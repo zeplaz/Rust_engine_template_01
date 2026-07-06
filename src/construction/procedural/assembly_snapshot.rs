@@ -747,7 +747,12 @@ mod tests {
         let first = &snapshot.module_placements[0];
         assert_eq!(first.token, "C");
         assert_eq!(first.slot_key, "corner_outer");
-        assert!(first.glb_path.contains("corner_L_lod0_run001"));
+        // BQ-F2: style_victorian resolves corner_L production row, not tier-only industrial lod0.
+        assert!(
+            first.glb_path.contains("corner_L_production_run001"),
+            "expected victorian corner, got {}",
+            first.glb_path
+        );
     }
 
     #[test]

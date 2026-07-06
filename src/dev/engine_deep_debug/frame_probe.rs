@@ -38,6 +38,7 @@ pub fn sample_deep_debug_frame(
     map_views: &MapViewInstances,
     view_trace: Option<&ViewRuntimeTrace>,
     subsystem_cache: Option<&DeepDebugSubsystemCache>,
+    tactical: Option<Value>,
 ) -> Option<Value> {
     if !cfg.active {
         return None;
@@ -86,6 +87,10 @@ pub fn sample_deep_debug_frame(
         "map_view_minimap_revision": map_views.minimap.revision,
         "minimap_trace": minimap_trace_snapshot(&trace),
     });
+
+    if let Some(tactical) = tactical {
+        body["tactical_map"] = tactical;
+    }
 
     if let Some(vt) = view_trace {
         body["view_runtime_violations"] = json!(vt

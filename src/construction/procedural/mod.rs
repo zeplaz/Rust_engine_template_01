@@ -40,7 +40,8 @@ pub use arch_build_grammar_v0::{
     ARCH_GRAMMAR_V0_PRESET_JSON,
 };
 pub use building_grammar::{
-    build_pg_quality_001_witness_body, generate as generate_building_grammar,
+    build_pg_quality_001_witness_body, city_g0_s1c_split_witness_green,
+    generate as generate_building_grammar,
     generate_with_arch_dna_preset, grammar_reference_tags, load_building_grammar_registry, pg_quality_001_witness_green,
     pg_quality_002_pg2_hook_body, pg_quality_002_pg2_hook_green,
     refresh_pg_quality_001_grammar_diversity_witness, BuildingGrammar, BuildingGrammarRegistry,

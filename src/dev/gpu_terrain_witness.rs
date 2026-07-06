@@ -48,12 +48,17 @@ pub fn gpu_p0c_prime_env_rollback_ok() -> bool {
     ok
 }
 
+/// Honest contract: the minimap compositor's terrain input is the CPU-rastered world image
+/// (`TileWorldFallbackState`) regardless of `TerrainRenderAuthority` — `TerrainMaterialAtlasGpu`
+/// is a material-swatch palette, never a valid world-texture input, so
+/// `TerrainRenderAuthority::GpuInstancedAtlas` does **not** yet imply a distinct GPU terrain
+/// source for the minimap. This stays `"world_raster"` until a real GPU world-terrain bake
+/// exists (deferred, see `src/dev/plan_gpu_terrain_production_exec_001_v1.md`, F2).
 #[must_use]
 pub fn gpu_p0e_minimap_terrain_source_ok() -> bool {
-    use crate::render::{minimap_compositor::minimap_terrain_source_label, TerrainRenderAuthority};
+    use crate::render::minimap_compositor::minimap_terrain_source_label;
 
-    minimap_terrain_source_label(TerrainRenderAuthority::GpuInstancedAtlas) == "gpu_atlas"
-        && minimap_terrain_source_label(TerrainRenderAuthority::CpuFallback) == "cpu_fallback"
+    minimap_terrain_source_label(true) == "world_raster" && minimap_terrain_source_label(false) == "none"
 }
 
 #[must_use]

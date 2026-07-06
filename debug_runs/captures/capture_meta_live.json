@@ -1,0 +1,23 @@
+{
+  "capture_at_frame": 600,
+  "frame_in_simulation": 600,
+  "main_world_camera_summary": [
+    {
+      "is_active": true,
+      "order": 0,
+      "target_debug": "Image(ImageRenderTarget { handle: StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }, scale_factor: 1.0 })"
+    }
+  ],
+  "rtt_handle_debug": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+  "rtt_image_extent": {
+    "h": 720,
+    "w": 1280
+  },
+  "schema": "visual_capture_probe_v1",
+  "tactical_rtt_capture_path": "debug_runs/captures/tactical_rtt_live.png",
+  "window_capture_path": "debug_runs/captures/window_live.png",
+  "window_resolution": {
+    "h": 720.0,
+    "w": 1280.0
+  }
+}

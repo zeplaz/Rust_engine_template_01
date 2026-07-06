@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_g1_c1_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g1_c1_001_block_archetype_witness",
-    "written_at_epoch_secs": 1783114441
+    "written_at_epoch_secs": 1783371797
   },
   "band_results": [
     {

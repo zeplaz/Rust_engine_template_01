@@ -16,6 +16,7 @@ pub use frame::{WorldFireParticleFrame, WorldFireParticleGpuStorage};
 pub use pack::{GpuParticleInstance, GpuParticleQuadVertex, ParticleClass};
 pub use witness::{
     fire_spark_011_green, fire_spark_compute_enabled, FireSparkWitness,
-    FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA, FIRE_SPARK_SCATTER_MAX,
-    FIRE_SPARK_STRATEGIC_ZOOM_ALPHA, FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+    FIRE_SPARK_FULL_SCATTER_PX_PER_TILE, FIRE_SPARK_MIN_PX_PER_TILE,
+    FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE, FIRE_SPARK_SCATTER_MAX,
+    FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
 };

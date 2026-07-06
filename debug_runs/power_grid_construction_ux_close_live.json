@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/power_grid_construction_ux_close_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_power_grid_construction_ux_close_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371798
   },
   "demolish_cut_wired": true,
   "gate": "PLAN-POWER-GRID-CONSTRUCTION-UX-001",

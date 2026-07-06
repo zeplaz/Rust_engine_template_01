@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/bq_f2_style_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_bq_f2_style_001_witness",
-    "written_at_epoch_secs": 1783114931
+    "written_at_epoch_secs": 1783371796
   },
   "cross_style_fallback_count": 0,
   "gate": "BQ-F2-STYLE-001",

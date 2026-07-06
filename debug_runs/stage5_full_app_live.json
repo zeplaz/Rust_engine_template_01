@@ -61,7 +61,7 @@
     "relative_path": "debug_runs/stage5_full_app_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "log_e01_fullapp_upgrade_001_witness_refresh",
-    "written_at_epoch_secs": 1783111897
+    "written_at_epoch_secs": 1783371800
   },
   "ecology_active_rows": 17,
   "ecology_rows_source": "live_landscape_program_on_chunk",

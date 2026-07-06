@@ -219,6 +219,30 @@
       "stylepack_visible": false
     },
     {
+      "module_id": "door_brick_residential_1u",
+      "job_id": "door_brick_residential_1u_production_run001",
+      "category": "door",
+      "glb": "assets/models/modules/door_brick_residential_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/door_brick_residential_1u_production_run001/model.glb",
+      "archetype": "module_door",
+      "style_pack": "style_colonial",
+      "grid_units": [
+        1,
+        1
+      ],
+      "snap": "floor_edge",
+      "material_profile": "brick_red_01",
+      "style_tags": [
+        "brick",
+        "red",
+        "colonial"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
       "module_id": "door_civic",
       "job_id": "door_civic_lod0_run001",
       "category": "door",
@@ -240,6 +264,30 @@
       "batch_id": "kit_lod0_006",
       "development_tier": "lod0",
       "pbr_status": "deferred",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "door_concrete_service_1u",
+      "job_id": "door_concrete_service_1u_production_run001",
+      "category": "door",
+      "glb": "assets/models/modules/door_concrete_service_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/door_concrete_service_1u_production_run001/model.glb",
+      "archetype": "module_door",
+      "style_pack": "style_modern",
+      "grid_units": [
+        1,
+        1
+      ],
+      "snap": "floor_edge",
+      "material_profile": "concrete_pad_01",
+      "style_tags": [
+        "concrete",
+        "pad",
+        "modern"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
       "stylepack_visible": true
     },
     {
@@ -1020,6 +1068,30 @@
       "replaced_by": "prop_vent"
     },
     {
+      "module_id": "roof_brick_gable_2u",
+      "job_id": "roof_brick_gable_2u_production_run001",
+      "category": "roof",
+      "glb": "assets/models/modules/roof_brick_gable_2u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/roof_brick_gable_2u_production_run001/model.glb",
+      "archetype": "module_roof",
+      "style_pack": "style_colonial",
+      "grid_units": [
+        2,
+        1
+      ],
+      "snap": "roof_ridge",
+      "material_profile": "brick_red_01",
+      "style_tags": [
+        "brick",
+        "red",
+        "colonial"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
       "module_id": "roof_bunker",
       "job_id": "roof_bunker_lod0_run001",
       "category": "roof",
@@ -1065,6 +1137,30 @@
       "batch_id": "kit_lod0_008",
       "development_tier": "lod0",
       "pbr_status": "deferred",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "roof_concrete_flat_2u",
+      "job_id": "roof_concrete_flat_2u_production_run001",
+      "category": "roof",
+      "glb": "assets/models/modules/roof_concrete_flat_2u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/roof_concrete_flat_2u_production_run001/model.glb",
+      "archetype": "module_roof",
+      "style_pack": "style_modern",
+      "grid_units": [
+        2,
+        1
+      ],
+      "snap": "roof_ridge",
+      "material_profile": "concrete_pad_01",
+      "style_tags": [
+        "concrete",
+        "pad",
+        "modern"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
       "stylepack_visible": true
     },
     {
@@ -1454,6 +1550,30 @@
       "batch_id": "kit_lod0_007",
       "development_tier": "lod0",
       "pbr_status": "deferred",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "roof_wood_gable_2u",
+      "job_id": "roof_wood_gable_2u_production_run001",
+      "category": "roof",
+      "glb": "assets/models/modules/roof_wood_gable_2u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/roof_wood_gable_2u_production_run001/model.glb",
+      "archetype": "module_roof",
+      "style_pack": "style_rural",
+      "grid_units": [
+        2,
+        1
+      ],
+      "snap": "roof_ridge",
+      "material_profile": "wood_plank_01",
+      "style_tags": [
+        "wood",
+        "plank",
+        "rural"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
       "stylepack_visible": true
     },
     {
@@ -2043,6 +2163,54 @@
       "stylepack_visible": true
     },
     {
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "category": "window",
+      "glb": "assets/models/modules/win_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
+      "archetype": "module_window",
+      "style_pack": "style_colonial",
+      "grid_units": [
+        1,
+        1
+      ],
+      "snap": "wall_center",
+      "material_profile": "brick_red_01",
+      "style_tags": [
+        "brick",
+        "red",
+        "colonial"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "win_brick_2u",
+      "job_id": "win_brick_2u_production_run001",
+      "category": "window",
+      "glb": "assets/models/modules/win_brick_2u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_2u_production_run001/model.glb",
+      "archetype": "module_window",
+      "style_pack": "style_colonial",
+      "grid_units": [
+        2,
+        1
+      ],
+      "snap": "wall_center",
+      "material_profile": "brick_red_01",
+      "style_tags": [
+        "brick",
+        "red",
+        "colonial"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
       "module_id": "win_bunker_slit",
       "job_id": "win_bunker_slit_lod0_run001",
       "category": "window",
@@ -2064,6 +2232,54 @@
       "batch_id": "kit_lod0_009",
       "development_tier": "lod0",
       "pbr_status": "deferred",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "win_concrete_1u",
+      "job_id": "win_concrete_1u_production_run001",
+      "category": "window",
+      "glb": "assets/models/modules/win_concrete_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_concrete_1u_production_run001/model.glb",
+      "archetype": "module_window",
+      "style_pack": "style_modern",
+      "grid_units": [
+        1,
+        1
+      ],
+      "snap": "wall_center",
+      "material_profile": "concrete_pad_01",
+      "style_tags": [
+        "concrete",
+        "pad",
+        "modern"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "win_concrete_2u",
+      "job_id": "win_concrete_2u_production_run001",
+      "category": "window",
+      "glb": "assets/models/modules/win_concrete_2u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_concrete_2u_production_run001/model.glb",
+      "archetype": "module_window",
+      "style_pack": "style_modern",
+      "grid_units": [
+        2,
+        1
+      ],
+      "snap": "wall_center",
+      "material_profile": "concrete_pad_01",
+      "style_tags": [
+        "concrete",
+        "pad",
+        "modern"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
       "stylepack_visible": true
     },
     {
@@ -2282,6 +2498,54 @@
       "batch_id": "kit_lod0_005",
       "development_tier": "lod0",
       "pbr_status": "deferred",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "win_wood_1u",
+      "job_id": "win_wood_1u_production_run001",
+      "category": "window",
+      "glb": "assets/models/modules/win_wood_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_wood_1u_production_run001/model.glb",
+      "archetype": "module_window",
+      "style_pack": "style_rural",
+      "grid_units": [
+        1,
+        1
+      ],
+      "snap": "wall_center",
+      "material_profile": "wood_plank_01",
+      "style_tags": [
+        "wood",
+        "plank",
+        "rural"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "win_wood_2u",
+      "job_id": "win_wood_2u_production_run001",
+      "category": "window",
+      "glb": "assets/models/modules/win_wood_2u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_wood_2u_production_run001/model.glb",
+      "archetype": "module_window",
+      "style_pack": "style_rural",
+      "grid_units": [
+        2,
+        1
+      ],
+      "snap": "wall_center",
+      "material_profile": "wood_plank_01",
+      "style_tags": [
+        "wood",
+        "plank",
+        "rural"
+      ],
+      "batch_id": "kit_fill_bq_k1_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
       "stylepack_visible": true
     },
     {

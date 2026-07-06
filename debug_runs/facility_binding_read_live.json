@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/facility_binding_read_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_facility_binding_read_live_witness",
-    "written_at_epoch_secs": 1783027290
+    "written_at_epoch_secs": 1783371798
   },
   "cmcp_lane": "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json",
   "code": [
@@ -72,9 +72,9 @@
     "binding_schema": "facility_binding_v1",
     "bound_grammar_count": 3,
     "bound_grammar_ids": [
-      "rail_edge_v1",
       "factory_cluster_v1",
-      "industrial_warehouse_v1"
+      "industrial_warehouse_v1",
+      "rail_edge_v1"
     ],
     "factory_cluster_v1": true,
     "g1_min_ok": true,

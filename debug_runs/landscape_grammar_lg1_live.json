@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/landscape_grammar_lg1_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_lg1_witness",
-    "written_at_epoch_secs": 1783027603
+    "written_at_epoch_secs": 1783371800
   },
   "chart_id": "AGRI-LANDSCAPE-Δ9",
   "effective_lambda": {

@@ -228,6 +228,33 @@ pub fn apply_simulation_unified_cursor_system(
     }
 }
 
+/// Draw crosshair when OS cursor is hidden over the tactical play area (TRIAGE-CURSOR-UNIFY-001).
+pub fn draw_simulation_unified_cursor_egui_system(
+    base: Res<State<BaseState>>,
+    gate: Res<SimulationMapPointerGate>,
+    mut contexts: EguiContexts,
+) {
+    if !simulation_unified_cursor_hide_os(*base.get(), gate.in_play_area) {
+        return;
+    }
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+    let pos = egui::pos2(gate.cursor.x, gate.cursor.y);
+    let layer = egui::LayerId::new(egui::Order::Foreground, egui::Id::new("sim_unified_cursor"));
+    let painter = ctx.layer_painter(layer);
+    let r = 7.0;
+    painter.circle_stroke(pos, r, egui::Stroke::new(1.5, egui::Color32::WHITE));
+    painter.line_segment(
+        [pos + egui::vec2(-r * 1.5, 0.0), pos + egui::vec2(r * 1.5, 0.0)],
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(255, 220, 120)),
+    );
+    painter.line_segment(
+        [pos + egui::vec2(0.0, -r * 1.5), pos + egui::vec2(0.0, r * 1.5)],
+        egui::Stroke::new(1.0, egui::Color32::from_rgb(255, 220, 120)),
+    );
+}
+
 #[inline]
 fn rect_contains(rect: egui::Rect, cursor: Vec2) -> bool {
     rect.contains(egui::pos2(cursor.x, cursor.y))

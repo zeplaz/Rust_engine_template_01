@@ -4,8 +4,11 @@
 //! publishes a process-wide latch equivalent to:
 //!
 //! ```text
-//! SIM_ANALYTICS=1 SIM_ANALYTICS_QUIET=1 SIM_ANALYTICS_FRAMES=1 STALL=1
+//! SIM_ANALYTICS=1 SIM_ANALYTICS_QUIET=1 SIM_ANALYTICS_FRAMES=1
 //! ```
+//!
+//! **GPU-P3-C:** `--test demo` stays quiet — no implicit `STALL=1`; stall spans for disk triage
+//! only on VFX / full-capture / weather lanes unless operator sets `STALL=1`.
 //!
 //! Manual env vars still work and can override quiet / frame-jsonl off.
 
@@ -112,10 +115,16 @@ pub fn diagnostics_operator_trace_enabled(cfg_cli: bool, env_keys: &[&str]) -> b
     cfg_cli || env_keys.iter().any(|k| env_flag(k))
 }
 
-/// STALL lines go to disk witness always when enabled; terminal only when not quiet.
+/// STALL lines go to disk witness via sim-spectrum stall spans; terminal only when explicitly requested.
 #[must_use]
 pub fn stall_terminal_logging_enabled() -> bool {
-    !instrumentation_quiet_terminal() || instrumentation_explicit_verbose_trace()
+    if env_flag("STALL") || env_flag("STALL_SPAN_DEBUG") {
+        return true;
+    }
+    if instrumentation_explicit_verbose_trace() {
+        return true;
+    }
+    instrumentation_stall_spans() && !instrumentation_quiet_terminal()
 }
 
 #[must_use]
@@ -143,6 +152,12 @@ fn publish_atomics(inst: &TestRunInstrumentation) {
     STALL_SPANS.store(inst.stall_spans, Ordering::Relaxed);
     let _ = FLUSH_SECS.set(inst.flush_secs);
     let _ = FRAME_JSONL_STRIDE.set(inst.frame_jsonl_stride.max(1));
+}
+
+/// Test / witness hook — publish instrumentation latch without PostStartup bootstrap.
+#[cfg(test)]
+pub(crate) fn publish_test_run_instrumentation_latch(inst: &TestRunInstrumentation) {
+    publish_atomics(inst);
 }
 
 fn merge_env_overrides(inst: &mut TestRunInstrumentation) {
@@ -330,5 +345,26 @@ mod tests {
         inst.quiet_terminal = profile.quiet_terminal;
         assert!(inst.active);
         assert!(inst.quiet_terminal);
+    }
+
+    #[test]
+    fn demo_profile_quiet_without_stall_terminal() {
+        let profile = EngineLaunchArgs::from_cli(Some("demo".into()), false, None)
+            .test_instrumentation_profile();
+        assert!(profile.quiet_terminal);
+        assert!(!profile.stall_spans);
+        publish_test_run_instrumentation_latch(&TestRunInstrumentation {
+            active: profile.active,
+            quiet_terminal: profile.quiet_terminal,
+            frame_jsonl: profile.frame_jsonl,
+            stall_spans: profile.stall_spans,
+            flush_secs: profile.flush_secs,
+            frame_jsonl_stride: profile.frame_jsonl_stride,
+            from_test_cli: true,
+            test_scene: TestScene::Visual,
+            maneuver: crate::engine::DebugManeuver::DemoOpen,
+        });
+        assert!(!stall_terminal_logging_enabled());
+        assert!(!instrumentation_stall_spans());
     }
 }

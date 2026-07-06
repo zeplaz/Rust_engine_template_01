@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/minimap_topology_legend_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_minimap_topology_legend_live_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371797
   },
   "alias_gate": "VEG-MINIMAP-LEGEND-UI-001",
   "burn_legend_wired": true,

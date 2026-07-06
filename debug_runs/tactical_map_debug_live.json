@@ -1,0 +1,303 @@
+{
+  "body": {
+    "diagnosis_hints": [
+      "FALLBACK_IMAGE_CPU_OK: sim terrain painted — if tactical map void, check RTT RenderLayers + ImageNode bind + ExtractedCameraMetrics view_proj (particles)"
+    ],
+    "fallback_raster": {
+      "chunk_grid_dirty": true,
+      "cpu_minimap_pass": false,
+      "last_h": 320,
+      "last_w": 320,
+      "minimap_image": {
+        "asset_usage": "RenderAssetUsages(MAIN_WORLD | RENDER_WORLD)",
+        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 193 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "has_cpu_data": true,
+        "height": 320,
+        "loaded": true,
+        "pixels": {
+          "center": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "corner_br": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "corner_tl": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "coverage_ratio": 0.0,
+          "luma_sum": 0,
+          "nonzero_pixels": 0,
+          "total_pixels": 102400,
+          "valid": true
+        },
+        "render_world": true,
+        "texture_format": "Rgba8UnormSrgb",
+        "texture_usages": "TextureUsages(COPY_DST | TEXTURE_BINDING)",
+        "width": 320
+      },
+      "raster_applied_revision": 14,
+      "raster_revision": 14,
+      "sim_image": {
+        "asset_usage": "RenderAssetUsages(MAIN_WORLD | RENDER_WORLD)",
+        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 192 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "has_cpu_data": true,
+        "height": 320,
+        "loaded": true,
+        "pixels": {
+          "center": [
+            40,
+            110,
+            55,
+            255
+          ],
+          "corner_br": [
+            40,
+            110,
+            55,
+            255
+          ],
+          "corner_tl": [
+            32,
+            76,
+            66,
+            255
+          ],
+          "coverage_ratio": 1.0,
+          "luma_sum": 26021013,
+          "nonzero_pixels": 102400,
+          "total_pixels": 102400,
+          "valid": true
+        },
+        "render_world": true,
+        "texture_format": "Rgba8UnormSrgb",
+        "texture_usages": "TextureUsages(COPY_DST | TEXTURE_BINDING)",
+        "width": 320
+      },
+      "sprite_entity": true,
+      "test_harness_boost": false
+    },
+    "frame": 1860,
+    "minimap_compositor": {
+      "atlas_image_loaded": true,
+      "composite_path": "GpuCompute",
+      "dual_minimap_present": false,
+      "terrain_source_label": "world_raster"
+    },
+    "overlays_clutter": {
+      "construction_footprint_tiles": 0,
+      "construction_paths": 0,
+      "fire_debug_force_visible": true,
+      "overlay_revision": 1768,
+      "shared_overlay_fire_cells": 28,
+      "tile_debug_batched_overlay": false
+    },
+    "rtt_diag_mode": "Production",
+    "rtt_render_trace": {
+      "bind_barrier": {
+        "bound_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "bound_matches_sim_tex": true,
+        "pending": null,
+        "revision": 0,
+        "sim_tex_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }"
+      },
+      "coverage": {
+        "fallback_sim_cpu": 1.0,
+        "note": "rtt_cpu_readback=0 is normal/expected for a GPU-only RTT (CPU never writes it) and does not by itself imply GPU_RTT_VOID; GPU_RTT_VOID is raised only when sim CPU terrain is painted AND a mechanical RTT invariant above has failed",
+        "rtt_cpu_readback": 0.0
+      },
+      "extracted_camera_metrics": {
+        "view_pixels": [
+          1280.0,
+          720.0
+        ],
+        "view_proj_degenerate": false,
+        "zoom_alpha": 0.043303489685058594,
+        "zoom_level": 3.9369213581085205
+      },
+      "fire_particle_raster": {
+        "draw_globals_vertex_count": 2016,
+        "spark_rows": 336,
+        "spark_view_culled": false,
+        "world_frame_instances": 336
+      },
+      "hud_ui_camera": {
+        "is_active": true,
+        "order": 1,
+        "render_target": {
+          "kind": "window"
+        }
+      },
+      "main_world_camera": {
+        "is_active": true,
+        "order": 0,
+        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 325.12714, height: 182.88402 }, scale: 1.0, area: Rect { min: Vec2(-162.56357, -91.44201), max: Vec2(162.56357, 91.44201) } })",
+        "render_layers": null,
+        "render_target": {
+          "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+          "kind": "image",
+          "matches_barrier_bound": true,
+          "matches_sim_tex": true,
+          "scale_factor": 1.0
+        },
+        "viewport": null,
+        "visibility": "Inherited",
+        "world_position": [
+          160.0,
+          160.0,
+          999.0
+        ]
+      },
+      "map_camera_desired": {
+        "scale": 3.9369213581085205,
+        "translation": [
+          160.0,
+          160.0
+        ]
+      },
+      "ortho_trace": {
+        "authority_zoom": 3.9369213581085205,
+        "camera_center": [
+          160.0,
+          160.0
+        ],
+        "desired_zoom": 3.9369213581085205,
+        "fixed_world_span": [
+          325.12713623046875,
+          182.88401794433594
+        ],
+        "view_pixels": [
+          1280.0,
+          720.0
+        ]
+      },
+      "primary_void_suspect": "UNKNOWN_GPU_VOID",
+      "render_layer_intersect_ok": true,
+      "terrain_display": {
+        "custom_size": [
+          320.0,
+          320.0
+        ],
+        "display": "Sprite",
+        "entity": "1355v0",
+        "image_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 192 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "image_matches_fallback_state": true,
+        "render_layers": "default(0)",
+        "transform_xy": [
+          160.0,
+          160.0
+        ],
+        "transform_z": 0.0,
+        "visibility": "Visible"
+      },
+      "void_suspects": []
+    },
+    "schema": "tactical_map_debug_v2",
+    "sim_time_micros": 135713370,
+    "tactical_rtt": {
+      "fill_logical_px": [
+        1280.0,
+        720.0
+      ],
+      "fill_steady_invalid_flip_count": 0,
+      "fill_valid": true,
+      "image_node_bind": {
+        "handle_matches_rtt": true,
+        "present": true,
+        "stretch_mode": "Stretch"
+      },
+      "main_camera": {
+        "clear_color": "Custom(Srgba(Srgba { red: 0.48, green: 0.54, blue: 0.64, alpha: 1.0 }))",
+        "is_active": true,
+        "order": 0,
+        "output_mode": "Write { blend_state: None, clear_color: Custom(Srgba(Srgba { red: 0.48, green: 0.54, blue: 0.64, alpha: 1.0 })) }",
+        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 325.12714, height: 182.88402 }, scale: 1.0, area: Rect { min: Vec2(-162.56357, -91.44201), max: Vec2(162.56357, 91.44201) } })",
+        "visibility": "Inherited",
+        "world_position": [
+          160.0,
+          160.0,
+          999.0
+        ]
+      },
+      "rtt_image": {
+        "asset_usage": "RenderAssetUsages(MAIN_WORLD | RENDER_WORLD)",
+        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "has_cpu_data": true,
+        "height": 720,
+        "loaded": true,
+        "pixels": {
+          "center": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "corner_br": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "corner_tl": [
+            0,
+            0,
+            0,
+            0
+          ],
+          "coverage_ratio": 0.0,
+          "luma_sum": 0,
+          "nonzero_pixels": 0,
+          "total_pixels": 921600,
+          "valid": true
+        },
+        "render_world": true,
+        "texture_format": "Rgba8UnormSrgb",
+        "texture_usages": "TextureUsages(COPY_DST | TEXTURE_BINDING | RENDER_ATTACHMENT)",
+        "width": 1280
+      }
+    },
+    "terrain_authority": "GpuInstancedAtlas",
+    "terrain_bake_note": "GpuInstancedAtlas: CPU dirty-gated raster → GPU texture; minimap reads texture directly; tactical map = Camera2d RenderTarget::Image + same RenderLayers as sprite",
+    "terrain_display_path": "Sprite (P0) or Mesh2d+ColorMaterial (P1 Camera3d diag)",
+    "terrain_sources": {
+      "chunk_cell_matrix_entities": 100,
+      "dense_cache": {
+        "height": 320,
+        "tile_count": 102400,
+        "width": 320
+      },
+      "test_scene_chunk_entities": 100,
+      "tile_marker_entities": 0
+    },
+    "test_scene": "VfxSandbox",
+    "uses_cpu_fallback_raster": false,
+    "uses_gpu_sprite_display": true,
+    "vt4": {
+      "failing_surface_mask": "0x0",
+      "mismatch_count": 0,
+      "stamp": 1861
+    },
+    "world_gen": {
+      "base_state": "Simulation",
+      "chunk_entities": 100,
+      "flow": "FullReady",
+      "progress_running": false,
+      "terrain_baked": true
+    },
+    "world_params": {
+      "field_storage": "ChunkCellMatrixAuthoritative",
+      "height": 320,
+      "width": 320
+    }
+  },
+  "path": "debug_runs/tactical_map_debug_live.json",
+  "written_at_epoch_secs": 1783372466
+}

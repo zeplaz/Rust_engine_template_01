@@ -57,11 +57,11 @@
     "coder_b_backlog": "docs/archive/2026-06-src-dev/plans/coder_b_backlog_wave6_20260527_v1.md",
     "weather_lane": "docs/archive/2026-06-src-dev/plans/plan_weather_parallel_lane_v1.md",
     "weather_witness": "docs/archive/2026-06-src-dev/plans/plan_weather_witness_002_v1.md",
-    "last_sync": "2026-07-03",
+    "last_sync": "2026-07-04",
     "multi_parallel_dispatch": "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json",
     "multi_parallel_home": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
     "multi_parallel_prompts": "src/dev/multi_parallel_agent_prompts_v1.md",
-    "last_dispatch_subqueue_sync": "2026-07-03T15:06:13Z",
+    "last_dispatch_subqueue_sync": "2026-07-04T17:13:09Z",
     "dispatch_subqueue_script": "tools/orchestrator/scripts/sync_dispatch_subqueues.py",
     "hub_scan_script": "tools/orchestrator/scripts/scan_queues_hub.py",
     "dispatch_pick_count": 1
@@ -2465,8 +2465,8 @@
   },
   "coder_mcp_lane": {
     "aps_presence_correction": "tools/orchestrator/queues/aps_presence_correction_queue.json",
-    "aps_presence_routing_lock": "Do not re-pick APS-GUARD-BRIEF-PARITY-001 | APS-GRAM-TIER-GATES-LIVE-001 | DES-APS-SESSION-DUMP-001 | OVR-APS-PRESENCE-OPERATOR-001 — program CLOSED 2026-07-03",
-    "next_pick": "idle — APS-G4-COVERAGE-001 done 2026-07-03; see city_grammar_queue.json for P2 picks",
+    "aps_presence_routing_lock": "Do not re-pick APS-GUARD-BRIEF-PARITY-001 | APS-GRAM-TIER-GATES-LIVE-001 | DES-APS-SESSION-DUMP-001 | OVR-APS-PRESENCE-OPERATOR-001 \u2014 program CLOSED 2026-07-03",
+    "next_pick": "idle \u2014 APS-G4-COVERAGE-001 done 2026-07-03; see city_grammar_queue.json for P2 picks",
     "multi_parallel_pick": [
       {
         "id": "APS-GUARD-BRIEF-PARITY-001",

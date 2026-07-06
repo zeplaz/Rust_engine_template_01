@@ -19,6 +19,7 @@
 | **VR-14** | Fire heat chunk markers missing | Partial | `gpu_tile_debug.rs` | **Fixed:** fire markers no longer gated on `CameraFocusDebug.enabled` |
 | **VR-15** | Fire test red box wrong region / no camera focus | Partial | `vfx_fire_test_highlight.rs` | **Fixed:** chunk origins + `map_camera_desired_fit_tile_aabb` |
 | **VR-16** | Sparks / GPU fire particles still not visible in play | **Yes** — operator verify | fire extract + raster dispatch | **Lib green** (`steward_spark_vfx_001`); **operator:** run `--test vfx` with display — code path fixed, witness refresh may be stale |
+| **VR-17** | Startup panic: `VisibilityRangePlugin` already added | **Yes** | `mig_a_adoption.rs` MIG-A14 | **Fixed 2026-07-04:** do not re-add plugin (DefaultPlugins includes it). Rebuild local `target/release` — stale exe looked like fix failed |
 
 **Operator verify command:**
 

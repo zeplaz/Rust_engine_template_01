@@ -76,6 +76,7 @@ pub fn build_pick_ghost_tile_system(
     desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
+    ortho: Res<crate::gui::MainWorldCameraOrthoTrace>,
     strip: Res<BuildStripState>,
     tool: Res<ActiveBuildTool>,
     mut ghost: ResMut<BuildGhostState>,
@@ -126,7 +127,10 @@ pub fn build_pick_ghost_tile_system(
         map_vp.as_ref(),
         params.as_ref(),
     );
-    let Some(world_xy) = proj.cursor_world_xy(cursor_px) else {
+    let Some(world_xy) = proj
+        .cursor_world_xy_with_ortho(cursor_px, ortho.as_ref())
+        .or_else(|| proj.cursor_world_xy(cursor_px))
+    else {
         return;
     };
 

@@ -323,7 +323,7 @@ pub fn audit_camera_scissor_matches_committed(
     if !viewport_authority_debug_enabled() {
         return;
     }
-    if !sim.valid || !ortho.using_hole {
+    if !sim.valid {
         return;
     }
     let Ok(camera) = cam.single() else {

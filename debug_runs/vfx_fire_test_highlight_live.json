@@ -58,10 +58,12 @@
     "relative_path": "debug_runs/vfx_fire_test_highlight_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_vfx_fire_test_highlight_live_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371798
   },
   "gate": "VFX-FIRE-HIGHLIGHT-001",
   "green": true,
   "module": "src/gui/vfx_fire_test_highlight.rs",
-  "plugin_wired": true
+  "plugin_wired": false,
+  "projection": "MainWorldCameraOrthoTrace",
+  "status": "removed_pending_redesign"
 }

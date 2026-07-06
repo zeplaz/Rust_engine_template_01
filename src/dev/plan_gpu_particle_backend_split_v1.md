@@ -33,6 +33,19 @@ Instance byte stride: **32** (`GpuInstancedQuadInstance` / `GpuParticleInstance`
 5. WGSL struct comments / uniform field ownership  
 6. Tests + stage5 witness refresh  
 
+### RTT operator lane — Track B (Item 5 + 2a) — **lib SHIPPED 2026-07-04**
+
+**Hub:** [`plan_tactical_map_rtt_lane_v1.md`](plan_tactical_map_rtt_lane_v1.md) · HANDOFF § PLAN-TACTICAL-MAP-RTT-v1 · witness `debug_runs/rtt_lane_witness_live.json`
+
+| ID | Maps to phase | Action |
+|----|---------------|--------|
+| RTT-B5-001 | **2a** | Shared `ViewUniform` / `ParticleViewGlobals` from `ExtractedCameraMetrics` |
+| RTT-B5-002 | **5** | Fire: `fire_particle_draw.wgsl` + raster use extracted view only |
+| RTT-B5-003 | **5** | Water: same View uniform pattern |
+| RTT-B5-004 | **6** | `--test vfx` + stage5 witness refresh |
+
+**Exit:** sparks/precip visible on tactical map RTT; no `MainWorldCamera` query in raster sync.
+
 **Deferred:** R7 weather/precip generic spine — gated on D3 baseline (`plan_cleanup_v1.md`).
 
 ## Forbidden

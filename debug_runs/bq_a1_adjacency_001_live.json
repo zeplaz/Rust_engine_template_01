@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/bq_a1_adjacency_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_bq_a1_adjacency_witness",
-    "written_at_epoch_secs": 1783114931
+    "written_at_epoch_secs": 1783371796
   },
   "gate": "BQ-A1-ADJ-001",
   "green": true,

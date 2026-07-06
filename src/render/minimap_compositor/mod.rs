@@ -61,16 +61,9 @@ mod tests {
     use bevy::prelude::*;
 
     #[test]
-    fn minimap_terrain_source_label_matches_gpu_authority() {
-        use crate::render::TerrainRenderAuthority;
-        assert_eq!(
-            super::minimap_terrain_source_label(TerrainRenderAuthority::GpuInstancedAtlas),
-            "gpu_atlas"
-        );
-        assert_eq!(
-            super::minimap_terrain_source_label(TerrainRenderAuthority::CpuFallback),
-            "cpu_fallback"
-        );
+    fn minimap_terrain_source_label_reflects_bound_world_texture() {
+        assert_eq!(super::minimap_terrain_source_label(true), "world_raster");
+        assert_eq!(super::minimap_terrain_source_label(false), "none");
     }
 
     #[test]
@@ -581,6 +574,84 @@ mod tests {
         match prior_raster_chunks {
             Some(v) => std::env::set_var("RASTER_CHUNKS_PER_FRAME", v),
             None => std::env::remove_var("RASTER_CHUNKS_PER_FRAME"),
+        }
+    }
+
+    /// **RPC-0-001** — runtime predicate must go false when the shader-failed atomic is set,
+    /// independent of the env toggle, so a lying `composite_path` witness cannot occur.
+    #[test]
+    fn gpu_compositor_runtime_enabled_false_on_shader_failure() {
+        let _guard = MINIMAP_GPU_COMPOSITOR_ENV_LOCK
+            .lock()
+            .expect("MINIMAP_GPU_COMPOSITOR env tests");
+        let prior = std::env::var("MINIMAP_GPU_COMPOSITOR").ok();
+        std::env::remove_var("MINIMAP_GPU_COMPOSITOR");
+
+        let was_failed = super::diagnostics::MINIMAP_GPU_SHADER_FAILED
+            .swap(false, std::sync::atomic::Ordering::Relaxed);
+        assert!(super::pass::minimap_gpu_compositor_runtime_enabled());
+
+        super::diagnostics::MINIMAP_GPU_SHADER_FAILED
+            .store(true, std::sync::atomic::Ordering::Relaxed);
+        assert!(!super::pass::minimap_gpu_compositor_runtime_enabled());
+        // env-only predicate stays true — this is exactly the mismatch RPC-0-001 fixes.
+        assert!(super::pass::minimap_gpu_compositor_env_enabled());
+
+        super::diagnostics::MINIMAP_GPU_SHADER_FAILED
+            .store(was_failed, std::sync::atomic::Ordering::Relaxed);
+        match prior {
+            Some(v) => std::env::set_var("MINIMAP_GPU_COMPOSITOR", v),
+            None => std::env::remove_var("MINIMAP_GPU_COMPOSITOR"),
+        }
+    }
+
+    /// **RPC-0-001** — `run_minimap_compositor_pass` must flip `composite_path` to `CpuBridge`
+    /// the same frame the shader-failed atomic is observed, matching what
+    /// `sync_minimap_presentation_source` already does for `MinimapShellState`.
+    #[test]
+    fn composite_path_flips_to_cpu_bridge_on_shader_failure() {
+        let _guard = MINIMAP_GPU_COMPOSITOR_ENV_LOCK
+            .lock()
+            .expect("MINIMAP_GPU_COMPOSITOR env tests");
+        let prior = std::env::var("MINIMAP_GPU_COMPOSITOR").ok();
+        std::env::remove_var("MINIMAP_GPU_COMPOSITOR");
+        let was_failed = super::diagnostics::MINIMAP_GPU_SHADER_FAILED
+            .swap(true, std::sync::atomic::Ordering::Relaxed);
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.init_resource::<MinimapShellState>();
+        app.init_resource::<MinimapRenderTargetRegistry>();
+        app.init_resource::<super::MinimapCompositorState>();
+        app.init_resource::<super::diagnostics::MinimapGpuCompositorDiagnostics>();
+        app.init_resource::<crate::render::TileWorldFallbackState>();
+        app.init_resource::<super::composite::MinimapCompositeDispatch>();
+        app.init_resource::<super::composite::MinimapCompositeHeatTextures>();
+        app.init_resource::<crate::gui::MapViewInstances>();
+        app.init_resource::<crate::render::ResolvedViewports>();
+        app.init_resource::<crate::gui::VisualCadence>();
+        app.init_resource::<Assets<Image>>();
+        {
+            let mut shell = app.world_mut().resource_mut::<MinimapShellState>();
+            shell.visible = true;
+            shell.minimized = false;
+        }
+        {
+            let mut compositor = app.world_mut().resource_mut::<super::MinimapCompositorState>();
+            compositor.stamp = 7;
+            compositor.composite_path = super::MinimapCompositePath::GpuCompute;
+        }
+        app.add_systems(Update, super::pass::run_minimap_compositor_pass);
+        app.update();
+
+        let compositor = app.world().resource::<super::MinimapCompositorState>();
+        assert_eq!(compositor.composite_path, super::MinimapCompositePath::CpuBridge);
+
+        super::diagnostics::MINIMAP_GPU_SHADER_FAILED
+            .store(was_failed, std::sync::atomic::Ordering::Relaxed);
+        match prior {
+            Some(v) => std::env::set_var("MINIMAP_GPU_COMPOSITOR", v),
+            None => std::env::remove_var("MINIMAP_GPU_COMPOSITOR"),
         }
     }
 }

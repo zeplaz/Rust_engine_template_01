@@ -69,7 +69,8 @@ pub struct TileGpuDebugSettings {
 impl Default for TileGpuDebugSettings {
     fn default() -> Self {
         Self {
-            // Off until [`BaseState::Simulation`] (`enable_tile_gpu_instanced_authoritative`) or test harness.
+            // Off by default; set directly by visual test harness setup (`test_harness.rs`) or
+            // debug tooling — no `OnEnter(Simulation)` system flips this today.
             use_batched_mesh_overlay: false,
             max_instances: 4096,
         }

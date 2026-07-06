@@ -144,6 +144,24 @@ When adding a system, prefer these anchors:
 | `ConstructionPlacementDebugProbe` | PostUpdate after camera scissor; `--test vfx` overlay |
 | `MainWorldCameraOrthoTrace` | `sync_main_world_camera_viewport_and_projection` |
 
+## GPU terrain render authority (P0-C′ / P2-D)
+
+Simulation terrain display authority lives in `src/render/terrain_render_authority.rs` — **not** a parallel extraction path.
+
+| Resource / fn | Role |
+|---------------|------|
+| `TerrainRenderAuthority` | `CpuFallback` · `GpuTilemap` (blocked) · `GpuInstancedAtlas` |
+| `resolve_sim_default_authority()` | **Release Simulation:** `GpuInstancedAtlas`; **Debug:** `CpuFallback` unless `TERRAIN_GPU_INSTANCED=1` |
+| `TERRAIN_CPU_FALLBACK=1` | Rollback env → force `CpuFallback` |
+| `tile_world_fallback.rs` | CPU raster + stamp blit gated when authority uses GPU display |
+| `terrain_instanced_draw.rs` | Interim GPU sprite-bake display (dirty-gated) |
+| `minimap_compositor/pass.rs` | `minimap_terrain_source_label()` reflects authority in composite witness |
+| `visual_perf_budget.rs` | `fire_extract_cadence_due()` — overlay extract cadence gate |
+
+**Witness:** `debug_runs/gpu_terrain_p0c_prime_001_live.json` · `debug_runs/gpu_p1_p2_001_live.json` · harness `src/dev/gpu_terrain_witness.rs` / `gpu_p1_p2_witness.rs`.
+
+**Anti-pattern:** ad-hoc CPU terrain blit in Simulation when `GpuInstancedAtlas` is active — route stamps through `TerrainGpuStampIndices` (`map_tile_atlas_stamp.rs`).
+
 ## Escalation
 
 | Change touches | Read also |

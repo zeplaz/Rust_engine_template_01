@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/mig_bevy_019/mig_a_program_close.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_mig_program_close_witness",
-    "written_at_epoch_secs": 1783115023
+    "written_at_epoch_secs": 1783372330
   },
   "bevy_version": "0.19",
   "blocked_not_migration": [

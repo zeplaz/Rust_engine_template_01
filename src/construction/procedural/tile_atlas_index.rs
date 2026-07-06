@@ -482,12 +482,20 @@ mod tests {
     use super::*;
 
     #[test]
-    fn tile_atlas_active_index_empty_after_greybox_freeze() {
+    fn tile_atlas_active_index_ships_production_not_lod0_pilot() {
         let reg = load_tile_atlas_registry();
         assert!(reg.load_errors.is_empty(), "{:?}", reg.load_errors);
         assert!(
-            reg.is_empty(),
-            "TILE-FIX-001: active index empty until atlas v2 ships"
+            reg.get("rowhouse_victorian_production_v1")
+                .is_some_and(|e| e.runtime_stamp_allowed()),
+            "TILE-FIX-002: production rowhouse atlas indexed for runtime stamp"
+        );
+        let pilot = reg
+            .get("rowhouse_victorian_pilot_v1")
+            .expect("pilot row indexed for tooling");
+        assert!(
+            !pilot.runtime_stamp_allowed(),
+            "lod0 pilot must not runtime-stamp"
         );
     }
 
@@ -566,11 +574,12 @@ mod tests {
     }
 
     #[test]
-    fn tile_atlas_for_assembly_none_until_v2_promoted() {
+    fn tile_atlas_for_assembly_resolves_production_v1() {
         let reg = load_tile_atlas_registry();
-        assert!(
-            reg.atlas_for_assembly("victorian_4x3_s42_a7cb").is_none(),
-            "greybox production v1 de-indexed"
-        );
+        let entry = reg
+            .atlas_for_assembly("victorian_4x3_s42_a7cb")
+            .expect("production v1 promoted for victorian assembly");
+        assert_eq!(entry.atlas_id, "rowhouse_victorian_production_v1");
+        assert!(entry.runtime_stamp_allowed());
     }
 }

@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_c6_bsn_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_c6_bsn_witness",
-    "written_at_epoch_secs": 1783114114
+    "written_at_epoch_secs": 1783371796
   },
   "asset_map": [
     "hedge→prop_fence",

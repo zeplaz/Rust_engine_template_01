@@ -11,6 +11,16 @@ mod smoke_visual_extract;
 
 mod vegetation_visual_extract;
 
+// RENDER-DIR-RESTRUCTURE-v1 — mechanical move: extract-side snapshots/metrics.
+pub mod sim_visual_extract;
+pub mod fire_view_extract;
+pub mod extracted_camera_metrics;
+pub mod ecology_visual_snapshot;
+pub mod logistics_visual_snapshot;
+pub mod visual_domain_snapshots;
+pub mod visual_snapshot_commit;
+pub mod domain_projection_frame;
+
 pub use vegetation_visual_extract::{
     build_vegetation_extract_frame, build_harness_topo_extract_frame,
     extract_glyph_deterministic, harness_topo_extract_witness_green,
@@ -43,7 +53,7 @@ pub use procedural_module_extract::{
     ProceduralModuleSceneCatalog, ProceduralModuleVisualPolicy,
 };
 pub use render_projection_graph::{
-    f2_tactical_fire_projection_fixture, fire_projection_stamp_aligned,
+    bin_merge_chunk_heat, f2_tactical_fire_projection_fixture, fire_projection_stamp_aligned,
     projection_graph_build_signature, projection_graph_runtime_order_snapshot,
     run_render_projection_graph, spatial_distribution_stats, FireProjectionNode, ProjectionNodeTrait,
     ProjectionGraphFrameCoherence, RenderProjectionContext, RenderProjectionGraph,

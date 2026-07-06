@@ -1,0 +1,25 @@
+{
+  "task_id": "BQ-K1-BAKE-001",
+  "gate": "BQ-K1-KITFILL-001",
+  "green": true,
+  "promoted_count": 11,
+  "index_count": 11,
+  "style_purity_gap_count": 0,
+  "charter_doc": "src/dev/design_bq_k1_kitfill_charter_v1.md",
+  "batch_rel": "tools/mcp/schemas/examples/bq_k1_kitfill_batch_v1.json",
+  "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-K1",
+  "_agent_meta": {
+    "schema": "bq_k1_bake_live_v1",
+    "profile": "BQ_K1_BAKE",
+    "relative_path": "debug_runs/bq_k1_bake_001_live.json",
+    "source_system": "bq_k1_kitfill",
+    "written_at_epoch_secs": 1783133240,
+    "ritual": "BLANG:WIT-HON BQ-K1-BAKE-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_k1_bake_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

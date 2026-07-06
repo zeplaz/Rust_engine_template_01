@@ -28,6 +28,7 @@ Consolidated **open** work after BQ-C4 · APSR-S1/S2 · BQ-H1/H2/H3 · APSR-Q1 �
 | ☑ | **CLN-P0-S8/P10** | @coder | spacial println! · EC-LOG frequency doc | `cln_p0_s8/p10_001_live.json` |
 | ☑ | **BQ-Q3** | @coder | Golden-seed regression (12 seeds) | `bq_q3_golden_001_live.json` |
 | ☑ | **CLN-P0-R4/R8/T4/T7/T6** | steward/operator | Phase 0 steward rows · `cln_p0_*_001_live.json` |
+| ☐ | **RGR-M1-001** | @coder | `render/api.rs` + mod.rs pub use collapse | `render_gui_refactor_queue.json` · stage5 lib |
 
 ---
 
@@ -67,7 +68,9 @@ Consolidated **open** work after BQ-C4 · APSR-S1/S2 · BQ-H1/H2/H3 · APSR-Q1 �
 
 ## Done (2026-07-03) — do not re-pick
 
-BQ-C4 · BQ-A1/A2 · BQ-F1/F2/F3 · BQ-C1/C2/C3 · APSR-S1/S2 · BQ-H1/H2 · BQ-K1/K2/K3 charters · MIG program close · CITY G0–G3
+**RGR Phase 0 (@coder_b CHAIN-B):** CB-MIG-001..003 · CB-CLN-001 · CB-BQ-001/002 · CB-CITY-001/002 · CB-RGR-001 · witness `chain_b_witness_live.json`
+
+BQ-C4 · BQ-A1/A2 · BQ-F1/F2/F3 · BQ-C1/C2/C3 · APSR-S1/S2 · BQ-H1/H2 · BQ-K1/K2/K3 charters · MIG program close · CITY G0–G3 · **RTT CHAIN-A lib** · `rtt_lane_witness_live.json`
 
 ---
 

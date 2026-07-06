@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_g1_c4_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g1_c4_001_seed_chain_witness",
-    "written_at_epoch_secs": 1783114441
+    "written_at_epoch_secs": 1783371797
   },
   "auto_001_contract": true,
   "chain_layers": {
@@ -73,11 +73,11 @@
   "issue": "CITY-C4",
   "registry_ok": true,
   "run_hashes": [
-    "0dd4ff52066ea6afb86a844b53e2dae3ab6f8929522989d48b43e3c1693fb933",
-    "0dd4ff52066ea6afb86a844b53e2dae3ab6f8929522989d48b43e3c1693fb933",
-    "0dd4ff52066ea6afb86a844b53e2dae3ab6f8929522989d48b43e3c1693fb933"
+    "9667f6452095ce591da4b121349d1c4f04036fa0b68e504bea2953a40474e0b4",
+    "9667f6452095ce591da4b121349d1c4f04036fa0b68e504bea2953a40474e0b4",
+    "9667f6452095ce591da4b121349d1c4f04036fa0b68e504bea2953a40474e0b4"
   ],
-  "stable_hash": "0dd4ff52066ea6afb86a844b53e2dae3ab6f8929522989d48b43e3c1693fb933",
+  "stable_hash": "9667f6452095ce591da4b121349d1c4f04036fa0b68e504bea2953a40474e0b4",
   "three_run_stable": true,
   "witness_context": {
     "archetype_id": "IndustrialWarehouse",

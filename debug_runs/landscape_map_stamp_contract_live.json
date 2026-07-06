@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/landscape_map_stamp_contract_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_landscape_map_stamp_contract_live_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371797
   },
   "atlas_domain": "landscape",
   "charter": "src/dev/plan_aps_veg_parity_engine_authority_v1.md",

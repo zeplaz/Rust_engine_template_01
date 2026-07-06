@@ -11,6 +11,51 @@ use super::frame_probe::sample_deep_debug_frame;
 use super::latch::{deep_debug_active, DeepDebugConfig};
 use super::subsystem_cache::DeepDebugSubsystemCache;
 
+#[derive(Resource, Default, Clone)]
+pub struct DeepDebugTacticalMapCache(pub Option<Value>);
+
+pub fn refresh_deep_debug_tactical_map_cache(
+    cfg: Res<DeepDebugConfig>,
+    mut cache: ResMut<DeepDebugTacticalMapCache>,
+    fill: Res<crate::gui::SimulationMapFillRect>,
+    sim_tex: Res<crate::gui::SimulationMapTexture>,
+    authority: Res<crate::render::TerrainRenderAuthority>,
+    raster_dirty: Res<crate::render::TileWorldFallbackRasterDirty>,
+    raster_ctrl: Res<crate::render::TileWorldFallbackRasterCtrl>,
+    fallback: Res<crate::render::TileWorldFallbackState>,
+    overlay: Res<crate::render::SharedOverlayFieldBuffers>,
+    fire_diag: Res<crate::render::FireExtractDiagnostics>,
+    tile_debug: Res<crate::gui::TileGpuDebugSettings>,
+    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
+    images: Res<Assets<Image>>,
+    chunks: Query<(), With<crate::terrain::generation::ChunkCellMatrix>>,
+) {
+    if !cfg.active {
+        cache.0 = None;
+        return;
+    }
+    let rtt_img = images.get(&sim_tex.0);
+    cache.0 = Some(json!({
+        "fill_valid": fill.valid,
+        "fill_logical": [fill.logical_size().x, fill.logical_size().y],
+        "rtt_extent": rtt_img.map(|i| json!([i.width(), i.height()])),
+        "terrain_authority": format!("{:?}", *authority),
+        "terrain_sprite": fallback.sprite_entity.is_some(),
+        "terrain_image": fallback.image != Handle::default(),
+        "raster_revision": raster_dirty.revision(),
+        "raster_applied_revision": raster_ctrl.last_applied_raster_revision(),
+        "chunk_grid_dirty": raster_ctrl.chunk_grid.has_dirty(),
+        "chunk_entities": chunks.iter().len(),
+        "overlay_fire_cells": overlay.chunk_fire_heat.len(),
+        "overlay_revision": overlay.revision,
+        "fire_extract_snapshot_unchanged": fire_diag.snapshot_unchanged,
+        "fire_extract_cadence_skipped": fire_diag.last.cadence_skipped,
+        "fire_extract_fingerprint_skipped": fire_diag.last.fingerprint_skipped,
+        "tile_debug_instanced": tile_debug.use_batched_mesh_overlay,
+        "test_scene": launch.as_ref().map(|l| format!("{:?}", l.test_scene)),
+    }));
+}
+
 pub const DEEP_DEBUG_WITNESS_REL: &str = "debug_runs/deep_debug/engine_deep_debug_live.json";
 const JSONL_REL: &str = "debug_runs/deep_debug/engine_deep_debug_frames.jsonl";
 
@@ -79,11 +124,13 @@ pub fn deep_debug_post_update(
     map_views: Res<crate::gui::MapViewInstances>,
     view_trace: Option<Res<crate::render::view_runtime::ViewRuntimeTrace>>,
     subsystem_cache: Res<DeepDebugSubsystemCache>,
+    tactical_cache: Res<DeepDebugTacticalMapCache>,
 ) {
     if !cfg.active {
         return;
     }
     let jsonl = cfg.jsonl_frames;
+    let tactical = tactical_cache.0.clone();
     if let Some(body) = sample_deep_debug_frame(
         frame.as_ref(),
         cfg.as_ref(),
@@ -100,6 +147,7 @@ pub fn deep_debug_post_update(
         map_views.as_ref(),
         view_trace.as_deref(),
         Some(subsystem_cache.as_ref()),
+        tactical,
     ) {
         write_live_witness(&body);
         if jsonl {

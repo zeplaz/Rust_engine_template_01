@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/infra_lane_close_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_infra_lane_close_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783183814
   },
   "gate": "INFRA-LANE-CLOSE-001",
   "stray_writer_audit_green": true,

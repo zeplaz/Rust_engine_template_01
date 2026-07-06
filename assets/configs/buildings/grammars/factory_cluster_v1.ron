@@ -19,6 +19,8 @@
             (id: "long_hall", weight: 30, width_depth_ratio: 1.85, footprint_mode: rect),
             (id: "yard_complex", weight: 20, footprint_mode: yard_interior),
             (id: "l_shape", weight: 10, footprint_mode: l_shape),
+            (id: "stepped_row", weight: 15, width_depth_ratio: 1.1, footprint_mode: rect),
+            (id: "t_loading", weight: 10, footprint_mode: t_shape),
         ],
     ),
     roof: (
@@ -26,6 +28,8 @@
         by_massing: [
             (massing_id: "double_hall", slot: "roof_industrial"),
             (massing_id: "yard_complex", slot: "roof_flat"),
+            (massing_id: "stepped_row", slot: "roof_industrial"),
+            (massing_id: "t_loading", slot: "roof_flat"),
         ],
     ),
     facade: (
@@ -33,6 +37,34 @@
         door_slot: "door_wide",
         wall_slot: "wall_1u",
         placement_tags: ["exterior", "industrial", "factory", "street_facing"],
+        by_massing: [
+            (
+                massing_id: "double_hall",
+                door_rhythm: "loading_bay",
+                placement_tags: ["loading_dock", "factory"],
+            ),
+            (
+                massing_id: "long_hall",
+                door_rhythm: "linear_center",
+                placement_tags: ["sawtooth", "factory_row"],
+            ),
+            (
+                massing_id: "stepped_row",
+                door_rhythm: "bay_alternating",
+                placement_tags: ["stepped_facade", "factory"],
+            ),
+            (
+                massing_id: "t_loading",
+                door_rhythm: "leg_offset",
+                door_slot: "door_wide",
+                placement_tags: ["loading_leg", "rail_adjacent"],
+            ),
+            (
+                massing_id: "yard_complex",
+                door_rhythm: "perimeter_only",
+                placement_tags: ["yard_perimeter"],
+            ),
+        ],
     ),
     detail: (
         prop_slot: "prop_clutter",
@@ -41,9 +73,9 @@
     ),
     age: (
         bands: [
-            (id: "new", weight: 30, variant_tags: ["clean"]),
-            (id: "weathered", weight: 50, variant_tags: ["clean", "weathered"]),
-            (id: "abandoned", weight: 20, variant_tags: ["abandoned", "damaged"]),
+            (id: "new", weight: 30, variant_tags: ["clean"], aps_mandate_tags: ["surface_clean"], condition_tags: ["new"]),
+            (id: "weathered", weight: 50, variant_tags: ["clean", "weathered"], aps_mandate_tags: ["surface_weathered", "edge_wear"], condition_tags: ["aged"]),
+            (id: "abandoned", weight: 20, variant_tags: ["abandoned", "damaged"], aps_mandate_tags: ["surface_abandoned", "vandalism", "surface_damaged", "structural_stress"], condition_tags: ["derelict", "damaged"]),
         ],
     ),
     district_styles: [

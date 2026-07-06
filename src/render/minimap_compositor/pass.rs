@@ -43,8 +43,6 @@ pub struct MinimapCompositorHeatSources<'w> {
     pub construction_channel: Option<Res<'w, ConstructionPhaseGpuChannel>>,
     pub replay: Option<Res<'w, crate::systems::sim_frame_delta::CommittedSimReplayRing>>,
     pub veg_extract: Option<Res<'w, crate::render::extraction::VegetationExtractFrame>>,
-    pub terrain_authority: Res<'w, crate::render::TerrainRenderAuthority>,
-    pub terrain_atlas: Res<'w, crate::render::TerrainMaterialAtlasGpu>,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -80,19 +78,23 @@ pub struct MinimapCompositorState {
     pub veg_burn_rows: u32,
     pub burn_overrides_topology: bool,
     pub veg_extract_revision: u64,
-    /// Witness: `gpu_atlas` | `cpu_fallback`.
+    /// Witness: `world_raster` | `none`.
     pub terrain_source_label: &'static str,
 }
 
-/// P0-E witness helper — terrain source label from terrain render authority.
+/// P0-E witness helper — terrain source label from the *actual* bound compositor input.
+///
+/// The label reports what texture really feeds the compositor, not `TerrainRenderAuthority`:
+/// a material-swatch atlas is never a valid world-texture input (see the terrain-selection
+/// comment in `run_minimap_compositor_pass`), so `TerrainRenderAuthority::GpuInstancedAtlas`
+/// does **not** imply a distinct "gpu" terrain source today. `world_bound` should be `true`
+/// iff the resolved terrain handle (world raster) is non-default.
 #[must_use]
-pub fn minimap_terrain_source_label(
-    authority: crate::render::TerrainRenderAuthority,
-) -> &'static str {
-    if authority.is_gpu() {
-        "gpu_atlas"
+pub fn minimap_terrain_source_label(world_bound: bool) -> &'static str {
+    if world_bound {
+        "world_raster"
     } else {
-        "cpu_fallback"
+        "none"
     }
 }
 
@@ -122,7 +124,7 @@ impl Default for MinimapCompositorState {
             veg_burn_rows: 0,
             burn_overrides_topology: false,
             veg_extract_revision: 0,
-            terrain_source_label: "cpu_fallback",
+            terrain_source_label: "none",
         }
     }
 }
@@ -320,7 +322,11 @@ pub fn run_minimap_compositor_pass(
     let now_secs = time.elapsed_secs_f64();
     diagnostics.refresh_budget_verdict(now_secs, visual_cadence.minimap_hz);
 
-    if !minimap_gpu_compositor_env_enabled() {
+    // RPC-0-001: consult the *runtime* predicate (env AND shader-health), not just env — otherwise
+    // a GPU shader compile failure degrades `MinimapShellState.presentation_source` to CPU raster
+    // (see `sync_minimap_presentation_source`) while this pass keeps stamping `composite_path` as
+    // `GpuCompute`, producing a lying witness. Same-frame flip to `CpuBridge` on shader failure.
+    if !minimap_gpu_compositor_runtime_enabled() {
         compositor.dual_minimap_present = false;
         compositor.composite_path = MinimapCompositePath::CpuBridge;
         dispatch.commit_stamp = 0;
@@ -345,24 +351,23 @@ pub fn run_minimap_compositor_pass(
     }
     *cadence = 0.0;
 
-    // GPU terrain: sample material atlas (not CPU fallback RGBA repaint).
-    let authority = heat_sources.terrain_authority.as_ref();
-    let atlas = heat_sources.terrain_atlas.as_ref();
-    let terrain = if authority.is_gpu() && atlas.image != Handle::default() {
-        atlas.image.clone()
-    } else {
-        match resolve_minimap_texture_source(&shell, &fallback, &registry) {
-            MapTextureSource::GpuRenderTarget(_) => {
-                if fallback.image != Handle::default() {
-                    fallback.image.clone()
-                } else if fallback.minimap_image != Handle::default() {
-                    fallback.minimap_image.clone()
-                } else {
-                    Handle::default()
-                }
+    // Terrain input: `TerrainMaterialAtlasGpu.image` is a material-swatch palette grid
+    // (src/render/core/terrain_material_atlas.rs), never a world-space texture — it must
+    // never feed the compositor regardless of `TerrainRenderAuthority`. The only real
+    // world-space terrain texture today is the CPU-rastered world image
+    // (`TileWorldFallbackState`, painted by tile_world_fallback.rs). A GPU world-terrain
+    // bake does not exist yet (deferred, see src/dev/plan_gpu_terrain_production_exec_001_v1.md, F2).
+    let terrain = match resolve_minimap_texture_source(&shell, &fallback, &registry) {
+        MapTextureSource::GpuRenderTarget(_) => {
+            if fallback.image != Handle::default() {
+                fallback.image.clone()
+            } else if fallback.minimap_image != Handle::default() {
+                fallback.minimap_image.clone()
+            } else {
+                Handle::default()
             }
-            MapTextureSource::SharedCpuRaster(handle) => handle,
         }
+        MapTextureSource::SharedCpuRaster(handle) => handle,
     };
     if terrain == Handle::default() {
         dispatch.commit_stamp = 0;
@@ -520,6 +525,7 @@ pub fn run_minimap_compositor_pass(
         return;
     }
 
+    let terrain_bound = terrain != Handle::default();
     compositor.stamp = compositor.stamp.wrapping_add(1);
     dispatch.terrain = terrain;
     dispatch.output = registry.committed_image.clone();
@@ -548,7 +554,7 @@ pub fn run_minimap_compositor_pass(
     }
 
     compositor.compositor_revision = registry.revision;
-    compositor.terrain_source_label = minimap_terrain_source_label(*authority);
+    compositor.terrain_source_label = minimap_terrain_source_label(terrain_bound);
     compositor.last_overlay_revision = overlay_revision;
     compositor.logistics_rows = logistics_rows;
     compositor.construction_rows = construction_rows;

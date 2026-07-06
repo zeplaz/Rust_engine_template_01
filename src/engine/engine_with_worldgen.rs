@@ -10,12 +10,11 @@ use crate::gui::{
     LogisticsTargetsPanelPlugin,
     hud::TransmissionShellPlugin,
     hud::HudDockShellPlugin,
-    MainWorldCamera, MapCameraPlugin, CameraFocusDebugPlugin, SplashPlugin, TileDebugRenderHost,
+    MapCameraPlugin, CameraFocusDebugPlugin, SplashPlugin,
     ViewAuthorityPlugin,
     ViewRepresentationPlugin, StrategicToolingPlugin,
     UiThemePlugin,
 };
-use crate::render::TerrainInstancedRenderHost;
 #[cfg(feature = "bevy_tilemap_adapter")]
 use crate::render::TilemapAdapterPlugin;
 use crate::systems::production::{
@@ -30,7 +29,6 @@ use crate::strategic::StrategicFieldPipeline;
 use crate::compute::ComputeDispatchPlugin;
 use crate::render::{
     Core2dOverlayOrderPlugin, FramePerfPlugin, GpuWeatherFireFieldPlugin, LocalLightPlugin,
-    RenderSchedulePerfPlugin,
     SharedOverlayFieldBuffersPlugin,
     StallWatchPlugin, Stage5ReadinessProfile, TerrainInstancedDrawPlugin,
     TerrainMaterialAtlasPlugin, TerrainRenderAuthorityPlugin, TileWorldFallbackPlugin,
@@ -52,7 +50,6 @@ use crate::gui::hud::SimViewSyncDebugPlugin;
 use crate::render::{DebugViewportOverlayPlugin, VisualDiagnosticsPlugin};
 use super::test_harness::{TestHarnessMenuPlugin, TestHarnessPlugin, TestHarnessStatePlugin};
 use super::DebugManeuverPlugin;
-use bevy::camera::{ImageRenderTarget, RenderTarget};
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
 use bevy::winit::WinitSettings;
@@ -64,32 +61,16 @@ fn spawn_primary_ui_camera(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
     palette: Res<crate::gui::UiPalette>,
+    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
 ) {
     let handle = crate::gui::insert_simulation_map_texture(
         images.as_mut(),
         &mut commands,
-        1920,
-        1080,
+        1280,
+        720,
     );
-    let rt = RenderTarget::Image(ImageRenderTarget {
-        handle: handle.clone(),
-        scale_factor: 1.0,
-    });
-    let mut camera = Camera {
-        order: 0,
-        ..default()
-    };
-    crate::gui::apply_simulation_map_camera_clear(&mut camera, palette.as_ref());
-    commands.spawn((
-        MainWorldCamera,
-        Camera2d,
-        rt,
-        crate::gui::simulation_map_rtt_render_layers(),
-        camera,
-        crate::gui::MapCameraDesired::default(),
-        TileDebugRenderHost,
-        TerrainInstancedRenderHost,
-    ));
+    let mode = crate::gui::rtt_diag_camera_mode(launch.as_deref());
+    crate::gui::spawn_main_world_rtt_camera(&mut commands, handle, palette.as_ref(), mode);
     crate::gui::spawn_simulation_hud_ui_camera(&mut commands, palette.as_ref());
 }
 
@@ -128,7 +109,7 @@ impl Plugin for EnginePlugin {
                     ..default()
                 }),
         )
-            .add_plugins(crate::render::MigAAdoptionPlugin)
+            .add_plugins(crate::dev::MigAAdoptionPlugin)
             // PERF-PLAY: keep simulation in continuous mode; reactive low-power mode can sleep
             // near 1s between frames and makes camera/minimap feel "broken" under active play.
             .insert_resource(WinitSettings::game())
@@ -168,7 +149,8 @@ impl Plugin for EnginePlugin {
             .add_plugins(AtmospherePlugin)
             .add_plugins(WeatherPlugin)
             .add_plugins(FramePerfPlugin)
-            .add_plugins(RenderSchedulePerfPlugin)
+            .add_plugins(crate::render::probes::rtt_sprite_trace::RttSpriteTracePlugin)
+            .add_plugins(crate::dev::diagnostics::DevDiagnosticsPlugin)
             .add_plugins(Core2dOverlayOrderPlugin)
             .add_plugins(GpuWeatherFireFieldPlugin)
             .add_plugins(crate::infrastructure::InfrastructureProfilesPlugin)
@@ -221,7 +203,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::StrategicIconInstancesPlugin)
             .add_plugins(ViewRepresentationPlugin)
             .add_plugins(StallWatchPlugin)
-            .add_plugins(crate::render::VisualReadinessWitnessPlugin)
+            .add_plugins(crate::dev::diagnostics::VisualReadinessWitnessPlugin)
             .add_plugins(crate::dev::TestRunInstrumentationPlugin)
             .add_plugins(crate::dev::SimSpectrumAnalyticsPlugin)
             .add_plugins(ComputeDispatchPlugin);
@@ -273,7 +255,6 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::hud::Stage7UiShellPlugin)
             .add_plugins(BuildPlanningPlugin)
             .add_plugins(crate::gui::AssemblySnapshotQcUiPlugin)
-            .add_plugins(crate::gui::VfxFireTestHighlightPlugin)
             .add_plugins(crate::gui::SettlementBlockFrameDebugPlugin)
             .add_plugins(LogisticsTargetsPanelPlugin)
             // World generation editor + runtime.

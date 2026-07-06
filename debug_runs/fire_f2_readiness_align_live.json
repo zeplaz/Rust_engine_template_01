@@ -58,17 +58,17 @@
     "relative_path": "debug_runs/fire_f2_readiness_align_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_fire_f2_readiness_align_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371798
   },
   "fire_f2_readiness_align_001": {
     "fire_inst_excluded_from_f1_green": true,
     "fire_inst_proxy": 0,
     "green": true,
     "heat_mostly_stable": true,
-    "max_heat": 0.04506590589880943,
-    "mean_fuel": 0.059996217489242554,
+    "max_heat": 0.045029036700725555,
+    "mean_fuel": 0.05999695509672165,
     "policy": "f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded",
-    "sim_mean_heat": 0.022495385259389877
+    "sim_mean_heat": 0.02249624952673912
   },
   "gate": "FIRE-F2-READINESS-ALIGN-001"
 }

@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 
-use crate::construction::map_egui_projection::{map_zoom_screen_scale, world_to_sim_map_egui};
+use crate::construction::map_egui_projection::map_zoom_screen_scale;
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::strategic::BuildSiteTile;
@@ -233,8 +233,16 @@ pub fn draw_construction_visual_requests_egui(
     authority: Option<Res<ViewProjectionAuthority>>,
     desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
+    ortho: Res<crate::gui::MainWorldCameraOrthoTrace>,
     params: Res<WorldGenParams>,
+    test_scene: Option<Res<crate::engine::test_harness::ActiveTestScene>>,
 ) -> Result {
+    if test_scene
+        .as_deref()
+        .is_some_and(|s| matches!(s.0, crate::engine::launch_args::TestScene::VfxSandbox | crate::engine::launch_args::TestScene::Fire))
+    {
+        return Ok(());
+    }
     if requests.paths.is_empty()
         && requests.zone_tiles.is_empty()
         && requests.control_points.is_empty()
@@ -249,6 +257,7 @@ pub fn draw_construction_visual_requests_egui(
         return Ok(());
     }
     let zoom = map_zoom_screen_scale(authority.as_deref(), desired.as_ref());
+    let ortho_ref = ortho.as_ref();
     let ctx = contexts.ctx_mut()?;
     let layer = egui::LayerId::new(
         egui::Order::Foreground,
@@ -256,22 +265,25 @@ pub fn draw_construction_visual_requests_egui(
     );
     let painter = ctx.layer_painter(layer);
 
-    let tile_px = crate::construction::map_egui_projection::tile_screen_extent(
+    let tile_px = crate::construction::map_egui_projection::tile_screen_extent_rendered(
+        Some(ortho_ref),
         authority.as_deref(),
         desired.as_ref(),
         map_vp.as_ref(),
         params.as_ref(),
     );
+    let world_to_screen = |world: Vec3| {
+        crate::construction::map_egui_projection::world_to_sim_map_egui_rendered(
+            world,
+            Some(ortho_ref),
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        )
+    };
     for z in &requests.zone_tiles {
-        if let Some(screen) =
-            world_to_sim_map_egui(
-                z.center,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        {
+        if let Some(screen) = world_to_screen(z.center) {
             let side = tile_px * 0.92;
             let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
             painter.rect_filled(rect, 1.0, z.color);
@@ -293,12 +305,8 @@ pub fn draw_construction_visual_requests_egui(
                     0.05,
                     stub.origin.z as f32 + dz as f32 + 0.5,
                 );
-                if let Some(screen) = world_to_sim_map_egui(
+                if let Some(screen) = world_to_screen(
                     world,
-                    authority.as_deref(),
-                    desired.as_ref(),
-                    map_vp.as_ref(),
-                    params.as_ref(),
                 ) {
                     let side = tile_px * 0.92;
                     let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
@@ -313,12 +321,8 @@ pub fn draw_construction_visual_requests_egui(
                     0.05,
                     stub.origin.z as f32 + edge as f32 + 0.5,
                 );
-                if let Some(screen) = world_to_sim_map_egui(
+                if let Some(screen) = world_to_screen(
                     world,
-                    authority.as_deref(),
-                    desired.as_ref(),
-                    map_vp.as_ref(),
-                    params.as_ref(),
                 ) {
                     let side = tile_px * 0.92;
                     let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
@@ -329,13 +333,7 @@ pub fn draw_construction_visual_requests_egui(
     }
 
     for label in &requests.site_zone_labels {
-        if let Some(screen) = world_to_sim_map_egui(
-            label.world,
-            authority.as_deref(),
-            desired.as_ref(),
-            map_vp.as_ref(),
-            params.as_ref(),
-        ) {
+        if let Some(screen) = world_to_screen(label.world) {
             painter.text(
                 screen,
                 egui::Align2::CENTER_CENTER,
@@ -349,39 +347,15 @@ pub fn draw_construction_visual_requests_egui(
     super::round4_corridor::draw_corridor_phase_paths(
         &painter,
         &requests.corridor_paths,
-        |world| {
-            world_to_sim_map_egui(
-                world,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        },
+        |world| world_to_screen(world),
         zoom,
     );
 
     for path in &requests.paths {
-        let Some(a) =
-            world_to_sim_map_egui(
-                path.start,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        else {
+        let Some(a) = world_to_screen(path.start) else {
             continue;
         };
-        let Some(b) =
-            world_to_sim_map_egui(
-                path.end,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        else {
+        let Some(b) = world_to_screen(path.end) else {
             continue;
         };
         let color = match (path.kind, path.valid, path.slope_ok, path.committed) {
@@ -398,15 +372,7 @@ pub fn draw_construction_visual_requests_egui(
     }
 
     for (p, color) in &requests.control_points {
-        if let Some(screen) =
-            world_to_sim_map_egui(
-                *p,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        {
+        if let Some(screen) = world_to_screen(*p) {
             let r = (5.0 * zoom.sqrt()).clamp(3.0, 14.0);
             painter.circle_filled(screen, r, *color);
         }
@@ -414,13 +380,7 @@ pub fn draw_construction_visual_requests_egui(
 
     for tile in &requests.footprint_tiles {
         let world = Vec3::new(tile.tile.x as f32 + 0.5, 0.0, tile.tile.y as f32 + 0.5);
-        let Some(screen) = world_to_sim_map_egui(
-            world,
-            authority.as_deref(),
-            desired.as_ref(),
-            map_vp.as_ref(),
-            params.as_ref(),
-        ) else {
+        let Some(screen) = world_to_screen(world) else {
             continue;
         };
         let base = match tile.color_kind {

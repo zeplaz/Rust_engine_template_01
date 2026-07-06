@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/fire_ecology_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "fire_ecology_live_proof",
-    "written_at_epoch_secs": 1783112623
+    "written_at_epoch_secs": 1783371800
   },
   "f1_green": false,
   "fire_f2_fuel_spread_001": {
@@ -96,7 +96,7 @@
     "max_heat": 0.0,
     "mean_fuel": 0.05999999865889549,
     "mean_heat": 0.0,
-    "mean_old_growth": 0.1999969631433487,
+    "mean_old_growth": 0.19999754428863525,
     "neighbor_spread_cells": 0,
     "proof_json": true,
     "ungated_spark_cells": 0

@@ -335,6 +335,7 @@ D5 | M | DV-TODO boards (~3.6k LOC) always compiled + STAGE5_PER_FRAME_HOOKS INF
 # EXECUTION ORDER (phased, each phase independently shippable)
 # ═════════════════════════════════════════════════════════════════════
 Phase 0 — zero-risk hygiene (1 session):     T6, R1, R4, R8, S8, T4, P10, T7
+Phase 0b — RTT viewport hygiene (parallel):  RTT-A1-* — **SHIPPED 2026-07-04** (witness `debug_runs/rtt_lane_witness_live.json`)
 Phase 1 — prod/debug separation (H):         D2, D3, D1, D4, D5   ← do before perf work so measurements are honest
 Phase 2 — correctness/authority (H):         R3 (route via debug-intelligence), R2, S2, S10, S6
 Phase 3 — perf passes (measured):            P1, P3, P5, P2, P4, P9, P7, P8, P6

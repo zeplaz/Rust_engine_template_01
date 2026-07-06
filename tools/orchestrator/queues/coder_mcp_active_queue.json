@@ -3,7 +3,7 @@
     "version": "1.0.0",
     "owner": "@coder-mcp",
     "updated": "2026-07-03",
-    "next_pick": "APSR-T3 spec consolidation (@designer) or BQ-H1 facade lane",
+    "next_pick": "BQ-Q2-SCREEN-001 (operator) or BQ-H1 facade (@coder)",
     "rule": "P2 parallel-safe with MIG · pipeline-only · do NOT re-pick closed APS presence/G4 rows",
     "regression": "cd tools/mcp/python && python -m pytest tests -q -k \"bq or aps or city\"",
     "plans": [
@@ -271,6 +271,14 @@
       "closed": "2026-07-03",
       "witness": "debug_runs/apsr_a4_q3_001_live.json",
       "note": "Golden-seed review panel; rubric rows JSON"
+    },
+    {
+      "id": "BQ-K1-BAKE-001",
+      "program": "PLAN-BUILDING-QUALITY-v1",
+      "issue": "BQ-K1",
+      "closed": "2026-07-03",
+      "witness": "debug_runs/bq_k1_bake_001_live.json",
+      "note": "11 kit-fill GLBs promoted; style_pack slots wired; style_purity_gap_count 0"
     }
   ],
   "active": [

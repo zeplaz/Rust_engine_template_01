@@ -15,7 +15,7 @@ pub struct GoldenSeedEntry {
     pub expected_hash: &'static str,
 }
 
-/// Operator-approved baseline (2026-07-03). Refresh via `bq_q3_golden_bootstrap_hashes` test when intentional.
+/// Operator-approved baseline (2026-07-03, BQ-K3 refresh 2026-07-04). Refresh via `bq_q3_golden_bootstrap_hashes` when intentional.
 pub const GOLDEN_SEED_SET_V1: &[GoldenSeedEntry] = &[
     GoldenSeedEntry {
         archetype_id: "IndustrialWarehouse",
@@ -45,49 +45,49 @@ pub const GOLDEN_SEED_SET_V1: &[GoldenSeedEntry] = &[
         archetype_id: "FactoryCluster",
         district_style: "manufacturing_row",
         seed: 35,
-        expected_hash: "46062d59c423463839e5f34d4f5e4009c9759bcabc6a4a9ce8b976db0e5ded11",
+        expected_hash: "b44a3d2b12c73271e293d0b27ab30246a3b4f31c8dc0a3f22014dc0c39f56d30",
     },
     GoldenSeedEntry {
         archetype_id: "FactoryCluster",
         district_style: "manufacturing_row",
         seed: 36,
-        expected_hash: "ee500d058422475ae2a3c172c37e1ff993cf0626737a599f2081e0a5aacc688a",
+        expected_hash: "363a3a6978549e14195052ae2b6e780fe3eee34723fbb850bf84cd8559bfbe08",
     },
     GoldenSeedEntry {
         archetype_id: "FactoryCluster",
         district_style: "manufacturing_row",
         seed: 37,
-        expected_hash: "22478b847a5505a560657ef51644b8a4a64c87b6832a8f54b643eea71a90a1e1",
+        expected_hash: "b9bab56562f4560f2520117634a7cfa457d76c7da51e494eba7b71f93349bd3c",
     },
     GoldenSeedEntry {
         archetype_id: "RailEdge",
         district_style: "rail_yard_corridor",
         seed: 42,
-        expected_hash: "f6aef61394775c267cedce830774d6e15ae069b588bca89f6d56a5310cf63cf0",
+        expected_hash: "5ec5e25e8fa682c80411c9bf1d742d5ffa672427fd23b9458ed89b5ffc359a15",
     },
     GoldenSeedEntry {
         archetype_id: "RailEdge",
         district_style: "rail_yard_corridor",
         seed: 43,
-        expected_hash: "ff4c2c49c3ad2715224499116b27109c73dfb823546c8a6f5ed62582d182892f",
+        expected_hash: "4036fc1c02d000535698d07ea8f72e9f8738e08f773c4375dc9073bfd0143a04",
     },
     GoldenSeedEntry {
         archetype_id: "CivicBlock",
         district_style: "main_street_civic",
         seed: 99,
-        expected_hash: "27baa743f456f8435d9bf77b5ebfc5337a1761b675095b9081d6b22f18b68ee7",
+        expected_hash: "439c5667ac50f0ad0213fde4c9cf697bc3883c508bed95f8c98d769fee898ae9",
     },
     GoldenSeedEntry {
         archetype_id: "CivicBlock",
         district_style: "main_street_civic",
         seed: 100,
-        expected_hash: "c308a92a81a2256017ba4ce1a9bd38e0b9b83b4465800b6889eab037667bde92",
+        expected_hash: "3aa9ff1f3258d11795c02e2ec41460a449f295392ff203dbf9a37705c785d2cd",
     },
     GoldenSeedEntry {
         archetype_id: "CivicBlock",
         district_style: "town_hall_row",
         seed: 101,
-        expected_hash: "c9213893df4abb6bf56e115386c25d4ed9bab3b4d1733c5c73411aaf132bc5e1",
+        expected_hash: "92e49be09a47d7fe6c510136928971363bd81ebff73fc23e71eac6c5dde696c8",
     },
 ];
 

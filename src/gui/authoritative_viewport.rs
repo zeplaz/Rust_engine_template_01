@@ -103,6 +103,7 @@ pub fn measure_sim_map_fill_viewport(
         min,
         max,
         window_logical,
+        ..Default::default()
     }
 }
 
@@ -183,6 +184,7 @@ mod tests {
             min: Vec2::ZERO,
             max: Vec2::new(1280.0, 720.0),
             window_logical: Vec2::new(1280.0, 720.0),
+            ..Default::default()
         };
         assert!(fill.is_adequate_for_camera());
     }

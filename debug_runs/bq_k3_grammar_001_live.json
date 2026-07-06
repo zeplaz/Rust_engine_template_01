@@ -1,35 +1,79 @@
 {
-  "gate": "BQ-K3-GRAMMAR-001",
-  "program": "PLAN-BUILDING-QUALITY-v1",
-  "charter_doc": "src/dev/design_bq_k3_grammar_enrichment_v1.md",
-  "manifest_rel": "tools/mcp/schemas/examples/bq_k3_grammar_enrichment_v1.json",
-  "grammar_patches": [
-    "civic_block_v1",
-    "factory_cluster_v1",
-    "rail_edge_v1"
-  ],
-  "checks": {
-    "charter_doc": true,
-    "manifest_on_disk": true,
-    "three_grammars": true,
-    "massing_additions": true,
-    "facade_by_massing": true,
-    "roof_by_massing": true,
-    "age_aps_map_four_bands": true,
-    "reference_pattern_exists": true
-  },
-  "green": true,
-  "verdict": "PASS",
-  "handoff": {
-    "coder": "merge grammar_patches into RON + BQ-H1 FacadeRule evaluator"
-  },
   "_agent_meta": {
-    "schema": "bq_k3_grammar_live_v1",
-    "written_at_epoch_secs": 1783118482,
-    "profile": "BQ_K3_GRAMMAR",
-    "source_system": "dmcp_bq_k_lane",
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "BQ-K3-GRAMMAR-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
     "relative_path": "debug_runs/bq_k3_grammar_001_live.json",
-    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-K3-GRAMMAR-001",
-    "agent": "designer-mcp"
-  }
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_bq_k3_grammar_witness",
+    "written_at_epoch_secs": 1783371798
+  },
+  "age_aps_tags_ok": true,
+  "charter": "src/dev/design_bq_k3_grammar_enrichment_v1.md",
+  "facade_by_massing_ok": true,
+  "footprint_modes_ok": true,
+  "gate": "BQ-K3-GRAMMAR-001",
+  "generate_propagation_ok": true,
+  "green": true,
+  "load_errors": [],
+  "manifest": "tools/mcp/schemas/examples/bq_k3_grammar_enrichment_v1.json",
+  "massing_strategies_ok": true,
+  "massing_strategy_counts": {
+    "civic_block_v1": 6,
+    "factory_cluster_v1": 6,
+    "rail_edge_v1": 6
+  },
+  "registry_load_ok": true
 }

@@ -16,8 +16,8 @@ use super::frame::WorldFireParticleFrame;
 use super::pack::{GpuParticleInstance, ParticleClass};
 use super::witness::{
     fire_spark_witness_phase, fire_spark_zoom_scatter_gate, FireSparkWitness,
-    FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_MIN_ZOOM_ALPHA, FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA,
-    FIRE_SPARK_SCATTER_MAX,
+    FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_MIN_PX_PER_TILE,
+    FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE, FIRE_SPARK_SCATTER_MAX,
 };
 
 /// Chunk slab size assumed when bootstrap rows lack matrix geometry (matches test harness).
@@ -37,10 +37,12 @@ pub fn is_tactical_fire_particle_view(id: crate::gui::ViewId) -> bool {
     )
 }
 
+/// FIRE-VIS-001: `px_per_tile` is the camera's raw scale (`ExtractedCameraMetrics::zoom_level`),
+/// not `zoom_alpha` — see [`FIRE_SPARK_MIN_PX_PER_TILE`].
 #[inline]
 #[must_use]
-pub fn fire_particle_scatter_count(heat: f32, zoom_alpha: f32, budget_pressure: f32) -> usize {
-    let zoom_gate = fire_spark_zoom_scatter_gate(zoom_alpha);
+pub fn fire_particle_scatter_count(heat: f32, px_per_tile: f32, budget_pressure: f32) -> usize {
+    let zoom_gate = fire_spark_zoom_scatter_gate(px_per_tile);
     if zoom_gate <= 0.0 {
         return 0;
     }
@@ -56,7 +58,7 @@ pub fn fire_particle_scatter_count(heat: f32, zoom_alpha: f32, budget_pressure: 
         0
     };
     let mut slots = ((base as f32) * zoom_gate).ceil() as usize;
-    if zoom_alpha >= FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA * 0.75 && heat >= 0.12 {
+    if px_per_tile >= FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE * 0.75 && heat >= 0.12 {
         slots = slots.max(2);
     }
     slots = slots.min(FIRE_SPARK_SCATTER_MAX);
@@ -95,11 +97,12 @@ fn fire_lod_band_for_instance_row(row: &FireVisualGpuInstance, chunk_lod: Option
 }
 
 /// Shapes a projected GPU row for particle emission from authoritative [`FireLodBand`].
+/// FIRE-VIS-001: `px_per_tile` is the camera's raw scale, not `zoom_alpha`.
 #[must_use]
 fn shape_fire_row_for_particle_lod(
     mut row: FireVisualGpuInstance,
     band: FireLodBand,
-    zoom_alpha: f32,
+    px_per_tile: f32,
 ) -> Option<(FireVisualGpuInstance, ParticleClass)> {
     match band {
         FireLodBand::None => None,
@@ -114,7 +117,7 @@ fn shape_fire_row_for_particle_lod(
             row.chunk_xy_heat_lum.z *= 0.62;
             row.chunk_xy_heat_lum.w *= 0.82;
             row.smoke_ember_vis_priority.y *= 0.68;
-            let class = if zoom_alpha >= FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA * 0.75 {
+            let class = if px_per_tile >= FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE * 0.75 {
                 ParticleClass::Spark
             } else {
                 ParticleClass::Ember
@@ -137,18 +140,18 @@ pub fn emit_world_fire_particles_from_projection(
     mut frame: ResMut<WorldFireParticleFrame>,
     mut last_trace: Local<u64>,
 ) {
-    if coherence.as_deref().is_some_and(|c| c.evaluate_skipped) {
+    let evaluate_skipped = coherence.as_deref().is_some_and(|c| c.evaluate_skipped);
+    if evaluate_skipped {
         frame.snapshot_stamp = graph.fire.snapshot_stamp;
-        frame.anim_time_secs = time.elapsed_secs();
-        return;
+    } else {
+        update_world_fire_particles_from_projection(
+            graph.as_ref(),
+            frame.as_mut(),
+            Some(chunk_lod.as_ref()),
+            *cam,
+            view_manager.as_deref(),
+        );
     }
-    update_world_fire_particles_from_projection(
-        graph.as_ref(),
-        frame.as_mut(),
-        Some(chunk_lod.as_ref()),
-        *cam,
-        view_manager.as_deref(),
-    );
     if frame.instances.is_empty() && graph.fire.instance_buffer.is_empty() {
         if let Some(overlay) = overlay.as_ref() {
             if !overlay.chunk_fire_heat.is_empty() {
@@ -212,7 +215,10 @@ pub fn update_world_fire_particles_from_projection(
     let mut scatter_slots = 0usize;
     let mut budget_capped = false;
 
-    if !tactical || capacity == 0 || cam.zoom_alpha < FIRE_SPARK_MIN_ZOOM_ALPHA {
+    // FIRE-VIS-001: cull gate keyed on px-per-tile (camera raw scale), not zoom_alpha — see
+    // FIRE_SPARK_MIN_PX_PER_TILE. zoom_level == scale_x == px-per-world-unit == px-per-tile.
+    let px_per_tile = cam.zoom_level;
+    if !tactical || capacity == 0 || px_per_tile < FIRE_SPARK_MIN_PX_PER_TILE {
         frame.spark_witness = FireSparkWitness {
             phase: fire_spark_witness_phase(),
             rows: 0,
@@ -221,7 +227,7 @@ pub fn update_world_fire_particles_from_projection(
             zoom_alpha: cam.zoom_alpha,
             additive_blend: true,
             budget_capped: false,
-            view_culled: !tactical || cam.zoom_alpha < FIRE_SPARK_MIN_ZOOM_ALPHA,
+            view_culled: !tactical || px_per_tile < FIRE_SPARK_MIN_PX_PER_TILE,
             projection_view: projection_label,
         };
         return;
@@ -231,7 +237,7 @@ pub fn update_world_fire_particles_from_projection(
         .reserve(graph.fire.instance_buffer.len().min(capacity));
     for row in &graph.fire.instance_buffer {
         let band = fire_lod_band_for_instance_row(row, chunk_lod);
-        let Some((shaped, class)) = shape_fire_row_for_particle_lod(*row, band, cam.zoom_alpha) else {
+        let Some((shaped, class)) = shape_fire_row_for_particle_lod(*row, band, px_per_tile) else {
             continue;
         };
         if shaped.heat() < FIRE_VISUAL_ACTIVE_HEAT_EPS && shaped.smoke_ember_vis_priority.y < 0.02 {
@@ -247,7 +253,7 @@ pub fn update_world_fire_particles_from_projection(
         frame
             .instances
             .push(GpuParticleInstance::from_fire_visual(&shaped, class, cam));
-        let scatter_n = fire_particle_scatter_count(heat, cam.zoom_alpha, budget_pressure);
+        let scatter_n = fire_particle_scatter_count(heat, px_per_tile, budget_pressure);
         scatter_slots = scatter_slots.saturating_add(scatter_n);
         for slot in 0u32..scatter_n as u32 {
             if frame.instances.len() >= capacity {
@@ -295,7 +301,7 @@ pub fn update_world_fire_particles_from_projection(
             row.world_xyz_radius = Vec4::new(center.x, center.y, 0.0, 28.0);
             row.smoke_ember_vis_priority = Vec4::new(0.12, 0.55, 0.0, 1.0);
             if let Some((shaped, class)) =
-                shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame, cam.zoom_alpha)
+                shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame, px_per_tile)
             {
                 frame.instances.push(GpuParticleInstance::from_fire_visual(
                     &shaped,
@@ -333,7 +339,9 @@ pub fn seed_world_fire_particles_from_overlay_heat(
     frame: &mut WorldFireParticleFrame,
     cam: ExtractedCameraMetrics,
 ) {
-    if cam.zoom_alpha < FIRE_SPARK_MIN_ZOOM_ALPHA {
+    // FIRE-VIS-001: cull gate keyed on px-per-tile (camera raw scale), not zoom_alpha.
+    let px_per_tile = cam.zoom_level;
+    if px_per_tile < FIRE_SPARK_MIN_PX_PER_TILE {
         frame.instances.clear();
         frame.spark_witness = FireSparkWitness {
             phase: fire_spark_witness_phase(),
@@ -360,14 +368,14 @@ pub fn seed_world_fire_particles_from_overlay_heat(
         row.world_xyz_radius = Vec4::new(center.x, center.y, 0.0, 28.0);
         row.smoke_ember_vis_priority = Vec4::new(0.12, 0.55, 0.0, 1.0);
         let Some((shaped, class)) =
-            shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame, cam.zoom_alpha)
+            shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame, px_per_tile)
         else {
             continue;
         };
         frame
             .instances
             .push(GpuParticleInstance::from_fire_visual(&shaped, class, cam));
-        let scatter_n = fire_particle_scatter_count(heat, cam.zoom_alpha, 0.0);
+        let scatter_n = fire_particle_scatter_count(heat, px_per_tile, 0.0);
         scatter_slots = scatter_slots.saturating_add(scatter_n);
         for slot in 0..scatter_n as u32 {
             let offset = fire_particle_scatter_offset(shaped.chunk_grid_xy(), heat, slot);
@@ -395,6 +403,7 @@ pub fn seed_world_fire_particles_from_overlay_heat(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::render::fire_vfx::witness::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE;
     use crate::render::gpu_buffer_registry::{BufferId, FIRE_PARTICLE_INSTANCES_BUFFER};
     use crate::gui::{
         build_representation_inputs, build_representation_result, resolution_for_band,
@@ -467,13 +476,13 @@ mod tests {
         assert!(graph.fire.instance_buffer.len() <= 8);
 
         let mut particles = WorldFireParticleFrame::default();
-        update_world_fire_particles_from_projection(
-            &graph,
-            &mut particles,
-            None,
-            ExtractedCameraMetrics::default(),
-            None,
-        );
+        // FIRE-VIS-001: default cam zoom_level (1.0 px/tile) is below FIRE_SPARK_MIN_PX_PER_TILE —
+        // use an operational-play px-per-tile so this test exercises LOD thinning, not the cull gate.
+        let cam = ExtractedCameraMetrics {
+            zoom_level: FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE,
+            ..Default::default()
+        };
+        update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
         assert!(
             !particles.instances.is_empty(),
             "macro band should still route some particle rows when fire projection is non-empty"
@@ -517,13 +526,14 @@ mod tests {
         graph.fire.gpu_instance_capacity = lod.resolution.fire_instance_cap;
 
         let mut particles = WorldFireParticleFrame::default();
+        // FIRE-VIS-001: zoom_level (px-per-tile) drives the cull/scatter gate now, not zoom_alpha.
         let cam = ExtractedCameraMetrics {
-            zoom_level: 1.0,
+            zoom_level: 2.8,
             zoom_alpha: 0.72,
             ..Default::default()
         };
         update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
-        let scatter = 1 + fire_particle_scatter_count(0.8, cam.zoom_alpha, 0.0);
+        let scatter = 1 + fire_particle_scatter_count(0.8, cam.zoom_level, 0.0);
         assert_eq!(particles.instances.len(), scatter);
         assert_eq!(particles.snapshot_stamp, 7);
         assert_eq!(
@@ -541,8 +551,10 @@ mod tests {
             heat: 0.9,
             smoke: 0.0,
         });
+        // FIRE-VIS-001: zoom_level must clear FIRE_SPARK_MIN_PX_PER_TILE or the cull gate returns
+        // early with projection_view="WorldMain" before the chunk-heat fallback logic runs.
         let cam = ExtractedCameraMetrics {
-            zoom_level: 1.0,
+            zoom_level: 2.8,
             zoom_alpha: 0.72,
             ..Default::default()
         };
@@ -619,13 +631,13 @@ mod tests {
         graph.fire.gpu_instance_capacity = 3;
 
         let mut particles = WorldFireParticleFrame::default();
-        update_world_fire_particles_from_projection(
-            &graph,
-            &mut particles,
-            None,
-            ExtractedCameraMetrics::default(),
-            None,
-        );
+        // FIRE-VIS-001: default cam zoom_level (1.0) is below FIRE_SPARK_MIN_PX_PER_TILE — use an
+        // operational-play px-per-tile so this test exercises the GPU capacity ceiling, not the cull gate.
+        let cam = ExtractedCameraMetrics {
+            zoom_level: FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE,
+            ..Default::default()
+        };
+        update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
         assert_eq!(particles.instances.len(), 3);
         assert_eq!(particles.gpu_capacity, 3);
     }
@@ -637,7 +649,7 @@ mod tests {
         graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.9, 0.5)];
         let mut particles = WorldFireParticleFrame::default();
         let cam = ExtractedCameraMetrics {
-            zoom_level: 1.0,
+            zoom_level: 2.8,
             zoom_alpha: 0.72,
             ..Default::default()
         };
@@ -648,7 +660,7 @@ mod tests {
         );
         assert_eq!(
             particles.instances.len(),
-            1 + fire_particle_scatter_count(0.9, cam.zoom_alpha, 0.0)
+            1 + fire_particle_scatter_count(0.9, cam.zoom_level, 0.0)
         );
     }
 
@@ -695,16 +707,22 @@ mod tests {
             .insert(IVec2::ZERO, FireLodBand::SmokeOnly);
 
         let mut particles = WorldFireParticleFrame::default();
+        // FIRE-VIS-001: default cam zoom_level (1.0) is below FIRE_SPARK_MIN_PX_PER_TILE — use an
+        // operational-play px-per-tile so this test exercises SmokeOnly LOD routing, not the cull gate.
+        let cam = ExtractedCameraMetrics {
+            zoom_level: 2.8,
+            ..Default::default()
+        };
         update_world_fire_particles_from_projection(
             &graph,
             &mut particles,
             Some(&chunk_lod),
-            ExtractedCameraMetrics::default(),
+            cam,
             None,
         );
         assert_eq!(
             particles.instances.len(),
-            1 + fire_particle_scatter_count(0.95 * 0.15, 0.72, 0.0)
+            1 + fire_particle_scatter_count(0.95 * 0.15, cam.zoom_level, 0.0)
         );
         assert!(
             (particles.instances[0].ember_class_radius_smoke.y - ParticleClass::AtmosphereFx.as_f32()).abs()
@@ -725,13 +743,13 @@ mod tests {
             .insert(IVec2::new(5, 2), FireLodBand::None);
 
         let mut particles = WorldFireParticleFrame::default();
-        update_world_fire_particles_from_projection(
-            &graph,
-            &mut particles,
-            Some(&chunk_lod),
-            ExtractedCameraMetrics::default(),
-            None,
-        );
+        // FIRE-VIS-001: keep zoom_level clear of the cull gate so this test proves the LOD `None`
+        // routing (not the separate px-per-tile cull, covered by strategic_zoom_culls_fire_spark_rows).
+        let cam = ExtractedCameraMetrics {
+            zoom_level: 2.8,
+            ..Default::default()
+        };
+        update_world_fire_particles_from_projection(&graph, &mut particles, Some(&chunk_lod), cam, None);
         assert!(
             particles.instances.is_empty(),
             "None band should suppress GPU particle emission for that chunk"
@@ -745,12 +763,14 @@ mod tests {
 
     #[test]
     fn hot_cell_scatter_count_at_least_three() {
-        assert!(fire_particle_scatter_count(0.8, 0.72, 0.0) >= 3);
+        // FIRE-VIS-001: second arg is px-per-tile (tactical zoom, well above FIRE_SPARK_MIN_PX_PER_TILE).
+        assert!(fire_particle_scatter_count(0.8, 2.8, 0.0) >= 3);
     }
 
     #[test]
     fn strategic_zoom_zeroes_scatter() {
-        assert_eq!(fire_particle_scatter_count(0.95, 0.05, 0.0), 0);
+        // FIRE-VIS-001: px-per-tile below FIRE_SPARK_MIN_PX_PER_TILE (1.5) — far strategic zoom.
+        assert_eq!(fire_particle_scatter_count(0.95, 0.5, 0.0), 0);
     }
 
     #[test]
@@ -785,12 +805,14 @@ mod tests {
             .insert(IVec2::new(1, 1), FireLodBand::LowFlame);
 
         let mut particles = WorldFireParticleFrame::default();
+        // FIRE-VIS-001: px-per-tile just above the hard-cull floor but below the operational-play
+        // spark threshold — should still clear the cull gate and route Ember (not Spark).
         update_world_fire_particles_from_projection(
             &graph,
             &mut particles,
             Some(&chunk_lod),
             ExtractedCameraMetrics {
-                zoom_level: 0.2,
+                zoom_level: 1.6,
                 zoom_alpha: 0.18,
                 ..Default::default()
             },
@@ -819,8 +841,8 @@ mod tests {
             &mut particles,
             Some(&chunk_lod),
             ExtractedCameraMetrics {
-                zoom_level: 1.0,
-                zoom_alpha: FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA,
+                zoom_level: FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE,
+                zoom_alpha: 0.42,
                 ..Default::default()
             },
             None,
@@ -833,8 +855,8 @@ mod tests {
 
     #[test]
     fn budget_pressure_halves_scatter_slots() {
-        let full = fire_particle_scatter_count(0.8, 0.72, 0.0);
-        let pressured = fire_particle_scatter_count(0.8, 0.72, FIRE_SPARK_BUDGET_PRESSURE);
+        let full = fire_particle_scatter_count(0.8, 2.8, 0.0);
+        let pressured = fire_particle_scatter_count(0.8, 2.8, FIRE_SPARK_BUDGET_PRESSURE);
         assert!(pressured <= full);
         assert!(pressured >= 1);
         assert_eq!(pressured, full / 2);
@@ -847,8 +869,10 @@ mod tests {
         graph.fire.gpu_instance_capacity = 256;
         graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.5)];
         let mut particles = WorldFireParticleFrame::default();
+        // FIRE-VIS-001: zoom_level (px-per-tile) drives the cull/scatter gate; zoom_alpha stays on
+        // the proof-lock axis consumed by fire_spark_011_green's witness threshold check.
         let cam = ExtractedCameraMetrics {
-            zoom_level: 1.0,
+            zoom_level: FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
             zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
             ..Default::default()
         };
@@ -867,15 +891,15 @@ mod tests {
         graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.4)];
         let mut particles = WorldFireParticleFrame::default();
         let cam = ExtractedCameraMetrics {
-            zoom_level: 1.0,
-            zoom_alpha: FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA,
+            zoom_level: FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE,
+            zoom_alpha: 0.42,
             ..Default::default()
         };
         update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
         assert!(
             particles.spark_witness.rows > 0,
-            "expected fire spark rows > 0 at operational zoom_alpha={}, got {}",
-            FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA,
+            "expected fire spark rows > 0 at operational px_per_tile={}, got {}",
+            FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE,
             particles.spark_witness.rows
         );
     }
@@ -887,14 +911,14 @@ mod tests {
         graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.4)];
         let mut particles = WorldFireParticleFrame::default();
         let cam = ExtractedCameraMetrics {
-            zoom_level: 1.0,
+            zoom_level: 2.8,
             zoom_alpha: 0.8,
             ..Default::default()
         };
         update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
         assert!(
             particles.spark_witness.rows > 0,
-            "expected fire spark rows > 0 at tactical zoom_alpha=0.8, got {}",
+            "expected fire spark rows > 0 at tactical px_per_tile=2.8, got {}",
             particles.spark_witness.rows
         );
         assert!((particles.spark_witness.zoom_alpha - 0.8).abs() < 1e-4);
@@ -924,7 +948,7 @@ mod tests {
         graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.4)];
         let mut particles = WorldFireParticleFrame::default();
         let cam = ExtractedCameraMetrics {
-            zoom_level: 1.0,
+            zoom_level: 2.8,
             zoom_alpha: 0.72,
             ..Default::default()
         };
@@ -962,7 +986,7 @@ mod tests {
         graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.4)];
         let mut particles = WorldFireParticleFrame::default();
         let cam = ExtractedCameraMetrics {
-            zoom_level: 1.2,
+            zoom_level: 2.1,
             zoom_alpha: 0.66,
             ..Default::default()
         };

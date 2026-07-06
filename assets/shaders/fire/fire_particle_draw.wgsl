@@ -1,6 +1,7 @@
 // World-anchored fire pinpoint sparks (Phase A — FX-FIRE-SPARK-001).
 // Expanded quads from `fire_particle.wgsl`; sharp ≤2px read, legacy age/twinkle mix.
 
+// View globals — `view_proj` from ExtractedCameraMetrics (RTT-B5); no MainWorldCamera query in raster sync.
 struct Globals {
     view_proj: mat4x4<f32>,
     vertex_count: u32,

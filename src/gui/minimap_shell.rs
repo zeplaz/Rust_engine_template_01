@@ -217,7 +217,8 @@ impl Default for MinimapShellState {
             pending_camera_focus_zoom: None,
             diagnostic_ui_wrote_camera: false,
             diagnostic_camera_drove_ui: false,
-            show_tactical_viewport_frame: false,
+            // MINIMAP-BOX-001: restored true — regressed to false as a stray one-liner in 39c21c45 ("bevy 0,19!").
+            show_tactical_viewport_frame: true,
             topology_legend_expanded: false,
             topology_legend_user_toggled: false,
         }

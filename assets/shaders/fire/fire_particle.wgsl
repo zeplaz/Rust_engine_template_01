@@ -47,14 +47,12 @@ fn expand_instances(@builtin(global_invocation_id) gid: vec3<u32>) {
     let class_id = row.ember_class_radius_smoke.y;
     let base_half = row.ember_class_radius_smoke.z;
     let smoke = row.ember_class_radius_smoke.w;
-    let za = clamp(params.zoom_alpha, 0.0, 1.0);
     var world = row.world_xyz_heat.xyz;
     if params.spark_sim_enabled > 0.5 {
         world = spark_state[i].pos.xyz;
     }
-    var half = base_half * (0.82 + heat * 0.18);
-    half = half * (0.32 + za * 0.68);
-    half = clamp(half, 0.015, 1.5);
+    var half = base_half * (0.88 + heat * 0.14);
+    half = clamp(half, 0.08, 64.0);
     if class_id > 0.5 {
         half = half * 0.72;
     }

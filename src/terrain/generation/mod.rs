@@ -38,7 +38,7 @@ pub use world_generator::*;
 pub use bevy_terrain_gen::*;
 pub use world_gen_diagnostics::WorldGenLastDebugReport;
 pub use world_gen_dense_cache::{
-    hydrate_chunk_matrices_from_dense_terrain, WorldGenDenseTerrainCache,
+    hydrate_chunk_matrices_from_dense_terrain, DenseTerrainHydrationGate, WorldGenDenseTerrainCache,
 };
 pub use world_generator_enhanced::*;
 pub use world_generation_plugin::*;

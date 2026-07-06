@@ -1,37 +1,13 @@
 {
-  "timestamp_unix_ms": 1783095281399,
+  "timestamp_unix_ms": 1783141497369,
   "frame_index": 88,
   "sim_step_stamp": {
     "tick": 89,
-    "sim_time_micros": 6311876
+    "sim_time_micros": 5072522
   },
   "camera_truth": [
     {
-      "entity": 8589934340,
-      "camera_type": "world_preview_gpu",
-      "priority": 2,
-      "active": true,
-      "projection": "orthographic",
-      "viewport_logical": {
-        "min_x": 0.0,
-        "min_y": 0.0,
-        "max_x": 1212.0,
-        "max_y": 594.0,
-        "width": 1212.0,
-        "height": 594.0
-      },
-      "viewport_physical": {
-        "min_x": 0.0,
-        "min_y": 0.0,
-        "max_x": 1212.0,
-        "max_y": 594.0,
-        "width": 1212.0,
-        "height": 594.0
-      },
-      "render_target": "image:AssetId<bevy_image::image::Image>{ index: 13, generation: 1}"
-    },
-    {
-      "entity": 4294967256,
+      "entity": 4294966218,
       "camera_type": "main_world",
       "priority": 0,
       "active": true,
@@ -52,10 +28,34 @@
         "width": 1280.0,
         "height": 720.0
       },
-      "render_target": "image:AssetId<bevy_image::image::Image>{ index: 157, generation: 0}"
+      "render_target": "image:AssetId<bevy_image::image::Image>{ index: 204, generation: 0}"
     },
     {
-      "entity": 4294967255,
+      "entity": 4294965930,
+      "camera_type": "world_preview_gpu",
+      "priority": 2,
+      "active": true,
+      "projection": "orthographic",
+      "viewport_logical": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "max_x": 320.0,
+        "max_y": 320.0,
+        "width": 320.0,
+        "height": 320.0
+      },
+      "viewport_physical": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "max_x": 320.0,
+        "max_y": 320.0,
+        "width": 320.0,
+        "height": 320.0
+      },
+      "render_target": "image:AssetId<bevy_image::image::Image>{ index: 185, generation: 0}"
+    },
+    {
+      "entity": 4294966217,
       "camera_type": "other",
       "priority": 1,
       "active": true,
@@ -81,13 +81,21 @@
   ],
   "viewport_ui_layout_truth": {
     "egui": {
+      "world_preview_viewport": {
+        "min_x": 736.28125,
+        "min_y": 361.4375,
+        "max_x": 1056.2812,
+        "max_y": 681.4375,
+        "width": 320.0,
+        "height": 320.0
+      },
       "world_preview_window": {
         "min_x": 16.28125,
         "min_y": 16.28125,
-        "max_x": 2004.2812,
-        "max_y": 701.28125,
-        "width": 1988.0,
-        "height": 685.0
+        "max_x": 1063.2812,
+        "max_y": 688.4375,
+        "width": 1047.0,
+        "height": 672.15625
       },
       "minimap_window": {
         "min_x": 1008.0,
@@ -105,14 +113,6 @@
         "width": 1280.0,
         "height": 720.0
       },
-      "world_preview_viewport": {
-        "min_x": 785.0625,
-        "min_y": 79.96875,
-        "max_x": 1997.2812,
-        "max_y": 674.28125,
-        "width": 1212.2188,
-        "height": 594.3125
-      },
       "minimap_image": {
         "min_x": 1014.0,
         "min_y": 106.0,
@@ -123,7 +123,15 @@
       }
     },
     "computed_viewport_per_camera": {
-      "4294967256": {
+      "4294965930": {
+        "min_x": 0.0,
+        "min_y": 0.0,
+        "max_x": 320.0,
+        "max_y": 320.0,
+        "width": 320.0,
+        "height": 320.0
+      },
+      "4294966218": {
         "min_x": 0.0,
         "min_y": 0.0,
         "max_x": 1280.0,
@@ -131,15 +139,7 @@
         "width": 1280.0,
         "height": 720.0
       },
-      "8589934340": {
-        "min_x": 0.0,
-        "min_y": 0.0,
-        "max_x": 1212.0,
-        "max_y": 594.0,
-        "width": 1212.0,
-        "height": 594.0
-      },
-      "4294967255": {
+      "4294966217": {
         "min_x": 0.0,
         "min_y": 0.0,
         "max_x": 1280.0,
@@ -149,7 +149,7 @@
       }
     },
     "egui_vs_gpu_viewport_mismatch": {
-      "8589934340": false
+      "4294965930": false
     }
   },
   "world_screen_projection_state": {
@@ -158,7 +158,7 @@
       "y": 160.0
     },
     "camera_rotation_deg_z": 0.0,
-    "camera_zoom_scale": 0.8333333,
+    "camera_zoom_scale": 1.0,
     "visible_world_bounds": {
       "min_x": -480.0,
       "min_y": -200.0,
@@ -168,12 +168,12 @@
       "height": 720.0
     },
     "map_display_rect": {
-      "min_x": 1117.7881,
-      "min_y": 103.74124,
-      "max_x": 1664.5557,
-      "max_y": 650.5088,
-      "width": 546.7676,
-      "height": 546.7676
+      "min_x": 749.08124,
+      "min_y": 374.2375,
+      "max_x": 1043.4812,
+      "max_y": 668.63745,
+      "width": 294.39996,
+      "height": 294.39996
     },
     "map_texture_uv_rect": {
       "min_x": 0.0,
@@ -184,17 +184,17 @@
       "height": 1.0
     },
     "world_origin_screen": {
-      "x": 506.66663,
-      "y": 493.33334
+      "x": 480.0,
+      "y": 520.0
     },
     "world_origin_screen_sanity_ok": true
   },
   "particle_system_audit": [
     {
       "source": "fire_visual_frame_tactical",
-      "active_count": 0,
+      "active_count": 28,
       "coordinate_space": "world",
-      "camera_binding": 4294967256,
+      "camera_binding": 4294966218,
       "inside_main_frustum": null,
       "outside_main_frustum": null,
       "bounds_world": null,
@@ -203,9 +203,9 @@
     },
     {
       "source": "sim_fire_emitter_extract",
-      "active_count": 0,
+      "active_count": 28,
       "coordinate_space": "world",
-      "camera_binding": 4294967256,
+      "camera_binding": 4294966218,
       "inside_main_frustum": null,
       "outside_main_frustum": null,
       "bounds_world": null,
@@ -216,7 +216,7 @@
       "source": "world_fire_particle_frame",
       "active_count": 0,
       "coordinate_space": "world",
-      "camera_binding": 4294967256,
+      "camera_binding": 4294966218,
       "inside_main_frustum": 0,
       "outside_main_frustum": 0,
       "bounds_world": null,
@@ -227,7 +227,7 @@
       "source": "weather_precip_particles",
       "active_count": 192,
       "coordinate_space": "screen_hybrid",
-      "camera_binding": 4294967256,
+      "camera_binding": 4294966218,
       "inside_main_frustum": null,
       "outside_main_frustum": null,
       "bounds_world": null,
@@ -240,8 +240,8 @@
       "pass": "world_main_pass",
       "active": true,
       "gpu_path": true,
-      "cpu_path": true,
-      "fallback_active": true,
+      "cpu_path": false,
+      "fallback_active": false,
       "notes": "MainWorldCamera + tile fallback sprite"
     },
     {
@@ -258,7 +258,7 @@
       "gpu_path": true,
       "cpu_path": false,
       "fallback_active": false,
-      "notes": "source=GpuRenderTarget presentation=SharedRenderTargetImage rev=11 composite_rev=2 rt_bound=true"
+      "notes": "source=GpuRenderTarget presentation=SharedRenderTargetImage rev=14 composite_rev=2 rt_bound=true"
     }
   ],
   "texture_gpu_state": [
@@ -272,9 +272,9 @@
     },
     {
       "name": "world_preview_gpu_target",
-      "width": 1212,
-      "height": 594,
-      "revision": 89,
+      "width": 320,
+      "height": 320,
+      "revision": 5,
       "last_update_frame": 88,
       "stale": false
     },
@@ -282,7 +282,7 @@
       "name": "minimap_fallback_raster",
       "width": 320,
       "height": 320,
-      "revision": 11,
+      "revision": 14,
       "last_update_frame": 88,
       "stale": true
     },
@@ -298,7 +298,7 @@
       "name": "shared_overlay_fields",
       "width": 0,
       "height": 0,
-      "revision": 2,
+      "revision": 48,
       "last_update_frame": 88,
       "stale": false
     }
@@ -309,7 +309,7 @@
         "x": 160.0,
         "y": 160.0
       },
-      "scale": 0.8333333,
+      "scale": 1.0,
       "rotation_deg_z": 0.0
     },
     "map_camera_desired_changed_this_frame": false,
