@@ -7,8 +7,9 @@ use bevy::prelude::*;
 use bevy_egui::egui;
 
 use crate::gui::{
-    sim_map_cursor_world_xy, sim_map_world_vec3_to_egui, view_camera_state_from_map_camera_desired,
-    MapCameraDesired, SimulationMapViewport, ViewCameraState,
+    sim_map_screen_to_world_xy, sim_map_world_vec3_to_egui, sim_map_world_xy_to_egui_with_ortho,
+    view_camera_state_from_map_camera_desired, MainWorldCameraOrthoTrace, MapCameraDesired,
+    SimulationMapViewport, ViewCameraState,
 };
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewSurfaceId};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -60,15 +61,54 @@ impl<'a> ConstructionMapProjection<'a> {
         )
     }
 
+    /// Prefer [`MainWorldCameraOrthoTrace`] — matches RTT stretch + tactical map camera.
+    #[must_use]
+    pub fn world_to_egui_with_ortho(
+        &self,
+        world: Vec3,
+        ortho: &MainWorldCameraOrthoTrace,
+    ) -> Option<egui::Pos2> {
+        sim_map_world_xy_to_egui_with_ortho(
+            Vec2::new(world.x, world.z),
+            self.map_vp,
+            ortho,
+        )
+    }
+
+    #[must_use]
+    pub fn world_to_egui_rendered(
+        &self,
+        world: Vec3,
+        ortho: Option<&MainWorldCameraOrthoTrace>,
+    ) -> Option<egui::Pos2> {
+        if let Some(ortho) = ortho.filter(|o| o.fixed_width > 0.0 && o.fixed_height > 0.0) {
+            return self.world_to_egui_with_ortho(world, ortho);
+        }
+        self.world_to_egui(world)
+    }
+
     #[must_use]
     pub fn cursor_world_xy(&self, cursor_logical: Vec2) -> Option<Vec2> {
         let compat = self.map_camera_compat();
-        sim_map_cursor_world_xy(
+        sim_map_screen_to_world_xy(
             cursor_logical,
             &compat,
             self.map_vp,
             self.world_w,
             self.world_h,
+        )
+    }
+
+    #[must_use]
+    pub fn cursor_world_xy_with_ortho(
+        &self,
+        cursor_logical: Vec2,
+        ortho: &crate::gui::MainWorldCameraOrthoTrace,
+    ) -> Option<Vec2> {
+        crate::gui::sim_map_screen_to_world_xy_with_ortho(
+            cursor_logical,
+            self.map_vp,
+            ortho,
         )
     }
 
@@ -81,9 +121,12 @@ impl<'a> ConstructionMapProjection<'a> {
         window: &Window,
         ortho: Option<&crate::gui::MainWorldCameraOrthoTrace>,
     ) -> Option<Vec2> {
-        let _xf = xf;
+        let _ = (camera, xf, window);
+        if let Some(ortho) = ortho {
+            return self.cursor_world_xy_with_ortho(cursor_logical, ortho);
+        }
         if let Some(frame) =
-            crate::gui::sim_map_projection_frame(camera, self.map_vp, window, ortho)
+            crate::gui::sim_map_projection_frame(camera, self.map_vp, window, None)
         {
             let pose = crate::gui::MapCameraPresentationPose {
                 translation: self.map_camera_compat().translation,
@@ -142,6 +185,19 @@ pub fn world_to_sim_map_egui(
 }
 
 #[must_use]
+pub fn world_to_sim_map_egui_rendered(
+    world: Vec3,
+    ortho: Option<&MainWorldCameraOrthoTrace>,
+    authority: Option<&ViewProjectionAuthority>,
+    desired: &MapCameraDesired,
+    map_vp: &SimulationMapViewport,
+    params: &WorldGenParams,
+) -> Option<egui::Pos2> {
+    ConstructionMapProjection::resolve(authority, desired, map_vp, params)
+        .world_to_egui_rendered(world, ortho)
+}
+
+#[must_use]
 pub fn map_zoom_screen_scale(
     authority: Option<&ViewProjectionAuthority>,
     desired: &MapCameraDesired,
@@ -157,13 +213,23 @@ pub fn tile_screen_extent(
     map_vp: &SimulationMapViewport,
     params: &WorldGenParams,
 ) -> f32 {
+    tile_screen_extent_rendered(None, authority, desired, map_vp, params)
+}
+
+#[must_use]
+pub fn tile_screen_extent_rendered(
+    ortho: Option<&MainWorldCameraOrthoTrace>,
+    authority: Option<&ViewProjectionAuthority>,
+    desired: &MapCameraDesired,
+    map_vp: &SimulationMapViewport,
+    params: &WorldGenParams,
+) -> f32 {
     let proj = ConstructionMapProjection::resolve(authority, desired, map_vp, params);
-    let zoom = proj.zoom_screen_scale();
-    let a = proj.world_to_egui(Vec3::new(0.5, 0.0, 0.5));
-    let b = proj.world_to_egui(Vec3::new(1.5, 0.0, 0.5));
+    let a = proj.world_to_egui_rendered(Vec3::new(0.5, 0.0, 0.5), ortho);
+    let b = proj.world_to_egui_rendered(Vec3::new(1.5, 0.0, 0.5), ortho);
     match (a, b) {
-        (Some(p0), Some(p1)) => (p1 - p0).length().max(4.0 * zoom),
-        _ => 24.0 * zoom,
+        (Some(p0), Some(p1)) => (p1 - p0).length().max(4.0 * proj.zoom_screen_scale()),
+        _ => 24.0 * proj.zoom_screen_scale(),
     }
 }
 
@@ -178,6 +244,7 @@ pub fn egui_footprint_hotfix_a_witness_green() -> bool {
         min: Vec2::new(80.0, 60.0),
         max: Vec2::new(880.0, 540.0),
         window_logical: Vec2::new(960.0, 600.0),
+        ..Default::default()
     };
     let params = WorldGenParams::default();
     let desired = MapCameraDesired {
@@ -245,6 +312,7 @@ mod tests {
             min: Vec2::new(80.0, 60.0),
             max: Vec2::new(880.0, 540.0),
             window_logical: Vec2::new(960.0, 600.0),
+            ..Default::default()
         };
         let params = WorldGenParams::default();
         let world = Vec3::new(64.5, 0.0, 64.5);

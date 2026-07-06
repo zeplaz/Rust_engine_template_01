@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_g3_rollout_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g3_rollout_witness",
-    "written_at_epoch_secs": 1783114114
+    "written_at_epoch_secs": 1783371797
   },
   "city_g1_c3_still_green": true,
   "gate": "CITY-G3-ROLLOUT-001",

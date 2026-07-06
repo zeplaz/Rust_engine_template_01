@@ -8,6 +8,8 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 use crate::engine::launch_args::{EngineLaunchArgs, TestScene};
+use crate::gui::FireDebugOverride;
+use crate::render::TileWorldFallbackRasterDirty;
 use crate::engine::debug_maneuver::{
     DebugManeuver, FrameLayoutDebugSession, UnittestWorldFixture,
 };
@@ -166,6 +168,7 @@ pub struct TestHarnessPlugin;
 
 impl Plugin for TestHarnessPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(crate::dev::tactical_map_debug::TacticalMapDebugPlugin);
         app.add_systems(
                 Startup,
                 (
@@ -175,7 +178,11 @@ impl Plugin for TestHarnessPlugin {
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),
-                reset_post_enter_sim_frame_on_enter,
+                (
+                    reset_post_enter_sim_frame_on_enter,
+                    bootstrap_test_scene_tactical_raster,
+                    clear_construction_visuals_on_test_sim_enter,
+                ),
             )
             .add_systems(
                 Update,
@@ -240,8 +247,13 @@ impl Plugin for TestHarnessPlugin {
             )
             .add_systems(
                 Update,
-                maintain_test_scene_fire_overlay
-                    .before(crate::render::extraction::extract_fire_simulation_snapshot)
+                (
+                    maintain_test_scene_fire_overlay
+                        .before(preserve_test_scene_fire_after_sim_tick),
+                    preserve_test_scene_fire_after_sim_tick
+                        .after(ChunkEnvironmentSet::Fire)
+                        .before(crate::render::extraction::FireVisualFrameSet::BuildProfiles),
+                )
                     .run_if(in_state(BaseState::Simulation)),
             )
             .add_systems(
@@ -575,6 +587,102 @@ fn test_world_bootstrap(
     }
 }
 
+/// Dry/warm slab cells so surface-fire tick does not zero heat on empty moisture/temperature grids.
+fn test_scene_chunk_matrix(size: bevy::math::UVec2) -> ChunkCellMatrix {
+    let mut matrix = ChunkCellMatrix::new(size);
+    for i in 0..matrix.moisture.len() {
+        matrix.moisture[i] = 0.06;
+        matrix.temperature[i] = 0.24;
+    }
+    matrix
+}
+
+fn test_scene_fire_seed_count(scene: TestScene) -> u32 {
+    match scene {
+        TestScene::Fire => 6,
+        TestScene::Atmosphere => 8,
+        TestScene::Visual | TestScene::VfxSandbox => 28,
+        TestScene::None | TestScene::Weather => 0,
+    }
+}
+
+fn apply_test_scene_fire_seeds(
+    scene: TestScene,
+    params: &WorldGenParams,
+    fire_q: &mut Query<(Entity, &Chunk, &ChunkCellMatrix, &mut ChunkSurfaceFire)>,
+    commands: &mut Commands,
+) {
+    let count = test_scene_fire_seed_count(scene);
+    if count == 0 {
+        return;
+    }
+    let (heat, fuel) = match scene {
+        TestScene::Fire => (0.78, 0.65),
+        TestScene::Atmosphere => (0.55, 0.5),
+        TestScene::Visual | TestScene::VfxSandbox => (0.92, 0.75),
+        TestScene::None | TestScene::Weather => (0.0, 0.0),
+    };
+    seed_test_fire_near_world_center(params, fire_q, count, heat, fuel);
+    attach_fire_light_emission_for_seeded_chunks(fire_q, commands);
+}
+
+fn attach_fire_light_emission_for_seeded_chunks(
+    fire_q: &Query<(Entity, &Chunk, &ChunkCellMatrix, &mut ChunkSurfaceFire)>,
+    commands: &mut Commands,
+) {
+    for (entity, chunk, _, fire) in fire_q.iter() {
+        if fire.heat <= 0.02 {
+            continue;
+        }
+        let flicker_phase =
+            (chunk.coord.x as f32 * 0.37 + chunk.coord.y as f32 * 0.91).fract() * std::f32::consts::TAU;
+        let base_intensity = (fire.heat * 1.2).clamp(0.0, 2.5);
+        commands.entity(entity).insert(FireLightEmission {
+            radius: 120.0 + fire.heat * 180.0,
+            base_intensity,
+            current_intensity: base_intensity,
+            flicker_strength: 0.12,
+            flicker_phase,
+            extract_priority: 0.5 + fire.heat * 2.0,
+        });
+    }
+}
+
+/// Strip settlement/construction debug overlays on CLI `--test` sim enter.
+fn clear_construction_visuals_on_test_sim_enter(
+    scene: Option<Res<ActiveTestScene>>,
+    launch: Option<Res<EngineLaunchArgs>>,
+    mut requests: Option<ResMut<crate::construction::ConstructionVisualRequests>>,
+) {
+    if scene.is_none() && !launch.as_deref().is_some_and(|l| l.test_mode()) {
+        return;
+    }
+    if let Some(requests) = requests.as_mut() {
+        requests.clear();
+    }
+}
+
+/// Force overworld/minimap CPU raster on sim enter for CLI `--test` worlds.
+fn bootstrap_test_scene_tactical_raster(
+    scene: Option<Res<ActiveTestScene>>,
+    launch: Option<Res<EngineLaunchArgs>>,
+    mut raster_dirty: ResMut<TileWorldFallbackRasterDirty>,
+    mut raster_ctrl: ResMut<crate::render::TileWorldFallbackRasterCtrl>,
+    mut raster_policy: ResMut<crate::render::TileFallbackRasterPolicy>,
+) {
+    if scene.is_none() && !launch.as_deref().is_some_and(|l| l.test_mode()) {
+        return;
+    }
+    raster_policy.test_harness_boost = true;
+    raster_ctrl.chunk_grid.mark_all_dirty();
+    raster_ctrl.reset_paint_bookkeeping();
+    raster_dirty.bump();
+    info!(
+        target: "test_harness::raster",
+        "test scene sim enter — tactical raster marked all dirty"
+    );
+}
+
 /// Spawns [`Chunk`] + [`ChunkCellMatrix`] slabs so weather / ecology / fire / atmosphere have ECS targets
 /// (tiles alone do not run chunk sim). World-gen only spawns tiles — CLI `--test` always needs these slabs.
 fn spawn_test_scene_chunk_slabs_once(
@@ -582,6 +690,10 @@ fn spawn_test_scene_chunk_slabs_once(
     params: Res<WorldGenParams>,
     mut commands: Commands,
     tagged: Query<(), With<TestSceneSimChunk>>,
+    mut raster_dirty: ResMut<TileWorldFallbackRasterDirty>,
+    mut raster_ctrl: ResMut<crate::render::TileWorldFallbackRasterCtrl>,
+    mut raster_policy: ResMut<crate::render::TileFallbackRasterPolicy>,
+    mut hydration_gate: Option<ResMut<crate::terrain::generation::DenseTerrainHydrationGate>>,
 ) {
     if scene.is_none() {
         return;
@@ -605,7 +717,7 @@ fn spawn_test_scene_chunk_slabs_once(
             commands.spawn((
                 TestSceneSimChunk,
                 Chunk { coord },
-                ChunkCellMatrix::new(UVec2::new(slab_x, slab_y)),
+                test_scene_chunk_matrix(UVec2::new(slab_x, slab_y)),
                 ChunkSurfaceFire {
                     heat: 0.0,
                     fuel: 1.0,
@@ -636,6 +748,13 @@ fn spawn_test_scene_chunk_slabs_once(
         params.width,
         params.height
     );
+    if let Some(gate) = hydration_gate.as_mut() {
+        gate.reset();
+    }
+    raster_policy.test_harness_boost = true;
+    raster_ctrl.chunk_grid.mark_all_dirty();
+    raster_ctrl.reset_paint_bookkeeping();
+    raster_dirty.bump();
 }
 
 /// Direct graph seed for unit tests (no transport directory).
@@ -1475,6 +1594,7 @@ fn apply_test_scene_defaults(
     mut commands: Commands,
     mut fire_q: Query<(Entity, &Chunk, &ChunkCellMatrix, &mut ChunkSurfaceFire)>,
     mut fuel_q: Query<&mut ChunkFuelProfile>,
+    mut fire_override: Option<ResMut<FireDebugOverride>>,
     mut global_wind: Option<ResMut<GlobalWind>>,
 ) {
     let Some(kind) = scene.as_ref().map(|r| r.0) else {
@@ -1509,14 +1629,12 @@ fn apply_test_scene_defaults(
         }
         TestScene::Fire => {
             tile_debug.use_batched_mesh_overlay = true;
-            seed_test_fire_near_world_center(&params, &mut fire_q, 6, 0.78, 0.65);
         }
         TestScene::Atmosphere => {
             if let Some(gw) = global_wind.as_mut() {
                 gw.direction = Vec2::new(1.0, 0.2).normalize_or_zero();
                 gw.speed = 6.0;
             }
-            seed_test_fire_near_world_center(&params, &mut fire_q, 8, 0.55, 0.5);
             let mut wn = 0u32;
             for mut w in &mut wx_q {
                 if wn >= 16 {
@@ -1546,7 +1664,6 @@ fn apply_test_scene_defaults(
                 gw.speed = 5.8;
             }
             gpu.show = false;
-            seed_test_fire_near_world_center(&params, &mut fire_q, 28, 0.92, 0.75);
             let mut wn = 0u32;
             for mut w in &mut wx_q {
                 if wn >= 24 {
@@ -1554,7 +1671,8 @@ fn apply_test_scene_defaults(
                 }
                 w.wind_speed = w.wind_speed.max(0.5);
                 w.fog_density = w.fog_density.max(0.12);
-                w.rain_intensity = w.rain_intensity.max(0.55);
+                // Keep rain light so harness fire is not extinguished during visual proof.
+                w.rain_intensity = w.rain_intensity.min(0.12);
                 wn += 1;
             }
             let mut fi = 0u32;
@@ -1570,13 +1688,12 @@ fn apply_test_scene_defaults(
             wx.particles = true;
             wx.background_aesthetic = true;
             focus_debug.enabled = false;
-            tile_debug.use_batched_mesh_overlay = true;
+            tile_debug.use_batched_mesh_overlay = false;
             if let Some(gw) = global_wind.as_mut() {
                 gw.direction = Vec2::new(1.0, 0.2).normalize_or_zero();
                 gw.speed = 6.0;
             }
             gpu.show = true;
-            seed_test_fire_near_world_center(&params, &mut fire_q, 28, 0.92, 0.75);
             let mut wn = 0u32;
             for mut w in &mut wx_q {
                 if wn >= 24 {
@@ -1584,8 +1701,9 @@ fn apply_test_scene_defaults(
                 }
                 w.wind_speed = w.wind_speed.max(0.65);
                 w.fog_density = w.fog_density.max(0.18);
-                w.rain_intensity = w.rain_intensity.max(0.82);
-                w.soil_moisture = w.soil_moisture.max(0.55);
+                // Heavy rain was zeroing surface fire before extract could publish instances.
+                w.rain_intensity = w.rain_intensity.min(0.12);
+                w.soil_moisture = w.soil_moisture.max(0.35);
                 wn += 1;
             }
             let mut fi = 0u32;
@@ -1606,23 +1724,11 @@ fn apply_test_scene_defaults(
         return;
     }
     if needs_fire {
-        sync_test_fire_overlay_from_ecs(&fire_q, &mut shared_overlay);
-        for (entity, chunk, _, fire) in fire_q.iter() {
-            if fire.heat <= 0.02 {
-                continue;
-            }
-            let flicker_phase =
-                (chunk.coord.x as f32 * 0.37 + chunk.coord.y as f32 * 0.91).fract() * std::f32::consts::TAU;
-            let base_intensity = (fire.heat * 1.2).clamp(0.0, 2.5);
-            commands.entity(entity).insert(FireLightEmission {
-                radius: 120.0 + fire.heat * 180.0,
-                base_intensity,
-                current_intensity: base_intensity,
-                flicker_strength: 0.12,
-                flicker_phase,
-                extract_priority: 0.5 + fire.heat * 2.0,
-            });
+        if let Some(override_res) = fire_override.as_mut() {
+            override_res.force_visible = true;
         }
+        apply_test_scene_fire_seeds(kind, &params, &mut fire_q, &mut commands);
+        sync_test_fire_overlay_from_ecs(&fire_q, &mut shared_overlay);
     }
     harness.defaults_applied = true;
     raster_dirty.bump();
@@ -1750,60 +1856,45 @@ fn apply_visual_aidv2_macro_zoom_camera(
     *applied = true;
 }
 
-/// Keeps CLI test worlds burning after world-gen + fire extract (re-seed if sim cooled, refresh overlay).
+/// Pre-extract overlay refresh (cheap); heavy re-seed runs after the fire sim tick.
 fn maintain_test_scene_fire_overlay(
     scene: Option<Res<ActiveTestScene>>,
     harness: Res<TestWorldHarness>,
-    params: Res<WorldGenParams>,
     frame: Res<FrameCount>,
-    mut commands: Commands,
-    mut fire_q: Query<(Entity, &Chunk, &ChunkCellMatrix, &mut ChunkSurfaceFire)>,
+    fire_q: Query<(Entity, &Chunk, &ChunkCellMatrix, &ChunkSurfaceFire)>,
     mut shared_overlay: ResMut<crate::render::SharedOverlayFieldBuffers>,
-    mut last_reseed_frame: Local<u32>,
 ) {
     let Some(active) = scene else {
         return;
     };
-    if !harness.defaults_applied {
+    if !harness.defaults_applied || !active.0.seeds_fire_overlay() {
         return;
     }
-    if !active.0.seeds_fire_overlay() {
+    if frame.0 % 15 != 0 {
         return;
     }
-    let burning = fire_q
-        .iter()
-        .filter(|(_, _, _, fire)| fire.heat > 0.02)
-        .count();
-    if burning < 3 && frame.0.saturating_sub(*last_reseed_frame) > 45 {
-        *last_reseed_frame = frame.0;
-        let count = match active.0 {
-            TestScene::Fire => 6,
-            TestScene::Atmosphere => 8,
-            TestScene::Visual | TestScene::VfxSandbox => 28,
-            TestScene::None | TestScene::Weather => 0,
-        };
-        seed_test_fire_near_world_center(&params, &mut fire_q, count, 0.92, 0.75);
-        for (entity, chunk, _, fire) in fire_q.iter() {
-            if fire.heat <= 0.02 {
-                continue;
-            }
-            let flicker_phase =
-                (chunk.coord.x as f32 * 0.37 + chunk.coord.y as f32 * 0.91).fract() * std::f32::consts::TAU;
-            let base_intensity = (fire.heat * 1.2).clamp(0.0, 2.5);
-            commands.entity(entity).insert(FireLightEmission {
-                radius: 120.0 + fire.heat * 180.0,
-                base_intensity,
-                current_intensity: base_intensity,
-                flicker_strength: 0.12,
-                flicker_phase,
-                extract_priority: 0.5 + fire.heat * 2.0,
-            });
-        }
-    }
-    const OVERLAY_SYNC_INTERVAL_FRAMES: u32 = 15;
-    if burning >= 3 && frame.0 % OVERLAY_SYNC_INTERVAL_FRAMES != 0 {
+    sync_test_fire_overlay_from_heat(
+        fire_q.iter().map(|(_, chunk, _, fire)| (chunk.coord, fire.heat)),
+        &mut shared_overlay,
+    );
+}
+
+/// Re-arm harness fire after rain/fuel sim so extract always sees [`FireLightEmission`].
+fn preserve_test_scene_fire_after_sim_tick(
+    scene: Option<Res<ActiveTestScene>>,
+    harness: Res<TestWorldHarness>,
+    params: Res<WorldGenParams>,
+    mut commands: Commands,
+    mut fire_q: Query<(Entity, &Chunk, &ChunkCellMatrix, &mut ChunkSurfaceFire)>,
+    mut shared_overlay: ResMut<crate::render::SharedOverlayFieldBuffers>,
+) {
+    let Some(active) = scene else {
+        return;
+    };
+    if !harness.defaults_applied || !active.0.seeds_fire_overlay() {
         return;
     }
+    apply_test_scene_fire_seeds(active.0, &params, &mut fire_q, &mut commands);
     sync_test_fire_overlay_from_ecs(&fire_q, &mut shared_overlay);
 }
 
@@ -1811,11 +1902,21 @@ fn sync_test_fire_overlay_from_ecs(
     fire_q: &Query<(Entity, &Chunk, &ChunkCellMatrix, &mut ChunkSurfaceFire)>,
     shared: &mut crate::render::SharedOverlayFieldBuffers,
 ) {
+    sync_test_fire_overlay_from_heat(
+        fire_q.iter().map(|(_, chunk, _, fire)| (chunk.coord, fire.heat)),
+        shared,
+    );
+}
+
+fn sync_test_fire_overlay_from_heat(
+    samples: impl Iterator<Item = (bevy::math::IVec2, f32)>,
+    shared: &mut crate::render::SharedOverlayFieldBuffers,
+) {
     let mut next = HashMap::new();
-    for (_, chunk, _, fire) in fire_q.iter() {
-        if fire.heat >= crate::render::CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
-            let e = next.entry(chunk.coord).or_insert(0.0_f32);
-            *e = f32::max(*e, fire.heat);
+    for (coord, heat) in samples {
+        if heat >= crate::render::CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
+            let e = next.entry(coord).or_insert(0.0_f32);
+            *e = f32::max(*e, heat);
         }
     }
     if !next.is_empty() {

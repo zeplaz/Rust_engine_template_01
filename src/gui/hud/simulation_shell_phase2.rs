@@ -905,6 +905,11 @@ impl Plugin for SimulationShellPhase2Plugin {
             )
             .add_systems(
                 bevy_egui::EguiPrimaryContextPass,
+                super::simulation_pointer_gate::draw_simulation_unified_cursor_egui_system
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                bevy_egui::EguiPrimaryContextPass,
                 (
                     super::simulation_pointer_gate::finalize_simulation_map_pointer_gate_egui_system,
                     sync_minimap_chrome_root_system,

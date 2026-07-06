@@ -99,16 +99,13 @@ fn fire_particle_quad_base_half_world(
     class: ParticleClass,
 ) -> f32 {
     let h = heat.clamp(0.0, 1.0);
-    let _influence_cap =
-        influence_light_radius_world.mul_add(0.004, h * h * 0.35).clamp(0.04, 1.2);
-    let z = camera_zoom.max(0.06);
-    let za = zoom_alpha.clamp(0.0, 1.0);
-    let screen_half_spark = (0.5 + za * 1.5) * (0.38 + h * 0.62);
-    let screen_half = match class {
-        ParticleClass::Spark => screen_half_spark,
-        ParticleClass::Ember => (screen_half_spark * 2.8).clamp(1.0, 6.0),
-        ParticleClass::AtmosphereFx => screen_half_spark * 0.72,
-    };
-    let world_half = (screen_half / z).clamp(0.015, 1.5);
-    world_half.max(0.015)
+    let _ = (camera_zoom, zoom_alpha);
+    // World-locked half-edge — scales with tactical zoom like chunk footprints (not screen-stabilized).
+    let chunk_span = influence_light_radius_world.max(8.0);
+    let base = chunk_span * 0.045 + h * h * 0.22;
+    match class {
+        ParticleClass::Spark => base.clamp(0.35, chunk_span * 0.55),
+        ParticleClass::Ember => (base * 1.85).clamp(0.6, chunk_span * 0.85),
+        ParticleClass::AtmosphereFx => (base * 0.72).clamp(0.25, chunk_span * 0.45),
+    }
 }

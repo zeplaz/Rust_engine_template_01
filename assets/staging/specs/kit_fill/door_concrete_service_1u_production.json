@@ -9,7 +9,7 @@
     "style_military"
   ],
   "development_tier": "production",
-  "pbr_status": "planned",
+  "pbr_status": "shipped",
   "material_profile": "concrete_pad_01",
   "material_family": "concrete",
   "module": {

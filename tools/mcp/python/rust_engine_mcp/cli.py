@@ -1246,6 +1246,27 @@ def _cmd_dmcp_city_palette_variation_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_bq_k1_bake_wire(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import bq_k1_kitfill
+
+    body = bq_k1_kitfill.run_k1_bake_wire(
+        register=not args.no_register,
+        try_rebake=not args.no_rebake,
+    )
+    if args.witness:
+        body["witness"] = bq_k1_kitfill.write_bq_k1_bake_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_k1_bake_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import bq_k1_kitfill
+
+    body = bq_k1_kitfill.write_bq_k1_bake_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_dmcp_bq_k1_kitfill_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k1_kitfill_witness
 
@@ -2032,6 +2053,12 @@ def main(argv: list[str] | None = None) -> int:
         func=_cmd_dmcp_city_palette_variation_witness
     )
     sub.add_parser("dmcp-bq-k1-kitfill-witness").set_defaults(func=_cmd_dmcp_bq_k1_kitfill_witness)
+    p_k1 = sub.add_parser("bq-k1-bake-wire")
+    p_k1.add_argument("--no-register", action="store_true")
+    p_k1.add_argument("--no-rebake", action="store_true")
+    p_k1.add_argument("--witness", action="store_true")
+    p_k1.set_defaults(func=_cmd_bq_k1_bake_wire)
+    sub.add_parser("bq-k1-bake-witness").set_defaults(func=_cmd_bq_k1_bake_witness)
     sub.add_parser("dmcp-bq-k2-coverage-witness").set_defaults(func=_cmd_dmcp_bq_k2_coverage_witness)
     sub.add_parser("dmcp-bq-k3-grammar-witness").set_defaults(func=_cmd_dmcp_bq_k3_grammar_witness)
     sub.add_parser("dmcp-bq-k-lane-witness").set_defaults(func=_cmd_dmcp_bq_k_lane_witness)

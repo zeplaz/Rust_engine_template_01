@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/bq_c4_scale_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_bq_c4_scale_witness",
-    "written_at_epoch_secs": 1783115376
+    "written_at_epoch_secs": 1783371796
   },
   "authority_decision": "visual_only_iso_draw",
   "chain": [

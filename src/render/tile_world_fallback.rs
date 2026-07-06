@@ -18,6 +18,7 @@ use bevy::image::{ImageFilterMode, ImageSampler, ImageSamplerDescriptor};
 use bevy::diagnostic::FrameCount;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use bevy::asset::RenderAssetUsages;
 use bevy::render::render_resource::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages};
 
 use bevy_egui::{egui, EguiContexts};
@@ -76,6 +77,8 @@ pub struct TileWorldFallbackState {
     pub minimap_image: Handle<Image>,
     pub last_w: u32,
     pub last_h: u32,
+    /// Tracks RTT diag mesh vs sprite display so mode switches force respawn.
+    pub last_rtt_diag_uses_mesh: Option<bool>,
     #[cfg(feature = "bevy_tilemap_adapter")]
     pub suppressed: bool,
 }
@@ -254,6 +257,7 @@ fn rebuild_tile_world_fallback_index(
         Query<&MapEditorRoadMarkerV1>,
         Query<(&Chunk, &ChunkCellMatrix, Option<&crate::systems::fire::ChunkFireOverlay>)>,
     )>,
+    dense_cache: Option<&WorldGenDenseTerrainCache>,
 ) {
     if index.revision == Some(revision) {
         return;
@@ -263,6 +267,26 @@ fn rebuild_tile_world_fallback_index(
     index.roads_by_chunk.clear();
     let chunk_tiles = RASTER_CHUNK_TILES as usize;
     if queries.p0().is_empty() {
+        if let Some(cache) = dense_cache {
+            let w = cache.width.max(1) as usize;
+            for (i, _) in cache.family.iter().enumerate() {
+                let xu = i % w;
+                let yu = i / w;
+                if xu >= tex_w || yu >= tex_h {
+                    continue;
+                }
+                let cx = (xu / chunk_tiles) as u32;
+                let cz = (yu / chunk_tiles) as u32;
+                index.tiles_by_chunk.entry((cx, cz)).or_default().push((
+                    xu,
+                    yu,
+                    cache.family[i],
+                    cache.elevation[i],
+                    cache.moisture[i],
+                    cache.temperature[i],
+                ));
+            }
+        } else if !queries.p2().is_empty() {
         for (chunk, matrix, _) in queries.p2().iter() {
             let sx = matrix.size.x as usize;
             let sy = matrix.size.y as usize;
@@ -294,6 +318,7 @@ fn rebuild_tile_world_fallback_index(
                     ));
                 }
             }
+        }
         }
     } else {
         for (tf, terrain, height, moisture, temperature) in queries.p0().iter() {
@@ -368,6 +393,19 @@ pub struct TileWorldFallbackRasterCtrl {
     pub atlas_stamps: Vec<crate::gui::map_tile_atlas_stamp::TileAtlasStampRequest>,
 }
 
+impl TileWorldFallbackRasterCtrl {
+    #[must_use]
+    pub fn last_applied_raster_revision(&self) -> Option<u64> {
+        self.last_applied_revision
+    }
+
+    /// Sim enter / world regen — force a full overworld repaint on next raster pass.
+    pub fn reset_paint_bookkeeping(&mut self) {
+        self.last_applied_revision = None;
+        self.cadence_acc = 0.0;
+    }
+}
+
 /// Whether [`tile_world_fallback_rasterize`] should repaint `minimap_image` this frame.
 #[derive(Resource, Debug, Clone, Copy)]
 pub struct TileFallbackRasterPolicy {
@@ -376,6 +414,8 @@ pub struct TileFallbackRasterPolicy {
     pub fire_overlay_mark_interval_frames: u32,
     pub defer_zoom_dirty: bool,
     pub minimap_cadence_hz: f32,
+    /// CLI `--test` sim enter — faster first paint until raster completes.
+    pub test_harness_boost: bool,
 }
 
 impl Default for TileFallbackRasterPolicy {
@@ -387,6 +427,7 @@ impl Default for TileFallbackRasterPolicy {
             fire_overlay_mark_interval_frames: budget.fire_overlay_mark_interval_frames,
             defer_zoom_dirty: false,
             minimap_cadence_hz: 10.0,
+            test_harness_boost: false,
         }
     }
 }
@@ -405,19 +446,31 @@ pub fn tile_raster_dirty_on_zoom_band_change_enabled() -> bool {
     true
 }
 
-/// Any main-camera zoom delta — full tile re-raster (prevents RTT zoom "ghost" from stale chunks).
+/// Main-camera zoom **band** crossing — full tile re-raster (prevents RTT zoom "ghost" from
+/// stale chunks). CPU tint is quantized by [`raster_zoom_band`], so only a band change can
+/// invalidate painted chunks. A raw per-frame delta trigger (old behavior, 1e-4) re-dirtied
+/// the whole map every frame while the camera smoothed/glided, so the budgeted raster backlog
+/// never drained and the terrain image was asset-committed every frame.
 fn bump_tile_raster_on_main_camera_zoom(
     desired: Res<MapCameraDesiredRes>,
     mut dirty: ResMut<TileWorldFallbackRasterDirty>,
     mut ctrl: ResMut<TileWorldFallbackRasterCtrl>,
-    mut last_zoom: Local<f32>,
+    mut last_accepted_alpha: Local<Option<f32>>,
 ) {
-    let z = desired.scale.x;
-    if *last_zoom > 0.0 && (z - *last_zoom).abs() > 1e-4 {
+    let alpha = crate::gui::map_zoom_alpha(desired.scale.x);
+    let Some(prev) = *last_accepted_alpha else {
+        *last_accepted_alpha = Some(alpha);
+        return;
+    };
+    // Hysteresis: accept a band change only after leaving the boundary by 5% of a band,
+    // so zoom jitter exactly on a boundary cannot re-dirty the map every frame.
+    let band_hysteresis = 0.05 / RASTER_ZOOM_BANDS as f32;
+    if raster_zoom_band(alpha) != raster_zoom_band(prev) && (alpha - prev).abs() > band_hysteresis
+    {
         ctrl.chunk_grid.mark_all_dirty();
         dirty.bump();
+        *last_accepted_alpha = Some(alpha);
     }
-    *last_zoom = z;
 }
 
 /// Runs **after** [`FireVisualFrameSet::BuildProfiles`](crate::render::FireVisualFrameSet) so minimap RGBA sees fresh [`SharedOverlayFieldBuffers`].
@@ -485,8 +538,9 @@ impl Plugin for TileWorldFallbackPlugin {
                         .after(sync_tile_fallback_raster_policy)
                         .after(crate::render::WaterSurfaceVisualSet)
                         .run_if(in_state(BaseState::Simulation).or_else(in_state(BaseState::Editor))),
+                    sync_tile_fallback_sprite_after_raster.after(tile_world_fallback_rasterize),
                     tile_world_fallback_rasterize_perf
-                        .after(tile_world_fallback_rasterize),
+                        .after(sync_tile_fallback_sprite_after_raster),
                 )
                     .in_set(TileWorldFallbackAfterFireExtract),
             )
@@ -505,7 +559,7 @@ impl Plugin for TileWorldFallbackPlugin {
 }
 
 fn focus_main_camera_on_world_params(
-    mut cam: Query<&mut Transform, With<MainWorldCamera>>,
+    mut cam: Query<(&mut Transform, &mut MapCameraDesired), With<MainWorldCamera>>,
     params: Res<WorldGenParams>,
     test_scene: Option<Res<ActiveTestScene>>,
     launch: Option<Res<EngineLaunchArgs>>,
@@ -555,18 +609,24 @@ fn focus_main_camera_on_world_params(
             }
         }
     };
-    for mut t in cam.iter_mut() {
-        t.translation.x = cx;
-        t.translation.y = cy;
-        t.translation.z = 999.0;
-        t.scale = Vec3::ONE;
-        t.rotation = Quat::IDENTITY;
-    }
     let pose = MapCameraDesired {
         translation: Vec3::new(cx, cy, 999.0),
         scale: Vec3::splat(zoom),
         rotation: Quat::IDENTITY,
     };
+    for (mut t, mut desired) in cam.iter_mut() {
+        t.translation.x = cx;
+        t.translation.y = cy;
+        t.translation.z = 999.0;
+        t.scale = Vec3::ONE;
+        t.rotation = Quat::IDENTITY;
+        // Mirror the computed startup pose into the MapCameraDesired component
+        // (Bevy 0.19: sync_map_camera_pose_to_view_authority runs in ApplyInput,
+        // before DeriveDesired, and unconditionally commits this component's stale
+        // spawn-default pose back to the authority on the same frame — clobbering
+        // the zoom set below if this write is skipped).
+        *desired = pose.clone();
+    }
     crate::gui::commit_map_camera_pose_to_view_authority(
         authority.as_mut(),
         trace.as_mut(),
@@ -620,6 +680,7 @@ fn make_rgba_image(w: u32, h: u32, label: &'static str) -> Image {
     };
     let len = 4 * w as usize * h as usize;
     image.data = Some(vec![0u8; len]);
+    image.asset_usage = RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD;
     image.sampler = ImageSampler::Descriptor(ImageSamplerDescriptor {
         mag_filter: ImageFilterMode::Nearest,
         min_filter: ImageFilterMode::Nearest,
@@ -628,11 +689,53 @@ fn make_rgba_image(w: u32, h: u32, label: &'static str) -> Image {
     image
 }
 
+/// CPU→GPU: touch asset so render-world re-uploads the texture bind group.
+fn commit_raster_image_for_gpu(images: &mut Assets<Image>, handle: &Handle<Image>) {
+    let Some(mut image) = images.get_mut(handle) else {
+        return;
+    };
+    image.asset_usage = RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD;
+    if let Some(data) = image.data.as_ref() {
+        image.data = Some(data.clone());
+    }
+}
+
+fn sync_tile_fallback_sprite_after_raster(
+    state: Res<TileWorldFallbackState>,
+    rtt_diag: Option<Res<crate::gui::RttDiagCameraConfig>>,
+    mut sprites: Query<&mut Sprite, With<TileWorldFallbackSprite>>,
+    mesh_materials: Query<&MeshMaterial2d<ColorMaterial>, With<TileWorldFallbackSprite>>,
+    mut color_assets: ResMut<Assets<ColorMaterial>>,
+) {
+    let Some(entity) = state.sprite_entity else {
+        return;
+    };
+    if state.image == Handle::default() {
+        return;
+    };
+    if rtt_diag.is_some_and(|c| c.mode.uses_mesh_terrain()) {
+        let Ok(mat_handle) = mesh_materials.get(entity) else {
+            return;
+        };
+        if let Some(mut mat) = color_assets.get_mut(&mat_handle.0) {
+            mat.texture = Some(state.image.clone());
+        }
+        return;
+    }
+    let Ok(mut sprite) = sprites.get_mut(entity) else {
+        return;
+    };
+    sprite.image = state.image.clone();
+}
+
 fn tile_world_fallback_sync_spawner(
     mut commands: Commands,
     mut images: ResMut<Assets<Image>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
     params: Res<WorldGenParams>,
-    authority: Res<TerrainRenderAuthority>,
+    rtt_diag: Option<Res<crate::gui::RttDiagCameraConfig>>,
+    _authority: Res<TerrainRenderAuthority>,
     tiles: Query<(), With<TileMarker>>,
     terrain_chunks: Query<(), With<ChunkCellMatrix>>,
     dense_cache: Option<Res<WorldGenDenseTerrainCache>>,
@@ -641,18 +744,6 @@ fn tile_world_fallback_sync_spawner(
     mut raster_dirty: ResMut<TileWorldFallbackRasterDirty>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
 ) {
-    if authority.uses_gpu_sprite_display() {
-        // GPU path: one sprite + dirty-gated texture bake (no per-frame CPU paint).
-    } else if authority.is_gpu() {
-        if let Some(e) = state.sprite_entity.take() {
-            commands.entity(e).despawn();
-        }
-        state.last_w = 0;
-        state.last_h = 0;
-        state.image = Handle::default();
-        return;
-    }
-
     let has_terrain = !tiles.is_empty()
         || dense_cache.is_some()
         || !terrain_chunks.is_empty();
@@ -674,31 +765,60 @@ fn tile_world_fallback_sync_spawner(
     let w = params.width;
     let h = params.height;
 
-    let need_new = state.sprite_entity.is_none() || state.last_w != w || state.last_h != h;
+    let use_mesh = rtt_diag
+        .as_deref()
+        .is_some_and(|c| c.mode.uses_mesh_terrain());
+    let mode_changed = state.last_rtt_diag_uses_mesh != Some(use_mesh);
+
+    let need_new = state.sprite_entity.is_none()
+        || state.last_w != w
+        || state.last_h != h
+        || mode_changed;
     if need_new {
         if let Some(e) = state.sprite_entity.take() {
             commands.entity(e).despawn();
         }
         let image = images.add(make_rgba_image(w, h, "tile_world_fallback_sim"));
         let minimap_image = images.add(make_rgba_image(w, h, "tile_world_fallback_minimap"));
-        let e = commands
-            .spawn((
-                TileWorldFallbackSprite,
-                crate::gui::simulation_map_rtt_render_layers(),
-                crate::render::mig_a_static_bulk_bundle(),
-                Sprite {
-                    image: image.clone(),
-                    custom_size: Some(Vec2::new(w as f32, h as f32)),
-                    ..default()
-                },
-                Transform::from_xyz(w as f32 * 0.5, h as f32 * 0.5, 0.0),
-            ))
-            .id();
+        let world_size = Vec2::new(w as f32, h as f32);
+        let center = Transform::from_xyz(world_size.x * 0.5, world_size.y * 0.5, 0.0);
+        let e = if use_mesh {
+            let mesh = meshes.add(Rectangle::new(world_size.x, world_size.y));
+            let material = materials.add(ColorMaterial {
+                texture: Some(image.clone()),
+                ..default()
+            });
+            commands
+                .spawn((
+                    TileWorldFallbackSprite,
+                    crate::render::mig_a_static_bulk_bundle(),
+                    Visibility::Visible,
+                    Mesh2d(mesh),
+                    MeshMaterial2d(material),
+                    center,
+                ))
+                .id()
+        } else {
+            commands
+                .spawn((
+                    TileWorldFallbackSprite,
+                    crate::render::mig_a_static_bulk_bundle(),
+                    Visibility::Visible,
+                    Sprite {
+                        image: image.clone(),
+                        custom_size: Some(world_size),
+                        ..default()
+                    },
+                    center,
+                ))
+                .id()
+        };
         state.sprite_entity = Some(e);
         state.image = image;
         state.minimap_image = minimap_image;
         state.last_w = w;
         state.last_h = h;
+        state.last_rtt_diag_uses_mesh = Some(use_mesh);
         raster_ctrl.chunk_grid.resize_for_world(w, h);
         raster_ctrl.tile_index.revision = None;
         raster_ctrl.chunk_grid.mark_all_dirty();
@@ -830,6 +950,7 @@ fn mark_tile_world_fallback_dirty_on_changes(
     changed_terrain: Query<&Transform, (With<TileMarker>, Changed<TerrainType>)>,
     added_roads: Query<&MapEditorRoadMarkerV1, Added<MapEditorRoadMarkerV1>>,
     changed_roads: Query<&MapEditorRoadMarkerV1, Changed<MapEditorRoadMarkerV1>>,
+    added_chunks: Query<(&Chunk, &ChunkCellMatrix), Added<ChunkCellMatrix>>,
     handles: Res<TerrainRegistriesHandles>,
     overlay: Res<SharedOverlayFieldBuffers>,
     presentation: Res<MapViewPresentationStates>,
@@ -854,6 +975,18 @@ fn mark_tile_world_fallback_dirty_on_changes(
     }
     for road in added_roads.iter().chain(changed_roads.iter()) {
         raster_ctrl.chunk_grid.mark_tile(road.tile_x, road.tile_z);
+        structural_bump = true;
+    }
+    for (chunk, matrix) in &added_chunks {
+        let sx = matrix.size.x.max(1);
+        let sy = matrix.size.y.max(1);
+        for y in 0..sy {
+            for x in 0..sx {
+                let wx = chunk.coord.x as u32 * sx + x;
+                let wy = chunk.coord.y as u32 * sy + y;
+                raster_ctrl.chunk_grid.mark_tile(wx, wy);
+            }
+        }
         structural_bump = true;
     }
     if handles.is_changed() {
@@ -982,6 +1115,13 @@ fn raster_tile_fallback_subregion(
     }
 }
 
+/// Optional terrain sources that would exceed Bevy's system param limit if listed separately.
+#[derive(SystemParam)]
+struct TileFallbackRasterExtras<'w> {
+    dense_cache: Option<Res<'w, WorldGenDenseTerrainCache>>,
+    water_catalog: Option<Res<'w, crate::render::WaterSurfaceVisualCatalog>>,
+}
+
 fn tile_world_fallback_rasterize(
     authority: Res<TerrainRenderAuthority>,
     mut images: ResMut<Assets<Image>>,
@@ -990,6 +1130,7 @@ fn tile_world_fallback_rasterize(
     materials: Res<Assets<MaterialRegistry>>,
     map_views: Res<MapViewInstances>,
     presentation: Res<MapViewPresentationStates>,
+    extras: TileFallbackRasterExtras,
     mut queries: ParamSet<(
         Query<(
             &Transform,
@@ -1002,18 +1143,17 @@ fn tile_world_fallback_rasterize(
         Query<(&Chunk, &ChunkCellMatrix, Option<&crate::systems::fire::ChunkFireOverlay>)>,
     )>,
     overlay: Res<SharedOverlayFieldBuffers>,
-    water_catalog: Option<Res<crate::render::WaterSurfaceVisualCatalog>>,
     camera: Res<MapCameraDesiredRes>,
     raster_dirty: Res<TileWorldFallbackRasterDirty>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     time: Res<Time>,
-    raster_policy: Res<TileFallbackRasterPolicy>,
+    mut raster_policy: ResMut<TileFallbackRasterPolicy>,
     atlas_cache: Res<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
 ) {
-    if !authority.uses_cpu_fallback_raster() && !authority.uses_gpu_sprite_display() {
-        raster_ctrl.last_applied_revision = Some(raster_dirty.revision());
-        return;
-    }
+    let TileFallbackRasterExtras {
+        dense_cache,
+        water_catalog,
+    } = extras;
     if state.sprite_entity.is_none()
         || state.image == Handle::default()
         || state.minimap_image == Handle::default()
@@ -1021,8 +1161,8 @@ fn tile_world_fallback_rasterize(
         raster_ctrl.last_applied_revision = None;
         return;
     }
-    // Chunk-authoritative world gen has no TileMarker entities; raster from ChunkCellMatrix.
-    if queries.p0().is_empty() && queries.p2().is_empty() {
+    // Chunk-authoritative world gen has no TileMarker entities; raster from ChunkCellMatrix or dense cache.
+    if queries.p0().is_empty() && queries.p2().is_empty() && dense_cache.is_none() {
         return;
     }
     let tex_w_u = state.last_w;
@@ -1052,6 +1192,8 @@ fn tile_world_fallback_rasterize(
         return;
     }
 
+    let test_harness = raster_policy.test_harness_boost;
+
     let hz = if raster_policy.minimap_cadence_hz.is_finite() && raster_policy.minimap_cadence_hz > 0.25 {
         raster_policy.minimap_cadence_hz
     } else {
@@ -1059,7 +1201,9 @@ fn tile_world_fallback_rasterize(
     };
     let interval = preview_partial_min_interval_from_hz(hz);
     let force_immediate =
-        raster_ctrl.last_applied_revision.is_none() || raster_ctrl.chunk_grid.has_dirty();
+        raster_ctrl.last_applied_revision.is_none()
+            || raster_ctrl.chunk_grid.has_dirty()
+            || test_harness;
     if !force_immediate {
         raster_ctrl.cadence_acc += time.delta_secs();
         if raster_ctrl.cadence_acc < interval {
@@ -1076,6 +1220,8 @@ fn tile_world_fallback_rasterize(
     // stays black until terrain RGBA is populated at least once.
     let chunk_budget = if raster_ctrl.last_applied_revision.is_none() {
         usize::MAX
+    } else if test_harness {
+        raster_policy.chunks_per_frame.saturating_mul(4).max(16)
     } else if spike_active {
         raster_policy.chunks_per_frame.min(2)
     } else {
@@ -1083,9 +1229,6 @@ fn tile_world_fallback_rasterize(
     };
     let dirty_chunks = raster_ctrl.chunk_grid.take_dirty_chunks(chunk_budget);
     if dirty_chunks.is_empty() {
-        if !raster_ctrl.chunk_grid.has_dirty() {
-            raster_ctrl.last_applied_revision = Some(rev);
-        }
         return;
     }
 
@@ -1119,7 +1262,9 @@ fn tile_world_fallback_rasterize(
     let raster_started = FrameBudgetTimer::start();
     // VX-P0-01: strategic zoom boost only on the main overworld raster — minimap stays 1.0 so
     // optional fire-heat toggle does not wash the whole panel when zoomed out.
-    let fire_boost_main = if zoom_alpha < crate::render::gpu_particles::FIRE_SPARK_STRATEGIC_ZOOM_ALPHA {
+    // FIRE-VIS-001: keyed on px-per-tile (camera.scale.x), not zoom_alpha — matches the GPU spark
+    // cull axis (FIRE_SPARK_MIN_PX_PER_TILE) so CPU heat boost and GPU sparks agree on "far zoom".
+    let fire_boost_main = if camera.scale.x < crate::render::gpu_particles::FIRE_SPARK_MIN_PX_PER_TILE {
         1.0
     } else {
         (1.0 + 0.85 / camera.scale.x.max(0.5)).clamp(1.0, 2.0)
@@ -1166,6 +1311,7 @@ fn tile_world_fallback_rasterize(
         tex_w,
         tex_h,
         &mut queries,
+        dense_cache.as_deref(),
     );
 
     for (cx, cz) in &dirty_chunks {
@@ -1178,61 +1324,63 @@ fn tile_world_fallback_rasterize(
             .get(&(*cx, *cz))
             .map(Vec::as_slice)
             .unwrap_or(&[]);
-        let tile_iter = chunk_tiles.iter().copied().filter(|(x, y, ..)| {
-            *x >= x0 && *x < x1 && *y >= y0 && *y < y1
-        });
         let chunk_roads = raster_ctrl
             .tile_index
             .roads_by_chunk
             .get(&(*cx, *cz))
             .map(Vec::as_slice)
             .unwrap_or(&[]);
-        let road_iter = chunk_roads
-            .iter()
-            .copied()
-            .filter(|(x, y)| *x >= x0 && *x < x1 && *y >= y0 && *y < y1);
 
-        raster_tile_fallback_subregion(
-            images.as_mut(),
-            &state.image,
-            tex_w,
-            tex_h,
-            x0,
-            y0,
-            x1,
-            y1,
-            sim_layers,
-            sim.overlays.fire_heat,
-            tile_iter,
-            road_iter,
-            &mat_slices,
-            reg_opt,
-            fam_opt,
-            &chunk_geom,
-            &cell_fire_heat,
-            overlay.as_ref(),
-            fire_boost_main,
-            water_catalog,
-            time_secs,
-            zoom_alpha,
-        );
+        if state.image != Handle::default() {
+            let main_tiles = chunk_tiles.iter().copied().filter(|(x, y, ..)| {
+                *x >= x0 && *x < x1 && *y >= y0 && *y < y1
+            });
+            let main_roads = chunk_roads
+                .iter()
+                .copied()
+                .filter(|(x, y)| *x >= x0 && *x < x1 && *y >= y0 && *y < y1);
+            raster_tile_fallback_subregion(
+                images.as_mut(),
+                &state.image,
+                tex_w,
+                tex_h,
+                x0,
+                y0,
+                x1,
+                y1,
+                sim_layers,
+                sim.overlays.fire_heat,
+                main_tiles,
+                main_roads,
+                &mat_slices,
+                reg_opt,
+                fam_opt,
+                &chunk_geom,
+                &cell_fire_heat,
+                overlay.as_ref(),
+                fire_boost_main,
+                water_catalog,
+                time_secs,
+                zoom_alpha,
+            );
 
-        if !raster_ctrl.atlas_stamps.is_empty()
-            && !atlas_slices.is_empty()
-            && crate::gui::map_tile_atlas_stamp::stamp_cpu_rgba_blit_enabled(*authority)
-        {
-            if let Some(mut dest_image) = images.get_mut(&state.image) {
-                if let Some(data) = dest_image.data.as_mut() {
-                    crate::gui::map_tile_atlas_stamp::apply_atlas_stamps_to_rgba_subregion(
-                        data,
-                        tex_w,
-                        x0,
-                        y0,
-                        x1,
-                        y1,
-                        &raster_ctrl.atlas_stamps,
-                        &atlas_slices,
-                    );
+            if !raster_ctrl.atlas_stamps.is_empty()
+                && !atlas_slices.is_empty()
+                && crate::gui::map_tile_atlas_stamp::stamp_cpu_rgba_blit_enabled(*authority)
+            {
+                if let Some(mut dest_image) = images.get_mut(&state.image) {
+                    if let Some(data) = dest_image.data.as_mut() {
+                        crate::gui::map_tile_atlas_stamp::apply_atlas_stamps_to_rgba_subregion(
+                            data,
+                            tex_w,
+                            x0,
+                            y0,
+                            x1,
+                            y1,
+                            &raster_ctrl.atlas_stamps,
+                            &atlas_slices,
+                        );
+                    }
                 }
             }
         }
@@ -1273,8 +1421,18 @@ fn tile_world_fallback_rasterize(
         }
     }
 
+    if state.image != Handle::default() {
+        commit_raster_image_for_gpu(images.as_mut(), &state.image);
+    }
+    if raster_policy.cpu_minimap_pass {
+        commit_raster_image_for_gpu(images.as_mut(), &state.minimap_image);
+    }
+
     if !raster_ctrl.chunk_grid.has_dirty() {
         raster_ctrl.last_applied_revision = Some(rev);
+        if test_harness {
+            raster_policy.test_harness_boost = false;
+        }
     }
     raster_ctrl.last_ms = Some(raster_started.elapsed_ms());
 }

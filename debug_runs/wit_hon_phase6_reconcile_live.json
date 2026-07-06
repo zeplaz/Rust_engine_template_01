@@ -58,17 +58,17 @@
     "relative_path": "debug_runs/wit_hon_phase6_reconcile_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_wit_hon_phase6_reconcile_live_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371797
   },
   "gate": "CDR-B-WIT-HON-PHASE6-001",
-  "green": false,
+  "green": true,
   "note": "Done rows must have honest on-disk witnesses — no lib-only green without field truth",
   "phase6_rows_checked": 5,
   "queue_doc": "tools/orchestrator/queues/post_drain_phase6_coder_queue.json",
   "rows": {
     "BUILD-READ-CONSUMER-MCP-001": {
       "field": "green",
-      "ok": false,
+      "ok": true,
       "witness_path": "debug_runs/aps_dna_consumer_rust_live.json"
     },
     "BUILD-READ-VISUAL-001": {
@@ -83,7 +83,7 @@
     },
     "PG-QUALITY-001": {
       "field": "green",
-      "ok": false,
+      "ok": true,
       "witness_path": "debug_runs/grammar_diversity_witness.json"
     },
     "VEG-PROGRAM-CLOSE-001": {

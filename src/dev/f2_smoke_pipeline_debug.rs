@@ -165,12 +165,13 @@ fn run_mini_fire_smoke_pipeline_ticks() -> PipelineMiniReport {
     let graph = app.world().resource::<crate::render::extraction::RenderProjectionGraph>();
     let smoke_w = app.world().resource::<SmokeVisualBridgeWitness>();
     let mut particles = crate::render::WorldFireParticleFrame::default();
+    // FIRE-VIS-001: fire spark cull/scatter keys on zoom_level (px-per-tile), not zoom_alpha.
     update_world_fire_particles_from_projection(
         graph,
         &mut particles,
         None,
         ExtractedCameraMetrics {
-            zoom_level: 1.0,
+            zoom_level: crate::render::gpu_particles::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
             zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
             ..Default::default()
         },

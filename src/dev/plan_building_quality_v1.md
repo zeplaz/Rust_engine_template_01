@@ -255,8 +255,8 @@ BQ-Q3 | Golden-seed regression set: ~12 seeds × archetype × style committed as
 #
 # id                  | track | issue    | owner       | effort | exit
 # BQ-F1-BAKE-001      | BQ    | BQ-F1    | coder-mcp   | S      | roof Y=0 flush; wall no 1.05 sill; rebaked GLBs promoted
-# BQ-F2-STYLE-001     | BQ    | BQ-F2    | coder       | S      | style_pack filter in module_index; cross-style fallback logged
-# BQ-F3-SLOT-001      | BQ    | BQ-F3    | coder       | XS     | MissingSlotViolation witness; debug tint; no silent hide
+# BQ-F2-STYLE-001     | BQ    | BQ-F2    | **coder_b** (CHAIN-B CB-BQ-001) | S      | style_pack filter in module_index; cross-style fallback logged
+# BQ-F3-SLOT-001      | BQ    | BQ-F3    | **coder_b** (CHAIN-B CB-BQ-002) | XS     | MissingSlotViolation witness; debug tint; no silent hide
 # APSR-A0-T1-001      | APSR  | APSR-T1  | coder_a     | S      | mutation-inventory pytest; new direct SuiteState write = fail
 # APSR-A0-T2-001      | APSR  | APSR-T2  | coder_a     | S      | stale-assembly xfail repro; lane round-trip characterization
 # APSR-A0-T3-001      | APSR  | APSR-T3  | designer    | M      | APS_IA_SPEC_v1.md + spec-ID headers on panels

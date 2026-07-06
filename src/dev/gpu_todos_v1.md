@@ -113,7 +113,7 @@ cargo run -p proc_A_dine01 --release -- --test demo --stay-open
 | ☑ | **P2-A** | `WorldRepresentationFrame` fingerprint skip | `world_repr_fingerprint_same_except_stamp` |
 | ☑ | **P2-B** | Overlay buffer push gate | `chunk_fire_heat_maps_differ` tests + sync gate in extract |
 | ☑ | **P2-C** | Streaming reconstruct idle gate | `warm_gate_skips_when_pending_all_cached_and_idle` |
-| ☐ | **P2-D** | Authority map doc paste | plan §6 + `07-repo-authority-map.md` |
+| ☑ | **P2-D** | Authority map doc paste | plan §6 + `07-repo-authority-map.md` |
 
 ---
 
@@ -121,10 +121,10 @@ cargo run -p proc_A_dine01 --release -- --test demo --stay-open
 
 | ☐ | ID | Scope |
 |:---:|:---|:---|
-| ☐ | **P3-A** | Optional `tracy` feature + doc |
-| ☐ | **P3-B** | Witness contract (`sim_spectrum` + `render_schedule`) |
-| ☐ | **P3-C** | Trim STALL spam default demo |
-| ☐ | **P3-D** | `visual_test_runbook_v1.md` perf truth section |
+| ☑ | **P3-A** | Optional `tracy` feature + doc |
+| ☑ | **P3-B** | Witness contract (`sim_spectrum` + `render_schedule`) |
+| ☑ | **P3-C** | Trim STALL spam default demo |
+| ☑ | **P3-D** | `visual_test_runbook_v1.md` perf truth section |
 
 ---
 

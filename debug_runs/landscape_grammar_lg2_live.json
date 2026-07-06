@@ -58,17 +58,17 @@
     "relative_path": "debug_runs/landscape_grammar_lg2_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_lg2_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371800
   },
-  "construction_disturbances": 1,
+  "construction_disturbances": 0,
   "disturbance_history_linked": true,
-  "fire_disturbances": 1,
+  "fire_disturbances": 0,
   "gate": "LG-2-SUCCESSION-001",
-  "green": true,
-  "harvest_disturbances": 1,
+  "green": false,
+  "harvest_disturbances": 0,
   "lib_green": true,
-  "nested_depth_max": 3,
-  "recovery_ticks": 1,
+  "nested_depth_max": 2,
+  "recovery_ticks": 0,
   "succession_age_ticks": true,
   "topology_kind_count": 6
 }

@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/sch_w1_e3_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_sch_w1_e3_witness",
-    "written_at_epoch_secs": 1783119779
+    "written_at_epoch_secs": 1783371799
   },
   "direct_edge": "FireVisualFrameSet::BuildProfiles.after(ChunkEnvironmentSet::Fire)",
   "engine_site": "src/engine/engine_with_worldgen.rs",

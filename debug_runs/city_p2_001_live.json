@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_p2_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_p2_witness",
-    "written_at_epoch_secs": 1783114114
+    "written_at_epoch_secs": 1783371797
   },
   "fallback_source": "assets/models/modules/prop_fence_lod0_run001/model.glb#Scene0",
   "fixture_green": true,

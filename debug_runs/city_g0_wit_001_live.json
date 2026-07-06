@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_g0_wit_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g0_wit_001_grammar_determinism_witness",
-    "written_at_epoch_secs": 1783114392
+    "written_at_epoch_secs": 1783371796
   },
   "auto_001_contract": true,
   "g0_prerequisites": {
@@ -70,9 +70,9 @@
   "issue": "CITY-G0c",
   "registry_ok": true,
   "run_hashes": [
-    "ee0890da25a2102586237d7c2292fd3970a005457425217ed2241ab135a11cb8",
-    "ee0890da25a2102586237d7c2292fd3970a005457425217ed2241ab135a11cb8",
-    "ee0890da25a2102586237d7c2292fd3970a005457425217ed2241ab135a11cb8"
+    "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
+    "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
+    "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09"
   ],
   "seed_sensitivity_ok": true,
   "spec": {
@@ -81,6 +81,6 @@
     "district_style": "industrial_west",
     "seed": 43
   },
-  "stable_hash": "ee0890da25a2102586237d7c2292fd3970a005457425217ed2241ab135a11cb8",
+  "stable_hash": "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
   "three_run_stable": true
 }

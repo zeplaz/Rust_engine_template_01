@@ -1,0 +1,66 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-RENDER-PROD-CLEANUP-v1",
+    "plan_doc": "src/dev/plan_render_production_cleanup_v1.md",
+    "date": "2026-07-06",
+    "status": "ACTIVE",
+    "active_phase": "Phase 0 CLOSED 2026-07-06 — next: FIRE-VIS + MINIMAP-BOX slices (operator-reported), then Phase 1 decision",
+    "current_pick": "FIRE-VIS-001 (spark cull recalibration) + MINIMAP-BOX-001 pending tracer report",
+    "priority": "P1",
+    "branch": "master",
+    "regression": "cargo test -p proc_A_dine01 --lib stage5 && cargo test -p proc_A_dine01 --lib minimap_compositor",
+    "cross_program": {
+      "render_gui_refactor": "RGR-V2-004 runs in RGR queue, tandem OK (disjoint files)",
+      "material_vfx_port": "PLAN-MATERIAL-VFX-PORT-v1 still DEFERRED (RGR-G4 gate)"
+    },
+    "decision_gate": "Phase 1 (GPU terrain: build real bake vs honest rename) BLOCKED_ON_OPERATOR_DECISION"
+  },
+  "drain": [
+    {
+      "seq": 1,
+      "id": "RPC-0-001",
+      "status": "done",
+      "closed": "2026-07-06",
+      "notes": "run_minimap_compositor_pass now gates on runtime_enabled (env AND shader-health); composite_path flips to CpuBridge same frame on MINIMAP_GPU_SHADER_FAILED. 2 new tests (pure-fn predicate mismatch + system-level App test). 26/26 minimap tests. env_enabled untouched at lifecycle call sites (correct).",
+      "priority": "P1",
+      "owner": "coder",
+      "audit": "F4",
+      "goal": "Unify minimap GPU-enablement predicate; composite_path flips to CpuBridge on MINIMAP_GPU_SHADER_FAILED",
+      "territory": "src/render/minimap_compositor/pass.rs · diagnostics.rs",
+      "exit": "witness composite_path can never claim GpuCompute after shader failure; minimap_compositor lib tests green"
+    },
+    {
+      "seq": 2,
+      "id": "RPC-0-002",
+      "status": "done",
+      "closed": "2026-07-06",
+      "notes": "Dead if/else collapsed (editor always CpuFallback, documented); stale allow(dead_code) removed (2 live callers confirmed); tile_debug_types.rs:72 doc ref fixed. Zero behavior change. Debt noted: terrain_render_authority env-var tests flaky under parallel execution (pre-existing, separate test-hygiene ticket).",
+      "priority": "P2",
+      "owner": "coder",
+      "audit": "F6/F12/F15",
+      "goal": "Dead branch collapse (apply_editor_terrain_authority) + stale allow(dead_code) + stale doc ref",
+      "territory": "src/render/core/terrain_render_authority.rs · src/render/core/gpu_surface_teardown.rs · src/gui/tile_debug_types.rs",
+      "exit": "cargo check clean, zero behavior change"
+    },
+    {
+      "seq": 3,
+      "id": "RPC-1-DECISION",
+      "status": "blocked_on_operator",
+      "priority": "P1",
+      "owner": "operator",
+      "audit": "F2/F3",
+      "goal": "Choose: (A) build real GPU world-terrain bake vs (B) honest rename + retire dormant per-tile pass",
+      "exit": "decision recorded here; unblocks Phase 3"
+    },
+    {
+      "seq": 4,
+      "id": "RPC-2-001",
+      "status": "queued_after_phase0",
+      "priority": "P1",
+      "owner": "planner",
+      "goal": "TODO-04 pose authority completion — architecture pass: writer enumeration, single commit point, mirror direction",
+      "exit": "plan packet for @coder; kills startup-pose clobber class"
+    }
+  ]
+}

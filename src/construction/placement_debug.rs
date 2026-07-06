@@ -4,6 +4,7 @@
 //! footprint tiles use egui + live `world_to_viewport` (GPU instancing disabled).
 
 use bevy::prelude::*;
+use bevy::ecs::system::SystemParam;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
 
@@ -14,7 +15,7 @@ use crate::construction::build_tool_authority::ActiveBuildTool;
 use crate::construction::building_definitions::BuildingDefinitionRegistry;
 use crate::construction::footprint_tile_instances::FootprintTileWitness;
 use crate::construction::map_egui_projection::{
-    ConstructionMapProjection, tile_screen_extent, world_to_sim_map_egui,
+    ConstructionMapProjection, tile_screen_extent, world_to_sim_map_egui_rendered,
 };
 use crate::construction::visual_authority::ConstructionVisualRequests;
 use crate::engine::launch_args::{EngineLaunchArgs, TestScene};
@@ -24,7 +25,7 @@ use crate::gui::{
     map_camera_pose_for_presentation, sim_map_projection_frame,
     sim_map_screen_to_world_xy_in_frame, sim_map_world_vec3_to_egui,
     sim_map_world_vec3_to_egui_rendered, MainWorldCamera, MainWorldCameraOrthoTrace,
-    MainWorldCameraViewportLatch, MapCameraDesired, MapCameraDesiredRes, SimulationMapViewport, TileDebugDrawGlobals,
+    MapCameraDesired, MapCameraDesiredRes, SimulationMapViewport, TileDebugDrawGlobals,
     TileGpuDebugSettings,
 };
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewSurfaceId};
@@ -65,7 +66,7 @@ pub struct ConstructionPlacementDebugProbe {
     pub cursor_reproject_delta_px: Option<f32>,
     pub camera_viewport_phys: Option<[u32; 4]>,
     pub ortho_fixed_wh: Option<Vec2>,
-    pub latch_using_hole: bool,
+    pub rtt_fill_valid: bool,
     pub pointer_in_play_area: bool,
     pub pointer_chrome_blocks: bool,
     pub egui_blocks: bool,
@@ -284,7 +285,6 @@ pub fn sync_construction_placement_debug_probe(
     pointer_gate: Res<SimulationMapPointerGate>,
     params: Res<WorldGenParams>,
     ghost: Res<BuildGhostState>,
-    latch: Res<MainWorldCameraViewportLatch>,
     ortho: Res<MainWorldCameraOrthoTrace>,
     globals: Option<Res<TileDebugDrawGlobals>>,
     footprint: Option<Res<FootprintTileWitness>>,
@@ -300,7 +300,7 @@ pub fn sync_construction_placement_debug_probe(
         return;
     };
     probe.cursor_logical = window.cursor_position();
-    probe.latch_using_hole = latch.using_hole;
+    probe.rtt_fill_valid = map_vp.valid;
     probe.pointer_in_play_area = pointer_gate.in_play_area;
     probe.pointer_chrome_blocks = pointer_gate.chrome_blocks;
     probe.egui_blocks = pointer_gate.egui_blocks;
@@ -455,12 +455,13 @@ fn overlay_visible(overlay: &ConstructionPlacementDebugOverlay, launch: Option<&
     if overlay.enabled {
         return true;
     }
-    launch.is_some_and(|l| {
-        matches!(
-            l.test_scene,
-            TestScene::VfxSandbox | TestScene::Visual
-        )
-    })
+    launch.is_some_and(|l| matches!(l.test_scene, TestScene::Visual))
+}
+
+#[derive(SystemParam)]
+pub(crate) struct PlacementDebugOverlayExtras<'w> {
+    ortho: Res<'w, crate::gui::MainWorldCameraOrthoTrace>,
+    tile_gpu: Res<'w, TileGpuDebugSettings>,
 }
 
 pub fn draw_construction_placement_debug_overlay(
@@ -478,9 +479,10 @@ pub fn draw_construction_placement_debug_overlay(
     registry: Res<BuildingDefinitionRegistry>,
     requests: Res<ConstructionVisualRequests>,
     map_vp: Res<SimulationMapViewport>,
+    extras: PlacementDebugOverlayExtras,
     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
-    tile_gpu: Res<TileGpuDebugSettings>,
 ) -> Result {
+    let PlacementDebugOverlayExtras { ortho, tile_gpu } = extras;
     if !overlay_visible(overlay.as_ref(), launch.as_deref()) {
         return Ok(());
     }
@@ -512,12 +514,12 @@ pub fn draw_construction_placement_debug_overlay(
 
             if let Some(p) = probe.as_deref() {
                 ui.label(format!(
-                    "Pointer: play_area={} chrome_blocks={} egui_blocks={} os_cursor_hidden={} latch_hole={}",
+                    "Pointer: play_area={} chrome_blocks={} egui_blocks={} os_cursor_hidden={} rtt_fill_valid={}",
                     p.pointer_in_play_area,
                     p.pointer_chrome_blocks,
                     p.egui_blocks,
                     p.os_cursor_hidden,
-                    p.latch_using_hole
+                    p.rtt_fill_valid
                 ));
                 if let Some(c) = p.cursor_logical {
                     ui.label(format!("Cursor logical: ({:.1},{:.1})", c.x, c.y));
@@ -700,6 +702,7 @@ pub fn draw_construction_placement_debug_overlay(
             desired.as_ref(),
             map_vp.as_ref(),
             params.as_ref(),
+            ortho.as_ref(),
             cam_q,
         );
     }
@@ -715,6 +718,7 @@ fn draw_placement_crosshairs(
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
     params: &WorldGenParams,
+    ortho: &crate::gui::MainWorldCameraOrthoTrace,
     cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
 ) {
     if !map_vp.is_adequate_for_camera() {
@@ -795,8 +799,9 @@ fn draw_placement_crosshairs(
             painter.circle_filled(pt, 5.0, egui::Color32::from_rgb(80, 220, 80));
             painter.circle_stroke(pt, 11.0, egui::Stroke::new(2.0, egui::Color32::from_rgb(120, 255, 120)));
         }
-    } else if let Some(p) = world_to_sim_map_egui(
+    } else if let Some(p) = world_to_sim_map_egui_rendered(
         center,
+        Some(ortho),
         authority,
         desired,
         map_vp,

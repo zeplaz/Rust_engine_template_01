@@ -104,19 +104,17 @@ pub struct CameraProjectionInfo {
     pub world_width: f32,
     pub world_height: f32,
     pub view_pixels: Vec2,
-    pub using_hole: bool,
 }
 
 impl std::fmt::Display for CameraProjectionInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "world=({:.0},{:.0}) view_px=({:.0},{:.0}) render_hole={}",
+            "world=({:.0},{:.0}) view_px=({:.0},{:.0})",
             self.world_width,
             self.world_height,
             self.view_pixels.x,
             self.view_pixels.y,
-            self.using_hole
         )
     }
 }

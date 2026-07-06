@@ -191,11 +191,15 @@ impl EngineLaunchArgs {
             TestScene::Weather | TestScene::Fire | TestScene::Atmosphere => 15,
             TestScene::None => 1,
         };
+        let stall_spans = matches!(
+            self.test_scene,
+            TestScene::VfxSandbox | TestScene::Weather | TestScene::Fire | TestScene::Atmosphere
+        ) || self.full_capture_active();
         TestInstrumentationProfile {
             active: true,
             quiet_terminal: true,
             frame_jsonl,
-            stall_spans: true,
+            stall_spans,
             flush_secs,
             frame_jsonl_stride,
         }
@@ -295,6 +299,22 @@ mod tests {
         let a = EngineLaunchArgs::from_cli(Some("atmosphere".into()), false, None);
         assert_eq!(a.test_scene, TestScene::Atmosphere);
         assert!(a.test_mode());
+    }
+
+    #[test]
+    fn test_instrumentation_profile_demo_no_stall_spans() {
+        let a = EngineLaunchArgs::from_cli(Some("demo".into()), false, None);
+        let p = a.test_instrumentation_profile();
+        assert!(p.active);
+        assert!(p.quiet_terminal);
+        assert!(!p.stall_spans, "P3-C: demo uses disk witness only — no implicit STALL spans");
+    }
+
+    #[test]
+    fn test_instrumentation_profile_visual_full_capture_stall_spans() {
+        let a = EngineLaunchArgs::from_cli(Some("visual".into()), false, None);
+        assert!(a.full_capture_active());
+        assert!(a.test_instrumentation_profile().stall_spans);
     }
 
     #[test]

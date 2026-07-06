@@ -58,13 +58,13 @@
     "relative_path": "debug_runs/landscape_grammar_burn_overlay_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_burn_overlay_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371799
   },
   "active_burn_chunks": 1,
   "fire_disturbances": 1,
   "gate": "VEG-BURN-OVERLAY-001",
   "green": true,
   "overlay_removals": 0,
-  "regrowth_macro_advances": 4,
-  "succession_003_green": true
+  "regrowth_macro_advances": 0,
+  "succession_003_green": false
 }

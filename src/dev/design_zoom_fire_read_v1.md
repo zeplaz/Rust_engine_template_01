@@ -270,3 +270,29 @@ Unblocks: TRIAGE-FIRE-PRODUCT-001 UX review
 | Version | Date | Notes |
 |:---|:---|:---|
 | v1.0.0 | 2026-06-11 | Initial PASS — zoom fire read + crosshair probe tiers |
+
+---
+
+## 2026-07-06 correction (FIRE-VIS-001)
+
+The bands in §1 were authored against `zoom_alpha` normalized on the **old fixed span**
+`MAP_ZOOM_CLAMP ≈ (0.35, 4.5)`. Per-world zoom limits ([`map_zoom_limits_for_world`](../src/gui/tactical/map_camera.rs))
+later made `zoom_alpha` world-size-relative (`hi` derived from `viewport / 8 tiles`), so on a
+320-world `hi ≈ 90` — the old alpha thresholds (0.10/0.28/0.42/0.58/0.85) became unreachable at
+normal play zoom (alpha ≈ 0.10 corresponded to zoom ≈ 9, never hit in practice). This silently
+hard-culled sparks, embers, smoke, and heat-blob seeding.
+
+**Fix:** fire visibility gates are re-keyed onto **px-per-tile** — the camera's raw scale
+(`ExtractedCameraMetrics::zoom_level`, equal to px-per-world-unit; tiles are 1 world unit) — which
+is stable regardless of world size or zoom-limit policy.
+
+| Old (`zoom_alpha`, fixed-span authored) | New (`px-per-tile`) | Constant |
+|:---|:---|:---|
+| `0.10` (hard cull floor) | `1.5` | `FIRE_SPARK_MIN_PX_PER_TILE` |
+| `0.42` (operational play anchor) | `2.5` | `FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE` |
+| `0.58` (full scatter) | `4.0` | `FIRE_SPARK_FULL_SCATTER_PX_PER_TILE` |
+| `0.85` (tactical proof / cinematic) | *unchanged* — stays on `zoom_alpha` axis (proof-lock harness only, not the cull path) | `FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA` |
+
+At fit zoom (~2.07 px/tile for a 320-world @ 1280×720) sparks/embers/smoke are now visible when
+fire burns; full scatter is reached at ~4 px/tile. Constants live in
+[`src/render/fire_vfx/witness.rs`](../src/render/fire_vfx/witness.rs).

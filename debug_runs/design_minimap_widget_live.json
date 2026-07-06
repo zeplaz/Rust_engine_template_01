@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/design_minimap_widget_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_design_minimap_widget_live_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371798
   },
   "content_pan_offset": 0,
   "gate": "MINIMAP-WIDGET-IMPL-001",

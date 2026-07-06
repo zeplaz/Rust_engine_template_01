@@ -77,6 +77,16 @@ impl MassingId {
     pub fn is_yard_complex(&self) -> bool {
         self.0 == "yard_complex"
     }
+
+    #[must_use]
+    pub fn is_t_massing(&self) -> bool {
+        self.0.starts_with("t_") || self.0.ends_with("_loading") || self.0.contains("_spur")
+    }
+
+    #[must_use]
+    pub fn is_u_courtyard(&self) -> bool {
+        self.0 == "u_courtyard"
+    }
 }
 
 impl fmt::Display for MassingId {
@@ -168,6 +178,12 @@ pub enum FootprintMode {
     LShape,
     #[serde(rename = "yard_interior")]
     YardInterior,
+    /// **BQ-K3** — T-block stem; v1 footprint uses L-notch proxy until dedicated T grid.
+    #[serde(rename = "t_shape")]
+    TShape,
+    /// **BQ-K3** — U courtyard; v1 footprint uses interior-yard proxy.
+    #[serde(rename = "u_shape")]
+    UShape,
 }
 
 impl FootprintMode {
@@ -177,6 +193,8 @@ impl FootprintMode {
             Self::Rect => "rect",
             Self::LShape => "l_shape",
             Self::YardInterior => "yard_interior",
+            Self::TShape => "t_shape",
+            Self::UShape => "u_shape",
         }
     }
 }
@@ -322,9 +340,9 @@ impl FacadeRule {
 pub fn default_door_rhythm_for_massing(massing_id: &MassingId) -> String {
     if massing_id.is_long_hall() {
         "linear_center".into()
-    } else if massing_id.is_l_shape() {
+    } else if massing_id.is_l_shape() || massing_id.is_t_massing() {
         "leg_offset".into()
-    } else if massing_id.is_yard_complex() {
+    } else if massing_id.is_yard_complex() || massing_id.is_u_courtyard() {
         "perimeter_only".into()
     } else {
         "default".into()
@@ -356,6 +374,12 @@ pub struct AgeBand {
     pub id: String,
     pub weight: u32,
     pub variant_tags: Vec<String>,
+    /// **BQ-K3** — APS surface mandate tags for material/condition routing.
+    #[serde(default)]
+    pub aps_mandate_tags: Vec<String>,
+    /// **BQ-K3** — condition band tags (new · aged · derelict · damaged).
+    #[serde(default)]
+    pub condition_tags: Vec<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]

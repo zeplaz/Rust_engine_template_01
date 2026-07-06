@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/power_node_hover_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_power_node_hover_live_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371798
   },
   "card_max_w": 280.0,
   "card_min_w": 220.0,

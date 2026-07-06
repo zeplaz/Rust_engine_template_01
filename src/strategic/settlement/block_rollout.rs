@@ -47,7 +47,7 @@ struct BlockRolloutState {
 
 #[derive(Resource, Debug, Default, Clone)]
 pub struct BlockRolloutStagingBook {
-    pub active: Vec<BlockRolloutState>,
+    active: Vec<BlockRolloutState>,
     pub committed: HashSet<BlockId>,
     pub planned_messages: u32,
     pub assembled_messages: u32,
@@ -325,6 +325,7 @@ pub fn advance_block_rollout_staging_system(
                     next_active.push(state);
                     continue;
                 }
+                state.phase = BlockRolloutPhase::Committed;
                 committed.write(BlockCommitted {
                     block_id: state.block_id.clone(),
                 });
@@ -339,8 +340,12 @@ pub fn advance_block_rollout_staging_system(
 
 pub fn push_block_recipe_visual_requests_system(
     eval_book: Res<BlockRecipeEvaluationBook>,
+    test_scene: Option<Res<crate::engine::test_harness::ActiveTestScene>>,
     mut requests: Option<ResMut<ConstructionVisualRequests>>,
 ) {
+    if test_scene.is_some() {
+        return;
+    }
     let Some(requests) = requests.as_mut() else {
         return;
     };

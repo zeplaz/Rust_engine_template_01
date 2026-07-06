@@ -4,7 +4,7 @@
   "queue_stats": [
     {
       "queue": "aps_grammar_evolution_queue.json",
-      "done": 12,
+      "done": 13,
       "pick": 0,
       "blocked": 3,
       "other": 0
@@ -18,8 +18,8 @@
     },
     {
       "queue": "aps_presence_correction_queue.json",
-      "done": 5,
-      "pick": 1,
+      "done": 6,
+      "pick": 0,
       "blocked": 0,
       "other": 0
     },
@@ -35,6 +35,13 @@
       "done": 15,
       "pick": 0,
       "blocked": 9,
+      "other": 0
+    },
+    {
+      "queue": "city_grammar_queue.json",
+      "done": 16,
+      "pick": 0,
+      "blocked": 0,
       "other": 0
     },
     {
@@ -56,6 +63,13 @@
       "done": 14,
       "pick": 0,
       "blocked": 16,
+      "other": 0
+    },
+    {
+      "queue": "coder_mcp_active_queue.json",
+      "done": 0,
+      "pick": 0,
+      "blocked": 1,
       "other": 0
     },
     {
@@ -88,7 +102,7 @@
     },
     {
       "queue": "grammar_continuation_queue.json",
-      "done": 107,
+      "done": 109,
       "pick": 1,
       "blocked": 4,
       "other": 0
@@ -171,9 +185,9 @@
     },
     {
       "queue": "post_drain_phase5_queue.json",
-      "done": 15,
+      "done": 17,
       "pick": 0,
-      "blocked": 13,
+      "blocked": 11,
       "other": 0
     },
     {
@@ -205,6 +219,13 @@
       "other": 0
     },
     {
+      "queue": "render_gui_refactor_queue.json",
+      "done": 4,
+      "pick": 1,
+      "blocked": 3,
+      "other": 0
+    },
+    {
       "queue": "simulation_continuation_queue.json",
       "done": 6,
       "pick": 0,
@@ -224,6 +245,22 @@
         "priority": 1
       }
     ],
+    "coder": [
+      {
+        "id": "RGR-M1-001",
+        "status": "ready",
+        "owner": "coder",
+        "queue": "render_gui_refactor_queue.json",
+        "program": "PLAN-RENDER-GUI-REFACTOR-v1",
+        "depends_on": [
+          "RGR-T0-001",
+          "RGR-T0-002",
+          "RGR-T0-003",
+          "RGR-T0-004"
+        ],
+        "priority": "P1"
+      }
+    ],
     "coder_b": [
       {
         "id": "PERF-INSTR-VFX-002",
@@ -236,20 +273,6 @@
       }
     ],
     "operator": [
-      {
-        "id": "OVR-APS-PRESENCE-OPERATOR-001",
-        "status": "done",
-        "owner": "operator",
-        "queue": "aps_presence_correction_queue.json",
-        "program": "APS-PRESENCE-CORRECTION-001",
-        "depends_on": [
-          "APS-GRAM-TIER-GATES-LIVE-001",
-          "DES-APS-SESSION-DUMP-001"
-        ],
-        "priority": "P1",
-        "witness": "debug_runs/aps_presence_operator_attestation_live.json",
-        "note": "closed 2026-07-03 operator lease"
-      },
       {
         "id": "PERF-SHELL-001",
         "status": "ready",
@@ -308,6 +331,17 @@
         "queue": "coder_master_drain_queue.json",
         "program": "CODER-MASTER-DRAIN-001",
         "depends_on": [],
+        "priority": "P4"
+      },
+      {
+        "id": "BQ-Q2-SCREEN-001",
+        "status": "blocked",
+        "owner": "?",
+        "queue": "coder_mcp_active_queue.json",
+        "program": "PLAN-BUILDING-QUALITY-v1",
+        "depends_on": [
+          "BQ-A2-GATE-001"
+        ],
         "priority": "P4"
       },
       {
@@ -438,20 +472,42 @@
         "program": "POST-DRAIN-PHASE-5-001",
         "depends_on": [],
         "priority": 1
+      },
+      {
+        "id": "RGR-M1-002",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "render_gui_refactor_queue.json",
+        "program": "PLAN-RENDER-GUI-REFACTOR-v1",
+        "depends_on": [
+          "RGR-M1-001"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "RGR-M1-003",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "render_gui_refactor_queue.json",
+        "program": "PLAN-RENDER-GUI-REFACTOR-v1",
+        "depends_on": [
+          "RGR-M1-002"
+        ],
+        "priority": "P1"
+      },
+      {
+        "id": "RGR-M1-004",
+        "status": "blocked",
+        "owner": "coder",
+        "queue": "render_gui_refactor_queue.json",
+        "program": "PLAN-RENDER-GUI-REFACTOR-v1",
+        "depends_on": [
+          "RGR-M1-003"
+        ],
+        "priority": "P2"
       }
     ],
     "coder-mcp": [
-      {
-        "id": "APS-G4-COVERAGE-001",
-        "status": "done",
-        "owner": "coder-mcp",
-        "queue": "aps_grammar_evolution_queue.json",
-        "program": "PLAN-APS-GRAMMAR-EVOLUTION-001",
-        "depends_on": [],
-        "priority": "P0",
-        "witness": "debug_runs/aps_g4_coverage_live.json",
-        "note": "tier G4 · pilot_hardcode green · closed 2026-07-03"
-      },
       {
         "id": "APS-E1-FLOW-LANE-001",
         "status": "blocked",
@@ -1764,32 +1820,12 @@
       },
       {
         "id": "BUILD-READ-DESIGN-001",
-        "status": "done",
+        "status": "blocked",
         "owner": "designer",
         "queue": "coder_master_drain_queue.json",
         "program": "CODER-MASTER-DRAIN-001",
         "depends_on": [],
         "priority": "P1"
-      },
-      {
-        "id": "BUILD-READ-DESIGN-001",
-        "status": "done",
-        "owner": "designer",
-        "queue": "post_drain_phase5_queue.json",
-        "program": "POST-DRAIN-PHASE-5-001",
-        "depends_on": [],
-        "priority": 1
-      },
-      {
-        "id": "BUILD-READ-DESIGN-002",
-        "status": "done",
-        "owner": "designer",
-        "queue": "post_drain_phase5_queue.json",
-        "program": "POST-DRAIN-PHASE-5-001",
-        "depends_on": [
-          "BUILD-READ-DESIGN-001"
-        ],
-        "priority": 2
       }
     ],
     "designer-mcp": [

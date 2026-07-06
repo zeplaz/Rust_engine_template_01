@@ -47,7 +47,11 @@ pub trait ProjectionNodeTrait {
     fn evaluate(&mut self, ctx: &RenderProjectionContext<'_>);
 }
 
-fn bin_merge_chunk_heat(rows: &[ChunkFireHeat], bin: i32) -> Vec<ChunkFireHeat> {
+/// VT4-WITNESS-001: exported so witness/agreement comparisons can apply the **same** binning
+/// policy to a source-side chunk-heat list before hashing against [`FireProjectionNode::chunk_heat`]
+/// (which is already LOD-binned here) — otherwise bin>1 comparisons are permanently apples-to-oranges.
+#[must_use]
+pub fn bin_merge_chunk_heat(rows: &[ChunkFireHeat], bin: i32) -> Vec<ChunkFireHeat> {
     debug_assert!(bin >= 1);
     let mut m: HashMap<(i32, i32), ChunkFireHeat> = HashMap::new();
     for h in rows {
@@ -120,6 +124,10 @@ pub struct FireProjectionNode {
     pub lod: WorldLodBand,
     /// LOD-shaped allocation ceiling for the fire instance GPU buffer.
     pub gpu_instance_capacity: usize,
+    /// VT4-WITNESS-001: chunk-grid bin actually applied to [`Self::chunk_heat`] this evaluation
+    /// (1 = unbinned). Authority for apples-to-apples source-vs-projected hash comparisons —
+    /// see [`bin_merge_chunk_heat`].
+    pub chunk_heat_bin: i32,
 }
 
 impl Default for FireProjectionNode {
@@ -132,6 +140,7 @@ impl Default for FireProjectionNode {
             burst_hints: Vec::new(),
             lod: WorldLodBand::LocalTactical,
             gpu_instance_capacity: usize::MAX,
+            chunk_heat_bin: 1,
         }
     }
 }
@@ -168,11 +177,13 @@ impl ProjectionNodeTrait for FireProjectionNode {
             self.chunk_heat.clear();
             self.burst_hints.clear();
             self.gpu_instance_capacity = 0;
+            self.chunk_heat_bin = 1;
             self.snapshot_stamp = ctx.committed_stamp.tick;
             return;
         }
         self.gpu_instance_capacity = ctx.policy.gpu_budget.fire_instance_cap;
         self.instance_buffer = project_fire_instances(ctx.fire, ctx.policy);
+        self.chunk_heat_bin = ctx.policy.overlay_policy.chunk_heat_bin.max(1);
         self.chunk_heat = project_chunk_heat(ctx.fire, ctx.policy);
         self.burst_hints = if ctx.policy.extract_plan.fire_instances {
             collect_burst_hints_from_fire_visual(&self.instance_buffer, 0.9)

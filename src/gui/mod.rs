@@ -11,8 +11,17 @@ pub mod hud;
 mod minimap_shell;
 mod minimap_egui_dev;
 mod minimap_viewport_frame;
-mod map_camera;
-pub mod sim_map_rtt;
+pub mod tactical;
+/// RGR-P5-002 shim — old `crate::gui::map_camera::*` path kept alive; canonical home is
+/// `crate::gui::tactical::map_camera`. Remove once all call sites migrate to the new path.
+pub mod map_camera {
+    pub use super::tactical::map_camera::*;
+}
+/// RGR-P5-002 shim — old `crate::gui::sim_map_rtt::*` path kept alive; canonical home is
+/// `crate::gui::tactical::sim_map_rtt`. Remove once all call sites migrate to the new path.
+pub mod sim_map_rtt {
+    pub use super::tactical::sim_map_rtt::*;
+}
 mod map_zoom_coherence;
 mod sim_map_projection;
 mod vfx_fire_test_highlight;
@@ -163,10 +172,12 @@ pub use style::{
 pub use egui_root::new_root_ui;
 pub use egui_window::std_floating;
 pub use sim_map_rtt::{
-    apply_simulation_map_camera_clear, insert_simulation_map_texture, simulation_map_rtt_clear_color,
+    apply_simulation_map_camera_clear, insert_simulation_map_texture, rtt_diag_camera_mode,
+    simulation_map_rtt_clear_color,
     simulation_map_rtt_image, simulation_map_rtt_render_layers, simulation_map_texture_extent,
-    spawn_simulation_hud_ui_camera, SimulationHudUiCamera, SimulationMapFillRect,
-    SimulationMapTexture, SIMULATION_MAP_RTT_RENDER_LAYER,
+    spawn_main_world_rtt_camera, spawn_simulation_hud_ui_camera, RttDiagCameraConfig,
+    RttDiagCameraMode, SimulationHudUiCamera, SimulationMapFillRect,
+    TacticalMapFillRect, SimulationMapTexture, SIMULATION_MAP_RTT_RENDER_LAYER,
 };
 pub use authoritative_viewport::{
     bootstrap_authoritative_viewport_on_enter_simulation, measure_sim_map_fill_viewport,
@@ -175,18 +186,16 @@ pub use authoritative_viewport::{
 pub use map_camera::{
     default_map_zoom_for_world, in_simulation_or_editor_map, map_camera_viewport_pixels,
     map_zoom_limits_for_world, orthographic_fixed_world_span, primary_cursor_world_xy,
-    MainWorldCamera,
-    MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired, MapCameraDesiredRes,
+    MainWorldCamera, MainWorldCameraOrthoTrace, MAIN_WORLD_CAMERA_Z, MapCameraDesired, MapCameraDesiredRes,
     MapCameraMode,
-    reset_main_world_camera_viewport_latch_on_enter_simulation,
     sync_main_world_camera_viewport_and_projection,
     MapCameraPlugin, MapCameraSettings, MapCameraSystemSet,
     derive_map_camera_desired_from_view_authority, mirror_world_main_camera_from_map_desired,
     map_scale_for_zoom_alpha, map_zoom_alpha, map_zoom_alpha_with_limits,
     on_world_main_pose_committed,
     sim_map_cursor_world_xy, sim_map_image_rect,
-    sim_map_screen_to_world_xy, sim_map_visible_world_span, sim_map_world_vec3_to_egui,
-    sim_map_world_xy_to_egui, TACTICAL_VFX_PROOF_ZOOM_ALPHA,
+    sim_map_screen_to_world_xy, sim_map_screen_to_world_xy_with_ortho, sim_map_visible_world_span, sim_map_world_vec3_to_egui,
+    sim_map_world_xy_to_egui, sim_map_world_xy_to_egui_with_ortho, TACTICAL_VFX_PROOF_ZOOM_ALPHA,
     trace_map_camera_desired_write_if_full_app, MAP_ZOOM_CLAMP, MAP_ZOOM_AXIS_SNAP_EPS,
 };
 pub use map_zoom_coherence::{

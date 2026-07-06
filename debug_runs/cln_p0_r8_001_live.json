@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/cln_p0_r8_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_cln_p0_r8_witness",
-    "written_at_epoch_secs": 1783119133
+    "written_at_epoch_secs": 1783371797
   },
   "classification": "prod_comps_A_obsolete; legacy_transport_stubs_B_transitional",
   "gate": "CLN-P0-R8-001",

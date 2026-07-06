@@ -115,8 +115,8 @@ impl FootprintGrid {
         );
         let mut grid = Self::from_rect_with_door(result.width, result.depth, result.floors, Some(door_x));
         match result.footprint_mode.as_str() {
-            "yard_interior" => grid.inject_interior_yard(),
-            "l_shape" => grid.inject_l_shape_yard_v1(),
+            "yard_interior" | "u_shape" => grid.inject_interior_yard(),
+            "l_shape" | "t_shape" => grid.inject_l_shape_yard_v1(),
             _ => {}
         }
         grid
@@ -237,10 +237,11 @@ pub fn street_facing_door_column(
     });
 
     let rhythm_bias = match door_rhythm {
-        "linear_center" => span / 2,
-        "perimeter_only" => (min_x + span / 4).max(min_x),
-        "leg_offset" => min_x + span / 3,
-        "loading_bay" => min_x + span * 2 / 3,
+        "linear_center" | "stem_center" | "shopfront_row" => span / 2,
+        "perimeter_only" | "court_perimeter" => (min_x + span / 4).max(min_x),
+        "leg_offset" | "corner_primary" => min_x + span / 3,
+        "loading_bay" | "spur_end" => min_x + span * 2 / 3,
+        "bay_alternating" => min_x + (span / 2) * ((seed % 2) as u32),
         _ if massing_strategy.contains("long_hall") || massing_strategy.contains("double_hall") => {
             span / 2
         }

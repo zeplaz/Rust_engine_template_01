@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/bq_h2_openings_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_bq_h2_openings_witness",
-    "written_at_epoch_secs": 1783115349
+    "written_at_epoch_secs": 1783371796
   },
   "door_cell_floor0": {
     "x": 7,

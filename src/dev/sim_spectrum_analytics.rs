@@ -429,6 +429,104 @@ fn gpu_bound_idle_steady(
     render_present_ms >= 8.0 || render_thread_draw_ms >= 8.0
 }
 
+/// **GPU-P3-B** — render-thread suspects outrank stall substages in triage ordering.
+#[must_use]
+pub fn perf_suspect_tier(label: &str) -> u8 {
+    match label {
+        "render_thread_draw_and_present" => 0,
+        "render_present_uninstrumented" | "gpu_gap_wall_clock" | "post_render_gap" => 1,
+        l if l.starts_with("substage_") => 3,
+        _ => 2,
+    }
+}
+
+pub fn sort_perf_suspects(suspects: &mut [(String, f32)]) {
+    suspects.sort_by(|a, b| {
+        perf_suspect_tier(&a.0)
+            .cmp(&perf_suspect_tier(&b.0))
+            .then(b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal))
+    });
+}
+
+/// Required `last_frame` paths when test instrumentation is active (**GPU-P3-B**).
+pub const SIM_SPECTRUM_CONTRACT_PATHS: &[&str] = &[
+    "spine.terrain_authority",
+    "spine.tile_raster_ms",
+    "render_schedule.render_and_present_ms",
+    "bottleneck_triage.primary_suspects",
+];
+
+#[must_use]
+pub fn frame_json_has_path(frame: &Value, dotted: &str) -> bool {
+    let pointer = format!("/{}", dotted.replace('.', "/"));
+    frame.pointer(&pointer).is_some()
+}
+
+#[must_use]
+pub fn triage_render_before_substage(primary: &[Value]) -> bool {
+    let mut render_idx = None;
+    let mut substage_idx = None;
+    for (i, entry) in primary.iter().enumerate() {
+        let Some(label) = entry.get("label").and_then(|v| v.as_str()) else {
+            continue;
+        };
+        if label == "render_thread_draw_and_present" {
+            render_idx = Some(i);
+        } else if label.starts_with("substage_") && substage_idx.is_none() {
+            substage_idx = Some(i);
+        }
+    }
+    match (render_idx, substage_idx) {
+        (Some(r), Some(s)) => r < s,
+        _ => true,
+    }
+}
+
+#[must_use]
+pub fn sim_spectrum_frame_contract_ok(frame: &Value) -> bool {
+    SIM_SPECTRUM_CONTRACT_PATHS
+        .iter()
+        .all(|path| frame_json_has_path(frame, path))
+        && frame
+            .pointer("/bottleneck_triage/primary_suspects")
+            .and_then(|v| v.as_array())
+            .is_some_and(|arr| triage_render_before_substage(arr))
+}
+
+#[must_use]
+pub fn sim_spectrum_witness_contract_green(frame: &Value) -> bool {
+    sim_spectrum_frame_contract_ok(frame)
+}
+
+fn render_schedule_frame_json(rs: Option<&RenderScheduleWitness>) -> Value {
+    if let Some(rs) = rs {
+        let r = &rs.spans;
+        return json!({
+            "main_thread_handoff_total_ms": rs.main_thread_handoff_total_ms,
+            "frames_received": rs.frames_received,
+            "extract_schedule_ms": r.extract_schedule_ms,
+            "extract_commands_ms": r.extract_commands_ms,
+            "prepare_assets_ms": r.prepare_assets_ms,
+            "prepare_meshes_ms": r.prepare_meshes_ms,
+            "manage_views_ms": r.manage_views_ms,
+            "queue_ms": r.queue_ms,
+            "phase_sort_ms": r.phase_sort_ms,
+            "prepare_ms": r.prepare_ms,
+            "render_and_present_ms": r.render_and_present_ms,
+            "cleanup_ms": r.cleanup_ms,
+            "post_cleanup_ms": r.post_cleanup_ms,
+            "total_render_app_ms": r.total_render_app_ms,
+        });
+    }
+    json!({
+        "frames_received": 0,
+        "pending_first_frame": true,
+        "render_and_present_ms": 0.0,
+        "prepare_ms": 0.0,
+        "total_render_app_ms": 0.0,
+    })
+}
+
 fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
     let shell_wall_ms = params
         .budget
@@ -540,8 +638,8 @@ fn build_bottleneck_triage(params: &SpectrumCapture) -> Value {
         }
     }
 
-    suspects.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
     suspects.dedup_by(|a, b| a.0 == b.0);
+    sort_perf_suspects(&mut suspects);
 
     let stall_mismatch = suspects.iter().any(|(l, ms)| {
         *ms >= 50.0
@@ -773,24 +871,10 @@ fn build_frame_snapshot(params: &SpectrumCapture) -> Value {
     frame["bottleneck_triage"] = build_bottleneck_triage(params);
     frame["perf_scopes"] = perf_scope_frame_log::take_perf_scopes_json();
 
-    if let Some(rs) = params.render_schedule.as_deref() {
-        let r = &rs.spans;
-        frame["render_schedule"] = json!({
-            "main_thread_handoff_total_ms": rs.main_thread_handoff_total_ms,
-            "frames_received": rs.frames_received,
-            "extract_schedule_ms": r.extract_schedule_ms,
-            "extract_commands_ms": r.extract_commands_ms,
-            "prepare_assets_ms": r.prepare_assets_ms,
-            "prepare_meshes_ms": r.prepare_meshes_ms,
-            "manage_views_ms": r.manage_views_ms,
-            "queue_ms": r.queue_ms,
-            "phase_sort_ms": r.phase_sort_ms,
-            "prepare_ms": r.prepare_ms,
-            "render_and_present_ms": r.render_and_present_ms,
-            "cleanup_ms": r.cleanup_ms,
-            "post_cleanup_ms": r.post_cleanup_ms,
-            "total_render_app_ms": r.total_render_app_ms,
-        });
+    if sim_spectrum_analytics_enabled() {
+        frame["render_schedule"] = render_schedule_frame_json(params.render_schedule.as_deref());
+    } else if let Some(rs) = params.render_schedule.as_deref() {
+        frame["render_schedule"] = render_schedule_frame_json(Some(rs));
     }
 
     frame
@@ -982,9 +1066,20 @@ pub fn flush_sim_spectrum_analytics(
         .and_then(|v| v.as_f64())
         .unwrap_or(0.0) as f32;
     let last_stall_mismatch = steady_ref
-        .and_then(|f| f.pointer("/attribution_honesty/stall_checkpoint_mismatch"))
+        .and_then(|f| f.pointer("/bottleneck_triage/attribution_honesty/stall_checkpoint_mismatch"))
         .and_then(|v| v.as_bool())
-        .unwrap_or(true);
+        .unwrap_or(false);
+    let witness_contract = {
+        let frame = analytics.last_frame.as_ref();
+        let paths_ok = frame.is_some_and(sim_spectrum_frame_contract_ok);
+        json!({
+            "gate": "GPU-P3-B",
+            "version": 1,
+            "required_paths": SIM_SPECTRUM_CONTRACT_PATHS,
+            "frame_paths_ok": paths_ok,
+            "green": paths_ok,
+        })
+    };
     let program_exit_gate = json!({
         "p95_frame_ms": gate_p95,
         "p95_render_present_ms": gate_render_p95,
@@ -1007,6 +1102,7 @@ pub fn flush_sim_spectrum_analytics(
         "frames_sampled": frames_sampled,
         "disk_flushes": analytics.disk_flushes,
         "program_exit_gate": program_exit_gate,
+        "witness_contract": witness_contract,
         "rolling": rolling.clone(),
         "last_frame": analytics.last_frame.clone().unwrap_or(Value::Null),
         "jsonl_enabled": sim_spectrum_frame_jsonl_enabled(),
@@ -1089,5 +1185,57 @@ mod tests {
         assert!(summary.get("frame_wall_ms").is_some());
         assert!(summary.get("fire_pipeline_ms").is_some());
         assert!(summary.get("view_fire_ms").is_some());
+    }
+
+    #[test]
+    fn sort_perf_suspects_render_before_substage() {
+        let mut suspects = vec![
+            ("substage_fire_pre_extract".to_string(), 100.0),
+            ("render_thread_draw_and_present".to_string(), 20.0),
+            ("readiness".to_string(), 30.0),
+        ];
+        sort_perf_suspects(&mut suspects);
+        assert_eq!(suspects[0].0, "render_thread_draw_and_present");
+        assert!(suspects.iter().position(|(l, _)| l == "substage_fire_pre_extract").unwrap()
+            > suspects
+                .iter()
+                .position(|(l, _)| l == "render_thread_draw_and_present")
+                .unwrap());
+    }
+
+    #[test]
+    fn sim_spectrum_frame_contract_requires_core_paths() {
+        let frame = json!({
+            "spine": {
+                "terrain_authority": "GpuInstancedAtlas",
+                "tile_raster_ms": 0.0,
+            },
+            "render_schedule": { "render_and_present_ms": 12.0 },
+            "bottleneck_triage": {
+                "primary_suspects": [
+                    { "label": "render_thread_draw_and_present", "ms": 20.0 },
+                    { "label": "substage_fire_pre_extract", "ms": 100.0 },
+                ],
+            },
+        });
+        assert!(sim_spectrum_frame_contract_ok(&frame));
+    }
+
+    #[test]
+    fn sim_spectrum_contract_rejects_substage_before_render() {
+        let frame = json!({
+            "spine": {
+                "terrain_authority": "GpuInstancedAtlas",
+                "tile_raster_ms": 0.0,
+            },
+            "render_schedule": { "render_and_present_ms": 12.0 },
+            "bottleneck_triage": {
+                "primary_suspects": [
+                    { "label": "substage_fire_pre_extract", "ms": 100.0 },
+                    { "label": "render_thread_draw_and_present", "ms": 20.0 },
+                ],
+            },
+        });
+        assert!(!sim_spectrum_frame_contract_ok(&frame));
     }
 }

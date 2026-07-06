@@ -4,6 +4,10 @@
 //! importing `dev` except at explicit hook sites to prevent accidental coupling.
 
 pub mod debug_run_envelope;
+pub mod diagnostic_events;
+pub mod diagnostics;
+pub mod mig_a_adoption;
+pub mod mig_a_audit;
 pub mod stage7_play_witness;
 pub mod stage7_behavioral_witness;
 pub mod runtime_witness;
@@ -11,9 +15,14 @@ pub mod schedule_cycle_probe;
 pub mod perf_scope_frame_log;
 pub mod sim_spectrum_analytics;
 pub mod schedule_sync_witness;
+pub mod chain_b_witness;
+pub mod rgr_m1_witness;
 pub mod cleanup_p0_witness;
 pub mod gpu_terrain_witness;
 pub mod gpu_p1_p2_witness;
+pub mod bq_k3_grammar_witness;
+pub mod gpu_p3_witness;
+pub mod rtt_lane_witness;
 pub mod triage_perf_vfx_fix_live_proof;
 pub mod test_run_instrumentation;
 pub mod construction_live_todos;
@@ -27,6 +36,7 @@ pub mod industrial_activation_todos;
 pub mod logistics_throughput_todos;
 pub mod orchestrator_health;
 pub mod engine_deep_debug;
+pub mod tactical_map_debug;
 pub mod proof_grade;
 pub mod replay_editor_parity;
 pub mod stage5_live_todos;
@@ -235,6 +245,11 @@ pub use test_run_instrumentation::{
     instrumentation_active, instrumentation_flush_secs, instrumentation_frame_jsonl,
     instrumentation_quiet_terminal, instrumentation_stall_spans, TestRunInstrumentation,
     TestRunInstrumentationPlugin,
+};
+pub use mig_a_adoption::{
+    build_mig_a_rollup_json, mig_a_static_scene_enabled, mig_a4_render_recovery_enabled,
+    MigAAdoptionPlugin, MigAAdoptionState, MigAStaticScenePlugin, MIG_A1_A2_A16_JSON,
+    MIG_A_ROLLUP_JSON,
 };
 #[cfg(test)]
 pub use coder_b_queue_bundle_proof::refresh_coder_b_queue_bundle_live_witnesses;

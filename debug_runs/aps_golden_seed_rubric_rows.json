@@ -9,7 +9,7 @@
       "expected_hash": "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
       "verdict": "approve",
       "note": "pytest",
-      "recorded_at": "2026-07-03T22:40:42.546527+00:00",
+      "recorded_at": "2026-07-04T02:47:19.138430+00:00",
       "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q3"
     }
   ]

@@ -132,8 +132,8 @@ pub fn simulation_map_fallback_logical_extent(window: Vec2) -> Vec2 {
     )
 }
 
-/// Screen-space rect of the tactical map UI fill — see [`crate::gui::sim_map_rtt::SimulationMapFillRect`].
-pub use crate::gui::sim_map_rtt::SimulationMapFillRect as SimulationMapViewport;
+/// Screen-space rect of the tactical map UI fill — see [`crate::gui::sim_map_rtt::TacticalMapFillRect`].
+pub use crate::gui::sim_map_rtt::TacticalMapFillRect as SimulationMapViewport;
 
 /// Legacy debug witness slots (hole latch removed — RTT path).
 #[derive(Resource, Clone, Copy, Debug, Default)]
@@ -193,20 +193,11 @@ impl Plugin for InGameHudPlugin {
             .init_resource::<SimulationMapViewportTrace>()
             .init_resource::<SimulationMapViewportDebug>()
             .init_resource::<crate::gui::sim_map_rtt::SimulationMapFillRect>()
+            .init_resource::<crate::gui::sim_map_rtt::SimulationMapRttBindBarrier>()
             .init_resource::<crate::gui::hud::ViewportRectSanity>()
             .add_plugins(crate::gui::hud::ViewportIntegrityAssertPlugin)
             .add_plugins(SimulationShellPhase2Plugin)
-            .add_systems(
-                PostUpdate,
-                (
-                    crate::gui::sim_map_rtt::sync_simulation_map_fill_rect_system,
-                    crate::gui::sim_map_rtt::sync_simulation_map_image_node_system,
-                )
-                    .chain()
-                    .run_if(in_simulation_or_editor)
-                    .after(bevy::ui::UiSystems::Stack)
-                    .in_set(SimulationViewportSyncSet::MeasureUiHole),
-            );
+            .add_plugins(crate::gui::tactical::sim_map_rtt::SimulationMapRttPlugin);
         register_sim_command_shell_lifecycle(app);
         app.add_systems(
                 Update,
@@ -296,7 +287,10 @@ fn spawn_simulation_command_shell(
     let tf_hud = |size: f32| TextFont::from_font_size(size).with_font(font.clone());
     let map_image = tex
         .as_ref()
-        .map(|t| bevy::ui::widget::ImageNode::new(t.0.clone()))
+        .map(|t| {
+            bevy::ui::widget::ImageNode::new(t.0.clone())
+                .with_mode(bevy::ui::widget::NodeImageMode::Stretch)
+        })
         .unwrap_or_default();
 
     let tools = format!(

@@ -1,5 +1,6 @@
 //! **CLN-P0-*** Phase 0 hygiene witnesses (coder + steward slices).
 
+pub const CLN_P0_R1_LIVE_JSON: &str = "debug_runs/cln_p0_r1_001_live.json";
 pub const CLN_P0_S8_LIVE_JSON: &str = "debug_runs/cln_p0_s8_001_live.json";
 pub const CLN_P0_P10_LIVE_JSON: &str = "debug_runs/cln_p0_p10_001_live.json";
 pub const CLN_P0_R4_LIVE_JSON: &str = "debug_runs/cln_p0_r4_001_live.json";
@@ -7,6 +8,39 @@ pub const CLN_P0_R8_LIVE_JSON: &str = "debug_runs/cln_p0_r8_001_live.json";
 pub const CLN_P0_T4_LIVE_JSON: &str = "debug_runs/cln_p0_t4_001_live.json";
 pub const CLN_P0_T7_LIVE_JSON: &str = "debug_runs/cln_p0_t7_001_live.json";
 pub const CLN_P0_T6_LIVE_JSON: &str = "debug_runs/cln_p0_t6_001_live.json";
+
+#[must_use]
+pub fn cln_p0_r1_legacy_engine_doc_green() -> bool {
+    let engine_mod = include_str!("../engine/mod.rs");
+    let warnings = include_str!("COMPILE_WARNINGS_TODOS.md");
+    engine_mod.contains("#[cfg(feature = \"legacy_engine\")]")
+        && engine_mod.contains("mod engine;")
+        && warnings.contains("CW-31")
+        && warnings.contains("legacy_engine")
+        && warnings.contains("not exported in default build")
+}
+
+#[must_use]
+pub fn build_cln_p0_r1_witness_body() -> serde_json::Value {
+    serde_json::json!({
+        "gate": "CLN-P0-R1-001",
+        "green": cln_p0_r1_legacy_engine_doc_green(),
+        "issue": "R1",
+        "target": "src/engine/engine.rs",
+        "feature_gated": true,
+        "plan_ref": "src/dev/plan_cleanup_v1.md#CLN-P0-R1-001",
+    })
+}
+
+#[must_use]
+pub fn refresh_cln_p0_r1_witness() -> bool {
+    refresh_witness(
+        CLN_P0_R1_LIVE_JSON,
+        "CLN-P0-R1-001",
+        "refresh_cln_p0_r1_witness",
+        build_cln_p0_r1_witness_body(),
+    )
+}
 
 #[must_use]
 pub fn cln_p0_s8_spacial_no_println_green() -> bool {
@@ -64,7 +98,7 @@ pub fn refresh_cln_p0_p10_witness() -> bool {
 
 #[must_use]
 pub fn refresh_cln_p0_coder_witnesses() -> bool {
-    refresh_cln_p0_s8_witness() && refresh_cln_p0_p10_witness()
+    refresh_cln_p0_r1_witness() && refresh_cln_p0_s8_witness() && refresh_cln_p0_p10_witness()
 }
 
 /// **CLN-P0-R4-001** — Drez-era loaders removed from module graph.
@@ -257,6 +291,11 @@ fn refresh_witness(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn cln_p0_r1_witness_green() {
+        assert!(cln_p0_r1_legacy_engine_doc_green());
+    }
 
     #[test]
     fn cln_p0_s8_witness_green() {

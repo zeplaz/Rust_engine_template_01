@@ -85,13 +85,11 @@ pub fn sim_map_screen_to_world_xy_in_frame(
     frame: &SimMapProjectionFrame,
 ) -> Vec2 {
     let rect = frame.screen_rect;
-    let nx = ((cursor.x - rect.min.x) / rect.width().max(1.0)).clamp(0.0, 1.0);
-    let ny = ((cursor.y - rect.min.y) / rect.height().max(1.0)).clamp(0.0, 1.0);
     let cam = pose.translation.truncate();
-    Vec2::new(
-        cam.x + (nx - 0.5) * frame.visible_w,
-        cam.y + (ny - 0.5) * frame.visible_h,
-    )
+    let dx = (cursor.x - rect.center().x) * frame.visible_w / rect.width().max(1.0);
+    // World +Y is north; screen +Y is down — must match [`sim_map_screen_to_world_xy`].
+    let dy = -(cursor.y - rect.center().y) * frame.visible_h / rect.height().max(1.0);
+    Vec2::new(cam.x + dx, cam.y + dy)
 }
 
 /// [`Camera::world_to_viewport`] — already logical px (matches [`Window::cursor_position`]).

@@ -1,5 +1,4 @@
-// FX-WATER-PARTICLE-001 — pinpoint water glints/streaks/foam (D-W05/D-W07).
-
+// View globals — `view_proj` from ExtractedCameraMetrics (RTT-B5); raster sync uses metrics, not camera query.
 struct Globals {
     view_proj: mat4x4<f32>,
     vertex_count: u32,

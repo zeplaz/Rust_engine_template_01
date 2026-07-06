@@ -41,16 +41,17 @@ fn load_contract_file() -> Option<ModuleContractFile> {
 pub fn build_bq_c1_contract_witness_body() -> Value {
     let file = load_contract_file();
     let file_ok = file.is_some();
-    let (grid_ok, floor_ok, pivot_ok) = if let Some(c) = file.as_ref() {
+    let (grid_ok, floor_ok, pivot_ok, schema_ok) = if let Some(c) = file.as_ref() {
         (
             (c.grid_unit_m - f64::from(GRID_UNIT_M)).abs() < f64::EPSILON,
             (c.floor_height_m - f64::from(FLOOR_HEIGHT_M)).abs() < f64::EPSILON,
             c.pivot_convention == PIVOT_CONVENTION,
+            c.schema_version >= 1,
         )
     } else {
-        (false, false, false)
+        (false, false, false, false)
     };
-    let green = file_ok && grid_ok && floor_ok && pivot_ok;
+    let green = file_ok && grid_ok && floor_ok && pivot_ok && schema_ok;
     json!({
         "task_id": "BQ-C1-CONTRACT-001",
         "gate": "BQ-C1-CONTRACT-001",
@@ -64,6 +65,7 @@ pub fn build_bq_c1_contract_witness_body() -> Value {
         },
         "parity": {
             "contract_file_loaded": file_ok,
+            "schema_version": schema_ok,
             "grid_unit_m": grid_ok,
             "floor_height_m": floor_ok,
             "pivot_convention": pivot_ok,

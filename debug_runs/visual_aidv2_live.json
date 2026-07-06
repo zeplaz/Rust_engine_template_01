@@ -10,7 +10,7 @@
     },
     "logging_env": {
       "ORCHESTRATOR_EXPORT_HEALTH": false,
-      "PERF": true,
+      "PERF": false,
       "PERF_DISK": false,
       "RUST_LOG": null,
       "SIM_ANALYTICS": false,
@@ -19,7 +19,7 @@
       "SIM_VIEW_SYNC_DEBUG": false,
       "STAGE5_READINESS_VERBOSE": false,
       "STAGE5_VERBOSE": false,
-      "STALL": true,
+      "STALL": false,
       "VIEWPORT_AUTHORITY_DEBUG": false
     },
     "orchestrator": {
@@ -58,13 +58,13 @@
     "relative_path": "debug_runs/visual_aidv2_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "visual_aidv2_live_todos",
-    "written_at_epoch_secs": 1783051727
+    "written_at_epoch_secs": 1783371799
   },
   "board": "VISUAL_AID_V2",
   "done": 6,
   "green": true,
-  "lib_fixture": false,
-  "proof_grade": "visual_capture",
+  "lib_fixture": true,
+  "proof_grade": "lib_harness_fixture",
   "rows": [
     {
       "goal": "HUD cycles Collapsed/Peek/Expanded/Pinned; ESC collapses unpinned panels.",

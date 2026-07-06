@@ -18,8 +18,7 @@ use crate::engine::{AppState, WorldGenState};
 use crate::gui::hud::{HudDockRegistry, HudWidgetId, ViewportRectSanity};
 use crate::gui::CommandLeftStackState;
 use crate::gui::map_camera::{
-    MainWorldCamera, MainWorldCameraOrthoTrace, MainWorldCameraViewportLatch, MapCameraDesired,
-    MapCameraDesiredRes,
+    MainWorldCameraOrthoTrace, MapCameraDesired, MapCameraDesiredRes,
 };
 use crate::gui::{
     MinimapShellState, SimulationMapViewport, SimulationMapViewportDebug, SimulationMapViewportTrace,
@@ -42,9 +41,6 @@ pub(crate) struct SyncSignature {
     sim_adequate: bool,
     sim_held: bool,
     commit_tag: u8,
-    cam_hole: bool,
-    render_hole: bool,
-    cam_scissor: Option<(u32, u32, u32, u32)>,
     ortho_wh: (u32, u32),
     view_px: (u32, u32),
     raster_rev: u64,
@@ -104,17 +100,6 @@ fn pack_uvec2(v: UVec2) -> (u32, u32) {
     (v.x, v.y)
 }
 
-fn pack_viewport(vp: Option<bevy::camera::Viewport>) -> Option<(u32, u32, u32, u32)> {
-    vp.map(|v| {
-        (
-            v.physical_position.x,
-            v.physical_position.y,
-            v.physical_size.x,
-            v.physical_size.y,
-        )
-    })
-}
-
 fn tag_commit(s: &str) -> u8 {
     match s {
         "hole_inadequate" => 1,
@@ -134,8 +119,6 @@ pub(crate) struct SimViewSyncCtx<'w, 's> {
     sim: Res<'w, SimulationMapViewport>,
     trace: Res<'w, SimulationMapViewportTrace>,
     sim_dbg: Res<'w, SimulationMapViewportDebug>,
-    latch: Res<'w, MainWorldCameraViewportLatch>,
-    cam: Query<'w, 's, &'static Camera, With<MainWorldCamera>>,
     ortho: Res<'w, MainWorldCameraOrthoTrace>,
     raster_dirty: Res<'w, TileWorldFallbackRasterDirty>,
     resolved: Res<'w, ResolvedViewports>,
@@ -157,7 +140,6 @@ fn log_sync_edge(
     sim: &SimulationMapViewport,
     trace: &SimulationMapViewportTrace,
     sim_dbg: &SimulationMapViewportDebug,
-    latch: &MainWorldCameraViewportLatch,
     dock: &HudDockRegistry,
     viewport_sanity: &ViewportRectSanity,
     left_stack: &CommandLeftStackState,
@@ -183,11 +165,6 @@ fn log_sync_edge(
         last_commit = sim_dbg.last_commit,
         frozen = sim_dbg.frozen,
         pending_wh = ?sim_dbg.pending_wh,
-        cam_hole = sig.cam_hole,
-        render_hole = sig.render_hole,
-        cam_invalid_streak = latch.invalid_streak,
-        cam_valid_streak = latch.valid_streak,
-        cam_scissor = ?sig.cam_scissor,
         ortho_fixed_wh = ?sig.ortho_wh,
         map_view_px = ?sig.view_px,
         raster_rev = sig.raster_rev,
@@ -207,24 +184,6 @@ fn log_sync_edge(
     );
 
     if let Some(p) = prev {
-        if p.cam_hole != sig.cam_hole {
-            warn!(
-                target: "sim_view_sync::anomaly",
-                frame,
-                was_hole = p.cam_hole,
-                now_hole = sig.cam_hole,
-                "CAMERA_VIEWPORT_MODE_FLIP (full-window vs map-hole scissor)"
-            );
-        }
-        if p.cam_scissor != sig.cam_scissor {
-            warn!(
-                target: "sim_view_sync::anomaly",
-                frame,
-                was = ?p.cam_scissor,
-                now = ?sig.cam_scissor,
-                "CAMERA_SCISSOR_CHANGED"
-            );
-        }
         if p.sim_adequate != sig.sim_adequate || p.sim_valid != sig.sim_valid {
             warn!(
                 target: "sim_view_sync::anomaly",
@@ -243,46 +202,23 @@ fn log_sync_edge(
                 frame,
                 sim_valid = sig.sim_valid,
                 resolved_sim_valid = sig.resolved_sim_valid,
-                cam_scissor = ?sig.cam_scissor,
-                "SIM_VALID_CONTRACT_DRIFT (camera validity diverged from resolved viewport)"
+                "SIM_VALID_CONTRACT_DRIFT (fill validity diverged from resolved viewport)"
             );
         }
-        if sig.render_hole != sig.cam_hole {
+        let dw = sig.view_px.0.abs_diff(p.view_px.0);
+        let dh = sig.view_px.1.abs_diff(p.view_px.1);
+        if (dw > 16 || dh > 8) && (p.ortho_wh != sig.ortho_wh || p.view_px != sig.view_px) {
             warn!(
                 target: "sim_view_sync::anomaly",
                 frame,
-                latch_hole = sig.cam_hole,
-                render_hole = sig.render_hole,
-                "VIEWPORT_ORTHO_MISMATCH (latch vs render_hole — should not happen after immediate latch release)"
+                ortho_was = ?p.ortho_wh,
+                ortho_now = ?sig.ortho_wh,
+                view_px_was = ?p.view_px,
+                view_px_now = ?sig.view_px,
+                delta_w = dw,
+                delta_h = dh,
+                "ORTHO_VIEW_PX_DRIFT (RTT fill / ortho span jumped)"
             );
-        }
-        if p.render_hole != sig.render_hole {
-            warn!(
-                target: "sim_view_sync::anomaly",
-                frame,
-                was_render_hole = p.render_hole,
-                now_render_hole = sig.render_hole,
-                was_scissor = ?p.cam_scissor,
-                now_scissor = ?sig.cam_scissor,
-                "RENDER_MODE_FLIP (map-hole scissor vs full-window — primary blink source)"
-            );
-        }
-        if sig.render_hole == p.render_hole {
-            let dw = sig.view_px.0.abs_diff(p.view_px.0);
-            let dh = sig.view_px.1.abs_diff(p.view_px.1);
-            if (dw > 16 || dh > 8) && (p.ortho_wh != sig.ortho_wh || p.view_px != sig.view_px) {
-                warn!(
-                    target: "sim_view_sync::anomaly",
-                    frame,
-                    ortho_was = ?p.ortho_wh,
-                    ortho_now = ?sig.ortho_wh,
-                    view_px_was = ?p.view_px,
-                    view_px_now = ?sig.view_px,
-                    delta_w = dw,
-                    delta_h = dh,
-                    "ORTHO_VIEW_PX_DRIFT (same render mode — hole size jumped)"
-                );
-            }
         }
     }
 }
@@ -309,7 +245,6 @@ pub(crate) fn trace_sim_view_sync_state(
         .map(|w| UVec2::new(w.physical_width(), w.physical_height()))
         .unwrap_or(UVec2::ONE);
 
-    let cam_vp = ctx.cam.single().ok().and_then(|c| c.viewport.clone());
     let sig = SyncSignature {
         win_logical: pack_vec2(win_logical),
         win_physical: pack_uvec2(win_physical),
@@ -317,9 +252,6 @@ pub(crate) fn trace_sim_view_sync_state(
         sim_adequate: ctx.sim.is_adequate_for_camera(),
         sim_held: ctx.trace.committed_from_stable_hold,
         commit_tag: tag_commit(ctx.sim_dbg.last_commit),
-        cam_hole: ctx.latch.using_hole,
-        render_hole: ctx.ortho.using_hole,
-        cam_scissor: pack_viewport(cam_vp),
         ortho_wh: (
             ctx.ortho.fixed_width.round() as u32,
             ctx.ortho.fixed_height.round() as u32,
@@ -345,7 +277,6 @@ pub(crate) fn trace_sim_view_sync_state(
         ctx.sim.as_ref(),
         ctx.trace.as_ref(),
         ctx.sim_dbg.as_ref(),
-        ctx.latch.as_ref(),
         ctx.dock.as_ref(),
         ctx.viewport_sanity.as_ref(),
         ctx.left_stack.as_ref(),

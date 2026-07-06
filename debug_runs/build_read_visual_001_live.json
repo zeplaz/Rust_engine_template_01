@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/build_read_visual_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_build_read_visual_001_live_witness",
-    "written_at_epoch_secs": 1783027962
+    "written_at_epoch_secs": 1783371796
   },
   "footprint_grid_uses_grammar": true,
   "gate": "BUILD-READ-VISUAL-001",

@@ -21,6 +21,8 @@ Items below are **owned by other sessions / agents** — not the migration or pr
 
 **All delegated rows closed except PERF display acceptance.**
 
+**CHAIN-B (@coder_b) closed 2026-07-04** — witness `debug_runs/chain_b_witness_live.json` (`green: true`, all 9 slices).
+
 ---
 
 ## Stream map (historical)

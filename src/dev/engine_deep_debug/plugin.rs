@@ -15,12 +15,17 @@ impl Plugin for EngineDeepDebugPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<MinimapDeepTrace>()
             .init_resource::<DeepDebugFrameProbe>()
+            .init_resource::<super::witness::DeepDebugTacticalMapCache>()
             .init_resource::<super::subsystem_cache::DeepDebugSubsystemCache>()
             .add_systems(Startup, (init_startup_config, log_deep_debug_banner).chain())
             .add_systems(
                 PostUpdate,
                 super::subsystem_cache::refresh_deep_debug_subsystem_cache
                     .before(deep_debug_post_update),
+            )
+            .add_systems(
+                PostUpdate,
+                super::witness::refresh_deep_debug_tactical_map_cache.before(deep_debug_post_update),
             )
             .add_systems(PostUpdate, deep_debug_post_update);
         if deep_debug_active() {

@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/vegetation_variant_catalog_load_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_vegetation_variant_catalog_load_live_witness",
-    "written_at_epoch_secs": 1783111825
+    "written_at_epoch_secs": 1783371799
   },
   "all_resolver_keys_present": true,
   "catalog_entry_count": 35,

@@ -94,25 +94,81 @@ If `to_map` is huge but `map_view` / `view_fire` are tiny, cost is in **Update s
 
 ---
 
-## Perf truth (PLAN-GPU-TERRAIN — release, no env overrides)
+## Perf truth sign-off (GPU terrain P0 / P3-D — authoritative)
+
+Single operator recipe for release baseline **before** GPU program §10 gate. Uses disk witnesses only — no terminal `STALL` / `PERF` spam (`P3-C` quiet demo policy).
+
+### Preconditions
+
+- Release build on a machine with a display (same class as VR16 / PERF acceptance).
+- Shell must **not** carry debug env from prior sessions (see reset table above).
+- Do **not** set: `PERF`, `STALL`, `STALL_SPAN_DEBUG`, `RASTER_*`, `STAGE5_VERBOSE`, `TERRAIN_CPU_FALLBACK`, or other rows in the reset table.
+
+### One-command repro
+
+Helper (clears env, runs release demo):
+
+```powershell
+.\tools\orchestrator\scripts\run_demo_perf_truth.ps1
+```
+
+Equivalent manual command:
 
 ```powershell
 cargo run -p proc_A_dine01 --release -- --test demo --stay-open
 ```
 
-After ~60s steady Simulation (no camera move):
+`--test demo` auto-enables `SIM_ANALYTICS` + quiet terminal + disk flush to `debug_runs/sim_spectrum_analytics_live.json`. It does **not** enable terminal STALL lines.
 
-| Witness field | Gate |
-|---------------|------|
-| `last_frame.spine.tile_raster_ms` | `== 0` |
-| `last_frame.spine.terrain_authority` | `GpuInstancedAtlas` (or `GpuTilemap`) |
-| `last_frame.perf.terrain_gpu_authoritative` | `true` |
-| `last_frame.render_schedule.render_and_present_ms` | p95 ≤ 16 ms |
-| `minimap_compositor_live.json` → `terrain_source` | `gpu_atlas` |
+### Procedure
 
-Read `debug_runs/sim_spectrum_analytics_live.json` + `debug_runs/stage5_full_app_live.json`. Do **not** set `RASTER_*`, `PERF_*`, or `STALL=1` for baseline sign-off.
+1. Launch with the command above; enter **Simulation** and hold steady (~60s) — minimal camera movement.
+2. Wait for at least one disk flush (default every 5s) or exit after ~60s.
+3. Read witnesses **on disk** — do not rely on console `STALL` / `PERF` lines for sign-off.
 
-Optional deep dive: [`tracy_integration.md`](tracy_integration.md).
+### Witness files and gates
+
+| File | Field(s) | Pass |
+|------|----------|------|
+| `debug_runs/sim_spectrum_analytics_live.json` | `last_frame.spine.tile_raster_ms` | `== 0` steady sim |
+| same | `last_frame.spine.terrain_authority` | `GpuInstancedAtlas` (release default) |
+| same | `last_frame.perf.terrain_gpu_authoritative` | `true` |
+| same | `last_frame.render_schedule.render_and_present_ms` | present; rolling p95 ≤ **16 ms** |
+| same | `witness_contract.green` | `true` (P3-B contract paths) |
+| same | `program_exit_gate.green` | `true` when ≥30 steady samples |
+| same | `program_exit_gate.p95_frame_ms` | ≤ **33 ms** |
+| same | `program_exit_gate.p95_render_present_ms` | ≤ **16 ms** |
+| `debug_runs/minimap_compositor_live.json` | terrain source / witness body | `gpu_atlas` / green |
+| `debug_runs/stage5_full_app_live.json` | readiness spine | green |
+| `debug_runs/gpu_terrain_p0c_prime_001_live.json` | lib refresh optional | green |
+
+**Triage order (P3-B):** when stalls look confusing, read `last_frame.bottleneck_triage.primary_suspects` — `render_thread_draw_and_present` must rank before `substage_*` when both appear. Prefer `render_schedule.*` + `spine.*` over raw stall checkpoint labels when `stall_checkpoint_mismatch` is true.
+
+### Lib regression (before / after code changes)
+
+```powershell
+cargo test -p proc_A_dine01 --lib gpu_p3 gpu_terrain sim_spectrum_analytics::tests -q
+```
+
+Refresh lib witnesses (when tests green):
+
+```powershell
+cargo test -p proc_A_dine01 --lib gpu_p3b_refresh gpu_p3c_refresh gpu_p0c -q
+```
+
+### When sign-off fails
+
+| Symptom | Next step |
+|---------|-----------|
+| `tile_raster_ms > 0` in release sim | Check `terrain_authority` rollback env; see `gpu_todos_v1.md` P0-C′ |
+| High `render_and_present_ms`, zero tile raster | Read `render_schedule` block; optional Tracy (`tracy_integration.md`) |
+| Terminal noise during demo | Should not happen — if `STALL` lines appear without `STALL=1`, file a P3-C regression |
+| Deep timeline needed | [`tracy_integration.md`](tracy_integration.md) — `cargo run … --features tracy` |
+
+### Related (non-baseline) runs
+
+- **Visual / VFX debug** with stall probes: [`run_visual_test_clean.ps1`](../../tools/orchestrator/scripts/run_visual_test_clean.ps1) `-StallDebug`
+- Historical attribution notes: [`debug_runs/perf_attribution_60s.md`](../../debug_runs/perf_attribution_60s.md)
 
 ---
 

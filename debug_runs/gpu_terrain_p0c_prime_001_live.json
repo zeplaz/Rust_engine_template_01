@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/gpu_terrain_p0c_prime_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_gpu_p0c_prime_witness",
-    "written_at_epoch_secs": 1783119990
+    "written_at_epoch_secs": 1783371798
   },
   "cpu_raster_metric_gated": true,
   "display_mode": "gpu_sprite_dirty_gated",

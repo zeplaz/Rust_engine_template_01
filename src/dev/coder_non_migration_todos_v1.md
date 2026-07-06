@@ -87,7 +87,7 @@ G0–G3 + P1/P2 + CITY-DOC-002 done. Only **DR-MIG-TILEMAP** remains (steward, c
 | ☑ | **H3** | coder | v0 freeze shim · `bq_h3_v0_retire_001_live.json` |
 | ☑ | **K charters** | designer-mcp | BQ-K1/K2/K3 **SIGNED** — @coder-mcp K1 bake + @coder K3 RON merge |
 | ☐ | **Q tail** | coder + operator | BQ-Q2/Q3 (Q1 APS strip ☑ · `apsr_a4_q1_001_live.json`) |
-| ☐ | **APSR-P/D/Q** | coder-mcp | Panel split · design lint · QC surfaces (Q1 strip ☑) |
+| ☐ | **APSR-P/D/Q** | coder-mcp | Panel split · design lint · QC surfaces — **P/D/Q closed** |
 
 ---
 

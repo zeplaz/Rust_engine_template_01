@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_g2_c5_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g2_c5_001_palette_witness",
-    "written_at_epoch_secs": 1783114114
+    "written_at_epoch_secs": 1783371797
   },
   "city_g0_prerequisites_ok": true,
   "city_g0_wit_note": "module index load only — full CITY-G0-WIT assembly may fail on grammar RON parse debt unrelated to C5",
@@ -159,7 +159,7 @@
     }
   ],
   "matrix_rows": 9,
-  "pilot_palette_family_count": 16,
+  "pilot_palette_family_count": 18,
   "registry_ok": true,
   "run_hashes": [
     "4c4bb41c6fbeae0d",

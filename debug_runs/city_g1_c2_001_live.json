@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/city_g1_c2_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g1_c2_001_block_frame_witness",
-    "written_at_epoch_secs": 1783114441
+    "written_at_epoch_secs": 1783371796
   },
   "block_archetype_table_still_ok": true,
   "bounds_ok": true,

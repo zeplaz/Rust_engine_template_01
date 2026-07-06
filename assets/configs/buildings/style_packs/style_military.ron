@@ -7,9 +7,9 @@
     slots: (
         wall_1u: "wall_military_bunker_1u",
         wall_2u: "wall_concrete_2u",
-        door_default: "door_military",
+        door_default: "door_concrete_service_1u",
         window_1u: "win_bunker_slit",
-        roof_default: "roof_bunker",
+        roof_default: "roof_concrete_flat_2u",
         roof_flat: "roof_parapet",
         corner_outer: "corner_parapet",
         prop_clutter: "prop_tank",

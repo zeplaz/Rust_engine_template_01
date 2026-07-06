@@ -1,12 +1,16 @@
 {
   "schema": "grammar_labels_v1",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "reviewed_by": "designer",
-  "reviewed_date": "2026-06-03",
+  "reviewed_date": "2026-06-11",
   "archetypes": {
     "IndustrialWarehouse": {
       "label": "Industrial Warehouse",
       "usage": "warehouse"
+    },
+    "CivicBlock": {
+      "label": "Civic Block",
+      "usage": "civic"
     },
     "FactoryCluster": {
       "label": "Factory Cluster",
@@ -21,23 +25,39 @@
     "long_hall": "Long Hall",
     "double_hall": "Double Hall",
     "l_shape": "L-Shape Yard",
-    "yard_complex": "Yard Complex"
+    "yard_complex": "Yard Complex",
+    "t_block": "T-Block Civic",
+    "u_courtyard": "U-Courtyard",
+    "stepped_block": "Stepped Block",
+    "corner_anchored": "Corner Anchored",
+    "row_infill": "Row Infill",
+    "plaza_setback": "Plaza Setback",
+    "stepped_row": "Stepped Factory Row",
+    "t_loading": "T-Loading Leg",
+    "t_rail_spur": "T-Rail Spur",
+    "stepped_dock": "Stepped Rail Dock"
   },
   "footprint_mode": {
     "rect": "Rectangle",
     "l_shape": "L-Shape Fill",
-    "yard_interior": "Interior Yard"
+    "yard_interior": "Interior Yard",
+    "t_shape": "T-Shape Fill",
+    "u_shape": "U-Courtyard Fill"
   },
   "roof": {
     "roof_default": "Default Roof",
     "roof_industrial": "Industrial Roof",
-    "roof_flat": "Flat Roof"
+    "roof_flat": "Flat Roof",
+    "roof_flat_parapet": "Flat Parapet Roof",
+    "roof_terrace": "Terrace Roof"
   },
   "facade": {
     "facade_v1": "Industrial Facade Pack",
     "wall_1u": "Standard Wall Module",
     "door_wide": "Wide Industrial Door",
-    "window_industrial": "Industrial Window"
+    "door_glass_entry": "Glass Entry Door",
+    "window_industrial": "Industrial Window",
+    "window_storefront_2u": "Storefront Window"
   },
   "detail": {
     "prop_clutter": "Roof & Yard Clutter"
@@ -50,7 +70,9 @@
   "district_styles": {
     "industrial_west": "Industrial West",
     "manufacturing_row": "Manufacturing Row",
-    "rail_yard_corridor": "Rail Yard Corridor"
+    "rail_yard_corridor": "Rail Yard Corridor",
+    "main_street_civic": "Main Street Civic",
+    "town_hall_row": "Town Hall Row"
   },
   "iteration_modes": {
     "massing": "Massing & footprint",

@@ -7,7 +7,7 @@
     "plan_doc": "src/dev/plan_multi_parallel_tracks_v1.md",
     "prompts": "src/dev/multi_parallel_agent_prompts_v1.md",
     "rule": "Home queue for multi-parallel rows \u2014 dual Q\u2713 with dispatch rollup",
-    "last_dispatch_subqueue_sync": "2026-07-03T15:06:13Z"
+    "last_dispatch_subqueue_sync": "2026-07-04T17:13:09Z"
   },
   "drain": [
     {

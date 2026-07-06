@@ -360,6 +360,7 @@ struct MinimapGpuBootstrapWatch {
 /// Degrade to CPU minimap presentation when GPU compositor never gets terrain (blank panel).
 fn maintain_minimap_gpu_bootstrap_fallback(
     base: Res<State<BaseState>>,
+    scene: Option<Res<crate::engine::ActiveTestScene>>,
     compositor: Res<crate::render::minimap_compositor::MinimapCompositorState>,
     gpu_diag: Res<crate::render::minimap_compositor::MinimapGpuCompositorDiagnostics>,
     fallback: Res<crate::render::TileWorldFallbackState>,
@@ -387,8 +388,9 @@ fn maintain_minimap_gpu_bootstrap_fallback(
     if fallback.image == Handle::default() && fallback.minimap_image == Handle::default() {
         return;
     }
+    let frame_limit = if scene.is_some() { 15 } else { 120 };
     watch.no_terrain_frames = watch.no_terrain_frames.saturating_add(1);
-    if watch.no_terrain_frames >= 120 {
+    if watch.no_terrain_frames >= frame_limit {
         shell.presentation_source = MinimapPresentationSource::SharedCpuRaster;
         watch.no_terrain_frames = 0;
         warn!(

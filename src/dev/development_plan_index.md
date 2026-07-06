@@ -22,6 +22,14 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Building quality + APS refactor (P2 — 2026-07-03):** [`plan_building_quality_v1.md`](plan_building_quality_v1.md) — **integration hub** · BQ Phase F (~80% visible) + APSR guardrails/services · companion [`plan_aps_refactor_v1.md`](plan_aps_refactor_v1.md) · golden-seed done bar · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-BUILDING-QUALITY-v1
 
+**Render + GUI refactor (P1 — 2026-07-04):** [`plan_render_gui_refactor_v1.md`](plan_render_gui_refactor_v1.md) · **active RGR-M1-001** · queue [`render_gui_refactor_queue.json`](../tools/orchestrator/queues/render_gui_refactor_queue.json) · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-RENDER-GUI-REFACTOR-v1
+
+**Material2d + Buffer VFX port (P2 DEFERRED — 2026-07-04):** [`plan_material_vfx_port_v1.md`](plan_material_vfx_port_v1.md) — **gate:** RGR-V2-001 lands + RGR-G4 unlocks · fire/water Material2d adoption + BufferVec pilot · no queue (DEFERRED)
+
+**Render production cleanup (P1 — 2026-07-06):** [`plan_render_production_cleanup_v1.md`](plan_render_production_cleanup_v1.md) — audit F1–F16 → phased purge of fallback lies/hacks · **Phase 0 active** · **Phase 1 GPU-terrain decision BLOCKED_ON_OPERATOR** · queue [`render_production_cleanup_queue.json`](../tools/orchestrator/queues/render_production_cleanup_queue.json)
+
+**Tactical map RTT lane (P0 — 2026-07-04):** [`plan_tactical_map_rtt_lane_v1.md`](plan_tactical_map_rtt_lane_v1.md) — Tracks **A/B/C** parallel · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-TACTICAL-MAP-RTT-v1
+
 ## Designer art MCP + Blender (2026-06-02)
 
 **Design:** [`prompts/designer_questions/art_design.md`](../prompts/designer_questions/art_design.md) · [`prompts/art_desgin_inbound.md`](../prompts/art_desgin_inbound.md)  

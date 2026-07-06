@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/cln_p0_s8_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_cln_p0_s8_witness",
-    "written_at_epoch_secs": 1783119133
+    "written_at_epoch_secs": 1783371797
   },
   "gate": "CLN-P0-S8-001",
   "green": true,
