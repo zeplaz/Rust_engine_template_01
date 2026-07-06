@@ -3,6 +3,9 @@
 /target_*/
 /.vscode
 
+# Claude Code agent worktrees (isolated git checkouts; canonical tree is repo root on master)
+/.claude/worktrees/
+
 # Orchestrator volatile history (reports/runbooks are committed when refreshed)
 /tools/orchestrator/history/run_*.json
 /tools/orchestrator/state/last_run.json
