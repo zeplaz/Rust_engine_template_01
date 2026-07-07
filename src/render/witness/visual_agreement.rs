@@ -615,4 +615,82 @@ mod tests {
             "raw (unbinned) fire_heat_hash field is expected to differ from the binned projected hash — field semantics unchanged"
         );
     }
+
+    /// Same as [`binned_source_hash_matches_projected_hash_at_bin_two`] at Macro-band `bin=4`
+    /// (`src/gui/world_representation.rs` picks `chunk_heat_bin=4` below px-per-tile 1.5). Uses
+    /// odd/scattered chunk coordinates (including negative) to exercise `div_euclid` remap —
+    /// confirms `bin_merge_chunk_heat` stays deterministic and order-independent at bin=4.
+    #[test]
+    fn binned_source_hash_matches_projected_hash_at_bin_four() {
+        let raw_rows = vec![
+            ChunkFireHeat { chunk: IVec2::new(0, 0), heat: 0.4, smoke: 0.0 },
+            ChunkFireHeat { chunk: IVec2::new(3, 1), heat: 0.9, smoke: 0.2 },
+            ChunkFireHeat { chunk: IVec2::new(-1, 2), heat: 0.3, smoke: 0.0 },
+            ChunkFireHeat { chunk: IVec2::new(5, 5), heat: 0.6, smoke: 0.1 },
+            ChunkFireHeat { chunk: IVec2::new(7, -2), heat: 0.7, smoke: 0.0 },
+            ChunkFireHeat { chunk: IVec2::new(-3, -1), heat: 0.5, smoke: 0.05 },
+        ];
+        let bin = 4;
+        let binned_source = bin_merge_chunk_heat(&raw_rows, bin);
+        let projected_hash = hash_chunk_fire_heat(&binned_source);
+        let source_hash_for_comparison = hash_chunk_fire_heat(&bin_merge_chunk_heat(&raw_rows, bin));
+        assert_eq!(
+            source_hash_for_comparison, projected_hash,
+            "binned-source hash must equal projected hash at bin={bin} — apples-to-apples VT-4 comparison"
+        );
+        assert_ne!(hash_chunk_fire_heat(&raw_rows), projected_hash);
+
+        // Order-independence: shuffling input row order must not change the merged/hashed result
+        // (rules out HashMap iteration order as a source of the live bin=4 asymmetry).
+        let mut reordered = raw_rows.clone();
+        reordered.reverse();
+        let reordered_hash = hash_chunk_fire_heat(&bin_merge_chunk_heat(&reordered, bin));
+        assert_eq!(reordered_hash, projected_hash);
+    }
+
+    /// End-to-end at bin=4: mirrors [`vt4_agreement_no_mismatch_when_projection_is_binned`] but at
+    /// the Macro-band bin — `update_visual_agreement_frame` itself must stay green when the
+    /// projection's `chunk_heat` is the correctly bin-merged source.
+    #[test]
+    fn vt4_agreement_no_mismatch_when_projection_is_binned_at_bin_four() {
+        let stamp = SimStepStamp::new(7, 700);
+        let raw_rows = vec![
+            ChunkFireHeat { chunk: IVec2::new(0, 0), heat: 0.4, smoke: 0.0 },
+            ChunkFireHeat { chunk: IVec2::new(3, 1), heat: 0.9, smoke: 0.2 },
+            ChunkFireHeat { chunk: IVec2::new(-1, 2), heat: 0.3, smoke: 0.0 },
+            ChunkFireHeat { chunk: IVec2::new(5, 5), heat: 0.6, smoke: 0.1 },
+        ];
+        let frame = FireVisualFrame {
+            stamp,
+            instances: Vec::new(),
+            chunk_heat: raw_rows.clone(),
+        };
+        let sim = sim_from_frame(&frame);
+        let mut shared = SharedOverlayFieldBuffers::default();
+        shared.stamp = stamp;
+        for h in &raw_rows {
+            shared
+                .chunk_fire_heat
+                .entry(h.chunk)
+                .and_modify(|e| *e = f32::max(*e, h.heat))
+                .or_insert(h.heat);
+        }
+        let overlay = OverlayFieldFrame {
+            stamp,
+            fields: HashMap::new(),
+            fire_heat_overlay_revision: 3,
+        };
+        let mut graph = RenderProjectionGraph::default();
+        graph.fire.chunk_heat_bin = 4;
+        graph.fire.chunk_heat = bin_merge_chunk_heat(&raw_rows, 4);
+        let mut agreement = VisualAgreementFrame::default();
+        update_visual_agreement_frame(
+            &frame, &sim, &shared, &overlay, Some(&graph), None, &mut agreement,
+        );
+        assert_eq!(
+            agreement.mismatch_count, 0,
+            "binned projection at chunk_heat_bin=4 must agree with the same-binned source, not the raw unbinned hash"
+        );
+        assert_ne!(agreement.fire_heat_hash, agreement.projected_fire_heat_hash);
+    }
 }
