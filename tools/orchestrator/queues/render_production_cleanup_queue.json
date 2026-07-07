@@ -5,8 +5,8 @@
     "plan_doc": "src/dev/plan_render_production_cleanup_v1.md",
     "date": "2026-07-06",
     "status": "ACTIVE",
-    "active_phase": "Phase 0 CLOSED 2026-07-06 — next: FIRE-VIS + MINIMAP-BOX slices (operator-reported), then Phase 1 decision",
-    "current_pick": "FIRE-VIS-001 (spark cull recalibration) + MINIMAP-BOX-001 pending tracer report",
+    "active_phase": "Phase 0 + operator-visual slices ALL CLOSED 2026-07-06 (map, minimap, camera box, fire gates, VT-4)",
+    "current_pick": "RPC-1-DECISION (operator: GPU terrain bake vs honest rename) → then Phase 2 (TODO-04 pose authority)",
     "priority": "P1",
     "branch": "master",
     "regression": "cargo test -p proc_A_dine01 --lib stage5 && cargo test -p proc_A_dine01 --lib minimap_compositor",
@@ -42,6 +42,27 @@
       "goal": "Dead branch collapse (apply_editor_terrain_authority) + stale allow(dead_code) + stale doc ref",
       "territory": "src/render/core/terrain_render_authority.rs · src/render/core/gpu_surface_teardown.rs · src/gui/tile_debug_types.rs",
       "exit": "cargo check clean, zero behavior change"
+    },
+    {
+      "seq": 5,
+      "id": "FIRE-VIS-001",
+      "status": "done",
+      "closed": "2026-07-06",
+      "notes": "Fire spark/ember/smoke/heat-boost gates re-keyed from world-relative zoom_alpha to px-per-tile (cam.zoom_level==scale): MIN 1.5, OPERATIONAL 2.5, FULL_SCATTER 4.0; scatter ramp re-threaded; design_zoom_fire_read_v1.md correction appended. Witness proof: 336 spark instances at zoom 3.94 (was 0 at every practical zoom); culled below 1.5 px/tile by design. Root cause: zoom_limits hi=90 (world-relative) inflated the alpha axis ~20x vs the fixed span the 0.28/0.42/0.58/0.85 design bands assumed; partial 0.28→0.10 cut in 5dade169 treated the symptom."
+    },
+    {
+      "seq": 6,
+      "id": "MINIMAP-BOX-001",
+      "status": "done",
+      "closed": "2026-07-06",
+      "notes": "Two stacked defects: (1) show_tactical_viewport_frame default flipped true→false by stray line in 39c21c45 (bevy 0.19 commit) — restored; (2) MinimapViewportFrameOverlay entity was NEVER spawned (marker+sync system landed in 77228215 without a spawn — feature was a torso since day one). Spawned as child of MinimapGpuImageNode (in_game_hud.rs), 2px gold border, positioned per-frame by sync_minimap_viewport_frame_overlay_system. Pixel proof: gold camera frame visible on minimap in debug_runs/captures/window_live.png."
+    },
+    {
+      "seq": 7,
+      "id": "VT4-WITNESS-001",
+      "status": "done",
+      "closed": "2026-07-06",
+      "notes": "VT-4 fire-heat comparison bins source with shared bin_merge_chunk_heat before hashing; green at Operational band (bin=2) — witnessed 0x0. TAIL (VT4-WITNESS-002, closed same day): Macro-band failure was a SECOND independent un-binned GpuFireField comparison in vt_ci_matrix.rs apply_vt4_ci_surface_checks duplicating the same bug — now bin-aware via the same shared policy; bin=4 regression test added (vt4_ci_matrix_gpu_fire_field_agrees_at_macro_bin_four). bin_merge itself proven deterministic incl. negative coords + order independence. 17/17 vt_ci_matrix, 49/49 visual_agreement+stage5."
     },
     {
       "seq": 3,

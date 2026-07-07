@@ -878,19 +878,43 @@ fn spawn_simulation_command_shell(
                 .with_children(|chrome| {
                     // Painted GPU map image — sits in the body rect (below title bar, inside rails);
                     // `sync_minimap_gpu_image_node_system` insets + binds it to the committed RT handle.
-                    chrome.spawn((
-                        Node {
-                            position_type: PositionType::Absolute,
-                            left: Val::Px(0.0),
-                            top: Val::Px(MINIMAP_TITLE_BAR_H_PX),
-                            width: Val::Px(258.0),
-                            height: Val::Px(218.0 - MINIMAP_TITLE_BAR_H_PX),
-                            ..default()
-                        },
-                        Visibility::Hidden,
-                        MinimapGpuImageNode,
-                        bevy::ui::widget::ImageNode::from(Handle::<Image>::default()),
-                    ));
+                    chrome
+                        .spawn((
+                            Node {
+                                position_type: PositionType::Absolute,
+                                left: Val::Px(0.0),
+                                top: Val::Px(MINIMAP_TITLE_BAR_H_PX),
+                                width: Val::Px(258.0),
+                                height: Val::Px(218.0 - MINIMAP_TITLE_BAR_H_PX),
+                                ..default()
+                            },
+                            Visibility::Hidden,
+                            MinimapGpuImageNode,
+                            bevy::ui::widget::ImageNode::from(Handle::<Image>::default()),
+                        ))
+                        .with_children(|img| {
+                            // MINIMAP-BOX-001: gold tactical-viewport frame. The marker +
+                            // positioning system (sync_minimap_viewport_frame_overlay_system)
+                            // landed in 77228215 without any spawn — the frame never rendered.
+                            // Position/size/visibility are driven per-frame by that system.
+                            img.spawn((
+                                Node {
+                                    position_type: PositionType::Absolute,
+                                    left: Val::Px(0.0),
+                                    top: Val::Px(0.0),
+                                    width: Val::Px(1.0),
+                                    height: Val::Px(1.0),
+                                    border: UiRect::all(Val::Px(2.0)),
+                                    ..default()
+                                },
+                                Visibility::Hidden,
+                                BackgroundColor(Color::NONE),
+                                BorderColor::all(Color::srgb(0.92, 0.78, 0.18)),
+                                ZIndex(3),
+                                crate::gui::hud::minimap_bevy_interaction::MinimapViewportFrameOverlay,
+                                Name::new("minimap_viewport_frame_overlay"),
+                            ));
+                        });
 
                     // Title bar — drag-grab strip mirroring the egui `Minimap` window header.
                     chrome

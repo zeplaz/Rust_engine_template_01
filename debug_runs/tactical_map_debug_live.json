@@ -66,13 +66,13 @@
             255
           ],
           "corner_tl": [
-            32,
-            76,
-            66,
+            33,
+            82,
+            64,
             255
           ],
           "coverage_ratio": 1.0,
-          "luma_sum": 26021013,
+          "luma_sum": 20306924,
           "nonzero_pixels": 102400,
           "total_pixels": 102400,
           "valid": true
@@ -85,7 +85,7 @@
       "sprite_entity": true,
       "test_harness_boost": false
     },
-    "frame": 1860,
+    "frame": 1920,
     "minimap_compositor": {
       "atlas_image_loaded": true,
       "composite_path": "GpuCompute",
@@ -96,7 +96,7 @@
       "construction_footprint_tiles": 0,
       "construction_paths": 0,
       "fire_debug_force_visible": true,
-      "overlay_revision": 1768,
+      "overlay_revision": 1788,
       "shared_overlay_fire_cells": 28,
       "tile_debug_batched_overlay": false
     },
@@ -120,14 +120,14 @@
           720.0
         ],
         "view_proj_degenerate": false,
-        "zoom_alpha": 0.043303489685058594,
-        "zoom_level": 3.9369213581085205
+        "zoom_alpha": 0.002380289835855365,
+        "zoom_level": 0.2555275559425354
       },
       "fire_particle_raster": {
-        "draw_globals_vertex_count": 2016,
-        "spark_rows": 336,
-        "spark_view_culled": false,
-        "world_frame_instances": 336
+        "draw_globals_vertex_count": 0,
+        "spark_rows": 0,
+        "spark_view_culled": true,
+        "world_frame_instances": 0
       },
       "hud_ui_camera": {
         "is_active": true,
@@ -139,7 +139,7 @@
       "main_world_camera": {
         "is_active": true,
         "order": 0,
-        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 325.12714, height: 182.88402 }, scale: 1.0, area: Rect { min: Vec2(-162.56357, -91.44201), max: Vec2(162.56357, 91.44201) } })",
+        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 5009.2446, height: 2817.7 }, scale: 1.0, area: Rect { min: Vec2(-1006.55133, -566.1851), max: Vec2(1006.55133, 566.1851) } })",
         "render_layers": null,
         "render_target": {
           "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
@@ -157,29 +157,29 @@
         ]
       },
       "map_camera_desired": {
-        "scale": 3.9369213581085205,
+        "scale": 0.2555275559425354,
         "translation": [
           160.0,
           160.0
         ]
       },
       "ortho_trace": {
-        "authority_zoom": 3.9369213581085205,
+        "authority_zoom": 0.2555275559425354,
         "camera_center": [
           160.0,
           160.0
         ],
-        "desired_zoom": 3.9369213581085205,
+        "desired_zoom": 0.2555275559425354,
         "fixed_world_span": [
-          325.12713623046875,
-          182.88401794433594
+          5009.24462890625,
+          2817.699951171875
         ],
         "view_pixels": [
           1280.0,
           720.0
         ]
       },
-      "primary_void_suspect": "UNKNOWN_GPU_VOID",
+      "primary_void_suspect": "FIRE_ZOOM_CULLED: px-per-tile below FIRE_SPARK_MIN_PX_PER_TILE (1.5) — sparks suppressed",
       "render_layer_intersect_ok": true,
       "terrain_display": {
         "custom_size": [
@@ -187,7 +187,7 @@
           320.0
         ],
         "display": "Sprite",
-        "entity": "1355v0",
+        "entity": "1356v0",
         "image_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 192 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
         "image_matches_fallback_state": true,
         "render_layers": "default(0)",
@@ -198,10 +198,12 @@
         "transform_z": 0.0,
         "visibility": "Visible"
       },
-      "void_suspects": []
+      "void_suspects": [
+        "FIRE_ZOOM_CULLED: px-per-tile below FIRE_SPARK_MIN_PX_PER_TILE (1.5) — sparks suppressed"
+      ]
     },
     "schema": "tactical_map_debug_v2",
-    "sim_time_micros": 135713370,
+    "sim_time_micros": 142233291,
     "tactical_rtt": {
       "fill_logical_px": [
         1280.0,
@@ -215,11 +217,11 @@
         "stretch_mode": "Stretch"
       },
       "main_camera": {
-        "clear_color": "Custom(Srgba(Srgba { red: 0.48, green: 0.54, blue: 0.64, alpha: 1.0 }))",
+        "clear_color": "Custom(Srgba(Srgba { red: 0.47116905, green: 0.5305383, blue: 0.629487, alpha: 1.0 }))",
         "is_active": true,
         "order": 0,
-        "output_mode": "Write { blend_state: None, clear_color: Custom(Srgba(Srgba { red: 0.48, green: 0.54, blue: 0.64, alpha: 1.0 })) }",
-        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 325.12714, height: 182.88402 }, scale: 1.0, area: Rect { min: Vec2(-162.56357, -91.44201), max: Vec2(162.56357, 91.44201) } })",
+        "output_mode": "Write { blend_state: None, clear_color: Custom(Srgba(Srgba { red: 0.47116905, green: 0.5305383, blue: 0.629487, alpha: 1.0 })) }",
+        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 5009.2446, height: 2817.7 }, scale: 1.0, area: Rect { min: Vec2(-1006.55133, -566.1851), max: Vec2(1006.55133, 566.1851) } })",
         "visibility": "Inherited",
         "world_position": [
           160.0,
@@ -281,9 +283,9 @@
     "uses_cpu_fallback_raster": false,
     "uses_gpu_sprite_display": true,
     "vt4": {
-      "failing_surface_mask": "0x0",
-      "mismatch_count": 0,
-      "stamp": 1861
+      "failing_surface_mask": "0x4",
+      "mismatch_count": 2,
+      "stamp": 1921
     },
     "world_gen": {
       "base_state": "Simulation",
@@ -299,5 +301,5 @@
     }
   },
   "path": "debug_runs/tactical_map_debug_live.json",
-  "written_at_epoch_secs": 1783372466
+  "written_at_epoch_secs": 1783391187
 }

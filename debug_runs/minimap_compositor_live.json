@@ -60,7 +60,7 @@
     "relative_path": "debug_runs/minimap_compositor_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "minimap_compositor_live_proof",
-    "written_at_epoch_secs": 1783372470
+    "written_at_epoch_secs": 1783391190
   },
   "burn_overrides_topology": true,
   "composite_ok": true,
@@ -82,20 +82,20 @@
   "fow_enabled": false,
   "fow_rows": 0,
   "gpu_budget": {
-    "commits_queued": 271,
+    "commits_queued": 285,
     "debug_logging": false,
-    "gpu_dedup_skips": 1551,
-    "gpu_executes": 271,
+    "gpu_dedup_skips": 1543,
+    "gpu_executes": 285,
     "justified": true,
-    "last_commit_stamp": 271,
+    "last_commit_stamp": 285,
     "last_dispatch": "overlay_changed",
-    "last_fingerprint": 734605795993741994,
+    "last_fingerprint": 15748975499063262926,
     "last_skip": "none",
     "overflow_ratio": 1.0,
     "skips_hidden": 0,
-    "skips_no_change": 12,
+    "skips_no_change": 7,
     "skips_no_rt": 0,
-    "skips_no_terrain": 14,
+    "skips_no_terrain": 11,
     "skips_rate_capped": 0,
     "skips_upload_failed": 0,
     "target_hz": 6.0
@@ -127,7 +127,7 @@
   "presentation_source": "SharedRenderTargetImage",
   "replay_scrub_enabled": false,
   "rt_bound": true,
-  "stamp": 271,
+  "stamp": 285,
   "terrain_source": "world_raster",
   "ui_oh_m2_001": {
     "construction_heat_enabled": false,
@@ -175,6 +175,6 @@
   "unit_markers_reader_green": true,
   "units_heat_enabled": false,
   "veg_burn_rows": 28,
-  "veg_extract_revision": 1916,
+  "veg_extract_revision": 1953,
   "veg_minimap_burn_merge_green": true
 }

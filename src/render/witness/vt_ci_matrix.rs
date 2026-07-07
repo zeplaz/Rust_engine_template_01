@@ -11,7 +11,7 @@ use crate::gui::{
     WorldRepresentationFrame,
 };
 use crate::render::extraction::{
-    ProjectionNodeTrait, RenderProjectionContext, RenderProjectionGraph,
+    bin_merge_chunk_heat, ProjectionNodeTrait, RenderProjectionContext, RenderProjectionGraph,
 };
 use crate::render::gpu_particles::{
     update_world_fire_particles_from_projection, WorldFireParticleFrame,
@@ -23,8 +23,8 @@ use crate::render::{
 };
 use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance};
 use crate::render::visual_agreement::{
-    hash_shared_overlay_heat, update_visual_agreement_frame, OverlayAgreementDebug,
-    VisualAgreementFrame, WorldPreviewVt4Probe,
+    hash_chunk_fire_heat, hash_shared_overlay_heat, update_visual_agreement_frame,
+    OverlayAgreementDebug, VisualAgreementFrame, WorldPreviewVt4Probe,
 };
 use crate::render::visual_snapshot_commit::CommittedVisualSnapshotFence;
 use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot};
@@ -252,7 +252,19 @@ pub fn apply_vt4_ci_surface_checks(
         }
     }
 
-    if agreement.projected_fire_heat_hash != agreement.fire_heat_hash {
+    // VT4-WITNESS-001 (bin=4 follow-up): `agreement.fire_heat_hash` is ALWAYS the raw unbinned
+    // source hash (see `update_visual_agreement_frame` doc). At `chunk_heat_bin>1` (Operational
+    // bin=2, Macro bin=4 — src/gui/world_representation.rs) the projection LOD-merges chunk_heat
+    // before hashing, so comparing it directly against the raw hash here reintroduced the exact
+    // false-positive already fixed inside `update_visual_agreement_frame`. Apply the SAME bin
+    // policy to the source before comparing — apples-to-apples, matching the internal check.
+    let bin = scenario.graph.fire.chunk_heat_bin.max(1);
+    let gpu_fire_field_source_hash = if bin <= 1 {
+        agreement.fire_heat_hash
+    } else {
+        hash_chunk_fire_heat(&bin_merge_chunk_heat(&scenario.fire.chunk_heat, bin))
+    };
+    if agreement.projected_fire_heat_hash != gpu_fire_field_source_hash {
         report.record_surface_mismatch(Vt4SurfaceId::GpuFireField);
     }
 
@@ -598,6 +610,45 @@ mod tests {
         inactive.preview_probe.overlay_heat_hash = 0;
         run_vt4_ci_matrix(&inactive, &mut agreement, &mut report);
         assert_eq!(report.failing_surface_mask & Vt4SurfaceId::WorldPreview.bit(), 0);
+    }
+
+    /// VT4-WITNESS-001 (Macro-band follow-up): `apply_vt4_ci_surface_checks` must not
+    /// re-derive a `GpuFireField` false positive from the raw unbinned `fire_heat_hash` once the
+    /// projection is at `chunk_heat_bin=4` (Macro band, px-per-tile < 1.5 —
+    /// src/gui/world_representation.rs). Reproduces the live `failing_surface_mask=0x4` seen in
+    /// debug_runs/tactical_map_debug_live.json frame 1920 with a deterministic fixture.
+    #[test]
+    fn vt4_ci_matrix_gpu_fire_field_agrees_at_macro_bin_four() {
+        let mut scenario = build_deterministic_ci_scenario();
+        // Scattered, non-bin-aligned chunk coords — mirrors live Macro-band camera framing where
+        // source chunks don't happen to land on bin=4 boundaries already.
+        let raw_rows = vec![
+            ChunkFireHeat { chunk: IVec2::new(1, 0), heat: 0.5, smoke: 0.0 },
+            ChunkFireHeat { chunk: IVec2::new(13, 5), heat: 0.7, smoke: 0.1 },
+            ChunkFireHeat { chunk: IVec2::new(-2, 3), heat: 0.3, smoke: 0.0 },
+        ];
+        scenario.fire.chunk_heat = raw_rows.clone();
+        scenario.sim.chunk_heat = raw_rows.clone();
+        scenario.shared.chunk_fire_heat.clear();
+        for row in &raw_rows {
+            scenario.shared.chunk_fire_heat.insert(row.chunk, row.heat);
+        }
+        scenario.graph.fire.chunk_heat_bin = 4;
+        scenario.graph.fire.chunk_heat = bin_merge_chunk_heat(&raw_rows, 4);
+        scenario.preview_probe.overlay_heat_hash =
+            hash_shared_overlay_heat(&scenario.shared.chunk_fire_heat);
+
+        let mut agreement = VisualAgreementFrame::default();
+        let mut report = Vt4CiReport::default();
+        run_vt4_ci_matrix(&scenario, &mut agreement, &mut report);
+        assert_eq!(
+            report.failing_surface_mask & Vt4SurfaceId::GpuFireField.bit(),
+            0,
+            "GpuFireField must not fail when projection chunk_heat is correctly bin-merged at bin=4: mismatches={} mask={:#x}",
+            report.mismatch_count,
+            report.failing_surface_mask
+        );
+        assert!(report.passes());
     }
 
     #[test]
