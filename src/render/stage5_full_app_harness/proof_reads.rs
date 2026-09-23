@@ -16,13 +16,13 @@ use crate::gui::{
     ViewRepresentationSnapshot,
 };
 use crate::render::extraction::RenderProjectionGraph;
-use crate::render::gpu_indirect_draw::GpuIndirectDrawSpine;
-use crate::render::gpu_particle_draw::WorldFireParticleDrawDispatch;
-use crate::render::gpu_particles::WorldFireParticleFrame;
-use crate::render::gpu_water_particles::WorldWaterParticleFrame;
-use crate::render::phase_f_lod_proof::PhaseFLodProofReport;
+use crate::render::pipelines::gpu_indirect_draw::GpuIndirectDrawSpine;
+use crate::render::pipelines::gpu_particle_draw::WorldFireParticleDrawDispatch;
+use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
+use crate::render::pipelines::gpu_water_particles::WorldWaterParticleFrame;
+use crate::render::witness::phase_f_lod_proof::PhaseFLodProofReport;
 use crate::render::viewport_pipeline::{ResolvedViewports, ViewportPresentationMismatch};
-use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
+use crate::render::pipelines::overlay_field_buffers::SharedOverlayFieldBuffers;
 use crate::render::{
     build_minimap_compositor_proof_payload_with_tray, minimap_gpu_compositor_env_enabled,
     MinimapGpuCompositorDiagnostics, MinimapCompositorState, MinimapRenderTargetRegistry,
@@ -86,6 +86,11 @@ pub(crate) struct Stage5FullAppLiveProofReads<'w> {
     pub(super) va2_board: Option<Res<'w, crate::dev::VisualAidV2LiveTodoBoard>>,
     pub(super) va2_witness: Option<Res<'w, crate::dev::VisualAidV2Witness>>,
     pub(super) va2_hud: Option<Res<'w, crate::gui::hud::HudPanelStateWitness>>,
+    pub(super) smoke_bridge: Option<Res<'w, crate::render::extraction::SmokeVisualBridgeWitness>>,
+    pub(super) particle_domains: Option<Res<'w, crate::render::ParticleDomainRegistry>>,
+    pub(super) weather_precip_frame: Option<Res<'w, crate::render::WeatherPrecipFrame>>,
+    /// ES-1-R-001 — ECS-backed Core2d overlay host presence (not env default).
+    pub(super) rtt_overlay_host: Option<Res<'w, crate::gui::RttCore2dOverlayHostState>>,
 }
 
 pub(super) fn stage5_live_todo_board_snapshot(board: &Stage5LiveTodoBoard) -> serde_json::Value {

@@ -1,0 +1,33 @@
+{
+  "schema": "effect_promote_manifest_v1",
+  "effect_id": "rain_streaks",
+  "batch_id": "vss_t4_reference_effects_v1",
+  "promoted_at_utc": "2026-08-28T04:44:00Z",
+  "registry_dir": "assets/effects/registry/rain_streaks/",
+  "pack_hash": "1c7cfec6aeb94ec829f64f9af93d2d6e3d136c1060b85879a37ffffa28769031",
+  "shader_hashes": {
+    "draw": {
+      "source": "assets/shaders/weather/weather_precip_draw.wgsl",
+      "dest": "shaders/weather_precip_draw.wgsl",
+      "sha256": "e44f1198f06c9634b8304a8e324e3147a1769b1c12bde36bfe9e691d6f26a079"
+    }
+  },
+  "development_tier": "smoke",
+  "lane": "particle_instanced",
+  "preview_witness": {
+    "witness_schema": "artist_vfx_preview_witness_v1",
+    "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+    "preview_job_id": "rain_streaks_preview_stub",
+    "frames_captured": 0,
+    "staging_path": "assets/staging/rain_streaks/",
+    "honest_gate": "pending",
+    "captured_at_utc": "2026-08-28T04:44:00Z",
+    "toolchain": {
+      "mcp_tool": "effect_promote",
+      "cli_parity": true,
+      "blender_present": false
+    },
+    "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
+    "promoted_path": "assets/effects/registry/rain_streaks/"
+  }
+}

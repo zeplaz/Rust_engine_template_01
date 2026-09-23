@@ -6,7 +6,16 @@ from dataclasses import asdict, dataclass, field
 from typing import Any, Literal
 
 
-ValidatorId = Literal["cargo", "bevy", "mcp_schema", "asset_glb", "test", "tile", "blender"]
+ValidatorId = Literal[
+    "cargo",
+    "bevy",
+    "mcp_schema",
+    "asset_glb",
+    "test",
+    "tile",
+    "blender",
+    "effect_spec",
+]
 Status = Literal["passed", "failed", "warning"]
 Severity = Literal["error", "warning", "info"]
 

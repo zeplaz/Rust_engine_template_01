@@ -62,6 +62,8 @@ Normalized `zoom_alpha` from [`map_zoom_alpha`](../src/gui/map_camera.rs) on `MA
 
 **Default play anchor:** `FIRE_SPARK_OPERATIONAL_PLAY_ZOOM_ALPHA = 0.42` — product must be **passable** here, not only at `--test visual` tactical lock (`0.85`).
 
+**World-scale cross-link (VSS-T1-003):** at `OPERATIONAL_ZOOM_ALPHA = 0.42` on 512² default world, witness measures **26.26 px/tile**, **78.8 px** typical 3×3 primary, **263×210 px** site stub — see [`design_build_readability_v1.md`](design_build_readability_v1.md) §1a measured table and [`debug_runs/world_scale_contract_live.json`](../debug_runs/world_scale_contract_live.json).
+
 ### 1a. Channel priority by band (what wins visually)
 
 | Band | Dominant read | Secondary | Tertiary | Forbidden |

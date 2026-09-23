@@ -57,7 +57,13 @@ def test_queue_integrity_finds_contradictions() -> None:
     assert body.get("error_count", 0) >= 6
     assert body.get("green") is False
     contradictions = body.get("contradictions") or []
-    assert any(c.get("id") == "VEG-F02-MCP-ATLAS-001" for c in contradictions)
+    assert len(contradictions) >= 3
+    for c in contradictions[:3]:
+        assert c.get("id")
+        by_queue = c.get("by_queue") or {}
+        assert len(by_queue) >= 2
+        statuses = set(by_queue.values())
+        assert "closed" in statuses and "open" in statuses
 
 
 def test_synthetic_queue_pair_contradiction() -> None:

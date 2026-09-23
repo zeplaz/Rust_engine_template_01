@@ -14,8 +14,9 @@ use crate::gui::{WorldLodBand, WorldLodBands, WorldRepresentationFrame};
 
 pub const CITY_P2_LIVE_JSON: &str = "debug_runs/city_p2_001_live.json";
 
-const C8_PILOT_IMPOSTOR_GLB: &str = "assets/staging/city_c8_pilot_merge_run001/model.glb#Scene0";
-const FALLBACK_IMPOSTOR_GLB: &str = "assets/models/modules/prop_fence_lod0_run001/model.glb#Scene0";
+// AssetServer roots at `assets/` — paths must be relative to that root (no `assets/` prefix).
+const C8_PILOT_IMPOSTOR_GLB: &str = "staging/city_c8_pilot_merge_run001/model.glb#Scene0";
+const FALLBACK_IMPOSTOR_GLB: &str = "models/modules/prop_fence_lod0_run001/model.glb#Scene0";
 
 #[derive(Resource, Debug, Default)]
 pub struct BlockLodImpostorCatalog {

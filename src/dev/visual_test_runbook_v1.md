@@ -131,14 +131,14 @@ cargo run -p proc_A_dine01 --release -- --test demo --stay-open
 | File | Field(s) | Pass |
 |------|----------|------|
 | `debug_runs/sim_spectrum_analytics_live.json` | `last_frame.spine.tile_raster_ms` | `== 0` steady sim |
-| same | `last_frame.spine.terrain_authority` | `GpuInstancedAtlas` (release default) |
+| same | `last_frame.spine.terrain_authority` | `GpuBake` (release default; CPU dirty-bake → texture until RPC-1-004+) |
 | same | `last_frame.perf.terrain_gpu_authoritative` | `true` |
 | same | `last_frame.render_schedule.render_and_present_ms` | present; rolling p95 ≤ **16 ms** |
 | same | `witness_contract.green` | `true` (P3-B contract paths) |
 | same | `program_exit_gate.green` | `true` when ≥30 steady samples |
 | same | `program_exit_gate.p95_frame_ms` | ≤ **33 ms** |
 | same | `program_exit_gate.p95_render_present_ms` | ≤ **16 ms** |
-| `debug_runs/minimap_compositor_live.json` | terrain source / witness body | `gpu_atlas` / green |
+| `debug_runs/minimap_compositor_live.json` | terrain source / witness body | **now** `world_raster` (CPU dirty-gated bake); **flag ON** after RPC-1-005 can be `gpu_bake` (operator prove = RPC-1-006) |
 | `debug_runs/stage5_full_app_live.json` | readiness spine | green |
 | `debug_runs/gpu_terrain_p0c_prime_001_live.json` | lib refresh optional | green |
 

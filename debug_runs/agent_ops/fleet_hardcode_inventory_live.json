@@ -1,0 +1,62 @@
+{
+  "schema": "fleet_hardcode_inventory_v1",
+  "slice_id": "FLEET-BUILD-REWIRE-004",
+  "task_id": "BUILD-READ-REWIRE-004",
+  "gate_id": "pilot_hardcode_lint",
+  "written": "2026-08-12",
+  "agent": "coder",
+  "lint_ok": true,
+  "violation_count": 0,
+  "violation_count_before": 8,
+  "transitional_hit_count": 0,
+  "transitional_hit_count_before": 1,
+  "counts_by_class": {
+    "AUTO_FIX": 0,
+    "NEEDS_ART": 0,
+    "DEFER": 0
+  },
+  "rewire_applied": [
+    {
+      "kind": "catalog_constants",
+      "file": "src/construction/pilot_catalog.rs",
+      "change": "PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE + PILOT_ARCH_DNA_PRESET_WAREHOUSE; allowlisted"
+    },
+    {
+      "kind": "loader_rename",
+      "file": "src/construction/procedural/arch_build_grammar_v0.rs",
+      "change": "load_logistics_rail_warehouse_v0_preset → load_canonical_arch_dna_pilot_preset"
+    },
+    {
+      "kind": "call_site_rewire",
+      "files": [
+        "src/construction/procedural/mod.rs",
+        "src/construction/procedural/arch_grammar_v0_shim.rs",
+        "src/construction/procedural/facade_propagation.rs",
+        "src/construction/procedural/footprint_grid.rs",
+        "src/construction/procedural/golden_seed_set.rs",
+        "src/construction/procedural/building_grammar/grammar_evaluation.rs",
+        "src/construction/procedural/assembly_snapshot.rs",
+        "src/strategic/settlement/seed_chain.rs",
+        "src/strategic/settlement/block_recipe.rs"
+      ]
+    }
+  ],
+  "inventory": [],
+  "witness": "debug_runs/pilot_hardcode_lint_live.json",
+  "next_owner": "@coder-mcp / @sim-steward",
+  "next_slice": "BUILD-SET-GUARD-002 — retire transitional_allowlist entries if still listed; MCP Python defaults remain out of src scan",
+  "remaining_owners": {
+    "src_scan": "clear (0 violations)",
+    "allowlist_catalog": "src/construction/pilot_catalog.rs (permanent)",
+    "mcp_python_defaults": "tools/mcp/python + art_pipeline_suite (outside scan_roots — follow-up BUILD-SET-GUARD / coder-mcp)",
+    "transitional_paths": "assembly_snapshot.rs + gui qc still listed until BUILD-SET-GUARD-002 removes rows (0 needle hits)"
+  },
+  "validate_report_cli": "python -m rust_engine_mcp.cli validate-report pilot_hardcode_lint",
+  "allowlist": "tools/mcp/guard/pilot_hardcode_allowlist_v1.json",
+  "_agent_meta": {
+    "track": "fleet-drain",
+    "task_id": "FLEET-BUILD-REWIRE-004",
+    "proceed_ship": true,
+    "honest_gate": "honest_gate"
+  }
+}

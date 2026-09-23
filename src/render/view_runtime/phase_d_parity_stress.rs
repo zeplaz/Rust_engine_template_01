@@ -12,9 +12,9 @@ use crate::gui::{
     ViewInstance, ViewIsolationDiagnostics, ViewManager, ViewProjection, ViewRenderPolicy,
     ViewRenderTarget, VIEW_NO_ENTITY,
 };
-use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, VisibleFireChunkSet};
-use crate::render::fire_view_extract::{per_view_fire_extract_bounded, FireVisualFramesByView};
-use crate::render::sim_visual_extract::{FireVisualFrame, FireVisualGpuInstance};
+use crate::render::fx_spine::fire_chunk_runtime::{ActiveFireChunkSet, VisibleFireChunkSet};
+use crate::render::extraction::fire_view_extract::{per_view_fire_extract_bounded, FireVisualFramesByView};
+use crate::render::extraction::sim_visual_extract::{FireVisualFrame, FireVisualGpuInstance};
 
 use super::per_view_policy::PerViewRepresentationPolicy;
 use super::view_fire_isolation::{overlay_masks_aligned_with_map_views, ViewFireIsolationWitness};

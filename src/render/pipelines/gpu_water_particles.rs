@@ -10,9 +10,9 @@ use bevy::prelude::*;
 use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
-use crate::render::gpu_particles::FireParticleCameraScale;
+use crate::render::pipelines::gpu_particles::FireParticleCameraScale;
 use crate::render::tile_world_fallback::RASTER_CHUNK_TILES;
-use crate::render::water_surface_visual::{RiverPolylineSegment, WaterSurfaceVisualCatalog};
+use crate::render::fx_spine::water_surface_visual::{RiverPolylineSegment, WaterSurfaceVisualCatalog};
 
 /// Strategic zoom cutoff — particles only (shader motion stays on — D-W09 A).
 pub const WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA: f32 = 0.35;

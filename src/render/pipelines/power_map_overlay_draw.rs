@@ -10,7 +10,7 @@ use crate::infrastructure::utility::VoltageClass;
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use crate::render::infrastructure_overlay::{
+use crate::render::pipelines::infrastructure_overlay::{
     InfrastructureNetworkLayer, InfrastructureOverlayDrawRequests, InfrastructureOverlaySettings,
     InfrastructureOverlayStroke, PowerLineOverlayState, PowerMapOverlayPresentation,
     stroke_for_power_line_state,
@@ -190,7 +190,7 @@ fn paint_gap_line(
 
 #[must_use]
 pub fn power_map_overlay_draw_witness_green() -> bool {
-    use crate::render::infrastructure_overlay::stroke_for_voltage_class;
+    use crate::render::pipelines::infrastructure_overlay::stroke_for_voltage_class;
     let live = stroke_for_voltage_class(VoltageClass::Medium, false);
     live.alpha > 0.99 && !live.dashed
 }

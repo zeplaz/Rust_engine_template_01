@@ -12,19 +12,9 @@ mod minimap_shell;
 mod minimap_egui_dev;
 mod minimap_viewport_frame;
 pub mod tactical;
-/// RGR-P5-002 shim — old `crate::gui::map_camera::*` path kept alive; canonical home is
-/// `crate::gui::tactical::map_camera`. Remove once all call sites migrate to the new path.
-pub mod map_camera {
-    pub use super::tactical::map_camera::*;
-}
-/// RGR-P5-002 shim — old `crate::gui::sim_map_rtt::*` path kept alive; canonical home is
-/// `crate::gui::tactical::sim_map_rtt`. Remove once all call sites migrate to the new path.
-pub mod sim_map_rtt {
-    pub use super::tactical::sim_map_rtt::*;
-}
 mod map_zoom_coherence;
 mod sim_map_projection;
-mod vfx_fire_test_highlight;
+mod vfx_fire_test_focus;
 mod settlement_block_frame_debug;
 mod assembly_snapshot_qc_ui;
 mod map_view;
@@ -93,10 +83,8 @@ pub use assembly_snapshot_qc_ui::{
     placement_grid_coords, AssemblySnapshotQcUiPlugin, AssemblySnapshotQcUiState,
     APS_BEVY_QC_HUD_DEFAULT_SNAPSHOT,
 };
-pub use vfx_fire_test_highlight::{
-    draw_vfx_fire_test_highlight_overlay, refresh_vfx_fire_test_highlight_from_burning,
-    vfx_fire_test_highlight_001_witness_green, vfx_fire_test_highlight_001_witness_json,
-    VfxFireTestHighlight, VfxFireTestHighlightPlugin,
+pub use vfx_fire_test_focus::{
+    publish_vfx_fire_test_region, VfxFireTestFocusPlugin, VfxFireTestRegion,
 };
 pub use settlement_block_frame_debug::{
     draw_block_frame_debug_overlay, settlement_block_frame_debug_overlay_wired_witness_green,
@@ -144,6 +132,8 @@ pub use hud::{HudPanelStateWitness, HudPanelState, HudPanelStatePlugin,
     TransmissionShellPlugin, TransmissionShellState,
 };
 pub use style::{
+    bevy_logical_to_egui_pos,
+    bevy_logical_vec_to_egui,
     error_text,
     forbid_raw_colors,
     framed_group,
@@ -171,26 +161,26 @@ pub use style::{
 };
 pub use egui_root::new_root_ui;
 pub use egui_window::std_floating;
-pub use sim_map_rtt::{
-    apply_simulation_map_camera_clear, insert_simulation_map_texture, rtt_diag_camera_mode,
-    simulation_map_rtt_clear_color,
-    simulation_map_rtt_image, simulation_map_rtt_render_layers, simulation_map_texture_extent,
-    spawn_main_world_rtt_camera, spawn_simulation_hud_ui_camera, RttDiagCameraConfig,
-    RttDiagCameraMode, SimulationHudUiCamera, SimulationMapFillRect,
-    TacticalMapFillRect, SimulationMapTexture, SIMULATION_MAP_RTT_RENDER_LAYER,
+pub use tactical::sim_map_rtt::{
+    apply_simulation_map_camera_clear, insert_simulation_map_texture, rtt_core2d_overlay_hosts_enabled,
+    rtt_diag_camera_mode, simulation_map_rtt_clear_color, simulation_map_rtt_image,
+    simulation_map_rtt_render_layers, simulation_map_texture_extent, spawn_main_world_rtt_camera,
+    spawn_simulation_hud_ui_camera, RttCore2dOverlayHostState, RttDiagCameraConfig, RttDiagCameraMode,
+    SimulationHudUiCamera, SimulationMapFillRect, SimulationMapTexture, TacticalMapFillRect,
+    SIMULATION_MAP_RTT_RENDER_LAYER,
 };
 pub use authoritative_viewport::{
     bootstrap_authoritative_viewport_on_enter_simulation, measure_sim_map_fill_viewport,
     sync_simulation_map_fill_debug_trace, AuthoritativeViewport, CENTER_ROW_HORIZONTAL_PAD_PX,
 };
-pub use map_camera::{
+pub use tactical::map_camera::{
     default_map_zoom_for_world, in_simulation_or_editor_map, map_camera_viewport_pixels,
     map_zoom_limits_for_world, orthographic_fixed_world_span, primary_cursor_world_xy,
     MainWorldCamera, MainWorldCameraOrthoTrace, MAIN_WORLD_CAMERA_Z, MapCameraDesired, MapCameraDesiredRes,
     MapCameraMode,
     sync_main_world_camera_viewport_and_projection,
     MapCameraPlugin, MapCameraSettings, MapCameraSystemSet,
-    derive_map_camera_desired_from_view_authority, mirror_world_main_camera_from_map_desired,
+    apply_derived_map_camera_desired, derive_map_camera_desired_from_view_authority,
     map_scale_for_zoom_alpha, map_zoom_alpha, map_zoom_alpha_with_limits,
     on_world_main_pose_committed,
     sim_map_cursor_world_xy, sim_map_image_rect,
@@ -241,7 +231,8 @@ pub use world_representation::{
     GlobalLodState, LodCell, LodGameplaySignals, LodGlobalRules,
     LodInputs, LodZoneId, LodZoneRegistry, LodZoneSource, OperationalLodZone,
     TacticalEscalation, TacticalLodBubble, TacticalLodBubbleRegistry, WorldLodBand, WorldLodBands,
-    WorldLodMap, WorldLodPolicyEngine, WorldRepresentationFrame, WorldRepresentationResolver,
+    WorldLodMap, WorldLodPolicyEngine, WorldChunkLayoutCache, WorldRepresentationFrame,
+    WorldRepresentationResolver, ZoomFrame,
     WorldRepresentationSystemSet, WorldResolutionPolicy, WorldVisibilityMask, resolution_for_band,
     visibility_for_band,
 };

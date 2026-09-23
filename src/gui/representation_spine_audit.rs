@@ -51,7 +51,7 @@ pub const POLICY_CONSUMER_PATHS: &[&str] = &[
 ];
 
 /// Sole ECS fire scan authority for sim snapshots ([`crate::render::FireSimulationSnapshot`]) before view extraction
-/// (`FireVisualFramesByView` / legacy [`crate::render::sim_visual_extract::FireVisualFrame`]).
+/// (`FireVisualFramesByView` / legacy [`crate::render::extraction::sim_visual_extract::FireVisualFrame`]).
 #[cfg(test)]
 pub const FIRE_VISUAL_EXTRACT_AUTHORITY: &[&str] = &[
     "src/render/extraction/fire_visual_extract.rs",

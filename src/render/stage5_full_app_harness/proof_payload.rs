@@ -5,8 +5,8 @@ use bevy::prelude::*;
 
 use crate::dev::diagnostics::view_authority_sample_json;
 use crate::gui::{MapViewInstanceId, WorldBounds};
-use crate::render::gpu_water_particles::WorldWaterParticleFrame;
-use crate::render::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport};
+use crate::render::pipelines::gpu_water_particles::WorldWaterParticleFrame;
+use crate::render::witness::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport};
 use crate::render::{
     minimap_gpu_compositor_env_enabled, ui_p3_m2_minimap_acceptance_green,
     ui_p3_m3_minimap_acceptance_green,
@@ -42,11 +42,11 @@ pub(super) fn build_water_surface_proof_json(
     let water_vfx_witness = water_catalog.map(|c| {
         let live_zoom = water_particles
             .map(|f| f.witness.zoom_alpha)
-            .unwrap_or(crate::render::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA);
-        let bands = crate::render::gpu_water_particles::evaluate_water_vfx_witness_bands(
+            .unwrap_or(crate::render::pipelines::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA);
+        let bands = crate::render::pipelines::gpu_water_particles::evaluate_water_vfx_witness_bands(
             c, live_zoom, 0.0,
         );
-        crate::render::gpu_water_particles::water_vfx_witness_json(c, &bands)
+        crate::render::pipelines::gpu_water_particles::water_vfx_witness_json(c, &bands)
     });
     let tactical_coast_foam = water_vfx_witness
         .as_ref()
@@ -65,7 +65,7 @@ pub(super) fn build_water_surface_proof_json(
         "water_w1_river_green": water_catalog.map(|c| c.w1_river_green()),
         "water_w1_river_read_green": water_catalog.map(|c| {
             c.w1_river_read_green_at_zoom(
-                crate::render::water_surface_visual::WATER_STRATEGIC_ZOOM_ALPHA * 0.5,
+                crate::render::fx_spine::water_surface_visual::WATER_STRATEGIC_ZOOM_ALPHA * 0.5,
             )
         }),
         "water_w1_ocean_green": water_catalog.map(|c| c.w1_ocean_green()),
@@ -98,7 +98,7 @@ pub(super) fn build_water_surface_proof_json(
             .as_ref()
             .and_then(|v| v.get("water_witness_001_green"))
             .and_then(|v| v.as_bool()),
-        "tactical_witness_gates": tactical_vfx_witness_json(tactical_vfx),
+        "tactical_witness_gates": tactical_vfx_witness_json(tactical_vfx, false),
     })
 }
 
@@ -422,7 +422,7 @@ pub(super) fn build_stage5_full_app_live_proof_payload(
             "fire_spark_additive_blend": particles.map(|frame| frame.spark_witness.additive_blend),
             "fire_spark_011_green": Some(tactical_vfx.fire_spark_011_green),
             "fire_spark_tactical_proof_zoom_alpha":
-                crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+                crate::render::pipelines::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
             "fire_spark_budget_capped": particles.map(|frame| frame.spark_witness.budget_capped),
             "fire_particle_view_culled": particles.map(|frame| frame.spark_witness.view_culled),
             "fire_spark_projection_view": particles.map(|frame| frame.spark_witness.projection_view),
@@ -436,6 +436,40 @@ pub(super) fn build_stage5_full_app_live_proof_payload(
                 "y": reads.resolved.simulation_map.valid.then_some(reads.resolved.simulation_map.half_extents.y)
                     .or_else(|| reads.resolved.primary_window.valid.then_some(reads.resolved.primary_window.half_extents.y)),
             },
+        },
+        "effects_system": {
+            "program": "EFFECTS-SYSTEM-UNIFY-001",
+            "rtt_core2d_overlay_host_wired": reads
+                .rtt_overlay_host
+                .as_ref()
+                .map(|s| s.host_present)
+                .unwrap_or(false),
+            "smoke_extract_wired": reads.smoke_bridge.as_ref().map(|s| s.smoke_extract_wired),
+            "smoke_stub_removed": reads.smoke_bridge.as_ref().map(|s| s.smoke_stub_removed),
+            "smoke_path": "SimChunkSmokeVisualExtract→SmokeProjectionNode→gpu_field_bridge",
+            "particle_domain_registry": reads.particle_domains.as_ref().map(|r| r.witness_json()),
+            "weather_vfx": crate::render::weather_vfx_witness_json(
+                reads.weather_precip_frame
+                    .as_ref()
+                    .map(|f| f.as_ref())
+                    .unwrap_or(&crate::render::WeatherPrecipFrame::default()),
+                reads.particle_domains.as_ref().map(|r| r.as_ref()),
+            ),
+            "weather_vfx_frontend_filled": reads
+                .weather_precip_frame
+                .as_ref()
+                .map(|f| f.climate_fed)
+                .unwrap_or(false),
+            "cpu_weather_precip_retired": crate::render::cpu_weather_precip_retired(
+                reads.weather_precip_frame
+                    .as_ref()
+                    .map(|f| f.as_ref())
+                    .unwrap_or(&crate::render::WeatherPrecipFrame::default()),
+                reads.particle_domains.as_ref().map(|r| r.as_ref()),
+            ),
+            // ES-4 ALTERNATIVE — composites not wired; WGSL under shaders/experiments/atmosphere/
+            "atmosphere_composite_wired": crate::systems::atmosphere::ATMOSPHERE_COMPOSITE_WIRED,
+            "atmosphere_wgsl_quarantined": crate::systems::atmosphere::ATMOSPHERE_WGSL_QUARANTINED,
         },
         "texture_stale_reasons": {
             "preview_stale_binding": reads.viewport_mismatch.stale_texture_binding,
@@ -459,7 +493,14 @@ pub(super) fn build_stage5_full_app_live_proof_payload(
             })
         }),
         "water_surface": water_surface,
-        "tactical_vfx_witness": tactical_vfx_witness_json(&tactical_vfx),
+        "tactical_vfx_witness": tactical_vfx_witness_json(
+            &tactical_vfx,
+            reads
+                .rtt_overlay_host
+                .as_ref()
+                .map(|s| s.host_present)
+                .unwrap_or(false),
+        ),
         "tactical_vector_overlay": reads.tactical_vector.as_ref().map(|s| {
             crate::render::tactical_vector_overlay_witness_json(s)
         }).unwrap_or_else(|| {
@@ -481,6 +522,13 @@ pub(super) fn build_stage5_full_app_live_proof_payload(
         },
     });
     if let Some(graph) = projection {
+        let smoke_w = crate::render::extraction::SmokeVisualBridgeWitness {
+            smoke_density_sum: graph.smoke.density_sum,
+            smoke_row_count: graph.smoke.row_count,
+            smoke_extract_wired: graph.smoke.extract_wired,
+            smoke_stub_removed: true,
+        };
+        smoke_w.merge_into_stage5_json(&mut body, Some(&graph.smoke));
         if graph.logistics.active_rows > 0 {
             patch_log_e01_visual_confirm_witnesses(
                 &mut body,

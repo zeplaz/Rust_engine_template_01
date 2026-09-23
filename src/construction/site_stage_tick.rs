@@ -101,19 +101,6 @@ pub fn construction_site_stage_tick_002_witness_green() -> bool {
     construction_site_stage_tick_002_self_check().is_ok()
 }
 
-fn assemble_stage_tick_test_app() -> App {
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins);
-    app.init_resource::<SiteConstructionBook>()
-        .init_resource::<SiteIdIssuer>()
-        .init_resource::<SimControlState>()
-        .init_resource::<SimTick>()
-        .add_message::<CommitConstructionSiteEvent>()
-        .add_plugins(SiteStageTickPlugin)
-        .add_systems(Update, crate::strategic::commit_construction_site_system);
-    app
-}
-
 fn construction_site_stage_tick_002_self_check() -> Result<(), &'static str> {
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
@@ -203,7 +190,20 @@ mod tests {
         BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles, LayerType, SiteArchetype,
         SiteConstructionBook, SiteConstructionPhase, SiteIdIssuer,
     };
-    use crate::systems::sim_control::SimTick;
+    use crate::systems::sim_control::{SimControlState, SimTick};
+
+    fn assemble_stage_tick_test_app() -> App {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.init_resource::<SiteConstructionBook>()
+            .init_resource::<SiteIdIssuer>()
+            .init_resource::<SimControlState>()
+            .init_resource::<SimTick>()
+            .add_message::<CommitConstructionSiteEvent>()
+            .add_plugins(SiteStageTickPlugin)
+            .add_systems(Update, crate::strategic::commit_construction_site_system);
+        app
+    }
 
     #[test]
     fn commit_leaves_site_planned_not_operational() {

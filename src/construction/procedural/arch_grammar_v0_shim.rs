@@ -72,7 +72,7 @@ pub fn bq_h3_v0_shim_witness_green() -> bool {
     if !registry.load_errors.is_empty() {
         return false;
     }
-    let preset_ok = super::arch_build_grammar_v0::load_logistics_rail_warehouse_v0_preset()
+    let preset_ok = super::arch_build_grammar_v0::load_canonical_arch_dna_pilot_preset()
         .ok()
         .and_then(|preset| {
             registry
@@ -99,7 +99,7 @@ pub fn bq_h3_v0_shim_witness_green() -> bool {
 #[must_use]
 pub fn build_bq_h3_v0_shim_witness_body() -> serde_json::Value {
     let registry = load_building_grammar_registry();
-    let preset_validation = super::arch_build_grammar_v0::load_logistics_rail_warehouse_v0_preset()
+    let preset_validation = super::arch_build_grammar_v0::load_canonical_arch_dna_pilot_preset()
         .ok()
         .and_then(|preset| {
             registry
@@ -124,7 +124,7 @@ pub fn build_bq_h3_v0_shim_witness_body() -> serde_json::Value {
         "decision": "frozen_shim",
         "note": "v0 DNA reweighting opt-in only; preset massing_weight_override must match T1 grammar strategies",
         "v0_known_massing_ids": V0_KNOWN_MASSING_IDS,
-        "logistics_rail_warehouse_v0": preset_validation,
+        (crate::construction::PILOT_ARCH_DNA_PRESET_WAREHOUSE): preset_validation,
         "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-H3",
     })
 }

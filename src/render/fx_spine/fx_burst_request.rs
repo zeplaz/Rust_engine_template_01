@@ -1,6 +1,6 @@
 //! Projection-owned burst hints for instanced FX (`base_gui_next.md`).
 //! **Must not** become a second GPU upload path — hints are filled from committed
-//! [`crate::render::sim_visual_extract::FireVisualFrame`] during projection only.
+//! [`crate::render::extraction::sim_visual_extract::FireVisualFrame`] during projection only.
 
 use bevy::prelude::*;
 
@@ -14,7 +14,7 @@ pub struct FxParticleBurstRequest {
 /// Collect burst hints from committed fire visual rows (no live ECS scan).
 #[must_use]
 pub fn collect_burst_hints_from_fire_visual(
-    rows: &[crate::render::sim_visual_extract::FireVisualGpuInstance],
+    rows: &[crate::render::extraction::sim_visual_extract::FireVisualGpuInstance],
     heat_threshold: f32,
 ) -> Vec<FxParticleBurstRequest> {
     let mut out = Vec::new();

@@ -1,0 +1,80 @@
+{
+  "schema_version": "effect_spec_v1",
+  "effect_id": "smoke_column",
+  "display_name": "Smoke Column (reference)",
+  "seed": 42002,
+  "batch_id": "vss_t4_reference_effects_v1",
+  "development_tier": "smoke",
+  "lane": "gpu_field",
+  "sim_coupling": "smoke_field",
+  "spawn_hook": "attach_entity",
+  "spawn_hook_config": {
+    "attach_entity": {
+      "anchor_kind": "building_footprint",
+      "entity_tag": "vss_reference_chimney",
+      "socket": "chimney_top",
+      "offset_local": [0, 0.5, 0]
+    }
+  },
+  "grid": {
+    "tile_units": 1,
+    "snap_to_grid": true,
+    "rotation_quarters": 0,
+    "anchor": "entity_origin"
+  },
+  "emit": {
+    "duration_secs": 8,
+    "rate": 48,
+    "burst_count": 0,
+    "lifetime_secs": 4,
+    "prewarm_secs": 1
+  },
+  "lod_tiers": {
+    "macro": {
+      "enabled": false,
+      "max_instances": 0,
+      "rate_scale": 0,
+      "sprite_px_scale": 0.5
+    },
+    "strategic": {
+      "enabled": true,
+      "max_instances": 8,
+      "rate_scale": 0.2,
+      "sprite_px_scale": 0.75
+    },
+    "operational": {
+      "enabled": true,
+      "max_instances": 32,
+      "rate_scale": 0.5,
+      "sprite_px_scale": 1
+    },
+    "local_tactical": {
+      "enabled": true,
+      "max_instances": 64,
+      "rate_scale": 1,
+      "sprite_px_scale": 1.25
+    }
+  },
+  "visual": {
+    "source": "wgsl_pack",
+    "shader_pack": {
+      "compute": "assets/shaders/post/weather_fire_field.wgsl",
+      "draw": "assets/shaders/experiments/atmosphere/smoke_column.wgsl"
+    },
+    "blend": "alpha",
+    "sprite_px": 6,
+    "tint": [0.55, 0.58, 0.62, 0.85]
+  },
+  "preview": {
+    "frames": 120,
+    "camera_zoom_px_per_tile": 8,
+    "entry_path": "effect_sandbox",
+    "warmup_frames": 45,
+    "capture_resolution": [512, 512]
+  },
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "42002"
+  }
+}

@@ -1,7 +1,9 @@
 //! Pushes [`crate::render::WeatherFireFieldUniforms`] from **visual extract** only (no sim chunk queries).
 //!
-//! Fire heat in the GPU field mean uses [`crate::render::extraction::RenderProjectionGraph`] (fire node) + [`SimChunkSmokeVisualExtract`].
-//! Weather / ecology means come from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate)
+//! Fire heat in the GPU field mean uses [`crate::render::extraction::RenderProjectionGraph`]
+//! (**fire** + **smoke** projection nodes). Smoke channel bias comes from the smoke node only —
+//! never a second ECS smoke scan. Weather / ecology means come from
+//! [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate)
 //! (filled in the same [`AtmospherePipelineSet::VisualExtract`](super::pipeline::AtmospherePipelineSet) chain).
 
 use bevy::prelude::*;
@@ -10,14 +12,16 @@ use crate::gui::{
     preview_partial_min_interval_from_hz, CameraVisualState, FxVisibilitySettings, RepresentationBand,
     RepresentationResult,
 };
-use crate::render::extraction::RenderProjectionGraph;
-use crate::render::{ClimateVisualAggregate, SimChunkSmokeVisualExtract, WeatherFireFieldUniforms};
+use crate::render::extraction::{RenderProjectionGraph, SmokeProjectionNode};
+use crate::render::{ClimateVisualAggregate, WeatherFireFieldUniforms};
 use super::incremental_schedule::AtmospherePartialFieldState;
 
 /// Mean emitter intensity × smoke/toxic bias (WGSL `means.z` fire channel).
+///
+/// Smoke density/toxicity come from [`SmokeProjectionNode`] only (Layer B bridge).
 pub(crate) fn effective_fire_heat_for_gpu_field(
     fire_proj: &crate::render::extraction::FireProjectionNode,
-    smoke_ex: &SimChunkSmokeVisualExtract,
+    smoke_proj: &SmokeProjectionNode,
 ) -> f32 {
     let fire_mean = if !fire_proj.instance_buffer.is_empty() {
         let n = fire_proj.instance_buffer.len() as f32;
@@ -34,26 +38,22 @@ pub(crate) fn effective_fire_heat_for_gpu_field(
         0.0
     };
 
-    let (smoke_d, smoke_t) = if smoke_ex.instances.is_empty() {
-        (0.0f32, 0.0f32)
-    } else {
-        let n = smoke_ex.instances.len() as f32;
-        let d: f32 = smoke_ex
-            .instances
-            .iter()
-            .map(|s| s.density_tox_vis.x)
-            .sum::<f32>()
-            / n;
-        let t: f32 = smoke_ex
-            .instances
-            .iter()
-            .map(|s| s.density_tox_vis.y)
-            .sum::<f32>()
-            / n;
-        (d, t)
-    };
+    let smoke_d = smoke_proj.mean_density;
+    let smoke_t = smoke_proj.mean_toxicity;
     let fire_boost = 1.0 + smoke_d.clamp(0.0, 1.0) * 0.22 + smoke_t.clamp(0.0, 1.0) * 0.12;
     (fire_mean * fire_boost).min(1.5)
+}
+
+/// Fog/smoke visual channel (WGSL `means.w`) — climate fog plus projected smoke density.
+#[must_use]
+pub(crate) fn fog_smoke_channel_from_bridge(
+    climate_fog: f32,
+    atm_weight: f32,
+    smoke_proj: &SmokeProjectionNode,
+) -> f32 {
+    let fog = climate_fog * atm_weight;
+    let smoke = smoke_proj.mean_density.clamp(0.0, 1.0) * 0.55;
+    (fog + smoke).min(1.85)
 }
 
 #[must_use]
@@ -84,7 +84,6 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
     mut cadence_warmed: Local<bool>,
     climate: Res<ClimateVisualAggregate>,
     fire_proj: Option<Res<RenderProjectionGraph>>,
-    smoke_ex: Res<SimChunkSmokeVisualExtract>,
     partial_field: Option<Res<AtmospherePartialFieldState>>,
     fx_vis: Option<Res<FxVisibilitySettings>>,
     cam_vis: Option<Res<CameraVisualState>>,
@@ -113,11 +112,13 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
         *cadence_acc = 0.0;
     }
 
-    let empty_node = crate::render::extraction::FireProjectionNode::default();
-    let mut heat_effective = match fire_proj.as_deref() {
-        Some(g) => effective_fire_heat_for_gpu_field(&g.fire, &smoke_ex),
-        None => effective_fire_heat_for_gpu_field(&empty_node, &smoke_ex),
+    let empty_fire = crate::render::extraction::FireProjectionNode::default();
+    let empty_smoke = SmokeProjectionNode::default();
+    let (fire_node, smoke_node) = match fire_proj.as_deref() {
+        Some(g) => (&g.fire, &g.smoke),
+        None => (&empty_fire, &empty_smoke),
     };
+    let mut heat_effective = effective_fire_heat_for_gpu_field(fire_node, smoke_node);
 
     // View Representation: macro/cinematic emphasis on GPU field means (no ECS sim readback).
     let cine = cam_vis
@@ -137,10 +138,7 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
         .unwrap_or(1.0)
         .clamp(0.05, 2.5);
 
-    let fire_n = fire_proj
-        .as_deref()
-        .map(|g| g.fire.instance_buffer.len())
-        .unwrap_or(0);
+    let fire_n = fire_node.instance_buffer.len();
     u.fire_instance_count = (fire_n.min(u32::MAX as usize)) as u32;
     u._fire_pad = UVec3::ZERO;
 
@@ -150,11 +148,13 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
         .unwrap_or(RepresentationBand::Full);
     u.fire_propagate = fire_propagate_from_representation_band(band);
 
+    let fog_smoke = fog_smoke_channel_from_bridge(climate.mean_fog_density, atm_w, smoke_node);
+
     u.means = Vec4::new(
         climate.mean_rain,
         climate.mean_snow,
         heat_effective,
-        climate.mean_fog_density * atm_w,
+        fog_smoke,
     );
     u.extra_means = Vec4::new(
         climate.mean_biomass,
@@ -197,8 +197,7 @@ pub fn gpu_field_bridge_systems(app: &mut App) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::extraction::{FireVisualGpuInstance, FireProjectionNode};
-    use crate::render::sim_visual_extract::ChunkSmokeGpu;
+    use crate::render::extraction::{FireVisualGpuInstance, FireProjectionNode, SmokeProjectionNode};
     use crate::systems::atmosphere::incremental_schedule::AtmospherePartialFieldState;
 
     #[test]
@@ -211,21 +210,36 @@ mod tests {
     }
 
     #[test]
-    fn effective_fire_heat_boosts_with_smoke_extract() {
+    fn effective_fire_heat_boosts_with_smoke_projection() {
         let mut fire = FireProjectionNode::default();
         fire.instance_buffer.push(FireVisualGpuInstance {
             chunk_xy_heat_lum: Vec4::new(0.0, 0.0, 0.5, 0.0),
             ..Default::default()
         });
-        let mut smoke = SimChunkSmokeVisualExtract::default();
-        smoke.instances.push(ChunkSmokeGpu {
-            chunk_xy: Vec4::ZERO,
-            density_tox_vis: Vec4::new(0.8, 0.2, 0.0, 0.0),
-        });
-        let h0 = effective_fire_heat_for_gpu_field(&fire, &SimChunkSmokeVisualExtract::default());
+        let smoke = SmokeProjectionNode {
+            mean_density: 0.8,
+            mean_toxicity: 0.2,
+            row_count: 1,
+            extract_wired: true,
+            ..Default::default()
+        };
+        let h0 = effective_fire_heat_for_gpu_field(&fire, &SmokeProjectionNode::default());
         let h1 = effective_fire_heat_for_gpu_field(&fire, &smoke);
         assert!(h1 > h0);
         assert!(h1 > 0.5);
+    }
+
+    #[test]
+    fn fog_smoke_channel_uses_projection_density_only() {
+        let smoke = SmokeProjectionNode {
+            mean_density: 0.5,
+            extract_wired: true,
+            row_count: 1,
+            ..Default::default()
+        };
+        let v = fog_smoke_channel_from_bridge(0.1, 1.0, &smoke);
+        assert!(v > 0.1);
+        assert!(v < 1.0);
     }
 
     #[test]

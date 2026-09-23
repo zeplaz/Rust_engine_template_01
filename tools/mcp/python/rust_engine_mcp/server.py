@@ -7,6 +7,7 @@ Design rule: MCP tools delegate to CLI/functions; the LLM chooses tools, not mes
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 try:
@@ -29,6 +30,7 @@ from rust_engine_mcp import assembly
 from rust_engine_mcp import variant_set
 from rust_engine_mcp.tile_index import register_tile_atlas_from_batch
 from rust_engine_mcp.validators import run_validator
+from rust_engine_mcp import agent_flow
 from rust_engine_mcp import agent_queue
 from rust_engine_mcp import mcp_productivity_p0
 from rust_engine_mcp import ops_intelligence
@@ -310,6 +312,68 @@ def validate_cargo_report(package: str = "", compress: int = 3, use_cached: bool
         use_cached=use_cached,
     )
     return json.dumps(report.to_dict())
+
+
+@mcp.tool()
+def symbolic_build_digest_tool(
+    package: str = "",
+    compress: int = 3,
+    use_cached: bool = False,
+    extra_touched: str = "",
+    program_id: str = "VSS-001",
+) -> str:
+    """VSS-T5-001 — cargo check → SYMLANG symcodes + trip hits + ValidationReport (agents consume this, not raw logs)."""
+    from .symbolic_build_encoder import symbolic_build_digest
+
+    touched = [t.strip() for t in extra_touched.split(",") if t.strip()]
+    digest = symbolic_build_digest(
+        package=package or None,
+        compression_level=max(1, min(4, compress)),
+        use_cached=use_cached,
+        extra_touched=touched or None,
+        program_id=program_id,
+    )
+    return json.dumps(digest.to_dict())
+
+
+@mcp.tool()
+def tribunal_on_touch(touched_paths: str, agent: str = "auto", verdict: str = "revise") -> str:
+    """VSS-T5-002 — emit tribunal packet YAML for touched paths; dissent[] slot always present."""
+    from datetime import datetime, timezone
+
+    root = paths.repo_root()
+    paths = [p.strip().replace("\\", "/") for p in touched_paths.split(",") if p.strip()]
+    from .symbolic_build_encoder import trip_hits_for_files
+
+    hits = trip_hits_for_files(root, paths)
+    now = datetime.now(timezone.utc).strftime("%Y%m%d")
+    trip_id = hits[0] if hits else "TRIP-VSS-GENERIC"
+    out_dir = root / "debug_runs/tribunals"
+    out_dir.mkdir(parents=True, exist_ok=True)
+    safe_agent = re.sub(r"[^a-zA-Z0-9_-]", "_", agent or "auto")
+    packet = {
+        "schema": "tribunal_packet_v1",
+        "program_id": "VSS-001",
+        "trip_id": trip_id,
+        "trip_hits": hits,
+        "touched_paths": paths,
+        "agent": agent,
+        "verdict": verdict if verdict in ("ship", "revise", "dissent") else "revise",
+        "majority": {"agent": agent, "rationale": "auto-generated stub — replace with critique"},
+        "dissent": [],
+        "dissent_policy": "minority rows always allowed; majority cannot delete",
+        "routing": "@orchestrator",
+        "generated_at": datetime.now(timezone.utc).isoformat(),
+    }
+    out_path = out_dir / f"{trip_id}_{now}_{safe_agent}.json"
+    out_path.write_text(json.dumps(packet, indent=2), encoding="utf-8")
+    return json.dumps(
+        {
+            "ok": True,
+            "path": str(out_path.relative_to(root)).replace("\\", "/"),
+            "packet": packet,
+        }
+    )
 
 
 @mcp.tool()
@@ -613,6 +677,40 @@ def validate_construction_report(path: str, compress: int = 3) -> str:
 
 
 @mcp.tool()
+def validate_effect_spec_report(path: str, compress: int = 3) -> str:
+    """VSS-T4-003 — ValidationReport for effect_spec_v1 JSON (Draft 2020-12 spawn_hook allOf)."""
+    from rust_engine_mcp.validators.effect_spec import validate_effect_spec
+    from rust_engine_mcp.paths import repo_root
+
+    p = Path(path)
+    if not p.is_absolute():
+        p = repo_root() / p
+    report = validate_effect_spec(p, compression_level=max(1, min(4, compress)))
+    return json.dumps(report.to_dict())
+
+
+@mcp.tool()
+def effect_promote(
+    spec_path: str = "",
+    batch_id: str = "",
+    phase: str = "full",
+    force: bool = False,
+    write_witness: bool = True,
+) -> str:
+    """VSS-T4-003 — pack wgsl_pack shaders to staging and/or promote to assets/effects/registry/."""
+    from rust_engine_mcp import effect_promote as ep
+
+    result = ep.effect_promote(
+        spec_path=spec_path,
+        batch_id=batch_id,
+        phase=phase,
+        force=force,
+        write_witness=write_witness,
+    )
+    return json.dumps(result)
+
+
+@mcp.tool()
 def validate_witness_honesty_report(path: str, compress: int = 3, scan: bool = False) -> str:
     """BLANG:WIT-HON — ValidationReport for witness honesty (single path or scan dir when scan=True)."""
     from rust_engine_mcp.validators.witness_honesty import validate_witness_honesty_path, validate_witness_honesty_scan
@@ -767,6 +865,46 @@ def orchestrator_brief(use_cached: bool = True) -> str:
 def token_savings_guide() -> str:
     """Which MCP tools to use instead of raw logs / full-file reads (token policy)."""
     return json.dumps(agent_queue.token_savings_guide())
+
+
+@mcp.tool()
+def agent_flow_route(goal: str, domain: str = "auto", force_hard: bool = False, skip_hard: bool = False) -> str:
+    """BLANG:FLOW — cheap→hard→exec dispatch packet before spawning Tasks (deterministic)."""
+    return json.dumps(
+        agent_flow.agent_flow_route(
+            goal,
+            domain=domain,
+            force_hard=force_hard,
+            skip_hard=skip_hard,
+        )
+    )
+
+
+@mcp.tool()
+def agent_flow_policy() -> str:
+    """Static L0/L1/L2 model-tier policy — pair with agent_flow_route."""
+    return json.dumps(agent_flow.agent_flow_policy())
+
+
+@mcp.tool()
+def terrain_honesty_lint_tool(write_witness: bool = True, compress: int = 3) -> str:
+    """RPC-1 deterministic TerrainRenderAuthority / gpu_atlas honesty scan (no LLM)."""
+    from rust_engine_mcp import terrain_honesty_lint
+
+    return json.dumps(
+        terrain_honesty_lint.validate_terrain_honesty_report(
+            write_witness=write_witness,
+            compress=compress,
+        )
+    )
+
+
+@mcp.tool()
+def auto_fleet_brief() -> str:
+    """No-operator auto fleet drain wave status (auto_fleet_drain_queue_v1)."""
+    from rust_engine_mcp import auto_fleet
+
+    return json.dumps(auto_fleet.auto_fleet_brief())
 
 
 @mcp.tool()
@@ -968,7 +1106,10 @@ def micro_tool_help() -> str:
                 "library-register --rebuild-all",
                 "library-search [--style-pack X] [--batch-id Y]",
                 "write-witness <batch_id>",
-                "validate-report <cargo|bevy|mcp_spec|mcp_job|asset_glb|tile_batch> [path]",
+                "validate-report <cargo|bevy|mcp_spec|mcp_job|asset_glb|tile_batch|effect_spec> [path]",
+                "effect-pack <spec.json>",
+                "effect-promote <spec.json> [--phase pack|promote|full] [--batch-id X] [--force]",
+                "artist-vfx-pipeline-witness",
                 "tile-atlas-pack <png_folder> [-pk]",
                 "lod0-batch-run --batch kit_lod0_003 --phase geometry",
                 "tile-batch-run <tile_batch_v1.json>",
@@ -1027,6 +1168,9 @@ def micro_tool_help() -> str:
                 "file_digest",
                 "orchestrator_brief",
                 "token_savings_guide",
+                "agent_flow_route",
+                "agent_flow_policy",
+                "terrain_honesty_lint_tool",
                 "pipeline_preflight",
                 "snapshot_digest",
                 "material_profile_brief",

@@ -37,7 +37,7 @@ pub fn refresh_coder_a_wave3_14_closure() -> bool {
         refresh_wc_d04_stage6_virtualization_live_witness,
     };
     use crate::render::stage5_full_app_harness::refresh_log_e01_and_tactical_vfx_stage5_live_witness;
-    use crate::render::fire_streaming::refresh_fire_streaming_live_witness;
+    use crate::render::fx_spine::fire_streaming::refresh_fire_streaming_live_witness;
 
     assert!(
         refresh_infrastructure_view_isolation_live_witness(),

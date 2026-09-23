@@ -17,7 +17,7 @@ use crate::engine::states::{BaseState, WorldGenFlowState};
 use crate::engine::{AppState, WorldGenState};
 use crate::gui::hud::{HudDockRegistry, HudWidgetId, ViewportRectSanity};
 use crate::gui::CommandLeftStackState;
-use crate::gui::map_camera::{
+use crate::gui::tactical::map_camera::{
     MainWorldCameraOrthoTrace, MapCameraDesired, MapCameraDesiredRes,
 };
 use crate::gui::{

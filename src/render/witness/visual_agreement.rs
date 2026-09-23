@@ -1,15 +1,15 @@
 //! **VT-4** visual agreement — stamp + hash validation across fire snapshot consumers.
 //!
-//! Tactical GPU surfaces agree with [`crate::render::fire_view_extract::tactical_fire_visual`] (view-culled).
+//! Tactical GPU surfaces agree with [`crate::render::extraction::fire_view_extract::tactical_fire_visual`] (view-culled).
 //! Shared overlay heat agrees with the full [`FireSimulationSnapshot`] (max-per-chunk), not the culled tactical frame.
 
 use bevy::prelude::*;
 
 use crate::gui::OverlayFieldFrame;
 use crate::render::extraction::{bin_merge_chunk_heat, RenderProjectionGraph};
-use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
+use crate::render::pipelines::overlay_field_buffers::SharedOverlayFieldBuffers;
 use crate::render::{tactical_fire_visual, FireSimulationSnapshot, FireVisualFramesByView};
-use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
+use crate::render::extraction::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
 use crate::systems::sim_control::SimStepStamp;
 
 /// Latest overlay sample for the world-preview consumer (CPU fallback or GPU target).

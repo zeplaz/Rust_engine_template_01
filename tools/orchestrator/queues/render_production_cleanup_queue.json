@@ -1,20 +1,24 @@
 {
   "_meta": {
-    "version": "1.0.0",
+    "version": "1.1.0",
     "program_id": "PLAN-RENDER-PROD-CLEANUP-v1",
     "plan_doc": "src/dev/plan_render_production_cleanup_v1.md",
+    "rpc1_plan": "src/dev/plan_rpc1_gpu_terrain_ab_v1.md",
+    "rpc2_plan": "src/dev/plan_rpc2_pose_authority_v1.md",
     "date": "2026-07-06",
     "status": "ACTIVE",
-    "active_phase": "Phase 0 + operator-visual slices ALL CLOSED 2026-07-06 (map, minimap, camera box, fire gates, VT-4)",
-    "current_pick": "RPC-1-DECISION (operator: GPU terrain bake vs honest rename) → then Phase 2 (TODO-04 pose authority)",
+    "active_phase": "Phase 2 pose authority (RPC-2) ★ closed — TODO-05 residual BridgeCompat open · Phase 1 RPC-1-006 still operator",
+    "current_pick": "coder idle / auto — RPC-2 ★done; residual TODO-05 ≠ RPC-2-004 (parallel OK w/ RPC-1-006 operator)",
     "priority": "P1",
     "branch": "master",
     "regression": "cargo test -p proc_A_dine01 --lib stage5 && cargo test -p proc_A_dine01 --lib minimap_compositor",
+    "deterministic_l0": "python -m rust_engine_mcp.cli terrain-honesty-lint",
     "cross_program": {
       "render_gui_refactor": "RGR-V2-004 runs in RGR queue, tandem OK (disjoint files)",
-      "material_vfx_port": "PLAN-MATERIAL-VFX-PORT-v1 still DEFERRED (RGR-G4 gate)"
+      "material_vfx_port": "PLAN-MATERIAL-VFX-PORT-v1 still DEFERRED (RGR-G4 gate)",
+      "gpu_terrain_exec": "plan_gpu_terrain_production_exec_001_v1.md — bake work lands via RPC-1-004+"
     },
-    "decision_gate": "Phase 1 (GPU terrain: build real bake vs honest rename) BLOCKED_ON_OPERATOR_DECISION"
+    "decision_gate": "Phase 1 DECIDED A+B 2026-07-06 — see RPC-1-DECISION"
   },
   "drain": [
     {
@@ -67,21 +71,143 @@
     {
       "seq": 3,
       "id": "RPC-1-DECISION",
-      "status": "blocked_on_operator",
+      "status": "decided",
+      "closed": "2026-07-06",
       "priority": "P1",
       "owner": "operator",
       "audit": "F2/F3",
       "goal": "Choose: (A) build real GPU world-terrain bake vs (B) honest rename + retire dormant per-tile pass",
-      "exit": "decision recorded here; unblocks Phase 3"
+      "decision": "A AND B together (operator, 2026-07-06): build the GPU world-terrain bake AND make naming/labels/docs honest as it lands. Architect freeze: src/dev/plan_rpc1_gpu_terrain_ab_v1.md. Bake = dirty-region scissor atlas→world tex (prefer); fire stays live overlay; rename toward CpuRaster/GpuBake; master green every step.",
+      "exit": "decision recorded; RPC-1-0xx slices seeded from plan_rpc1_gpu_terrain_ab_v1.md"
+    },
+    {
+      "seq": 8,
+      "id": "RPC-1-001",
+      "status": "done",
+      "closed": "2026-08-12",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Lint baseline + plan freeze — run terrain-honesty-lint; attach witness; confirm plan_rpc1_gpu_terrain_ab_v1.md",
+      "territory": "tools/mcp/python/rust_engine_mcp/terrain_honesty_lint.py · src/dev/plan_rpc1_gpu_terrain_ab_v1.md",
+      "exit": "debug_runs/terrain_honesty_lint_live.json written; honest_gate noted; next=RPC-1-002",
+      "notes": "Witness: honest_gate=dishonest_docs (0 errors, 4 warnings). Plan freeze landed. Next=RPC-1-002 docs."
+    },
+    {
+      "seq": 9,
+      "id": "RPC-1-002",
+      "status": "done",
+      "closed": "2026-08-12",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "B0 docs honesty — replace gpu_atlas expectations with world_raster / transitional notes",
+      "territory": "src/dev/gpu_todos_v1.md · src/dev/visual_test_runbook_v1.md · plan_gpu_terrain refs",
+      "exit": "terrain-honesty-lint doc_promises_gpu_atlas count == 0",
+      "notes": "Docs now: live minimap terrain_source=world_raster (CPU dirty-gated bake); target after RPC-1-005=gpu_bake. Plan P0-E3/§8 marked transitional. Lint: doc_promises_gpu_atlas=0 (2 remaining warnings: dishonest_variant_name, gputilemap_never_constructed → RPC-1-003+).",
+      "witness": "debug_runs/terrain_honesty_lint_live.json"
+    },
+    {
+      "seq": 10,
+      "id": "RPC-1-003",
+      "status": "done",
+      "closed": "2026-08-12",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "B1 rename helpers/comments toward GpuBake/CpuRaster — zero behavior change",
+      "territory": "src/render/core/terrain_render_authority.rs · callers docs",
+      "exit": "lib gpu_terrain + minimap_compositor green; lint dishonest_variant_name addressed or explicitly deferred with flag",
+      "notes": "Renamed variants CpuRaster/GpuBake; const aliases CpuFallback/GpuInstancedAtlas; uses_cpu_raster + docs. Lint: dishonest_variant_name=0; gputilemap_never_constructed allowlisted until DR-MIG-TILEMAP (plan_rpc1). Tests: gpu_terrain 2/2, minimap_compositor 26/26, terrain_render_authority 6/6.",
+      "witness": "debug_runs/terrain_honesty_lint_live.json"
+    },
+    {
+      "seq": 11,
+      "id": "RPC-1-004",
+      "status": "done",
+      "closed": "2026-08-12",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "A0 bake spike — dirty-region scissor atlas→world texture behind flag (keep CPU truth)",
+      "territory": "src/render/pipelines/terrain_gpu_bake_spike.rs · terrain_instanced_draw (untouched display) · tile_world_fallback peek",
+      "exit": "capture probe proves bake OR spike rejected with written note; CPU path still default",
+      "notes": "Flag TERRAIN_GPU_BAKE_SPIKE (default OFF). TerrainGpuBakeIndexMap + dirty scissors + world bake Image (RENDER_ATTACHMENT). Fire excluded from bake indices; CPU/sprite remains display truth; minimap still world_raster. RTT atlas→world write pass NOT wired (RPC-1-005). Tests: terrain_gpu_bake_spike 8/8, gpu_terrain 2/2, terrain_render_authority 6/6, minimap_compositor 26/26.",
+      "witness": "debug_runs/terrain_gpu_bake_spike_rpc1_004_live.json"
+    },
+    {
+      "seq": 12,
+      "id": "RPC-1-005",
+      "status": "done",
+      "closed": "2026-08-12",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "A1 consumers — minimap+tactical read bake when flag on; honest terrain_source label",
+      "territory": "src/render/minimap_compositor/pass.rs · terrain_gpu_bake_spike.rs · tactical_map_debug.rs",
+      "exit": "terrain_source can be gpu_bake when flag on; fire remains live overlay",
+      "notes": "Host atlas→world scissor write (rtt_pass_kind=host_atlas_to_world_scissor). Minimap binds bake when spike_bake_ready_for_consumers; label gpu_bake only on that bind. Default OFF stays world_raster. Tactical debug reports gpu_bake_spike; main sprite still CPU display. operator_pixel_proof=false → RPC-1-006.",
+      "witness": "debug_runs/terrain_gpu_bake_spike_rpc1_005_live.json"
+    },
+    {
+      "seq": 13,
+      "id": "RPC-1-006",
+      "status": "queued",
+      "priority": "P1",
+      "owner": "operator",
+      "goal": "Pixel prove + optional default flip",
+      "territory": "debug_runs/captures · witnesses",
+      "exit": "operator sign-off; lint honest_gate=honest on release path"
     },
     {
       "seq": 4,
       "id": "RPC-2-001",
-      "status": "queued_after_phase0",
+      "status": "done",
+      "closed": "2026-08-12",
       "priority": "P1",
       "owner": "planner",
       "goal": "TODO-04 pose authority completion — architecture pass: writer enumeration, single commit point, mirror direction",
-      "exit": "plan packet for @coder; kills startup-pose clobber class"
+      "exit": "plan packet for @coder; kills startup-pose clobber class",
+      "notes": "Freeze src/dev/plan_rpc2_pose_authority_v1.md — ViewProjectionAuthority sole WorldMain commit; MapCameraDesired derive-only; ViewManager read spine. Residual: ApplyInput still desired→authority (P1).",
+      "witness": "src/dev/plan_rpc2_pose_authority_v1.md"
+    },
+    {
+      "seq": 14,
+      "id": "RPC-2-002",
+      "status": "done",
+      "closed": "2026-08-12",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Invert ApplyInput+wheel — authority-first; retire sync_map_camera_pose_to_view_authority from schedule",
+      "territory": "src/gui/tactical/map_camera.rs · src/gui/view_authority.rs",
+      "exit": "no desired→authority sync in ApplyInput; no Query<&mut MapCameraDesired> in apply/wheel; cargo test -p proc_A_dine01 --lib view_runtime",
+      "depends_on": ["RPC-2-001"],
+      "conflict": "serialize vs other map_camera.rs editors; parallel OK with RPC-1-006 operator",
+      "witness": "debug_runs/rpc2_002_pose_authority_invert_live.json",
+      "notes": "ApplyInput+wheel commit ViewProjectionAuthority (MapCameraInput); derive sole desired writer; deleted mirror+sync schedule systems; Bevy 16-param: dropped redundant State (run_if gates)."
+    },
+    {
+      "seq": 15,
+      "id": "RPC-2-003",
+      "status": "done",
+      "closed": "2026-08-12",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Startup/focus authority-only — remove focus_main_camera dual-write Comp+authority hack",
+      "territory": "src/render/tile_world_fallback.rs · simulation_session audit",
+      "exit": "focus paths ¬mut MapCameraDesired; bridge drift OK; shared derive helper if frame-0 hole",
+      "depends_on": ["RPC-2-002"],
+      "witness": "debug_runs/rpc2_003_focus_authority_only_live.json",
+      "notes": "focus commits authority+Transform only; minimap OnEnter sync reads authority; apply_derived_map_camera_desired extracted; simulation_session already authority-only."
+    },
+    {
+      "seq": 16,
+      "id": "RPC-2-004",
+      "status": "done",
+      "closed": "2026-08-12",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Mirror hygiene + TODO-04 exit — sole derive writer grep gate + isolation/stage5 witnesses",
+      "territory": "map_camera docs · view_runtime tests · stage5 bridge witnesses",
+      "exit": "dual_writer_pose_violation=false; minimap_shell_wrote_map_camera_desired=false; stage5+view_runtime green; TODO-04 live predicate may close",
+      "depends_on": ["RPC-2-003"],
+      "witness": "debug_runs/rpc2_004_mirror_hygiene_live.json",
+      "notes": "grep gate sole derive; alias retired; MapCameraDesired docs = mirror; TODO-05 remains Open (BridgeCompat)."
     }
   ]
 }

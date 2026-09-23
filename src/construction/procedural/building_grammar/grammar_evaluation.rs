@@ -15,6 +15,7 @@ use crate::construction::procedural::arch_build_grammar_v0::{
     floors_from_beta_vert, reweight_massing_strategies, ArchDnaConsumerFields,
 };
 use crate::construction::procedural::footprint_grid::FootprintGrid;
+use crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 
 impl BuildingGrammarRegistry {
     #[must_use]
@@ -479,7 +480,7 @@ pub fn pg_quality_001_collect_metrics(
 
 #[must_use]
 pub fn pg_quality_001_witness_green() -> bool {
-    pg_quality_001_collect_metrics("IndustrialWarehouse", "industrial_west", PG_QUALITY_001_SEED_SWEEP)
+    pg_quality_001_collect_metrics(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", PG_QUALITY_001_SEED_SWEEP)
         .ok()
         .is_some_and(|m| {
             m.massing_strategy_count >= 3
@@ -492,7 +493,7 @@ pub fn pg_quality_001_witness_green() -> bool {
 #[must_use]
 pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
     let metrics = pg_quality_001_collect_metrics(
-        "IndustrialWarehouse",
+        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         "industrial_west",
         PG_QUALITY_001_SEED_SWEEP,
     );
@@ -516,7 +517,7 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
         "program_id": "PLAN-BUILDING-GRAMMAR-001",
         "slice_id": "CDR-B-CONSTRUCTION-GRAMMAR-DEPTH-001",
         "green": green,
-        "archetype_id": "IndustrialWarehouse",
+        "archetype_id": PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         "district_style": "industrial_west",
         "seed_sweep": PG_QUALITY_001_SEED_SWEEP,
         "thresholds": {
@@ -535,7 +536,7 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
 #[must_use]
 pub fn pg_quality_002_pg2_hook_body() -> serde_json::Value {
     let metrics = pg_quality_001_collect_metrics(
-        "IndustrialWarehouse",
+        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         "industrial_west",
         PG_QUALITY_001_SEED_SWEEP,
     );
@@ -556,7 +557,7 @@ pub fn pg_quality_002_pg2_hook_body() -> serde_json::Value {
         "grammar_gate_id": "PG-QUALITY-001",
         "grammar_witness_path": GRAMMAR_DIVERSITY_WITNESS_JSON,
         "green": grammar_metrics_green,
-        "pilot_archetype_id": "IndustrialWarehouse",
+        "pilot_archetype_id": PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         "pilot_district_style": "industrial_west",
         "metrics": metrics_ok,
         "error": metrics_err,
@@ -616,7 +617,7 @@ pub fn city_g0_s1c_split_witness_green() -> bool {
     types.is_file()
         && deserialize.is_file()
         && evaluation.is_file()
-        && generate("IndustrialWarehouse", "industrial_west", 43).is_ok()
+        && generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).is_ok()
 }
 
 #[cfg(test)]
@@ -652,8 +653,8 @@ mod tests {
             "{:?}",
             registry.load_errors
         );
-        let a = generate("IndustrialWarehouse", "industrial_west", 43).expect("generate a");
-        let b = generate("IndustrialWarehouse", "industrial_west", 43).expect("generate b");
+        let a = generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).expect("generate a");
+        let b = generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).expect("generate b");
         assert_eq!(a.width, b.width);
         assert_eq!(a.massing_strategy, b.massing_strategy);
         assert_eq!(a.style_pack_id, "style_industrial_west");
@@ -664,7 +665,7 @@ mod tests {
     fn grammar_massing_strategies_vary_by_seed() {
         let mut strategies = HashSet::new();
         for seed in 0..64 {
-            let r = generate("IndustrialWarehouse", "industrial_west", seed).unwrap();
+            let r = generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", seed).unwrap();
             strategies.insert(r.massing_strategy);
         }
         assert!(

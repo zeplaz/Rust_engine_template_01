@@ -1,0 +1,95 @@
+{
+  "schema": "vss_trip_artifact_registry_v1",
+  "program_id": "VSS-001",
+  "description": "Trip artifacts — agents MUST read linked stubs before editing paths. Failing to trip = process violation.",
+  "plan_doc": "src/dev/plan_vfx_spectator_scale_program_v1.md",
+  "tribunal_registry": "tools/orchestrator/queues/vss_tribunal_touch_registry.json",
+  "symbolic_encoding_guide": "prompts/guides/symbolic_build_output_encoding_v1.md",
+  "artifacts": [
+    {
+      "trip_id": "TRIP-VSS-PLAN",
+      "path": "src/dev/plan_vfx_spectator_scale_program_v1.md",
+      "kind": "plan",
+      "mandatory_read": true,
+      "owner": "@orchestrator",
+      "note": "Program router — read before any VSS slice"
+    },
+    {
+      "trip_id": "TRIP-VSS-SCALE",
+      "path": "src/dev/TRIP_VSS_SCALE_CONTRACT.md",
+      "kind": "trip_stub",
+      "mandatory_read": true,
+      "owner": "@planner",
+      "triggers_on_touch": [
+        "src/terrain/generation/**",
+        "src/gui/tactical/map_camera.rs",
+        "src/engine/test_harness.rs",
+        "WorldGenParams"
+      ],
+      "note": "World unit / chunk / building scale — critique before changing constants"
+    },
+    {
+      "trip_id": "TRIP-VSS-HARNESS",
+      "path": "src/dev/TRIP_VSS_TEST_HARNESS.md",
+      "kind": "trip_stub",
+      "mandatory_read": true,
+      "owner": "@coder",
+      "triggers_on_touch": [
+        "src/engine/test_harness.rs",
+        "src/engine/launch_args.rs",
+        "src/engine/play_scenario.rs",
+        "ActiveTestScene",
+        "TestScene::VfxSandbox"
+      ],
+      "note": "Harness ≠ game — parity witness required"
+    },
+    {
+      "trip_id": "TRIP-VSS-FIRE-AUTHORITY",
+      "path": "src/dev/TRIP_VSS_FIRE_AUTHORITY.md",
+      "kind": "trip_stub",
+      "mandatory_read": true,
+      "owner": "@sim-steward",
+      "triggers_on_touch": [
+        "src/render/fire_vfx/**",
+        "src/render/pipelines/gpu_fire_particle_raster.rs",
+        "src/render/pipelines/gpu_particle_draw.rs",
+        "src/render/pipelines/overlay_field_buffers.rs",
+        "assets/shaders/fire/**"
+      ],
+      "note": "Single visual path per effect class — no parallel extract"
+    },
+    {
+      "trip_id": "TRIP-VSS-EFFECT-SPEC",
+      "path": "src/dev/plan_artist_vfx_toolchain_v1.md",
+      "kind": "plan",
+      "mandatory_read": true,
+      "owner": "@planner-mcp",
+      "triggers_on_touch": [
+        "tools/mcp/schemas/effect_spec_v1.schema.json",
+        "tools/mcp/schemas/examples/effect_spec_*.json",
+        "assets/effects/**"
+      ],
+      "note": "Artist consumable effects — schema risks in artist_vfx_pipeline_live.json"
+    },
+    {
+      "trip_id": "TRIP-VSS-SYMBOLIC-BUILD",
+      "path": "prompts/guides/symbolic_build_output_encoding_v1.md",
+      "kind": "guide",
+      "mandatory_read": true,
+      "owner": "@coder-mcp",
+      "triggers_on_touch": [
+        "tools/mcp/python/rust_engine_mcp/symbolic_build_encoder.py",
+        "tools/mcp/python/rust_engine_mcp/validators/**"
+      ],
+      "note": "Build output → SYMLANG digest before agent reasoning"
+    },
+    {
+      "trip_id": "TRIP-VSS-TRIBUNAL",
+      "path": ".cursor/agents/_fragments/tribunal_trip_v1.md",
+      "kind": "agent_fragment",
+      "mandatory_read": true,
+      "owner": "@operations-intelligence",
+      "note": "All agents — dissent slot + trip protocol"
+    }
+  ]
+}

@@ -220,8 +220,22 @@ pub fn apply_simulation_unified_cursor_system(
     base: Res<State<BaseState>>,
     mut gate: ResMut<SimulationMapPointerGate>,
     mut cursors: Query<&mut CursorOptions, With<PrimaryWindow>>,
+    picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
+    tool: Option<Res<crate::construction::ActiveBuildTool>>,
+    diagnostics: Option<Res<crate::gui::DiagnosticsUiState>>,
 ) {
-    let hide_os = simulation_unified_cursor_hide_os(*base.get(), gate.in_play_area);
+    // Menus / diagnostics need the OS cursor for accurate egui hits.
+    let picker_open = picker.as_ref().is_some_and(|p| p.open);
+    let tool_menus = tool.as_ref().is_some_and(|t| {
+        t.residential_menu_open
+            || t.commercial_menu_open
+            || t.industrial_menu_open
+            || t.utilities_menu_open
+            || t.mock_shapes_menu_open
+    });
+    let diag_open = diagnostics.as_ref().is_some_and(|d| d.visible);
+    let menu_open = picker_open || tool_menus || diag_open || gate.chrome_blocks;
+    let hide_os = !menu_open && simulation_unified_cursor_hide_os(*base.get(), gate.in_play_area);
     gate.os_cursor_visible = !hide_os;
     for mut cursor in &mut cursors {
         cursor.visible = !hide_os;
@@ -234,13 +248,20 @@ pub fn draw_simulation_unified_cursor_egui_system(
     gate: Res<SimulationMapPointerGate>,
     mut contexts: EguiContexts,
 ) {
+    // Never draw a second cursor while the OS pointer is visible (build/diag/chrome).
+    if gate.os_cursor_visible {
+        return;
+    }
     if !simulation_unified_cursor_hide_os(*base.get(), gate.in_play_area) {
         return;
     }
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    let pos = egui::pos2(gate.cursor.x, gate.cursor.y);
+    // Prefer egui's pointer (points) so the crosshair matches widget hit-testing under density scale.
+    let pos = ctx
+        .input(|i| i.pointer.latest_pos())
+        .unwrap_or_else(|| crate::gui::bevy_logical_to_egui_pos(ctx, egui::pos2(gate.cursor.x, gate.cursor.y)));
     let layer = egui::LayerId::new(egui::Order::Foreground, egui::Id::new("sim_unified_cursor"));
     let painter = ctx.layer_painter(layer);
     let r = 7.0;

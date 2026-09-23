@@ -5,7 +5,7 @@ use std::collections::HashMap;
 use bevy::prelude::Resource;
 use bevy::render::render_resource::{BindGroup, BufferBinding};
 
-use crate::render::gpu_buffer_registry::{BufferId, GPUBufferRegistry};
+use crate::render::core::gpu_buffer_registry::{BufferId, GPUBufferRegistry};
 
 /// Stable numeric identity for a cached bind group (no string keys on the hot path).
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]

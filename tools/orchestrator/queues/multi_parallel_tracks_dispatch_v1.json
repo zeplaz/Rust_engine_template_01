@@ -1069,10 +1069,10 @@
       "wave": 0,
       "seq": 0,
       "id": "PERF-INSTR-VFX-002",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P0",
       "owner": "coder_b",
-      "goal": "VFX perf \u2014 Phase 2A\u20132D dirty gates (fire fingerprint, world repr stamp skip, map camera at-rest)",
+      "goal": "VFX perf — Phase 2A–2D dirty gates (fire fingerprint, world repr stamp skip, map camera at-rest)",
       "plan": "src/dev/perf_visual_full_fix_todo_v1.md",
       "witness": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
       "home_queue": "multi_parallel_home_queues_v1.json",
@@ -1080,8 +1080,9 @@
         "T4",
         "T6"
       ],
-      "updated_at": "2026-06-21T01:10:00Z"
-    },
+      "updated_at": "2026-08-12T21:50:00Z",
+      "completed": "2026-08-12",
+      "note": "Lib/stage5 closed · display_acceptance_pending → operator --test vfx"
     {
       "track": "T8",
       "track_id": "INFRA-PERF",

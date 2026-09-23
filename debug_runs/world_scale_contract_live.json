@@ -1,0 +1,173 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "VSS-T1-003",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/world_scale_contract_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_world_scale_contract_live_witness",
+    "written_at_epoch_secs": 1787892468
+  },
+  "anchors": {
+    "design_operational_zoom_alpha": 0.41999998688697815,
+    "fire_full_scatter_px_per_tile": 4.0,
+    "fire_operational_px_per_tile": 2.5,
+    "tactical_proof_zoom_alpha": 0.8500000238418579
+  },
+  "contract": {
+    "BUILDINGS_PER_FRAME_TARGET": [
+      4,
+      9
+    ],
+    "BUILDING_LARGE_FOOTPRINT_TILES": [
+      6,
+      5
+    ],
+    "BUILDING_TYPICAL_FOOTPRINT_TILES": [
+      3,
+      3
+    ],
+    "CHUNK_TILES_DISPLAY": 8,
+    "CHUNK_TILES_SIM": 32,
+    "OPERATIONAL_PX_PER_TILE": 2.5,
+    "OPERATIONAL_ZOOM_ALPHA": 0.41999998688697815,
+    "SITE_TYPICAL_ENVELOPE_TILES": [
+      10,
+      8
+    ],
+    "TACTICAL_PROOF_ZOOM_ALPHA": 0.8500000238418579,
+    "TACTICAL_PX_PER_TILE": 4.0,
+    "TILE_METERS_SYMBOLIC": 100.0,
+    "TILE_MIN_SCREEN_PX": 8.0,
+    "TILE_SIM_UNIT": 1.0,
+    "WORLD_DEFAULT_TILES_AXIS": 512,
+    "WORLD_HARNESS_TILES_AXIS": 320
+  },
+  "footprint_pilot_audit": {
+    "largest_primary_tiles": [
+      6,
+      5
+    ],
+    "median_primary_tiles": [
+      3,
+      3
+    ],
+    "source": "assets/configs/buildings/_pilot_catalog.ron",
+    "typical_site_envelope_tiles": [
+      10,
+      8
+    ]
+  },
+  "green": true,
+  "legacy_fit_env": false,
+  "measured": {
+    "building_typical_screen_px": [
+      78.78479766845703,
+      78.78479766845703
+    ],
+    "buildings_per_frame": 10.154243469238281,
+    "chunk_slab_screen_px": 840.3711547851562,
+    "chunk_tiles_display": null,
+    "chunk_tiles_sim": 32,
+    "meters_per_tile": 100.0,
+    "operational_px_per_tile": 26.261598587036133,
+    "sim_entry_px_per_tile": 26.261598587036133,
+    "sim_entry_zoom_alpha": 0.41999998688697815,
+    "site_envelope_screen_px": [
+      262.6159973144531,
+      210.09278869628906
+    ],
+    "viewport_logical_px": [
+      800.0,
+      500.0
+    ],
+    "world_height_tiles": 512,
+    "world_tiles_axis": 512
+  },
+  "notes": "VSS-T1-003 — designer P3 sign-off @ OPERATIONAL_ZOOM_ALPHA; bpf linear proxy 10.15 (margin +1.15 vs 9 cap); qualitative readability PASS.",
+  "p3_readability": {
+    "primary_screen_px_height": 78.78479766845703,
+    "primary_pct_site_height": 0.375,
+    "site_stub_screen_px": [262.6159973144531, 210.09278869628906],
+    "buildings_per_frame_measured": 10.154243469238281,
+    "buildings_per_frame_target": [4, 9],
+    "bpf_in_band": false,
+    "primary_above_40px_floor": true,
+    "site_reads_smaller_than_chunk": true,
+    "verdict": "PASS"
+  },
+  "presets": {
+    "editor_default_tiles_axis": 512,
+    "harness_tiles_axis": 320
+  },
+  "program_id": "VSS-001",
+  "schema": "world_scale_contract_witness_v1",
+  "slice_id": "VSS-T1-003",
+  "status": "green",
+  "tribunal": {
+    "designer_signed_off": true,
+    "signed_off_at": "2026-08-29",
+    "signed_off_by": "@designer",
+    "slice_id": "VSS-T1-003",
+    "dissent": [
+      {
+        "field": "measured.buildings_per_frame",
+        "measured": 10.154243469238281,
+        "target": [4, 9],
+        "note": "Linear viewport/footprint ratio marginally above 9-cap (+13%); 2x2 and 3x3 neighborhood grids still fit; primary 78.8px exceeds 40px floor. No P4 blocker."
+      }
+    ]
+  }
+}

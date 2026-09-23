@@ -686,19 +686,20 @@ impl Plugin for InfrastructureOverlayPlugin {
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                crate::render::power_map_overlay_draw::draw_power_map_overlay_egui,
+                crate::render::pipelines::power_map_overlay_draw::draw_power_map_overlay_egui,
             );
     }
 }
 
 #[must_use]
 pub fn minimap_power_strokes_wired() -> bool {
-    true
+    // Structural: stroke draw helper present (not always-true).
+    include_str!("power_map_overlay_draw.rs").contains("pub fn draw_power_strokes_on_minimap")
 }
 
 #[must_use]
 pub fn island_offline_badges_wired() -> bool {
-    true
+    include_str!("power_map_overlay_draw.rs").contains("island_offline_world_positions")
 }
 
 #[must_use]

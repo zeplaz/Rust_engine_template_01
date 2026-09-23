@@ -34,9 +34,9 @@ use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::gui::MainWorldCamera;
 use crate::render::{
     seed_minimap_m2_overlay_witness, seed_minimap_m3_fow_ew_witness, EcologyVisualSnapshot,
-    FireSimulationSnapshot, MinimapOperationalSnapshot, SharedOverlayFieldBuffers,
+    FireSimulationSnapshot, MinimapOperationalSnapshot,
 };
-use crate::render::sim_visual_extract::ClimateVisualAggregate;
+use crate::render::extraction::sim_visual_extract::ClimateVisualAggregate;
 use crate::strategic::CorridorConstructionBook;
 use bevy::window::PrimaryWindow;
 
@@ -106,12 +106,14 @@ pub fn seed_ux_e03_transmission_on_simulation_enter(
 }
 
 /// Minimap + sim map presentation defaults on enter (keeps [`apply_simulation_hud_defaults`] under Bevy param cap).
+///
+/// **VT-4 / VSS-T3-002:** presentation flags only — [`SharedOverlayFieldBuffers`] is owned by
+/// [`crate::render::extraction::fire_visual_extract::sync_shared_overlay_from_simulation`].
 pub fn apply_simulation_map_presentation_defaults(
     mut minimap: ResMut<MinimapShellState>,
     mut map_views: ResMut<MapViewInstances>,
     mut tray: ResMut<HudOverlayTrayState>,
     mut presentation: ResMut<crate::gui::MapViewPresentationStates>,
-    mut shared_overlay: ResMut<SharedOverlayFieldBuffers>,
     params: Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
     test_scene: Option<Res<ActiveTestScene>>,
     _scenario: Option<Res<crate::engine::ActivePlayScenario>>,
@@ -147,10 +149,6 @@ pub fn apply_simulation_map_presentation_defaults(
         .as_ref()
         .is_some_and(|s| s.0.seeds_fire_overlay());
     sim_pres.bump_revision();
-    if test_scene.is_none() {
-        shared_overlay.chunk_fire_heat.clear();
-        shared_overlay.bump();
-    }
     if let Ok(window) = primary_window.single() {
         minimap.bootstrap_simulation_layout_rect(window.width(), window.height());
     }
@@ -451,7 +449,7 @@ impl Plugin for SimulationSessionPlugin {
 mod tests {
     use super::*;
 
-    /// **VX-P0-01** — operator Simulation enters with fire CPU tint off (tray + sim map + overlay buffer).
+    /// **VX-P0-01** — operator Simulation enters with fire CPU tint off (tray + sim map presentation flags).
     #[test]
     fn vx_p0_01_operator_simulation_fire_heat_off_by_default() {
         assert!(!simulation_minimap_overlay_defaults().fire_heat);

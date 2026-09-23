@@ -1,0 +1,23 @@
+{
+  "schema": "repo_tidy_slice_witness_v1",
+  "id": "CLN-MOD-003",
+  "status": "done",
+  "updated": "2026-08-27",
+  "summary": "Mechanically split world_preview/mod.rs: chrome + plugin extracted; render_contract/raster already siblings; public API re-exported from mod.rs.",
+  "loc": {
+    "mod_rs": 195,
+    "chrome_rs": 260,
+    "plugin_rs": 227,
+    "prior_mod_rs_approx": 687
+  },
+  "behavior_change": false,
+  "cargo": {
+    "validate_cargo_report": "0 errors, 11 warnings",
+    "world_preview_errors": 0
+  },
+  "debt_not_taken": [
+    "Did not touch minimap_compositor or map_editor",
+    "Did not further split layout.rs vs chrome.rs (layout co-located in chrome — same seam)",
+    "Lib-test filter blocked by unrelated stage5 gpu_particles E0432"
+  ]
+}

@@ -1,15 +1,349 @@
 {
   "gate": "MCP-WIT-014",
-  "green": true,
-  "verdict": "PASS",
+  "green": false,
+  "verdict": "FAIL",
   "registry": "tools/mcp/schemas/queue_registry_v1.json",
-  "contradiction_count": 0,
-  "error_count": 0,
+  "contradiction_count": 10,
+  "error_count": 67,
   "warning_count": 0,
-  "contradictions": [],
-  "snag_done": [],
-  "exit_predicate_failures": [],
-  "stale_ids": [],
+  "contradictions": [
+    {
+      "id": "DMCP-E4-MATRIX-CHARTER-001",
+      "by_queue": {
+        "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json": "closed",
+        "tools/orchestrator/queues/aps_option_d_agent_queue.json": "open"
+      }
+    },
+    {
+      "id": "BUILD-READ-DESIGN-001",
+      "by_queue": {
+        "tools/orchestrator/queues/post_drain_phase5_queue.json": "closed",
+        "tools/orchestrator/queues/coder_master_drain_queue.json": "open"
+      }
+    },
+    {
+      "id": "SIM-STEWARD-FIRE-REGRESS-001",
+      "by_queue": {
+        "tools/orchestrator/queues/post_drain_phase5_queue.json": "open",
+        "tools/orchestrator/queues/post_drain_phase4_queue.json": "open",
+        "tools/orchestrator/queues/coder_master_drain_queue.json": "open",
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "closed"
+      }
+    },
+    {
+      "id": "DES-APS-INTERACTION-001",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "DES-APS-ONBOARD-SPEC-002",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "DES-APS-PREVIEW-LADDER-001",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "DES-APS-MANUAL-FALLBACK-001",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "DES-APS-OPERATOR-RUBRIC-002",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "DES-SIM-HUD-OPS-002",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "VM-11-PREVIEW-AUDIT",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    }
+  ],
+  "snag_done": [
+    {
+      "id": "VEG-F02-MCP-ATLAS-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "snag": "coder-mcp_blocked"
+    }
+  ],
+  "exit_predicate_failures": [
+    {
+      "id": "CDR-B-VEG-MINIMAP-LEGEND-UI-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "witness": "debug_runs/minimap_topology_legend_live.json",
+      "detail": "witness_honesty debug_runs/minimap_topology_legend_live.json: 1 error(s), 1 issue(s)"
+    },
+    {
+      "id": "CDR-B-VEG-MINIMAP-LEGEND-UI-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json",
+      "witness": "debug_runs/minimap_topology_legend_live.json",
+      "detail": "witness_honesty debug_runs/minimap_topology_legend_live.json: 1 error(s), 1 issue(s)"
+    }
+  ],
+  "stale_ids": [
+    {
+      "id": "MCP-APS-IMPORT-GUARD-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "MCP-APS-PYTEST-SUITE-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "MCP-APS-STATE-SCAFFOLD-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "MCP-LANDSCAPE-BROWSE-STUB-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "MCP-APS-ATLAS-QC-DOMAIN-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "MCP-APS-INLINE-FEEDBACK-002",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "MCP-APS-GRAMMAR-INSPECT-LAND-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "MCP-APS-WIT-HON-HOOK-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "PLAN-VEG-RUNTIME-PROOF-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DMCP-E2-PRESET-QC-CRITERIA-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DMCP-E4-MATRIX-CHARTER-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DMCP-VEG-F01-ART-SHIP-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DMCP-LG5-KEYFRAME-REQS-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-APS-E1-IA-OPTION-D-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-APS-STYLE-TOKENS-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-APS-DOMAIN-A11Y-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-APS-PARITY-PANEL-UX-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-APS-PRESET-BROWSE-UX-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-APS-STATE-AXIS-LABELS-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-ECOLOGY-READ-HUD-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-G-PLAY-OPERATOR-FLOW-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-APS-ASSEMBLY-DENSITY-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-APS-COLOR-A11Y-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-MINIMAP-VEG-LEGEND-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "DES-BUILD-READ-HUD-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "CDR-A-PRESET-PICK-LAMBDA-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "CDR-A-ECOLOGY-HARNESS-CLEAN-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "CDR-A-VEG-DOC-REFRESH-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "CDR-B-REPRESENTATION-PARITY-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "VEG-A18-PHASE-A-CLOSE-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "reason": "witness_missing"
+    },
+    {
+      "id": "VEG-B-PHASE-CLOSE-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "reason": "witness_missing"
+    },
+    {
+      "id": "VEG-C15-PHASE-CLOSE-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "reason": "witness_missing"
+    },
+    {
+      "id": "VEG-D07-PHASE-CLOSE-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "reason": "witness_missing"
+    },
+    {
+      "id": "VEG-E08-PHASE-CLOSE-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "reason": "witness_missing"
+    },
+    {
+      "id": "VEG-F02-MCP-ATLAS-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "reason": "snag_done"
+    },
+    {
+      "id": "VEG-F02-MCP-ATLAS-001",
+      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "APS-E1-CHROME-001",
+      "queue": "tools/orchestrator/queues/aps_option_d_agent_queue.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "VEG-C04-PREVIEW-WITNESS-001",
+      "queue": "tools/orchestrator/queues/coder_master_drain_queue.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "CMCP-GRAM-SWEEP-PROCESS-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "witness_missing"
+    },
+    {
+      "id": "CDR-B-VEG-MINIMAP-LEGEND-UI-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "witness_honesty"
+    },
+    {
+      "id": "VEG-F01-ATLAS-SHIP-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "witness_missing"
+    },
+    {
+      "id": "DES-POWER-NODE-HOVER-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "COD-POWER-OVERLAY-RENDER-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "COD-POWER-ISLAND-HIGHLIGHT-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "COD-POWER-DAMAGE-SEGMENT-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "COD-UTILITY-ACTIVATION-LINK-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "COD-POWER-TOOL-RAIL-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+      "reason": "missing_exit_predicate"
+    },
+    {
+      "id": "CMCP-GRAM-SWEEP-PROCESS-001",
+      "queue": "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json",
+      "reason": "missing_exit_predicate"
+    }
+  ],
   "proceed_bulk_reopen": false,
   "note": "green:false until contradictions triaged \u2014 report-only reconcile",
   "commands": [
@@ -18,10 +352,10 @@
   ],
   "_agent_meta": {
     "schema": "queue_integrity_reconcile_live_v1",
-    "written_at_epoch_secs": 1781990366,
+    "written_at_epoch_secs": 1786569984,
     "profile": "MCP_WIT_QUEUE_INTEGRITY",
     "source_system": "queue_integrity",
     "relative_path": "debug_runs/queue_integrity_reconcile_live.json",
-    "ritual": "BLANG:WIT-HON queue_integrity"
+    "ritual": null
   }
 }

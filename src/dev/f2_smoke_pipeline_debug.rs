@@ -29,7 +29,7 @@ fn stamp_mismatch_clears_buffer_when_lag_gt_1() -> bool {
     use crate::render::extraction::{
         ProjectionNodeTrait, RenderProjectionContext, RenderProjectionGraph,
     };
-    use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance};
+    use crate::render::extraction::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance};
     use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot};
     use crate::systems::sim_control::SimStepStamp;
 
@@ -59,6 +59,7 @@ fn stamp_mismatch_clears_buffer_when_lag_gt_1() -> bool {
         lod: &lod,
         lod_map: &lod_map,
         fire: &frame,
+        smoke: None,
         logistics: &logistics,
         ecology: &ecology,
         committed_stamp: SimStepStamp::new(7, 0),
@@ -171,7 +172,7 @@ fn run_mini_fire_smoke_pipeline_ticks() -> PipelineMiniReport {
         &mut particles,
         None,
         ExtractedCameraMetrics {
-            zoom_level: crate::render::gpu_particles::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
+            zoom_level: crate::render::pipelines::gpu_particles::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
             zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
             ..Default::default()
         },

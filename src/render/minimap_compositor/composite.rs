@@ -14,7 +14,7 @@ use crate::render::{
     extraction::VegetationExtractFrame, EcologyVisualSnapshot, LogisticsVisualSnapshot,
     SharedOverlayFieldBuffers, TileWorldFallbackState,
 };
-use crate::render::visual_domain_snapshots::MinimapOperationalSnapshot;
+use crate::render::extraction::visual_domain_snapshots::MinimapOperationalSnapshot;
 use crate::strategic::{ConstructionPhase, CorridorConstructionBook};
 use crate::systems::sim_frame_delta::CommittedSimReplayRing;
 

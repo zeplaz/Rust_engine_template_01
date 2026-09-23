@@ -4,8 +4,8 @@
 use bevy::prelude::*;
 
 use crate::render::extraction::RenderProjectionGraph;
-use crate::render::gpu_particles::WorldFireParticleFrame;
-use crate::render::gpu_water_particles::WorldWaterParticleFrame;
+use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
+use crate::render::pipelines::gpu_water_particles::WorldWaterParticleFrame;
 use crate::render::WaterSurfaceVisualCatalog;
 
 /// Tactical zoom band for Phase 2 VFX witness gates (matches §7 / D-F09).
@@ -48,7 +48,8 @@ pub fn visual_tactical_vfx_camera_lock_enabled() -> bool {
 #[inline]
 #[must_use]
 pub fn vfx_sandbox_scroll_zoom_free(_launch: Option<&crate::engine::EngineLaunchArgs>) -> bool {
-    true
+    // Honest: free iff camera hard-lock is off (lock path deleted).
+    !visual_tactical_vfx_camera_lock_enabled()
 }
 
 /// P0-VFX-ZOOM-LOCK-001 witness — `TACTICAL_VFX_PROOF` no longer forces camera lock.
@@ -99,7 +100,7 @@ impl TacticalVfxWitnessGates {
         let fire_tactical = fire_zoom >= TACTICAL_VFX_ZOOM_ALPHA_MIN;
         let fire_rows = particles.map(|p| p.spark_witness.rows).unwrap_or(0);
         let fire_spark_011 = particles
-            .map(|p| crate::render::gpu_particles::fire_spark_011_green(&p.spark_witness))
+            .map(|p| crate::render::pipelines::gpu_particles::fire_spark_011_green(&p.spark_witness))
             .unwrap_or(false);
 
         let water_zoom = water_particles
@@ -114,9 +115,9 @@ impl TacticalVfxWitnessGates {
             .map(|p| p.witness.river_streaks)
             .unwrap_or(0);
         let water_bands = water_catalog.map(|c| {
-            crate::render::gpu_water_particles::evaluate_water_vfx_witness_bands(
+            crate::render::pipelines::gpu_water_particles::evaluate_water_vfx_witness_bands(
                 c,
-                water_zoom.max(crate::render::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA),
+                water_zoom.max(crate::render::pipelines::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA),
                 0.0,
             )
         });
@@ -138,22 +139,22 @@ impl TacticalVfxWitnessGates {
         let water_river_read = water_catalog
             .map(|c| {
                 c.w1_river_read_green_at_zoom(
-                    crate::render::water_surface_visual::WATER_STRATEGIC_ZOOM_ALPHA * 0.5,
+                    crate::render::fx_spine::water_surface_visual::WATER_STRATEGIC_ZOOM_ALPHA * 0.5,
                 )
             })
             .unwrap_or(false);
         let water_strategic_001 = water_bands
             .as_ref()
-            .map(crate::render::gpu_water_particles::water_strategic_001_green)
+            .map(crate::render::pipelines::gpu_water_particles::water_strategic_001_green)
             .unwrap_or(false);
         let water_witness_001 = water_catalog
             .zip(water_bands)
-            .map(|(c, b)| crate::render::gpu_water_particles::water_witness_001_green(c, &b))
+            .map(|(c, b)| crate::render::pipelines::gpu_water_particles::water_witness_001_green(c, &b))
             .unwrap_or(false);
         let water_foam_or_ocean = water_catalog
             .zip(water_bands)
             .map(|(c, b)| {
-                crate::render::gpu_water_particles::water_witness_foam_or_ocean_green(
+                crate::render::pipelines::gpu_water_particles::water_witness_foam_or_ocean_green(
                     c,
                     &b.tactical,
                 )
@@ -161,7 +162,7 @@ impl TacticalVfxWitnessGates {
             .unwrap_or(false);
         let water_w2_foam = water_catalog
             .zip(water_bands)
-            .map(|(c, b)| crate::render::gpu_water_particles::water_w2_foam_001_green(c, &b))
+            .map(|(c, b)| crate::render::pipelines::gpu_water_particles::water_w2_foam_001_green(c, &b))
             .unwrap_or(false);
 
         let buffer_rows = projection
@@ -247,7 +248,7 @@ pub(crate) fn refresh_visual_proof_water_particles(
     launch: Option<Res<crate::engine::EngineLaunchArgs>>,
     time: Res<Time>,
     catalog: Option<Res<WaterSurfaceVisualCatalog>>,
-    cam: Res<crate::render::gpu_particles::FireParticleCameraScale>,
+    cam: Res<crate::render::pipelines::gpu_particles::FireParticleCameraScale>,
     mut frame: ResMut<WorldWaterParticleFrame>,
 ) {
     let Some(_launch) = launch.as_ref() else {
@@ -262,8 +263,8 @@ pub(crate) fn refresh_visual_proof_water_particles(
     let mut cam_snap = *cam;
     cam_snap.zoom_alpha = cam_snap
         .zoom_alpha
-        .max(crate::render::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA);
-    crate::render::gpu_water_particles::update_world_water_particles_from_catalog(
+        .max(crate::render::pipelines::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA);
+    crate::render::pipelines::gpu_water_particles::update_world_water_particles_from_catalog(
         catalog,
         frame.as_mut(),
         cam_snap,
@@ -277,7 +278,7 @@ pub(crate) fn refresh_visual_proof_fire_particles(
     overlay: Res<crate::render::SharedOverlayFieldBuffers>,
     graph: Res<crate::render::extraction::RenderProjectionGraph>,
     chunk_lod: Res<crate::render::FireChunkLodState>,
-    cam: Res<crate::render::gpu_particles::FireParticleCameraScale>,
+    cam: Res<crate::render::pipelines::gpu_particles::FireParticleCameraScale>,
     view_manager: Option<Res<crate::gui::ViewManager>>,
     mut particles: ResMut<WorldFireParticleFrame>,
 ) {
@@ -287,7 +288,7 @@ pub(crate) fn refresh_visual_proof_fire_particles(
     if !visual_tactical_vfx_witness_required(launch) {
         return;
     }
-    crate::render::gpu_particles::update_world_fire_particles_from_projection(
+    crate::render::pipelines::gpu_particles::update_world_fire_particles_from_projection(
         graph.as_ref(),
         particles.as_mut(),
         Some(chunk_lod.as_ref()),
@@ -305,7 +306,7 @@ pub(crate) fn refresh_visual_proof_fire_particles(
     if overlay.chunk_fire_heat.is_empty() {
         return;
     }
-    crate::render::gpu_particles::seed_world_fire_particles_from_overlay_heat(
+    crate::render::pipelines::gpu_particles::seed_world_fire_particles_from_overlay_heat(
         &overlay.chunk_fire_heat,
         particles.as_mut(),
         *cam,

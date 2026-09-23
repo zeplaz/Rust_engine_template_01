@@ -6,7 +6,7 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
-use super::map_camera::{MainWorldCameraOrthoTrace, MapCameraDesired, MapCameraDesiredRes};
+use super::tactical::map_camera::{MainWorldCameraOrthoTrace, MapCameraDesired, MapCameraDesiredRes};
 use super::SimulationMapViewport;
 use super::world_representation::{GlobalLodState, LodInputs};
 

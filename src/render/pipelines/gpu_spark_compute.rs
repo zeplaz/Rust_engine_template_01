@@ -19,13 +19,13 @@ use bevy::render::{
 
 use bytemuck::{Pod, Zeroable};
 
-use crate::render::fire_smoke_shader_handles::FIRE_SPARK_COMPUTE_WGSL;
-use crate::render::gpu_weather_fire_field::prepare_fire_particle_gpu_storage;
-use crate::render::gpu_bind_group_registry::{
+use crate::render::fx_spine::fire_smoke_shader_handles::FIRE_SPARK_COMPUTE_WGSL;
+use crate::render::pipelines::gpu_weather_fire_field::prepare_fire_particle_gpu_storage;
+use crate::render::core::gpu_bind_group_registry::{
     BindGroupBufferBinding, FIRE_SPARK_ATTRACTORS_BIND_GROUP, FIRE_SPARK_INSTANCES_BIND_GROUP,
     FIRE_SPARK_STATE_BIND_GROUP, GPUBindGroupRegistry,
 };
-use crate::render::gpu_buffer_registry::{
+use crate::render::core::gpu_buffer_registry::{
     BufferVisibility, FIRE_PARTICLE_INSTANCES_BUFFER, FIRE_SPARK_ATTRACTORS_BUFFER,
     FIRE_SPARK_STATE_BUFFER, GPUBufferRegistry, RegisteredBufferDescriptor,
 };
@@ -125,13 +125,19 @@ pub fn build_fire_spark_attractors(instances: &[GpuParticleInstance]) -> FireSpa
 }
 
 fn init_spark_states(instances: &[GpuParticleInstance]) -> Vec<SparkSimState> {
+    // Top-down map: mild planar drift. Legacy 3D "up" vel (0,12,0) + near-zero
+    // lifetime_decay launched sparks off-screen for hours → zero visible flames.
     instances
         .iter()
-        .map(|row| {
+        .enumerate()
+        .map(|(i, row)| {
             let origin = row.world_xyz_heat;
+            let h = (origin.x * 12.9898 + origin.y * 78.233 + i as f32 * 0.17).fract();
+            let hx = (h - 0.5) * 2.4;
+            let hy = ((h * 7.13).fract() - 0.5) * 2.4;
             SparkSimState {
-                pos: Vec4::new(origin.x, origin.y, origin.z, 4.2),
-                vel: Vec4::new(0.0, 12.0, 0.0, 0.0),
+                pos: Vec4::new(origin.x, origin.y, origin.z, 1.85),
+                vel: Vec4::new(hx, hy, 0.0, 0.0),
             }
         })
         .collect()
@@ -179,7 +185,7 @@ pub fn register_fire_spark_compute(app: &mut App) {
 }
 
 /// Spark advection runs before particle expand on the render graph schedule.
-/// Ordering is configured by [`crate::render::gpu_weather_fire_field::GpuWeatherFireFieldPlugin`].
+/// Ordering is configured by [`crate::render::pipelines::gpu_weather_fire_field::GpuWeatherFireFieldPlugin`].
 
 fn init_fire_spark_compute_pipeline(
     mut commands: Commands,
@@ -359,8 +365,9 @@ fn prepare_fire_spark_compute_bind_groups(
         delta_time: if dt > 0.0 { dt } else { 1.0 / 60.0 },
         instance_count: count,
         attractor_count: attractors.rows.len().min(MAX_ATTRACTORS) as u32,
-        lifetime_decay: 0.00058,
-        respawn_life: 5.8,
+        // ~2s visible life then respawn on attractor/origin (was ~2h at 0.00058).
+        lifetime_decay: 0.95,
+        respawn_life: 1.85,
         _pad: 0.0,
     };
     uniform_gpu.uniform.set(uniforms);

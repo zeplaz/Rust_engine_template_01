@@ -42,7 +42,7 @@ pub struct ContextTrayBuildDrawParams<'w> {
     pub staging: ResMut<'w, StagedPlacementMode>,
     pub book: ResMut<'w, StagedPlacementBook>,
     pub actor: Res<'w, BuildCommandActor>,
-    pub pending: Res<'w, PendingConstructionQueue>,
+    pub pending: ResMut<'w, PendingConstructionQueue>,
     pub site_stub: Res<'w, SiteStubOverlayState>,
     pub corridor_book: Option<Res<'w, CorridorConstructionBook>>,
     pub occupation: Option<Res<'w, TileOccupationBook>>,
@@ -52,6 +52,8 @@ pub struct ContextTrayBuildDrawParams<'w> {
 #[must_use]
 pub fn context_tray_build_tab_wired() -> bool {
     ContextTrayTab::Build.label() == "Build"
+        && include_str!("context_tray_build_egui.rs").contains("ContextTrayTab::Build")
+        && include_str!("context_tray_build_egui.rs").contains("context_tray_build_peek_line")
 }
 
 #[must_use]
@@ -65,7 +67,12 @@ pub fn context_tray_build_peek_line(is_build_tool: bool) -> String {
 
 #[must_use]
 pub fn site_legend_in_tray_wired() -> bool {
-    true
+    // Structural copy + draw path reference (not always-true).
+    !TRAY_LEGEND_TITLE.is_empty()
+        && !TRAY_LEGEND_FOOTPRINT.is_empty()
+        && !TRAY_LEGEND_YARD.is_empty()
+        && include_str!("context_tray_build_egui.rs").contains("TRAY_LEGEND_TITLE")
+        && include_str!("context_tray_build_egui.rs").contains("TRAY_LEGEND_FOOTPRINT")
 }
 
 #[must_use]
@@ -171,6 +178,57 @@ pub fn draw_context_tray_build_body_egui(
                     &params.palette,
                     &tray_queue_summary(n, first),
                 ));
+                ui.horizontal(|ui| {
+                    if ui
+                        .add_enabled(
+                            !params.pending.entries.is_empty(),
+                            egui::Button::new("Build queued"),
+                        )
+                        .clicked()
+                    {
+                        params.pending.approve_all();
+                        for entry in params.pending.drain_approved() {
+                            if !matches!(
+                                entry.kind,
+                                crate::construction::PendingEntryKind::BuildSite
+                            ) {
+                                continue;
+                            }
+                            let placement = entry.catalog_id.as_deref().and_then(|id| {
+                                params.registry.get(id).map(|def| {
+                                    crate::construction::parametric_placement_snapshot(
+                                        &def.footprint,
+                                        def.family,
+                                        entry.origin,
+                                        entry.rotation_quarter_turns,
+                                        entry.mirror_x,
+                                        None,
+                                    )
+                                })
+                            });
+                            crate::construction::queue_commit_construction_site(
+                                &mut events,
+                                params.actor.0,
+                                entry.archetype,
+                                entry.origin,
+                                entry.footprint,
+                                entry.layer,
+                                entry.catalog_id.clone(),
+                                placement,
+                            );
+                            params.history.queue_site(entry.origin);
+                        }
+                    }
+                    if ui
+                        .add_enabled(
+                            !params.pending.entries.is_empty(),
+                            egui::Button::new("Clear queue"),
+                        )
+                        .clicked()
+                    {
+                        params.pending.clear();
+                    }
+                });
             });
         });
     Ok(())

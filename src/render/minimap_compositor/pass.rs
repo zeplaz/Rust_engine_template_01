@@ -28,6 +28,11 @@ use super::render_target::{
     try_commit_minimap_render_target, MinimapGpuResizeQueue, MinimapRenderTargetBindBarrier,
     MinimapRenderTargetRegistry,
 };
+use super::state::{
+    minimap_gpu_compositor_env_enabled, minimap_gpu_compositor_runtime_enabled,
+    minimap_terrain_source_bind, minimap_terrain_source_label, MinimapCompositePath,
+    MinimapCompositorState,
+};
 
 /// Force a composite when visible even if fingerprint unchanged (seconds).
 const MINIMAP_GPU_MAX_STALE_SECS: f64 = 5.0;
@@ -45,88 +50,12 @@ pub struct MinimapCompositorHeatSources<'w> {
     pub veg_extract: Option<Res<'w, crate::render::extraction::VegetationExtractFrame>>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub enum MinimapCompositePath {
-    #[default]
-    CpuBridge,
-    GpuCompute,
-}
-
-#[derive(Resource, Debug, Clone)]
-pub struct MinimapCompositorState {
-    pub stamp: u64,
-    pub compositor_revision: u64,
-    pub last_overlay_revision: u64,
-    pub dual_minimap_present: bool,
-    pub extent_match_px: f32,
-    pub composite_path: MinimapCompositePath,
-    pub logistics_rows: u32,
-    pub construction_rows: u32,
-    pub ecology_rows: u32,
-    pub fow_rows: u32,
-    pub ew_rows: u32,
-    pub fire_heat_enabled: bool,
-    pub logistics_heat_enabled: bool,
-    pub construction_heat_enabled: bool,
-    pub ecology_heat_enabled: bool,
-    pub fow_heat_enabled: bool,
-    pub ew_heat_enabled: bool,
-    pub units_heat_enabled: bool,
-    pub unit_marker_rows: u32,
-    pub replay_scrub_enabled: bool,
-    /// **VEG-MINIMAP-BURN-MERGE-001** — rows merged from `VegetationExtractFrame`.
-    pub veg_burn_rows: u32,
-    pub burn_overrides_topology: bool,
-    pub veg_extract_revision: u64,
-    /// Witness: `world_raster` | `none`.
-    pub terrain_source_label: &'static str,
-}
-
-/// P0-E witness helper — terrain source label from the *actual* bound compositor input.
-///
-/// The label reports what texture really feeds the compositor, not `TerrainRenderAuthority`:
-/// a material-swatch atlas is never a valid world-texture input (see the terrain-selection
-/// comment in `run_minimap_compositor_pass`), so `TerrainRenderAuthority::GpuInstancedAtlas`
-/// does **not** imply a distinct "gpu" terrain source today. `world_bound` should be `true`
-/// iff the resolved terrain handle (world raster) is non-default.
-#[must_use]
-pub fn minimap_terrain_source_label(world_bound: bool) -> &'static str {
-    if world_bound {
-        "world_raster"
-    } else {
-        "none"
-    }
-}
-
-impl Default for MinimapCompositorState {
-    fn default() -> Self {
-        Self {
-            stamp: 0,
-            compositor_revision: 0,
-            last_overlay_revision: 0,
-            dual_minimap_present: false,
-            extent_match_px: 0.0,
-            composite_path: MinimapCompositePath::default(),
-            logistics_rows: 0,
-            construction_rows: 0,
-            ecology_rows: 0,
-            fow_rows: 0,
-            ew_rows: 0,
-            fire_heat_enabled: false,
-            logistics_heat_enabled: false,
-            construction_heat_enabled: false,
-            ecology_heat_enabled: false,
-            fow_heat_enabled: false,
-            ew_heat_enabled: false,
-            units_heat_enabled: false,
-            unit_marker_rows: 0,
-            replay_scrub_enabled: false,
-            veg_burn_rows: 0,
-            burn_overrides_topology: false,
-            veg_extract_revision: 0,
-            terrain_source_label: "none",
-        }
-    }
+/// World-terrain feed for the compositor (CPU raster + optional bake spike) — keeps system param count ≤16.
+#[derive(SystemParam)]
+pub struct MinimapCompositorTerrainFeed<'w> {
+    pub fallback: Res<'w, TileWorldFallbackState>,
+    pub raster_dirty: Option<Res<'w, crate::render::TileWorldFallbackRasterDirty>>,
+    pub bake_spike: Option<Res<'w, crate::render::TerrainGpuBakeSpikeState>>,
 }
 
 /// Allocate committed minimap RT immediately on sim enter so Bevy chrome never binds CPU terrain.
@@ -154,16 +83,6 @@ pub fn bootstrap_minimap_gpu_render_target(
     registry.committed_image = handle;
     registry.committed_size = UVec2::new(w, h);
     registry.revision = registry.revision.max(1);
-}
-
-#[must_use]
-pub fn minimap_gpu_compositor_env_enabled() -> bool {
-    match std::env::var("MINIMAP_GPU_COMPOSITOR").ok().as_deref() {
-        None => true,
-        Some("0") | Some("false") | Some("FALSE") | Some("no") | Some("NO") => false,
-        Some("1") | Some("true") | Some("TRUE") | Some("yes") | Some("YES") => true,
-        _ => true,
-    }
 }
 
 pub fn queue_minimap_render_target_resize(
@@ -233,51 +152,6 @@ pub fn commit_minimap_render_target_bind_system(
     );
 }
 
-#[must_use]
-pub fn minimap_gpu_compositor_default_on_unset() -> bool {
-    std::env::var("MINIMAP_GPU_COMPOSITOR").is_err()
-}
-
-/// **PERF-VIS-P1B-GPU-DEFAULT-001** — Simulation GPU minimap path without `RASTER_*` / explicit env.
-#[must_use]
-pub fn perf_vis_p1b_gpu_default_001_green(
-    shell: &MinimapShellState,
-    registry: &MinimapRenderTargetRegistry,
-    compositor: &MinimapCompositorState,
-) -> bool {
-    minimap_gpu_compositor_env_enabled()
-        && shell.presentation_source == MinimapPresentationSource::SharedRenderTargetImage
-        && registry.committed_image != Handle::default()
-        && compositor.stamp > 0
-        && compositor.composite_path == MinimapCompositePath::GpuCompute
-}
-
-#[must_use]
-pub(crate) fn perf_vis_p1b_witness_json(
-    shell: &MinimapShellState,
-    registry: &MinimapRenderTargetRegistry,
-    compositor: &MinimapCompositorState,
-) -> serde_json::Value {
-    serde_json::json!({
-        "gate": "PERF-VIS-P1B-GPU-DEFAULT-001",
-        "green": perf_vis_p1b_gpu_default_001_green(shell, registry, compositor),
-        "gpu_compositor_default_on": minimap_gpu_compositor_default_on_unset(),
-        "gpu_compositor_env": minimap_gpu_compositor_env_enabled(),
-        "presentation_source": match shell.presentation_source {
-            MinimapPresentationSource::SharedCpuRaster => "SharedCpuRaster",
-            MinimapPresentationSource::SharedRenderTargetImage => "SharedRenderTargetImage",
-        },
-        "raster_env_required": false,
-    })
-}
-
-/// GPU compositor env on and shader pipeline healthy (no runtime fallback).
-#[must_use]
-pub fn minimap_gpu_compositor_runtime_enabled() -> bool {
-    minimap_gpu_compositor_env_enabled()
-        && !super::diagnostics::MINIMAP_GPU_SHADER_FAILED.load(std::sync::atomic::Ordering::Relaxed)
-}
-
 /// P1-B: Simulation main HUD → GPU RT when compositor env on. CPU raster is not auto-fallback.
 pub fn sync_minimap_presentation_source(
     base: Res<State<crate::engine::states::BaseState>>,
@@ -307,8 +181,7 @@ pub fn run_minimap_compositor_pass(
     mut compositor: ResMut<MinimapCompositorState>,
     mut diagnostics: ResMut<MinimapGpuCompositorDiagnostics>,
     registry: Res<MinimapRenderTargetRegistry>,
-    fallback: Res<TileWorldFallbackState>,
-    raster_dirty: Option<Res<crate::render::TileWorldFallbackRasterDirty>>,
+    terrain_feed: MinimapCompositorTerrainFeed,
     heat_sources: MinimapCompositorHeatSources,
     map_views: Res<MapViewInstances>,
     resolved: Res<ResolvedViewports>,
@@ -353,27 +226,41 @@ pub fn run_minimap_compositor_pass(
 
     // Terrain input: `TerrainMaterialAtlasGpu.image` is a material-swatch palette grid
     // (src/render/core/terrain_material_atlas.rs), never a world-space texture — it must
-    // never feed the compositor regardless of `TerrainRenderAuthority`. The only real
-    // world-space terrain texture today is the CPU-rastered world image
-    // (`TileWorldFallbackState`, painted by tile_world_fallback.rs). A GPU world-terrain
-    // bake does not exist yet (deferred, see src/dev/plan_gpu_terrain_production_exec_001_v1.md, F2).
-    let terrain = match resolve_minimap_texture_source(&shell, &fallback, &registry) {
-        MapTextureSource::GpuRenderTarget(_) => {
-            if fallback.image != Handle::default() {
-                fallback.image.clone()
-            } else if fallback.minimap_image != Handle::default() {
-                fallback.minimap_image.clone()
-            } else {
-                Handle::default()
+    // never feed the compositor regardless of `TerrainRenderAuthority`.
+    // Default: CPU-rastered world image (`TileWorldFallbackState`).
+    // RPC-1-005: when `TERRAIN_GPU_BAKE_SPIKE` consumers are ready, bind the spike bake Image
+    // (material/topo only — fire stays live overlay heat).
+    let bake_ready = terrain_feed
+        .bake_spike
+        .as_ref()
+        .is_some_and(|s| crate::render::spike_bake_ready_for_consumers(s));
+    let bake_handle = terrain_feed
+        .bake_spike
+        .as_ref()
+        .filter(|_| bake_ready)
+        .map(|s| s.world_bake_image.clone());
+    let terrain = if let Some(ref bake) = bake_handle {
+        bake.clone()
+    } else {
+        match resolve_minimap_texture_source(&shell, &terrain_feed.fallback, &registry) {
+            MapTextureSource::GpuRenderTarget(_) => {
+                if terrain_feed.fallback.image != Handle::default() {
+                    terrain_feed.fallback.image.clone()
+                } else if terrain_feed.fallback.minimap_image != Handle::default() {
+                    terrain_feed.fallback.minimap_image.clone()
+                } else {
+                    Handle::default()
+                }
             }
+            MapTextureSource::SharedCpuRaster(handle) => handle,
         }
-        MapTextureSource::SharedCpuRaster(handle) => handle,
     };
     if terrain == Handle::default() {
         dispatch.commit_stamp = 0;
         diagnostics.record_skip(MinimapGpuSkipReason::NoTerrain);
         return;
     }
+    let terrain_bind = minimap_terrain_source_bind(&terrain, bake_handle.as_ref());
 
     let overlay_revision = heat_sources
         .overlay
@@ -419,7 +306,16 @@ pub fn run_minimap_compositor_pass(
                 })
                 .unwrap_or(0),
         );
-    let fallback_revision = raster_dirty.as_ref().map(|r| r.revision()).unwrap_or(0);
+    let fallback_revision = terrain_feed
+        .raster_dirty
+        .as_ref()
+        .map(|r| r.revision())
+        .unwrap_or(0);
+    let bake_revision = terrain_feed
+        .bake_spike
+        .as_ref()
+        .map(|s| s.bake_revision)
+        .unwrap_or(0);
     let overlays = map_views.minimap.overlays;
     let fingerprint = composite_fingerprint(
         &terrain,
@@ -428,7 +324,7 @@ pub fn run_minimap_compositor_pass(
         construction_rows_hint,
         ecology_rows_hint,
         registry.revision,
-        fallback_revision,
+        fallback_revision.wrapping_add(bake_revision),
         overlays.fire_heat,
         overlays.logistics_heat,
         overlays.construction_heat,
@@ -516,7 +412,7 @@ pub fn run_minimap_compositor_pass(
         heat_sources.replay.as_deref(),
         heat_sources.veg_extract.as_deref(),
         &map_views,
-        &fallback,
+        &terrain_feed.fallback,
         extent,
     );
     if !upload_ok {
@@ -525,7 +421,6 @@ pub fn run_minimap_compositor_pass(
         return;
     }
 
-    let terrain_bound = terrain != Handle::default();
     compositor.stamp = compositor.stamp.wrapping_add(1);
     dispatch.terrain = terrain;
     dispatch.output = registry.committed_image.clone();
@@ -554,7 +449,7 @@ pub fn run_minimap_compositor_pass(
     }
 
     compositor.compositor_revision = registry.revision;
-    compositor.terrain_source_label = minimap_terrain_source_label(terrain_bound);
+    compositor.terrain_source_label = minimap_terrain_source_label(terrain_bind);
     compositor.last_overlay_revision = overlay_revision;
     compositor.logistics_rows = logistics_rows;
     compositor.construction_rows = construction_rows;

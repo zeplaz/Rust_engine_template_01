@@ -113,7 +113,6 @@ pub use seed_chain::{
 pub use town::{portland_fixture_town, TownBook, TownRecord};
 pub use zoning::ZoningClass;
 
-#[cfg(test)]
 pub use district::portland_fixture_district;
 
 use bevy::prelude::*;

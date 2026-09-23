@@ -11,7 +11,7 @@ use super::stage7_play::Stage7PlayLiveProofState;
 use super::view_runtime::ViewRuntimeLiveProofState;
 use super::wave_p::WavePLiveProofState;
 use super::wss_substrate::WssSubstrateLiveProofState;
-use crate::render::fire_streaming::FireStreamingLiveProofState;
+use crate::render::fx_spine::fire_streaming::FireStreamingLiveProofState;
 
 pub struct LiveProofCadencePlugin;
 

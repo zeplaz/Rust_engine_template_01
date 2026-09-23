@@ -1,6 +1,6 @@
 //! **Phase D — preview render architecture** (`base_visual_dev01_plan_status.md` § `phase-d-preview-render-target`).
 //!
-//! **D-1** — Preview transform + mode are **owned here**, separate from gameplay [`crate::gui::map_camera::MapCameraDesired`].
+//! **D-1** — Preview transform + mode are **owned here**, separate from gameplay [`crate::gui::tactical::map_camera::MapCameraDesired`].
 //! **D-2** — [`PreviewRenderTarget`] names the GPU image + extent the preview pipeline targets.
 //! **D-5** — [`PreviewRenderBudget`] (`max_hz`, `force_redraw`); `max_hz` follows [`crate::gui::VisualCadence`]
 //! when present, else [`crate::gui::VisualBudgetSettings`], else defaults.

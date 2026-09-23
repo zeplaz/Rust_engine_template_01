@@ -1,0 +1,20 @@
+# VSS-WAVE1-DRAIN status — all product entry paths · 2026-08-29
+schema: vss_wave1_drain_status_v1
+program_id: VSS-001
+
+program_slices_done:
+  [VSS-T5-001, VSS-T5-002, VSS-T1-001, VSS-T1-002, VSS-T1-003, VSS-T2-001, VSS-T2-002, VSS-T2-003, VSS-T4-001, VSS-T4-002, VSS-T4-003, VSS-T4-004, VSS-T3-002]
+program_slices_ready: [VSS-T3-001]
+wave_1_next_pick: VSS-T3-001
+
+spectator_parity:
+  harness: debug_only
+  scenario: product
+  save: product
+  interactive: product
+  witness: debug_runs/spectator_parity_live.json
+  slice: VSS-T2-003
+
+operator_note: Use scenario demo or interactive SimEffect — not --test vfx harness alone
+
+⟨BP:SHARE⟩

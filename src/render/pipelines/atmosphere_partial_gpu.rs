@@ -193,7 +193,7 @@ pub fn sync_atmosphere_partial_gpu_extract(
 pub fn apply_partial_texture_writes(
     uploads: Res<AtmospherePartialGpuExtract>,
     gpu_images: Res<RenderAssets<GpuImage>>,
-    textures: Res<crate::render::gpu_weather_fire_field::WeatherFireFieldTextures>,
+    textures: Res<crate::render::pipelines::gpu_weather_fire_field::WeatherFireFieldTextures>,
     queue: Res<RenderQueue>,
 ) {
     if !crate::systems::atmosphere::P2H_GPU_PARTIAL_TEXTURE_UPLOADS_ENABLED {

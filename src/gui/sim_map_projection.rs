@@ -3,10 +3,10 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 
-use super::{
-    map_camera::{map_plane_horizontal_xy, sim_map_image_rect, sim_map_world_vec3_to_egui},
-    MainWorldCameraOrthoTrace, MapCameraDesired, SimulationMapViewport,
+use super::tactical::map_camera::{
+    map_plane_horizontal_xy, sim_map_image_rect, sim_map_world_vec3_to_egui,
 };
+use super::{MainWorldCameraOrthoTrace, MapCameraDesired, SimulationMapViewport};
 
 /// Tactical camera pose for pick / ghost alignment (transform + desired zoom).
 #[derive(Debug, Clone, Copy)]
@@ -56,7 +56,7 @@ pub fn sim_map_projection_frame(
     if !map_vp.is_adequate_for_camera() {
         return None;
     }
-    let screen_rect = if super::map_camera::tactical_map_full_window_render()
+    let screen_rect = if super::tactical::map_camera::tactical_map_full_window_render()
         && map_vp.window_logical.x > 1.0
         && map_vp.window_logical.y > 1.0
     {

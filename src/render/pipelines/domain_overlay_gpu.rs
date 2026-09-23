@@ -1,24 +1,24 @@
-//! Stage-5 logistics / ecology overlay rows uploaded through [`crate::render::gpu_buffer_registry::GPUBufferRegistry`].
+//! Stage-5 logistics / ecology overlay rows uploaded through [`crate::render::core::gpu_buffer_registry::GPUBufferRegistry`].
 
 use bevy::math::Vec4;
 use bevy::prelude::*;
 use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
-use crate::render::ecology_visual_snapshot::EcologyVisualSnapshot;
+use crate::render::extraction::ecology_visual_snapshot::EcologyVisualSnapshot;
 use crate::render::extraction::RenderProjectionGraph;
-use crate::render::logistics_visual_snapshot::LogisticsVisualSnapshot;
+use crate::render::extraction::logistics_visual_snapshot::LogisticsVisualSnapshot;
 use crate::render::CommittedVisualSnapshotFence;
 use crate::systems::sim_control::SimStepStamp;
 
-/// Packed corridor overlay row for [`crate::render::gpu_buffer_registry::LOGISTICS_OVERLAY_BUFFER`].
+/// Packed corridor overlay row for [`crate::render::core::gpu_buffer_registry::LOGISTICS_OVERLAY_BUFFER`].
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct LogisticsOverlayGpuRow {
     pub corridor_xy_revision: Vec4,
 }
 
-/// Packed ecology overlay row for [`crate::render::gpu_buffer_registry::ECOLOGY_OVERLAY_BUFFER`].
+/// Packed ecology overlay row for [`crate::render::core::gpu_buffer_registry::ECOLOGY_OVERLAY_BUFFER`].
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, Pod, Zeroable)]
 pub struct EcologyOverlayGpuRow {

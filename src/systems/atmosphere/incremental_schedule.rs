@@ -13,7 +13,7 @@ use super::field_page_residency::{
     ATMOSPHERE_FIELD_CHUNKS_PER_PAGE,
 };
 
-use crate::render::gpu_weather_fire_field::{WeatherFireFieldTextures, WEATHER_FIRE_FIELD_SIZE};
+use crate::render::pipelines::gpu_weather_fire_field::{WeatherFireFieldTextures, WEATHER_FIRE_FIELD_SIZE};
 use crate::systems::sim_control::SimStepStamp;
 
 /// P2-H partial GPU path is authoritative when texture uploads + partial compute are active.

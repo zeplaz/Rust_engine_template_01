@@ -1,7 +1,7 @@
 //! Chunk-level **fire light emission** metadata — simulation-owned, not render (`base_fire2_smoke.md` §9).
 //!
 //! Render consumes this via [`crate::render::extraction::FireVisualFramePlugin`] →
-//! [`crate::render::sim_visual_extract::FireVisualFrame`] → [`crate::render::light::RequestLocalLight`] → pooled [`PointLight`]s.
+//! [`crate::render::extraction::sim_visual_extract::FireVisualFrame`] → [`crate::render::pipelines::light::RequestLocalLight`] → pooled [`PointLight`]s.
 
 use bevy::prelude::*;
 

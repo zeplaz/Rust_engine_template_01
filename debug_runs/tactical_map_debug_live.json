@@ -10,7 +10,7 @@
       "last_w": 320,
       "minimap_image": {
         "asset_usage": "RenderAssetUsages(MAIN_WORLD | RENDER_WORLD)",
-        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 193 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 193 }, type_id: TypeId(0x52340e0d5b26bcedcb21d1bef050a46a), path: None }",
         "has_cpu_data": true,
         "height": 320,
         "loaded": true,
@@ -44,19 +44,19 @@
         "texture_usages": "TextureUsages(COPY_DST | TEXTURE_BINDING)",
         "width": 320
       },
-      "raster_applied_revision": 14,
-      "raster_revision": 14,
+      "raster_applied_revision": 15,
+      "raster_revision": 15,
       "sim_image": {
         "asset_usage": "RenderAssetUsages(MAIN_WORLD | RENDER_WORLD)",
-        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 192 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 192 }, type_id: TypeId(0x52340e0d5b26bcedcb21d1bef050a46a), path: None }",
         "has_cpu_data": true,
         "height": 320,
         "loaded": true,
         "pixels": {
           "center": [
-            40,
-            110,
-            55,
+            58,
+            76,
+            66,
             255
           ],
           "corner_br": [
@@ -66,13 +66,13 @@
             255
           ],
           "corner_tl": [
-            33,
-            82,
-            64,
+            40,
+            110,
+            55,
             255
           ],
           "coverage_ratio": 1.0,
-          "luma_sum": 20306924,
+          "luma_sum": 26257843,
           "nonzero_pixels": 102400,
           "total_pixels": 102400,
           "valid": true
@@ -85,7 +85,18 @@
       "sprite_entity": true,
       "test_harness_boost": false
     },
-    "frame": 1920,
+    "frame": 180,
+    "gpu_bake_spike": {
+      "bake_revision": 0,
+      "consumers_ready": false,
+      "cpu_display_still_authority": true,
+      "fire_excluded_from_bake": true,
+      "flag_enabled": false,
+      "rtt_pass_wired": false,
+      "world_bake_h": 0,
+      "world_bake_w": 0,
+      "write_pixel_count": 0
+    },
     "minimap_compositor": {
       "atlas_image_loaded": true,
       "composite_path": "GpuCompute",
@@ -95,19 +106,19 @@
     "overlays_clutter": {
       "construction_footprint_tiles": 0,
       "construction_paths": 0,
-      "fire_debug_force_visible": true,
-      "overlay_revision": 1788,
-      "shared_overlay_fire_cells": 28,
+      "fire_debug_force_visible": false,
+      "overlay_revision": 33,
+      "shared_overlay_fire_cells": 6,
       "tile_debug_batched_overlay": false
     },
     "rtt_diag_mode": "Production",
     "rtt_render_trace": {
       "bind_barrier": {
-        "bound_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "bound_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 14 }, type_id: TypeId(0x52340e0d5b26bcedcb21d1bef050a46a), path: None }",
         "bound_matches_sim_tex": true,
         "pending": null,
         "revision": 0,
-        "sim_tex_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }"
+        "sim_tex_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 14 }, type_id: TypeId(0x52340e0d5b26bcedcb21d1bef050a46a), path: None }"
       },
       "coverage": {
         "fallback_sim_cpu": 1.0,
@@ -120,14 +131,22 @@
           720.0
         ],
         "view_proj_degenerate": false,
-        "zoom_alpha": 0.002380289835855365,
-        "zoom_level": 0.2555275559425354
+        "zoom_alpha": 0.0024465296883136034,
+        "zoom_level": 24.814441680908203
       },
       "fire_particle_raster": {
-        "draw_globals_vertex_count": 0,
-        "spark_rows": 0,
-        "spark_view_culled": true,
-        "world_frame_instances": 0
+        "draw_diagnostics": {
+          "cap_zero_skip": 121,
+          "draw_ok": 239,
+          "identity_skip": 0,
+          "policy_skip": 0
+        },
+        "draw_globals_vertex_count": 288,
+        "overlay_hosts_env_enabled": true,
+        "rtt_core2d_overlay_host_present": true,
+        "spark_rows": 48,
+        "spark_view_culled": false,
+        "world_frame_instances": 48
       },
       "hud_ui_camera": {
         "is_active": true,
@@ -139,10 +158,10 @@
       "main_world_camera": {
         "is_active": true,
         "order": 0,
-        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 5009.2446, height: 2817.7 }, scale: 1.0, area: Rect { min: Vec2(-1006.55133, -566.1851), max: Vec2(1006.55133, 566.1851) } })",
+        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 51.582867, height: 29.015362 }, scale: 1.0, area: Rect { min: Vec2(-25.791433, -14.507681), max: Vec2(25.791433, 14.507681) } })",
         "render_layers": null,
         "render_target": {
-          "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+          "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 14 }, type_id: TypeId(0x52340e0d5b26bcedcb21d1bef050a46a), path: None }",
           "kind": "image",
           "matches_barrier_bound": true,
           "matches_sim_tex": true,
@@ -152,34 +171,34 @@
         "visibility": "Inherited",
         "world_position": [
           160.0,
-          160.0,
+          144.0,
           999.0
         ]
       },
       "map_camera_desired": {
-        "scale": 0.2555275559425354,
+        "scale": 24.814441680908203,
         "translation": [
           160.0,
-          160.0
+          144.0
         ]
       },
       "ortho_trace": {
-        "authority_zoom": 0.2555275559425354,
+        "authority_zoom": 24.814441680908203,
         "camera_center": [
           160.0,
-          160.0
+          144.0
         ],
-        "desired_zoom": 0.2555275559425354,
+        "desired_zoom": 24.814441680908203,
         "fixed_world_span": [
-          5009.24462890625,
-          2817.699951171875
+          51.58286666870117,
+          29.015361785888672
         ],
         "view_pixels": [
           1280.0,
           720.0
         ]
       },
-      "primary_void_suspect": "FIRE_ZOOM_CULLED: px-per-tile below FIRE_SPARK_MIN_PX_PER_TILE (1.5) — sparks suppressed",
+      "primary_void_suspect": "UNKNOWN_GPU_VOID",
       "render_layer_intersect_ok": true,
       "terrain_display": {
         "custom_size": [
@@ -187,8 +206,8 @@
           320.0
         ],
         "display": "Sprite",
-        "entity": "1356v0",
-        "image_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 192 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "entity": "1170v0",
+        "image_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 192 }, type_id: TypeId(0x52340e0d5b26bcedcb21d1bef050a46a), path: None }",
         "image_matches_fallback_state": true,
         "render_layers": "default(0)",
         "transform_xy": [
@@ -198,12 +217,15 @@
         "transform_z": 0.0,
         "visibility": "Visible"
       },
-      "void_suspects": [
-        "FIRE_ZOOM_CULLED: px-per-tile below FIRE_SPARK_MIN_PX_PER_TILE (1.5) — sparks suppressed"
-      ]
+      "void_suspects": [],
+      "zoom_frame": {
+        "lod_band": "Operational",
+        "px_per_tile": 24.814441680908203,
+        "zoom_alpha": 0.0024465296883136034
+      }
     },
     "schema": "tactical_map_debug_v2",
-    "sim_time_micros": 142233291,
+    "sim_time_micros": 12291303,
     "tactical_rtt": {
       "fill_logical_px": [
         1280.0,
@@ -217,21 +239,21 @@
         "stretch_mode": "Stretch"
       },
       "main_camera": {
-        "clear_color": "Custom(Srgba(Srgba { red: 0.47116905, green: 0.5305383, blue: 0.629487, alpha: 1.0 }))",
+        "clear_color": "Custom(Srgba(Srgba { red: 0.48, green: 0.54, blue: 0.64, alpha: 1.0 }))",
         "is_active": true,
         "order": 0,
-        "output_mode": "Write { blend_state: None, clear_color: Custom(Srgba(Srgba { red: 0.47116905, green: 0.5305383, blue: 0.629487, alpha: 1.0 })) }",
-        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 5009.2446, height: 2817.7 }, scale: 1.0, area: Rect { min: Vec2(-1006.55133, -566.1851), max: Vec2(1006.55133, 566.1851) } })",
+        "output_mode": "Write { blend_state: None, clear_color: Custom(Srgba(Srgba { red: 0.48, green: 0.54, blue: 0.64, alpha: 1.0 })) }",
+        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 51.582867, height: 29.015362 }, scale: 1.0, area: Rect { min: Vec2(-25.791433, -14.507681), max: Vec2(25.791433, 14.507681) } })",
         "visibility": "Inherited",
         "world_position": [
           160.0,
-          160.0,
+          144.0,
           999.0
         ]
       },
       "rtt_image": {
         "asset_usage": "RenderAssetUsages(MAIN_WORLD | RENDER_WORLD)",
-        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 14 }, type_id: TypeId(0x52340e0d5b26bcedcb21d1bef050a46a), path: None }",
         "has_cpu_data": true,
         "height": 720,
         "loaded": true,
@@ -266,8 +288,8 @@
         "width": 1280
       }
     },
-    "terrain_authority": "GpuInstancedAtlas",
-    "terrain_bake_note": "GpuInstancedAtlas: CPU dirty-gated raster → GPU texture; minimap reads texture directly; tactical map = Camera2d RenderTarget::Image + same RenderLayers as sprite",
+    "terrain_authority": "GpuBake",
+    "terrain_bake_note": "GpuBake authority = CPU dirty-gated raster → GPU sprite (display truth). Opt-in TERRAIN_GPU_BAKE_SPIKE feeds minimap via host atlas→world bake Image (label gpu_bake only when bound); tactical Camera2d still reads sprite/RTT — fire stays live overlay",
     "terrain_display_path": "Sprite (P0) or Mesh2d+ColorMaterial (P1 Camera3d diag)",
     "terrain_sources": {
       "chunk_cell_matrix_entities": 100,
@@ -283,9 +305,9 @@
     "uses_cpu_fallback_raster": false,
     "uses_gpu_sprite_display": true,
     "vt4": {
-      "failing_surface_mask": "0x4",
-      "mismatch_count": 2,
-      "stamp": 1921
+      "failing_surface_mask": "0x0",
+      "mismatch_count": 1,
+      "stamp": 181
     },
     "world_gen": {
       "base_state": "Simulation",
@@ -301,5 +323,5 @@
     }
   },
   "path": "debug_runs/tactical_map_debug_live.json",
-  "written_at_epoch_secs": 1783391187
+  "written_at_epoch_secs": 1787890429
 }

@@ -1,16 +1,17 @@
 //! Ping-pong **GPU field** for weather + fire **visuals** (compute on `Rgba32Float` textures).
 //!
-//! - **CPU** uploads [`WeatherFireFieldUniforms`] from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate),
-//! [`RenderProjectionGraph`](crate::render::extraction::RenderProjectionGraph) (fire node) / [`SimChunkSmokeVisualExtract`](crate::render::sim_visual_extract::SimChunkSmokeVisualExtract)
-//!   (via [`crate::systems::atmosphere::gpu_field_bridge`]). No direct [`ChunkWeather`](crate::systems::weather::ChunkWeather) /
+//! - **CPU** uploads [`WeatherFireFieldUniforms`] from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate)
+//!   and [`RenderProjectionGraph`](crate::render::extraction::RenderProjectionGraph) (**fire** + **smoke** nodes)
+//!   via [`crate::systems::atmosphere::gpu_field_bridge`]. Smoke channel bias is projection-only
+//!   (no second ECS smoke scan). No direct [`ChunkWeather`](crate::systems::weather::ChunkWeather) /
 //!   [`ChunkEcology`](crate::systems::ecology::ChunkEcology) queries in the bridge.
 //! - Packed fire instances are extracted to the render world and uploaded each frame through
 //!   [`GPUBufferRegistry`](crate::render::GPUBufferRegistry) ([`FIRE_VISUAL_INSTANCES_BUFFER`](crate::render::FIRE_VISUAL_INSTANCES_BUFFER)).
 //! - **WGSL** (`assets/shaders/post/weather_fire_field.wgsl`) relaxes the field each frame and applies a
 //!   lightweight **neighbor spread** on the fire channel (visual-only propagation on the ping-pong texture).
 //! - P2-H partial dirty-rect uploads are planned on the main world ([`crate::systems::atmosphere::AtmosphereGpuFieldBridge`]),
-//!   extracted to [`crate::render::atmosphere_partial_gpu::AtmospherePartialGpuExtract`], and written into both ping-pong
-//!   textures via [`crate::render::atmosphere_partial_gpu::apply_partial_texture_writes`].
+//!   extracted to [`crate::render::pipelines::atmosphere_partial_gpu::AtmospherePartialGpuExtract`], and written into both ping-pong
+//!   textures via [`crate::render::pipelines::atmosphere_partial_gpu::apply_partial_texture_writes`].
 //!   When partial uploads are empty, full-field dispatch runs only after
 //!   [`crate::systems::atmosphere::AtmosphereGpuFieldBridge::pending_full_field_dispatch`] (reconcile), not every idle frame.
 //! - Optional **debug sprite** (see [`WeatherFireFieldDebugOverlay`]).
@@ -37,25 +38,25 @@ use bevy::{
 };
 
 use crate::gui::{representation_band_from_world_lod, GPU_FIRE_INSTANCE_BUDGET_CEILING};
-use crate::render::atmosphere_partial_gpu::{
+use crate::render::pipelines::atmosphere_partial_gpu::{
     apply_partial_texture_writes, sync_atmosphere_partial_gpu_extract, AtmospherePartialGpuExtract,
 };
 use crate::render::extraction::RenderProjectionGraph;
-use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
-use crate::render::gpu_buffer_registry::{
+use crate::render::core::gpu_representation_metrics::GpuRepresentationMetrics;
+use crate::render::core::gpu_buffer_registry::{
     BufferVisibility, GPUBufferRegistry, RegisteredBufferDescriptor,
 };
-use crate::render::gpu_bind_group_registry::{
+use crate::render::core::gpu_bind_group_registry::{
     BindGroupBufferBinding, GPUBindGroupRegistry, WEATHER_FIRE_FIELD_FIRE_BIND_GROUP,
 };
-use crate::render::domain_overlay_gpu::DomainOverlayGpuFrame;
-use crate::render::gpu_packed_formats::{
+use crate::render::pipelines::domain_overlay_gpu::DomainOverlayGpuFrame;
+use crate::render::core::gpu_packed_formats::{
     ecology_overlay_row_format, fire_particle_instance_format, fire_visual_instance_format,
     logistics_overlay_row_format, packed_byte_size,
 };
-use crate::render::fire_smoke_shader_handles::load_fire_smoke_shader_handles;
-use crate::render::gpu_particles::{WorldFireParticleFrame, WorldFireParticleGpuStorage};
-use crate::render::sim_visual_extract::SimChunkSmokeVisualExtract;
+use crate::render::fx_spine::fire_smoke_shader_handles::load_fire_smoke_shader_handles;
+use crate::render::pipelines::gpu_particles::{WorldFireParticleFrame, WorldFireParticleGpuStorage};
+use crate::render::extraction::sim_visual_extract::SimChunkSmokeVisualExtract;
 
 use crate::systems::atmosphere::{mirror_partial_write_metrics, AtmospherePipelineSet, P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE, WEATHER_FIRE_FIELD_WGSL};
 
@@ -342,10 +343,14 @@ fn startup_field_textures(mut commands: Commands, mut images: ResMut<Assets<Imag
 fn cleanup_debug_sprite(
     mut commands: Commands,
     overlay: Res<WeatherFireFieldDebugOverlay>,
+    test_scene: Option<Res<crate::engine::ActiveTestScene>>,
     q: Query<Entity, With<DebugFieldSpriteTag>>,
     mut spawn_gate: ResMut<WeatherFieldDebugSpawned>,
 ) {
-    if overlay.show {
+    let ban_test = test_scene
+        .as_ref()
+        .is_some_and(|s| s.0.seeds_fire_overlay());
+    if overlay.show && !ban_test {
         return;
     }
     for e in &q {
@@ -357,10 +362,19 @@ fn cleanup_debug_sprite(
 fn maybe_spawn_debug_sprite(
     mut commands: Commands,
     overlay: Res<WeatherFireFieldDebugOverlay>,
+    test_scene: Option<Res<crate::engine::ActiveTestScene>>,
     tex: Res<WeatherFireFieldTextures>,
     mut gate: ResMut<WeatherFieldDebugSpawned>,
     existing: Query<(), With<DebugFieldSpriteTag>>,
 ) {
+    // Never spawn the world-space field sprite during fire/VFX test scenes — it is a huge
+    // opaque red/orange quad at (0,0) that operators read as a broken "red box".
+    if test_scene
+        .as_ref()
+        .is_some_and(|s| s.0.seeds_fire_overlay())
+    {
+        return;
+    }
     if !overlay.show {
         return;
     }
@@ -478,8 +492,8 @@ impl Plugin for GpuWeatherFireFieldPlugin {
             RenderGraph,
             (
                 WeatherFireFieldPassSet,
-                crate::render::gpu_spark_compute::FireSparkComputePassSet,
-                crate::render::gpu_particle_draw::WorldFireParticleDrawPassSet,
+                crate::render::pipelines::gpu_spark_compute::FireSparkComputePassSet,
+                crate::render::pipelines::gpu_particle_draw::WorldFireParticleDrawPassSet,
             )
                 .chain()
                 .in_set(RenderGraphSystems::Render),

@@ -12,9 +12,11 @@ pub struct AtmosphereDiagnostics {
     pub field_fill_runs: u64,
     pub advect_runs: u64,
     pub emitter_sync_runs: u64,
+    /// Retired ES-0 — stub controller removed from schedule; stays 0.
     pub particle_controller_runs: u64,
     pub coupling_runs: u64,
     pub visual_extract_runs: u64,
+    /// Retired ES-0 — render-prep placeholder removed; stays 0.
     pub render_prep_runs: u64,
     pub last_emitter_extract_count: usize,
     pub last_smoke_extract_count: usize,

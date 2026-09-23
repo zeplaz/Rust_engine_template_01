@@ -12,7 +12,7 @@
       "ORCHESTRATOR_EXPORT_HEALTH": false,
       "PERF": true,
       "PERF_DISK": false,
-      "RUST_LOG": null,
+      "RUST_LOG": "warn,stall=info,perf=info",
       "SIM_ANALYTICS": false,
       "SIM_ANALYTICS_FRAMES": false,
       "SIM_ANALYTICS_QUIET": false,
@@ -58,15 +58,15 @@
     "relative_path": "debug_runs/mig_bevy_019/mig_a_frame_perf.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "mig_a_frame_perf_witness",
-    "written_at_epoch_secs": 1783144957
+    "written_at_epoch_secs": 1786574778
   },
   "baseline_post": "debug_runs/mig_bevy_019/baseline_stage5_post019.json",
   "baseline_pre": "debug_runs/mig_bevy_019/baseline_stage5_pre019.json",
   "domain_merge_ms": 0.00010000000474974513,
   "frame": 120,
   "gate": "MIG-A18",
-  "instrumented_ms": 0.583299994468689,
+  "instrumented_ms": 0.003800000064074993,
   "projection_graph_ms": 0.0,
-  "readiness_ms": 0.5781999826431274,
-  "world_repr_ms": 0.0012000000569969416
+  "readiness_ms": 0.0,
+  "world_repr_ms": 0.001500000013038516
 }

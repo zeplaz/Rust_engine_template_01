@@ -11,8 +11,8 @@ use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 use crate::gui::editor::world_preview::PreviewPathAuthority;
 use crate::gui::{ViewManager, WorldRepresentationFrame};
 use crate::io::streaming::{gather_wave_c_readiness, wave_c_readiness_passes, ChunkResidencyTable};
-use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
-use crate::render::per_view_residency::{residency_coords_for_view_instance, PerViewResidencyConsumerWindow};
+use crate::render::core::gpu_representation_metrics::GpuRepresentationMetrics;
+use crate::render::core::per_view_residency::{residency_coords_for_view_instance, PerViewResidencyConsumerWindow};
 use crate::render::view_runtime::ViewSurfaceId;
 use crate::render::SharedOverlayFieldBuffers;
 

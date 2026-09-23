@@ -10,18 +10,48 @@ fn repo_root() -> PathBuf {
         .unwrap_or_else(|| PathBuf::from("."))
 }
 
-/// INFRA-VM09-STRAY-001 — production `ResMut<MapCameraDesiredRes>` only in mirror + derive (+ compat alias sig).
+/// INFRA-VM09-STRAY-001 / RPC-2-004 — production `ResMut<MapCameraDesiredRes>` +
+/// `Query<&mut MapCameraDesired>` only in derive (sole mirror writer).
 #[must_use]
 pub fn infra_vm09_stray_map_camera_writer_audit_green() -> bool {
     let root = repo_root();
-    let map_camera = std::fs::read_to_string(root.join("src/gui/map_camera.rs"))
+    let map_camera = std::fs::read_to_string(root.join("src/gui/tactical/map_camera.rs"))
         .expect("read map_camera.rs");
-    let derive_count = map_camera.matches("pub fn derive_map_camera_desired_from_view_authority").count();
+    let derive_count = map_camera
+        .matches("pub fn derive_map_camera_desired_from_view_authority")
+        .count();
     let resmut_count = map_camera.matches("ResMut<MapCameraDesiredRes>").count();
-    let harness_ok = !std::fs::read_to_string(root.join("src/render/stage5_full_app_harness.rs"))
-        .expect("stage5 harness")
-        .contains("mut desired: ResMut<crate::gui::MapCameraDesired>");
-    derive_count == 1 && resmut_count <= 3 && harness_ok
+    let query_mut_count = map_camera
+        .matches("Query<&mut MapCameraDesired")
+        .count();
+    // ApplyInput must not desired→authority sync (RPC-2-002).
+    let no_desired_to_auth_sync = !map_camera.contains("fn sync_map_camera_pose_to_view_authority");
+    // Misleading pre-invert alias must stay retired (RPC-2-004).
+    let no_compat_alias = !map_camera.contains("fn mirror_world_main_camera_from_map_desired");
+    let harness_needle = "mut desired: ResMut<crate::gui::MapCameraDesired>";
+    let harness_dir = root.join("src/render/stage5_full_app_harness");
+    let harness_ok = if harness_dir.is_dir() {
+        std::fs::read_dir(&harness_dir)
+            .expect("stage5 harness dir")
+            .filter_map(|e| e.ok())
+            .filter(|e| e.path().extension().is_some_and(|ext| ext == "rs"))
+            .all(|e| {
+                !std::fs::read_to_string(e.path())
+                    .unwrap_or_default()
+                    .contains(harness_needle)
+            })
+    } else {
+        // Legacy monolith path (pre RGR-H3 split).
+        !std::fs::read_to_string(root.join("src/render/stage5_full_app_harness.rs"))
+            .unwrap_or_default()
+            .contains(harness_needle)
+    };
+    derive_count == 1
+        && resmut_count == 1
+        && query_mut_count == 1
+        && no_desired_to_auth_sync
+        && no_compat_alias
+        && harness_ok
 }
 
 /// Refreshes infrastructure witness + agent index.

@@ -18,7 +18,7 @@ use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
 use crate::terrain::generation::{chunk_cell_world_center, Chunk, ChunkCellMatrix};
 use crate::terrain::material::{MaterialId, MaterializedChunk};
 
-use crate::render::sim_visual_extract::FireVisualGpuInstance;
+use crate::render::extraction::sim_visual_extract::FireVisualGpuInstance;
 
 /// High-level combustion category for VFX / gameplay hints (not a separate sim system).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -52,7 +52,7 @@ pub struct FireEmissionProfile {
 }
 
 /// Canonical **render-facing** fire row (`P1-E`): packed GPU/storage layout in
-/// [`crate::render::sim_visual_extract::FireVisualFrame::instances`] (one ECS extract pass per frame).
+/// [`crate::render::extraction::sim_visual_extract::FireVisualFrame::instances`] (one ECS extract pass per frame).
 pub type FireVisualProxy = FireVisualGpuInstance;
 
 #[inline]
@@ -149,7 +149,7 @@ pub fn infer_combustion_class(
     CombustionClass::Structural
 }
 
-/// Build one per-chunk profile for [`crate::render::sim_visual_extract::FireVisualFrame`].
+/// Build one per-chunk profile for [`crate::render::extraction::sim_visual_extract::FireVisualFrame`].
 ///
 /// When [`ChunkFireOverlay`] is present, **peak** cell heat is merged into the scalar used for VFX
 /// so per-cell burning is not averaged away against cold cells (fixes “sim fire, zero visual rows”).
@@ -191,7 +191,7 @@ pub fn infer_fire_emission_profile(
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
             {
-                if *cell_heat > crate::render::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS {
+                if *cell_heat > crate::render::extraction::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS {
                     let cell_xy =
                         chunk_cell_world_center(chunk.coord, matrix.size, idx);
                     world_pos = Vec3::new(cell_xy.x, cell_xy.y, 0.0);

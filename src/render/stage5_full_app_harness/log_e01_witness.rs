@@ -3,9 +3,9 @@
 
 use crate::render::extraction::RenderProjectionGraph;
 #[cfg(test)]
-use crate::render::gpu_particles::WorldFireParticleFrame;
+use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
 #[cfg(test)]
-use crate::render::gpu_water_particles::WorldWaterParticleFrame;
+use crate::render::pipelines::gpu_water_particles::WorldWaterParticleFrame;
 
 use super::witness_gates::{tactical_vfx_proof_enabled, TacticalVfxWitnessGates, TACTICAL_VFX_ZOOM_ALPHA_MIN};
 
@@ -19,12 +19,16 @@ pub fn merge_tactical_vfx_stage5_witness(
     water_particles: Option<&WorldWaterParticleFrame>,
     gates: &TacticalVfxWitnessGates,
 ) {
-    let tactical = tactical_vfx_witness_json(gates);
+    let tactical = tactical_vfx_witness_json(
+        gates,
+        // Lib fixture has no ECS camera — record spawn policy expectation, not live host.
+        crate::gui::rtt_core2d_overlay_hosts_enabled(),
+    );
     let routing_patch = if let Some(particles) = particles {
         serde_json::json!({
             "fire_spark_011_green": gates.fire_spark_011_green,
             "fire_spark_tactical_proof_zoom_alpha":
-                crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+                crate::render::pipelines::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
             "fire_spark_zoom_alpha": particles.spark_witness.zoom_alpha,
             "fire_spark_rows": particles.spark_witness.rows,
             "fire_spark_scatter_slots": particles.spark_witness.scatter_slots,
@@ -234,7 +238,7 @@ pub fn log_e01_projection_graph_fixture() -> RenderProjectionGraph {
     let mut policy = RepresentationResult::default();
     policy.overlay_matrix.logistics = true;
     policy.overlay_policy.fire_heat = true;
-    let fire_frame = crate::render::sim_visual_extract::FireVisualFrame::default();
+    let fire_frame = crate::render::extraction::sim_visual_extract::FireVisualFrame::default();
     let ecology_rows =
         crate::dev::landscape_grammar_sim_harness::live_landscape_program_chunk_count_after_harness();
     let mut ecology = EcologyVisualSnapshot::default();
@@ -246,6 +250,7 @@ pub fn log_e01_projection_graph_fixture() -> RenderProjectionGraph {
         lod: &frame,
         lod_map: &lod_map,
         fire: &fire_frame,
+        smoke: None,
         logistics: &logistics_snap,
         ecology: &ecology,
         committed_stamp: stamp,
@@ -398,13 +403,10 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
     let graph = log_e01_f2_combined_projection_fixture();
 
     use bevy::math::Vec2;
-    use crate::render::gpu_water_particles::update_world_water_particles_from_catalog;
+    use crate::render::pipelines::gpu_water_particles::update_world_water_particles_from_catalog;
     use crate::render::{
-        gpu_particles::{
-            update_world_fire_particles_from_projection, FireParticleCameraScale,
-            FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
-        },
-        RiverPolylineSegment, WaterSurfaceVisualCatalog,
+        update_world_fire_particles_from_projection, FireParticleCameraScale,
+        FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA, RiverPolylineSegment, WaterSurfaceVisualCatalog,
     };
 
     let proj = graph.clone();
@@ -417,7 +419,7 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
         &mut particles,
         None,
         FireParticleCameraScale {
-            zoom_level: crate::render::gpu_particles::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
+            zoom_level: crate::render::pipelines::gpu_particles::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
             zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
             ..Default::default()
         },
@@ -442,7 +444,7 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
         &mut water,
         FireParticleCameraScale {
             zoom_level: 1.0,
-            zoom_alpha: crate::render::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA,
+            zoom_alpha: crate::render::pipelines::gpu_water_particles::WATER_TACTICAL_WITNESS_ZOOM_ALPHA,
             ..Default::default()
         },
         0.0,
@@ -471,6 +473,11 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
     merge_log_e01_stage5_witness(&mut root, &graph);
     merge_tactical_vfx_stage5_witness(&mut root, Some(&particles), Some(&water), &gates);
     merge_visual_perf_witness_stage5(&mut root);
+    {
+        let (smoke_w, smoke_node) =
+            crate::render::extraction::smoke_bridge_projection_fixture();
+        smoke_w.merge_into_stage5_json(&mut root, Some(&smoke_node));
+    }
     patch_log_e01_visual_confirm_witnesses(&mut root, LogE01CaptureLane::LibFixture, &graph);
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
         "FULL_APP",
@@ -534,11 +541,14 @@ pub fn refresh_p2_fire_spark_011_stage5_live_witness() -> bool {
     refresh_log_e01_and_tactical_vfx_stage5_live_witness()
 }
 
-pub(super) fn tactical_vfx_witness_json(gates: &TacticalVfxWitnessGates) -> serde_json::Value {
+pub(super) fn tactical_vfx_witness_json(
+    gates: &TacticalVfxWitnessGates,
+    rtt_core2d_overlay_host_wired: bool,
+) -> serde_json::Value {
     serde_json::json!({
         "tactical_zoom_alpha_min": TACTICAL_VFX_ZOOM_ALPHA_MIN,
         "proof_gate_enabled": tactical_vfx_proof_enabled(),
-        "fire_sparks_above_smoke": crate::render::gpu_fire_particle_raster::FIRE_SPARKS_ABOVE_SMOKE_OVERLAY,
+        "fire_sparks_above_smoke": crate::render::pipelines::gpu_fire_particle_raster::FIRE_SPARKS_ABOVE_SMOKE_OVERLAY,
         "fire_tactical_zoom": gates.fire_tactical_zoom,
         "fire_spark_rows_gt_0": gates.fire_spark_rows_gt_0,
         "fire_spark_011_green": gates.fire_spark_011_green,
@@ -547,7 +557,7 @@ pub(super) fn tactical_vfx_witness_json(gates: &TacticalVfxWitnessGates) -> serd
         "fire_degraded_overlay_bootstrap": gates.fire_degraded_overlay_bootstrap,
         "fire_projection_stamp_aligned": gates.fire_projection_stamp_aligned,
         "fire_spark_tactical_proof_zoom_alpha":
-            crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+            crate::render::pipelines::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
         "water_tactical_zoom": gates.water_tactical_zoom,
         "water_has_river_segments": gates.water_has_river_segments,
         "water_particle_rows_gt_0": gates.water_particle_rows_gt_0,
@@ -563,5 +573,7 @@ pub(super) fn tactical_vfx_witness_json(gates: &TacticalVfxWitnessGates) -> serd
         "water_strategic_gates_green": gates.water_strategic_gates_green(),
         "water_witness_rollup_green": gates.water_witness_rollup_green(),
         "all_green": gates.all_green(),
+        // ES-1-R-001: ECS host presence — never the spawn-time env default alone.
+        "rtt_core2d_overlay_host_wired": rtt_core2d_overlay_host_wired,
     })
 }

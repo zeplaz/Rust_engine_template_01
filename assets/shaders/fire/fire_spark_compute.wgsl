@@ -64,7 +64,9 @@ fn advect_sparks(@builtin(global_invocation_id) gid: vec3<u32>) {
     if state.pos.w <= 0.0 {
         let spawn = nearest_attractor(origin, params.attractor_count);
         state.pos = vec4(spawn, params.respawn_life);
-        state.vel = vec4(state.vel.xyz * 0.9, 0.0);
+        // Fresh mild 2D drift — do not keep legacy high velocity across respawns.
+        let h = fract(spawn.x * 0.173 + spawn.y * 0.419 + f32(i) * 0.07);
+        state.vel = vec4((h - 0.5) * 2.2, (fract(h * 7.1) - 0.5) * 2.2, 0.0, 0.0);
     }
 
     var val = state.vel;

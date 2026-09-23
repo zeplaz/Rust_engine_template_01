@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::gui::{MinimapPresentationSource, MinimapShellState};
 
-use super::pass::{
+use super::state::{
     minimap_gpu_compositor_env_enabled, MinimapCompositePath, MinimapCompositorState,
 };
 use super::diagnostics::{diagnostics_json_snapshot, MinimapGpuCompositorDiagnostics};
@@ -220,8 +220,8 @@ pub fn build_minimap_compositor_proof_payload(
         "rt_bound": registry.committed_image != Handle::default(),
         "ui_stress_wrote_sim": ui_stress_wrote_sim,
         "composite_path": match compositor.composite_path {
-            super::pass::MinimapCompositePath::GpuCompute => "GpuCompute",
-            super::pass::MinimapCompositePath::CpuBridge => "CpuBridge",
+            super::state::MinimapCompositePath::GpuCompute => "GpuCompute",
+            super::state::MinimapCompositePath::CpuBridge => "CpuBridge",
         },
         "logistics_rows": compositor.logistics_rows,
         "construction_rows": compositor.construction_rows,
@@ -279,7 +279,7 @@ pub fn build_minimap_compositor_proof_payload(
         "construction_heat_enabled": compositor.construction_heat_enabled,
         "ecology_heat_enabled": compositor.ecology_heat_enabled,
     });
-    body["perf_vis_p1b_gpu_default_001"] = super::pass::perf_vis_p1b_witness_json(
+    body["perf_vis_p1b_gpu_default_001"] = super::state::perf_vis_p1b_witness_json(
         shell,
         registry,
         compositor,

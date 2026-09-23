@@ -1,0 +1,213 @@
+{
+  "schema": "vss_program_queue_v1",
+  "program_id": "VSS-001",
+  "plan_doc": "src/dev/plan_vfx_spectator_scale_program_v1.md",
+  "child_plans": {
+    "T1_scale": "src/dev/plan_world_scale_contract_v1.md",
+    "T4_artist_vfx": "src/dev/plan_artist_vfx_toolchain_v1.md"
+  },
+  "kickoff_packet": "debug_runs/agent_ops/vss_001_kickoff_packet.yaml",
+  "kickoff_verdict": "APPROVE",
+  "wave_0_status": "closed",
+  "wave_1_parallel_ok": ["VSS-T3-001"],
+  "wave_1_next": ["VSS-T3-001"],
+  "slices": [
+    {
+      "id": "VSS-T5-001",
+      "track": "T5",
+      "title": "Symbolic build encoder + MCP tool",
+      "owner": "@coder-mcp",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/symbolic_build_encoding_live.json"
+    },
+    {
+      "id": "VSS-T5-002",
+      "track": "T5",
+      "title": "Tribunal on touch MCP stub",
+      "owner": "@coder-mcp",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/tribunal_hygiene_live.json"
+    },
+    {
+      "id": "VSS-T1-001",
+      "track": "T1",
+      "title": "World scale contract doc",
+      "owner": "@planner",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/world_scale_contract_live.json",
+      "plan": "src/dev/plan_world_scale_contract_v1.md",
+      "note": "Full contract from planner spike — 32 sim / 8 display grid / operational zoom 0.42"
+    },
+    {
+      "id": "VSS-T1-002",
+      "track": "T1",
+      "title": "world_scale_contract.rs + sim-entry operational zoom",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/world_scale_contract_live.json",
+      "plan": "src/dev/plan_world_scale_contract_v1.md#P2",
+      "note": "OPERATIONAL_ZOOM_ALPHA on interactive sim enter; legacy fit via RUST_ENGINE_MAP_ZOOM_LEGACY_FIT=1"
+    },
+    {
+      "id": "VSS-T1-003",
+      "track": "T1",
+      "title": "Designer buildings-per-frame sign-off",
+      "owner": "@designer",
+      "status": "done",
+      "completed": "2026-08-29",
+      "blocked_on": [],
+      "witness": "debug_runs/world_scale_contract_live.json",
+      "plan": "src/dev/plan_world_scale_contract_v1.md#P3",
+      "note": "tribunal.designer_signed_off true; bpf 10.15 with dissent; primary 78.8px PASS"
+    },
+    {
+      "id": "VSS-T1-004",
+      "track": "T1",
+      "title": "8-tile display grid split (overlays/minimap)",
+      "owner": "@coder",
+      "status": "deferred",
+      "blocked_on": [],
+      "note": "Only if P3 readability fails — P3 PASS 2026-08-29; remains deferred"
+    },
+    {
+      "id": "VSS-T4-001",
+      "track": "T4",
+      "title": "EffectSpec JSON schema",
+      "owner": "@planner-mcp",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/artist_vfx_pipeline_live.json",
+      "plan": "src/dev/plan_artist_vfx_toolchain_v1.md"
+    },
+    {
+      "id": "VSS-T4-002",
+      "track": "T4",
+      "title": "Smoke + rain reference EffectSpecs",
+      "owner": "@designer-mcp",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/artist_vfx_pipeline_live.json",
+      "note": "3 reference specs validated; rain=particle_instanced, smoke=gpu_field"
+    },
+    {
+      "id": "VSS-T4-003",
+      "track": "T4",
+      "title": "validate_report effect_spec + promote tool",
+      "owner": "@coder-mcp",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/artist_vfx_pipeline_live.json",
+      "shipped": [
+        "validate_effect_spec_report",
+        "validate-report effect_spec",
+        "effect_promote",
+        "effect-pack",
+        "effect-promote",
+        "artist-vfx-pipeline-witness",
+        "tests/test_effect_spec_validator.py",
+        "tests/test_effect_promote.py"
+      ],
+      "note": "wgsl_pack hash staging + promote to assets/effects/registry/; preview_witness honest_gate pending until G4"
+    },
+    {
+      "id": "VSS-T4-004",
+      "track": "T4",
+      "title": "EffectConsumable ECS + registry loader",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-08-29",
+      "witness": "debug_runs/artist_vfx_pipeline_live.json",
+      "blocked_on": [],
+      "shipped": [
+        "EffectConsumableRegistry",
+        "EffectConsumableRegistryPlugin",
+        "spawn_hook_resolver",
+        "render::fire_vfx::consumable"
+      ],
+      "note": "Load from assets/effects/registry/; spawn_hook resolver wired — no parallel draw path"
+    },
+    {
+      "id": "VSS-T4-005",
+      "track": "T4",
+      "title": "APS browse/preview/assign panel",
+      "owner": "@designer",
+      "status": "ready",
+      "witness": "debug_runs/artist_vfx_pipeline_live.json",
+      "blocked_on": [],
+      "note": "G4 preview honest_gate; runtime emit-from-registry deferred here"
+    },
+    {
+      "id": "VSS-T2-001",
+      "track": "T2",
+      "title": "Demote harness fire seed as primary proof",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/spectator_parity_live.json",
+      "note": "Harness fire debug_fallback_only; scenario product path green (T2-002)"
+    },
+    {
+      "id": "VSS-T2-002",
+      "track": "T2",
+      "title": "Scenario ignite_at / trigger_effect API",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-08-28",
+      "witness": "debug_runs/spectator_parity_live.json",
+      "note": "IgniteAt + TriggerEffect → SimEffectQueue; scenario entry_path proof_grade product"
+    },
+    {
+      "id": "VSS-T2-003",
+      "track": "T2",
+      "title": "All product entry paths (scenario + save + interactive)",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-08-29",
+      "witness": "debug_runs/spectator_parity_live.json",
+      "note": "save: Wave S manifest + fire_field dirty queue; interactive: sim_effect_spine lib"
+    },
+    {
+      "id": "VSS-T3-002",
+      "track": "T3",
+      "title": "Remove overlay dual-writers (VT-4)",
+      "owner": "@sim-steward",
+      "status": "done",
+      "completed": "2026-08-29",
+      "witness": "debug_runs/sim_effect_fire_consumer_live.json",
+      "routing_ref": "dual_writer_candidates[0] simulation_session.rs",
+      "note": "simulation_session presentation-only; sole writer sync_shared_overlay_from_simulation"
+    },
+    {
+      "id": "VSS-T3-001",
+      "track": "T3",
+      "title": "Single ignition funnel via SimEffect",
+      "owner": "@coder",
+      "status": "ready",
+      "blocked_on": [],
+      "witness": "debug_runs/sim_effect_fire_consumer_live.json",
+      "routing_ref": "dual_writer_candidates[1,2] drain.rs + ember_spot_ignition.rs"
+    },
+    {
+      "id": "VSS-T3-003",
+      "track": "T3",
+      "title": "Save round-trip fire state hash",
+      "owner": "@coder",
+      "status": "blocked",
+      "blocked_on": ["VSS-T3-001"]
+    },
+    {
+      "id": "VSS-T3-004",
+      "track": "T3",
+      "title": "Effects DEBT stub cleanup",
+      "owner": "@cleanup-intelligence",
+      "status": "blocked",
+      "blocked_on": ["VSS-T3-001"]
+    }
+  ],
+  "t3_gate_witness": "debug_runs/sim_effect_fire_consumer_live.json",
+  "routing_ref": "debug_runs/agent_ops/vss_001_kickoff_packet.yaml#routing"
+}

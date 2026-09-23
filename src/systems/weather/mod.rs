@@ -3,7 +3,8 @@
 //! Design: [`prompts/guides/weather_simulation_runbook_v1.md`](../../../prompts/guides/weather_simulation_runbook_v1.md).
 //! Step pack: [`prompts/matrix/simulation_expansion/runbook/s2_steps_v1.md`](../../../prompts/matrix/simulation_expansion/runbook/s2_steps_v1.md).
 //!
-//! **Precipitation visuals** (screen-space overlay + mesh particles): [`WeatherVisualPlugin`](weather_visual::WeatherVisualPlugin), [`WeatherVisualSettings`](weather_visual::WeatherVisualSettings).
+//! **Precipitation visuals** (overlay tint; GPU streaks via `render::weather_vfx`): [`WeatherVisualPlugin`](weather_visual::WeatherVisualPlugin), [`WeatherVisualSettings`](weather_visual::WeatherVisualSettings).
+//! GPU frontend stub (ES-5): [`crate::render::WeatherVfxPlugin`] — domain WeatherPrecip inactive until streaks.
 
 mod chunk_weather;
 mod player_read_hud;
@@ -18,7 +19,9 @@ pub use chunk_weather::{
     ChunkWeather, GlobalRenewableWeatherFactors, WeatherSimDiagnostics,
 };
 pub use weather_visual::{
+    weather_precip_show_background, weather_precip_show_tactical, weather_precip_tactical_band,
     WeatherPrecipVisualSample, WeatherVisualSettings, WeatherVisualPlugin, WeatherVfxCameraChild,
+    WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA,
 };
 pub use player_read_hud::weather_hud_player_read_witness_payload;
 
@@ -54,6 +57,10 @@ pub struct WeatherPlugin;
 
 impl Plugin for WeatherPlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins((WeatherSimulationPlugin, WeatherVisualPlugin));
+        app.add_plugins((
+            WeatherSimulationPlugin,
+            WeatherVisualPlugin,
+            crate::render::WeatherVfxPlugin,
+        ));
     }
 }

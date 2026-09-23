@@ -1,6 +1,6 @@
 //! Chunk heat **diffusion** compute kernel (CPU v1) with owned ping-pong buffers and GPU registry sync.
 //!
-//! Reads [`crate::render::fire_chunk_runtime::FireSimulationSnapshot`] + [`WorldLodMap`] only; writes [`HeatDiffusionFieldBuffers`] (compute-owned).
+//! Reads [`crate::render::fx_spine::fire_chunk_runtime::FireSimulationSnapshot`] + [`WorldLodMap`] only; writes [`HeatDiffusionFieldBuffers`] (compute-owned).
 
 use std::collections::HashMap;
 
@@ -18,7 +18,7 @@ use crate::render::{
     heat_diffusion_cell_format, packed_byte_size, BufferVisibility, GPUBufferRegistry,
     HEAT_DIFFUSION_FIELD_BUFFER, LodBandBufferPolicy, RegisteredBufferDescriptor,
 };
-use crate::render::sim_visual_extract::ChunkFireHeat;
+use crate::render::extraction::sim_visual_extract::ChunkFireHeat;
 use crate::systems::sim_control::SimStepStamp;
 
 use super::frame_snapshots::NavFieldFrame;

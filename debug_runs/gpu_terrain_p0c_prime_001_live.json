@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/gpu_terrain_p0c_prime_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_gpu_p0c_prime_witness",
-    "written_at_epoch_secs": 1783371798
+    "written_at_epoch_secs": 1786571125
   },
   "cpu_raster_metric_gated": true,
   "display_mode": "gpu_sprite_dirty_gated",
@@ -69,6 +69,6 @@
   "minimap_terrain_source_ok": true,
   "plan_ref": "src/dev/plan_gpu_terrain_production_exec_001_v1.md#P0-C′",
   "release_default_gpu": true,
-  "terrain_authority_default": "CpuFallback",
+  "terrain_authority_default": "CpuRaster",
   "todo_board": "src/dev/gpu_todos_v1.md"
 }

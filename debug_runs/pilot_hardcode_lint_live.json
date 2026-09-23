@@ -3,17 +3,15 @@
   "gate_id": "pilot_hardcode_lint",
   "ok": true,
   "green": true,
-  "scanned_files": 2025,
+  "scanned_files": 2095,
   "needle_count": 3,
   "hit_count": 0,
   "violation_count": 0,
-  "transitional_hit_count": 1,
-  "permanent_allowlist_hit_count": 10,
-  "transitional_until": "BUILD-SET-GUARD-002",
+  "transitional_hit_count": 0,
+  "permanent_allowlist_hit_count": 11,
+  "transitional_until": "",
   "allowlist": "tools/mcp/guard/pilot_hardcode_allowlist_v1.json",
   "violations": [],
-  "transitional_files": [
-    "src/construction/procedural/assembly_snapshot.rs"
-  ],
+  "transitional_files": [],
   "violations_truncated": false
 }

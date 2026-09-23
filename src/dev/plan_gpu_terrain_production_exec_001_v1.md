@@ -168,7 +168,7 @@ Use C′ only if C fails after 1 day — document choice in plan footer.
 |:---|:---|:---|
 | **P0-E1** | `src/render/minimap_compositor/pass.rs` | Terrain source: GPU downsample pass OR shared atlas sample — **not** `fallback.image` CPU repaint dependency. |
 | **P0-E2** | `src/render/minimap_compositor/composite.rs` | Refresh terrain layer on cadence + dirty revision only. |
-| **P0-E3** | Witness | `minimap_compositor_live.json`: `terrain_source: gpu_atlas` (new field). |
+| **P0-E3** | Witness | `minimap_compositor_live.json`: default-off label is `world_raster`; with `TERRAIN_GPU_BAKE_SPIKE=1` + consumers ready, label may be `gpu_bake` (RPC-1-005). Operator pixel prove = RPC-1-006. |
 
 **Exit P0-E:** Minimap compositor works with `cpu_minimap_pass: false` and `tile_raster_ms: 0`.
 
@@ -284,7 +284,7 @@ PostUpdate:
 |:---|:---|:---|
 | `sim_spectrum_analytics_live.json` | `render_schedule.*`, `spine.tile_raster_ms == 0`, `terrain_authority` | P0+ |
 | `stage5_full_app_live.json` | `perf.terrain_gpu_authoritative: true` | P0 |
-| `minimap_compositor_live.json` | `terrain_source: gpu_atlas` | P0-E |
+| `minimap_compositor_live.json` | default-off `terrain_source: world_raster`; flag ON + consumers ready → `gpu_bake` (RPC-1-005); operator prove RPC-1-006 | P0-E / RPC-1 |
 | `engine_deep_debug_live.json` | `images` count **down** (no duplicate terrain textures) | P0 |
 | `debug_runs/perf_attribution_60s.md` | P3 runbook section | P3 |
 

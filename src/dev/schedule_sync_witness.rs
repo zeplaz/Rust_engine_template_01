@@ -67,7 +67,9 @@ pub fn refresh_sch_w1_t1_witness() -> bool {
 /// **SCH-W1-E3-001** — direct `BuildProfiles.after(ChunkEnvironmentSet::Fire)` edge wired in engine.
 #[must_use]
 pub fn sch_w1_e3_witness_green() -> bool {
-    true
+    let eng = include_str!("../engine/engine_with_worldgen.rs");
+    eng.contains("FireVisualFrameSet::BuildProfiles")
+        && eng.contains("ChunkEnvironmentSet::Fire")
 }
 
 #[must_use]
@@ -77,6 +79,7 @@ pub fn build_sch_w1_e3_witness_body() -> serde_json::Value {
         "green": sch_w1_e3_witness_green(),
         "direct_edge": "FireVisualFrameSet::BuildProfiles.after(ChunkEnvironmentSet::Fire)",
         "engine_site": "src/engine/engine_with_worldgen.rs",
+        "proof": "include_str source contains edge tokens",
         "plan_ref": "src/dev/plan_schedule_sync_v1.md#SCH-W1-E3-001",
     })
 }
@@ -89,7 +92,9 @@ pub fn refresh_sch_w1_e3_witness() -> bool {
 /// **SCH-W1-E4-001** — `HybridSimPipeline::IntentReset.after(StrategicFieldPipeline::LogisticsNetInject)`.
 #[must_use]
 pub fn sch_w1_e4_witness_green() -> bool {
-    true
+    let sim = include_str!("../strategic/sim.rs");
+    sim.contains("HybridSimPipeline::IntentReset")
+        && sim.contains("StrategicFieldPipeline::LogisticsNetInject")
 }
 
 #[must_use]

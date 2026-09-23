@@ -1,0 +1,186 @@
+{
+  "schema": "effects_system_queue_v1",
+  "program_id": "EFFECTS-SYSTEM-UNIFY-001",
+  "plan_doc": "src/dev/plan_effects_system_architecture_v1.md",
+  "updated": "2026-08-27",
+  "pick_order": ["ES-0", "ES-1", "ES-3", "ES-2", "ES-5", "ES-4", "ES-6", "ES-8", "ES-7"],
+  "session_note": "2026-08-27: ES-5 closed; ES-7-1..3 contract-wired (particles_rendered false until ES-7-4). Hanabi ≠ weather. ES-6 residual 2/4 open.",
+  "items": [
+    {
+      "id": "ES-0-001",
+      "phase": "ES-0",
+      "title": "Remove atmosphere_particle_controller from live schedule",
+      "owner": "coder",
+      "status": "done",
+      "witness": "debug_runs/effects_system_es0_live.json",
+      "exit_predicate": "effects_stub_schedule_clean"
+    },
+    {
+      "id": "ES-0-002",
+      "phase": "ES-0",
+      "title": "Remove atmosphere_render_prep_placeholder from schedule",
+      "owner": "coder",
+      "status": "done",
+      "witness": "debug_runs/effects_system_es0_live.json",
+      "exit_predicate": "effects_stub_schedule_clean"
+    },
+    {
+      "id": "ES-1-005",
+      "phase": "ES-1",
+      "title": "Operator verify --test vfx after ZoomFrame migration",
+      "owner": "operator",
+      "status": "done",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "exit_predicate": "tactical_vfx_witness.all_green",
+      "note": "CPU witness was green while RTT raster skipped — fixed by ES-1-RTT-HOST"
+    },
+    {
+      "id": "ES-1-RTT-HOST",
+      "phase": "ES-1",
+      "title": "Production RTT Core2d overlay host default ON for fire/water raster",
+      "owner": "coder",
+      "status": "done",
+      "witness": "src/gui/tactical/sim_map_rtt.rs",
+      "exit_predicate": "rtt_core2d_overlay_host_wired",
+      "note": "TileDebugRenderHost on MainWorldCamera unless RTT_CORE2D_OVERLAY=0"
+    },
+    {
+      "id": "ES-1-R-001",
+      "phase": "ES-1",
+      "title": "RTT host witness from ECS component, not env default",
+      "owner": "coder",
+      "status": "done",
+      "witness": "debug_runs/effects_system_es1_r_live.json",
+      "exit_predicate": "rtt_core2d_overlay_host_wired_ecs",
+      "note": "RttCore2dOverlayHostState.host_present from Has<TileDebugRenderHost>"
+    },
+    {
+      "id": "ES-3-001",
+      "phase": "ES-3",
+      "title": "Smoke projection graph node → GPU field bridge",
+      "owner": "coder",
+      "status": "done",
+      "witness": "debug_runs/stage5_full_app_live.json",
+      "exit_predicate": "smoke_extract_wired",
+      "note": "SmokeProjectionNode → gpu_field_bridge; smoke_volume unload"
+    },
+    {
+      "id": "ES-2-002",
+      "phase": "ES-2",
+      "title": "Particle domain registry without FIRE_* buffer rename",
+      "owner": "coder",
+      "status": "done",
+      "witness": "src/render/particle_domains/mod.rs",
+      "exit_predicate": "particle_domain_registry",
+      "note": "Fire=domain0 active; WeatherPrecip/Ash reserved"
+    },
+    {
+      "id": "ES-5-001",
+      "phase": "ES-5",
+      "title": "Weather precip GPU frontend fill (ClimateVisualAggregate → WeatherPrecipFrame)",
+      "owner": "coder",
+      "status": "done",
+      "blocked_by": [],
+      "witness": "debug_runs/effects_system_es5_live.json",
+      "exit_predicate": "weather_vfx_frontend_filled",
+      "note": "Climate→frame; domain only when CPU mesh soft-gated off; gpu_authority=false"
+    },
+    {
+      "id": "ES-5-002",
+      "phase": "ES-5",
+      "title": "GPU streak upload + weather_precip_draw (mesh still present)",
+      "owner": "coder",
+      "status": "done",
+      "blocked_by": [],
+      "witness": "debug_runs/effects_system_es5_live.json",
+      "exit_predicate": "weather_precip_gpu_upload_active",
+      "note": "BufferId(13)+WGSL+camera recenter; cpu_weather_precip_retired=false until ES-5-3; Reject Hanabi"
+    },
+    {
+      "id": "ES-5-003",
+      "phase": "ES-5",
+      "title": "Delete CPU mesh precip spawn+tick; keep overlay tint",
+      "owner": "coder",
+      "status": "done",
+      "blocked_by": [],
+      "witness": "debug_runs/effects_system_es5_live.json",
+      "exit_predicate": "cpu_weather_precip_retired",
+      "note": "PrecipParticle+tick removed; overlay retained"
+    },
+    {
+      "id": "ES-5-004",
+      "phase": "ES-5",
+      "title": "Provisional ZoomFrame precip density (0.45 tactical threshold)",
+      "owner": "coder",
+      "status": "done",
+      "blocked_by": [],
+      "witness": "debug_runs/effects_system_es5_live.json",
+      "exit_predicate": "weather_precip_zoom_banded",
+      "note": "Designer may refine density/scatter later — not a development gate"
+    },
+    {
+      "id": "ES-4-002",
+      "phase": "ES-4",
+      "title": "Quarantine unwired atmosphere WGSL (EV/Cx alt to full composite)",
+      "owner": "coder",
+      "status": "done",
+      "blocked_by": [],
+      "witness": "debug_runs/effects_system_es4_live.json",
+      "exit_predicate": "atmosphere_wgsl_quarantined"
+    },
+    {
+      "id": "ES-6-001",
+      "phase": "ES-6",
+      "title": "Atmosphere clipmap L0 authoritative — gate legacy bridge",
+      "owner": "coder",
+      "status": "done",
+      "blocked_by": [],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "clipmap_l0_authoritative",
+      "note": "L0 auth true; DEBT-006 gated OFF (RUST_ENGINE_ATMOS_LEGACY_BRIDGE=1 rollback). Residual ES-6-2 field writers + ES-6-4 save. Prior 'defer' agent superseded by this gated exit."
+    },
+    {
+      "id": "ES-8-001",
+      "phase": "ES-8",
+      "title": "Purge render/mod.rs path shims (ES-8-1 + ES-8-3)",
+      "owner": "coder",
+      "status": "done",
+      "blocked_by": [],
+      "witness": "debug_runs/effects_system_es8_live.json",
+      "exit_predicate": "shim_imports_zero",
+      "note": "2026-08-27: api.rs retargeted; 61 path-preserving shim blocks deleted from render/mod.rs (~31 LOC left). Pub API via pub use api::*."
+    },
+    {
+      "id": "ES-7-001",
+      "phase": "ES-7",
+      "title": "Hanabi spike report + burst consumer contract (fire_ember_burst MVP)",
+      "owner": "coder",
+      "status": "done",
+      "witness": "debug_runs/effects_system_es7_live.json",
+      "exit_predicate": "burst_hint_consumer_present",
+      "note": "map_burst_chunks_to_spawns + LocalTactical gate; FxParticleBurstRequest not named in consumer"
+    },
+    {
+      "id": "ES-7-003",
+      "phase": "ES-7",
+      "title": "hanabi_no_sim_writeback + minimap bleed-free witness",
+      "owner": "coder",
+      "status": "done",
+      "witness": "debug_runs/effects_system_es7_live.json",
+      "exit_predicate": "hanabi_no_sim_writeback",
+      "note": "Static audit + Strategic/Operational/Macro map empty"
+    },
+    {
+      "id": "ES-7-004",
+      "phase": "ES-7",
+      "title": "Emitter visual capture (ParticleEffect spawn)",
+      "owner": "coder",
+      "status": "deferred",
+      "blocked_by": ["operator-hanabi-l3-capture"],
+      "witness": "debug_runs/effects_system_es7_live.json",
+      "exit_predicate": "particles_rendered",
+      "unblock_when": "--features hanabi_l3 + RUST_ENGINE_HANABI_L3=1 + operator eyes",
+      "note": "EffectAsset ported under cfg; spawn deferred for honesty"
+    }
+  ]
+}

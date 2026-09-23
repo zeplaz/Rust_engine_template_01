@@ -112,10 +112,10 @@ pub fn refresh_sim_effect_spine_live_witness() -> bool {
         &ledger,
         &faction_react,
     );
+    // Trust export Result — do not treat Path::exists as proof of spine green.
     let jsonl_ok = ledger
         .export_jsonl(std::path::Path::new(SIM_EFFECTS_JSONL))
-        .is_ok()
-        && std::path::Path::new(SIM_EFFECTS_JSONL).exists();
+        .is_ok();
     json_ok && jsonl_ok
 }
 

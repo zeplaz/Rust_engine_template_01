@@ -12,7 +12,7 @@ use bevy::ui::{ComputedNode, IsDefaultUiCamera, UiGlobalTransform};
 use bevy::window::PrimaryWindow;
 
 use crate::gui::style::UiPalette;
-use crate::gui::map_camera::{MainWorldCamera, MapCameraDesired};
+use crate::gui::tactical::map_camera::{MainWorldCamera, MapCameraDesired};
 use crate::gui::TileDebugRenderHost;
 use crate::render::TerrainInstancedRenderHost;
 use crate::engine::EngineLaunchArgs;
@@ -137,12 +137,65 @@ impl RttDiagCameraMode {
     }
 }
 
-/// Opt-in Core2d overlay hosts on production RTT camera (fire/water/tile-debug passes).
+/// Core2d overlay hosts on production RTT camera (fire/water/terrain-instanced passes).
+///
+/// Default **on** — sparks and water particles require [`TileDebugRenderHost`] on
+/// [`MainWorldCamera`]. Set `RTT_CORE2D_OVERLAY=0` only for pixel_grid_snap isolation.
+///
+/// **Spawn policy only** — do not use as witness truth. Live authority is
+/// [`RttCore2dOverlayHostState::host_present`] (ECS component on [`MainWorldCamera`]).
 #[must_use]
 pub fn rtt_core2d_overlay_hosts_enabled() -> bool {
-    std::env::var("RTT_CORE2D_OVERLAY")
-        .ok()
-        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    !matches!(
+        std::env::var("RTT_CORE2D_OVERLAY").as_deref(),
+        Ok("0") | Ok("false") | Ok("off")
+    )
+}
+
+/// ES-1-R-001 — honest witness of Core2d overlay host presence on [`MainWorldCamera`].
+///
+/// Updated from ECS (`Has<TileDebugRenderHost>`), not from the spawn-time env default.
+#[derive(Resource, Debug, Clone, Copy, Default)]
+pub struct RttCore2dOverlayHostState {
+    /// True when at least one [`MainWorldCamera`] carries [`TileDebugRenderHost`].
+    pub host_present: bool,
+}
+
+/// Sync [`RttCore2dOverlayHostState`] from the live camera entity (single authority).
+pub fn sync_rtt_core2d_overlay_host_state(
+    hosts: Query<(), (With<MainWorldCamera>, With<TileDebugRenderHost>)>,
+    mut state: ResMut<RttCore2dOverlayHostState>,
+) {
+    state.host_present = !hosts.is_empty();
+}
+
+/// Repair Production RTT cameras that lost Core2d overlay hosts (fire/water raster gate).
+///
+/// Spawn policy can miss hosts if env flipped mid-session or an older entity lacked them;
+/// without [`TileDebugRenderHost`], sparks emit (`spark_rows>0`) but never draw.
+pub fn ensure_rtt_core2d_overlay_hosts(
+    mut commands: Commands,
+    diag: Option<Res<RttDiagCameraConfig>>,
+    missing: Query<
+        Entity,
+        (
+            With<MainWorldCamera>,
+            Without<TileDebugRenderHost>,
+        ),
+    >,
+) {
+    if !rtt_core2d_overlay_hosts_enabled() {
+        return;
+    }
+    let mode = diag.map(|d| d.mode).unwrap_or(RttDiagCameraMode::Production);
+    if mode != RttDiagCameraMode::Production {
+        return;
+    }
+    for entity in &missing {
+        commands
+            .entity(entity)
+            .insert((TileDebugRenderHost, TerrainInstancedRenderHost));
+    }
 }
 
 /// Default: **production** camera. Opt-in diagnostics only via env (see table on [`rtt_diag_camera_mode`]).
@@ -187,18 +240,29 @@ pub fn spawn_main_world_rtt_camera(
 
     match mode {
         RttDiagCameraMode::Production => {
-            // Bevy pixel_grid_snap baseline: Camera2d → Image, default layer 0, no Core2d overlay hosts.
-            // Set RTT_CORE2D_OVERLAY=1 to re-enable fire/water/tile-debug overlay passes on this camera.
-            let mut entity = commands.spawn((
-                MainWorldCamera,
-                Camera2d,
-                Msaa::Off,
-                rt,
-                camera,
-                MapCameraDesired::default(),
-            ));
+            // Production RTT: Camera2d → Image + Core2d overlay hosts so fire/water particle
+            // raster and terrain-instanced draws composite into the simulation map.
+            // Isolation: RTT_CORE2D_OVERLAY=0 strips hosts (terrain sprite-only baseline).
             if rtt_core2d_overlay_hosts_enabled() {
-                entity.insert((TileDebugRenderHost, TerrainInstancedRenderHost));
+                commands.spawn((
+                    MainWorldCamera,
+                    Camera2d,
+                    Msaa::Off,
+                    rt,
+                    camera,
+                    MapCameraDesired::default(),
+                    TileDebugRenderHost,
+                    TerrainInstancedRenderHost,
+                ));
+            } else {
+                commands.spawn((
+                    MainWorldCamera,
+                    Camera2d,
+                    Msaa::Off,
+                    rt,
+                    camera,
+                    MapCameraDesired::default(),
+                ));
             }
         }
         RttDiagCameraMode::UnhookCamera2d => {
@@ -353,7 +417,7 @@ fn clamp_aabb_to_window(min: Vec2, max: Vec2, window: Vec2) -> (Vec2, Vec2) {
 pub fn sync_simulation_map_fill_rect_system(
     q: Query<(&ComputedNode, &UiGlobalTransform), With<SimulationMapViewportFill>>,
     mut fill: ResMut<TacticalMapFillRect>,
-    mut tex: ResMut<SimulationMapTexture>,
+    tex: Res<SimulationMapTexture>,
     mut images: ResMut<Assets<Image>>,
     mut barrier: ResMut<SimulationMapRttBindBarrier>,
     frame: Res<FrameCount>,
@@ -486,15 +550,20 @@ pub fn reset_tactical_map_fill_streak_on_enter_simulation(mut fill: ResMut<Tacti
 
 impl Plugin for SimulationMapRttPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<crate::gui::sim_map_rtt::TacticalMapFillRect>()
+        app.init_resource::<crate::gui::tactical::sim_map_rtt::TacticalMapFillRect>()
+            .init_resource::<RttCore2dOverlayHostState>()
             .add_systems(
                 OnEnter(crate::engine::states::BaseState::Simulation),
                 reset_tactical_map_fill_streak_on_enter_simulation,
             )
             .add_systems(
                 Update,
-                sync_sim_map_clear_from_day_cycle
-                    .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick),
+                (
+                    sync_sim_map_clear_from_day_cycle
+                        .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick),
+                    ensure_rtt_core2d_overlay_hosts.before(sync_rtt_core2d_overlay_host_state),
+                    sync_rtt_core2d_overlay_host_state,
+                ),
             )
             .add_systems(
                 PostUpdate,

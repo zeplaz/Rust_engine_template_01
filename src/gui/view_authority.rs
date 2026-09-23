@@ -2,9 +2,10 @@
 //!
 //! **View projection authority:** treat [`ViewManager`] as the read spine for per-view
 //! [`ViewCameraState`], [`ViewInstance::viewport_rect`], and [`ViewInstance::visible_world_rect`].
-//! **TRIAGE-VM-09-v2:** [`MapCameraDesired`] is a **read-only compatibility mirror** — RTS input and shell
-//! jumps commit [`ViewProjectionAuthority`] first; [`derive_map_camera_desired_from_view_authority`]
-//! is the sole `ResMut<MapCameraDesiredRes>` writer in production (see [`crate::gui::map_camera`]).
+//! **RPC-2-002 / TRIAGE-VM-09-v2:** [`MapCameraDesired`] is a **read-only compatibility mirror** —
+//! ApplyInput + wheel + shell jumps commit [`ViewProjectionAuthority`] first;
+//! [`derive_map_camera_desired_from_view_authority`] is the sole `ResMut<MapCameraDesiredRes>` /
+//! `&mut MapCameraDesired` writer in production (see [`crate::gui::tactical::map_camera`]).
 //! **VM-06:** [`sync_view_manager_bridge`] is the **sole** `ResMut<ViewManager>` writer — it rebuilds the
 //! read model from authority after viewport resolve. [`sync_view_manager_world_main_from_authority`] is
 //! a test/helper partial sync only (not scheduled).
@@ -22,7 +23,7 @@ use std::collections::HashMap;
 use bevy::math::{Rect, Vec2};
 use bevy::prelude::*;
 
-use crate::gui::map_camera::{MainWorldCamera, MapCameraDesired, MapCameraDesiredRes, MapCameraSystemSet, MAIN_WORLD_CAMERA_Z};
+use crate::gui::tactical::map_camera::{MainWorldCamera, MapCameraDesired, MapCameraDesiredRes, MapCameraSystemSet, MAIN_WORLD_CAMERA_Z};
 use crate::gui::map_view::{MapViewInstances, MapViewPresentationStates};
 use crate::gui::{MapViewState, MinimapFollowMode};
 use crate::gui::MinimapOverlayMask;

@@ -1,0 +1,32 @@
+{
+  "schema": "rpc2_003_focus_authority_only_v1",
+  "slice_id": "RPC-2-003",
+  "fleet_id": "FLEET-RPC2-003",
+  "closed": "2026-08-12",
+  "status": "done",
+  "authority": "ViewProjectionAuthority",
+  "writer_tag": "MapCameraInput",
+  "desired_writer": "apply_derived_map_camera_desired / derive_map_camera_desired_from_view_authority",
+  "focus_paths": {
+    "focus_main_camera_on_world_params": "authority + Transform seed; no MapCameraDesired mut",
+    "refit_simulation_map_camera_on_enter": "already authority-only (audit OK)",
+    "sync_minimap_follow_camera_on_sim_enter": "reads WorldMain authority (not desired Res)"
+  },
+  "acceptance": {
+    "focus_no_mut_map_camera_desired": true,
+    "simulation_session_no_mut_map_camera_desired": true,
+    "shared_apply_derived_helper": true,
+    "view_runtime_lib": "16 passed",
+    "map_camera_lib": "14 passed",
+    "validate_cargo": "0 errors"
+  },
+  "residual_rpc2_004": {
+    "goal": "Mirror hygiene + TODO-04 exit — sole derive writer grep gate + isolation/stage5 witnesses",
+    "files": [
+      "src/gui/tactical/map_camera.rs docs",
+      "stage5_live_todos / isolation witness",
+      "view_runtime tests"
+    ]
+  },
+  "plan": "src/dev/plan_rpc2_pose_authority_v1.md"
+}

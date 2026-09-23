@@ -1,0 +1,21 @@
+{
+  "schema": "planner_packet_witness_v1",
+  "slice_id": "RPC-2-001",
+  "fleet_id": "FLEET-RPC2-PLAN",
+  "status": "done",
+  "closed": "2026-08-12",
+  "plan_path": "src/dev/plan_rpc2_pose_authority_v1.md",
+  "parent_plan": "src/dev/plan_render_production_cleanup_v1.md",
+  "stage5_todo": "TODO-04",
+  "key_decisions": {
+    "pose_authority": "ViewProjectionAuthority",
+    "read_spine": "ViewManager via sync_view_manager_bridge",
+    "mirror": "MapCameraDesired[+Res] via derive_map_camera_desired_from_view_authority only",
+    "mirror_direction": "authority_to_desired",
+    "retire": "sync_map_camera_pose_to_view_authority desired_to_authority path",
+    "minimap": "commit_pose Minimap only — already correct"
+  },
+  "next_coder_slices": ["RPC-2-002", "RPC-2-003", "RPC-2-004"],
+  "operator_parallel": "RPC-1-006",
+  "no_rust_impl": true
+}

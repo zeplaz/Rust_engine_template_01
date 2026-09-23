@@ -126,8 +126,9 @@ pub fn draw_block_frame_debug_overlay(
 pub fn settlement_block_frame_debug_overlay_wired_witness_green() -> bool {
     use crate::strategic::settlement::block_frame_debug_overlay_wired_witness_green;
 
-    std::path::Path::new("src/gui/settlement_block_frame_debug.rs").exists()
-        && block_frame_debug_overlay_wired_witness_green()
+    // Honest: structural frame fixture (not Path::exists). Plugin wires
+    // `draw_block_frame_debug_overlay` via [`SettlementBlockFrameDebugPlugin`].
+    block_frame_debug_overlay_wired_witness_green()
 }
 
 pub struct SettlementBlockFrameDebugPlugin;

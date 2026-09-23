@@ -1,0 +1,346 @@
+{
+  "_meta": {
+    "schema": "auto_fleet_drain_queue_v1",
+    "version": "1.0.0",
+    "created": "2026-08-12",
+    "purpose": "No-operator automatable drain — specialized agents only; operator gates excluded",
+    "operator_excluded": [
+      "G-PLAY-OPERATOR-01",
+      "RPC-1-006",
+      "OPS-F01",
+      "OPS-F03",
+      "APS-G4 pixel follow-up",
+      "WH-TRACK-B-PAUSE / warehouse G4 keyframe"
+    ],
+    "scan": "python tools/orchestrator/scripts/scan_auto_fleet_inventory.py",
+    "inventory": "debug_runs/agent_ops/auto_fleet_inventory_live.json",
+    "policy": "BLANG:FLOW L0 cheap → L2 exec; deterministic lints before rename; ¬file∩ parallel",
+    "status": "ACTIVE",
+    "current_wave": "W3"
+  },
+  "waves": [
+    {
+      "id": "W1",
+      "parallel": true,
+      "note": "Disjoint files — docs / designer specs / MCP lint inventory / HANDOFF reconcile",
+      "slices": [
+        {
+          "id": "FLEET-RPC1-002",
+          "maps_to": "RPC-1-002",
+          "agent": "coder",
+          "model": "inherit",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "Docs honesty: gpu_atlas → world_raster / transitional notes",
+          "territory": ["src/dev/gpu_todos_v1.md", "src/dev/visual_test_runbook_v1.md", "src/dev/plan_gpu_terrain_production_exec_001_v1.md"],
+          "exit": "terrain-honesty-lint doc_promises_gpu_atlas == 0",
+          "l0": "python -m rust_engine_mcp.cli terrain-honesty-lint",
+          "notes": "doc_promises_gpu_atlas cleared; witness debug_runs/terrain_honesty_lint_live.json",
+          "witness": "debug_runs/terrain_honesty_lint_live.json"
+        },
+        {
+          "id": "FLEET-DES-UI4",
+          "maps_to": "UI4-DESIGN-001",
+          "agent": "designer",
+          "model": "inherit",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "Close or advance UI4-DESIGN-001 design packet (no Rust; no operator pixel)",
+          "territory": ["tools/orchestrator/queues/designer_signoff_registry.json", "src/dev"],
+          "exit": "design packet path + status update; ¬operator checklist",
+          "evidence": [
+            "docs/archive/2026-06-prompts-guides/ui_phases/guides/ui/world_preview_d04_slide_sheet_spec_v1.md",
+            "assets/ui/world_preview/slide_sheet_spec_v1.png",
+            "tools/orchestrator/queues/designer_signoff_registry.json#UI4-DESIGN-001"
+          ],
+          "notes": "Already SIGNED 2026-05-24; registry reopened on stale prompts/ path — reconciled to archive witness; LAYOUT-002 already DONE; no new design packet; ¬operator"
+        },
+        {
+          "id": "FLEET-DES-S7B",
+          "maps_to": "S7B-DESIGN-001",
+          "agent": "designer",
+          "model": "composer-2.5-fast",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "Confirm S7B design lock docs; handoff planner next ids only",
+          "territory": ["src/dev"],
+          "exit": "brief note of locked D-S7 ids + next planner slice ids",
+          "evidence": [
+            "src/dev/stage7_behavioral_d_signoff_v1.md",
+            "docs/archive/2026-06-prompts-guides/runbooks/guides/stage7_behavioral_decision_worksheet_v1.md",
+            "src/dev/stage7_behavioral_implementation_plan_v1.md",
+            "tools/orchestrator/queues/designer_signoff_registry.json#S7B-DESIGN-001"
+          ],
+          "locked_d_s7": ["D-S7-01", "D-S7-02", "D-S7-03", "D-S7-04", "D-S7-05", "D-S7-06"],
+          "next_ids": ["S7B-PLAN-001 (SIGNED on disk)", "S7B-PREFLIGHT-001", "S7B-M1-001 @coder"],
+          "notes": "Design gate already SIGNED 2026-05-25; registry path drift fixed; planner plan SIGNED — handoff exec to S7B-PREFLIGHT/M1 @coder"
+        },
+        {
+          "id": "FLEET-MCP-HARDCODE",
+          "maps_to": "PILOT-HARDCODE-AUTO",
+          "agent": "coder-mcp",
+          "model": "composer-2.5-fast",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "Run pilot hardcode lint; list automatable fix sites (no Blender bake)",
+          "territory": ["tools/mcp"],
+          "exit": "compressed violation list + ranked auto-fix vs operator-art",
+          "witness": "debug_runs/agent_ops/fleet_hardcode_inventory_live.json",
+          "notes": "8 DEFER (catalog rewire), 0 NEEDS_ART; 2 AUTO_FIX applied (allowlist block_recipe_*.json + validate-report compression_level); lint still red"
+        },
+        {
+          "id": "FLEET-HO-RECONCILE",
+          "maps_to": "HANDOFF-STALE-001",
+          "agent": "orchestrator",
+          "model": "composer-2.5-fast",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "Reconcile HANDOFF agent_picks vs live queues (RGR-M1 already done)",
+          "territory": ["tools/orchestrator/queues/HANDOFF.md"],
+          "exit": "HANDOFF picks updated to live next automatable slices",
+          "notes": "@coder pick RPC-1-002; RGR-M1 closed in render_gui_refactor_queue.json"
+        }
+      ]
+    },
+    {
+      "id": "W2",
+      "parallel": false,
+      "depends_on": ["W1"],
+      "note": "After docs honesty — authority rename then bake spike (single coder lane)",
+      "slices": [
+        {
+          "id": "FLEET-RPC1-003",
+          "maps_to": "RPC-1-003",
+          "agent": "coder",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "B1 rename toward GpuBake/CpuRaster — zero behavior change",
+          "notes": "CpuRaster/GpuBake + aliases; dishonest_variant_name cleared; witness debug_runs/terrain_honesty_lint_live.json"
+        },
+        {
+          "id": "FLEET-RPC1-004",
+          "maps_to": "RPC-1-004",
+          "agent": "coder",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "A0 bake spike behind flag",
+          "notes": "TERRAIN_GPU_BAKE_SPIKE default OFF; TerrainGpuBakeIndexMap+scissors+bake Image; witness debug_runs/terrain_gpu_bake_spike_rpc1_004_live.json; next RPC-1-005 RTT+consumers"
+        },
+        {
+          "id": "FLEET-RPC1-005",
+          "maps_to": "RPC-1-005",
+          "agent": "coder",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "A1 consumers + honest label when flag on",
+          "notes": "host atlas→world write; minimap gpu_bake when consumers ready; witness debug_runs/terrain_gpu_bake_spike_rpc1_005_live.json; next RPC-1-006 operator",
+          "witness": "debug_runs/terrain_gpu_bake_spike_rpc1_005_live.json"
+        }
+      ]
+    },
+    {
+      "id": "W3",
+      "parallel": true,
+      "depends_on": ["W2"],
+      "note": "Secondary automatable — only if W1/W2 free capacity",
+      "slices": [
+        {
+          "id": "FLEET-RPC2-PLAN",
+          "maps_to": "RPC-2-001",
+          "agent": "planner",
+          "status": "done",
+          "closed": "2026-08-12",
+          "goal": "TODO-04 pose authority architecture packet",
+          "notes": "Freeze src/dev/plan_rpc2_pose_authority_v1.md; next coder RPC-2-002",
+          "witness": "src/dev/plan_rpc2_pose_authority_v1.md"
+        },
+        {
+          "id": "FLEET-RPC2-002",
+          "maps_to": "RPC-2-002",
+          "agent": "coder",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P1",
+          "goal": "Invert ApplyInput+wheel — authority-first; retire desired→authority sync",
+          "territory": ["src/gui/tactical/map_camera.rs", "src/gui/view_authority.rs"],
+          "plan": "src/dev/plan_rpc2_pose_authority_v1.md",
+          "conflict": "¬PERF-VFX (disjoint gui); parallel OK w/ RPC-1-006 operator",
+          "witness": "debug_runs/rpc2_002_pose_authority_invert_live.json"
+        },
+        {
+          "id": "FLEET-RPC2-003",
+          "maps_to": "RPC-2-003",
+          "agent": "coder",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P1",
+          "goal": "Startup/focus authority-only — remove Comp+authority dual-write hack",
+          "territory": ["src/render/tile_world_fallback.rs", "src/gui/hud/simulation_session.rs", "src/gui/tactical/map_camera.rs"],
+          "plan": "src/dev/plan_rpc2_pose_authority_v1.md",
+          "depends_on": ["FLEET-RPC2-002"],
+          "witness": "debug_runs/rpc2_003_focus_authority_only_live.json",
+          "notes": "focus authority+Transform only; minimap OnEnter from authority; apply_derived helper; sim_session audit OK."
+        },
+        {
+          "id": "FLEET-RPC2-004",
+          "maps_to": "RPC-2-004",
+          "agent": "coder",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P1",
+          "goal": "Mirror hygiene + TODO-04 exit — sole derive writer grep gate + witnesses",
+          "territory": ["src/gui/tactical/map_camera.rs", "src/dev/stage5_live_todos.rs", "view_runtime"],
+          "plan": "src/dev/plan_rpc2_pose_authority_v1.md",
+          "depends_on": ["FLEET-RPC2-003"],
+          "witness": "debug_runs/rpc2_004_mirror_hygiene_live.json",
+          "notes": "invert complete; TODO-05 Open (BridgeCompat) — not claimed done."
+        }
+      ]
+    },
+    {
+      "id": "W1B",
+      "parallel": true,
+      "depends_on": ["W1"],
+      "note": "From inventory 70a506c6 — blocked-but-automatable; ¬operator; disjoint from RPC-1 coder lane when possible",
+      "slices": [
+        {
+          "id": "FLEET-PERF-VFX",
+          "maps_to": "PERF-INSTR-VFX-002",
+          "agent": "coder",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P0",
+          "goal": "VFX dirty gates — resume in_progress; lib/stage5 exit",
+          "territory": ["src/render/", "visual_perf_budget.rs"],
+          "conflict": "serialize vs RPC-1-004/005 if touching terrain_instanced_draw",
+          "witness": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
+          "notes": "Phase 2A–2D shipped (fire fingerprint, world repr stamp skip, map camera at-rest, derive no-op). Lib green + stage5 39/39. Spike cadence test aligned to ×2.5 effective interval. Leftover: display acceptance (operator --test vfx) + 2E/2F attribution — not fleet exit."
+        },
+        {
+          "id": "FLEET-MCP-WIT-001",
+          "maps_to": "MCP-WIT-001",
+          "agent": "coder-mcp",
+          "status": "done",
+          "priority": "P0",
+          "goal": "witness_honesty validate-report catalog",
+          "territory": ["tools/mcp/python/"],
+          "witness": "debug_runs/mcp_witness_honesty_validator_live.json",
+          "note": "2026-08-12 \u00b7 pytest 19/19 \u00b7 validate-report witness_honesty green on fixtures"
+        },
+        {
+          "id": "FLEET-MCP-WIT-010",
+          "maps_to": "MCP-WIT-010",
+          "agent": "coder-mcp",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P0",
+          "goal": "queue_integrity validator + registry",
+          "territory": ["tools/mcp/python/", "queue_registry_v1.json"],
+          "witness": "debug_runs/queue_integrity_reconcile_live.json",
+          "note": "2026-08-12 · pytest 8/8 · validate-report queue_integrity emits ValidationReport (report-only FAIL expected)"
+        },
+        {
+          "id": "FLEET-MCP-PROD-B2",
+          "maps_to": "MCP-PROD-B2",
+          "agent": "coder-mcp",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P0",
+          "goal": "validate_asset_report tier rules",
+          "territory": ["tools/mcp/python/"],
+          "witness": "debug_runs/mcp_prod_b2_live.json",
+          "note": "2026-08-12 \u00b7 pytest 18/18 \u00b7 TIER-002 silhouette gate green on pitched/sawtooth/arched"
+        },
+        {
+          "id": "FLEET-MCP-WIT-020",
+          "maps_to": "MCP-WIT-020",
+          "agent": "coder-mcp",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P1",
+          "goal": "ops honest_gate v2 + post_build witness_honesty hook",
+          "territory": ["tools/mcp/python/", "tools/orchestrator/"],
+          "witness": "debug_runs/mcp_witness_integrity_ops_live.json",
+          "note": "2026-08-12 \u00b7 pytest 6/6 \u00b7 honest_gate v2 + post_build hook pre-shipped \u00b7 witness refreshed"
+        },
+        {
+          "id": "FLEET-MCP-WIT-030",
+          "maps_to": "MCP-WIT-030",
+          "agent": "coder-mcp",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P1",
+          "goal": "witness_brief profile=honesty + BLANG:WIT-HON + MICRO_TOOLS Tier 1i",
+          "territory": ["tools/mcp/python/", "tools/mcp/MICRO_TOOLS_REGISTRY_v1.md"],
+          "witness": "debug_runs/mcp_witness_honesty_validator_live.json",
+          "note": "2026-08-12 close · pre-shipped · pytest 21/21 · witness refreshed"
+        },
+        {
+          "id": "FLEET-MCP-WIT-040",
+          "maps_to": "MCP-WIT-040",
+          "agent": "coder-mcp",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P1",
+          "goal": "pytest witness_honesty + queue_integrity + CI -WitnessIntegrity stage",
+          "territory": ["tools/mcp/python/tests/", "tools/orchestrator/ci/"],
+          "witness": "debug_runs/mcp_witness_honesty_validator_live.json",
+          "note": "2026-08-12 close \u00b7 pre-shipped \u00b7 pytest 68/68 \u00b7 witnesses refreshed"
+        },
+        {
+          "id": "FLEET-DES-BUILD-READ",
+          "maps_to": "BUILD-READ-DESIGN-001",
+          "agent": "designer",
+          "model": "inherit",
+          "status": "done",
+          "closed": "2026-08-12",
+          "priority": "P1",
+          "goal": "markdown build-readability spec — no pixel gate",
+          "territory": ["src/dev/design_build_readability_v1.md", "tools/orchestrator/queues/designer_signoff_registry.json"],
+          "exit": "design packet path + status update; ¬operator checklist",
+          "evidence": [
+            "src/dev/design_build_readability_v1.md",
+            "src/dev/design_build_read_d001_d004_v1.md",
+            "src/dev/design_build_toolbox_hud_v1.md",
+            "debug_runs/design_build_readability_live.json",
+            "debug_runs/design_build_read_d001_d004_live.json",
+            "tools/orchestrator/queues/designer_signoff_registry.json#BUILD-READ-DESIGN-001"
+          ],
+          "next_ids": [
+            "BUILD-READ-REWIRE-004 @coder (FLEET-BUILD-REWIRE-004)",
+            "BUILD-READ-VISUAL-002 @coder-mcp (tile bake batch)",
+            "BUILD-READ-WORLD-002 @coder (green witness on disk)"
+          ],
+          "notes": "Design gate SIGNED 2026-06-02; charter + D-001..D-004 + DESIGN-002 on disk with green witnesses; fleet reopen was stale dispatch — no new spec; exec handoff to REWIRE-004 + VISUAL-002 bake"
+        },
+        {
+          "id": "FLEET-BUILD-REWIRE-004",
+          "maps_to": "BUILD-READ-REWIRE-004",
+          "agent": "coder",
+          "status": "done",
+          "priority": "P1",
+          "goal": "Pilot catalog authority — clear IndustrialWarehouse hardcode needles (8 DEFER from FLEET-MCP-HARDCODE)",
+          "territory": [
+            "src/construction/procedural/",
+            "src/strategic/settlement/",
+            "debug_runs/agent_ops/fleet_hardcode_inventory_live.json"
+          ],
+          "exit": "pilot_hardcode_lint green or violations reduced; witness path",
+          "notes": "DONE 2026-08-12: 8→0 violations, 1→0 transitional. Catalog constants in pilot_catalog.rs; load_canonical_arch_dna_pilot_preset. Witness: debug_runs/pilot_hardcode_lint_live.json + fleet_hardcode_inventory_live.json. Related BUILD-SET-GUARD-002 can drop empty transitional rows."
+        },
+        {
+          "id": "FLEET-BUILD-SET-GUARD-002",
+          "maps_to": "BUILD-SET-GUARD-002",
+          "agent": "coder",
+          "model": "composer-2.5-fast",
+          "status": "done",
+          "priority": "P2",
+          "goal": "Drop empty transitional allowlist rows after REWIRE-004 green",
+          "territory": ["tools/mcp/guard/pilot_hardcode_allowlist_v1.json"],
+          "exit": "pilot_hardcode_lint still green; allowlist cleaned",
+          "notes": "DONE 2026-08-12: removed transitional_allowlist (assembly_snapshot.rs, assembly_snapshot_qc_ui.rs) + transitional_until; 0 transitional hits pre-removal. Witness: debug_runs/pilot_hardcode_lint_live.json"
+        }
+      ]
+    }
+  ]
+}

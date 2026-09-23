@@ -60,39 +60,38 @@ const COLOR_GOLD: vec3<f32> = vec3<f32>(0.91, 0.75, 0.23);
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
-    // D-F01 A: point sprite / ≤2px sharp core — not smooth radial blob.
+    // Soft pin — readable, not a giant yellow disc.
     let d = distance(in.uv, vec2<f32>(0.5, 0.5));
-    let core = 1.0 - smoothstep(0.015, 0.09, d);
-    let pin = step(d, 0.07);
+    let core = 1.0 - smoothstep(0.05, 0.42, d);
+    let pin = step(d, 0.18);
 
     // D-F04 A: ash → orange age mix (heat + ember as lifetime intensity).
-    let age_intensity = clamp(in.heat * 1.08 + in.ember * 0.32, 0.0, 1.0);
+    let age_intensity = clamp(in.heat * 1.12 + in.ember * 0.35, 0.0, 1.0);
+    let smoke_read = 1.0 - smoothstep(0.08, 0.42, in.heat);
     let col_age = mix(COLOR_ASH, COLOR_HOT, age_intensity);
+    let col_smoke = mix(col_age, vec3<f32>(0.52, 0.54, 0.58), smoke_read * 0.88);
 
     // D-F05 A: legacy sin(pos.x) / cos(pos.y) twinkle personality.
     let sin_intzy = sin(in.world_xy.x * 0.31) * 0.5 + 0.5;
     let cos_intzy = cos(in.world_xy.y * 0.27) * 0.5 + 0.5;
     let twinkle = sin_intzy * cos_intzy;
     var col_pos = col_age;
-    col_pos.r = mix(col_age.r, COLOR_DIRTY_AMBER.r, twinkle * 0.58);
-    col_pos.g = mix(col_age.g, COLOR_DIRTY_AMBER.g, twinkle * 0.48);
-    col_pos.b = mix(col_age.b, COLOR_DIRTY_AMBER.b, twinkle * 0.38);
+    col_pos.r = mix(col_age.r, COLOR_DIRTY_AMBER.r, twinkle * 0.5);
+    col_pos.g = mix(col_age.g, COLOR_DIRTY_AMBER.g, twinkle * 0.4);
+    col_pos.b = mix(col_age.b, COLOR_DIRTY_AMBER.b, twinkle * 0.3);
 
-    var col = mix(col_age, col_pos, 0.5);
+    var col = mix(col_smoke, col_pos, (1.0 - smoke_read * 0.65));
 
-    // D-F08 A: additive-leaning hot cores (gold peak on brightest pins).
-    let hot_core = smoothstep(0.5, 0.92, age_intensity);
-    col = mix(col, COLOR_GOLD, hot_core * pin * 0.62);
+    let hot_core = smoothstep(0.4, 0.9, age_intensity);
+    col = mix(col, COLOR_GOLD, hot_core * pin * 0.4);
 
-    // D-F07 A: many tiny points — low base α, not large soft blobs.
-    let ember_alpha = (0.06 + in.ember * 0.12) * (0.28 + age_intensity * 0.42);
+    let ember_alpha = (0.28 + in.ember * 0.4) * (0.5 + age_intensity * 0.5);
+    // Sparks stay readable at strategic zoom — do not fade out when zoom_alpha is low.
+    let zoom_fade = 1.0;
 
-    // D-F09 A: fade sparks when zoomed out (strategic zoom → low zoom_alpha).
-    let za = clamp(globals.zoom_alpha, 0.0, 1.0);
-    let zoom_fade = za * za * (0.2 + 0.8 * za);
-
-    let alpha = (core * ember_alpha + pin * hot_core * 0.18) * zoom_fade;
-    let rgb = col * (1.0 + hot_core * pin * 1.6);
+    let alpha = clamp(core * ember_alpha + pin * hot_core * 0.45, 0.0, 1.0) * zoom_fade;
+    let alpha = clamp(alpha * (1.0 + smoke_read * 0.55) * 1.35 + pin * 0.2, 0.0, 1.0);
+    let rgb = col * (1.0 + hot_core * pin * 1.35);
 
     return vec4<f32>(rgb * alpha, alpha);
 }

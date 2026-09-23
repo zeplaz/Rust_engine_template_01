@@ -1,14 +1,14 @@
 //! RTT-era simulation map fill helpers.
 //!
-//! **Canonical rect:** [`crate::gui::sim_map_rtt::SimulationMapFillRect`] ([`SimulationMapViewport`] alias),
-//! updated each frame by [`crate::gui::sim_map_rtt::sync_simulation_map_fill_rect_system`].
+//! **Canonical rect:** [`crate::gui::tactical::sim_map_rtt::SimulationMapFillRect`] ([`SimulationMapViewport`] alias),
+//! updated each frame by [`crate::gui::tactical::sim_map_rtt::sync_simulation_map_fill_rect_system`].
 
 use bevy::prelude::*;
 use bevy::ui::{ComputedNode, UiGlobalTransform};
 use bevy::window::PrimaryWindow;
 
 use crate::gui::hud::{ViewportRectSanity, VIEWPORT_SIM_MAP_SAFE_MIN_H, VIEWPORT_SIM_MAP_SAFE_MIN_W};
-use crate::gui::sim_map_rtt::SimulationMapFillRect;
+use crate::gui::tactical::sim_map_rtt::SimulationMapFillRect;
 use crate::gui::viewport_layout_solver::viewport_rescue_floor;
 use crate::gui::{
     simulation_map_fallback_logical_extent, SimulationMapViewportDebug,

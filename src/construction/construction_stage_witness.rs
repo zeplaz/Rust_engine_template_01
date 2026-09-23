@@ -1,4 +1,8 @@
 //! Runtime witness flags for construction todo boards.
+//!
+//! Gates prefer compile-time `include_str!(…).contains(…)` symbol checks and live
+//! `Res` / proof state over `Path::exists` (disk presence ≠ wiring). Absence of the
+//! retired `src/gui/build` shim remains a Path::exists-negative proof.
 
 use bevy::prelude::*;
 
@@ -29,43 +33,65 @@ pub struct ConstructionStageWitness {
     pub multiview_ghosts_wired: bool,
 }
 
-fn module_exists(rel: &str) -> bool {
-    std::path::Path::new(rel).exists()
+/// Retired gui/build shim absence (legitimate Path::exists-negative).
+fn gui_build_shim_gone() -> bool {
+    !std::path::Path::new("src/gui/build/mod.rs").exists()
 }
 
 pub fn refresh_construction_stage_witness(
     base: Option<Res<State<crate::engine::states::BaseState>>>,
     authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    _tool: Res<super::ActiveBuildTool>,
-    _mode: Res<super::BuildModeState>,
-    _path: Res<super::roads::ActiveRoadPlacement>,
-    _zone: Res<super::zones::ActiveZonePaint>,
+    tool: Res<super::ActiveBuildTool>,
+    mode: Res<super::BuildModeState>,
+    path: Res<super::roads::ActiveRoadPlacement>,
+    zone: Res<super::zones::ActiveZonePaint>,
     mut w: ResMut<ConstructionStageWitness>,
 ) {
-    w.toolbox_panel = module_exists("src/construction/build_toolbox.rs");
+    // Linked `Res` params prove these types are in the world; symbols prove module body.
+    let _ = (tool.as_ref(), mode.as_ref(), path.as_ref(), zone.as_ref());
+
+    w.toolbox_panel =
+        include_str!("build_toolbox.rs").contains("pub fn draw_build_toolbox_egui");
     w.semicolon_demoted_in_help = true;
-    w.active_build_tool = module_exists("src/construction/build_tool_authority.rs");
-    w.build_mode = module_exists("src/construction/build_mode.rs");
-    w.ghost_commit_isolated = module_exists("src/construction/build_ghost.rs");
-    w.shared_ghost_valid = module_exists("src/construction/build_validation.rs");
-    w.residential_menu = module_exists("src/construction/residential_menu.rs");
-    w.demolish_tool = module_exists("src/construction/demolish.rs");
-    w.road_control_points = module_exists("src/construction/roads/placement.rs");
-    w.road_input_model = module_exists("src/construction/roads/input.rs");
-    w.road_segment_preview = module_exists("src/construction/roads/pathing.rs");
-    w.road_ghost_draw =
-        module_exists("src/construction/visual_authority.rs") || module_exists("src/construction/roads/ghost.rs");
-    w.road_popup = module_exists("src/construction/roads/popup.rs");
-    w.commit_funnel_audited = module_exists("src/construction/construction_pipeline.rs");
-    w.road_commit_from_segments = module_exists("src/construction/roads/commit.rs");
-    w.road_e2e_test = module_exists("src/construction/integration_tests.rs");
-    w.rail_pipeline = module_exists("src/construction/rail/pathing.rs");
-    w.zone_paint = module_exists("src/construction/zones/input.rs");
-    w.module_split = !module_exists("src/gui/build/mod.rs")
-        && module_exists("src/construction/mod.rs");
-    let modules_ok = module_exists("src/construction/map_egui_projection.rs")
-        && module_exists("src/construction/visual_authority.rs")
-        && (module_exists("src/construction/roads/ghost.rs") || module_exists("src/construction/zones/ghost.rs"));
+    w.active_build_tool =
+        include_str!("build_tool_authority.rs").contains("pub struct ActiveBuildTool");
+    w.build_mode = include_str!("build_mode.rs").contains("pub struct BuildModeState")
+        && include_str!("build_mode.rs").contains("pub fn build_escape_cancel_system");
+    w.ghost_commit_isolated =
+        include_str!("build_ghost.rs").contains("pub struct GhostBuildCursor");
+    // Honest: build_validation only wraps evaluate_site_placement_stubs — not production GhostValid.
+    w.shared_ghost_valid = false;
+    w.residential_menu =
+        include_str!("residential_menu.rs").contains("pub fn draw_residential_submenu");
+    w.demolish_tool = include_str!("demolish.rs").contains("pub fn execute_demolish_at_tile");
+    w.road_control_points =
+        include_str!("roads/placement.rs").contains("pub struct ActiveRoadPlacement");
+    w.road_input_model =
+        include_str!("roads/input.rs").contains("pub fn road_path_input_system");
+    w.road_segment_preview =
+        include_str!("roads/pathing.rs").contains("pub fn regenerate_road_segments");
+    w.road_ghost_draw = include_str!("visual_authority.rs")
+        .contains("pub fn sync_road_visual_requests")
+        || include_str!("roads/ghost.rs").contains("pub fn draw_road_path_ghost_egui");
+    w.road_popup = include_str!("roads/popup.rs").contains("pub fn draw_road_tool_popup_egui");
+    w.commit_funnel_audited = include_str!("construction_pipeline.rs")
+        .contains("pub fn execute_construction_plans_system");
+    w.road_commit_from_segments =
+        include_str!("roads/commit.rs").contains("pub fn commit_road_path_to_queue");
+    w.road_e2e_test =
+        include_str!("integration_tests.rs").contains("fn road_e2e_queue_validate_segments");
+    w.rail_pipeline =
+        include_str!("rail/pathing.rs").contains("pub fn regenerate_rail_segments");
+    w.zone_paint = include_str!("zones/input.rs").contains("pub fn zone_paint_input_system");
+    w.module_split = gui_build_shim_gone()
+        && include_str!("mod.rs").contains("mod build_tool_authority")
+        && include_str!("mod.rs").contains("mod construction_pipeline");
+
+    let modules_ok = include_str!("map_egui_projection.rs")
+        .contains("pub struct ConstructionMapProjection")
+        && include_str!("visual_authority.rs").contains("pub struct ConstructionVisualRequests")
+        && (include_str!("roads/ghost.rs").contains("pub fn draw_road_path_ghost_egui")
+            || include_str!("zones/ghost.rs").contains("pub fn draw_zone_paint_ghost_egui"));
     let in_sim = matches!(
         base.as_deref().map(|s| s.get()),
         Some(crate::engine::states::BaseState::Simulation)
@@ -74,14 +100,11 @@ pub fn refresh_construction_stage_witness(
         .as_deref()
         .map(|a| {
             use crate::render::view_runtime::ViewSurfaceId;
-            a.surface(ViewSurfaceId::SimulationMap).is_some()
-                || a.last_commit_revision > 0
+            a.surface(ViewSurfaceId::SimulationMap).is_some() || a.last_commit_revision > 0
         })
         .unwrap_or(false);
-    w.multiview_ghosts_wired = modules_ok
-        && w.ghost_commit_isolated
-        && w.road_ghost_draw
-        && (!in_sim || authority_mv);
+    w.multiview_ghosts_wired =
+        modules_ok && w.ghost_commit_isolated && w.road_ghost_draw && (!in_sim || authority_mv);
 }
 
 pub fn sync_construction_live_todo_board_system(
@@ -131,8 +154,8 @@ pub fn refresh_construction_phase2_witness_system(
     mut w: ResMut<crate::dev::construction_phase2_todos::ConstructionPhase2Witness>,
     mut p9: ResMut<crate::dev::construction_p9_todos::ConstructionP9Witness>,
 ) {
-    let shim_gone = !std::path::Path::new("src/gui/build/mod.rs").exists();
-    w.shim_removed = shim_gone;
+    let _ = placement.as_ref();
+    w.shim_removed = gui_build_shim_gone();
     w.demolish_execute = true;
     w.zone_strategic_commit = true;
     w.legacy_roads_removed = true;
@@ -141,23 +164,25 @@ pub fn refresh_construction_phase2_witness_system(
     w.industrial_tool = true;
     w.utilities_tool = true;
     w.building_intent_pipeline = true;
-    w.rail_module = std::path::Path::new("src/construction/rail/pathing.rs").exists();
+    w.rail_module = include_str!("rail/pathing.rs").contains("pub fn regenerate_rail_segments");
     w.road_cost_estimate = true;
     w.ghost_policy = true;
-    w.road_e2e_integration = true;
-    w.zone_e2e_integration = true;
-    w.input_conflict_matrix = true;
-    w.construction_proof_json = proof
-        .as_ref()
-        .map(|p| p.written())
-        .unwrap_or_else(|| {
-            std::path::Path::new("debug_runs/construction_stage_live.json").exists()
-        });
-    w.curved_road_spline = std::path::Path::new("src/construction/roads/spline.rs").exists();
-    let _ = &placement;
-    w.grid_and_node_snap = std::path::Path::new("src/construction/snap.rs").exists();
-    w.road_upgrade_lane = std::path::Path::new("src/construction/upgrade.rs").exists();
-    w.terrain_conform = std::path::Path::new("src/construction/terrain_conform.rs").exists();
+    w.road_e2e_integration =
+        include_str!("integration_tests.rs").contains("fn road_e2e_queue_validate_segments");
+    w.zone_e2e_integration =
+        include_str!("integration_tests.rs").contains("fn zone_paint_queues_zone_pending_kind");
+    w.input_conflict_matrix =
+        include_str!("integration_tests.rs").contains("fn input_conflict_matrix_gates");
+    // Disk JSON alone is not wiring — require live proof collector write.
+    w.construction_proof_json = proof.as_ref().is_some_and(|p| p.written());
+    w.curved_road_spline =
+        include_str!("roads/spline.rs").contains("pub fn catmull_rom_chain");
+    w.grid_and_node_snap = include_str!("snap.rs").contains("pub fn snap_placement")
+        && include_str!("snap.rs").contains("pub fn nearest_road_node");
+    w.road_upgrade_lane =
+        include_str!("upgrade.rs").contains("pub fn enqueue_road_upgrade");
+    // Honest: height_norm_stub only — not live height_grid conform.
+    w.terrain_conform = false;
     *p9 = crate::dev::construction_p9_todos::ConstructionP9Witness::from_phase2(w.as_ref());
 }
 
@@ -266,35 +291,35 @@ pub fn refresh_construction_round3_witness_system(
     w.catalog_footprint = reg_ok;
     w.catalog_commit = reg_ok;
     w.intersection_map = !intersections.by_id.is_empty() || intersections.by_tile.is_empty();
-    w.intersection_commit = std::path::Path::new("src/construction/construction_pipeline.rs")
-        .exists();
+    w.intersection_commit = include_str!("construction_pipeline.rs")
+        .contains("pub fn execute_construction_plans_system");
     w.intersection_link = w.intersection_commit;
     w.intersection_query = true;
-    w.visual_request = std::path::Path::new("src/construction/visual_authority.rs").exists();
-    w.visual_unified_draw = w.visual_request;
-    w.visual_viewport_doc = std::path::Path::new("src/dev/construction_ownership.md").exists();
+    w.visual_request = include_str!("visual_authority.rs")
+        .contains("pub struct ConstructionVisualRequests");
+    w.visual_unified_draw = w.visual_request
+        && include_str!("visual_authority.rs")
+            .contains("pub fn draw_construction_visual_requests_egui");
+    w.visual_viewport_doc = include_str!("../dev/construction_ownership.md")
+        .contains("Construction ownership");
     w.brush_mode = true;
     w.building_line_brush = true;
     w.zone_rect_brush = true;
-    w.demolish_undo = std::path::Path::new("src/construction/demolish.rs").exists()
-        && std::path::Path::new("src/construction/history.rs").exists();
-    w.redo_stack = true;
+    w.demolish_undo = include_str!("demolish.rs").contains("pub fn execute_demolish_at_tile")
+        && include_str!("history.rs").contains("pub fn record_demolish_execution");
+    w.redo_stack = include_str!("history.rs").contains("pub fn construction_redo_input_system");
     w.history_labels = history.last_action_kind.is_some() || true;
-    w.rail_switch = std::path::Path::new("src/construction/rail/junction.rs").exists();
+    w.rail_switch =
+        include_str!("rail/junction.rs").contains("pub struct RailJunctionAuthority");
     w.rail_junction = w.rail_switch;
     w.rail_proof = true;
     w.preview_pooling = w.visual_request;
     w.incremental_path = true;
     w.batched_zone = w.visual_request;
-    w.invariants_agents = std::fs::read_to_string("AGENTS.md")
-        .map(|s| s.contains("construction_invariants.md"))
-        .unwrap_or(false);
+    w.invariants_agents =
+        include_str!("../../AGENTS.md").contains("construction_invariants.md");
     w.ownership_doc = w.visual_viewport_doc;
-    w.authority_audit = shim_gone();
-}
-
-fn shim_gone() -> bool {
-    !std::path::Path::new("src/gui/build/mod.rs").exists()
+    w.authority_audit = gui_build_shim_gone();
 }
 
 pub fn sync_construction_round3_board_system(
@@ -330,14 +355,13 @@ pub fn refresh_construction_operational_witness_system(
     mut w: ResMut<crate::dev::construction_operational_todos::ConstructionOperationalWitness>,
 ) {
     w.toolbox = session.keep_tool_after_commit;
-    w.undo = std::path::Path::new("src/construction/history.rs").exists();
-    w.proof_json = proof.as_ref().is_some_and(|p| p.written())
-        || std::path::Path::new("debug_runs/construction_stage_live.json").exists();
+    w.undo = include_str!("history.rs").contains("pub fn construction_undo_input_system");
+    w.proof_json = proof.as_ref().is_some_and(|p| p.written());
     w.road_commit = true;
     w.zone_paint = true;
     w.building_place = registry.as_ref().map(|r| !r.by_id.is_empty()).unwrap_or(true);
     w.demolish = true;
-    w.no_legacy = shim_gone();
+    w.no_legacy = gui_build_shim_gone();
 }
 
 pub fn sync_construction_operational_board_system(

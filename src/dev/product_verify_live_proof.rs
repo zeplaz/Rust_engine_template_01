@@ -92,11 +92,12 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
         crate::dev::pilot_catalog_parity_live_proof::refresh_pilot_catalog_parity_live_witness();
     r.build_visual =
         crate::dev::build_read_visual_001_live_proof::refresh_build_read_visual_001_live_witness();
-    r.minimap =
-        crate::dev::design_minimap_widget_live_proof::refresh_design_minimap_widget_live_witness();
+    // Minimap widget drag/tap is runtime-only — do not invent a lib green (CLN-WIT-001).
+    let _ = crate::dev::design_minimap_widget_live_proof::refresh_design_minimap_widget_live_witness();
+    r.minimap = false;
     r.fire_ecology = crate::dev::fire_ecology_lib_harness::refresh_fire_ecology_lib_harness_witness();
-    r.vfx_fire =
-        crate::dev::vfx_fire_test_highlight_live_proof::refresh_vfx_fire_test_highlight_live_witness();
+    // Focus camera for `--test vfx` is runtime-only — do not invent a lib green (CLN cheat purge).
+    r.vfx_fire = false;
     r.fire_play_vis = crate::dev::design_fire_play_visibility_live_proof::refresh_design_fire_play_visibility_live_witness();
     r.sim_effect_spine =
         crate::dev::sim_effect_spine_live_proof::refresh_sim_effect_spine_live_witness();
@@ -148,9 +149,7 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
     let coder_rollup_green = r.map_zoom
         && r.pilot_catalog
         && r.build_visual
-        && r.minimap
         && r.fire_ecology
-        && r.vfx_fire
         && r.fire_play_vis
         && r.landscape_grammar
         && r.pointer_gate
@@ -176,9 +175,9 @@ pub fn refresh_product_verify_live_witnesses() -> ProductVerifyRefreshResult {
             "map_zoom": r.map_zoom,
             "pilot_catalog": r.pilot_catalog,
             "build_visual": r.build_visual,
-            "minimap": r.minimap,
+            "minimap_widget_lib_witness": "retired_runtime_only",
             "fire_ecology": r.fire_ecology,
-            "vfx_fire": r.vfx_fire,
+            "vfx_fire_lib_witness": "retired_runtime_only",
             "fire_play_vis": r.fire_play_vis,
             "sim_effect_spine": r.sim_effect_spine,
             "landscape_grammar": r.landscape_grammar,
@@ -224,9 +223,11 @@ mod tests {
         assert!(r.map_zoom, "map_zoom");
         assert!(r.pilot_catalog, "pilot_catalog");
         assert!(r.build_visual, "build_visual");
-        assert!(r.minimap, "minimap");
+        assert!(
+            !r.minimap,
+            "minimap lib widget green must stay retired (CLN-WIT-001)"
+        );
         assert!(r.fire_ecology, "fire_ecology");
-        assert!(r.vfx_fire, "vfx_fire");
         assert!(r.fire_play_vis, "fire_play_vis");
         assert!(r.landscape_grammar, "landscape_grammar");
         assert!(r.pointer_gate, "pointer_gate");

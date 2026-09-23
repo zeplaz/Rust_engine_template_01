@@ -36,10 +36,12 @@ pub fn draw_tool_hints_egui(
             "Esc: clear paint (keep tool)",
         ],
         BuildTool::Building(_) => vec![
+            "Pick a building in the picker first",
             "LMB: move ghost on map",
-            "Shift+LMB: queue blueprint",
+            "Enter: place ghost + queued",
             "RMB: clear ghost",
-            "Esc: clear ghost (keep tool)",
+            "Esc: cancel building (clear queue + tool)",
+            "Backspace: clear unapproved queue",
         ],
         BuildTool::Road(_) => vec![
             "LMB: add point",

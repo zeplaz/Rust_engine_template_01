@@ -33,7 +33,7 @@ pub use arch_build_grammar_v0::{
     build_read_grammar_v0_003_witness_green, build_read_consumer_mcp_001_witness_green,
     arch_dna_massing_diversity_witness_green, build_arch_dna_massing_diversity_rows,
     load_arch_dna_preset, list_arch_dna_preset_ids,     load_preset_from_path, load_preset_for_id,
-    load_logistics_rail_warehouse_v0_preset,
+    load_canonical_arch_dna_pilot_preset,
     program_graph_stub_for_preset,
     site_zones_for_preset,
     ArchDnaConsumerFields, ArchGrammarV0Preset, PressureFieldV0, ARCH_DNA_EXAMPLES_DIR,

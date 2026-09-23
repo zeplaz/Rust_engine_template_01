@@ -1,0 +1,75 @@
+# VSS effects visibility failure audit — L0 cheap · 2026-09-23
+# Sources: Task(explore) 99c075c3 · Task(operations-intelligence) 22835f37 · parent witness briefs
+schema: effects_visibility_months_failure_v1
+program: VSS-001
+
+audit:
+  title: effects_visibility_months_failure
+  product_symptom: "Operators see no fire/sparks/smoke in play despite months of lib/harness greens; product scenario path was unproven or bypassed."
+  root_causes:
+    - id: R1
+      claim: "Dual ignition funnel — SimEffect drain and spot diffusion both write EmberSpotIgnitionEvent; ignition_single_funnel still false."
+      evidence: "debug_runs/sim_effect_fire_consumer_live.json (exit_predicates.ignition_single_funnel: false)"
+      confidence: 0.92
+    - id: R2
+      claim: "Four half-built effect stacks (fire GPU, atmosphere field, dead particle stub, CPU weather mesh) compete; stubs still on schedule."
+      evidence: "src/dev/plan_effects_system_architecture_v1.md DEBT-001..011"
+      confidence: 0.88
+    - id: R3
+      claim: "Proof targeted harness/debug paths, not product entry — harness forbidden as sole proof."
+      evidence: "spectator_parity_live.json harness.proof_grade=debug_only; operator_unlock_next_steps_v1.md B3"
+      confidence: 0.90
+    - id: R4
+      claim: "Zoom/scale contract shipped (α≈0.42) but operator pixel visibility still unverified at operational zoom."
+      evidence: "world_scale_contract_live.json; visual_run_blockers.md VR-16"
+      confidence: 0.75
+    - id: R5
+      claim: "T4 registry/consumable loader shipped; runtime emit-from-registry and G4 preview honest_gate not closed."
+      evidence: "artist_vfx_pipeline_live.json T4-004 shipped; honest_gate=pending; T4-005 ready"
+      confidence: 0.82
+
+ops_digest:
+  lib_green_vs_pixels: "YES split — stage5 counters fire_inst=1 spark_rows=12 while full_visual_confirm=false (lib_fixture); fire_streaming green=false"
+  half_built_stacks: 4
+  next_pick: "VSS-T3-001"
+  gap: "Architecture shipped (registry, overlay sole-writer, product entry paths) but operator lacks honest pixels: ignition_single_funnel=false, G4 pending, emit-from-registry deferred"
+
+what_already_shipped:
+  - "VSS-T1 scale + OPERATIONAL_ZOOM_ALPHA + designer sign-off"
+  - "VSS-T2 product entry paths scenario/save/interactive"
+  - "VSS-T3-002 overlay single writer VT-4"
+  - "VSS-T4 EffectSpec → promote → EffectConsumableRegistry"
+  - "VSS-T5 symbolic build encoder"
+
+still_broken_for_operator:
+  - "VSS-T3-001 dual EmberSpotIgnitionEvent producers"
+  - "Industrial demo may enqueue without visible heat/sparks/smoke"
+  - "Registry effects loaded but not operator-verified in play"
+  - "DEBT atmosphere/weather stubs still live"
+
+next_fix_order:
+  - slice: VSS-T3-001
+    owner: "@coder"
+    why: "Single ignition funnel — blocks T3-003/T3-004; wave_1_next_pick"
+  - slice: OPERATOR-VERIFY
+    owner: "operator"
+    why: "Rebuild + default_industrial_demo_fire.scenario.ron at α≈0.42 — pixels gate"
+  - slice: VSS-T4-005
+    owner: "@designer"
+    why: "APS + runtime emit-from-registry + G4 honest_gate"
+  - slice: VSS-T3-004
+    owner: "@cleanup-intelligence"
+    why: "Retire DEBT stubs after funnel closed"
+
+forbidden_retries:
+  - "harness-only --test vfx green as sole proof"
+  - "lib sim_effect_spine green without scenario demo"
+  - "direct ChunkSurfaceFire/overlay seed bypassing SimEffect → EmberSpot waist"
+  - "new parallel draw path before T3-001/T3-004"
+
+operator_verify:
+  scenario: "assets/scenarios/play/default_industrial_demo_fire.scenario.ron"
+  command: "cargo run -p proc_A_dine01 --release  (no --test harness)"
+  expect: "IgniteAt in first camera span; heat overlay + GPU sparks; smoke readable at OPERATIONAL_ZOOM ~0.42"
+
+⟨BP:SHARE⟩

@@ -2,11 +2,11 @@
 
 #[cfg(test)]
 mod tests {
-    use crate::render::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport};
-    use crate::render::vt_ci_matrix::{
+    use crate::render::witness::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport};
+    use crate::render::witness::vt_ci_matrix::{
         build_deterministic_ci_scenario, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix, Vt4CiReport,
     };
-    use crate::render::visual_agreement::VisualAgreementFrame;
+    use crate::render::witness::visual_agreement::VisualAgreementFrame;
     use crate::systems::atmosphere::P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE;
 
     #[test]

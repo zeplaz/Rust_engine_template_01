@@ -4,6 +4,33 @@ use bevy::prelude::Resource;
 
 use super::debug_maneuver::{DebugManeuver, FULL_CAPTURE_MIN_FRAMES_DEFAULT};
 
+/// Product spectator / fire proof entry path (VSS-T2-001 witness `entry_path` field).
+///
+/// `Harness` is **debug fallback only** — not sole ship proof per `TRIP_VSS_TEST_HARNESS.md`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SpectatorEntryPath {
+    /// CLI/menu `--test` harness (`apply_test_scene_fire_seeds`) — diagnostic scaffold.
+    Harness,
+    /// Scenario script / `play_scenario` ignite path.
+    Scenario,
+    /// Save-game hydrate + sim resume.
+    Save,
+    /// Operator interactive session (SimEffect / ECS ignition).
+    Interactive,
+}
+
+impl SpectatorEntryPath {
+    #[must_use]
+    pub const fn as_str(self) -> &'static str {
+        match self {
+            Self::Harness => "harness",
+            Self::Scenario => "scenario",
+            Self::Save => "save",
+            Self::Interactive => "interactive",
+        }
+    }
+}
+
 /// `--test weather|fire|atmosphere|visual`: generated world + sim debug defaults for VFX / systems checks.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum TestScene {
@@ -146,6 +173,26 @@ impl EngineLaunchArgs {
     #[must_use]
     pub fn test_mode(&self) -> bool {
         self.test_scene != TestScene::None
+    }
+
+    /// True when CLI/menu `--test` would seed fire via harness (`apply_test_scene_fire_seeds`).
+    ///
+    /// **Debug fallback only** — forbidden as sole product fire proof (VSS-T2-001).
+    /// Product paths: [`SpectatorEntryPath::Scenario`], [`SpectatorEntryPath::Save`],
+    /// [`SpectatorEntryPath::Interactive`].
+    #[must_use]
+    pub fn harness_fire_is_debug_fallback(&self) -> bool {
+        self.test_scene.seeds_fire_overlay()
+    }
+
+    /// Entry path when the active session is a CLI/menu test harness world.
+    #[must_use]
+    pub fn test_harness_entry_path(&self) -> Option<SpectatorEntryPath> {
+        if self.test_mode() {
+            Some(SpectatorEntryPath::Harness)
+        } else {
+            None
+        }
     }
 
     #[must_use]
@@ -299,6 +346,22 @@ mod tests {
         let a = EngineLaunchArgs::from_cli(Some("atmosphere".into()), false, None);
         assert_eq!(a.test_scene, TestScene::Atmosphere);
         assert!(a.test_mode());
+    }
+
+    #[test]
+    fn harness_fire_seeds_are_debug_fallback_not_product_proof() {
+        let fire = EngineLaunchArgs::from_cli(Some("fire".into()), false, None);
+        assert!(fire.harness_fire_is_debug_fallback());
+        assert_eq!(
+            fire.test_harness_entry_path(),
+            Some(SpectatorEntryPath::Harness)
+        );
+        let weather = EngineLaunchArgs::from_cli(Some("weather".into()), false, None);
+        assert!(!weather.harness_fire_is_debug_fallback());
+        assert_eq!(weather.test_harness_entry_path(), Some(SpectatorEntryPath::Harness));
+        let default = EngineLaunchArgs::default();
+        assert!(!default.harness_fire_is_debug_fallback());
+        assert_eq!(default.test_harness_entry_path(), None);
     }
 
     #[test]

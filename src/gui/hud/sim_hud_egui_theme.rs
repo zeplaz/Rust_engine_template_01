@@ -12,7 +12,10 @@ pub fn apply_sim_hud_egui_theme(ctx: &egui::Context, palette: &UiPalette) {
 /// Sim construction satellites call [`apply_sim_hud_egui_theme`] (picker, road sheet, tray Build, footprint chip).
 #[must_use]
 pub fn sim_hud_egui_theme_enforcement_wired() -> bool {
-    true
+    // Structural: consumers call apply (not always-true link-time stub).
+    include_str!("sim_build_picker_sheet.rs").contains("apply_sim_hud_egui_theme")
+        && include_str!("sim_road_tool_sheet.rs").contains("apply_sim_hud_egui_theme")
+        && include_str!("context_tray_build_egui.rs").contains("apply_sim_hud_egui_theme")
 }
 
 /// **DES-SIM-HUD-A11Y-001** — validity copy uses ✓/✗ glyphs (not color-only).

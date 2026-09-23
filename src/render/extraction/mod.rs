@@ -33,7 +33,7 @@ pub use fire_emission_profile::{
     infer_combustion_class, infer_fire_emission_profile, material_id_at_chunk_center,
     terrain_family_at_chunk_center, CombustionClass, FireEmissionProfile, FireVisualProxy,
 };
-pub use crate::render::sim_visual_extract::FireVisualGpuInstance;
+pub use crate::render::extraction::sim_visual_extract::FireVisualGpuInstance;
 pub use fire_visual_extract::{
     extract_fire_simulation_snapshot, sync_shared_overlay_from_simulation, FireAtmosphereAggregate,
     FireVisualFramePlugin, FireVisualFrameSet,
@@ -41,8 +41,10 @@ pub use fire_visual_extract::{
 pub use fire_extract_scan::{
     build_fire_extract_scan_set, expand_moore_rim_one, fire_extract_glow_domain,
 };
-pub use smoke_visual_extract::{build_smoke_visual_extract, SmokeVisualBridgeWitness};
-pub use crate::render::sim_visual_extract::FireVisualFrame;
+pub use smoke_visual_extract::{
+    build_smoke_visual_extract, smoke_bridge_projection_fixture, SmokeVisualBridgeWitness,
+};
+pub use crate::render::extraction::sim_visual_extract::FireVisualFrame;
 pub use procedural_build_extract::{
     assemble_procedural_build_instances, extract_procedural_build_assembly,
     ProceduralBuildExtract, ProceduralBuildInstance,
@@ -55,7 +57,7 @@ pub use procedural_module_extract::{
 pub use render_projection_graph::{
     bin_merge_chunk_heat, f2_tactical_fire_projection_fixture, fire_projection_stamp_aligned,
     projection_graph_build_signature, projection_graph_runtime_order_snapshot,
-    run_render_projection_graph, spatial_distribution_stats, FireProjectionNode, ProjectionNodeTrait,
-    ProjectionGraphFrameCoherence, RenderProjectionContext, RenderProjectionGraph,
-    CLUSTERED_FIRE_INSTANCE_CAP,
+    run_render_projection_graph, spatial_distribution_stats, FireProjectionNode,
+    ProjectionNodeTrait, ProjectionGraphFrameCoherence, RenderProjectionContext,
+    RenderProjectionGraph, SmokeProjectionNode, CLUSTERED_FIRE_INSTANCE_CAP,
 };

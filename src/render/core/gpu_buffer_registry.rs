@@ -43,6 +43,8 @@ pub const WATER_PARTICLE_EXPANDED_VERTICES_BUFFER: BufferId = BufferId(11);
 pub const TILE_DEBUG_INSTANCES_BUFFER: BufferId = BufferId(7);
 /// Instanced terrain tile rows (`terrain_instanced.wgsl`).
 pub const TERRAIN_INSTANCES_BUFFER: BufferId = BufferId(12);
+/// Weather precip streak instances (ES-5-002) — exclusive of FIRE_*/WATER_*.
+pub const WEATHER_PRECIP_INSTANCES_BUFFER: BufferId = BufferId(13);
 
 /// Prevents accidental cross-graph buffer sharing until explicitly allowed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -348,6 +350,8 @@ mod tests {
         assert_eq!(ECOLOGY_OVERLAY_BUFFER, BufferId(5));
         assert_eq!(FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER, BufferId(6));
         assert_eq!(TILE_DEBUG_INSTANCES_BUFFER, BufferId(7));
+        assert_eq!(TERRAIN_INSTANCES_BUFFER, BufferId(12));
+        assert_eq!(WEATHER_PRECIP_INSTANCES_BUFFER, BufferId(13));
     }
 
     #[test]

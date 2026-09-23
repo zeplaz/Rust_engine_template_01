@@ -11,7 +11,7 @@ use super::representation_policy::{
 use super::view_representation::{CameraVisualState, VisualBudgetSettings, VisualCadence};
 use crate::compute::AgentFrame;
 use crate::gui::lod_zone_authoring::refresh_lod_zone_registry;
-use crate::gui::map_camera::{
+use crate::gui::tactical::map_camera::{
     in_simulation_or_editor_map, map_zoom_alpha, MapCameraDesiredRes, MapCameraSystemSet,
 };
 use crate::render::{ChunkFireHeat, FireSimulationSnapshot, Stage5LodBandLogWitness};
@@ -258,6 +258,27 @@ impl Default for WorldRepresentationFrame {
             interest_radius_chunks: 8,
             sim_step_stamp: SimStepStamp::default(),
             gameplay_importance: 0.0,
+        }
+    }
+}
+
+/// Authoritative per-frame zoom metrics — sole writer: [`sync_zoom_frame`].
+#[derive(Resource, Clone, Copy, Debug, PartialEq)]
+pub struct ZoomFrame {
+    /// Camera scale (`MapCameraDesired.scale.x`) — px-per-world-unit == px-per-tile.
+    pub px_per_tile: f32,
+    /// Normalized zoom band in `[0, 1]` (0 = zoomed out, 1 = zoomed in).
+    pub zoom_alpha: f32,
+    /// Global LOD band from [`WorldRepresentationFrame`] this frame.
+    pub lod_band: WorldLodBand,
+}
+
+impl Default for ZoomFrame {
+    fn default() -> Self {
+        Self {
+            px_per_tile: 1.0,
+            zoom_alpha: 0.5,
+            lod_band: WorldLodBand::Strategic,
         }
     }
 }
@@ -901,7 +922,8 @@ pub fn compute_world_representation_frame(
         camera_distance: translation.length() * 1e-4,
         camera_velocity: velocity * 1e-3,
         screen_density: 1.0,
-        zoom_level: za,
+        // `map_zoom_alpha`: low = zoomed out. Engine thresholds treat high `zoom_level` as far band.
+        zoom_level: 1.0 - za,
         gameplay_importance: gameplay.gameplay_importance,
         ai_density: gameplay.ai_density,
         combat_intensity: gameplay.combat_intensity,
@@ -1018,6 +1040,20 @@ pub fn apply_representation_result(
     }
 }
 
+/// Single writer for [`ZoomFrame`] — runs after world-repr band is committed.
+pub fn sync_zoom_frame(
+    desired: Res<crate::gui::MapCameraDesiredRes>,
+    frame: Res<WorldRepresentationFrame>,
+    mut zoom: ResMut<ZoomFrame>,
+) {
+    let px = desired.scale.x.abs();
+    *zoom = ZoomFrame {
+        px_per_tile: px,
+        zoom_alpha: map_zoom_alpha(px),
+        lod_band: frame.global_band(),
+    };
+}
+
 pub(crate) fn register_world_representation_frame(app: &mut App) {
     app.configure_sets(
         Update,
@@ -1036,6 +1072,7 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
         .init_resource::<WorldRepresentationResolver>()
         .init_resource::<WorldLodMap>()
         .init_resource::<WorldRepresentationFrame>()
+        .init_resource::<ZoomFrame>()
         .init_resource::<Stage5LodBandLogWitness>()
         .init_resource::<RepresentationResult>()
         .init_resource::<crate::render::extraction::ProceduralModuleSceneCatalog>()
@@ -1063,6 +1100,7 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
                 sync_procedural_tile_primary_active,
                 compute_world_representation_frame,
                 crate::render::stall_substage_repr_compute_frame,
+                sync_zoom_frame,
                 witness_stage5_lod_band_log_after_world_representation,
                 apply_representation_result,
                 crate::render::stall_substage_repr_apply_result,
@@ -1331,7 +1369,7 @@ mod tests {
 
     #[test]
     fn gather_lod_gameplay_signals_from_fire_and_agents() {
-        let chunk_heat = vec![crate::render::sim_visual_extract::ChunkFireHeat {
+        let chunk_heat = vec![crate::render::extraction::sim_visual_extract::ChunkFireHeat {
             chunk: IVec2::ZERO,
             heat: 0.9,
             smoke: 0.2,

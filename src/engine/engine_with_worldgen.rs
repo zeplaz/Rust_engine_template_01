@@ -30,7 +30,8 @@ use crate::compute::ComputeDispatchPlugin;
 use crate::render::{
     Core2dOverlayOrderPlugin, FramePerfPlugin, GpuWeatherFireFieldPlugin, LocalLightPlugin,
     SharedOverlayFieldBuffersPlugin,
-    StallWatchPlugin, Stage5ReadinessProfile, TerrainInstancedDrawPlugin,
+    StallWatchPlugin, Stage5ReadinessProfile, TerrainGpuBakeSpikePlugin,
+    TerrainInstancedDrawPlugin,
     TerrainMaterialAtlasPlugin, TerrainRenderAuthorityPlugin, TileWorldFallbackPlugin,
     ViewportPipelinePlugin,
     ViewRuntimePlugin, GpuWaterParticlesPlugin, WaterSurfaceVisualPlugin,
@@ -166,9 +167,9 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::editor::editor_world_commit_bridge::EditorWorldCommitBridgePlugin)
             .add_plugins(crate::strategic::StrategicFieldsAndAiPlugin)
             .add_plugins(crate::strategic::GpuBridgePlugin);
-        if crate::render::hanabi_witness::hanabi_l3_plugin_wired() {
+        if crate::render::witness::hanabi_witness::hanabi_l3_plugin_wired() {
             #[cfg(feature = "hanabi_l3")]
-            app.add_plugins(crate::render::hanabi_embellishment::HanabiEmbellishmentPlugin);
+            app.add_plugins(crate::render::fx_spine::hanabi_embellishment::HanabiEmbellishmentPlugin);
         }
         // Fire visual extract: one sim pass → buffer; then pooled local lights collect messages.
         app.configure_sets(
@@ -214,6 +215,7 @@ impl Plugin for EnginePlugin {
             .is_some_and(|launch| launch.test_mode());
         if test_mode {
             app.add_plugins(TestHarnessPlugin);
+            app.add_plugins(crate::gui::VfxFireTestFocusPlugin);
         }
         init_preview_render_contract_resources(app);
         app.insert_resource(Stage5ReadinessProfile::FULL_APP);
@@ -231,6 +233,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(TerrainRenderAuthorityPlugin)
             .add_plugins(TerrainMaterialAtlasPlugin)
             .add_plugins(TerrainInstancedDrawPlugin)
+            .add_plugins(TerrainGpuBakeSpikePlugin)
             .add_plugins(crate::render::TacticalVectorOverlayPlugin)
             .add_plugins(WaterSurfaceVisualPlugin)
             .add_plugins(GpuWaterParticlesPlugin);

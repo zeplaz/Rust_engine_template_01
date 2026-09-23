@@ -11,16 +11,16 @@ use std::path::PathBuf;
 use std::time::{SystemTime, UNIX_EPOCH};
 
 use bevy::asset::RenderAssetUsages;
+use crate::render::pipelines::gpu_fire_particle_raster::FireDrawDiagnostics;
 use bevy::camera::visibility::RenderLayers;
 use bevy::camera::{ImageRenderTarget, RenderTarget};
 use bevy::ecs::system::SystemParam;
-use bevy::math::{Mat4, Vec2};
+use bevy::math::Mat4;
 use bevy::prelude::*;
 use serde_json::{json, Value};
 
 pub const TACTICAL_MAP_DEBUG_JSON: &str = "debug_runs/tactical_map_debug_live.json";
 
-const RTT_LAYER: usize = crate::gui::SIMULATION_MAP_RTT_RENDER_LAYER;
 #[derive(Resource, Default)]
 struct TacticalMapDebugState {
     last_written_frame: u32,
@@ -53,6 +53,7 @@ struct TacticalMapDebugInputs<'w, 's> {
     overlay: Res<'w, crate::render::SharedOverlayFieldBuffers>,
     compositor: Res<'w, crate::render::minimap_compositor::MinimapCompositorState>,
     atlas: Option<Res<'w, crate::render::TerrainMaterialAtlasGpu>>,
+    bake_spike: Option<Res<'w, crate::render::TerrainGpuBakeSpikeState>>,
     vt4: Option<Res<'w, crate::render::VtCiMatrixLiveReport>>,
     tile_debug: Res<'w, crate::gui::TileGpuDebugSettings>,
     fire_override: Res<'w, crate::gui::FireDebugOverride>,
@@ -60,11 +61,14 @@ struct TacticalMapDebugInputs<'w, 's> {
     params: Res<'w, crate::terrain::generation::WorldGenParams>,
     dense: Option<Res<'w, crate::terrain::generation::WorldGenDenseTerrainCache>>,
     images: Res<'w, Assets<Image>>,
-    rtt_barrier: Option<Res<'w, crate::gui::sim_map_rtt::SimulationMapRttBindBarrier>>,
+    rtt_barrier: Option<Res<'w, crate::gui::tactical::sim_map_rtt::SimulationMapRttBindBarrier>>,
     ortho: Option<Res<'w, crate::gui::MainWorldCameraOrthoTrace>>,
     cam_metrics: Option<Res<'w, crate::render::ExtractedCameraMetrics>>,
     fire_globals: Option<Res<'w, crate::render::FireParticleDrawGlobals>>,
+    fire_draw_diag: Option<Res<'w, FireDrawDiagnostics>>,
     fire_frame: Option<Res<'w, crate::render::WorldFireParticleFrame>>,
+    zoom_frame: Option<Res<'w, crate::gui::ZoomFrame>>,
+    rtt_overlay_host: Option<Res<'w, crate::gui::RttCore2dOverlayHostState>>,
     map_desired: Option<Res<'w, crate::gui::MapCameraDesiredRes>>,
     flow: Option<Res<'w, bevy::prelude::State<crate::engine::states::WorldGenFlowState>>>,
     wg_progress: Option<Res<'w, crate::terrain::generation::WorldGenProgress>>,
@@ -178,7 +182,6 @@ fn render_target_trace(
         RenderTarget::Window(_) => json!({ "kind": "window" }),
         RenderTarget::TextureView(_) => json!({ "kind": "texture_view" }),
         RenderTarget::None { .. } => json!({ "kind": "none", "void_suspect": "CAMERA_RTT_TARGET_NONE" }),
-        _ => json!({ "kind": "other", "debug": format!("{target:?}") }),
     }
 }
 
@@ -195,7 +198,7 @@ fn view_proj_degenerate(m: Mat4) -> bool {
 }
 
 fn build_rtt_render_trace(
-    barrier: Option<&crate::gui::sim_map_rtt::SimulationMapRttBindBarrier>,
+    barrier: Option<&crate::gui::tactical::sim_map_rtt::SimulationMapRttBindBarrier>,
     sim_tex: &Handle<Image>,
     image_node: Option<&bevy::ui::widget::ImageNode>,
     cam: Option<(
@@ -219,7 +222,10 @@ fn build_rtt_render_trace(
     ortho: Option<&crate::gui::MainWorldCameraOrthoTrace>,
     metrics: Option<&crate::render::ExtractedCameraMetrics>,
     fire_globals: Option<&crate::render::FireParticleDrawGlobals>,
+    fire_draw_diag: Option<&FireDrawDiagnostics>,
     fire_frame: Option<&crate::render::WorldFireParticleFrame>,
+    zoom_frame: Option<&crate::gui::ZoomFrame>,
+    rtt_overlay_host: Option<&crate::gui::RttCore2dOverlayHostState>,
     map_desired: Option<&crate::gui::MapCameraDesired>,
     fill_valid: bool,
     images: &Assets<Image>,
@@ -366,10 +372,25 @@ fn build_rtt_render_trace(
         if view_proj_degenerate(m.view_proj) {
             void_suspects.push("VIEW_PROJ_DEGENERATE: fire/particle overlay raster gated off");
         }
-        // FIRE-VIS-001: gate re-keyed to px-per-tile (camera zoom_level) — see FIRE_SPARK_MIN_PX_PER_TILE.
-        if m.zoom_level < crate::render::gpu_particles::FIRE_SPARK_MIN_PX_PER_TILE {
-            void_suspects.push("FIRE_ZOOM_CULLED: px-per-tile below FIRE_SPARK_MIN_PX_PER_TILE (1.5) — sparks suppressed");
+        // FIRE-VIS-001: gate re-keyed to px-per-tile — prefer [`ZoomFrame`] authority.
+        let px_gate = zoom_frame
+            .map(|z| z.px_per_tile)
+            .unwrap_or(m.zoom_level);
+        // Zoom hard-cull retired (FIRE_SPARK_MIN_PX_PER_TILE == 0). Keep no-op guard for re-enable.
+        if crate::render::FIRE_SPARK_MIN_PX_PER_TILE > 0.0
+            && px_gate < crate::render::FIRE_SPARK_MIN_PX_PER_TILE
+        {
+            void_suspects.push(
+                "FIRE_ZOOM_CULLED: px-per-tile below FIRE_SPARK_MIN_PX_PER_TILE — sparks suppressed",
+            );
         }
+    }
+    let host_present = rtt_overlay_host.map(|h| h.host_present).unwrap_or(false);
+    let spark_rows = fire_frame.map(|f| f.spark_witness.rows).unwrap_or(0);
+    if spark_rows > 0 && !host_present {
+        void_suspects.push(
+            "FIRE_SPARK_HOST_MISSING: spark_rows>0 but TileDebugRenderHost absent on MainWorldCamera — raster skips",
+        );
     }
     if !fill_valid {
         void_suspects.push("FILL_RECT_INVALID");
@@ -417,7 +438,20 @@ fn build_rtt_render_trace(
             "draw_globals_vertex_count": fire_globals.map(|g| g.vertex_count),
             "spark_view_culled": fire_frame.map(|f| f.spark_witness.view_culled),
             "spark_rows": fire_frame.map(|f| f.spark_witness.rows),
+            "rtt_core2d_overlay_host_present": host_present,
+            "overlay_hosts_env_enabled": crate::gui::rtt_core2d_overlay_hosts_enabled(),
+            "draw_diagnostics": fire_draw_diag.map(|d| json!({
+                "policy_skip": d.policy_skip,
+                "cap_zero_skip": d.cap_zero_skip,
+                "identity_skip": d.identity_skip,
+                "draw_ok": d.draw_ok,
+            })),
         }),
+        "zoom_frame": zoom_frame.map(|z| json!({
+            "px_per_tile": z.px_per_tile,
+            "zoom_alpha": z.zoom_alpha,
+            "lod_band": format!("{:?}", z.lod_band),
+        })),
         "coverage": {
             "fallback_sim_cpu": sim_cpu_coverage,
             "rtt_cpu_readback": rtt_cpu_coverage,
@@ -433,7 +467,7 @@ fn should_flush(frame: u32, last: u32) -> bool {
     frame >= 240 && frame.saturating_sub(last) >= 60
 }
 
-pub fn write_tactical_map_debug_witness(
+fn write_tactical_map_debug_witness(
     mut state: ResMut<TacticalMapDebugState>,
     q: TacticalMapDebugInputs,
     main_cam: Query<
@@ -486,7 +520,10 @@ pub fn write_tactical_map_debug_witness(
         q.ortho.as_deref(),
         q.cam_metrics.as_deref(),
         q.fire_globals.as_deref(),
+        q.fire_draw_diag.as_deref(),
         q.fire_frame.as_deref(),
+        q.zoom_frame.as_deref(),
+        q.rtt_overlay_host.as_deref(),
         q.map_desired.as_deref().map(|r| &r.0),
         q.fill.valid,
         &q.images,
@@ -535,7 +572,7 @@ pub fn write_tactical_map_debug_witness(
             "chunk_entities": q.chunks.iter().len(),
             "terrain_baked": q.fallback.sprite_entity.is_some(),
         },
-        "terrain_bake_note": "GpuInstancedAtlas: CPU dirty-gated raster → GPU texture; minimap reads texture directly; tactical map = Camera2d RenderTarget::Image + same RenderLayers as sprite",
+        "terrain_bake_note": "GpuBake authority = CPU dirty-gated raster → GPU sprite (display truth). Opt-in TERRAIN_GPU_BAKE_SPIKE feeds minimap via host atlas→world bake Image (label gpu_bake only when bound); tactical Camera2d still reads sprite/RTT — fire stays live overlay",
         "rtt_render_trace": rtt_trace,
         "tactical_rtt": {
             "fill_valid": q.fill.valid,
@@ -569,6 +606,17 @@ pub fn write_tactical_map_debug_witness(
             "dual_minimap_present": q.compositor.dual_minimap_present,
             "atlas_image_loaded": q.atlas.as_deref().map(|a| a.image != Handle::default()).unwrap_or(false),
         },
+        "gpu_bake_spike": q.bake_spike.as_deref().map(|s| json!({
+            "flag_enabled": s.enabled,
+            "rtt_pass_wired": s.rtt_pass_wired,
+            "consumers_ready": crate::render::spike_bake_ready_for_consumers(s),
+            "write_pixel_count": s.last_write_pixel_count,
+            "world_bake_w": s.world_bake_w,
+            "world_bake_h": s.world_bake_h,
+            "bake_revision": s.bake_revision,
+            "cpu_display_still_authority": s.cpu_display_still_authority,
+            "fire_excluded_from_bake": s.fire_excluded_from_bake,
+        })),
         "overlays_clutter": {
             "shared_overlay_fire_cells": q.overlay.chunk_fire_heat.len(),
             "overlay_revision": q.overlay.revision,
@@ -665,14 +713,15 @@ fn diagnosis_hints(
     } else if fallback.image != Handle::default() {
         hints.push("FALLBACK_IMAGE_NOT_LOADED: sim terrain handle not in Assets<Image>");
     }
-    // NOTE: the minimap compositor terrain input is the CPU-rastered world image
-    // (`TileWorldFallbackState`) regardless of `TerrainRenderAuthority` — `minimap_source`
-    // is `"world_raster"` in the normal case and `"none"` only when no world texture is
-    // bound yet. `TerrainMaterialAtlasGpu` (a material-swatch palette) is never a valid
-    // minimap input; see `run_minimap_compositor_pass` in
-    // src/render/minimap_compositor/pass.rs.
+    // NOTE: default-off minimap terrain input is the CPU-rastered world image
+    // (`TileWorldFallbackState`) → `world_raster`. When TERRAIN_GPU_BAKE_SPIKE consumers
+    // are ready, label may be `gpu_bake` (bake Image bind). `TerrainMaterialAtlasGpu`
+    // (swatch palette) is never a valid minimap world input.
     if minimap_source == "none" && fallback.image != Handle::default() {
         hints.push("MINIMAP_NO_TERRAIN_BOUND: minimap compositor reports no terrain source despite a world raster image existing — check resolve_minimap_texture_source routing");
+    }
+    if minimap_source == "gpu_bake" {
+        hints.push("MINIMAP_GPU_BAKE_BOUND: minimap compositor bound spike bake Image (TERRAIN_GPU_BAKE_SPIKE) — fire heat remains live overlay");
     }
     if tile_debug_on {
         hints.push("TILE_DEBUG_OVERLAY_ON: red/green GPU chunk squares drawn on tactical RTT (fire + LOD debug)");

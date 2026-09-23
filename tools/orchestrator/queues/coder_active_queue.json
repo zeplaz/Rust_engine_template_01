@@ -1810,7 +1810,7 @@
     "multi_parallel_pick": [
       {
         "id": "PERF-INSTR-VFX-002",
-        "status": "in_progress",
+        "status": "done",
         "owner": "coder_b",
         "track": "T8",
         "track_id": "INFRA-PERF",
@@ -2528,7 +2528,7 @@
     "coder_b": [
       {
         "id": "PERF-INSTR-VFX-002",
-        "status": "in_progress",
+        "status": "done",
         "owner": "coder_b",
         "track": "T8",
         "track_id": "INFRA-PERF",

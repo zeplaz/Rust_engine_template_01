@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::gui::RepresentationResult;
 use crate::render::extraction::RenderProjectionGraph;
 use crate::render::{tactical_fire_visual, FireVisualFramesByView};
-use crate::render::sim_visual_extract::FireVisualFrame;
+use crate::render::extraction::sim_visual_extract::FireVisualFrame;
 use crate::systems::atmosphere::AtmospherePartialWriteMetrics;
 use crate::systems::sim_control::SimStepStamp;
 
@@ -62,7 +62,7 @@ pub fn build_domain_projection_frame(
 ) -> DomainProjectionFrame {
     let fire_rows = graph.fire.instance_buffer.len() as u32;
     let fire_reserved = policy.gpu_budget.fire_instance_cap as u32;
-    let fire_stride = std::mem::size_of::<crate::render::sim_visual_extract::FireVisualGpuInstance>() as u64;
+    let fire_stride = std::mem::size_of::<crate::render::extraction::sim_visual_extract::FireVisualGpuInstance>() as u64;
     let weather_bytes = partial_metrics
         .map(|m| m.partial_upload_bytes.saturating_add(m.gpu_texture_upload_bytes))
         .unwrap_or(0);

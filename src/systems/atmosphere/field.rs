@@ -1,4 +1,9 @@
-//! [`AtmosphereCell`] / [`AtmosphereField`] CPU authority + [`GlobalWind`] (`base_fire2_smoke.md` §1, §3).
+//! [`AtmosphereCell`] / [`AtmosphereField`] CPU grid + [`GlobalWind`] (`base_fire2_smoke.md` §1, §3).
+//!
+//! **ES-6:** Smoke consumers that already sample [`crate::substrate::atmosphere::AtmosphereClipmapStack`]
+//! treat **clipmap L0** as sim authority. This 128² grid remains for transitional fold/advect/
+//! particles/visibility/chunk_smoke writers only — not dual-written into the clipmap while
+//! DEBT-006 (`legacy_atmosphere_bridge_system`) is gated off.
 
 use bevy::prelude::*;
 
@@ -15,7 +20,8 @@ pub struct AtmosphereCell {
     pub visibility: f32,
 }
 
-/// Grid keyed by world chunk indices: cell `(x,y)` covers chunk `(origin.x + x, origin.y + y)`.
+/// Transitional 128² grid for fold/advect/particles/visibility/chunk_smoke.
+/// Clipmap L0 owns smoke samples for clipmap consumers (ES-6).
 #[derive(Resource, Debug, Clone)]
 pub struct AtmosphereField {
     pub origin: IVec2,

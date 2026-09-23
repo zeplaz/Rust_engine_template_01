@@ -276,7 +276,7 @@ pub fn bq_h2_street_facing_witness_green() -> bool {
 #[must_use]
 pub fn build_bq_h2_openings_witness_body() -> serde_json::Value {
     let grid = FootprintGrid::from_grammar(&super::building_grammar::generate(
-        "IndustrialWarehouse",
+        crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         "industrial_west",
         43,
     )

@@ -108,7 +108,7 @@ fn scenario_script_host_resume_after_stop() {
 }
 
 #[test]
-fn g_play_demo_fire_scenario_deserializes_emit_sim_effect() {
+fn g_play_demo_fire_scenario_deserializes_ignite_step() {
     use crate::engine::play_scenario::DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO;
     use crate::scenario::scenario_steps::ScenarioStep;
 
@@ -118,6 +118,36 @@ fn g_play_demo_fire_scenario_deserializes_emit_sim_effect() {
     assert!(
         file.steps
             .iter()
-            .any(|s| matches!(s, ScenarioStep::EmitSimEffect { .. }))
+            .any(|s| matches!(s, ScenarioStep::IgniteAt { .. })),
+        "demo fire uses IgniteAt product API"
     );
+}
+
+#[test]
+fn vss_t2_002_fixture_validates_and_enqueues() {
+    use crate::scenario::validation::validate_scenario;
+    use crate::sim::effects::SimEffectQueue;
+    use crate::systems::sim_control::SimControlPlugin;
+
+    let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+        .join("assets/scenarios/tests/vss_t2_002_ignite_at.scenario.ron");
+    let text = std::fs::read_to_string(&path).expect("fixture");
+    let file: ScenarioFileV1 = ron::from_str(&text).expect("parse fixture");
+    let report = validate_scenario(&file);
+    assert!(report.is_ok(), "errors: {:?}", report.errors);
+
+    let mut app = App::new();
+    app.add_plugins((MinimalPlugins, InputPlugin));
+    app.init_resource::<InputBindings>();
+    app.init_resource::<SimEffectQueue>();
+    app.add_plugins((SimControlPlugin, ScenarioScriptingPlugin));
+    {
+        let mut host = app.world_mut().resource_mut::<EngineScriptHost>();
+        host.load_script(file);
+    }
+    for _ in 0..3 {
+        app.update();
+    }
+    let queue = app.world().resource::<SimEffectQueue>();
+    assert!(queue.pushed_total >= 2, "IgniteAt + TriggerEffect enqueue");
 }

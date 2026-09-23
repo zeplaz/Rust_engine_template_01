@@ -18,7 +18,7 @@ use super::composite::{
     MinimapCompositeDispatch, MinimapCompositeHeatTextures, MinimapCompositeParamsGpu,
     MINIMAP_COMPOSITE_SHADER,
 };
-use super::pass::minimap_gpu_compositor_env_enabled;
+use super::state::minimap_gpu_compositor_env_enabled;
 use super::diagnostics::{MINIMAP_GPU_DEDUP_SKIP_COUNT, MINIMAP_GPU_EXECUTE_COUNT};
 
 const WORKGROUP: u32 = 8;

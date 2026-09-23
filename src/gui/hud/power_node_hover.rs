@@ -78,7 +78,9 @@ pub struct PowerNodeHoverState {
 
 #[must_use]
 pub fn power_node_hover_tier_map_attached() -> bool {
-    true
+    // Structural: hover card projects via sim-map egui (map-attached tier).
+    include_str!("power_node_hover_egui.rs").contains("world_to_sim_map_egui")
+        && include_str!("power_node_hover_egui.rs").contains("SimulationMapViewport")
 }
 
 #[must_use]

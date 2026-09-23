@@ -192,7 +192,11 @@ pub fn compute_post_spine_witness(
     let congestion = registry.map(mean_slab_congestion).unwrap_or(0.0);
     let regional = clipmap.map(clipmap_l2_mean_scalar).unwrap_or(0.0);
     let regional_weather_wired = clipmap_witness
-        .map(|w| w.clipmap_advect_wired && w.legacy_atmosphere_field_bridged)
+        .map(|w| {
+            w.clipmap_advect_wired
+                && (crate::substrate::atmosphere::CLIPMAP_L0_AUTHORITATIVE
+                    || w.legacy_atmosphere_field_bridged)
+        })
         .unwrap_or(false)
         && clipmap.is_some_and(|c| {
             c.levels.len() >= 3 && !c.levels[2].smoke_density.is_empty()

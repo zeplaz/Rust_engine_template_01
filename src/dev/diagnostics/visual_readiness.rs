@@ -30,7 +30,7 @@ pub struct VisualReadinessWitness {
     pub tile_raster_minimap_cpu_allowed: bool,
     pub frames_sampled: u64,
     /// Sourced from the RTT valid streak — `TacticalMapFillRect::steady_invalid_flip_count`
-    /// ([`crate::gui::sim_map_rtt::TacticalMapFillRect`]), **not** a hole-latch resource
+    /// ([`crate::gui::tactical::sim_map_rtt::TacticalMapFillRect`]), **not** a hole-latch resource
     /// (RGR-V2-004: legacy latch removed under RTT-A1-001/004).
     pub render_hole_steady_flip_count: u32,
     pub p95_frame_ms: f32,

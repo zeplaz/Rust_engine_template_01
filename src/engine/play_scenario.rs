@@ -7,7 +7,6 @@ use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
 use crate::engine::ActiveTestScene;
-use crate::scenario::scenario_steps::ScenarioStep;
 use crate::scenario::script_host::EngineScriptHost;
 use crate::scenario::ScenarioFileV1;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -502,9 +501,9 @@ fn g_play_fire_001_self_check() -> Result<(), &'static str> {
     if !file
         .steps
         .iter()
-        .any(|s| matches!(s, ScenarioStep::EmitSimEffect { .. }))
+        .any(|s| s.routes_fire_via_sim_effect())
     {
-        return Err("no_emit_step");
+        return Err("no_ignite_step");
     }
     Ok(())
 }

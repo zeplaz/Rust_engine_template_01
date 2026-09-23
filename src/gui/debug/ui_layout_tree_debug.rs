@@ -318,7 +318,7 @@ pub fn audit_camera_scissor_matches_committed(
     sim: Res<SimulationMapViewport>,
     cam: Query<&Camera, With<crate::gui::MainWorldCamera>>,
     win: Query<&Window, With<PrimaryWindow>>,
-    ortho: Res<crate::gui::MainWorldCameraOrthoTrace>,
+    _ortho: Res<crate::gui::MainWorldCameraOrthoTrace>,
 ) {
     if !viewport_authority_debug_enabled() {
         return;
@@ -380,7 +380,7 @@ impl Plugin for UiLayoutTreeDebugPlugin {
         .add_systems(
             PostUpdate,
             audit_camera_scissor_matches_committed
-                .after(crate::gui::map_camera::sync_main_world_camera_viewport_and_projection)
+                .after(crate::gui::tactical::map_camera::sync_main_world_camera_viewport_and_projection)
                 .run_if(crate::gui::in_simulation_or_editor_map),
         );
     }

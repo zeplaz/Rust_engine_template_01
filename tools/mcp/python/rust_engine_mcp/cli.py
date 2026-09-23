@@ -109,6 +109,38 @@ def _cmd_promote(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_effect_pack(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import effect_promote as ep
+
+    body = ep.pack_effect_spec(args.spec_path, force=args.force)
+    if not args.no_witness:
+        body["witness"] = ep.refresh_artist_vfx_pipeline_witness()
+    print(json.dumps(body, indent=2))
+    return 0
+
+
+def _cmd_effect_promote(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import effect_promote as ep
+
+    body = ep.effect_promote(
+        spec_path=args.spec_path or "",
+        batch_id=args.batch_id or "",
+        phase=args.phase,
+        force=args.force,
+        write_witness=not args.no_witness,
+    )
+    print(json.dumps(body, indent=2))
+    return 0
+
+
+def _cmd_artist_vfx_pipeline_witness(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import effect_promote as ep
+
+    body = ep.refresh_artist_vfx_pipeline_witness()
+    print(json.dumps(body, indent=2))
+    return 0
+
+
 def _cmd_library_register(args: argparse.Namespace) -> int:
     if getattr(args, "rebuild_all", False):
         result = library.write_module_index()
@@ -508,6 +540,44 @@ def _cmd_orchestrator_brief(args: argparse.Namespace) -> int:
 
 def _cmd_token_savings_guide(_args: argparse.Namespace) -> int:
     print(json.dumps(agent_queue.token_savings_guide(), indent=2))
+    return 0
+
+
+def _cmd_agent_flow_route(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import agent_flow
+
+    body = agent_flow.agent_flow_route(
+        args.goal,
+        domain=args.domain,
+        force_hard=bool(args.force_hard),
+        skip_hard=bool(args.skip_hard),
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_agent_flow_policy(_args: argparse.Namespace) -> int:
+    from rust_engine_mcp import agent_flow
+
+    print(json.dumps(agent_flow.agent_flow_policy(), indent=2))
+    return 0
+
+
+def _cmd_terrain_honesty_lint(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import terrain_honesty_lint
+
+    body = terrain_honesty_lint.validate_terrain_honesty_report(
+        write_witness=not bool(args.no_witness),
+        compress=int(args.compress),
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
+def _cmd_auto_fleet_brief(_args: argparse.Namespace) -> int:
+    from rust_engine_mcp import auto_fleet
+
+    print(json.dumps(auto_fleet.auto_fleet_brief(), indent=2))
     return 0
 
 
@@ -1588,6 +1658,30 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--allow-smoke", action="store_true", help="Allow explicit smoke-tier harness promote")
     p.set_defaults(func=_cmd_promote)
 
+    p = sub.add_parser("effect-pack", help="VSS-T4-003 — wgsl_pack hash copy to assets/staging/<effect_id>/")
+    p.add_argument("spec_path", help="EffectSpec JSON path")
+    p.add_argument("--force", action="store_true", help="Overwrite staging shaders on hash drift")
+    p.add_argument("--no-witness", action="store_true", help="Skip artist_vfx_pipeline_live.json refresh")
+    p.set_defaults(func=_cmd_effect_pack)
+
+    p = sub.add_parser("effect-promote", help="VSS-T4-003 — pack and/or promote EffectSpec to effects/registry/")
+    p.add_argument("spec_path", nargs="?", default="", help="EffectSpec JSON (omit with --batch-id)")
+    p.add_argument("--batch-id", default="", help=f"Reference batch (default: vss_t4_reference_effects_v1)")
+    p.add_argument(
+        "--phase",
+        default="full",
+        choices=["pack", "promote", "full"],
+        help="pack=staging only; promote=registry (expects pack); full=both",
+    )
+    p.add_argument("--force", action="store_true")
+    p.add_argument("--no-witness", action="store_true")
+    p.set_defaults(func=_cmd_effect_promote)
+
+    sub.add_parser(
+        "artist-vfx-pipeline-witness",
+        help="Refresh debug_runs/artist_vfx_pipeline_live.json from staging/registry disk",
+    ).set_defaults(func=_cmd_artist_vfx_pipeline_witness)
+
     p = sub.add_parser("library-register")
     p.add_argument("job_id", nargs="?", default="")
     p.add_argument("--rebuild-all", action="store_true")
@@ -1767,6 +1861,7 @@ def main(argv: list[str] | None = None) -> int:
             "tile_batch",
             "atlas_meta_v2",
             "visual_config",
+            "effect_spec",
             "tile_promotion",
             "assembly_grammar",
             "assembly_p0",
@@ -1880,6 +1975,30 @@ def main(argv: list[str] | None = None) -> int:
     p.set_defaults(func=_cmd_orchestrator_brief)
 
     sub.add_parser("token-savings-guide").set_defaults(func=_cmd_token_savings_guide)
+
+    p = sub.add_parser("agent-flow-route", help="BLANG:FLOW cheap→hard→exec dispatch packet")
+    p.add_argument("--goal", required=True, help="Work goal (one sentence)")
+    p.add_argument(
+        "--domain",
+        default="auto",
+        help="auto|fire|ui|render|art|ops|engine|sim",
+    )
+    p.add_argument("--force-hard", action="store_true", help="Always include L1 HARD gate")
+    p.add_argument("--skip-hard", action="store_true", help="Never include L1 HARD gate")
+    p.set_defaults(func=_cmd_agent_flow_route)
+    sub.add_parser("agent-flow-policy").set_defaults(func=_cmd_agent_flow_policy)
+
+    p = sub.add_parser(
+        "terrain-honesty-lint",
+        help="RPC-1 deterministic TerrainRenderAuthority / gpu_atlas honesty scan",
+    )
+    p.add_argument("--compress", default="3")
+    p.add_argument("--no-witness", action="store_true")
+    p.set_defaults(func=_cmd_terrain_honesty_lint)
+
+    sub.add_parser("auto-fleet-brief", help="No-operator auto fleet wave status").set_defaults(
+        func=_cmd_auto_fleet_brief
+    )
 
     p = sub.add_parser("pipeline-preflight", help="MCP-PREFLIGHT-001 environment check")
     p.add_argument("--queue", default="grammar")

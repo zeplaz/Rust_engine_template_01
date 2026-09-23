@@ -1518,6 +1518,9 @@ def token_savings_guide() -> dict[str, Any]:
             "orchestrator_mcp_lane": "orchestrator-mcp-lane-brief — @orchestrator-mcp P2 pick + explicit order",
             "get_que": "get_que('<agent>', demand=true, minutes=60) — multi-parallel Q+ + hour todo list",
             "agent_queue_demand": "agent_queue_demand('<agent>', minutes=60) — ordered session slices only",
+            "agent_flow": "agent_flow_route(goal, domain='auto') — L0 cheap → L1 hard → L2 exec before Tasks",
+            "agent_flow_policy": "agent_flow_policy() — static model-tier table",
+            "terrain_honesty": "terrain_honesty_lint_tool() — RPC-1 GpuInstancedAtlas/gpu_atlas honesty (deterministic)",
         },
         "witness_integrity": {
             "blang": "BLANG:WIT-HON",
@@ -1550,6 +1553,7 @@ def token_savings_guide() -> dict[str, Any]:
                 "BLANG:WIT-HON": "witness_brief(path, profile='honesty') | validate-report witness_honesty <path>|--scan debug_runs | validate-report queue_integrity",
                 "BLANG:REVIEW": "review_order_brief()",
                 "BLANG:OPS": "ops_get_project_brief() — delta_wf + active_blockers composed",
+                "BLANG:FLOW": "agent_flow_route(goal, domain) — L0 cheap → L1 hard? → L2 exec",
                 "BLANG:OPS-RETRY": "ops_get_retry_guidance('<task_id>')",
                 "BLANG:OPS-BLOCK": "ops_get_active_blockers()",
                 "BLANG:SLICE": "slice_exec_brief('<slice_id>')",

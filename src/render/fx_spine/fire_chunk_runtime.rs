@@ -14,7 +14,7 @@ use bevy::prelude::*;
 use rustc_hash::{FxHashMap, FxHashSet};
 
 use crate::gui::ViewId;
-use crate::render::sim_visual_extract::{
+use crate::render::extraction::sim_visual_extract::{
     ChunkFireHeat, FireVisualGpuInstance, FIRE_VISUAL_ACTIVE_HEAT_EPS,
 };
 use crate::systems::sim_control::SimStepStamp;
@@ -180,7 +180,7 @@ pub fn sync_active_fire_chunk_set(
         .collect();
     if test_fire_loose && set.chunks.is_empty() {
         for h in &sim.chunk_heat {
-            if h.heat > crate::render::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS {
+            if h.heat > crate::render::extraction::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS {
                 set.chunks.insert(h.chunk);
             }
         }

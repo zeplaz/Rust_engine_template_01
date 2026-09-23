@@ -1,0 +1,17 @@
+(
+    schema_version: 2,
+    metadata: (
+        id: "vss_t2_002_ignite_fixture",
+        display_name: "VSS-T2-002 ignite API fixture",
+        author: Some("proc_A_dine01"),
+        description: Some("Product path — IgniteAt + TriggerEffect via SimEffect waist"),
+    ),
+    steps: [
+        IgniteAt(
+            tile: (tile_x: 8, tile_z: 8),
+            spark: 0.4,
+            cause_id: "CAUSE-vss-t2-ignite-at",
+        ),
+        TriggerEffect(effect_id: "demo_ignite_v0"),
+    ],
+)

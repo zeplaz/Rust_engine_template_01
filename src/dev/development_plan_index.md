@@ -14,7 +14,11 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **GPU terrain / sim perf (ACTIVE):** [`gpu_todos_v1.md`](gpu_todos_v1.md) · [`plan_gpu_terrain_production_exec_001_v1.md`](plan_gpu_terrain_production_exec_001_v1.md) — P0-C′-PRIME next · P0-C tilemap **blocked DR-MIG-TILEMAP**
 
+**VFX · spectator · scale · artist pipeline (ACTIVE — 2026-08-28):** [`plan_vfx_spectator_scale_program_v1.md`](plan_vfx_spectator_scale_program_v1.md) — **VSS-001** · child: [`plan_world_scale_contract_v1.md`](plan_world_scale_contract_v1.md) · [`plan_artist_vfx_toolchain_v1.md`](plan_artist_vfx_toolchain_v1.md) · queue [`vss_program_queue.json`](../tools/orchestrator/queues/vss_program_queue.json) · kickoff [`vss_001_kickoff_packet.yaml`](../debug_runs/agent_ops/vss_001_kickoff_packet.yaml)
+
 **Codebase cleanup (P1 on master — 2026-07-03):** [`plan_cleanup_v1.md`](plan_cleanup_v1.md) — Phase 0 hygiene · Phase 2+ parallel after RTT/VFX operator lane closes · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-CLEANUP-v1
+
+**Repo tidy (active):** [`plan_cleanup_v1.md`](plan_cleanup_v1.md) · queue [`repo_tidy_queue_v1.json`](../tools/orchestrator/queues/repo_tidy_queue_v1.json) — classify before delete · CLN-CHEAT-001 done (always-true VFX lib witness retired) · next: live_proof audit · map_editor mod.rs split
 
 **City + building grammar (P3 — coder closed 2026-07-03):** [`plan_city_grammar_upgrade_v1.md`](plan_city_grammar_upgrade_v1.md) · G0–G3 + P1/P2 green · machine queue [`city_grammar_queue.json`](../tools/orchestrator/queues/city_grammar_queue.json) · **active:** PLAN-BUILDING-QUALITY-v1
 
@@ -67,6 +71,7 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 | Track | Start here |
 |:---|:---|
+| **VSS-001 (active)** | [`plan_vfx_spectator_scale_program_v1.md`](plan_vfx_spectator_scale_program_v1.md) · T1 [`plan_world_scale_contract_v1.md`](plan_world_scale_contract_v1.md) · T4 [`plan_artist_vfx_toolchain_v1.md`](plan_artist_vfx_toolchain_v1.md) |
 | **Construction P3 (now)** | [`plan_construction_scaling_audit_exec_003_v1.md`](plan_construction_scaling_audit_exec_003_v1.md) — **A: CON-P3-S1..S3 + WIT** · **B: S4–S6 done** |
 | **Settlement P5** | [`plan_settlement_hierarchy_exec_005_v1.md`](plan_settlement_hierarchy_exec_005_v1.md) — **SET-P5-001..003 done on disk** |
 | **Coder workload** | [`fleet_coder_workload_queue_20260602_v1.md`](fleet_coder_workload_queue_20260602_v1.md) — machine queue `v5.4.0` |

@@ -7,10 +7,9 @@ use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 
 use super::mig_a_adoption::{
-    build_mig_a_rollup_json, build_mig_program_close_witness_body, mig_a18_frame_perf_witness_enabled,
-    refresh_mig_program_close_witness, MigAAdoptionState, MIG_A1_A2_A16_JSON, MIG_A_A11_AUDIT_JSON,
-    MIG_A_A17_AUDIT_JSON, MIG_A_A8_AUDIT_JSON, MIG_A_A9_HANDOFF_JSON, MIG_A_FRAME_PERF_JSON,
-    MIG_A_ROLLUP_JSON,
+    build_mig_a_rollup_json, mig_a18_frame_perf_witness_enabled, refresh_mig_program_close_witness,
+    MigAAdoptionState, MIG_A1_A2_A16_JSON, MIG_A_A11_AUDIT_JSON, MIG_A_A17_AUDIT_JSON,
+    MIG_A_A8_AUDIT_JSON, MIG_A_A9_HANDOFF_JSON, MIG_A_FRAME_PERF_JSON, MIG_A_ROLLUP_JSON,
 };
 
 pub struct MigAAuditPlugin;

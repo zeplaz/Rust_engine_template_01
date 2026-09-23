@@ -1,11 +1,27 @@
-//! AC-003 — hybrid bridge between clipmap L1 and legacy [`AtmosphereField`].
+//! DEBT-006 — opt-in hybrid bridge between clipmap L1 and legacy [`AtmosphereField`].
+//!
+//! **Default OFF** (ES-6): clipmap L0 is sim authority for smoke consumers that already
+//! read [`AtmosphereClipmapStack`]. Set `RUST_ENGINE_ATMOS_LEGACY_BRIDGE=1` to re-enable
+//! the L1↔128² roundtrip for rollback only. Do not treat this bridge as dual authority.
 
 use bevy::prelude::*;
 
-use super::{AtmosphereClipmapStack};
+use super::AtmosphereClipmapStack;
 
-/// Copy legacy field smoke/fog into clipmap L1 (alias ingest).
-pub fn sync_l1_from_legacy_field(stack: &mut AtmosphereClipmapStack, legacy: &crate::systems::atmosphere::AtmosphereField) {
+/// Env rollback — legacy L1↔field sync runs only when set to `1` / `true` / `on`.
+#[must_use]
+pub fn legacy_atmosphere_bridge_enabled() -> bool {
+    matches!(
+        std::env::var("RUST_ENGINE_ATMOS_LEGACY_BRIDGE").as_deref(),
+        Ok("1") | Ok("true") | Ok("on")
+    )
+}
+
+/// Copy legacy field smoke/fog into clipmap L1 (alias ingest) — rollback path only.
+pub fn sync_l1_from_legacy_field(
+    stack: &mut AtmosphereClipmapStack,
+    legacy: &crate::systems::atmosphere::AtmosphereField,
+) {
     let Some(l1) = stack.levels.get_mut(1) else {
         return;
     };
@@ -24,7 +40,7 @@ pub fn sync_l1_from_legacy_field(stack: &mut AtmosphereClipmapStack, legacy: &cr
     }
 }
 
-/// Push clipmap L1 back into legacy field (alias egress).
+/// Push clipmap L1 back into legacy field (alias egress) — rollback path only.
 pub fn sync_legacy_field_from_l1(
     stack: &AtmosphereClipmapStack,
     legacy: &mut crate::systems::atmosphere::AtmosphereField,
@@ -39,6 +55,7 @@ pub fn sync_legacy_field_from_l1(
     }
 }
 
+/// Scheduled only when [`legacy_atmosphere_bridge_enabled`] (env rollback).
 pub fn legacy_atmosphere_bridge_system(
     mut stack: ResMut<AtmosphereClipmapStack>,
     legacy: Option<ResMut<crate::systems::atmosphere::AtmosphereField>>,
@@ -54,6 +71,12 @@ pub fn legacy_atmosphere_bridge_system(
 mod tests {
     use super::*;
     use crate::systems::atmosphere::AtmosphereField;
+
+    #[test]
+    fn legacy_bridge_gated_off_by_default() {
+        let _ = std::env::remove_var("RUST_ENGINE_ATMOS_LEGACY_BRIDGE");
+        assert!(!legacy_atmosphere_bridge_enabled());
+    }
 
     #[test]
     fn legacy_field_l1_alias_roundtrip() {

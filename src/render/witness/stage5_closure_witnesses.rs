@@ -20,11 +20,11 @@ impl Default for Stage5MapCameraBridgeWitness {
     }
 }
 
-/// [`crate::render::fire_view_extract::build_fire_visual_frames_by_view`] publishes orphan chunk count for WorldMain.
+/// [`crate::render::extraction::fire_view_extract::build_fire_visual_frames_by_view`] publishes orphan chunk count for WorldMain.
 #[derive(Resource, Default, Debug, Clone, Copy)]
 pub struct Stage5FireViewChunkWitness {
     pub world_main_visible_orphan_chunks: u32,
-    /// F7-A-001: every [`crate::render::fire_view_extract::FireVisualFramesByView`] row ⊆ that view's visible set.
+    /// F7-A-001: every [`crate::render::extraction::fire_view_extract::FireVisualFramesByView`] row ⊆ that view's visible set.
     pub f7_a_per_view_extract_bounded: bool,
 }
 

@@ -169,15 +169,19 @@ pub fn fire_extract_cadence_due(
     if clock.last_full_extract_secs == 0.0 && clock.last_tick == 0 {
         return true;
     }
+    // Overlay/residency churn must not be suppressed by UX spike guard (VR-05 / zoom flicker).
+    if overlay_dirty || residency_dirty {
+        return true;
+    }
     let min_interval = cadence.effective_min_interval_secs(spike_active);
     let interval_elapsed =
         (now_secs - clock.last_full_extract_secs).max(0.0) >= min_interval;
     if spike_active {
         interval_elapsed
     } else if cadence.full_scan_on_sim_tick {
-        tick_changed || interval_elapsed || overlay_dirty || residency_dirty
+        tick_changed || interval_elapsed
     } else {
-        interval_elapsed || overlay_dirty || residency_dirty
+        interval_elapsed
     }
 }
 
@@ -446,11 +450,34 @@ mod tests {
             last_tick: 5,
             ..Default::default()
         };
+        // Without spike, tick alone would force a scan.
+        assert!(fire_extract_cadence_due(
+            &clock, &cadence, 0.5, true, false, false, false
+        ));
+        // Spike uses effective_min_interval (×2.5) and ignores tick alone.
         assert!(!fire_extract_cadence_due(
             &clock, &cadence, 0.5, true, true, false, false
         ));
+        // Overlay/residency dirty forces extract even under spike.
         assert!(fire_extract_cadence_due(
-            &clock, &cadence, 1.3, true, true, false, false
+            &clock, &cadence, 0.5, true, true, true, false
+        ));
+        assert!(fire_extract_cadence_due(
+            &clock, &cadence, 0.5, true, true, false, true
+        ));
+        let spike_due_at = clock.last_full_extract_secs
+            + cadence.effective_min_interval_secs(true);
+        assert!(!fire_extract_cadence_due(
+            &clock,
+            &cadence,
+            spike_due_at - 0.01,
+            true,
+            true,
+            false,
+            false
+        ));
+        assert!(fire_extract_cadence_due(
+            &clock, &cadence, spike_due_at, true, true, false, false
         ));
     }
 

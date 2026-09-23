@@ -4,6 +4,7 @@ use super::building_grammar::{
     default_door_rhythm_for_massing, generate, load_building_grammar_registry,
     GrammarGenerateResult, MassingId, ResolvedFacade,
 };
+use crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 
 pub const BQ_H1_LIVE_JSON: &str = "debug_runs/bq_h1_facade_001_live.json";
 
@@ -40,7 +41,7 @@ pub fn bq_h1_generate_propagation_green() -> bool {
     let mut saw_double = false;
     let mut saw_yard = false;
     for seed in 0..128u64 {
-        let Ok(result) = generate("IndustrialWarehouse", "industrial_west", seed) else {
+        let Ok(result) = generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", seed) else {
             return false;
         };
         match result.massing_strategy.as_str() {
@@ -84,7 +85,8 @@ pub fn build_bq_h1_facade_witness_body() -> serde_json::Value {
             ),
         })
     });
-    let sample: Option<GrammarGenerateResult> = generate("IndustrialWarehouse", "industrial_west", 43).ok();
+    let sample: Option<GrammarGenerateResult> =
+        generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).ok();
     let green = bq_h1_facade_witness_green();
     serde_json::json!({
         "gate": "BQ-H1-FACADE-001",

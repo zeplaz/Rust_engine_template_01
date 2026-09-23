@@ -29,7 +29,17 @@ Fix **doll-house on green chunk**: buildings must read as **one layer inside a s
 
 ### 1a. Screen height vs chunk (default sim)
 
-Assume **1280×720** window, map hole ≈ **900×520 logical px**, default `zoom_alpha ≈ 0.42` (operational play).
+Assume **1280×720** window, map hole ≈ **800×500 logical px** (witness harness `SimulationMapViewport` 100,50→900,550), default `zoom_alpha ≈ 0.42` (operational play).
+
+**VSS-T1-003 measured** (`debug_runs/world_scale_contract_live.json` @ `OPERATIONAL_ZOOM_ALPHA`):
+
+| Element | Design target | **Measured px** | Verdict |
+|:---|:---:|:---:|:---|
+| **px/tile** (operational) | ~27 | **26.26** | PASS |
+| **3×3 primary footprint** | 40–90 px tall | **78.8 × 78.8** | PASS |
+| **10×8 site stub** | 120–200 px tall | **263 × 210** | PASS (height +5% — yard/rail void still readable) |
+| **Buildings per frame** (linear proxy) | 4–9 | **10.15** | MARGINAL — see dissent; 2×2/3×3 grids fit |
+| **Primary % of site height** | 15–40% | **37.5%** | PASS |
 
 | Element | Target screen height | Notes |
 |:---|:---:|:---|

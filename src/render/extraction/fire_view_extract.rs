@@ -1,4 +1,4 @@
-//! Per-view **visible fire chunks** + filtered [`crate::render::sim_visual_extract::FireVisualFrame`] builds.
+//! Per-view **visible fire chunks** + filtered [`crate::render::extraction::sim_visual_extract::FireVisualFrame`] builds.
 //!
 //! Visibility intersects sim-active chunks with each view's [`ViewInstance::visible_world_rect`]
 //! (projection + viewport from view authority). [`VisibleFireChunkSet`] stores [`FxHashSet`]s per
@@ -18,7 +18,7 @@ use rustc_hash::FxHashSet;
 
 use crate::engine::states::BaseState;
 use crate::gui::{ViewId, ViewInstance, ViewManager, WorldLodBand};
-use crate::render::fire_chunk_runtime::{
+use crate::render::fx_spine::fire_chunk_runtime::{
     ActiveFireChunkSet, ChunkCoord, FireChunkLodState, FireLodBand, FireSimulationSnapshot, VisibleFireChunkSet,
 };
 use crate::io::streaming::ChunkResidencyTable;
@@ -27,7 +27,7 @@ use crate::render::{
     Stage5FireViewChunkWitness, Stage5ReadinessProfile,
 };
 use crate::render::view_runtime::ViewSurfaceId;
-use crate::render::sim_visual_extract::{FireVisualFrame, FireVisualGpuInstance};
+use crate::render::extraction::sim_visual_extract::{FireVisualFrame, FireVisualGpuInstance};
 
 /// World XY extent per chunk index step (aligned with [`crate::gui::camera_focus_debug::DEBUG_CHUNK_SPACING_WORLD`]).
 
@@ -133,7 +133,7 @@ pub fn sync_visible_fire_chunks_from_views(
     let mut tactical_visible: FxHashSet<ChunkCoord> = active.chunks.iter().copied().collect();
     if tactical_visible.is_empty() && proof {
         for h in &sim.chunk_heat {
-            if h.heat > crate::render::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS {
+            if h.heat > crate::render::extraction::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS {
                 tactical_visible.insert(h.chunk);
             }
         }
@@ -584,7 +584,7 @@ mod tests {
     #[test]
     fn allowed_chunks_missing_view_key_is_empty_not_full_sim() {
         let mut sim = FireSimulationSnapshot::default();
-        sim.chunk_heat.push(crate::render::sim_visual_extract::ChunkFireHeat {
+        sim.chunk_heat.push(crate::render::extraction::sim_visual_extract::ChunkFireHeat {
             chunk: IVec2::new(5, 5),
             ..Default::default()
         });
@@ -634,7 +634,7 @@ mod tests {
 
     #[test]
     fn f7_c_lod_caps_differ_strategic_vs_tactical() {
-        use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualGpuInstance};
+        use crate::render::extraction::sim_visual_extract::{ChunkFireHeat, FireVisualGpuInstance};
         let mut sim = FireSimulationSnapshot::default();
         for i in 0..40i32 {
             sim.chunk_heat.push(ChunkFireHeat {

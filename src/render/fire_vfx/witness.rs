@@ -19,26 +19,31 @@ pub const FIRE_SPARK_SCATTER_MAX: usize = 14;
 /// is normalized against per-world zoom limits ([`map_zoom_limits_for_world`](crate::gui::map_zoom_limits_for_world))
 /// so alpha 0.10 corresponded to zoom ≈ 9 on a 320-world, unreachable in normal play. This axis is
 /// the camera's raw scale (`ExtractedCameraMetrics::zoom_level`), which equals px-per-world-unit ==
-/// px-per-tile (tiles are 1 world unit). Hard cull only below this — heat blobs only, no spark flood.
-pub const FIRE_SPARK_MIN_PX_PER_TILE: f32 = 1.5;
+/// Operator debug: zoom hard-cull disabled (`0.0`). Scatter density still soft-ramps toward
+/// [`FIRE_SPARK_FULL_SCATTER_PX_PER_TILE`]. Re-enable a floor later via designer gate.
+pub const FIRE_SPARK_MIN_PX_PER_TILE: f32 = 0.0;
 /// Designer operational play anchor — sparse sparks must read here ([`design_zoom_fire_read_v1.md`]).
 /// Re-keyed to px-per-tile alongside [`FIRE_SPARK_MIN_PX_PER_TILE`] (was `zoom_alpha` 0.42).
-pub const FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE: f32 = 2.5;
+pub const FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE: f32 =
+    crate::terrain::world_scale_contract::OPERATIONAL_PX_PER_TILE;
 /// Full scatter density by operational play (not tactical-only cinematic zoom). Re-keyed to px-per-tile.
-pub const FIRE_SPARK_FULL_SCATTER_PX_PER_TILE: f32 = 4.0;
+pub const FIRE_SPARK_FULL_SCATTER_PX_PER_TILE: f32 =
+    crate::terrain::world_scale_contract::TACTICAL_PX_PER_TILE;
 /// P2-FIRE-SPARK-011 / `--test visual` proof band — still expressed on the `zoom_alpha` axis
 /// (drives [`FireSparkWitness::zoom_alpha`] / camera proof-lock harnesses, not the px-per-tile cull).
 /// Matches [`crate::gui::TACTICAL_VFX_PROOF_ZOOM_ALPHA`].
-pub const FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA: f32 = 0.85;
+pub const FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA: f32 =
+    crate::terrain::world_scale_contract::TACTICAL_PROOF_ZOOM_ALPHA;
 pub(crate) const FIRE_SPARK_BUDGET_PRESSURE: f32 = 0.85;
 
-/// Phase B compute advection gate (`FIRE_SPARK_COMPUTE=0|false|off` disables).
+/// Phase B compute advection — **opt-in** (`FIRE_SPARK_COMPUTE=1`). Default off so
+/// sparks stay on instance origins (legacy 3D advection was flying them off-map).
 #[inline]
 #[must_use]
 pub fn fire_spark_compute_enabled() -> bool {
-    !matches!(
+    matches!(
         std::env::var("FIRE_SPARK_COMPUTE").as_deref(),
-        Ok("0") | Ok("false") | Ok("off")
+        Ok("1") | Ok("true") | Ok("on")
     )
 }
 
@@ -61,10 +66,40 @@ pub(crate) fn fire_spark_witness_phase() -> &'static str {
     }
 }
 
+/// Camera scale axis for spark cull / heat boost (px-per-world-unit == px-per-tile).
+#[inline]
+#[must_use]
+pub fn fire_spark_px_per_tile(scale_x: f32) -> f32 {
+    scale_x.abs()
+}
+
+/// True when GPU sparks and CPU heat boost should both be active at this zoom.
+#[inline]
+#[must_use]
+pub fn fire_spark_enabled_at_px_per_tile(px_per_tile: f32) -> bool {
+    fire_spark_px_per_tile(px_per_tile) >= FIRE_SPARK_MIN_PX_PER_TILE
+}
+
 /// FIRE-VIS-001: scatter ramp on **px-per-tile** (camera `zoom_level`), not `zoom_alpha` — see
 /// [`FIRE_SPARK_MIN_PX_PER_TILE`]. Continuous ramp 0..1 between min and full-scatter px-per-tile.
 #[inline]
 pub(crate) fn fire_spark_zoom_scatter_gate(px_per_tile: f32) -> f32 {
     let span = (FIRE_SPARK_FULL_SCATTER_PX_PER_TILE - FIRE_SPARK_MIN_PX_PER_TILE).max(1e-4);
     ((px_per_tile - FIRE_SPARK_MIN_PX_PER_TILE) / span).clamp(0.0, 1.0)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn operational_play_px_per_tile_enables_sparks_and_heat_boost() {
+        assert!(fire_spark_enabled_at_px_per_tile(
+            FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE
+        ));
+        // Zoom hard-cull disabled (MIN=0) — negative zoom is the only reject.
+        assert!(fire_spark_enabled_at_px_per_tile(0.0));
+        assert!(!fire_spark_enabled_at_px_per_tile(-1.0));
+        assert!(fire_spark_zoom_scatter_gate(FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE) > 0.0);
+    }
 }

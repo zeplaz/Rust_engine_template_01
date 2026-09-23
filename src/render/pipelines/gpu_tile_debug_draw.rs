@@ -24,11 +24,11 @@ use bevy::render::{
 };
 
 use crate::gui::{TileDebugDrawGlobals, TileDebugRenderHost};
-use crate::render::core2d_overlay_order::{
+use crate::render::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
 };
-use crate::render::gpu_buffer_registry::{GPUBufferRegistry, TILE_DEBUG_INSTANCES_BUFFER};
-use crate::render::gpu_tile_debug_buffer::prepare_tile_debug_instance_storage;
+use crate::render::core::gpu_buffer_registry::{GPUBufferRegistry, TILE_DEBUG_INSTANCES_BUFFER};
+use crate::render::pipelines::gpu_tile_debug_buffer::prepare_tile_debug_instance_storage;
 
 pub const TILE_DEBUG_INSTANCED_WGSL: &str = "shaders/debug/tile_debug_instanced.wgsl";
 

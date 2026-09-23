@@ -3,8 +3,13 @@
 //! Without this, generated tiles have no mesh/material and the main camera shows nothing.
 //!
 //! **Performance:** `tile_world_fallback_rasterize` repaints **128×128 dirty chunks** per frame
-//! ([`TileWorldFallbackChunkGrid`], `RASTER_CHUNK_TILES`) when [`TileWorldFallbackRasterDirty`]
+//! ([`TileWorldFallbackChunkGrid`], [`RASTER_CHUNK_TILES`]) when [`TileWorldFallbackRasterDirty`]
 //! bumps — `O(changed_chunks × chunk_area)` not `O(world)` collect + full texture clear.
+//! Cadence + budget still apply.
+//!
+//! **RPC-1-004:** GPU atlas→world bake spike (`TERRAIN_GPU_BAKE_SPIKE`) peeks this dirty grid for
+//! scissors but does **not** steal dirty flags or replace this CPU path as display truth.
+//!
 //! **Fire tint:** after terrain + roads, applies [`crate::gui::map_tile_raster::apply_shared_fire_heat_to_rgba`]
 //! from [`crate::render::SharedOverlayFieldBuffers`] (same source as world preview); raster systems run in
 //! [`TileWorldFallbackAfterFireExtract`] **after** [`crate::render::FireVisualFrameSet::BuildProfiles`].
@@ -54,7 +59,7 @@ use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::{
     Height, Moisture, Temperature, TerrainType, TileMarker, WorldGenParams,
 };
-use crate::render::terrain_render_authority::TerrainRenderAuthority;
+use crate::render::core::terrain_render_authority::TerrainRenderAuthority;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix, WorldGenDenseTerrainCache};
 use crate::terrain::material::MaterialRegistry;
 
@@ -115,6 +120,9 @@ impl TileWorldFallbackRasterDirty {
 /// Dirty-region tile size for overworld CPU raster (tiles per axis).
 pub const RASTER_CHUNK_TILES: u32 = 128;
 
+/// Chebyshev radius of raster chunks to dirty on zoom-band crossing (viewport ring, not full map).
+pub const ZOOM_BAND_DIRTY_RING_RADIUS: u32 = 6;
+
 /// Tracks which 128×128 tile regions need CPU repaint (see [`RASTER_CHUNK_TILES`]).
 #[derive(Resource, Debug, Clone)]
 pub struct TileWorldFallbackChunkGrid {
@@ -163,8 +171,40 @@ impl TileWorldFallbackChunkGrid {
         }
     }
 
+    /// Mark a square ring of raster chunks centered on `(center_cx, center_cz)` (zoom-band partial dirty).
+    pub fn mark_ring_dirty(&mut self, center_cx: u32, center_cz: u32, radius: u32) {
+        if self.chunks_x == 0 || self.chunks_z == 0 {
+            return;
+        }
+        let r = radius.max(1);
+        let x0 = center_cx.saturating_sub(r);
+        let z0 = center_cz.saturating_sub(r);
+        let x1 = (center_cx + r).min(self.chunks_x.saturating_sub(1));
+        let z1 = (center_cz + r).min(self.chunks_z.saturating_sub(1));
+        for cz in z0..=z1 {
+            for cx in x0..=x1 {
+                self.mark_chunk(cx, cz);
+            }
+        }
+    }
+
     pub fn has_dirty(&self) -> bool {
         self.dirty.iter().any(|&d| d)
+    }
+
+    /// Peek dirty chunk coords without clearing flags (RPC-1-004 GPU bake spike).
+    #[must_use]
+    pub fn peek_dirty_chunks(&self) -> Vec<(u32, u32)> {
+        let mut out = Vec::new();
+        for cz in 0..self.chunks_z {
+            for cx in 0..self.chunks_x {
+                let i = (cz * self.chunks_x + cx) as usize;
+                if self.dirty.get(i) == Some(&true) {
+                    out.push((cx, cz));
+                }
+            }
+        }
+        out
     }
 
     /// Take up to `budget` dirty chunk coords and clear their dirty flags.
@@ -440,10 +480,30 @@ fn raster_zoom_band(zoom_alpha: f32) -> u8 {
     (zoom_alpha.clamp(0.0, 1.0) * RASTER_ZOOM_BANDS as f32).floor() as u8
 }
 
+#[inline]
+fn raster_chunk_center_from_camera(desired: &MapCameraDesired) -> (u32, u32) {
+    let tx = desired.translation.x.max(0.0) as u32;
+    let tz = desired.translation.y.max(0.0) as u32;
+    (tx / RASTER_CHUNK_TILES, tz / RASTER_CHUNK_TILES)
+}
+
+#[inline]
+fn mark_zoom_band_dirty(ctrl: &mut TileWorldFallbackRasterCtrl, desired: &MapCameraDesired) {
+    let (cx, cz) = raster_chunk_center_from_camera(desired);
+    if std::env::var_os("RUST_ENGINE_ZOOM_RING_DIRTY").is_some_and(|v| v == "0") {
+        ctrl.chunk_grid.mark_all_dirty();
+    } else {
+        ctrl.chunk_grid
+            .mark_ring_dirty(cx, cz, ZOOM_BAND_DIRTY_RING_RADIUS);
+    }
+}
+
 /// MAP-ZOOM-001 — zoom-band crossing always schedules tile dirty (Option B partial; lib witness).
 #[must_use]
 pub fn tile_raster_dirty_on_zoom_band_change_enabled() -> bool {
-    true
+    let src = include_str!("tile_world_fallback.rs");
+    src.contains("bump_tile_raster_on_main_camera_zoom")
+        && src.contains("raster_zoom_band")
 }
 
 /// Main-camera zoom **band** crossing — full tile re-raster (prevents RTT zoom "ghost" from
@@ -453,11 +513,12 @@ pub fn tile_raster_dirty_on_zoom_band_change_enabled() -> bool {
 /// never drained and the terrain image was asset-committed every frame.
 fn bump_tile_raster_on_main_camera_zoom(
     desired: Res<MapCameraDesiredRes>,
+    zoom_frame: Res<crate::gui::ZoomFrame>,
     mut dirty: ResMut<TileWorldFallbackRasterDirty>,
     mut ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     mut last_accepted_alpha: Local<Option<f32>>,
 ) {
-    let alpha = crate::gui::map_zoom_alpha(desired.scale.x);
+    let alpha = zoom_frame.zoom_alpha;
     let Some(prev) = *last_accepted_alpha else {
         *last_accepted_alpha = Some(alpha);
         return;
@@ -467,7 +528,7 @@ fn bump_tile_raster_on_main_camera_zoom(
     let band_hysteresis = 0.05 / RASTER_ZOOM_BANDS as f32;
     if raster_zoom_band(alpha) != raster_zoom_band(prev) && (alpha - prev).abs() > band_hysteresis
     {
-        ctrl.chunk_grid.mark_all_dirty();
+        mark_zoom_band_dirty(&mut ctrl, &desired.0);
         dirty.bump();
         *last_accepted_alpha = Some(alpha);
     }
@@ -491,6 +552,7 @@ impl Plugin for TileWorldFallbackPlugin {
             .init_resource::<crate::render::FireExtractCadence>()
             .init_resource::<crate::render::FireExtractClock>()
             .init_resource::<crate::render::TileRasterSpikeFeedback>()
+            .init_resource::<crate::gui::ZoomFrame>()
             .init_resource::<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>()
             .init_resource::<crate::gui::map_tile_atlas_stamp::TerrainGpuStampIndices>()
             .configure_sets(
@@ -558,8 +620,11 @@ impl Plugin for TileWorldFallbackPlugin {
     }
 }
 
+/// RPC-2-003: commit WorldMain/SimulationMap pose to authority only; seed Transform for
+/// presentation. [`MapCameraDesired`] is filled by DeriveDesired (or
+/// [`crate::gui::apply_derived_map_camera_desired`]) — no Comp dual-write.
 fn focus_main_camera_on_world_params(
-    mut cam: Query<(&mut Transform, &mut MapCameraDesired), With<MainWorldCamera>>,
+    mut cam: Query<&mut Transform, With<MainWorldCamera>>,
     params: Res<WorldGenParams>,
     test_scene: Option<Res<ActiveTestScene>>,
     launch: Option<Res<EngineLaunchArgs>>,
@@ -585,28 +650,42 @@ fn focus_main_camera_on_world_params(
         .as_ref()
         .map(|s| s.0)
         .is_some_and(|scene| match scene {
-            TestScene::VfxSandbox => true,
+            // VfxSandbox camera is owned by VfxFireTestRegion one-shot focus — do not also
+            // slam tactical proof zoom here (dual writers = shake / miss the burn cluster).
+            TestScene::VfxSandbox => false,
             TestScene::Visual => launch.as_ref().is_some_and(|l| l.full_capture_active()),
             _ => false,
         });
+    let legacy_fit = crate::terrain::world_scale_contract::map_zoom_legacy_fit_enabled();
     let zoom = if tactical_proof {
         crate::gui::map_scale_for_zoom_alpha(
-            crate::gui::TACTICAL_VFX_PROOF_ZOOM_ALPHA,
+            crate::terrain::world_scale_contract::TACTICAL_PROOF_ZOOM_ALPHA,
             zoom_lo,
             zoom_hi,
         )
+    } else if legacy_fit {
+        let margin = crate::terrain::world_scale_contract::WHOLE_MAP_FIT_MARGIN;
+        let fit = margin * (viewport.x / world_w.max(1.0)).min(viewport.y / world_h.max(1.0));
+        fit.clamp(zoom_lo, zoom_hi)
     } else {
         match test_scene.as_ref().map(|s| s.0) {
             Some(TestScene::Fire) | Some(TestScene::Atmosphere) => {
-                let margin = 0.9;
+                let margin = crate::terrain::world_scale_contract::WHOLE_MAP_FIT_MARGIN;
                 let fit: f32 = margin * (viewport.x / world_w).min(viewport.y / world_h);
                 fit.clamp(zoom_lo, zoom_hi)
             }
-            _ => {
-                let margin = 0.9;
+            Some(TestScene::VfxSandbox) => {
+                // Interim until VfxFireTestRegion focuses the burn cluster — never whole-map fit.
+                let margin = crate::terrain::world_scale_contract::WHOLE_MAP_FIT_MARGIN;
                 let fit = margin * (viewport.x / world_w.max(1.0)).min(viewport.y / world_h.max(1.0));
                 fit.clamp(zoom_lo, zoom_hi)
+                    .max(crate::terrain::world_scale_contract::OPERATIONAL_PX_PER_TILE * 4.0)
             }
+            _ => crate::gui::map_scale_for_zoom_alpha(
+                crate::terrain::world_scale_contract::OPERATIONAL_ZOOM_ALPHA,
+                zoom_lo,
+                zoom_hi,
+            ),
         }
     };
     let pose = MapCameraDesired {
@@ -614,30 +693,25 @@ fn focus_main_camera_on_world_params(
         scale: Vec3::splat(zoom),
         rotation: Quat::IDENTITY,
     };
-    for (mut t, mut desired) in cam.iter_mut() {
-        t.translation.x = cx;
-        t.translation.y = cy;
-        t.translation.z = 999.0;
-        t.scale = Vec3::ONE;
-        t.rotation = Quat::IDENTITY;
-        // Mirror the computed startup pose into the MapCameraDesired component
-        // (Bevy 0.19: sync_map_camera_pose_to_view_authority runs in ApplyInput,
-        // before DeriveDesired, and unconditionally commits this component's stale
-        // spawn-default pose back to the authority on the same frame — clobbering
-        // the zoom set below if this write is skipped).
-        *desired = pose.clone();
-    }
     crate::gui::commit_map_camera_pose_to_view_authority(
         authority.as_mut(),
         trace.as_mut(),
         &pose,
     );
+    // Same-frame presentation seed; DeriveDesired fills MapCameraDesired on first Update.
+    for mut t in cam.iter_mut() {
+        t.translation.x = cx;
+        t.translation.y = cy;
+        t.translation.z = 999.0;
+        t.scale = Vec3::ONE;
+        t.rotation = Quat::IDENTITY;
+    }
 }
 
 /// After [`focus_main_camera_on_world_params`], align minimap follow state with the committed main map pose.
 fn sync_minimap_follow_camera_on_sim_enter(
     params: Res<WorldGenParams>,
-    desired: Res<MapCameraDesiredRes>,
+    authority: Res<crate::render::view_runtime::ViewProjectionAuthority>,
     mut map_views: ResMut<crate::gui::MapViewInstances>,
     mut shell: ResMut<MinimapShellState>,
 ) {
@@ -645,7 +719,11 @@ fn sync_minimap_follow_camera_on_sim_enter(
         return;
     }
     let center = if params.width > 0 && params.height > 0 {
-        Vec2::new(desired.translation.x, desired.translation.y)
+        use crate::render::view_runtime::ViewSurfaceId;
+        authority
+            .surface(ViewSurfaceId::WorldMain)
+            .map(|s| s.camera.translation)
+            .unwrap_or(map_views.minimap.camera_center)
     } else {
         map_views.minimap.camera_center
     };
@@ -1120,6 +1198,7 @@ fn raster_tile_fallback_subregion(
 struct TileFallbackRasterExtras<'w> {
     dense_cache: Option<Res<'w, WorldGenDenseTerrainCache>>,
     water_catalog: Option<Res<'w, crate::render::WaterSurfaceVisualCatalog>>,
+    zoom_frame: Res<'w, crate::gui::ZoomFrame>,
 }
 
 fn tile_world_fallback_rasterize(
@@ -1153,6 +1232,7 @@ fn tile_world_fallback_rasterize(
     let TileFallbackRasterExtras {
         dense_cache,
         water_catalog,
+        zoom_frame,
     } = extras;
     if state.sprite_entity.is_none()
         || state.image == Handle::default()
@@ -1175,14 +1255,14 @@ fn tile_world_fallback_rasterize(
     raster_ctrl.chunk_grid.resize_for_world(tex_w_u, tex_h_u);
 
     let rev = raster_dirty.revision();
-    let zoom_alpha = crate::gui::map_zoom_alpha(camera.scale.x);
+    let zoom_alpha = zoom_frame.zoom_alpha;
     let zoom_band = raster_zoom_band(zoom_alpha);
     let zoom_band_changed = raster_ctrl.last_raster_zoom_band != Some(zoom_band);
     let spike_active = raster_policy.defer_zoom_dirty;
     if zoom_band_changed {
         raster_ctrl.last_raster_zoom_band = Some(zoom_band);
         if !raster_ctrl.chunk_grid.has_dirty() {
-            raster_ctrl.chunk_grid.mark_all_dirty();
+            mark_zoom_band_dirty(&mut raster_ctrl, &camera.0);
         }
     }
 
@@ -1222,6 +1302,8 @@ fn tile_world_fallback_rasterize(
         usize::MAX
     } else if test_harness {
         raster_policy.chunks_per_frame.saturating_mul(4).max(16)
+    } else if zoom_band_changed {
+        raster_policy.chunks_per_frame.max(8)
     } else if spike_active {
         raster_policy.chunks_per_frame.min(2)
     } else {
@@ -1263,11 +1345,14 @@ fn tile_world_fallback_rasterize(
     // VX-P0-01: strategic zoom boost only on the main overworld raster — minimap stays 1.0 so
     // optional fire-heat toggle does not wash the whole panel when zoomed out.
     // FIRE-VIS-001: keyed on px-per-tile (camera.scale.x), not zoom_alpha — matches the GPU spark
-    // cull axis (FIRE_SPARK_MIN_PX_PER_TILE) so CPU heat boost and GPU sparks agree on "far zoom".
-    let fire_boost_main = if camera.scale.x < crate::render::gpu_particles::FIRE_SPARK_MIN_PX_PER_TILE {
-        1.0
+    // cull axis so CPU heat boost and GPU sparks agree on "far zoom".
+    let px_per_tile = zoom_frame.px_per_tile;
+    let fire_boost_main = if crate::render::pipelines::gpu_particles::fire_spark_enabled_at_px_per_tile(px_per_tile)
+    {
+        // Operator findability: keep heat tint readable even at mid zoom (sparks are pinpoints).
+        (1.5 + 1.2 / px_per_tile.max(0.5)).clamp(1.5, 3.5)
     } else {
-        (1.0 + 0.85 / camera.scale.x.max(0.5)).clamp(1.0, 2.0)
+        1.25
     };
     let fire_boost_minimap = 1.0;
     let time_secs = time.elapsed_secs();
@@ -1438,7 +1523,7 @@ fn tile_world_fallback_rasterize(
 }
 
 fn tile_world_fallback_rasterize_perf(
-    authority: Res<crate::render::terrain_render_authority::TerrainRenderAuthority>,
+    authority: Res<crate::render::core::terrain_render_authority::TerrainRenderAuthority>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     mut budget: Option<ResMut<FrameBudgetDiagnostics>>,
     mut perf: Option<ResMut<crate::render::FramePerf>>,
@@ -1709,7 +1794,7 @@ pub fn draw_simulation_minimap_egui(
         if let (Some(settings), Some(edges), Some(power)) =
             (infra_settings, infra_overlays, power_presentation)
         {
-            super::power_map_overlay_draw::draw_power_strokes_on_minimap(
+            super::pipelines::power_map_overlay_draw::draw_power_strokes_on_minimap(
                 &painter,
                 edges,
                 settings,
@@ -1893,6 +1978,15 @@ mod chunk_grid_tests {
     fn chunk_bounds_clamp_to_world() {
         let (x0, y0, x1, y1) = TileWorldFallbackChunkGrid::chunk_pixel_bounds(1, 1, 200, 200);
         assert_eq!((x0, y0, x1, y1), (128, 128, 200, 200));
+    }
+
+    #[test]
+    fn mark_ring_dirty_only_touches_local_neighborhood() {
+        let mut grid = TileWorldFallbackChunkGrid::default();
+        grid.resize_for_world(512, 512);
+        grid.mark_ring_dirty(2, 2, 1);
+        assert!(grid.dirty[(2 * grid.chunks_x + 2) as usize]);
+        assert!(!grid.dirty[0]);
     }
 
     #[test]

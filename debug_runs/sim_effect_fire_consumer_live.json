@@ -1,0 +1,163 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "VSS-T3-FIRE-CONSUMER-GATE",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json"
+    ],
+    "relative_path": "debug_runs/sim_effect_fire_consumer_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "sim_steward_vss_t3_overlay_authority",
+    "written_at_epoch_secs": 1787979526
+  },
+  "authority_spine": {
+    "ignition_waist": "EmberSpotIgnitionEvent → apply_ember_spot_ignitions",
+    "overlay_cpu": "sync_shared_overlay_from_simulation → SharedOverlayFieldBuffers",
+    "particles": "fire_vfx → gpu_particle_draw → gpu_fire_particle_raster",
+    "sim_heat": "ChunkSurfaceFire / ChunkFireOverlay (ECS hot path)"
+  },
+  "canonical_overlay_writer": "src/render/extraction/fire_visual_extract.rs::sync_shared_overlay_from_simulation",
+  "dissent": [],
+  "dual_writer_candidates": [
+    {
+      "canonical_writer": "single funnel target — VSS-T3-001 not yet enforced",
+      "file": "src/sim/effects/drain.rs",
+      "note": "SimEffect spine dispatches IgniteCells/LightningStrike/StructureHeat → ember events in parallel with emit_ember_spot_ignition_events (spot diffusion).",
+      "resource": "EmberSpotIgnitionEvent (MessageWriter)",
+      "severity": "high",
+      "symbol": "drain_sim_effect_queue_system / dispatch_one"
+    },
+    {
+      "canonical_writer": "single funnel target — VSS-T3-001 not yet enforced",
+      "file": "src/systems/fire/ember_spot_ignition.rs",
+      "note": "Second ingress to ignition waist; apply_ember_spot_ignitions is sole ChunkFireOverlay applier — writers must consolidate before T3-001 close.",
+      "resource": "EmberSpotIgnitionEvent (MessageWriter)",
+      "severity": "medium",
+      "symbol": "emit_ember_spot_ignition_events"
+    },
+    {
+      "canonical_writer": "EmberSpotIgnitionEvent → apply_ember_spot_ignitions",
+      "file": "src/engine/test_harness.rs",
+      "note": "Harness seeds ECS heat directly (overlay buffer intentionally not dual-written since VT-4 fix comment); bypasses ignition funnel for witness parity.",
+      "resource": "ChunkSurfaceFire / ChunkFireOverlay",
+      "severity": "medium",
+      "symbol": "apply_test_scene_fire_seeds"
+    },
+    {
+      "canonical_writer": "src/render/extraction/fire_visual_extract.rs::sync_shared_overlay_from_simulation",
+      "file": "src/systems/fire/play_fire_visibility.rs",
+      "note": "Unit test direct overlay seed — schedule-clean but masks production dual-write if copied to runtime.",
+      "resource": "SharedOverlayFieldBuffers",
+      "severity": "low",
+      "symbol": "test-only insert + bump"
+    }
+  ],
+  "exit_predicates": {
+    "effects_stub_schedule_clean": null,
+    "ignition_single_funnel": false,
+    "overlay_single_writer": true,
+    "vt4_overlay_hash_stable": true
+  },
+  "gate_id": "VSS-T3-002",
+  "grep_summary": {
+    "EmberSpotIgnitionEvent_MessageWriter": [
+      "src/systems/fire/ember_spot_ignition.rs::emit_ember_spot_ignition_events",
+      "src/sim/effects/drain.rs::drain_sim_effect_queue_system"
+    ],
+    "SharedOverlayFieldBuffers_ResMut_production": [
+      "src/render/extraction/fire_visual_extract.rs::sync_shared_overlay_from_simulation"
+    ],
+    "SharedOverlayFieldBuffers_test_only": [
+      "src/systems/fire/play_fire_visibility.rs",
+      "src/render/witness/visual_agreement.rs",
+      "src/render/witness/vt_ci_matrix.rs",
+      "src/gui/view_representation.rs (unit test bump)"
+    ]
+  },
+  "routing": {
+    "conflict_matrix": "T2 + T3 + fire raster = SERIAL (same overlay authority per plan_vfx_spectator_scale_program_v1.md)",
+    "ordered_slices": [
+      {
+        "blocked_by": [],
+        "deliverable": "Single ignition funnel via EmberSpotIgnitionEvent — consolidate drain + spot emit behind one producer contract",
+        "id": "VSS-T3-001",
+        "owner": "@coder"
+      },
+      {
+        "deliverable": "Remove overlay dual-writers (VT-4) — presentation flags only on sim enter",
+        "id": "VSS-T3-002",
+        "owner": "@sim-steward",
+        "status": "done"
+      },
+      {
+        "blocked_by": [
+          "VSS-T3-001",
+          "VSS-T3-002"
+        ],
+        "deliverable": "Save round-trip fire state hash",
+        "id": "VSS-T3-003",
+        "owner": "@coder"
+      },
+      {
+        "blocked_by": [
+          "VSS-T3-001"
+        ],
+        "deliverable": "DEBT registry from effects plan — delete atmosphere stubs",
+        "id": "VSS-T3-004",
+        "owner": "@cleanup-intelligence"
+      }
+    ]
+  },
+  "status": "done",
+  "storage_class": "② GAME HOT PATH — ECS resources; witness JSON is dev-only (③-adjacent), not sim authority"
+}

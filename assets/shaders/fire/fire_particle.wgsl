@@ -51,13 +51,23 @@ fn expand_instances(@builtin(global_invocation_id) gid: vec3<u32>) {
     if params.spark_sim_enabled > 0.5 {
         world = spark_state[i].pos.xyz;
     }
-    var half = base_half * (0.88 + heat * 0.14);
-    half = clamp(half, 0.08, 64.0);
+    var half = base_half * (0.92 + heat * 0.18);
+    // Screen-stable but capped — avoid chunk-sized yellow blobs.
+    let zoom_ref = clamp(params.camera_zoom, 0.85, 20.0);
+    half = half * (2.4 / zoom_ref);
+    half = clamp(half, 0.85, 4.5);
     if class_id > 0.5 {
-        half = half * 0.72;
+        half = half * 0.8;
     }
-    let ember_scale = ember * (0.45 + class_id * 0.35);
-    let heat_scale = heat * (0.38 + smoke * 0.52);
+    // Soft bob when spark-sim is off / stalled — avoid frozen "puff" look without large shake.
+    if params.spark_sim_enabled < 0.5 {
+        let bob = sin(params.time_secs * 2.8 + f32(i) * 0.37) * (0.04 + ember * 0.1);
+        world.y = world.y + bob;
+        let drift = cos(params.time_secs * 1.7 + f32(i) * 0.19) * (0.02 + heat * 0.06);
+        world.x = world.x + drift;
+    }
+    let ember_scale = max(ember, 0.4) * (0.5 + class_id * 0.2);
+    let heat_scale = max(heat, 0.3) * (0.5 + smoke * 0.35);
     let base = i * 4u;
     expanded[base + 0u] = GpuParticleQuadVertex(vec4(world.x - half, world.y - half, heat_scale, ember_scale));
     expanded[base + 1u] = GpuParticleQuadVertex(vec4(world.x + half, world.y - half, heat_scale, ember_scale));

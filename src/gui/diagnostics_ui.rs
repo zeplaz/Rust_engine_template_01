@@ -21,12 +21,14 @@ use crate::gui::style::{
 use crate::gui::editor::world_preview::{PreviewPathAuthority, PreviewPresentationDebug};
 use crate::gui::gameplay_capture::GameplayRecorder;
 use crate::gui::representation_policy::RepresentationResult;
+use crate::gui::{ViewId, WorldLodBand, WorldRepresentationFrame, ZoomFrame};
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::engine::test_harness::ActiveTestScene;
 use crate::render::{
-    fire_streaming_b_green, ActiveFireChunkSet, AppStage5ReadinessReport, FireChunkRuntime,
-    FireStreamingLiveProofState, FireStreamingWitness, WeatherFireFieldDebugOverlay,
+    fire_cap_for_world_band, fire_streaming_b_green, tactical_fire_visual, ActiveFireChunkSet,
+    AppStage5ReadinessReport, FireChunkRuntime, FireStreamingLiveProofState, FireStreamingWitness,
+    FireVisualFramesByView, VisibleFireChunkSet, WeatherFireFieldDebugOverlay,
     FIRE_SIM_CHUNK_ACTIVE_EPS, FIRE_STREAMING_SLEEP_RADIUS,
 };
 use crate::systems::atmosphere::AtmosphereDiagnostics;
@@ -150,6 +152,23 @@ pub struct DiagnosticsSpinePanels<'w> {
     logistics_ai: Option<Res<'w, LogisticsAiRuntime>>,
 }
 
+/// F7O per-view fire overlay extract (separate param bundle — Bevy limit).
+#[derive(SystemParam)]
+pub struct FireOverlayDiagnosticsPanels<'w> {
+    zoom: Option<Res<'w, ZoomFrame>>,
+    world_frame: Option<Res<'w, WorldRepresentationFrame>>,
+    fire_by_view: Option<Res<'w, FireVisualFramesByView>>,
+    visible: Option<Res<'w, VisibleFireChunkSet>>,
+    view_authority: Option<Res<'w, crate::render::view_runtime::ViewProjectionAuthority>>,
+    spark_frame: Option<Res<'w, crate::render::WorldFireParticleFrame>>,
+    spark_draw: Option<Res<'w, crate::render::WorldFireParticleDrawDispatch>>,
+    rtt_host: Option<Res<'w, crate::gui::RttCore2dOverlayHostState>>,
+    overlay: Option<Res<'w, crate::render::SharedOverlayFieldBuffers>>,
+    smoke_extract: Option<Res<'w, crate::render::SimChunkSmokeVisualExtract>>,
+    precip_status: Option<Res<'w, crate::render::WeatherPrecipDrawStatus>>,
+    precip_frame: Option<Res<'w, crate::render::WeatherPrecipFrame>>,
+}
+
 /// Renders the panel; consumers add tabs by extending this system or chaining own systems
 /// in `EguiPrimaryContextPass` after this one.
 pub fn diagnostics_ui_system(
@@ -166,6 +185,7 @@ pub fn diagnostics_ui_system(
     mut construction_book: ResMut<CorridorConstructionBook>,
     palette: Res<UiPalette>,
     spine: DiagnosticsSpinePanels,
+    fire_overlay: FireOverlayDiagnosticsPanels,
     ecology: EcologyDiagnosticsPanels,
     veg_extract: VegExtractDiagnosticsPanel,
 ) -> Result {
@@ -180,7 +200,10 @@ pub fn diagnostics_ui_system(
         "Diagnostics ({})",
         InputBindings::format_key(bindings.toggle_diagnostics)
     )))
+    // Keep on-screen and clear of the far-left chrome / (0,0) dead zone.
+    .default_pos(egui::pos2(420.0, 64.0))
     .default_size(egui::vec2(420.0, 520.0))
+    .constrain(true)
         .collapsible(true)
         .show(ctx, |ui| {
             widget_scroll_vertical_fill("diagnostics_body_scroll", ui.available_height()).show(ui, |ui| {
@@ -267,14 +290,12 @@ pub fn diagnostics_ui_system(
                             ui,
                             &palette,
                             format!(
-                                "fill #{} · advect #{} · emitters #{} · particles #{} · coupling #{} · visual #{} · render_prep #{}",
+                                "fill #{} · advect #{} · emitters #{} · coupling #{} · visual #{} · layers off (ES-4 WGSL quarantined)",
                                 d.field_fill_runs,
                                 d.advect_runs,
                                 d.emitter_sync_runs,
-                                d.particle_controller_runs,
                                 d.coupling_runs,
                                 d.visual_extract_runs,
-                                d.render_prep_runs
                             ),
                         );
                         muted_label(
@@ -646,6 +667,131 @@ pub fn diagnostics_ui_system(
                             ui,
                             &palette,
                             "Empty — dark gray #1E1E24 — no terrain / no fire",
+                        );
+                    });
+            }
+
+            if fire_overlay.fire_by_view.is_some() {
+                let zoom = fire_overlay.zoom.as_deref();
+                let world = fire_overlay.world_frame.as_deref();
+                let by_view = fire_overlay.fire_by_view.as_deref();
+                let visible = fire_overlay.visible.as_deref();
+                let tactical = by_view.map(tactical_fire_visual);
+                let world_band = world
+                    .map(|f| f.global_band())
+                    .or_else(|| zoom.map(|z| z.lod_band))
+                    .unwrap_or(WorldLodBand::Strategic);
+                let cap = fire_cap_for_world_band(world_band);
+                let vis_count = visible
+                    .and_then(|v| v.per_view.get(&ViewId::WorldMain))
+                    .map(|s| s.len())
+                    .unwrap_or(0);
+                let tac_inst = tactical.map(|f| f.instances.len()).unwrap_or(0);
+                let minimap_inst = by_view
+                    .and_then(|m| m.by_id.get(&ViewId::Minimap))
+                    .map(|f| f.instances.len())
+                    .unwrap_or(0);
+                let policy_ok = fire_overlay.view_authority.is_some();
+                let f7o_green = vis_count > 0 || tac_inst > 0;
+                egui::CollapsingHeader::new("Fire overlay & LOD (F7O)")
+                    .default_open(state.sections_default_open)
+                    .show(ui, |ui| {
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!("F7O gate=TRIAGE-FIRE-OVERLAY-DBG green={f7o_green}"),
+                        );
+                        if let Some(z) = zoom {
+                            muted_label(
+                                ui,
+                                &palette,
+                                format!(
+                                    "F7O zoom px_per_tile={:.2} alpha={:.3} lod_band={:?}",
+                                    z.px_per_tile, z.zoom_alpha, z.lod_band
+                                ),
+                            );
+                        }
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "F7O view=WorldMain lod_band={world_band:?} cap={cap}"
+                            ),
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "F7O visible_chunks={vis_count} instances={tac_inst} band={world_band:?}"
+                            ),
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "F7O minimap_instances={minimap_inst} tactical_instances={tac_inst}"
+                            ),
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "F7O extract_authority=ViewProjectionAuthority policy_ok={policy_ok}"
+                            ),
+                        );
+                        let spark = fire_overlay.spark_frame.as_deref();
+                        let draw = fire_overlay.spark_draw.as_deref();
+                        let host = fire_overlay
+                            .rtt_host
+                            .as_ref()
+                            .map(|h| h.host_present)
+                            .unwrap_or(false);
+                        let overlay_cells = fire_overlay
+                            .overlay
+                            .as_ref()
+                            .map(|o| o.chunk_fire_heat.len())
+                            .unwrap_or(0);
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "F7O SPARKS rows={} culled={} view={} compute={} draw_inst={} host={} overlay_cells={}",
+                                spark.map(|s| s.spark_witness.rows).unwrap_or(0),
+                                spark.map(|s| s.spark_witness.view_culled).unwrap_or(true),
+                                spark.map(|s| s.spark_witness.projection_view).unwrap_or("?"),
+                                crate::render::fire_spark_compute_enabled(),
+                                draw.map(|d| d.instance_count).unwrap_or(0),
+                                host,
+                                overlay_cells,
+                            ),
+                        );
+                        muted_label(
+                            ui,
+                            &palette,
+                            "F7O SPARKS: need rows>0 AND host=true; host=false → overlay hosts missing; rows=0 → overlay_cells",
+                        );
+                        let smoke_rows = fire_overlay
+                            .smoke_extract
+                            .as_ref()
+                            .map(|s| s.instances.len())
+                            .unwrap_or(0);
+                        let precip_draw = fire_overlay
+                            .precip_status
+                            .as_ref()
+                            .map(|p| p.draw_instances)
+                            .unwrap_or(0);
+                        let precip_streaks = fire_overlay
+                            .precip_frame
+                            .as_ref()
+                            .map(|f| f.instance_count)
+                            .unwrap_or(0);
+                        muted_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "F7O VFX lanes smoke_extract={} precip_streaks={} precip_draw={} host={}",
+                                smoke_rows, precip_streaks, precip_draw, host,
+                            ),
                         );
                     });
             }

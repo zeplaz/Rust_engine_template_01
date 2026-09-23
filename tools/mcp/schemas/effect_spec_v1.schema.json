@@ -1,0 +1,558 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/effect_spec_v1.schema.json",
+  "title": "EffectSpec v1 — deterministic artist VFX consumable",
+  "description": "VSS-T4-001 — artist-owned effect consumable spec. Validates before bpy/WGSL pack → staging → promote → assets/effects/registry/. Extends fire_vfx spine; does not fork draw paths.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "effect_id",
+    "seed",
+    "batch_id",
+    "lane",
+    "spawn_hook",
+    "emit",
+    "lod_tiers"
+  ],
+  "properties": {
+    "schema_version": { "const": "effect_spec_v1" },
+    "effect_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{2,48}$",
+      "description": "Registry key under assets/effects/registry/"
+    },
+    "display_name": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "description": "APS browse label — not a registry key"
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Deterministic variation seed — required (mcp-production-rules deterministic_output)"
+    },
+    "batch_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{2,64}$",
+      "description": "Reference-effect set or atlas group — required for batch_processing gate (VSS-T4-002 ships spark/smoke/rain as one batch)"
+    },
+    "development_tier": {
+      "type": "string",
+      "enum": ["smoke", "lod0", "production"],
+      "default": "smoke",
+      "description": "smoke = G4 preview only; production = promote-eligible after validate"
+    },
+    "lane": {
+      "type": "string",
+      "enum": ["particle_instanced", "gpu_field", "material_overlay", "embellishment"],
+      "description": "Which render spine owns this effect — must match plan_effects_system_architecture L4/L5/L6"
+    },
+    "sim_coupling": {
+      "type": "string",
+      "enum": ["none", "heat_field", "smoke_field", "precip_field", "custom_message"],
+      "default": "none",
+      "description": "SimEffect spine coupling — fire is consumer, not authority"
+    },
+    "spawn_hook": {
+      "$ref": "#/$defs/spawn_hook_kind",
+      "description": "How the runtime attaches this consumable at spawn time"
+    },
+    "spawn_hook_config": {
+      "$ref": "#/$defs/spawn_hook_config"
+    },
+    "grid": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "grid_alignment gate — tile-snapped placement; no free rotation",
+      "required": ["tile_units", "rotation_quarters"],
+      "properties": {
+        "tile_units": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "default": 1,
+          "description": "World units per tactical tile (align with world scale contract VSS-T1)"
+        },
+        "snap_to_grid": {
+          "type": "boolean",
+          "default": true
+        },
+        "rotation_quarters": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 3,
+          "default": 0,
+          "description": "Quarter-turn only — 0..3; blocks free-rotated props"
+        },
+        "anchor": {
+          "type": "string",
+          "enum": ["tile_center", "tile_corner_sw", "entity_origin"],
+          "default": "tile_center"
+        }
+      }
+    },
+    "emit": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["duration_secs", "rate"],
+      "properties": {
+        "duration_secs": { "type": "number", "minimum": 0.01, "maximum": 600 },
+        "rate": { "type": "number", "minimum": 0, "maximum": 10000 },
+        "burst_count": { "type": "integer", "minimum": 0, "maximum": 100000 },
+        "lifetime_secs": {
+          "type": "number",
+          "minimum": 0.01,
+          "maximum": 30,
+          "description": "Per-particle lifetime — maps to spark compute respawn_life"
+        },
+        "prewarm_secs": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 10,
+          "default": 0
+        }
+      }
+    },
+    "lod_tiers": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Per-WorldLodBand caps — aligns with WorldLodBand + fire_view_extract designer table",
+      "required": ["operational"],
+      "properties": {
+        "macro": { "$ref": "#/$defs/lod_tier_policy" },
+        "strategic": { "$ref": "#/$defs/lod_tier_policy" },
+        "operational": { "$ref": "#/$defs/lod_tier_policy" },
+        "local_tactical": { "$ref": "#/$defs/lod_tier_policy" }
+      }
+    },
+    "visual": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "type": "string",
+          "enum": ["wgsl_pack", "blender_glb", "atlas_sheet"],
+          "description": "no_ai_generated_images — final art from toolchain only"
+        },
+        "asset_path": {
+          "type": "string",
+          "pattern": "^assets/",
+          "description": "Promoted path under assets/ — staging paths forbidden at ship"
+        },
+        "shader_entry": { "type": "string" },
+        "shader_pack": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "compute": { "type": "string" },
+            "draw": { "type": "string" },
+            "particle": { "type": "string" }
+          }
+        },
+        "blend": { "type": "string", "enum": ["alpha", "additive", "multiply"] },
+        "sprite_px": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 64,
+          "description": "Base half-edge in screen px at reference zoom"
+        },
+        "tint": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0, "maximum": 1 },
+          "minItems": 3,
+          "maxItems": 4
+        }
+      }
+    },
+    "preview": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "G4 preview tool + Effect Sandbox capture contract",
+      "properties": {
+        "frames": { "type": "integer", "minimum": 1, "maximum": 300, "default": 90 },
+        "camera_zoom_px_per_tile": { "type": "number", "minimum": 1, "maximum": 64, "default": 8 },
+        "entry_path": {
+          "type": "string",
+          "enum": ["effect_sandbox", "scenario_script", "harness_parity"],
+          "default": "effect_sandbox",
+          "description": "VSS-T2: harness_parity is diagnostic only — not sole ship proof"
+        },
+        "warmup_frames": { "type": "integer", "minimum": 0, "maximum": 120, "default": 30 },
+        "capture_resolution": {
+          "type": "array",
+          "items": { "type": "integer", "minimum": 64, "maximum": 4096 },
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [512, 512]
+        }
+      }
+    },
+    "preview_witness": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Filled by validate/preview MCP tools — honest_gate required before promote",
+      "required": ["witness_schema"],
+      "properties": {
+        "witness_schema": {
+          "type": "string",
+          "const": "artist_vfx_preview_witness_v1"
+        },
+        "witness_path": {
+          "type": "string",
+          "pattern": "^debug_runs/",
+          "description": "Live JSON path — e.g. debug_runs/artist_vfx_pipeline_live.json"
+        },
+        "preview_job_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]{2,64}$"
+        },
+        "frames_captured": { "type": "integer", "minimum": 0, "maximum": 300 },
+        "capture_hash": {
+          "type": "string",
+          "pattern": "^[a-f0-9]{64}$",
+          "description": "SHA-256 of deterministic frame digest — proves reproducible preview"
+        },
+        "staging_path": {
+          "type": "string",
+          "pattern": "^assets/staging/"
+        },
+        "promoted_path": {
+          "type": "string",
+          "pattern": "^assets/effects/"
+        },
+        "honest_gate": {
+          "type": "string",
+          "enum": ["pending", "honest", "dishonest_gate"],
+          "default": "pending"
+        },
+        "captured_at_utc": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "toolchain": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "mcp_tool": { "type": "string" },
+            "cli_parity": { "type": "boolean" },
+            "blender_present": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "promotion": {
+      "type": "object",
+      "additionalProperties": false,
+      "description": "Staging → registry copy contract — promote never mutates source spec",
+      "properties": {
+        "staging_dir": { "type": "string", "pattern": "^assets/staging/" },
+        "registry_dir": {
+          "type": "string",
+          "const": "assets/effects/registry/",
+          "description": "Fixed promote target for EffectConsumable loader"
+        },
+        "sidecar": {
+          "type": "string",
+          "pattern": "\\.ron$",
+          "description": "Bevy registry sidecar beside promoted pack"
+        },
+        "confirmed": { "type": "boolean", "default": false }
+      }
+    },
+    "rules_check": {
+      "type": "object",
+      "description": "mcp-production-rules gate — must pass before promote",
+      "required": ["passed", "seed"],
+      "properties": {
+        "passed": { "type": "boolean" },
+        "blocked_by": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": [
+              "no_ai_generated_images",
+              "deterministic_output",
+              "batch_processing",
+              "grid_alignment"
+            ]
+          }
+        },
+        "seed": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "tribunal": {
+      "type": "object",
+      "description": "Optional dissent slot — minority notes preserved (VSS-T5)",
+      "additionalProperties": false,
+      "properties": {
+        "verdict": { "type": "string", "enum": ["ship", "revise", "dissent"] },
+        "dissent": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["agent", "reason"],
+            "additionalProperties": false,
+            "properties": {
+              "agent": { "type": "string" },
+              "reason": { "type": "string" },
+              "proposed_change": { "type": "string" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": { "spawn_hook": { "const": "world_xy" } },
+        "required": ["spawn_hook"]
+      },
+      "then": {
+        "properties": {
+          "spawn_hook_config": {
+            "required": ["world_xy"],
+            "properties": {
+              "world_xy": { "$ref": "#/$defs/spawn_world_xy" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "spawn_hook": { "const": "attach_entity" } },
+        "required": ["spawn_hook"]
+      },
+      "then": {
+        "properties": {
+          "spawn_hook_config": {
+            "required": ["attach_entity"],
+            "properties": {
+              "attach_entity": { "$ref": "#/$defs/spawn_attach_entity" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "spawn_hook": { "const": "field_sample" } },
+        "required": ["spawn_hook"]
+      },
+      "then": {
+        "properties": {
+          "spawn_hook_config": {
+            "required": ["field_sample"],
+            "properties": {
+              "field_sample": { "$ref": "#/$defs/spawn_field_sample" }
+            }
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": { "development_tier": { "const": "production" } },
+        "required": ["development_tier"]
+      },
+      "then": {
+        "required": ["visual", "rules_check"],
+        "properties": {
+          "rules_check": {
+            "properties": { "passed": { "const": true } }
+          }
+        }
+      }
+    }
+  ],
+  "examples": [
+    {
+      "schema_version": "effect_spec_v1",
+      "effect_id": "spark_shower",
+      "display_name": "Spark Shower (reference)",
+      "seed": 42001,
+      "batch_id": "vss_t4_reference_effects_v1",
+      "development_tier": "smoke",
+      "lane": "particle_instanced",
+      "sim_coupling": "heat_field",
+      "spawn_hook": "world_xy",
+      "spawn_hook_config": {
+        "world_xy": {
+          "tile_x": 0,
+          "tile_y": 0,
+          "offset_tile": [0.5, 0.5]
+        }
+      },
+      "grid": {
+        "tile_units": 1,
+        "snap_to_grid": true,
+        "rotation_quarters": 0,
+        "anchor": "tile_center"
+      },
+      "emit": {
+        "duration_secs": 4,
+        "rate": 120,
+        "burst_count": 48,
+        "lifetime_secs": 1.2,
+        "prewarm_secs": 0.5
+      },
+      "lod_tiers": {
+        "macro": { "enabled": false, "max_instances": 0, "rate_scale": 0 },
+        "strategic": { "enabled": true, "max_instances": 32, "rate_scale": 0.25 },
+        "operational": { "enabled": true, "max_instances": 128, "rate_scale": 0.6 },
+        "local_tactical": { "enabled": true, "max_instances": 512, "rate_scale": 1 }
+      },
+      "visual": {
+        "source": "wgsl_pack",
+        "shader_pack": {
+          "compute": "assets/shaders/fire/fire_spark_compute.wgsl",
+          "draw": "assets/shaders/fire/fire_particle_draw.wgsl",
+          "particle": "assets/shaders/fire/fire_particle.wgsl"
+        },
+        "blend": "additive",
+        "sprite_px": 3
+      },
+      "preview": {
+        "frames": 90,
+        "camera_zoom_px_per_tile": 8,
+        "entry_path": "effect_sandbox",
+        "warmup_frames": 30
+      }
+    }
+  ],
+  "$defs": {
+    "spawn_hook_kind": {
+      "type": "string",
+      "enum": ["world_xy", "attach_entity", "field_sample"]
+    },
+    "spawn_hook_config": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "world_xy": { "$ref": "#/$defs/spawn_world_xy" },
+        "attach_entity": { "$ref": "#/$defs/spawn_attach_entity" },
+        "field_sample": { "$ref": "#/$defs/spawn_field_sample" }
+      }
+    },
+    "spawn_world_xy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["tile_x", "tile_y"],
+      "properties": {
+        "tile_x": { "type": "integer" },
+        "tile_y": { "type": "integer" },
+        "offset_tile": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0, "maximum": 1 },
+          "minItems": 2,
+          "maxItems": 2,
+          "default": [0.5, 0.5],
+          "description": "Sub-tile offset in tile fractions — snapped when grid.snap_to_grid"
+        },
+        "world_z": { "type": "number", "default": 0 }
+      }
+    },
+    "spawn_attach_entity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["anchor_kind"],
+      "properties": {
+        "anchor_kind": {
+          "type": "string",
+          "enum": [
+            "building_footprint",
+            "vehicle_hull",
+            "ember_spot",
+            "scenario_marker"
+          ]
+        },
+        "entity_tag": {
+          "type": "string",
+          "description": "Scenario/script tag — resolved at spawn, not baked into art"
+        },
+        "socket": {
+          "type": "string",
+          "enum": ["origin", "roof_vent", "chimney_top", "impact_point"],
+          "default": "origin"
+        },
+        "offset_local": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 3,
+          "maxItems": 3,
+          "default": [0, 0, 0]
+        }
+      }
+    },
+    "spawn_field_sample": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["field_id", "sample_uv"],
+      "properties": {
+        "field_id": {
+          "type": "string",
+          "enum": [
+            "shared_overlay_heat",
+            "shared_overlay_smoke",
+            "gpu_weather_fire_field",
+            "climate_precip"
+          ]
+        },
+        "sample_uv": {
+          "type": "array",
+          "items": { "type": "number", "minimum": 0, "maximum": 1 },
+          "minItems": 2,
+          "maxItems": 2
+        },
+        "threshold": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.1,
+          "description": "Minimum field value to emit"
+        },
+        "spawn_density_scale": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 4,
+          "default": 1
+        }
+      }
+    },
+    "lod_tier_policy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "max_instances", "rate_scale"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "max_instances": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 65535,
+          "description": "Hard cap — align with FIRE_LOD_CAP_* where lane=particle_instanced"
+        },
+        "rate_scale": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Multiplier on emit.rate at this band"
+        },
+        "sprite_px_scale": {
+          "type": "number",
+          "minimum": 0.25,
+          "maximum": 4,
+          "default": 1
+        },
+        "fire_lod_band": {
+          "type": "string",
+          "enum": ["none", "smoke_only", "low_flame", "full_flame"],
+          "description": "Optional clamp when sim_coupling=heat_field — maps FireLodBand"
+        }
+      }
+    }
+  }
+}

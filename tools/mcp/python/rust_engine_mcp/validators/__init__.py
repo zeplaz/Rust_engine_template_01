@@ -11,6 +11,7 @@ from .mcp_schema import validate_mcp_job, validate_mcp_spec
 from .atlas_meta import validate_atlas_meta_v2
 from .tile_batch import validate_tile_batch
 from .visual_config import validate_visual_config
+from .effect_spec import validate_effect_spec
 from .assembly_production import validate_assembly_snapshot, validate_assembly_snapshot_path
 from .assembly_grammar_verify import (
     validate_assembly_grammar_verify,
@@ -35,6 +36,7 @@ __all__ = [
     "validate_tile_batch",
     "validate_atlas_meta_v2",
     "validate_visual_config",
+    "validate_effect_spec",
     "validate_assembly_snapshot",
     "validate_assembly_snapshot_path",
     "validate_assembly_grammar_verify",
@@ -112,6 +114,10 @@ def run_validator(
         if not target:
             raise ValueError("target path required for visual_config")
         return validate_visual_config(_resolve(target), compression_level=compression_level)
+    if name == "effect_spec":
+        if not target:
+            raise ValueError("target path required for effect_spec")
+        return validate_effect_spec(_resolve(target), compression_level=compression_level)
     if name == "tile_promotion":
         if not target:
             raise ValueError("target path required for tile_promotion (building_definition JSON)")

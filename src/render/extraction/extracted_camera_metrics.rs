@@ -103,19 +103,21 @@ pub enum ExtractedCameraMetricsSet {
 /// Sync from the committed [`ViewProjectionAuthority`] `WorldMain` surface pose before
 /// particle emit / weather VFX (RGR-V2-001 — no raw [`MainWorldCamera`] query).
 ///
-/// `translation`/`zoom` come from the authority pose (single writer:
-/// [`crate::gui::sync_map_camera_pose_to_view_authority`]); when the surface has not
+/// `translation`/`zoom` come from the authority pose (sole WorldMain writer via
+/// `commit_map_camera_pose_to_view_authority` / `MapCameraInput`); when the surface has not
 /// committed yet (pre-bootstrap / headless) this falls back to [`MapCameraDesiredRes`],
-/// the same mirror [`crate::gui::derive_map_camera_desired_from_view_authority`] derives
-/// from the authority one frame later. `view_proj` is always the analytical projection —
-/// it is built from the same `fill`/`desired`/`params` triple that
-/// `apply_main_world_camera_ortho_core` uses to drive the live camera's `Transform` /
-/// `OrthographicProjection`, so the two agree by construction.
+/// the compatibility mirror [`crate::gui::derive_map_camera_desired_from_view_authority`]
+/// fills from authority. `view_proj` is always the analytical projection — built from the
+/// same `fill`/`desired`/`params` triple that `apply_main_world_camera_ortho_core` uses to
+/// drive the live camera's `Transform` / `OrthographicProjection`, so the two agree by
+/// construction.
 pub fn sync_extracted_camera_metrics(
     authority: Option<Res<ViewProjectionAuthority>>,
     desired: Res<MapCameraDesiredRes>,
     fill: Option<Res<TacticalMapFillRect>>,
     params: Option<Res<WorldGenParams>>,
+    zoom_frame: Option<Res<crate::gui::ZoomFrame>>,
+    main_cam: Query<(&Camera, &GlobalTransform), With<crate::gui::MainWorldCamera>>,
     mut metrics: ResMut<ExtractedCameraMetrics>,
 ) {
     let view_px = fill
@@ -136,12 +138,20 @@ pub fn sync_extracted_camera_metrics(
         .unwrap_or((0.08, 4.0));
     let world_w = params.as_deref().map(|p| p.width as f32).unwrap_or(320.0);
     let world_h = params.as_deref().map(|p| p.height as f32).unwrap_or(320.0);
-    let view_proj =
+    let mut view_proj =
         ExtractedCameraMetrics::compute_tactical_view_proj(translation, view_px, zoom, world_w, world_h);
+    // Production RTT: match Bevy Camera2d clip space (tile_debug / terrain_instanced parity).
+    if let Ok((camera, gt)) = main_cam.single() {
+        let view_from_world = Mat4::from(gt.affine().inverse());
+        view_proj = camera.clip_from_view() * view_from_world;
+    }
     *metrics = ExtractedCameraMetrics {
         translation,
-        zoom_level: zoom,
-        zoom_alpha: map_zoom_alpha_with_limits(zoom, lo, hi),
+        zoom_level: zoom_frame.as_deref().map(|z| z.px_per_tile).unwrap_or(zoom),
+        zoom_alpha: zoom_frame
+            .as_deref()
+            .map(|z| z.zoom_alpha)
+            .unwrap_or_else(|| map_zoom_alpha_with_limits(zoom, lo, hi)),
         view_pixels: view_px,
         view_proj,
     };
@@ -153,8 +163,8 @@ pub fn particle_view_globals_from_metrics(
     metrics: &ExtractedCameraMetrics,
     time_secs: f32,
     vertex_count: u32,
-) -> crate::render::gpu_instanced_quad::ParticleViewGlobals {
-    crate::render::gpu_instanced_quad::ParticleViewGlobals {
+) -> crate::render::pipelines::gpu_instanced_quad::ParticleViewGlobals {
+    crate::render::pipelines::gpu_instanced_quad::ParticleViewGlobals {
         view_proj: metrics.view_proj,
         vertex_count,
         time_secs,
@@ -164,7 +174,6 @@ pub fn particle_view_globals_from_metrics(
 }
 
 /// Deprecated alias — [`sync_extracted_camera_metrics`].
-pub use sync_extracted_camera_metrics as sync_fire_particle_camera_scale;
 
 pub struct ExtractedCameraMetricsPlugin;
 

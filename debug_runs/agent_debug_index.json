@@ -58,15 +58,15 @@
     "relative_path": "debug_runs/agent_debug_index.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "debug_run_envelope",
-    "written_at_epoch_secs": 1783392134
+    "written_at_epoch_secs": 1787979526
   },
   "profile": "AGENT_DEBUG_INDEX",
   "proof_count": 24,
   "proofs": [
     {
-      "bytes": 7522,
+      "bytes": 7834,
       "exists": true,
-      "modified_epoch_secs": 1783392134,
+      "modified_epoch_secs": 1787798608,
       "path": "debug_runs/stage5_full_app_live.json",
       "summary": {
         "activation_green": null,
@@ -84,7 +84,7 @@
     {
       "bytes": 5287,
       "exists": true,
-      "modified_epoch_secs": 1783371799,
+      "modified_epoch_secs": 1786572353,
       "path": "debug_runs/infrastructure_view_isolation_live.json",
       "summary": {
         "activation_green": null,
@@ -120,7 +120,7 @@
     {
       "bytes": 7335,
       "exists": true,
-      "modified_epoch_secs": 1783371800,
+      "modified_epoch_secs": 1787892485,
       "path": "debug_runs/industrial_activation_live.json",
       "summary": {
         "activation_green": false,
@@ -174,7 +174,7 @@
     {
       "bytes": 2648,
       "exists": true,
-      "modified_epoch_secs": 1783391049,
+      "modified_epoch_secs": 1787890421,
       "path": "debug_runs/replay_editor_parity_live.json",
       "summary": {
         "activation_green": null,
@@ -326,9 +326,9 @@
       }
     },
     {
-      "bytes": 8958,
+      "bytes": 8968,
       "exists": true,
-      "modified_epoch_secs": 1783392134,
+      "modified_epoch_secs": 1787890427,
       "path": "debug_runs/ui_shell_migration_live.json",
       "summary": {
         "activation_green": null,
@@ -344,9 +344,9 @@
       }
     },
     {
-      "bytes": 5753,
+      "bytes": 5741,
       "exists": true,
-      "modified_epoch_secs": 1783391190,
+      "modified_epoch_secs": 1787890429,
       "path": "debug_runs/minimap_compositor_live.json",
       "summary": {
         "activation_green": null,
@@ -362,9 +362,9 @@
       }
     },
     {
-      "bytes": 19175,
+      "bytes": 19217,
       "exists": true,
-      "modified_epoch_secs": 1783391190,
+      "modified_epoch_secs": 1787890429,
       "path": "debug_runs/sim_spectrum_analytics_live.json",
       "summary": {
         "activation_green": null,
@@ -416,9 +416,9 @@
       }
     },
     {
-      "bytes": 5955,
+      "bytes": 5993,
       "exists": true,
-      "modified_epoch_secs": 1783371800,
+      "modified_epoch_secs": 1787798406,
       "path": "debug_runs/wss_substrate_live.json",
       "summary": {
         "activation_green": null,
@@ -452,9 +452,9 @@
       }
     },
     {
-      "bytes": 3874,
+      "bytes": 3862,
       "exists": true,
-      "modified_epoch_secs": 1783391049,
+      "modified_epoch_secs": 1787892485,
       "path": "debug_runs/play_scenario_live.json",
       "summary": {
         "activation_green": null,

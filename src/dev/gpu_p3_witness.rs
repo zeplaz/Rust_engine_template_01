@@ -23,7 +23,7 @@ pub fn gpu_p3b_sim_spectrum_contract_sample_green() -> bool {
 
     let frame = json!({
         "spine": {
-            "terrain_authority": "GpuInstancedAtlas",
+            "terrain_authority": "GpuBake",
             "tile_raster_ms": 0.0,
         },
         "render_schedule": { "render_and_present_ms": 11.5 },

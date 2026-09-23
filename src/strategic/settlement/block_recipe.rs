@@ -867,7 +867,10 @@ mod tests {
         .expect("eval");
         assert!(eval.errors.is_empty(), "{:?}", eval.errors);
         assert_eq!(eval.lots.len(), 2);
-        assert_eq!(eval.lots[0].building_archetype, "IndustrialWarehouse");
+        assert_eq!(
+            eval.lots[0].building_archetype,
+            crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE
+        );
         assert_eq!(eval.lots[0].lot_seed, lot_seed(bs, 0));
     }
 

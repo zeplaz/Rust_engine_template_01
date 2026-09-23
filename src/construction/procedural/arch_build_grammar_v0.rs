@@ -8,6 +8,9 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 use super::building_grammar::MassingStrategy;
+use crate::construction::pilot_catalog::{
+    PILOT_ARCH_DNA_PRESET_WAREHOUSE, PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
+};
 
 pub const ARCH_GRAMMAR_V0_PRESET_JSON: &str =
     "tools/mcp/schemas/examples/arch_dna_logistics_rail_warehouse_v0.json";
@@ -209,9 +212,10 @@ pub fn list_arch_dna_preset_ids() -> Vec<String> {
     ids
 }
 
+/// Load the insured logistics warehouse ARCH-DNA preset (catalog authority).
 #[must_use]
-pub fn load_logistics_rail_warehouse_v0_preset() -> Result<ArchGrammarV0Preset, String> {
-    load_preset_for_id("logistics_rail_warehouse_v0")
+pub fn load_canonical_arch_dna_pilot_preset() -> Result<ArchGrammarV0Preset, String> {
+    load_preset_for_id(PILOT_ARCH_DNA_PRESET_WAREHOUSE)
 }
 
 #[must_use]
@@ -295,14 +299,17 @@ fn build_read_consumer_mcp_001_self_check() -> Result<(), &'static str> {
     let example_path = repo_path(ARCH_GRAMMAR_V0_PRESET_JSON);
     load_preset_from_path(&example_path).map_err(|_| "example_preset_path")?;
     let preset_ids = list_arch_dna_preset_ids();
-    if !preset_ids.iter().any(|id| id == "logistics_rail_warehouse_v0") {
+    if !preset_ids
+        .iter()
+        .any(|id| id == PILOT_ARCH_DNA_PRESET_WAREHOUSE)
+    {
         return Err("preset_ids");
     }
-    if site_zones_for_preset("logistics_rail_warehouse_v0").is_empty() {
+    if site_zones_for_preset(PILOT_ARCH_DNA_PRESET_WAREHOUSE).is_empty() {
         return Err("site_zones");
     }
 
-    let consumer = arch_dna_consumer_from_preset_id("logistics_rail_warehouse_v0")
+    let consumer = arch_dna_consumer_from_preset_id(PILOT_ARCH_DNA_PRESET_WAREHOUSE)
         .map_err(|_| "consumer_load")?;
     if !arch_dna_consumer_wired(&consumer) {
         return Err("consumer_wired");
@@ -318,17 +325,16 @@ fn build_read_consumer_mcp_001_self_check() -> Result<(), &'static str> {
     }
 
     let snapshot = build_assembly_snapshot_from_grammar_with_preset(
-        "IndustrialWarehouse",
+        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         "industrial_west",
         440013,
-        Some("logistics_rail_warehouse_v0"),
+        Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE),
         &modules,
         &packs,
     )
     .map_err(|_| "snapshot")?;
 
-    if snapshot.arch_build_grammar_preset_id.as_deref()
-        != Some("logistics_rail_warehouse_v0")
+    if snapshot.arch_build_grammar_preset_id.as_deref() != Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE)
     {
         return Err("preset_on_snapshot");
     }
@@ -337,13 +343,13 @@ fn build_read_consumer_mcp_001_self_check() -> Result<(), &'static str> {
     }
 
     let grammar = super::building_grammar::generate_with_arch_dna_preset(
-        "IndustrialWarehouse",
+        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         "industrial_west",
         440013,
-        Some("logistics_rail_warehouse_v0"),
+        Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE),
     )
     .map_err(|_| "grammar")?;
-    if grammar.arch_dna_preset_id.as_deref() != Some("logistics_rail_warehouse_v0") {
+    if grammar.arch_dna_preset_id.as_deref() != Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE) {
         return Err("preset_on_grammar");
     }
 
@@ -422,7 +428,7 @@ pub fn beta_with_world_transport_bias(
 /// BUILD-READ-GRAMMAR-v0-003 — preset row for grammar diversity witness.
 #[must_use]
 pub fn build_read_grammar_v0_003_witness_body() -> serde_json::Value {
-    let preset = load_logistics_rail_warehouse_v0_preset();
+    let preset = load_canonical_arch_dna_pilot_preset();
     let (ok, _preset_id, weights, pick_l_shape) = match preset {
         Ok(p) => {
             let registry = super::load_building_grammar_registry();
@@ -450,7 +456,7 @@ pub fn build_read_grammar_v0_003_witness_body() -> serde_json::Value {
     };
     serde_json::json!({
         "gate_id": "BUILD-READ-GRAMMAR-v0-003",
-        "preset_id": "logistics_rail_warehouse_v0",
+        "preset_id": PILOT_ARCH_DNA_PRESET_WAREHOUSE,
         "green": ok && pick_l_shape,
         "massing_weights_v0": weights,
         "rail_edge_picks_l_shape_or_yard": pick_l_shape,
@@ -472,12 +478,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn logistics_rail_warehouse_v0_reweights_massing() {
-        let preset = load_logistics_rail_warehouse_v0_preset().expect("preset json");
+    fn canonical_arch_dna_pilot_reweights_massing() {
+        let preset = load_canonical_arch_dna_pilot_preset().expect("preset json");
         let registry = super::super::load_building_grammar_registry();
         let grammar = registry
             .grammars
-            .get("IndustrialWarehouse")
+            .get(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE)
             .expect("industrial grammar");
         let weights = reweight_massing_strategies(&grammar.massing.strategies, &preset.pressure_field);
         let l = weights.iter().find(|(id, _)| id == "l_shape").map(|(_, w)| *w);

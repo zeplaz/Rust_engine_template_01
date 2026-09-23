@@ -13,18 +13,18 @@ use bevy::render::{
 };
 
 use crate::gui::GPU_FIRE_INSTANCE_BUDGET_CEILING;
-use crate::render::gpu_bind_group_registry::{
+use crate::render::core::gpu_bind_group_registry::{
     BindGroupBufferBinding, GPUBindGroupRegistry, WORLD_WATER_PARTICLE_DRAW_BIND_GROUP,
     WORLD_WATER_PARTICLE_EXPANDED_BIND_GROUP,
 };
-use crate::render::gpu_buffer_registry::{
+use crate::render::core::gpu_buffer_registry::{
     GPUBufferRegistry, RegisteredBufferDescriptor, BufferVisibility,
     WATER_PARTICLE_EXPANDED_VERTICES_BUFFER, WATER_PARTICLE_INSTANCES_BUFFER,
 };
-use crate::render::gpu_packed_formats::{
+use crate::render::core::gpu_packed_formats::{
     packed_byte_size, water_particle_expanded_vertex_format, water_particle_instance_format,
 };
-use crate::render::gpu_water_particles::{GpuWaterParticleQuadVertex, WorldWaterParticleFrame};
+use crate::render::pipelines::gpu_water_particles::{GpuWaterParticleQuadVertex, WorldWaterParticleFrame};
 
 pub const WATER_PARTICLE_WGSL: &str = "shaders/water/water_particle.wgsl";
 
@@ -196,7 +196,7 @@ fn init_world_water_particle_draw_pipeline(
 
 fn prepare_world_water_particle_draw_uniforms(
     extracted: Option<Res<WorldWaterParticleFrame>>,
-    cam: Option<Res<crate::render::gpu_particles::FireParticleCameraScale>>,
+    cam: Option<Res<crate::render::pipelines::gpu_particles::FireParticleCameraScale>>,
     mut uniforms: ResMut<WorldWaterParticleDrawUniforms>,
     storage: Option<Res<WorldWaterParticleGpuStorage>>,
 ) {

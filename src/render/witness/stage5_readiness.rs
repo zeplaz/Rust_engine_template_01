@@ -16,9 +16,9 @@ use crate::gui::{
 use crate::gui::in_simulation_or_editor;
 use crate::render::extraction::{projection_graph_runtime_order_snapshot, RenderProjectionGraph};
 use crate::render::FireSimulationSnapshot;
-use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
-use crate::render::phase_f_lod_proof::PhaseFLodProofReport;
-use crate::render::visual_agreement::VisualAgreementFrame;
+use crate::render::pipelines::overlay_field_buffers::SharedOverlayFieldBuffers;
+use crate::render::witness::phase_f_lod_proof::PhaseFLodProofReport;
+use crate::render::witness::visual_agreement::VisualAgreementFrame;
 use crate::render::CommittedVisualSnapshotFence;
 use crate::render::GpuRepresentationMetrics;
 use crate::systems::atmosphere::{
@@ -142,7 +142,7 @@ const READINESS_FULL_APP_SUCCESS_LOG_INTERVAL: u32 = PERF_PLAY_READINESS_GREEN_L
 
 #[inline]
 fn stage5_readiness_live_verbose_logs() -> bool {
-    crate::render::frame_perf::stage5_readiness_live_verbose()
+    crate::render::probes::frame_perf::stage5_readiness_live_verbose()
 }
 
 #[inline]
@@ -154,7 +154,7 @@ fn readiness_full_app_live_log_this_frame(
     if stage5_readiness_live_verbose_logs() || !passes || !violations_empty {
         return true;
     }
-    if !crate::render::frame_perf::perf_play_quiet_defaults_recommended() {
+    if !crate::render::probes::frame_perf::perf_play_quiet_defaults_recommended() {
         return true;
     }
     inv % READINESS_FULL_APP_SUCCESS_LOG_INTERVAL == 0
@@ -179,7 +179,7 @@ pub fn evaluate_app_stage5_readiness(world: &mut World) {
     let overlay = world.get_resource::<SharedOverlayFieldBuffers>();
     let gpu_metrics = world.get_resource::<GpuRepresentationMetrics>();
     let agreement = world.get_resource::<VisualAgreementFrame>();
-    let vt_ci = world.get_resource::<crate::render::vt_ci_matrix::VtCiMatrixLiveReport>();
+    let vt_ci = world.get_resource::<crate::render::witness::vt_ci_matrix::VtCiMatrixLiveReport>();
     let partial_metrics = world.get_resource::<AtmospherePartialWriteMetrics>();
     let preview_cam = world.get_resource::<PreviewCameraState>();
     let preview_gpu = world.get_resource::<WorldPreviewGpuRuntime>();
@@ -560,7 +560,7 @@ impl ReadinessInputPresence {
         overlay: Option<&SharedOverlayFieldBuffers>,
         gpu_metrics: Option<&GpuRepresentationMetrics>,
         agreement: Option<&VisualAgreementFrame>,
-        vt_ci: Option<&crate::render::vt_ci_matrix::VtCiMatrixLiveReport>,
+        vt_ci: Option<&crate::render::witness::vt_ci_matrix::VtCiMatrixLiveReport>,
         partial_metrics: Option<&AtmospherePartialWriteMetrics>,
         preview_cam: Option<&PreviewCameraState>,
         preview_gpu: Option<&WorldPreviewGpuRuntime>,
@@ -843,7 +843,7 @@ impl Plugin for Stage5ReadinessPlugin {
                     .after(crate::render::sync_world_fire_indirect_draw)
                     .after(ViewRepresentationSystemSet::PostFX)
                     .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)
-                    .after(crate::render::vt_ci_matrix::record_vt_ci_matrix_live),
+                    .after(crate::render::witness::vt_ci_matrix::record_vt_ci_matrix_live),
             )
             .add_systems(
                 PostUpdate,
@@ -876,7 +876,7 @@ impl Plugin for Stage5ReadinessPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::phase_f_lod_proof::PhaseFLodProofReport;
+    use crate::render::witness::phase_f_lod_proof::PhaseFLodProofReport;
 
     #[test]
     fn spine_checklist_counts_projection_domains() {
@@ -899,8 +899,8 @@ mod tests {
     #[test]
     fn full_app_readiness_chain_aligns_instanced_draw_before_evaluate() {
         use bevy::MinimalPlugins;
-        use crate::render::gpu_particles::WorldFireParticleFrame;
-        use crate::render::phase_f_lod_proof::PhaseFLodProofReport;
+        use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
+        use crate::render::witness::phase_f_lod_proof::PhaseFLodProofReport;
         use crate::render::{
             GpuIndirectDrawSpinePlugin, GpuRepresentationMetrics, WorldFireParticleDrawDispatch,
         };
@@ -969,8 +969,8 @@ mod tests {
     fn headless_minimal_app_readiness_skips_optional_surface_violations() {
         use bevy::MinimalPlugins;
         use crate::render::extraction::RenderProjectionGraph;
-        use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
-        use crate::render::visual_snapshot_commit::CommittedVisualSnapshotFence;
+        use crate::render::pipelines::overlay_field_buffers::SharedOverlayFieldBuffers;
+        use crate::render::extraction::visual_snapshot_commit::CommittedVisualSnapshotFence;
         use crate::systems::sim_control::SimStepStamp;
 
         let mut app = App::new();
@@ -996,7 +996,7 @@ mod tests {
     #[test]
     fn perf_play_001_green_readiness_eval_log_throttled() {
         assert!(
-            crate::render::frame_perf::perf_play_quiet_defaults_recommended(),
+            crate::render::probes::frame_perf::perf_play_quiet_defaults_recommended(),
             "test assumes quiet play defaults (no PERF / STAGE5_READINESS_VERBOSE)"
         );
         assert!(!readiness_full_app_live_log_this_frame(1, true, true));
@@ -1010,7 +1010,7 @@ mod tests {
         assert!(readiness_full_app_live_log_this_frame(2, false, true));
 
         std::env::set_var("PERF", "1");
-        assert!(!crate::render::frame_perf::perf_play_quiet_defaults_recommended());
+        assert!(!crate::render::probes::frame_perf::perf_play_quiet_defaults_recommended());
         assert!(readiness_full_app_live_log_this_frame(2, true, true));
         std::env::remove_var("PERF");
     }

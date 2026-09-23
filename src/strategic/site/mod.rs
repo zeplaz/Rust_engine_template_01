@@ -35,6 +35,9 @@ pub use validation::{
     evaluate_site_placement_stubs, validate_network_access_for_site, validate_site_placement_stubs,
     validate_terrain_for_site, SitePlacementValidation,
 };
+// Honesty helpers — available to callers; not referenced inside this barrel yet.
+#[allow(unused_imports)]
+pub use validation::{site_network_gate_is_stub, site_terrain_gate_is_stub};
 
 /// Schedule buckets for site systems live on [`crate::strategic::InfrastructureSiteSet`](super::plugin::InfrastructureSiteSet).
 

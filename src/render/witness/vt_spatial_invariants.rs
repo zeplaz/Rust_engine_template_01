@@ -4,7 +4,7 @@ use bevy::math::IVec2;
 use bevy::prelude::Vec4;
 
 use crate::render::extraction::spatial_distribution_stats;
-use crate::render::sim_visual_extract::FireVisualGpuInstance;
+use crate::render::extraction::sim_visual_extract::FireVisualGpuInstance;
 
 pub const VT5_MIN_OCCUPIED_CHUNKS: usize = 2;
 pub const VT5_MIN_MEAN_DISTANCE: f32 = 1.0;

@@ -99,6 +99,7 @@ Copied from user profile into the repo so the team shares one definition. Each f
 | [`.cursor/agents/main-thread-orchestrator.md`](.cursor/agents/main-thread-orchestrator.md) | **Main-thread continuity** — Task attempt + fail-cycle escalation + foreground queue when Task/debug/cleanup fail; never stop on usage errors | Runs Shift A→B→C inline or via `@sim-steward` |
 | [`.cursor/agents/coparent-orchestrator.md`](.cursor/agents/coparent-orchestrator.md) | **Secondary pathways** — parallel lanes (operator, VFX capture, designer tails, parametric placement); conflict matrix vs primary P1 | Promotes slices to `@orchestrator`; routes drift to `@sim-steward` |
 | [`.cursor/agents/operations-intelligence.md`](.cursor/agents/operations-intelligence.md) | **Pipeline + agent ops analyst** — DSM authority/risk/cost surfaces, witness rollup, complexity-budget proposal review, ΔWF routing (readonly) | `orchestrator` / `planner` / `sim-steward`; defers ECS drift to `debug-intelligence` |
+| [`.cursor/agents/flow-controller.md`](.cursor/agents/flow-controller.md) | **Tier router** — L0 cheap → L1 hard → L2 exec via `agent_flow_route` (readonly); reserves quality models for contested gates | Parent spawns Task/`@` agents from packet |
 
 **Handoff chain (orchestrator.md):** `orchestrator` → **`planner`** (plan) → **`coder`** / **`designer`** (implement) → verification (`cargo check` / tests / witness JSON).
 
@@ -184,6 +185,7 @@ Index: [`.cursor/skills/README.md`](.cursor/skills/README.md).
 | `sim-steward` | `stage5_readiness_agent`, `viewport_cleanup_agent`, `render_pipeline_agent` | All three skills (personal **bevy-simulation-grade** + project **debug-intelligence** + **cleanup-completion-intelligence**); [`subagent_continuity_playbook_v1.md`](prompts/guides/subagent_continuity_playbook_v1.md) |
 | `main-thread-orchestrator` | Same as sim-steward + orchestrator continuity §10 | Fail-cycle ledger in `HANDOFF.md`; [`main-thread-orchestrator.md`](.cursor/agents/main-thread-orchestrator.md) |
 | `operations-intelligence` | [`plan_agent_operations_intelligence_v1.md`](src/dev/plan_agent_operations_intelligence_v1.md), [`OPS_WITNESS_SPINE.md`](tools/orchestrator/queues/OPS_WITNESS_SPINE.md), `debug_runs/unified_witness_index.json`, `debug_runs/agent_ops/ops_report_latest.json` | Skill: [`.cursor/skills/operations-intelligence/`](.cursor/skills/operations-intelligence/SKILL.md); **debug-intelligence** for viewport/ECS only |
+| `flow-controller` | `_fragments/model_tier_routing_v1.md` | MCP `agent_flow_route` / `agent_flow_policy`; rule `agent-flow-tiers.mdc` |
 
 **Cycles:** Stage 5 regression → `stage5_readiness_agent`; infrastructure → `viewport_cleanup_agent` + `render_pipeline_agent`; after edits → `cargo orchestrate`. See [`tools/orchestrator/NEXT.md`](tools/orchestrator/NEXT.md).
 

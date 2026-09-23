@@ -1,0 +1,30 @@
+{
+  "schema": "rpc2_002_pose_authority_invert_v1",
+  "slice_id": "RPC-2-002",
+  "fleet_id": "FLEET-RPC2-002",
+  "closed": "2026-08-12",
+  "status": "done",
+  "authority": "ViewProjectionAuthority",
+  "writer_tag": "MapCameraInput",
+  "desired_writer": "derive_map_camera_desired_from_view_authority",
+  "retired": [
+    "mirror_map_camera_component_to_resource",
+    "sync_map_camera_pose_to_view_authority"
+  ],
+  "acceptance": {
+    "apply_input_no_mut_map_camera_desired": true,
+    "wheel_no_mut_map_camera_desired": true,
+    "desired_to_authority_sync_scheduled": false,
+    "view_runtime_lib": "16 passed",
+    "map_camera_lib": "9 passed",
+    "validate_cargo": "0 errors"
+  },
+  "residual_rpc2_003": {
+    "goal": "focus_main_camera_on_world_params authority-only; remove Comp dual-write hack",
+    "files": [
+      "src/render/tile_world_fallback.rs",
+      "src/gui/hud/simulation_session.rs"
+    ]
+  },
+  "plan": "src/dev/plan_rpc2_pose_authority_v1.md"
+}

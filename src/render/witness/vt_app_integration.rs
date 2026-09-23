@@ -7,9 +7,9 @@ mod tests {
 
     use crate::gui::OverlayFieldFrame;
     use crate::render::extraction::RenderProjectionGraph;
-    use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
+    use crate::render::extraction::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
     use crate::render::FireSimulationSnapshot;
-    use crate::render::visual_agreement::{
+    use crate::render::witness::visual_agreement::{
         hash_shared_overlay_heat, update_visual_agreement_frame, VisualAgreementFrame,
     };
     use crate::render::OverlayAgreementDebug;
@@ -72,7 +72,7 @@ mod tests {
 
     #[test]
     fn vt5_app_spatial_rows_pass_invariants() {
-        use crate::render::vt_spatial_invariants::{passes_vt5_spatial_invariants, sample_fire_row};
+        use crate::render::witness::vt_spatial_invariants::{passes_vt5_spatial_invariants, sample_fire_row};
         let rows = vec![
             sample_fire_row(IVec2::new(0, 0), 0.8),
             sample_fire_row(IVec2::new(16, 4), 0.7),

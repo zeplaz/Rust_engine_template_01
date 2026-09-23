@@ -5,8 +5,8 @@ use bevy::math::IVec2;
 use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
-use crate::gui::CameraFocusDebug;
-use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, ChunkCoord, FireChunkRuntime};
+use crate::gui::{MapCameraDesiredRes, WorldChunkLayoutCache, WorldRepresentationFrame};
+use crate::render::fx_spine::fire_chunk_runtime::{ActiveFireChunkSet, ChunkCoord, FireChunkRuntime};
 use crate::dev::runtime_witness::common::WitnessWriteCadence;
 
 pub const FIRE_STREAMING_LIVE_JSON: &str = "debug_runs/fire_streaming_live.json";
@@ -47,16 +47,65 @@ impl FireStreamingLiveProofState {
     }
 }
 
+/// Streaming sleep/wake center from live camera / world-repr focus (never debug overlay).
+#[must_use]
+pub fn fire_streaming_focus_chunk(
+    world_frame: &WorldRepresentationFrame,
+    desired: &MapCameraDesiredRes,
+    layout: &WorldChunkLayoutCache,
+) -> ChunkCoord {
+    let cw = layout.tiles_per_chunk.x.max(1) as f32;
+    let ch = layout.tiles_per_chunk.y.max(1) as f32;
+    if layout.chunk_count > 0 || desired.translation.length_squared() > 0.0 {
+        IVec2::new(
+            (desired.translation.x / cw).floor() as i32,
+            (desired.translation.y / ch).floor() as i32,
+        )
+    } else {
+        world_frame.focus_chunk
+    }
+}
+
 /// Mutates [`FireChunkRuntime`] before [`crate::render::sync_active_fire_chunk_set`].
 pub fn apply_fire_streaming_sleep_wake_system(
-    focus: Option<Res<CameraFocusDebug>>,
+    desired: Option<Res<MapCameraDesiredRes>>,
+    layout: Option<Res<WorldChunkLayoutCache>>,
+    world_frame: Option<Res<WorldRepresentationFrame>>,
+    test_scene: Option<Res<crate::engine::ActiveTestScene>>,
     mut runtime: ResMut<FireChunkRuntime>,
     mut witness: ResMut<FireStreamingWitness>,
 ) {
-    let center = focus
-        .as_deref()
-        .map(|f| f.focus_chunk)
-        .unwrap_or(IVec2::ZERO);
+    if test_scene
+        .as_ref()
+        .is_some_and(|s| s.0.seeds_fire_overlay())
+    {
+        for chunk in runtime.chunks.values_mut() {
+            if chunk.active || chunk.max_heat > crate::render::FIRE_SIM_CHUNK_ACTIVE_EPS {
+                chunk.visual_active = true;
+            }
+        }
+        if let (Some(desired), Some(layout), Some(world_frame)) = (
+            desired.as_deref(),
+            layout.as_deref(),
+            world_frame.as_deref(),
+        ) {
+            witness.focus_chunk =
+                fire_streaming_focus_chunk(world_frame, desired, layout);
+        }
+        return;
+    }
+
+    let center = match (
+        desired.as_deref(),
+        layout.as_deref(),
+        world_frame.as_deref(),
+    ) {
+        (Some(desired), Some(layout), Some(world_frame)) => {
+            fire_streaming_focus_chunk(world_frame, desired, layout)
+        }
+        (_, _, Some(world_frame)) => world_frame.focus_chunk,
+        _ => witness.focus_chunk,
+    };
     witness.focus_chunk = center;
 
     let mut slept = 0u64;
@@ -152,7 +201,7 @@ pub fn write_fire_streaming_live_proof_system(
 #[cfg(test)]
 #[must_use]
 pub fn refresh_fire_streaming_live_witness() -> bool {
-    use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, FireChunk, FireChunkRuntime};
+    use crate::render::fx_spine::fire_chunk_runtime::{ActiveFireChunkSet, FireChunk, FireChunkRuntime};
 
     let mut runtime = FireChunkRuntime::default();
     let hot = ChunkCoord::new(0, 0);
@@ -221,7 +270,29 @@ impl Plugin for FireStreamingPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::fire_chunk_runtime::FireChunk;
+    use crate::gui::CameraFocusDebug;
+    use crate::render::fx_spine::fire_chunk_runtime::FireChunk;
+
+    #[test]
+    fn focus_chunk_follows_camera_when_debug_disabled() {
+        use crate::gui::{MapCameraDesired, MapCameraDesiredRes, WorldRepresentationFrame};
+
+        let debug = CameraFocusDebug::default();
+        let frame = WorldRepresentationFrame::default();
+        let desired = MapCameraDesiredRes(MapCameraDesired {
+            translation: bevy::math::Vec3::new(96.0, 64.0, 0.0),
+            scale: bevy::math::Vec3::splat(2.5),
+            ..Default::default()
+        });
+        let layout = WorldChunkLayoutCache {
+            chunk_count: 4,
+            tiles_per_chunk: bevy::math::UVec2::splat(32),
+            ..Default::default()
+        };
+        let center = fire_streaming_focus_chunk(&frame, &desired, &layout);
+        assert_eq!(center, IVec2::new(3, 2));
+        let _ = debug;
+    }
 
     #[test]
     fn neighbor_wake_promotes_visual_active() {
@@ -249,7 +320,7 @@ mod tests {
             },
         );
         let mut witness = FireStreamingWitness::default();
-        let focus = CameraFocusDebug {
+        let _focus = CameraFocusDebug {
             focus_chunk: hot,
             enabled: true,
             ..Default::default()
@@ -268,6 +339,6 @@ mod tests {
         }
         assert!(runtime.chunks.get(&neighbor).unwrap().visual_active);
         assert!(w.wake_transitions > 0);
-        let _ = focus;
+        let _ = _focus;
     }
 }

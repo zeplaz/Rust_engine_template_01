@@ -89,7 +89,7 @@ pub struct FrameUpdateAttrib {
     pub fire_build_view_ms: f32,
     /// [`crate::render::extraction::run_render_projection_graph`] (fire node CPU projection).
     pub fire_project_ms: f32,
-    /// [`crate::render::gpu_particles::emit_world_fire_particles_from_projection`] (WorldFireParticleFrame build).
+    /// [`crate::render::pipelines::gpu_particles::emit_world_fire_particles_from_projection`] (WorldFireParticleFrame build).
     pub fire_particles_ms: f32,
 }
 

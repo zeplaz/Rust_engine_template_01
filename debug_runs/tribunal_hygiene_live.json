@@ -1,0 +1,13 @@
+{
+  "schema": "debug_run_envelope_v1",
+  "program_id": "VSS-001",
+  "slice_id": "VSS-T5-002",
+  "body": {
+    "schema": "tribunal_hygiene_witness_v1",
+    "status": "shipped",
+    "mcp_tool": "tribunal_on_touch",
+    "packet_dir": "debug_runs/tribunals",
+    "dissent_policy": "minority rows always allowed",
+    "registry": "tools/orchestrator/queues/vss_tribunal_touch_registry.json"
+  }
+}

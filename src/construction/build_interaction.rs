@@ -103,6 +103,15 @@ pub fn build_pick_ghost_tile_system(
         ghost.footprint = id.footprint();
     }
 
+    // Industry/Civil rail arms Building(Factory) before a catalog pick — do not place a
+    // ghost until building_intent is set (picker/submenu selection). Otherwise "Place 2x2"
+    // appears and locks the map the moment the menu opens.
+    if matches!(tool.tool, BuildTool::Building(_)) && tool.building_intent.is_none() {
+        ghost.origin = None;
+        ghost.drag_active = false;
+        return;
+    }
+
     let Ok(window) = win.single() else {
         return;
     };
@@ -398,9 +407,13 @@ pub fn build_confirm_site_system(
         return;
     }
 
-    // PARAM-002: zone/road/demolish keep Shift+Enter batch; buildings commit single ghost only.
-    if !matches!(tool.tool, BuildTool::Building(_)) {
-        let batch_approve = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
+    // Buildings previously skipped pending drain (PARAM-002) — that left Shift+LMB queues stuck
+    // with no Enter path and a read-only tray summary. Drain pending for all tools; buildings
+    // still commit a single active ghost below when staging is off.
+    {
+        let batch_approve = keys.pressed(KeyCode::ShiftLeft)
+            || keys.pressed(KeyCode::ShiftRight)
+            || matches!(tool.tool, BuildTool::Building(_));
         if batch_approve {
             pending.approve_all();
         }

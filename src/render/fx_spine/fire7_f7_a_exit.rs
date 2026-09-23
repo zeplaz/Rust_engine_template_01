@@ -1,9 +1,9 @@
 //! **FIRE7-F7-A-EXIT-001** — F7-A product gate A1–A5 ([`fire_sim_phase7_architecture_v1.md`](../dev/fire_sim_phase7_architecture_v1.md)).
 
 use crate::gui::fire_visual_producer_count;
-use crate::render::fire_view_extract::per_view_fire_extract_bounded;
-use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, VisibleFireChunkSet};
-use crate::render::fire_view_extract::FireVisualFramesByView;
+use crate::render::extraction::fire_view_extract::per_view_fire_extract_bounded;
+use crate::render::fx_spine::fire_chunk_runtime::{ActiveFireChunkSet, VisibleFireChunkSet};
+use crate::render::extraction::fire_view_extract::FireVisualFramesByView;
 
 /// A1–A5 rollup for infrastructure / closure witnesses.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
