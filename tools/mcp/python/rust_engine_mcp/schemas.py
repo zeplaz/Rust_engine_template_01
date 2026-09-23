@@ -88,6 +88,14 @@ def validate_landscape_grammar(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("landscape_grammar_v0.schema.json"))
 
 
+def validate_effect_spec(data: dict[str, Any]) -> None:
+    """Draft 2020-12 — required for effect_spec_v1 allOf spawn_hook conditionals (R-SCHEMA-1)."""
+    from jsonschema import Draft202012Validator
+
+    schema = _load_schema("effect_spec_v1.schema.json")
+    Draft202012Validator(schema).validate(data)
+
+
 def validate_witness_integrity_catalog(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("witness_integrity_rules_v1.schema.json"))
 

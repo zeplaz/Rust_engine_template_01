@@ -4,18 +4,17 @@ use bevy::prelude::*;
 
 pub const FIRE_PARTICLE_WGSL: &str = "shaders/fire/fire_particle.wgsl";
 pub const FIRE_SPARK_COMPUTE_WGSL: &str = "shaders/fire/fire_spark_compute.wgsl";
+/// Unwired volume pass — **do not load** until ES-4 atmosphere/smoke volume composite lands (DEBT-009).
 pub const SMOKE_VOLUME_WGSL: &str = "shaders/fire/smoke_volume.wgsl";
 
 #[derive(Resource, Debug)]
 pub struct FireSmokeShaderHandles {
     pub fire_particle: Handle<Shader>,
-    pub smoke_volume: Handle<Shader>,
 }
 
 pub(crate) fn load_fire_smoke_shader_handles(mut commands: Commands, assets: Res<AssetServer>) {
     commands.insert_resource(FireSmokeShaderHandles {
         fire_particle: assets.load(FIRE_PARTICLE_WGSL),
-        smoke_volume: assets.load(SMOKE_VOLUME_WGSL),
     });
 }
 
@@ -39,5 +38,13 @@ mod tests {
         let fire = std::fs::read_to_string(root.join("assets/shaders/fire/fire_particle.wgsl"))
             .expect("fire_particle.wgsl");
         assert!(fire.contains("expand_instances"));
+    }
+
+    #[test]
+    fn smoke_volume_not_loaded_until_composite() {
+        // Production loader only pulls fire_particle — smoke_volume stays on disk for ES-4.
+        assert!(std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/shaders/fire/smoke_volume.wgsl")
+            .is_file());
     }
 }

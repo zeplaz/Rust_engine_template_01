@@ -10,7 +10,8 @@ pub const DEFAULT_WORLD_SEED: u64 = 99_001;
 pub const DEFAULT_TOWN_ID: &str = "portland";
 pub const CITY_G1_C4_WIT_BLOCK: &str = "industrial_west_b01";
 pub const CITY_G1_C4_WIT_LOT_IDX: u32 = 7;
-pub const CITY_G1_C4_WIT_ARCHETYPE: &str = "IndustrialWarehouse";
+pub const CITY_G1_C4_WIT_ARCHETYPE: &str =
+    crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 pub const CITY_G1_C4_WIT_DISTRICT: &str = "industrial_west";
 pub const CITY_G1_C4_LIVE_JSON: &str = "debug_runs/city_g1_c4_001_live.json";
 
@@ -225,24 +226,24 @@ mod tests {
         let ts = town_seed(99_001, &town);
         let bs = block_seed(ts, &block);
         let ls = lot_seed(bs, 7);
-        let bg = building_grammar_seed(ls, "IndustrialWarehouse");
+        let bg = building_grammar_seed(ls, CITY_G1_C4_WIT_ARCHETYPE);
         assert_eq!(ts, town_seed(99_001, &town));
-        assert_eq!(bg, building_grammar_seed_chain(99_001, &town, &block, 7, "IndustrialWarehouse"));
+        assert_eq!(bg, building_grammar_seed_chain(99_001, &town, &block, 7, CITY_G1_C4_WIT_ARCHETYPE));
     }
 
     #[test]
     fn seed_chain_differs_by_lot_idx() {
         let town = TownId(DEFAULT_TOWN_ID.into());
         let block = BlockId(CITY_G1_C4_WIT_BLOCK.into());
-        let a = building_grammar_seed_chain(DEFAULT_WORLD_SEED, &town, &block, 0, "IndustrialWarehouse");
-        let b = building_grammar_seed_chain(DEFAULT_WORLD_SEED, &town, &block, 1, "IndustrialWarehouse");
+        let a = building_grammar_seed_chain(DEFAULT_WORLD_SEED, &town, &block, 0, CITY_G1_C4_WIT_ARCHETYPE);
+        let b = building_grammar_seed_chain(DEFAULT_WORLD_SEED, &town, &block, 1, CITY_G1_C4_WIT_ARCHETYPE);
         assert_ne!(a, b);
     }
 
     #[test]
     fn site_derived_seed_is_stable() {
-        let s = building_grammar_seed_for_site(DEFAULT_WORLD_SEED, 42, "IndustrialWarehouse");
-        assert_eq!(s, building_grammar_seed_for_site(DEFAULT_WORLD_SEED, 42, "IndustrialWarehouse"));
+        let s = building_grammar_seed_for_site(DEFAULT_WORLD_SEED, 42, CITY_G1_C4_WIT_ARCHETYPE);
+        assert_eq!(s, building_grammar_seed_for_site(DEFAULT_WORLD_SEED, 42, CITY_G1_C4_WIT_ARCHETYPE));
     }
 
     #[test]

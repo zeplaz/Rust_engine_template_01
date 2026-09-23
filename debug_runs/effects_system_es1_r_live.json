@@ -1,0 +1,9 @@
+{
+  "gate": "EFFECTS-SYSTEM-ES-1-R-001",
+  "program": "EFFECTS-SYSTEM-UNIFY-001",
+  "green": true,
+  "rtt_core2d_overlay_host_wired_source": "RttCore2dOverlayHostState.host_present",
+  "authority": "Has<TileDebugRenderHost> on MainWorldCamera",
+  "env_default_not_witness": true,
+  "note": "Closes L1 RD-1 dishonest env-sourced host witness"
+}

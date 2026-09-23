@@ -22,7 +22,7 @@ Read first: [`.cursor/skills/bevy-simulation-grade/07-repo-authority-map.md`](..
 | Claim | Reality |
 |:---|:---|
 | Plan §13 **PERF-GPU-TERRAIN-001..004 DONE** | **Partial** — P0-C′-PRIME shipped; §10 operator gate still open |
-| `sim_spectrum_analytics_live.json` | Debug builds still `CpuFallback`; **release** defaults `GpuInstancedAtlas` |
+| `sim_spectrum_analytics_live.json` | Debug builds still `CpuRaster`; **release** defaults `GpuBake` (RPC-1-003 rename; path still CPU dirty-bake → texture) |
 | P0-C tilemap | **BLOCKED** — `DR-MIG-TILEMAP` / `DR-GPU-TERRAIN-P0C` |
 | P0-C′ instanced + atlas | **Default in release** — debug keeps CPU unless `TERRAIN_GPU_INSTANCED=1` |
 | P1 zero-dispatch particles | **Wired** — particle + spark + fire raster skip tests |
@@ -32,15 +32,15 @@ Read first: [`.cursor/skills/bevy-simulation-grade/07-repo-authority-map.md`](..
 
 ---
 
-## Witness truth (target after program close)
+## Witness truth (honest now vs target)
 
-| Field / witness | Target |
+| Field / witness | Honest now / target |
 |:---|:---|
-| `sim_spectrum_analytics_live.json` → `last_frame.spine.terrain_authority` | `GpuInstancedAtlas` (or `GpuTilemap` post-unblock) |
+| `sim_spectrum_analytics_live.json` → `last_frame.spine.terrain_authority` | `GpuBake` (release; was `GpuInstancedAtlas`) · `GpuTilemap` still deferred |
 | `last_frame.spine.tile_raster_ms` | **== 0** steady sim (CPU per-frame paint off) |
 | `render_schedule.render_and_present_ms` p95 | **≤ 16 ms** |
 | `stage5_full_app_live.json` | `perf.terrain_gpu_authoritative: true` |
-| `minimap_compositor_live.json` | `terrain_source: gpu_atlas` |
+| `minimap_compositor_live.json` | **now** `terrain_source: world_raster` (CPU dirty-gated bake); **flag ON** after RPC-1-005 can be `gpu_bake` |
 
 ---
 
@@ -50,7 +50,7 @@ Read first: [`.cursor/skills/bevy-simulation-grade/07-repo-authority-map.md`](..
 
 | ☑ | ID | Scope | Exit |
 |:---:|:---|:---|:---|
-| ☑ | **GPU-P0C-PRIME-001** | `terrain_render_authority.rs` — `resolve_sim_default_authority()` → `GpuInstancedAtlas` in **release** sim (keep `TERRAIN_CPU_FALLBACK=1` rollback) | `sim_default_gpu_in_release_cpu_in_debug` + witness |
+| ☑ | **GPU-P0C-PRIME-001** | `terrain_render_authority.rs` — `resolve_sim_default_authority()` → `GpuBake` in **release** sim (keep `TERRAIN_CPU_FALLBACK=1` rollback); RPC-1-003 renamed from `GpuInstancedAtlas` | `sim_default_gpu_in_release_cpu_in_debug` + witness |
 | ☑ | **GPU-P0C-PRIME-002** | `tile_world_fallback.rs` — dirty-gated bake under `uses_gpu_sprite_display()`; CPU raster metric gated | `gpu_authority_skips_cpu_fallback_raster_metric` |
 | ☑ | **GPU-P0C-PRIME-003** | `terrain_instanced_draw.rs` — sprite-bake interim documented (plan Q3) | module header + witness `instanced_pass: wired_deferred` |
 | ☑ | **GPU-P0C-PRIME-004** | Lib witness `debug_runs/gpu_terrain_p0c_prime_001_live.json` | `green: true` ✓ |
@@ -86,7 +86,7 @@ Read first: [`.cursor/skills/bevy-simulation-grade/07-repo-authority-map.md`](..
 ```powershell
 cargo test -p proc_A_dine01 --lib terrain_render terrain_instanced minimap_shell tile_world_fallback --release
 cargo run -p proc_A_dine01 --release -- --test demo --stay-open
-# 60s: tile_raster_ms == 0 · terrain_authority == GpuInstancedAtlas
+# 60s: tile_raster_ms == 0 · terrain_authority == GpuBake
 ```
 
 ---

@@ -1,0 +1,18 @@
+---
+description: Cheap→hard→exec agent flow — call agent_flow_route before Tasks; reserve quality models for contested gates.
+alwaysApply: true
+---
+
+# Agent flow tiers (token efficiency)
+
+Before spawning Task/subagents for multi-step work:
+
+1. Call MCP **`agent_flow_route(goal, domain)`** (or CLI `agent-flow-route --goal …`).
+2. Follow the returned `phases[]` order — do not invent a parallel graph.
+3. **L0 CHEAP** (`composer-2.5-fast` / explore / ops briefs) = research + digests only.
+4. **L1 HARD** (`claude-opus-5-thinking-high`) = only when `hard_gate: true` (authority, architecture, EV/Cx, contested roots).
+5. **L2 EXEC** (`inherit` / `@coder` / `@coder-mcp` / …) = implement from filled packets + validation-first.
+
+Never put raw cargo walls or full-file research on L1/L2 models. Prefer `token_savings_guide` + briefs.
+
+Agent: `@flow-controller` · fragment: `.cursor/agents/_fragments/model_tier_routing_v1.md`

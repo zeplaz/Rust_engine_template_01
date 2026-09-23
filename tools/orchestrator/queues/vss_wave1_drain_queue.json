@@ -1,0 +1,76 @@
+{
+  "schema": "vss_wave1_drain_queue_v1",
+  "program_id": "VSS-001",
+  "handoff": "src/dev/vss_wave1_drain_handoff_v1.md",
+  "continuity_guide": "prompts/guides/vss_agent_continuity_stack_v1.md",
+  "drain_started": "2026-08-28",
+  "drain_status": "debug_runs/agent_ops/vss_wave1_drain_status.yaml",
+  "channels": [
+    {
+      "channel": "A",
+      "slice_id": "VSS-T2-001",
+      "owner": "@coder",
+      "model_tier": "L2",
+      "status": "done",
+      "completed_at": "2026-08-28",
+      "task_agent": "coder-harness-parity",
+      "note": "Harness fire demoted to debug_fallback; spectator_parity_live.json stub with entry_path enum",
+      "files_owned": ["src/engine/test_harness.rs", "src/engine/launch_args.rs", "debug_runs/spectator_parity_live.json"],
+      "forbidden": ["tile_world_fallback.rs", "map_camera.rs"],
+      "witness": "debug_runs/spectator_parity_live.json"
+    },
+    {
+      "channel": "B",
+      "slice_id": "VSS-T1-002",
+      "owner": "@coder",
+      "model_tier": "L2",
+      "status": "done",
+      "completed_at": "2026-08-28",
+      "note": "world_scale_contract.rs + OPERATIONAL_ZOOM_ALPHA sim-entry; witness green",
+      "files_owned": ["src/terrain/world_scale_contract.rs", "src/render/tile_world_fallback.rs"],
+      "witness": "debug_runs/world_scale_contract_live.json"
+    },
+    {
+      "channel": "C",
+      "slice_id": "VSS-T4-002",
+      "owner": "@designer-mcp",
+      "model_tier": "L2",
+      "status": "done",
+      "completed": "2026-08-28",
+      "task_agent": "designer-mcp-effect-specs",
+      "witness": "debug_runs/artist_vfx_pipeline_live.json"
+    },
+    {
+      "channel": "D",
+      "slice_id": "VSS-T4-003",
+      "owner": "@coder-mcp",
+      "model_tier": "L0-L2",
+      "status": "done",
+      "completed": "2026-08-28",
+      "task_agent": "coder-mcp-effect-promote",
+      "witness": "debug_runs/artist_vfx_pipeline_live.json",
+      "note": "effect_promote + staging pack + registry promote; preview_witness honest_gate pending G4"
+    },
+    {
+      "channel": "E",
+      "slice_id": "VSS-OPS-W1",
+      "owner": "@operations-intelligence",
+      "model_tier": "L0",
+      "status": "done",
+      "completed": "2026-08-28",
+      "task_agent": "ops-wave1-digest",
+      "output": "debug_runs/agent_ops/vss_wave1_drain_status.yaml"
+    },
+    {
+      "channel": "F",
+      "slice_id": "VSS-STEWARD-W1",
+      "owner": "@sim-steward",
+      "model_tier": "L0",
+      "status": "done",
+      "completed": "2026-08-28",
+      "task_agent": "sim-steward-dual-write-map",
+      "output": "debug_runs/sim_effect_fire_consumer_live.json",
+      "note": "T3 order: T3-002 overlay fix → T3-001 ignition funnel; SERIAL with T2+fire raster"
+    }
+  ]
+}

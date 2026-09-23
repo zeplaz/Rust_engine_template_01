@@ -42,6 +42,14 @@ pub const MOCK_SHAPES_RON: &str = "assets/configs/buildings/_mock_shapes.ron";
 pub const BUILDINGS_CONFIG_ROOT: &str = "assets/configs/buildings";
 pub const ARCH_DNA_EXAMPLES_DIR: &str = "tools/mcp/schemas/examples";
 
+/// Insured grammar archetype id (`grammar_archetype_id` in `_pilot_catalog.ron`).
+/// Call sites must use this constant — do not hardcode the string elsewhere (MCP-GUARD-001).
+pub const PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE: &str = "IndustrialWarehouse";
+
+/// Insured ARCH-DNA / building_set preset id (`id` / `arch_dna_preset` in catalog).
+/// Call sites must use this constant — do not hardcode the string elsewhere (MCP-GUARD-001).
+pub const PILOT_ARCH_DNA_PRESET_WAREHOUSE: &str = "logistics_rail_warehouse_v0";
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Deserialize, Default)]
 #[serde(rename_all = "snake_case")]
 pub enum PilotKind {

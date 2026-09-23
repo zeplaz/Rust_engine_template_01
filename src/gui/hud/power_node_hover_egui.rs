@@ -25,7 +25,9 @@ use super::sim_hud_egui_theme::{
 
 #[must_use]
 pub fn power_node_hover_card_wired() -> bool {
-    true
+    // Structural: map-attached draw path present (not always-true).
+    include_str!("power_node_hover_egui.rs").contains("pub fn draw_power_node_hover_egui")
+        && include_str!("power_node_hover_egui.rs").contains("map_attached_chip_frame")
 }
 
 fn load_bar_color(palette: &UiPalette, pct: f32) -> egui::Color32 {

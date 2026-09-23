@@ -6,8 +6,8 @@ use bevy::math::IVec2;
 use rustc_hash::FxHashSet;
 
 use crate::io::streaming::ChunkResidencyTable;
-use crate::render::fire_chunk_runtime::{ChunkCoord, FireChunkRuntime, FireSimulationSnapshot};
-use crate::render::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS;
+use crate::render::fx_spine::fire_chunk_runtime::{ChunkCoord, FireChunkRuntime, FireSimulationSnapshot};
+use crate::render::extraction::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS;
 use crate::render::FireExtractDirtyQueue;
 
 const MOORE_NEIGHBORS: [IVec2; 8] = [
@@ -103,7 +103,7 @@ mod tests {
         let mut runtime = FireChunkRuntime::default();
         runtime.chunks.insert(
             ChunkCoord::new(5, 5),
-            crate::render::fire_chunk_runtime::FireChunk {
+            crate::render::fx_spine::fire_chunk_runtime::FireChunk {
                 coord: ChunkCoord::new(5, 5),
                 active: true,
                 visual_active: true,

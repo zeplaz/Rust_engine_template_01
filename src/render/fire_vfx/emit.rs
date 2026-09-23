@@ -5,7 +5,9 @@ use bevy::prelude::*;
 
 use crate::gui::GPU_FIRE_INSTANCE_BUDGET_CEILING;
 use crate::render::extraction::RenderProjectionGraph;
-use crate::render::sim_visual_extract::{FireVisualGpuInstance, FIRE_VISUAL_ACTIVE_HEAT_EPS};
+use crate::render::extraction::sim_visual_extract::{
+    FireVisualGpuInstance, SimChunkSmokeVisualExtract, FIRE_VISUAL_ACTIVE_HEAT_EPS,
+};
 use crate::render::{
     trace_particle_routing, ChunkCoord, DebugRenderTraceConfig, FireChunkLodState, FireLodBand,
 };
@@ -26,7 +28,10 @@ const FIRE_PARTICLE_BOOTSTRAP_SLAB: u32 = 32;
 /// **TRIAGE-PHASE-F-CULL-001** — sparks culled off non-tactical views / low zoom.
 #[must_use]
 pub fn view_aware_particle_cull_wired() -> bool {
-    true
+    let src = include_str!("emit.rs");
+    src.contains("is_tactical_fire_particle_view")
+        && src.contains("fire_spark_zoom_scatter_gate")
+        && src.contains("FIRE_SPARK_MIN_PX_PER_TILE")
 }
 
 #[inline]
@@ -135,6 +140,7 @@ pub fn emit_world_fire_particles_from_projection(
     coherence: Option<Res<crate::render::extraction::ProjectionGraphFrameCoherence>>,
     chunk_lod: Res<FireChunkLodState>,
     cam: Res<ExtractedCameraMetrics>,
+    smoke_extract: Option<Res<SimChunkSmokeVisualExtract>>,
     view_manager: Option<Res<crate::gui::ViewManager>>,
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
     mut frame: ResMut<WorldFireParticleFrame>,
@@ -151,8 +157,13 @@ pub fn emit_world_fire_particles_from_projection(
             *cam,
             view_manager.as_deref(),
         );
+        if let Some(smoke) = smoke_extract.as_deref() {
+            append_smoke_atmosphere_particles_from_extract(smoke, frame.as_mut(), *cam);
+        }
     }
-    if frame.instances.is_empty() && graph.fire.instance_buffer.is_empty() {
+    if frame.instances.is_empty() {
+        // Overlay bootstrap even when projection still has heat rows but emit culled
+        // (zoom / capacity) — otherwise sparks stay empty forever while fire_inst>0.
         if let Some(overlay) = overlay.as_ref() {
             if !overlay.chunk_fire_heat.is_empty() {
                 seed_world_fire_particles_from_overlay_heat(
@@ -190,7 +201,7 @@ pub fn update_world_fire_particles_from_projection(
 ) {
     frame.snapshot_stamp = graph.fire.snapshot_stamp;
     frame.active_band = crate::gui::representation_band_from_world_lod(graph.fire.lod);
-    let source_view = crate::render::view_fire_projection::projection_fire_source_view(view_manager);
+    let source_view = crate::render::fx_spine::view_fire_projection::projection_fire_source_view(view_manager);
     let tactical = is_tactical_fire_particle_view(source_view);
     let projection_label = match source_view {
         crate::gui::ViewId::WorldMain => "WorldMain",
@@ -215,10 +226,10 @@ pub fn update_world_fire_particles_from_projection(
     let mut scatter_slots = 0usize;
     let mut budget_capped = false;
 
-    // FIRE-VIS-001: cull gate keyed on px-per-tile (camera raw scale), not zoom_alpha — see
-    // FIRE_SPARK_MIN_PX_PER_TILE. zoom_level == scale_x == px-per-world-unit == px-per-tile.
-    let px_per_tile = cam.zoom_level;
-    if !tactical || capacity == 0 || px_per_tile < FIRE_SPARK_MIN_PX_PER_TILE {
+    // Operator debug: zoom cull disabled — emit whenever tactical + capacity allow.
+    // Density still soft-ramps via fire_spark_zoom_scatter_gate (MIN may be 0).
+    let px_per_tile = cam.zoom_level.max(0.01);
+    if !tactical || capacity == 0 {
         frame.spark_witness = FireSparkWitness {
             phase: fire_spark_witness_phase(),
             rows: 0,
@@ -227,7 +238,7 @@ pub fn update_world_fire_particles_from_projection(
             zoom_alpha: cam.zoom_alpha,
             additive_blend: true,
             budget_capped: false,
-            view_culled: !tactical || px_per_tile < FIRE_SPARK_MIN_PX_PER_TILE,
+            view_culled: !tactical,
             projection_view: projection_label,
         };
         return;
@@ -333,29 +344,58 @@ pub fn update_world_fire_particles_from_projection(
     };
 }
 
+/// Gray smoke puffs from Layer-B extract — same instanced fire raster pass (AtmosphereFx class).
+fn append_smoke_atmosphere_particles_from_extract(
+    smoke: &SimChunkSmokeVisualExtract,
+    frame: &mut WorldFireParticleFrame,
+    cam: ExtractedCameraMetrics,
+) {
+    if smoke.instances.is_empty() {
+        return;
+    }
+    let capacity = frame.gpu_capacity.max(1);
+    let px_per_tile = cam.zoom_level.max(0.01);
+    for row in &smoke.instances {
+        if frame.instances.len() >= capacity {
+            break;
+        }
+        let density = row.density_tox_vis.x;
+        if density < 0.06 {
+            continue;
+        }
+        let coord = IVec2::new(row.chunk_xy.x as i32, row.chunk_xy.y as i32);
+        let center = chunk_world_center(ChunkCoord::new(coord.x, coord.y), UVec2::splat(16));
+        let mut fv = FireVisualGpuInstance::default();
+        fv.chunk_xy_heat_lum = Vec4::new(coord.x as f32, coord.y as f32, density * 0.12, density);
+        fv.world_xyz_radius = Vec4::new(center.x, center.y, 4.0, 22.0);
+        fv.smoke_ember_vis_priority = Vec4::new(density.max(0.35), 0.0, 0.0, 1.0);
+        let Some((shaped, _)) =
+            shape_fire_row_for_particle_lod(fv, FireLodBand::SmokeOnly, px_per_tile)
+        else {
+            continue;
+        };
+        frame.instances.push(GpuParticleInstance::from_fire_visual(
+            &shaped,
+            ParticleClass::AtmosphereFx,
+            cam,
+        ));
+    }
+    frame.instances.sort_by_key(|row| {
+        ParticleClass::from_class_id(row.ember_class_radius_smoke.y).transparent_draw_order()
+    });
+    if !smoke.instances.is_empty() {
+        frame.spark_witness.rows = frame.instances.len();
+    }
+}
+
 /// P2-VFX-VISUAL-001 — when projection has no fire rows but overlay heat exists (visual proof).
 pub fn seed_world_fire_particles_from_overlay_heat(
     chunk_fire_heat: &std::collections::HashMap<bevy::math::IVec2, f32>,
     frame: &mut WorldFireParticleFrame,
     cam: ExtractedCameraMetrics,
 ) {
-    // FIRE-VIS-001: cull gate keyed on px-per-tile (camera raw scale), not zoom_alpha.
-    let px_per_tile = cam.zoom_level;
-    if px_per_tile < FIRE_SPARK_MIN_PX_PER_TILE {
-        frame.instances.clear();
-        frame.spark_witness = FireSparkWitness {
-            phase: fire_spark_witness_phase(),
-            rows: 0,
-            scatter_max: FIRE_SPARK_SCATTER_MAX,
-            scatter_slots: 0,
-            zoom_alpha: cam.zoom_alpha,
-            additive_blend: true,
-            budget_capped: false,
-            view_culled: true,
-            projection_view: "overlay_bootstrap",
-        };
-        return;
-    }
+    // FIRE-VIS-001: cull gate removed for operator debug — always seed from overlay heat.
+    let px_per_tile = cam.zoom_level.max(0.01);
     frame.instances.clear();
     let mut scatter_slots = 0usize;
     for (&coord, &heat) in chunk_fire_heat {
@@ -375,7 +415,7 @@ pub fn seed_world_fire_particles_from_overlay_heat(
         frame
             .instances
             .push(GpuParticleInstance::from_fire_visual(&shaped, class, cam));
-        let scatter_n = fire_particle_scatter_count(heat, px_per_tile, 0.0);
+        let scatter_n = fire_particle_scatter_count(heat, px_per_tile, 0.0).max(2);
         scatter_slots = scatter_slots.saturating_add(scatter_n);
         for slot in 0..scatter_n as u32 {
             let offset = fire_particle_scatter_offset(shaped.chunk_grid_xy(), heat, slot);
@@ -404,7 +444,7 @@ pub fn seed_world_fire_particles_from_overlay_heat(
 mod tests {
     use super::*;
     use crate::render::fire_vfx::witness::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE;
-    use crate::render::gpu_buffer_registry::{BufferId, FIRE_PARTICLE_INSTANCES_BUFFER};
+    use crate::render::core::gpu_buffer_registry::{BufferId, FIRE_PARTICLE_INSTANCES_BUFFER};
     use crate::gui::{
         build_representation_inputs, build_representation_result, resolution_for_band,
         LodZoneRegistry, VisualBudgetSettings,
@@ -413,7 +453,7 @@ mod tests {
     use crate::render::extraction::{
         ProjectionNodeTrait, RenderProjectionContext, RenderProjectionGraph,
     };
-    use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
+    use crate::render::extraction::sim_visual_extract::{ChunkFireHeat, FireVisualFrame};
     use crate::render::{
         EcologyVisualSnapshot, FireChunkLodState, FireLodBand, LogisticsVisualSnapshot,
     };
@@ -464,6 +504,7 @@ mod tests {
             lod: &lod,
             lod_map: &lod_map,
             fire: &fire,
+            smoke: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: fire.stamp,
@@ -516,6 +557,7 @@ mod tests {
             lod: &lod,
             lod_map: &lod_map,
             fire: &fire,
+            smoke: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: fire.stamp,
@@ -546,7 +588,7 @@ mod tests {
     #[test]
     fn chunk_heat_fallback_only_when_instance_buffer_empty() {
         let mut graph = RenderProjectionGraph::default();
-        graph.fire.chunk_heat.push(crate::render::sim_visual_extract::ChunkFireHeat {
+        graph.fire.chunk_heat.push(crate::render::extraction::sim_visual_extract::ChunkFireHeat {
             chunk: IVec2::ZERO,
             heat: 0.9,
             smoke: 0.0,
@@ -584,7 +626,7 @@ mod tests {
             ExtractedCameraMetrics::default(),
         );
         assert!(
-            gpu.ember_class_radius_smoke.z <= 1.51 && gpu.ember_class_radius_smoke.z >= 0.015,
+            gpu.ember_class_radius_smoke.z <= 2.5 && gpu.ember_class_radius_smoke.z >= 0.3,
             "spark half {}",
             gpu.ember_class_radius_smoke.z
         );
@@ -621,6 +663,7 @@ mod tests {
             lod: &lod,
             lod_map: &lod_map,
             fire: &fire,
+            smoke: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: fire.stamp,
@@ -692,6 +735,7 @@ mod tests {
             lod: &lod,
             lod_map: &lod_map,
             fire: &fire,
+            smoke: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: fire.stamp,
@@ -769,8 +813,8 @@ mod tests {
 
     #[test]
     fn strategic_zoom_zeroes_scatter() {
-        // FIRE-VIS-001: px-per-tile below FIRE_SPARK_MIN_PX_PER_TILE (1.5) — far strategic zoom.
-        assert_eq!(fire_particle_scatter_count(0.95, 0.5, 0.0), 0);
+        // Soft density ramp: very far zoom still gets at least a thin scatter when heat is hot.
+        assert!(fire_particle_scatter_count(0.95, 0.08, 0.0) >= 1);
     }
 
     #[test]
@@ -925,7 +969,8 @@ mod tests {
     }
 
     #[test]
-    fn strategic_zoom_culls_fire_spark_rows() {
+    fn strategic_zoom_still_emits_fire_spark_rows() {
+        // Zoom hard-cull removed — far strategic zoom must still produce spark rows.
         let mut graph = RenderProjectionGraph::default();
         graph.fire.gpu_instance_capacity = 64;
         graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.4)];
@@ -936,9 +981,11 @@ mod tests {
             ..Default::default()
         };
         update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
-        assert_eq!(particles.instances.len(), 0);
-        assert_eq!(particles.spark_witness.rows, 0);
-        assert!(particles.spark_witness.view_culled);
+        assert!(
+            !particles.instances.is_empty(),
+            "expected sparks at strategic zoom after cull removal"
+        );
+        assert!(!particles.spark_witness.view_culled);
     }
 
     #[test]

@@ -1,0 +1,123 @@
+{
+  "schema": "operator_bug_triage_v1",
+  "session": "2026-08-12",
+  "source_csv": "debug_runs/operator_bugs/bug_report_20260812.csv",
+  "captures": [
+    "debug_runs/operator_bugs/b1_b2_errors.png",
+    "debug_runs/operator_bugs/b2_place_stuck.png"
+  ],
+  "launch_context": {
+    "when": "A1+ visual / A2 vfx",
+    "gpu_bridge_ui": "CpuOnly",
+    "placement_debug_overlay": "open",
+    "hud_note": "DEBUG-GUI cursor_visible=false is expected over play area (TRIAGE-CURSOR-UNIFY-001)"
+  },
+  "bugs": [
+    {
+      "id": "B4",
+      "symptom": "bevy_asset Path not found assets\\assets\\... for city_c8 + prop_* glbs on visual run",
+      "severity": "P1",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "claim": "AssetServer.load used repo-relative assets/... paths → doubled assets/assets/",
+          "evidence": "block_street_visual.rs + block_lod_impostor.rs; GLBs exist on disk under assets/",
+          "confidence": 0.95
+        }
+      ],
+      "owner": "@coder",
+      "status": "fixed_pending_rebuild",
+      "fix": "Strip assets/ prefix for AssetServer loads (2026-08-12)"
+    },
+    {
+      "id": "B5",
+      "symptom": "10 rustc warnings on release compile (unused imports/mut, unreachable pattern, private_interfaces)",
+      "severity": "P3",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "claim": "Hygiene only — build Finished OK; does not block visual",
+          "evidence": "Errors and reports.md lines 1-116",
+          "confidence": 0.9
+        }
+      ],
+      "owner": "@coder",
+      "next": "Optional cargo fix / CW hygiene sweep — not blocking"
+    },
+    {
+      "id": "B1",
+      "symptom": "Weird yellow horizontal thing in water (red circle)",
+      "severity": "P2",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "claim": "Unified sim cursor yellow crosshair arm (intentional) misread as world glitch",
+          "evidence": "simulation_pointer_gate draws yellow lines rgb(255,220,120); os_cursor_hidden over play area",
+          "confidence": 0.55
+        },
+        {
+          "id": "H2",
+          "claim": "Construction placement debug map crosshairs / leftover road-path segment in water",
+          "evidence": "Roads tab selected in errors.PNG; overlay show_crosshairs; yellow water bar",
+          "confidence": 0.45
+        }
+      ],
+      "owner": "@coder",
+      "next": "Reproduce with placement debug Enabled unchecked + Esc clear path; if yellow follows mouse → cursor not bug; if stuck in world → path ghost"
+    },
+    {
+      "id": "B2",
+      "symptom": "Building menu dead; stuck Place 2x2 rot 0 perfect; cannot place/cancel; construction UI glitched; mouse input wrong",
+      "severity": "P0",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "claim": "Esc keeps tool (ActiveToolSession.keep_tool_after_commit default true) — cancel only clears ghost origin, not place mode",
+          "evidence": "src/construction/sessions.rs default keep_tool_after_commit=true; build_escape_cancel_system only clears tool when false; tool_hints say Esc keep tool",
+          "confidence": 0.75
+        },
+        {
+          "id": "H2",
+          "claim": "Construction placement (debug) window captures egui pointer over rail / blocks submenu clicks",
+          "evidence": "Large debug window open in both captures; egui_wants_pointer_input skips map picks; Place label stuck",
+          "confidence": 0.65
+        },
+        {
+          "id": "H3",
+          "claim": "Ghost locked with Industry strip + no click-through to commit/cancel while chrome/egui_blocks",
+          "evidence": "b2_place_stuck.png Place 2x2; Build strip Industry; ghost via egui math",
+          "confidence": 0.5
+        }
+      ],
+      "owner": "@coder",
+      "next": "Fix cancel UX: second Esc or RMB clears tool to None; ensure debug overlay does not steal rail clicks; add regression test",
+      "workaround_now": "Uncheck Enabled on Construction placement (debug); press Esc twice if needed; click same build-rail category to deselect; avoid leaving Industry tool armed"
+    },
+    {
+      "id": "B3",
+      "symptom": "No fire visible on --test vfx",
+      "severity": "P1",
+      "hypotheses": [
+        {
+          "id": "H1",
+          "claim": "Camera/zoom not on seeded burn region (VR-16 / focus path)",
+          "evidence": "VfxSandbox seeds_fire_overlay=true; focus_vfx_fire_test_camera_on_burning_region exists; sparks historically invisible until operator zoom",
+          "confidence": 0.6
+        },
+        {
+          "id": "H2",
+          "claim": "Fire extract/raster still dark despite seed (render)",
+          "evidence": "visual_run_blockers VR-16 operator verify open",
+          "confidence": 0.4
+        }
+      ],
+      "owner": "@coder",
+      "next": "Re-run --test vfx; confirm red fire highlight AABB and heat markers; if none after 10s → extract bug; if highlight only → particle/spark visibility"
+    }
+  ],
+  "routing": {
+    "dispatch_first": "B2",
+    "parallel_ok": ["B1_classify", "B3_repro"],
+    "not_operator_unlock": "Does not close G-PLAY / RPC-1-006 / keyframes; blocks construction playtest"
+  }
+}

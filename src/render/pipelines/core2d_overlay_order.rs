@@ -19,13 +19,20 @@ pub fn core2d_overlay_pipeline_hdr_index(target_format: TextureFormat) -> usize 
 }
 
 /// Ordered overlay raster passes chained after stock Core2d main pass.
+///
+/// **Fire sparks must be last** among map overlays — terrain/weather opaque or
+/// heavy draws after fire bury the additive spark pass (tint survives; sparks vanish).
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum Core2dOverlaySet {
     WaterSurface,
     WaterParticleRaster,
     TileDebug,
-    FireParticleRaster,
+    /// Terrain atlas quads — before fire so sparks composite on top.
     TerrainInstanced,
+    /// EFFECTS-SYSTEM ES-5-002 — precip streaks under sparks.
+    WeatherPrecipRaster,
+    /// P2-FIRE-SPARK-010 — additive sparks end the overlay chain (visible on RTT).
+    FireParticleRaster,
 }
 
 pub struct Core2dOverlayOrderPlugin;
@@ -41,8 +48,9 @@ impl Plugin for Core2dOverlayOrderPlugin {
                 Core2dOverlaySet::WaterSurface,
                 Core2dOverlaySet::WaterParticleRaster,
                 Core2dOverlaySet::TileDebug,
-                Core2dOverlaySet::FireParticleRaster,
                 Core2dOverlaySet::TerrainInstanced,
+                Core2dOverlaySet::WeatherPrecipRaster,
+                Core2dOverlaySet::FireParticleRaster,
             )
                 .chain()
                 .after(Core2dSystems::MainPass)

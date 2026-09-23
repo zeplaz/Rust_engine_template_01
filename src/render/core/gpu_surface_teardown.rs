@@ -119,7 +119,10 @@ pub fn tick_visual_test_graceful_exit(
 
 #[must_use]
 pub fn visual_teardown_vr02_wired() -> bool {
-    true
+    let src = include_str!("gpu_surface_teardown.rs");
+    src.contains("deactivate_cameras_on_window_close")
+        && src.contains("GpuSurfaceTeardownPlugin")
+        && src.contains("tick_visual_test_graceful_exit")
 }
 
 pub struct GpuSurfaceTeardownPlugin;

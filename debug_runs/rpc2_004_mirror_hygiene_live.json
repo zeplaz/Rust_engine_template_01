@@ -1,0 +1,33 @@
+{
+  "schema": "rpc2_004_mirror_hygiene_v1",
+  "slice_id": "RPC-2-004",
+  "fleet_id": "FLEET-RPC2-004",
+  "closed": "2026-08-12",
+  "status": "done",
+  "invert_complete": true,
+  "invert_bridge": "ViewProjectionAuthority_write_MapCameraDesired_derive",
+  "authority": "ViewProjectionAuthority",
+  "read_spine": "ViewManager via sync_view_manager_bridge",
+  "desired_writer": "derive_map_camera_desired_from_view_authority / apply_derived_map_camera_desired",
+  "grep_gate": {
+    "sole_ResMut_MapCameraDesiredRes": "derive_map_camera_desired_from_view_authority",
+    "sole_Query_mut_MapCameraDesired": "derive_map_camera_desired_from_view_authority",
+    "retired_alias": "mirror_world_main_camera_from_map_desired",
+    "no_desired_to_authority_sync": true
+  },
+  "vm_a": {
+    "dual_writer_pose_violation": false,
+    "minimap_shell_wrote_map_camera_desired": false
+  },
+  "todo_04": {
+    "static_row": "Open — flips Done via sync_stage5_todo_board_predicates under FULL_APP",
+    "predicate": "vm_wm && last_post_mirror_drift <= MAP_BRIDGE_DRIFT_OK",
+    "docs_aligned": true
+  },
+  "todo_05": {
+    "status": "Open — residual BridgeCompat upsert paths in view_runtime",
+    "not_claimed_done": true
+  },
+  "plan": "src/dev/plan_rpc2_pose_authority_v1.md",
+  "related_witness": "debug_runs/infrastructure_view_isolation_live.json"
+}

@@ -467,7 +467,7 @@ pub fn staging_relative_path(snapshot: &AssemblySnapshot) -> String {
 }
 
 /// **CITY-G0-WIT-001** — fixed grammar→assembly spec for determinism witness.
-pub const CITY_G0_WIT_ARCHETYPE: &str = "IndustrialWarehouse";
+pub const CITY_G0_WIT_ARCHETYPE: &str = crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 pub const CITY_G0_WIT_DISTRICT: &str = "industrial_west";
 pub const CITY_G0_WIT_SEED: u64 = 43;
 pub const CITY_G0_WIT_RUNS: u32 = 3;
@@ -761,7 +761,7 @@ mod tests {
         assert!(modules.load_errors.is_empty(), "{:?}", modules.load_errors);
         let packs = load_style_pack_registry();
         let snapshot = build_assembly_snapshot_from_grammar(
-            "IndustrialWarehouse",
+            CITY_G0_WIT_ARCHETYPE,
             "industrial_west",
             43,
             &modules,
@@ -771,7 +771,7 @@ mod tests {
         assert_eq!(snapshot.procedural_rules_version, GRAMMAR_RULES_VERSION);
         assert_eq!(
             snapshot.archetype_id.as_deref(),
-            Some("IndustrialWarehouse")
+            Some(CITY_G0_WIT_ARCHETYPE)
         );
         assert_eq!(snapshot.district_style.as_deref(), Some("industrial_west"));
         assert!(snapshot.grammar_rule_chain.is_some());
@@ -804,7 +804,7 @@ mod tests {
         let modules = load_procedural_module_registry();
         let packs = load_style_pack_registry();
         let a = build_assembly_snapshot_from_grammar(
-            "IndustrialWarehouse",
+            CITY_G0_WIT_ARCHETYPE,
             "industrial_west",
             0,
             &modules,
@@ -812,7 +812,7 @@ mod tests {
         )
         .expect("seed 0");
         let b = build_assembly_snapshot_from_grammar(
-            "IndustrialWarehouse",
+            CITY_G0_WIT_ARCHETYPE,
             "industrial_west",
             50,
             &modules,

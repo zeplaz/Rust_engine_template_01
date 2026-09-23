@@ -6,12 +6,12 @@ use bevy::math::Isometry2d;
 use bevy::prelude::*;
 use std::collections::{HashMap, HashSet};
 
-use crate::gui::map_camera::{in_simulation_or_editor_map, MapCameraDesiredRes};
+use crate::gui::tactical::map_camera::{in_simulation_or_editor_map, MapCameraDesiredRes};
 use crate::gui::view_authority::tactical_camera_world_pose;
 use crate::gui::world_representation::WorldRepresentationFrame;
 use crate::gui::{ViewAuthoritySystemSet, ViewManager};
 use crate::render::{tactical_fire_visual, FireVisualFramesByView};
-use crate::render::sim_visual_extract::{FireVisualFrame, FIRE_VISUAL_ACTIVE_HEAT_EPS};
+use crate::render::extraction::sim_visual_extract::{FireVisualFrame, FIRE_VISUAL_ACTIVE_HEAT_EPS};
 use crate::terrain::generation::{chunk_world_center, Chunk, ChunkCellMatrix};
 
 /// Approximate world extent (XY) covered by one chunk index step for debug tiling.

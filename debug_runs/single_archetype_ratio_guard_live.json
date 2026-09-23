@@ -3,13 +3,25 @@
   "gate_id": "single_archetype_ratio_guard",
   "ok": true,
   "green": true,
-  "scanned_files": 360,
-  "total_refs": 14,
+  "scanned_files": 401,
+  "total_refs": 20,
   "archetype_counts": {
-    "IndustrialWarehouse": 14
+    "IndustrialWarehouse": 14,
+    "Industrial": 1,
+    "LowDensityRes": 1,
+    "MediumDensityRes": 1,
+    "CivicBlock": 1,
+    "FactoryCluster": 1,
+    "RailEdge": 1
   },
   "archetype_ratios": {
-    "IndustrialWarehouse": 1.0
+    "IndustrialWarehouse": 0.7,
+    "Industrial": 0.05,
+    "LowDensityRes": 0.05,
+    "MediumDensityRes": 0.05,
+    "CivicBlock": 0.05,
+    "FactoryCluster": 0.05,
+    "RailEdge": 0.05
   },
   "max_ratio": 0.4,
   "building_set_insured": true,

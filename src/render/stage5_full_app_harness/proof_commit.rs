@@ -5,7 +5,7 @@ use bevy::prelude::*;
 
 use crate::dev::{Stage5FinishUx06Streak, FINISH_UX06_STREAK_DONE};
 use crate::engine::DebugCaptureFrameGate;
-use crate::render::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport, Stage5ReadinessProfile};
+use crate::render::witness::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport, Stage5ReadinessProfile};
 
 use super::proof_payload::build_stage5_full_app_live_proof_payload;
 use super::proof_reads::{write_minimap_compositor_live_proof_from_reads, Stage5FullAppLiveProofReads};
@@ -64,7 +64,7 @@ fn visual_probe_fire_witness_ready(
 
 /// After `--test visual` captures diagnostics: hold until **FINISH-UX-06** reaches
 /// [`FINISH_UX06_STREAK_DONE`] consecutive clean readiness evals, then write proof JSON.
-/// After proof commit, [`crate::render::gpu_surface_teardown::tick_visual_test_graceful_exit`] requests
+/// After proof commit, [`crate::render::core::gpu_surface_teardown::tick_visual_test_graceful_exit`] requests
 /// `AppExit` so Vulkan surfaces tear down cleanly (manual window close can panic in wgpu).
 pub(crate) fn finalize_visual_full_app_live_probe(
     launch: Option<Res<crate::engine::EngineLaunchArgs>>,
@@ -74,7 +74,7 @@ pub(crate) fn finalize_visual_full_app_live_probe(
     summary: Res<crate::render::FullRenderDiagnosticSummary>,
     proof_reads: Stage5FullAppLiveProofReads,
     streak: Option<Res<Stage5FinishUx06Streak>>,
-    visual_exit: ResMut<crate::render::gpu_surface_teardown::VisualTestGracefulExit>,
+    visual_exit: ResMut<crate::render::core::gpu_surface_teardown::VisualTestGracefulExit>,
     capture_gate: Option<Res<DebugCaptureFrameGate>>,
     mut state: Local<VisualProbeFinalizeState>,
 ) {
@@ -140,7 +140,7 @@ pub(crate) fn finalize_visual_full_app_live_probe(
                 "FULL_APP visual probe timed out waiting for FINISH-UX-06 streak"
             );
             if launch.visual_auto_exit && !visual_exit.armed {
-                crate::render::gpu_surface_teardown::arm_visual_test_graceful_exit(visual_exit);
+                crate::render::core::gpu_surface_teardown::arm_visual_test_graceful_exit(visual_exit);
             }
             return;
         }
@@ -269,7 +269,7 @@ pub(crate) fn finalize_visual_full_app_live_probe(
 
     if launch.visual_auto_exit {
         if !visual_exit.armed {
-            crate::render::gpu_surface_teardown::arm_visual_test_graceful_exit(visual_exit);
+            crate::render::core::gpu_surface_teardown::arm_visual_test_graceful_exit(visual_exit);
         }
     } else {
         info!(

@@ -62,6 +62,9 @@ cross-agent handoffs as a **Δ-handoff table** (lossless, `$REPORT W7`); deep di
 | `file-digest <path>` | `file_digest` | Head N lines + total line count |
 | `orchestrator-brief` | `orchestrator_brief` | `last_run.json` summary |
 | `token-savings-guide` | `token_savings_guide` | Policy: which tools replace raw logs |
+| `agent-flow-route --goal … [--domain auto\|fire\|ui\|render\|art\|ops]` | `agent_flow_route` | BLANG:FLOW — L0 cheap → L1 hard → L2 exec dispatch packet |
+| `agent-flow-policy` | `agent_flow_policy` | Static model-tier table (composer-fast / opus / inherit) |
+| `terrain-honesty-lint [--compress 3]` | `terrain_honesty_lint_tool` | RPC-1 deterministic GpuInstancedAtlas / gpu_atlas honesty scan |
 | ~~`agent-lang-demo`~~ | — | **removed in CLI refactor** — health smoke via driver `demo` (pipeline-preflight + handoff-brief) |
 
 Queues: `grammar` → `grammar_continuation_queue.json` · `continuation` → `continuation_queue.json`  
@@ -262,6 +265,10 @@ Doc: [`docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md`](../..
 | `validate-report mcp_spec <path>` | `validate_report` | AssetSpec schema |
 | `validate-report mcp_job <path>` | `validate_report` | GeometryJob schema + seed |
 | `validate-report asset_glb <path>` | `validate_asset_report` | GLB structured issues |
+| `validate-report effect_spec <path>` | `validate_effect_spec_report` | EffectSpec v1 + spawn_hook allOf (VSS-T4-003) | **SHIPPED** |
+| `effect-pack <spec.json>` | — | wgsl_pack hash copy → `assets/staging/<effect_id>/` | **SHIPPED** |
+| `effect-promote [spec.json] [--batch-id] [--phase pack\|promote\|full]` | `effect_promote` | Staging pack + promote → `assets/effects/registry/` | **SHIPPED** |
+| `artist-vfx-pipeline-witness` | — | Refresh `debug_runs/artist_vfx_pipeline_live.json` | **SHIPPED** |
 
 Schema: `tools/validators/schemas/validation_report_v1.schema.json` · Rule: `.cursor/rules/validation-first.mdc`
 

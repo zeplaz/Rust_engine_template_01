@@ -134,7 +134,8 @@ pub fn load_block_street_furniture_scenes(
         "prop_vent_lod0_run001",
     ];
     for job in jobs {
-        let label = format!("assets/models/modules/{job}/model.glb#Scene0");
+        // AssetServer roots at `assets/` — do not prefix `assets/` again (else `assets/assets/...`).
+        let label = format!("models/modules/{job}/model.glb#Scene0");
         catalog
             .scenes
             .insert(job.to_string(), asset_server.load(label));

@@ -60,7 +60,7 @@
     "relative_path": "debug_runs/minimap_compositor_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "minimap_compositor_live_proof",
-    "written_at_epoch_secs": 1783391190
+    "written_at_epoch_secs": 1787890429
   },
   "burn_overrides_topology": true,
   "composite_ok": true,
@@ -82,20 +82,20 @@
   "fow_enabled": false,
   "fow_rows": 0,
   "gpu_budget": {
-    "commits_queued": 285,
+    "commits_queued": 17,
     "debug_logging": false,
-    "gpu_dedup_skips": 1543,
-    "gpu_executes": 285,
+    "gpu_dedup_skips": 76,
+    "gpu_executes": 17,
     "justified": true,
-    "last_commit_stamp": 285,
+    "last_commit_stamp": 17,
     "last_dispatch": "overlay_changed",
-    "last_fingerprint": 15748975499063262926,
+    "last_fingerprint": 8310390588268005940,
     "last_skip": "none",
     "overflow_ratio": 1.0,
     "skips_hidden": 0,
-    "skips_no_change": 7,
+    "skips_no_change": 11,
     "skips_no_rt": 0,
-    "skips_no_terrain": 11,
+    "skips_no_terrain": 6,
     "skips_rate_capped": 0,
     "skips_upload_failed": 0,
     "target_hz": 6.0
@@ -109,7 +109,7 @@
     "gate": "MINIMAP-ECO-FIRE-TRAY-001",
     "green": true
   },
-  "overlay_revision": 1824,
+  "overlay_revision": 33,
   "overlay_tray_minimap_mask": {
     "construction_heat": false,
     "ecology_heat": true,
@@ -118,7 +118,7 @@
   },
   "perf_vis_p1b_gpu_default_001": {
     "gate": "PERF-VIS-P1B-GPU-DEFAULT-001",
-    "gpu_compositor_default_on": false,
+    "gpu_compositor_default_on": true,
     "gpu_compositor_env": true,
     "green": true,
     "presentation_source": "SharedRenderTargetImage",
@@ -127,7 +127,7 @@
   "presentation_source": "SharedRenderTargetImage",
   "replay_scrub_enabled": false,
   "rt_bound": true,
-  "stamp": 285,
+  "stamp": 17,
   "terrain_source": "world_raster",
   "ui_oh_m2_001": {
     "construction_heat_enabled": false,
@@ -174,7 +174,7 @@
   "unit_marker_rows": 0,
   "unit_markers_reader_green": true,
   "units_heat_enabled": false,
-  "veg_burn_rows": 28,
-  "veg_extract_revision": 1953,
+  "veg_burn_rows": 7,
+  "veg_extract_revision": 179,
   "veg_minimap_burn_merge_green": true
 }

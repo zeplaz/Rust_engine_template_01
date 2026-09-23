@@ -26,11 +26,11 @@ use bevy::render::{
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
-use crate::gui::{RepresentationResult, TileDebugRenderHost};
-use crate::render::core2d_overlay_order::{
+use crate::gui::{MainWorldCamera, RepresentationResult, TileDebugRenderHost};
+use crate::render::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
 };
-use crate::render::gpu_buffer_registry::{GPUBufferRegistry, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER};
+use crate::render::core::gpu_buffer_registry::{GPUBufferRegistry, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER};
 use crate::render::fire_vfx::WorldFireParticleFrame;
 use crate::render::{particle_view_globals_from_metrics, ExtractedCameraMetrics};
 
@@ -59,6 +59,15 @@ pub struct FireParticleDrawGlobals {
     pub _pad: f32,
 }
 
+/// Counts silent early-outs in [`sync_fire_particle_draw_globals`] (Phase 2 diagnostics).
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct FireDrawDiagnostics {
+    pub policy_skip: u64,
+    pub cap_zero_skip: u64,
+    pub identity_skip: u64,
+    pub draw_ok: u64,
+}
+
 #[derive(Resource)]
 struct FireParticleRasterPipeline {
     globals_layout: BindGroupLayoutDescriptor,
@@ -76,6 +85,8 @@ struct FireParticleRasterBindGpu {
 
 pub fn register_fire_particle_raster_draw(app: &mut App) {
     app.init_resource::<FireParticleDrawGlobals>()
+        .init_resource::<FireDrawDiagnostics>()
+        .init_resource::<crate::gui::ZoomFrame>()
         .add_plugins(bevy::render::extract_resource::ExtractResourcePlugin::<
             FireParticleDrawGlobals,
         >::default())
@@ -91,6 +102,7 @@ pub fn register_fire_particle_raster_draw(app: &mut App) {
             PostUpdate,
             sync_fire_particle_draw_globals
                 .after(crate::render::ExtractedCameraMetricsSet::Sync)
+                .after(crate::gui::sync_main_world_camera_viewport_and_projection)
                 .run_if(crate::gui::in_simulation_or_editor_map),
         );
 
@@ -111,35 +123,49 @@ pub fn register_fire_particle_raster_draw(app: &mut App) {
         );
 }
 
+/// Live RTT Camera2d clip matrix — same authority as tile_debug / terrain_instanced overlays.
+#[inline]
+fn main_world_camera_view_proj(cam_q: &Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>) -> Option<Mat4> {
+    let (camera, gt) = cam_q.single().ok()?;
+    let view_from_world = Mat4::from(gt.affine().inverse());
+    Some(camera.clip_from_view() * view_from_world)
+}
+
 fn sync_fire_particle_draw_globals(
     policy: Res<RepresentationResult>,
     particles: Res<WorldFireParticleFrame>,
     metrics: Res<ExtractedCameraMetrics>,
+    zoom_frame: Res<crate::gui::ZoomFrame>,
+    cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
     mut globals: ResMut<FireParticleDrawGlobals>,
+    mut diag: ResMut<FireDrawDiagnostics>,
 ) {
     *globals = FireParticleDrawGlobals::default();
     globals.time_secs = particles.anim_time_secs;
     let allow_draw =
         policy.particle_policy.instanced_draw || !particles.instances.is_empty();
     if !allow_draw {
+        diag.policy_skip = diag.policy_skip.saturating_add(1);
         return;
     }
     let cap = policy
         .gpu_budget
         .particle_rows_cap
         .min(particles.instances.len());
-    if cap == 0 || metrics.view_proj == Mat4::IDENTITY {
+    if cap == 0 {
+        diag.cap_zero_skip = diag.cap_zero_skip.saturating_add(1);
         return;
     }
-    let packed = particle_view_globals_from_metrics(
-        metrics.as_ref(),
-        particles.anim_time_secs,
-        (cap as u32).saturating_mul(6),
-    );
-    globals.view_proj = packed.view_proj;
-    globals.vertex_count = packed.vertex_count;
-    globals.time_secs = packed.time_secs;
-    globals.zoom_alpha = packed.zoom_alpha;
+    let view_proj = main_world_camera_view_proj(&cam_q).unwrap_or(metrics.view_proj);
+    if view_proj == Mat4::IDENTITY {
+        diag.identity_skip = diag.identity_skip.saturating_add(1);
+        return;
+    }
+    globals.view_proj = view_proj;
+    globals.vertex_count = (cap as u32).saturating_mul(6);
+    globals.time_secs = particles.anim_time_secs;
+    globals.zoom_alpha = zoom_frame.zoom_alpha;
+    diag.draw_ok = diag.draw_ok.saturating_add(1);
 }
 
 fn init_fire_particle_raster_pipeline(

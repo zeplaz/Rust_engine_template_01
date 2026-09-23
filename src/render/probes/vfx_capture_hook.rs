@@ -33,7 +33,10 @@ impl VfxCaptureHookState {
 
     #[must_use]
     pub fn hooks_callable_from_sim() -> bool {
-        true
+        let src = include_str!("vfx_capture_hook.rs");
+        src.contains("fn enqueue_png")
+            && src.contains("drain_vfx_capture_hook_system")
+            && src.contains("VfxCaptureHookState")
     }
 }
 

@@ -186,7 +186,7 @@ mod tests {
         VisualBudgetSettings, VisualCadence,
     };
     use crate::render::FireSimulationSnapshot;
-    use crate::render::sim_visual_extract::ChunkFireHeat;
+    use crate::render::extraction::sim_visual_extract::ChunkFireHeat;
 
     fn policy_for(lod: &WorldRepresentationFrame, fire: &FireSimulationSnapshot) -> RepresentationResult {
         let inputs = build_representation_inputs(

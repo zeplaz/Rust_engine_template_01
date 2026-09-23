@@ -2,8 +2,8 @@
 
 use bevy::math::Vec4;
 
-use crate::render::gpu_instanced_quad::GpuInstancedQuadInstance;
-use crate::render::sim_visual_extract::FireVisualGpuInstance;
+use crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadInstance;
+use crate::render::extraction::sim_visual_extract::FireVisualGpuInstance;
 
 use crate::render::ExtractedCameraMetrics;
 
@@ -67,15 +67,17 @@ impl GpuParticleInstance {
     ) -> Self {
         let world = row.world_xyz_radius;
         let heat = row.heat();
+        let ember = row.smoke_ember_vis_priority.y.max(0.55);
+        let smoke = row.smoke_ember_vis_priority.x.max(0.2);
         let quad_half_world =
             fire_particle_quad_base_half_world(world.w, heat, cam.zoom_level, cam.zoom_alpha, class);
         Self {
             world_xyz_heat: Vec4::new(world.x, world.y, world.z, heat),
             ember_class_radius_smoke: Vec4::new(
-                row.smoke_ember_vis_priority.y,
+                ember,
                 class.as_f32(),
                 quad_half_world,
-                row.smoke_ember_vis_priority.x,
+                smoke,
             ),
         }
     }
@@ -87,7 +89,7 @@ impl GpuParticleInstance {
 }
 
 /// Expanded vertex alias (fire lane naming).
-pub type GpuParticleQuadVertex = crate::render::gpu_instanced_quad::GpuInstancedQuadVertex;
+pub type GpuParticleQuadVertex = crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadVertex;
 
 /// World-space **half-edge** length for pinpoint spark quads (FX-FIRE-SPARK-001 Phase A).
 #[inline]
@@ -98,14 +100,13 @@ fn fire_particle_quad_base_half_world(
     zoom_alpha: f32,
     class: ParticleClass,
 ) -> f32 {
+    let _ = (influence_light_radius_world, camera_zoom, zoom_alpha);
     let h = heat.clamp(0.0, 1.0);
-    let _ = (camera_zoom, zoom_alpha);
-    // World-locked half-edge — scales with tactical zoom like chunk footprints (not screen-stabilized).
-    let chunk_span = influence_light_radius_world.max(8.0);
-    let base = chunk_span * 0.045 + h * h * 0.22;
+    // Readable spark half-edge on tactical map (still far below old chunk-sized blobs).
+    let base = 0.85 + h * h * 0.55;
     match class {
-        ParticleClass::Spark => base.clamp(0.35, chunk_span * 0.55),
-        ParticleClass::Ember => (base * 1.85).clamp(0.6, chunk_span * 0.85),
-        ParticleClass::AtmosphereFx => (base * 0.72).clamp(0.25, chunk_span * 0.45),
+        ParticleClass::Spark => base.clamp(0.65, 2.0),
+        ParticleClass::Ember => (base * 1.55).clamp(0.9, 2.8),
+        ParticleClass::AtmosphereFx => (base * 0.85).clamp(0.5, 1.6),
     }
 }

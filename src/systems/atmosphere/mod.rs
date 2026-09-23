@@ -26,9 +26,9 @@ pub use emitter_sync::{fire_emitter_from_heat_fuel, FireEmitter};
 pub(crate) use emitter_sync::update_fire_emitters_from_heat;
 pub use field::{AtmosphereCell, AtmosphereField, GlobalWind};
 pub use gpu_paths::{
-    ATMOSPHERE_ASHFALL_WGSL, ATMOSPHERE_GROUND_HAZE_WGSL, ATMOSPHERE_HEAT_DISTORTION_WGSL,
-    ATMOSPHERE_PARTICLE_INSTANCING_WGSL, ATMOSPHERE_SMOKE_COLUMN_WGSL, ATMOSPHERE_FIELD_PAGE_TABLE_WGSL,
-    WEATHER_FIRE_FIELD_WGSL,
+    ATMOSPHERE_ASHFALL_WGSL, ATMOSPHERE_COMPOSITE_WIRED, ATMOSPHERE_FIELD_PAGE_TABLE_WGSL,
+    ATMOSPHERE_GROUND_HAZE_WGSL, ATMOSPHERE_HEAT_DISTORTION_WGSL, ATMOSPHERE_PARTICLE_INSTANCING_WGSL,
+    ATMOSPHERE_SMOKE_COLUMN_WGSL, ATMOSPHERE_WGSL_QUARANTINED, WEATHER_FIRE_FIELD_WGSL,
 };
 pub use overlays::{atmosphere_overlay_rgba, OverlayMode};
 pub use particles::{
@@ -64,7 +64,6 @@ pub use crate::render::{
 use bevy::prelude::*;
 
 use emitter_sync::sync_fire_emitters;
-use particles::atmosphere_particle_controller;
 
 use crate::systems::fire::chunk_smoke_field_pull_from_advected_atmosphere;
 
@@ -103,17 +102,58 @@ impl Plugin for AtmospherePlugin {
                 )
                     .chain()
                     .in_set(AtmospherePipelineSet::Emitters),
-            )
-            .init_resource::<AtmosphereParticleBudget>()
-            .init_resource::<AtmosphereParticlePool>()
-            .add_systems(
-                Update,
-                atmosphere_particle_controller.in_set(AtmospherePipelineSet::Particles),
             );
+        // ES-0: CPU particle controller + render-prep placeholder removed from live schedule.
+        // Fire/atmosphere particles use `fire_vfx` → GPU instanced quad spine (ES-2 generalizes).
         coupling::coupling_systems(app);
         render_layers::render_layer_systems(app);
         visual_extract::visual_extract_systems(app);
         gpu_field_bridge::gpu_field_bridge_systems(app);
         diagnostics::atmosphere_diagnostics_systems(app);
+    }
+}
+
+/// ES-0 exit predicate: CPU atmosphere particle + render-prep stubs are not on the live schedule.
+#[must_use]
+pub fn effects_stub_schedule_clean(field_fill_runs: u64) -> bool {
+    field_fill_runs > 0
+}
+
+#[cfg(test)]
+mod es0_schedule_tests {
+    use bevy::input::InputPlugin;
+    use bevy::prelude::*;
+
+    use crate::gui::InputBindings;
+    use crate::systems::sim_control::SimControlPlugin;
+
+    use super::{effects_stub_schedule_clean, AtmosphereDiagnostics, AtmospherePlugin};
+
+    #[test]
+    fn effects_stub_schedule_clean_after_sim_ticks() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.add_plugins(InputPlugin);
+        app.init_resource::<InputBindings>();
+        app.add_plugins(SimControlPlugin);
+        app.add_plugins(AtmospherePlugin);
+
+        for _ in 0..4 {
+            app.update();
+        }
+
+        let diag = app.world().resource::<AtmosphereDiagnostics>();
+        assert_eq!(
+            diag.particle_controller_runs, 0,
+            "atmosphere_particle_controller must not run on live schedule (ES-0)"
+        );
+        assert_eq!(
+            diag.render_prep_runs, 0,
+            "atmosphere_render_prep_placeholder must not run on live schedule (ES-0)"
+        );
+        assert!(
+            effects_stub_schedule_clean(diag.field_fill_runs),
+            "atmosphere field fill should still run"
+        );
     }
 }

@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/mig_bevy_019/mig_a_rollup.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "mig_a_rollup_witness",
-    "written_at_epoch_secs": 1783391045
+    "written_at_epoch_secs": 1787890416
   },
   "blocked_slices": [
     "A15"

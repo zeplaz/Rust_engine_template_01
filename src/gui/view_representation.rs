@@ -19,7 +19,7 @@ use crate::render::extraction::RenderProjectionGraph;
 
 use super::representation_policy::RepresentationResult;
 
-use super::map_camera::{
+use super::tactical::map_camera::{
     in_simulation_or_editor_map, map_camera_viewport_pixels, map_zoom_alpha_with_limits,
     map_zoom_limits_for_world, MapCameraDesired, MapCameraDesiredRes, MapCameraMode, MapCameraSettings,
     MapCameraSystemSet, MAP_ZOOM_CLAMP,
@@ -633,25 +633,25 @@ mod tests {
     #[test]
     fn vt2_zoom_alpha_monotonic_over_scale_sweep() {
         let (lo, hi) = MAP_ZOOM_CLAMP;
-        let mut prev = crate::gui::map_camera::map_zoom_alpha(lo - 50.0);
+        let mut prev = crate::gui::tactical::map_camera::map_zoom_alpha(lo - 50.0);
         for i in 0..=1000 {
             let t = i as f32 / 1000.0;
             let s = lo - 5.0 + (hi - lo + 10.0) * t;
-            let a = crate::gui::map_camera::map_zoom_alpha(s);
+            let a = crate::gui::tactical::map_camera::map_zoom_alpha(s);
             assert!(
                 a + 1e-5 >= prev,
                 "zoom_alpha decreased at scale={s}: {a} < {prev}"
             );
             prev = a;
         }
-        assert!((crate::gui::map_camera::map_zoom_alpha(lo) - 0.0).abs() < 1e-5);
-        assert!((crate::gui::map_camera::map_zoom_alpha(hi) - 1.0).abs() < 1e-5);
+        assert!((crate::gui::tactical::map_camera::map_zoom_alpha(lo) - 0.0).abs() < 1e-5);
+        assert!((crate::gui::tactical::map_camera::map_zoom_alpha(hi) - 1.0).abs() < 1e-5);
     }
 
     /// **VT-2** — full [`super::apply_camera_visual_from_map_snapshot`] path: `zoom_alpha` + `overlay_blend` monotonic in scale.
     #[test]
     fn vt2_pipeline_zoom_and_overlay_blend_monotonic_over_scale_sweep() {
-        use crate::gui::map_camera::MapCameraSettings;
+        use crate::gui::tactical::map_camera::MapCameraSettings;
         let settings = MapCameraSettings::default();
         let (lo, hi) = MAP_ZOOM_CLAMP;
         let mut visual = CameraVisualState::default();

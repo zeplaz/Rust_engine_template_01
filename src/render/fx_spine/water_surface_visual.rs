@@ -389,7 +389,7 @@ impl WaterSurfaceVisualCatalog {
 /// WGSL overlay reference path (GPU pass W1 — constants mirrored in CPU raster).
 pub const WATER_SURFACE_OVERLAY_WGSL: &str = "shaders/water/water_surface_overlay.wgsl";
 
-/// Strategic zoom band (D-W09) — keep in sync with [`crate::render::gpu_water_particles::WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA`].
+/// Strategic zoom band (D-W09) — keep in sync with [`crate::render::pipelines::gpu_water_particles::WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA`].
 pub const WATER_STRATEGIC_ZOOM_ALPHA: f32 = 0.35;
 
 /// Strategic zoom α for dual-band witness (matches [`evaluate_water_vfx_witness_bands`]).
@@ -654,7 +654,7 @@ pub struct WaterOverlayDrawFrame {
 
 pub fn sync_water_overlay_draw_frame(
     catalog: Option<Res<WaterSurfaceVisualCatalog>>,
-    cam_scale: Option<Res<crate::render::gpu_particles::FireParticleCameraScale>>,
+    cam_scale: Option<Res<crate::render::pipelines::gpu_particles::FireParticleCameraScale>>,
     time: Res<Time>,
     mut frame: ResMut<WaterOverlayDrawFrame>,
 ) {

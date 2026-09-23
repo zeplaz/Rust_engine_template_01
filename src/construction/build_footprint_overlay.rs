@@ -36,6 +36,12 @@ pub fn build_footprint_validity_overlay_egui(
     if strip.active == ToolContext::None || ghost.origin.is_none() || !map_vp.is_adequate_for_camera() {
         return Ok(());
     }
+    // No footprint paint until a catalog / submenu pick arms building_intent.
+    if matches!(tool.tool, crate::construction::BuildTool::Building(_))
+        && tool.building_intent.is_none()
+    {
+        return Ok(());
+    }
 
     let confidence = confidence_from_validation(&preview.report);
     let color = match confidence {

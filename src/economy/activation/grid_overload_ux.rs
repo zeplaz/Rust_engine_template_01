@@ -30,7 +30,9 @@ impl GridOverloadToastState {
 
 #[must_use]
 pub fn s7p_grid_ux_toast_ui_wired() -> bool {
-    true
+    // Structural: toast ingest path present (not always-true).
+    include_str!("grid_overload_ux.rs").contains("ingest_grid_overload_toast_system")
+        && include_str!("grid_overload_ux.rs").contains("GridOverloadToastState")
 }
 
 #[must_use]

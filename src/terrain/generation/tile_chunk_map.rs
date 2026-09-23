@@ -7,6 +7,24 @@
 use bevy::prelude::{IVec2, UVec2};
 use std::collections::HashSet;
 
+use crate::terrain::ChunkCellKey;
+
+/// World tile `(tx, tz)` → authoritative [`ChunkCellKey`] for ignite / overlay writes.
+#[inline]
+pub fn world_tile_to_chunk_cell_key(
+    tile_x: u32,
+    tile_z: u32,
+    cells_per_chunk: UVec2,
+) -> ChunkCellKey {
+    let cw = cells_per_chunk.x.max(1);
+    let ch = cells_per_chunk.y.max(1);
+    let chunk = tile_to_chunk_coord(tile_x, tile_z, cells_per_chunk);
+    let local_x = tile_x % cw;
+    let local_z = tile_z % ch;
+    let cell_index = local_z * cw + local_x;
+    ChunkCellKey::new(chunk, cell_index)
+}
+
 #[inline]
 pub fn tile_to_chunk_coord(tile_x: u32, tile_z: u32, cells_per_chunk: UVec2) -> IVec2 {
     let cw = cells_per_chunk.x.max(1);
@@ -82,5 +100,13 @@ mod tests {
             tile_to_chunk_coord(32, 0, cells),
             IVec2::new(1, 0)
         );
+    }
+
+    #[test]
+    fn world_tile_maps_to_chunk_cell_key() {
+        let cells = UVec2::new(32, 32);
+        let key = world_tile_to_chunk_cell_key(33, 1, cells);
+        assert_eq!(key.chunk, IVec2::new(1, 0));
+        assert_eq!(key.cell_index, 33);
     }
 }

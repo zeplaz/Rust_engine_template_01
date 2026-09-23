@@ -1,19 +1,18 @@
 //! LOD / fire chunk debug: logical **instances** keyed by [`TileDebugViewId`], uploaded to GPU
 //! storage and drawn as **one instanced pass** on the [`MainWorldCamera`](super::MainWorldCamera)
-//! Core2d subgraph (`crate::render::gpu_tile_debug_draw`).
+//! Core2d subgraph (`crate::render::pipelines::gpu_tile_debug_draw`).
 
 use bevy::prelude::*;
 use bevy::render::extract_component::ExtractComponentPlugin;
 use bevy::render::extract_resource::ExtractResourcePlugin;
 
 use super::camera_focus_debug::{CameraFocusDebug, DEBUG_CHUNK_SPACING_WORLD};
-use super::map_camera::{in_simulation_or_editor_map, MainWorldCamera, MapCameraDesiredRes};
+use super::tactical::map_camera::{in_simulation_or_editor_map, MainWorldCamera, MapCameraDesiredRes};
 use super::{ViewAuthoritySystemSet, ViewId, ViewManager};
 use super::tile_debug_types::{
     FireDebugOverride, TileDebugDrawGlobals, TileDebugInstance, TileDebugInstanceMap, TileDebugRenderHost,
     TileDebugViewId, TileGpuDebugSettings, tile_flags,
 };
-use crate::systems::fire::ChunkSurfaceFire;
 use crate::terrain::generation::{chunk_world_center, Chunk, ChunkCellMatrix};
 
 pub struct GpuTileDebugPlugin;
@@ -51,21 +50,16 @@ impl Plugin for GpuTileDebugPlugin {
 /// **TRIAGE-GPU-TILE-WGSL-001** — storage instanced WGSL present.
 #[must_use]
 pub fn triage_gpu_tile_wgsl_001_green() -> bool {
-    let path = std::path::Path::new("assets/shaders/debug/tile_debug_instanced.wgsl");
-    path.exists()
-        && std::fs::read_to_string(path)
-            .map(|s| s.contains("storage, read") && s.contains("tile_instance_color"))
-            .unwrap_or(false)
+    let wgsl = include_str!("../../assets/shaders/debug/tile_debug_instanced.wgsl");
+    wgsl.contains("storage, read") && wgsl.contains("tile_instance_color")
 }
 
 pub fn build_tile_debug_instances(
     settings: Res<TileGpuDebugSettings>,
-    fire_override: Res<FireDebugOverride>,
     debug: Res<CameraFocusDebug>,
     view_manager: Res<ViewManager>,
     desired: Res<MapCameraDesiredRes>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
-    fire_chunks: Query<(&Chunk, &ChunkCellMatrix, &ChunkSurfaceFire)>,
     mut map: ResMut<TileDebugInstanceMap>,
 ) {
     map.per_view.clear();
@@ -138,28 +132,6 @@ pub fn build_tile_debug_instances(
                 });
             }
         }
-    }
-
-    for (chunk, matrix, fire) in &fire_chunks {
-        if out.len() >= settings.max_instances {
-            break;
-        }
-        if fire.heat <= 0.02 && !fire_override.force_visible {
-            continue;
-        }
-        let sx = matrix.size.x.max(1) as f32;
-        let sy = matrix.size.y.max(1) as f32;
-        let origin = crate::terrain::generation::chunk_world_origin(chunk.coord, matrix.size);
-        let center = origin + Vec2::new(sx * 0.5, sy * 0.5);
-        let heat = fire.heat.clamp(0.0, 1.0);
-        // World-locked chunk footprint — scales with tactical zoom (not screen-stabilized).
-        let extent = sx.max(sy) * (0.92 + heat * 0.06);
-        out.push(TileDebugInstance {
-            world_pos: center.to_array(),
-            size: extent,
-            lod: lod_u32,
-            flags: tile_flags::FIRE,
-        });
     }
 
     map.per_view.insert(TileDebugViewId::WorldMain, out);

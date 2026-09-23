@@ -84,6 +84,8 @@ No FixedUpdate anywhere: sim is dt-scaled Update (frame-rate consistent, not ind
 | `ResolvedViewports` | `ViewportPipelineSet::Resolve` chain | `resolve_*` systems in `viewport_pipeline.rs` |
 | `ViewportAuthority.pending` | UI via `submit_viewport_request` | Cleared after resolve |
 | `ViewRepresentationSnapshot` | `build_view_representation_snapshot` | After `SyncViewManager` |
+| `AtmosphereClipmapStack` L0 | `sync_atmos_clipmap_witness_system` (+ contamination tick) | **ES-6** — smoke authority for clipmap consumers; DEBT-006 bridge gated OFF (`RUST_ENGINE_ATMOS_LEGACY_BRIDGE=1` rollback) |
+| `AtmosphereField` (128²) | atmosphere FieldFill/Advect pipeline | Transitional only — not dual-written into clipmap while bridge gated |
 
 **Test-only partial sync:** `sync_view_manager_world_main_from_authority` — not scheduled in production.
 
@@ -150,9 +152,9 @@ Simulation terrain display authority lives in `src/render/terrain_render_authori
 
 | Resource / fn | Role |
 |---------------|------|
-| `TerrainRenderAuthority` | `CpuFallback` · `GpuTilemap` (blocked) · `GpuInstancedAtlas` |
-| `resolve_sim_default_authority()` | **Release Simulation:** `GpuInstancedAtlas`; **Debug:** `CpuFallback` unless `TERRAIN_GPU_INSTANCED=1` |
-| `TERRAIN_CPU_FALLBACK=1` | Rollback env → force `CpuFallback` |
+| `TerrainRenderAuthority` | `CpuRaster` (alias `CpuFallback`) · `GpuTilemap` (deferred, never constructed) · `GpuBake` (alias `GpuInstancedAtlas`) |
+| `resolve_sim_default_authority()` | **Release Simulation:** `GpuBake`; **Debug:** `CpuRaster` unless `TERRAIN_GPU_INSTANCED=1` |
+| `TERRAIN_CPU_FALLBACK=1` | Rollback env → force `CpuRaster` |
 | `tile_world_fallback.rs` | CPU raster + stamp blit gated when authority uses GPU display |
 | `terrain_instanced_draw.rs` | Interim GPU sprite-bake display (dirty-gated) |
 | `minimap_compositor/pass.rs` | `minimap_terrain_source_label()` reflects authority in composite witness |
@@ -160,7 +162,7 @@ Simulation terrain display authority lives in `src/render/terrain_render_authori
 
 **Witness:** `debug_runs/gpu_terrain_p0c_prime_001_live.json` · `debug_runs/gpu_p1_p2_001_live.json` · harness `src/dev/gpu_terrain_witness.rs` / `gpu_p1_p2_witness.rs`.
 
-**Anti-pattern:** ad-hoc CPU terrain blit in Simulation when `GpuInstancedAtlas` is active — route stamps through `TerrainGpuStampIndices` (`map_tile_atlas_stamp.rs`).
+**Anti-pattern:** ad-hoc CPU terrain blit in Simulation when `GpuBake` is active — route stamps through `TerrainGpuStampIndices` (`map_tile_atlas_stamp.rs`).
 
 ## Escalation
 

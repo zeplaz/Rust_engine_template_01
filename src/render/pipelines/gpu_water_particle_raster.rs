@@ -25,12 +25,12 @@ use bevy::render::{
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
-use crate::gui::{RepresentationResult, TileDebugRenderHost};
-use crate::render::core2d_overlay_order::{
+use crate::gui::{MainWorldCamera, RepresentationResult, TileDebugRenderHost};
+use crate::render::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
 };
-use crate::render::gpu_buffer_registry::{GPUBufferRegistry, WATER_PARTICLE_EXPANDED_VERTICES_BUFFER};
-use crate::render::gpu_water_particles::WorldWaterParticleFrame;
+use crate::render::core::gpu_buffer_registry::{GPUBufferRegistry, WATER_PARTICLE_EXPANDED_VERTICES_BUFFER};
+use crate::render::pipelines::gpu_water_particles::WorldWaterParticleFrame;
 use crate::render::{particle_view_globals_from_metrics, ExtractedCameraMetrics};
 
 pub const WATER_PARTICLE_DRAW_WGSL: &str = "shaders/water/water_particle_draw.wgsl";
@@ -80,7 +80,7 @@ pub fn register_world_water_particle_raster(app: &mut App) {
         .add_systems(
             Update,
             sync_water_particle_draw_globals
-                .after(crate::render::gpu_water_particles::emit_world_water_particles_from_catalog)
+                .after(crate::render::pipelines::gpu_water_particles::emit_world_water_particles_from_catalog)
                 .after(crate::render::ExtractedCameraMetricsSet::Sync)
                 .run_if(crate::gui::in_simulation_or_editor_map),
         )
@@ -112,6 +112,7 @@ fn sync_water_particle_draw_globals(
     policy: Res<RepresentationResult>,
     particles: Res<WorldWaterParticleFrame>,
     metrics: Res<ExtractedCameraMetrics>,
+    cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
     mut globals: ResMut<WaterParticleDrawGlobals>,
 ) {
     *globals = WaterParticleDrawGlobals::default();
@@ -120,18 +121,22 @@ fn sync_water_particle_draw_globals(
         return;
     }
     let cap = particles.instances.len();
-    if cap == 0 || metrics.view_proj == Mat4::IDENTITY {
+    if cap == 0 {
         return;
     }
-    let packed = particle_view_globals_from_metrics(
-        metrics.as_ref(),
-        particles.anim_time_secs,
-        (cap as u32).saturating_mul(6),
-    );
-    globals.view_proj = packed.view_proj;
-    globals.vertex_count = packed.vertex_count;
-    globals.time_secs = packed.time_secs;
-    globals.zoom_alpha = packed.zoom_alpha;
+    let view_proj = if let Ok((camera, gt)) = cam_q.single() {
+        let view_from_world = Mat4::from(gt.affine().inverse());
+        camera.clip_from_view() * view_from_world
+    } else {
+        metrics.view_proj
+    };
+    if view_proj == Mat4::IDENTITY {
+        return;
+    }
+    globals.view_proj = view_proj;
+    globals.vertex_count = (cap as u32).saturating_mul(6);
+    globals.time_secs = particles.anim_time_secs;
+    globals.zoom_alpha = metrics.zoom_alpha;
 }
 
 fn init_water_particle_raster_pipeline(

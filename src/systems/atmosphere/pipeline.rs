@@ -17,14 +17,14 @@ pub enum AtmospherePipelineSet {
     WindAdvect,
     /// Low-count [`super::emitter_sync::FireEmitter`] sync.
     Emitters,
-    /// Budget / controller for GPU-bound particles (stub until instancing lands).
+    /// Reserved for future GPU atmosphere particle frontend (ES-2); no live systems in ES-0.
     Particles,
     /// Fold atmosphere into gameplay samples (logistics, LOS helpers).
     Coupling,
     /// Sim → render-facing snapshots ([`crate::render::SimChunkSmokeVisualExtract`], smoke only in `VisualExtract`).
     /// Fire rows: main world [`crate::render::extraction::RenderProjectionGraph`] + render [`crate::render::GPUBufferRegistry`].
     VisualExtract,
-    /// Extraction hooks for render world (stubs until GPU layers land).
+    /// ES-4: quarantine pin keeps composite toggles off until WGSL passes wire.
     RenderPrep,
     /// Frame metrics for egui / HUD.
     Diagnostics,

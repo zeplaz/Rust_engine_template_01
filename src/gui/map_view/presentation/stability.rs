@@ -154,7 +154,7 @@ pub struct MapViewInteractionByView {
 pub struct ActiveMapViewInput(pub Option<ViewHandle>);
 
 impl ActiveMapViewInput {
-    /// When true, gameplay [`crate::gui::map_camera::MapCameraDesired`] must not receive
+    /// When true, gameplay [`crate::gui::tactical::map_camera::MapCameraDesired`] must not receive
     /// keyboard / edge / grip / scroll zoom — those surfaces own input for this frame family.
     ///
     /// World Preview blocks only while the preview window is open **and** hovered (see

@@ -1,0 +1,395 @@
+{
+  "auto_count": 14,
+  "blocked_non_op_count": 142,
+  "operator_count": 9,
+  "auto": [
+    {
+      "file": "designer_signoff_registry.json",
+      "id": "UI4-DESIGN-001",
+      "owner": "designer",
+      "status": "open",
+      "op": false,
+      "goal": "D-04 slide sheet spec; LAYOUT-002 coder DONE"
+    },
+    {
+      "file": "designer_signoff_registry.json",
+      "id": "DESIGN-UI-P2-SIGNOFF-001",
+      "owner": "designer",
+      "status": "open",
+      "op": false,
+      "goal": "Historical Phase 2 HUD gate \u2014 verify file only"
+    },
+    {
+      "file": "designer_signoff_registry.json",
+      "id": "MINIMAP-DESIGN-M3-001",
+      "owner": "designer",
+      "status": "open",
+      "op": false,
+      "goal": "M3 FoW/EW/units/replay scrub; PNG optional; impl OPEN on coder"
+    },
+    {
+      "file": "designer_signoff_registry.json",
+      "id": "S7B-DESIGN-001",
+      "owner": "designer",
+      "status": "open",
+      "op": false,
+      "goal": "D-S7-01..06 locked; no Rust; planner handoff next"
+    },
+    {
+      "file": "grammar_continuation_queue.json",
+      "id": "WH-TRACK-B-PAUSE",
+      "owner": "orchestrator",
+      "status": "active",
+      "op": false,
+      "goal": "Warehouse Track B keyframe/G4 \u2014 orchestrator pause (non-blocking)"
+    },
+    {
+      "file": "multi_parallel_tracks_dispatch_v1.json",
+      "id": "PERF-INSTR-VFX-002",
+      "owner": "coder_b",
+      "status": "in_progress",
+      "op": false,
+      "goal": "VFX perf \u2014 Phase 2A\u20132D dirty gates (fire fingerprint, world repr stamp skip, map camera at-rest)"
+    },
+    {
+      "file": "planner_active_queue.json",
+      "id": "PLAN-APS-PRESENCE-001",
+      "owner": "?",
+      "status": "open",
+      "op": false,
+      "goal": ""
+    },
+    {
+      "file": "post_drain_active_queue.json",
+      "id": "OPS-F01",
+      "owner": "?",
+      "status": "ready",
+      "op": false,
+      "goal": "60s perf capture"
+    },
+    {
+      "file": "post_drain_active_queue.json",
+      "id": "OPS-F03",
+      "owner": "?",
+      "status": "ready",
+      "op": false,
+      "goal": "Refresh stage6 virtualization JSON in sim"
+    },
+    {
+      "file": "render_production_cleanup_queue.json",
+      "id": "RPC-1-002",
+      "owner": "coder",
+      "status": "queued",
+      "op": false,
+      "goal": "B0 docs honesty \u2014 replace gpu_atlas expectations with world_raster / transitional notes"
+    },
+    {
+      "file": "render_production_cleanup_queue.json",
+      "id": "RPC-1-003",
+      "owner": "coder",
+      "status": "queued",
+      "op": false,
+      "goal": "B1 rename helpers/comments toward GpuBake/CpuRaster \u2014 zero behavior change"
+    },
+    {
+      "file": "render_production_cleanup_queue.json",
+      "id": "RPC-1-004",
+      "owner": "coder",
+      "status": "queued",
+      "op": false,
+      "goal": "A0 bake spike \u2014 dirty-region scissor atlas\u2192world texture behind flag (keep CPU truth)"
+    },
+    {
+      "file": "render_production_cleanup_queue.json",
+      "id": "RPC-1-005",
+      "owner": "coder",
+      "status": "queued",
+      "op": false,
+      "goal": "A1 consumers \u2014 minimap+tactical read bake when flag on; honest terrain_source label"
+    },
+    {
+      "file": "render_production_cleanup_queue.json",
+      "id": "RPC-2-001",
+      "owner": "planner",
+      "status": "queued_after_rpc1",
+      "op": false,
+      "goal": "TODO-04 pose authority completion \u2014 architecture pass: writer enumeration, single commit point, mirr"
+    }
+  ],
+  "blocked_non_op": [
+    {
+      "file": "aps_grammar_evolution_queue.json",
+      "id": "ORCH-GRAM-001",
+      "owner": "orchestrator-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Issue PLAN-APS-GRAMMAR-EVOLUTION-001; enforce no fake green on tier/content rows"
+    },
+    {
+      "file": "aps_grammar_evolution_queue.json",
+      "id": "PLAN-GRAM-WITNESS-001",
+      "owner": "planner-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Witness envelope per row \u2014 exit_predicate.must fields"
+    },
+    {
+      "file": "aps_grammar_evolution_queue.json",
+      "id": "STEWARD-GRAM-WIT-HON-001",
+      "owner": "sim-steward",
+      "status": "blocked",
+      "op": false,
+      "goal": "Reject Q\u2713 when tier witness archetype_count disagrees with list_archetype_ids() or UI exposure table"
+    },
+    {
+      "file": "aps_option_d_agent_queue.json",
+      "id": "APS-E1-FLOW-LANE-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Flow bar: Landscape \u2192 Generate grammar \u00b7 Bake states \u00b7 Pack LG-5 atlas"
+    },
+    {
+      "file": "aps_option_d_agent_queue.json",
+      "id": "APS-E1-PIPELINE-LANE-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Validity-aware pipeline pills + Stamp step for landscape"
+    },
+    {
+      "file": "aps_option_d_agent_queue.json",
+      "id": "APS-E2-GRAMMAR-PANEL-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "New landscape_grammar_panel.py \u2014 not Assembly reuse"
+    },
+    {
+      "file": "aps_option_d_agent_queue.json",
+      "id": "DMCP-E4-MATRIX-CHARTER-001",
+      "owner": "designer-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "First expansion topology\u00d7state matrix charter"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "OVR-P1-TOKENS-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Token ramp + spacing scale + color roles; fix 7px font; style/density guards"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "OVR-P2-TEXT-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Implement terminology + ban-list + voice rules across panels and aps_tooltips.py"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "OVR-P3-LAYOUT-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Reclaim work area; fix footprint overflow; migrate padding literals; no h-scroll at MIN"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "OVR-P4-IA-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "R1 Stamp\u2192Atlas; R2 dead catalog path; Buildings reorder; material vocab unify"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "OVR-P45-SPINE-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Clickable pipeline spine; readiness gates flow verbs; narrate on_bake_variants"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "OVR-P5-STYLE-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "status_atom() everywhere; tk\u2192ttk migration; fix PASS-in-blue; section component"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "OVR-P55-PREVIEW-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Unified preview states; no black/blank; async update-on-select; trimesh degradation"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "OVR-P56-ONBOARD-001",
+      "owner": "coder-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "First-run greeting; friendly empty states; metadata_flow default collapsed; dismiss remembered"
+    },
+    {
+      "file": "aps_uiux_overhaul_queue.json",
+      "id": "ORCH-OVR-FILELOCK-001",
+      "owner": "orchestrator-mcp",
+      "status": "blocked",
+      "op": false,
+      "goal": "Publish per-phase file-lock table in dispatch orders; one coder-mcp phase active"
+    },
+    {
+      "file": "coder_active_queue.json",
+      "id": "PLAN-AUDIT-020",
+      "owner": "planner",
+      "status": "blocked",
+      "op": false,
+      "goal": ""
+    },
+    {
+      "file": "coder_drain_queue.json",
+      "id": "TRIAGE-BUILD-CLICK-PLACE-001",
+      "owner": "coder_b",
+      "status": "blocked",
+      "op": false,
+      "goal": "Two-click place: lock \u2192 Ctrl rotate / Shift size \u2192 click place"
+    },
+    {
+      "file": "coder_drain_queue.json",
+      "id": "TRIAGE-CURSOR-UNIFY-001",
+      "owner": "coder_b",
+      "status": "blocked",
+      "op": false,
+      "goal": "Hide OS cursor in sim; unified game cursor for pick + UI"
+    },
+    {
+      "file": "coder_drain_queue.json",
+      "id": "P0-VFX-ZOOM-LOCK-001",
+      "owner": "coder_b",
+      "status": "blocked",
+      "op": false,
+      "goal": "--test vfx scroll zoom must not snap back"
+    },
+    {
+      "file": "coder_drain_queue.json",
+      "id": "P0-TERRAIN-BLOB-001",
+      "owner": "coder_b",
+      "status": "blocked",
+      "op": false,
+      "goal": "Central terrain raster seam/blob fix or instrument"
+    },
+    {
+      "file": "coder_drain_queue.json",
+      "id": "FACTION-REACT-001",
+      "owner": "coder_a",
+      "status": "blocked",
+      "op": false,
+      "goal": "Faction stress hooks read telemetry rows"
+    },
+    {
+      "file": "coder_master_drain_queue.json",
+      "id": "BUILD-READ-REWIRE-001",
+      "owner": "coder_b",
+      "status": "blocked",
+      "op": false,
+      "goal": "Re-wire placement_debug into construction/mod.rs + projection exports"
+    },
+    {
+      "file": "coder_master_drain_queue.json",
+      "id": "BUILD-READ-REWIRE-002",
+      "owner": "coder_b",
+      "status": "blocked",
+      "op": false,
+      "goal": "Re-wire pointer gate + sim_build_rail_submenu_block_rect in ops shell"
+    },
+    {
+      "file": "coder_master_drain_queue.json",
+      "id": "MINIMAP-REWIRE-001",
+      "owner": "coder_b",
+      "status": "blocked",
+      "op": false,
+      "goal": "MinimapEdge + title bar API; wire minimap_bevy_interaction"
+    }
+  ],
+  "operator_only": [
+    {
+      "file": "coder_vegetation_drain_queue.json",
+      "id": "VEG-C03-PREVIEW-HEterogeneity-001",
+      "owner": "coder_a",
+      "status": "blocked",
+      "op": true,
+      "goal": "Pixel heterogeneity test: >=2 distinct tint buckets per chunk"
+    },
+    {
+      "file": "coder_vegetation_drain_queue.json",
+      "id": "VEG-C14-OPERATOR-CHECKLIST-001",
+      "owner": "coder_a",
+      "status": "blocked",
+      "op": true,
+      "goal": "Operator G-PLAY veg checklist row"
+    },
+    {
+      "file": "coder_vegetation_drain_queue.json",
+      "id": "VEG-G01-OPERATOR-HISTORY-001",
+      "owner": "coder_a",
+      "status": "blocked",
+      "op": true,
+      "goal": "DisturbanceHistory timeline in diagnostics UI"
+    },
+    {
+      "file": "multi_parallel_home_queues_v1.json",
+      "id": "OPS-VT5-OPERATOR-001",
+      "owner": "operator",
+      "status": "blocked",
+      "op": true,
+      "goal": "VT-5 flicker visual confirm"
+    },
+    {
+      "file": "multi_parallel_home_queues_v1.json",
+      "id": "G-PLAY-01",
+      "owner": "operator",
+      "status": "blocked",
+      "op": true,
+      "goal": "Play acceptance session \u2014 NEEDS-DISPLAY"
+    },
+    {
+      "file": "multi_parallel_home_queues_v1.json",
+      "id": "G-PLAY-OPERATOR-01",
+      "owner": "operator",
+      "status": "blocked",
+      "op": true,
+      "goal": "Veg/fire/ecology operator checklist v2"
+    },
+    {
+      "file": "multi_parallel_home_queues_v1.json",
+      "id": "PERF-SHELL-001",
+      "owner": "operator",
+      "status": "blocked",
+      "op": true,
+      "goal": "Shell perf spot-check"
+    },
+    {
+      "file": "multi_parallel_tracks_dispatch_v1.json",
+      "id": "DES-APS-OPERATOR-RUBRIC-002",
+      "owner": "designer",
+      "status": "blocked",
+      "op": true,
+      "goal": "APS pixel walk checklist v2 for operator"
+    },
+    {
+      "file": "render_production_cleanup_queue.json",
+      "id": "RPC-1-006",
+      "owner": "operator",
+      "status": "queued",
+      "op": true,
+      "goal": "Pixel prove + optional default flip"
+    }
+  ]
+}

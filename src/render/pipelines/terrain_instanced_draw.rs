@@ -1,10 +1,15 @@
 //! GPU instanced terrain atlas draw (P0-C′) — one quad per world tile from chunk matrices.
 //!
 //! **P0-C′-PRIME interim (plan Q3):** Simulation default uses dirty-gated **sprite texture bake**
-//! via [`crate::render::terrain_render_authority::TerrainRenderAuthority::uses_gpu_sprite_display`].
+//! via [`crate::render::core::terrain_render_authority::TerrainRenderAuthority::uses_gpu_sprite_display`].
 //! The Core2d instanced pass remains wired for a future flip when per-tile instancing replaces
 //! the sprite bake; [`sync_terrain_instances_from_chunks`] clears instances while sprite display
 //! is active.
+//!
+//! **RPC-1-004/005:** flagged atlas→world bake lives in
+//! [`crate::render::pipelines::terrain_gpu_bake_spike`] (`TERRAIN_GPU_BAKE_SPIKE=1`). That path does **not**
+//! populate this display `TerrainInstanceMap` while sprite display is on (avoids dual draw).
+//! Host atlas→world Image feeds minimap when consumers ready; GPU RTT shader prove = RPC-1-006.
 
 use std::borrow::Cow;
 
@@ -31,19 +36,19 @@ use bevy::render::{
     render_asset::RenderAssets,
     texture::GpuImage,
 };
-use bevy::render::extract_component::ExtractComponent;
+use bevy::render::extract_component::{ExtractComponent, ExtractComponentPlugin};
 use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 use bytemuck::{Pod, Zeroable};
 
 use crate::gui::MainWorldCamera;
-use crate::render::core2d_overlay_order::{
+use crate::render::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
 };
-use crate::render::gpu_buffer_registry::{
+use crate::render::core::gpu_buffer_registry::{
     BufferVisibility, GPUBufferRegistry, RegisteredBufferDescriptor, TERRAIN_INSTANCES_BUFFER,
 };
-use crate::render::terrain_material_atlas::TerrainMaterialAtlasGpu;
-use crate::render::terrain_render_authority::TerrainRenderAuthority;
+use crate::render::core::terrain_material_atlas::TerrainMaterialAtlasGpu;
+use crate::render::core::terrain_render_authority::TerrainRenderAuthority;
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
@@ -118,6 +123,7 @@ impl Plugin for TerrainInstancedDrawPlugin {
             .add_plugins((
                 ExtractResourcePlugin::<TerrainInstanceMap>::default(),
                 ExtractResourcePlugin::<TerrainInstancedDrawGlobals>::default(),
+                ExtractComponentPlugin::<TerrainInstancedRenderHost>::default(),
             ))
             .add_systems(
                 Update,
@@ -225,7 +231,7 @@ fn sync_terrain_instances_from_chunks(
 }
 
 fn sync_terrain_instanced_draw_globals(
-    authority: Res<crate::render::terrain_render_authority::TerrainRenderAuthority>,
+    authority: Res<crate::render::core::terrain_render_authority::TerrainRenderAuthority>,
     atlas: Res<TerrainMaterialAtlasGpu>,
     map: Res<TerrainInstanceMap>,
     mut globals: ResMut<TerrainInstancedDrawGlobals>,

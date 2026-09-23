@@ -61,8 +61,9 @@ mod parametric_commit;
 mod procedural_build_spawn;
 pub use parametric_commit::{
     build_read_visual_001_witness_body, build_read_visual_001_witness_green,
-    construction_procedural_build_001_witness_green, procedural_building_request_from_commit,
-    style_pack_for_site_archetype, sync_procedural_assembly_request_from_sites,
+    construction_procedural_build_001_witness_green, parametric_placement_snapshot,
+    procedural_building_request_from_commit, style_pack_for_site_archetype,
+    sync_procedural_assembly_request_from_sites,
 };
 pub use iso_draw_scale::{
     build_read_world_002_witness_body, build_read_world_002_witness_green,
@@ -73,7 +74,7 @@ pub use site_stub_overlay::{
 };
 pub use pilot_catalog::{
     build_read_shape_002_witness_green, pilot_catalog_parity_witness_green, PilotCatalog,
-    PilotKind,
+    PilotKind, PILOT_ARCH_DNA_PRESET_WAREHOUSE, PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
 };
 pub use placement_debug::{
     build_read_debug_001_witness_green, build_verify_debug_001_witness_json,

@@ -3,9 +3,9 @@
 use bevy::prelude::*;
 
 use crate::gui::{MapViewInstances, ViewId, ViewIsolationDiagnostics, ViewManager};
-use crate::render::fire_chunk_runtime::{ActiveFireChunkSet, VisibleFireChunkSet};
-use crate::render::fire_view_extract::{per_view_fire_extract_bounded, FireVisualFramesByView};
-use crate::render::view_fire_projection::projection_fire_source_view;
+use crate::render::fx_spine::fire_chunk_runtime::{ActiveFireChunkSet, VisibleFireChunkSet};
+use crate::render::extraction::fire_view_extract::{per_view_fire_extract_bounded, FireVisualFramesByView};
+use crate::render::fx_spine::view_fire_projection::projection_fire_source_view;
 
 use super::ids::ViewSurfaceId;
 use super::per_view_policy::PerViewRepresentationPolicy;

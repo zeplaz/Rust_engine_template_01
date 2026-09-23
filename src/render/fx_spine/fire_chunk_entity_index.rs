@@ -5,7 +5,7 @@
 use bevy::prelude::*;
 use rustc_hash::FxHashMap;
 
-use crate::render::fire_chunk_runtime::ChunkCoord;
+use crate::render::fx_spine::fire_chunk_runtime::ChunkCoord;
 
 /// Chunk entity lookup for [`extract_fire_simulation_snapshot`](crate::render::extraction::extract_fire_simulation_snapshot).
 #[derive(Resource, Default, Debug)]

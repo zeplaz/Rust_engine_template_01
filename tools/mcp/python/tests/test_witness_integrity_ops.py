@@ -27,12 +27,17 @@ def test_build_integrity_cache_has_counts() -> None:
 
 
 def test_classify_inflated_green_lg4() -> None:
-    rel = "debug_runs/landscape_grammar_lg4_preview_live.json"
-    path = repo_root() / rel
-    if not path.is_file():
-        pytest.skip("lg4 witness missing")
-    body = json.loads(path.read_text(encoding="utf-8"))
+    rel = "debug_runs/landscape_grammar_lg4_fixture_bad_live.json"
+    body = {
+        "green": True,
+        "topology_tint_visible_chunks": 0,
+        "topology_tint_wired": True,
+        "gate": "LG-4-PREVIEW-FIXTURE",
+    }
     cache = build_integrity_cache()
+    cache.setdefault("by_file", {})[rel] = [
+        {"symbol": "WIT-GREEN-TINT-ZERO", "kind": "WIT-GREEN-TINT-ZERO"}
+    ]
     summary = {"green": True, "task_id": body.get("gate"), "_witness_rel": rel}
     gate = classify_honest_gate_v2(rel, body, summary, cache)
     assert gate == "inflated_green"

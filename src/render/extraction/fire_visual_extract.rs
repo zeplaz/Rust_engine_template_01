@@ -1,7 +1,7 @@
 //! **Fire sim → chunk runtime → view visibility → LOD → per-view frames** (CPU). ECS reads happen only in
-//! [`extract_fire_simulation_snapshot`]; [`crate::render::fire_view_extract::build_fire_visual_frames_by_view`] fills
-//! [`crate::render::fire_view_extract::FireVisualFramesByView`] using per-view [`VisibleFireChunkSet`] and
-//! [`WorldLodBand`](crate::gui::WorldLodBand)-clamped fire LOD. GPU / projection use [`crate::render::fire_view_extract::tactical_fire_visual`]
+//! [`extract_fire_simulation_snapshot`]; [`crate::render::extraction::fire_view_extract::build_fire_visual_frames_by_view`] fills
+//! [`crate::render::extraction::fire_view_extract::FireVisualFramesByView`] using per-view [`VisibleFireChunkSet`] and
+//! [`WorldLodBand`](crate::gui::WorldLodBand)-clamped fire LOD. GPU / projection use [`crate::render::extraction::fire_view_extract::tactical_fire_visual`]
 //! ([`ViewId::WorldMain`]); other [`ViewId`]s read their entry directly.
 //! [`crate::render::extraction::RenderProjectionGraph`] (fire node evaluation) → render upload (`base_fire2_smoke.md`).
 //! [`crate::compute::ComputeDispatchGraph`] runs on the same snapshots **before** render projection (compute LOD policy).
@@ -29,15 +29,15 @@ use crate::render::{
     FireChunkLodState, FireChunkRuntime, FireSimulationSnapshot, FireVisualFramesByView,
     VisibleFireChunkSet, FIRE_SIM_CHUNK_ACTIVE_EPS,
 };
-use crate::render::overlay_field_buffers::{
+use crate::render::pipelines::overlay_field_buffers::{
     chunk_fire_heat_maps_differ, CHUNK_FIRE_OVERLAY_DISPLAY_MIN,
 };
-use crate::render::sim_visual_extract::{
+use crate::render::extraction::sim_visual_extract::{
     ChunkFireHeat, FireVisualGpuInstance, SimFireEmitterVisualExtract,
     FIRE_VISUAL_ACTIVE_HEAT_EPS,
 };
 use crate::render::SharedOverlayFieldBuffers;
-use crate::render::light::{LightCategory, RequestLocalLight};
+use crate::render::pipelines::light::{LightCategory, RequestLocalLight};
 use crate::render::lighting::{
     build_fire_light_clusters, FireLightCluster, FireLightEmission as VisFireLightSample, FireLightType,
 };
@@ -54,8 +54,8 @@ use super::fire_emission_profile::infer_fire_emission_profile;
 use super::fire_extract_scan::{build_fire_extract_scan_set, fire_extract_glow_domain};
 use super::render_projection_graph::{run_render_projection_graph, RenderProjectionGraph};
 use super::smoke_visual_extract::{build_smoke_visual_extract, SmokeVisualBridgeWitness};
-use crate::render::visual_snapshot_commit::{commit_fire_visual_snapshot, CommittedVisualSnapshotFence};
-use crate::render::extracted_camera_metrics::ExtractedCameraMetricsSet;
+use crate::render::extraction::visual_snapshot_commit::{commit_fire_visual_snapshot, CommittedVisualSnapshotFence};
+use crate::render::extraction::extracted_camera_metrics::ExtractedCameraMetricsSet;
 use crate::render::fire_vfx::{
     emit_world_fire_particles_from_projection, WorldFireParticleFrame,
 };
@@ -103,7 +103,9 @@ pub struct FireVisualFramePlugin;
 
 impl Plugin for FireVisualFramePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(crate::render::fire_streaming::FireStreamingPlugin);
+        app.add_plugins(crate::render::fx_spine::fire_streaming::FireStreamingPlugin);
+        app.add_plugins(crate::render::particle_domains::ParticleDomainRegistryPlugin);
+        app.add_plugins(crate::render::fire_vfx::EffectConsumableRegistryPlugin);
         app.add_message::<RequestLocalLight>()
             .configure_sets(Update, ViewAuthoritySystemSet::SyncViewManager)
             .init_resource::<FireSimulationSnapshot>()
@@ -143,7 +145,7 @@ impl Plugin for FireVisualFramePlugin {
                 )
                     .before(extract_fire_simulation_snapshot),
             )
-            .configure_sets(Update, crate::render::fire_streaming::FireStreamingSleepWakeSet)
+            .configure_sets(Update, crate::render::fx_spine::fire_streaming::FireStreamingSleepWakeSet)
             .configure_sets(
                 Update,
                 (
@@ -162,11 +164,11 @@ impl Plugin for FireVisualFramePlugin {
             .add_systems(
                 Update,
                 (
-                    crate::render::fire_streaming::apply_fire_streaming_sleep_wake_system
+                    crate::render::fx_spine::fire_streaming::apply_fire_streaming_sleep_wake_system
                         .after(extract_fire_simulation_snapshot)
-                        .in_set(crate::render::fire_streaming::FireStreamingSleepWakeSet),
+                        .in_set(crate::render::fx_spine::fire_streaming::FireStreamingSleepWakeSet),
                     sync_active_fire_chunk_set
-                        .after(crate::render::fire_streaming::FireStreamingSleepWakeSet)
+                        .after(crate::render::fx_spine::fire_streaming::FireStreamingSleepWakeSet)
                         .before(build_fire_visual_frames_by_view),
                     crate::render::stall_substage_fire_sync_active,
                 ),
@@ -210,7 +212,7 @@ impl Plugin for FireVisualFramePlugin {
             )
             .add_systems(
                 Update,
-                crate::render::fire_streaming::write_fire_streaming_live_proof_system
+                crate::render::fx_spine::fire_streaming::write_fire_streaming_live_proof_system
                     .run_if(crate::dev::runtime_witness::fire_streaming_live_proof_due)
                     .after(FireVisualFrameSet::BuildProfiles)
                     .run_if(in_state(crate::engine::states::BaseState::Simulation)),
@@ -327,9 +329,9 @@ pub fn sync_shared_overlay_from_simulation(
     // MAP-BLINK-001: cold-start ramp — soften first overlay revision bumps (operator pop-in).
     if shared.chunk_fire_heat.is_empty() && !next.is_empty() {
         let frames = fire_playback.overlay_warmup_frames;
-        if frames < crate::render::overlay_field_buffers::OVERLAY_WARMUP_BLEND_FRAMES {
+        if frames < crate::render::pipelines::overlay_field_buffers::OVERLAY_WARMUP_BLEND_FRAMES {
             let alpha = (frames as f32 + 1.0)
-                / crate::render::overlay_field_buffers::OVERLAY_WARMUP_BLEND_FRAMES as f32;
+                / crate::render::pipelines::overlay_field_buffers::OVERLAY_WARMUP_BLEND_FRAMES as f32;
             for heat in next.values_mut() {
                 *heat *= alpha;
             }
@@ -1051,7 +1053,7 @@ mod vt1_full_world_fire_extract_tests {
         ViewManager, ViewProjection, ViewRenderPolicy, ViewRenderTarget, VisualBudgetSettings,
         VisualCadence, WorldLodBand, WorldLodMap, WorldLodPolicyEngine, WorldRepresentationFrame,
     };
-    use crate::render::light::RequestLocalLight;
+    use crate::render::pipelines::light::RequestLocalLight;
     use crate::render::SharedOverlayFieldBuffersPlugin;
     use crate::systems::atmosphere::AtmosphereDiagnostics;
     use crate::systems::fire::{ChunkSurfaceFire, FireLightEmission};

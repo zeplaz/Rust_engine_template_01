@@ -1,13 +1,18 @@
 use bevy::prelude::*;
 use std::collections::VecDeque;
 
-use crate::sim::effects::{SimEffectEvent, SimEffectKind, SimEffectQueue};
+use crate::sim::effects::SimEffectQueue;
+use crate::strategic::StrategicRasterConfig;
 use crate::systems::sim_control::SimControlState;
-use crate::terrain::ChunkCellKey;
 
+use super::ignite::{
+    enqueue_scenario_ignite_sim_effect, ignite_cell_from_world_tile,
+    ignite_cells_from_scenario_cells,
+};
 use super::objectives::ScenarioObjectiveMarker;
 use super::scenario_steps::ScenarioStep;
 use super::scenario_types::ScenarioFileV1;
+use super::trigger_registry::trigger_effect_to_emit_step;
 use super::validation::{validate_scenario, ScenarioValidationReport};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
@@ -115,6 +120,7 @@ pub fn drain_script_steps(
     mut host: ResMut<EngineScriptHost>,
     mut sim_control: ResMut<SimControlState>,
     mut sim_effect_queue: ResMut<SimEffectQueue>,
+    raster: Option<Res<StrategicRasterConfig>>,
     objective_entities: Query<Entity, With<ScenarioObjectiveMarker>>,
 ) {
     if !host.running {
@@ -174,28 +180,75 @@ pub fn drain_script_steps(
             if cells.is_empty() {
                 host.execution_log.push("EmitSimEffect: rejected — empty cells".into());
             } else {
-                let mapped: Vec<(ChunkCellKey, f32)> = cells
-                    .iter()
-                    .map(|c| {
-                        (
-                            ChunkCellKey {
-                                chunk: IVec2::new(c.chunk_x, c.chunk_y),
-                                cell_index: c.cell,
-                            },
-                            c.spark,
-                        )
-                    })
-                    .collect();
-                let pushed = sim_effect_queue.push(SimEffectEvent {
+                let mapped = ignite_cells_from_scenario_cells(&cells);
+                let pushed = enqueue_scenario_ignite_sim_effect(
+                    sim_effect_queue.as_mut(),
                     source,
-                    cause_id: cause_id.clone(),
+                    cause_id.clone(),
                     parent_effect_id,
-                    kind: SimEffectKind::IgniteCells { cells: mapped },
-                });
+                    mapped,
+                );
                 host.execution_log.push(format!(
                     "EmitSimEffect: cause={cause_id} cells={} pushed={pushed}",
                     cells.len()
                 ));
+            }
+        }
+        ScenarioStep::IgniteAt {
+            tile,
+            spark,
+            cause_id,
+        } => {
+            let cells_per_chunk = raster
+                .as_ref()
+                .map(|r| r.cells_per_chunk)
+                .unwrap_or_else(|| StrategicRasterConfig::default().cells_per_chunk);
+            let tile_x = tile.tile_x;
+            let tile_z = tile.tile_z;
+            let mapped = vec![ignite_cell_from_world_tile(tile, cells_per_chunk, spark)];
+            let pushed = enqueue_scenario_ignite_sim_effect(
+                sim_effect_queue.as_mut(),
+                crate::sim::effects::SimEffectSource::ScenarioScript,
+                cause_id.clone(),
+                None,
+                mapped,
+            );
+            host.execution_log.push(format!(
+                "IgniteAt: tile=({}, {}) spark={spark} cause={cause_id} pushed={pushed}",
+                tile_x, tile_z
+            ));
+        }
+        ScenarioStep::TriggerEffect { effect_id } => {
+            match trigger_effect_to_emit_step(&effect_id) {
+                Ok(ScenarioStep::EmitSimEffect {
+                    source,
+                    cause_id,
+                    parent_effect_id,
+                    cells,
+                }) => {
+                    let mapped = ignite_cells_from_scenario_cells(&cells);
+                    let pushed = enqueue_scenario_ignite_sim_effect(
+                        sim_effect_queue.as_mut(),
+                        source,
+                        cause_id.clone(),
+                        parent_effect_id,
+                        mapped,
+                    );
+                    host.execution_log.push(format!(
+                        "TriggerEffect: id={effect_id} cause={cause_id} cells={} pushed={pushed}",
+                        cells.len()
+                    ));
+                }
+                Ok(_) => {
+                    host.execution_log.push(format!(
+                        "TriggerEffect: id={effect_id} rejected — non-ignite step"
+                    ));
+                }
+                Err(err) => {
+                    host.execution_log.push(format!(
+                        "TriggerEffect: id={effect_id} failed — {err:?}"
+                    ));
+                }
             }
         }
     }

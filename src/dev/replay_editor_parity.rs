@@ -1,7 +1,5 @@
 //! Replay + editor parity witness (infrastructure hardening — not Stage 5 exit).
 
-use std::path::Path;
-
 use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 use serde::Serialize;
@@ -32,14 +30,15 @@ pub fn refresh_replay_editor_parity_witness_system(
         .as_deref()
         .map(|r| r.stamps.len() as u32)
         .unwrap_or(0);
-    witness.scenario_plugin_wired = Path::new("src/scenario/scenario_plugin.rs").exists();
+    witness.scenario_plugin_wired =
+        include_str!("../scenario/scenario_plugin.rs").contains("pub struct ScenarioScriptingPlugin");
     witness.editor_scenario_panel =
-        Path::new("src/gui/editor/scenario_script_panel.rs").exists();
-    witness.committed_visual_fence_module =
-        Path::new("src/render/committed_visual_snapshot.rs").exists()
-            || Path::new("src/render/mod.rs").exists();
-    witness.infrastructure_isolation_json =
-        Path::new("debug_runs/infrastructure_view_isolation_live.json").exists();
+        include_str!("../gui/editor/scenario_script_panel.rs").contains("ScenarioScriptPanelState");
+    witness.committed_visual_fence_module = include_str!("../render/api.rs")
+        .contains("CommittedVisualSnapshotFence")
+        || include_str!("../render/mod.rs").contains("visual_snapshot_commit");
+    // Isolation JSON on disk is not wiring — require live replay samples instead.
+    witness.infrastructure_isolation_json = witness.replay_ring_len >= 2;
     witness.parity_green = witness.replay_ring_len >= 2
         && witness.scenario_plugin_wired
         && witness.editor_scenario_panel
@@ -82,35 +81,39 @@ pub fn write_replay_editor_parity_live_proof_system(
 }
 
 /// **REPLAY-PARITY-001** — lib refresh of `replay_editor_parity_live.json`.
+///
+/// Lib cannot invent `replay_ring_len` — prove under live Simulation with ring samples.
 #[must_use]
 pub fn refresh_replay_editor_parity_live_witness() -> bool {
-    let mut witness = ReplayEditorParityWitness::default();
-    witness.replay_ring_len = 4;
-    witness.scenario_plugin_wired = Path::new("src/scenario/scenario_plugin.rs").exists();
-    witness.editor_scenario_panel = Path::new("src/gui/editor/scenario_script_panel.rs").exists();
-    witness.infrastructure_isolation_json =
-        Path::new("debug_runs/infrastructure_view_isolation_live.json").exists();
-    witness.parity_green = witness.replay_ring_len >= 2
-        && witness.scenario_plugin_wired
-        && witness.editor_scenario_panel
-        && witness.infrastructure_isolation_json;
+    let scenario_plugin_wired =
+        include_str!("../scenario/scenario_plugin.rs").contains("pub struct ScenarioScriptingPlugin");
+    let editor_scenario_panel =
+        include_str!("../gui/editor/scenario_script_panel.rs").contains("ScenarioScriptPanelState");
+    let committed_visual_fence_module = include_str!("../render/api.rs")
+        .contains("CommittedVisualSnapshotFence")
+        || include_str!("../render/mod.rs").contains("visual_snapshot_commit");
     const PROOF_PATH: &str = "debug_runs/replay_editor_parity_live.json";
     let payload = serde_json::json!({
         "profile": "REPLAY_EDITOR_PARITY",
-        "parity_green": witness.parity_green,
-        "replay_ring_len": witness.replay_ring_len,
-        "scenario_plugin_wired": witness.scenario_plugin_wired,
-        "editor_scenario_panel": witness.editor_scenario_panel,
-        "infrastructure_isolation_json": witness.infrastructure_isolation_json,
-        "replay_parity_001_green": witness.parity_green,
+        "parity_green": false,
+        "replay_ring_len": 0,
+        "scenario_plugin_wired": scenario_plugin_wired,
+        "editor_scenario_panel": editor_scenario_panel,
+        "committed_visual_fence_module": committed_visual_fence_module,
+        "infrastructure_isolation_json": false,
+        "replay_parity_001_green": false,
+        "proof_grade": "lib_fixture_retired",
+        "cheat_retired": true,
+        "retire_note": "Invented ring_len=4 lib green retired (CLN-WIT-001); runtime system remains authoritative.",
     });
     let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "REPLAY_EDITOR_PARITY",
+        "REPLAY-PARITY-001",
         "refresh_replay_editor_parity_live_witness",
         PROOF_PATH,
         payload,
     );
-    crate::dev::debug_run_envelope::write_debug_run_json(PROOF_PATH, wrapped)
+    let _ = crate::dev::debug_run_envelope::write_debug_run_json(PROOF_PATH, wrapped);
+    false
 }
 
 pub fn register_replay_editor_parity_hooks(app: &mut App) {

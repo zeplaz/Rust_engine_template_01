@@ -1,0 +1,9 @@
+,,,,,
+ID,Symptom,When (A1/A2/…),Panic?,Screenshot path,Suspected area
+B1,there is a werid yellow thing ,A1+,no,notes: this bug has been highiled by a red cicle shape around it:C:\Users\oz_\Pictures\errors.PNG, i haeve another pic with the hihglied in red the glitch of the UIi also buildings or and rendering? UI?
+B2,the building menu does not work. canèt  lick on stuff. seems theirs also a preselected buikding but cant click it cant place it canèt cancel it so some gui ui states not working ,A1+,,i highlted the zone with a red scicle did not highlight the cuser staying as a place 2x2 rot 0  perfict. C:\Users\oz_\Pictures\red_path.png   and like constiton menu seem sgliched out not able to sub slect and sems meouse input not propelr managed : C:\Users\oz_\Pictures\errors.PNG,
+B3,no fire in A2 ,A2 with vfx in cmd,,theirs no fire. ,fire or render
+,,,,,
+,,,,,
+,,,,,
+Rule: one row per distinct bug. Prefer screenshot + witness path over long terminal paste.,,,,,

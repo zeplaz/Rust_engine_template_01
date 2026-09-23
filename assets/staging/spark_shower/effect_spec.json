@@ -1,0 +1,85 @@
+{
+  "schema_version": "effect_spec_v1",
+  "effect_id": "spark_shower",
+  "display_name": "Spark Shower (reference)",
+  "seed": 42001,
+  "batch_id": "vss_t4_reference_effects_v1",
+  "development_tier": "smoke",
+  "lane": "particle_instanced",
+  "sim_coupling": "heat_field",
+  "spawn_hook": "world_xy",
+  "spawn_hook_config": {
+    "world_xy": {
+      "tile_x": 0,
+      "tile_y": 0,
+      "offset_tile": [0.5, 0.5],
+      "world_z": 0
+    }
+  },
+  "grid": {
+    "tile_units": 1,
+    "snap_to_grid": true,
+    "rotation_quarters": 0,
+    "anchor": "tile_center"
+  },
+  "emit": {
+    "duration_secs": 4,
+    "rate": 120,
+    "burst_count": 48,
+    "lifetime_secs": 1.2,
+    "prewarm_secs": 0.5
+  },
+  "lod_tiers": {
+    "macro": {
+      "enabled": false,
+      "max_instances": 0,
+      "rate_scale": 0,
+      "sprite_px_scale": 0.5,
+      "fire_lod_band": "none"
+    },
+    "strategic": {
+      "enabled": true,
+      "max_instances": 32,
+      "rate_scale": 0.25,
+      "sprite_px_scale": 0.75,
+      "fire_lod_band": "smoke_only"
+    },
+    "operational": {
+      "enabled": true,
+      "max_instances": 128,
+      "rate_scale": 0.6,
+      "sprite_px_scale": 1,
+      "fire_lod_band": "low_flame"
+    },
+    "local_tactical": {
+      "enabled": true,
+      "max_instances": 512,
+      "rate_scale": 1,
+      "sprite_px_scale": 1.25,
+      "fire_lod_band": "full_flame"
+    }
+  },
+  "visual": {
+    "source": "wgsl_pack",
+    "shader_pack": {
+      "compute": "assets/shaders/fire/fire_spark_compute.wgsl",
+      "draw": "assets/shaders/fire/fire_particle_draw.wgsl",
+      "particle": "assets/shaders/fire/fire_particle.wgsl"
+    },
+    "blend": "additive",
+    "sprite_px": 3,
+    "tint": [1, 0.72, 0.28, 1]
+  },
+  "preview": {
+    "frames": 90,
+    "camera_zoom_px_per_tile": 8,
+    "entry_path": "effect_sandbox",
+    "warmup_frames": 30,
+    "capture_resolution": [512, 512]
+  },
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "42001"
+  }
+}

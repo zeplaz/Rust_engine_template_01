@@ -47,10 +47,10 @@ pub use witness_gates::{
 mod tests {
     use super::*;
     use crate::dev::proof_grade::ProofGrade;
-    use crate::render::gpu_particles::WorldFireParticleFrame;
-    use crate::render::gpu_water_particles::WorldWaterParticleFrame;
-    use crate::render::stage5_readiness::stage5_readiness_passes;
-    use crate::render::vt_ci_matrix::build_deterministic_ci_scenario;
+    use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
+    use crate::render::pipelines::gpu_water_particles::WorldWaterParticleFrame;
+    use crate::render::witness::stage5_readiness::stage5_readiness_passes;
+    use crate::render::witness::vt_ci_matrix::build_deterministic_ci_scenario;
     use bevy::math::Vec2;
 
     #[test]
@@ -97,9 +97,9 @@ mod tests {
         use bevy::math::{Vec2, Vec4};
 
         use crate::render::extraction::FireVisualGpuInstance;
-        use crate::render::gpu_water_particles::update_world_water_particles_from_catalog;
+        use crate::render::pipelines::gpu_water_particles::update_world_water_particles_from_catalog;
         use crate::render::{
-            gpu_particles::{update_world_fire_particles_from_projection, FireParticleCameraScale},
+            update_world_fire_particles_from_projection, FireParticleCameraScale,
             RiverPolylineSegment, WaterSurfaceVisualCatalog,
         };
 
@@ -120,8 +120,8 @@ mod tests {
             &mut particles,
             None,
             FireParticleCameraScale {
-                zoom_level: crate::render::gpu_particles::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
-                zoom_alpha: crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
+                zoom_level: crate::render::pipelines::gpu_particles::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
+                zoom_alpha: crate::render::pipelines::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
                 ..Default::default()
             },
             None,
@@ -227,7 +227,7 @@ mod tests {
     #[test]
     fn dehack_fire_001_overlay_bootstrap_not_default() {
         use crate::render::extraction::{FireVisualGpuInstance, RenderProjectionGraph};
-        use crate::render::gpu_particles::WorldFireParticleFrame;
+        use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
 
         let _ = std::env::remove_var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY");
         let mut particles = WorldFireParticleFrame::default();
@@ -337,6 +337,12 @@ mod tests {
             v["tactical_vfx_witness"]["fire_instance_buffer_rows_gt_0"],
             serde_json::json!(true)
         );
+        assert_eq!(v["smoke_extract_wired"], serde_json::json!(true));
+        assert_eq!(v["smoke_stub_removed"], serde_json::json!(true));
+        assert_eq!(
+            v["smoke_bridge"]["projection_wired"],
+            serde_json::json!(true)
+        );
         assert_eq!(
             v["veg_burn_witness"]["gate"],
             serde_json::json!("VEG-BURN-FULLAPP-006")
@@ -352,7 +358,7 @@ mod tests {
 
     #[test]
     fn p2_fire_spark_011_stage5_witness_refresh() {
-        use crate::render::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA;
+        use crate::render::pipelines::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA;
 
         assert!(super::refresh_p2_fire_spark_011_stage5_live_witness());
 
@@ -387,7 +393,7 @@ mod tests {
 
     #[test]
     fn water_strategic_001_full_app_witness_gate() {
-        use crate::render::gpu_water_particles::{
+        use crate::render::pipelines::gpu_water_particles::{
             evaluate_water_vfx_witness_bands, water_strategic_001_green,
         };
         use crate::render::{RiverPolylineSegment, WaterSurfaceVisualCatalog};
@@ -410,7 +416,7 @@ mod tests {
         assert!(gates.water_strategic_001_green);
         assert!(gates.water_strategic_001_shader_motion_green);
         assert!(gates.water_strategic_gates_green());
-        let json = tactical_vfx_witness_json(&gates);
+        let json = tactical_vfx_witness_json(&gates, false);
         assert_eq!(
             json["water_strategic_001_green"],
             serde_json::json!(true)
@@ -423,7 +429,7 @@ mod tests {
 
     #[test]
     fn water_witness_001_dual_band_gates_from_catalog() {
-        use crate::render::gpu_water_particles::{
+        use crate::render::pipelines::gpu_water_particles::{
             evaluate_water_vfx_witness_bands, water_strategic_001_green, water_witness_001_green,
             water_witness_foam_or_ocean_green,
         };
@@ -456,7 +462,7 @@ mod tests {
 
     #[test]
     fn water_w2_foam_001_gate_from_bend_and_coast_catalog() {
-        use crate::render::gpu_water_particles::{
+        use crate::render::pipelines::gpu_water_particles::{
             evaluate_water_vfx_witness_bands, water_w2_foam_001_green,
         };
         use crate::render::{RiverPolylineSegment, WaterSurfaceVisualCatalog};

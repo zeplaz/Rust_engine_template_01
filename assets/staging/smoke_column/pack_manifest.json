@@ -1,0 +1,20 @@
+{
+  "schema": "effect_pack_manifest_v1",
+  "effect_id": "smoke_column",
+  "batch_id": "vss_t4_reference_effects_v1",
+  "packed_at_utc": "2026-08-28T04:44:00Z",
+  "spec_source": "tools/mcp/schemas/examples/effect_spec_smoke_column_v1.json",
+  "shader_hashes": {
+    "compute": {
+      "source": "assets/shaders/post/weather_fire_field.wgsl",
+      "dest": "shaders/weather_fire_field.wgsl",
+      "sha256": "fca943f3e81c7e1fb1e33d90a9a2599561e15d168466dc2d9e0dd06de9a3ea8a"
+    },
+    "draw": {
+      "source": "assets/shaders/experiments/atmosphere/smoke_column.wgsl",
+      "dest": "shaders/smoke_column.wgsl",
+      "sha256": "4179e8752cbf0eed43cfd11ada742b658200ddca103e8fcd2397e2c3269e73a8"
+    }
+  },
+  "pack_hash": "f876a6f6d84da926ed6161eeec16ac1bc7e7e0e01a7a258b73c44ea0b5dd0ff5"
+}

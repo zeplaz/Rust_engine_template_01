@@ -1,6 +1,6 @@
 //! Per-view projection read surface (Phase 1). Authoritative snapshots live in [`crate::gui::ViewManager`]
 //! after [`crate::gui::ViewAuthoritySystemSet::SyncViewManager`] (which runs after
-//! [`crate::gui::map_camera::MapCameraSystemSet::ApplyInput`] so [`MapCameraDesired`] is current). Prefer these helpers over ad-hoc
+//! [`crate::gui::tactical::map_camera::MapCameraSystemSet::ApplyInput`] so [`MapCameraDesired`] is current). Prefer these helpers over ad-hoc
 //! [`crate::gui::MapCameraDesired`] reads when you have a [`crate::gui::ViewId`].
 //!
 //! **vm-06:** [`view_surface_world_to_screen`] / [`view_surface_screen_to_world`] route through

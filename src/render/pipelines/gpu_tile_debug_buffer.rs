@@ -1,6 +1,6 @@
-//! Upload [`crate::gui::TileDebugInstance`] rows to [`crate::render::gpu_buffer_registry::GPUBufferRegistry`]
+//! Upload [`crate::gui::TileDebugInstance`] rows to [`crate::render::core::gpu_buffer_registry::GPUBufferRegistry`]
 //! for `assets/shaders/debug/tile_debug_instanced.wgsl` (storage @group(1) @binding(0)).
-//! Instances are drawn in the Core2d graph via [`crate::render::gpu_tile_debug_draw`].
+//! Instances are drawn in the Core2d graph via [`crate::render::pipelines::gpu_tile_debug_draw`].
 
 use bevy::prelude::*;
 use bevy::render::{
@@ -10,7 +10,7 @@ use bevy::render::{
 };
 
 use crate::gui::{TileDebugInstance, TileDebugInstanceMap, TileDebugViewId};
-use crate::render::gpu_buffer_registry::{
+use crate::render::core::gpu_buffer_registry::{
     BufferVisibility, GPUBufferRegistry, RegisteredBufferDescriptor, TILE_DEBUG_INSTANCES_BUFFER,
 };
 

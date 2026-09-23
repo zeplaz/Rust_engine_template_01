@@ -59,7 +59,7 @@
     "relative_path": "debug_runs/wss_substrate_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_wss_substrate_live_witness",
-    "written_at_epoch_secs": 1783371800
+    "written_at_epoch_secs": 1787798406
   },
   "active_runtime_activate_test_ok": false,
   "active_runtime_cap_respected": false,
@@ -106,6 +106,7 @@
   "substrate_plugin_enabled": true,
   "wss_atmos_clipmap_001": {
     "clipmap_advect_wired": true,
+    "clipmap_l0_authoritative": true,
     "clipmap_l0_smoke_max": 0.41999998688697815,
     "clipmap_level_count": 4,
     "clipmap_levels_present": true,

@@ -35,6 +35,19 @@
       "anchor_witnesses": ["debug_runs/play_scenario_live.json"]
     },
     {
+      "program_id": "vss_spectator_scale",
+      "label": "VSS-001 — real game test · scale · artist VFX · symbolic build",
+      "owner": "@orchestrator",
+      "anchor_witnesses": [
+        "debug_runs/spectator_parity_live.json",
+        "debug_runs/symbolic_build_encoding_live.json",
+        "debug_runs/world_scale_contract_live.json",
+        "debug_runs/artist_vfx_pipeline_live.json"
+      ],
+      "plan_doc": "src/dev/plan_vfx_spectator_scale_program_v1.md",
+      "trip_registry": "tools/orchestrator/queues/vss_trip_artifact_registry.json"
+    },
+    {
       "program_id": "agent_ops",
       "label": "Agent continuity",
       "owner": "@main-thread-orchestrator",

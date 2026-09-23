@@ -13,22 +13,22 @@ use crate::gui::{
 use crate::render::extraction::{
     bin_merge_chunk_heat, ProjectionNodeTrait, RenderProjectionContext, RenderProjectionGraph,
 };
-use crate::render::gpu_particles::{
+use crate::render::pipelines::gpu_particles::{
     update_world_fire_particles_from_projection, WorldFireParticleFrame,
 };
-use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
+use crate::render::pipelines::overlay_field_buffers::SharedOverlayFieldBuffers;
 use crate::render::{
     fire_chunk_lod_state_from_simulation, tactical_fire_visual, FireSimulationSnapshot,
     FireVisualFramesByView,
 };
-use crate::render::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance};
-use crate::render::visual_agreement::{
+use crate::render::extraction::sim_visual_extract::{ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance};
+use crate::render::witness::visual_agreement::{
     hash_chunk_fire_heat, hash_shared_overlay_heat, update_visual_agreement_frame,
     OverlayAgreementDebug, VisualAgreementFrame, WorldPreviewVt4Probe,
 };
-use crate::render::visual_snapshot_commit::CommittedVisualSnapshotFence;
+use crate::render::extraction::visual_snapshot_commit::CommittedVisualSnapshotFence;
 use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot};
-use crate::render::vt_spatial_invariants::{
+use crate::render::witness::vt_spatial_invariants::{
     passes_vt5_spatial_invariants, vt5_spatial_eval_deferred,
 };
 use crate::systems::sim_control::SimStepStamp;
@@ -151,6 +151,7 @@ pub fn build_deterministic_ci_scenario() -> Vt4CiScenario {
         lod: &lod,
         lod_map: &lod_map,
         fire: &fire,
+        smoke: None,
         logistics: &logistics,
         ecology: &ecology,
         committed_stamp: stamp,
@@ -169,7 +170,7 @@ pub fn build_deterministic_ci_scenario() -> Vt4CiScenario {
         &graph,
         &mut particles,
         Some(&chunk_lod),
-        crate::render::gpu_particles::FireParticleCameraScale::default(),
+        crate::render::pipelines::gpu_particles::FireParticleCameraScale::default(),
         None,
     );
 
@@ -415,7 +416,7 @@ pub fn stage5_vt_flicker_visual_001_witness() -> serde_json::Value {
 #[must_use]
 pub fn stab_vt_001_witness() -> serde_json::Value {
     use serde_json::json;
-    let lib_green = crate::render::vt_ci_matrix::full_app_vt_ci_fixture_passes();
+    let lib_green = crate::render::witness::vt_ci_matrix::full_app_vt_ci_fixture_passes();
     json!({
         "gate": "STAB-VT-001",
         "vr04_live_confirm_pending": true,
@@ -433,7 +434,7 @@ impl Plugin for VtCiMatrixPlugin {
         app.init_resource::<VtCiMatrixLiveReport>().add_systems(
             PostUpdate,
             record_vt_ci_matrix_live
-                .after(crate::render::visual_agreement::record_visual_agreement_frame),
+                .after(crate::render::witness::visual_agreement::record_visual_agreement_frame),
         );
     }
 }
@@ -667,8 +668,8 @@ mod tests {
 
     #[test]
     fn stage5_ci_core_readiness_fixture_passes() {
-        assert!(crate::render::vt_ci_matrix::full_app_vt_ci_fixture_passes());
-        use crate::render::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport};
+        assert!(crate::render::witness::vt_ci_matrix::full_app_vt_ci_fixture_passes());
+        use crate::render::witness::stage5_readiness::{stage5_readiness_passes, AppStage5ReadinessReport};
         use crate::systems::atmosphere::P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE;
 
         let report = AppStage5ReadinessReport {

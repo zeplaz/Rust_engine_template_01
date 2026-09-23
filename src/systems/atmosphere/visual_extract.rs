@@ -1,4 +1,4 @@
-//! Publishes sim state into [`crate::render::sim_visual_extract`] resources (`base_gui_next.md` Stage 2).
+//! Publishes sim state into [`crate::render::extraction::sim_visual_extract`] resources (`base_gui_next.md` Stage 2).
 
 use bevy::prelude::*;
 

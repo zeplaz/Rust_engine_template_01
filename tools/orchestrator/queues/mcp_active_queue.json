@@ -299,12 +299,19 @@
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P0",
-      "status": "blocked",
+      "status": "done",
       "goal": "validate_asset_report tier rules (Phase B2)",
       "plan_ref": "plan_module_kit_production_tier_v1.md#phase-b",
       "witness": "debug_runs/mcp_prod_b2_live.json",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "exit_predicate": {
+        "must": [
+          "TIER-002 rejects 24-vert cube for pitched/sawtooth/arched at production",
+          "refresh_mcp_prod_b2_witness green",
+          "pytest tests/test_validators.py green"
+        ]
+      },
+      "updated_at": "2026-08-12T21:30:00Z",
+      "note": "FLEET-MCP-PROD-B2 close 2026-08-12 \u00b7 tier rules pre-shipped in validators/tier.py \u00b7 pytest 18/18 \u00b7 witness refreshed green \u00b7 debug_runs/mcp_prod_b2_live.json"
     },
     {
       "id": "MCP-PROD-C-PILOT",
@@ -533,11 +540,18 @@
       "week": 4,
       "agent": "coder-mcp",
       "priority": "P0",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [],
       "goal": "witness_integrity rule catalog + validate-report witness_honesty",
       "plan_deliverable": "src/dev/plan_witness_queue_integrity_mcp_v1.md",
       "witness": "debug_runs/mcp_witness_honesty_validator_live.json",
+      "exit_predicate": {
+        "must": [
+          "tools/mcp/schemas/witness_integrity_rules_v1.schema.json validates catalog",
+          "validate-report witness_honesty <path> returns ValidationReport",
+          "pytest tests/test_witness_honesty.py green"
+        ]
+      },
       "commands": [
         "python -m rust_engine_mcp.cli validate-report witness_honesty --scan debug_runs --compress 3",
         "python -m rust_engine_mcp.cli mcp-witness-honesty-validator-witness"
@@ -546,66 +560,89 @@
         "MCP-WIT-010",
         "PLAN-WITNESS-REOPEN-001"
       ],
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-08-12T21:22:00Z",
+      "note": "FLEET-MCP-WIT-001 close 2026-08-12 \u00b7 catalog+validator pre-shipped \u00b7 pytest 19/19 \u00b7 witness refreshed green \u00b7 debug_runs/mcp_witness_honesty_validator_live.json"
     },
     {
       "id": "MCP-WIT-010",
       "week": 4,
       "agent": "coder-mcp",
       "priority": "P0",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [
         "MCP-WIT-001"
       ],
       "goal": "validate-report queue_integrity + queue_registry_v1.json",
       "plan_deliverable": "src/dev/plan_witness_queue_integrity_mcp_v1.md",
       "witness": "debug_runs/queue_integrity_reconcile_live.json",
+      "exit_predicate": {
+        "must": [
+          "tools/mcp/schemas/queue_registry_v1.schema.json validates registry",
+          "validate-report queue_integrity returns ValidationReport",
+          "pytest tests/test_queue_integrity.py green"
+        ]
+      },
       "commands": [
         "python -m rust_engine_mcp.cli validate-report queue_integrity --compress 3",
         "python -m rust_engine_mcp.cli queue-integrity-reconcile-witness"
       ],
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-08-12T21:30:00Z",
+      "note": "FLEET-MCP-WIT-010 close 2026-08-12 \u00b7 validator+registry pre-shipped \u00b7 pytest 8/8 \u00b7 witness refreshed \u00b7 debug_runs/queue_integrity_reconcile_live.json"
     },
     {
       "id": "MCP-WIT-020",
       "week": 4,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [
         "MCP-WIT-010"
       ],
       "goal": "ops honest_gate v2 + post_build witness_honesty hook",
       "witness": "debug_runs/mcp_witness_integrity_ops_live.json",
+      "exit_predicate": {
+        "must": [
+          "tools/orchestrator/scripts/witness_honesty_lib.py classify_honest_gate_v2 + build_integrity_cache",
+          "post_build.ps1 calls witness_honesty_lib run-hook (warn default; enforce via env)",
+          "pytest tests/test_witness_integrity_ops.py green"
+        ]
+      },
       "commands": [
         "python tools/orchestrator/scripts/witness_honesty_lib.py run-hook",
         "powershell -File tools/orchestrator/scripts/ops_intelligence_scan.ps1"
       ],
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-08-12T21:45:00Z",
+      "note": "FLEET-MCP-WIT-020 close 2026-08-12 \u00b7 pre-shipped honest_gate v2 + post_build hook \u00b7 pytest 6/6 \u00b7 witness refreshed \u00b7 debug_runs/mcp_witness_integrity_ops_live.json"
     },
     {
       "id": "MCP-WIT-030",
       "week": 4,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "blocked",
+      "status": "done",
+      "closed": "2026-08-12",
       "depends_on": [
         "MCP-WIT-001"
       ],
       "goal": "witness_brief profile=honesty + BLANG:WIT-HON + MICRO_TOOLS Tier 1i",
       "witness": "debug_runs/mcp_witness_honesty_validator_live.json",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "exit_predicate": {
+        "must": [
+          "witness_brief(path, profile='honesty') returns failed_rule_ids + q_forbidden",
+          "token_savings_guide witness_integrity.blang == BLANG:WIT-HON",
+          "MICRO_TOOLS_REGISTRY_v1.md Tier 1i witness-brief --profile honesty SHIPPED"
+        ]
+      },
+      "updated_at": "2026-08-12T21:26:00Z",
+      "note": "2026-08-12 close · pre-shipped profile=honesty + BLANG:WIT-HON + Tier 1i · pytest 21/21 · witness refreshed"
     },
     {
       "id": "MCP-WIT-040",
       "week": 4,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "blocked",
+      "status": "done",
+      "closed": "2026-08-12",
       "depends_on": [
         "MCP-WIT-001",
         "MCP-WIT-010",
@@ -617,8 +654,16 @@
         "python -m pytest tests/test_witness_honesty.py tests/test_queue_integrity.py tests/test_aps_imports.py -q",
         "powershell -File tools/orchestrator/ci/run.ps1 -WitnessIntegrity"
       ],
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "exit_predicate": {
+        "must": [
+          "pytest tests/test_witness_honesty.py tests/test_queue_integrity.py tests/test_aps_imports.py green",
+          "tools/orchestrator/ci/run.ps1 -WitnessIntegrity stage (MCP-WIT-043) runs pytest + witness refresh",
+          "debug_runs/mcp_witness_honesty_validator_live.json green",
+          "debug_runs/queue_integrity_reconcile_live.json report-only reconcile written"
+        ]
+      },
+      "updated_at": "2026-08-12T21:26:00Z",
+      "note": "2026-08-12 close \u00b7 pre-shipped pytest + CI -WitnessIntegrity \u00b7 pytest 68/68 \u00b7 witnesses refreshed"
     },
     {
       "id": "PLAN-WITNESS-QUEUE-INTEGRITY-001",

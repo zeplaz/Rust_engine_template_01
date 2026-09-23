@@ -659,10 +659,10 @@ pub fn preload_tile_atlas_gpu_cache(
     }
 }
 
-/// CPU RGBA stamp blit is allowed only under [`TerrainRenderAuthority::CpuFallback`].
+/// CPU RGBA stamp blit is allowed only under [`TerrainRenderAuthority::CpuRaster`].
 #[must_use]
 pub fn stamp_cpu_rgba_blit_enabled(authority: crate::render::TerrainRenderAuthority) -> bool {
-    authority.uses_cpu_fallback_raster()
+    authority.uses_cpu_raster()
 }
 
 /// Nearest-neighbor blit of atlas UV sub-rect into overworld RGBA8 (alpha ≥ 128 replaces base).
@@ -761,15 +761,15 @@ mod tests {
     #[test]
     fn stamp_cpu_blit_gated_on_fallback_authority() {
         use crate::render::TerrainRenderAuthority;
-        assert!(stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::CpuFallback));
-        assert!(!stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::GpuInstancedAtlas));
+        assert!(stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::CpuRaster));
+        assert!(!stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::GpuBake));
         assert!(!stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::GpuTilemap));
     }
 
     #[test]
     fn gpu_stamp_path_avoids_cpu_blit_contract() {
         use crate::render::TerrainRenderAuthority;
-        let gpu = TerrainRenderAuthority::GpuInstancedAtlas;
+        let gpu = TerrainRenderAuthority::GpuBake;
         assert!(gpu.is_gpu());
         assert!(!stamp_cpu_rgba_blit_enabled(gpu));
     }

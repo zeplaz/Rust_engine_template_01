@@ -102,20 +102,21 @@ fn cursor_in_minimap_chrome(cursor: Vec2, shell: &MinimapShellState) -> bool {
     point_in_rect(cursor, minimap_widget_rect(shell))
 }
 
-/// **MINIMAP-WIDGET-IMPL-001** lib witness — map image drag + title bar drag + tap-to-jump.
+/// **MINIMAP-WIDGET-IMPL-001** lib witness — egui drag/pan is runtime-only; lib green retired.
 #[must_use]
 pub fn minimap_widget_impl_001_witness_green() -> bool {
-    minimap_map_image_drag_pans_view() && minimap_title_bar_drag_moves_widget()
+    // Lib cannot prove egui map-image / title-bar drag without a live pointer session.
+    false
 }
 
 #[must_use]
 pub fn minimap_map_image_drag_pans_view() -> bool {
-    true
+    false
 }
 
 #[must_use]
 pub fn minimap_title_bar_drag_moves_widget() -> bool {
-    true
+    false
 }
 
 #[must_use]
@@ -123,11 +124,14 @@ pub fn minimap_widget_impl_001_witness_json() -> serde_json::Value {
     serde_json::json!({
         "gate": "MINIMAP-WIDGET-IMPL-001",
         "green": minimap_widget_impl_001_witness_green(),
+        "proof_grade": "lib_fixture_retired",
+        "cheat_retired": true,
         "map_image_drag_pans_view": minimap_map_image_drag_pans_view(),
         "title_bar_drag_moves_widget": minimap_title_bar_drag_moves_widget(),
-        "tap_map_jumps_camera": true,
-        "texture_centered_on_resize": true,
+        "tap_map_jumps_camera": false,
+        "texture_centered_on_resize": false,
         "content_pan_offset": 0,
+        "retire_note": "Lib always-true drag/tap flags retired (CLN-WIT-001); prove under --test visual / operator session.",
     })
 }
 
@@ -581,7 +585,10 @@ pub fn draw_simulation_minimap_topology_legend_egui_system(
 /// Lib witness — GPU-path legend draw is registered (CDR-B).
 #[must_use]
 pub fn minimap_topology_legend_gpu_chrome_wired() -> bool {
-    true
+    // Structural: draw helper exists and the sim egui system calls it (not always-true).
+    include_str!("minimap_topology_legend.rs").contains("pub fn draw_minimap_topology_legend_gpu_chrome")
+        && include_str!("minimap_bevy_interaction.rs")
+            .contains("draw_minimap_topology_legend_gpu_chrome(")
 }
 
 #[cfg(test)]
@@ -594,13 +601,16 @@ mod tests {
     }
 
     #[test]
-    fn minimap_widget_impl_001_witness_green_lib() {
-        assert!(minimap_widget_impl_001_witness_green());
+    fn minimap_widget_impl_001_witness_retired_not_lib_green() {
+        assert!(!minimap_widget_impl_001_witness_green());
+        let body = minimap_widget_impl_001_witness_json();
+        assert_eq!(body["cheat_retired"], true);
+        assert_eq!(body["proof_grade"], "lib_fixture_retired");
     }
 
     #[test]
-    fn map_image_drag_pans_view() {
-        assert!(minimap_map_image_drag_pans_view());
-        assert!(minimap_title_bar_drag_moves_widget());
+    fn map_image_drag_pans_view_retired() {
+        assert!(!minimap_map_image_drag_pans_view());
+        assert!(!minimap_title_bar_drag_moves_widget());
     }
 }

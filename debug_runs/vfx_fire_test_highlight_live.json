@@ -58,12 +58,14 @@
     "relative_path": "debug_runs/vfx_fire_test_highlight_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_vfx_fire_test_highlight_live_witness",
-    "written_at_epoch_secs": 1783371798
+    "written_at_epoch_secs": 1787792429
   },
+  "draw_mode": "gizmo_2d_line_loop",
+  "focus_zoom_floor_px_per_tile": 4.0,
   "gate": "VFX-FIRE-HIGHLIGHT-001",
   "green": true,
   "module": "src/gui/vfx_fire_test_highlight.rs",
-  "plugin_wired": false,
-  "projection": "MainWorldCameraOrthoTrace",
-  "status": "removed_pending_redesign"
+  "plugin_wired": true,
+  "projection": "world_space_gizmos",
+  "status": "world_gizmo_v2"
 }

@@ -14,22 +14,22 @@ use bevy::render::{
 
 use crate::gui::{GPU_FIRE_INSTANCE_BUDGET_CEILING, RepresentationResult};
 #[cfg(test)]
-use crate::render::gpu_instanced_quad::{FireSparkDrawExtension, ParticleSystemUniforms};
-use crate::render::fire_smoke_shader_handles::FIRE_PARTICLE_WGSL;
-use crate::render::gpu_bind_group_registry::{
+use crate::render::pipelines::gpu_instanced_quad::{FireSparkDrawExtension, ParticleSystemUniforms};
+use crate::render::fx_spine::fire_smoke_shader_handles::FIRE_PARTICLE_WGSL;
+use crate::render::core::gpu_bind_group_registry::{
     BindGroupBufferBinding, GPUBindGroupRegistry, WORLD_FIRE_PARTICLE_DRAW_BIND_GROUP,
     WORLD_FIRE_PARTICLE_EXPANDED_BIND_GROUP, WORLD_FIRE_PARTICLE_SPARK_BIND_GROUP,
 };
-use crate::render::gpu_buffer_registry::{
+use crate::render::core::gpu_buffer_registry::{
     FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER, FIRE_PARTICLE_INSTANCES_BUFFER,
     FIRE_SPARK_STATE_BUFFER, GPUBufferRegistry, RegisteredBufferDescriptor, BufferVisibility,
 };
 use crate::render::fire_vfx::{fire_spark_compute_enabled, GpuParticleQuadVertex, WorldFireParticleGpuStorage};
-use crate::render::gpu_packed_formats::{fire_particle_expanded_vertex_format, packed_byte_size};
-use crate::render::gpu_spark_compute::FireSparkComputePrepareSet;
-use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
+use crate::render::core::gpu_packed_formats::{fire_particle_expanded_vertex_format, packed_byte_size};
+use crate::render::pipelines::gpu_spark_compute::{FireSparkComputePrepareSet, SparkSimState};
+use crate::render::core::gpu_representation_metrics::GpuRepresentationMetrics;
 
-/// Shared with [`crate::render::gpu_indirect_draw::GPU_INDIRECT_DISPATCH_WORKGROUP`] (MIG-A10).
+/// Shared with [`crate::render::pipelines::gpu_indirect_draw::GPU_INDIRECT_DISPATCH_WORKGROUP`] (MIG-A10).
 pub const PARTICLE_WORKGROUP: u32 = 64;
 
 #[derive(Resource, Clone, ShaderType)]
@@ -126,7 +126,7 @@ struct WorldFireParticleDrawPassReady {
 
 pub fn register_world_fire_particle_draw(app: &mut App) {
     app.init_resource::<WorldFireParticleDrawDispatch>();
-    crate::render::gpu_spark_compute::register_fire_spark_compute(app);
+    crate::render::pipelines::gpu_spark_compute::register_fire_spark_compute(app);
     super::gpu_fire_particle_raster::register_fire_particle_raster_draw(app);
 
     let Some(render_app) = app.get_sub_app_mut(RenderApp) else {
@@ -407,6 +407,50 @@ fn prepare_world_fire_particle_draw_bind_group(
                 }],
             );
         }
+    } else if storage.instance_count > 0 {
+        // Expand compute requires binding 3 even when spark-sim is off — upload identity rows.
+        let rows = storage.instance_count as usize;
+        let spark_rows: Vec<SparkSimState> = (0..rows.max(1))
+            .map(|_| SparkSimState::default())
+            .collect();
+        let stride = std::mem::size_of::<SparkSimState>() as u32;
+        let _ = registry.upload_pod_slice(
+            &render_device,
+            &queue,
+            RegisteredBufferDescriptor {
+                id: FIRE_SPARK_STATE_BUFFER,
+                size_bytes: (spark_rows.len() * stride as usize) as u64,
+                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                visibility: BufferVisibility::RenderAndCompute,
+                stride,
+            },
+            spark_rows.len(),
+            &spark_rows,
+            1,
+        );
+        if let Some(spark_buf) = registry.get(FIRE_SPARK_STATE_BUFFER) {
+            let spark_layout = pipeline_cache.get_bind_group_layout(&pipeline.spark_layout);
+            let spark_bg = render_device.create_bind_group(
+                None,
+                &spark_layout,
+                &[BindGroupEntry {
+                    binding: 0,
+                    resource: BindingResource::Buffer(BufferBinding {
+                        buffer: &spark_buf.buffer,
+                        offset: 0,
+                        size: None,
+                    }),
+                }],
+            );
+            bind_registry.insert(
+                WORLD_FIRE_PARTICLE_SPARK_BIND_GROUP,
+                spark_bg,
+                vec![BindGroupBufferBinding {
+                    buffer_id: FIRE_SPARK_STATE_BUFFER,
+                    buffer_version: spark_buf.version,
+                }],
+            );
+        }
     }
 
     uniform_gpu.uniform.set((*uniforms).clone());
@@ -551,8 +595,8 @@ pub fn sync_particle_draw_dispatch_from_policy(
 mod tests {
     use super::*;
     use crate::gui::{GpuBudgetPolicy, RepresentationBand, RepresentationResult};
-    use crate::render::gpu_bind_group_registry::BindGroupId;
-    use crate::render::gpu_buffer_registry::BufferId;
+    use crate::render::core::gpu_bind_group_registry::BindGroupId;
+    use crate::render::core::gpu_buffer_registry::BufferId;
 
     #[test]
     fn policy_sync_aligns_draw_dispatch_with_particles() {

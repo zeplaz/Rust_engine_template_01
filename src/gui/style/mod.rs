@@ -12,10 +12,11 @@ use bevy::prelude::Color;
 use bevy::prelude::Resource;
 
 pub use density::{
-    apply_density_to_egui_style, apply_hud_density_profile, native_ui_pixels_per_point,
-    resolve_ui_scale, resolved_hud_pixels_per_point, reset_ui_scale_application_gate,
-    spacing_for_density, sync_egui_context_scale_factor, HudDensityProfile,
-    UiScaleApplicationGate, DEFAULT_UI_GLOBAL_SCALE, UI_GLOBAL_SCALE_STEP,
+    apply_density_to_egui_style, apply_hud_density_profile, bevy_logical_to_egui_pos,
+    bevy_logical_vec_to_egui, native_ui_pixels_per_point, resolve_ui_scale,
+    resolved_hud_pixels_per_point, reset_ui_scale_application_gate, spacing_for_density,
+    sync_egui_context_scale_factor, HudDensityProfile, UiScaleApplicationGate,
+    DEFAULT_UI_GLOBAL_SCALE, UI_GLOBAL_SCALE_STEP,
 };
 pub use color_guard::forbid_raw_colors;
 pub use fonts::CmdUiMonoFont;

@@ -79,10 +79,15 @@ pub fn build_escape_cancel_system(
     mut power: ResMut<ActivePowerLinePlacement>,
     mut rail: ResMut<ActiveRailPlacement>,
     mut zone: ResMut<ActiveZonePaint>,
+    mut pending: ResMut<super::pending_construction::PendingConstructionQueue>,
+    mut staged: ResMut<super::staged_ghost_panel::StagedPlacementBook>,
+    mut staging_mode: ResMut<super::staged_ghost_panel::StagedPlacementMode>,
 ) {
     if !keys.just_pressed(KeyCode::Escape) {
         return;
     }
+    let building_armed = matches!(tool.tool, BuildTool::Building(_));
+
     ghost.origin = None;
     ghost.drag_active = false;
     path.control_points.clear();
@@ -91,7 +96,13 @@ pub fn build_escape_cancel_system(
     rail.control_points.clear();
     rail.generated_segments.clear();
     zone.clear();
-    if !session.keep_tool_after_commit {
+    pending.clear();
+    staged.rows.clear();
+    staging_mode.enabled = false;
+
+    // Buildings: Esc always aborts place/queue (roads/power keep tool when session says so).
+    let drop_tool = !session.keep_tool_after_commit || building_armed;
+    if drop_tool {
         tool.tool = BuildTool::None;
         tool.close_submenus();
         tool.clear_building_intent();

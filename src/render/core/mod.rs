@@ -1,6 +1,6 @@
 //! RENDER-DIR-RESTRUCTURE-v1 — registries, formats, GPU lifetime modules (mechanical move from `render/`).
 //! `render/mod.rs` keeps path-preserving shim modules at the old `crate::render::gpu_*` /
-//! `crate::render::terrain_*` / `crate::render::per_view_residency` locations so existing call sites
+//! `crate::render::terrain_*` / `crate::render::core::per_view_residency` locations so existing call sites
 //! keep resolving.
 
 pub mod gpu_buffer_registry;

@@ -121,9 +121,14 @@ pub fn build_wss_substrate_payload(
         (Some(c), Some(q)) => construction_hydro_coupling_witness_green(c, q),
         _ => false,
     };
-    let atmos_green = clip_w.clipmap_advect_wired
-        && clip_w.legacy_atmosphere_field_bridged
-        && clipmap_l0 > 0.0;
+    // ES-6: L0 authoritative path does not require DEBT-006 bridge flag.
+    let atmos_green = if crate::substrate::atmosphere::CLIPMAP_L0_AUTHORITATIVE {
+        clip_w.clipmap_advect_wired && clipmap_l0 > 0.0
+    } else {
+        clip_w.clipmap_advect_wired
+            && clip_w.legacy_atmosphere_field_bridged
+            && clipmap_l0 > 0.0
+    };
     let hydro_green = hydro_w.hydrology_hydrated && hydro_w.hydrology_background_wired;
     let post_green = post.weather_runbook_phase2_green;
     json!({
@@ -173,14 +178,15 @@ pub fn build_wss_substrate_payload(
         "smoke_row_count": smoke_row_count,
         "smoke_extract_wired": smoke_extract_wired,
         "smoke_stub_removed": smoke.map(|s| s.smoke_stub_removed).unwrap_or(true),
-        "hanabi_spike_report_present": crate::render::hanabi_witness::hanabi_spike_report_present(),
-        "hanabi_l3_plugin_wired": crate::render::hanabi_witness::hanabi_l3_plugin_wired(),
+        "hanabi_spike_report_present": crate::render::witness::hanabi_witness::hanabi_spike_report_present(),
+        "hanabi_l3_plugin_wired": crate::render::witness::hanabi_witness::hanabi_l3_plugin_wired(),
         "wss_atmos_clipmap_001": {
             "gate": WSS_ATMOS_CLIPMAP_GATE,
             "green": atmos_green,
             "clipmap_levels_present": clipmap.is_some(),
             "clipmap_level_count": clipmap.map(|c| c.levels.len()).unwrap_or(0),
             "clipmap_l0_smoke_max": clipmap_l0,
+            "clipmap_l0_authoritative": crate::substrate::atmosphere::CLIPMAP_L0_AUTHORITATIVE,
             "clipmap_advect_wired": clip_w.clipmap_advect_wired,
             "legacy_atmosphere_field_bridged": clip_w.legacy_atmosphere_field_bridged,
             "render_clipmap_wired": clip_w.render_clipmap_wired,

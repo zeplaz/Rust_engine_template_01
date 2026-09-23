@@ -23,10 +23,10 @@ use crate::gui::{map_display_rect, map_texture_uv_rect};
 use crate::gui::MapViewInstances;
 use crate::gui::{MapCameraDesiredRes, MinimapShellState, SimulationMapViewport};
 use crate::gui::MainWorldCamera;
-use crate::render::gpu_particles::WorldFireParticleFrame;
-use crate::render::overlay_field_buffers::SharedOverlayFieldBuffers;
+use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
+use crate::render::pipelines::overlay_field_buffers::SharedOverlayFieldBuffers;
 use crate::render::{tactical_fire_visual, FireVisualFramesByView};
-use crate::render::sim_visual_extract::SimFireEmitterVisualExtract;
+use crate::render::extraction::sim_visual_extract::SimFireEmitterVisualExtract;
 use crate::render::tile_world_fallback::{TileWorldFallbackRasterDirty, TileWorldFallbackState};
 use crate::render::Stage5ReadinessProfile;
 use crate::systems::sim_control::{SimStepStamp, SimTick, SimTimeMicros};
@@ -363,7 +363,7 @@ fn visible_world_bounds_ortho(
     ))
 }
 
-fn particle_bounds(instances: &[crate::render::gpu_particles::GpuParticleInstance]) -> Option<Rect2> {
+fn particle_bounds(instances: &[crate::render::pipelines::gpu_particles::GpuParticleInstance]) -> Option<Rect2> {
     if instances.is_empty() {
         return None;
     }
@@ -378,7 +378,7 @@ fn particle_bounds(instances: &[crate::render::gpu_particles::GpuParticleInstanc
 }
 
 fn count_particles_in_main_frustum(
-    instances: &[crate::render::gpu_particles::GpuParticleInstance],
+    instances: &[crate::render::pipelines::gpu_particles::GpuParticleInstance],
     bounds: Option<Rect2>,
 ) -> (usize, usize) {
     let Some(bounds) = bounds else {

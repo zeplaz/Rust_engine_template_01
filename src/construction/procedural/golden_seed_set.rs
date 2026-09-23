@@ -4,6 +4,7 @@
 
 use super::assembly_snapshot::{assembly_snapshot_stable_hash, build_assembly_snapshot_from_grammar};
 use super::{load_procedural_module_registry, load_style_pack_registry};
+use crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 
 pub const BQ_Q3_LIVE_JSON: &str = "debug_runs/bq_q3_golden_001_live.json";
 
@@ -18,25 +19,25 @@ pub struct GoldenSeedEntry {
 /// Operator-approved baseline (2026-07-03, BQ-K3 refresh 2026-07-04). Refresh via `bq_q3_golden_bootstrap_hashes` when intentional.
 pub const GOLDEN_SEED_SET_V1: &[GoldenSeedEntry] = &[
     GoldenSeedEntry {
-        archetype_id: "IndustrialWarehouse",
+        archetype_id: PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         district_style: "industrial_west",
         seed: 43,
         expected_hash: "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
     },
     GoldenSeedEntry {
-        archetype_id: "IndustrialWarehouse",
+        archetype_id: PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         district_style: "industrial_west",
         seed: 44,
         expected_hash: "e70133127bd7ad0609ac042953acae6dbc4c499e8a138fa341b18cb28ed2f30e",
     },
     GoldenSeedEntry {
-        archetype_id: "IndustrialWarehouse",
+        archetype_id: PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         district_style: "industrial_west",
         seed: 45,
         expected_hash: "fa0f147f89014aba668ec53c6b672e05e129a8a52df4bdb954de7aa2ec21c708",
     },
     GoldenSeedEntry {
-        archetype_id: "IndustrialWarehouse",
+        archetype_id: PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
         district_style: "industrial_west",
         seed: 46,
         expected_hash: "cfe4516da50c45d5ad2900920116f490243e70c01c7b21d1eb1c5814aa40b2f6",

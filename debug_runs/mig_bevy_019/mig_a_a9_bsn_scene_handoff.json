@@ -58,7 +58,7 @@
     "relative_path": "debug_runs/mig_bevy_019/mig_a_a9_bsn_scene_handoff.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "mig_a_a9_bsn_scene_handoff",
-    "written_at_epoch_secs": 1783391045
+    "written_at_epoch_secs": 1787890416
   },
   "defer_ids": [
     "DR-MIG-A9",

@@ -1,8 +1,12 @@
 //! Pan / zoom / edge-scroll / rotate for [`MainWorldCamera`] (RTT path).
 //!
-//! Input mutates the [`MapCameraDesired`] **component** on [`MainWorldCamera`]; [`mirror_map_camera_component_to_resource`]
-//! mirrors into [`Res<MapCameraDesiredRes>`]; [`sync_map_camera_pose_to_view_authority`] publishes WorldMain.
-//! Schedule: **ApplyInput → DeriveDesired → Smooth** (matches engine spine + stall probes).
+//! **Pan:** right-mouse drag (primary), middle-mouse / Space grip (legacy), WASD, edge-scroll.
+//!
+//! **RPC-2-002…004:** ApplyInput + wheel + startup/focus commit [`ViewProjectionAuthority`] first
+//! (`MapCameraInput`). [`apply_derived_map_camera_desired`] /
+//! [`derive_map_camera_desired_from_view_authority`] is the sole [`MapCameraDesired`] writer
+//! (component + [`MapCameraDesiredRes`] — compatibility mirror only). Schedule:
+//! **ApplyInput → DeriveDesired → Smooth**.
 
 use bevy::input::mouse::{AccumulatedMouseScroll, MouseWheel};
 use bevy::diagnostic::FrameCount;
@@ -15,7 +19,7 @@ use crate::engine::{ActiveTestScene, TestScene};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::gui::ActiveMapViewInput;
 use crate::gui::in_game_hud::SimulationMapViewportFill;
-use crate::gui::sim_map_rtt::{apply_simulation_map_camera_clear, simulation_map_texture_extent};
+use crate::gui::tactical::sim_map_rtt::{apply_simulation_map_camera_clear, simulation_map_texture_extent};
 use crate::gui::SimulationMapTexture;
 use crate::gui::style::UiPalette;
 use crate::gui::{InputBindings, InputFrame, SimulationMapViewport, SimulationViewportSyncSet};
@@ -32,8 +36,8 @@ pub const HYBRID_ORTO_CAMERA_SCAFFOLD: ScaffoldContract = ScaffoldContract {
     removal_trigger: "duplicate projection writers for WorldMain",
 };
 
-/// **vm-09:** [`crate::gui::ViewAuthoritySystemSet::SyncViewManager`] is ordered **after** this set so
-/// [`MapCameraDesired`] is updated before the view-manager bridge reads it each frame.
+/// [`crate::gui::ViewAuthoritySystemSet::SyncViewManager`] is ordered **after** this set so
+/// DeriveDesired mirrors authority → [`MapCameraDesired`] before the view-manager bridge.
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MapCameraSystemSet {
     ApplyInput,
@@ -99,7 +103,11 @@ pub fn on_world_main_pose_committed(
     );
 }
 
-/// Logical pose on [`MainWorldCamera`] — ECS authority; [`Res<MapCameraDesiredRes>`] mirrors the component each frame.
+/// Compatibility pose mirror on [`MainWorldCamera`] — **not** pose authority.
+///
+/// Sole production writer: [`derive_map_camera_desired_from_view_authority`] (via
+/// [`apply_derived_map_camera_desired`]). Truth = [`ViewProjectionAuthority`]; presentation
+/// (Smooth / ortho) reads this mirror. [`Res<MapCameraDesiredRes>`] tracks the same value.
 #[derive(Component, Clone, Debug, PartialEq)]
 pub struct MapCameraDesired {
     pub translation: Vec3,
@@ -195,7 +203,9 @@ impl Default for MapCameraSettings {
     }
 }
 
-/// Resource mirror of [`MapCameraDesired`] on [`MainWorldCamera`] (Bevy 0.19: no dual Component+Resource derive).
+/// Resource twin of the [`MapCameraDesired`] component (Bevy 0.19: no dual Component+Resource derive).
+///
+/// Compatibility mirror only — written solely by [`apply_derived_map_camera_desired`].
 #[derive(Resource, Clone, Debug, PartialEq, Default)]
 pub struct MapCameraDesiredRes(pub MapCameraDesired);
 
@@ -237,8 +247,6 @@ impl Plugin for MapCameraPlugin {
                 (
                     map_camera_apply_input,
                     map_camera_wheel_zoom_system.after(map_camera_apply_input),
-                    mirror_map_camera_component_to_resource.after(map_camera_wheel_zoom_system),
-                    sync_map_camera_pose_to_view_authority.after(mirror_map_camera_component_to_resource),
                 )
                     .chain()
                     .in_set(MapCameraSystemSet::ApplyInput)
@@ -279,7 +287,9 @@ const EDGE_FRACTION: f32 = 0.06;
 const KEY_PAN: f32 = 520.0;
 const EDGE_PAN: f32 = 340.0;
 const GRIP_PAN: f32 = 620.0;
-const ZOOM_FACTOR: f32 = 1.20;
+/// Per-notch scale multiplier — soft enough for continuous mouse-wheel feel.
+/// Was 1.20 (too jumpy); ~6–7% per normalized notch.
+const ZOOM_FACTOR: f32 = 1.065;
 /// Z-plane for [`MainWorldCamera`] and map pose lift (weather/VFX children share this stack).
 pub const MAIN_WORLD_CAMERA_Z: f32 = 999.0;
 /// Fallback zoom limits when viewport/world size is unknown (witness / alpha only).
@@ -361,7 +371,8 @@ pub fn map_zoom_limits_for_world(world_w: f32, world_h: f32, viewport: Vec2) -> 
     (lo, hi)
 }
 
-/// Keep the map filling the view: camera center clamped so world edges align with screen edges at most.
+/// Keep some map on screen, but allow centering any world point including edges
+/// (up to half a view of void beyond the edge — not the old “edges glued to screen”).
 #[must_use]
 pub fn clamp_map_camera_translation_xy(
     center: Vec2,
@@ -370,8 +381,11 @@ pub fn clamp_map_camera_translation_xy(
     viewport: Vec2,
 ) -> Vec2 {
     let half = map_visible_half_extents(scale, viewport, world);
-    let min = half;
-    let max = world - half;
+    // Edge-center: camera may sit on world origin / far corner.
+    // Soft void limit: don't slide so far that less than ~12% of the view still covers the map.
+    let void_slack = half * 0.88;
+    let min = Vec2::ZERO - void_slack;
+    let max = world + void_slack;
     let x = if min.x > max.x {
         world.x * 0.5
     } else {
@@ -400,7 +414,8 @@ pub fn map_zoom_alpha(scale_x: f32) -> f32 {
 }
 
 /// Target zoom alpha for P2-VFX-VISUAL-001 tactical witness (`stage5_full_app_harness`).
-pub const TACTICAL_VFX_PROOF_ZOOM_ALPHA: f32 = 0.85;
+pub const TACTICAL_VFX_PROOF_ZOOM_ALPHA: f32 =
+    crate::terrain::world_scale_contract::TACTICAL_PROOF_ZOOM_ALPHA;
 
 /// Inverse of [`map_zoom_alpha_with_limits`] — pick map scale for a normalized zoom band.
 #[inline]
@@ -470,30 +485,24 @@ fn map_fill_accepts_pointer(interaction: &Interaction) -> bool {
     matches!(*interaction, Interaction::Hovered | Interaction::Pressed)
 }
 
-fn mirror_map_camera_component_to_resource(
-    q: Query<&MapCameraDesired, With<MainWorldCamera>>,
-    mut res: ResMut<MapCameraDesiredRes>,
-) {
-    if let Ok(d) = q.single() {
-        if res.0 != *d {
-            res.0 = d.clone();
-        }
+/// Working pose for ApplyInput: authority first; Transform seed if WorldMain unset (pre-focus).
+fn map_camera_pose_seed_from_authority(
+    authority: &ViewProjectionAuthority,
+    tf: &Transform,
+) -> MapCameraDesired {
+    use crate::render::view_runtime::ViewSurfaceId;
+    if authority.surface(ViewSurfaceId::WorldMain).is_some() {
+        return crate::gui::view_authority::map_camera_desired_from_view_authority(authority);
     }
-}
-
-fn sync_map_camera_pose_to_view_authority(
-    q: Query<&MapCameraDesired, With<MainWorldCamera>>,
-    mut authority: ResMut<ViewProjectionAuthority>,
-) {
-    let Ok(desired) = q.single() else {
-        return;
-    };
-    commit_map_camera_pose_to_view_authority_simple(authority.as_mut(), desired);
+    MapCameraDesired {
+        translation: Vec3::new(tf.translation.x, tf.translation.y, MAIN_WORLD_CAMERA_Z),
+        scale: Vec3::splat(default_map_zoom_for_world(None)),
+        rotation: tf.rotation,
+    }
 }
 
 fn map_camera_apply_input(
     time: Res<Time>,
-    state: Res<State<BaseState>>,
     bindings: Res<InputBindings>,
     keys: Res<ButtonInput<KeyCode>>,
     mouse_btn: Res<ButtonInput<MouseButton>>,
@@ -506,18 +515,15 @@ fn map_camera_apply_input(
     params: Res<WorldGenParams>,
     active_map_surface: Res<ActiveMapViewInput>,
     mut settings: ResMut<MapCameraSettings>,
-    mut q_cam: Query<(&mut Transform, &mut MapCameraDesired), With<MainWorldCamera>>,
+    mut authority: ResMut<ViewProjectionAuthority>,
+    mut q_cam: Query<&mut Transform, With<MainWorldCamera>>,
     mut locals: Local<MapCameraInputLocals>,
 ) {
     // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
     let _perf = crate::render::PerfScope::new("upd_map_camera_apply_input");
     locals.before_apply = None;
 
-    if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
-        return;
-    }
-
-    let Ok((mut tf, mut desired)) = q_cam.single_mut() else {
+    let Ok(mut tf) = q_cam.single_mut() else {
         return;
     };
 
@@ -529,13 +535,16 @@ fn map_camera_apply_input(
         .unwrap_or(false);
     let pointer_blocks_mouse = !pointer_on_map;
 
-    locals.before_apply = Some(desired.clone());
+    let mut pose = map_camera_pose_seed_from_authority(authority.as_ref(), tf.as_ref());
+    locals.before_apply = Some(pose.clone());
 
     if active_map_surface
         .0
         .is_some_and(|id| id == crate::gui::MapViewInstanceId::Minimap)
     {
-        let grip = keys.pressed(bindings.map_mouse_grip) || mouse_btn.pressed(MouseButton::Middle);
+        let grip = keys.pressed(bindings.map_mouse_grip)
+            || mouse_btn.pressed(MouseButton::Middle)
+            || mouse_btn.pressed(MouseButton::Right);
         if grip {
             return;
         }
@@ -567,21 +576,17 @@ fn map_camera_apply_input(
     let center_xy = if params.width > 0 && params.height > 0 {
         Vec3::new(world_w * 0.5, world_h * 0.5, 0.0)
     } else {
-        desired.translation
-    };
-
-    let mut recenter_pulse = || {
-        desired.translation = center_xy;
+        pose.translation
     };
 
     if keys.just_pressed(bindings.map_recenter_world) {
-        recenter_pulse();
+        pose.translation = center_xy;
     }
     if mouse_btn.just_pressed(MouseButton::Middle) {
         let now = time.elapsed_secs();
         if let Some(prev) = locals.middle_tap {
             if now - prev < 0.45 {
-                recenter_pulse();
+                pose.translation = center_xy;
                 locals.middle_tap = None;
             } else {
                 locals.middle_tap = Some(now);
@@ -593,18 +598,22 @@ fn map_camera_apply_input(
 
     let default_z = default_map_zoom_for_world(None);
     if keys.just_pressed(bindings.map_reset_zoom) {
-        desired.scale = Vec3::splat(default_z);
+        pose.scale = Vec3::splat(default_z);
     }
 
     if keys.just_pressed(bindings.map_frame_world) {
-        desired.translation = center_xy;
+        pose.translation = center_xy;
         let margin = 0.9;
         let s = margin * (viewport.x / world_w.max(1.0)).min(viewport.y / world_h.max(1.0));
-        desired.scale = Vec3::splat(sanitize_map_zoom_input(s));
+        pose.scale = Vec3::splat(sanitize_map_zoom_input(s));
     }
 
     let fast = keys.pressed(bindings.map_pan_fast_modifier);
-    let key_speed = KEY_PAN * dt * if fast { 2.2 } else { 1.0 };
+    // Zoom-scaled pan: zoomed-in (high scale) → slower world travel; zoomed-out → faster.
+    // Screen-feel stays closer to constant — not a fixed world-unit step.
+    let zoom = pose.scale.x.max(0.05);
+    let zoom_pan = (1.0 / zoom).clamp(0.06, 5.0);
+    let key_speed = KEY_PAN * dt * zoom_pan * if fast { 2.2 } else { 1.0 };
 
     let mut pan = Vec2::ZERO;
     if keys.pressed(bindings.map_pan_west) {
@@ -620,14 +629,18 @@ fn map_camera_apply_input(
         pan.y -= 1.0;
     }
     if pan != Vec2::ZERO {
-        desired.translation += (pan.normalize() * key_speed).extend(0.0);
+        pose.translation += (pan.normalize() * key_speed).extend(0.0);
     }
 
-    let grip = keys.pressed(bindings.map_mouse_grip) || mouse_btn.pressed(MouseButton::Middle);
+    // Traditional RTS/city pan: right-drag (primary), middle-drag / Space (legacy).
+    let grip = keys.pressed(bindings.map_mouse_grip)
+        || mouse_btn.pressed(MouseButton::Middle)
+        || mouse_btn.pressed(MouseButton::Right);
     if grip && !pointer_blocks_mouse {
         let sum = input_frame.pointer_delta;
-        desired.translation +=
-            Vec3::new(-sum.x, sum.y, 0.0) * GRIP_PAN * dt * 0.045 * if fast { 1.35 } else { 1.0 };
+        // Pixel → world: divide by zoom so super-zoomed pans stay smooth/slow.
+        pose.translation += Vec3::new(-sum.x, sum.y, 0.0) * (GRIP_PAN * 0.0022 / zoom)
+            * if fast { 1.35 } else { 1.0 };
     }
 
     if settings.edge_scroll_enabled && !pointer_blocks_mouse {
@@ -648,8 +661,8 @@ fn map_camera_apply_input(
                     edge.y -= 1.0;
                 }
                 if edge != Vec2::ZERO {
-                    desired.translation +=
-                        (edge.normalize() * EDGE_PAN * dt).extend(0.0) * if fast { 1.4 } else { 1.0 };
+                    pose.translation += (edge.normalize() * EDGE_PAN * dt * zoom_pan).extend(0.0)
+                        * if fast { 1.4 } else { 1.0 };
                 }
             }
         }
@@ -657,61 +670,64 @@ fn map_camera_apply_input(
 
     let zoom_key = 4.0 * dt;
     if keys.pressed(bindings.map_zoom_in) {
-        let s = sanitize_map_zoom_input(desired.scale.x * (1.0 + zoom_key));
-        desired.scale = Vec3::splat(s);
+        let s = sanitize_map_zoom_input(pose.scale.x * (1.0 + zoom_key));
+        pose.scale = Vec3::splat(s);
     }
     if keys.pressed(bindings.map_zoom_out) {
-        let s = sanitize_map_zoom_input(desired.scale.x / (1.0 + zoom_key));
-        desired.scale = Vec3::splat(s);
+        let s = sanitize_map_zoom_input(pose.scale.x / (1.0 + zoom_key));
+        pose.scale = Vec3::splat(s);
     }
 
     if keys.just_pressed(bindings.map_rotate_ccw) {
-        desired.rotation *= Quat::from_rotation_z(ROTATE_STEP);
+        pose.rotation *= Quat::from_rotation_z(ROTATE_STEP);
     }
     if keys.just_pressed(bindings.map_rotate_cw) {
-        desired.rotation *= Quat::from_rotation_z(-ROTATE_STEP);
+        pose.rotation *= Quat::from_rotation_z(-ROTATE_STEP);
     }
 
-    let scale = sanitize_map_zoom_input(desired.scale.x);
-    desired.scale = Vec3::splat(scale);
+    let scale = sanitize_map_zoom_input(pose.scale.x);
+    pose.scale = Vec3::splat(scale);
     let clamped = clamp_map_camera_translation_xy(
-        Vec2::new(desired.translation.x, desired.translation.y),
+        Vec2::new(pose.translation.x, pose.translation.y),
         scale,
         world,
         viewport,
     );
-    desired.translation.x = clamped.x;
-    desired.translation.y = clamped.y;
-    desired.translation.z = MAIN_WORLD_CAMERA_Z;
-    tf.translation = desired.translation;
-    tf.rotation = desired.rotation;
+    pose.translation.x = clamped.x;
+    pose.translation.y = clamped.y;
+    pose.translation.z = MAIN_WORLD_CAMERA_Z;
 
-    if locals.before_apply.as_ref() == Some(&*desired) {
+    if locals.before_apply.as_ref() == Some(&pose) {
         return;
     }
 
     if locals
         .before_apply
         .as_ref()
-        .is_some_and(|b| (b.scale.x - desired.scale.x).abs() > 1e-6)
+        .is_some_and(|b| (b.scale.x - pose.scale.x).abs() > 1e-6)
     {
         bevy::log::info!(
             target: "map_camera_zoom",
             "KEY_ZOOM scale {:.4} -> {:.4}",
             locals.before_apply.as_ref().map(|b| b.scale.x).unwrap_or(0.0),
-            desired.scale.x
+            pose.scale.x
         );
     }
+
+    commit_map_camera_pose_to_view_authority_simple(authority.as_mut(), &pose);
+    // Same-frame presentation seed; DeriveDesired fills MapCameraDesired next in set chain.
+    tf.translation = pose.translation;
+    tf.rotation = pose.rotation;
 }
 
-/// Returns true when scroll changed the committed map zoom.
+/// Returns true when scroll changed the pose value (caller commits authority — not an ECS writer).
 #[must_use]
 pub fn apply_map_camera_wheel_zoom(
     scroll: f32,
     params: &WorldGenParams,
     fill: &SimulationMapViewport,
     tex_extent: Vec2,
-    desired: &mut MapCameraDesired,
+    pose: &mut MapCameraDesired,
 ) -> bool {
     if scroll.abs() < f32::EPSILON {
         return false;
@@ -723,22 +739,24 @@ pub fn apply_map_camera_wheel_zoom(
     }
     let viewport = map_camera_rtt_view_pixels(fill, tex_extent);
 
-    let before_scale = desired.scale.x;
-    let z = ZOOM_FACTOR.powf(scroll.clamp(-24.0, 24.0));
-    let scale = sanitize_map_zoom_input(desired.scale.x * z);
+    let before_scale = pose.scale.x;
+    // Normalize raw OS/pixel scroll into a small notch count so high-res wheels stay smooth.
+    let notches = scroll.signum() * scroll.abs().min(4.0);
+    let z = ZOOM_FACTOR.powf(notches);
+    let scale = sanitize_map_zoom_input(pose.scale.x * z);
     if (scale - before_scale).abs() < 1e-6 {
         return false;
     }
-    desired.scale = Vec3::splat(scale);
+    pose.scale = Vec3::splat(scale);
     let clamped = clamp_map_camera_translation_xy(
-        Vec2::new(desired.translation.x, desired.translation.y),
+        Vec2::new(pose.translation.x, pose.translation.y),
         scale,
         Vec2::new(world_w, world_h),
         viewport,
     );
-    desired.translation.x = clamped.x;
-    desired.translation.y = clamped.y;
-    desired.translation.z = MAIN_WORLD_CAMERA_Z;
+    pose.translation.x = clamped.x;
+    pose.translation.y = clamped.y;
+    pose.translation.z = MAIN_WORLD_CAMERA_Z;
     true
 }
 
@@ -781,7 +799,8 @@ fn map_camera_wheel_zoom_system(
     scroll_acc: Res<AccumulatedMouseScroll>,
     input_frame: Res<InputFrame>,
     mut wheel_events: MessageReader<MouseWheel>,
-    mut q_cam: Query<(&mut MapCameraDesired, &mut Transform), With<MainWorldCamera>>,
+    mut authority: ResMut<ViewProjectionAuthority>,
+    mut q_cam: Query<&mut Transform, With<MainWorldCamera>>,
 ) {
     let _perf = crate::render::PerfScope::new("map_camera_wheel");
     if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
@@ -806,23 +825,25 @@ fn map_camera_wheel_zoom_system(
         return;
     }
 
-    let Ok((mut desired, mut tf)) = q_cam.single_mut() else {
+    let Ok(mut tf) = q_cam.single_mut() else {
         return;
     };
-    let before = desired.scale.x;
+    let mut pose = map_camera_pose_seed_from_authority(authority.as_ref(), tf.as_ref());
+    let before = pose.scale.x;
     let tex_extent = simulation_map_texture_extent(tex.as_ref(), images.as_ref());
     if apply_map_camera_wheel_zoom(
         scroll,
         params.as_ref(),
         fill.as_ref(),
         tex_extent,
-        desired.as_mut(),
+        &mut pose,
     ) {
-        tf.translation = desired.translation;
+        commit_map_camera_pose_to_view_authority_simple(authority.as_mut(), &pose);
+        tf.translation = pose.translation;
         bevy::log::info!(
             target: "map_camera_zoom",
             "WHEEL_APPLIED scroll={scroll:.3} zoom {before:.4} -> {:.4}",
-            desired.scale.x
+            pose.scale.x
         );
     }
 }
@@ -935,21 +956,23 @@ fn commit_map_camera_pose_to_view_authority_simple(
     );
 }
 
-/// Mirror WorldMain authority onto the camera component + resource (minimap / preview writers).
-pub fn derive_map_camera_desired_from_view_authority(
-    authority: Res<ViewProjectionAuthority>,
-    mut desired_res: ResMut<MapCameraDesiredRes>,
-    mut q_cam: Query<&mut MapCameraDesired, With<MainWorldCamera>>,
-    profile: Res<Stage5ReadinessProfile>,
-) {
-    // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
-    let _perf = crate::render::PerfScope::new("upd_map_camera_derive");
+/// Sole body that writes [`MapCameraDesired`] + [`MapCameraDesiredRes`] from WorldMain authority.
+///
+/// Used by [`derive_map_camera_desired_from_view_authority`] (Update) and callable after an OnEnter
+/// authority commit when a same-tick mirror is required (RPC-2-003 frame-0 helper).
+#[must_use]
+pub fn apply_derived_map_camera_desired(
+    authority: &ViewProjectionAuthority,
+    desired_res: &mut MapCameraDesiredRes,
+    cam_desired: Option<&mut MapCameraDesired>,
+    profile: &Stage5ReadinessProfile,
+) -> bool {
     use crate::render::view_runtime::ViewSurfaceId;
     let Some(cam) = authority
         .surface(ViewSurfaceId::WorldMain)
         .map(|s| s.camera)
     else {
-        return;
+        return false;
     };
     let before = desired_res.0.clone();
     let next = MapCameraDesired {
@@ -958,28 +981,37 @@ pub fn derive_map_camera_desired_from_view_authority(
         rotation: Quat::from_rotation_z(cam.rotation),
     };
     if desired_res.0 == next {
-        return;
+        return false;
     }
     desired_res.0 = next.clone();
-    if let Ok(mut d) = q_cam.single_mut() {
+    if let Some(d) = cam_desired {
         *d = next;
     }
     trace_map_camera_desired_write_if_full_app(
-        profile.as_ref(),
+        profile,
         "derive_map_camera_desired_from_view_authority",
         &before,
         &desired_res.0,
     );
+    true
 }
 
-/// VM-09-v2 compat alias — [`derive_map_camera_desired_from_view_authority`].
-pub fn mirror_world_main_camera_from_map_desired(
+/// Mirror WorldMain authority onto the camera component + resource (sole production schedule writer).
+pub fn derive_map_camera_desired_from_view_authority(
     authority: Res<ViewProjectionAuthority>,
-    desired: ResMut<MapCameraDesiredRes>,
-    q_cam: Query<&mut MapCameraDesired, With<MainWorldCamera>>,
+    mut desired_res: ResMut<MapCameraDesiredRes>,
+    mut q_cam: Query<&mut MapCameraDesired, With<MainWorldCamera>>,
     profile: Res<Stage5ReadinessProfile>,
 ) {
-    derive_map_camera_desired_from_view_authority(authority, desired, q_cam, profile);
+    // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
+    let _perf = crate::render::PerfScope::new("upd_map_camera_derive");
+    let mut cam = q_cam.single_mut().ok();
+    let _ = apply_derived_map_camera_desired(
+        authority.as_ref(),
+        desired_res.as_mut(),
+        cam.as_deref_mut(),
+        profile.as_ref(),
+    );
 }
 
 /// PostUpdate ortho refresh after UI fill measure.
@@ -1454,15 +1486,31 @@ mod tests {
             height: 512,
             ..Default::default()
         };
-        let mut desired = MapCameraDesired::default();
+        let mut pose = crate::gui::view_authority::map_camera_desired_from_view_authority(&authority);
         assert!(apply_map_camera_wheel_zoom(
             1.0,
             &params,
             &vp,
             Vec2::new(800.0, 600.0),
-            &mut desired,
+            &mut pose,
         ));
-        assert!(desired.scale.x > 1.0, "wheel must increase zoom");
+        assert!(pose.scale.x > 1.0, "wheel must increase zoom");
+        commit_map_camera_pose_to_view_authority_simple(&mut authority, &pose);
+        let zoom = authority
+            .surface(ViewSurfaceId::WorldMain)
+            .map(|s| s.camera.zoom)
+            .unwrap_or(0.0);
+        assert!(
+            (zoom - pose.scale.x).abs() < 1e-5,
+            "wheel path must commit zoom to ViewProjectionAuthority"
+        );
+        assert_eq!(
+            authority
+                .last_pose_writer
+                .get(&ViewSurfaceId::WorldMain)
+                .copied(),
+            Some(ViewAuthorityWriter::MapCameraInput)
+        );
     }
 
     #[test]
@@ -1505,14 +1553,28 @@ mod tests {
     }
 
     #[test]
-    fn clamp_keeps_visible_rect_inside_world() {
+    fn clamp_allows_centering_world_edge() {
+        let world = Vec2::new(200.0, 100.0);
+        let viewport = Vec2::new(400.0, 150.0);
+        let scale = 2.0;
+        let c = clamp_map_camera_translation_xy(Vec2::ZERO, scale, world, viewport);
+        assert!((c.x).abs() < 1e-3, "should allow centering west edge");
+        assert!((c.y).abs() < 1e-3, "should allow centering south edge");
+        let far = clamp_map_camera_translation_xy(world, scale, world, viewport);
+        assert!((far.x - world.x).abs() < 1e-3);
+        assert!((far.y - world.y).abs() < 1e-3);
+    }
+
+    #[test]
+    fn clamp_rejects_sliding_map_fully_offscreen() {
         let world = Vec2::new(200.0, 100.0);
         let viewport = Vec2::new(400.0, 150.0);
         let scale = 2.0;
         let half = map_visible_half_extents(scale, viewport, world);
-        let c = clamp_map_camera_translation_xy(Vec2::new(-50.0, 500.0), scale, world, viewport);
-        assert!((c.x - (world.x - half.x)).abs() < 1e-3);
-        assert!((c.y - (world.y - half.y)).abs() < 1e-3);
+        let slack = half * 0.88;
+        let c = clamp_map_camera_translation_xy(Vec2::new(-9_999.0, 9_999.0), scale, world, viewport);
+        assert!((c.x - (-slack.x)).abs() < 1e-2);
+        assert!((c.y - (world.y + slack.y)).abs() < 1e-2);
     }
 
     #[test]

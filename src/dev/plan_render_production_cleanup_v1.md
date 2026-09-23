@@ -25,23 +25,24 @@ day/night clear revival + SimulationMapRttPlugin consolidation · real capture p
 | RPC-0-002 | F6/F12/F15 | Hygiene: collapse dead identical if/else in `apply_editor_terrain_authority` (terrain_render_authority.rs:83-89); drop stale `#[allow(dead_code)]` on `arm_visual_test_graceful_exit` (gpu_surface_teardown.rs:29); fix stale doc ref `enable_tile_gpu_instanced_authoritative` (tile_debug_types.rs:72) | cargo check clean, no behavior change |
 | RGR-V2-004 | — | (runs in RGR queue, tandem OK) remove deprecated latch witness fields from visual_readiness | render_hole_steady_flip_count sourced from RTT valid streak |
 
-### Phase 1 — GPU terrain decision (BLOCKED_ON_OPERATOR_DECISION)
-F2/F3: `TerrainRenderAuthority::GpuInstancedAtlas` promises a GPU world-texture path that does not exist
+### Phase 1 — GPU terrain A+B (DECIDED 2026-07-06)
+**Decision:** build real GPU world-terrain bake **and** honest rename (compose).  
+**Freeze:** [`plan_rpc1_gpu_terrain_ab_v1.md`](plan_rpc1_gpu_terrain_ab_v1.md) · slices `RPC-1-001`…`006` in queue.  
+**L0 deterministic:** `python -m rust_engine_mcp.cli terrain-honesty-lint`
+
+F2/F3: historical `GpuInstancedAtlas` name promised a GPU world-texture path that did not exist
 (terrain pixels are always CPU-rastered; `GpuTilemap` never constructed; per-tile instanced pass permanently
-dormant behind `uses_gpu_sprite_display()`).
-- **Option A:** build a real GPU world-terrain bake (render-thread sample of `TerrainMaterialAtlasGpu` into a
-  world texture; minimap + tactical consume it). Bigger effort; real perf/quality win at large worlds.
-- **Option B:** honest rename + simplify: `TerrainRenderAuthority` → `TerrainSourceMode`, delete or
-  milestone-gate the dormant per-tile pass (`pipelines/terrain_instanced_draw.rs`), keep CPU raster as the
-  one world-texture source. Small effort; removes ambient complexity + label lies.
-Doc refs claiming `gpu_atlas` as target: `gpu_todos_v1.md:43`, `plan_gpu_terrain_production_exec_001_v1.md:171,287`,
-`visual_test_runbook_v1.md:141` — update per chosen option.
+dormant behind `uses_gpu_sprite_display()`). RPC-1-003 renames to `GpuBake` / `CpuRaster` (const aliases kept);
+`gputilemap_never_constructed` remains allowlisted until `DR-MIG-TILEMAP`.
+- **A:** dirty-region scissor bake (prefer) sampling material atlas → world texture; fire stays **live** overlay.
+- **B:** honest docs/names toward `CpuRaster` / `GpuBake`; gate `GpuTilemap`; purge lying `gpu_atlas` expectations until bake proven.
+Doc refs claiming `gpu_atlas`: `gpu_todos_v1.md`, `visual_test_runbook_v1.md` — cleared in **RPC-1-002**.
 
 ### Phase 2 — pose authority completion (TODO-04)
-Finish "ViewManager sole authority for WorldMain camera pose; MapCameraDesired only mirrored" (stage5 TODO-04).
+Finish pose truth: **`ViewProjectionAuthority` sole WorldMain commit**; `ViewManager` = read spine; `MapCameraDesired` = derive-only mirror (stage5 TODO-04).
 Kills the whole clobber class (startup-zoom bug family; frame-1 `ZOOM_REVERT 1.0→0.02` alpha-state default).
-@planner architecture pass first: enumerate writers (map_camera_apply_input, focus_main_camera_on_world_params,
-view_representation::apply_minimap_camera_intent), define single commit point + mirror direction, then @coder.
+**Freeze:** [`plan_rpc2_pose_authority_v1.md`](plan_rpc2_pose_authority_v1.md) · **RPC-2-001 ★ DONE 2026-08-12** (planner).
+**Coder ladder:** `RPC-2-002` invert ApplyInput · `RPC-2-003` startup/focus authority-only · `RPC-2-004` grep gate + TODO-04 witness — **★ DONE 2026-08-12** (TODO-05 BridgeCompat residual remains Open).
 
 ### Phase 3 — structure (after Phase 1 decision)
 | id | audit | goal |

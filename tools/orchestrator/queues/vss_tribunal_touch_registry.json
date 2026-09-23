@@ -1,0 +1,62 @@
+{
+  "schema": "vss_tribunal_touch_registry_v1",
+  "program_id": "VSS-001",
+  "description": "Paths that require tribunal_packet on touch unless verdict=ship. Dissent rows always preserved.",
+  "packet_dir": "debug_runs/tribunals",
+  "packet_naming": "{trip_id}_{utc_date}_{agent}.yaml",
+  "touches": [
+    {
+      "trip_id": "TRIP-VSS-HARNESS",
+      "globs": [
+        "src/engine/test_harness.rs",
+        "src/engine/launch_args.rs"
+      ],
+      "reviewers": ["@coder", "@sim-steward", "@operations-intelligence"],
+      "required_checks": [
+        "spectator_parity_live.json entry_path != harness_only",
+        "symbolic_build_digest_tool after cargo check"
+      ]
+    },
+    {
+      "trip_id": "TRIP-VSS-FIRE-AUTHORITY",
+      "globs": [
+        "src/render/fire_vfx/**",
+        "src/render/pipelines/gpu_fire_particle_raster.rs",
+        "src/render/pipelines/overlay_field_buffers.rs"
+      ],
+      "reviewers": ["@sim-steward", "@debug-intelligence", "@coder"],
+      "required_checks": [
+        "no dual writer on SharedOverlayFieldBuffers",
+        "single extract scan for fire ECS"
+      ]
+    },
+    {
+      "trip_id": "TRIP-VSS-SCALE",
+      "globs": [
+        "src/terrain/generation/**",
+        "src/gui/tactical/map_camera.rs"
+      ],
+      "reviewers": ["@planner", "@designer", "@operations-intelligence"],
+      "required_checks": [
+        "world_scale_contract_live.json refreshed or explicitly deferred with DR row"
+      ]
+    },
+    {
+      "trip_id": "TRIP-VSS-EFFECT-SPEC",
+      "globs": [
+        "tools/mcp/schemas/effect_spec_v1.schema.json",
+        "tools/mcp/python/rust_engine_mcp/**effect*"
+      ],
+      "reviewers": ["@planner-mcp", "@designer-mcp", "@coder-mcp"],
+      "required_checks": [
+        "mcp-production-rules rules_check passed",
+        "deterministic seed on all effect assets"
+      ]
+    }
+  ],
+  "dissent_policy": {
+    "allowed": true,
+    "majority_cannot_delete": true,
+    "resolve_in": "tools/orchestrator/queues/HANDOFF.md"
+  }
+}

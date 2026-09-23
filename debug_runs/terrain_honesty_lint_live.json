@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "validator": "terrain_honesty",
+  "status": "warning",
+  "compression_level": 3,
+  "summary": "terrain honesty: 0 errors, 1 warnings; minimap=world_raster|gpu_bake; GpuTilemap_sites=0",
+  "error_count": 0,
+  "warning_count": 1,
+  "errors": [],
+  "warnings": [
+    {
+      "kind": "gputilemap_never_constructed",
+      "severity": "warning",
+      "file": "src/render/core/terrain_render_authority.rs",
+      "hint": "retire or milestone-gate GpuTilemap until DR-MIG-TILEMAP unblocks"
+    }
+  ],
+  "known_fixes": [
+    {
+      "signature": "doc_gpu_atlas",
+      "fix": "RPC-1-002 update docs to world_raster",
+      "confidence": 0.9
+    },
+    {
+      "signature": "rename_authority",
+      "fix": "RPC-1-003 GpuBake/CpuRaster rename",
+      "confidence": 0.85
+    },
+    {
+      "signature": "real_bake",
+      "fix": "RPC-1-004/005 GPU bake then flip label",
+      "confidence": 0.8
+    }
+  ],
+  "confidence": 0.95,
+  "facts": {
+    "authority": {
+      "uses_gpu_sprite_display_includes_GpuInstancedAtlas": false,
+      "has_GpuTilemap_variant": true,
+      "has_GpuInstancedAtlas_variant": true
+    },
+    "minimap_terrain_source": "world_raster|gpu_bake",
+    "GpuTilemap_construction_sites": []
+  },
+  "program": "PLAN-RENDER-PROD-CLEANUP-v1 / RPC-1 A+B",
+  "ok": true,
+  "honest_gate": "dishonest_docs"
+}

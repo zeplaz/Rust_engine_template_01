@@ -1,0 +1,43 @@
+{
+  "schema": "effect_promote_manifest_v1",
+  "effect_id": "spark_shower",
+  "batch_id": "vss_t4_reference_effects_v1",
+  "promoted_at_utc": "2026-08-28T04:44:00Z",
+  "registry_dir": "assets/effects/registry/spark_shower/",
+  "pack_hash": "d1caeb40c35525590227ca49315cab0bcc60350e276f416cbad062646566a3f5",
+  "shader_hashes": {
+    "compute": {
+      "source": "assets/shaders/fire/fire_spark_compute.wgsl",
+      "dest": "shaders/fire_spark_compute.wgsl",
+      "sha256": "bf298740a2693e25561a100ac7911dfb7fb75bb6f37b8378a2819efef96f64a1"
+    },
+    "draw": {
+      "source": "assets/shaders/fire/fire_particle_draw.wgsl",
+      "dest": "shaders/fire_particle_draw.wgsl",
+      "sha256": "2093520eb553179fd544c046335c97f573a0e4a9a92194c7db72899d706bb6ec"
+    },
+    "particle": {
+      "source": "assets/shaders/fire/fire_particle.wgsl",
+      "dest": "shaders/fire_particle.wgsl",
+      "sha256": "62914941c233028fa6d6e94eeb5e8ac95b1d79ba7e12aa151650aad1e58b8d7d"
+    }
+  },
+  "development_tier": "smoke",
+  "lane": "particle_instanced",
+  "preview_witness": {
+    "witness_schema": "artist_vfx_preview_witness_v1",
+    "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+    "preview_job_id": "spark_shower_preview_stub",
+    "frames_captured": 0,
+    "staging_path": "assets/staging/spark_shower/",
+    "honest_gate": "pending",
+    "captured_at_utc": "2026-08-28T04:44:00Z",
+    "toolchain": {
+      "mcp_tool": "effect_promote",
+      "cli_parity": true,
+      "blender_present": false
+    },
+    "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
+    "promoted_path": "assets/effects/registry/spark_shower/"
+  }
+}

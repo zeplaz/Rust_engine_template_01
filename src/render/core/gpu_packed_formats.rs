@@ -5,16 +5,17 @@ use crate::gui::{WorldLodBand, WorldResolutionPolicy};
 pub const LOGISTICS_OVERLAY_ROW_FORMAT: PackedFormatId = PackedFormatId(4);
 pub const ECOLOGY_OVERLAY_ROW_FORMAT: PackedFormatId = PackedFormatId(5);
 
-use crate::render::gpu_buffer_registry::{
+use crate::render::core::gpu_buffer_registry::{
     BufferId, ECOLOGY_OVERLAY_BUFFER, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER,
     FIRE_PARTICLE_INSTANCES_BUFFER, FIRE_VISUAL_INSTANCES_BUFFER, HEAT_DIFFUSION_FIELD_BUFFER,
     LOGISTICS_OVERLAY_BUFFER, WATER_PARTICLE_EXPANDED_VERTICES_BUFFER,
-    WATER_PARTICLE_INSTANCES_BUFFER,
+    WATER_PARTICLE_INSTANCES_BUFFER, WEATHER_PRECIP_INSTANCES_BUFFER,
 };
-use crate::render::domain_overlay_gpu::{EcologyOverlayGpuRow, LogisticsOverlayGpuRow};
+use crate::render::pipelines::domain_overlay_gpu::{EcologyOverlayGpuRow, LogisticsOverlayGpuRow};
 use crate::render::fire_vfx::pack::{GpuParticleInstance, GpuParticleQuadVertex};
-use crate::render::gpu_water_particles::{GpuWaterParticleInstance, GpuWaterParticleQuadVertex};
-use crate::render::sim_visual_extract::FireVisualGpuInstance;
+use crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadInstance;
+use crate::render::pipelines::gpu_water_particles::{GpuWaterParticleInstance, GpuWaterParticleQuadVertex};
+use crate::render::extraction::sim_visual_extract::FireVisualGpuInstance;
 
 /// Stable numeric identity for a packed row layout (stride authority).
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
@@ -27,6 +28,8 @@ pub const FIRE_PARTICLE_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(3);
 pub const FIRE_PARTICLE_EXPANDED_VERTEX_FORMAT: PackedFormatId = PackedFormatId(6);
 pub const WATER_PARTICLE_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(7);
 pub const WATER_PARTICLE_EXPANDED_VERTEX_FORMAT: PackedFormatId = PackedFormatId(8);
+/// Weather precip streaks — same 32-byte stride as [`GpuInstancedQuadInstance`].
+pub const WEATHER_PRECIP_INSTANCE_FORMAT: PackedFormatId = PackedFormatId(9);
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub struct PackedBufferFormat {
@@ -79,6 +82,15 @@ pub const fn water_particle_expanded_vertex_format() -> PackedBufferFormat {
         format_id: WATER_PARTICLE_EXPANDED_VERTEX_FORMAT,
         buffer_id: WATER_PARTICLE_EXPANDED_VERTICES_BUFFER,
         stride: std::mem::size_of::<GpuWaterParticleQuadVertex>() as u32,
+    }
+}
+
+#[must_use]
+pub const fn weather_precip_instance_format() -> PackedBufferFormat {
+    PackedBufferFormat {
+        format_id: WEATHER_PRECIP_INSTANCE_FORMAT,
+        buffer_id: WEATHER_PRECIP_INSTANCES_BUFFER,
+        stride: std::mem::size_of::<GpuInstancedQuadInstance>() as u32,
     }
 }
 
@@ -153,6 +165,15 @@ mod tests {
             fire_particle_instance_format().stride,
             std::mem::size_of::<GpuParticleInstance>() as u32
         );
+    }
+
+    #[test]
+    fn weather_precip_stride_matches_instanced_quad() {
+        assert_eq!(
+            weather_precip_instance_format().stride,
+            std::mem::size_of::<GpuInstancedQuadInstance>() as u32
+        );
+        assert_eq!(weather_precip_instance_format().buffer_id, WEATHER_PRECIP_INSTANCES_BUFFER);
     }
 
     #[test]

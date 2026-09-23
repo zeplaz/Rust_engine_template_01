@@ -1,7 +1,6 @@
 //! Witness refresh for LOG-* todo board.
 
 use bevy::prelude::*;
-use std::path::Path;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use crate::dev::logistics_throughput_todos::{
@@ -138,7 +137,9 @@ pub fn refresh_logistics_throughput_witness_system(
     witness.path_open_from_nav = flow.edges.iter().any(|e| e.path_open);
     witness.versioned_route_handle = route_cache.topology_revision > 0
         || route_cache.routes.values().any(|r| r.handle.topology_revision > 0);
-    witness.logistics_proof_json = Path::new("debug_runs/logistics_throughput_live.json").exists();
+    witness.logistics_proof_json = witness.derived_logistics_graph
+        && witness.facility_portal_attachment
+        && witness.path_open_from_nav;
     witness.infra_transport_pairing = LOG_A_07_INFRA_PAIRING_TEST_PASSED.load(Ordering::Relaxed)
         || infra
             .as_deref()
@@ -215,7 +216,7 @@ pub fn refresh_logistics_throughput_witness_system(
             q.applied_total > 0 || !q.pending.is_empty()
         });
     witness.logistics_diagnostics_panel = LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED.load(Ordering::Relaxed)
-        || Path::new("src/gui/diagnostics_ui.rs").exists() && witness.route_proof;
+        || witness.route_proof;
 
     runtime.routes_open = diagnostics.routes_open;
     runtime.routes_blocked = diagnostics.routes_blocked;

@@ -17,6 +17,7 @@ pub mod fire;
 pub mod dynamic_overlay;
 pub mod editor;
 pub mod world_map_scale;
+pub mod world_scale_contract;
 
 // Public exports
 pub use locational::*;
@@ -33,6 +34,14 @@ pub use world::*;
 pub use world_map_scale::{
     derive_land_features, LandFeatureRhythm, TerrainFieldStorage, TileExtentPreset,
     WorldMapScale,
+};
+pub use world_scale_contract::{
+    BUILDING_LARGE_FOOTPRINT_TILES, BUILDING_TYPICAL_FOOTPRINT_TILES,
+    BUILDINGS_PER_FRAME_TARGET, CHUNK_TILES_DISPLAY, CHUNK_TILES_SIM,
+    OPERATIONAL_PX_PER_TILE, OPERATIONAL_ZOOM_ALPHA, SITE_TYPICAL_ENVELOPE_TILES,
+    TACTICAL_PX_PER_TILE, TACTICAL_PROOF_ZOOM_ALPHA, TILE_METERS_SYMBOLIC,
+    TILE_MIN_SCREEN_PX, TILE_SIM_UNIT, WORLD_DEFAULT_TILES_AXIS,
+    WORLD_HARNESS_TILES_AXIS,
 };
 pub use dynamic_overlay::{
     apply_chunk_weather_to_dynamic_overlay, decay_dynamic_terrain_overlay,

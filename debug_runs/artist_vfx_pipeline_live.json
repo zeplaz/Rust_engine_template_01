@@ -1,0 +1,238 @@
+{
+  "_agent_meta": {
+    "profile": "VSS-T4-004",
+    "schema": "debug_run_envelope_v1",
+    "relative_path": "debug_runs/artist_vfx_pipeline_live.json",
+    "source_system": "effect_consumable_registry",
+    "track": "VSS-T4",
+    "task_id": "VSS-T4-004",
+    "proceed_ship": true,
+    "art_quality": "smoke_tier_reference_batch",
+    "docs": {
+      "plan": "src/dev/plan_artist_vfx_toolchain_v1.md",
+      "schema": "tools/mcp/schemas/effect_spec_v1.schema.json"
+    }
+  },
+  "schema": "artist_vfx_pipeline_witness_v1",
+  "status": "shipped",
+  "program_id": "VSS-001",
+  "slice_id": "VSS-T4-004",
+  "green": true,
+  "schema_risks": [
+    {
+      "id": "R-SCHEMA-1",
+      "title": "allOf conditional spawn_hook_config",
+      "owner": "@coder-mcp",
+      "status": "mitigated",
+      "mitigation": "Draft202012Validator + pytest \u2014 validate_effect_spec_report"
+    },
+    {
+      "id": "R-SCHEMA-2",
+      "title": "LOD cap drift vs FIRE_LOD_CAP_* runtime",
+      "owner": "@coder",
+      "mitigation": "lint bridge after VSS-T1-002"
+    },
+    {
+      "id": "R-SCHEMA-3",
+      "title": "wgsl_pack paths vs assets/effects/registry promote bundle",
+      "owner": "@coder-mcp",
+      "status": "mitigated",
+      "mitigation": "pack_manifest sha256 per shader_pack role \u2014 effect_promote pack step"
+    }
+  ],
+  "shipped": {
+    "effect_spec_schema": "tools/mcp/schemas/effect_spec_v1.schema.json",
+    "effect_spec_validator": "tools/mcp/python/rust_engine_mcp/validators/effect_spec.py",
+    "validate_effect_spec_mcp": "validate_effect_spec_report",
+    "validate_effect_spec_cli": "validate-report effect_spec",
+    "effect_promote_mcp": "effect_promote",
+    "effect_promote_cli": "effect-promote",
+    "effect_pack_cli": "effect-pack",
+    "reference_batch_id": "vss_t4_reference_effects_v1",
+    "effect_consumable_ecs": "render::fire_vfx::consumable",
+    "effect_consumable_registry_plugin": "EffectConsumableRegistryPlugin",
+    "plan_doc": "src/dev/plan_artist_vfx_toolchain_v1.md"
+  },
+  "reference_specs": {
+    "batch_id": "vss_t4_reference_effects_v1",
+    "status": "shipped",
+    "slice": "VSS-T4-003",
+    "validator": "rust_engine_mcp.validators.effect_spec",
+    "validation": {
+      "effect_spec_smoke_column_v1.json": "passed",
+      "effect_spec_rain_streaks_v1.json": "passed",
+      "effect_spec_spark_shower_v1.json": "passed"
+    },
+    "lane_decisions": {
+      "smoke_column": "gpu_field",
+      "rain_streaks": "particle_instanced",
+      "rain_lane_rationale": "ES-5 GPU precip spine; climate_precip field_sample drives density"
+    },
+    "staging": {
+      "spark_shower": {
+        "spec": "tools/mcp/schemas/examples/effect_spec_spark_shower_v1.json",
+        "lane": "particle_instanced",
+        "validation": "passed",
+        "staging_path": "assets/staging/spark_shower/",
+        "pack_hash": "d1caeb40c35525590227ca49315cab0bcc60350e276f416cbad062646566a3f5",
+        "shader_count": 3,
+        "preview_witness": {
+          "witness_schema": "artist_vfx_preview_witness_v1",
+          "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+          "preview_job_id": "spark_shower_preview_stub",
+          "frames_captured": 0,
+          "staging_path": "assets/staging/spark_shower/",
+          "honest_gate": "pending",
+          "captured_at_utc": "2026-08-28T04:44:00Z",
+          "toolchain": {
+            "mcp_tool": "effect_promote",
+            "cli_parity": true,
+            "blender_present": false
+          },
+          "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
+          "promoted_path": "assets/effects/registry/spark_shower/"
+        }
+      },
+      "smoke_column": {
+        "spec": "tools/mcp/schemas/examples/effect_spec_smoke_column_v1.json",
+        "lane": "gpu_field",
+        "validation": "passed",
+        "staging_path": "assets/staging/smoke_column/",
+        "pack_hash": "f876a6f6d84da926ed6161eeec16ac1bc7e7e0e01a7a258b73c44ea0b5dd0ff5",
+        "shader_count": 2,
+        "preview_witness": {
+          "witness_schema": "artist_vfx_preview_witness_v1",
+          "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+          "preview_job_id": "smoke_column_preview_stub",
+          "frames_captured": 0,
+          "staging_path": "assets/staging/smoke_column/",
+          "honest_gate": "pending",
+          "captured_at_utc": "2026-08-28T04:44:00Z",
+          "toolchain": {
+            "mcp_tool": "effect_promote",
+            "cli_parity": true,
+            "blender_present": false
+          },
+          "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
+          "promoted_path": "assets/effects/registry/smoke_column/"
+        }
+      },
+      "rain_streaks": {
+        "spec": "tools/mcp/schemas/examples/effect_spec_rain_streaks_v1.json",
+        "lane": "particle_instanced",
+        "validation": "passed",
+        "staging_path": "assets/staging/rain_streaks/",
+        "pack_hash": "1c7cfec6aeb94ec829f64f9af93d2d6e3d136c1060b85879a37ffffa28769031",
+        "shader_count": 1,
+        "preview_witness": {
+          "witness_schema": "artist_vfx_preview_witness_v1",
+          "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+          "preview_job_id": "rain_streaks_preview_stub",
+          "frames_captured": 0,
+          "staging_path": "assets/staging/rain_streaks/",
+          "honest_gate": "pending",
+          "captured_at_utc": "2026-08-28T04:44:00Z",
+          "toolchain": {
+            "mcp_tool": "effect_promote",
+            "cli_parity": true,
+            "blender_present": false
+          },
+          "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
+          "promoted_path": "assets/effects/registry/rain_streaks/"
+        }
+      }
+    },
+    "promoted": {
+      "spark_shower": {
+        "registry_path": "assets/effects/registry/spark_shower/",
+        "pack_hash": "d1caeb40c35525590227ca49315cab0bcc60350e276f416cbad062646566a3f5",
+        "lane": "particle_instanced",
+        "preview_witness": {
+          "witness_schema": "artist_vfx_preview_witness_v1",
+          "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+          "preview_job_id": "spark_shower_preview_stub",
+          "frames_captured": 0,
+          "staging_path": "assets/staging/spark_shower/",
+          "honest_gate": "pending",
+          "captured_at_utc": "2026-08-28T04:44:00Z",
+          "toolchain": {
+            "mcp_tool": "effect_promote",
+            "cli_parity": true,
+            "blender_present": false
+          },
+          "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
+          "promoted_path": "assets/effects/registry/spark_shower/"
+        }
+      },
+      "smoke_column": {
+        "registry_path": "assets/effects/registry/smoke_column/",
+        "pack_hash": "f876a6f6d84da926ed6161eeec16ac1bc7e7e0e01a7a258b73c44ea0b5dd0ff5",
+        "lane": "gpu_field",
+        "preview_witness": {
+          "witness_schema": "artist_vfx_preview_witness_v1",
+          "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+          "preview_job_id": "smoke_column_preview_stub",
+          "frames_captured": 0,
+          "staging_path": "assets/staging/smoke_column/",
+          "honest_gate": "pending",
+          "captured_at_utc": "2026-08-28T04:44:00Z",
+          "toolchain": {
+            "mcp_tool": "effect_promote",
+            "cli_parity": true,
+            "blender_present": false
+          },
+          "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
+          "promoted_path": "assets/effects/registry/smoke_column/"
+        }
+      },
+      "rain_streaks": {
+        "registry_path": "assets/effects/registry/rain_streaks/",
+        "pack_hash": "1c7cfec6aeb94ec829f64f9af93d2d6e3d136c1060b85879a37ffffa28769031",
+        "lane": "particle_instanced",
+        "preview_witness": {
+          "witness_schema": "artist_vfx_preview_witness_v1",
+          "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+          "preview_job_id": "rain_streaks_preview_stub",
+          "frames_captured": 0,
+          "staging_path": "assets/staging/rain_streaks/",
+          "honest_gate": "pending",
+          "captured_at_utc": "2026-08-28T04:44:00Z",
+          "toolchain": {
+            "mcp_tool": "effect_promote",
+            "cli_parity": true,
+            "blender_present": false
+          },
+          "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
+          "promoted_path": "assets/effects/registry/rain_streaks/"
+        }
+      }
+    },
+    "gaps": []
+  },
+  "effect_consumable_ecs": {
+    "slice": "VSS-T4-004",
+    "status": "shipped",
+    "module": "src/render/fire_vfx/consumable.rs",
+    "registry_root": "assets/effects/registry/",
+    "loaded_count": 3,
+    "spawn_hook_resolver_wired": true,
+    "spawn_hooks": {
+      "world_xy": "spark_shower",
+      "attach_entity": "smoke_column",
+      "field_sample": "rain_streaks"
+    },
+    "no_parallel_draw_path": true,
+    "particle_domain_routing": {
+      "spark_shower": "fire",
+      "rain_streaks": "weather_precip",
+      "smoke_column": "gpu_field"
+    }
+  },
+  "pending": {
+    "preview_witness_capture": "G4 preview worker — capture_hash + honest_gate=honest",
+    "aps_panel": "VSS-T4-005"
+  },
+  "tribunal": {
+    "dissent": []
+  }
+}

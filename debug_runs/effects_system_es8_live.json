@@ -1,0 +1,36 @@
+{
+  "gate": "EFFECTS-SYSTEM-ES-8-3",
+  "program": "EFFECTS-SYSTEM-UNIFY-001",
+  "slice": "CLN-SHIM-API-BATCH",
+  "green": true,
+  "shim_blocks_removed": 61,
+  "batch1_zero_caller_deleted": [
+    "debug_render_trace",
+    "debug_viewport_overlay",
+    "fire_chunk_entity_index",
+    "fire7_f7_a_exit",
+    "full_render_diagnostic",
+    "gpu_particle_draw",
+    "gpu_spark_compute",
+    "gpu_water_particle_draw",
+    "gpu_water_particle_raster",
+    "gpu_water_surface_draw",
+    "stage5_closure_witnesses",
+    "tactical_vector_overlay",
+    "vfx_capture_hook",
+    "visual_diagnostics",
+    "stall_watch"
+  ],
+  "hot_caller_migrated_then_deleted": 46,
+  "api_retarget": "src/render/api.rs → pipelines:: / core:: / fx_spine:: / probes:: / witness:: / extraction::",
+  "canonical_parents_pub_crate": [
+    "pipelines",
+    "probes",
+    "core",
+    "fx_spine",
+    "witness"
+  ],
+  "remaining_root_shims": [],
+  "cargo": "0 errors (validate_cargo_report)",
+  "note": "Prior CLN-ES8-SHIM-001 fire_chunk_runtime already removed; this batch clears all remaining path-preserving shims in render/mod.rs. Public type surface preserved via pub use api::*."
+}

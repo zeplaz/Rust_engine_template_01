@@ -11,7 +11,7 @@
 //!
 //! ## Root spine (execute in this order before parallel GPU / fire / LOD)
 //! 1. **TODO-01** — runtime readiness fence (`evaluate_app_stage5_readiness`). Unlocks all measurement.
-//! 2. **TODO-04** — view authority (ViewManager vs `MapCameraDesired`). Real engine spine; cascades to minimap, fire alignment, LOD, preview.
+//! 2. **TODO-04** — pose authority (`ViewProjectionAuthority`; `ViewManager` = read spine; `MapCameraDesired` = derive mirror). Cascades to minimap, fire alignment, LOD, preview.
 //! 3. **TODO-06** — `CommittedVisualSnapshotFence` / frame sync. Unlocks GPU + fire truth on a stable frame boundary.
 //!
 //! Then: TODO-02, TODO-03, TODO-05, GPU layer (07–09), fire (10–11), preview/LOD (12–13) per `STAGE5_TODOS` P0→P4 list.
@@ -26,7 +26,7 @@
 use bevy::prelude::*;
 
 use crate::gui::{
-    fire_visual_producer_count, mirror_world_main_camera_from_map_desired,
+    derive_map_camera_desired_from_view_authority, fire_visual_producer_count,
     MapCameraDesiredRes, MapCameraSystemSet, RepresentationResult, ViewId, ViewManager, WorldRepresentationFrame,
 };
 use crate::systems::atmosphere::AtmospherePartialWriteMetrics;
@@ -110,19 +110,19 @@ pub static STAGE5_TODOS: &[Stage5LiveTodo] = &[
     Stage5LiveTodo {
         id: "TODO-04",
         status: TodoStatus::Open,
-        file: "src/gui/map_camera.rs, src/gui/view_authority.rs",
-        system: "ViewManager, MapCameraDesired, mirror + trace",
-        goal: "ViewManager sole authority for WorldMain camera pose after bridge; MapCameraDesired only mirrored.",
-        runtime_check: "FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE lines from map_camera_apply_input, tile_world_fallback::focus_main_camera_on_world_params, view_representation::apply_minimap_camera_intent when pose changes.",
+        file: "src/gui/tactical/map_camera.rs, src/gui/view_authority.rs",
+        system: "ViewProjectionAuthority, derive_map_camera_desired_from_view_authority, sync_view_manager_bridge",
+        goal: "ViewProjectionAuthority sole WorldMain pose commit; ViewManager = read spine; MapCameraDesired = derive-only mirror.",
+        runtime_check: "FULL_APP + RUST_LOG=map_camera_desired::write=debug: MAP_CAMERA_DESIRED_WRITE only from derive_map_camera_desired_from_view_authority; vm_a.dual_writer_pose_violation=false; post_mirror_drift OK.",
         failure_mode: "minimap/world drift, dual-write inconsistency.",
     },
     Stage5LiveTodo {
         id: "TODO-05",
         status: TodoStatus::Open,
-        file: "src/gui/map_camera.rs",
-        system: "map_camera_apply_input, mirror_world_main_camera_from_map_desired",
-        goal: "No hidden second writer path for world main camera (VM-09B closed).",
-        runtime_check: "RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes.",
+        file: "src/gui/map_camera.rs, src/render/view_runtime/",
+        system: "map_camera_apply_input, BridgeCompat upsert paths",
+        goal: "No hidden second writer path for world main camera (VM-09B / BridgeCompat residual).",
+        runtime_check: "RUST_LOG=stage5_live_todos=info: STAGE5_MAP_CAMERA_HOOK post_mirror bridge_drift + desired vs WorldMain; no unexplained spikes; BridgeCompat must not overwrite MapCameraInput.",
         failure_mode: "Jitter + desync minimap vs world.",
     },
     Stage5LiveTodo {
@@ -621,7 +621,7 @@ pub fn register_stage5_todo_runtime_hooks(app: &mut App) {
     app.add_systems(
         Update,
         hook_map_camera_post
-            .after(mirror_world_main_camera_from_map_desired)
+            .after(derive_map_camera_desired_from_view_authority)
             .in_set(MapCameraSystemSet::DeriveDesired)
             .run_if(full_app_hooks_enabled),
     );

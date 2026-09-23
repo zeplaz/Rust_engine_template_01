@@ -178,7 +178,18 @@ pub fn draw_sim_build_picker_sheet_egui(
     let ctx = contexts.ctx_mut()?;
     apply_sim_hud_egui_theme(ctx, &palette);
 
-    let anchor = sim_build_picker_sheet_rect(picker.as_ref(), left_stack.collapsed).min;
+    let anchor_bevy = sim_build_picker_sheet_rect(picker.as_ref(), left_stack.collapsed).min;
+    let anchor = crate::gui::bevy_logical_to_egui_pos(ctx, anchor_bevy);
+    let sheet_w = crate::gui::bevy_logical_vec_to_egui(
+        ctx,
+        egui::vec2(BUILD_PICKER_SHEET_W_PX, 0.0),
+    )
+    .x;
+    let sheet_body_h = crate::gui::bevy_logical_vec_to_egui(
+        ctx,
+        egui::vec2(0.0, BUILD_PICKER_MAX_H_PX - 72.0),
+    )
+    .y;
     let mut close_requested = false;
 
     egui::Area::new(egui::Id::new("sim_build_picker_sheet"))
@@ -186,7 +197,7 @@ pub fn draw_sim_build_picker_sheet_egui(
         .fixed_pos(anchor)
         .interactable(true)
         .show(ctx, |ui| {
-            ui.set_width(BUILD_PICKER_SHEET_W_PX);
+            ui.set_width(sheet_w);
             picker_sheet_frame(&palette).show(ui, |ui| {
                 picker_header_frame(&palette).show(ui, |ui| {
                     ui.horizontal(|ui| {
@@ -222,7 +233,7 @@ pub fn draw_sim_build_picker_sheet_egui(
                 });
                 ui.separator();
                 egui::ScrollArea::vertical()
-                    .max_height(BUILD_PICKER_MAX_H_PX - 72.0)
+                    .max_height(sheet_body_h)
                     .show(ui, |ui| {
                         match picker.category {
                             BuildPickerCategory::Zone => {
@@ -288,7 +299,7 @@ fn draw_industry_picker_tab(
             PICKER_GENERIC_DEPOT
         };
         if ui.button(body_text(palette, label)).clicked() {
-            tool.tool = BuildTool::Building(BuildingArchetypeId::Factory);
+            tool.tool = BuildTool::Building(archetype);
             tool.building_intent = Some(preview);
         }
     }

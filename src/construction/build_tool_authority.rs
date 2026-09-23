@@ -226,13 +226,6 @@ pub fn shift_queue_building_removed_witness_green() -> bool {
     !shift_lmb_queues_building_blueprint(BuildTool::Building(BuildingArchetypeId::Factory))
 }
 
-/// Enter path in `build_confirm_site_system` commits the active ghost when valid (PARAM-002).
-#[cfg(test)]
-#[must_use]
-pub fn enter_commits_single_ghost_witness_green() -> bool {
-    true
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -262,6 +255,6 @@ mod tests {
             ZoneTool::ResidentialLow
         )));
         assert!(shift_queue_building_removed_witness_green());
-        assert!(enter_commits_single_ghost_witness_green());
+        // Enter→commit is measured in build_interaction (MinimalPlugins self-check), not here.
     }
 }

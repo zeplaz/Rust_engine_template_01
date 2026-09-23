@@ -9,15 +9,31 @@ use crate::strategic::ChunkStrategicOverlay;
 
 use super::resources::FootprintTiles;
 
-/// Terrain gate for site placement — replace with slope / hydrology / zoning queries.
+/// Terrain gate for site placement — **stub pass** until slope/hydrology/zoning land.
+/// Not a real gate; see [`site_terrain_gate_is_stub`].
 #[inline]
 pub fn validate_terrain_for_site() -> bool {
     true
 }
 
-/// Network reachability gate — replace with graph / distance-to-road queries.
+/// Network reachability gate — **stub pass** until graph/distance-to-road land.
+/// Not a real gate; see [`site_network_gate_is_stub`].
 #[inline]
 pub fn validate_network_access_for_site() -> bool {
+    true
+}
+
+/// Honesty: terrain placement gate is still a stub (always passes).
+#[inline]
+#[must_use]
+pub fn site_terrain_gate_is_stub() -> bool {
+    true
+}
+
+/// Honesty: network placement gate is still a stub (always passes).
+#[inline]
+#[must_use]
+pub fn site_network_gate_is_stub() -> bool {
     true
 }
 

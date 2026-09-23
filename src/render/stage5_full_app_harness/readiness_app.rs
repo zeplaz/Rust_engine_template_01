@@ -7,14 +7,14 @@ use bevy::prelude::*;
 #[cfg(test)]
 use crate::gui::editor::world_preview::{PreviewCameraState, WorldPreviewUiState};
 #[cfg(test)]
-use crate::render::gpu_particle_draw::WorldFireParticleDrawDispatch;
+use crate::render::pipelines::gpu_particle_draw::WorldFireParticleDrawDispatch;
 #[cfg(test)]
-use crate::render::gpu_particles::WorldFireParticleFrame;
+use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
 #[cfg(test)]
-use crate::render::phase_f_lod_proof::PhaseFLodProofReport;
+use crate::render::witness::phase_f_lod_proof::PhaseFLodProofReport;
 #[cfg(test)]
 use crate::render::GpuRepresentationMetrics;
-use crate::render::stage5_readiness::{
+use crate::render::witness::stage5_readiness::{
     evaluate_app_stage5_readiness, AppStage5ReadinessReport, Stage5ReadinessProfile,
     Stage5ReadinessTruthInputs,
 };
@@ -42,18 +42,18 @@ use crate::terrain::material::WorldPreviewState;
 #[cfg(test)]
 use crate::render::extraction::FireVisualFramePlugin;
 #[cfg(test)]
-use crate::render::gpu_indirect_draw::compact_world_fire_indirect_draw;
+use crate::render::pipelines::gpu_indirect_draw::compact_world_fire_indirect_draw;
 #[cfg(test)]
 use crate::render::{
     DomainProjectionFramePlugin, GpuIndirectDrawSpinePlugin, PhaseFLodProofPlugin, VtCiMatrixPlugin,
 };
 #[cfg(test)]
-use crate::render::vt_ci_matrix::{
+use crate::render::witness::vt_ci_matrix::{
     build_deterministic_ci_scenario, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix, Vt4CiReport,
     Vt4CiScenario, VtCiMatrixLiveReport,
 };
 #[cfg(test)]
-use crate::render::visual_agreement::VisualAgreementFrame;
+use crate::render::witness::visual_agreement::VisualAgreementFrame;
 #[cfg(test)]
 use crate::render::CommittedVisualSnapshotFence;
 #[cfg(test)]

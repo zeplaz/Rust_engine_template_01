@@ -1,0 +1,262 @@
+# VSS-001 kickoff research packet — operations-intelligence (READ-ONLY)
+# Generated: 2026-08-28 · program: PLAN-VFX-SPECTATOR-SCALE-001
+# Sources: plan_vfx_spectator_scale_program_v1.md · vss_program_queue.json ·
+#          tactical_map_debug_live.json (body keys) · guide_sim_effect_spine_v1 §STORAGE-THREE-WORLDS
+
+schema: vss_kickoff_packet_v1
+program_id: VSS-001
+plan_doc: src/dev/plan_vfx_spectator_scale_program_v1.md
+queue: tools/orchestrator/queues/vss_program_queue.json
+witness_primary: debug_runs/tactical_map_debug_live.json
+agent: operations-intelligence
+status: kickoff_research
+
+dsm:
+  auth_spine_art: "MAT★⇢APS★⇢SNAP★⇢WRK○⇢ATL○⇢RT○"
+  auth_spine_sim: "SimEffectSpine★⇢ChunkEnvironment★⇢FireConsumer○⇢Extract○⇢GPU-Raster○"
+  flow: "Entry(save|campaign|scenario|test)⇢SimEffectQueue⇢fire_tick⇢extract⇢EffectConsumable/overlay⇢witness"
+  loop: "RUN⇢TEL⇢KPI⇢OPS★ ─═[Δ>ε]▶ ↺ΔWF · witness JSON wins over queue rows"
+  risk_hotspots: "harness≠game · scale-contract-missing · VT-4-dual-write · dishonest-green · T5-blocks-T2"
+
+  authority_surfaces:
+    fire:
+      owner: "@sim-steward + @coder"
+      spine_rule: "Fire is SimEffect consumer — NOT spine (guide_sim_effect_spine_v1)"
+      authoritative_paths:
+        - src/render/fire_vfx/**
+        - src/render/pipelines/gpu_fire_particle_raster.rs
+        - src/render/pipelines/overlay_field_buffers.rs
+        - assets/shaders/fire/**
+      trip: TRIP-VSS-FIRE-AUTHORITY · src/dev/TRIP_VSS_FIRE_AUTHORITY.md
+      witness_evidence:
+        tactical_overlay_fire_cells: 6
+        fire_particle_draw_ok: 239
+        spark_rows: 48
+        vt4_mismatch_count: 1
+        fire_excluded_from_bake: true
+      failure_propagation: "Parallel extract or overlay dual-writer ⛔ invalidates all VFX proof"
+
+    harness:
+      owner: "@coder + @orchestrator"
+      spine_rule: "Harness seeds overlay heat — debug_only fallback; NOT primary product proof"
+      authoritative_paths:
+        - src/engine/test_harness.rs
+        - src/engine/play_scenario.rs
+        - src/engine/launch_args.rs
+        - ActiveTestScene / TestScene::VfxSandbox
+      trip: TRIP-VSS-HARNESS · src/dev/TRIP_VSS_TEST_HARNESS.md
+      witness_evidence:
+        test_scene: VfxSandbox
+        test_harness_boost: false
+        base_state: Simulation
+        world_gen_flow: FullReady
+      failure_propagation: "Green --test vfx without scenario parity ⛔ false ship on fire visibility"
+
+    scale:
+      owner: "@planner → @coder + @designer"
+      spine_rule: "Single module for tile unit · chunk slab · building footprint constants"
+      authoritative_paths:
+        - WorldGenParams / world_params
+        - src/gui/tactical/map_camera.rs
+        - src/terrain/generation/**
+      trip: TRIP-VSS-SCALE · src/dev/TRIP_VSS_SCALE_CONTRACT.md
+      witness_evidence:
+        world_size_tiles: "320×320"
+        chunk_entities: 100
+        dense_tile_count: 102400
+        px_per_tile: 24.814
+        fixed_world_span: "51.58×29.02"
+        zoom_level: 24.814
+        minimap_coverage_ratio: 0.0
+        sim_terrain_coverage_ratio: 1.0
+      failure_propagation: "32×32 slabs read as city-sized territories ⛔ fire/buildings misaligned at all zoom"
+
+    effects:
+      owner: "@coder (ECS) + @orchestrator-mcp → @designer-mcp → @coder-mcp (art)"
+      spine_rule: "STORAGE-THREE-WORLDS — hot ECS RAM · FS/RON persist · dev Postgres NEVER in tick path"
+      storage_classes:
+        hot_sim: "SimEffectQueue · EmberSpotIgnitionEvent · capped EventLog rings"
+        game_persist: "Wave S FS/RON · chunk cache spill — gated embedded DB only"
+        dev_postgres: "Agent KPI index copies JSONL — NOT sim authority"
+      authoritative_paths:
+        - SimEffectQueue / dispatch spine
+        - tools/mcp/schemas/effect_spec_v1.schema.json
+        - assets/effects/registry/
+      trip: TRIP-VSS-EFFECT-SPEC
+      witness_evidence:
+        effects_es_slices_green: "ES0–ES8 lib witnesses green (schema scope)"
+        program_exit_witnesses_pending:
+          - debug_runs/spectator_parity_live.json
+          - debug_runs/sim_effect_fire_consumer_live.json
+          - debug_runs/artist_vfx_pipeline_live.json
+      failure_propagation: "Merging dev Postgres into tick path or parallel draw path ⛔ authority drift"
+
+qce:
+  program_level:
+    Q_coherence:
+      score: 4
+      evidence: "Lib ES witnesses green; product fire invisible at zoom; scale contract unpublished"
+    Q_stability:
+      score: 5
+      evidence: "VT-4 mismatch_count=1; T2+T3+fire raster SERIAL per conflict matrix; overlay authority contested"
+    C_compute:
+      score: 8
+      evidence: "5 parallel tracks · fire raster + MCP bpy/WGSL · spectator RTT capture · GPU bake spike latent"
+    C_tokens:
+      score: 8
+      evidence: "Raw cargo walls + repeated plan re-reads until VSS-T5-001 symbolic encoder lands"
+    E_clarity:
+      score: 3
+      evidence: "No plan_world_scale_contract_v1.md; operators report no visible fire/sparks/smoke"
+    E_confusion_risk:
+      score: 9
+      evidence: "Harness VfxSandbox green vs campaign path; minimap void (coverage 0) while sim painted; ops FIRE/VFX 0 green proofs"
+
+  complexity_budget:
+    proposal_complexity: 8
+    expected_value: 9
+    ev_over_cx: 1.125
+    verdict: APPROVE
+    note: "High Cx justified — unblocks product VFX + ends token waste; phase Wave 0 to cap blast radius"
+
+  per_track:
+    T1_scale:
+      cx: 5
+      ev: 8
+      ev_over_cx: 1.6
+      gate: APPROVE
+    T2_spectator:
+      cx: 7
+      ev: 9
+      ev_over_cx: 1.29
+      gate: APPROVE
+      blocked_on: VSS-T5-001
+    T3_sim_effect_fire:
+      cx: 7
+      ev: 8
+      ev_over_cx: 1.14
+      gate: APPROVE
+      blocked_on: VSS-T2-002 + sim-steward dual-write map
+    T4_artist_vfx:
+      cx: 6
+      ev: 7
+      ev_over_cx: 1.17
+      gate: APPROVE
+      parallel_ok_with: T1
+    T5_reflection:
+      cx: 4
+      ev: 8
+      ev_over_cx: 2.0
+      gate: APPROVE
+      note: "~1/7 fleet; unlocks T2 demotion and tribunal hygiene"
+
+top_risks:
+  - id: R1
+    severity: critical
+    title: Scale contract absent — tactical cells read as territories
+    evidence: "px_per_tile≈24.8 · fixed_world_span≈51×29 world units · plan T1-001 ready not started"
+    owner: "@planner"
+  - id: R2
+    severity: critical
+    title: Harness-green ≠ product fire path
+    evidence: "test_scene=VfxSandbox · test_harness_boost=false · spectator_parity witness pending"
+    owner: "@coder"
+  - id: R3
+    severity: high
+    title: T2+T3+fire raster authority collision (VT-4)
+    evidence: "vt4.mismatch_count=1 · plan conflict matrix SERIAL · dual-writer removal VSS-T3-002"
+    owner: "@sim-steward"
+  - id: R4
+    severity: high
+    title: Dishonest or scope-mismatched green witnesses
+    evidence: "ops FIRE/VFX 0 green proofs · E_confusion_risk=9 repo-wide · witness wins over queue"
+    owner: "@operations-intelligence"
+  - id: R5
+    severity: medium
+    title: T5 encoder on critical path blocks Wave 1
+    evidence: "VSS-T5-001 in_progress · VSS-T2-001 blocked_on T5-001"
+    owner: "@coder-mcp"
+
+routing:
+  run_first: "Wave 0 parallel trio — critical path VSS-T5-001"
+  wave_0_parallel:
+    - slice: VSS-T5-001
+      track: T5
+      owner: "@coder-mcp"
+      status: in_progress
+      rationale: "Symbolic encoder gates T2 harness demotion; stops token bleed"
+    - slice: VSS-T1-001
+      track: T1
+      owner: "@planner"
+      status: ready
+      rationale: "Scale contract doc unblocks constants + designer readability audit"
+    - slice: VSS-T4-001
+      track: T4
+      owner: "@planner-mcp"
+      status: ready
+      rationale: "EffectSpec schema — PARALLEL OK with T1; no ECS authority touch"
+  wave_1_serial_after_wave_0:
+    - VSS-T2-001
+    - VSS-T2-002
+    - VSS-T3-001
+  serial_constraint: "T2 + T3 + fire raster — ONE session only if sim-steward clears dual-write map"
+  conflict_matrix:
+    T2_T3_fire: SERIAL
+    T4_MCP_T1: PARALLEL_OK
+  delta_wf:
+    - finding: "Complete VSS-T5-001 to unblock T2 harness demotion"
+      owner: "@coder-mcp"
+      next_artifact: debug_runs/symbolic_build_encoding_live.json
+    - finding: "Publish scale contract before T1-002 constants land"
+      owner: "@planner"
+      next_artifact: src/dev/plan_world_scale_contract_v1.md
+    - finding: "VT-4 dual-write map before T2-002 ∩ T3-001 same session"
+      owner: "@sim-steward"
+      next_artifact: debug_runs/sim_effect_fire_consumer_live.json
+    - finding: "Orchestrator seeds HANDOFF § PLAN-VFX-SPECTATOR-SCALE-001 lease"
+      owner: "@orchestrator"
+      next_artifact: tools/orchestrator/queues/HANDOFF.md
+
+token_savings:
+  policy: "L0 cheap digests → L2 exec only with filled packet (agent_flow_route)"
+  do_not_re_research:
+    - topic: VSS program router + wave pick order
+      digest: src/dev/plan_vfx_spectator_scale_program_v1.md
+      tool: agent_doc_digest_cached
+    - topic: Trip artifacts before path touch
+      digest: tools/orchestrator/queues/vss_trip_artifact_registry.json
+      tool: file_digest
+    - topic: SimEffect spine + three-worlds storage
+      digest: src/dev/guide_sim_effect_spine_v1.md § STORAGE-THREE-WORLDS
+      tool: agent_doc_touch intent=orient
+    - topic: Tactical map / fire raster state
+      digest: debug_runs/tactical_map_debug_live.json
+      tool: witness_brief
+    - topic: Queue slice status
+      digest: tools/orchestrator/queues/vss_program_queue.json
+      tool: slice_exec_brief
+    - topic: Build output
+      digest: validate_cargo_report compress=4
+      tool: symbolic_build_digest_tool
+      note: "After VSS-T5-001 lands — never paste raw cargo stderr"
+    - topic: Effects lib slice status
+      digest: debug_runs/effects_system_es*_live.json
+      tool: witness_brief profile=fire_product
+  mandatory_briefs_per_session:
+    - agent_flow_route goal="VSS slice work" domain=auto
+    - handoff_brief
+    - token_savings_guide
+  never:
+    - Paste full cargo check output
+    - Re-read AGENTS.md + full plan every turn without agent_doc_touch
+    - Read entire witness JSON when witness_brief suffices
+
+dissent_slot: []
+
+bp_share:
+  marker: "⟨BP:SHARE⟩"
+  witness_path: debug_runs/agent_ops/vss_001_kickoff_packet.yaml
+  next_agents:
+    - "@orchestrator"
+    - "@coder-mcp"
+    - "@planner"

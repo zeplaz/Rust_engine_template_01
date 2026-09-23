@@ -2,7 +2,7 @@
 //!
 //! **Viewport isolation:** [`MapViewInstances::world_preview`] and [`MapViewInstances::minimap`]
 //! are independent [`MapViewState`] values. Minimap zoom/focus must not read
-//! [`crate::gui::map_camera::MapCameraDesired`]; interaction is namespaced in
+//! [`crate::gui::tactical::map_camera::MapCameraDesired`]; interaction is namespaced in
 //! [`crate::gui::MapViewInteractionByView`] (per-surface queues) + [`MapShellPointerGate`].
 
 use bevy::math::{UVec2, Vec2};

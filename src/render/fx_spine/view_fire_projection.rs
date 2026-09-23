@@ -2,8 +2,8 @@
 
 use crate::gui::{RepresentationResult, ViewId, ViewManager};
 
-use crate::render::fire_view_extract::FireVisualFramesByView;
-use crate::render::sim_visual_extract::FireVisualFrame;
+use crate::render::extraction::fire_view_extract::FireVisualFramesByView;
+use crate::render::extraction::sim_visual_extract::FireVisualFrame;
 use crate::render::view_runtime::PerViewRepresentationPolicy;
 
 /// Tactical GPU projection source: WorldMain when fire overlay enabled, else SimulationMap.
@@ -60,7 +60,7 @@ mod tests {
         OverlayMask, ViewCameraState, ViewInstance, ViewProjection, ViewRenderPolicy,
         ViewRenderTarget, VIEW_NO_ENTITY,
     };
-    use crate::render::sim_visual_extract::FireVisualGpuInstance;
+    use crate::render::extraction::sim_visual_extract::FireVisualGpuInstance;
 
     fn view_with_fire_overlay(id: ViewId, fire_heat: bool) -> ViewInstance {
         let camera = ViewCameraState::default();

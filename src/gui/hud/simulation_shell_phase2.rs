@@ -866,16 +866,16 @@ impl Plugin for SimulationShellPhase2Plugin {
                     super::simulation_pointer_gate::apply_simulation_unified_cursor_system
                         .after(super::simulation_pointer_gate::sync_simulation_map_pointer_gate_system),
                     super::minimap_bevy_interaction::minimap_bevy_active_input_system
-                        .before(crate::gui::map_camera::MapCameraSystemSet::ApplyInput),
+                        .before(crate::gui::tactical::map_camera::MapCameraSystemSet::ApplyInput),
                     super::minimap_bevy_interaction::minimap_bevy_scroll_zoom_system
-                        .after(crate::gui::map_camera::MapCameraSystemSet::ApplyInput),
+                        .after(crate::gui::tactical::map_camera::MapCameraSystemSet::ApplyInput),
                     super::minimap_bevy_interaction::pin_minimap_centered_fit_system,
                     prime_phase2a_ops_zones_witness_when_strip_live,
                     ops_strip_zone_click_system,
                     context_tray_tab_click_system,
                     build_rail_tool_click_system,
                     apply_ops_strip_intel_focus_system
-                        .before(crate::gui::map_camera::MapCameraSystemSet::ApplyInput),
+                        .before(crate::gui::tactical::map_camera::MapCameraSystemSet::ApplyInput),
                     update_ops_strip_zone_lines_system.in_set(OpsStripZoneLinesSet),
                     sync_ops_strip_zone_hover_system,
                     sync_ops_strip_alert_badge_system,

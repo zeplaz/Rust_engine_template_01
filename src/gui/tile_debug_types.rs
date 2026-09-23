@@ -16,8 +16,9 @@ pub enum TileDebugViewId {
     SimulationMap,
 }
 
-/// Marker on the gameplay [`MainWorldCamera`](crate::gui::map_camera::MainWorldCamera): Core2d
-/// tile-debug instancing runs only on this view.
+/// Marker on the tactical map RTT [`MainWorldCamera`](crate::gui::tactical::map_camera::MainWorldCamera).
+/// Gates Core2d overlay raster (fire particles, water particles, optional tile-debug).
+/// Name is historical — production fire/water draw requires this host on the RTT camera.
 #[derive(Component, Clone, Copy, Default, Reflect, bevy::render::extract_component::ExtractComponent)]
 #[reflect(Component)]
 pub struct TileDebugRenderHost;

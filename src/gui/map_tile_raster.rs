@@ -227,7 +227,7 @@ pub fn apply_shared_fire_heat_to_rgba_subregion(
                 continue;
             }
             let base = [data[i], data[i + 1], data[i + 2], data[i + 3]];
-            let tint = (heat * boost * 0.42).min(0.72);
+            let tint = (heat * boost * 0.85).min(0.92);
             let out = blend_fire_overlay(base, tint, 0.0);
             data[i..i + 4].copy_from_slice(&out);
         }
@@ -261,7 +261,7 @@ pub fn apply_cell_fire_heat_to_rgba_subregion(
                 continue;
             }
             let base = [data[i], data[i + 1], data[i + 2], data[i + 3]];
-            let tint = (heat * boost * 0.42).min(0.72);
+            let tint = (heat * boost * 0.85).min(0.92);
             let out = blend_fire_overlay(base, tint, 0.0);
             data[i..i + 4].copy_from_slice(&out);
         }

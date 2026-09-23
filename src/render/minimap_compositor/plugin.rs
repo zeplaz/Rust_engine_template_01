@@ -19,7 +19,7 @@ use super::render_target::{
     MinimapGpuResizeQueue, MinimapRenderTargetBindBarrier, MinimapRenderTargetRegistry,
 };
 use super::diagnostics::MinimapGpuCompositorDiagnostics;
-use super::pass::MinimapCompositorState;
+use super::state::MinimapCompositorState;
 use crate::dev::runtime_witness::minimap::{
     write_minimap_compositor_live_proof_system, MinimapCompositorLiveProofState,
 };

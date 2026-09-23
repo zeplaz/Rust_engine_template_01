@@ -18,9 +18,19 @@
 //! ## Biome brush (M3-S03)
 //! Sets [`TerrainType`] directly — **no** [`classify_biome`](crate::terrain::biome::classify_biome); manual paint only.
 
-use std::collections::HashSet;
-use std::path::{Path, PathBuf};
-use std::sync::Arc;
+mod brush;
+mod road_markers;
+mod transport_io;
+
+pub use brush::{MapEditorBrushShape, MapEditorTerrainPaint, MapEditorTool, MapEditorToolKind};
+pub use road_markers::{
+    MapEditorRoadDragState, MapEditorRoadMarkerV1, MapEditorRoadPlacementSeq,
+    MapEditorRoadUndoRequest, MapEditorRoadUndoStack, RoadAuthoringGhostPreview, RoadMarkerUndoFrame,
+};
+pub use transport_io::{
+    MapEditorBakeTransportRequest, MapEditorLoadDevTransportRequest, MapEditorLoadHybridWorldDevRequest,
+    MapEditorMapSnapshotIoRequest, MapEditorSaveDevTransportRequest, MapEditorSaveHybridWorldDevRequest,
+};
 
 use bevy::math::IVec2;
 use bevy::prelude::*;
@@ -34,7 +44,7 @@ use crate::engine::{AppState, BaseState, InGameEditorState, MainMenuState, World
 use crate::gui::std_floating;
 use crate::gui::ui_gates::map_editor_chrome_active;
 use crate::gui::editor::editor_world_commit_bridge::{
-    write_editor_world_grid_commit, EditorTileEditCommitted, EditorTileEditKind,
+    EditorTileEditCommitted, EditorTileEditKind,
 };
 use crate::gui::editor::scenario_script_panel::{
     scenario_editor_tools_entry_window, scenario_script_panel_system,
@@ -45,383 +55,63 @@ use crate::gui::style::{
     widget_scroll_both, widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette, VertSpace,
 };
 use crate::systems::terrain::TerrainRegistriesHandles;
-use crate::terrain::editor::map_snapshot::{
-    load_map_snapshot_bundle_from_ron, MapSnapshotCellV2, MapSnapshotV2,
-    MAP_SNAPSHOT_SCHEMA_VERSION_V2,
-};
-use crate::terrain::family::{TerrainFamilyId, TerrainFamilyRegistry, DEFAULT_TERRAIN_FAMILY_ID};
-use crate::terrain::generation::polygon_world_semantics::MacroStrategicKind;
 use crate::terrain::generation::world_generator_enhanced::{
-    despawn_generated_world_entities, Height, Moisture, Temperature, TerrainType, TileMarker,
-    TileRegionIndex, WorldGenParams, WorldMarker,
-};
-use crate::terrain::generation::brush_tile_inclusive_bounds;
-use crate::io::snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0};
-use crate::strategic::{
-    apply_corridor_book_from_transport_snapshot, transport_construction_records_from_book,
-    CorridorConstructionBook,
-};
-use crate::systems::transport::{
-    bake_snapshot_from_ordered_markers_with_world_positions, hydrate_transport_from_snapshot_text,
-    hydrate_transport_from_snapshot, transport_network_snapshot_from_world_with_construction, transport_network_snapshot_save_ron_path,
-    transport_network_snapshot_to_ron_string,
-    LoadTransportNetworkSnapshotFromDisk, TransportEdgeDirectory, TransportFieldStore,
-    TransportLastHydratedSnapshot, TransportNetworkSnapshot, TransportTopology,
+    Height, TerrainType, TileMarker, WorldGenParams, WorldMarker,
 };
 use crate::terrain::material::{MaterialId, MaterialRegistry};
 
-/// Request: build **W1** transport topology from current [`MapEditorRoadMarkerV1`] entities.
-#[derive(Message)]
-pub struct MapEditorBakeTransportRequest;
-
-/// **G4** dev: write `TransportNetworkSnapshot` JSON under `assets/saves/` (crate root at compile time).
-#[derive(Message)]
-pub struct MapEditorSaveDevTransportRequest;
-
-/// **G4** dev: load same path via [`LoadTransportNetworkSnapshotFromDisk`].
-#[derive(Message)]
-pub struct MapEditorLoadDevTransportRequest;
-
-/// **M5 / wave S** stub: write hybrid-shaped dev snapshot (JSON header line + transport JSON body).
-#[derive(Message)]
-pub struct MapEditorSaveHybridWorldDevRequest;
-
-/// Load transport body from [`dev_hybrid_world_save_path`] after validating header.
-#[derive(Message)]
-pub struct MapEditorLoadHybridWorldDevRequest;
-
-/// **M5:** save or load terrain grid snapshot at `assets/saves/maps/last.ron`.
-#[derive(Message, Clone, Copy)]
-pub enum MapEditorMapSnapshotIoRequest {
-    Save,
-    Load,
-}
-
-/// **R9:** undo last road stroke (stack captured **before** each mouse-down on the minimap).
-#[derive(Message)]
-pub struct MapEditorRoadUndoRequest;
-
-fn dev_transport_network_save_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/dev_transport_network.ron")
-}
-
-fn dev_hybrid_world_save_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/dev_world_hybrid_v0.sav")
-}
-
-fn dev_map_snapshot_path() -> PathBuf {
-    Path::new(env!("CARGO_MANIFEST_DIR")).join("assets/saves/maps/last.ron")
-}
-
-/// Live **preview** polyline from markers (R9 ghost) — not hydrated until **Bake**.
-#[derive(Resource, Clone, Debug, Default)]
-pub struct RoadAuthoringGhostPreview {
-    pub snapshot: Option<TransportNetworkSnapshot>,
-}
-
-/// One undo frame: full marker set **before** a placement action.
-#[derive(Clone, Debug, Default)]
-pub struct RoadMarkerUndoFrame {
-    pub entries: Vec<(u32, u32, u32, Vec3)>,
-}
-
-impl RoadMarkerUndoFrame {
-    fn capture(
-        q: &Query<(&MapEditorRoadMarkerV1, &Transform), Without<TileMarker>>,
-    ) -> Self {
-        let mut rows: Vec<_> = q
-            .iter()
-            .map(|(m, t)| (m.placement_seq, m.tile_x, m.tile_z, t.translation))
-            .collect();
-        rows.sort_by_key(|(seq, _, _, _)| *seq);
-        Self {
-            entries: rows
-                .into_iter()
-                .map(|(seq, tx, tz, pos)| (seq, tx, tz, pos))
-                .collect(),
-        }
-    }
-}
-
-#[derive(Resource, Debug)]
-pub struct MapEditorRoadUndoStack {
-    pub frames: Vec<RoadMarkerUndoFrame>,
-    pub max_frames: usize,
-}
-
-impl Default for MapEditorRoadUndoStack {
-    fn default() -> Self {
-        Self {
-            frames: Vec::new(),
-            max_frames: 50,
-        }
-    }
-}
-
-impl MapEditorRoadUndoStack {
-    fn push_frame(&mut self, frame: RoadMarkerUndoFrame) {
-        while self.frames.len() >= self.max_frames {
-            self.frames.remove(0);
-        }
-        self.frames.push(frame);
-    }
-}
-
-/// Monotonic **click order** for the current editor session (reset when entering editor).
-/// Drives bake polyline order — **R9**; see `r9_authoring_bake_order_steps_v1.md`.
-#[derive(Resource, Default, Debug)]
-pub struct MapEditorRoadPlacementSeq {
-    pub next: u32,
-}
-
-/// Tile-aligned **road placeholder** for map editor M4. Does not replace `entities::structure` `Road` stubs;
-/// `placement_seq` is **authoring order** for [`bake_snapshot_from_ordered_tile_markers`] (not lexicographic).
-#[derive(Component, Clone, Copy, Debug)]
-pub struct MapEditorRoadMarkerV1 {
-    pub tile_x: u32,
-    pub tile_z: u32,
-    pub placement_seq: u32,
-}
-
-fn height_at_tile(
-    tiles: &Query<
-        (&Transform, &Height),
-        (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
-    >,
-    tx: u32,
-    tz: u32,
-) -> f32 {
-    for (tf, h) in tiles.iter() {
-        if tf.translation.x.round() as u32 == tx && tf.translation.z.round() as u32 == tz {
-            return h.0;
-        }
-    }
-    0.0
-}
-
-fn despawn_road_markers_at(
-    commands: &mut Commands,
-    road_q: &Query<(Entity, &MapEditorRoadMarkerV1)>,
-    tx: u32,
-    tz: u32,
-) {
-    let victims: Vec<Entity> = road_q
-        .iter()
-        .filter(|(_, m)| m.tile_x == tx && m.tile_z == tz)
-        .map(|(e, _)| e)
-        .collect();
-    for e in victims {
-        commands.entity(e).despawn();
-    }
-}
-
-fn place_road_marker(
-    commands: &mut Commands,
-    world_roots: &Query<Entity, With<WorldMarker>>,
-    road_q: &Query<(Entity, &MapEditorRoadMarkerV1)>,
-    placement: &mut MapEditorRoadPlacementSeq,
-    tx: u32,
-    tz: u32,
-    height_normalized: f32,
-) {
-    let Ok(world_root) = world_roots.single() else {
-        warn!("Map editor road: expected exactly one WorldMarker");
-        return;
-    };
-    despawn_road_markers_at(commands, road_q, tx, tz);
-    let seq = placement.next;
-    placement.next = placement.next.saturating_add(1);
-    let y = height_normalized * HEIGHT_WORLD_SCALE + 0.25;
-    commands.entity(world_root).with_children(|parent| {
-        parent.spawn((
-            MapEditorRoadMarkerV1 {
-                tile_x: tx,
-                tile_z: tz,
-                placement_seq: seq,
-            },
-            Transform::from_translation(Vec3::new(tx as f32, y, tz as f32)),
-            Name::new(format!("Road marker v1 ({tx},{tz}) seq={seq}")),
-        ));
-    });
-}
+use brush::{
+    bresenham_tile_line, emit_editor_tile_commit_for_brush, sync_tool_to_substate,
+    terrain_family_combo, tile_in_brush,
+};
+use road_markers::{
+    height_at_tile, map_editor_road_undo, place_road_marker, road_authoring_ghost_refresh,
+};
+use transport_io::{
+    dev_hybrid_world_save_path, dev_map_snapshot_path, dev_transport_network_save_path,
+    map_editor_bake_transport, map_editor_dev_load_hybrid_world, map_editor_dev_load_transport,
+    map_editor_dev_save_hybrid_world, map_editor_dev_save_transport, map_editor_map_snapshot_io,
+};
 
 /// Vertical exaggeration in world units; must stay in sync with world generator tile spawn.
 pub const HEIGHT_WORLD_SCALE: f32 = 20.0;
 
-/// Terrain brush footprint in the XZ tile plane (column = x, row = z).
-#[derive(Clone, Copy, PartialEq, Eq, Default, Debug)]
-pub enum MapEditorBrushShape {
-    #[default]
-    Disk,
-    Square,
-    Diamond,
-}
-
-impl MapEditorBrushShape {
-    const ALL: [Self; 3] = [Self::Disk, Self::Square, Self::Diamond];
-
-    fn label(self) -> &'static str {
-        match self {
-            Self::Disk => "Disk",
-            Self::Square => "Square",
-            Self::Diamond => "Diamond",
-        }
-    }
-}
-
-#[inline]
-fn tile_in_brush(
-    shape: MapEditorBrushShape,
-    cx: f32,
-    cy: f32,
-    tx: f32,
-    tz: f32,
-    r: f32,
-) -> bool {
-    let dx = tx - cx;
-    let dz = tz - cy;
-    match shape {
-        MapEditorBrushShape::Disk => dx * dx + dz * dz <= r * r,
-        MapEditorBrushShape::Square => dx.abs() <= r && dz.abs() <= r,
-        MapEditorBrushShape::Diamond => dx.abs() + dz.abs() <= r,
-    }
-}
-
-/// Raster-ordered grid cells from `(x0,y0)` to `(x1,y1)` inclusive (tile column, tile row).
-fn bresenham_tile_line(x0: u32, y0: u32, x1: u32, y1: u32) -> Vec<(u32, u32)> {
-    let mut out = Vec::new();
-    let xa = x0 as i32;
-    let ya = y0 as i32;
-    let xb = x1 as i32;
-    let yb = y1 as i32;
-    let dx = (xb - xa).abs();
-    let dy = -(yb - ya).abs();
-    let sx = if xa < xb { 1 } else { -1 };
-    let sy = if ya < yb { 1 } else { -1 };
-    let mut err = dx + dy;
-    let mut x = xa;
-    let mut y = ya;
-    loop {
-        if x >= 0 && y >= 0 {
-            out.push((x as u32, y as u32));
-        }
-        if x == xb && y == yb {
-            break;
-        }
-        let e2 = 2 * err;
-        if e2 >= dy {
-            err += dy;
-            x += sx;
-        }
-        if e2 <= dx {
-            err += dx;
-            y += sy;
-        }
-    }
-    out
-}
-
-/// Terrain tool sub-mode: height sculpt vs biome repaint.
-#[derive(Clone, Copy, PartialEq, Eq, Default, Debug)]
-pub enum MapEditorTerrainPaint {
-    #[default]
-    Height,
-    Biome,
-}
-
-/// Brush / tool kind for palettes; kept in sync with [`InGameEditorState`].
-#[derive(Clone, Copy, PartialEq, Eq, Default, Debug)]
-pub enum MapEditorToolKind {
-    #[default]
-    Select,
-    Terrain,
-    Road,
-    /// Footprint placement — not yet implemented (see palette copy).
-    Building,
-    /// Curves / tiles distinct from roads — not yet implemented.
-    Rail,
-}
-
-impl MapEditorToolKind {
-    fn to_in_game(self) -> InGameEditorState {
-        match self {
-            MapEditorToolKind::Select => InGameEditorState::Select,
-            MapEditorToolKind::Terrain => InGameEditorState::Terrain,
-            MapEditorToolKind::Road => InGameEditorState::Road,
-            MapEditorToolKind::Building => InGameEditorState::Create,
-            MapEditorToolKind::Rail => InGameEditorState::Rail,
-        }
-    }
-
-    const ALL: [Self; 5] = [
-        Self::Select,
-        Self::Terrain,
-        Self::Road,
-        Self::Building,
-        Self::Rail,
-    ];
-
-    fn label(self) -> &'static str {
-        match self {
-            MapEditorToolKind::Select => "Select",
-            MapEditorToolKind::Terrain => "Terrain",
-            MapEditorToolKind::Road => "Road",
-            MapEditorToolKind::Building => "Building (stub)",
-            MapEditorToolKind::Rail => "Rail (stub)",
-        }
-    }
-}
-
-#[derive(Resource, Clone)]
-pub struct MapEditorTool {
-    pub kind: MapEditorToolKind,
-    pub brush_radius: f32,
-    pub brush_shape: MapEditorBrushShape,
-    pub terrain_paint: MapEditorTerrainPaint,
-    /// Biome family (manual override only) — dense id into [`TerrainFamilyRegistry`].
-    pub paint_biome: TerrainFamilyId,
-}
-
-impl Default for MapEditorTool {
-    fn default() -> Self {
-        Self {
-            kind: MapEditorToolKind::default(),
-            brush_radius: 3.0,
-            brush_shape: MapEditorBrushShape::default(),
-            terrain_paint: MapEditorTerrainPaint::default(),
-            paint_biome: DEFAULT_TERRAIN_FAMILY_ID,
-        }
-    }
-}
-
-fn sync_tool_to_substate(tool: &MapEditorTool, next_sub: &mut NextState<InGameEditorState>) {
-    NextState::set_if_neq(next_sub, tool.kind.to_in_game());
-}
-
-#[inline]
-fn emit_editor_tile_commit_for_brush(
-    edit_commits: &mut MessageWriter<EditorTileEditCommitted>,
-    params: &WorldGenParams,
-    cx: u32,
-    cy: u32,
-    radius: f32,
-    kind: EditorTileEditKind,
+fn apply_terrain_brush(
+    tool: &MapEditorTool,
+    center_x: u32,
+    center_y: u32,
+    tiles: &mut Query<
+        (&mut Transform, &mut Height, &mut TerrainType),
+        (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
+    >,
+    height_delta_opt: Option<f32>,
 ) {
-    if params.width == 0 || params.height == 0 {
-        return;
+    let r = tool.brush_radius.max(1.0);
+    let cx = center_x as f32;
+    let cy = center_y as f32;
+
+    for (mut tf, mut height, mut terrain) in tiles.iter_mut() {
+        let tx = tf.translation.x;
+        let tz = tf.translation.z;
+        if !tile_in_brush(tool.brush_shape, cx, cy, tx, tz, r) {
+            continue;
+        }
+        match tool.kind {
+            MapEditorToolKind::Terrain => match tool.terrain_paint {
+                MapEditorTerrainPaint::Height => {
+                    if let Some(d) = height_delta_opt {
+                        let v = (height.0 + d).clamp(0.0, 1.0);
+                        height.0 = v;
+                        tf.translation.y = v * HEIGHT_WORLD_SCALE;
+                    }
+                }
+                MapEditorTerrainPaint::Biome => {
+                    terrain.0 = tool.paint_biome;
+                }
+            },
+            _ => {}
+        }
     }
-    let (mut min, mut max) = brush_tile_inclusive_bounds(cx, cy, radius);
-    let mx = params.width - 1;
-    let mz = params.height - 1;
-    min.x = min.x.min(mx);
-    min.y = min.y.min(mz);
-    max.x = max.x.min(mx);
-    max.y = max.y.min(mz);
-    edit_commits.write(EditorTileEditCommitted {
-        min_tile: min,
-        max_tile: max,
-        kind,
-    });
 }
 
 fn on_enter_editor(
@@ -447,12 +137,6 @@ fn on_enter_editor(
     *road_drag = MapEditorRoadDragState::default();
     minimap_dirty.bump();
     NextState::set_if_neq(&mut *next_sub, InGameEditorState::Select);
-}
-
-/// While primary is held, extends polyline road placement between hovered minimap tiles.
-#[derive(Resource, Default)]
-pub struct MapEditorRoadDragState {
-    pub last_hover_tile: Option<(u32, u32)>,
 }
 
 /// Last-hovered tile from the minimap (`None` = off-map or not over minimap).
@@ -641,57 +325,6 @@ fn map_editor_raster_minimap(
         fam_opt,
     );
     *last_applied_revision = Some(rev);
-}
-
-fn terrain_family_combo(ui: &mut egui::Ui, current: &mut TerrainFamilyId) {
-    let reg = crate::terrain::default_terrain_families();
-    let sel = reg.def(*current).map(|d| d.name.as_str()).unwrap_or("?");
-    egui::ComboBox::from_id_salt("map_editor_biome_pick")
-        .selected_text(sel)
-        .show_ui(ui, |ui| {
-            for (i, def) in reg.families.iter().enumerate() {
-                let id = TerrainFamilyId(i as u16);
-                ui.selectable_value(current, id, def.name.as_str());
-            }
-        });
-}
-
-fn apply_terrain_brush(
-    tool: &MapEditorTool,
-    center_x: u32,
-    center_y: u32,
-    tiles: &mut Query<
-        (&mut Transform, &mut Height, &mut TerrainType),
-        (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
-    >,
-    height_delta_opt: Option<f32>,
-) {
-    let r = tool.brush_radius.max(1.0);
-    let cx = center_x as f32;
-    let cy = center_y as f32;
-
-    for (mut tf, mut height, mut terrain) in tiles.iter_mut() {
-        let tx = tf.translation.x;
-        let tz = tf.translation.z;
-        if !tile_in_brush(tool.brush_shape, cx, cy, tx, tz, r) {
-            continue;
-        }
-        match tool.kind {
-            MapEditorToolKind::Terrain => match tool.terrain_paint {
-                MapEditorTerrainPaint::Height => {
-                    if let Some(d) = height_delta_opt {
-                        let v = (height.0 + d).clamp(0.0, 1.0);
-                        height.0 = v;
-                        tf.translation.y = v * HEIGHT_WORLD_SCALE;
-                    }
-                }
-                MapEditorTerrainPaint::Biome => {
-                    terrain.0 = tool.paint_biome;
-                }
-            },
-            _ => {}
-        }
-    }
 }
 
 fn map_editor_minimap_window(
@@ -904,441 +537,6 @@ fn map_editor_minimap_window(
         });
 
     Ok(())
-}
-
-fn map_editor_bake_transport(
-    mut events: MessageReader<MapEditorBakeTransportRequest>,
-    markers: Query<(&MapEditorRoadMarkerV1, &Transform)>,
-    mut topology: ResMut<TransportTopology>,
-    mut fields: ResMut<TransportFieldStore>,
-    mut directory: ResMut<TransportEdgeDirectory>,
-    mut last_hydrated: ResMut<TransportLastHydratedSnapshot>,
-    params: Res<WorldGenParams>,
-    mut edit_commits: MessageWriter<EditorTileEditCommitted>,
-) {
-    for _ in events.read() {
-        let mut rows: Vec<(u32, u32, u32, Vec3)> = markers
-            .iter()
-            .map(|(m, t)| (m.placement_seq, m.tile_x, m.tile_z, t.translation))
-            .collect();
-        rows.sort_by_key(|(seq, _, _, _)| *seq);
-        let with_pos: Vec<(u32, u32, Vec3)> =
-            rows.into_iter().map(|(_, x, z, p)| (x, z, p)).collect();
-        let snap = bake_snapshot_from_ordered_markers_with_world_positions(&with_pos);
-        if snap.edges.is_empty() {
-            warn!("Bake transport: need ≥2 markers after removing consecutive duplicates on same tile.");
-            continue;
-        }
-        match hydrate_transport_from_snapshot(&mut topology, &mut fields, &mut directory, &snap) {
-            Ok(()) => {
-                last_hydrated.snapshot = Some(snap);
-                write_editor_world_grid_commit(
-                    &mut edit_commits,
-                    &params,
-                    EditorTileEditKind::TransportTopology,
-                );
-            }
-            Err(e) => warn!("Bake transport hydrate failed: {e:?}"),
-        }
-    }
-}
-
-fn map_editor_dev_save_transport(
-    mut events: MessageReader<MapEditorSaveDevTransportRequest>,
-    last: Res<TransportLastHydratedSnapshot>,
-    topology: Res<TransportTopology>,
-    directory: Res<TransportEdgeDirectory>,
-    book: Res<CorridorConstructionBook>,
-) {
-    for _ in events.read() {
-        let construction = transport_construction_records_from_book(&book, &topology);
-        let snap = transport_network_snapshot_from_world_with_construction(
-            &topology,
-            &directory,
-            construction,
-        )
-        .or_else(|| last.snapshot.clone());
-        let Some(snap) = snap else {
-            warn!("Save transport: bake or load a graph first (nothing to save).");
-            continue;
-        };
-        let path = dev_transport_network_save_path();
-        if let Some(parent) = path.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        match transport_network_snapshot_save_ron_path(&snap, &path) {
-            Ok(()) => info!("Saved transport R8 RON to {}", path.display()),
-            Err(e) => warn!("Save transport failed: {e:?}"),
-        }
-    }
-}
-
-fn map_editor_dev_load_transport(
-    mut events: MessageReader<MapEditorLoadDevTransportRequest>,
-    mut load_tx: MessageWriter<LoadTransportNetworkSnapshotFromDisk>,
-) {
-    for _ in events.read() {
-        let path = dev_transport_network_save_path();
-        let s: String = path.to_string_lossy().into_owned();
-        load_tx.write(LoadTransportNetworkSnapshotFromDisk {
-            path: Arc::from(s.into_boxed_str()),
-        });
-    }
-}
-
-fn road_authoring_ghost_refresh(
-    base: Res<State<BaseState>>,
-    tool: Res<MapEditorTool>,
-    markers: Query<(&MapEditorRoadMarkerV1, &Transform)>,
-    mut ghost: ResMut<RoadAuthoringGhostPreview>,
-) {
-    if base.get() != &BaseState::Editor || tool.kind != MapEditorToolKind::Road {
-        ghost.snapshot = None;
-        return;
-    }
-    let mut rows: Vec<(u32, u32, u32, Vec3)> = markers
-        .iter()
-        .map(|(m, t)| (m.placement_seq, m.tile_x, m.tile_z, t.translation))
-        .collect();
-    rows.sort_by_key(|(seq, _, _, _)| *seq);
-    let with_pos: Vec<(u32, u32, Vec3)> = rows.into_iter().map(|(_, x, z, p)| (x, z, p)).collect();
-    let snap = bake_snapshot_from_ordered_markers_with_world_positions(&with_pos);
-    ghost.snapshot = if snap.edges.is_empty() {
-        None
-    } else {
-        Some(snap)
-    };
-}
-
-fn map_editor_road_undo(
-    mut events: MessageReader<MapEditorRoadUndoRequest>,
-    mut commands: Commands,
-    world_roots: Query<Entity, With<WorldMarker>>,
-    road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
-    mut stack: ResMut<MapEditorRoadUndoStack>,
-    mut placement: ResMut<MapEditorRoadPlacementSeq>,
-) {
-    for _ in events.read() {
-        let Some(frame) = stack.frames.pop() else {
-            continue;
-        };
-        let Ok(world_root) = world_roots.single() else {
-            warn!("Map editor undo: expected exactly one WorldMarker");
-            continue;
-        };
-        let to_remove: Vec<Entity> = road_entities.iter().map(|(e, _)| e).collect();
-        for e in to_remove {
-            commands.entity(e).despawn();
-        }
-        for (seq, tx, tz, pos) in &frame.entries {
-            commands.entity(world_root).with_children(|parent| {
-                parent.spawn((
-                    MapEditorRoadMarkerV1 {
-                        tile_x: *tx,
-                        tile_z: *tz,
-                        placement_seq: *seq,
-                    },
-                    Transform::from_translation(*pos),
-                    Name::new(format!("Road marker v1 ({tx},{tz}) seq={seq}")),
-                ));
-            });
-        }
-        placement.next = frame
-            .entries
-            .iter()
-            .map(|(s, _, _, _)| *s)
-            .max()
-            .map(|m| m.saturating_add(1))
-            .unwrap_or(0);
-    }
-}
-
-fn map_editor_dev_save_hybrid_world(
-    mut events: MessageReader<MapEditorSaveHybridWorldDevRequest>,
-    last: Res<TransportLastHydratedSnapshot>,
-    topology: Res<TransportTopology>,
-    directory: Res<TransportEdgeDirectory>,
-    book: Res<CorridorConstructionBook>,
-) {
-    for _ in events.read() {
-        let construction = transport_construction_records_from_book(&book, &topology);
-        let snap = transport_network_snapshot_from_world_with_construction(
-            &topology,
-            &directory,
-            construction,
-        )
-        .or_else(|| last.snapshot.clone());
-        let Some(snap) = snap else {
-            warn!("Save hybrid world: bake or load a graph first (nothing to save).");
-            continue;
-        };
-        let path = dev_hybrid_world_save_path();
-        if let Some(parent) = path.parent() {
-            let _ = std::fs::create_dir_all(parent);
-        }
-        let ron = match transport_network_snapshot_to_ron_string(&snap) {
-            Ok(s) => s,
-            Err(e) => {
-                warn!("Save hybrid: RON error {e:?}");
-                continue;
-            }
-        };
-        match write_hybrid_world_snapshot_dev_v0(&path, ron.as_bytes()) {
-            Ok(()) => info!("Saved hybrid dev snapshot to {}", path.display()),
-            Err(e) => warn!("Save hybrid failed: {e:?}"),
-        }
-    }
-}
-
-fn map_editor_dev_load_hybrid_world(
-    mut events: MessageReader<MapEditorLoadHybridWorldDevRequest>,
-    mut topology: ResMut<TransportTopology>,
-    mut fields: ResMut<TransportFieldStore>,
-    mut directory: ResMut<TransportEdgeDirectory>,
-    mut last: ResMut<TransportLastHydratedSnapshot>,
-    mut book: ResMut<CorridorConstructionBook>,
-) {
-    for _ in events.read() {
-        let path = dev_hybrid_world_save_path();
-        let (header, body) = match read_hybrid_world_snapshot_dev_v0(&path) {
-            Ok(x) => x,
-            Err(e) => {
-                warn!("Load hybrid failed for {}: {e:?}", path.display());
-                continue;
-            }
-        };
-        let text = match std::str::from_utf8(&body) {
-            Ok(s) => s,
-            Err(e) => {
-                warn!("Load hybrid: body not UTF-8: {e:?}");
-                continue;
-            }
-        };
-        match hydrate_transport_from_snapshot_text(
-            topology.as_mut(),
-            fields.as_mut(),
-            directory.as_mut(),
-            text,
-        ) {
-            Ok(snap) => {
-                apply_corridor_book_from_transport_snapshot(
-                    book.as_mut(),
-                    directory.as_ref(),
-                    &snap,
-                );
-                last.snapshot = Some(snap);
-                info!(
-                    "Loaded hybrid dev transport ({} bytes, header v{})",
-                    header.transport_byte_len, header.format_version
-                );
-            }
-            Err(e) => warn!("Load hybrid hydrate failed: {e:?}"),
-        }
-    }
-}
-
-fn map_editor_map_snapshot_io(
-    mut events: MessageReader<MapEditorMapSnapshotIoRequest>,
-    mut commands: Commands,
-    mut params: ResMut<WorldGenParams>,
-    tiles: Query<(&Transform, &Height, &TerrainType), With<TileMarker>>,
-    roads: Query<&MapEditorRoadMarkerV1>,
-    fam_assets: Res<Assets<TerrainFamilyRegistry>>,
-    handles: Res<TerrainRegistriesHandles>,
-    mut road_placement: ResMut<MapEditorRoadPlacementSeq>,
-    mut road_undo: ResMut<MapEditorRoadUndoStack>,
-    mut ghost: ResMut<RoadAuthoringGhostPreview>,
-    world_q: Query<Entity, With<WorldMarker>>,
-    road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
-    mut edit_commits: MessageWriter<EditorTileEditCommitted>,
-) {
-    for req in events.read() {
-        match *req {
-            MapEditorMapSnapshotIoRequest::Save => {
-                let Some(reg) = fam_assets.get(&handles.terrain_families) else {
-                    warn!("Save map snapshot: terrain family registry not loaded.");
-                    continue;
-                };
-                let w = params.width;
-                let h = params.height;
-                if w == 0 || h == 0 {
-                    warn!("Save map snapshot: world dimensions are zero.");
-                    continue;
-                }
-                let mut grid: Vec<Option<(f32, TerrainFamilyId)>> = vec![None; (w * h) as usize];
-                for (tf, he, terr) in &tiles {
-                    let x = tf.translation.x.round() as i32;
-                    let z = tf.translation.z.round() as i32;
-                    if x < 0 || z < 0 {
-                        continue;
-                    }
-                    let x = x as u32;
-                    let z = z as u32;
-                    if x >= w || z >= h {
-                        continue;
-                    }
-                    let i = (z * w + x) as usize;
-                    grid[i] = Some((he.0, terr.0));
-                }
-                let mut road_tiles = HashSet::new();
-                for m in &roads {
-                    road_tiles.insert((m.tile_x, m.tile_z));
-                }
-                let mut cells = Vec::with_capacity((w * h) as usize);
-                for z in 0..h {
-                    for x in 0..w {
-                        let i = (z * w + x) as usize;
-                        let (height, tid) = grid[i].unwrap_or((0.0, DEFAULT_TERRAIN_FAMILY_ID));
-                        let terrain_family = reg
-                            .def(tid)
-                            .map(|d| d.name.clone())
-                            .unwrap_or_else(|| "Grassland".to_string());
-                        cells.push(MapSnapshotCellV2 {
-                            height,
-                            terrain_family,
-                        });
-                    }
-                }
-                let road_marker_tiles: Vec<[u32; 2]> = road_tiles
-                    .iter()
-                    .map(|(x, z)| [*x, *z])
-                    .collect();
-                let snap_v2 = MapSnapshotV2 {
-                    schema_version: MAP_SNAPSHOT_SCHEMA_VERSION_V2,
-                    width: w,
-                    height: h,
-                    cells,
-                    road_marker_tiles,
-                };
-                let path = dev_map_snapshot_path();
-                if let Some(parent) = path.parent() {
-                    let _ = std::fs::create_dir_all(parent);
-                }
-                match snap_v2.to_ron_string() {
-                    Ok(s) => match std::fs::write(&path, format!("{}\n", s.trim_end())) {
-                        Ok(()) => info!("Saved map snapshot to {}", path.display()),
-                        Err(e) => warn!("Save map snapshot failed: {e:?}"),
-                    },
-                    Err(e) => warn!("Save map snapshot RON: {e:?}"),
-                }
-            }
-            MapEditorMapSnapshotIoRequest::Load => {
-                let path = dev_map_snapshot_path();
-                let bytes = match std::fs::read(&path) {
-                    Ok(b) => b,
-                    Err(e) => {
-                        warn!("Load map snapshot: read {}: {e:?}", path.display());
-                        continue;
-                    }
-                };
-                let text = match std::str::from_utf8(&bytes) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        warn!("Load map snapshot: UTF-8: {e:?}");
-                        continue;
-                    }
-                };
-                let bundle = match load_map_snapshot_bundle_from_ron(text) {
-                    Ok(s) => s,
-                    Err(e) => {
-                        warn!("Load map snapshot: RON: {e}");
-                        continue;
-                    }
-                };
-                let snap = bundle.terrain;
-                if let Err(e) = snap.validate() {
-                    warn!("Load map snapshot: {e}");
-                    continue;
-                }
-                let Some(reg) = fam_assets.get(&handles.terrain_families) else {
-                    warn!("Load map snapshot: terrain family registry not loaded.");
-                    continue;
-                };
-                for (e, _) in road_entities.iter() {
-                    commands.entity(e).despawn();
-                }
-                despawn_generated_world_entities(&mut commands, &world_q);
-                params.width = snap.width;
-                params.height = snap.height;
-                *road_placement = MapEditorRoadPlacementSeq::default();
-                road_undo.frames.clear();
-                *ghost = RoadAuthoringGhostPreview::default();
-
-                let world_root = commands
-                    .spawn((
-                        WorldMarker,
-                        Transform::default(),
-                        GlobalTransform::default(),
-                        Name::new("Map snapshot world"),
-                    ))
-                    .id();
-
-                let w = snap.width;
-                let h = snap.height;
-                let mut idx = 0usize;
-                for z in 0..h {
-                    for x in 0..w {
-                        let cell = &snap.cells[idx];
-                        idx += 1;
-                        let tid = match reg.require_id(&cell.terrain_family) {
-                            Ok(id) => id,
-                            Err(_) => {
-                                warn!(
-                                    "Load map snapshot: unknown terrain family {:?}, using Grassland",
-                                    cell.terrain_family
-                                );
-                                DEFAULT_TERRAIN_FAMILY_ID
-                            }
-                        };
-                        let tile_e = commands
-                            .spawn((
-                                TileMarker,
-                                TileRegionIndex(0),
-                                Transform::from_translation(Vec3::new(
-                                    x as f32,
-                                    cell.height * HEIGHT_WORLD_SCALE,
-                                    z as f32,
-                                )),
-                                Height(cell.height),
-                                Moisture(0.5),
-                                Temperature(0.5),
-                                TerrainType(tid),
-                                MacroStrategicKind::default(),
-                                Name::new(format!("Tile ({x}, {z})")),
-                            ))
-                            .id();
-                        commands.entity(world_root).add_child(tile_e);
-                    }
-                }
-
-                for (x, z) in bundle.road_marker_tiles {
-                    let i = (z * h + x) as usize;
-                    let height = snap.cells.get(i).map(|c| c.height).unwrap_or(0.0);
-                    let seq = road_placement.next;
-                    road_placement.next = road_placement.next.saturating_add(1);
-                    let y = height * HEIGHT_WORLD_SCALE + 0.25;
-                    commands.entity(world_root).with_children(|parent| {
-                        parent.spawn((
-                            MapEditorRoadMarkerV1 {
-                                tile_x: x,
-                                tile_z: z,
-                                placement_seq: seq,
-                            },
-                            Transform::from_translation(Vec3::new(x as f32, y, z as f32)),
-                            Name::new(format!("Road marker v1 ({x},{z}) seq={seq}")),
-                        ));
-                    });
-                }
-
-                info!("Loaded map snapshot {}×{} from {}", w, h, path.display());
-                write_editor_world_grid_commit(
-                    &mut edit_commits,
-                    &params,
-                    EditorTileEditKind::MapSnapshotImport,
-                );
-            }
-        }
-    }
 }
 
 fn map_editor_palette_system(

@@ -1,0 +1,59 @@
+{
+  "schema": "repo_tidy_queue_v1",
+  "program_id": "PLAN-CLEANUP-v1",
+  "plan_doc": "src/dev/plan_cleanup_v1.md",
+  "updated": "2026-08-27",
+  "session_note": "Tidy drain CLOSED (CLN-MOD-002/003 + CONST-PATH landed). Phase 0 green. Godfile S4a/TWF/WR deferred. Feature ES-5-002 done — next ES-5-4 designer zoom then ES-5-3 mesh retire.",
+  "policy": "Classify A/B/C/D before delete. Prefer complete-or-migrate over destroy. No always-true lib witnesses.",
+  "items": [
+    {"id": "CLN-CHEAT-001", "status": "done"},
+    {"id": "CLN-ES8-SHIM-001", "status": "done"},
+    {"id": "CLN-ES0-FN-001", "status": "done"},
+    {"id": "CLN-CHEAT-SETTLE", "status": "done"},
+    {"id": "CLN-GUI-SHIM-001", "status": "done"},
+    {"id": "CLN-MOD-001", "status": "done", "note": "map_editor split"},
+    {"id": "CLN-SHIM-API-BATCH", "status": "done", "note": "61 shims deleted"},
+    {
+      "id": "CLN-WIT-001",
+      "status": "done",
+      "witness": "debug_runs/repo_tidy_cheat_audit_live.json",
+      "note": "High always-true fixed; remaining are include_str structural or legitimate Path absence / stub_pass-labeled site gates"
+    },
+    {
+      "id": "CLN-MOD-002",
+      "status": "done",
+      "note": "minimap_compositor: state.rs(157)+pass.rs(459)+plugin.rs(79)+tests.rs(569); mod.rs 614→47 LOC re-exports only; cargo check 0 errors"
+    },
+    {
+      "id": "CLN-MOD-003",
+      "status": "done",
+      "owner": "coder",
+      "witness": "debug_runs/repo_tidy_cln_mod_003_live.json",
+      "note": "Extracted chrome.rs (layout+gates+open/dismiss ~260) + plugin.rs (SystemSets+WorldPreviewPlugin ~227). preview_render_contract + render_raster already siblings. mod.rs ~195 barrel+re-exports. Zero behavior change. validate_cargo_report 0 errors."
+    },
+    {
+      "id": "CLN-CONST-PATH-001",
+      "status": "done",
+      "owner": "coder",
+      "witness": "debug_runs/repo_tidy_cheat_audit_live.json#construction_stage_pass",
+      "note": "Path::exists→include_str symbols + live Res/proof; shared_ghost_valid+terrain_conform honest false (stubs); gui/build absence Path::exists-negative only. Cargo 0 errors."
+    },
+    {
+      "id": "CLN-P0-T6",
+      "status": "done",
+      "witness": "debug_runs/cln_p0_t6_001_live.json",
+      "note": "stale target_* dirs absent"
+    },
+    {
+      "id": "CLN-PHASE0-GATE",
+      "status": "done",
+      "note": "All CLN-P0-R1/S8/P10/R4/R8/T4/T7/T6 live JSON green"
+    }
+  ],
+  "deferred": [
+    {"id": "S4a", "note": "simulation_shell_phase2.rs ~2893 LOC — needs GU-MMS sign-off"},
+    {"id": "TWF-split", "note": "tile_world_fallback.rs ~1895 LOC — coordinate GPU terrain"},
+    {"id": "WR-split", "note": "world_representation.rs ~1309 LOC — Stage5 spine lock"}
+  ],
+  "next_feature": "ES-5-4 designer zoom band → ES-5-3 mesh precip delete → cpu_weather_precip_retired"
+}

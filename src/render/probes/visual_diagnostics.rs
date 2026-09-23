@@ -21,7 +21,7 @@ use crate::gui::{
     SimulationMapViewportTrace,
 };
 use crate::render::extraction::RenderProjectionGraph;
-use crate::render::frame_perf::{FramePerf, FrameWallClock};
+use crate::render::probes::frame_perf::{FramePerf, FrameWallClock};
 use crate::render::{
     DebugRenderTraceConfig, GpuRepresentationMetrics, ResolvedViewports, SharedOverlayFieldBuffers,
     Stage5ReadinessProfile, TileWorldFallbackRasterDirty, ViewportPresentationMismatch,

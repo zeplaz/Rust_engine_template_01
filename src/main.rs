@@ -78,6 +78,8 @@ fn main() {
             s7p_logistics_seed_ticks: 0,
             minimap_m2_overlay_seeded: false,
             post_enter_sim_frame: 0,
+            last_fire_rearm_frame: 0,
+            harness_fire_debug_fallback: true,
         });
     }
     app.add_plugins(EnginePlugin).run();

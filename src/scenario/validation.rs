@@ -117,6 +117,27 @@ pub fn validate_scenario(file: &ScenarioFileV1) -> ScenarioValidationReport {
                 );
             }
         }
+        if let ScenarioStep::IgniteAt { cause_id, .. } = step {
+            if cause_id.trim().is_empty() {
+                r.push(
+                    ScenarioValidationSeverity::Error,
+                    format!("IgniteAt at step {si} has empty cause_id"),
+                );
+            }
+        }
+        if let ScenarioStep::TriggerEffect { effect_id } = step {
+            if effect_id.trim().is_empty() {
+                r.push(
+                    ScenarioValidationSeverity::Error,
+                    format!("TriggerEffect at step {si} has empty effect_id"),
+                );
+            } else if super::trigger_registry::load_trigger_spec(effect_id).is_err() {
+                r.push(
+                    ScenarioValidationSeverity::Error,
+                    format!("TriggerEffect at step {si}: unknown effect_id `{effect_id}`"),
+                );
+            }
+        }
     }
 
     r

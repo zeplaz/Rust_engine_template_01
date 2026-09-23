@@ -1,7 +1,7 @@
 //! RENDER-DIR-RESTRUCTURE-v1 — proof/witness/CI-matrix surfaces (mechanical move from `render/`).
 //! `render/mod.rs` keeps path-preserving shim modules at the old `crate::render::stage5_*` /
-//! `crate::render::hanabi_witness` / `crate::render::visual_agreement` /
-//! `crate::render::spine_governance_matrix` / `crate::render::phase_f_lod_proof` /
+//! `crate::render::witness::hanabi_witness` / `crate::render::witness::visual_agreement` /
+//! `crate::render::spine_governance_matrix` / `crate::render::witness::phase_f_lod_proof` /
 //! `crate::render::vt_*` locations so existing call sites keep resolving.
 
 pub mod stage5_closure_witnesses;

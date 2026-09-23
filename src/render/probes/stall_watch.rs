@@ -16,7 +16,7 @@ use bevy::prelude::*;
 use bevy_egui::EguiPostUpdateSet;
 
 use crate::render::evaluate_app_stage5_readiness;
-use crate::render::frame_perf::{
+use crate::render::probes::frame_perf::{
     frame_perf_verbose, reset_frame_perf_counters, stamp_frame_wall_last,
 };
 
@@ -328,7 +328,7 @@ pub fn stall_after_vt_ci(mut watch: ResMut<FrameStallWatch>) {
     watch.checkpoint("after_vt_ci");
 }
 
-/// Early PostUpdate span (not domain merge — see [`crate::render::domain_projection_frame::stall_checkpoint_after_domain_merge`]).
+/// Early PostUpdate span (not domain merge — see [`crate::render::extraction::domain_projection_frame::stall_checkpoint_after_domain_merge`]).
 pub fn stall_postupdate_head(mut watch: ResMut<FrameStallWatch>) {
     watch.checkpoint("postupdate_head");
 }
@@ -414,7 +414,7 @@ impl Plugin for StallWatchPlugin {
             .add_systems(PostUpdate, stall_postupdate_head.after(stall_postupdate_begin))
             .add_systems(
                 PostUpdate,
-                stall_after_vt_ci.after(crate::render::vt_ci_matrix::record_vt_ci_matrix_live),
+                stall_after_vt_ci.after(crate::render::witness::vt_ci_matrix::record_vt_ci_matrix_live),
             )
             .add_systems(
                 PostUpdate,
@@ -461,7 +461,7 @@ impl Plugin for StallWatchPlugin {
             .add_systems(
                 Update,
                 stall_checkpoint_after_fire_build
-                    .after(crate::render::visual_snapshot_commit::commit_fire_visual_snapshot)
+                    .after(crate::render::extraction::visual_snapshot_commit::commit_fire_visual_snapshot)
                     .after(stall_checkpoint_after_view_sync)
                     .before(stall_checkpoint_before_world_repr),
             )

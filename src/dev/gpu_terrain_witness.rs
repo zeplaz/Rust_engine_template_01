@@ -13,10 +13,10 @@ pub fn gpu_p0c_prime_default_authority_ok() -> bool {
     }
     let auth = resolve_sim_default_authority();
     if cfg!(debug_assertions) {
-        auth == TerrainRenderAuthority::CpuFallback
-            || auth == TerrainRenderAuthority::GpuInstancedAtlas
+        auth == TerrainRenderAuthority::CpuRaster
+            || auth == TerrainRenderAuthority::GpuBake
     } else {
-        auth == TerrainRenderAuthority::GpuInstancedAtlas
+        auth == TerrainRenderAuthority::GpuBake
     }
 }
 
@@ -27,15 +27,15 @@ pub fn gpu_p0c_prime_release_default_is_gpu() -> bool {
     if cfg!(debug_assertions) {
         return true;
     }
-    resolve_sim_default_authority() == TerrainRenderAuthority::GpuInstancedAtlas
+    resolve_sim_default_authority() == TerrainRenderAuthority::GpuBake
 }
 
 #[must_use]
 pub fn gpu_p0c_prime_cpu_raster_metric_gated() -> bool {
     use crate::render::TerrainRenderAuthority;
 
-    !TerrainRenderAuthority::GpuInstancedAtlas.uses_cpu_fallback_raster()
-        && TerrainRenderAuthority::GpuInstancedAtlas.uses_gpu_sprite_display()
+    !TerrainRenderAuthority::GpuBake.uses_cpu_raster()
+        && TerrainRenderAuthority::GpuBake.uses_gpu_sprite_display()
 }
 
 #[must_use]
@@ -43,22 +43,22 @@ pub fn gpu_p0c_prime_env_rollback_ok() -> bool {
     use crate::render::{resolve_sim_default_authority, TerrainRenderAuthority};
 
     std::env::set_var("TERRAIN_CPU_FALLBACK", "1");
-    let ok = resolve_sim_default_authority() == TerrainRenderAuthority::CpuFallback;
+    let ok = resolve_sim_default_authority() == TerrainRenderAuthority::CpuRaster;
     std::env::remove_var("TERRAIN_CPU_FALLBACK");
     ok
 }
 
-/// Honest contract: the minimap compositor's terrain input is the CPU-rastered world image
-/// (`TileWorldFallbackState`) regardless of `TerrainRenderAuthority` — `TerrainMaterialAtlasGpu`
-/// is a material-swatch palette, never a valid world-texture input, so
-/// `TerrainRenderAuthority::GpuInstancedAtlas` does **not** yet imply a distinct GPU terrain
-/// source for the minimap. This stays `"world_raster"` until a real GPU world-terrain bake
-/// exists (deferred, see `src/dev/plan_gpu_terrain_production_exec_001_v1.md`, F2).
+/// Honest contract: default-off minimap terrain input is the CPU-rastered world image
+/// (`TileWorldFallbackState`) → label `world_raster`. RPC-1-005 adds flagged
+/// `gpu_bake` when `TERRAIN_GPU_BAKE_SPIKE` consumers bind the bake Image
+/// (see `MinimapTerrainSourceBind` / `plan_rpc1_gpu_terrain_ab_v1.md`).
 #[must_use]
 pub fn gpu_p0e_minimap_terrain_source_ok() -> bool {
-    use crate::render::minimap_compositor::minimap_terrain_source_label;
+    use crate::render::minimap_compositor::{minimap_terrain_source_label, MinimapTerrainSourceBind};
 
-    minimap_terrain_source_label(true) == "world_raster" && minimap_terrain_source_label(false) == "none"
+    minimap_terrain_source_label(MinimapTerrainSourceBind::WorldRaster) == "world_raster"
+        && minimap_terrain_source_label(MinimapTerrainSourceBind::None) == "none"
+        && minimap_terrain_source_label(MinimapTerrainSourceBind::GpuBake) == "gpu_bake"
 }
 
 #[must_use]

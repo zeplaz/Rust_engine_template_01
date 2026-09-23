@@ -15,13 +15,13 @@ pub struct WorldMapScale {
 impl Default for WorldMapScale {
     fn default() -> Self {
         Self {
-            meters_per_tile: 100.0,
+            meters_per_tile: crate::terrain::world_scale_contract::TILE_METERS_SYMBOLIC,
         }
     }
 }
 
 impl WorldMapScale {
-    pub const DEFAULT_METERS_PER_TILE: f32 = 100.0;
+    pub const DEFAULT_METERS_PER_TILE: f32 = crate::terrain::world_scale_contract::TILE_METERS_SYMBOLIC;
 
     #[must_use]
     pub fn extent_m(&self, tiles: u32) -> f32 {

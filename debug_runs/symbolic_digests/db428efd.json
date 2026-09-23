@@ -1,0 +1,21 @@
+{
+  "schema": "symbolic_build_digest_v1",
+  "digest_id": "db428efd",
+  "source": "cargo_check",
+  "status": "passed",
+  "compression_level": 3,
+  "summary": "orchestrator cache: 0 errors, 45 warnings",
+  "symcodes": [],
+  "trip_hits": [],
+  "touched_files": [],
+  "validation_report": {
+    "validator": "cargo",
+    "status": "passed",
+    "summary": "orchestrator cache: 0 errors, 45 warnings",
+    "error_count": 0,
+    "warning_count": 45
+  },
+  "human_notes_path": "debug_runs/symbolic_digests/db428efd.notes.md",
+  "program_id": "VSS-001",
+  "generated_at": "2026-08-28T04:24:15.155072+00:00"
+}

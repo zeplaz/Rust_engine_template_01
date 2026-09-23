@@ -3,7 +3,7 @@
 //! [`FireVisualGpuInstance`] is the packed **proxy row** (GPU storage layout); the canonical per-frame **truth** snapshot is
 //! [`FireVisualFrame`] (full instances + chunk heat). [`crate::render::extraction::RenderProjectionGraph`] carries the
 //! LOD-shaped fire view for GPU upload. [`SimFireEmitterVisualExtract`] mirrors **full** truth instance rows on the
-//! **main** world for legacy CPU/debug callers; the render world uploads [`crate::render::gpu_weather_fire_field::FireVisualGpuInstanceStorage`]
+//! **main** world for legacy CPU/debug callers; the render world uploads [`crate::render::pipelines::gpu_weather_fire_field::FireVisualGpuInstanceStorage`]
 //! from extracted [`crate::render::extraction::RenderProjectionGraph`].
 //!
 //! [`ClimateVisualAggregate`] is the **single** world mean over chunk weather + ecology for GPU / overlay
@@ -96,7 +96,7 @@ pub const FIRE_VISUAL_ACTIVE_HEAT_EPS: f32 = 0.02;
 
 /// Canonical **CPU** fire visual snapshot for the frame (full detail). Filled by
 /// [`crate::render::extraction::fire_visual_extract::build_fire_visual_frame_from_simulation`] from
-/// [`crate::render::fire_chunk_runtime::FireSimulationSnapshot`] (simulation is ECS-only in `extract_fire_simulation_snapshot`).
+/// [`crate::render::fx_spine::fire_chunk_runtime::FireSimulationSnapshot`] (simulation is ECS-only in `extract_fire_simulation_snapshot`).
 #[derive(Resource, Default, Debug, Clone)]
 pub struct FireVisualFrame {
     pub stamp: SimStepStamp,

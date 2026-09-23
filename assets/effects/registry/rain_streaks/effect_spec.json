@@ -1,0 +1,79 @@
+{
+  "schema_version": "effect_spec_v1",
+  "effect_id": "rain_streaks",
+  "display_name": "Rain Streaks (reference)",
+  "seed": 42003,
+  "batch_id": "vss_t4_reference_effects_v1",
+  "development_tier": "smoke",
+  "lane": "particle_instanced",
+  "sim_coupling": "precip_field",
+  "spawn_hook": "field_sample",
+  "spawn_hook_config": {
+    "field_sample": {
+      "field_id": "climate_precip",
+      "sample_uv": [0.5, 0.5],
+      "threshold": 0.15,
+      "spawn_density_scale": 1
+    }
+  },
+  "grid": {
+    "tile_units": 1,
+    "snap_to_grid": true,
+    "rotation_quarters": 0,
+    "anchor": "tile_center"
+  },
+  "emit": {
+    "duration_secs": 10,
+    "rate": 192,
+    "burst_count": 0,
+    "lifetime_secs": 1.8,
+    "prewarm_secs": 2
+  },
+  "lod_tiers": {
+    "macro": {
+      "enabled": true,
+      "max_instances": 16,
+      "rate_scale": 0.15,
+      "sprite_px_scale": 0.5
+    },
+    "strategic": {
+      "enabled": true,
+      "max_instances": 32,
+      "rate_scale": 0.35,
+      "sprite_px_scale": 0.75
+    },
+    "operational": {
+      "enabled": true,
+      "max_instances": 96,
+      "rate_scale": 0.7,
+      "sprite_px_scale": 1
+    },
+    "local_tactical": {
+      "enabled": true,
+      "max_instances": 192,
+      "rate_scale": 1,
+      "sprite_px_scale": 1
+    }
+  },
+  "visual": {
+    "source": "wgsl_pack",
+    "shader_pack": {
+      "draw": "assets/shaders/weather/weather_precip_draw.wgsl"
+    },
+    "blend": "alpha",
+    "sprite_px": 2,
+    "tint": [0.72, 0.78, 0.92, 0.65]
+  },
+  "preview": {
+    "frames": 120,
+    "camera_zoom_px_per_tile": 8,
+    "entry_path": "effect_sandbox",
+    "warmup_frames": 30,
+    "capture_resolution": [512, 512]
+  },
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "42003"
+  }
+}

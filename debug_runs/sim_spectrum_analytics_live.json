@@ -60,9 +60,9 @@
     "relative_path": "debug_runs/sim_spectrum_analytics_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "sim_spectrum_analytics",
-    "written_at_epoch_secs": 1783391190
+    "written_at_epoch_secs": 1787890429
   },
-  "disk_flushes": 244,
+  "disk_flushes": 23,
   "env": {
     "PERF_DISK": false,
     "SIM_ANALYTICS": false,
@@ -71,30 +71,34 @@
     "STALL": false,
     "flush_interval_secs": 5.0
   },
-  "frames_sampled": 1953,
+  "frames_sampled": 185,
   "jsonl_enabled": true,
-  "jsonl_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\perf_frames\\frames_1783391045.jsonl",
+  "jsonl_path": "C:\\dev\\github\\Rust_engine_template_01\\debug_runs\\perf_frames\\frames_1787890416.jsonl",
   "last_frame": {
     "bottleneck_triage": {
       "attribution_honesty": {
-        "gpu_gap_ms": 77.53469848632812,
-        "instrumented_cpu_ms": 5.995698928833008,
-        "max_perf_scope_ms": 0.09380000084638596,
+        "gpu_gap_ms": 73.94930267333984,
+        "instrumented_cpu_ms": 7.2170000076293945,
+        "max_perf_scope_ms": 1.9952999353408813,
         "post_render_gap_ms": 0.0,
-        "render_present_uninstrumented_ms": 77.53469848632812,
+        "render_present_uninstrumented_ms": 73.94930267333984,
         "stall_checkpoint_mismatch": false,
-        "wall_ms": 77.58399963378906
+        "wall_ms": 76.07799530029297
       },
       "fire_extract_skipped_this_frame": false,
       "interpretation": "Bevy Render schedule + GPU present on the render thread. Stall labels like `substage_fire_pre_extract` / `readiness` are wall gaps between main-thread checkpoints — trust `render_schedule.*`, `spine.*`, `update_attrib`, and `perf_scopes` for ECS CPU.",
       "primary_suspects": [
         {
           "label": "render_present_uninstrumented",
-          "ms": 77.53469848632812
+          "ms": 73.94930267333984
         },
         {
           "label": "substage_fire_pre_extract",
-          "ms": 64.48149871826172
+          "ms": 60.282100677490234
+        },
+        {
+          "label": "substage_fire_sync_active",
+          "ms": 57.86149978637695
         }
       ],
       "ux_spike_active": false
@@ -105,10 +109,10 @@
       "ghost_band_cells": 56
     },
     "cpu": {
-      "egui_ms": 0.48420000076293945,
-      "gpu_gap_ms": 77.53469848632812,
-      "post_egui_ms": 4.937100410461426,
-      "pre_egui_ms": 72.16270446777344
+      "egui_ms": 0.3555000126361847,
+      "gpu_gap_ms": 73.94930267333984,
+      "post_egui_ms": 5.579699993133545,
+      "pre_egui_ms": 68.69419860839844
     },
     "ecs_inventory": {
       "entities": {
@@ -122,9 +126,9 @@
       },
       "resources": {
         "fire_simulation": {
-          "chunk_heat_cells": 28,
-          "instances": 28,
-          "stamp_tick": 1920
+          "chunk_heat_cells": 6,
+          "instances": 5393,
+          "stamp_tick": 180
         },
         "logistics_graph": {
           "edges": 0,
@@ -143,32 +147,32 @@
       "bounded_path": true,
       "cadence_due": true,
       "cadence_skipped": false,
-      "chunk_heat_written": 28,
+      "chunk_heat_written": 6,
       "chunks_fast_path": 0,
-      "chunks_iterated": 28,
-      "chunks_profiled": 28,
-      "extract_ms": 0.09369999915361404,
+      "chunks_iterated": 6,
+      "chunks_profiled": 6,
+      "extract_ms": 1.9944000244140625,
       "fingerprint_skipped": false,
       "full_reconcile": false,
       "index_len": 100,
-      "instances_written": 28,
+      "instances_written": 5393,
       "interval_elapsed": false,
       "min_interval_secs": 3.0,
       "ran_full_scan": true,
       "residency_len": 225,
       "residency_scoped": true,
-      "runtime_chunks": 32,
+      "runtime_chunks": 8,
       "scan_set_len": 289,
       "spike_active": false,
       "tick_changed": true
     },
     "fire_runtime": {
-      "chunks_active": 32,
-      "chunks_total": 32,
-      "chunks_visual_active": 32
+      "chunks_active": 8,
+      "chunks_total": 8,
+      "chunks_visual_active": 8
     },
     "frame_budget": {
-      "avg_frame_ms": 76.73455047607422,
+      "avg_frame_ms": 76.65985107421875,
       "buckets": {
         "GPU texture registration": {
           "avg_ms": 0.0,
@@ -195,47 +199,47 @@
           "max_ms": 0.0
         },
         "Render extraction": {
-          "avg_ms": 0.1682596504688263,
+          "avg_ms": 0.2055889070034027,
           "events_last_frame": 0,
-          "last_ms": 0.20600000023841858,
-          "max_ms": 0.7220000624656677
+          "last_ms": 0.2460000067949295,
+          "max_ms": 0.2460000067949295
         },
         "Residency updates": {
-          "avg_ms": 0.022150104865431786,
+          "avg_ms": 0.01737034134566784,
           "events_last_frame": 0,
-          "last_ms": 0.021399999037384987,
-          "max_ms": 0.16359999775886536
+          "last_ms": 0.01360000018030405,
+          "max_ms": 0.027000000700354576
         },
         "Tile world raster": {
-          "avg_ms": 4.241687297821045,
+          "avg_ms": 4.274350643157959,
           "events_last_frame": 0,
-          "last_ms": 3.867000102996826,
-          "max_ms": 8.616700172424316
+          "last_ms": 3.8407998085021973,
+          "max_ms": 8.321999549865723
         }
       },
       "last_anomaly": {
-        "detail": "frame 79.3 ms (avg 76.7 ms)",
+        "detail": "frame 78.0 ms (avg 76.6 ms)",
         "kind": "FrameSpike"
       },
       "layout_invalidations_frame": 0,
-      "max_frame_ms": 233.33969116210938,
+      "max_frame_ms": 250.0,
       "stage6": {
         "active_residency_cells": 225,
         "atlas_pressure": 0.0,
-        "dirty_region_count": 1834,
+        "dirty_region_count": 48,
         "upload_bytes_frame": 0
       },
       "texture_rebuilds_frame": 0,
       "upload_bytes_frame": 0,
       "viewport_mutations_frame": 0
     },
-    "frame_index": 3906,
+    "frame_index": 370,
     "minimap_gpu": {
-      "commits_queued": 285,
+      "commits_queued": 17,
       "last_dispatch": "OverlayChanged",
-      "last_skip": "None",
-      "skips_no_change": 7,
-      "skips_no_terrain": 11,
+      "last_skip": "NoChange",
+      "skips_no_change": 12,
+      "skips_no_terrain": 6,
       "skips_rate_capped": 0,
       "skips_upload_failed": 0
     },
@@ -245,51 +249,51 @@
     "perf_scopes": [
       {
         "label": "upd_fire_sim_snapshot",
-        "ms": 0.09380000084638596
+        "ms": 1.9952999353408813
       },
       {
         "label": "upd_veg_extract_frame",
-        "ms": 0.03779999911785126
+        "ms": 0.04479999840259552
       },
       {
         "label": "upd_repr_proc_extract",
-        "ms": 0.01889999955892563
-      },
-      {
-        "label": "upd_fire_sync_overlay",
-        "ms": 0.005200000014156103
+        "ms": 0.01730000041425228
       },
       {
         "label": "upd_fire_sync_visible",
-        "ms": 0.004800000227987766
+        "ms": 0.0027000000700354576
+      },
+      {
+        "label": "upd_fire_sync_overlay",
+        "ms": 0.002199999988079071
       },
       {
         "label": "upd_map_camera_apply_input",
+        "ms": 0.0010999999940395355
+      },
+      {
+        "label": "upd_fire_build_view",
         "ms": 0.0008999999845400453
       },
       {
         "label": "upd_world_repr_frame",
-        "ms": 0.000800000037997961
-      },
-      {
-        "label": "upd_fire_build_view",
-        "ms": 0.000699999975040555
+        "ms": 0.0006000000284984708
       },
       {
         "label": "upd_map_camera_smooth",
         "ms": 0.0005000000237487257
       },
       {
-        "label": "map_camera_wheel",
+        "label": "upd_map_camera_derive",
         "ms": 0.0003000000142492354
       },
       {
-        "label": "upd_map_camera_derive",
-        "ms": 0.00020000000949949026
+        "label": "map_camera_wheel",
+        "ms": 0.00010000000474974513
       },
       {
         "label": "upd_repr_proc_spawn",
-        "ms": 0.00020000000949949026
+        "ms": 0.00010000000474974513
       }
     ],
     "render_schedule": {
@@ -303,59 +307,59 @@
       "after_fire_build_ms": 0.0,
       "after_map_camera_smooth_ms": 0.0,
       "after_view_sync_ms": 0.0,
-      "before_world_repr_ms": 0.00860000029206276,
-      "domain_merge_ms": 0.008899999782443047,
+      "before_world_repr_ms": 0.005200000014156103,
+      "domain_merge_ms": 0.006500000134110451,
       "egui_ms": 0.0,
       "first_to_preupdate_ms": 0.0,
       "map_camera_chain_ms": 0.0,
       "post_egui_to_last_ms": 0.0,
-      "post_fire_project_ms": 0.06970000267028809,
+      "post_fire_project_ms": 0.04750000312924385,
       "post_render_gap_ms": 0.0,
-      "post_streaming_spine_ms": 0.05209999904036522,
+      "post_streaming_spine_ms": 0.02889999933540821,
       "post_vt_to_pre_egui_ms": 0.0,
-      "post_world_repr_ms": 0.4871000051498413,
+      "post_world_repr_ms": 0.5798999667167664,
       "postupdate_main_ms": 0.0,
       "postupdate_vt_ci_ms": 0.0,
       "readiness_ms": 0.0,
-      "unattributed_gap_ms": 337.25921630859375,
+      "unattributed_gap_ms": 116.56719970703125,
       "update_ms": 0.0,
       "update_pre_map_camera_ms": 0.0
     },
     "sim_loop": {
       "app_state": "InGame",
-      "sim_time_micros": 144693074,
-      "tick": 1953,
+      "sim_time_micros": 12600277,
+      "tick": 185,
       "world_gen_state": "Dismissed"
     },
     "spine": {
-      "atmosphere_gpu_extract_ms": 0.003000000026077032,
+      "atmosphere_gpu_extract_ms": 0.0027000000700354576,
       "domain_merge_ms": 0.0,
       "projection_graph_ms": 0.0,
-      "readiness_ms": 0.04569999873638153,
-      "terrain_authority": "GpuInstancedAtlas",
+      "readiness_ms": 0.6768999695777893,
+      "terrain_authority": "GpuBake",
       "tile_raster_ms": 0.0,
       "tile_raster_ran": false,
-      "world_repr_ms": 0.0006000000284984708
+      "world_repr_ms": 0.0005000000237487257
     },
     "substage_spans": {
-      "fire_build_view_ms": 0.011599999852478504,
-      "fire_commit_ms": 0.010400000028312206,
-      "fire_emitter_sync_ms": 0.010300000198185444,
-      "fire_pre_extract_ms": 64.48149871826172,
-      "fire_sim_snapshot_ms": 0.11469999700784683,
-      "fire_sync_active_ms": 6.225299835205078,
-      "fire_sync_lod_ms": 0.009999999776482582,
-      "fire_sync_overlay_ms": 0.05220000073313713,
-      "fire_sync_visible_ms": 0.016100000590085983,
+      "fire_build_view_ms": 0.016100000590085983,
+      "fire_commit_ms": 0.011500000022351742,
+      "fire_emitter_sync_ms": 0.013500000350177288,
+      "fire_pre_extract_ms": 60.282100677490234,
+      "fire_sim_snapshot_ms": 2.0204999446868896,
+      "fire_sync_active_ms": 57.86149978637695,
+      "fire_sync_lod_ms": 0.08049999922513962,
+      "fire_sync_overlay_ms": 0.034199997782707214,
+      "fire_sync_visible_ms": 0.013700000010430813,
       "map_apply_input_ms": 0.0,
       "map_derive_ms": 0.0,
       "map_smooth_ms": 0.0,
       "minimap_intent_ms": 0.0,
-      "repr_apply_result_ms": 0.01209999993443489,
-      "repr_compute_frame_ms": 0.01510000042617321,
-      "repr_decay_lod_ms": 0.019700000062584877,
-      "repr_proc_extract_ms": 0.033299997448921204,
-      "repr_refresh_lod_ms": 0.010699999518692493,
+      "repr_apply_result_ms": 0.008300000801682472,
+      "repr_compute_frame_ms": 0.010400000028312206,
+      "repr_decay_lod_ms": 0.024700000882148743,
+      "repr_proc_extract_ms": 0.026200000196695328,
+      "repr_refresh_lod_ms": 0.008200000040233135,
       "view_sync_ms": 0.0
     },
     "tile_raster_policy": {
@@ -365,29 +369,29 @@
       "minimap_cadence_hz": 10.0
     },
     "update_attrib": {
-      "fire_build_view_ms": 0.011899999342858791,
-      "fire_particles_ms": 0.002199999988079071,
-      "fire_pipeline_ms": 0.233800008893013,
-      "fire_project_ms": 0.00570000009611249,
+      "fire_build_view_ms": 0.020600000396370888,
+      "fire_particles_ms": 0.00860000029206276,
+      "fire_pipeline_ms": 2.204900026321411,
+      "fire_project_ms": 0.018699999898672104,
       "hud_egui_ms": 0.0,
-      "map_fit_sync_ms": 0.0008999999845400453,
-      "map_fit_validate_ms": 0.000699999975040555,
+      "map_fit_sync_ms": 0.0003000000142492354,
+      "map_fit_validate_ms": 0.0004000000189989805,
       "preview_cpu_raster_ms": 0.0,
-      "preview_gpu_present_ms": 0.006599999964237213,
-      "streaming_reconstruct_ms": 5.7490997314453125,
-      "sum_ms": 5.992699146270752,
+      "preview_gpu_present_ms": 0.0017999999690800905,
+      "streaming_reconstruct_ms": 5.004199981689453,
+      "sum_ms": 7.214300155639648,
       "tile_storage_apply_ms": 0.0,
-      "viewport_sync_ms": 0.001600000075995922,
+      "viewport_sync_ms": 0.0027000000700354576,
       "world_gen_ui_ms": 0.0
     },
     "ux_spike_guard": {
-      "last_frame_ms": 78.72649383544922,
+      "last_frame_ms": 75.32769775390625,
       "max_ms": 33.0,
       "spike_active": false,
       "suppress_optional_diagnostics": false,
       "suppress_preview": false
     },
-    "wall_ms": 155.11871337890625
+    "wall_ms": 148.57870483398438
   },
   "profile": "SIM_SPECTRUM",
   "program_exit_gate": {
@@ -404,81 +408,81 @@
       "max_ms": 0.0,
       "p50_ms": 0.0,
       "p95_ms": 0.0,
-      "samples": 1953
+      "samples": 185
     },
     "after_map_camera_smooth_ms": {
       "max_ms": 0.0,
       "p50_ms": 0.0,
       "p95_ms": 0.0,
-      "samples": 1953
+      "samples": 185
     },
     "cpu_egui_ms": {
-      "max_ms": 159.23849487304688,
-      "p50_ms": 0.3884999752044678,
-      "p95_ms": 1.0575000047683716,
-      "samples": 1953
+      "max_ms": 81.61719512939453,
+      "p50_ms": 0.42659997940063477,
+      "p95_ms": 2.183500051498413,
+      "samples": 185
     },
     "cpu_pre_egui_ms": {
-      "max_ms": 191.95680236816406,
-      "p50_ms": 70.35499572753906,
-      "p95_ms": 72.82150268554688,
-      "samples": 1953
+      "max_ms": 188.2702178955078,
+      "p50_ms": 68.69419860839844,
+      "p95_ms": 78.23590087890625,
+      "samples": 185
     },
     "domain_merge_ms": {
-      "max_ms": 0.00570000009611249,
+      "max_ms": 0.00020000000949949026,
       "p50_ms": 0.0,
       "p95_ms": 0.00010000000474974513,
-      "samples": 1953
+      "samples": 185
     },
     "fire_pipeline_ms": {
-      "max_ms": 12.968299865722656,
-      "p50_ms": 0.23799999058246613,
-      "p95_ms": 0.28619998693466187,
-      "samples": 1953
+      "max_ms": 3.15939998626709,
+      "p50_ms": 2.285900115966797,
+      "p95_ms": 2.9649999141693115,
+      "samples": 185
     },
     "frame_wall_ms": {
-      "max_ms": 465.7201843261719,
-      "p50_ms": 150.37570190429688,
-      "p95_ms": 158.28408813476562,
-      "samples": 1953
+      "max_ms": 545.53662109375,
+      "p50_ms": 148.87791442871094,
+      "p95_ms": 254.08860778808594,
+      "samples": 185
     },
-    "frames_over_250ms": 4,
-    "frames_sampled": 1953,
+    "frames_over_250ms": 11,
+    "frames_sampled": 185,
     "gpu_gap_ms": {
-      "max_ms": 233.30809020996094,
-      "p50_ms": 75.18070220947266,
-      "p95_ms": 81.9573974609375,
-      "samples": 1953
+      "max_ms": 272.7611083984375,
+      "p50_ms": 74.10160827636719,
+      "p95_ms": 166.2447967529297,
+      "samples": 185
     },
     "map_camera_chain_ms": {
       "max_ms": 0.0,
       "p50_ms": 0.0,
       "p95_ms": 0.0,
-      "samples": 1953
+      "samples": 185
     },
     "post_vt_to_egui_ms": {
       "max_ms": 0.0,
       "p50_ms": 0.0,
       "p95_ms": 0.0,
-      "samples": 1953
+      "samples": 185
     },
     "post_world_repr_ms": {
-      "max_ms": 31.945899963378906,
-      "p50_ms": 0.43209999799728394,
-      "p95_ms": 0.5462000370025635,
-      "samples": 1953
+      "max_ms": 53.531097412109375,
+      "p50_ms": 0.4099000096321106,
+      "p95_ms": 0.5547999739646912,
+      "samples": 185
     },
     "projection_graph_ms": {
-      "max_ms": 0.0024999999441206455,
+      "max_ms": 0.052799999713897705,
       "p50_ms": 0.0,
-      "p95_ms": 0.0,
-      "samples": 1953
+      "p95_ms": 0.018000001087784767,
+      "samples": 185
     },
     "readiness_ms": {
-      "max_ms": 0.33730000257492065,
-      "p50_ms": 0.03880000114440918,
-      "p95_ms": 0.05220000073313713,
-      "samples": 1953
+      "max_ms": 99.88719940185547,
+      "p50_ms": 0.6686000227928162,
+      "p95_ms": 1.3184000253677368,
+      "samples": 185
     },
     "spike_frames": 0,
     "steady_sim_frame_ms": {
@@ -494,144 +498,144 @@
       "samples": 0
     },
     "streaming_ms": {
-      "max_ms": 27.600000381469727,
-      "p50_ms": 5.487400054931641,
-      "p95_ms": 5.958800315856934,
-      "samples": 1953
+      "max_ms": 94.88020324707031,
+      "p50_ms": 4.9928998947143555,
+      "p95_ms": 5.609400272369385,
+      "samples": 185
     },
     "substage_ms": {
       "fire_build_view_ms": {
-        "max_ms": 7.211400032043457,
-        "p50_ms": 0.012299999594688416,
-        "p95_ms": 0.019700000062584877,
-        "samples": 1953
+        "max_ms": 0.5681000351905823,
+        "p50_ms": 0.010900000110268593,
+        "p95_ms": 0.01979999989271164,
+        "samples": 185
       },
       "fire_commit_ms": {
-        "max_ms": 0.05169999971985817,
-        "p50_ms": 0.011099999770522118,
+        "max_ms": 0.03129999712109566,
+        "p50_ms": 0.009100000374019146,
         "p95_ms": 0.015300000086426735,
-        "samples": 1953
+        "samples": 185
       },
       "fire_emitter_sync_ms": {
-        "max_ms": 0.1436000019311905,
-        "p50_ms": 0.01080000028014183,
+        "max_ms": 0.02800000086426735,
+        "p50_ms": 0.010400000028312206,
         "p95_ms": 0.016100000590085983,
-        "samples": 1953
+        "samples": 185
       },
       "fire_sim_snapshot_ms": {
-        "max_ms": 0.3540000021457672,
-        "p50_ms": 0.1193000003695488,
-        "p95_ms": 0.1591000109910965,
-        "samples": 1953
+        "max_ms": 2.957399845123291,
+        "p50_ms": 2.07099986076355,
+        "p95_ms": 2.745300054550171,
+        "samples": 185
       },
       "fire_sync_active_ms": {
-        "max_ms": 165.08180236816406,
-        "p50_ms": 6.612199783325195,
-        "p95_ms": 12.229599952697754,
-        "samples": 1953
+        "max_ms": 385.56341552734375,
+        "p50_ms": 7.601500034332275,
+        "p95_ms": 100.94609832763672,
+        "samples": 185
       },
       "fire_sync_lod_ms": {
-        "max_ms": 0.10320000350475311,
-        "p50_ms": 0.010699999518692493,
-        "p95_ms": 0.01730000041425228,
-        "samples": 1953
+        "max_ms": 0.24540001153945923,
+        "p50_ms": 0.08379999548196793,
+        "p95_ms": 0.11800000071525574,
+        "samples": 185
       },
       "fire_sync_overlay_ms": {
-        "max_ms": 12.807600021362305,
-        "p50_ms": 0.03890000283718109,
-        "p95_ms": 0.047199998050928116,
-        "samples": 1953
+        "max_ms": 0.04479999840259552,
+        "p50_ms": 0.02979999966919422,
+        "p95_ms": 0.03700000047683716,
+        "samples": 185
       },
       "fire_sync_visible_ms": {
-        "max_ms": 0.14380000531673431,
-        "p50_ms": 0.01589999906718731,
-        "p95_ms": 0.023799998685717583,
-        "samples": 1953
+        "max_ms": 0.04370000213384628,
+        "p50_ms": 0.013900000602006912,
+        "p95_ms": 0.023000000044703484,
+        "samples": 185
       },
       "map_apply_input_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 1953
+        "samples": 185
       },
       "map_derive_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 1953
+        "samples": 185
       },
       "map_smooth_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 1953
+        "samples": 185
       },
       "minimap_intent_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 1953
+        "samples": 185
       },
       "repr_apply_result_ms": {
-        "max_ms": 10.185400009155273,
-        "p50_ms": 0.011299999430775642,
+        "max_ms": 0.06240000203251839,
+        "p50_ms": 0.009600000455975533,
         "p95_ms": 0.016100000590085983,
-        "samples": 1953
+        "samples": 185
       },
       "repr_compute_frame_ms": {
-        "max_ms": 0.1396999955177307,
-        "p50_ms": 0.014299999922513962,
-        "p95_ms": 0.01889999955892563,
-        "samples": 1953
+        "max_ms": 0.164900004863739,
+        "p50_ms": 0.01140000019222498,
+        "p95_ms": 0.018699999898672104,
+        "samples": 185
       },
       "repr_decay_lod_ms": {
-        "max_ms": 0.2215999960899353,
-        "p50_ms": 0.020999999716877937,
-        "p95_ms": 0.030499998480081558,
-        "samples": 1953
+        "max_ms": 0.15240000188350677,
+        "p50_ms": 0.021300001069903374,
+        "p95_ms": 0.03129999712109566,
+        "samples": 185
       },
       "repr_proc_extract_ms": {
-        "max_ms": 0.16030000150203705,
-        "p50_ms": 0.03369999676942825,
-        "p95_ms": 0.043800000101327896,
-        "samples": 1953
+        "max_ms": 4.693299770355225,
+        "p50_ms": 0.02889999933540821,
+        "p95_ms": 0.03989999741315842,
+        "samples": 185
       },
       "repr_refresh_lod_ms": {
-        "max_ms": 0.8172000050544739,
-        "p50_ms": 0.012399999424815178,
-        "p95_ms": 0.019200000911951065,
-        "samples": 1953
+        "max_ms": 0.03460000082850456,
+        "p50_ms": 0.010699999518692493,
+        "p95_ms": 0.017000000923871994,
+        "samples": 185
       },
       "view_sync_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 1953
+        "samples": 185
       }
     },
     "tile_raster_ms": {
-      "max_ms": 8.616700172424316,
+      "max_ms": 8.321999549865723,
       "p50_ms": 0.0,
       "p95_ms": 0.0,
-      "samples": 1953
+      "samples": 185
     },
     "view_fire_ms": {
       "max_ms": 0.0,
       "p50_ms": 0.0,
       "p95_ms": 0.0,
-      "samples": 1953
+      "samples": 185
     },
     "window_target_frames": 3600,
     "world_repr_ms": {
-      "max_ms": 0.01940000057220459,
-      "p50_ms": 0.000699999975040555,
-      "p95_ms": 0.0010000000474974513,
-      "samples": 1953
+      "max_ms": 0.003700000001117587,
+      "p50_ms": 0.0006000000284984708,
+      "p95_ms": 0.001500000013038516,
+      "samples": 185
     }
   },
   "schema_version": 1,
-  "session_elapsed_secs": 144.6939436,
-  "session_started_epoch_secs": 1783391045,
+  "session_elapsed_secs": 12.6003588,
+  "session_started_epoch_secs": 1787890416,
   "test_instrumentation": {
     "active": true,
     "frame_jsonl": true,

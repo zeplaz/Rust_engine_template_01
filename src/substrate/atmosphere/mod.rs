@@ -1,16 +1,27 @@
-//! WSS-ATMOS-CLIPMAP-001 — clipmap stack, contamination tick, legacy bridge, witness.
+//! WSS-ATMOS-CLIPMAP-001 — clipmap stack, contamination tick, gated legacy bridge, witness.
 
 mod bridge_legacy;
 mod clipmap_advect;
 mod contamination_tick;
 
-pub use bridge_legacy::legacy_atmosphere_bridge_system;
+pub use bridge_legacy::{legacy_atmosphere_bridge_enabled, legacy_atmosphere_bridge_system};
 pub use contamination_tick::contamination_tick_system;
 
 use bevy::math::DVec2;
 use bevy::prelude::*;
 
 pub const WSS_ATMOS_CLIPMAP_GATE: &str = "WSS-ATMOS-CLIPMAP-001";
+
+/// EFFECTS-SYSTEM ES-6 exit — clipmap L0 is sim authority for smoke consumers that
+/// already sample [`AtmosphereClipmapStack`] (`smoke_bridge_from_clipmap`, post-spine).
+///
+/// DEBT-006 [`legacy_atmosphere_bridge_system`] is **hard-gated OFF** by default
+/// (`RUST_ENGINE_ATMOS_LEGACY_BRIDGE=1` rollback). Fixed 128² [`AtmosphereField`] remains
+/// for transitional fold/advect/particles/visibility/chunk_smoke writers — **not** a
+/// second authority into clipmap while the bridge is gated.
+///
+/// Residual (not blocking this flag): ES-6-2 full field→L0 shim · ES-6-4 save/load.
+pub const CLIPMAP_L0_AUTHORITATIVE: bool = true;
 
 /// Default L0–L3 sim resolutions (tunable).
 pub const CLIPMAP_L0_RES: UVec2 = UVec2::new(128, 128);
@@ -94,8 +105,9 @@ pub fn sync_atmos_clipmap_witness_system(
     } else {
         0
     };
+    // True only while DEBT-006 env rollback is active — not "field resource exists".
     witness.legacy_atmosphere_field_bridged =
-        legacy_field.is_some() || !stack.levels.is_empty();
+        bridge_legacy::legacy_atmosphere_bridge_enabled() && legacy_field.is_some();
 }
 
 #[must_use]

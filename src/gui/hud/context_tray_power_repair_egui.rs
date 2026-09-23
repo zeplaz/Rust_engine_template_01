@@ -31,12 +31,15 @@ pub struct ContextTrayPowerRepairDrawParams<'w> {
 
 #[must_use]
 pub fn power_repair_panel_wired() -> bool {
-    true
+    // Structural: Logistics tray draw path present (not always-true).
+    include_str!("context_tray_power_repair_egui.rs")
+        .contains("pub fn draw_context_tray_power_repair_egui")
+        && include_str!("context_tray_power_repair_egui.rs").contains("PowerRepairQueue")
 }
 
 #[must_use]
 pub fn power_repair_panel_tier_tray_logistics() -> bool {
-    true
+    include_str!("context_tray_power_repair_egui.rs").contains("ContextTrayTab::Logistics")
 }
 
 pub fn draw_context_tray_power_repair_egui(

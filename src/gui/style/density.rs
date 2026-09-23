@@ -66,6 +66,27 @@ pub fn resolve_ui_scale(ctx: &egui::Context, density: &HudDensityProfile) -> f32
     resolved_hud_pixels_per_point(native_ui_pixels_per_point(ctx), density)
 }
 
+/// Convert Bevy window logical pixels → egui points.
+///
+/// Layout constants and `Window::cursor_position` are Bevy-logical; egui `fixed_pos` /
+/// hit-testing use points (`physical / pixels_per_point`). When density scales PPP away
+/// from the native DPI, these spaces diverge — unconverted anchors make clicks miss buttons.
+#[must_use]
+pub fn bevy_logical_to_egui_pos(ctx: &egui::Context, logical: egui::Pos2) -> egui::Pos2 {
+    let native = native_ui_pixels_per_point(ctx);
+    let ppp = ctx.pixels_per_point().max(0.01);
+    let s = native / ppp;
+    egui::pos2(logical.x * s, logical.y * s)
+}
+
+#[must_use]
+pub fn bevy_logical_vec_to_egui(ctx: &egui::Context, logical: egui::Vec2) -> egui::Vec2 {
+    let native = native_ui_pixels_per_point(ctx);
+    let ppp = ctx.pixels_per_point().max(0.01);
+    let s = native / ppp;
+    egui::vec2(logical.x * s, logical.y * s)
+}
+
 /// Single writer for egui widget scale — absolute multiplier, not compounded each frame.
 pub fn sync_egui_context_scale_factor(
     profile: &HudDensityProfile,
@@ -143,5 +164,16 @@ mod tests {
         let first = resolved_hud_pixels_per_point(1.5, &profile);
         let second = resolved_hud_pixels_per_point(1.5, &profile);
         assert_eq!(first, second);
+    }
+
+    #[test]
+    fn bevy_logical_to_egui_compensates_density_scale() {
+        let native = 1.0;
+        let ppp = native * DEFAULT_UI_GLOBAL_SCALE;
+        let s = native / ppp;
+        assert!((s - 1.0 / DEFAULT_UI_GLOBAL_SCALE).abs() < 1e-5);
+        let logical = egui::pos2(100.0, 200.0);
+        let egui_pos = egui::pos2(logical.x * s, logical.y * s);
+        assert!((egui_pos.x - 100.0 / DEFAULT_UI_GLOBAL_SCALE).abs() < 1e-3);
     }
 }

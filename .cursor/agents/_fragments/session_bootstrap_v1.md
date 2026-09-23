@@ -30,6 +30,8 @@ Replace `<AGENT>` with this agent file's `name:` frontmatter (e.g. `coder`, `pla
 
 **Domain skills** (read after agent-lang each session when in role matrix): validation-first, bevy-simulation-grade, debug-intelligence, mcp-production-rules, operations-intelligence, …
 
+**VSS-001 active programs:** Read `$ref:.cursor/agents/_fragments/tribunal_trip_v1.md` and `$ref:tools/orchestrator/queues/vss_trip_artifact_registry.json` before editing trip-listed paths. Use `symbolic_build_digest_tool` — never raw cargo walls.
+
 ---
 
 ## Mandatory skill attach (ALL agents)

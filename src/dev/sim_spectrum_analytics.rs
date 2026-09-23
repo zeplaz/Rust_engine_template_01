@@ -726,7 +726,7 @@ fn build_frame_snapshot(params: &SpectrumCapture) -> Value {
         .terrain_authority
         .as_deref()
         .copied()
-        .unwrap_or(crate::render::TerrainRenderAuthority::CpuFallback);
+        .unwrap_or(crate::render::TerrainRenderAuthority::CpuRaster);
 
     let cpu = params.wall.as_deref().map(|w| {
         json!({
@@ -1207,7 +1207,7 @@ mod tests {
     fn sim_spectrum_frame_contract_requires_core_paths() {
         let frame = json!({
             "spine": {
-                "terrain_authority": "GpuInstancedAtlas",
+                "terrain_authority": "GpuBake",
                 "tile_raster_ms": 0.0,
             },
             "render_schedule": { "render_and_present_ms": 12.0 },
@@ -1225,7 +1225,7 @@ mod tests {
     fn sim_spectrum_contract_rejects_substage_before_render() {
         let frame = json!({
             "spine": {
-                "terrain_authority": "GpuInstancedAtlas",
+                "terrain_authority": "GpuBake",
                 "tile_raster_ms": 0.0,
             },
             "render_schedule": { "render_and_present_ms": 12.0 },

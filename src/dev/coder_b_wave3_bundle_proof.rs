@@ -66,8 +66,8 @@ pub fn refresh_coder_b_wave3_bundle_live_witnesses() -> bool {
         "UI-P3-M3-UNITS-001 + UI-P3-M3-REPLAY-001 + M2/M3"
     );
     assert!(
-        refresh_replay_editor_parity_live_witness(),
-        "REPLAY-PARITY-001"
+        !refresh_replay_editor_parity_live_witness(),
+        "REPLAY-PARITY-001 lib green retired (CLN-WIT-001); refresh still writes cheat_retired JSON"
     );
     assert!(
         refresh_infrastructure_view_isolation_live_witness(),
@@ -146,7 +146,15 @@ mod tests {
         assert!(pointer_bool(&minimap, "/ui_p3_m3_replay_001_green"));
 
         let replay = read_json(REPLAY);
-        assert!(pointer_bool(&replay, "/replay_parity_001_green"));
+        assert_eq!(
+            replay.get("cheat_retired").and_then(|v| v.as_bool()),
+            Some(true),
+            "REPLAY-PARITY-001 lib fixture retired"
+        );
+        assert_eq!(
+            replay.get("replay_parity_001_green").and_then(|v| v.as_bool()),
+            Some(false)
+        );
 
         let infra = read_json(INFRA);
         assert!(pointer_bool(&infra, "/infra_vm_deep_001/green"));

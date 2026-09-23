@@ -4,7 +4,7 @@ use bevy::math::{Rect, UVec2, Vec2};
 use bevy::prelude::*;
 
 use crate::gui::editor::world_preview::{PreviewCameraState, WorldPreviewRenderTargetRegistry};
-use crate::gui::map_camera::{MapCameraDesiredRes};
+use crate::gui::tactical::map_camera::{MapCameraDesiredRes};
 use crate::gui::{ViewId, ViewManager};
 use crate::render::{
     AppStage5ReadinessReport, GpuParticleInstance, ResolvedViewports, Stage5ReadinessProfile,

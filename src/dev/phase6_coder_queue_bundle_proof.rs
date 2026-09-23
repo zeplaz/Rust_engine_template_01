@@ -31,6 +31,8 @@ pub fn refresh_phase6_tail_witnesses() -> bool {
         crate::dev::nav_agent_routing_live_proof::refresh_nav_agent_routing_live_witness();
     let s7b_m1 = s7b_m1_witness_green();
 
+    // Replay lib green retired (CLN-WIT-001) — write still happens; exclude from rollup.
+    let _ = replay;
     let green = veg_snapshot
         && minimap
         && infra_e0
@@ -42,7 +44,6 @@ pub fn refresh_phase6_tail_witnesses() -> bool {
         && pg2_tail
         && og_4
         && og_ux
-        && replay
         && infra_vm
         && build_program
         && build_site_zone
@@ -74,7 +75,11 @@ pub fn refresh_phase6_tail_witnesses() -> bool {
             "PROC-OG-UX-WIRE-001": og_ux,
             "CON-R4-TAIL-001": con_r4,
             "PT-5-002": pt_5_002,
-            "REPLAY-RING-001": replay,
+            "REPLAY-RING-001": {
+                "lib_green": false,
+                "cheat_retired": true,
+                "note": "CLN-WIT-001 invented ring_len retired; runtime system authoritative",
+            },
             "S7B-M1-001": s7b_m1,
         },
     });

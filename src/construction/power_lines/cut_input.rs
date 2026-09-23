@@ -115,7 +115,9 @@ fn dist_point_to_segment(p: Vec2, a: Vec2, b: Vec2) -> f32 {
 
 #[must_use]
 pub fn power_line_cut_input_wired() -> bool {
-    true
+    // Structural: cut hit-test + damage cut API present (not always-true).
+    include_str!("cut_input.rs").contains("pub fn dist_point_to_segment")
+        && include_str!("damage.rs").contains("pub fn cut_power_line_segment")
 }
 
 #[cfg(test)]

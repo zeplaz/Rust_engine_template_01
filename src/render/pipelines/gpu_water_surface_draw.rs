@@ -26,10 +26,10 @@ use bevy::render::{
 };
 
 use crate::gui::{MainWorldCamera, TileDebugRenderHost};
-use crate::render::core2d_overlay_order::{
+use crate::render::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
 };
-use crate::render::water_surface_visual::{WaterOverlayDrawFrame, WaterOverlayGpuInstance};
+use crate::render::fx_spine::water_surface_visual::{WaterOverlayDrawFrame, WaterOverlayGpuInstance};
 
 pub const WATER_OVERLAY_WGSL: &str = "shaders/water/water_overlay.wgsl";
 
@@ -76,7 +76,7 @@ pub fn register_water_surface_draw(app: &mut App) {
         .add_systems(
             Update,
             sync_water_overlay_draw_globals
-                .after(crate::render::water_surface_visual::sync_water_overlay_draw_frame),
+                .after(crate::render::fx_spine::water_surface_visual::sync_water_overlay_draw_frame),
         );
 
     let Some(render_app) = app.get_sub_app_mut(RenderApp) else {

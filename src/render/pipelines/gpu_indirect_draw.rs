@@ -6,9 +6,9 @@
 use bevy::prelude::*;
 
 use crate::gui::RepresentationResult;
-use crate::render::gpu_particle_draw::{WorldFireParticleDrawDispatch, PARTICLE_WORKGROUP};
-use crate::render::gpu_particles::WorldFireParticleFrame;
-use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
+use crate::render::pipelines::gpu_particle_draw::{WorldFireParticleDrawDispatch, PARTICLE_WORKGROUP};
+use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
+use crate::render::core::gpu_representation_metrics::GpuRepresentationMetrics;
 use crate::render::Stage5ReadinessProfile;
 
 /// Workgroup size for particle indirect dispatch (shared with compute raster prepass).
@@ -123,7 +123,7 @@ impl Plugin for GpuIndirectDrawSpinePlugin {
 mod tests {
     use super::*;
     use crate::gui::{GpuBudgetPolicy, RepresentationBand, RepresentationResult};
-    use crate::render::gpu_representation_metrics::GpuRepresentationMetrics;
+    use crate::render::core::gpu_representation_metrics::GpuRepresentationMetrics;
 
     #[test]
     fn instanced_spine_matches_draw_dispatch_after_policy_sync() {

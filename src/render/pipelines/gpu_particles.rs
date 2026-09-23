@@ -2,9 +2,9 @@
 //!
 //! Domain logic lives in [`crate::render::fire_vfx`]; see `src/dev/plan_gpu_particle_backend_split_v1.md`.
 
-pub use crate::render::extracted_camera_metrics::FireParticleCameraScale;
+pub use crate::render::extraction::extracted_camera_metrics::FireParticleCameraScale;
 pub use crate::render::fire_vfx::*;
-pub use crate::render::gpu_instanced_quad::GpuInstancedQuadInstance;
+pub use crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadInstance;
 pub use crate::render::fire_vfx::pack::{GpuParticleInstance, GpuParticleQuadVertex};
 
 const _: () = assert!(

@@ -1,5 +1,5 @@
 //! RGR-P5-001 — render-thread perf-probe bracket modules (mechanical move from `render/`).
-//! `render/mod.rs` keeps path-preserving shim modules at the old `crate::render::frame_perf` /
+//! `render/mod.rs` keeps path-preserving shim modules at the old `crate::render::probes::frame_perf` /
 //! `crate::render::stall_watch` locations so existing call sites keep resolving.
 //!
 //! `visual_perf_budget.rs` was inspected and **not** moved here — it is a production visual

@@ -18,9 +18,9 @@ pub use active_runtime::{
     sync_active_runtime_witness_flags_system, ActiveRuntimeState,
 };
 pub use atmosphere::{
-    clipmap_l0_smoke_max, contamination_tick_system, legacy_atmosphere_bridge_system,
-    sync_atmos_clipmap_witness_system, AtmosphereClipmapStack, AtmosphereClipmapWitness,
-    WSS_ATMOS_CLIPMAP_GATE,
+    clipmap_l0_smoke_max, contamination_tick_system, legacy_atmosphere_bridge_enabled,
+    legacy_atmosphere_bridge_system, sync_atmos_clipmap_witness_system, AtmosphereClipmapStack,
+    AtmosphereClipmapWitness, CLIPMAP_L0_AUTHORITATIVE, WSS_ATMOS_CLIPMAP_GATE,
 };
 pub use deformation::{
     apply_deformation_to_chunk, deformation_apply_tick_system, DeformationTickState,
@@ -156,7 +156,9 @@ impl Plugin for SubstratePlugin {
                     hydrology_boundary_exchange_system,
                     hydrology_drain_construction_events_system,
                     sync_hydrology_runtime_witness_system,
-                    legacy_atmosphere_bridge_system,
+                    // DEBT-006: default OFF — clipmap L0 authority (ES-6).
+                    legacy_atmosphere_bridge_system
+                        .run_if(legacy_atmosphere_bridge_enabled),
                     atmosphere::contamination_tick_system,
                     sync_atmos_clipmap_witness_system,
                     mirror_logistics_pressure_to_slab_system,

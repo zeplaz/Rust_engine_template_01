@@ -10,6 +10,7 @@ mod manifest;
 mod pipeline;
 mod registry_snapshot;
 mod snapshot_builder;
+mod settlement_overlay;
 mod transport_overlay;
 mod wave_s_artifacts;
 mod wire_format;
@@ -43,6 +44,12 @@ pub use pipeline::{
 };
 pub use registry_snapshot::{
     build_default_registry_snapshot_refs, write_registry_snapshot_artifacts,
+};
+pub use settlement_overlay::{
+    build_settlement_overlay_refs, econ_og_save_001_witness_green,
+    settlement_books_manifest_roundtrip_witness_green,
+    settlement_books_save_roundtrip_witness_green, SETTLEMENT_BOOKS_REL_PATH,
+    SETTLEMENT_OVERLAY_NAME,
 };
 pub use transport_overlay::{
     read_transport_snapshot_ron, transport_overlay_ref, write_transport_snapshot_ron,

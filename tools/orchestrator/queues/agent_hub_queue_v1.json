@@ -264,7 +264,7 @@
     "coder_b": [
       {
         "id": "PERF-INSTR-VFX-002",
-        "status": "in_progress",
+        "status": "done",
         "owner": "coder_b",
         "queue": "coder_active_queue.json",
         "program": "",
@@ -681,12 +681,13 @@
       },
       {
         "id": "MCP-PROD-B2",
-        "status": "blocked",
+        "status": "done",
         "owner": "coder-mcp",
         "queue": "mcp_active_queue.json",
         "program": "",
         "depends_on": [],
-        "priority": "P0"
+        "priority": "P0",
+        "witness": "debug_runs/mcp_prod_b2_live.json"
       },
       {
         "id": "MCP-PROD-C-PILOT",
@@ -740,49 +741,55 @@
       },
       {
         "id": "MCP-WIT-001",
-        "status": "blocked",
+        "status": "done",
         "owner": "coder-mcp",
         "queue": "mcp_active_queue.json",
         "program": "",
         "depends_on": [],
-        "priority": "P0"
+        "priority": "P0",
+        "witness": "debug_runs/mcp_witness_honesty_validator_live.json"
       },
       {
         "id": "MCP-WIT-010",
-        "status": "blocked",
+        "status": "done",
         "owner": "coder-mcp",
         "queue": "mcp_active_queue.json",
         "program": "",
         "depends_on": [
           "MCP-WIT-001"
         ],
-        "priority": "P0"
+        "priority": "P0",
+        "witness": "debug_runs/queue_integrity_reconcile_live.json"
       },
       {
         "id": "MCP-WIT-020",
-        "status": "blocked",
+        "status": "done",
         "owner": "coder-mcp",
         "queue": "mcp_active_queue.json",
         "program": "",
         "depends_on": [
           "MCP-WIT-010"
         ],
-        "priority": "P1"
+        "priority": "P1",
+        "witness": "debug_runs/mcp_witness_integrity_ops_live.json"
       },
       {
         "id": "MCP-WIT-030",
-        "status": "blocked",
+        "status": "done",
+        "closed": "2026-08-12",
         "owner": "coder-mcp",
         "queue": "mcp_active_queue.json",
         "program": "",
         "depends_on": [
           "MCP-WIT-001"
         ],
-        "priority": "P1"
+        "priority": "P1",
+        "witness": "debug_runs/mcp_witness_honesty_validator_live.json"
       },
       {
         "id": "MCP-WIT-040",
-        "status": "blocked",
+        "status": "done",
+        "closed": "2026-08-12",
         "owner": "coder-mcp",
         "queue": "mcp_active_queue.json",
         "program": "",
@@ -791,7 +798,8 @@
           "MCP-WIT-010",
           "MCP-WIT-030"
         ],
-        "priority": "P1"
+        "priority": "P1",
+        "witness": "debug_runs/mcp_witness_honesty_validator_live.json"
       },
       {
         "id": "OVR-P56-ONBOARD-001",

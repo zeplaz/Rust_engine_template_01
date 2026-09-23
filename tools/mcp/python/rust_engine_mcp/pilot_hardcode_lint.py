@@ -156,7 +156,9 @@ def pilot_hardcode_lint(*, allowlist_path: Path | None = None) -> dict[str, Any]
     }
 
 
-def validate_pilot_hardcode_lint(*, allowlist_path: Path | None = None) -> ValidationReport:
+def validate_pilot_hardcode_lint(
+    *, allowlist_path: Path | None = None, compression_level: int = 3
+) -> ValidationReport:
     body = pilot_hardcode_lint(allowlist_path=allowlist_path)
     status = "passed" if body["green"] else "failed"
     errors = [
@@ -173,7 +175,7 @@ def validate_pilot_hardcode_lint(*, allowlist_path: Path | None = None) -> Valid
     return ValidationReport(
         validator="test",
         status=status,
-        compression_level=3,
+        compression_level=compression_level,
         summary=(
             f"pilot_hardcode_lint: {body['violation_count']} violation(s), "
             f"{body['transitional_hit_count']} transitional hit(s)"

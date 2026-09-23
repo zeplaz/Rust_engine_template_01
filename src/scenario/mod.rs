@@ -1,12 +1,15 @@
 //! Scripted scenario execution (Wave 1+): `EngineScriptHost`, RON scenarios, `SimControlState` stepping, Wave 3 objectives.
 //! Runbook: `prompts/guides/scenario_campaign_scripted_tools_runbook_v1.md`
 
+pub mod ignite;
 pub mod objectives;
 pub mod scenario_plugin;
 pub mod scenario_runner;
 pub mod scenario_steps;
 pub mod scenario_types;
 pub mod script_host;
+pub mod trigger_registry;
+pub mod trigger_spec;
 pub mod validation;
 
 pub use objectives::{
