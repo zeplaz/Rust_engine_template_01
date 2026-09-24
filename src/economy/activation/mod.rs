@@ -36,8 +36,8 @@ pub use bridge::{
 pub use bridge::IndustrialActivationPlugin;
 pub use witness_collectors::{
     build_industrial_activation_proof_payload, refresh_ind_e02_default_live_witness,
-    sync_industrial_proof_witness_flags, write_industrial_activation_live_proof_system,
-    IndustrialActivationLiveProofState,
+    refresh_industrial_i3_02_grid_overload_live_witness, sync_industrial_proof_witness_flags,
+    write_industrial_activation_live_proof_system, IndustrialActivationLiveProofState,
 };
 
 #[cfg(test)]

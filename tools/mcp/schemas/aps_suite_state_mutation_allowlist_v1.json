@@ -45,39 +45,39 @@
       "field": "seed"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/catalog.py:250",
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:265",
       "file": "tools/mcp/art_pipeline_suite/catalog.py",
-      "line": 250,
+      "line": 265,
       "field": "selected_landscape_preset_id"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/catalog.py:251",
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:266",
       "file": "tools/mcp/art_pipeline_suite/catalog.py",
-      "line": 251,
+      "line": 266,
       "field": "selected_module_id"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/catalog.py:252",
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:267",
       "file": "tools/mcp/art_pipeline_suite/catalog.py",
-      "line": 252,
+      "line": 267,
       "field": "selected_module_ids"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/catalog.py:317",
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:332",
       "file": "tools/mcp/art_pipeline_suite/catalog.py",
-      "line": 317,
+      "line": 332,
       "field": "selected_module_id"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/catalog.py:318",
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:333",
       "file": "tools/mcp/art_pipeline_suite/catalog.py",
-      "line": 318,
+      "line": 333,
       "field": "selected_module_ids"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/catalog.py:335",
+      "id": "tools/mcp/art_pipeline_suite/catalog.py:350",
       "file": "tools/mcp/art_pipeline_suite/catalog.py",
-      "line": 335,
+      "line": 350,
       "field": "style_pack_id"
     },
     {
@@ -105,45 +105,45 @@
       "field": "selected_landscape_preset_id"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:65",
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:75",
       "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
-      "line": 65,
+      "line": 75,
       "field": "assembly_generation_approved"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:74",
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:84",
       "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
-      "line": 74,
+      "line": 84,
       "field": "assembly_generation_approved"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:117",
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:127",
       "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
-      "line": 117,
+      "line": 127,
       "field": "assembly_generation_approved"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/landscape_grammar_panel.py:204",
+      "id": "tools/mcp/art_pipeline_suite/landscape_grammar_panel.py:207",
       "file": "tools/mcp/art_pipeline_suite/landscape_grammar_panel.py",
-      "line": 204,
+      "line": 207,
       "field": "landscape_grammar_saved"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:157",
+      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:161",
       "file": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py",
-      "line": 157,
+      "line": 161,
       "field": "selected_landscape_preset_id"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:158",
+      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:162",
       "file": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py",
-      "line": 158,
+      "line": 162,
       "field": "landscape_preset_validate_ok"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:189",
+      "id": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py:193",
       "file": "tools/mcp/art_pipeline_suite/landscape_presets_panel.py",
-      "line": 189,
+      "line": 193,
       "field": "landscape_preset_validate_ok"
     },
     {

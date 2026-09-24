@@ -1,0 +1,100 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "PRODUCTION-SIM-HUD-NATIVE",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
+    ],
+    "relative_path": "debug_runs/production_sim_hud_native_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "coder_hud_nat_008_009",
+    "written_at_epoch_secs": 1790270009
+  },
+  "designer_open": [
+    "VSS-T4-005"
+  ],
+  "exit_predicates": {
+    "hud_a_003_window_ban": true,
+    "hud_nat_001_bevy_picker": true,
+    "hud_nat_002_road_power_bevy": true,
+    "hud_nat_003_tray_build_bevy": true,
+    "hud_nat_004_staged_editor_only": true,
+    "hud_nat_005_tool_hints_off_sim": true,
+    "hud_nat_007_road_popup_off_sim": true,
+    "hud_nat_008_no_sim_overflow": true,
+    "hud_nat_008_side_status_sim_gated": true,
+    "hud_nat_009_plant_map_clamped": true,
+    "hud_nat_009_power_map_clamped": true,
+    "hud_nat_009_single_themed_satellite": true
+  },
+  "green": true,
+  "human_gates_open": [
+    "HUD-OPS-001",
+    "HUD-GPLAY-002"
+  ],
+  "notes": "Machine native HUD drain closed through NAT-009; side status retired in sim; plant/power share map-attached chip + map-hole clamp (plant yields to power hover).",
+  "schema": "production_sim_hud_native_live_v1",
+  "slice_id": "HUD-WIT-001",
+  "status": "green",
+  "updated": "2026-09-24"
+}

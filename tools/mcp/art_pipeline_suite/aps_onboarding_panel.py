@@ -39,7 +39,7 @@ from .aps_tooltips import bind_aps_tooltip
 
 
 class OnboardingPanel(ttk.Frame):
-    """Dismissible first-run card — the 5-step pipeline in plain artist words."""
+    """Dismissible first-run card — the 6-step pipeline in plain artist words."""
 
     def __init__(self, master: tk.Misc, *, on_dismiss: Callable[[], None] | None = None) -> None:
         super().__init__(master, padding=GAP_LG)

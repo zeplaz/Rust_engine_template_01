@@ -1,0 +1,45 @@
+{
+  "_agent_meta": {
+    "profile": "BUILDING-LOOK-V2-RUST-PARITY",
+    "source": "coder"
+  },
+  "gate": "BUILDING-LOOK-V2-RUST-PARITY",
+  "green": true,
+  "parity_needed": true,
+  "parity_applied": true,
+  "python_contracts": {
+    "dual_face_corners": true,
+    "full_footprint_roof": true,
+    "wall_edge_offset": true,
+    "outward_yaw_for_face": true
+  },
+  "rust_files": [
+    "src/construction/procedural/footprint_grid.rs",
+    "src/construction/procedural/assembly_snapshot.rs",
+    "src/construction/procedural/edge_adjacency.rs",
+    "src/construction/procedural/mod.rs",
+    "src/render/extraction/procedural_build_extract.rs",
+    "src/construction/procedural_build_spawn.rs"
+  ],
+  "tests_ok": [
+    "footprint_grid_dual_face_and_single_roof",
+    "assembly_snapshot_auto_001_shape_victorian_4x3_s42",
+    "look_v2_outward_yaw_and_wall_edge_offset",
+    "bq_a1_rect_perimeter_passes_five_rules",
+    "procedural_build_extract_resolves_lod0_glb"
+  ],
+  "residual": [
+    "soft openings / industrial materials / BQ-Q3 deliberately not touched",
+    "full-footprint roof mesh sized for QC 4x2 \u2014 other footprints may need scale/size-class kits (same as Python)"
+  ],
+  "charter": "src/dev/design_building_visual_concept_v2.md",
+  "diff_against": "tools/mcp/python/rust_engine_mcp/assembly.py",
+  "utc": "2026-09-24T14:32:31.166478+00:00",
+  "cargo_report": {
+    "status": "warning",
+    "error_count": 0,
+    "warning_count": 17,
+    "confidence": 0.95
+  },
+  "note": "Rust lagged Python dual-face + full_footprint roof; parity applied so in-engine spawn uses edge offset + yaw."
+}

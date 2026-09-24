@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "wall_brick_2u_production_run001",
+  "batch_id": "kit_prod_promote_bq_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/wall_brick_2u_production.json",
+  "operation": "module_wall",
+  "params": {
+    "width_m": 8,
+    "height_m": 3,
+    "depth_m": 0.3,
+    "material_profile": "brick_red_01",
+    "seed": 560003,
+    "profile": "brick",
+    "brick_courses": 6
+  },
+  "output": {
+    "glb": "assets/staging/wall_brick_2u_production_run001/model.glb",
+    "thumbnail": "assets/staging/wall_brick_2u_production_run001/preview.png"
+  }
+}

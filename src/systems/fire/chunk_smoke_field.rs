@@ -1,11 +1,15 @@
 //! Strategic **smoke / visibility** scalars per chunk (`base_fire_sim.md` §5).
 //! After global advection, [`chunk_smoke_field_pull_from_advected_atmosphere`] nudges these toward
-//! [`crate::systems::atmosphere::AtmosphereField`] so chunk reads track transported smoke (`sim-smoke-1`).
-//! **Future:** optional per-cell grid + richer bidirectional coupling.
+//! clipmap L0 (DEBT-010b / DEBT-011) so chunk reads track transported smoke (`sim-smoke-1`).
+//! **DEBT-011:** single smoke bridge is L0 → ChunkSmoke → [`SimChunkSmokeVisualExtract`] —
+//! no AtmosphereField mirror.
 
 use bevy::prelude::*;
 
-use crate::systems::atmosphere::{AtmosphereCell, AtmosphereField};
+use crate::substrate::atmosphere::{
+    sample_tactical_smoke_from_l0, sample_tactical_toxicity_from_l0, AtmosphereClipmapStack,
+};
+use crate::systems::atmosphere::atmos_chunk_to_tile;
 use super::chunk_fuel_profile::ChunkFuelProfile;
 use super::chunk_surface_fire::ChunkSurfaceFire;
 use super::combustion::profile_weighted_smoke_toxic_explosion;
@@ -91,38 +95,58 @@ pub fn chunk_smoke_field_tick(
     }
 }
 
-/// Blend weight for folding advected [`AtmosphereField`] smoke back into chunk scalars.
+/// Blend weight for folding advected atmosphere smoke back into chunk scalars.
 pub const ATMOSPHERE_TO_CHUNK_SMOKE_BLEND: f32 = 0.16;
 
+/// DEBT-010b / DEBT-011 — chunk_smoke pulls from L0 (sole atmosphere→chunk path).
+pub const CHUNK_SMOKE_L0_PULL: bool = true;
+
 #[inline]
-fn blend_chunk_smoke_toward_atmosphere_cell(
+fn blend_chunk_smoke_toward_l0_samples(
     smoke: &mut ChunkSmokeField,
-    cell: &AtmosphereCell,
+    density: f32,
+    toxicity: f32,
     wx: &ChunkWeather,
     w_atm: f32,
 ) {
     let w = w_atm.clamp(0.0, 0.55);
-    smoke.density = (smoke.density * (1.0 - w) + cell.smoke_density * w).clamp(0.0, 1.0);
-    smoke.toxicity = (smoke.toxicity * (1.0 - w) + cell.toxicity * w).clamp(0.0, 1.0);
+    smoke.density = (smoke.density * (1.0 - w) + density * w).clamp(0.0, 1.0);
+    smoke.toxicity = (smoke.toxicity * (1.0 - w) + toxicity * w).clamp(0.0, 1.0);
     smoke.visibility_penalty =
         (smoke.density * 0.75 + wx.fog_density * 0.35 + smoke.toxicity * 0.25).clamp(0.0, 0.98);
 }
 
 /// Runs in [`crate::systems::atmosphere::AtmospherePipelineSet::WindAdvect`] after advection so chunk
 /// smoke matches the transported plume for logistics / extract.
+///
+/// **DEBT-011:** L0-only pull via [`atmos_chunk_to_tile`] — no Field mirror.
 pub fn chunk_smoke_field_pull_from_advected_atmosphere(
     ctrl: Res<SimControlState>,
-    atm: Res<AtmosphereField>,
+    stack: Res<AtmosphereClipmapStack>,
     mut q: Query<(&Chunk, &ChunkWeather, &mut ChunkSmokeField)>,
 ) {
     if !ctrl.should_tick() {
         return;
     }
+    if !CHUNK_SMOKE_L0_PULL {
+        return;
+    }
     for (chunk, wx, mut smoke) in &mut q {
-        let Some(cell) = atm.cell_at_chunk(chunk.coord) else {
+        let Some((x, y)) = atmos_chunk_to_tile(chunk.coord) else {
             continue;
         };
-        blend_chunk_smoke_toward_atmosphere_cell(&mut smoke, &cell, wx, ATMOSPHERE_TO_CHUNK_SMOKE_BLEND);
+        if let (Some(density), Some(toxicity)) = (
+            sample_tactical_smoke_from_l0(stack.as_ref(), x, y),
+            sample_tactical_toxicity_from_l0(stack.as_ref(), x, y),
+        ) {
+            blend_chunk_smoke_toward_l0_samples(
+                &mut smoke,
+                density,
+                toxicity,
+                wx,
+                ATMOSPHERE_TO_CHUNK_SMOKE_BLEND,
+            );
+        }
     }
 }
 
@@ -161,27 +185,22 @@ mod tests {
     }
 
     #[test]
-    fn pull_shifts_density_toward_atmosphere_cell() {
-        let mut field = AtmosphereField::default();
-        let coord = IVec2::new(0, 0);
-        if let Some(c) = field.cell_mut_at_chunk(coord) {
-            c.smoke_density = 1.0;
-            c.toxicity = 0.9;
-        }
-        let cell = field.cell_at_chunk(coord).unwrap();
+    fn pull_shifts_density_toward_l0_samples() {
         let wx = ChunkWeather::default();
         let mut smoke = ChunkSmokeField {
             density: 0.1,
             toxicity: 0.1,
             visibility_penalty: 0.0,
         };
-        super::blend_chunk_smoke_toward_atmosphere_cell(
+        super::blend_chunk_smoke_toward_l0_samples(
             &mut smoke,
-            &cell,
+            1.0,
+            0.9,
             &wx,
             ATMOSPHERE_TO_CHUNK_SMOKE_BLEND,
         );
         assert!(smoke.density > 0.1 && smoke.density < 1.0);
         assert!(smoke.toxicity > 0.1);
+        assert!(CHUNK_SMOKE_L0_PULL);
     }
 }

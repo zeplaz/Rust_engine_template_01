@@ -1424,14 +1424,14 @@
     "lane": "mcp-coder",
     "agent": "coder-mcp",
     "depends_on": [],
-    "status": "blocked",
+    "status": "done",
     "witness": "debug_runs/aps_build_read_grammar_v0_002_live.json",
     "docs": [
       "src/dev/plan_operator_build_readability_exec_001_v1.md",
       "tools/mcp/schemas/arch_build_grammar_v0.schema.json"
     ],
-    "updated_at": "2026-06-20T21:19:24Z",
-    "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+    "updated_at": "2026-09-24T13:13:15.249475+00:00",
+    "note": "MCP-QUEUE-RECON-001 false-blocked\u2192done \u00b7 witness debug_runs/aps_build_read_grammar_v0_002_live.json \u00b7 ok=true green=true \u00b7 mtime=2026-06-15T14:57:17Z"
   },
   {
     "id": "BUILD-READ-CONSUMER-MCP-001",
@@ -1442,14 +1442,14 @@
     "depends_on": [
       "BUILD-READ-GRAMMAR-v0-002"
     ],
-    "status": "blocked",
+    "status": "done",
     "witness": "debug_runs/aps_dna_consumer_contract_live.json",
     "commands": [
       "python -m rust_engine_mcp.cli arch-dna-consumer-contract",
       "python -m rust_engine_mcp.cli aps-dna-consumer-witness"
     ],
-    "updated_at": "2026-06-20T21:19:24Z",
-    "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+    "updated_at": "2026-09-24T13:13:15.255649+00:00",
+    "note": "MCP-QUEUE-RECON-001 false-blocked\u2192done \u00b7 witness debug_runs/aps_dna_consumer_contract_live.json \u00b7 ok=true green=true \u00b7 mtime=2026-07-03T17:01:24Z"
   },
   {
     "id": "MCP-OPS-REPORT-001",
@@ -1460,10 +1460,15 @@
     "depends_on": [
       "MCP-DOC-READ-002-IMPL"
     ],
-    "status": "deferred",
+    "status": "done",
     "docs": [
       "src/dev/plan_agent_operations_intelligence_v1.md"
-    ]
+    ],
+    "witness": "debug_runs/agent_ops/mcp_ops_report_001_live.json",
+    "completed": "2026-09-24",
+    "completed_by": "coder-mcp",
+    "note": "debug_runs/agent_ops/mcp_ops_report_001_live.json green \u00b7 CLI/MCP/ps1 ops-intelligence-scan parity \u00b7 WIT-HON",
+    "updated_at": "2026-09-24T13:23:54.125178+00:00"
   },
   {
     "id": "MCP-PRODUCTIVITY-P1-PLAN",
@@ -1919,7 +1924,9 @@
     "title": "Archetype tag presets + reaction suggested tags",
     "lane": "aps-coder",
     "agent": "coder-mcp",
-    "depends_on": ["DES-APS-TAG-TIER2-001"],
+    "depends_on": [
+      "DES-APS-TAG-TIER2-001"
+    ],
     "status": "done",
     "witness": "debug_runs/aps_tag_tier2_live.json",
     "commands": [
@@ -1934,10 +1941,13 @@
   {
     "id": "APS-UX-POLISH-TAIL-001",
     "priority": 2,
-    "title": "UX audit v2 tail — F5 valid vs saved, F6 footprint text, F7 flow bar",
+    "title": "UX audit v2 tail \u2014 F5 valid vs saved, F6 footprint text, F7 flow bar",
     "lane": "aps-coder",
     "agent": "coder-mcp",
-    "depends_on": ["APS-TAG-TIER2-IMPL", "APS-UX-POLISH-001"],
+    "depends_on": [
+      "APS-TAG-TIER2-IMPL",
+      "APS-UX-POLISH-001"
+    ],
     "status": "done",
     "witness": "debug_runs/aps_ux_polish_tail_live.json",
     "commands": [

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "job_id": "win_double_1u_production_run001",
+  "batch_id": "kit_prod_promote_bq_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/win_double_1u_production.json",
+  "operation": "module_window",
+  "params": {
+    "width_m": 4,
+    "height_m": 1.3,
+    "depth_m": 0.3,
+    "opening_width_m": 2.8,
+    "opening_height_m": 1.95,
+    "opening_sill_m": 0.5,
+    "material_profile": "glass_panel_01",
+    "seed": 560001,
+    "profile": "frame_mullion"
+  },
+  "output": {
+    "glb": "assets/staging/win_double_1u_production_run001/model.glb",
+    "thumbnail": "assets/staging/win_double_1u_production_run001/preview.png"
+  }
+}

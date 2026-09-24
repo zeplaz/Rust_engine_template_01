@@ -22,7 +22,13 @@
     },
     "roof": {
       "seat_plane_export_min_y": 0.0,
-      "notes": "After glTF export (Blender Y→glTF −Z), seat plane min bound ≥ 0 (BQ-F1)."
+      "notes": "Author height on Blender +Z; export_yup → glTF +Y. Seat underside min Y ≥ 0 (BQ-F1 / BUILDING-LOOK-V2-ART)."
+    },
+    "axis_convention": {
+      "blender_height_axis": "Z",
+      "gltf_height_axis": "Y",
+      "export_yup": true,
+      "notes": "Wall/door/window height must land on glTF +Y for Bevy upright. Legacy Blender-Y authorship laid walls flat."
     },
     "corner": {
       "height_m": 3.0

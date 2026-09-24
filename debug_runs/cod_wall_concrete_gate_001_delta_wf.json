@@ -1,0 +1,53 @@
+{
+  "schema": "coder_delta_wf_packet_v1",
+  "id": "COD-WALL-CONCRETE-GATE-001",
+  "priority": "P2",
+  "agent": "coder",
+  "lane": "construction_qop",
+  "status": "coder_done",
+  "ready_for_coder": false,
+  "blocked_by": [],
+  "prereq_shipped": [
+    "DES-MIL-DEFENSE-PLACE",
+    "COD-MIL-DEFENSE-PLACE-001",
+    "COD-WALL-ARCHETYPE-001",
+    "DES-MIL-DEPLOYABLE-CATALOG"
+  ],
+  "goal": "DefensiveWall allows_commit requires concrete stock; consume on successful CommitConstructionSiteEvent. Trench/bunker unchanged. Player sees locked reason 'insufficient concrete'.",
+  "charter": "src/dev/design_mil_deployable_defense_v1.md",
+  "design_witness": "debug_runs/des_mil_deployable_defense_live.json",
+  "impl_witness": "debug_runs/cod_wall_concrete_gate_live.json",
+  "plan": "src/dev/plan_mil_deployable_defense_v1.md",
+  "parallel_ok_with": ["COD-DEPLOYABLE-RECIPE-001"],
+  "authority_owner": "allows_commit + CommitConstructionSiteEvent",
+  "touch_expected": [
+    "src/construction/build_interaction.rs",
+    "src/gui/hud/validation_feedback.rs",
+    "src/gui/hud/sim_hud_copy.rs (REASON_INSUFFICIENT_CONCRETE already locked)"
+  ],
+  "do": [
+    "Gate DefenseKind::DefensiveWall commit on concrete buffer stock ≥ footprint need",
+    "Debit concrete on successful commit only",
+    "Wire strip/toast reason: insufficient concrete",
+    "Leave TrenchLine / Bunker commit behavior unchanged"
+  ],
+  "do_not": [
+    "New place funnel or CommitConstructionSiteEvent bypass",
+    "Abstract construction_cost wallet instead of concrete tag (prefer real concrete)",
+    "Materialize trench/bunker (DR-MIL-TRENCH-MATERIAL)",
+    "Phase 9 / deployable recipes (parallel slice)",
+    "UI write of stock buffers"
+  ],
+  "acceptance": [
+    "concrete=0 blocks wall commit",
+    "stock debit on success",
+    "trench/bunker unchanged",
+    "cod_wall_concrete_gate_live.json green:true ∧ consume_on_commit:true"
+  ],
+  "joint_coder": "Prefer existing portland/concrete buffer tag over inventing a parallel wallet (plan Q3).",
+  "verify": [
+    "validate-report cargo --cached --compress 4",
+    "cargo test -p proc_A_dine01 --lib construction::"
+  ],
+  "delta_wf": "@designer DES-MIL-DEPLOYABLE-CATALOG PASS → @coder COD-WALL-CONCRETE-GATE-001 (∥ COD-DEPLOYABLE-RECIPE-001)"
+}

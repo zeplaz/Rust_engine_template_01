@@ -231,6 +231,17 @@ def evaluate_witness_honesty_rules(
     if data.get("green") is True and art_quality.startswith("rejected"):
         add("WIT-ART-DISHONEST", f"green=true but art_quality={art_quality!r}")
 
+    # WIT-PRODUCT-VFX-PARTICLES — scoped ES-7/ecology green must not claim product VFX.
+    if (
+        data.get("green") is True
+        and data.get("product_vfx_claim") is True
+        and data.get("particles_rendered") is False
+    ):
+        add(
+            "WIT-PRODUCT-VFX-PARTICLES",
+            "green=true with product_vfx_claim=true but particles_rendered=false",
+        )
+
     # WIT-TINY-PNG-PILOT
     png_count = int(data.get("png_count") or 0)
     ship = data.get("ship")

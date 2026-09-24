@@ -1,0 +1,76 @@
+{
+  "gate": "APSR-MUTATION-REGRESS-001",
+  "task_id": "APSR-MUTATION-REGRESS-001",
+  "green": true,
+  "ok": true,
+  "mutation_inventory_green": true,
+  "live_mutation_count": 33,
+  "allowlist_count": 33,
+  "mutation_ceiling": 33,
+  "growth_ok": true,
+  "unexpected_sites": [],
+  "removed_sites": [],
+  "allowlist_sync": {
+    "synced": false,
+    "reason": "no_line_drift",
+    "live_count": 33,
+    "allowlist_count": 33,
+    "fingerprint_match": true
+  },
+  "allowlist_rel": "tools/mcp/schemas/aps_suite_state_mutation_allowlist_v1.json",
+  "lane_roundtrip_wiring": {
+    "ok": true,
+    "path": "tools/mcp/art_pipeline_suite/aps_shell_wiring.py",
+    "subscribes_lane_changed": true,
+    "calls_sync_from_state": true,
+    "buildings_lane_sync": true
+  },
+  "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-T1",
+  "cli": "apsr-mutation-regress-001",
+  "next_residual": "APS-GOLDEN-RUBRIC-OPS-001",
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": null,
+    "contract_only_no_ship_art": true,
+    "deterministic_output": true,
+    "no_ai_generated_images": true
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/apsr_mutation_regress_001_live.json",
+    "must": [
+      {
+        "field": "mutation_inventory_green",
+        "equals": true
+      },
+      {
+        "field": "growth_ok",
+        "equals": true
+      },
+      {
+        "field": "lane_roundtrip_wiring.ok",
+        "equals": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "apsr_mutation_regress_001_live_v1",
+    "profile": "APSR_MUTATION_REGRESS",
+    "relative_path": "debug_runs/apsr_mutation_regress_001_live.json",
+    "source_system": "apsr_mutation_regress",
+    "written_at_epoch_secs": 1790255188,
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 APSR-MUTATION-REGRESS-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "APSR-MUTATION-REGRESS-001",
+    "proceed_ship": false,
+    "art_quality": "contract_only_no_ship_art",
+    "agent": "coder-mcp"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/apsr_mutation_regress_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/apsr_mutation_regress_001_live.json"
+}

@@ -1,0 +1,12 @@
+{
+  "job_id": "win_brick_1u_production_run001",
+  "status": "done",
+  "log_path": "debug_runs/art_pipeline/win_brick_1u_production_run001.log",
+  "outputs": [
+    "assets/staging/win_brick_1u_production_run001/model.glb"
+  ],
+  "error": null,
+  "spec_ref": "assets/staging/specs/win_brick_1u_production.json",
+  "job_path": "tools/mcp/schemas/examples/win_brick_1u_production_run001.json",
+  "updated_at": 1790271893.4983966
+}

@@ -136,7 +136,7 @@ mod tests {
         assert!(toast.last_message.contains("Power island"));
         assert!(toast.last_message.contains('3'));
 
-        let mut world = app.world_mut();
+        let world = app.world_mut();
         let mut q = world.query_filtered::<&Text, With<OpsStripPower>>();
         let text_line = q.single(&world).expect("pwr strip").0.clone();
         assert!(text_line.contains("Island"));

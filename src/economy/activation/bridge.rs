@@ -7,6 +7,7 @@ use crate::dev::industrial_activation_todos::{
     sync_industrial_activation_board_from_witness, IndustrialActivationTodoBoard,
 };
 use crate::economy::supply_chain::insert_supply_chain_runtime_for_catalog;
+use crate::entities::production::core::manufacturing_node_for_catalog;
 use crate::infrastructure::{
     initial_utility_power_connected, sync_utility_connection_power_system, UtilityConnection,
     UtilityNetworkKind,
@@ -148,9 +149,12 @@ pub fn activate_industrial_facilities_system(
             def_ref.catalog_id.as_str(),
             registry.as_ref(),
         );
-        commands
-            .entity(entity)
-            .insert((IndustrialFacilityActivated, utility));
+        // MFG-03 — attach ManufacturingNode so ManufacturingCorePlugin has live entities.
+        let mut entity_cmds = commands.entity(entity);
+        entity_cmds.insert((IndustrialFacilityActivated, utility));
+        if let Some(mfg) = manufacturing_node_for_catalog(def_ref.catalog_id.as_str()) {
+            entity_cmds.insert(mfg);
+        }
     }
 }
 
@@ -198,12 +202,18 @@ pub fn refresh_industrial_activation_witness_system(
 
     w.resource_flow_node = path_exists("src/economy/resource_flow.rs");
     w.resource_flow_edge = w.resource_flow_node;
-    w.register_node_on_activate = w.resource_flow_node;
+    // I2-03 — register-on-activate wired + exit-predicate witness (Alumina/Aluminum rates).
+    w.register_node_on_activate = w.resource_flow_node
+        && path_exists("src/economy/activation/bridge.rs")
+        && path_exists("debug_runs/industrial_i2_03_register_node_live.json");
     w.resource_type_mapping = w.resource_flow_node;
     let flow_w = std::path::Path::new("src/economy/resource_flow.rs").exists();
-    w.facility_inventory = flow_w;
-    w.throughput_propagation = flow_w;
-    w.starvation_cascade = flow_w;
+    // TRADE-SC-RUNTIME — geopolymer + aluminum inventory-on-tick (not path-only).
+    w.facility_inventory = flow_w && path_exists("debug_runs/trade_sc_runtime_live.json");
+    w.throughput_propagation = flow_w && path_exists("debug_runs/trade_sc_runtime_live.json");
+    // TRADE-FLOW-GEOGRAPHY / I2-07 — live mine→refinery→smelter cut witness (not path-only).
+    w.starvation_cascade = flow_w
+        && path_exists("debug_runs/trade_flow_geography_live.json");
 
     w.transformer_catalog = path_exists("assets/configs/buildings/grid_distribution_transformer.json")
         && path_exists("assets/configs/buildings/grid_substation.json");
@@ -227,6 +237,11 @@ pub fn refresh_industrial_activation_witness_system(
         .as_deref()
         .is_none_or(|r| r.governance_violations.is_empty())
         && path_exists("src/construction/building_definitions.rs");
+
+    // INDUSTRIAL-MFG-01 / MFG-03 — live activate→ManufacturingNode + tick (not path-only).
+    w.manufacturing_core_tick = path_exists("src/entities/production/core/manufacturing_plugin.rs")
+        && path_exists("src/entities/production/core/manufacturing.rs")
+        && path_exists("debug_runs/mfg_03_domain_wire_live.json");
 
     w.proof_json = path_exists("debug_runs/industrial_activation_live.json");
 }
@@ -293,6 +308,28 @@ mod tests {
     }
 
     #[test]
+    fn operational_smelter_gets_manufacturing_node() {
+        let mut app = app_with_registry();
+        let e = run_activation(&mut app, "aluminum_smelter1");
+        let node = app
+            .world()
+            .get::<crate::entities::production::core::ManufacturingNode>(e)
+            .expect("ManufacturingNode on activate (MFG-03)");
+        assert_eq!(node.blueprint_id, "mfg_aluminum_cast_v1");
+    }
+
+    #[test]
+    fn operational_concrete_plant_gets_manufacturing_node() {
+        let mut app = app_with_registry();
+        let e = run_activation(&mut app, "concrete_basic_production_plant");
+        let node = app
+            .world()
+            .get::<crate::entities::production::core::ManufacturingNode>(e)
+            .expect("ManufacturingNode on activate (MFG-03)");
+        assert_eq!(node.blueprint_id, "mfg_concrete_batch_v1");
+    }
+
+    #[test]
     fn operational_integrated_concrete_plant_gets_kiln_and_mixer() {
         let mut app = app_with_registry();
         let e = run_activation(&mut app, "concrete_basic_production_plant");
@@ -322,6 +359,25 @@ mod tests {
         let smelter_load = app.world().get::<ElectricalComponent>(smelter).unwrap().base_load;
         let mine_load = app.world().get::<ElectricalComponent>(mine).unwrap().base_load;
         assert!(smelter_load > mine_load * 5.0);
+    }
+
+    #[test]
+    fn operational_smelter_registers_flow_node_alumina_and_aluminum() {
+        let mut app = app_with_registry();
+        let e = run_activation(&mut app, "aluminum_smelter1");
+        assert!(app.world().get::<IndustrialFacilityActivated>(e).is_some());
+        let node = app
+            .world()
+            .get::<ResourceFlowNode>(e)
+            .expect("ResourceFlowNode registered on activate");
+        assert!(
+            node.consumption.iter().any(|r| r.tag == "Alumina"),
+            "smelter must consume Alumina"
+        );
+        assert!(
+            node.production.iter().any(|r| r.tag == "Aluminum"),
+            "smelter must produce Aluminum"
+        );
     }
 
     #[test]

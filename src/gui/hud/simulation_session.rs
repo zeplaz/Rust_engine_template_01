@@ -95,6 +95,19 @@ pub fn apply_simulation_hud_defaults(
     sync_simulation_egui_shell_gate_witness(&dock, &layout, &mut witness);
 }
 
+/// VISUAL-JANK-LOD-001 / CHROME-001 — kill sticky debug overlays on Simulation enter.
+pub fn suppress_simulation_visual_debug_chrome(
+    mut focus_debug: ResMut<crate::gui::CameraFocusDebug>,
+    mut block_frame_dbg: ResMut<crate::gui::BlockFrameDebugUiState>,
+    mut pressure: ResMut<crate::gui::PressureComposerState>,
+) {
+    if !crate::gui::camera_focus_debug_env_armed() {
+        focus_debug.enabled = false;
+    }
+    block_frame_dbg.visible = false;
+    pressure.show_bevy_strip = false;
+}
+
 /// UX-E03-CODER-A — seed transmission media registry on Simulation enter (read-only narrative lane).
 pub fn seed_ux_e03_transmission_on_simulation_enter(
     mut registry: ResMut<TransmissionMediaProviderRegistry>,
@@ -144,11 +157,19 @@ pub fn apply_simulation_map_presentation_defaults(
         minimap.zoom_target = 1.0;
     }
     tray.set_minimap_overlay_mask(mask);
+    // VX-P0-01: minimap/tray fire tint stays off by default (wash). SimulationMap presentation
+    // fire_heat is armed for harness fire seeds immediately; product heat is enabled by
+    // `sync_sim_map_fire_overlay_when_sim_has_heat` once FireSimulationSnapshot has display heat.
     let sim_pres = presentation.get_mut(MapViewInstanceId::SimulationMap);
-    sim_pres.overlays.fire_heat = test_scene
+    let test_fire = test_scene
         .as_ref()
         .is_some_and(|s| s.0.seeds_fire_overlay());
+    sim_pres.overlays.fire_heat = test_fire;
     sim_pres.bump_revision();
+    if test_fire {
+        // Harness/--test vfx|visual|fire: keep tray checkbox aligned so operators see heat on.
+        tray.fire_heat = true;
+    }
     if let Ok(window) = primary_window.single() {
         minimap.bootstrap_simulation_layout_rect(window.width(), window.height());
     }
@@ -406,7 +427,11 @@ impl Plugin for SimulationSessionPlugin {
             .add_systems(OnEnter(BaseState::Simulation), apply_simulation_hud_defaults)
             .add_systems(
                 OnEnter(BaseState::Simulation),
-                apply_simulation_play_visual_budget.after(apply_simulation_hud_defaults),
+                suppress_simulation_visual_debug_chrome.after(apply_simulation_hud_defaults),
+            )
+            .add_systems(
+                OnEnter(BaseState::Simulation),
+                apply_simulation_play_visual_budget.after(suppress_simulation_visual_debug_chrome),
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),

@@ -27,6 +27,13 @@ CANONICAL_MODULE_IDS: frozenset[str] = frozenset(
         "win_office_1u",
         "win_bunker_slit",
         "win_skylight_1u",
+        # style-pack window slots (BQ-K1 / LOOK-V2 — brick/wood packs)
+        "win_brick_1u",
+        "win_brick_2u",
+        "win_wood_1u",
+        "win_wood_2u",
+        "win_concrete_1u",
+        "win_concrete_2u",
         # doors (10)
         "door_residential",
         "door_shop",

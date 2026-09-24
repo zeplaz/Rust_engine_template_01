@@ -1,0 +1,62 @@
+{
+  "task_id": "APS-GOLDEN-RUBRIC-SHEET-SCAFFOLD-001",
+  "gate": "APS-GOLDEN-RUBRIC-OPS-001",
+  "green": true,
+  "proceed_ship": false,
+  "art_quality": "rubric_sheet_pending_operator",
+  "operator_pass": false,
+  "aps_golden_ops_closed": false,
+  "bq_q3_ops_closed": false,
+  "designer_rubric_v3_exists": true,
+  "next_owners": [
+    "designer",
+    "operator"
+  ],
+  "unblock": [
+    "APS-GOLDEN-RUBRIC-OPS-001 \u2014 @designer charter design_aps_operator_rubric_v3.md",
+    "BQ-Q3-OPS-APPROVE-001 \u2014 @operator display session; verdicts \u2260 pytest"
+  ],
+  "plan_ref": "tools/orchestrator/queues/mcp_aps_tooling_finish_queue.json#APS-GOLDEN-RUBRIC-OPS-001",
+  "rubric_rows_path": "debug_runs/aps_golden_seed_rubric_rows.json",
+  "row_count": 12,
+  "added_pending": 0,
+  "demoted_pytest_theater": 0,
+  "preserved_operator_verdicts": 0,
+  "golden_seed_count": 12,
+  "rubric_ref": "src/dev/design_aps_operator_rubric_v3.md#BQ-Q3",
+  "operator_verdict_count": 0,
+  "pending_operator_count": 12,
+  "pytest_theater_count": 0,
+  "min_required": 12,
+  "exit_predicate": {
+    "witness": "debug_runs/aps_golden_rubric_sheet_scaffold_live.json",
+    "must": [
+      {
+        "field": "row_count",
+        "gte": 12
+      },
+      {
+        "field": "operator_pass",
+        "equals": false
+      },
+      {
+        "field": "aps_golden_ops_closed",
+        "equals": false
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "aps_golden_rubric_sheet_scaffold_v1",
+    "profile": "APS_GOLDEN_RUBRIC_SHEET",
+    "relative_path": "debug_runs/aps_golden_rubric_sheet_scaffold_live.json",
+    "source_system": "aps_golden_rubric_scaffold",
+    "written_at_epoch_secs": 1790255528,
+    "ritual": "BLANG:WIT-HON APS-GOLDEN-RUBRIC-SHEET-SCAFFOLD-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_golden_rubric_sheet_scaffold_live.json: 0 error(s), 0 issue(s)"
+  }
+}

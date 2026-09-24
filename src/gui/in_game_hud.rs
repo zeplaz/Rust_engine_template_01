@@ -107,7 +107,7 @@ impl Default for CommandLeftStackState {
         Self { collapsed: true }
     }
 }
-const OPS_STRIP_H_PX: f32 = 38.0;
+const OPS_STRIP_H_PX: f32 = 30.0; // HUD-A-001 — 28–32 px ops strip row
 const OPS_STRIP_MONO_PT: f32 = 13.0;
 /// L0 developmental context strip — always on in simulation shell (`developmental_ux_runbook_v1.md`).
 const DEV_CONTEXT_STRIP_H_PX: f32 = 26.0;
@@ -244,11 +244,20 @@ impl Plugin for InGameHudPlugin {
 
 /// Sim Bevy shell lifecycle — **Simulation only** (never `AppState::WorldGen`; see `world_gen_chrome_contract`).
 fn register_sim_command_shell_lifecycle(app: &mut App) {
-    app.add_systems(OnEnter(BaseState::Simulation), spawn_simulation_command_shell)
-        .add_systems(
-            OnExit(BaseState::Simulation),
-            despawn_simulation_command_shell,
-        );
+    app.add_systems(
+        OnEnter(BaseState::Simulation),
+        (
+            spawn_simulation_command_shell,
+            crate::gui::hud::sim_build_picker_bevy::spawn_sim_build_picker_bevy
+                .after(spawn_simulation_command_shell),
+            crate::gui::hud::sim_road_power_sheets_bevy::spawn_sim_road_power_sheets_bevy
+                .after(spawn_simulation_command_shell),
+        ),
+    )
+    .add_systems(
+        OnExit(BaseState::Simulation),
+        despawn_simulation_command_shell,
+    );
 }
 
 /// Left-stack show/hide changes flex width — fill rect re-measures next PostUpdate.
@@ -264,8 +273,29 @@ fn reset_simulation_map_fill_on_left_stack_toggle(
 fn despawn_simulation_command_shell(
     mut commands: Commands,
     roots: Query<Entity, With<SimulationCommandShellRoot>>,
+    pickers: Query<
+        Entity,
+        With<crate::gui::hud::sim_build_picker_bevy::SimBuildPickerRoot>,
+    >,
+    road_sheets: Query<
+        Entity,
+        With<crate::gui::hud::sim_road_power_sheets_bevy::SimRoadSheetRoot>,
+    >,
+    power_sheets: Query<
+        Entity,
+        With<crate::gui::hud::sim_road_power_sheets_bevy::SimPowerSheetRoot>,
+    >,
 ) {
     for e in &roots {
+        commands.entity(e).try_despawn();
+    }
+    for e in &pickers {
+        commands.entity(e).try_despawn();
+    }
+    for e in &road_sheets {
+        commands.entity(e).try_despawn();
+    }
+    for e in &power_sheets {
         commands.entity(e).try_despawn();
     }
 }

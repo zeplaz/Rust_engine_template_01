@@ -16,6 +16,7 @@ from .landscape_states_panel import LandscapeStatesPanel
 from .scrollable import ScrollableFrame
 from .state import SuiteState, ArtDomain
 from .materials_panel import MaterialsPanel
+from .effects_panel import EffectsPanel
 from .variants_panel import VariantsPanel
 from .aps_tooltips import bind_aps_tooltip, hide_all_tooltips
 from .aps_inline_feedback import flow_prerequisite_message
@@ -299,6 +300,14 @@ class ArtPipelineSuiteApp(tk.Tk):
             **job_kw,
         )
         bind_aps_tooltip(self.materials, "tab_materials")
+        self.effects = self._add_scrollable_tab(
+            nb,
+            EffectsPanel,
+            "Effects",
+            state=self.state,
+            on_log=self._log,
+        )
+        bind_aps_tooltip(self.effects, "tab_effects")
         self.assembly = self._add_scrollable_tab(
             nb,
             AssemblyPanel,

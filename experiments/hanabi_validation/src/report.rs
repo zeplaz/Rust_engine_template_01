@@ -23,7 +23,7 @@ pub fn render_report_v1(aggregate: &SpikeAggregate, bevy_gate: &str, hanabi_vers
          | **Bevy gate** | {bevy_gate} |\n\
          | **Hanabi crate** | {hanabi_version} |\n\n\
          ## Executive summary\n\n\
-         Bevy **0.18** + **bevy_hanabi 0.18** compile in the isolated experiment crate. \
+         Bevy **0.19** + **bevy_hanabi 0.19** compile in the isolated experiment crate. \
          Layer-3 presets for fire ember, water splash, and construction micro-spark are **PASS** \
          against designer numeric bounds. Arcade anti-pattern sample is documented **REJECT**.\n\n\
          **Spike verdict:** **PASS (qualified)** — proceed to designer re-review only if a future preset hits **TUNE** in production wiring.\n"
@@ -85,15 +85,16 @@ pub fn render_report_v1(aggregate: &SpikeAggregate, bevy_gate: &str, hanabi_vers
          | Muzzle-flash / neon / screen-fill | REJECT (`reject_arcade_muzzle_stack` — reference only) |\n\
          | Particles write L1 sim / weather | **Not attempted** — read-only L3 charter |\n\
          | Minimap / strategic zoom | **Not attempted** — tactical L3 only |\n\n\
-         ## Bevy 0.18 gate\n\n\
-         - Root [`Cargo.toml`](../../Cargo.toml): `bevy = \"0.18\"` (main crate unchanged)\n\
-         - Experiment: `bevy = \"0.18\"`, `bevy_hanabi = \"0.18\"`\n\
+         ## Bevy 0.19 gate\n\n\
+         - Root [`Cargo.toml`](../../Cargo.toml): `bevy = \"0.19\"`\n\
+         - Experiment: `bevy = \"0.19\"`, `bevy_hanabi = \"0.19\"`\n\
+         - Migration guide: https://bevy.org/learn/migration-guides/0-18-to-0-19/\n\
          - CI: `cargo check -p hanabi_validation`\n\n\
          ## Regression (main app)\n\n\
          ```powershell\n\
          cargo test -p proc_A_dine01 --lib stage7\n\
          ```\n\n\
-         Main app does **not** link `bevy_hanabi` until H-A2 feature gate.\n\n\
+         Main app does **not** link `bevy_hanabi` until H-A2 feature gate (`hanabi_l3`).\n\n\
          ## Optional captures\n\n\
          Operator may add PNGs under `assets/vfx/reference/review_captures/hanabi_spike/` (not required for spike exit).\n"
     )
@@ -122,5 +123,5 @@ fn verdict_label_matches(v: BoundsVerdict) -> &'static str {
 pub fn build_default_report() -> String {
     let events = spike_event_catalog();
     let aggregate = aggregate_spike_metrics(&events);
-    render_report_v1(&aggregate, "PASS — `cargo check -p hanabi_validation`", "bevy_hanabi 0.18")
+    render_report_v1(&aggregate, "PASS — `cargo check -p hanabi_validation`", "bevy_hanabi 0.19")
 }

@@ -7,7 +7,7 @@
   "ops_project_brief_v1_path": true,
   "ops_project_brief_rel": "debug_runs/agent_ops/ops_project_brief_v1.json",
   "schema": "ops_project_brief_v1",
-  "quality_score": 7,
+  "quality_score": 5,
   "delta_wf_composed": [
     {
       "finding": "Track B ship blocked \u2014 manual keyframe + G4",
@@ -85,7 +85,7 @@
   },
   "_agent_meta": {
     "schema": "ops_mcp_function_layer_live_v1",
-    "written_at_epoch_secs": 1782016222,
+    "written_at_epoch_secs": 1790256223,
     "profile": "OPS_MCP_FUNCTION_LAYER",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/ops_mcp_function_layer_live.json"

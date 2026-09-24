@@ -14,5 +14,7 @@ Artifacts moved here are **retired from runtime indexes** but **kept on disk** f
 | Folder | Contents |
 |:---|:---|
 | [`lod0_tile_pilots_2026-06/`](lod0_tile_pilots_2026-06/MANIFEST.yaml) | APS headless pilot building atlases + staging mirrors |
+| [`kit_greybox_smoke_retired_2026-09/`](kit_greybox_smoke_retired_2026-09/MOVED_LOG.json) | Greybox/smoke modules retired after BQ-PROD-DEFER-PACKS-001 |
+| [`kit_lod0_twins_retired_2026-09/`](kit_lod0_twins_retired_2026-09/MOVED_LOG.json) | Unused lod0 index twins retired after BQ-LOD0-TWIN-PRUNE-001 |
 
 To restore a pilot to active index: copy manifest paths back, re-add row to `_tile_atlas_index.ron`, and set `development_tier: lod0` (still not ship — use for debug only).

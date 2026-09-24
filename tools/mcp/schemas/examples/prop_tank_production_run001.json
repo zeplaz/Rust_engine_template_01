@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "job_id": "prop_tank_production_run001",
+  "batch_id": "kit_prod_noncore_bq_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/prop_tank_production.json",
+  "operation": "module_prop",
+  "params": {
+    "width_m": 2,
+    "height_m": 2,
+    "depth_m": 2,
+    "material_profile": "steel_panel_01",
+    "seed": 580005,
+    "profile": "box"
+  },
+  "output": {
+    "glb": "assets/staging/prop_tank_production_run001/model.glb",
+    "thumbnail": "assets/staging/prop_tank_production_run001/preview.png"
+  }
+}

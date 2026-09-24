@@ -80,7 +80,7 @@ def preview_witness_stub(
     staging_rel: str,
     promoted_rel: str = "",
 ) -> dict[str, Any]:
-    """Honest_gate pending until G4 preview worker runs (VSS-T4-003 stub envelope)."""
+    """Pending envelope when no capture frames exist yet."""
     body: dict[str, Any] = {
         "witness_schema": "artist_vfx_preview_witness_v1",
         "witness_path": WITNESS_REL,
@@ -94,11 +94,34 @@ def preview_witness_stub(
             "cli_parity": True,
             "blender_present": False,
         },
-        "_note": "G4 preview worker not run — capture_hash omitted until frames captured",
+        "_note": "Run effect-preview-capture for staging_pack_digest frames + capture_hash",
     }
     if promoted_rel:
         body["promoted_path"] = promoted_rel
     return body
+
+
+def resolve_preview_witness(
+    *,
+    effect_id: str,
+    staging_rel: str,
+    promoted_rel: str = "",
+    staging_dir: Path | None = None,
+) -> dict[str, Any]:
+    """Prefer on-disk capture witness; else pending stub."""
+    from .effect_preview_capture import load_staging_preview_witness, verify_capture_hash
+
+    root_staging = staging_dir or (staging_root() / effect_id)
+    captured = load_staging_preview_witness(root_staging)
+    if captured and verify_capture_hash(root_staging):
+        out = dict(captured)
+        out["staging_path"] = staging_rel
+        if promoted_rel:
+            out["promoted_path"] = promoted_rel
+        return out
+    return preview_witness_stub(
+        effect_id=effect_id, staging_rel=staging_rel, promoted_rel=promoted_rel
+    )
 
 
 def pack_effect_spec(spec_path: str | Path, *, force: bool = False) -> dict[str, Any]:
@@ -166,7 +189,11 @@ def pack_effect_spec(spec_path: str | Path, *, force: bool = False) -> dict[str,
         "pack_manifest": f"{staging_rel}{PACK_MANIFEST}",
         "shader_count": len(shader_hashes),
         "pack_hash": pack_hash,
-        "preview_witness": preview_witness_stub(effect_id=effect_id, staging_rel=staging_rel),
+        "preview_witness": resolve_preview_witness(
+            effect_id=effect_id,
+            staging_rel=staging_rel,
+            staging_dir=staging_dir,
+        ),
     }
 
 
@@ -232,6 +259,7 @@ def promote_effect(spec_path: str | Path, *, force: bool = False, pack_first: bo
 
     shutil.copy2(staging_dir / EFFECT_SPEC_NAME, registry_dir / EFFECT_SPEC_NAME)
     promoted_rel = f"{REGISTRY_REL}/{effect_id}/"
+    staging_rel = f"assets/staging/{effect_id}/"
     promote_body = {
         "schema": "effect_promote_manifest_v1",
         "effect_id": effect_id,
@@ -242,13 +270,24 @@ def promote_effect(spec_path: str | Path, *, force: bool = False, pack_first: bo
         "shader_hashes": manifest.get("shader_hashes"),
         "development_tier": spec.get("development_tier"),
         "lane": spec.get("lane"),
-        "preview_witness": preview_witness_stub(
+        "preview_witness": resolve_preview_witness(
             effect_id=effect_id,
-            staging_rel=f"assets/staging/{effect_id}/",
+            staging_rel=staging_rel,
             promoted_rel=promoted_rel,
+            staging_dir=staging_dir,
         ),
     }
     (registry_dir / PROMOTE_MANIFEST).write_text(json.dumps(promote_body, indent=2) + "\n", encoding="utf-8")
+    # Carry staging preview_frames into registry when capture already ran.
+    frames_src = staging_dir / "preview_frames"
+    if frames_src.is_dir():
+        frames_dest = registry_dir / "preview_frames"
+        if frames_dest.is_dir():
+            shutil.rmtree(frames_dest)
+        shutil.copytree(frames_src, frames_dest)
+        thumb = staging_dir / "capture_000.png"
+        if thumb.is_file():
+            shutil.copy2(thumb, registry_dir / "capture_000.png")
 
     return {
         "effect_id": effect_id,
@@ -343,12 +382,22 @@ def effect_promote(
 
 
 def refresh_artist_vfx_pipeline_witness(*, repo: Path | None = None) -> dict[str, Any]:
-    """Refresh debug_runs/artist_vfx_pipeline_live.json from disk (partial_ship → closer to green)."""
+    """Refresh debug_runs/artist_vfx_pipeline_live.json from disk (merge prior shipped fields)."""
     root = repo or repo_root()
     witness_path = root / WITNESS_REL
 
+    prior: dict[str, Any] = {}
+    if witness_path.is_file():
+        try:
+            loaded = json.loads(witness_path.read_text(encoding="utf-8"))
+            if isinstance(loaded, dict):
+                prior = loaded
+        except (OSError, json.JSONDecodeError):
+            prior = {}
+
     staging_effects: dict[str, Any] = {}
     promoted_effects: dict[str, Any] = {}
+    honest_count = 0
     for rel in REFERENCE_SPEC_RELS:
         spec_path = root / rel
         if not spec_path.is_file():
@@ -358,6 +407,9 @@ def refresh_artist_vfx_pipeline_witness(*, repo: Path | None = None) -> dict[str
         staging_dir = root / "assets" / "staging" / effect_id
         registry_dir = root / REGISTRY_REL / effect_id
         pack_manifest = staging_dir / PACK_MANIFEST
+        promoted_rel = (
+            f"{REGISTRY_REL}/{effect_id}/" if (registry_dir / PROMOTE_MANIFEST).is_file() else ""
+        )
         row: dict[str, Any] = {
             "spec": str(spec_path.relative_to(root)).replace("\\", "/"),
             "lane": spec.get("lane"),
@@ -365,39 +417,93 @@ def refresh_artist_vfx_pipeline_witness(*, repo: Path | None = None) -> dict[str
         }
         if pack_manifest.is_file():
             pm = json.loads(pack_manifest.read_text(encoding="utf-8"))
+            pw = resolve_preview_witness(
+                effect_id=effect_id,
+                staging_rel=f"assets/staging/{effect_id}/",
+                promoted_rel=promoted_rel,
+                staging_dir=staging_dir,
+            )
             row["staging_path"] = f"assets/staging/{effect_id}/"
             row["pack_hash"] = pm.get("pack_hash")
             row["shader_count"] = len(pm.get("shader_hashes") or {})
-            row["preview_witness"] = preview_witness_stub(
-                effect_id=effect_id,
-                staging_rel=f"assets/staging/{effect_id}/",
-                promoted_rel=f"{REGISTRY_REL}/{effect_id}/" if (registry_dir / PROMOTE_MANIFEST).is_file() else "",
-            )
+            row["preview_witness"] = pw
             staging_effects[effect_id] = row
+            if pw.get("honest_gate") == "honest":
+                honest_count += 1
         promote_manifest = registry_dir / PROMOTE_MANIFEST
         if promote_manifest.is_file():
             pm = json.loads(promote_manifest.read_text(encoding="utf-8"))
+            # Prefer live capture over stale stub still sitting on promote manifest.
+            pw = resolve_preview_witness(
+                effect_id=effect_id,
+                staging_rel=f"assets/staging/{effect_id}/",
+                promoted_rel=f"{REGISTRY_REL}/{effect_id}/",
+                staging_dir=staging_dir if pack_manifest.is_file() else staging_dir,
+            )
+            if isinstance(pm.get("preview_witness"), dict) and pw.get("honest_gate") != "honest":
+                # Keep registry-written witness when staging capture absent.
+                reg_pw = pm["preview_witness"]
+                if str(reg_pw.get("honest_gate") or "") == "honest" and int(
+                    reg_pw.get("frames_captured") or 0
+                ) >= 1:
+                    pw = dict(reg_pw)
             promoted_effects[effect_id] = {
                 "registry_path": f"{REGISTRY_REL}/{effect_id}/",
                 "pack_hash": pm.get("pack_hash"),
                 "lane": pm.get("lane"),
-                "preview_witness": pm.get("preview_witness"),
+                "preview_witness": pw,
             }
 
     packed_count = len(staging_effects)
     promoted_count = len(promoted_effects)
     pack_complete = packed_count >= 3
     promote_complete = promoted_count >= 3
+    capture_complete = honest_count >= 3 and promote_complete
     green = pack_complete and promote_complete
+
+    gaps: list[str] = []
+    if not promote_complete:
+        gaps.append("registry promote incomplete")
+    elif not capture_complete:
+        gaps.append("preview_witness honest_gate pending until effect-preview-capture")
+
+    pending: dict[str, Any] = {}
+    if not capture_complete:
+        pending["preview_witness_capture"] = (
+            "effect-preview-capture — staging_pack_digest frames + capture_hash + honest_gate=honest"
+        )
+
+    shipped: dict[str, Any] = {
+        "effect_spec_schema": "tools/mcp/schemas/effect_spec_v1.schema.json",
+        "effect_spec_validator": "tools/mcp/python/rust_engine_mcp/validators/effect_spec.py",
+        "validate_effect_spec_mcp": "validate_effect_spec_report",
+        "validate_effect_spec_cli": "validate-report effect_spec",
+        "effect_promote_mcp": "effect_promote",
+        "effect_promote_cli": "effect-promote",
+        "effect_pack_cli": "effect-pack",
+        "effect_preview_capture_mcp": "effect_preview_capture",
+        "effect_preview_capture_cli": "effect-preview-capture",
+        "reference_batch_id": REFERENCE_BATCH_ID,
+        "plan_doc": "src/dev/plan_artist_vfx_toolchain_v1.md",
+    }
+    # Preserve later-slice shipped blocks (T4-004 ECS · T4-005 APS panel).
+    prior_shipped = prior.get("shipped") if isinstance(prior.get("shipped"), dict) else {}
+    for key in (
+        "effect_consumable_ecs",
+        "effect_consumable_registry_plugin",
+        "aps_effect_browser",
+    ):
+        if key in prior_shipped:
+            shipped[key] = prior_shipped[key]
 
     body: dict[str, Any] = {
         "_agent_meta": {
             "profile": "VSS-T4-003",
             "schema": "debug_run_envelope_v1",
             "relative_path": WITNESS_REL,
-            "source_system": "effect_promote",
+            "source_system": "effect_preview_capture" if capture_complete else "effect_promote",
             "track": "VSS-T4",
-            "task_id": "VSS-T4-003",
+            "task_id": "VSS-T4-005b" if capture_complete else "VSS-T4-003",
             "proceed_ship": promote_complete,
             "art_quality": "smoke_tier_reference_batch",
             "docs": {
@@ -432,17 +538,7 @@ def refresh_artist_vfx_pipeline_witness(*, repo: Path | None = None) -> dict[str
                 "mitigation": "pack_manifest sha256 per shader_pack role — effect_promote pack step",
             },
         ],
-        "shipped": {
-            "effect_spec_schema": "tools/mcp/schemas/effect_spec_v1.schema.json",
-            "effect_spec_validator": "tools/mcp/python/rust_engine_mcp/validators/effect_spec.py",
-            "validate_effect_spec_mcp": "validate_effect_spec_report",
-            "validate_effect_spec_cli": "validate-report effect_spec",
-            "effect_promote_mcp": "effect_promote",
-            "effect_promote_cli": "effect-promote",
-            "effect_pack_cli": "effect-pack",
-            "reference_batch_id": REFERENCE_BATCH_ID,
-            "plan_doc": "src/dev/plan_artist_vfx_toolchain_v1.md",
-        },
+        "shipped": shipped,
         "reference_specs": {
             "batch_id": REFERENCE_BATCH_ID,
             "status": "shipped" if promote_complete else ("packed" if pack_complete else "partial_ship"),
@@ -466,14 +562,27 @@ def refresh_artist_vfx_pipeline_witness(*, repo: Path | None = None) -> dict[str
             },
             "staging": staging_effects,
             "promoted": promoted_effects,
-            "gaps": [] if promote_complete else ["preview_witness honest_gate pending until G4 preview worker"],
+            "gaps": gaps,
+            "preview_capture": {
+                "status": "shipped" if capture_complete else "pending",
+                "honest_count": honest_count,
+                "capture_kind": "staging_pack_digest",
+            },
         },
-        "pending": {
-            "preview_witness_capture": "G4 preview worker — capture_hash + honest_gate=honest",
-            "effect_consumable_ecs": "VSS-T4-004",
-        },
+        "pending": pending,
         "tribunal": {"dissent": []},
     }
+
+    for key in ("effect_consumable_ecs", "aps_panel_charter"):
+        if key in prior and isinstance(prior[key], dict):
+            body[key] = prior[key]
+
+    if capture_complete and isinstance(body.get("aps_panel_charter"), dict):
+        body["aps_panel_charter"] = {
+            **body["aps_panel_charter"],
+            "preview_witness_capture": "shipped",
+            "assign_unblocked": True,
+        }
 
     witness_path.parent.mkdir(parents=True, exist_ok=True)
     witness_path.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")

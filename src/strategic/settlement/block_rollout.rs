@@ -356,6 +356,7 @@ pub fn push_block_recipe_visual_requests_system(
                     tile,
                     color_kind: FootprintTileColorKind::Valid,
                     weight: 0.35,
+                    fill_override: None,
                 });
             }
         }
@@ -365,6 +366,7 @@ pub fn push_block_recipe_visual_requests_system(
                     tile,
                     color_kind: FootprintTileColorKind::Risky,
                     weight: 0.25,
+                    fill_override: None,
                 });
             }
         }
@@ -374,6 +376,7 @@ pub fn push_block_recipe_visual_requests_system(
                     tile,
                     color_kind: FootprintTileColorKind::Valid,
                     weight: 0.2,
+                    fill_override: None,
                 });
             }
         }

@@ -1,0 +1,270 @@
+{
+  "schema": "planner_coder_packet_v1",
+  "id": "PLAN-MIL-DEPLOYABLE-DEFENSE-v1",
+  "priority": "P2",
+  "agent": "planner",
+  "lane": "construction_qop",
+  "status": "designer_pass_coder_ready",
+  "ready_for_coder": true,
+  "ready_for_designer": false,
+  "blocked_by": [],
+  "prereq_shipped": [
+    "DES-MIL-DEFENSE-PLACE",
+    "COD-MIL-DEFENSE-PLACE-001",
+    "COD-P3-PLACE-ANIM-001",
+    "COD-WALL-ARCHETYPE-001"
+  ],
+  "parent_charter": "src/dev/design_mil_defense_place_v1.md",
+  "plan_doc": "src/dev/plan_mil_deployable_defense_v1.md",
+  "parent_residual": "debug_runs/des_mil_defense_place_residual_packet.json",
+  "index_codes": ["CB-TOOL", "CB-PIPE", "CB-CAT", "EC-LOG", "AI-CON", "STR-SIT"],
+  "architecture_decision": {
+    "verdict": "TWO_DEPLOY_CLASSES_ONE_FUNNEL",
+    "classes": {
+      "in_situ_material": {
+        "kinds": ["DefensiveWall"],
+        "model": "concrete_consume_on_commit",
+        "funnel": "CommitConstructionSiteEvent"
+      },
+      "manufactured_deployable": {
+        "kinds": ["DragonTeeth", "Minefield"],
+        "model": "manufacture_transit_stage_deploy",
+        "cargo": {
+          "DragonTeeth": "heavy_unit",
+          "Minefield": "light_unit"
+        },
+        "buffer_tags": {
+          "DragonTeeth": "dragon_teeth_unit",
+          "Minefield": "mine_unit"
+        },
+        "funnel": "CommitConstructionSiteEvent",
+        "gate": "SiteStagingStock >= footprint_need"
+      }
+    },
+    "reject": [
+      "free_stamp_place",
+      "parallel_place_event_bus",
+      "ConstructionPlanQueue_for_defense",
+      "CorridorConstructionBook_for_deployables",
+      "Phase9_military_industry_wholesale",
+      "AI_bypass_of_CommitConstructionSiteEvent",
+      "mines_as_separate_authority_because_lighter"
+    ],
+    "authority": {
+      "tool": "⊚ActiveBuildTool ═▶ ⊨ armed tool",
+      "kind": "⊚DefenseKind ⊰ ⊚ActiveBuildTool",
+      "commit": "⊚CommitConstructionSiteEvent ═▶ ⊨ site spawn",
+      "manufacture": "⊚ManufacturingNode ═▶ ⊨ unit production (ManufacturingDomain::Custom thin recipes)",
+      "freight_alloc": "⊚ThroughputSolverState ═▶ ⊨ freight alloc",
+      "in_transit": "⊚InTransitLedger ⊰ ⊚ThroughputSolver",
+      "staging": "⊚SiteStagingStock ⊰ ⊚InTransitLedger (single writer)",
+      "ai": "⊚ConstructionAiConfig ⊰ same CommitConstructionSiteEvent + gates",
+      "preview": "ghosts ◂⊳[snapshot] ActiveBuildTool — never mutate stock",
+      "not_authority": [
+        "UI/HUD",
+        "CorridorConstructionBook",
+        "ConstructionPlanQueue",
+        "Phase9 invent"
+      ]
+    }
+  },
+  "summary": "Walls stay in-situ concrete-on-commit. Dragon teeth and minefields share one manufacturable-deployable pipeline (recipe → InTransitLedger → staging → gated CommitConstructionSiteEvent). Same funnel as shipped defense place; no Phase-9; mines lighter cargo only.",
+  "current_problems": [
+    "Defense place commits without material or prefab stock.",
+    "No DefenseKind/SiteArchetype for DragonTeeth or Minefield.",
+    "ManufacturingDomain::Custom unused for deployable recipes.",
+    "No SiteStagingStock bridging freight arrivals to allows_commit.",
+    "Place residual scoped out logistics — QoP residuals not opened."
+  ],
+  "target_architecture": {
+    "catalog_sections_add": ["Obstacles (Dragon teeth)", "Emplacement (Minefield)"],
+    "site_archetypes_add": ["DragonTeeth", "Minefield"],
+    "defense_kinds_add": ["DragonTeeth", "Minefield"],
+    "recipes": ["mfg_dragon_teeth_v1", "mfg_mine_unit_v1"],
+    "pipeline": "ManufacturingNode → ThroughputSolver/FreightLot → InTransitLedger → SiteStagingStock → allows_commit → CommitConstructionSiteEvent"
+  },
+  "phases": [
+    {
+      "id": "DES-0",
+      "slice": "DES-MIL-DEPLOYABLE-CATALOG",
+      "owner": "@designer",
+      "goal": "Catalog IA + locked copy + contrast walls vs teeth vs mines; reject stamp UX",
+      "witness": "debug_runs/des_mil_deployable_defense_live.json",
+      "acceptance": [
+        "Obstacles + Emplacement sections locked",
+        "Walls remain InSituMaterial(concrete)",
+        "Demolish footer unchanged"
+      ]
+    },
+    {
+      "id": "COD-W1",
+      "slice": "COD-WALL-CONCRETE-GATE-001",
+      "owner": "@coder",
+      "depends_on": ["DES-0"],
+      "goal": "DefensiveWall allows_commit requires concrete; consume on commit",
+      "authority_owner": "allows_commit + CommitConstructionSiteEvent",
+      "witness": "debug_runs/cod_wall_concrete_gate_live.json",
+      "acceptance": [
+        "concrete=0 blocks wall commit",
+        "stock debit on success",
+        "trench/bunker unchanged"
+      ]
+    },
+    {
+      "id": "COD-P2",
+      "slice": "COD-DEPLOYABLE-RECIPE-001",
+      "owner": "@coder",
+      "depends_on": ["DES-0"],
+      "goal": "Thin Custom blueprints for dragon_teeth + mine_unit",
+      "authority_owner": "ManufacturingBlueprintRegistry",
+      "witness": "debug_runs/cod_deployable_pipeline_live.json",
+      "acceptance": ["recipes_registered true", "tick credits tagged buffers in lib"]
+    },
+    {
+      "id": "COD-P3",
+      "slice": "COD-DEPLOYABLE-LOGISTICS-001",
+      "owner": "@coder",
+      "review": "@sim-steward",
+      "depends_on": ["COD-P2"],
+      "goal": "buffer_tags in InTransitLedger; arrivals credit SiteStagingStock (single writer)",
+      "authority_owner": "InTransitLedger + SiteStagingStock",
+      "witness": "debug_runs/cod_deployable_pipeline_live.json",
+      "acceptance": [
+        "no same-tick teleport",
+        "in_transit then staged counters",
+        "async_district not a second freight path"
+      ]
+    },
+    {
+      "id": "COD-P4",
+      "slice": "COD-DEPLOYABLE-PLACE-001",
+      "owner": "@coder",
+      "depends_on": ["COD-P3", "COD-W1"],
+      "goal": "DefenseKind+SiteArchetype for teeth/mines; place+AI gated on staging",
+      "authority_owner": "CommitConstructionSiteEvent",
+      "witness": "debug_runs/cod_deployable_pipeline_live.json",
+      "acceptance": [
+        "place_blocked_no_stock",
+        "place_ok with debit",
+        "ai_commit_gated",
+        "construction_plan_queue_for_defense == false"
+      ]
+    }
+  ],
+  "exit_predicates": [
+    {
+      "id": "EP-DES",
+      "predicate": "des_mil_deployable_defense_live.json green:true ∧ catalog sections Obstacles+Emplacement"
+    },
+    {
+      "id": "EP-WALL-CONCRETE",
+      "predicate": "cod_wall_concrete_gate_live.json green:true ∧ consume_on_commit:true"
+    },
+    {
+      "id": "EP-PIPELINE",
+      "predicate": "cod_deployable_pipeline_live.json green:true ∧ recipes_registered ∧ in_transit ∧ staged ∧ place_ok ∧ place_blocked_no_stock ∧ ai_commit_gated"
+    },
+    {
+      "id": "EP-FUNNEL",
+      "predicate": "rg shows DefenseKind DragonTeeth/Minefield commit only via CommitConstructionSiteEvent; ConstructionPlanQueue unused for defense"
+    },
+    {
+      "id": "EP-TESTS",
+      "predicate": "cargo test -p proc_A_dine01 --lib construction:: ; logistics freight no-teleport still green"
+    },
+    {
+      "id": "EP-VALIDATE",
+      "predicate": "validate-report cargo --cached --compress 4 status ok / known_fixes only"
+    }
+  ],
+  "deferrals": [
+    {
+      "id": "DR-MIL-MUNITIONS-INDUSTRY",
+      "class": "product_blocked",
+      "unblock_when": "cod_deployable_pipeline_live.json green AND industrial L3 military domain charter signed"
+    },
+    {
+      "id": "DR-MIL-MINE-COMBAT",
+      "class": "product_blocked",
+      "unblock_when": "warfare/combat plan signed"
+    },
+    {
+      "id": "DR-MIL-DEPLOYABLE-ART",
+      "class": "product_blocked",
+      "unblock_when": "DES art brief AND MCP G4 stills path"
+    },
+    {
+      "id": "DR-MIL-TRENCH-MATERIAL",
+      "class": "incremental_ok",
+      "unblock_when": "cod_wall_concrete_gate_live.json green"
+    }
+  ],
+  "diagnostics": {
+    "witness_paths": [
+      "debug_runs/des_mil_deployable_defense_live.json",
+      "debug_runs/cod_wall_concrete_gate_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/des_mil_defense_place_residual_packet.json"
+    ],
+    "related_witnesses": [
+      "debug_runs/des_mil_defense_place_live.json",
+      "debug_runs/cod_wall_archetype_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/industrial_activation_live.json"
+    ]
+  },
+  "edge_cases": [
+    "Partial freight never spawns fractional sites",
+    "Stale RouteHandle must not credit staging",
+    "Trench/bunker material gates deferred (DR-MIL-TRENCH-MATERIAL)",
+    "Forward-only archetypes; old saves cannot place deployables until stock flows"
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "joint": "designer",
+      "ask": "Staging UX: one ghost line vs sheet section for in-transit/staged/ready?",
+      "resolved": true,
+      "answer": "one_context_strip_line — reject sheet staging section (DES-MIL-DEPLOYABLE-CATALOG)"
+    },
+    {
+      "id": "Q2",
+      "joint": "coder",
+      "ask": "Staging: per-site component vs FacilityPortal depot buffer then site pull?"
+    },
+    {
+      "id": "Q3",
+      "joint": "coder",
+      "ask": "Wall gate: real concrete buffer tag vs abstract construction_cost — prefer concrete tag"
+    },
+    {
+      "id": "Q4",
+      "joint": "sim-steward",
+      "ask": "Name single writer for SiteStagingStock before COD-P3"
+    }
+  ],
+  "catalog_ia_designer_override": {
+    "planner_sections": ["Obstacles", "Emplacement"],
+    "designer_section": "Deployables",
+    "rationale": "Single section fits 320x480; same ManufacturedPrefab authority chain; heavy vs light in row captions"
+  },
+  "scope_out": [
+    "Phase 9 military industry wholesale",
+    "Mine detection/clearing/detonation combat",
+    "APS / module kits / G-PLAY",
+    "Corridor continuous wall topology",
+    "Changing ConstructionPlanQueue road/rail semantics",
+    "Trench/bunker materialization (deferred)"
+  ],
+  "complexity_budget": {
+    "ev": "high (QoP honesty: defense = industry+logistics)",
+    "cx": "medium if phased; catastrophic if Phase-9",
+    "verdict": "SHIP_THIN"
+  },
+  "delta_wf": "@coder COD-WALL-CONCRETE-GATE-001 ∥ COD-DEPLOYABLE-RECIPE-001 → COD-DEPLOYABLE-LOGISTICS-001 (@sim-steward dual-writer) → COD-DEPLOYABLE-PLACE-001 → WIT-HON",
+  "verify": [
+    "validate-report cargo --cached --compress 4",
+    "cargo test -p proc_A_dine01 --lib construction::",
+    "cargo test -p proc_A_dine01 --lib logistics::"
+  ]
+}

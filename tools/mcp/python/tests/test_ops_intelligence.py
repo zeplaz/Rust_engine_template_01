@@ -114,3 +114,45 @@ def test_ops_project_brief_written_by_scan():
     assert "utility_score" in report
     assert "metrics_tier1" in report
     assert "ops_project_brief" in report["_agent_meta"]["source_system"]
+
+
+def test_ops_intelligence_scan_mcp_ops_report_001():
+    """MCP-OPS-REPORT-001 — shared CLI/MCP scan writes slice witness + spine artifacts."""
+    body = ops_intelligence.run_ops_intelligence_scan(window_hours=24, write_slice_witness=True)
+    assert body.get("gate") == "MCP-OPS-REPORT-001"
+    assert body.get("green") is True, body.get("summary") or body.get("steps")
+    assert body.get("written") == ops_intelligence.MCP_OPS_REPORT_001_WITNESS_REL
+    root = repo_root()
+    for rel in (
+        ops_intelligence.UNIFIED_INDEX_REL,
+        ops_intelligence.OPS_REPORT_REL,
+        ops_intelligence.OPS_BRIEF_REL,
+        ops_intelligence.OPS_DASHBOARD_REL,
+        ops_intelligence.OPS_TRIAGE_REL,
+        ops_intelligence.MCP_OPS_REPORT_001_WITNESS_REL,
+    ):
+        assert (root / rel).is_file(), rel
+    disk = json.loads((root / ops_intelligence.MCP_OPS_REPORT_001_WITNESS_REL).read_text(encoding="utf-8"))
+    assert disk.get("green") is True
+    assert disk.get("_agent_meta", {}).get("task_id") == "MCP-OPS-REPORT-001"
+
+
+def test_cli_ops_intelligence_scan():
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rust_engine_mcp.cli",
+            "ops-intelligence-scan",
+            "--window-hours",
+            "24",
+        ],
+        cwd=repo_root() / "tools/mcp/python",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+    body = json.loads(proc.stdout)
+    assert body.get("ok") is True
+    assert body.get("gate") == "MCP-OPS-REPORT-001"

@@ -27,6 +27,9 @@ fn site_archetype_label(archetype: SiteArchetype) -> &'static str {
         SiteArchetype::SensorPost => "Sensor",
         SiteArchetype::TrenchLine => "Trench",
         SiteArchetype::BunkerComplex => "Bunker",
+        SiteArchetype::DefensiveWall => "Wall",
+        SiteArchetype::DragonTeeth => "Dragon's teeth",
+        SiteArchetype::Minefield => "Minefield",
         SiteArchetype::FuelDepot => "Fuel depot",
         SiteArchetype::WaterPlant => "Water",
     }

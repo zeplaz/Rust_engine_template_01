@@ -1,0 +1,105 @@
+{
+  "schema": "mcp_ops_report_001_live_v1",
+  "gate": "MCP-OPS-REPORT-001",
+  "task_id": "MCP-OPS-REPORT-001",
+  "green": true,
+  "ok": true,
+  "window_hours": 24,
+  "enforce_integrity": false,
+  "steps": [
+    {
+      "ok": true,
+      "step": "witness_index",
+      "exit_code": 0,
+      "stdout_tail": "Wrote debug_runs/unified_witness_index.json (585 proofs, 9 programs)\nWrote debug_runs/agent_ops/ops_report_latest.json\nWrote debug_runs/agent_ops/ops_project_brief_v1.json\nWrote debug_runs/agent_ops/ops_mcp_function_layer_live.json\n",
+      "stderr_tail": "",
+      "wrote": [
+        "debug_runs/unified_witness_index.json",
+        "debug_runs/agent_ops/ops_report_latest.json",
+        "debug_runs/agent_ops/ops_project_brief_v1.json",
+        "debug_runs/agent_ops/ops_mcp_function_layer_live.json"
+      ]
+    },
+    {
+      "ok": true,
+      "step": "witness_integrity_hook",
+      "exit_code": 0,
+      "enforce": false,
+      "fail_count": null,
+      "witness_honesty_status": "failed"
+    },
+    {
+      "ok": true,
+      "step": "ops_dashboard",
+      "written": "debug_runs/agent_ops/ops_dashboard_live.json"
+    },
+    {
+      "ok": true,
+      "step": "ops_triage",
+      "written": "debug_runs/agent_ops/triage_live.json"
+    }
+  ],
+  "artifacts": {
+    "unified_witness_index": "debug_runs/unified_witness_index.json",
+    "ops_report_latest": "debug_runs/agent_ops/ops_report_latest.json",
+    "ops_project_brief": "debug_runs/agent_ops/ops_project_brief_v1.json",
+    "ops_dashboard": "debug_runs/agent_ops/ops_dashboard_live.json",
+    "triage_live": "debug_runs/agent_ops/triage_live.json",
+    "ops_mcp_function_layer": "debug_runs/agent_ops/ops_mcp_function_layer_live.json"
+  },
+  "cli": "ops-intelligence-scan",
+  "mcp": "ops_intelligence_scan_tool",
+  "ps1_parity": "tools/orchestrator/scripts/ops_intelligence_scan.ps1",
+  "summary": "OPS spine scan complete \u2014 index + integrity + dashboard + triage",
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": null,
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true,
+    "cli_mcp_parity": true
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/agent_ops/mcp_ops_report_001_live.json",
+    "must": [
+      {
+        "id": "paths_ok",
+        "pass": true
+      },
+      {
+        "id": "index_ok",
+        "pass": true
+      },
+      {
+        "id": "dashboard_ok",
+        "pass": true
+      },
+      {
+        "id": "triage_ok",
+        "pass": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "mcp_ops_report_001_live_v1",
+    "profile": "MCP_OPS_REPORT",
+    "relative_path": "debug_runs/agent_ops/mcp_ops_report_001_live.json",
+    "source_system": "ops_intelligence_scan",
+    "written_at_epoch_secs": 1790256226,
+    "ritual": "MCP-OPS-REPORT-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "MCP-OPS-REPORT-001",
+    "proceed_ship": false,
+    "art_quality": "tooling_only_no_ship_art",
+    "agent": "coder-mcp"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/agent_ops/mcp_ops_report_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/agent_ops/mcp_ops_report_001_live.json"
+}

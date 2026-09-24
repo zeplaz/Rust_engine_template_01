@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "job_id": "win_wood_1u_production_run001",
+  "batch_id": "kit_fill_bq_k1_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/win_wood_1u_production.json",
+  "operation": "module_window",
+  "params": {
+    "width_m": 4,
+    "height_m": 1.2,
+    "depth_m": 0.3,
+    "opening_width_m": 2.6,
+    "opening_height_m": 1.85,
+    "opening_sill_m": 0.55,
+    "material_profile": "wood_plank_01",
+    "seed": 42023,
+    "profile": "mullion",
+    "frame_m": 0.1
+  },
+  "output": {
+    "glb": "assets/staging/win_wood_1u_production_run001/model.glb",
+    "thumbnail": "assets/staging/win_wood_1u_production_run001/preview.png"
+  }
+}

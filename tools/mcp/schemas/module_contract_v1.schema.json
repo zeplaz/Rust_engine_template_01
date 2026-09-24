@@ -89,6 +89,16 @@
       "minimum": 0,
       "maximum": 0.05,
       "description": "BQ-C3 seam validator tolerance (default 0.01m)."
+    },
+    "axis_convention": {
+      "type": "object",
+      "properties": {
+        "blender_height_axis": { "type": "string" },
+        "gltf_height_axis": { "type": "string" },
+        "export_yup": { "type": "boolean" },
+        "notes": { "type": "string" }
+      },
+      "additionalProperties": true
     }
   },
   "additionalProperties": false

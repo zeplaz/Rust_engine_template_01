@@ -1,11 +1,17 @@
 //! Map camera focus → chunk grid + LOD for debug overlays and unified tracing.
 //!
 //! Uses the same ~64 world-unit chunk spacing assumed by fire visual tests / preview sampling.
+//!
+//! **Production gate (VISUAL-JANK-LOD-001):** yellow focus / green terrain chunk squares must
+//! never paint the Simulation playfield unless an explicit overlay flag is armed
+//! (`CAMERA_FOCUS_DEBUG=1` **and** [`CameraFocusDebug::enabled`]). Single authority:
+//! [`CameraFocusDebug::lod_paint_active`].
 
 use bevy::math::Isometry2d;
 use bevy::prelude::*;
 use std::collections::{HashMap, HashSet};
 
+use crate::engine::states::BaseState;
 use crate::gui::tactical::map_camera::{in_simulation_or_editor_map, MapCameraDesiredRes};
 use crate::gui::view_authority::tactical_camera_world_pose;
 use crate::gui::world_representation::WorldRepresentationFrame;
@@ -18,9 +24,18 @@ use crate::terrain::generation::{chunk_world_center, Chunk, ChunkCellMatrix};
 /// Default slab size when chunk matrix is unavailable (see test harness `SLAB = 32`).
 pub const DEBUG_CHUNK_SPACING_WORLD: f32 = 32.0;
 
+/// Explicit opt-in for LOD chunk debug paint (`CAMERA_FOCUS_DEBUG=1|true|on`).
+#[must_use]
+pub fn camera_focus_debug_env_armed() -> bool {
+    std::env::var("CAMERA_FOCUS_DEBUG")
+        .ok()
+        .is_some_and(|v| matches!(v.as_str(), "1" | "true" | "on" | "TRUE" | "ON"))
+}
+
 /// Dev overlay: camera world XY, derived chunk, LOD band, optional nearest zone id.
 #[derive(Resource, Debug, Clone, Copy)]
 pub struct CameraFocusDebug {
+    /// Runtime toggle — **inert in Simulation** unless [`camera_focus_debug_env_armed`].
     pub enabled: bool,
     pub world_pos: Vec2,
     pub focus_chunk: IVec2,
@@ -34,6 +49,7 @@ pub struct CameraFocusDebug {
 
 impl Default for CameraFocusDebug {
     fn default() -> Self {
+        // Production default OFF. Env arm alone does not paint — still need `enabled`.
         Self {
             enabled: false,
             world_pos: Vec2::ZERO,
@@ -46,23 +62,60 @@ impl Default for CameraFocusDebug {
     }
 }
 
+impl CameraFocusDebug {
+    /// Single authority: yellow/green LOD chunk squares may paint.
+    #[inline]
+    #[must_use]
+    pub fn lod_paint_active(self) -> bool {
+        self.enabled && camera_focus_debug_env_armed()
+    }
+}
+
+/// Schedule gate for gizmo LOD draw (pairs with GPU path check in `build_tile_debug_instances`).
+pub fn camera_focus_lod_paint_active(debug: Res<CameraFocusDebug>) -> bool {
+    debug.lod_paint_active()
+}
+
+/// Simulation session: force LOD overlay off unless env armed (no sticky mid-session enable).
+pub fn enforce_camera_focus_lod_off_in_simulation(
+    base: Res<State<BaseState>>,
+    mut debug: ResMut<CameraFocusDebug>,
+) {
+    if *base.get() != BaseState::Simulation {
+        return;
+    }
+    if !camera_focus_debug_env_armed() {
+        debug.enabled = false;
+    }
+}
+
 pub struct CameraFocusDebugPlugin;
 
 impl Plugin for CameraFocusDebugPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<CameraFocusDebug>().add_systems(
-            Update,
-            (
-                update_camera_focus_debug
-                    .after(ViewAuthoritySystemSet::SyncViewManager),
-                trace_camera_focus_line.after(update_camera_focus_debug),
-                draw_sim_focus_debug_overlay
-                    .after(trace_camera_focus_line)
-                    .run_if(crate::gui::tile_debug_types::tile_debug_use_gizmos_instead),
+        app.init_resource::<CameraFocusDebug>()
+            .add_systems(
+                Update,
+                enforce_camera_focus_lod_off_in_simulation
+                    .run_if(in_simulation_or_editor_map),
             )
-                .chain()
-                .run_if(in_simulation_or_editor_map),
-        );
+            .add_systems(
+                Update,
+                (
+                    update_camera_focus_debug
+                        .after(ViewAuthoritySystemSet::SyncViewManager)
+                        .run_if(camera_focus_lod_paint_active),
+                    trace_camera_focus_line
+                        .after(update_camera_focus_debug)
+                        .run_if(camera_focus_lod_paint_active),
+                    draw_sim_focus_debug_overlay
+                        .after(trace_camera_focus_line)
+                        .run_if(camera_focus_lod_paint_active)
+                        .run_if(crate::gui::tile_debug_types::tile_debug_use_gizmos_instead),
+                )
+                    .chain()
+                    .run_if(in_simulation_or_editor_map),
+            );
     }
 }
 
@@ -82,7 +135,8 @@ pub fn update_camera_focus_debug(
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     mut debug: ResMut<CameraFocusDebug>,
 ) {
-    if !debug.enabled {
+    // Defense in depth — schedule already `run_if(camera_focus_lod_paint_active)`.
+    if !debug.lod_paint_active() {
         return;
     }
     let (world_pos, _) = tactical_camera_world_pose(authority.as_deref(), &view_manager, &desired);
@@ -125,7 +179,7 @@ pub fn trace_camera_focus_line(
     mut last_fire: Local<usize>,
     mut tick: Local<u32>,
 ) {
-    if !focus.enabled {
+    if !focus.lod_paint_active() {
         return;
     }
     let fire = tactical_fire_visual(fire_by_view.as_ref());
@@ -157,7 +211,7 @@ pub fn draw_sim_focus_debug_overlay(
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     fire_by_view: Res<FireVisualFramesByView>,
 ) {
-    if !debug.enabled {
+    if !debug.lod_paint_active() {
         return;
     }
     let fire = tactical_fire_visual(fire_by_view.as_ref());
@@ -227,5 +281,26 @@ pub fn draw_sim_focus_debug_overlay(
             marker,
             Color::srgb(1.0, 0.15, 0.12),
         );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn lod_paint_inactive_without_env_even_if_enabled() {
+        // Env not set in unit test → enabled alone must not paint.
+        let mut d = CameraFocusDebug::default();
+        d.enabled = true;
+        assert!(!d.lod_paint_active());
+        assert!(!camera_focus_debug_env_armed());
+    }
+
+    #[test]
+    fn lod_paint_inactive_when_disabled() {
+        let d = CameraFocusDebug::default();
+        assert!(!d.enabled);
+        assert!(!d.lod_paint_active());
     }
 }

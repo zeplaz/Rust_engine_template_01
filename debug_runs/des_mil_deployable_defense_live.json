@@ -1,0 +1,155 @@
+{
+  "schema": "debug_run_envelope_v1",
+  "gate": "DES-MIL-DEPLOYABLE-CATALOG",
+  "verdict": "PASS",
+  "green": true,
+  "charter_on_disk": true,
+  "hud_copy_locked": true,
+  "impl_wired": false,
+  "picker_chrome": {
+    "reuse_military_rail": true,
+    "sheet_w_px": 320,
+    "sheet_max_h_px": 480,
+    "gap_px": 8,
+    "new_chrome_region": false,
+    "phase9_chrome": false
+  },
+  "catalog_ia": {
+    "sections": [
+      "walls",
+      "trenches",
+      "fortification",
+      "deployables",
+      "editing_demolish"
+    ],
+    "planner_obstacles_emplacement_consolidated_to": "deployables",
+    "rows": [
+      {
+        "id": "defensive_wall",
+        "section": "walls",
+        "label": "Defensive wall",
+        "caption": "Poured concrete",
+        "deploy_class": "InSituMaterial",
+        "material": "concrete",
+        "site_archetype": "DefensiveWall",
+        "place_fsm": "two_click",
+        "commit_gate": "concrete_stock"
+      },
+      {
+        "id": "trench_line",
+        "section": "trenches",
+        "label": "Trench line",
+        "deploy_class": "unchanged_deferred_material",
+        "site_archetype": "TrenchLine",
+        "place_fsm": "two_click"
+      },
+      {
+        "id": "bunker",
+        "section": "fortification",
+        "label": "Bunker",
+        "deploy_class": "unchanged_deferred_material",
+        "site_archetype": "BunkerComplex",
+        "place_fsm": "two_click"
+      },
+      {
+        "id": "dragon_teeth",
+        "section": "deployables",
+        "label": "Dragon's teeth",
+        "caption": "Heavy · staged stock required",
+        "deploy_class": "ManufacturedPrefab",
+        "cargo": "heavy_unit",
+        "buffer_tag": "dragon_teeth_unit",
+        "defense_kind": "DragonTeeth",
+        "site_archetype": "DragonTeeth",
+        "place_fsm": "two_click",
+        "commit_gate": "site_staging_stock",
+        "footprint_default": "3x1"
+      },
+      {
+        "id": "minefield",
+        "section": "deployables",
+        "label": "Minefield",
+        "caption": "Light · staged stock required",
+        "deploy_class": "ManufacturedPrefab",
+        "cargo": "light_unit",
+        "buffer_tag": "mine_unit",
+        "defense_kind": "Minefield",
+        "site_archetype": "Minefield",
+        "place_fsm": "two_click",
+        "commit_gate": "site_staging_stock",
+        "footprint_default": "3x3"
+      },
+      {
+        "id": "demolish",
+        "section": "editing_demolish",
+        "label": "Demolish",
+        "default_on_military_select": false
+      }
+    ]
+  },
+  "place_ux": {
+    "two_click_reuse": true,
+    "free_stamp_rejected": true,
+    "commit_funnel": "CommitConstructionSiteEvent",
+    "construction_plan_queue_for_defense": false,
+    "staging_ux": "one_context_strip_line",
+    "staging_sheet_section": false
+  },
+  "q1_staging_ux": {
+    "decision": "one_ghost_context_strip_line",
+    "reject": "picker_sheet_staging_section"
+  },
+  "copy_locked": {
+    "lead": "Poured walls or staged deployables — demolish is separate.",
+    "section_deployables": "Deployables",
+    "row_dragon_teeth": "Dragon's teeth",
+    "row_minefield": "Minefield",
+    "reason_insufficient_concrete": "insufficient concrete",
+    "reason_insufficient_staged": "insufficient staged stock",
+    "reason_stock_in_transit": "stock still in transit"
+  },
+  "scope_out": [
+    "phase9_military_industry",
+    "mine_combat",
+    "deployable_art",
+    "trench_bunker_material",
+    "corridor_wall_topology",
+    "picker_row_wiring_ecs"
+  ],
+  "deferrals": [
+    "DR-MIL-MUNITIONS-INDUSTRY",
+    "DR-MIL-MINE-COMBAT",
+    "DR-MIL-DEPLOYABLE-ART",
+    "DR-MIL-TRENCH-MATERIAL"
+  ],
+  "residuals_open_after_des": [
+    "COD-WALL-CONCRETE-GATE-001",
+    "COD-DEPLOYABLE-RECIPE-001",
+    "COD-DEPLOYABLE-LOGISTICS-001",
+    "COD-DEPLOYABLE-PLACE-001"
+  ],
+  "delta_wf": "@coder COD-WALL-CONCRETE-GATE-001 ∥ COD-DEPLOYABLE-RECIPE-001 → COD-DEPLOYABLE-LOGISTICS-001 → COD-DEPLOYABLE-PLACE-001",
+  "delta_wf_packets": [
+    "debug_runs/cod_wall_concrete_gate_001_delta_wf.json",
+    "debug_runs/cod_deployable_recipe_001_delta_wf.json"
+  ],
+  "charter": "src/dev/design_mil_deployable_defense_v1.md",
+  "plan": "src/dev/plan_mil_deployable_defense_v1.md",
+  "parent_charter": "src/dev/design_mil_defense_place_v1.md",
+  "related_witnesses": [
+    "debug_runs/des_mil_defense_place_live.json",
+    "debug_runs/des_mil_defense_place_residual_packet.json",
+    "debug_runs/des_mil_deployable_defense_planner_packet.json",
+    "debug_runs/cod_wall_archetype_live.json"
+  ],
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "profile": "DES-MIL-DEPLOYABLE-CATALOG",
+    "source_system": "designer_des_mil_deployable_catalog",
+    "relative_path": "debug_runs/des_mil_deployable_defense_live.json",
+    "docs": {
+      "charter": "src/dev/design_mil_deployable_defense_v1.md",
+      "copy_registry": "src/dev/sim_hud_copy_registry_v1.md"
+    }
+  }
+}

@@ -1,0 +1,252 @@
+{
+  "schema": "debug_intelligence_routing_packet_v1",
+  "packet_id": "VFX-ABSENT-ADVERSARIAL-001",
+  "role": "adversarial_counter_agent",
+  "agent": "debug-intelligence",
+  "written_at_epoch_secs": 1790271807,
+  "screenshot_evidence": {
+    "path": "assets/.../jank-48476060-caf6-48dc-b1c7-33eefa1700b4.png",
+    "rain_visible": true,
+    "fire_spark_smoke_visible": false,
+    "yellow_green_edge_squares": true,
+    "brown_static_burn_tiles_center": true,
+    "clipped_pres_worl_hud": true
+  },
+  "adversarial_verdict": "REJECT band-aids. Product fire/spark/smoke is dead while scoped-lib witnesses claim green. Rain working proves weather precip path only \u2014 not fire particle raster health. Yellow/green edge quads are LOD/tile-debug chrome, not missing VFX.",
+  "reject_band_aids": [
+    "Flip effects_system_es7_live.json particles_rendered true without Hanabi/operator capture",
+    "Toggle WeatherFireFieldDebugOverlay.show /gpu.show as fire fix",
+    "Enable FIRE_SPARK_COMPUTE=1 env as the production fix",
+    "Enable hanabi_l3 feature as if it were the ship particle path",
+    "Inflate fire_ecology f1_green / fire_inst_proxy while fire_inst=0",
+    "Rely on steward_spark_vfx_001 / fire_spark_011_green at locked zoom_alpha=0.85",
+    "Claim VR-16 closed from lib green alone",
+    "Hide yellow/green by scissor hack without killing CameraFocusDebug / tile-debug overlay writers"
+  ],
+  "dishonest_witness_audit": [
+    {
+      "path": "debug_runs/effects_system_es7_live.json",
+      "claim": "green=true status=done",
+      "contradiction": "particles_rendered=false hanabi_l3_wired=false contract_proven_without_backend=true",
+      "honesty_brief": "WIT-HON profile returned failed_rule_ids=[] \u2014 honesty gate does not catch product-dead particles",
+      "age_note": "ES-7-1..3 closed with explicit false particles since ~2026-08 queue note; months-old scoped-green lie if treated as product VFX"
+    },
+    {
+      "path": "debug_runs/fire_ecology_live.json",
+      "claim": "green=true f1_green=true ember_events_emitted=1024",
+      "contradiction": "fire_inst_proxy=0; policy explicitly excludes render fire_inst from f1_green; sim fuel/spark gates only",
+      "age_note": "lib_harness refresh \u2014 not --test visual pixels"
+    },
+    {
+      "path": "debug_runs/stage5_full_app_live.json",
+      "claim": "tactical_vfx_witness.all_green=true fire_spark_011_green=true fire_spark_rows=12",
+      "contradiction": "stage5_closure missing; readiness.passes null; log_e01_fullapp_upgrade_001.green=false full_visual_confirm=false; proof zoom locked 0.85; screenshot shows zero sparks",
+      "age_note": "Harness counters != operator Simulation presentation (vfx_triage_v1 rule)"
+    },
+    {
+      "path": "debug_runs/f2_smoke_pipeline_live.json",
+      "claim": "green=true pass=true",
+      "contradiction": "lib mini_pipeline only; no smoke pixels in screenshot",
+      "age_note": "epoch older than ES-7; still cited as related_proof"
+    },
+    {
+      "path": "debug_runs/steward_spark_vfx_proof.rs / steward_spark_vfx_001",
+      "claim": "lib green closes VR-16",
+      "contradiction": "asserts JSON fields at tactical proof zoom; visual_run_blockers VR-16 still operator-verify; DR-RTT-VR16 open"
+    }
+  ],
+  "authority_map": {
+    "should_draw": {
+      "fire_heat_overlay": {
+        "resource": "FireVisualFrame / SharedOverlayFieldBuffers",
+        "writer": "src/render/extraction/fire_visual_extract.rs::sync_shared_overlay_from_simulation",
+        "set": "FireVisualFrameSet"
+      },
+      "sparks": {
+        "resource": "WorldFireParticleFrame",
+        "emitter": "src/render/fire_vfx/emit.rs::emit_world_fire_particles_from_projection",
+        "schedule": "FireVisualFrameSet::EmitParticles (after ProjectGpu)",
+        "raster": "src/render/pipelines/gpu_fire_particle_raster.rs",
+        "hard_gate": "MainWorldCamera must Have TileDebugRenderHost \u2014 else spark_rows>0 but never draw (sim_map_rtt.rs ensure_rtt_core2d_overlay_hosts)"
+      },
+      "smoke": {
+        "build": "FireVisualFrameSet::EmitSmoke / build_smoke_visual_extract",
+        "field": "ChunkSmokeGpu / atmosphere visual_extract chunk smoke",
+        "note": "NOT weather rain; F2 lib green is not smoke pixels"
+      },
+      "rain": {
+        "path": "src/systems/weather/weather_visual.rs + weather precip draw",
+        "status": "WORKING in screenshot (VR-13 fixed) \u2014 orthogonal to fire sparks"
+      },
+      "hanabi_l3": {
+        "path": "src/render/fx_spine/hanabi_embellishment.rs",
+        "status": "OPTIONAL embellishment behind feature+env \u2014 NOT production spark authority"
+      }
+    },
+    "actually_runs_in_test_visual_or_simulation": {
+      "rain": "yes \u2014 visible",
+      "fire_heat_chunk_tint": "partial \u2014 brown static tiles center; may be heat overlay or seeded burn without particle garnish",
+      "gpu_sparks": "no visible \u2014 either zero instances at play zoom, raster host miss, or draw skip",
+      "smoke": "no visible",
+      "yellow_green_edge": "CameraFocusDebug LOD gizmo colors (focus yellow 0.95/0.85/0.15 + terrain green 0.2/0.75/0.25) and/or TileGpuDebug FOCUS+TERRAIN flags \u2014 chrome artifact lane",
+      "WeatherFireFieldDebugOverlay": "default show=false; only forced true for TestScene::Weather; unlikely unless F3 enabled"
+    }
+  },
+  "root_causes_ranked": [
+    {
+      "rank": 1,
+      "id": "WITNESS-SCOPE-LIE",
+      "confidence": 0.92,
+      "root_cause": "Months-old scoped-green culture: ES-7/fire_ecology/steward_spark/stage5 tactical counters claim done while product pixels absent; WIT-HON does not fail particles_rendered:false+green",
+      "evidence": [
+        "effects_system_es7_live.json",
+        "fire_ecology_live.json fire_inst_proxy=0",
+        "steward_spark asserts stage5 fields",
+        "vfx_triage_v1 harness!=Simulation rule"
+      ]
+    },
+    {
+      "rank": 2,
+      "id": "EMIT_NE_DRAW",
+      "confidence": 0.78,
+      "root_cause": "Known contract: sparks can emit (spark_rows>0) but Core2d fire particle raster skips without TileDebugRenderHost on MainWorldCamera; diagnostics already name FIRE_SPARK_HOST_MISSING",
+      "evidence": [
+        "src/gui/tactical/sim_map_rtt.rs:175",
+        "src/dev/tactical_map_debug.rs FIRE_SPARK_HOST_MISSING",
+        "gpu_fire_particle_raster Has<TileDebugRenderHost>"
+      ]
+    },
+    {
+      "rank": 3,
+      "id": "SIM_FIRE_HEAT_POLICY",
+      "confidence": 0.72,
+      "root_cause": "OnEnter(Simulation) forces SimulationMap overlays.fire_heat = test_scene.seeds_fire_overlay() only \u2014 false in normal play (VX-P0-01 wash fix). Product fire read depends on WorldMain fire_heat + tray; easy to ship rain+dead fire",
+      "evidence": [
+        "src/gui/hud/simulation_session.rs:148-150",
+        "vfx_triage VX-P0-01"
+      ]
+    },
+    {
+      "rank": 4,
+      "id": "CHROME_LOD_DEBUG",
+      "confidence": 0.7,
+      "root_cause": "Yellow/green edge squares match CameraFocusDebug draw_sim_focus_debug_overlay colors, not spark/smoke shaders; Visual harness comments call these green squares LOD tile debug",
+      "evidence": [
+        "src/gui/camera_focus_debug.rs:203-208",
+        "test_harness.rs Visual: focus_debug.enabled=false comment"
+      ]
+    },
+    {
+      "rank": 5,
+      "id": "HEAT_WITHOUT_GARNISH",
+      "confidence": 0.55,
+      "root_cause": "Center brown tiles may be heat/overlay without WorldFireParticleFrame scatter (heat<thresholds or capacity0) \u2014 counters can still be green from prior harness write",
+      "evidence": [
+        "screenshot center brown cluster",
+        "emit.rs heat/scatter gates"
+      ]
+    }
+  ],
+  "lattice": {
+    "H1": {
+      "name": "dishonest scoped witnesses masking product-dead VFX",
+      "rho": 0.45
+    },
+    "H2": {
+      "name": "TileDebugRenderHost / fire raster skip (emit\u2260draw)",
+      "rho": 0.25
+    },
+    "H3": {
+      "name": "Simulation fire_heat overlay policy kill",
+      "rho": 0.15
+    },
+    "H4": {
+      "name": "LOD/tile-debug chrome (yellow/green)",
+      "rho": 0.1
+    },
+    "H5": {
+      "name": "Hanabi/ES-7 not wired",
+      "rho": 0.05,
+      "note": "RED HERRING for production sparks"
+    }
+  },
+  "production_fix": {
+    "required_exit_predicate": "Operator-visible fire heat + sparks + smoke in cargo run --release -- --test vfx AND normal Simulation play; counters alone insufficient",
+    "file_owners": {
+      "@coder": [
+        "src/render/fire_vfx/emit.rs",
+        "src/render/pipelines/gpu_fire_particle_raster.rs",
+        "src/gui/tactical/sim_map_rtt.rs (TileDebugRenderHost heal + live host_present in product witness)",
+        "src/render/extraction/fire_visual_extract.rs",
+        "src/dev/effects_system_es7_live_proof.rs (stop green when particles_rendered false if claimed product)",
+        "src/systems/fire/witness_collectors.rs / fire_ecology \u2014 separate sim-green from render-green"
+      ],
+      "@designer": [
+        "Simulation fire_heat default vs wash (VX-P0-01 follow-up) \u2014 product overlay tray defaults",
+        "Chrome: CameraFocusDebug / tile-debug must stay off in product Simulation"
+      ],
+      "@sim-steward": [
+        "Force WIT-HON fail on green\u2227particles_rendered:false for product lanes",
+        "Refresh stage5_full_app_live from live --test vfx with host_present + draw_ok",
+        "Keep VR-16 / DR-RTT-VR16 open until pixels proven"
+      ],
+      "@operations-intelligence": [
+        "art/ops dishonest_gate=7 rollup \u2014 do not collapse into ECS fix; separate DSM"
+      ]
+    },
+    "instrumentation_before_toggle": [
+      "RttCore2dOverlayHostState.host_present",
+      "WorldFireParticleFrame.spark_witness.{rows,view_culled,projection_view,zoom_alpha}",
+      "FireDrawDiagnostics {policy_skip,cap_zero_skip,identity_skip,draw_ok}",
+      "CameraFocusDebug.enabled + TileGpuDebugSettings.use_batched_mesh_overlay",
+      "MapView WorldMain+SimulationMap overlays.fire_heat"
+    ]
+  },
+  "force_siblings": [
+    "Do not close chrome by toggling a bool without naming CameraFocusDebug / tile-debug as the writer",
+    "Do not treat ES-7 Hanabi as the fire/spark/smoke production path",
+    "Do not refresh fire_ecology green as proof of VFX",
+    "Must produce live --test vfx witness with spark_rows AND draw_ok AND host_present AND operator note",
+    "Must split sim-ecology green from render-particle green in any Q\u2713",
+    "Must fix emit\u2260draw or overlay policy with file owners above \u2014 not witness JSON edits"
+  ],
+  "routing_packet": {
+    "issue": "Rain yes / fire-spark-smoke no + yellow-green edge chrome; witnesses claim green",
+    "severity": "high",
+    "root_cause": "Months-old scoped-green + emit\u2260draw/host and Simulation fire_heat policy \u2014 not a missing Hanabi toggle",
+    "affected": [
+      "WorldFireParticleFrame",
+      "gpu_fire_particle_raster",
+      "TileDebugRenderHost",
+      "FireVisualFrame / SharedOverlayFieldBuffers",
+      "CameraFocusDebug",
+      "effects_system_es7_live",
+      "fire_ecology_live",
+      "stage5_full_app_live"
+    ],
+    "migration": "n/a (post Bevy 0.19; VR-16 / DR-RTT-VR16 still verify)",
+    "recommendation": "Instrument host_present+draw_ok+fire_heat live; kill LOD chrome writers; restore product spark raster; make WIT-HON fail green\u2227!particles for product; reject ES-7/ecology green as VFX proof",
+    "owner": "@coder",
+    "secondary_owners": [
+      "@sim-steward",
+      "@designer"
+    ],
+    "confidence": 0.82,
+    "confidence_glyph": "\u25d5",
+    "delta_wf": "@coder"
+  },
+  "one_line_smoking_guns_for_coder": [
+    "sim_map_rtt.rs: without TileDebugRenderHost, sparks emit but never draw",
+    "simulation_session.rs: OnEnter Simulation sets fire_heat only if test seeds fire",
+    "effects_system_es7_live_proof.rs: asserts particles_rendered==false while green==true"
+  ],
+  "share": {
+    "bp": "SHARE",
+    "witness_path": "debug_runs/vfx_absent_adversarial_packet.json",
+    "invite_review": [
+      "@coder",
+      "@sim-steward",
+      "sibling chrome/vfx agents"
+    ]
+  }
+}

@@ -1,12 +1,13 @@
 //! Left **status rail** — docked egui side panel (`HudCommandShellLayout::status_side_panel_state`).
 //!
-//! **2B-03:** Editor-only — simulation uses Bevy left context rail; gated via
+//! **2B-03 / HUD-NAT-008:** Editor-only — simulation uses Bevy left context rail; gated via
 //! [`crate::gui::ui_gates::side_status_rail_egui_active`] and
 //! [`super::shell_framework::side_status_rail_egui_dock_active`].
 use bevy::prelude::*;
 use bevy_egui::egui;
 
 use crate::construction::{ActiveBuildTool, BuildPlacementPreview, BuildGhostState};
+use crate::engine::states::BaseState;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::style::widget_scroll_vertical_fill;
 use crate::gui::CommandLeftStackState;
@@ -20,6 +21,7 @@ use super::hud_chrome::{
     HudChromeIcon,
 };
 use super::panel_state::HudPanelState;
+use super::shell_framework::side_status_rail_egui_dock_active;
 use super::stage5_spine_consumer::draw_stage5_spine_consumer_panel;
 use super::stage6_consumer::draw_stage6_residency_consumer_panel;
 use super::stage6_telemetry::Stage6HudTelemetry;
@@ -30,6 +32,19 @@ use crate::gui::editor::world_preview::{PreviewPathAuthority, PreviewPresentatio
 use crate::gui::style::UiPalette;
 use crate::gui::WorldRepresentationFrame;
 
+/// HUD-NAT-008 — egui side status must not open in Simulation (Bevy context rail owns status).
+pub const SIDE_STATUS_RAIL_EGUI_IN_SIM: bool = false;
+
+/// Lib / witness: sim gate confirms no egui side-status overflow into play chrome.
+#[must_use]
+pub fn hud_nat_008_side_status_sim_gated() -> bool {
+    !SIDE_STATUS_RAIL_EGUI_IN_SIM
+        && !side_status_rail_egui_dock_active(BaseState::Simulation)
+        && side_status_rail_egui_dock_active(BaseState::Editor)
+        && include_str!("hud_side_status_panel.rs").contains("side_status_rail_egui_dock_active")
+        && include_str!("hud_side_status_panel.rs").contains("SIDE_STATUS_RAIL_EGUI_IN_SIM")
+}
+
 /// Draw the docked left status panel (call early in the egui pass).
 pub fn draw_hud_side_status_panel_egui(
     ui: &mut egui::Ui,
@@ -37,6 +52,7 @@ pub fn draw_hud_side_status_panel_egui(
     palette: &UiPalette,
     bindings: &InputBindings,
     world: &WorldRepresentationFrame,
+    base: BaseState,
     readiness: Option<&AppStage5ReadinessReport>,
     preview_authority: Option<&PreviewPathAuthority>,
     preview_debug: Option<&PreviewPresentationDebug>,
@@ -52,6 +68,14 @@ pub fn draw_hud_side_status_panel_egui(
     interaction_latency: &InteractionLatencyMetrics,
     world_interaction: Option<&WorldInteractionDiagnostics>,
 ) {
+    // HUD-NAT-008 / UI-P2B-003 — defense in depth (root also `run_if(product_egui_shell_active)`).
+    if !SIDE_STATUS_RAIL_EGUI_IN_SIM && matches!(base, BaseState::Simulation) {
+        return;
+    }
+    if !side_status_rail_egui_dock_active(base) {
+        return;
+    }
+
     let width = layout.status_side_panel_state.target_width();
     let mut panel_state = layout.status_side_panel_state;
 
@@ -201,4 +225,14 @@ pub fn hud_status_side_panel_toggle_system(
         HudPanelState::Expanded => HudPanelState::Collapsed,
         HudPanelState::Pinned => HudPanelState::Collapsed,
     };
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn hud_nat_008_side_status_sim_gated_lib() {
+        assert!(hud_nat_008_side_status_sim_gated());
+    }
 }

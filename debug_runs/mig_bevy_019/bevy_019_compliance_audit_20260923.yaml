@@ -1,0 +1,43 @@
+# Bevy 0.18→0.19 compliance audit — 2026-09-23
+# Guide: https://bevy.org/learn/migration-guides/0-18-to-0-19/
+schema: bevy_019_compliance_audit_v1
+bevy_version: "0.19.0"
+hanabi_version: "0.19.0"
+bevy_egui: "0.41"
+gate_witness: debug_runs/mig_bevy_019/mig_v1_gate.json
+mig_program: CLOSED
+
+checks:
+  cargo_check_proc_A_dine01: pass
+  rustflags_deny_deprecated: pass  # RUSTFLAGS="-D deprecated" → 0 hits
+  cargo_check_hanabi_validation: pass
+  messages_api: pass               # MessageWriter/Reader; EventWriter/Reader = 0
+  no_dual_component_resource: pass
+  no_init_non_send_resource: pass  # already on init_non_send / insert_non_send if used
+  entity_allocator: pass           # entity_allocator() not entities_allocator
+  extract_component_hosts: pass    # TerrainInstancedRenderHost / TileDebugRenderHost
+  feature_flags_g3: pass           # multi_threaded explicit; audio not implied
+  particles_gui_drain_019: pass    # Message API + ResMut patterns on 0.19
+
+deferred_ecosystem:
+  - item: bevy_ecs_tilemap
+    pin: "0.18.1"
+    reason: "crates.io has no 0.19 line yet — feature bevy_tilemap_adapter stays OFF"
+  - item: Hanabi main EnginePlugin
+    reason: "L6 embellishment only via hanabi_l3 feature; native fire_vfx stays authority"
+
+hanabi_vs_native:
+  native: "sim-coupled world VFX — fire_vfx → gpu_particle_draw"
+  hanabi: "optional L6 local bursts — experiments/hanabi_validation + hanabi_l3"
+  guide_ref: src/dev/hanabi_event_vfx_style_bounds_v1.md
+
+stale_docs_fixed:
+  - experiments/hanabi_validation/README.md
+  - experiments/hanabi_validation/src/report.rs
+  - experiments/hanabi_validation/src/hanabi_gate.rs
+  - experiments/hanabi_validation/Cargo.toml description
+
+verdict: PASS
+note: >
+  PLAN-BEVY-019-MIG-v1 closed on master; this audit re-verified against the official
+  0.18→0.19 guide after particles+GUI drain. No remaining -D deprecated hits in main crate.

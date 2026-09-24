@@ -240,6 +240,8 @@ impl MapSnapshotV2 {
 mod tests {
     use super::*;
 
+    /// INFRA-E0-002 — fixtures must set legacy `road` to prove migration clears it.
+    #[allow(deprecated)]
     #[test]
     fn infra_e0_002_migrate_strips_road_flags() {
         let snap = MapSnapshotV1 {
@@ -263,6 +265,7 @@ mod tests {
         assert!(migrated.cells.iter().all(|c| !c.road));
     }
 
+    #[allow(deprecated)]
     #[test]
     fn map_snapshot_v1_round_trips_ron() {
         let snap = MapSnapshotV1 {

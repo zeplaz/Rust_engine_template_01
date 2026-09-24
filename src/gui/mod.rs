@@ -201,8 +201,9 @@ pub use sim_map_projection::{
     sim_map_world_vec3_to_egui_rendered, MapCameraPresentationPose, SimMapProjectionFrame,
 };
 pub use camera_focus_debug::{
-    fire_chunk_coords_above_visual_eps, CameraFocusDebug, CameraFocusDebugPlugin,
-    DEBUG_CHUNK_SPACING_WORLD,
+    camera_focus_debug_env_armed, camera_focus_lod_paint_active,
+    enforce_camera_focus_lod_off_in_simulation, fire_chunk_coords_above_visual_eps,
+    CameraFocusDebug, CameraFocusDebugPlugin, DEBUG_CHUNK_SPACING_WORLD,
 };
 pub use gpu_tile_debug::{
     build_tile_debug_instances, triage_gpu_tile_wgsl_001_green, GpuTileDebugPlugin,

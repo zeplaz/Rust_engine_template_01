@@ -94,25 +94,18 @@ pub fn terrain_gpu_instanced_env_enabled() -> bool {
 
 /// Simulation default terrain authority (P0-C′-PRIME / RPC-1-003 naming).
 ///
-/// Release: [`TerrainRenderAuthority::GpuBake`] (dirty-gated CPU bake → GPU sprite).
-/// Debug: [`TerrainRenderAuthority::CpuRaster`] unless `TERRAIN_GPU_INSTANCED=1`.
+/// Default: [`TerrainRenderAuthority::GpuBake`] (dirty-gated CPU bake → GPU sprite)
+/// in **both** debug and release Simulation.
 /// Rollback: `TERRAIN_CPU_FALLBACK=1` forces CPU paint in any build.
+/// Legacy: `TERRAIN_GPU_INSTANCED=1` still selects GpuBake (redundant with default).
 #[must_use]
 pub fn resolve_sim_default_authority() -> TerrainRenderAuthority {
     if terrain_cpu_fallback_env_forced() {
         return TerrainRenderAuthority::CpuRaster;
     }
-    if terrain_gpu_instanced_env_enabled() {
-        return TerrainRenderAuthority::GpuBake;
-    }
-    #[cfg(not(debug_assertions))]
-    {
-        return TerrainRenderAuthority::GpuBake;
-    }
-    #[cfg(debug_assertions)]
-    {
-        TerrainRenderAuthority::CpuRaster
-    }
+    // GpuBake is the Simulation default (debug + release). Tilemap remains deferred.
+    let _ = terrain_gpu_instanced_env_enabled();
+    TerrainRenderAuthority::GpuBake
 }
 
 pub fn apply_simulation_terrain_authority(mut authority: ResMut<TerrainRenderAuthority>) {
@@ -141,22 +134,18 @@ mod tests {
     use super::*;
 
     #[test]
-    fn sim_default_gpu_in_release_cpu_in_debug() {
+    fn sim_default_gpu_bake_unless_cpu_rollback() {
         std::env::remove_var("TERRAIN_CPU_FALLBACK");
         std::env::remove_var("TERRAIN_GPU_INSTANCED");
-        let auth = resolve_sim_default_authority();
-        if cfg!(debug_assertions) {
-            assert_eq!(auth, TerrainRenderAuthority::CpuRaster);
-        } else {
-            assert_eq!(auth, TerrainRenderAuthority::GpuBake);
-        }
+        assert_eq!(
+            resolve_sim_default_authority(),
+            TerrainRenderAuthority::GpuBake
+        );
     }
 
     #[test]
     fn debug_opt_in_gpu_instanced_env() {
-        if !cfg!(debug_assertions) {
-            return;
-        }
+        // Legacy env still resolves to GpuBake (now the default).
         std::env::remove_var("TERRAIN_CPU_FALLBACK");
         std::env::set_var("TERRAIN_GPU_INSTANCED", "1");
         assert_eq!(
@@ -212,10 +201,6 @@ mod tests {
         app.update();
 
         let auth = app.world().resource::<TerrainRenderAuthority>();
-        if cfg!(debug_assertions) {
-            assert_eq!(*auth, TerrainRenderAuthority::CpuRaster);
-        } else {
-            assert_eq!(*auth, TerrainRenderAuthority::GpuBake);
-        }
+        assert_eq!(*auth, TerrainRenderAuthority::GpuBake);
     }
 }

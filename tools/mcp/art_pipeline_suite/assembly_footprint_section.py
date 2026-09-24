@@ -82,7 +82,7 @@ class AssemblyFootprintSectionMixin:
         self._refresh_snapshot_presentation(enriched, path_hint=path_hint)
         if hasattr(self, "_qc_strip"):
             aid = str(enriched.get("assembly_id") or self.state.assembly_id or "")
-            self._qc_strip.refresh(aid or None)
+            self._qc_strip.refresh(aid or None, snapshot=enriched)
 
     def refresh_generation_trace(self) -> None:
         if hasattr(self, "_gen_trace"):

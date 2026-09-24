@@ -76,6 +76,12 @@ pub fn evaluate_site_placement_stubs() -> SitePlacementValidation {
     if !n_ok {
         v.errors.push("network_access".to_string());
     }
+    if site_terrain_gate_is_stub() {
+        v.warnings.push("terrain_gate_stub".to_string());
+    }
+    if site_network_gate_is_stub() {
+        v.warnings.push("network_gate_stub".to_string());
+    }
     v.allows_commit = v.valid && v.errors.is_empty();
     v
 }

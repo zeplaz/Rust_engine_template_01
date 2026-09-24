@@ -801,6 +801,8 @@ fn map_camera_wheel_zoom_system(
     mut wheel_events: MessageReader<MouseWheel>,
     mut authority: ResMut<ViewProjectionAuthority>,
     mut q_cam: Query<&mut Transform, With<MainWorldCamera>>,
+    keys: Res<ButtonInput<KeyCode>>,
+    ghost: Option<Res<crate::construction::BuildGhostState>>,
 ) {
     let _perf = crate::render::PerfScope::new("map_camera_wheel");
     if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
@@ -823,6 +825,12 @@ fn map_camera_wheel_zoom_system(
     );
     if scroll.abs() < f32::EPSILON {
         return;
+    }
+    // Yield wheel to building Adjust Ctrl/Shift modifiers (TRIAGE-BUILD-CLICK-PLACE-001).
+    if let Some(g) = ghost.as_deref() {
+        if crate::construction::build_adjust_blocks_map_wheel(g, keys.as_ref()) {
+            return;
+        }
     }
 
     let Ok(mut tf) = q_cam.single_mut() else {

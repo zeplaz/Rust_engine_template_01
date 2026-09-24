@@ -53,35 +53,106 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/logistics_throughput_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "logistics_throughput_live_proof",
-    "written_at_epoch_secs": 1783371799
+    "written_at_epoch_secs": 1790260326
   },
-  "edge_saturation_max": 0.0,
+  "edge_saturation_max": 1.0,
   "graph_only_paths": true,
-  "infra_e5_002_green": false,
+  "infra_e5_002_green": true,
   "no_harness_tile_paint": true,
-  "open_todos": 5,
+  "open_todos": 0,
   "profile": "LOGISTICS_THROUGHPUT",
-  "route_proofs_sample": [],
+  "route_proofs_sample": [
+    {
+      "blocked_at": null,
+      "bottleneck_capacity": 2.0,
+      "delivered": 2.0,
+      "request_id": 98,
+      "requested": 4.0
+    },
+    {
+      "blocked_at": null,
+      "bottleneck_capacity": 2.0,
+      "delivered": 2.0,
+      "request_id": 97,
+      "requested": 4.0
+    },
+    {
+      "blocked_at": null,
+      "bottleneck_capacity": 2.0,
+      "delivered": 2.0,
+      "request_id": 96,
+      "requested": 4.0
+    },
+    {
+      "blocked_at": null,
+      "bottleneck_capacity": 2.0,
+      "delivered": 2.0,
+      "request_id": 95,
+      "requested": 4.0
+    }
+  ],
   "routes_blocked": 0,
-  "routes_open": 0,
-  "s7p_log_001_green": false,
-  "throughput_green": false,
+  "routes_open": 2,
+  "s7p_log_001_green": true,
+  "starved_facilities": [
+    "aluminum_alumina_refinery",
+    "aluminum_bauxite_mine",
+    "aluminum_smelter1"
+  ],
+  "throughput_green": true,
   "todo_total": 24,
+  "top_saturated_edges": [
+    {
+      "capacity": 2.0,
+      "edge_id": 0,
+      "load": 2.0,
+      "pressure": 1.0
+    },
+    {
+      "capacity": 2.0,
+      "edge_id": 1,
+      "load": 2.0,
+      "pressure": 1.0
+    }
+  ],
   "topology_revision": 129,
   "witness": {
+    "arrivals_only_propagation": true,
+    "async_district_solve": true,
     "congestion_feedback": true,
+    "corridor_class": true,
     "corridor_pressure": true,
     "derived_logistics_graph": true,
+    "district_scoped_solve": true,
+    "facility_portal_attachment": true,
+    "freight_movement_model": true,
     "freight_reservations": true,
     "geographic_cascade_test": true,
+    "in_transit_ledger": true,
+    "infra_transport_pairing": true,
+    "logistics_diagnostics_panel": true,
     "logistics_proof_json": true,
-    "path_open_from_nav": false,
-    "route_proof": false,
+    "overlay_solver_load": true,
+    "partial_fulfillment": true,
+    "path_open_from_nav": true,
+    "route_path_store": true,
+    "route_proof": true,
+    "soa_throughput_solver": true,
+    "streaming_route_invalidation": true,
     "versioned_route_handle": true
   }
 }

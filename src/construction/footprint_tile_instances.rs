@@ -58,6 +58,8 @@ pub fn push_footprint_tile_instances(
         return;
     }
     witness.egui_path_active = true;
+    // Footprint GPU path still needs batched overlay; LOD paint flag is unrelated.
+    // Keep CameraFocusDebug.enabled as the historical arm for GPU footprint bridge.
     if !tile_settings.use_batched_mesh_overlay || !debug.enabled {
         return;
     }

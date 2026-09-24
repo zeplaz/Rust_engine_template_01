@@ -170,8 +170,6 @@ pub fn growth_hud_ecology_hint_wired_witness_green() -> bool {
 
 #[cfg(test)]
 mod growth_hud_tests {
-    use super::*;
-
     #[test]
     fn growth_hud_ecology_hint_wired_witness_green_lib() {
         assert!(super::growth_hud_ecology_hint_wired_witness_green());

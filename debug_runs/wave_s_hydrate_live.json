@@ -53,15 +53,35 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/wave_s_hydrate_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "coder_b_wave3_hydrate_refresh",
-    "written_at_epoch_secs": 1783371799
+    "source_system": "refresh_bq128_apply_live_witnesses",
+    "written_at_epoch_secs": 1790271959
   },
   "autoload_enabled": false,
   "blueprint_count": 1,
+  "bq128_apply_ghost_001": {
+    "apply_imported_preset_wired": true,
+    "gate": "BQ-128-APPLY-001",
+    "green": true
+  },
+  "bq128_apply_merge_replace_002": {
+    "gate": "BQ-128-APPLY-002",
+    "green": true,
+    "import_wave_s_presets_wired": true
+  },
   "last_error": null,
   "layout_widget_count": 4,
   "profile": "WAVE_S_HYDRATE",

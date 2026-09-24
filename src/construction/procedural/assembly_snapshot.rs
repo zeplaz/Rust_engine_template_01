@@ -15,11 +15,12 @@ use super::arch_build_grammar_v0::{
     arch_dna_consumer_wired, ArchDnaConsumerFields, PressureFieldV0,
 };
 use super::building_grammar::generate_with_arch_dna_preset;
+use super::module_contract::{FLOOR_HEIGHT_M, GRID_UNIT_M};
 use super::{
-    grammar_reference_tags, DevelopmentTier, FootprintGrid, FootprintToken,
+    grammar_reference_tags, DevelopmentTier, ExteriorFace, FootprintGrid, FootprintToken,
     GrammarGenerateResult, MissingSlotReason, MissingSlotViolation, ProceduralBuildingRequest,
-    ProceduralModuleRegistry, StylePack, StylePackRegistry, StylePackSlotKey, FallbackPolicy,
-    GRAMMAR_RULES_VERSION,
+    ProceduralModuleRegistry, RoofMode, StylePack, StylePackRegistry, StylePackSlotKey,
+    FallbackPolicy, GRAMMAR_RULES_VERSION, exterior_faces,
 };
 
 pub const ASSEMBLY_SNAPSHOT_SCHEMA: u32 = 1;
@@ -43,6 +44,46 @@ pub struct AssemblyModulePlacement {
     pub material_profile: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub weathering: Option<String>,
+    /// Cardinal face (`S`/`N`/`W`/`E`) — omitted for full-footprint roof.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub face: Option<String>,
+    /// Look-v2 roof seat mode (`full_footprint`).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub roof_mode: Option<String>,
+    /// Non-uniform mesh scale (full-footprint roofs beyond authored 8×16 m).
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scale: Option<[f64; 3]>,
+}
+
+/// Composition flags — parity with Python `building_look_v2` block.
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+pub struct BuildingLookV2Flags {
+    pub grid_unit_m: f64,
+    pub floor_height_m: f64,
+    pub ridge_row_roof: bool,
+    pub full_footprint_roof: bool,
+    pub outward_yaw: bool,
+    pub corners_as_walls: bool,
+    pub dual_face_corners: bool,
+    pub street_openings_ground: bool,
+    pub wall_edge_offset: bool,
+}
+
+impl BuildingLookV2Flags {
+    #[must_use]
+    pub fn look_v2_defaults() -> Self {
+        Self {
+            grid_unit_m: f64::from(GRID_UNIT_M),
+            floor_height_m: f64::from(FLOOR_HEIGHT_M),
+            ridge_row_roof: false,
+            full_footprint_roof: true,
+            outward_yaw: true,
+            corners_as_walls: true,
+            dual_face_corners: true,
+            street_openings_ground: true,
+            wall_edge_offset: true,
+        }
+    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -84,6 +125,8 @@ pub struct AssemblySnapshot {
     pub seed: u64,
     pub footprint: AssemblyFootprintSnapshot,
     pub module_placements: Vec<AssemblyModulePlacement>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub building_look_v2: Option<BuildingLookV2Flags>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub archetype_id: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -151,19 +194,146 @@ fn slot_key_for_token(token: FootprintToken) -> Option<StylePackSlotKey> {
         FootprintToken::Door => Some(StylePackSlotKey::DoorDefault),
         FootprintToken::Corner => Some(StylePackSlotKey::CornerOuter),
         FootprintToken::Roof => Some(StylePackSlotKey::RoofDefault),
+        FootprintToken::Opening => Some(StylePackSlotKey::Window1u),
         FootprintToken::Yard => None,
     }
 }
 
-/// Local 1 m grid placement for PG-2 module instances (matches AUTO-001 `position`).
+/// World metres — cell × [`GRID_UNIT_M`], floor × [`FLOOR_HEIGHT_M`] (Building Look v2).
+/// Matches AUTO-001 `position` and Python `assembly._grid_to_position`.
 #[must_use]
 pub fn procedural_module_local_translation(x: u32, y: u32, floor: u32) -> Vec3 {
-    Vec3::new(x as f32, (floor * 3) as f32, y as f32)
+    Vec3::new(
+        x as f32 * GRID_UNIT_M,
+        floor as f32 * FLOOR_HEIGHT_M,
+        y as f32 * GRID_UNIT_M,
+    )
+}
+
+/// Seat wall on the exterior edge of the cell (parity with Python `_wall_position`).
+#[must_use]
+pub fn procedural_wall_local_translation(x: u32, y: u32, floor: u32, face: ExteriorFace) -> Vec3 {
+    let mut pos = procedural_module_local_translation(x, y, floor);
+    let half = GRID_UNIT_M * 0.5;
+    match face {
+        ExteriorFace::South => pos.z -= half,
+        ExteriorFace::North => pos.z += half,
+        ExteriorFace::West => pos.x -= half,
+        ExteriorFace::East => pos.x += half,
+        ExteriorFace::Roof => {}
+    }
+    pos
+}
+
+/// Center of footprint plan — single continuous roof seat (Python `_roof_position`).
+#[must_use]
+pub fn procedural_roof_local_translation(width: u32, depth: u32, floor: u32) -> Vec3 {
+    Vec3::new(
+        (width.max(1) - 1) as f32 * GRID_UNIT_M * 0.5,
+        floor as f32 * FLOOR_HEIGHT_M,
+        (depth.max(1) - 1) as f32 * GRID_UNIT_M * 0.5,
+    )
+}
+
+/// Authored full-footprint roof kits are 8×16 m (2×4 cells). Scale mesh local X/Z to footprint.
+pub const ROOF_AUTHOR_SHORT_M: f32 = 8.0;
+pub const ROOF_AUTHOR_LONG_M: f32 = 16.0;
+
+/// Non-uniform scale so 8×16 authored roofs cover arbitrary footprints (Python parity).
+#[must_use]
+pub fn full_footprint_roof_scale(width: u32, depth: u32) -> [f64; 3] {
+    let short_cells = width.min(depth).max(1);
+    let long_cells = width.max(depth).max(1);
+    let sx = f64::from(short_cells as f32 * GRID_UNIT_M / ROOF_AUTHOR_SHORT_M);
+    let sz = f64::from(long_cells as f32 * GRID_UNIT_M / ROOF_AUTHOR_LONG_M);
+    [sx, 1.0, sz]
+}
+
+fn scale_if_non_unit(scale: [f64; 3]) -> Option<[f64; 3]> {
+    if (scale[0] - 1.0).abs() > 1e-6 || (scale[2] - 1.0).abs() > 1e-6 {
+        Some(scale)
+    } else {
+        None
+    }
+}
+
+/// Yaw about +Y for a cardinal face (parity with Python `outward_yaw_for_face`).
+#[must_use]
+pub fn outward_yaw_for_face(face: ExteriorFace) -> f64 {
+    const PI: f64 = std::f64::consts::PI;
+    match face {
+        ExteriorFace::North => PI,
+        ExteriorFace::West => PI / 2.0,
+        ExteriorFace::East => -PI / 2.0,
+        ExteriorFace::South | ExteriorFace::Roof => 0.0,
+    }
+}
+
+/// Yaw about +Y so the module face points off the footprint (parity with Python `outward_yaw_rad`).
+///
+/// After BUILDING-LOOK-V2-ART Z-up authorship + export_yup, default wall face is glTF −Z.
+/// Corners prefer S→N→W→E when multiple faces exist; dual-face callers use [`outward_yaw_for_face`].
+#[must_use]
+pub fn outward_yaw_rad(x: u32, y: u32, width: u32, depth: u32) -> f64 {
+    let faces = exterior_faces(x, y, width, depth);
+    if faces.is_empty() {
+        return 0.0;
+    }
+    for prefer in [
+        ExteriorFace::South,
+        ExteriorFace::North,
+        ExteriorFace::West,
+        ExteriorFace::East,
+    ] {
+        if faces.contains(&prefer) {
+            return outward_yaw_for_face(prefer);
+        }
+    }
+    outward_yaw_for_face(faces[0])
 }
 
 #[must_use]
-fn grid_to_position(x: u32, y: u32, floor: u32) -> [f64; 3] {
-    let v = procedural_module_local_translation(x, y, floor);
+fn rotation_for_cell(
+    token: FootprintToken,
+    face: ExteriorFace,
+    width: u32,
+    depth: u32,
+    roof_mode: Option<RoofMode>,
+) -> [f64; 3] {
+    if matches!(token, FootprintToken::Roof) {
+        // Mesh authored ridge-along-Z; yaw so ridge follows long (X) street axis.
+        if roof_mode == Some(RoofMode::FullFootprint) && width >= depth {
+            return [0.0, std::f64::consts::PI / 2.0, 0.0];
+        }
+        return [0.0, 0.0, 0.0];
+    }
+    if matches!(
+        face,
+        ExteriorFace::South | ExteriorFace::North | ExteriorFace::West | ExteriorFace::East
+    ) {
+        return [0.0, outward_yaw_for_face(face), 0.0];
+    }
+    [0.0, 0.0, 0.0]
+}
+
+#[must_use]
+fn position_for_cell(
+    cell: &super::FootprintCell,
+    width: u32,
+    depth: u32,
+) -> [f64; 3] {
+    let v = if matches!(cell.token, FootprintToken::Roof)
+        && cell.roof_mode == Some(RoofMode::FullFootprint)
+    {
+        procedural_roof_local_translation(width, depth, cell.floor)
+    } else if matches!(
+        cell.face,
+        ExteriorFace::South | ExteriorFace::North | ExteriorFace::West | ExteriorFace::East
+    ) {
+        procedural_wall_local_translation(cell.x, cell.y, cell.floor, cell.face)
+    } else {
+        procedural_module_local_translation(cell.x, cell.y, cell.floor)
+    };
     [f64::from(v.x), f64::from(v.y), f64::from(v.z)]
 }
 
@@ -270,18 +440,33 @@ fn build_assembly_snapshot_with_grammar(
     let mut source_tier = "lod0".to_owned();
 
     for cell in grid.facade_cells() {
-        let Some(slot_key) = slot_key_for_token(cell.token) else {
+        let mut token = cell.token;
+        let Some(mut slot_key) = slot_key_for_token(token) else {
             continue;
         };
-        let Some(schema_token) = cell.token.as_schema_token() else {
-            continue;
+        let mut schema_token = match token.as_schema_token() {
+            Some(t) => t,
+            None => continue,
         };
-        let slot_name = slot_key.ron_key();
-        let effective_slot = grammar
+        let mut slot_name = slot_key.ron_key();
+        let mut effective_slot = grammar
             .and_then(|g| g.slot_overrides.get(slot_name))
             .map(|s| s.as_str())
             .unwrap_or(slot_name);
-        let Some(raw_module_id) = style_pack.resolve_slot_str(effective_slot) else {
+        let mut raw_module_id = style_pack.resolve_slot_str(effective_slot);
+        // Opening slot hole → solid wall (Building Look v2 envelope).
+        if raw_module_id.is_none() && matches!(token, FootprintToken::Opening) {
+            token = FootprintToken::Wall;
+            slot_key = StylePackSlotKey::Wall1u;
+            schema_token = "W";
+            slot_name = slot_key.ron_key();
+            effective_slot = grammar
+                .and_then(|g| g.slot_overrides.get(slot_name))
+                .map(|s| s.as_str())
+                .unwrap_or(slot_name);
+            raw_module_id = style_pack.resolve_slot_str(effective_slot);
+        }
+        let Some(raw_module_id) = raw_module_id else {
             record_hide_slot_violation(
                 &mut missing_slot_violations,
                 style_pack,
@@ -337,6 +522,16 @@ fn build_assembly_snapshot_with_grammar(
             .filter(|s| !s.is_empty())
             .unwrap_or_else(|| entry.material_profile.clone());
         let weathering = grammar.map(|g| g.weathering.clone());
+        let face_str = match cell.face {
+            ExteriorFace::Roof => None,
+            f => Some(f.as_schema_face().to_owned()),
+        };
+        let roof_mode_str = cell.roof_mode.map(|m| m.as_schema().to_owned());
+        let scale = if cell.roof_mode == Some(RoofMode::FullFootprint) {
+            scale_if_non_unit(full_footprint_roof_scale(grid.width, grid.depth))
+        } else {
+            None
+        };
         placements.push(AssemblyModulePlacement {
             module_id: entry.module_id.clone(),
             job_id: entry.job_id.clone(),
@@ -346,10 +541,19 @@ fn build_assembly_snapshot_with_grammar(
             grid_y: cell.y,
             floor: cell.floor,
             glb_path: entry.glb_path.clone(),
-            position: grid_to_position(cell.x, cell.y, cell.floor),
-            rotation_euler: [0.0, 0.0, 0.0],
+            position: position_for_cell(cell, grid.width, grid.depth),
+            rotation_euler: rotation_for_cell(
+                token,
+                cell.face,
+                grid.width,
+                grid.depth,
+                cell.roof_mode,
+            ),
             material_profile,
             weathering,
+            face: face_str,
+            roof_mode: roof_mode_str,
+            scale,
         });
     }
 
@@ -424,6 +628,7 @@ fn build_assembly_snapshot_with_grammar(
             wdc_cell_count: grid.wdc_cell_count(),
         },
         module_placements: placements,
+        building_look_v2: Some(BuildingLookV2Flags::look_v2_defaults()),
         missing_slot_violations,
         archetype_id,
         district_style,
@@ -742,17 +947,48 @@ mod tests {
         let snapshot = build_assembly_snapshot(&request, pack, &grid, &modules);
         assert_eq!(snapshot.assembly_id, "victorian_4x3_s42_a7cb");
         assert_eq!(snapshot.procedural_rules_version, PROCEDURAL_RULES_VERSION);
-        assert_eq!(snapshot.module_placements.len(), 30);
+        // Look v2: dual-face perimeter (14/floor × 2) + 1 full-footprint roof = 29
+        assert_eq!(snapshot.module_placements.len(), 29);
         assert!(snapshot_passes_auto_001_contract(&snapshot));
+        let flags = snapshot.building_look_v2.as_ref().expect("building_look_v2");
+        assert!(flags.dual_face_corners);
+        assert!(flags.full_footprint_roof);
+        assert!(!flags.ridge_row_roof);
+        let roofs: Vec<_> = snapshot
+            .module_placements
+            .iter()
+            .filter(|p| p.token == "R")
+            .collect();
+        assert_eq!(roofs.len(), 1);
+        assert_eq!(roofs[0].roof_mode.as_deref(), Some("full_footprint"));
+        assert!(roofs[0].scale.is_none()); // 4×2 matches authored 8×16
         let first = &snapshot.module_placements[0];
-        assert_eq!(first.token, "C");
-        assert_eq!(first.slot_key, "corner_outer");
-        // BQ-F2: style_victorian resolves corner_L production row, not tier-only industrial lod0.
+        // SW corner south face — wall/opening (not L-kit corner_outer)
         assert!(
-            first.glb_path.contains("corner_L_production_run001"),
-            "expected victorian corner, got {}",
+            matches!(first.token.as_str(), "W" | "O" | "D"),
+            "expected W/D/O, got {}",
+            first.token
+        );
+        assert_eq!(first.face.as_deref(), Some("S"));
+        assert!(
+            first.glb_path.contains("wall_")
+                || first.glb_path.contains("door_")
+                || first.glb_path.contains("win_")
+                || first.glb_path.contains("window_"),
+            "expected envelope module, got {}",
             first.glb_path
         );
+    }
+
+    #[test]
+    fn look_v2_outward_yaw_and_wall_edge_offset() {
+        assert!((outward_yaw_for_face(ExteriorFace::South) - 0.0).abs() < 1e-12);
+        assert!((outward_yaw_for_face(ExteriorFace::North) - std::f64::consts::PI).abs() < 1e-12);
+        let wall = procedural_wall_local_translation(0, 0, 0, ExteriorFace::South);
+        assert!((wall.z - (-GRID_UNIT_M * 0.5)).abs() < f32::EPSILON);
+        let roof = procedural_roof_local_translation(4, 2, 1);
+        assert!((roof.x - 6.0).abs() < f32::EPSILON);
+        assert!((roof.z - 2.0).abs() < f32::EPSILON);
     }
 
     #[test]

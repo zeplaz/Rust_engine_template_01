@@ -114,7 +114,7 @@ mod tests {
         assert_eq!(toast.last_message, GRID_OVERLOAD_TOAST_MESSAGE);
         assert!(s7p_grid_ux_toast_ui_wired());
 
-        let mut world = app.world_mut();
+        let world = app.world_mut();
         let mut q = world.query_filtered::<&Text, With<OpsStripPower>>();
         let text_line = q.single(&world).expect("pwr strip").0.clone();
         assert!(text_line.contains("Grid overload"));

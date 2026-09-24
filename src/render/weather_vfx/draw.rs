@@ -190,6 +190,7 @@ fn prepare_weather_precip_instance_storage(
     queue: Res<RenderQueue>,
 ) {
     *local_frame = local_frame.wrapping_add(1);
+    let stride = crate::render::core::gpu_packed_formats::weather_precip_instance_format().stride;
     if !status.upload_active || frame.streaks.is_empty() {
         let _ = registry.upload_pod_slice(
             &render_device,
@@ -200,7 +201,7 @@ fn prepare_weather_precip_instance_storage(
                 usage: bevy::render::render_resource::BufferUsages::COPY_DST
                     | bevy::render::render_resource::BufferUsages::STORAGE,
                 visibility: BufferVisibility::RenderAndCompute,
-                stride: std::mem::size_of::<GpuInstancedQuadInstance>() as u32,
+                stride,
             },
             1,
             &[] as &[GpuInstancedQuadInstance],
@@ -208,7 +209,6 @@ fn prepare_weather_precip_instance_storage(
         );
         return;
     }
-    let stride = std::mem::size_of::<GpuInstancedQuadInstance>() as u32;
     let reserve_rows = frame.streaks.len().max(1);
     let _ = registry.upload_pod_slice(
         &render_device,

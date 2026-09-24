@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "asset_id": "roof_tile",
+  "archetype": "module_roof",
+  "style_pack": "style_rural",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "batch_id": "kit_prod_noncore_bq_001",
+  "module": {
+    "grid_units": [
+      2,
+      1
+    ],
+    "snap": "roof_ridge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 8,
+    "h": 0.35,
+    "d": 4
+  },
+  "material_profile": "roof_tile_01",
+  "references": [
+    "ref:gate:BQ-PROD-NONCORE-PROMOTE-001",
+    "ref:kit:kit_prod_noncore_bq_001",
+    "ref:audit:debug_runs/bq_smoke_tier_audit_live.json",
+    "ref:slot:style_rural.roof_flat"
+  ]
+}

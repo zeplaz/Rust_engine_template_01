@@ -13,7 +13,7 @@ use crate::gui::std_floating;
 
 use super::build_state::{BuildGhostState, BuildPlacementPreview};
 use super::build_tool_authority::{
-    ActiveBuildTool, BuildTool, RailType, RoadType, ZoneTool,
+    ActiveBuildTool, BuildTool, DefenseKind, RailType, RoadType, ZoneTool,
 };
 use super::commercial_menu::draw_commercial_submenu;
 use super::industrial_menu::draw_industrial_submenu;
@@ -81,21 +81,40 @@ pub fn draw_build_toolbox_egui(
                 .weak(),
         );
         ui.separator();
-        if matches!(tool.tool, BuildTool::Building(_)) {
-            let can_place = ghost.origin.is_some() && preview.report.allows_commit;
-            let place_label = format!(
-                "Place on map ({})",
-                InputBindings::format_key(bindings.confirm_build_placement)
-            );
-            ui.add_enabled_ui(can_place, |ui| {
+        if tool.tool.uses_two_click_place() {
+            let in_adjust = ghost.placement_mode
+                == crate::construction::BuildPlacementMode::Adjust
+                && ghost.origin.is_some();
+            let can_place = in_adjust && preview.report.allows_commit;
+            let row = match tool.tool {
+                BuildTool::Defense(kind) => kind.player_label(),
+                _ => "building",
+            };
+            let place_label = if !in_adjust {
+                format!("Lock {row} — click map")
+            } else if can_place {
+                format!("Place {row} — click map again")
+            } else {
+                "Cannot place — fix validation".to_string()
+            };
+            ui.add_enabled_ui(can_place || !in_adjust, |ui| {
                 let _ = ui.button(place_label);
             });
-            if !can_place {
-                ui.label(
-                    egui::RichText::new("Pick a catalog building below, then LMB on the map.")
-                        .small()
-                        .weak(),
-                );
+            ui.label(
+                egui::RichText::new(format!(
+                    "Shortcut: {}",
+                    InputBindings::format_key(bindings.confirm_build_placement)
+                ))
+                .small()
+                .weak(),
+            );
+            if !in_adjust {
+                let hint = if matches!(tool.tool, BuildTool::Defense(_)) {
+                    "Pick a defense row in the Military picker, then click the map to lock."
+                } else {
+                    "Pick a catalog building below, then click the map to lock."
+                };
+                ui.label(egui::RichText::new(hint).small().weak());
             }
             ui.separator();
         }
@@ -155,6 +174,21 @@ pub fn draw_build_toolbox_egui(
                 tool.tool = BuildTool::None;
                 tool.close_submenus();
                 tool.clear_building_intent();
+            }
+        });
+        ui.collapsing("Defense (Military)", |ui| {
+            for (kind, label) in [
+                (DefenseKind::DefensiveWall, "Defensive wall"),
+                (DefenseKind::TrenchLine, "Trench line"),
+                (DefenseKind::Bunker, "Bunker"),
+                (DefenseKind::DragonTeeth, "Dragon's teeth"),
+                (DefenseKind::Minefield, "Minefield"),
+            ] {
+                if ui.button(label).clicked() {
+                    tool.close_submenus();
+                    tool.clear_building_intent();
+                    tool.tool = BuildTool::Defense(kind);
+                }
             }
         });
         if tool.residential_menu_open {

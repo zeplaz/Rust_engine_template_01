@@ -4,9 +4,11 @@ use bevy::prelude::*;
 use bevy::world_serialization::WorldAsset;
 
 use crate::construction::procedural::{
-    footprint_grid_for_assembly, FootprintCell, FootprintGrid, FootprintToken,
-    MissingSlotReason, MissingSlotViolation, ProceduralBuildingRequest, ProceduralModuleEntry,
-    ProceduralModuleRegistry, StylePack, StylePackRegistry, StylePackSlotKey,
+    footprint_grid_for_assembly, outward_yaw_for_face, procedural_module_local_translation,
+    procedural_roof_local_translation, procedural_wall_local_translation, ExteriorFace,
+    FootprintCell, FootprintGrid, FootprintToken, MissingSlotReason, MissingSlotViolation,
+    ProceduralBuildingRequest, ProceduralModuleEntry, ProceduralModuleRegistry, RoofMode,
+    StylePack, StylePackRegistry, StylePackSlotKey,
 };
 use crate::gui::RepresentationResult;
 use crate::render::extraction::{
@@ -21,6 +23,13 @@ pub struct ProceduralBuildInstance {
     pub grid_x: u32,
     pub grid_y: u32,
     pub floor: u32,
+    /// Look-v2 cardinal face (`S`/`N`/`W`/`E`/`R`).
+    pub face: ExteriorFace,
+    pub roof_mode: Option<RoofMode>,
+    /// Local translation already edge-offset / roof-centered.
+    pub local_translation: Vec3,
+    /// Yaw about +Y (radians).
+    pub yaw_y: f32,
     pub scene: Option<Handle<WorldAsset>>,
     pub hidden: bool,
     /// **BQ-F3-SLOT-001** — preview/debug tint for hide-slot violations.
@@ -48,6 +57,7 @@ fn slot_key_for_token(token: FootprintToken) -> Option<StylePackSlotKey> {
         FootprintToken::Door => Some(StylePackSlotKey::DoorDefault),
         FootprintToken::Corner => Some(StylePackSlotKey::CornerOuter),
         FootprintToken::Roof => Some(StylePackSlotKey::RoofDefault),
+        FootprintToken::Opening => Some(StylePackSlotKey::Window1u),
         FootprintToken::Yard => None,
     }
 }
@@ -74,21 +84,60 @@ fn record_hide_slot_violation(
     });
 }
 
+fn placement_pose(
+    cell: &FootprintCell,
+    width: u32,
+    depth: u32,
+) -> (Vec3, f32) {
+    if matches!(cell.token, FootprintToken::Roof)
+        && cell.roof_mode == Some(RoofMode::FullFootprint)
+    {
+        let yaw = if width >= depth {
+            std::f32::consts::FRAC_PI_2
+        } else {
+            0.0
+        };
+        return (
+            procedural_roof_local_translation(width, depth, cell.floor),
+            yaw,
+        );
+    }
+    if matches!(
+        cell.face,
+        ExteriorFace::South | ExteriorFace::North | ExteriorFace::West | ExteriorFace::East
+    ) {
+        return (
+            procedural_wall_local_translation(cell.x, cell.y, cell.floor, cell.face),
+            outward_yaw_for_face(cell.face) as f32,
+        );
+    }
+    (
+        procedural_module_local_translation(cell.x, cell.y, cell.floor),
+        0.0,
+    )
+}
+
 fn push_hidden_instance(
     extract: &mut ProceduralBuildExtract,
     style_pack: &StylePack,
     cell: &FootprintCell,
+    grid: &FootprintGrid,
     slot_key: &str,
     module_id: String,
     reason: MissingSlotReason,
 ) {
     record_hide_slot_violation(extract, style_pack, slot_key, cell, &module_id, reason);
+    let (local_translation, yaw_y) = placement_pose(cell, grid.width, grid.depth);
     extract.instances.push(ProceduralBuildInstance {
         module_id,
         slot_key: slot_key.to_owned(),
         grid_x: cell.x,
         grid_y: cell.y,
         floor: cell.floor,
+        face: cell.face,
+        roof_mode: cell.roof_mode,
+        local_translation,
+        yaw_y,
         scene: None,
         hidden: true,
         violation_tint: style_pack.records_hide_slot_violations(),
@@ -99,6 +148,7 @@ fn hide_smoke_or_greybox(
     extract: &mut ProceduralBuildExtract,
     style_pack: &StylePack,
     cell: &FootprintCell,
+    grid: &FootprintGrid,
     slot_key: &str,
     entry: &ProceduralModuleEntry,
 ) {
@@ -108,6 +158,7 @@ fn hide_smoke_or_greybox(
             extract,
             style_pack,
             cell,
+            grid,
             slot_key,
             entry.module_id.clone(),
             MissingSlotReason::SmokeModule,
@@ -119,6 +170,7 @@ fn hide_smoke_or_greybox(
             extract,
             style_pack,
             cell,
+            grid,
             slot_key,
             entry.module_id.clone(),
             MissingSlotReason::GreyboxModule,
@@ -143,15 +195,23 @@ pub fn assemble_procedural_build_instances(
     };
 
     for cell in grid.facade_cells() {
-        let Some(slot_key) = slot_key_for_token(cell.token) else {
+        let Some(mut slot_key) = slot_key_for_token(cell.token) else {
             continue;
         };
-        let slot_name = slot_key.ron_key();
-        let Some(raw_module_id) = style_pack.resolve_slot(slot_key) else {
+        let mut slot_name = slot_key.ron_key();
+        let mut raw_module_id = style_pack.resolve_slot(slot_key);
+        // Opening slot hole → solid wall (Look v2 envelope).
+        if raw_module_id.is_none() && matches!(cell.token, FootprintToken::Opening) {
+            slot_key = StylePackSlotKey::Wall1u;
+            slot_name = slot_key.ron_key();
+            raw_module_id = style_pack.resolve_slot(slot_key);
+        }
+        let Some(raw_module_id) = raw_module_id else {
             push_hidden_instance(
                 &mut extract,
                 style_pack,
                 cell,
+                grid,
                 slot_name,
                 String::new(),
                 MissingSlotReason::SlotUnresolved,
@@ -166,6 +226,7 @@ pub fn assemble_procedural_build_instances(
                 &mut extract,
                 style_pack,
                 cell,
+                grid,
                 slot_name,
                 raw_module_id.to_owned(),
                 MissingSlotReason::ModuleNotFound,
@@ -179,7 +240,7 @@ pub fn assemble_procedural_build_instances(
         }
 
         if entry.development_tier.is_smoke() || entry.batch_id.starts_with("kit_greybox") {
-            hide_smoke_or_greybox(&mut extract, style_pack, cell, slot_name, entry);
+            hide_smoke_or_greybox(&mut extract, style_pack, cell, grid, slot_name, entry);
             continue;
         }
 
@@ -187,12 +248,17 @@ pub fn assemble_procedural_build_instances(
         if !extract.module_ids_used.contains(&entry.module_id) {
             extract.module_ids_used.push(entry.module_id.clone());
         }
+        let (local_translation, yaw_y) = placement_pose(cell, grid.width, grid.depth);
         extract.instances.push(ProceduralBuildInstance {
             module_id: entry.module_id.clone(),
             slot_key: slot_name.to_owned(),
             grid_x: cell.x,
             grid_y: cell.y,
             floor: cell.floor,
+            face: cell.face,
+            roof_mode: cell.roof_mode,
+            local_translation,
+            yaw_y,
             scene,
             hidden: false,
             violation_tint: false,
@@ -311,8 +377,9 @@ mod tests {
             .get("style_victorian")
             .unwrap()
             .clone();
+        // Look v2 seats walls on corners — inject unresolved id into wall_1u.
         pack.slots
-            .insert("corner_outer".into(), "corner_brick_outer".into());
+            .insert("wall_1u".into(), "corner_brick_outer".into());
         let grid = FootprintGrid::from_request(&victorian_request());
         let extract = assemble_procedural_build_instances(
             &victorian_request(),

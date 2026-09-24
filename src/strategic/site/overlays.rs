@@ -22,7 +22,12 @@ pub fn zone_emitter_for_archetype(archetype: SiteArchetype) -> ZoneEmitter {
             civil_authority_strength: 0.12,
             ..Default::default()
         },
-        SiteArchetype::MilitaryBase | SiteArchetype::BunkerComplex | SiteArchetype::TrenchLine => ZoneEmitter {
+        SiteArchetype::MilitaryBase
+        | SiteArchetype::BunkerComplex
+        | SiteArchetype::TrenchLine
+        | SiteArchetype::DefensiveWall
+        | SiteArchetype::DragonTeeth
+        | SiteArchetype::Minefield => ZoneEmitter {
             fire_control_strength: 0.28,
             supply_strength: 0.12,
             ..Default::default()

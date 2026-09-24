@@ -2,13 +2,13 @@
   "schema": "ops_triage_live_v1",
   "task_id": "OPS-TRIAGE-DASH-001",
   "ok": true,
-  "generated_at": "2026-06-21T04:29:24.919681+00:00",
+  "generated_at": "2026-09-24T13:23:46.044416+00:00",
   "ignore_dcc_status_bar": true,
   "metrics": {
     "crash_alerts": 0,
-    "slip_ups": 15,
+    "slip_ups": 17,
     "open_gates": 1,
-    "ftr": null,
+    "ftr": 0.0,
     "dcc_processes": 0
   },
   "glyph_chain": "\u26a0\u26d4",
@@ -55,6 +55,12 @@
       "kind": "witness_honesty",
       "severity": "alert",
       "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/veg_atlas_ship_001_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
       "path": "debug_runs/art_pipeline/warehouse_production_keyframe_g4_live.json"
     },
     {
@@ -62,6 +68,12 @@
       "severity": "alert",
       "detail": "Queue rows contradict witness rollup",
       "path": null
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg4_preview_live.json"
     },
     {
       "kind": "witness_honesty",
@@ -116,8 +128,8 @@
     "task_id": "OPS-CRASH-EXPORT-001",
     "schema": "ops_crash_scan_v1",
     "ok": true,
-    "scanned_at": "2026-06-21T04:29:15.975185+00:00",
-    "process_count": 3,
+    "scanned_at": "2026-09-24T13:23:45.545601+00:00",
+    "process_count": 5,
     "dcc_process_count": 0,
     "crash_alert_count": 0,
     "slip_up_count": 0,
@@ -125,20 +137,32 @@
     "processes": [
       {
         "name": "python.exe",
-        "pid": "32532",
-        "mem": "14\u00ff244 Ko",
+        "pid": "8548",
+        "mem": "24\u00ff120 Ko",
         "is_dcc": false
       },
       {
         "name": "python.exe",
-        "pid": "1712",
-        "mem": "12\u00ff388 Ko",
+        "pid": "18928",
+        "mem": "9\u00ff848 Ko",
         "is_dcc": false
       },
       {
         "name": "python.exe",
-        "pid": "30496",
-        "mem": "45\u00ff632 Ko",
+        "pid": "24048",
+        "mem": "13\u00ff364 Ko",
+        "is_dcc": false
+      },
+      {
+        "name": "python.exe",
+        "pid": "19968",
+        "mem": "52\u00ff772 Ko",
+        "is_dcc": false
+      },
+      {
+        "name": "python.exe",
+        "pid": "23996",
+        "mem": "37\u00ff576 Ko",
         "is_dcc": false
       }
     ],
@@ -147,7 +171,7 @@
   },
   "ops_dashboard": {
     "path": "debug_runs/agent_ops/ops_dashboard_live.json",
-    "slip_up_count": 15
+    "slip_up_count": 17
   },
   "prometheus": {
     "path": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom",
@@ -157,16 +181,16 @@
     "triage_dashboard": "tools/orchestrator/dashboard/grafana_triage_overview.json",
     "alert_rules": "tools/orchestrator/dashboard/prometheus_alert_rules.yml"
   },
-  "previous_hash": "",
-  "content_hash": "99e55a15a9c484a558c3a0b56cb7767f26704ea976479ff96b97b0decc29a065",
+  "previous_hash": "22ebf50c0d2c3a33df504ceff2fdf3dbf09b3c61c6a0463d7d21091cb5b4dda7",
+  "content_hash": "0107c44d430238ba5f515cce54d98f0077f0147f984980a58c527b916ff895e6",
   "hash_lock_id": "granfina_has\u2026",
   "_agent_meta": {
     "schema": "debug_run_envelope_v1",
-    "written_at_epoch_secs": 1782016164,
+    "written_at_epoch_secs": 1790256226,
     "profile": "OPS-TRIAGE-LIVE",
     "source_system": "ops_crash_exporter",
     "relative_path": "debug_runs/agent_ops/triage_live.json",
     "agent": "ops_crash_exporter",
-    "content_hash": "99e55a15a9c484a558c3a0b56cb7767f26704ea976479ff96b97b0decc29a065"
+    "content_hash": "0107c44d430238ba5f515cce54d98f0077f0147f984980a58c527b916ff895e6"
   }
 }

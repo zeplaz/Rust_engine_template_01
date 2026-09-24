@@ -4,8 +4,10 @@ use bevy::prelude::*;
 
 use super::shell_framework::ProductShellWidgetId;
 
-pub const DEFAULT_UI_BUDGET_MS: f32 = 8.0;
+pub const DEFAULT_UI_BUDGET_MS: f32 = 10.0;
 pub const DEFAULT_ASYNC_BUDGET_MS: f32 = 2.0;
+/// Grace frames after an overrun before dock panels defer (avoids "UI died" flicker).
+pub const DEFER_GRACE_FRAMES: u32 = 2;
 
 #[derive(Resource, Clone, Debug)]
 pub struct HudFrameBudget {
@@ -19,6 +21,8 @@ pub struct HudFrameBudget {
     pub worst_offender_ms: f32,
     pub last_frame_ms: f32,
     pub dynamic_background_hz: f32,
+    /// Consecutive overrun frames — defer only after [`DEFER_GRACE_FRAMES`].
+    pub overrun_streak: u32,
 }
 
 impl Default for HudFrameBudget {
@@ -34,6 +38,7 @@ impl Default for HudFrameBudget {
             worst_offender_ms: 0.0,
             last_frame_ms: 0.0,
             dynamic_background_hz: super::shell_update_budget::BACKGROUND_PANEL_HZ,
+            overrun_streak: 0,
         }
     }
 }
@@ -55,7 +60,7 @@ impl HudFrameBudget {
     }
 
     pub fn should_defer(&self, id: ProductShellWidgetId, frame_ms: f32) -> bool {
-        if frame_ms <= self.ui_budget_ms {
+        if frame_ms <= self.ui_budget_ms || self.overrun_streak < DEFER_GRACE_FRAMES {
             return false;
         }
         matches!(
@@ -79,8 +84,10 @@ impl HudFrameBudget {
         if frame_ms > self.ui_budget_ms {
             self.overruns_frame = self.overruns_frame.saturating_add(1);
             self.overruns_total = self.overruns_total.wrapping_add(1);
+            self.overrun_streak = self.overrun_streak.saturating_add(1);
             self.dynamic_background_hz = (self.dynamic_background_hz * 0.85).max(2.0);
         } else {
+            self.overrun_streak = 0;
             self.dynamic_background_hz = (self.dynamic_background_hz * 1.02)
                 .min(super::shell_update_budget::BACKGROUND_PANEL_HZ);
         }

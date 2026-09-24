@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "asset_id": "win_double_1u",
+  "archetype": "module_window",
+  "style_pack": "style_industrial_west",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "batch_id": "kit_prod_promote_bq_001",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 4,
+    "h": 1.2,
+    "d": 0.12
+  },
+  "material_profile": "glass_panel_01",
+  "references": [
+    "ref:gate:BQ-PROD-PROMOTE-BATCH-001",
+    "ref:kit:kit_prod_promote_bq_001",
+    "ref:audit:debug_runs/bq_smoke_tier_audit_live.json",
+    "ref:slot:style_industrial_west.window_1u"
+  ]
+}

@@ -108,6 +108,9 @@ pub fn build_fire_ecology_proof_payload(witness: &FireEcologyWitness) -> serde_j
         witness.fuel_depleted_cells > 0 || witness.neighbor_spread_cells > 0;
     serde_json::json!({
         "profile": "FIRE_ECOLOGY_F1",
+        "scope": "sim_ecology_not_render_particles",
+        "product_vfx_claim": false,
+        "render_particle_green": false,
         "green": (witness.f1_fuel_gate_active() || spread_active) && witness.heat_mostly_stable(),
         "f1_green": witness.f1_fuel_gate_active() && witness.heat_mostly_stable(),
         "fire_f2_fuel_spread_001": build_fire_f2_fuel_spread_block(witness),
@@ -224,6 +227,10 @@ mod tests {
             crate::dev::runtime_witness::LiveProofCadencePlugin,
         ));
         app.init_resource::<FireEcologyLiveProofState>();
+        app.init_resource::<crate::sim::effects::SimEffectQueue>();
+        app.init_resource::<crate::sim::effects::SimEffectTelemetryLedger>();
+        app.init_resource::<crate::sim::effects::SimEffectSpineWitness>();
+        app.init_resource::<crate::sim::effects::PlayerEventLog>();
         app.world_mut()
             .resource_mut::<FireEcologyLiveProofState>()
             .cadence
@@ -273,16 +280,21 @@ mod tests {
     #[test]
     fn simulation_writes_fire_ecology_live_json() {
         crate::dev::debug_run_envelope::reset_witness_refresh_gate_for_tests();
-        let _ = fs::remove_file(proof_output_path());
         let mut app = assemble_fire_proof_app();
         for _ in 0..24 {
             app.update();
         }
+        assert!(
+            app.world().resource::<FireEcologyLiveProofState>().written(),
+            "sole runtime writer must mark FireEcologyLiveProofState"
+        );
+        // Leave disk on the sole honest authority path (lib harness + nested spine after drain).
+        assert!(crate::dev::fire_ecology_lib_harness::refresh_fire_ecology_lib_harness_witness());
         let path = proof_output_path();
-        assert!(path.exists(), "expected {:?}", path);
         let json: serde_json::Value =
             serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("parse");
-        assert_eq!(json["profile"], "FIRE_ECOLOGY_F1");
-        assert!(app.world().resource::<FireEcologyLiveProofState>().written());
+        assert_eq!(json["f1_green"], true);
+        assert!(json.get("sim_effect_spine").is_some());
+        assert!(json.pointer("/sim_effect_spine/sim_effect_spine").is_none());
     }
 }

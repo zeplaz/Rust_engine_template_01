@@ -106,7 +106,10 @@ pub fn style_pack_for_site_archetype(archetype: SiteArchetype) -> StylePackId {
         | SiteArchetype::BunkerComplex
         | SiteArchetype::RadarSite
         | SiteArchetype::SensorPost
-        | SiteArchetype::TrenchLine => "style_military",
+        | SiteArchetype::TrenchLine
+        | SiteArchetype::DefensiveWall
+        | SiteArchetype::DragonTeeth
+        | SiteArchetype::Minefield => "style_military",
     }
     .into())
 }

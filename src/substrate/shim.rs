@@ -317,7 +317,7 @@ mod tests {
 
         let coord = IVec2::new(3, 2);
         let key = ChunkKey::from(coord);
-        let mut state = WorldChunkState::new_empty(key, 4);
+        let state = WorldChunkState::new_empty(key, 4);
         {
             let mut reg = app.world_mut().resource_mut::<WorldSubstrateRegistry>();
             reg.chunks.insert(key, state);

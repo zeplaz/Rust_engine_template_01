@@ -57,7 +57,9 @@ impl Default for PressureComposerState {
         Self {
             visible: false,
             tab: PressureComposerTab::World,
-            show_bevy_strip: true,
+            // Production: off — strip painted "Pres/Worl" into sim chrome (VISUAL-JANK-CHROME-001).
+            // Arm via F2 composer checkbox or set true in Editor tooling.
+            show_bevy_strip: false,
             draft_duration: 2_000,
             draft_pressure: PressureProfile {
                 paranoia: 0.15,
@@ -190,7 +192,7 @@ fn spawn_pressure_bevy_overlay(
             },
             BackgroundColor(palette.bevy_hud_panel_fill()),
             BorderColor::all(palette.bevy_wire_magenta()),
-            Visibility::Visible,
+            Visibility::Hidden,
             ZIndex(900),
         ))
         .with_children(|p| {

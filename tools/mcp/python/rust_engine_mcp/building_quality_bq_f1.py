@@ -13,9 +13,11 @@ from rust_engine_mcp.paths import repo_root
 TASK_ID = "BQ-F1-BAKE-001"
 WITNESS_REL = "debug_runs/building_quality_bq_f1_live.json"
 FLAT_WALL_PROFILES = frozenset({"flat", "panel", "panel_flat"})
-ROOF_BOTTOM_AXIS = 2
+# After BUILDING-LOOK-V2-ART: Blender Z-up authorship + export_yup → glTF Y-up.
+# Roof seat underside → glTF +Y (axis 1). Wall thickness/depth → glTF ±Z (axis 2).
+ROOF_BOTTOM_AXIS = 1
 ROOF_BOTTOM_EPS = 0.002
-WALL_DEPTH_AXIS = 1
+WALL_DEPTH_AXIS = 2
 WALL_DEPTH_EPS = 0.004
 
 
@@ -85,10 +87,14 @@ def audit_bpy_sources(*, repo: Path | None = None) -> dict[str, Any]:
     issues: list[str] = []
     if "d * 1.05" in wall_src or "d*1.05" in wall_src:
         issues.append("module_wall.py still contains d*1.05 sill depth factor")
-    if "_snap_roof_seat_plane_to_y_zero" not in roof_src:
-        issues.append("module_roof.py missing _snap_roof_seat_plane_to_y_zero helper")
-    if "build(params" in roof_src and "_snap_roof_seat_plane_to_y_zero(obj)" not in roof_src:
-        issues.append("module_roof.build() does not snap roof seat plane to Y=0")
+    if "_snap_roof_seat_plane_to_z_zero" not in roof_src:
+        issues.append("module_roof.py missing _snap_roof_seat_plane_to_z_zero helper")
+    if "build(params" in roof_src and "_snap_roof_seat_plane_to_z_zero(obj)" not in roof_src:
+        issues.append("module_roof.build() does not snap roof seat plane to Blender Z=0 (glTF Y)")
+    if "module_coords" not in wall_src and "scale_whd" not in wall_src:
+        # wall may import add_box from module_coords
+        if "from ops.module_coords import" not in wall_src:
+            issues.append("module_wall.py missing module_coords Z-up authorship import")
     return {"green": not issues, "issues": issues}
 
 

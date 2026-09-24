@@ -1,8 +1,61 @@
 //! W / D / C footprint grammar — parametric grid from width × depth (PG-2).
+//!
+//! Building Look v2 (parity with `rust_engine_mcp.assembly.footprint_grid`):
+//! dual-face corners + one full-footprint roof seat.
 
 use super::types::ProceduralBuildingRequest;
 
-/// Facade / roof token in the W/D/C grammar.
+/// Cardinal exterior edge (or roof seat) for a placement bay.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum ExteriorFace {
+    South,
+    North,
+    West,
+    East,
+    Roof,
+}
+
+impl ExteriorFace {
+    #[must_use]
+    pub const fn as_schema_face(self) -> &'static str {
+        match self {
+            Self::South => "S",
+            Self::North => "N",
+            Self::West => "W",
+            Self::East => "E",
+            Self::Roof => "R",
+        }
+    }
+
+    #[must_use]
+    pub fn parse(s: &str) -> Option<Self> {
+        match s.to_ascii_uppercase().as_str() {
+            "S" => Some(Self::South),
+            "N" => Some(Self::North),
+            "W" => Some(Self::West),
+            "E" => Some(Self::East),
+            "R" => Some(Self::Roof),
+            _ => None,
+        }
+    }
+}
+
+/// Roof seating mode — `full_footprint` = single continuous module (Look v2).
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum RoofMode {
+    FullFootprint,
+}
+
+impl RoofMode {
+    #[must_use]
+    pub const fn as_schema(self) -> &'static str {
+        match self {
+            Self::FullFootprint => "full_footprint",
+        }
+    }
+}
+
+/// Facade / roof token in the W/D/C/O grammar.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum FootprintToken {
     /// Wall bay (window slot optional on upper floors).
@@ -13,6 +66,8 @@ pub enum FootprintToken {
     Corner,
     /// Roof footprint cell (plan view).
     Roof,
+    /// Street-face opening / window (upper floors).
+    Opening,
     /// Interior / setback — no mesh.
     Yard,
 }
@@ -24,6 +79,10 @@ pub struct FootprintCell {
     pub y: u32,
     pub floor: u32,
     pub token: FootprintToken,
+    /// Cardinal face this bay seats on (corners emit two cells).
+    pub face: ExteriorFace,
+    /// Set on the single Look-v2 roof seat.
+    pub roof_mode: Option<RoofMode>,
 }
 
 /// Assembled W/D/C grid for a rectangular footprint.
@@ -58,36 +117,56 @@ impl FootprintGrid {
                     if !is_perimeter(x, y, width, depth) {
                         continue;
                     }
-                    let token = if is_corner(x, y, width, depth) {
-                        FootprintToken::Corner
-                    } else if floor == 0 && y == 0 && x == door_x {
-                        FootprintToken::Door
-                    } else {
-                        FootprintToken::Wall
-                    };
-                    cells.push(FootprintCell {
-                        x,
-                        y,
-                        floor,
-                        token,
-                    });
+                    // Dual-face corners: one bay per cardinal edge (closes gaps / pierces).
+                    for face in exterior_faces(x, y, width, depth) {
+                        let token = match face {
+                            ExteriorFace::South => {
+                                if floor == 0 && x == door_x {
+                                    FootprintToken::Door
+                                } else if x != door_x || floor > 0 {
+                                    // Street openings — ground non-door + all upper.
+                                    FootprintToken::Opening
+                                } else {
+                                    FootprintToken::Wall
+                                }
+                            }
+                            ExteriorFace::North => {
+                                // Soft openings for iso_ne readability (camera sees N/E).
+                                if x != door_x || floor > 0 {
+                                    FootprintToken::Opening
+                                } else {
+                                    FootprintToken::Wall
+                                }
+                            }
+                            ExteriorFace::East | ExteriorFace::West if y == depth / 2 => {
+                                // Mid long-face window band — reads from iso_se / side views.
+                                FootprintToken::Opening
+                            }
+                            _ => FootprintToken::Wall,
+                        };
+                        cells.push(FootprintCell {
+                            x,
+                            y,
+                            floor,
+                            token,
+                            face,
+                            roof_mode: None,
+                        });
+                    }
                 }
             }
         }
 
+        // Roof seat: ONE full-footprint module at plan center (Look v2).
         let roof_floor = floors;
-        for y in 0..depth {
-            for x in 0..width {
-                if is_perimeter(x, y, width, depth) {
-                    cells.push(FootprintCell {
-                        x,
-                        y,
-                        floor: roof_floor,
-                        token: FootprintToken::Roof,
-                    });
-                }
-            }
-        }
+        cells.push(FootprintCell {
+            x: width / 2,
+            y: depth.saturating_sub(1) / 2,
+            floor: roof_floor,
+            token: FootprintToken::Roof,
+            face: ExteriorFace::Roof,
+            roof_mode: Some(RoofMode::FullFootprint),
+        });
 
         Self {
             width,
@@ -138,6 +217,8 @@ impl FootprintGrid {
                         y,
                         floor,
                         token: FootprintToken::Yard,
+                        face: ExteriorFace::South,
+                        roof_mode: None,
                     });
                 }
             }
@@ -162,6 +243,8 @@ impl FootprintGrid {
                         y,
                         floor,
                         token: FootprintToken::Yard,
+                        face: ExteriorFace::South,
+                        roof_mode: None,
                     });
                 }
             }
@@ -176,7 +259,10 @@ impl FootprintGrid {
             .filter(|c| {
                 matches!(
                     c.token,
-                    FootprintToken::Wall | FootprintToken::Door | FootprintToken::Corner
+                    FootprintToken::Wall
+                        | FootprintToken::Door
+                        | FootprintToken::Corner
+                        | FootprintToken::Opening
                 )
             })
             .count() as u32
@@ -196,19 +282,40 @@ impl FootprintToken {
             Self::Door => Some("D"),
             Self::Corner => Some("C"),
             Self::Roof => Some("R"),
+            Self::Opening => Some("O"),
             Self::Yard => None,
         }
     }
 }
 
 #[must_use]
-fn is_perimeter(x: u32, y: u32, width: u32, depth: u32) -> bool {
+pub(crate) fn is_perimeter(x: u32, y: u32, width: u32, depth: u32) -> bool {
     x == 0 || y == 0 || x + 1 == width || y + 1 == depth
 }
 
 #[must_use]
-fn is_corner(x: u32, y: u32, width: u32, depth: u32) -> bool {
+pub(crate) fn is_corner(x: u32, y: u32, width: u32, depth: u32) -> bool {
     (x == 0 || x + 1 == width) && (y == 0 || y + 1 == depth)
+}
+
+/// Cardinal exterior edges this perimeter cell sits on (S/N/W/E).
+/// Corners return *two* faces so dual wall placements close the envelope.
+#[must_use]
+pub fn exterior_faces(x: u32, y: u32, width: u32, depth: u32) -> Vec<ExteriorFace> {
+    let mut faces = Vec::with_capacity(2);
+    if y == 0 {
+        faces.push(ExteriorFace::South);
+    }
+    if y + 1 == depth {
+        faces.push(ExteriorFace::North);
+    }
+    if x == 0 {
+        faces.push(ExteriorFace::West);
+    }
+    if x + 1 == width {
+        faces.push(ExteriorFace::East);
+    }
+    faces
 }
 
 /// **BQ-H1/H2** — street-facing door column from grammar tags + massing rhythm (seeded, not width/2).
@@ -337,23 +444,49 @@ mod tests {
     }
 
     #[test]
-    fn footprint_grid_corner_token_consumes_c() {
+    fn footprint_grid_corners_use_wall_look_v2() {
+        // Building Look v2 — L-corner kits are style-blind; corners are wall/opening bays.
         let grid = FootprintGrid::from_rect(4, 2, 1);
         let corners: Vec<_> = grid
             .cells
             .iter()
             .filter(|c| is_corner(c.x, c.y, grid.width, grid.depth) && c.floor == 0)
             .collect();
-        assert_eq!(corners.len(), 4);
+        // 4 corners × 2 faces
+        assert_eq!(corners.len(), 8);
         for cell in corners {
-            assert_eq!(
-                cell.token,
-                FootprintToken::Corner,
-                "corner ({},{}) must be C not W/D",
+            assert!(
+                matches!(
+                    cell.token,
+                    FootprintToken::Wall | FootprintToken::Door | FootprintToken::Opening
+                ),
+                "corner ({},{}) must be W/D/O not C (look v2)",
                 cell.x,
                 cell.y
             );
         }
+    }
+
+    #[test]
+    fn footprint_grid_dual_face_and_single_roof() {
+        let grid = FootprintGrid::from_rect(4, 2, 1);
+        let walls: Vec<_> = grid
+            .cells
+            .iter()
+            .filter(|c| c.token != FootprintToken::Roof)
+            .collect();
+        let roofs: Vec<_> = grid
+            .cells
+            .iter()
+            .filter(|c| c.token == FootprintToken::Roof)
+            .collect();
+        assert_eq!(roofs.len(), 1);
+        assert_eq!(roofs[0].roof_mode, Some(RoofMode::FullFootprint));
+        // 4×2 perimeter: 4 corners×2 + 4 mid-edge = 12 wall faces
+        assert_eq!(walls.len(), 12);
+        assert_eq!(exterior_faces(0, 0, 4, 2), vec![ExteriorFace::South, ExteriorFace::West]);
+        assert_eq!(exterior_faces(3, 1, 4, 2), vec![ExteriorFace::North, ExteriorFace::East]);
+        assert_eq!(exterior_faces(1, 0, 4, 2), vec![ExteriorFace::South]);
     }
 
     #[test]

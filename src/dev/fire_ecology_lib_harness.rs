@@ -4,8 +4,9 @@ use bevy::input::InputPlugin;
 use bevy::prelude::*;
 use bevy::state::app::StatesPlugin;
 
-use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
-use crate::dev::runtime_witness::fire::FIRE_ECOLOGY_JSON;
+use crate::dev::runtime_witness::fire::{
+    commit_fire_ecology_live_proof_unchecked, FireEcologyCommitLabels,
+};
 use crate::dev::sim_effect_spine_live_proof::sim_effect_spine_proof_state;
 use crate::engine::states::BaseState;
 use crate::gui::InputBindings;
@@ -13,9 +14,7 @@ use crate::sim::effects::build_sim_effect_spine_proof_payload;
 use crate::systems::chunk_environment_persist::ChunkEnvironmentPersistPlugin;
 use crate::systems::chunk_sim_lod::ChunkSimLodPlugin;
 use crate::systems::ecology::VegetationField;
-use crate::systems::fire::witness_collectors::{
-    build_fire_ecology_proof_payload, FireEcologyWitness,
-};
+use crate::systems::fire::witness_collectors::FireEcologyWitness;
 use crate::systems::fire::{chunk_fuel_profile_from_vegetation, FirePlugin};
 use crate::systems::sim_control::SimControlPlugin;
 use crate::systems::weather::{ChunkWeather, WeatherSimulationPlugin};
@@ -45,6 +44,8 @@ fn assemble_fire_ecology_harness_app() -> App {
     app.insert_state(BaseState::Simulation);
     app.add_plugins(SimControlPlugin);
     crate::systems::chunk_environment_set::configure_chunk_environment_sets(&mut app);
+    // Ember emit needs the queue resource; full `SimEffectsPlugin` pulls grid/hydrology deps.
+    app.init_resource::<crate::sim::effects::SimEffectQueue>();
     app.add_plugins((
         ChunkEnvironmentPersistPlugin,
         ChunkSimLodPlugin,
@@ -60,10 +61,16 @@ fn assemble_fire_ecology_harness_app() -> App {
     let veg_burn = harness_vegetation();
     let profile_burn = chunk_fuel_profile_from_vegetation(&veg_burn);
 
+    // Must match combustion::near_empty_vegetation_blocks_ignition_gate —
+    // `..Default` leaves canopy/understory high enough to *pass* MIN_WILDLAND_FUEL_MASS
+    // and leave f1_green dishonest (FIRE-F1-STRICT).
     let veg_gate = VegetationField {
         ground_fuel: 0.05,
+        canopy_density: 0.05,
+        understory_density: 0.05,
+        dryness: 0.9,
         old_growth: 0.02,
-        dryness: 0.85,
+        fuel_load: 0.05,
         ..Default::default()
     };
     let profile_gate = chunk_fuel_profile_from_vegetation(&veg_gate);
@@ -138,7 +145,14 @@ pub fn fire_ecology_lib_harness_green(witness: &FireEcologyWitness) -> bool {
     let heat_ok = witness.heat_mostly_stable();
     let f1_ok = witness.f1_fuel_gate_active();
     let f2_ok = fire_f2_fuel_spread_green(witness);
+    // Overall ecology green still accepts F2 spread; FIRE-F1-STRICT uses `f1_green` alone.
     heat_ok && (f1_ok || f2_ok)
+}
+
+/// **FIRE-F1-STRICT** — fuel/old-growth gate must have blocked real spark attempts.
+#[must_use]
+pub fn fire_ecology_f1_strict_green(witness: &FireEcologyWitness) -> bool {
+    witness.f1_fuel_gate_active() && witness.heat_mostly_stable()
 }
 
 #[must_use]
@@ -148,34 +162,25 @@ pub fn refresh_fire_ecology_lib_harness_witness() -> bool {
         return false;
     }
 
+    // Same sole writer as runtime — nest spine after a real drain finalize (proof_state).
     let (spine_witness, spine_queue, spine_ledger, spine_faction_react) = sim_effect_spine_proof_state();
-    let mut body = build_fire_ecology_proof_payload(&witness);
-    if let Some(obj) = body.as_object_mut() {
-        obj.insert(
-            "sim_effect_spine".into(),
-            build_sim_effect_spine_proof_payload(
-                &spine_witness,
-                &spine_queue,
-                &spine_ledger,
-                Some(&spine_faction_react),
-            ),
-        );
-        obj.insert("gate".into(), serde_json::json!("FIRE-ECOLOGY-REFRESH-001"));
-        obj.insert("lib_harness".into(), serde_json::json!(true));
-    }
-
-    let wrapped = wrap_debug_run(
-        "FIRE-ECOLOGY-REFRESH-001",
-        "refresh_fire_ecology_lib_harness_witness",
-        FIRE_ECOLOGY_JSON,
-        body,
+    let spine_payload = build_sim_effect_spine_proof_payload(
+        &spine_witness,
+        &spine_queue,
+        &spine_ledger,
+        Some(&spine_faction_react),
     );
-    write_debug_run_json(FIRE_ECOLOGY_JSON, wrapped)
+    commit_fire_ecology_live_proof_unchecked(
+        &witness,
+        Some(&spine_payload),
+        FireEcologyCommitLabels::lib_harness(),
+    )
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::dev::runtime_witness::fire::FIRE_ECOLOGY_JSON;
     use crate::systems::fire::{chunk_fuel_profile_from_vegetation, combustion::{fuel_ignition_gate, MIN_WILDLAND_FUEL_MASS}};
 
     #[test]
@@ -196,6 +201,27 @@ mod tests {
     }
 
     #[test]
+    fn harness_gate_chunk_blocks_ignition_gate() {
+        let veg_gate = VegetationField {
+            ground_fuel: 0.05,
+            canopy_density: 0.05,
+            understory_density: 0.05,
+            dryness: 0.9,
+            old_growth: 0.02,
+            fuel_load: 0.05,
+            ..Default::default()
+        };
+        let profile = chunk_fuel_profile_from_vegetation(&veg_gate);
+        assert!(
+            profile.wildland_fuel_mass < MIN_WILDLAND_FUEL_MASS,
+            "wildland={} must be below MIN={}",
+            profile.wildland_fuel_mass,
+            MIN_WILDLAND_FUEL_MASS
+        );
+        assert_eq!(fuel_ignition_gate(profile.wildland_fuel_mass), 0.0);
+    }
+
+    #[test]
     fn fire_ecology_lib_harness_meets_f1_green() {
         let witness = run_fire_ecology_lib_harness();
         assert!(
@@ -204,21 +230,19 @@ mod tests {
             witness.frames_sampled
         );
         assert!(
-            witness.fuel_gated_spark_cells > 0
-                || witness.chunks_fuel_gated > 0
-                || fire_f2_fuel_spread_green(&witness),
-            "fuel gate inactive: sampled={} frames={} gated_cells={} chunks_gated={} spread={}",
-            witness.chunks_sampled,
-            witness.frames_sampled,
+            fire_ecology_f1_strict_green(&witness),
+            "FIRE-F1-STRICT: gated_cells={} chunks_gated={} ungated={} frames={}",
             witness.fuel_gated_spark_cells,
             witness.chunks_fuel_gated,
-            witness.neighbor_spread_cells,
+            witness.ungated_spark_cells,
+            witness.frames_sampled,
         );
         assert!(fire_ecology_lib_harness_green(&witness));
     }
 
     #[test]
     fn fire_ecology_lib_harness_writes_green_json() {
+        let _guard = crate::dev::runtime_witness::fire::ecology_witness_file_lock_for_tests();
         assert!(refresh_fire_ecology_lib_harness_witness());
         let raw = std::fs::read_to_string(
             std::env::var_os("CARGO_MANIFEST_DIR")
@@ -229,6 +253,26 @@ mod tests {
         .expect("read");
         let doc: serde_json::Value = serde_json::from_str(&raw).expect("parse");
         assert_eq!(doc.get("green").and_then(|v| v.as_bool()), Some(true));
+        assert_eq!(
+            doc.get("f1_green").and_then(|v| v.as_bool()),
+            Some(true),
+            "FIRE-F1-STRICT exit: f1_green must be true"
+        );
         assert!(doc.get("sim_effect_spine").is_some());
+        assert_eq!(
+            doc.pointer("/sim_effect_spine/queue_drain_ok")
+                .and_then(|v| v.as_bool()),
+            Some(true),
+            "spine must nest drain metrics (not double-wrapped); got {:?}",
+            doc.get("sim_effect_spine")
+        );
+        assert!(
+            doc.pointer("/sim_effect_spine/sim_effect_spine").is_none(),
+            "refuse double-nested sim_effect_spine"
+        );
+        let fuel_gate = doc
+            .pointer("/witness/fuel_gate_active")
+            .and_then(|v| v.as_bool());
+        assert_eq!(fuel_gate, Some(true));
     }
 }

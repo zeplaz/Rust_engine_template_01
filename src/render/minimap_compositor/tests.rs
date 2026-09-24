@@ -87,7 +87,6 @@ fn minimap_compositor_proof_payload_fields() {
 #[test]
 fn ui_w3_m2_001_live_witness_refresh() {
     use super::{refresh_ui_w3_m2_001_live_witness, ui_w3_m2_001_green};
-    use crate::gui::hud::HudOverlayTrayState;
 
     assert!(refresh_ui_w3_m2_001_live_witness());
     let text = std::fs::read_to_string("debug_runs/minimap_compositor_live.json")
@@ -106,7 +105,6 @@ fn ui_w3_m2_001_live_witness_refresh() {
 #[test]
 fn ui_oh_m2_001_live_witness_refresh() {
     use super::{refresh_ui_oh_m2_001_live_witness, ui_oh_m2_001_green};
-    use crate::gui::hud::HudOverlayTrayState;
 
     assert!(refresh_ui_oh_m2_001_live_witness());
     let text = std::fs::read_to_string("debug_runs/minimap_compositor_live.json")
@@ -130,7 +128,6 @@ fn minimap_compositor_live_witness_refresh() {
     use super::diagnostics::MinimapGpuCompositorDiagnostics;
     use crate::dev::runtime_witness::commit_minimap_compositor_live_proof;
     use super::state::MinimapCompositorState;
-    use crate::gui::hud::HudOverlayTrayState;
 
     let tray = super::witness_collectors::witness_harness_tray();
     let compositor = MinimapCompositorState {
@@ -217,7 +214,6 @@ fn minimap_compositor_live_witness_refresh() {
 fn ui_p3_m2_tray_opt_green_when_tray_matches_compositor() {
     use super::witness_collectors::ui_p3_m2_tray_opt_green;
     use super::state::MinimapCompositorState;
-    use crate::gui::hud::HudOverlayTrayState;
 
     let compositor = MinimapCompositorState {
         fire_heat_enabled: true,

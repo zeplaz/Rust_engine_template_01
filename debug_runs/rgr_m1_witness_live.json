@@ -1,5 +1,5 @@
 {
-  "RGR-M1-001": false,
+  "RGR-M1-001": true,
   "RGR-M1-002_003": true,
   "RGR-M1-004": true,
   "_agent_meta": {
@@ -56,15 +56,24 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/rgr_m1_witness_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_rgr_m1_witness",
-    "written_at_epoch_secs": 1783371799
+    "written_at_epoch_secs": 1790260524
   },
-  "api_rs_pub_use_count": 75,
-  "green": false,
-  "mod_rs_pub_use_count": 62,
+  "api_rs_pub_use_count": 78,
+  "green": true,
+  "mod_rs_pub_use_count": 1,
   "schema": "rgr_m1_witness_v1"
 }

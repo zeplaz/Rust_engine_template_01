@@ -50,11 +50,13 @@ pub fn fire_spark_compute_enabled() -> bool {
 /// P2-FIRE-SPARK-011 — tactical shower read @ proof zoom (D-F07 / F-T03).
 #[must_use]
 pub fn fire_spark_011_green(w: &FireSparkWitness) -> bool {
+    let registry_emit = crate::render::fire_vfx::emit::effect_consumable_registry_emit_wired();
     w.rows > 0
         && w.scatter_slots >= 3
         && w.zoom_alpha >= FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA * 0.75
         && !w.view_culled
         && w.additive_blend
+        && registry_emit
 }
 
 #[inline]

@@ -97,3 +97,17 @@ def test_apsr_q3_witness_green() -> None:
     body = write_apsr_q3_witness()
     assert body["green"] is True
     assert body["golden_seed_count"] >= 12
+
+
+def test_aps_golden_rubric_scaffold_pending_only() -> None:
+    body = golden_seed_review.write_aps_golden_rubric_scaffold_witness()
+    assert body["green"] is True
+    assert body["operator_pass"] is False
+    assert body["aps_golden_ops_closed"] is False
+    assert body["bq_q3_ops_closed"] is False
+    assert int(body["row_count"]) >= 12
+    rows = golden_seed_review.load_rubric_rows().get("rows") or []
+    assert len(rows) >= 12
+    assert all(r.get("verdict") == "pending_operator" or golden_seed_review.is_operator_verdict(r) for r in rows)
+    assert not any(golden_seed_review.is_pytest_theater(r) for r in rows)
+    assert (repo_root() / "debug_runs/aps_golden_rubric_sheet_scaffold_live.json").is_file()

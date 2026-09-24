@@ -66,11 +66,15 @@ fn test_scene_wants_fire_overlay(scene: TestScene) -> bool {
 }
 
 /// Toggle SimulationMap fire overlay from sim heat or an active fire test scene (never demo-seed).
+///
+/// Also turns tray `fire_heat` on when product heat appears so operator checkbox matches pixels.
+/// Presentation/tray are optional so fire-ecology lib harnesses without HUD still run.
 pub fn sync_sim_map_fire_overlay_when_sim_has_heat(
     base: Res<State<BaseState>>,
     test_scene: Option<Res<ActiveTestScene>>,
     sim: Option<Res<FireSimulationSnapshot>>,
-    mut presentation: ResMut<MapViewPresentationStates>,
+    presentation: Option<ResMut<MapViewPresentationStates>>,
+    tray: Option<ResMut<crate::gui::hud::HudOverlayTrayState>>,
 ) {
     if !matches!(*base.get(), BaseState::Simulation) {
         return;
@@ -85,12 +89,21 @@ pub fn sync_sim_map_fire_overlay_when_sim_has_heat(
         .as_ref()
         .is_some_and(|active| test_scene_wants_fire_overlay(active.0));
     let want_overlay = sim_has_heat || test_fire_lane;
-    let sim = presentation.get_mut(MapViewInstanceId::SimulationMap);
-    if sim.overlays.fire_heat == want_overlay {
-        return;
+    if let Some(mut presentation) = presentation {
+        let sim = presentation.get_mut(MapViewInstanceId::SimulationMap);
+        if sim.overlays.fire_heat != want_overlay {
+            sim.overlays.fire_heat = want_overlay;
+            sim.bump_revision();
+        }
     }
-    sim.overlays.fire_heat = want_overlay;
-    sim.bump_revision();
+    // Product: enable tray with heat; never force-off (operator may clear while cold).
+    if want_overlay {
+        if let Some(mut tray) = tray {
+            if !tray.fire_heat {
+                tray.fire_heat = true;
+            }
+        }
+    }
 }
 
 #[cfg(test)]

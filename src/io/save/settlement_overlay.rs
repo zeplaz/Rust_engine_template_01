@@ -223,6 +223,29 @@ pub fn settlement_books_manifest_roundtrip_witness_green() -> bool {
     hydrated && roundtrip == expected
 }
 
+/// Write settlement books into the active save bundle when a flush is armed.
+/// Runs **before** [`crate::io::save::flush_dirty_chunk_save_queue`] so the
+/// manifest-referenced `overlays/settlement_books.ron` artifact exists on disk.
+pub fn write_settlement_overlay_on_save_flush(
+    flush: Res<crate::io::save::SaveFlushRequested>,
+    settings: Res<crate::io::save::WorldSaveBundleSettings>,
+    towns: Res<TownBook>,
+    districts: Res<DistrictBook>,
+    blocks: Res<BlockBook>,
+) {
+    if !flush.0 {
+        return;
+    }
+    if let Err(err) =
+        write_settlement_overlay_to_bundle(&settings.bundle_dir, &towns, &districts, &blocks)
+    {
+        bevy::log::warn!(
+            "settlement overlay write failed at {:?}: {err}",
+            settings.bundle_dir.join(SETTLEMENT_BOOKS_REL_PATH)
+        );
+    }
+}
+
 /// Tracks settlement overlay hydrate attempts per bundle dir (ECON-OG-SAVE-001).
 #[derive(Resource, Default, Debug)]
 pub struct SettlementBooksHydrateState {

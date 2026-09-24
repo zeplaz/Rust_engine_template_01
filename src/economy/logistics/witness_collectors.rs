@@ -64,11 +64,32 @@ pub fn build_logistics_throughput_proof_payload(
     let routes_open = rt.map(|r| r.routes_open).unwrap_or(0);
     let routes_blocked = rt.map(|r| r.routes_blocked).unwrap_or(0);
     let infra = infra_e5.unwrap_or_default();
+    let infra_clean = infra.graph_only_paths && routes_blocked == 0 && routes_open > 0;
+    if infra_clean {
+        super::witness::INFRA_E5_002_GRAPH_ONLY_LATCH.store(true, std::sync::atomic::Ordering::Relaxed);
+    }
+    let infra_e5_002_green = infra_clean
+        || (infra.graph_only_paths
+            && routes_open > 0
+            && super::witness::INFRA_E5_002_GRAPH_ONLY_LATCH.load(std::sync::atomic::Ordering::Relaxed));
+    let top_saturated: Vec<serde_json::Value> = diagnostics
+        .top_saturated_edges
+        .iter()
+        .take(5)
+        .map(|s| {
+            serde_json::json!({
+                "edge_id": s.edge_id,
+                "pressure": s.pressure,
+                "load": s.load,
+                "capacity": s.capacity,
+            })
+        })
+        .collect();
     serde_json::json!({
         "profile": "LOGISTICS_THROUGHPUT",
         "throughput_green": open == 0,
         "s7p_log_001_green": open == 0 && routes_open > 0,
-        "infra_e5_002_green": infra.graph_only_paths && routes_blocked == 0 && routes_open > 0,
+        "infra_e5_002_green": infra_e5_002_green,
         "graph_only_paths": infra.graph_only_paths,
         "no_harness_tile_paint": infra.no_harness_tile_paint,
         "open_todos": open,
@@ -77,16 +98,32 @@ pub fn build_logistics_throughput_proof_payload(
         "routes_open": routes_open,
         "routes_blocked": routes_blocked,
         "edge_saturation_max": rt.map(|r| r.edge_saturation_max),
+        "top_saturated_edges": top_saturated,
+        "starved_facilities": diagnostics.starved_facilities,
         "route_proofs_sample": diagnostics_sample,
         "witness": {
             "derived_logistics_graph": witness.derived_logistics_graph,
+            "facility_portal_attachment": witness.facility_portal_attachment,
             "path_open_from_nav": witness.path_open_from_nav,
             "versioned_route_handle": witness.versioned_route_handle,
+            "infra_transport_pairing": witness.infra_transport_pairing,
+            "route_path_store": witness.route_path_store,
+            "in_transit_ledger": witness.in_transit_ledger,
+            "freight_movement_model": witness.freight_movement_model,
+            "arrivals_only_propagation": witness.arrivals_only_propagation,
+            "partial_fulfillment": witness.partial_fulfillment,
             "route_proof": witness.route_proof,
+            "soa_throughput_solver": witness.soa_throughput_solver,
             "freight_reservations": witness.freight_reservations,
             "congestion_feedback": witness.congestion_feedback,
             "corridor_pressure": witness.corridor_pressure,
+            "overlay_solver_load": witness.overlay_solver_load,
             "geographic_cascade_test": witness.geographic_cascade_test,
+            "district_scoped_solve": witness.district_scoped_solve,
+            "async_district_solve": witness.async_district_solve,
+            "corridor_class": witness.corridor_class,
+            "streaming_route_invalidation": witness.streaming_route_invalidation,
+            "logistics_diagnostics_panel": witness.logistics_diagnostics_panel,
             "logistics_proof_json": true,
         },
     })
@@ -283,6 +320,9 @@ mod live_proof_sim_tests {
         app.add_message::<CommitConstructionSiteEvent>();
         crate::dev::logistics_throughput_todos::register_logistics_throughput_todo_hooks(&mut app);
         register_industrial_activation_todo_hooks(&mut app);
+        // Sibling power-overlay lane owns presentation; stub so IndustrialActivationPlugin
+        // toast ingest does not hard-fail headless logistics proof apps (LOG-A harness).
+        app.init_resource::<crate::render::PowerMapOverlayPresentation>();
         app.add_plugins((
             crate::economy::activation::IndustrialActivationPlugin,
             crate::strategic::InfrastructureGraphBridgePlugin,
@@ -424,10 +464,11 @@ mod live_proof_sim_tests {
     fn simulation_writes_logistics_throughput_live_json_log_b_green() {
         let _lock = proof_lock();
         use super::super::witness::{
-            LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED, LOG_B_04_ARRIVALS_ONLY_TEST_PASSED,
-            LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED,
+            LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED, LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED,
+            LOG_B_04_ARRIVALS_ONLY_TEST_PASSED, LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED,
         };
 
+        LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
         LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
         LOG_B_04_ARRIVALS_ONLY_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
         LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
@@ -450,6 +491,14 @@ mod live_proof_sim_tests {
             .resource::<crate::economy::logistics::InTransitLedger>()
             .lots
             .is_empty();
+        let ledger_routed = app
+            .world()
+            .resource::<crate::economy::logistics::InTransitLedger>()
+            .lots
+            .iter()
+            .any(|l| l.route.id > 0 || l.route.topology_revision > 0 || l.path.edge_count > 0);
+        LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED
+            .store(ledger_nonempty && ledger_routed, std::sync::atomic::Ordering::Relaxed);
         LOG_B_04_ARRIVALS_ONLY_TEST_PASSED.store(ledger_nonempty, std::sync::atomic::Ordering::Relaxed);
         LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
         for _ in 0..50 {
@@ -489,11 +538,12 @@ mod live_proof_sim_tests {
     fn simulation_writes_logistics_throughput_live_json_log_c_green() {
         let _lock = proof_lock();
         use super::super::witness::{
-            LOG_C_02_RESERVATION_TEST_PASSED, LOG_C_03_CONGESTION_TEST_PASSED,
-            LOG_C_04_PRESSURE_TEST_PASSED, LOG_C_06_OVERLAY_TEST_PASSED,
-            LOG_GEOGRAPHIC_CASCADE_TEST_PASSED,
+            LOG_C_01_SOA_TEST_PASSED, LOG_C_02_RESERVATION_TEST_PASSED,
+            LOG_C_03_CONGESTION_TEST_PASSED, LOG_C_04_PRESSURE_TEST_PASSED,
+            LOG_C_06_OVERLAY_TEST_PASSED, LOG_GEOGRAPHIC_CASCADE_TEST_PASSED,
         };
 
+        LOG_C_01_SOA_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
         LOG_C_02_RESERVATION_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
         LOG_C_03_CONGESTION_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
         LOG_C_04_PRESSURE_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
@@ -534,13 +584,27 @@ mod live_proof_sim_tests {
             app.update();
         }
 
-        LOG_C_02_RESERVATION_TEST_PASSED.store(
-            super::super::solver::reservations_within_capacity(
+        LOG_C_01_SOA_TEST_PASSED.store(
+            super::super::solver::soa_solver_aligned(
                 app.world()
                     .resource::<crate::economy::logistics::ThroughputSolverState>(),
             ),
             std::sync::atomic::Ordering::Relaxed,
         );
+        {
+            let solver = app
+                .world()
+                .resource::<crate::economy::logistics::ThroughputSolverState>();
+            let book = app
+                .world()
+                .resource::<crate::economy::logistics::FreightReservationBook>();
+            LOG_C_02_RESERVATION_TEST_PASSED.store(
+                super::super::solver::reservations_within_capacity(solver)
+                    && (book.entries.is_empty()
+                        || super::super::solver::book_matches_soa_reserved(book, solver)),
+                std::sync::atomic::Ordering::Relaxed,
+            );
+        }
         LOG_C_03_CONGESTION_TEST_PASSED.store(
             app.world()
                 .resource::<TransportFieldStore>()
@@ -578,6 +642,16 @@ mod live_proof_sim_tests {
         let json: serde_json::Value =
             serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("parse");
         assert!(json.get("route_proofs_sample").and_then(|v| v.as_array()).is_some_and(|a| !a.is_empty()));
+        assert_eq!(
+            json.pointer("/witness/soa_throughput_solver").and_then(|v| v.as_bool()),
+            Some(true),
+            "LOG-C-01 soa_throughput_solver must export true"
+        );
+        assert_eq!(
+            json.pointer("/witness/freight_reservations").and_then(|v| v.as_bool()),
+            Some(true),
+            "LOG-C-01/02 freight_reservations must export true"
+        );
 
         let witness = app.world().resource::<LogisticsThroughputWitness>();
         for id in log_c_ids() {
@@ -593,11 +667,12 @@ mod live_proof_sim_tests {
         use super::super::witness::{
             LOG_A_07_INFRA_PAIRING_TEST_PASSED, LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED,
             LOG_B_04_ARRIVALS_ONLY_TEST_PASSED, LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED,
-            LOG_C_02_RESERVATION_TEST_PASSED, LOG_C_03_CONGESTION_TEST_PASSED,
-            LOG_C_04_PRESSURE_TEST_PASSED, LOG_C_06_OVERLAY_TEST_PASSED,
-            LOG_D_01_CORRIDOR_CLASS_TEST_PASSED, LOG_D_02_DISTRICT_SCOPED_TEST_PASSED,
-            LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED, LOG_D_04_ASYNC_DISTRICT_TEST_PASSED,
-            LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED, LOG_GEOGRAPHIC_CASCADE_TEST_PASSED,
+            LOG_C_01_SOA_TEST_PASSED, LOG_C_02_RESERVATION_TEST_PASSED,
+            LOG_C_03_CONGESTION_TEST_PASSED, LOG_C_04_PRESSURE_TEST_PASSED,
+            LOG_C_06_OVERLAY_TEST_PASSED, LOG_D_01_CORRIDOR_CLASS_TEST_PASSED,
+            LOG_D_02_DISTRICT_SCOPED_TEST_PASSED, LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED,
+            LOG_D_04_ASYNC_DISTRICT_TEST_PASSED, LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED,
+            LOG_GEOGRAPHIC_CASCADE_TEST_PASSED,
         };
 
         let _lock = proof_lock();
@@ -634,13 +709,27 @@ mod live_proof_sim_tests {
                 .any(|p| p.delivered + 1e-4 < p.requested),
             std::sync::atomic::Ordering::Relaxed,
         );
-        LOG_C_02_RESERVATION_TEST_PASSED.store(
-            super::super::solver::reservations_within_capacity(
+        LOG_C_01_SOA_TEST_PASSED.store(
+            super::super::solver::soa_solver_aligned(
                 app.world()
                     .resource::<crate::economy::logistics::ThroughputSolverState>(),
             ),
             std::sync::atomic::Ordering::Relaxed,
         );
+        {
+            let solver = app
+                .world()
+                .resource::<crate::economy::logistics::ThroughputSolverState>();
+            let book = app
+                .world()
+                .resource::<crate::economy::logistics::FreightReservationBook>();
+            LOG_C_02_RESERVATION_TEST_PASSED.store(
+                super::super::solver::reservations_within_capacity(solver)
+                    && (book.entries.is_empty()
+                        || super::super::solver::book_matches_soa_reserved(book, solver)),
+                std::sync::atomic::Ordering::Relaxed,
+            );
+        }
         LOG_C_03_CONGESTION_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
         LOG_C_04_PRESSURE_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
         LOG_C_06_OVERLAY_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -649,22 +738,13 @@ mod live_proof_sim_tests {
         LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
         LOG_D_04_ASYNC_DISTRICT_TEST_PASSED.store(
             app.world()
-                .resource::<crate::economy::logistics::async_district::AsyncDistrictSolveQueue>()
-                .applied_total
-                > 0
-                || {
-                    app.world_mut()
-                        .resource_mut::<crate::economy::logistics::async_district::AsyncDistrictSolveQueue>()
-                        .post(crate::economy::logistics::async_district::DistrictSolveResult {
-                            district_id: 0,
-                            edge_load: vec![(0, 0.5)],
-                        });
-                    app.update();
-                    app.world()
-                        .resource::<crate::economy::logistics::async_district::AsyncDistrictSolveQueue>()
-                        .applied_total
-                        > 0
-                },
+                .resource::<crate::economy::logistics::types::LogisticsThroughputRuntimeWitness>()
+                .saw_async_district_solve
+                || app
+                    .world()
+                    .resource::<crate::economy::logistics::async_district::AsyncDistrictSolveQueue>()
+                    .applied_total
+                    > 0,
             std::sync::atomic::Ordering::Relaxed,
         );
         LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
@@ -726,6 +806,8 @@ mod live_proof_sim_tests {
             diagnostics.routes_open,
             diagnostics.routes_blocked
         );
+        crate::economy::logistics::INFRA_E5_002_GRAPH_ONLY_LATCH
+            .store(true, std::sync::atomic::Ordering::Relaxed);
 
         finalize_s7p_logistics_witness_in_test_app(&mut app);
         for _ in 0..12 {

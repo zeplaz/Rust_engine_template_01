@@ -2,6 +2,11 @@
 
 use bevy::prelude::*;
 
+use crate::construction::{
+    apply_deployable_staging_gate_archetype, enqueue_deployable_staging_debit_for_archetype,
+    note_ai_commit_gated,
+};
+use crate::economy::logistics::{InTransitLedger, PendingSiteStagingDebits, SiteStagingStock};
 use crate::strategic::{
     evaluate_site_placement_at_world_tile, BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles,
     LayerType, SiteArchetype, SiteId, StrategicRasterConfig,
@@ -19,6 +24,8 @@ pub struct ConstructionAiConfig {
     pub archetype: SiteArchetype,
     /// Inclusive tile radius around [`Self::origin_tile`] evaluated each probe.
     pub search_radius: i32,
+    /// Footprint for deployable / site probes (defaults 1×1; set for DragonTeeth/Minefield).
+    pub footprint: FootprintTiles,
 }
 
 impl Default for ConstructionAiConfig {
@@ -29,6 +36,10 @@ impl Default for ConstructionAiConfig {
             origin_tile: BuildSiteTile { x: 4, z: 4 },
             archetype: SiteArchetype::FuelDepot,
             search_radius: 2,
+            footprint: FootprintTiles {
+                width: 1,
+                depth: 1,
+            },
         }
     }
 }
@@ -45,6 +56,9 @@ fn construction_ai_shared_validation_probe_system(
     mut writer: MessageWriter<CommitConstructionSiteEvent>,
     overlay: Query<&crate::strategic::ChunkStrategicOverlay>,
     raster: Option<Res<StrategicRasterConfig>>,
+    staging: Option<Res<SiteStagingStock>>,
+    mut pending_staging: Option<ResMut<PendingSiteStagingDebits>>,
+    ledger: Option<Res<InTransitLedger>>,
 ) {
     if !cfg.enabled {
         return;
@@ -54,10 +68,7 @@ fn construction_ai_shared_validation_probe_system(
         return;
     }
 
-    let fp = FootprintTiles {
-        width: 1,
-        depth: 1,
-    };
+    let fp = cfg.footprint;
     let r = cfg.search_radius.max(0);
     let mut best: Option<(BuildSiteTile, f32)> = None;
 
@@ -72,9 +83,35 @@ fn construction_ai_shared_validation_probe_system(
                 x: xi as u32,
                 z: zi as u32,
             };
-            let report =
+            let mut report =
                 evaluate_site_placement_at_world_tile(origin, fp, raster.as_deref(), &overlay);
+            // COD-DEPLOYABLE-PLACE-001 — same staging gate as player place (no AI bypass).
+            if let (Some(staging), Some(pending), Some(ledger)) = (
+                staging.as_deref(),
+                pending_staging.as_deref(),
+                ledger.as_deref(),
+            ) {
+                apply_deployable_staging_gate_archetype(
+                    cfg.archetype,
+                    fp,
+                    staging,
+                    pending,
+                    ledger,
+                    &mut report,
+                );
+            } else if matches!(
+                cfg.archetype,
+                SiteArchetype::DragonTeeth | SiteArchetype::Minefield
+            ) {
+                report.allows_commit = false;
+            }
             if !report.allows_commit {
+                if matches!(
+                    cfg.archetype,
+                    SiteArchetype::DragonTeeth | SiteArchetype::Minefield
+                ) {
+                    note_ai_commit_gated();
+                }
                 continue;
             }
             let score = report.terrain_score + report.logistics_score + report.strategic_score;
@@ -87,6 +124,21 @@ fn construction_ai_shared_validation_probe_system(
     let Some((origin, _)) = best else {
         return;
     };
+
+    // Enqueue staging debit before the sole commit funnel (FreightDispatch applies try_debit).
+    if let (Some(staging), Some(pending)) = (staging.as_deref(), pending_staging.as_deref_mut()) {
+        if enqueue_deployable_staging_debit_for_archetype(cfg.archetype, fp, staging, pending)
+            .is_err()
+        {
+            return;
+        }
+    } else if matches!(
+        cfg.archetype,
+        SiteArchetype::DragonTeeth | SiteArchetype::Minefield
+    ) {
+        note_ai_commit_gated();
+        return;
+    }
 
     writer.write(CommitConstructionSiteEvent {
         site_id: SiteId::UNASSIGNED,

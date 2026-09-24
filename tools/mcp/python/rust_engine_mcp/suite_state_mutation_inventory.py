@@ -12,6 +12,8 @@ from rust_engine_mcp.paths import repo_root
 
 ALLOWLIST_REL = "tools/mcp/schemas/aps_suite_state_mutation_allowlist_v1.json"
 APS_SUITE_DIR = repo_root() / "tools" / "mcp" / "art_pipeline_suite"
+# APSR-MUTATION-REGRESS-001 — CI ceiling; shrink OK (lower this intentionally), growth fails.
+MAX_DIRECT_MUTATION_SITES = 33
 
 # Assignment only — exclude ``==`` / ``!=`` comparisons on state fields.
 _MUTATION_RE = re.compile(r"(?:self\.)?state\.([a-z_][a-z0-9_]*)\s*=(?!=)")
@@ -88,13 +90,17 @@ def suite_state_mutation_inventory(*, root: Path | None = None) -> dict[str, Any
     live_ids = {site.site_id for site in sites}
     unexpected = sorted(live_ids - allowed)
     removed = sorted(allowed - live_ids)
-    ok = not unexpected and not removed
+    live_count = len(sites)
+    growth_ok = live_count <= MAX_DIRECT_MUTATION_SITES
+    ok = not unexpected and not removed and growth_ok
     return {
         "gate": "APSR-A0-T1-001",
         "green": ok,
         "ok": ok,
-        "live_count": len(sites),
+        "live_count": live_count,
         "allowlist_count": len(allowed),
+        "mutation_ceiling": MAX_DIRECT_MUTATION_SITES,
+        "growth_ok": growth_ok,
         "unexpected_sites": unexpected,
         "removed_sites": removed,
         "sites": [

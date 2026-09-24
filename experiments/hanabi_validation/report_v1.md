@@ -4,15 +4,14 @@
 |:---|:---|
 | **Slice** | H-A-SPIKE-001 / PLAN-HANABI-ADOPTION-001 |
 | **Designer bounds** | DESIGN-HANABI-BOUNDS-001 PASS (qualified) |
-| **Designer review** | DESIGN-HANABI-SPIKE-REVIEW-001 → [`hanabi_spike_review_h_a2_gate_v1.md`](../../docs/archive/2026-06-src-dev/plans/hanabi_spike_review_h_a2_gate_v1.md) — H-A2 **CLEARED (qualified)** |
 | **Date** | 2026-05-27 |
 | **Scope** | `experiments/hanabi_validation/` only — main `EnginePlugin` unchanged |
 | **Bevy gate** | PASS — `cargo check -p hanabi_validation` |
-| **Hanabi crate** | bevy_hanabi 0.18 |
+| **Hanabi crate** | bevy_hanabi 0.19 |
 
 ## Executive summary
 
-Bevy **0.18** + **bevy_hanabi 0.18** compile in the isolated experiment crate. Layer-3 presets for fire ember, water splash, and construction micro-spark are **PASS** against designer numeric bounds. Arcade anti-pattern sample is documented **REJECT**.
+Bevy **0.19** + **bevy_hanabi 0.19** compile in the isolated experiment crate. Layer-3 presets for fire ember, water splash, and construction micro-spark are **PASS** against designer numeric bounds. Arcade anti-pattern sample is documented **REJECT**.
 
 **Spike verdict:** **PASS (qualified)** — proceed to designer re-review only if a future preset hits **TUNE** in production wiring.
 
@@ -49,10 +48,11 @@ Bevy **0.18** + **bevy_hanabi 0.18** compile in the isolated experiment crate. L
 | Particles write L1 sim / weather | **Not attempted** — read-only L3 charter |
 | Minimap / strategic zoom | **Not attempted** — tactical L3 only |
 
-## Bevy 0.18 gate
+## Bevy 0.19 gate
 
-- Root [`Cargo.toml`](../../Cargo.toml): `bevy = "0.18"` (main crate unchanged)
-- Experiment: `bevy = "0.18"`, `bevy_hanabi = "0.18"`
+- Root [`Cargo.toml`](../../Cargo.toml): `bevy = "0.19"`
+- Experiment: `bevy = "0.19"`, `bevy_hanabi = "0.19"`
+- Migration guide: https://bevy.org/learn/migration-guides/0-18-to-0-19/
 - CI: `cargo check -p hanabi_validation`
 
 ## Regression (main app)
@@ -61,7 +61,7 @@ Bevy **0.18** + **bevy_hanabi 0.18** compile in the isolated experiment crate. L
 cargo test -p proc_A_dine01 --lib stage7
 ```
 
-Main app does **not** link `bevy_hanabi` until H-A2 feature gate.
+Main app does **not** link `bevy_hanabi` until H-A2 feature gate (`hanabi_l3`).
 
 ## Optional captures
 

@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_double_shop",
+  "archetype": "module_door",
+  "style_pack": "style_colonial",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "batch_id": "kit_prod_promote_bq_001",
+  "module": {
+    "grid_units": [
+      2,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 4,
+    "h": 2.5,
+    "d": 0.15
+  },
+  "material_profile": "wood_plank_01",
+  "references": [
+    "ref:gate:BQ-PROD-PROMOTE-BATCH-001",
+    "ref:kit:kit_prod_promote_bq_001",
+    "ref:audit:debug_runs/bq_smoke_tier_audit_live.json",
+    "ref:slot:style_colonial.door_wide"
+  ]
+}

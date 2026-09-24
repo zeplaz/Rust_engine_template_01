@@ -1,7 +1,7 @@
 {
   "_agent_meta": {
     "schema": "ops_report_v2",
-    "written_at_epoch_secs": 1782016220,
+    "written_at_epoch_secs": 1790256222,
     "profile": "OPS_REPORT",
     "source_system": "ops_witness_index+ops_project_brief",
     "relative_path": "debug_runs/agent_ops/ops_report_latest.json",
@@ -14,22 +14,21 @@
   "dsm_snapshot": [
     "AUTH: MAT\u2605\u21e2APS\u2605\u21e2SNAP\u2605\u21e2WRK\u2605\u21e2ATL\u2605\u21e2RT\u2605 | SIM\u2605\u21e2CON\u2605\u21e2INFRA\u2605\u21e2FIRE\u2605\u21e2ECO\u2605",
     "LOOP: RUN\u21e2TEL\u2605\u21e2KPI\u2605\u21e2OPS\u2605\u21e2\u0394WF\u21ba",
-    "STAGE5: 1 green / 1 proofs",
+    "STAGE5: 0 green / 1 proofs",
     "FIRE/VFX: 0 green / 0 proofs",
-    "CONSTRUCTION: operational + 15 sub-witnesses \u00b7 1 red",
+    "CONSTRUCTION: operational + 15 sub-witnesses \u00b7 0 red",
     "INFRASTRUCTURE: 0 green / 0 proofs",
     "ECONOMY/LOG: 0 green / 0 proofs",
     "WAVE/STAGE6: 0 green / 0 proofs",
     "STAGE7/PLAY: 0 green / 1 proofs",
-    "ART-A/B/C: 2/114/0 proofs \u00b7 B ship\u26d4=True",
-    "UI: 0 proofs \u00b7 UNCLASSIFIED: 330",
-    "FAIL-PROP[art_B]: Track B manual keyframe \u2014 warehouse paused (does not block ATL\u2605/RT\u2605)",
-    "FAIL-PROP[construction]: red sub-witnesses: construction_site_stage_tick_002"
+    "ART-A/B/C: 3/116/1 proofs \u00b7 B ship\u26d4=True",
+    "UI: 0 proofs \u00b7 UNCLASSIFIED: 457",
+    "FAIL-PROP[art_B]: Track B manual keyframe \u2014 warehouse paused (does not block ATL\u2605/RT\u2605)"
   ],
   "qce": {
     "Q_coherence": {
-      "score": 7,
-      "evidence": "stage5 spine + construction operational; art_B dishonest=6"
+      "score": 5,
+      "evidence": "stage5 spine + construction operational; art_B dishonest=7"
     },
     "Q_stability": {
       "score": 7,
@@ -49,7 +48,7 @@
     },
     "E_confusion_risk": {
       "score": 9,
-      "evidence": "art dishonest=6; construction red=1; inflated_green=6; rollup_inflated=0; queue_contradiction=9"
+      "evidence": "art dishonest=7; construction red=0; inflated_green=7; rollup_inflated=0; queue_contradiction=3"
     }
   },
   "delta_wf": [
@@ -91,14 +90,19 @@
       "label": "Agent continuity"
     },
     "art_A": {
-      "count": 2,
-      "green_count": 2,
+      "count": 3,
+      "green_count": 3,
       "label": "APS product / material studio"
     },
     "art_B": {
-      "count": 114,
-      "green_count": 75,
+      "count": 116,
+      "green_count": 76,
       "label": "MCP pipeline spine / warehouse integration"
+    },
+    "art_C": {
+      "count": 1,
+      "green_count": 1,
+      "label": null
     },
     "construction": {
       "count": 1,
@@ -107,7 +111,7 @@
     },
     "stage5_spine": {
       "count": 1,
-      "green_count": 1,
+      "green_count": 0,
       "label": "Stage 5 FULL_APP readiness"
     },
     "stage7_play": {
@@ -116,9 +120,14 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 330,
-      "green_count": 256,
+      "count": 457,
+      "green_count": 373,
       "label": null
+    },
+    "vss_spectator_scale": {
+      "count": 4,
+      "green_count": 3,
+      "label": "VSS-001 \u2014 real game test \u00b7 scale \u00b7 artist VFX \u00b7 symbolic build"
     }
   },
   "construction_sub_witnesses": [
@@ -202,7 +211,7 @@
     },
     {
       "witness_key": "construction_site_stage_tick_002",
-      "green": false,
+      "green": true,
       "partial_alpha": null,
       "note": null
     },
@@ -215,7 +224,7 @@
   "handoff_path": "tools/orchestrator/queues/HANDOFF.md",
   "doc_reads": {
     "witness_path": "debug_runs/agent_ops/doc_reads_brief_latest.json",
-    "total_reads_in_window": 192,
+    "total_reads_in_window": 223,
     "hot_path_count": 12,
     "promotion_candidates": 12,
     "top_hot_paths": [
@@ -225,19 +234,19 @@
       },
       {
         "path": "src/dev/agent_lang_v1.md",
-        "count": 30
+        "count": 35
       },
       {
         "path": "prompts/llm_agent_brief.md",
-        "count": 23
+        "count": 28
+      },
+      {
+        "path": ".cursor/skills/agent-lang/SKILL.md",
+        "count": 25
       },
       {
         "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
         "count": 21
-      },
-      {
-        "path": ".cursor/skills/agent-lang/SKILL.md",
-        "count": 20
       }
     ]
   },
@@ -248,6 +257,6 @@
     "rtr": null,
     "status": "measured",
     "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
-    "events_per_day": 0.86
+    "events_per_day": 0.14
   }
 }

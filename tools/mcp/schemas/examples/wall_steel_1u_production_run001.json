@@ -8,7 +8,7 @@
   "params": {
     "width_m": 4,
     "height_m": 3,
-    "depth_m": 0.2,
+    "depth_m": 0.4,
     "material_profile": "steel_panel_01",
     "seed": 42010,
     "profile": "flat"

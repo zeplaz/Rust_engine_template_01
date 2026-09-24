@@ -194,7 +194,8 @@
       "exit": "validate-report cargo + stage5 lib + straggler import list in HANDOFF",
       "blocked_by": [],
       "closed": "2026-07-04",
-      "witness": "debug_runs/rgr_m1_witness_live.json"
+      "witness": "debug_runs/rgr_m1_witness_live.json",
+      "honesty_note": "2026-09-24 refresh: green:true · mod_rs_pub_use_count:1 (≤2) · WIT-HON passed — collapse already on disk; stale JSON was the honesty gap"
     },
     {
       "seq": 6,

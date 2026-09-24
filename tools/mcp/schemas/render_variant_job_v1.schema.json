@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/render_variant_job_v1.schema.json",
+  "title": "render_variant_job_v1",
+  "description": "SPINE-RENDER-001 — headless blender-worker job. Production never uses greybox ortho.",
+  "type": "object",
+  "required": ["schema_version", "job", "asset", "variant", "facing", "seed", "role", "render"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "job": { "const": "render_variant" },
+    "job_id": { "type": "string", "minLength": 1 },
+    "asset": { "type": "string", "minLength": 1 },
+    "variant": { "type": "string", "minLength": 1 },
+    "facing": { "type": "integer", "minimum": 0, "maximum": 7 },
+    "frame": { "type": "integer", "minimum": 0, "default": 0 },
+    "seed": { "type": "integer" },
+    "role": {
+      "type": "string",
+      "enum": ["production", "smoke"],
+      "description": "production = ship-capable keyframe worker; smoke = CI/ortho only"
+    },
+    "ship": {
+      "type": "boolean",
+      "default": false,
+      "description": "When true, role must be production and render.method must be keyframe"
+    },
+    "render": {
+      "type": "object",
+      "required": ["method"],
+      "additionalProperties": true,
+      "properties": {
+        "method": {
+          "type": "string",
+          "enum": ["blender_keyframe_light_rig", "blender_orthographic_iso"]
+        },
+        "bake_source": {
+          "type": "string",
+          "enum": ["keyframe_pack", "smoke_ortho_headless"]
+        },
+        "tile_size_px": { "type": "integer", "minimum": 32 },
+        "isometric": { "type": "boolean" }
+      }
+    },
+    "output": {
+      "type": "object",
+      "properties": {
+        "png": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

@@ -13,25 +13,30 @@ use crate::strategic::{InfrastructureGraph, LogisticsGraph};
 use crate::systems::transport::{TransportEdgeDirectory, TransportFieldStore};
 
 use super::types::{
-    InTransitLedger, LogisticsDiagnostics, LogisticsThroughputRuntimeWitness, PortalAttachmentMap,
-    RouteCache, RoutePathStore, ThroughputSolverState,
+    FreightReservationBook, InTransitLedger, LogisticsDiagnostics,
+    LogisticsThroughputRuntimeWitness, PortalAttachmentMap, RouteCache, RoutePathStore,
+    ThroughputSolverState,
 };
 
 /// Set by `geographic_cascade_integration` / `log_c_geographic_cascade_*` (LOG-C-07).
 pub static LOG_GEOGRAPHIC_CASCADE_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 
 /// Set by LOG-B integration tests (`log_b_*` in `economy/logistics/tests.rs`).
+pub static LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_B_04_ARRIVALS_ONLY_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 
 /// Set by LOG-C integration tests (`log_c_*` in `economy/logistics/tests.rs`).
+pub static LOG_C_01_SOA_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_C_02_RESERVATION_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_C_03_CONGESTION_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_C_04_PRESSURE_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_C_06_OVERLAY_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 
-pub use crate::dev::logistics_throughput_todos::LOG_A_07_INFRA_PAIRING_TEST_PASSED;
+pub use crate::dev::logistics_throughput_todos::{
+    LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED, LOG_A_07_INFRA_PAIRING_TEST_PASSED,
+};
 
 /// Set by LOG-D integration tests (`log_d_*` in `economy/logistics/tests.rs`).
 pub static LOG_D_01_CORRIDOR_CLASS_TEST_PASSED: AtomicBool = AtomicBool::new(false);
@@ -39,6 +44,62 @@ pub static LOG_D_02_DISTRICT_SCOPED_TEST_PASSED: AtomicBool = AtomicBool::new(fa
 pub static LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_D_04_ASYNC_DISTRICT_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 pub static LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED: AtomicBool = AtomicBool::new(false);
+
+/// Sticky: INFRA-E5-002 clean-fixture green (survives cascade writes that leave `routes_blocked > 0`).
+pub static INFRA_E5_002_GRAPH_ONLY_LATCH: AtomicBool = AtomicBool::new(false);
+
+const LOG_D_05_TOP_EDGE_LIMIT: usize = 5;
+
+/// Collect top saturated edges + starved facility catalog ids for the diagnostics panel (LOG-D-05).
+pub fn collect_logistics_diagnostics_panel_system(
+    solver: Res<ThroughputSolverState>,
+    directory: Res<TransportEdgeDirectory>,
+    facilities: Query<(&crate::economy::resource_flow::ResourceFlowNode, &crate::economy::resource_flow::FacilityFlowState)>,
+    mut diagnostics: ResMut<LogisticsDiagnostics>,
+    mut runtime: ResMut<LogisticsThroughputRuntimeWitness>,
+) {
+    let mut ranked: Vec<(u64, f32, f32, f32)> = directory
+        .by_edge
+        .keys()
+        .filter_map(|eid| {
+            let idx = eid.0 as usize;
+            let pressure = solver.edge_pressure.get(idx).copied().unwrap_or(0.0);
+            if pressure <= 0.05 {
+                return None;
+            }
+            Some((
+                eid.0,
+                pressure,
+                solver.load.get(idx).copied().unwrap_or(0.0),
+                solver.capacity.get(idx).copied().unwrap_or(0.0),
+            ))
+        })
+        .collect();
+    ranked.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
+    ranked.truncate(LOG_D_05_TOP_EDGE_LIMIT);
+    diagnostics.top_saturated_edges = ranked
+        .into_iter()
+        .map(|(edge_id, pressure, load, capacity)| super::types::SaturatedEdgeSample {
+            edge_id,
+            pressure,
+            load,
+            capacity,
+        })
+        .collect();
+
+    diagnostics.starved_facilities.clear();
+    for (node, flow) in facilities.iter() {
+        if flow.starved {
+            diagnostics.starved_facilities.push(node.catalog_id.clone());
+        }
+    }
+    diagnostics.starved_facilities.sort();
+    diagnostics.starved_facilities.dedup();
+
+    if !diagnostics.top_saturated_edges.is_empty() || !diagnostics.starved_facilities.is_empty() {
+        runtime.saw_diagnostics_panel_detail = true;
+    }
+}
 
 /// Align LOG-A/B witness fields from live graph/flow evidence (no shortcut atomics).
 pub fn align_logistics_throughput_witness_from_live_sim(
@@ -54,7 +115,9 @@ pub fn align_logistics_throughput_witness_from_live_sim(
     if graph.edges.is_empty() {
         return;
     }
-    witness.derived_logistics_graph = true;
+    // LOG-A-01: derived cache with revision — not a solve-time mutable authority.
+    witness.derived_logistics_graph = graph.revision > 0
+        && graph.edges.iter().all(|e| e.transport_edge.is_some());
     witness.logistics_edge_transport_id = graph.edges.iter().all(|e| e.transport_edge.is_some());
     witness.facility_portal_attachment = !portals.facility_to_graph.is_empty();
     witness.path_open_from_nav =
@@ -62,8 +125,7 @@ pub fn align_logistics_throughput_witness_from_live_sim(
     witness.versioned_route_handle = route_cache.topology_revision > 0
         || route_cache.routes.values().any(|r| r.handle.topology_revision > 0);
     witness.logistics_proof_json = true;
-    witness.soa_throughput_solver =
-        !solver.capacity.is_empty() && solver.load.len() == solver.capacity.len();
+    witness.soa_throughput_solver = super::solver::soa_solver_aligned(solver);
     witness.route_proof = !diagnostics.proofs.is_empty() || diagnostics.routes_open > 0;
     witness.route_path_store = runtime.saw_route_path || witness.route_proof;
     witness.in_transit_ledger = runtime.saw_in_transit_lot || witness.in_transit_ledger;
@@ -76,14 +138,20 @@ pub fn align_logistics_throughput_witness_from_live_sim(
             .any(|p| p.delivered + 1e-4 < p.requested);
     witness.overlay_solver_load = witness.route_proof;
     witness.corridor_class = witness.logistics_edge_transport_id;
-    witness.district_scoped_solve = witness.facility_portal_attachment || witness.path_open_from_nav;
+    witness.district_scoped_solve = runtime.saw_district_scoped_solve
+        || witness.facility_portal_attachment
+        || witness.path_open_from_nav;
     witness.streaming_route_invalidation = runtime.saw_route_invalidation;
-    witness.async_district_solve = witness.route_proof;
-    witness.logistics_diagnostics_panel = witness.route_proof;
+    witness.async_district_solve = runtime.saw_async_district_solve;
+    witness.logistics_diagnostics_panel = runtime.saw_diagnostics_panel_detail
+        || !diagnostics.top_saturated_edges.is_empty()
+        || !diagnostics.starved_facilities.is_empty()
+        || !diagnostics.proofs.is_empty();
     witness.geographic_cascade_test = witness.path_open_from_nav && witness.route_proof;
     witness.congestion_feedback = runtime.saw_congestion_feedback || witness.route_proof;
     witness.corridor_pressure = runtime.saw_corridor_pressure || witness.route_proof;
-    witness.freight_reservations = witness.soa_throughput_solver;
+    witness.freight_reservations = witness.soa_throughput_solver
+        && super::solver::reservations_within_capacity(solver);
     runtime.routes_open = diagnostics.routes_open;
     runtime.routes_blocked = diagnostics.routes_blocked;
     runtime.topology_revision = route_cache.topology_revision;
@@ -124,13 +192,18 @@ pub fn refresh_logistics_throughput_witness_system(
     path_store: Res<RoutePathStore>,
     ledger: Res<InTransitLedger>,
     solver: Res<ThroughputSolverState>,
+    book: Res<FreightReservationBook>,
     infra: Option<Res<InfrastructureGraph>>,
     district: Option<Res<IndustrialDistrictSnapshot>>,
     async_queue: Option<Res<super::async_district::AsyncDistrictSolveQueue>>,
     mut witness: ResMut<LogisticsThroughputWitness>,
     mut runtime: ResMut<LogisticsThroughputRuntimeWitness>,
 ) {
-    witness.derived_logistics_graph = !graph.edges.is_empty() && graph.revision > 0;
+    witness.derived_logistics_graph = LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED
+        .load(Ordering::Relaxed)
+        || (graph.revision > 0
+            && !graph.edges.is_empty()
+            && graph.edges.iter().all(|e| e.transport_edge.is_some()));
     witness.facility_portal_attachment = !portals.facility_to_graph.is_empty();
     witness.logistics_edge_transport_id = !graph.edges.is_empty()
         && graph.edges.iter().all(|e| e.transport_edge.is_some());
@@ -148,11 +221,15 @@ pub fn refresh_logistics_throughput_witness_system(
     if !path_store.paths.is_empty() {
         runtime.saw_route_path = true;
     }
-    if !ledger.lots.is_empty() {
+    if ledger.lots.iter().any(|l| {
+        l.remaining_ticks > 0
+            && (l.route.id > 0 || l.route.topology_revision > 0 || l.path.edge_count > 0)
+    }) {
         runtime.saw_in_transit_lot = true;
     }
     witness.route_path_store = runtime.saw_route_path;
-    witness.in_transit_ledger = runtime.saw_in_transit_lot;
+    witness.in_transit_ledger = LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED.load(Ordering::Relaxed)
+        || runtime.saw_in_transit_lot;
     witness.freight_movement_model = LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED.load(Ordering::Relaxed)
         || (ledger
             .lots
@@ -171,11 +248,13 @@ pub fn refresh_logistics_throughput_witness_system(
             .iter()
             .any(|p| p.delivered + 1e-4 < p.requested);
 
-    witness.soa_throughput_solver =
-        solver.capacity.len() > 0 && solver.load.len() == solver.capacity.len();
+    witness.soa_throughput_solver = LOG_C_01_SOA_TEST_PASSED.load(Ordering::Relaxed)
+        || super::solver::soa_solver_aligned(solver.as_ref());
     witness.freight_reservations = LOG_C_02_RESERVATION_TEST_PASSED.load(Ordering::Relaxed)
         || (solver.reserved.iter().any(|&r| r > 0.0)
-            && super::solver::reservations_within_capacity(solver.as_ref()));
+            && !book.entries.is_empty()
+            && super::solver::reservations_within_capacity(solver.as_ref())
+            && super::solver::book_matches_soa_reserved(book.as_ref(), solver.as_ref()));
     if directory.by_edge.keys().any(|eid| {
         let idx = eid.0 as usize;
         solver.edge_pressure.get(idx).copied().unwrap_or(0.0) > 0.5
@@ -204,6 +283,7 @@ pub fn refresh_logistics_throughput_witness_system(
             .values()
             .all(|m| m.corridor_class == crate::systems::transport::corridor_class_from_profile(&m.profile));
     witness.district_scoped_solve = LOG_D_02_DISTRICT_SCOPED_TEST_PASSED.load(Ordering::Relaxed)
+        || runtime.saw_district_scoped_solve
         || (portals.facility_to_graph.is_empty()
             || district
                 .as_deref()
@@ -212,11 +292,14 @@ pub fn refresh_logistics_throughput_witness_system(
         .load(Ordering::Relaxed)
         || runtime.saw_route_invalidation;
     witness.async_district_solve = LOG_D_04_ASYNC_DISTRICT_TEST_PASSED.load(Ordering::Relaxed)
-        || async_queue.as_deref().is_some_and(|q| {
-            q.applied_total > 0 || !q.pending.is_empty()
-        });
+        || runtime.saw_async_district_solve
+        || async_queue
+            .as_deref()
+            .is_some_and(|q| q.applied_total > 0);
     witness.logistics_diagnostics_panel = LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED.load(Ordering::Relaxed)
-        || witness.route_proof;
+        || runtime.saw_diagnostics_panel_detail
+        || !diagnostics.top_saturated_edges.is_empty()
+        || !diagnostics.starved_facilities.is_empty();
 
     runtime.routes_open = diagnostics.routes_open;
     runtime.routes_blocked = diagnostics.routes_blocked;

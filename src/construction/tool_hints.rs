@@ -37,12 +37,36 @@ pub fn draw_tool_hints_egui(
         ],
         BuildTool::Building(_) => vec![
             "Pick a building in the picker first",
-            "LMB: move ghost on map",
-            "Enter: place ghost + queued",
-            "RMB: clear ghost",
-            "Esc: cancel building (clear queue + tool)",
+            "LMB: lock ghost on map",
+            "Adjust: Ctrl+scroll rotate · Shift+scroll size",
+            "LMB again: place (Enter shortcut)",
+            "RMB / Esc: unlock ghost",
+            "Esc again: cancel building tool",
             "Backspace: clear unapproved queue",
         ],
+        BuildTool::Defense(kind) => {
+            let lead = match kind {
+                crate::construction::DefenseKind::DefensiveWall => {
+                    crate::gui::hud::sim_hud_copy::HINT_DEFENSIVE_WALL
+                }
+                crate::construction::DefenseKind::DragonTeeth => {
+                    crate::gui::hud::sim_hud_copy::HINT_DRAGON_TEETH
+                }
+                crate::construction::DefenseKind::Minefield => {
+                    crate::gui::hud::sim_hud_copy::HINT_MINEFIELD
+                }
+                crate::construction::DefenseKind::TrenchLine => "Trench line — two clicks on map",
+                crate::construction::DefenseKind::Bunker => "Bunker — two clicks on map",
+            };
+            vec![
+                lead,
+                "LMB: lock ghost on map",
+                "Adjust: Ctrl+scroll rotate · Shift+scroll size",
+                "LMB again: place (Enter shortcut)",
+                "RMB / Esc: unlock ghost",
+                "Esc again: cancel defense tool",
+            ]
+        },
         BuildTool::Road(_) => vec![
             "LMB: add point",
             "RMB: undo point",
@@ -77,9 +101,9 @@ pub fn draw_tool_hints_egui(
             for line in &hints {
                 ui.label(egui::RichText::new(*line).small().weak());
             }
-            if matches!(tool.tool, BuildTool::Building(_)) {
+            if tool.tool.uses_two_click_place() {
                 ui.label(
-                    egui::RichText::new(format!("{confirm_key}: place building"))
+                    egui::RichText::new(format!("{confirm_key}: place"))
                         .small()
                         .strong(),
                 );

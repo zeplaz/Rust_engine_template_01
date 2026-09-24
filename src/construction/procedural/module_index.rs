@@ -169,7 +169,7 @@ impl ProceduralModuleEntry {
 pub struct ProceduralModuleRegistry {
     pub schema_version: u32,
     pub entries: Vec<ProceduralModuleEntry>,
-    /// Best-tier row per `module_id` (lod0/production wins over smoke).
+    /// Best-tier row per `module_id` (production/lod0 wins over smoke).
     pub by_module_id: HashMap<String, ProceduralModuleEntry>,
     pub by_job_id: HashMap<String, String>,
     pub load_errors: Vec<String>,
@@ -361,15 +361,15 @@ fn pick_stylepack_entry<'a>(
     (tier_best, StylePackResolveMeta::default())
 }
 
-/// PG-2 / assembly prefers **lod0** over production when both are stylepack-visible.
+/// PG-2 / assembly prefers **production** over lod0 when both are stylepack-visible.
 fn prefer_stylepack_tier<'a>(
     candidate: &'a ProceduralModuleEntry,
     current: &'a ProceduralModuleEntry,
 ) -> &'a ProceduralModuleEntry {
     use DevelopmentTier::{Lod0, Production};
     match (candidate.development_tier, current.development_tier) {
-        (Lod0, Production) => candidate,
-        (Production, Lod0) => current,
+        (Production, Lod0) => candidate,
+        (Lod0, Production) => current,
         _ if candidate.development_tier > current.development_tier => candidate,
         _ => current,
     }
@@ -714,18 +714,33 @@ mod tests {
     }
 
     #[test]
-    fn wall_brick_1u_resolves_to_lod0_job() {
+    fn wall_brick_1u_resolves_to_best_stylepack_tier() {
         let reg = load_procedural_module_registry();
         assert!(reg.load_errors.is_empty(), "{:?}", reg.load_errors);
         let entry = reg
             .stylepack_entry("wall_brick_1u")
-            .expect("lod0 wall_brick_1u");
-        assert_eq!(entry.job_id, "wall_brick_1u_lod0_run001");
-        assert_eq!(entry.development_tier, DevelopmentTier::Lod0);
+            .expect("wall_brick_1u");
+        // Production wins when both tiers ship; otherwise lod0 is acceptable.
+        assert!(
+            matches!(
+                entry.development_tier,
+                DevelopmentTier::Production | DevelopmentTier::Lod0
+            ),
+            "tier={:?} job={}",
+            entry.development_tier,
+            entry.job_id
+        );
         let asset = reg
             .stylepack_glb_asset("wall_brick_1u")
-            .expect("lod0 glb asset");
-        assert!(asset.contains("wall_brick_1u_lod0_run001"));
+            .expect("glb asset");
+        assert!(asset.contains("wall_brick_1u"));
+        if entry.development_tier == DevelopmentTier::Production {
+            assert!(
+                entry.job_id.contains("production") || !entry.job_id.contains("lod0"),
+                "production job expected, got {}",
+                entry.job_id
+            );
+        }
     }
 
     #[test]

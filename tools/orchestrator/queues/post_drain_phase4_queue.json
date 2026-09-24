@@ -86,7 +86,7 @@
       "lane": "H_VIEW",
       "priority": 1,
       "agent": "coder",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [
         "DESIGN-BUILD-UX-REDESIGN-001"
       ],
@@ -95,15 +95,15 @@
         "src/dev/design_build_ux_redesign_v1.md"
       ],
       "completed": "2026-06-11",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "note": "done \u00b7 WIT-HON design_build_ux_redesign_live.json (impl_wired, mode_lock=2, lmb_commit=2) \u00b7 construction::build_interaction 3/3",
+      "updated_at": "2026-09-24T14:40:08.169754+00:00"
     },
     {
       "id": "TRIAGE-CURSOR-UNIFY-001",
       "lane": "H_VIEW",
       "priority": 1,
       "agent": "coder",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [
         "DESIGN-BUILD-UX-REDESIGN-001"
       ],
@@ -112,8 +112,8 @@
         "src/dev/design_build_ux_redesign_v1.md"
       ],
       "completed": "2026-06-11",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "note": "done \u00b7 WIT-HON debug_runs/sim_hud_cursor_live.json \u00b7 build-scoped OS hide (play+rail) \u00b7 pick-aligned crosshair \u00b7 two-click FSM untouched \u00b7 residual DES-MIL-DEFENSE-PLACE",
+      "updated_at": "2026-09-24T14:44:47.395884+00:00"
     },
     {
       "id": "PLAN-PRODUCT-POLISH-001",

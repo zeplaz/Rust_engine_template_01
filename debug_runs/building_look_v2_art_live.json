@@ -1,0 +1,446 @@
+{
+  "task_id": "BUILDING-LOOK-V2-ART",
+  "green": true,
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true,
+    "seed": "style_pack_production_run001"
+  },
+  "rebake": {
+    "rebake_ok": 0,
+    "promote_ok": 0,
+    "axis_ok": 16,
+    "job_count": 16,
+    "errors": [],
+    "axis_checks": [
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.3569999933242798
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.1784999966621399
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.1784999966621399
+        ],
+        "height_axis": "Y",
+        "job_id": "wall_brick_1u_production_run001",
+        "check": "wall_or_door_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.4000000059604645
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.20000000298023224
+        ],
+        "height_axis": "Y",
+        "job_id": "wall_steel_1u_production_run001",
+        "check": "wall_or_door_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          8.0,
+          3.0,
+          0.30000001192092896
+        ],
+        "min": [
+          -4.0,
+          0.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          4.0,
+          3.0,
+          0.15000000596046448
+        ],
+        "height_axis": "Y",
+        "job_id": "wall_concrete_2u_production_run001",
+        "check": "wall_or_door_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.3499999940395355
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.17499999701976776
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.17499999701976776
+        ],
+        "height_axis": "Y",
+        "job_id": "wall_wood_1u_production_run001",
+        "check": "wall_or_door_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          8.0,
+          3.0,
+          0.25
+        ],
+        "min": [
+          -4.0,
+          0.0,
+          -0.125
+        ],
+        "max": [
+          4.0,
+          3.0,
+          0.125
+        ],
+        "height_axis": "Y",
+        "job_id": "wall_wood_2u_production_run001",
+        "check": "wall_or_door_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.30000001192092896
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.15000000596046448
+        ],
+        "height_axis": "Y",
+        "job_id": "door_residential_production_run001",
+        "check": "wall_or_door_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.4000000059604645
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.20000000298023224
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.20000000298023224
+        ],
+        "height_axis": "Y",
+        "job_id": "door_warehouse_production_run001",
+        "check": "wall_or_door_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.30000001192092896
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.15000000596046448
+        ],
+        "height_axis": "Y",
+        "job_id": "win_brick_1u_production_run001",
+        "check": "window_bay_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.15000000596046448
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.07500000298023224
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.07500000298023224
+        ],
+        "height_axis": "Y",
+        "job_id": "win_brick_2u_production_run001",
+        "check": "window_bay_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.30000001192092896
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.15000000596046448
+        ],
+        "height_axis": "Y",
+        "job_id": "win_wood_1u_production_run001",
+        "check": "window_bay_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.15000000596046448
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.07500000298023224
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.07500000298023224
+        ],
+        "height_axis": "Y",
+        "job_id": "win_wood_2u_production_run001",
+        "check": "window_bay_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          4.0,
+          3.0,
+          0.30000001192092896
+        ],
+        "min": [
+          -2.0,
+          0.0,
+          -0.15000000596046448
+        ],
+        "max": [
+          2.0,
+          3.0,
+          0.15000000596046448
+        ],
+        "height_axis": "Y",
+        "job_id": "win_double_1u_production_run001",
+        "check": "window_bay_upright"
+      },
+      {
+        "ok": true,
+        "extents": [
+          8.0,
+          2.200000047683716,
+          16.0
+        ],
+        "min": [
+          -4.0,
+          0.0,
+          -8.0
+        ],
+        "max": [
+          4.0,
+          2.200000047683716,
+          8.0
+        ],
+        "height_axis": "Z",
+        "job_id": "roof_pitched_gable_production_run001",
+        "check": "roof_seat_y"
+      },
+      {
+        "ok": true,
+        "extents": [
+          8.045762538909912,
+          1.0486677885055542,
+          16.0
+        ],
+        "min": [
+          -4.045762538909912,
+          0.0,
+          -8.0
+        ],
+        "max": [
+          4.0,
+          1.0486677885055542,
+          8.0
+        ],
+        "height_axis": "Z",
+        "job_id": "roof_metal_low_production_run001",
+        "check": "roof_seat_y"
+      },
+      {
+        "ok": true,
+        "extents": [
+          8.111255168914795,
+          1.496680736541748,
+          4.0
+        ],
+        "min": [
+          -4.111255168914795,
+          0.0,
+          -2.0
+        ],
+        "max": [
+          4.0,
+          1.496680736541748,
+          2.0
+        ],
+        "height_axis": "Z",
+        "job_id": "roof_shed_production_run001",
+        "check": "roof_seat_y"
+      },
+      {
+        "ok": true,
+        "extents": [
+          8.0,
+          0.3499999940395355,
+          4.0
+        ],
+        "min": [
+          -4.0,
+          0.0,
+          -2.0
+        ],
+        "max": [
+          4.0,
+          0.3499999940395355,
+          2.0
+        ],
+        "height_axis": "Z",
+        "job_id": "roof_tile_production_run001",
+        "check": "roof_seat_y"
+      }
+    ]
+  },
+  "after_stills": {
+    "screens": [
+      {
+        "assembly_id": "victorian_4x2_s1_d8e2",
+        "style_pack_id": "style_victorian",
+        "seed": 1,
+        "width": 4,
+        "depth": 2,
+        "floors": 2,
+        "snapshot_path": "assets/staging/assemblies/victorian_4x2_s1_d8e2.json",
+        "preview_png": "debug_runs/bq_q2_screens/victorian_4x2_s1_d8e2.png",
+        "preview_mode": "bevy_worker",
+        "preview_usable": true,
+        "modules_loaded": 25,
+        "missing_glb": [],
+        "bevy_status": "done",
+        "elapsed_ms": 2892,
+        "after_png": "debug_runs/building_look_v2/after/victorian_4x2_s1_d8e2.png"
+      },
+      {
+        "assembly_id": "industrial_west_4x2_s1_4bf6",
+        "style_pack_id": "style_industrial_west",
+        "seed": 1,
+        "width": 4,
+        "depth": 2,
+        "floors": 2,
+        "snapshot_path": "assets/staging/assemblies/industrial_west_4x2_s1_4bf6.json",
+        "preview_png": "debug_runs/bq_q2_screens/industrial_west_4x2_s1_4bf6.png",
+        "preview_mode": "bevy_worker",
+        "preview_usable": true,
+        "modules_loaded": 25,
+        "missing_glb": [],
+        "bevy_status": "done",
+        "elapsed_ms": 2642,
+        "after_png": "debug_runs/building_look_v2/after/industrial_west_4x2_s1_4bf6.png"
+      },
+      {
+        "assembly_id": "rural_4x2_s3_94e7",
+        "style_pack_id": "style_rural",
+        "seed": 3,
+        "width": 4,
+        "depth": 2,
+        "floors": 1,
+        "snapshot_path": "assets/staging/assemblies/rural_4x2_s3_94e7.json",
+        "preview_png": "debug_runs/bq_q2_screens/rural_4x2_s3_94e7.png",
+        "preview_mode": "bevy_worker",
+        "preview_usable": true,
+        "modules_loaded": 13,
+        "missing_glb": [],
+        "bevy_status": "done",
+        "elapsed_ms": 2660,
+        "after_png": "debug_runs/building_look_v2/after/rural_4x2_s3_94e7.png"
+      }
+    ],
+    "after_dir": "debug_runs/building_look_v2/after"
+  },
+  "pixel_look_pass": true,
+  "pixel_look_note": "Upright production meshes + eye read PASS on AFTER stills",
+  "live_witness": "debug_runs/building_look_v2_live.json",
+  "bq_q3_ops": "deferred",
+  "elapsed_s": 8.31,
+  "concept_ref": "src/dev/design_building_visual_concept_v2.md",
+  "residuals": [
+    "BQ-Q3-OPS-APPROVE-001 remains deferred",
+    "lod0 kits intentionally untouched",
+    "openings present on street face but soft at iso distance (door/window punch still small vs bay)",
+    "full-footprint roof mesh sized for 4\u00d72 QC \u2014 other footprints need scale or size-class kits",
+    "style materials still noisy/greybox-adjacent on industrial metal"
+  ],
+  "eye_read": {
+    "victorian": "pass \u2014 closed brick/clapboard envelope + continuous gable seat",
+    "industrial_west": "pass \u2014 enclosed steel box under metal_low/shed (no skeletal pierces)",
+    "rural": "pass \u2014 wood envelope + pitched gable seat (flat roof_tile retired)"
+  },
+  "_agent_meta": {
+    "schema": "building_look_v2_art_live_v1",
+    "profile": "BUILDING_LOOK_V2_ART",
+    "relative_path": "debug_runs/building_look_v2_art_live.json",
+    "source_system": "coder_mcp_building_look_v2_art",
+    "written_at_epoch_secs": 1790259659,
+    "ritual": "BUILDING-LOOK-V2-ART"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/building_look_v2_art_live.json: 0 error(s), 0 issue(s)"
+  }
+}

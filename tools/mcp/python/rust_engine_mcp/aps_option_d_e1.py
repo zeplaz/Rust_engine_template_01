@@ -67,6 +67,7 @@ def verify_e1_pipeline_lane(*, repo: Path | None = None) -> dict[str, Any]:
     ok = keys == ["presets", "grammar", "states", "atlas"] and bkeys == [
         "catalog",
         "materials",
+        "effects",
         "assembly",
         "variants",
         "atlas",

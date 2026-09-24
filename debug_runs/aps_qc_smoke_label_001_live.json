@@ -1,0 +1,30 @@
+{
+  "task_id": "APS-QC-SMOKE-LABEL-001",
+  "gate": "APS-QC-SMOKE-LABEL-001",
+  "green": true,
+  "proceed_ship": "no",
+  "art_quality": "n/a",
+  "labels": {
+    "smoke": "Smoke kit \u2014 not ship",
+    "lod0": "LOD0 stand-in \u2014 production pending"
+  },
+  "smoke_strip_sample": "Building QC witness: pass \u00b7 9 assembly row(s) \u00b7 threshold 70 \u00b7 Smoke kit \u2014 not ship",
+  "lod0_strip_sample": "Building QC witness: pass \u00b7 9 assembly row(s) \u00b7 threshold 70 \u00b7 LOD0 stand-in \u2014 production pending",
+  "approve_blocks_on_smoke": true,
+  "rubric_ref": "src/dev/design_aps_operator_rubric_v3.md#4",
+  "pytest": "tests/test_building_quality_qc.py 5 passed",
+  "_agent_meta": {
+    "schema": "aps_qc_smoke_label_live_v1",
+    "profile": "APS_QC_SMOKE_LABEL",
+    "relative_path": "debug_runs/aps_qc_smoke_label_001_live.json",
+    "source_system": "aps_qc_smoke_label",
+    "written_at_epoch_secs": 1790255730,
+    "ritual": "BLANG:WIT-HON APS-QC-SMOKE-LABEL-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/aps_qc_smoke_label_001_live.json: 0 error(s), 0 issue(s)"
+  }
+}

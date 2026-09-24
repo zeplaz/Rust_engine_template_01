@@ -6,10 +6,11 @@
   "spec_ref": "assets/staging/specs/roof_pitched_gable_production.json",
   "operation": "module_roof",
   "params": {
-    "width_m": 4,
-    "height_m": 1.5,
-    "depth_m": 4,
-    "profile": "pitched",
+    "width_m": 8,
+    "depth_m": 16,
+    "thickness_m": 0.25,
+    "pitch_height_m": 2.2,
+    "profile": "gable_cap",
     "pitch_deg": 35,
     "seed": 42004
   },

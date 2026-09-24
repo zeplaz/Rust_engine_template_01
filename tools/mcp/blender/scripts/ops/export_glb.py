@@ -200,7 +200,10 @@ def apply_greybox_materials() -> None:
 
 
 def _assign_box_uv_to_mesh(mesh: bpy.types.Mesh) -> None:
-    """Procedural modules (bmesh) ship without UV — Bevy mikktspace needs TEXCOORD_0."""
+    """Procedural modules (bmesh) ship without UV — Bevy mikktspace needs TEXCOORD_0.
+
+    Modules author height on Blender +Z (see ops.module_coords); project UVs accordingly.
+    """
     if len(mesh.polygons) == 0:
         return
     bm = bmesh.new()
@@ -211,12 +214,13 @@ def _assign_box_uv_to_mesh(mesh: bpy.types.Mesh) -> None:
         ax, ay, az = abs(n.x), abs(n.y), abs(n.z)
         for loop in face.loops:
             v = loop.vert.co
-            if ay >= ax and ay >= az:
-                u, vcoord = v.x, v.z
-            elif ax >= az:
-                u, vcoord = v.z, v.y
-            else:
+            # Dominant normal axis → planar map (Z-up authorship).
+            if az >= ax and az >= ay:
                 u, vcoord = v.x, v.y
+            elif ax >= ay:
+                u, vcoord = v.y, v.z
+            else:
+                u, vcoord = v.x, v.z
             loop[uv_layer].uv = (u, vcoord)
     bm.to_mesh(mesh)
     bm.free()

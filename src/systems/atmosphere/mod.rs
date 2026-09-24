@@ -2,6 +2,7 @@
 
 mod incremental_schedule;
 mod field_page_residency;
+mod field_l0_shim;
 mod gpu_field_bridge;
 mod advect;
 mod coupling;
@@ -24,7 +25,15 @@ pub use coupling::merge_atmosphere_into_logistics_sample;
 pub use diagnostics::AtmosphereDiagnostics;
 pub use emitter_sync::{fire_emitter_from_heat_fuel, FireEmitter};
 pub(crate) use emitter_sync::update_fire_emitters_from_heat;
-pub use field::{AtmosphereCell, AtmosphereField, GlobalWind};
+pub use field::{
+    atmos_chunk_to_tile, atmos_chunk_to_tile_in, AtmosphereCell, GlobalWind, ATMO_GRID_ORIGIN,
+    ATMO_GRID_SIZE,
+};
+pub use field_l0_shim::{
+    atmosphere_field_l0_shim_system, DEBT_010_WRITERS_ON_L0, FIELD_L0_SHIM_RETIRED,
+    FIELD_L0_SHIM_WIRED,
+};
+pub use visual_extract::{DEBT_011_SMOKE_UNIFIED, SMOKE_EXTRACT_BRIDGE};
 pub use gpu_paths::{
     ATMOSPHERE_ASHFALL_WGSL, ATMOSPHERE_COMPOSITE_WIRED, ATMOSPHERE_FIELD_PAGE_TABLE_WGSL,
     ATMOSPHERE_GROUND_HAZE_WGSL, ATMOSPHERE_HEAT_DISTORTION_WGSL, ATMOSPHERE_PARTICLE_INSTANCING_WGSL,
@@ -54,7 +63,7 @@ pub use update::{atmosphere_field_blend_fire_overlay_sources, atmosphere_field_f
 pub use validation_layout::{
     tile_in_any_validation_region, AtmosphereValidationRegion, ATMOSPHERE_VALIDATION_LAYOUT_V1,
 };
-pub use visibility::visibility_between;
+pub use visibility::{sample_tactical_visibility_from_l0, visibility_between};
 
 pub use crate::render::{
     ChunkSmokeGpu, ClimateVisualAggregate, FireEmitterGpu, SimChunkSmokeVisualExtract,
@@ -73,7 +82,9 @@ impl Plugin for AtmospherePlugin {
     fn build(&self, app: &mut App) {
         configure_atmosphere_pipeline_sets(app);
         incremental_schedule::register_atmosphere_incremental_schedule(app);
-        app.init_resource::<AtmosphereField>()
+        // DEBT-011: AtmosphereField deleted; AtmospherePlugin owns clipmap stack when
+        // SubstratePlugin is absent (lib proofs / headless). Substrate re-init is idempotent.
+        app.init_resource::<crate::substrate::atmosphere::AtmosphereClipmapStack>()
             .init_resource::<GlobalWind>()
             .add_systems(
                 Update,
@@ -89,7 +100,8 @@ impl Plugin for AtmospherePlugin {
                 Update,
                 (
                     advect_atmosphere_field,
-                    chunk_smoke_field_pull_from_advected_atmosphere.after(advect_atmosphere_field),
+                    // DEBT-011: Field→L0 shim retired; ChunkSmoke pulls from L0 only.
+                    chunk_smoke_field_pull_from_advected_atmosphere,
                 )
                     .chain()
                     .in_set(AtmospherePipelineSet::WindAdvect),

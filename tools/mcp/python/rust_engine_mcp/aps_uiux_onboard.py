@@ -15,12 +15,13 @@ WITNESS_REL = "debug_runs/aps_uiux_onboard_live.json"
 # P5.6 — first-run "How this works" content (plain artist words, no jargon).
 ONBOARDING_TITLE = "How this works"
 ONBOARDING_INTRO = (
-    "Five steps, left to right. Each tab hands its result to the next — "
+    "Six steps, left to right. Each tab hands its result to the next — "
     "the Next step line up top always tells you what to do."
 )
 ONBOARDING_STEPS: tuple[tuple[str, str], ...] = (
     ("Catalog", "Pick a building module to start from."),
     ("Materials", "Choose or make the surfaces it is built from."),
+    ("Effects", "Browse EffectSpecs, check preview honesty, assign to scenario markers."),
     ("Assembly", "Combine module + materials into one saved building."),
     ("Variants", "Add states — lighting, damage, fill — for that building."),
     ("Atlas", "Pack the baked tiles into one sheet the game loads."),
@@ -35,6 +36,7 @@ ASSEMBLY_EMPTY_G2_PLUS = (
 EMPTY_STATES: dict[str, str] = {
     "catalog": "No module selected — pick one from the list to see its details.",
     "materials": "No materials yet — Generate or add one to begin.",
+    "effects": "No effect selected — pick one from the list to check honesty and assign.",
     "assembly": ASSEMBLY_EMPTY_G0_G1,
     "variants": "No variant set yet — New from assembly or Load example to begin.",
     "atlas": "No tiles yet — bake variants first, then pack them here.",

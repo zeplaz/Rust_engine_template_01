@@ -15,7 +15,7 @@
     "reasons": [],
     "option_d_ia_contract_ok": true,
     "tab_set_swap": true,
-    "buildings_tab_count": 5,
+    "buildings_tab_count": 6,
     "landscape_tab_count": 4,
     "flow_lane_scoped": true,
     "pipeline_lane_scoped": true,
@@ -32,6 +32,7 @@
     "buildings_pipeline_keys": [
       "catalog",
       "materials",
+      "effects",
       "assembly",
       "variants",
       "atlas"
@@ -74,7 +75,7 @@
     "profile": "APS_E2_PRESET_BROWSE",
     "relative_path": "debug_runs/aps_landscape_preset_browse_live.json",
     "source_system": "aps_landscape_preset_browse",
-    "written_at_epoch_secs": 1783097999,
+    "written_at_epoch_secs": 1790272047,
     "ritual": "BLANG:WIT-HON APS-EVO-E2-PRESET-BROWSE-001"
   },
   "witness_honesty": {

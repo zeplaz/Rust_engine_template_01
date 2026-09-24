@@ -1,4 +1,8 @@
 //! Publishes sim state into [`crate::render::extraction::sim_visual_extract`] resources (`base_gui_next.md` Stage 2).
+//!
+//! **DEBT-011:** sole smoke extract bridge is
+//! `clipmap L0 → ChunkSmokeField → SimChunkSmokeVisualExtract` (slab cutover path optional).
+//! AtmosphereField is not in this path.
 
 use bevy::prelude::*;
 
@@ -11,6 +15,10 @@ use crate::terrain::generation::Chunk;
 use super::diagnostics::AtmosphereDiagnostics;
 
 const SMOKE_EXTRACT_EPS: f32 = 1e-4;
+
+/// DEBT-011 — documented single smoke extract bridge (compile-time witness).
+pub const DEBT_011_SMOKE_UNIFIED: bool = true;
+pub const SMOKE_EXTRACT_BRIDGE: &str = "L0→ChunkSmoke→SimChunkSmokeVisualExtract";
 
 /// Single scan of chunk weather + ecology → [`ClimateVisualAggregate`] for GPU / precip overlay (no duplicate queries).
 pub(crate) fn publish_climate_visual_aggregate(
@@ -78,6 +86,9 @@ pub(crate) fn sync_weather_precip_sample_from_climate_aggregate(
 
 /// Chunk smoke only — fire truth rows live in [`crate::render::extraction::FireVisualFrame`]; GPU field reads
 /// [`crate::render::extraction::RenderProjectionGraph`] after [`crate::render::extraction::run_render_projection_graph`].
+///
+/// **DEBT-011:** does not read AtmosphereField; ChunkSmoke (L0-pulled) is the sole ECS smoke extract source
+/// unless slab cutover is active.
 pub(crate) fn publish_sim_visual_extract(
     mut smoke_out: ResMut<SimChunkSmokeVisualExtract>,
     mut diag: ResMut<AtmosphereDiagnostics>,
@@ -85,6 +96,7 @@ pub(crate) fn publish_sim_visual_extract(
     substrate: Option<Res<crate::substrate::WorldSubstrateRegistry>>,
     smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
 ) {
+    let _ = (DEBT_011_SMOKE_UNIFIED, SMOKE_EXTRACT_BRIDGE);
     smoke_out.instances.clear();
 
     let slab_smoke_extract = ecs_retire
@@ -180,5 +192,14 @@ mod tests {
         app.update();
         let b = app.world().resource::<AtmosphereDiagnostics>().visual_extract_runs;
         assert!(b > a);
+    }
+
+    #[test]
+    fn debt_011_smoke_bridge_const() {
+        assert!(super::DEBT_011_SMOKE_UNIFIED);
+        assert_eq!(
+            super::SMOKE_EXTRACT_BRIDGE,
+            "L0→ChunkSmoke→SimChunkSmokeVisualExtract"
+        );
     }
 }

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job": "render_variant",
+  "job_id": "render_variant_warehouse_industrial_damage_heavy_f3_fr0",
+  "asset": "warehouse_industrial",
+  "variant": "damage_heavy",
+  "facing": 3,
+  "frame": 0,
+  "seed": 43001,
+  "role": "production",
+  "ship": false,
+  "render": {
+    "method": "blender_keyframe_light_rig",
+    "bake_source": "keyframe_pack",
+    "isometric": true,
+    "tile_size_px": 128
+  },
+  "output": {
+    "png": "assets/staging/tiles/warehouse_industrial/damage_heavy_f3_fr0.png"
+  }
+}

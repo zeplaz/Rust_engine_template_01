@@ -1,0 +1,51 @@
+{
+  "schema": "coder_delta_wf_packet_v1",
+  "id": "COD-DEPLOYABLE-RECIPE-001",
+  "priority": "P2",
+  "agent": "coder",
+  "lane": "construction_qop",
+  "status": "done",
+  "ready_for_coder": false,
+  "blocked_by": [],
+  "prereq_shipped": [
+    "DES-MIL-DEFENSE-PLACE",
+    "COD-MIL-DEFENSE-PLACE-001",
+    "DES-MIL-DEPLOYABLE-CATALOG"
+  ],
+  "goal": "Thin ManufacturingDomain::Custom blueprints mfg_dragon_teeth_v1 + mfg_mine_unit_v1 that credit buffer_tags dragon_teeth_unit / mine_unit. No place wiring yet.",
+  "charter": "src/dev/design_mil_deployable_defense_v1.md",
+  "design_witness": "debug_runs/des_mil_deployable_defense_live.json",
+  "impl_witness": "debug_runs/cod_deployable_pipeline_live.json",
+  "plan": "src/dev/plan_mil_deployable_defense_v1.md",
+  "parallel_ok_with": ["COD-WALL-CONCRETE-GATE-001"],
+  "authority_owner": "ManufacturingBlueprintRegistry",
+  "touch_expected": [
+    "src/economy/manufacturing (or manufacturing_plugin registry seed)",
+    "lib harness proving tick credits tagged buffers"
+  ],
+  "do": [
+    "Register mfg_dragon_teeth_v1 → output buffer_tag dragon_teeth_unit (heavy)",
+    "Register mfg_mine_unit_v1 → output buffer_tag mine_unit (light)",
+    "Seed under ManufacturingDomain::Custom only",
+    "Witness field recipes_registered:true on cod_deployable_pipeline_live.json"
+  ],
+  "do_not": [
+    "Dedicated munitions plant buildings (DR-MIL-MUNITIONS-INDUSTRY)",
+    "InTransitLedger / SiteStagingStock (COD-DEPLOYABLE-LOGISTICS-001)",
+    "DefenseKind / picker Deployables rows (COD-DEPLOYABLE-PLACE-001)",
+    "Phase 9 wholesale industry tree",
+    "Free-stamp place"
+  ],
+  "acceptance": [
+    "recipes_registered true",
+    "tick credits tagged buffers in lib"
+  ],
+  "unblocks": ["COD-DEPLOYABLE-LOGISTICS-001"],
+  "joint_coder": "Cargo class (heavy vs light) is amount/throughput only — same Custom domain, do not fork authority.",
+  "verify": [
+    "validate-report cargo --cached --compress 4",
+    "cargo test -p proc_A_dine01 --lib construction::",
+    "manufacturing / economy filters as needed"
+  ],
+  "delta_wf": "@designer DES-MIL-DEPLOYABLE-CATALOG PASS → @coder COD-DEPLOYABLE-RECIPE-001 (∥ COD-WALL-CONCRETE-GATE-001) → COD-DEPLOYABLE-LOGISTICS-001"
+}

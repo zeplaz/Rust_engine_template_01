@@ -33,7 +33,8 @@ def test_style_pack_change_leaves_shadow_snapshot_stale(aps_app) -> None:
     assert str(aps_app.assembly._snapshot.get("style_pack_id")) == "style_industrial_west"
 
 
-def test_lane_round_trip_leaves_assembly_shadow_snapshot_stale(aps_app) -> None:
+def test_lane_round_trip_resyncs_assembly_from_state(aps_app) -> None:
+    """APSR-MUTATION-REGRESS-001 — LaneChanged → sync_from_state (V2 stale-panel fixed)."""
     _generate_victorian_snapshot(aps_app)
     before_id = aps_app.state.assembly_id
     assert before_id

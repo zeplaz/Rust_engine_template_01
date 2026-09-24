@@ -1,8 +1,9 @@
 //! Schedule sets for **post-fire** atmosphere work (`base_fire2_smoke.md` §18).
 //!
 //! Chunk-scale weather / ecology / fire run in [`crate::systems::chunk_environment_set::ChunkEnvironmentSet`].
-//! This pipeline fills the global-ish [`super::field::AtmosphereField`], advects, then emitters → particles →
-//! coupling hooks → **VisualExtract** (sim→render snapshots) → render prep → diagnostics. **Transport** is ordered after this stack from the engine.
+//! This pipeline fills Field + clipmap L0 channels (DEBT-010/010b/010c), advects L0 then
+//! emitters → particles → coupling → **VisualExtract** → render prep → diagnostics.
+//! **Transport** is ordered after this stack from the engine.
 
 use bevy::prelude::*;
 
@@ -11,9 +12,9 @@ use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 /// Runs **after** [`ChunkEnvironmentSet::Fire`].
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AtmospherePipelineSet {
-    /// Push chunk signals into [`super::field::AtmosphereField`].
+    /// Push chunk signals into Field + clipmap L0 channels (DEBT-010/010b/010c).
     FieldFill,
-    /// Semi-Lagrangian drift of smoke / toxic / ash.
+    /// Semi-Lagrangian drift — L0 channel authority (smoke/fog/toxicity/ash/ember/heat).
     WindAdvect,
     /// Low-count [`super::emitter_sync::FireEmitter`] sync.
     Emitters,

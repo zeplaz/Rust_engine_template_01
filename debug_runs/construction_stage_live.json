@@ -54,12 +54,22 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/construction_stage_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "construction_live_proof",
-    "written_at_epoch_secs": 1783371798
+    "written_at_epoch_secs": 1790271958
   },
   "build_p_star": [
     {
@@ -84,7 +94,7 @@
     },
     {
       "id": "BUILD-P1-02",
-      "status": "Done"
+      "status": "Open"
     },
     {
       "id": "BUILD-P1-03",
@@ -139,7 +149,7 @@
       "status": "Done"
     }
   ],
-  "con_e01_p9_green": true,
+  "con_e01_p9_green": false,
   "construction_bq128_apply_ghost_001": {
     "apply_imported_preset_wired": true,
     "gate": "BQ-128-APPLY-001",
@@ -188,6 +198,7 @@
     "staging_panel_visible": true,
     "staging_toggle_wired": true,
     "staging_validity_badges_wired": true,
+    "two_click_place_fsm": true,
     "weighted_raster_tests_green": true
   },
   "construction_procedural_build_001": {
@@ -326,7 +337,7 @@
     },
     {
       "id": "PHASE2-BUILD-20",
-      "status": "Done"
+      "status": "Open"
     }
   ],
   "p9_witness": {
@@ -334,7 +345,7 @@
     "curved_road_spline": true,
     "grid_and_node_snap": true,
     "road_upgrade_lane": true,
-    "terrain_conform": true
+    "terrain_conform": false
   },
   "path_tool_feedback": {
     "required_actions": [],
@@ -419,7 +430,7 @@
     },
     {
       "id": "PHASE2-BUILD-20",
-      "status": "Done"
+      "status": "Open"
     }
   ],
   "phase2_witness": {
@@ -439,7 +450,7 @@
     "road_e2e_integration": true,
     "road_upgrade_lane": true,
     "shim_removed": true,
-    "terrain_conform": true,
+    "terrain_conform": false,
     "utilities_tool": true,
     "zone_e2e_integration": true,
     "zone_strategic_commit": true

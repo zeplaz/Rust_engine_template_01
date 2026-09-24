@@ -60,10 +60,7 @@ pub fn drain_sim_effect_queue_system(
 
     queue.last_drain_us = start.elapsed().as_micros() as u64;
     witness.last_drain_telemetry_rows = queue.last_drain_count;
-    witness.last_drain_us = queue.last_drain_us;
-    if queue.last_drain_count > 0 {
-        witness.queue_drain_ok = true;
-    }
+    witness.finalize_after_drain(&queue, &ledger);
     queue.clear_tick_dedupe();
 }
 
@@ -156,6 +153,7 @@ mod tests {
             .init_resource::<HydrologyEventQueue>()
             .init_resource::<SimEffectTelemetryLedger>()
             .init_resource::<SimEffectSpineWitness>()
+            .init_resource::<crate::sim::effects::player_event_log::PlayerEventLog>()
             .init_resource::<SimTick>()
             .add_message::<EmberSpotIgnitionEvent>()
             .add_systems(Update, drain_sim_effect_queue_system);
@@ -212,6 +210,10 @@ mod tests {
 
         let ledger = app.world().resource::<SimEffectTelemetryLedger>();
         assert!(ledger.causal_chain_depth_max() >= 1);
+
+        let witness = app.world().resource::<SimEffectSpineWitness>();
+        assert!(witness.queue_drain_ok);
+        assert!(witness.dedupe_ok);
 
         app.update();
         let embers2 = app.world().resource::<Messages<EmberSpotIgnitionEvent>>();

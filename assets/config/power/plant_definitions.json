@@ -836,6 +836,30 @@
         "power_factor": 0.95,
         "inrush_multiplier": 1.05,
         "allow_grid_forming": true
+      },
+      "nuclear_failure_profile": {
+        "requires_offsite_power_when": [
+          "Standby",
+          "Operational",
+          "ReducedCapacity",
+          "OverCapacity",
+          "StartingUp"
+        ],
+        "offsite_power_mw": 12.0,
+        "diesel_backup_mw": 10.0,
+        "diesel_fuel_hours": 72.0,
+        "passive_cooling": false,
+        "scram_on_loop": true,
+        "meltdown_enabled": true,
+        "scram_delay_s": 15.0,
+        "diesel_start_delay_s": 30.0,
+        "diesel_time_compress": 60.0,
+        "core_stable_temp_c": 80.0,
+        "meltdown_threshold_c": 1200.0,
+        "decay_heat_rise_c_per_s": 0.2,
+        "decay_heat_time_compress": 60.0,
+        "decay_heat_cool_c_per_s": 0.05,
+        "breach_delay_s": 45.0
       }
     },
     {

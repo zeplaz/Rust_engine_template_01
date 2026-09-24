@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "job_id": "roof_flat_production_run001",
+  "batch_id": "kit_prod_noncore_bq_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/roof_flat_production.json",
+  "operation": "module_roof",
+  "params": {
+    "width_m": 4,
+    "thickness_m": 0.3,
+    "depth_m": 4,
+    "material_profile": "roof_metal_01",
+    "seed": 580003,
+    "profile": "flat"
+  },
+  "output": {
+    "glb": "assets/staging/roof_flat_production_run001/model.glb",
+    "thumbnail": "assets/staging/roof_flat_production_run001/preview.png"
+  }
+}

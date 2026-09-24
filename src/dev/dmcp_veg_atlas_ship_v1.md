@@ -8,31 +8,37 @@
 | **Date** | 2026-06-02 |
 | **Machine spec** | [`veg_atlas_ship_001.json`](../assets/staging/specs/veg_atlas_ship_001.json) |
 | **Authority** | [`design_landscape_lg5_expand_bake_v1.md`](design_landscape_lg5_expand_bake_v1.md) · [`design_landscape_lg5_keyframe_qc_v1.md`](design_landscape_lg5_keyframe_qc_v1.md) · [`landscape_expanded_g0_rules.yaml`](../debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml) |
-| **Verdict** | **PASS WITH NOTES** — criteria locked · **`ship: false` stays** until G4 manual green |
+| **Verdict** | **BLOCKED (G4)** — criteria locked · finish-queue ship **not** closable until manual keyframes |
+| **Exit witness** | [`veg_atlas_ship_001_live.json`](../debug_runs/art_pipeline/veg_atlas_ship_001_live.json) |
 
 ```yaml
 order_critique:
-  request_summary: "Lock G4/G5 art-ship sign-off criteria for landscape_lg5_expanded_v1"
+  request_summary: "Progress/close vegetation atlas ship (finish queue 2026-09-24)"
   rules_audit:
     no_ai_generated_images: pass
     deterministic_output: pass
     honest_ship_false: pass
-    g4_manual_complete: open
-  proceed: yes_with_notes
-  note: "Criteria doc ≠ ship flip — operator G4 still required"
+    g4_manual_complete: fail
+  proceed: no
+  blocked: true
+  note: "Criteria ≠ ship — G4 proceed_ship:no · corridor regrowth missing"
 ```
 
 ---
 
-## 0. Honest state (2026-06-02)
+## 0. Honest state (2026-09-24)
 
 | Field | Value | Meaning |
 |:---|:---|:---|
 | `batch.ship` | `false` | Teach tier — correct |
 | `development_tier` | `pilot` | Not production until G4 |
 | `proceed_tile_ship` (G0) | `no` | Do not register production row |
-| Teach keyframes | 16/16 @ 64px | Phase A complete |
-| G4 gap | `topology_corridor_regrowth_grass` | Manual still deferred |
+| Teach keyframes | 16/16 @ 64px | Pilot/teach on disk |
+| G4 `proceed_ship` | `no` | Manual stills incomplete |
+| G4 gap | `topology_corridor_regrowth_grass` + burn/scar manual | Hard block |
+| Finish-queue status | `blocked` | Honest — not done |
+
+**`unblock_when`:** operator iso-rig keyframe stills for G4 minimum set (incl. corridor regrowth) → designer-mcp + operator flip `landscape_expanded_g4_signoff.yaml` `proceed_ship: yes` with `art_quality: keyframe_manual`.
 
 **Forbidden:** any witness or registry row with `ship: true` before §3 G4 sign-off.
 
@@ -86,7 +92,9 @@ File: `debug_runs/art_pipeline/landscape_expanded_g4_signoff.yaml`
 
 **Ship flip authorized only when** `proceed_ship: yes` **and** all minimum_set keys have `manual_still: true`.
 
-Current template: **`proceed_ship: no`** — corridor regrowth manual still open.
+Current template: **`proceed_ship: no`** — corridor regrowth missing; burn/scar teach-only (`manual_still: false`).
+
+Live blocked witness: `debug_runs/art_pipeline/veg_atlas_ship_001_live.json` (2026-09-24).
 
 ---
 
@@ -127,8 +135,9 @@ Rollup witnesses (all green before engine consumer):
 
 | Role | Verdict | Date |
 |:---|:---|:---|
-| `@designer-mcp` | **PASS WITH NOTES** | 2026-06-02 |
+| `@designer-mcp` | **PASS WITH NOTES** (criteria) | 2026-06-02 |
+| `@designer-mcp` | **BLOCKED** (ship close) | 2026-09-24 |
 
 ```text
-DMCP-VEG-ATLAS-SHIP-001 Q✓ — G4/G5 criteria locked · ship:false honest until operator G4
+DMCP-VEG-ATLAS-SHIP-001 Q✓blocked — criteria locked · ship:false · G4 manual open · witness veg_atlas_ship_001_live.json
 ```

@@ -9,6 +9,7 @@
 | **Depends** | [`design_aps_interaction_v1.md`](design_aps_interaction_v1.md) · [`design_aps_onboard_spec_v2.md`](design_aps_onboard_spec_v2.md) · [`design_aps_preview_v2_spec_v1.md`](design_aps_preview_v2_spec_v1.md) |
 | **Needs display** | true — operator session |
 | **Verdict** | **PASS** |
+| **BQ-Q3 successor** | [`design_aps_operator_rubric_v3.md`](design_aps_operator_rubric_v3.md) — golden-seed “reads as a real building” (v2 remains UI chrome walk) |
 
 ```text
 DES-APS-OPERATOR-RUBRIC-002 Q✓

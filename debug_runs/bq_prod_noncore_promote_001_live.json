@@ -1,0 +1,348 @@
+{
+  "gate": "BQ-PROD-NONCORE-PROMOTE-001",
+  "task_id": "BQ-PROD-NONCORE-PROMOTE-001",
+  "program": "PLAN-MCP-APS-TOOLING-FINISH-001",
+  "batch_id": "kit_prod_noncore_bq_001",
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "580001..580012",
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true,
+    "no_fake_operator_pass": true
+  },
+  "deferred_packs": [
+    "style_rural",
+    "style_modern",
+    "style_military",
+    "style_industrial_soviet"
+  ],
+  "artifacts_written": [
+    {
+      "job_id": "door_gate_industrial_production_run001",
+      "spec": "assets/staging/specs/door_gate_industrial_production.json",
+      "job": "tools/mcp/schemas/examples/door_gate_industrial_production_run001.json"
+    },
+    {
+      "job_id": "prop_transformer_production_run002",
+      "spec": "assets/staging/specs/prop_transformer_noncore_production.json",
+      "job": "tools/mcp/schemas/examples/prop_transformer_production_run002.json"
+    },
+    {
+      "job_id": "roof_flat_production_run001",
+      "spec": "assets/staging/specs/roof_flat_production.json",
+      "job": "tools/mcp/schemas/examples/roof_flat_production_run001.json"
+    },
+    {
+      "job_id": "corner_parapet_production_run001",
+      "spec": "assets/staging/specs/corner_parapet_production.json",
+      "job": "tools/mcp/schemas/examples/corner_parapet_production_run001.json"
+    },
+    {
+      "job_id": "prop_tank_production_run001",
+      "spec": "assets/staging/specs/prop_tank_production.json",
+      "job": "tools/mcp/schemas/examples/prop_tank_production_run001.json"
+    },
+    {
+      "job_id": "roof_parapet_production_run001",
+      "spec": "assets/staging/specs/roof_parapet_production.json",
+      "job": "tools/mcp/schemas/examples/roof_parapet_production_run001.json"
+    },
+    {
+      "job_id": "prop_ac_production_run001",
+      "spec": "assets/staging/specs/prop_ac_production.json",
+      "job": "tools/mcp/schemas/examples/prop_ac_production_run001.json"
+    },
+    {
+      "job_id": "wall_industrial_panel_2u_production_run001",
+      "spec": "assets/staging/specs/wall_industrial_panel_2u_production.json",
+      "job": "tools/mcp/schemas/examples/wall_industrial_panel_2u_production_run001.json"
+    },
+    {
+      "job_id": "door_garage_production_run001",
+      "spec": "assets/staging/specs/door_garage_production.json",
+      "job": "tools/mcp/schemas/examples/door_garage_production_run001.json"
+    },
+    {
+      "job_id": "prop_fence_production_run001",
+      "spec": "assets/staging/specs/prop_fence_production.json",
+      "job": "tools/mcp/schemas/examples/prop_fence_production_run001.json"
+    },
+    {
+      "job_id": "roof_tile_production_run001",
+      "spec": "assets/staging/specs/roof_tile_production.json",
+      "job": "tools/mcp/schemas/examples/roof_tile_production_run001.json"
+    },
+    {
+      "job_id": "wall_wood_2u_production_run001",
+      "spec": "assets/staging/specs/wall_wood_2u_production.json",
+      "job": "tools/mcp/schemas/examples/wall_wood_2u_production_run001.json"
+    }
+  ],
+  "promoted_ids": [
+    "door_gate_industrial_production_run001",
+    "prop_transformer_production_run002",
+    "roof_flat_production_run001",
+    "corner_parapet_production_run001",
+    "prop_tank_production_run001",
+    "roof_parapet_production_run001",
+    "prop_ac_production_run001",
+    "wall_industrial_panel_2u_production_run001",
+    "door_garage_production_run001",
+    "prop_fence_production_run001",
+    "roof_tile_production_run001",
+    "wall_wood_2u_production_run001"
+  ],
+  "promoted_count": 12,
+  "job_count": 12,
+  "rebake_ok": 0,
+  "seed_ok": 0,
+  "validate_ok": 12,
+  "rebakes": [],
+  "seeds": [],
+  "validations": [
+    {
+      "job_id": "door_gate_industrial_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=44 tier=production arch=module_door profile=frame",
+      "error_count": 0
+    },
+    {
+      "job_id": "prop_transformer_production_run002",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_prop profile=box",
+      "error_count": 0
+    },
+    {
+      "job_id": "roof_flat_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_roof profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "corner_parapet_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=48 tier=production arch=module_prop profile=box",
+      "error_count": 0
+    },
+    {
+      "job_id": "prop_tank_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_prop profile=box",
+      "error_count": 0
+    },
+    {
+      "job_id": "roof_parapet_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_roof profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "prop_ac_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=48 tier=production arch=module_prop profile=box",
+      "error_count": 0
+    },
+    {
+      "job_id": "wall_industrial_panel_2u_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_wall profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "door_garage_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=44 tier=production arch=module_door profile=frame",
+      "error_count": 0
+    },
+    {
+      "job_id": "prop_fence_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_prop profile=box",
+      "error_count": 0
+    },
+    {
+      "job_id": "roof_tile_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_roof profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "wall_wood_2u_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_wall profile=flat",
+      "error_count": 0
+    }
+  ],
+  "promotes": [
+    {
+      "job_id": "door_gate_industrial_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/door_gate_industrial_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "prop_transformer_production_run002",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/prop_transformer_production_run002/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "roof_flat_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/roof_flat_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "corner_parapet_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/corner_parapet_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "prop_tank_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/prop_tank_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "roof_parapet_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/roof_parapet_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "prop_ac_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/prop_ac_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "wall_industrial_panel_2u_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/wall_industrial_panel_2u_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "door_garage_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/door_garage_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "prop_fence_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/prop_fence_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "roof_tile_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/roof_tile_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "wall_wood_2u_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/wall_wood_2u_production_run001/model.glb",
+      "batch_id": "kit_prod_noncore_bq_001",
+      "valid": true
+    }
+  ],
+  "exit_check": {
+    "deferred_packs_lod0_slots": {
+      "style_rural": 0,
+      "style_modern": 0,
+      "style_military": 0,
+      "style_industrial_soviet": 0
+    },
+    "residual_non_production_slots": [],
+    "promoted_targets_still_lod0": [],
+    "production_count": 54,
+    "lod0_count": 50,
+    "operator_pass": false,
+    "operator_pass_note": "BQ-Q3 pixel approve remains @operator \u2014 this slice is machine tier only",
+    "ok": true
+  },
+  "index_entries": 104,
+  "errors": [],
+  "green": true,
+  "verdict": "PASS",
+  "honest_gate": "honest_gate",
+  "proceed_ship": true,
+  "art_quality": "production_batch",
+  "operator_pass": false,
+  "next_residual": "BQ-Q3-OPS-APPROVE-001",
+  "notes": "Promoted deferred-pack non-core lod0 slots to production (machine tier). operator_pass stays false \u2014 BQ-Q3 eyes still required.",
+  "_agent_meta_extra": {
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-PROD-NONCORE-PROMOTE-001",
+    "proceed_ship": true,
+    "art_quality": "production_batch",
+    "agent": "coder-mcp",
+    "operator_pass": false
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/bq_prod_noncore_promote_001_live.json",
+    "must": [
+      {
+        "id": "deferred_noncore_lod0_cleared",
+        "pass": true
+      },
+      {
+        "id": "validate_asset_tier",
+        "pass": true
+      },
+      {
+        "id": "no_fake_operator_pass",
+        "pass": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "bq_prod_noncore_promote_001_live_v1",
+    "profile": "BQ_PROD_NONCORE_PROMOTE",
+    "relative_path": "debug_runs/bq_prod_noncore_promote_001_live.json",
+    "source_system": "bq_prod_noncore_promote",
+    "written_at_epoch_secs": 1790257648,
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-PROD-NONCORE-PROMOTE-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-PROD-NONCORE-PROMOTE-001",
+    "proceed_ship": true,
+    "art_quality": "production_batch",
+    "agent": "coder-mcp",
+    "operator_pass": false
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_prod_noncore_promote_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/bq_prod_noncore_promote_001_live.json"
+}

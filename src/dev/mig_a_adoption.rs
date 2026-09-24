@@ -399,7 +399,6 @@ pub fn refresh_mig_program_close_witness(state: &MigAAdoptionState) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::state::app::StatesPlugin;
 
     #[test]
     fn mig_a_rollup_json_covers_all_slices() {

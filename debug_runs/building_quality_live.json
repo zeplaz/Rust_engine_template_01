@@ -53,12 +53,21 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/building_quality_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_building_quality_live_witness",
-    "written_at_epoch_secs": 1783371796
+    "written_at_epoch_secs": 1790253931
   },
   "assemblies": [
     {
@@ -68,17 +77,112 @@
       "missing_slot_count": 0,
       "overall_score": 100.0,
       "passes_gate": true,
-      "silhouette_continuity_pct": 150.0,
+      "silhouette_continuity_pct": 100.0,
       "style_pack_id": "style_victorian",
+      "style_purity_pct": 100.0
+    },
+    {
+      "adjacency_violation_count": 0,
+      "assembly_id": "victorian_4x2_s7_8e1b",
+      "cross_style_fallback_count": 0,
+      "missing_slot_count": 0,
+      "overall_score": 100.0,
+      "passes_gate": true,
+      "silhouette_continuity_pct": 100.0,
+      "style_pack_id": "style_victorian",
+      "style_purity_pct": 100.0
+    },
+    {
+      "adjacency_violation_count": 0,
+      "assembly_id": "victorian_3x3_s11_d96f",
+      "cross_style_fallback_count": 0,
+      "missing_slot_count": 0,
+      "overall_score": 100.0,
+      "passes_gate": true,
+      "silhouette_continuity_pct": 100.0,
+      "style_pack_id": "style_victorian",
+      "style_purity_pct": 100.0
+    },
+    {
+      "adjacency_violation_count": 0,
+      "assembly_id": "victorian_5x3_s13_5880",
+      "cross_style_fallback_count": 0,
+      "missing_slot_count": 0,
+      "overall_score": 100.0,
+      "passes_gate": true,
+      "silhouette_continuity_pct": 100.0,
+      "style_pack_id": "style_victorian",
+      "style_purity_pct": 100.0
+    },
+    {
+      "adjacency_violation_count": 0,
+      "assembly_id": "industrial_west_4x2_s1_4bf6",
+      "cross_style_fallback_count": 0,
+      "missing_slot_count": 0,
+      "overall_score": 100.0,
+      "passes_gate": true,
+      "silhouette_continuity_pct": 100.0,
+      "style_pack_id": "style_industrial_west",
+      "style_purity_pct": 100.0
+    },
+    {
+      "adjacency_violation_count": 0,
+      "assembly_id": "industrial_west_6x3_s5_d53f",
+      "cross_style_fallback_count": 0,
+      "missing_slot_count": 0,
+      "overall_score": 100.0,
+      "passes_gate": true,
+      "silhouette_continuity_pct": 100.0,
+      "style_pack_id": "style_industrial_west",
+      "style_purity_pct": 100.0
+    },
+    {
+      "adjacency_violation_count": 0,
+      "assembly_id": "industrial_west_4x2_s9_798d",
+      "cross_style_fallback_count": 0,
+      "missing_slot_count": 0,
+      "overall_score": 100.0,
+      "passes_gate": true,
+      "silhouette_continuity_pct": 100.0,
+      "style_pack_id": "style_industrial_west",
+      "style_purity_pct": 100.0
+    },
+    {
+      "adjacency_violation_count": 0,
+      "assembly_id": "rural_4x2_s3_94e7",
+      "cross_style_fallback_count": 0,
+      "missing_slot_count": 4,
+      "overall_score": 80.5,
+      "passes_gate": true,
+      "silhouette_continuity_pct": 75.0,
+      "style_pack_id": "style_rural",
+      "style_purity_pct": 100.0
+    },
+    {
+      "adjacency_violation_count": 0,
+      "assembly_id": "rural_5x3_s3_4086",
+      "cross_style_fallback_count": 0,
+      "missing_slot_count": 4,
+      "overall_score": 83.0,
+      "passes_gate": true,
+      "silhouette_continuity_pct": 83.33333587646484,
+      "style_pack_id": "style_rural",
       "style_purity_pct": 100.0
     }
   ],
+  "assembly_count": 9,
   "bq_a1_wired": true,
+  "bq_silh_honest_001": true,
+  "coverage_ok": true,
+  "finish_slice": "BQ-SILH-HONEST-001",
   "gate": "BQ-A2-GATE-001",
   "green": true,
   "pass_threshold": 70.0,
   "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-A2",
   "schema": "building_quality_live_v1",
+  "silh_honest": true,
+  "silh_max_pct": 100.0,
   "snapshot_violation_aligned": true,
+  "style_pack_count": 3,
   "table_ok": true
 }

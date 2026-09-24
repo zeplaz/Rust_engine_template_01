@@ -24,9 +24,9 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Schedule sync (2026-07-03):** [`plan_schedule_sync_v1.md`](plan_schedule_sync_v1.md) — Wave 1 unblocked (MIG-V1 green); Wave 2+ → **DR-SCHED-W2**
 
-**Building quality + APS refactor (P2 — 2026-07-03):** [`plan_building_quality_v1.md`](plan_building_quality_v1.md) — **integration hub** · BQ Phase F (~80% visible) + APSR guardrails/services · companion [`plan_aps_refactor_v1.md`](plan_aps_refactor_v1.md) · golden-seed done bar · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-BUILDING-QUALITY-v1
+**Building quality + APS refactor (P1 finish — 2026-09-24):** [`plan_building_quality_v1.md`](plan_building_quality_v1.md) — **machine F/C/A/H/K/Q ★closed** · companion APSR ★closed · **visual finish** [`mcp_aps_tooling_finish_queue.json`](../tools/orchestrator/queues/mcp_aps_tooling_finish_queue.json) — SILH/SMOKE/assemble/LOOK-V2-ART ★closed · residual **operator** warehouse G4 · VEG G4 · G-PLAY · RPC-1-006 · BQ-Q3 deferred · ¬reopen game-systems drain
 
-**Render + GUI refactor (P1 — 2026-07-04):** [`plan_render_gui_refactor_v1.md`](plan_render_gui_refactor_v1.md) · **active RGR-M1-001** · queue [`render_gui_refactor_queue.json`](../tools/orchestrator/queues/render_gui_refactor_queue.json) · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-RENDER-GUI-REFACTOR-v1
+**Render + GUI refactor (P1 — 2026-07-04):** [`plan_render_gui_refactor_v1.md`](plan_render_gui_refactor_v1.md) · **RGR-M1 ★closed** (001..004) · tail → [`plan_render_production_cleanup_v1.md`](plan_render_production_cleanup_v1.md) · queue [`render_gui_refactor_queue.json`](../tools/orchestrator/queues/render_gui_refactor_queue.json) · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-RENDER-GUI-REFACTOR-v1
 
 **Material2d + Buffer VFX port (P2 DEFERRED — 2026-07-04):** [`plan_material_vfx_port_v1.md`](plan_material_vfx_port_v1.md) — **gate:** RGR-V2-001 lands + RGR-G4 unlocks · fire/water Material2d adoption + BufferVec pilot · no queue (DEFERRED)
 
@@ -48,6 +48,8 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 **APS presence correction (P1 — 2026-06):** [`aps_presence_correction_todos_v1.md`](aps_presence_correction_todos_v1.md) — brief/coverage/parity parity · live tier witnesses · session dump · queue [`aps_presence_correction_queue.json`](../tools/orchestrator/queues/aps_presence_correction_queue.json) · routing [`planner_routing_aps_presence_v1.md`](planner_routing_aps_presence_v1.md).
 
 **Finish backlog (why plans stall):** [`plan_finish_execution_backlog_v1.md`](plan_finish_execution_backlog_v1.md) — Tier 0–3 implementation picks; no new plans until Tier 0 witnesses green.
+
+**Game systems drain (IDLE — 2026-09-24):** [`game_systems_drain_queue.json`](../tools/orchestrator/queues/game_systems_drain_queue.json) — **32/32 done** · DEBT-012 AtmosphereCell kept (C dormant) · `atmos_lane_drain=idle` until `overlays_l0_direct` · HANDOFF § PLAN-GAME-SYSTEMS-DRAIN-001.
 
 **Designer backlog (2026-06):** [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) — APS polish · art · style bibles · sim UX · prompt [`designer_work_prompt_202606_v1.md`](designer_work_prompt_202606_v1.md) · queue [`designer_active_queue.json`](../tools/orchestrator/queues/designer_active_queue.json).
 

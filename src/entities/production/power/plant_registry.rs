@@ -40,6 +40,11 @@ impl PlantDefinitionRegistry {
     pub fn get(&self, id: &str) -> Option<&PlantDefinition> {
         self.by_id.get(id)
     }
+
+    /// Test / tooling: insert or replace a definition by id.
+    pub fn insert_for_test(&mut self, def: PlantDefinition) {
+        self.by_id.insert(def.id.clone(), def);
+    }
 }
 
 #[cfg(test)]

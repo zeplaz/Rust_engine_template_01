@@ -93,6 +93,9 @@ pub fn draw_sim_road_tool_sheet_egui(
             draw.map_vp,
         );
     }
+    if crate::gui::hud::sim_road_power_sheets_bevy::SIM_ROAD_POWER_SHEETS_USE_BEVY {
+        return Ok(());
+    }
 
     draw.road_sheet.sync_from_strip(draw.strip.as_ref());
     if !draw.road_sheet.open {

@@ -100,7 +100,7 @@ pub fn refresh_sim_effect_spine_live_witness() -> bool {
         return false;
     }
     let (witness, queue, ledger, faction_react) = sim_effect_spine_proof_state();
-    if !witness.queue_drain_ok || ledger.causal_chain_depth_max() < 1 {
+    if !witness.queue_drain_ok || !witness.dedupe_ok || ledger.causal_chain_depth_max() < 1 {
         return false;
     }
     if !faction_react.wired || faction_react.hook_rows < 1 {
@@ -124,6 +124,7 @@ pub fn sim_effect_spine_live_proof_body_green() -> bool {
     let (witness, queue, ledger, faction_react) = sim_effect_spine_proof_state();
     let body = build_sim_effect_spine_proof_payload(&witness, &queue, &ledger, Some(&faction_react));
     body["sim_effect_spine"]["queue_drain_ok"].as_bool() == Some(true)
+        && body["sim_effect_spine"]["dedupe_ok"].as_bool() == Some(true)
         && body["sim_effect_spine"]["causal_chain_depth_max"]
             .as_u64()
             .is_some_and(|d| d >= 1)

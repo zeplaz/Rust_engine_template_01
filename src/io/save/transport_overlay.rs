@@ -47,9 +47,7 @@ pub fn read_transport_snapshot_ron(path: impl AsRef<Path>) -> std::io::Result<Tr
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::systems::transport::{
-        hydrate_transport_from_snapshot, TransportEdgeId, TransportEdgeMeta, TransportFieldStore,
-    };
+    use crate::systems::transport::{TransportEdgeId, TransportEdgeMeta};
 
     #[test]
     fn transport_overlay_ref_uses_canonical_name() {

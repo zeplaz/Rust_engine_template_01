@@ -6,11 +6,16 @@ use crate::strategic::{BuildSiteTile, FootprintTiles, SiteArchetype, SitePlaceme
 
 use super::build_strip::ToolContext;
 
-/// Last world pick while a build tool is active (`None` when tool is `None` or not yet clicked).
+/// Building placement FSM (design Preview | Adjust | Place — TRIAGE-BUILD-CLICK-PLACE-001).
+///
+/// - [`Place`] — design **Preview**: ghost follows cursor; first LMB locks → [`Adjust`].
+/// - [`Adjust`] — ghost fixed; second LMB commits (ephemeral Place) → back to [`Place`].
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum BuildPlacementMode {
+    /// Unlocked preview (design name: Preview).
     #[default]
     Place,
+    /// Locked ghost — rotate/scale modifiers apply; second LMB places.
     Adjust,
 }
 
@@ -27,6 +32,8 @@ pub struct BuildGhostState {
     pub placement_mode: BuildPlacementMode,
     pub last_click_screen: Option<Vec2>,
     pub last_action_tile: Option<BuildSiteTile>,
+    /// True only on the frame Preview→Adjust lock consumed LMB (blocks same-frame stage/commit).
+    pub locked_this_frame: bool,
 }
 
 impl Default for BuildGhostState {
@@ -44,7 +51,20 @@ impl Default for BuildGhostState {
             placement_mode: BuildPlacementMode::Place,
             last_click_screen: None,
             last_action_tile: None,
+            locked_this_frame: false,
         }
+    }
+}
+
+impl BuildGhostState {
+    /// Drop Adjust lock → Preview ([`BuildPlacementMode::Place`]); tool stays armed.
+    pub fn unlock_to_preview(&mut self) {
+        self.placement_mode = BuildPlacementMode::Place;
+        self.origin = None;
+        self.drag_active = false;
+        self.locked_this_frame = false;
+        self.last_click_screen = None;
+        self.last_action_tile = None;
     }
 }
 

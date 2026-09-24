@@ -47,6 +47,16 @@ pub const KNOWN_LIVE_PROOF_PATHS: &[&str] = &[
     "debug_runs/f2_smoke_pipeline_live.json",
     "debug_runs/play_scenario_live.json",
     "debug_runs/transport_network_live.json",
+    "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+    "debug_runs/effects_system_es6_live.json",
+    "debug_runs/fire_save_roundtrip_live.json",
+    "debug_runs/industrial_i2_03_register_node_live.json",
+    "debug_runs/trade_flow_geography_live.json",
+    "debug_runs/trade_sc_runtime_live.json",
+    "debug_runs/mfg_03_domain_wire_live.json",
+    "debug_runs/cod_deployable_pipeline_live.json",
+    "debug_runs/nuclear_meltdown_live.json",
+    "debug_runs/settlement_hierarchy_gap_live.json",
 ];
 
 pub const AGENT_DEBUG_INDEX_PATH: &str = "debug_runs/agent_debug_index.json";

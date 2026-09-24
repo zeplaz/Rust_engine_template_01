@@ -519,12 +519,16 @@ fn ind_e03_grid_seed_enabled(launch: Option<&crate::engine::launch_args::EngineL
 }
 
 /// Spawns transformer host + high-load members (mirrors `bridge` overload integration test).
+///
+/// Load members carry [`UtilityConnection::power`] with `connected: true` so
+/// [`rebuild_electrical_grid_topology`] can admit them (INFRA-E4 power gate).
 pub fn spawn_ind_e03_grid_overload_cluster(commands: &mut Commands, origin: BuildSiteTile) {
     use crate::entities::production::power::{
         ElectricalComponent, ElectricalGrid, TransformerComponent,
     };
     use crate::entities::structure::components::Building;
     use crate::entities::types::s_flagz::BuildingType;
+    use crate::infrastructure::UtilityConnection;
 
     let base = crate::economy::site_placement::site_world_position(origin);
     commands.spawn((
@@ -558,6 +562,7 @@ pub fn spawn_ind_e03_grid_overload_cluster(commands: &mut Commands, origin: Buil
                 max_transfer: 2.0,
                 capacity: 0.0,
             },
+            UtilityConnection::power(i as u64 + 1, 1.0, true),
         ));
     }
 }

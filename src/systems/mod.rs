@@ -30,7 +30,7 @@ pub use atmosphere::{
     ATMOSPHERE_HEAT_DISTORTION_WGSL, ATMOSPHERE_PARTICLE_INSTANCING_WGSL, ATMOSPHERE_SMOKE_COLUMN_WGSL,
     ATMOSPHERE_WGSL_QUARANTINED, WEATHER_FIRE_FIELD_WGSL,
     ATMOSPHERE_VALIDATION_LAYOUT_V1,
-    AtmosphereCell, AtmosphereDiagnostics, AtmosphereField, AtmosphereParticle,
+    AtmosphereCell, AtmosphereDiagnostics, AtmosphereParticle,
     AtmosphereParticleBudget, AtmosphereParticleKind, AtmospherePerfThresholds,
     AtmospherePipelineSet, AtmospherePlugin, AtmosphereRenderLayers,
     AtmosphereValidationRegion, ChunkSmokeGpu, FireEmitter, FireEmitterGpu,

@@ -75,9 +75,18 @@ pub fn site_archetype_operational_name(a: SiteArchetype) -> &'static str {
         SiteArchetype::SensorPost => "Sensor post",
         SiteArchetype::TrenchLine => "Trench line",
         SiteArchetype::BunkerComplex => "Bunker complex",
+        SiteArchetype::DefensiveWall => "Defensive wall",
+        SiteArchetype::DragonTeeth => "Dragon's teeth",
+        SiteArchetype::Minefield => "Minefield",
         SiteArchetype::FuelDepot => "Fuel depot",
         SiteArchetype::WaterPlant => "Water / utilities plant",
     }
+}
+
+/// Player label when placing from Defense catalog — matches committed site identity.
+#[inline]
+pub fn defense_place_display_name(kind: crate::construction::DefenseKind) -> &'static str {
+    site_archetype_operational_name(kind.site_archetype())
 }
 
 fn map_error_token(raw: &str) -> String {
@@ -85,6 +94,15 @@ fn map_error_token(raw: &str) -> String {
         "terrain" => "Terrain not viable — check slope, water, or geology for this structure.".into(),
         "network_access" => {
             "No logistics access from this tile — extend corridors or pick a better-connected site.".into()
+        }
+        "insufficient_concrete" => {
+            crate::gui::hud::sim_hud_copy::REASON_INSUFFICIENT_CONCRETE.to_string()
+        }
+        "insufficient_staged_stock" => {
+            crate::gui::hud::sim_hud_copy::REASON_INSUFFICIENT_STAGED.to_string()
+        }
+        "stock_still_in_transit" => {
+            crate::gui::hud::sim_hud_copy::REASON_STOCK_IN_TRANSIT.to_string()
         }
         x if x.starts_with("out_") => format!("Operational constraint: {}", x.replace('_', " ")),
         _ => format!("Cannot place: {}", raw.replace('_', " ")),
@@ -133,6 +151,21 @@ mod tests {
         assert!(
             d.iter().any(|x| x.message.contains("Logistics reach")),
             "{d:?}"
+        );
+    }
+
+    #[test]
+    fn insufficient_concrete_maps_to_locked_copy() {
+        let v = SitePlacementValidation {
+            valid: false,
+            allows_commit: false,
+            errors: vec!["insufficient_concrete".into()],
+            ..Default::default()
+        };
+        let msg = primary_validation_message(&v).expect("reason");
+        assert_eq!(
+            msg,
+            crate::gui::hud::sim_hud_copy::REASON_INSUFFICIENT_CONCRETE
         );
     }
 }

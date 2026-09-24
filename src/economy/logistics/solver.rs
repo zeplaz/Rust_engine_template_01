@@ -10,10 +10,23 @@ use crate::strategic::LogisticsGraph;
 use crate::systems::transport::{TransportEdgeDirectory, TransportFieldStore};
 
 use super::routes::topology_revision_u32;
-use super::types::{LogisticsDiagnostics, RouteProof, ThroughputSolverState};
+use super::types::{
+    FreightReservation, FreightReservationBook, LogisticsDiagnostics, RouteProof,
+    ThroughputSolverState,
+};
 use super::types::{RoutePathStore, RouteCache};
 use crate::construction::ConstructionWorldRevision;
 use crate::economy::resource_flow::ResourceFlowRegistry;
+
+/// LOG-C-01: SoA vectors share one edge-index space (no HashMap on the hot path).
+#[must_use]
+pub fn soa_solver_aligned(solver: &ThroughputSolverState) -> bool {
+    let n = solver.capacity.len();
+    n > 0
+        && solver.load.len() == n
+        && solver.reserved.len() == n
+        && solver.edge_pressure.len() == n
+}
 
 /// LOG-C-02: every edge reservation must stay within capacity after solve.
 #[must_use]
@@ -23,6 +36,18 @@ pub fn reservations_within_capacity(solver: &ThroughputSolverState) -> bool {
         .iter()
         .zip(solver.reserved.iter())
         .all(|(&cap, &res)| res <= cap + 1e-4)
+}
+
+/// Book sparse sums must equal SoA `reserved` (single solve writer).
+#[must_use]
+pub fn book_matches_soa_reserved(
+    book: &FreightReservationBook,
+    solver: &ThroughputSolverState,
+) -> bool {
+    let sums = book.reserved_sums(solver.reserved.len());
+    sums.iter()
+        .zip(solver.reserved.iter())
+        .all(|(a, b)| (a - b).abs() <= 1e-3)
 }
 
 pub fn sync_solver_capacity_from_graph_system(
@@ -64,8 +89,10 @@ pub fn solve_throughput_greedy_system(
     route_cache: Res<RouteCache>,
     path_store: Res<RoutePathStore>,
     mut solver: ResMut<ThroughputSolverState>,
+    mut book: ResMut<FreightReservationBook>,
     mut diagnostics: ResMut<LogisticsDiagnostics>,
 ) {
+    book.clear();
     for edge in flow.edges.iter() {
         if !edge.path_open {
             continue;
@@ -99,6 +126,8 @@ pub fn solve_throughput_greedy_system(
                 }
             }
         }
+        let req_id = diagnostics.request_id_seq.saturating_add(1);
+        diagnostics.request_id_seq = req_id;
         if amount > 0.0 {
             for &tid in path_edges {
                 let idx = tid.0 as usize;
@@ -107,11 +136,14 @@ pub fn solve_throughput_greedy_system(
                     solver.load[idx] += amount;
                     let cap = solver.capacity[idx].max(1e-6);
                     solver.edge_pressure[idx] = (solver.load[idx] / cap).clamp(0.0, 2.0);
+                    book.push(FreightReservation {
+                        edge_index: idx,
+                        amount,
+                        request_id: req_id,
+                    });
                 }
             }
         }
-        let req_id = diagnostics.request_id_seq.saturating_add(1);
-        diagnostics.request_id_seq = req_id;
         diagnostics.proofs.push(RouteProof {
             request_id: req_id,
             from_catalog: String::new(),

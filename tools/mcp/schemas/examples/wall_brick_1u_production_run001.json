@@ -8,7 +8,7 @@
   "params": {
     "width_m": 4,
     "height_m": 3,
-    "depth_m": 0.3,
+    "depth_m": 0.35,
     "profile": "brick",
     "brick_courses": 6,
     "seed": 42001

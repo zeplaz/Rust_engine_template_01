@@ -13,10 +13,11 @@
 # PROGRAM METADATA (integrated dual-track)
 # ═════════════════════════════════════════════════════════════════════
 # id:           PLAN-BUILDING-QUALITY-v1  (+ PLAN-APS-REFACTOR-v1 companion)
-# status:       PLANNED — diagnosis signed 2026-07-03; execution not started
-# priority:     P2 on master — parallel-safe with MIG (Bevy lane) and APS G4; BQ-F# + APSR-A0 safe now
-# owner:        @sim-steward sequences · @coder engine (BQ-F2/A/H) · @coder-mcp bake+APS (BQ-F1/C, APSR)
-#               @designer-mcp kit charters (BQ-K) · @designer IA spec (APSR-T3)
+# status:       MACHINE-CLOSED — F/C/A/H/K/Q witnesses green 2026-09-24; VISUAL FINISH open
+# priority:     P1 finish lane via PLAN-MCP-APS-TOOLING-FINISH-001 (smoke/lod0 + G4 stills + SILH honesty)
+# owner:        @plan-orchestrator sequences finish queue · @coder SILH · @coder-mcp smoke→promote ·
+#               @designer-mcp G4 warehouse · @operator Session D + golden eyes
+# finish_queue: tools/orchestrator/queues/mcp_aps_tooling_finish_queue.json
 # companion:    plan_aps_refactor_v1.md · aps-design-ux skill · design_aps_operator_rubric_v2.md
 # index:        development_plan_index.md + HANDOFF.md § PLAN-BUILDING-QUALITY-v1
 # regression:   validate-report cargo (engine) · pytest tools/mcp/python (APS + validators) ·
@@ -82,9 +83,11 @@
 # ═════════════════════════════════════════════════════════════════════
 # ACTIVE PHASE
 # ═════════════════════════════════════════════════════════════════════
-# current:   BQ-A2 gate shipped — `building_quality_live.json` witness · BQ-A1 adjacency stubbed at 0
-# next_pick: BQ-A1-ADJ-001 · BQ-Q1-WITNESS-001 (wire APSR-Q1 after A2+F3 green)
-# blocked:   APSR-A4-Q1-001 until BQ-F3 + BQ-A2 witnesses green · BQ-Q3 until BQ-A/K/H slices land
+# current:   MACHINE DONE — F1–F3 · C1–C4 · A1–A2 · H1–H3 · K1–K3 · Q3 hash goldens · APSR A1–A4 green
+# next_pick: BQ-SMOKE-AUDIT-001 ∥ BQ-Q2-SCREEN-001 (SILH done 2026-09-24) — NOT re-pick closed F/C/A/H/K
+# blocked:   MCP-P2-KIT002-G4 / BQ-Q3-OPS-APPROVE-001 on operator display (Session D + golden eyes)
+# honesty:   module_index still 30 production / 50 lod0 / 31 smoke — kit-fill charter ≠ production tier
+# do_not:    reopen PLAN-GAME-SYSTEMS-DRAIN-001
 
 # ═════════════════════════════════════════════════════════════════════
 # SLICE TEMPLATE

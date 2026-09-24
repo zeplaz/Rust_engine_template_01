@@ -168,8 +168,6 @@ fn build_read_site_v0_002_self_check() -> Result<(), &'static str> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn site_v0_002_witness_green() {
         assert!(super::build_read_site_v0_002_witness_green());

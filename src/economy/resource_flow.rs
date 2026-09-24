@@ -154,10 +154,16 @@ fn chain_catalog_order(chain_id: &str) -> &'static [&'static str] {
             "aluminum_smelter1",
             "aluminum_fabrication_plant",
         ],
-        "concrete_portland" | "concrete_geopolymer" => &[
+        "concrete_portland" => &[
             "concrete_aggregate_mine",
             "concrete_cement_kiln",
             "concrete_mixer_plant",
+        ],
+        // Distinct kiln/mixer catalog ids — do not alias portland (TRADE-SC-RUNTIME).
+        "concrete_geopolymer" => &[
+            "concrete_aggregate_mine",
+            "concrete_cement_kiln_geopolymer",
+            "concrete_mixer_geopolymer",
         ],
         _ => &[],
     }
@@ -234,18 +240,19 @@ pub fn link_supply_chain_edges_system(
         return;
     }
 
-    let mut by_chain: HashMap<String, HashMap<String, Entity>> = HashMap::new();
+    // Catalog id → entity (shared steps e.g. aggregate mine may carry portland membership
+    // while geopolymer kiln/mixer sit on concrete_geopolymer).
+    let mut catalog_to_entity: HashMap<String, Entity> = HashMap::new();
     let mut node_snap: HashMap<Entity, ResourceFlowNode> = HashMap::new();
+    let mut active_chains: HashMap<String, ()> = HashMap::new();
 
     for (entity, node, membership) in &nodes {
         node_snap.insert(entity, node.clone());
-        by_chain
-            .entry(membership.chain_id.clone())
-            .or_default()
-            .insert(node.catalog_id.clone(), entity);
+        catalog_to_entity.insert(node.catalog_id.clone(), entity);
+        active_chains.insert(membership.chain_id.clone(), ());
     }
 
-    for (chain_id, catalog_to_entity) in &by_chain {
+    for chain_id in active_chains.keys() {
         let order = chain_catalog_order(chain_id);
         for pair in order.windows(2) {
             let (from_id, to_id) = (pair[0], pair[1]);
@@ -325,8 +332,11 @@ fn try_consume(node: &mut ResourceFlowNode, scale: f32) -> bool {
     ok
 }
 
-#[cfg(test)]
-fn transfer_along_edge(
+/// Move buffer along an open edge. Geography cut (`path_open == false`) transfers nothing.
+/// Freight production path uses [`InTransitLedger`](crate::economy::logistics::InTransitLedger);
+/// this helper is the resource-flow gate for trade-geography proofs and unit checks.
+#[must_use]
+pub fn transfer_along_edge(
     edge: &ResourceFlowEdge,
     from: &mut ResourceFlowNode,
     to: &mut ResourceFlowNode,
@@ -529,11 +539,12 @@ mod tests {
     }
 
     #[test]
-    fn smelter_node_lists_alumina_consume() {
+    fn smelter_node_lists_alumina_consume_and_aluminum_produce() {
         let reg = load_building_definitions_from_dir(default_buildings_dir());
         let def = reg.get("aluminum_smelter1").expect("smelter def");
         let node = flow_node_from_definition(def);
         assert!(node.consumption.iter().any(|r| r.tag == "Alumina"));
+        assert!(node.production.iter().any(|r| r.tag == "Aluminum"));
     }
 
     #[test]
@@ -551,6 +562,34 @@ mod tests {
         assert!(
             app.world().resource::<ResourceFlowRegistry>().edges.len() >= 2,
             "expected mine→refinery→smelter edges"
+        );
+    }
+
+    #[test]
+    fn geopolymer_chain_links_edges() {
+        let mut app = flow_test_app();
+        spawn_operational(
+            &mut app,
+            "concrete_aggregate_mine",
+            21,
+            BuildSiteTile { x: 0, z: 0 },
+        );
+        spawn_operational(
+            &mut app,
+            "concrete_cement_kiln_geopolymer",
+            22,
+            BuildSiteTile { x: 1, z: 0 },
+        );
+        spawn_operational(
+            &mut app,
+            "concrete_mixer_geopolymer",
+            23,
+            BuildSiteTile { x: 2, z: 0 },
+        );
+        app.update();
+        assert!(
+            app.world().resource::<ResourceFlowRegistry>().edges.len() >= 2,
+            "expected geopolymer mine→kiln→mixer edges"
         );
     }
 

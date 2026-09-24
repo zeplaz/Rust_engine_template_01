@@ -6,10 +6,13 @@
   "spec_ref": "assets/staging/specs/door_residential_production.json",
   "operation": "module_door",
   "params": {
-    "width_m": 1.2,
-    "height_m": 2.2,
-    "depth_m": 0.15,
-    "profile": "residential",
+    "width_m": 4,
+    "height_m": 3,
+    "depth_m": 0.3,
+    "opening_width_m": 2.2,
+    "opening_height_m": 2.55,
+    "opening_sill_m": 0.0,
+    "profile": "bay",
     "seed": 42003
   },
   "output": {

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "graph_id": "build_graph_rowhouse_victorian_production_v1",
+  "building_id": "rowhouse_victorian",
+  "seed": 42,
+  "ship": false,
+  "nodes": [
+    {
+      "node_id": "build_assembly",
+      "cli": "assembly-snapshot-generate",
+      "mcp": "assembly_snapshot_generate",
+      "depends_on": [],
+      "artifact": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_production_v1.json",
+      "manifest": "assets/staging/assemblies/victorian_4x3_s42_a7cb.json",
+      "witness": "debug_runs/tile_spine_run_001_live.json",
+      "validation": "validate-report mcp_spec <artifact>",
+      "notes": "Authority: assembly snapshot with per-node material_profile"
+    },
+    {
+      "node_id": "build_variants",
+      "cli": "variant-set-validate",
+      "mcp": "variant_set_validate",
+      "depends_on": ["build_assembly"],
+      "artifact": "tools/mcp/schemas/examples/variant_set_rowhouse_victorian_production_v1.json",
+      "witness": "debug_runs/tile_spine_run_001_live.json",
+      "validation": "variant-set-validate <artifact>",
+      "notes": "Variant graph before render"
+    },
+    {
+      "node_id": "build_blend",
+      "cli": "assembly-build-run",
+      "mcp": "assembly_build_run",
+      "depends_on": ["build_assembly"],
+      "artifact": "assets/staging/assemblies/victorian_4x3_s42_a7cb.blend",
+      "witness": "debug_runs/build_worker_001_live.json",
+      "validation": "job-status <job_id>",
+      "notes": "Headless convert — parallel with build_variants"
+    },
+    {
+      "node_id": "render_frames",
+      "cli": "tile-batch-run",
+      "mcp": "tile_batch_run",
+      "depends_on": ["build_blend", "build_variants"],
+      "artifact": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
+      "manifest": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/",
+      "witness": "debug_runs/art_pipeline/tile_rowhouse_victorian_production_v1_live.json",
+      "validation": "validate-report tile_batch <artifact>",
+      "notes": "bake_source keyframe_pack for ship; ortho = smoke only"
+    },
+    {
+      "node_id": "pack_atlas",
+      "cli": "tile-atlas-pack",
+      "mcp": "tile_atlas_pack_tool",
+      "depends_on": ["render_frames"],
+      "artifact": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas.png",
+      "manifest": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json",
+      "witness": "debug_runs/mcp_atlas_brief_001_live.json",
+      "validation": "validate-report atlas_meta_v2 <manifest>",
+      "notes": "Pack stills — never invent PNGs"
+    },
+    {
+      "node_id": "register_atlas",
+      "cli": "tile-atlas-register",
+      "mcp": "tile_atlas_register",
+      "depends_on": ["pack_atlas"],
+      "artifact": "assets/tile_atlases/_tile_atlas_index.ron",
+      "witness": "debug_runs/rt_registry_001_live.json",
+      "validation": "rt-registry --batch-id tile_rowhouse_victorian_production_v1",
+      "notes": "Post-G4 index upsert only"
+    }
+  ]
+}

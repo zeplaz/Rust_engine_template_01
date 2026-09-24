@@ -133,6 +133,20 @@ def _cmd_effect_promote(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_effect_preview_capture(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import effect_preview_capture as epc
+
+    body = epc.effect_preview_capture(
+        spec_path=args.spec_path or "",
+        batch_id=args.batch_id or "",
+        pack_first=not args.no_pack,
+        force=args.force,
+        write_witness=not args.no_witness,
+    )
+    print(json.dumps(body, indent=2))
+    return 0
+
+
 def _cmd_artist_vfx_pipeline_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp import effect_promote as ep
 
@@ -205,6 +219,7 @@ def _cmd_assembly_snapshot_generate(args: argparse.Namespace) -> int:
         depth=int(args.footprint.split("x")[1]),
         floors=int(args.floors),
         seed=int(args.seed),
+        source_tier=str(getattr(args, "source_tier", None) or "production"),
     )
     print(json.dumps(snap, indent=2))
     return 0
@@ -683,6 +698,29 @@ def _cmd_ops_mcp_function_layer_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_ops_intelligence_scan(args: argparse.Namespace) -> int:
+    """MCP-OPS-REPORT-001 — OPS spine scan (index + integrity + dashboard + triage)."""
+    from rust_engine_mcp import ops_intelligence
+
+    hours = int(getattr(args, "window_hours", 168) or 168)
+    enforce = bool(getattr(args, "enforce", False))
+    body = ops_intelligence.run_ops_intelligence_scan(
+        window_hours=hours,
+        enforce_integrity=enforce if enforce else None,
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_assemble_prefer_prod(args: argparse.Namespace) -> int:
+    """BQ-ASSEMBLE-PREF-PROD-001 — assert assemble defaults to production tier."""
+    from rust_engine_mcp.bq_assemble_prefer_prod import write_bq_assemble_prefer_prod_witness
+
+    body = write_bq_assemble_prefer_prod_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_build_read_grammar_v0_002_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp import arch_build_grammar
 
@@ -1011,6 +1049,15 @@ def _cmd_apsr_a4_q3_witness(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_aps_golden_rubric_scaffold(_: argparse.Namespace) -> int:
+    from rust_engine_mcp.golden_seed_review import write_aps_golden_rubric_scaffold_witness
+
+    body = write_aps_golden_rubric_scaffold_witness()
+    print(json.dumps(body, indent=2))
+    # Machine sheet-ready may be green; never treat as operator pass / APS-GOLDEN close
+    return 0 if body.get("green") and body.get("operator_pass") is False else 1
+
+
 def _cmd_bq_c1_contract_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp import building_quality_bq_c1
 
@@ -1043,6 +1090,37 @@ def _cmd_bq_f1_rebake_promote(args: argparse.Namespace) -> int:
     if args.write_witness:
         ok = ok and witness_green is True
     return 0 if ok else 1
+
+
+def _cmd_building_look_v2_art(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import building_look_v2_art
+
+    # Default eye_read_pass=False (honest). --eye-pass only after inspecting AFTER stills.
+    eye: bool | None = False
+    if getattr(args, "eye_pass", False):
+        eye = True
+    if getattr(args, "eye_fail", False):
+        eye = False
+
+    body = building_look_v2_art.run_building_look_v2_art(
+        try_bevy=not args.no_bevy,
+        skip_rebake=args.skip_rebake,
+        eye_read_pass=eye,
+    )
+    summary = {
+        "task_id": body.get("task_id"),
+        "green": body.get("green"),
+        "pixel_look_pass": body.get("pixel_look_pass"),
+        "pixel_look_note": body.get("pixel_look_note"),
+        "rebake_ok": (body.get("rebake") or {}).get("rebake_ok"),
+        "promote_ok": (body.get("rebake") or {}).get("promote_ok"),
+        "axis_ok": (body.get("rebake") or {}).get("axis_ok"),
+        "errors": (body.get("rebake") or {}).get("errors"),
+        "elapsed_s": body.get("elapsed_s"),
+        "witness": body.get("written") or "debug_runs/building_look_v2_art_live.json",
+    }
+    print(json.dumps(summary, indent=2))
+    return 0 if body.get("green") else 1
 
 
 def _cmd_city_g2_c5_apply(_: argparse.Namespace) -> int:
@@ -1333,6 +1411,92 @@ def _cmd_bq_k1_bake_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp import bq_k1_kitfill
 
     body = bq_k1_kitfill.write_bq_k1_bake_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_smoke_tier_audit(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import bq_smoke_tier_audit
+
+    body = bq_smoke_tier_audit.write_bq_smoke_tier_audit_witness()
+    print(json.dumps(body, indent=2))
+    # Audit is honest-FAIL while lod0/smoke remain selectable — exit 0 so CI can refresh witness.
+    return 0
+
+
+def _cmd_bq_q2_screen(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import bq_q2_screen
+
+    body = bq_q2_screen.write_bq_q2_screen_witness(try_bevy=not args.no_bevy)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_prod_promote_batch(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import bq_prod_promote_batch
+
+    body = bq_prod_promote_batch.write_bq_prod_promote_batch_witness(
+        try_rebake=not args.no_rebake,
+        register=not args.no_register,
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_prod_defer_packs(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import bq_prod_defer_packs
+
+    body = bq_prod_defer_packs.write_bq_prod_defer_packs_witness(
+        try_rebake=not args.no_rebake,
+        register=not args.no_register,
+        retire_smoke=not args.no_retire_smoke,
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_prod_noncore_promote(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import bq_prod_noncore_promote
+
+    body = bq_prod_noncore_promote.write_bq_prod_noncore_promote_witness(
+        try_rebake=not args.no_rebake,
+        register=not args.no_register,
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_bq_lod0_twin_prune(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import bq_lod0_twin_prune
+
+    body = bq_lod0_twin_prune.write_bq_lod0_twin_prune_witness(
+        register=not args.no_register,
+        retire=not args.no_retire,
+    )
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_spine_render_001(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import spine_render_contract
+
+    body = spine_render_contract.write_spine_render_001_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_spine_build_001(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import spine_build_graph
+
+    body = spine_build_graph.write_spine_build_001_witness()
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_apsr_mutation_regress_001(_: argparse.Namespace) -> int:
+    from rust_engine_mcp import apsr_mutation_regress
+
+    body = apsr_mutation_regress.write_apsr_mutation_regress_001_witness()
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
@@ -1677,6 +1841,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--no-witness", action="store_true")
     p.set_defaults(func=_cmd_effect_promote)
 
+    p = sub.add_parser(
+        "effect-preview-capture",
+        help="VSS-T4 residual — deterministic staging_pack_digest frames → honest_gate=honest",
+    )
+    p.add_argument("spec_path", nargs="?", default="", help="EffectSpec JSON (omit with --batch-id)")
+    p.add_argument("--batch-id", default="", help="Reference batch (default: vss_t4_reference_effects_v1)")
+    p.add_argument("--no-pack", action="store_true", help="Skip pack step (expect existing staging)")
+    p.add_argument("--force", action="store_true", help="Force pack overwrite on hash drift")
+    p.add_argument("--no-witness", action="store_true")
+    p.set_defaults(func=_cmd_effect_preview_capture)
+
     sub.add_parser(
         "artist-vfx-pipeline-witness",
         help="Refresh debug_runs/artist_vfx_pipeline_live.json from staging/registry disk",
@@ -1727,6 +1902,12 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--footprint", default="4x3", help="WxD e.g. 4x3")
     p.add_argument("--floors", type=int, default=2)
     p.add_argument("--seed", type=int, default=42)
+    p.add_argument(
+        "--source-tier",
+        default="production",
+        choices=("production", "lod0"),
+        help="Module tier preference (default production — BQ-ASSEMBLE-PREF-PROD-001)",
+    )
     p.set_defaults(func=_cmd_assembly_snapshot_generate)
 
     p = sub.add_parser("build-iso-rig")
@@ -1875,6 +2056,9 @@ def main(argv: list[str] | None = None) -> int:
             "construction",
             "witness_honesty",
             "queue_integrity",
+            "render_variant",
+            "build_graph",
+            "tile_promotion_honest",
         ],
         help="Validator id",
     )
@@ -2044,6 +2228,24 @@ def main(argv: list[str] | None = None) -> int:
     p = sub.add_parser("ops-mcp-function-layer-witness")
     p.set_defaults(func=_cmd_ops_mcp_function_layer_witness)
 
+    p = sub.add_parser(
+        "ops-intelligence-scan",
+        help="MCP-OPS-REPORT-001 — full OPS spine (index + integrity + dashboard + triage)",
+    )
+    p.add_argument("--window-hours", type=int, default=168)
+    p.add_argument(
+        "--enforce",
+        action="store_true",
+        help="Fail when witness integrity reports fails (same as RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE=1)",
+    )
+    p.set_defaults(func=_cmd_ops_intelligence_scan)
+
+    p = sub.add_parser(
+        "bq-assemble-prefer-prod",
+        help="BQ-ASSEMBLE-PREF-PROD-001 — assemble defaults to production tier",
+    )
+    p.set_defaults(func=_cmd_bq_assemble_prefer_prod)
+
     p = sub.add_parser("grammar-set-brief")
     p.add_argument("--set-id", default="")
     p.add_argument("--write-witness", action="store_true")
@@ -2103,6 +2305,13 @@ def main(argv: list[str] | None = None) -> int:
     sub.add_parser("apsr-a4-q1-witness").set_defaults(func=_cmd_apsr_a4_q1_witness)
     sub.add_parser("apsr-a4-q2-witness").set_defaults(func=_cmd_apsr_a4_q2_witness)
     sub.add_parser("apsr-a4-q3-witness").set_defaults(func=_cmd_apsr_a4_q3_witness)
+    sub.add_parser(
+        "aps-golden-rubric-scaffold",
+        help=(
+            "APS-GOLDEN sheet scaffold — ≥12 pending_operator rows; "
+            "never marks operator_pass (BQ-Q3 / APS-GOLDEN ops remain open)"
+        ),
+    ).set_defaults(func=_cmd_aps_golden_rubric_scaffold)
     sub.add_parser("bq-c1-contract-witness").set_defaults(func=_cmd_bq_c1_contract_witness)
     sub.add_parser("bq-c2-bounds-witness").set_defaults(func=_cmd_bq_c2_bounds_witness)
     sub.add_parser("bq-c3-seam-witness").set_defaults(func=_cmd_bq_c3_seam_witness)
@@ -2117,6 +2326,20 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--no-register", action="store_true", help="Skip module registry registration on promote")
     p.add_argument("--write-witness", action="store_true")
     p.set_defaults(func=_cmd_bq_f1_rebake_promote)
+    p_art = sub.add_parser("building-look-v2-art")
+    p_art.add_argument("--no-bevy", action="store_true", help="Skip bevy_preview_worker for AFTER stills")
+    p_art.add_argument("--skip-rebake", action="store_true", help="Only refresh AFTER stills / witness")
+    p_art.add_argument(
+        "--eye-pass",
+        action="store_true",
+        help="After inspecting AFTER stills: mark pixel_look_pass if axis+png ok",
+    )
+    p_art.add_argument(
+        "--eye-fail",
+        action="store_true",
+        help="Force pixel_look_pass false (default)",
+    )
+    p_art.set_defaults(func=_cmd_building_look_v2_art)
     sub.add_parser("city-g2-c5-apply").set_defaults(func=_cmd_city_g2_c5_apply)
     sub.add_parser("city-g2-c5-mcp-witness").set_defaults(func=_cmd_city_g2_c5_mcp_witness)
     sub.add_parser("aps-guard-brief-parity-witness").set_defaults(func=_cmd_aps_guard_brief_parity_witness)
@@ -2178,6 +2401,54 @@ def main(argv: list[str] | None = None) -> int:
     p_k1.add_argument("--witness", action="store_true")
     p_k1.set_defaults(func=_cmd_bq_k1_bake_wire)
     sub.add_parser("bq-k1-bake-witness").set_defaults(func=_cmd_bq_k1_bake_witness)
+    sub.add_parser("bq-smoke-tier-audit").set_defaults(func=_cmd_bq_smoke_tier_audit)
+    p_q2 = sub.add_parser("bq-q2-screen")
+    p_q2.add_argument(
+        "--no-bevy",
+        action="store_true",
+        help="Skip bevy_preview_worker; use trimesh/browser thumbnail fallback",
+    )
+    p_q2.set_defaults(func=_cmd_bq_q2_screen)
+    p_prod = sub.add_parser("bq-prod-promote-batch")
+    p_prod.add_argument("--no-rebake", action="store_true", help="Skip Blender; seed staging from lod0 donor if needed")
+    p_prod.add_argument("--no-register", action="store_true", help="Promote without rebuilding module index")
+    p_prod.set_defaults(func=_cmd_bq_prod_promote_batch)
+    p_defer = sub.add_parser("bq-prod-defer-packs")
+    p_defer.add_argument("--no-rebake", action="store_true", help="Skip Blender; seed staging from lod0 donor if needed")
+    p_defer.add_argument("--no-register", action="store_true", help="Promote without rebuilding module index")
+    p_defer.add_argument(
+        "--no-retire-smoke",
+        action="store_true",
+        help="Skip archiving kit_greybox smoke modules",
+    )
+    p_defer.set_defaults(func=_cmd_bq_prod_defer_packs)
+    p_noncore = sub.add_parser(
+        "bq-prod-noncore-promote",
+        help="BQ-PROD-NONCORE-PROMOTE-001 — promote deferred-pack non-core lod0 slots",
+    )
+    p_noncore.add_argument("--no-rebake", action="store_true", help="Skip Blender; seed staging from lod0 donor if needed")
+    p_noncore.add_argument("--no-register", action="store_true", help="Promote without rebuilding module index")
+    p_noncore.set_defaults(func=_cmd_bq_prod_noncore_promote)
+    p_lod0_prune = sub.add_parser(
+        "bq-lod0-twin-prune",
+        help="BQ-LOD0-TWIN-PRUNE-001 — archive unused lod0 index twins (no Q3)",
+    )
+    p_lod0_prune.add_argument("--no-register", action="store_true", help="Skip rebuilding module index")
+    p_lod0_prune.add_argument("--no-retire", action="store_true", help="Skip moving lod0 folders to archive")
+    p_lod0_prune.set_defaults(func=_cmd_bq_lod0_twin_prune)
+
+    sub.add_parser(
+        "spine-render-001",
+        help="SPINE-RENDER-001 — refresh debug_runs/spine_render_001_live.json (blender-worker contract)",
+    ).set_defaults(func=_cmd_spine_render_001)
+    sub.add_parser(
+        "spine-build-001",
+        help="SPINE-BUILD-001 — refresh debug_runs/spine_build_001_live.json (build DAG + per-node witness)",
+    ).set_defaults(func=_cmd_spine_build_001)
+    sub.add_parser(
+        "apsr-mutation-regress-001",
+        help="APSR-MUTATION-REGRESS-001 — mutation ceiling + lane wiring → debug_runs/apsr_mutation_regress_001_live.json",
+    ).set_defaults(func=_cmd_apsr_mutation_regress_001)
     sub.add_parser("dmcp-bq-k2-coverage-witness").set_defaults(func=_cmd_dmcp_bq_k2_coverage_witness)
     sub.add_parser("dmcp-bq-k3-grammar-witness").set_defaults(func=_cmd_dmcp_bq_k3_grammar_witness)
     sub.add_parser("dmcp-bq-k-lane-witness").set_defaults(func=_cmd_dmcp_bq_k_lane_witness)
