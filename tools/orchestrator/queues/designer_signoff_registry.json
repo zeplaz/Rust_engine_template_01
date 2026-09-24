@@ -2521,6 +2521,22 @@
       "notes": "Operator pixel walk rubric v2 \u2014 MIN window \u00b7 needs_display session"
     },
     {
+      "id": "DES-APS-OPERATOR-RUBRIC-003",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "READY",
+      "completed": "2026-09-24",
+      "program": "PLAN-MCP-APS-TOOLING-FINISH-001",
+      "track": "APS-GOLDEN",
+      "witness": "src/dev/design_aps_operator_rubric_v3.md",
+      "deliverable": "src/dev/design_aps_operator_rubric_v3.md",
+      "queue_id": "APS-GOLDEN-RUBRIC-OPS-001",
+      "notes": "Building-quality golden eyes rubric v3 \u2014 reads as a real building \u00b7 sheet field map \u00b7 smoke QC labels \u00b7 operator_pass=false \u00b7 unblocks BQ-Q3-OPS-APPROVE-001",
+      "unblocks": [
+        "BQ-Q3-OPS-APPROVE-001"
+      ]
+    },
+    {
       "id": "DMCP-VEG-ATLAS-SHIP-001",
       "agent": "designer-mcp",
       "status": "done",
@@ -2988,6 +3004,83 @@
         "coder grammar RON merge"
       ],
       "notes": "3 grammar patches + age APS map \u2014 RON merge @coder"
+    },
+    {
+      "id": "DES-MIL-DEFENSE-PLACE",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-09-24",
+      "verdict": "PASS",
+      "program": "construction_ux",
+      "witness": "debug_runs/des_mil_defense_place_live.json",
+      "deliverable": "src/dev/design_mil_defense_place_v1.md",
+      "depends_on": [
+        "TRIAGE-BUILD-CLICK-PLACE-001",
+        "TRIAGE-CURSOR-UNIFY-001"
+      ],
+      "unblocks": [
+        "COD-MIL-DEFENSE-PLACE-001"
+      ],
+      "notes": "Military picker IA walls/trenches/fortification; Demolish sibling not default; two-click reuse; sheet/pointer inherit Industry"
+    },
+    {
+      "id": "DES-P3-PLACE-ANIM",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-09-24",
+      "verdict": "PASS",
+      "program": "construction_ux",
+      "witness": "debug_runs/des_place_feedback_anim_live.json",
+      "deliverable": "src/dev/design_place_feedback_anim_v1.md",
+      "depends_on": [
+        "TRIAGE-BUILD-CLICK-PLACE-001",
+        "COD-MIL-DEFENSE-PLACE-001"
+      ],
+      "unblocks": [
+        "COD-P3-PLACE-ANIM-001"
+      ],
+      "notes": "280ms ease-out ghost→Planned settle via ConstructionVisualRequests; FSM/funnel untouched; WALL-ARCHETYPE left for planner"
+    },
+    {
+      "id": "DES-MIL-DEPLOYABLE-CATALOG",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-09-24",
+      "verdict": "PASS",
+      "program": "construction_qop",
+      "witness": "debug_runs/des_mil_deployable_defense_live.json",
+      "deliverable": "src/dev/design_mil_deployable_defense_v1.md",
+      "depends_on": [
+        "DES-MIL-DEFENSE-PLACE",
+        "COD-MIL-DEFENSE-PLACE-001",
+        "COD-WALL-ARCHETYPE-001",
+        "COD-P3-PLACE-ANIM-001"
+      ],
+      "unblocks": [
+        "COD-WALL-CONCRETE-GATE-001",
+        "COD-DEPLOYABLE-RECIPE-001"
+      ],
+      "notes": "Deployables section (Dragon's teeth heavy + Minefield light); Walls stay poured concrete; two-click + stock gate copy; Q1=one strip line; no Phase-9 chrome; ΔWF packets ready"
+    },
+    {
+      "id": "DES-APS-EFFECT-BROWSER-001",
+      "agent": "designer",
+      "status": "done",
+      "signoff": "SIGNED",
+      "signed_date": "2026-09-24",
+      "verdict": "PASS",
+      "program": "PLAN-ARTIST-VFX-TOOLCHAIN-001",
+      "slice": "VSS-T4-005",
+      "witness": "src/dev/design_aps_effect_browser_v1.md",
+      "deliverable": "src/dev/design_aps_effect_browser_v1.md",
+      "packet": "tools/mcp/art_pipeline_suite/effect_browser_impl_packet_v1.md",
+      "unblocks": [
+        "VSS-T4-005"
+      ],
+      "notes": "APS Effects tab — MaterialBrowserPanel pattern; preview ladder + honest_gate; assign\to scenario markers; no fire_vfx fork; ΔWF @coder-mcp"
     }
   ]
 }

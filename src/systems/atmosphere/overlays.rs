@@ -1,4 +1,8 @@
 //! Mission / dev overlay mapping (`base_fire2_smoke.md` §10–11).
+//!
+//! **DEBT-012 keep:** still consumes [`AtmosphereCell`] — overlays have **not** gone
+//! L0-direct. Do not delete the cell sample until callers sample clipmap L0 channels
+//! (or equivalent free fns) without this DTO.
 
 use super::field::AtmosphereCell;
 

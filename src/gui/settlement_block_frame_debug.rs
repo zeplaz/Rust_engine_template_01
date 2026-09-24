@@ -1,8 +1,12 @@
 //! **CITY-G1-C2-001** — BlockFrame debug overlay (archetype lots, green edges, brown scatter).
+//!
+//! **VISUAL-JANK-CHROME-001:** never auto-open in Simulation — editor / env opt-in only
+//! (`BLOCK_FRAME_DEBUG=1`). Prevents green/brown mini-grid bleed into sim chrome.
 
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
+use crate::engine::states::BaseState;
 use crate::strategic::settlement::{
     scatter_interior_tiles, street_edge_tiles, BlockArchetype, BlockBook, BlockFrame,
     BlockFrameBook,
@@ -10,7 +14,24 @@ use crate::strategic::settlement::{
 
 #[derive(Resource, Debug, Default, Clone)]
 pub struct BlockFrameDebugUiState {
+    /// Operator/dev arm — Simulation requires this (or env) before the window paints.
     pub visible: bool,
+}
+
+#[must_use]
+fn block_frame_debug_env_armed() -> bool {
+    std::env::var("BLOCK_FRAME_DEBUG")
+        .ok()
+        .is_some_and(|v| matches!(v.as_str(), "1" | "true" | "on" | "TRUE" | "ON"))
+}
+
+#[must_use]
+fn block_frame_debug_may_draw(base: BaseState, ui_state: &BlockFrameDebugUiState) -> bool {
+    match base {
+        BaseState::Editor => ui_state.visible || block_frame_debug_env_armed(),
+        BaseState::Simulation => ui_state.visible && block_frame_debug_env_armed(),
+        _ => false,
+    }
 }
 
 #[must_use]
@@ -63,6 +84,7 @@ fn paint_block_mini_grid(
 pub fn draw_block_frame_debug_overlay(
     mut contexts: EguiContexts,
     mut ui_state: ResMut<BlockFrameDebugUiState>,
+    base: Res<State<BaseState>>,
     frames: Option<Res<BlockFrameBook>>,
     blocks: Option<Res<BlockBook>>,
 ) -> Result {
@@ -77,7 +99,13 @@ pub fn draw_block_frame_debug_overlay(
         ui_state.visible = false;
         return Ok(());
     }
-    ui_state.visible = true;
+    // Editor: env or prior arm may open. Simulation: never auto — env ∧ visible only.
+    if matches!(*base.get(), BaseState::Editor) && block_frame_debug_env_armed() {
+        ui_state.visible = true;
+    }
+    if !block_frame_debug_may_draw(*base.get(), ui_state.as_ref()) {
+        return Ok(());
+    }
 
     egui::Window::new("Block frames (CITY-G1-C2)")
         .id(egui::Id::new("settlement_block_frame_debug"))

@@ -1,0 +1,116 @@
+{
+  "schema": "veg_atlas_ship_001_live_v1",
+  "gate": "DMCP-VEG-ATLAS-SHIP-001",
+  "owner": "designer-mcp",
+  "status": "blocked",
+  "green": false,
+  "verdict": "BLOCKED_G4_MANUAL",
+  "ship": false,
+  "proceed_ship": false,
+  "development_tier": "pilot",
+  "batch_id": "tile_landscape_expanded_v1",
+  "atlas_id": "landscape_lg5_expanded_v1",
+  "atlas_domain": "landscape",
+  "bake_source": "keyframe_pack",
+  "art_quality": "teach_pilot_not_keyframe_manual",
+  "criteria_locked": true,
+  "criteria_doc": "src/dev/dmcp_veg_atlas_ship_v1.md",
+  "machine_spec": "assets/staging/specs/veg_atlas_ship_001.json",
+  "g0_rules": "debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml",
+  "g4_signoff": "debug_runs/art_pipeline/landscape_expanded_g4_signoff.yaml",
+  "keyframe_stills_folder": "assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1",
+  "disk_audit": {
+    "teach_png_count": 16,
+    "keyframe_stills_folder_count": 16,
+    "atlas_staging_exists": true,
+    "batch_dry_run": true,
+    "batch_ship": false,
+    "g0_proceed_tile_ship": "no",
+    "g4_proceed_ship": "no",
+    "g4_verdict": "OPEN"
+  },
+  "g4_minimum_review": {
+    "topology_patch_burn_04": {
+      "in_batch": true,
+      "teach_png": true,
+      "manual_still": false,
+      "path": "assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1/topology_patch_burn_04.png",
+      "notes": "Teach/pilot PNG present — not designer+operator G4 manual still"
+    },
+    "topology_patch_scar": {
+      "in_batch": true,
+      "teach_png": true,
+      "manual_still": false,
+      "path": "assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1/topology_patch_scar.png",
+      "notes": "Teach/pilot PNG present — not designer+operator G4 manual still"
+    },
+    "topology_corridor_regrowth_grass": {
+      "in_batch": false,
+      "teach_png": false,
+      "manual_still": false,
+      "path": "assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1/topology_corridor_regrowth_grass.png",
+      "notes": "Missing from 16-cell batch and keyframe_stills — hard G4 gap"
+    }
+  },
+  "manual_stills_ok_count": 0,
+  "blocked_by": [
+    "G4_MANUAL_KEYFRAMES",
+    "topology_corridor_regrowth_grass_missing",
+    "proceed_ship_no"
+  ],
+  "unblock_when": [
+    "Operator exports iso-rig keyframe stills (Tile_iso_rig_v1 / keyframe_render.py) for G4 minimum set into assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1/",
+    "topology_corridor_regrowth_grass.png exists and is reviewed at 64px iso",
+    "topology_patch_burn_04 + topology_patch_scar re-exported/reviewed as manual stills (not teach overlays)",
+    "designer-mcp flips debug_runs/art_pipeline/landscape_expanded_g4_signoff.yaml proceed_ship:yes with art_quality:keyframe_manual",
+    "Then G5: ship:true + atlas register + write_witness(tile_landscape_expanded_v1)"
+  ],
+  "forbidden_until_g4": [
+    "ship_true",
+    "development_tier_production",
+    "proceed_tile_ship_yes",
+    "ai_generated_albedo",
+    "ortho_bake_as_production"
+  ],
+  "rules_audit": {
+    "no_ai_generated_images": "pass",
+    "deterministic_output": "pass",
+    "batch_processing": "pass",
+    "grid_alignment": "pass",
+    "honest_ship_false": "pass",
+    "g4_manual_complete": "fail"
+  },
+  "order_critique": {
+    "request_summary": "Progress or close vegetation atlas ship per MCP production rules",
+    "concerns": [
+      "Finish-queue ready row implies ship close, but G4 proceed_ship remains no",
+      "Criteria doc already PASS_WITH_NOTES — closing ship now would be dishonest_gate",
+      "Teach 16/16 PNGs ≠ keyframe_manual G4"
+    ],
+    "proceed": "no",
+    "blocked": true,
+    "reroute": "Operator Session D-style keyframe export for landscape_lg5_expanded (not warehouse); then designer-mcp G4 review"
+  },
+  "residuals": [
+    "G4 manual corridor regrowth + burn/scar stills",
+    "G5 ship flip + landscape atlas index production stamp",
+    "VEG-F01 / VEG-F02 remain teach-gated until proceed_ship:yes"
+  ],
+  "aps_golden_avoided": true,
+  "prior_criteria_witness": "debug_runs/art_pipeline/dmcp_designer_mcp_open_lane_live.json",
+  "rollup_refs": [
+    "debug_runs/art_pipeline/tile_landscape_expanded_live.json",
+    "debug_runs/art_pipeline/landscape_expanded_g0_rules.yaml",
+    "debug_runs/art_pipeline/landscape_expanded_g4_signoff.yaml"
+  ],
+  "_agent_meta": {
+    "schema": "veg_atlas_ship_001_live_v1",
+    "profile": "DMCP_VEG_ATLAS_SHIP",
+    "relative_path": "debug_runs/art_pipeline/veg_atlas_ship_001_live.json",
+    "source_system": "designer-mcp",
+    "ritual": "BLANG:WIT-HON DMCP-VEG-ATLAS-SHIP-001 blocked G4",
+    "agent": "designer-mcp",
+    "written_at": "2026-09-24",
+    "queue": "tools/orchestrator/queues/mcp_aps_tooling_finish_queue.json"
+  }
+}

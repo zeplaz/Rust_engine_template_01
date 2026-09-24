@@ -248,7 +248,7 @@
     "coder": [
       {
         "id": "RGR-M1-001",
-        "status": "ready",
+        "status": "done",
         "owner": "coder",
         "queue": "render_gui_refactor_queue.json",
         "program": "PLAN-RENDER-GUI-REFACTOR-v1",
@@ -258,7 +258,9 @@
           "RGR-T0-003",
           "RGR-T0-004"
         ],
-        "priority": "P1"
+        "priority": "P1",
+        "witness": "debug_runs/rgr_m1_witness_live.json",
+        "note": "2026-09-24 honesty green — mod_rs_pub_use_count:1"
       }
     ],
     "coder_b": [

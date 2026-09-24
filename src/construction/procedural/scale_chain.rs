@@ -43,6 +43,12 @@ pub fn scale_chain_links() -> Vec<ScaleChainLink> {
             value: FLOOR_HEIGHT_M,
         },
         ScaleChainLink {
+            stage: "placement",
+            authority: "procedural_module_local_translation",
+            constant: "xz = grid * GRID_UNIT_M",
+            value: GRID_UNIT_M,
+        },
+        ScaleChainLink {
             stage: "spawn_visual",
             authority: "ConstructionIsoDrawScale",
             constant: "iso_draw_scale_multiplier",
@@ -64,13 +70,21 @@ pub fn iso_draw_is_visual_only_spawn() -> bool {
 }
 
 #[must_use]
+pub fn placement_xz_matches_grid_unit(x: u32, y: u32) -> bool {
+    let p = procedural_module_local_translation(x, y, 0);
+    (p.x - x as f32 * GRID_UNIT_M).abs() < f32::EPSILON
+        && (p.z - y as f32 * GRID_UNIT_M).abs() < f32::EPSILON
+}
+
+#[must_use]
 pub fn bq_c4_scale_chain_witness_green() -> bool {
     let links = scale_chain_links();
-    links.len() >= 4
+    links.len() >= 5
         && links[0].value == 4.0
         && links[1].value == 3.0
         && placement_y_matches_floor_height(0)
         && placement_y_matches_floor_height(2)
+        && placement_xz_matches_grid_unit(1, 2)
         && iso_draw_is_visual_only_spawn()
         && {
             let iso = ConstructionIsoDrawScale::default();

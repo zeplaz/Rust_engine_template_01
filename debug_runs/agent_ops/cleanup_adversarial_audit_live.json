@@ -1,0 +1,113 @@
+{
+  "schema": "cleanup_adversarial_audit_v1",
+  "id": "CLEANUP-ADV-2026-09-24-FOLLOWUP",
+  "parent_id": "CLEANUP-ADV-2026-09-24",
+  "generated_at": "2026-09-24T18:10:00Z",
+  "mandate": "Warnings are design smell; prefer production solutions over hacks/dupes/sloppy witnesses",
+  "followup_of": "2fa28167-d9e2-4238-aae2-aaa4a84ee148",
+  "prosecution_closed_this_slice": [
+    {
+      "id": "LIB-TEST-WARN-SMELL",
+      "severity": "medium",
+      "finding": "~29 cfg(test)/lib-test unused_import + unused_mut warnings after check went 0e/0w",
+      "fix": "wire dead muts/imports (WC-D04 refresh wired; trim unused reexports); allow(deprecated) only on INFRA-E0-002 migration fixtures",
+      "class": "sloppy_api",
+      "status": "applied"
+    },
+    {
+      "id": "FIRE-ECOLOGY-DUAL-WITNESS",
+      "severity": "high",
+      "finding": "fire_ecology_live.json dual writers (runtime commit vs lib harness wrap) + double-nested sim_effect_spine inflated green risk",
+      "fix": "sole commit_fire_ecology_live_proof(_unchecked); nest_sim_effect_spine_for_ecology flattens payload; write after SimEffectSystemSet::Drain; re-entrant file lock for parallel tests",
+      "class": "authority_drift",
+      "status": "applied",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "wit_hon": "passed"
+    }
+  ],
+  "defense": [
+    {
+      "id": "GPU-BAKE-DEFAULT",
+      "class": "production",
+      "note": "Do not regress GpuBake Simulation default or assembly prefer_stylepack_tier production preference"
+    },
+    {
+      "id": "FIRE-ECOLOGY-SINGLE-WRITER",
+      "class": "production",
+      "note": "commit_fire_ecology_live_proof is sole disk writer; spine nest only post-drain (omit key if drain never finalized — no invented green)"
+    }
+  ],
+  "top_10_remaining": [
+    {
+      "rank": 1,
+      "id": "RPC-1-004-SPIKE-DEFAULT",
+      "owner": "@coder",
+      "exit": "Consider defaulting TERRAIN_GPU_BAKE_SPIKE path once stable — still opt-in"
+    },
+    {
+      "rank": 2,
+      "id": "MIG-A11-DEEP",
+      "owner": "@coder",
+      "exit": "Depth prepass merge — post-mig perf (out of scope this slice)"
+    },
+    {
+      "rank": 3,
+      "id": "QUEUE-RESIDUAL-SYNC",
+      "owner": "@orchestrator",
+      "exit": "des_mil residual packet still lists shipped slices as ready — sync or cull"
+    },
+    {
+      "rank": 4,
+      "id": "ART-DISHONEST-GATES",
+      "owner": "@operator/@coder-mcp",
+      "exit": "Dishonest art G4 gates — operator stills (out of scope)"
+    },
+    {
+      "rank": 5,
+      "id": "WAREHOUSE-ISO-STAMP",
+      "owner": "@coder",
+      "exit": "Rail warehouse operational → production GLB + iso stamp on map (not lod0-only)"
+    },
+    {
+      "rank": 6,
+      "id": "REAL-TERRAIN-NETWORK-GATES",
+      "owner": "@planner→@coder",
+      "exit": "Replace stub terrain/network validate_* with real scores"
+    },
+    {
+      "rank": 7,
+      "id": "EFFECT-CONSUMABLE-RUNTIME",
+      "owner": "@coder",
+      "exit": "append_effect_consumable_registry_particles on live emit path (not only include_str probe)"
+    },
+    {
+      "rank": 8,
+      "id": "ORPHAN-ALLOW-ALIASES",
+      "owner": "@coder",
+      "exit": "TerrainRenderAuthority CpuFallback/GpuInstancedAtlas aliases — schedule remove after call-site scrub"
+    },
+    {
+      "rank": 9,
+      "id": "INFLATED-GREEN-SWEEP",
+      "owner": "@operations-intelligence",
+      "exit": "WIT-HON on landscape/minimap/veg inflated_green warns"
+    },
+    {
+      "rank": 10,
+      "id": "SPARK-EMIT-NE-DRAW",
+      "owner": "@coder",
+      "exit": "In-game spark emit≠draw (241fdb2e) — out of scope this slice"
+    }
+  ],
+  "validation": {
+    "cargo_check": "0e/0w target after import fix",
+    "lib_test_profile": "0 warnings (was ~29)",
+    "focused_tests": "fire_ecology filter 6/6 ok",
+    "wit_hon_fire_ecology": "passed"
+  },
+  "session_applied": [
+    "lib-test warning smell cleared (prefer use/delete over allow)",
+    "fire_ecology single writer + flat sim_effect_spine nest after drain",
+    "cleanup adversarial follow-up witness"
+  ]
+}

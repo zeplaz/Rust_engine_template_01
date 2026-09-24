@@ -45,7 +45,8 @@ pub const BUILD_RAIL_W_PX: f32 = 52.0;
 pub const COMMAND_LEFT_STACK_COLUMN_GAP_PX: f32 = 6.0;
 /// Build rail container + slot geometry (must match `in_game_hud` spawn).
 pub const BUILD_RAIL_CONTAINER_PAD_PX: f32 = 4.0;
-pub const BUILD_RAIL_SLOT_MIN_H_PX: f32 = 32.0;
+/// Hit target ≥48 px (HUD-A-001 presentation contract).
+pub const BUILD_RAIL_SLOT_MIN_H_PX: f32 = 42.0;
 pub const BUILD_RAIL_SLOT_PAD_Y_PX: f32 = 3.0;
 pub const BUILD_RAIL_ROW_GAP_PX: f32 = 4.0;
 /// Gap between build rail and egui picker sheets.
@@ -891,6 +892,30 @@ impl Plugin for SimulationShellPhase2Plugin {
             .add_systems(
                 Update,
                 (
+                    crate::gui::hud::sim_build_picker_bevy::sync_picker_category_from_strip,
+                    crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_layout,
+                    crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_title,
+                    crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_tabs,
+                    crate::gui::hud::sim_build_picker_bevy::rebuild_sim_build_picker_bevy_body,
+                    crate::gui::hud::sim_build_picker_bevy::sim_build_picker_bevy_close_system,
+                    crate::gui::hud::sim_build_picker_bevy::sim_build_picker_bevy_tab_system,
+                    crate::gui::hud::sim_build_picker_bevy::sim_build_picker_bevy_action_system,
+                )
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
+                    crate::gui::hud::sim_road_power_sheets_bevy::sync_sim_road_sheet_bevy,
+                    crate::gui::hud::sim_road_power_sheets_bevy::sync_sim_power_sheet_bevy,
+                    crate::gui::hud::sim_road_power_sheets_bevy::sim_road_sheet_actions,
+                    crate::gui::hud::sim_road_power_sheets_bevy::sim_power_sheet_actions,
+                )
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
                     super::plant_focus_card::sync_plant_focus_card_visibility,
                 )
                     .run_if(in_simulation_or_editor),
@@ -1319,7 +1344,16 @@ fn sync_context_tray_visibility_system(
                 "LOGISTICS · congest {:.2} · stock {:.2} · edges {}",
                 d.logistics_congestion, d.logistics_stockpile, d.transport_edges
             ),
-            ContextTrayTab::Build => String::new(),
+            ContextTrayTab::Build => {
+                let pending = d.pending_total;
+                let unapproved = d.pending_unapproved;
+                format!(
+                    "BUILD · queue {} ({} ready) · {}",
+                    pending,
+                    pending.saturating_sub(unapproved),
+                    crate::gui::hud::sim_hud_copy::TRAY_PEEK_MODIFIERS
+                )
+            }
             ContextTrayTab::Diagnostics => format!(
                 "DIAG · sim n={} · fire parts {} · pending {}/{}",
                 d.sim_tick,

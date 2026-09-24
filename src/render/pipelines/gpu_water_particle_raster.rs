@@ -31,7 +31,7 @@ use crate::render::pipelines::core2d_overlay_order::{
 };
 use crate::render::core::gpu_buffer_registry::{GPUBufferRegistry, WATER_PARTICLE_EXPANDED_VERTICES_BUFFER};
 use crate::render::pipelines::gpu_water_particles::WorldWaterParticleFrame;
-use crate::render::{particle_view_globals_from_metrics, ExtractedCameraMetrics};
+use crate::render::ExtractedCameraMetrics;
 
 pub const WATER_PARTICLE_DRAW_WGSL: &str = "shaders/water/water_particle_draw.wgsl";
 

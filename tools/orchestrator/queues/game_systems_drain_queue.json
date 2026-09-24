@@ -13,7 +13,7 @@
       "src/dev/plan_effects_system_architecture_v1.md",
       "src/dev/plan_infrastructure_world_layers_exec_001_v1.md"
     ],
-    "rule": "Trust debug_runs/*_live.json over queue status. Non-HUD gameplay only. Pick order: manufacturing \u2192 connections \u2192 logistics \u2192 AI \u2192 trade \u2192 systems.",
+    "rule": "Trust debug_runs/*_live.json over queue status. Non-HUD gameplay only. Pick order: manufacturing → connections → logistics → AI → trade → systems.",
     "handoff": "tools/orchestrator/queues/HANDOFF.md",
     "regression": "validate-report cargo --cached; then lib tests scoped to slice",
     "wit_hon": "validate-report witness_honesty <witness> --compress 3"
@@ -51,7 +51,7 @@
         "ES-6-2-FIELD-SHIM"
       ],
       "completed": "2026-09-23",
-      "note": "Bundle write/hydrate + manifest refs in incremental save \u00b7 residual drops ES-6-4 when green"
+      "note": "Bundle write/hydrate + manifest refs in incremental save · residual drops ES-6-4 when green"
     },
     {
       "seq": 2,
@@ -86,7 +86,7 @@
         "COD-POWER-ISLAND-HIGHLIGHT"
       ],
       "completed": "2026-09-23",
-      "note": "activate\u2192register chain + smelter Alumina/Aluminum rates \u00b7 witness green"
+      "note": "activate→register chain + smelter Alumina/Aluminum rates · witness green"
     },
     {
       "seq": 4,
@@ -107,7 +107,7 @@
       "witness": "debug_runs/mfg_03_domain_wire_live.json",
       "exit_predicate": "manufacturing_core_tick true AND activated entity has ManufacturingNode",
       "completed": "2026-09-23",
-      "note": "activate\u2192ManufacturingNode + tick throughput \u00b7 closes path-only MFG gap \u00b7 witness green"
+      "note": "activate→ManufacturingNode + tick throughput · closes path-only MFG gap · witness green"
     },
     {
       "seq": 5,
@@ -116,7 +116,7 @@
       "status": "done",
       "priority": "P0",
       "owner": "coder",
-      "goal": "Nuclear LOOP detect \u2192 SCRAM delay \u2192 diesel window + events",
+      "goal": "Nuclear LOOP detect → SCRAM delay → diesel window + events",
       "code_paths": [
         "src/entities/production/power/failure_modes.rs"
       ],
@@ -154,7 +154,7 @@
       "status": "done",
       "priority": "P1",
       "owner": "coder",
-      "goal": "UtilityConnection \u2194 UtilityGraph membership on activation",
+      "goal": "UtilityConnection ↔ UtilityGraph membership on activation",
       "code_paths": [
         "src/infrastructure/utility/activation_link.rs",
         "src/economy/activation/bridge.rs"
@@ -163,7 +163,7 @@
       "witness": "debug_runs/power_grid_track_bd_live.json",
       "exit_predicate": "COD-UTILITY-ACTIVATION-LINK-001 true + activation inserts UtilityConnection; sync from UtilityGraph reachability (no radius hack)",
       "completed": "2026-09-24",
-      "note": "Reconciled: home COD-UTILITY-ACTIVATION-LINK-001 done; lib utility_activation_link_witness_green_lib + power_grid_track_bd_live_witness_green ok; WIT-HON pass; drain witness path was industrial_activation_live (wrong) \u2014 aligned to home power_grid_track_bd_live"
+      "note": "Reconciled: home COD-UTILITY-ACTIVATION-LINK-001 done; lib utility_activation_link_witness_green_lib + power_grid_track_bd_live_witness_green ok; WIT-HON pass; drain witness path was industrial_activation_live (wrong) — aligned to home power_grid_track_bd_live"
     },
     {
       "seq": 8,
@@ -172,7 +172,7 @@
       "status": "done",
       "priority": "P2",
       "owner": "coder",
-      "goal": "Decay heat \u2192 ThermalComponent after diesel depletion",
+      "goal": "Decay heat → ThermalComponent after diesel depletion",
       "depends_on": [
         "COD-NUCLEAR-P1-LOOP-SCRAM"
       ],
@@ -185,7 +185,7 @@
       "witness": "debug_runs/nuclear_failure_p2_live.json",
       "exit_predicate": "witness green with heat rise after diesel empty",
       "completed": "2026-09-24",
-      "note": "COD-NUCLEAR-COOLING-001: nuclear_decay_heat_cooling_system drives ThermalComponent after diesel Failed; NuclearCoolingDegradedEvent + Crit alert; meltdown_threshold_reached flag only \u2014 P3 deferred; WIT-HON pass"
+      "note": "COD-NUCLEAR-COOLING-001: nuclear_decay_heat_cooling_system drives ThermalComponent after diesel Failed; NuclearCoolingDegradedEvent + Crit alert; meltdown_threshold_reached flag only — P3 deferred; WIT-HON pass"
     },
     {
       "seq": 9,
@@ -207,7 +207,7 @@
         "INDUSTRIAL-I2-03"
       ],
       "completed": "2026-09-23",
-      "note": "LOG-A-AUTHORITY: sole GraphSync writer sync_logistics_graph_from_transport; removed attach_portal_nodes dual-writer API; witness.derived_logistics_graph + topology_revision green \u00b7 residual play/harness one-shot seeds use same rebuild then GraphSync replaces"
+      "note": "LOG-A-AUTHORITY: sole GraphSync writer sync_logistics_graph_from_transport; removed attach_portal_nodes dual-writer API; witness.derived_logistics_graph + topology_revision green · residual play/harness one-shot seeds use same rebuild then GraphSync replaces"
     },
     {
       "seq": 10,
@@ -221,9 +221,9 @@
         "LOG-A-01"
       ],
       "witness": "debug_runs/logistics_throughput_live.json",
-      "exit_predicate": "cut road \u2192 path_open false after refresh",
+      "exit_predicate": "cut road → path_open false after refresh",
       "completed": "2026-09-23",
-      "note": "LOG-A-04: link_supply_chain path_open starts false; refresh_resource_flow_routes_system from TransportNavExport; test log_a_04_cut_road_sets_path_open_false_after_refresh; witness.path_open_from_nav + routes_open\u22651 green"
+      "note": "LOG-A-04: link_supply_chain path_open starts false; refresh_resource_flow_routes_system from TransportNavExport; test log_a_04_cut_road_sets_path_open_false_after_refresh; witness.path_open_from_nav + routes_open≥1 green"
     },
     {
       "seq": 11,
@@ -239,7 +239,7 @@
       "witness": "debug_runs/logistics_throughput_live.json",
       "exit_predicate": "transfer test uses ledger arrivals only",
       "completed": "2026-09-24",
-      "note": "LOG-B-02: advance_lot_progress on remaining_ticks; RouteHandle from RouteCache; test log_b_02_in_transit_ledger_uses_route_handle_and_progress; witness.in_transit_ledger true \u00b7 throughput_green"
+      "note": "LOG-B-02: advance_lot_progress on remaining_ticks; RouteHandle from RouteCache; test log_b_02_in_transit_ledger_uses_route_handle_and_progress; witness.in_transit_ledger true · throughput_green"
     },
     {
       "seq": 12,
@@ -255,7 +255,7 @@
       "witness": "debug_runs/logistics_throughput_live.json",
       "exit_predicate": "reserved <= capacity invariant",
       "completed": "2026-09-24",
-      "note": "LOG-C-01: FreightReservationBook + SoA load/capacity/reserved/pressure; reserved<=capacity + book_matches_soa; witness.soa_throughput_solver + freight_reservations green \u00b7 logistics_throughput_live.json"
+      "note": "LOG-C-01: FreightReservationBook + SoA load/capacity/reserved/pressure; reserved<=capacity + book_matches_soa; witness.soa_throughput_solver + freight_reservations green · logistics_throughput_live.json"
     },
     {
       "seq": 13,
@@ -264,7 +264,7 @@
       "status": "done",
       "priority": "P2",
       "owner": "coder",
-      "goal": "Reconcile SET-P5 books vs live gameplay gaps (placement \u2192 block assignment)",
+      "goal": "Reconcile SET-P5 books vs live gameplay gaps (placement → block assignment)",
       "plan": "src/dev/plan_settlement_hierarchy_exec_005_v1.md",
       "witness": "debug_runs/settlement_hierarchy_gap_live.json",
       "exit_predicate": "settlement overlay hydrate + tile_to_block live",
@@ -273,7 +273,7 @@
         "TRADE-FLOW-GEOGRAPHY"
       ],
       "completed": "2026-09-24",
-      "note": "SET-P5-HIERARCHY-GAP: seed_settlement_books_if_empty on Startup; write_settlement_overlay_on_save_flush + try_hydrate_settlement_books_on_bundle_dir wired; placement\u2192tile_to_block + overlay hydrate live; WIT-HON pass"
+      "note": "SET-P5-HIERARCHY-GAP: seed_settlement_books_if_empty on Startup; write_settlement_overlay_on_save_flush + try_hydrate_settlement_books_on_bundle_dir wired; placement→tile_to_block + overlay hydrate live; WIT-HON pass"
     },
     {
       "seq": 14,
@@ -282,11 +282,11 @@
       "status": "done",
       "priority": "P2",
       "owner": "coder",
-      "goal": "Stage7 behavioral residual \u2014 strategic agent gameplay not HUD",
+      "goal": "Stage7 behavioral residual — strategic agent gameplay not HUD",
       "witness": "debug_runs/stage7_behavioral_live.json",
       "exit_predicate": "behavioral counters non-zero under lib harness",
       "completed": "2026-09-24",
-      "note": "STAGE7-BEHAVIORAL-GAP: s7b_m4_play_remedy refreshed play+behavioral; pending_dispatch_count=3, recon=100, logistics_stress=18; s7b_m1..m4 + s7b_steward_green true; WIT-HON pass"
+      "note": "STAGE7-BEHAVIORAL-GAP: refreshed 2026-09-24 via prebuilt proc_A_dine01-6237140a6309b92d.exe s7b_m4_play_remedy_001 + s7b_steward_001; s7p_play_witness_ok/s7b_m1/s7b_steward/s7b_m4_play_green true; pending_dispatch_count=1; WIT-HON pass"
     },
     {
       "seq": 15,
@@ -295,7 +295,7 @@
       "status": "done",
       "priority": "P1",
       "owner": "coder",
-      "goal": "Mine\u2192refinery\u2192smelter geography; cut road starves smelter",
+      "goal": "Mine→refinery→smelter geography; cut road starves smelter",
       "depends_on": [
         "LOG-A-04",
         "INDUSTRIAL-I2-03"
@@ -311,7 +311,7 @@
         "COD-POWER-ISLAND-HIGHLIGHT"
       ],
       "completed": "2026-09-24",
-      "note": "ResourceFlowEdge.path_open cut \u2192 smelter FacilityFlowState.starved + efficiency drop; I2-07 starvation_cascade gated on live witness \u00b7 LOG-A-04 residual (TransportNavExport\u2192path_open)"
+      "note": "ResourceFlowEdge.path_open cut → smelter FacilityFlowState.starved + efficiency drop; I2-07 starvation_cascade gated on live witness · LOG-A-04 residual (TransportNavExport→path_open)"
     },
     {
       "seq": 16,
@@ -363,7 +363,7 @@
       "witness": "debug_runs/fire_ecology_live.json",
       "exit_predicate": "f1_green==true",
       "completed": "2026-09-24",
-      "note": "Gate chunk veg was Default canopy/understory (passed MIN_WILDLAND); fixed to near-empty strata so fuel_gated_spark_cells/chunks_fuel_gated non-zero \u00b7 f1_green true \u00b7 WIT-HON pass"
+      "note": "Gate chunk veg was Default canopy/understory (passed MIN_WILDLAND); fixed to near-empty strata so fuel_gated_spark_cells/chunks_fuel_gated non-zero · f1_green true · WIT-HON pass"
     },
     {
       "seq": 19,
@@ -397,7 +397,7 @@
       "witness": "debug_runs/effects_system_es6_live.json",
       "exit_predicate": "residual drops ES-6-2",
       "completed": "2026-09-24",
-      "note": "field\u2192L0 fold after WindAdvect \u00b7 sample_tactical_smoke prefers L0 \u00b7 es_6_2_field_l0_shim true \u00b7 residual ES-6-3"
+      "note": "field→L0 fold after WindAdvect · sample_tactical_smoke prefers L0 · es_6_2_field_l0_shim true · residual ES-6-3"
     },
     {
       "seq": 21,
@@ -449,7 +449,7 @@
       "status": "done",
       "priority": "P2",
       "owner": "coder",
-      "goal": "Async district solve scaffold \u2014 apply reservations main thread only",
+      "goal": "Async district solve scaffold — apply reservations main thread only",
       "depends_on": [
         "LOG-C-01"
       ],
@@ -462,7 +462,7 @@
       "witness": "debug_runs/logistics_throughput_live.json",
       "exit_predicate": "async_district_solve true; job posts + applies next frame; no off-thread field mutate",
       "completed": "2026-09-24",
-      "note": "LOG-D-04: enqueue_async_district_solve\u2192staging\u2192promote\u2192apply_async main-thread only; saw_async_district_solve sticky; open_todos 1\u21920 throughput_green; WIT-HON pass"
+      "note": "LOG-D-04: enqueue_async_district_solve→staging→promote→apply_async main-thread only; saw_async_district_solve sticky; open_todos 1→0 throughput_green; WIT-HON pass"
     },
     {
       "seq": 24,
@@ -488,7 +488,7 @@
       "exit_predicate": "es_6_3a_field_readers_l0==true AND debt_006_delete_safe==false; residual ES-6-3b",
       "completed": "2026-09-24",
       "note": "Readers prefer sample_tactical_smoke/visibility L0; writers still ES-6-2 shim; bridge_legacy retained; next ES-6-3b DELETE only when debt_006_delete_safe",
-      "follow_on": "ES-6-3b-DELETE-bridge_legacy \u2192 @sim-steward attach cleanup packet"
+      "follow_on": "ES-6-3b-DELETE-bridge_legacy → @sim-steward attach cleanup packet"
     },
     {
       "seq": 24.5,
@@ -532,12 +532,160 @@
       "blocks": [],
       "completed": "2026-09-24",
       "note": "apply_containment_breach_radiation_hook_system sole breach writer for slab radiation; seed=1.0; WIT-HON pass nuclear_meltdown_live.json"
+    },
+    {
+      "seq": 26,
+      "domain": "systems",
+      "id": "INDUSTRIAL-I3-02",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "grid_overload_hook live seed — UtilityConnection on IND-E03 overload cluster + industrial_activation_live witness green",
+      "code_paths": [
+        "src/economy/activation/concrete_chain_e2e.rs",
+        "src/economy/activation/witness_collectors.rs",
+        "src/dev/industrial_i3_02_grid_overload_live_proof.rs"
+      ],
+      "witness": "debug_runs/industrial_activation_live.json",
+      "exit_predicate": "grid_overload_hook==true AND industrial_i3_02_green==true AND open_todos==0 AND overload_events_total>=1",
+      "parallel_ok": true,
+      "blocks": [],
+      "completed": "2026-09-24",
+      "note": "spawn_ind_e03_grid_overload_cluster adds UtilityConnection::power(connected); refresh_industrial_i3_02_grid_overload_live_witness; stage7_play_live S7P residual closed 2026-09-24"
+    },
+    {
+      "seq": 27,
+      "domain": "systems",
+      "id": "DEBT-010-WRITERS-L0",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "DEBT-010 retire AtmosphereField smoke writers (update/advect) onto clipmap L0; Field retained class B multi-channel fold/mirror",
+      "depends_on": [
+        "ES-6-3b-DELETE-bridge_legacy"
+      ],
+      "code_paths": [
+        "src/systems/atmosphere/update.rs",
+        "src/systems/atmosphere/advect.rs",
+        "src/systems/atmosphere/field_l0_shim.rs",
+        "src/substrate/atmosphere/clipmap_advect.rs",
+        "src/dev/effects_system_es6_live_proof.rs"
+      ],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "debt_010_writers_l0==true AND field_cleanup_class==B_transitional AND residual includes DEBT-010b",
+      "completed": "2026-09-24",
+      "note": "FieldFill/WindAdvect write L0; Field smoke mirrored from L0; particles use fire_vfx ¬Field; residual DEBT-010b + DEBT-011",
+      "follow_on": "DEBT-010b-TOXICITY-FOG-L0"
+    },
+    {
+      "seq": 28,
+      "domain": "systems",
+      "id": "DEBT-010b-TOXICITY-FOG-L0",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "DEBT-010b migrate toxicity/fog to clipmap L0 + chunk_smoke L0 pull; AtmosphereField retained class B (ash/ember/heat + GPU)",
+      "depends_on": [
+        "DEBT-010-WRITERS-L0"
+      ],
+      "code_paths": [
+        "src/substrate/atmosphere/mod.rs",
+        "src/substrate/atmosphere/clipmap_advect.rs",
+        "src/systems/atmosphere/update.rs",
+        "src/systems/atmosphere/advect.rs",
+        "src/systems/atmosphere/field.rs",
+        "src/systems/fire/chunk_smoke_field.rs",
+        "src/io/save/atmosphere_clipmap_overlay.rs",
+        "src/dev/effects_system_es6_live_proof.rs"
+      ],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "debt_010b_toxicity_fog_l0==true AND chunk_smoke_l0_pull==true AND field_delete_blocked==true AND residual includes DEBT-010c",
+      "completed": "2026-09-24",
+      "note": "L0 fog/toxicity lanes + chunk_smoke L0 pull; Field NOT deleted (ash/ember/heat + GPU consumers); residual DEBT-010c + DEBT-011",
+      "follow_on": "DEBT-010c delete Field after ash/ember/heat clipmap + GPU field consumers L0"
+    },
+    {
+      "seq": 29,
+      "domain": "systems",
+      "id": "DEBT-010c-ASH-EMBER-HEAT-L0",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "DEBT-010c migrate ash/ember/heat (+ GPU field consumers) onto clipmap L0; AtmosphereField retained class B mirror/API until DEBT-011",
+      "depends_on": [
+        "DEBT-010b-TOXICITY-FOG-L0"
+      ],
+      "code_paths": [
+        "src/substrate/atmosphere/mod.rs",
+        "src/substrate/atmosphere/clipmap_advect.rs",
+        "src/systems/atmosphere/update.rs",
+        "src/systems/atmosphere/advect.rs",
+        "src/systems/atmosphere/field.rs",
+        "src/io/save/atmosphere_clipmap_overlay.rs",
+        "src/dev/effects_system_es6_live_proof.rs"
+      ],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "debt_010c_ash_ember_heat_l0==true AND gpu_field_consumers_on_l0==true AND field_delete_blocked==true AND residual includes DEBT-011",
+      "completed": "2026-09-24",
+      "note": "L0 ash/ember/heat + GPU projection-owned; Field NOT deleted (mirror/API); residual DEBT-011",
+      "follow_on": "DEBT-011 unify ChunkSmoke + Field mirror + GPU smoke extract — then delete AtmosphereField"
+    },
+    {
+      "seq": 30,
+      "domain": "systems",
+      "id": "DEBT-011-SMOKE-UNIFY-FIELD-DELETE",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "DEBT-011 unify ChunkSmoke + Field mirror + GPU smoke extract; delete AtmosphereField",
+      "depends_on": [
+        "DEBT-010c-ASH-EMBER-HEAT-L0"
+      ],
+      "code_paths": [
+        "src/systems/atmosphere/field.rs",
+        "src/systems/atmosphere/update.rs",
+        "src/systems/atmosphere/advect.rs",
+        "src/systems/atmosphere/visual_extract.rs",
+        "src/systems/atmosphere/coupling.rs",
+        "src/systems/atmosphere/visibility.rs",
+        "src/systems/fire/chunk_smoke_field.rs",
+        "src/substrate/atmosphere/clipmap_advect.rs",
+        "src/dev/effects_system_es6_live_proof.rs"
+      ],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "debt_011_smoke_unified==true AND field_deleted==true AND field_delete_blocked==false AND residual includes DEBT-012",
+      "completed": "2026-09-24",
+      "note": "L0→ChunkSmoke→SimChunkSmokeVisualExtract; AtmosphereField deleted; atmos_chunk_to_tile + AtmosphereCell retained; residual DEBT-012",
+      "follow_on": "DEBT-012 optional AtmosphereCell overlay retire if overlays go L0-direct"
+    },
+    {
+      "seq": 31,
+      "domain": "systems",
+      "id": "DEBT-012-ATMOS-CELL-OVERLAY",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder",
+      "goal": "DEBT-012 classify AtmosphereCell overlay sample — delete only if overlays L0-direct",
+      "depends_on": [
+        "DEBT-011-SMOKE-UNIFY-FIELD-DELETE"
+      ],
+      "code_paths": [
+        "src/systems/atmosphere/field.rs",
+        "src/systems/atmosphere/overlays.rs",
+        "src/systems/atmosphere/coupling.rs",
+        "src/dev/effects_system_es6_live_proof.rs"
+      ],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "debt_012_cell_action==kept AND overlays_l0_direct==false AND cleanup_class==C_dormant_kept AND residual excludes DEBT-012 AND atmos_lane_drain==idle",
+      "completed": "2026-09-24",
+      "note": "Class C dormant — AtmosphereCell kept as overlay/logistics sample DTO; overlays not L0-direct; DELETE-GATE fail",
+      "follow_on": "none — atmos lane drain idle until overlays_l0_direct unblock"
     }
   ],
   "dispatch_now": {
-    "coder": "COD-NUCLEAR-WSS-FALLOUT-001 \u2605done \u00b7 ES-6-3b \u2605done \u00b7 residual DEBT-010 AtmosphereField writers",
-    "sim-steward": "ES-6-3b-DELETE-bridge_legacy \u2605done \u00b7 debt_006_delete_safe true \u00b7 cleanup A_obsolete_deleted",
-    "coder_parallel": "\u00actouch ES-6 bridge (deleted) \u00b7 DEBT-010 field retirement separate",
-    "note": "ES-6-3b closed 2026-09-24 \u00b7 effects_system_es6_live.json debt_006_delete_safe + DEBT-010 residual"
+    "coder": "DEBT-012 ★kept (C dormant) · atmos drain idle",
+    "sim-steward": "ES-6 / DEBT-010…012 ★done · Field A_obsolete · Cell C_dormant_kept",
+    "coder_parallel": "stage7_behavioral ★done · atmos lane idle",
+    "note": "DEBT-012 closed 2026-09-24 · cell kept · overlays_l0_direct false · drain idle"
   }
 }

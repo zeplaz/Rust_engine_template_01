@@ -48,23 +48,24 @@ def test_refresh_onboard_witness() -> None:
 
 # --- P5.6 first-run content (real, not just the seen-flag) ---
 
-EXPECTED_STEP_NAMES = ("Catalog", "Materials", "Assembly", "Variants", "Atlas")
+EXPECTED_STEP_NAMES = ("Catalog", "Materials", "Effects", "Assembly", "Variants", "Atlas")
 
 
-def test_onboarding_greeting_covers_five_named_steps() -> None:
+def test_onboarding_greeting_covers_six_named_steps() -> None:
     names = tuple(name for name, _blurb in ONBOARDING_STEPS)
     assert names == EXPECTED_STEP_NAMES
     lines = onboarding_greeting_lines()
     # Title + intro + one line per step.
     assert len(lines) == 2 + len(EXPECTED_STEP_NAMES)
     assert lines[0] == "How this works"
+    assert "Six steps" in lines[1]
     body = "\n".join(lines)
     for i, name in enumerate(EXPECTED_STEP_NAMES, start=1):
         assert f"{i}. {name} —" in body
 
 
 def test_empty_states_exist_for_primary_surfaces() -> None:
-    for surface in ("catalog", "materials", "assembly", "variants", "atlas"):
+    for surface in ("catalog", "materials", "effects", "assembly", "variants", "atlas"):
         text = empty_state_text(surface)
         assert text and text in EMPTY_STATES.values()
     # The assembly empty state matches the plan's example phrasing.
@@ -73,7 +74,7 @@ def test_empty_states_exist_for_primary_surfaces() -> None:
 
 @pytest.mark.aps_gui
 def test_onboarding_panel_renders_title_steps_and_dismiss(tk_root) -> None:
-    """The first-run card renders the title, all 5 step names, and a working dismiss."""
+    """The first-run card renders the title, all 6 step names, and a working dismiss."""
     from art_pipeline_suite.aps_onboarding_panel import OnboardingPanel
 
     dismissed = {"v": False}

@@ -64,14 +64,23 @@ def test_index_all_kit_greybox_marked_smoke():
         assert row["pbr_status"] == "none"
 
 
-def test_index_kit_lod0_001_entries():
+def test_index_kit_lod0_001_entries_retired():
+    """BQ-LOD0-TWIN-PRUNE-001 — lod0 twins leave the active index (archive quarantine)."""
     library.write_module_index()
     rows = library.search_modules(batch_id="kit_lod0_001")
-    assert len(rows) == 5
-    for row in rows:
-        assert row["development_tier"] == "lod0"
-        assert row["stylepack_visible"] is True
-        assert row["job_id"] in library.KIT_LOD0_001_JOB_IDS
+    assert rows == []
+    data = json.loads(
+        (repo_root() / "assets/configs/buildings/_module_index.json").read_text(encoding="utf-8")
+    )
+    lod0 = [e for e in data["entries"] if e.get("development_tier") == "lod0"]
+    assert lod0 == []
+    archive = (
+        repo_root()
+        / "assets/archive/kit_lod0_twins_retired_2026-09/modules"
+        / "wall_brick_1u_lod0_run001"
+    )
+    # Idempotent: either already archived by prune gate, or still pending a first run.
+    assert archive.is_dir() or (repo_root() / "assets/models/modules/wall_brick_1u_lod0_run001").is_dir()
 
 
 def test_replaced_by_on_superseded_smoke_rows():

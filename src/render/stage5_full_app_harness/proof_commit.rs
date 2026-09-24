@@ -191,7 +191,14 @@ pub(crate) fn finalize_visual_full_app_live_probe(
             proof_reads.water_particles.as_deref(),
             proof_reads.projection.as_deref(),
         );
-        if !gates.all_green_for_visual_proof(true) {
+        if !gates.all_green_for_visual_proof(
+            true,
+            proof_reads
+                .rtt_overlay_host
+                .as_ref()
+                .map(|s| s.host_present)
+                .unwrap_or(false),
+        ) {
             if state.frames_since_capture < VISUAL_PROBE_TACTICAL_VFX_MAX_FRAMES {
                 if state.frames_since_capture == 1 || state.frames_since_capture % 30 == 0 {
                     info!(

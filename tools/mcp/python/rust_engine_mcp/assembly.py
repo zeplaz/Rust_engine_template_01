@@ -19,6 +19,25 @@ STYLE_PACKS_DIR = "assets/configs/buildings/style_packs"
 SNAPSHOT_STAGING = "assets/staging/assemblies"
 RULES_VERSION = "pg2_wdc_v1"
 GRAMMAR_RULES_VERSION = "building_grammar_v1"
+# BQ-C1 / Building Look v2 — must match module_contract_v1 + Rust GRID_UNIT_M / FLOOR_HEIGHT_M.
+GRID_UNIT_M = 4.0
+FLOOR_HEIGHT_M = 3.0
+# Authored full-footprint roof kits (metal_low / pitched_gable) are 8×16 m = 2×4 cells.
+ROOF_AUTHOR_SHORT_M = 8.0
+ROOF_AUTHOR_LONG_M = 16.0
+
+
+def full_footprint_roof_scale(width: int, depth: int) -> list[float]:
+    """Non-uniform XY scale so 8×16 authored roofs cover arbitrary footprints.
+
+    Mesh local X = short axis, Z = long axis; yaw π/2 when width≥depth maps
+    long→street X. Scale is applied in mesh local space before rotation.
+    """
+    short_cells = max(1, min(int(width), int(depth)))
+    long_cells = max(1, max(int(width), int(depth)))
+    sx = (short_cells * GRID_UNIT_M) / ROOF_AUTHOR_SHORT_M
+    sz = (long_cells * GRID_UNIT_M) / ROOF_AUTHOR_LONG_M
+    return [sx, 1.0, sz]
 
 
 def _style_packs_dir() -> Path:
@@ -66,9 +85,9 @@ def list_style_packs() -> list[str]:
 def _index_by_module_id(
     index: list[dict[str, Any]],
     *,
-    prefer_tier: str = "lod0",
+    prefer_tier: str = "production",
 ) -> dict[str, dict[str, Any]]:
-    """Prefer lod0_run* or production_run* rows when duplicate module_id keys exist."""
+    """Prefer production_run* (default) or lod0_run* rows when duplicate module_id keys exist."""
     out: dict[str, dict[str, Any]] = {}
     for row in index:
         mid = str(row["module_id"])
@@ -129,12 +148,21 @@ def _resolve_module_row(
     pool = pack_rows if pack_rows else rows
 
     if source_tier == "production":
+        # Prefer same-pack production, then any-pack production, then same-pack lod0.
+        # Never prefer same-pack lod0 over cross-pack production (KF-4 / BQ-PROD-DEFER-PACKS-001).
         for row in pool:
             tier = str(row.get("development_tier") or "")
             batch = str(row.get("batch_id") or "")
             if tier == "production" or batch.startswith(("kit_production", "kit_industrial_west_production")):
                 if _row_glb_ready(row):
                     return row
+        if pack_rows:
+            for row in rows:
+                tier = str(row.get("development_tier") or "")
+                batch = str(row.get("batch_id") or "")
+                if tier == "production" or batch.startswith(("kit_production", "kit_industrial_west_production")):
+                    if _row_glb_ready(row):
+                        return row
         for row in pool:
             job = str(row.get("job_id") or "")
             if "lod0" in job and _row_glb_ready(row):
@@ -251,7 +279,7 @@ def explain_module_resolve(
     }
 
 
-FootprintToken = str  # W | D | C | R
+FootprintToken = str  # W | D | C | R | O (opening/window)
 
 
 def _is_perimeter(x: int, y: int, width: int, depth: int) -> bool:
@@ -260,6 +288,57 @@ def _is_perimeter(x: int, y: int, width: int, depth: int) -> bool:
 
 def _is_corner(x: int, y: int, width: int, depth: int) -> bool:
     return (x == 0 or x + 1 == width) and (y == 0 or y + 1 == depth)
+
+
+def exterior_faces(x: int, y: int, width: int, depth: int) -> list[str]:
+    """Cardinal exterior edges this perimeter cell sits on (S/N/W/E).
+
+    Corners return *two* faces so dual wall placements close the envelope —
+    diagonal single-yaw corners left diamond bay gaps / skeletal pierces on depth=2.
+    """
+    faces: list[str] = []
+    if y == 0:
+        faces.append("S")
+    if y + 1 == depth:
+        faces.append("N")
+    if x == 0:
+        faces.append("W")
+    if x + 1 == width:
+        faces.append("E")
+    return faces
+
+
+def outward_yaw_for_face(face: str) -> float:
+    """Yaw about +Y for a cardinal face (default module normal glTF −Z)."""
+    import math
+
+    key = str(face or "S").upper()
+    if key == "N":
+        return math.pi
+    if key == "W":
+        return math.pi / 2.0
+    if key == "E":
+        return -math.pi / 2.0
+    return 0.0  # S
+
+
+def outward_yaw_rad(x: int, y: int, width: int, depth: int) -> float:
+    """Yaw about +Y so the module face points off the footprint (Building Look v2).
+
+    After BUILDING-LOOK-V2-ART Z-up authorship + export_yup, wall face normals default
+    to glTF −Z (Blender +Y → −Z). South edge (y=0) therefore uses yaw 0.
+
+    When a cell has multiple exterior faces (corner), prefer street/south then
+    north — callers that need a closed envelope should place one module per face
+    via ``exterior_faces`` + ``outward_yaw_for_face``.
+    """
+    faces = exterior_faces(x, y, width, depth)
+    if not faces:
+        return 0.0
+    for prefer in ("S", "N", "W", "E"):
+        if prefer in faces:
+            return outward_yaw_for_face(prefer)
+    return outward_yaw_for_face(faces[0])
 
 
 def footprint_grid(width: int, depth: int, floors: int) -> list[dict[str, Any]]:
@@ -274,19 +353,51 @@ def footprint_grid(width: int, depth: int, floors: int) -> list[dict[str, Any]]:
             for x in range(width):
                 if not _is_perimeter(x, y, width, depth):
                     continue
-                if _is_corner(x, y, width, depth):
-                    token: FootprintToken = "C"
-                elif floor == 0 and y == 0 and x == door_x:
-                    token = "D"
-                else:
-                    token = "W"
-                cells.append({"x": x, "y": y, "floor": floor, "token": token})
+                faces = exterior_faces(x, y, width, depth)
+                # Dual-face corners: one bay per cardinal edge (closes gaps / pierces).
+                for face in faces:
+                    if face == "S":
+                        if floor == 0 and x == door_x:
+                            token = "D"
+                        elif x != door_x or floor > 0:
+                            # Street openings — ground non-door + all upper (readable at distance).
+                            token = "O"
+                        else:
+                            token = "W"
+                    elif face == "N":
+                        # Soft openings on north — iso_ne QC camera sees N/E, not only street S.
+                        if x != door_x or floor > 0:
+                            token = "O"
+                        else:
+                            token = "W"
+                    elif face in ("E", "W") and y == (depth // 2):
+                        # Mid long-face window band — reads from iso_se / side views.
+                        token = "O"
+                    else:
+                        token = "W"
+                    cells.append(
+                        {
+                            "x": x,
+                            "y": y,
+                            "floor": floor,
+                            "token": token,
+                            "face": face,
+                        }
+                    )
 
+    # Roof seat: ONE full-footprint module at plan center — per-bay gable caps
+    # read as sawtooth collage (Look v2). Mesh authored 8×16 (4×2); larger footprints scale.
     roof_floor = floors
-    for y in range(depth):
-        for x in range(width):
-            if _is_perimeter(x, y, width, depth):
-                cells.append({"x": x, "y": y, "floor": roof_floor, "token": "R"})
+    cells.append(
+        {
+            "x": max(0, width // 2),
+            "y": max(0, (depth - 1) // 2),
+            "floor": roof_floor,
+            "token": "R",
+            "face": "R",
+            "roof_mode": "full_footprint",
+        }
+    )
     return cells
 
 
@@ -295,6 +406,7 @@ SLOT_FOR_TOKEN = {
     "D": "door_default",
     "C": "corner_outer",
     "R": "roof_default",
+    "O": "window_1u",
 }
 
 # ARCH-003 — default placement tags by footprint token (APS Assembly Editor checkboxes).
@@ -303,6 +415,7 @@ TOKEN_PLACEMENT_TAGS: dict[str, list[str]] = {
     "D": ["exterior", "door"],
     "C": ["exterior", "corner"],
     "R": ["exterior", "roof"],
+    "O": ["exterior", "window_band"],
 }
 
 COMMON_PLACEMENT_TAGS = (
@@ -331,6 +444,9 @@ def placement_node_id(placement: dict[str, Any]) -> str:
     gx = int(placement.get("grid_x") or 0)
     gy = int(placement.get("grid_y") or 0)
     fl = int(placement.get("floor") or 0)
+    face = str(placement.get("face") or "").upper()
+    if face and face != "R":
+        return f"{mid}_{gx}_{gy}_f{fl}_{face}"
     return f"{mid}_{gx}_{gy}_f{fl}"
 
 
@@ -351,7 +467,7 @@ def _default_lod_policy(row: dict[str, Any], source_tier: str) -> str:
 def enrich_placement(
     placement: dict[str, Any],
     *,
-    source_tier: str = "lod0",
+    source_tier: str = "production",
     index_row: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
     """ARCH-003 — ensure node_id, material_profile, tags, lod_policy on one placement."""
@@ -378,7 +494,7 @@ def enrich_placement(
 
 def enrich_snapshot(snapshot: dict[str, Any]) -> dict[str, Any]:
     """Apply ARCH-003 fields to all placements (idempotent)."""
-    tier = str(snapshot.get("source_tier") or "lod0")
+    tier = str(snapshot.get("source_tier") or "production")
     index = load_index_json()
     index_by_id = _index_by_module_id(
         index, prefer_tier="production" if tier == "production" else "lod0"
@@ -491,7 +607,7 @@ def update_placement(
         if module_id is not None:
             row["module_id"] = module_id
             style_pack = str(out.get("style_pack_id") or "")
-            tier = str(out.get("source_tier") or "lod0")
+            tier = str(out.get("source_tier") or "production")
             mod_row = _resolve_module_row(
                 module_id,
                 load_index_json(),
@@ -512,7 +628,7 @@ def update_placement(
             else:
                 row.pop("glb_path", None)
                 row.pop("job_id", None)
-        placements.append(enrich_placement(row, source_tier=str(out.get("source_tier") or "lod0")))
+        placements.append(enrich_placement(row, source_tier=str(out.get("source_tier") or "production")))
     if not found:
         raise KeyError(f"placement node_id not found: {node_id}")
     out["module_placements"] = placements
@@ -521,8 +637,78 @@ def update_placement(
 
 
 def _grid_to_position(x: int, y: int, floor: int) -> list[float]:
-    """1m grid snap — south edge y=0, floor height 3m."""
-    return [float(x), float(floor * 3.0), float(y)]
+    """World metres — cell × GRID_UNIT_M (4), floor × FLOOR_HEIGHT_M (3). South edge y=0."""
+    return [
+        float(x) * GRID_UNIT_M,
+        float(floor) * FLOOR_HEIGHT_M,
+        float(y) * GRID_UNIT_M,
+    ]
+
+
+def _wall_position(x: int, y: int, floor: int, face: str) -> list[float]:
+    """Seat wall on the exterior edge of the cell (closes envelope; avoids center-pier look)."""
+    pos = _grid_to_position(x, y, floor)
+    half = GRID_UNIT_M * 0.5
+    key = str(face or "").upper()
+    if key == "S":
+        pos[2] -= half
+    elif key == "N":
+        pos[2] += half
+    elif key == "W":
+        pos[0] -= half
+    elif key == "E":
+        pos[0] += half
+    return pos
+
+
+def _roof_position(width: int, depth: int, floor: int) -> list[float]:
+    """Center of footprint plan — single continuous roof seat."""
+    return [
+        (max(width, 1) - 1) * GRID_UNIT_M * 0.5,
+        float(floor) * FLOOR_HEIGHT_M,
+        (max(depth, 1) - 1) * GRID_UNIT_M * 0.5,
+    ]
+
+
+def _rotation_for_cell(
+    token: str,
+    x: int,
+    y: int,
+    width: int,
+    depth: int,
+    *,
+    face: str | None = None,
+) -> list[float]:
+    """Euler XYZ radians. Roofs stay axis-aligned; walls/doors/openings yaw per face."""
+    if token == "R":
+        return [0.0, 0.0, 0.0]
+    if face and str(face).upper() in ("S", "N", "W", "E"):
+        return [0.0, outward_yaw_for_face(str(face)), 0.0]
+    return [0.0, outward_yaw_rad(x, y, width, depth), 0.0]
+
+
+def _module_width_cells(row: dict[str, Any] | None) -> int:
+    """Grid cells spanned along X by a roof/wall module (≥1). 2u roofs → stride-2 ridge."""
+    if not row:
+        return 1
+    for key in ("footprint_w", "grid_w", "width_cells"):
+        if row.get(key) is not None:
+            return max(1, int(row[key]))
+    job_id = str(row.get("job_id") or "")
+    if job_id:
+        job_path = repo_root() / "tools/mcp/schemas/examples" / f"{job_id}.json"
+        if job_path.is_file():
+            try:
+                job = json.loads(job_path.read_text(encoding="utf-8"))
+                wm = (job.get("params") or {}).get("width_m")
+                if wm is not None:
+                    return max(1, int(round(float(wm) / GRID_UNIT_M)))
+            except (OSError, json.JSONDecodeError, TypeError, ValueError):
+                pass
+    mid = str(row.get("module_id") or job_id or "")
+    if "_2u" in mid or mid.endswith("2u"):
+        return 2
+    return 1
 
 
 def _assembly_id(style_pack_id: str, width: int, depth: int, floors: int, seed: int) -> str:
@@ -588,6 +774,8 @@ def _placement_for_cell(
     source_tier: str,
     default_placement_tags: list[str],
     default_variant_tags: list[str],
+    footprint_width: int,
+    footprint_depth: int,
 ) -> dict[str, Any] | None:
     from . import building_grammar
 
@@ -599,6 +787,11 @@ def _placement_for_cell(
         return None
     slot_key = slot_overrides.get(slot_key, slot_key)
     module_id = pack["slots"].get(slot_key)
+    # Window slot hole → solid wall (still an envelope; style kit fill is separate art work).
+    if not module_id and token == "O":
+        token = "W"
+        slot_key = slot_overrides.get("wall_1u", "wall_1u")
+        module_id = pack["slots"].get(slot_key)
     if not module_id:
         return None
     row = _resolve_module_row(
@@ -613,6 +806,32 @@ def _placement_for_cell(
     if not glb.is_file():
         return None
     gx, gy, gf = int(cell["x"]), int(cell["y"]), int(cell["floor"])
+    face = str(cell.get("face") or "")
+    if token == "R":
+        span = _module_width_cells(row)
+        if span > 1 and (gx % span) != 0 and str(cell.get("roof_mode") or "") != "full_footprint":
+            return None
+    if token == "R" and str(cell.get("roof_mode") or "") == "full_footprint":
+        position = _roof_position(footprint_width, footprint_depth, gf)
+        # Mesh authored ridge-along-Z; yaw so ridge follows long (X) street axis.
+        rotation = [0.0, 0.0, 0.0]
+        if footprint_width >= footprint_depth:
+            import math
+
+            rotation = [0.0, math.pi / 2.0, 0.0]
+        scale = full_footprint_roof_scale(footprint_width, footprint_depth)
+    elif face and face != "R":
+        position = _wall_position(gx, gy, gf, face)
+        rotation = _rotation_for_cell(
+            token, gx, gy, footprint_width, footprint_depth, face=face
+        )
+        scale = None
+    else:
+        position = _grid_to_position(gx, gy, gf)
+        rotation = _rotation_for_cell(
+            token, gx, gy, footprint_width, footprint_depth, face=face or None
+        )
+        scale = None
     base = {
         "module_id": str(row["module_id"]),
         "job_id": str(row["job_id"]),
@@ -622,9 +841,15 @@ def _placement_for_cell(
         "grid_y": gy,
         "floor": gf,
         "glb_path": str(glb.relative_to(repo_root())).replace("\\", "/"),
-        "position": _grid_to_position(gx, gy, gf),
-        "rotation_euler": [0.0, 0.0, 0.0],
+        "position": position,
+        "rotation_euler": rotation,
     }
+    if scale is not None and (abs(scale[0] - 1.0) > 1e-6 or abs(scale[2] - 1.0) > 1e-6):
+        base["scale"] = scale
+    if face and face != "R":
+        base["face"] = face
+    if str(cell.get("roof_mode") or ""):
+        base["roof_mode"] = str(cell.get("roof_mode"))
     if source_tier == "production" and str(row.get("development_tier") or "") != "production":
         base["mesh_tier_fallback"] = "lod0"
     enriched = enrich_placement(base, source_tier=source_tier, index_row=row)
@@ -657,9 +882,17 @@ def refresh_placements_for_tokens(
     default_placement_tags = list(grammar.get("placement_tags") or [])
     default_variant_tags = list(grammar.get("variant_tags") or ["clean"])
     cells = building_grammar.footprint_grid_from_grammar(grammar)
+    fp = out.get("footprint") or {}
+    fw = int(fp.get("width") or grammar.get("width") or 2)
+    fd = int(fp.get("depth") or grammar.get("depth") or 2)
 
-    def key(p: dict[str, Any]) -> tuple[int, int, int]:
-        return (int(p.get("floor") or 0), int(p.get("grid_x") or 0), int(p.get("grid_y") or 0))
+    def key(p: dict[str, Any]) -> tuple[int, int, int, str]:
+        return (
+            int(p.get("floor") or 0),
+            int(p.get("grid_x") or 0),
+            int(p.get("grid_y") or 0),
+            str(p.get("face") or p.get("token") or ""),
+        )
 
     existing = {key(p): dict(p) for p in out.get("module_placements") or []}
     for cell in cells:
@@ -675,6 +908,8 @@ def refresh_placements_for_tokens(
             source_tier=source_tier,
             default_placement_tags=default_placement_tags,
             default_variant_tags=default_variant_tags,
+            footprint_width=fw,
+            footprint_depth=fd,
         )
         if placement:
             existing[key(placement)] = placement
@@ -691,14 +926,18 @@ def generate_assembly_snapshot(
     depth: int | None = None,
     floors: int | None = None,
     seed: int = 42,
-    source_tier: str = "lod0",
+    source_tier: str = "production",
     reference_tags: list[str] | None = None,
     write: bool = True,
     archetype_id: str | None = None,
     district_style: str | None = None,
     grammar_result: dict[str, Any] | None = None,
 ) -> dict[str, Any]:
-    """Footprint fill from W/D/C grid. When ``archetype_id`` + ``district_style`` set, grammar runs first."""
+    """Footprint fill from W/D/C grid. When ``archetype_id`` + ``district_style`` set, grammar runs first.
+
+    Default ``source_tier=production`` (BQ-ASSEMBLE-PREF-PROD-001) — pass ``lod0`` only for
+    explicit greybox/pilot paths.
+    """
     from . import building_grammar
 
     grammar: dict[str, Any] | None = grammar_result
@@ -739,6 +978,8 @@ def generate_assembly_snapshot(
 
     placements: list[dict[str, Any]] = []
     lod0_fallbacks = 0
+    assert width is not None and depth is not None and floors is not None
+    fw, fd = int(width), int(depth)
 
     for cell in cells:
         token = str(cell["token"])
@@ -749,6 +990,11 @@ def generate_assembly_snapshot(
             continue
         slot_key = slot_overrides.get(slot_key, slot_key)
         module_id = pack["slots"].get(slot_key)
+        use_token = token
+        if not module_id and token == "O":
+            use_token = "W"
+            slot_key = slot_overrides.get("wall_1u", "wall_1u")
+            module_id = pack["slots"].get(slot_key)
         if not module_id:
             continue
         row = _resolve_module_row(
@@ -763,18 +1009,49 @@ def generate_assembly_snapshot(
         if not glb.is_file():
             continue
         gx, gy, gf = int(cell["x"]), int(cell["y"]), int(cell["floor"])
+        face = str(cell.get("face") or "")
+        roof_mode = str(cell.get("roof_mode") or "")
+        # 2u roofs on every bay read as pierce/collage — stride by module span.
+        if use_token == "R" and roof_mode != "full_footprint":
+            span = _module_width_cells(row)
+            if span > 1 and (gx % span) != 0:
+                continue
+        if use_token == "R" and roof_mode == "full_footprint":
+            position = _roof_position(fw, fd, gf)
+            rotation = [0.0, 0.0, 0.0]
+            if fw >= fd:
+                import math
+
+                rotation = [0.0, math.pi / 2.0, 0.0]
+            scale = full_footprint_roof_scale(fw, fd)
+        elif face and face != "R":
+            position = _wall_position(gx, gy, gf, face)
+            rotation = _rotation_for_cell(use_token, gx, gy, fw, fd, face=face)
+            scale = None
+        else:
+            position = _grid_to_position(gx, gy, gf)
+            rotation = _rotation_for_cell(
+                use_token, gx, gy, fw, fd, face=face or None
+            )
+            scale = None
         base = {
             "module_id": str(row["module_id"]),
             "job_id": str(row["job_id"]),
             "slot_key": slot_key,
-            "token": token,
+            "token": use_token,
             "grid_x": gx,
             "grid_y": gy,
             "floor": gf,
             "glb_path": str(glb.relative_to(repo_root())).replace("\\", "/"),
-            "position": _grid_to_position(gx, gy, gf),
-            "rotation_euler": [0.0, 0.0, 0.0],
+            "position": position,
+            "rotation_euler": rotation,
         }
+        if scale is not None and (abs(scale[0] - 1.0) > 1e-6 or abs(scale[2] - 1.0) > 1e-6):
+            base["scale"] = scale
+        if face and face != "R":
+            base["face"] = face
+        if roof_mode:
+            base["roof_mode"] = roof_mode
         if source_tier == "production" and str(row.get("development_tier") or "") != "production":
             base["mesh_tier_fallback"] = "lod0"
             lod0_fallbacks += 1
@@ -799,7 +1076,7 @@ def generate_assembly_snapshot(
         )
 
     assembly_id = _assembly_id(style_pack_id, width, depth, floors, seed)
-    wdc = sum(1 for c in cells if c["token"] in ("W", "D", "C"))
+    wdc = sum(1 for c in cells if c["token"] in ("W", "D", "C", "O"))
 
     snapshot: dict[str, Any] = {
         "schema_version": 1,
@@ -816,6 +1093,17 @@ def generate_assembly_snapshot(
             "wdc_cell_count": wdc,
         },
         "module_placements": placements,
+        "building_look_v2": {
+            "grid_unit_m": GRID_UNIT_M,
+            "floor_height_m": FLOOR_HEIGHT_M,
+            "ridge_row_roof": False,
+            "full_footprint_roof": True,
+            "outward_yaw": True,
+            "corners_as_walls": True,
+            "dual_face_corners": True,
+            "street_openings_ground": True,
+            "wall_edge_offset": True,
+        },
     }
     if lod0_fallbacks:
         snapshot["mesh_tier_fallback_count"] = lod0_fallbacks

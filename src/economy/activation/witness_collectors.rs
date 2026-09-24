@@ -173,7 +173,20 @@ pub fn build_industrial_activation_proof_payload(
             "transformer_catalog": witness.transformer_catalog,
             "transformer_activation": witness.transformer_activation,
             "no_mega_factory_collapse": witness.no_mega_factory_collapse,
+            "manufacturing_core_tick": witness.manufacturing_core_tick,
             "proof_json": true,
+        },
+        "industrial_i2_03": {
+            "gate": "INDUSTRIAL-I2-03",
+            "witness": "debug_runs/industrial_i2_03_register_node_live.json",
+            "register_node_on_activate": witness.register_node_on_activate,
+            "green": witness.register_node_on_activate,
+        },
+        "mfg_03_domain_wire": {
+            "gate": "MFG-03-DOMAIN-WIRE",
+            "witness": "debug_runs/mfg_03_domain_wire_live.json",
+            "manufacturing_core_tick": witness.manufacturing_core_tick,
+            "green": witness.manufacturing_core_tick,
         },
         "governance_violation_count": governance_violations,
         "spatial_district": district.map(|d| serde_json::json!({
@@ -414,6 +427,82 @@ pub fn refresh_ind_e02_default_play_002_live_witness() -> bool {
         body,
     );
     crate::dev::debug_run_envelope::write_debug_run_json(PROOF_PATH, wrapped)
+}
+
+/// **INDUSTRIAL-I3-02 / IND-E03** — live JSON with `grid_overload_hook` + `industrial_i3_02_green`.
+#[must_use]
+pub fn refresh_industrial_i3_02_grid_overload_live_witness() -> bool {
+    use crate::economy::activation::bridge::activate_industrial_facilities_system;
+    use crate::economy::activation::concrete_chain_e2e::{
+        commit_concrete_portland_chain_in_play, fast_forward_portland_chain_sites_to_operational,
+        spawn_ind_e03_grid_overload_cluster, ConcreteChainE2eWitness,
+    };
+    use bevy::ecs::system::RunSystemOnce;
+
+    let _guard = industrial_proof_file_lock();
+    let _ = std::fs::remove_file(proof_output_path());
+    let mut app = assemble_industrial_proof_app();
+    app.add_plugins(crate::construction::SiteStageTickPlugin)
+        .init_resource::<crate::strategic::SiteConstructionBook>()
+        .init_resource::<crate::strategic::SiteIdIssuer>()
+        .add_message::<crate::strategic::CommitConstructionSiteEvent>()
+        .add_systems(
+            Update,
+            (
+                crate::strategic::commit_construction_site_system,
+                fast_forward_portland_chain_sites_to_operational,
+            )
+                .chain()
+                .before(activate_industrial_facilities_system),
+        );
+
+    let origin = crate::strategic::BuildSiteTile { x: 32, z: 32 };
+    let owner = app.world_mut().spawn_empty().id();
+    app.world_mut()
+        .run_system_once(
+            move |mut writer: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
+                  mut witness: ResMut<ConcreteChainE2eWitness>| {
+                commit_concrete_portland_chain_in_play(
+                    &mut writer,
+                    witness.as_mut(),
+                    owner,
+                    origin,
+                );
+            },
+        )
+        .expect("enqueue portland commits for I3-02 proof");
+    app.update();
+    spawn_ind_e03_grid_overload_cluster(
+        &mut app.world_mut().commands(),
+        crate::strategic::BuildSiteTile {
+            x: origin.x.saturating_add(2),
+            z: origin.z.saturating_add(2),
+        },
+    );
+    run_industrial_proof_frames(&mut app, 32);
+
+    let path = proof_output_path();
+    if !path.exists() {
+        return false;
+    }
+    let json: serde_json::Value =
+        serde_json::from_str(&std::fs::read_to_string(&path).expect("read")).expect("parse");
+    json["industrial_i3_02_green"]
+        .as_bool()
+        .unwrap_or(false)
+        && json
+            .pointer("/grid_overload/grid_overload_hook")
+            .and_then(|v| v.as_bool())
+            .unwrap_or(false)
+        && json
+            .pointer("/grid_overload/overload_events_total")
+            .and_then(|v| v.as_u64())
+            .unwrap_or(0)
+            >= 1
+        && app
+            .world()
+            .resource::<crate::dev::IndustrialActivationWitness>()
+            .grid_overload_hook
 }
 
 /// **IND-E02-DEFAULT** — live JSON with `ind_e02_green: true` (construction commit path).

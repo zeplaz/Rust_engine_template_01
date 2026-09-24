@@ -1,0 +1,76 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "profile": "MAIN_THREAD_LOGISTICS_SESSION",
+    "source_system": "main-thread-orchestrator",
+    "relative_path": "debug_runs/main_thread_logistics_session_live.json",
+    "written_at_epoch_secs": 1790260347,
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib log_d_diagnostics_panel",
+      "cargo test -p proc_A_dine01 --lib infra_e5_002"
+    ]
+  },
+  "schema": "main_thread_orchestrator_session_v1",
+  "slice_id": "LOG-D-05+INFRA-E5-002",
+  "ok": true,
+  "green": true,
+  "slices_done": [
+    {
+      "id": "LOG-D-05",
+      "note": "diagnostics panel top saturated edges + starved facilities + last RouteProof; collector system; honest witness fields"
+    },
+    {
+      "id": "INFRA-E5-002",
+      "note": "sticky latch + refreshed live proof infra_e5_002_green=true routes_blocked=0"
+    }
+  ],
+  "witnesses": [
+    "debug_runs/logistics_throughput_live.json"
+  ],
+  "fail_cycle_ledger": {
+    "slice_id": "LOG-D-05",
+    "attempts": [
+      {
+        "cycle": 0,
+        "channel": "Task",
+        "outcome": "skipped",
+        "note": "queues idle — no Task"
+      },
+      {
+        "cycle": 2,
+        "channel": "main-thread-shift-B",
+        "outcome": "yaml_emitted"
+      },
+      {
+        "cycle": 3,
+        "channel": "main-thread-implement",
+        "outcome": "green"
+      }
+    ]
+  },
+  "next_pick": "RGR-M1 honesty closed (green:true mod_rs=1) — next: PLAN-RENDER-PROD-CLEANUP / BQ-SILH-HONEST-001 or operator OPS-F03 (out of this slice)",
+  "blockers": [
+    {
+      "id": "RGR-M1-001",
+      "status": "done",
+      "unblock_when": "n/a — refreshed 2026-09-24 green:true mod_rs_pub_use_count:1",
+      "witness": "debug_runs/rgr_m1_witness_live.json"
+    },
+    {
+      "id": "G-PLAY-OPERATOR-01",
+      "status": "blocked",
+      "unblock_when": "operator checklist",
+      "owner": "operator"
+    },
+    {
+      "id": "OPS-007",
+      "status": "paused",
+      "unblock_when": "Manual keyframe + G4 warehouse"
+    }
+  ],
+  "skipped_out_of_scope": [
+    "assembly_snapshot",
+    "BQ-Q3",
+    "APS operator stills"
+  ]
+}

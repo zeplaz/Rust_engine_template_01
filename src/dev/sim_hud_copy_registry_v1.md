@@ -50,6 +50,31 @@ Single source — context strip, picker, tray, toast — no drift
 | `picker.loading` | `⟳ Loading build catalog…` |
 | `picker.error_catalog` | `✗ Catalog unavailable` |
 | `picker.close` | `Close` |
+| `picker.title.defense` | `Defense` |
+| `picker.defense.lead` | `Poured walls or staged deployables — demolish is separate.` |
+| `picker.defense.section.walls` | `Walls` |
+| `picker.defense.section.trenches` | `Trenches` |
+| `picker.defense.section.fortification` | `Fortification` |
+| `picker.defense.section.deployables` | `Deployables` |
+| `picker.defense.row.defensive_wall` | `Defensive wall` |
+| `picker.defense.row.caption.defensive_wall` | `Poured concrete` |
+| `picker.defense.row.trench_line` | `Trench line` |
+| `picker.defense.row.bunker` | `Bunker` |
+| `picker.defense.row.dragon_teeth` | `Dragon's teeth` |
+| `picker.defense.row.caption.dragon_teeth` | `Heavy · staged stock required` |
+| `picker.defense.row.minefield` | `Minefield` |
+| `picker.defense.row.caption.minefield` | `Light · staged stock required` |
+| `picker.defense.row.demolish` | `Demolish` |
+| `picker.defense.footer_hint` | `Two clicks to place · stock gates commit · Ctrl rotate · Shift size` |
+| `defense.reason.insufficient_concrete` | `insufficient concrete` |
+| `defense.reason.insufficient_staged` | `insufficient staged stock` |
+| `defense.reason.stock_in_transit` | `stock still in transit` |
+| `defense.stock.empty` | `No staged stock — manufacture and haul first` |
+| `defense.hint.defensive_wall` | `Defensive wall — poured concrete on place` |
+| `defense.hint.dragon_teeth` | `Dragon's teeth — needs staged heavy units` |
+| `defense.hint.minefield` | `Minefield — needs staged mine units` |
+
+**Authority:** [`design_mil_defense_place_v1.md`](design_mil_defense_place_v1.md) · [`design_mil_deployable_defense_v1.md`](design_mil_deployable_defense_v1.md) · witnesses `debug_runs/des_mil_defense_place_live.json` · `debug_runs/des_mil_deployable_defense_live.json`
 
 ### Chain display names
 

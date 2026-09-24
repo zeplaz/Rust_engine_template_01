@@ -34,8 +34,9 @@ pub use economy::{
     INDUSTRIAL_ACTIVATION_JSON, LOGISTICS_THROUGHPUT_JSON,
 };
 pub use fire::{
-    commit_fire_ecology_live_proof, write_fire_ecology_live_proof_system,
-    FireEcologyLiveProofState, FIRE_ECOLOGY_JSON,
+    commit_fire_ecology_live_proof, commit_fire_ecology_live_proof_unchecked,
+    nest_sim_effect_spine_for_ecology, write_fire_ecology_live_proof_system,
+    FireEcologyCommitLabels, FireEcologyLiveProofState, FIRE_ECOLOGY_JSON,
 };
 pub use containment::{
     phase0_containment_green, scan_live_proof_containment_violations, LiveProofContainmentViolation,

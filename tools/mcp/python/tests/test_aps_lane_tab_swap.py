@@ -27,10 +27,10 @@ def test_landscape_notebook_four_tabs_no_materials(aps_app) -> None:
     assert "Variants" not in tabs
 
 
-def test_buildings_notebook_five_tabs_unchanged(aps_app) -> None:
+def test_buildings_notebook_six_tabs_with_effects(aps_app) -> None:
     aps_app._apply_lane("buildings", log=False)
     tabs = _tab_texts(aps_app._notebook_buildings)
-    assert tabs == ["Catalog", "Materials", "Assembly", "Variants", "Atlas"]
+    assert tabs == ["Catalog", "Materials", "Effects", "Assembly", "Variants", "Atlas"]
 
 
 def test_no_zip_label_remap_on_single_notebook(aps_app) -> None:

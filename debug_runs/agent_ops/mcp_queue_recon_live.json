@@ -1,0 +1,224 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "profile": "mcp_queue_recon",
+    "source_system": "orchestrator-mcp",
+    "relative_path": "debug_runs/agent_ops/mcp_queue_recon_live.json",
+    "written_at_epoch_secs": 1790255595,
+    "agent": "orchestrator-mcp",
+    "lane": "mcp",
+    "program_id": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "MCP-QUEUE-RECON-001",
+    "agent_commands": [
+      "node .claude/skills/agent-lang/driver.mjs boot orchestrator-mcp",
+      "coder_mcp_drain_brief()",
+      "validate_witness_honesty_report on candidate witnesses"
+    ]
+  },
+  "gate_id": "MCP-QUEUE-RECON-001",
+  "ok": true,
+  "green": true,
+  "track": "C",
+  "proceed_ship": false,
+  "art_quality": "n/a_queue_recon",
+  "honest_gate": "honest",
+  "reconciled_count": 13,
+  "reconciled": [
+    {
+      "id": "MCP-PROD-C-PILOT",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/mcp_prod_c_pilot_live.json",
+      "written_at": "mtime=2026-08-12T21:23:21Z",
+      "fields": "ok=true green=true"
+    },
+    {
+      "id": "MCP-PROD-PBR-PILOT",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/art_pipeline/pbr_pilot_rowhouse_live.json",
+      "written_at": "mtime=2026-06-10T15:50:54Z",
+      "fields": "ok=true green=true"
+    },
+    {
+      "id": "MCP-PROD-MOD-G0-G5",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/art_pipeline/rowhouse_production_mod_g0_g5_live.json",
+      "written_at": "mtime=2026-06-07T22:38:19Z",
+      "fields": "ok=true green=true"
+    },
+    {
+      "id": "MCP-PROD-ATLAS-G0-G4",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/art_pipeline/rowhouse_production_atlas_g0_g4_live.json",
+      "written_at": "mtime=2026-06-07T22:42:44Z",
+      "fields": "ok=true green=true proceed_ship=true"
+    },
+    {
+      "id": "MCP-P2-KIT002-G0",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/art_pipeline/warehouse_production_g0_live.json",
+      "written_at": "mtime=2026-06-17T01:25:38Z",
+      "fields": "green=true verdict=PASS_WITH_NOTES"
+    },
+    {
+      "id": "MCP-P2-KIT002-G2",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/art_pipeline/kit_production_002_g2_live.json",
+      "written_at": "mtime=2026-06-17T04:23:39Z _agent_meta.written_at_epoch_secs=1781670219",
+      "fields": "green=true promoted_glb=true"
+    },
+    {
+      "id": "MCP-P2-KIT002-G3",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/art_pipeline/kit_production_002_g3_live.json",
+      "written_at": "mtime=2026-06-17T04:23:39Z _agent_meta.written_at_epoch_secs=1781670219",
+      "fields": "green=true verdict=PASS validate 6/6"
+    },
+    {
+      "id": "MCP-P2-KIT002-G1",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/art_pipeline/kit_production_002_g1_live.json",
+      "written_at": "mtime=2026-06-17T01:25:38Z",
+      "fields": "green=true verdict=PASS"
+    },
+    {
+      "id": "MCP-PROD-TILE-VAL",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/mcp_prod_tile_val_live.json",
+      "written_at": "mtime=2026-08-12T21:23:21Z",
+      "fields": "ok=true green=true proceed_ship=true"
+    },
+    {
+      "id": "MCP-PROD-INDEX",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/mcp_prod_index_live.json",
+      "written_at": "mtime=2026-08-12T21:23:21Z",
+      "fields": "ok=true green=true"
+    },
+    {
+      "id": "PLAN-WITNESS-QUEUE-INTEGRITY-001",
+      "queue": "mcp_active",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/mcp_planner_witness_queue_integrity_sign_live.json",
+      "written_at": "mtime=2026-06-17T04:09:30Z",
+      "fields": "green=true signed=true"
+    },
+    {
+      "id": "BUILD-READ-GRAMMAR-v0-002",
+      "queue": "grammar",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/aps_build_read_grammar_v0_002_live.json",
+      "written_at": "mtime=2026-06-15T14:57:17Z",
+      "fields": "ok=true green=true"
+    },
+    {
+      "id": "BUILD-READ-CONSUMER-MCP-001",
+      "queue": "grammar",
+      "from": "blocked",
+      "to": "done",
+      "witness": "debug_runs/aps_dna_consumer_contract_live.json",
+      "written_at": "mtime=2026-07-03T17:01:24Z",
+      "fields": "ok=true green=true"
+    }
+  ],
+  "still_blocked": [
+    {
+      "id": "MCP-OPS-REPORT-001",
+      "status": "deferred",
+      "source": "coder_mcp_drain_brief"
+    },
+    {
+      "id": "MCP-P2-KIT002-G4",
+      "status": "blocked",
+      "source": "mcp_aps_tooling_finish",
+      "blocked_by": [
+        "keyframe_stills_folder_missing",
+        "manual_keyframe_render",
+        "operator_session_D"
+      ]
+    },
+    {
+      "id": "PILOT-001-WAREHOUSE-SPINE",
+      "status": "blocked",
+      "source": "mcp_aps_tooling_finish",
+      "blocked_by": [
+        "MCP-P2-KIT002-G4"
+      ]
+    },
+    {
+      "id": "BQ-Q3-OPS-APPROVE-001",
+      "status": "blocked",
+      "source": "mcp_aps_tooling_finish",
+      "blocked_by": [
+        "NEEDS-DISPLAY"
+      ]
+    },
+    {
+      "id": "DMCP-VEG-ATLAS-SHIP-001",
+      "status": "blocked",
+      "source": "mcp_aps_tooling_finish",
+      "blocked_by": [
+        "G4_MANUAL_KEYFRAMES",
+        "topology_corridor_regrowth_grass_missing"
+      ]
+    },
+    {
+      "id": "G-PLAY-OPERATOR-01",
+      "status": "blocked",
+      "source": "mcp_aps_tooling_finish",
+      "blocked_by": [
+        "NEEDS-DISPLAY"
+      ]
+    },
+    {
+      "id": "RPC-1-006-OPS",
+      "status": "blocked",
+      "source": "mcp_aps_tooling_finish",
+      "blocked_by": [
+        "NEEDS-DISPLAY"
+      ]
+    },
+    {
+      "id": "MCP-P2-KIT002-G4",
+      "status": "blocked",
+      "source": "mcp_active",
+      "witness": "debug_runs/art_pipeline/kit_production_002_g4_live.json",
+      "reason": "green=false stills missing"
+    }
+  ],
+  "exit_predicate": {
+    "each_flipped_cites_witness_and_written_at": true,
+    "coder_mcp_drain_brief_matches_disk": true,
+    "KIT002-G4_remains_blocked": true
+  },
+  "coder_mcp_drain_brief_after": {
+    "ready": [],
+    "blocked": [],
+    "deferred": [
+      "MCP-OPS-REPORT-001"
+    ],
+    "recommend_next": "MCP-OPS-REPORT-001"
+  },
+  "rule": "Do not invent green — only flip when live witness green/ok; G4 stills stay blocked"
+}

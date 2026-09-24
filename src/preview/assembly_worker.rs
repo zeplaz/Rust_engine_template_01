@@ -1,4 +1,10 @@
 //! Bevy assembly preview — spawn snapshot placements, capture PNG.
+//!
+//! Blank-frame root cause (BQ-Q2): screenshot fired on `LoadState::Loaded` before
+//! `WorldAssetRoot` finished instantiating meshes / GPU presented a lit frame.
+//! Invisible windows on some DXGI paths also yield all-black captures. Fix: wait for
+//! `Mesh3d`, settle N frames, capture from an off-screen but visible window, and
+//! reject flat/black PNGs (one retry with extra settle) before writing `status: done`.
 
 use std::path::{Path, PathBuf};
 use std::time::Instant;
@@ -7,12 +13,20 @@ use bevy::asset::LoadState;
 use bevy::prelude::*;
 use bevy::world_serialization::{WorldAsset, WorldAssetRoot};
 use bevy::render::view::screenshot::{save_to_disk, Captured, Screenshot};
-use bevy::window::{PresentMode, Window, WindowPlugin};
+use bevy::window::{PresentMode, Window, WindowPlugin, WindowPosition};
 use serde::Serialize;
 
 use crate::construction::procedural::{AssemblyModulePlacement, AssemblySnapshot};
 
 use super::job::PreviewAssemblyJob;
+
+/// Frames after first `Mesh3d` appears before requesting a screenshot.
+const SETTLE_FRAMES: u32 = 12;
+/// Extra settle frames after a blank capture before one retry.
+const RETRY_EXTRA_SETTLE: u32 = 16;
+/// Min luma span (hi−lo) to accept a preview PNG (mirrors Python `png_preview_usable`).
+const MIN_LUMA_SPAN: u8 = 24;
+const MAX_CAPTURE_ATTEMPTS: u8 = 2;
 
 #[derive(Resource)]
 pub struct PreviewWorkerConfig {
@@ -26,8 +40,11 @@ pub struct PreviewWorkerConfig {
 struct PreviewWorkerState {
     spawn_done: bool,
     screenshot_requested: bool,
+    screenshot_attempts: u8,
     modules_loaded: u32,
     missing_glb: Vec<String>,
+    meshes_seen: bool,
+    settle_remaining: u32,
 }
 
 #[derive(Debug, Serialize)]
@@ -109,7 +126,8 @@ fn placement_center(placements: &[AssemblyModulePlacement]) -> Vec3 {
 
 fn iso_camera_transform(center: Vec3, distance_m: f32) -> Transform {
     let d = distance_m.max(8.0);
-    Transform::from_translation(center + Vec3::new(d * 0.85, d * 0.65, d * 0.85))
+    // iso_se — +X/−Z so street/south openings read at city-sim distance (not hid behind N wall).
+    Transform::from_translation(center + Vec3::new(d * 0.85, d * 0.65, -d * 0.85))
         .looking_at(center, Vec3::Y)
 }
 
@@ -183,9 +201,13 @@ fn spawn_preview_scene(
             row.rotation_euler[1] as f32,
             row.rotation_euler[2] as f32,
         );
+        let mut xf = Transform::from_translation(pos).with_rotation(rot);
+        if let Some(s) = row.scale {
+            xf.scale = Vec3::new(s[0] as f32, s[1] as f32, s[2] as f32);
+        }
         commands.spawn((
             WorldAssetRoot(handle),
-            Transform::from_translation(pos).with_rotation(rot),
+            xf,
             Visibility::default(),
         ));
     }
@@ -211,6 +233,34 @@ fn scenes_ready(asset_server: Res<AssetServer>, handles: Option<Res<PreviewScene
         })
 }
 
+/// Reject missing / flat / near-black PNGs (same bar as Python `png_preview_usable`).
+fn png_preview_usable(path: &Path) -> bool {
+    if !path.is_file() {
+        return false;
+    }
+    let Ok(meta) = std::fs::metadata(path) else {
+        return false;
+    };
+    if meta.len() < 256 {
+        return false;
+    }
+    let Ok(img) = image::open(path) else {
+        return false;
+    };
+    let gray = img.to_luma8();
+    let mut lo = u8::MAX;
+    let mut hi = 0u8;
+    for p in gray.pixels() {
+        let v = p.0[0];
+        lo = lo.min(v);
+        hi = hi.max(v);
+        if hi.saturating_sub(lo) >= MIN_LUMA_SPAN {
+            return true;
+        }
+    }
+    hi.saturating_sub(lo) >= MIN_LUMA_SPAN
+}
+
 fn request_screenshot_when_ready(
     mut commands: Commands,
     config: Res<PreviewWorkerConfig>,
@@ -218,6 +268,7 @@ fn request_screenshot_when_ready(
     asset_server: Res<AssetServer>,
     mut state: ResMut<PreviewWorkerState>,
     pending: Query<Entity, With<Screenshot>>,
+    meshes: Query<(), With<Mesh3d>>,
 ) {
     if state.screenshot_requested || !state.spawn_done || !pending.is_empty() {
         return;
@@ -225,29 +276,75 @@ fn request_screenshot_when_ready(
     if !scenes_ready(asset_server, handles) {
         return;
     }
+    // WorldAssetRoot spawns children after LoadState::Loaded — wait for meshes.
+    if meshes.iter().next().is_none() {
+        return;
+    }
+    if !state.meshes_seen {
+        state.meshes_seen = true;
+        state.settle_remaining = SETTLE_FRAMES;
+    }
+    if state.settle_remaining > 0 {
+        state.settle_remaining = state.settle_remaining.saturating_sub(1);
+        return;
+    }
 
     let png_path = config.job.png_path(&config.repo_root);
     if let Some(parent) = png_path.parent() {
         let _ = std::fs::create_dir_all(parent);
     }
+    // Drop stale blank from a prior attempt so capture writes a fresh file.
+    let _ = std::fs::remove_file(&png_path);
 
     state.screenshot_requested = true;
+    state.screenshot_attempts = state.screenshot_attempts.saturating_add(1);
     commands
         .spawn(Screenshot::primary_window())
         .observe(save_to_disk(png_path));
 }
 
 fn on_screenshot_captured(
+    mut commands: Commands,
     config: Res<PreviewWorkerConfig>,
-    state: Res<PreviewWorkerState>,
-    captured: Query<(), Added<Captured>>,
+    mut state: ResMut<PreviewWorkerState>,
+    captured: Query<Entity, Added<Captured>>,
     mut exit: MessageWriter<AppExit>,
 ) {
-    if captured.is_empty() {
+    let Ok(entity) = captured.single() else {
+        return;
+    };
+
+    let png_path = config.job.png_path(&config.repo_root);
+    // save_to_disk observer usually wins the race; poll briefly if needed.
+    let deadline = Instant::now() + std::time::Duration::from_millis(1500);
+    while Instant::now() < deadline {
+        if png_preview_usable(&png_path) {
+            break;
+        }
+        std::thread::sleep(std::time::Duration::from_millis(40));
+    }
+
+    if !png_preview_usable(&png_path) {
+        commands.entity(entity).despawn();
+        if state.screenshot_attempts < MAX_CAPTURE_ATTEMPTS {
+            // Blank first frame — settle longer and retry once.
+            state.screenshot_requested = false;
+            state.settle_remaining = RETRY_EXTRA_SETTLE;
+            eprintln!(
+                "bevy_preview_worker: blank PNG attempt {} — retrying after {} settle frames",
+                state.screenshot_attempts, RETRY_EXTRA_SETTLE
+            );
+            return;
+        }
+        write_failed(
+            &config,
+            "preview PNG blank or unusable after settle+retry".into(),
+            state.missing_glb.clone(),
+        );
+        exit.write(AppExit::error());
         return;
     }
 
-    let png_path = config.job.png_path(&config.repo_root);
     let rel_png = png_path
         .strip_prefix(&config.repo_root)
         .map(|p| p.to_string_lossy().replace('\\', "/"))
@@ -266,6 +363,7 @@ fn on_screenshot_captured(
         exit.write(AppExit::error());
         return;
     }
+    commands.entity(entity).despawn();
     exit.write(AppExit::Success);
 }
 
@@ -296,10 +394,18 @@ fn watchdog_timeout(
     state: Res<PreviewWorkerState>,
     mut exit: MessageWriter<AppExit>,
 ) {
-    if config.started.elapsed().as_secs() > 90 && !state.screenshot_requested {
-        write_failed(&config, "preview worker timeout (90s)".into(), state.missing_glb.clone());
-        exit.write(AppExit::error());
+    if config.started.elapsed().as_secs() <= 90 {
+        return;
     }
+    let reason = if state.modules_loaded > 0 && !state.meshes_seen {
+        "preview worker timeout (90s) — assets loaded but no Mesh3d spawned"
+    } else if state.screenshot_attempts > 0 {
+        "preview worker timeout (90s) — capture/validate stalled"
+    } else {
+        "preview worker timeout (90s)"
+    };
+    write_failed(&config, reason.into(), state.missing_glb.clone());
+    exit.write(AppExit::error());
 }
 
 /// Run one preview job; returns process exit code.
@@ -322,32 +428,44 @@ pub fn run_preview_job(job_path: &Path) -> i32 {
     let width = job.output.width.max(64);
     let height = job.output.height.max(64);
 
+    // Ensure AssetServer resolves repo `assets/` even when cwd drifts.
+    if std::env::var_os("BEVY_ASSET_ROOT").is_none() {
+        // SAFETY: single-threaded before App::run; set once for this process.
+        unsafe {
+            std::env::set_var("BEVY_ASSET_ROOT", &repo_root);
+        }
+    }
+
     let mut app = App::new();
-    app.insert_resource(PreviewWorkerConfig {
-        repo_root: repo_root.clone(),
-        job_path: job_path.clone(),
-        job: job.clone(),
-        started: Instant::now(),
-    })
-    .insert_resource(PreviewWorkerState::default())
-    .add_plugins(
-        DefaultPlugins
-            .set(WindowPlugin {
-                primary_window: Some(Window {
-                    title: "bevy_preview_worker".into(),
-                    resolution: (width, height).into(),
-                    present_mode: PresentMode::AutoNoVsync,
-                    visible: false,
+    app.insert_resource(ClearColor(Color::srgb(0.18, 0.20, 0.24)))
+        .insert_resource(PreviewWorkerConfig {
+            repo_root: repo_root.clone(),
+            job_path: job_path.clone(),
+            job: job.clone(),
+            started: Instant::now(),
+        })
+        .insert_resource(PreviewWorkerState::default())
+        .add_plugins(
+            DefaultPlugins
+                .set(WindowPlugin {
+                    primary_window: Some(Window {
+                        title: "bevy_preview_worker".into(),
+                        resolution: (width, height).into(),
+                        present_mode: PresentMode::AutoNoVsync,
+                        // Invisible windows often capture all-black on DXGI; keep
+                        // visible but parked off-screen so the GPU presents a frame.
+                        visible: true,
+                        position: WindowPosition::new(IVec2::new(-12_000, -12_000)),
+                        ..default()
+                    }),
                     ..default()
-                }),
-                ..default()
-            })
-            .build(),
-    )
-    .add_systems(Startup, spawn_preview_scene)
-    .add_systems(Update, request_screenshot_when_ready)
-    .add_systems(Update, on_screenshot_captured.after(request_screenshot_when_ready))
-    .add_systems(Update, (watchdog_no_assets, watchdog_timeout));
+                })
+                .build(),
+        )
+        .add_systems(Startup, spawn_preview_scene)
+        .add_systems(Update, request_screenshot_when_ready)
+        .add_systems(Update, on_screenshot_captured.after(request_screenshot_when_ready))
+        .add_systems(Update, (watchdog_no_assets, watchdog_timeout));
 
     let exit = app.run();
     if exit.is_success() {
@@ -376,7 +494,7 @@ mod tests {
             "operation": "preview_assembly",
             "job_id": "test_worker_job",
             "assembly_snapshot": snap.strip_prefix(&root).unwrap().to_string_lossy(),
-            "camera": { "preset": "iso_ne", "distance_m": 24.0 },
+            "camera": { "preset": "iso_se", "distance_m": 24.0 },
             "output": {
                 "png": "debug_runs/preview_jobs/test_worker_job.png",
                 "width": 256,

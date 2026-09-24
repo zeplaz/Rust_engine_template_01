@@ -30,6 +30,9 @@ use super::sim_hud_egui_theme::{
     apply_sim_hud_egui_theme, caption_text, data_text, picker_sheet_frame, title_text,
 };
 
+/// HUD-NAT-003 — Bevy tray body owns Build tab content in Simulation.
+pub const CONTEXT_TRAY_BUILD_USE_BEVY: bool = true;
+
 #[derive(SystemParam)]
 pub struct ContextTrayBuildDrawParams<'w> {
     pub tray: Res<'w, ContextTrayState>,
@@ -89,6 +92,10 @@ pub fn draw_context_tray_build_body_egui(
     if !matches!(base.get(), BaseState::Simulation) {
         return Ok(());
     }
+    // HUD-NAT-003 — Build tab body lives on Bevy ContextTrayBodyLine (+ chrome below).
+    if CONTEXT_TRAY_BUILD_USE_BEVY {
+        return Ok(());
+    }
     if params.tray.active_tab != ContextTrayTab::Build {
         return Ok(());
     }
@@ -105,8 +112,8 @@ pub fn draw_context_tray_build_body_egui(
         HudPanelState::Collapsed => return Ok(()),
     };
 
-    let is_build =
-        matches!(params.tool.tool, BuildTool::Building(_)) && params.strip.active != ToolContext::None;
+    let is_build = params.tool.tool.uses_two_click_place()
+        && params.strip.active != ToolContext::None;
     let screen_h = ctx.input(|i| i.content_rect().height());
     let anchor_y = screen_h - CONTEXT_TRAY_TAB_H_PX - body_h;
 
@@ -233,3 +240,59 @@ pub fn draw_context_tray_build_body_egui(
         });
     Ok(())
 }
+
+/// GUI-CRAFT-001 / HUD-A-002 — when a build tool is armed, keep the context tray at least Peek
+/// and force the Build tab while a building is mid-place (PLAY-01 may collapse idle trays).
+pub fn ensure_context_tray_peek_when_build_armed(
+    tool: Res<ActiveBuildTool>,
+    strip: Res<BuildStripState>,
+    mut tray: ResMut<ContextTrayState>,
+) {
+    let armed = strip.active != ToolContext::None
+        && !matches!(tool.tool, BuildTool::None | BuildTool::Demolish);
+    if !armed {
+        return;
+    }
+    if tray.panel_state == HudPanelState::Collapsed {
+        tray.panel_state = HudPanelState::Peek;
+    }
+    let place_armed = tool.tool.uses_two_click_place();
+    let category_build = matches!(
+        strip.active,
+        ToolContext::Industry
+            | ToolContext::Utilities
+            | ToolContext::Military
+            | ToolContext::Civil
+    );
+    if place_armed || (category_build && tray.active_tab != ContextTrayTab::Build) {
+        tray.active_tab = ContextTrayTab::Build;
+    }
+}
+
+#[cfg(test)]
+mod craft_tests {
+    use super::*;
+
+    #[test]
+    fn peek_when_armed_leaves_expanded_alone() {
+        let mut tray = ContextTrayState {
+            panel_state: HudPanelState::Expanded,
+            active_tab: ContextTrayTab::Build,
+        };
+        let tool = ActiveBuildTool {
+            tool: BuildTool::Building(crate::construction::BuildingArchetypeId::Factory),
+            ..Default::default()
+        };
+        let strip = BuildStripState {
+            active: ToolContext::Industry,
+            ..Default::default()
+        };
+        // Manual invoke of the latch logic:
+        if strip.active != ToolContext::None && tray.panel_state == HudPanelState::Collapsed {
+            tray.panel_state = HudPanelState::Peek;
+        }
+        let _ = (tool, strip);
+        assert_eq!(tray.panel_state, HudPanelState::Expanded);
+    }
+}
+

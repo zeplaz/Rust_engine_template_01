@@ -12,12 +12,10 @@ pub fn gpu_p0c_prime_default_authority_ok() -> bool {
         return false;
     }
     let auth = resolve_sim_default_authority();
-    if cfg!(debug_assertions) {
-        auth == TerrainRenderAuthority::CpuRaster
-            || auth == TerrainRenderAuthority::GpuBake
-    } else {
-        auth == TerrainRenderAuthority::GpuBake
+    if terrain_cpu_fallback_env_forced() {
+        return false;
     }
+    auth == TerrainRenderAuthority::GpuBake
 }
 
 #[must_use]

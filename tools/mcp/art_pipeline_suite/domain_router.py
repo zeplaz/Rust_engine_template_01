@@ -14,7 +14,7 @@ PREFS_REL = "debug_runs/aps_ui_prefs.json"
 
 FLOW_CAVEAT = "Every button here runs the same tools the build pipeline uses."
 
-BUILDINGS_TAB_LABELS = ("Catalog", "Materials", "Assembly", "Variants", "Atlas")
+BUILDINGS_TAB_LABELS = ("Catalog", "Materials", "Effects", "Assembly", "Variants", "Atlas")
 LANDSCAPE_TAB_LABELS = ("Presets", "Grammar", "States", "Atlas")
 
 AUTHORITY_BY_LANE: dict[str, str] = {
@@ -32,6 +32,7 @@ PIPELINE_STEPS_BY_LANE: dict[str, tuple[tuple[str, str], ...]] = {
     ArtDomain.BUILDINGS.value: (
         ("catalog", "Catalog"),
         ("materials", "Materials"),
+        ("effects", "Effects"),
         ("assembly", "Assembly"),
         ("variants", "Variants"),
         ("atlas", "Atlas"),
@@ -65,7 +66,11 @@ NEXT_ACTION_BY_LANE: dict[str, dict[str, tuple[str, str | None]]] = {
     ArtDomain.BUILDINGS.value: {
         "catalog": ("Send your selected module to the Assembly step.", "send_to_assembly"),
         "assembly": ("Assign materials, then run the ship check before you bake.", None),
-        "materials": ("Bake your variants into tiles on the Atlas step.", "bake_variants"),
+        "materials": ("Browse effects or continue to Assembly for ship authority.", None),
+        "effects": (
+            "Assign honest EffectSpecs to scenario markers, then continue to Assembly.",
+            None,
+        ),
         "variants": ("Bake your variants into tiles on the Atlas step.", "bake_variants"),
         "atlas": ("Pack the tiles into the ship atlas.", "pack_atlas"),
     },
@@ -192,7 +197,8 @@ def verify_option_d_ia_contract() -> dict[str, Any]:
     landscape_flow = [k for k, _ in flow_verbs_for(ArtDomain.LANDSCAPE.value)]
     buildings_pipe = [k for k, _ in pipeline_steps_for(ArtDomain.BUILDINGS.value)]
     landscape_pipe = [k for k, _ in pipeline_steps_for(ArtDomain.LANDSCAPE.value)]
-    tab_set_swap = len(buildings_tabs) == 5 and len(landscape_tabs) == 4 and buildings_tabs != landscape_tabs
+    # VSS-T4-005 added Effects after Materials (6 buildings tabs). Landscape stays 4.
+    tab_set_swap = len(buildings_tabs) == 6 and len(landscape_tabs) == 4 and buildings_tabs != landscape_tabs
     flow_lane_scoped = buildings_flow == [
         "send_to_assembly",
         "bake_variants",
@@ -201,6 +207,7 @@ def verify_option_d_ia_contract() -> dict[str, Any]:
     pipeline_lane_scoped = buildings_pipe == [
         "catalog",
         "materials",
+        "effects",
         "assembly",
         "variants",
         "atlas",
@@ -242,7 +249,7 @@ def des_aps_e1_ia_verdict(*, repo: Path | None = None) -> dict[str, Any]:
     ok = bool(contract.get("option_d_ia_contract_ok")) and bool(shell.get("option_d_shell_ok"))
     reasons: list[str] = []
     if not contract.get("tab_set_swap"):
-        reasons.append("tab_set_swap: expected 5 buildings + 4 landscape tab labels")
+        reasons.append("tab_set_swap: expected 6 buildings + 4 landscape tab labels")
     if not contract.get("flow_lane_scoped"):
         reasons.append("flow_lane_scoped: flow verbs must differ per lane per sign-off")
     if not contract.get("pipeline_lane_scoped"):

@@ -1,4 +1,7 @@
-//! Bevy 0.18 + `bevy_hanabi` 0.18 compile/runtime registration gate.
+//! Bevy 0.19 + `bevy_hanabi` 0.19 compile/runtime registration gate.
+//!
+//! Migration: https://bevy.org/learn/migration-guides/0-18-to-0-19/
+//! Bounds: [`hanabi_event_vfx_style_bounds_v1.md`](../../../src/dev/hanabi_event_vfx_style_bounds_v1.md)
 
 use bevy::prelude::*;
 use bevy_hanabi::prelude::*;
@@ -41,7 +44,7 @@ mod tests {
 
     /// Runtime plugin graph needs a full render stack; `cargo check -p hanabi_validation` is the CI gate.
     #[test]
-    fn hanabi_crate_linked_on_bevy_018() {
+    fn hanabi_crate_linked_on_bevy_019() {
         let _ = std::any::type_name::<HanabiPlugin>();
     }
 

@@ -27,17 +27,17 @@
   "preview_witness": {
     "witness_schema": "artist_vfx_preview_witness_v1",
     "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
-    "preview_job_id": "spark_shower_preview_stub",
-    "frames_captured": 0,
+    "preview_job_id": "spark_shower_preview_capture",
+    "frames_captured": 4,
+    "capture_hash": "870508a8f2c6999cfbe64bb76f7f925459de41c6b3b26203c97de27c10c72f56",
     "staging_path": "assets/staging/spark_shower/",
-    "honest_gate": "pending",
-    "captured_at_utc": "2026-08-28T04:44:00Z",
+    "honest_gate": "honest",
+    "captured_at_utc": "2026-09-24T17:55:20Z",
     "toolchain": {
-      "mcp_tool": "effect_promote",
+      "mcp_tool": "effect_preview_capture",
       "cli_parity": true,
       "blender_present": false
     },
-    "_note": "G4 preview worker not run \u2014 capture_hash omitted until frames captured",
     "promoted_path": "assets/effects/registry/spark_shower/"
   }
 }

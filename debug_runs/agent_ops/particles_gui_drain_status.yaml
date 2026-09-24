@@ -1,0 +1,40 @@
+schema: particles_gui_drain_status_v1
+program_id: PARTICLES-GUI-DRAIN-001
+updated: "2026-09-23T22:00:00Z"
+active: true
+wave_1_next:
+  - OPERATOR-VERIFY
+  - G-PLAY-OPERATOR-01
+  - HUD-NAT-001
+channels:
+  P-A: done
+  P-B: done
+  P-C: ready_human
+  G-A: done
+  G-B: done
+  G-C: done
+  G-D: done
+cross_drain_closed:
+  HUD-OPS-002: done
+  HUD-A-001: done
+  HUD-A-002: done
+  HUD-A-003: done
+  VSS-T3-003: done
+  VSS-T3-004: done
+proofs:
+  ignition_single_funnel: true
+  fire_save_roundtrip_hash: true
+  effects_stub_schedule_clean: true
+  witness: debug_runs/sim_effect_fire_consumer_live.json
+  fire_save: debug_runs/fire_save_roundtrip_live.json
+  hud_window_ban: debug_runs/hud_a_sim_window_ban_live.json
+  registry_emit: lib green (registry_spark_shower_emits_into_fire_vfx_spine)
+  gui_esc: lib green (second_esc / building_esc)
+  iso_scale: 1.65 (debug_runs/build_read_world_002_live.json)
+  operator_checklist: debug_runs/agent_ops/particles_gui_operator_checklist.md
+  effect_spec_spark_shower: schema-green
+queue: tools/orchestrator/queues/particles_gui_drain_queue.json
+hud_native_queue: tools/orchestrator/queues/production_sim_hud_native_queue.json
+parent_plan: .cursor/plans/particles_plus_gui_10d09b86.plan.md
+cargo: "0 errors · validate_cargo_report compress=3"
+mcp_art: "MCP-PROD-* still blocked · EffectSpec path green"

@@ -11,7 +11,7 @@
         door_wide: "door_warehouse",
         window_1u: "win_double_1u",
         window_industrial: "win_industrial_3u",
-        roof_default: "roof_sawtooth",
+        roof_default: "roof_metal_low",
         roof_industrial: "roof_shed",
         roof_flat: "roof_metal_low",
         corner_outer: "corner_L",

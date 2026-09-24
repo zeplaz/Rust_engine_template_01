@@ -42,3 +42,23 @@ pub fn portland_fixture_town() -> TownBook {
         default_town: Some(id),
     }
 }
+
+/// **SET-P5-HIERARCHY-GAP** — seed playable town/district books when empty.
+/// Save overlay hydrate remains authoritative and may overwrite after Startup.
+pub fn seed_settlement_books_if_empty(
+    mut towns: ResMut<TownBook>,
+    mut districts: ResMut<super::district::DistrictBook>,
+) {
+    let need_town = towns.default_town.is_none() || towns.towns.is_empty();
+    let need_district = districts.districts.is_empty();
+    if !need_town && !need_district {
+        return;
+    }
+    let seeded_town = portland_fixture_town();
+    if need_town {
+        *towns = seeded_town.clone();
+    }
+    if need_district {
+        *districts = super::district::portland_fixture_district(&seeded_town);
+    }
+}

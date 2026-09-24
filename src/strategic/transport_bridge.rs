@@ -143,6 +143,9 @@ pub fn rebuild_logistics_graph_from_transport(
     graph
 }
 
+/// **Sole production writer** of [`LogisticsGraph`] (LOG-A-01 / LOG-A-AUTHORITY).
+/// Full replace from transport — never appends facility nodes; portals bind via
+/// [`PortalAttachmentMap`](crate::economy::logistics::PortalAttachmentMap) after GraphSync.
 pub fn sync_logistics_graph_from_transport(
     directory: Res<TransportEdgeDirectory>,
     fields: Res<TransportFieldStore>,
@@ -152,14 +155,18 @@ pub fn sync_logistics_graph_from_transport(
     construction_rev: Option<Res<crate::construction::ConstructionWorldRevision>>,
     mut graph: ResMut<LogisticsGraph>,
 ) {
-    if directory.by_edge.is_empty() {
-        graph.nodes.clear();
-        graph.edges.clear();
-        return;
-    }
     let sig = crate::strategic::transport_directory_edge_signature(&directory);
     let rev = construction_rev.map(|r| r.revision).unwrap_or(0);
     let topology_revision = sig ^ rev.rotate_left(17);
+    // Empty directory still assigns revision so consumers invalidate stale handles.
+    if directory.by_edge.is_empty() {
+        *graph = LogisticsGraph {
+            revision: topology_revision,
+            nodes: Vec::new(),
+            edges: Vec::new(),
+        };
+        return;
+    }
     *graph = rebuild_logistics_graph_from_transport(
         &directory,
         &fields,
@@ -356,6 +363,84 @@ mod tests {
         );
         assert_eq!(g.nodes.len(), 2);
         assert_eq!(g.edges.len(), 1);
+    }
+
+    /// LOG-A-01 / LOG-A-AUTHORITY: rebuild assigns a fresh graph (replace), never appends.
+    #[test]
+    fn log_a_01_rebuild_replaces_graph_not_append() {
+        use crate::dev::logistics_throughput_todos::LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED;
+        use std::sync::atomic::Ordering;
+
+        LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED.store(false, Ordering::Relaxed);
+
+        let mut dir = TransportEdgeDirectory::default();
+        dir.by_edge.insert(
+            TransportEdgeId(0),
+            crate::systems::transport::TransportEdgeMeta {
+                profile: "default_road".into(),
+                head_key: "t0_0".into(),
+                tail_key: "t1_0".into(),
+                ..default()
+            },
+        );
+        let mut fields = TransportFieldStore::default();
+        fields.by_edge.insert(
+            TransportEdgeId(0),
+            crate::systems::transport::EdgeFieldState {
+                travel_time_base: 1.0,
+                ..default()
+            },
+        );
+        let weights = TransportCostWeights::default();
+        let cells = StrategicRasterConfig {
+            cells_per_chunk: UVec2::new(4, 4),
+        };
+        let book = CorridorConstructionBook::default();
+        let g1 = rebuild_logistics_graph_from_transport(&dir, &fields, &weights, &cells, &book, 11);
+        assert_eq!(g1.revision, 11);
+        assert_eq!(g1.nodes.len(), 2);
+        assert_eq!(g1.edges.len(), 1);
+        assert!(g1.edges.iter().all(|e| e.transport_edge.is_some()));
+
+        dir.by_edge.insert(
+            TransportEdgeId(1),
+            crate::systems::transport::TransportEdgeMeta {
+                profile: "default_road".into(),
+                head_key: "t1_0".into(),
+                tail_key: "t2_0".into(),
+                ..default()
+            },
+        );
+        fields.by_edge.insert(
+            TransportEdgeId(1),
+            crate::systems::transport::EdgeFieldState {
+                travel_time_base: 1.0,
+                ..default()
+            },
+        );
+        let g2 = rebuild_logistics_graph_from_transport(&dir, &fields, &weights, &cells, &book, 22);
+        // Replace semantics: exact topology for current directory — not g1.nodes + append.
+        assert_eq!(g2.revision, 22);
+        assert_eq!(g2.nodes.len(), 3);
+        assert_eq!(g2.edges.len(), 2);
+        assert_ne!(g1.revision, g2.revision);
+        assert!(g2.edges.iter().all(|e| e.transport_edge.is_some()));
+
+        // Empty rebuild clears structure but keeps revision input (sync wraps this).
+        let empty = rebuild_logistics_graph_from_transport(
+            &TransportEdgeDirectory::default(),
+            &TransportFieldStore::default(),
+            &weights,
+            &cells,
+            &book,
+            33,
+        );
+        assert!(empty.nodes.is_empty());
+        assert!(empty.edges.is_empty());
+        assert_eq!(empty.revision, 33);
+
+        LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED.store(true, Ordering::Relaxed);
+        assert!(LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED.load(Ordering::Relaxed));
     }
 
     #[test]

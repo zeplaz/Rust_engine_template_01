@@ -53,12 +53,22 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "write_triage_perf_vfx_fix_live_witness",
-    "written_at_epoch_secs": 1787890429
+    "written_at_epoch_secs": 1790274931
   },
   "acceptance_targets": {
     "main_camera_transform_changed_steady_pct": 90.0,
@@ -70,134 +80,134 @@
       "max_ms": 0.0,
       "p50_ms": 0.0,
       "p95_ms": 0.0,
-      "samples": 185
+      "samples": 3600
     },
     "after_map_camera_smooth_ms": {
       "max_ms": 0.0,
       "p50_ms": 0.0,
       "p95_ms": 0.0,
-      "samples": 185
+      "samples": 3600
     },
     "frame_wall_ms": {
-      "max_ms": 545.53662109375,
-      "p50_ms": 148.87791442871094,
-      "p95_ms": 254.08860778808594,
-      "samples": 185
+      "max_ms": 227.53768920898438,
+      "p50_ms": 148.34600830078125,
+      "p95_ms": 155.65249633789062,
+      "samples": 3600
     },
     "post_world_repr_ms": {
-      "max_ms": 53.531097412109375,
-      "p50_ms": 0.4099000096321106,
-      "p95_ms": 0.5547999739646912,
-      "samples": 185
+      "max_ms": 0.9778000116348267,
+      "p50_ms": 0.4092000126838684,
+      "p95_ms": 0.5476999878883362,
+      "samples": 3600
     },
     "substage_ms": {
       "fire_build_view_ms": {
-        "max_ms": 0.5681000351905823,
-        "p50_ms": 0.010900000110268593,
-        "p95_ms": 0.01979999989271164,
-        "samples": 185
+        "max_ms": 0.40450000762939453,
+        "p50_ms": 0.019999999552965164,
+        "p95_ms": 0.026499999687075615,
+        "samples": 3600
       },
       "fire_commit_ms": {
-        "max_ms": 0.03129999712109566,
-        "p50_ms": 0.009100000374019146,
-        "p95_ms": 0.015300000086426735,
-        "samples": 185
+        "max_ms": 0.04650000110268593,
+        "p50_ms": 0.016600001603364944,
+        "p95_ms": 0.024000000208616257,
+        "samples": 3600
       },
       "fire_emitter_sync_ms": {
-        "max_ms": 0.02800000086426735,
-        "p50_ms": 0.010400000028312206,
-        "p95_ms": 0.016100000590085983,
-        "samples": 185
+        "max_ms": 0.1298999935388565,
+        "p50_ms": 0.017500000074505806,
+        "p95_ms": 0.025600001215934753,
+        "samples": 3600
       },
       "fire_sim_snapshot_ms": {
-        "max_ms": 2.957399845123291,
-        "p50_ms": 2.07099986076355,
-        "p95_ms": 2.745300054550171,
-        "samples": 185
+        "max_ms": 3.636399984359741,
+        "p50_ms": 2.6161000728607178,
+        "p95_ms": 3.0147998332977295,
+        "samples": 3600
       },
       "fire_sync_active_ms": {
-        "max_ms": 385.56341552734375,
-        "p50_ms": 7.601500034332275,
-        "p95_ms": 100.94609832763672,
-        "samples": 185
+        "max_ms": 41.32469940185547,
+        "p50_ms": 6.314000129699707,
+        "p95_ms": 11.133800506591797,
+        "samples": 3600
       },
       "fire_sync_lod_ms": {
-        "max_ms": 0.24540001153945923,
-        "p50_ms": 0.08379999548196793,
-        "p95_ms": 0.11800000071525574,
-        "samples": 185
+        "max_ms": 0.541700005531311,
+        "p50_ms": 0.12189999967813492,
+        "p95_ms": 0.15139999985694885,
+        "samples": 3600
       },
       "fire_sync_overlay_ms": {
-        "max_ms": 0.04479999840259552,
-        "p50_ms": 0.02979999966919422,
-        "p95_ms": 0.03700000047683716,
-        "samples": 185
+        "max_ms": 0.8881999850273132,
+        "p50_ms": 0.041600000113248825,
+        "p95_ms": 0.04899999871850014,
+        "samples": 3600
       },
       "fire_sync_visible_ms": {
-        "max_ms": 0.04370000213384628,
-        "p50_ms": 0.013900000602006912,
-        "p95_ms": 0.023000000044703484,
-        "samples": 185
+        "max_ms": 0.05289999768137932,
+        "p50_ms": 0.02539999969303608,
+        "p95_ms": 0.032499998807907104,
+        "samples": 3600
       },
       "map_apply_input_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 185
+        "samples": 3600
       },
       "map_derive_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 185
+        "samples": 3600
       },
       "map_smooth_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 185
+        "samples": 3600
       },
       "minimap_intent_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 185
+        "samples": 3600
       },
       "repr_apply_result_ms": {
-        "max_ms": 0.06240000203251839,
-        "p50_ms": 0.009600000455975533,
-        "p95_ms": 0.016100000590085983,
-        "samples": 185
+        "max_ms": 0.17260000109672546,
+        "p50_ms": 0.016300000250339508,
+        "p95_ms": 0.02449999935925007,
+        "samples": 3600
       },
       "repr_compute_frame_ms": {
-        "max_ms": 0.164900004863739,
-        "p50_ms": 0.01140000019222498,
-        "p95_ms": 0.018699999898672104,
-        "samples": 185
+        "max_ms": 0.19029998779296875,
+        "p50_ms": 0.020900001749396324,
+        "p95_ms": 0.02879999950528145,
+        "samples": 3600
       },
       "repr_decay_lod_ms": {
-        "max_ms": 0.15240000188350677,
-        "p50_ms": 0.021300001069903374,
-        "p95_ms": 0.03129999712109566,
-        "samples": 185
+        "max_ms": 0.44290000200271606,
+        "p50_ms": 0.03070000186562538,
+        "p95_ms": 0.042799998074769974,
+        "samples": 3600
       },
       "repr_proc_extract_ms": {
-        "max_ms": 4.693299770355225,
-        "p50_ms": 0.02889999933540821,
-        "p95_ms": 0.03989999741315842,
-        "samples": 185
+        "max_ms": 0.20169998705387115,
+        "p50_ms": 0.03840000182390213,
+        "p95_ms": 0.049400001764297485,
+        "samples": 3600
       },
       "repr_refresh_lod_ms": {
-        "max_ms": 0.03460000082850456,
-        "p50_ms": 0.010699999518692493,
-        "p95_ms": 0.017000000923871994,
-        "samples": 185
+        "max_ms": 0.09390000253915787,
+        "p50_ms": 0.01860000006854534,
+        "p95_ms": 0.023799998685717583,
+        "samples": 3600
       },
       "view_sync_ms": {
         "max_ms": 0.0,
         "p50_ms": 0.0,
         "p95_ms": 0.0,
-        "samples": 185
+        "samples": 3600
       }
     }
   },
@@ -221,7 +231,7 @@
     }
   },
   "display_acceptance_pending": true,
-  "frames_sampled": 185,
+  "frames_sampled": 13873,
   "gate": "PERF-INSTR-VFX-002",
   "green": true,
   "lane": "PERF-INSTR-VFX-002",

@@ -1,0 +1,167 @@
+{
+  "schema": "production_sim_hud_native_queue_v1",
+  "program_id": "PLAN-PRODUCTION-SIM-HUD-NATIVE-001",
+  "plan_doc": "src/dev/plan_production_sim_hud_native_v1.md",
+  "seeded": "2026-09-23",
+  "wave_0_next": ["HUD-OPS-001", "HUD-GPLAY-002"],
+  "channels": [
+    {
+      "channel": "0-A",
+      "slice_id": "HUD-OPS-001",
+      "owner": "human",
+      "status": "ready",
+      "note": "OPERATOR-VERIFY + G-PLAY-OPERATOR-01 checklist",
+      "checklist": "debug_runs/agent_ops/particles_gui_operator_checklist.md"
+    },
+    {
+      "channel": "0-B",
+      "slice_id": "HUD-OPS-002",
+      "owner": "@sim-steward",
+      "status": "done",
+      "completed": "2026-09-23",
+      "note": "Unblocked VSS-T3-003/004; scrubbed HANDOFF ACTIVE (T3-001→T3-003 pick)"
+    },
+    {
+      "channel": "A-1",
+      "slice_id": "HUD-A-001",
+      "owner": "@designer→@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "note": "Ops strip 30px; build rail slot hit ≥48 (min_h 42+pad)"
+    },
+    {
+      "channel": "A-2",
+      "slice_id": "HUD-A-002",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "note": "Tray Peek+Build forced when Building armed"
+    },
+    {
+      "channel": "A-3",
+      "slice_id": "HUD-A-003",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "witness": "debug_runs/hud_a_sim_window_ban_live.json",
+      "note": "Sim place path Window ban + placement debug editor-only"
+    },
+    {
+      "channel": "B-1",
+      "slice_id": "HUD-NAT-001",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "files": ["src/gui/hud/sim_build_picker_bevy.rs"],
+      "exit": "Bevy build picker; egui picker off in Simulation"
+    },
+    {
+      "channel": "B-2",
+      "slice_id": "HUD-NAT-002",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "files": ["src/gui/hud/sim_road_power_sheets_bevy.rs"],
+      "note": "Bevy road+power sheets; egui Area gated off in sim"
+    },
+    {
+      "channel": "B-4",
+      "slice_id": "HUD-NAT-007",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "note": "ROAD_POPUP_FLOATING_IN_SIM=false + Bevy road sheet"
+    },
+    {
+      "channel": "C-1",
+      "slice_id": "HUD-NAT-003",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "note": "CONTEXT_TRAY_BUILD_USE_BEVY — Build tab on ContextTrayBodyLine"
+    },
+    {
+      "channel": "C-2",
+      "slice_id": "HUD-NAT-004",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "note": "STAGED_PANEL_FLOATING_SIM=false; draw returns in Simulation"
+    },
+    {
+      "channel": "B-3",
+      "slice_id": "HUD-NAT-006",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "note": "Family/catalog cards live in Bevy picker body (NAT-001)"
+    },
+    {
+      "channel": "C-3",
+      "slice_id": "HUD-NAT-005",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "note": "TOOL_HINTS_DRAW_IN_SIM=false; modifiers in tray peek"
+    },
+    {
+      "channel": "C-4",
+      "slice_id": "HUD-NAT-008",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-24",
+      "witness": "debug_runs/production_sim_hud_native_live.json",
+      "note": "SIDE_STATUS_RAIL_EGUI_IN_SIM=false + dock_active inner guard; Bevy context rail owns sim status"
+    },
+    {
+      "channel": "C-5",
+      "slice_id": "HUD-NAT-009",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-24",
+      "witness": "debug_runs/production_sim_hud_native_live.json",
+      "note": "plant+power map-hole clamp/max-h; one themed satellite (plant yields to power hover)"
+    },
+    {
+      "channel": "D-1",
+      "slice_id": "VSS-T3-003",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "witness": "debug_runs/fire_save_roundtrip_live.json"
+    },
+    {
+      "channel": "D-2",
+      "slice_id": "VSS-T4-005",
+      "owner": "@coder-mcp",
+      "status": "done",
+      "completed": "2026-09-24",
+      "witness": "debug_runs/aps_effect_browser_live.json",
+      "note": "Effects tab wired · assign gated on honest · residual G4 preview capture"
+    },
+    {
+      "channel": "D-3",
+      "slice_id": "VSS-T3-004",
+      "owner": "@cleanup-intelligence",
+      "status": "done",
+      "completed": "2026-09-23"
+    },
+    {
+      "channel": "E-1",
+      "slice_id": "HUD-GPLAY-002",
+      "owner": "human",
+      "status": "blocked",
+      "blocked_on": ["HUD-OPS-001"]
+    }
+  ],
+  "do_not_pick": [
+    "MIG-*",
+    "PARTICLES-GUI P-A/B/G-A..D",
+    "VSS-T3-001",
+    "VSS-T4-005b",
+    "RGR-M1",
+    "power_grid COD-POWER-*",
+    "COD-SIM-HUD-* false-blocked",
+    "Dear ImGui"
+  ]
+}

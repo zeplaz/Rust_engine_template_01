@@ -37,6 +37,18 @@ pub fn footprint_invalid_color() -> egui::Color32 {
     egui::Color32::from_rgba_unmultiplied(180, 48, 48, 240)
 }
 
+/// Place-settle target — Planned phase family (`#6490DC` @ ~200α). See `design_place_feedback_anim_v1.md`.
+#[must_use]
+pub fn footprint_place_settle_color() -> egui::Color32 {
+    egui::Color32::from_rgba_unmultiplied(100, 144, 220, 200)
+}
+
+/// Disposable place-feedback pulse duration (seconds).
+#[must_use]
+pub fn place_feedback_duration_secs() -> f32 {
+    0.28
+}
+
 /// R4 corridor edge — planned (`#E8B040` @ 180/255).
 #[must_use]
 pub fn corridor_planned_color() -> egui::Color32 {

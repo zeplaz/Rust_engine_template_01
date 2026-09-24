@@ -27,11 +27,14 @@ mod construction_pipeline;
 mod construction_queue_intent;
 mod construction_stage_witness;
 mod demolish;
+mod defense_concrete_stock;
+mod defense_staging_stock;
 mod industrial_menu;
 mod mock_shapes_menu;
 mod pending_construction;
 mod pending_construction_panel;
 mod path_feedback;
+mod place_feedback;
 mod build_state;
 mod build_strip;
 mod build_validation;
@@ -124,10 +127,24 @@ pub use blueprint_preset::{
     BlueprintImportQueueMode, BlueprintPresetCollectionR8, BlueprintPresetEntryR8,
 };
 pub use build_interaction::{
-    build_cancel_ghost_system, build_clear_pending_queue_system, build_confirm_site_system,
-    build_drag_paint_queue_system, build_pick_ghost_tile_system,
+    build_adjust_blocks_map_wheel, build_adjust_modifiers_system, build_cancel_ghost_system,
+    build_clear_pending_queue_system, build_confirm_site_system, build_drag_paint_queue_system,
+    build_pick_ghost_tile_system, build_place_on_second_lmb_system,
     build_queue_blueprint_on_shift_click_system, build_refresh_placement_validation_system,
     build_rotate_mirror_ghost_system, build_sync_ghost_cursor_entity_system,
+    construction_map_pick_allowed, mil_defense_place_fsm_witness_green,
+    refresh_cod_mil_defense_place_witness, refresh_design_build_ux_redesign_impl_witness,
+    two_click_lmb_commit_count, two_click_mode_lock_count, two_click_place_fsm_witness_green,
+};
+pub use defense_concrete_stock::{
+    refresh_cod_trench_material_gate_witness, refresh_cod_wall_concrete_gate_witness,
+    INSUFFICIENT_CONCRETE_ERROR,
+};
+pub use defense_staging_stock::{
+    ai_commit_gated_count, apply_deployable_staging_gate, apply_deployable_staging_gate_archetype,
+    enqueue_deployable_staging_debit_for_archetype, enqueue_deployable_staging_debit_on_commit,
+    note_ai_commit_gated, place_blocked_no_stock_count, place_ok_debit_count,
+    INSUFFICIENT_STAGED_ERROR, STOCK_IN_TRANSIT_ERROR,
 };
 pub use construction_pipeline::{
     execute_construction_plans_system, validate_construction_plans_system,
@@ -157,13 +174,14 @@ pub use footprint_tile_instances::FootprintTileWitness;
 pub use build_state::{
     BuildCommandActor, BuildGhostRoot, BuildGhostState, BuildPlacementMode, BuildPlacementPreview,
 };
-pub use build_mode::{BuildMode, BuildModeState};
+pub use build_mode::{BuildEscCancelLatch, BuildMode, BuildModeState};
 pub use build_strip::{BuildStripState, ToolContext};
 pub use supply_chain_role::IndustrialSupplyChainRole;
 pub use utility_infrastructure_role::UtilityInfrastructureRole;
 pub use building_definitions::{
-    default_buildings_dir, init_building_definition_registry, load_building_definitions_from_dir,
-    mock_shapes_parity_green, BuildingDefinition, BuildingDefinitionRegistry,
+    default_buildings_dir, init_building_definition_registry, intent_from_archetype,
+    intent_from_definition, load_building_definitions_from_dir, mock_shapes_parity_green,
+    BuildingDefinition, BuildingDefinitionRegistry,
 };
 pub use procedural::{
     init_procedural_module_registry, init_style_pack_registry, init_tile_atlas_registry,
@@ -180,8 +198,8 @@ pub use grammar_labels::{
     human_massing_label,
 };
 pub use build_tool_authority::{
-    apply_build_rail_tool_selection, ActiveBuildTool, BuildTool, BuildingArchetypeId, RailType,
-    RoadType, ZoneTool,
+    apply_build_rail_tool_selection, ActiveBuildTool, BuildTool, BuildingArchetypeId, DefenseKind,
+    RailType, RoadType, ZoneTool,
 };
 pub use commercial_menu::draw_commercial_submenu;
 pub use residential_menu::draw_residential_submenu;
@@ -237,6 +255,11 @@ pub use witness_collectors::build_construction_stage_proof_payload;
 pub use witness_collectors::{refresh_bq128_apply_live_witnesses, refresh_construction_mv_001_live_witness};
 pub use history::ConstructionHistory;
 pub use path_feedback::ConstructionPathFeedback;
+pub use place_feedback::{
+    place_feedback_anim_impl_witness_green, place_feedback_complete_count,
+    place_feedback_start_count, refresh_des_place_feedback_anim_witness, PlaceFeedbackPulse,
+    TwoClickCommitParams,
+};
 pub use rail::RailJunctionAuthority;
 
 use bevy::prelude::*;
@@ -278,6 +301,7 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<BuildStripState>()
             .init_resource::<ActiveBuildTool>()
             .init_resource::<BuildModeState>()
+            .init_resource::<BuildEscCancelLatch>()
             .init_resource::<ActiveRoadPlacement>()
             .init_resource::<ActiveRailPlacement>()
             .init_resource::<ActivePowerLinePlacement>()
@@ -323,6 +347,7 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<ConstructionBlueprintImportUi>()
             .init_resource::<ConstructionQueuePanelView>()
             .init_resource::<path_feedback::ConstructionPathFeedback>()
+            .init_resource::<place_feedback::PlaceFeedbackPulse>()
             .init_resource::<ConstructionPlanQueue>()
             .init_resource::<ConstructionWorldRevision>()
             .init_resource::<ExecutedRoadNetwork>()
@@ -386,6 +411,7 @@ impl Plugin for BuildPlanningPlugin {
                     visual_authority::sync_rail_visual_requests,
                     visual_authority::sync_zone_visual_requests,
                     visual_authority::sync_footprint_visual_requests,
+                    place_feedback::sync_place_feedback_visual_requests,
                     site_stub_overlay::sync_site_stub_overlay_requests,
                     round4_corridor::sync_corridor_phase_visual_requests
                         .after(visual_authority::sync_footprint_visual_requests),
@@ -394,6 +420,15 @@ impl Plugin for BuildPlanningPlugin {
                     site_phase_tile_instances::push_site_phase_tile_instances
                         .after(footprint_tile_instances::push_footprint_tile_instances),
                     footprint_tile_instances::sync_visual_aidv2_footprint_witness,
+                )
+                    .chain()
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
+                    place_feedback::tick_place_feedback_pulse,
+                    place_feedback::clear_place_feedback_on_tool_exit,
                 )
                     .chain()
                     .run_if(in_simulation_or_editor),
@@ -437,9 +472,11 @@ impl Plugin for BuildPlanningPlugin {
                     build_refresh_placement_validation_system,
                     staged_ghost_panel::stage_active_ghost_on_lmb_system
                         .after(build_refresh_placement_validation_system),
+                    build_place_on_second_lmb_system,
                     build_queue_blueprint_on_shift_click_system,
                     build_drag_paint_queue_system,
                     build_rotate_mirror_ghost_system,
+                    build_adjust_modifiers_system,
                     build_clear_pending_queue_system,
                     build_confirm_site_system,
                 )
@@ -468,6 +505,11 @@ impl Plugin for BuildPlanningPlugin {
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(
+                Update,
+                crate::gui::hud::context_tray_build_egui::ensure_context_tray_peek_when_build_armed
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
                 EguiPrimaryContextPass,
                 (
                     draw_build_toolbox_egui.run_if(product_egui_shell_active),
@@ -480,7 +522,7 @@ impl Plugin for BuildPlanningPlugin {
                     crate::gui::hud::context_tray_power_repair_egui::draw_context_tray_power_repair_egui
                         .run_if(in_simulation_or_editor),
                     placement_debug::draw_construction_placement_debug_overlay
-                        .run_if(in_simulation_or_editor),
+                        .run_if(product_egui_shell_active),
                     tool_hints::draw_tool_hints_egui,
                     crate::gui::hud::sim_road_tool_sheet::draw_sim_road_tool_sheet_egui,
                     crate::gui::hud::sim_power_tool_sheet::draw_sim_power_tool_sheet_egui,

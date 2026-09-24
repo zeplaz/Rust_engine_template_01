@@ -1,12 +1,15 @@
 //! Long-range **ember** spot ignition: [`emit_ember_spot_ignition_events`] samples hot
-//! [`ChunkFireOverlay`](super::types::ChunkFireOverlay) cells and emits [`EmberSpotIgnitionEvent`];
-//! [`apply_ember_spot_ignitions`] applies heat to target cells (any chunk). External gameplay
-//! (lightning, ordnance) may also write [`EmberSpotIgnitionEvent`].
+//! [`ChunkFireOverlay`](super::types::ChunkFireOverlay) cells and enqueues
+//! [`SimEffectKind::IgniteCells`](crate::sim::effects::SimEffectKind) via
+//! [`SimEffectQueue`](crate::sim::effects::SimEffectQueue) (VSS-T3-001 single funnel).
+//! [`apply_ember_spot_ignitions`] applies heat from [`EmberSpotIgnitionEvent`] written **only**
+//! by [`drain_sim_effect_queue_system`](crate::sim::effects::drain_sim_effect_queue_system).
 
 use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::sim::effects::{SimEffectEvent, SimEffectKind, SimEffectQueue, SimEffectSource};
 use crate::systems::chunk_environment_persist::{ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks};
 use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::systems::weather::ChunkWeather;
@@ -18,7 +21,8 @@ use super::fire_fuel::FireFuelField;
 use super::surface_water::SurfaceWaterFireGate;
 use super::types::ChunkFireOverlay;
 
-/// Apply heat at a chunk cell. Consumed by [`apply_ember_spot_ignitions`]; safe for other systems to send.
+/// Apply heat at a chunk cell. Consumed by [`apply_ember_spot_ignitions`].
+/// **Sole production writer:** `drain_sim_effect_queue_system` (VSS-T3-001).
 #[derive(Message, Clone, Copy, Debug)]
 pub struct EmberSpotIgnitionEvent {
     pub target: ChunkCellKey,
@@ -81,13 +85,14 @@ pub fn resolve_spot_ignite_cell(
     Some(ChunkCellKey::new(IVec2::new(cx, cy), idx))
 }
 
-/// Reads overlay + fuel + weather; emits [`EmberSpotIgnitionEvent`] for long jumps (non-local diffusion).
+/// Reads overlay + fuel + weather; enqueues spot jumps through [`SimEffectQueue`] (not a direct
+/// [`EmberSpotIgnitionEvent`] writer — VSS-T3-001).
 pub fn emit_ember_spot_ignition_events(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
     tick: Res<SimTick>,
     water_gate: Res<SurfaceWaterFireGate>,
-    mut writer: MessageWriter<EmberSpotIgnitionEvent>,
+    mut queue: ResMut<SimEffectQueue>,
     q: Query<(
         &Chunk,
         &ChunkCellMatrix,
@@ -109,6 +114,8 @@ pub fn emit_ember_spot_ignition_events(
     const SALT_PROB: u32 = 0xE0BE_5700;
     const SALT_D: u32 = 0xE0BE_5701;
     const SALT_ANG: u32 = 0xE0BE_5702;
+
+    let mut cells: Vec<(ChunkCellKey, f32)> = Vec::new();
 
     for (chunk, matrix, wx, fuel_opt, ovl) in &q {
         let sx_u = matrix.size.x as usize;
@@ -167,11 +174,21 @@ pub fn emit_ember_spot_ignition_events(
 
             let spark = (h * 0.07 * ember * (0.55 + wx.wind_speed * 0.45)).clamp(0.0, 0.3);
             if spark > 1e-4 {
-                writer.write(EmberSpotIgnitionEvent { target, spark });
+                cells.push((target, spark));
                 sent += 1;
             }
         }
     }
+
+    if cells.is_empty() {
+        return;
+    }
+    let _ = queue.push(SimEffectEvent {
+        source: SimEffectSource::Ecology,
+        cause_id: format!("CAUSE-ember-spot-{}", tick.0),
+        parent_effect_id: None,
+        kind: SimEffectKind::IgniteCells { cells },
+    });
 }
 
 pub fn apply_ember_spot_ignitions(
@@ -267,5 +284,16 @@ mod tests {
         let k = resolve_spot_ignite_cell(IVec2::new(2, -1), 8, 8, 4, 4, 1, -2).expect("key");
         assert_eq!(k.chunk, IVec2::new(2, -1));
         assert_eq!(k.cell_index, 4 + 1 + (4 - 2) * 8);
+    }
+
+    #[test]
+    fn emit_does_not_own_ember_message_writer() {
+        let src = include_str!("ember_spot_ignition.rs");
+        let needle = format!("Message{}<EmberSpotIgnitionEvent>", "Writer");
+        assert!(
+            !src.contains(&needle),
+            "spot diffusion must enqueue SimEffectQueue — sole MessageWriter is drain"
+        );
+        assert!(src.contains("ResMut<SimEffectQueue>"));
     }
 }

@@ -23,6 +23,12 @@ pub enum SiteArchetype {
     SensorPost,
     TrenchLine,
     BunkerComplex,
+    /// Strip fortification (Defense catalog Defensive wall) — not a base compound.
+    DefensiveWall,
+    /// Manufactured heavy deployable (Dragon's teeth) — COD-DEPLOYABLE-PLACE-001.
+    DragonTeeth,
+    /// Manufactured light deployable (Minefield) — COD-DEPLOYABLE-PLACE-001.
+    Minefield,
     FuelDepot,
     WaterPlant,
 }

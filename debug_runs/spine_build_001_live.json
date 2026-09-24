@@ -1,0 +1,190 @@
+{
+  "gate": "SPINE-BUILD-001",
+  "task_id": "SPINE-BUILD-001",
+  "green": true,
+  "ok": true,
+  "schema": "build_graph_v1.schema.json",
+  "example": "tools/mcp/schemas/examples/build_graph_rowhouse_victorian_production_v1.json",
+  "checks": {
+    "example_schema_and_dag": {
+      "ok": true,
+      "schema_ok": true,
+      "schema_error": null,
+      "classification": {
+        "ok": true,
+        "errors": [],
+        "topo_order": [
+          "build_assembly",
+          "build_blend",
+          "build_variants",
+          "render_frames",
+          "pack_atlas",
+          "register_atlas"
+        ],
+        "canonical_complete": true
+      }
+    },
+    "per_node_witness": {
+      "ok": true,
+      "nodes": [
+        {
+          "node_id": "build_assembly",
+          "depends_on": [],
+          "cli": "assembly-snapshot-generate",
+          "mcp": "assembly_snapshot_generate",
+          "artifact": "tools/mcp/schemas/examples/assembly_snapshot_rowhouse_victorian_production_v1.json",
+          "artifact_exists": true,
+          "manifest": "assets/staging/assemblies/victorian_4x3_s42_a7cb.json",
+          "witness": "debug_runs/tile_spine_run_001_live.json",
+          "validation": "validate-report mcp_spec <artifact>",
+          "status": "present",
+          "ok": true
+        },
+        {
+          "node_id": "build_variants",
+          "depends_on": [
+            "build_assembly"
+          ],
+          "cli": "variant-set-validate",
+          "mcp": "variant_set_validate",
+          "artifact": "tools/mcp/schemas/examples/variant_set_rowhouse_victorian_production_v1.json",
+          "artifact_exists": true,
+          "manifest": null,
+          "witness": "debug_runs/tile_spine_run_001_live.json",
+          "validation": "variant-set-validate <artifact>",
+          "status": "present",
+          "ok": true
+        },
+        {
+          "node_id": "build_blend",
+          "depends_on": [
+            "build_assembly"
+          ],
+          "cli": "assembly-build-run",
+          "mcp": "assembly_build_run",
+          "artifact": "assets/staging/assemblies/victorian_4x3_s42_a7cb.blend",
+          "artifact_exists": true,
+          "manifest": null,
+          "witness": "debug_runs/build_worker_001_live.json",
+          "validation": "job-status <job_id>",
+          "status": "present",
+          "ok": true
+        },
+        {
+          "node_id": "render_frames",
+          "depends_on": [
+            "build_blend",
+            "build_variants"
+          ],
+          "cli": "tile-batch-run",
+          "mcp": "tile_batch_run",
+          "artifact": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
+          "artifact_exists": true,
+          "manifest": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/",
+          "witness": "debug_runs/art_pipeline/tile_rowhouse_victorian_production_v1_live.json",
+          "validation": "validate-report tile_batch <artifact>",
+          "status": "present",
+          "ok": true
+        },
+        {
+          "node_id": "pack_atlas",
+          "depends_on": [
+            "render_frames"
+          ],
+          "cli": "tile-atlas-pack",
+          "mcp": "tile_atlas_pack_tool",
+          "artifact": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas.png",
+          "artifact_exists": false,
+          "manifest": "assets/staging/tiles/tile_rowhouse_victorian_production_v1/atlas_meta.json",
+          "witness": "debug_runs/mcp_atlas_brief_001_live.json",
+          "validation": "validate-report atlas_meta_v2 <manifest>",
+          "status": "deferred_staging",
+          "ok": true
+        },
+        {
+          "node_id": "register_atlas",
+          "depends_on": [
+            "pack_atlas"
+          ],
+          "cli": "tile-atlas-register",
+          "mcp": "tile_atlas_register",
+          "artifact": "assets/tile_atlases/_tile_atlas_index.ron",
+          "artifact_exists": false,
+          "manifest": null,
+          "witness": "debug_runs/rt_registry_001_live.json",
+          "validation": "rt-registry --batch-id tile_rowhouse_victorian_production_v1",
+          "status": "deferred_staging",
+          "ok": true
+        }
+      ]
+    },
+    "cycle_rejected": {
+      "ok": true
+    },
+    "bad_depends_on_rejected": {
+      "ok": true
+    }
+  },
+  "canonical_nodes": [
+    "build_assembly",
+    "build_variants",
+    "build_blend",
+    "render_frames",
+    "pack_atlas",
+    "register_atlas"
+  ],
+  "cli": "spine-build-001 / validate-report build_graph <graph.json>",
+  "next_residual": "APSR-MUTATION-REGRESS-001",
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": 42,
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true,
+    "no_greybox_as_production": true,
+    "contract_only_no_ship_art": true
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/spine_build_001_live.json",
+    "must": [
+      {
+        "field": "checks.example_schema_and_dag.ok",
+        "equals": true
+      },
+      {
+        "field": "checks.per_node_witness.ok",
+        "equals": true
+      },
+      {
+        "field": "checks.cycle_rejected.ok",
+        "equals": true
+      },
+      {
+        "field": "checks.bad_depends_on_rejected.ok",
+        "equals": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "spine_build_001_live_v1",
+    "profile": "SPINE_BUILD",
+    "relative_path": "debug_runs/spine_build_001_live.json",
+    "source_system": "spine_build_graph",
+    "written_at_epoch_secs": 1790254869,
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 SPINE-BUILD-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "SPINE-BUILD-001",
+    "proceed_ship": false,
+    "art_quality": "contract_only_no_ship_art",
+    "agent": "coder-mcp"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/spine_build_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/spine_build_001_live.json"
+}

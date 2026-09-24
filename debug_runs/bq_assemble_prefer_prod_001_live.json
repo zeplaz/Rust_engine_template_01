@@ -1,0 +1,88 @@
+{
+  "schema": "bq_assemble_prefer_prod_001_live_v1",
+  "gate": "BQ-ASSEMBLE-PREF-PROD-001",
+  "task_id": "BQ-ASSEMBLE-PREF-PROD-001",
+  "green": true,
+  "ok": true,
+  "default_source_tier": "production",
+  "default_source_tier_ok": true,
+  "index_prefer_tier_default": "production",
+  "index_prefer_tier_default_ok": true,
+  "focus_packs": [
+    {
+      "style_pack_id": "style_victorian",
+      "source_tier": "production",
+      "placement_count": 30,
+      "production_placements": 30,
+      "lod0_fallbacks": 0,
+      "ok": true
+    },
+    {
+      "style_pack_id": "style_industrial_west",
+      "source_tier": "production",
+      "placement_count": 30,
+      "production_placements": 30,
+      "lod0_fallbacks": 0,
+      "ok": true
+    },
+    {
+      "style_pack_id": "style_rural",
+      "source_tier": "production",
+      "placement_count": 22,
+      "production_placements": 22,
+      "lod0_fallbacks": 0,
+      "ok": true
+    }
+  ],
+  "cli": "assembly-snapshot-generate --source-tier production (default)",
+  "mcp": "assembly_snapshot_generate(source_tier='production')",
+  "summary": "Assemble prefers production by default \u2014 focus packs resolve production GLBs",
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": 42,
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true,
+    "prefer_production_default": true
+  },
+  "repo_root": "C:\\dev\\github\\Rust_engine_template_01",
+  "exit_predicate": {
+    "witness": "debug_runs/bq_assemble_prefer_prod_001_live.json",
+    "must": [
+      {
+        "id": "default_production",
+        "pass": true
+      },
+      {
+        "id": "index_prefer_production",
+        "pass": true
+      },
+      {
+        "id": "focus_packs_production",
+        "pass": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "bq_assemble_prefer_prod_001_live_v1",
+    "profile": "BQ_ASSEMBLE_PREF_PROD",
+    "relative_path": "debug_runs/bq_assemble_prefer_prod_001_live.json",
+    "source_system": "bq_assemble_prefer_prod",
+    "written_at_epoch_secs": 1790256217,
+    "ritual": "BQ-ASSEMBLE-PREF-PROD-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-ASSEMBLE-PREF-PROD-001",
+    "proceed_ship": false,
+    "art_quality": "tooling_only_no_ship_art",
+    "agent": "coder-mcp"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_assemble_prefer_prod_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/bq_assemble_prefer_prod_001_live.json"
+}

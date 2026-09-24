@@ -2,13 +2,13 @@
   "schema": "ops_dashboard_v1",
   "task_id": "OPS-DASHBOARD-001",
   "ok": true,
-  "generated_at": "2026-06-21T04:30:12.874300+00:00",
-  "run_id": "9b095141-8b95-4762-b0a3-197724df94d9",
+  "generated_at": "2026-09-24T13:23:45.293626+00:00",
+  "run_id": "1102eb5b-38e6-4599-985e-df9078ebf8c9",
   "auth_spine": "AUTH: MAT\u2605\u21e2APS\u2605\u21e2SNAP\u2605\u21e2WRK\u2605\u21e2ATL\u2605\u21e2RT\u2605 | SIM\u2605\u21e2CON\u2605\u21e2INFRA\u2605\u21e2FIRE\u2605\u21e2ECO\u2605",
   "qce": {
     "Q_coherence": {
-      "score": 7,
-      "evidence": "stage5 spine + construction operational; art_B dishonest=6"
+      "score": 5,
+      "evidence": "stage5 spine + construction operational; art_B dishonest=7"
     },
     "Q_stability": {
       "score": 7,
@@ -28,18 +28,18 @@
     },
     "E_confusion_risk": {
       "score": 9,
-      "evidence": "art dishonest=6; construction red=1; inflated_green=6; rollup_inflated=0; queue_contradiction=9"
+      "evidence": "art dishonest=7; construction red=0; inflated_green=7; rollup_inflated=0; queue_contradiction=3"
     }
   },
   "metrics_tier1": {
-    "ftr": null,
+    "ftr": 0.0,
     "rtr": null,
-    "events_per_day": 0.0,
-    "status": "sparse",
+    "events_per_day": 1.0,
+    "status": "measured",
     "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
-    "drift_alerts": 7,
-    "drift_warns": 8,
-    "active_processes": 4,
+    "drift_alerts": 8,
+    "drift_warns": 9,
+    "active_processes": 5,
     "crash_alert_count": 0,
     "dcc_process_count": 0,
     "glyph_summary": ""
@@ -49,24 +49,33 @@
     "schema": "ops_run_events_rollup_v1",
     "ok": true,
     "window_hours": 24,
-    "total_events": 0,
-    "non_test_events": 0,
-    "by_agent": {},
-    "by_status": {},
-    "top_slices": [],
+    "total_events": 1,
+    "non_test_events": 1,
+    "by_agent": {
+      "orchestrator-mcp": 1
+    },
+    "by_status": {
+      "unknown": 1
+    },
+    "top_slices": [
+      {
+        "slice_id": "MCP-QUEUE-RECON-001",
+        "count": 1
+      }
+    ],
     "top_tools": [],
     "demo_event_count": 0,
     "pytest_event_count": 0,
     "done_count": 0,
     "metrics_tier1": {
-      "ftr": null,
+      "ftr": 0.0,
       "rtr": null,
-      "events_per_day": 0.0,
-      "status": "sparse",
+      "events_per_day": 1.0,
+      "status": "measured",
       "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
-      "drift_alerts": 7,
-      "drift_warns": 8,
-      "active_processes": 4,
+      "drift_alerts": 8,
+      "drift_warns": 9,
+      "active_processes": 5,
       "crash_alert_count": 0,
       "dcc_process_count": 0,
       "glyph_summary": ""
@@ -79,27 +88,32 @@
     "schema": "ops_process_scan_v1",
     "ok": true,
     "error": null,
-    "process_count": 4,
+    "process_count": 5,
     "processes": [
       {
         "name": "python.exe",
-        "pid": "32532",
-        "mem": "11\u00ff672 Ko"
+        "pid": "8548",
+        "mem": "24\u00ff120 Ko"
       },
       {
         "name": "python.exe",
-        "pid": "1712",
-        "mem": "12\u00ff364 Ko"
+        "pid": "18928",
+        "mem": "9\u00ff848 Ko"
       },
       {
         "name": "python.exe",
-        "pid": "30496",
-        "mem": "45\u00ff516 Ko"
+        "pid": "24048",
+        "mem": "13\u00ff364 Ko"
       },
       {
         "name": "python.exe",
-        "pid": "23312",
-        "mem": "32\u00ff556 Ko"
+        "pid": "19968",
+        "mem": "52\u00ff772 Ko"
+      },
+      {
+        "name": "python.exe",
+        "pid": "23996",
+        "mem": "36\u00ff932 Ko"
       }
     ],
     "slip_ups": [],
@@ -109,9 +123,9 @@
     "task_id": "OPS-TEL-DRIFT-001",
     "schema": "ops_drift_scan_v1",
     "ok": true,
-    "instance_count": 29,
-    "alert_count": 7,
-    "warn_count": 8,
+    "instance_count": 31,
+    "alert_count": 8,
+    "warn_count": 9,
     "instances": [
       {
         "kind": "viewport_authority",
@@ -119,6 +133,14 @@
         "status": "closed",
         "severity": "info",
         "detail": "viewport_authority_migration"
+      },
+      {
+        "kind": "witness_honesty",
+        "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg4_preview_live.json",
+        "honest_gate": "inflated_green",
+        "program_id": null,
+        "severity": "warn",
+        "green": true
       },
       {
         "kind": "witness_honesty",
@@ -186,6 +208,14 @@
       },
       {
         "kind": "witness_honesty",
+        "path": "debug_runs/art_pipeline/veg_atlas_ship_001_live.json",
+        "honest_gate": "dishonest_gate",
+        "program_id": null,
+        "severity": "alert",
+        "green": false
+      },
+      {
+        "kind": "witness_honesty",
         "path": "debug_runs/art_pipeline/warehouse_production_keyframe_g4_live.json",
         "honest_gate": "dishonest_gate",
         "program_id": null,
@@ -219,7 +249,7 @@
       {
         "kind": "queue_contradiction",
         "severity": "alert",
-        "count": 9,
+        "count": 3,
         "detail": "Queue rows contradict witness rollup"
       },
       {
@@ -378,6 +408,12 @@
       "kind": "witness_honesty",
       "severity": "alert",
       "detail": "dishonest_gate",
+      "path": "debug_runs/art_pipeline/veg_atlas_ship_001_live.json"
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "alert",
+      "detail": "dishonest_gate",
       "path": "debug_runs/art_pipeline/warehouse_production_keyframe_g4_live.json"
     },
     {
@@ -385,6 +421,12 @@
       "severity": "alert",
       "detail": "Queue rows contradict witness rollup",
       "path": null
+    },
+    {
+      "kind": "witness_honesty",
+      "severity": "warn",
+      "detail": "inflated_green",
+      "path": "debug_runs/.witness_honesty_precheck/landscape_grammar_lg4_preview_live.json"
     },
     {
       "kind": "witness_honesty",
@@ -435,7 +477,7 @@
       "path": null
     }
   ],
-  "slip_up_count": 15,
+  "slip_up_count": 17,
   "program_summary": {
     "agent_ops": {
       "count": 1,
@@ -443,14 +485,19 @@
       "label": "Agent continuity"
     },
     "art_A": {
-      "count": 2,
-      "green_count": 2,
+      "count": 3,
+      "green_count": 3,
       "label": "APS product / material studio"
     },
     "art_B": {
-      "count": 114,
-      "green_count": 75,
+      "count": 116,
+      "green_count": 76,
       "label": "MCP pipeline spine / warehouse integration"
+    },
+    "art_C": {
+      "count": 1,
+      "green_count": 1,
+      "label": null
     },
     "construction": {
       "count": 1,
@@ -459,7 +506,7 @@
     },
     "stage5_spine": {
       "count": 1,
-      "green_count": 1,
+      "green_count": 0,
       "label": "Stage 5 FULL_APP readiness"
     },
     "stage7_play": {
@@ -468,9 +515,14 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 328,
-      "green_count": 255,
+      "count": 457,
+      "green_count": 373,
       "label": null
+    },
+    "vss_spectator_scale": {
+      "count": 4,
+      "green_count": 3,
+      "label": "VSS-001 \u2014 real game test \u00b7 scale \u00b7 artist VFX \u00b7 symbolic build"
     }
   },
   "delta_wf": [
@@ -527,7 +579,7 @@
   },
   "_agent_meta": {
     "schema": "ops_dashboard_v1",
-    "written_at_epoch_secs": 1782016212,
+    "written_at_epoch_secs": 1790256225,
     "profile": "OPS_DASHBOARD",
     "source_system": "ops_telemetry",
     "relative_path": "debug_runs/agent_ops/ops_dashboard_live.json",

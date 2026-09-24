@@ -45,6 +45,12 @@ impl PendingConstructionQueue {
         self.entries.retain(|entry| entry.approved);
     }
 
+    /// Drop pending demolish picks when arming a defense place row.
+    pub fn clear_demolish_pending(&mut self) {
+        self.entries
+            .retain(|entry| entry.kind != PendingEntryKind::Demolish);
+    }
+
     pub fn approve_all(&mut self) {
         for entry in &mut self.entries {
             entry.approved = true;

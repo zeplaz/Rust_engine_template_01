@@ -1,11 +1,17 @@
 //! Frame counters / cheap aggregates for egui (`base_fire2_smoke.md` §13).
+//!
+//! **DEBT-011 / ES-6-3a:** mean smoke / visibility / max toxicity sample clipmap L0 only.
 
 use bevy::prelude::*;
 
-use super::field::AtmosphereField;
+use crate::substrate::atmosphere::{
+    sample_tactical_toxicity_from_l0, AtmosphereClipmapStack, CLIPMAP_L0_RES,
+};
+
 use super::incremental_schedule::AtmospherePartialWriteMetrics;
 use super::perf_overlay::AtmospherePerfThresholds;
 use super::pipeline::AtmospherePipelineSet;
+use super::visibility::sample_tactical_visibility_from_l0;
 
 #[derive(Resource, Debug, Default, Clone)]
 pub struct AtmosphereDiagnostics {
@@ -37,18 +43,32 @@ pub struct AtmosphereDiagnostics {
 }
 
 fn atmosphere_diagnostics_sample(
-    field: Res<AtmosphereField>,
+    stack: Res<AtmosphereClipmapStack>,
     thresholds: Res<AtmospherePerfThresholds>,
     mut diag: ResMut<AtmosphereDiagnostics>,
 ) {
-    let n = field.cells.len().max(1) as f32;
+    let size = stack
+        .levels
+        .first()
+        .map(|l| l.resolution)
+        .unwrap_or(CLIPMAP_L0_RES);
+    let n = (size.x * size.y).max(1) as f32;
     let mut sum_s = 0f32;
     let mut sum_v = 0f32;
     let mut max_t = 0f32;
-    for c in &field.cells {
-        sum_s += c.smoke_density;
-        sum_v += c.visibility;
-        max_t = max_t.max(c.toxicity);
+    for y in 0..size.y {
+        for x in 0..size.x {
+            sum_s += crate::substrate::atmosphere::sample_tactical_smoke_from_l0(
+                stack.as_ref(),
+                x,
+                y,
+            )
+            .unwrap_or(0.0);
+            sum_v += sample_tactical_visibility_from_l0(stack.as_ref(), x, y);
+            max_t = max_t.max(
+                sample_tactical_toxicity_from_l0(stack.as_ref(), x, y).unwrap_or(0.0),
+            );
+        }
     }
     diag.last_mean_smoke = sum_s / n;
     diag.last_mean_visibility = sum_v / n;

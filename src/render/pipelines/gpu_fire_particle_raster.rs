@@ -14,7 +14,7 @@ use bevy::render::{
         BindGroup, BindGroupEntry, BindGroupLayoutDescriptor, BindGroupLayoutEntries,
         BindGroupLayoutEntry, BindingResource, BindingType, BufferBinding, BufferBindingType,
         BlendComponent, BlendFactor, BlendOperation, BlendState,
-        CachedRenderPipelineId, ColorTargetState, ColorWrites,
+        CachedPipelineState, CachedRenderPipelineId, ColorTargetState, ColorWrites,
         CompareFunction,
         DepthBiasState, DepthStencilState, FragmentState, FrontFace, LoadOp, MultisampleState,
         PipelineCache, PolygonMode, PrimitiveState, PrimitiveTopology, RenderPassDescriptor,
@@ -32,7 +32,7 @@ use crate::render::pipelines::core2d_overlay_order::{
 };
 use crate::render::core::gpu_buffer_registry::{GPUBufferRegistry, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER};
 use crate::render::fire_vfx::WorldFireParticleFrame;
-use crate::render::{particle_view_globals_from_metrics, ExtractedCameraMetrics};
+use crate::render::ExtractedCameraMetrics;
 
 pub const FIRE_PARTICLE_DRAW_WGSL: &str = "shaders/fire/fire_particle_draw.wgsl";
 
@@ -372,6 +372,14 @@ fn fire_particle_raster_pass(
     let hdr = core2d_overlay_pipeline_hdr_index(extracted_view.target_format);
     let si = msaa_index(msaa.samples());
     let pipeline_id = pipeline_res.pipelines[hdr][si];
+    // VR-07 / VR-16: do not silently skip when WGSL fails (rain would still draw).
+    if let CachedPipelineState::Err(e) = cache.get_render_pipeline_state(pipeline_id) {
+        let detail = format!("{e:?}");
+        if !detail.contains("ShaderNotLoaded") && !detail.contains("ShaderImportNotYetAvailable") {
+            panic!("fire_particle_raster pipeline ({FIRE_PARTICLE_DRAW_WGSL}): {e}");
+        }
+        return;
+    }
     let Some(pl) = cache.get_render_pipeline(pipeline_id) else {
         return;
     };
@@ -411,7 +419,28 @@ mod draw_order_tests {
     }
 
     #[test]
+    fn fire_particle_draw_wgsl_has_single_alpha_binding() {
+        // VR-07 regression: double binding → Naga redefinition → silent no-draw.
+        let src = include_str!("../../../assets/shaders/fire/fire_particle_draw.wgsl");
+        let code: String = src
+            .lines()
+            .filter(|l| !l.trim_start().starts_with("//"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let alpha_lets = code.matches("let alpha").count();
+        assert_eq!(
+            alpha_lets, 1,
+            "fire_particle_draw.wgsl must declare `let alpha` exactly once in code (got {alpha_lets})"
+        );
+        assert!(
+            !code.contains("let alpha = clamp(alpha"),
+            "redefinition pattern must stay retired"
+        );
+    }
+
+    #[test]
     fn draw_globals_use_extracted_metrics_view_proj() {
+        use crate::render::particle_view_globals_from_metrics;
         let metrics = ExtractedCameraMetrics::for_tests(2.0, 0.85);
         assert_ne!(metrics.view_proj, Mat4::IDENTITY);
         let packed = particle_view_globals_from_metrics(&metrics, 1.0, 12);

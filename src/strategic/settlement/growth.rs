@@ -115,9 +115,6 @@ mod tests {
     use super::*;
     use crate::strategic::settlement::district::portland_fixture_district;
     use crate::strategic::settlement::market::compute_market_saturation_for_district;
-    use crate::strategic::settlement::pressure::{
-        compute_district_pressure_system, rollup_district_metrics_system,
-    };
     use crate::strategic::settlement::town::portland_fixture_town;
 
     #[test]

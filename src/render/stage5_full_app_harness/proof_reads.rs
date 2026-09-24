@@ -91,6 +91,8 @@ pub(crate) struct Stage5FullAppLiveProofReads<'w> {
     pub(super) weather_precip_frame: Option<Res<'w, crate::render::WeatherPrecipFrame>>,
     /// ES-1-R-001 — ECS-backed Core2d overlay host presence (not env default).
     pub(super) rtt_overlay_host: Option<Res<'w, crate::gui::RttCore2dOverlayHostState>>,
+    /// EMIT≠DRAW — fire particle raster sync counters (draw_ok vs policy/cap/identity skips).
+    pub(super) fire_draw_diag: Option<Res<'w, crate::render::FireDrawDiagnostics>>,
 }
 
 pub(super) fn stage5_live_todo_board_snapshot(board: &Stage5LiveTodoBoard) -> serde_json::Value {

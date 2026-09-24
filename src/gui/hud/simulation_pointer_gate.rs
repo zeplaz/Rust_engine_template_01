@@ -18,7 +18,7 @@ use crate::gui::hud::simulation_shell_phase2::{
     command_left_stack_footprint_px, sim_build_rail_submenu_block_rect, ContextTrayState,
     CONTEXT_TRAY_BODY_H_PX, CONTEXT_TRAY_PEEK_BODY_H_PX, CONTEXT_TRAY_TAB_H_PX,
 };
-use crate::construction::{ActiveBuildTool, BuildStripState, ToolContext};
+use crate::construction::{ActiveBuildTool, BuildStripState, BuildTool, ToolContext};
 use crate::gui::{
     CommandLeftStackState, MinimapShellState, SimulationMapViewport,
     SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX,
@@ -104,7 +104,24 @@ pub fn finalize_simulation_map_pointer_gate_egui_system(
             left_stack.as_ref(),
             gate.cursor,
         );
-    let egui_blocks = ctx.egui_wants_pointer_input() || over_floating_hud;
+    // GUI-ESC-001: over left build rail / stack, ignore egui wants_pointer so rail clicks work
+    // even when placement-debug egui chrome is open.
+    let left_block_w =
+        CENTER_ROW_EDGE_PAD_PX + command_left_stack_footprint_px(left_stack.collapsed);
+    let over_build_rail = gate.cursor.x < left_block_w
+        || sim_build_rail_submenu_blocks_pointer(
+            strip.as_ref(),
+            tool.as_ref(),
+            picker.as_ref(),
+            left_stack.as_ref(),
+            gate.cursor,
+        );
+    let egui_wants = ctx.egui_wants_pointer_input();
+    let egui_blocks = if over_build_rail {
+        false
+    } else {
+        egui_wants || over_floating_hud
+    };
     gate.egui_blocks = egui_blocks;
     if egui_blocks {
         gate.chrome_blocks = true;
@@ -190,28 +207,113 @@ fn cursor_over_visible_hud_widget(
     false
 }
 
-/// **TRIAGE-CURSOR-UNIFY-001** — hide OS cursor over sim play area; picks use gate cursor coords.
+/// **TRIAGE-CURSOR-UNIFY-001** / design_build_ux §5 — placement active when strip or tool selected.
 #[inline]
 #[must_use]
-pub fn simulation_unified_cursor_hide_os(base: BaseState, in_play_area: bool) -> bool {
-    matches!(base, BaseState::Simulation) && in_play_area
+pub fn simulation_build_placement_active(
+    strip: &BuildStripState,
+    tool: Option<&ActiveBuildTool>,
+) -> bool {
+    strip.active != ToolContext::None
+        || tool.is_some_and(|t| !matches!(t.tool, BuildTool::None))
 }
 
-/// **TRIAGE-CURSOR-UNIFY-001** — OS cursor hidden over sim play area only.
+/// Left command stack / build rail (logical px) — hide OS here while placing (§2 hide-when-build).
+#[inline]
+#[must_use]
+pub fn simulation_cursor_over_build_rail_chrome(
+    cursor: Vec2,
+    left_stack: &CommandLeftStackState,
+) -> bool {
+    if cursor.y < SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX {
+        return false;
+    }
+    let left_block_w =
+        CENTER_ROW_EDGE_PAD_PX + command_left_stack_footprint_px(left_stack.collapsed);
+    cursor.x < left_block_w
+}
+
+/// Hide-region while build-active: play area **or** left build rail (not ops/minimap/tray).
+#[inline]
+#[must_use]
+pub fn simulation_unified_cursor_hide_region(
+    cursor: Vec2,
+    left_stack: &CommandLeftStackState,
+    in_play_area: bool,
+) -> bool {
+    in_play_area || simulation_cursor_over_build_rail_chrome(cursor, left_stack)
+}
+
+/// **TRIAGE-CURSOR-UNIFY-001** — OS hide only when build placement active ∧ hide-region.
+/// Picks stay on [`Window::cursor_position`] / gate.cursor (aligned with game crosshair).
+#[inline]
+#[must_use]
+pub fn simulation_unified_cursor_hide_os(
+    base: BaseState,
+    build_placement_active: bool,
+    in_hide_region: bool,
+) -> bool {
+    matches!(base, BaseState::Simulation) && build_placement_active && in_hide_region
+}
+
+/// **TRIAGE-CURSOR-UNIFY-001** — build-scoped hide + rail continuity + idle show.
 #[must_use]
 pub fn triage_cursor_unify_001_witness_green() -> bool {
     triage_cursor_unify_001_self_check().is_ok()
 }
 
 fn triage_cursor_unify_001_self_check() -> Result<(), &'static str> {
-    if !simulation_unified_cursor_hide_os(BaseState::Simulation, true) {
-        return Err("hide_sim_play");
+    let strip_idle = BuildStripState {
+        active: ToolContext::None,
+        ..Default::default()
+    };
+    let strip_roads = BuildStripState {
+        active: ToolContext::Roads,
+        ..Default::default()
+    };
+    let left = CommandLeftStackState { collapsed: true };
+    let play = Vec2::new(640.0, 400.0);
+    let rail = Vec2::new(20.0, 200.0);
+    let ops = Vec2::new(640.0, 10.0);
+
+    if !simulation_build_placement_active(&strip_roads, None) {
+        return Err("strip_active_is_placement");
     }
-    if simulation_unified_cursor_hide_os(BaseState::Simulation, false) {
-        return Err("show_sim_chrome");
+    if simulation_build_placement_active(&strip_idle, None) {
+        return Err("idle_strip_not_placement");
     }
-    if simulation_unified_cursor_hide_os(BaseState::MainMenu, true) {
+    // Idle sim: never hide (fixes always-on play-area hide glitch).
+    if simulation_unified_cursor_hide_os(BaseState::Simulation, false, true) {
+        return Err("idle_show_play");
+    }
+    // Build + play → hide.
+    if !simulation_unified_cursor_hide_os(BaseState::Simulation, true, true) {
+        return Err("hide_build_play");
+    }
+    // Build + left rail → hide (continuous with play — no OS pop-in).
+    if !simulation_unified_cursor_hide_region(rail, &left, false) {
+        return Err("rail_is_hide_region");
+    }
+    if !simulation_unified_cursor_hide_os(
+        BaseState::Simulation,
+        true,
+        simulation_unified_cursor_hide_region(rail, &left, false),
+    ) {
+        return Err("hide_build_rail");
+    }
+    // Build + ops strip → show OS (not a hide region).
+    if simulation_unified_cursor_hide_region(ops, &left, false) {
+        return Err("ops_not_hide_region");
+    }
+    if simulation_unified_cursor_hide_os(BaseState::Simulation, true, false) {
+        return Err("show_build_non_hide");
+    }
+    if simulation_unified_cursor_hide_os(BaseState::MainMenu, true, true) {
         return Err("show_menu");
+    }
+    // Sanity: play sample is hide-region when in_play_area.
+    if !simulation_unified_cursor_hide_region(play, &left, true) {
+        return Err("play_hide_region");
     }
     Ok(())
 }
@@ -220,11 +322,15 @@ pub fn apply_simulation_unified_cursor_system(
     base: Res<State<BaseState>>,
     mut gate: ResMut<SimulationMapPointerGate>,
     mut cursors: Query<&mut CursorOptions, With<PrimaryWindow>>,
+    left_stack: Res<CommandLeftStackState>,
+    strip: Option<Res<BuildStripState>>,
     picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
-    tool: Option<Res<crate::construction::ActiveBuildTool>>,
+    tool: Option<Res<ActiveBuildTool>>,
     diagnostics: Option<Res<crate::gui::DiagnosticsUiState>>,
 ) {
-    // Menus / diagnostics need the OS cursor for accurate egui hits.
+    // Catalog / tool menus / diagnostics / floating egui need OS cursor for accurate hits.
+    // Do **not** treat all chrome_blocks as menu_open — that popped the OS cursor on the
+    // build rail during place mode (dual-cursor glitch vs play-area hide).
     let picker_open = picker.as_ref().is_some_and(|p| p.open);
     let tool_menus = tool.as_ref().is_some_and(|t| {
         t.residential_menu_open
@@ -234,34 +340,44 @@ pub fn apply_simulation_unified_cursor_system(
             || t.mock_shapes_menu_open
     });
     let diag_open = diagnostics.as_ref().is_some_and(|d| d.visible);
-    let menu_open = picker_open || tool_menus || diag_open || gate.chrome_blocks;
-    let hide_os = !menu_open && simulation_unified_cursor_hide_os(*base.get(), gate.in_play_area);
+    let menu_open = picker_open || tool_menus || diag_open || gate.egui_blocks;
+
+    let build_active = strip
+        .as_ref()
+        .map(|s| simulation_build_placement_active(s, tool.as_deref()))
+        .unwrap_or_else(|| tool.as_ref().is_some_and(|t| !matches!(t.tool, BuildTool::None)));
+    let in_hide_region = simulation_unified_cursor_hide_region(
+        gate.cursor,
+        left_stack.as_ref(),
+        gate.in_play_area,
+    );
+    let hide_os =
+        !menu_open && simulation_unified_cursor_hide_os(*base.get(), build_active, in_hide_region);
     gate.os_cursor_visible = !hide_os;
     for mut cursor in &mut cursors {
         cursor.visible = !hide_os;
     }
 }
 
-/// Draw crosshair when OS cursor is hidden over the tactical play area (TRIAGE-CURSOR-UNIFY-001).
+/// Draw crosshair when OS cursor is hidden (TRIAGE-CURSOR-UNIFY-001).
+/// Position = gate.cursor (same logical px as map pick) converted to egui points.
 pub fn draw_simulation_unified_cursor_egui_system(
     base: Res<State<BaseState>>,
     gate: Res<SimulationMapPointerGate>,
     mut contexts: EguiContexts,
 ) {
-    // Never draw a second cursor while the OS pointer is visible (build/diag/chrome).
-    if gate.os_cursor_visible {
-        return;
-    }
-    if !simulation_unified_cursor_hide_os(*base.get(), gate.in_play_area) {
+    // Sole visibility authority is apply_* → gate.os_cursor_visible (no second policy).
+    if gate.os_cursor_visible || !matches!(*base.get(), BaseState::Simulation) {
         return;
     }
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
-    // Prefer egui's pointer (points) so the crosshair matches widget hit-testing under density scale.
-    let pos = ctx
-        .input(|i| i.pointer.latest_pos())
-        .unwrap_or_else(|| crate::gui::bevy_logical_to_egui_pos(ctx, egui::pos2(gate.cursor.x, gate.cursor.y)));
+    // Align with Window::cursor_position / pick — not egui latest_pos (density PPP drift).
+    let pos = crate::gui::bevy_logical_to_egui_pos(
+        ctx,
+        egui::pos2(gate.cursor.x, gate.cursor.y),
+    );
     let layer = egui::LayerId::new(egui::Order::Foreground, egui::Id::new("sim_unified_cursor"));
     let painter = ctx.layer_painter(layer);
     let r = 7.0;
@@ -426,8 +542,31 @@ mod tests {
     fn simulation_unified_cursor_hides_over_play_area() {
         use crate::engine::states::BaseState;
 
-        assert!(simulation_unified_cursor_hide_os(BaseState::Simulation, true));
-        assert!(!simulation_unified_cursor_hide_os(BaseState::Simulation, false));
-        assert!(!simulation_unified_cursor_hide_os(BaseState::MainMenu, true));
+        let left = CommandLeftStackState { collapsed: true };
+        assert!(simulation_unified_cursor_hide_os(
+            BaseState::Simulation,
+            true,
+            true
+        ));
+        assert!(!simulation_unified_cursor_hide_os(
+            BaseState::Simulation,
+            false,
+            true
+        ));
+        assert!(!simulation_unified_cursor_hide_os(
+            BaseState::MainMenu,
+            true,
+            true
+        ));
+        assert!(simulation_unified_cursor_hide_region(
+            Vec2::new(20.0, 200.0),
+            &left,
+            false
+        ));
+        assert!(!simulation_unified_cursor_hide_region(
+            Vec2::new(640.0, 10.0),
+            &left,
+            false
+        ));
     }
 }

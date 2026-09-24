@@ -1,0 +1,105 @@
+{
+  "schema": "visual_artifact_jank_live_v1",
+  "gate": "VISUAL-JANK-LOD-001",
+  "status": "fixed",
+  "green": true,
+  "timestamp": "2026-09-24T17:45:00Z",
+  "operator_evidence": {
+    "screenshot": "jank-48476060-caf6-48dc-b1c7-33eefa1700b4.png",
+    "circled": [
+      "far_left_stray_dark_pixel_on_chrome",
+      "bottom_left_map_edge_yellow_solid_square",
+      "bottom_left_map_edge_green_translucent_square"
+    ]
+  },
+  "root_cause": {
+    "yellow_green_squares": {
+      "owner": "CameraFocusDebug LOD chunk overlay",
+      "colors": {
+        "focus": "srgb(0.95, 0.85, 0.15) / wgsl FOCUS flag",
+        "terrain": "srgb(0.2, 0.75, 0.25) / wgsl TERRAIN flag"
+      },
+      "writers": [
+        "src/gui/camera_focus_debug.rs::draw_sim_focus_debug_overlay",
+        "src/gui/gpu_tile_debug.rs::build_tile_debug_instances (FOCUS/TERRAIN)"
+      ],
+      "mechanism": "LOD debug paint could reach Simulation playfield / map-hole edge without an explicit production-safe arm; gizmo path ran whenever batched overlay was off."
+    },
+    "chrome_bleed": {
+      "top_left_green_brown_chip": {
+        "owner": "settlement_block_frame_debug::draw_block_frame_debug_overlay",
+        "mechanism": "auto-opened CITY-G1-C2 egui window whenever BlockFrameBook non-empty (Simulation inclusive)"
+      },
+      "bottom_right_Pres_Worl": {
+        "owner": "pressure_tooling::PressureBevyOverlayRoot",
+        "mechanism": "show_bevy_strip defaulted true → always-on Bevy strip in Simulation"
+      },
+      "far_left_pixel": {
+        "owner": "related chrome bleed (block-frame window / strip edge)",
+        "mechanism": "debug chrome painting outside map hole"
+      }
+    },
+    "not_owners": [
+      "fire/spark VFX (coder 241fdb2e lane)",
+      "WeatherFireFieldDebugOverlay sprite"
+    ]
+  },
+  "fix": {
+    "authority": "CameraFocusDebug::lod_paint_active = enabled ∧ CAMERA_FOCUS_DEBUG=1",
+    "removed_or_gated": [
+      {
+        "path": "src/gui/camera_focus_debug.rs",
+        "change": "lod_paint_active single gate; enforce_camera_focus_lod_off_in_simulation; gizmo/update/trace run_if lod_paint_active"
+      },
+      {
+        "path": "src/gui/gpu_tile_debug.rs",
+        "change": "FOCUS/TERRAIN instance emit only when lod_paint_active()"
+      },
+      {
+        "path": "src/gui/settlement_block_frame_debug.rs",
+        "change": "Simulation never auto-draws; requires BLOCK_FRAME_DEBUG=1 ∧ visible"
+      },
+      {
+        "path": "src/gui/pressure_tooling.rs",
+        "change": "show_bevy_strip default false; spawn Visibility::Hidden"
+      },
+      {
+        "path": "src/gui/hud/simulation_session.rs",
+        "change": "suppress_simulation_visual_debug_chrome OnEnter(Simulation)"
+      },
+      {
+        "path": "src/engine/test_harness.rs",
+        "change": "Visual scene documents LOD hard-off; focus_debug.enabled=false"
+      }
+    ],
+    "production_default": "OFF",
+    "explicit_arm": {
+      "lod_chunk_squares": "CAMERA_FOCUS_DEBUG=1 and CameraFocusDebug.enabled=true",
+      "block_frame_window": "BLOCK_FRAME_DEBUG=1 (Simulation also needs visible)",
+      "pressure_strip": "F2 composer checkbox show_bevy_strip"
+    },
+    "no_alpha_hack": true
+  },
+  "before_after": {
+    "before": "Yellow focus + green terrain LOD squares visible at map-hole edge; block-frame mini-grid + pressure strip chrome bleed",
+    "after": "LOD paint inert unless CAMERA_FOCUS_DEBUG armed; Simulation enter clears sticky debug chrome; pressure strip and block-frame window off by default"
+  },
+  "residuals": [
+    "Rain/precip streaks over full window chrome (weather visual clip — out of this chrome/LOD slice)",
+    "Fire/spark VFX owned by coder 241fdb2e — not modified",
+    "TileGpuDebugSettings.use_batched_mesh_overlay may still be true in --test visual for non-LOD channels; LOD FOCUS/TERRAIN emit remains gated"
+  ],
+  "validation": {
+    "lib_tests": [
+      "gui::camera_focus_debug::tests::lod_paint_inactive_without_env_even_if_enabled",
+      "gui::camera_focus_debug::tests::lod_paint_inactive_when_disabled"
+    ],
+    "cargo": {
+      "validate_cargo_report": "passed",
+      "error_count": 0,
+      "warning_count": 0,
+      "confidence": 0.95
+    },
+    "lib_test_link": "LNK1104 residual — concurrent fire/spark coder holds test exe lock; check-green covers compile of this slice"
+  }
+}

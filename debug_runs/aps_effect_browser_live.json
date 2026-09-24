@@ -1,0 +1,53 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "relative_path": "debug_runs/aps_effect_browser_live.json",
+    "source_system": "aps_effect_browser",
+    "track": "VSS-T4",
+    "task_id": "VSS-T4-005",
+    "proceed_ship": true,
+    "art_quality": "smoke_tier_panel_wire",
+    "docs": {
+      "charter": "src/dev/design_aps_effect_browser_v1.md",
+      "packet": "tools/mcp/art_pipeline_suite/effect_browser_impl_packet_v1.md"
+    }
+  },
+  "schema": "aps_effect_browser_live_v1",
+  "slice_id": "VSS-T4-005",
+  "status": "shipped",
+  "green": true,
+  "honest_gate": "honest",
+  "reference_batch_id": "vss_t4_reference_effects_v1",
+  "listed_effect_ids": [
+    "rain_streaks",
+    "smoke_column",
+    "spark_shower"
+  ],
+  "reference_count": 3,
+  "honesty_sample": {
+    "rain_streaks": {
+      "honest_gate": "honest",
+      "label": "\u2713 honest"
+    },
+    "smoke_column": {
+      "honest_gate": "honest",
+      "label": "\u2713 honest"
+    },
+    "spark_shower": {
+      "honest_gate": "honest",
+      "label": "\u2713 honest"
+    }
+  },
+  "assign_gate": "blocked_unless_honest",
+  "assign_unblocked": true,
+  "mount": "mount_effect_library",
+  "tab": "Effects",
+  "no_fire_vfx_import": true,
+  "residuals": [],
+  "preview_witness_capture": {
+    "status": "shipped",
+    "capture_kind": "staging_pack_digest",
+    "cli": "effect-preview-capture",
+    "mcp": "effect_preview_capture"
+  }
+}

@@ -269,8 +269,7 @@ mod tests {
     use super::*;
     use crate::systems::ecology::{
         evaluate_landscape_program, load_landscape_grammar_catalog, ActiveBurn, ChunkEcology,
-        LandscapeProgramEvaluation, LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID,
-        VegetationField,
+        LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID, VegetationField,
     };
     use crate::systems::weather::ChunkWeather;
 
@@ -282,25 +281,22 @@ mod tests {
             .init_resource::<crate::systems::sim_control::SimTimeMicros>()
             .add_plugins(VegetationVisualExtractPlugin);
 
-        let entity = app
-            .world_mut()
-            .spawn((
-                Chunk {
-                    coord: LG1_PILOT_CHUNK,
-                },
-                SuccessionState {
-                    stage: SuccessionTopologyStage::BurnScar,
-                    ..Default::default()
-                },
-                ActiveBurn {
-                    heat: 0.7,
-                    frame_index: 3,
-                    started_tick: 0,
-                    severity: 0.7,
-                    ..Default::default()
-                },
-            ))
-            .id();
+        app.world_mut().spawn((
+            Chunk {
+                coord: LG1_PILOT_CHUNK,
+            },
+            SuccessionState {
+                stage: SuccessionTopologyStage::BurnScar,
+                ..Default::default()
+            },
+            ActiveBurn {
+                heat: 0.7,
+                frame_index: 3,
+                started_tick: 0,
+                severity: 0.7,
+                ..Default::default()
+            },
+        ));
 
         app.update();
         let frame = app.world().resource::<VegetationExtractFrame>();

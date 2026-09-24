@@ -56,7 +56,7 @@ Owner: @orchestrator routes · @coder / @coder-mcp implement
 
 | Program | Plan | First coder pick | Blocker |
 |:---|:---|:---|:---|
-| **Nuclear failure** | `plan_nuclear_power_failure_meltdown_v1.md` | COD-NUCLEAR-GRID-LINK-001 (LOOP/SCRAM) | No sim state machine yet |
+| **Nuclear failure** | `plan_nuclear_power_failure_meltdown_v1.md` | **P1 LOOP/SCRAM shipped** (`failure_modes.rs`) · next **COD-NUCLEAR-COOLING-001** | P2/P3 open · game drain `$ref:../tools/orchestrator/queues/game_systems_drain_queue.json` |
 | **Industrial facility grammar** | `plan_industrial_facility_grammar_suite_v1.md` | CMCP-GRAM-FACILITY-BRIEF-001 | Facility binding schema + site pilots |
 | **Designer Track F/G** | Power + nuclear art | DMCP-SPEC-SUBSTATION-YARD-001 | Style bible signed → MCP job |
 

@@ -2,6 +2,12 @@
 //!
 //! Surfaces pick vs ghost alignment: pick uses live camera after viewport sync;
 //! footprint tiles use egui + live `world_to_viewport` (GPU instancing disabled).
+//!
+//! **HUD-A-003:** floating Window is editor-only (`product_egui_shell_active`).
+
+/// Sim must not show this floating debug Window (editor product shell only).
+#[allow(dead_code)] // HUD-A-003 witness greps this const; schedule uses product_egui_shell_active
+pub const PLACEMENT_DEBUG_WINDOW_IN_SIM: bool = false;
 
 use bevy::prelude::*;
 use bevy::ecs::system::SystemParam;

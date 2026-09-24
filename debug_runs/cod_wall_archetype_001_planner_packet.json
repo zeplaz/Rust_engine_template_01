@@ -1,0 +1,226 @@
+{
+  "schema": "planner_coder_packet_v1",
+  "id": "COD-WALL-ARCHETYPE-001",
+  "residual_id": "WALL-ARCHETYPE",
+  "priority": "P2",
+  "agent": "coder",
+  "lane": "construction_ux",
+  "status": "ready_for_coder",
+  "ready_for_coder": true,
+  "blocked_by": [],
+  "prereq_shipped": [
+    "DES-MIL-DEFENSE-PLACE",
+    "COD-MIL-DEFENSE-PLACE-001",
+    "COD-P3-PLACE-ANIM-001"
+  ],
+  "parent_charter": "src/dev/design_mil_defense_place_v1.md",
+  "parent_residual": "debug_runs/des_mil_defense_place_residual_packet.json",
+  "impl_witness": "debug_runs/cod_wall_archetype_live.json",
+  "related_witnesses": [
+    "debug_runs/des_mil_defense_place_live.json",
+    "debug_runs/construction_stage_live.json"
+  ],
+  "architecture_decision": {
+    "verdict": "NEW_SITE_ARCHETYPE",
+    "variant": "SiteArchetype::DefensiveWall",
+    "reject_corridor_reuse": true,
+    "reject_keep_stub": true,
+    "rationale": [
+      "Defense place already commits via CommitConstructionSiteEvent + two-click Building FSM (same as TrenchLine / BunkerComplex).",
+      "ConstructionPlanQueue is roads/rail only (construction_invariants §3); charter forbids a parallel defense plan writer.",
+      "CorridorConstructionBook is TransportEdgeId ledger — walls are not transport edges; routing walls through corridor would dual-authority site vs transport.",
+      "MilitaryBase is semantically a base compound; stub forces HUD label overrides and poisons identity for any future real MilitaryBase place.",
+      "TrenchLine already proves strip SiteArchetype (6×1) — DefensiveWall is isomorphic (4×1)."
+    ],
+    "keep_stub_unblock_when": null,
+    "future_corridor_wall_unblock_when": "Product requires continuous paint / edge topology walls that share ConstructionPlanQueue or CorridorConstructionBook — then open a NEW slice; do not conflate with this identity fix.",
+    "authority": {
+      "site_identity": "⊚SiteArchetype::DefensiveWall ⊨ defense wall commit identity",
+      "tool": "⊚DefenseKind::DefensiveWall ⊰ ⊚SiteArchetype (via site_archetype())",
+      "commit": "⊚CommitConstructionSiteEvent ◂⊳[snapshot] ActiveBuildTool + allows_commit",
+      "preview": "BuildGhostState / BuildPlacementPreview — preview never mutates gameplay",
+      "not_authority": [
+        "CorridorConstructionBook",
+        "ConstructionPlanQueue",
+        "MilitaryBase (retained for future real bases — not wall)"
+      ]
+    }
+  },
+  "summary": "Replace Defensive-wall → MilitaryBase place stub with SiteArchetype::DefensiveWall. Thin identity + exhaustiveness + label remap only. Keep two-click + CommitConstructionSiteEvent. No Phase 9, logistics, building look, G-PLAY, APS, place-anim, or corridor plan kind.",
+  "current_problems": [
+    "DefenseKind::DefensiveWall.site_archetype() → MilitaryBase (lie in commit identity).",
+    "Player HUD must special-case 'Defensive wall' vs site_archetype_operational_name('Military base').",
+    "Witness catalog_ia still records site_archetype: MilitaryBase for defensive_wall row."
+  ],
+  "target_architecture": {
+    "enum": "SiteArchetype gains DefensiveWall beside TrenchLine / BunkerComplex",
+    "mapping": "DefenseKind::DefensiveWall → SiteArchetype::DefensiveWall",
+    "footprint": "unchanged 4×1 (DefenseKind::footprint)",
+    "zone_emitter": "same military cluster as MilitaryBase | BunkerComplex | TrenchLine (fire_control)",
+    "style_pack": "style_military (parametric_commit parity with TrenchLine)",
+    "fsm": "unchanged BuildTool::Defense + uses_two_click_place"
+  },
+  "phases": [
+    {
+      "id": "P0",
+      "goal": "Add SiteArchetype::DefensiveWall; fix all exhaustive matches",
+      "files": [
+        "src/strategic/site/components.rs",
+        "src/strategic/site/overlays.rs",
+        "src/construction/phase_visual.rs",
+        "src/gui/hud/validation_feedback.rs",
+        "src/construction/parametric_commit.rs",
+        "src/construction/blueprint_preset.rs"
+      ],
+      "authority_owner": "SiteArchetype enum (strategic/site)",
+      "risks": [
+        "Missed match arm → compile fail (desired)",
+        "Do not remap unrelated MilitaryBase uses (demolish tests, history fixtures, ToolContext::Military fallback)"
+      ],
+      "acceptance": [
+        "cargo check / validate-report cargo --cached --compress 4 compiles with new variant",
+        "MilitaryBase still exists and still maps to 'Military base' operational name"
+      ]
+    },
+    {
+      "id": "P1",
+      "goal": "Remap DefenseKind wall → DefensiveWall; update unit asserts + defense witness body",
+      "files": [
+        "src/construction/build_tool_authority.rs",
+        "src/construction/build_interaction.rs"
+      ],
+      "authority_owner": "DefenseKind::site_archetype",
+      "depends_on": ["P0"],
+      "risks": [
+        "Witness green predicates still assert MilitaryBase — must flip with remap"
+      ],
+      "acceptance": [
+        "DefenseKind::DefensiveWall.site_archetype() == SiteArchetype::DefensiveWall",
+        "TrenchLine / BunkerComplex mappings unchanged"
+      ]
+    },
+    {
+      "id": "P2",
+      "goal": "Labels + catalog honesty; write COD-WALL-ARCHETYPE witness",
+      "files": [
+        "src/gui/hud/validation_feedback.rs",
+        "src/construction/build_interaction.rs",
+        "debug_runs/cod_wall_archetype_live.json",
+        "debug_runs/des_mil_defense_place_live.json"
+      ],
+      "authority_owner": "HUD display names derive from archetype; DefenseKind.player_label stays 'Defensive wall'",
+      "depends_on": ["P1"],
+      "risks": [
+        "Refreshing des_mil witness must keep charter fields; only wall archetype field changes"
+      ],
+      "acceptance": [
+        "site_archetype_operational_name(DefensiveWall) == 'Defensive wall' (or equivalent locked string)",
+        "Witness catalog row defensive_wall.site_archetype == DefensiveWall",
+        "impl_wired / green true on cod_wall_archetype_live.json"
+      ]
+    }
+  ],
+  "ecs_schedule": {
+    "note": "No schedule change. Placement remains Input → ghost preview → allows_commit → CommitConstructionSiteEvent → site spawn. Zone emitter sync continues Changed<ConstructionSite>.",
+    "order": "unchanged defense two-click path"
+  },
+  "touch": [
+    "src/strategic/site/components.rs",
+    "src/strategic/site/overlays.rs",
+    "src/construction/build_tool_authority.rs",
+    "src/construction/build_interaction.rs",
+    "src/construction/phase_visual.rs",
+    "src/construction/parametric_commit.rs",
+    "src/construction/blueprint_preset.rs",
+    "src/gui/hud/validation_feedback.rs"
+  ],
+  "do": [
+    "Add SiteArchetype::DefensiveWall",
+    "Map DefenseKind::DefensiveWall → DefensiveWall",
+    "Exhaustive label / emitter / style / blueprint tag arms",
+    "Update defense place self-check + write debug_runs/cod_wall_archetype_live.json",
+    "Refresh des_mil_defense_place_live.json wall row archetype field if that witness is regenerated"
+  ],
+  "do_not": [
+    "Phase 9 military industry / production / activation",
+    "ConstructionPlanQueue or CorridorConstructionBook for walls",
+    "Road-paint / continuous wall FSM",
+    "New commit writer or allows_commit bypass",
+    "Place-anim changes (COD-P3-PLACE-ANIM-001 done)",
+    "Logistics / convoy / G-PLAY / APS / Building Look / module kits",
+    "Delete or repurpose MilitaryBase",
+    "Expand footprint semantics beyond existing 4×1"
+  ],
+  "exit_predicates": [
+    {
+      "id": "EP-MAP",
+      "predicate": "DefenseKind::DefensiveWall.site_archetype() == SiteArchetype::DefensiveWall"
+    },
+    {
+      "id": "EP-LABEL",
+      "predicate": "Committed wall sites display as Defensive wall without MilitaryBase label override hack for this kind"
+    },
+    {
+      "id": "EP-FUNNEL",
+      "predicate": "Still CommitConstructionSiteEvent only; construction_plan_queue_for_defense == false"
+    },
+    {
+      "id": "EP-TESTS",
+      "predicate": "cargo test -p proc_A_dine01 --lib construction::"
+    },
+    {
+      "id": "EP-VALIDATE",
+      "predicate": "validate-report cargo --cached --compress 4 status ok / known_fixes only"
+    },
+    {
+      "id": "EP-WITNESS",
+      "predicate": "debug_runs/cod_wall_archetype_live.json green:true ∧ wall_archetype:DefensiveWall ∧ stub_cleared:true"
+    }
+  ],
+  "diagnostics": {
+    "witness_path": "debug_runs/cod_wall_archetype_live.json",
+    "witness_min_fields": [
+      "gate",
+      "green",
+      "verdict",
+      "wall_archetype",
+      "defense_kind_map_ok",
+      "military_base_retained",
+      "commit_funnel",
+      "construction_plan_queue_for_defense",
+      "stub_cleared"
+    ],
+    "rg_audit": "rg \"DefensiveWall => SiteArchetype::MilitaryBase\" src/  → 0 hits"
+  },
+  "edge_cases": [
+    "Existing saves with MilitaryBase sites placed via wall stub (if any) stay MilitaryBase — no silent rewrite; identity fix is forward-only.",
+    "ToolContext::Military → SiteArchetype::MilitaryBase fallback in build_state stays (not wall).",
+    "Blueprint string tag add \"DefensiveWall\"; unknown tags must not collapse to MilitaryBase."
+  ],
+  "open_questions": [
+    {
+      "id": "Q1",
+      "joint": "coder",
+      "ask": "Prefer operational name 'Defensive wall' (player) vs short phase_visual 'Wall' — recommend player string for operational_name and short 'Wall' for phase chrome (parity Trench/Bunker)."
+    }
+  ],
+  "scope_out": [
+    "Phase 9 military industry",
+    "Logistics / convoy",
+    "Building visual look / module kits",
+    "Operator G-PLAY rubric",
+    "APS",
+    "Place animation",
+    "Corridor / continuous wall topology"
+  ],
+  "complexity_budget": {
+    "ev": "high (honest identity; unblocks future military base place)",
+    "cx": "low (enum + remap + labels)",
+    "verdict": "SHIP_THIN"
+  },
+  "delta_wf": "@planner COD-WALL-ARCHETYPE-001 packet ready → @coder implement P0→P2 → WIT-HON debug_runs/cod_wall_archetype_live.json → Q✓ residual WALL-ARCHETYPE",
+  "verify": [
+    "validate-report cargo --cached --compress 4",
+    "cargo test -p proc_A_dine01 --lib construction::"
+  ]
+}

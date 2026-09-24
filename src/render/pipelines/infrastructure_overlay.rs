@@ -209,7 +209,8 @@ pub fn stroke_for_power_line_state(
         PowerLineOverlayState::IslandBoundary => InfrastructureOverlayStroke {
             color_rgb: [0xe8, 0xc0, 0x40],
             weight_px: 3.0,
-            dashed: false,
+            // DES-POWER-ISLAND-UX-001: gold dashed ring on island cut edges
+            dashed: true,
             alpha: 1.0,
             dash_on_px: 4.0,
             dash_off_px: 4.0,
@@ -867,6 +868,18 @@ mod tests {
             compute_island_partition(&utility, &snap, &damaged, &HashSet::new());
         assert!(boundary.contains(&11));
         assert!(offline >= 1 || !unpowered.is_empty());
+    }
+
+    #[test]
+    fn island_highlight_tokens_match_design() {
+        // DES-POWER-ISLAND-UX-001: gold dashed boundary + 40% dim unpowered
+        let boundary =
+            stroke_for_power_line_state(VoltageClass::Medium, PowerLineOverlayState::IslandBoundary);
+        assert!(boundary.dashed);
+        assert_eq!(boundary.color_rgb, [0xe8, 0xc0, 0x40]);
+        let unpowered =
+            stroke_for_power_line_state(VoltageClass::Medium, PowerLineOverlayState::IslandUnpowered);
+        assert!((unpowered.alpha - 0.4).abs() < f32::EPSILON);
     }
 
     #[test]

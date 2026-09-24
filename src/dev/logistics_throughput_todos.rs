@@ -13,6 +13,9 @@ use super::stage5_live_todos::Stage5LiveTodo;
 
 pub const LOGISTICS_THROUGHPUT_TODO_COUNT: usize = 24;
 
+/// Set by `log_a_01_rebuild_replaces_graph_not_append` (LOG-A-01 / LOG-A-AUTHORITY).
+pub static LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED: AtomicBool = AtomicBool::new(false);
+
 /// Set by `infra_pairs_by_transport_edge_not_directory_iteration_order` (LOG-A-07).
 pub static LOG_A_07_INFRA_PAIRING_TEST_PASSED: AtomicBool = AtomicBool::new(false);
 

@@ -11,11 +11,9 @@
 # PROGRAM METADATA
 # ═════════════════════════════════════════════════════════════════════
 # id:           PLAN-APS-REFACTOR-v1
-# status:       PLANNED — audit signed 2026-07-03; execution sequenced via plan_building_quality_v1.md
-# integration:  plan_building_quality_v1.md § INTEGRATED EXECUTION GRAPH + queue seed
-# priority:     parallel-safe with EVERYTHING (pure Python lane; zero overlap with Bevy MIG /
-#               cleanup / schedule plans). Natural partner: run alongside PLAN-BUILDING-QUALITY-v1
-#               so QC surfaces (APSR-Q#) land as BQ gates come online.
+# status:       MACHINE-CLOSED — APSR-A1..A4 + APSR-MUTATION-REGRESS-001 witnesses green 2026-09-24; residual = operator golden rubric
+# integration:  finish lane `$ref:../tools/orchestrator/queues/mcp_aps_tooling_finish_queue.json`
+# priority:     P2 residual (APS-GOLDEN-RUBRIC-OPS-001) under MCP-APS finish
 # owner:        @coder-mcp implements · @designer charters IA/copy deltas (aps-design-ux rules) ·
 #               @sim-steward sequences · lesser agents OK for APSR-D#/T# mechanical slices
 # territory:    tools/mcp/art_pipeline_suite/* · tools/mcp/python/tests/test_aps_* ·

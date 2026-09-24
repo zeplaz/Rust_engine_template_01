@@ -97,7 +97,9 @@ pub fn build_tile_debug_instances(
     };
 
     let mut out = Vec::new();
-    if debug.enabled {
+    // LOD yellow/green squares: sole gate is CameraFocusDebug::lod_paint_active
+    // (enabled ∧ CAMERA_FOCUS_DEBUG=1). Never emit FOCUS/TERRAIN into the playfield otherwise.
+    if debug.lod_paint_active() {
         let r = debug.overlay_radius_chunks.clamp(1, 12);
         let center = debug.focus_chunk;
         'outer: for dy in -r..=r {

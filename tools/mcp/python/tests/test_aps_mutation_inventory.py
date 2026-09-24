@@ -1,4 +1,4 @@
-"""APSR-A0-T1-001 — direct SuiteState mutation inventory must not grow."""
+"""APSR-A0-T1-001 / APSR-MUTATION-REGRESS-001 — SuiteState mutation inventory must not grow."""
 
 from __future__ import annotations
 
@@ -7,6 +7,7 @@ from pathlib import Path
 from rust_engine_mcp.paths import repo_root
 from rust_engine_mcp.suite_state_mutation_inventory import (
     ALLOWLIST_REL,
+    MAX_DIRECT_MUTATION_SITES,
     load_mutation_allowlist,
     scan_suite_state_mutations,
     suite_state_mutation_inventory,
@@ -21,6 +22,8 @@ def test_suite_state_mutation_inventory_matches_allowlist() -> None:
     assert body["green"] is True
     assert body["unexpected_sites"] == []
     assert body["removed_sites"] == []
+    assert body["growth_ok"] is True
+    assert body["live_count"] <= MAX_DIRECT_MUTATION_SITES
 
 
 def test_suite_state_mutation_allowlist_on_disk() -> None:
@@ -28,7 +31,8 @@ def test_suite_state_mutation_allowlist_on_disk() -> None:
     assert path.is_file(), f"missing allowlist: {path}"
     data = load_mutation_allowlist(path)
     assert data.get("gate") == "APSR-A0-T1-001"
-    assert len(data.get("sites", [])) >= 33
+    assert len(data.get("sites", [])) <= MAX_DIRECT_MUTATION_SITES
+    assert len(data.get("sites", [])) >= 1
 
 
 def test_new_direct_suite_state_write_fails_inventory(tmp_path: Path) -> None:

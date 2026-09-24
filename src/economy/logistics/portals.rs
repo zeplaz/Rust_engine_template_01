@@ -5,9 +5,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::economy::spatial_district::chunk_key_from_site_tile;
-use crate::strategic::{
-    LogisticsGraph, LogisticsNode, LogisticsNodeId, PlannedSite, StrategicRasterConfig,
-};
+use crate::strategic::{LogisticsGraph, LogisticsNodeId, PlannedSite, StrategicRasterConfig};
 use crate::terrain::ChunkCellKey;
 
 use super::routes::tile_node_key;
@@ -88,43 +86,4 @@ pub fn rebuild_portal_attachment_map_system(
             map.facility_to_graph.insert(entity, nid);
         }
     }
-}
-
-/// Append portal-only nodes for facilities not colocated with a junction (read-only graph extension at rebuild).
-pub fn attach_portal_nodes_to_derived_graph(
-    graph: &mut LogisticsGraph,
-    portals: &[(Entity, ChunkCellKey)],
-) -> HashMap<Entity, LogisticsNodeId> {
-    let mut out = HashMap::new();
-    let mut by_anchor: HashMap<ChunkCellKey, LogisticsNodeId> = graph
-        .nodes
-        .iter()
-        .filter_map(|n| n.anchor.map(|a| (a, n.id)))
-        .collect();
-
-    let mut next_id = graph
-        .nodes
-        .iter()
-        .map(|n| n.id.0)
-        .max()
-        .unwrap_or(0)
-        .saturating_add(1);
-
-    for &(entity, anchor) in portals {
-        if let Some(&id) = by_anchor.get(&anchor) {
-            out.insert(entity, id);
-            continue;
-        }
-        let id = LogisticsNodeId(next_id);
-        next_id += 1;
-        graph.nodes.push(LogisticsNode {
-            id,
-            throughput: 1.0,
-            stockpile: 0.0,
-            anchor: Some(anchor),
-        });
-        by_anchor.insert(anchor, id);
-        out.insert(entity, id);
-    }
-    out
 }

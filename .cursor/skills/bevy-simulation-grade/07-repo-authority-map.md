@@ -84,8 +84,9 @@ No FixedUpdate anywhere: sim is dt-scaled Update (frame-rate consistent, not ind
 | `ResolvedViewports` | `ViewportPipelineSet::Resolve` chain | `resolve_*` systems in `viewport_pipeline.rs` |
 | `ViewportAuthority.pending` | UI via `submit_viewport_request` | Cleared after resolve |
 | `ViewRepresentationSnapshot` | `build_view_representation_snapshot` | After `SyncViewManager` |
-| `AtmosphereClipmapStack` L0 | `sync_atmos_clipmap_witness_system` (+ contamination tick) | **ES-6** — smoke authority for clipmap consumers; DEBT-006 bridge gated OFF (`RUST_ENGINE_ATMOS_LEGACY_BRIDGE=1` rollback) |
-| `AtmosphereField` (128²) | atmosphere FieldFill/Advect pipeline | Transitional only — not dual-written into clipmap while bridge gated |
+| `AtmosphereClipmapStack` L0 | FieldFill/WindAdvect (+ `sync_atmos_clipmap_witness_system`) | **ES-6 / DEBT-011** — smoke+fog+toxicity+ash+ember+heat authority; Field resource deleted; smoke extract bridge `L0→ChunkSmoke→SimChunkSmokeVisualExtract` |
+| ~~`AtmosphereField` (128²)~~ | — | **DEBT-011 deleted** — use `atmos_chunk_to_tile` + L0 `sample_tactical_*` |
+| `LogisticsGraph` | `sync_logistics_graph_from_transport` (`StrategicFieldPipeline::GraphSync`) | **LOG-A-01** derived cache only; portals via `PortalAttachmentMap`; one-shot play/harness seeds call same `rebuild_logistics_graph_from_transport` then GraphSync replaces |
 
 **Test-only partial sync:** `sync_view_manager_world_main_from_authority` — not scheduled in production.
 
@@ -153,7 +154,7 @@ Simulation terrain display authority lives in `src/render/terrain_render_authori
 | Resource / fn | Role |
 |---------------|------|
 | `TerrainRenderAuthority` | `CpuRaster` (alias `CpuFallback`) · `GpuTilemap` (deferred, never constructed) · `GpuBake` (alias `GpuInstancedAtlas`) |
-| `resolve_sim_default_authority()` | **Release Simulation:** `GpuBake`; **Debug:** `CpuRaster` unless `TERRAIN_GPU_INSTANCED=1` |
+| `resolve_sim_default_authority()` | **Simulation:** `GpuBake` (debug+release); `TERRAIN_CPU_FALLBACK=1` forces `CpuRaster` |
 | `TERRAIN_CPU_FALLBACK=1` | Rollback env → force `CpuRaster` |
 | `tile_world_fallback.rs` | CPU raster + stamp blit gated when authority uses GPU display |
 | `terrain_instanced_draw.rs` | Interim GPU sprite-bake display (dirty-gated) |

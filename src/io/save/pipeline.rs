@@ -26,7 +26,7 @@ use crate::io::save::wire_format;
 
 use crate::io::save::manifest::{
 
-    build_save_world_manifest, ChunkSetRef, OverlaySnapshotRef, SaveWorldManifest,
+    build_save_world_manifest, ChunkSetRef, SaveWorldManifest,
 
 };
 
@@ -180,7 +180,12 @@ pub fn build_incremental_save_manifest(
 
         build_default_registry_snapshot_refs(),
 
-        Vec::<OverlaySnapshotRef>::new(),
+        {
+            let mut overlays = crate::io::save::build_settlement_overlay_refs();
+            overlays.push(crate::io::save::default_fire_overlay_ref());
+            overlays.extend(crate::io::save::build_atmos_clipmap_overlay_refs());
+            overlays
+        },
 
     )
 
@@ -470,6 +475,7 @@ impl Plugin for WorldSaveSpinePlugin {
             .init_resource::<crate::io::save::WaveSShellHydrateWitness>()
             .init_resource::<crate::io::save::WaveSImportedBlueprints>()
             .init_resource::<crate::io::save::WaveSLiveProofState>()
+            .init_resource::<crate::io::save::SettlementBooksHydrateState>()
 
             .add_message::<crate::io::save::dirty_queue::RequestWorldSaveFlush>()
 
@@ -487,6 +493,9 @@ impl Plugin for WorldSaveSpinePlugin {
 
                     crate::io::save::autosave::tick_world_save_autosave,
 
+                    crate::io::save::write_settlement_overlay_on_save_flush
+                        .before(flush_dirty_chunk_save_queue),
+
                     flush_dirty_chunk_save_queue,
 
                     poll_save_io_completions,
@@ -494,6 +503,7 @@ impl Plugin for WorldSaveSpinePlugin {
                     crate::io::save::apply::apply_pending_save_pipeline_jobs,
                     crate::io::save::apply_wave_s_shell_capture_requests,
                     crate::io::save::try_autoload_wave_s_on_bundle_dir,
+                    crate::io::save::try_hydrate_settlement_books_on_bundle_dir,
                     crate::io::save::apply_wave_s_shell_restore_requests,
                     crate::io::save::write_wave_s_hydrate_live_proof_system
                         .run_if(crate::dev::runtime_witness::live_proof_cadence_due),

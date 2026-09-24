@@ -1,4 +1,7 @@
 //! egui draw — map-attached power node hover card (COD-POWER-NODE-HOVER-001).
+//!
+//! **HUD-NAT-009:** map-hole clamp + max-h scroll; sole themed satellite when visible
+//! (plant focus yields).
 
 use bevy::prelude::*;
 use bevy_egui::egui;
@@ -19,15 +22,19 @@ use super::power_node_hover::{
     HOVER_OFFSET_Y,
 };
 use super::sim_hud_egui_theme::{
-    apply_sim_hud_egui_theme, body_text, caption_text, data_text, map_attached_chip_frame,
-    title_text,
+    apply_sim_hud_egui_theme, body_text, caption_text, clamp_satellite_to_map_hole, data_text,
+    map_attached_chip_frame, title_text,
 };
+
+/// HUD-NAT-009 — keep power hover readable inside the map hole.
+pub const HOVER_CARD_MAX_H: f32 = 160.0;
 
 #[must_use]
 pub fn power_node_hover_card_wired() -> bool {
     // Structural: map-attached draw path present (not always-true).
     include_str!("power_node_hover_egui.rs").contains("pub fn draw_power_node_hover_egui")
         && include_str!("power_node_hover_egui.rs").contains("map_attached_chip_frame")
+        && include_str!("power_node_hover_egui.rs").contains("clamp_satellite_to_map_hole")
 }
 
 fn load_bar_color(palette: &UiPalette, pct: f32) -> egui::Color32 {
@@ -38,23 +45,6 @@ fn load_bar_color(palette: &UiPalette, pct: f32) -> egui::Color32 {
     } else {
         palette.fg_data
     }
-}
-
-fn clamp_card_pos(mut pos: egui::Pos2, size: egui::Vec2, map_vp: &SimulationMapViewport) -> egui::Pos2 {
-    if !map_vp.valid {
-        return pos;
-    }
-    let min_x = map_vp.min.x + 4.0;
-    let min_y = map_vp.min.y + 4.0;
-    let max_x = map_vp.max.x - size.x - 4.0;
-    let max_y = map_vp.max.y - size.y - 4.0;
-    pos.x = pos.x.clamp(min_x, max_x);
-    pos.y = pos.y.clamp(min_y, max_y);
-    if pos.y + size.y > map_vp.max.y - 4.0 {
-        pos.y = map_vp.max.y - size.y - 12.0;
-        pos.y = pos.y.clamp(min_y, max_y);
-    }
-    pos
 }
 
 pub fn draw_power_node_hover_egui(
@@ -77,16 +67,20 @@ pub fn draw_power_node_hover_egui(
     let Some(card) = hover.card.as_ref() else {
         return Ok(());
     };
+    // Pointer-gate aware: do not paint a chip when chrome already owns the cursor.
+    if pointer_gate.chrome_blocks_pre_egui && !pointer_gate.in_play_area {
+        return Ok(());
+    }
 
     let ctx = contexts.ctx_mut()?;
     apply_sim_hud_egui_theme(ctx, &palette);
 
-    let card_size = egui::vec2(HOVER_CARD_MIN_W, 120.0);
+    let card_size = egui::vec2(HOVER_CARD_MIN_W, HOVER_CARD_MAX_H);
     let mut anchor = egui::pos2(
         pointer_gate.cursor.x + HOVER_OFFSET_X,
         pointer_gate.cursor.y + HOVER_OFFSET_Y,
     );
-    anchor = clamp_card_pos(anchor, card_size, map_vp.as_ref());
+    anchor = clamp_satellite_to_map_hole(anchor, card_size, map_vp.as_ref());
 
     egui::Area::new(egui::Id::new("power_node_hover_card"))
         .order(egui::Order::Foreground)
@@ -96,44 +90,51 @@ pub fn draw_power_node_hover_egui(
             map_attached_chip_frame(&palette, palette.wire_magenta).show(ui, |ui| {
                 ui.set_min_width(HOVER_CARD_MIN_W);
                 ui.set_max_width(HOVER_CARD_MAX_W);
-                ui.horizontal(|ui| {
-                    ui.label(title_text(&palette, &card.title));
-                    ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                        ui.label(body_text(&palette, &card.voltage_label));
+                egui::ScrollArea::vertical()
+                    .max_height(HOVER_CARD_MAX_H)
+                    .show(ui, |ui| {
+                        ui.horizontal(|ui| {
+                            ui.label(title_text(&palette, &card.title));
+                            ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
+                                ui.label(body_text(&palette, &card.voltage_label));
+                            });
+                        });
+                        ui.label(body_text(&palette, card.status.label()));
+                        ui.horizontal(|ui| {
+                            ui.label(caption_text(&palette, POWER_HOVER_LOAD));
+                            let bar_w = ui.available_width() - 48.0;
+                            let (rect, _) = ui.allocate_exact_size(
+                                egui::vec2(bar_w.max(80.0), 10.0),
+                                egui::Sense::hover(),
+                            );
+                            let fill_w = rect.width() * (card.load_pct / 100.0).clamp(0.0, 1.0);
+                            let fill = egui::Rect::from_min_size(
+                                rect.min,
+                                egui::vec2(fill_w, rect.height()),
+                            );
+                            ui.painter().rect_filled(rect, 2.0, palette.bg_vellum);
+                            ui.painter()
+                                .rect_filled(fill, 2.0, load_bar_color(&palette, card.load_pct));
+                            ui.label(data_text(&palette, &format!("{:.0}%", card.load_pct)));
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label(caption_text(&palette, POWER_HOVER_CAPACITY));
+                            ui.label(data_text(&palette, &card.capacity_line));
+                        });
+                        ui.horizontal(|ui| {
+                            ui.label(caption_text(&palette, POWER_HOVER_FEEDS));
+                            ui.label(data_text(&palette, &card.feeds_line));
+                        });
+                        if let Some(links) = card.links_line.as_ref() {
+                            ui.horizontal(|ui| {
+                                ui.label(caption_text(&palette, POWER_HOVER_LINKS));
+                                ui.label(data_text(&palette, links));
+                            });
+                        }
+                        if let Some(yard) = card.yard_line.as_ref() {
+                            ui.label(caption_text(&palette, yard));
+                        }
                     });
-                });
-                ui.label(body_text(&palette, card.status.label()));
-                ui.horizontal(|ui| {
-                    ui.label(caption_text(&palette, POWER_HOVER_LOAD));
-                    let bar_w = ui.available_width() - 48.0;
-                    let (rect, _) = ui.allocate_exact_size(
-                        egui::vec2(bar_w.max(80.0), 10.0),
-                        egui::Sense::hover(),
-                    );
-                    let fill_w = rect.width() * (card.load_pct / 100.0).clamp(0.0, 1.0);
-                    let fill = egui::Rect::from_min_size(rect.min, egui::vec2(fill_w, rect.height()));
-                    ui.painter().rect_filled(rect, 2.0, palette.bg_vellum);
-                    ui.painter()
-                        .rect_filled(fill, 2.0, load_bar_color(&palette, card.load_pct));
-                    ui.label(data_text(&palette, &format!("{:.0}%", card.load_pct)));
-                });
-                ui.horizontal(|ui| {
-                    ui.label(caption_text(&palette, POWER_HOVER_CAPACITY));
-                    ui.label(data_text(&palette, &card.capacity_line));
-                });
-                ui.horizontal(|ui| {
-                    ui.label(caption_text(&palette, POWER_HOVER_FEEDS));
-                    ui.label(data_text(&palette, &card.feeds_line));
-                });
-                if let Some(links) = card.links_line.as_ref() {
-                    ui.horizontal(|ui| {
-                        ui.label(caption_text(&palette, POWER_HOVER_LINKS));
-                        ui.label(data_text(&palette, links));
-                    });
-                }
-                if let Some(yard) = card.yard_line.as_ref() {
-                    ui.label(caption_text(&palette, yard));
-                }
             });
         });
 

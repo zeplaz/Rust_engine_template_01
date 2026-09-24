@@ -45,6 +45,7 @@ fn construction_parametric_placement_001_witness() -> serde_json::Value {
         super::build_tool_authority::shift_queue_building_removed_witness_green();
     let enter_commits_single_ghost =
         super::build_interaction::enter_commits_single_ghost_witness_green();
+    let two_click_place_fsm = super::build_interaction::two_click_place_fsm_witness_green();
     let staging_toggle_wired = super::staged_ghost_panel::staging_toggle_wired_witness_green();
     let build_approved_drains_staged =
         super::staged_ghost_panel::build_approved_drains_staged_witness_green();
@@ -60,6 +61,7 @@ fn construction_parametric_placement_001_witness() -> serde_json::Value {
         && commit_carries_scale_and_weights
         && shift_queue_building_removed
         && enter_commits_single_ghost
+        && two_click_place_fsm
         && staging_toggle_wired
         && build_approved_drains_staged
         && overlap_blocks_commit
@@ -74,6 +76,7 @@ fn construction_parametric_placement_001_witness() -> serde_json::Value {
         "commit_carries_scale_and_weights": commit_carries_scale_and_weights,
         "shift_queue_building_removed": shift_queue_building_removed,
         "enter_commits_single_ghost": enter_commits_single_ghost,
+        "two_click_place_fsm": two_click_place_fsm,
         "staging_toggle_wired": staging_toggle_wired,
         "build_approved_drains_staged": build_approved_drains_staged,
         "overlap_blocks_commit": overlap_blocks_commit,
@@ -646,6 +649,12 @@ mod live_proof_sim_tests {
             block["enter_commits_single_ghost"],
             serde_json::json!(true),
             "PARAM-002 P2-A: {}",
+            block
+        );
+        assert_eq!(
+            block["two_click_place_fsm"],
+            serde_json::json!(true),
+            "TRIAGE-BUILD-CLICK-PLACE-001: {}",
             block
         );
         assert_eq!(

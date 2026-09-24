@@ -6,7 +6,8 @@ use bevy::prelude::*;
 use crate::gui::GPU_FIRE_INSTANCE_BUDGET_CEILING;
 use crate::render::extraction::RenderProjectionGraph;
 use crate::render::extraction::sim_visual_extract::{
-    FireVisualGpuInstance, SimChunkSmokeVisualExtract, FIRE_VISUAL_ACTIVE_HEAT_EPS,
+    ClimateVisualAggregate, FireVisualGpuInstance, SimChunkSmokeVisualExtract,
+    FIRE_VISUAL_ACTIVE_HEAT_EPS,
 };
 use crate::render::{
     trace_particle_routing, ChunkCoord, DebugRenderTraceConfig, FireChunkLodState, FireLodBand,
@@ -14,12 +15,15 @@ use crate::render::{
 use crate::terrain::generation::chunk_world_center;
 
 use crate::render::ExtractedCameraMetrics;
+use super::consumable::{
+    EffectConsumable, EffectConsumableDef, EffectConsumableRegistry, EffectLane,
+    EffectResolvedSpawn, EffectSpawnResolveContext, SimCoupling, resolve_effect_spawn,
+};
 use super::frame::WorldFireParticleFrame;
 use super::pack::{GpuParticleInstance, ParticleClass};
 use super::witness::{
     fire_spark_witness_phase, fire_spark_zoom_scatter_gate, FireSparkWitness,
-    FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_MIN_PX_PER_TILE,
-    FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE, FIRE_SPARK_SCATTER_MAX,
+    FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE, FIRE_SPARK_SCATTER_MAX,
 };
 
 /// Chunk slab size assumed when bootstrap rows lack matrix geometry (matches test harness).
@@ -143,6 +147,9 @@ pub fn emit_world_fire_particles_from_projection(
     smoke_extract: Option<Res<SimChunkSmokeVisualExtract>>,
     view_manager: Option<Res<crate::gui::ViewManager>>,
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
+    registry: Option<Res<crate::render::fire_vfx::EffectConsumableRegistry>>,
+    climate: Option<Res<ClimateVisualAggregate>>,
+    consumables: Query<&crate::render::fire_vfx::EffectConsumable>,
     mut frame: ResMut<WorldFireParticleFrame>,
     mut last_trace: Local<u64>,
 ) {
@@ -173,6 +180,18 @@ pub fn emit_world_fire_particles_from_projection(
                 );
             }
         }
+    }
+    // VSS-T4-005b — registry consumables push into the same WorldFireParticleFrame spine.
+    if let Some(reg) = registry.as_deref() {
+        let active: Vec<&EffectConsumable> = consumables.iter().collect();
+        append_effect_consumable_registry_particles(
+            reg,
+            overlay.as_deref(),
+            climate.as_deref(),
+            &active,
+            frame.as_mut(),
+            *cam,
+        );
     }
     frame.anim_time_secs = time.elapsed_secs();
     if let Some(cfg) = cfg.as_deref() {
@@ -438,6 +457,163 @@ pub fn seed_world_fire_particles_from_overlay_heat(
         view_culled: false,
         projection_view: "overlay_bootstrap",
     };
+}
+
+/// VSS-T4-005b — push active registry consumables into the existing fire_vfx particle frame.
+/// No parallel draw path: `ParticleDomainId::Fire` / precip → same `GpuParticleInstance` spine.
+pub fn append_effect_consumable_registry_particles(
+    registry: &EffectConsumableRegistry,
+    overlay: Option<&crate::render::SharedOverlayFieldBuffers>,
+    climate: Option<&ClimateVisualAggregate>,
+    consumables: &[&EffectConsumable],
+    frame: &mut WorldFireParticleFrame,
+    cam: ExtractedCameraMetrics,
+) {
+    let capacity = frame.gpu_capacity.max(1);
+    let px_per_tile = cam.zoom_level.max(0.01);
+    let ctx = EffectSpawnResolveContext {
+        overlay,
+        climate,
+        entity_by_tag: None,
+    };
+
+    let mut pushed = 0usize;
+
+    for consumable in consumables.iter().copied() {
+        if !consumable.active || frame.instances.len() >= capacity {
+            break;
+        }
+        let Some(def) = registry.get(&consumable.effect_id) else {
+            continue;
+        };
+        if def.particle_domain().is_none() {
+            continue;
+        }
+        pushed += push_consumable_def_instances(
+            def,
+            &consumable.resolved_spawn,
+            frame,
+            cam,
+            px_per_tile,
+            capacity,
+        );
+    }
+
+    // Heat-/precip-coupled registry defs without live entities still emit from field samples.
+    for def in registry.entries.values() {
+        if frame.instances.len() >= capacity {
+            break;
+        }
+        if def.particle_domain().is_none() {
+            continue;
+        }
+        let resolved = resolve_effect_spawn(def, &ctx);
+        let should_emit = match (&def.sim_coupling, &resolved) {
+            (SimCoupling::HeatField, _) => overlay
+                .map(|o| o.chunk_fire_heat.values().any(|&h| h >= 0.12))
+                .unwrap_or(false),
+            (SimCoupling::PrecipField, EffectResolvedSpawn::FieldSample { emits, .. }) => *emits,
+            (SimCoupling::None, EffectResolvedSpawn::WorldPosition(_)) => true,
+            _ => matches!(
+                resolved,
+                EffectResolvedSpawn::WorldPosition(_)
+                    | EffectResolvedSpawn::FieldSample { emits: true, .. }
+            ),
+        };
+        if !should_emit {
+            continue;
+        }
+        if def.sim_coupling == SimCoupling::HeatField && !frame.instances.is_empty() && pushed == 0 {
+            pushed += push_consumable_def_instances(def, &resolved, frame, cam, px_per_tile, capacity);
+        } else if def.sim_coupling != SimCoupling::HeatField || frame.instances.is_empty() {
+            pushed += push_consumable_def_instances(def, &resolved, frame, cam, px_per_tile, capacity);
+        }
+    }
+
+    if pushed > 0 {
+        frame.instances.sort_by_key(|row| {
+            ParticleClass::from_class_id(row.ember_class_radius_smoke.y).transparent_draw_order()
+        });
+        frame.spark_witness.rows = frame.instances.len();
+        if frame.spark_witness.projection_view.is_empty() {
+            frame.spark_witness.projection_view = "effect_consumable_registry";
+        }
+    }
+}
+
+fn push_consumable_def_instances(
+    def: &EffectConsumableDef,
+    resolved: &EffectResolvedSpawn,
+    frame: &mut WorldFireParticleFrame,
+    cam: ExtractedCameraMetrics,
+    px_per_tile: f32,
+    capacity: usize,
+) -> usize {
+    let class = match def.lane {
+        EffectLane::ParticleInstanced if def.sim_coupling == SimCoupling::PrecipField => {
+            ParticleClass::AtmosphereFx
+        }
+        EffectLane::ParticleInstanced => ParticleClass::Spark,
+        _ => return 0,
+    };
+    let world = match resolved {
+        EffectResolvedSpawn::WorldPosition(p) => *p,
+        EffectResolvedSpawn::FieldSample { uv, value, .. } => {
+            let x = uv.x * 64.0;
+            let y = uv.y * 64.0;
+            bevy::math::Vec3::new(x, y, value * 4.0)
+        }
+        EffectResolvedSpawn::AttachedEntity { offset, .. } => *offset,
+        EffectResolvedSpawn::Unresolved(_) => return 0,
+    };
+    let heat = match resolved {
+        EffectResolvedSpawn::FieldSample { value, .. } => (*value).clamp(0.12, 1.0),
+        _ => 0.55,
+    };
+    let burst = def
+        .emit
+        .burst_count
+        .min(48)
+        .max(4) as usize;
+    let rate_slots = ((def.emit.rate * 0.05).ceil() as usize).clamp(2, FIRE_SPARK_SCATTER_MAX);
+    let slots = burst.min(rate_slots).min(capacity.saturating_sub(frame.instances.len()));
+    if slots == 0 {
+        return 0;
+    }
+    let mut row = FireVisualGpuInstance::default();
+    row.chunk_xy_heat_lum = bevy::math::Vec4::new(
+        (world.x / 32.0).floor(),
+        (world.y / 32.0).floor(),
+        heat,
+        1.0,
+    );
+    row.world_xyz_radius = bevy::math::Vec4::new(world.x, world.y, world.z, 24.0);
+    row.smoke_ember_vis_priority = bevy::math::Vec4::new(0.2, 0.7, 0.0, 1.0);
+    let Some((shaped, _)) =
+        shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame, px_per_tile)
+    else {
+        return 0;
+    };
+    let mut pushed = 0usize;
+    for slot in 0..slots as u32 {
+        if frame.instances.len() >= capacity {
+            break;
+        }
+        let offset = fire_particle_scatter_offset(shaped.chunk_grid_xy(), heat, slot);
+        let scattered = fire_row_with_world_offset(shaped, offset);
+        frame.instances.push(GpuParticleInstance::from_fire_visual(
+            &scattered, class, cam,
+        ));
+        pushed += 1;
+    }
+    pushed
+}
+
+#[must_use]
+pub fn effect_consumable_registry_emit_wired() -> bool {
+    let src = include_str!("emit.rs");
+    src.contains("append_effect_consumable_registry_particles")
+        && src.contains("effect_consumable_registry")
 }
 
 #[cfg(test)]
@@ -1042,5 +1218,38 @@ mod tests {
         assert!((particles.spark_witness.zoom_alpha - 0.66).abs() < 1e-4);
         assert_eq!(particles.spark_witness.scatter_max, FIRE_SPARK_SCATTER_MAX);
         assert!(!particles.spark_witness.view_culled);
+    }
+
+    #[test]
+    fn registry_spark_shower_emits_into_fire_vfx_spine() {
+        assert!(effect_consumable_registry_emit_wired());
+        let reg = EffectConsumableRegistry::load_from_disk(
+            std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/effects/registry"),
+        );
+        assert!(reg.get("spark_shower").is_some());
+        let mut heat = std::collections::HashMap::new();
+        heat.insert(IVec2::ZERO, 0.8_f32);
+        let mut overlay = crate::render::SharedOverlayFieldBuffers::default();
+        overlay.chunk_fire_heat = heat;
+        let mut frame = WorldFireParticleFrame::default();
+        frame.gpu_capacity = 256;
+        let cam = ExtractedCameraMetrics {
+            zoom_level: FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE,
+            zoom_alpha: 0.42,
+            ..Default::default()
+        };
+        append_effect_consumable_registry_particles(
+            &reg,
+            Some(&overlay),
+            None,
+            &[],
+            &mut frame,
+            cam,
+        );
+        assert!(
+            !frame.instances.is_empty(),
+            "spark_shower registry emit must push GpuParticleInstance rows"
+        );
+        assert!(frame.spark_witness.rows > 0);
     }
 }

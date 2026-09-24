@@ -1,0 +1,103 @@
+{
+  "gate": "BQ-LOD0-TWIN-PRUNE-001",
+  "task_id": "BQ-LOD0-TWIN-PRUNE-001",
+  "program": "PLAN-MCP-APS-TOOLING-FINISH-001",
+  "batch_id": "kit_lod0_twins_retired_2026-09",
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "n/a-archive-only",
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true,
+    "no_fake_operator_pass": true,
+    "no_q3_golden_seed_theater": true
+  },
+  "pre_lod0_dirs": [],
+  "pre_lod0_count": 0,
+  "pruned_count": 0,
+  "pruned_total_archived": 50,
+  "pruned_job_ids": [],
+  "cleared_total_archived": 50,
+  "retire": {
+    "ok": true,
+    "cleared_count": 0,
+    "cleared_total": 50,
+    "archive_rel": "assets/archive/kit_lod0_twins_retired_2026-09",
+    "moved_log": "assets/archive/kit_lod0_twins_retired_2026-09/MOVED_LOG.json",
+    "moved_job_ids": [],
+    "errors": []
+  },
+  "exit_check": {
+    "production_count": 54,
+    "lod0_count": 0,
+    "smoke_count": 0,
+    "selectable_lod0_ids": [],
+    "residual_lod0_dirs_in_modules": [],
+    "all_packs_production_only": true,
+    "audit_green": true,
+    "ok": true
+  },
+  "index_entries": 54,
+  "errors": [],
+  "green": true,
+  "verdict": "PASS",
+  "honest_gate": "honest_gate",
+  "proceed_ship": true,
+  "art_quality": "index_hygiene",
+  "operator_pass": false,
+  "operator_pass_note": "Hygiene only \u2014 no pixel approve; Q3 cancelled by user",
+  "next_residual": "Building Visual Concept v2 / assembly composition \u2014 sibling Session 063286c3",
+  "notes": "Archived unused lod0 index twins so assemble cannot fall back. Assembly composition / Building Visual Concept v2 owned by reinvent sibling 063286c3. Do not reopen BQ-Q3-OPS-APPROVE-001.",
+  "_agent_meta_extra": {
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-LOD0-TWIN-PRUNE-001",
+    "proceed_ship": true,
+    "art_quality": "index_hygiene",
+    "agent": "coder-mcp",
+    "operator_pass": false
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/bq_lod0_twin_prune_001_live.json",
+    "must": [
+      {
+        "id": "lod0_index_cleared",
+        "pass": true
+      },
+      {
+        "id": "no_residual_lod0_dirs",
+        "pass": true
+      },
+      {
+        "id": "no_fake_operator_pass",
+        "pass": true
+      },
+      {
+        "id": "next_residual_is_reinvent_not_q3",
+        "pass": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "bq_lod0_twin_prune_001_live_v1",
+    "profile": "BQ_LOD0_TWIN_PRUNE",
+    "relative_path": "debug_runs/bq_lod0_twin_prune_001_live.json",
+    "source_system": "bq_lod0_twin_prune",
+    "written_at_epoch_secs": 1790257942,
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-LOD0-TWIN-PRUNE-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-LOD0-TWIN-PRUNE-001",
+    "proceed_ship": true,
+    "art_quality": "index_hygiene",
+    "agent": "coder-mcp",
+    "operator_pass": false
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_lod0_twin_prune_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/bq_lod0_twin_prune_001_live.json"
+}

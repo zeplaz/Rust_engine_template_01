@@ -109,6 +109,10 @@ Same job JSON as APS — tri-mode rule.
 | Missing GLB | `status: failed`, list `missing_glb[]` |
 | Worker timeout | APS shows last good thumb + error |
 | Headless GPU unavailable | Fall back to catalog browser multi-GLB (degraded) |
+| Blank / flat PNG (DXGI early capture) | Worker waits for `Mesh3d` + settle frames, rejects flat luma, one retry; Python `png_preview_usable` still gates; BQ-Q2 falls back to `schematic_pil` |
+| Stale `target/release` binary | Python picks newest `bevy_preview_worker` by mtime (release vs debug) |
+
+**Blank-frame fix witness:** `debug_runs/bq_bevy_blank_frame_fix_001_live.json` (BQ-BEVY-BLANK-FRAME-FIX-001).
 
 ---
 

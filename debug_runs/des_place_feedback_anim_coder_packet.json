@@ -1,0 +1,53 @@
+{
+  "schema": "coder_delta_wf_packet_v1",
+  "id": "COD-P3-PLACE-ANIM-001",
+  "priority": "P3",
+  "agent": "coder",
+  "lane": "construction_ux",
+  "status": "done",
+  "blocked_by": [],
+  "prereq_shipped": [
+    "TRIAGE-BUILD-CLICK-PLACE-001",
+    "COD-MIL-DEFENSE-PLACE-001",
+    "DES-P3-PLACE-ANIM"
+  ],
+  "goal": "Intentional ghost→place settle (280ms ease-out) for Building + Defense after successful CommitConstructionSiteEvent — reuse ConstructionVisualRequests / ghost_visual tokens; no FSM / funnel / pointer-gate change.",
+  "charter": "src/dev/design_place_feedback_anim_v1.md",
+  "design_witness": "debug_runs/des_place_feedback_anim_live.json",
+  "impl_witness": "debug_runs/des_place_feedback_anim_live.json",
+  "impl_note": "PlaceFeedbackPulse + TwoClickCommitParams; arm after queue_commit; sync_place_feedback_visual_requests; impl_wired:true",
+  "touch": [
+    "src/construction/ghost_visual.rs",
+    "src/construction/visual_authority.rs",
+    "src/construction/build_interaction.rs",
+    "src/construction/place_feedback.rs",
+    "src/construction/mod.rs"
+  ],
+  "do": [
+    "Arm PlaceFeedbackPulse after successful queue_commit (Building + Defense)",
+    "Push footprint settle tiles via ConstructionVisualRequests for 280ms ease-out",
+    "Honest counters place_feedback_starts / place_feedback_completes",
+    "Keep unlock_to_preview + two-click FSM + pointer gate + allows_commit"
+  ],
+  "do_not": [
+    "Second commit writer",
+    "Bypass allows_commit",
+    "Fork two-click FSM",
+    "Parallel extract / new camera math",
+    "WALL-ARCHETYPE expansion",
+    "Phase 9 / logistics / building look / G-PLAY"
+  ],
+  "joint_coder": "Prefer one visual-authority sync path appending pulse tiles — never a second painter with forked projection.",
+  "verify": [
+    "validate-report cargo --cached --compress 4",
+    "cargo test -p proc_A_dine01 --lib construction::"
+  ],
+  "residuals_leave": [
+    {
+      "id": "WALL-ARCHETYPE",
+      "owner": "planner",
+      "scope": "replace MilitaryBase stub for defensive wall"
+    }
+  ],
+  "delta_wf": "@designer DES-P3-PLACE-ANIM PASS → @coder COD-P3-PLACE-ANIM-001"
+}

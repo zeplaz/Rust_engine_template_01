@@ -21,9 +21,7 @@ mod witness_gates;
 pub use log_e01_witness::{LogE01CaptureLane, STAGE5_FULL_APP_LIVE_JSON};
 #[cfg(test)]
 pub use log_e01_witness::{
-    log_e01_f2_combined_projection_fixture, log_e01_projection_graph_fixture,
-    merge_log_e01_stage5_witness, merge_tactical_vfx_stage5_witness,
-    merge_visual_perf_witness_stage5, refresh_log_e01_and_tactical_vfx_stage5_live_witness,
+    log_e01_projection_graph_fixture, refresh_log_e01_and_tactical_vfx_stage5_live_witness,
     refresh_log_e01_fullapp_upgrade_001_live_witness, refresh_p2_fire_spark_011_stage5_live_witness,
     refresh_stage5_visual_perf_witness_on_disk,
 };

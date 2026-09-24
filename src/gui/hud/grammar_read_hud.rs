@@ -229,7 +229,22 @@ pub fn format_build_read_hud_v2_line(
     use super::sim_hud_esc_cascade::truncate_build_read_line;
 
     if tool.tool == BuildTool::Demolish {
-        return truncate_build_read_line("BUILD  ·  DEMOLISH · hover");
+        return truncate_build_read_line(super::sim_hud_copy::TRAY_DEMOLISH_ARMED);
+    }
+    if let BuildTool::Defense(kind) = tool.tool {
+        let label = kind.player_label();
+        let in_adjust =
+            ghost.placement_mode == BuildPlacementMode::Adjust && ghost.origin.is_some();
+        let line = if !in_adjust {
+            super::sim_hud_copy::defense_preview_strip(label)
+        } else if preview.report.allows_commit {
+            super::sim_hud_copy::defense_adjust_valid_strip(label)
+        } else {
+            let reason = validation_feedback::primary_validation_message(&preview.report)
+                .unwrap_or_else(|| "blocked".into());
+            super::sim_hud_copy::defense_adjust_invalid_strip(&reason)
+        };
+        return truncate_build_read_line(&line);
     }
     let scale = format_build_scale(ghost);
     let mut line = if preview.report.allows_commit {
@@ -275,7 +290,7 @@ fn des_build_read_hud_002_self_check() -> Result<(), &'static str> {
         ..Default::default()
     };
     let demo = format_build_read_hud_v2_line(&demolish, &strip, &ghost, &preview, &book);
-    if !demo.contains("DEMOLISH") {
+    if !demo.to_lowercase().contains("demolish") && !demo.contains("pick target") {
         return Err("demolish_copy");
     }
     let mut book2 = CorridorConstructionBook::default();

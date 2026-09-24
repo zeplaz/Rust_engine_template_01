@@ -67,7 +67,11 @@ class GenerationTraceStrip(ttk.LabelFrame):
     def _on_approve_toggle(self) -> None:
         if self._approved_var.get():
             aid = self._get_assembly_id() if self._get_assembly_id else self.state.assembly_id
-            allowed, reason = building_quality_qc.assembly_qc_allows_approve(aid or None)
+            snap = self._get_snapshot() if self._get_snapshot else None
+            allowed, reason = building_quality_qc.assembly_qc_allows_approve(
+                aid or None,
+                snapshot=snap if isinstance(snap, dict) else None,
+            )
             if not allowed:
                 self._approved_var.set(False)
                 messagebox.showwarning("Approve blocked (QC)", reason)

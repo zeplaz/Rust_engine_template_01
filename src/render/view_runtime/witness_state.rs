@@ -77,7 +77,7 @@ mod tests {
         commit_map_camera_pose_to_view_authority, map_camera_desired_from_view_authority,
         MapCameraDesired,
     };
-    use crate::render::view_runtime::{ViewRuntimeTrace, ViewSurfaceId};
+    use crate::render::view_runtime::ViewRuntimeTrace;
 
     /// **TRIAGE-VM-09-v2** — derive round-trip from authority WorldMain pose.
     #[test]

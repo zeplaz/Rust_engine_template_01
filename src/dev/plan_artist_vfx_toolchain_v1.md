@@ -48,7 +48,7 @@ VSS-T4-001 extends the EffectSpec stub into a **promote-ready JSON contract** fo
 | `assets/effects/registry/` on disk | **SHIPPED** | spark_shower, smoke_column, rain_streaks |
 | `preview_witness` capture + `capture_hash` | **STUB** | Envelope on witness; `honest_gate: pending` until G4 worker |
 | `EffectConsumable` ECS + registry loader | **SHIPPED** | VSS-T4-004 @coder — registry + spawn_hook resolver |
-| APS browse/preview/assign panel | **PLANNED** | VSS-T4-005 @designer |
+| APS browse/preview/assign panel | **DESIGNER PASS** | VSS-T4-005 — charter DES-APS-EFFECT-BROWSER-001; wire `@coder-mcp` |
 | bpy pack step for `blender_glb` lane | **DEFER** | P1 reference set uses `wgsl_pack` for sparks; bpy path for smoke column meshes in P2 |
 | Hanabi as effect lane | **DEFER** | L6 embellishment only — `lane: embellishment` reserved, not in reference batch |
 | Separate asset-library MCP server | **DEFER** | Exec plan Phase 4 — premature split |
@@ -65,8 +65,8 @@ EffectSpec JSON
   → preview_witness (G4 sandbox)         [STUB — honest_gate pending G4]
   → promote → assets/effects/registry/   [SHIPPED VSS-T4-003]
   → EffectConsumable (Bevy)              [SHIPPED VSS-T4-004]
-  → runtime emit hook (scenario/APS)       [PLANNED VSS-T4-005]
-  → spawn_hook resolver at runtime       [PLANNED — same spine as fire_vfx emit]
+  → runtime emit hook (scenario/APS)       [DESIGNER PASS VSS-T4-005 — panel wire @coder-mcp]
+  → spawn_hook resolver at runtime       [SHIPPED VSS-T4-004/005b — same spine as fire_vfx emit]
 ```
 
 **Schema ownership:** `@planner-mcp` owns `effect_spec_v1`; `@designer-mcp` owns reference spec *content*; `@coder-mcp` owns validator + packer implementation; `@coder` owns runtime consumer.
@@ -107,8 +107,10 @@ EffectSpec JSON
 ### P4 — APS panel (VSS-T4-005)
 
 - **Goal:** Browse batch · preview ladder · assign to scenario markers.
-- **Owner:** @designer
-- **Gate:** G4 designer sign-off on preview captures.
+- **Owner:** @designer → @coder-mcp (wire)
+- **Charter:** [`design_aps_effect_browser_v1.md`](design_aps_effect_browser_v1.md) **PASS** 2026-09-24
+- **Packet:** `tools/mcp/art_pipeline_suite/effect_browser_impl_packet_v1.md`
+- **Gate:** G4 designer sign-off on panel UX; preview `honest_gate: honest` still unlocks Assign/P4 (capture residual).
 
 ---
 
@@ -148,4 +150,4 @@ EffectSpec JSON
 
 | Next owner | Slice |
 |:---|:---|
-| @designer | VSS-T4-005 — APS browse/preview/assign (**pick next**) |
+| @coder-mcp | VSS-T4-005 — wire EffectBrowser from packet (**pick next**) |

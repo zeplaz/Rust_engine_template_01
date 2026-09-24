@@ -19,7 +19,7 @@ pub use active_runtime::{
 };
 pub use atmosphere::{
     clipmap_l0_smoke_max, contamination_tick_system, sync_atmos_clipmap_witness_system,
-    AtmosphereClipmapStack, AtmosphereClipmapWitness, CLIPMAP_L0_AUTHORITATIVE,
+    AtmosphereClipmapStack, AtmosphereClipmapWitness, CLIPMAP_L0_AUTHORITATIVE, DEBT_010_WRITERS_L0,
     WSS_ATMOS_CLIPMAP_GATE,
 };
 pub use deformation::{

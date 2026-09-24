@@ -79,9 +79,10 @@ pub use assembly_snapshot::{
     grammar_rule_chain_snapshot, refresh_bq_f3_slot_001_witness,
     refresh_city_g0_wit_001_grammar_determinism_witness, snapshot_passes_auto_001_contract,
     staging_relative_path, write_assembly_snapshot, procedural_module_local_translation,
-    AssemblyGrammarRuleChain, AssemblyModulePlacement, AssemblySnapshot,
-    ASSEMBLY_SNAPSHOT_SCHEMA, ASSEMBLY_SNAPSHOT_STAGING, BQ_F3_SLOT_001_LIVE_JSON,
-    CITY_G0_WIT_LIVE_JSON, PROCEDURAL_RULES_VERSION,
+    procedural_roof_local_translation, procedural_wall_local_translation, outward_yaw_for_face,
+    outward_yaw_rad, AssemblyGrammarRuleChain, AssemblyModulePlacement, AssemblySnapshot,
+    BuildingLookV2Flags, ASSEMBLY_SNAPSHOT_SCHEMA, ASSEMBLY_SNAPSHOT_STAGING,
+    BQ_F3_SLOT_001_LIVE_JSON, CITY_G0_WIT_LIVE_JSON, PROCEDURAL_RULES_VERSION,
 };
 pub use scale_chain::{
     bq_c4_scale_chain_witness_green, build_bq_c4_scale_witness_body, refresh_bq_c4_scale_witness,
@@ -93,8 +94,8 @@ pub use facade_propagation::{
 };
 pub use footprint_grid::{
     bq_h2_street_facing_witness_green, bq_h_openings_witness_green, build_bq_h2_openings_witness_body,
-    refresh_bq_h2_openings_witness, street_facing_door_column, FootprintCell, FootprintGrid,
-    FootprintToken,
+    exterior_faces, refresh_bq_h2_openings_witness, street_facing_door_column, ExteriorFace,
+    FootprintCell, FootprintGrid, FootprintToken, RoofMode,
 };
 pub use load::{
     default_style_packs_dir, init_style_pack_registry, load_style_pack_registry,

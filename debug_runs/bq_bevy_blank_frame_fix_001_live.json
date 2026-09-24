@@ -1,0 +1,81 @@
+{
+  "task_id": "BQ-BEVY-BLANK-FRAME-FIX-001",
+  "gate": "BQ-BEVY-BLANK-FRAME-FIX-001",
+  "green": true,
+  "verdict": "PASS",
+  "honest_gate": "honest_gate",
+  "proceed_ship": false,
+  "art_quality": "bevy_preview_frames_usable",
+  "root_cause": [
+    "Screenshot fired on LoadState::Loaded before WorldAssetRoot Mesh3d instantiate + GPU present",
+    "Invisible DXGI window often captured clear-color-only (flat luma)",
+    "Stale target/release/bevy_preview_worker.exe (2026-08-26) preferred over fresh debug \u2014 masked fixes"
+  ],
+  "fix": {
+    "assembly_worker": "Mesh3d wait + settle 12f + blank reject/retry + off-screen visible window + ClearColor",
+    "assembly_preview": "pick newest bevy_preview_worker by mtime among release/debug"
+  },
+  "probe": {
+    "mode": "bevy_worker",
+    "png": "debug_runs/preview_jobs/blank_frame_fix_probe.png",
+    "luma_span": 223,
+    "bytes": 167395,
+    "usable": true,
+    "elapsed_ms": 2962,
+    "modules_loaded": 40
+  },
+  "bq_q2_refresh": {
+    "witness": "debug_runs/bq_q2_screen_001_live.json",
+    "green": true,
+    "preview_modes": {
+      "bevy_worker": 9
+    },
+    "screens_with_png": 9,
+    "bevy_worker_count": 9,
+    "schematic_pil_count": 0,
+    "operator_pass_faked": false,
+    "rubric_still": "pending_operator"
+  },
+  "next_residual": "BQ-Q3-OPS-APPROVE-001 (operator pixel pass \u2014 do not machine-fake)",
+  "notes": "Machine Bevy frames restored for BQ-Q2 evidence. Operator Q3 / Session D unchanged.",
+  "_agent_meta_extra": {
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-BEVY-BLANK-FRAME-FIX-001",
+    "proceed_ship": false,
+    "art_quality": "bevy_preview_frames_usable",
+    "agent": "coder-mcp"
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/bq_bevy_blank_frame_fix_001_live.json",
+    "must": [
+      {
+        "field": "probe.usable",
+        "equals": true
+      },
+      {
+        "field": "bq_q2_refresh.bevy_worker_count",
+        "gte": 8
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "bq_bevy_blank_frame_fix_001_live_v1",
+    "profile": "BQ_BEVY_BLANK_FRAME",
+    "relative_path": "debug_runs/bq_bevy_blank_frame_fix_001_live.json",
+    "source_system": "bevy_preview_worker",
+    "written_at_epoch_secs": 1790257162,
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-BEVY-BLANK-FRAME-FIX-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-BEVY-BLANK-FRAME-FIX-001",
+    "proceed_ship": false,
+    "art_quality": "bevy_preview_frames_usable",
+    "agent": "coder-mcp"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_bevy_blank_frame_fix_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/bq_bevy_blank_frame_fix_001_live.json"
+}

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import math
 import random
 from dataclasses import dataclass
 from pathlib import Path
@@ -155,23 +156,27 @@ def _gen_wood(rng: random.Random, size: int) -> Image.Image:
 
 
 def _gen_steel(rng: random.Random, size: int) -> Image.Image:
-    """Brushed panel steel — blue-gray tint, seams, speckle (distinct from APS error swatch ~#60686e)."""
+    """Industrial cladding — horizontal corrugation + soft grain (readable at iso; not salt-pepper)."""
     img = Image.new("RGB", (size, size))
     px = img.load()
-    panel_w = max(24, size // 3)
-    seam = max(2, size // 128)
+    # ~0.5 m ribs on a 4 m bay when UV'd 1:1 on a wall module.
+    rib_h = max(8, size // 10)
+    seam = max(1, size // 256)
     for y in range(size):
-        panel_band = (y // panel_w) % 2
+        rib = y // rib_h
+        rib_phase = (y % rib_h) / float(rib_h)
+        # Soft corrugation: dark troughs, brighter crowns (no high-freq speck field).
+        corrug = 0.05 * math.sin(rib_phase * math.pi * 2.0)
+        panel_band = 0.015 if rib % 2 else -0.01
         for x in range(size):
-            along = (_noise(rng, x // 3, y) - 0.5) * 0.14
-            brush = (_noise(rng, x, y // 6) - 0.5) * 0.08
-            seam_dark = -0.12 if (x % panel_w) < seam or (y % panel_w) < seam else 0.0
-            speck = 0.09 if rng.random() > 0.992 else 0.0
-            band = 0.03 if panel_band else -0.02
-            base_r, base_g, base_b = 0.46, 0.52, 0.58
-            r = base_r + along + brush + seam_dark + speck + band
-            g = base_g + along * 0.9 + brush + seam_dark + speck * 0.8 + band
-            b = base_b + along * 1.1 + brush * 0.7 + seam_dark + speck + band + 0.04
+            # Low-frequency brushed grain only (coherent at city-sim distance).
+            along = (_noise(rng, x // 8, y // 4) - 0.5) * 0.05
+            brush = (_noise(rng, x // 2, y // 10) - 0.5) * 0.03
+            seam_dark = -0.08 if (y % rib_h) < seam else 0.0
+            base_r, base_g, base_b = 0.48, 0.54, 0.58
+            r = base_r + along + brush + seam_dark + corrug + panel_band
+            g = base_g + along * 0.9 + brush + seam_dark + corrug + panel_band
+            b = base_b + along * 1.05 + brush * 0.7 + seam_dark + corrug + panel_band + 0.02
             px[x, y] = tuple(int(max(0, min(1, v)) * 255) for v in (r, g, b))
     return img
 
@@ -236,7 +241,7 @@ def generate_profile(profile: ProfileDef, *, size: int = SIZE) -> dict[str, str]
 
     albedo = gen(rng, size)
     if profile.generator == "steel":
-        normal = _normal_from_albedo(albedo, strength=2.8)
+        normal = _normal_from_albedo(albedo, strength=1.8)
     elif profile.generator in ("brick", "concrete", "wood"):
         normal = _normal_from_albedo(albedo, strength=1.6)
     else:

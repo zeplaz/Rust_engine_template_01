@@ -67,6 +67,9 @@ struct TacticalMapDebugInputs<'w, 's> {
     fire_globals: Option<Res<'w, crate::render::FireParticleDrawGlobals>>,
     fire_draw_diag: Option<Res<'w, FireDrawDiagnostics>>,
     fire_frame: Option<Res<'w, crate::render::WorldFireParticleFrame>>,
+    weather_precip: Option<Res<'w, crate::render::WeatherPrecipFrame>>,
+    presentation: Res<'w, crate::gui::MapViewPresentationStates>,
+    focus_debug: Res<'w, crate::gui::CameraFocusDebug>,
     zoom_frame: Option<Res<'w, crate::gui::ZoomFrame>>,
     rtt_overlay_host: Option<Res<'w, crate::gui::RttCore2dOverlayHostState>>,
     map_desired: Option<Res<'w, crate::gui::MapCameraDesiredRes>>,
@@ -625,6 +628,18 @@ fn write_tactical_map_debug_witness(
             "construction_footprint_tiles": q.construction.as_deref().map(|r| r.footprint_tiles.len()).unwrap_or(0),
             "construction_paths": q.construction.as_deref().map(|r| r.paths.len()).unwrap_or(0),
         },
+        "weather_precip_smoke": {
+            "instance_count": q.weather_precip.as_deref().map(|f| f.instance_count).unwrap_or(0),
+            "rain_present": q
+                .weather_precip
+                .as_deref()
+                .is_some_and(|f| f.instance_count > 0),
+        },
+        "camera_focus_debug_gate": {
+            "enabled": q.focus_debug.enabled,
+            "env_armed": crate::gui::camera_focus_debug_env_armed(),
+            "lod_paint_active": q.focus_debug.lod_paint_active(),
+        },
         "vt4": q.vt4.as_deref().map(|r| json!({
             "mismatch_count": r.vt4.mismatch_count,
             "failing_surface_mask": format!("{:#x}", r.vt4.failing_surface_mask),
@@ -644,6 +659,43 @@ fn write_tactical_map_debug_witness(
                 .is_some_and(|n| n.image == q.sim_tex.0),
         ),
     });
+
+    let host_present = q
+        .rtt_overlay_host
+        .as_ref()
+        .map(|h| h.host_present)
+        .unwrap_or(false);
+    let spark_rows = q
+        .fire_frame
+        .as_ref()
+        .map(|f| f.spark_witness.rows as u64)
+        .unwrap_or(0);
+    let draw_ok = q
+        .fire_draw_diag
+        .as_ref()
+        .map(|d| d.draw_ok as u64)
+        .unwrap_or(0);
+    let fire_heat_overlay_on = q
+        .presentation
+        .get(crate::gui::MapViewInstanceId::SimulationMap)
+        .overlays
+        .fire_heat;
+    if crate::dev::product_fire_vfx_live_proof::stamp_product_fire_vfx_live_witness(
+        host_present,
+        spark_rows,
+        draw_ok,
+        fire_heat_overlay_on,
+    ) {
+        info!(
+            target: "tactical_map_debug",
+            path = crate::dev::product_fire_vfx_live_proof::PRODUCT_FIRE_VFX_LIVE_JSON,
+            host_present,
+            spark_rows,
+            draw_ok,
+            fire_heat_overlay_on,
+            "product fire VFX live witness stamped"
+        );
+    }
 
     let wrapped = json!({
         "written_at_epoch_secs": SystemTime::now()

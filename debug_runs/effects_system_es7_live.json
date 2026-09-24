@@ -53,12 +53,22 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/effects_system_es7_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_effects_system_es7_live_witness",
-    "written_at_epoch_secs": 1787845409
+    "written_at_epoch_secs": 1790272693
   },
   "burst_hint_consumer_present": true,
   "contract": {
@@ -77,7 +87,7 @@
     "plan_note": "ES-7 contract-wired; emitter visual capture = ES-7-4 with RUST_ENGINE_HANABI_L3. Reject weather rain / sim writeback / minimap."
   },
   "deferred": {
-    "note": "Emitter visual capture needs --features hanabi_l3 + RUST_ENGINE_HANABI_L3=1 + operator eyes",
+    "note": "Emitter visual capture needs --features hanabi_l3 + RUST_ENGINE_HANABI_L3=1 + operator eyes — still not production sparks",
     "slice": "ES-7-4"
   },
   "green": true,
@@ -86,8 +96,10 @@
   "hanabi_no_sim_writeback": true,
   "particles_rendered": false,
   "phase": "ES-7",
-  "plan_note": "ES-7-1..3 contract closed. Hanabi ≠ weather. Parallel OK with GPU precip.",
+  "plan_note": "ES-7-1..3 contract closed. Hanabi ≠ weather ≠ gpu_fire_particle_raster. Parallel OK with GPU precip.",
+  "product_vfx_claim": false,
   "program_id": "EFFECTS-SYSTEM-UNIFY-001",
+  "scope": "hanabi_contract_not_product_vfx",
   "slice": "ES-7-001",
   "status": "done"
 }

@@ -319,13 +319,12 @@ mod tests {
                 ..Default::default()
             },
         );
-        let mut witness = FireStreamingWitness::default();
+        let mut w = FireStreamingWitness::default();
         let _focus = CameraFocusDebug {
             focus_chunk: hot,
             enabled: true,
             ..Default::default()
         };
-        let mut w = witness;
         // inline neighbor wake (same as system tail)
         let hot_list = vec![hot];
         for (coord, chunk) in runtime.chunks.iter_mut() {

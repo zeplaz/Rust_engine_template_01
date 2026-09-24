@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "job_id": "roof_metal_low_production_run001",
+  "batch_id": "kit_prod_promote_bq_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/roof_metal_low_production.json",
+  "operation": "module_roof",
+  "params": {
+    "width_m": 8,
+    "thickness_m": 0.35,
+    "depth_m": 16,
+    "pitch_height_m": 0.7,
+    "material_profile": "roof_metal_01",
+    "seed": 560002,
+    "profile": "shed"
+  },
+  "output": {
+    "glb": "assets/staging/roof_metal_low_production_run001/model.glb",
+    "thumbnail": "assets/staging/roof_metal_low_production_run001/preview.png"
+  }
+}

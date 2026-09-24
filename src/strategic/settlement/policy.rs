@@ -44,19 +44,16 @@ pub fn push_proposal_ghosts_to_visual_requests(
             tile: proposal.anchor_tile,
             color_kind: crate::construction::FootprintTileColorKind::Risky,
             weight: 0.45,
+            fill_override: None,
         });
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::strategic::settlement::actors::{BuildingUsage, GrowthActorLayer};
-    use crate::strategic::settlement::ids::ArchetypeId;
-
     #[test]
     fn proposal_ghosts_sync_from_queue() {
-        assert!(proposal_ghost_witness_green());
+        assert!(super::proposal_ghost_witness_green());
     }
 }
 

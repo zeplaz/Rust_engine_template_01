@@ -9,10 +9,11 @@ Isolated experiment crate — **does not** modify main `EnginePlugin` or link in
 | [`docs/archive/2026-06-src-dev/plans/plan_hanabi_adoption_v1.md`](../../docs/archive/2026-06-src-dev/plans/plan_hanabi_adoption_v1.md) | Adoption phases H-A0…H-A3 |
 | [`docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md`](../../docs/archive/2026-06-src-dev/plans/hanabi_event_vfx_style_bounds_v1.md) | Designer numeric bounds (PASS qualified) |
 
-## Bevy 0.18 gate
+## Bevy 0.19 gate
 
-- Main crate: `bevy = "0.18"` (unchanged)
-- This crate: `bevy = "0.18"`, `bevy_hanabi = "0.18"`
+- Main crate: `bevy = "0.19"`
+- This crate: `bevy = "0.19"`, `bevy_hanabi = "0.19"`
+- Guide: https://bevy.org/learn/migration-guides/0-18-to-0-19/
 
 ## Commands
 

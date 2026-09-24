@@ -1,0 +1,249 @@
+{
+  "gate": "BQ-PROD-PROMOTE-BATCH-001",
+  "task_id": "BQ-PROD-PROMOTE-BATCH-001",
+  "program": "PLAN-MCP-APS-TOOLING-FINISH-001",
+  "batch_id": "kit_prod_promote_bq_001",
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "560001..560006",
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true
+  },
+  "artifacts_written": [
+    {
+      "job_id": "win_double_1u_production_run001",
+      "spec": "assets/staging/specs/win_double_1u_production.json",
+      "job": "tools/mcp/schemas/examples/win_double_1u_production_run001.json"
+    },
+    {
+      "job_id": "roof_metal_low_production_run001",
+      "spec": "assets/staging/specs/roof_metal_low_production.json",
+      "job": "tools/mcp/schemas/examples/roof_metal_low_production_run001.json"
+    },
+    {
+      "job_id": "wall_brick_2u_production_run001",
+      "spec": "assets/staging/specs/wall_brick_2u_production.json",
+      "job": "tools/mcp/schemas/examples/wall_brick_2u_production_run001.json"
+    },
+    {
+      "job_id": "door_double_shop_production_run001",
+      "spec": "assets/staging/specs/door_double_shop_production.json",
+      "job": "tools/mcp/schemas/examples/door_double_shop_production_run001.json"
+    },
+    {
+      "job_id": "roof_canopy_production_run001",
+      "spec": "assets/staging/specs/roof_canopy_production.json",
+      "job": "tools/mcp/schemas/examples/roof_canopy_production_run001.json"
+    },
+    {
+      "job_id": "corner_T_production_run001",
+      "spec": "assets/staging/specs/corner_T_production.json",
+      "job": "tools/mcp/schemas/examples/corner_T_production_run001.json"
+    }
+  ],
+  "promoted_ids": [
+    "win_double_1u_production_run001",
+    "roof_metal_low_production_run001",
+    "wall_brick_2u_production_run001",
+    "door_double_shop_production_run001",
+    "roof_canopy_production_run001",
+    "corner_T_production_run001"
+  ],
+  "promoted_count": 6,
+  "job_count": 6,
+  "rebake_ok": 0,
+  "seed_ok": 0,
+  "validate_ok": 6,
+  "rebakes": [],
+  "seeds": [],
+  "validations": [
+    {
+      "job_id": "win_double_1u_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=48 tier=production arch=module_window profile=frame_mullion",
+      "error_count": 0
+    },
+    {
+      "job_id": "roof_metal_low_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_roof profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "wall_brick_2u_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=192 tier=production arch=module_wall profile=brick",
+      "error_count": 0
+    },
+    {
+      "job_id": "door_double_shop_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=44 tier=production arch=module_door profile=frame",
+      "error_count": 0
+    },
+    {
+      "job_id": "roof_canopy_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=48 tier=production arch=module_roof profile=shed",
+      "error_count": 0
+    },
+    {
+      "job_id": "corner_T_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=48 tier=production arch=module_prop profile=box",
+      "error_count": 0
+    }
+  ],
+  "promotes": [
+    {
+      "job_id": "win_double_1u_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "batch_id": "kit_prod_promote_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "roof_metal_low_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/roof_metal_low_production_run001/model.glb",
+      "batch_id": "kit_prod_promote_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "wall_brick_2u_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/wall_brick_2u_production_run001/model.glb",
+      "batch_id": "kit_prod_promote_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "door_double_shop_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/door_double_shop_production_run001/model.glb",
+      "batch_id": "kit_prod_promote_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "roof_canopy_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/roof_canopy_production_run001/model.glb",
+      "batch_id": "kit_prod_promote_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "corner_T_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/corner_T_production_run001/model.glb",
+      "batch_id": "kit_prod_promote_bq_001",
+      "valid": true
+    }
+  ],
+  "exit_check": {
+    "industrial_west_standard_production_only": true,
+    "victorian_standard_production_only": true,
+    "industrial_west_production_only": true,
+    "victorian_production_only": true,
+    "colonial_production_only": true,
+    "promoted_targets_still_lod0": [],
+    "focus_lod0_slot_hits": 0,
+    "selectable_smoke_ids_count": 14,
+    "smoke_note": "stylepack_visible smoke already 0; lod0 focus promote targets cleared",
+    "audit_focus": {
+      "ids": [
+        "style_industrial_west",
+        "style_victorian",
+        "style_colonial"
+      ],
+      "production_only": true,
+      "rows": [
+        {
+          "style_pack_id": "style_colonial",
+          "production_only": true,
+          "lod0_slots": 0,
+          "smoke_slots": 0,
+          "selectable_lod0_ids": [],
+          "core_non_production": []
+        },
+        {
+          "style_pack_id": "style_industrial_west",
+          "production_only": true,
+          "lod0_slots": 0,
+          "smoke_slots": 0,
+          "selectable_lod0_ids": [],
+          "core_non_production": []
+        },
+        {
+          "style_pack_id": "style_victorian",
+          "production_only": true,
+          "lod0_slots": 0,
+          "smoke_slots": 0,
+          "selectable_lod0_ids": [],
+          "core_non_production": []
+        }
+      ]
+    },
+    "ok": true
+  },
+  "index_entries": 117,
+  "errors": [],
+  "green": true,
+  "verdict": "PASS",
+  "honest_gate": "honest_gate",
+  "proceed_ship": true,
+  "art_quality": "production_batch",
+  "next_residual": "BQ-PROD-DEFER-PACKS-001",
+  "notes": "Promoted focus-pack lod0 slots to production; style packs already named these module_ids. Deferred residual: rural/modern/military/soviet lod0 packs + smoke index orphans.",
+  "_agent_meta_extra": {
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-PROD-PROMOTE-BATCH-001",
+    "proceed_ship": true,
+    "art_quality": "production_batch",
+    "agent": "coder-mcp"
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/bq_prod_promote_batch_001_live.json",
+    "must": [
+      {
+        "id": "iw_vic_standard_production",
+        "pass": true
+      },
+      {
+        "id": "validate_asset_tier",
+        "pass": true
+      },
+      {
+        "id": "focus_lod0_cleared",
+        "pass": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "bq_prod_promote_batch_001_live_v1",
+    "profile": "BQ_PROD_PROMOTE_BATCH",
+    "relative_path": "debug_runs/bq_prod_promote_batch_001_live.json",
+    "source_system": "bq_prod_promote_batch",
+    "written_at_epoch_secs": 1790254015,
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-PROD-PROMOTE-BATCH-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-PROD-PROMOTE-BATCH-001",
+    "proceed_ship": true,
+    "art_quality": "production_batch",
+    "agent": "coder-mcp"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_prod_promote_batch_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/bq_prod_promote_batch_001_live.json"
+}

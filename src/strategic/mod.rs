@@ -228,7 +228,9 @@ pub use settlement::{
     city_g1_c1_001_block_archetype_witness_green, city_g1_c2_001_block_frame_witness_green,
     city_g1_c4_001_seed_chain_witness_green, construction_organic_growth_001_witness_green,
     refresh_city_g1_c1_001_block_archetype_witness, refresh_city_g1_c2_001_block_frame_witness,
-    refresh_city_g1_c4_001_seed_chain_witness, set_p5_002_block_assignment_witness_green,
+    refresh_city_g1_c4_001_seed_chain_witness, refresh_set_p5_hierarchy_gap_live_witness,
+    seed_settlement_books_if_empty, set_p5_002_block_assignment_witness_green,
+    set_p5_hierarchy_books_seeded_witness_green, set_p5_hierarchy_gap_lib_green,
     assign_block_for_tile, register_site_on_commit, AutoBuildPolicy, AutoBuildPolicyBook,
     BlockArchetype, BlockBook, BlockFrame, BlockFrameBook, BlockId, BlockRecord, BlockScore,
     BuildingUsage, DEFAULT_WORLD_SEED, DevelopmentPressure, DevelopmentPressureBook, DistrictBook,
@@ -455,7 +457,10 @@ pub struct LogisticsEdge {
     pub traversal_cost: f32,
 }
 
-/// **Derived cache only** — rebuilt at `GraphSync`; never mutated during freight solve.
+/// **Derived cache only** (LOG-A-01) — sole continuous writer:
+/// [`sync_logistics_graph_from_transport`](crate::strategic::sync_logistics_graph_from_transport)
+/// at `GraphSync`. Never mutated during freight solve; facilities attach via
+/// [`PortalAttachmentMap`](crate::economy::logistics::PortalAttachmentMap), not node append.
 #[derive(Resource, Clone, Debug, Default)]
 pub struct LogisticsGraph {
     pub revision: u64,

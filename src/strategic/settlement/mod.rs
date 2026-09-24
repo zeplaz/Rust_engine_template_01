@@ -13,6 +13,7 @@ mod block_street_visual;
 mod district;
 mod execute;
 mod growth;
+mod hierarchy_gap;
 mod ids;
 mod market;
 mod policy;
@@ -92,6 +93,10 @@ pub use execute::{
     pending_blueprint_from_growth_proposal, site_archetype_for_growth_proposal,
 };
 pub use growth::{growth_proposal_tick_system, score_proposal, GrowthProposal, GrowthProposalQueue};
+pub use hierarchy_gap::{
+    refresh_set_p5_hierarchy_gap_live_witness, set_p5_hierarchy_gap_lib_green,
+    SET_P5_HIERARCHY_GAP_LIVE_JSON,
+};
 pub use ids::{ArchetypeId, BlockId, DistrictId, RegionId, TownId};
 pub use market::{
     compute_market_saturation_for_district, compute_market_saturation_system,
@@ -110,7 +115,7 @@ pub use seed_chain::{
     lot_idx_from_site_id, lot_seed, mix_u64, town_seed, CitySeedContext, DEFAULT_TOWN_ID,
     DEFAULT_WORLD_SEED, CITY_G1_C4_LIVE_JSON,
 };
-pub use town::{portland_fixture_town, TownBook, TownRecord};
+pub use town::{portland_fixture_town, seed_settlement_books_if_empty, TownBook, TownRecord};
 pub use zoning::ZoningClass;
 
 pub use district::portland_fixture_district;
@@ -123,6 +128,12 @@ use crate::strategic::InfrastructureSiteSet;
 #[must_use]
 pub fn set_p5_002_block_assignment_witness_green() -> bool {
     assign::three_sites_same_block_witness_green()
+}
+
+/// **SET-P5-HIERARCHY-GAP** — playable books seeded (default_town + ≥1 district).
+#[must_use]
+pub fn set_p5_hierarchy_books_seeded_witness_green(towns: &TownBook, districts: &DistrictBook) -> bool {
+    towns.default_town.is_some() && !towns.towns.is_empty() && districts.districts.len() >= 1
 }
 
 /// **ECON-OG-1-C** witness rollup.
@@ -145,14 +156,15 @@ fn settlement_registry_startup(mut commands: Commands) {
 
 impl Plugin for SettlementPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(Startup, settlement_registry_startup)
-            .add_systems(
-                Startup,
-                (
-                    load_block_street_furniture_scenes,
-                    load_block_lod_impostor_scene,
-                ),
-            )
+        app.add_systems(
+            Startup,
+            (
+                settlement_registry_startup,
+                seed_settlement_books_if_empty,
+                load_block_street_furniture_scenes,
+                load_block_lod_impostor_scene,
+            ),
+        )
             .init_resource::<TownBook>()
             .init_resource::<DistrictBook>()
             .init_resource::<BlockBook>()
@@ -207,6 +219,11 @@ mod tests {
     #[test]
     fn set_p5_002_witness_green() {
         assert!(set_p5_002_block_assignment_witness_green());
+    }
+
+    #[test]
+    fn set_p5_hierarchy_gap_live_green() {
+        assert!(refresh_set_p5_hierarchy_gap_live_witness());
     }
 
     #[test]

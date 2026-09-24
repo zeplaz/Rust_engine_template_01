@@ -79,6 +79,9 @@ pub fn draw_sim_power_tool_sheet_egui(
     if !matches!(base.get(), BaseState::Simulation) {
         return Ok(());
     }
+    if crate::gui::hud::sim_road_power_sheets_bevy::SIM_ROAD_POWER_SHEETS_USE_BEVY {
+        return Ok(());
+    }
     draw.power_sheet.sync_from_tool(draw.tool.as_ref());
     if !draw.power_sheet.open {
         return Ok(());

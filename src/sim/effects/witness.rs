@@ -169,6 +169,9 @@ fn sim_effect_spine_self_check() -> Result<(), &'static str> {
     if queue.last_drain_count < 2 {
         return Err("rain_count");
     }
+    if !witness.dedupe_ok {
+        return Err("dedupe_ok");
+    }
     if ledger.causal_chain_depth_max() < 1 {
         return Err("causal_chain");
     }

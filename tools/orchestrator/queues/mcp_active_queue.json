@@ -43,7 +43,7 @@
     "planner_drain_order": [],
     "coder_mcp_blocked_chain": [],
     "coder_mcp_blocked_until": null,
-    "note": "PLAN-WITNESS-QUEUE-INTEGRITY-001 SIGNED \u2014 MCP-WIT Phases 1\u20135 closed; WIT-RUST-* @coder"
+    "note": "PLAN-WITNESS-QUEUE-INTEGRITY-001 SIGNED — MCP-WIT Phases 1–5 closed; WIT-RUST-* @coder"
   },
   "p2_tasks": [
     {
@@ -52,7 +52,7 @@
       "agent": "planner-mcp",
       "priority": "P0",
       "status": "done",
-      "goal": "SIGN sim product validators plan \u2014 Tier 1e Phases 1\u20133 authorized",
+      "goal": "SIGN sim product validators plan — Tier 1e Phases 1–3 authorized",
       "plan_deliverable": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
       "depends_on": [],
       "blocks": [
@@ -61,7 +61,7 @@
         "MCP-P2-OPS-BRIEF-002"
       ],
       "signed": "2026-06-17",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · stub_marker:stub",
       "witness": "docs/archive/2026-06-src-dev/plans/plan_mcp_sim_product_validators_v1.md",
       "updated_at": "2026-06-20T21:19:25Z",
       "witness_refresh": "2026-06-21T03:54:01Z",
@@ -87,7 +87,7 @@
         "python -m rust_engine_mcp.cli mcp-phase4-queue-witness"
       ],
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · stub_marker:stub",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -111,7 +111,7 @@
         "python -m rust_engine_mcp.cli validate-report construction debug_runs/construction_placement_live.json"
       ],
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 stub_marker:stub",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · stub_marker:stub",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -136,7 +136,7 @@
         "python -m rust_engine_mcp.cli ops-mcp-function-layer-witness"
       ],
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · missing_exit_predicate",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -156,7 +156,7 @@
       ],
       "signed": "2026-06-14",
       "witness": "debug_runs/mcp_landscape_grammar_sign_live.json",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · missing_exit_predicate",
       "updated_at": "2026-06-20T21:19:24Z",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
@@ -181,7 +181,7 @@
         "python -m rust_engine_mcp.cli landscape-grammar-presets-witness"
       ],
       "updated_at": "2026-06-20T21:19:24Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · missing_exit_predicate",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -203,7 +203,7 @@
         "python -m rust_engine_mcp.cli landscape-sign-atlas-witness"
       ],
       "updated_at": "2026-06-20T21:19:26Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 contradiction",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · contradiction",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -224,7 +224,7 @@
       "signed": "2026-06-14",
       "witness": "debug_runs/mcp_kit002_arch002_sign_live.json",
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · missing_exit_predicate",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -235,7 +235,7 @@
       "agent": "coder-mcp",
       "priority": "P1",
       "status": "done",
-      "goal": "agent_run_append MCP wrapper \u2014 OPS Phase 1 telemetry",
+      "goal": "agent_run_append MCP wrapper — OPS Phase 1 telemetry",
       "docs": [
         "src/dev/plan_agent_operations_intelligence_v1.md",
         "docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md"
@@ -243,7 +243,7 @@
       "witness": "debug_runs/mcp_p2_run_event_001_live.json",
       "depends_on": [],
       "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · missing_exit_predicate",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -254,7 +254,7 @@
       "agent": "coder-mcp",
       "priority": "P2",
       "status": "done",
-      "goal": "tile_promotion_honest_check \u2014 reject headless-as-ship before G4",
+      "goal": "tile_promotion_honest_check — reject headless-as-ship before G4",
       "depends_on": [
         "MCP-P2-RUN-EVENT-001"
       ],
@@ -263,7 +263,7 @@
       ],
       "witness": "debug_runs/mcp_p2_honest_bake_001_live.json",
       "updated_at": "2026-06-20T21:19:24Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · missing_exit_predicate",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -287,7 +287,7 @@
       "signed": "2026-06-14",
       "witness": "debug_runs/mcp_kit002_arch002_sign_live.json",
       "updated_at": "2026-06-20T21:19:24Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 missing_exit_predicate",
+      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · missing_exit_predicate",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
@@ -311,27 +311,30 @@
         ]
       },
       "updated_at": "2026-08-12T21:30:00Z",
-      "note": "FLEET-MCP-PROD-B2 close 2026-08-12 \u00b7 tier rules pre-shipped in validators/tier.py \u00b7 pytest 18/18 \u00b7 witness refreshed green \u00b7 debug_runs/mcp_prod_b2_live.json"
+      "note": "FLEET-MCP-PROD-B2 close 2026-08-12 · tier rules pre-shipped in validators/tier.py · pytest 18/18 · witness refreshed green · debug_runs/mcp_prod_b2_live.json"
     },
     {
       "id": "MCP-PROD-C-PILOT",
       "week": 1,
       "agent": "coder-mcp",
       "priority": "P0",
-      "status": "blocked",
+      "status": "done",
       "blocked_by": [],
       "goal": "bpy profiles wall/door/window/roof rowhouse",
       "manifest": "tools/mcp/schemas/examples/batch_kit_production_001.manifest.json",
       "witness": "debug_runs/mcp_prod_c_pilot_live.json",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/mcp_prod_c_pilot_live.json · ok=true green=true · mtime=2026-08-12T21:23:21Z",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/mcp_prod_c_pilot_live.json · ok=true green=true · mtime=2026-08-12T21:23:21Z"
     },
     {
       "id": "MCP-PROD-PBR-PILOT",
       "week": 1,
       "agent": "designer-mcp",
       "priority": "P0",
-      "status": "blocked",
+      "status": "done",
       "goal": "Material Maker doc or PBR waiver + tileable set ids",
       "acceptance": [
         "pbr_pilot_rowhouse_witness.yaml"
@@ -340,8 +343,11 @@
       "witness_yaml": "debug_runs/art_pipeline/pbr_pilot_rowhouse_witness.yaml",
       "doc_ref": "docs/archive/2026-06-src-dev/plans/pbr_pilot_rowhouse_material_maker_v1.md",
       "pbr_waiver": "procedural_mcp_generator_v1",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/pbr_pilot_rowhouse_live.json · ok=true green=true · mtime=2026-06-10T15:50:54Z",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/pbr_pilot_rowhouse_live.json · ok=true green=true · mtime=2026-06-10T15:50:54Z"
     },
     {
       "id": "MCP-PROD-MOD-G0-G5",
@@ -349,7 +355,7 @@
       "track": "modules",
       "agent": "designer-mcp",
       "priority": "P0",
-      "status": "blocked",
+      "status": "done",
       "blocked_by": [],
       "depends_on": [
         "MCP-PROD-C-PILOT",
@@ -359,8 +365,11 @@
       "witness": "debug_runs/art_pipeline/rowhouse_production_module_g0_rules.yaml",
       "witness_json": "debug_runs/art_pipeline/rowhouse_production_mod_g0_g5_live.json",
       "kit_witness": "debug_runs/art_pipeline/kit_production_001_live.json",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/rowhouse_production_mod_g0_g5_live.json · ok=true green=true · mtime=2026-06-07T22:38:19Z",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/rowhouse_production_mod_g0_g5_live.json · ok=true green=true · mtime=2026-06-07T22:38:19Z"
     },
     {
       "id": "MCP-PROD-ATLAS-G0-G4",
@@ -368,15 +377,18 @@
       "track": "atlas",
       "agent": "designer-mcp",
       "priority": "P1",
-      "status": "blocked",
+      "status": "done",
       "blocked_by": [],
       "goal": "keyframe pack + rowhouse_victorian_production_signoff proceed_ship yes",
       "batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
       "witness": "debug_runs/art_pipeline/rowhouse_production_atlas_g0_g4_witness.yaml",
       "witness_json": "debug_runs/art_pipeline/rowhouse_production_atlas_g0_g4_live.json",
       "g4_signoff": "debug_runs/art_pipeline/rowhouse_victorian_production_signoff.yaml",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/rowhouse_production_atlas_g0_g4_live.json · ok=true green=true proceed_ship=true · mtime=2026-06-07T22:42:44Z",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/rowhouse_production_atlas_g0_g4_live.json · ok=true green=true proceed_ship=true · mtime=2026-06-07T22:42:44Z"
     },
     {
       "id": "MCP-P2-KIT002-G0",
@@ -384,19 +396,22 @@
       "track": "kit_production_002",
       "agent": "designer-mcp",
       "priority": "P0",
-      "status": "blocked",
+      "status": "done",
       "blocked_by": [],
       "depends_on": [
         "MCP-P2-KIT002-PLAN",
         "ARCH-002"
       ],
-      "goal": "warehouse production G0 rules YAML \u2014 gate before kit002 bpy",
+      "goal": "warehouse production G0 rules YAML — gate before kit002 bpy",
       "witness": "debug_runs/art_pipeline/warehouse_production_g0_rules.yaml",
       "witness_json": "debug_runs/art_pipeline/warehouse_production_g0_live.json",
       "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
       "verdict": "PASS_WITH_NOTES",
-      "updated_at": "2026-06-20T21:19:24Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/warehouse_production_g0_live.json · green=true verdict=PASS_WITH_NOTES · mtime=2026-06-17T01:25:38Z",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/warehouse_production_g0_live.json · green=true verdict=PASS_WITH_NOTES · mtime=2026-06-17T01:25:38Z"
     },
     {
       "id": "MCP-P2-KIT002-G2",
@@ -404,7 +419,7 @@
       "track": "kit_production_002",
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [
         "MCP-P2-KIT002-G0"
       ],
@@ -415,8 +430,11 @@
         "python -m rust_engine_mcp.cli kit-production-002-g2-run",
         "python -m rust_engine_mcp.cli kit-production-002-g2-witness"
       ],
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/kit_production_002_g2_live.json · green=true promoted_glb=true · mtime=2026-06-17T04:23:39Z _agent_meta.written_at_epoch_secs=1781670219",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/kit_production_002_g2_live.json · green=true promoted_glb=true · mtime=2026-06-17T04:23:39Z _agent_meta.written_at_epoch_secs=1781670219"
     },
     {
       "id": "MCP-P2-KIT002-G3",
@@ -424,7 +442,7 @@
       "track": "kit_production_002",
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [
         "MCP-P2-KIT002-G1",
         "MCP-P2-KIT002-G2"
@@ -436,8 +454,11 @@
         "python -m rust_engine_mcp.cli kit-production-002-g3-validate",
         "python -m rust_engine_mcp.cli kit-production-002-g3-witness"
       ],
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/kit_production_002_g3_live.json · green=true verdict=PASS validate 6/6 · mtime=2026-06-17T04:23:39Z _agent_meta.written_at_epoch_secs=1781670219",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/kit_production_002_g3_live.json · green=true verdict=PASS validate 6/6 · mtime=2026-06-17T04:23:39Z _agent_meta.written_at_epoch_secs=1781670219"
     },
     {
       "id": "MCP-P2-KIT002-G4",
@@ -463,9 +484,9 @@
         "python -m rust_engine_mcp.cli kit-production-002-g4-evaluate",
         "python -m rust_engine_mcp.cli kit-production-002-g4-witness"
       ],
-      "operator_next": "utils/keyframe_render.py on production assembly \u2192 re-run designer_mcp_warehouse_phase_c.ps1",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "operator_next": "utils/keyframe_render.py on production assembly → re-run designer_mcp_warehouse_phase_c.ps1",
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 keep blocked · debug_runs/art_pipeline/kit_production_002_g4_live.json · green=false proceed_ship=false art_quality=rejected_headless_procedural stills missing · mtime=2026-06-17T04:23:39Z"
     },
     {
       "id": "MCP-P2-KIT002-G1",
@@ -473,44 +494,53 @@
       "track": "kit_production_002",
       "agent": "designer-mcp",
       "priority": "P0",
-      "status": "blocked",
+      "status": "done",
       "depends_on": [
         "MCP-P2-KIT002-G0"
       ],
-      "goal": "production AssetSpec per module \u2014 kit_production_002 manifest (6/6)",
+      "goal": "production AssetSpec per module — kit_production_002 manifest (6/6)",
       "manifest": "tools/mcp/schemas/examples/batch_kit_production_002.manifest.json",
       "witness": "src/dev/design_kit_production_002_g1_v1.md",
       "witness_json": "debug_runs/art_pipeline/kit_production_002_g1_live.json",
       "assetspec_index": "assets/staging/specs/kit_production_002_assetspec_index.json",
       "verdict": "PASS",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/kit_production_002_g1_live.json · green=true verdict=PASS · mtime=2026-06-17T01:25:38Z",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/art_pipeline/kit_production_002_g1_live.json · green=true verdict=PASS · mtime=2026-06-17T01:25:38Z"
     },
     {
       "id": "MCP-PROD-TILE-VAL",
       "week": 2,
       "agent": "coder-mcp",
       "priority": "P1",
-      "status": "blocked",
+      "status": "done",
       "blocked_by": [],
       "goal": "tile_batch_validate keyframe_pack + variant_matrix_expand",
       "witness": "debug_runs/mcp_prod_tile_val_live.json",
       "batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/mcp_prod_tile_val_live.json · ok=true green=true proceed_ship=true · mtime=2026-08-12T21:23:21Z",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/mcp_prod_tile_val_live.json · ok=true green=true proceed_ship=true · mtime=2026-08-12T21:23:21Z"
     },
     {
       "id": "MCP-PROD-INDEX",
       "week": 2,
       "agent": "coder-mcp",
       "priority": "P2",
-      "status": "blocked",
+      "status": "done",
       "blocked_by": [],
       "goal": "_tile_atlas_index.ron production row ship_allowed true",
       "witness": "debug_runs/mcp_prod_index_live.json",
       "index": "assets/configs/buildings/_tile_atlas_index.ron",
-      "updated_at": "2026-06-20T21:19:25Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate"
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/mcp_prod_index_live.json · ok=true green=true · mtime=2026-08-12T21:23:21Z",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/mcp_prod_index_live.json · ok=true green=true · mtime=2026-08-12T21:23:21Z"
     },
     {
       "id": "ENG-PT-4-001",
@@ -561,7 +591,7 @@
         "PLAN-WITNESS-REOPEN-001"
       ],
       "updated_at": "2026-08-12T21:22:00Z",
-      "note": "FLEET-MCP-WIT-001 close 2026-08-12 \u00b7 catalog+validator pre-shipped \u00b7 pytest 19/19 \u00b7 witness refreshed green \u00b7 debug_runs/mcp_witness_honesty_validator_live.json"
+      "note": "FLEET-MCP-WIT-001 close 2026-08-12 · catalog+validator pre-shipped · pytest 19/19 · witness refreshed green · debug_runs/mcp_witness_honesty_validator_live.json"
     },
     {
       "id": "MCP-WIT-010",
@@ -587,7 +617,7 @@
         "python -m rust_engine_mcp.cli queue-integrity-reconcile-witness"
       ],
       "updated_at": "2026-08-12T21:30:00Z",
-      "note": "FLEET-MCP-WIT-010 close 2026-08-12 \u00b7 validator+registry pre-shipped \u00b7 pytest 8/8 \u00b7 witness refreshed \u00b7 debug_runs/queue_integrity_reconcile_live.json"
+      "note": "FLEET-MCP-WIT-010 close 2026-08-12 · validator+registry pre-shipped · pytest 8/8 · witness refreshed · debug_runs/queue_integrity_reconcile_live.json"
     },
     {
       "id": "MCP-WIT-020",
@@ -612,7 +642,7 @@
         "powershell -File tools/orchestrator/scripts/ops_intelligence_scan.ps1"
       ],
       "updated_at": "2026-08-12T21:45:00Z",
-      "note": "FLEET-MCP-WIT-020 close 2026-08-12 \u00b7 pre-shipped honest_gate v2 + post_build hook \u00b7 pytest 6/6 \u00b7 witness refreshed \u00b7 debug_runs/mcp_witness_integrity_ops_live.json"
+      "note": "FLEET-MCP-WIT-020 close 2026-08-12 · pre-shipped honest_gate v2 + post_build hook · pytest 6/6 · witness refreshed · debug_runs/mcp_witness_integrity_ops_live.json"
     },
     {
       "id": "MCP-WIT-030",
@@ -663,15 +693,15 @@
         ]
       },
       "updated_at": "2026-08-12T21:26:00Z",
-      "note": "2026-08-12 close \u00b7 pre-shipped pytest + CI -WitnessIntegrity \u00b7 pytest 68/68 \u00b7 witnesses refreshed"
+      "note": "2026-08-12 close · pre-shipped pytest + CI -WitnessIntegrity · pytest 68/68 · witnesses refreshed"
     },
     {
       "id": "PLAN-WITNESS-QUEUE-INTEGRITY-001",
       "week": 4,
       "agent": "planner-mcp",
       "priority": "P0",
-      "status": "blocked",
-      "goal": "SIGN witness + queue integrity MCP prevention program (Phases 1\u20135)",
+      "status": "done",
+      "goal": "SIGN witness + queue integrity MCP prevention program (Phases 1–5)",
       "plan_deliverable": "src/dev/plan_witness_queue_integrity_mcp_v1.md",
       "depends_on": [
         "MCP-WIT-040"
@@ -682,8 +712,11 @@
       ],
       "signed": "2026-06-17",
       "witness": "debug_runs/mcp_planner_witness_queue_integrity_sign_live.json",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/mcp_planner_witness_queue_integrity_sign_live.json · green=true signed=true · mtime=2026-06-17T04:09:30Z",
+      "updated_at": "2026-09-24T13:13:15.243262+00:00",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "reconcile_note": "MCP-QUEUE-RECON-001 false-blocked→done · witness debug_runs/mcp_planner_witness_queue_integrity_sign_live.json · green=true signed=true · mtime=2026-06-17T04:09:30Z"
     }
   ],
   "archive_done": {

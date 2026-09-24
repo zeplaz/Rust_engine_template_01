@@ -2,7 +2,26 @@
 
 use bevy_egui::egui;
 
-use crate::gui::UiPalette;
+use crate::gui::{SimulationMapViewport, UiPalette};
+
+/// Clamp a floating satellite into the measured sim map hole (HUD-NAT-009).
+#[must_use]
+pub fn clamp_satellite_to_map_hole(
+    mut pos: egui::Pos2,
+    size: egui::Vec2,
+    map_vp: &SimulationMapViewport,
+) -> egui::Pos2 {
+    if !map_vp.valid {
+        return pos;
+    }
+    let min_x = map_vp.min.x + 4.0;
+    let min_y = map_vp.min.y + 4.0;
+    let max_x = (map_vp.max.x - size.x - 4.0).max(min_x);
+    let max_y = (map_vp.max.y - size.y - 4.0).max(min_y);
+    pos.x = pos.x.clamp(min_x, max_x);
+    pos.y = pos.y.clamp(min_y, max_y);
+    pos
+}
 
 /// Apply authoritative palette to egui (sim HUD satellites).
 pub fn apply_sim_hud_egui_theme(ctx: &egui::Context, palette: &UiPalette) {
@@ -16,6 +35,16 @@ pub fn sim_hud_egui_theme_enforcement_wired() -> bool {
     include_str!("sim_build_picker_sheet.rs").contains("apply_sim_hud_egui_theme")
         && include_str!("sim_road_tool_sheet.rs").contains("apply_sim_hud_egui_theme")
         && include_str!("context_tray_build_egui.rs").contains("apply_sim_hud_egui_theme")
+}
+
+/// HUD-NAT-009 — plant + power share one map-attached chip theme + map-hole clamp.
+#[must_use]
+pub fn hud_nat_009_single_themed_satellite_wired() -> bool {
+    include_str!("plant_focus_card.rs").contains("map_attached_chip_frame")
+        && include_str!("plant_focus_card.rs").contains("clamp_satellite_to_map_hole")
+        && include_str!("plant_focus_card.rs").contains("ScrollArea")
+        && include_str!("power_node_hover_egui.rs").contains("map_attached_chip_frame")
+        && include_str!("power_node_hover_egui.rs").contains("clamp_satellite_to_map_hole")
 }
 
 /// **DES-SIM-HUD-A11Y-001** — validity copy uses ✓/✗ glyphs (not color-only).

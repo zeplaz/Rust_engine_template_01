@@ -1,0 +1,66 @@
+{
+  "schema": "particles_gui_drain_queue_v1",
+  "program_id": "PARTICLES-GUI-DRAIN-001",
+  "parent_plan": ".cursor/plans/particles_plus_gui_10d09b86.plan.md",
+  "handoff": "tools/orchestrator/queues/HANDOFF.md",
+  "drain_started": "2026-09-23",
+  "drain_code_closed": "2026-09-23",
+  "status_witness": "debug_runs/agent_ops/particles_gui_drain_status.yaml",
+  "wave_1_next": ["OPERATOR-VERIFY", "G-PLAY-OPERATOR-01"],
+  "channels": [
+    {
+      "channel": "P-A",
+      "slice_id": "VSS-T3-001",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "witness": "debug_runs/sim_effect_fire_consumer_live.json",
+      "exit": "ignition_single_funnel=true"
+    },
+    {
+      "channel": "P-B",
+      "slice_id": "VSS-T4-005b",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "witness": "lib registry_spark_shower_emits_into_fire_vfx_spine"
+    },
+    {
+      "channel": "P-C",
+      "slice_id": "OPERATOR-VERIFY",
+      "owner": "human",
+      "status": "ready",
+      "checklist": "debug_runs/agent_ops/particles_gui_operator_checklist.md"
+    },
+    {
+      "channel": "G-A",
+      "slice_id": "GUI-ESC-001",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23"
+    },
+    {
+      "channel": "G-B",
+      "slice_id": "GUI-EGUI-BUDGET",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23"
+    },
+    {
+      "channel": "G-C",
+      "slice_id": "GUI-CRAFT-001",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23"
+    },
+    {
+      "channel": "G-D",
+      "slice_id": "BUILD-READ-WORLD-002",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "witness": "debug_runs/build_read_world_002_live.json",
+      "note": "iso_draw_scale_multiplier=1.65"
+    }
+  ]
+}

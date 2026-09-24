@@ -1,0 +1,107 @@
+{
+  "gate": "SPINE-RENDER-001",
+  "task_id": "SPINE-RENDER-001",
+  "green": true,
+  "ok": true,
+  "schema": "render_variant_job_v1.schema.json",
+  "example": "tools/mcp/schemas/examples/render_variant_warehouse_damage_heavy_v1.json",
+  "checks": {
+    "example_schema_and_contract": {
+      "ok": true,
+      "schema_ok": true,
+      "schema_error": null,
+      "classification": {
+        "role": "production",
+        "ship": false,
+        "method": "blender_keyframe_light_rig",
+        "ok": true,
+        "errors": [],
+        "production_capable": true
+      }
+    },
+    "ship_ortho_job_rejected": {
+      "ok": true,
+      "classification": {
+        "role": "smoke",
+        "ship": true,
+        "method": "blender_orthographic_iso",
+        "ok": false,
+        "errors": [
+          "smoke role cannot ship=true \u2014 greybox ortho is CI-only",
+          "ship=true requires role=production",
+          "ship=true rejects blender_orthographic_iso \u2014 use blender_keyframe_light_rig + keyframe_pack",
+          "ship=true rejects smoke_ortho_headless bake_source \u2014 use keyframe_pack",
+          "ship=true requires production render.method (got 'blender_orthographic_iso')"
+        ],
+        "production_capable": false
+      }
+    },
+    "tile_promotion_honest_rejects_ortho": {
+      "ok": true,
+      "errors": [
+        "bake_source must be keyframe_pack for ship (got 'smoke_ortho_headless').",
+        "render.method blender_orthographic_iso is smoke/CI only \u2014 ship requires manual keyframe_render + G4."
+      ]
+    },
+    "example_tile_batch_not_ortho": {
+      "ok": true,
+      "batch": "tools/mcp/schemas/examples/tile_batch_rowhouse_victorian_production_v1.json",
+      "render_method": "blender_keyframe_light_rig",
+      "bake_source": "keyframe_pack"
+    }
+  },
+  "worker_roles": {
+    "production": [
+      "blender_keyframe_light_rig"
+    ],
+    "smoke": [
+      "blender_orthographic_iso"
+    ]
+  },
+  "cli": "spine-render-001 / validate-report render_variant <job.json>",
+  "next_residual": "SPINE-BUILD-001",
+  "_agent_meta_extra": {
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "SPINE-RENDER-001",
+    "proceed_ship": false,
+    "art_quality": "contract_only_no_ship_art",
+    "agent": "coder-mcp"
+  },
+  "exit_predicate": {
+    "witness": "debug_runs/spine_render_001_live.json",
+    "must": [
+      {
+        "field": "checks.example_schema_and_contract.ok",
+        "equals": true
+      },
+      {
+        "field": "checks.ship_ortho_job_rejected.ok",
+        "equals": true
+      },
+      {
+        "field": "checks.tile_promotion_honest_rejects_ortho.ok",
+        "equals": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "spine_render_001_live_v1",
+    "profile": "SPINE_RENDER",
+    "relative_path": "debug_runs/spine_render_001_live.json",
+    "source_system": "spine_render_contract",
+    "written_at_epoch_secs": 1790254661,
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 SPINE-RENDER-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "SPINE-RENDER-001",
+    "proceed_ship": false,
+    "art_quality": "contract_only_no_ship_art",
+    "agent": "coder-mcp"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/spine_render_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/spine_render_001_live.json"
+}

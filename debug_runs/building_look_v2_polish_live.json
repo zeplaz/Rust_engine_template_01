@@ -1,0 +1,145 @@
+{
+  "task_id": "BUILDING-LOOK-V2-POLISH-001",
+  "parent": "BUILDING-LOOK-V2-ART",
+  "green": true,
+  "ok": true,
+  "soft_openings": {
+    "punch_enlarged": true,
+    "faces": [
+      "S",
+      "N",
+      "E/W mid"
+    ],
+    "camera": "iso_se",
+    "by_assembly": {
+      "victorian_4x2_s1_d8e2": {
+        "openings": 19,
+        "roof_scale": null,
+        "roof_module": "roof_pitched_gable"
+      },
+      "industrial_west_4x2_s1_4bf6": {
+        "openings": 19,
+        "roof_scale": null,
+        "roof_module": "roof_metal_low"
+      },
+      "rural_4x2_s3_94e7": {
+        "openings": 9,
+        "roof_scale": null,
+        "roof_module": "roof_pitched_gable"
+      },
+      "industrial_west_6x3_s5_d53f": {
+        "openings": 27,
+        "roof_scale": [
+          1.5,
+          1.0,
+          1.5
+        ],
+        "roof_module": "roof_metal_low"
+      }
+    }
+  },
+  "industrial_material": {
+    "steel_panel_01": "corrugation + soft grain",
+    "rebaked": [
+      "wall_steel_1u",
+      "door_warehouse",
+      "roof_metal_low"
+    ]
+  },
+  "size_class_roofs": {
+    "author_m": [
+      8,
+      16
+    ],
+    "scale_fn": "full_footprint_roof_scale",
+    "proof_6x3": {
+      "openings": 27,
+      "roof_scale": [
+        1.5,
+        1.0,
+        1.5
+      ],
+      "roof_module": "roof_metal_low"
+    },
+    "after_png": "debug_runs/building_look_v2/after/industrial_west_6x3_s5_d53f.png"
+  },
+  "axis": {
+    "ok": 16,
+    "job_count": 16
+  },
+  "after_stills": {
+    "screens": [
+      {
+        "assembly_id": "victorian_4x2_s1_d8e2",
+        "style_pack_id": "style_victorian",
+        "seed": 1,
+        "width": 4,
+        "depth": 2,
+        "floors": 2,
+        "snapshot_path": "assets/staging/assemblies/victorian_4x2_s1_d8e2.json",
+        "preview_png": "debug_runs/bq_q2_screens/victorian_4x2_s1_d8e2.png",
+        "preview_mode": "schematic_pil",
+        "preview_usable": true,
+        "modules_loaded": 25,
+        "missing_glb": [],
+        "bevy_status": "blank_rejected",
+        "elapsed_ms": 0,
+        "after_png": "debug_runs/building_look_v2/after/victorian_4x2_s1_d8e2.png"
+      },
+      {
+        "assembly_id": "industrial_west_4x2_s1_4bf6",
+        "style_pack_id": "style_industrial_west",
+        "seed": 1,
+        "width": 4,
+        "depth": 2,
+        "floors": 2,
+        "snapshot_path": "assets/staging/assemblies/industrial_west_4x2_s1_4bf6.json",
+        "preview_png": "debug_runs/bq_q2_screens/industrial_west_4x2_s1_4bf6.png",
+        "preview_mode": "schematic_pil",
+        "preview_usable": true,
+        "modules_loaded": 25,
+        "missing_glb": [],
+        "bevy_status": "blank_rejected",
+        "elapsed_ms": 0,
+        "after_png": "debug_runs/building_look_v2/after/industrial_west_4x2_s1_4bf6.png"
+      },
+      {
+        "assembly_id": "rural_4x2_s3_94e7",
+        "style_pack_id": "style_rural",
+        "seed": 3,
+        "width": 4,
+        "depth": 2,
+        "floors": 1,
+        "snapshot_path": "assets/staging/assemblies/rural_4x2_s3_94e7.json",
+        "preview_png": "debug_runs/bq_q2_screens/rural_4x2_s3_94e7.png",
+        "preview_mode": "schematic_pil",
+        "preview_usable": true,
+        "modules_loaded": 13,
+        "missing_glb": [],
+        "bevy_status": "blank_rejected",
+        "elapsed_ms": 0,
+        "after_png": "debug_runs/building_look_v2/after/rural_4x2_s3_94e7.png"
+      }
+    ],
+    "after_dir": "debug_runs/building_look_v2/after"
+  },
+  "residuals": [
+    "BQ-Q3 deferred",
+    "lod0 untouched",
+    "optional dedicated glass albedo later"
+  ],
+  "_agent_meta": {
+    "schema": "building_look_v2_polish_live_v1",
+    "profile": "BUILDING_LOOK_V2_POLISH",
+    "relative_path": "debug_runs/building_look_v2_polish_live.json",
+    "source_system": "main_thread_orchestrator_building_look_polish",
+    "written_at_epoch_secs": 1790272354,
+    "ritual": "BUILDING-LOOK-V2-POLISH-001"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/building_look_v2_polish_live.json: 0 error(s), 0 issue(s)"
+  }
+}

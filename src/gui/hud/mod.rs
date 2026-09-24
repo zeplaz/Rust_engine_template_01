@@ -59,6 +59,8 @@ pub mod sim_hud_l5_polish;
 pub mod sim_hud_copy;
 pub mod sim_hud_egui_theme;
 pub mod sim_build_picker_sheet;
+pub mod sim_build_picker_bevy;
+pub mod sim_road_power_sheets_bevy;
 pub mod sim_road_tool_sheet;
 pub mod sim_power_tool_sheet;
 pub mod power_grid_copy;
@@ -120,7 +122,9 @@ pub use simulation_shell_phase2::{
     CONTEXT_TRAY_TAB_H_PX, MAP_FRAME_INSET_PX, OPS_STRIP_TOP_OFFSET_PX,
 };
 pub use ui_shell_migration::*;
-pub use simulation_session::{apply_simulation_hud_defaults, SimulationSessionPlugin};
+pub use simulation_session::{
+    apply_simulation_hud_defaults, suppress_simulation_visual_debug_chrome, SimulationSessionPlugin,
+};
 pub use hud_dev_overlay::{HudDevOverlayPlugin, HudDevOverlayState};
 pub use explainability_viewer::{
     draw_explainability_viewer, mock_explainability_events, ExplainabilityFeedEvent,

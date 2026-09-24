@@ -1,0 +1,530 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "date": "2026-09-24",
+    "status": "ACTIVE_OPERATOR_RESIDUAL",
+    "priority": "P1",
+    "branch": "master",
+    "plan_hub": "src/dev/plan_building_quality_v1.md",
+    "companion": "src/dev/plan_aps_refactor_v1.md",
+    "operator_guide": "src/dev/operator_unlock_next_steps_v1.md",
+    "rule": "Trust witnesses over queue status. PLAN-GAME-SYSTEMS-DRAIN-001 stays IDLE (32/32). Do not re-open ECS game-systems invent work. ¬GPU terrain / cargo-warning (agent 2fa28167).",
+    "reconcile_note": "2026-09-24 plan-orchestrator · BUILDING-LOOK-V2-ART Q✓ (pixel_look_pass) · SILH/SMOKE/assemble ★closed · residual = operator G4/G-PLAY/RPC only · ¬GPU terrain / cargo-warning (agent 2fa28167)",
+    "witness_truth": {
+      "bq_a2": "debug_runs/building_quality_live.json green=true · bq_silh_honest_001=true · silh_max_pct=100 · assemblies=9 across 3 packs (2026-09-24 BQ-SILH-HONEST-001)",
+      "bq_q2": "debug_runs/bq_q2_screen_001_live.json green=true · 9/9 PNG · 3 packs×≥2 · bevy_worker (blank-frame fix 2026-09-24) · WIT-HON pass · rubric pending_operator",
+      "apsr": "debug_runs/apsr_a*_*.json mostly green",
+      "g4_coverage": "debug_runs/aps_g4_coverage_live.json green · tier G4",
+      "hardcode": "debug_runs/pilot_hardcode_lint_live.json green=0 violations",
+      "kit002_g4": "debug_runs/art_pipeline/kit_production_002_g4_live.json green=false · stills missing",
+      "module_index_tiers": "production=54 lod0=0 smoke=0 (post BQ-LOD0-TWIN-PRUNE-001; lod0 twins archived)",
+      "spine_render": "debug_runs/spine_render_001_live.json green · render_variant_job_v1 · ship+ortho rejected (2026-09-24 SPINE-RENDER-001)",
+      "spine_build": "debug_runs/spine_build_001_live.json green · build_graph_v1 · 6-node DAG + per-node witness (2026-09-24 SPINE-BUILD-001)",
+      "apsr_mutation_regress": "debug_runs/apsr_mutation_regress_001_live.json green · ceiling 33 · LaneChanged wiring · WIT-HON (2026-09-24 APSR-MUTATION-REGRESS-001)",
+      "veg_atlas_ship": "debug_runs/art_pipeline/veg_atlas_ship_001_live.json green=false · blocked G4 manual · proceed_ship:no · WIT-HON (2026-09-24 DMCP-VEG-ATLAS-SHIP-001)",
+      "aps_qc_smoke_label": "debug_runs/aps_qc_smoke_label_001_live.json green · Smoke kit / LOD0 stand-in labels on Assembly QC strip · approve blocks on smoke (2026-09-24 APS-QC-SMOKE-LABEL-001)",
+      "mcp_ops_report": "debug_runs/agent_ops/mcp_ops_report_001_live.json green · ops-intelligence-scan CLI/MCP/ps1 parity (2026-09-24 MCP-OPS-REPORT-001)",
+      "bq_assemble_prefer_prod": "debug_runs/bq_assemble_prefer_prod_001_live.json green · generate default source_tier=production (2026-09-24 BQ-ASSEMBLE-PREF-PROD-001)",
+      "bq_look_v2": "debug_runs/building_look_v2_live.json composition_pass=true · pixel_look_pass=true · WIT-HON (2026-09-24 BUILDING-LOOK-V2)",
+      "bq_look_v2_art": "debug_runs/building_look_v2_art_live.json green · pixel_look_pass=true · axis_ok 16/16 · WIT-HON (2026-09-24 BUILDING-LOOK-V2-ART)",
+      "bq_look_v2_polish": "debug_runs/building_look_v2_polish_live.json green · soft openings iso_se · steel corrugation · 6x3 roof scale (2026-09-24 BUILDING-LOOK-V2-POLISH-001)",
+      "bq_bevy_blank_frame": "debug_runs/bq_bevy_blank_frame_fix_001_live.json green · Mesh3d settle+blank reject · Q2 9/9 bevy_worker (2026-09-24 BQ-BEVY-BLANK-FRAME-FIX-001)",
+      "bq_prod_noncore": "debug_runs/bq_prod_noncore_promote_001_live.json green · promoted 12 · deferred packs lod0_slots=0 · operator_pass=false (2026-09-24 BQ-PROD-NONCORE-PROMOTE-001)"
+    }
+  },
+  "dispatch_now": {
+    "coder": "APS machine finish ★closed · ¬SILH/SMOKE/LOOK-V2 · cross-drain CHAIN/RTT or cleanup · ¬GPU terrain (agent 2fa28167)",
+    "coder-mcp": "machine residual empty · wait operator G4 keyframes (KIT002 / VEG) · ¬re-pick closed promote/SILH/ART",
+    "designer-mcp": "blocked MCP-P2-KIT002-G4 + DMCP-VEG-ATLAS until Session D / G4 stills",
+    "designer": "APS-GOLDEN-RUBRIC-OPS-001 done — BQ-Q3-OPS stays deferred",
+    "operator": "Unlock guide Sessions A–D · KIT002-G4 · G-PLAY · RPC-1-006 · VEG G4 · BQ-Q3 deferred",
+    "orchestrator-mcp": "Primary = operator unblock · keep BQ-Q3 deferred · ¬invent machine rows",
+    "plan-orchestrator": "machine finish drained · residual operator blockers only"
+  },
+  "pick_order": [
+    "BUILDING-LOOK-V2-ART",
+    "MCP-P2-KIT002-G4",
+    "DMCP-VEG-ATLAS-SHIP-001",
+    "G-PLAY-OPERATOR-01",
+    "RPC-1-006-OPS",
+    "BQ-Q3-OPS-APPROVE-001"
+  ],
+  "drain": [
+    {
+      "seq": 1,
+      "id": "BQ-SILH-HONEST-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder",
+      "section": "Building auto-gen quality",
+      "goal": "Fix dishonest silhouette_continuity_pct (>100%) in assembly_quality_gate.rs — clamp 0..100 and use story-aware denom (instances vs footprint_cells). Expand building_quality_live to N seeds × style packs (not single victorian row).",
+      "started": "2026-09-24",
+      "started_by": "plan-orchestrator",
+      "completed": "2026-09-24",
+      "completed_by": "coder",
+      "note": "debug_runs/building_quality_live.json — silh_max_pct=100 · assemblies=9 · style_packs=3 · bq_silh_honest_001=true · WIT-HON pass",
+      "route": "ΔWF→@coder BQ-SILH-HONEST-001 — clear exit; no operator needed",
+      "territory": [
+        "src/construction/procedural/assembly_quality_gate.rs"
+      ],
+      "depends_on": [],
+      "exit_witness": "debug_runs/building_quality_live.json",
+      "exit_predicate": [
+        "all assemblies silhouette_continuity_pct <= 100",
+        "assemblies.length >= 8 across >=3 style packs",
+        "WIT-HON pass"
+      ],
+      "unblocks": [
+        "BQ-Q2-SCREEN-001",
+        "BQ-Q3-OPS-APPROVE-001"
+      ],
+      "why_jank": "Gate greenwashes multi-story assemblies (visible_count/footprint_cells = 150%) so bad massing still passes_gate"
+    },
+    {
+      "seq": 2,
+      "id": "BQ-SMOKE-AUDIT-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "section": "Building auto-gen quality",
+      "goal": "Emit smoke/lod0 inventory witness from _module_index.json + style-pack slot resolution — list every non-production module still selectable at assemble time.",
+      "territory": [
+        "assets/configs/buildings/_module_index.json",
+        "tools/mcp/python/rust_engine_mcp/"
+      ],
+      "depends_on": [],
+      "exit_witness": "debug_runs/bq_smoke_tier_audit_live.json",
+      "exit_predicate": [
+        "counts.production/lod0/smoke present",
+        "per_style_pack selectable_smoke_ids listed",
+        "green=false while any style pack can pick smoke/lod0 for a standard slot"
+      ],
+      "unblocks": [
+        "BQ-PROD-PROMOTE-BATCH-001"
+      ],
+      "why_jank": "31 smoke + 50 lod0 modules still in index — generators resolve to greybox geometry even when BQ kit-fill witnesses claim complete",
+      "done_note": "debug_runs/bq_smoke_tier_audit_live.json · counts 30/50/31 · promote=6 focus lod0 · green=false (industrial_west window_1u lod0) · next BQ-PROD-PROMOTE-BATCH-001"
+    },
+    {
+      "seq": 3,
+      "id": "MCP-QUEUE-RECON-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "orchestrator-mcp",
+      "section": "MCP toolchain",
+      "goal": "Reconcile mcp_active_queue + coder_mcp_drain_brief false-blocked rows against green witnesses (MCP-PROD-C-PILOT, TILE-VAL, INDEX, BUILD-READ-*, KIT002-G2/G3).",
+      "territory": [
+        "tools/orchestrator/queues/mcp_active_queue.json"
+      ],
+      "depends_on": [],
+      "exit_witness": "debug_runs/agent_ops/mcp_queue_recon_live.json",
+      "exit_predicate": [
+        "each flipped row cites witness path + written_at",
+        "coder_mcp_drain_brief ready/blocked matches disk",
+        "KIT002-G4 remains blocked (stills missing)"
+      ],
+      "note": "Intel cull 2026-06-20 left rows blocked despite later green witnesses",
+      "completed": "2026-09-24",
+      "completed_by": "orchestrator-mcp",
+      "done_note": "debug_runs/agent_ops/mcp_queue_recon_live.json · flipped 13 false-blocked · KIT002-G4 remains blocked",
+      "updated_at": "2026-09-24T13:13:15.243262+00:00"
+    },
+    {
+      "seq": 4,
+      "id": "BQ-Q2-SCREEN-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "section": "Building auto-gen quality",
+      "goal": "bevy_preview_worker N seeded assemblies per style pack; attach PNG paths to witness; rubric row 'reads as a real building'.",
+      "territory": [
+        "tools/mcp/python/rust_engine_mcp/",
+        "tools/mcp/art_pipeline_suite/"
+      ],
+      "depends_on": [
+        "BQ-SILH-HONEST-001"
+      ],
+      "exit_witness": "debug_runs/bq_q2_screen_001_live.json",
+      "exit_predicate": [
+        ">=3 style packs × >=2 seeds have preview paths",
+        "no pass without screenshot path",
+        "WIT-HON pass"
+      ],
+      "started": "2026-09-24",
+      "started_by": "coder-mcp",
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "note": "debug_runs/bq_q2_screen_001_live.json green · 9/9 PNG bevy_worker · packs victorian/industrial_west/rural · rubric pending_operator · blank-frame fix BQ-BEVY-BLANK-FRAME-FIX-001 · WIT-HON pass · next BQ-Q3-OPS-APPROVE-001",
+      "unblocks": [
+        "BQ-Q3-OPS-APPROVE-001"
+      ],
+      "blocked_note": "Machine screen done; pixel verdict still needs operator eyes"
+    },
+    {
+      "seq": 5,
+      "id": "BQ-PROD-PROMOTE-BATCH-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "section": "Bake/atlas · Building auto-gen",
+      "goal": "Rebake+promote highest-traffic smoke/lod0 slots to production tier for industrial_west + victorian + colonial (doors/windows/corners/roofs used by grammar generate).",
+      "depends_on": [
+        "BQ-SMOKE-AUDIT-001"
+      ],
+      "exit_witness": "debug_runs/bq_prod_promote_batch_001_live.json",
+      "exit_predicate": [
+        "style_industrial_west + style_victorian standard slots resolve production-only",
+        "validate_asset_report tier pass",
+        "module index smoke selectable count decreased"
+      ],
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "done_note": "debug_runs/bq_prod_promote_batch_001_live.json · promoted 6 (kit_prod_promote_bq_001) · focus packs production_only · promote_count 0 · WIT-HON pass · next BQ-PROD-DEFER-PACKS-001 (deferred packs + 14 smoke orphans)",
+      "parallel_ok_with": [
+        "MCP-QUEUE-RECON-001",
+        "BQ-SILH-HONEST-001"
+      ],
+      "why_jank": "Primary visible jumble source after F/C/A machine gates — greybox still wins tier picks"
+    },
+    {
+      "seq": 5.5,
+      "id": "BQ-PROD-DEFER-PACKS-001",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "section": "Bake/atlas · Building auto-gen",
+      "goal": "Promote rural/modern/military/industrial_soviet CORE lod0 slots to production; retire/clear smoke orphans so bq_smoke_tier_audit goes green.",
+      "depends_on": [
+        "BQ-PROD-PROMOTE-BATCH-001"
+      ],
+      "exit_witness": "debug_runs/bq_prod_defer_packs_001_live.json",
+      "exit_predicate": [
+        "deferred CORE slots resolve production-only",
+        "smoke index count == 0",
+        "bq_smoke_tier_audit green=true",
+        "WIT-HON pass"
+      ],
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "done_note": "debug_runs/bq_prod_defer_packs_001_live.json · promoted 6 · cleared_smoke_total_archived 31 (assets/archive/kit_greybox_smoke_retired_2026-09) · audit green · WIT-HON pass · next BQ-PROD-NONCORE-PROMOTE-001",
+      "why_jank": "Deferred packs still picked lod0 CORE; 31 smoke rows inflated index"
+    },
+    {
+      "seq": 5.6,
+      "id": "BQ-PROD-NONCORE-PROMOTE-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "section": "Bake/atlas · Building auto-gen",
+      "goal": "Promote remaining deferred-pack non-core lod0 slots (rural/modern/military/industrial_soviet doors/roofs/props/walls) to production without claiming operator_pass.",
+      "depends_on": [
+        "BQ-PROD-DEFER-PACKS-001"
+      ],
+      "exit_witness": "debug_runs/bq_prod_noncore_promote_001_live.json",
+      "exit_predicate": [
+        "deferred packs lod0_slots == 0",
+        "promoted_count == 12",
+        "operator_pass == false",
+        "WIT-HON pass"
+      ],
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "done_note": "debug_runs/bq_prod_noncore_promote_001_live.json green · kit_prod_noncore_bq_001 · 12 promoted · all style packs production_only · operator_pass=false · WIT-HON · next BQ-Q3-OPS-APPROVE-001 @operator",
+      "why_jank": "Non-core deferred slots still resolved lod0 after CORE promote"
+    },
+    {
+      "seq": 6,
+      "id": "MCP-P2-KIT002-G4",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "designer-mcp",
+      "section": "Grammar/G4 · Bake/atlas",
+      "goal": "Warehouse industrial-west G4 sign-off on real keyframe stills (not headless procedural).",
+      "blocked_by": [
+        "keyframe_stills_folder_missing",
+        "manual_keyframe_render",
+        "operator_session_D"
+      ],
+      "depends_on": [],
+      "exit_witness": "debug_runs/art_pipeline/kit_production_002_g4_live.json",
+      "operator_next": "operator_unlock_next_steps_v1.md Session D → utils/keyframe_render.py → designer_mcp_warehouse_phase_c.ps1",
+      "why_jank": "Track B ship blocked — warehouse tiles rejected_headless_procedural; art_quality FAIL"
+    },
+    {
+      "seq": 7,
+      "id": "PILOT-001-WAREHOUSE-SPINE",
+      "status": "blocked",
+      "priority": "P0",
+      "owner": "designer-mcp",
+      "section": "Bake/atlas",
+      "goal": "Warehouse through full tile spine with G4 on real stills (plan_building_tile_spine_001_v1).",
+      "blocked_by": [
+        "MCP-P2-KIT002-G4"
+      ],
+      "exit_witness": "debug_runs/art_pipeline/tile_spine_warehouse_pilot_live.json",
+      "alias_of": "MCP-P2-KIT002-G4"
+    },
+    {
+      "seq": 7.5,
+      "id": "BUILDING-LOOK-V2-COMP",
+      "status": "done",
+      "priority": "P0",
+      "owner": "designer-mcp",
+      "section": "Building auto-gen quality",
+      "goal": "Building Visual Concept v2 composition contracts: 4m grid spacing, outward yaw, ridge-row roof, corners-as-walls, Q2 production-only.",
+      "exit_witness": "debug_runs/building_look_v2_live.json",
+      "concept_ref": "src/dev/design_building_visual_concept_v2.md",
+      "completed": "2026-09-24",
+      "completed_by": "designer-mcp",
+      "done_note": "composition_pass=true · pixel_look_pass=false honest · BEFORE/AFTER under debug_runs/building_look_v2/ · BQ-Q3 deferred",
+      "why_jank": "1m spacing of 4m modules + zero yaw + lod0 Q2 created collage theater while SILH stayed 100%"
+    },
+    {
+      "seq": 7.6,
+      "id": "BUILDING-LOOK-V2-ART",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder-mcp",
+      "section": "Building auto-gen quality",
+      "goal": "Rebake wall/door/window/roof production modules so Bevy preview reads upright envelope (wall height on +Y, facade normal outward, single-span roof caps).",
+      "depends_on": [
+        "BUILDING-LOOK-V2-COMP"
+      ],
+      "blocked_by": [],
+      "exit_witness": "debug_runs/building_look_v2_art_live.json",
+      "exit_predicate": [
+        "pixel_look_pass true on victorian/industrial/rural sample AFTER stills",
+        "wall modules stand upright in bevy_preview_worker",
+        "roof sits on wall tops without plank collage"
+      ],
+      "concept_ref": "src/dev/design_building_visual_concept_v2.md",
+      "started": "2026-09-24",
+      "started_by": "coder-mcp",
+      "completed": "2026-09-24",
+      "completed_by": "plan-orchestrator",
+      "done_note": "debug_runs/building_look_v2_art_live.json green · polish BUILDING-LOOK-V2-POLISH-001 (soft openings iso_se · corrugated steel · 6×3 roof scale) · `$ref:debug_runs/building_look_v2_polish_live.json` · WIT-HON pass",
+      "why_jank": "Flat-on-ground walls + plank collage roofs after Blender→Bevy axis mismatch"
+    },
+    {
+      "seq": 8,
+      "id": "BQ-Q3-OPS-APPROVE-001",
+      "status": "deferred",
+      "priority": "P3",
+      "owner": "operator",
+      "section": "Operator/display gates",
+      "goal": "DEFERRED/CANCELLED for now — golden-seed operator approve theater. Look-v2 pixel_look_pass satisfied; still do not spend operator time on golden-seed theater.",
+      "blocked_by": [
+        "OPERATOR_THEATER_DEFERRED"
+      ],
+      "blocked_note": "2026-09-24 · look-v2 ART Q✓ removed ART gate · theater stays deferred per user mandate · unblock_when only if product reopens golden approve",
+      "exit_witness": "debug_runs/bq_q3_operator_approve_live.json",
+      "deferred_reason": "operator_theater",
+      "unblocks_when": "product explicitly reopens golden-seed approve (look-v2 pixel_look_pass already true)"
+    },
+    {
+      "seq": 9,
+      "id": "SPINE-BUILD-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "section": "MCP toolchain",
+      "goal": "Explicit build dependency graph + per-node witness (plan_building_tile_spine BUILD-001).",
+      "depends_on": [],
+      "exit_witness": "debug_runs/spine_build_001_live.json",
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "done_note": "debug_runs/spine_build_001_live.json green · build_graph_v1 · topo 6 nodes · cycle/bad-deps rejected · WIT-HON pass · next APSR-MUTATION-REGRESS-001"
+    },
+    {
+      "seq": 10,
+      "id": "SPINE-RENDER-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "section": "MCP toolchain",
+      "goal": "Headless blender-worker contract — MCP never ships greybox ortho as production (RENDER-001).",
+      "depends_on": [
+        "BQ-SMOKE-AUDIT-001"
+      ],
+      "exit_witness": "debug_runs/spine_render_001_live.json",
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "done_note": "debug_runs/spine_render_001_live.json green · schema render_variant_job_v1 · ship+ortho rejected · honest bake rejects ortho · WIT-HON pass · next SPINE-BUILD-001"
+    },
+    {
+      "seq": 11,
+      "id": "MCP-OPS-REPORT-001",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder-mcp",
+      "section": "Tooling/CLI",
+      "goal": "ops_intelligence_scan MCP wrapper",
+      "exit_witness": "debug_runs/agent_ops/mcp_ops_report_001_live.json",
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "done_note": "debug_runs/agent_ops/mcp_ops_report_001_live.json green · CLI ops-intelligence-scan + MCP ops_intelligence_scan_tool + ps1 thin wrapper · WIT-HON pass · next residual operator BQ-Q3"
+    },
+    {
+      "seq": 11.5,
+      "id": "BQ-ASSEMBLE-PREF-PROD-001",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder-mcp",
+      "section": "Building auto-gen quality",
+      "goal": "Hard-default assemble/generate to source_tier=production (not lod0); CLI/MCP --source-tier parity; focus packs resolve production GLBs with zero mesh_tier_fallback.",
+      "exit_witness": "debug_runs/bq_assemble_prefer_prod_001_live.json",
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "done_note": "debug_runs/bq_assemble_prefer_prod_001_live.json green · default production · victorian/industrial_west/rural zero lod0 fallback · WIT-HON pass",
+      "why_jank": "generate_assembly_snapshot defaulted lod0 so CLI/MCP/tile_pipeline silently built greybox assemblies after CORE promote"
+    },
+    {
+      "seq": 12,
+      "id": "APS-GOLDEN-RUBRIC-OPS-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "designer",
+      "section": "APS artist tool",
+      "goal": "Charter operator rubric v3 criterion 'reads as a real building' + APS QC strip labels for smoke-tier hits.",
+      "depends_on": [],
+      "exit_witness": "src/dev/design_aps_operator_rubric_v3.md",
+      "unblocks": [
+        "BQ-Q3-OPS-APPROVE-001"
+      ],
+      "machine_scaffold": "debug_runs/aps_golden_rubric_sheet_scaffold_live.json · CLI aps-golden-rubric-scaffold · pending_operator only — do NOT mark done from scaffold",
+      "completed": "2026-09-24",
+      "completed_by": "designer",
+      "done_note": "src/dev/design_aps_operator_rubric_v3.md READY · sheet field map + smoke QC labels · operator_pass=false · next BQ-Q3-OPS-APPROVE-001 @operator"
+    },
+    {
+      "seq": 13,
+      "id": "APSR-MUTATION-REGRESS-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder-mcp",
+      "section": "APS artist tool",
+      "goal": "Confirm mutation-inventory ratchet still green; add CI fail if SuiteState direct writes grow; stale-panel lane-roundtrip regression.",
+      "exit_witness": "debug_runs/apsr_mutation_regress_001_live.json",
+      "completed": "2026-09-24",
+      "completed_by": "coder-mcp",
+      "done_note": "debug_runs/apsr_mutation_regress_001_live.json green · mutation ceiling 33 · LaneChanged→sync_from_state AST lock · line-drift allowlist sync · WIT-HON pass · next APS-GOLDEN-RUBRIC-OPS-001"
+    },
+    {
+      "seq": 14,
+      "id": "DMCP-VEG-ATLAS-SHIP-001",
+      "status": "blocked",
+      "priority": "P2",
+      "owner": "designer-mcp",
+      "section": "Bake/atlas",
+      "goal": "Vegetation atlas ship lane (HANDOFF T3 pick) — parallel to building finish when not blocked on G4 keyframes.",
+      "exit_witness": "debug_runs/art_pipeline/veg_atlas_ship_001_live.json",
+      "parallel_ok_with": [
+        "BQ-SILH-HONEST-001",
+        "BQ-SMOKE-AUDIT-001"
+      ],
+      "blocked_by": [
+        "G4_MANUAL_KEYFRAMES",
+        "topology_corridor_regrowth_grass_missing"
+      ],
+      "unblock_when": "Operator iso-rig keyframe stills for G4 minimum set (incl. topology_corridor_regrowth_grass) → designer-mcp flips landscape_expanded_g4_signoff.yaml proceed_ship:yes with art_quality:keyframe_manual",
+      "blocked_note": "2026-09-24 designer-mcp · witness debug_runs/art_pipeline/veg_atlas_ship_001_live.json · ship:false honest · criteria locked · APS-GOLDEN avoided · WIT-HON pass"
+    },
+    {
+      "seq": 15,
+      "id": "G-PLAY-OPERATOR-01",
+      "status": "blocked",
+      "priority": "P1",
+      "owner": "operator",
+      "section": "Operator/display gates",
+      "goal": "Close sole open tensor gate G-PLAY-01 via 10-min play checklist.",
+      "blocked_by": [
+        "NEEDS-DISPLAY"
+      ],
+      "exit_witness": "debug_runs/g_play_product_close_live.json",
+      "operator_next": "operator_unlock_next_steps_v1.md Session C"
+    },
+    {
+      "seq": 16,
+      "id": "RPC-1-006-OPS",
+      "status": "blocked",
+      "priority": "P2",
+      "owner": "operator",
+      "section": "Operator/display gates",
+      "goal": "GPU terrain bake pixel prove (Session B) — does not block MCP/APS finish.",
+      "blocked_by": [
+        "NEEDS-DISPLAY"
+      ],
+      "exit_witness": "debug_runs/minimap_compositor_live.json"
+    }
+  ],
+  "closed_machine_do_not_repick": [
+    "BQ-F1-BAKE-001",
+    "BQ-F2-STYLE-001",
+    "BQ-F3-SLOT-001",
+    "BQ-C1-CONTRACT-001",
+    "BQ-C2-BOUNDS-001",
+    "BQ-C3-SEAM-001",
+    "BQ-C4-SCALE-001",
+    "BQ-A1-ADJ-001",
+    "BQ-A2-GATE-001",
+    "BQ-H1-FACADE-001",
+    "BQ-H2-OPENINGS-001",
+    "BQ-H3-V0-RETIRE-001",
+    "BQ-K1-KITFILL-001",
+    "BQ-K2-COVERAGE-001",
+    "BQ-K3-GRAMMAR-001",
+    "BQ-Q3-GOLDEN-001",
+    "APSR-A1-S1-001",
+    "APSR-A1-S2-ASM-001",
+    "APSR-A1-S3-001",
+    "APSR-A2-P1-001",
+    "APSR-A2-P2-001",
+    "APSR-A2-P3-001",
+    "APSR-A3-D1-001",
+    "APSR-A3-D2-001",
+    "APSR-A3-D3-001",
+    "APSR-A3-D4-001",
+    "APSR-A4-Q1-001",
+    "APSR-A4-Q2-001",
+    "APSR-A4-Q3-001",
+    "APSR-MUTATION-REGRESS-001",
+    "APS-G4-COVERAGE-001",
+    "APS-PRESENCE-CORRECTION-001",
+    "CITY-G0*",
+    "MCP-WIT-001..040",
+    "MCP-PROD-B2"
+  ],
+  "janky_buildings_root_causes": [
+    {
+      "id": "JB-1",
+      "cause": "Look-v2 composition+ART ★closed (pixel_look_pass); residual building eye polish is lod0-untouched kits + style materials — not Q3 golden-seed theater",
+      "layer": "bake/module kits",
+      "fix_slice": "MCP-P2-KIT002-G4 Session D stills (warehouse); optional style material pass"
+    },
+    {
+      "id": "JB-2",
+      "cause": "Warehouse Track B G4 rejects headless procedural — keyframe stills folder missing",
+      "layer": "G4 / tile spine",
+      "fix_slice": "MCP-P2-KIT002-G4 (operator Session D)"
+    },
+    {
+      "id": "JB-3",
+      "cause": "Quality gate silhouette metric unbounded (>100%) greenwashes multi-story jumbles",
+      "layer": "assembly_quality_gate",
+      "fix_slice": "BQ-SILH-HONEST-001"
+    },
+    {
+      "id": "JB-4",
+      "cause": "Golden-seed 'approve' is pytest theater (1 rubric row) — no operator eyes on 'reads as building'",
+      "layer": "QC / APSQ",
+      "fix_slice": "BQ-Q2-SCREEN-001 → BQ-Q3-OPS-APPROVE-001"
+    },
+    {
+      "id": "JB-5",
+      "cause": "Historical logic defects (style-blind pick, hide_slot, float roofs, kit holes) are MACHINE-FIXED — do not re-diagnose as open code bugs",
+      "layer": "closed",
+      "fix_slice": "closed_machine_do_not_repick"
+    }
+  ]
+}

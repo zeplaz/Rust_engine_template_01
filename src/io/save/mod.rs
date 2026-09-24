@@ -11,6 +11,8 @@ mod pipeline;
 mod registry_snapshot;
 mod snapshot_builder;
 mod settlement_overlay;
+mod fire_overlay;
+mod atmosphere_clipmap_overlay;
 mod transport_overlay;
 mod wave_s_artifacts;
 mod wire_format;
@@ -48,8 +50,27 @@ pub use registry_snapshot::{
 pub use settlement_overlay::{
     build_settlement_overlay_refs, econ_og_save_001_witness_green,
     settlement_books_manifest_roundtrip_witness_green,
-    settlement_books_save_roundtrip_witness_green, SETTLEMENT_BOOKS_REL_PATH,
+    settlement_books_save_roundtrip_witness_green, try_hydrate_settlement_books_from_manifest,
+    try_hydrate_settlement_books_on_bundle_dir, write_settlement_overlay_on_save_flush,
+    write_settlement_overlay_to_bundle, SettlementBooksHydrateState, SETTLEMENT_BOOKS_REL_PATH,
     SETTLEMENT_OVERLAY_NAME,
+};
+pub use fire_overlay::{
+    apply_chunk_fire_state, capture_chunk_fire_state, capture_chunk_fire_state_from_rows,
+    default_fire_overlay_ref, fire_overlay_ref, fire_save_roundtrip_lib_green,
+    hash_saved_fire_state, hash_surface_fire_rows, read_chunk_fire_state_ron,
+    refresh_fire_save_roundtrip_live_witness, write_chunk_fire_state_ron, ChunkFireStateSnapshot,
+    SavedFireChunkRow, FIRE_OVERLAY_NAME, FIRE_SAVE_ROUNDTRIP_JSON, FIRE_STATE_REL_PATH,
+    FIRE_STATE_SCHEMA_VERSION,
+};
+pub use atmosphere_clipmap_overlay::{
+    atmosphere_clipmap_manifest_roundtrip_green, atmosphere_clipmap_save_roundtrip_green,
+    build_atmos_clipmap_overlay_refs, capture_atmosphere_clipmap_snapshot,
+    default_atmos_clipmap_overlay_ref, hydrate_atmosphere_clipmap_snapshot,
+    read_atmosphere_clipmap_snapshot, refresh_atmosphere_clipmap_save_roundtrip_witness,
+    try_hydrate_atmosphere_clipmap_from_manifest, write_atmosphere_clipmap_overlay_to_bundle,
+    write_atmosphere_clipmap_snapshot, AtmosphereClipmapSnapshot, ATMOS_CLIPMAP_OVERLAY_NAME,
+    ATMOS_CLIPMAP_SAVE_ROUNDTRIP_JSON, ATMOS_CLIPMAP_SCHEMA_VERSION, ATMOS_CLIPMAP_STATE_REL_PATH,
 };
 pub use transport_overlay::{
     read_transport_snapshot_ron, transport_overlay_ref, write_transport_snapshot_ron,

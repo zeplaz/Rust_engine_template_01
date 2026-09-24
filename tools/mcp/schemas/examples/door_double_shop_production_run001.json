@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "job_id": "door_double_shop_production_run001",
+  "batch_id": "kit_prod_promote_bq_001",
+  "development_tier": "production",
+  "spec_ref": "assets/staging/specs/door_double_shop_production.json",
+  "operation": "module_door",
+  "params": {
+    "width_m": 4,
+    "height_m": 2.5,
+    "depth_m": 0.15,
+    "material_profile": "wood_plank_01",
+    "seed": 560004,
+    "profile": "frame"
+  },
+  "output": {
+    "glb": "assets/staging/door_double_shop_production_run001/model.glb",
+    "thumbnail": "assets/staging/door_double_shop_production_run001/preview.png"
+  }
+}

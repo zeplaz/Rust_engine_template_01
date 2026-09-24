@@ -231,6 +231,44 @@ pub fn diagnostics_ui_system(
                         rt.edge_saturation_max
                     ),
                 );
+                if ld.top_saturated_edges.is_empty() {
+                    muted_label(ui, &palette, "Top saturated edges: (none)");
+                } else {
+                    muted_label(ui, &palette, "Top saturated edges:");
+                    for sample in ld.top_saturated_edges.iter().take(5) {
+                        primary_label(
+                            ui,
+                            &palette,
+                            format!(
+                                "  edge {} · pressure {:.2} · load {:.1}/{:.1}",
+                                sample.edge_id, sample.pressure, sample.load, sample.capacity
+                            ),
+                        );
+                    }
+                }
+                if ld.starved_facilities.is_empty() {
+                    muted_label(ui, &palette, "Starved facilities: (none)");
+                } else {
+                    muted_label(
+                        ui,
+                        &palette,
+                        format!("Starved facilities: {}", ld.starved_facilities.join(", ")),
+                    );
+                }
+                if let Some(proof) = ld.proofs.last() {
+                    muted_label(
+                        ui,
+                        &palette,
+                        format!(
+                            "Last RouteProof #{}: {}→{} delivered {:.1}/{:.1}",
+                            proof.request_id,
+                            proof.from_catalog,
+                            proof.to_catalog,
+                            proof.delivered,
+                            proof.requested
+                        ),
+                    );
+                }
             }
 
             ui.separator();

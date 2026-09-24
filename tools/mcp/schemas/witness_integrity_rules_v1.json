@@ -57,6 +57,13 @@
       "fix_hint": "Set green:false when art_quality is rejected"
     },
     {
+      "rule_id": "WIT-PRODUCT-VFX-PARTICLES",
+      "severity": "error",
+      "description": "Product VFX claim green while particles_rendered is false",
+      "when_fail": "green==true ∧ product_vfx_claim==true ∧ particles_rendered==false",
+      "fix_hint": "Ship gpu_fire_particle_raster pixels (host_present+draw_ok+spark_rows) or set product_vfx_claim:false for scoped contracts (ES-7/ecology)"
+    },
+    {
       "rule_id": "WIT-ENV-BOOTSTRAP-ONLY",
       "severity": "warning",
       "description": "Live-sim-required witness green from lib/bootstrap harness only",

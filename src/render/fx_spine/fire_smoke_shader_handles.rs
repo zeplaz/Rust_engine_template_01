@@ -4,8 +4,7 @@ use bevy::prelude::*;
 
 pub const FIRE_PARTICLE_WGSL: &str = "shaders/fire/fire_particle.wgsl";
 pub const FIRE_SPARK_COMPUTE_WGSL: &str = "shaders/fire/fire_spark_compute.wgsl";
-/// Unwired volume pass — **do not load** until ES-4 atmosphere/smoke volume composite lands (DEBT-009).
-pub const SMOKE_VOLUME_WGSL: &str = "shaders/fire/smoke_volume.wgsl";
+// DEBT-009: `assets/shaders/fire/smoke_volume.wgsl` stays on disk for ES-4 — do not AssetServer::load.
 
 #[derive(Resource, Debug)]
 pub struct FireSmokeShaderHandles {

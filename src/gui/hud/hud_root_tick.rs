@@ -219,6 +219,7 @@ pub fn hud_product_shell_egui_root(
         &panels.palette,
         &bindings,
         &panels.world,
+        *panels.base.get(),
         panels.readiness.as_deref(),
         panels.preview_authority.as_deref(),
         panels.preview_debug.as_deref(),

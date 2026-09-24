@@ -162,7 +162,7 @@ pub static INDUSTRIAL_ACTIVATION_TODOS: &[Stage5LiveTodo] = &[
     },
     Stage5LiveTodo {
         id: "INDUSTRIAL-I2-03",
-        status: TodoStatus::Open,
+        status: TodoStatus::Done,
         file: "src/economy/activation/bridge.rs",
         system: "RegisterNodeOnActivate",
         goal: "On activation, register `ResourceFlowNode` from def produces/consumes + membership.",
@@ -301,11 +301,11 @@ pub static INDUSTRIAL_ACTIVATION_TODOS: &[Stage5LiveTodo] = &[
     // ── MFG Manufacturing core tick (CLN-P0-T7 fold) ───────────────────────
     Stage5LiveTodo {
         id: "INDUSTRIAL-MFG-01",
-        status: TodoStatus::Open,
+        status: TodoStatus::Done,
         file: "src/entities/production/core/manufacturing_plugin.rs",
         system: "ManufacturingCorePlugin::tick_manufacturing_nodes",
         goal: "Drive `ManufacturingNode` throughput vs blueprint, decay/efficiency curves, alert events.",
-        runtime_check: "Sim tick mutates node rates when Operational + supply inputs present.",
+        runtime_check: "Sim tick mutates node rates when Operational + ManufacturingNode present (MFG-03 wire).",
         failure_mode: "ManufacturingCorePlugin is a no-op scaffold forever.",
     },
 ];

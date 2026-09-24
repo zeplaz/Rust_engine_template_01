@@ -5,7 +5,12 @@ use crate::systems::weather::GlobalRenewableWeatherFactors;
 use crate::entities::production::power::capabilities::attach_power_plant_capabilities;
 use crate::entities::production::power::components::{ElectricalComponent, PowerPlant};
 use crate::entities::production::power::failure_modes::{
-    nuclear_containment_placeholder, steam_system_placeholder, variable_renewable_placeholder,
+    apply_containment_breach_radiation_hook_system, attach_nuclear_containment_runtime,
+    nuclear_decay_heat_cooling_system, nuclear_loop_scram_system, nuclear_meltdown_breach_system,
+    project_containment_breach_to_player_event_log, project_meltdown_to_player_event_log,
+    project_nuclear_cooling_degraded_to_player_event_log, project_nuclear_scram_to_player_event_log,
+    steam_system_placeholder, sync_nuclear_offsite_from_utility, variable_renewable_placeholder,
+    ContainmentBreachEvent, MeltdownEvent, NuclearCoolingDegradedEvent, NuclearScramEvent,
 };
 use crate::entities::production::power::grid_topology::{
     emit_grid_overload_signals, purge_removed_power_components_from_grids, purge_stale_grid_references,
@@ -24,10 +29,15 @@ impl Plugin for PowerRuntimePlugin {
             .init_resource::<PlantDefinitionRegistry>()
             .init_resource::<GlobalRenewableWeatherFactors>()
             .add_message::<GridOverloadEvent>()
+            .add_message::<NuclearScramEvent>()
+            .add_message::<NuclearCoolingDegradedEvent>()
+            .add_message::<MeltdownEvent>()
+            .add_message::<ContainmentBreachEvent>()
             .add_systems(
                 Update,
                 (
                     attach_power_plant_capabilities,
+                    attach_nuclear_containment_runtime,
                     rebuild_electrical_grid_topology,
                     purge_removed_power_components_from_grids,
                     purge_stale_grid_references,
@@ -36,7 +46,15 @@ impl Plugin for PowerRuntimePlugin {
                     update_electrical_load_system,
                     update_power_output_system,
                     steam_system_placeholder,
-                    nuclear_containment_placeholder,
+                    sync_nuclear_offsite_from_utility,
+                    nuclear_loop_scram_system,
+                    nuclear_decay_heat_cooling_system,
+                    nuclear_meltdown_breach_system,
+                    apply_containment_breach_radiation_hook_system,
+                    project_nuclear_scram_to_player_event_log,
+                    project_nuclear_cooling_degraded_to_player_event_log,
+                    project_meltdown_to_player_event_log,
+                    project_containment_breach_to_player_event_log,
                     variable_renewable_placeholder,
                 )
                     .chain()

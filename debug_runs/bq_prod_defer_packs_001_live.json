@@ -1,0 +1,223 @@
+{
+  "gate": "BQ-PROD-DEFER-PACKS-001",
+  "task_id": "BQ-PROD-DEFER-PACKS-001",
+  "program": "PLAN-MCP-APS-TOOLING-FINISH-001",
+  "batch_id": "kit_prod_defer_bq_001",
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "570001..570006",
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true,
+    "no_greybox_as_production": true
+  },
+  "deferred_packs": [
+    "style_rural",
+    "style_modern",
+    "style_military",
+    "style_industrial_soviet"
+  ],
+  "artifacts_written": [
+    {
+      "job_id": "wall_wood_1u_production_run001",
+      "spec": "assets/staging/specs/wall_wood_1u_production.json",
+      "job": "tools/mcp/schemas/examples/wall_wood_1u_production_run001.json"
+    },
+    {
+      "job_id": "wall_glass_curtain_1u_production_run001",
+      "spec": "assets/staging/specs/wall_glass_curtain_1u_production.json",
+      "job": "tools/mcp/schemas/examples/wall_glass_curtain_1u_production_run001.json"
+    },
+    {
+      "job_id": "wall_military_bunker_1u_production_run001",
+      "spec": "assets/staging/specs/wall_military_bunker_1u_production.json",
+      "job": "tools/mcp/schemas/examples/wall_military_bunker_1u_production_run001.json"
+    },
+    {
+      "job_id": "win_bunker_slit_production_run001",
+      "spec": "assets/staging/specs/win_bunker_slit_production.json",
+      "job": "tools/mcp/schemas/examples/win_bunker_slit_production_run001.json"
+    },
+    {
+      "job_id": "wall_concrete_1u_production_run001",
+      "spec": "assets/staging/specs/wall_concrete_1u_production.json",
+      "job": "tools/mcp/schemas/examples/wall_concrete_1u_production_run001.json"
+    },
+    {
+      "job_id": "door_factory_production_run001",
+      "spec": "assets/staging/specs/door_factory_production.json",
+      "job": "tools/mcp/schemas/examples/door_factory_production_run001.json"
+    }
+  ],
+  "promoted_ids": [
+    "wall_wood_1u_production_run001",
+    "wall_glass_curtain_1u_production_run001",
+    "wall_military_bunker_1u_production_run001",
+    "win_bunker_slit_production_run001",
+    "wall_concrete_1u_production_run001",
+    "door_factory_production_run001"
+  ],
+  "promoted_count": 6,
+  "job_count": 6,
+  "cleared_smoke_count": 0,
+  "cleared_smoke_total_archived": 31,
+  "cleared_smoke_ids": [],
+  "retire": {
+    "ok": true,
+    "cleared_count": 0,
+    "cleared_total": 31,
+    "archive_rel": "assets/archive/kit_greybox_smoke_retired_2026-09",
+    "moved_log": "assets/archive/kit_greybox_smoke_retired_2026-09/MOVED_LOG.json",
+    "moved_job_ids": [],
+    "errors": []
+  },
+  "rebake_ok": 0,
+  "seed_ok": 0,
+  "validate_ok": 6,
+  "rebakes": [],
+  "seeds": [],
+  "validations": [
+    {
+      "job_id": "wall_wood_1u_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_wall profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "wall_glass_curtain_1u_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_wall profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "wall_military_bunker_1u_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_wall profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "win_bunker_slit_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=96 tier=production arch=module_window profile=strip",
+      "error_count": 0
+    },
+    {
+      "job_id": "wall_concrete_1u_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=24 tier=production arch=module_wall profile=flat",
+      "error_count": 0
+    },
+    {
+      "job_id": "door_factory_production_run001",
+      "ok": true,
+      "status": "passed",
+      "summary": "model.glb: verts=44 tier=production arch=module_door profile=frame",
+      "error_count": 0
+    }
+  ],
+  "promotes": [
+    {
+      "job_id": "wall_wood_1u_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/wall_wood_1u_production_run001/model.glb",
+      "batch_id": "kit_prod_defer_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "wall_glass_curtain_1u_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/wall_glass_curtain_1u_production_run001/model.glb",
+      "batch_id": "kit_prod_defer_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "wall_military_bunker_1u_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/wall_military_bunker_1u_production_run001/model.glb",
+      "batch_id": "kit_prod_defer_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "win_bunker_slit_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/win_bunker_slit_production_run001/model.glb",
+      "batch_id": "kit_prod_defer_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "wall_concrete_1u_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/wall_concrete_1u_production_run001/model.glb",
+      "batch_id": "kit_prod_defer_bq_001",
+      "valid": true
+    },
+    {
+      "job_id": "door_factory_production_run001",
+      "ok": true,
+      "promoted_glb": "assets/models/modules/door_factory_production_run001/model.glb",
+      "batch_id": "kit_prod_defer_bq_001",
+      "valid": true
+    }
+  ],
+  "exit_check": {
+    "deferred_core_production_only": true,
+    "any_standard_non_prod": false,
+    "smoke_index_count": 0,
+    "orphan_unreplaced_count": 0,
+    "audit_green": true,
+    "ok": true
+  },
+  "index_entries": 92,
+  "errors": [],
+  "green": true,
+  "verdict": "PASS",
+  "honest_gate": "honest_gate",
+  "proceed_ship": true,
+  "art_quality": "production_batch",
+  "next_residual": "SPINE-RENDER-001",
+  "notes": "Promoted deferred-pack CORE lod0 slots; retired kit_greybox smoke from modules index (archive quarantine). Cross-pack production preferred over same-pack lod0 in assembly resolve.",
+  "exit_predicate": {
+    "witness": "debug_runs/bq_prod_defer_packs_001_live.json",
+    "must": [
+      {
+        "id": "deferred_core_production",
+        "pass": true
+      },
+      {
+        "id": "smoke_index_cleared",
+        "pass": true
+      },
+      {
+        "id": "validate_asset_tier",
+        "pass": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "bq_prod_defer_packs_001_live_v1",
+    "profile": "BQ_PROD_DEFER_PACKS",
+    "relative_path": "debug_runs/bq_prod_defer_packs_001_live.json",
+    "source_system": "bq_prod_defer_packs",
+    "written_at_epoch_secs": 1790254524,
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-PROD-DEFER-PACKS-001",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-PROD-DEFER-PACKS-001",
+    "proceed_ship": true,
+    "art_quality": "production_batch",
+    "agent": "coder-mcp"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/bq_prod_defer_packs_001_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/bq_prod_defer_packs_001_live.json"
+}

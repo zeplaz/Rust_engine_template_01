@@ -32,7 +32,7 @@ use crate::gui::editor::world_preview::{PreviewRenderMode, WorldPreviewGpuRuntim
 #[cfg(test)]
 use crate::gui::{
     build_representation_inputs, build_representation_result, CameraVisualState, FxVisibilitySettings,
-    LodZoneRegistry, MapCameraDesired, MapCameraSettings, OverlayFieldFrame, VisualBudgetSettings,
+    LodZoneRegistry, MapCameraSettings, OverlayFieldFrame, VisualBudgetSettings,
     VisualCadence, WorldLodBand, WorldLodBands, WorldLodMap, WorldRepresentationFrame,
 };
 #[cfg(test)]
@@ -49,8 +49,7 @@ use crate::render::{
 };
 #[cfg(test)]
 use crate::render::witness::vt_ci_matrix::{
-    build_deterministic_ci_scenario, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix, Vt4CiReport,
-    Vt4CiScenario, VtCiMatrixLiveReport,
+    run_vt4_ci_matrix, run_vt5_ci_spatial_matrix, Vt4CiReport, Vt4CiScenario, VtCiMatrixLiveReport,
 };
 #[cfg(test)]
 use crate::render::witness::visual_agreement::VisualAgreementFrame;

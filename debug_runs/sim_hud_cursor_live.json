@@ -53,16 +53,33 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/sim_hud_cursor_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_sim_hud_cursor_live_witness",
-    "written_at_epoch_secs": 1783371799
+    "written_at_epoch_secs": 1790261055
   },
+  "build_rail_hide_continuous": true,
   "gate": "COD-SIM-HUD-CURSOR-001",
-  "os_cursor_hidden_in_play_area": true,
+  "os_cursor_hidden_in_play_area_when_build_active": true,
+  "os_cursor_shown_when_idle": true,
+  "policy": {
+    "crosshair_anchor": "gate.cursor == Window::cursor_position (pick-aligned)",
+    "hide_os_when": "build_placement_active && (play_area || build_rail_chrome)",
+    "show_os_when": "idle_strip || ops_minimap_tray || egui_menu"
+  },
   "slice_id": "TRIAGE-CURSOR-UNIFY-001",
   "triage_cursor_unify_green": true,
+  "two_click_fsm_untouched": true,
   "verify_pointer_001_green": true
 }

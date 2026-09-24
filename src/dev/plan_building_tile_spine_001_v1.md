@@ -132,8 +132,8 @@ TILE-FIX-01…10 laid schema, resolver, validators, and froze greybox ship. **Sp
 | **ARCH-002** | @planner-mcp | Formal **Variant Graph** schema (`VariantNode`: material/visibility/emission/decal overrides) | **done** — `variant_graph_v1.schema.json` SIGNED 2026-06-14 |
 | **ARCH-003** | @coder-mcp | `material_profile` (+ tags) on each `module_placement`; enrich on generate/load; ship validator | **done** |
 | **APS-UI-003b** | @coder-mcp | **Assembly Editor** in Art Pipeline Suite — placements list, material/tags/LOD, save/validate | **done** |
-| **BUILD-001** | @coder-mcp | Explicit build dependency graph + per-node witness | **pending** |
-| **RENDER-001** | @coder-mcp | Headless **blender-worker** contract; MCP never ships greybox ortho as production | **pending** |
+| **BUILD-001** | @coder-mcp | Explicit build dependency graph + per-node witness | **done** — `debug_runs/spine_build_001_live.json` · schema `build_graph_v1` · CLI `spine-build-001` (2026-09-24) |
+| **RENDER-001** | @coder-mcp | Headless **blender-worker** contract; MCP never ships greybox ortho as production | **done** — `debug_runs/spine_render_001_live.json` · CLI `spine-render-001` · schema `render_variant_job_v1` |
 | **ATLAS-001** | @planner-mcp | State × Facing × Frame atlas + lookup validation (extends TILE-FIX-02) | **partial** |
 | **RUNTIME-001** | @coder | `VisualState` resolver wired for all building stamps (extends TILE-FIX-03) | **partial** |
 | **PILOT-001** | @designer-mcp + @coder-mcp | Warehouse through full spine; G4 on real stills | **pending** |

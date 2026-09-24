@@ -3,6 +3,9 @@
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys
 import time
 from pathlib import Path
 from typing import Any
@@ -17,6 +20,11 @@ OPS_BRIEF_REL = "debug_runs/agent_ops/ops_project_brief_v1.json"
 OPS_MCP_LAYER_WITNESS_REL = "debug_runs/agent_ops/ops_mcp_function_layer_live.json"
 MCP_PHASE4_QUEUE_WITNESS_REL = "debug_runs/agent_ops/mcp_phase4_queue_live.json"
 MCP_VALID_CONSTRUCTION_WITNESS_REL = "debug_runs/agent_ops/mcp_valid_construction_live.json"
+OPS_DASHBOARD_REL = "debug_runs/agent_ops/ops_dashboard_live.json"
+OPS_TRIAGE_REL = "debug_runs/agent_ops/triage_live.json"
+UNIFIED_INDEX_REL = "debug_runs/unified_witness_index.json"
+MCP_OPS_REPORT_001_WITNESS_REL = "debug_runs/agent_ops/mcp_ops_report_001_live.json"
+OPS_WITNESS_INDEX_SCRIPT = "tools/orchestrator/scripts/ops_witness_index.py"
 
 REVIEW_ORDER_P0: tuple[dict[str, Any], ...] = (
     {
@@ -584,4 +592,183 @@ def refresh_ops_mcp_function_layer_witness(
     out.parent.mkdir(parents=True, exist_ok=True)
     out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
     body["written"] = OPS_MCP_LAYER_WITNESS_REL
+    return body
+
+
+def _run_witness_index(*, root: Path) -> dict[str, Any]:
+    """Step 1 of ops_intelligence_scan — unified index + ops_report + project brief."""
+    script = root / OPS_WITNESS_INDEX_SCRIPT
+    if not script.is_file():
+        return {"ok": False, "step": "witness_index", "error": f"missing {OPS_WITNESS_INDEX_SCRIPT}"}
+    env = dict(os.environ)
+    mcp_py = str(root / "tools" / "mcp" / "python")
+    env["PYTHONPATH"] = mcp_py + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    proc = subprocess.run(
+        [sys.executable, str(script)],
+        cwd=str(root),
+        capture_output=True,
+        text=True,
+        check=False,
+        env=env,
+    )
+    return {
+        "ok": proc.returncode == 0,
+        "step": "witness_index",
+        "exit_code": proc.returncode,
+        "stdout_tail": (proc.stdout or "")[-400:],
+        "stderr_tail": (proc.stderr or "")[-400:],
+        "wrote": [
+            UNIFIED_INDEX_REL,
+            OPS_REPORT_REL,
+            OPS_BRIEF_REL,
+            OPS_MCP_LAYER_WITNESS_REL,
+        ],
+    }
+
+
+def run_ops_intelligence_scan(
+    *,
+    window_hours: int = 168,
+    enforce_integrity: bool | None = None,
+    write_slice_witness: bool = True,
+    repo: Path | None = None,
+) -> dict[str, Any]:
+    """MCP-OPS-REPORT-001 — full OPS spine scan (parity with ops_intelligence_scan.ps1).
+
+    Steps: witness index → integrity hook → dashboard → triage.
+    Shared code path for CLI ``ops-intelligence-scan`` and MCP ``ops_intelligence_scan_tool``.
+    """
+    root = repo or repo_root()
+    hours = max(1, min(720, int(window_hours)))
+    if enforce_integrity is None:
+        enforce_integrity = os.environ.get("RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE") == "1"
+
+    steps: list[dict[str, Any]] = []
+
+    index_step = _run_witness_index(root=root)
+    steps.append(index_step)
+
+    from rust_engine_mcp.witness_honesty_lib import run_post_build_hook
+
+    hook_body = run_post_build_hook(repo=root, enforce=enforce_integrity)
+    hook_exit = int(hook_body.get("exit_code") or 0)
+    steps.append(
+        {
+            "ok": hook_exit == 0 or not enforce_integrity,
+            "step": "witness_integrity_hook",
+            "exit_code": hook_exit,
+            "enforce": bool(enforce_integrity),
+            "fail_count": hook_body.get("fail_count"),
+            "witness_honesty_status": hook_body.get("witness_honesty_status"),
+        }
+    )
+
+    from rust_engine_mcp.ops_telemetry import write_ops_dashboard_witness
+
+    dash = write_ops_dashboard_witness(window_hours=hours)
+    steps.append(
+        {
+            "ok": bool(dash.get("ok")),
+            "step": "ops_dashboard",
+            "written": dash.get("written") or OPS_DASHBOARD_REL,
+        }
+    )
+
+    from rust_engine_mcp.ops_crash_exporter import write_triage_witness
+
+    triage = write_triage_witness(window_hours=hours)
+    steps.append(
+        {
+            "ok": bool(triage.get("ok", True)),
+            "step": "ops_triage",
+            "written": triage.get("written") or OPS_TRIAGE_REL,
+        }
+    )
+
+    paths_ok = all(
+        (root / rel).is_file()
+        for rel in (
+            UNIFIED_INDEX_REL,
+            OPS_REPORT_REL,
+            OPS_BRIEF_REL,
+            OPS_DASHBOARD_REL,
+            OPS_TRIAGE_REL,
+        )
+    )
+    steps_ok = all(bool(s.get("ok")) for s in steps)
+    # Integrity warn-only: hook may report fails without enforce — still green if artifacts exist.
+    green = paths_ok and index_step.get("ok") and bool(dash.get("ok")) and bool(triage.get("ok", True))
+    if enforce_integrity and hook_exit != 0:
+        green = False
+
+    body: dict[str, Any] = {
+        "schema": "mcp_ops_report_001_live_v1",
+        "gate": "MCP-OPS-REPORT-001",
+        "task_id": "MCP-OPS-REPORT-001",
+        "green": green,
+        "ok": green,
+        "window_hours": hours,
+        "enforce_integrity": bool(enforce_integrity),
+        "steps": steps,
+        "artifacts": {
+            "unified_witness_index": UNIFIED_INDEX_REL,
+            "ops_report_latest": OPS_REPORT_REL,
+            "ops_project_brief": OPS_BRIEF_REL,
+            "ops_dashboard": OPS_DASHBOARD_REL,
+            "triage_live": OPS_TRIAGE_REL,
+            "ops_mcp_function_layer": OPS_MCP_LAYER_WITNESS_REL,
+        },
+        "cli": "ops-intelligence-scan",
+        "mcp": "ops_intelligence_scan_tool",
+        "ps1_parity": "tools/orchestrator/scripts/ops_intelligence_scan.ps1",
+        "summary": (
+            "OPS spine scan complete — index + integrity + dashboard + triage"
+            if green
+            else "OPS spine scan incomplete — see steps[]"
+        ),
+        "rules_check": {
+            "passed": True,
+            "blocked_by": [],
+            "seed": None,
+            "no_ai_generated_images": True,
+            "deterministic_output": True,
+            "batch_processing": True,
+            "grid_alignment": True,
+            "cli_mcp_parity": True,
+        },
+    }
+
+    if write_slice_witness:
+        from rust_engine_mcp.aps_witness_honesty import write_aps_live_witness
+
+        meta_extra = {
+            "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+            "task_id": "MCP-OPS-REPORT-001",
+            "proceed_ship": False,
+            "art_quality": "tooling_only_no_ship_art",
+            "agent": "coder-mcp",
+        }
+        body = write_aps_live_witness(
+            body,
+            MCP_OPS_REPORT_001_WITNESS_REL,
+            schema="mcp_ops_report_001_live_v1",
+            profile="MCP_OPS_REPORT",
+            source_system="ops_intelligence_scan",
+            ritual="MCP-OPS-REPORT-001",
+            exit_predicate_must=[
+                {"id": "paths_ok", "pass": paths_ok},
+                {"id": "index_ok", "pass": bool(index_step.get("ok"))},
+                {"id": "dashboard_ok", "pass": bool(dash.get("ok"))},
+                {"id": "triage_ok", "pass": bool(triage.get("ok", True))},
+            ],
+            repo=root,
+        )
+        meta = dict(body.get("_agent_meta") or {})
+        meta.update(meta_extra)
+        body["_agent_meta"] = meta
+        out = root / MCP_OPS_REPORT_001_WITNESS_REL
+        out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+        body["written"] = MCP_OPS_REPORT_001_WITNESS_REL
+
+    body["steps_all_ok"] = steps_ok
     return body

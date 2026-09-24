@@ -60,6 +60,20 @@ def validate_tile_variant_bake_job(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("tile_variant_bake_job_v1.schema.json"))
 
 
+def validate_render_variant_job(data: dict[str, Any]) -> None:
+    """SPINE-RENDER-001 — schema + production/smoke role contract."""
+    from rust_engine_mcp.spine_render_contract import validate_render_variant_job as _validate
+
+    _validate(data)
+
+
+def validate_build_graph(data: dict[str, Any]) -> None:
+    """SPINE-BUILD-001 — schema + DAG depends_on contract."""
+    from rust_engine_mcp.spine_build_graph import validate_build_graph as _validate
+
+    _validate(data)
+
+
 def validate_variant_set(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("variant_set_v1.schema.json"))
 

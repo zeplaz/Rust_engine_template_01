@@ -1,0 +1,1555 @@
+{
+  "gate": "BQ-SMOKE-AUDIT-001",
+  "task_id": "BQ-SMOKE-AUDIT-001",
+  "program": "PLAN-MCP-APS-TOOLING-FINISH-001",
+  "module_index": "assets/configs/buildings/_module_index.json",
+  "module_index_exists": true,
+  "counts": {
+    "production": 54,
+    "lod0": 0,
+    "smoke": 0,
+    "unknown": 0,
+    "total_entries": 54,
+    "greybox_batch_counts": {},
+    "top_batches": [
+      {
+        "batch_id": "kit_prod_noncore_bq_001",
+        "count": 12
+      },
+      {
+        "batch_id": "kit_fill_bq_k1_001",
+        "count": 11
+      },
+      {
+        "batch_id": "kit_industrial_west_production_001",
+        "count": 8
+      },
+      {
+        "batch_id": "kit_prod_promote_bq_001",
+        "count": 6
+      },
+      {
+        "batch_id": "kit_prod_defer_bq_001",
+        "count": 6
+      },
+      {
+        "batch_id": "kit_production_001",
+        "count": 5
+      },
+      {
+        "batch_id": "kit_utility_power_production_001",
+        "count": 2
+      },
+      {
+        "batch_id": "kit_production_002",
+        "count": 2
+      },
+      {
+        "batch_id": "kit_nuclear_pwr_production_001",
+        "count": 1
+      },
+      {
+        "batch_id": "",
+        "count": 1
+      }
+    ]
+  },
+  "per_style_pack": [
+    {
+      "style_pack_id": "style_colonial",
+      "label": "Colonial",
+      "slot_total": 9,
+      "production_slots": 9,
+      "lod0_slots": 0,
+      "smoke_slots": 0,
+      "missing_slots": 0,
+      "selectable_lod0_ids": [],
+      "selectable_smoke_ids": [],
+      "core_non_production": [],
+      "can_pick_smoke_or_lod0_standard_slot": false,
+      "slots": [
+        {
+          "slot": "corner_outer",
+          "module_id": "corner_T",
+          "resolved_job_id": "corner_T_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_promote_bq_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "door_default",
+          "module_id": "door_brick_residential_1u",
+          "resolved_job_id": "door_brick_residential_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "door_wide",
+          "module_id": "door_double_shop",
+          "resolved_job_id": "door_double_shop_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_promote_bq_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "roof_default",
+          "module_id": "roof_brick_gable_2u",
+          "resolved_job_id": "roof_brick_gable_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "roof_flat",
+          "module_id": "roof_canopy",
+          "resolved_job_id": "roof_canopy_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_promote_bq_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "wall_1u",
+          "module_id": "wall_brick_1u",
+          "resolved_job_id": "wall_brick_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_victorian"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "wall_2u",
+          "module_id": "wall_brick_2u",
+          "resolved_job_id": "wall_brick_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_promote_bq_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "window_1u",
+          "module_id": "win_brick_1u",
+          "resolved_job_id": "win_brick_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "window_2u",
+          "module_id": "win_brick_2u",
+          "resolved_job_id": "win_brick_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        }
+      ],
+      "production_only": true
+    },
+    {
+      "style_pack_id": "style_industrial_soviet",
+      "label": "Industrial Soviet",
+      "slot_total": 8,
+      "production_slots": 8,
+      "lod0_slots": 0,
+      "smoke_slots": 0,
+      "missing_slots": 0,
+      "selectable_lod0_ids": [],
+      "selectable_smoke_ids": [],
+      "core_non_production": [],
+      "can_pick_smoke_or_lod0_standard_slot": false,
+      "slots": [
+        {
+          "slot": "door_default",
+          "module_id": "door_factory",
+          "resolved_job_id": "door_factory_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_defer_bq_001",
+          "resolved_style_pack": "style_industrial_soviet",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_soviet"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "door_wide",
+          "module_id": "door_gate_industrial",
+          "resolved_job_id": "door_gate_industrial_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_industrial_soviet",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_soviet"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "prop_clutter",
+          "module_id": "prop_transformer",
+          "resolved_job_id": "prop_transformer_production_run002",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_industrial_soviet",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_soviet"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "roof_default",
+          "module_id": "roof_sawtooth",
+          "resolved_job_id": "roof_sawtooth_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "roof_flat",
+          "module_id": "roof_flat",
+          "resolved_job_id": "roof_flat_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_industrial_soviet",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_soviet"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "wall_1u",
+          "module_id": "wall_concrete_1u",
+          "resolved_job_id": "wall_concrete_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_defer_bq_001",
+          "resolved_style_pack": "style_industrial_soviet",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_soviet"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "wall_2u",
+          "module_id": "wall_concrete_2u",
+          "resolved_job_id": "wall_concrete_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "window_industrial",
+          "module_id": "win_industrial_3u",
+          "resolved_job_id": "win_industrial_3u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        }
+      ],
+      "production_only": true
+    },
+    {
+      "style_pack_id": "style_industrial_west",
+      "label": "Industrial West",
+      "slot_total": 11,
+      "production_slots": 11,
+      "lod0_slots": 0,
+      "smoke_slots": 0,
+      "missing_slots": 0,
+      "selectable_lod0_ids": [],
+      "selectable_smoke_ids": [],
+      "core_non_production": [],
+      "can_pick_smoke_or_lod0_standard_slot": false,
+      "slots": [
+        {
+          "slot": "corner_outer",
+          "module_id": "corner_L",
+          "resolved_job_id": "corner_L_industrial_west_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west",
+            "style_victorian"
+          ],
+          "production_row_count": 2,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "door_default",
+          "module_id": "door_warehouse",
+          "resolved_job_id": "door_warehouse_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "door_wide",
+          "module_id": "door_warehouse",
+          "resolved_job_id": "door_warehouse_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "prop_clutter",
+          "module_id": "prop_vent",
+          "resolved_job_id": "prop_vent_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "roof_default",
+          "module_id": "roof_metal_low",
+          "resolved_job_id": "roof_metal_low_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_promote_bq_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "roof_flat",
+          "module_id": "roof_metal_low",
+          "resolved_job_id": "roof_metal_low_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_promote_bq_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "roof_industrial",
+          "module_id": "roof_shed",
+          "resolved_job_id": "roof_shed_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "wall_1u",
+          "module_id": "wall_steel_1u",
+          "resolved_job_id": "wall_steel_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_002",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "wall_2u",
+          "module_id": "wall_concrete_2u",
+          "resolved_job_id": "wall_concrete_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "window_1u",
+          "module_id": "win_double_1u",
+          "resolved_job_id": "win_double_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_promote_bq_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "window_industrial",
+          "module_id": "win_industrial_3u",
+          "resolved_job_id": "win_industrial_3u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        }
+      ],
+      "production_only": true
+    },
+    {
+      "style_pack_id": "style_military",
+      "label": "Military",
+      "slot_total": 8,
+      "production_slots": 8,
+      "lod0_slots": 0,
+      "smoke_slots": 0,
+      "missing_slots": 0,
+      "selectable_lod0_ids": [],
+      "selectable_smoke_ids": [],
+      "core_non_production": [],
+      "can_pick_smoke_or_lod0_standard_slot": false,
+      "slots": [
+        {
+          "slot": "corner_outer",
+          "module_id": "corner_parapet",
+          "resolved_job_id": "corner_parapet_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_military",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_military"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "door_default",
+          "module_id": "door_concrete_service_1u",
+          "resolved_job_id": "door_concrete_service_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "prop_clutter",
+          "module_id": "prop_tank",
+          "resolved_job_id": "prop_tank_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_military",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_military"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "roof_default",
+          "module_id": "roof_concrete_flat_2u",
+          "resolved_job_id": "roof_concrete_flat_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "roof_flat",
+          "module_id": "roof_parapet",
+          "resolved_job_id": "roof_parapet_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_military",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_military"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "wall_1u",
+          "module_id": "wall_military_bunker_1u",
+          "resolved_job_id": "wall_military_bunker_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_defer_bq_001",
+          "resolved_style_pack": "style_military",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_military"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "wall_2u",
+          "module_id": "wall_concrete_2u",
+          "resolved_job_id": "wall_concrete_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "window_1u",
+          "module_id": "win_bunker_slit",
+          "resolved_job_id": "win_bunker_slit_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_defer_bq_001",
+          "resolved_style_pack": "style_military",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_military"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        }
+      ],
+      "production_only": true
+    },
+    {
+      "style_pack_id": "style_modern",
+      "label": "Modern",
+      "slot_total": 9,
+      "production_slots": 9,
+      "lod0_slots": 0,
+      "smoke_slots": 0,
+      "missing_slots": 0,
+      "selectable_lod0_ids": [],
+      "selectable_smoke_ids": [],
+      "core_non_production": [],
+      "can_pick_smoke_or_lod0_standard_slot": false,
+      "slots": [
+        {
+          "slot": "door_default",
+          "module_id": "door_concrete_service_1u",
+          "resolved_job_id": "door_concrete_service_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "prop_clutter",
+          "module_id": "prop_ac",
+          "resolved_job_id": "prop_ac_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "roof_default",
+          "module_id": "roof_concrete_flat_2u",
+          "resolved_job_id": "roof_concrete_flat_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "roof_flat",
+          "module_id": "roof_flat",
+          "resolved_job_id": "roof_flat_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_industrial_soviet",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_soviet"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "wall_1u",
+          "module_id": "wall_glass_curtain_1u",
+          "resolved_job_id": "wall_glass_curtain_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_defer_bq_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "wall_2u",
+          "module_id": "wall_industrial_panel_2u",
+          "resolved_job_id": "wall_industrial_panel_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "window_1u",
+          "module_id": "win_concrete_1u",
+          "resolved_job_id": "win_concrete_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "window_2u",
+          "module_id": "win_concrete_2u",
+          "resolved_job_id": "win_concrete_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_modern",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_modern"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "window_industrial",
+          "module_id": "win_industrial_3u",
+          "resolved_job_id": "win_industrial_3u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_industrial_west_production_001",
+          "resolved_style_pack": "style_industrial_west",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        }
+      ],
+      "production_only": true
+    },
+    {
+      "style_pack_id": "style_rural",
+      "label": "Rural",
+      "slot_total": 9,
+      "production_slots": 9,
+      "lod0_slots": 0,
+      "smoke_slots": 0,
+      "missing_slots": 0,
+      "selectable_lod0_ids": [],
+      "selectable_smoke_ids": [],
+      "core_non_production": [],
+      "can_pick_smoke_or_lod0_standard_slot": false,
+      "slots": [
+        {
+          "slot": "door_default",
+          "module_id": "door_residential",
+          "resolved_job_id": "door_residential_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_victorian"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "door_wide",
+          "module_id": "door_garage",
+          "resolved_job_id": "door_garage_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_rural",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_rural"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "prop_clutter",
+          "module_id": "prop_fence",
+          "resolved_job_id": "prop_fence_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_rural",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_rural"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "roof_default",
+          "module_id": "roof_tile",
+          "resolved_job_id": "roof_tile_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_rural",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_rural"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "roof_flat",
+          "module_id": "roof_tile",
+          "resolved_job_id": "roof_tile_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_rural",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_rural"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "wall_1u",
+          "module_id": "wall_wood_1u",
+          "resolved_job_id": "wall_wood_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_defer_bq_001",
+          "resolved_style_pack": "style_rural",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_rural"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "wall_2u",
+          "module_id": "wall_wood_2u",
+          "resolved_job_id": "wall_wood_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_style_pack": "style_rural",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_rural"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "window_1u",
+          "module_id": "win_wood_1u",
+          "resolved_job_id": "win_wood_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_rural",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_rural"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "window_2u",
+          "module_id": "win_wood_2u",
+          "resolved_job_id": "win_wood_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_rural",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_rural"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        }
+      ],
+      "production_only": true
+    },
+    {
+      "style_pack_id": "style_victorian",
+      "label": "Victorian",
+      "slot_total": 9,
+      "production_slots": 9,
+      "lod0_slots": 0,
+      "smoke_slots": 0,
+      "missing_slots": 0,
+      "selectable_lod0_ids": [],
+      "selectable_smoke_ids": [],
+      "core_non_production": [],
+      "can_pick_smoke_or_lod0_standard_slot": false,
+      "slots": [
+        {
+          "slot": "corner_outer",
+          "module_id": "corner_L",
+          "resolved_job_id": "corner_L_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_industrial_west",
+            "style_victorian"
+          ],
+          "production_row_count": 2,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "door_default",
+          "module_id": "door_residential",
+          "resolved_job_id": "door_residential_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_victorian"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "prop_clutter",
+          "module_id": "prop_chimney",
+          "resolved_job_id": "prop_chimney_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_victorian"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "roof_default",
+          "module_id": "roof_pitched_gable",
+          "resolved_job_id": "roof_pitched_gable_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_victorian"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "roof_flat",
+          "module_id": "roof_pitched_gable",
+          "resolved_job_id": "roof_pitched_gable_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_victorian"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "wall_1u",
+          "module_id": "wall_brick_1u",
+          "resolved_job_id": "wall_brick_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_victorian"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "wall_2u",
+          "module_id": "wall_brick_1u",
+          "resolved_job_id": "wall_brick_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_victorian"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        },
+        {
+          "slot": "window_1u",
+          "module_id": "win_brick_1u",
+          "resolved_job_id": "win_brick_1u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": true
+        },
+        {
+          "slot": "window_2u",
+          "module_id": "win_brick_2u",
+          "resolved_job_id": "win_brick_2u_production_run001",
+          "resolved_tier": "production",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_colonial",
+          "available_tiers": [
+            "production"
+          ],
+          "available_style_packs": [
+            "style_colonial"
+          ],
+          "production_row_count": 1,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
+          "reason": "production_hit",
+          "non_production": false,
+          "is_core_slot": false
+        }
+      ],
+      "production_only": true
+    }
+  ],
+  "selectable_smoke_ids": [],
+  "selectable_lod0_ids": [],
+  "smoke_inventory": {
+    "smoke_index_count": 0,
+    "stylepack_visible_true_count": 0,
+    "replaced_by_count": 0,
+    "orphan_unreplaced_count": 0,
+    "selectable_smoke_ids": [],
+    "stylepack_visible_smoke_ids": [],
+    "orphan_smoke_ids": [],
+    "note": "Assembly _resolve_lod0_module skips smoke/greybox via stylepack_visible=false + replaced_by; residue still inflates index and can be re-picked if resolve bypasses those guards."
+  },
+  "focus_packs": {
+    "ids": [
+      "style_industrial_west",
+      "style_victorian",
+      "style_colonial"
+    ],
+    "production_only": true,
+    "rows": [
+      {
+        "style_pack_id": "style_colonial",
+        "production_only": true,
+        "lod0_slots": 0,
+        "smoke_slots": 0,
+        "selectable_lod0_ids": [],
+        "core_non_production": []
+      },
+      {
+        "style_pack_id": "style_industrial_west",
+        "production_only": true,
+        "lod0_slots": 0,
+        "smoke_slots": 0,
+        "selectable_lod0_ids": [],
+        "core_non_production": []
+      },
+      {
+        "style_pack_id": "style_victorian",
+        "production_only": true,
+        "lod0_slots": 0,
+        "smoke_slots": 0,
+        "selectable_lod0_ids": [],
+        "core_non_production": []
+      }
+    ]
+  },
+  "promote_block_lists": {
+    "promote": [],
+    "promote_count": 0,
+    "block": [
+      {
+        "rule": "no_greybox_as_production",
+        "detail": "\u26d4 promote kit_greybox_* / smoke-tier GLBs as production \u2014 rebake with production profiles"
+      },
+      {
+        "rule": "ortho_not_ship",
+        "detail": "\u26d4 ortho/lod0 headless bake as ship:true \u2014 bake_source must be keyframe_pack for production"
+      },
+      {
+        "rule": "defer_non_focus_packs",
+        "detail": "Deferred packs rural/modern/military/industrial_soviet CORE lod0 handled by BQ-PROD-DEFER-PACKS-001 (promote+retire); residual non-core lod0 \u2192 SPINE-RENDER-001",
+        "deferred_packs": []
+      },
+      {
+        "rule": "victorian_already_production",
+        "detail": "style_victorian standard+extended slots already resolve production \u2014 skip rebake"
+      }
+    ],
+    "focus_packs": [
+      "style_industrial_west",
+      "style_victorian",
+      "style_colonial"
+    ],
+    "next_slice": "SPINE-RENDER-001"
+  },
+  "why_kit_fill_green_still_picks_lod0": [
+    {
+      "id": "KF-1",
+      "cause": "Module index still majority non-production (production=54 lod0=0 smoke=0)"
+    },
+    {
+      "id": "KF-2",
+      "cause": "BQ-K1 kit-fill green proves new production modules exist on disk; it does not retarget style-pack slots that still point at lod0-only module_ids"
+    },
+    {
+      "id": "KF-3",
+      "cause": "BQ-K2 / kit_coverage_audit marks a slot covered when _resolve_module_row returns any GLB-ready row \u2014 including lod0 fallback after production miss"
+    },
+    {
+      "id": "KF-4",
+      "cause": "Style-pack-scoped pool prefers same-pack lod0 over cross-pack production (assembly._resolve_module_row pack_rows filter)"
+    },
+    {
+      "id": "KF-5",
+      "cause": "Smoke rows remain in index (0) with stylepack_visible=false; assemble skips them but index residue + orphan ids (0) stay selectable if guards bypassed"
+    },
+    {
+      "id": "KF-6",
+      "cause": "Focus-pack lod0 slot hits at assemble time: 0 (industrial_west + colonial still select lod0 for some slots; victorian production-only)"
+    }
+  ],
+  "any_style_pack_picks_smoke_or_lod0_standard_slot": false,
+  "green": true,
+  "verdict": "PASS",
+  "honest_gate": "honest_gate",
+  "proceed_ship": false,
+  "art_quality": "audit_only",
+  "next_residual": "SPINE-RENDER-001",
+  "notes": "Audit inventory. Focus + deferred CORE slots production-only and smoke index cleared after BQ-PROD-DEFER-PACKS-001. Residual non-core lod0 \u2192 SPINE-RENDER-001.",
+  "_agent_meta": {
+    "schema": "bq_smoke_tier_audit_live_v1",
+    "written_at_epoch_secs": 1790257914,
+    "profile": "BQ_SMOKE_TIER_AUDIT",
+    "source_system": "bq_smoke_tier_audit",
+    "relative_path": "debug_runs/bq_smoke_tier_audit_live.json",
+    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
+    "task_id": "BQ-SMOKE-AUDIT-001",
+    "proceed_ship": false,
+    "art_quality": "audit_only",
+    "agent": "coder-mcp",
+    "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-SMOKE-AUDIT-001"
+  }
+}

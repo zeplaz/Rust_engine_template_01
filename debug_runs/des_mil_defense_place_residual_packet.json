@@ -1,0 +1,131 @@
+{
+  "schema": "residual_packet_v1",
+  "id": "DES-MIL-DEFENSE-PLACE",
+  "priority": "P2",
+  "agent": "planner",
+  "lane": "construction_qop",
+  "status": "machine_closed",
+  "reconciled_at": "2026-09-24",
+  "reconcile_note": "WIT-HON pass on cod_wall_concrete_gate_live + cod_deployable_pipeline_live · pipeline_complete=true · place_ok=true — residual packet lagged ready/open status",
+  "blocked_by": [],
+  "prereq_shipped": [
+    "TRIAGE-BUILD-CLICK-PLACE-001",
+    "TRIAGE-CURSOR-UNIFY-001",
+    "DES-MIL-DEFENSE-PLACE",
+    "COD-MIL-DEFENSE-PLACE-001",
+    "DES-P3-PLACE-ANIM",
+    "COD-P3-PLACE-ANIM-001",
+    "COD-WALL-ARCHETYPE-001",
+    "DES-MIL-DEPLOYABLE-CATALOG",
+    "COD-WALL-CONCRETE-GATE-001",
+    "COD-DEPLOYABLE-RECIPE-001",
+    "COD-DEPLOYABLE-LOGISTICS-001",
+    "COD-DEPLOYABLE-PLACE-001"
+  ],
+  "goal": "Place spine + deployable catalog + wall concrete gate + deployable recipe/logistics/place machine ★closed. Residual = product DEFERs only.",
+  "impl_witness": "debug_runs/des_mil_defense_place_live.json",
+  "design_witness_deployable": "debug_runs/des_mil_deployable_defense_live.json",
+  "pipeline_witness": "debug_runs/cod_deployable_pipeline_live.json",
+  "wall_concrete_witness": "debug_runs/cod_wall_concrete_gate_live.json",
+  "architecture_packet": "debug_runs/des_mil_deployable_defense_planner_packet.json",
+  "plan_doc": "src/dev/plan_mil_deployable_defense_v1.md",
+  "charter_deployable": "src/dev/design_mil_deployable_defense_v1.md",
+  "residuals_open": [],
+  "residuals_closed": [
+    {
+      "id": "DES-MIL-DEPLOYABLE-CATALOG",
+      "owner": "@designer",
+      "status": "designer_charter_pass",
+      "note": "Deployables section (consolidated Obstacles+Emplacement); locked copy; Q1=strip line; free-stamp rejected",
+      "witness": "debug_runs/des_mil_deployable_defense_live.json",
+      "charter": "src/dev/design_mil_deployable_defense_v1.md"
+    },
+    {
+      "id": "P3-PLACE-ANIM",
+      "as": "DES-P3-PLACE-ANIM",
+      "status": "designer_charter_pass",
+      "witness": "debug_runs/des_place_feedback_anim_live.json"
+    },
+    {
+      "id": "COD-P3-PLACE-ANIM-001",
+      "status": "coder_done",
+      "note": "place settle pulse shipped"
+    },
+    {
+      "id": "WALL-ARCHETYPE",
+      "as": "COD-WALL-ARCHETYPE-001",
+      "status": "coder_done",
+      "witness": "debug_runs/cod_wall_archetype_live.json",
+      "architecture_verdict": "NEW_SITE_ARCHETYPE",
+      "note": "SiteArchetype::DefensiveWall; MilitaryBase retained for real bases; corridor reuse rejected"
+    },
+    {
+      "id": "COD-WALL-CONCRETE-GATE-001",
+      "owner": "@coder",
+      "status": "coder_done",
+      "note": "InSituMaterial DefensiveWall consumes concrete on commit · WIT-HON 2026-09-24",
+      "witness": "debug_runs/cod_wall_concrete_gate_live.json",
+      "closed": "2026-09-24"
+    },
+    {
+      "id": "COD-DEPLOYABLE-RECIPE-001",
+      "owner": "@coder",
+      "status": "coder_done",
+      "note": "mfg_dragon_teeth_v1 + mfg_mine_unit_v1 under ManufacturingDomain::Custom · recipe_slice_green",
+      "witness": "debug_runs/cod_deployable_pipeline_live.json",
+      "closed": "2026-09-24"
+    },
+    {
+      "id": "COD-DEPLOYABLE-LOGISTICS-001",
+      "owner": "@coder",
+      "review": "@sim-steward",
+      "status": "coder_done",
+      "note": "InTransitLedger buffer_tags → SiteStagingStock · logistics_slice_green · no_same_tick_teleport",
+      "witness": "debug_runs/cod_deployable_pipeline_live.json",
+      "closed": "2026-09-24"
+    },
+    {
+      "id": "COD-DEPLOYABLE-PLACE-001",
+      "owner": "@coder",
+      "status": "coder_done",
+      "note": "DefenseKind DragonTeeth+Minefield · picker gated on staging · place_ok · pipeline_complete",
+      "witness": "debug_runs/cod_deployable_pipeline_live.json",
+      "closed": "2026-09-24"
+    }
+  ],
+  "deferred": [
+    {
+      "id": "DR-MIL-MUNITIONS-INDUSTRY",
+      "class": "product_blocked",
+      "unblock_when": "cod_deployable_pipeline_live.json green AND industrial L3 military domain charter signed"
+    },
+    {
+      "id": "DR-MIL-MINE-COMBAT",
+      "class": "product_blocked",
+      "unblock_when": "warfare/combat plan signed"
+    },
+    {
+      "id": "DR-MIL-DEPLOYABLE-ART",
+      "class": "product_blocked",
+      "unblock_when": "DES art brief AND MCP G4 stills path"
+    },
+    {
+      "id": "DR-MIL-TRENCH-MATERIAL",
+      "class": "incremental_ok",
+      "status": "closed",
+      "closed_by": "COD-TRENCH-MATERIAL-GATE-001",
+      "closed": "2026-09-24",
+      "note": "trench/bunker concrete gate isomorphic to wall — ResourceFlowNode Concrete · CommitConstructionSiteEvent",
+      "witness": "debug_runs/cod_trench_material_gate_live.json"
+    }
+  ],
+  "scope_out": [
+    "Phase 9 military industry wholesale",
+    "Mine combat/detection/clearing",
+    "Building visual look / module kits",
+    "Operator G-PLAY rubric",
+    "Parallel place funnel",
+    "Corridor / continuous wall topology (separate unblock_when)"
+  ],
+  "delta_wf": "machine ★closed · COD-TRENCH-MATERIAL-GATE-001 closed DR-MIL-TRENCH-MATERIAL · product DEFERs: munitions/mine-combat/art only · ¬reopen recipe/logistics/place"
+}

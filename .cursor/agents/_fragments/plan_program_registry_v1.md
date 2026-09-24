@@ -1,5 +1,5 @@
 # plan_program_registry_v1 — shared fragment (referenced by agents; owned by @plan-orchestrator)
-# Updated 2026-07-03 (MIG-V1 green + deferral registry). One table = current program set + global pick order.
+# Updated 2026-09-24 (APS machine finish drained · residual operator G4/G-PLAY/RPC). One table = current program set + global pick order.
 # Authority: src/dev/development_plan_index.md + plan_deferral_registry_v1.md + HANDOFF.md lease blocks.
 
 ## Shared map (read before planning/sweeping ANYTHING)
@@ -17,8 +17,9 @@
 | P0 | PLAN-BEVY-019-MIG-v1 | plan_bevy_019_migration_v1.md | MIG-A tail | **MIG-V1 DONE** · RTT/VFX operator verify · incremental MIG-A deep |
 | P1 | PLAN-CLEANUP-v1 Phase 0 | plan_cleanup_v1.md | R/S/P/T/D | hygiene now; Phase 2+ → **DR-CLEANUP-P2** |
 | P2 | PLAN-CITY-GRAMMAR-v1 | plan_city_grammar_upgrade_v1.md | CITY-G/C/P | block/town tier; **owns BSN product architecture** § BSN ASSEMBLY CHARTER |
-| P2 | PLAN-BUILDING-QUALITY-v1 | plan_building_quality_v1.md | BQ-F/C/A/H/K/Q | building-level jank fix; integration hub for APSR |
-| P2 | PLAN-APS-REFACTOR-v1 | plan_aps_refactor_v1.md | APSR-T/S/P/D/Q | APS services/state/panels; sequenced via BQ hub |
+| P1 | PLAN-MCP-APS-TOOLING-FINISH-001 | queues/mcp_aps_tooling_finish_queue.json | SILH/SMOKE/G4/Q3-OPS | **PRIMARY** — machine SILH/SMOKE/LOOK-V2 ★closed · residual operator G4/G-PLAY/RPC |
+| P2 | PLAN-BUILDING-QUALITY-v1 | plan_building_quality_v1.md | BQ-F/C/A/H/K/Q | **machine closed** · residual via finish queue |
+| P2 | PLAN-APS-REFACTOR-v1 | plan_aps_refactor_v1.md | APSR-T/S/P/D/Q | **machine closed** · residual regress + operator rubric |
 | P3 | PLAN-SCHEDULE-SYNC-v1 | plan_schedule_sync_v1.md | SCH-E/A/T/P/D | Wave 1 OK; Wave 2+ → **DR-SCHED-W2** |
 | P1 | PLAN-GPU-TERRAIN-EXEC | plan_gpu_terrain_production_exec_001_v1.md | PERF-GPU | P0-C tilemap → **DR-MIG-TILEMAP**; use P0-C′ instanced |
 
@@ -34,8 +35,9 @@
 - **Bevy 0.19 on master** — MIG-V1 gate_pass true; do not re-pick MIG-G/M/R/V1 or shipped MIG-A core.
 - Schedule: ambiguity detection OFF; 233 bare-fn `.after` anchors; strategic agents ignore pause (SCH-T1);
   verified global Update order lives in plan_schedule_sync + skill 07-repo-authority-map.
-- Buildings: style-blind `prefer_stylepack_tier` (module_index.rs) · zero adjacency constraints ·
-  roof bake floats 0.1m · no brick/wood/concrete roofs exist (kit holes).
-- APS: 47 unguarded SuiteState mutation sites · stale buildings-panels on lane switch · IA/jobs/headless are GOOD (keep).
+- Buildings (2026-09-24): BQ-F/C/A/H/K machine ★closed · residual jank = **smoke/lod0 majority** in
+  `_module_index.json` (30 prod / 50 lod0 / 31 smoke) + warehouse G4 stills missing + SILH >100% gate smell.
+  Do **not** re-diagnose style-blind pick / hide_slot / float roofs as open (witnesses green).
+- APS: APSR-A1..A4 + APSR-MUTATION-REGRESS-001 machine ★closed · residual = operator golden rubric (not pytest).
 - **MIG-A9 BSN** — migration handoff **complete**; BSN product owner = `plan_city_grammar_upgrade_v1.md` § BSN ASSEMBLY CHARTER
 - Tilemap: `bevy_ecs_tilemap` 0.18.1 only — **DR-MIG-TILEMAP** blocks default adapter enable.

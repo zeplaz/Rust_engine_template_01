@@ -1708,8 +1708,11 @@ fn apply_test_scene_defaults(
         TestScene::Visual => {
             wx.particles = true;
             wx.background_aesthetic = true;
-            // LOD tile debug (green squares) off in visual proof — enable via dev tooling if needed.
+            // LOD yellow/green chunk squares: hard OFF. Paint only with CAMERA_FOCUS_DEBUG=1
+            // + CameraFocusDebug.enabled (see CameraFocusDebug::lod_paint_active).
             focus_debug.enabled = false;
+            // Batched overlay may stay on for non-LOD instance channels (footprint/site) —
+            // LOD FOCUS/TERRAIN emission is independently gated by lod_paint_active.
             tile_debug.use_batched_mesh_overlay = true;
             if let Some(gw) = global_wind.as_mut() {
                 gw.direction = Vec2::new(1.0, 0.22).normalize_or_zero();

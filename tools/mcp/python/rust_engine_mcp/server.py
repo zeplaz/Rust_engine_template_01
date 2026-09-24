@@ -226,6 +226,111 @@ def write_pilot_hardcode_lint_witness_tool() -> str:
 
 
 @mcp.tool()
+def bq_smoke_tier_audit_tool() -> str:
+    """BQ-SMOKE-AUDIT-001 — module-index tier inventory + promote/block list for production rebake."""
+    from rust_engine_mcp import bq_smoke_tier_audit
+
+    return json.dumps(bq_smoke_tier_audit.write_bq_smoke_tier_audit_witness())
+
+
+@mcp.tool()
+def bq_q2_screen_tool(no_bevy: bool = False) -> str:
+    """BQ-Q2-SCREEN-001 — bevy/trimesh preview PNGs for SILH assemblies + rubric rows."""
+    from rust_engine_mcp import bq_q2_screen
+
+    return json.dumps(bq_q2_screen.write_bq_q2_screen_witness(try_bevy=not no_bevy))
+
+
+@mcp.tool()
+def aps_golden_rubric_scaffold_tool() -> str:
+    """Scaffold APS-GOLDEN/BQ-Q3 rubric sheet as pending_operator — never auto-approve."""
+    from rust_engine_mcp.golden_seed_review import write_aps_golden_rubric_scaffold_witness
+
+    return json.dumps(write_aps_golden_rubric_scaffold_witness())
+
+
+@mcp.tool()
+def bq_prod_promote_batch_tool(no_rebake: bool = False, no_register: bool = False) -> str:
+    """BQ-PROD-PROMOTE-BATCH-001 — rebake+promote focus-pack lod0 slots; write promote witness."""
+    from rust_engine_mcp import bq_prod_promote_batch
+
+    return json.dumps(
+        bq_prod_promote_batch.write_bq_prod_promote_batch_witness(
+            try_rebake=not no_rebake,
+            register=not no_register,
+        )
+    )
+
+
+@mcp.tool()
+def bq_prod_defer_packs_tool(
+    no_rebake: bool = False,
+    no_register: bool = False,
+    no_retire_smoke: bool = False,
+) -> str:
+    """BQ-PROD-DEFER-PACKS-001 — promote deferred CORE lod0 + retire smoke orphans; write witness."""
+    from rust_engine_mcp import bq_prod_defer_packs
+
+    return json.dumps(
+        bq_prod_defer_packs.write_bq_prod_defer_packs_witness(
+            try_rebake=not no_rebake,
+            register=not no_register,
+            retire_smoke=not no_retire_smoke,
+        )
+    )
+
+
+@mcp.tool()
+def bq_prod_noncore_promote_tool(no_rebake: bool = False, no_register: bool = False) -> str:
+    """BQ-PROD-NONCORE-PROMOTE-001 — promote deferred-pack non-core lod0; write witness (operator_pass=false)."""
+    from rust_engine_mcp import bq_prod_noncore_promote
+
+    return json.dumps(
+        bq_prod_noncore_promote.write_bq_prod_noncore_promote_witness(
+            try_rebake=not no_rebake,
+            register=not no_register,
+        )
+    )
+
+
+@mcp.tool()
+def bq_lod0_twin_prune_tool(no_register: bool = False, no_retire: bool = False) -> str:
+    """BQ-LOD0-TWIN-PRUNE-001 — archive unused lod0 index twins; rebuild module index (no Q3)."""
+    from rust_engine_mcp import bq_lod0_twin_prune
+
+    return json.dumps(
+        bq_lod0_twin_prune.write_bq_lod0_twin_prune_witness(
+            register=not no_register,
+            retire=not no_retire,
+        )
+    )
+
+
+@mcp.tool()
+def spine_render_001_tool() -> str:
+    """SPINE-RENDER-001 — headless blender-worker render_variant contract witness."""
+    from rust_engine_mcp import spine_render_contract
+
+    return json.dumps(spine_render_contract.write_spine_render_001_witness())
+
+
+@mcp.tool()
+def spine_build_001_tool() -> str:
+    """SPINE-BUILD-001 — build dependency graph + per-node witness."""
+    from rust_engine_mcp import spine_build_graph
+
+    return json.dumps(spine_build_graph.write_spine_build_001_witness())
+
+
+@mcp.tool()
+def apsr_mutation_regress_001_tool() -> str:
+    """APSR-MUTATION-REGRESS-001 — SuiteState mutation ceiling + lane-roundtrip wiring witness."""
+    from rust_engine_mcp import apsr_mutation_regress
+
+    return json.dumps(apsr_mutation_regress.write_apsr_mutation_regress_001_witness())
+
+
+@mcp.tool()
 def grammar_set_brief(set_id: str = "") -> str:
     """MCP-GRAMMAR-SET-001 — pilot/grammar/preset inventory + F-axis gaps (≤50 lines)."""
     body = grammar_build_set.grammar_set_brief(set_id=set_id or None)
@@ -438,15 +543,23 @@ def assembly_snapshot_generate(
     footprint: str = "4x3",
     floors: int = 2,
     seed: int = 42,
+    source_tier: str = "production",
 ) -> str:
-    """Generate assembly_snapshot_v1 JSON from StylePack + footprint (no Blender)."""
+    """Generate assembly_snapshot_v1 JSON from StylePack + footprint (no Blender).
+
+    Default source_tier=production (BQ-ASSEMBLE-PREF-PROD-001) — lod0 only when explicit.
+    """
     w, d = footprint.lower().split("x")
+    tier = (source_tier or "production").strip().lower()
+    if tier not in ("production", "lod0"):
+        tier = "production"
     snap = assembly.generate_assembly_snapshot(
         style_pack_id=style_pack,
         width=int(w),
         depth=int(d),
         floors=floors,
         seed=seed,
+        source_tier=tier,
     )
     return json.dumps(snap)
 
@@ -711,6 +824,27 @@ def effect_promote(
 
 
 @mcp.tool()
+def effect_preview_capture(
+    spec_path: str = "",
+    batch_id: str = "",
+    pack_first: bool = True,
+    force: bool = False,
+    write_witness: bool = True,
+) -> str:
+    """VSS-T4 residual — deterministic staging_pack_digest frames → honest_gate=honest (Assign unlock)."""
+    from rust_engine_mcp import effect_preview_capture as epc
+
+    result = epc.effect_preview_capture(
+        spec_path=spec_path,
+        batch_id=batch_id,
+        pack_first=pack_first,
+        force=force,
+        write_witness=write_witness,
+    )
+    return json.dumps(result)
+
+
+@mcp.tool()
 def validate_witness_honesty_report(path: str, compress: int = 3, scan: bool = False) -> str:
     """BLANG:WIT-HON — ValidationReport for witness honesty (single path or scan dir when scan=True)."""
     from rust_engine_mcp.validators.witness_honesty import validate_witness_honesty_path, validate_witness_honesty_scan
@@ -813,6 +947,27 @@ def ops_triage_refresh_tool(window_hours: int = 168) -> str:
     from rust_engine_mcp.ops_crash_exporter import write_triage_witness
 
     return json.dumps(write_triage_witness(window_hours=max(1, min(720, window_hours))))
+
+
+@mcp.tool()
+def ops_intelligence_scan_tool(window_hours: int = 168, enforce_integrity: bool = False) -> str:
+    """MCP-OPS-REPORT-001 — full OPS spine scan (parity with ops_intelligence_scan.ps1 / CLI)."""
+    from rust_engine_mcp import ops_intelligence
+
+    return json.dumps(
+        ops_intelligence.run_ops_intelligence_scan(
+            window_hours=max(1, min(720, window_hours)),
+            enforce_integrity=True if enforce_integrity else None,
+        )
+    )
+
+
+@mcp.tool()
+def bq_assemble_prefer_prod_tool() -> str:
+    """BQ-ASSEMBLE-PREF-PROD-001 — assert assemble defaults to production tier."""
+    from rust_engine_mcp.bq_assemble_prefer_prod import write_bq_assemble_prefer_prod_witness
+
+    return json.dumps(write_bq_assemble_prefer_prod_witness())
 
 
 @mcp.tool()
@@ -1185,6 +1340,9 @@ def micro_tool_help() -> str:
                 "snapshot_diff_brief",
                 "grammar_iterate",
                 "tile_spine_run_tool",
+                "spine_render_001_tool",
+                "spine_build_001_tool",
+                "apsr_mutation_regress_001_tool",
                 "atlas_meta_brief_tool",
                 "rt_registry_tool",
                 "runtime_lookup_brief_tool",

@@ -45,6 +45,8 @@ pub struct FootprintTileRequest {
     pub color_kind: FootprintTileColorKind,
     /// Partial-alpha weight from parametric raster (`α = weight`, capped at 1).
     pub weight: f32,
+    /// Place-settle pulse (and similar) — when set, egui paints this RGBA instead of color_kind tokens.
+    pub fill_override: Option<egui::Color32>,
 }
 
 /// BUILD-READ-SITE-v0-002 — dashed site composition border.
@@ -106,6 +108,7 @@ fn push_weighted_footprint_tiles(
                 tile,
                 color_kind: kind,
                 weight: w.clamp(0.05, 1.0),
+                fill_override: None,
             });
         }
     }
@@ -157,6 +160,7 @@ pub fn sync_footprint_visual_requests(
                     tile,
                     color_kind: ghost_kind,
                     weight: 1.0,
+                    fill_override: None,
                 });
             }
         }
@@ -383,16 +387,33 @@ pub fn draw_construction_visual_requests_egui(
         let Some(screen) = world_to_screen(world) else {
             continue;
         };
-        let base = match tile.color_kind {
-            FootprintTileColorKind::Valid => super::ghost_visual::footprint_valid_color(),
-            FootprintTileColorKind::Risky => super::ghost_visual::footprint_risky_color(),
-            FootprintTileColorKind::Invalid => super::ghost_visual::footprint_invalid_color(),
+        let (color, stroke) = if let Some(override_c) = tile.fill_override {
+            let alpha = (override_c.a() as f32 * tile.weight).round() as u8;
+            let color =
+                egui::Color32::from_rgba_unmultiplied(override_c.r(), override_c.g(), override_c.b(), alpha);
+            let outline = egui::Color32::from_rgba_unmultiplied(
+                override_c.r(),
+                override_c.g(),
+                override_c.b(),
+                ((override_c.a() as f32) * 0.9).round().clamp(0.0, 255.0) as u8,
+            );
+            (color, Some(egui::Stroke::new(1.5, outline)))
+        } else {
+            let base = match tile.color_kind {
+                FootprintTileColorKind::Valid => super::ghost_visual::footprint_valid_color(),
+                FootprintTileColorKind::Risky => super::ghost_visual::footprint_risky_color(),
+                FootprintTileColorKind::Invalid => super::ghost_visual::footprint_invalid_color(),
+            };
+            let alpha = (base.a() as f32 * tile.weight).round() as u8;
+            let color = egui::Color32::from_rgba_unmultiplied(base.r(), base.g(), base.b(), alpha);
+            (color, None)
         };
-        let alpha = (base.a() as f32 * tile.weight).round() as u8;
-        let color = egui::Color32::from_rgba_unmultiplied(base.r(), base.g(), base.b(), alpha);
         let side = tile_px * 0.92;
         let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
         painter.rect_filled(rect, 1.0, color);
+        if let Some(stroke) = stroke {
+            painter.rect_stroke(rect, 0.0, stroke, egui::epaint::StrokeKind::Inside);
+        }
     }
     Ok(())
 }

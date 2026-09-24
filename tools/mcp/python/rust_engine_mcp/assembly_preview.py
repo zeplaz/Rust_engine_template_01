@@ -216,6 +216,7 @@ def png_preview_usable(path: Path, *, min_bytes: int = 256) -> bool:
 
 def _bevy_worker_command(job_path: Path, root: Path) -> list[str]:
     rel_job = str(job_path.relative_to(root) if job_path.is_relative_to(root) else job_path)
+    candidates: list[Path] = []
     for rel in (
         "target/release/bevy_preview_worker.exe",
         "target/debug/bevy_preview_worker.exe",
@@ -224,7 +225,11 @@ def _bevy_worker_command(job_path: Path, root: Path) -> list[str]:
     ):
         exe = root / rel.replace("/", os.sep)
         if exe.is_file():
-            return [str(exe), "preview-assembly", rel_job]
+            candidates.append(exe)
+    if candidates:
+        # Prefer newest mtime — a stale release binary must not mask a fresh debug fix.
+        exe = max(candidates, key=lambda p: p.stat().st_mtime)
+        return [str(exe), "preview-assembly", rel_job]
     return [
         "cargo",
         "run",

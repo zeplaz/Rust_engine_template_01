@@ -3,7 +3,8 @@
 use bevy::prelude::*;
 
 /// Designer table: [`design_build_readability_v1.md`](../../dev/design_build_readability_v1.md) §3b.
-pub const DEFAULT_ISO_DRAW_SCALE_MULTIPLIER: f32 = 1.5;
+/// Mid-upper band (1.35–1.75) so primary reads ~15%+ of site stub at operational zoom.
+pub const DEFAULT_ISO_DRAW_SCALE_MULTIPLIER: f32 = 1.65;
 pub const ISO_DRAW_SCALE_MIN: f32 = 1.35;
 pub const ISO_DRAW_SCALE_MAX: f32 = 1.75;
 
@@ -43,7 +44,7 @@ pub fn build_read_world_002_witness_body() -> serde_json::Value {
         "gate_id": "BUILD-READ-WORLD-002",
         "lever": "iso_draw_scale_multiplier",
         "iso_draw_scale_multiplier": DEFAULT_ISO_DRAW_SCALE_MULTIPLIER,
-        "primary_pct_site_stub": 0.125,
+        "primary_pct_site_stub": 0.15,
         "green": green,
     })
 }

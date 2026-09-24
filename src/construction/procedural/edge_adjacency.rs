@@ -1,6 +1,6 @@
 //! **BQ-A1-ADJ-001** — footprint edge-compatibility rules (constraint check, not WFC).
 
-use super::footprint_grid::{FootprintGrid, FootprintToken};
+use super::footprint_grid::{is_corner, is_perimeter, FootprintGrid, FootprintToken};
 use super::FootprintCell;
 
 pub const BQ_A1_LIVE_JSON: &str = "debug_runs/bq_a1_adjacency_001_live.json";
@@ -41,20 +41,10 @@ impl FootprintGrid {
     }
 }
 
-#[must_use]
-fn is_perimeter(x: u32, y: u32, width: u32, depth: u32) -> bool {
-    x == 0 || y == 0 || x + 1 == width || y + 1 == depth
-}
-
-#[must_use]
-fn is_corner(x: u32, y: u32, width: u32, depth: u32) -> bool {
-    (x == 0 || x + 1 == width) && (y == 0 || y + 1 == depth)
-}
-
 fn is_facade_token(token: FootprintToken) -> bool {
     matches!(
         token,
-        FootprintToken::Wall | FootprintToken::Door | FootprintToken::Corner
+        FootprintToken::Wall | FootprintToken::Door | FootprintToken::Corner | FootprintToken::Opening
     )
 }
 
@@ -115,24 +105,42 @@ pub fn check_footprint_adjacency(grid: &FootprintGrid) -> Vec<AdjacencyViolation
         }
     }
 
-    // Rule 4 — roof covers full perimeter (no gaps).
+    // Rule 4 — roof covers footprint.
+    // Look v2: single full_footprint roof seat (not a perimeter carpet).
     let roof_floor = grid.floors;
-    for y in 0..grid.depth {
-        for x in 0..grid.width {
-            if !is_perimeter(x, y, grid.width, grid.depth) {
-                continue;
-            }
-            match grid.cell_at(x, y, roof_floor) {
-                Some(c) if c.token == FootprintToken::Roof => {}
-                _ => violations.push(AdjacencyViolation {
-                    rule_id: "roof_perimeter_continuous",
-                    message: format!("missing roof at ({x},{y})"),
-                }),
+    let full_footprint = grid.cells.iter().any(|c| {
+        c.token == FootprintToken::Roof && c.roof_mode == Some(super::RoofMode::FullFootprint)
+    });
+    if full_footprint {
+        let roof_count = grid
+            .cells
+            .iter()
+            .filter(|c| c.token == FootprintToken::Roof && c.floor == roof_floor)
+            .count();
+        if roof_count != 1 {
+            violations.push(AdjacencyViolation {
+                rule_id: "roof_full_footprint_single",
+                message: format!("expected 1 full-footprint roof, got {roof_count}"),
+            });
+        }
+    } else {
+        for y in 0..grid.depth {
+            for x in 0..grid.width {
+                if !is_perimeter(x, y, grid.width, grid.depth) {
+                    continue;
+                }
+                match grid.cell_at(x, y, roof_floor) {
+                    Some(c) if c.token == FootprintToken::Roof => {}
+                    _ => violations.push(AdjacencyViolation {
+                        rule_id: "roof_perimeter_continuous",
+                        message: format!("missing roof at ({x},{y})"),
+                    }),
+                }
             }
         }
     }
 
-    // Rule 5 — no doors above ground; upper floors align as wall at door column.
+    // Rule 5 — no doors above ground; upper floors at door column stay wall/opening rhythm.
     let door_columns: Vec<(u32, u32)> = grid
         .cells
         .iter()
@@ -150,11 +158,17 @@ pub fn check_footprint_adjacency(grid: &FootprintGrid) -> Vec<AdjacencyViolation
     for (dx, dy) in door_columns {
         for floor in 1..grid.floors {
             match grid.cell_at(dx, dy, floor) {
-                Some(c) if c.token == FootprintToken::Wall || c.token == FootprintToken::Corner => {}
+                Some(c)
+                    if matches!(
+                        c.token,
+                        FootprintToken::Wall
+                            | FootprintToken::Corner
+                            | FootprintToken::Opening
+                    ) => {}
                 Some(c) => violations.push(AdjacencyViolation {
                     rule_id: "vertical_door_rhythm",
                     message: format!(
-                        "floor {floor} at door column ({dx},{dy}) is {:?}, expected wall rhythm",
+                        "floor {floor} at door column ({dx},{dy}) is {:?}, expected wall/opening rhythm",
                         c.token
                     ),
                 }),
@@ -214,7 +228,7 @@ pub fn build_bq_a1_adjacency_witness_body() -> serde_json::Value {
         "gate": "BQ-A1-ADJ-001",
         "green": green,
         "violation_count": violations.len(),
-        "rules": ["corner_two_neighbors", "door_not_corner", "one_door_per_edge", "roof_perimeter_continuous", "vertical_door_rhythm"],
+        "rules": ["corner_two_neighbors", "door_not_corner", "one_door_per_edge", "roof_full_footprint_single|roof_perimeter_continuous", "vertical_door_rhythm"],
         "violations": violations.iter().map(|v| serde_json::json!({
             "rule_id": v.rule_id,
             "message": v.message,

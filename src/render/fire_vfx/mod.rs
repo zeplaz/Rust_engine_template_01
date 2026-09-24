@@ -9,14 +9,13 @@ pub mod pack;
 pub mod witness;
 
 pub use consumable::{
-    effect_spawn_hook_resolver_wired, resolve_effect_spawn, sample_effect_field,
-    spawn_effect_consumable, EffectConsumable, EffectConsumableDef, EffectConsumableRegistry,
+    effect_spawn_hook_resolver_wired, resolve_effect_spawn, spawn_effect_consumable,
+    EffectConsumable, EffectConsumableDef, EffectConsumableRegistry,
     EffectConsumableRegistryPlugin, EffectFieldId, EffectLane, EffectResolvedSpawn,
-    EffectSpawnHookConfig, EffectSpawnResolveContext, SpawnHookKind, EFFECT_REGISTRY_ROOT,
+    EffectSpawnResolveContext, SpawnHookKind, EFFECT_REGISTRY_ROOT,
 };
 pub use emit::{
-    emit_world_fire_particles_from_projection,
-    seed_world_fire_particles_from_overlay_heat,
+    emit_world_fire_particles_from_projection, seed_world_fire_particles_from_overlay_heat,
     update_world_fire_particles_from_projection, view_aware_particle_cull_wired,
 };
 pub use frame::{WorldFireParticleFrame, WorldFireParticleGpuStorage};

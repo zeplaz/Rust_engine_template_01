@@ -1,13 +1,20 @@
-//! Freight ledger propagation (LOG-B).
+//! Freight ledger propagation (LOG-B) + deployable staging haul (COD-DEPLOYABLE-LOGISTICS-001).
 
 use bevy::prelude::*;
 
 use crate::economy::resource_flow::{ResourceFlowNode, ResourceFlowRegistry, TransportMode};
+use crate::entities::production::core::{
+    is_deployable_staging_buffer_tag, ManufacturingOutputBuffers, BUFFER_TAG_DRAGON_TEETH_UNIT,
+    BUFFER_TAG_MINE_UNIT,
+};
 
 use super::types::{
-    FreightLot, FreightMovementModel, InTransitLedger, LogisticsDiagnostics, RouteCache,
-    RoutePathStore, ThroughputSolverState,
+    FreightLot, FreightMovementModel, InTransitLedger, LogisticsDiagnostics, PendingSiteStagingDebits,
+    RouteCache, RouteHandle, RoutePath, RoutePathStore, SiteStagingStock, ThroughputSolverState,
 };
+
+/// Deployable tags hauled from plant buffers into the ledger (then staging).
+const DEPLOYABLE_HAUL_TAGS: &[&str] = &[BUFFER_TAG_DRAGON_TEETH_UNIT, BUFFER_TAG_MINE_UNIT];
 
 /// LOG-B-03: movement model from transport mode.
 #[must_use]
@@ -27,25 +34,110 @@ pub fn freight_transit_ticks(path_len: usize, movement: FreightMovementModel) ->
     }
 }
 
+/// Minimal transit for plant→depot deployable haul (no parallel freight bus).
+#[must_use]
+pub fn deployable_haul_transit_ticks() -> u16 {
+    freight_transit_ticks(1, FreightMovementModel::Continuous)
+}
+
+/// LOG-B-02: advance `progress_edge` from elapsed transit ticks (no teleport).
+fn advance_lot_progress(lot: &mut FreightLot) {
+    if lot.remaining_ticks == 0 {
+        return;
+    }
+    lot.remaining_ticks -= 1;
+    let edge_count = lot.path.edge_count;
+    if edge_count == 0 {
+        return;
+    }
+    let total = freight_transit_ticks(edge_count as usize, lot.movement);
+    let elapsed = total.saturating_sub(lot.remaining_ticks);
+    lot.progress_edge = match lot.movement {
+        FreightMovementModel::Continuous => elapsed.min(edge_count.saturating_sub(1)),
+        FreightMovementModel::Batched => (elapsed / 2).min(edge_count.saturating_sub(1)),
+    };
+}
+
+/// Commit arrivals: deployable tags → [`SiteStagingStock`] (sole credit writer);
+/// all other tags → destination [`ResourceFlowNode`] buffers.
 pub fn commit_freight_arrivals_system(
     mut ledger: ResMut<InTransitLedger>,
+    mut staging: ResMut<SiteStagingStock>,
     mut nodes: Query<&mut ResourceFlowNode>,
 ) {
     let mut i = 0;
     while i < ledger.lots.len() {
         if ledger.lots[i].remaining_ticks > 0 {
-            ledger.lots[i].remaining_ticks -= 1;
+            advance_lot_progress(&mut ledger.lots[i]);
             i += 1;
             continue;
         }
         let lot = ledger.lots[i].clone();
-        if let Ok(mut node) = nodes.get_mut(lot.destination) {
+        if is_deployable_staging_buffer_tag(&lot.buffer_tag) {
+            // Single writer for SiteStagingStock credit — UI must not mirror this path.
+            staging.credit(&lot.buffer_tag, lot.amount);
+        } else if let Ok(mut node) = nodes.get_mut(lot.destination) {
             *node
                 .buffer_by_tag
                 .entry(lot.buffer_tag.clone())
                 .or_insert(0.0) += lot.amount;
         }
         ledger.lots.swap_remove(i);
+    }
+}
+
+/// Apply place-commit staging debits — sole `SiteStagingStock::try_debit` caller
+/// (COD-DEPLOYABLE-PLACE-001). Same writer family as arrivals credit.
+pub fn apply_pending_site_staging_debits_system(
+    mut staging: ResMut<SiteStagingStock>,
+    mut pending: ResMut<PendingSiteStagingDebits>,
+) {
+    if pending.queue.is_empty() {
+        return;
+    }
+    let drained: Vec<_> = pending.queue.drain(..).collect();
+    for req in drained {
+        let _ok = staging.try_debit(&req.buffer_tag, req.amount);
+        debug_assert!(
+            _ok,
+            "staging debit failed for {} amount {} — gate should have reserved",
+            req.buffer_tag, req.amount
+        );
+    }
+}
+
+/// Haul plant-local deployable stock into [`InTransitLedger`] (no teleport / no staging credit).
+///
+/// Debits [`ManufacturingOutputBuffers`]; arrivals later credit [`SiteStagingStock`].
+pub fn dispatch_deployable_from_manufacturing_system(
+    mut ledger: ResMut<InTransitLedger>,
+    mut buffers: Query<(Entity, &mut ManufacturingOutputBuffers)>,
+) {
+    let ticks = deployable_haul_transit_ticks();
+    debug_assert!(ticks > 0, "deployable haul must not same-tick teleport");
+    for (plant, mut buf) in buffers.iter_mut() {
+        for tag in DEPLOYABLE_HAUL_TAGS {
+            let ship = buf.debit(tag, f32::MAX);
+            if ship <= 0.0 {
+                continue;
+            }
+            ledger.lots.push(FreightLot {
+                destination: plant,
+                buffer_tag: (*tag).to_string(),
+                amount: ship,
+                route: RouteHandle {
+                    id: 0,
+                    topology_revision: 0,
+                },
+                path: RoutePath {
+                    first_edge: 0,
+                    edge_count: 1,
+                },
+                progress_edge: 0,
+                remaining_ticks: ticks,
+                movement: FreightMovementModel::Continuous,
+            });
+        }
     }
 }
 
@@ -75,6 +167,10 @@ pub fn dispatch_freight_from_solver_system(
         let Some(tag) = edge.buffer_tag.as_ref() else {
             continue;
         };
+        // Deployables use ManufacturingOutputBuffers → dispatch_deployable_*; skip flow edges.
+        if is_deployable_staging_buffer_tag(tag) {
+            continue;
+        }
         let Ok(mut from_node) = nodes.get_mut(edge.from) else {
             continue;
         };
@@ -94,14 +190,18 @@ pub fn dispatch_freight_from_solver_system(
         let ticks = freight_transit_ticks(path_len, movement);
 
         let cached = route_cache.routes.get(&(edge.from, edge.to));
+        let route = cached
+            .map(|c| c.handle)
+            .or(edge.route_handle)
+            .unwrap_or(super::types::RouteHandle {
+                id: 0,
+                topology_revision: solver.topology_revision,
+            });
         ledger.lots.push(FreightLot {
             destination: edge.to,
             buffer_tag: tag.clone(),
             amount: ship,
-            route: edge.route_handle.unwrap_or(super::types::RouteHandle {
-                id: 0,
-                topology_revision: solver.topology_revision,
-            }),
+            route,
             path: cached.map(|c| c.path).unwrap_or(super::types::RoutePath {
                 first_edge: 0,
                 edge_count: 0,

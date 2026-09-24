@@ -2,15 +2,15 @@
   "gate_id": "APS-PREVIEW-004",
   "green": true,
   "mode": "bevy_worker",
-  "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
-  "modules_loaded": 40,
-  "elapsed_ms": 2548,
+  "png": "debug_runs/bq_q2_screens/industrial_west_6x3_s5_d53f.png",
+  "modules_loaded": 37,
+  "elapsed_ms": 2790,
   "missing_glb": [],
   "bevy_status": {
     "status": "done",
-    "png": "debug_runs/preview_jobs/industrial_west_7x5_s39_9fa1_thumb.png",
-    "elapsed_ms": 1737,
-    "modules_loaded": 40,
+    "png": "debug_runs/bq_q2_screens/industrial_west_6x3_s5_d53f.png",
+    "elapsed_ms": 2600,
+    "modules_loaded": 37,
     "mode": "bevy_worker"
   }
 }

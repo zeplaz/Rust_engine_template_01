@@ -44,6 +44,10 @@ pub fn refresh_coder_a_wave3_14_closure() -> bool {
         "FIRE7-F7-A-EXIT-001"
     );
     assert!(
+        refresh_wc_d04_stage6_virtualization_live_witness(),
+        "WC-D04 stage6 virtualization"
+    );
+    assert!(
         refresh_log_e01_and_tactical_vfx_stage5_live_witness(),
         "VFX-VISUAL-SIGNOFF-001 lib tactical VFX"
     );

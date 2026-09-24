@@ -104,6 +104,9 @@ pub fn site_archetype_from_preset_tag(tag: &str) -> SiteArchetype {
         "SensorPost" => SiteArchetype::SensorPost,
         "BunkerComplex" => SiteArchetype::BunkerComplex,
         "TrenchLine" => SiteArchetype::TrenchLine,
+        "DefensiveWall" => SiteArchetype::DefensiveWall,
+        "DragonTeeth" => SiteArchetype::DragonTeeth,
+        "Minefield" => SiteArchetype::Minefield,
         _ => SiteArchetype::Factory,
     }
 }

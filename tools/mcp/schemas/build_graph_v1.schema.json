@@ -1,0 +1,49 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/build_graph_v1.schema.json",
+  "title": "build_graph_v1",
+  "description": "SPINE-BUILD-001 — explicit tile spine build DAG. Each node declares artifact, witness, validation, and depends_on.",
+  "type": "object",
+  "required": ["schema_version", "graph_id", "nodes"],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "graph_id": { "type": "string", "minLength": 1 },
+    "building_id": { "type": "string" },
+    "seed": { "type": "integer" },
+    "ship": { "type": "boolean", "default": false },
+    "nodes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["node_id", "cli", "depends_on", "artifact", "validation"],
+        "additionalProperties": true,
+        "properties": {
+          "node_id": {
+            "type": "string",
+            "enum": [
+              "build_assembly",
+              "build_variants",
+              "build_blend",
+              "render_frames",
+              "pack_atlas",
+              "register_atlas"
+            ]
+          },
+          "cli": { "type": "string", "minLength": 1 },
+          "mcp": { "type": "string" },
+          "depends_on": {
+            "type": "array",
+            "items": { "type": "string" }
+          },
+          "artifact": { "type": "string", "minLength": 1 },
+          "manifest": { "type": "string" },
+          "witness": { "type": "string" },
+          "validation": { "type": "string", "minLength": 1 },
+          "notes": { "type": "string" }
+        }
+      }
+    }
+  }
+}

@@ -673,8 +673,8 @@
       "wave": 0,
       "seq": 1,
       "id": "COD-SIM-HUD-EGUI-THEME-001",
-      "status": "blocked",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-09-23",
       "priority": "P0",
       "owner": "coder",
       "goal": "UiPalette + shell chrome enforcement",
@@ -687,8 +687,9 @@
         "*"
       ],
       "program": "multi_parallel_tracks",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "witness": "debug_runs/production_sim_hud_native_live.json",
+      "note": "Superseded by PLAN-PRODUCTION-SIM-HUD-NATIVE — HUD-A + NAT theme/palette live",
+      "updated_at": "2026-09-23T23:46:00Z"
     },
     {
       "track": "T5",
@@ -696,8 +697,8 @@
       "wave": 0,
       "seq": 2,
       "id": "COD-SIM-HUD-BUILD-PICKER-001",
-      "status": "blocked",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-09-23",
       "priority": "P0",
       "owner": "coder",
       "goal": "Rail-anchored build picker \u2014 retire submenu list",
@@ -710,8 +711,9 @@
         "*"
       ],
       "program": "multi_parallel_tracks",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "witness": "debug_runs/production_sim_hud_native_live.json",
+      "note": "Superseded by HUD-NAT-001 Bevy picker",
+      "updated_at": "2026-09-23T23:46:00Z"
     },
     {
       "track": "T5",
@@ -719,8 +721,8 @@
       "wave": 0,
       "seq": 3,
       "id": "COD-SIM-HUD-TRAY-BUILD-001",
-      "status": "blocked",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-09-23",
       "priority": "P0",
       "owner": "coder",
       "goal": "Tray Build tab body",
@@ -733,8 +735,9 @@
         "*"
       ],
       "program": "multi_parallel_tracks",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "witness": "debug_runs/production_sim_hud_native_live.json",
+      "note": "Superseded by HUD-NAT-003 tray Build Bevy",
+      "updated_at": "2026-09-23T23:46:00Z"
     },
     {
       "track": "T5",
@@ -742,8 +745,8 @@
       "wave": 0,
       "seq": 4,
       "id": "COD-SIM-HUD-POPUP-MIGRATE-001",
-      "status": "blocked",
-      "completed": "2026-06-20",
+      "status": "done",
+      "completed": "2026-09-23",
       "priority": "P0",
       "owner": "coder_b",
       "goal": "Popup tier migration \u2014 tray/sheet only",
@@ -756,8 +759,9 @@
         "*"
       ],
       "program": "multi_parallel_tracks",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:24Z"
+      "witness": "debug_runs/production_sim_hud_native_live.json",
+      "note": "Superseded by HUD-NAT-002/007 Bevy road+power sheets",
+      "updated_at": "2026-09-23T23:46:00Z"
     },
     {
       "track": "T5",

@@ -58,11 +58,11 @@
     "relative_path": "debug_runs/build_read_world_002_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_build_read_world_002_live_witness",
-    "written_at_epoch_secs": 1783371796
+    "written_at_epoch_secs": 1790198888
   },
   "gate_id": "BUILD-READ-WORLD-002",
   "green": true,
-  "iso_draw_scale_multiplier": 1.5,
+  "iso_draw_scale_multiplier": 1.649999976158142,
   "lever": "iso_draw_scale_multiplier",
-  "primary_pct_site_stub": 0.125
+  "primary_pct_site_stub": 0.15
 }

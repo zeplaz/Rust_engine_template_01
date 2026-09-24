@@ -30,7 +30,7 @@ pub use crate::terrain::fire::FuelLayer;
 pub use chunk_fire_overlay::chunk_fire_overlay_tick;
 pub use chunk_smoke_field::{
     chunk_smoke_field_pull_from_advected_atmosphere, chunk_smoke_field_tick, ChunkSmokeField,
-    ATMOSPHERE_TO_CHUNK_SMOKE_BLEND,
+    ATMOSPHERE_TO_CHUNK_SMOKE_BLEND, CHUNK_SMOKE_L0_PULL,
 };
 pub use fire_fuel::{derive_fire_fuel_from_vegetation, FireFuelField};
 pub use chunk_surface_fire::{chunk_surface_fire_tick, ChunkSurfaceFire};
@@ -50,6 +50,7 @@ pub(crate) use chunk_fuel_profile::{chunk_fuel_profile_tick, spawn_chunk_fuel_pr
 
 use bevy::prelude::*;
 
+use crate::sim::effects::SimEffectSystemSet;
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use chunk_fire_overlay::spawn_chunk_fire_overlay_on_matrix;
 use chunk_smoke_field::spawn_chunk_smoke_field_on_new_chunk;
@@ -68,32 +69,45 @@ impl Plugin for FirePlugin {
             .add_systems(Startup, surface_water::init_surface_water_fire_gate)
             .add_message::<ember_spot_ignition::EmberSpotIgnitionEvent>()
             .add_systems(
-            Update,
-            (
-                spawn_chunk_surface_fire_on_new_chunk.in_set(ChunkEnvironmentSet::Fire),
-                spawn_chunk_smoke_field_on_new_chunk.in_set(ChunkEnvironmentSet::Fire),
-                spawn_chunk_fire_overlay_on_matrix.in_set(ChunkEnvironmentSet::Fire),
-                chunk_fire_overlay_tick.in_set(ChunkEnvironmentSet::Fire),
-                witness_collectors::finalize_fire_ecology_witness_frame
-                    .after(chunk_fire_overlay_tick)
-                    .in_set(ChunkEnvironmentSet::Fire),
-                witness_collectors::write_fire_ecology_live_proof_system
-                    .after(witness_collectors::finalize_fire_ecology_witness_frame)
-                    .run_if(crate::dev::runtime_witness::fire_ecology_live_proof_due),
-                emit_ember_spot_ignition_events.in_set(ChunkEnvironmentSet::Fire),
-                apply_ember_spot_ignitions.in_set(ChunkEnvironmentSet::Fire),
-                chunk_surface_fire_tick.in_set(ChunkEnvironmentSet::Fire),
-                maintain_fire_light_emission_from_surface_fire
-                    .after(chunk_surface_fire_tick)
-                    .in_set(ChunkEnvironmentSet::Fire),
-                update_fire_light_emission_flicker
-                    .after(maintain_fire_light_emission_from_surface_fire)
-                    .in_set(ChunkEnvironmentSet::Fire),
-                chunk_smoke_field_tick
-                    .after(update_fire_light_emission_flicker)
-                    .in_set(ChunkEnvironmentSet::Fire),
-            )
-                .chain(),
-        );
+                Update,
+                (
+                    spawn_chunk_surface_fire_on_new_chunk.in_set(ChunkEnvironmentSet::Fire),
+                    spawn_chunk_smoke_field_on_new_chunk.in_set(ChunkEnvironmentSet::Fire),
+                    spawn_chunk_fire_overlay_on_matrix.in_set(ChunkEnvironmentSet::Fire),
+                    chunk_fire_overlay_tick.in_set(ChunkEnvironmentSet::Fire),
+                    witness_collectors::finalize_fire_ecology_witness_frame
+                        .after(chunk_fire_overlay_tick)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    // Sole ecology JSON writer — after drain finalize so nested sim_effect_spine is honest.
+                    witness_collectors::write_fire_ecology_live_proof_system
+                        .after(witness_collectors::finalize_fire_ecology_witness_frame)
+                        .after(SimEffectSystemSet::Drain)
+                        .run_if(crate::dev::runtime_witness::fire_ecology_live_proof_due),
+                    // VSS-T3-001: emit → SimEffect drain → apply (sole EmberSpot MessageWriter = drain).
+                    emit_ember_spot_ignition_events
+                        .after(chunk_fire_overlay_tick)
+                        .before(SimEffectSystemSet::Drain)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    apply_ember_spot_ignitions
+                        .after(SimEffectSystemSet::Drain)
+                        .before(chunk_surface_fire_tick)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    chunk_surface_fire_tick.in_set(ChunkEnvironmentSet::Fire),
+                    maintain_fire_light_emission_from_surface_fire
+                        .after(chunk_surface_fire_tick)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    update_fire_light_emission_flicker
+                        .after(maintain_fire_light_emission_from_surface_fire)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    chunk_smoke_field_tick
+                        .after(update_fire_light_emission_flicker)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    // TRIAGE-FIRE-PLAY-VIS-001 / VFX-ABSENT: product SimulationMap fire_heat
+                    // follows real sim heat (was exported but never scheduled → dead overlay).
+                    sync_sim_map_fire_overlay_when_sim_has_heat
+                        .after(chunk_fire_overlay_tick)
+                        .run_if(in_state(crate::engine::states::BaseState::Simulation)),
+                ),
+            );
     }
 }

@@ -163,7 +163,7 @@ pub use super::core::gpu_buffer_registry::{
     RegistryBufferAllocation, RegistryError, RegistryUploadStats,     TILE_DEBUG_INSTANCES_BUFFER, TERRAIN_INSTANCES_BUFFER,
 };
 pub use super::fx_spine::fire_smoke_shader_handles::{
-    FireSmokeShaderHandles, FIRE_PARTICLE_WGSL, FIRE_SPARK_COMPUTE_WGSL, SMOKE_VOLUME_WGSL,
+    FireSmokeShaderHandles, FIRE_PARTICLE_WGSL, FIRE_SPARK_COMPUTE_WGSL,
 };
 pub use super::fx_spine::fx_burst_request::{collect_burst_hints_from_fire_visual, FxParticleBurstRequest};
 pub use super::extraction::visual_snapshot_commit::{commit_fire_visual_snapshot, CommittedVisualSnapshotFence};

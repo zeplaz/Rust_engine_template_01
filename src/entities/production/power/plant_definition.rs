@@ -40,6 +40,100 @@ pub struct PlantDefinition {
     pub research: ResearchGates,
     #[serde(default)]
     pub grid_interface: GridInterface,
+    /// Present only on containment-class plants (`ContainmentBuilding`). Omit / null = no LOOP/SCRAM path.
+    #[serde(default)]
+    pub nuclear_failure_profile: Option<NuclearFailureProfile>,
+}
+
+/// Data-driven nuclear LOOP / SCRAM / diesel window (**DES-NUCLEAR-FAILURE-PROFILE-001**).
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct NuclearFailureProfile {
+    #[serde(default)]
+    pub requires_offsite_power_when: Vec<OperationalStatus>,
+    #[serde(default)]
+    pub offsite_power_mw: f32,
+    #[serde(default)]
+    pub diesel_backup_mw: f32,
+    #[serde(default = "default_diesel_hours")]
+    pub diesel_fuel_hours: f32,
+    #[serde(default)]
+    pub passive_cooling: bool,
+    #[serde(default = "default_true")]
+    pub scram_on_loop: bool,
+    #[serde(default)]
+    pub meltdown_enabled: bool,
+    /// Seconds after LOOP before auto SCRAM.
+    #[serde(default = "default_scram_delay")]
+    pub scram_delay_s: f32,
+    /// Seconds after SCRAM before diesels count as running.
+    #[serde(default = "default_diesel_start")]
+    pub diesel_start_delay_s: f32,
+    /// Multiplier on real-time burn of `diesel_fuel_hours` (60 ⇒ 72 h → ~72 min sim).
+    #[serde(default = "default_diesel_compress")]
+    pub diesel_time_compress: f32,
+    /// Post-SCRAM core temp (°C) while cooling is available (**COD-NUCLEAR-COOLING-001**).
+    #[serde(default = "default_core_stable_c")]
+    pub core_stable_temp_c: f32,
+    /// Core temp (°C) at which P2 marks meltdown threshold (P3 acts on the flag).
+    #[serde(default = "default_meltdown_threshold_c")]
+    pub meltdown_threshold_c: f32,
+    /// Uncooled decay-heat rise (°C / real second) before `decay_heat_time_compress`.
+    #[serde(default = "default_decay_rise_c_per_s")]
+    pub decay_heat_rise_c_per_s: f32,
+    /// Gameplay compress on decay-heat rise (same role as diesel compress).
+    #[serde(default = "default_decay_heat_compress")]
+    pub decay_heat_time_compress: f32,
+    /// Cool-down rate (°C / real second) while diesels/offsite/passive hold the core.
+    #[serde(default = "default_decay_cool_c_per_s")]
+    pub decay_heat_cool_c_per_s: f32,
+    /// Seconds after meltdown threshold before containment breach + fallout hook (**COD-NUCLEAR-MELTDOWN-001**).
+    #[serde(default = "default_breach_delay_s")]
+    pub breach_delay_s: f32,
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_diesel_hours() -> f32 {
+    72.0
+}
+
+fn default_scram_delay() -> f32 {
+    15.0
+}
+
+fn default_diesel_start() -> f32 {
+    30.0
+}
+
+fn default_diesel_compress() -> f32 {
+    60.0
+}
+
+fn default_core_stable_c() -> f32 {
+    80.0
+}
+
+fn default_meltdown_threshold_c() -> f32 {
+    1200.0
+}
+
+/// ~0.2 °C/s × compress 60 ≈ 12 °C/s game → threshold in ~1.5–2 min after diesel fail.
+fn default_decay_rise_c_per_s() -> f32 {
+    0.2
+}
+
+fn default_decay_heat_compress() -> f32 {
+    60.0
+}
+
+fn default_decay_cool_c_per_s() -> f32 {
+    0.05
+}
+
+fn default_breach_delay_s() -> f32 {
+    45.0
 }
 
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]

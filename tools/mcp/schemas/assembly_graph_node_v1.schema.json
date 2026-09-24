@@ -33,7 +33,7 @@
     "module_id": { "type": "string" },
     "job_id": { "type": "string" },
     "slot_key": { "type": "string" },
-    "token": { "type": "string", "enum": ["W", "D", "C", "R"] },
+    "token": { "type": "string", "enum": ["W", "D", "C", "R", "O"] },
     "grid_x": { "type": "integer", "minimum": 0 },
     "grid_y": { "type": "integer", "minimum": 0 },
     "floor": { "type": "integer", "minimum": 0 },

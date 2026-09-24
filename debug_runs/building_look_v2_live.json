@@ -1,0 +1,230 @@
+{
+  "schema": "building_look_v2_live_v1",
+  "gate": "BUILDING-LOOK-V2",
+  "task_id": "BUILDING-LOOK-V2",
+  "green": true,
+  "ok": true,
+  "composition_pass": true,
+  "pixel_look_pass": true,
+  "pixel_look_note": "Soft openings visible iso_se \u00b7 corrugated industrial steel \u00b7 6x3 roof scale",
+  "concept_ref": "src/dev/design_building_visual_concept_v2.md",
+  "bq_q3_ops": {
+    "id": "BQ-Q3-OPS-APPROVE-001",
+    "status": "deferred_cancelled",
+    "reason": "operator theater deferred; fix look in code/art first"
+  },
+  "diagnosis_summary": [
+    "FIXED: wall/door/window/roof height on glTF +Y (was Blender-Y\u2192flat in Bevy)",
+    "FIXED: outward_yaw remapped for default face \u2212Z after export_yup",
+    "FIXED: gable_cap single-span roof + bay door/window cutouts in ops",
+    "FIXED: dual-face corner walls + exterior edge offset close bay gaps / pierces",
+    "FIXED: street openings on ground non-door bays",
+    "FIXED: single full-footprint roof seat (no per-bay gable collage)",
+    "FIXED: rural roof_default \u2192 roof_pitched_gable; metal_low shed 8\u00d716 for 4\u00d72"
+  ],
+  "machine_gates": [
+    {
+      "assembly_id": "victorian_4x2_s1_d8e2",
+      "style_pack_id": "style_victorian",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    },
+    {
+      "assembly_id": "victorian_4x2_s7_8e1b",
+      "style_pack_id": "style_victorian",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    },
+    {
+      "assembly_id": "victorian_3x3_s11_d96f",
+      "style_pack_id": "style_victorian",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    },
+    {
+      "assembly_id": "victorian_5x3_s13_5880",
+      "style_pack_id": "style_victorian",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    },
+    {
+      "assembly_id": "industrial_west_4x2_s1_4bf6",
+      "style_pack_id": "style_industrial_west",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    },
+    {
+      "assembly_id": "industrial_west_6x3_s5_d53f",
+      "style_pack_id": "style_industrial_west",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    },
+    {
+      "assembly_id": "industrial_west_4x2_s9_798d",
+      "style_pack_id": "style_industrial_west",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    },
+    {
+      "assembly_id": "rural_4x2_s3_94e7",
+      "style_pack_id": "style_rural",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    },
+    {
+      "assembly_id": "rural_5x3_s3_4086",
+      "style_pack_id": "style_rural",
+      "grid_spacing_ok": true,
+      "outward_yaw_ok": true,
+      "ridge_roof_ok": true,
+      "production_ok": true,
+      "no_corner_l_kit": true,
+      "dx": 4.0,
+      "roof_count": 1,
+      "expect_roof": 1,
+      "ok": true
+    }
+  ],
+  "before_dir": "debug_runs/building_look_v2/before",
+  "after_screens": [
+    {
+      "assembly_id": "victorian_4x2_s1_d8e2",
+      "after_png": "debug_runs/building_look_v2/after/victorian_4x2_s1_d8e2.png",
+      "mode": "bevy_worker"
+    },
+    {
+      "assembly_id": "industrial_west_4x2_s1_4bf6",
+      "after_png": "debug_runs/building_look_v2/after/industrial_west_4x2_s1_4bf6.png",
+      "mode": "bevy_worker"
+    },
+    {
+      "assembly_id": "rural_4x2_s3_94e7",
+      "after_png": "debug_runs/building_look_v2/after/rural_4x2_s3_94e7.png",
+      "mode": "bevy_worker"
+    }
+  ],
+  "art_bake_needed": [],
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "no_ai_generated_images": true,
+    "deterministic_output": true,
+    "batch_processing": true,
+    "grid_alignment": true,
+    "seed": "style_pack_production_run001"
+  },
+  "summary": "Look v2 composition PASS \u00b7 pixel look PASS (polish soft-open + steel + roof scale)",
+  "exit_predicate": {
+    "witness": "debug_runs/building_look_v2_live.json",
+    "must": [
+      {
+        "id": "grid_4m",
+        "pass": true
+      },
+      {
+        "id": "outward_yaw",
+        "pass": true
+      },
+      {
+        "id": "ridge_roof",
+        "pass": true
+      },
+      {
+        "id": "production",
+        "pass": true
+      },
+      {
+        "id": "pixel_look",
+        "pass": true
+      },
+      {
+        "id": "soft_openings_iso",
+        "pass": true
+      },
+      {
+        "id": "roof_scale_beyond_4x2",
+        "pass": true
+      }
+    ]
+  },
+  "_agent_meta": {
+    "schema": "building_look_v2_live_v1",
+    "profile": "BUILDING_LOOK_V2",
+    "relative_path": "debug_runs/building_look_v2_live.json",
+    "source_system": "main_thread_orchestrator_building_look_polish",
+    "written_at_epoch_secs": 1790272354,
+    "ritual": "BUILDING-LOOK-V2-ART"
+  },
+  "witness_honesty": {
+    "status": "passed",
+    "error_count": 0,
+    "warning_count": 0,
+    "summary": "witness_honesty debug_runs/building_look_v2_live.json: 0 error(s), 0 issue(s)"
+  },
+  "written": "debug_runs/building_look_v2_live.json",
+  "art_task_id": "BUILDING-LOOK-V2-ART",
+  "art_rebake": {
+    "rebake_ok": 0,
+    "promote_ok": 0,
+    "axis_ok": 16,
+    "job_count": 16,
+    "errors": []
+  },
+  "polish_witness": "debug_runs/building_look_v2_polish_live.json"
+}

@@ -8,7 +8,7 @@ use bevy_egui::egui;
 use crate::construction::{
     draw_commercial_submenu, draw_mock_shapes_submenu, draw_residential_submenu,
     draw_utilities_submenu, ActiveBuildTool, BuildStripState, BuildTool, BuildingArchetypeId,
-    BuildingDefinition, BuildingDefinitionRegistry, BuildingFamily, RailType, RoadType,
+    BuildingDefinition, BuildingDefinitionRegistry, BuildingFamily, DefenseKind, RailType, RoadType,
     ToolContext, UtilitiesSubmenuIconUi,
 };
 use crate::construction::building_definitions::intent_from_archetype;
@@ -19,9 +19,14 @@ use crate::gui::hud::power_hud_icon_atlas::{
 use crate::gui::UiPalette;
 
 use super::sim_hud_copy::{
-    human_chain_label, power_tier_compact, PICKER_EMPTY_CATEGORY, PICKER_GENERIC_DEPOT,
-    PICKER_GENERIC_FACTORY, PICKER_INDUSTRY_LEAD, PICKER_INDUSTRY_OTHER, PICKER_TITLE_INDUSTRY,
-    PICKER_TITLE_ROADS, PICKER_TITLE_SHAPES, PICKER_TITLE_UTILITIES, PICKER_TITLE_ZONE,
+    human_chain_label, power_tier_compact, PICKER_DEFENSE_FOOTER_HINT, PICKER_DEFENSE_LEAD,
+    PICKER_EMPTY_CATEGORY, PICKER_GENERIC_DEPOT, PICKER_GENERIC_FACTORY, PICKER_INDUSTRY_LEAD,
+    PICKER_INDUSTRY_OTHER, PICKER_ROW_BUNKER, PICKER_ROW_CAPTION_DRAGON_TEETH,
+    PICKER_ROW_CAPTION_MINEFIELD, PICKER_ROW_DEFENSIVE_WALL, PICKER_ROW_DEMOLISH,
+    PICKER_ROW_DRAGON_TEETH, PICKER_ROW_MINEFIELD, PICKER_ROW_TRENCH_LINE,
+    PICKER_SECTION_DEPLOYABLES, PICKER_SECTION_FORTIFICATION, PICKER_SECTION_TRENCHES,
+    PICKER_SECTION_WALLS, PICKER_TITLE_DEFENSE, PICKER_TITLE_INDUSTRY, PICKER_TITLE_ROADS,
+    PICKER_TITLE_SHAPES, PICKER_TITLE_UTILITIES, PICKER_TITLE_ZONE,
 };
 use super::sim_hud_egui_theme::{
     apply_sim_hud_egui_theme, body_text, caption_text, picker_header_frame,
@@ -50,6 +55,7 @@ pub enum BuildPickerCategory {
     Industry,
     Utilities,
     Shapes,
+    Defense,
 }
 
 impl BuildPickerCategory {
@@ -61,17 +67,19 @@ impl BuildPickerCategory {
             Self::Industry => PICKER_TITLE_INDUSTRY,
             Self::Utilities => PICKER_TITLE_UTILITIES,
             Self::Shapes => PICKER_TITLE_SHAPES,
+            Self::Defense => PICKER_TITLE_DEFENSE,
         }
     }
 
     #[must_use]
-    pub const fn all() -> [Self; 5] {
+    pub const fn all() -> [Self; 6] {
         [
             Self::Zone,
             Self::Roads,
             Self::Industry,
             Self::Utilities,
             Self::Shapes,
+            Self::Defense,
         ]
     }
 }
@@ -84,7 +92,8 @@ pub const fn tool_context_to_picker_category(ctx: ToolContext) -> BuildPickerCat
         ToolContext::Industry => BuildPickerCategory::Industry,
         ToolContext::Utilities => BuildPickerCategory::Utilities,
         ToolContext::Ecology => BuildPickerCategory::Shapes,
-        ToolContext::Military | ToolContext::None => BuildPickerCategory::Zone,
+        ToolContext::Military => BuildPickerCategory::Defense,
+        ToolContext::None => BuildPickerCategory::Zone,
     }
 }
 
@@ -97,10 +106,6 @@ pub struct SimBuildPickerState {
 
 impl SimBuildPickerState {
     pub fn open_for_slot(&mut self, slot: ToolContext) {
-        if slot == ToolContext::Military {
-            self.open = false;
-            return;
-        }
         if self.open && self.anchor_slot == slot {
             self.open = false;
             return;
@@ -154,6 +159,9 @@ pub fn draw_sim_build_picker_sheet_egui(
     mut tex_cache: ResMut<PowerHudEguiTextureCache>,
 ) -> Result {
     if !matches!(base.get(), BaseState::Simulation) {
+        return Ok(());
+    }
+    if crate::gui::hud::sim_build_picker_bevy::SIM_BUILD_PICKER_USE_BEVY {
         return Ok(());
     }
     if strip.active == ToolContext::None || !picker.open {
@@ -267,6 +275,9 @@ pub fn draw_sim_build_picker_sheet_egui(
                                 draw_mock_shapes_submenu(ui, &mut tool, &registry);
                                 draw_commercial_submenu(ui, &mut tool, &registry);
                             }
+                            BuildPickerCategory::Defense => {
+                                draw_defense_picker_tab(ui, &palette, &mut tool);
+                            }
                         }
                     });
             });
@@ -278,9 +289,134 @@ pub fn draw_sim_build_picker_sheet_egui(
     } else if tool.building_intent.is_some() && picker.category == BuildPickerCategory::Industry {
         picker.close();
         tool.close_submenus();
+    } else if matches!(tool.tool, BuildTool::Defense(_))
+        && picker.category == BuildPickerCategory::Defense
+    {
+        picker.close();
+        tool.close_submenus();
     }
 
     Ok(())
+}
+
+fn draw_defense_picker_tab(
+    ui: &mut egui::Ui,
+    palette: &UiPalette,
+    tool: &mut ActiveBuildTool,
+) {
+    ui.label(caption_text(palette, PICKER_DEFENSE_LEAD));
+    ui.add_space(4.0);
+
+    ui.label(title_text(palette, PICKER_SECTION_WALLS));
+    if defense_row_clicked(ui, palette, tool, DefenseKind::DefensiveWall, PICKER_ROW_DEFENSIVE_WALL)
+    {
+        return;
+    }
+    ui.separator();
+    ui.label(title_text(palette, PICKER_SECTION_TRENCHES));
+    if defense_row_clicked(ui, palette, tool, DefenseKind::TrenchLine, PICKER_ROW_TRENCH_LINE) {
+        return;
+    }
+    ui.separator();
+    ui.label(title_text(palette, PICKER_SECTION_FORTIFICATION));
+    if defense_row_clicked(ui, palette, tool, DefenseKind::Bunker, PICKER_ROW_BUNKER) {
+        return;
+    }
+    ui.separator();
+    ui.label(title_text(palette, PICKER_SECTION_DEPLOYABLES));
+    if defense_row_with_caption_clicked(
+        ui,
+        palette,
+        tool,
+        DefenseKind::DragonTeeth,
+        PICKER_ROW_DRAGON_TEETH,
+        PICKER_ROW_CAPTION_DRAGON_TEETH,
+    ) {
+        return;
+    }
+    if defense_row_with_caption_clicked(
+        ui,
+        palette,
+        tool,
+        DefenseKind::Minefield,
+        PICKER_ROW_MINEFIELD,
+        PICKER_ROW_CAPTION_MINEFIELD,
+    ) {
+        return;
+    }
+    ui.separator();
+    ui.label(caption_text(palette, "Editing"));
+    let demolish_selected = matches!(tool.tool, BuildTool::Demolish);
+    let demolish_frame = egui::Frame::new()
+        .fill(palette.bg_interactive)
+        .stroke(egui::Stroke::new(
+            if demolish_selected { 3.0 } else { 1.0 },
+            if demolish_selected {
+                palette.accent_gold
+            } else {
+                palette.fg_muted
+            },
+        ))
+        .inner_margin(egui::Margin::symmetric(6, 4));
+    demolish_frame.show(ui, |ui| {
+        ui.set_min_height(40.0);
+        if ui
+            .button(body_text(palette, PICKER_ROW_DEMOLISH))
+            .clicked()
+        {
+            tool.clear_building_intent();
+            tool.tool = BuildTool::Demolish;
+        }
+    });
+    ui.add_space(4.0);
+    ui.label(caption_text(palette, PICKER_DEFENSE_FOOTER_HINT));
+}
+
+fn defense_row_clicked(
+    ui: &mut egui::Ui,
+    palette: &UiPalette,
+    tool: &mut ActiveBuildTool,
+    kind: DefenseKind,
+    label: &str,
+) -> bool {
+    defense_row_with_caption_clicked(ui, palette, tool, kind, label, "")
+}
+
+fn defense_row_with_caption_clicked(
+    ui: &mut egui::Ui,
+    palette: &UiPalette,
+    tool: &mut ActiveBuildTool,
+    kind: DefenseKind,
+    label: &str,
+    caption: &str,
+) -> bool {
+    let selected = matches!(tool.tool, BuildTool::Defense(k) if k == kind);
+    let frame = egui::Frame::new()
+        .fill(palette.bg_interactive)
+        .stroke(egui::Stroke::new(
+            if selected { 3.0 } else { 1.0 },
+            if selected {
+                palette.accent_gold
+            } else {
+                palette.fg_muted
+            },
+        ))
+        .inner_margin(egui::Margin::symmetric(6, 4));
+    let mut clicked = false;
+    frame.show(ui, |ui| {
+        ui.set_min_height(if caption.is_empty() { 48.0 } else { 56.0 });
+        ui.vertical(|ui| {
+            clicked = ui.button(body_text(palette, label)).clicked();
+            if !caption.is_empty() {
+                ui.label(caption_text(palette, caption));
+            }
+        });
+    });
+    if clicked {
+        tool.clear_building_intent();
+        tool.tool = BuildTool::Defense(kind);
+    }
+    clicked
 }
 
 fn draw_industry_picker_tab(
@@ -433,6 +569,20 @@ mod tests {
             tool_context_to_picker_category(ToolContext::Industry),
             BuildPickerCategory::Industry
         );
+        assert_eq!(
+            tool_context_to_picker_category(ToolContext::Military),
+            BuildPickerCategory::Defense
+        );
+    }
+
+    #[test]
+    fn military_opens_defense_picker() {
+        let mut picker = SimBuildPickerState::default();
+        picker.open_for_slot(ToolContext::Military);
+        assert!(picker.open);
+        assert_eq!(picker.anchor_slot, ToolContext::Military);
+        assert_eq!(picker.category, BuildPickerCategory::Defense);
+        assert_eq!(BuildPickerCategory::Defense.title(), "Defense");
     }
 
     #[test]

@@ -24,7 +24,7 @@ Read first: [`.cursor/skills/bevy-simulation-grade/07-repo-authority-map.md`](..
 | Plan §13 **PERF-GPU-TERRAIN-001..004 DONE** | **Partial** — P0-C′-PRIME shipped; §10 operator gate still open |
 | `sim_spectrum_analytics_live.json` | Debug builds still `CpuRaster`; **release** defaults `GpuBake` (RPC-1-003 rename; path still CPU dirty-bake → texture) |
 | P0-C tilemap | **BLOCKED** — `DR-MIG-TILEMAP` / `DR-GPU-TERRAIN-P0C` |
-| P0-C′ instanced + atlas | **Default in release** — debug keeps CPU unless `TERRAIN_GPU_INSTANCED=1` |
+| P0-C′ instanced + atlas | **Default in Simulation (debug+release)** — `TERRAIN_CPU_FALLBACK=1` rollback only |
 | P1 zero-dispatch particles | **Wired** — particle + spark + fire raster skip tests |
 | §10 exit gate (p95 ≤33ms, tile_raster_ms==0, …) | **Open** — needs operator `--test demo/visual` + witness refresh |
 

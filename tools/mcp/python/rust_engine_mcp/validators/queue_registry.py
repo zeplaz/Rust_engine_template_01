@@ -84,11 +84,21 @@ def _witness_rel_from_row(row: dict[str, Any], entry: dict[str, Any]) -> str:
     return ""
 
 
-def iter_queue_rows(queue_doc: dict[str, Any], entry: dict[str, Any]) -> Iterator[dict[str, Any]]:
+def iter_queue_rows(queue_doc: dict[str, Any] | list[Any], entry: dict[str, Any]) -> Iterator[dict[str, Any]]:
+    # Some older queues are a bare JSON array of rows.
+    if isinstance(queue_doc, list):
+        for row in queue_doc:
+            if isinstance(row, dict):
+                yield row
+        return
+    if not isinstance(queue_doc, dict):
+        return
     rows_path = str(entry.get("rows_path") or "rows")
     if rows_path == "p2_tasks":
         yield from queue_doc.get("p2_tasks") or []
         for bucket in entry.get("synthetic_done_buckets") or []:
+            if not isinstance(bucket, dict):
+                continue
             dot = str(bucket.get("dot_path") or "")
             status = str(bucket.get("status") or "done")
             ids = _get_dot(queue_doc, dot)
@@ -102,7 +112,18 @@ def iter_queue_rows(queue_doc: dict[str, Any], entry: dict[str, Any]) -> Iterato
         return
     block = queue_doc.get(rows_path)
     if isinstance(block, list):
-        yield from block
+        for row in block:
+            if isinstance(row, dict):
+                yield row
+        return
+    # Fallbacks used by finish / hub queues
+    for key in ("drain", "items", "slices", "todos"):
+        alt = queue_doc.get(key)
+        if isinstance(alt, list):
+            for row in alt:
+                if isinstance(row, dict):
+                    yield row
+            return
 
 
 def iter_registry_rows(
@@ -116,6 +137,8 @@ def iter_registry_rows(
     registry = registry or load_queue_registry(repo=root)
     needle = (queue_filter or "").strip().lower()
     for entry in registry.get("queues") or []:
+        if not isinstance(entry, dict):
+            continue
         queue_id = str(entry.get("queue_id") or "")
         if needle and needle not in {queue_id.lower(), str(entry.get("path") or "").lower()}:
             continue

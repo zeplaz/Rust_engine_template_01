@@ -133,6 +133,7 @@ Queue: `phase4` → `$ref:tools/orchestrator/queues/post_drain_phase4_queue.json
 | `ops-crash-scan` | `ops_crash_scan_tool` | DCC crash + preview failures + data drops |
 | `ops-triage-refresh` | `ops_triage_refresh_tool` | Triage witness + Prometheus textfile |
 | `ops-crash-daemon` | — (CLI only) | Background Python daemon — not cron |
+| `ops-intelligence-scan` | `ops_intelligence_scan_tool` | **MCP-OPS-REPORT-001** — full OPS spine (index + integrity + dashboard + triage) → `mcp_ops_report_001_live.json` |
 
 **Dashboard:** `ops_dashboard_live.json` · **Triage:** `triage_live.json` · **Prometheus:** `debug_runs/agent_ops/prometheus/rust_engine_ops.prom`  
 **Grafana:** `grafana_triage_overview.json` · alerts `prometheus_alert_rules.yml` · daemon `ops_crash_daemon.ps1`  
@@ -173,6 +174,20 @@ Doc: [`docs/archive/2026-06-src-dev/plans/plan_mcp_productivity_chain_v1.md`](..
 | `ops-007-warehouse-pause-witness` | — | Refresh `debug_runs/ops_007_warehouse_production_pause_live.json` | **SHIPPED** |
 | `pilot-hardcode-lint` | — | Scan src/tests/examples for pilot id literals outside allowlist | **SHIPPED** |
 | `pilot-hardcode-lint-witness` | — | Refresh `debug_runs/pilot_hardcode_lint_live.json` (MCP-GUARD-001) | **SHIPPED** |
+| `bq-smoke-tier-audit` | `bq_smoke_tier_audit_tool` | BQ-SMOKE-AUDIT-001 — index tier counts + style-pack lod0/smoke selectable → `debug_runs/bq_smoke_tier_audit_live.json` | **SHIPPED** |
+| `bq-q2-screen [--no-bevy]` | `bq_q2_screen_tool` | BQ-Q2-SCREEN-001 — SILH assembly preview PNGs + "reads as a real building" rubric rows → `debug_runs/bq_q2_screen_001_live.json` | **SHIPPED** |
+| `building-look-v2-art [--skip-rebake] [--eye-pass\|--eye-fail]` | — | BUILDING-LOOK-V2-ART — rebake upright production kits + AFTER stills → `debug_runs/building_look_v2_art_live.json` | **SHIPPED** |
+| `aps-golden-rubric-scaffold` | `aps_golden_rubric_scaffold_tool` | APS-GOLDEN sheet scaffold — ≥12 `pending_operator` golden-seed rows; demotes pytest theater; `operator_pass` always false → `debug_runs/aps_golden_rubric_sheet_scaffold_live.json` | **SHIPPED** |
+| `bq-prod-promote-batch [--no-rebake] [--no-register]` | `bq_prod_promote_batch_tool` | BQ-PROD-PROMOTE-BATCH-001 — rebake+promote 6 focus lod0 slots → `debug_runs/bq_prod_promote_batch_001_live.json` | **SHIPPED** |
+| `bq-prod-defer-packs [--no-rebake] [--no-register] [--no-retire-smoke]` | `bq_prod_defer_packs_tool` | BQ-PROD-DEFER-PACKS-001 — promote 6 deferred CORE lod0 + archive smoke orphans → `debug_runs/bq_prod_defer_packs_001_live.json` | **SHIPPED** |
+| `bq-prod-noncore-promote [--no-rebake] [--no-register]` | `bq_prod_noncore_promote_tool` | BQ-PROD-NONCORE-PROMOTE-001 — promote 12 deferred-pack non-core lod0 → `debug_runs/bq_prod_noncore_promote_001_live.json` (`operator_pass=false`) | **SHIPPED** |
+| `bq-lod0-twin-prune [--no-register] [--no-retire]` | `bq_lod0_twin_prune_tool` | BQ-LOD0-TWIN-PRUNE-001 — archive unused lod0 index twins → `debug_runs/bq_lod0_twin_prune_001_live.json` (next residual = reinvent sibling, not Q3) | **SHIPPED** |
+| `bq-assemble-prefer-prod` | `bq_assemble_prefer_prod_tool` | BQ-ASSEMBLE-PREF-PROD-001 — assemble default `source_tier=production` + focus-pack resolve → `debug_runs/bq_assemble_prefer_prod_001_live.json` | **SHIPPED** |
+| `spine-render-001` | `spine_render_001_tool` | SPINE-RENDER-001 — blender-worker `render_variant` contract; ship+ortho rejected → `debug_runs/spine_render_001_live.json` | **SHIPPED** |
+| `validate-report render_variant <job.json>` | `validate_report` | Schema + role/ship rules for `render_variant_job_v1` | **SHIPPED** |
+| `spine-build-001` | `spine_build_001_tool` | SPINE-BUILD-001 — build DAG + per-node witness → `debug_runs/spine_build_001_live.json` | **SHIPPED** |
+| `apsr-mutation-regress-001` | `apsr_mutation_regress_001_tool` | APSR-MUTATION-REGRESS-001 — SuiteState mutation ceiling + LaneChanged wiring → `debug_runs/apsr_mutation_regress_001_live.json` | **SHIPPED** |
+| `validate-report build_graph <graph.json>` | `validate_report` | Schema + depends_on topo for `build_graph_v1` | **SHIPPED** |
 | `mcp-p2-run-event-001-witness` | — | Refresh `debug_runs/mcp_p2_run_event_001_live.json` | **SHIPPED** |
 | `mcp-p2-honest-bake-001-witness` | — | Refresh `debug_runs/mcp_p2_honest_bake_001_live.json` | **SHIPPED** |
 | `validate-report arch_build_grammar <preset.json>` | `validate_report` | ARCH-DNA preset schema | **SHIPPED** |
@@ -268,6 +283,7 @@ Doc: [`docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md`](../..
 | `validate-report effect_spec <path>` | `validate_effect_spec_report` | EffectSpec v1 + spawn_hook allOf (VSS-T4-003) | **SHIPPED** |
 | `effect-pack <spec.json>` | — | wgsl_pack hash copy → `assets/staging/<effect_id>/` | **SHIPPED** |
 | `effect-promote [spec.json] [--batch-id] [--phase pack\|promote\|full]` | `effect_promote` | Staging pack + promote → `assets/effects/registry/` | **SHIPPED** |
+| `effect-preview-capture [spec.json] [--batch-id]` | `effect_preview_capture` | Deterministic staging_pack_digest frames → `honest_gate=honest` | **SHIPPED** |
 | `artist-vfx-pipeline-witness` | — | Refresh `debug_runs/artist_vfx_pipeline_live.json` | **SHIPPED** |
 
 Schema: `tools/validators/schemas/validation_report_v1.schema.json` · Rule: `.cursor/rules/validation-first.mdc`

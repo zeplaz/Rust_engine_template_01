@@ -100,11 +100,8 @@ pub fn spawn_procedural_build_on_site_operational(
         commands.entity(site_entity).with_children(|parent| {
             for inst in instances.iter().filter(|i| !i.hidden) {
                 module_count += 1;
-                let mut local = Transform::from_translation(procedural_module_local_translation(
-                    inst.grid_x,
-                    inst.grid_y,
-                    inst.floor,
-                ));
+                let mut local = Transform::from_translation(inst.local_translation);
+                local.rotation = Quat::from_rotation_y(inst.yaw_y);
                 local.scale = scale;
                 if let Some(scene) = inst.scene.as_ref() {
                     parent.spawn((
@@ -173,7 +170,10 @@ fn procedural_pg2_spawn_self_check() -> Result<(), &'static str> {
     }
 
     let pos = procedural_module_local_translation(1, 2, 1);
-    if pos.y != 3.0 || pos.x != 1.0 || pos.z != 2.0 {
+    if (pos.y - 3.0).abs() > f32::EPSILON
+        || (pos.x - 4.0).abs() > f32::EPSILON
+        || (pos.z - 8.0).abs() > f32::EPSILON
+    {
         return Err("local_translation");
     }
 

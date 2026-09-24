@@ -18,7 +18,7 @@
 | **VR-13** | Weather particles invisible on tactical map | **Yes** | `weather_visual.rs` RTT layer | **Fixed:** `RenderLayers` on overlay + precip mesh children (layer 1) |
 | **VR-14** | Fire heat chunk markers missing | Partial | `gpu_tile_debug.rs` | **Fixed:** fire markers no longer gated on `CameraFocusDebug.enabled` |
 | **VR-15** | Fire test red box wrong region / no camera focus | Partial | `vfx_fire_test_highlight.rs` | **Fixed:** chunk origins + `map_camera_desired_fit_tile_aabb` |
-| **VR-16** | Sparks / GPU fire particles still not visible in play | **Yes** — operator verify | fire extract + raster dispatch | **Lib green** (`steward_spark_vfx_001`); **operator:** run `--test vfx` with display — code path fixed, witness refresh may be stale |
+| **VR-16** | Sparks / GPU fire particles still not visible in play | **Yes** — operator verify | fire extract + raster dispatch | **Root 2026-09-24:** VR-07 alpha redef relapsed → pipeline never compiled (rain OK). Shader + honesty gate fixed; **display verify:** `cargo run --release -- --test vfx` |
 | **VR-17** | Startup panic: `VisibilityRangePlugin` already added | **Yes** | `mig_a_adoption.rs` MIG-A14 | **Fixed 2026-07-04:** do not re-add plugin (DefaultPlugins includes it). Rebuild local `target/release` — stale exe looked like fix failed |
 
 **Operator verify command:**
@@ -42,7 +42,7 @@ cargo run -p proc_A_dine01 --release -- --test vfx
 | **VR-04** | `VT-5 spatial invariants failed` at inv≈108 (`fire_inst=2`) | **No** — not FULL_APP gate | `TRIAGE-VT-DEEP`, `TRIAGE-FIRE-EXTRACT` | **Coder triage:** bootstrap defer (`vt5_flicker_triage_live.json`); operator visual confirm → OPS-VT5-001 |
 | **VR-05** | `fire_inst` flicker (e.g. 22 → 0) while eval passes | No | `TRIAGE-FIRE-*` + fuel/old-growth | Sim/render contract; see § Fire |
 | **VR-06** | Visual test exits before inv 720 / no proof JSON | **Yes** if early crash | VR-01 | User logs show **pass** at 240/480/720+ after shader fix |
-| **VR-07** | `fire_particle_draw.wgsl`: `redefinition of alpha` (Naga) | **Yes** — fire raster pipeline fails | `fire_particle_draw.wgsl` | **Fixed 2026-05-23:** single `let alpha` expr |
+| **VR-07** | `fire_particle_draw.wgsl`: `redefinition of alpha` (Naga) | **Yes** — fire raster pipeline fails | `fire_particle_draw.wgsl` | **Re-fixed 2026-09-24:** single `let alpha`; raster panics on non-loading shader err (was silent no-op → rain-only look) |
 | **VR-08** | `fire_particle_raster`: globals binding not visible in FRAGMENT | **Yes** — wgpu panic + `STATUS_STACK_BUFFER_OVERRUN` | `gpu_fire_particle_raster.rs` | **Fixed 2026-05-23:** `ShaderStages::VERTEX_FRAGMENT` |
 | **VR-09** | Visual harness never writes JSON (fire rows 0, UX-06 done) | **Yes** — B1 proof stall | `stage5_full_app_harness.rs` | **Fixed 2026-05-23:** witness = `instanced_dispatch_ok` |
 

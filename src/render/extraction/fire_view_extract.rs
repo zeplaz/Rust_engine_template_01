@@ -645,7 +645,7 @@ mod tests {
             sim.instances.push(FireVisualGpuInstance::default());
         }
         let lod = FireChunkLodState::default();
-        let mut allowed: FxHashSet<ChunkCoord> = (0..40).map(|i| IVec2::new(i, 0)).collect();
+        let allowed: FxHashSet<ChunkCoord> = (0..40).map(|i| IVec2::new(i, 0)).collect();
         let mut strategic =
             build_frame_for_allowed(&sim, &lod, &allowed, WorldLodBand::Strategic);
         strategic

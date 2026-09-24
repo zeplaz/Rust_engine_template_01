@@ -165,6 +165,12 @@ pub fn stage_active_ghost_on_lmb_system(
     if !buttons.just_pressed(MouseButton::Left) {
         return;
     }
+    // Two-click: first LMB locks Preview→Adjust; only stage on a later place-click.
+    if ghost.placement_mode != super::build_state::BuildPlacementMode::Adjust
+        || ghost.locked_this_frame
+    {
+        return;
+    }
     let Some(origin) = ghost.origin else {
         return;
     };
@@ -278,6 +284,8 @@ pub fn draw_staged_placements_panel_egui_system(
         return Ok(());
     }
     if matches!(base.get(), BaseState::Simulation) {
+        // HUD-NAT-004 — tray owns staging; floating panel is editor-only (`STAGED_PANEL_FLOATING_SIM`).
+        debug_assert!(!STAGED_PANEL_FLOATING_SIM);
         return Ok(());
     }
     let ctx = contexts.ctx_mut()?;

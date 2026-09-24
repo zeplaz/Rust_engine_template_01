@@ -1,0 +1,150 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "COD_DEPLOYABLE_PLACE_001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
+    ],
+    "relative_path": "debug_runs/cod_deployable_pipeline_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "refresh_cod_deployable_pipeline_live_witness",
+    "written_at_epoch_secs": 1790272615
+  },
+  "ai_commit_gated": true,
+  "ai_commit_gated_count": 2,
+  "authority_owner": "commit_freight_arrivals_system + apply_pending_site_staging_debits_system",
+  "charter": "src/dev/design_mil_deployable_defense_v1.md",
+  "debit_applied_freight_dispatch": true,
+  "debt_not_taken": [
+    "Phase 9 munitions industry (DR-MIL-MUNITIONS-INDUSTRY)",
+    "mine combat (DR-MIL-MINE-COMBAT)",
+    "deployable art (DR-MIL-DEPLOYABLE-ART)"
+  ],
+  "designer_pass": "d9851e12-4830-4637-baac-6f5a8bb625f1",
+  "gate_id": "COD-DEPLOYABLE-PLACE-001",
+  "green": true,
+  "in_transit": true,
+  "in_transit_amounts": {
+    "dragon_teeth_unit": 1.0,
+    "mine_unit": 3.0
+  },
+  "kind_map_ok": true,
+  "logistics_slice_green": true,
+  "no_same_tick_teleport": true,
+  "pipeline_complete": true,
+  "place_blocked_no_stock": true,
+  "place_blocked_no_stock_count": 2,
+  "place_ok": true,
+  "place_ok_debit_count": 2,
+  "plan": "src/dev/plan_mil_deployable_defense_v1.md",
+  "program": "PLAN-MIL-DEPLOYABLE-DEFENSE-v1",
+  "recipe_slice_green": true,
+  "recipes": [
+    {
+      "cargo": "heavy_unit",
+      "credited": 1.0,
+      "domain": "Custom",
+      "id": "mfg_dragon_teeth_v1",
+      "output_buffer_tag": "dragon_teeth_unit"
+    },
+    {
+      "cargo": "light_unit",
+      "credited": 3.0,
+      "domain": "Custom",
+      "id": "mfg_mine_unit_v1",
+      "output_buffer_tag": "mine_unit"
+    }
+  ],
+  "recipes_registered": true,
+  "residual_next": {
+    "closed": [
+      {
+        "closed_by": "COD-TRENCH-MATERIAL-GATE-001",
+        "id": "DR-MIL-TRENCH-MATERIAL",
+        "witness": "debug_runs/cod_trench_material_gate_live.json"
+      }
+    ],
+    "deferred": [
+      "DR-MIL-MUNITIONS-INDUSTRY",
+      "DR-MIL-MINE-COMBAT",
+      "DR-MIL-DEPLOYABLE-ART"
+    ],
+    "do_not": [
+      "UI write SiteStagingStock",
+      "parallel place bus",
+      "ConstructionPlanQueue for defense",
+      "Phase 9 / mine combat / art"
+    ],
+    "id": null
+  },
+  "site_staging_stock_ui_writes": false,
+  "site_staging_stock_writer": "FreightDispatch (credit arrivals + debit pending)",
+  "staged": true,
+  "staged_amounts": {
+    "dragon_teeth_unit": 1.0,
+    "mine_unit": 3.0
+  },
+  "tick_credits_tagged_buffers": true,
+  "unblocks": [],
+  "wall_concrete_untouched": true
+}

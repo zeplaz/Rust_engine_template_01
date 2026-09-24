@@ -1050,7 +1050,7 @@ mod vt1_full_world_fire_extract_tests {
     use crate::gui::{
         build_representation_inputs, build_representation_result, LodInputs, LodZoneRegistry,
         RepresentationResult, ViewCameraState, ViewId, ViewInstance, ViewInteractionState,
-        ViewManager, ViewProjection, ViewRenderPolicy, ViewRenderTarget, VisualBudgetSettings,
+        ViewManager, ViewRenderPolicy, ViewRenderTarget, VisualBudgetSettings,
         VisualCadence, WorldLodBand, WorldLodMap, WorldLodPolicyEngine, WorldRepresentationFrame,
     };
     use crate::render::pipelines::light::RequestLocalLight;

@@ -9,8 +9,9 @@
   "kickoff_packet": "debug_runs/agent_ops/vss_001_kickoff_packet.yaml",
   "kickoff_verdict": "APPROVE",
   "wave_0_status": "closed",
-  "wave_1_parallel_ok": ["VSS-T3-001"],
-  "wave_1_next": ["VSS-T3-001"],
+  "wave_1_parallel_ok": ["VSS-T3-001", "GUI-ESC-001"],
+  "wave_1_next": ["OPERATOR-VERIFY", "G-PLAY-OPERATOR-01"],
+  "particles_gui_drain": "tools/orchestrator/queues/particles_gui_drain_queue.json",
   "slices": [
     {
       "id": "VSS-T5-001",
@@ -134,11 +135,12 @@
       "id": "VSS-T4-005",
       "track": "T4",
       "title": "APS browse/preview/assign panel",
-      "owner": "@designer",
-      "status": "ready",
-      "witness": "debug_runs/artist_vfx_pipeline_live.json",
+      "owner": "@coder-mcp",
+      "status": "done",
+      "completed": "2026-09-24",
+      "witness": "debug_runs/aps_effect_browser_live.json",
       "blocked_on": [],
-      "note": "G4 preview honest_gate; runtime emit-from-registry deferred here"
+      "note": "Effects tab wired · mount_effect_library · pytest green · pending.aps_panel cleared · residual G4 preview_witness_capture"
     },
     {
       "id": "VSS-T2-001",
@@ -186,26 +188,45 @@
       "track": "T3",
       "title": "Single ignition funnel via SimEffect",
       "owner": "@coder",
-      "status": "ready",
+      "status": "done",
+      "completed": "2026-09-23",
       "blocked_on": [],
       "witness": "debug_runs/sim_effect_fire_consumer_live.json",
-      "routing_ref": "dual_writer_candidates[1,2] drain.rs + ember_spot_ignition.rs"
+      "routing_ref": "dual_writer_candidates drain sole MessageWriter",
+      "note": "Spot diffusion enqueues SimEffectQueue; sole EmberSpotIgnitionEvent writer = drain; ignition_single_funnel=true"
+    },
+    {
+      "id": "VSS-T4-005b",
+      "track": "T4",
+      "title": "Runtime emit-from-registry into fire_vfx spine",
+      "owner": "@coder",
+      "status": "done",
+      "completed": "2026-09-23",
+      "blocked_on": [],
+      "witness": "debug_runs/artist_vfx_pipeline_live.json",
+      "note": "append_effect_consumable_registry_particles → WorldFireParticleFrame; lib green"
     },
     {
       "id": "VSS-T3-003",
       "track": "T3",
       "title": "Save round-trip fire state hash",
       "owner": "@coder",
-      "status": "blocked",
-      "blocked_on": ["VSS-T3-001"]
+      "status": "done",
+      "completed": "2026-09-23",
+      "blocked_on": [],
+      "witness": "debug_runs/fire_save_roundtrip_live.json",
+      "note": "chunk_fire_state.ron overlay + hash RT; exit_predicates.fire_save_roundtrip_hash"
     },
     {
       "id": "VSS-T3-004",
       "track": "T3",
       "title": "Effects DEBT stub cleanup",
       "owner": "@cleanup-intelligence",
-      "status": "blocked",
-      "blocked_on": ["VSS-T3-001"]
+      "status": "done",
+      "completed": "2026-09-23",
+      "blocked_on": [],
+      "witness": "debug_runs/sim_effect_fire_consumer_live.json",
+      "note": "SMOKE_VOLUME_WGSL const pruned; stubs already off schedule; bridge/WeatherVisual/gpu_particles KEEP"
     }
   ],
   "t3_gate_witness": "debug_runs/sim_effect_fire_consumer_live.json",

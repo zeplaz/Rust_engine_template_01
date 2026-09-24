@@ -14,7 +14,8 @@ use crate::render::{
 use crate::render::WaterSurfaceVisualCatalog;
 
 use super::log_e01_witness::{
-    patch_log_e01_visual_confirm_witnesses, tactical_vfx_witness_json, LogE01CaptureLane,
+    patch_log_e01_visual_confirm_witnesses, tactical_vfx_witness_json,
+    tactical_vfx_witness_json_with_draw, LogE01CaptureLane,
 };
 use super::proof_reads::{
     map_view_consumer_payload, minimap_source_label_for_proof, stage5_finish_todo_board_snapshot,
@@ -493,13 +494,14 @@ pub(super) fn build_stage5_full_app_live_proof_payload(
             })
         }),
         "water_surface": water_surface,
-        "tactical_vfx_witness": tactical_vfx_witness_json(
+        "tactical_vfx_witness": tactical_vfx_witness_json_with_draw(
             &tactical_vfx,
             reads
                 .rtt_overlay_host
                 .as_ref()
                 .map(|s| s.host_present)
                 .unwrap_or(false),
+            reads.fire_draw_diag.as_deref(),
         ),
         "tactical_vector_overlay": reads.tactical_vector.as_ref().map(|s| {
             crate::render::tactical_vector_overlay_witness_json(s)

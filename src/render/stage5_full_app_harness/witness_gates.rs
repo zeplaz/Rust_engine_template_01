@@ -222,11 +222,16 @@ impl TacticalVfxWitnessGates {
 
     #[must_use]
     pub(crate) fn all_green(&self) -> bool {
-        self.all_green_for_visual_proof(false)
+        // Lib / non-visual: host presence is spawn-policy expectation (see tactical_vfx_witness_json).
+        self.all_green_for_visual_proof(false, true)
     }
 
     #[must_use]
-    pub(crate) fn all_green_for_visual_proof(&self, require_fire_rows: bool) -> bool {
+    pub(crate) fn all_green_for_visual_proof(
+        &self,
+        require_fire_rows: bool,
+        rtt_core2d_overlay_host_wired: bool,
+    ) -> bool {
         let fire_tactical_ok = if require_fire_rows {
             self.fire_tactical_zoom && self.fire_spark_rows_gt_0
         } else {
@@ -239,7 +244,9 @@ impl TacticalVfxWitnessGates {
                 && self.water_particle_river_streaks_when_rivers
                 && self.water_particle_strategic_not_culled);
         let water_ok = self.water_strategic_gates_green() && water_live_ok;
-        fire_ok && water_ok
+        // Sparks emit into WorldFireParticleFrame but Core2d raster requires TileDebugRenderHost.
+        let host_ok = !self.fire_spark_rows_gt_0 || rtt_core2d_overlay_host_wired;
+        fire_ok && water_ok && host_ok
     }
 }
 

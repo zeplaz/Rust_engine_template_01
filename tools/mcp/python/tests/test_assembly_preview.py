@@ -58,6 +58,30 @@ def test_preview_assembly_cli_witness_no_browser():
     assert body.get("material_profiles_sample")
 
 
+def test_bevy_worker_command_prefers_newest_mtime(tmp_path, monkeypatch):
+    """Stale release must not mask a freshly built debug worker (blank-frame fix)."""
+    root = tmp_path
+    release = root / "target" / "release" / "bevy_preview_worker.exe"
+    debug = root / "target" / "debug" / "bevy_preview_worker.exe"
+    release.parent.mkdir(parents=True)
+    debug.parent.mkdir(parents=True)
+    release.write_bytes(b"old")
+    debug.write_bytes(b"new")
+    # Make debug newer
+    import os
+    import time
+
+    older = time.time() - 86_400
+    os.utime(release, (older, older))
+    os.utime(debug, None)
+    job = root / "job.json"
+    job.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(assembly_preview, "repo_root", lambda: root)
+    cmd = assembly_preview._bevy_worker_command(job, root)
+    assert cmd[0] == str(debug)
+    assert cmd[1] == "preview-assembly"
+
+
 def test_bevy_preview_worker_smoke_optional():
     """APS-PREVIEW-004 — run worker when binary exists (GPU required)."""
     root = repo_root()

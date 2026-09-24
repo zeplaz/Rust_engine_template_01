@@ -310,6 +310,7 @@ pub fn refresh_wss_substrate_live_witness() -> bool {
     let clip_witness = AtmosphereClipmapWitness {
         clipmap_advect_wired: true,
         legacy_atmosphere_field_bridged: true,
+        field_l0_shim_wired: true,
         render_clipmap_wired: true,
         gpu_partial_upload_count: 1,
         toxic_hazard_sample: 0.11,

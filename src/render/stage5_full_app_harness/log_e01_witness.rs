@@ -456,7 +456,9 @@ pub fn refresh_log_e01_and_tactical_vfx_stage5_live_witness() -> bool {
         Some(&water),
         Some(&proj),
     );
-    if graph.logistics.active_rows == 0 || !gates.all_green_for_visual_proof(true) {
+    if graph.logistics.active_rows == 0
+        || !gates.all_green_for_visual_proof(true, crate::gui::rtt_core2d_overlay_hosts_enabled())
+    {
         return false;
     }
 
@@ -545,6 +547,28 @@ pub(super) fn tactical_vfx_witness_json(
     gates: &TacticalVfxWitnessGates,
     rtt_core2d_overlay_host_wired: bool,
 ) -> serde_json::Value {
+    tactical_vfx_witness_json_with_draw(gates, rtt_core2d_overlay_host_wired, None)
+}
+
+/// Live proof path — include [`FireDrawDiagnostics`] so EMIT≠DRAW cannot green without draw_ok.
+pub(super) fn tactical_vfx_witness_json_with_draw(
+    gates: &TacticalVfxWitnessGates,
+    rtt_core2d_overlay_host_wired: bool,
+    fire_draw: Option<&crate::render::FireDrawDiagnostics>,
+) -> serde_json::Value {
+    let draw_ok = fire_draw.map(|d| d.draw_ok).unwrap_or(0);
+    let spark_rows_gt_0 = gates.fire_spark_rows_gt_0;
+    let particles_rendered =
+        rtt_core2d_overlay_host_wired && spark_rows_gt_0 && draw_ok > 0;
+    // Rows without draw diagnostics = lib fixture (host policy only). Live must render.
+    let product_vfx_claim = spark_rows_gt_0 && fire_draw.is_some();
+    let contract_green =
+        gates.all_green_for_visual_proof(false, rtt_core2d_overlay_host_wired);
+    let all_green = if product_vfx_claim {
+        contract_green && particles_rendered
+    } else {
+        contract_green
+    };
     serde_json::json!({
         "tactical_zoom_alpha_min": TACTICAL_VFX_ZOOM_ALPHA_MIN,
         "proof_gate_enabled": tactical_vfx_proof_enabled(),
@@ -572,8 +596,15 @@ pub(super) fn tactical_vfx_witness_json(
         "water_w2_foam_001_green": gates.water_w2_foam_001_green,
         "water_strategic_gates_green": gates.water_strategic_gates_green(),
         "water_witness_rollup_green": gates.water_witness_rollup_green(),
-        "all_green": gates.all_green(),
-        // ES-1-R-001: ECS host presence — never the spawn-time env default alone.
+        "all_green": all_green,
+        "all_green_lib": gates.all_green(),
         "rtt_core2d_overlay_host_wired": rtt_core2d_overlay_host_wired,
+        "fire_draw_ok": draw_ok,
+        "fire_draw_policy_skip": fire_draw.map(|d| d.policy_skip).unwrap_or(0),
+        "fire_draw_cap_zero_skip": fire_draw.map(|d| d.cap_zero_skip).unwrap_or(0),
+        "fire_draw_identity_skip": fire_draw.map(|d| d.identity_skip).unwrap_or(0),
+        "particles_rendered": particles_rendered,
+        "product_vfx_claim": product_vfx_claim,
+        "chrome_lod_note": "yellow/green edge quads are CameraFocusDebug / tile-debug — not sparks",
     })
 }

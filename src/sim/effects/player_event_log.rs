@@ -258,6 +258,17 @@ pub fn clear_player_event_crit_unread(log: &mut PlayerEventLog) {
     log.unread_crit = 0;
 }
 
+/// Push a row from non-drain producers (e.g. nuclear SCRAM). Caps + unread_crit for Crit.
+pub fn push_player_event_row(log: &mut PlayerEventLog, row: PlayerEventRow) {
+    if row.severity == PlayerEventSeverity::Crit && row.dispatch_ok {
+        log.unread_crit = log.unread_crit.saturating_add(1);
+    }
+    log.rows.push_back(row);
+    while log.rows.len() > PLAYER_EVENT_LOG_CAP {
+        log.rows.pop_front();
+    }
+}
+
 pub fn project_player_event_log_from_drain(
     tick: u64,
     drained: &[(&SimEffectEvent, u64, bool)],

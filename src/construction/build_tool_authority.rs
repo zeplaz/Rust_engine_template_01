@@ -73,12 +73,86 @@ pub enum RailType {
     Standard,
 }
 
+/// Military Defense catalog place kinds (**COD-MIL-DEFENSE-PLACE-001** + deployables).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DefenseKind {
+    /// Strip fortification → [`SiteArchetype::DefensiveWall`] (**COD-WALL-ARCHETYPE-001**).
+    DefensiveWall,
+    TrenchLine,
+    Bunker,
+    /// Heavy manufactured prefab → [`SiteArchetype::DragonTeeth`] (**COD-DEPLOYABLE-PLACE-001**).
+    DragonTeeth,
+    /// Light manufactured prefab → [`SiteArchetype::Minefield`] (**COD-DEPLOYABLE-PLACE-001**).
+    Minefield,
+}
+
+impl DefenseKind {
+    #[must_use]
+    pub const fn site_archetype(self) -> SiteArchetype {
+        match self {
+            Self::DefensiveWall => SiteArchetype::DefensiveWall,
+            Self::TrenchLine => SiteArchetype::TrenchLine,
+            Self::Bunker => SiteArchetype::BunkerComplex,
+            Self::DragonTeeth => SiteArchetype::DragonTeeth,
+            Self::Minefield => SiteArchetype::Minefield,
+        }
+    }
+
+    #[must_use]
+    pub const fn footprint(self) -> crate::strategic::FootprintTiles {
+        use crate::strategic::FootprintTiles;
+        match self {
+            Self::DefensiveWall => FootprintTiles {
+                width: 4,
+                depth: 1,
+            },
+            Self::TrenchLine => FootprintTiles {
+                width: 6,
+                depth: 1,
+            },
+            Self::Bunker => FootprintTiles {
+                width: 2,
+                depth: 2,
+            },
+            // Designer charter: strip 3×1 / field 3×3.
+            Self::DragonTeeth => FootprintTiles {
+                width: 3,
+                depth: 1,
+            },
+            Self::Minefield => FootprintTiles {
+                width: 3,
+                depth: 3,
+            },
+        }
+    }
+
+    /// Player-facing row label (matches locked HUD copy / operational name).
+    #[must_use]
+    pub const fn player_label(self) -> &'static str {
+        match self {
+            Self::DefensiveWall => "Defensive wall",
+            Self::TrenchLine => "Trench line",
+            Self::Bunker => "Bunker",
+            Self::DragonTeeth => "Dragon's teeth",
+            Self::Minefield => "Minefield",
+        }
+    }
+
+    /// Manufactured-prefab deployables (staging-gated); walls/trench/bunker are not.
+    #[must_use]
+    pub const fn is_manufactured_deployable(self) -> bool {
+        matches!(self, Self::DragonTeeth | Self::Minefield)
+    }
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum BuildTool {
     #[default]
     None,
     Zone(ZoneTool),
     Building(BuildingArchetypeId),
+    /// Walls / trenches / bunkers — shares building two-click FSM.
+    Defense(DefenseKind),
     Road(RoadType),
     Rail(RailType),
     PowerLine(VoltageClass),
@@ -92,11 +166,18 @@ impl BuildTool {
             Self::None => "none",
             Self::Zone(_) => "zone",
             Self::Building(_) => "building",
+            Self::Defense(_) => "defense",
             Self::Road(_) => "road",
             Self::Rail(_) => "rail",
             Self::PowerLine(_) => "power_line",
             Self::Demolish => "demolish",
         }
+    }
+
+    /// Preview→Adjust→Place (buildings + defense).
+    #[must_use]
+    pub const fn uses_two_click_place(self) -> bool {
+        matches!(self, Self::Building(_) | Self::Defense(_))
     }
 
     #[must_use]
@@ -112,10 +193,10 @@ impl BuildTool {
                     ToolContext::Utilities
                 }
             },
+            Self::Defense(_) | Self::Demolish => ToolContext::Military,
             Self::Road(_) => ToolContext::Roads,
             Self::Rail(_) => ToolContext::Rail,
             Self::PowerLine(_) => ToolContext::Utilities,
-            Self::Demolish => ToolContext::Military,
         }
     }
 
@@ -126,7 +207,8 @@ impl BuildTool {
             ToolContext::Roads => Self::Road(RoadType::Street),
             ToolContext::Rail => Self::Rail(RailType::Standard),
             ToolContext::Utilities => Self::PowerLine(VoltageClass::Medium),
-            ToolContext::Military => Self::Demolish,
+            // Military opens Defense picker — do not auto-arm Demolish.
+            ToolContext::Military => Self::None,
             ToolContext::Industry => Self::Building(BuildingArchetypeId::Factory),
             ToolContext::Ecology => Self::Zone(ZoneTool::MixedUse),
             ToolContext::Civil => Self::Zone(ZoneTool::ResidentialLow),
@@ -205,7 +287,13 @@ pub fn apply_active_build_tool_to_strip(
     if !tool.is_changed() {
         return;
     }
-    strip.active = tool.tool.to_tool_context();
+    match tool.tool {
+        // Picker-only Military: strip stays Military while tool is None until rail deselect/Esc.
+        BuildTool::None if strip.active == ToolContext::Military => {}
+        other => {
+            strip.active = other.to_tool_context();
+        }
+    }
 }
 
 /// Shift+LMB is only meaningful for zone paint and road path finalize — not building queue overlap.
@@ -256,5 +344,27 @@ mod tests {
         )));
         assert!(shift_queue_building_removed_witness_green());
         // Enter→commit is measured in build_interaction (MinimalPlugins self-check), not here.
+    }
+
+    #[test]
+    fn military_rail_does_not_default_to_demolish() {
+        assert_eq!(
+            BuildTool::from_tool_context(ToolContext::Military),
+            BuildTool::None
+        );
+        assert!(!BuildTool::from_tool_context(ToolContext::Military)
+            .uses_two_click_place());
+        let wall = DefenseKind::DefensiveWall;
+        assert_eq!(wall.site_archetype(), SiteArchetype::DefensiveWall);
+        assert_eq!(wall.player_label(), "Defensive wall");
+        assert!(BuildTool::Defense(wall).uses_two_click_place());
+        assert_eq!(
+            BuildTool::Defense(DefenseKind::TrenchLine).to_tool_context(),
+            ToolContext::Military
+        );
+        assert_eq!(
+            BuildTool::Demolish.to_tool_context(),
+            ToolContext::Military
+        );
     }
 }

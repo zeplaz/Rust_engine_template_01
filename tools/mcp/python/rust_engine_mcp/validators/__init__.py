@@ -205,4 +205,69 @@ def run_validator(
             queue_filter=target or None,
             compression_level=compression_level,
         )
+    if name == "render_variant":
+        if not target:
+            raise ValueError("target path required for render_variant (render_variant_job JSON)")
+        from rust_engine_mcp.spine_render_contract import validate_render_variant_path
+
+        return validate_render_variant_path(_resolve(target), compression_level=compression_level)
+    if name == "build_graph":
+        if not target:
+            raise ValueError("target path required for build_graph (build_graph_v1 JSON)")
+        from rust_engine_mcp.spine_build_graph import validate_build_graph_path
+        from rust_engine_mcp.validators.report import ValidationIssue, ValidationReport
+
+        try:
+            classified = validate_build_graph_path(_resolve(target))
+            ok = bool(classified.get("ok"))
+            errs = classified.get("errors") or []
+            issues = [
+                ValidationIssue(
+                    kind="BuildGraphContract",
+                    severity="error",
+                    file=str(_resolve(target)),
+                    hint=e,
+                    signature="build_graph_contract",
+                )
+                for e in errs
+            ]
+            return ValidationReport(
+                validator="build_graph",  # type: ignore[arg-type]
+                status="passed" if ok else "failed",
+                compression_level=compression_level,
+                summary=(
+                    f"build_graph: {classified.get('topo_order')}"
+                    if ok
+                    else f"build_graph blocked: {errs[0] if errs else 'probe failed'}"
+                ),
+                error_count=len(issues),
+                warning_count=0,
+                errors=issues,
+            ).compress(compression_level)
+        except Exception as exc:  # noqa: BLE001
+            return ValidationReport(
+                validator="build_graph",  # type: ignore[arg-type]
+                status="failed",
+                compression_level=compression_level,
+                summary=f"build_graph load/validate failed: {exc}",
+                error_count=1,
+                warning_count=0,
+                errors=[
+                    ValidationIssue(
+                        kind="BuildGraphLoadError",
+                        severity="error",
+                        file=str(_resolve(target) or ""),
+                        hint=str(exc),
+                        signature="build_graph_load_error",
+                    )
+                ],
+            ).compress(compression_level)
+    if name == "tile_promotion_honest":
+        if not target:
+            raise ValueError("target path required for tile_promotion_honest (tile_batch JSON)")
+        from rust_engine_mcp.tile_promotion_honest import validate_tile_promotion_honest_path
+
+        return validate_tile_promotion_honest_path(
+            _resolve(target), ship=True, honest_bake=True, compression_level=compression_level
+        )
     raise ValueError(f"unknown validator: {name}")
