@@ -1,40 +1,611 @@
-{
-  "schema": "runtime_witness_exceptions_v1",
-  "policy": "src/dev/dev_artifact_containment_policy_v1.md",
-  "hard_fail_after_slice": "D",
-  "hard_fail_ci_active": true,
-  "hard_fail_ci_witness": ".github/workflows/ci.yml + tools/orchestrator/ci/run.ps1",
-  "contain_d_001_retired": [
-    "src/io/streaming/wave_c_live_proof.rs",
-    "src/io/save/wave_s_live_proof.rs",
-    "src/render/stage6_live_proof.rs",
-    "src/render/view_runtime/live_proof.rs",
-    "src/render/minimap_compositor/live_proof.rs"
-  ],
-  "allowed_shim_paths": [
-    "src/construction/live_proof.rs",
-    "src/economy/activation/live_proof.rs",
-    "src/economy/logistics/live_proof.rs",
-    "src/systems/fire/live_proof.rs",
-    "src/gui/editor/world_preview/wave_p_live_proof.rs",
-    "src/dev/stage7_behavioral_live_proof.rs",
-    "src/dev/stage7_play_live_proof.rs",
-    "src/substrate/live_proof.rs"
-  ],
-  "migrated_writers": [
-    "src/dev/runtime_witness/wave_c.rs",
-    "src/dev/runtime_witness/wave_s.rs",
-    "src/dev/runtime_witness/stage6.rs",
-    "src/dev/runtime_witness/view_runtime.rs",
-    "src/dev/runtime_witness/minimap.rs",
-    "src/dev/runtime_witness/construction.rs",
-    "src/dev/runtime_witness/economy.rs",
-    "src/dev/runtime_witness/fire.rs",
-    "src/dev/runtime_witness/wave_p.rs",
-    "src/dev/runtime_witness/stage7_behavioral.rs",
-    "src/dev/runtime_witness/stage7_play.rs",
-    "src/dev/runtime_witness/wss_substrate.rs"
-  ],
-  "shim_expiry": {}
-}
-
+{
+  "schema": "runtime_witness_exceptions_v1",
+  "policy": "src/dev/dev_artifact_containment_policy_v1.md",
+  "hard_fail_after_slice": "D",
+  "hard_fail_ci_active": true,
+  "hard_fail_ci_witness": ".github/workflows/ci.yml + tools/orchestrator/ci/run.ps1",
+  "contain_d_001_retired": [
+    "src/io/streaming/wave_c_live_proof.rs",
+    "src/io/save/wave_s_live_proof.rs",
+    "src/render/stage6_live_proof.rs",
+    "src/render/view_runtime/live_proof.rs",
+    "src/render/minimap_compositor/live_proof.rs"
+  ],
+  "allowed_shim_paths": [
+    "src/construction/live_proof.rs",
+    "src/dev/aps_bevy_qc_hud_live_proof.rs",
+    "src/dev/aps_dna_consumer_live_proof.rs",
+    "src/dev/artist_vfx_pipeline_live_proof.rs",
+    "src/dev/build_read_debug_live_proof.rs",
+    "src/dev/build_read_grammar_v003_live_proof.rs",
+    "src/dev/build_read_visual_001_live_proof.rs",
+    "src/dev/build_read_world_002_live_proof.rs",
+    "src/dev/city_c6_bsn_live_proof.rs",
+    "src/dev/city_g0_wit_001_live_proof.rs",
+    "src/dev/city_g1_c1_001_live_proof.rs",
+    "src/dev/city_g1_c2_001_live_proof.rs",
+    "src/dev/city_g1_c3_001_live_proof.rs",
+    "src/dev/city_g1_c4_001_live_proof.rs",
+    "src/dev/city_g2_c5_001_live_proof.rs",
+    "src/dev/city_g3_rollout_live_proof.rs",
+    "src/dev/city_p1_001_live_proof.rs",
+    "src/dev/city_p2_001_live_proof.rs",
+    "src/dev/cod_deployable_recipe_live_proof.rs",
+    "src/dev/coder_a_parallel_wave_live_proof.rs",
+    "src/dev/coder_b_e5_resolver_gate_live_proof.rs",
+    "src/dev/coder_b_parallel_wave_live_proof.rs",
+    "src/dev/construction_placement_live_proof.rs",
+    "src/dev/des_build_read_hud_001_live_proof.rs",
+    "src/dev/des_build_read_hud_002_live_proof.rs",
+    "src/dev/design_build_toolbox_hud_live_proof.rs",
+    "src/dev/design_event_log_ui_live_proof.rs",
+    "src/dev/design_fire_play_visibility_live_proof.rs",
+    "src/dev/design_minimap_widget_live_proof.rs",
+    "src/dev/econ_og_save_live_proof.rs",
+    "src/dev/effects_system_es0_live_proof.rs",
+    "src/dev/effects_system_es4_live_proof.rs",
+    "src/dev/effects_system_es5_live_proof.rs",
+    "src/dev/effects_system_es6_live_proof.rs",
+    "src/dev/effects_system_es7_live_proof.rs",
+    "src/dev/facility_binding_read_live_proof.rs",
+    "src/dev/fire_f2_readiness_live_proof.rs",
+    "src/dev/grammar_ship_close_live_proof.rs",
+    "src/dev/ind_play_witness_live_proof.rs",
+    "src/dev/industrial_i2_03_register_node_live_proof.rs",
+    "src/dev/industrial_i3_02_grid_overload_live_proof.rs",
+    "src/dev/infra_e0_profile_catalog_live_proof.rs",
+    "src/dev/infra_lane_close_live_proof.rs",
+    "src/dev/infra_overlay_live_proof.rs",
+    "src/dev/infra_utility_overlay_live_proof.rs",
+    "src/dev/landscape_grammar_burn_live_proof.rs",
+    "src/dev/landscape_grammar_fire_harvest_wire_live_proof.rs",
+    "src/dev/landscape_grammar_live_proof.rs",
+    "src/dev/landscape_grammar_visual_smoke_live_proof.rs",
+    "src/dev/landscape_map_stamp_contract_live_proof.rs",
+    "src/dev/landscape_map_stamp_runtime_live_proof.rs",
+    "src/dev/map_zoom_coherence_live_proof.rs",
+    "src/dev/mfg_03_domain_wire_live_proof.rs",
+    "src/dev/minimap_fire_veg_coherence_live_proof.rs",
+    "src/dev/minimap_topology_legend_live_proof.rs",
+    "src/dev/nav_agent_routing_live_proof.rs",
+    "src/dev/nuclear_failure_p2_live_proof.rs",
+    "src/dev/nuclear_failure_p3_live_proof.rs",
+    "src/dev/nuclear_loop_scram_live_proof.rs",
+    "src/dev/pilot_catalog_parity_live_proof.rs",
+    "src/dev/power_grid_construction_ux_close_live_proof.rs",
+    "src/dev/power_grid_track_bd_live_proof.rs",
+    "src/dev/power_grid_track_c_live_proof.rs",
+    "src/dev/power_line_draw_live_proof.rs",
+    "src/dev/power_map_overlay_live_proof.rs",
+    "src/dev/power_node_hover_live_proof.rs",
+    "src/dev/product_fire_vfx_live_proof.rs",
+    "src/dev/product_verify_live_proof.rs",
+    "src/dev/production_sim_hud_native_live_proof.rs",
+    "src/dev/sim_effect_spine_live_proof.rs",
+    "src/dev/sim_hud_cursor_live_proof.rs",
+    "src/dev/sim_hud_esc_cascade_live_proof.rs",
+    "src/dev/sim_hud_l5_polish_live_proof.rs",
+    "src/dev/sim_hud_ops_v2_live_proof.rs",
+    "src/dev/sim_hud_phase2_close_live_proof.rs",
+    "src/dev/sim_hud_play01_live_proof.rs",
+    "src/dev/sim_hud_power_icons_live_proof.rs",
+    "src/dev/sim_hud_professional_polish_live_proof.rs",
+    "src/dev/sim_hud_slices_live_proof.rs",
+    "src/dev/spectator_parity_live_proof.rs",
+    "src/dev/stage7_behavioral_live_proof.rs",
+    "src/dev/stage7_play_live_proof.rs",
+    "src/dev/terrain_blob_diag_live_proof.rs",
+    "src/dev/trade_flow_geography_live_proof.rs",
+    "src/dev/trade_sc_runtime_live_proof.rs",
+    "src/dev/transport_network_live_proof.rs",
+    "src/dev/triage_perf_vfx_fix_live_proof.rs",
+    "src/dev/utility_network_live_proof.rs",
+    "src/dev/veg_diag_extract_panel_live_proof.rs",
+    "src/dev/veg_resolver_parity_live_proof.rs",
+    "src/dev/veg_ship_close_live_proof.rs",
+    "src/dev/vegetation_snapshot_roundtrip_live_proof.rs",
+    "src/dev/vegetation_variant_catalog_load_live_proof.rs",
+    "src/dev/vfx_zoom_lock_live_proof.rs",
+    "src/dev/vt5_flicker_triage_live_proof.rs",
+    "src/dev/weather_sim_live_proof.rs",
+    "src/dev/wit_hon_phase6_reconcile_live_proof.rs",
+    "src/dev/world_scale_contract_live_proof.rs",
+    "src/economy/activation/live_proof.rs",
+    "src/economy/logistics/live_proof.rs",
+    "src/gui/editor/world_preview/wave_p_live_proof.rs",
+    "src/substrate/live_proof.rs",
+    "src/systems/fire/live_proof.rs"
+  ],
+  "migrated_writers": [
+    "src/dev/runtime_witness/wave_c.rs",
+    "src/dev/runtime_witness/wave_s.rs",
+    "src/dev/runtime_witness/stage6.rs",
+    "src/dev/runtime_witness/view_runtime.rs",
+    "src/dev/runtime_witness/minimap.rs",
+    "src/dev/runtime_witness/construction.rs",
+    "src/dev/runtime_witness/economy.rs",
+    "src/dev/runtime_witness/fire.rs",
+    "src/dev/runtime_witness/wave_p.rs",
+    "src/dev/runtime_witness/stage7_behavioral.rs",
+    "src/dev/runtime_witness/stage7_play.rs",
+    "src/dev/runtime_witness/wss_substrate.rs"
+  ],
+  "shim_expiry": {
+    "src/dev/aps_bevy_qc_hud_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/aps_dna_consumer_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/artist_vfx_pipeline_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/build_read_debug_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/build_read_grammar_v003_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/build_read_visual_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/build_read_world_002_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_c6_bsn_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_g0_wit_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_g1_c1_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_g1_c2_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_g1_c3_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_g1_c4_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_g2_c5_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_g3_rollout_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_p1_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/city_p2_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/cod_deployable_recipe_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/coder_a_parallel_wave_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/coder_b_e5_resolver_gate_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/coder_b_parallel_wave_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/construction_placement_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/des_build_read_hud_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/des_build_read_hud_002_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/design_build_toolbox_hud_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/design_event_log_ui_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/design_fire_play_visibility_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/design_minimap_widget_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/econ_og_save_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/effects_system_es0_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/effects_system_es4_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/effects_system_es5_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/effects_system_es6_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/effects_system_es7_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/facility_binding_read_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/fire_f2_readiness_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/grammar_ship_close_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/ind_play_witness_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/industrial_i2_03_register_node_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/industrial_i3_02_grid_overload_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/infra_e0_profile_catalog_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/infra_lane_close_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/infra_overlay_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/infra_utility_overlay_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/landscape_grammar_burn_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/landscape_grammar_fire_harvest_wire_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/landscape_grammar_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/landscape_grammar_visual_smoke_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/landscape_map_stamp_contract_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/landscape_map_stamp_runtime_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/map_zoom_coherence_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/mfg_03_domain_wire_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/minimap_fire_veg_coherence_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/minimap_topology_legend_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/nav_agent_routing_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/nuclear_failure_p2_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/nuclear_failure_p3_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/nuclear_loop_scram_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/pilot_catalog_parity_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/power_grid_construction_ux_close_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/power_grid_track_bd_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/power_grid_track_c_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/power_line_draw_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/power_map_overlay_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/power_node_hover_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/product_fire_vfx_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/product_verify_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/production_sim_hud_native_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_effect_spine_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_cursor_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_esc_cascade_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_l5_polish_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_ops_v2_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_phase2_close_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_play01_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_power_icons_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_professional_polish_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/sim_hud_slices_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/spectator_parity_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/terrain_blob_diag_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/trade_flow_geography_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/trade_sc_runtime_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/transport_network_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/triage_perf_vfx_fix_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/utility_network_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/veg_diag_extract_panel_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/veg_resolver_parity_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/veg_ship_close_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/vegetation_snapshot_roundtrip_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/vegetation_variant_catalog_load_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/vfx_zoom_lock_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/vt5_flicker_triage_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/weather_sim_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/wit_hon_phase6_reconcile_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/world_scale_contract_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_908f9af8"
+    }
+  },
+  "notes": "CI HardFail (DEV-CONTAIN-HARDFAIL-CI-001) requires every *live_proof*.rs outside runtime_witness to be listed here until migrated. Domain shims remain preferred; src/dev backlog is timed."
+}
