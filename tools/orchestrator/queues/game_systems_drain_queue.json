@@ -1,0 +1,543 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-GAME-SYSTEMS-DRAIN-001",
+    "date": "2026-09-23",
+    "seeded_by": "plan-orchestrator",
+    "plan_docs": [
+      "src/dev/development_plan_index.md",
+      "src/dev/plan_finish_execution_backlog_v1.md",
+      "src/dev/industrial_activation_phase_todos.md",
+      "src/dev/logistics_throughput_phase_todos.md",
+      "src/dev/plan_nuclear_power_failure_meltdown_v1.md",
+      "src/dev/plan_effects_system_architecture_v1.md",
+      "src/dev/plan_infrastructure_world_layers_exec_001_v1.md"
+    ],
+    "rule": "Trust debug_runs/*_live.json over queue status. Non-HUD gameplay only. Pick order: manufacturing \u2192 connections \u2192 logistics \u2192 AI \u2192 trade \u2192 systems.",
+    "handoff": "tools/orchestrator/queues/HANDOFF.md",
+    "regression": "validate-report cargo --cached; then lib tests scoped to slice",
+    "wit_hon": "validate-report witness_honesty <witness> --compress 3"
+  },
+  "pick_order": [],
+  "domains": [
+    "manufacturing",
+    "connections",
+    "logistics",
+    "ai_settlement",
+    "trade_distribution",
+    "systems"
+  ],
+  "drain": [
+    {
+      "seq": 1,
+      "domain": "systems",
+      "id": "ES-6-4-CLIPMAP-SAVE",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "Atmosphere clipmap RON overlay export/hydrate + live witness + ES6 residual close",
+      "code_paths": [
+        "src/io/save/atmosphere_clipmap_overlay.rs",
+        "src/dev/effects_system_es6_live_proof.rs",
+        "src/io/save/pipeline.rs"
+      ],
+      "witness": "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "exit_predicate": "roundtrip_green==true AND es_6_4_clipmap_snapshot==true in effects_system_es6_live.json",
+      "parallel_ok": [
+        "INDUSTRIAL-I2-03",
+        "LOG-A-01"
+      ],
+      "blocks": [
+        "ES-6-2-FIELD-SHIM"
+      ],
+      "completed": "2026-09-23",
+      "note": "Bundle write/hydrate + manifest refs in incremental save \u00b7 residual drops ES-6-4 when green"
+    },
+    {
+      "seq": 2,
+      "domain": "manufacturing",
+      "id": "INDUSTRIAL-MFG-01",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "ManufacturingCorePlugin ticks throughput vs blueprint registry",
+      "witness": "src/entities/production/core/manufacturing_plugin.rs",
+      "exit_predicate": "ManufacturingCorePlugin + tick_manufacturing_nodes on disk",
+      "completed": "2026-09-23",
+      "note": "Verified on disk this session; industrial board row may still say Open until witness refresh"
+    },
+    {
+      "seq": 3,
+      "domain": "manufacturing",
+      "id": "INDUSTRIAL-I2-03",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "On activation, register ResourceFlowNode from def produces/consumes",
+      "code_paths": [
+        "src/economy/activation/bridge.rs",
+        "src/economy/resource_flow.rs",
+        "src/dev/industrial_i2_03_register_node_live_proof.rs"
+      ],
+      "witness": "debug_runs/industrial_i2_03_register_node_live.json",
+      "exit_predicate": "register_node_on_activate true with live node lists Alumina consume + Aluminum produce",
+      "parallel_ok": [
+        "ES-6-4-CLIPMAP-SAVE",
+        "COD-POWER-ISLAND-HIGHLIGHT"
+      ],
+      "completed": "2026-09-23",
+      "note": "activate\u2192register chain + smelter Alumina/Aluminum rates \u00b7 witness green"
+    },
+    {
+      "seq": 4,
+      "domain": "manufacturing",
+      "id": "MFG-03-DOMAIN-WIRE",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Spawn ManufacturingNode on industrial activation (close path-only witness gap)",
+      "depends_on": [
+        "INDUSTRIAL-MFG-01"
+      ],
+      "code_paths": [
+        "src/entities/production/core/manufacturing_plugin.rs",
+        "src/economy/activation/bridge.rs",
+        "src/dev/mfg_03_domain_wire_live_proof.rs"
+      ],
+      "witness": "debug_runs/mfg_03_domain_wire_live.json",
+      "exit_predicate": "manufacturing_core_tick true AND activated entity has ManufacturingNode",
+      "completed": "2026-09-23",
+      "note": "activate\u2192ManufacturingNode + tick throughput \u00b7 closes path-only MFG gap \u00b7 witness green"
+    },
+    {
+      "seq": 5,
+      "domain": "connections",
+      "id": "COD-NUCLEAR-P1-LOOP-SCRAM",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "Nuclear LOOP detect \u2192 SCRAM delay \u2192 diesel window + events",
+      "code_paths": [
+        "src/entities/production/power/failure_modes.rs"
+      ],
+      "witness": "src/entities/production/power/failure_modes.rs::tests",
+      "exit_predicate": "lib test nuclear_loop_scram_system asserts scrammed",
+      "completed": "2026-09-23",
+      "note": "P1 shipped this session; P2/P3 remain open"
+    },
+    {
+      "seq": 6,
+      "domain": "connections",
+      "id": "COD-POWER-ISLAND-HIGHLIGHT",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Island boundary + dim unpowered consumers",
+      "code_paths": [
+        "src/render/pipelines/power_map_overlay_draw.rs",
+        "src/render/pipelines/infrastructure_overlay.rs"
+      ],
+      "witness": "debug_runs/power_grid_track_bd_live.json",
+      "exit_predicate": "island highlight visible in lib/visual proof",
+      "home_queue": "power_grid_construction_ux_queue.json",
+      "parallel_ok": [
+        "INDUSTRIAL-I2-03",
+        "LOG-A-01"
+      ],
+      "completed": "2026-09-24",
+      "note": "Reconciled: home COD-POWER-ISLAND-HIGHLIGHT-001 done; WIT-HON pass on power_grid_track_bd_live + power_grid_construction_ux_close_live; IslandBoundary dashed aligned to DES-POWER-ISLAND-UX-001"
+    },
+    {
+      "seq": 7,
+      "domain": "connections",
+      "id": "COD-UTILITY-ACTIVATION-LINK",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "UtilityConnection \u2194 UtilityGraph membership on activation",
+      "code_paths": [
+        "src/infrastructure/utility/activation_link.rs",
+        "src/economy/activation/bridge.rs"
+      ],
+      "home_queue": "power_grid_construction_ux_queue.json",
+      "witness": "debug_runs/power_grid_track_bd_live.json",
+      "exit_predicate": "COD-UTILITY-ACTIVATION-LINK-001 true + activation inserts UtilityConnection; sync from UtilityGraph reachability (no radius hack)",
+      "completed": "2026-09-24",
+      "note": "Reconciled: home COD-UTILITY-ACTIVATION-LINK-001 done; lib utility_activation_link_witness_green_lib + power_grid_track_bd_live_witness_green ok; WIT-HON pass; drain witness path was industrial_activation_live (wrong) \u2014 aligned to home power_grid_track_bd_live"
+    },
+    {
+      "seq": 8,
+      "domain": "connections",
+      "id": "COD-NUCLEAR-P2-COOLING",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "Decay heat \u2192 ThermalComponent after diesel depletion",
+      "depends_on": [
+        "COD-NUCLEAR-P1-LOOP-SCRAM"
+      ],
+      "plan": "src/dev/plan_nuclear_power_failure_meltdown_v1.md",
+      "code_paths": [
+        "src/entities/production/power/failure_modes.rs",
+        "src/entities/production/power/plant_definition.rs",
+        "src/dev/nuclear_failure_p2_live_proof.rs"
+      ],
+      "witness": "debug_runs/nuclear_failure_p2_live.json",
+      "exit_predicate": "witness green with heat rise after diesel empty",
+      "completed": "2026-09-24",
+      "note": "COD-NUCLEAR-COOLING-001: nuclear_decay_heat_cooling_system drives ThermalComponent after diesel Failed; NuclearCoolingDegradedEvent + Crit alert; meltdown_threshold_reached flag only \u2014 P3 deferred; WIT-HON pass"
+    },
+    {
+      "seq": 9,
+      "domain": "logistics",
+      "id": "LOG-A-01",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "LogisticsGraph derived-only + revision; stop appending facility nodes in bridge",
+      "plan": "src/dev/logistics_throughput_phase_todos.md",
+      "code_paths": [
+        "src/economy/",
+        "src/systems/transport/"
+      ],
+      "witness": "debug_runs/logistics_throughput_live.json",
+      "exit_predicate": "routes_open/routes_blocked + topology_revision honest",
+      "parallel_ok": [
+        "ES-6-4-CLIPMAP-SAVE",
+        "INDUSTRIAL-I2-03"
+      ],
+      "completed": "2026-09-23",
+      "note": "LOG-A-AUTHORITY: sole GraphSync writer sync_logistics_graph_from_transport; removed attach_portal_nodes dual-writer API; witness.derived_logistics_graph + topology_revision green \u00b7 residual play/harness one-shot seeds use same rebuild then GraphSync replaces"
+    },
+    {
+      "seq": 10,
+      "domain": "logistics",
+      "id": "LOG-A-04",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "path_open from TransportNavExport reachability (kill stub true)",
+      "depends_on": [
+        "LOG-A-01"
+      ],
+      "witness": "debug_runs/logistics_throughput_live.json",
+      "exit_predicate": "cut road \u2192 path_open false after refresh",
+      "completed": "2026-09-23",
+      "note": "LOG-A-04: link_supply_chain path_open starts false; refresh_resource_flow_routes_system from TransportNavExport; test log_a_04_cut_road_sets_path_open_false_after_refresh; witness.path_open_from_nav + routes_open\u22651 green"
+    },
+    {
+      "seq": 11,
+      "domain": "logistics",
+      "id": "LOG-B-02",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "InTransitLedger with RouteHandle + progress (no teleport)",
+      "depends_on": [
+        "LOG-A-01"
+      ],
+      "witness": "debug_runs/logistics_throughput_live.json",
+      "exit_predicate": "transfer test uses ledger arrivals only",
+      "completed": "2026-09-24",
+      "note": "LOG-B-02: advance_lot_progress on remaining_ticks; RouteHandle from RouteCache; test log_b_02_in_transit_ledger_uses_route_handle_and_progress; witness.in_transit_ledger true \u00b7 throughput_green"
+    },
+    {
+      "seq": 12,
+      "domain": "logistics",
+      "id": "LOG-C-01",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "ThroughputSolver SoA state + reservation book",
+      "depends_on": [
+        "LOG-B-02"
+      ],
+      "witness": "debug_runs/logistics_throughput_live.json",
+      "exit_predicate": "reserved <= capacity invariant",
+      "completed": "2026-09-24",
+      "note": "LOG-C-01: FreightReservationBook + SoA load/capacity/reserved/pressure; reserved<=capacity + book_matches_soa; witness.soa_throughput_solver + freight_reservations green \u00b7 logistics_throughput_live.json"
+    },
+    {
+      "seq": 13,
+      "domain": "ai_settlement",
+      "id": "SET-P5-HIERARCHY-GAP",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "Reconcile SET-P5 books vs live gameplay gaps (placement \u2192 block assignment)",
+      "plan": "src/dev/plan_settlement_hierarchy_exec_005_v1.md",
+      "witness": "debug_runs/settlement_hierarchy_gap_live.json",
+      "exit_predicate": "settlement overlay hydrate + tile_to_block live",
+      "parallel_ok": [
+        "LOG-A-01",
+        "TRADE-FLOW-GEOGRAPHY"
+      ],
+      "completed": "2026-09-24",
+      "note": "SET-P5-HIERARCHY-GAP: seed_settlement_books_if_empty on Startup; write_settlement_overlay_on_save_flush + try_hydrate_settlement_books_on_bundle_dir wired; placement\u2192tile_to_block + overlay hydrate live; WIT-HON pass"
+    },
+    {
+      "seq": 14,
+      "domain": "ai_settlement",
+      "id": "STAGE7-BEHAVIORAL-GAP",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "Stage7 behavioral residual \u2014 strategic agent gameplay not HUD",
+      "witness": "debug_runs/stage7_behavioral_live.json",
+      "exit_predicate": "behavioral counters non-zero under lib harness",
+      "completed": "2026-09-24",
+      "note": "STAGE7-BEHAVIORAL-GAP: s7b_m4_play_remedy refreshed play+behavioral; pending_dispatch_count=3, recon=100, logistics_stress=18; s7b_m1..m4 + s7b_steward_green true; WIT-HON pass"
+    },
+    {
+      "seq": 15,
+      "domain": "trade_distribution",
+      "id": "TRADE-FLOW-GEOGRAPHY",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Mine\u2192refinery\u2192smelter geography; cut road starves smelter",
+      "depends_on": [
+        "LOG-A-04",
+        "INDUSTRIAL-I2-03"
+      ],
+      "code_paths": [
+        "src/economy/resource_flow.rs",
+        "src/dev/trade_flow_geography_live_proof.rs",
+        "src/economy/activation/bridge.rs"
+      ],
+      "witness": "debug_runs/trade_flow_geography_live.json",
+      "exit_predicate": "starvation_cascade true with geography cut",
+      "parallel_ok": [
+        "COD-POWER-ISLAND-HIGHLIGHT"
+      ],
+      "completed": "2026-09-24",
+      "note": "ResourceFlowEdge.path_open cut \u2192 smelter FacilityFlowState.starved + efficiency drop; I2-07 starvation_cascade gated on live witness \u00b7 LOG-A-04 residual (TransportNavExport\u2192path_open)"
+    },
+    {
+      "seq": 16,
+      "domain": "trade_distribution",
+      "id": "TRADE-SC-RUNTIME",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "Supply-chain runtime beyond catalog membership",
+      "code_paths": [
+        "src/economy/resource_flow.rs",
+        "src/dev/trade_sc_runtime_live_proof.rs",
+        "src/economy/activation/bridge.rs"
+      ],
+      "witness": "debug_runs/trade_sc_runtime_live.json",
+      "exit_predicate": "geopolymer + aluminum chains move inventory on tick",
+      "completed": "2026-09-24",
+      "note": "chain_catalog_order(concrete_geopolymer) + cross-chain shared aggregate mine linking; propagate fills buffers; I2-05/06 facility_inventory gated on live witness"
+    },
+    {
+      "seq": 17,
+      "domain": "systems",
+      "id": "FIRE-ECOLOGY-LIVE",
+      "status": "done",
+      "priority": "P0",
+      "owner": "coder",
+      "goal": "Fire ecology live witness green",
+      "witness": "debug_runs/fire_ecology_live.json",
+      "exit_predicate": "green==true",
+      "completed": "2026-09-23",
+      "note": "Overall green + f1_green closed via FIRE-F1-STRICT (near-empty gate chunk)"
+    },
+    {
+      "seq": 18,
+      "domain": "systems",
+      "id": "FIRE-F1-STRICT",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "Close f1_green (fuel/old-growth ignition gate honesty)",
+      "depends_on": [
+        "FIRE-ECOLOGY-LIVE"
+      ],
+      "code_paths": [
+        "src/dev/fire_ecology_lib_harness.rs",
+        "src/systems/fire/combustion.rs",
+        "src/systems/fire/chunk_fire_overlay.rs"
+      ],
+      "witness": "debug_runs/fire_ecology_live.json",
+      "exit_predicate": "f1_green==true",
+      "completed": "2026-09-24",
+      "note": "Gate chunk veg was Default canopy/understory (passed MIN_WILDLAND); fixed to near-empty strata so fuel_gated_spark_cells/chunks_fuel_gated non-zero \u00b7 f1_green true \u00b7 WIT-HON pass"
+    },
+    {
+      "seq": 19,
+      "domain": "systems",
+      "id": "VSS-T3-003-FIRE-SAVE",
+      "status": "done",
+      "priority": "P1",
+      "owner": "coder",
+      "goal": "Fire chunk save roundtrip overlay",
+      "witness": "debug_runs/fire_save_roundtrip_live.json",
+      "exit_predicate": "green==true",
+      "completed": "2026-09-23"
+    },
+    {
+      "seq": 20,
+      "domain": "systems",
+      "id": "ES-6-2-FIELD-SHIM",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "AtmosphereField fold/advect read clipmap L0 at tactical (transitional dual-write end)",
+      "depends_on": [
+        "ES-6-4-CLIPMAP-SAVE"
+      ],
+      "code_paths": [
+        "src/systems/atmosphere/field_l0_shim.rs",
+        "src/systems/atmosphere/field.rs",
+        "src/substrate/atmosphere/clipmap_advect.rs",
+        "src/dev/effects_system_es6_live_proof.rs"
+      ],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "residual drops ES-6-2",
+      "completed": "2026-09-24",
+      "note": "field\u2192L0 fold after WindAdvect \u00b7 sample_tactical_smoke prefers L0 \u00b7 es_6_2_field_l0_shim true \u00b7 residual ES-6-3"
+    },
+    {
+      "seq": 21,
+      "domain": "construction",
+      "id": "CON-CORRIDOR-PHASES",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "CorridorConstructionBook phases in TransportNetworkSnapshot construction slice",
+      "code_paths": [
+        "src/strategic/construction_book.rs",
+        "src/construction/"
+      ],
+      "witness": "debug_runs/construction_stage_live.json",
+      "exit_predicate": "G4 load hydrates CorridorConstructionBook",
+      "parallel_ok": [
+        "LOG-A-01"
+      ],
+      "completed": "2026-09-24",
+      "note": "Already on disk: G4 hydrate via apply_corridor_book_from_transport_snapshot; construction_r4_corridor_001.green + r8_roundtrip_ok; lib tests construction_book + round4_corridor + g4_fixture_load_hydrate; WIT-HON pass; residual off-drain ES-6-3 (cleanup)"
+    },
+    {
+      "seq": 22,
+      "domain": "connections",
+      "id": "COD-NUCLEAR-P3-MELTDOWN",
+      "status": "done",
+      "priority": "P3",
+      "owner": "coder",
+      "goal": "Replace nuclear_containment_placeholder with meltdown ladder",
+      "depends_on": [
+        "COD-NUCLEAR-P2-COOLING"
+      ],
+      "plan": "src/dev/plan_nuclear_power_failure_meltdown_v1.md",
+      "code_paths": [
+        "src/entities/production/power/failure_modes.rs",
+        "src/entities/production/power/plant_definition.rs",
+        "src/entities/production/power/systems.rs",
+        "src/dev/nuclear_failure_p3_live_proof.rs"
+      ],
+      "witness": "debug_runs/nuclear_meltdown_live.json",
+      "exit_predicate": "meltdown threshold witness green",
+      "completed": "2026-09-24",
+      "note": "COD-NUCLEAR-MELTDOWN-001: nuclear_meltdown_breach_system acts on meltdown_threshold_reached under meltdown_enabled; MeltdownEvent then ContainmentBreachEvent(fallout_hook) after breach_delay_s; ReactorBreach on Operational; WIT-HON pass"
+    },
+    {
+      "seq": 23,
+      "domain": "logistics",
+      "id": "LOG-D-04",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "Async district solve scaffold \u2014 apply reservations main thread only",
+      "depends_on": [
+        "LOG-C-01"
+      ],
+      "plan": "src/dev/logistics_throughput_phase_todos.md",
+      "code_paths": [
+        "src/economy/logistics/async_district.rs",
+        "src/economy/logistics/mod.rs",
+        "src/economy/logistics/witness.rs"
+      ],
+      "witness": "debug_runs/logistics_throughput_live.json",
+      "exit_predicate": "async_district_solve true; job posts + applies next frame; no off-thread field mutate",
+      "completed": "2026-09-24",
+      "note": "LOG-D-04: enqueue_async_district_solve\u2192staging\u2192promote\u2192apply_async main-thread only; saw_async_district_solve sticky; open_todos 1\u21920 throughput_green; WIT-HON pass"
+    },
+    {
+      "seq": 24,
+      "domain": "systems",
+      "id": "ES-6-3-DEBT-006-CONSUMER-MIGRATE",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "ES-6-3a migrate AtmosphereField readers (visibility/coupling/diagnostics) onto L0; do NOT delete bridge_legacy",
+      "depends_on": [
+        "ES-6-2-FIELD-SHIM"
+      ],
+      "blocked_by_delete": true,
+      "code_paths": [
+        "src/systems/atmosphere/visibility.rs",
+        "src/systems/atmosphere/coupling.rs",
+        "src/systems/atmosphere/diagnostics.rs",
+        "src/systems/atmosphere/field.rs",
+        "src/dev/effects_system_es6_live_proof.rs",
+        "src/substrate/atmosphere/bridge_legacy.rs"
+      ],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "es_6_3a_field_readers_l0==true AND debt_006_delete_safe==false; residual ES-6-3b",
+      "completed": "2026-09-24",
+      "note": "Readers prefer sample_tactical_smoke/visibility L0; writers still ES-6-2 shim; bridge_legacy retained; next ES-6-3b DELETE only when debt_006_delete_safe",
+      "follow_on": "ES-6-3b-DELETE-bridge_legacy \u2192 @sim-steward attach cleanup packet"
+    },
+    {
+      "seq": 24.5,
+      "domain": "systems",
+      "id": "ES-6-3b-DELETE-bridge_legacy",
+      "status": "done",
+      "priority": "P2",
+      "owner": "sim-steward",
+      "goal": "ES-6-3b DELETE DEBT-006 bridge_legacy after cleanup packet predicates; flip debt_006_delete_safe computed true",
+      "depends_on": [
+        "ES-6-3-DEBT-006-CONSUMER-MIGRATE"
+      ],
+      "cleanup_packet": "d6e130cf→0778f3f4 A_obsolete",
+      "code_paths": [
+        "src/substrate/atmosphere/bridge_legacy.rs",
+        "src/substrate/atmosphere/mod.rs",
+        "src/substrate/mod.rs",
+        "src/dev/effects_system_es6_live_proof.rs"
+      ],
+      "witness": "debug_runs/effects_system_es6_live.json",
+      "exit_predicate": "debt_006_delete_safe==true AND cleanup_class==A_obsolete_deleted AND bridge_legacy.rs absent",
+      "completed": "2026-09-24",
+      "note": "All unblock_when PASS; deleted bridge_legacy + schedule/re-exports; residual DEBT-010 AtmosphereField writers"
+    },
+    {
+      "seq": 25,
+      "domain": "systems",
+      "id": "COD-NUCLEAR-WSS-FALLOUT-001",
+      "status": "done",
+      "priority": "P2",
+      "owner": "coder",
+      "goal": "ContainmentBreachEvent fallout_hook injects contamination.radiation on WorldSubstrateRegistry slab",
+      "code_paths": [
+        "src/entities/production/power/failure_modes.rs",
+        "src/entities/production/power/systems.rs",
+        "src/dev/nuclear_failure_p3_live_proof.rs"
+      ],
+      "witness": "debug_runs/nuclear_meltdown_live.json",
+      "exit_predicate": "contamination_radiation_injected==true AND containment_breach_fallout_hook==true AND meltdown_lib_green==true",
+      "parallel_ok": true,
+      "blocks": [],
+      "completed": "2026-09-24",
+      "note": "apply_containment_breach_radiation_hook_system sole breach writer for slab radiation; seed=1.0; WIT-HON pass nuclear_meltdown_live.json"
+    }
+  ],
+  "dispatch_now": {
+    "coder": "COD-NUCLEAR-WSS-FALLOUT-001 \u2605done \u00b7 ES-6-3b \u2605done \u00b7 residual DEBT-010 AtmosphereField writers",
+    "sim-steward": "ES-6-3b-DELETE-bridge_legacy \u2605done \u00b7 debt_006_delete_safe true \u00b7 cleanup A_obsolete_deleted",
+    "coder_parallel": "\u00actouch ES-6 bridge (deleted) \u00b7 DEBT-010 field retirement separate",
+    "note": "ES-6-3b closed 2026-09-24 \u00b7 effects_system_es6_live.json debt_006_delete_safe + DEBT-010 residual"
+  }
+}

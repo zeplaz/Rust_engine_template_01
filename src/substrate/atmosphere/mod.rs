@@ -1,10 +1,15 @@
-//! WSS-ATMOS-CLIPMAP-001 — clipmap stack, contamination tick, gated legacy bridge, witness.
+//! WSS-ATMOS-CLIPMAP-001 — clipmap stack, contamination tick, witness.
+//!
+//! DEBT-006 `bridge_legacy` **deleted** (ES-6-3b) — cleanup packet
+//! [d6e130cf](d6e130cf-a7f2-42e4-9818-b2920c4a7caf) → re-eval
+//! [0778f3f4](0778f3f4-fc7d-4ee8-aae3-80e39dede087) · class A_obsolete.
 
-mod bridge_legacy;
-mod clipmap_advect;
+pub mod clipmap_advect;
 mod contamination_tick;
 
-pub use bridge_legacy::{legacy_atmosphere_bridge_enabled, legacy_atmosphere_bridge_system};
+pub use clipmap_advect::{
+    fold_atmosphere_field_into_l0, sample_tactical_smoke_from_l0,
+};
 pub use contamination_tick::contamination_tick_system;
 
 use bevy::math::DVec2;
@@ -15,12 +20,10 @@ pub const WSS_ATMOS_CLIPMAP_GATE: &str = "WSS-ATMOS-CLIPMAP-001";
 /// EFFECTS-SYSTEM ES-6 exit — clipmap L0 is sim authority for smoke consumers that
 /// already sample [`AtmosphereClipmapStack`] (`smoke_bridge_from_clipmap`, post-spine).
 ///
-/// DEBT-006 [`legacy_atmosphere_bridge_system`] is **hard-gated OFF** by default
-/// (`RUST_ENGINE_ATMOS_LEGACY_BRIDGE=1` rollback). Fixed 128² [`AtmosphereField`] remains
-/// for transitional fold/advect/particles/visibility/chunk_smoke writers — **not** a
-/// second authority into clipmap while the bridge is gated.
-///
-/// Residual (not blocking this flag): ES-6-2 full field→L0 shim · ES-6-4 save/load.
+/// DEBT-006 L1↔field bridge **removed** (ES-6-3b). Fixed 128² [`AtmosphereField`] remains
+/// for transitional fold/advect/particles/chunk_smoke writers. ES-6-2 folds
+/// that grid into L0 after WindAdvect. ES-6-3a readers prefer L0 tactical samples.
+/// ES-6-4 save shipped (`io/save/atmosphere_clipmap_overlay.rs`).
 pub const CLIPMAP_L0_AUTHORITATIVE: bool = true;
 
 /// Default L0–L3 sim resolutions (tunable).
@@ -65,6 +68,8 @@ impl Default for AtmosphereClipmapStack {
 pub struct AtmosphereClipmapWitness {
     pub legacy_atmosphere_field_bridged: bool,
     pub clipmap_advect_wired: bool,
+    /// ES-6-2 — field→L0 tactical shim ran (scheduled fold after WindAdvect).
+    pub field_l0_shim_wired: bool,
     pub render_clipmap_wired: bool,
     pub gpu_partial_upload_count: u32,
     pub toxic_hazard_sample: f32,
@@ -74,7 +79,6 @@ pub fn sync_atmos_clipmap_witness_system(
     mut stack: ResMut<AtmosphereClipmapStack>,
     mut witness: ResMut<AtmosphereClipmapWitness>,
     registry: Option<Res<crate::substrate::WorldSubstrateRegistry>>,
-    legacy_field: Option<Res<crate::systems::atmosphere::AtmosphereField>>,
     smoke_extract: Option<Res<crate::render::extraction::SmokeVisualBridgeWitness>>,
 ) {
     let mut smoke_seed = 0.0_f32;
@@ -105,9 +109,8 @@ pub fn sync_atmos_clipmap_witness_system(
     } else {
         0
     };
-    // True only while DEBT-006 env rollback is active — not "field resource exists".
-    witness.legacy_atmosphere_field_bridged =
-        bridge_legacy::legacy_atmosphere_bridge_enabled() && legacy_field.is_some();
+    // DEBT-006 deleted (ES-6-3b) — L1↔field bridge no longer exists.
+    witness.legacy_atmosphere_field_bridged = false;
 }
 
 #[must_use]
