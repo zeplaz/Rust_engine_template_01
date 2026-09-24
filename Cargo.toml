@@ -17,8 +17,8 @@ name = "bevy_preview_worker"
 path = "src/bin/bevy_preview_worker.rs"
 
 [features]
-# `bevy_tilemap_adapter` is NOT default: `bevy_ecs_tilemap` 0.18.1 — no 0.19 crate yet.
-# Keep OFF until upgraded; see src/dev/coder_remaining_post_019_v1.md § Feature gates.
+# `bevy_tilemap_adapter` is NOT default: opt-in `bevy_ecs_tilemap` 0.19 (render off).
+# Keep OFF of `default` until adapter + runtime witness green; see src/dev/coder_remaining_post_019_v1.md.
 default = []
 # Extra Bevy entity/frame diagnostics plugins during `--test` runs (runtime latch still works without this).
 test_instrumentation = []
@@ -81,7 +81,7 @@ rayon = "1.10"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 nalgebra = "0.32.2"
-bevy_ecs_tilemap = { version = "0.18.1", optional = true, default-features = false }
+bevy_ecs_tilemap = { version = "0.19", optional = true, default-features = false }
 bevy_hanabi = { version = "0.19", optional = true, default-features = false, features = ["3d"] }
 bevy_vector_shapes = "0.13.0"
 

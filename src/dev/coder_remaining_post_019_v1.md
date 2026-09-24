@@ -21,7 +21,7 @@
 | **`engine_deep_debug`** | optional | intrusive witnesses |
 | **`tracy`** | optional | profiling |
 
-**Do not** add these to `[features] default`. Re-enable `bevy_tilemap_adapter` only after a 0.19-compatible `bevy_ecs_tilemap` release + compat witness.
+**Do not** add these to `[features] default`. CI checks `--features bevy_tilemap_adapter` against `bevy_ecs_tilemap` 0.19; keep OFF of `[features] default` until runtime compat witness.
 
 ---
 
