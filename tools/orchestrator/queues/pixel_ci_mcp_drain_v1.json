@@ -34,8 +34,10 @@
     {
       "id": "PCI-03",
       "theme": "ci",
-      "status": "ready",
+      "status": "done",
       "goal": "Partition lib tests so CI cannot run 5.5h",
+      "note": "Default cargo test --lib skips vt_ci_matrix, vt_app_integration, and stage5_full_app_harness. Those run in a 10-minute visual/app step. Job cap 120 and lib step timeout 60 from 6597f049 stay. Grammar deadlock fix untouched.",
+      "witness": ".github/workflows/ci.yml",
       "unblock_when": "Split visual/app lib tests out of the default CI cargo test --lib step while keeping the 60m timeout backstop from 6597f049"
     },
     {

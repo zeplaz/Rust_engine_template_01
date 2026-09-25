@@ -52,15 +52,22 @@ jobs:
       - name: cargo check (bevy_tilemap_adapter)
         run: cargo check -p proc_A_dine01 --features bevy_tilemap_adapter
 
+      # PCI-03: fast unit tests stay in this step. Visual/app harnesses
+      # (vt_ci_matrix, vt_app_integration, stage5_full_app_harness) are the
+      # next step, so a windowed or non-exiting test cannot consume this one.
+      # 60-minute timeout is the hang backstop from 6597f049.
       - name: cargo test (lib)
         timeout-minutes: 60
-        run: cargo test -p proc_A_dine01 --lib
+        run: cargo test -p proc_A_dine01 --lib -- --skip vt_ci_matrix --skip vt_app_integration --skip stage5_full_app_harness
+
+      # PCI-03: visual/app lib tests only. Short timeout so this step cannot
+      # ride the 60-minute lib backstop or the 120-minute job cap.
+      - name: cargo test (visual/app lib)
+        timeout-minutes: 10
+        run: cargo test -p proc_A_dine01 --lib vt_ci_matrix vt_app_integration stage5_full_app_harness
 
       - name: cargo test (stage5 spine governance)
         run: cargo test -p proc_A_dine01 --lib stage5_spine_governance_matrix_passes
-
-      - name: cargo test (VT-4 / VT-5 CI matrix)
-        run: cargo test -p proc_A_dine01 --lib vt_ci_matrix
 
       - name: cargo test (Stage 5 readiness)
         run: cargo test -p proc_A_dine01 --lib stage5_readiness
