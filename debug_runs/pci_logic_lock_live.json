@@ -1,0 +1,29 @@
+{
+  "_agent_meta": {
+    "schema": "debug_run_envelope_v1",
+    "profile": "PCI-33-34",
+    "source_system": "sim::effects::witness + economy::logistics::propagation",
+    "relative_path": "debug_runs/pci_logic_lock_live.json",
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib -- queue_drain_ok_flips_only_after_nonzero_drain site_staging_try_debit_has_one_caller"
+    ]
+  },
+  "schema": "pci_logic_lock_live_v1",
+  "green": true,
+  "command": "cargo test -p proc_A_dine01 --lib -- queue_drain_ok_flips_only_after_nonzero_drain site_staging_try_debit_has_one_caller",
+  "result": "2 passed; 0 failed; 1679 filtered out",
+  "slices": [
+    {
+      "id": "PCI-33",
+      "test": "sim::effects::witness::tests::queue_drain_ok_flips_only_after_nonzero_drain",
+      "result": "ok",
+      "predicate": "queue_drain_ok stays false on a zero drain and flips true only when last_drain_count or drained_total is non-zero"
+    },
+    {
+      "id": "PCI-34",
+      "test": "economy::logistics::propagation::tests::site_staging_try_debit_has_one_caller",
+      "result": "ok",
+      "predicate": "exactly one staging.try_debit call, in src/economy/logistics/propagation.rs"
+    }
+  ]
+}
