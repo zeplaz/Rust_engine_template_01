@@ -3,7 +3,8 @@
 use bevy::prelude::*;
 
 use crate::construction::{
-    BuildGhostState, BuildPlacementMode, BuildPlacementPreview, BuildStripState, ToolContext,
+    ActiveBuildTool, BuildGhostState, BuildPlacementMode, BuildPlacementPreview, BuildStripState,
+    BuildTool, RoadType, ToolContext,
 };
 use crate::gui::hud::strategic_preview::format_projected_commit_effects;
 use crate::gui::hud::tool_help;
@@ -14,6 +15,27 @@ use crate::strategic::StrategicOverlayDisplayPolicy;
 /// Bevy UI text node for the developmental context row (under the operations strip).
 #[derive(Component)]
 pub struct DevelopmentalContextStripLine;
+
+/// Catalog or defense name for tray and strip. Generic "building" is not a subject.
+#[must_use]
+pub fn active_place_subject(tool: &ActiveBuildTool) -> Option<String> {
+    if let Some(intent) = tool.building_intent.as_ref() {
+        let name = intent.label.trim();
+        if !name.is_empty() {
+            return Some(name.to_string());
+        }
+    }
+    match tool.tool {
+        BuildTool::Defense(kind) => Some(kind.player_label().to_string()),
+        BuildTool::Road(RoadType::Street) => Some("Street".to_string()),
+        BuildTool::Road(RoadType::Highway) => Some("Highway".to_string()),
+        BuildTool::Rail(_) => Some("Rail".to_string()),
+        BuildTool::PowerLine(_) => Some("Power line".to_string()),
+        BuildTool::Demolish => Some("Demolish".to_string()),
+        BuildTool::Zone(_) => Some("Zone".to_string()),
+        BuildTool::Building(_) | BuildTool::None => None,
+    }
+}
 
 #[inline]
 fn tool_heading(ctx: ToolContext) -> String {

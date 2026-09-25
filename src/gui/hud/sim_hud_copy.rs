@@ -125,3 +125,58 @@ pub fn tray_queue_summary(n: usize, first_label: &str) -> String {
         format!("{n} pending · {first_label}")
     }
 }
+
+/// Sim tray Build tab. Idle copy stays the shipped queue line.
+/// A subject names the footprint (`design_build_place_feel_v1.md`).
+#[must_use]
+pub fn tray_build_status_line(
+    pending: usize,
+    unapproved: usize,
+    subject: Option<&str>,
+    locked: bool,
+    snap: Option<&str>,
+) -> String {
+    let ready = pending.saturating_sub(unapproved);
+    let queue = format!("queue {pending} ({ready} ready)");
+    let Some(name) = subject.map(str::trim).filter(|s| !s.is_empty()) else {
+        return format!("BUILD · {queue} · {TRAY_PEEK_MODIFIERS}");
+    };
+    let state = if locked {
+        "locked footprint"
+    } else {
+        "follows cursor"
+    };
+    let mut line = format!("BUILD · {name} · {state} · {TRAY_PEEK_MODIFIERS} · {queue}");
+    if let Some(hint) = snap.map(str::trim).filter(|s| !s.is_empty()) {
+        line.push_str(" · ");
+        if !hint.to_ascii_lowercase().starts_with("snap") {
+            line.push_str("Snap · ");
+        }
+        line.push_str(hint);
+    }
+    line
+}
+
+#[cfg(test)]
+mod place_feel_tests {
+    use super::*;
+
+    #[test]
+    fn idle_tray_line_stays_queue_copy() {
+        let line = tray_build_status_line(2, 1, None, false, None);
+        assert_eq!(line, "BUILD · queue 2 (1 ready) · Ctrl rotate · Shift scale");
+    }
+
+    #[test]
+    fn armed_tray_names_subject_lock_and_snap() {
+        let locked = tray_build_status_line(0, 0, Some("Victorian row"), true, Some("grid"));
+        assert!(locked.contains("Victorian row"));
+        assert!(locked.contains("locked footprint"));
+        assert!(locked.contains("Snap · grid"));
+        assert!(locked.contains(TRAY_PEEK_MODIFIERS));
+        let open = tray_build_status_line(0, 0, Some("Street"), false, Some("Snap joint"));
+        assert!(open.contains("follows cursor"));
+        assert!(open.contains("Snap joint"));
+        assert!(!open.contains("Snap · Snap"));
+    }
+}

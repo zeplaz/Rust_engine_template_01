@@ -49,6 +49,18 @@ pub fn place_feedback_duration_secs() -> f32 {
     0.28
 }
 
+/// Gold lock ring for a held footprint (`#E8C460` @ 230α). See `design_build_place_feel_v1.md`.
+#[must_use]
+pub fn footprint_lock_ring_color() -> egui::Color32 {
+    egui::Color32::from_rgba_unmultiplied(232, 196, 96, 230)
+}
+
+/// Lock-ring stroke in egui points. Unified footprint paint may read this later.
+#[must_use]
+pub fn footprint_lock_ring_stroke_px() -> f32 {
+    2.0
+}
+
 /// R4 corridor edge — planned (`#E8B040` @ 180/255).
 #[must_use]
 pub fn corridor_planned_color() -> egui::Color32 {

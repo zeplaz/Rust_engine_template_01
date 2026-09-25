@@ -380,15 +380,22 @@ pub fn draw_simulation_unified_cursor_egui_system(
     );
     let layer = egui::LayerId::new(egui::Order::Foreground, egui::Id::new("sim_unified_cursor"));
     let painter = ctx.layer_painter(layer);
-    let r = 7.0;
-    painter.circle_stroke(pos, r, egui::Stroke::new(1.5, egui::Color32::WHITE));
+    // `design_build_place_feel_v1.md` — one tight crosshair, dark halo so it reads on bright terrain.
+    let r = 5.0;
+    let gold = egui::Color32::from_rgb(255, 220, 120);
+    painter.circle_stroke(
+        pos,
+        r + 1.0,
+        egui::Stroke::new(2.0, egui::Color32::from_rgba_unmultiplied(0, 0, 0, 180)),
+    );
+    painter.circle_stroke(pos, r, egui::Stroke::new(1.25, egui::Color32::WHITE));
     painter.line_segment(
-        [pos + egui::vec2(-r * 1.5, 0.0), pos + egui::vec2(r * 1.5, 0.0)],
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(255, 220, 120)),
+        [pos + egui::vec2(-r * 1.6, 0.0), pos + egui::vec2(r * 1.6, 0.0)],
+        egui::Stroke::new(1.0, gold),
     );
     painter.line_segment(
-        [pos + egui::vec2(0.0, -r * 1.5), pos + egui::vec2(0.0, r * 1.5)],
-        egui::Stroke::new(1.0, egui::Color32::from_rgb(255, 220, 120)),
+        [pos + egui::vec2(0.0, -r * 1.6), pos + egui::vec2(0.0, r * 1.6)],
+        egui::Stroke::new(1.0, gold),
     );
 }
 

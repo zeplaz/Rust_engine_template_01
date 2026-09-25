@@ -214,7 +214,10 @@ pub fn draw_sim_build_picker_sheet_egui(
                             if ui
                                 .add(
                                     egui::Button::new(body_text(&palette, "✕"))
-                                        .min_size(egui::vec2(36.0, 36.0)),
+                                        .min_size(egui::vec2(
+                                            super::sim_build_picker_bevy::BUILD_PICKER_CLOSE_PX,
+                                            super::sim_build_picker_bevy::BUILD_PICKER_CLOSE_PX,
+                                        )),
                                 )
                                 .clicked()
                             {
