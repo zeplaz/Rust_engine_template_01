@@ -2,17 +2,25 @@
   "generated_at": null,
   "kpi": {
     "absent": 0,
-    "count_art": 0,
+    "count_art": 1,
     "count_gui": 0,
     "count_ui": 0,
     "count_world": 0,
-    "honest": 0,
-    "last_conclusion_status": "absent"
+    "honest": 1,
+    "last_conclusion_status": "returned"
   },
-  "rows": [],
+  "rows": [
+    {
+      "honesty": "honest",
+      "kind": "art",
+      "path": "debug_runs/scan_debug_pixel_conclude/pixel_matrix_art.json",
+      "source": "glob",
+      "status": "green"
+    }
+  ],
   "schema": "image_conclusion_review_v1",
   "source": {
-    "conclusion_present": false,
+    "conclusion_present": true,
     "conclusion_rel": "debug_runs/scan_debug_conclusion_live.json",
     "matrix_glob": "debug_runs/**/pixel_matrix_*.json",
     "pixel_pipeline_note": "Python pixel pipeline: land matrices under debug_runs/ as pixel_matrix_*.json (kinds gui, ui, world, art). Also follow any matrix path listed in debug_runs/scan_debug_conclusion_live.json.",
