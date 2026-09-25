@@ -1083,6 +1083,7 @@
       "updated_at": "2026-08-12T21:50:00Z",
       "completed": "2026-08-12",
       "note": "Lib/stage5 closed · display_acceptance_pending → operator --test vfx"
+    },
     {
       "track": "T8",
       "track_id": "INFRA-PERF",
