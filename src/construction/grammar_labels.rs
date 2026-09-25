@@ -143,4 +143,185 @@ mod tests {
         let warehouse_label = human_archetype_label(&warehouse_key);
         assert!(!warehouse_label.contains(&warehouse_key));
     }
+
+    /// True when a `labels_cache().lock()` guard is still in scope at a call that locks again.
+    ///
+    /// `std::sync::Mutex` deadlocks on same-thread reentry, which hung `cargo test --lib`.
+    fn lock_scope_relocks(src: &str) -> bool {
+        let code = strip_comments_and_strings(src);
+        let bytes = code.as_bytes();
+        let mut depth = 0i32;
+        let mut guards: Vec<i32> = Vec::new();
+        let mut i = 0usize;
+        while i < bytes.len() {
+            match bytes[i] {
+                b'{' => {
+                    depth += 1;
+                    i += 1;
+                }
+                b'}' => {
+                    depth -= 1;
+                    guards.retain(|&d| depth >= d);
+                    i += 1;
+                }
+                _ => {
+                    if starts_at(&code, i, "labels_cache().lock()") {
+                        if guards.iter().any(|&d| depth >= d) {
+                            return true;
+                        }
+                        guards.push(depth);
+                        i += "labels_cache().lock()".len();
+                        continue;
+                    }
+                    const RELOCK: &[&str] = &[
+                        "human_archetype_label",
+                        "human_district_label",
+                        "human_massing_label",
+                        "human_age_label",
+                        "grammar_labels_loaded_green",
+                        "labels_cache",
+                    ];
+                    if let Some(hit) = RELOCK.iter().find(|name| ident_at(&code, i, name)) {
+                        if guards.iter().any(|&d| depth >= d) {
+                            return true;
+                        }
+                        i += hit.len();
+                        continue;
+                    }
+                    i += 1;
+                }
+            }
+        }
+        false
+    }
+
+    fn ident_at(code: &str, i: usize, name: &str) -> bool {
+        if !code[i..].starts_with(name) {
+            return false;
+        }
+        let before_ok = i == 0
+            || {
+                let prev = code.as_bytes()[i - 1];
+                !prev.is_ascii_alphanumeric() && prev != b'_'
+            };
+        let end = i + name.len();
+        let after_ok = end >= code.len()
+            || {
+                let next = code.as_bytes()[end];
+                !next.is_ascii_alphanumeric() && next != b'_'
+            };
+        before_ok && after_ok
+    }
+
+    fn starts_at(code: &str, i: usize, needle: &str) -> bool {
+        code[i..].starts_with(needle)
+    }
+
+    fn strip_comments_and_strings(src: &str) -> String {
+        let b = src.as_bytes();
+        let mut out = String::with_capacity(src.len());
+        let mut i = 0usize;
+        while i < b.len() {
+            if b[i] == b'/' && i + 1 < b.len() && b[i + 1] == b'/' {
+                while i < b.len() && b[i] != b'\n' {
+                    i += 1;
+                }
+                continue;
+            }
+            if b[i] == b'r' {
+                if let Some(end) = skip_raw_string(b, i) {
+                    out.push(' ');
+                    i = end;
+                    continue;
+                }
+            }
+            if b[i] == b'"' {
+                i += 1;
+                while i < b.len() && b[i] != b'"' {
+                    if b[i] == b'\\' {
+                        i = (i + 2).min(b.len());
+                        continue;
+                    }
+                    i += 1;
+                }
+                if i < b.len() {
+                    i += 1;
+                }
+                out.push(' ');
+                continue;
+            }
+            out.push(b[i] as char);
+            i += 1;
+        }
+        out
+    }
+
+    fn skip_raw_string(b: &[u8], i: usize) -> Option<usize> {
+        let mut j = i + 1;
+        let mut hashes = 0usize;
+        while j < b.len() && b[j] == b'#' {
+            hashes += 1;
+            j += 1;
+        }
+        if j >= b.len() || b[j] != b'"' {
+            return None;
+        }
+        j += 1;
+        while j < b.len() {
+            if b[j] == b'"' {
+                let mut k = 0usize;
+                while k < hashes && j + 1 + k < b.len() && b[j + 1 + k] == b'#' {
+                    k += 1;
+                }
+                if k == hashes {
+                    return Some(j + 1 + hashes);
+                }
+            }
+            j += 1;
+        }
+        Some(b.len())
+    }
+
+    #[test]
+    fn grammar_label_cache_must_not_relock() {
+        let historical = r#"
+            fn g1_archetype_labels_present() {
+                let cache = labels_cache().lock().expect("grammar labels");
+                let factory_key = cache.archetypes.keys().next().cloned().unwrap();
+                assert_eq!(human_archetype_label(&factory_key), "factory cluster");
+            }
+        "#;
+        assert!(
+            lock_scope_relocks(historical),
+            "detector must flag the CI deadlock shape"
+        );
+        let live = include_str!("grammar_labels.rs");
+        assert!(
+            !lock_scope_relocks(live),
+            "grammar label cache re-locked: a lookup runs while the Mutex guard is live"
+        );
+
+        let (tx, rx) = std::sync::mpsc::channel();
+        let worker = std::thread::spawn(move || {
+            let key = {
+                let cache = labels_cache().lock().expect("grammar labels");
+                cache.archetypes.keys().next().cloned()
+            };
+            if let Some(key) = key {
+                let _ = human_archetype_label(&key);
+            }
+            let _ = human_massing_label("long_hall");
+            let _ = human_district_label("core");
+            let _ = human_age_label("new");
+            assert!(
+                labels_cache().try_lock().is_ok(),
+                "grammar label cache still held after lookup"
+            );
+            tx.send(()).expect("send");
+        });
+        match rx.recv_timeout(std::time::Duration::from_secs(2)) {
+            Ok(()) => worker.join().expect("grammar label lookup thread"),
+            Err(_) => panic!("grammar label cache re-locked (same-thread Mutex deadlock)"),
+        }
+    }
 }
