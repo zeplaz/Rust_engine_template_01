@@ -322,8 +322,10 @@
     {
       "id": "PCI-38",
       "theme": "cleanup",
-      "status": "ready",
+      "status": "done",
       "goal": "Orphan module CI check",
+      "note": "CI scans assets/configs/buildings/_module_index.ron only. Rows under assets/staging/ are skipped, so untracked staging does not fail the job.",
+      "witness": "tools/orchestrator/scripts/check_orphan_modules.py",
       "unblock_when": "Name the module registry the check should scan; do not fail CI on untracked staging"
     },
     {
