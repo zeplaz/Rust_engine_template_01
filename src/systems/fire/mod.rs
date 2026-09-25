@@ -111,3 +111,29 @@ impl Plugin for FirePlugin {
             );
     }
 }
+
+#[cfg(test)]
+mod fire_schedule_locks {
+    #[test]
+    fn sync_sim_map_fire_overlay_when_sim_has_heat_is_in_fire_schedule() {
+        let src = include_str!("mod.rs");
+        let plugin = src
+            .split_once("impl Plugin for FirePlugin")
+            .expect("FirePlugin")
+            .1;
+        let plugin = plugin.split("mod fire_schedule_locks").next().unwrap_or(plugin);
+        let code: String = plugin
+            .lines()
+            .filter(|line| !line.trim_start().starts_with("//"))
+            .collect::<Vec<_>>()
+            .join("\n");
+        let idx = code
+            .find("sync_sim_map_fire_overlay_when_sim_has_heat")
+            .expect("sync_sim_map_fire_overlay_when_sim_has_heat missing from FirePlugin");
+        let window = &code[idx..(idx + 180).min(code.len())];
+        assert!(
+            window.contains(".after(chunk_fire_overlay_tick)"),
+            "sync_sim_map_fire_overlay_when_sim_has_heat must be scheduled after chunk_fire_overlay_tick"
+        );
+    }
+}
