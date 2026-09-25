@@ -148,6 +148,181 @@
       ],
       "title": "Drift instances",
       "type": "table"
+    },
+    {
+      "datasource": { "type": "datasource", "uid": "grafana" },
+      "gridPos": { "h": 4, "w": 24, "x": 0, "y": 14 },
+      "id": 7,
+      "options": {
+        "code": { "language": "plaintext", "showLineNumbers": false, "showMiniMap": false },
+        "content": "**Image conclusion matrices.** Static snapshot: `tools/orchestrator/dashboard/image_conclusion_review.json`.\n\nReads `debug_runs/scan_debug_conclusion_live.json` when that file exists (empty state when it does not). Follows matrix paths named in the conclusion, plus any `debug_runs/**/pixel_matrix_*.json`.\n\nPython pixel pipeline: land matrices under `debug_runs/` as `pixel_matrix_*.json` (kinds gui, ui, world, art). Refresh once with `python tools/orchestrator/dashboard/build_image_conclusion_review.py` — no server, no heartbeat.\n\nHTML review: `tools/orchestrator/dashboard/ops_dashboard.html`.",
+        "mode": "markdown"
+      },
+      "title": "Image conclusion paths",
+      "type": "text"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 18 },
+      "id": 8,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "kpi.last_conclusion_status", "text": "last_conclusion_status", "type": "string" }],
+          "format": "table",
+          "refId": "A",
+          "root_selector": "",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/tools/orchestrator/dashboard/image_conclusion_review.json"
+        }
+      ],
+      "title": "Last conclusion status",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } },
+      "gridPos": { "h": 4, "w": 4, "x": 4, "y": 18 },
+      "id": 9,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "kpi.count_gui", "text": "count_gui", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/tools/orchestrator/dashboard/image_conclusion_review.json"
+        }
+      ],
+      "title": "GUI matrices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } },
+      "gridPos": { "h": 4, "w": 4, "x": 8, "y": 18 },
+      "id": 10,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "kpi.count_ui", "text": "count_ui", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/tools/orchestrator/dashboard/image_conclusion_review.json"
+        }
+      ],
+      "title": "UI matrices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } },
+      "gridPos": { "h": 4, "w": 4, "x": 12, "y": 18 },
+      "id": 11,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "kpi.count_world", "text": "count_world", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/tools/orchestrator/dashboard/image_conclusion_review.json"
+        }
+      ],
+      "title": "World matrices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" } } },
+      "gridPos": { "h": 4, "w": 4, "x": 16, "y": 18 },
+      "id": 12,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "kpi.count_art", "text": "count_art", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/tools/orchestrator/dashboard/image_conclusion_review.json"
+        }
+      ],
+      "title": "Art matrices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": {
+        "defaults": {
+          "color": { "mode": "thresholds" },
+          "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "red", "value": 1 }] }
+        }
+      },
+      "gridPos": { "h": 4, "w": 4, "x": 20, "y": 18 },
+      "id": 13,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "kpi.absent", "text": "absent", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/tools/orchestrator/dashboard/image_conclusion_review.json"
+        }
+      ],
+      "title": "Absent matrices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "fieldConfig": { "defaults": { "color": { "mode": "thresholds" }, "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] } } },
+      "gridPos": { "h": 4, "w": 4, "x": 0, "y": 22 },
+      "id": 14,
+      "options": { "colorMode": "value", "graphMode": "none", "justifyMode": "auto", "orientation": "auto", "reduceOptions": { "calcs": ["lastNotNull"], "fields": "", "values": false }, "textMode": "auto" },
+      "targets": [
+        {
+          "columns": [{ "selector": "kpi.honest", "text": "honest", "type": "number" }],
+          "format": "table",
+          "refId": "A",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/tools/orchestrator/dashboard/image_conclusion_review.json"
+        }
+      ],
+      "title": "Honest matrices",
+      "type": "stat"
+    },
+    {
+      "datasource": { "type": "yesoreyeram-infinity-datasource", "uid": "ops-infinity-json" },
+      "gridPos": { "h": 8, "w": 20, "x": 4, "y": 22 },
+      "id": 15,
+      "options": { "showHeader": true },
+      "targets": [
+        {
+          "columns": [
+            { "selector": "kind", "text": "kind", "type": "string" },
+            { "selector": "honesty", "text": "honesty", "type": "string" },
+            { "selector": "status", "text": "status", "type": "string" },
+            { "selector": "path", "text": "path", "type": "string" }
+          ],
+          "format": "table",
+          "refId": "A",
+          "root_selector": "rows",
+          "source": "url",
+          "type": "json",
+          "url": "file:///C:/dev/github/Rust_engine_template_01/tools/orchestrator/dashboard/image_conclusion_review.json"
+        }
+      ],
+      "title": "Image conclusion rows",
+      "type": "table"
     }
   ],
   "refresh": "30s",
@@ -159,7 +334,7 @@
   "timezone": "browser",
   "title": "Rust Engine — OPS Oversight",
   "uid": "rust-engine-ops-overview",
-  "version": 1,
+  "version": 2,
   "__inputs": [
     {
       "description": "Infinity datasource reading ops_dashboard_live.json",

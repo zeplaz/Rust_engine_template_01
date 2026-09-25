@@ -1,0 +1,21 @@
+{
+  "generated_at": null,
+  "kpi": {
+    "absent": 0,
+    "count_art": 0,
+    "count_gui": 0,
+    "count_ui": 0,
+    "count_world": 0,
+    "honest": 0,
+    "last_conclusion_status": "absent"
+  },
+  "rows": [],
+  "schema": "image_conclusion_review_v1",
+  "source": {
+    "conclusion_present": false,
+    "conclusion_rel": "debug_runs/scan_debug_conclusion_live.json",
+    "matrix_glob": "debug_runs/**/pixel_matrix_*.json",
+    "pixel_pipeline_note": "Python pixel pipeline: land matrices under debug_runs/ as pixel_matrix_*.json (kinds gui, ui, world, art). Also follow any matrix path listed in debug_runs/scan_debug_conclusion_live.json.",
+    "refresh": "python tools/orchestrator/dashboard/build_image_conclusion_review.py"
+  }
+}
