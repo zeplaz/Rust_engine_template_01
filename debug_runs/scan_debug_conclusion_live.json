@@ -1,0 +1,143 @@
+{
+  "_agent_meta": {
+    "agent_commands": [
+      "cargo test -p proc_A_dine01 --lib"
+    ],
+    "docs": {
+      "compile_warnings": "src/dev/COMPILE_WARNINGS_TODOS.md",
+      "stage5_directive": "prompts/guides/stage5_convergence_directive_v1.md",
+      "viewport_recovery": "src/dev/recovery_viewport.md"
+    },
+    "logging_env": {
+      "ORCHESTRATOR_EXPORT_HEALTH": false,
+      "PERF": false,
+      "PERF_DISK": false,
+      "RUST_LOG": null,
+      "SIM_ANALYTICS": false,
+      "SIM_ANALYTICS_FRAMES": false,
+      "SIM_ANALYTICS_QUIET": false,
+      "SIM_VIEW_SYNC_DEBUG": false,
+      "STAGE5_READINESS_VERBOSE": false,
+      "STAGE5_VERBOSE": false,
+      "STALL": false,
+      "VIEWPORT_AUTHORITY_DEBUG": false
+    },
+    "orchestrator": {
+      "build_report": "tools/orchestrator/reports/build_report.md",
+      "ci_entry": "tools/orchestrator/ci/run.ps1",
+      "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
+      "warning_registry": "tools/orchestrator/reports/warning_registry.md"
+    },
+    "profile": "SCAN-DEBUG-WITNESS-001",
+    "related_proofs": [
+      "debug_runs/stage5_full_app_live.json",
+      "debug_runs/infrastructure_view_isolation_live.json",
+      "debug_runs/construction_stage_live.json",
+      "debug_runs/industrial_activation_live.json",
+      "debug_runs/fire_ecology_live.json",
+      "debug_runs/logistics_throughput_live.json",
+      "debug_runs/replay_editor_parity_live.json",
+      "debug_runs/orchestrator_thread_health.json",
+      "debug_runs/viewport_drift.json",
+      "debug_runs/viewport_authority_migration_witness.json",
+      "debug_runs/main_thread_orchestrator_live.json",
+      "debug_runs/stage6_virtualization_live.json",
+      "debug_runs/wave_s_hydrate_live.json",
+      "debug_runs/wave_p_live.json",
+      "debug_runs/wave_c_live.json",
+      "debug_runs/ui_shell_migration_live.json",
+      "debug_runs/minimap_compositor_live.json",
+      "debug_runs/sim_spectrum_analytics_live.json",
+      "debug_runs/stage7_behavioral_live.json",
+      "debug_runs/stage7_play_live.json",
+      "debug_runs/wss_substrate_live.json",
+      "debug_runs/f2_smoke_pipeline_live.json",
+      "debug_runs/play_scenario_live.json",
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
+    ],
+    "relative_path": "debug_runs/scan_debug_conclusion_live.json",
+    "schema": "debug_run_envelope_v1",
+    "source_system": "run_scan_debug_conclusion",
+    "written_at_epoch_secs": 1790313219
+  },
+  "counters": {
+    "green": 2,
+    "idle_misaligned": 1,
+    "missing": 0,
+    "present": 3,
+    "row_count": 3
+  },
+  "gate": "SCAN-DEBUG-WITNESS-001",
+  "green": false,
+  "heartbeat": false,
+  "matrix": [
+    {
+      "green": false,
+      "id": "product_fire_vfx",
+      "path": "debug_runs/product_fire_vfx_live.json",
+      "present": true
+    },
+    {
+      "green": true,
+      "id": "visual_artifact_jank",
+      "path": "debug_runs/visual_artifact_jank_live.json",
+      "present": true
+    },
+    {
+      "green": true,
+      "id": "building_look",
+      "path": "debug_runs/building_look_v2_live.json",
+      "present": true
+    }
+  ],
+  "misaligned": [
+    {
+      "id": "visual_artifact_jank",
+      "idle": true,
+      "misaligned": true,
+      "pixel_path": "debug_runs/visual_artifact_jank_pixel_matrix.png",
+      "reason": "green_witness_pixel_matrix_absent"
+    }
+  ],
+  "one_shot": true,
+  "pixel": {
+    "exit_code": 0,
+    "png": "debug_runs/building_look_v2/after/victorian_4x2_s1_d8e2.png",
+    "status": "invoked"
+  },
+  "schedule": null,
+  "schema": "scan_debug_conclusion_live_v1",
+  "status": "returned",
+  "sub_drainages": [
+    {
+      "id": "vfx",
+      "pointer": "debug_runs/product_fire_vfx_live.json"
+    },
+    {
+      "id": "construction",
+      "pointer": "debug_runs/construction_stage_live.json"
+    },
+    {
+      "id": "mcp",
+      "pointer": "tools/mcp/python/rust_engine_mcp/pixel_pipeline"
+    },
+    {
+      "id": "gpu",
+      "pointer": "debug_runs/gpu_p1_p2_001_live.json"
+    },
+    {
+      "id": "ci",
+      "pointer": "tools/orchestrator/ci/run.ps1"
+    }
+  ]
+}
