@@ -59,9 +59,10 @@
     {
       "id": "PCI-06",
       "theme": "ci",
-      "status": "ready",
+      "status": "done",
       "goal": "Inflated-green witnesses fail honesty",
-      "note": "WIT-ART-DISHONEST and WIT-PIXELS-DISHONEST cover two shapes. A repo-wide scan job is still not on the CI workflow.",
+      "note": "CI step scans debug_runs/*_live.json and fails on WIT-ART-DISHONEST or WIT-PIXELS-DISHONEST. Local run scanned 595 files in 118ms (shell 2523ms), under the 120000ms budget, with inflated_green=0. Broader honesty errors stay report-only.",
+      "witness": "debug_runs/pci06_witness_honesty_scan_live.json",
       "unblock_when": "Add a witness-honesty scan step only if it stays under two minutes"
     },
     {

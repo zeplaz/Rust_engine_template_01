@@ -80,6 +80,15 @@ jobs:
         with:
           python-version: "3.12"
 
+      # PCI-06: repo-wide *_live.json scan. Fail closed on inflated green
+      # (WIT-ART-DISHONEST, WIT-PIXELS-DISHONEST). Step budget is two minutes.
+      - name: witness honesty scan — inflated green (PCI-06)
+        timeout-minutes: 2
+        env:
+          PYTHONUTF8: "1"
+          PYTHONPATH: tools/mcp/python
+        run: python tools/orchestrator/scripts/check_witness_honesty_inflated_green.py
+
       - name: ResourceType vs RESOURCE_TYPES parity
         run: python src/utils/asset_tools/scripts/check_resource_parity.py
 

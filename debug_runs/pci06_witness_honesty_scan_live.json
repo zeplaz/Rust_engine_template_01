@@ -1,0 +1,24 @@
+{
+  "gate": "PCI-06",
+  "green": true,
+  "self_test": "passed",
+  "command_ms": 118,
+  "shell_elapsed_ms": 2523,
+  "scanned": 595,
+  "unreadable": 4,
+  "inflated_green": 0,
+  "elapsed_ms": 118,
+  "budget_ms": 120000,
+  "under_budget": true,
+  "hits": [],
+  "fail_closed_rules": [
+    "WIT-ART-DISHONEST",
+    "WIT-PIXELS-DISHONEST"
+  ],
+  "ci_step": ".github/workflows/ci.yml",
+  "command": "python tools/orchestrator/scripts/check_witness_honesty_inflated_green.py",
+  "_agent_meta": {
+    "schema": "pci06_witness_honesty_scan_live_v1",
+    "profile": "PCI-06"
+  }
+}
