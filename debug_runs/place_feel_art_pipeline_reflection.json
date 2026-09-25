@@ -1,0 +1,50 @@
+{
+  "schema": "place_feel_art_pipeline_reflection_v1",
+  "id": "DES-PLACE-FEEL-ART-001",
+  "date": "2026-09-25",
+  "owner": "@designer-mcp",
+  "rebake": false,
+  "doc": "src/dev/design_place_feel_art_reflection_v1.md",
+  "lint": {
+    "rule_id": "TIER-PLACE-001",
+    "cli": "place-feel-phase-note",
+    "silent_when_claim_omitted": true
+  },
+  "rows": [
+    {
+      "phase": "Operational/Built",
+      "artifact": "bq_smoke_tier_audit same-pack lod0 preference; BUILD-READ-VISUAL-001 mesh_tier_used lod0; phase_visual Operational green",
+      "lie": "Kit-fill stays green when any GLB resolves, including lod0 fallback, and a style pack prefers same-pack lod0 over cross-pack production. The click then sits under a Built tile.",
+      "responsive_fix": "operational_envelope is legal only at development_tier production. lod0 may claim preview_ghost_stand_in only.",
+      "owner": "@coder-mcp resolve; @coder Built witness; @designer-mcp TIER-PLACE-001"
+    },
+    {
+      "phase": "Preview ghost vs Planned site vs kit",
+      "artifact": "BuildPlacementMode Place/Adjust; SiteConstructionPhase::Planned tiles; geometry_job development_tier",
+      "lie": "Three clocks. The cursor is a footprint tint, the site is a blue Planned tile, and the mesh tier is chosen later. Nothing forces the ghost silhouette to be the mesh that stays.",
+      "responsive_fix": "production ghost claim is preview_ghost_same_mesh. lod0 ghost claim is preview_ghost_stand_in and must stay labeled. Do not swap tiers to mean Preview vs Built.",
+      "owner": "@designer ghost draw; @designer-mcp claim gate"
+    },
+    {
+      "phase": "picker click vs unit icon vs module",
+      "artifact": "icon_atlas_phase4.icon_atlas.ron cell_size 32×32 (RD/IN and TRUCK/BUS) vs GRID_UNIT_M=4 modules",
+      "lie": "Place-targets and movers share one 32px budget. A 4 m module thumbnail is not that cell, so the building click and the unit icon lie about scale.",
+      "responsive_fix": "place_feel_claim picker_icon is always illegal on a geometry job or AssetSpec. Icon roles stay on the atlas.",
+      "owner": "@designer atlas roles; @designer-mcp reject module-as-icon"
+    },
+    {
+      "phase": "deployable staging (in transit / staged / ready)",
+      "artifact": "design_mil_deployable_defense_v1 ghost caption vs production prefab modules",
+      "lie": "A manufactured prefab can be production art and still be unplaceable because stock is in transit. Showing lod0 or smoke to mean not-ready teaches unfinished art instead of blocked stock.",
+      "responsive_fix": "Do not add a kit phase for staging. Keep the production silhouette and let the ghost caption carry in-transit / insufficient stock.",
+      "owner": "@designer caption; @designer-mcp refuse a fourth development_tier"
+    },
+    {
+      "phase": "ghost scale vs module bay",
+      "artifact": "BuildGhostState.scale_factor vs module grid_units at 4 m, bottom_center pivot",
+      "lie": "The footprint blot can resize while the module cannot, so the click shape is not the envelope that will instance.",
+      "responsive_fix": "Click footprint snaps to integer 4 m bays. Do not scale the GLB to match Shift+scroll.",
+      "owner": "@designer ghost raster; @designer-mcp grid rule"
+    }
+  ]
+}

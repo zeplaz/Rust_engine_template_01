@@ -9,6 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from rust_engine_mcp.paths import repo_root
+from rust_engine_mcp.place_feel_phase import claim_issue_rows_for_record
 from rust_engine_mcp.schemas import load_json_file
 
 from .module_inventory import CANONICAL_MODULE_IDS
@@ -465,7 +466,25 @@ def tier_issues_for_job(job: dict[str, Any], job_path: Path) -> list[TierIssue]:
                 )
             )
 
+    issues.extend(_place_feel_issues(job, tier or None))
     return issues
+
+
+def _place_feel_issues(record: dict[str, Any], kit_phase: str | None = None) -> list[TierIssue]:
+    """TIER-PLACE-001 — only when place_feel_claim is set. Does not fail silent jobs."""
+    if "place_feel_claim" not in record:
+        return []
+    checked = record if not kit_phase else {**record, "development_tier": kit_phase}
+    return [
+        TierIssue(
+            row["rule_id"],
+            row["kind"],
+            row["severity"],
+            row["hint"],
+            row["signature"],
+        )
+        for row in claim_issue_rows_for_record(checked)
+    ]
 
 
 def tier_issues_for_spec(spec: dict[str, Any], spec_path: Path) -> list[TierIssue]:
@@ -520,6 +539,7 @@ def tier_issues_for_spec(spec: dict[str, Any], spec_path: Path) -> list[TierIssu
             )
         )
 
+    issues.extend(_place_feel_issues(spec, tier or None))
     return issues
 
 

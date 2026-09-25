@@ -11,7 +11,13 @@
     "batch_id": { "type": "string" },
     "development_tier": {
       "type": "string",
-      "enum": ["smoke", "lod0", "production"]
+      "enum": ["smoke", "lod0", "production"],
+      "description": "Kit phase only (smoke harness, lod0 stand-in, production envelope). Not a site phase (Planned…Operational), ghost FSM (Preview/Adjust), or deployable stock (in transit/staged/ready)."
+    },
+    "place_feel_claim": {
+      "type": "string",
+      "enum": ["harness_only", "preview_ghost_stand_in", "preview_ghost_same_mesh", "operational_envelope", "picker_icon"],
+      "description": "Optional. Which place-feel surface this mesh claims. picker_icon is always illegal on a geometry module (32px atlas is a different artifact). Illegal pairs fail TIER-PLACE-001. Omit to leave existing jobs silent."
     },
     "operation": {
       "type": "string",
