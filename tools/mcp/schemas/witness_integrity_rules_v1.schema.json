@@ -24,6 +24,11 @@
       "type": "array",
       "items": { "$ref": "#/$defs/queue_entry" }
     },
+    "pixel_regression_required_paths": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "VFX/visual product witnesses that must carry pixel_regression_green when green"
+    },
     "live_sim_required_paths": {
       "type": "array",
       "items": { "type": "string" }
