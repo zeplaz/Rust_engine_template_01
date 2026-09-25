@@ -478,6 +478,26 @@
     }
   ],
   "slip_up_count": 17,
+  "ci_lib_test": {
+    "schema": "ops_ci_lib_test_v1",
+    "ok": true,
+    "source": "github_actions",
+    "workflow": "CI",
+    "run_id": 36049220492,
+    "head_sha": "0faa8bb3b6e1badf493c38bbed29ade0b3956e9e",
+    "workflow_conclusion": "cancelled",
+    "run_url": "https://github.com/zeplaz/Rust_engine_template_01/actions/runs/36049220492",
+    "ci_duration_ms": 21651000,
+    "lib_test_name": "cargo test (lib)",
+    "lib_test_outcome": "cancelled",
+    "lib_test_duration_ms": 19999000,
+    "recorded_at": "2026-09-25T05:53:55.086944+00:00",
+    "note": "Newer CI runs have no concluded cargo test (lib) step yet; this record is the latest concluded lib-test outcome.",
+    "skipped_newer_run_ids": [
+      36096840044,
+      36056583798
+    ]
+  },
   "program_summary": {
     "agent_ops": {
       "count": 1,
@@ -562,7 +582,8 @@
     "run_events": "debug_runs/agent_ops/run_events.jsonl",
     "unified_index": "debug_runs/unified_witness_index.json",
     "triage_live": "debug_runs/agent_ops/triage_live.json",
-    "prometheus": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom"
+    "prometheus": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom",
+    "ci_lib_test": "debug_runs/agent_ops/ci_lib_test_last.json"
   },
   "grafana": {
     "panel_hints": [
@@ -571,7 +592,8 @@
       "processes.process_count \u2014 gauge",
       "drift.alert_count \u2014 gauge",
       "run_events.by_agent \u2014 bar chart",
-      "metrics_tier1.crash_alert_count \u2014 DCC/crash gauge"
+      "metrics_tier1.crash_alert_count \u2014 DCC/crash gauge",
+      "ci_lib_test.ci_duration_ms / lib_test_outcome \u2014 last CI stat"
     ],
     "refresh_cli": "python -m rust_engine_mcp.cli ops-dashboard-refresh",
     "triage_dashboard": "tools/orchestrator/dashboard/grafana_triage_overview.json",
