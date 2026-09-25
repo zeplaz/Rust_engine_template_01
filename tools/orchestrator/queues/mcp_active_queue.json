@@ -203,7 +203,7 @@
         "python -m rust_engine_mcp.cli landscape-sign-atlas-witness"
       ],
       "updated_at": "2026-06-20T21:19:26Z",
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 · contradiction",
+      "note": "PCI-05 2026-09-25: atlas lane VEG-F02 green in debug_runs/mcp_landscape_sign_atlas_live.json",
       "witness_refresh": "2026-06-21T03:54:01Z",
       "completed": "2026-06-21",
       "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"

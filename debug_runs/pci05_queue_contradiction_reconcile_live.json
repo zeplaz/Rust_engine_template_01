@@ -1,0 +1,45 @@
+{
+  "gate": "PCI-05",
+  "green": true,
+  "contradiction_count_before": 14,
+  "contradiction_count_after": 13,
+  "reconciled": [
+    {
+      "id": "VEG-F02-MCP-ATLAS-001",
+      "queues": [
+        "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+        "tools/orchestrator/queues/mcp_active_queue.json"
+      ],
+      "witness": "debug_runs/mcp_landscape_sign_atlas_live.json",
+      "atlas_lane_green": true,
+      "status": "done",
+      "action": "kept done after the atlas lane was green; cleared the stale coder-mcp snag and attached the witness"
+    },
+    {
+      "id": "SIM-STEWARD-FIRE-REGRESS-001",
+      "queues": [
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json"
+      ],
+      "witness": "debug_runs/fire_ecology_live.json",
+      "green": true,
+      "ember_events_emitted": 1024,
+      "status": "done",
+      "action": "kept done and attached the fire ecology witness on the dispatch copy"
+    },
+    {
+      "id": "SIM-STEWARD-FIRE-REPLAY-001",
+      "split_from": "SIM-STEWARD-FIRE-REGRESS-001",
+      "queues": [
+        "tools/orchestrator/queues/post_drain_phase4_queue.json",
+        "tools/orchestrator/queues/post_drain_phase5_queue.json",
+        "tools/orchestrator/queues/coder_master_drain_queue.json",
+        "tools/orchestrator/queues/agent_hub_queue_v1.json"
+      ],
+      "witness": "debug_runs/replay_editor_parity_live.json",
+      "parity_green": false,
+      "status": "deferred",
+      "action": "left deferred under a distinct id because replay parity is false"
+    }
+  ]
+}

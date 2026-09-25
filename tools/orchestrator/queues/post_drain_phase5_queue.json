@@ -513,14 +513,15 @@
       "updated_at": "2026-06-20T21:19:25Z"
     },
     {
-      "id": "SIM-STEWARD-FIRE-REGRESS-001",
+      "id": "SIM-STEWARD-FIRE-REPLAY-001",
       "lane": "I_FIRE",
       "priority": 3,
       "agent": "sim-steward",
       "status": "deferred",
       "goal": "Fire/replay regression after Phase 5 product slices",
       "witness": "debug_runs/replay_editor_parity_live.json",
-      "verify": "cargo test -p proc_A_dine01 --lib stage5 fire_ecology"
+      "verify": "cargo test -p proc_A_dine01 --lib stage5 fire_ecology",
+      "note": "PCI-05 2026-09-25: split from SIM-STEWARD-FIRE-REGRESS-001. replay_editor_parity_live.json parity_green is false, so this row stays deferred."
     }
   ],
   "deferred": [

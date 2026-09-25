@@ -1707,18 +1707,17 @@
       "depends_on": [
         "VEG-E08-PHASE-CLOSE-001"
       ],
-      "snag": "coder-mcp_blocked",
-      "blocked_owner": "coder-mcp",
+      "witness": "debug_runs/mcp_landscape_sign_atlas_live.json",
       "forbidden_exit": [
         "lib_test_only",
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 contradiction",
-      "updated_at": "2026-06-20T21:19:26Z",
-      "witness_refresh": "2026-06-21T03:54:01Z",
+      "note": "PCI-05 2026-09-25: atlas lane VEG-F02 green in mcp_landscape_sign_atlas_live.json; stale coder-mcp snag cleared",
+      "updated_at": "2026-09-25T05:40:00Z",
+      "witness_refresh": "2026-09-25T05:40:00Z",
       "completed": "2026-06-21",
-      "reconcile_note": "witness-green auto-close (reconcile_coder_crisis.py)"
+      "reconcile_note": "PCI-05 lanes.atlas.green true"
     },
     {
       "seq": 73,
