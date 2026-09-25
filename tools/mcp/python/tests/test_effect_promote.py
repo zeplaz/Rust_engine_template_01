@@ -111,6 +111,64 @@ def test_refresh_witness_partial_ship_before_promote(isolated_staging: Path) -> 
     assert any("promote" in g or "capture" in g or "pending" in g for g in gaps)
 
 
+def _write_production_rain(root: Path) -> str:
+    """Isolated production-tier clone. Not a shipped example."""
+    rel = "tools/mcp/schemas/examples/effect_spec_rain_streaks_prod_pci28.json"
+    src = json.loads(
+        (root / "tools/mcp/schemas/examples/effect_spec_rain_streaks_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    src["effect_id"] = "rain_streaks_prod"
+    src["development_tier"] = "production"
+    dest = root / rel
+    dest.write_text(json.dumps(src, indent=2) + "\n", encoding="utf-8")
+    return rel
+
+
+def test_pci28_force_remains_pending_operator_override(isolated_staging: Path) -> None:
+    """PCI-28: force=True may promote production while honest_gate stays pending."""
+    assert ep.OPERATOR_FORCE_OVERRIDES_PENDING_GATE is True
+    rel = _write_production_rain(isolated_staging)
+    with pytest.raises(ValueError, match="operator override"):
+        ep.promote_effect(rel, pack_first=True, force=False)
+    promoted = ep.promote_effect(rel, pack_first=True, force=True)
+    assert promoted["operator_force_pending"] is True
+    assert promoted["preview_witness"]["honest_gate"] == "pending"
+    manifest_path = (
+        isolated_staging
+        / "assets"
+        / "effects"
+        / "registry"
+        / "rain_streaks_prod"
+        / ep.PROMOTE_MANIFEST
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    assert manifest["operator_force_pending"] is True
+    assert manifest["preview_witness"]["honest_gate"] == "pending"
+
+
+def test_pci28_force_does_not_override_dishonest_gate(isolated_staging: Path) -> None:
+    """PCI-28: dishonest_gate blocks promote even when force=True."""
+    rel = _write_production_rain(isolated_staging)
+    ep.pack_effect_spec(rel)
+    frames = isolated_staging / "assets" / "staging" / "rain_streaks_prod" / "preview_frames"
+    frames.mkdir(parents=True)
+    (frames / "frames_manifest.json").write_text(
+        json.dumps(
+            {
+                "schema": "effect_preview_frames_manifest_v1",
+                "effect_id": "rain_streaks_prod",
+                "preview_witness": {"honest_gate": "dishonest_gate", "frames_captured": 0},
+            }
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    with pytest.raises(ValueError, match="dishonest_gate"):
+        ep.promote_effect(rel, pack_first=False, force=True)
+
+
 def test_refresh_witness_green_after_batch_promote(isolated_staging: Path) -> None:
     ep.effect_promote(batch_id=ep.REFERENCE_BATCH_ID, phase="full", write_witness=False)
     witness = ep.refresh_artist_vfx_pipeline_witness()

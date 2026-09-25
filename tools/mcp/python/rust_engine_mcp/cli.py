@@ -1880,7 +1880,15 @@ def main(argv: list[str] | None = None) -> int:
         choices=["pack", "promote", "full"],
         help="pack=staging only; promote=registry (expects pack); full=both",
     )
-    p.add_argument("--force", action="store_true")
+    p.add_argument(
+        "--force",
+        action="store_true",
+        help=(
+            "Overwrite staging shaders on hash drift. PCI-28 operator override: "
+            "production tier may promote while honest_gate is pending. "
+            "Does not override dishonest_gate."
+        ),
+    )
     p.add_argument("--no-witness", action="store_true")
     p.set_defaults(func=_cmd_effect_promote)
 

@@ -810,7 +810,11 @@ def effect_promote(
     force: bool = False,
     write_witness: bool = True,
 ) -> str:
-    """VSS-T4-003 — pack wgsl_pack shaders to staging and/or promote to assets/effects/registry/."""
+    """VSS-T4-003 — pack wgsl_pack shaders to staging and/or promote to assets/effects/registry/.
+
+    force=True remains the operator override for a pending production honest_gate
+    (PCI-28). It does not override dishonest_gate and does not mark the witness honest.
+    """
     from rust_engine_mcp import effect_promote as ep
 
     result = ep.effect_promote(

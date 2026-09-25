@@ -27,6 +27,12 @@ PACK_MANIFEST = "pack_manifest.json"
 EFFECT_SPEC_NAME = "effect_spec.json"
 PROMOTE_MANIFEST = "manifest.json"
 
+# PCI-28 — force=True remains the operator override for a *pending* honest_gate
+# on production tier. It does not override dishonest_gate and it does not
+# rewrite the witness to honest. Smoke and lod0 tiers still promote pending
+# without force (reference batch).
+OPERATOR_FORCE_OVERRIDES_PENDING_GATE = True
+
 
 def _utc_now() -> str:
     return datetime.now(timezone.utc).replace(microsecond=0).isoformat().replace("+00:00", "Z")
@@ -218,17 +224,47 @@ def _verify_staging_hashes(staging_dir: Path, manifest: dict[str, Any]) -> None:
             raise ValueError(f"staging hash mismatch for {role}: expected {expected[:12]}… got {actual[:12]}…")
 
 
-def _promote_gate(spec: dict[str, Any], *, force: bool) -> None:
-    pw = spec.get("preview_witness")
-    if isinstance(pw, dict):
-        gate = str(pw.get("honest_gate") or "pending")
-        if gate == "dishonest_gate" and not force:
-            raise ValueError("preview_witness.honest_gate is dishonest_gate — promote blocked")
-        tier = str(spec.get("development_tier") or "smoke")
-        if tier == "production" and gate != "honest" and not force:
-            raise ValueError(
-                "production tier requires preview_witness.honest_gate=honest (or force=True)"
-            )
+def _staging_honest_gate(effect_id: str, staging_dir: Path) -> str:
+    """Disk honesty. A dishonest label blocks even when the capture hash fails."""
+    from .effect_preview_capture import load_staging_preview_witness
+
+    loaded = load_staging_preview_witness(staging_dir)
+    if isinstance(loaded, dict) and str(loaded.get("honest_gate") or "") == "dishonest_gate":
+        return "dishonest_gate"
+    resolved = resolve_preview_witness(
+        effect_id=effect_id,
+        staging_rel=f"assets/staging/{effect_id}/",
+        staging_dir=staging_dir,
+    )
+    return str(resolved.get("honest_gate") or "pending")
+
+
+def _promote_gate(spec: dict[str, Any], *, force: bool, staging_dir: Path) -> bool:
+    """Return True when this promote used the PCI-28 operator pending override.
+
+    Honesty lives on the staging capture witness, not on EffectSpec
+    (schema additionalProperties is false). Production + pending requires
+    force=True. dishonest_gate never promotes.
+    """
+    effect_id = str(spec.get("effect_id") or "")
+    gate = _staging_honest_gate(effect_id, staging_dir)
+    if gate == "dishonest_gate":
+        raise ValueError(
+            "preview_witness.honest_gate is dishonest_gate — promote blocked; force does not override"
+        )
+    tier = str(spec.get("development_tier") or "smoke")
+    if tier != "production" or gate == "honest":
+        return False
+    if (
+        not OPERATOR_FORCE_OVERRIDES_PENDING_GATE
+        or not force
+        or gate != "pending"
+    ):
+        raise ValueError(
+            "production tier requires preview_witness.honest_gate=honest "
+            "(operator override: force=True while the gate is pending)"
+        )
+    return True
 
 
 def promote_effect(spec_path: str | Path, *, force: bool = False, pack_first: bool = True) -> dict[str, Any]:
@@ -238,11 +274,11 @@ def promote_effect(spec_path: str | Path, *, force: bool = False, pack_first: bo
         pack_effect_spec(path, force=force)
     spec = _require_validate(path)
     _require_rules_check(spec, path=path)
-    _promote_gate(spec, force=force)
-
     effect_id = str(spec["effect_id"])
-    batch_id = str(spec.get("batch_id") or "")
     staging_dir = staging_root() / effect_id
+    operator_force_pending = _promote_gate(spec, force=force, staging_dir=staging_dir)
+
+    batch_id = str(spec.get("batch_id") or "")
     manifest = _load_pack_manifest(staging_dir)
     if manifest.get("effect_id") != effect_id:
         raise ValueError("pack_manifest.effect_id mismatch")
@@ -270,6 +306,7 @@ def promote_effect(spec_path: str | Path, *, force: bool = False, pack_first: bo
         "shader_hashes": manifest.get("shader_hashes"),
         "development_tier": spec.get("development_tier"),
         "lane": spec.get("lane"),
+        "operator_force_pending": operator_force_pending,
         "preview_witness": resolve_preview_witness(
             effect_id=effect_id,
             staging_rel=staging_rel,
@@ -295,6 +332,7 @@ def promote_effect(spec_path: str | Path, *, force: bool = False, pack_first: bo
         "phase": "promote",
         "registry_dir": promoted_rel,
         "pack_hash": manifest.get("pack_hash"),
+        "operator_force_pending": operator_force_pending,
         "preview_witness": promote_body["preview_witness"],
     }
 
