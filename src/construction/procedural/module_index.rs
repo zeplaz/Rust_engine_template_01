@@ -210,7 +210,7 @@ impl ProceduralModuleRegistry {
         self.stylepack_entry_for(module_id, None).0
     }
 
-    /// StylePack / PG-2 path — optional `style_pack_id` filters before tier preference.
+    /// StylePack / PG-2 path. Production beats lod0 even across packs; the requested pack wins within one tier.
     #[must_use]
     pub fn stylepack_entry_for(
         &self,
@@ -319,60 +319,57 @@ fn pick_stylepack_entry<'a>(
     entries: impl Iterator<Item = &'a ProceduralModuleEntry>,
     style_pack_id: Option<&str>,
 ) -> (Option<&'a ProceduralModuleEntry>, StylePackResolveMeta) {
-    let mut tier_best: Option<&ProceduralModuleEntry> = None;
-    let mut style_best: Option<&ProceduralModuleEntry> = None;
-
+    let mut best: Option<&ProceduralModuleEntry> = None;
     for entry in entries {
-        tier_best = Some(match tier_best {
+        best = Some(match best {
             None => entry,
-            Some(cur) => prefer_stylepack_tier(entry, cur),
+            Some(cur) => prefer_stylepack_tier(entry, cur, style_pack_id),
         });
-        if style_pack_id.is_some_and(|id| style_pack_matches(entry, id)) {
-            style_best = Some(match style_best {
-                None => entry,
-                Some(cur) => prefer_stylepack_tier(entry, cur),
-            });
-        }
     }
-
-    if let Some(style_id) = style_pack_id {
-        if let Some(best) = style_best {
-            return (Some(best), StylePackResolveMeta::default());
-        }
-        if let Some(fallback) = tier_best {
-            warn!(
-                target: "procedural_module",
-                module_id = %fallback.module_id,
-                requested_style = %style_id,
-                resolved_style = %fallback.style_pack,
-                job_id = %fallback.job_id,
-                "stylepack cross-style fallback (BQ-F2)"
-            );
-            return (
-                Some(fallback),
-                StylePackResolveMeta {
-                    cross_style_fallback: true,
-                },
-            );
-        }
+    let Some(best) = best else {
         return (None, StylePackResolveMeta::default());
+    };
+    if let Some(style_id) = style_pack_id.filter(|id| !style_pack_matches(best, id)) {
+        warn!(
+            target: "procedural_module",
+            module_id = %best.module_id,
+            requested_style = %style_id,
+            resolved_style = %best.style_pack,
+            job_id = %best.job_id,
+            "stylepack cross-style fallback (BQ-F2)"
+        );
+        return (
+            Some(best),
+            StylePackResolveMeta {
+                cross_style_fallback: true,
+            },
+        );
     }
-
-    (tier_best, StylePackResolveMeta::default())
+    (Some(best), StylePackResolveMeta::default())
 }
 
-/// PG-2 / assembly prefers **production** over lod0 when both are stylepack-visible.
+/// Production beats lod0 even when the production GLB is another style pack.
+/// Within one tier, the requested pack wins. Equal rows keep the earlier one.
 fn prefer_stylepack_tier<'a>(
     candidate: &'a ProceduralModuleEntry,
     current: &'a ProceduralModuleEntry,
+    style_pack_id: Option<&str>,
 ) -> &'a ProceduralModuleEntry {
-    use DevelopmentTier::{Lod0, Production};
-    match (candidate.development_tier, current.development_tier) {
-        (Production, Lod0) => candidate,
-        (Lod0, Production) => current,
-        _ if candidate.development_tier > current.development_tier => candidate,
-        _ => current,
+    if candidate.development_tier != current.development_tier {
+        return if candidate.development_tier > current.development_tier {
+            candidate
+        } else {
+            current
+        };
     }
+    if let Some(id) = style_pack_id {
+        let candidate_pack = style_pack_matches(candidate, id);
+        let current_pack = style_pack_matches(current, id);
+        if candidate_pack != current_pack {
+            return if candidate_pack { candidate } else { current };
+        }
+    }
+    current
 }
 
 fn glb_to_asset_path(glb: &str) -> String {
@@ -777,6 +774,70 @@ mod tests {
             .resolve_module_id("wall_brick_1u")
             .expect("resolve_module_id lod0");
         assert_eq!(entry.development_tier, DevelopmentTier::Lod0);
+    }
+
+    fn stylepack_fixture(
+        job_id: &str,
+        tier: &str,
+        style_pack: &str,
+    ) -> ProceduralModuleEntry {
+        normalize_entry(
+            "wall_brick_1u".into(),
+            job_id.into(),
+            "wall".into(),
+            format!("assets/models/modules/{job_id}/model.glb"),
+            (1, 1),
+            Vec::new(),
+            "kit_test".into(),
+            tier.into(),
+            "shipped".into(),
+            true,
+            None,
+            "module_wall".into(),
+            style_pack.into(),
+            "floor_edge".into(),
+            "brick_red_01".into(),
+            "palette_test".into(),
+            1,
+            "v0".into(),
+        )
+    }
+
+    #[test]
+    fn production_beats_same_pack_lod0_even_across_packs() {
+        let same_lod0 = stylepack_fixture("wall_brick_1u_lod0_colonial", "lod0", "style_colonial");
+        let other_prod = stylepack_fixture(
+            "wall_brick_1u_production_iw",
+            "production",
+            "style_industrial_west",
+        );
+        let (picked, meta) =
+            pick_stylepack_entry([&same_lod0, &other_prod].into_iter(), Some("style_colonial"));
+        let picked = picked.expect("production row");
+        assert_eq!(picked.development_tier, DevelopmentTier::Production);
+        assert_eq!(picked.job_id, "wall_brick_1u_production_iw");
+        assert!(meta.cross_style_fallback);
+
+        let same_prod =
+            stylepack_fixture("wall_brick_1u_production_colonial", "production", "style_colonial");
+        let (picked, meta) = pick_stylepack_entry(
+            [&same_lod0, &other_prod, &same_prod].into_iter(),
+            Some("style_colonial"),
+        );
+        assert_eq!(
+            picked.expect("same-pack production").job_id,
+            "wall_brick_1u_production_colonial"
+        );
+        assert!(!meta.cross_style_fallback);
+
+        let other_lod0 =
+            stylepack_fixture("wall_brick_1u_lod0_iw", "lod0", "style_industrial_west");
+        let (picked, meta) =
+            pick_stylepack_entry([&other_lod0, &same_lod0].into_iter(), Some("style_colonial"));
+        let picked = picked.expect("same-pack lod0");
+        assert_eq!(picked.development_tier, DevelopmentTier::Lod0);
+        assert_eq!(picked.style_pack, "style_colonial");
+        assert!(!meta.cross_style_fallback);
     }
 
     #[test]
