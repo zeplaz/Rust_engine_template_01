@@ -64,6 +64,13 @@
       "fix_hint": "Ship gpu_fire_particle_raster pixels (host_present+draw_ok+spark_rows) or set product_vfx_claim:false for scoped contracts (ES-7/ecology)"
     },
     {
+      "rule_id": "WIT-PIXELS-DISHONEST",
+      "severity": "error",
+      "description": "Green witness contradicts an explicit pixel-regression or LOD-chrome verdict",
+      "when_fail": "green==true ∧ (pixel_regression_green==false ∨ lod_chrome_leak==true)",
+      "fix_hint": "Set green:false until pixel_regression_green is true and lod_chrome_leak is absent"
+    },
+    {
       "rule_id": "WIT-ENV-BOOTSTRAP-ONLY",
       "severity": "warning",
       "description": "Live-sim-required witness green from lib/bootstrap harness only",

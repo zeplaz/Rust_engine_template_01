@@ -73,6 +73,8 @@ def test_catalog_witness_rules_have_pytest_coverage() -> None:
         "WIT-GATE-DRIFT-G4",
         "WIT-TINY-PNG-PILOT",
         "WIT-ART-DISHONEST",
+        "WIT-PRODUCT-VFX-PARTICLES",
+        "WIT-PIXELS-DISHONEST",
         "WIT-ENV-BOOTSTRAP-ONLY",
         "WIT-MISSING-ENVELOPE",
         "WIT-EXIT-PREDICATE",
@@ -84,6 +86,32 @@ def test_catalog_witness_rules_have_pytest_coverage() -> None:
         if rid in _SCAN_ONLY_RULES:
             continue
         assert rid in covered, f"missing pytest coverage for {rid}"
+
+
+def test_product_vfx_and_pixel_regression_honesty() -> None:
+    catalog = load_witness_integrity_catalog()
+    root = repo_root()
+    meta = {"_agent_meta": {"schema": "witness_honesty_fixture_v1"}}
+    rel = "debug_runs/product_fire_vfx_live.json"
+    vfx = {**meta, "green": True, "product_vfx_claim": True, "particles_rendered": False}
+    issues = evaluate_witness_honesty_rules(vfx, witness_rel=rel, catalog=catalog, root=root)
+    assert any(i.symbol == "WIT-PRODUCT-VFX-PARTICLES" for i in issues)
+
+    pending = {**meta, "green": False, "product_vfx_claim": True, "particles_rendered": False}
+    quiet = evaluate_witness_honesty_rules(pending, witness_rel=rel, catalog=catalog, root=root)
+    assert not any(i.symbol == "WIT-PRODUCT-VFX-PARTICLES" for i in quiet)
+
+    dishonest = {**meta, "green": True, "pixel_regression_green": False}
+    pixels = evaluate_witness_honesty_rules(dishonest, witness_rel=rel, catalog=catalog, root=root)
+    assert any(i.symbol == "WIT-PIXELS-DISHONEST" for i in pixels)
+
+    chrome = {**meta, "green": True, "pixel_regression_green": True, "lod_chrome_leak": True}
+    leaked = evaluate_witness_honesty_rules(chrome, witness_rel=rel, catalog=catalog, root=root)
+    assert any(i.symbol == "WIT-PIXELS-DISHONEST" for i in leaked)
+
+    clean = {**meta, "green": True, "pixel_regression_green": True, "lod_chrome_leak": False}
+    ok = evaluate_witness_honesty_rules(clean, witness_rel=rel, catalog=catalog, root=root)
+    assert not any(i.symbol == "WIT-PIXELS-DISHONEST" for i in ok)
 
 
 def test_env_bootstrap_only_warning() -> None:

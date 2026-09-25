@@ -242,6 +242,15 @@ def evaluate_witness_honesty_rules(
             "green=true with product_vfx_claim=true but particles_rendered=false",
         )
 
+    # WIT-PIXELS-DISHONEST — green must not outrun an explicit pixel verdict.
+    if data.get("green") is True and (
+        data.get("pixel_regression_green") is False or data.get("lod_chrome_leak") is True
+    ):
+        add(
+            "WIT-PIXELS-DISHONEST",
+            "green=true but pixel_regression_green is false or lod_chrome_leak is true",
+        )
+
     # WIT-TINY-PNG-PILOT
     png_count = int(data.get("png_count") or 0)
     ship = data.get("ship")
