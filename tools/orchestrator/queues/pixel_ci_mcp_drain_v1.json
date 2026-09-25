@@ -182,9 +182,10 @@
     {
       "id": "PCI-21",
       "theme": "mcp",
-      "status": "ready",
+      "status": "done",
       "goal": "effect spec to validate to preview-capture to honest_gate to promote",
-      "note": "Chain is documented in effect_promote.shipped and covered by test_effect_preview_capture.py. A one-command CLI smoke is not a CI step yet.",
+      "note": "effect-chain-smoke runs the reference batch isolated: validate, preview-capture, honest_gate, promote. force=false. cron_scheduled=false. 127ms against a 120000ms budget. CI workflow step stays PCI-27.",
+      "witness": "debug_runs/pci21_effect_chain_smoke_live.json",
       "unblock_when": "Add a CLI smoke only if it stays under two minutes and does not schedule a cron"
     },
     {

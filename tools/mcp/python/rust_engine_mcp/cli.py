@@ -147,6 +147,14 @@ def _cmd_effect_preview_capture(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_effect_chain_smoke(args: argparse.Namespace) -> int:
+    from rust_engine_mcp.effect_chain_smoke import run_effect_chain_smoke
+
+    body = run_effect_chain_smoke(write_witness=args.witness)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_artist_vfx_pipeline_witness(_: argparse.Namespace) -> int:
     from rust_engine_mcp import effect_promote as ep
 
@@ -1886,6 +1894,17 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--force", action="store_true", help="Force pack overwrite on hash drift")
     p.add_argument("--no-witness", action="store_true")
     p.set_defaults(func=_cmd_effect_preview_capture)
+
+    p = sub.add_parser(
+        "effect-chain-smoke",
+        help="PCI-21 — isolated spec→validate→preview-capture→honest_gate→promote (no cron)",
+    )
+    p.add_argument(
+        "--witness",
+        action="store_true",
+        help="Write debug_runs/pci21_effect_chain_smoke_live.json",
+    )
+    p.set_defaults(func=_cmd_effect_chain_smoke)
 
     sub.add_parser(
         "artist-vfx-pipeline-witness",

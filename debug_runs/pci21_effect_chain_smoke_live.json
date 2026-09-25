@@ -1,0 +1,48 @@
+{
+  "schema": "effect_chain_smoke_v1",
+  "id": "PCI-21",
+  "command": "effect-chain-smoke",
+  "batch_id": "vss_t4_reference_effects_v1",
+  "steps": [
+    "validate",
+    "preview_capture",
+    "honest_gate",
+    "promote"
+  ],
+  "count": 3,
+  "effects": [
+    {
+      "spec": "tools/mcp/schemas/examples/effect_spec_spark_shower_v1.json",
+      "validate_status": "passed",
+      "effect_id": "spark_shower",
+      "honest_gate": "honest",
+      "frames_captured": 4,
+      "promoted_honest_gate": "honest"
+    },
+    {
+      "spec": "tools/mcp/schemas/examples/effect_spec_smoke_column_v1.json",
+      "validate_status": "passed",
+      "effect_id": "smoke_column",
+      "honest_gate": "honest",
+      "frames_captured": 4,
+      "promoted_honest_gate": "honest"
+    },
+    {
+      "spec": "tools/mcp/schemas/examples/effect_spec_rain_streaks_v1.json",
+      "validate_status": "passed",
+      "effect_id": "rain_streaks",
+      "honest_gate": "honest",
+      "frames_captured": 4,
+      "promoted_honest_gate": "honest"
+    }
+  ],
+  "errors": [],
+  "elapsed_ms": 127,
+  "budget_ms": 120000,
+  "under_budget": true,
+  "cron_scheduled": false,
+  "writes_live_registry": false,
+  "force": false,
+  "green": true,
+  "witness": "debug_runs/pci21_effect_chain_smoke_live.json"
+}

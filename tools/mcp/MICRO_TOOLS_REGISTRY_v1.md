@@ -286,6 +286,7 @@ Doc: [`docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md`](../..
 | `effect-pack <spec.json>` | — | wgsl_pack hash copy → `assets/staging/<effect_id>/` | **SHIPPED** |
 | `effect-promote [spec.json] [--batch-id] [--phase pack\|promote\|full]` | `effect_promote` | Staging pack + promote → `assets/effects/registry/` | **SHIPPED** |
 | `effect-preview-capture [spec.json] [--batch-id]` | `effect_preview_capture` | Deterministic staging_pack_digest frames → `honest_gate=honest` | **SHIPPED** |
+| `effect-chain-smoke [--witness]` | — | PCI-21 isolated spec → validate → preview-capture → honest_gate → promote. No cron. | **SHIPPED** |
 | `artist-vfx-pipeline-witness` | — | Refresh `debug_runs/artist_vfx_pipeline_live.json` | **SHIPPED** |
 
 Schema: `tools/validators/schemas/validation_report_v1.schema.json` · Rule: `.cursor/rules/validation-first.mdc`

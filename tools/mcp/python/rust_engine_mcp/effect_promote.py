@@ -483,6 +483,7 @@ def refresh_artist_vfx_pipeline_witness(*, repo: Path | None = None) -> dict[str
         "effect_pack_cli": "effect-pack",
         "effect_preview_capture_mcp": "effect_preview_capture",
         "effect_preview_capture_cli": "effect-preview-capture",
+        "effect_chain_smoke_cli": "effect-chain-smoke",
         "reference_batch_id": REFERENCE_BATCH_ID,
         "plan_doc": "src/dev/plan_artist_vfx_toolchain_v1.md",
     }
