@@ -115,6 +115,7 @@ pub mod effects_system_es5_live_proof;
 pub mod effects_system_es6_live_proof;
 pub mod effects_system_es7_live_proof;
 pub mod product_fire_vfx_live_proof;
+pub mod scan_debug_pipeline;
 pub mod artist_vfx_pipeline_live_proof;
 pub mod design_event_log_ui_live_proof;
 pub mod pilot_catalog_parity_live_proof;
