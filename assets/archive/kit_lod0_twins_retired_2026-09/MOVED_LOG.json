@@ -1,0 +1,262 @@
+{
+  "schema": "archive_moved_log_v1",
+  "bundle": "kit_lod0_twins_retired_2026-09",
+  "gate": "BQ-LOD0-TWIN-PRUNE-001",
+  "written_at_epoch_secs": 1790257942,
+  "moved_count": 50,
+  "moved_this_run": 0,
+  "moved": [
+    {
+      "job_id": "corner_L_lod0_run001",
+      "from": "assets/models/modules/corner_L_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/corner_L_lod0_run001"
+    },
+    {
+      "job_id": "corner_parapet_lod0_run001",
+      "from": "assets/models/modules/corner_parapet_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/corner_parapet_lod0_run001"
+    },
+    {
+      "job_id": "corner_T_lod0_run001",
+      "from": "assets/models/modules/corner_T_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/corner_T_lod0_run001"
+    },
+    {
+      "job_id": "door_civic_lod0_run001",
+      "from": "assets/models/modules/door_civic_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_civic_lod0_run001"
+    },
+    {
+      "job_id": "door_double_shop_lod0_run001",
+      "from": "assets/models/modules/door_double_shop_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_double_shop_lod0_run001"
+    },
+    {
+      "job_id": "door_factory_lod0_run001",
+      "from": "assets/models/modules/door_factory_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_factory_lod0_run001"
+    },
+    {
+      "job_id": "door_garage_lod0_run001",
+      "from": "assets/models/modules/door_garage_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_garage_lod0_run001"
+    },
+    {
+      "job_id": "door_gate_industrial_lod0_run001",
+      "from": "assets/models/modules/door_gate_industrial_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_gate_industrial_lod0_run001"
+    },
+    {
+      "job_id": "door_military_lod0_run001",
+      "from": "assets/models/modules/door_military_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_military_lod0_run001"
+    },
+    {
+      "job_id": "door_office_lod0_run001",
+      "from": "assets/models/modules/door_office_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_office_lod0_run001"
+    },
+    {
+      "job_id": "door_residential_lod0_run001",
+      "from": "assets/models/modules/door_residential_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_residential_lod0_run001"
+    },
+    {
+      "job_id": "door_shop_lod0_run001",
+      "from": "assets/models/modules/door_shop_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_shop_lod0_run001"
+    },
+    {
+      "job_id": "door_warehouse_lod0_run001",
+      "from": "assets/models/modules/door_warehouse_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/door_warehouse_lod0_run001"
+    },
+    {
+      "job_id": "prop_ac_lod0_run001",
+      "from": "assets/models/modules/prop_ac_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/prop_ac_lod0_run001"
+    },
+    {
+      "job_id": "prop_chimney_lod0_run001",
+      "from": "assets/models/modules/prop_chimney_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/prop_chimney_lod0_run001"
+    },
+    {
+      "job_id": "prop_fence_lod0_run001",
+      "from": "assets/models/modules/prop_fence_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/prop_fence_lod0_run001"
+    },
+    {
+      "job_id": "prop_light_lod0_run001",
+      "from": "assets/models/modules/prop_light_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/prop_light_lod0_run001"
+    },
+    {
+      "job_id": "prop_tank_lod0_run001",
+      "from": "assets/models/modules/prop_tank_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/prop_tank_lod0_run001"
+    },
+    {
+      "job_id": "prop_transformer_lod0_run001",
+      "from": "assets/models/modules/prop_transformer_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/prop_transformer_lod0_run001"
+    },
+    {
+      "job_id": "prop_vent_lod0_run001",
+      "from": "assets/models/modules/prop_vent_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/prop_vent_lod0_run001"
+    },
+    {
+      "job_id": "roof_bunker_lod0_run001",
+      "from": "assets/models/modules/roof_bunker_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_bunker_lod0_run001"
+    },
+    {
+      "job_id": "roof_canopy_lod0_run001",
+      "from": "assets/models/modules/roof_canopy_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_canopy_lod0_run001"
+    },
+    {
+      "job_id": "roof_flat_lod0_run001",
+      "from": "assets/models/modules/roof_flat_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_flat_lod0_run001"
+    },
+    {
+      "job_id": "roof_metal_low_lod0_run001",
+      "from": "assets/models/modules/roof_metal_low_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_metal_low_lod0_run001"
+    },
+    {
+      "job_id": "roof_parapet_lod0_run001",
+      "from": "assets/models/modules/roof_parapet_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_parapet_lod0_run001"
+    },
+    {
+      "job_id": "roof_pitched_gable_lod0_run001",
+      "from": "assets/models/modules/roof_pitched_gable_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_pitched_gable_lod0_run001"
+    },
+    {
+      "job_id": "roof_pitched_hip_lod0_run001",
+      "from": "assets/models/modules/roof_pitched_hip_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_pitched_hip_lod0_run001"
+    },
+    {
+      "job_id": "roof_sawtooth_lod0_run001",
+      "from": "assets/models/modules/roof_sawtooth_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_sawtooth_lod0_run001"
+    },
+    {
+      "job_id": "roof_shed_lod0_run001",
+      "from": "assets/models/modules/roof_shed_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_shed_lod0_run001"
+    },
+    {
+      "job_id": "roof_tile_lod0_run001",
+      "from": "assets/models/modules/roof_tile_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/roof_tile_lod0_run001"
+    },
+    {
+      "job_id": "wall_brick_1u_lod0_run001",
+      "from": "assets/models/modules/wall_brick_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_brick_1u_lod0_run001"
+    },
+    {
+      "job_id": "wall_brick_2u_lod0_run001",
+      "from": "assets/models/modules/wall_brick_2u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_brick_2u_lod0_run001"
+    },
+    {
+      "job_id": "wall_concrete_1u_lod0_run001",
+      "from": "assets/models/modules/wall_concrete_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_concrete_1u_lod0_run001"
+    },
+    {
+      "job_id": "wall_concrete_2u_lod0_run001",
+      "from": "assets/models/modules/wall_concrete_2u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_concrete_2u_lod0_run001"
+    },
+    {
+      "job_id": "wall_glass_curtain_1u_lod0_run001",
+      "from": "assets/models/modules/wall_glass_curtain_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_glass_curtain_1u_lod0_run001"
+    },
+    {
+      "job_id": "wall_industrial_panel_2u_lod0_run001",
+      "from": "assets/models/modules/wall_industrial_panel_2u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_industrial_panel_2u_lod0_run001"
+    },
+    {
+      "job_id": "wall_military_bunker_1u_lod0_run001",
+      "from": "assets/models/modules/wall_military_bunker_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_military_bunker_1u_lod0_run001"
+    },
+    {
+      "job_id": "wall_steel_1u_lod0_run001",
+      "from": "assets/models/modules/wall_steel_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_steel_1u_lod0_run001"
+    },
+    {
+      "job_id": "wall_wood_1u_lod0_run001",
+      "from": "assets/models/modules/wall_wood_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_wood_1u_lod0_run001"
+    },
+    {
+      "job_id": "wall_wood_2u_lod0_run001",
+      "from": "assets/models/modules/wall_wood_2u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/wall_wood_2u_lod0_run001"
+    },
+    {
+      "job_id": "win_arched_1u_lod0_run001",
+      "from": "assets/models/modules/win_arched_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_arched_1u_lod0_run001"
+    },
+    {
+      "job_id": "win_bunker_slit_lod0_run001",
+      "from": "assets/models/modules/win_bunker_slit_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_bunker_slit_lod0_run001"
+    },
+    {
+      "job_id": "win_double_1u_lod0_run001",
+      "from": "assets/models/modules/win_double_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_double_1u_lod0_run001"
+    },
+    {
+      "job_id": "win_house_1u_lod0_run001",
+      "from": "assets/models/modules/win_house_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_house_1u_lod0_run001"
+    },
+    {
+      "job_id": "win_industrial_3u_lod0_run001",
+      "from": "assets/models/modules/win_industrial_3u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_industrial_3u_lod0_run001"
+    },
+    {
+      "job_id": "win_office_1u_lod0_run001",
+      "from": "assets/models/modules/win_office_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_office_1u_lod0_run001"
+    },
+    {
+      "job_id": "win_shop_2u_lod0_run001",
+      "from": "assets/models/modules/win_shop_2u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_shop_2u_lod0_run001"
+    },
+    {
+      "job_id": "win_single_1u_lod0_run001",
+      "from": "assets/models/modules/win_single_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_single_1u_lod0_run001"
+    },
+    {
+      "job_id": "win_skylight_1u_lod0_run001",
+      "from": "assets/models/modules/win_skylight_1u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_skylight_1u_lod0_run001"
+    },
+    {
+      "job_id": "win_strip_2u_lod0_run001",
+      "from": "assets/models/modules/win_strip_2u_lod0_run001",
+      "to": "assets/archive/kit_lod0_twins_retired_2026-09/modules/win_strip_2u_lod0_run001"
+    }
+  ],
+  "errors": [],
+  "note": "Retired lod0 twins from runtime index; kept on disk per assets/archive/README.md"
+}

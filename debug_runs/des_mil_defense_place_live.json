@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/des_mil_defense_place_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_cod_mil_defense_place_witness",
-    "written_at_epoch_secs": 1790272509
+    "written_at_epoch_secs": 1790312390
   },
   "catalog_ia": {
     "rows": [
@@ -111,9 +111,9 @@
   "green": true,
   "hud_copy_locked": true,
   "impl_wired": true,
-  "lmb_commit_count": 3,
+  "lmb_commit_count": 5,
   "military_default_is_demolish": false,
-  "mode_lock_count": 3,
+  "mode_lock_count": 5,
   "picker_opens_on_military": true,
   "pointer_gate": "inherit_industry_picker",
   "residuals": [],

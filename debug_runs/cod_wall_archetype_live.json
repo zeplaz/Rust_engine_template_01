@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/cod_wall_archetype_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_cod_wall_archetype_witness",
-    "written_at_epoch_secs": 1790272509
+    "written_at_epoch_secs": 1790312390
   },
   "bunker_mapping_unchanged": true,
   "commit_funnel": "CommitConstructionSiteEvent",

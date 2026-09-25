@@ -23,6 +23,8 @@
 /debug_runs/perf_frames/
 /debug_runs/validators/*.log
 /debug_runs/world_gen_17*.json
+# Preview-job worker output (jobs, status, thumbs). Written at runtime; do not git add.
+/debug_runs/preview_jobs/
 
 # Python bytecode (MCP toolchain)
 **/__pycache__/

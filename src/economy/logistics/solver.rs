@@ -14,7 +14,7 @@ use super::types::{
     FreightReservation, FreightReservationBook, LogisticsDiagnostics, RouteProof,
     ThroughputSolverState,
 };
-use super::types::{RoutePathStore, RouteCache};
+use super::types::{RouteCache, RoutePathStore};
 use crate::construction::ConstructionWorldRevision;
 use crate::economy::resource_flow::ResourceFlowRegistry;
 
@@ -22,10 +22,7 @@ use crate::economy::resource_flow::ResourceFlowRegistry;
 #[must_use]
 pub fn soa_solver_aligned(solver: &ThroughputSolverState) -> bool {
     let n = solver.capacity.len();
-    n > 0
-        && solver.load.len() == n
-        && solver.reserved.len() == n
-        && solver.edge_pressure.len() == n
+    n > 0 && solver.load.len() == n && solver.reserved.len() == n && solver.edge_pressure.len() == n
 }
 
 /// LOG-C-02: every edge reservation must stay within capacity after solve.

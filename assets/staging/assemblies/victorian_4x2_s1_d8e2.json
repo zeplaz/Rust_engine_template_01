@@ -32,25 +32,8 @@
         0.0,
         0.0
       ],
-      "face": "S",
-      "node_id": "win_brick_1u_0_0_f0_S",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "S"
     },
     {
       "module_id": "wall_brick_1u",
@@ -71,25 +54,8 @@
         1.5707963267948966,
         0.0
       ],
-      "face": "W",
-      "node_id": "wall_brick_1u_0_0_f0_W",
       "material_profile": "brick_red_01",
-      "placement_tags": [
-        "exterior",
-        "industrial"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "architectural": [
-          "industrial"
-        ]
-      }
+      "face": "W"
     },
     {
       "module_id": "win_brick_1u",
@@ -110,25 +76,8 @@
         0.0,
         0.0
       ],
-      "face": "S",
-      "node_id": "win_brick_1u_1_0_f0_S",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "S"
     },
     {
       "module_id": "door_residential",
@@ -149,25 +98,8 @@
         0.0,
         0.0
       ],
-      "face": "S",
-      "node_id": "door_residential_2_0_f0_S",
       "material_profile": "wood_plank_01",
-      "placement_tags": [
-        "exterior",
-        "door"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "door_rollup"
-        ]
-      }
+      "face": "S"
     },
     {
       "module_id": "win_brick_1u",
@@ -188,25 +120,8 @@
         0.0,
         0.0
       ],
-      "face": "S",
-      "node_id": "win_brick_1u_3_0_f0_S",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "S"
     },
     {
       "module_id": "wall_brick_1u",
@@ -227,25 +142,8 @@
         -1.5707963267948966,
         0.0
       ],
-      "face": "E",
-      "node_id": "wall_brick_1u_3_0_f0_E",
       "material_profile": "brick_red_01",
-      "placement_tags": [
-        "exterior",
-        "industrial"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "architectural": [
-          "industrial"
-        ]
-      }
+      "face": "E"
     },
     {
       "module_id": "win_brick_1u",
@@ -266,25 +164,8 @@
         3.141592653589793,
         0.0
       ],
-      "face": "N",
-      "node_id": "win_brick_1u_0_1_f0_N",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "N"
     },
     {
       "module_id": "win_brick_1u",
@@ -305,25 +186,8 @@
         1.5707963267948966,
         0.0
       ],
-      "face": "W",
-      "node_id": "win_brick_1u_0_1_f0_W",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "W"
     },
     {
       "module_id": "win_brick_1u",
@@ -344,25 +208,8 @@
         3.141592653589793,
         0.0
       ],
-      "face": "N",
-      "node_id": "win_brick_1u_1_1_f0_N",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "N"
     },
     {
       "module_id": "wall_brick_1u",
@@ -383,25 +230,8 @@
         3.141592653589793,
         0.0
       ],
-      "face": "N",
-      "node_id": "wall_brick_1u_2_1_f0_N",
       "material_profile": "brick_red_01",
-      "placement_tags": [
-        "exterior",
-        "industrial"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "architectural": [
-          "industrial"
-        ]
-      }
+      "face": "N"
     },
     {
       "module_id": "win_brick_1u",
@@ -422,25 +252,8 @@
         3.141592653589793,
         0.0
       ],
-      "face": "N",
-      "node_id": "win_brick_1u_3_1_f0_N",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "N"
     },
     {
       "module_id": "win_brick_1u",
@@ -461,25 +274,8 @@
         -1.5707963267948966,
         0.0
       ],
-      "face": "E",
-      "node_id": "win_brick_1u_3_1_f0_E",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "E"
     },
     {
       "module_id": "win_brick_1u",
@@ -500,25 +296,8 @@
         0.0,
         0.0
       ],
-      "face": "S",
-      "node_id": "win_brick_1u_0_0_f1_S",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "S"
     },
     {
       "module_id": "wall_brick_1u",
@@ -539,25 +318,8 @@
         1.5707963267948966,
         0.0
       ],
-      "face": "W",
-      "node_id": "wall_brick_1u_0_0_f1_W",
       "material_profile": "brick_red_01",
-      "placement_tags": [
-        "exterior",
-        "industrial"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "architectural": [
-          "industrial"
-        ]
-      }
+      "face": "W"
     },
     {
       "module_id": "win_brick_1u",
@@ -578,25 +340,8 @@
         0.0,
         0.0
       ],
-      "face": "S",
-      "node_id": "win_brick_1u_1_0_f1_S",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "S"
     },
     {
       "module_id": "win_brick_1u",
@@ -617,25 +362,8 @@
         0.0,
         0.0
       ],
-      "face": "S",
-      "node_id": "win_brick_1u_2_0_f1_S",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "S"
     },
     {
       "module_id": "win_brick_1u",
@@ -656,25 +384,8 @@
         0.0,
         0.0
       ],
-      "face": "S",
-      "node_id": "win_brick_1u_3_0_f1_S",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "S"
     },
     {
       "module_id": "wall_brick_1u",
@@ -695,25 +406,8 @@
         -1.5707963267948966,
         0.0
       ],
-      "face": "E",
-      "node_id": "wall_brick_1u_3_0_f1_E",
       "material_profile": "brick_red_01",
-      "placement_tags": [
-        "exterior",
-        "industrial"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "architectural": [
-          "industrial"
-        ]
-      }
+      "face": "E"
     },
     {
       "module_id": "win_brick_1u",
@@ -734,25 +428,8 @@
         3.141592653589793,
         0.0
       ],
-      "face": "N",
-      "node_id": "win_brick_1u_0_1_f1_N",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "N"
     },
     {
       "module_id": "win_brick_1u",
@@ -773,25 +450,8 @@
         1.5707963267948966,
         0.0
       ],
-      "face": "W",
-      "node_id": "win_brick_1u_0_1_f1_W",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "W"
     },
     {
       "module_id": "win_brick_1u",
@@ -812,25 +472,8 @@
         3.141592653589793,
         0.0
       ],
-      "face": "N",
-      "node_id": "win_brick_1u_1_1_f1_N",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "N"
     },
     {
       "module_id": "win_brick_1u",
@@ -851,25 +494,8 @@
         3.141592653589793,
         0.0
       ],
-      "face": "N",
-      "node_id": "win_brick_1u_2_1_f1_N",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "N"
     },
     {
       "module_id": "win_brick_1u",
@@ -890,25 +516,8 @@
         3.141592653589793,
         0.0
       ],
-      "face": "N",
-      "node_id": "win_brick_1u_3_1_f1_N",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "N"
     },
     {
       "module_id": "win_brick_1u",
@@ -929,25 +538,8 @@
         -1.5707963267948966,
         0.0
       ],
-      "face": "E",
-      "node_id": "win_brick_1u_3_1_f1_E",
       "material_profile": "glass_panel_01",
-      "placement_tags": [
-        "exterior",
-        "window_band"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "detail": [
-          "window_band"
-        ]
-      }
+      "face": "E"
     },
     {
       "module_id": "roof_pitched_gable",
@@ -968,25 +560,8 @@
         1.5707963267948966,
         0.0
       ],
-      "roof_mode": "full_footprint",
-      "node_id": "roof_pitched_gable_2_0_f2",
       "material_profile": "roof_tile_01",
-      "placement_tags": [
-        "exterior",
-        "industrial"
-      ],
-      "variant_tags": [
-        "clean"
-      ],
-      "lod_policy": "production",
-      "semantic_tags": {
-        "location": [
-          "street_facing"
-        ],
-        "architectural": [
-          "industrial"
-        ]
-      }
+      "roof_mode": "full_footprint"
     }
   ],
   "building_look_v2": {

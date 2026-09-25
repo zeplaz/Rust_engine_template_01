@@ -168,14 +168,14 @@
       "face": "E"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 0,
       "grid_y": 1,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         -2.0,
         0.0,
@@ -186,18 +186,18 @@
         1.5707963267948966,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "W"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 4,
       "grid_y": 1,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         18.0,
         0.0,
@@ -208,18 +208,18 @@
         -1.5707963267948966,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "E"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 0,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         0.0,
         0.0,
@@ -230,7 +230,7 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {
@@ -256,14 +256,14 @@
       "face": "W"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 1,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         4.0,
         0.0,
@@ -274,7 +274,7 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {
@@ -300,14 +300,14 @@
       "face": "N"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 3,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         12.0,
         0.0,
@@ -318,18 +318,18 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 4,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         16.0,
         0.0,
@@ -340,7 +340,7 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {
@@ -520,14 +520,14 @@
       "face": "E"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 0,
       "grid_y": 1,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         -2.0,
         3.0,
@@ -538,18 +538,18 @@
         1.5707963267948966,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "W"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 4,
       "grid_y": 1,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         18.0,
         3.0,
@@ -560,18 +560,18 @@
         -1.5707963267948966,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "E"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 0,
       "grid_y": 2,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         0.0,
         3.0,
@@ -582,7 +582,7 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {
@@ -608,14 +608,14 @@
       "face": "W"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 1,
       "grid_y": 2,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         4.0,
         3.0,
@@ -626,18 +626,18 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 2,
       "grid_y": 2,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         8.0,
         3.0,
@@ -648,18 +648,18 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 3,
       "grid_y": 2,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         12.0,
         3.0,
@@ -670,18 +670,18 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {
-      "module_id": "wall_brick_1u",
-      "job_id": "wall_brick_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_brick_1u",
+      "job_id": "win_brick_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 4,
       "grid_y": 2,
       "floor": 1,
-      "glb_path": "assets/models/modules/wall_brick_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_brick_1u_production_run001/model.glb",
       "position": [
         16.0,
         3.0,
@@ -692,7 +692,7 @@
         3.141592653589793,
         0.0
       ],
-      "material_profile": "brick_red_01",
+      "material_profile": "glass_panel_01",
       "face": "N"
     },
     {

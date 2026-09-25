@@ -53,12 +53,22 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/city_g0_wit_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g0_wit_001_grammar_determinism_witness",
-    "written_at_epoch_secs": 1783371796
+    "written_at_epoch_secs": 1790312391
   },
   "auto_001_contract": true,
   "g0_prerequisites": {
@@ -70,9 +80,9 @@
   "issue": "CITY-G0c",
   "registry_ok": true,
   "run_hashes": [
-    "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
-    "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
-    "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09"
+    "892d651edb4be9bbab05a1bf6c0d4b7194498c01029b624c1297ee86209f0ff6",
+    "892d651edb4be9bbab05a1bf6c0d4b7194498c01029b624c1297ee86209f0ff6",
+    "892d651edb4be9bbab05a1bf6c0d4b7194498c01029b624c1297ee86209f0ff6"
   ],
   "seed_sensitivity_ok": true,
   "spec": {
@@ -81,6 +91,6 @@
     "district_style": "industrial_west",
     "seed": 43
   },
-  "stable_hash": "6d8031cfea5ad1c3ec81f891386f6375b422cd668a2958cb49cdfb0a849f6b09",
+  "stable_hash": "892d651edb4be9bbab05a1bf6c0d4b7194498c01029b624c1297ee86209f0ff6",
   "three_run_stable": true
 }

@@ -63,9 +63,9 @@
   ],
   "scan": {
     "status": "failed",
-    "summary": "witness_honesty scan debug_runs: scanned=525 failed_files=154 issues=222",
-    "error_count": 78,
-    "warning_count": 144
+    "summary": "witness_honesty scan debug_runs: scanned=593 failed_files=168 issues=242",
+    "error_count": 84,
+    "warning_count": 158
   },
   "commands": [
     "python -m rust_engine_mcp.cli validate-report witness_honesty <path> --compress 3",
@@ -73,7 +73,7 @@
   ],
   "_agent_meta": {
     "schema": "mcp_witness_honesty_validator_live_v1",
-    "written_at_epoch_secs": 1786569984,
+    "written_at_epoch_secs": 1790313476,
     "profile": "MCP_WITNESS_HONESTY_VALIDATOR",
     "source_system": "witness_honesty",
     "relative_path": "debug_runs/mcp_witness_honesty_validator_live.json",

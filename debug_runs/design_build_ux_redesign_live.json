@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/design_build_ux_redesign_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_design_build_ux_redesign_impl_witness",
-    "written_at_epoch_secs": 1790271958
+    "written_at_epoch_secs": 1790312390
   },
   "alt_drag_blueprint_paint": true,
   "charter_on_disk": true,
@@ -79,7 +79,7 @@
   "hud_copy_locked": true,
   "impl_slice": "TRIAGE-BUILD-CLICK-PLACE-001",
   "impl_wired": true,
-  "lmb_commit_count": 2,
+  "lmb_commit_count": 3,
   "mode_lock_count": 3,
   "pointer_gate_bound": true,
   "shift_lmb_building_queue_removed": true,

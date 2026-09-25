@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/effects_system_es7_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_effects_system_es7_live_witness",
-    "written_at_epoch_secs": 1790272693
+    "written_at_epoch_secs": 1790312393
   },
   "burst_hint_consumer_present": true,
   "contract": {

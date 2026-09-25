@@ -53,12 +53,22 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/city_g2_c5_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g2_c5_001_palette_witness",
-    "written_at_epoch_secs": 1783371797
+    "written_at_epoch_secs": 1790312393
   },
   "city_g0_prerequisites_ok": true,
   "city_g0_wit_note": "module index load only — full CITY-G0-WIT assembly may fail on grammar RON parse debt unrelated to C5",
@@ -159,7 +169,7 @@
     }
   ],
   "matrix_rows": 9,
-  "pilot_palette_family_count": 18,
+  "pilot_palette_family_count": 11,
   "registry_ok": true,
   "run_hashes": [
     "4c4bb41c6fbeae0d",

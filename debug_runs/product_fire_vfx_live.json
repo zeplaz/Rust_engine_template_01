@@ -67,25 +67,26 @@
     ],
     "relative_path": "debug_runs/product_fire_vfx_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "stamp_product_fire_vfx_live_witness",
-    "written_at_epoch_secs": 1790274930
+    "source_system": "refresh_product_fire_vfx_pending_witness",
+    "written_at_epoch_secs": 1790312394
   },
   "adversarial_packet": "debug_runs/vfx_absent_adversarial_packet.json",
   "chrome_lod_note": "yellow/green edge = CameraFocusDebug / tile-debug — not VFX",
-  "fire_draw_ok": 27424,
-  "fire_heat_overlay_on": true,
+  "fire_draw_ok": 0,
+  "fire_heat_overlay_on": false,
   "gate": "PRODUCT-FIRE-VFX-001",
-  "green": true,
+  "green": false,
+  "lib_note": "lib refresh stamps instrumentation schema only — run --test vfx for green",
   "not_proof": [
     "fire_ecology_live f1_green",
     "effects_system_es7_live (Hanabi contract)",
     "steward_spark_vfx_001 lib zoom lock alone"
   ],
-  "particles_rendered": true,
+  "particles_rendered": false,
   "product_vfx_claim": true,
   "rtt_core2d_overlay_host_present": true,
   "scope": "render_particles",
-  "spark_rows": 48,
-  "status": "pending_operator_verify",
+  "spark_rows": 0,
+  "status": "pending_live_vfx",
   "verify_cmd": "cargo run -p proc_A_dine01 --release -- --test vfx"
 }

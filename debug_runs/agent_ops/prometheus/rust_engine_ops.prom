@@ -9,4 +9,4 @@ rust_engine_ops_slip_ups_total 0
 rust_engine_dcc_process_count 0
 # HELP rust_engine_engine_process_count Live engine-related processes
 # TYPE rust_engine_engine_process_count gauge
-rust_engine_engine_process_count 4
+rust_engine_engine_process_count 5

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "asset_id": "win_double_1u",
+  "archetype": "module_window",
+  "style_pack": "style_rural",
+  "development_tier": "lod0",
+  "pbr_status": "deferred",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 4,
+    "h": 1.2,
+    "d": 0.12
+  },
+  "material_profile": "glass_panel_01",
+  "references": []
+}

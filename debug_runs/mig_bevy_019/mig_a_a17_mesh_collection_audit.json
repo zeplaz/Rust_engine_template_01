@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/mig_bevy_019/mig_a_a17_mesh_collection_audit.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "mig_a_a17_mesh_collection_audit",
-    "written_at_epoch_secs": 1790273880
+    "written_at_epoch_secs": 1790312394
   },
   "gate": "MIG-A17",
   "green": true,

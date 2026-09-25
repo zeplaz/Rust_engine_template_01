@@ -28,7 +28,7 @@
       "continuation_queue": "tools/orchestrator/queues/continuation_queue.json",
       "warning_registry": "tools/orchestrator/reports/warning_registry.md"
     },
-    "profile": "VSS-T1-003",
+    "profile": "VSS-T1-002",
     "related_proofs": [
       "debug_runs/stage5_full_app_live.json",
       "debug_runs/infrastructure_view_isolation_live.json",
@@ -53,12 +53,22 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/world_scale_contract_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_world_scale_contract_live_witness",
-    "written_at_epoch_secs": 1787892468
+    "written_at_epoch_secs": 1790312348
   },
   "anchors": {
     "design_operational_zoom_alpha": 0.41999998688697815,
@@ -136,38 +146,17 @@
     "world_height_tiles": 512,
     "world_tiles_axis": 512
   },
-  "notes": "VSS-T1-003 — designer P3 sign-off @ OPERATIONAL_ZOOM_ALPHA; bpf linear proxy 10.15 (margin +1.15 vs 9 cap); qualitative readability PASS.",
-  "p3_readability": {
-    "primary_screen_px_height": 78.78479766845703,
-    "primary_pct_site_height": 0.375,
-    "site_stub_screen_px": [262.6159973144531, 210.09278869628906],
-    "buildings_per_frame_measured": 10.154243469238281,
-    "buildings_per_frame_target": [4, 9],
-    "bpf_in_band": false,
-    "primary_above_40px_floor": true,
-    "site_reads_smaller_than_chunk": true,
-    "verdict": "PASS"
-  },
+  "notes": "VSS-T1-002 — interactive sim-entry commits OPERATIONAL_ZOOM_ALPHA; test scenes/scenario override.",
   "presets": {
     "editor_default_tiles_axis": 512,
     "harness_tiles_axis": 320
   },
   "program_id": "VSS-001",
   "schema": "world_scale_contract_witness_v1",
-  "slice_id": "VSS-T1-003",
+  "slice_id": "VSS-T1-002",
   "status": "green",
   "tribunal": {
-    "designer_signed_off": true,
-    "signed_off_at": "2026-08-29",
-    "signed_off_by": "@designer",
-    "slice_id": "VSS-T1-003",
-    "dissent": [
-      {
-        "field": "measured.buildings_per_frame",
-        "measured": 10.154243469238281,
-        "target": [4, 9],
-        "note": "Linear viewport/footprint ratio marginally above 9-cap (+13%); 2x2 and 3x3 neighborhood grids still fit; primary 78.8px exceeds 40px floor. No P4 blocker."
-      }
-    ]
+    "designer_signed_off": false,
+    "dissent": []
   }
 }

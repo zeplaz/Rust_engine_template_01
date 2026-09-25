@@ -1,0 +1,14 @@
+{
+  "schema_version": 1,
+  "asset_id": "wall_brick_1u",
+  "archetype": "module_wall",
+  "style_pack": "style_industrial_west",
+  "module": {
+    "grid_units": [1, 1],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": { "w": 4, "h": 3, "d": 0.3 },
+  "material_profile": "brick_red_01",
+  "references": []
+}

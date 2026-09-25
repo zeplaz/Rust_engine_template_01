@@ -170,10 +170,7 @@ pub fn refresh_resource_flow_routes_system(
     portals: Query<(Entity, &FacilityPortal, &PlannedSite)>,
 ) {
     let graph_rev = graph.as_ref().map(|g| g.revision).unwrap_or(0);
-    let topo = topology_revision_u32(
-        graph_rev,
-        construction_rev.map(|r| r.revision).unwrap_or(0),
-    );
+    let topo = topology_revision_u32(graph_rev, construction_rev.map(|r| r.revision).unwrap_or(0));
     if route_cache.topology_revision != topo {
         if let Some(rt) = runtime.as_mut() {
             rt.saw_route_invalidation = true;
@@ -192,10 +189,9 @@ pub fn refresh_resource_flow_routes_system(
     diagnostics.routes_blocked = 0;
 
     for edge in &mut flow.edges {
-        let (Some((_from_p, from_tile)), Some((_to_p, to_tile))) = (
-            portal_map.get(&edge.from),
-            portal_map.get(&edge.to),
-        ) else {
+        let (Some((_from_p, from_tile)), Some((_to_p, to_tile))) =
+            (portal_map.get(&edge.from), portal_map.get(&edge.to))
+        else {
             edge.path_open = false;
             diagnostics.routes_blocked = diagnostics.routes_blocked.saturating_add(1);
             continue;
@@ -238,11 +234,7 @@ pub fn refresh_resource_flow_routes_system(
                     handle,
                     path,
                     reachable,
-                    bottleneck_capacity: if reachable {
-                        bottleneck.min(4.0)
-                    } else {
-                        0.0
-                    },
+                    bottleneck_capacity: if reachable { bottleneck.min(4.0) } else { 0.0 },
                 },
             );
         }
@@ -276,14 +268,9 @@ pub fn flow_paths_match_nav_export(
             }
             continue;
         };
-        let nav_open = path_edges_between_tiles(
-            nav,
-            directory,
-            from_tile,
-            to_tile,
-            edge.transport_mode,
-        )
-        .is_some();
+        let nav_open =
+            path_edges_between_tiles(nav, directory, from_tile, to_tile, edge.transport_mode)
+                .is_some();
         if edge.path_open != nav_open {
             return false;
         }
@@ -342,7 +329,8 @@ pub fn nav_agent_routing_witness_payload() -> serde_json::Value {
     let to_key = tile_node_key(to);
 
     let mut topo = TransportTopology::default();
-    topo.neighbors.insert(TransportEdgeId(0), vec![TransportEdgeId(1)]);
+    topo.neighbors
+        .insert(TransportEdgeId(0), vec![TransportEdgeId(1)]);
     topo.neighbors.insert(TransportEdgeId(1), vec![]);
 
     let mut directory = TransportEdgeDirectory::default();
@@ -388,10 +376,10 @@ pub fn nav_agent_routing_witness_payload() -> serde_json::Value {
     let mut nav = TransportNavExport::default();
     refresh_transport_nav_export(&topo, &cache, &directory, &mut nav);
 
-    let road_reaches = path_edges_between_tiles(&nav, &directory, from, to, TransportMode::Truck)
-        .is_some();
-    let train_reaches = path_edges_between_tiles(&nav, &directory, from, to, TransportMode::Rail)
-        .is_some();
+    let road_reaches =
+        path_edges_between_tiles(&nav, &directory, from, to, TransportMode::Truck).is_some();
+    let train_reaches =
+        path_edges_between_tiles(&nav, &directory, from, to, TransportMode::Rail).is_some();
 
     serde_json::json!({
         "gate": "INFRA-E6-002",

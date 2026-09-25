@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/cod_wall_concrete_gate_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_cod_wall_concrete_gate_witness",
-    "written_at_epoch_secs": 1790272565
+    "written_at_epoch_secs": 1790312390
   },
   "buffer_tag": "Concrete",
   "commit_funnel": "CommitConstructionSiteEvent",
@@ -84,8 +84,8 @@
   "impl_wired": true,
   "parallel_wallet": false,
   "phase9": false,
-  "place_blocked_no_stock": 2,
-  "place_ok": 2,
+  "place_blocked_no_stock": 4,
+  "place_ok": 6,
   "reason_copy_locked": true,
   "residuals": [
     {
