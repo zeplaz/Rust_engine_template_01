@@ -194,9 +194,41 @@ fn sim_effect_spine_self_check() -> Result<(), &'static str> {
 #[cfg(test)]
 mod tests {
     use super::sim_effect_spine_lib_witness_green;
+    use super::{SimEffectSpineWitness, SimEffectTelemetryLedger};
+    use crate::sim::effects::queue::SimEffectQueue;
 
     #[test]
     fn sim_effect_spine_witness_green() {
         assert!(sim_effect_spine_lib_witness_green());
+    }
+
+    /// PCI-33: `queue_drain_ok` is false on an empty drain and true only after a non-zero drain.
+    #[test]
+    fn queue_drain_ok_flips_only_after_nonzero_drain() {
+        let ledger = SimEffectTelemetryLedger::default();
+        let mut witness = SimEffectSpineWitness::default();
+        let empty = SimEffectQueue::default();
+        witness.finalize_after_drain(&empty, &ledger);
+        assert!(
+            !witness.queue_drain_ok,
+            "zero last_drain_count and drained_total must not claim a drain"
+        );
+
+        let mut last_only = SimEffectQueue::default();
+        last_only.last_drain_count = 1;
+        witness.finalize_after_drain(&last_only, &ledger);
+        assert!(witness.queue_drain_ok);
+
+        let mut witness = SimEffectSpineWitness::default();
+        let mut total_only = SimEffectQueue::default();
+        total_only.drained_total = 1;
+        witness.finalize_after_drain(&total_only, &ledger);
+        assert!(
+            witness.queue_drain_ok,
+            "historical drained_total keeps the flag after last_drain_count returns to zero"
+        );
+
+        witness.finalize_after_drain(&empty, &ledger);
+        assert!(!witness.queue_drain_ok);
     }
 }
