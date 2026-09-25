@@ -122,6 +122,14 @@ jobs:
           PYTHONPATH: tools/mcp/python
         run: python -m rust_engine_mcp.cli effect-chain-smoke
 
+      # PCI-38: scan assets/configs/buildings/_module_index.ron for missing GLBs.
+      # Paths under assets/staging/ are skipped so untracked staging cannot fail CI.
+      - name: orphan module registry (PCI-38)
+        timeout-minutes: 2
+        env:
+          PYTHONUTF8: "1"
+        run: python tools/orchestrator/scripts/check_orphan_modules.py
+
       - name: ResourceType vs RESOURCE_TYPES parity
         run: python src/utils/asset_tools/scripts/check_resource_parity.py
 
