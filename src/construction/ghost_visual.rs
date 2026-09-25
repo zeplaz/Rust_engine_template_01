@@ -55,10 +55,23 @@ pub fn footprint_lock_ring_color() -> egui::Color32 {
     egui::Color32::from_rgba_unmultiplied(232, 196, 96, 230)
 }
 
-/// Lock-ring stroke in egui points. Unified footprint paint may read this later.
+/// Lock-ring stroke in egui points.
 #[must_use]
 pub fn footprint_lock_ring_stroke_px() -> f32 {
     2.0
+}
+
+/// Stroke for the live ghost when it is locked (`BuildPlacementMode::Adjust`).
+/// `None` while the ghost still follows the cursor. Selectable without an egui window.
+#[must_use]
+pub fn footprint_lock_ring_stroke(locked: bool) -> Option<egui::Stroke> {
+    if !locked {
+        return None;
+    }
+    Some(egui::Stroke::new(
+        footprint_lock_ring_stroke_px(),
+        footprint_lock_ring_color(),
+    ))
 }
 
 /// R4 corridor edge — planned (`#E8B040` @ 180/255).

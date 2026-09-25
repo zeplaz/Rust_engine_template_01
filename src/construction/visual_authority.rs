@@ -69,6 +69,8 @@ pub struct ConstructionVisualRequests {
     pub zone_tiles: Vec<ZoneTileRequest>,
     pub control_points: Vec<(Vec3, egui::Color32)>,
     pub footprint_tiles: Vec<FootprintTileRequest>,
+    /// Tiles of the live ghost that take the gold lock ring (`BuildPlacementMode::Adjust` only).
+    pub footprint_lock_tiles: Vec<IVec2>,
     pub corridor_paths: Vec<super::round4_corridor::CorridorPhasePathRequest>,
     pub site_stub_boxes: Vec<SiteStubBoxRequest>,
     pub site_zone_labels: Vec<SiteZoneLabelRequest>,
@@ -80,6 +82,7 @@ impl ConstructionVisualRequests {
         self.zone_tiles.clear();
         self.control_points.clear();
         self.footprint_tiles.clear();
+        self.footprint_lock_tiles.clear();
         self.corridor_paths.clear();
         self.site_stub_boxes.clear();
         self.site_zone_labels.clear();
@@ -138,6 +141,7 @@ pub fn sync_footprint_visual_requests(
         BuildConfidence::Invalid => FootprintTileColorKind::Invalid,
     };
     if let Some(origin) = ghost.origin {
+        let before = requests.footprint_tiles.len();
         if let Some(snapshot) = placement_snapshot_for_building(&tool, &registry, &ghost, origin) {
             push_weighted_footprint_tiles(
                 &mut requests.footprint_tiles,
@@ -163,6 +167,13 @@ pub fn sync_footprint_visual_requests(
                     fill_override: None,
                 });
             }
+        }
+        if ghost.placement_mode == crate::construction::build_state::BuildPlacementMode::Adjust {
+            let locked: Vec<IVec2> = requests.footprint_tiles[before..]
+                .iter()
+                .map(|tile| tile.tile)
+                .collect();
+            requests.footprint_lock_tiles.extend(locked);
         }
     }
     for row in &staged.rows {
@@ -206,6 +217,45 @@ mod footprint_tests {
         let reqs = app.world().resource::<ConstructionVisualRequests>();
         assert_eq!(reqs.footprint_tiles.len(), 6);
         assert!(reqs.footprint_tiles.iter().all(|t| (t.weight - 1.0).abs() < 1e-5));
+        assert!(reqs.footprint_lock_tiles.is_empty());
+    }
+
+    #[test]
+    fn locked_adjust_ghost_selects_lock_ring_token() {
+        let mut app = App::new();
+        app.insert_resource(BuildStripState {
+            active: ToolContext::Industry,
+            ..Default::default()
+        });
+        app.insert_resource(BuildGhostState {
+            origin: Some(BuildSiteTile { x: 4, z: 7 }),
+            footprint: FootprintTiles {
+                width: 3,
+                depth: 2,
+            },
+            placement_mode: crate::construction::build_state::BuildPlacementMode::Adjust,
+            ..Default::default()
+        });
+        app.insert_resource(BuildPlacementPreview::default());
+        app.insert_resource(crate::construction::build_tool_authority::ActiveBuildTool::default());
+        app.insert_resource(
+            crate::construction::building_definitions::BuildingDefinitionRegistry::default(),
+        );
+        app.insert_resource(crate::construction::staged_ghost_panel::StagedPlacementBook::default());
+        app.insert_resource(crate::construction::tile_visual::ConstructionTileVisualSettings::default());
+        app.insert_resource(ConstructionVisualRequests::default());
+        app.add_systems(Update, sync_footprint_visual_requests);
+        app.update();
+        let reqs = app.world().resource::<ConstructionVisualRequests>();
+        assert_eq!(reqs.footprint_lock_tiles.len(), 6);
+        let stroke = crate::construction::ghost_visual::footprint_lock_ring_stroke(true)
+            .expect("locked ghost selects the gold ring");
+        assert!((stroke.width - 2.0).abs() < 1e-5);
+        assert_eq!(
+            stroke.color,
+            crate::construction::ghost_visual::footprint_lock_ring_color()
+        );
+        assert!(crate::construction::ghost_visual::footprint_lock_ring_stroke(false).is_none());
     }
 
     #[test]
@@ -382,6 +432,7 @@ pub fn draw_construction_visual_requests_egui(
         }
     }
 
+    let mut lock_bounds: Option<egui::Rect> = None;
     for tile in &requests.footprint_tiles {
         let world = Vec3::new(tile.tile.x as f32 + 0.5, 0.0, tile.tile.y as f32 + 0.5);
         let Some(screen) = world_to_screen(world) else {
@@ -413,6 +464,17 @@ pub fn draw_construction_visual_requests_egui(
         painter.rect_filled(rect, 1.0, color);
         if let Some(stroke) = stroke {
             painter.rect_stroke(rect, 0.0, stroke, egui::epaint::StrokeKind::Inside);
+        }
+        if requests.footprint_lock_tiles.contains(&tile.tile) {
+            lock_bounds = Some(match lock_bounds {
+                Some(bounds) => bounds.union(rect),
+                None => rect,
+            });
+        }
+    }
+    if let Some(rect) = lock_bounds {
+        if let Some(stroke) = super::ghost_visual::footprint_lock_ring_stroke(true) {
+            painter.rect_stroke(rect, 1.0, stroke, egui::epaint::StrokeKind::Outside);
         }
     }
     Ok(())
