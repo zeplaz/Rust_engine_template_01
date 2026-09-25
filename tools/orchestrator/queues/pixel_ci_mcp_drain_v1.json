@@ -1,0 +1,329 @@
+{
+  "schema": "pixel_ci_mcp_drain_v1",
+  "program_id": "PIXEL-CI-MCP-DRAIN-001",
+  "created": "2026-09-25",
+  "branch": "master",
+  "do_not_touch": [
+    "tools/mcp/python/rust_engine_mcp/pixel_pipeline/",
+    "src/dev/scan_debug_pipeline.rs",
+    "tools/orchestrator/dashboard/"
+  ],
+  "links": {
+    "construction": "tools/orchestrator/queues/coder_drain_queue.json",
+    "vfx": "debug_runs/product_fire_vfx_live.json",
+    "mcp": "tools/orchestrator/queues/mcp_active_queue.json",
+    "gpu": "src/render/pipelines/terrain_gpu_bake_spike.rs"
+  },
+  "rows": [
+    {
+      "id": "PCI-01",
+      "theme": "ci",
+      "status": "done",
+      "goal": "CI lib hang backstop",
+      "note": "Landed on master as 6597f049. Do not duplicate the hang-fix agent.",
+      "witness": "6597f049"
+    },
+    {
+      "id": "PCI-02",
+      "theme": "ci",
+      "status": "done",
+      "goal": "Fail honesty on green without pixels",
+      "note": "WIT-PRODUCT-VFX-PARTICLES already evaluated; WIT-PIXELS-DISHONEST fails green when pixel_regression_green is false or lod_chrome_leak is true. Pytest covers both.",
+      "witness": "tools/mcp/python/tests/test_witness_honesty.py"
+    },
+    {
+      "id": "PCI-03",
+      "theme": "ci",
+      "status": "ready",
+      "goal": "Partition lib tests so CI cannot run 5.5h",
+      "unblock_when": "Split visual/app lib tests out of the default CI cargo test --lib step while keeping the 60m timeout backstop from 6597f049"
+    },
+    {
+      "id": "PCI-04",
+      "theme": "ci",
+      "status": "blocked",
+      "goal": "Re-home or delete timed live_proof exception shims",
+      "unblock_when": "Retire one domain folder of src/dev/runtime_witness/exceptions_manifest.json allowed_shim_paths per slice. Mass-move is out. Expiry is 2026-12-23."
+    },
+    {
+      "id": "PCI-05",
+      "theme": "ci",
+      "status": "ready",
+      "goal": "Clear three known queue contradictions",
+      "note": "INTEL-OFFICER-001 contradiction notes in coder_vegetation_drain_queue.json, multi_parallel_tracks_dispatch_v1.json, multi_parallel_home_queues_v1.json",
+      "unblock_when": "Reconcile those three queue files against live witnesses before marking rows done"
+    },
+    {
+      "id": "PCI-06",
+      "theme": "ci",
+      "status": "ready",
+      "goal": "Inflated-green witnesses fail honesty",
+      "note": "WIT-ART-DISHONEST and WIT-PIXELS-DISHONEST cover two shapes. A repo-wide scan job is still not on the CI workflow.",
+      "unblock_when": "Add a witness-honesty scan step only if it stays under two minutes"
+    },
+    {
+      "id": "PCI-07",
+      "theme": "ci",
+      "status": "done",
+      "goal": "Lock fire ecology single ignition writer",
+      "note": "emit_does_not_own_ember_message_writer already asserts spot diffusion does not own the ember MessageWriter",
+      "witness": "src/systems/fire/ember_spot_ignition.rs"
+    },
+    {
+      "id": "PCI-08",
+      "theme": "ci",
+      "status": "blocked",
+      "goal": "Idle duplicate-agent heartbeats",
+      "note": "No cancel-heartbeat tool exists in tools/. Do not invent a daemon. Archive and staging noise stay untracked.",
+      "unblock_when": "Only if a heartbeat-cancel tool already exists; otherwise leave this blocked"
+    },
+    {
+      "id": "PCI-09",
+      "theme": "ci",
+      "status": "done",
+      "goal": "Keep archive and staging noise untracked",
+      "note": "assets/archive and assets/staging stay out of commits"
+    },
+    {
+      "id": "PCI-10",
+      "theme": "ci",
+      "status": "done",
+      "goal": "bevy_ecs_tilemap 0.19 feature check stays",
+      "note": "0faa8bb3 bumped the optional bevy_tilemap_adapter dep. A dedicated regression assertion that the version string stays 0.19 is still worth a later lib test.",
+      "witness": "0faa8bb3"
+    },
+    {
+      "id": "PCI-11",
+      "theme": "pixel",
+      "status": "blocked",
+      "owner": "pixel_pipeline",
+      "goal": "Deterministic k-means and histogram segmentation tool",
+      "unblock_when": "pixel_pipeline agent owns tools/mcp/python/rust_engine_mcp/pixel_pipeline/. This drain must not edit that tree."
+    },
+    {
+      "id": "PCI-12",
+      "theme": "pixel",
+      "status": "blocked",
+      "owner": "pixel_pipeline",
+      "goal": "Golden compare for spark and rain masks",
+      "unblock_when": "PCI-11 lands a fixture compare inside pixel_pipeline"
+    },
+    {
+      "id": "PCI-13",
+      "theme": "pixel",
+      "status": "blocked",
+      "owner": "dashboard",
+      "goal": "Feed matrix JSON into the existing ops dashboard snapshot",
+      "unblock_when": "Dashboard owner edits tools/orchestrator/dashboard/. This drain must not."
+    },
+    {
+      "id": "PCI-14",
+      "theme": "pixel",
+      "status": "ready",
+      "goal": "Regression gate script callable from CI later",
+      "unblock_when": "After PCI-11, add a workflow step only if the gate stays under two minutes"
+    },
+    {
+      "id": "PCI-15",
+      "theme": "pixel",
+      "status": "blocked",
+      "goal": "Building-look stills hook after segmentation",
+      "unblock_when": "Optional after PCI-11 and a real still exists under debug_runs"
+    },
+    {
+      "id": "PCI-16",
+      "theme": "pixel",
+      "status": "done",
+      "goal": "LOD chrome leak fails honesty",
+      "note": "WIT-PIXELS-DISHONEST treats lod_chrome_leak=true with green=true as dishonest. Segmentation clustering itself stays in pixel_pipeline.",
+      "witness": "tools/mcp/schemas/witness_integrity_rules_v1.json"
+    },
+    {
+      "id": "PCI-17",
+      "theme": "pixel",
+      "status": "done",
+      "goal": "pixel_regression_green status field is honest",
+      "note": "Field is optional. When present and false, green=true fails WIT-PIXELS-DISHONEST.",
+      "witness": "tools/mcp/python/rust_engine_mcp/validators/witness_honesty.py"
+    },
+    {
+      "id": "PCI-18",
+      "theme": "pixel",
+      "status": "blocked",
+      "owner": "dashboard",
+      "goal": "Compact status card reading the matrix JSON",
+      "unblock_when": "Dashboard owner extends ops_dashboard.html or grafana_ops_overview.json"
+    },
+    {
+      "id": "PCI-19",
+      "theme": "pixel",
+      "status": "ready",
+      "goal": "Last CI duration and lib-test outcome in the ops snapshot",
+      "unblock_when": "Snapshot writer may add the fields; do not invent a new web app"
+    },
+    {
+      "id": "PCI-20",
+      "theme": "pixel",
+      "status": "done",
+      "goal": "Link sub-drainages for construction, VFX, MCP, and GPU",
+      "note": "links object on this file",
+      "witness": "tools/orchestrator/queues/pixel_ci_mcp_drain_v1.json"
+    },
+    {
+      "id": "PCI-21",
+      "theme": "mcp",
+      "status": "ready",
+      "goal": "effect spec to validate to preview-capture to honest_gate to promote",
+      "note": "Chain is documented in effect_promote.shipped and covered by test_effect_preview_capture.py. A one-command CLI smoke is not a CI step yet.",
+      "unblock_when": "Add a CLI smoke only if it stays under two minutes and does not schedule a cron"
+    },
+    {
+      "id": "PCI-22",
+      "theme": "mcp",
+      "status": "done",
+      "goal": "Assembly prefers production kits",
+      "note": "Keep test_bq_smoke_tier_audit.py",
+      "witness": "tools/mcp/python/tests/test_bq_smoke_tier_audit.py"
+    },
+    {
+      "id": "PCI-23",
+      "theme": "mcp",
+      "status": "done",
+      "goal": "GPU bake spike stays default off until env-armed",
+      "note": "Keep bake_spike_flag_defaults_off",
+      "witness": "src/render/pipelines/terrain_gpu_bake_spike.rs"
+    },
+    {
+      "id": "PCI-24",
+      "theme": "mcp",
+      "status": "done",
+      "goal": "Warehouse downstream consumption stays code-side",
+      "note": "No operator G4 block added"
+    },
+    {
+      "id": "PCI-25",
+      "theme": "mcp",
+      "status": "blocked",
+      "goal": "Nightly MCP chain",
+      "note": "Do not schedule an unsupervised cron that leaves heartbeats. This row is the note.",
+      "unblock_when": "A human runs the chain; no daemon"
+    },
+    {
+      "id": "PCI-26",
+      "theme": "mcp",
+      "status": "blocked",
+      "owner": "pixel_pipeline",
+      "goal": "Attach pixel matrix JSON to effect-preview-capture frames",
+      "unblock_when": "pixel_pipeline tool exists and effect_preview_capture calls it without a second capture path"
+    },
+    {
+      "id": "PCI-27",
+      "theme": "mcp",
+      "status": "ready",
+      "goal": "CI does not yet run the effect-chain smoke",
+      "unblock_when": "Workflow step added only if pytest test_effect_preview_capture stays under two minutes"
+    },
+    {
+      "id": "PCI-28",
+      "theme": "mcp",
+      "status": "ready",
+      "goal": "Promote can still be forced past a pending honest_gate",
+      "unblock_when": "Decide whether effect_promote force=True remains an operator override"
+    },
+    {
+      "id": "PCI-29",
+      "theme": "mcp",
+      "status": "blocked",
+      "goal": "Preview frames are pack-digest tiles, not screen pixels",
+      "note": "product_fire_vfx_live.json stays green=false / pending_live_vfx",
+      "unblock_when": "A real --test vfx capture exists before product_vfx_claim can go green"
+    },
+    {
+      "id": "PCI-30",
+      "theme": "mcp",
+      "status": "blocked",
+      "goal": "GPU bake default-on versus spike default-off",
+      "note": "PCI-23 locks the spike default OFF. Turning bake on by default is a separate render decision.",
+      "unblock_when": "Planner accepts a default-on bake that still excludes fire from the bake image"
+    },
+    {
+      "id": "PCI-31",
+      "theme": "logic",
+      "status": "done",
+      "goal": "Fire WGSL single alpha",
+      "note": "Keep fire_particle_draw_wgsl_has_single_alpha_binding",
+      "witness": "src/render/pipelines/gpu_fire_particle_raster.rs"
+    },
+    {
+      "id": "PCI-32",
+      "theme": "logic",
+      "status": "ready",
+      "goal": "Lock fire_heat sync in the Update schedule",
+      "note": "sync_shared_overlay_from_simulation runs after extract_fire_simulation_snapshot in FireVisualFrameSet::BuildProfiles",
+      "unblock_when": "Add a lib test that the schedule edge stays, without a second overlay writer"
+    },
+    {
+      "id": "PCI-33",
+      "theme": "logic",
+      "status": "ready",
+      "goal": "Lock SimEffect finalize_after_drain",
+      "note": "drain_sim_effect_queue_system calls witness.finalize_after_drain",
+      "unblock_when": "Unit test that queue_drain_ok flips only after a non-zero drain"
+    },
+    {
+      "id": "PCI-34",
+      "theme": "logic",
+      "status": "ready",
+      "goal": "Lock SiteStagingStock single debit writer",
+      "note": "apply_pending_site_staging_debits_system is the sole try_debit caller",
+      "unblock_when": "Source scan test for staging.try_debit with one hit"
+    },
+    {
+      "id": "PCI-35",
+      "theme": "logic",
+      "status": "blocked",
+      "goal": "CommitConstructionSiteEvent sole place funnel",
+      "note": "Play path is try_commit_active_building_ghost. Tests and harnesses also write the message, so a sole-writer assertion would be false.",
+      "unblock_when": "Lock the play-path function without claiming it is the only MessageWriter"
+    },
+    {
+      "id": "PCI-36",
+      "theme": "cleanup",
+      "status": "blocked",
+      "goal": "Classify live_proof shims before any delete",
+      "note": "exceptions_manifest shims are transitional, not obsolete. Cleanup class: transitional. Do not delete this turn.",
+      "unblock_when": "Shift B classify one shim, then re-home or delete that one file"
+    },
+    {
+      "id": "PCI-37",
+      "theme": "cleanup",
+      "status": "blocked",
+      "goal": "Duplicate credit helper beside SiteStagingStock.credit",
+      "note": "No second production debit was found. Do not merge credit into try_debit.",
+      "unblock_when": "A real duplicate caller shows up in a source scan"
+    },
+    {
+      "id": "PCI-38",
+      "theme": "cleanup",
+      "status": "ready",
+      "goal": "Orphan module CI check",
+      "unblock_when": "Name the module registry the check should scan; do not fail CI on untracked staging"
+    },
+    {
+      "id": "PCI-39",
+      "theme": "cleanup",
+      "status": "blocked",
+      "owner": "hang-fix",
+      "goal": "Do not re-open the lib-test hang",
+      "unblock_when": "PCI-03 partition lands after 6597f049 stays green on CI"
+    },
+    {
+      "id": "PCI-40",
+      "theme": "cleanup",
+      "status": "done",
+      "goal": "This queue is the sub-drainage index",
+      "note": "40 rows. Pixel tool and dashboard paths are owned by other agents.",
+      "witness": "tools/orchestrator/queues/pixel_ci_mcp_drain_v1.json"
+    }
+  ]
+}
