@@ -22,13 +22,14 @@
     section { margin-bottom: 1.5rem; }
     section h2 { font-size: 1rem; margin: 0 0 0.5rem; }
     .err { color: var(--alert); white-space: pre-wrap; }
+    .note { color: var(--muted); font-size: 0.85rem; margin: 0 0 0.75rem; }
     button { background: #2d6cdf; color: white; border: 0; border-radius: 6px; padding: 0.45rem 0.85rem; cursor: pointer; }
     input[type=file] { margin-left: 0.75rem; color: var(--muted); }
   </style>
 </head>
 <body>
   <h1>OPS Oversight Dashboard</h1>
-  <p class="sub">Processes · drift · run_events slip-ups · tier-1 KPIs</p>
+  <p class="sub">Processes · drift · run_events slip-ups · tier-1 KPIs · image conclusions</p>
   <p>
     <button id="reload">Reload JSON</button>
     <input type="file" id="filePick" accept="application/json" />
@@ -48,8 +49,70 @@
     <h2>Active processes</h2>
     <table><thead><tr><th>Name</th><th>PID</th><th>Mem</th></tr></thead><tbody id="procs"></tbody></table>
   </section>
+  <section>
+    <h2>Image conclusion matrices</h2>
+    <p class="note" id="imageNote"></p>
+    <div class="grid" id="imageStats"></div>
+    <table>
+      <thead><tr><th>Kind</th><th>Honesty</th><th>Status</th><th>Path</th></tr></thead>
+      <tbody id="imageRows"></tbody>
+    </table>
+  </section>
   <script>
     const JSON_PATH = "../../../debug_runs/agent_ops/ops_dashboard_live.json";
+    const REVIEW_PATH = "image_conclusion_review.json";
+    const EMPTY_REVIEW = {
+      schema: "image_conclusion_review_v1",
+      source: {
+        conclusion_present: false,
+        conclusion_rel: "debug_runs/scan_debug_conclusion_live.json",
+        matrix_glob: "debug_runs/**/pixel_matrix_*.json",
+        pixel_pipeline_note: "Python pixel pipeline: land matrices under debug_runs/ as pixel_matrix_*.json (kinds gui, ui, world, art). Also follow any matrix path listed in debug_runs/scan_debug_conclusion_live.json.",
+        refresh: "python tools/orchestrator/dashboard/build_image_conclusion_review.py"
+      },
+      kpi: {
+        last_conclusion_status: "absent",
+        count_gui: 0, count_ui: 0, count_world: 0, count_art: 0,
+        honest: 0, absent: 0
+      },
+      rows: []
+    };
+    function esc(s) {
+      return String(s ?? "").replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+    }
+    function renderReview(data) {
+      const body = data && data.kpi ? data : EMPTY_REVIEW;
+      const kpi = body.kpi || EMPTY_REVIEW.kpi;
+      const src = body.source || EMPTY_REVIEW.source;
+      const status = kpi.last_conclusion_status || "absent";
+      const stats = [
+        ["Conclusion", status],
+        ["GUI", kpi.count_gui ?? 0],
+        ["UI", kpi.count_ui ?? 0],
+        ["World", kpi.count_world ?? 0],
+        ["Art", kpi.count_art ?? 0],
+        ["Honest", kpi.honest ?? 0],
+        ["Absent", kpi.absent ?? 0]
+      ];
+      document.getElementById("imageStats").innerHTML = stats.map(([l, v]) =>
+        `<div class="stat"><div class="label">${esc(l)}</div><div class="value">${esc(v)}</div></div>`).join("");
+      const present = src.conclusion_present ? "conclusion file present" : "conclusion file absent — empty state";
+      document.getElementById("imageNote").textContent =
+        present + ". " + (src.pixel_pipeline_note || EMPTY_REVIEW.source.pixel_pipeline_note)
+        + " Refresh: " + (src.refresh || EMPTY_REVIEW.source.refresh);
+      const rows = body.rows || [];
+      document.getElementById("imageRows").innerHTML = rows.length
+        ? rows.map(r => `<tr><td>${esc(r.kind)}</td><td class="${r.honesty === "honest" ? "sev-info" : r.honesty === "absent" ? "sev-alert" : "sev-warn"}">${esc(r.honesty)}</td><td>${esc(r.status)}</td><td>${esc(r.path)}</td></tr>`).join("")
+        : "<tr><td colspan=4>No conclusion or pixel matrices yet.</td></tr>";
+    }
+    async function loadReview() {
+      renderReview(EMPTY_REVIEW);
+      try {
+        const res = await fetch(REVIEW_PATH + "?t=" + Date.now());
+        if (!res.ok) return;
+        renderReview(await res.json());
+      } catch (_) { /* file:// often blocks fetch; empty state stays */ }
+    }
     function sevClass(s) { return s === "alert" ? "sev-alert" : s === "warn" ? "sev-warn" : "sev-info"; }
     function render(data) {
       document.getElementById("error").textContent = "";
@@ -88,10 +151,17 @@
     document.getElementById("filePick").addEventListener("change", ev => {
       const f = ev.target.files[0]; if (!f) return;
       const reader = new FileReader();
-      reader.onload = () => { try { render(JSON.parse(reader.result)); } catch (e) { document.getElementById("error").textContent = String(e); } };
+      reader.onload = () => {
+        try {
+          const data = JSON.parse(reader.result);
+          if (data && data.schema === "image_conclusion_review_v1") renderReview(data);
+          else render(data);
+        } catch (e) { document.getElementById("error").textContent = String(e); }
+      };
       reader.readAsText(f);
     });
     loadDefault();
+    loadReview();
   </script>
 </body>
 </html>
