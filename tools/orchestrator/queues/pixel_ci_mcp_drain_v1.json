@@ -265,17 +265,19 @@
     {
       "id": "PCI-33",
       "theme": "logic",
-      "status": "ready",
+      "status": "done",
       "goal": "Lock SimEffect finalize_after_drain",
-      "note": "drain_sim_effect_queue_system calls witness.finalize_after_drain",
+      "note": "queue_drain_ok_flips_only_after_nonzero_drain green · 2026-09-25",
+      "witness": "debug_runs/pci_logic_lock_live.json",
       "unblock_when": "Unit test that queue_drain_ok flips only after a non-zero drain"
     },
     {
       "id": "PCI-34",
       "theme": "logic",
-      "status": "ready",
+      "status": "done",
       "goal": "Lock SiteStagingStock single debit writer",
-      "note": "apply_pending_site_staging_debits_system is the sole try_debit caller",
+      "note": "site_staging_try_debit_has_one_caller green · one hit in propagation.rs · 2026-09-25",
+      "witness": "debug_runs/pci_logic_lock_live.json",
       "unblock_when": "Source scan test for staging.try_debit with one hit"
     },
     {
