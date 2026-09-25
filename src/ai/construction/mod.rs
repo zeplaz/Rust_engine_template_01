@@ -8,8 +8,8 @@ use crate::construction::{
 };
 use crate::economy::logistics::{InTransitLedger, PendingSiteStagingDebits, SiteStagingStock};
 use crate::strategic::{
-    evaluate_site_placement_at_world_tile, BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles,
-    LayerType, SiteArchetype, SiteId, StrategicRasterConfig,
+    evaluate_site_placement_at_world_tile, BuildSiteTile, CommitConstructionSiteEvent,
+    FootprintTiles, LayerType, SiteArchetype, SiteId, StrategicRasterConfig,
 };
 
 #[derive(Resource, Clone, Copy, Debug)]
@@ -36,10 +36,7 @@ impl Default for ConstructionAiConfig {
             origin_tile: BuildSiteTile { x: 4, z: 4 },
             archetype: SiteArchetype::FuelDepot,
             search_radius: 2,
-            footprint: FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            footprint: FootprintTiles { width: 1, depth: 1 },
         }
     }
 }
@@ -160,6 +157,15 @@ impl Plugin for ConstructionAiPlugin {
         app.insert_resource(ConstructionAiOwner(owner))
             .init_resource::<ConstructionAiConfig>()
             .init_resource::<ConstructionAiProbeState>()
-            .add_systems(Update, construction_ai_shared_validation_probe_system);
+            .init_resource::<crate::economy::logistics::intent_draw::AiConstructionIntent>()
+            .add_message::<CommitConstructionSiteEvent>()
+            .add_systems(
+                Update,
+                (
+                    construction_ai_shared_validation_probe_system,
+                    crate::economy::logistics::intent_draw::record_ai_construction_intent_system,
+                )
+                    .chain(),
+            );
     }
 }
