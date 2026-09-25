@@ -1,5 +1,8 @@
 // World-anchored fire pinpoint sparks (Phase A — FX-FIRE-SPARK-001).
 // Expanded quads from `fire_particle.wgsl`; sharp ≤2px read, legacy age/twinkle mix.
+//
+// VR-07: single `let alpha` only — Naga rejects redefinition and the Core2d raster
+// pass silently no-ops (rain still draws; sparks/smoke billboards vanish).
 
 // View globals — `view_proj` from ExtractedCameraMetrics (RTT-B5); no MainWorldCamera query in raster sync.
 struct Globals {
@@ -89,8 +92,15 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // Sparks stay readable at strategic zoom — do not fade out when zoom_alpha is low.
     let zoom_fade = 1.0;
 
-    let alpha = clamp(core * ember_alpha + pin * hot_core * 0.45, 0.0, 1.0) * zoom_fade;
-    let alpha = clamp(alpha * (1.0 + smoke_read * 0.55) * 1.35 + pin * 0.2, 0.0, 1.0);
+    // VR-07: one binding — base pin alpha then smoke/read boost (was illegal double `let alpha`).
+    let alpha = clamp(
+        (clamp(core * ember_alpha + pin * hot_core * 0.45, 0.0, 1.0) * zoom_fade)
+            * (1.0 + smoke_read * 0.55)
+            * 1.35
+            + pin * 0.2,
+        0.0,
+        1.0,
+    );
     let rgb = col * (1.0 + hot_core * pin * 1.35);
 
     return vec4<f32>(rgb * alpha, alpha);

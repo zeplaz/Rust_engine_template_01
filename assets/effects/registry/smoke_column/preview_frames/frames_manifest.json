@@ -1,0 +1,57 @@
+{
+  "schema": "effect_preview_frames_manifest_v1",
+  "effect_id": "smoke_column",
+  "batch_id": "vss_t4_reference_effects_v1",
+  "capture_kind": "staging_pack_digest",
+  "pack_hash": "f876a6f6d84da926ed6161eeec16ac1bc7e7e0e01a7a258b73c44ea0b5dd0ff5",
+  "seed": "42002",
+  "captured_at_utc": "2026-09-24T17:55:20Z",
+  "frames": [
+    {
+      "index": 0,
+      "path": "preview_frames/capture_000.png",
+      "source_digest": "d8eb343a5394dd6e830ec81b7ef34ee10294d00f770de069b254a86729019d37",
+      "sha256": "a7df9c836aae743937200f866a90c6bf5fd2902b2a68a5d7fbcf23b2cf555337",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 1,
+      "path": "preview_frames/capture_001.png",
+      "source_digest": "738a51c4c023657c16a4a92c2a978d6f08cafe4577b7674c289b063e782b68b5",
+      "sha256": "152987645230550a4957b8fa690e5560a65c360a22780479f3a3e129f8aae75b",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 2,
+      "path": "preview_frames/capture_002.png",
+      "source_digest": "08bd64a28869ab3fbc68a4a2221a7becab8cfd96c3be13d9f7cd34a97870765f",
+      "sha256": "6d5fef509ae7ba05edeafd84c950bbd2ccb54e4305b86414131e03e488847c8f",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 3,
+      "path": "preview_frames/capture_003.png",
+      "source_digest": "d60a8963de61f8c5e85d092069df3aa2b7cbd65944a66257cbc819f0842ca1d4",
+      "sha256": "f52c0b2b1a2e4ebebd9d719c596abc52555ebc08ca7532b9b69a8bbe7a018b66",
+      "capture_kind": "staging_pack_digest"
+    }
+  ],
+  "capture_hash": "389fc5de122d4c4d2287e1ca7e74d54413654ddf18cce3de3565c557492307bd",
+  "preview_witness": {
+    "witness_schema": "artist_vfx_preview_witness_v1",
+    "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+    "preview_job_id": "smoke_column_preview_capture",
+    "frames_captured": 4,
+    "capture_hash": "389fc5de122d4c4d2287e1ca7e74d54413654ddf18cce3de3565c557492307bd",
+    "staging_path": "assets/staging/smoke_column/",
+    "honest_gate": "honest",
+    "captured_at_utc": "2026-09-24T17:55:20Z",
+    "toolchain": {
+      "mcp_tool": "effect_preview_capture",
+      "cli_parity": true,
+      "blender_present": false
+    },
+    "promoted_path": "assets/effects/registry/smoke_column/"
+  },
+  "_note": "Deterministic staging_pack_digest tiles \u2014 not GPU/operator theater pixels"
+}

@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "asset_id": "door_residential_1u",
+  "archetype": "module_door",
+  "style_pack": "style_rural",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 1.2,
+    "h": 2.4,
+    "d": 0.12
+  },
+  "material_profile": "wood_plank_01",
+  "references": [
+    "kit:door_residential"
+  ]
+}

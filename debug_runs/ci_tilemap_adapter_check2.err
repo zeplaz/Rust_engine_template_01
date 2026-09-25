@@ -1,0 +1,8 @@
+    Updating crates.io index
+     Locking 1 package to latest compatible version
+    Updating bevy_ecs_tilemap v0.18.1 -> v0.19.0
+ Downloading crates ...
+  Downloaded bevy_ecs_tilemap v0.19.0
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+    Checking bevy_ecs_tilemap v0.19.0
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 36.58s

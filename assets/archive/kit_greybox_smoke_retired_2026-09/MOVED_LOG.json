@@ -1,0 +1,167 @@
+{
+  "schema": "archive_moved_log_v1",
+  "bundle": "kit_greybox_smoke_retired_2026-09",
+  "gate": "BQ-PROD-DEFER-PACKS-001",
+  "written_at_epoch_secs": 1790254524,
+  "moved_count": 31,
+  "moved_this_run": 0,
+  "moved": [
+    {
+      "job_id": "corner_brick_outer_run001",
+      "from": "assets/models/modules/corner_brick_outer_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/corner_brick_outer_run001"
+    },
+    {
+      "job_id": "corner_concrete_outer_run001",
+      "from": "assets/models/modules/corner_concrete_outer_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/corner_concrete_outer_run001"
+    },
+    {
+      "job_id": "corner_steel_inner_run001",
+      "from": "assets/models/modules/corner_steel_inner_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/corner_steel_inner_run001"
+    },
+    {
+      "job_id": "corner_wood_porch_run001",
+      "from": "assets/models/modules/corner_wood_porch_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/corner_wood_porch_run001"
+    },
+    {
+      "job_id": "door_garage_2u_run001",
+      "from": "assets/models/modules/door_garage_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/door_garage_2u_run001"
+    },
+    {
+      "job_id": "door_industrial_1u_run001",
+      "from": "assets/models/modules/door_industrial_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/door_industrial_1u_run001"
+    },
+    {
+      "job_id": "door_residential_1u_run001",
+      "from": "assets/models/modules/door_residential_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/door_residential_1u_run001"
+    },
+    {
+      "job_id": "door_shop_1u_run001",
+      "from": "assets/models/modules/door_shop_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/door_shop_1u_run001"
+    },
+    {
+      "job_id": "door_warehouse_2u_run001",
+      "from": "assets/models/modules/door_warehouse_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/door_warehouse_2u_run001"
+    },
+    {
+      "job_id": "prop_ac_unit_1u_run001",
+      "from": "assets/models/modules/prop_ac_unit_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/prop_ac_unit_1u_run001"
+    },
+    {
+      "job_id": "prop_chimney_1u_run001",
+      "from": "assets/models/modules/prop_chimney_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/prop_chimney_1u_run001"
+    },
+    {
+      "job_id": "prop_vent_roof_1u_run001",
+      "from": "assets/models/modules/prop_vent_roof_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/prop_vent_roof_1u_run001"
+    },
+    {
+      "job_id": "roof_flat_2u_run001",
+      "from": "assets/models/modules/roof_flat_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/roof_flat_2u_run001"
+    },
+    {
+      "job_id": "roof_industrial_shed_2u_run001",
+      "from": "assets/models/modules/roof_industrial_shed_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/roof_industrial_shed_2u_run001"
+    },
+    {
+      "job_id": "roof_pitched_2u_run001",
+      "from": "assets/models/modules/roof_pitched_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/roof_pitched_2u_run001"
+    },
+    {
+      "job_id": "roof_sawtooth_2u_run001",
+      "from": "assets/models/modules/roof_sawtooth_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/roof_sawtooth_2u_run001"
+    },
+    {
+      "job_id": "wall_brick_1u_example",
+      "from": "assets/models/modules/wall_brick_1u_example",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_brick_1u_example"
+    },
+    {
+      "job_id": "wall_brick_2u_run001",
+      "from": "assets/models/modules/wall_brick_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_brick_2u_run001"
+    },
+    {
+      "job_id": "wall_concrete_1u_run001",
+      "from": "assets/models/modules/wall_concrete_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_concrete_1u_run001"
+    },
+    {
+      "job_id": "wall_concrete_2u_run001",
+      "from": "assets/models/modules/wall_concrete_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_concrete_2u_run001"
+    },
+    {
+      "job_id": "wall_glass_1u_run001",
+      "from": "assets/models/modules/wall_glass_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_glass_1u_run001"
+    },
+    {
+      "job_id": "wall_industrial_panel_2u_run001",
+      "from": "assets/models/modules/wall_industrial_panel_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_industrial_panel_2u_run001"
+    },
+    {
+      "job_id": "wall_steel_1u_run001",
+      "from": "assets/models/modules/wall_steel_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_steel_1u_run001"
+    },
+    {
+      "job_id": "wall_wood_1u_run001",
+      "from": "assets/models/modules/wall_wood_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_wood_1u_run001"
+    },
+    {
+      "job_id": "wall_wood_2u_run001",
+      "from": "assets/models/modules/wall_wood_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/wall_wood_2u_run001"
+    },
+    {
+      "job_id": "window_double_1u_run001",
+      "from": "assets/models/modules/window_double_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/window_double_1u_run001"
+    },
+    {
+      "job_id": "window_glass_curtain_2u_run001",
+      "from": "assets/models/modules/window_glass_curtain_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/window_glass_curtain_2u_run001"
+    },
+    {
+      "job_id": "window_industrial_1u_run001",
+      "from": "assets/models/modules/window_industrial_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/window_industrial_1u_run001"
+    },
+    {
+      "job_id": "window_shop_1u_run001",
+      "from": "assets/models/modules/window_shop_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/window_shop_1u_run001"
+    },
+    {
+      "job_id": "window_single_1u_run001",
+      "from": "assets/models/modules/window_single_1u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/window_single_1u_run001"
+    },
+    {
+      "job_id": "window_warehouse_2u_run001",
+      "from": "assets/models/modules/window_warehouse_2u_run001",
+      "to": "assets/archive/kit_greybox_smoke_retired_2026-09/modules/window_warehouse_2u_run001"
+    }
+  ],
+  "errors": [],
+  "note": "Retired from runtime index; kept on disk per assets/archive/README.md"
+}

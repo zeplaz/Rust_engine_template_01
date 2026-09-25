@@ -127,10 +127,11 @@ mod tests {
         assert_eq!(solver.capacity[0], 0.0);
         let scope = app.world().resource::<DistrictSolveScope>();
         assert_eq!(scope.empty_districts_skipped, 1);
-        assert!(app
-            .world()
-            .resource::<LogisticsThroughputRuntimeWitness>()
-            .saw_district_scoped_solve);
+        assert!(
+            app.world()
+                .resource::<LogisticsThroughputRuntimeWitness>()
+                .saw_district_scoped_solve
+        );
     }
 
     #[test]
@@ -177,10 +178,11 @@ mod tests {
         app.update();
         let solver = app.world().resource::<ThroughputSolverState>();
         assert!((solver.capacity[0] - 5.0).abs() < 1e-4);
-        assert!(app
-            .world()
-            .resource::<LogisticsThroughputRuntimeWitness>()
-            .saw_district_scoped_solve);
+        assert!(
+            app.world()
+                .resource::<LogisticsThroughputRuntimeWitness>()
+                .saw_district_scoped_solve
+        );
         assert_eq!(
             app.world()
                 .resource::<DistrictSolveScope>()

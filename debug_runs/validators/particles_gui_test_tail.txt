@@ -1,0 +1,301 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+warning: unused import: `super::*`
+   --> src\gui\construction_growth_inspector.rs:173:9
+    |
+173 |     use super::*;
+    |         ^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `TransportFieldStore` and `hydrate_transport_from_snapshot`
+  --> src\io\save\transport_overlay.rs:51:9
+   |
+51 |         hydrate_transport_from_snapshot, TransportEdgeId, TransportEdgeMeta, TransportFieldStore,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                      ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ViewProjection`
+    --> src\render\extraction\fire_visual_extract.rs:1053:22
+     |
+1053 |         ViewManager, ViewProjection, ViewRenderPolicy, ViewRenderTarget, VisualBudgetSettings,
+     |                      ^^^^^^^^^^^^^^
+
+warning: unused import: `LandscapeProgramEvaluation`
+   --> src\render\extraction\vegetation_visual_extract.rs:272:9
+    |
+272 |         LandscapeProgramEvaluation, LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `FIRE_SPARK_MIN_PX_PER_TILE`
+  --> src\render\fire_vfx\emit.rs:26:33
+   |
+26 |     FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_MIN_PX_PER_TILE,
+   |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `EffectSpawnHookConfig` and `sample_effect_field`
+  --> src\render\fire_vfx\mod.rs:12:61
+   |
+12 |     effect_spawn_hook_resolver_wired, resolve_effect_spawn, sample_effect_field,
+   |                                                             ^^^^^^^^^^^^^^^^^^^
+...
+15 |     EffectSpawnHookConfig, EffectSpawnResolveContext, SpawnHookKind, EFFECT_REGISTRY_ROOT,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `append_effect_consumable_registry_particles` and `effect_consumable_registry_emit_wired`
+  --> src\render\fire_vfx\mod.rs:18:5
+   |
+18 |     append_effect_consumable_registry_particles, effect_consumable_registry_emit_wired,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MapCameraDesired`
+  --> src\render\stage5_full_app_harness\readiness_app.rs:35:22
+   |
+35 |     LodZoneRegistry, MapCameraDesired, MapCameraSettings, OverlayFieldFrame, VisualBudgetSettings,
+   |                      ^^^^^^^^^^^^^^^^
+
+warning: unused import: `build_deterministic_ci_scenario`
+  --> src\render\stage5_full_app_harness\readiness_app.rs:52:5
+   |
+52 |     build_deterministic_ci_scenario, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix, Vt4CiReport,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `log_e01_f2_combined_projection_fixture`, `merge_log_e01_stage5_witness`, `merge_tactical_vfx_stage5_witness`, and `merge_visual_perf_witness_stage5`
+  --> src\render\stage5_full_app_harness\mod.rs:24:5
+   |
+24 |     log_e01_f2_combined_projection_fixture, log_e01_projection_graph_fixture,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 |     merge_log_e01_stage5_witness, merge_tactical_vfx_stage5_witness,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+26 |     merge_visual_perf_witness_stage5, refresh_log_e01_and_tactical_vfx_stage5_live_witness,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ViewSurfaceId`
+  --> src\render\view_runtime\witness_state.rs:80:57
+   |
+80 |     use crate::render::view_runtime::{ViewRuntimeTrace, ViewSurfaceId};
+   |                                                         ^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudOverlayTrayState`
+  --> src\render\minimap_compositor\tests.rs:90:9
+   |
+90 |     use crate::gui::hud::HudOverlayTrayState;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudOverlayTrayState`
+   --> src\render\minimap_compositor\tests.rs:109:9
+    |
+109 |     use crate::gui::hud::HudOverlayTrayState;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudOverlayTrayState`
+   --> src\render\minimap_compositor\tests.rs:133:9
+    |
+133 |     use crate::gui::hud::HudOverlayTrayState;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudOverlayTrayState`
+   --> src\render\minimap_compositor\tests.rs:220:9
+    |
+220 |     use crate::gui::hud::HudOverlayTrayState;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `particle_view_globals_from_metrics`
+  --> src\render\pipelines\gpu_water_particle_raster.rs:34:21
+   |
+34 | use crate::render::{particle_view_globals_from_metrics, ExtractedCameraMetrics};
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `compute_district_pressure_system` and `rollup_district_metrics_system`
+   --> src\strategic\settlement\growth.rs:119:9
+    |
+119 |         compute_district_pressure_system, rollup_district_metrics_system,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildingUsage` and `GrowthActorLayer`
+  --> src\strategic\settlement\policy.rs:54:48
+   |
+54 |     use crate::strategic::settlement::actors::{BuildingUsage, GrowthActorLayer};
+   |                                                ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::strategic::settlement::ids::ArchetypeId`
+  --> src\strategic\settlement\policy.rs:55:9
+   |
+55 |     use crate::strategic::settlement::ids::ArchetypeId;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::state::app::StatesPlugin`
+   --> src\dev\mig_a_adoption.rs:402:9
+    |
+402 |     use bevy::state::app::StatesPlugin;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `refresh_wc_d04_stage6_virtualization_live_witness`
+  --> src\dev\coder_a_wave3_closure_v1.rs:37:9
+   |
+37 |         refresh_wc_d04_stage6_virtualization_live_witness,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+   --> src\construction\site_stub_overlay.rs:171:9
+    |
+171 |     use super::*;
+    |         ^^^^^^^^
+
+warning: use of deprecated field `terrain::editor::map_snapshot::MapSnapshotCellV1::road`: INFRA-E0-002: road markers are editor entities / transport snapshot ÔÇö not tile flags
+   --> src\terrain\editor\map_snapshot.rs:253:21
+    |
+253 |                     road: true,
+    |                     ^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated field `terrain::editor::map_snapshot::MapSnapshotCellV1::road`: INFRA-E0-002: road markers are editor entities / transport snapshot ÔÇö not tile flags
+   --> src\terrain\editor\map_snapshot.rs:258:21
+    |
+258 |                     road: false,
+    |                     ^^^^^^^^^^^
+
+warning: use of deprecated field `terrain::editor::map_snapshot::MapSnapshotCellV1::road`: INFRA-E0-002: road markers are editor entities / transport snapshot ÔÇö not tile flags
+   --> src\terrain\editor\map_snapshot.rs:263:48
+    |
+263 |         assert!(migrated.cells.iter().all(|c| !c.road));
+    |                                                ^^^^^^
+
+warning: use of deprecated field `terrain::editor::map_snapshot::MapSnapshotCellV1::road`: INFRA-E0-002: road markers are editor entities / transport snapshot ÔÇö not tile flags
+   --> src\terrain\editor\map_snapshot.rs:275:17
+    |
+275 |                 road: false,
+    |                 ^^^^^^^^^^^
+
+warning: unused variable: `entity`
+   --> src\render\extraction\vegetation_visual_extract.rs:285:13
+    |
+285 |         let entity = app
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_entity`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src\render\extraction\fire_view_extract.rs:648:13
+    |
+648 |         let mut allowed: FxHashSet<ChunkCoord> = (0..40).map(|i| IVec2::new(i, 0)).collect();
+    |             ----^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src\render\fx_spine\fire_streaming.rs:322:13
+    |
+322 |         let mut witness = FireStreamingWitness::default();
+    |             ----^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\economy\activation\grid_overload_ux.rs:117:13
+    |
+117 |         let mut world = app.world_mut();
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\economy\activation\power_island_ux.rs:139:13
+    |
+139 |         let mut world = app.world_mut();
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\substrate\shim.rs:320:13
+    |
+320 |         let mut state = WorldChunkState::new_empty(key, 4);
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: struct `SettlementBooksHydrateState` is never constructed
+   --> src\io\save\settlement_overlay.rs:228:12
+    |
+228 | pub struct SettlementBooksHydrateState {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `try_hydrate_settlement_books_on_bundle_dir` is never used
+   --> src\io\save\settlement_overlay.rs:235:8
+    |
+235 | pub fn try_hydrate_settlement_books_on_bundle_dir(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `site_terrain_gate_is_stub` is never used
+  --> src\strategic\site\validation.rs:29:8
+   |
+29 | pub fn site_terrain_gate_is_stub() -> bool {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `site_network_gate_is_stub` is never used
+  --> src\strategic\site\validation.rs:36:8
+   |
+36 | pub fn site_network_gate_is_stub() -> bool {
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: `proc_A_dine01` (lib test) generated 36 warnings (run `cargo fix --lib -p proc_A_dine01 --tests` to apply 28 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 20s
+     Running unittests src\lib.rs (target\debug\deps\proc_A_dine01-6237140a6309b92d.exe)
+
+running 8 tests
+test construction::build_mode::gui_esc_001_tests::building_esc_drops_tool_first_press ... FAILED
+test construction::build_mode::gui_esc_001_tests::second_esc_drops_keep_tool_road_session ... FAILED
+test construction::iso_draw_scale::tests::world_002_witness_green ... ok
+test dev::build_read_world_002_live_proof::tests::build_read_world_002_live_witness_refresh_green ... ok
+test dev::vss_t3_overlay_authority_proof::tests::vss_t3_001_ignition_single_funnel_invariant ... FAILED
+test dev::vss_t3_overlay_authority_proof::tests::vss_t3_fire_consumer_witness_refresh_green ... FAILED
+test render::fire_vfx::emit::tests::registry_spark_shower_emits_into_fire_vfx_spine ... ok
+test systems::fire::ember_spot_ignition::tests::emit_does_not_own_ember_message_writer ... FAILED
+
+failures:
+
+---- construction::build_mode::gui_esc_001_tests::building_esc_drops_tool_first_press stdout ----
+
+thread 'construction::build_mode::gui_esc_001_tests::building_esc_drops_tool_first_press' (22444) panicked at src\construction\build_mode.rs:269:9:
+assertion `left == right` failed
+  left: Building(Factory)
+ right: None
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- construction::build_mode::gui_esc_001_tests::second_esc_drops_keep_tool_road_session stdout ----
+
+thread 'construction::build_mode::gui_esc_001_tests::second_esc_drops_keep_tool_road_session' (20876) panicked at src\construction\build_mode.rs:220:9:
+assertion failed: app.world().resource::<BuildEscCancelLatch>().awaiting_second_esc_to_drop_tool
+
+---- dev::vss_t3_overlay_authority_proof::tests::vss_t3_001_ignition_single_funnel_invariant stdout ----
+
+thread 'dev::vss_t3_overlay_authority_proof::tests::vss_t3_001_ignition_single_funnel_invariant' (7120) panicked at src\dev\vss_t3_overlay_authority_proof.rs:248:9:
+sole MessageWriter<EmberSpotIgnitionEvent> must be drain.rs (spot diffusion uses SimEffectQueue)
+
+---- dev::vss_t3_overlay_authority_proof::tests::vss_t3_fire_consumer_witness_refresh_green stdout ----
+
+thread 'dev::vss_t3_overlay_authority_proof::tests::vss_t3_fire_consumer_witness_refresh_green' (10884) panicked at src\dev\vss_t3_overlay_authority_proof.rs:277:9:
+assertion `left == right` failed
+  left: Bool(false)
+ right: true
+
+---- systems::fire::ember_spot_ignition::tests::emit_does_not_own_ember_message_writer stdout ----
+
+thread 'systems::fire::ember_spot_ignition::tests::emit_does_not_own_ember_message_writer' (16808) panicked at src\systems\fire\ember_spot_ignition.rs:292:9:
+spot diffusion must enqueue SimEffectQueue ÔÇö sole MessageWriter is drain
+
+
+failures:
+    construction::build_mode::gui_esc_001_tests::building_esc_drops_tool_first_press
+    construction::build_mode::gui_esc_001_tests::second_esc_drops_keep_tool_road_session
+    dev::vss_t3_overlay_authority_proof::tests::vss_t3_001_ignition_single_funnel_invariant
+    dev::vss_t3_overlay_authority_proof::tests::vss_t3_fire_consumer_witness_refresh_green
+    systems::fire::ember_spot_ignition::tests::emit_does_not_own_ember_message_writer
+
+test result: FAILED. 3 passed; 5 failed; 0 ignored; 0 measured; 1579 filtered out; finished in 0.37s
+
+error: test failed, to rerun pass `-p proc_A_dine01 --lib`

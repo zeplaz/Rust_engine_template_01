@@ -61,13 +61,14 @@
       "debug_runs/trade_flow_geography_live.json",
       "debug_runs/trade_sc_runtime_live.json",
       "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
       "debug_runs/nuclear_meltdown_live.json",
       "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/settlement_hierarchy_gap_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_set_p5_hierarchy_gap_live_witness",
-    "written_at_epoch_secs": 1790210305
+    "written_at_epoch_secs": 1790312398
   },
   "books_seeded": true,
   "commit_block_assignment_wired": true,

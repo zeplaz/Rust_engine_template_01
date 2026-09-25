@@ -1,0 +1,1003 @@
+{
+  "schema_version": 1,
+  "assembly_id": "industrial_west_4x2_s1_4bf6",
+  "style_pack_id": "style_industrial_west",
+  "source_tier": "production",
+  "procedural_rules_version": "pg2_wdc_v1",
+  "reference_tags": [],
+  "seed": 1,
+  "footprint": {
+    "width": 4,
+    "depth": 2,
+    "floors": 2,
+    "wdc_cell_count": 24
+  },
+  "module_placements": [
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        -2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "face": "S",
+      "node_id": "win_double_1u_0_0_f0_S",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        -2.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        1.5707963267948966,
+        0.0
+      ],
+      "face": "W",
+      "node_id": "wall_steel_1u_0_0_f0_W",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        4.0,
+        0.0,
+        -2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "face": "S",
+      "node_id": "win_double_1u_1_0_f0_S",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "door_warehouse",
+      "job_id": "door_warehouse_production_run001",
+      "slot_key": "door_default",
+      "token": "D",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/door_warehouse_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        -2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "face": "S",
+      "node_id": "door_warehouse_2_0_f0_S",
+      "material_profile": "steel_door_warehouse_01",
+      "placement_tags": [
+        "exterior",
+        "door"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "door_rollup"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        12.0,
+        0.0,
+        -2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "face": "S",
+      "node_id": "win_double_1u_3_0_f0_S",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        14.0,
+        0.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        -1.5707963267948966,
+        0.0
+      ],
+      "face": "E",
+      "node_id": "wall_steel_1u_3_0_f0_E",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        3.141592653589793,
+        0.0
+      ],
+      "face": "N",
+      "node_id": "win_double_1u_0_1_f0_N",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        -2.0,
+        0.0,
+        4.0
+      ],
+      "rotation_euler": [
+        0.0,
+        1.5707963267948966,
+        0.0
+      ],
+      "face": "W",
+      "node_id": "win_double_1u_0_1_f0_W",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 1,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        4.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        3.141592653589793,
+        0.0
+      ],
+      "face": "N",
+      "node_id": "win_double_1u_1_1_f0_N",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 2,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        8.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        3.141592653589793,
+        0.0
+      ],
+      "face": "N",
+      "node_id": "wall_steel_1u_2_1_f0_N",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        12.0,
+        0.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        3.141592653589793,
+        0.0
+      ],
+      "face": "N",
+      "node_id": "win_double_1u_3_1_f0_N",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 0,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        14.0,
+        0.0,
+        4.0
+      ],
+      "rotation_euler": [
+        0.0,
+        -1.5707963267948966,
+        0.0
+      ],
+      "face": "E",
+      "node_id": "win_double_1u_3_1_f0_E",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        -2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "face": "S",
+      "node_id": "win_double_1u_0_0_f1_S",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 0,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        -2.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        1.5707963267948966,
+        0.0
+      ],
+      "face": "W",
+      "node_id": "wall_steel_1u_0_0_f1_W",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 1,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        4.0,
+        3.0,
+        -2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "face": "S",
+      "node_id": "win_double_1u_1_0_f1_S",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        -2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "face": "S",
+      "node_id": "win_double_1u_2_0_f1_S",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        12.0,
+        3.0,
+        -2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        0.0,
+        0.0
+      ],
+      "face": "S",
+      "node_id": "win_double_1u_3_0_f1_S",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "wall_steel_1u",
+      "job_id": "wall_steel_1u_production_run001",
+      "slot_key": "wall_1u",
+      "token": "W",
+      "grid_x": 3,
+      "grid_y": 0,
+      "floor": 1,
+      "glb_path": "assets/models/modules/wall_steel_1u_production_run001/model.glb",
+      "position": [
+        14.0,
+        3.0,
+        0.0
+      ],
+      "rotation_euler": [
+        0.0,
+        -1.5707963267948966,
+        0.0
+      ],
+      "face": "E",
+      "node_id": "wall_steel_1u_3_0_f1_E",
+      "material_profile": "steel_panel_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        0.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        3.141592653589793,
+        0.0
+      ],
+      "face": "N",
+      "node_id": "win_double_1u_0_1_f1_N",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 0,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        -2.0,
+        3.0,
+        4.0
+      ],
+      "rotation_euler": [
+        0.0,
+        1.5707963267948966,
+        0.0
+      ],
+      "face": "W",
+      "node_id": "win_double_1u_0_1_f1_W",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 1,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        4.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        3.141592653589793,
+        0.0
+      ],
+      "face": "N",
+      "node_id": "win_double_1u_1_1_f1_N",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 2,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        8.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        3.141592653589793,
+        0.0
+      ],
+      "face": "N",
+      "node_id": "win_double_1u_2_1_f1_N",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        12.0,
+        3.0,
+        6.0
+      ],
+      "rotation_euler": [
+        0.0,
+        3.141592653589793,
+        0.0
+      ],
+      "face": "N",
+      "node_id": "win_double_1u_3_1_f1_N",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "win_double_1u",
+      "job_id": "win_double_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
+      "grid_x": 3,
+      "grid_y": 1,
+      "floor": 1,
+      "glb_path": "assets/models/modules/win_double_1u_production_run001/model.glb",
+      "position": [
+        14.0,
+        3.0,
+        4.0
+      ],
+      "rotation_euler": [
+        0.0,
+        -1.5707963267948966,
+        0.0
+      ],
+      "face": "E",
+      "node_id": "win_double_1u_3_1_f1_E",
+      "material_profile": "glass_panel_01",
+      "placement_tags": [
+        "exterior",
+        "window_band"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "detail": [
+          "window_band"
+        ]
+      }
+    },
+    {
+      "module_id": "roof_metal_low",
+      "job_id": "roof_metal_low_production_run001",
+      "slot_key": "roof_default",
+      "token": "R",
+      "grid_x": 2,
+      "grid_y": 0,
+      "floor": 2,
+      "glb_path": "assets/models/modules/roof_metal_low_production_run001/model.glb",
+      "position": [
+        6.0,
+        6.0,
+        2.0
+      ],
+      "rotation_euler": [
+        0.0,
+        1.5707963267948966,
+        0.0
+      ],
+      "roof_mode": "full_footprint",
+      "node_id": "roof_metal_low_2_0_f2",
+      "material_profile": "roof_metal_01",
+      "placement_tags": [
+        "exterior",
+        "industrial"
+      ],
+      "variant_tags": [
+        "clean"
+      ],
+      "lod_policy": "production",
+      "semantic_tags": {
+        "location": [
+          "street_facing"
+        ],
+        "architectural": [
+          "industrial"
+        ]
+      }
+    }
+  ],
+  "building_look_v2": {
+    "grid_unit_m": 4.0,
+    "floor_height_m": 3.0,
+    "ridge_row_roof": false,
+    "full_footprint_roof": true,
+    "outward_yaw": true,
+    "corners_as_walls": true,
+    "dual_face_corners": true,
+    "street_openings_ground": true,
+    "wall_edge_offset": true
+  }
+}

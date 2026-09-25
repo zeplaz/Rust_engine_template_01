@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "asset_id": "corner_L",
+  "archetype": "module_prop",
+  "style_pack": "style_industrial_west",
+  "development_tier": "lod0",
+  "pbr_status": "deferred",
+  "batch_id": "kit_lod0_007",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 2,
+    "h": 3,
+    "d": 2
+  },
+  "material_profile": "concrete_grey_01",
+  "references": []
+}

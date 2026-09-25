@@ -9,8 +9,9 @@ use crate::entities::production::core::{
 };
 
 use super::types::{
-    FreightLot, FreightMovementModel, InTransitLedger, LogisticsDiagnostics, PendingSiteStagingDebits,
-    RouteCache, RouteHandle, RoutePath, RoutePathStore, SiteStagingStock, ThroughputSolverState,
+    FreightLot, FreightMovementModel, InTransitLedger, LogisticsDiagnostics,
+    PendingSiteStagingDebits, RouteCache, RouteHandle, RoutePath, RoutePathStore, SiteStagingStock,
+    ThroughputSolverState,
 };
 
 /// Deployable tags hauled from plant buffers into the ledger (then staging).
@@ -179,7 +180,9 @@ pub fn dispatch_freight_from_solver_system(
         if ship <= 0.0 {
             continue;
         }
-        from_node.buffer_by_tag.insert(tag.clone(), available - ship);
+        from_node
+            .buffer_by_tag
+            .insert(tag.clone(), available - ship);
 
         let path_len = route_cache
             .routes
@@ -190,13 +193,14 @@ pub fn dispatch_freight_from_solver_system(
         let ticks = freight_transit_ticks(path_len, movement);
 
         let cached = route_cache.routes.get(&(edge.from, edge.to));
-        let route = cached
-            .map(|c| c.handle)
-            .or(edge.route_handle)
-            .unwrap_or(super::types::RouteHandle {
-                id: 0,
-                topology_revision: solver.topology_revision,
-            });
+        let route =
+            cached
+                .map(|c| c.handle)
+                .or(edge.route_handle)
+                .unwrap_or(super::types::RouteHandle {
+                    id: 0,
+                    topology_revision: solver.topology_revision,
+                });
         ledger.lots.push(FreightLot {
             destination: edge.to,
             buffer_tag: tag.clone(),

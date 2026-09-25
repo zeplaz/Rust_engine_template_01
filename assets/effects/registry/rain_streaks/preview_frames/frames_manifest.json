@@ -1,0 +1,57 @@
+{
+  "schema": "effect_preview_frames_manifest_v1",
+  "effect_id": "rain_streaks",
+  "batch_id": "vss_t4_reference_effects_v1",
+  "capture_kind": "staging_pack_digest",
+  "pack_hash": "1c7cfec6aeb94ec829f64f9af93d2d6e3d136c1060b85879a37ffffa28769031",
+  "seed": "42003",
+  "captured_at_utc": "2026-09-24T17:55:20Z",
+  "frames": [
+    {
+      "index": 0,
+      "path": "preview_frames/capture_000.png",
+      "source_digest": "1104635ca3ed8ce5c7a08d9986ef33f912923ab2a8ffefb4eca8cbd4522e1aac",
+      "sha256": "dfced1fa5221e682ff16581d12aee033b4ca571f20b39c5747854ece3ad9b1de",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 1,
+      "path": "preview_frames/capture_001.png",
+      "source_digest": "2d2c9238b4cb8da18e1160ea880af0ff64c05e2227620d68ea3eafd7ae7fcd45",
+      "sha256": "01de838c31babe39396ef95ea2c3ef3951e27c48d2dac3f7e8053b6bccd341c9",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 2,
+      "path": "preview_frames/capture_002.png",
+      "source_digest": "5ee1d487a07323a453dcaa0ed9c7953c15ed822148db3e9d4b0702a3b3b50d53",
+      "sha256": "1cfd36979822a69a86e786dbbcca07ca020ee0ba3670fd0209fc19ca2b216339",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 3,
+      "path": "preview_frames/capture_003.png",
+      "source_digest": "db852bc4310a3c1a311070dee8e81c77288d8f68e2a507b1d5d47e5dd3d2ebb0",
+      "sha256": "6d733ca53d3d5126a88702c5587877c659f56d57d44f27568cdd2cca40f060ca",
+      "capture_kind": "staging_pack_digest"
+    }
+  ],
+  "capture_hash": "509e2b88de29a388f9d2e93069a4f33d1b83e75b154be2464ebfef1791269829",
+  "preview_witness": {
+    "witness_schema": "artist_vfx_preview_witness_v1",
+    "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+    "preview_job_id": "rain_streaks_preview_capture",
+    "frames_captured": 4,
+    "capture_hash": "509e2b88de29a388f9d2e93069a4f33d1b83e75b154be2464ebfef1791269829",
+    "staging_path": "assets/staging/rain_streaks/",
+    "honest_gate": "honest",
+    "captured_at_utc": "2026-09-24T17:55:20Z",
+    "toolchain": {
+      "mcp_tool": "effect_preview_capture",
+      "cli_parity": true,
+      "blender_present": false
+    },
+    "promoted_path": "assets/effects/registry/rain_streaks/"
+  },
+  "_note": "Deterministic staging_pack_digest tiles \u2014 not GPU/operator theater pixels"
+}

@@ -53,12 +53,22 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/vegetation_snapshot_roundtrip_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_vegetation_snapshot_roundtrip_live_witness",
-    "written_at_epoch_secs": 1783371798
+    "written_at_epoch_secs": 1790312396
   },
   "chunks_roundtrip": 1,
   "gate": "VEG-SNAPSHOT-PLAY-001",

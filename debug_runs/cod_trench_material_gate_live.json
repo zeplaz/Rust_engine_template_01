@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/cod_trench_material_gate_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_cod_trench_material_gate_witness",
-    "written_at_epoch_secs": 1790272646
+    "written_at_epoch_secs": 1790312390
   },
   "buffer_tag": "Concrete",
   "bunker_stock_sufficient_leaves_allows_commit": true,
@@ -91,8 +91,8 @@
   "kinds_classified": true,
   "parallel_wallet": false,
   "phase9": false,
-  "place_blocked_no_stock": 2,
-  "place_ok": 2,
+  "place_blocked_no_stock": 3,
+  "place_ok": 5,
   "reason_copy_locked": true,
   "reason_token": "insufficient_concrete",
   "residuals_closed": [

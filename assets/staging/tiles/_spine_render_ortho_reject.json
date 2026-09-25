@@ -1,0 +1,9 @@
+{
+  "batch_id": "spine_render_ortho_reject",
+  "bake_source": "smoke_ortho_headless",
+  "render": {
+    "method": "blender_orthographic_iso",
+    "seed": 1
+  },
+  "ship": true
+}

@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "asset_id": "window_shop_1u",
+  "archetype": "module_window",
+  "style_pack": "style_modern",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 4,
+    "h": 2.0,
+    "d": 0.1
+  },
+  "material_profile": "glass_shop_01",
+  "references": []
+}

@@ -24,9 +24,7 @@ pub fn register_facility_portals_system(
         ),
     >,
 ) {
-    let cells = cfg
-        .map(|c| c.cells_per_chunk)
-        .unwrap_or(UVec2::new(32, 32));
+    let cells = cfg.map(|c| c.cells_per_chunk).unwrap_or(UVec2::new(32, 32));
     for (entity, planned) in &q {
         let anchor = chunk_key_from_site_tile(planned.origin, cells);
         let transport_anchor = TransportNodeAnchor(tile_node_key(planned.origin));

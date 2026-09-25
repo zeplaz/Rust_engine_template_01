@@ -68,14 +68,14 @@
     "relative_path": "debug_runs/bq_f3_slot_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_bq_f3_slot_001_witness",
-    "written_at_epoch_secs": 1790271958
+    "written_at_epoch_secs": 1790312391
   },
   "debug_tint_wired": true,
   "gate": "BQ-F3-SLOT-001",
   "green": true,
   "module_not_found_recorded": true,
-  "snapshot_violation_count": 16,
+  "snapshot_violation_count": 5,
   "style_pack_id": "style_industrial_west",
   "table_ok": true,
-  "violation_count": 16
+  "violation_count": 5
 }

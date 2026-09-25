@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop_vent_roof_1u",
+  "archetype": "module_prop",
+  "style_pack": "style_industrial_west",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "roof_ridge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 2,
+    "h": 0.6,
+    "d": 2
+  },
+  "material_profile": "vent_metal_01",
+  "references": []
+}

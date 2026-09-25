@@ -1,0 +1,425 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+warning: unused import: `super::*`
+   --> src\gui\construction_growth_inspector.rs:173:9
+    |
+173 |     use super::*;
+    |         ^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `TransportFieldStore` and `hydrate_transport_from_snapshot`
+  --> src\io\save\transport_overlay.rs:51:9
+   |
+51 |         hydrate_transport_from_snapshot, TransportEdgeId, TransportEdgeMeta, TransportFieldStore,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                                      ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ViewProjection`
+    --> src\render\extraction\fire_visual_extract.rs:1053:22
+     |
+1053 |         ViewManager, ViewProjection, ViewRenderPolicy, ViewRenderTarget, VisualBudgetSettings,
+     |                      ^^^^^^^^^^^^^^
+
+warning: unused import: `LandscapeProgramEvaluation`
+   --> src\render\extraction\vegetation_visual_extract.rs:272:9
+    |
+272 |         LandscapeProgramEvaluation, LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MapCameraDesired`
+  --> src\render\stage5_full_app_harness\readiness_app.rs:35:22
+   |
+35 |     LodZoneRegistry, MapCameraDesired, MapCameraSettings, OverlayFieldFrame, VisualBudgetSettings,
+   |                      ^^^^^^^^^^^^^^^^
+
+warning: unused import: `build_deterministic_ci_scenario`
+  --> src\render\stage5_full_app_harness\readiness_app.rs:52:5
+   |
+52 |     build_deterministic_ci_scenario, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix, Vt4CiReport,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `log_e01_f2_combined_projection_fixture`, `merge_log_e01_stage5_witness`, `merge_tactical_vfx_stage5_witness`, and `merge_visual_perf_witness_stage5`
+  --> src\render\stage5_full_app_harness\mod.rs:24:5
+   |
+24 |     log_e01_f2_combined_projection_fixture, log_e01_projection_graph_fixture,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+25 |     merge_log_e01_stage5_witness, merge_tactical_vfx_stage5_witness,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+26 |     merge_visual_perf_witness_stage5, refresh_log_e01_and_tactical_vfx_stage5_live_witness,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ViewSurfaceId`
+  --> src\render\view_runtime\witness_state.rs:80:57
+   |
+80 |     use crate::render::view_runtime::{ViewRuntimeTrace, ViewSurfaceId};
+   |                                                         ^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudOverlayTrayState`
+  --> src\render\minimap_compositor\tests.rs:90:9
+   |
+90 |     use crate::gui::hud::HudOverlayTrayState;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudOverlayTrayState`
+   --> src\render\minimap_compositor\tests.rs:109:9
+    |
+109 |     use crate::gui::hud::HudOverlayTrayState;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudOverlayTrayState`
+   --> src\render\minimap_compositor\tests.rs:133:9
+    |
+133 |     use crate::gui::hud::HudOverlayTrayState;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudOverlayTrayState`
+   --> src\render\minimap_compositor\tests.rs:220:9
+    |
+220 |     use crate::gui::hud::HudOverlayTrayState;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `compute_district_pressure_system` and `rollup_district_metrics_system`
+   --> src\strategic\settlement\growth.rs:119:9
+    |
+119 |         compute_district_pressure_system, rollup_district_metrics_system,
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildingUsage` and `GrowthActorLayer`
+  --> src\strategic\settlement\policy.rs:55:48
+   |
+55 |     use crate::strategic::settlement::actors::{BuildingUsage, GrowthActorLayer};
+   |                                                ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::strategic::settlement::ids::ArchetypeId`
+  --> src\strategic\settlement\policy.rs:56:9
+   |
+56 |     use crate::strategic::settlement::ids::ArchetypeId;
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::state::app::StatesPlugin`
+   --> src\dev\mig_a_adoption.rs:402:9
+    |
+402 |     use bevy::state::app::StatesPlugin;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `refresh_wc_d04_stage6_virtualization_live_witness`
+  --> src\dev\coder_a_wave3_closure_v1.rs:37:9
+   |
+37 |         refresh_wc_d04_stage6_virtualization_live_witness,
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::*`
+   --> src\construction\site_stub_overlay.rs:171:9
+    |
+171 |     use super::*;
+    |         ^^^^^^^^
+
+warning: use of deprecated field `terrain::editor::map_snapshot::MapSnapshotCellV1::road`: INFRA-E0-002: road markers are editor entities / transport snapshot ÔÇö not tile flags
+   --> src\terrain\editor\map_snapshot.rs:253:21
+    |
+253 |                     road: true,
+    |                     ^^^^^^^^^^
+    |
+    = note: `#[warn(deprecated)]` on by default
+
+warning: use of deprecated field `terrain::editor::map_snapshot::MapSnapshotCellV1::road`: INFRA-E0-002: road markers are editor entities / transport snapshot ÔÇö not tile flags
+   --> src\terrain\editor\map_snapshot.rs:258:21
+    |
+258 |                     road: false,
+    |                     ^^^^^^^^^^^
+
+warning: use of deprecated field `terrain::editor::map_snapshot::MapSnapshotCellV1::road`: INFRA-E0-002: road markers are editor entities / transport snapshot ÔÇö not tile flags
+   --> src\terrain\editor\map_snapshot.rs:263:48
+    |
+263 |         assert!(migrated.cells.iter().all(|c| !c.road));
+    |                                                ^^^^^^
+
+warning: use of deprecated field `terrain::editor::map_snapshot::MapSnapshotCellV1::road`: INFRA-E0-002: road markers are editor entities / transport snapshot ÔÇö not tile flags
+   --> src\terrain\editor\map_snapshot.rs:275:17
+    |
+275 |                 road: false,
+    |                 ^^^^^^^^^^^
+
+warning: unused import: `super`
+   --> src\gui\hud\sim_road_power_sheets_bevy.rs:504:9
+    |
+504 |     use super::*;
+    |         ^^^^^
+
+warning: unused variable: `entity`
+   --> src\render\extraction\vegetation_visual_extract.rs:285:13
+    |
+285 |         let entity = app
+    |             ^^^^^^ help: if this is intentional, prefix it with an underscore: `_entity`
+    |
+    = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src\render\extraction\fire_view_extract.rs:648:13
+    |
+648 |         let mut allowed: FxHashSet<ChunkCoord> = (0..40).map(|i| IVec2::new(i, 0)).collect();
+    |             ----^^^^^^^
+    |             |
+    |             help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: variable does not need to be mutable
+   --> src\render\fx_spine\fire_streaming.rs:322:13
+    |
+322 |         let mut witness = FireStreamingWitness::default();
+    |             ----^^^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\economy\activation\grid_overload_ux.rs:117:13
+    |
+117 |         let mut world = app.world_mut();
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\economy\activation\power_island_ux.rs:139:13
+    |
+139 |         let mut world = app.world_mut();
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: variable does not need to be mutable
+   --> src\substrate\shim.rs:320:13
+    |
+320 |         let mut state = WorldChunkState::new_empty(key, 4);
+    |             ----^^^^^
+    |             |
+    |             help: remove this `mut`
+
+warning: `proc_A_dine01` (lib test) generated 29 warnings (run `cargo fix --lib -p proc_A_dine01 --tests` to apply 24 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 36.79s
+     Running unittests src\lib.rs (target\debug\deps\proc_A_dine01-6237140a6309b92d.exe)
+
+running 218 tests
+test construction::build_confidence::tests::perfect_when_commit_with_no_errors ... ok
+test construction::blueprint_preset::tests::apply_blueprint_preset_sets_ghost_origin_and_footprint ... ok
+test construction::blueprint_preset::tests::import_presets_replace_clears_queue ... ok
+test construction::blueprint_preset::tests::import_presets_append_keeps_existing_queue_rows ... ok
+test construction::blueprint_preset::tests::bq128_apply_ghost_witness_green_lib ... ok
+test construction::blueprint_preset::tests::bq128_apply_merge_replace_witness_green_lib ... ok
+test construction::blueprint_preset::tests::blueprint_preset_collection_ron_roundtrip ... ok
+test construction::build_mode::gui_esc_001_tests::building_esc_drops_tool_first_press ... ok
+test construction::build_mode::gui_esc_001_tests::building_esc_from_adjust_unlocks_preview ... ok
+test construction::build_mode::gui_esc_001_tests::second_esc_drops_keep_tool_road_session ... ok
+test construction::build_tool_authority::tests::building_archetype_maps_to_distinct_sites ... ok
+test construction::build_tool_authority::tests::military_rail_does_not_default_to_demolish ... ok
+test construction::build_interaction::parametric_input_tests::trench_material_gate_witness_refresh ... ok
+test construction::build_interaction::parametric_input_tests::wall_concrete_gate_witness_refresh ... ok
+test construction::build_tool_authority::tests::shift_lmb_conflict_matrix ... ok
+test construction::building_definitions::tests::governance_catches_productive_industry_without_role ... ok
+test construction::building_definitions::tests::governance_accepts_supply_chain_step ... ok
+test construction::building_definitions::tests::mock_shape_ron_roundtrip_matches_registry_footprint ... ok
+test construction::build_interaction::parametric_input_tests::wall_archetype_witness_refresh ... ok
+test construction::build_interaction::parametric_input_tests::enter_commits_single_ghost_witness ... ok
+test construction::build_interaction::parametric_input_tests::two_click_place_fsm_witness ... ok
+test construction::building_definitions::tests::loads_mock_shape_footprints_from_ron ... ok
+test construction::build_interaction::parametric_input_tests::design_build_ux_impl_witness_refresh ... ok
+test construction::construction_pipeline::tests::road_segment_validation_accepts_in_bounds_pair ... ok
+test construction::construction_pipeline::tests::road_segment_validation_rejects_identical_tiles ... ok
+test construction::corridor_transport::tests::infra_e2_003_find_edge_after_bake ... ok
+test construction::build_interaction::parametric_input_tests::mil_defense_place_fsm_and_witness ... FAILED
+test construction::building_definitions::tests::loads_example_building_json_when_present ... ok
+test construction::construction_queue_intent::tests::apply_imported_preset_updates_ghost_not_queue ... ok
+test construction::building_set::tests::building_set_coverage_witness ... ok
+test construction::construction_queue_intent::tests::import_wave_s_presets_append_without_replace_confirm ... ok
+test construction::corridor_transport::tests::infra_e2_003_planned_construction_record_shape ... ok
+test construction::corridor_transport::tests::infra_e2_004_rail_profile_train_agents ... ok
+test construction::defense_concrete_stock::tests::debit_consumes_typed_concrete ... ok
+test construction::defense_concrete_stock::tests::zero_concrete_blocks_in_situ_not_deployables ... ok
+test construction::defense_staging_stock::tests::dragon_teeth_need_one_heavy_unit ... ok
+test construction::defense_staging_stock::tests::in_transit_uses_locked_reason_token ... ok
+test construction::defense_concrete_stock::tests::trench_material_gate_witness_refresh_green ... ok
+test construction::defense_staging_stock::tests::minefield_need_three_light_units ... ok
+test construction::construction_queue_intent::tests::import_wave_s_presets_replace_requires_confirm_when_queue_nonempty ... ok
+test construction::defense_concrete_stock::tests::wall_witness_refresh_green ... ok
+test construction::defense_staging_stock::tests::wall_trench_bunker_untouched_by_staging_gate ... ok
+test construction::history::tests::demolish_undo_action_stores_restore_events ... ok
+test construction::history::tests::road_redo_stack_records_and_replays_tiles ... ok
+test construction::hydro_coupling::tests::execute_emit_enqueued_preview_emits_zero ... ok
+test construction::hydro_coupling::tests::site_execute_emits_construction_complete_per_chunk ... ok
+test construction::integration_tests::input_conflict_matrix_gates ... ok
+test construction::defense_staging_stock::tests::gate_blocks_without_stock_and_enqueues_debit_when_ready ... ok
+test construction::integration_tests::intersection_registry_dedupes_tile ... ok
+test construction::integration_tests::road_e2e_queue_validate_segments ... ok
+test construction::integration_tests::zone_paint_queues_zone_pending_kind ... ok
+test construction::iso_draw_scale::tests::world_002_witness_green ... ok
+test construction::map_egui_projection::tests::authority_simulation_map_overrides_compat_desired ... ok
+test construction::map_egui_projection::tests::tile_projection_stable_under_zoom ... ok
+test construction::parametric_commit::pg3_tests::housing_maps_to_victorian_style ... ok
+test construction::integration_tests::hydro_coupling_execute_plan_emits_preview_validate_does_not ... ok
+test construction::parametric_commit::pg3_tests::sub_2x2_footprint_skips_spec ... ok
+test construction::integration_tests::infra_e2_003_execute_road_increments_transport_binds_markers_and_paths ... ok
+test construction::pending_construction::tests::pending_queue_clears_unapproved_only ... ok
+test construction::parametric_commit::pg3_tests::procedural_request_from_portland_footprint ... ok
+test construction::pending_construction::tests::pending_queue_drains_only_approved ... ok
+test construction::pilot_catalog::tests::pilot_catalog_loads_eight_pilots ... ok
+test construction::place_feedback::tests::arm_replace_and_complete_counters ... ok
+test construction::parametric_commit::pg3_tests::commit_attaches_procedural_building_spec ... ok
+test construction::place_feedback::tests::settle_tokens_and_ease ... ok
+test construction::power_lines::commit::tests::commit_adds_power_edge_to_snapshot_and_graph ... ok
+test construction::place_feedback::tests::sync_appends_fill_override_tiles ... ok
+test construction::power_lines::cut_input::tests::dist_point_to_segment_midpoint ... ok
+test construction::power_lines::cut_input::tests::power_line_cut_witness_wired ... ok
+test construction::power_lines::damage::tests::partial_damage_not_destroyed ... ok
+test construction::power_lines::damage::tests::cut_segment_marks_destroyed_and_previews_island ... ok
+test construction::hydro_coupling::tests::drain_marks_substrate_dirty_without_writing_hydrology ... ok
+test construction::power_lines::damage::tests::power_damage_witness_green_lib ... ok
+test construction::power_lines::repair::tests::power_repair_witness_green_lib ... ok
+test construction::power_lines::routing::tests::curved_mode_emits_more_samples_than_polyline ... ok
+test construction::power_lines::routing::tests::orthogonal_rectangle_has_no_diagonal_segments ... ok
+test construction::place_feedback::tests::witness_refresh_impl_wired ... ok
+test construction::procedural::arch_build_grammar_v0::tests::beta_exp_expansion_multiplier_in_range ... ok
+test construction::pilot_catalog::tests::pilot_catalog_parity_witness ... ok
+test construction::procedural::arch_build_grammar_v0::tests::build_read_grammar_v0_003_witness_green ... ok
+test construction::procedural::arch_build_grammar_v0::tests::canonical_arch_dna_pilot_reweights_massing ... ok
+test construction::procedural::arch_grammar_v0_shim::tests::bq_h3_v0_shim_witness_green_lib ... ok
+test construction::parametric_commit::pg3_tests::build_read_visual_001_pilot_uses_grammar_lod0 ... ok
+test construction::procedural::assembly_quality_gate::tests::bq_a2_computes_score_fields ... ok
+test construction::procedural::arch_grammar_v0_shim::tests::bq_h3_refresh_witness_when_green ... ok
+test construction::procedural::assembly_quality_gate::tests::bq_a2_gate_001_witness_writes_when_green ... ok
+test construction::procedural::assembly_quality_gate::tests::bq_silh_honest_001_refresh_witness ... FAILED
+test construction::procedural::assembly_quality_gate::tests::bq_silh_honest_001_multi_story_clamped ... ok
+test construction::procedural::assembly_snapshot::tests::assembly_id_matches_mcp_sha256_contract ... ok
+test construction::procedural::assembly_quality_gate::tests::bq_silh_honest_001_witness_coverage ... ok
+test construction::procedural::assembly_snapshot::tests::bq_f3_slot_001_witness_green_lib ... ok
+test construction::procedural::assembly_snapshot::tests::bq_f3_slot_001_live_witness_refresh_green ... ok
+test construction::procedural::assembly_snapshot::tests::assembly_snapshot_auto_001_shape_victorian_4x3_s42 ... FAILED
+test construction::procedural::assembly_snapshot::tests::assembly_snapshot_grammar_wire_industrial_warehouse_s43 ... ok
+test construction::procedural::assembly_snapshot::tests::look_v2_outward_yaw_and_wall_edge_offset ... ok
+test construction::procedural::assembly_snapshot::tests::bq_f3_missing_module_records_violation_in_snapshot ... ok
+test construction::procedural::building_grammar::grammar_deserialize::tests::deserialize_rejects_invalid_usage_in_grammar ... ok
+test construction::procedural::building_grammar::grammar_evaluation::tests::city_g0_s11_typed_ids_witness_green_lib ... ok
+test construction::procedural::building_grammar::grammar_deserialize::tests::ship_grammars_load_without_errors ... ok
+test construction::procedural::assembly_snapshot::tests::grammar_snapshot_roof_slot_override_differs_by_massing ... ok
+test construction::procedural::building_grammar::grammar_evaluation::tests::facility_binding_deserializes_program_axes ... ok
+test construction::procedural::building_grammar::grammar_evaluation::tests::city_g0_s1c_split_witness_green_lib ... ok
+test construction::procedural::building_grammar::grammar_evaluation::tests::facility_binding_read_witness_is_green ... ok
+test construction::procedural::building_grammar::grammar_evaluation::tests::industrial_warehouse_grammar_deterministic ... ok
+test construction::procedural::building_grammar::grammar_types::tests::corridor_type_for_profile_rail ... ok
+test construction::procedural::building_grammar::grammar_types::tests::massing_id_validates_snake_case ... ok
+test construction::procedural::building_grammar::grammar_types::tests::usage_id_rejects_unknown_tag ... ok
+test construction::procedural::edge_adjacency::tests::bq_a1_rect_perimeter_passes_five_rules ... ok
+test construction::procedural::assembly_snapshot::tests::write_assembly_snapshot_staging_roundtrip ... ok
+test construction::procedural::edge_adjacency::tests::bq_a1_witness_green_lib ... ok
+test construction::procedural::edge_adjacency::tests::bq_a1_refresh_witness_when_green ... ok
+test construction::procedural::assembly_snapshot::tests::city_g0_wit_001_assembly_snapshot_hash_stable_three_runs ... ok
+test construction::procedural::footprint_grid::tests::bq_h2_openings_witness_green_lib ... ok
+test construction::procedural::footprint_grid::tests::bq_h2_refresh_witness_when_green ... ok
+test construction::procedural::footprint_grid::tests::footprint_grid_corners_use_wall_look_v2 ... ok
+test construction::procedural::footprint_grid::tests::footprint_grid_door_not_on_corner_when_street_tagged ... ok
+test construction::procedural::footprint_grid::tests::footprint_grid_door_on_floor_zero ... ok
+test construction::procedural::footprint_grid::tests::footprint_grid_dual_face_and_single_roof ... ok
+test construction::procedural::building_grammar::grammar_evaluation::tests::pg_quality_001_witness_metrics_green ... ok
+test construction::procedural::golden_seed_set::tests::bq_q3_golden_regression_matches_committed_hashes ... FAILED
+test construction::procedural::building_grammar::grammar_evaluation::tests::grammar_massing_strategies_vary_by_seed ... ok
+test construction::procedural::module_contract::tests::bq_c1_contract_constants_match_json ... ok
+test construction::procedural::module_contract::tests::grid_units_from_width_m_one_cell ... ok
+test construction::procedural::golden_seed_set::tests::bq_q3_refresh_witness_when_green ... ok
+test construction::procedural::module_index::tests::bq_f2_style_001_live_witness_refresh_green ... ok
+test construction::procedural::golden_seed_set::tests::bq_q3_golden_bootstrap_hashes ... ok
+test construction::procedural::module_index::tests::bq_f2_victorian_wall_brick_never_picks_industrial_lod0 ... FAILED
+test construction::procedural::module_index::tests::bq_f2_style_001_witness_green_lib ... ok
+test construction::procedural::module_index::tests::resolve_canonical_follows_replaced_by_alias ... FAILED
+test construction::procedural::module_index::tests::loads_kit_greybox_module_index ... FAILED
+test construction::procedural::module_index::tests::lod0_included_in_stylepack_iterator ... FAILED
+test construction::procedural::module_index::tests::resolve_module_id_alias_for_lod0 ... FAILED
+test construction::procedural::module_index::tests::smoke_only_module_returns_none_for_stylepack_glb ... ok
+test construction::procedural::module_index::tests::smoke_excluded_from_stylepack_iterator ... ok
+test construction::procedural::module_index::tests::wall_brick_1u_resolves_to_best_stylepack_tier ... ok
+test construction::procedural::palette_catalog::tests::district_style_maps_to_palette_id ... ok
+test construction::procedural::palette_catalog::tests::palette_catalog_registry_loads_three_v1_catalogs ... ok
+test construction::procedural::palette_catalog::tests::resolve_palette_variation_is_stable_for_fixed_seed ... ok
+test construction::procedural::scale_chain::tests::bq_c4_scale_chain_witness_green_lib ... ok
+test construction::procedural::scale_chain::tests::bq_c4_refresh_witness_when_green ... ok
+test construction::procedural::tests::attach_paths_from_procedural_module_id_field ... FAILED
+test construction::procedural::facade_propagation::tests::bq_h1_facade_witness_green_lib ... ok
+test construction::procedural::tests::registry_resolves_lod0_module_glb_by_catalog_id ... FAILED
+test construction::procedural::tests::smoke_only_module_not_resolved_for_stylepack ... ok
+test construction::procedural::tests::style_pack_rejects_duplicate_ids ... ok
+test construction::procedural::tests::style_pack_ron_loads_victorian_slots ... ok
+test construction::procedural::tests::style_pack_slot_module_id_non_empty ... ok
+test construction::procedural::tests::style_pack_slots_resolve_via_module_registry ... ok
+test construction::procedural::tile_atlas_index::tests::tile_atlas_active_index_ships_production_not_lod0_pilot ... FAILED
+test construction::procedural::building_grammar::grammar_evaluation::tests::refresh_pg_quality_001_writes_grammar_diversity_witness ... ok
+test construction::procedural::tile_atlas_index::tests::tile_atlas_archive_loads_pilot_rowhouse ... ok
+test construction::procedural::tile_atlas_index::tests::tile_atlas_archive_resolve_variant_uv ... ok
+test construction::procedural::tile_atlas_index::tests::tile_atlas_for_assembly_resolves_production_v1 ... ok
+test construction::procedural::tile_atlas_index::tests::variant_key_frame_maps_to_gpu_material_index ... ok
+test construction::procedural::tile_atlas_index::tests::tile_atlas_registry_empty_when_index_missing ... ok
+test construction::procedural::tile_variant_resolver::tests::landscape_tile_resolver_maps_topology_and_extract_keys ... ok
+test construction::procedural::tile_atlas_index::tests::variant_key_resolves_archive_uv_and_lookup_frame ... ok
+test construction::procedural::tile_variant_resolver::tests::palette_atlas_variant_key_suffix ... ok
+test construction::procedural::tile_variant_resolver::tests::production_atlas_covers_keyframe_pack_entry ... ok
+test construction::procedural::tile_variant_resolver::tests::pt4_damage_variant_maps_to_damaged_night_on ... ok
+test construction::procedural::tile_variant_resolver::tests::pt4_power_night_inputs_witness_green_lib ... ok
+test construction::procedural::tile_variant_resolver::tests::resolver_fire_frame_advances ... ok
+test construction::procedural::tile_variant_resolver::tests::resolver_night_power_on ... ok
+test construction::procedural::tile_variant_resolver::tests::resolver_operational_day_clean ... ok
+test construction::procedural::palette_catalog::tests::city_g2_c5_001_witness_green ... ok
+test construction::procedural::tile_variant_resolver::tests::variant_catalog_loads_from_ron ... ok
+test construction::procedural::tile_visual_state::tests::quarter_turn_maps_to_facing_8_with_fallback ... ok
+test construction::procedural::tile_visual_state::tests::resolve_visual_state_uv_v2_lookup ... ok
+test construction::procedural::tile_visual_state::tests::visual_state_from_resolver_carries_fire_frame ... ok
+test construction::procedural::variant_recipe::tests::building_state_maps_clean_day ... ok
+test construction::procedural::variant_recipe::tests::expand_recipes_dedupes_collision_keys ... ok
+test construction::procedural::variant_recipe::tests::fire_layer_tags_recipe ... ok
+test construction::procedural::tile_variant_resolver::tests::runtime_witness_green ... ok
+test construction::rail::validation::tests::steep_grade_fails_rail_validation ... ok
+test construction::roads::commit::tests::commit_enqueues_valid_segments_only ... ok
+test construction::roads::pathing::tests::curved_preview_emits_more_segments_than_polyline ... ok
+test construction::roads::pathing::tests::polyline_emits_n_minus_one_segments ... ok
+test construction::roads::spline::tests::catmull_rom_produces_more_samples_than_control_count ... ok
+test construction::procedural::tile_variant_resolver::tests::refresh_procedural_tiles_runtime_live_witness_writes_json ... ok
+test construction::round4_corridor::tests::r4_corridor_witness_rollup_lib_green ... ok
+test construction::round4_corridor::tests::r4_mv_ghost_witness_rollup ... ok
+test construction::scaling_audit::tests::con_p3_scaling_audit_b_half_green ... ok
+test construction::procedural_build_spawn::tests::pg2_spawn_witness_green ... ok
+test construction::scaling_audit::tests::con_p3_scaling_audit_a_half_green ... ok
+test construction::sessions::tests::default_session_keeps_tool_and_continuous_path ... ok
+test construction::site_stage_tick::tests::con_p2_002_post_a001_commit_attached_before_tick ... ok
+test construction::site_stage_tick::tests::commit_leaves_site_planned_not_operational ... ok
+test construction::site_stage_transitions::tests::forest_pipeline_phase_order ... ok
+test construction::scaling_audit::tests::con_p3_scaling_audit_full_rollup_green ... ok
+test construction::site_stage_tick::tests::forest_pipeline_reaches_operational_in_n_ticks ... ok
+test construction::snap::tests::grid_snap_quantizes_to_step ... ok
+test construction::site_stub_overlay::tests::site_v0_002_witness_green ... ok
+test construction::staged_ghost_panel::tests::build_approved_drains_staged ... ok
+test construction::staged_ghost_panel::tests::build_approved_skips_unapproved ... ok
+test construction::integration_tests::no_legacy_gui_build_placement_in_src ... ok
+test construction::staged_ghost_panel::tests::staging_panel_visible_witness ... ok
+test construction::terrain_conform::tests::conform_y_varies_with_position ... ok
+test construction::staged_ghost_panel::tests::staging_toggle_wired ... ok
+test construction::site_zone_grid::tests::grammar_pilot_site_json_loads ... ok
+test construction::upgrade::tests::nearest_segment_finds_adjacent_pair ... ok
+test construction::visual_authority::footprint_tests::partial_alpha_parametric_witness ... ok
+test construction::weighted_footprint::tests::unit_footprint_full_mass_at_unity_scale ... ok
+test construction::weighted_footprint::tests::weighted_footprint_overlap_rejects ... ok
+test construction::weighted_footprint::tests::weighted_footprint_rotation_preserves_mass ... ok
+test construction::weighted_footprint::tests::weighted_footprint_scale_monotonic ... ok
+test construction::weighted_footprint::tests::weighted_raster_witness_green_matches_self_check ... ok
+test construction::staged_ghost_panel::tests::enter_does_not_commit_when_staging_on ... FAILED
+test construction::visual_authority::footprint_tests::footprint_tile_requests_3x2_emits_six ... ok
+test construction::witness_collectors::live_proof_sim_tests::construction_site_stage_pipeline_001_witness_green ... ok
+test construction::witness_collectors::live_proof_sim_tests::construction_scaling_audit_001_witness_green ... ok
+test construction::zones::commit::tests::commit_painted_zones_queues_zone_kind ... ok
+test construction::procedural::tests::procedural_assembly_live_witness_green ... ok
+test construction::procedural::tests::pg_quality_002_links_grammar_diversity_to_pg2_witness ... ok
+test construction::procedural::facade_propagation::tests::bq_h1_refresh_witness_when_green ... ok
+test construction::witness_collectors::live_proof_sim_tests::parametric_placement_witness_writes_construction_parametric_placement_001 ... ok
+test construction::witness_collectors::live_proof_sim_tests::simulation_writes_construction_stage_live_json_operational_green ... FAILED
+test construction::witness_collectors::bq128_apply_witness_tests::bq128_apply_live_witness_refresh_green ... ok
+test construction::grammar_labels::tests::g1_archetype_labels_present has been running for over 60 seconds
+error: test failed, to rerun pass `-p proc_A_dine01 --lib`
+
+Caused by:
+  process didn't exit successfully: `C:\dev\github\Rust_engine_template_01\target\debug\deps\proc_A_dine01-6237140a6309b92d.exe construction::` (exit code: 0xffffffff)
+note: test exited abnormally; to see the full output pass --no-capture to the harness.

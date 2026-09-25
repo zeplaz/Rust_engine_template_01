@@ -12,14 +12,17 @@ use crate::dev::proof_grade::ProofGrade;
 use crate::economy::resource_flow::ResourceFlowRegistry;
 use crate::strategic::LogisticsGraph;
 
-use super::types::{LogisticsDiagnostics, LogisticsThroughputRuntimeWitness, PortalAttachmentMap, RouteCache, ThroughputSolverState};
+use super::types::{
+    LogisticsDiagnostics, LogisticsThroughputRuntimeWitness, PortalAttachmentMap, RouteCache,
+    ThroughputSolverState,
+};
 use super::witness::{
     align_logistics_throughput_witness_from_live_sim,
     LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED, LOG_A_07_INFRA_PAIRING_TEST_PASSED,
     LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED, LOG_B_04_ARRIVALS_ONLY_TEST_PASSED,
     LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED, LOG_C_01_SOA_TEST_PASSED,
-    LOG_C_02_RESERVATION_TEST_PASSED,
-    LOG_C_03_CONGESTION_TEST_PASSED, LOG_C_04_PRESSURE_TEST_PASSED, LOG_C_06_OVERLAY_TEST_PASSED,
+    LOG_C_02_RESERVATION_TEST_PASSED, LOG_C_03_CONGESTION_TEST_PASSED,
+    LOG_C_04_PRESSURE_TEST_PASSED, LOG_C_06_OVERLAY_TEST_PASSED,
     LOG_D_01_CORRIDOR_CLASS_TEST_PASSED, LOG_D_02_DISTRICT_SCOPED_TEST_PASSED,
     LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED, LOG_D_04_ASYNC_DISTRICT_TEST_PASSED,
     LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED, LOG_GEOGRAPHIC_CASCADE_TEST_PASSED,

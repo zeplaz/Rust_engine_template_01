@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "asset_id": "corner_parapet",
+  "archetype": "module_prop",
+  "style_pack": "style_military",
+  "development_tier": "lod0",
+  "pbr_status": "deferred",
+  "batch_id": "kit_lod0_009",
+  "module": {
+    "grid_units": [
+      1,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 2,
+    "h": 1.2,
+    "d": 2
+  },
+  "material_profile": "concrete_grey_01",
+  "references": []
+}

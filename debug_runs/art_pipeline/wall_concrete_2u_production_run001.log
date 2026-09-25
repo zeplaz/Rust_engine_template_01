@@ -1,11 +1,12 @@
-INFO Draco mesh compression is available, use library at C:\Program Files (x86)\Steam\steamapps\common\Blender\5.1\scripts\addons_core\io_scene_gltf2\extern_draco.dll
-15:57:54 | INFO: Starting glTF 2.0 export
-15:57:54 | INFO: Extracting primitive: Cube
-15:57:54 | INFO: Primitives created: 1
-15:57:54 | INFO: Finished glTF 2.0 export in 0.08266234397888184 s
+INFO Draco is available, use library at C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_meshopt_bridge.dll
+10:16:12 | INFO: Starting glTF 2.0 export
+10:16:12 | INFO: Extracting primitive: Cube
+10:16:12 | INFO: Primitives created: 1
+10:16:12 | INFO: Finished glTF 2.0 export in 0.037161827087402344 s
 
 EXPORT_MODE pbr_profile profile=concrete_grey_01
 EXPORT_OK C:\dev\github\Rust_engine_template_01\assets\staging\wall_concrete_2u_production_run001\model.glb
-Blender 5.1.2 (hash ec6e62d40fa9 built 2026-05-19 01:37:34)
+Blender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
 
 Blender quit

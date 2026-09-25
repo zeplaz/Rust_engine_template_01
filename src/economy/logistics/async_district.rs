@@ -7,9 +7,7 @@
 use bevy::prelude::*;
 use std::collections::VecDeque;
 
-use super::types::{
-    DistrictSolveScope, LogisticsThroughputRuntimeWitness, ThroughputSolverState,
-};
+use super::types::{DistrictSolveScope, LogisticsThroughputRuntimeWitness, ThroughputSolverState};
 
 /// Posted solve result — applied on the main thread (never mutated off-thread).
 #[derive(Clone, Debug)]

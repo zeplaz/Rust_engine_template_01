@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/fire_ecology_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_fire_ecology_lib_harness_witness",
-    "written_at_epoch_secs": 1790273291
+    "written_at_epoch_secs": 1790312398
   },
   "f1_green": true,
   "fire_f2_fuel_spread_001": {
@@ -84,10 +84,10 @@
     "fire_inst_proxy": 0,
     "green": true,
     "heat_mostly_stable": true,
-    "max_heat": 0.04502197727560997,
-    "mean_fuel": 0.05999596789479256,
+    "max_heat": 0.045025646686553955,
+    "mean_fuel": 0.05999603867530823,
     "policy": "f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded",
-    "sim_mean_heat": 0.022495828568935394
+    "sim_mean_heat": 0.02249610237777233
   },
   "gate": "FIRE-ECOLOGY-REFRESH-001",
   "green": true,
@@ -100,7 +100,7 @@
     "causal_chain_depth_max": 2,
     "dedupe_ok": true,
     "dedupe_rejected": 0,
-    "drain_us": 13,
+    "drain_us": 26,
     "effect_rows": 3,
     "ember_dispatched": 3,
     "faction_react_hook_rows": 1,
@@ -121,9 +121,9 @@
     "heat_mostly_stable": true,
     "heat_spike_frames": 0,
     "heat_stable_low_frames": 64,
-    "max_heat": 0.04502197727560997,
-    "mean_fuel": 0.05999596789479256,
-    "mean_heat": 0.022495828568935394,
+    "max_heat": 0.045025646686553955,
+    "mean_fuel": 0.05999603867530823,
+    "mean_heat": 0.02249610237777233,
     "mean_old_growth": 0.20000000298023224,
     "neighbor_spread_cells": 193,
     "proof_json": false,

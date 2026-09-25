@@ -61,13 +61,14 @@
       "debug_runs/trade_flow_geography_live.json",
       "debug_runs/trade_sc_runtime_live.json",
       "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
       "debug_runs/nuclear_meltdown_live.json",
       "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/logistics_throughput_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "logistics_throughput_live_proof",
-    "written_at_epoch_secs": 1790260326
+    "written_at_epoch_secs": 1790313735
   },
   "edge_saturation_max": 1.0,
   "graph_only_paths": true,
@@ -79,34 +80,34 @@
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 2.0,
-      "request_id": 98,
+      "delivered": 4.0,
+      "request_id": 190,
       "requested": 4.0
     },
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 2.0,
-      "request_id": 97,
+      "delivered": 4.0,
+      "request_id": 189,
       "requested": 4.0
     },
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 2.0,
-      "request_id": 96,
+      "delivered": 4.0,
+      "request_id": 188,
       "requested": 4.0
     },
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 2.0,
-      "request_id": 95,
+      "delivered": 4.0,
+      "request_id": 187,
       "requested": 4.0
     }
   ],
-  "routes_blocked": 0,
-  "routes_open": 2,
+  "routes_blocked": 1,
+  "routes_open": 1,
   "s7p_log_001_green": true,
   "starved_facilities": [
     "aluminum_alumina_refinery",
@@ -119,17 +120,11 @@
     {
       "capacity": 2.0,
       "edge_id": 0,
-      "load": 2.0,
-      "pressure": 1.0
-    },
-    {
-      "capacity": 2.0,
-      "edge_id": 1,
-      "load": 2.0,
+      "load": 0.0,
       "pressure": 1.0
     }
   ],
-  "topology_revision": 129,
+  "topology_revision": 257,
   "witness": {
     "arrivals_only_propagation": true,
     "async_district_solve": true,

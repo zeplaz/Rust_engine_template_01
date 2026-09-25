@@ -1,0 +1,85 @@
+INFO Draco is available, use library at C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_draco_bridge.dll
+INFO MeshOptimizer is available, use library at C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\bf_intern_meshopt_bridge.dll
+13:44:55 | INFO: Starting glTF 2.0 export
+13:44:55 | INFO: Extracting primitive: Cube
+13:44:56 | INFO: Primitives created: 1
+00:00.672  bpy.rna          | ERROR Python script error in EXPORT_SCENE_OT_gltf.execute
+Error: Python: Traceback (most recent call last):
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\__init__.py", line 1409, in execute
+    res = gltf2_blender_export.save(context, export_settings)
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\blender\exp\export.py", line 42, in save
+    __write_file(json, buffer, export_settings)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\blender\exp\export.py", line 571, in __write_file
+    gltf2_io_export.save_gltf(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        json,
+        ^^^^^
+        export_settings,
+        ^^^^^^^^^^^^^^^^
+        json_util.BlenderJSONEncoder,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        buffer)
+        ^^^^^^^
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\io\exp\export... truncatedBlender 5.2.2 LTS (hash d13f752e3b9c built 2026-09-15 01:37:04)
+
+Blender quit
+Traceback (most recent call last):
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\__init__.py", line 1409, in execute
+    res = gltf2_blender_export.save(context, export_settings)
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\blender\exp\export.py", line 42, in save
+    __write_file(json, buffer, export_settings)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\blender\exp\export.py", line 571, in __write_file
+    gltf2_io_export.save_gltf(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        json,
+        ^^^^^
+        export_settings,
+        ^^^^^^^^^^^^^^^^
+        json_util.BlenderJSONEncoder,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        buffer)
+        ^^^^^^^
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\io\exp\export.py", line 85, in save_gltf
+    file = open(export_settings['gltf_filepath'], "wb")
+OSError: [Errno 22] Invalid argument: 'C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\win_wood_2u_production_run001\\model.glb'
+Traceback (most recent call last):
+  File "C:\dev\github\Rust_engine_template_01\tools\mcp\blender\scripts\run_job.py", line 94, in <module>
+    main()
+    ~~~~^^
+  File "C:\dev\github\Rust_engine_template_01\tools\mcp\blender\scripts\run_job.py", line 89, in main
+    export_glb(str(glb_path), material_profile=material_profile, repo_root=repo_guess)
+    ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\dev\github\Rust_engine_template_01\tools\mcp\blender\scripts\ops\export_glb.py", line 250, in export_glb
+    bpy.ops.export_scene.gltf(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        filepath=filepath,
+        ^^^^^^^^^^^^^^^^^^
+    ...<5 lines>...
+        export_image_format="AUTO",
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    )
+    ^
+RuntimeError: Error: Python: Traceback (most recent call last):
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\__init__.py", line 1409, in execute
+    res = gltf2_blender_export.save(context, export_settings)
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\blender\exp\export.py", line 42, in save
+    __write_file(json, buffer, export_settings)
+    ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\blender\exp\export.py", line 571, in __write_file
+    gltf2_io_export.save_gltf(
+    ~~~~~~~~~~~~~~~~~~~~~~~~~^
+        json,
+        ^^^^^
+        export_settings,
+        ^^^^^^^^^^^^^^^^
+        json_util.BlenderJSONEncoder,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        buffer)
+        ^^^^^^^
+  File "C:\Program Files (x86)\Steam\steamapps\common\Blender\5.2\scripts\addons_core\io_scene_gltf2\io\exp\export.py", line 85, in save_gltf
+    file = open(export_settings['gltf_filepath'], "wb")
+OSError: [Errno 22] Invalid argument: 'C:\\dev\\github\\Rust_engine_template_01\\assets\\staging\\win_wood_2u_production_run001\\model.glb'
+Location: C:\dev\github\Rust_engine_template_01\tools\mcp\blender\scripts\ops\export_glb.py:250
+

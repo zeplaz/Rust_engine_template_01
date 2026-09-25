@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "asset_id": "prop_fence",
+  "archetype": "module_prop",
+  "style_pack": "style_rural",
+  "development_tier": "production",
+  "pbr_status": "shipped",
+  "batch_id": "kit_prod_noncore_bq_001",
+  "module": {
+    "grid_units": [
+      2,
+      1
+    ],
+    "snap": "floor_edge",
+    "pivot": "bottom_center"
+  },
+  "dimensions_m": {
+    "w": 8,
+    "h": 1.2,
+    "d": 0.1
+  },
+  "material_profile": "wood_plank_01",
+  "references": [
+    "ref:gate:BQ-PROD-NONCORE-PROMOTE-001",
+    "ref:kit:kit_prod_noncore_bq_001",
+    "ref:audit:debug_runs/bq_smoke_tier_audit_live.json",
+    "ref:slot:style_rural.prop_clutter"
+  ]
+}

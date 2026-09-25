@@ -67,23 +67,13 @@
     ],
     "relative_path": "debug_runs/wave_s_hydrate_live.json",
     "schema": "debug_run_envelope_v1",
-    "source_system": "refresh_bq128_apply_live_witnesses",
-    "written_at_epoch_secs": 1790271959
+    "source_system": "witness_parity_refresh",
+    "written_at_epoch_secs": 1790312394
   },
   "autoload_enabled": false,
   "blueprint_count": 1,
-  "bq128_apply_ghost_001": {
-    "apply_imported_preset_wired": true,
-    "gate": "BQ-128-APPLY-001",
-    "green": true
-  },
-  "bq128_apply_merge_replace_002": {
-    "gate": "BQ-128-APPLY-002",
-    "green": true,
-    "import_wave_s_presets_wired": true
-  },
   "last_error": null,
-  "layout_widget_count": 4,
+  "layout_widget_count": 1,
   "profile": "WAVE_S_HYDRATE",
   "restore_triggered": false,
   "shell_loaded": true,

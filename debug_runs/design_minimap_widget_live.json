@@ -53,18 +53,31 @@
       "debug_runs/wss_substrate_live.json",
       "debug_runs/f2_smoke_pipeline_live.json",
       "debug_runs/play_scenario_live.json",
-      "debug_runs/transport_network_live.json"
+      "debug_runs/transport_network_live.json",
+      "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
+      "debug_runs/effects_system_es6_live.json",
+      "debug_runs/fire_save_roundtrip_live.json",
+      "debug_runs/industrial_i2_03_register_node_live.json",
+      "debug_runs/trade_flow_geography_live.json",
+      "debug_runs/trade_sc_runtime_live.json",
+      "debug_runs/mfg_03_domain_wire_live.json",
+      "debug_runs/cod_deployable_pipeline_live.json",
+      "debug_runs/nuclear_meltdown_live.json",
+      "debug_runs/settlement_hierarchy_gap_live.json"
     ],
     "relative_path": "debug_runs/design_minimap_widget_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_design_minimap_widget_live_witness",
-    "written_at_epoch_secs": 1783371798
+    "written_at_epoch_secs": 1790312394
   },
+  "cheat_retired": true,
   "content_pan_offset": 0,
   "gate": "MINIMAP-WIDGET-IMPL-001",
-  "green": true,
-  "map_image_drag_pans_view": true,
-  "tap_map_jumps_camera": true,
-  "texture_centered_on_resize": true,
-  "title_bar_drag_moves_widget": true
+  "green": false,
+  "map_image_drag_pans_view": false,
+  "proof_grade": "lib_fixture_retired",
+  "retire_note": "Lib always-true drag/tap flags retired (CLN-WIT-001); prove under --test visual / operator session.",
+  "tap_map_jumps_camera": false,
+  "texture_centered_on_resize": false,
+  "title_bar_drag_moves_widget": false
 }

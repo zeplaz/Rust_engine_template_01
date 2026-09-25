@@ -2,7 +2,7 @@
   "schema": "effect_pack_manifest_v1",
   "effect_id": "rain_streaks",
   "batch_id": "vss_t4_reference_effects_v1",
-  "packed_at_utc": "2026-08-28T04:44:00Z",
+  "packed_at_utc": "2026-09-24T17:55:20Z",
   "spec_source": "tools/mcp/schemas/examples/effect_spec_rain_streaks_v1.json",
   "shader_hashes": {
     "draw": {

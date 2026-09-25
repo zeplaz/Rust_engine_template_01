@@ -1,0 +1,57 @@
+{
+  "schema": "effect_preview_frames_manifest_v1",
+  "effect_id": "spark_shower",
+  "batch_id": "vss_t4_reference_effects_v1",
+  "capture_kind": "staging_pack_digest",
+  "pack_hash": "c4661ad07d7a36bd934950941a445ff20b52be40cd33a76e561816817f429021",
+  "seed": "42001",
+  "captured_at_utc": "2026-09-24T17:55:20Z",
+  "frames": [
+    {
+      "index": 0,
+      "path": "preview_frames/capture_000.png",
+      "source_digest": "730bda5e79bd1b6e5c67801b7b3152602df17c75b73f8a43dad9e0be19833ec3",
+      "sha256": "ec9cdb75a819bbbb7eaec4d680096e9839e5f25d7b242352da52f0ed533a8c04",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 1,
+      "path": "preview_frames/capture_001.png",
+      "source_digest": "dd4bc640248e72021bdc2d8b40be0b4766c2a74f6078d06ae520a2284191da03",
+      "sha256": "ef71bc6f79df77d5180edbf18cc32af2f082ae9b651e12b4fb849bc7f9abec7c",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 2,
+      "path": "preview_frames/capture_002.png",
+      "source_digest": "c692731f44681eb1b10fe0d69988a1434e6e0bf6be4cce67106595e46b88b114",
+      "sha256": "9f23f67f4a3d676962f80550701f49ba3ccc4b6c272afdde8e85e349d4e19429",
+      "capture_kind": "staging_pack_digest"
+    },
+    {
+      "index": 3,
+      "path": "preview_frames/capture_003.png",
+      "source_digest": "0668dc7a2aeeed4921b238eec57c76e6c5a8f43b00e8835cdd68cdac74a3f4bb",
+      "sha256": "8790ec2b7eb0c2c992ac224b65d74f940dc9747c6d4aae5983bcd77631a4317f",
+      "capture_kind": "staging_pack_digest"
+    }
+  ],
+  "capture_hash": "870508a8f2c6999cfbe64bb76f7f925459de41c6b3b26203c97de27c10c72f56",
+  "preview_witness": {
+    "witness_schema": "artist_vfx_preview_witness_v1",
+    "witness_path": "debug_runs/artist_vfx_pipeline_live.json",
+    "preview_job_id": "spark_shower_preview_capture",
+    "frames_captured": 4,
+    "capture_hash": "870508a8f2c6999cfbe64bb76f7f925459de41c6b3b26203c97de27c10c72f56",
+    "staging_path": "assets/staging/spark_shower/",
+    "honest_gate": "honest",
+    "captured_at_utc": "2026-09-24T17:55:20Z",
+    "toolchain": {
+      "mcp_tool": "effect_preview_capture",
+      "cli_parity": true,
+      "blender_present": false
+    },
+    "promoted_path": "assets/effects/registry/spark_shower/"
+  },
+  "_note": "Deterministic staging_pack_digest tiles \u2014 not GPU/operator theater pixels"
+}

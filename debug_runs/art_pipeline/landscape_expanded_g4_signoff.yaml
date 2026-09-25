@@ -7,6 +7,9 @@ reviewer:
   operator: pending
 proceed_ship: no
 verdict: OPEN
+art_quality: teach_pilot_not_keyframe_manual
+honest_gate: honest_blocked
+updated: "2026-09-24"
 minimum_set:
   topology_patch_burn_04:
     in_batch: true
@@ -27,9 +30,17 @@ rubric_refs:
   - src/dev/design_landscape_keyframe_burn_reqs_v1.md
   - src/dev/design_veg_burn_visual_language_v1.md
 criteria_doc: src/dev/dmcp_veg_atlas_ship_v1.md
+exit_witness: debug_runs/art_pipeline/veg_atlas_ship_001_live.json
 blocked_by:
   - "G4 manual stills incomplete"
   - "topology_corridor_regrowth_grass missing"
+  - "art_quality != keyframe_manual"
+unblock_when:
+  - "Operator exports Tile_iso_rig_v1 / keyframe_render.py stills to assets/staging/tiles/keyframe_stills/tile_landscape_expanded_v1/ for G4 minimum set (incl. topology_corridor_regrowth_grass)"
+  - "designer-mcp + operator review burn vs scar vs corridor regrowth at 64px iso"
+  - "All three minimum_set keys have manual_still: true"
+  - "This file flips proceed_ship: yes with art_quality: keyframe_manual"
 next:
-  - "Operator exports manual stills to keyframe_stills/tile_landscape_expanded_v1/"
+  - "Operator: landscape keyframe export (same method as Session D warehouse — Light_keysshotsetup / keyframe_render.py; different folder + variant keys)"
   - "designer-mcp reviews @ 64px iso — flip proceed_ship to yes when rubric passes"
+  - "¬AI albedo · ¬ortho as production · ¬APS-GOLDEN approve for this gate"

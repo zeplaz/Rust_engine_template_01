@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/triage_perf_vfx_fix_2026-06-11_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "write_triage_perf_vfx_fix_live_witness",
-    "written_at_epoch_secs": 1790274931
+    "written_at_epoch_secs": 1790312395
   },
   "acceptance_targets": {
     "main_camera_transform_changed_steady_pct": 90.0,
@@ -89,20 +89,20 @@
       "samples": 3600
     },
     "frame_wall_ms": {
-      "max_ms": 227.53768920898438,
+      "max_ms": 227.5376892089844,
       "p50_ms": 148.34600830078125,
       "p95_ms": 155.65249633789062,
       "samples": 3600
     },
     "post_world_repr_ms": {
-      "max_ms": 0.9778000116348267,
+      "max_ms": 0.9778000116348268,
       "p50_ms": 0.4092000126838684,
       "p95_ms": 0.5476999878883362,
       "samples": 3600
     },
     "substage_ms": {
       "fire_build_view_ms": {
-        "max_ms": 0.40450000762939453,
+        "max_ms": 0.4045000076293946,
         "p50_ms": 0.019999999552965164,
         "p95_ms": 0.026499999687075615,
         "samples": 3600
@@ -198,7 +198,7 @@
         "samples": 3600
       },
       "repr_refresh_lod_ms": {
-        "max_ms": 0.09390000253915787,
+        "max_ms": 0.09390000253915788,
         "p50_ms": 0.01860000006854534,
         "p95_ms": 0.023799998685717583,
         "samples": 3600

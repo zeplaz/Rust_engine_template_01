@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/mig_bevy_019/mig_a_rollup.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "mig_a_rollup_witness",
-    "written_at_epoch_secs": 1790273880
+    "written_at_epoch_secs": 1790312394
   },
   "blocked_slices": [
     "A15"
@@ -92,12 +92,12 @@
   "program_closed_note": "All non-blocked MIG-A slices shipped or closed. A11/A13/A17 deep perf = POST-MIG (PERF-GPU), not migration.",
   "slices": {
     "A1": {
-      "enabled": true,
+      "enabled": false,
       "note": "StaticTransformOptimizations",
       "status": "shipped"
     },
     "A10": {
-      "enabled": true,
+      "enabled": false,
       "note": "GpuIndirectDrawSpine dispatch_count authority via apply_gpu_indirect_spine_dispatch_authority",
       "status": "shipped",
       "workgroup": 64
@@ -126,7 +126,7 @@
       "status": "shipped"
     },
     "A14": {
-      "enabled": true,
+      "enabled": false,
       "note": "VisibilityRange on static bulk (plugin from DefaultPlugins; MIG_A14=0 disables tagging)",
       "status": "shipped",
       "tagged": 0
@@ -159,7 +159,7 @@
     "A2": {
       "note": "NoCpuCulling removed 2026-07-06 — Bevy 0.19 excludes tagged entities from check_visibility, making CPU-queued sprites/mesh2d invisible; MigAStaticBulk marker retained",
       "status": "retired",
-      "tagged": 0
+      "tagged": 3
     },
     "A3": {
       "note": "DiagnosticsOverlayPlugin behind feature dev_tools + MIG_A3!=0 — optional dev overlay, not migration gate",
@@ -167,7 +167,7 @@
       "status": "shipped"
     },
     "A4": {
-      "enabled": true,
+      "enabled": false,
       "note": "RenderErrorHandler Recover — opt-in via MIG_A4=1; hook registered when enabled",
       "status": "shipped"
     },

@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/mig_bevy_019/mig_a_a8_settings_coexistence_audit.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "mig_a_a8_settings_coexistence_audit",
-    "written_at_epoch_secs": 1790273880
+    "written_at_epoch_secs": 1790312394
   },
   "authority": "ProductShellPersistenceBundleR8",
   "coexistence": "src/gui/hud/shell_persistence.rs",

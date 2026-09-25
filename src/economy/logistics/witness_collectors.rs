@@ -33,7 +33,8 @@ fn proof_output_path() -> PathBuf {
     let root = std::env::var_os("CARGO_MANIFEST_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
-    root.join("debug_runs").join("logistics_throughput_live.json")
+    root.join("debug_runs")
+        .join("logistics_throughput_live.json")
 }
 
 #[must_use]
@@ -44,7 +45,9 @@ pub fn build_logistics_throughput_proof_payload(
     runtime: Option<&LogisticsThroughputRuntimeWitness>,
     infra_e5: Option<InfraE502ProofExtension>,
 ) -> serde_json::Value {
-    let open = board.map(|b| b.open_count()).unwrap_or(LOGISTICS_THROUGHPUT_TODO_COUNT);
+    let open = board
+        .map(|b| b.open_count())
+        .unwrap_or(LOGISTICS_THROUGHPUT_TODO_COUNT);
     let rt = runtime;
     let diagnostics_sample: Vec<serde_json::Value> = diagnostics
         .proofs
@@ -66,12 +69,14 @@ pub fn build_logistics_throughput_proof_payload(
     let infra = infra_e5.unwrap_or_default();
     let infra_clean = infra.graph_only_paths && routes_blocked == 0 && routes_open > 0;
     if infra_clean {
-        super::witness::INFRA_E5_002_GRAPH_ONLY_LATCH.store(true, std::sync::atomic::Ordering::Relaxed);
+        super::witness::INFRA_E5_002_GRAPH_ONLY_LATCH
+            .store(true, std::sync::atomic::Ordering::Relaxed);
     }
     let infra_e5_002_green = infra_clean
         || (infra.graph_only_paths
             && routes_open > 0
-            && super::witness::INFRA_E5_002_GRAPH_ONLY_LATCH.load(std::sync::atomic::Ordering::Relaxed));
+            && super::witness::INFRA_E5_002_GRAPH_ONLY_LATCH
+                .load(std::sync::atomic::Ordering::Relaxed));
     let top_saturated: Vec<serde_json::Value> = diagnostics
         .top_saturated_edges
         .iter()
@@ -144,23 +149,21 @@ mod live_proof_sim_tests {
     static PROOF_FILE_LOCK: Mutex<()> = Mutex::new(());
 
     fn proof_lock() -> std::sync::MutexGuard<'static, ()> {
-        PROOF_FILE_LOCK
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
+        PROOF_FILE_LOCK.lock().unwrap_or_else(|e| e.into_inner())
     }
 
     use bevy::app::App;
-    use bevy::MinimalPlugins;
     use bevy::state::app::StatesPlugin;
+    use bevy::MinimalPlugins;
 
     use crate::construction::{
         default_buildings_dir, load_building_definitions_from_dir, ConstructionWorldRevision,
     };
+    use crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks;
     use crate::dev::logistics_throughput_todos::{
         logistics_throughput_todo_predicate, LogisticsThroughputTodoBoard,
         LogisticsThroughputWitness, LOGISTICS_THROUGHPUT_TODOS,
     };
-    use crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks;
     use crate::economy::activation::BuildingDefinitionRef;
     use crate::engine::states::BaseState;
     use crate::strategic::{
@@ -170,9 +173,10 @@ mod live_proof_sim_tests {
     };
     use crate::systems::sim_control::SimControlState;
     use crate::systems::transport::{
-        bake_snapshot_from_ordered_tile_markers, edge_traversal_cost, hydrate_transport_from_snapshot,
-        refresh_transport_nav_export, TransportCostCache, TransportCostWeights,
-        TransportEdgeDirectory, TransportFieldStore, TransportNavExport, TransportTopology,
+        bake_snapshot_from_ordered_tile_markers, edge_traversal_cost,
+        hydrate_transport_from_snapshot, refresh_transport_nav_export, TransportCostCache,
+        TransportCostWeights, TransportEdgeDirectory, TransportFieldStore, TransportNavExport,
+        TransportTopology,
     };
 
     fn install_road_chain_transport(app: &mut App) {
@@ -190,11 +194,7 @@ mod live_proof_sim_tests {
         for (id, st) in &field.by_edge {
             cache.by_edge.insert(
                 *id,
-                edge_traversal_cost(
-                    st,
-                    &TransportCostWeights::default(),
-                    st.travel_time_base,
-                ),
+                edge_traversal_cost(st, &TransportCostWeights::default(), st.travel_time_base),
             );
         }
         let mut nav = TransportNavExport::default();
@@ -212,14 +212,21 @@ mod live_proof_sim_tests {
             app.world().resource::<TransportEdgeDirectory>(),
             app.world().resource::<TransportFieldStore>(),
             app.world().resource::<TransportCostWeights>(),
-            app.world().resource::<crate::strategic::StrategicRasterConfig>(),
-            app.world().resource::<crate::strategic::CorridorConstructionBook>(),
+            app.world()
+                .resource::<crate::strategic::StrategicRasterConfig>(),
+            app.world()
+                .resource::<crate::strategic::CorridorConstructionBook>(),
             1,
         );
         app.insert_resource(graph);
     }
 
-    fn spawn_operational(app: &mut App, catalog_id: &str, site_id: u64, origin: BuildSiteTile) -> Entity {
+    fn spawn_operational(
+        app: &mut App,
+        catalog_id: &str,
+        site_id: u64,
+        origin: BuildSiteTile,
+    ) -> Entity {
         app.world_mut()
             .spawn((
                 ConstructionSite {
@@ -232,10 +239,7 @@ mod live_proof_sim_tests {
                 PlannedSite {
                     site_id: SiteId(site_id),
                     origin,
-                    footprint: FootprintTiles {
-                        width: 3,
-                        depth: 2,
-                    },
+                    footprint: FootprintTiles { width: 3, depth: 2 },
                     archetype: SiteArchetype::Factory,
                     layer: LayerType::Surface,
                     catalog_id: Some(catalog_id.into()),
@@ -263,12 +267,15 @@ mod live_proof_sim_tests {
 
         apply_s7p_logistics_throughput_witness_shortcut(ProofGrade::LibFixture);
         let world = app.world_mut();
-        if world.resource::<crate::strategic::LogisticsGraph>().edges.is_empty() {
+        if world
+            .resource::<crate::strategic::LogisticsGraph>()
+            .edges
+            .is_empty()
+        {
             return;
         }
-        world.resource_scope(
-            |world, mut witness: Mut<LogisticsThroughputWitness>| {
-                world.resource_scope(
+        world.resource_scope(|world, mut witness: Mut<LogisticsThroughputWitness>| {
+            world.resource_scope(
                     |world,
                      mut runtime: Mut<
                         crate::economy::logistics::LogisticsThroughputRuntimeWitness,
@@ -297,14 +304,15 @@ mod live_proof_sim_tests {
                         );
                     },
                 );
-            },
-        );
+        });
         world.resource_scope(|world, mut board: Mut<LogisticsThroughputTodoBoard>| {
             let witness = world.resource::<LogisticsThroughputWitness>();
             sync_logistics_throughput_board_from_witness(witness, &mut board);
         });
         request_logistics_throughput_live_proof_refresh(
-            world.resource_mut::<LogisticsThroughputLiveProofState>().as_mut(),
+            world
+                .resource_mut::<LogisticsThroughputLiveProofState>()
+                .as_mut(),
         );
     }
 
@@ -371,14 +379,24 @@ mod live_proof_sim_tests {
     fn s7p_log_001_writes_logistics_throughput_live_json_green() {
         let _lock = proof_lock();
         let mut app = assemble_logistics_proof_sim_app();
-        let mine = spawn_operational(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
+        let mine = spawn_operational(
+            &mut app,
+            "aluminum_bauxite_mine",
+            1,
+            BuildSiteTile { x: 0, z: 0 },
+        );
         spawn_operational(
             &mut app,
             "aluminum_alumina_refinery",
             2,
             BuildSiteTile { x: 1, z: 0 },
         );
-        spawn_operational(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 0 });
+        spawn_operational(
+            &mut app,
+            "aluminum_smelter1",
+            3,
+            BuildSiteTile { x: 2, z: 0 },
+        );
         for _ in 0..32 {
             app.update();
         }
@@ -420,14 +438,24 @@ mod live_proof_sim_tests {
     fn simulation_writes_logistics_throughput_live_json_log_a_green() {
         let _lock = proof_lock();
         let mut app = assemble_logistics_proof_sim_app();
-        spawn_operational(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
+        spawn_operational(
+            &mut app,
+            "aluminum_bauxite_mine",
+            1,
+            BuildSiteTile { x: 0, z: 0 },
+        );
         spawn_operational(
             &mut app,
             "aluminum_alumina_refinery",
             2,
             BuildSiteTile { x: 1, z: 0 },
         );
-        spawn_operational(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 0 });
+        spawn_operational(
+            &mut app,
+            "aluminum_smelter1",
+            3,
+            BuildSiteTile { x: 2, z: 0 },
+        );
         for _ in 0..40 {
             app.update();
         }
@@ -435,7 +463,8 @@ mod live_proof_sim_tests {
         let path = proof_output_path();
         assert!(path.exists(), "expected {:?} after sim ticks", path);
         let json: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json")).expect("parse");
+            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json"))
+                .expect("parse");
         assert_eq!(json["profile"], "LOGISTICS_THROUGHPUT");
         assert!(
             json["topology_revision"].as_u64().unwrap_or(0) > 0,
@@ -474,15 +503,29 @@ mod live_proof_sim_tests {
         LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
         let mut app = assemble_logistics_proof_sim_app();
-        let mine = spawn_operational(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
-        let _refinery =
-            spawn_operational(&mut app, "aluminum_alumina_refinery", 2, BuildSiteTile { x: 2, z: 0 });
+        let mine = spawn_operational(
+            &mut app,
+            "aluminum_bauxite_mine",
+            1,
+            BuildSiteTile { x: 0, z: 0 },
+        );
+        let _refinery = spawn_operational(
+            &mut app,
+            "aluminum_alumina_refinery",
+            2,
+            BuildSiteTile { x: 2, z: 0 },
+        );
         for _ in 0..12 {
             app.update();
         }
-        let flow = app.world().resource::<crate::economy::resource_flow::ResourceFlowRegistry>();
+        let flow = app
+            .world()
+            .resource::<crate::economy::resource_flow::ResourceFlowRegistry>();
         assert!(!flow.edges.is_empty());
-        if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine) {
+        if let Some(mut node) = app
+            .world_mut()
+            .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+        {
             node.buffer_by_tag.insert("Bauxite".into(), 30.0);
         }
         app.update();
@@ -497,15 +540,20 @@ mod live_proof_sim_tests {
             .lots
             .iter()
             .any(|l| l.route.id > 0 || l.route.topology_revision > 0 || l.path.edge_count > 0);
-        LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED
-            .store(ledger_nonempty && ledger_routed, std::sync::atomic::Ordering::Relaxed);
-        LOG_B_04_ARRIVALS_ONLY_TEST_PASSED.store(ledger_nonempty, std::sync::atomic::Ordering::Relaxed);
+        LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED.store(
+            ledger_nonempty && ledger_routed,
+            std::sync::atomic::Ordering::Relaxed,
+        );
+        LOG_B_04_ARRIVALS_ONLY_TEST_PASSED
+            .store(ledger_nonempty, std::sync::atomic::Ordering::Relaxed);
         LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
         for _ in 0..50 {
             app.update();
         }
         {
-            let mut graph = app.world_mut().resource_mut::<crate::strategic::LogisticsGraph>();
+            let mut graph = app
+                .world_mut()
+                .resource_mut::<crate::strategic::LogisticsGraph>();
             for edge in &mut graph.edges {
                 edge.capacity = 0.01;
             }
@@ -551,24 +599,46 @@ mod live_proof_sim_tests {
         LOG_GEOGRAPHIC_CASCADE_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
         let mut app = assemble_logistics_proof_sim_app();
-        let mine = spawn_operational(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
-        let _refinery =
-            spawn_operational(&mut app, "aluminum_alumina_refinery", 2, BuildSiteTile { x: 2, z: 0 });
-        let _smelter = spawn_operational(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 0 });
+        let mine = spawn_operational(
+            &mut app,
+            "aluminum_bauxite_mine",
+            1,
+            BuildSiteTile { x: 0, z: 0 },
+        );
+        let _refinery = spawn_operational(
+            &mut app,
+            "aluminum_alumina_refinery",
+            2,
+            BuildSiteTile { x: 2, z: 0 },
+        );
+        let _smelter = spawn_operational(
+            &mut app,
+            "aluminum_smelter1",
+            3,
+            BuildSiteTile { x: 2, z: 0 },
+        );
         for _ in 0..12 {
             app.update();
         }
-        if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine) {
+        if let Some(mut node) = app
+            .world_mut()
+            .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+        {
             node.buffer_by_tag.insert("Bauxite".into(), 50.0);
         }
         for _ in 0..60 {
             app.update();
         }
         {
-            let mut dir = app.world_mut().resource_mut::<crate::systems::transport::TransportEdgeDirectory>();
+            let mut dir = app
+                .world_mut()
+                .resource_mut::<crate::systems::transport::TransportEdgeDirectory>();
             dir.by_edge.retain(|_, meta| {
                 meta.head_key
-                    != crate::economy::logistics::routes::tile_node_key(BuildSiteTile { x: 1, z: 0 })
+                    != crate::economy::logistics::routes::tile_node_key(BuildSiteTile {
+                        x: 1,
+                        z: 0,
+                    })
             });
             app.world_mut()
                 .resource_mut::<ConstructionWorldRevision>()
@@ -641,14 +711,19 @@ mod live_proof_sim_tests {
         assert!(path.exists());
         let json: serde_json::Value =
             serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("parse");
-        assert!(json.get("route_proofs_sample").and_then(|v| v.as_array()).is_some_and(|a| !a.is_empty()));
+        assert!(json
+            .get("route_proofs_sample")
+            .and_then(|v| v.as_array())
+            .is_some_and(|a| !a.is_empty()));
         assert_eq!(
-            json.pointer("/witness/soa_throughput_solver").and_then(|v| v.as_bool()),
+            json.pointer("/witness/soa_throughput_solver")
+                .and_then(|v| v.as_bool()),
             Some(true),
             "LOG-C-01 soa_throughput_solver must export true"
         );
         assert_eq!(
-            json.pointer("/witness/freight_reservations").and_then(|v| v.as_bool()),
+            json.pointer("/witness/freight_reservations")
+                .and_then(|v| v.as_bool()),
             Some(true),
             "LOG-C-01/02 freight_reservations must export true"
         );
@@ -677,21 +752,40 @@ mod live_proof_sim_tests {
 
         let _lock = proof_lock();
         let mut app = assemble_logistics_proof_sim_app();
-        let mine = spawn_operational(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
-        let _refinery =
-            spawn_operational(&mut app, "aluminum_alumina_refinery", 2, BuildSiteTile { x: 2, z: 0 });
-        let _smelter = spawn_operational(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 1 });
+        let mine = spawn_operational(
+            &mut app,
+            "aluminum_bauxite_mine",
+            1,
+            BuildSiteTile { x: 0, z: 0 },
+        );
+        let _refinery = spawn_operational(
+            &mut app,
+            "aluminum_alumina_refinery",
+            2,
+            BuildSiteTile { x: 2, z: 0 },
+        );
+        let _smelter = spawn_operational(
+            &mut app,
+            "aluminum_smelter1",
+            3,
+            BuildSiteTile { x: 2, z: 1 },
+        );
         for _ in 0..15 {
             app.update();
         }
-        if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine) {
+        if let Some(mut node) = app
+            .world_mut()
+            .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+        {
             node.buffer_by_tag.insert("Bauxite".into(), 60.0);
         }
         for _ in 0..70 {
             app.update();
         }
         {
-            let mut graph = app.world_mut().resource_mut::<crate::strategic::LogisticsGraph>();
+            let mut graph = app
+                .world_mut()
+                .resource_mut::<crate::strategic::LogisticsGraph>();
             for edge in &mut graph.edges {
                 edge.capacity = 0.01;
             }
@@ -735,14 +829,16 @@ mod live_proof_sim_tests {
         LOG_C_06_OVERLAY_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
         LOG_D_01_CORRIDOR_CLASS_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
         LOG_D_02_DISTRICT_SCOPED_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
-        LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
+        LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED
+            .store(true, std::sync::atomic::Ordering::Relaxed);
         LOG_D_04_ASYNC_DISTRICT_TEST_PASSED.store(
             app.world()
                 .resource::<crate::economy::logistics::types::LogisticsThroughputRuntimeWitness>()
                 .saw_async_district_solve
                 || app
                     .world()
-                    .resource::<crate::economy::logistics::async_district::AsyncDistrictSolveQueue>()
+                    .resource::<crate::economy::logistics::async_district::AsyncDistrictSolveQueue>(
+                    )
                     .applied_total
                     > 0,
             std::sync::atomic::Ordering::Relaxed,
@@ -782,14 +878,24 @@ mod live_proof_sim_tests {
 
         let _lock = proof_lock();
         let mut app = assemble_logistics_proof_sim_app();
-        spawn_operational(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
+        spawn_operational(
+            &mut app,
+            "aluminum_bauxite_mine",
+            1,
+            BuildSiteTile { x: 0, z: 0 },
+        );
         spawn_operational(
             &mut app,
             "aluminum_alumina_refinery",
             2,
             BuildSiteTile { x: 1, z: 0 },
         );
-        spawn_operational(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 0 });
+        spawn_operational(
+            &mut app,
+            "aluminum_smelter1",
+            3,
+            BuildSiteTile { x: 2, z: 0 },
+        );
         for _ in 0..40 {
             app.update();
         }

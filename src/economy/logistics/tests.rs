@@ -12,9 +12,8 @@ use crate::strategic::{
 };
 use crate::systems::transport::{
     bake_snapshot_from_ordered_tile_markers, hydrate_transport_from_snapshot,
-    refresh_transport_nav_export, TransportCostCache, TransportCostWeights,
-    TransportEdgeDirectory, TransportEdgeId, TransportEdgeMeta, TransportFieldStore,
-    TransportNavExport, TransportTopology,
+    refresh_transport_nav_export, TransportCostCache, TransportCostWeights, TransportEdgeDirectory,
+    TransportEdgeId, TransportEdgeMeta, TransportFieldStore, TransportNavExport, TransportTopology,
 };
 
 fn road_chain_snapshot() -> crate::systems::transport::TransportNetworkSnapshot {
@@ -99,16 +98,14 @@ fn path_blocked_without_transport_edge() {
     hydrate_chain(&mut app);
     let nav = app.world().resource::<TransportNavExport>();
     let dir = app.world().resource::<TransportEdgeDirectory>();
-    assert!(
-        path_edges_between_tiles(
-            nav,
-            dir,
-            BuildSiteTile { x: 0, z: 0 },
-            BuildSiteTile { x: 9, z: 9 },
-            TransportMode::Truck,
-        )
-        .is_none()
-    );
+    assert!(path_edges_between_tiles(
+        nav,
+        dir,
+        BuildSiteTile { x: 0, z: 0 },
+        BuildSiteTile { x: 9, z: 9 },
+        TransportMode::Truck,
+    )
+    .is_none());
 }
 
 #[test]
@@ -118,10 +115,7 @@ fn logistics_edges_carry_transport_edge_id() {
     hydrate_chain(&mut app);
     let graph = app.world().resource::<LogisticsGraph>();
     assert_eq!(graph.edges.len(), 2);
-    assert!(graph
-        .edges
-        .iter()
-        .all(|e| e.transport_edge.is_some()));
+    assert!(graph.edges.iter().all(|e| e.transport_edge.is_some()));
 }
 
 #[test]
@@ -235,10 +229,7 @@ fn spawn_facility(app: &mut App, catalog_id: &str, site_id: u64, origin: BuildSi
             PlannedSite {
                 site_id: SiteId(site_id),
                 origin,
-                footprint: FootprintTiles {
-                    width: 3,
-                    depth: 2,
-                },
+                footprint: FootprintTiles { width: 3, depth: 2 },
                 archetype: SiteArchetype::Factory,
                 layer: LayerType::Surface,
                 catalog_id: Some(catalog_id.into()),
@@ -254,7 +245,12 @@ fn spawn_facility(app: &mut App, catalog_id: &str, site_id: u64, origin: BuildSi
 }
 
 fn setup_aluminum_chain_facilities(app: &mut App) -> (Entity, Entity) {
-    let mine = spawn_facility(app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
+    let mine = spawn_facility(
+        app,
+        "aluminum_bauxite_mine",
+        1,
+        BuildSiteTile { x: 0, z: 0 },
+    );
     let refinery = spawn_facility(
         app,
         "aluminum_alumina_refinery",
@@ -291,17 +287,17 @@ fn log_a_04_cut_road_sets_path_open_false_after_refresh() {
 
     let from_tile = BuildSiteTile { x: 0, z: 0 };
     let to_tile = BuildSiteTile { x: 2, z: 0 };
-    let cells = app.world().resource::<StrategicRasterConfig>().cells_per_chunk;
+    let cells = app
+        .world()
+        .resource::<StrategicRasterConfig>()
+        .cells_per_chunk;
     let from_e = app
         .world_mut()
         .spawn((
             PlannedSite {
                 site_id: SiteId(1),
                 origin: from_tile,
-                footprint: FootprintTiles {
-                    width: 1,
-                    depth: 1,
-                },
+                footprint: FootprintTiles { width: 1, depth: 1 },
                 archetype: SiteArchetype::Factory,
                 layer: LayerType::Surface,
                 catalog_id: Some("mine".into()),
@@ -319,10 +315,7 @@ fn log_a_04_cut_road_sets_path_open_false_after_refresh() {
             PlannedSite {
                 site_id: SiteId(2),
                 origin: to_tile,
-                footprint: FootprintTiles {
-                    width: 1,
-                    depth: 1,
-                },
+                footprint: FootprintTiles { width: 1, depth: 1 },
                 archetype: SiteArchetype::Factory,
                 layer: LayerType::Surface,
                 catalog_id: Some("refinery".into()),
@@ -378,7 +371,12 @@ fn log_a_04_cut_road_sets_path_open_false_after_refresh() {
         let sig = crate::strategic::transport_directory_edge_signature(&dir);
         let topology_revision = sig ^ cons.rotate_left(17);
         let graph = rebuild_logistics_graph_from_transport(
-            &dir, &fields, &weights, &cells, &book, topology_revision,
+            &dir,
+            &fields,
+            &weights,
+            &cells,
+            &book,
+            topology_revision,
         );
         app.insert_resource(graph);
     }
@@ -519,10 +517,16 @@ fn log_b_freight_moves_through_ledger_not_same_tick_teleport() {
         .resource_mut::<InTransitLedger>()
         .lots
         .clear();
-    if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(refinery) {
+    if let Some(mut node) = app
+        .world_mut()
+        .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(refinery)
+    {
         node.buffer_by_tag.remove("Bauxite");
     }
-    if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine) {
+    if let Some(mut node) = app
+        .world_mut()
+        .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+    {
         node.buffer_by_tag.insert("Bauxite".into(), 20.0);
     }
     let refinery_before_dispatch = app
@@ -541,7 +545,10 @@ fn log_b_freight_moves_through_ledger_not_same_tick_teleport() {
         "no same-tick teleport: refinery must not receive bauxite before ledger arrival"
     );
     let ledger = app.world().resource::<InTransitLedger>();
-    assert!(!ledger.lots.is_empty(), "freight should be in transit after dispatch");
+    assert!(
+        !ledger.lots.is_empty(),
+        "freight should be in transit after dispatch"
+    );
     LOG_B_04_ARRIVALS_ONLY_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
     for _ in 0..40 {
         app.update();
@@ -565,7 +572,10 @@ fn log_b_rail_batch_uses_longer_transit_than_truck() {
 
     let truck = freight_transit_ticks(3, FreightMovementModel::Continuous);
     let rail = freight_transit_ticks(3, FreightMovementModel::Batched);
-    assert!(rail > truck, "batched rail ETA > continuous truck for same path length");
+    assert!(
+        rail > truck,
+        "batched rail ETA > continuous truck for same path length"
+    );
     LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
@@ -578,14 +588,19 @@ fn log_b_partial_fulfillment_records_shortage() {
 
     let mut app = logistics_log_b_app();
     let (mine, _) = setup_aluminum_chain_facilities(&mut app);
-    if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine) {
+    if let Some(mut node) = app
+        .world_mut()
+        .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+    {
         node.buffer_by_tag.insert("Bauxite".into(), 50.0);
     }
     for _ in 0..15 {
         app.update();
     }
     {
-        let mut graph = app.world_mut().resource_mut::<crate::strategic::LogisticsGraph>();
+        let mut graph = app
+            .world_mut()
+            .resource_mut::<crate::strategic::LogisticsGraph>();
         for edge in &mut graph.edges {
             edge.capacity = 0.01;
         }
@@ -613,13 +628,18 @@ fn log_c_01_soa_throughput_solver_aligned_vecs() {
 
     let mut app = logistics_log_b_app();
     let (mine, _) = setup_aluminum_chain_facilities(&mut app);
-    if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine) {
+    if let Some(mut node) = app
+        .world_mut()
+        .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+    {
         node.buffer_by_tag.insert("Bauxite".into(), 40.0);
     }
     for _ in 0..25 {
         app.update();
     }
-    let solver = app.world().resource::<crate::economy::logistics::ThroughputSolverState>();
+    let solver = app
+        .world()
+        .resource::<crate::economy::logistics::ThroughputSolverState>();
     assert!(
         soa_solver_aligned(solver),
         "SoA load/capacity/reserved/pressure must share edge-index length"
@@ -641,20 +661,33 @@ fn log_c_reservations_never_exceed_capacity() {
 
     let mut app = logistics_log_b_app();
     let (mine, _) = setup_aluminum_chain_facilities(&mut app);
-    if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine) {
+    if let Some(mut node) = app
+        .world_mut()
+        .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+    {
         node.buffer_by_tag.insert("Bauxite".into(), 40.0);
     }
     for _ in 0..25 {
         app.update();
     }
-    let solver = app.world().resource::<crate::economy::logistics::ThroughputSolverState>();
-    let book = app.world().resource::<crate::economy::logistics::FreightReservationBook>();
+    let solver = app
+        .world()
+        .resource::<crate::economy::logistics::ThroughputSolverState>();
+    let book = app
+        .world()
+        .resource::<crate::economy::logistics::FreightReservationBook>();
     assert!(
         reservations_within_capacity(solver),
         "reserved load must stay within per-edge capacity"
     );
-    assert!(solver.reserved.iter().any(|&r| r > 0.0), "solve should reserve corridor capacity");
-    assert!(!book.entries.is_empty(), "FreightReservationBook must record sparse reservations");
+    assert!(
+        solver.reserved.iter().any(|&r| r > 0.0),
+        "solve should reserve corridor capacity"
+    );
+    assert!(
+        !book.entries.is_empty(),
+        "FreightReservationBook must record sparse reservations"
+    );
     assert!(
         book_matches_soa_reserved(book, solver),
         "book sums must match SoA reserved"
@@ -671,7 +704,10 @@ fn log_c_congestion_rises_when_edge_saturated() {
 
     let mut app = logistics_log_b_app();
     let (mine, _) = setup_aluminum_chain_facilities(&mut app);
-    if let Some(mut node) = app.world_mut().get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine) {
+    if let Some(mut node) = app
+        .world_mut()
+        .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
+    {
         node.buffer_by_tag.insert("Bauxite".into(), 80.0);
     }
     {
@@ -713,12 +749,17 @@ fn log_c_congestion_rises_when_edge_saturated() {
         .get(&edge_id)
         .map(|st| st.congestion)
         .unwrap_or(0.0);
-    let solver = app.world().resource::<crate::economy::logistics::ThroughputSolverState>();
+    let solver = app
+        .world()
+        .resource::<crate::economy::logistics::ThroughputSolverState>();
     assert!(
         solver.edge_pressure.iter().any(|&p| p > 0.5),
         "solver should report saturated edges before congestion feedback"
     );
-    assert!(after > before + 0.01, "congestion should rise under sustained load");
+    assert!(
+        after > before + 0.01,
+        "congestion should rise under sustained load"
+    );
     LOG_C_03_CONGESTION_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
@@ -739,7 +780,9 @@ fn log_c_corridor_pressure_diffuses_to_successor() {
         }
     }
     app.update();
-    let solver = app.world().resource::<crate::economy::logistics::ThroughputSolverState>();
+    let solver = app
+        .world()
+        .resource::<crate::economy::logistics::ThroughputSolverState>();
     assert!(
         solver.edge_pressure.len() >= 2 && solver.edge_pressure[1] > 0.2,
         "successor edge should inherit diffused pressure"
@@ -749,20 +792,30 @@ fn log_c_corridor_pressure_diffuses_to_successor() {
 
 #[test]
 fn log_c_geographic_cascade_starves_downstream_smelter() {
-    use crate::entities::production::aluminum::AluminumSmelterRuntime;
     use crate::economy::resource_flow::FacilityFlowState;
+    use crate::entities::production::aluminum::AluminumSmelterRuntime;
 
     LOG_GEOGRAPHIC_CASCADE_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
     let mut app = logistics_log_b_app();
-    let _mine = spawn_facility(&mut app, "aluminum_bauxite_mine", 1, BuildSiteTile { x: 0, z: 0 });
+    let _mine = spawn_facility(
+        &mut app,
+        "aluminum_bauxite_mine",
+        1,
+        BuildSiteTile { x: 0, z: 0 },
+    );
     let refinery = spawn_facility(
         &mut app,
         "aluminum_alumina_refinery",
         2,
         BuildSiteTile { x: 2, z: 0 },
     );
-    let smelter = spawn_facility(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 1 });
+    let smelter = spawn_facility(
+        &mut app,
+        "aluminum_smelter1",
+        3,
+        BuildSiteTile { x: 2, z: 1 },
+    );
     for _ in 0..20 {
         app.update();
     }
@@ -784,7 +837,9 @@ fn log_c_geographic_cascade_starves_downstream_smelter() {
         app.update();
     }
 
-    let flow = app.world().resource::<crate::economy::resource_flow::ResourceFlowRegistry>();
+    let flow = app
+        .world()
+        .resource::<crate::economy::resource_flow::ResourceFlowRegistry>();
     let bauxite_route_blocked = flow
         .edges
         .iter()
@@ -845,9 +900,7 @@ fn log_c_overlay_uses_solver_load_not_static_capacity() {
 #[test]
 fn log_d_corridor_class_rail_profile_blocks_truck_path() {
     use super::witness::LOG_D_01_CORRIDOR_CLASS_TEST_PASSED;
-    use crate::systems::transport::{
-        corridor_class_from_profile, CorridorClass,
-    };
+    use crate::systems::transport::{corridor_class_from_profile, CorridorClass};
 
     LOG_D_01_CORRIDOR_CLASS_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
@@ -855,12 +908,17 @@ fn log_d_corridor_class_rail_profile_blocks_truck_path() {
     let allowed = vec!["rail_train".to_string()];
     let truck_agent = "road_vehicle";
     let profile = "rail";
-    let truck_may_use = allowed.is_empty()
-        || allowed.iter().any(|a| a == truck_agent)
-        || profile.contains("road");
-    assert!(!truck_may_use, "rail-only agents must not admit road_vehicle");
+    let truck_may_use =
+        allowed.is_empty() || allowed.iter().any(|a| a == truck_agent) || profile.contains("road");
+    assert!(
+        !truck_may_use,
+        "rail-only agents must not admit road_vehicle"
+    );
     let rail_may_use = allowed.iter().any(|a| a == "rail_train");
-    assert!(rail_may_use, "rail_train should be allowed on rail corridor");
+    assert!(
+        rail_may_use,
+        "rail_train should be allowed on rail corridor"
+    );
     LOG_D_01_CORRIDOR_CLASS_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
@@ -911,7 +969,10 @@ fn log_d_district_scoped_snapshot_present_with_facilities() {
         .resource::<super::types::PortalAttachmentMap>()
         .facility_to_graph
         .is_empty());
-    assert!(app.world().get_resource::<IndustrialDistrictSnapshot>().is_some());
+    assert!(app
+        .world()
+        .get_resource::<IndustrialDistrictSnapshot>()
+        .is_some());
     let runtime = app
         .world()
         .resource::<super::types::LogisticsThroughputRuntimeWitness>();
