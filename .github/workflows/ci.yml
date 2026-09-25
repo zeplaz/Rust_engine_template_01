@@ -11,6 +11,9 @@ env:
 jobs:
   check:
     runs-on: ubuntu-latest
+    # Backstop after the lib-harness deadlock fix. A stuck test used to ride the
+    # GitHub default (360m) and cancel the job; this fails that step in bounded time.
+    timeout-minutes: 120
     steps:
       - uses: actions/checkout@v4
 
@@ -50,6 +53,7 @@ jobs:
         run: cargo check -p proc_A_dine01 --features bevy_tilemap_adapter
 
       - name: cargo test (lib)
+        timeout-minutes: 60
         run: cargo test -p proc_A_dine01 --lib
 
       - name: cargo test (stage5 spine governance)

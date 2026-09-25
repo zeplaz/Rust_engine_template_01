@@ -120,23 +120,25 @@ mod tests {
     #[test]
     fn g1_archetype_labels_present() {
         assert!(grammar_labels_loaded_green());
-        let cache = labels_cache().lock().expect("grammar labels");
-        let factory_key = cache
-            .archetypes
-            .keys()
-            .find(|k| k.contains("Factory"))
-            .cloned()
-            .expect("factory archetype label");
-        let warehouse_key = cache
-            .archetypes
-            .keys()
-            .find(|k| k.contains("Warehouse") || k.contains("Industrial"))
-            .cloned()
-            .expect("warehouse archetype label");
-        assert_eq!(
-            human_archetype_label(&factory_key),
-            "factory cluster"
-        );
+        // Drop the cache guard before human_* lookups. `std::sync::Mutex` is not
+        // reentrant; holding it across those calls deadlocks the lib harness.
+        let (factory_key, warehouse_key) = {
+            let cache = labels_cache().lock().expect("grammar labels");
+            let factory_key = cache
+                .archetypes
+                .keys()
+                .find(|k| k.contains("Factory"))
+                .cloned()
+                .expect("factory archetype label");
+            let warehouse_key = cache
+                .archetypes
+                .keys()
+                .find(|k| k.contains("Warehouse") || k.contains("Industrial"))
+                .cloned()
+                .expect("warehouse archetype label");
+            (factory_key, warehouse_key)
+        };
+        assert_eq!(human_archetype_label(&factory_key), "factory cluster");
         assert_eq!(human_massing_label("long_hall"), "Long Hall");
         let warehouse_label = human_archetype_label(&warehouse_key);
         assert!(!warehouse_label.contains(&warehouse_key));
