@@ -66,6 +66,7 @@ cross-agent handoffs as a **Δ-handoff table** (lossless, `$REPORT W7`); deep di
 | `agent-flow-route --goal … [--domain auto\|fire\|ui\|render\|art\|ops]` | `agent_flow_route` | BLANG:FLOW — L0 cheap → L1 hard → L2 exec dispatch packet |
 | `agent-flow-policy` | `agent_flow_policy` | Static model-tier table (composer-fast / opus / inherit) |
 | `terrain-honesty-lint [--compress 3]` | `terrain_honesty_lint_tool` | RPC-1 deterministic GpuInstancedAtlas / gpu_atlas honesty scan |
+| `place-feel-phase-note [--tier smoke\|lod0\|production] [--claim …] [job.json]` | — | Kit phase vs place-feel claim. CLI only (not an MCP tool). Illegal `place_feel_claim` fails; omitted claim stays silent. Does not rebake. |
 | ~~`agent-lang-demo`~~ | — | **removed in CLI refactor** — health smoke via driver `demo` (pipeline-preflight + handoff-brief) |
 
 Queues: `grammar` → `grammar_continuation_queue.json` · `continuation` → `continuation_queue.json`  

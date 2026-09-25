@@ -34,7 +34,16 @@
       }
     },
     "material_profile": { "type": "string" },
-    "development_tier": { "type": "string", "enum": ["smoke", "lod0", "production"] },
+    "development_tier": {
+      "type": "string",
+      "enum": ["smoke", "lod0", "production"],
+      "description": "Kit phase only (smoke harness, lod0 stand-in, production envelope). Not a site phase, ghost FSM, or deployable stock state."
+    },
+    "place_feel_claim": {
+      "type": "string",
+      "enum": ["harness_only", "preview_ghost_stand_in", "preview_ghost_same_mesh", "operational_envelope", "picker_icon"],
+      "description": "Optional. Legal pairs: smoke→harness_only, lod0→preview_ghost_stand_in, production→preview_ghost_same_mesh|operational_envelope. picker_icon is never legal on a module."
+    },
     "pbr_status": { "type": "string", "enum": ["none", "deferred", "pending", "shipped"] },
     "batch_id": { "type": "string" },
     "module_id_alias_of": { "type": ["string", "null"] },

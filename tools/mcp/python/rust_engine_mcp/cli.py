@@ -578,6 +578,29 @@ def _cmd_agent_flow_policy(_args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_place_feel_phase_note(args: argparse.Namespace) -> int:
+    """Print kit-phase place-feel note. Does not rebake. Exit 1 only on an illegal claim."""
+    import json
+    from pathlib import Path
+
+    from rust_engine_mcp.place_feel_phase import phase_note
+    from rust_engine_mcp.schemas import load_json_file
+
+    tier = str(args.tier or "")
+    claim = args.claim
+    if args.path:
+        record = load_json_file(Path(args.path))
+        tier = str(record.get("development_tier") or tier)
+        if record.get("place_feel_claim"):
+            claim = str(record["place_feel_claim"])
+    if not tier:
+        print(json.dumps({"ok": False, "error": "pass --tier or a JSON path with development_tier"}))
+        return 1
+    body = phase_note(tier, claim)
+    print(json.dumps(body, indent=2))
+    return 0 if body.get("ok") else 1
+
+
 def _cmd_terrain_honesty_lint(args: argparse.Namespace) -> int:
     from rust_engine_mcp import terrain_honesty_lint
 
@@ -2188,6 +2211,15 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--compress", default="3")
     p.add_argument("--no-witness", action="store_true")
     p.set_defaults(func=_cmd_terrain_honesty_lint)
+
+    p = sub.add_parser(
+        "place-feel-phase-note",
+        help="Kit phase (smoke/lod0/production) vs place-feel claim. Does not rebake.",
+    )
+    p.add_argument("--tier", default="", help="smoke|lod0|production")
+    p.add_argument("--claim", default=None, help="Optional place_feel_claim to check")
+    p.add_argument("path", nargs="?", default=None, help="Optional job or spec JSON")
+    p.set_defaults(func=_cmd_place_feel_phase_note)
 
     sub.add_parser("auto-fleet-brief", help="No-operator auto fleet wave status").set_defaults(
         func=_cmd_auto_fleet_brief
