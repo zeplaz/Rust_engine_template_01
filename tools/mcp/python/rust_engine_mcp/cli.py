@@ -1787,6 +1787,15 @@ def _cmd_validate_report(args: argparse.Namespace) -> int:
     return 0 if report.status == "passed" else 1
 
 
+def _cmd_pixel_conclude(args: argparse.Namespace) -> int:
+    from .pixel_pipeline.cli import cli_main
+
+    argv = ["--image", args.image, "--kind", args.kind]
+    if args.out:
+        argv.extend(["--out", args.out])
+    return cli_main(argv)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="rust_engine_mcp.cli")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -2512,6 +2521,15 @@ def main(argv: list[str] | None = None) -> int:
     )
     p.add_argument("--write-witness", action="store_true")
     p.set_defaults(func=_cmd_grammar_integration_validate)
+
+    p = sub.add_parser(
+        "pixel-conclude",
+        help="Deterministic image conclusion: k-means, mean-shift, matrix, verdict",
+    )
+    p.add_argument("--image", required=True)
+    p.add_argument("--kind", required=True, choices=["gui", "ui", "world", "art"])
+    p.add_argument("--out", default=None)
+    p.set_defaults(func=_cmd_pixel_conclude)
 
     args = parser.parse_args(argv)
     try:

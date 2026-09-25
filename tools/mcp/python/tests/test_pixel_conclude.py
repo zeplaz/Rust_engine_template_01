@@ -197,3 +197,31 @@ def test_cli_subprocess_prog(tmp_path: Path) -> None:
     body = json.loads(proc.stdout)
     assert body["verdict"] == "green"
     assert body["kind"] == "art"
+
+
+def test_cli_package_subcommand(tmp_path: Path) -> None:
+    image = tmp_path / "plain.png"
+    _paint(image, 16, 16, lambda _x, _y: (90, 90, 100))
+    proc = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "rust_engine_mcp.cli",
+            "pixel-conclude",
+            "--image",
+            str(image),
+            "--kind",
+            "ui",
+            "--out",
+            str(tmp_path / "pkg"),
+        ],
+        cwd=repo_root() / "tools/mcp/python",
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    assert proc.returncode == 0, proc.stderr or proc.stdout
+    body = json.loads(proc.stdout)
+    assert body["verdict"] == "green"
+    assert body["kind"] == "ui"
+    assert Path(body["matrix"]).name == "pixel_matrix_ui.json"
