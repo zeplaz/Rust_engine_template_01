@@ -1264,6 +1264,7 @@ def micro_tool_help() -> str:
                 "validate-report <cargo|bevy|mcp_spec|mcp_job|asset_glb|tile_batch|effect_spec> [path]",
                 "effect-pack <spec.json>",
                 "effect-promote <spec.json> [--phase pack|promote|full] [--batch-id X] [--force]",
+                "effect-chain-smoke [--witness]",
                 "artist-vfx-pipeline-witness",
                 "tile-atlas-pack <png_folder> [-pk]",
                 "lod0-batch-run --batch kit_lod0_003 --phase geometry",
