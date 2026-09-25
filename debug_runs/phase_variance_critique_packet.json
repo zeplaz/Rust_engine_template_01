@@ -1,0 +1,103 @@
+{
+  "schema": "phase_variance_critique_packet_v1",
+  "id": "PHASE-VARIANCE-CRITIQUE",
+  "agent": "planner",
+  "date": "2026-09-25",
+  "repo": "C:\\dev\\github\\Rust_engine_template_01",
+  "branch": "master",
+  "green": false,
+  "pixel_regression_green": false,
+  "scope": "critique_gate_not_runtime",
+  "read_before_code": true,
+  "not_a_program": true,
+  "no_new_programs": true,
+  "sole_place_funnel": "CommitConstructionSiteEvent",
+  "tool_source": "ActiveBuildTool",
+  "queue_into_funnel": "PendingConstructionQueue",
+  "procedure": [
+    "observe_phase",
+    "name_the_lie",
+    "one_owner",
+    "one_fix",
+    "witness"
+  ],
+  "response_doc": "src/dev/design_phase_variance_response_v1.md",
+  "sibling_lanes_do_not_edit": {
+    "5273fb2c": "place-feel HUD and player ghost presentation",
+    "944715db": "haul-route and AI place-intent draw; follow ai_intent_contract; do not add a second commit path"
+  },
+  "authority": {
+    "player_ghost": "BuildGhostState — construction input only; preview never mutates gameplay",
+    "commit": "CommitConstructionSiteEvent spawns ConstructionSite at SiteConstructionPhase::Planned",
+    "committed_pixels": "phase_visual egui AND site_phase_tile_instances GPU; not the ghost",
+    "player_footprint_draw": "ConstructionVisualRequests.footprint_tiles filled by sync_footprint_visual_requests after clear_construction_visual_requests",
+    "catalog_mesh": "ProceduralModuleRegistry best-tier row; atlas stamp allowed only for DevelopmentTier::Production"
+  },
+  "variances": [
+    {
+      "id": "PV-GHOST-COMMIT-PHASE",
+      "observe_phase": "Three clocks share a map cell. (1) Player ghost is BuildPlacementMode Place|Adjust in BuildGhostState — it has no SiteConstructionPhase. (2) Commit sets ConstructionSite.phase = Planned (strategic/site/systems.rs). (3) Occupied cells then paint as phase tiles: egui phase_color in phase_visual.rs, and the same cell again as TileDebugInstance.lod = phase_lod 0..9 with CONSTRUCTION_SITE.",
+      "lie": "The click flash is the committed site. footprint_place_settle_color is documented as the Planned family (#6490DC-class blue, rgba 100,144,220,200) next to Planned phase paint (100,160,220,200). Operational green (70,170,95) sits next to a valid ghost (48,140,72). GPU stores construction phase in the lod slot, so Planned reads as lod 0. When construction_phase_on_instanced_path is true the egui painter returns early — two encodings, one of them silent. build_footprint_validity_overlay_egui adds a third label on the same origin.",
+      "owner": "@coder — src/construction visual_authority + phase_visual + site_phase_tile_instances. One painter owner. @designer (5273fb2c) may change chrome of the player ghost and must not add a fourth fill.",
+      "one_fix": "One token table. Ghost fill stays valid/risky/invalid and is absent after commit. Committed phase uses phase_color only, and not through TileDebugInstance.lod. Delete the lod smuggle by writing phase on the scaffold's flags channel that already exists (CONSTRUCTION_SITE), or stop the GPU path until overlay_matrix.construction_phase is the only consumer named by CONSTRUCTION_PHASE_TILE_SCAFFOLD. Do not add a new overlay plugin.",
+      "witness": "debug_runs/construction_stage_live.json may stay schema-green. It does not prove these pixels. A later witness must record ghost_fill != planned_fill and phase_lod_slot_unused. This packet is not that witness.",
+      "forbidden": ["new ghost entity", "second egui painter", "writing SiteConstructionPhase from the ghost system"]
+    },
+    {
+      "id": "PV-LOD0-VS-PRODUCTION",
+      "observe_phase": "Live assets/configs/buildings/_module_index.json and _module_index.ron: 54 development_tier=production, 0 lod0, 0 smoke (grep 2026-09-25). DevelopmentTier::atlas_runtime_stamp_allowed is Production only. prefer_stylepack_tier still returns lod0 when no production row exists, and visible_in_stylepack is true for lod0 (only smoke is hidden). Untracked assets/archive/kit_lod0_twins_retired_2026-09 and kit_greybox_smoke_retired_2026-09 sit on disk outside the index. parametric_commit.rs still names BUILD-READ-VISUAL-001 as a grammar-to-lod0 extract. plan_program_registry_v1.md still tells agents not to re-litigate '30 prod / 50 lod0 / 31 smoke'.",
+      "lie": "A closed kit program and a green visual witness describe a lod0 city. The catalog the game loads is 54 production rows. The code will show a lod0 GLB again the moment a kit_lod0 batch_id re-enters the index, and the comment on the visual witness still calls that success.",
+      "owner": "@designer-mcp owns what is allowed in the module index. @coder owns prefer_stylepack_tier / visible_in_stylepack. Do not open a kit program.",
+      "one_fix": "Stamp and assembly visibility match atlas_runtime_stamp_allowed: production or nothing. Lod0 and smoke stay in archive and in rejected index rows. Correct the registry sentence that still quotes 30/50/31. Rewrite the BUILD-READ-VISUAL-001 checklist line so a green witness names the glb tier actually assembled.",
+      "witness": "Count development_tier on _module_index.ron before claiming kit phase. build_read_visual_001_witness_green is lib-green until it records source_tier and a pixel. Greybox archive GLBs are not a runtime proof.",
+      "forbidden": ["re-promote archived lod0 into the player path", "new lod program", "treating registry doc counts as live"]
+    },
+    {
+      "id": "PV-WITNESS-VS-PIXELS",
+      "observe_phase": "WIT-PIXELS-DISHONEST (witness_honesty.py, commit 3f1ec8b1) fails only when green is true AND (pixel_regression_green is False OR lod_chrome_leak is true). A missing pixel field does not fail. proposal_ghost_witness_green builds an App, enqueues one GrowthProposal, and asserts GrowthProposalGhostState.active.len()==1 — it never calls the draw system. growth_approve_execute_pipeline_witness_green asserts PendingConstructionQueue length. construction phase-2 board green is a counter in a witness resource.",
+      "lie": "Lib length == 1 is called ghost-green. Schema-green and board-green are called the city. The honesty rule lets every visual witness omit pixels and stay green. That is how phase variance survives review.",
+      "owner": "@coder-mcp — the existing witness_honesty rule. Do not add a second honesty program.",
+      "one_fix": "On any witness whose claim is a pixel (ghost, phase tile, kit, icon, haul line), green requires pixel_regression_green present and true, and lod_chrome_leak absent. Missing field fails the same rule. Until that lands, agents set green false on visual claims. Do not mint a new validator crate.",
+      "witness": "tools/mcp/schemas/witness_integrity_rules_v1.json rule WIT-PIXELS-DISHONEST. This packet sets green false and pixel_regression_green false on purpose.",
+      "forbidden": ["queue done on proposal_ghost_witness_green", "new witness family for this critique"]
+    },
+    {
+      "id": "PV-AI-INTENT-VS-PLAYER-GHOST",
+      "observe_phase": "Player footprint requests are cleared and refilled in the construction Update chain (clear_construction_visual_requests then sync_footprint_visual_requests). Growth proposals copy into GrowthProposalGhostState and push_proposal_ghosts_to_visual_requests appends FootprintTileRequest color_kind=Risky weight 0.45 into that same vec. Settlement runs that push in its own Update chain after InfrastructureSiteSet::Planning, with no order edge against the construction clear. Ambiguity detection is off. Sibling agent 944715db may add haul-route and AI intent draw in the economy lane.",
+      "lie": "An uncommitted AI proposal paints with the player risky-ghost token, into the player buffer, on a schedule that either wipes it, stacks it on the cursor ghost, or shows it as the player's placement. A haul line drawn as PathLineRequest with VisualPathKind Road|Rail is a road the player did not place.",
+      "owner": "Draw contract owner for the illegal append already in tree: src/strategic/settlement/policy.rs. Sibling 944715db may add pixels only inside the contract below. Commit owner stays strategic site commit. Do not split ownership across a new marker resource that also commits.",
+      "one_fix": "Stop appending FootprintTileRequest from proposals. AI markers and haul polylines use a draw list that construction clear() does not own and that does not reuse ghost_visual valid/risky/invalid, Planned blue, or road_segment_color. See ai_intent_contract.",
+      "witness": "proposal_ghost_witness_green does not cover this. A later note must show player footprint_tiles contain no proposal anchors, and CommitConstructionSiteEvent count unchanged by the draw system.",
+      "forbidden": ["second place funnel", "writing BuildGhostState or ActiveBuildTool from AI", "editing 944715db's in-flight draw to 'share' footprint_tiles"]
+    },
+    {
+      "id": "PV-HUD-ICON-VS-FOOTPRINT",
+      "observe_phase": "HUD chrome uses density.icon_size 16px (gui/style/density.rs) and a power icon atlas drawn as labeled egui rows. The world ghost size is the catalog footprint in tiles, projected by tile_screen_extent from the live camera. Macro band sync_strategic_icon_instances_scaffold pushes one StrategicIconInstance at world (0,0), size 12, whenever building_visual_simplified or the harness probe is on. Module grid_units on a corner piece are not the building footprint.",
+      "lie": "The button is the building. A 16px glyph and a size-12 icon at the origin claim a presence the SiteFootprint does not have. Players read the icon's pixel box as the tiles they are about to lock.",
+      "owner": "@designer for chrome (5273fb2c place-feel). World occupancy owner is the catalog FootprintMatrix copied onto BuildGhostState.footprint at tool arm. strategic_icon_instances scaffold is @coder render, and it must not become a second footprint.",
+      "one_fix": "Icon pixel size stays chrome. The map ghost and the commit use the same footprint width×depth from the armed building intent. The macro scaffold does not spawn a stand-in at the origin; it reads committed site positions or it draws nothing. Do not scale world tiles to icon_size.",
+      "witness": "ConstructionPlacementDebugProbe already budgets pick delta and ghost screen delta. A footprint witness compares ghost tile count to catalog occupied cells, not to icon_size. Scaffold instance_count at Vec2::ZERO is not a building count.",
+      "forbidden": ["icon atlas as placement authority", "new HUD place tool"]
+    }
+  ],
+  "ai_intent_contract": {
+    "audience": "944715db and any later logistics or growth draw",
+    "may_draw": [
+      "Haul polylines that read freight edges already solved by the logistics owner",
+      "A non-filled marker on a GrowthProposal anchor (dash, tick, or label) while the proposal is uncommitted"
+    ],
+    "must_not": [
+      "Write BuildGhostState, ActiveBuildTool, or BuildPlacementPreview",
+      "Append to ConstructionVisualRequests.footprint_tiles, paths, zone_tiles, or corridor_paths",
+      "Reuse FootprintTileColorKind, footprint_valid/risky/invalid colors, footprint_place_settle_color, phase_color, or road_segment_color / road_committed_color",
+      "Emit CommitConstructionSiteEvent",
+      "Push PendingConstructionQueue from a draw system",
+      "Spawn ConstructionSite, PlannedSite, or a road/rail entity",
+      "Encode intent phase in TileDebugInstance.lod"
+    ],
+    "commit_if_ever": "GrowthProposal already enters PendingConstructionQueue as PendingEntryKind::BuildSite (approve_growth_proposal_into_pending). That queue is the existing door into CommitConstructionSiteEvent. Draw code does not call it.",
+    "schedule": "Marker draw runs in presentation after sim snapshot. It does not interleave with clear_construction_visual_requests. If the marker shares a resource with the player ghost, it is the wrong resource.",
+    "player_precedence": "Where a player ghost tile and an AI anchor overlap, the player ghost is the only filled cell. The AI mark hides or drops to a corner tick outside the cell fill."
+  },
+  "reflection_gate": "An agent that adds a painter, a kit row, a green witness, or a place path without walking procedure[] on the matching variance id is ignoring this packet."
+}
