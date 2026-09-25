@@ -230,8 +230,10 @@
     {
       "id": "PCI-27",
       "theme": "mcp",
-      "status": "ready",
+      "status": "done",
       "goal": "CI does not yet run the effect-chain smoke",
+      "note": "ci.yml runs pytest test_effect_preview_capture with a two-minute timeout, then effect-chain-smoke. Local measure 4 passed in 0.33s, so the smoke step is allowed. No cron. No --witness. force stays false.",
+      "witness": ".github/workflows/ci.yml",
       "unblock_when": "Workflow step added only if pytest test_effect_preview_capture stays under two minutes"
     },
     {
