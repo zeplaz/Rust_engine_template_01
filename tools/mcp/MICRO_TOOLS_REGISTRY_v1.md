@@ -47,6 +47,7 @@ cross-agent handoffs as a **Δ-handoff table** (lossless, `$REPORT W7`); deep di
 | `promote <job_id> [--no-register]` | `promote_staging_module` | Promote; auto-registers unless `--no-register` |
 | — | `geometry_operations` | List bpy operation ids |
 | — | `micro_tool_help` | CLI help JSON |
+| `pixel-conclude --image <png> --kind gui\|ui\|world\|art` | — (`pixel_pipeline.pixel_conclude`) | Deterministic k-means + histogram mean-shift, label map, matrix JSON, verdict |
 
 ## Tier 1a — agent queue + token briefs (orchestration)
 
