@@ -34,6 +34,29 @@ fn collect_rs_files(dir: &Path, out: &mut Vec<PathBuf>) {
     }
 }
 
+/// PCI-32 — `sync_shared_overlay_from_simulation` stays on Update, after the sim
+/// snapshot extract, inside `FireVisualFrameSet::BuildProfiles`, with one overlay writer.
+#[must_use]
+pub fn pci_32_fire_heat_sync_schedule_green() -> bool {
+    const SRC: &str = include_str!("../render/extraction/fire_visual_extract.rs");
+    const EDGE: &str =
+        "sync_shared_overlay_from_simulation.after(extract_fire_simulation_snapshot)";
+    let Some(edge_at) = SRC.find(EDGE) else {
+        return false;
+    };
+    if SRC.matches(EDGE).count() != 1 {
+        return false;
+    }
+    let tail = &SRC[edge_at..];
+    let Some(set_rel) = tail.find(".in_set(FireVisualFrameSet::BuildProfiles)") else {
+        return false;
+    };
+    let between = &tail[..set_rel];
+    between.contains(".chain()")
+        && !between.contains("add_systems")
+        && vss_t3_overlay_single_writer_audit_green()
+}
+
 /// Production `ResMut<SharedOverlayFieldBuffers>` must live only in fire extract sync (VT-4).
 #[must_use]
 pub fn vss_t3_overlay_single_writer_audit_green() -> bool {
@@ -242,6 +265,14 @@ pub fn refresh_sim_effect_fire_consumer_live_witness() -> bool {
 mod tests {
     use super::*;
     use crate::dev::debug_run_envelope::refresh_agent_debug_index;
+
+    #[test]
+    fn pci_32_fire_heat_sync_follows_extract_in_build_profiles() {
+        assert!(
+            pci_32_fire_heat_sync_schedule_green(),
+            "fire heat sync must stay after extract_fire_simulation_snapshot in FireVisualFrameSet::BuildProfiles with one overlay writer"
+        );
+    }
 
     #[test]
     fn vss_t3_002_overlay_single_writer_invariant() {

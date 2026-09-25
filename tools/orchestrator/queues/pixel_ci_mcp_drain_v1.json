@@ -257,10 +257,10 @@
     {
       "id": "PCI-32",
       "theme": "logic",
-      "status": "ready",
+      "status": "done",
       "goal": "Lock fire_heat sync in the Update schedule",
-      "note": "sync_shared_overlay_from_simulation runs after extract_fire_simulation_snapshot in FireVisualFrameSet::BuildProfiles",
-      "unblock_when": "Add a lib test that the schedule edge stays, without a second overlay writer"
+      "note": "pci_32_fire_heat_sync_schedule_green locks sync_shared_overlay_from_simulation.after(extract_fire_simulation_snapshot) on the BuildProfiles chain and reuses the sole ResMut overlay writer audit.",
+      "witness": "src/dev/vss_t3_overlay_authority_proof.rs"
     },
     {
       "id": "PCI-33",
