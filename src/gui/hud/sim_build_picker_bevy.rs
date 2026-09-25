@@ -28,6 +28,11 @@ use crate::gui::UiPalette;
 /// When true, Simulation uses Bevy picker and skips egui Area draw.
 pub const SIM_BUILD_PICKER_USE_BEVY: bool = true;
 
+/// Catalog row hit target — `design_build_place_feel_v1.md`.
+pub const BUILD_PICKER_ROW_MIN_H_PX: f32 = 40.0;
+pub const BUILD_PICKER_CLOSE_PX: f32 = 40.0;
+pub const BUILD_PICKER_ROW_FONT_PX: f32 = 13.0;
+
 #[derive(Component)]
 pub struct SimBuildPickerRoot;
 
@@ -108,8 +113,8 @@ pub fn spawn_sim_build_picker_bevy(
                 hdr.spawn((
                     Button,
                     Node {
-                        width: Val::Px(36.0),
-                        height: Val::Px(36.0),
+                        width: Val::Px(BUILD_PICKER_CLOSE_PX),
+                        height: Val::Px(BUILD_PICKER_CLOSE_PX),
                         justify_content: JustifyContent::Center,
                         align_items: AlignItems::Center,
                         border: UiRect::all(Val::Px(1.0)),
@@ -365,7 +370,7 @@ pub fn rebuild_sim_build_picker_bevy_body(
                 Button,
                 Node {
                     width: Val::Percent(100.0),
-                    min_height: Val::Px(32.0),
+                    min_height: Val::Px(BUILD_PICKER_ROW_MIN_H_PX),
                     padding: UiRect::axes(Val::Px(8.0), Val::Px(6.0)),
                     border: UiRect::all(Val::Px(1.0)),
                     justify_content: JustifyContent::FlexStart,
@@ -379,7 +384,7 @@ pub fn rebuild_sim_build_picker_bevy_body(
             .with_children(|btn| {
                 btn.spawn((
                     Text::new(label),
-                    TextFont::from_font_size(12.0).with_font(font.clone()),
+                    TextFont::from_font_size(BUILD_PICKER_ROW_FONT_PX).with_font(font.clone()),
                     TextColor(palette.bevy_primary_text()),
                 ));
             });

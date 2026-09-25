@@ -54,43 +54,34 @@ fn lerp_u8(a: u8, b: u8, t: f32) -> u8 {
     (a as f32 + (b as f32 - a as f32) * t).round().clamp(0.0, 255.0) as u8
 }
 
-/// Fill color at normalized pulse progress `t` (0..1), after ease-out.
+/// Wall-clock fraction that holds the locked valid fill before the Planned settle.
+/// Charter: `design_build_place_feel_v1.md` — no alpha punch.
+pub const PLACE_FEEDBACK_LOCK_HOLD_T: f32 = 0.62;
+
+/// Fill color at normalized pulse progress `t` (0..1).
 ///
-/// t≈0: valid fill · early alpha punch ×1.15 · after 0.45: crossfade → Planned settle.
+/// Until [`PLACE_FEEDBACK_LOCK_HOLD_T`]: valid fill (locked footprint).
+/// Tail: ease-out cubic crossfade → Planned settle. Alpha multiplier is 1.0.
 #[must_use]
 pub fn place_feedback_fill_at(t: f32) -> egui::Color32 {
     let t = t.clamp(0.0, 1.0);
-    let e = ease_out_cubic(t);
     // Unmultiplied RGBA — do not read Color32.r/g/b (premultiplied storage).
     let valid = [48_u8, 140, 72, 220];
     let settle = [100_u8, 144, 220, 200];
 
-    let punch_end = 0.45;
-    let alpha_mul = if e < punch_end {
-        let u = e / punch_end;
-        let peak_at = 0.35;
-        if u <= peak_at {
-            1.0 + 0.15 * (u / peak_at)
-        } else {
-            1.15 + (1.0 - 1.15) * ((u - peak_at) / (1.0 - peak_at))
-        }
-    } else {
-        1.0
-    };
-
-    let hue_blend = if e <= punch_end {
+    let hue_blend = if t <= PLACE_FEEDBACK_LOCK_HOLD_T {
         0.0
     } else {
-        ((e - punch_end) / (1.0 - punch_end)).clamp(0.0, 1.0)
+        let u = ((t - PLACE_FEEDBACK_LOCK_HOLD_T) / (1.0 - PLACE_FEEDBACK_LOCK_HOLD_T))
+            .clamp(0.0, 1.0);
+        ease_out_cubic(u)
     };
-    let mut rgba = [
+    egui::Color32::from_rgba_unmultiplied(
         lerp_u8(valid[0], settle[0], hue_blend),
         lerp_u8(valid[1], settle[1], hue_blend),
         lerp_u8(valid[2], settle[2], hue_blend),
         lerp_u8(valid[3], settle[3], hue_blend),
-    ];
-    rgba[3] = ((rgba[3] as f32) * alpha_mul).round().clamp(0.0, 255.0) as u8;
-    egui::Color32::from_rgba_unmultiplied(rgba[0], rgba[1], rgba[2], rgba[3])
+    )
 }
 
 /// Disposable settle pulse — sole writer of place-feedback footprint overlays.
@@ -222,10 +213,12 @@ pub fn refresh_des_place_feedback_anim_witness() -> bool {
         "impl_wired": impl_wired,
         "motion": {
             "duration_ms": 280,
-            "curve": "ease_out_cubic",
-            "alpha_punch_peak": 1.15,
+            "curve": "ease_out_cubic_on_settle_tail",
+            "lock_hold_until_raw_t": 0.62,
+            "alpha_punch_peak": 1.0,
             "settle_hue_family": "phase_planned",
-            "forbidden": ["white_flash", "camera_nudge", "parallel_extract", "second_ghost_entity"]
+            "feel_charter": "src/dev/design_build_place_feel_v1.md",
+            "forbidden": ["white_flash", "alpha_punch", "camera_nudge", "parallel_extract", "second_ghost_entity"]
         },
         "tokens": {
             "start": "ghost_visual::footprint_valid_color",
@@ -298,6 +291,16 @@ mod tests {
         let s = footprint_place_settle_color();
         assert_eq!(place_feedback_fill_at(0.0), v);
         assert_eq!(place_feedback_fill_at(1.0), s);
+        assert_eq!(place_feedback_fill_at(PLACE_FEEDBACK_LOCK_HOLD_T), v);
+        let cap = v.a().max(s.a());
+        for i in 0..=16 {
+            assert!(place_feedback_fill_at(i as f32 / 16.0).a() <= cap);
+        }
+        assert_eq!(super::super::ghost_visual::footprint_lock_ring_stroke_px(), 2.0);
+        assert_eq!(
+            super::super::ghost_visual::footprint_lock_ring_color().a(),
+            230
+        );
     }
 
     #[test]

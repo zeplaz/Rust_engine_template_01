@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/des_place_feedback_anim_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_des_place_feedback_anim_witness",
-    "written_at_epoch_secs": 1790271958
+    "written_at_epoch_secs": 1790313305
   },
   "charter_on_disk": true,
   "charter_path": "src/dev/design_place_feedback_anim_v1.md",
@@ -87,15 +87,18 @@
     "no_parallel_extract"
   ],
   "motion": {
-    "alpha_punch_peak": 1.15,
-    "curve": "ease_out_cubic",
+    "alpha_punch_peak": 1.0,
+    "curve": "ease_out_cubic_on_settle_tail",
     "duration_ms": 280,
+    "feel_charter": "src/dev/design_build_place_feel_v1.md",
     "forbidden": [
       "white_flash",
+      "alpha_punch",
       "camera_nudge",
       "parallel_extract",
       "second_ghost_entity"
     ],
+    "lock_hold_until_raw_t": 0.62,
     "settle_hue_family": "phase_planned"
   },
   "note_counters": "AtomicU32 PLACE_FEEDBACK_STARTS/COMPLETES — starts on arm, completes on 280ms finish; abort on tool exit does not complete",

@@ -1284,6 +1284,9 @@ fn sync_context_tray_visibility_system(
     tray: Res<ContextTrayState>,
     live: Option<Res<HudInfoLiveData>>,
     player_log: Option<Res<crate::sim::effects::PlayerEventLog>>,
+    tool: Option<Res<crate::construction::ActiveBuildTool>>,
+    ghost: Option<Res<crate::construction::BuildGhostState>>,
+    path_feedback: Option<Res<crate::construction::ConstructionPathFeedback>>,
     mut q: ParamSet<(
         Query<(&mut Node, &mut Visibility), With<ContextTrayRoot>>,
         Query<&mut Visibility, With<ContextTrayBodyRoot>>,
@@ -1347,11 +1350,20 @@ fn sync_context_tray_visibility_system(
             ContextTrayTab::Build => {
                 let pending = d.pending_total;
                 let unapproved = d.pending_unapproved;
-                format!(
-                    "BUILD · queue {} ({} ready) · {}",
+                let subject = tool
+                    .as_deref()
+                    .and_then(super::contextual_tip::active_place_subject);
+                let locked = ghost.as_deref().is_some_and(|g| {
+                    g.placement_mode == crate::construction::BuildPlacementMode::Adjust
+                        && g.origin.is_some()
+                });
+                let snap = path_feedback.as_deref().and_then(|p| p.snap_hint.as_deref());
+                crate::gui::hud::sim_hud_copy::tray_build_status_line(
                     pending,
-                    pending.saturating_sub(unapproved),
-                    crate::gui::hud::sim_hud_copy::TRAY_PEEK_MODIFIERS
+                    unapproved,
+                    subject.as_deref(),
+                    locked,
+                    snap,
                 )
             }
             ContextTrayTab::Diagnostics => format!(

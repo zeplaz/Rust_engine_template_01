@@ -247,12 +247,19 @@ pub fn format_build_read_hud_v2_line(
         return truncate_build_read_line(&line);
     }
     let scale = format_build_scale(ghost);
+    let subject = super::contextual_tip::active_place_subject(tool);
     let mut line = if preview.report.allows_commit {
-        format!("BUILD  ·  Valid ✓  ·  {scale}")
+        match subject.as_deref() {
+            Some(name) => format!("BUILD  ·  {name}  ·  Valid ✓  ·  {scale}"),
+            None => format!("BUILD  ·  Valid ✓  ·  {scale}"),
+        }
     } else {
         let reason = validation_feedback::primary_validation_message(&preview.report)
             .unwrap_or_else(|| "blocked".into());
-        format!("BUILD  ·  Blocked ✗ · {reason}  ·  {scale}")
+        match subject.as_deref() {
+            Some(name) => format!("BUILD  ·  {name}  ·  Blocked ✗ · {reason}  ·  {scale}"),
+            None => format!("BUILD  ·  Blocked ✗ · {reason}  ·  {scale}"),
+        }
     };
     if let Some(phase) = active_corridor_phase_label(strip, book) {
         line.push_str(&format!("  ·  Corridor · phase {phase}"));
