@@ -657,7 +657,10 @@ def _cmd_ops_dashboard_refresh(args: argparse.Namespace) -> int:
     from rust_engine_mcp.ops_telemetry import write_ops_dashboard_witness
 
     hours = int(getattr(args, "window_hours", 168) or 168)
-    body = write_ops_dashboard_witness(window_hours=hours)
+    body = write_ops_dashboard_witness(
+        window_hours=hours,
+        refresh_ci=bool(getattr(args, "refresh_ci", False)),
+    )
     print(json.dumps(body, indent=2))
     return 0 if body.get("ok") else 1
 
@@ -2246,6 +2249,11 @@ def main(argv: list[str] | None = None) -> int:
 
     p = sub.add_parser("ops-dashboard-refresh")
     p.add_argument("--window-hours", type=int, default=168)
+    p.add_argument(
+        "--refresh-ci",
+        action="store_true",
+        help="Record the latest CI duration and lib-test outcome before writing the snapshot",
+    )
     p.set_defaults(func=_cmd_ops_dashboard_refresh)
 
     sub.add_parser("ops-process-scan").set_defaults(func=_cmd_ops_process_scan)

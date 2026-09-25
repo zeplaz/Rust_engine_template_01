@@ -18,6 +18,7 @@ from .paths import repo_root
 RUN_EVENTS_REL = "debug_runs/agent_ops/run_events.jsonl"
 AGENT_MARKERS_REL = "debug_runs/agent_ops/agent_markers.jsonl"
 OPS_DASHBOARD_REL = "debug_runs/agent_ops/ops_dashboard_live.json"
+CI_LIB_TEST_REL = "debug_runs/agent_ops/ci_lib_test_last.json"
 OPS_REPORT_REL = "debug_runs/agent_ops/ops_report_latest.json"
 UNIFIED_INDEX_REL = "debug_runs/unified_witness_index.json"
 VIEWPORT_DRIFT_REL = "debug_runs/viewport_drift.json"
@@ -351,6 +352,226 @@ def scan_drift_instances() -> dict[str, Any]:
     }
 
 
+_LIB_TEST_STEP_PREFIX = "cargo test (lib)"
+_CI_OUTCOMES = frozenset(
+    {"success", "failure", "cancelled", "skipped", "timed_out", "unknown"}
+)
+
+
+def _iso_duration_ms(start: Any, end: Any) -> int | None:
+    if not isinstance(start, str) or not isinstance(end, str):
+        return None
+    try:
+        started = datetime.fromisoformat(start.replace("Z", "+00:00"))
+        finished = datetime.fromisoformat(end.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    millis = int((finished - started).total_seconds() * 1000)
+    if millis < 0:
+        return None
+    return millis
+
+
+def _lib_test_step(job: dict[str, Any]) -> dict[str, Any] | None:
+    steps = job.get("steps")
+    if not isinstance(steps, list):
+        return None
+    for step in steps:
+        if not isinstance(step, dict):
+            continue
+        name = str(step.get("name") or "")
+        if name == _LIB_TEST_STEP_PREFIX or name.startswith(f"{_LIB_TEST_STEP_PREFIX} "):
+            return step
+    return None
+
+
+def summarize_github_ci_run(run: dict[str, Any], jobs: list[dict[str, Any]]) -> dict[str, Any]:
+    """Last CI wall time plus the cargo lib-test step outcome. No invented numbers."""
+    owner = None
+    for job in jobs:
+        if isinstance(job, dict) and _lib_test_step(job) is not None:
+            owner = job
+            break
+    if owner is None:
+        for job in jobs:
+            if isinstance(job, dict):
+                owner = job
+                break
+
+    step = _lib_test_step(owner) if owner else None
+    raw_outcome = str((step or {}).get("conclusion") or "").strip().lower()
+    lib_test_outcome = raw_outcome if raw_outcome in _CI_OUTCOMES else "unknown"
+    ci_duration_ms = None
+    if owner is not None:
+        ci_duration_ms = _iso_duration_ms(owner.get("started_at"), owner.get("completed_at"))
+    if ci_duration_ms is None:
+        ci_duration_ms = _iso_duration_ms(run.get("created_at"), run.get("updated_at"))
+
+    return {
+        "schema": "ops_ci_lib_test_v1",
+        "ok": lib_test_outcome != "unknown" and ci_duration_ms is not None,
+        "source": "github_actions",
+        "workflow": str(run.get("name") or "CI"),
+        "run_id": run.get("id"),
+        "head_sha": run.get("head_sha"),
+        "workflow_conclusion": run.get("conclusion"),
+        "run_url": run.get("html_url"),
+        "ci_duration_ms": ci_duration_ms,
+        "lib_test_name": _LIB_TEST_STEP_PREFIX,
+        "lib_test_outcome": lib_test_outcome,
+        "lib_test_duration_ms": _iso_duration_ms(
+            (step or {}).get("started_at"), (step or {}).get("completed_at")
+        )
+        if step
+        else None,
+    }
+
+
+def ci_lib_test_for_snapshot() -> dict[str, Any]:
+    """Read the last recorded CI slice. Absent record stays unknown — never a guessed duration."""
+    data = _load_json(repo_root() / CI_LIB_TEST_REL)
+    if not data or data.get("schema") != "ops_ci_lib_test_v1":
+        return {
+            "schema": "ops_ci_lib_test_v1",
+            "ok": False,
+            "source": "absent",
+            "ci_duration_ms": None,
+            "lib_test_outcome": "unknown",
+            "lib_test_duration_ms": None,
+        }
+    outcome = str(data.get("lib_test_outcome") or "unknown")
+    if outcome not in _CI_OUTCOMES:
+        outcome = "unknown"
+    body = {
+        "schema": "ops_ci_lib_test_v1",
+        "ok": bool(data.get("ok")),
+        "source": data.get("source") or "local_record",
+        "workflow": data.get("workflow"),
+        "run_id": data.get("run_id"),
+        "head_sha": data.get("head_sha"),
+        "workflow_conclusion": data.get("workflow_conclusion"),
+        "run_url": data.get("run_url"),
+        "ci_duration_ms": data.get("ci_duration_ms"),
+        "lib_test_name": data.get("lib_test_name") or _LIB_TEST_STEP_PREFIX,
+        "lib_test_outcome": outcome,
+        "lib_test_duration_ms": data.get("lib_test_duration_ms"),
+        "recorded_at": data.get("recorded_at"),
+    }
+    if data.get("note"):
+        body["note"] = data.get("note")
+    if data.get("skipped_newer_run_ids"):
+        body["skipped_newer_run_ids"] = data.get("skipped_newer_run_ids")
+    return body
+
+
+def _github_repo_slug() -> str | None:
+    try:
+        proc = subprocess.run(
+            ["git", "remote", "get-url", "origin"],
+            cwd=repo_root(),
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    except (OSError, subprocess.TimeoutExpired):
+        return None
+    url = (proc.stdout or "").strip()
+    if url.endswith(".git"):
+        url = url[:-4]
+    for prefix in ("https://github.com/", "git@github.com:"):
+        if url.startswith(prefix):
+            slug = url[len(prefix) :]
+            parts = slug.split("/")
+            if len(parts) == 2 and all(parts):
+                return slug
+    return None
+
+
+def refresh_ci_lib_test_record(*, timeout: float = 20.0) -> dict[str, Any]:
+    """Pull the latest CI run from the public Actions API and store it for the snapshot.
+
+    Failure leaves any previous record untouched. This is not a dashboard app.
+    """
+    import urllib.error
+    import urllib.request
+
+    slug = _github_repo_slug()
+    if not slug:
+        return {
+            "schema": "ops_ci_lib_test_v1",
+            "ok": False,
+            "source": "absent",
+            "ci_duration_ms": None,
+            "lib_test_outcome": "unknown",
+            "error": "origin remote is not a github.com slug",
+        }
+
+    def _get(url: str) -> dict[str, Any]:
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "rust-engine-ops-telemetry",
+                "Accept": "application/vnd.github+json",
+            },
+        )
+        with urllib.request.urlopen(req, timeout=timeout) as resp:
+            body = json.loads(resp.read().decode("utf-8"))
+        if not isinstance(body, dict):
+            raise ValueError(f"expected object from {url}")
+        return body
+
+    try:
+        runs = _get(
+            f"https://api.github.com/repos/{slug}/actions/workflows/ci.yml/runs?per_page=5"
+        )
+        workflow_runs = runs.get("workflow_runs")
+        if not isinstance(workflow_runs, list) or not workflow_runs:
+            raise ValueError("no CI workflow runs")
+        summary = None
+        skipped: list[Any] = []
+        for run in workflow_runs:
+            if not isinstance(run, dict) or not run.get("id"):
+                continue
+            jobs_body = _get(
+                f"https://api.github.com/repos/{slug}/actions/runs/{run['id']}/jobs?per_page=100"
+            )
+            jobs = jobs_body.get("jobs")
+            if not isinstance(jobs, list):
+                raise ValueError("CI jobs payload missing jobs[]")
+            candidate = summarize_github_ci_run(run, [j for j in jobs if isinstance(j, dict)])
+            if candidate.get("lib_test_outcome") != "unknown":
+                summary = candidate
+                break
+            skipped.append(run.get("id"))
+            if summary is None:
+                summary = candidate
+        if summary is None:
+            raise ValueError("no CI workflow runs")
+        if skipped and summary.get("run_id") not in skipped:
+            summary["skipped_newer_run_ids"] = skipped
+            summary["note"] = (
+                "Newer CI runs have no concluded cargo test (lib) step yet; "
+                "this record is the latest concluded lib-test outcome."
+            )
+    except (OSError, urllib.error.URLError, json.JSONDecodeError, ValueError, TimeoutError) as exc:
+        return {
+            "schema": "ops_ci_lib_test_v1",
+            "ok": False,
+            "source": "absent",
+            "ci_duration_ms": None,
+            "lib_test_outcome": "unknown",
+            "error": str(exc),
+        }
+
+    summary["recorded_at"] = datetime.now(timezone.utc).isoformat()
+    out = repo_root() / CI_LIB_TEST_REL
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(summary, indent=2) + "\n", encoding="utf-8")
+    summary["written"] = CI_LIB_TEST_REL
+    return summary
+
+
 def build_ops_dashboard(*, window_hours: int = 168) -> dict[str, Any]:
     """Unified oversight bundle for agents, Grafana Infinity, and local HTML dashboard."""
     run_rollup = scan_run_events(window_hours=window_hours)
@@ -412,6 +633,7 @@ def build_ops_dashboard(*, window_hours: int = 168) -> dict[str, Any]:
         "drift": drift,
         "slip_ups": slip_ups[:24],
         "slip_up_count": len(slip_ups),
+        "ci_lib_test": ci_lib_test_for_snapshot(),
         "program_summary": report.get("program_summary"),
         "delta_wf": (report.get("delta_wf") or [])[:8],
         "sources": {
@@ -420,6 +642,7 @@ def build_ops_dashboard(*, window_hours: int = 168) -> dict[str, Any]:
             "unified_index": UNIFIED_INDEX_REL,
             "triage_live": "debug_runs/agent_ops/triage_live.json",
             "prometheus": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom",
+            "ci_lib_test": CI_LIB_TEST_REL,
         },
         "grafana": {
             "panel_hints": [
@@ -429,6 +652,7 @@ def build_ops_dashboard(*, window_hours: int = 168) -> dict[str, Any]:
                 "drift.alert_count — gauge",
                 "run_events.by_agent — bar chart",
                 "metrics_tier1.crash_alert_count — DCC/crash gauge",
+                "ci_lib_test.ci_duration_ms / lib_test_outcome — last CI stat",
             ],
             "refresh_cli": "python -m rust_engine_mcp.cli ops-dashboard-refresh",
             "triage_dashboard": "tools/orchestrator/dashboard/grafana_triage_overview.json",
@@ -437,7 +661,9 @@ def build_ops_dashboard(*, window_hours: int = 168) -> dict[str, Any]:
     }
 
 
-def write_ops_dashboard_witness(*, window_hours: int = 168) -> dict[str, Any]:
+def write_ops_dashboard_witness(*, window_hours: int = 168, refresh_ci: bool = False) -> dict[str, Any]:
+    if refresh_ci:
+        refresh_ci_lib_test_record()
     body = build_ops_dashboard(window_hours=window_hours)
     out = repo_root() / OPS_DASHBOARD_REL
     out.parent.mkdir(parents=True, exist_ok=True)

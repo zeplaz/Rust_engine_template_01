@@ -1,0 +1,20 @@
+{
+  "schema": "ops_ci_lib_test_v1",
+  "ok": true,
+  "source": "github_actions",
+  "workflow": "CI",
+  "run_id": 36049220492,
+  "head_sha": "0faa8bb3b6e1badf493c38bbed29ade0b3956e9e",
+  "workflow_conclusion": "cancelled",
+  "run_url": "https://github.com/zeplaz/Rust_engine_template_01/actions/runs/36049220492",
+  "ci_duration_ms": 21651000,
+  "lib_test_name": "cargo test (lib)",
+  "lib_test_outcome": "cancelled",
+  "lib_test_duration_ms": 19999000,
+  "skipped_newer_run_ids": [
+    36096840044,
+    36056583798
+  ],
+  "note": "Newer CI runs have no concluded cargo test (lib) step yet; this record is the latest concluded lib-test outcome.",
+  "recorded_at": "2026-09-25T05:53:55.086944+00:00"
+}

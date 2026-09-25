@@ -165,8 +165,10 @@
     {
       "id": "PCI-19",
       "theme": "pixel",
-      "status": "ready",
+      "status": "done",
       "goal": "Last CI duration and lib-test outcome in the ops snapshot",
+      "note": "ops_dashboard_v1.ci_lib_test reads debug_runs/agent_ops/ci_lib_test_last.json. Refresh with ops-dashboard-refresh --refresh-ci. Latest concluded cargo test (lib) is run 36049220492: cancelled, job wall 21651000 ms, lib step 19999000 ms. Newer runs had no concluded lib step. No new web app.",
+      "witness": "debug_runs/agent_ops/ci_lib_test_last.json",
       "unblock_when": "Snapshot writer may add the fields; do not invent a new web app"
     },
     {
