@@ -66,9 +66,9 @@
     {
       "rule_id": "WIT-PIXELS-DISHONEST",
       "severity": "error",
-      "description": "Green witness contradicts an explicit pixel-regression or LOD-chrome verdict",
-      "when_fail": "green==true ∧ (pixel_regression_green==false ∨ lod_chrome_leak==true)",
-      "fix_hint": "Set green:false until pixel_regression_green is true and lod_chrome_leak is absent"
+      "description": "Green product-pixel witness missing or contradicting a pixel verdict",
+      "when_fail": "green==true ∧ (pixel_regression_green==false ∨ lod_chrome_leak==true ∨ (pixel-claim scope ∧ pixel_regression_green absent) ∨ (product_vfx_claim==true ∧ particles_rendered absent)). Scope = product_vfx_claim==true ∨ pixel_regression_green key present ∨ path in pixel_regression_required_paths. product_vfx_claim==false and construction/grammar witnesses are out of scope.",
+      "fix_hint": "Set green:false until pixel_regression_green is present and true, lod_chrome_leak is absent, and a product_vfx_claim includes particles_rendered"
     },
     {
       "rule_id": "WIT-ENV-BOOTSTRAP-ONLY",
@@ -192,6 +192,9 @@
       "id_field": "id",
       "rows_path": "rows"
     }
+  ],
+  "pixel_regression_required_paths": [
+    "debug_runs/product_fire_vfx_live.json"
   ],
   "live_sim_required_paths": [
     "debug_runs/veg_runtime_proof_live.json",

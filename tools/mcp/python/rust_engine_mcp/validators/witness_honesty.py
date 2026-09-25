@@ -183,6 +183,49 @@ def _keyframe_for_batch(root: Path, batch_id: str) -> Path | None:
     return None
 
 
+def _pixel_claim_scope(data: dict[str, Any], witness_rel: str, catalog: dict[str, Any]) -> bool:
+    """Pixel fields are required only when this witness already claims product pixels.
+
+    Out of scope: construction, grammar, and witnesses that set product_vfx_claim false
+    (ES-7 / ecology). In scope: product_vfx_claim true, an explicit pixel_regression_green
+    key, or a path on pixel_regression_required_paths.
+    """
+    if data.get("product_vfx_claim") is True:
+        return True
+    if "pixel_regression_green" in data:
+        return True
+    required = {
+        str(p).replace("\\", "/")
+        for p in (catalog.get("pixel_regression_required_paths") or [])
+    }
+    return str(witness_rel).replace("\\", "/") in required
+
+
+def _pixels_dishonest(data: dict[str, Any], witness_rel: str, catalog: dict[str, Any]) -> bool:
+    if data.get("pixel_regression_green") is False or data.get("lod_chrome_leak") is True:
+        return True
+    if not _pixel_claim_scope(data, witness_rel, catalog):
+        return False
+    if "pixel_regression_green" not in data:
+        return True
+    # particles_rendered is the product-VFX pixel count, not a general regression flag.
+    return data.get("product_vfx_claim") is True and "particles_rendered" not in data
+
+
+def _pixels_dishonest_hint(data: dict[str, Any], witness_rel: str, catalog: dict[str, Any]) -> str:
+    reasons: list[str] = []
+    if data.get("pixel_regression_green") is False:
+        reasons.append("pixel_regression_green is false")
+    elif _pixel_claim_scope(data, witness_rel, catalog) and "pixel_regression_green" not in data:
+        reasons.append("pixel_regression_green is missing")
+    if data.get("lod_chrome_leak") is True:
+        reasons.append("lod_chrome_leak is true")
+    if data.get("product_vfx_claim") is True and "particles_rendered" not in data:
+        reasons.append("particles_rendered is missing")
+    detail = " or ".join(reasons) if reasons else "pixel verdict is absent or false"
+    return f"green=true but {detail}"
+
+
 def evaluate_witness_honesty_rules(
     data: dict[str, Any],
     *,
@@ -242,13 +285,14 @@ def evaluate_witness_honesty_rules(
             "green=true with product_vfx_claim=true but particles_rendered=false",
         )
 
-    # WIT-PIXELS-DISHONEST — green must not outrun an explicit pixel verdict.
-    if data.get("green") is True and (
-        data.get("pixel_regression_green") is False or data.get("lod_chrome_leak") is True
-    ):
+    # WIT-PIXELS-DISHONEST — green must not outrun a pixel verdict.
+    # Missing pixel_regression_green / particles_rendered fails only in pixel-claim
+    # scope (product_vfx_claim, an explicit pixel_regression_green key, or the
+    # catalog required-path list). Construction and grammar witnesses omit both.
+    if data.get("green") is True and _pixels_dishonest(data, witness_rel, catalog):
         add(
             "WIT-PIXELS-DISHONEST",
-            "green=true but pixel_regression_green is false or lod_chrome_leak is true",
+            _pixels_dishonest_hint(data, witness_rel, catalog),
         )
 
     # WIT-TINY-PNG-PILOT

@@ -113,6 +113,74 @@ def test_product_vfx_and_pixel_regression_honesty() -> None:
     ok = evaluate_witness_honesty_rules(clean, witness_rel=rel, catalog=catalog, root=root)
     assert not any(i.symbol == "WIT-PIXELS-DISHONEST" for i in ok)
 
+    # Product-pixel claim: omitted fields fail. green:false does not.
+    omitted_pixel = {**meta, "green": True, "product_vfx_claim": True, "particles_rendered": True}
+    missing_pixel = evaluate_witness_honesty_rules(
+        omitted_pixel, witness_rel=rel, catalog=catalog, root=root
+    )
+    assert any(i.symbol == "WIT-PIXELS-DISHONEST" for i in missing_pixel)
+
+    omitted_particles = {
+        **meta,
+        "green": True,
+        "product_vfx_claim": True,
+        "pixel_regression_green": True,
+    }
+    missing_particles = evaluate_witness_honesty_rules(
+        omitted_particles, witness_rel=rel, catalog=catalog, root=root
+    )
+    assert any(i.symbol == "WIT-PIXELS-DISHONEST" for i in missing_particles)
+
+    both_present = {
+        **meta,
+        "green": True,
+        "product_vfx_claim": True,
+        "pixel_regression_green": True,
+        "particles_rendered": True,
+        "lod_chrome_leak": False,
+    }
+    honest_claim = evaluate_witness_honesty_rules(
+        both_present, witness_rel=rel, catalog=catalog, root=root
+    )
+    assert not any(i.symbol == "WIT-PIXELS-DISHONEST" for i in honest_claim)
+    assert not any(i.symbol == "WIT-PRODUCT-VFX-PARTICLES" for i in honest_claim)
+
+    not_yet_green = {**meta, "green": False, "product_vfx_claim": True}
+    held = evaluate_witness_honesty_rules(not_yet_green, witness_rel=rel, catalog=catalog, root=root)
+    assert not any(i.symbol == "WIT-PIXELS-DISHONEST" for i in held)
+
+    # Scoped non-claim (ecology / ES-7) and unrelated lanes omit the fields.
+    ecology = {**meta, "green": True, "product_vfx_claim": False}
+    ecology_ok = evaluate_witness_honesty_rules(
+        ecology, witness_rel="debug_runs/fire_ecology_live.json", catalog=catalog, root=root
+    )
+    assert not any(i.symbol == "WIT-PIXELS-DISHONEST" for i in ecology_ok)
+
+    construction = {**meta, "green": True}
+    construction_ok = evaluate_witness_honesty_rules(
+        construction,
+        witness_rel="debug_runs/construction_stage_live.json",
+        catalog=catalog,
+        root=root,
+    )
+    assert not any(i.symbol == "WIT-PIXELS-DISHONEST" for i in construction_ok)
+
+    grammar = {**meta, "green": True, "topology_tint_visible_chunks": 3}
+    grammar_ok = evaluate_witness_honesty_rules(
+        grammar,
+        witness_rel="debug_runs/landscape_grammar_lg4_preview_live.json",
+        catalog=catalog,
+        root=root,
+    )
+    assert not any(i.symbol == "WIT-PIXELS-DISHONEST" for i in grammar_ok)
+
+    # Required-path list: green without the key fails even if product_vfx_claim was stripped.
+    stripped = {**meta, "green": True}
+    required_fail = evaluate_witness_honesty_rules(
+        stripped, witness_rel=rel, catalog=catalog, root=root
+    )
+    assert any(i.symbol == "WIT-PIXELS-DISHONEST" for i in required_fail)
+
 
 def test_env_bootstrap_only_warning() -> None:
     catalog = load_witness_integrity_catalog()
