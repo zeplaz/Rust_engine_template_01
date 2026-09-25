@@ -5,8 +5,8 @@ Chain: EffectSpec → validate → preview-capture → honest_gate → promote.
 Isolated temp tree. Does not write the live registry or staging dirs.
 Does not schedule cron or a daemon. CI calls this smoke from
 .github/workflows/ci.yml only after test_effect_preview_capture stays
-under two minutes (PCI-27). force=True stays an operator decision (PCI-28);
-this smoke never forces.
+under two minutes (PCI-27). force=True remains the operator override
+for a pending production honest_gate (PCI-28); this smoke never forces.
 """
 
 from __future__ import annotations

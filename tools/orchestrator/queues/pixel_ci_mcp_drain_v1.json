@@ -239,8 +239,10 @@
     {
       "id": "PCI-28",
       "theme": "mcp",
-      "status": "ready",
+      "status": "done",
       "goal": "Promote can still be forced past a pending honest_gate",
+      "note": "force=True remains the operator override for a pending production honest_gate. It does not override dishonest_gate and does not mark the witness honest. Smoke tiers still promote pending without force. 12 passed in test_effect_promote + test_effect_preview_capture.",
+      "witness": "tools/mcp/python/tests/test_effect_promote.py",
       "unblock_when": "Decide whether effect_promote force=True remains an operator override"
     },
     {
