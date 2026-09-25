@@ -301,6 +301,14 @@ mod tests {
             super::super::ghost_visual::footprint_lock_ring_color().a(),
             230
         );
+        let locked = super::super::ghost_visual::footprint_lock_ring_stroke(true)
+            .expect("lock-ring token selectable without a window");
+        assert!((locked.width - 2.0).abs() < 1e-5);
+        assert_eq!(
+            locked.color,
+            super::super::ghost_visual::footprint_lock_ring_color()
+        );
+        assert!(super::super::ghost_visual::footprint_lock_ring_stroke(false).is_none());
     }
 
     #[test]
