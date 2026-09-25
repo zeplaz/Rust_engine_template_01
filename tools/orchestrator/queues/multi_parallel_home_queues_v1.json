@@ -643,10 +643,10 @@
       ],
       "home_queue": "multi_parallel_home_queues_v1.json",
       "program": "multi_parallel_tracks",
-      "note": "INTEL-OFFICER-001 ops-intel supervised cull 2026-06-20 \u00b7 contradiction",
-      "updated_at": "2026-06-20T21:18:19.561168+00:00",
+      "note": "PCI-05 2026-09-25: fire_ecology_live.json green (ember_events_emitted 1024). Replay gate moved to SIM-STEWARD-FIRE-REPLAY-001.",
+      "updated_at": "2026-09-25T05:40:00Z",
       "completed": "2026-06-21",
-      "witness_refresh": "2026-06-21T01:11:35Z"
+      "witness_refresh": "2026-09-25T05:40:00Z"
     },
     {
       "track": "T4",

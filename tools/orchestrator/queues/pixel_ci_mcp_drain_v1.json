@@ -50,9 +50,10 @@
     {
       "id": "PCI-05",
       "theme": "ci",
-      "status": "ready",
+      "status": "done",
       "goal": "Clear three known queue contradictions",
-      "note": "INTEL-OFFICER-001 contradiction notes in coder_vegetation_drain_queue.json, multi_parallel_tracks_dispatch_v1.json, multi_parallel_home_queues_v1.json",
+      "note": "VEG-F02 stays done on the green atlas witness with the snag cleared. SIM-STEWARD-FIRE-REGRESS-001 stays done on fire_ecology_live.json. The replay copies stay deferred as SIM-STEWARD-FIRE-REPLAY-001 because parity_green is false.",
+      "witness": "debug_runs/pci05_queue_contradiction_reconcile_live.json",
       "unblock_when": "Reconcile those three queue files against live witnesses before marking rows done"
     },
     {
