@@ -212,3 +212,48 @@ pub fn dispatch_freight_from_solver_system(
         });
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use std::path::Path;
+
+    /// PCI-34: `SiteStagingStock::try_debit` has one production caller.
+    #[test]
+    fn site_staging_try_debit_has_one_caller() {
+        let root = Path::new(env!("CARGO_MANIFEST_DIR")).join("src");
+        let needle = format!("staging.{}(", "try_debit");
+        let mut hits: Vec<String> = Vec::new();
+        fn walk(dir: &Path, needle: &str, hits: &mut Vec<String>) {
+            let Ok(rd) = std::fs::read_dir(dir) else {
+                return;
+            };
+            for ent in rd.flatten() {
+                let path = ent.path();
+                if path.is_dir() {
+                    walk(&path, needle, hits);
+                    continue;
+                }
+                if path.extension().and_then(|e| e.to_str()) != Some("rs") {
+                    continue;
+                }
+                let Ok(text) = std::fs::read_to_string(&path) else {
+                    continue;
+                };
+                if text.contains(needle) {
+                    hits.push(path.display().to_string().replace('\\', "/"));
+                }
+            }
+        }
+        walk(&root, &needle, &mut hits);
+        assert_eq!(
+            hits.len(),
+            1,
+            "expected one staging.try_debit call site, found {hits:?}"
+        );
+        assert!(
+            hits[0].ends_with("src/economy/logistics/propagation.rs"),
+            "sole debit caller drifted: {}",
+            hits[0]
+        );
+    }
+}
