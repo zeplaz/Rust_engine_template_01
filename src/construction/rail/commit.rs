@@ -4,12 +4,12 @@ use bevy::prelude::*;
 
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::junction::RailJunctionAuthority;
-use super::pathing::world_xy_to_tile;
-use super::placement::ActiveRailPlacement;
 use super::super::construction_pipeline::{
     ConstructionIntent, ConstructionPlanQueue, ConstructionType, ExecutedRoadNetwork,
 };
+use super::junction::RailJunctionAuthority;
+use super::pathing::world_xy_to_tile;
+use super::placement::ActiveRailPlacement;
 
 pub fn commit_rail_path_to_queue(
     placement: &mut ActiveRailPlacement,

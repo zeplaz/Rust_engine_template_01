@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import re
 from functools import lru_cache
 from pathlib import Path
 from typing import Any
@@ -33,6 +34,20 @@ def _binding_map(tree: dict[str, Any]) -> dict[str, str]:
     return out
 
 
+def _id_tokens(value: str) -> list[str]:
+    return [token for token in re.split(r"[^a-z0-9]+", value.lower()) if token]
+
+
+def _rule_matches(match: str, profile_id: str) -> bool:
+    """Whole tokens only — ``wood`` matches ``wood_siding``, not ``plywood``."""
+    needle = _id_tokens(match)
+    if not needle:
+        return False
+    tokens = _id_tokens(profile_id)
+    width = len(needle)
+    return any(tokens[i : i + width] == needle for i in range(len(tokens) - width + 1))
+
+
 def infer_category_from_tree(profile_id: str, tree: dict[str, Any] | None = None) -> str | None:
     """Resolve category_path via profile_bindings then infer_rules (highest priority first)."""
     if tree is None:
@@ -43,15 +58,13 @@ def infer_category_from_tree(profile_id: str, tree: dict[str, Any] | None = None
     bindings = _binding_map(tree)
     if pid in bindings:
         return bindings[pid]
-    pid_l = pid.lower()
     rules = sorted(
         (r for r in (tree.get("infer_rules") or []) if isinstance(r, dict) and r.get("match")),
         key=lambda r: int(r.get("priority") or 0),
         reverse=True,
     )
     for rule in rules:
-        match = str(rule.get("match") or "").lower()
-        if match and match in pid_l:
+        if _rule_matches(str(rule.get("match") or ""), pid):
             return str(rule.get("category_path") or "")
     return None
 
@@ -62,8 +75,27 @@ def tree_roots() -> list[dict[str, Any]]:
     return sorted(roots, key=lambda r: int(r.get("sort_order") or 0))
 
 
+def _label_at(nodes: list[Any], parts: list[str]) -> str | None:
+    if not parts:
+        return None
+    head, rest = parts[0], parts[1:]
+    for node in nodes:
+        if not isinstance(node, dict) or str(node.get("id")) != head:
+            continue
+        if not rest:
+            return str(node.get("label") or head)
+        nested = _label_at(list(node.get("children") or []), rest)
+        if nested:
+            return nested
+        return None
+    return None
+
+
 def category_label(path: str, tree: dict[str, Any] | None = None) -> str:
-    """Human label for a category path (e.g. industrial/steel → Steel)."""
+    """Human label for a category path (e.g. industrial/steel → Steel).
+
+    Walks each path segment. A later segment does not borrow a sibling label.
+    """
     if tree is None:
         tree = load_material_category_tree()
     if not path or path == "all":
@@ -71,16 +103,10 @@ def category_label(path: str, tree: dict[str, Any] | None = None) -> str:
     parts = [p.strip() for p in path.split("/") if p.strip()]
     if not parts:
         return path
-    leaf = parts[-1]
-    for root in tree.get("roots") or []:
-        if str(root.get("id")) == parts[0]:
-            if len(parts) == 1:
-                return str(root.get("label") or parts[0])
-            for child in root.get("children") or []:
-                if str(child.get("id")) == leaf:
-                    return str(child.get("label") or leaf)
-            return leaf.replace("_", " ").title()
-    return leaf.replace("_", " ").title()
+    found = _label_at(list(tree.get("roots") or []), parts)
+    if found:
+        return found
+    return parts[-1].replace("_", " ").title()
 
 
 def refresh_aps_mat_003_witness() -> bool:

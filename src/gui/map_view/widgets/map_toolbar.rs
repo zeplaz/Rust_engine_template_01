@@ -40,6 +40,7 @@ pub fn map_toolbar(
     let _ = config.show_generation_tools;
 }
 
+#[allow(dead_code)] // Called only from the retired world-preview egui toolbar.
 pub fn map_toolbar_preview_zoom(
     ui: &mut egui::Ui,
     viewport: &mut EditorViewport,

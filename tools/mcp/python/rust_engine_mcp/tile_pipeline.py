@@ -25,6 +25,17 @@ _MINIMAL_PNG = (
 )
 
 
+def _render_seed(render: dict[str, Any] | None) -> int:
+    """Absent seed keeps the historical fallback of 42. Zero stays zero."""
+    body = render or {}
+    if "seed" not in body or body.get("seed") is None:
+        return 42
+    raw = body.get("seed")
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("render.seed must be an integer")
+    return raw
+
+
 def light_setup_blend_path() -> Path:
     env = os.environ.get("RUST_ENGINE_TILE_LIGHT_BLEND")
     if env:
@@ -311,7 +322,7 @@ def _batch_assembly_blend(batch: dict[str, Any]) -> tuple[str | None, dict[str, 
     width = int(footprint.get("width") or 4)
     depth = int(footprint.get("depth") or 3)
     floors = int(footprint.get("floors") or 2)
-    seed = int(batch.get("render", {}).get("seed") or 42)
+    seed = _render_seed(batch.get("render") if isinstance(batch.get("render"), dict) else {})
 
     snap_path = ref.get("assembly_snapshot")
     if snap_path:
@@ -671,7 +682,7 @@ def tile_batch_run(tile_batch_path: str | Path) -> dict[str, Any]:
         width = int(footprint.get("width") or 4)
         depth = int(footprint.get("depth") or 3)
         floors = int(footprint.get("floors") or 2)
-        seed = int(batch.get("render", {}).get("seed") or 42)
+        seed = _render_seed(batch.get("render") if isinstance(batch.get("render"), dict) else {})
 
         snap_path = ref.get("assembly_snapshot")
         if snap_path:

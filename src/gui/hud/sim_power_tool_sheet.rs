@@ -23,6 +23,8 @@ use super::sim_hud_egui_theme::{
 };
 
 pub const POWER_TOOL_SHEET_W_PX: f32 = 300.0;
+/// Logical height of the Bevy power sheet, used by the pointer gate (not a second window).
+pub const POWER_TOOL_SHEET_BLOCK_H_PX: f32 = 260.0;
 
 #[derive(Resource, Debug, Clone, Default)]
 pub struct SimPowerToolSheetState {

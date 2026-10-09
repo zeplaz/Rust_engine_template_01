@@ -19,6 +19,9 @@ QUEUE_REGISTRY: dict[str, str] = {
     "phase4": "tools/orchestrator/queues/post_drain_phase4_queue.json",
     "power_ux": "tools/orchestrator/queues/power_grid_construction_ux_queue.json",
     "aps_presence": "tools/orchestrator/queues/aps_presence_correction_queue.json",
+    "landform_veg": "tools/orchestrator/queues/landform_veg_drain_v1.json",
+    "sim_fanout": "tools/orchestrator/queues/sim_feature_fanout_drain_v1.json",
+    "system_sweep": "tools/orchestrator/queues/system_sweep_drain_v1.json",
 }
 
 MULTI_PARALLEL_DISPATCH = "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json"

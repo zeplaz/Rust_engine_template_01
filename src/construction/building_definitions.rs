@@ -210,7 +210,10 @@ pub fn intent_from_archetype(
 }
 
 #[must_use]
-pub fn intent_from_apartment_form(form: ApartmentForm, registry: &BuildingDefinitionRegistry) -> BuildingIntentPreview {
+pub fn intent_from_apartment_form(
+    form: ApartmentForm,
+    registry: &BuildingDefinitionRegistry,
+) -> BuildingIntentPreview {
     let id = match form {
         ApartmentForm::Duplex => "builtin:duplex",
         ApartmentForm::Quadplex => "builtin:quadplex",
@@ -262,7 +265,10 @@ fn infer_archetype(raw: &BuildingDefinitionFile, name_lower: &str) -> SiteArchet
         || name_lower.contains("waterworks")
         || (name_lower.contains("water") && raw.produces_resources.is_empty());
     if water_utility
-        && raw.consumes_resources.iter().any(|c| c.eq_ignore_ascii_case("water"))
+        && raw
+            .consumes_resources
+            .iter()
+            .any(|c| c.eq_ignore_ascii_case("water"))
         && raw.power_consumption > 20.0
     {
         return SiteArchetype::WaterPlant;
@@ -318,7 +324,8 @@ fn file_to_definition(id: String, raw: BuildingDefinitionFile) -> BuildingDefini
         display_name,
         footprint: FootprintMatrix::from_size(w, d, true),
         construction_cost: raw.construction_cost.max(1),
-        construction_time_ticks: (raw.construction_cost / 10).max(30) + raw.building_height.saturating_mul(2),
+        construction_time_ticks: (raw.construction_cost / 10).max(30)
+            + raw.building_height.saturating_mul(2),
         power_consumption: raw.power_consumption,
         power_generation: raw.power_generation,
         workers_required: if raw.is_productive { 4 } else { 0 },
@@ -649,7 +656,9 @@ mod tests {
     fn governance_accepts_supply_chain_step() {
         let reg = load_building_definitions_from_dir(default_buildings_dir());
         assert!(
-            !reg.governance_violations.iter().any(|v| v.contains("aluminum_smelter1")),
+            !reg.governance_violations
+                .iter()
+                .any(|v| v.contains("aluminum_smelter1")),
             "smelter should have role: {:?}",
             reg.governance_violations
         );
@@ -681,7 +690,9 @@ mod tests {
         let reg = load_building_definitions_from_dir(default_buildings_dir());
         assert!(reg.by_id.contains_key("builtin:duplex"));
         if Path::new("assets/configs/buildings/concrete_basic_production_plant.json").exists() {
-            let def = reg.get("concrete_basic_production_plant").expect("plant def");
+            let def = reg
+                .get("concrete_basic_production_plant")
+                .expect("plant def");
             assert_eq!(def.footprint.width, 3);
             assert_eq!(def.site_archetype, SiteArchetype::Factory);
         }

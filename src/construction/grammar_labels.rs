@@ -199,17 +199,15 @@ mod tests {
         if !code[i..].starts_with(name) {
             return false;
         }
-        let before_ok = i == 0
-            || {
-                let prev = code.as_bytes()[i - 1];
-                !prev.is_ascii_alphanumeric() && prev != b'_'
-            };
+        let before_ok = i == 0 || {
+            let prev = code.as_bytes()[i - 1];
+            !prev.is_ascii_alphanumeric() && prev != b'_'
+        };
         let end = i + name.len();
-        let after_ok = end >= code.len()
-            || {
-                let next = code.as_bytes()[end];
-                !next.is_ascii_alphanumeric() && next != b'_'
-            };
+        let after_ok = end >= code.len() || {
+            let next = code.as_bytes()[end];
+            !next.is_ascii_alphanumeric() && next != b'_'
+        };
         before_ok && after_ok
     }
 

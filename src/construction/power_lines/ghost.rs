@@ -5,8 +5,8 @@ use bevy_egui::{egui, EguiContexts};
 
 use crate::engine::states::BaseState;
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
-use crate::render::{paint_stroke_line, stroke_for_voltage_class, InfrastructureOverlayStroke};
 use crate::render::view_runtime::ViewProjectionAuthority;
+use crate::render::{paint_stroke_line, stroke_for_voltage_class, InfrastructureOverlayStroke};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool};
@@ -92,9 +92,6 @@ pub fn draw_power_line_path_ghost_egui(
 
 #[must_use]
 pub fn power_line_ghost_preview_dashed_witness_green() -> bool {
-    let stroke = stroke_for_voltage_class(
-        crate::infrastructure::VoltageClass::Medium,
-        true,
-    );
+    let stroke = stroke_for_voltage_class(crate::infrastructure::VoltageClass::Medium, true);
     stroke.dashed && stroke.alpha <= 0.61
 }

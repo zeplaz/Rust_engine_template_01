@@ -159,11 +159,7 @@ pub fn reweight_massing_strategies(
 
 /// Floors cap from βvert (v0 baseline §4).
 #[must_use]
-pub fn floors_from_beta_vert(
-    beta_vert: f32,
-    min_floors: u32,
-    max_floors: u32,
-) -> u32 {
+pub fn floors_from_beta_vert(beta_vert: f32, min_floors: u32, max_floors: u32) -> u32 {
     let raw = 1.0 + beta_vert.clamp(0.0, 1.0) * 3.0;
     raw.round().clamp(min_floors as f32, max_floors as f32) as u32
 }
@@ -190,7 +186,9 @@ pub fn load_preset_from_path(path: &Path) -> Result<ArchGrammarV0Preset, String>
 
 #[must_use]
 pub fn preset_path_for_id(preset_id: &str) -> PathBuf {
-    repo_path(&format!("{ARCH_DNA_EXAMPLES_DIR}/arch_dna_{preset_id}.json"))
+    repo_path(&format!(
+        "{ARCH_DNA_EXAMPLES_DIR}/arch_dna_{preset_id}.json"
+    ))
 }
 
 #[must_use]
@@ -263,11 +261,8 @@ pub fn arch_dna_consumer_from_snapshot_fields(
     arch_dna: serde_json::Value,
     pressure_field: Option<PressureFieldV0>,
 ) -> Option<ArchDnaConsumerFields> {
-    let pressure = pressure_field.or_else(|| {
-        load_preset_for_id(preset_id)
-            .ok()
-            .map(|p| p.pressure_field)
-    })?;
+    let pressure =
+        pressure_field.or_else(|| load_preset_for_id(preset_id).ok().map(|p| p.pressure_field))?;
     if arch_dna.is_null() || !arch_dna.as_object().is_some_and(|o| !o.is_empty()) {
         return None;
     }
@@ -334,8 +329,7 @@ fn build_read_consumer_mcp_001_self_check() -> Result<(), &'static str> {
     )
     .map_err(|_| "snapshot")?;
 
-    if snapshot.arch_build_grammar_preset_id.as_deref() != Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE)
-    {
+    if snapshot.arch_build_grammar_preset_id.as_deref() != Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE) {
         return Err("preset_on_snapshot");
     }
     if !snapshot.arch_dna_consumer_wired() {
@@ -436,14 +430,11 @@ pub fn build_read_grammar_v0_003_witness_body() -> serde_json::Value {
                 .grammars
                 .values()
                 .find(|g| g.grammar_id == p.grammar_id);
-            let weights = grammar.map(|g| {
-                reweight_massing_strategies(&g.massing.strategies, &p.pressure_field)
-            });
-            let top = weights.as_ref().and_then(|w| {
-                w.iter()
-                    .max_by_key(|(_, wt)| *wt)
-                    .map(|(id, _)| id.clone())
-            });
+            let weights = grammar
+                .map(|g| reweight_massing_strategies(&g.massing.strategies, &p.pressure_field));
+            let top = weights
+                .as_ref()
+                .and_then(|w| w.iter().max_by_key(|(_, wt)| *wt).map(|(id, _)| id.clone()));
             let pick_l = top.as_deref() == Some("l_shape")
                 || weights
                     .as_ref()
@@ -485,9 +476,16 @@ mod tests {
             .grammars
             .get(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE)
             .expect("industrial grammar");
-        let weights = reweight_massing_strategies(&grammar.massing.strategies, &preset.pressure_field);
-        let l = weights.iter().find(|(id, _)| id == "l_shape").map(|(_, w)| *w);
-        assert!(l.unwrap_or(0) >= 26, "l_shape weight should rank high: {weights:?}");
+        let weights =
+            reweight_massing_strategies(&grammar.massing.strategies, &preset.pressure_field);
+        let l = weights
+            .iter()
+            .find(|(id, _)| id == "l_shape")
+            .map(|(_, w)| *w);
+        assert!(
+            l.unwrap_or(0) >= 26,
+            "l_shape weight should rank high: {weights:?}"
+        );
         let sum: u32 = weights.iter().map(|(_, w)| *w).sum();
         assert_eq!(sum, 100);
     }

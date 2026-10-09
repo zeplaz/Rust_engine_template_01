@@ -8,9 +8,9 @@ use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::placement::ActiveRailPlacement;
 use super::super::build_tool_authority::{ActiveBuildTool, BuildTool};
 use super::super::map_egui_projection::{map_zoom_screen_scale, world_to_sim_map_egui};
+use super::placement::ActiveRailPlacement;
 
 #[must_use]
 fn rail_segment_color(valid: bool, slope_ok: bool) -> egui::Color32 {
@@ -46,26 +46,22 @@ pub fn draw_rail_path_ghost_egui(
         egui::Id::new("rail_path_ghost_layer"),
     ));
     for seg in &placement.generated_segments {
-        let Some(a) =
-            world_to_sim_map_egui(
-                seg.start,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        else {
+        let Some(a) = world_to_sim_map_egui(
+            seg.start,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        ) else {
             continue;
         };
-        let Some(b) =
-            world_to_sim_map_egui(
-                seg.end,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        else {
+        let Some(b) = world_to_sim_map_egui(
+            seg.end,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        ) else {
             continue;
         };
         let color = rail_segment_color(seg.valid, seg.slope_ok);
@@ -73,17 +69,19 @@ pub fn draw_rail_path_ghost_egui(
         painter.line_segment([a, b], egui::Stroke::new(stroke_w, color));
     }
     for p in &placement.control_points {
-        if let Some(screen) =
-            world_to_sim_map_egui(
-                *p,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        {
+        if let Some(screen) = world_to_sim_map_egui(
+            *p,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        ) {
             let r = (5.0 * zoom.sqrt()).clamp(3.0, 14.0);
-            painter.circle_filled(screen, r, egui::Color32::from_rgba_unmultiplied(200, 160, 255, 220));
+            painter.circle_filled(
+                screen,
+                r,
+                egui::Color32::from_rgba_unmultiplied(200, 160, 255, 220),
+            );
         }
     }
     Ok(())

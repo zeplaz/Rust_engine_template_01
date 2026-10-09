@@ -2,15 +2,17 @@
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::EguiContexts;
 
-use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::economy::activation::BuildingDefinitionRef;
+use crate::gui::hud::simulation_pointer_gate::{
+    simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
+};
+use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::strategic::{
     BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
     PlannedSite, SiteArchetype, SiteFootprint, SiteId,
 };
+use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::build_tool_authority::{ActiveBuildTool, BuildTool};
 use super::pending_construction::{
@@ -27,7 +29,7 @@ pub fn demolish_pick_queue_system(
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     mut pending: ResMut<PendingConstructionQueue>,
-    mut egui_ctx: EguiContexts,
+    pointer_gate: Option<Res<SimulationMapPointerGate>>,
 ) {
     if tool.tool != BuildTool::Demolish {
         return;
@@ -35,10 +37,7 @@ pub fn demolish_pick_queue_system(
     if !buttons.just_pressed(MouseButton::Left) {
         return;
     }
-    let Ok(ctx) = egui_ctx.ctx_mut() else {
-        return;
-    };
-    if ctx.egui_wants_pointer_input() {
+    if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
         return;
     }
     let Ok(window) = win.single() else {
@@ -62,10 +61,7 @@ pub fn demolish_pick_queue_system(
         label: format!("demolish:{},{}", origin.x, origin.z),
         archetype: SiteArchetype::MilitaryBase,
         origin,
-        footprint: FootprintTiles {
-            width: 1,
-            depth: 1,
-        },
+        footprint: FootprintTiles { width: 1, depth: 1 },
         layer: LayerType::Surface,
         rotation_quarter_turns: 0,
         mirror_x: false,

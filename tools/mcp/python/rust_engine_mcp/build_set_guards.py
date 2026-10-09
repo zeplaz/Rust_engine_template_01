@@ -6,7 +6,7 @@ import fnmatch
 import json
 import re
 from collections import Counter
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 from rust_engine_mcp.grammar_build_set import building_set_coverage_report, load_building_sets, load_pilot_catalog
@@ -33,11 +33,14 @@ def _norm_rel(path: Path, root: Path) -> str:
 
 
 def _glob_match(rel: str, patterns: list[str]) -> bool:
+    """``*`` does not cross ``/``. ``dir/*`` does not match ``dir_extra`` or ``dir/nested``."""
     rel = rel.replace("\\", "/")
+    path = PurePosixPath(rel)
     for pattern in patterns:
-        if fnmatch.fnmatch(rel, pattern):
+        pat = pattern.replace("\\", "/")
+        if path.full_match(pat):
             return True
-        if fnmatch.fnmatch(Path(rel).name, pattern):
+        if "/" not in pat and fnmatch.fnmatch(path.name, pat):
             return True
     return False
 
@@ -110,8 +113,9 @@ def example_teachable_audit(*, config_path: Path | None = None) -> dict[str, Any
                 }
             )
 
-    green = len(violations) == 0
-    truncated = len(violations) > MAX_VIOLATIONS
+    violation_count = len(violations)
+    green = violation_count == 0
+    truncated = violation_count > MAX_VIOLATIONS
     if truncated:
         violations = violations[:MAX_VIOLATIONS]
 
@@ -123,7 +127,7 @@ def example_teachable_audit(*, config_path: Path | None = None) -> dict[str, Any
         "checked_files": len(checked),
         "checked": checked,
         "min_teaches_axes": min_axes,
-        "violation_count": len(violations) if not truncated else "truncated",
+        "violation_count": violation_count,
         "violations": violations,
         "violations_truncated": truncated,
         "config": CONFIG_REL,
@@ -270,8 +274,9 @@ def warehouse_track_guard(*, config_path: Path | None = None) -> dict[str, Any]:
                 }
             )
 
-    green = len(violations) == 0
-    truncated = len(violations) > MAX_VIOLATIONS
+    violation_count = len(violations)
+    green = violation_count == 0
+    truncated = violation_count > MAX_VIOLATIONS
     if truncated:
         violations = violations[:MAX_VIOLATIONS]
 
@@ -282,7 +287,7 @@ def warehouse_track_guard(*, config_path: Path | None = None) -> dict[str, Any]:
         "green": green,
         "scanned_files": scanned,
         "manifest_path_count": len(manifest_paths),
-        "violation_count": len(violations) if not truncated else "truncated",
+        "violation_count": violation_count,
         "violations": violations,
         "violations_truncated": truncated,
         "config": CONFIG_REL,

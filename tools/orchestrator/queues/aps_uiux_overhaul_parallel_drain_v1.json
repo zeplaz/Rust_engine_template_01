@@ -13,7 +13,7 @@
   },
   "dispatch_now": {
     "orchestrator-mcp": "ORCH-OVR-WAVE3-001 — issue wave-3 parallel drain",
-    "coder-mcp": "OVR-P3-LAYOUT-001 ★ PICK (app.py exclusive — no parallel coder-mcp)",
+    "coder-mcp": "idle — OVR-P3-LAYOUT-001 blocked on canonical queue until the min-window pytest actually runs",
     "designer": "idle — spine spec + onboard outline signed",
     "designer-mcp": "idle — P2 impl audit + P3 accept rubric done",
     "planner-mcp": "idle — wave-3 planner rows CLOSED 2026-06-17",
@@ -192,9 +192,10 @@
   "main_queue_picks": {
     "coder-mcp": {
       "id": "OVR-P3-LAYOUT-001",
-      "status": "ready",
+      "status": "blocked",
       "file_lock": ["app.py", "scrollable.py", "footprint_canvas.py"],
-      "blocks": "P4→P6 chain until Q✓"
+      "blocks": "P4→P6 chain until Q✓",
+      "note": "Canonical aps_uiux_overhaul_queue.json is blocked (2026-06-20 cull, no exit witness). Guard file exists; pytest skipped this session — no Tk display. Do not treat the parallel pick as ready."
     },
     "designer": {
       "id": "OVR-DES-P45-SPINE-SPEC-001",
@@ -206,8 +207,8 @@
   },
   "remaining_main_queue": {
     "done": 12,
-    "ready": 1,
-    "blocked": 11,
+    "ready": 0,
+    "blocked": 12,
     "total": 24,
     "percent": 46,
     "next_coder_mcp_chain": [

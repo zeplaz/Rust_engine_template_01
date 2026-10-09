@@ -740,6 +740,8 @@ mod live_proof_tests {
     /// **INDUSTRIAL-I3-02** — `GridOverloadEvent` / brownout hook + live proof rollup.
     #[test]
     fn simulation_writes_industrial_activation_live_json_i3_02_grid_overload() {
+        let prior_instant = std::env::var("RUST_ENGINE_CONSTRUCTION_INSTANT").ok();
+        std::env::set_var("RUST_ENGINE_CONSTRUCTION_INSTANT", "1");
         let _guard = industrial_proof_file_lock();
         let _ = fs::remove_file(proof_output_path());
         let mut app = assemble_industrial_proof_app();
@@ -749,10 +751,17 @@ mod live_proof_tests {
         assert!(path.exists(), "expected {:?}", path);
         let json: serde_json::Value =
             serde_json::from_str(&fs::read_to_string(&path).expect("read")).expect("parse");
+        let production_green = json["concrete_chain_e2e"]["production_green"]
+            .as_bool()
+            .unwrap_or(false);
+        match prior_instant {
+            Some(v) => std::env::set_var("RUST_ENGINE_CONSTRUCTION_INSTANT", v),
+            None => {
+                let _ = std::env::remove_var("RUST_ENGINE_CONSTRUCTION_INSTANT");
+            }
+        }
         assert!(
-            json["concrete_chain_e2e"]["production_green"]
-                .as_bool()
-                .unwrap_or(false),
+            production_green,
             "IND-E03: expected stable concrete E2E production_green"
         );
         let grid_overload = &json["grid_overload"];

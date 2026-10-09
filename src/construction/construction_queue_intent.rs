@@ -120,30 +120,21 @@ pub fn apply_construction_queue_intents(
             }
             ConstructionQueueIntent::Remove { index } => pending.remove_at(*index),
             ConstructionQueueIntent::ApplyImportedPreset { preset_index } => {
-                let Some(collection) = imported
-                    .as_ref()
-                    .and_then(|w| w.collection.as_ref())
-                else {
+                let Some(collection) = imported.as_ref().and_then(|w| w.collection.as_ref()) else {
                     continue;
                 };
                 let Some(entry) = collection.presets.get(*preset_index) else {
                     continue;
                 };
                 super::blueprint_preset::apply_blueprint_preset_to_build_ghost(
-                    entry,
-                    &mut ghost,
-                    &mut tool,
-                    &mut strip,
+                    entry, &mut ghost, &mut tool, &mut strip,
                 );
             }
             ConstructionQueueIntent::ImportWaveSPresets {
                 mode,
                 replace_confirmed,
             } => {
-                let Some(collection) = imported
-                    .as_ref()
-                    .and_then(|w| w.collection.as_ref())
-                else {
+                let Some(collection) = imported.as_ref().and_then(|w| w.collection.as_ref()) else {
                     continue;
                 };
                 if collection.presets.is_empty() {
@@ -195,10 +186,7 @@ mod tests {
                         "depot_a",
                         SiteArchetype::RailDepot,
                         BuildSiteTile { x: 9, z: 11 },
-                        FootprintTiles {
-                            width: 2,
-                            depth: 2,
-                        },
+                        FootprintTiles { width: 2, depth: 2 },
                         "Surface",
                         0,
                         false,
@@ -239,10 +227,7 @@ mod tests {
                         "imported",
                         SiteArchetype::RailDepot,
                         BuildSiteTile { x: 1, z: 2 },
-                        FootprintTiles {
-                            width: 2,
-                            depth: 2,
-                        },
+                        FootprintTiles { width: 2, depth: 2 },
                         "Surface",
                         0,
                         false,
@@ -253,26 +238,26 @@ mod tests {
 
         {
             let mut queue = app.world_mut().resource_mut::<PendingConstructionQueue>();
-            queue.push(crate::construction::pending_construction::PendingBuildBlueprint {
-                kind: crate::construction::pending_construction::PendingEntryKind::BuildSite,
-                label: "keep".into(),
-                archetype: SiteArchetype::Factory,
-                origin: BuildSiteTile { x: 0, z: 0 },
-                footprint: FootprintTiles {
-                    width: 1,
-                    depth: 1,
+            queue.push(
+                crate::construction::pending_construction::PendingBuildBlueprint {
+                    kind: crate::construction::pending_construction::PendingEntryKind::BuildSite,
+                    label: "keep".into(),
+                    archetype: SiteArchetype::Factory,
+                    origin: BuildSiteTile { x: 0, z: 0 },
+                    footprint: FootprintTiles { width: 1, depth: 1 },
+                    layer: crate::strategic::LayerType::Surface,
+                    rotation_quarter_turns: 0,
+                    mirror_x: false,
+                    approved: false,
+                    catalog_id: None,
                 },
-                layer: crate::strategic::LayerType::Surface,
-                rotation_quarter_turns: 0,
-                mirror_x: false,
-                approved: false,
-                catalog_id: None,
-            });
+            );
         }
-        app.world_mut().write_message(ConstructionQueueIntent::ImportWaveSPresets {
-            mode: BlueprintImportQueueMode::Append,
-            replace_confirmed: false,
-        });
+        app.world_mut()
+            .write_message(ConstructionQueueIntent::ImportWaveSPresets {
+                mode: BlueprintImportQueueMode::Append,
+                replace_confirmed: false,
+            });
         app.update();
 
         let queue = app.world().resource::<PendingConstructionQueue>();
@@ -297,10 +282,7 @@ mod tests {
                         "imported",
                         SiteArchetype::RailDepot,
                         BuildSiteTile { x: 1, z: 2 },
-                        FootprintTiles {
-                            width: 2,
-                            depth: 2,
-                        },
+                        FootprintTiles { width: 2, depth: 2 },
                         "Surface",
                         0,
                         false,
@@ -311,26 +293,26 @@ mod tests {
 
         {
             let mut queue = app.world_mut().resource_mut::<PendingConstructionQueue>();
-            queue.push(crate::construction::pending_construction::PendingBuildBlueprint {
-                kind: crate::construction::pending_construction::PendingEntryKind::BuildSite,
-                label: "old".into(),
-                archetype: SiteArchetype::Factory,
-                origin: BuildSiteTile { x: 0, z: 0 },
-                footprint: FootprintTiles {
-                    width: 1,
-                    depth: 1,
+            queue.push(
+                crate::construction::pending_construction::PendingBuildBlueprint {
+                    kind: crate::construction::pending_construction::PendingEntryKind::BuildSite,
+                    label: "old".into(),
+                    archetype: SiteArchetype::Factory,
+                    origin: BuildSiteTile { x: 0, z: 0 },
+                    footprint: FootprintTiles { width: 1, depth: 1 },
+                    layer: crate::strategic::LayerType::Surface,
+                    rotation_quarter_turns: 0,
+                    mirror_x: false,
+                    approved: false,
+                    catalog_id: None,
                 },
-                layer: crate::strategic::LayerType::Surface,
-                rotation_quarter_turns: 0,
-                mirror_x: false,
-                approved: false,
-                catalog_id: None,
-            });
+            );
         }
-        app.world_mut().write_message(ConstructionQueueIntent::ImportWaveSPresets {
-            mode: BlueprintImportQueueMode::Replace,
-            replace_confirmed: false,
-        });
+        app.world_mut()
+            .write_message(ConstructionQueueIntent::ImportWaveSPresets {
+                mode: BlueprintImportQueueMode::Replace,
+                replace_confirmed: false,
+            });
         app.update();
         assert_eq!(
             app.world()
@@ -340,17 +322,15 @@ mod tests {
             1
         );
         assert_eq!(
-            app.world()
-                .resource::<PendingConstructionQueue>()
-                .entries[0]
-                .label,
+            app.world().resource::<PendingConstructionQueue>().entries[0].label,
             "old"
         );
 
-        app.world_mut().write_message(ConstructionQueueIntent::ImportWaveSPresets {
-            mode: BlueprintImportQueueMode::Replace,
-            replace_confirmed: true,
-        });
+        app.world_mut()
+            .write_message(ConstructionQueueIntent::ImportWaveSPresets {
+                mode: BlueprintImportQueueMode::Replace,
+                replace_confirmed: true,
+            });
         app.update();
         let queue = app.world().resource::<PendingConstructionQueue>();
         assert_eq!(queue.entries.len(), 1);

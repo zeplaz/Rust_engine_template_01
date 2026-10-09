@@ -5,7 +5,7 @@ use std::fs;
 use bevy::prelude::*;
 use serde::Deserialize;
 
-use super::pilot_catalog::{PilotCatalog, PilotKind, ARCH_DNA_EXAMPLES_DIR, repo_asset_path};
+use super::pilot_catalog::{repo_asset_path, PilotCatalog, PilotKind, ARCH_DNA_EXAMPLES_DIR};
 use super::procedural::load_preset_for_id;
 
 pub const BUILDING_SETS_RON: &str = "assets/configs/buildings/_building_sets.ron";
@@ -54,9 +54,11 @@ impl BuildingSetManifest {
 
 #[must_use]
 pub fn arch_dna_f_function(preset_id: &str) -> Option<String> {
-    load_preset_for_id(preset_id)
-        .ok()
-        .and_then(|p| p.arch_dna.get("F").and_then(|v| v.as_str().map(str::to_lowercase)))
+    load_preset_for_id(preset_id).ok().and_then(|p| {
+        p.arch_dna
+            .get("F")
+            .and_then(|v| v.as_str().map(str::to_lowercase))
+    })
 }
 
 /// BUILD-SET-001 — ≥2 grammar pilots + required F-axis coverage from manifest.
@@ -132,9 +134,11 @@ fn building_set_coverage_self_check() -> Result<(), &'static str> {
         .flatten()
         .filter(|e| {
             e.as_ref().ok().and_then(|entry| {
-                entry.path().file_name().and_then(|n| n.to_str()).map(|n| {
-                    n.starts_with("arch_dna_") && n.ends_with(".json")
-                })
+                entry
+                    .path()
+                    .file_name()
+                    .and_then(|n| n.to_str())
+                    .map(|n| n.starts_with("arch_dna_") && n.ends_with(".json"))
             }) == Some(true)
         })
         .count();

@@ -257,10 +257,7 @@ fn sample_tile_weight(
     (inside as f32 / (n * n) as f32).clamp(0.0, 1.0)
 }
 
-fn compute_world_bounds(
-    base: &FootprintMatrix,
-    params: &PlacementParams,
-) -> (i32, i32, i32, i32) {
+fn compute_world_bounds(base: &FootprintMatrix, params: &PlacementParams) -> (i32, i32, i32, i32) {
     let mut min_x = i32::MAX;
     let mut min_z = i32::MAX;
     let mut max_x = i32::MIN;
@@ -355,6 +352,10 @@ mod tests {
         let base = FootprintMatrix::from_size(2, 2, true);
         let origin = BuildSiteTile { x: 1, z: 1 };
         let (_, fp) = rasterize_with_effective_scale(&base, PlacementParams::identity(1.0), origin);
-        assert!((fp.occupied_mass() - 4.0).abs() < 0.05, "mass={}", fp.occupied_mass());
+        assert!(
+            (fp.occupied_mass() - 4.0).abs() < 0.05,
+            "mass={}",
+            fp.occupied_mass()
+        );
     }
 }

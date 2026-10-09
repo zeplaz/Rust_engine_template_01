@@ -6,13 +6,13 @@
 
 use bevy::prelude::*;
 
+use super::chunk_fuel_profile::ChunkFuelProfile;
+use super::chunk_surface_fire::ChunkSurfaceFire;
+use super::combustion::profile_weighted_smoke_toxic_explosion;
 use crate::substrate::atmosphere::{
     sample_tactical_smoke_from_l0, sample_tactical_toxicity_from_l0, AtmosphereClipmapStack,
 };
 use crate::systems::atmosphere::atmos_chunk_to_tile;
-use super::chunk_fuel_profile::ChunkFuelProfile;
-use super::chunk_surface_fire::ChunkSurfaceFire;
-use super::combustion::profile_weighted_smoke_toxic_explosion;
 use crate::systems::chunk_sim_lod::ChunkSimLod;
 use crate::systems::sim_control::SimControlState;
 use crate::systems::weather::ChunkWeather;
@@ -78,17 +78,21 @@ pub fn chunk_smoke_field_tick(
         let (smoke_r, toxic_prof, _) = prof_opt
             .map(profile_weighted_smoke_toxic_explosion)
             .unwrap_or((0.5, 0.12, 0.0));
-        let toxic_fuel = prof_opt.map(|p| p.to_fuel_layer().toxic_smoke).unwrap_or(toxic_prof);
+        let toxic_fuel = prof_opt
+            .map(|p| p.to_fuel_layer().toxic_smoke)
+            .unwrap_or(toxic_prof);
         let toxic_rate = (0.5 * toxic_prof + 0.5 * toxic_fuel).clamp(0.0, 1.0);
 
         let emit = heat * (0.55 + smoke_r * 1.1) * (1.0 + wx.wind_speed * 0.35);
         let rain_cleanse = wx.rain_intensity * 0.45;
 
-        smoke.density = (smoke.density + emit * dt_e * 2.8 - smoke.density * 0.28 * dt_e - rain_cleanse * dt_e)
-            .clamp(0.0, 1.0);
-        smoke.toxicity =
-            (smoke.toxicity + heat * toxic_rate * dt_e * 1.9 - smoke.toxicity * 0.22 * dt_e - rain_cleanse * 0.35 * dt_e)
+        smoke.density =
+            (smoke.density + emit * dt_e * 2.8 - smoke.density * 0.28 * dt_e - rain_cleanse * dt_e)
                 .clamp(0.0, 1.0);
+        smoke.toxicity = (smoke.toxicity + heat * toxic_rate * dt_e * 1.9
+            - smoke.toxicity * 0.22 * dt_e
+            - rain_cleanse * 0.35 * dt_e)
+            .clamp(0.0, 1.0);
 
         smoke.visibility_penalty =
             (smoke.density * 0.75 + wx.fog_density * 0.35 + smoke.toxicity * 0.25).clamp(0.0, 0.98);

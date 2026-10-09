@@ -9,7 +9,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
-from .paths import art_pipeline_log_dir, blender_exe, blender_scripts_dir, jobs_root, repo_root
+from .paths import (
+    art_pipeline_log_dir,
+    blender_exe,
+    blender_scripts_dir,
+    jobs_root,
+    repo_root,
+    resolve_under_root,
+)
 from .schemas import (
     load_json_file,
     validate_assembly_build_job,
@@ -28,7 +35,18 @@ class JobResult:
 
 
 def _status_path(job_id: str) -> Path:
-    return jobs_root() / f"{job_id}.status.json"
+    """Status file stays inside the jobs root. ``..`` is not a job id."""
+    name = str(job_id or "").strip()
+    if (
+        not name
+        or name in {".", ".."}
+        or "/" in name
+        or "\\" in name
+        or ":" in name
+        or Path(name).is_absolute()
+    ):
+        raise ValueError(f"job_id must be a single folder name: {job_id!r}")
+    return resolve_under_root(jobs_root(), f"{name}.status.json", label="job status")
 
 
 def write_status(job_id: str, payload: dict[str, Any]) -> None:
@@ -43,14 +61,19 @@ def read_status(job_id: str) -> dict[str, Any] | None:
     return json.loads(p.read_text(encoding="utf-8"))
 
 
+def _seed_is_int(value: Any) -> bool:
+    return isinstance(value, int) and not isinstance(value, bool)
+
+
 def _enforce_seed_in_params(job: dict[str, Any]) -> None:
     params = job.get("params") or {}
-    if "seed" in params:
-        return
     variation_keys = {"material_profile", "prop_kind", "style_variant"}
-    if variation_keys.intersection(params.keys()):
+    if not variation_keys.intersection(params.keys()):
+        return
+    seed = params.get("seed", job.get("seed"))
+    if not _seed_is_int(seed):
         raise ValueError(
-            "geometry job params require 'seed' when material_profile or variation fields are set"
+            "geometry job params require an integer 'seed' when material_profile or variation fields are set"
         )
 
 

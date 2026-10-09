@@ -1,0 +1,753 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-LANDFORM-VEG-DRAIN-001",
+    "date": "2026-09-25",
+    "rule": "This queue is the pick order. June 20 intel-cull rows stay blocked in the old boards; they are not a stop-work order. G-PLAY and keyframe stills are acceptance. Do not mark a row done without the named test or the named play raster. Do not reopen MIG-*.",
+    "pick": "get-que coder --queue landform_veg",
+    "supersedes_pick": [
+      "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "tools/orchestrator/queues/post_drain_phase6_coder_queue.json"
+    ],
+    "todo": "src/dev/landform_veg_drain_todos_v1.md"
+  },
+  "drain": [
+    {
+      "id": "LAND-CURVE-001",
+      "agent": "coder",
+      "priority": 10,
+      "status": "done",
+      "goal": "Profile curvature on ChunkDerivedMetrics, stitched with slope. Positive hollow, negative ridge.",
+      "docs": ["src/terrain/generation/derived.rs", "src/systems/terrain/material_plugin.rs"],
+      "exit": "bowl_is_positive_curvature_ridge_is_negative and stitch_two_chunks_vertical_edge pass",
+      "note": "Shipped 2026-09-25. Tests passed. Not a witness-JSON close."
+    },
+    {
+      "id": "VEG-CHUNK-BIAS-001",
+      "agent": "coder",
+      "priority": 11,
+      "status": "done",
+      "goal": "Chunk canopy thins on steep ground and shifts with hollow versus ridge mass.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "steep_slope_thins_canopy_versus_flat passes",
+      "note": "Chunk-mean only. A ridge and a hollow in one chunk still share one canopy number."
+    },
+    {
+      "id": "MAP-PREVIEW-RELIEF-001",
+      "agent": "coder",
+      "priority": 12,
+      "status": "done",
+      "goal": "World-preview raster shades biome, height, and ecology tiles by slope and curvature.",
+      "docs": [
+        "src/gui/editor/world_preview/layers.rs",
+        "src/gui/editor/world_preview/overlays.rs",
+        "src/gui/editor/world_preview/tile_sampling.rs"
+      ],
+      "exit": "relief_curvature_brightens_ridges_and_darkens_hollows passes",
+      "note": "Editor composite path. Play-map proof is MAP-SIM-RELIEF-001."
+    },
+    {
+      "id": "VIS-BLOB-FIRE-RAIL-CURSOR-001",
+      "agent": "coder",
+      "priority": 13,
+      "status": "done",
+      "goal": "GPU phase/footprint blob off, fire sparks use time and stay on the cell, rail labels and a single cursor writer.",
+      "exit": "production_does_not_push_phase_tiles_into_gpu_debug_map, scatter_stays_on_burning_cell_world_meters, human_chain_label_portland, cursor_hide_does_not_oscillate_over_armed_play_area",
+      "note": "In the working tree 2026-09-25. Eye check is OPS-VIS-EYE, not a code gate."
+    },
+    {
+      "id": "PLANT-FOCUS-LIVE-001",
+      "agent": "coder",
+      "priority": 14,
+      "status": "done",
+      "goal": "Plant focus card reads the hottest live containment runtime when Utilities is the active tool.",
+      "docs": ["src/gui/hud/plant_focus_card.rs"],
+      "exit": "live_runtime_fills_scram_heat_and_fuel passes",
+      "note": "Do not re-pick COD-NUCLEAR-COOLING. Cooling is already in failure_modes.rs."
+    },
+    {
+      "id": "MAP-SIM-RELIEF-001",
+      "agent": "coder",
+      "priority": 1,
+      "status": "done",
+      "stop_point": true,
+      "goal": "Shade the raster the running simulation actually draws, using the same slope and profile curvature as the preview.",
+      "docs": [
+        "src/gui/editor/world_preview/layers.rs",
+        "src/gui/editor/world_preview/render_raster.rs",
+        "src/terrain/generation/derived.rs"
+      ],
+      "exit": "play_map_ridge_is_lighter_than_hollow passes",
+      "depends_on": ["MAP-PREVIEW-RELIEF-001"],
+      "note": "Do not add an env flag. Do not invent a second ChunkDerivedMetrics writer."
+    },
+    {
+      "id": "VEG-CELL-CANOPY-001",
+      "agent": "coder",
+      "priority": 2,
+      "status": "done",
+      "goal": "Per-cell canopy scale from local slope and curvature, read by vegetation preview and extract. Steep and ridge cells thinner; hollow cells denser.",
+      "docs": [
+        "src/systems/ecology/vegetation_field.rs",
+        "src/render/extraction/vegetation_visual_extract.rs",
+        "src/gui/editor/world_preview/ecology_preview.rs"
+      ],
+      "exit": "same_chunk_hollow_holds_more_cover_than_ridge passes",
+      "depends_on": ["VEG-CHUNK-BIAS-001", "LAND-CURVE-001"]
+    },
+    {
+      "id": "VEG-DRAW-FOLLOW-001",
+      "agent": "coder",
+      "priority": 3,
+      "status": "done",
+      "goal": "The vegetation draw the player sees uses the per-cell cover. Burn glyphs and ecology tint follow that field.",
+      "docs": ["src/render/extraction/vegetation_visual_extract.rs"],
+      "exit": "veg_draw_follows_center_curvature passes",
+      "depends_on": ["VEG-CELL-CANOPY-001", "MAP-SIM-RELIEF-001"]
+    },
+    {
+      "id": "LAND-LAYERS-002",
+      "agent": "coder",
+      "priority": 4,
+      "status": "done",
+      "goal": "Fill drainage, support, concealment, and flood basins from elevation. Leave erosion at zero.",
+      "docs": ["src/terrain/generation/derived.rs", "src/systems/terrain/material_plugin.rs"],
+      "depends_on": ["LAND-CURVE-001"],
+      "exit": "valley_drains_and_hides_more_than_a_peak_and_erosion_stays_zero passes"
+    },
+    {
+      "id": "MAP-DRAIN-SHADE-001",
+      "agent": "coder",
+      "priority": 5,
+      "status": "done",
+      "goal": "Play raster tints high-drainage cells wetter than a peak.",
+      "docs": ["src/gui/map_tile_raster.rs"],
+      "depends_on": ["LAND-LAYERS-002"],
+      "exit": "play_map_pit_is_wetter_than_peak passes"
+    },
+    {
+      "id": "MAP-FLOOD-SHADE-002",
+      "agent": "coder",
+      "priority": 6,
+      "status": "done",
+      "goal": "Flood-basin cells darken the play raster relative to a peak. Erosion stays untouched.",
+      "docs": ["src/gui/map_tile_raster.rs"],
+      "depends_on": ["MAP-DRAIN-SHADE-001"],
+      "exit": "play_map_flood_basin_is_darker_than_peak passes"
+    },
+    {
+      "id": "MAP-SUPPORT-MARK-003",
+      "agent": "coder",
+      "priority": 7,
+      "status": "done",
+      "goal": "A steep unsupported cell is dimmer on the play raster than a flat cell.",
+      "docs": ["src/gui/map_tile_raster.rs"],
+      "depends_on": ["LAND-LAYERS-002"],
+      "exit": "play_map_steep_support_is_dimmer_than_flat passes"
+    },
+    {
+      "id": "MAP-CONCEAL-SHADE-004",
+      "agent": "coder",
+      "priority": 8,
+      "status": "done",
+      "goal": "A concealed pit is less green on the play raster than a peak. Erosion stays untouched.",
+      "docs": ["src/gui/map_tile_raster.rs"],
+      "depends_on": ["LAND-LAYERS-002"],
+      "exit": "play_map_concealed_pit_is_less_green_than_peak passes"
+    },
+    {
+      "id": "LAND-EROSION-003",
+      "agent": "coder",
+      "priority": 9,
+      "status": "done",
+      "goal": "Erosion comes from slope and drainage. Curvature is not an input. The play raster separates an eroded cell from a flat cell.",
+      "docs": ["src/terrain/generation/derived.rs", "src/gui/map_tile_raster.rs"],
+      "depends_on": ["LAND-LAYERS-002"],
+      "exit": "valley_drains_and_hides_more_than_a_peak_and_erosion_stays_zero and play_map_eroded_peak_is_less_green_than_flat pass"
+    },
+    {
+      "id": "MAP-EDITOR-HYDRO-005",
+      "agent": "coder",
+      "priority": 10,
+      "status": "done",
+      "goal": "Editor preview blues a pit more than a peak.",
+      "docs": ["src/gui/editor/world_preview/overlays.rs", "src/gui/editor/world_preview/layers.rs"],
+      "depends_on": ["MAP-PREVIEW-RELIEF-001"],
+      "exit": "editor_preview_pit_is_bluer_than_peak passes"
+    },
+    {
+      "id": "MAP-EDITOR-FLOOD-006",
+      "agent": "coder",
+      "priority": 11,
+      "status": "done",
+      "goal": "Editor preview darkens a flood basin against a peak.",
+      "docs": ["src/gui/editor/world_preview/overlays.rs"],
+      "depends_on": ["MAP-EDITOR-HYDRO-005"],
+      "exit": "editor_preview_basin_is_darker_than_peak passes"
+    },
+    {
+      "id": "MAP-EDITOR-SUPPORT-007",
+      "agent": "coder",
+      "priority": 12,
+      "status": "done",
+      "goal": "Editor preview dims steep ground against flat ground.",
+      "docs": ["src/gui/editor/world_preview/overlays.rs", "src/gui/editor/world_preview/layers.rs"],
+      "depends_on": ["MAP-EDITOR-HYDRO-005"],
+      "exit": "editor_preview_steep_is_dimmer_than_flat passes"
+    },
+    {
+      "id": "VEG-CLIMATE-CANOPY-010",
+      "agent": "coder",
+      "priority": 13,
+      "status": "done",
+      "goal": "Moisture raises canopy and heat lowers it at the same slope.",
+      "docs": ["src/terrain/generation/derived.rs"],
+      "depends_on": ["VEG-CELL-CANOPY-001"],
+      "exit": "wet_canopy_exceeds_dry_canopy_at_the_same_slope passes"
+    },
+    {
+      "id": "DRAIN-BORDER-004",
+      "agent": "coder",
+      "priority": 14,
+      "status": "done",
+      "goal": "A higher neighbor chunk adds drainage on the shared edge. Same writer refreshes erosion from slope times the new drainage.",
+      "docs": ["src/terrain/generation/derived.rs", "src/systems/terrain/material_plugin.rs"],
+      "depends_on": ["LAND-EROSION-003"],
+      "exit": "neighbor_chunk_adds_drainage_on_the_shared_edge passes"
+    },
+    {
+      "id": "MAP-MOIST-SLOPE-008",
+      "agent": "coder",
+      "priority": 15,
+      "status": "done",
+      "goal": "Play-map moisture darkens where the cell is steep.",
+      "docs": ["src/gui/map_tile_raster.rs"],
+      "depends_on": ["MAP-SIM-RELIEF-001"],
+      "exit": "play_map_moisture_steep_is_darker_than_flat passes"
+    },
+    {
+      "id": "VEG-FUEL-012",
+      "agent": "coder",
+      "priority": 16,
+      "status": "done",
+      "goal": "Wet ground holds less surface fuel than the same litter when dry.",
+      "docs": ["src/gui/editor/world_preview/ecology_preview.rs"],
+      "depends_on": ["VEG-CLIMATE-CANOPY-010"],
+      "exit": "wet_ground_holds_less_surface_fuel passes"
+    },
+    {
+      "id": "VEG-PREVIEW-COVER-011",
+      "agent": "coder",
+      "priority": 17,
+      "status": "done",
+      "goal": "Ecology preview green follows the cell-cover scale.",
+      "docs": ["src/gui/editor/world_preview/ecology_preview.rs"],
+      "depends_on": ["VEG-CELL-CANOPY-001"],
+      "exit": "preview_green_follows_cell_cover passes"
+    },
+    {
+      "id": "MAP-EDITOR-MOIST-009",
+      "agent": "coder",
+      "priority": 18,
+      "status": "done",
+      "goal": "Editor chunk moisture color darkens when the chunk elevation is steep.",
+      "docs": ["src/gui/editor/world_preview/composite_preview_graph.rs"],
+      "depends_on": ["MAP-MOIST-SLOPE-008"],
+      "exit": "editor_moisture_graph_steep_is_darker_than_flat passes"
+    },
+    {
+      "id": "MAP-EDITOR-TEMP-010",
+      "agent": "coder",
+      "priority": 19,
+      "status": "done",
+      "goal": "Editor chunk temperature color darkens when the chunk elevation is steep.",
+      "docs": ["src/gui/editor/world_preview/composite_preview_graph.rs"],
+      "depends_on": ["MAP-EDITOR-MOIST-009"],
+      "exit": "editor_temperature_graph_steep_is_darker_than_flat passes"
+    },
+    {
+      "id": "VEG-PREVIEW-CLIMATE-013",
+      "agent": "coder",
+      "priority": 20,
+      "status": "done",
+      "goal": "Ecology preview green follows climate cover. Wet cool ground is greener than dry heat.",
+      "docs": ["src/gui/editor/world_preview/ecology_preview.rs"],
+      "depends_on": ["VEG-CLIMATE-CANOPY-010"],
+      "exit": "preview_green_follows_climate_cover passes"
+    },
+    {
+      "id": "LOG-HAUL-DISRUPT-014",
+      "agent": "coder",
+      "priority": 21,
+      "status": "done",
+      "goal": "Half disruption slows the haul marker. Full disruption leaves it at the origin.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "drain_half_disruption_slows_the_haul_marker passes"
+    },
+    {
+      "id": "SHOT-RANGE-015",
+      "agent": "coder",
+      "priority": 22,
+      "status": "done",
+      "goal": "A shot past 24 tiles stays on the origin and does not impact.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "drain_shot_past_range_does_not_impact passes"
+    },
+    {
+      "id": "SHOT-LAND-016",
+      "agent": "coder",
+      "priority": 23,
+      "status": "done",
+      "goal": "Tracer danger clears when the shot lands. Impact owns the target cell.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "drain_danger_clears_when_the_shot_lands passes"
+    },
+    {
+      "id": "VEG-SNOW-CANOPY-014",
+      "agent": "coder",
+      "priority": 24,
+      "status": "done",
+      "goal": "Snow thins canopy. Bare ground does not.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "drain_snow_thins_canopy_against_bare_ground passes"
+    },
+    {
+      "id": "TOWN-PREFIX-017",
+      "agent": "coder",
+      "priority": 25,
+      "status": "done",
+      "goal": "Adding later generated towns does not move earlier centers.",
+      "docs": ["src/strategic/settlement/town.rs"],
+      "exit": "drain_later_town_does_not_move_an_earlier_center passes"
+    },
+    {
+      "id": "LOG-EDGE-018",
+      "agent": "coder",
+      "priority": 26,
+      "status": "done",
+      "goal": "A haul marker stops on the last map cell instead of wrapping.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "live_haul_marker_stops_at_the_map_edge passes"
+    },
+    {
+      "id": "SHOT-BOOK-019",
+      "agent": "coder",
+      "priority": 27,
+      "status": "done",
+      "goal": "Book danger and impact are the hottest pure tracer reads. They do not write artillery danger.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "live_book_danger_is_the_hottest_tracer passes"
+    },
+    {
+      "id": "SHOT-TRACE-020",
+      "agent": "coder",
+      "priority": 28,
+      "status": "done",
+      "goal": "An in-range tracer stays inside the origin-to-target span.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "live_trace_stays_on_the_segment passes"
+    },
+    {
+      "id": "VEG-UNDER-SNOW-021",
+      "agent": "coder",
+      "priority": 29,
+      "status": "done",
+      "goal": "Snow thins understory less than canopy. Bare ground does not.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "live_understory_thins_in_snow passes"
+    },
+    {
+      "id": "TOWN-HOUSE-022",
+      "agent": "coder",
+      "priority": 30,
+      "status": "done",
+      "goal": "Generated housing and jobs stay at or under population.",
+      "docs": ["src/strategic/settlement/town.rs"],
+      "exit": "live_generated_housing_does_not_exceed_population passes"
+    },
+    {
+      "id": "HUD-HAUL-023",
+      "agent": "coder",
+      "priority": 31,
+      "status": "done",
+      "goal": "A fully disrupted haul reads idle on the tray.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs"],
+      "exit": "live_disrupted_haul_reads_idle passes"
+    },
+    {
+      "id": "HUD-SHOT-024",
+      "agent": "coder",
+      "priority": 32,
+      "status": "done",
+      "goal": "Tray flight copy reads the book max danger and impact.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs", "src/strategic/shot_pulse.rs"],
+      "exit": "live_shot_hud_reads_book_impact passes"
+    },
+    {
+      "id": "LOG-STAMP-025",
+      "agent": "coder",
+      "priority": 33,
+      "status": "done",
+      "goal": "Play-map haul stamps stay inside the map when the marker is on the edge.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "live_play_haul_stamp_stays_inside_the_map passes"
+    },
+    {
+      "id": "LOG-SOLVER-ZERO-026",
+      "agent": "coder",
+      "priority": 34,
+      "status": "done",
+      "goal": "A solver load of zero does not fall back to static capacity.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "push_zero_solver_load_does_not_restore_static_capacity passes"
+    },
+    {
+      "id": "LOG-SOLVER-CLOSE-027",
+      "agent": "coder",
+      "priority": 35,
+      "status": "done",
+      "goal": "Full disruption closes overlay flow even when the solver has load.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "push_disrupted_solver_load_closes_the_edge passes"
+    },
+    {
+      "id": "SHOT-POINT-028",
+      "agent": "coder",
+      "priority": 36,
+      "status": "done",
+      "goal": "A zero-length shot impacts on the fire tick. Danger stays clear.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "push_zero_length_shot_impacts_on_the_fire_tick passes"
+    },
+    {
+      "id": "SHOT-EARLY-029",
+      "agent": "coder",
+      "priority": 37,
+      "status": "done",
+      "goal": "Danger and impact stay clear before the shot is fired.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "push_danger_stays_clear_before_the_shot_is_fired passes"
+    },
+    {
+      "id": "SHOT-FACTION-030",
+      "agent": "coder",
+      "priority": 38,
+      "status": "done",
+      "goal": "Book danger for one faction ignores the other faction's tracer.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "push_other_faction_does_not_raise_book_danger passes"
+    },
+    {
+      "id": "VEG-REGROW-031",
+      "agent": "coder",
+      "priority": 39,
+      "status": "done",
+      "goal": "Snow slows the regrowth drive. Bare ground does not.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "push_snow_slows_regrowth_drive passes"
+    },
+    {
+      "id": "VEG-FRAG-032",
+      "agent": "coder",
+      "priority": 40,
+      "status": "done",
+      "goal": "Burn raises stand fragmentation.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "push_burn_raises_fragmentation passes"
+    },
+    {
+      "id": "TOWN-COUNT-033",
+      "agent": "coder",
+      "priority": 41,
+      "status": "done",
+      "goal": "A generated book stays between one and eight towns.",
+      "docs": ["src/strategic/settlement/town.rs"],
+      "exit": "push_generated_town_count_stays_in_bounds passes"
+    },
+    {
+      "id": "TOWN-SPACE-034",
+      "agent": "coder",
+      "priority": 42,
+      "status": "done",
+      "goal": "Stacked generated centers separate by four tiles and stay in the seed band.",
+      "docs": ["src/strategic/settlement/town.rs"],
+      "exit": "push_stacked_town_centers_stay_four_apart passes"
+    },
+    {
+      "id": "ED-ERODE-035",
+      "agent": "coder",
+      "priority": 43,
+      "status": "done",
+      "goal": "Editor green drops with slope times drainage. Curvature is not an input.",
+      "docs": ["src/gui/editor/world_preview/overlays.rs", "src/gui/editor/world_preview/layers.rs"],
+      "exit": "push_editor_erosion_dims_a_drained_slope passes"
+    },
+    {
+      "id": "HUD-STOCK-036",
+      "agent": "coder",
+      "priority": 44,
+      "status": "done",
+      "goal": "A short deployable stock reads short, not ready.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs"],
+      "exit": "push_short_stock_does_not_read_ready passes"
+    },
+    {
+      "id": "HUD-FACTION-037",
+      "agent": "coder",
+      "priority": 45,
+      "status": "done",
+      "goal": "The tray stays clear on another faction's tracer.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs", "src/strategic/shot_pulse.rs"],
+      "exit": "push_other_faction_reads_clear_on_the_tray passes"
+    },
+    {
+      "id": "LOG-HALF-038",
+      "agent": "coder",
+      "priority": 46,
+      "status": "done",
+      "goal": "One anchored end keeps half the flow when the other end is missing.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "next_one_anchor_keeps_its_half_of_the_flow passes"
+    },
+    {
+      "id": "LOG-COST-039",
+      "agent": "coder",
+      "priority": 47,
+      "status": "done",
+      "goal": "A traversal cost above 1 slows the haul phase.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "next_costly_haul_advances_slower passes"
+    },
+    {
+      "id": "LOG-NEG-040",
+      "agent": "coder",
+      "priority": 48,
+      "status": "done",
+      "goal": "Negative capacity does not open flow.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "next_open_flow_rejects_negative_capacity passes"
+    },
+    {
+      "id": "SHOT-RING-041",
+      "agent": "coder",
+      "priority": 49,
+      "status": "done",
+      "goal": "Range is the longer axis. A diagonal inside 24 still flies. Past that it stays put.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "next_diagonal_shot_stays_inside_the_range_ring passes"
+    },
+    {
+      "id": "SHOT-DUP-042",
+      "agent": "coder",
+      "priority": 50,
+      "status": "done",
+      "goal": "Recording the same shot twice does not stack it.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "next_duplicate_shot_does_not_stack passes"
+    },
+    {
+      "id": "VEG-FOG-043",
+      "agent": "coder",
+      "priority": 51,
+      "status": "done",
+      "goal": "Fog lowers concealment. Clear air does not.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "next_fog_lowers_concealment passes"
+    },
+    {
+      "id": "VEG-HEAT-044",
+      "agent": "coder",
+      "priority": 52,
+      "status": "done",
+      "goal": "Heat lowers the surface fuel the stand is showing.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "next_heat_lowers_ground_fuel passes"
+    },
+    {
+      "id": "TOWN-GAP-045",
+      "agent": "coder",
+      "priority": 53,
+      "status": "done",
+      "goal": "Four tiles is enough separation. Three tiles still nudge.",
+      "docs": ["src/strategic/settlement/town.rs"],
+      "exit": "next_four_tiles_is_enough_separation passes"
+    },
+    {
+      "id": "ED-CLEAR-046",
+      "agent": "coder",
+      "priority": 54,
+      "status": "done",
+      "goal": "A transparent editor pixel ignores fire tint.",
+      "docs": ["src/gui/editor/world_preview/ecology_preview.rs"],
+      "exit": "next_clear_pixel_ignores_fire_tint passes"
+    },
+    {
+      "id": "ED-SMOKE-047",
+      "agent": "coder",
+      "priority": 55,
+      "status": "done",
+      "goal": "Smoke darkens green and does not raise red. Alpha stays.",
+      "docs": ["src/gui/editor/world_preview/ecology_preview.rs"],
+      "exit": "next_smoke_does_not_raise_the_red_channel passes"
+    },
+    {
+      "id": "HUD-ONE-048",
+      "agent": "coder",
+      "priority": 56,
+      "status": "done",
+      "goal": "One town reads singular. Two towns stay plural.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs"],
+      "exit": "next_one_town_does_not_pluralize passes"
+    },
+    {
+      "id": "LOG-SLOT-049",
+      "agent": "coder",
+      "priority": 57,
+      "status": "done",
+      "goal": "A named transport slot missing from the solver stays closed.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "cont_missing_solver_slot_stays_closed passes"
+    },
+    {
+      "id": "LOG-SPAN-050",
+      "agent": "coder",
+      "priority": 58,
+      "status": "done",
+      "goal": "A zero-size map stamps no haul.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "cont_zero_span_stamps_no_haul passes"
+    },
+    {
+      "id": "LOG-NAN-051",
+      "agent": "coder",
+      "priority": 59,
+      "status": "done",
+      "goal": "Non-finite capacity or disruption does not open flow.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "cont_non_finite_flow_stays_closed passes"
+    },
+    {
+      "id": "SHOT-OWN-052",
+      "agent": "coder",
+      "priority": 60,
+      "status": "done",
+      "goal": "Another faction's impact does not mark this side.",
+      "docs": ["src/strategic/shot_pulse.rs", "src/gui/hud/sim_hud_copy.rs"],
+      "exit": "cont_other_faction_impact_stays_off_this_side passes"
+    },
+    {
+      "id": "VEG-RAIN-053",
+      "agent": "coder",
+      "priority": 61,
+      "status": "done",
+      "goal": "Rain washes smoke the stand is holding.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "cont_rain_lowers_held_smoke passes"
+    },
+    {
+      "id": "VEG-SNOW-054",
+      "agent": "coder",
+      "priority": 62,
+      "status": "done",
+      "goal": "Snow lowers the drawn stand. Bare ground matches the clear draw.",
+      "docs": ["src/systems/ecology/vegetation_field.rs", "src/render/extraction/vegetation_visual_extract.rs"],
+      "exit": "cont_snow_lowers_the_drawn_stand passes"
+    },
+    {
+      "id": "VEG-FUEL-055",
+      "agent": "coder",
+      "priority": 63,
+      "status": "done",
+      "goal": "Rain lowers the fuel load the stand would pass to a fire.",
+      "docs": ["src/systems/ecology/vegetation_field.rs"],
+      "exit": "cont_rain_lowers_the_stand_fuel_load passes"
+    },
+    {
+      "id": "TOWN-BAND-056",
+      "agent": "coder",
+      "priority": 64,
+      "status": "done",
+      "goal": "An out-of-band town center is pulled into the seed band.",
+      "docs": ["src/strategic/settlement/town.rs"],
+      "exit": "cont_town_center_stays_inside_the_seed_band passes"
+    },
+    {
+      "id": "HUD-IN-057",
+      "agent": "coder",
+      "priority": 65,
+      "status": "done",
+      "goal": "Stock on the way reads inbound, not ready or short.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs"],
+      "exit": "cont_inbound_stock_is_not_ready_or_short passes"
+    },
+    {
+      "id": "ED-HOLE-058",
+      "agent": "coder",
+      "priority": 66,
+      "status": "done",
+      "goal": "A transparent editor pixel ignores hydro tint.",
+      "docs": ["src/gui/editor/world_preview/overlays.rs"],
+      "exit": "cont_clear_pixel_ignores_hydro_tint passes"
+    },
+    {
+      "id": "ED-FLAT-059",
+      "agent": "coder",
+      "priority": 67,
+      "status": "done",
+      "goal": "A transparent editor pixel keeps its support color.",
+      "docs": ["src/gui/editor/world_preview/overlays.rs"],
+      "exit": "cont_clear_pixel_keeps_its_support_color passes"
+    },
+    {
+      "id": "DRAIN-STALE-CULLED-ROWS",
+      "agent": "coder",
+      "priority": 20,
+      "status": "deferred",
+      "goal": "Do not mass-reopen the June 20 cull. Old vegetation, phase-6, and APS layout rows stay blocked until a slice in this queue names the file and the test.",
+      "note": "339 blocked rows. 179 are hub copies. The cull means do not claim done, not do not code."
+    },
+    {
+      "id": "OPS-VIS-EYE",
+      "agent": "operator",
+      "priority": 30,
+      "status": "deferred",
+      "role": "acceptance",
+      "goal": "Look at sparks, rail labels, the placement ghost, and the corner blob in a running window.",
+      "note": "Does not block MAP-SIM-RELIEF-001 or VEG-CELL-CANOPY-001."
+    },
+    {
+      "id": "G-PLAY-OPERATOR-01",
+      "agent": "operator",
+      "priority": 31,
+      "status": "deferred",
+      "role": "acceptance",
+      "goal": "Optional playtest log. Coder sub-gates are closed.",
+      "note": "blocks_development false. FACTION-REACT-001 is not waiting on this."
+    },
+    {
+      "id": "KIT-G4-STILLS",
+      "agent": "designer-mcp",
+      "priority": 32,
+      "status": "deferred",
+      "role": "acceptance",
+      "goal": "Warehouse and kit keyframe stills. Ship art stays rejected until stills exist.",
+      "note": "Art promotion only. Does not block landform or vegetation code."
+    },
+    {
+      "id": "PCI-DO-NOT-DRAIN",
+      "agent": "coder",
+      "priority": 40,
+      "status": "blocked",
+      "goal": "Keep PCI-04, 08, 12, 15, 25, 26, 29, 30, 35, 36, 37, 39 blocked.",
+      "note": "No heartbeat daemon, no default-on terrain bake, no sole-writer lie, shims stay until classified."
+    },
+    {
+      "id": "SIM-STEWARD-FIRE-REPLAY-001",
+      "agent": "coder",
+      "priority": 41,
+      "status": "blocked",
+      "goal": "Replay parity stays deferred while parity_green is false.",
+      "witness": "debug_runs/replay_editor_parity_live.json"
+    }
+  ]
+}

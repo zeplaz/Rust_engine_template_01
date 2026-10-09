@@ -15,8 +15,8 @@ pub fn repo_asset_path(rel: &str) -> PathBuf {
 
 pub fn load_building_grammar_from_path(path: &Path) -> Result<BuildingGrammar, String> {
     let text = fs::read_to_string(path).map_err(|e| e.to_string())?;
-    let grammar: BuildingGrammar = ron::from_str(&text)
-        .map_err(|e| format!("RON parse {}: {e}", path.display()))?;
+    let grammar: BuildingGrammar =
+        ron::from_str(&text).map_err(|e| format!("RON parse {}: {e}", path.display()))?;
     validate_building_grammar(&grammar)?;
     Ok(grammar)
 }

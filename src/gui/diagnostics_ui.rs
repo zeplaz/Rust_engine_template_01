@@ -76,7 +76,7 @@ impl Plugin for DiagnosticsUiPlugin {
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                diagnostics_ui_system.run_if(in_simulation_or_editor),
+                diagnostics_ui_system.run_if(crate::gui::ui_gates::product_egui_shell_active),
             );
     }
 }

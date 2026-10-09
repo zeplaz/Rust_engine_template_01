@@ -40,10 +40,7 @@ impl Default for BuildGhostState {
     fn default() -> Self {
         Self {
             origin: None,
-            footprint: FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            footprint: FootprintTiles { width: 1, depth: 1 },
             rotation_quarter_turns: 0,
             mirror_x: false,
             drag_active: false,
@@ -91,14 +88,10 @@ impl ToolContext {
     #[inline]
     pub fn footprint_for_tool(self) -> FootprintTiles {
         match self {
-            ToolContext::Industry | ToolContext::Civil | ToolContext::Military => FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
-            _ => FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            ToolContext::Industry | ToolContext::Civil | ToolContext::Military => {
+                FootprintTiles { width: 2, depth: 2 }
+            }
+            _ => FootprintTiles { width: 1, depth: 1 },
         }
     }
 

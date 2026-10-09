@@ -255,6 +255,7 @@ pub fn execute_staged_block_growth_system(
     let Some(pending) = pending.as_mut() else {
         return;
     };
+    let _ = super::execute::commit_top_district_growth(&mut queue, pending);
     for state in &staging.active {
         if state.phase != BlockRolloutPhase::Assembled {
             continue;
@@ -556,5 +557,25 @@ mod tests {
     #[test]
     fn city_g3_rollout_witness_green_lib() {
         assert!(city_g3_rollout_witness_green());
+    }
+
+    #[test]
+    fn over_empty_archetype_table_keeps_medium_density() {
+        use super::super::block_archetype::BlockArchetype;
+        use super::super::zoning::ZoningClass;
+
+        let registry = BlockArchetypeRegistry::default();
+        assert!(registry.table.is_none());
+        let score = BlockScore {
+            pressure_residential: 0.0,
+            pressure_commercial: 0.0,
+            pressure_industrial: 1.0,
+            saturation: 0.0,
+            transport_access: 1.0,
+            zoning: ZoningClass::Industrial,
+            noise_jitter: 0.0,
+        };
+        assert_eq!(registry.resolve(&score), BlockArchetype::MediumDensityRes);
+        assert_eq!(lot_usage_for_archetype(""), BuildingUsage::Residential);
     }
 }

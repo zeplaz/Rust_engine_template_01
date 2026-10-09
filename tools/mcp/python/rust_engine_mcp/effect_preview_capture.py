@@ -149,6 +149,26 @@ def load_staging_preview_witness(staging_dir: Path) -> dict[str, Any] | None:
     return dict(pw) if isinstance(pw, dict) else None
 
 
+def _capture_seed(spec: dict[str, Any]) -> str:
+    """Keep an explicit seed of 0. ``or`` would drop it and reuse another seed."""
+    rules = spec.get("rules_check")
+    rules = rules if isinstance(rules, dict) else {}
+    if "seed" in rules and rules.get("seed") is not None:
+        raw = rules.get("seed")
+    elif spec.get("seed") is not None:
+        raw = spec.get("seed")
+    else:
+        raw = "0"
+    if isinstance(raw, bool):
+        raise ValueError("capture seed must be an integer or decimal string")
+    if isinstance(raw, int):
+        return str(raw)
+    text = str(raw).strip()
+    if not text or not text.lstrip("-").isdigit():
+        raise ValueError("capture seed must be an integer or decimal string")
+    return text
+
+
 def capture_effect_preview(
     spec_path: str | Path,
     *,
@@ -165,7 +185,7 @@ def capture_effect_preview(
 
     effect_id = str(spec["effect_id"])
     batch_id = str(spec.get("batch_id") or "")
-    seed = str((spec.get("rules_check") or {}).get("seed") or spec.get("seed") or "0")
+    seed = _capture_seed(spec)
     staging_dir = staging_root() / effect_id
     pack_manifest = _load_pack_manifest(staging_dir)
     _verify_staging_hashes(staging_dir, pack_manifest)

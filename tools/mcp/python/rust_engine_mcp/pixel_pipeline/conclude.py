@@ -279,8 +279,8 @@ def pixel_conclude(
         "kmeans": matrix["kmeans"],
         "meanshift": matrix["meanshift"],
         "rules_check": {
-            "passed": True,
-            "blocked_by": [],
+            "passed": judged["verdict"] == "green",
+            "blocked_by": [] if judged["verdict"] == "green" else list(judged["reasons"]),
             "seed": str(KMEANS_SEED),
         },
     }

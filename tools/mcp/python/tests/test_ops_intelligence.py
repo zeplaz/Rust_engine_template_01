@@ -71,8 +71,10 @@ def test_ops_get_active_blockers_g_play_open():
     blockers = ops_intelligence.ops_get_active_blockers()
     assert blockers.get("ok") is True
     open_ids = [g["id"] for g in blockers.get("open_gates") or []]
-    assert "G-PLAY-01" in open_ids
-    gplay = next(g for g in blockers["open_gates"] if g["id"] == "G-PLAY-01")
+    assert "G-PLAY-01" not in open_ids
+    pending = blockers.get("acceptance_pending") or []
+    gplay = next(g for g in pending if g["id"] == "G-PLAY-01")
+    assert gplay.get("blocks_development") is False
     assert any(s.get("id") == "G-PLAY-OPERATOR-01" for s in gplay.get("open_sub_gates") or [])
 
 

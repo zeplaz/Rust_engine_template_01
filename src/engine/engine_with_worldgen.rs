@@ -137,6 +137,7 @@ impl Plugin for EnginePlugin {
             // Scenario script host (Wave 1): drains one step per frame before sim tick.
             .add_plugins(crate::sim::SimEffectsPlugin)
             .add_plugins(ScenarioScriptingPlugin);
+        super::omit_egui_pointer_preupdate_in_simulation(app);
         configure_chunk_environment_sets(app);
         app.add_plugins(crate::dev::runtime_witness::LiveProofCadencePlugin)
             .add_plugins(crate::substrate::SubstratePlugin)
@@ -158,6 +159,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::infrastructure::InfrastructureTransportPlugin)
             .add_plugins(crate::infrastructure::utility::UtilityGraphPlugin)
             .add_plugins(crate::render::InfrastructureOverlayPlugin)
+            .add_plugins(crate::render::WorldMapNetworkMeshPlugin)
             .add_plugins(TransportSimulationPlugin)
             .add_plugins(crate::engine::PlayScenarioPlugin)
             // Nav: damage/speed adjustments after transport cost cache; motion stage after damage (S2).

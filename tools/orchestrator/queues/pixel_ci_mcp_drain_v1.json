@@ -117,9 +117,11 @@
     {
       "id": "PCI-13",
       "theme": "pixel",
-      "status": "blocked",
+      "status": "done",
       "owner": "dashboard",
       "goal": "Feed matrix JSON into the existing ops dashboard snapshot",
+      "note": "image_conclusion_review.json already reads debug_runs/**/pixel_matrix_*.json. KPI counts land in ops_dashboard.html and grafana_ops_overview.json. No new app.",
+      "witness": "tools/orchestrator/dashboard/image_conclusion_review.json",
       "unblock_when": "Dashboard owner edits tools/orchestrator/dashboard/. This drain must not."
     },
     {
@@ -157,9 +159,11 @@
     {
       "id": "PCI-18",
       "theme": "pixel",
-      "status": "blocked",
+      "status": "done",
       "owner": "dashboard",
       "goal": "Compact status card reading the matrix JSON",
+      "note": "ops_dashboard.html renderReview already shows Conclusion/GUI/UI/World/Art/Honest/Absent from image_conclusion_review.json. Grafana panels read the same kpi fields.",
+      "witness": "tools/orchestrator/dashboard/ops_dashboard.html",
       "unblock_when": "Dashboard owner extends ops_dashboard.html or grafana_ops_overview.json"
     },
     {

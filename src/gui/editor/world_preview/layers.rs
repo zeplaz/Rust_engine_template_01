@@ -2,10 +2,11 @@
 
 use super::color_presets::{height_to_color, moisture_to_color, temperature_to_color};
 use super::ecology_preview::{ecology_preview_rgba, ecology_sample_for_world_tile, EcologyRasterChunkRow};
-use super::overlays::{blend_overlay, movement_hint_rgba, slope_grade_to_color, voronoi_region_preview_rgba};
+use super::overlays::{blend_overlay, landform_relief_rgba, movement_hint_rgba, preview_erosion_rgba, preview_hydro_rgba, preview_support_rgba, slope_grade_to_color, voronoi_region_preview_rgba};
 use super::tile_sampling::{
     cell_tags_for_world_tile, chunk_cell_layer_at_world_tile, chunk_cell_key_for_world_tile,
-    slope_grade_for_world_tile, slope_grade_from_world_elevation_neighbors,
+    profile_curvature_from_world_elevation_neighbors, slope_grade_for_world_tile,
+    slope_grade_from_world_elevation_neighbors, inflow_from_world_elevation_neighbors,
 };
 use crate::terrain::family::TerrainFamilyId;
 use crate::terrain::generation::passes::threshold_tags_for_scalars;
@@ -186,6 +187,43 @@ impl PreviewLayers {
             ecology_slices,
         );
 
+        if !self.contains(PreviewLayers::REGIONS) {
+            let h0 = chunk_cell_layer_at_world_tile(tx, ty, elev_slices).unwrap_or(tile_height);
+            let slope = slope_grade_for_world_tile(tx, ty, slope_slices).unwrap_or_else(|| {
+                slope_grade_from_world_elevation_neighbors(
+                    tx,
+                    ty,
+                    width,
+                    height,
+                    h0,
+                    elev_slices,
+                    tile_heights_ref,
+                )
+            });
+            let curve = profile_curvature_from_world_elevation_neighbors(
+                tx,
+                ty,
+                width,
+                height,
+                h0,
+                elev_slices,
+                tile_heights_ref,
+            );
+            rgba = landform_relief_rgba(rgba, slope, curve);
+            rgba = preview_hydro_rgba(rgba, curve);
+            rgba = preview_support_rgba(rgba, slope);
+            let inflow = inflow_from_world_elevation_neighbors(
+                tx,
+                ty,
+                width,
+                height,
+                h0,
+                elev_slices,
+                tile_heights_ref,
+            );
+            rgba = preview_erosion_rgba(rgba, slope, inflow);
+        }
+
         if self.contains(PreviewLayers::TAG_OVERLAY) {
             let h = chunk_cell_layer_at_world_tile(tx, ty, elev_slices).unwrap_or(tile_height);
             let m = chunk_cell_layer_at_world_tile(tx, ty, moist_slices).unwrap_or(moisture);
@@ -272,5 +310,22 @@ impl PreviewLayers {
         }
 
         rgba
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::super::overlays::{
+        landform_relief_rgba, preview_erosion_rgba, preview_hydro_rgba, preview_support_rgba,
+    };
+
+    #[test]
+    fn fold_editor_chain_keeps_a_clear_pixel() {
+        let clear = [80u8, 160, 90, 0];
+        let out = landform_relief_rgba(clear, 0.5, 0.2);
+        let out = preview_hydro_rgba(out, 0.2);
+        let out = preview_support_rgba(out, 0.5);
+        let out = preview_erosion_rgba(out, 0.5, 6.0);
+        assert_eq!(out, clear);
     }
 }

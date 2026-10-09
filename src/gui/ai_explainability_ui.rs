@@ -28,7 +28,7 @@ impl Plugin for AiExplainabilityPlugin {
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                ai_explainability_egui_system.run_if(in_simulation_or_editor),
+                ai_explainability_egui_system.run_if(crate::gui::ui_gates::product_egui_shell_active),
             );
     }
 }

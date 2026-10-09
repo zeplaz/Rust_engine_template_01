@@ -80,7 +80,12 @@ pub fn cell_fill(cell: SiteZoneCell) -> Option<egui::Color32> {
         SiteZoneCell::Void => None,
         SiteZoneCell::Primary | SiteZoneCell::Loading => {
             let c = footprint_valid_color();
-            Some(egui::Color32::from_rgba_unmultiplied(c.r(), c.g(), c.b(), 90))
+            Some(egui::Color32::from_rgba_unmultiplied(
+                c.r(),
+                c.g(),
+                c.b(),
+                90,
+            ))
         }
         SiteZoneCell::Utility => Some(egui::Color32::from_rgba_unmultiplied(200, 140, 40, 38)),
         SiteZoneCell::Rail => Some(egui::Color32::from_rgba_unmultiplied(136, 136, 136, 64)),
@@ -137,13 +142,12 @@ mod tests {
         use crate::construction::pilot_catalog::PilotCatalog;
 
         let catalog = PilotCatalog::load_from_disk();
-        for pilot in catalog.grammar_pilots().filter(|p| p.site_json_path.is_some()) {
-            let preset = pilot
-                .arch_dna_preset
-                .as_deref()
-                .expect("grammar preset");
-            let grid =
-                site_zone_grid_for_arch_dna_preset(preset).expect("site grid");
+        for pilot in catalog
+            .grammar_pilots()
+            .filter(|p| p.site_json_path.is_some())
+        {
+            let preset = pilot.arch_dna_preset.as_deref().expect("grammar preset");
+            let grid = site_zone_grid_for_arch_dna_preset(preset).expect("site grid");
             assert!(grid.width >= 4 && grid.depth >= 4, "pilot={}", pilot.id);
             assert!(primary_loading_cell_count(&grid) > 0);
         }

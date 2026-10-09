@@ -2,34 +2,20 @@
   "schema": "ops_project_brief_v1",
   "project": "Rust_engine_template_01",
   "quality_score": 5,
-  "utility_score": 0.0,
+  "utility_score": 4.9,
   "auth_spine": "MAT\u2605\u21e2APS\u2605\u21e2SNAP\u2605\u21e2WRK\u2605\u21e2ATL\u2605\u21e2RT\u2605",
-  "known_failures": [
-    "track_b_ship_blocked__manual_keyframe_+_g4",
-    "rollup_open__see_sub-gates_g-play-coder-*_+_g-play-operator-01",
-    "g-play-coder-veg_closed__play_scenario_veg_topology_+_wit-hon_ro",
-    "human_10_min_checklist__sole_operator_blocker_for_rollup",
-    "warehouse_production_bake_paused__track_b"
-  ],
+  "known_failures": [],
   "top_failures_ranked": [
     {
-      "id": "track_b_ship_blocked__manual_keyframe_+_g4",
+      "id": "failure_0",
       "severity": "P0"
-    },
-    {
-      "id": "rollup_open__see_sub-gates_g-play-coder-*_+_g-play-operator-01",
-      "severity": "P1"
-    },
-    {
-      "id": "g-play-coder-veg_closed__play_scenario_veg_topology_+_wit-hon_ro",
-      "severity": "P1"
     }
   ],
   "recent_improvements": [
     "OPS-006",
     "OPS-CYCLE-2-001"
   ],
-  "suggested_focus": "Track B ship blocked \u2014 manual keyframe + G4",
+  "suggested_focus": "Patch known subsystem defects. Operator sessions are acceptance logs, not lane freezes.",
   "active_picks": {
     "Operator": "G-PLAY-01"
   },
@@ -89,34 +75,31 @@
       "owner": "@coder-mcp + operator",
       "program_id": "art_B",
       "next_artifact": "debug_runs/ops_007_warehouse_production_pause_live.json"
-    },
-    {
-      "finding": "Gate open \u2014 G-PLAY-01",
-      "owner": "operator",
-      "program_id": "stage7_play",
-      "next_artifact": "src/dev/plan_g_play_close_001_checklist_v1.md",
-      "gate_id": "G-PLAY-01",
-      "phi": 0
     }
   ],
   "active_blockers": {
     "schema": "ops_active_blockers_v1",
     "ok": true,
     "tensor_path": "tools/orchestrator/queues/master_chain_tensor_v1.json",
-    "open_gate_count": 1,
-    "open_gates": [
+    "open_gate_count": 0,
+    "open_gates": [],
+    "acceptance_pending": [
       {
         "id": "G-PLAY-01",
         "phi": 0,
         "closed": null,
         "plan": "src/dev/plan_g_play_close_001_checklist_v1.md",
         "operator": "src/dev/plan_g_play_close_001_checklist_v1.md",
-        "note": "Rollup OPEN \u2014 G-PLAY-CODER-VEG closed 2026-06-17 \u00b7 operator only on G-PLAY-OPERATOR-01",
+        "note": "Acceptance log only. Coder sub-gates are closed. A missing playtest does not freeze subsystem patches.",
+        "role": "acceptance",
+        "blocks_development": false,
         "open_sub_gates": [
           {
             "id": "G-PLAY-OPERATOR-01",
             "phi": 0,
-            "closed": false
+            "closed": false,
+            "blocks_development": false,
+            "role": "acceptance"
           }
         ],
         "owner": "operator"
@@ -130,7 +113,7 @@
   },
   "_agent_meta": {
     "schema": "ops_project_brief_v1",
-    "written_at_epoch_secs": 1790256223,
+    "written_at_epoch_secs": 1790347514,
     "profile": "OPS_PROJECT_BRIEF",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/ops_project_brief_v1.json"

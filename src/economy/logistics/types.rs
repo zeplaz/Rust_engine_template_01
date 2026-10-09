@@ -225,6 +225,12 @@ pub struct ThroughputSolverState {
     pub capacity: Vec<f32>,
     pub reserved: Vec<f32>,
     pub edge_pressure: Vec<f32>,
+    /// Set only after a solve that did not return early.
+    pub(super) solved_revision: Option<u32>,
+    /// `path_open` of each flow edge at that solve, registry order.
+    pub(super) solved_path_open: Vec<bool>,
+    /// `max_rate` of each flow edge at that solve, registry order.
+    pub(super) solved_max_rate: Vec<f32>,
 }
 
 impl ThroughputSolverState {

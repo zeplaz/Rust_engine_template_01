@@ -188,6 +188,7 @@ impl Plugin for InGameHudPlugin {
         );
         app.init_resource::<HudLogisticsFocus>()
             .init_resource::<HudAggregateSettings>()
+            .init_resource::<crate::gui::map_tile_raster::PlayMapPixelMode>()
             .init_resource::<StrategicHudStripState>()
             .init_resource::<CommandLeftStackState>()
             .init_resource::<SimulationMapViewportTrace>()
@@ -238,7 +239,43 @@ impl Plugin for InGameHudPlugin {
             .add_systems(
                 Update,
                 update_strategic_ops_hud.run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (play_map_height_slope_click_system, sync_play_map_height_slope_label)
+                    .run_if(in_state(BaseState::Simulation)),
             );
+    }
+}
+
+/// Ops-strip control for the play terrain sprite. Default label is the biome raster.
+#[derive(Component)]
+struct PlayMapHeightSlopeButton;
+
+#[derive(Component)]
+struct PlayMapHeightSlopeLabel;
+
+fn play_map_height_slope_click_system(
+    q: Query<&Interaction, (Changed<Interaction>, With<PlayMapHeightSlopeButton>)>,
+    mut mode: ResMut<crate::gui::map_tile_raster::PlayMapPixelMode>,
+) {
+    for interaction in &q {
+        if *interaction == Interaction::Pressed {
+            mode.height_slope = !mode.height_slope;
+        }
+    }
+}
+
+fn sync_play_map_height_slope_label(
+    mode: Res<crate::gui::map_tile_raster::PlayMapPixelMode>,
+    mut text: Query<&mut Text, With<PlayMapHeightSlopeLabel>>,
+) {
+    if !mode.is_changed() {
+        return;
+    }
+    let label = if mode.height_slope { "HEIGHT ON" } else { "HEIGHT" };
+    for mut line in &mut text {
+        *line = Text::new(label);
     }
 }
 
@@ -523,6 +560,44 @@ fn spawn_simulation_command_shell(
                                 TextFont::from_font_size(fs).with_font(font.clone()),
                                 TextColor(palette.bevy_secondary_text()),
                                 OpsStripPower,
+                            ));
+                        });
+                    parent
+                        .spawn((
+                            Button,
+                            Node {
+                                padding: UiRect::axes(Val::Px(4.0), Val::Px(2.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::NONE),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            crate::gui::hud::simulation_shell_phase2::ZoneShadeToggleButton,
+                        ))
+                        .with_children(|z| {
+                            z.spawn((
+                                Text::new("SHADE"),
+                                TextFont::from_font_size(fs).with_font(font.clone()),
+                                TextColor(palette.bevy_secondary_text()),
+                                crate::gui::hud::simulation_shell_phase2::ZoneShadeToggleLabel,
+                            ));
+                        });
+                    parent
+                        .spawn((
+                            Button,
+                            Node {
+                                padding: UiRect::axes(Val::Px(4.0), Val::Px(2.0)),
+                                ..default()
+                            },
+                            BackgroundColor(Color::NONE),
+                            BorderColor::all(palette.bevy_border_subtle()),
+                            PlayMapHeightSlopeButton,
+                        ))
+                        .with_children(|z| {
+                            z.spawn((
+                                Text::new("HEIGHT"),
+                                TextFont::from_font_size(fs).with_font(font.clone()),
+                                TextColor(palette.bevy_secondary_text()),
+                                PlayMapHeightSlopeLabel,
                             ));
                         });
                     parent
@@ -1181,8 +1256,110 @@ fn spawn_simulation_command_shell(
                             TextColor(palette.bevy_secondary_text()),
                             ContextTrayBodyLine,
                         ));
+                        body.spawn((
+                            Node {
+                                width: Val::Percent(100.0),
+                                flex_direction: FlexDirection::Column,
+                                row_gap: Val::Px(2.0),
+                                overflow: Overflow::clip(),
+                                ..default()
+                            },
+                            Visibility::Hidden,
+                            crate::gui::hud::sim_play_bevy_chrome::ContextTrayPowerRepairList,
+                        ));
                     });
                 });
+            shell.spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    left: Val::Px(8.0 + crate::gui::hud::simulation_shell_phase2::BUILD_RAIL_W_PX + 12.0),
+                    top: Val::Px(40.0),
+                    width: Val::Px(220.0),
+                    max_height: Val::Px(160.0),
+                    padding: UiRect::all(Val::Px(8.0)),
+                    border: UiRect::all(Val::Px(1.0)),
+                    ..default()
+                },
+                BackgroundColor(palette.bevy_bg_vellum()),
+                BorderColor::all(palette.bevy_wire_magenta()),
+                Visibility::Hidden,
+                Pickable::IGNORE,
+                ZIndex(980),
+                crate::gui::hud::sim_play_bevy_chrome::SimPlayPlantCard,
+            ))
+            .with_children(|card| {
+                card.spawn((
+                    Text::new(""),
+                    TextFont::from_font_size(11.0).with_font(font.clone()),
+                    TextColor(palette.bevy_primary_text()),
+                    crate::gui::hud::sim_play_bevy_chrome::SimPlayPlantCardText,
+                ));
+            });
+            shell.spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    left: Val::Px(0.0),
+                    top: Val::Px(0.0),
+                    width: Val::Px(220.0),
+                    max_height: Val::Px(140.0),
+                    padding: UiRect::all(Val::Px(6.0)),
+                    border: UiRect::all(Val::Px(1.0)),
+                    ..default()
+                },
+                BackgroundColor(palette.bevy_bg_vellum()),
+                BorderColor::all(palette.bevy_wire_magenta()),
+                Visibility::Hidden,
+                Pickable::IGNORE,
+                ZIndex(990),
+                crate::gui::hud::sim_play_bevy_chrome::SimPlayPowerHover,
+            ))
+            .with_children(|card| {
+                card.spawn((
+                    Text::new(""),
+                    TextFont::from_font_size(11.0).with_font(font.clone()),
+                    TextColor(palette.bevy_primary_text()),
+                    crate::gui::hud::sim_play_bevy_chrome::SimPlayPowerHoverText,
+                ));
+            });
+            shell.spawn((
+                Node {
+                    position_type: PositionType::Absolute,
+                    width: Val::Px(14.0),
+                    height: Val::Px(14.0),
+                    ..default()
+                },
+                Visibility::Hidden,
+                Pickable::IGNORE,
+                ZIndex(1200),
+                crate::gui::hud::sim_play_bevy_chrome::SimPlayCrosshair,
+            ))
+            .with_children(|cross| {
+                let gold = palette.bevy_accent_gold();
+                cross.spawn((
+                    Node {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(6.0),
+                        top: Val::Px(0.0),
+                        width: Val::Px(2.0),
+                        height: Val::Px(14.0),
+                        ..default()
+                    },
+                    BackgroundColor(gold),
+                    Pickable::IGNORE,
+                ));
+                cross.spawn((
+                    Node {
+                        position_type: PositionType::Absolute,
+                        left: Val::Px(0.0),
+                        top: Val::Px(6.0),
+                        width: Val::Px(14.0),
+                        height: Val::Px(2.0),
+                        ..default()
+                    },
+                    BackgroundColor(gold),
+                    Pickable::IGNORE,
+                ));
+            });
         });
 }
 

@@ -65,6 +65,7 @@ pub use landscape_grammar_map::{
 };
 pub use vegetation_field::{
     derive_vegetation_structure, integrate_vegetation_field_step, succession_stage_from_vegetation,
+    veg_draw_density, veg_draw_density_after_impact, veg_draw_density_under_snow,
     EcologicalSuccessionStage, VegetationField, VegetationStructure,
 };
 pub use vegetation_variant_catalog::{

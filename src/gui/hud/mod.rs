@@ -22,6 +22,7 @@ pub mod overlay_framework;
 pub mod player_intent_panel;
 pub mod shell_cohesion;
 pub mod shell_diagnostics;
+pub mod sim_play_bevy_chrome;
 pub mod shell_framework;
 pub mod shell_persistence;
 pub mod shell_update_budget;

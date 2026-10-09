@@ -9,8 +9,8 @@
 #[allow(dead_code)] // HUD-A-003 witness greps this const; schedule uses product_egui_shell_active
 pub const PLACEMENT_DEBUG_WINDOW_IN_SIM: bool = false;
 
-use bevy::prelude::*;
 use bevy::ecs::system::SystemParam;
+use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::{egui, EguiContexts};
 
@@ -21,10 +21,10 @@ use crate::construction::build_tool_authority::ActiveBuildTool;
 use crate::construction::building_definitions::BuildingDefinitionRegistry;
 use crate::construction::footprint_tile_instances::FootprintTileWitness;
 use crate::construction::map_egui_projection::{
-    ConstructionMapProjection, tile_screen_extent, world_to_sim_map_egui_rendered,
+    tile_screen_extent, world_to_sim_map_egui_rendered, ConstructionMapProjection,
 };
 use crate::construction::visual_authority::ConstructionVisualRequests;
-use crate::engine::launch_args::{EngineLaunchArgs, TestScene};
+use crate::engine::launch_args::EngineLaunchArgs;
 use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
 use crate::gui::{
     camera_map_plane_vec3_to_logical_screen, map_camera_desired_from_presentation,
@@ -141,13 +141,15 @@ struct ConstructionPlacementWitnessSample {
     cursor_reproject_delta_px: f32,
 }
 
-fn construction_placement_001_self_check() -> Result<ConstructionPlacementWitnessSample, &'static str> {
+fn construction_placement_001_self_check(
+) -> Result<ConstructionPlacementWitnessSample, &'static str> {
     if !map_pick_closure_lib_witness_green() {
         return Err("map_pick_lib");
     }
 
     use crate::gui::{
-        sim_map_screen_to_world_xy, sim_map_world_xy_to_egui, MapCameraDesired, SimulationMapViewport,
+        sim_map_screen_to_world_xy, sim_map_world_xy_to_egui, MapCameraDesired,
+        SimulationMapViewport,
     };
 
     let mut vp = SimulationMapViewport::default();
@@ -162,8 +164,8 @@ fn construction_placement_001_self_check() -> Result<ConstructionPlacementWitnes
         ..Default::default()
     };
     let world = Vec2::new(12.5, 8.5);
-    let screen =
-        sim_map_world_xy_to_egui(world, &desired, &vp, world_w, world_h).ok_or("world_to_screen")?;
+    let screen = sim_map_world_xy_to_egui(world, &desired, &vp, world_w, world_h)
+        .ok_or("world_to_screen")?;
     let back = sim_map_screen_to_world_xy(
         Vec2::new(screen.x, screen.y),
         &desired,
@@ -178,8 +180,7 @@ fn construction_placement_001_self_check() -> Result<ConstructionPlacementWitnes
     }
     let screen2 =
         sim_map_world_xy_to_egui(back, &desired, &vp, world_w, world_h).ok_or("reproject")?;
-    let cursor_reproject_delta_px =
-        Vec2::new(screen.x - screen2.x, screen.y - screen2.y).length();
+    let cursor_reproject_delta_px = Vec2::new(screen.x - screen2.x, screen.y - screen2.y).length();
     if cursor_reproject_delta_px > MAP_PICK_GHOST_SCREEN_DELTA_PX_MAX {
         return Err("cursor_reproject_delta");
     }
@@ -384,20 +385,18 @@ pub fn sync_construction_placement_debug_probe(
                 ]);
                 probe.projection_visible_wh = Some(Vec2::new(frame.visible_w, frame.visible_h));
                 if let Some(pose) = presentation.as_ref() {
-                    probe.pick_world_manual = Some(sim_map_screen_to_world_xy_in_frame(
-                        cursor, pose, &frame,
-                    ));
+                    probe.pick_world_manual =
+                        Some(sim_map_screen_to_world_xy_in_frame(cursor, pose, &frame));
                 }
             }
             probe.pick_world_rendered =
                 proj.cursor_world_xy_rendered(cursor, camera, xf, window, Some(ortho.as_ref()));
             if let Some(world) = probe.pick_world_rendered {
-                probe.cursor_reproject_from_pick_camera =
-                    camera_map_plane_vec3_to_logical_screen(
-                        camera,
-                        xf,
-                        Vec3::new(world.x, 0.0, world.y),
-                    );
+                probe.cursor_reproject_from_pick_camera = camera_map_plane_vec3_to_logical_screen(
+                    camera,
+                    xf,
+                    Vec3::new(world.x, 0.0, world.y),
+                );
                 probe.cursor_reproject_delta_px = probe
                     .cursor_reproject_from_pick_camera
                     .map(|p| p.distance(cursor));
@@ -457,11 +456,13 @@ pub fn sync_construction_placement_debug_probe(
 }
 
 #[inline]
-fn overlay_visible(overlay: &ConstructionPlacementDebugOverlay, launch: Option<&EngineLaunchArgs>) -> bool {
-    if overlay.enabled {
-        return true;
-    }
-    launch.is_some_and(|l| matches!(l.test_scene, TestScene::Visual))
+fn overlay_visible(
+    overlay: &ConstructionPlacementDebugOverlay,
+    _launch: Option<&EngineLaunchArgs>,
+) -> bool {
+    // `--test visual` used to force this window. That painted crosshairs into
+    // water and sky and was logged as operator bug B1. Explicit enable only.
+    overlay.enabled
 }
 
 #[derive(SystemParam)]
@@ -764,7 +765,11 @@ fn draw_placement_crosshairs(
     if let Some(p) = probe.and_then(|p| p.cursor_reproject_from_pick_camera) {
         if map_vp.contains_cursor(p) {
             let pt = egui::pos2(p.x, p.y);
-            painter.circle_stroke(pt, 8.0, egui::Stroke::new(1.5, egui::Color32::from_rgb(80, 220, 255)));
+            painter.circle_stroke(
+                pt,
+                8.0,
+                egui::Stroke::new(1.5, egui::Color32::from_rgb(80, 220, 255)),
+            );
         }
     }
 
@@ -779,42 +784,45 @@ fn draw_placement_crosshairs(
             if map_vp.contains_cursor(p) {
                 let pt = egui::pos2(p.x, p.y);
                 painter.circle_filled(pt, 5.0, egui::Color32::from_rgb(255, 80, 220));
-                painter.circle_stroke(pt, 11.0, egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 120, 240)));
+                painter.circle_stroke(
+                    pt,
+                    11.0,
+                    egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 120, 240)),
+                );
             }
         }
     }
 
-    if let Some(p) = probe
-        .and_then(|p| p.ghost_screen_egui)
-        .or_else(|| {
-            presentation.as_ref().and_then(|pose| {
-                let compat = map_camera_desired_from_presentation(pose);
-                sim_map_world_vec3_to_egui(
-                    center,
-                    &compat,
-                    map_vp,
-                    params.width as f32,
-                    params.height as f32,
-                )
-                .map(|ep| Vec2::new(ep.x, ep.y))
-            })
+    if let Some(p) = probe.and_then(|p| p.ghost_screen_egui).or_else(|| {
+        presentation.as_ref().and_then(|pose| {
+            let compat = map_camera_desired_from_presentation(pose);
+            sim_map_world_vec3_to_egui(
+                center,
+                &compat,
+                map_vp,
+                params.width as f32,
+                params.height as f32,
+            )
+            .map(|ep| Vec2::new(ep.x, ep.y))
         })
-    {
+    }) {
         if map_vp.contains_cursor(p) {
             let pt = egui::pos2(p.x, p.y);
             painter.circle_filled(pt, 5.0, egui::Color32::from_rgb(80, 220, 80));
-            painter.circle_stroke(pt, 11.0, egui::Stroke::new(2.0, egui::Color32::from_rgb(120, 255, 120)));
+            painter.circle_stroke(
+                pt,
+                11.0,
+                egui::Stroke::new(2.0, egui::Color32::from_rgb(120, 255, 120)),
+            );
         }
-    } else if let Some(p) = world_to_sim_map_egui_rendered(
-        center,
-        Some(ortho),
-        authority,
-        desired,
-        map_vp,
-        params,
-    ) {
-        painter.circle_stroke(p, 12.0, egui::Stroke::new(2.0, egui::Color32::GREEN));
-        painter.circle_filled(p, 4.0, egui::Color32::from_rgb(40, 220, 90));
+    } else if let Some(p) =
+        world_to_sim_map_egui_rendered(center, Some(ortho), authority, desired, map_vp, params)
+    {
+        let v = Vec2::new(p.x, p.y);
+        if map_vp.contains_cursor(v) {
+            painter.circle_stroke(p, 12.0, egui::Stroke::new(2.0, egui::Color32::GREEN));
+            painter.circle_filled(p, 4.0, egui::Color32::from_rgb(40, 220, 90));
+        }
     }
 
     let ox = origin.x as i32;
@@ -823,9 +831,7 @@ fn draw_placement_crosshairs(
         for dx in 0..ghost.footprint.width.min(3) as i32 {
             let world = Vec3::new((ox + dx) as f32 + 0.5, 0.0, (oz + dz) as f32 + 0.5);
             if let Ok((camera, xf)) = cam_q.single() {
-                if let Some(p) =
-                    camera_map_plane_vec3_to_logical_screen(camera, xf, world)
-                {
+                if let Some(p) = camera_map_plane_vec3_to_logical_screen(camera, xf, world) {
                     if map_vp.contains_cursor(p) {
                         painter.circle_filled(
                             egui::pos2(p.x, p.y),
@@ -843,8 +849,34 @@ fn draw_placement_crosshairs(
                 params.width as f32,
                 params.height as f32,
             ) {
-                painter.circle_filled(p, 2.0, egui::Color32::from_rgb(80, 200, 255));
+                let v = Vec2::new(p.x, p.y);
+                if map_vp.contains_cursor(v) {
+                    painter.circle_filled(p, 2.0, egui::Color32::from_rgb(80, 200, 255));
+                }
             }
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::engine::launch_args::TestScene;
+
+    #[test]
+    fn visual_test_scene_does_not_force_placement_debug() {
+        let off = ConstructionPlacementDebugOverlay {
+            enabled: false,
+            show_crosshairs: true,
+        };
+        let mut launch = EngineLaunchArgs::default();
+        launch.test_scene = TestScene::Visual;
+        assert!(!overlay_visible(&off, Some(&launch)));
+        let on = ConstructionPlacementDebugOverlay {
+            enabled: true,
+            show_crosshairs: true,
+        };
+        assert!(overlay_visible(&on, Some(&launch)));
+        assert!(overlay_visible(&on, None));
     }
 }

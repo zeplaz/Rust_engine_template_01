@@ -42,13 +42,17 @@ pub fn project_logistics_overlay_rows(
         .edge_rows
         .iter()
         .take(cap)
-        .map(|&(edge, traffic)| LogisticsOverlayGpuRow {
-            corridor_xy_revision: Vec4::new(
-                edge as f32,
-                traffic,
-                snapshot.stamp.tick as f32,
-                snapshot.corridor_revision as f32,
-            ),
+        .enumerate()
+        .map(|(i, &(edge, traffic))| {
+            let haul = snapshot.haul_marker_t.get(i).copied().unwrap_or(0.0);
+            LogisticsOverlayGpuRow {
+                corridor_xy_revision: Vec4::new(
+                    edge as f32,
+                    traffic,
+                    haul,
+                    snapshot.corridor_revision as f32,
+                ),
+            }
         })
         .collect()
 }
@@ -106,11 +110,13 @@ mod tests {
             corridor_revision: 2,
             active_overlay_rows: 2,
             edge_rows: vec![(7, 0.5), (9, 1.0)],
+            haul_marker_t: vec![0.25, 0.0],
         };
         let rows = project_logistics_overlay_rows(&snapshot, 2);
         assert_eq!(rows.len(), 2);
         assert_eq!(rows[0].corridor_xy_revision.x, 7.0);
         assert!((rows[0].corridor_xy_revision.y - 0.5).abs() < 1e-5);
+        assert!((rows[0].corridor_xy_revision.z - 0.25).abs() < 1e-5);
     }
 
     #[test]

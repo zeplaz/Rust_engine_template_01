@@ -36,6 +36,7 @@ pub fn apply_pan(viewport: &mut EditorViewport, delta_screen: Vec2) {
 }
 
 /// **INFRA-PROJ2-001** — hover tile via [`view_surface_screen_to_world`] (`ViewId::WorldPreview`).
+#[allow(dead_code)] // egui panel hit-test retired with the WorldGen painter; projection helper stays.
 pub fn update_hover_tile(
     manager: &ViewManager,
     viewport: &mut EditorViewport,

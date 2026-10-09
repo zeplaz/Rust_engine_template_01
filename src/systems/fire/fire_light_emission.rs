@@ -51,8 +51,8 @@ pub(crate) fn maintain_fire_light_emission_from_surface_fire(
         let bio = eco.map(|e| e.biomass).unwrap_or(0.35);
         let base_intensity = (fire.heat * (0.6 + bio * 0.9)).clamp(0.0, 2.5);
         let radius = 120.0 + fire.heat * 180.0;
-        let flicker_phase =
-            (chunk.coord.x as f32 * 0.37 + chunk.coord.y as f32 * 0.91).fract() * std::f32::consts::TAU;
+        let flicker_phase = (chunk.coord.x as f32 * 0.37 + chunk.coord.y as f32 * 0.91).fract()
+            * std::f32::consts::TAU;
         let flicker_strength = 0.12;
         let extract_priority = 0.5 + fire.heat * 2.0;
 

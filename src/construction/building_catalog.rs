@@ -132,7 +132,10 @@ pub struct BuildingIntentPreview {
 #[must_use]
 pub fn default_preview_for_apartment(form: ApartmentForm) -> BuildingIntentPreview {
     let (label, units) = match form {
-        ApartmentForm::Duplex => ("Duplex", vec![ApartmentUnitKind::Single, ApartmentUnitKind::Single]),
+        ApartmentForm::Duplex => (
+            "Duplex",
+            vec![ApartmentUnitKind::Single, ApartmentUnitKind::Single],
+        ),
         ApartmentForm::Quadplex => (
             "Quadplex",
             vec![
@@ -142,7 +145,10 @@ pub fn default_preview_for_apartment(form: ApartmentForm) -> BuildingIntentPrevi
                 ApartmentUnitKind::Single,
             ],
         ),
-        ApartmentForm::HighRise => ("High-rise", vec![ApartmentUnitKind::Studio, ApartmentUnitKind::Family]),
+        ApartmentForm::HighRise => (
+            "High-rise",
+            vec![ApartmentUnitKind::Studio, ApartmentUnitKind::Family],
+        ),
         ApartmentForm::ThreeStoryBlock => ("3-story block", vec![ApartmentUnitKind::Double]),
         ApartmentForm::FiveStoryBlock => ("5-story block", vec![ApartmentUnitKind::Family]),
     };

@@ -1,0 +1,408 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-SIM-FEATURE-FANOUT-001",
+    "date": "2026-09-25",
+    "rule": "These lanes are not blocked by G-PLAY, keyframe stills, or the June 20 cull. One writer per resource. Do not mark done without the named test. Do not reopen MIG-*.",
+    "pick": "agent-queue-next coder --queue sim_fanout",
+    "parallel_with": "tools/orchestrator/queues/landform_veg_drain_v1.json",
+    "todo": "src/dev/landform_veg_drain_todos_v1.md"
+  },
+  "drain": [
+    {
+      "id": "TOWN-AI-COMMIT-001",
+      "agent": "coder",
+      "priority": 1,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "Each tick, the highest-priority district growth proposal becomes one pending construction site. Staged block lots are left for rollout.",
+      "docs": ["src/strategic/settlement/execute.rs", "src/strategic/settlement/block_rollout.rs"],
+      "exit": "commit_top_district_growth_keeps_lower_priority_and_staged_lots passes"
+    },
+    {
+      "id": "TOWN-AI-PLACE-002",
+      "agent": "coder",
+      "priority": 2,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "The pending growth site reaches the single construction commit funnel and a building appears at the proposal anchor.",
+      "docs": ["src/construction/", "src/strategic/settlement/execute.rs"],
+      "depends_on": ["TOWN-AI-COMMIT-001"],
+      "exit": "growth_pending_uses_commit_funnel passes"
+    },
+    {
+      "id": "TOWN-GEN-001",
+      "agent": "coder",
+      "priority": 3,
+      "status": "done",
+      "lane": "generated_towns",
+      "goal": "generated_town_book builds up to eight towns from the world seed. Centers repeat for the same seed.",
+      "docs": ["src/strategic/settlement/town.rs", "src/strategic/settlement/seed_chain.rs"],
+      "exit": "generated_town_book_is_deterministic passes"
+    },
+    {
+      "id": "TOWN-GEN-SEED-002",
+      "agent": "coder",
+      "priority": 4,
+      "status": "done",
+      "lane": "generated_towns",
+      "goal": "An empty town book in a new world uses generated_town_book from the world seed. Saved Portland overlays still win.",
+      "docs": ["src/strategic/settlement/town.rs", "src/io/save/settlement_overlay.rs"],
+      "depends_on": ["TOWN-GEN-001"],
+      "exit": "saved_town_book_is_kept_when_seeding and empty_town_book_uses_generated_towns pass"
+    },
+    {
+      "id": "LOG-HAUL-T-001",
+      "agent": "coder",
+      "priority": 5,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "Open edges get a repeating haul position from flow and tick. Idle edges stay at the origin.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "exit": "haul_marker_advances_only_when_flow_is_open passes"
+    },
+    {
+      "id": "LOG-HAUL-DRAW-002",
+      "agent": "coder",
+      "priority": 6,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "The logistics snapshot paints a marker at haul_marker_t along an edge that has flow.",
+      "docs": [
+        "src/strategic/logistics_net.rs",
+        "src/render/extraction/visual_domain_snapshots.rs"
+      ],
+      "depends_on": ["LOG-HAUL-T-001"],
+      "exit": "logistics_snapshot_prefers_graph_solver_load passes (haul_marker_t differs across ticks)"
+    },
+    {
+      "id": "WPN-TRACE-001",
+      "agent": "coder",
+      "priority": 7,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "ShotPulseBook records shots and shot_trace_tile moves from origin to target over eight ticks.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "exit": "shot_advances_from_origin_to_target passes"
+    },
+    {
+      "id": "WPN-DRAW-002",
+      "agent": "coder",
+      "priority": 8,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "A recorded shot draws a tracer on the play view and raises artillery_danger on the cells it crosses.",
+      "docs": ["src/strategic/shot_pulse.rs", "src/strategic/mod.rs"],
+      "depends_on": ["WPN-TRACE-001"],
+      "exit": "shot_advances_from_origin_to_target covers shot_danger_at; play_map_tracer_cell_is_brighter_than_untouched passes"
+    },
+    {
+      "id": "LOG-HAUL-GPU-003",
+      "agent": "coder",
+      "priority": 9,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "The logistics overlay row the GPU uploads carries haul_marker_t for that edge.",
+      "docs": ["src/render/pipelines/domain_overlay_gpu.rs"],
+      "depends_on": ["LOG-HAUL-DRAW-002"],
+      "exit": "logistics_rows_pack_committed_edge_ids packs haul into z"
+    },
+    {
+      "id": "LOG-HAUL-PAINT-004",
+      "agent": "coder",
+      "priority": 10,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "Minimap logistics heat paints the haul position, so a flowing edge moves when haul_marker_t changes.",
+      "docs": ["src/render/minimap_compositor/composite.rs"],
+      "depends_on": ["LOG-HAUL-GPU-003"],
+      "exit": "logistics_haul_pixel_moves_and_idle_stays_at_origin passes"
+    },
+    {
+      "id": "LOG-HAUL-IDLE-005",
+      "agent": "coder",
+      "priority": 11,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "Idle flow stays on the origin pixel and does not add a second moving pixel.",
+      "docs": ["src/render/minimap_compositor/composite.rs"],
+      "depends_on": ["LOG-HAUL-PAINT-004"],
+      "exit": "logistics_haul_pixel_moves_and_idle_stays_at_origin passes"
+    },
+    {
+      "id": "LOG-TWO-EDGE-006",
+      "agent": "coder",
+      "priority": 12,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "On two edges, only the flowing edge's pixel moves. The idle edge stays at its origin.",
+      "docs": ["src/render/minimap_compositor/composite.rs"],
+      "depends_on": ["LOG-HAUL-IDLE-005"],
+      "exit": "logistics_haul_pixel_moves_and_idle_stays_at_origin passes"
+    },
+    {
+      "id": "TOWN-DISTRICT-003",
+      "agent": "coder",
+      "priority": 13,
+      "status": "done",
+      "lane": "generated_towns",
+      "goal": "Generated towns get one district each. Empty-book seeding uses that. A saved Portland book is left alone.",
+      "docs": ["src/strategic/settlement/district.rs", "src/strategic/settlement/town.rs"],
+      "depends_on": ["TOWN-GEN-SEED-002"],
+      "exit": "generated_towns_each_get_a_district_and_stay_apart, empty_town_book_uses_generated_towns, saved_town_book_is_kept_when_seeding pass"
+    },
+    {
+      "id": "TOWN-SPACE-005",
+      "agent": "coder",
+      "priority": 14,
+      "status": "done",
+      "lane": "generated_towns",
+      "goal": "Generated town centers stay at least four tiles apart.",
+      "docs": ["src/strategic/settlement/town.rs"],
+      "depends_on": ["TOWN-GEN-001"],
+      "exit": "generated_towns_each_get_a_district_and_stay_apart passes"
+    },
+    {
+      "id": "TOWN-GROWTH-SITE-004",
+      "agent": "coder",
+      "priority": 15,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "A generated town's district enqueues one growth blueprint at the town center, accepted by the commit funnel.",
+      "docs": ["src/strategic/settlement/execute.rs"],
+      "depends_on": ["TOWN-DISTRICT-003", "TOWN-AI-PLACE-002"],
+      "exit": "generated_town_center_growth_uses_commit_funnel passes"
+    },
+    {
+      "id": "WPN-IMPACT-003",
+      "agent": "coder",
+      "priority": 16,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "Impact on the target tile is higher than an untouched cell, and the impact stamp color differs from the in-flight tracer.",
+      "docs": ["src/strategic/shot_pulse.rs", "src/gui/map_tile_raster.rs"],
+      "depends_on": ["WPN-DRAW-002"],
+      "exit": "shot_advances_from_origin_to_target and play_map_impact_stamp_differs_from_tracer pass"
+    },
+    {
+      "id": "WPN-KEEP-004",
+      "agent": "coder",
+      "priority": 17,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "The shot book keeps the newest 32 shots.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "depends_on": ["WPN-TRACE-001"],
+      "exit": "record_shot_keeps_the_newest_thirty_two passes"
+    },
+    {
+      "id": "WPN-FADE-005",
+      "agent": "coder",
+      "priority": 18,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "Impact stays for eight ticks after arrival, then clears.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "depends_on": ["WPN-IMPACT-003"],
+      "exit": "shot_impact_fades_after_hold passes"
+    },
+    {
+      "id": "TOWN-MARK-006",
+      "agent": "coder",
+      "priority": 19,
+      "status": "done",
+      "lane": "generated_towns",
+      "goal": "Town centers stamp a distinct color on the play raster.",
+      "docs": ["src/gui/map_tile_raster.rs", "src/render/tile_world_fallback.rs"],
+      "depends_on": ["TOWN-GEN-SEED-002"],
+      "exit": "play_map_town_center_differs_from_empty passes"
+    },
+    {
+      "id": "TOWN-GROWTH-ALL-007",
+      "agent": "coder",
+      "priority": 20,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "Every generated town gets one growth site the commit funnel accepts, each at a different tile.",
+      "docs": ["src/strategic/settlement/execute.rs"],
+      "depends_on": ["TOWN-GROWTH-SITE-004"],
+      "exit": "every_generated_town_gets_a_growth_site passes"
+    },
+    {
+      "id": "TOWN-ENQUEUE-008",
+      "agent": "coder",
+      "priority": 21,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "Generated town growth sites enter the pending queue once. Player rows stay. A second pass adds nothing.",
+      "docs": ["src/strategic/settlement/execute.rs", "src/strategic/settlement/mod.rs"],
+      "depends_on": ["TOWN-GROWTH-ALL-007"],
+      "exit": "town_growth_enqueues_once_and_keeps_player_rows passes"
+    },
+    {
+      "id": "LOG-HAUL-PLAY-008",
+      "agent": "coder",
+      "priority": 22,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "An open haul stamps the play raster at the moving cell. Idle flow stays on the origin.",
+      "docs": ["src/strategic/logistics_net.rs", "src/gui/map_tile_raster.rs", "src/render/tile_world_fallback.rs"],
+      "depends_on": ["LOG-HAUL-PAINT-004"],
+      "exit": "haul_marker_advances_only_when_flow_is_open and play_map_haul_stamp_differs_from_town pass"
+    },
+    {
+      "id": "VEG-EXTRACT-CELL-002",
+      "agent": "coder",
+      "priority": 23,
+      "status": "done",
+      "lane": "vegetation",
+      "goal": "The harness extract density follows center-cell curvature when a cell matrix is present.",
+      "docs": ["src/render/extraction/vegetation_visual_extract.rs"],
+      "depends_on": ["VEG-DRAW-FOLLOW-001"],
+      "exit": "harness_density_follows_center_curvature passes"
+    },
+    {
+      "id": "TOWN-FOOTPRINT-009",
+      "agent": "coder",
+      "priority": 24,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "A growth origin paints a footprint color that is not the town center or the haul stamp.",
+      "docs": ["src/gui/map_tile_raster.rs", "src/render/tile_world_fallback.rs"],
+      "depends_on": ["TOWN-ENQUEUE-008"],
+      "exit": "play_map_growth_origin_is_not_the_town_stamp passes"
+    },
+    {
+      "id": "WPN-VEG-005",
+      "agent": "coder",
+      "priority": 25,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "Shot impact lowers vegetation draw density. The extract reads the shot book when a hit tile is inside the chunk.",
+      "docs": ["src/systems/ecology/vegetation_field.rs", "src/render/extraction/vegetation_visual_extract.rs"],
+      "depends_on": ["WPN-IMPACT-003"],
+      "exit": "impact_lowers_veg_draw_density passes"
+    },
+    {
+      "id": "LOG-CLOSED-009",
+      "agent": "coder",
+      "priority": 26,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "A closed edge does not get a play-raster haul stamp. An open edge does.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "depends_on": ["LOG-HAUL-PLAY-008"],
+      "exit": "haul_marker_advances_only_when_flow_is_open passes"
+    },
+    {
+      "id": "TOWN-ZONE-010",
+      "agent": "coder",
+      "priority": 27,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "District zoning picks the growth archetype. Industrial queues a warehouse. Residential queues a house.",
+      "docs": ["src/strategic/settlement/execute.rs"],
+      "depends_on": ["TOWN-FOOTPRINT-009"],
+      "exit": "zoning_picks_the_growth_archetype passes"
+    },
+    {
+      "id": "TOWN-SECOND-011",
+      "agent": "coder",
+      "priority": 28,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "A second growth tick queues a new origin two tiles east and does not repeat it. Player rows stay.",
+      "docs": ["src/strategic/settlement/execute.rs", "src/strategic/settlement/mod.rs"],
+      "depends_on": ["TOWN-ZONE-010"],
+      "exit": "second_growth_tick_uses_a_new_origin_and_does_not_repeat passes"
+    },
+    {
+      "id": "LOG-AXIS-010",
+      "agent": "coder",
+      "priority": 29,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "Even open edges advance on x. Odd open edges advance a shorter step on y.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "depends_on": ["LOG-CLOSED-009"],
+      "exit": "open_edges_move_on_different_axes passes"
+    },
+    {
+      "id": "LOG-TICK-011",
+      "agent": "coder",
+      "priority": 30,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "Play haul stamps move between ticks. Tick 0 leaves open edges off the map.",
+      "docs": ["src/strategic/logistics_net.rs"],
+      "depends_on": ["LOG-AXIS-010"],
+      "exit": "play_haul_stamp_advances_with_tick passes"
+    },
+    {
+      "id": "WPN-SPLIT-008",
+      "agent": "coder",
+      "priority": 31,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "In flight, danger is on the tracer cell and impact is zero on the target. Impact is gone after the hold.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "depends_on": ["WPN-VEG-005"],
+      "exit": "danger_and_impact_sit_on_different_cells_in_flight passes"
+    },
+    {
+      "id": "WPN-FACTION-009",
+      "agent": "coder",
+      "priority": 32,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "A second faction shot stays until the book hits the cap. The oldest shot is the one dropped.",
+      "docs": ["src/strategic/shot_pulse.rs"],
+      "depends_on": ["WPN-SPLIT-008"],
+      "exit": "second_faction_shot_stays_until_the_cap passes"
+    },
+    {
+      "id": "TOWN-CIVIC-014",
+      "agent": "coder",
+      "priority": 33,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "Civic zoning queues a civic hall. Commercial zoning still queues a corner shop.",
+      "docs": ["src/strategic/settlement/execute.rs"],
+      "depends_on": ["TOWN-ZONE-010"],
+      "exit": "civic_zoning_queues_a_hall passes"
+    },
+    {
+      "id": "HUD-HAUL-012",
+      "agent": "coder",
+      "priority": 34,
+      "status": "done",
+      "lane": "logistics",
+      "goal": "HUD names haul east or north only while flow is open. Idle flow stays idle.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs"],
+      "depends_on": ["LOG-AXIS-010"],
+      "exit": "haul_heading_names_axis_only_when_flow_is_open passes"
+    },
+    {
+      "id": "HUD-TOWN-013",
+      "agent": "coder",
+      "priority": 35,
+      "status": "done",
+      "lane": "ai_towns",
+      "goal": "HUD counts live towns and queued growth sites. An empty book reads no towns.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs"],
+      "depends_on": ["TOWN-SECOND-011"],
+      "exit": "town_board_line_counts_live_towns passes"
+    },
+    {
+      "id": "HUD-SHOT-015",
+      "agent": "coder",
+      "priority": 36,
+      "status": "done",
+      "lane": "weapons",
+      "goal": "HUD says in flight while danger is off the target, then impact once the hold starts.",
+      "docs": ["src/gui/hud/sim_hud_copy.rs"],
+      "depends_on": ["WPN-SPLIT-008"],
+      "exit": "shot_hud_word_follows_flight_then_impact passes"
+    }
+  ]
+}

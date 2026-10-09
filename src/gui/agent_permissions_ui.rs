@@ -542,6 +542,9 @@ impl Plugin for AgentPermissionsUiPlugin {
         app.init_resource::<PermissionsUiState>()
            .add_message::<TogglePermissionsUiEvent>()
            .add_systems(Update, toggle_permissions_ui)
-           .add_systems(EguiPrimaryContextPass, permissions_ui_system);
+           .add_systems(
+               EguiPrimaryContextPass,
+               permissions_ui_system.run_if(crate::gui::ui_gates::product_egui_shell_active),
+           );
     }
 }

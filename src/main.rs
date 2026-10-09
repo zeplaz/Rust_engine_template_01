@@ -9,7 +9,7 @@ use proc_A_dine01::render::DebugRenderTraceConfig;
 #[command(name = "proc_A_dine01")]
 struct Cli {
     /// Debug / VFX test boot: `frame` (layout), `visual`/`capture` (proof+exit), `demo` (stay open),
-    /// `unittest` (fixture world), or `weather` | `fire` | `atmosphere`.
+    /// `vfx` / `city` (stay open), `unittest` (fixture world), or `weather` | `fire` | `atmosphere`.
     #[arg(long, value_name = "MODE")]
     test: Option<String>,
     /// Override unittest fixture path (default `assets/fixtures/unittest_world.ron`).

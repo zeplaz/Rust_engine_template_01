@@ -9,7 +9,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
-from .paths import repo_root, staging_root
+from .paths import repo_root, resolve_under_root, staging_root
 from .schemas import load_json_file
 from .validators.effect_spec import validate_effect_spec
 
@@ -39,9 +39,7 @@ def _utc_now() -> str:
 
 
 def _resolve_spec(spec_path: str | Path) -> Path:
-    p = Path(spec_path)
-    if not p.is_absolute():
-        p = repo_root() / p
+    p = resolve_under_root(repo_root(), spec_path, label="effect spec")
     if not p.is_file():
         raise FileNotFoundError(f"EffectSpec not found: {p}")
     return p
@@ -150,7 +148,7 @@ def pack_effect_spec(spec_path: str | Path, *, force: bool = False) -> dict[str,
     shader_hashes: dict[str, Any] = {}
     hash_parts: list[str] = []
     for role, rel in _shader_pack_entries(spec):
-        src = repo_root() / rel
+        src = resolve_under_root(repo_root(), rel, label="shader source")
         if not src.is_file():
             raise FileNotFoundError(f"shader_pack.{role} missing on disk: {rel}")
         dest_name = Path(rel).name
@@ -210,18 +208,40 @@ def _load_pack_manifest(staging_dir: Path) -> dict[str, Any]:
     return json.loads(manifest_path.read_text(encoding="utf-8"))
 
 
+def _shader_inside_staging(staging_dir: Path, dest_rel: str) -> Path:
+    """Resolve a pack dest under the staging directory. ``../`` is rejected."""
+    rel = str(dest_rel or "").replace("\\", "/").strip()
+    if not rel or rel.startswith("/") or rel.startswith("../") or "/../" in f"/{rel}":
+        raise ValueError(f"shader dest escapes staging: {dest_rel}")
+    root = staging_dir.resolve()
+    dest = (staging_dir / rel).resolve()
+    if not dest.is_relative_to(root):
+        raise ValueError(f"shader dest escapes staging: {dest_rel}")
+    return dest
+
+
 def _verify_staging_hashes(staging_dir: Path, manifest: dict[str, Any]) -> None:
     for role, entry in (manifest.get("shader_hashes") or {}).items():
         if not isinstance(entry, dict):
             raise ValueError(f"invalid shader_hashes.{role}")
         dest_rel = str(entry.get("dest") or "")
         expected = str(entry.get("sha256") or "")
-        dest = staging_dir / dest_rel
+        dest = _shader_inside_staging(staging_dir, dest_rel)
         if not dest.is_file():
             raise FileNotFoundError(f"staged shader missing: {dest_rel}")
         actual = _sha256_file(dest)
         if actual != expected:
             raise ValueError(f"staging hash mismatch for {role}: expected {expected[:12]}… got {actual[:12]}…")
+
+
+def _disk_dishonest_witness(staging_dir: Path) -> dict[str, Any] | None:
+    """Staging ``dishonest_gate`` wins over a registry manifest that says honest."""
+    from .effect_preview_capture import load_staging_preview_witness
+
+    loaded = load_staging_preview_witness(staging_dir)
+    if isinstance(loaded, dict) and str(loaded.get("honest_gate") or "") == "dishonest_gate":
+        return dict(loaded)
+    return None
 
 
 def _staging_honest_gate(effect_id: str, staging_dir: Path) -> str:
@@ -289,8 +309,8 @@ def promote_effect(spec_path: str | Path, *, force: bool = False, pack_first: bo
 
     for role, entry in (manifest.get("shader_hashes") or {}).items():
         dest_rel = str(entry.get("dest") or "")
-        src = staging_dir / dest_rel
-        dest = registry_dir / Path(dest_rel).name
+        src = _shader_inside_staging(staging_dir, dest_rel)
+        dest = registry_dir / src.name
         shutil.copy2(src, dest)
 
     shutil.copy2(staging_dir / EFFECT_SPEC_NAME, registry_dir / EFFECT_SPEC_NAME)
@@ -461,6 +481,9 @@ def refresh_artist_vfx_pipeline_witness(*, repo: Path | None = None) -> dict[str
                 promoted_rel=promoted_rel,
                 staging_dir=staging_dir,
             )
+            locked = _disk_dishonest_witness(staging_dir)
+            if locked is not None:
+                pw = locked
             row["staging_path"] = f"assets/staging/{effect_id}/"
             row["pack_hash"] = pm.get("pack_hash")
             row["shader_count"] = len(pm.get("shader_hashes") or {})
@@ -471,14 +494,18 @@ def refresh_artist_vfx_pipeline_witness(*, repo: Path | None = None) -> dict[str
         promote_manifest = registry_dir / PROMOTE_MANIFEST
         if promote_manifest.is_file():
             pm = json.loads(promote_manifest.read_text(encoding="utf-8"))
-            # Prefer live capture over stale stub still sitting on promote manifest.
+            # Prefer live capture over a stale stub on the promote manifest.
+            # A disk dishonest_gate is never replaced by a registry honest label.
             pw = resolve_preview_witness(
                 effect_id=effect_id,
                 staging_rel=f"assets/staging/{effect_id}/",
                 promoted_rel=f"{REGISTRY_REL}/{effect_id}/",
                 staging_dir=staging_dir if pack_manifest.is_file() else staging_dir,
             )
-            if isinstance(pm.get("preview_witness"), dict) and pw.get("honest_gate") != "honest":
+            locked = _disk_dishonest_witness(staging_dir)
+            if locked is not None:
+                pw = locked
+            elif isinstance(pm.get("preview_witness"), dict) and pw.get("honest_gate") != "honest":
                 # Keep registry-written witness when staging capture absent.
                 reg_pw = pm["preview_witness"]
                 if str(reg_pw.get("honest_gate") or "") == "honest" and int(

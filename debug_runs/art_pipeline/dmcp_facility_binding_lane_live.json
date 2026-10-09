@@ -206,7 +206,7 @@
   },
   "_agent_meta": {
     "schema": "dmcp_facility_binding_lane_live_v1",
-    "written_at_epoch_secs": 1781756433,
+    "written_at_epoch_secs": 1790380710,
     "profile": "DMCP_FACILITY_BINDING",
     "source_system": "dmcp_facility_binding_lane",
     "relative_path": "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json",

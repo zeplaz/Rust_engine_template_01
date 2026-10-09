@@ -52,13 +52,7 @@ impl<'a> ConstructionMapProjection<'a> {
     #[must_use]
     pub fn world_to_egui(&self, world: Vec3) -> Option<egui::Pos2> {
         let compat = self.map_camera_compat();
-        sim_map_world_vec3_to_egui(
-            world,
-            &compat,
-            self.map_vp,
-            self.world_w,
-            self.world_h,
-        )
+        sim_map_world_vec3_to_egui(world, &compat, self.map_vp, self.world_w, self.world_h)
     }
 
     /// Prefer [`MainWorldCameraOrthoTrace`] — matches RTT stretch + tactical map camera.
@@ -68,11 +62,7 @@ impl<'a> ConstructionMapProjection<'a> {
         world: Vec3,
         ortho: &MainWorldCameraOrthoTrace,
     ) -> Option<egui::Pos2> {
-        sim_map_world_xy_to_egui_with_ortho(
-            Vec2::new(world.x, world.z),
-            self.map_vp,
-            ortho,
-        )
+        sim_map_world_xy_to_egui_with_ortho(Vec2::new(world.x, world.z), self.map_vp, ortho)
     }
 
     #[must_use]
@@ -105,11 +95,7 @@ impl<'a> ConstructionMapProjection<'a> {
         cursor_logical: Vec2,
         ortho: &crate::gui::MainWorldCameraOrthoTrace,
     ) -> Option<Vec2> {
-        crate::gui::sim_map_screen_to_world_xy_with_ortho(
-            cursor_logical,
-            self.map_vp,
-            ortho,
-        )
+        crate::gui::sim_map_screen_to_world_xy_with_ortho(cursor_logical, self.map_vp, ortho)
     }
 
     #[must_use]
@@ -125,8 +111,7 @@ impl<'a> ConstructionMapProjection<'a> {
         if let Some(ortho) = ortho {
             return self.cursor_world_xy_with_ortho(cursor_logical, ortho);
         }
-        if let Some(frame) =
-            crate::gui::sim_map_projection_frame(camera, self.map_vp, window, None)
+        if let Some(frame) = crate::gui::sim_map_projection_frame(camera, self.map_vp, window, None)
         {
             let pose = crate::gui::MapCameraPresentationPose {
                 translation: self.map_camera_compat().translation,
@@ -228,8 +213,10 @@ pub fn tile_screen_extent_rendered(
     let a = proj.world_to_egui_rendered(Vec3::new(0.5, 0.0, 0.5), ortho);
     let b = proj.world_to_egui_rendered(Vec3::new(1.5, 0.0, 0.5), ortho);
     match (a, b) {
-        (Some(p0), Some(p1)) => (p1 - p0).length().max(4.0 * proj.zoom_screen_scale()),
-        _ => 24.0 * proj.zoom_screen_scale(),
+        // One map cell. A floor of `4 * zoom` drew quads larger than the cell and
+        // kept that extra size when the camera zoomed.
+        (Some(p0), Some(p1)) => (p1 - p0).length().max(1e-3),
+        _ => proj.zoom_screen_scale().max(1e-3),
     }
 }
 
@@ -253,7 +240,14 @@ pub fn egui_footprint_hotfix_a_witness_green() -> bool {
         ..Default::default()
     };
     let ext = tile_screen_extent(None, &desired, &map_vp, &params);
-    ext > 4.0
+    let zoomed = MapCameraDesired {
+        translation: Vec3::new(64.0, 64.0, 999.0),
+        scale: Vec3::splat(4.0),
+        ..Default::default()
+    };
+    let ext_zoom = tile_screen_extent(None, &zoomed, &map_vp, &params);
+    ext > 0.5
+        && (ext_zoom / ext - 2.0).abs() < 0.08
         && world_to_sim_map_egui(Vec3::new(64.5, 0.0, 64.5), None, &desired, &map_vp, &params)
             .is_some()
 }
@@ -335,10 +329,8 @@ mod tests {
             "tile screen extent should change with zoom: low={ext_low} high={ext_high}"
         );
 
-        let proj_low =
-            ConstructionMapProjection::resolve(None, &zoom_low, &map_vp, &params);
-        let proj_high =
-            ConstructionMapProjection::resolve(None, &zoom_high, &map_vp, &params);
+        let proj_low = ConstructionMapProjection::resolve(None, &zoom_low, &map_vp, &params);
+        let proj_high = ConstructionMapProjection::resolve(None, &zoom_high, &map_vp, &params);
         let screen_low = proj_low.world_to_egui(world).expect("low");
         let screen_high = proj_high.world_to_egui(world).expect("high");
         assert!((screen_low - screen_high).length() > 1.0);

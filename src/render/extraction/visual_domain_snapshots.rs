@@ -65,6 +65,12 @@ pub fn fill_logistics_snapshot(
 
     snapshot.corridor_revision = graph.map(|g| g.revision as u64).unwrap_or(0);
     snapshot.active_overlay_rows = snapshot.edge_rows.len() as u32;
+    let tick = fire.stamp.tick;
+    snapshot.haul_marker_t = snapshot
+        .edge_rows
+        .iter()
+        .map(|(_, flow)| crate::strategic::haul_marker_t(*flow, tick))
+        .collect();
 }
 
 fn fill_ecology_snapshot(
@@ -428,6 +434,17 @@ mod tests {
         fill_logistics_snapshot(&fire, Some(&graph), Some(&solver), None, &mut snapshot);
         assert_eq!(snapshot.active_overlay_rows, 1);
         assert!((snapshot.edge_rows[0].1 - 0.4).abs() < 1e-4);
+        let at_tick = snapshot.haul_marker_t[0];
+        let fire_later = FireSimulationSnapshot {
+            stamp: SimStepStamp::new(13, 0),
+            ..Default::default()
+        };
+        fill_logistics_snapshot(&fire_later, Some(&graph), Some(&solver), None, &mut snapshot);
+        assert!(
+            (snapshot.haul_marker_t[0] - at_tick).abs() > 0.05,
+            "tick 5 {at_tick} tick 13 {}",
+            snapshot.haul_marker_t[0]
+        );
     }
 
     #[test]

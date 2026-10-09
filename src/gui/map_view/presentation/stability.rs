@@ -187,6 +187,17 @@ pub fn sync_shell_layout_drag_gate(
     Ok(())
 }
 
+/// Simulation shell drag comes from Bevy minimap chrome. Does not read an egui context.
+pub fn sync_shell_layout_drag_gate_from_bevy(
+    minimap: Option<Res<crate::gui::hud::minimap_bevy_interaction::MinimapBevyPointerState>>,
+    mut pending_layout: ResMut<crate::gui::hud::PendingHudLayoutCommit>,
+    mut gate: ResMut<MapShellPointerGate>,
+) {
+    let pointer_active = minimap.as_deref().is_some_and(|m| m.chrome_drag_active());
+    pending_layout.set_drag_active(pointer_active);
+    gate.shell_pointer_active = pointer_active;
+}
+
 pub fn sync_map_view_ready_states(
     frames: Res<ResolvedMapViewFrames>,
     resolved: Res<ResolvedViewports>,
@@ -318,6 +329,7 @@ pub fn commit_map_view_interaction_system(
     hub.minimap.reset_frame();
 }
 
+#[allow(dead_code)] // WorldGen placeholder text is a Bevy node; the egui helper stays compiled for the editor map path.
 pub fn paint_map_view_placeholder(ui: &mut egui::Ui, rect: egui::Rect, label: &str) {
     let painter = ui.painter_at(rect);
     painter.rect_filled(rect, 0.0, egui::Color32::from_rgb(18, 20, 24));

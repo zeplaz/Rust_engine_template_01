@@ -7,6 +7,12 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 use bevy_egui::EguiContexts;
 
+use crate::engine::states::BaseState;
+use crate::engine::AppState;
+use crate::gui::hud::shell_diagnostics::{note_egui_context_acquired, ProductShellDiagnostics};
+use crate::gui::hud::simulation_pointer_gate::{
+    simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
+};
 use crate::gui::SimulationMapViewport;
 
 /// Panel chrome state — replaces bool `expanded` on shell resources.
@@ -141,39 +147,97 @@ pub fn hud_panel_escape_collapse_system(
     witness.cycle_ok = true;
 }
 
-/// Click outside egui panels → collapse unpinned shells.
-pub fn hud_panel_click_outside_collapse_system(
-    mut contexts: EguiContexts,
-    mouse: Res<ButtonInput<MouseButton>>,
-    map_vp: Res<SimulationMapViewport>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
-    mut layout: ResMut<crate::gui::hud::HudCommandShellLayout>,
-    mut transmission: ResMut<crate::gui::hud::TransmissionShellState>,
-    mut context_tray: ResMut<crate::gui::hud::ContextTrayState>,
-) {
-    if !mouse.just_pressed(MouseButton::Left) {
-        return;
-    }
-    if let Ok(window) = win.single() {
-        if let Some(cursor) = window.cursor_position() {
-            if map_vp.is_adequate_for_camera() && map_vp.contains_cursor(cursor) {
-                return;
-            }
-        }
-    }
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
+fn click_is_inside_map_hole(
+    map_vp: &SimulationMapViewport,
+    win: &Query<&Window, With<PrimaryWindow>>,
+) -> bool {
+    let Ok(window) = win.single() else {
+        return false;
     };
-    if ctx.is_pointer_over_egui() {
-        return;
-    }
+    let Some(cursor) = window.cursor_position() else {
+        return false;
+    };
+    map_vp.is_adequate_for_camera() && map_vp.contains_cursor(cursor)
+}
+
+fn collapse_unpinned_shells(
+    tray: &mut crate::gui::hud::HudOverlayTrayState,
+    layout: &mut crate::gui::hud::HudCommandShellLayout,
+    transmission: &mut crate::gui::hud::TransmissionShellState,
+    context_tray: &mut crate::gui::hud::ContextTrayState,
+) {
     tray.tray_panel_state.collapse_unpinned();
     layout.overlay_tray_state.collapse_unpinned();
     layout.status_side_panel_state.collapse_unpinned();
     layout.command_tray_state.collapse_unpinned();
     transmission.panel_state.collapse_unpinned();
     context_tray.panel_state.collapse_unpinned();
+}
+
+/// Simulation click outside Bevy chrome → collapse unpinned shells. No egui context.
+pub fn hud_panel_click_outside_collapse_system(
+    mouse: Res<ButtonInput<MouseButton>>,
+    map_vp: Res<SimulationMapViewport>,
+    win: Query<&Window, With<PrimaryWindow>>,
+    gate: Option<Res<SimulationMapPointerGate>>,
+    mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
+    mut layout: ResMut<crate::gui::hud::HudCommandShellLayout>,
+    mut transmission: ResMut<crate::gui::hud::TransmissionShellState>,
+    mut context_tray: ResMut<crate::gui::hud::ContextTrayState>,
+) {
+    if !mouse.just_pressed(MouseButton::Left) || click_is_inside_map_hole(map_vp.as_ref(), &win) {
+        return;
+    }
+    if simulation_tool_pointer(gate.as_deref()) == SimulationToolPointer::HeldByChrome {
+        return;
+    }
+    collapse_unpinned_shells(
+        tray.as_mut(),
+        layout.as_mut(),
+        transmission.as_mut(),
+        context_tray.as_mut(),
+    );
+}
+
+/// Editor click outside egui panels → collapse unpinned shells.
+pub fn hud_panel_click_outside_collapse_egui_system(
+    mut contexts: EguiContexts,
+    mouse: Res<ButtonInput<MouseButton>>,
+    map_vp: Res<SimulationMapViewport>,
+    win: Query<&Window, With<PrimaryWindow>>,
+    base: Option<Res<State<BaseState>>>,
+    mut diag: Option<ResMut<ProductShellDiagnostics>>,
+    mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
+    mut layout: ResMut<crate::gui::hud::HudCommandShellLayout>,
+    mut transmission: ResMut<crate::gui::hud::TransmissionShellState>,
+    mut context_tray: ResMut<crate::gui::hud::ContextTrayState>,
+    app: Option<Res<State<AppState>>>,
+) {
+    if app
+        .as_ref()
+        .is_some_and(|state| matches!(state.get(), AppState::WorldGen))
+    {
+        return;
+    }
+    if !mouse.just_pressed(MouseButton::Left) || click_is_inside_map_hole(map_vp.as_ref(), &win) {
+        return;
+    }
+    let Ok(ctx) = contexts.ctx_mut() else {
+        return;
+    };
+    let in_simulation = base
+        .as_ref()
+        .is_some_and(|state| matches!(state.get(), BaseState::Simulation));
+    note_egui_context_acquired(in_simulation, diag.as_deref_mut());
+    if ctx.is_pointer_over_egui() {
+        return;
+    }
+    collapse_unpinned_shells(
+        tray.as_mut(),
+        layout.as_mut(),
+        transmission.as_mut(),
+        context_tray.as_mut(),
+    );
 }
 
 pub struct HudPanelStatePlugin;
@@ -184,7 +248,12 @@ impl Plugin for HudPanelStatePlugin {
             Update,
             (
                 hud_panel_escape_collapse_system,
-                hud_panel_click_outside_collapse_system.after(hud_panel_escape_collapse_system),
+                hud_panel_click_outside_collapse_system
+                    .after(hud_panel_escape_collapse_system)
+                    .run_if(in_state(BaseState::Simulation)),
+                hud_panel_click_outside_collapse_egui_system
+                    .after(hud_panel_escape_collapse_system)
+                    .run_if(not(in_state(BaseState::Simulation))),
                 super::hud_side_status_panel::hud_status_side_panel_toggle_system
                     .run_if(crate::gui::ui_gates::side_status_rail_egui_active),
             )

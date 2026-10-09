@@ -1,8 +1,8 @@
 //! Power line draw tool — path input, routing, commit to [`UtilityGraph`].
 
+mod commit;
 mod cut_input;
 mod damage;
-mod commit;
 mod ghost;
 mod input;
 mod placement;
@@ -14,8 +14,9 @@ pub use cut_input::{
 };
 pub use damage::{
     cut_power_line_segment, damage_power_line_segment, power_damage_segment_witness_green,
-    preview_island_offline_from_cut, register_power_segments_from_graph_system,
-    sync_power_damage_to_presentation_system, PowerLineDamageBook, PowerLineSegmentHealth,
+    power_line_load_fraction, preview_island_offline_from_cut,
+    register_power_segments_from_graph_system, sync_power_damage_to_presentation_system,
+    PowerLineDamageBook, PowerLineSegmentHealth,
 };
 pub use repair::{
     power_repair_queue_witness_green, tick_power_repair_queue_system, PowerRepairJob,

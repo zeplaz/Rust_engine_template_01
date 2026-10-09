@@ -108,6 +108,8 @@ pub struct WorldGenParams {
     pub auto_symbolic_land_features: bool,
     /// Terrain storage strategy (per-tile ECS is legacy; chunk matrix is the scale target).
     pub field_storage: TerrainFieldStorage,
+    /// Towns requested by a full generation. Zero asks for none and is not clamped to one.
+    pub settlement_count: u32,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug, Serialize, Deserialize)]
@@ -152,6 +154,7 @@ impl Default for WorldGenParams {
             feature_rhythm: LandFeatureRhythm::default(),
             auto_symbolic_land_features: true,
             field_storage: TerrainFieldStorage::PerTileEntities,
+            settlement_count: 0,
         };
         p.recompute_symbolic_land_features();
         p
@@ -708,6 +711,9 @@ fn world_gen_pipeline_tick(
     mut raster_dirty: Option<ResMut<TileWorldFallbackRasterDirty>>,
     mut dense_cache: Option<ResMut<WorldGenDenseTerrainCache>>,
     mut fire_chunk_index: Option<ResMut<ChunkFireEntityIndex>>,
+    mut towns: Option<ResMut<crate::strategic::settlement::TownBook>>,
+    mut districts: Option<ResMut<crate::strategic::settlement::DistrictBook>>,
+    mut town_snap: Option<ResMut<crate::strategic::settlement::GeneratedTownDrySnap>>,
 ) {
     if let Some(job) = slot.0.as_mut() {
         if matches!(job.step, WorldGenPipelineStep::HydrologyPending) {
@@ -765,6 +771,28 @@ fn world_gen_pipeline_tick(
                         }
                     }
                     let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &job.run_params);
+                    if let (Some(towns), Some(districts), Some(snap)) =
+                        (towns.as_mut(), districts.as_mut(), town_snap.as_mut())
+                    {
+                        let full = job.request_phase == WorldGenPhase::Full;
+                        let world_seed = job.run_params.seed;
+                        let settlement_count = job.run_params.settlement_count;
+                        crate::strategic::settlement::place_towns_for_full_generation(
+                            full,
+                            world_seed,
+                            settlement_count,
+                            towns,
+                            districts,
+                            snap,
+                            &|cell| {
+                                if cell.x < 0 || cell.y < 0 {
+                                    return true;
+                                }
+                                catalog.tile_kind(cell.x as u32, cell.y as u32)
+                                    != crate::render::WaterSurfaceKind::None
+                            },
+                        );
+                    }
                     commands.insert_resource(catalog);
                     if let Some(dirty) = raster_dirty.as_mut() {
                         dirty.bump();

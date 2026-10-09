@@ -25,40 +25,23 @@ var<storage, read> instances: array<TileInstance>;
 struct VertexOutput {
     @builtin(position) clip_position: vec4<f32>,
     @location(0) color: vec4<f32>,
+    @location(1) suppress: f32,
+}
+
+fn debug_quad_suppressed(flags: u32) -> bool {
+    // Construction-site and placement-footprint rows are not production paint.
+    // Phase occupation is the egui overlay; the ghost is visual_authority.
+    let footprint = ((flags >> 4u) & 7u) != 0u;
+    let construction = ((flags >> 7u) & 1u) != 0u;
+    return footprint || construction;
 }
 
 fn tile_instance_color(flags: u32, phase_lod: u32) -> vec4<f32> {
     let focus = (flags & 1u) != 0u;
     let fire = ((flags >> 1u) & 1u) != 0u;
-    let fp_invalid = ((flags >> 6u) & 1u) != 0u;
-    let fp_risky = ((flags >> 5u) & 1u) != 0u;
-    let fp_valid = ((flags >> 4u) & 1u) != 0u;
     let terrain = ((flags >> 3u) & 1u) != 0u;
-    let construction = ((flags >> 7u) & 1u) != 0u;
-    if construction {
-        // `phase_lod` = construction phase index (see site_phase_tile_instances.rs).
-        if phase_lod <= 1u {
-            return vec4<f32>(0.39, 0.63, 0.86, 0.42);
-        }
-        if phase_lod <= 3u {
-            return vec4<f32>(0.86, 0.67, 0.24, 0.45);
-        }
-        if phase_lod <= 5u {
-            return vec4<f32>(0.86, 0.47, 0.16, 0.48);
-        }
-        if phase_lod == 6u {
-            return vec4<f32>(0.27, 0.67, 0.37, 0.42);
-        }
-        return vec4<f32>(0.63, 0.27, 0.22, 0.44);
-    }
-    if fp_invalid {
-        return vec4<f32>(0.86, 0.12, 0.12, 0.42);
-    }
-    if fp_risky {
-        return vec4<f32>(1.0, 0.78, 0.2, 0.38);
-    }
-    if fp_valid {
-        return vec4<f32>(0.1, 0.82, 0.22, 0.32);
+    if debug_quad_suppressed(flags) {
+        return vec4<f32>(0.0, 0.0, 0.0, f32(phase_lod) * 0.0);
     }
     if focus {
         return vec4<f32>(0.95, 0.85, 0.15, 0.92);
@@ -107,10 +90,14 @@ fn vs_main(
     var out: VertexOutput;
     out.clip_position = clip;
     out.color = apply_view_tint(tile_instance_color(tile_row.flags, tile_row.lod), globals.view_tint);
+    out.suppress = select(0.0, 1.0, debug_quad_suppressed(tile_row.flags));
     return out;
 }
 
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    if (in.suppress > 0.5) {
+        discard;
+    }
     return in.color;
 }

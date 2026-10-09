@@ -535,7 +535,10 @@ mod tests {
             corridor_type_for_profile("default_rail"),
             CorridorType::Rail
         );
-        assert_eq!(corridor_type_for_profile("highway_2lane"), CorridorType::Road);
+        assert_eq!(
+            corridor_type_for_profile("highway_2lane"),
+            CorridorType::Road
+        );
     }
 
     #[test]

@@ -29,6 +29,8 @@ pub enum GrowthReasonCode {
     MarketSaturated,
     UtilityMissing,
     PolicyBlocked,
+    /// A threat cell or shot target is within 16 tiles of the town.
+    ThreatInRange,
 }
 
 #[must_use]

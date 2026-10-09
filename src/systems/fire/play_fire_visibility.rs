@@ -38,7 +38,9 @@ pub fn triage_fire_play_vis_001_green(inputs: &TriageFirePlayVis001Inputs) -> bo
 }
 
 #[must_use]
-pub fn triage_fire_play_vis_001_witness_json(inputs: &TriageFirePlayVis001Inputs) -> serde_json::Value {
+pub fn triage_fire_play_vis_001_witness_json(
+    inputs: &TriageFirePlayVis001Inputs,
+) -> serde_json::Value {
     serde_json::json!({
         "gate": "TRIAGE-FIRE-PLAY-VIS-001",
         "green": triage_fire_play_vis_001_green(inputs),
@@ -110,8 +112,10 @@ pub fn sync_sim_map_fire_overlay_when_sim_has_heat(
 mod tests {
     use super::*;
     use crate::engine::launch_args::TestScene;
-    use crate::gui::{map_camera_viewport_pixels, map_zoom_alpha_with_limits, map_zoom_limits_for_world};
-    use crate::render::{CHUNK_FIRE_OVERLAY_DISPLAY_MIN, SharedOverlayFieldBuffers};
+    use crate::gui::{
+        map_camera_viewport_pixels, map_zoom_alpha_with_limits, map_zoom_limits_for_world,
+    };
+    use crate::render::{SharedOverlayFieldBuffers, CHUNK_FIRE_OVERLAY_DISPLAY_MIN};
     use bevy::math::IVec2;
 
     #[test]
@@ -154,7 +158,9 @@ mod tests {
                 .fire_heat
         );
         let mut shared = SharedOverlayFieldBuffers::default();
-        shared.chunk_fire_heat.insert(IVec2::new(2, 2), CHUNK_FIRE_OVERLAY_DISPLAY_MIN + 0.1);
+        shared
+            .chunk_fire_heat
+            .insert(IVec2::new(2, 2), CHUNK_FIRE_OVERLAY_DISPLAY_MIN + 0.1);
         shared.bump();
         let want = !shared.chunk_fire_heat.is_empty();
         presentation
@@ -174,6 +180,9 @@ mod tests {
         assert!(TestScene::Fire.seeds_fire_overlay());
         assert!(TestScene::Visual.seeds_fire_overlay());
         assert!(!TestScene::Weather.seeds_fire_overlay());
-        assert_ne!(TestScene::Fire.menu_label(), TestScene::Weather.menu_label());
+        assert_ne!(
+            TestScene::Fire.menu_label(),
+            TestScene::Weather.menu_label()
+        );
     }
 }

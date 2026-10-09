@@ -79,9 +79,48 @@ fn variant_key_for_extract_row(
     )
 }
 
+fn center_cell_cover_scale(matrix: &crate::terrain::generation::ChunkCellMatrix) -> f32 {
+    let scales = crate::terrain::generation::cell_canopy_scales(matrix);
+    if scales.is_empty() {
+        return 1.0;
+    }
+    let cx = matrix.size.x / 2;
+    let cy = matrix.size.y / 2;
+    scales
+        .get(matrix.idx(cx, cy))
+        .copied()
+        .unwrap_or(1.0)
+}
+
+fn shot_impact_in_chunk(
+    book: Option<&crate::strategic::ShotPulseBook>,
+    tick: u64,
+    chunk: &Chunk,
+    matrix: Option<&crate::terrain::generation::ChunkCellMatrix>,
+) -> f32 {
+    let (Some(book), Some(matrix)) = (book, matrix) else {
+        return 0.0;
+    };
+    let origin_x = chunk.coord.x.saturating_mul(matrix.size.x as i32);
+    let origin_y = chunk.coord.y.saturating_mul(matrix.size.y as i32);
+    let w = matrix.size.x as i32;
+    let h = matrix.size.y as i32;
+    let mut best = 0.0f32;
+    for shot in &book.recent {
+        let tile = shot.target;
+        if tile.x < origin_x || tile.y < origin_y || tile.x >= origin_x + w || tile.y >= origin_y + h
+        {
+            continue;
+        }
+        best = best.max(crate::strategic::shot_impact_at(shot, tick, tile));
+    }
+    best
+}
+
 pub fn build_vegetation_extract_frame(
     tick: Res<crate::systems::sim_control::SimTick>,
     sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
+    shots: Option<Res<crate::strategic::ShotPulseBook>>,
     mut frame: ResMut<VegetationExtractFrame>,
     q: Query<(
         &Chunk,
@@ -89,6 +128,7 @@ pub fn build_vegetation_extract_frame(
         Option<&ActiveBurn>,
         Option<&VegetationPopulation>,
         Option<&LandscapeProgramOnChunk>,
+        Option<&crate::terrain::generation::ChunkCellMatrix>,
     )>,
 ) {
     // PERF-INSTR-VFX-001: name this per-chunk veg scan inside the Update wall window (STALL/PERF only).
@@ -100,18 +140,27 @@ pub fn build_vegetation_extract_frame(
     frame.revision = frame.revision.saturating_add(1);
     frame.stamp = stamp;
     frame.rows.clear();
-    for (chunk, succ, burn, pop, program) in &q {
+    for (chunk, succ, burn, pop, program, matrix) in &q {
         let burn_active = burn.is_some_and(|b| b.heat > crate::systems::ecology::ACTIVE_BURN_HEAT_EPS);
         let planning_glyph = planning_glyph_for_burn(burn, succ.stage);
         let extract_glyph = extract_glyph_for_burn(burn, succ.stage);
         let variant_key = variant_key_for_extract_row(program, burn, succ.stage);
+        let base_density = pop.map(|p| p.mean_density).unwrap_or(0.0);
+        let cell_scale = matrix
+            .map(center_cell_cover_scale)
+            .unwrap_or(1.0);
+        let impact = shot_impact_in_chunk(shots.as_deref(), tick.0, chunk, matrix);
         frame.rows.push(VegExtractRow {
             coord: chunk.coord,
             planning_glyph,
             extract_glyph,
             modifiers: VegExtractModifiers {
                 burn_active,
-                mean_density: pop.map(|p| p.mean_density).unwrap_or(0.0),
+                mean_density: crate::systems::ecology::veg_draw_density_after_impact(
+                    base_density,
+                    cell_scale,
+                    impact,
+                ),
             },
             variant_key,
             succession_stage: succ.stage,
@@ -173,6 +222,26 @@ pub fn harness_topo_extract_witness_green(frame: &VegetationExtractFrame) -> boo
 }
 
 /// Build extract rows from live program chunks without active burn (sim harness path).
+#[cfg(test)]
+pub fn harness_row_density(
+    mean: f32,
+    matrix: Option<&crate::terrain::generation::ChunkCellMatrix>,
+) -> f32 {
+    let scale = matrix.map(center_cell_cover_scale).unwrap_or(1.0);
+    crate::systems::ecology::veg_draw_density(mean, scale)
+}
+
+/// Drawn density after snow. Depth 0 matches [`harness_row_density`].
+#[must_use]
+pub fn harness_row_density_under_snow(
+    mean: f32,
+    matrix: Option<&crate::terrain::generation::ChunkCellMatrix>,
+    snow_depth: f32,
+) -> f32 {
+    let scale = matrix.map(center_cell_cover_scale).unwrap_or(1.0);
+    crate::systems::ecology::veg_draw_density_under_snow(mean, scale, snow_depth)
+}
+
 #[must_use]
 pub fn build_harness_topo_extract_frame(world: &mut World) -> VegetationExtractFrame {
     let mut rows = Vec::new();
@@ -182,8 +251,10 @@ pub fn build_harness_topo_extract_frame(world: &mut World) -> VegetationExtractF
         Option<&SuccessionState>,
         Option<&ActiveBurn>,
         Option<&VegetationPopulation>,
+        Option<&crate::terrain::generation::ChunkCellMatrix>,
+        Option<&crate::systems::weather::ChunkWeather>,
     )>();
-    for (chunk, program, succ, burn, pop) in q.iter(world) {
+    for (chunk, program, succ, burn, pop, matrix, weather) in q.iter(world) {
         if burn.is_some_and(|b| b.heat > ACTIVE_BURN_HEAT_EPS) {
             continue;
         }
@@ -200,7 +271,11 @@ pub fn build_harness_topo_extract_frame(world: &mut World) -> VegetationExtractF
             extract_glyph: extract_glyph_for_burn(burn, stage),
             modifiers: VegExtractModifiers {
                 burn_active: false,
-                mean_density: pop.map(|p| p.mean_density).unwrap_or(0.0),
+                mean_density: harness_row_density_under_snow(
+                    pop.map(|p| p.mean_density).unwrap_or(0.0),
+                    matrix,
+                    weather.map(|wx| wx.snow_depth).unwrap_or(0.0),
+                ),
             },
             variant_key,
             succession_stage: stage,
@@ -365,5 +440,39 @@ mod tests {
         let frame = super::build_harness_topo_extract_frame(app.world_mut());
         assert!(super::harness_topo_extract_witness_green(&frame));
         assert!(frame.rows.iter().any(|r| r.variant_key.starts_with("veg_topo_")));
+    }
+
+    #[test]
+    fn harness_density_follows_center_curvature() {
+        use crate::terrain::generation::ChunkCellMatrix;
+        let size = bevy::math::UVec2::new(7, 7);
+        let mut hollow = ChunkCellMatrix::new(size);
+        let mut ridge = ChunkCellMatrix::new(size);
+        for v in hollow.elevation.iter_mut().chain(ridge.elevation.iter_mut()) {
+            *v = 0.4;
+        }
+        let center = hollow.idx(3, 3);
+        hollow.elevation[center] = 0.05;
+        ridge.elevation[center] = 0.95;
+        let a = super::harness_row_density(0.6, Some(&hollow));
+        let b = super::harness_row_density(0.6, Some(&ridge));
+        assert!(a > b, "hollow {a} ridge {b}");
+    }
+
+    #[test]
+    fn fold_harness_zero_mean_draws_nothing() {
+        assert_eq!(super::harness_row_density(0.0, None), 0.0);
+        assert_eq!(super::harness_row_density_under_snow(0.0, None, 1.0), 0.0);
+        assert_eq!(super::harness_row_density(-1.0, None), 0.0);
+    }
+
+    #[test]
+    fn fold_harness_overfull_mean_clamps_at_one() {
+        let drawn = super::harness_row_density(4.0, None);
+        let again = super::harness_row_density(4.0, None);
+        let snow = super::harness_row_density_under_snow(4.0, None, 0.0);
+        assert!((drawn - 1.0).abs() < 1e-5);
+        assert_eq!(drawn.to_bits(), again.to_bits());
+        assert!((snow - drawn).abs() < 1e-5);
     }
 }

@@ -9,8 +9,7 @@ use crate::construction::{
 };
 use crate::engine::states::BaseState;
 use crate::gui::hud::sim_build_picker_sheet::{
-    tool_context_to_picker_category, BuildPickerCategory, SimBuildPickerState,
-    BUILD_PICKER_MAX_H_PX, BUILD_PICKER_SHEET_W_PX,
+    BuildPickerCategory, SimBuildPickerState, BUILD_PICKER_MAX_H_PX, BUILD_PICKER_SHEET_W_PX,
 };
 use crate::gui::hud::sim_hud_copy::{
     PICKER_DEFENSE_FOOTER_HINT, PICKER_DEFENSE_LEAD, PICKER_GENERIC_DEPOT, PICKER_GENERIC_FACTORY,
@@ -142,7 +141,6 @@ pub fn spawn_sim_build_picker_bevy(
             .with_children(|tabs| {
                 for cat in BuildPickerCategory::all() {
                     tabs.spawn((
-                        Button,
                         Node {
                             flex_grow: 1.0,
                             min_height: Val::Px(BUILD_RAIL_SLOT_MIN_H_PX),
@@ -180,19 +178,32 @@ pub fn spawn_sim_build_picker_bevy(
         });
 }
 
+/// The build catalog stays hidden while the power sheet is the open sheet.
+#[must_use]
+pub fn picker_visible_beside_power(
+    picker_open: bool,
+    power_open: bool,
+    tool_is_power: bool,
+) -> bool {
+    picker_open && !(power_open && tool_is_power)
+}
+
 pub fn sync_sim_build_picker_bevy_layout(
     base: Res<State<BaseState>>,
     picker: Res<SimBuildPickerState>,
     strip: Res<BuildStripState>,
+    tool: Res<crate::construction::ActiveBuildTool>,
+    power_sheet: Res<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>,
     left_stack: Res<crate::gui::CommandLeftStackState>,
     mut q: Query<(&mut Node, &mut Visibility), With<SimBuildPickerRoot>>,
 ) {
     let Ok((mut node, mut vis)) = q.single_mut() else {
         return;
     };
+    let tool_is_power = matches!(tool.tool, BuildTool::PowerLine(_));
     let show = SIM_BUILD_PICKER_USE_BEVY
         && matches!(base.get(), BaseState::Simulation)
-        && picker.open
+        && picker_visible_beside_power(picker.open, power_sheet.open, tool_is_power)
         && strip.active != ToolContext::None;
     *vis = if show {
         Visibility::Visible
@@ -211,27 +222,33 @@ pub fn sync_sim_build_picker_bevy_title(
     picker: Res<SimBuildPickerState>,
     mut q: Query<&mut Text, With<SimBuildPickerTitleText>>,
 ) {
-    if !picker.is_changed() && !picker.open {
+    if !picker.is_changed() {
         return;
     }
+    let title = picker.sheet_title();
     for mut text in &mut q {
-        *text = Text::new(picker.category.title());
+        if text.as_str() != title {
+            *text = Text::new(title);
+        }
     }
 }
 
 pub fn sync_sim_build_picker_bevy_tabs(
     picker: Res<SimBuildPickerState>,
     palette: Res<UiPalette>,
-    mut q: Query<(&SimBuildPickerTab, &mut BorderColor), With<Button>>,
+    mut q: Query<(&SimBuildPickerTab, &mut BorderColor)>,
 ) {
-    let gold = palette.bevy_accent_hot();
+    let gold = palette.bevy_accent_gold();
     let idle = palette.bevy_border_subtle();
     for (tab, mut border) in &mut q {
-        *border = if tab.0 == picker.category {
+        let next = if tab.0 == picker.category {
             BorderColor::all(gold)
         } else {
             BorderColor::all(idle)
         };
+        if *border != next {
+            *border = next;
+        }
     }
 }
 
@@ -251,11 +268,21 @@ pub fn rebuild_sim_build_picker_bevy_body(
     asset_server: Res<AssetServer>,
     body_q: Query<Entity, With<SimBuildPickerBody>>,
     children_q: Query<&Children>,
+    mut built: Local<Option<BuildPickerCategory>>,
 ) {
-    if !SIM_BUILD_PICKER_USE_BEVY || !picker.open {
+    if !SIM_BUILD_PICKER_USE_BEVY {
         return;
     }
-    if !picker.is_changed() && !registry.is_changed() {
+    if !picker.open {
+        if built.is_some() {
+            if let Ok(body) = body_q.single() {
+                clear_body_children(&mut commands, body, &children_q);
+            }
+            *built = None;
+        }
+        return;
+    }
+    if *built == Some(picker.category) && !registry.is_changed() {
         return;
     }
     let Ok(body) = body_q.single() else {
@@ -354,6 +381,7 @@ pub fn rebuild_sim_build_picker_bevy_body(
             let _ = (PICKER_DEFENSE_LEAD, PICKER_DEFENSE_FOOTER_HINT);
         }
     }
+    let category = picker.category;
     if rows.is_empty() {
         commands.entity(body).with_children(|b| {
             b.spawn((
@@ -362,34 +390,35 @@ pub fn rebuild_sim_build_picker_bevy_body(
                 TextColor(palette.bevy_text_muted()),
             ));
         });
-        return;
+    } else {
+        commands.entity(body).with_children(|b| {
+            for (label, action) in rows {
+                b.spawn((
+                    Button,
+                    Node {
+                        width: Val::Percent(100.0),
+                        min_height: Val::Px(BUILD_PICKER_ROW_MIN_H_PX),
+                        padding: UiRect::axes(Val::Px(8.0), Val::Px(6.0)),
+                        border: UiRect::all(Val::Px(1.0)),
+                        justify_content: JustifyContent::FlexStart,
+                        align_items: AlignItems::Center,
+                        ..default()
+                    },
+                    BackgroundColor(palette.bevy_hud_panel_fill()),
+                    BorderColor::all(palette.bevy_border_subtle()),
+                    action,
+                ))
+                .with_children(|btn| {
+                    btn.spawn((
+                        Text::new(label),
+                        TextFont::from_font_size(BUILD_PICKER_ROW_FONT_PX).with_font(font.clone()),
+                        TextColor(palette.bevy_primary_text()),
+                    ));
+                });
+            }
+        });
     }
-    commands.entity(body).with_children(|b| {
-        for (label, action) in rows {
-            b.spawn((
-                Button,
-                Node {
-                    width: Val::Percent(100.0),
-                    min_height: Val::Px(BUILD_PICKER_ROW_MIN_H_PX),
-                    padding: UiRect::axes(Val::Px(8.0), Val::Px(6.0)),
-                    border: UiRect::all(Val::Px(1.0)),
-                    justify_content: JustifyContent::FlexStart,
-                    align_items: AlignItems::Center,
-                    ..default()
-                },
-                BackgroundColor(palette.bevy_hud_panel_fill()),
-                BorderColor::all(palette.bevy_border_subtle()),
-                action,
-            ))
-            .with_children(|btn| {
-                btn.spawn((
-                    Text::new(label),
-                    TextFont::from_font_size(BUILD_PICKER_ROW_FONT_PX).with_font(font.clone()),
-                    TextColor(palette.bevy_primary_text()),
-                ));
-            });
-        }
-    });
+    *built = Some(category);
 }
 
 fn push_family_rows(
@@ -417,26 +446,48 @@ fn push_family_rows(
     }
 }
 
+/// True while the click that opened the sheet is still down, so sheet buttons
+/// spawned under that pointer cannot immediately close or switch the category.
+fn swallow_opening_press(
+    open: bool,
+    mouse_down: bool,
+    was_open: &mut bool,
+    block: &mut bool,
+) -> bool {
+    if open && !*was_open {
+        *block = true;
+    }
+    *was_open = open;
+    if !*block {
+        return false;
+    }
+    if mouse_down {
+        return true;
+    }
+    *block = false;
+    true
+}
+
 pub fn sim_build_picker_bevy_close_system(
     q: Query<&Interaction, (Changed<Interaction>, With<SimBuildPickerClose>)>,
     mut picker: ResMut<SimBuildPickerState>,
     mut tool: ResMut<ActiveBuildTool>,
+    mouse: Res<ButtonInput<MouseButton>>,
+    mut was_open: Local<bool>,
+    mut block: Local<bool>,
 ) {
+    if swallow_opening_press(
+        picker.open,
+        mouse.pressed(MouseButton::Left),
+        &mut was_open,
+        &mut block,
+    ) {
+        return;
+    }
     for interaction in &q {
         if *interaction == Interaction::Pressed {
             picker.close();
             tool.close_submenus();
-        }
-    }
-}
-
-pub fn sim_build_picker_bevy_tab_system(
-    q: Query<(&Interaction, &SimBuildPickerTab), (Changed<Interaction>, With<Button>)>,
-    mut picker: ResMut<SimBuildPickerState>,
-) {
-    for (interaction, tab) in &q {
-        if *interaction == Interaction::Pressed {
-            picker.category = tab.0;
         }
     }
 }
@@ -447,7 +498,18 @@ pub fn sim_build_picker_bevy_action_system(
     mut picker: ResMut<SimBuildPickerState>,
     registry: Res<BuildingDefinitionRegistry>,
     mut pending: ResMut<crate::construction::PendingConstructionQueue>,
+    mouse: Res<ButtonInput<MouseButton>>,
+    mut was_open: Local<bool>,
+    mut block: Local<bool>,
 ) {
+    if swallow_opening_press(
+        picker.open,
+        mouse.pressed(MouseButton::Left),
+        &mut was_open,
+        &mut block,
+    ) {
+        return;
+    }
     for (interaction, action) in &q {
         if *interaction != Interaction::Pressed {
             continue;
@@ -502,17 +564,6 @@ pub fn sim_build_picker_bevy_action_system(
     }
 }
 
-pub fn sync_picker_category_from_strip(
-    strip: Res<BuildStripState>,
-    mut picker: ResMut<SimBuildPickerState>,
-) {
-    if !picker.open || !strip.is_changed() {
-        return;
-    }
-    picker.category = tool_context_to_picker_category(strip.active);
-    picker.anchor_slot = strip.active;
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -521,6 +572,21 @@ mod tests {
     fn hud_nat_001_native_flag_on() {
         assert!(SIM_BUILD_PICKER_USE_BEVY);
         assert!(sim_build_picker_native_wired());
+    }
+
+    #[test]
+    fn cityfix_one_power_sheet_visible() {
+        assert!(!picker_visible_beside_power(true, true, true));
+        assert!(picker_visible_beside_power(true, false, true));
+        assert!(picker_visible_beside_power(true, true, false));
+        let src = include_str!("simulation_shell_phase2.rs");
+        let sync = src
+            .find("power_sheet.sync_from_tool")
+            .expect("power sheet opens from the rail");
+        let close = src[sync..]
+            .find("picker.close()")
+            .expect("picker closes when the power sheet opens");
+        assert!(close < 400);
     }
 }
 

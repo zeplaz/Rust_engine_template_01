@@ -80,11 +80,7 @@ pub fn chunk_fuel_profile_from_vegetation(veg: &VegetationField) -> ChunkFuelPro
     p.old_growth = og;
 
     // Surface grass: thin unless ground fuel or old-growth understory supports it.
-    let grass_scale = if og < 0.15 && gf < 0.22 {
-        0.35
-    } else {
-        1.0
-    };
+    let grass_scale = if og < 0.15 && gf < 0.22 { 0.35 } else { 1.0 };
     p.grass.live_biomass = (gf * (1.0 - us * 0.65) * grass_scale).max(0.02);
     p.grass.dead_biomass = (gf * dry * (0.55 + og * 0.25) * grass_scale).max(0.01);
     p.grass.moisture = (1.0 - dry) * 0.45 + 0.12;
@@ -109,7 +105,8 @@ pub fn chunk_fuel_profile_from_vegetation(veg: &VegetationField) -> ChunkFuelPro
     };
 
     p.peat_depth = (veg.fragmentation * 0.15 + dry * 0.08).min(1.0);
-    p.suppression_difficulty = (veg.fragmentation * 0.55 + dry * 0.35 + veg.fuel_load * 0.25).clamp(0.0, 1.0);
+    p.suppression_difficulty =
+        (veg.fragmentation * 0.55 + dry * 0.35 + veg.fuel_load * 0.25).clamp(0.0, 1.0);
 
     if p.peat_depth > 0.22 {
         p.grass.fuel_kind = FuelMaterialKind::Peat;

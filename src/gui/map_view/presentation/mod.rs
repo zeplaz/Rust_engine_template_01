@@ -6,15 +6,15 @@ mod stability;
 
 use bevy::prelude::*;
 
-pub use display_transform::{paint_map_display_debug_outlines, MapDisplayTransform};
+pub use display_transform::MapDisplayTransform;
 pub use map_interaction::{
     advance_map_view_presentation_interactions, sync_map_view_interaction_targets,
     MapViewPresentationInteractions, SmoothedMapInteraction,
 };
 pub use stability::{
     clear_active_map_view_input_before_map_widgets, commit_map_view_interaction_system,
-    commit_map_view_viewport_suggestions, paint_map_view_placeholder, sync_map_view_ready_states,
-    sync_shell_layout_drag_gate, update_minimap_view, update_world_preview_view, ActiveMapViewInput,
+    commit_map_view_viewport_suggestions, sync_map_view_ready_states,
+    sync_shell_layout_drag_gate, sync_shell_layout_drag_gate_from_bevy, update_minimap_view, update_world_preview_view, ActiveMapViewInput,
     MapShellPointerGate,
     MapViewInteractionByView, MapViewReadyStates, MapViewViewportSuggestions,
     MinimapInteractionBuffer, ViewHandle, WorldPreviewInteractionBuffer,

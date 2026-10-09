@@ -7,7 +7,18 @@ from typing import Any
 from . import assembly, building_grammar
 
 ROOF_TOKENS = frozenset({"R"})
-FACADE_TOKENS = frozenset({"W", "D", "C"})
+# O is the window opening. window_slot overrides never landed while it was omitted.
+FACADE_TOKENS = frozenset({"W", "D", "C", "O"})
+
+
+def _layer_seed(seed: int | None, snapshot: dict[str, Any]) -> int:
+    """Zero is a real seed. Missing seed stays on the historical default of 42."""
+    raw = seed if seed is not None else snapshot.get("seed")
+    if raw is None:
+        raw = 42
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("layer seed must be an integer")
+    return raw
 
 
 def _pinned_grammar_kwargs(snapshot: dict[str, Any], seed: int) -> dict[str, Any]:
@@ -40,7 +51,7 @@ def apply_roof_layer(
     district_style = str(snapshot.get("district_style") or "")
     if not archetype_id or not district_style:
         raise ValueError("snapshot missing archetype_id or district_style")
-    seed = int(seed if seed is not None else snapshot.get("seed") or 42)
+    seed = _layer_seed(seed, snapshot)
     pins = _pinned_grammar_kwargs(snapshot, seed)
     pins["roof_slot"] = overrides.get("roof_slot")
     pins["roof_rule_id"] = overrides.get("roof_rule_id")
@@ -54,12 +65,12 @@ def apply_facade_layer(
     *,
     seed: int | None = None,
 ) -> dict[str, Any]:
-    """Re-resolve perimeter W/D/C placements; preserve footprint and roof."""
+    """Re-resolve perimeter W/D/C/O placements; preserve footprint and roof."""
     archetype_id = str(snapshot.get("archetype_id") or "")
     district_style = str(snapshot.get("district_style") or "")
     if not archetype_id or not district_style:
         raise ValueError("snapshot missing archetype_id or district_style")
-    seed = int(seed if seed is not None else snapshot.get("seed") or 42)
+    seed = _layer_seed(seed, snapshot)
     pins = _pinned_grammar_kwargs(snapshot, seed)
     pins["wall_slot"] = overrides.get("wall_slot")
     pins["door_slot"] = overrides.get("door_slot")
@@ -76,7 +87,7 @@ def apply_roof_layer_copy(
     seed: int | None = None,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     child = apply_roof_layer(snapshot, overrides, seed=seed)
-    seed = int(seed if seed is not None else snapshot.get("seed") or 42)
+    seed = _layer_seed(seed, snapshot)
     pins = _pinned_grammar_kwargs(snapshot, seed)
     pins["roof_slot"] = overrides.get("roof_slot")
     pins["roof_rule_id"] = overrides.get("roof_rule_id")

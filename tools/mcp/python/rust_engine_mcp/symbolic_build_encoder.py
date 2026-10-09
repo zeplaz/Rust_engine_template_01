@@ -101,15 +101,34 @@ def _load_tribunal_registry(root: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))
 
 
+def _glob_to_regex(pattern: str) -> str:
+    """Translate ** / * globs. ``dir/**`` does not match ``dir_extra``."""
+    out: list[str] = ["^"]
+    i = 0
+    while i < len(pattern):
+        if pattern.startswith("**/", i):
+            out.append("(?:.*/)?")
+            i += 3
+            continue
+        if pattern.startswith("**", i):
+            out.append(".*")
+            i += 2
+            continue
+        if pattern[i] == "*":
+            out.append("[^/]*")
+            i += 1
+            continue
+        out.append(re.escape(pattern[i]))
+        i += 1
+    out.append("$")
+    return "".join(out)
+
+
 def _glob_match(rel_path: str, pattern: str) -> bool:
     """Minimal glob: ** and * only."""
     rel = rel_path.replace("\\", "/")
     pat = pattern.replace("\\", "/")
-    if pat.endswith("/**"):
-        prefix = pat[:-3]
-        return rel.startswith(prefix)
-    rx = "^" + re.escape(pat).replace(r"\*\*", ".*").replace(r"\*", "[^/]*") + "$"
-    return re.match(rx, rel) is not None
+    return re.match(_glob_to_regex(pat), rel) is not None
 
 
 def trip_hits_for_files(root: Path, files: list[str]) -> list[str]:

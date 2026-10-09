@@ -42,11 +42,10 @@ pub fn catmull_rom_chain(control_points: &[Vec3], samples_per_span: usize) -> Ve
 fn catmull_rom_point(p0: Vec3, p1: Vec3, p2: Vec3, p3: Vec3, t: f32) -> Vec3 {
     let t2 = t * t;
     let t3 = t2 * t;
-    0.5
-        * ((2.0 * p1)
-            + (-p0 + p2) * t
-            + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2
-            + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3)
+    0.5 * ((2.0 * p1)
+        + (-p0 + p2) * t
+        + (2.0 * p0 - 5.0 * p1 + 4.0 * p2 - p3) * t2
+        + (-p0 + 3.0 * p1 - 3.0 * p2 + p3) * t3)
 }
 
 #[cfg(test)]

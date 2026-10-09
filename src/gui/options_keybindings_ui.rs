@@ -68,7 +68,10 @@ impl Plugin for KeybindingsOptionsPlugin {
                 Update,
                 (toggle_keybindings_options_window, apply_binding_capture),
             )
-            .add_systems(EguiPrimaryContextPass, keybindings_options_ui);
+            .add_systems(
+                EguiPrimaryContextPass,
+                keybindings_options_ui.run_if(crate::gui::ui_gates::product_egui_shell_active),
+            );
     }
 }
 

@@ -14,6 +14,8 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **GPU terrain / sim perf (ACTIVE):** [`gpu_todos_v1.md`](gpu_todos_v1.md) · [`plan_gpu_terrain_production_exec_001_v1.md`](plan_gpu_terrain_production_exec_001_v1.md) — P0-C′-PRIME next · P0-C tilemap **blocked DR-MIG-TILEMAP**
 
+**Play egui + one map (2026-09-27):** [`plan_egui_game_retirement_v1.md`](plan_egui_game_retirement_v1.md) — UPM-1..5 and the city-bug pass **DONE** · next **PLN-1 → PLN-3** · charter [`design_native_game_ui_v1.md`](design_native_game_ui_v1.md). Editor and WorldGen keep `bevy_egui`.
+
 **VFX · spectator · scale · artist pipeline (ACTIVE — 2026-08-28):** [`plan_vfx_spectator_scale_program_v1.md`](plan_vfx_spectator_scale_program_v1.md) — **VSS-001** · child: [`plan_world_scale_contract_v1.md`](plan_world_scale_contract_v1.md) · [`plan_artist_vfx_toolchain_v1.md`](plan_artist_vfx_toolchain_v1.md) · queue [`vss_program_queue.json`](../tools/orchestrator/queues/vss_program_queue.json) · kickoff [`vss_001_kickoff_packet.yaml`](../debug_runs/agent_ops/vss_001_kickoff_packet.yaml)
 
 **Codebase cleanup (P1 on master — 2026-07-03):** [`plan_cleanup_v1.md`](plan_cleanup_v1.md) — Phase 0 hygiene · Phase 2+ parallel after RTT/VFX operator lane closes · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-CLEANUP-v1
@@ -21,6 +23,8 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 **Repo tidy (active):** [`plan_cleanup_v1.md`](plan_cleanup_v1.md) · queue [`repo_tidy_queue_v1.json`](../tools/orchestrator/queues/repo_tidy_queue_v1.json) — classify before delete · CLN-CHEAT-001 done (always-true VFX lib witness retired) · next: live_proof audit · map_editor mod.rs split
 
 **City + building grammar (P3 — coder closed 2026-07-03):** [`plan_city_grammar_upgrade_v1.md`](plan_city_grammar_upgrade_v1.md) · G0–G3 + P1/P2 green · machine queue [`city_grammar_queue.json`](../tools/orchestrator/queues/city_grammar_queue.json) · **active:** PLAN-BUILDING-QUALITY-v1
+
+**Town growth (2026-09-27):** [`plan_town_growth_v1.md`](plan_town_growth_v1.md) — drawable polygon limits, generation placement, faction growth · **TWN-OV1 → TWN-OV2 → TWN-GEN → TWN-AI**. Play-image stamp stays **PLN-3**.
 
 **Schedule sync (2026-07-03):** [`plan_schedule_sync_v1.md`](plan_schedule_sync_v1.md) — Wave 1 unblocked (MIG-V1 green); Wave 2+ → **DR-SCHED-W2**
 
@@ -50,6 +54,8 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 **Finish backlog (why plans stall):** [`plan_finish_execution_backlog_v1.md`](plan_finish_execution_backlog_v1.md) — Tier 0–3 implementation picks; no new plans until Tier 0 witnesses green.
 
 **Game systems drain (IDLE — 2026-09-24):** [`game_systems_drain_queue.json`](../tools/orchestrator/queues/game_systems_drain_queue.json) — **32/32 done** · DEBT-012 AtmosphereCell kept (C dormant) · `atmos_lane_drain=idle` until `overlays_l0_direct` · HANDOFF § PLAN-GAME-SYSTEMS-DRAIN-001.
+
+**Landform and vegetation drain (2026-09-25):** [`landform_veg_drain_todos_v1.md`](landform_veg_drain_todos_v1.md) · queues [`landform_veg_drain_v1.json`](../tools/orchestrator/queues/landform_veg_drain_v1.json) and [`sim_feature_fanout_drain_v1.json`](../tools/orchestrator/queues/sim_feature_fanout_drain_v1.json) · **coder rows done**. June 20 cull rows stay blocked. Playtest and keyframe stills do not freeze this queue.
 
 **Designer backlog (2026-06):** [`plan_designer_work_202606_v1.md`](plan_designer_work_202606_v1.md) — APS polish · art · style bibles · sim UX · prompt [`designer_work_prompt_202606_v1.md`](designer_work_prompt_202606_v1.md) · queue [`designer_active_queue.json`](../tools/orchestrator/queues/designer_active_queue.json).
 

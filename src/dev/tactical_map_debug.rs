@@ -24,6 +24,7 @@ pub const TACTICAL_MAP_DEBUG_JSON: &str = "debug_runs/tactical_map_debug_live.js
 #[derive(Resource, Default)]
 struct TacticalMapDebugState {
     last_written_frame: u32,
+    city_faction_stamped: bool,
 }
 
 pub struct TacticalMapDebugPlugin;
@@ -94,6 +95,7 @@ struct TacticalMapDebugInputs<'w, 's> {
     tile_markers: Query<'w, 's, (), With<crate::terrain::generation::TileMarker>>,
     chunks: Query<'w, 's, (), With<crate::terrain::generation::ChunkCellMatrix>>,
     test_chunks: Query<'w, 's, (), With<crate::engine::test_harness::TestSceneSimChunk>>,
+    towns: Option<Res<'w, crate::strategic::TownBook>>,
 }
 
 fn repo_path(rel: &str) -> PathBuf {
@@ -695,6 +697,31 @@ fn write_tactical_map_debug_witness(
             fire_heat_overlay_on,
             "product fire VFX live witness stamped"
         );
+    }
+
+    if q.launch.as_deref().is_some_and(|l| {
+        l.test_scene == crate::engine::TestScene::City
+    }) && !state.city_faction_stamped
+    {
+        let mut fixture = crate::dev::city_faction_progress::CityFactionFixture::healthy(
+            crate::strategic::settlement::DEFAULT_WORLD_SEED,
+        );
+        if let Some(book) = q.towns.as_ref() {
+            if !book.towns.is_empty() {
+                fixture.saved_towns = book.as_ref().clone();
+            }
+        }
+        let report = crate::dev::city_faction_progress::city_faction_progress(&fixture);
+        if crate::dev::city_faction_progress::write_city_faction_progress_live(&report) {
+            info!(
+                target: "tactical_map_debug",
+                path = crate::dev::city_faction_progress::CITY_FACTION_PROGRESS_LIVE_JSON,
+                green = report.issues.is_empty(),
+                towns = report.town_ids.len(),
+                "city faction progress live witness stamped"
+            );
+        }
+        state.city_faction_stamped = true;
     }
 
     let wrapped = json!({

@@ -39,26 +39,22 @@ pub fn draw_road_path_ghost_egui(
     let painter = ctx.layer_painter(layer);
 
     for seg in &placement.generated_segments {
-        let Some(a) =
-            world_to_sim_map_egui(
-                seg.start,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        else {
+        let Some(a) = world_to_sim_map_egui(
+            seg.start,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        ) else {
             continue;
         };
-        let Some(b) =
-            world_to_sim_map_egui(
-                seg.end,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        else {
+        let Some(b) = world_to_sim_map_egui(
+            seg.end,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        ) else {
             continue;
         };
         let color = road_segment_color(seg.valid);
@@ -67,15 +63,13 @@ pub fn draw_road_path_ghost_egui(
     }
 
     for p in &placement.control_points {
-        if let Some(screen) =
-            world_to_sim_map_egui(
-                *p,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        {
+        if let Some(screen) = world_to_sim_map_egui(
+            *p,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        ) {
             let c = road_control_point_color();
             let r = (5.0 * zoom.sqrt()).clamp(3.0, 14.0);
             painter.circle_filled(screen, r, c);

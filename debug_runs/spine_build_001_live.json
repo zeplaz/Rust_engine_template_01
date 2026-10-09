@@ -134,7 +134,7 @@
     "register_atlas"
   ],
   "cli": "spine-build-001 / validate-report build_graph <graph.json>",
-  "next_residual": "APSR-MUTATION-REGRESS-001",
+  "next_residual": "APS-GOLDEN-RUBRIC-OPS-001",
   "rules_check": {
     "passed": true,
     "blocked_by": [],
@@ -172,7 +172,7 @@
     "profile": "SPINE_BUILD",
     "relative_path": "debug_runs/spine_build_001_live.json",
     "source_system": "spine_build_graph",
-    "written_at_epoch_secs": 1790254869,
+    "written_at_epoch_secs": 1790380710,
     "ritual": "BLANG:WIT-HON\u2192Q\u2713 SPINE-BUILD-001",
     "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
     "task_id": "SPINE-BUILD-001",

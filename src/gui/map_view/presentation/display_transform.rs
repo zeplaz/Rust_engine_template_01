@@ -87,6 +87,7 @@ impl MapDisplayTransform {
     }
 }
 
+#[allow(dead_code)] // Editor map-view debug stroke; WorldGen preview no longer paints through egui.
 pub fn paint_map_display_debug_outlines(
     painter: &egui::Painter,
     transform: &MapDisplayTransform,

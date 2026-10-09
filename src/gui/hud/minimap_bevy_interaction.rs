@@ -41,6 +41,14 @@ pub struct MinimapBevyPointerState {
     resize_start_body: f32,
 }
 
+impl MinimapBevyPointerState {
+    /// True while the title bar or resize grip is dragging the Bevy minimap frame.
+    #[must_use]
+    pub fn chrome_drag_active(&self) -> bool {
+        self.panel_drag || self.resize_drag
+    }
+}
+
 #[inline]
 pub fn bevy_minimap_gpu_active(shell: &MinimapShellState, gate: Option<&MinimapEguiDevGate>) -> bool {
     if minimap_egui_dev_enabled(gate) {

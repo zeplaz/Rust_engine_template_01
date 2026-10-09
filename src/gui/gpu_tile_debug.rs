@@ -51,7 +51,23 @@ impl Plugin for GpuTileDebugPlugin {
 #[must_use]
 pub fn triage_gpu_tile_wgsl_001_green() -> bool {
     let wgsl = include_str!("../../assets/shaders/debug/tile_debug_instanced.wgsl");
-    wgsl.contains("storage, read") && wgsl.contains("tile_instance_color")
+    wgsl.contains("storage, read")
+        && wgsl.contains("tile_instance_color")
+        && wgsl.contains("debug_quad_suppressed")
+        && wgsl.contains("discard")
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn shader_discards_construction_and_footprint_quads() {
+        let wgsl = include_str!("../../assets/shaders/debug/tile_debug_instanced.wgsl");
+        assert!(super::triage_gpu_tile_wgsl_001_green());
+        assert!(!wgsl.contains("0.86, 0.67, 0.24"));
+        assert!(!wgsl.contains("0.27, 0.67, 0.37"));
+        assert!(wgsl.contains("0.95, 0.85, 0.15"));
+        assert!(wgsl.contains("0.2, 0.75, 0.25"));
+    }
 }
 
 pub fn build_tile_debug_instances(

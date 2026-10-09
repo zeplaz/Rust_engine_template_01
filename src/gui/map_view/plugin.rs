@@ -71,24 +71,20 @@ impl Plugin for MapViewPlugin {
                 reset_map_view_texture_frame.in_set(ViewRepresentationSystemSet::UiCollect),
             )
             .add_systems(
-                EguiPrimaryContextPass,
-                clear_active_map_view_input_before_map_widgets
-                    .before(crate::gui::hud::hud_root_tick::hud_product_shell_egui_root)
-                    .before(crate::gui::editor::world_preview::display_world_preview),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                super::presentation::sync_shell_layout_drag_gate,
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
+                Update,
                 (
-                    crate::gui::sync_map_fit_transform_components
-                        .after(crate::gui::hud::hud_root_tick::hud_product_shell_egui_root)
-                        .after(crate::gui::editor::world_preview::display_world_preview),
+                    clear_active_map_view_input_before_map_widgets,
+                    crate::gui::sync_map_fit_transform_components,
                     validate_map_fit_system.after(crate::gui::sync_map_fit_transform_components),
+                    super::presentation::sync_shell_layout_drag_gate_from_bevy
+                        .run_if(in_state(crate::engine::states::BaseState::Simulation)),
                 )
                     .chain(),
+            )
+            .add_systems(
+                EguiPrimaryContextPass,
+                super::presentation::sync_shell_layout_drag_gate
+                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
             );
     }
 }

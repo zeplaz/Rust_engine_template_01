@@ -2,8 +2,10 @@
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::EguiContexts;
 
+use crate::gui::hud::simulation_pointer_gate::{
+    simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
+};
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::infrastructure::utility::UtilityGraph;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -33,7 +35,7 @@ pub fn power_line_demolish_cut_system(
     snap: Option<Res<UtilityNetworkSnapshotResource>>,
     mut book: ResMut<PowerLineDamageBook>,
     mut toast: ResMut<PowerLineCutToast>,
-    mut egui_ctx: EguiContexts,
+    pointer_gate: Option<Res<SimulationMapPointerGate>>,
 ) {
     if tool.tool != BuildTool::Demolish {
         return;
@@ -41,10 +43,7 @@ pub fn power_line_demolish_cut_system(
     if !buttons.just_pressed(MouseButton::Left) {
         return;
     }
-    let Ok(ctx) = egui_ctx.ctx_mut() else {
-        return;
-    };
-    if ctx.egui_wants_pointer_input() {
+    if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
         return;
     }
     let Ok(window) = win.single() else {
@@ -63,11 +62,8 @@ pub fn power_line_demolish_cut_system(
         return;
     };
     let cursor2 = Vec2::new(cursor.x, cursor.z);
-    let node_pos: std::collections::HashMap<u64, Vec2> = utility
-        .nodes
-        .iter()
-        .map(|n| (n.id, n.position))
-        .collect();
+    let node_pos: std::collections::HashMap<u64, Vec2> =
+        utility.nodes.iter().map(|n| (n.id, n.position)).collect();
 
     let mut best: Option<(u64, f32)> = None;
     for edge in &utility.power_edges {
@@ -89,9 +85,10 @@ pub fn power_line_demolish_cut_system(
         return;
     };
 
-    let offline = snap.as_deref().map(|s| {
-        preview_island_offline_from_cut(&utility, &s.0, &book, link_id)
-    }).unwrap_or(0);
+    let offline = snap
+        .as_deref()
+        .map(|s| preview_island_offline_from_cut(&utility, &s.0, &book, link_id))
+        .unwrap_or(0);
 
     if cut_power_line_segment(&mut book, link_id) {
         toast.cuts_total = toast.cuts_total.saturating_add(1);

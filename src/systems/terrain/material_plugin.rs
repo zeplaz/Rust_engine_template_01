@@ -13,7 +13,8 @@ use crate::terrain::generation::passes::{
 use crate::terrain::generation::passes::materialize_traced;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{
-    Chunk, ChunkCellMatrix, ChunkDerivedMetrics, ChunkWorldgenSchedulerPlugin, stitch_chunk_slope_grades,
+    Chunk, ChunkCellMatrix, ChunkDerivedMetrics, ChunkWorldgenSchedulerPlugin, drainage_with_neighbor_inflow,
+    erosion_from_slope_drainage, fill_landform_layers, stitch_chunk_landform,
 };
 use crate::substrate::WorldSubstrateRegistry;
 use crate::terrain::{
@@ -277,8 +278,16 @@ fn stitch_chunk_derived_slopes(
     }
     for (chunk, matrix, mut derived) in q.iter_mut() {
         derived.size = matrix.size;
-        derived.slope_grade = stitch_chunk_slope_grades(chunk.coord, matrix, &map);
+        let (slope, curve) = stitch_chunk_landform(chunk.coord, matrix, &map);
+        derived.slope_grade = slope;
         derived.sync_stub_layers_to_slope_len();
+        derived.profile_curvature = curve;
+        fill_landform_layers(&mut derived, matrix);
+        derived.drainage = drainage_with_neighbor_inflow(chunk.coord, matrix, &map);
+        let n = derived.slope_grade.len().min(derived.drainage.len());
+        derived.erosion_risk = (0..n)
+            .map(|i| erosion_from_slope_drainage(derived.slope_grade[i], derived.drainage[i]))
+            .collect();
     }
 }
 

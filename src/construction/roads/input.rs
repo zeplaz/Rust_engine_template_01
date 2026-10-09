@@ -2,20 +2,22 @@
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::EguiContexts;
 
 use crate::construction::map_egui_projection::ConstructionMapProjection;
+use crate::gui::hud::simulation_pointer_gate::{
+    simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
+};
 use crate::gui::{MapCameraDesired, MapCameraDesiredRes, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
+use super::pathing::world_xy_to_tile;
 use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType, RoadType};
+use crate::construction::construction_pipeline::validate_road_segment;
 use crate::construction::construction_pipeline::ConstructionPlanQueue;
 use crate::construction::path_feedback::ConstructionPathFeedback;
-use crate::construction::snap::{snap_placement, RoadSnapSettings, SnapTarget};
-use crate::construction::construction_pipeline::validate_road_segment;
-use super::pathing::world_xy_to_tile;
 use crate::construction::sessions::ActiveToolSession;
+use crate::construction::snap::{snap_placement, RoadSnapSettings, SnapTarget};
 use crate::construction::terrain_conform::conform_vec3;
 
 use super::commit::commit_road_path_to_queue;
@@ -77,7 +79,7 @@ pub fn update_road_path_preview_system(
     roads: Res<crate::construction::construction_pipeline::ExecutedRoadNetwork>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut feedback: ResMut<ConstructionPathFeedback>,
-    mut egui_ctx: EguiContexts,
+    pointer_gate: Option<Res<SimulationMapPointerGate>>,
 ) {
     if !path_tool_active(tool.tool) {
         placement.generated_segments.clear();
@@ -85,12 +87,13 @@ pub fn update_road_path_preview_system(
         feedback.required_actions.clear();
         return;
     }
-    let Ok(ctx) = egui_ctx.ctx_mut() else {
-        return;
-    };
-    if ctx.egui_wants_pointer_input() {
-        placement.generated_segments.clear();
-        return;
+    match simulation_tool_pointer(pointer_gate.as_deref()) {
+        SimulationToolPointer::Unavailable => return,
+        SimulationToolPointer::HeldByChrome => {
+            placement.generated_segments.clear();
+            return;
+        }
+        SimulationToolPointer::Free => {}
     }
     let Ok(window) = win.single() else {
         return;
@@ -136,7 +139,11 @@ pub fn sync_road_path_build_preview(
         feedback.required_actions.clear();
         return;
     }
-    let valid_count = placement.generated_segments.iter().filter(|s| s.valid).count();
+    let valid_count = placement
+        .generated_segments
+        .iter()
+        .filter(|s| s.valid)
+        .count();
     let invalid = placement
         .generated_segments
         .iter()
@@ -180,29 +187,24 @@ pub fn road_path_input_system(
     mut queue: ResMut<ConstructionPlanQueue>,
     mut session: ResMut<ActiveToolSession>,
     mut feedback: ResMut<ConstructionPathFeedback>,
-    mut egui_ctx: EguiContexts,
+    pointer_gate: Option<Res<SimulationMapPointerGate>>,
 ) {
     if !path_tool_active(tool.tool) {
         return;
     }
-    let Ok(ctx) = egui_ctx.ctx_mut() else {
-        return;
-    };
-    if ctx.egui_wants_pointer_input() {
+    if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
         return;
     }
     let Ok(window) = win.single() else {
         return;
     };
-    let Some(raw) =
-        cursor_world_on_map(
-            &window,
-            authority.as_deref(),
-            desired.as_ref(),
-            map_vp.as_ref(),
-            params.as_ref(),
-        )
-    else {
+    let Some(raw) = cursor_world_on_map(
+        &window,
+        authority.as_deref(),
+        desired.as_ref(),
+        map_vp.as_ref(),
+        params.as_ref(),
+    ) else {
         return;
     };
     let world = resolve_placement_world(
@@ -217,6 +219,17 @@ pub fn road_path_input_system(
 
     if buttons.just_pressed(MouseButton::Left) {
         if shift {
+            if crate::construction::path_commit_leaves_generated_map(
+                &placement.control_points,
+                placement
+                    .generated_segments
+                    .iter()
+                    .flat_map(|seg| [seg.start, seg.end]),
+                params.width,
+                params.height,
+            ) {
+                return;
+            }
             commit_road_path_to_queue(
                 placement.as_mut(),
                 queue.as_mut(),
@@ -237,6 +250,71 @@ pub fn road_path_input_system(
             placement.width,
             params.as_ref(),
             placement.use_curved_preview,
+        );
+    }
+}
+
+#[cfg(test)]
+mod egr_tests {
+    use super::update_road_path_preview_system;
+    use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RoadType};
+    use crate::engine::states::BaseState;
+    use crate::gui::hud::shell_diagnostics::ProductShellDiagnostics;
+    use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
+    use bevy::input::ButtonInput;
+    use bevy::prelude::*;
+
+    #[test]
+    fn egr_armed_road_preview_in_simulation_does_not_acquire_context() {
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin));
+        app.init_state::<BaseState>();
+        app.init_resource::<ProductShellDiagnostics>();
+        app.init_resource::<bevy_egui::EguiUserTextures>();
+        app.world_mut().spawn((
+            bevy_egui::EguiContext::default(),
+            bevy_egui::PrimaryEguiContext,
+        ));
+        app.init_resource::<ActiveBuildTool>();
+        app.insert_resource(ButtonInput::<KeyCode>::default());
+        app.init_resource::<crate::gui::MapCameraDesiredRes>();
+        app.init_resource::<crate::gui::SimulationMapViewport>();
+        app.init_resource::<crate::terrain::generation::world_generator_enhanced::WorldGenParams>();
+        app.init_resource::<crate::construction::snap::RoadSnapSettings>();
+        app.init_resource::<crate::construction::construction_pipeline::ExecutedRoadNetwork>();
+        app.init_resource::<super::super::placement::ActiveRoadPlacement>();
+        app.init_resource::<crate::construction::path_feedback::ConstructionPathFeedback>();
+        app.insert_resource(SimulationMapPointerGate {
+            in_play_area: true,
+            chrome_blocks: false,
+            egui_blocks: false,
+            ..Default::default()
+        });
+        {
+            let mut tool = app.world_mut().resource_mut::<ActiveBuildTool>();
+            tool.tool = BuildTool::Road(RoadType::Street);
+        }
+        app.add_systems(Update, update_road_path_preview_system);
+
+        app.world_mut()
+            .resource_mut::<NextState<BaseState>>()
+            .set(BaseState::Simulation);
+        app.update();
+        app.update();
+
+        assert!(
+            matches!(
+                app.world().resource::<State<BaseState>>().get(),
+                BaseState::Simulation
+            ),
+            "tool tick must run while Simulation is current"
+        );
+        assert_eq!(
+            app.world()
+                .resource::<ProductShellDiagnostics>()
+                .sim_egui_context_acquires,
+            0,
+            "an armed simulation road tick must not acquire an egui context"
         );
     }
 }

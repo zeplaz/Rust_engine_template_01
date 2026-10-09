@@ -2,8 +2,8 @@
   "schema": "ops_dashboard_v1",
   "task_id": "OPS-DASHBOARD-001",
   "ok": true,
-  "generated_at": "2026-09-24T13:23:45.293626+00:00",
-  "run_id": "1102eb5b-38e6-4599-985e-df9078ebf8c9",
+  "generated_at": "2026-09-25T14:45:16.306284+00:00",
+  "run_id": "9bd1c9c4-a376-43c8-91a0-2d62c8b49dfe",
   "auth_spine": "AUTH: MAT\u2605\u21e2APS\u2605\u21e2SNAP\u2605\u21e2WRK\u2605\u21e2ATL\u2605\u21e2RT\u2605 | SIM\u2605\u21e2CON\u2605\u21e2INFRA\u2605\u21e2FIRE\u2605\u21e2ECO\u2605",
   "qce": {
     "Q_coherence": {
@@ -28,57 +28,48 @@
     },
     "E_confusion_risk": {
       "score": 9,
-      "evidence": "art dishonest=7; construction red=0; inflated_green=7; rollup_inflated=0; queue_contradiction=3"
+      "evidence": "art dishonest=7; construction red=0; inflated_green=7; rollup_inflated=0; queue_contradiction=13"
     }
   },
   "metrics_tier1": {
-    "ftr": 0.0,
+    "ftr": null,
     "rtr": null,
-    "events_per_day": 1.0,
-    "status": "measured",
+    "events_per_day": 0.0,
+    "status": "sparse",
     "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
     "drift_alerts": 8,
     "drift_warns": 9,
     "active_processes": 5,
     "crash_alert_count": 0,
     "dcc_process_count": 0,
-    "glyph_summary": ""
+    "glyph_summary": "\ud83d\udd34"
   },
   "run_events": {
     "task_id": "OPS-TEL-RUN-EVENTS-001",
     "schema": "ops_run_events_rollup_v1",
     "ok": true,
     "window_hours": 24,
-    "total_events": 1,
-    "non_test_events": 1,
-    "by_agent": {
-      "orchestrator-mcp": 1
-    },
-    "by_status": {
-      "unknown": 1
-    },
-    "top_slices": [
-      {
-        "slice_id": "MCP-QUEUE-RECON-001",
-        "count": 1
-      }
-    ],
+    "total_events": 0,
+    "non_test_events": 0,
+    "by_agent": {},
+    "by_status": {},
+    "top_slices": [],
     "top_tools": [],
     "demo_event_count": 0,
     "pytest_event_count": 0,
     "done_count": 0,
     "metrics_tier1": {
-      "ftr": 0.0,
+      "ftr": null,
       "rtr": null,
-      "events_per_day": 1.0,
-      "status": "measured",
+      "events_per_day": 0.0,
+      "status": "sparse",
       "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
       "drift_alerts": 8,
       "drift_warns": 9,
       "active_processes": 5,
       "crash_alert_count": 0,
       "dcc_process_count": 0,
-      "glyph_summary": ""
+      "glyph_summary": "\ud83d\udd34"
     },
     "slip_ups": [],
     "ledger_path": "debug_runs/agent_ops/run_events.jsonl"
@@ -93,27 +84,27 @@
       {
         "name": "python.exe",
         "pid": "8548",
-        "mem": "24\u00ff120 Ko"
+        "mem": "10\u00ff164 Ko"
       },
       {
         "name": "python.exe",
         "pid": "18928",
-        "mem": "9\u00ff848 Ko"
+        "mem": "18\u00ff224 Ko"
       },
       {
         "name": "python.exe",
-        "pid": "24048",
-        "mem": "13\u00ff364 Ko"
+        "pid": "19840",
+        "mem": "13\u00ff416 Ko"
       },
       {
         "name": "python.exe",
-        "pid": "19968",
-        "mem": "52\u00ff772 Ko"
+        "pid": "5032",
+        "mem": "53\u00ff404 Ko"
       },
       {
         "name": "python.exe",
-        "pid": "23996",
-        "mem": "36\u00ff932 Ko"
+        "pid": "6420",
+        "mem": "38\u00ff008 Ko"
       }
     ],
     "slip_ups": [],
@@ -249,7 +240,7 @@
       {
         "kind": "queue_contradiction",
         "severity": "alert",
-        "count": 3,
+        "count": 13,
         "detail": "Queue rows contradict witness rollup"
       },
       {
@@ -475,9 +466,23 @@
       "severity": "warn",
       "detail": "Rollup OPEN \u2014 see sub-gates G-PLAY-CODER-* + G-PLAY-OPERATOR-01",
       "path": null
+    },
+    {
+      "kind": "preview_job_failure",
+      "path": "debug_runs/preview_jobs/preview_industrial_west_4x2_s1_4bf6_e7beb892.status.json",
+      "status": "failed",
+      "exit_code": null,
+      "glyph": "\ud83d\udd34"
+    },
+    {
+      "kind": "preview_job_failure",
+      "path": "debug_runs/preview_jobs/preview_rural_5x3_s3_4086_528a9530.status.json",
+      "status": "failed",
+      "exit_code": null,
+      "glyph": "\ud83d\udd34"
     }
   ],
-  "slip_up_count": 17,
+  "slip_up_count": 19,
   "ci_lib_test": {
     "schema": "ops_ci_lib_test_v1",
     "ok": true,
@@ -510,7 +515,7 @@
       "label": "APS product / material studio"
     },
     "art_B": {
-      "count": 116,
+      "count": 117,
       "green_count": 76,
       "label": "MCP pipeline spine / warehouse integration"
     },
@@ -535,8 +540,8 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 457,
-      "green_count": 373,
+      "count": 481,
+      "green_count": 392,
       "label": null
     },
     "vss_spectator_scale": {
@@ -601,7 +606,7 @@
   },
   "_agent_meta": {
     "schema": "ops_dashboard_v1",
-    "written_at_epoch_secs": 1790256225,
+    "written_at_epoch_secs": 1790347516,
     "profile": "OPS_DASHBOARD",
     "source_system": "ops_telemetry",
     "relative_path": "debug_runs/agent_ops/ops_dashboard_live.json",

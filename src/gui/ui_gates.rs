@@ -16,11 +16,11 @@ pub fn minimap_chrome_egui_sync_active(base: Res<State<BaseState>>) -> bool {
 
 /// PLAY-01 Phase 2B: floating product-shell egui (dock windows, side rail, minimap texture dock).
 ///
-/// Simulation keeps Bevy chrome only; egui in sim is limited to F3 diagnostics and editor/world-gen
+/// Simulation keeps Bevy chrome only; egui in sim is limited to F3 diagnostics and editor
 /// plugins registered outside this gate.
 ///
-/// **World-gen chrome is exclusive:** while `AppState::WorldGen`, only World Generator + World Preview
-/// egui run — not the editor product shell (avoids double labels and click stealing).
+/// **World-gen chrome is exclusive:** while `AppState::WorldGen`, product egui stays off.
+/// Session controls live on the Bevy `WorldGenShellRoot`.
 #[must_use]
 pub fn product_egui_shell_active(
     base: Res<State<BaseState>>,

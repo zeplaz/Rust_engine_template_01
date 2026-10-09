@@ -1,7 +1,7 @@
 {
   "_agent_meta": {
     "schema": "ops_report_v2",
-    "written_at_epoch_secs": 1790256222,
+    "written_at_epoch_secs": 1790347513,
     "profile": "OPS_REPORT",
     "source_system": "ops_witness_index+ops_project_brief",
     "relative_path": "debug_runs/agent_ops/ops_report_latest.json",
@@ -21,8 +21,8 @@
     "ECONOMY/LOG: 0 green / 0 proofs",
     "WAVE/STAGE6: 0 green / 0 proofs",
     "STAGE7/PLAY: 0 green / 1 proofs",
-    "ART-A/B/C: 3/116/1 proofs \u00b7 B ship\u26d4=True",
-    "UI: 0 proofs \u00b7 UNCLASSIFIED: 457",
+    "ART-A/B/C: 3/117/1 proofs \u00b7 B ship\u26d4=True",
+    "UI: 0 proofs \u00b7 UNCLASSIFIED: 481",
     "FAIL-PROP[art_B]: Track B manual keyframe \u2014 warehouse paused (does not block ATL\u2605/RT\u2605)"
   ],
   "qce": {
@@ -48,7 +48,7 @@
     },
     "E_confusion_risk": {
       "score": 9,
-      "evidence": "art dishonest=7; construction red=0; inflated_green=7; rollup_inflated=0; queue_contradiction=3"
+      "evidence": "art dishonest=7; construction red=0; inflated_green=7; rollup_inflated=0; queue_contradiction=13"
     }
   },
   "delta_wf": [
@@ -95,7 +95,7 @@
       "label": "APS product / material studio"
     },
     "art_B": {
-      "count": 116,
+      "count": 117,
       "green_count": 76,
       "label": "MCP pipeline spine / warehouse integration"
     },
@@ -120,8 +120,8 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 457,
-      "green_count": 373,
+      "count": 481,
+      "green_count": 392,
       "label": null
     },
     "vss_spectator_scale": {
@@ -224,7 +224,7 @@
   "handoff_path": "tools/orchestrator/queues/HANDOFF.md",
   "doc_reads": {
     "witness_path": "debug_runs/agent_ops/doc_reads_brief_latest.json",
-    "total_reads_in_window": 223,
+    "total_reads_in_window": 259,
     "hot_path_count": 12,
     "promotion_candidates": 12,
     "top_hot_paths": [
@@ -234,23 +234,23 @@
       },
       {
         "path": "src/dev/agent_lang_v1.md",
-        "count": 35
+        "count": 44
       },
       {
         "path": "prompts/llm_agent_brief.md",
-        "count": 28
+        "count": 37
       },
       {
         "path": ".cursor/skills/agent-lang/SKILL.md",
-        "count": 25
+        "count": 34
       },
       {
-        "path": "docs/archive/2026-06-src-dev/plans/plan_mcp_agent_lang_program_v1.md",
-        "count": 21
+        "path": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
+        "count": 25
       }
     ]
   },
-  "utility_score": 0.0,
+  "utility_score": 4.9,
   "metrics_tier1": {
     "q_per_token": null,
     "ftr": 0.0,

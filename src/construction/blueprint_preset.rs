@@ -5,9 +5,11 @@ use serde::{Deserialize, Serialize};
 use crate::strategic::{BuildSiteTile, FootprintTiles, LayerType, SiteArchetype};
 
 use super::build_state::BuildGhostState;
-use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId};
 use super::build_strip::BuildStripState;
-use super::pending_construction::{PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind};
+use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId};
+use super::pending_construction::{
+    PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind,
+};
 
 /// One authored blueprint row for offline / save interchange.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
@@ -242,17 +244,14 @@ mod tests {
     fn apply_blueprint_preset_sets_ghost_origin_and_footprint() {
         use super::*;
         use crate::construction::build_state::BuildGhostState;
-        use crate::construction::build_tool_authority::ActiveBuildTool;
         use crate::construction::build_strip::BuildStripState;
+        use crate::construction::build_tool_authority::ActiveBuildTool;
 
         let entry = blueprint_preset_entry_from_pending(
             "depot_a",
             SiteArchetype::RailDepot,
             BuildSiteTile { x: 4, z: 8 },
-            FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
+            FootprintTiles { width: 2, depth: 2 },
             "Surface",
             1,
             false,
@@ -265,7 +264,10 @@ mod tests {
         assert_eq!(ghost.footprint.width, 2);
         assert_eq!(ghost.rotation_quarter_turns, 1);
         assert!(!ghost.mirror_x);
-        assert!(matches!(tool.tool, BuildTool::Building(BuildingArchetypeId::Depot)));
+        assert!(matches!(
+            tool.tool,
+            BuildTool::Building(BuildingArchetypeId::Depot)
+        ));
     }
 
     #[test]
@@ -281,28 +283,24 @@ mod tests {
     #[test]
     fn import_presets_append_keeps_existing_queue_rows() {
         let mut queue = PendingConstructionQueue::default();
-        queue.push(pending_entry_from_preset(&blueprint_preset_entry_from_pending(
-            "existing",
-            SiteArchetype::Factory,
-            BuildSiteTile { x: 0, z: 0 },
-            FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
-            "Surface",
-            0,
-            false,
-        )));
+        queue.push(pending_entry_from_preset(
+            &blueprint_preset_entry_from_pending(
+                "existing",
+                SiteArchetype::Factory,
+                BuildSiteTile { x: 0, z: 0 },
+                FootprintTiles { width: 1, depth: 1 },
+                "Surface",
+                0,
+                false,
+            ),
+        ));
         let incoming = BlueprintPresetCollectionR8 {
             schema_version: 1,
             presets: vec![blueprint_preset_entry_from_pending(
                 "imported",
                 SiteArchetype::RailDepot,
                 BuildSiteTile { x: 3, z: 4 },
-                FootprintTiles {
-                    width: 2,
-                    depth: 2,
-                },
+                FootprintTiles { width: 2, depth: 2 },
                 "Surface",
                 0,
                 false,
@@ -322,28 +320,24 @@ mod tests {
     #[test]
     fn import_presets_replace_clears_queue() {
         let mut queue = PendingConstructionQueue::default();
-        queue.push(pending_entry_from_preset(&blueprint_preset_entry_from_pending(
-            "old",
-            SiteArchetype::Factory,
-            BuildSiteTile { x: 0, z: 0 },
-            FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
-            "Surface",
-            0,
-            false,
-        )));
+        queue.push(pending_entry_from_preset(
+            &blueprint_preset_entry_from_pending(
+                "old",
+                SiteArchetype::Factory,
+                BuildSiteTile { x: 0, z: 0 },
+                FootprintTiles { width: 1, depth: 1 },
+                "Surface",
+                0,
+                false,
+            ),
+        ));
         let incoming = BlueprintPresetCollectionR8 {
             schema_version: 1,
             presets: vec![blueprint_preset_entry_from_pending(
                 "new",
                 SiteArchetype::WaterPlant,
                 BuildSiteTile { x: 1, z: 2 },
-                FootprintTiles {
-                    width: 1,
-                    depth: 1,
-                },
+                FootprintTiles { width: 1, depth: 1 },
                 "Surface",
                 0,
                 false,
@@ -365,10 +359,7 @@ mod tests {
             "depot_a",
             SiteArchetype::RailDepot,
             BuildSiteTile { x: 4, z: 8 },
-            FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
+            FootprintTiles { width: 2, depth: 2 },
             "Surface",
             1,
             false,

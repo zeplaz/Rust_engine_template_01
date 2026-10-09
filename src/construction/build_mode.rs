@@ -2,9 +2,9 @@
 
 use bevy::prelude::*;
 
-use super::build_tool_authority::{ActiveBuildTool, BuildTool};
 use super::build_state::BuildGhostState;
 use super::build_strip::ToolContext;
+use super::build_tool_authority::{ActiveBuildTool, BuildTool};
 use super::power_lines::ActivePowerLinePlacement;
 use super::rail::ActiveRailPlacement;
 use super::roads::ActiveRoadPlacement;
@@ -149,7 +149,14 @@ pub fn apply_build_escape_cancel(
         || !staged.rows.is_empty();
 
     clear_placement_ephemera(
-        ghost, path, power, rail, zone, pending, staged, staging_mode,
+        ghost,
+        path,
+        power,
+        rail,
+        zone,
+        pending,
+        staged,
+        staging_mode,
     );
 
     let drop_tool = !tool_armed
@@ -207,7 +214,7 @@ pub fn build_escape_cancel_system(
 mod gui_esc_001_tests {
     use super::*;
     use crate::construction::build_strip::{BuildStripState, ToolContext};
-    use crate::construction::build_tool_authority::{BuildingArchetypeId, BuildTool};
+    use crate::construction::build_tool_authority::{BuildTool, BuildingArchetypeId};
     use crate::construction::pending_construction::PendingConstructionQueue;
     use crate::construction::staged_ghost_panel::{StagedPlacementBook, StagedPlacementMode};
 

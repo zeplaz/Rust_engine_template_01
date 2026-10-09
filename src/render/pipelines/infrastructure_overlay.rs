@@ -687,7 +687,8 @@ impl Plugin for InfrastructureOverlayPlugin {
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                crate::render::pipelines::power_map_overlay_draw::draw_power_map_overlay_egui,
+                crate::render::pipelines::power_map_overlay_draw::draw_power_map_overlay_egui
+                    .run_if(crate::gui::product_egui_shell_active),
             );
     }
 }

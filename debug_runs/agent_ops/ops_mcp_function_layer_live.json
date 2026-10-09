@@ -38,14 +38,6 @@
       "owner": "@coder-mcp + operator",
       "program_id": "art_B",
       "next_artifact": "debug_runs/ops_007_warehouse_production_pause_live.json"
-    },
-    {
-      "finding": "Gate open \u2014 G-PLAY-01",
-      "owner": "operator",
-      "program_id": "stage7_play",
-      "next_artifact": "src/dev/plan_g_play_close_001_checklist_v1.md",
-      "gate_id": "G-PLAY-01",
-      "phi": 0
     }
   ],
   "retry_guidance_sample": {
@@ -58,20 +50,25 @@
     "schema": "ops_active_blockers_v1",
     "ok": true,
     "tensor_path": "tools/orchestrator/queues/master_chain_tensor_v1.json",
-    "open_gate_count": 1,
-    "open_gates": [
+    "open_gate_count": 0,
+    "open_gates": [],
+    "acceptance_pending": [
       {
         "id": "G-PLAY-01",
         "phi": 0,
         "closed": null,
         "plan": "src/dev/plan_g_play_close_001_checklist_v1.md",
         "operator": "src/dev/plan_g_play_close_001_checklist_v1.md",
-        "note": "Rollup OPEN \u2014 G-PLAY-CODER-VEG closed 2026-06-17 \u00b7 operator only on G-PLAY-OPERATOR-01",
+        "note": "Acceptance log only. Coder sub-gates are closed. A missing playtest does not freeze subsystem patches.",
+        "role": "acceptance",
+        "blocks_development": false,
         "open_sub_gates": [
           {
             "id": "G-PLAY-OPERATOR-01",
             "phi": 0,
-            "closed": false
+            "closed": false,
+            "blocks_development": false,
+            "role": "acceptance"
           }
         ],
         "owner": "operator"
@@ -85,7 +82,7 @@
   },
   "_agent_meta": {
     "schema": "ops_mcp_function_layer_live_v1",
-    "written_at_epoch_secs": 1790256223,
+    "written_at_epoch_secs": 1790347514,
     "profile": "OPS_MCP_FUNCTION_LAYER",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/ops_mcp_function_layer_live.json"

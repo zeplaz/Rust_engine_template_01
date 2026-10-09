@@ -3,7 +3,7 @@
   "gate_id": "pilot_hardcode_lint",
   "ok": true,
   "green": true,
-  "scanned_files": 2095,
+  "scanned_files": 2206,
   "needle_count": 3,
   "hit_count": 0,
   "violation_count": 0,

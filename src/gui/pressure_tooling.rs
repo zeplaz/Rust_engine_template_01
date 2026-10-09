@@ -105,7 +105,7 @@ impl Plugin for PressureComposerPlugin {
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                pressure_composer_egui_system.run_if(in_simulation_or_editor),
+                pressure_composer_egui_system.run_if(crate::gui::ui_gates::product_egui_shell_active),
             )
             .add_systems(
                 Update,

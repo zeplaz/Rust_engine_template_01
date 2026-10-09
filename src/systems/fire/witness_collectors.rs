@@ -31,7 +31,13 @@ pub struct FireEcologyWitness {
 }
 
 impl FireEcologyWitness {
-    pub fn accumulate_chunk(&mut self, mean_heat: f32, mean_fuel: f32, old_growth: f32, fuel_ok: bool) {
+    pub fn accumulate_chunk(
+        &mut self,
+        mean_heat: f32,
+        mean_fuel: f32,
+        old_growth: f32,
+        fuel_ok: bool,
+    ) {
         self.chunk_samples = self.chunk_samples.saturating_add(1);
         self.sum_heat += f64::from(mean_heat);
         self.sum_fuel += f64::from(mean_fuel);
@@ -64,8 +70,7 @@ impl FireEcologyWitness {
 
     #[must_use]
     pub fn f1_fuel_gate_active(&self) -> bool {
-        self.frames_sampled > 0
-            && (self.fuel_gated_spark_cells > 0 || self.chunks_fuel_gated > 0)
+        self.frames_sampled > 0 && (self.fuel_gated_spark_cells > 0 || self.chunks_fuel_gated > 0)
     }
 
     #[must_use]
@@ -92,8 +97,7 @@ impl FireEcologyWitness {
 
     #[must_use]
     pub fn heat_mostly_stable(&self) -> bool {
-        self.frames_sampled >= 30
-            && self.heat_spike_frames <= self.frames_sampled as u32 / 8
+        self.frames_sampled >= 30 && self.heat_spike_frames <= self.frames_sampled as u32 / 8
     }
 }
 
@@ -104,8 +108,7 @@ pub fn build_fire_ecology_proof_payload(witness: &FireEcologyWitness) -> serde_j
     } else {
         0.0
     };
-    let spread_active =
-        witness.fuel_depleted_cells > 0 || witness.neighbor_spread_cells > 0;
+    let spread_active = witness.fuel_depleted_cells > 0 || witness.neighbor_spread_cells > 0;
     serde_json::json!({
         "profile": "FIRE_ECOLOGY_F1",
         "scope": "sim_ecology_not_render_particles",
@@ -141,8 +144,7 @@ pub fn build_fire_ecology_proof_payload(witness: &FireEcologyWitness) -> serde_j
 #[must_use]
 pub fn build_fire_f2_fuel_spread_block(witness: &FireEcologyWitness) -> serde_json::Value {
     let counters_wired = witness.frames_sampled > 0;
-    let spread_active =
-        witness.fuel_depleted_cells > 0 || witness.neighbor_spread_cells > 0;
+    let spread_active = witness.fuel_depleted_cells > 0 || witness.neighbor_spread_cells > 0;
     serde_json::json!({
         "green": counters_wired && spread_active,
         "ember_wired": true,
@@ -189,17 +191,17 @@ mod tests {
     use super::*;
     use std::fs;
 
-    use bevy::input::InputPlugin;
+    use crate::engine::states::BaseState;
     use crate::gui::InputBindings;
     use crate::systems::chunk_environment_persist::ChunkEnvironmentPersistPlugin;
     use crate::systems::chunk_sim_lod::ChunkSimLodPlugin;
     use crate::systems::ecology::EcologyPlugin;
-    use crate::systems::sim_control::SimControlPlugin;
-    use crate::systems::weather::WeatherSimulationPlugin;
-    use crate::engine::states::BaseState;
     use crate::systems::ecology::VegetationField;
+    use crate::systems::sim_control::SimControlPlugin;
     use crate::systems::weather::ChunkWeather;
+    use crate::systems::weather::WeatherSimulationPlugin;
     use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+    use bevy::input::InputPlugin;
     use bevy::math::UVec2;
 
     fn proof_output_path() -> std::path::PathBuf {
@@ -243,9 +245,7 @@ mod tests {
             *t = 0.42;
         }
         app.world_mut().spawn((
-            Chunk {
-                coord: IVec2::ZERO,
-            },
+            Chunk { coord: IVec2::ZERO },
             matrix,
             VegetationField {
                 ground_fuel: 0.08,
@@ -285,7 +285,9 @@ mod tests {
             app.update();
         }
         assert!(
-            app.world().resource::<FireEcologyLiveProofState>().written(),
+            app.world()
+                .resource::<FireEcologyLiveProofState>()
+                .written(),
             "sole runtime writer must mark FireEcologyLiveProofState"
         );
         // Leave disk on the sole honest authority path (lib harness + nested spine after drain).

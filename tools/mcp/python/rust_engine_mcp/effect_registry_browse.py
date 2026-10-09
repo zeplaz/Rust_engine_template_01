@@ -80,6 +80,23 @@ def _honest_gate_from(spec: dict[str, Any], manifest: dict[str, Any] | None) -> 
     return gate, frames, pw
 
 
+def _apply_captured_witness(
+    gate: str,
+    frames: int,
+    pw: dict[str, Any],
+    captured: dict[str, Any] | None,
+) -> tuple[str, int, dict[str, Any]]:
+    """Pending captures may become honest. ``dishonest_gate`` is terminal."""
+    if gate == "dishonest_gate" or not captured:
+        return gate, frames, pw
+    if str(captured.get("honest_gate") or "") != "honest":
+        return gate, frames, pw
+    captured_frames = int(captured.get("frames_captured") or 0)
+    if gate != "honest" or captured_frames > frames:
+        return "honest", captured_frames, dict(captured)
+    return gate, frames, pw
+
+
 def _frames_manifest_witness(effect_dir: Path) -> dict[str, Any] | None:
     path = effect_dir / "preview_frames" / "frames_manifest.json"
     body = _read_json(path)
@@ -117,13 +134,8 @@ def _entry_from_dir(effect_dir: Path, *, source: str, root: Path) -> EffectBrows
     manifest_path = effect_dir / "manifest.json"
     manifest = _read_json(manifest_path)
     gate, frames, pw = _honest_gate_from(spec, manifest)
-    # Prefer verified staging capture witness when promote manifest is still pending.
-    captured = _frames_manifest_witness(effect_dir)
-    if captured and str(captured.get("honest_gate") or "") == "honest":
-        if gate != "honest" or int(captured.get("frames_captured") or 0) > frames:
-            pw = captured
-            gate = str(captured.get("honest_gate") or gate)
-            frames = int(captured.get("frames_captured") or frames)
+    # Pending captures may unlock Assign. A dishonest_gate stays dishonest.
+    gate, frames, pw = _apply_captured_witness(gate, frames, pw, _frames_manifest_witness(effect_dir))
     lane = str(spec.get("lane") or "")
     return EffectBrowseEntry(
         effect_id=effect_id,
@@ -183,8 +195,11 @@ def list_effect_entries(
                 existing = by_id.get(entry.effect_id)
                 if existing is None:
                     by_id[entry.effect_id] = entry
-                elif existing.honest_gate != "honest" and entry.honest_gate == "honest":
-                    # Staging capture can unlock Assign before registry manifest refresh.
+                elif (
+                    existing.honest_gate not in ("honest", "dishonest_gate")
+                    and entry.honest_gate == "honest"
+                ):
+                    # Staging capture can unlock a pending Assign before registry refresh.
                     by_id[entry.effect_id] = entry
 
     entries = list(by_id.values())

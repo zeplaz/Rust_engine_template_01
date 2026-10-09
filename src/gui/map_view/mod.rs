@@ -20,8 +20,7 @@ pub use consumers::{minimap, world_preview};
 pub use debug::{MapFitConsumerTag, MapFitValidation, MapFitValidationLog};
 pub use plugin::MapViewPlugin;
 pub use presentation::{
-    clear_active_map_view_input_before_map_widgets, paint_map_display_debug_outlines,
-    paint_map_view_placeholder, sync_shell_layout_drag_gate, ActiveMapViewInput,
+    clear_active_map_view_input_before_map_widgets, sync_shell_layout_drag_gate, ActiveMapViewInput,
     MapDisplayTransform, MapShellPointerGate, MapViewInstanceId, MapViewPresentationInteractions,
     MapViewPresentationState, MapViewPresentationStates, MapViewReadyStates,
     MapViewInteractionByView, MinimapInteractionBuffer, SmoothedMapInteraction,

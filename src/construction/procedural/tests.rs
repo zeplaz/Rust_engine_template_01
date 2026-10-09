@@ -117,10 +117,7 @@ pub fn build_procedural_assembly_witness_body() -> serde_json::Value {
 pub fn refresh_procedural_assembly_live_witness() -> bool {
     let _ = refresh_pg_quality_001_grammar_diversity_witness();
     let body = build_procedural_assembly_witness_body();
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
     let wrapped = wrap_debug_run(
         "procedural_assembly",
         "refresh_procedural_assembly_live_witness",
@@ -150,10 +147,7 @@ fn style_pack_ron_loads_victorian_slots() {
 
 #[test]
 fn style_pack_rejects_duplicate_ids() {
-    let dir = std::env::temp_dir().join(format!(
-        "style_pack_dup_test_{}",
-        std::process::id()
-    ));
+    let dir = std::env::temp_dir().join(format!("style_pack_dup_test_{}", std::process::id()));
     let _ = std::fs::create_dir_all(&dir);
     let ron = include_str!("../../../assets/configs/buildings/style_packs/style_victorian.ron");
     std::fs::write(dir.join("style_victorian.ron"), ron).unwrap();
@@ -223,7 +217,10 @@ fn pg_quality_002_links_grammar_diversity_to_pg2_witness() {
         .get("grammar_diversity")
         .or_else(|| body.get("payload").and_then(|p| p.get("grammar_diversity")))
         .expect("grammar_diversity hook");
-    assert_eq!(hook.get("gate_id").and_then(|v| v.as_str()), Some("PG-QUALITY-002"));
+    assert_eq!(
+        hook.get("gate_id").and_then(|v| v.as_str()),
+        Some("PG-QUALITY-002")
+    );
     assert_eq!(
         hook.get("grammar_gate_id").and_then(|v| v.as_str()),
         Some("PG-QUALITY-001")
@@ -233,8 +230,8 @@ fn pg_quality_002_links_grammar_diversity_to_pg2_witness() {
 // --- module index + building registry integration (MCP-E0) ---
 
 use crate::construction::building_definitions::{
-    attach_procedural_glb_paths, load_building_definitions_from_dir, BuildingDefinitionRegistry,
-    default_buildings_dir,
+    attach_procedural_glb_paths, default_buildings_dir, load_building_definitions_from_dir,
+    BuildingDefinitionRegistry,
 };
 
 #[test]
@@ -252,7 +249,9 @@ fn registry_resolves_lod0_module_glb_by_catalog_id() {
 fn smoke_only_module_not_resolved_for_stylepack() {
     let modules = load_procedural_module_registry();
     let buildings = load_building_definitions_from_dir(default_buildings_dir());
-    assert!(buildings.procedural_glb_asset(&modules, "corner_brick_outer").is_none());
+    assert!(buildings
+        .procedural_glb_asset(&modules, "corner_brick_outer")
+        .is_none());
 }
 
 #[test]

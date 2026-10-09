@@ -18,11 +18,7 @@ pub fn world_xy_to_tile(p: Vec3) -> BuildSiteTile {
 }
 
 #[must_use]
-pub fn segment_preview_valid(
-    start: Vec3,
-    end: Vec3,
-    params: &WorldGenParams,
-) -> bool {
+pub fn segment_preview_valid(start: Vec3, end: Vec3, params: &WorldGenParams) -> bool {
     let head = world_xy_to_tile(start);
     let tail = world_xy_to_tile(end);
     validate_road_segment(head, tail, params).valid
@@ -38,7 +34,11 @@ pub fn regenerate_road_segments(
 ) -> Vec<RoadSegmentPreview> {
     let mut chain: Vec<Vec3> = control_points.to_vec();
     if let Some(c) = cursor_world {
-        if chain.last().copied().map_or(true, |last| (last - c).length_squared() > 0.01) {
+        if chain
+            .last()
+            .copied()
+            .map_or(true, |last| (last - c).length_squared() > 0.01)
+        {
             chain.push(c);
         }
     }

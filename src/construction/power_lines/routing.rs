@@ -27,7 +27,10 @@ pub fn orthogonal_chain_between(from: Vec3, to: Vec3) -> Vec<Vec3> {
 pub fn flatten_chain(points: &[Vec3]) -> Vec<Vec3> {
     let mut out = Vec::new();
     for p in points {
-        if out.last().map_or(true, |last: &Vec3| (*last - *p).length_squared() > 0.0001) {
+        if out
+            .last()
+            .map_or(true, |last: &Vec3| (*last - *p).length_squared() > 0.0001)
+        {
             out.push(*p);
         }
     }
@@ -43,7 +46,11 @@ pub fn build_sample_chain(
 ) -> Vec<Vec3> {
     let mut chain: Vec<Vec3> = control_points.to_vec();
     if let Some(c) = cursor_world {
-        if chain.last().copied().map_or(true, |last| (last - c).length_squared() > 0.01) {
+        if chain
+            .last()
+            .copied()
+            .map_or(true, |last| (last - c).length_squared() > 0.01)
+        {
             chain.push(c);
         }
     }
@@ -75,11 +82,7 @@ pub fn build_sample_chain(
 }
 
 #[must_use]
-pub fn segment_preview_valid(
-    start: Vec3,
-    end: Vec3,
-    mode: PowerLineRoutingMode,
-) -> bool {
+pub fn segment_preview_valid(start: Vec3, end: Vec3, mode: PowerLineRoutingMode) -> bool {
     if (start - end).length_squared() < 0.25 {
         return false;
     }
@@ -127,12 +130,8 @@ mod tests {
             Vec3::new(4.5, 0.0, 0.5),
             Vec3::new(4.5, 0.0, 4.5),
         ];
-        let segs = regenerate_power_line_segments(
-            &pts,
-            None,
-            PowerLineRoutingMode::Orthogonal90,
-            true,
-        );
+        let segs =
+            regenerate_power_line_segments(&pts, None, PowerLineRoutingMode::Orthogonal90, true);
         assert!(segs.len() >= 2);
         assert!(segs.iter().all(|s| s.valid));
         for seg in segs {

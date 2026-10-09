@@ -42,7 +42,11 @@ pub fn draw_mock_shapes_submenu(
         }
     }
     if let Some(intent) = tool.building_intent.as_ref() {
-        if intent.catalog_id.as_deref().is_some_and(|id| id.starts_with("mock:")) {
+        if intent
+            .catalog_id
+            .as_deref()
+            .is_some_and(|id| id.starts_with("mock:"))
+        {
             ui.separator();
             draw_intent_preview(ui, intent);
         }

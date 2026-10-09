@@ -192,7 +192,8 @@ impl FootprintGrid {
             &result.massing_strategy,
             &result.door_rhythm,
         );
-        let mut grid = Self::from_rect_with_door(result.width, result.depth, result.floors, Some(door_x));
+        let mut grid =
+            Self::from_rect_with_door(result.width, result.depth, result.floors, Some(door_x));
         match result.footprint_mode.as_str() {
             "yard_interior" | "u_shape" => grid.inject_interior_yard(),
             "l_shape" | "t_shape" => grid.inject_l_shape_yard_v1(),
@@ -269,7 +270,9 @@ impl FootprintGrid {
     }
 
     pub fn facade_cells(&self) -> impl Iterator<Item = &FootprintCell> {
-        self.cells.iter().filter(|c| c.token != FootprintToken::Yard)
+        self.cells
+            .iter()
+            .filter(|c| c.token != FootprintToken::Yard)
     }
 }
 
@@ -340,7 +343,10 @@ pub fn street_facing_door_column(
         )
     });
     let loading = placement_tags.iter().any(|t| {
-        matches!(t.as_str(), "loading_dock" | "logistics" | "rail" | "industrial")
+        matches!(
+            t.as_str(),
+            "loading_dock" | "logistics" | "rail" | "industrial"
+        )
     });
 
     let rhythm_bias = match door_rhythm {
@@ -382,12 +388,14 @@ pub fn bq_h2_street_facing_witness_green() -> bool {
 
 #[must_use]
 pub fn build_bq_h2_openings_witness_body() -> serde_json::Value {
-    let grid = FootprintGrid::from_grammar(&super::building_grammar::generate(
-        crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
-        "industrial_west",
-        43,
-    )
-    .expect("grammar"));
+    let grid = FootprintGrid::from_grammar(
+        &super::building_grammar::generate(
+            crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
+            "industrial_west",
+            43,
+        )
+        .expect("grammar"),
+    );
     let door = grid
         .cells
         .iter()
@@ -420,7 +428,12 @@ pub fn refresh_bq_h2_openings_witness() -> bool {
     const JSON: &str = "debug_runs/bq_h2_openings_001_live.json";
     let body = build_bq_h2_openings_witness_body();
     let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run("BQ-H2-OPENINGS-001", "refresh_bq_h2_openings_witness", JSON, body);
+    let wrapped = wrap_debug_run(
+        "BQ-H2-OPENINGS-001",
+        "refresh_bq_h2_openings_witness",
+        JSON,
+        body,
+    );
     write_debug_run_json(JSON, wrapped) && green
 }
 
@@ -438,7 +451,10 @@ mod tests {
             "floor 0 must include a door"
         );
         assert!(
-            !grid.cells.iter().any(|c| c.token == FootprintToken::Door && c.floor > 0),
+            !grid
+                .cells
+                .iter()
+                .any(|c| c.token == FootprintToken::Door && c.floor > 0),
             "upper floors must not include doors"
         );
     }
@@ -484,17 +500,34 @@ mod tests {
         assert_eq!(roofs[0].roof_mode, Some(RoofMode::FullFootprint));
         // 4×2 perimeter: 4 corners×2 + 4 mid-edge = 12 wall faces
         assert_eq!(walls.len(), 12);
-        assert_eq!(exterior_faces(0, 0, 4, 2), vec![ExteriorFace::South, ExteriorFace::West]);
-        assert_eq!(exterior_faces(3, 1, 4, 2), vec![ExteriorFace::North, ExteriorFace::East]);
+        assert_eq!(
+            exterior_faces(0, 0, 4, 2),
+            vec![ExteriorFace::South, ExteriorFace::West]
+        );
+        assert_eq!(
+            exterior_faces(3, 1, 4, 2),
+            vec![ExteriorFace::North, ExteriorFace::East]
+        );
         assert_eq!(exterior_faces(1, 0, 4, 2), vec![ExteriorFace::South]);
     }
 
     #[test]
     fn footprint_grid_door_not_on_corner_when_street_tagged() {
-        let col = street_facing_door_column(4, 2, &["street_facing".into()], 7, "long_hall", "linear_center");
+        let col = street_facing_door_column(
+            4,
+            2,
+            &["street_facing".into()],
+            7,
+            "long_hall",
+            "linear_center",
+        );
         assert!(col >= 1 && col <= 2);
         let grid = FootprintGrid::from_rect_with_door(4, 2, 1, Some(col));
-        let door = grid.cells.iter().find(|c| c.token == FootprintToken::Door).unwrap();
+        let door = grid
+            .cells
+            .iter()
+            .find(|c| c.token == FootprintToken::Door)
+            .unwrap();
         assert_ne!(door.x, 0);
         assert_ne!(door.x + 1, grid.width);
     }

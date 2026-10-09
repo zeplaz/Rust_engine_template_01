@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/city_g2_c5_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_g2_c5_001_palette_witness",
-    "written_at_epoch_secs": 1790312393
+    "written_at_epoch_secs": 1790385413
   },
   "city_g0_prerequisites_ok": true,
   "city_g0_wit_note": "module index load only — full CITY-G0-WIT assembly may fail on grammar RON parse debt unrelated to C5",

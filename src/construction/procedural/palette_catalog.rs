@@ -9,8 +9,7 @@ use serde::Deserialize;
 use super::module_index::ProceduralModuleEntry;
 use crate::strategic::settlement::mix_u64;
 
-pub const PALETTE_CATALOG_INDEX_RON: &str =
-    "assets/configs/buildings/_palette_catalog_index.ron";
+pub const PALETTE_CATALOG_INDEX_RON: &str = "assets/configs/buildings/_palette_catalog_index.ron";
 pub const CITY_G2_C5_LIVE_JSON: &str = "debug_runs/city_g2_c5_001_live.json";
 
 #[derive(Debug, Clone, Deserialize)]
@@ -281,9 +280,10 @@ pub fn resolve_palette_variation_default(
 pub fn load_palette_catalog_registry_from_path(path: &Path) -> PaletteCatalogRegistry {
     let mut registry = PaletteCatalogRegistry::default();
     let Ok(text) = std::fs::read_to_string(path) else {
-        registry
-            .load_errors
-            .push(format!("palette catalog index not found: {}", path.display()));
+        registry.load_errors.push(format!(
+            "palette catalog index not found: {}",
+            path.display()
+        ));
         return registry;
     };
     let index: PaletteCatalogIndexFile = match ron::from_str(&text) {
@@ -344,7 +344,11 @@ pub fn init_palette_catalog_registry(mut commands: Commands) {
 
 const G2_WITNESS_LOT_SEEDS: [u64; 3] = [0x59DCFEF41AF9F0F9, 0xA1B2C3D4E5F60718, 0x0102030405060708];
 const G2_WITNESS_MODULES: [(&str, &str, &str); 3] = [
-    ("wall_concrete_2u", "industrial_west", "palette_industrial_west_v1"),
+    (
+        "wall_concrete_2u",
+        "industrial_west",
+        "palette_industrial_west_v1",
+    ),
     ("wall_brick_1u", "colonial", "palette_colonial_res_v1"),
     ("wall_brick_1u", "victorian", "palette_rowhouse_urban_v1"),
 ];
@@ -367,17 +371,15 @@ pub fn build_city_g2_c5_001_witness_body() -> serde_json::Value {
         };
         let module_entry = modules.get(module_id);
         for lot_seed in G2_WITNESS_LOT_SEEDS {
-            let resolved = resolve_palette_variation(
-                lot_seed,
-                module_id,
-                palette_id,
-                catalog,
-                module_entry,
-            );
+            let resolved =
+                resolve_palette_variation(lot_seed, module_id, palette_id, catalog, module_entry);
             let Some(resolved) = resolved else {
                 continue;
             };
-            let hash = format!("{:016x}", mix_u64(lot_seed, "g2_c5_visual", &resolved.visual_variant_id));
+            let hash = format!(
+                "{:016x}",
+                mix_u64(lot_seed, "g2_c5_visual", &resolved.visual_variant_id)
+            );
             matrix.push(serde_json::json!({
                 "module_id": module_id,
                 "district_style": district_style,
@@ -468,10 +470,7 @@ pub fn refresh_city_g2_c5_001_palette_witness() -> bool {
     use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
     let body = build_city_g2_c5_001_witness_body();
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
     let wrapped = wrap_debug_run(
         "CITY-G2-C5-001",
         "refresh_city_g2_c5_001_palette_witness",

@@ -94,7 +94,8 @@ def contract_errors(job: dict[str, Any]) -> list[str]:
                 f"(got {method!r})"
             )
 
-    if job.get("seed") is None:
+    seed = job.get("seed")
+    if isinstance(seed, bool) or not isinstance(seed, int):
         errors.append("seed required for deterministic blender-worker jobs")
 
     return errors

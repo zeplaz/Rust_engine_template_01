@@ -348,15 +348,24 @@ fn fill_logistics_heat_from_snapshot(
     };
     let ww = w.max(1);
     let hh = h.max(1);
-    for &(edge_id, traffic) in &log.edge_rows {
-        let x = edge_id % ww;
-        let y = (edge_id / ww) % hh;
-        let v = (traffic.clamp(0.0, 1.0) * 255.0) as u8;
+    for (i, &(edge_id, traffic)) in log.edge_rows.iter().enumerate() {
+        let haul = log.haul_marker_t.get(i).copied().unwrap_or(0.0);
+        let (x, y, v) = haul_heat_pixel(edge_id, traffic, haul, ww, hh);
         let i = ((y * ww + x) * 4 + 1) as usize;
         if i < out.len() {
             out[i] = out[i].saturating_add(v);
         }
     }
+}
+
+fn haul_heat_pixel(edge_id: u32, traffic: f32, haul: f32, ww: u32, hh: u32) -> (u32, u32, u8) {
+        let (x, y) = crate::strategic::haul_marker_cell(edge_id, traffic, haul, ww, hh);
+        let v = if traffic <= 0.0 {
+            1
+        } else {
+            (traffic.clamp(0.0, 1.0) * 255.0) as u8
+        };
+        (x, y, v.max(1))
 }
 
 fn ensure_heat_textures(
@@ -678,6 +687,43 @@ mod tests {
         assert!(log_buf.iter().any(|&b| b > 0));
         let fire = fire_heat_at_chunk(IVec2::ZERO, None, &map_views);
         assert_eq!(fire, 0.0);
+    }
+
+    #[test]
+    fn logistics_haul_pixel_moves_and_idle_stays_at_origin() {
+        let mut at_rest = vec![0u8; 16 * 16 * 4];
+        let mut moved = vec![0u8; 16 * 16 * 4];
+        let rest = LogisticsVisualSnapshot {
+            edge_rows: vec![(2, 1.0), (5, 0.0)],
+            haul_marker_t: vec![0.0, 0.8],
+            ..Default::default()
+        };
+        let flowing = LogisticsVisualSnapshot {
+            edge_rows: vec![(2, 1.0), (5, 0.0)],
+            haul_marker_t: vec![0.8, 0.8],
+            ..Default::default()
+        };
+        fill_logistics_heat_from_snapshot(&mut at_rest, 16, 16, Some(&rest), true);
+        fill_logistics_heat_from_snapshot(&mut moved, 16, 16, Some(&flowing), true);
+        let greens = |buf: &[u8]| -> Vec<(u32, u32)> {
+            let mut cells = Vec::new();
+            for y in 0..16u32 {
+                for x in 0..16u32 {
+                    if buf[((y * 16 + x) * 4 + 1) as usize] > 0 {
+                        cells.push((x, y));
+                    }
+                }
+            }
+            cells
+        };
+        let rest_cells = greens(&at_rest);
+        let moved_cells = greens(&moved);
+        assert_eq!(rest_cells, vec![(2, 0), (5, 0)]);
+        assert!(moved_cells.contains(&(5, 0)));
+        assert!(!moved_cells.contains(&(2, 0)));
+        assert_ne!(rest_cells, moved_cells);
+        let idle_shift = haul_heat_pixel(5, 0.0, 0.8, 16, 16);
+        assert_eq!((idle_shift.0, idle_shift.1), (5, 0));
     }
 
     #[test]

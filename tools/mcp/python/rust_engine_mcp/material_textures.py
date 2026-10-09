@@ -5,6 +5,7 @@ from __future__ import annotations
 import json
 import math
 import random
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable
@@ -13,18 +14,18 @@ from .paths import repo_root
 
 
 def _category_for_profile(profile_id: str) -> str:
-    pid = profile_id.lower()
-    if "steel" in pid or "metal" in pid:
+    tokens = {part for part in re.split(r"[^a-z0-9]+", profile_id.lower()) if part}
+    if tokens & {"steel", "metal"}:
         return "industrial/steel"
-    if "brick" in pid:
+    if "brick" in tokens:
         return "residential/brick"
-    if "wood" in pid or "plank" in pid:
+    if tokens & {"wood", "plank"}:
         return "residential/wood"
-    if "glass" in pid:
+    if "glass" in tokens:
         return "glass"
-    if "roof" in pid:
+    if "roof" in tokens:
         return "roof"
-    if "concrete" in pid:
+    if "concrete" in tokens:
         return "industrial/concrete"
     return "other"
 

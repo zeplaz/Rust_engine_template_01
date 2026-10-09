@@ -1,6 +1,10 @@
 use bevy::prelude::*;
 use bevy_egui::{update_ui_screen_rect, EguiContext, EguiContexts, EguiPreUpdateSet};
 
+use crate::engine::states::BaseState;
+use crate::engine::AppState;
+use crate::gui::hud::shell_diagnostics::{note_egui_context_acquired, ProductShellDiagnostics};
+
 use super::fonts::{install_egui_cmd_mono_font, load_cmd_ui_mono_font};
 use super::{
     apply_hud_density_profile, apply_scroll_style, sync_egui_context_scale_factor,
@@ -27,13 +31,17 @@ impl Plugin for UiThemePlugin {
                 PreUpdate,
                 (
                     reset_ui_scale_application_gate_system,
-                    sync_egui_density_scale_system.before(update_ui_screen_rect),
+                    sync_egui_density_scale_system
+                        .before(update_ui_screen_rect)
+                        .run_if(not(in_state(BaseState::Simulation))),
                 )
                     .chain(),
             )
             .add_systems(
                 PreUpdate,
-                apply_egui_theme_system.after(EguiPreUpdateSet::BeginPass),
+                apply_egui_theme_system
+                    .after(EguiPreUpdateSet::BeginPass)
+                    .run_if(not(in_state(BaseState::Simulation))),
             );
     }
 }
@@ -57,10 +65,24 @@ fn apply_egui_theme_system(
     density: Res<HudDensityProfile>,
     mut contexts: EguiContexts,
     mut loaded: ResMut<EguiCmdMonoFontLoaded>,
+    base: Option<Res<State<BaseState>>>,
+    app: Option<Res<State<AppState>>>,
+    mut diag: Option<ResMut<ProductShellDiagnostics>>,
 ) {
+    // WorldGen session chrome is Bevy UI. Editor and menus still theme egui.
+    if app
+        .as_ref()
+        .is_some_and(|state| matches!(state.get(), AppState::WorldGen))
+    {
+        return;
+    }
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
+    let in_simulation = base
+        .as_ref()
+        .is_some_and(|state| matches!(state.get(), BaseState::Simulation));
+    note_egui_context_acquired(in_simulation, diag.as_deref_mut());
     if !loaded.0 {
         install_egui_cmd_mono_font(ctx);
         loaded.0 = true;

@@ -458,6 +458,22 @@ fn world_gen_params_for_maneuver(
             p.field_storage = TerrainFieldStorage::ChunkCellMatrixAuthoritative;
         }
     }
+    // Isolation play entries keep this harness extent (MediumSmall). Each gets its own fixed seed.
+    if matches!(
+        launch.test_scene,
+        TestScene::City | TestScene::Vfx | TestScene::SubFx
+    ) {
+        p.apply_tile_extent_preset(TileExtentPreset::MediumSmall);
+        p.field_storage = TerrainFieldStorage::ChunkCellMatrixAuthoritative;
+        if let Some(seed) = launch.test_scene.isolation_world_seed() {
+            p.seed = seed;
+        }
+        p.settlement_count = if launch.test_scene.seeds_towns() {
+            crate::strategic::settlement::EMPTY_TOWN_BOOK_COUNT
+        } else {
+            0
+        };
+    }
     p
 }
 
@@ -618,11 +634,11 @@ fn test_scene_chunk_matrix(size: bevy::math::UVec2) -> ChunkCellMatrix {
 
 fn test_scene_fire_seed_count(scene: TestScene) -> u32 {
     match scene {
-        TestScene::Fire => 6,
+        TestScene::Fire | TestScene::Vfx => 6,
         TestScene::Atmosphere => 8,
         // Small burn cluster — not a world-center ocean flood of markers.
         TestScene::Visual | TestScene::VfxSandbox => 8,
-        TestScene::None | TestScene::Weather => 0,
+        TestScene::None | TestScene::Weather | TestScene::City | TestScene::SubFx => 0,
     }
 }
 
@@ -649,10 +665,10 @@ fn apply_test_scene_fire_seeds(
         return;
     }
     let (heat, fuel) = match scene {
-        TestScene::Fire => (0.78, 0.65),
+        TestScene::Fire | TestScene::Vfx => (0.78, 0.65),
         TestScene::Atmosphere => (0.55, 0.5),
         TestScene::Visual | TestScene::VfxSandbox => (0.92, 0.75),
-        TestScene::None | TestScene::Weather => (0.0, 0.0),
+        TestScene::None | TestScene::Weather | TestScene::City | TestScene::SubFx => (0.0, 0.0),
     };
     let bounds = seed_test_fire_near_world_center(params, fire_q, count, heat, fuel);
     attach_fire_light_emission_for_seeded_chunks(fire_q, commands);
@@ -1625,6 +1641,57 @@ fn seed_visual_concrete_chain_e2e(
     }
 }
 
+fn write_global_wind(global_wind: &mut Option<ResMut<GlobalWind>>, direction: Vec2, speed: f32) {
+    if let Some(gw) = global_wind.as_mut() {
+        gw.direction = direction;
+        gw.speed = speed;
+    }
+}
+
+/// Same chunk weather writes as the `--test weather` arm. Callers choose the cap and which fields rise.
+fn raise_chunk_weather(
+    wx_q: &mut Query<&mut ChunkWeather>,
+    limit: u32,
+    rain: Option<f32>,
+    fog: Option<f32>,
+    wind: Option<f32>,
+    soil: Option<f32>,
+) {
+    let mut n = 0u32;
+    for mut w in wx_q.iter_mut() {
+        if n >= limit {
+            break;
+        }
+        if let Some(v) = rain {
+            w.rain_intensity = w.rain_intensity.max(v);
+        }
+        if let Some(v) = fog {
+            w.fog_density = w.fog_density.max(v);
+        }
+        if let Some(v) = wind {
+            w.wind_speed = w.wind_speed.max(v);
+        }
+        if let Some(v) = soil {
+            w.soil_moisture = w.soil_moisture.max(v);
+        }
+        n += 1;
+    }
+}
+
+fn seed_weather_scene(wx_q: &mut Query<&mut ChunkWeather>, gpu: &mut WeatherFireFieldDebugOverlay) {
+    gpu.show = true;
+    raise_chunk_weather(wx_q, 12, Some(0.82), Some(0.18), Some(0.35), Some(0.55));
+}
+
+fn seed_atmosphere_wind(global_wind: &mut Option<ResMut<GlobalWind>>, wx_q: &mut Query<&mut ChunkWeather>) {
+    write_global_wind(
+        global_wind,
+        Vec2::new(1.0, 0.2).normalize_or_zero(),
+        6.0,
+    );
+    raise_chunk_weather(wx_q, 16, None, Some(0.08), Some(0.65), None);
+}
+
 fn apply_test_scene_defaults(
     scene: Option<Res<ActiveTestScene>>,
     mut harness: ResMut<TestWorldHarness>,
@@ -1656,46 +1723,33 @@ fn apply_test_scene_defaults(
         return;
     }
     let sim = presentation.get_mut(crate::gui::MapViewInstanceId::SimulationMap);
-    sim.overlays.fire_heat = true;
+    sim.overlays.fire_heat = match kind {
+        TestScene::None | TestScene::City | TestScene::SubFx => false,
+        // `--test weather` keeps the heat overlay chrome it already had; it still does not seed fire.
+        TestScene::Weather => true,
+        other => other.seeds_fire_overlay(),
+    };
     sim.bump_revision();
 
-    wx.enabled = true;
-    wx.overlay = true;
-    wx.particles = true;
+    let weather_chrome = !matches!(kind, TestScene::City | TestScene::Vfx);
+    wx.enabled = weather_chrome;
+    wx.overlay = weather_chrome;
+    wx.particles = weather_chrome;
     gpu.show = false;
 
     match kind {
         TestScene::Weather => {
-            gpu.show = true;
-            let mut n = 0u32;
-            for mut w in &mut wx_q {
-                if n >= 12 {
-                    break;
-                }
-                w.rain_intensity = w.rain_intensity.max(0.82);
-                w.fog_density = w.fog_density.max(0.18);
-                w.wind_speed = w.wind_speed.max(0.35);
-                w.soil_moisture = w.soil_moisture.max(0.55);
-                n += 1;
-            }
+            seed_weather_scene(&mut wx_q, &mut gpu);
         }
         TestScene::Fire => {
             tile_debug.use_batched_mesh_overlay = true;
         }
+        TestScene::Vfx => {
+            tile_debug.use_batched_mesh_overlay = true;
+            write_global_wind(&mut global_wind, Vec2::X, 0.0);
+        }
         TestScene::Atmosphere => {
-            if let Some(gw) = global_wind.as_mut() {
-                gw.direction = Vec2::new(1.0, 0.2).normalize_or_zero();
-                gw.speed = 6.0;
-            }
-            let mut wn = 0u32;
-            for mut w in &mut wx_q {
-                if wn >= 16 {
-                    break;
-                }
-                w.wind_speed = w.wind_speed.max(0.65);
-                w.fog_density = w.fog_density.max(0.08);
-                wn += 1;
-            }
+            seed_atmosphere_wind(&mut global_wind, &mut wx_q);
             let mut fi = 0u32;
             for mut prof in &mut fuel_q {
                 if fi >= 3 {
@@ -1704,6 +1758,12 @@ fn apply_test_scene_defaults(
                 prof.structure_overlay = Some(fuel_depot_profile().to_fuel_layer_overlay());
                 fi += 1;
             }
+        }
+        TestScene::SubFx => {
+            seed_weather_scene(&mut wx_q, &mut gpu);
+            seed_atmosphere_wind(&mut global_wind, &mut wx_q);
+            sim.overlays.fire_heat = false;
+            sim.bump_revision();
         }
         TestScene::Visual => {
             wx.particles = true;
@@ -1769,6 +1829,18 @@ fn apply_test_scene_defaults(
                 prof.structure_overlay = Some(fuel_depot_profile().to_fuel_layer_overlay());
                 fi += 1;
             }
+        }
+        TestScene::City => {
+            // Town stamps are the play raster. No fire overlay, weather particles, or wind field.
+            focus_debug.enabled = false;
+            tile_debug.use_batched_mesh_overlay = false;
+            wx.enabled = false;
+            wx.overlay = false;
+            wx.particles = false;
+            gpu.show = false;
+            write_global_wind(&mut global_wind, Vec2::X, 0.0);
+            sim.overlays.fire_heat = false;
+            sim.bump_revision();
         }
         TestScene::None => {}
     }

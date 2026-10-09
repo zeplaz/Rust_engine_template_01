@@ -105,14 +105,18 @@ pub struct SimBuildPickerState {
 }
 
 impl SimBuildPickerState {
+    /// Sole category assignment used by the build rail. Does not toggle closed —
+    /// a second call on the same slot stays open. The rail click system closes.
     pub fn open_for_slot(&mut self, slot: ToolContext) {
-        if self.open && self.anchor_slot == slot {
-            self.open = false;
-            return;
-        }
         self.open = true;
         self.anchor_slot = slot;
         self.category = tool_context_to_picker_category(slot);
+    }
+
+    /// Header word matches the rail button that opened this sheet.
+    #[must_use]
+    pub fn sheet_title(&self) -> &'static str {
+        super::sim_hud_copy::rail_player_label(self.anchor_slot)
     }
 
     pub fn close(&mut self) {
@@ -209,7 +213,7 @@ pub fn draw_sim_build_picker_sheet_egui(
             picker_sheet_frame(&palette).show(ui, |ui| {
                 picker_header_frame(&palette).show(ui, |ui| {
                     ui.horizontal(|ui| {
-                        ui.label(title_text(&palette, picker.category.title()));
+                        ui.label(title_text(&palette, picker.sheet_title()));
                         ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
                             if ui
                                 .add(
@@ -226,22 +230,7 @@ pub fn draw_sim_build_picker_sheet_egui(
                         });
                     });
                 });
-                ui.horizontal(|ui| {
-                    for tab in BuildPickerCategory::all() {
-                        let selected = picker.category == tab;
-                        let resp = ui.selectable_label(selected, body_text(&palette, tab.title()));
-                        if resp.clicked() {
-                            picker.category = tab;
-                        }
-                        if selected {
-                            ui.painter().hline(
-                                resp.rect.x_range(),
-                                resp.rect.bottom(),
-                                egui::Stroke::new(2.0, palette.accent_terminal),
-                            );
-                        }
-                    }
-                });
+                ui.label(caption_text(&palette, picker.category.title()));
                 ui.separator();
                 egui::ScrollArea::vertical()
                     .max_height(sheet_body_h)
@@ -585,7 +574,14 @@ mod tests {
         assert!(picker.open);
         assert_eq!(picker.anchor_slot, ToolContext::Military);
         assert_eq!(picker.category, BuildPickerCategory::Defense);
+        assert_eq!(picker.sheet_title(), "Defense");
         assert_eq!(BuildPickerCategory::Defense.title(), "Defense");
+        picker.open_for_slot(ToolContext::Military);
+        assert!(picker.open, "open_for_slot sets the category; it does not toggle closed");
+        picker.open_for_slot(ToolContext::Utilities);
+        assert!(picker.open);
+        assert_eq!(picker.category, BuildPickerCategory::Utilities);
+        assert_eq!(picker.sheet_title(), "Power");
     }
 
     #[test]

@@ -1,5 +1,6 @@
 //! Settlement hierarchy + organic growth (SET-P5 / ECON-OG / PROC-OG).
 
+mod admin_ink;
 mod actors;
 mod assign;
 mod block;
@@ -12,10 +13,12 @@ mod block_rollout;
 mod block_street_visual;
 mod district;
 mod execute;
+mod faction_step;
 mod growth;
 mod hierarchy_gap;
 mod ids;
 mod market;
+mod need_utility;
 mod policy;
 mod pressure;
 mod seed_chain;
@@ -83,14 +86,26 @@ pub use block_perf::{
     build_city_p1_witness_body, city_p1_witness_green, refresh_city_p1_witness,
     CITY_P1_LIVE_JSON,
 };
+pub use admin_ink::{
+    admin_ring_should_close, admin_zone_corner_tile, admin_zone_drag_rect, admin_zone_drag_stamps,
+    admin_zone_tile_from_world, append_admin_ring_vertex, arm_admin_zone_edit, begin_admin_zone_drag,
+    closed_ring_vertices, commit_admin_zone_drag, commit_admin_zone_ring, delete_admin_zone,
+    move_admin_ring_vertex, move_admin_zone_drag, start_admin_zone_drag, AdminZoneDrag, InkSite,
+};
 pub use district::{
+    add_admin_zone, core_ring_for_rect, ring_bounds, stamp_core_rings, tile_in_ring,
     DevelopmentPressure, DevelopmentPressureBook, DistrictBook, DistrictMetrics,
     DistrictMetricsBook, DistrictRecord, DistrictStyleRules,
 };
 pub use execute::{
     approve_all_growth_proposals_into_pending, approve_growth_proposal_into_pending,
+    commit_growth_pending_to_funnel_system, commit_top_district_growth,
     enqueue_approved_growth_proposal, growth_approve_execute_pipeline_witness_green,
+    growth_pending_commit_event, growth_site_at_town_center, growth_sites_for_towns,
+    enqueue_generated_town_growth_once_system, enqueue_second_town_growth,
+    enqueue_second_town_growth_system, enqueue_town_growth_once,
     pending_blueprint_from_growth_proposal, site_archetype_for_growth_proposal,
+    TownGrowthEnqueueGate, TownSecondGrowthGate,
 };
 pub use growth::{growth_proposal_tick_system, score_proposal, GrowthProposal, GrowthProposalQueue};
 pub use hierarchy_gap::{
@@ -115,7 +130,15 @@ pub use seed_chain::{
     lot_idx_from_site_id, lot_seed, mix_u64, town_seed, CitySeedContext, DEFAULT_TOWN_ID,
     DEFAULT_WORLD_SEED, CITY_G1_C4_LIVE_JSON,
 };
-pub use town::{portland_fixture_town, seed_settlement_books_if_empty, TownBook, TownRecord};
+pub use town::{
+    access_policy_for_generated_index, found_settlement, generated_town_book,
+    generated_town_book_on_land, place_towns_for_full_generation, portland_fixture_town,
+    region_name_for_seed,
+    seed_settlement_books_if_empty, snap_generated_towns_off_water, town_allows_entry,
+    EMPTY_TOWN_BOOK_COUNT,
+    town_allows_growth_commit, town_allows_logistics_entry, town_allows_vehicle,
+    GeneratedTownDrySnap, TownAccessPolicy, TownBook, TownRecord,
+};
 pub use zoning::ZoningClass;
 
 pub use district::portland_fixture_district;
@@ -149,6 +172,12 @@ pub fn construction_organic_growth_001_witness_green() -> bool {
 
 pub struct SettlementPlugin;
 
+#[derive(SystemSet, Clone, Copy, Debug, PartialEq, Eq, Hash)]
+enum SettlementGrowthSet {
+    Decide,
+    Present,
+}
+
 fn settlement_registry_startup(mut commands: Commands) {
     commands.insert_resource(load_block_recipe_registry());
     commands.insert_resource(load_block_archetype_registry());
@@ -160,13 +189,15 @@ impl Plugin for SettlementPlugin {
             Startup,
             (
                 settlement_registry_startup,
-                seed_settlement_books_if_empty,
                 load_block_street_furniture_scenes,
                 load_block_lod_impostor_scene,
             ),
         )
             .init_resource::<TownBook>()
+            .init_resource::<town::GeneratedTownDrySnap>()
             .init_resource::<DistrictBook>()
+            .init_resource::<admin_ink::AdminZoneDrag>()
+            .init_resource::<faction_step::FactionStanceBook>()
             .init_resource::<BlockBook>()
             .init_resource::<DistrictMetricsBook>()
             .init_resource::<DevelopmentPressureBook>()
@@ -185,6 +216,18 @@ impl Plugin for SettlementPlugin {
             .add_message::<BlockPlanned>()
             .add_message::<BlockAssembled>()
             .add_message::<BlockCommitted>()
+            .add_message::<crate::strategic::CommitConstructionSiteEvent>()
+            .init_resource::<crate::strategic::settlement::TownGrowthEnqueueGate>()
+            .init_resource::<crate::strategic::settlement::TownSecondGrowthGate>()
+            .configure_sets(
+                Update,
+                SettlementGrowthSet::Decide.before(SettlementGrowthSet::Present),
+            )
+            .add_systems(
+                Update,
+                town::snap_generated_towns_off_water
+                    .before(enqueue_generated_town_growth_once_system),
+            )
             .add_systems(
                 Update,
                 (
@@ -192,6 +235,7 @@ impl Plugin for SettlementPlugin {
                     compute_district_pressure_system,
                     compute_market_saturation_system,
                     growth_proposal_tick_system,
+                    faction_step::faction_growth_step_system,
                     sync_growth_proposal_ghosts_system,
                     push_proposal_ghosts_to_visual_requests,
                     sync_block_frames_system,
@@ -201,12 +245,24 @@ impl Plugin for SettlementPlugin {
                     begin_block_rollout_staging_system,
                     release_staged_block_lot_proposals_system,
                     execute_staged_block_growth_system,
+                    enqueue_generated_town_growth_once_system,
+                    enqueue_second_town_growth_system,
+                    commit_growth_pending_to_funnel_system,
+                )
+                    .chain()
+                    .in_set(SettlementGrowthSet::Decide)
+                    .after(InfrastructureSiteSet::Planning),
+            )
+            .add_systems(
+                Update,
+                (
                     spawn_block_street_furniture_system,
                     spawn_block_lod_impostors_system,
                     sync_block_lod_impostor_visibility_system,
                     push_block_recipe_visual_requests_system,
                 )
                     .chain()
+                    .in_set(SettlementGrowthSet::Present)
                     .after(InfrastructureSiteSet::Planning),
             );
     }

@@ -6,9 +6,12 @@ use std::path::PathBuf;
 
 use bevy::prelude::*;
 
-use crate::dev::construction_live_todos::{ConstructionLiveTodoBoard, TodoStatus, CONSTRUCTION_TODOS};
+use crate::dev::construction_live_todos::{
+    ConstructionLiveTodoBoard, TodoStatus, CONSTRUCTION_TODOS,
+};
 use crate::dev::construction_operational_todos::{
-    ConstructionOperationalTodoBoard, ConstructionOperationalWitness, CONSTRUCTION_OPERATIONAL_TODOS,
+    ConstructionOperationalTodoBoard, ConstructionOperationalWitness,
+    CONSTRUCTION_OPERATIONAL_TODOS,
 };
 use crate::dev::construction_p9_todos::{
     con_e01_p9_acceptance_green, ConstructionP9TodoBoard, ConstructionP9Witness,
@@ -31,14 +34,12 @@ fn proof_output_path() -> PathBuf {
     let root = std::env::var_os("CARGO_MANIFEST_DIR")
         .map(PathBuf::from)
         .unwrap_or_else(|| PathBuf::from("."));
-    root.join("debug_runs")
-        .join("construction_stage_live.json")
+    root.join("debug_runs").join("construction_stage_live.json")
 }
 
 /// **CONSTRUCTION-PARAM-001** — parametric placement rollup witness.
 fn construction_parametric_placement_001_witness() -> serde_json::Value {
-    let weighted_raster_tests_green =
-        super::weighted_footprint::weighted_raster_witness_green();
+    let weighted_raster_tests_green = super::weighted_footprint::weighted_raster_witness_green();
     let commit_carries_scale_and_weights =
         crate::strategic::commit_carries_scale_and_weights_witness_green();
     let shift_queue_building_removed =
@@ -51,8 +52,7 @@ fn construction_parametric_placement_001_witness() -> serde_json::Value {
         super::staged_ghost_panel::build_approved_drains_staged_witness_green();
     let overlap_blocks_commit = crate::strategic::overlap_blocks_commit_witness_green();
     let partial_alpha = super::visual_authority::partial_alpha_parametric_witness_green();
-    let staging_panel_visible =
-        super::staged_ghost_panel::staging_panel_visible_witness_green();
+    let staging_panel_visible = super::staged_ghost_panel::staging_panel_visible_witness_green();
     let staging_validity_badges_wired =
         super::staged_ghost_panel::staging_validity_badges_wired_witness_green();
     let economy_scales_at_activation =
@@ -129,7 +129,8 @@ fn construction_procedural_build_001_witness() -> serde_json::Value {
     let packs = super::procedural::load_style_pack_registry();
     let archetypes_loaded = true;
     let style_packs_loaded = packs.load_errors.is_empty() && packs.len() == 7;
-    let commit_carries_spec = super::parametric_commit::construction_procedural_build_001_witness_green();
+    let commit_carries_spec =
+        super::parametric_commit::construction_procedural_build_001_witness_green();
     let pg2_assembly_wired = super::procedural::procedural_pg2_assembly_wired_witness_green();
     let pg2_tail_wired = super::procedural::procedural_pg2_tail_001_witness_green();
     let mesh_tier_used = if pg2_tail_wired { "lod0" } else { "none" };
@@ -200,11 +201,11 @@ fn construction_growth_inspector_001_witness() -> serde_json::Value {
 /// **CON-P2-003** — staged site pipeline: commit leaves **Planned** + `SiteStageProgress` (no instant Operational).
 #[must_use]
 pub fn construction_site_stage_pipeline_001_witness() -> serde_json::Value {
-    use bevy::prelude::{App, MinimalPlugins, Update};
     use crate::strategic::{
         BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
         SiteArchetype, SiteConstructionBook, SiteConstructionPhase, SiteIdIssuer,
     };
+    use bevy::prelude::{App, MinimalPlugins, Update};
 
     let mut app = App::new();
     app.add_plugins(MinimalPlugins)
@@ -219,10 +220,7 @@ pub fn construction_site_stage_pipeline_001_witness() -> serde_json::Value {
         owner,
         archetype: SiteArchetype::Factory,
         origin: BuildSiteTile { x: 12, z: 12 },
-        footprint: FootprintTiles {
-            width: 2,
-            depth: 2,
-        },
+        footprint: FootprintTiles { width: 2, depth: 2 },
         layer: LayerType::Surface,
         catalog_id: None,
         placement: None,
@@ -296,17 +294,16 @@ fn construction_bq128_apply_ghost_001_witness() -> serde_json::Value {
 }
 
 fn board_snapshot(ids: &[&str], statuses: &[TodoStatus]) -> serde_json::Value {
-    serde_json::json!(
-        ids.iter()
-            .zip(statuses.iter())
-            .map(|(id, st)| {
-                serde_json::json!({
-                    "id": id,
-                    "status": format!("{st:?}"),
-                })
+    serde_json::json!(ids
+        .iter()
+        .zip(statuses.iter())
+        .map(|(id, st)| {
+            serde_json::json!({
+                "id": id,
+                "status": format!("{st:?}"),
             })
-            .collect::<Vec<_>>()
-    )
+        })
+        .collect::<Vec<_>>())
 }
 
 pub fn build_construction_stage_proof_payload(
@@ -330,7 +327,10 @@ pub fn build_construction_stage_proof_payload(
     let p9_ids: Vec<&str> = CONSTRUCTION_P9_TODOS.iter().map(|t| t.id).collect();
     let round2_ids: Vec<&str> = CONSTRUCTION_ROUND2_TODOS.iter().map(|t| t.id).collect();
     let round3_ids: Vec<&str> = CONSTRUCTION_ROUND3_TODOS.iter().map(|t| t.id).collect();
-    let op_ids: Vec<&str> = CONSTRUCTION_OPERATIONAL_TODOS.iter().map(|t| t.id).collect();
+    let op_ids: Vec<&str> = CONSTRUCTION_OPERATIONAL_TODOS
+        .iter()
+        .map(|t| t.id)
+        .collect();
 
     serde_json::json!({
         "profile": "CONSTRUCTION_STAGE",
@@ -414,7 +414,9 @@ pub use crate::dev::runtime_witness::construction::{
 
 pub fn sync_construction_proof_witness_flags(
     proof: Res<ConstructionLiveProofState>,
-    mut operational: ResMut<crate::dev::construction_operational_todos::ConstructionOperationalWitness>,
+    mut operational: ResMut<
+        crate::dev::construction_operational_todos::ConstructionOperationalWitness,
+    >,
     mut phase2: ResMut<crate::dev::construction_phase2_todos::ConstructionPhase2Witness>,
     mut p9: ResMut<crate::dev::construction_p9_todos::ConstructionP9Witness>,
 ) {
@@ -422,16 +424,17 @@ pub fn sync_construction_proof_witness_flags(
     if proof.written() || due_this_frame {
         operational.proof_json = true;
         phase2.construction_proof_json = true;
-        *p9 = crate::dev::construction_p9_todos::ConstructionP9Witness::from_phase2(phase2.as_ref());
+        *p9 =
+            crate::dev::construction_p9_todos::ConstructionP9Witness::from_phase2(phase2.as_ref());
     }
 }
 
 #[cfg(test)]
 mod live_proof_sim_tests {
     use super::*;
-    use std::fs;
     use bevy::app::App;
     use bevy::MinimalPlugins;
+    use std::fs;
 
     use crate::construction::path_feedback::ConstructionPathFeedback;
     use crate::construction::rail::RailJunctionAuthority;
@@ -443,11 +446,11 @@ mod live_proof_sim_tests {
     use crate::dev::construction_round2_todos;
     use crate::dev::construction_round3_todos;
 
+    use super::super::build_mode::BuildModeState;
+    use super::super::build_tool_authority::ActiveBuildTool;
     use super::super::building_definitions::{
         default_buildings_dir, load_building_definitions_from_dir,
     };
-    use super::super::build_mode::BuildModeState;
-    use super::super::build_tool_authority::ActiveBuildTool;
     use super::super::construction_stage_witness;
     use super::super::roads::{ActiveRoadPlacement, IntersectionRegistry};
     use super::super::sessions::ActiveToolSession;
@@ -466,8 +469,11 @@ mod live_proof_sim_tests {
             return false;
         }
         let json: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json")).expect("parse");
-        json["construction_mv_001"]["green"].as_bool().unwrap_or(false)
+            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json"))
+                .expect("parse");
+        json["construction_mv_001"]["green"]
+            .as_bool()
+            .unwrap_or(false)
             && json["operational_green"].as_bool().unwrap_or(false)
     }
 
@@ -552,7 +558,8 @@ mod live_proof_sim_tests {
         let path = proof_output_path();
         assert!(path.exists(), "expected {:?} after sim ticks", path);
         let json: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json")).expect("parse");
+            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json"))
+                .expect("parse");
         assert_eq!(json["profile"], "CONSTRUCTION_STAGE");
         assert_eq!(json["operational_green"], true);
         assert_eq!(json["con_e01_p9_green"], true);
@@ -571,7 +578,10 @@ mod live_proof_sim_tests {
         );
         assert!(json.get("p9_build").is_some());
         assert!(app.world().resource::<ConstructionP9TodoBoard>().is_green());
-        assert!(app.world().resource::<ConstructionLiveProofState>().written());
+        assert!(app
+            .world()
+            .resource::<ConstructionLiveProofState>()
+            .written());
         assert_eq!(
             json["construction_mv_001"]["green"],
             serde_json::json!(true),
@@ -594,7 +604,10 @@ mod live_proof_sim_tests {
     fn construction_site_stage_pipeline_001_witness_green() {
         let block = super::construction_site_stage_pipeline_001_witness();
         assert_eq!(block["green"], serde_json::json!(true));
-        assert_eq!(block["instant_operational_on_commit"], serde_json::json!(false));
+        assert_eq!(
+            block["instant_operational_on_commit"],
+            serde_json::json!(false)
+        );
     }
 
     #[test]
@@ -617,7 +630,8 @@ mod live_proof_sim_tests {
         let path = proof_output_path();
         assert!(path.exists(), "expected {:?} after sim ticks", path);
         let json: serde_json::Value =
-            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json")).expect("parse");
+            serde_json::from_str(&fs::read_to_string(&path).expect("read proof json"))
+                .expect("parse");
 
         let block = &json["construction_parametric_placement_001"];
         assert_eq!(block["gate"], serde_json::json!("CONSTRUCTION-PARAM-001"));
@@ -695,7 +709,9 @@ pub fn refresh_construction_mv_001_live_witness() -> bool {
 #[must_use]
 pub fn refresh_bq128_apply_live_witnesses() -> bool {
     use crate::dev::debug_run_envelope;
-    use crate::io::save::{build_wave_s_hydrate_proof_payload, WaveSShellHydrateWitness, WAVE_S_HYDRATE_JSON};
+    use crate::io::save::{
+        build_wave_s_hydrate_proof_payload, WaveSShellHydrateWitness, WAVE_S_HYDRATE_JSON,
+    };
 
     if !super::blueprint_preset::bq128_apply_ghost_witness_green() {
         return false;
@@ -775,14 +791,17 @@ mod bq128_apply_witness_tests {
             .unwrap_or_else(|| std::path::PathBuf::from("."))
             .join("debug_runs/wave_s_hydrate_live.json");
         let hydrate: serde_json::Value =
-            serde_json::from_str(&std::fs::read_to_string(hydrate_path).expect("hydrate")).expect("parse");
+            serde_json::from_str(&std::fs::read_to_string(hydrate_path).expect("hydrate"))
+                .expect("parse");
         assert_eq!(
-            hydrate.pointer("/bq128_apply_ghost_001/green")
+            hydrate
+                .pointer("/bq128_apply_ghost_001/green")
                 .and_then(|v| v.as_bool()),
             Some(true)
         );
         assert_eq!(
-            hydrate.pointer("/bq128_apply_merge_replace_002/green")
+            hydrate
+                .pointer("/bq128_apply_merge_replace_002/green")
                 .and_then(|v| v.as_bool()),
             Some(true)
         );

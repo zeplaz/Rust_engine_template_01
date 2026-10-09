@@ -4,18 +4,19 @@
 
 use bevy::prelude::*;
 
-use crate::construction::procedural::{
-    generate_with_arch_dna_preset, ProceduralAssemblyRequest, ProceduralBuildingRequest, StylePackId,
-};
 use crate::construction::building_catalog::{BuildingFamily, FootprintMatrix};
 use crate::construction::building_definitions::BuildingDefinitionRegistry;
 use crate::construction::placement_scaling::{clamp_scale_factor, default_scale_factor_for_family};
-use crate::strategic::{
-    building_grammar_seed_for_site, BuildSiteTile, CommittedPlacementSnapshot,
-    CommitConstructionSiteEvent, FootprintTiles, LayerType, ProceduralBuildingSpec,
-    SiteArchetype, SiteConstructionBook, SiteId, SiteIdIssuer, DEFAULT_WORLD_SEED,
+use crate::construction::procedural::{
+    generate_with_arch_dna_preset, ProceduralAssemblyRequest, ProceduralBuildingRequest,
+    StylePackId,
 };
 use crate::strategic::commit_construction_site_system;
+use crate::strategic::{
+    building_grammar_seed_for_site, BuildSiteTile, CommitConstructionSiteEvent,
+    CommittedPlacementSnapshot, FootprintTiles, LayerType, ProceduralBuildingSpec, SiteArchetype,
+    SiteConstructionBook, SiteId, SiteIdIssuer, DEFAULT_WORLD_SEED,
+};
 
 #[must_use]
 pub fn parametric_placement_snapshot(
@@ -70,48 +71,50 @@ fn transform_footprint_cell(
     quarter_turns: u8,
     mirror_x: bool,
 ) -> (u32, u32) {
-    let mut tx = x;
+    let tx = mirrored_local_column(x, width, mirror_x);
     let tz = z;
-    if mirror_x {
-        tx = width.saturating_sub(1).saturating_sub(tx);
-    }
     match quarter_turns % 4 {
         0 => (tx, tz),
-        1 => (
-            depth.saturating_sub(1).saturating_sub(tz),
-            tx,
-        ),
+        1 => (depth.saturating_sub(1).saturating_sub(tz), tx),
         2 => (
             width.saturating_sub(1).saturating_sub(tx),
             depth.saturating_sub(1).saturating_sub(tz),
         ),
-        _ => (
-            tz,
-            width.saturating_sub(1).saturating_sub(tx),
-        ),
+        _ => (tz, width.saturating_sub(1).saturating_sub(tx)),
     }
+}
+
+/// Mirror flips a column across the footprint. Width 1 stays on column 0.
+#[must_use]
+pub fn mirrored_local_column(x: u32, width: u32, mirror_x: bool) -> u32 {
+    if !mirror_x || width == 0 {
+        return x;
+    }
+    width.saturating_sub(1).saturating_sub(x)
 }
 
 /// Default StylePack for a committed site archetype (PG-3 pilot mapping).
 #[must_use]
 pub fn style_pack_for_site_archetype(archetype: SiteArchetype) -> StylePackId {
-    StylePackId(match archetype {
-        SiteArchetype::CivilHousing => "style_victorian",
-        SiteArchetype::Factory
-        | SiteArchetype::PowerPlant
-        | SiteArchetype::FuelDepot
-        | SiteArchetype::WaterPlant => "style_industrial_west",
-        SiteArchetype::RailDepot => "style_industrial_soviet",
-        SiteArchetype::MilitaryBase
-        | SiteArchetype::BunkerComplex
-        | SiteArchetype::RadarSite
-        | SiteArchetype::SensorPost
-        | SiteArchetype::TrenchLine
-        | SiteArchetype::DefensiveWall
-        | SiteArchetype::DragonTeeth
-        | SiteArchetype::Minefield => "style_military",
-    }
-    .into())
+    StylePackId(
+        match archetype {
+            SiteArchetype::CivilHousing => "style_victorian",
+            SiteArchetype::Factory
+            | SiteArchetype::PowerPlant
+            | SiteArchetype::FuelDepot
+            | SiteArchetype::WaterPlant => "style_industrial_west",
+            SiteArchetype::RailDepot => "style_industrial_soviet",
+            SiteArchetype::MilitaryBase
+            | SiteArchetype::BunkerComplex
+            | SiteArchetype::RadarSite
+            | SiteArchetype::SensorPost
+            | SiteArchetype::TrenchLine
+            | SiteArchetype::DefensiveWall
+            | SiteArchetype::DragonTeeth
+            | SiteArchetype::Minefield => "style_military",
+        }
+        .into(),
+    )
 }
 
 fn default_floors_for_archetype(
@@ -150,10 +153,7 @@ pub fn procedural_building_request_from_commit(
     if let (Some(cid), Some(reg)) = (catalog_id, buildings) {
         if let Some(def) = reg.get(cid) {
             if let Some(archetype_id) = def.grammar_archetype_id.as_deref() {
-                let district = def
-                    .district_style
-                    .as_deref()
-                    .unwrap_or("industrial_west");
+                let district = def.district_style.as_deref().unwrap_or("industrial_west");
                 let preset = def.arch_dna_preset.as_deref();
                 if let Ok(grammar) = generate_with_arch_dna_preset(
                     archetype_id,
@@ -186,11 +186,7 @@ pub fn procedural_building_request_from_commit(
         depth: footprint.depth,
         floors: default_floors_for_archetype(archetype, placement),
         style: style_pack_for_site_archetype(archetype),
-        seed: building_grammar_seed_for_site(
-            DEFAULT_WORLD_SEED,
-            site_id.0,
-            "rect_perimeter",
-        ),
+        seed: building_grammar_seed_for_site(DEFAULT_WORLD_SEED, site_id.0, "rect_perimeter"),
         arch_dna_preset_id: None,
     })
 }
@@ -205,10 +201,10 @@ fn build_read_visual_001_self_check() -> Result<(), &'static str> {
     use crate::construction::building_definitions::{
         default_buildings_dir, load_building_definitions_from_dir,
     };
-    use crate::construction::PilotCatalog;
     use crate::construction::procedural::{
         footprint_grid_for_assembly, load_procedural_module_registry, load_style_pack_registry,
     };
+    use crate::construction::PilotCatalog;
     use crate::render::extraction::{
         assemble_procedural_build_instances, ProceduralModuleSceneCatalog,
     };
@@ -277,8 +273,7 @@ pub fn build_read_visual_001_runtime_sim_verified() -> bool {
 #[must_use]
 pub fn build_read_visual_001_witness_body() -> serde_json::Value {
     use crate::gui::map_tile_atlas_stamp::{
-        build_read_visual_pilot_tile_stamp_lib_green,
-        rail_warehouse_pilot_atlas_index_registered,
+        build_read_visual_pilot_tile_stamp_lib_green, rail_warehouse_pilot_atlas_index_registered,
     };
 
     let lib_green = build_read_visual_001_witness_green();
@@ -348,10 +343,7 @@ fn commit_procedural_spec_self_check() -> Result<(), &'static str> {
         owner,
         archetype: SiteArchetype::Factory,
         origin,
-        footprint: FootprintTiles {
-            width: 3,
-            depth: 2,
-        },
+        footprint: FootprintTiles { width: 3, depth: 2 },
         layer: LayerType::Surface,
         catalog_id: Some("concrete_aggregate_mine".into()),
         placement: None,
@@ -385,10 +377,7 @@ mod pg3_tests {
         let req = procedural_building_request_from_commit(
             SiteId(42),
             SiteArchetype::Factory,
-            FootprintTiles {
-                width: 3,
-                depth: 2,
-            },
+            FootprintTiles { width: 3, depth: 2 },
             None,
             None,
             None,
@@ -413,10 +402,7 @@ mod pg3_tests {
         let req = procedural_building_request_from_commit(
             SiteId(1),
             SiteArchetype::CivilHousing,
-            FootprintTiles {
-                width: 4,
-                depth: 3,
-            },
+            FootprintTiles { width: 4, depth: 3 },
             None,
             None,
             None,
@@ -431,10 +417,7 @@ mod pg3_tests {
         assert!(procedural_building_request_from_commit(
             SiteId(1),
             SiteArchetype::Factory,
-            FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            FootprintTiles { width: 1, depth: 1 },
             None,
             None,
             None,
@@ -445,5 +428,13 @@ mod pg3_tests {
     #[test]
     fn build_read_visual_001_pilot_uses_grammar_lod0() {
         assert!(build_read_visual_001_witness_green());
+    }
+
+    #[test]
+    fn next_mirror_flips_the_local_column() {
+        assert_eq!(mirrored_local_column(0, 4, true), 3);
+        assert_eq!(mirrored_local_column(3, 4, true), 0);
+        assert_eq!(mirrored_local_column(1, 4, false), 1);
+        assert_eq!(mirrored_local_column(0, 1, true), 0);
     }
 }

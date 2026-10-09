@@ -1,8 +1,16 @@
 //! Power repair queue — jobs, priority, parts gate (COD-POWER-REPAIR-QUEUE-001).
 
+use std::collections::HashSet;
+
 use bevy::prelude::*;
 
+use crate::infrastructure::utility::UtilityGraph;
+use crate::systems::sim_control::SimControlState;
+
 use super::damage::{PowerLineDamageBook, PowerLineSegmentHealth};
+
+/// Reason stored when a job targets a link the commit funnel never wrote.
+pub const POWER_REPAIR_UNCOMMITTED: &str = "line is not on the committed grid";
 
 pub const POWER_REPAIR_PARTS_PER_SEGMENT: u32 = 2;
 pub const POWER_REPAIR_TICKS_PER_JOB: u32 = 120;
@@ -82,23 +90,31 @@ impl PowerRepairQueue {
     }
 
     pub fn sort_by_priority(&mut self) {
-        self.jobs.sort_by(|a, b| {
-            b.priority
-                .cmp(&a.priority)
-                .then_with(|| a.id.cmp(&b.id))
-        });
+        self.jobs
+            .sort_by(|a, b| b.priority.cmp(&a.priority).then_with(|| a.id.cmp(&b.id)));
     }
 }
 
-pub fn tick_power_repair_queue_system(
-    mut queue: ResMut<PowerRepairQueue>,
-    mut book: ResMut<PowerLineDamageBook>,
-    tick: Option<Res<crate::systems::sim_control::SimTick>>,
+/// Advance repair jobs one sim step. Does not insert graph edges — that stays on the commit funnel.
+pub fn advance_power_repair_queue(
+    queue: &mut PowerRepairQueue,
+    book: &mut PowerLineDamageBook,
+    committed_links: &HashSet<u64>,
+    sim_advancing: bool,
 ) {
-    let _ = tick;
+    if !sim_advancing {
+        return;
+    }
     queue.sort_by_priority();
     let mut completed_ids = Vec::new();
     for job in &mut queue.jobs {
+        if !committed_links.contains(&job.link_id) {
+            job.blocked_reason = Some(POWER_REPAIR_UNCOMMITTED.to_string());
+            continue;
+        }
+        if job.parts_have >= job.parts_need {
+            job.blocked_reason = None;
+        }
         if !job.parts_ready() {
             continue;
         }
@@ -110,10 +126,33 @@ pub fn tick_power_repair_queue_system(
         }
     }
     for (job_id, link_id) in completed_ids {
+        if !committed_links.contains(&link_id) {
+            continue;
+        }
         book.restore_segment(link_id);
         queue.jobs.retain(|j| j.id != job_id);
         queue.completed = queue.completed.saturating_add(1);
     }
+}
+
+pub fn tick_power_repair_queue_system(
+    mut queue: ResMut<PowerRepairQueue>,
+    mut book: ResMut<PowerLineDamageBook>,
+    graph: Option<Res<UtilityGraph>>,
+    ctrl: Option<Res<SimControlState>>,
+) {
+    let sim_advancing = ctrl.as_deref().is_some_and(|c| c.should_tick());
+    let committed = graph
+        .as_deref()
+        .map(|utility| {
+            utility
+                .power_edges
+                .iter()
+                .map(|edge| edge.link_id)
+                .collect::<HashSet<_>>()
+        })
+        .unwrap_or_default();
+    advance_power_repair_queue(&mut queue, &mut book, &committed, sim_advancing);
 }
 
 #[must_use]
@@ -136,5 +175,169 @@ mod tests {
     #[test]
     fn power_repair_witness_green_lib() {
         assert!(power_repair_queue_witness_green());
+    }
+
+    fn ready_job(link_id: u64, ticks: u32) -> PowerRepairQueue {
+        let mut book = PowerLineDamageBook::default();
+        let mut seg = PowerLineSegmentHealth::new(link_id);
+        seg.hp = 0.0;
+        seg.destroyed = true;
+        book.segments.insert(link_id, seg);
+        let mut queue = PowerRepairQueue::default();
+        queue
+            .enqueue_damaged_segment(book.segments.get(&link_id).unwrap(), 2)
+            .unwrap();
+        queue.jobs[0].ticks_remaining = ticks;
+        queue
+    }
+
+    fn graph_with_link(link_id: u64) -> crate::infrastructure::utility::graph::UtilityGraph {
+        use crate::infrastructure::utility::graph::{UtilityGraph, UtilityGraphEdge};
+        UtilityGraph {
+            nodes: Vec::new(),
+            power_edges: vec![UtilityGraphEdge {
+                from: 1,
+                to: 2,
+                link_id,
+                throughput: 1.0,
+            }],
+            hydrated_from_snapshot: true,
+        }
+    }
+
+    #[test]
+    fn grid_repair_ignores_an_uncommitted_cut() {
+        let mut app = App::new();
+        app.add_plugins(bevy::MinimalPlugins);
+        let mut book = PowerLineDamageBook::default();
+        let mut seg = PowerLineSegmentHealth::new(7);
+        seg.hp = 0.0;
+        seg.destroyed = true;
+        book.segments.insert(7, seg);
+        app.insert_resource(book);
+        app.insert_resource(ready_job(7, 1));
+        app.insert_resource(graph_with_link(99));
+        app.insert_resource(SimControlState {
+            paused: false,
+            steps_remaining: 0,
+            speed: 1.0,
+        });
+        app.add_systems(Update, tick_power_repair_queue_system);
+        app.update();
+        let book = app.world().resource::<PowerLineDamageBook>();
+        assert!(book.segments.get(&7).unwrap().circuit_open());
+        let queue = app.world().resource::<PowerRepairQueue>();
+        assert_eq!(queue.completed, 0);
+        assert_eq!(queue.jobs.len(), 1);
+        assert_eq!(
+            queue.jobs[0].blocked_reason.as_deref(),
+            Some(POWER_REPAIR_UNCOMMITTED)
+        );
+        assert_eq!(queue.jobs[0].ticks_remaining, 1);
+    }
+
+    #[test]
+    fn grid_repair_holds_when_the_sim_is_paused() {
+        let mut app = App::new();
+        app.add_plugins(bevy::MinimalPlugins);
+        let mut book = PowerLineDamageBook::default();
+        let mut seg = PowerLineSegmentHealth::new(7);
+        seg.hp = 0.0;
+        seg.destroyed = true;
+        book.segments.insert(7, seg);
+        app.insert_resource(book);
+        app.insert_resource(ready_job(7, 4));
+        app.insert_resource(graph_with_link(7));
+        app.insert_resource(SimControlState {
+            paused: true,
+            steps_remaining: 0,
+            speed: 1.0,
+        });
+        app.add_systems(Update, tick_power_repair_queue_system);
+        app.update();
+        let queue = app.world().resource::<PowerRepairQueue>();
+        assert_eq!(queue.jobs[0].ticks_remaining, 4);
+        assert_eq!(queue.completed, 0);
+        assert!(app
+            .world()
+            .resource::<PowerLineDamageBook>()
+            .segments
+            .get(&7)
+            .unwrap()
+            .circuit_open());
+    }
+
+    #[test]
+    fn grid_repair_recloses_a_committed_line() {
+        let mut app = App::new();
+        app.add_plugins(bevy::MinimalPlugins);
+        let mut book = PowerLineDamageBook::default();
+        let mut seg = PowerLineSegmentHealth::new(7);
+        seg.hp = 0.0;
+        seg.destroyed = true;
+        book.segments.insert(7, seg);
+        app.insert_resource(book);
+        app.insert_resource(ready_job(7, 1));
+        let graph = graph_with_link(7);
+        let edges_before = graph.power_edges.len();
+        app.insert_resource(graph);
+        app.insert_resource(SimControlState {
+            paused: false,
+            steps_remaining: 0,
+            speed: 1.0,
+        });
+        app.add_systems(Update, tick_power_repair_queue_system);
+        app.update();
+        let book = app.world().resource::<PowerLineDamageBook>();
+        assert!(!book.segments.get(&7).unwrap().circuit_open());
+        assert!((book.segments.get(&7).unwrap().load_fraction() - 1.0).abs() < 1e-5);
+        let queue = app.world().resource::<PowerRepairQueue>();
+        assert!(queue.jobs.is_empty());
+        assert_eq!(queue.completed, 1);
+        assert_eq!(
+            app.world().resource::<crate::infrastructure::utility::UtilityGraph>().power_edges.len(),
+            edges_before
+        );
+    }
+
+    #[test]
+    fn grid_ready_parts_clear_a_stale_block() {
+        let mut book = PowerLineDamageBook::default();
+        let mut seg = PowerLineSegmentHealth::new(7);
+        seg.hp = 10.0;
+        book.segments.insert(7, seg);
+        let mut queue = PowerRepairQueue::default();
+        queue
+            .enqueue_damaged_segment(book.segments.get(&7).unwrap(), 0)
+            .unwrap();
+        queue.jobs[0].parts_have = POWER_REPAIR_PARTS_PER_SEGMENT;
+        queue.jobs[0].ticks_remaining = 1;
+        assert!(queue.jobs[0].blocked_reason.is_some());
+        let committed = HashSet::from([7_u64]);
+        advance_power_repair_queue(&mut queue, &mut book, &committed, true);
+        assert!(queue.jobs.is_empty());
+        assert!(!book.segments.get(&7).unwrap().circuit_open());
+        assert!((book.segments.get(&7).unwrap().hp - book.segments.get(&7).unwrap().max_hp).abs() < 1e-4);
+    }
+
+    #[test]
+    fn link_paused_sim_does_not_advance_repair() {
+        let mut book = PowerLineDamageBook::default();
+        let mut seg = PowerLineSegmentHealth::new(7);
+        seg.hp = 0.0;
+        seg.destroyed = true;
+        book.segments.insert(7, seg);
+        let mut queue = ready_job(7, 4);
+        let committed = HashSet::from([7_u64]);
+        let paused = SimControlState {
+            paused: true,
+            steps_remaining: 0,
+            speed: 1.0,
+        };
+        assert!(!paused.should_tick());
+        advance_power_repair_queue(&mut queue, &mut book, &committed, paused.should_tick());
+        assert_eq!(queue.jobs[0].ticks_remaining, 4);
+        assert_eq!(queue.completed, 0);
+        assert!(book.segments.get(&7).unwrap().circuit_open());
     }
 }
