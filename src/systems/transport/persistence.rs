@@ -11,7 +11,8 @@ use std::path::Path;
 use std::sync::Arc;
 
 use super::snapshot::{
-    hydrate_transport_from_snapshot, TransportNetworkSnapshot, TRANSPORT_NETWORK_SCHEMA_V1,
+    hydrate_transport_from_snapshot, migrate_transport_snapshot_to_v2, TransportNetworkSnapshot,
+    TRANSPORT_NETWORK_SCHEMA_V1, TRANSPORT_NETWORK_SCHEMA_V2,
 };
 use super::types::{TransportEdgeDirectory, TransportFieldStore, TransportTopology};
 use bevy::prelude::*;
@@ -32,13 +33,17 @@ pub enum TransportNetworkPersistenceError {
     Hydrate(super::snapshot::HydrateError),
 }
 
-fn assert_schema_v1(snap: &TransportNetworkSnapshot) -> Result<(), TransportNetworkPersistenceError> {
-    if snap.schema_version != TRANSPORT_NETWORK_SCHEMA_V1 {
+/// Accept v1 (legacy fixtures) and v2 (what saves write); loaded snapshots are always v2.
+fn accept_schema(snap: &mut TransportNetworkSnapshot) -> Result<(), TransportNetworkPersistenceError> {
+    if snap.schema_version != TRANSPORT_NETWORK_SCHEMA_V1
+        && snap.schema_version != TRANSPORT_NETWORK_SCHEMA_V2
+    {
         return Err(TransportNetworkPersistenceError::BadSchema {
             found: snap.schema_version,
-            expected: TRANSPORT_NETWORK_SCHEMA_V1,
+            expected: TRANSPORT_NETWORK_SCHEMA_V2,
         });
     }
+    migrate_transport_snapshot_to_v2(snap);
     Ok(())
 }
 
@@ -60,11 +65,11 @@ impl From<super::snapshot::HydrateError> for TransportNetworkPersistenceError {
     }
 }
 
-/// Parse **RON**; validates `schema_version` before returning.
+/// Parse **RON**; validates `schema_version` (v1 or v2) and migrates to v2 before returning.
 pub fn transport_network_snapshot_from_ron_str(s: &str) -> Result<TransportNetworkSnapshot, TransportNetworkPersistenceError> {
-    let snap: TransportNetworkSnapshot =
+    let mut snap: TransportNetworkSnapshot =
         ron::de::from_str(s).map_err(|e| TransportNetworkPersistenceError::Ron(e.to_string()))?;
-    assert_schema_v1(&snap)?;
+    accept_schema(&mut snap)?;
     Ok(snap)
 }
 
@@ -83,10 +88,10 @@ pub fn transport_network_snapshot_save_ron_path(
     Ok(())
 }
 
-/// Parse JSON only; validates `schema_version`. Prefer RON for new files; keep for fixtures and `.json` interchange.
+/// Parse JSON only; validates `schema_version` (v1 or v2) and migrates to v2. Prefer RON for new files; keep for fixtures and `.json` interchange.
 pub fn transport_network_snapshot_from_json_str(s: &str) -> Result<TransportNetworkSnapshot, TransportNetworkPersistenceError> {
-    let snap: TransportNetworkSnapshot = serde_json::from_str(s)?;
-    assert_schema_v1(&snap)?;
+    let mut snap: TransportNetworkSnapshot = serde_json::from_str(s)?;
+    accept_schema(&mut snap)?;
     Ok(snap)
 }
 
