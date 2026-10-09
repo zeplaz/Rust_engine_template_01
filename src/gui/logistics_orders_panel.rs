@@ -82,6 +82,8 @@ pub struct LogisticsOrdersPanelState {
     pub draft: OrderDraft,
     pub last_error: Option<String>,
     pub show_finished: bool,
+    /// Keep order routes on the map while the panel is closed.
+    pub always_show_routes: bool,
     /// Dev seeding (Sites tab): amount added per click.
     pub seed_amount: u32,
 }
@@ -228,7 +230,12 @@ impl Plugin for LogisticsOrdersPanelPlugin {
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                logistics_orders_panel_ui.run_if(crate::gui::ui_gates::product_egui_shell_active),
+                (
+                    super::logistics_orders_overlay::draw_logistics_orders_overlay_egui,
+                    logistics_orders_panel_ui,
+                )
+                    .chain()
+                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
             );
     }
 }
@@ -613,6 +620,7 @@ fn logistics_orders_panel_ui(
                 OrdersTab::Sites => sites_tab(ui, palette, snap, state, &mut out),
             });
         ui.separator();
+        ui.checkbox(&mut state.always_show_routes, "keep routes on map when closed");
         section_heading(ui, palette, CmdHeadingStyle::Gt, "Recent");
         for e in snap.events.iter().rev().take(5) {
             muted_label(ui, palette, format!("t{} {}", e.tick, e.text));

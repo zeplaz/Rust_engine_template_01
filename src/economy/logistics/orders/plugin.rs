@@ -22,11 +22,16 @@ use super::snapshot::{build_snapshot, LogisticsOrdersSnapshot, SiteMeta, SiteRol
 use super::travel::SiteDistanceTravel;
 
 /// Marks an entity as an order endpoint. Insert from any lane (fronts, construction, depots).
-#[derive(Component, Clone, Debug, PartialEq)]
+///
+/// Position: `position_m` when set, else the entity's `Transform` translation XZ, which must be
+/// in **metres** (16 m per tile, as `economy::site_placement::site_world_position` writes).
+#[derive(Component, Clone, Debug, PartialEq, Default)]
 pub struct LogisticsOrderSite {
     pub name: String,
     pub owner: OwnerId,
     pub role: SiteRole,
+    /// Explicit world XZ in metres (for endpoints without a metre-space `Transform`).
+    pub position_m: Option<[f32; 2]>,
 }
 
 /// Assigned by the adapter once the site is registered with the sim.
@@ -163,6 +168,7 @@ pub fn tag_logistics_hubs_as_order_sites(
             name: name.map_or_else(|| format!("Depot {}", entity.index()), |n| n.to_string()),
             owner: OwnerId::PLAYER,
             role: SiteRole::Depot,
+            position_m: None,
         });
     }
 }
@@ -180,11 +186,19 @@ pub fn tag_flow_facilities_as_order_sites(
             name: format!("{} #{}", node.catalog_id, entity.index()),
             owner: OwnerId::PLAYER,
             role: SiteRole::Plant,
+            position_m: None,
         });
     }
 }
 
-fn site_xz(transform: Option<&Transform>, global: Option<&GlobalTransform>) -> Option<[f32; 2]> {
+fn site_xz(
+    site: &LogisticsOrderSite,
+    transform: Option<&Transform>,
+    global: Option<&GlobalTransform>,
+) -> Option<[f32; 2]> {
+    if let Some(p) = site.position_m {
+        return Some(p);
+    }
     let p = transform
         .map(|t| t.translation)
         .or_else(|| global.map(GlobalTransform::translation))?;
@@ -239,7 +253,7 @@ pub fn step_logistics_orders_system(
     }
 
     for (entity, site, t, g) in &new_sites {
-        let Some(xz) = site_xz(t, g) else {
+        let Some(xz) = site_xz(site, t, g) else {
             continue;
         };
         registry.next += 1;
@@ -281,7 +295,7 @@ pub fn step_logistics_orders_system(
             meta.name = site.name.clone();
             meta.owner = site.owner;
             meta.role = site.role;
-            if let Some(xz) = site_xz(t, g) {
+            if let Some(xz) = site_xz(site, t, g) {
                 meta.world_xz = xz;
                 registry.travel.positions.insert(sid.0, xz);
             }

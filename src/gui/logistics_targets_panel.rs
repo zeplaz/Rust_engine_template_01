@@ -7,6 +7,8 @@ use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 // `src/gui/logistics_orders_panel.rs`.
 #[path = "logistics_orders_panel.rs"]
 pub mod logistics_orders_panel;
+#[path = "logistics_orders_overlay.rs"]
+pub mod logistics_orders_overlay;
 pub use logistics_orders_panel::{LogisticsOrdersPanelPlugin, LogisticsOrdersPanelState};
 
 use crate::entities::production::core::{
