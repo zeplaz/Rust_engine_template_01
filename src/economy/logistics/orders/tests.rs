@@ -739,6 +739,7 @@ mod app {
                     name: name.into(),
                     owner: OwnerId::PLAYER,
                     role,
+                    position_m: None,
                 },
                 Transform::from_xyz(x, 0.0, 0.0),
             ))
