@@ -5,21 +5,23 @@
 
 use std::collections::BTreeMap;
 
+use serde::{Deserialize, Serialize};
+
 /// Sim tick counter (the order sim advances one per economy tick).
 pub type Tick = u64;
 
 /// Logistics endpoint — depot, front supply point, construction site, plant, unit.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct SiteId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct OrderId(pub u32);
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct VehicleId(pub u32);
 
 /// Owning faction slot (overlay faction `u8`). `OwnerId::PLAYER` = slot 0; AI factions use others.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default, Serialize, Deserialize)]
 pub struct OwnerId(pub u8);
 
 impl OwnerId {
@@ -27,7 +29,7 @@ impl OwnerId {
 }
 
 /// Buffer tag of the goods moved (`"Cement"`, `"ammo"`, `"personnel"`, …).
-#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct CargoKind(pub String);
 
 impl CargoKind {
@@ -70,7 +72,7 @@ impl CargoKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum CargoClass {
     Bulk,
     Liquid,
@@ -93,7 +95,7 @@ impl CargoClass {
 }
 
 /// Bitmask of [`CargoClass`]es a vehicle may carry.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Default, Serialize, Deserialize)]
 pub struct CargoClassMask(pub u8);
 
 impl CargoClassMask {
@@ -114,7 +116,7 @@ impl CargoClassMask {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Default, Serialize, Deserialize)]
 pub enum Priority {
     Low,
     #[default]
@@ -149,7 +151,7 @@ impl Priority {
 }
 
 /// Per-site, per-cargo stock. `available` feeds pickups; `projected` feeds demand evaluation.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StockEntry {
     pub on_hand: u32,
     /// Claimed by assigned pickups not yet loaded.
@@ -170,7 +172,7 @@ impl StockEntry {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct StockLedger {
     pub entries: BTreeMap<(SiteId, CargoKind), StockEntry>,
 }
@@ -190,7 +192,7 @@ impl StockLedger {
 }
 
 /// One leg of a trip with a countdown and its total (total drives progress fractions in UI).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Leg {
     pub remaining: u32,
     pub total: u32,
@@ -216,7 +218,7 @@ impl Leg {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum VehiclePhase {
     Idle,
     ToPickup(Leg),
@@ -245,7 +247,7 @@ impl VehiclePhase {
 }
 
 /// The trip a busy vehicle is running.
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct Assignment {
     pub order: OrderId,
     pub source: SiteId,
@@ -254,7 +256,7 @@ pub struct Assignment {
     pub load: u32,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Vehicle {
     pub id: VehicleId,
     pub owner: OwnerId,
@@ -275,7 +277,7 @@ impl Vehicle {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OrderKind {
     /// Continuous: keep the sink's draw demand satisfied from the source.
     StandingLine,
@@ -290,7 +292,7 @@ impl OrderKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum WaitReason {
     /// Every compatible vehicle of the owner is busy.
     NoVehicles,
@@ -320,12 +322,12 @@ impl WaitReason {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub enum FailReason {
     SiteRemoved,
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OrderStatus {
     /// Created, not yet evaluated by an allocation pass.
     Pending,
@@ -374,7 +376,7 @@ impl OrderStatus {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OrderStats {
     pub delivered: u32,
     /// Assigned or loaded, not yet unloaded.
@@ -385,7 +387,7 @@ pub struct OrderStats {
     pub lost: u32,
 }
 
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Order {
     pub id: OrderId,
     pub owner: OwnerId,
@@ -419,7 +421,7 @@ impl Order {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum ConsumerKind {
     Front,
     Depot,
@@ -441,7 +443,7 @@ impl ConsumerKind {
     }
 }
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum DemandHealth {
     #[default]
     Satisfied,
@@ -464,7 +466,7 @@ impl DemandHealth {
 }
 
 /// A consumer's published need (fronts, depots, construction sites, units).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct DrawDemand {
     pub site: SiteId,
     pub cargo: CargoKind,

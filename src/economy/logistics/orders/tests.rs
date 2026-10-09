@@ -830,6 +830,69 @@ fn advisor_prefers_source_that_covers_the_whole_target() {
     assert_eq!(best_source_for(&snap, demand_row), Some(DEPOT));
 }
 
+// ── LO-7: persistence ───────────────────────────────────────────────────────────
+
+#[test]
+fn ron_round_trip_mid_run_continues_identically() {
+    use super::persistence::{
+        logistics_orders_save_from_ron, logistics_orders_save_to_ron, LogisticsOrdersSave,
+        LOGISTICS_ORDERS_SAVE_SCHEMA,
+    };
+    let (mut sim, d) = world();
+    for cap in [10, 12] {
+        truck(&mut sim, OwnerId::PLAYER, cap);
+    }
+    stock(&mut sim, DEPOT, cement(), 300);
+    stock(&mut sim, DEPOT, ammo(), 300);
+    demand(&mut sim, FRONT, ammo(), 40, 15, 25, Priority::High);
+    line(&mut sim, ammo(), FRONT, Priority::High);
+    let id = run(&mut sim, cement(), SITE, 77);
+    step(&mut sim, &d, 37); // trucks mid-leg, run partly delivered
+
+    let save = LogisticsOrdersSave {
+        schema_version: LOGISTICS_ORDERS_SAVE_SCHEMA,
+        sim: sim.clone(),
+        sites: vec![],
+    };
+    let text = logistics_orders_save_to_ron(&save).unwrap();
+    let mut loaded = logistics_orders_save_from_ron(&text).unwrap().sim;
+    assert_eq!(loaded.orders, sim.orders);
+    assert_eq!(loaded.vehicles, sim.vehicles);
+
+    step(&mut sim, &d, 400);
+    step(&mut loaded, &d, 400);
+    assert_eq!(loaded.orders, sim.orders, "reloaded sim diverged");
+    assert_eq!(loaded.stock, sim.stock);
+    assert_eq!(loaded.events, sim.events);
+    // Ids keep allocating past the saved ones.
+    let next = run(&mut loaded, cement(), SITE, 5);
+    assert!(next > id);
+}
+
+#[test]
+fn saved_sites_rebind_by_name_owner_role_within_a_tile() {
+    use super::persistence::{saved_site_matches, SavedSite};
+    let saved = SavedSite {
+        id: SiteId(4),
+        name: "Front Alpha".into(),
+        owner: OwnerId(2),
+        role: SiteRole::Front,
+        world_xz: [100.0, 100.0],
+    };
+    let mut meta = SiteMeta {
+        name: "Front Alpha".into(),
+        owner: OwnerId(2),
+        role: SiteRole::Front,
+        world_xz: [110.0, 105.0],
+    };
+    assert!(saved_site_matches(&saved, &meta));
+    meta.world_xz = [130.0, 100.0];
+    assert!(!saved_site_matches(&saved, &meta), "two tiles away is another site");
+    meta.world_xz = [100.0, 100.0];
+    meta.owner = OwnerId(3);
+    assert!(!saved_site_matches(&saved, &meta));
+}
+
 mod app {
     use bevy::prelude::*;
 
@@ -978,6 +1041,70 @@ mod app {
         let depot_row = snap.site(d).unwrap();
         let cement = depot_row.stock.iter().find(|r| r.cargo == "Cement").unwrap();
         assert_eq!(cement.on_hand, 30);
+    }
+
+    #[test]
+    fn save_then_load_into_fresh_app_rebinds_sites_and_keeps_orders() {
+        let mut app = app();
+        let depot = spawn_site(&mut app, "Depot", SiteRole::Depot, 0.0);
+        let front = spawn_site(&mut app, "Front", SiteRole::Front, 600.0);
+        app.update();
+        app.update();
+        let reg = app.world().resource::<LogisticsSiteRegistry>();
+        let (src, dst) = (reg.site_of(depot).unwrap(), reg.site_of(front).unwrap());
+        send(
+            &mut app,
+            LogisticsOrderCommand::SetStock {
+                site: src,
+                cargo: CargoKind::new("ammo"),
+                on_hand: 400,
+            },
+        );
+        send(
+            &mut app,
+            LogisticsOrderCommand::CreateOneOffRun {
+                owner: OwnerId::PLAYER,
+                source: src,
+                sink: dst,
+                cargo: CargoKind::new("ammo"),
+                quantity: 200,
+                priority: Priority::Normal,
+                vehicle_cap: None,
+            },
+        );
+        advance_secs(&mut app, 90);
+        let save = capture_logistics_orders_save(
+            app.world().resource::<LogisticsOrderSimRes>(),
+            app.world().resource::<LogisticsSiteRegistry>(),
+        );
+        let delivered_at_save = app.world().resource::<LogisticsOrdersSnapshotRes>().0.orders[0].delivered;
+
+        // Fresh world: the lanes spawn their endpoints again (new entities, different order).
+        let mut app2 = self::app();
+        let front2 = spawn_site(&mut app2, "Front", SiteRole::Front, 600.0);
+        let depot2 = spawn_site(&mut app2, "Depot", SiteRole::Depot, 0.0);
+        {
+            let world = app2.world_mut();
+            world.resource_scope(|world, mut res: Mut<LogisticsOrderSimRes>| {
+                world.resource_scope(|world, mut registry: Mut<LogisticsSiteRegistry>| {
+                    let mut mirror = world.resource_mut::<super::super::plugin::PlantStockMirror>();
+                    install_logistics_orders_save(&mut res, &mut registry, &mut mirror, save);
+                });
+            });
+        }
+        app2.update();
+        app2.update();
+        let reg2 = app2.world().resource::<LogisticsSiteRegistry>();
+        assert_eq!(reg2.site_of(depot2), Some(src), "depot rebound to its saved id");
+        assert_eq!(reg2.site_of(front2), Some(dst));
+        assert!(reg2.pending_rebind.is_empty());
+        let snap = &app2.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        assert_eq!(snap.fleet(OwnerId::PLAYER).total, 6, "no second seed fleet");
+        assert_eq!(snap.orders[0].delivered, delivered_at_save);
+        advance_secs(&mut app2, 900);
+        let snap = &app2.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        assert_eq!(snap.orders[0].status, OrderStatus::Completed);
+        assert_eq!(snap.orders[0].delivered, 200);
     }
 
     #[test]

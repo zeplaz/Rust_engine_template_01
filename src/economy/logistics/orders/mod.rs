@@ -7,6 +7,7 @@
 
 pub mod advisor;
 pub mod model;
+pub mod persistence;
 pub mod plugin;
 pub mod sim;
 pub mod snapshot;
@@ -17,7 +18,9 @@ mod tests;
 
 pub use advisor::{best_source_for, suggest_lines_for_unserved, AdvisorGap, SupplyAdvice};
 pub use model::*;
+pub use persistence::{LogisticsOrdersSave, SavedSite};
 pub use plugin::{
+    capture_logistics_orders_save, install_logistics_orders_save, LogisticsOrdersHydrateState,
     DepotFleetSeed, LogisticsOrderRequest, LogisticsOrderSimRes, LogisticsOrderSite,
     LogisticsOrderSiteId, LogisticsOrdersPlugin, LogisticsOrdersSet, LogisticsOrdersSnapshotRes,
     LogisticsSiteRegistry,
