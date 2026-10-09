@@ -69,6 +69,8 @@ impl Plugin for TransportSimulationPlugin {
     }
 }
 
+/// Rebuild runtime topology from [`TransportGraph`](crate::infrastructure::transport::TransportGraph)
+/// only when the graph changed (LG-61). Field pressure on surviving edges is carried over.
 fn transport_topology_tick(
     graph: Option<Res<crate::infrastructure::transport::TransportGraph>>,
     mut topology: ResMut<TransportTopology>,
@@ -78,15 +80,32 @@ fn transport_topology_tick(
     let Some(graph) = graph else {
         return;
     };
-    if graph.edges.is_empty() {
+    if graph.edges.is_empty() || !graph.is_changed() {
         return;
     }
+    let previous = std::mem::take(&mut field_store.by_edge);
     crate::infrastructure::transport::sync_transport_runtime_from_graph(
         graph.as_ref(),
         &mut topology,
         &mut field_store,
         &mut edge_directory,
     );
+    carry_over_edge_fields(&previous, &mut field_store);
+}
+
+/// Restore congestion / damage / danger / heat for edges present before and after a resync;
+/// `travel_time_base` comes from the new geometry.
+pub fn carry_over_edge_fields(
+    previous: &std::collections::HashMap<TransportEdgeId, EdgeFieldState>,
+    store: &mut TransportFieldStore,
+) {
+    for (eid, state) in store.by_edge.iter_mut() {
+        if let Some(old) = previous.get(eid) {
+            let base = state.travel_time_base;
+            *state = old.clone();
+            state.travel_time_base = base;
+        }
+    }
 }
 
 fn transport_field_integrate(
@@ -203,6 +222,31 @@ fn transport_nav_export_refresh(
 
 #[cfg(test)]
 mod tests {
+    #[test]
+    fn resync_keeps_pressure_on_surviving_edges_only() {
+        use super::*;
+        let mut previous = std::collections::HashMap::new();
+        previous.insert(
+            TransportEdgeId(1),
+            EdgeFieldState {
+                congestion: 0.6,
+                damage: 0.3,
+                travel_time_base: 5.0,
+                ..Default::default()
+            },
+        );
+        previous.insert(TransportEdgeId(9), EdgeFieldState { danger: 1.0, ..Default::default() });
+        let mut store = TransportFieldStore::default();
+        store.by_edge.insert(TransportEdgeId(1), EdgeFieldState { travel_time_base: 7.0, ..Default::default() });
+        store.by_edge.insert(TransportEdgeId(2), EdgeFieldState::default());
+        carry_over_edge_fields(&previous, &mut store);
+        let e1 = &store.by_edge[&TransportEdgeId(1)];
+        assert!((e1.congestion - 0.6).abs() < 1e-6 && (e1.damage - 0.3).abs() < 1e-6);
+        assert!((e1.travel_time_base - 7.0).abs() < 1e-6, "new geometry wins");
+        assert_eq!(store.by_edge[&TransportEdgeId(2)].congestion, 0.0);
+        assert!(!store.by_edge.contains_key(&TransportEdgeId(9)), "removed edge stays gone");
+    }
+
     use super::*;
     use crate::economy::logistics::{
         refresh_resource_flow_routes_system, FacilityPortal, RouteCache, RoutePathStore,
