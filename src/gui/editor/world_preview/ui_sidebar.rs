@@ -18,6 +18,7 @@ fn tt(response: egui::Response, text: &'static str) -> egui::Response {
     response.on_hover_text(text)
 }
 
+#[allow(dead_code)] // Tag pool and mobility controls live on the Bevy WorldGen shell.
 pub fn world_preview_sidebar(
     ui: &mut egui::Ui,
     world_gen_ui_state: &mut WorldGenUiState,

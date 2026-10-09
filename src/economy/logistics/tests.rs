@@ -1100,3 +1100,120 @@ fn log_d_diagnostics_panel_source_present() {
     );
     LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
+
+#[test]
+fn solver_skips_an_unchanged_revision() {
+    use super::solver::solve_throughput_greedy_system;
+    use super::types::{
+        CachedRoute, FreightReservation, FreightReservationBook, LogisticsDiagnostics, RouteCache,
+        RouteHandle, RoutePathStore, ThroughputSolverState,
+    };
+    use crate::economy::resource_flow::{ResourceFlowEdge, ResourceFlowRegistry, TransportMode};
+    use crate::systems::transport::TransportEdgeId;
+    use bevy::ecs::system::RunSystemOnce;
+
+    let mut app = App::new();
+    let from = app.world_mut().spawn_empty().id();
+    let to = app.world_mut().spawn_empty().id();
+    let handle = RouteHandle {
+        id: 1,
+        topology_revision: 7,
+    };
+    let mut paths = RoutePathStore::default();
+    let path = paths.insert_path(&[TransportEdgeId(0)]);
+    let mut cache = RouteCache::default();
+    cache.routes.insert(
+        (from, to),
+        CachedRoute {
+            handle,
+            path,
+            reachable: true,
+            bottleneck_capacity: 4.0,
+        },
+    );
+    let mut solver = ThroughputSolverState::default();
+    solver.topology_revision = 7;
+    solver.ensure_len(1);
+    solver.capacity[0] = 8.0;
+    app.insert_resource(paths)
+        .insert_resource(cache)
+        .insert_resource(solver)
+        .insert_resource(FreightReservationBook::default())
+        .insert_resource(LogisticsDiagnostics::default())
+        .insert_resource(ResourceFlowRegistry {
+            edges: vec![ResourceFlowEdge {
+                from,
+                to,
+                transport_mode: TransportMode::Truck,
+                max_rate: 2.0,
+                latency_ticks: 1.0,
+                path_open: true,
+                route_handle: Some(handle),
+                buffer_tag: None,
+            }],
+        });
+
+    app.world_mut()
+        .run_system_once(solve_throughput_greedy_system)
+        .unwrap();
+    {
+        let mut book = app.world_mut().resource_mut::<FreightReservationBook>();
+        assert_eq!(book.entries.len(), 1);
+        book.push(FreightReservation {
+            edge_index: 0,
+            amount: 9.0,
+            request_id: 99,
+        });
+    }
+    app.world_mut()
+        .run_system_once(solve_throughput_greedy_system)
+        .unwrap();
+    {
+        let book = app.world().resource::<FreightReservationBook>();
+        let solver = app.world().resource::<ThroughputSolverState>();
+        assert_eq!(book.entries.len(), 2);
+        assert_eq!(book.entries[1].request_id, 99);
+        assert!((solver.reserved[0] - 2.0).abs() < 1e-5);
+    }
+
+    app.world_mut()
+        .resource_mut::<ResourceFlowRegistry>()
+        .edges[0]
+        .path_open = false;
+    app.world_mut()
+        .run_system_once(solve_throughput_greedy_system)
+        .unwrap();
+    assert!(app
+        .world()
+        .resource::<FreightReservationBook>()
+        .entries
+        .is_empty());
+
+    {
+        let mut flow = app.world_mut().resource_mut::<ResourceFlowRegistry>();
+        flow.edges[0].path_open = true;
+        flow.edges[0].max_rate = 3.0;
+    }
+    app.world_mut()
+        .run_system_once(solve_throughput_greedy_system)
+        .unwrap();
+    assert_eq!(
+        app.world()
+            .resource::<FreightReservationBook>()
+            .entries
+            .len(),
+        1
+    );
+
+    app.world_mut()
+        .resource_mut::<ThroughputSolverState>()
+        .topology_revision = 8;
+    app.world_mut()
+        .run_system_once(solve_throughput_greedy_system)
+        .unwrap();
+    assert!(app
+        .world()
+        .resource::<FreightReservationBook>()
+        .entries
+        .is_empty());
+}

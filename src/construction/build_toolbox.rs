@@ -3,23 +3,23 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 
-use crate::gui::InputBindings;
 use crate::gui::hud::{
     capture_shell_layout, draw_shell_window_chrome, floating_unanchored_default_pos,
     shell_widget_runs_egui_with_budget, HudDockRegistry, HudLayoutStore, HudWidgetId,
     PendingHudLayoutCommit, ProductShellUpdateBudget,
 };
 use crate::gui::std_floating;
+use crate::gui::InputBindings;
 
 use super::build_state::{BuildGhostState, BuildPlacementPreview};
 use super::build_tool_authority::{
     ActiveBuildTool, BuildTool, DefenseKind, RailType, RoadType, ZoneTool,
 };
+use super::building_definitions::BuildingDefinitionRegistry;
 use super::commercial_menu::draw_commercial_submenu;
 use super::industrial_menu::draw_industrial_submenu;
-use super::building_definitions::BuildingDefinitionRegistry;
-use super::residential_menu::{draw_intent_preview, draw_residential_submenu};
 use super::mock_shapes_menu::draw_mock_shapes_submenu;
+use super::residential_menu::{draw_intent_preview, draw_residential_submenu};
 use super::utilities_menu::draw_utilities_submenu;
 use crate::strategic::CorridorConstructionBook;
 
@@ -82,8 +82,7 @@ pub fn draw_build_toolbox_egui(
         );
         ui.separator();
         if tool.tool.uses_two_click_place() {
-            let in_adjust = ghost.placement_mode
-                == crate::construction::BuildPlacementMode::Adjust
+            let in_adjust = ghost.placement_mode == crate::construction::BuildPlacementMode::Adjust
                 && ghost.origin.is_some();
             let can_place = in_adjust && preview.report.allows_commit;
             let row = match tool.tool {
@@ -130,26 +129,30 @@ pub fn draw_build_toolbox_egui(
                 tool.close_submenus();
                 tool.commercial_menu_open = true;
                 tool.clear_building_intent();
-                tool.tool = BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Office);
+                tool.tool =
+                    BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Office);
             }
             if ui.button("Industrial…").clicked() {
                 tool.close_submenus();
                 tool.industrial_menu_open = true;
                 tool.clear_building_intent();
-                tool.tool = BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Factory);
+                tool.tool =
+                    BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Factory);
             }
             if ui.button("Utilities…").clicked() {
                 tool.close_submenus();
                 tool.utilities_menu_open = true;
                 tool.clear_building_intent();
-                tool.tool =
-                    BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::WaterPlant);
+                tool.tool = BuildTool::Building(
+                    super::build_tool_authority::BuildingArchetypeId::WaterPlant,
+                );
             }
             if ui.button("Mock shapes (T/O/L)…").clicked() {
                 tool.close_submenus();
                 tool.mock_shapes_menu_open = true;
                 tool.clear_building_intent();
-                tool.tool = BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Factory);
+                tool.tool =
+                    BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Factory);
             }
         });
         ui.collapsing("Infrastructure", |ui| {

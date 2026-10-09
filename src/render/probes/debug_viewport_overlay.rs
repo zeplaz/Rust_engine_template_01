@@ -120,7 +120,8 @@ impl Plugin for DebugViewportOverlayPlugin {
         app.add_systems(
             EguiPrimaryContextPass,
             draw_debug_viewport_overlay
-                .after(crate::gui::hud::hud_root_tick::hud_product_shell_egui_root),
+                .after(crate::gui::hud::hud_root_tick::hud_product_shell_egui_root)
+                .run_if(crate::gui::product_egui_shell_active),
         );
     }
 }

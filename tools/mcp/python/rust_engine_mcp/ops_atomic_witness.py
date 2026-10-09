@@ -10,7 +10,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from .paths import repo_root
+from .paths import repo_root, resolve_under_root
 
 DEFAULT_HASH_LOCK = "granfina_hash_lock_2026"
 APPROVED_ACTORS = frozenset(
@@ -83,6 +83,23 @@ def read_previous_hash(target: Path) -> str:
     return ""
 
 
+_ENVELOPE_KEYS = frozenset(
+    {"content_hash", "previous_hash", "hash_lock_id", "glyph_chain", "_agent_meta"}
+)
+
+
+def witness_content_matches(body: dict[str, Any], *, lock: str | None = None) -> bool:
+    """True when ``content_hash`` matches the body written by ``write_witness_atomic``."""
+    if not isinstance(body, dict):
+        return False
+    claimed = str(body.get("content_hash") or "")
+    if not claimed:
+        return False
+    previous = str(body.get("previous_hash") or "")
+    payload = {k: v for k, v in body.items() if k not in _ENVELOPE_KEYS}
+    return compute_body_hash(payload, previous_hash=previous, lock=lock) == claimed
+
+
 def write_witness_atomic(
     rel_path: str,
     body: dict[str, Any],
@@ -93,29 +110,29 @@ def write_witness_atomic(
     glyph: str | None = None,
 ) -> dict[str, Any]:
     """Write JSON witness atomically with hash chain + _agent_meta envelope."""
-    target = repo_root() / rel_path
+    target = resolve_under_root(repo_root(), rel_path, label="witness path")
     target.parent.mkdir(parents=True, exist_ok=True)
-    previous = read_previous_hash(target)
     lock = hash_lock_secret()
-    content_hash = compute_body_hash(body, previous_hash=previous, lock=lock)
-    out = dict(body)
-    out["previous_hash"] = previous
-    out["content_hash"] = content_hash
-    out["hash_lock_id"] = lock[:12] + "…"
-    if glyph:
-        out["glyph_chain"] = glyph
-    meta = {
-        "schema": "debug_run_envelope_v1",
-        "written_at_epoch_secs": int(time.time()),
-        "profile": profile,
-        "source_system": source_system,
-        "relative_path": rel_path,
-        "agent": actor,
-        "content_hash": content_hash,
-    }
-    out["_agent_meta"] = meta
     acquire_write_lock(target, actor=actor)
     try:
+        previous = read_previous_hash(target)
+        content_hash = compute_body_hash(body, previous_hash=previous, lock=lock)
+        out = dict(body)
+        out["previous_hash"] = previous
+        out["content_hash"] = content_hash
+        out["hash_lock_id"] = lock[:12] + "…"
+        if glyph:
+            out["glyph_chain"] = glyph
+        meta = {
+            "schema": "debug_run_envelope_v1",
+            "written_at_epoch_secs": int(time.time()),
+            "profile": profile,
+            "source_system": source_system,
+            "relative_path": rel_path,
+            "agent": actor,
+            "content_hash": content_hash,
+        }
+        out["_agent_meta"] = meta
         fd, tmp = tempfile.mkstemp(dir=str(target.parent), suffix=".tmp")
         try:
             with os.fdopen(fd, "w", encoding="utf-8") as fh:
@@ -134,7 +151,7 @@ def append_jsonl_atomic(rel_path: str, row: dict[str, Any], *, actor: str) -> No
     """Append one JSONL row under hash lock (crash event ledger)."""
     if actor not in APPROVED_ACTORS:
         raise PermissionError(f"actor not approved: {actor}")
-    target = repo_root() / rel_path
+    target = resolve_under_root(repo_root(), rel_path, label="witness path")
     target.parent.mkdir(parents=True, exist_ok=True)
     acquire_write_lock(target, actor=actor)
     try:

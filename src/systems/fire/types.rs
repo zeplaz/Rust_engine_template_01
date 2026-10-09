@@ -11,4 +11,7 @@ pub struct ChunkFireOverlay {
     pub smoke: Vec<f32>,
     /// Toxic products per cell `[0, 1]`.
     pub toxic: Vec<f32>,
+    /// Ticks left that this cell stays at residual heat after fuel drops below spread.
+    /// Written only by [`super::chunk_fire_overlay::chunk_fire_overlay_tick`].
+    pub burn_hold: Vec<u16>,
 }

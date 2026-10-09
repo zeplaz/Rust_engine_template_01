@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/city_p1_001_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_city_p1_witness",
-    "written_at_epoch_secs": 1790312393
+    "written_at_epoch_secs": 1790385413
   },
   "block_street_fixture_green": true,
   "gate": "CITY-P1-001",

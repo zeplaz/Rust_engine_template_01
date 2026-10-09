@@ -23,6 +23,8 @@ use super::sim_hud_egui_theme::{
 };
 
 pub const ROAD_TOOL_SHEET_W_PX: f32 = 280.0;
+/// Logical height of the Bevy road/rail sheet, used by the pointer gate.
+pub const ROAD_TOOL_SHEET_BLOCK_H_PX: f32 = 240.0;
 
 /// Sim uses rail-anchored sheet; editor keeps legacy floating window.
 pub const ROAD_POPUP_FLOATING_IN_SIM: bool = false;

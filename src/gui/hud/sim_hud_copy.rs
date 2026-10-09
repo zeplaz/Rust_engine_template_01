@@ -1,11 +1,29 @@
 //! Locked sim HUD copy — [`src/dev/sim_hud_copy_registry_v1.md`].
 
-pub const PICKER_TITLE_ZONE: &str = "Zone";
+use crate::construction::ToolContext;
+
+pub const PICKER_TITLE_ZONE: &str = "Zones";
 pub const PICKER_TITLE_ROADS: &str = "Roads";
 pub const PICKER_TITLE_INDUSTRY: &str = "Industry";
-pub const PICKER_TITLE_UTILITIES: &str = "Utilities";
-pub const PICKER_TITLE_SHAPES: &str = "Shapes";
+pub const PICKER_TITLE_UTILITIES: &str = "Power";
+pub const PICKER_TITLE_SHAPES: &str = "Ecology";
 pub const PICKER_TITLE_DEFENSE: &str = "Defense";
+
+/// Player-facing build-rail word for a tool that already exists.
+/// Letter atlas ids (RD/RL/UT/IN/CV) are not labels.
+#[must_use]
+pub const fn rail_player_label(ctx: ToolContext) -> &'static str {
+    match ctx {
+        ToolContext::None => "—",
+        ToolContext::Roads => PICKER_TITLE_ROADS,
+        ToolContext::Rail => "Rail",
+        ToolContext::Utilities => PICKER_TITLE_UTILITIES,
+        ToolContext::Military => PICKER_TITLE_DEFENSE,
+        ToolContext::Industry => PICKER_TITLE_INDUSTRY,
+        ToolContext::Ecology => PICKER_TITLE_SHAPES,
+        ToolContext::Civil => PICKER_TITLE_ZONE,
+    }
+}
 
 pub const PICKER_INDUSTRY_LEAD: &str = "Place each step separately — power adds on the grid.";
 pub const PICKER_INDUSTRY_OTHER: &str = "Other industry";
@@ -83,19 +101,6 @@ pub fn defense_adjust_invalid_strip(reason: &str) -> String {
     format!("{TRAY_DEFENSE_ADJUST_INVALID} — {reason}")
 }
 
-/// Deployable staging readout for ghost / context strip (**DES-MIL-DEPLOYABLE-CATALOG** Q1).
-#[must_use]
-pub fn defense_deployable_stock_line(staged: u32, in_transit: u32, need: u32) -> String {
-    if staged == 0 && in_transit == 0 {
-        return TRAY_DEPLOYABLE_STOCK_EMPTY.to_string();
-    }
-    let mut line = format!("Staged {staged} · in transit {in_transit}");
-    if staged >= need && need > 0 {
-        line.push_str(" — ready");
-    }
-    line
-}
-
 #[must_use]
 pub fn human_chain_label(chain_id: &str) -> String {
     match chain_id {
@@ -160,6 +165,7 @@ pub fn tray_build_status_line(
 #[cfg(test)]
 mod place_feel_tests {
     use super::*;
+    use crate::construction::ToolContext;
 
     #[test]
     fn idle_tray_line_stays_queue_copy() {
@@ -178,5 +184,17 @@ mod place_feel_tests {
         assert!(open.contains("follows cursor"));
         assert!(open.contains("Snap joint"));
         assert!(!open.contains("Snap · Snap"));
+    }
+
+    #[test]
+    fn rail_player_labels_are_words_for_existing_tools() {
+        assert_eq!(rail_player_label(ToolContext::Roads), "Roads");
+        assert_eq!(rail_player_label(ToolContext::Rail), "Rail");
+        assert_eq!(rail_player_label(ToolContext::Utilities), "Power");
+        assert_eq!(rail_player_label(ToolContext::Industry), "Industry");
+        assert_eq!(rail_player_label(ToolContext::Civil), "Zones");
+        assert_eq!(rail_player_label(ToolContext::Military), "Defense");
+        assert_eq!(rail_player_label(ToolContext::Ecology), "Ecology");
+        assert!(!rail_player_label(ToolContext::Roads).chars().all(|c| c.is_ascii_uppercase()));
     }
 }

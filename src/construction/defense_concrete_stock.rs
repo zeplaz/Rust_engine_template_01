@@ -273,8 +273,8 @@ pub fn refresh_cod_wall_concrete_gate_witness() -> bool {
     }
 
     // Deployables remain concrete-gate no-op (staging owns them).
-    let deployable_noop = concrete_gate_noop(DefenseKind::DragonTeeth)
-        && concrete_gate_noop(DefenseKind::Minefield);
+    let deployable_noop =
+        concrete_gate_noop(DefenseKind::DragonTeeth) && concrete_gate_noop(DefenseKind::Minefield);
 
     // Sufficient stock leaves allows_commit alone (terrain may still block elsewhere).
     let mut report_ok = SitePlacementValidation {
@@ -413,8 +413,8 @@ pub fn refresh_cod_trench_material_gate_witness() -> bool {
     let bunker_stock_ok = bunker_ok_report.allows_commit && bunker_ok_report.errors.is_empty();
 
     // Deployables: concrete gate no-op (staging-only).
-    let deployable_noop = concrete_gate_noop(DefenseKind::DragonTeeth)
-        && concrete_gate_noop(DefenseKind::Minefield);
+    let deployable_noop =
+        concrete_gate_noop(DefenseKind::DragonTeeth) && concrete_gate_noop(DefenseKind::Minefield);
 
     // Debit honesty for trench need.
     let mut node = ResourceFlowNode {
@@ -517,10 +517,7 @@ mod tests {
 
     #[test]
     fn zero_concrete_blocks_in_situ_not_deployables() {
-        let fp = FootprintTiles {
-            width: 4,
-            depth: 1,
-        };
+        let fp = FootprintTiles { width: 4, depth: 1 };
         let mut wall = SitePlacementValidation {
             valid: true,
             allows_commit: true,
@@ -542,10 +539,7 @@ mod tests {
         };
         apply_defensive_wall_concrete_gate(
             BuildTool::Defense(DefenseKind::TrenchLine),
-            FootprintTiles {
-                width: 6,
-                depth: 1,
-            },
+            FootprintTiles { width: 6, depth: 1 },
             0.0,
             &mut trench,
         );
@@ -562,10 +556,7 @@ mod tests {
         };
         apply_defensive_wall_concrete_gate(
             BuildTool::Defense(DefenseKind::Bunker),
-            FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
+            FootprintTiles { width: 2, depth: 2 },
             0.0,
             &mut bunker,
         );

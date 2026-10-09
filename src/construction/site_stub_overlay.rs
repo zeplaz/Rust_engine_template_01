@@ -5,10 +5,10 @@ use bevy::prelude::*;
 use super::build_state::BuildGhostState;
 use super::build_tool_authority::ActiveBuildTool;
 use super::building_definitions::BuildingDefinitionRegistry;
+use super::pilot_catalog::site_zone_grid_for_arch_dna_preset;
 use super::site_zone_grid::{
     cell_at, cell_fill, primary_loading_cell_count, zone_label_for, SiteZoneCell,
 };
-use super::pilot_catalog::site_zone_grid_for_arch_dna_preset;
 use super::visual_authority::{
     ConstructionVisualRequests, SiteStubBoxRequest, SiteZoneLabelRequest, ZoneTileRequest,
 };

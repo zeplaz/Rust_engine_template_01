@@ -5,24 +5,22 @@ use std::hash::{Hash, Hasher};
 
 use super::grammar_deserialize::{load_building_grammar_registry, repo_asset_path};
 use super::grammar_types::{
-    BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1, FacilityPowerTier,
-    FootprintMode, GrammarGenerateResult, GrammarRuleStep, MassingId, MassingStrategy,
-    PgQuality001Metrics, PG_QUALITY_001_SEED_SWEEP, FACILITY_BINDING_G1_MIN,
-    FACILITY_BINDING_SCHEMA, GRAMMAR_DIVERSITY_WITNESS_JSON, GRAMMAR_RULES_VERSION,
+    BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1, FacilityPowerTier, FootprintMode,
+    GrammarGenerateResult, GrammarRuleStep, MassingId, MassingStrategy, PgQuality001Metrics,
+    FACILITY_BINDING_G1_MIN, FACILITY_BINDING_SCHEMA, GRAMMAR_DIVERSITY_WITNESS_JSON,
+    GRAMMAR_RULES_VERSION, PG_QUALITY_001_SEED_SWEEP,
 };
-use crate::construction::procedural::types::{ProceduralBuildingRequest, StylePackId};
 use crate::construction::procedural::arch_build_grammar_v0::{
     floors_from_beta_vert, reweight_massing_strategies, ArchDnaConsumerFields,
 };
 use crate::construction::procedural::footprint_grid::FootprintGrid;
+use crate::construction::procedural::types::{ProceduralBuildingRequest, StylePackId};
 use crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 
 impl BuildingGrammarRegistry {
     #[must_use]
     pub fn by_grammar_id(&self, grammar_id: &str) -> Option<&BuildingGrammar> {
-        self.grammars
-            .values()
-            .find(|g| g.grammar_id == grammar_id)
+        self.grammars.values().find(|g| g.grammar_id == grammar_id)
     }
 
     #[must_use]
@@ -61,24 +59,21 @@ pub fn facility_binding_read_witness_body() -> serde_json::Value {
     let rail = registry.by_grammar_id("rail_edge_v1");
     let warehouse = registry.by_grammar_id("industrial_warehouse_v1");
 
-    let factory_binding_ok = factory
-        .and_then(|g| g.facility_binding())
-        .is_some_and(|b| {
-            b.catalog_id == "concrete_mixer_plant"
-                && b.chain_id == "concrete_portland"
-                && b.supply_chain_role == "concrete_mixer"
-                && b.power_tier == FacilityPowerTier::Light
-        });
-    let rail_binding_ok = rail
-        .and_then(|g| g.facility_binding())
-        .is_some_and(|b| {
-            b.catalog_id == "logistics_rail_warehouse" && b.chain_id == "logistics_storage"
-        });
+    let factory_binding_ok = factory.and_then(|g| g.facility_binding()).is_some_and(|b| {
+        b.catalog_id == "concrete_mixer_plant"
+            && b.chain_id == "concrete_portland"
+            && b.supply_chain_role == "concrete_mixer"
+            && b.power_tier == FacilityPowerTier::Light
+    });
+    let rail_binding_ok = rail.and_then(|g| g.facility_binding()).is_some_and(|b| {
+        b.catalog_id == "logistics_rail_warehouse" && b.chain_id == "logistics_storage"
+    });
     let warehouse_binding_ok = warehouse
         .and_then(|g| g.facility_binding())
         .is_some_and(|b| b.catalog_id == "logistics_storage_warehouse");
 
-    let green = load_ok && g1_min_ok && factory_binding_ok && rail_binding_ok && warehouse_binding_ok;
+    let green =
+        load_ok && g1_min_ok && factory_binding_ok && rail_binding_ok && warehouse_binding_ok;
 
     serde_json::json!({
         "gate": "COD-FACILITY-BINDING-READ-001",
@@ -126,10 +121,11 @@ impl BuildingGrammar {
         self.facility_binding.as_ref()
     }
 
-    pub fn district_binding(&self, district_style: &str) -> Option<&super::grammar_types::DistrictStyleBinding> {
-        self.district_styles
-            .iter()
-            .find(|d| d.id == district_style)
+    pub fn district_binding(
+        &self,
+        district_style: &str,
+    ) -> Option<&super::grammar_types::DistrictStyleBinding> {
+        self.district_styles.iter().find(|d| d.id == district_style)
     }
 
     fn resolve_footprint(&self, strategy: &MassingStrategy, seed: u64) -> (u32, u32, u32) {
@@ -167,7 +163,11 @@ impl BuildingGrammar {
             .unwrap_or_else(|| self.roof.default_slot.as_str())
     }
 
-    pub fn generate(&self, district_style: &str, seed: u64) -> Result<GrammarGenerateResult, String> {
+    pub fn generate(
+        &self,
+        district_style: &str,
+        seed: u64,
+    ) -> Result<GrammarGenerateResult, String> {
         self.generate_with_arch_dna(district_style, seed, None)
     }
 
@@ -413,8 +413,9 @@ pub fn generate_with_arch_dna_preset(
     seed: u64,
     arch_dna_preset_id: Option<&str>,
 ) -> Result<GrammarGenerateResult, String> {
-    let consumer = arch_dna_preset_id
-        .and_then(|id| super::super::arch_build_grammar_v0::arch_dna_consumer_from_preset_id(id).ok());
+    let consumer = arch_dna_preset_id.and_then(|id| {
+        super::super::arch_build_grammar_v0::arch_dna_consumer_from_preset_id(id).ok()
+    });
     let registry = load_building_grammar_registry();
     if !registry.load_errors.is_empty() {
         return Err(registry.load_errors.join("; "));
@@ -480,14 +481,15 @@ pub fn pg_quality_001_collect_metrics(
 
 #[must_use]
 pub fn pg_quality_001_witness_green() -> bool {
-    pg_quality_001_collect_metrics(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", PG_QUALITY_001_SEED_SWEEP)
-        .ok()
-        .is_some_and(|m| {
-            m.massing_strategy_count >= 3
-                && m.roof_slot_count >= 2
-                && m.footprint_silhouette_count >= 2
-        })
-        && crate::construction::procedural::arch_dna_massing_diversity_witness_green()
+    pg_quality_001_collect_metrics(
+        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
+        "industrial_west",
+        PG_QUALITY_001_SEED_SWEEP,
+    )
+    .ok()
+    .is_some_and(|m| {
+        m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2
+    }) && crate::construction::procedural::arch_dna_massing_diversity_witness_green()
 }
 
 #[must_use]
@@ -501,13 +503,9 @@ pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
     let dna_depth_green = dna_families
         .iter()
         .all(|row| row.get("green").and_then(|v| v.as_bool()).unwrap_or(false));
-    let green = metrics
-        .as_ref()
-        .ok()
-        .is_some_and(|m| {
-            m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2
-        })
-        && dna_depth_green;
+    let green = metrics.as_ref().ok().is_some_and(|m| {
+        m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2
+    }) && dna_depth_green;
     let (metrics_ok, metrics_err) = match metrics {
         Ok(m) => (Some(m), None),
         Err(e) => (None, Some(e)),
@@ -540,14 +538,9 @@ pub fn pg_quality_002_pg2_hook_body() -> serde_json::Value {
         "industrial_west",
         PG_QUALITY_001_SEED_SWEEP,
     );
-    let grammar_metrics_green = metrics
-        .as_ref()
-        .ok()
-        .is_some_and(|m| {
-            m.massing_strategy_count >= 2
-                && m.roof_slot_count >= 2
-                && m.footprint_silhouette_count >= 2
-        });
+    let grammar_metrics_green = metrics.as_ref().ok().is_some_and(|m| {
+        m.massing_strategy_count >= 2 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2
+    });
     let (metrics_ok, metrics_err) = match metrics {
         Ok(m) => (Some(m), None),
         Err(e) => (None, Some(e)),
@@ -622,8 +615,8 @@ pub fn city_g0_s1c_split_witness_green() -> bool {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
     use super::super::grammar_types::ProgramAxisLevel;
+    use super::*;
 
     #[test]
     fn facility_binding_read_witness_is_green() {
@@ -653,8 +646,10 @@ mod tests {
             "{:?}",
             registry.load_errors
         );
-        let a = generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).expect("generate a");
-        let b = generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).expect("generate b");
+        let a =
+            generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).expect("generate a");
+        let b =
+            generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).expect("generate b");
         assert_eq!(a.width, b.width);
         assert_eq!(a.massing_strategy, b.massing_strategy);
         assert_eq!(a.style_pack_id, "style_industrial_west");

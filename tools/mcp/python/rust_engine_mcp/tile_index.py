@@ -8,7 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from rust_engine_mcp import assembly
-from rust_engine_mcp.paths import repo_root
+from rust_engine_mcp.paths import repo_root, resolve_under_root
 from rust_engine_mcp.schemas import load_json_file
 
 TILE_ATLAS_INDEX_RON = "assets/configs/buildings/_tile_atlas_index.ron"
@@ -28,16 +28,12 @@ def _ron_str(value: str) -> str:
 
 
 def _rel_repo_path(path: str | Path) -> str:
-    p = Path(path)
+    raw = str(path or "").strip()
+    if not raw:
+        return ""
     root = repo_root().resolve()
-    if not p.is_absolute():
-        p = (root / p).resolve()
-    else:
-        p = p.resolve()
-    try:
-        return str(p.relative_to(root)).replace("\\", "/")
-    except ValueError:
-        return str(p).replace("\\", "/")
+    dest = resolve_under_root(root, raw, label="atlas path")
+    return dest.relative_to(root).as_posix()
 
 
 def format_tile_atlas_index_ron(entries: list[dict[str, Any]]) -> str:
@@ -67,33 +63,45 @@ def format_tile_atlas_index_ron(entries: list[dict[str, Any]]) -> str:
     return "\n".join(lines)
 
 
+_ATLAS_ENTRY_RE = re.compile(
+    r"atlas_id:\s*\"([^\"]+)\".*?batch_id:\s*\"([^\"]+)\".*?assembly_id:\s*\"([^\"]*?)\".*?"
+    r"tile_id:\s*\"([^\"]+)\".*?atlas_png:\s*\"([^\"]+)\".*?meta_json:\s*\"([^\"]+)\".*?"
+    r"development_tier:\s*\"([^\"]+)\".*?style_pack_id:\s*\"([^\"]*)\"",
+    re.DOTALL,
+)
+_SHIP_FIELD_RE = re.compile(r"(?m)^\s*ship_allowed:\s*(true|false)\b")
+
+
+def _entry_from_ron_block(block: str) -> dict[str, Any] | None:
+    """Parse one atlas tuple. ``ship_allowed`` must come from this block, not the next."""
+    match = _ATLAS_ENTRY_RE.search(block)
+    if not match:
+        return None
+    ship_match = _SHIP_FIELD_RE.search(block)
+    if ship_match:
+        ship_allowed = ship_match.group(1) != "false"
+    else:
+        ship_allowed = str(match.group(7)) == "production"
+    return {
+        "atlas_id": match.group(1),
+        "batch_id": match.group(2),
+        "assembly_id": match.group(3),
+        "tile_id": match.group(4),
+        "atlas_png": match.group(5),
+        "meta_json": match.group(6),
+        "development_tier": match.group(7),
+        "style_pack_id": match.group(8),
+        "ship_allowed": ship_allowed,
+    }
+
+
 def _parse_index_ron(text: str) -> list[dict[str, Any]]:
     """Minimal RON entry parser for upsert (fields we write)."""
     entries: list[dict[str, Any]] = []
-    for block in re.findall(r"\(\s*atlas_id:", text):
-        pass
-    for m in re.finditer(
-        r"atlas_id:\s*\"([^\"]+)\".*?batch_id:\s*\"([^\"]+)\".*?assembly_id:\s*\"([^\"]*?)\".*?"
-        r"tile_id:\s*\"([^\"]+)\".*?atlas_png:\s*\"([^\"]+)\".*?meta_json:\s*\"([^\"]+)\".*?"
-        r"development_tier:\s*\"([^\"]+)\".*?style_pack_id:\s*\"([^\"]*)\"(?:.*?ship_allowed:\s*(true|false))?",
-        text,
-        re.DOTALL,
-    ):
-        ship_raw = m.group(9)
-        ship_allowed = ship_raw != "false" if ship_raw else str(m.group(7)) == "production"
-        entries.append(
-            {
-                "atlas_id": m.group(1),
-                "batch_id": m.group(2),
-                "assembly_id": m.group(3),
-                "tile_id": m.group(4),
-                "atlas_png": m.group(5),
-                "meta_json": m.group(6),
-                "development_tier": m.group(7),
-                "style_pack_id": m.group(8),
-                "ship_allowed": ship_allowed,
-            }
-        )
+    for block in re.findall(r"\(\s*atlas_id:[\s\S]*?\)\s*,", text):
+        row = _entry_from_ron_block(block)
+        if row:
+            entries.append(row)
     return entries
 
 

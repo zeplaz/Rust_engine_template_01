@@ -44,8 +44,16 @@ pub enum TestScene {
     /// Uses FullCapture proof path when invoked as `--test visual` (not `--test vfx`).
     Visual,
     /// Operator sandbox — fire + weather + atmosphere; stays open; **no** full-capture auto-proof (`DemoOpen`).
-    /// Prefer for manual RTT/VFX inspection. See HANDOFF § `--test` modes.
+    /// CLI: `--test sandbox` / `--test fireweather`. `--test vfx` is fire-only ([`Self::Vfx`]).
     VfxSandbox,
+    /// Generated towns on the play map. Stay-open. Does not seed fire, weather, or atmosphere.
+    City,
+    /// Fire / fire-VFX only. Stay-open. No weather, atmosphere, or towns.
+    /// Fire overlay uses the same heat/fuel/count as [`Self::Fire`].
+    Vfx,
+    /// Weather + atmosphere (wind / precip). Stay-open. No fire overlay and no towns.
+    /// CLI name is `subfx`.
+    SubFx,
 }
 
 impl TestScene {
@@ -58,6 +66,9 @@ impl TestScene {
             Self::Atmosphere => "Atmosphere / wind",
             Self::Visual => "Full capture visual",
             Self::VfxSandbox => "Fire + weather + atmosphere",
+            Self::City => "Generated cities",
+            Self::Vfx => "Fire VFX",
+            Self::SubFx => "Weather + atmosphere",
         }
     }
 
@@ -65,13 +76,56 @@ impl TestScene {
     pub const fn seeds_fire_overlay(self) -> bool {
         matches!(
             self,
-            Self::Fire | Self::Atmosphere | Self::Visual | Self::VfxSandbox
+            Self::Fire | Self::Atmosphere | Self::Visual | Self::VfxSandbox | Self::Vfx
         )
+    }
+
+    /// Rain / fog / soil weather seed ([`crate::engine::test_harness`] weather arm).
+    #[must_use]
+    pub const fn seeds_weather(self) -> bool {
+        matches!(
+            self,
+            Self::Weather | Self::Visual | Self::VfxSandbox | Self::SubFx
+        )
+    }
+
+    /// Global wind + chunk wind field ([`crate::engine::test_harness`] atmosphere arm).
+    #[must_use]
+    pub const fn seeds_atmosphere(self) -> bool {
+        matches!(
+            self,
+            Self::Atmosphere | Self::Visual | Self::VfxSandbox | Self::SubFx
+        )
+    }
+
+    /// Empty town book + settlement count so city generation can run.
+    #[must_use]
+    pub const fn seeds_towns(self) -> bool {
+        matches!(self, Self::City)
+    }
+
+    /// Fire-only and subordinate-field play must not call [`crate::strategic::settlement::seed_settlement_books_if_empty`].
+    #[must_use]
+    pub const fn suppresses_town_book_seed(self) -> bool {
+        matches!(self, Self::Vfx | Self::SubFx)
+    }
+
+    /// Fixed world-gen seed for an isolation play entry. `None` leaves the harness default.
+    #[must_use]
+    pub const fn isolation_world_seed(self) -> Option<u64> {
+        match self {
+            Self::City => Some(crate::strategic::settlement::DEFAULT_WORLD_SEED),
+            // Same number as [`super::debug_maneuver::UnittestWorldFixture`] default seed.
+            Self::Vfx => Some(42),
+            // Distinct from the city book seed and the fire fixture seed so this world is not the city map.
+            Self::SubFx => Some(1_603),
+            _ => None,
+        }
     }
 
     #[must_use]
     pub const fn menu_vfx_bootstrap(self) -> bool {
-        !matches!(self, Self::None)
+        !matches!(self, Self::None | Self::City)
     }
 }
 
@@ -148,15 +202,34 @@ impl EngineLaunchArgs {
                 args.maneuver = DebugManeuver::DemoOpen;
                 args.visual_auto_exit = false;
             }
-            "vfx" | "sandbox" | "fireweather" => {
+            // Fire / fire-VFX only. Combined sandbox stays on `sandbox` / `fireweather`.
+            "vfx" => {
+                args.test_scene = TestScene::Vfx;
+                args.maneuver = DebugManeuver::DemoOpen;
+                args.visual_auto_exit = false;
+            }
+            "sandbox" | "fireweather" => {
                 args.test_scene = TestScene::VfxSandbox;
+                args.maneuver = DebugManeuver::DemoOpen;
+                args.visual_auto_exit = false;
+            }
+            // Settlements and town growth. Empty town book may still be seeded. No VFX menu bootstrap.
+            "city" => {
+                args.test_scene = TestScene::City;
+                args.maneuver = DebugManeuver::DemoOpen;
+                args.visual_auto_exit = false;
+            }
+            // Weather + atmosphere only. CLI name `subfx` (menu label: Weather + atmosphere).
+            "subfx" => {
+                args.test_scene = TestScene::SubFx;
                 args.maneuver = DebugManeuver::DemoOpen;
                 args.visual_auto_exit = false;
             }
             other => {
                 bevy::log::warn!(
-                    "Unknown --test mode {other:?}; use \
-                     `frame`, `visual`/`capture`, `demo`, `vfx`, `unittest`, or `weather`/`fire`/`atmosphere`."
+                    "Unknown --test mode {other:?}; isolation commands: \
+                     `city`, `vfx`, `subfx`. Combined sandbox: `sandbox`/`fireweather`. \
+                     Capture: `visual`. Also `frame`, `demo`, `unittest`, `weather`, `fire`, `atmosphere`."
                 );
             }
         }
@@ -230,17 +303,26 @@ impl EngineLaunchArgs {
                 | TestScene::Atmosphere
                 | TestScene::Visual
                 | TestScene::VfxSandbox
+                | TestScene::City
+                | TestScene::Vfx
+                | TestScene::SubFx
         ) || self.full_capture_active();
         let flush_secs = if self.full_capture_active() { 2.0 } else { 5.0 };
         let frame_jsonl_stride = match self.test_scene {
             TestScene::Visual => 30,
-            TestScene::VfxSandbox => 10,
+            TestScene::VfxSandbox | TestScene::City | TestScene::Vfx | TestScene::SubFx => 10,
             TestScene::Weather | TestScene::Fire | TestScene::Atmosphere => 15,
             TestScene::None => 1,
         };
         let stall_spans = matches!(
             self.test_scene,
-            TestScene::VfxSandbox | TestScene::Weather | TestScene::Fire | TestScene::Atmosphere
+            TestScene::VfxSandbox
+                | TestScene::City
+                | TestScene::Vfx
+                | TestScene::SubFx
+                | TestScene::Weather
+                | TestScene::Fire
+                | TestScene::Atmosphere
         ) || self.full_capture_active();
         TestInstrumentationProfile {
             active: true,
@@ -335,10 +417,80 @@ mod tests {
 
     #[test]
     fn cli_vfx_sandbox_stays_open() {
-        let a = EngineLaunchArgs::from_cli(Some("vfx".into()), false, None);
-        assert_eq!(a.test_scene, TestScene::VfxSandbox);
-        assert_eq!(a.maneuver, DebugManeuver::DemoOpen);
-        assert!(!a.visual_auto_exit);
+        let vfx = EngineLaunchArgs::from_cli(Some("vfx".into()), false, None);
+        assert_eq!(vfx.test_scene, TestScene::Vfx);
+        assert_eq!(vfx.maneuver, DebugManeuver::DemoOpen);
+        assert!(!vfx.visual_auto_exit);
+        let sandbox = EngineLaunchArgs::from_cli(Some("sandbox".into()), false, None);
+        let fireweather = EngineLaunchArgs::from_cli(Some("fireweather".into()), false, None);
+        assert_eq!(sandbox.test_scene, TestScene::VfxSandbox);
+        assert_eq!(fireweather.test_scene, TestScene::VfxSandbox);
+        assert_eq!(sandbox.maneuver, DebugManeuver::DemoOpen);
+        assert!(!sandbox.visual_auto_exit);
+    }
+
+    #[test]
+    fn play_isolation_scenes_seed_only_their_stack() {
+        let city = EngineLaunchArgs::from_cli(Some("city".into()), false, None);
+        let vfx = EngineLaunchArgs::from_cli(Some("vfx".into()), false, None);
+        let subfx = EngineLaunchArgs::from_cli(Some("subfx".into()), false, None);
+        let sandbox = EngineLaunchArgs::from_cli(Some("sandbox".into()), false, None);
+
+        assert_eq!(city.test_scene, TestScene::City);
+        assert_eq!(city.maneuver, DebugManeuver::DemoOpen);
+        assert!(!city.visual_auto_exit);
+        assert!(!city.test_scene.seeds_fire_overlay());
+        assert!(!city.test_scene.seeds_weather());
+        assert!(!city.test_scene.seeds_atmosphere());
+        assert!(city.test_scene.seeds_towns());
+        assert!(!city.test_scene.suppresses_town_book_seed());
+        assert!(!city.test_scene.menu_vfx_bootstrap());
+
+        assert_eq!(vfx.test_scene, TestScene::Vfx);
+        assert_eq!(vfx.maneuver, DebugManeuver::DemoOpen);
+        assert!(!vfx.visual_auto_exit);
+        assert!(vfx.test_scene.seeds_fire_overlay());
+        assert!(!vfx.test_scene.seeds_weather());
+        assert!(!vfx.test_scene.seeds_atmosphere());
+        assert!(!vfx.test_scene.seeds_towns());
+        assert!(vfx.test_scene.suppresses_town_book_seed());
+
+        assert_eq!(subfx.test_scene, TestScene::SubFx);
+        assert_eq!(subfx.test_scene.menu_label(), "Weather + atmosphere");
+        assert_eq!(subfx.maneuver, DebugManeuver::DemoOpen);
+        assert!(!subfx.visual_auto_exit);
+        assert!(subfx.test_scene.seeds_weather());
+        assert!(subfx.test_scene.seeds_atmosphere());
+        assert!(!subfx.test_scene.seeds_fire_overlay());
+        assert!(!subfx.test_scene.seeds_towns());
+        assert!(subfx.test_scene.suppresses_town_book_seed());
+
+        assert_eq!(sandbox.test_scene, TestScene::VfxSandbox);
+        assert!(sandbox.test_scene.seeds_fire_overlay());
+        assert!(sandbox.test_scene.seeds_weather());
+        assert!(sandbox.test_scene.seeds_atmosphere());
+
+        let city_seed = city.test_scene.isolation_world_seed();
+        let vfx_seed = vfx.test_scene.isolation_world_seed();
+        let subfx_seed = subfx.test_scene.isolation_world_seed();
+        assert!(city_seed.is_some() && vfx_seed.is_some() && subfx_seed.is_some());
+        assert_ne!(city_seed, vfx_seed);
+        assert_ne!(vfx_seed, subfx_seed);
+        assert_ne!(city_seed, subfx_seed);
+    }
+
+    #[test]
+    fn cli_city_stays_open_like_vfx() {
+        let city = EngineLaunchArgs::from_cli(Some("city".into()), false, None);
+        let vfx = EngineLaunchArgs::from_cli(Some("vfx".into()), false, None);
+        assert_eq!(city.test_scene, TestScene::City);
+        assert_eq!(city.maneuver, DebugManeuver::DemoOpen);
+        assert_eq!(city.maneuver, vfx.maneuver);
+        assert!(!city.visual_auto_exit);
+        assert_eq!(city.visual_auto_exit, vfx.visual_auto_exit);
+        assert!(city.test_mode());
+        assert!(!city.test_scene.seeds_fire_overlay());
+        assert!(!city.sim_enter_uses_tactical_camera_zoom());
     }
 
     #[test]

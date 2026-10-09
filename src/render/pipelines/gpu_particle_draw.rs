@@ -338,21 +338,28 @@ fn prepare_world_fire_particle_draw_bind_group(
             );
         }
         metrics.record_gpu_alloc_request(expanded_needed);
-        let _ = registry.upload_pod_slice(
-            &render_device,
-            &queue,
-            RegisteredBufferDescriptor {
-                id: expanded_format.buffer_id,
-                size_bytes: expanded_needed,
-                usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
-                visibility: BufferVisibility::RenderOnly,
-                stride: expanded_format.stride,
-            },
-            expanded_rows,
-            &[] as &[GpuParticleQuadVertex],
-            max_expand_instances as u64,
-        );
         let expanded_id = FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER;
+        // Allocate once. A per-frame empty upload writes a zero vertex and fights the
+        // expand compute for the same position buffer (raster then draws the wipe).
+        let already_allocated = registry
+            .get(expanded_id)
+            .is_some_and(|b| b.size_bytes >= expanded_needed);
+        if !already_allocated {
+            let _ = registry.upload_pod_slice(
+                &render_device,
+                &queue,
+                RegisteredBufferDescriptor {
+                    id: expanded_format.buffer_id,
+                    size_bytes: expanded_needed,
+                    usage: BufferUsages::STORAGE | BufferUsages::COPY_DST,
+                    visibility: BufferVisibility::RenderOnly,
+                    stride: expanded_format.stride,
+                },
+                expanded_rows,
+                &[] as &[GpuParticleQuadVertex],
+                max_expand_instances as u64,
+            );
+        }
         let Some(expanded_buf) = registry.get(expanded_id) else {
             return;
         };

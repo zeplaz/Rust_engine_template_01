@@ -164,6 +164,10 @@ pub struct SettlementBlockFrameDebugPlugin;
 impl Plugin for SettlementBlockFrameDebugPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<BlockFrameDebugUiState>()
-            .add_systems(EguiPrimaryContextPass, draw_block_frame_debug_overlay);
+            .add_systems(
+                EguiPrimaryContextPass,
+                draw_block_frame_debug_overlay
+                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
+            );
     }
 }

@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::strategic::BuildSiteTile;
 use crate::systems::transport::{
-    TransportConstructionRecord, TransportEdgeDirectory, TransportEdgeId, CorridorClass,
+    CorridorClass, TransportConstructionRecord, TransportEdgeDirectory, TransportEdgeId,
 };
 
 /// Active rail profile id for corridor execute (INFRA-E2-004).
@@ -109,7 +109,7 @@ mod tests {
     use super::*;
     use crate::systems::transport::{
         bake_snapshot_from_ordered_tile_markers, hydrate_transport_from_snapshot,
-        TransportEdgeRecord, TransportEdgeDirectory, TransportFieldStore, TransportTopology,
+        TransportEdgeDirectory, TransportEdgeRecord, TransportFieldStore, TransportTopology,
     };
 
     #[test]
@@ -122,12 +122,8 @@ mod tests {
 
     #[test]
     fn infra_e2_003_find_edge_after_bake() {
-        let snap = bake_snapshot_from_ordered_tile_markers(
-            &[(1, 1), (3, 1)],
-            |_, _| 0.5,
-            20.0,
-            0.25,
-        );
+        let snap =
+            bake_snapshot_from_ordered_tile_markers(&[(1, 1), (3, 1)], |_, _| 0.5, 20.0, 0.25);
         assert_eq!(snap.edges.len(), 1);
         let edge: &TransportEdgeRecord = &snap.edges[0];
         assert_eq!(edge.head, "t1_1");

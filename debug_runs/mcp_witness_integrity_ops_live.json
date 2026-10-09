@@ -5,23 +5,23 @@
   "enforce_mode": false,
   "exit_code": 0,
   "integrity_cache": {
-    "fail_count": 61,
+    "fail_count": 80,
     "inflated_green_count": 7,
     "rollup_inflated_count": 0,
-    "queue_contradiction_count": 3,
-    "queue_stale_count": 48,
-    "queue_error_count": 50
+    "queue_contradiction_count": 13,
+    "queue_stale_count": 59,
+    "queue_error_count": 69
   },
   "witness_honesty": {
     "status": "failed",
-    "summary": "witness_honesty scan debug_runs: scanned=572 failed_files=166 issues=167",
+    "summary": "witness_honesty scan debug_runs: scanned=596 failed_files=170 issues=171",
     "error_count": 11,
-    "warning_count": 156
+    "warning_count": 160
   },
   "queue_integrity": {
     "status": "failed",
-    "summary": "queue_integrity: contradictions=3 errors=50",
-    "error_count": 50
+    "summary": "queue_integrity: contradictions=13 errors=69",
+    "error_count": 69
   },
   "hooks": {
     "post_build": "tools/orchestrator/hooks/post_build.ps1",
@@ -36,7 +36,7 @@
   ],
   "_agent_meta": {
     "schema": "mcp_witness_integrity_ops_live_v1",
-    "written_at_epoch_secs": 1790256224,
+    "written_at_epoch_secs": 1790347515,
     "profile": "MCP_WITNESS_INTEGRITY_OPS",
     "source_system": "witness_honesty_lib",
     "relative_path": "debug_runs/mcp_witness_integrity_ops_live.json",

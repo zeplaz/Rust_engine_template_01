@@ -13,9 +13,9 @@ use crate::construction::visual_authority::FootprintTileColorKind;
 use crate::construction::weighted_footprint::{
     rasterize_with_effective_scale, PlacementParams, WEIGHT_OMIT_THRESHOLD,
 };
+use crate::strategic::commit_carries_scale_and_weights_witness_green;
 use crate::strategic::overlap_blocks_commit_witness_green;
 use crate::strategic::BuildSiteTile;
-use crate::strategic::commit_carries_scale_and_weights_witness_green;
 use crate::strategic::FootprintTiles;
 
 /// Preset footprint sizes (1×1 … 12×12) for tray/readability audit (**S1**).
@@ -51,19 +51,13 @@ fn scaling_audit_s1_self_check() -> Result<(), &'static str> {
             return Err("ghost_commit_weight_count");
         }
 
-        let footprint = FootprintTiles {
-            width: n,
-            depth: n,
-        };
+        let footprint = FootprintTiles { width: n, depth: n };
         if footprint.width * footprint.depth != n * n {
             return Err("footprint_tiles_area");
         }
 
-        let (params, weighted) = rasterize_with_effective_scale(
-            &base,
-            PlacementParams::identity(1.0),
-            origin,
-        );
+        let (params, weighted) =
+            rasterize_with_effective_scale(&base, PlacementParams::identity(1.0), origin);
         if (params.effective_scale - 1.0).abs() > 0.08 {
             return Err("unity_effective_scale");
         }

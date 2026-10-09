@@ -8,12 +8,8 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use bevy::prelude::*;
 
-use crate::economy::logistics::{
-    InTransitLedger, PendingSiteStagingDebits, SiteStagingStock,
-};
-use crate::entities::production::core::{
-    BUFFER_TAG_DRAGON_TEETH_UNIT, BUFFER_TAG_MINE_UNIT,
-};
+use crate::economy::logistics::{InTransitLedger, PendingSiteStagingDebits, SiteStagingStock};
+use crate::entities::production::core::{BUFFER_TAG_DRAGON_TEETH_UNIT, BUFFER_TAG_MINE_UNIT};
 use crate::strategic::{FootprintTiles, SiteArchetype, SitePlacementValidation};
 
 use super::build_tool_authority::{BuildTool, DefenseKind};

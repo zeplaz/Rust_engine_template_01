@@ -50,8 +50,7 @@ pub fn refresh_construction_stage_witness(
     // Linked `Res` params prove these types are in the world; symbols prove module body.
     let _ = (tool.as_ref(), mode.as_ref(), path.as_ref(), zone.as_ref());
 
-    w.toolbox_panel =
-        include_str!("build_toolbox.rs").contains("pub fn draw_build_toolbox_egui");
+    w.toolbox_panel = include_str!("build_toolbox.rs").contains("pub fn draw_build_toolbox_egui");
     w.semicolon_demoted_in_help = true;
     w.active_build_tool =
         include_str!("build_tool_authority.rs").contains("pub struct ActiveBuildTool");
@@ -66,8 +65,7 @@ pub fn refresh_construction_stage_witness(
     w.demolish_tool = include_str!("demolish.rs").contains("pub fn execute_demolish_at_tile");
     w.road_control_points =
         include_str!("roads/placement.rs").contains("pub struct ActiveRoadPlacement");
-    w.road_input_model =
-        include_str!("roads/input.rs").contains("pub fn road_path_input_system");
+    w.road_input_model = include_str!("roads/input.rs").contains("pub fn road_path_input_system");
     w.road_segment_preview =
         include_str!("roads/pathing.rs").contains("pub fn regenerate_road_segments");
     w.road_ghost_draw = include_str!("visual_authority.rs")
@@ -80,8 +78,7 @@ pub fn refresh_construction_stage_witness(
         include_str!("roads/commit.rs").contains("pub fn commit_road_path_to_queue");
     w.road_e2e_test =
         include_str!("integration_tests.rs").contains("fn road_e2e_queue_validate_segments");
-    w.rail_pipeline =
-        include_str!("rail/pathing.rs").contains("pub fn regenerate_rail_segments");
+    w.rail_pipeline = include_str!("rail/pathing.rs").contains("pub fn regenerate_rail_segments");
     w.zone_paint = include_str!("zones/input.rs").contains("pub fn zone_paint_input_system");
     w.module_split = gui_build_shim_gone()
         && include_str!("mod.rs").contains("mod build_tool_authority")
@@ -135,7 +132,11 @@ pub fn sync_construction_finish_board_system(
     use crate::dev::construction_live_todos::TodoStatus;
 
     board.sync_from_witness(witness.as_ref());
-    let done = board.status.iter().filter(|s| **s == TodoStatus::Done).count();
+    let done = board
+        .status
+        .iter()
+        .filter(|s| **s == TodoStatus::Done)
+        .count();
     if done == crate::dev::construction_finish_todos::CONSTRUCTION_FINISH_TODO_COUNT {
         gate.log_once(
             "construction_finish",
@@ -159,7 +160,10 @@ pub fn refresh_construction_phase2_witness_system(
     w.demolish_execute = true;
     w.zone_strategic_commit = true;
     w.legacy_roads_removed = true;
-    w.building_archetype_map = registry.as_ref().map(|r| !r.by_id.is_empty()).unwrap_or(true);
+    w.building_archetype_map = registry
+        .as_ref()
+        .map(|r| !r.by_id.is_empty())
+        .unwrap_or(true);
     w.commercial_tool = true;
     w.industrial_tool = true;
     w.utilities_tool = true;
@@ -175,12 +179,10 @@ pub fn refresh_construction_phase2_witness_system(
         include_str!("integration_tests.rs").contains("fn input_conflict_matrix_gates");
     // Disk JSON alone is not wiring — require live proof collector write.
     w.construction_proof_json = proof.as_ref().is_some_and(|p| p.written());
-    w.curved_road_spline =
-        include_str!("roads/spline.rs").contains("pub fn catmull_rom_chain");
+    w.curved_road_spline = include_str!("roads/spline.rs").contains("pub fn catmull_rom_chain");
     w.grid_and_node_snap = include_str!("snap.rs").contains("pub fn snap_placement")
         && include_str!("snap.rs").contains("pub fn nearest_road_node");
-    w.road_upgrade_lane =
-        include_str!("upgrade.rs").contains("pub fn enqueue_road_upgrade");
+    w.road_upgrade_lane = include_str!("upgrade.rs").contains("pub fn enqueue_road_upgrade");
     // Honest: height_norm_stub only — not live height_grid conform.
     w.terrain_conform = false;
     *p9 = crate::dev::construction_p9_todos::ConstructionP9Witness::from_phase2(w.as_ref());
@@ -284,7 +286,10 @@ pub fn refresh_construction_round3_witness_system(
     history: Res<super::history::ConstructionHistory>,
     mut w: ResMut<crate::dev::construction_round3_todos::ConstructionRound3Witness>,
 ) {
-    let reg_ok = registry.as_ref().map(|r| r.by_id.len() >= 5).unwrap_or(false);
+    let reg_ok = registry
+        .as_ref()
+        .map(|r| r.by_id.len() >= 5)
+        .unwrap_or(false);
     w.catalog_loader = reg_ok;
     w.catalog_registry = reg_ok;
     w.catalog_toolbox = reg_ok;
@@ -295,13 +300,13 @@ pub fn refresh_construction_round3_witness_system(
         .contains("pub fn execute_construction_plans_system");
     w.intersection_link = w.intersection_commit;
     w.intersection_query = true;
-    w.visual_request = include_str!("visual_authority.rs")
-        .contains("pub struct ConstructionVisualRequests");
+    w.visual_request =
+        include_str!("visual_authority.rs").contains("pub struct ConstructionVisualRequests");
     w.visual_unified_draw = w.visual_request
         && include_str!("visual_authority.rs")
             .contains("pub fn draw_construction_visual_requests_egui");
-    w.visual_viewport_doc = include_str!("../dev/construction_ownership.md")
-        .contains("Construction ownership");
+    w.visual_viewport_doc =
+        include_str!("../dev/construction_ownership.md").contains("Construction ownership");
     w.brush_mode = true;
     w.building_line_brush = true;
     w.zone_rect_brush = true;
@@ -309,15 +314,13 @@ pub fn refresh_construction_round3_witness_system(
         && include_str!("history.rs").contains("pub fn record_demolish_execution");
     w.redo_stack = include_str!("history.rs").contains("pub fn construction_redo_input_system");
     w.history_labels = history.last_action_kind.is_some() || true;
-    w.rail_switch =
-        include_str!("rail/junction.rs").contains("pub struct RailJunctionAuthority");
+    w.rail_switch = include_str!("rail/junction.rs").contains("pub struct RailJunctionAuthority");
     w.rail_junction = w.rail_switch;
     w.rail_proof = true;
     w.preview_pooling = w.visual_request;
     w.incremental_path = true;
     w.batched_zone = w.visual_request;
-    w.invariants_agents =
-        include_str!("../../AGENTS.md").contains("construction_invariants.md");
+    w.invariants_agents = include_str!("../../AGENTS.md").contains("construction_invariants.md");
     w.ownership_doc = w.visual_viewport_doc;
     w.authority_audit = gui_build_shim_gone();
 }
@@ -359,7 +362,10 @@ pub fn refresh_construction_operational_witness_system(
     w.proof_json = proof.as_ref().is_some_and(|p| p.written());
     w.road_commit = true;
     w.zone_paint = true;
-    w.building_place = registry.as_ref().map(|r| !r.by_id.is_empty()).unwrap_or(true);
+    w.building_place = registry
+        .as_ref()
+        .map(|r| !r.by_id.is_empty())
+        .unwrap_or(true);
     w.demolish = true;
     w.no_legacy = gui_build_shim_gone();
 }

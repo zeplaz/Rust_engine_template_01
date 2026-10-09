@@ -37,10 +37,7 @@ pub fn commit_painted_zones_to_pending(
     pending: &mut PendingConstructionQueue,
 ) -> usize {
     let tag = zone_tool_tag(zone);
-    let footprint = FootprintTiles {
-        width: 1,
-        depth: 1,
-    };
+    let footprint = FootprintTiles { width: 1, depth: 1 };
     let mut n = 0usize;
     for &origin in painted {
         pending.push(PendingBuildBlueprint {

@@ -75,7 +75,12 @@ impl From<&FireEmissionProfile> for FireVisualGpuInstance {
                 p.heat,
                 p.luminosity,
             ),
-            world_xyz_radius: Vec4::new(p.world_pos.x, p.world_pos.y, p.world_pos.z, p.influence_radius),
+            world_xyz_radius: Vec4::new(
+                p.world_pos.x,
+                p.world_pos.y,
+                p.world_pos.z,
+                p.influence_radius,
+            ),
             smoke_ember_vis_priority: Vec4::new(
                 p.smoke_density,
                 p.ember_rate,
@@ -178,9 +183,7 @@ pub fn infer_fire_emission_profile(
         .unwrap_or(MaterialId(0));
     let class = infer_combustion_class(terrain, material, eco, prof);
     let layer = prof.map(|p| p.to_fuel_layer()).unwrap_or_default();
-    let mut heat = slab_heat_override
-        .unwrap_or(fire.heat)
-        .clamp(0.0, 1.0);
+    let mut heat = slab_heat_override.unwrap_or(fire.heat).clamp(0.0, 1.0);
     if let Some(ovl) = overlay {
         if !ovl.heat.is_empty() {
             let peak = ovl.heat.iter().copied().fold(0.0f32, f32::max);
@@ -191,9 +194,10 @@ pub fn infer_fire_emission_profile(
                 .enumerate()
                 .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
             {
-                if *cell_heat > crate::render::extraction::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS {
-                    let cell_xy =
-                        chunk_cell_world_center(chunk.coord, matrix.size, idx);
+                if *cell_heat
+                    > crate::render::extraction::sim_visual_extract::FIRE_VISUAL_ACTIVE_HEAT_EPS
+                {
+                    let cell_xy = chunk_cell_world_center(chunk.coord, matrix.size, idx);
                     world_pos = Vec3::new(cell_xy.x, cell_xy.y, 0.0);
                     heat = heat.max(*cell_heat);
                 }
@@ -288,9 +292,7 @@ mod tests {
 
     #[test]
     fn wildland_without_overlay_is_vegetation() {
-        let chunk = Chunk {
-            coord: IVec2::ZERO,
-        };
+        let chunk = Chunk { coord: IVec2::ZERO };
         let fire = ChunkSurfaceFire {
             heat: 0.5,
             fuel: 1.0,
@@ -310,14 +312,15 @@ mod tests {
         assert_eq!(p.combustion_class, CombustionClass::Vegetation);
         assert_eq!(p.chunk_coord, IVec2::ZERO);
         assert!(p.luminosity > 0.0);
-        assert_eq!(p.world_pos.z, 0.0, "map-plane fire emitters use z=0 for Core2d");
+        assert_eq!(
+            p.world_pos.z, 0.0,
+            "map-plane fire emitters use z=0 for Core2d"
+        );
     }
 
     #[test]
     fn overlay_peak_heat_merged_into_profile_scalar() {
-        let chunk = Chunk {
-            coord: IVec2::ZERO,
-        };
+        let chunk = Chunk { coord: IVec2::ZERO };
         let fire = ChunkSurfaceFire {
             heat: 0.01,
             fuel: 1.0,
@@ -327,6 +330,7 @@ mod tests {
             fuel: vec![1.0; 4],
             smoke: vec![0.0; 4],
             toxic: vec![0.0; 4],
+            burn_hold: vec![0; 4],
         };
         let em = FireLightEmission {
             radius: 100.0,
@@ -338,8 +342,22 @@ mod tests {
         };
         let m = minimal_matrix();
         let p = infer_fire_emission_profile(
-            &chunk, &fire, Some(&overlay), &em, None, None, None, None, &m, None, None,
+            &chunk,
+            &fire,
+            Some(&overlay),
+            &em,
+            None,
+            None,
+            None,
+            None,
+            &m,
+            None,
+            None,
         );
-        assert!((p.heat - 0.55).abs() < 1e-4, "expected peak overlay cell heat, got {}", p.heat);
+        assert!(
+            (p.heat - 0.55).abs() < 1e-4,
+            "expected peak overlay cell heat, got {}",
+            p.heat
+        );
     }
 }

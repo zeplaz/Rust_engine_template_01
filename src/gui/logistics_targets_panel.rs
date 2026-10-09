@@ -36,7 +36,7 @@ impl Plugin for LogisticsTargetsPanelPlugin {
             )
             .add_systems(
                 EguiPrimaryContextPass,
-                logistics_targets_panel_ui.run_if(in_simulation_or_editor),
+                logistics_targets_panel_ui.run_if(crate::gui::ui_gates::product_egui_shell_active),
             );
     }
 }

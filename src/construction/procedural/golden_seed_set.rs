@@ -2,7 +2,9 @@
 //!
 //! Any grammar/kit change must diff against these hashes; update only with operator approval.
 
-use super::assembly_snapshot::{assembly_snapshot_stable_hash, build_assembly_snapshot_from_grammar};
+use super::assembly_snapshot::{
+    assembly_snapshot_stable_hash, build_assembly_snapshot_from_grammar,
+};
 use super::{load_procedural_module_registry, load_style_pack_registry};
 use crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 

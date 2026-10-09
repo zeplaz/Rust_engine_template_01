@@ -104,6 +104,7 @@ fn push_weighted_footprint_tiles(
     out: &mut Vec<FootprintTileRequest>,
     weights: &[(IVec2, f32)],
     kind: FootprintTileColorKind,
+    fill_override: Option<egui::Color32>,
 ) {
     for &(tile, w) in weights {
         if w > 0.001 {
@@ -111,7 +112,7 @@ fn push_weighted_footprint_tiles(
                 tile,
                 color_kind: kind,
                 weight: w.clamp(0.05, 1.0),
-                fill_override: None,
+                fill_override,
             });
         }
     }
@@ -140,6 +141,13 @@ pub fn sync_footprint_visual_requests(
         BuildConfidence::Risky => FootprintTileColorKind::Risky,
         BuildConfidence::Invalid => FootprintTileColorKind::Invalid,
     };
+    let occupy_fill = if super::preview_commit_guard::report_is_footprint_occupied(&preview.report)
+    {
+        let [r, g, b, a] = super::phase_fill::occupancy_reject_rgba();
+        Some(egui::Color32::from_rgba_unmultiplied(r, g, b, a))
+    } else {
+        None
+    };
     if let Some(origin) = ghost.origin {
         let before = requests.footprint_tiles.len();
         if let Some(snapshot) = placement_snapshot_for_building(&tool, &registry, &ghost, origin) {
@@ -147,6 +155,7 @@ pub fn sync_footprint_visual_requests(
                 &mut requests.footprint_tiles,
                 &snapshot.weights,
                 ghost_kind,
+                occupy_fill,
             );
         } else {
             let ox = origin.x as i32;
@@ -164,7 +173,7 @@ pub fn sync_footprint_visual_requests(
                     tile,
                     color_kind: ghost_kind,
                     weight: 1.0,
-                    fill_override: None,
+                    fill_override: occupy_fill,
                 });
             }
         }
@@ -178,7 +187,12 @@ pub fn sync_footprint_visual_requests(
     }
     for row in &staged.rows {
         let kind = color_kind_for_staged_validity(row.validity);
-        push_weighted_footprint_tiles(&mut requests.footprint_tiles, &row.footprint_weights, kind);
+        push_weighted_footprint_tiles(
+            &mut requests.footprint_tiles,
+            &row.footprint_weights,
+            kind,
+            None,
+        );
     }
 }
 
@@ -200,23 +214,29 @@ mod footprint_tests {
         });
         app.insert_resource(BuildGhostState {
             origin: Some(BuildSiteTile { x: 4, z: 7 }),
-            footprint: FootprintTiles {
-                width: 3,
-                depth: 2,
-            },
+            footprint: FootprintTiles { width: 3, depth: 2 },
             ..Default::default()
         });
         app.insert_resource(BuildPlacementPreview::default());
         app.insert_resource(crate::construction::build_tool_authority::ActiveBuildTool::default());
-        app.insert_resource(crate::construction::building_definitions::BuildingDefinitionRegistry::default());
-        app.insert_resource(crate::construction::staged_ghost_panel::StagedPlacementBook::default());
-        app.insert_resource(crate::construction::tile_visual::ConstructionTileVisualSettings::default());
+        app.insert_resource(
+            crate::construction::building_definitions::BuildingDefinitionRegistry::default(),
+        );
+        app.insert_resource(
+            crate::construction::staged_ghost_panel::StagedPlacementBook::default(),
+        );
+        app.insert_resource(
+            crate::construction::tile_visual::ConstructionTileVisualSettings::default(),
+        );
         app.insert_resource(ConstructionVisualRequests::default());
         app.add_systems(Update, sync_footprint_visual_requests);
         app.update();
         let reqs = app.world().resource::<ConstructionVisualRequests>();
         assert_eq!(reqs.footprint_tiles.len(), 6);
-        assert!(reqs.footprint_tiles.iter().all(|t| (t.weight - 1.0).abs() < 1e-5));
+        assert!(reqs
+            .footprint_tiles
+            .iter()
+            .all(|t| (t.weight - 1.0).abs() < 1e-5));
         assert!(reqs.footprint_lock_tiles.is_empty());
     }
 
@@ -229,10 +249,7 @@ mod footprint_tests {
         });
         app.insert_resource(BuildGhostState {
             origin: Some(BuildSiteTile { x: 4, z: 7 }),
-            footprint: FootprintTiles {
-                width: 3,
-                depth: 2,
-            },
+            footprint: FootprintTiles { width: 3, depth: 2 },
             placement_mode: crate::construction::build_state::BuildPlacementMode::Adjust,
             ..Default::default()
         });
@@ -241,8 +258,12 @@ mod footprint_tests {
         app.insert_resource(
             crate::construction::building_definitions::BuildingDefinitionRegistry::default(),
         );
-        app.insert_resource(crate::construction::staged_ghost_panel::StagedPlacementBook::default());
-        app.insert_resource(crate::construction::tile_visual::ConstructionTileVisualSettings::default());
+        app.insert_resource(
+            crate::construction::staged_ghost_panel::StagedPlacementBook::default(),
+        );
+        app.insert_resource(
+            crate::construction::tile_visual::ConstructionTileVisualSettings::default(),
+        );
         app.insert_resource(ConstructionVisualRequests::default());
         app.add_systems(Update, sync_footprint_visual_requests);
         app.update();
@@ -276,9 +297,10 @@ pub fn partial_alpha_parametric_witness_green() -> bool {
     let origin = BuildSiteTile { x: 1, z: 1 };
     let (_, weighted) =
         rasterize_with_effective_scale(&base, PlacementParams::identity(1.24), origin);
-    weighted.weights.iter().any(|(_, w)| {
-        *w >= WEIGHT_OMIT_THRESHOLD && *w > 0.0 && *w < 1.0
-    })
+    weighted
+        .weights
+        .iter()
+        .any(|(_, w)| *w >= WEIGHT_OMIT_THRESHOLD && *w > 0.0 && *w < 1.0)
 }
 
 pub fn draw_construction_visual_requests_egui(
@@ -291,10 +313,13 @@ pub fn draw_construction_visual_requests_egui(
     params: Res<WorldGenParams>,
     test_scene: Option<Res<crate::engine::test_harness::ActiveTestScene>>,
 ) -> Result {
-    if test_scene
-        .as_deref()
-        .is_some_and(|s| matches!(s.0, crate::engine::launch_args::TestScene::VfxSandbox | crate::engine::launch_args::TestScene::Fire))
-    {
+    if test_scene.as_deref().is_some_and(|s| {
+        matches!(
+            s.0,
+            crate::engine::launch_args::TestScene::VfxSandbox
+                | crate::engine::launch_args::TestScene::Fire
+        )
+    }) {
         return Ok(());
     }
     if requests.paths.is_empty()
@@ -350,7 +375,10 @@ pub fn draw_construction_visual_requests_egui(
         }
     }
 
-    let dash = egui::Stroke::new(1.5, egui::Color32::from_rgba_unmultiplied(180, 200, 255, 200));
+    let dash = egui::Stroke::new(
+        1.5,
+        egui::Color32::from_rgba_unmultiplied(180, 200, 255, 200),
+    );
     for stub in &requests.site_stub_boxes {
         for edge in 0..stub.width {
             for &dz in &[0, stub.depth.saturating_sub(1)] {
@@ -359,9 +387,7 @@ pub fn draw_construction_visual_requests_egui(
                     0.05,
                     stub.origin.z as f32 + dz as f32 + 0.5,
                 );
-                if let Some(screen) = world_to_screen(
-                    world,
-                ) {
+                if let Some(screen) = world_to_screen(world) {
                     let side = tile_px * 0.92;
                     let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
                     painter.rect_stroke(rect, 0.0, dash, egui::epaint::StrokeKind::Inside);
@@ -375,9 +401,7 @@ pub fn draw_construction_visual_requests_egui(
                     0.05,
                     stub.origin.z as f32 + edge as f32 + 0.5,
                 );
-                if let Some(screen) = world_to_screen(
-                    world,
-                ) {
+                if let Some(screen) = world_to_screen(world) {
                     let side = tile_px * 0.92;
                     let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
                     painter.rect_stroke(rect, 0.0, dash, egui::epaint::StrokeKind::Inside);
@@ -418,7 +442,9 @@ pub fn draw_construction_visual_requests_egui(
             (VisualPathKind::Rail, true, true, _) => {
                 egui::Color32::from_rgba_unmultiplied(180, 120, 255, 150)
             }
-            (VisualPathKind::Rail, _, false, _) => egui::Color32::from_rgba_unmultiplied(255, 140, 60, 180),
+            (VisualPathKind::Rail, _, false, _) => {
+                egui::Color32::from_rgba_unmultiplied(255, 140, 60, 180)
+            }
             _ => egui::Color32::from_rgba_unmultiplied(240, 90, 90, 160),
         };
         let stroke_w = (path.width * 0.5 * zoom).clamp(1.0, 48.0);
@@ -433,30 +459,37 @@ pub fn draw_construction_visual_requests_egui(
     }
 
     let mut lock_bounds: Option<egui::Rect> = None;
+    // Live ghost tiles own alpha (`ghost_visual` tokens). A settle fill_override on the
+    // same tile is a second writer and reads as a blink under the cursor.
+    let live_ghost_tiles: Vec<IVec2> = requests
+        .footprint_tiles
+        .iter()
+        .filter(|tile| tile.fill_override.is_none())
+        .map(|tile| tile.tile)
+        .collect();
     for tile in &requests.footprint_tiles {
+        if tile.fill_override.is_some() && live_ghost_tiles.contains(&tile.tile) {
+            continue;
+        }
         let world = Vec3::new(tile.tile.x as f32 + 0.5, 0.0, tile.tile.y as f32 + 0.5);
         let Some(screen) = world_to_screen(world) else {
             continue;
         };
         let (color, stroke) = if let Some(override_c) = tile.fill_override {
-            let alpha = (override_c.a() as f32 * tile.weight).round() as u8;
-            let color =
-                egui::Color32::from_rgba_unmultiplied(override_c.r(), override_c.g(), override_c.b(), alpha);
-            let outline = egui::Color32::from_rgba_unmultiplied(
-                override_c.r(),
-                override_c.g(),
-                override_c.b(),
-                ((override_c.a() as f32) * 0.9).round().clamp(0.0, 255.0) as u8,
-            );
-            (color, Some(egui::Stroke::new(1.5, outline)))
+            // Alpha is already baked in the settle color. Do not scale it again.
+            (override_c, Some(egui::Stroke::new(1.5, override_c)))
         } else {
             let base = match tile.color_kind {
                 FootprintTileColorKind::Valid => super::ghost_visual::footprint_valid_color(),
                 FootprintTileColorKind::Risky => super::ghost_visual::footprint_risky_color(),
                 FootprintTileColorKind::Invalid => super::ghost_visual::footprint_invalid_color(),
             };
-            let alpha = (base.a() as f32 * tile.weight).round() as u8;
-            let color = egui::Color32::from_rgba_unmultiplied(base.r(), base.g(), base.b(), alpha);
+            let color = if (tile.weight - 1.0).abs() <= f32::EPSILON {
+                base
+            } else {
+                let alpha = (base.a() as f32 * tile.weight).round() as u8;
+                egui::Color32::from_rgba_unmultiplied(base.r(), base.g(), base.b(), alpha)
+            };
             (color, None)
         };
         let side = tile_px * 0.92;

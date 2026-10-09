@@ -51,7 +51,9 @@ pub fn ease_out_cubic(t: f32) -> f32 {
 
 fn lerp_u8(a: u8, b: u8, t: f32) -> u8 {
     let t = t.clamp(0.0, 1.0);
-    (a as f32 + (b as f32 - a as f32) * t).round().clamp(0.0, 255.0) as u8
+    (a as f32 + (b as f32 - a as f32) * t)
+        .round()
+        .clamp(0.0, 255.0) as u8
 }
 
 /// Wall-clock fraction that holds the locked valid fill before the Planned settle.
@@ -72,8 +74,8 @@ pub fn place_feedback_fill_at(t: f32) -> egui::Color32 {
     let hue_blend = if t <= PLACE_FEEDBACK_LOCK_HOLD_T {
         0.0
     } else {
-        let u = ((t - PLACE_FEEDBACK_LOCK_HOLD_T) / (1.0 - PLACE_FEEDBACK_LOCK_HOLD_T))
-            .clamp(0.0, 1.0);
+        let u =
+            ((t - PLACE_FEEDBACK_LOCK_HOLD_T) / (1.0 - PLACE_FEEDBACK_LOCK_HOLD_T)).clamp(0.0, 1.0);
         ease_out_cubic(u)
     };
     egui::Color32::from_rgba_unmultiplied(
@@ -165,16 +167,32 @@ pub fn clear_place_feedback_on_tool_exit(
     }
 }
 
+/// True only while a commit settle is in flight. Arming a tool does not set this.
+#[must_use]
+pub fn place_feedback_pulse_paints(pulse: &PlaceFeedbackPulse) -> bool {
+    pulse.active && !pulse.tiles.is_empty()
+}
+
 /// Append settle tiles into the single [`ConstructionVisualRequests`] buffer (after ghost sync).
+///
+/// Tiles the live ghost already owns keep the ghost token alpha. The 280ms settle
+/// does not stack a second fill on the armed footprint.
 pub fn sync_place_feedback_visual_requests(
     pulse: Res<PlaceFeedbackPulse>,
     mut requests: ResMut<ConstructionVisualRequests>,
 ) {
-    if !pulse.active || pulse.tiles.is_empty() {
+    if !place_feedback_pulse_paints(pulse.as_ref()) {
         return;
     }
     let fill = place_feedback_fill_at(pulse.normalized_t());
     for &(tile, w) in &pulse.tiles {
+        if requests
+            .footprint_tiles
+            .iter()
+            .any(|existing| existing.tile == tile && existing.fill_override.is_none())
+        {
+            continue;
+        }
         let weight = w.clamp(0.05, 1.0);
         let a = ((fill.a() as f32) * weight).round().clamp(0.0, 255.0) as u8;
         let color = egui::Color32::from_rgba_unmultiplied(fill.r(), fill.g(), fill.b(), a);
@@ -296,7 +314,10 @@ mod tests {
         for i in 0..=16 {
             assert!(place_feedback_fill_at(i as f32 / 16.0).a() <= cap);
         }
-        assert_eq!(super::super::ghost_visual::footprint_lock_ring_stroke_px(), 2.0);
+        assert_eq!(
+            super::super::ghost_visual::footprint_lock_ring_stroke_px(),
+            2.0
+        );
         assert_eq!(
             super::super::ghost_visual::footprint_lock_ring_color().a(),
             230
@@ -333,6 +354,52 @@ mod tests {
     }
 
     #[test]
+    fn pulse_inactive_while_only_the_tool_is_armed() {
+        let pulse = PlaceFeedbackPulse::default();
+        assert!(!pulse.active);
+        assert!(pulse.tiles.is_empty());
+        assert!(!place_feedback_pulse_paints(&pulse));
+    }
+
+    #[test]
+    fn pulse_does_not_override_armed_ghost_alpha() {
+        let mut app = App::new();
+        app.insert_resource(PlaceFeedbackPulse {
+            active: true,
+            elapsed_secs: 0.0,
+            tiles: vec![(IVec2::new(2, 3), 1.0), (IVec2::new(9, 9), 1.0)],
+        });
+        let mut requests = ConstructionVisualRequests::default();
+        requests.footprint_tiles.push(FootprintTileRequest {
+            tile: IVec2::new(2, 3),
+            color_kind: FootprintTileColorKind::Valid,
+            weight: 1.0,
+            fill_override: None,
+        });
+        app.insert_resource(requests);
+        app.add_systems(Update, sync_place_feedback_visual_requests);
+        app.update();
+        let reqs = app.world().resource::<ConstructionVisualRequests>();
+        let ghost = reqs
+            .footprint_tiles
+            .iter()
+            .find(|t| t.tile == IVec2::new(2, 3))
+            .expect("armed ghost tile");
+        assert!(ghost.fill_override.is_none());
+        assert_eq!(
+            reqs.footprint_tiles
+                .iter()
+                .filter(|t| t.tile == IVec2::new(2, 3))
+                .count(),
+            1
+        );
+        assert!(reqs
+            .footprint_tiles
+            .iter()
+            .any(|t| t.tile == IVec2::new(9, 9) && t.fill_override.is_some()));
+    }
+
+    #[test]
     fn sync_appends_fill_override_tiles() {
         let mut app = App::new();
         app.insert_resource(PlaceFeedbackPulse {
@@ -345,7 +412,10 @@ mod tests {
         app.update();
         let reqs = app.world().resource::<ConstructionVisualRequests>();
         assert_eq!(reqs.footprint_tiles.len(), 2);
-        assert!(reqs.footprint_tiles.iter().all(|t| t.fill_override.is_some()));
+        assert!(reqs
+            .footprint_tiles
+            .iter()
+            .all(|t| t.fill_override.is_some()));
     }
 
     #[test]

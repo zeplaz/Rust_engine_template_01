@@ -3,9 +3,9 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts};
 
-use crate::engine::states::BaseState;
 use crate::construction::map_egui_projection::{tile_screen_extent, world_to_sim_map_egui};
 use crate::construction::tile_visual::ConstructionTileVisualSettings;
+use crate::engine::states::BaseState;
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
 
@@ -33,7 +33,10 @@ pub fn build_footprint_validity_overlay_egui(
     if !matches!(base.get(), BaseState::Simulation) {
         return Ok(());
     }
-    if strip.active == ToolContext::None || ghost.origin.is_none() || !map_vp.is_adequate_for_camera() {
+    if strip.active == ToolContext::None
+        || ghost.origin.is_none()
+        || !map_vp.is_adequate_for_camera()
+    {
         return Ok(());
     }
     // No footprint paint until a catalog / submenu pick arms building_intent.
@@ -100,10 +103,7 @@ pub fn build_footprint_validity_overlay_egui(
                     map_attached_chip_frame(&palette, color).show(ui, |ui| {
                         ui.label(body_text(&palette, &label));
                         if !preview.report.errors.is_empty() {
-                            ui.label(caption_text(
-                                &palette,
-                                &preview.report.errors.join(", "),
-                            ));
+                            ui.label(caption_text(&palette, &preview.report.errors.join(", ")));
                         }
                     });
                 });

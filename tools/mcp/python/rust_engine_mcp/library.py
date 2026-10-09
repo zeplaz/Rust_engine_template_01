@@ -281,8 +281,9 @@ def _style_tags_from_spec(spec: dict[str, Any]) -> list[str]:
         parts = [p for p in re.split(r"[_\-]+", mat) if p and p not in ("01", "02")]
         tags.extend(parts[:3])
     asset_id = str(spec.get("asset_id") or "")
+    asset_tokens = {p for p in re.split(r"[^a-z0-9]+", asset_id.lower()) if p}
     for token in ("brick", "concrete", "wood", "steel", "glass", "industrial", "rural", "modern"):
-        if token in asset_id and token not in tags:
+        if token in asset_tokens and token not in tags:
             tags.append(token)
     style_pack = str(spec.get("style_pack") or "")
     if style_pack.startswith("style_"):
@@ -297,11 +298,13 @@ def entry_from_promoted(job_dir: Path) -> dict[str, Any] | None:
     if not glb.is_file():
         return None
 
-    sidecars = list(job_dir.glob("*.module.json"))
+    sidecars = sorted(job_dir.glob("*.module.json"), key=lambda p: p.name.lower())
     if not sidecars:
         return None
-    spec = json.loads(sidecars[0].read_text(encoding="utf-8"))
     job_id = job_dir.name
+    preferred = f"{job_id.lower()}.module.json"
+    spec_path = next((p for p in sidecars if p.name.lower() == preferred), sidecars[0])
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
     module = spec.get("module") or {}
     grid = module.get("grid_units") or [1, 1]
     if len(grid) < 2:

@@ -38,6 +38,7 @@ mod viewport_authority;
 mod viewport_suggestion;
 mod wave_p_readiness;
 mod wave_p_witness;
+pub(crate) mod world_gen_bevy_shell;
 mod window;
 
 pub use chrome::{
@@ -74,7 +75,10 @@ pub use ecology_preview::{
 };
 pub use gpu_preview::{WorldPreviewGpuCamera, WorldPreviewGpuRuntime};
 pub use layers::PreviewLayers;
-pub use overlays::{tag_overlay_rgba, tag_overlay_rgba_pool, TAG_OVERLAY_HIGHLIGHT};
+pub use overlays::{
+    blend_overlay, landform_relief_rgba, slope_grade_to_color, tag_overlay_rgba,
+    tag_overlay_rgba_pool, TAG_OVERLAY_HIGHLIGHT,
+};
 pub use plugin::WorldPreviewPlugin;
 pub use preview_lifecycle::{
     advance_world_preview_lifecycle_system, note_world_preview_present_committed,
@@ -111,6 +115,7 @@ pub use texture_cache::{
 pub use tile_sampling::{
     cell_tags_for_world_tile, chunk_cell_key_for_world_tile, chunk_cell_layer_at_world_tile,
     slope_grade_for_world_tile, slope_grade_from_world_elevation_neighbors,
+    profile_curvature_from_world_elevation_neighbors,
 };
 pub use tilemap_bridge::tilemap_overlay_index_for_layers;
 pub use ui_wp_coder_a_witness::refresh_coder_a_ui_wp_wave_p_witness;
@@ -123,7 +128,6 @@ pub use wave_p_witness::{
     build_ui_phase4_wp_tail_witness, build_wave_p_witness_payload, WavePLiveProofState,
     WAVE_P_LIVE_JSON,
 };
-pub(crate) use window::display_world_preview;
 
 #[cfg(test)]
 mod tests {

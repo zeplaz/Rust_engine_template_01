@@ -44,18 +44,11 @@ impl BuildingArchetypeId {
     pub const fn footprint(self) -> crate::strategic::FootprintTiles {
         use crate::strategic::FootprintTiles;
         match self {
-            Self::Housing => FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
-            Self::Factory | Self::Depot | Self::PowerPlant | Self::WaterPlant => FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
-            Self::Office | Self::Retail => FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            Self::Housing => FootprintTiles { width: 2, depth: 2 },
+            Self::Factory | Self::Depot | Self::PowerPlant | Self::WaterPlant => {
+                FootprintTiles { width: 2, depth: 2 }
+            }
+            Self::Office | Self::Retail => FootprintTiles { width: 1, depth: 1 },
         }
     }
 }
@@ -102,27 +95,12 @@ impl DefenseKind {
     pub const fn footprint(self) -> crate::strategic::FootprintTiles {
         use crate::strategic::FootprintTiles;
         match self {
-            Self::DefensiveWall => FootprintTiles {
-                width: 4,
-                depth: 1,
-            },
-            Self::TrenchLine => FootprintTiles {
-                width: 6,
-                depth: 1,
-            },
-            Self::Bunker => FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
+            Self::DefensiveWall => FootprintTiles { width: 4, depth: 1 },
+            Self::TrenchLine => FootprintTiles { width: 6, depth: 1 },
+            Self::Bunker => FootprintTiles { width: 2, depth: 2 },
             // Designer charter: strip 3×1 / field 3×3.
-            Self::DragonTeeth => FootprintTiles {
-                width: 3,
-                depth: 1,
-            },
-            Self::Minefield => FootprintTiles {
-                width: 3,
-                depth: 3,
-            },
+            Self::DragonTeeth => FootprintTiles { width: 3, depth: 1 },
+            Self::Minefield => FootprintTiles { width: 3, depth: 3 },
         }
     }
 
@@ -262,7 +240,8 @@ pub fn apply_build_rail_tool_selection(
     tool.clear_building_intent();
     tool.tool = BuildTool::from_tool_context(ctx);
     match ctx {
-        ToolContext::Roads | ToolContext::Rail | ToolContext::Military | ToolContext::Utilities => {}
+        ToolContext::Roads | ToolContext::Rail | ToolContext::Military | ToolContext::Utilities => {
+        }
         ToolContext::Civil | ToolContext::Industry | ToolContext::Ecology | ToolContext::None => {}
     }
 }
@@ -299,7 +278,10 @@ pub fn apply_active_build_tool_to_strip(
 /// Shift+LMB is only meaningful for zone paint and road path finalize — not building queue overlap.
 #[must_use]
 pub fn shift_lmb_applies_to_active_tool(tool: BuildTool) -> bool {
-    matches!(tool, BuildTool::Zone(_) | BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::PowerLine(_))
+    matches!(
+        tool,
+        BuildTool::Zone(_) | BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::PowerLine(_)
+    )
 }
 
 /// **PARAM-002** — buildings use Enter commit + scale drag; Shift+LMB queue removed.
@@ -335,7 +317,9 @@ mod tests {
         assert!(shift_lmb_applies_to_active_tool(BuildTool::Zone(
             ZoneTool::ResidentialLow
         )));
-        assert!(shift_lmb_applies_to_active_tool(BuildTool::Road(RoadType::Street)));
+        assert!(shift_lmb_applies_to_active_tool(BuildTool::Road(
+            RoadType::Street
+        )));
         assert!(!shift_lmb_queues_building_blueprint(BuildTool::Building(
             BuildingArchetypeId::Factory
         )));
@@ -352,8 +336,7 @@ mod tests {
             BuildTool::from_tool_context(ToolContext::Military),
             BuildTool::None
         );
-        assert!(!BuildTool::from_tool_context(ToolContext::Military)
-            .uses_two_click_place());
+        assert!(!BuildTool::from_tool_context(ToolContext::Military).uses_two_click_place());
         let wall = DefenseKind::DefensiveWall;
         assert_eq!(wall.site_archetype(), SiteArchetype::DefensiveWall);
         assert_eq!(wall.player_label(), "Defensive wall");
@@ -362,9 +345,6 @@ mod tests {
             BuildTool::Defense(DefenseKind::TrenchLine).to_tool_context(),
             ToolContext::Military
         );
-        assert_eq!(
-            BuildTool::Demolish.to_tool_context(),
-            ToolContext::Military
-        );
+        assert_eq!(BuildTool::Demolish.to_tool_context(), ToolContext::Military);
     }
 }

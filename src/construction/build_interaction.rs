@@ -10,37 +10,26 @@ use bevy::input::mouse::AccumulatedMouseScroll;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
-use crate::construction::map_egui_projection::ConstructionMapProjection;
-use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
-use crate::gui::{InputBindings, MapCameraDesiredRes, SimulationMapViewport};
-use crate::render::view_runtime::ViewProjectionAuthority;
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use bevy_egui::EguiContexts;
 use super::parametric_commit::parametric_placement_snapshot;
 use super::placement_scaling::clamp_scale_factor;
 use super::queue_commit_construction_site;
-use crate::strategic::{
-    evaluate_site_placement_at_world_tile, BuildSiteTile, LayerType,
-    StrategicRasterConfig,
+use crate::construction::map_egui_projection::ConstructionMapProjection;
+use crate::gui::hud::simulation_pointer_gate::{
+    simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
 };
+use crate::gui::{InputBindings, MapCameraDesiredRes, SimulationMapViewport};
+use crate::render::view_runtime::ViewProjectionAuthority;
+use crate::strategic::{
+    evaluate_site_placement_at_world_tile, BuildSiteTile, LayerType, StrategicRasterConfig,
+};
+use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::build_tool_authority::{ActiveBuildTool, BuildTool, DefenseKind};
-use super::building_definitions::BuildingDefinitionRegistry;
-use super::history::{record_demolish_execution, record_zone_spawns, ConstructionHistory};
-use super::sessions::ActiveToolSession;
-use crate::strategic::FootprintTiles;
-use super::build_strip::{BuildStripState, ToolContext};
 use super::build_state::{
     BuildCommandActor, BuildGhostRoot, BuildGhostState, BuildPlacementMode, BuildPlacementPreview,
 };
-use super::demolish::execute_demolish_at_tile;
-use super::pending_construction::{
-    PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind,
-};
-use super::terrain_conform::conform_world_y;
-use super::zones::spawn_zone_at_tile;
-use super::place_feedback::{PlaceFeedbackPulse, TwoClickCommitParams};
-use super::GhostBuildCursor;
+use super::build_strip::{BuildStripState, ToolContext};
+use super::build_tool_authority::{ActiveBuildTool, BuildTool, DefenseKind};
+use super::building_definitions::BuildingDefinitionRegistry;
 use super::defense_concrete_stock::{
     apply_defensive_wall_concrete_gate, consume_concrete_on_wall_commit, total_available_concrete,
     INSUFFICIENT_CONCRETE_ERROR,
@@ -49,8 +38,31 @@ use super::defense_staging_stock::{
     apply_deployable_staging_gate, enqueue_deployable_staging_debit_on_commit,
     INSUFFICIENT_STAGED_ERROR, STOCK_IN_TRANSIT_ERROR,
 };
+use super::demolish::execute_demolish_at_tile;
+use super::history::{record_demolish_execution, record_zone_spawns, ConstructionHistory};
+use super::pending_construction::{
+    PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind,
+};
+use super::place_feedback::{PlaceFeedbackPulse, TwoClickCommitParams};
+use super::sessions::ActiveToolSession;
+use super::terrain_conform::conform_world_y;
+use super::zones::spawn_zone_at_tile;
+use super::GhostBuildCursor;
 use crate::economy::logistics::{InTransitLedger, PendingSiteStagingDebits, SiteStagingStock};
 use crate::economy::resource_flow::ResourceFlowNode;
+use crate::strategic::FootprintTiles;
+
+fn cell_is_water(
+    catalog: &crate::render::fx_spine::water_surface_visual::WaterSurfaceVisualCatalog,
+    x: i32,
+    z: i32,
+) -> bool {
+    if x < 0 || z < 0 {
+        return false;
+    }
+    catalog.tile_kind(x as u32, z as u32)
+        != crate::render::fx_spine::water_surface_visual::WaterSurfaceKind::None
+}
 
 /// Honest witness counters (lib + live) — TRIAGE-BUILD-CLICK-PLACE-001.
 static TWO_CLICK_MODE_LOCKS: AtomicU32 = AtomicU32::new(0);
@@ -82,10 +94,7 @@ pub fn construction_map_pick_allowed(
 
 /// When true, tactical map wheel zoom must yield (Ctrl rotate / Shift scale in Adjust).
 #[must_use]
-pub fn build_adjust_blocks_map_wheel(
-    ghost: &BuildGhostState,
-    keys: &ButtonInput<KeyCode>,
-) -> bool {
+pub fn build_adjust_blocks_map_wheel(ghost: &BuildGhostState, keys: &ButtonInput<KeyCode>) -> bool {
     if ghost.placement_mode != BuildPlacementMode::Adjust {
         return false;
     }
@@ -149,7 +158,6 @@ pub fn build_pick_ghost_tile_system(
     tool: Res<ActiveBuildTool>,
     pointer_gate: Option<Res<SimulationMapPointerGate>>,
     mut ghost: ResMut<BuildGhostState>,
-    mut egui_ctx: EguiContexts,
 ) {
     ghost.locked_this_frame = false;
 
@@ -189,17 +197,19 @@ pub fn build_pick_ghost_tile_system(
     let Ok(window) = win.single() else {
         return;
     };
-    let Ok(ctx) = egui_ctx.ctx_mut() else {
-        return;
-    };
-    let egui_wants = ctx.egui_wants_pointer_input();
-
     let Some(cursor_px) = window.cursor_position() else {
         return;
     };
-
-    let gate = pointer_gate.as_deref();
-    if !construction_map_pick_allowed(gate, egui_wants, map_vp.as_ref(), cursor_px) {
+    // Same predicate as before when the gate exists. `egui_wants` is unused on that path.
+    if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
+        return;
+    }
+    if !construction_map_pick_allowed(
+        pointer_gate.as_deref(),
+        false,
+        map_vp.as_ref(),
+        cursor_px,
+    ) {
         return;
     }
 
@@ -277,6 +287,8 @@ pub fn build_refresh_placement_validation_system(
     staging: Option<Res<SiteStagingStock>>,
     pending_staging: Option<Res<PendingSiteStagingDebits>>,
     ledger: Option<Res<InTransitLedger>>,
+    pending: Option<Res<PendingConstructionQueue>>,
+    water: Option<Res<crate::render::fx_spine::water_surface_visual::WaterSurfaceVisualCatalog>>,
     mut preview: ResMut<BuildPlacementPreview>,
 ) {
     if let Some(intent) = tool.building_intent.as_ref() {
@@ -303,29 +315,63 @@ pub fn build_refresh_placement_validation_system(
         return;
     };
 
-    preview.report = evaluate_site_placement_at_world_tile(
-        origin,
-        ghost.footprint,
-        config.as_deref(),
-        &overlay,
+    preview.report =
+        evaluate_site_placement_at_world_tile(origin, ghost.footprint, config.as_deref(), &overlay);
+
+    let _stamped = super::preview_commit_guard::stamp_empty_footprint(
+        &mut preview.report,
+        ghost.footprint.width,
+        ghost.footprint.depth,
     );
 
-    if let (Some(book), Some(snapshot)) = (
-        occupation.as_deref(),
-        placement_snapshot_for_building(&tool, &registry, &ghost, origin),
-    ) {
-        if book.would_overlap(&snapshot.weights) {
-            preview.report.valid = false;
-            preview.report.allows_commit = false;
-            if !preview
-                .report
-                .errors
-                .iter()
-                .any(|e| e == "weighted_overlap")
-            {
-                preview.report.errors.push("weighted_overlap".to_string());
+    if let Some(book) = occupation.as_deref() {
+        if let Some(snapshot) = placement_snapshot_for_building(&tool, &registry, &ghost, origin) {
+            if book.would_overlap(&snapshot.weights) {
+                preview.report.valid = false;
+                preview.report.allows_commit = false;
+                if !preview
+                    .report
+                    .errors
+                    .iter()
+                    .any(|e| e == "weighted_overlap")
+                {
+                    preview.report.errors.push("weighted_overlap".to_string());
+                }
             }
+        } else if pending.is_some() {
+            let tiles = super::preview_commit_guard::oriented_rect_tiles(
+                origin.x as i32,
+                origin.z as i32,
+                ghost.footprint.width,
+                ghost.footprint.depth,
+                ghost.rotation_quarter_turns,
+            );
+            super::preview_commit_guard::apply_rect_occupancy_reject(
+                &mut preview.report,
+                book,
+                &tiles,
+            );
         }
+    }
+
+    if let Some(catalog) = water.as_deref() {
+        let tiles = super::preview_commit_guard::oriented_rect_tiles(
+            origin.x as i32,
+            origin.z as i32,
+            ghost.footprint.width,
+            ghost.footprint.depth,
+            ghost.rotation_quarter_turns,
+        );
+        let catalog_id = tool
+            .building_intent
+            .as_ref()
+            .and_then(|intent| intent.catalog_id.as_deref());
+        super::preview_commit_guard::apply_water_footprint_reject(
+            &mut preview.report,
+            catalog_id,
+            &tiles,
+            |x, z| cell_is_water(catalog, x, z),
+        );
     }
 
     // COD-WALL-CONCRETE-GATE-001 / COD-TRENCH-MATERIAL-GATE-001 — in-situ wall/trench/bunker.
@@ -334,9 +380,11 @@ pub fn build_refresh_placement_validation_system(
     apply_defensive_wall_concrete_gate(tool.tool, ghost.footprint, available, &mut preview.report);
 
     // COD-DEPLOYABLE-PLACE-001 — DragonTeeth / Minefield gated on SiteStagingStock.
-    if let (Some(staging), Some(pending), Some(ledger)) =
-        (staging.as_deref(), pending_staging.as_deref(), ledger.as_deref())
-    {
+    if let (Some(staging), Some(pending), Some(ledger)) = (
+        staging.as_deref(),
+        pending_staging.as_deref(),
+        ledger.as_deref(),
+    ) {
         apply_deployable_staging_gate(
             tool.tool,
             ghost.footprint,
@@ -567,6 +615,14 @@ fn try_commit_active_building_ghost(
                 super::defense_staging_stock::note_blocked_no_stock();
             }
         }
+    }
+    let occupied = super::preview_commit_guard::report_is_footprint_occupied(&preview.report);
+    if !super::preview_commit_guard::may_queue_commit(
+        ghost.footprint.width,
+        ghost.footprint.depth,
+        preview.report.allows_commit,
+        occupied,
+    ) {
         return false;
     }
 
@@ -618,12 +674,21 @@ fn try_commit_active_building_ghost(
             .map(|(dx, dz)| (IVec2::new(ox + dx as i32, oz + dz as i32), 1.0))
             .collect()
     };
+    let mut footprint = ghost.footprint;
+    if let Some((w, d)) = super::preview_commit_guard::oriented_footprint(
+        footprint.width,
+        footprint.depth,
+        ghost.rotation_quarter_turns,
+    ) {
+        footprint.width = w;
+        footprint.depth = d;
+    }
     queue_commit_construction_site(
         events,
         actor,
         resolve_site_archetype(tool, registry, strip),
         origin,
-        ghost.footprint,
+        footprint,
         LayerType::Surface,
         catalog_id,
         placement,
@@ -650,7 +715,6 @@ pub fn build_place_on_second_lmb_system(
     mut concrete_nodes: Query<&mut ResourceFlowNode>,
     staging_stock: Option<Res<SiteStagingStock>>,
     mut pending_staging: Option<ResMut<PendingSiteStagingDebits>>,
-    mut egui_ctx: EguiContexts,
 ) {
     if commit.strip.active == ToolContext::None {
         return;
@@ -665,16 +729,16 @@ pub fn build_place_on_second_lmb_system(
     let Ok(window) = win.single() else {
         return;
     };
-    let Ok(ctx) = egui_ctx.ctx_mut() else {
-        return;
-    };
     let Some(cursor) = window.cursor_position() else {
         return;
     };
     let cursor_px = Vec2::new(cursor.x, cursor.y);
+    if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
+        return;
+    }
     if !construction_map_pick_allowed(
         pointer_gate.as_deref(),
-        ctx.egui_wants_pointer_input(),
+        false,
         map_vp.as_ref(),
         cursor_px,
     ) {
@@ -754,8 +818,7 @@ pub fn build_confirm_site_system(
     // queued for explicit Build/tray approve — do not batch-drain on Enter.
     let building_tool = commit.tool.tool.uses_two_click_place();
     if !building_tool {
-        let batch_approve = keys.pressed(KeyCode::ShiftLeft)
-            || keys.pressed(KeyCode::ShiftRight);
+        let batch_approve = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
         if batch_approve {
             pending.approve_all();
         }
@@ -848,9 +911,7 @@ pub fn build_cancel_ghost_system(
         return;
     }
     // Design: RMB cancels lock → Preview while building/defense tool stays armed.
-    if tool.tool.uses_two_click_place()
-        && ghost.placement_mode == BuildPlacementMode::Adjust
-    {
+    if tool.tool.uses_two_click_place() && ghost.placement_mode == BuildPlacementMode::Adjust {
         ghost.unlock_to_preview();
         return;
     }
@@ -940,11 +1001,11 @@ pub fn mil_defense_place_fsm_witness_green() -> bool {
 
 #[must_use]
 pub fn refresh_cod_mil_defense_place_witness() -> bool {
+    use super::build_strip::ToolContext;
+    use super::build_tool_authority::{BuildTool, DefenseKind};
     use crate::gui::hud::sim_build_picker_sheet::{
         tool_context_to_picker_category, BuildPickerCategory, SimBuildPickerState,
     };
-    use super::build_tool_authority::{DefenseKind, BuildTool};
-    use super::build_strip::ToolContext;
 
     let fsm_ok = mil_defense_place_fsm_witness_green();
     let two_click = two_click_place_fsm_witness_green();
@@ -1055,10 +1116,10 @@ pub fn refresh_cod_mil_defense_place_witness() -> bool {
 /// **COD-WALL-ARCHETYPE-001** — Defensive wall → [`SiteArchetype::DefensiveWall`] (not MilitaryBase stub).
 #[must_use]
 pub fn refresh_cod_wall_archetype_witness() -> bool {
+    use super::build_tool_authority::{BuildTool, DefenseKind};
     use crate::gui::hud::validation_feedback::{
         defense_place_display_name, site_archetype_operational_name,
     };
-    use super::build_tool_authority::{DefenseKind, BuildTool};
 
     let wall = DefenseKind::DefensiveWall;
     let map_ok = wall.site_archetype() == crate::strategic::SiteArchetype::DefensiveWall;
@@ -1199,10 +1260,8 @@ fn mil_defense_place_self_check() -> Result<(), &'static str> {
 
     // COD-TRENCH-MATERIAL-GATE-001 — trench commit debits concrete; seed stock for FSM proof.
     {
+        use super::defense_concrete_stock::{in_situ_defense_concrete_need, CONCRETE_BUFFER_TAG};
         use crate::entities::types::p_enumz::ResourceType;
-        use super::defense_concrete_stock::{
-            in_situ_defense_concrete_need, CONCRETE_BUFFER_TAG,
-        };
         let need = in_situ_defense_concrete_need(DefenseKind::TrenchLine.footprint());
         app.world_mut().spawn(ResourceFlowNode {
             catalog_id: "test_concrete_mixer".into(),
@@ -1266,7 +1325,7 @@ fn two_click_place_fsm_self_check() -> Result<(), &'static str> {
     use crate::strategic::CommitConstructionSiteEvent;
 
     use super::build_strip::{BuildStripState, ToolContext};
-    use super::build_tool_authority::{BuildingArchetypeId, BuildTool};
+    use super::build_tool_authority::{BuildTool, BuildingArchetypeId};
     use super::pending_construction::PendingConstructionQueue;
     use super::staged_ghost_panel::StagedPlacementMode;
 
@@ -1329,19 +1388,31 @@ fn two_click_place_fsm_self_check() -> Result<(), &'static str> {
         ..Default::default()
     };
     // Gate present → egui_wants ignored; play area allows.
-    if !construction_map_pick_allowed(Some(&gate), true, &SimulationMapViewport::default(), Vec2::ZERO)
-    {
+    if !construction_map_pick_allowed(
+        Some(&gate),
+        true,
+        &SimulationMapViewport::default(),
+        Vec2::ZERO,
+    ) {
         return Err("gate_should_allow_despite_egui_wants");
     }
     gate.egui_blocks = true;
-    if construction_map_pick_allowed(Some(&gate), false, &SimulationMapViewport::default(), Vec2::ZERO)
-    {
+    if construction_map_pick_allowed(
+        Some(&gate),
+        false,
+        &SimulationMapViewport::default(),
+        Vec2::ZERO,
+    ) {
         return Err("egui_blocks_must_deny");
     }
     gate.egui_blocks = false;
     gate.in_play_area = false;
-    if construction_map_pick_allowed(Some(&gate), false, &SimulationMapViewport::default(), Vec2::ZERO)
-    {
+    if construction_map_pick_allowed(
+        Some(&gate),
+        false,
+        &SimulationMapViewport::default(),
+        Vec2::ZERO,
+    ) {
         return Err("out_of_play_must_deny");
     }
 
@@ -1430,7 +1501,7 @@ fn enter_commits_building_enter_self_check() -> Result<(), &'static str> {
     use crate::strategic::CommitConstructionSiteEvent;
 
     use super::build_strip::{BuildStripState, ToolContext};
-    use super::build_tool_authority::{BuildingArchetypeId, BuildTool};
+    use super::build_tool_authority::{BuildTool, BuildingArchetypeId};
     use super::pending_construction::{PendingConstructionQueue, PendingEntryKind};
     use super::staged_ghost_panel::StagedPlacementMode;
 
@@ -1504,7 +1575,10 @@ fn enter_commits_building_enter_self_check() -> Result<(), &'static str> {
                 catalog_id: None,
             });
         }
-        let confirm = app.world().resource::<InputBindings>().confirm_build_placement;
+        let confirm = app
+            .world()
+            .resource::<InputBindings>()
+            .confirm_build_placement;
         app.world_mut()
             .resource_mut::<ButtonInput<KeyCode>>()
             .press(confirm);

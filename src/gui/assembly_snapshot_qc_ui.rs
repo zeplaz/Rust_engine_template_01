@@ -77,7 +77,10 @@ pub struct AssemblySnapshotQcUiPlugin;
 impl Plugin for AssemblySnapshotQcUiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AssemblySnapshotQcUiState>()
-            .add_systems(EguiPrimaryContextPass, draw_assembly_snapshot_qc_ui);
+            .add_systems(
+                EguiPrimaryContextPass,
+                draw_assembly_snapshot_qc_ui.run_if(crate::gui::ui_gates::product_egui_shell_active),
+            );
     }
 }
 

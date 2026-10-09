@@ -116,11 +116,22 @@ def _parse_pointer(path: str) -> list[str]:
     return [p.replace("~1", "/").replace("~0", "~") for p in parts]
 
 
+def _walk_list_index(part: str, length: int) -> int:
+    """Existing list index. Negative and non-digit tokens are out of range."""
+    token = str(part)
+    if not token.isdigit():
+        raise ValueError(f"patch index {token} outside 0..{max(length - 1, 0)}")
+    idx = int(token)
+    if idx >= length:
+        raise ValueError(f"patch index {idx} outside 0..{max(length - 1, 0)}")
+    return idx
+
+
 def _patch_get(doc: Any, path: str) -> Any:
     cur = doc
     for part in _parse_pointer(path):
         if isinstance(cur, list):
-            cur = cur[int(part)]
+            cur = cur[_walk_list_index(part, len(cur))]
         else:
             cur = cur[part]
     return cur
@@ -133,7 +144,7 @@ def _patch_set_parent(doc: Any, path: str, *, create: bool = False) -> tuple[Any
     cur = doc
     for part in parts[:-1]:
         if isinstance(cur, list):
-            cur = cur[int(part)]
+            cur = cur[_walk_list_index(part, len(cur))]
         else:
             if create and part not in cur:
                 cur[part] = {}
@@ -152,15 +163,27 @@ def _patch_add(doc: Any, path: str, value: Any) -> None:
         if key == "-":
             parent.append(value)
         else:
-            parent.insert(int(key), value)
+            idx = int(key)
+            if idx < 0 or idx > len(parent):
+                raise ValueError(f"patch add index {idx} outside 0..{len(parent)}")
+            parent.insert(idx, value)
     else:
         parent[key] = value
+
+
+def _existing_list_index(key: str | int, length: int) -> int:
+    if key == "-":
+        raise ValueError("patch index '-' is only valid for add")
+    idx = int(key)
+    if idx < 0 or idx >= length:
+        raise ValueError(f"patch index {idx} outside 0..{max(length - 1, 0)}")
+    return idx
 
 
 def _patch_remove(doc: Any, path: str) -> None:
     parent, key = _patch_set_parent(doc, path)
     if isinstance(parent, list):
-        del parent[int(key)]
+        del parent[_existing_list_index(key, len(parent))]
     else:
         del parent[key]
 
@@ -168,7 +191,7 @@ def _patch_remove(doc: Any, path: str) -> None:
 def _patch_replace(doc: Any, path: str, value: Any) -> None:
     parent, key = _patch_set_parent(doc, path)
     if isinstance(parent, list):
-        parent[int(key)] = value
+        parent[_existing_list_index(key, len(parent))] = value
     else:
         parent[key] = value
 
@@ -218,6 +241,13 @@ def _ensure_assembly_blend(assembly_id: str) -> str:
     return blend_rel
 
 
+def _require_int_seed(raw: object) -> int:
+    """Seed 0 is valid. Booleans and numeric strings are not integers."""
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("seed must be an integer")
+    return raw
+
+
 def variant_bake(
     variant_set_path: str | Path,
     variant_key: str,
@@ -230,7 +260,12 @@ def variant_bake(
     data = load_variant_set(p)
     idx, entry = _find_variant(data, variant_key)
     assembly_id = str(data["assembly_id"])
-    render_seed = int(seed if seed is not None else data.get("seed") or 42)
+    if seed is not None:
+        render_seed = _require_int_seed(seed)
+    elif "seed" in data:
+        render_seed = _require_int_seed(data.get("seed"))
+    else:
+        render_seed = 42
 
     assembly_blend = _ensure_assembly_blend(assembly_id)
     tile_variant = layers_to_tile_variant(entry)
@@ -392,7 +427,7 @@ def expand_variant_set_to_tile_batch(
         "render": {
             "method": "blender_orthographic_iso",
             "isometric": True,
-            "seed": int(data.get("seed") or 42),
+            "seed": _require_int_seed(data["seed"]) if "seed" in data else 42,
             "tile_size_px": 128,
             "camera_elevation_deg": 35.264,
         },
@@ -418,8 +453,13 @@ def _ron_to_dict(text: str) -> dict[str, Any]:
     stripped = text.strip()
     if stripped.startswith("{"):
         return json.loads(stripped)
-    # Quote bare keys: word: → "word":
-    converted = re.sub(r"(\w+):", r'"\1":', stripped)
+    # Quote bare keys only. A colon inside a quoted value must stay a colon.
+    converted = re.sub(
+        r'(^|[{,\s])(\w+)\s*:',
+        r'\1"\2":',
+        stripped,
+        flags=re.MULTILINE,
+    )
     converted = converted.replace("(", "{").replace(")", "}")
     converted = re.sub(r",\s*}", "}", converted)
     converted = re.sub(r",\s*]", "]", converted)
@@ -440,7 +480,7 @@ def _dict_to_ron(data: dict[str, Any]) -> str:
     if data.get("style_pack_id"):
         lines.append(f'    style_pack_id: "{data.get("style_pack_id")}",')
     if data.get("seed") is not None:
-        lines.append(f"    seed: {int(data['seed'])},")
+        lines.append(f"    seed: {_require_int_seed(data['seed'])},")
     lines.append("    variants: [")
     for entry in data.get("variants") or []:
         lines.append("        (")

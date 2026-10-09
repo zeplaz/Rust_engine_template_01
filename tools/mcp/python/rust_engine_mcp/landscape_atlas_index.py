@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import json
-import re
 from pathlib import Path
 from typing import Any
 
 from rust_engine_mcp.paths import repo_root
 from rust_engine_mcp.schemas import load_json_file
 from rust_engine_mcp.tile_index import (
+    _parse_index_ron,
     _rel_repo_path,
-    _ron_str,
     entry_from_meta,
     format_tile_atlas_index_ron,
 )
@@ -26,33 +25,6 @@ def landscape_atlas_index_ron_path() -> Path:
 
 def landscape_atlas_index_json_path() -> Path:
     return repo_root() / LANDSCAPE_ATLAS_INDEX_JSON
-
-
-def _parse_index_ron(text: str) -> list[dict[str, Any]]:
-    entries: list[dict[str, Any]] = []
-    for m in re.finditer(
-        r"atlas_id:\s*\"([^\"]+)\".*?batch_id:\s*\"([^\"]+)\".*?assembly_id:\s*\"([^\"]*?)\".*?"
-        r"tile_id:\s*\"([^\"]+)\".*?atlas_png:\s*\"([^\"]+)\".*?meta_json:\s*\"([^\"]+)\".*?"
-        r"development_tier:\s*\"([^\"]+)\".*?style_pack_id:\s*\"([^\"]*)\"(?:.*?ship_allowed:\s*(true|false))?",
-        text,
-        re.DOTALL,
-    ):
-        ship_raw = m.group(9)
-        ship_allowed = ship_raw != "false" if ship_raw else str(m.group(7)) == "production"
-        entries.append(
-            {
-                "atlas_id": m.group(1),
-                "batch_id": m.group(2),
-                "assembly_id": m.group(3),
-                "tile_id": m.group(4),
-                "atlas_png": m.group(5),
-                "meta_json": m.group(6),
-                "development_tier": m.group(7),
-                "style_pack_id": m.group(8),
-                "ship_allowed": ship_allowed,
-            }
-        )
-    return entries
 
 
 def load_landscape_atlas_index() -> list[dict[str, Any]]:

@@ -3,9 +3,7 @@
 use bevy::prelude::*;
 use bevy_egui::egui;
 
-use crate::strategic::{
-    ConstructionPhase, CorridorConstructionBook,
-};
+use crate::strategic::{ConstructionPhase, CorridorConstructionBook};
 use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId};
 
 use super::build_strip::{BuildStripState, ToolContext};
@@ -95,22 +93,23 @@ pub fn draw_corridor_phase_paths(
     zoom: f32,
 ) {
     for path in paths {
-        let screen: Vec<egui::Pos2> = path
-            .points
-            .iter()
-            .filter_map(|p| project(*p))
-            .collect();
+        let screen: Vec<egui::Pos2> = path.points.iter().filter_map(|p| project(*p)).collect();
         if screen.len() < 2 {
             continue;
         }
         match path.kind {
             CorridorPhaseDrawKind::Planned => {
-                let stroke = egui::Stroke::new((3.0 * zoom.sqrt()).clamp(1.5, 6.0), corridor_planned_color());
+                let stroke = egui::Stroke::new(
+                    (3.0 * zoom.sqrt()).clamp(1.5, 6.0),
+                    corridor_planned_color(),
+                );
                 stroke_polyline_dashed(painter, &screen, stroke, 8.0, 4.0);
             }
             CorridorPhaseDrawKind::InProgress => {
-                let stroke =
-                    egui::Stroke::new((4.0 * zoom.sqrt()).clamp(2.0, 8.0), corridor_in_progress_color());
+                let stroke = egui::Stroke::new(
+                    (4.0 * zoom.sqrt()).clamp(2.0, 8.0),
+                    corridor_in_progress_color(),
+                );
                 let clipped = clip_polyline_by_progress(&screen, path.progress);
                 if clipped.len() >= 2 {
                     for w in clipped.windows(2) {
@@ -202,7 +201,10 @@ pub fn draw_r4_corridor_tray_legend(
     book: &CorridorConstructionBook,
 ) {
     let road_active = matches!(tool.tool, BuildTool::Road(_));
-    let any_incomplete = book.rows.values().any(|r| r.phase != ConstructionPhase::Completed);
+    let any_incomplete = book
+        .rows
+        .values()
+        .any(|r| r.phase != ConstructionPhase::Completed);
     if !road_active && !any_incomplete {
         return;
     }
@@ -353,9 +355,13 @@ mod tests {
             TransportEdgeId(1),
             CorridorConstructionRow::planned(TransportEdgeId(1)),
         );
-        let block = construction_r4_corridor_001_witness(&gate, CorridorBookCounts::from_book(&book));
+        let block =
+            construction_r4_corridor_001_witness(&gate, CorridorBookCounts::from_book(&book));
         assert_eq!(block["gate"], "R4-CORRIDOR-001");
-        assert_eq!(block["corridor_phase_visual_wired"], serde_json::json!(true));
+        assert_eq!(
+            block["corridor_phase_visual_wired"],
+            serde_json::json!(true)
+        );
         assert_eq!(block["green"], serde_json::json!(true));
     }
 

@@ -10,6 +10,7 @@ use crate::gui::style::UiPalette;
 const D07_CORNER_MARGIN_PX: f32 = 10.0;
 
 /// Paint overview minimap as a corner inset on the map viewport (D-07). Returns inset side (px).
+#[allow(dead_code)] // Corner inset is a Bevy ImageNode on the WorldGen preview panel.
 pub fn paint_world_preview_minimap_corner_inset(
     ui: &mut egui::Ui,
     map_viewport_rect: egui::Rect,

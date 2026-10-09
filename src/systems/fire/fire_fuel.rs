@@ -44,20 +44,20 @@ pub fn derive_fire_fuel_from_vegetation(
         (veg.ground_fuel * (0.55 + og * 0.3) + veg.understory_density * 0.22).clamp(0.0, 1.0);
     let ladder_fuel =
         (veg.understory_density * veg.canopy_density * (0.85 + og * 0.45)).clamp(0.0, 1.0);
-    let canopy_fuel = (veg.canopy_density
-        * veg.fuel_load
-        * (0.35 + og * 0.55 + veg.dryness * 0.25))
-        .clamp(0.0, 1.0);
+    let canopy_fuel =
+        (veg.canopy_density * veg.fuel_load * (0.35 + og * 0.55 + veg.dryness * 0.25))
+            .clamp(0.0, 1.0);
 
     let moisture_retention =
         (soil * 0.55 + (1.0 - veg.dryness) * 0.45 + wx.rain_intensity * 0.35).clamp(0.0, 1.0);
-    let ignition_resistance = ((moisture_retention * 0.55 + eco.root_strength * 0.25
-        + (1.0 - eco.fire_risk) * 0.25)
-        * (1.0 + wx.snow_depth * 0.25))
-    .clamp(0.0, 1.0);
+    let ignition_resistance =
+        ((moisture_retention * 0.55 + eco.root_strength * 0.25 + (1.0 - eco.fire_risk) * 0.25)
+            * (1.0 + wx.snow_depth * 0.25))
+            .clamp(0.0, 1.0);
 
-    let ember_spread_factor = (veg.dryness * 0.45 + wx.wind_speed * 0.4 + ladder_fuel * 0.35 + eco.fire_risk * 0.2)
-        .clamp(0.0, 1.0);
+    let ember_spread_factor =
+        (veg.dryness * 0.45 + wx.wind_speed * 0.4 + ladder_fuel * 0.35 + eco.fire_risk * 0.2)
+            .clamp(0.0, 1.0);
 
     FireFuelField {
         surface_fuel,
@@ -78,7 +78,14 @@ pub(crate) fn spawn_fire_fuel_field_on_new_chunk(
     }
 }
 
-pub(crate) fn fire_fuel_field_tick(mut q: Query<(&VegetationField, &ChunkWeather, &ChunkEcology, &mut FireFuelField)>) {
+pub(crate) fn fire_fuel_field_tick(
+    mut q: Query<(
+        &VegetationField,
+        &ChunkWeather,
+        &ChunkEcology,
+        &mut FireFuelField,
+    )>,
+) {
     for (veg, wx, eco, mut fuel) in &mut q {
         *fuel = derive_fire_fuel_from_vegetation(veg, wx, eco);
     }

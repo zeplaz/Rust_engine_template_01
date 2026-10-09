@@ -26,7 +26,7 @@ use bevy::render::{
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
-use crate::gui::{MainWorldCamera, RepresentationResult, TileDebugRenderHost};
+use crate::gui::{RepresentationResult, TileDebugRenderHost};
 use crate::render::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
 };
@@ -91,14 +91,6 @@ pub fn register_fire_particle_raster_draw(app: &mut App) {
             FireParticleDrawGlobals,
         >::default())
         .add_systems(
-            Update,
-            sync_fire_particle_draw_globals
-                .after(crate::render::sync_particle_draw_dispatch_from_policy)
-                .after(crate::render::extraction::FireVisualFrameSet::EmitParticles)
-                .after(crate::render::ExtractedCameraMetricsSet::Sync)
-                .run_if(crate::gui::in_simulation_or_editor_map),
-        )
-        .add_systems(
             PostUpdate,
             sync_fire_particle_draw_globals
                 .after(crate::render::ExtractedCameraMetricsSet::Sync)
@@ -123,12 +115,17 @@ pub fn register_fire_particle_raster_draw(app: &mut App) {
         );
 }
 
-/// Live RTT Camera2d clip matrix — same authority as tile_debug / terrain_instanced overlays.
+/// Clip matrix for the fire raster. Sole owner: [`ExtractedCameraMetrics::view_proj`]
+/// (written by `sync_extracted_camera_metrics`). Identity means the tactical camera
+/// is not ready — publish no draw instead of clumping sparks through a second matrix.
 #[inline]
-fn main_world_camera_view_proj(cam_q: &Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>) -> Option<Mat4> {
-    let (camera, gt) = cam_q.single().ok()?;
-    let view_from_world = Mat4::from(gt.affine().inverse());
-    Some(camera.clip_from_view() * view_from_world)
+#[must_use]
+fn fire_particle_view_proj(metrics: &ExtractedCameraMetrics) -> Option<Mat4> {
+    if metrics.view_proj == Mat4::IDENTITY {
+        None
+    } else {
+        Some(metrics.view_proj)
+    }
 }
 
 fn sync_fire_particle_draw_globals(
@@ -136,15 +133,14 @@ fn sync_fire_particle_draw_globals(
     particles: Res<WorldFireParticleFrame>,
     metrics: Res<ExtractedCameraMetrics>,
     zoom_frame: Res<crate::gui::ZoomFrame>,
-    cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
     mut globals: ResMut<FireParticleDrawGlobals>,
     mut diag: ResMut<FireDrawDiagnostics>,
 ) {
-    *globals = FireParticleDrawGlobals::default();
     globals.time_secs = particles.anim_time_secs;
     let allow_draw =
         policy.particle_policy.instanced_draw || !particles.instances.is_empty();
     if !allow_draw {
+        globals.vertex_count = 0;
         diag.policy_skip = diag.policy_skip.saturating_add(1);
         return;
     }
@@ -153,14 +149,15 @@ fn sync_fire_particle_draw_globals(
         .particle_rows_cap
         .min(particles.instances.len());
     if cap == 0 {
+        globals.vertex_count = 0;
         diag.cap_zero_skip = diag.cap_zero_skip.saturating_add(1);
         return;
     }
-    let view_proj = main_world_camera_view_proj(&cam_q).unwrap_or(metrics.view_proj);
-    if view_proj == Mat4::IDENTITY {
+    let Some(view_proj) = fire_particle_view_proj(&metrics) else {
+        globals.vertex_count = 0;
         diag.identity_skip = diag.identity_skip.saturating_add(1);
         return;
-    }
+    };
     globals.view_proj = view_proj;
     globals.vertex_count = (cap as u32).saturating_mul(6);
     globals.time_secs = particles.anim_time_secs;
@@ -446,5 +443,13 @@ mod draw_order_tests {
         let packed = particle_view_globals_from_metrics(&metrics, 1.0, 12);
         assert_eq!(packed.zoom_alpha, 0.85);
         assert_eq!(packed.vertex_count, 12);
+        assert_eq!(fire_particle_view_proj(&metrics), Some(metrics.view_proj));
+    }
+
+    #[test]
+    fn identity_metrics_publish_no_fire_view() {
+        let metrics = ExtractedCameraMetrics::default();
+        assert_eq!(metrics.view_proj, Mat4::IDENTITY);
+        assert!(fire_particle_view_proj(&metrics).is_none());
     }
 }

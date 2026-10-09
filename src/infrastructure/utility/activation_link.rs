@@ -26,7 +26,7 @@ pub fn powered_utility_node_ids(
     let plant_nodes: HashSet<u64> = utility
         .nodes
         .iter()
-        .filter(|n| n.key.to_ascii_lowercase().contains("plant"))
+        .filter(|n| key_is_plant(&n.key))
         .map(|n| n.id)
         .collect();
     let sources: Vec<u64> = if plant_nodes.is_empty() {
@@ -50,6 +50,27 @@ pub fn powered_utility_node_ids(
         }
     }
     powered
+}
+
+fn key_is_plant(key: &str) -> bool {
+    key.to_ascii_lowercase().contains("plant")
+}
+
+/// A plant supplies logistics only when some non-plant node is still on the live feeder.
+#[must_use]
+pub fn plant_reaches_consumer(
+    utility: &UtilityGraph,
+    blocked_link_ids: &HashSet<u64>,
+) -> bool {
+    let has_plant = utility.nodes.iter().any(|node| key_is_plant(&node.key));
+    if !has_plant {
+        return true;
+    }
+    let powered = powered_utility_node_ids(utility, blocked_link_ids);
+    utility
+        .nodes
+        .iter()
+        .any(|node| powered.contains(&node.id) && !key_is_plant(&node.key))
 }
 
 #[must_use]
@@ -142,5 +163,25 @@ mod tests {
         let cut = HashSet::from([10_u64]);
         let after_cut = powered_utility_node_ids(&graph, &cut);
         assert!(after_cut.len() < all_powered.len() || all_powered.len() <= 1);
+    }
+
+    #[test]
+    fn grid_unlabeled_bus_is_not_a_plant_outage() {
+        let mut graph = hydrate_utility_graph_from_snapshot(&fixture_utility_network_snapshot());
+        for node in &mut graph.nodes {
+            node.key = node.key.replace("plant", "bus");
+        }
+        assert!(!powered_utility_node_ids(&graph, &HashSet::new()).is_empty());
+        assert!(plant_reaches_consumer(&graph, &HashSet::new()));
+    }
+
+    #[test]
+    fn grid_open_feeders_stop_at_the_plant() {
+        let graph = hydrate_utility_graph_from_snapshot(&fixture_utility_network_snapshot());
+        assert!(plant_reaches_consumer(&graph, &HashSet::new()));
+        let blocked = HashSet::from([10_u64, 11_u64]);
+        assert!(!plant_reaches_consumer(&graph, &blocked));
+        let powered = powered_utility_node_ids(&graph, &blocked);
+        assert_eq!(powered.len(), 1);
     }
 }

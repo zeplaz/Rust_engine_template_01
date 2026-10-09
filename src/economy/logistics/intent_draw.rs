@@ -334,7 +334,7 @@ pub fn sync_logistics_intent_draw_frame(
 }
 
 fn play_map_session(state: Option<&State<BaseState>>) -> bool {
-    state.is_some_and(|s| matches!(s.get(), BaseState::Simulation | BaseState::Editor))
+    state.is_some_and(|s| matches!(s.get(), BaseState::Editor))
 }
 
 /// Strokes haul polylines and the AI site outline. Off outside the play area or when egui has the pointer.

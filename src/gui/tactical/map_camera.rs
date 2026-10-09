@@ -468,9 +468,10 @@ fn test_scene_zoom(test_scene: Option<Res<ActiveTestScene>>) -> f32 {
         .as_ref()
         .map(|ts| match ts.0 {
             TestScene::Weather => 1.25,
-            TestScene::Fire => 1.95,
-            TestScene::Atmosphere => 1.75,
+            TestScene::Fire | TestScene::Vfx => 1.95,
+            TestScene::Atmosphere | TestScene::SubFx => 1.75,
             TestScene::Visual | TestScene::VfxSandbox => 2.1,
+            TestScene::City => 2.1,
             TestScene::None => 1.0,
         })
         .unwrap_or(1.0)

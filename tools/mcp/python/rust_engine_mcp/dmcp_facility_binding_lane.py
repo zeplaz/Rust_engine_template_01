@@ -7,7 +7,7 @@ import time
 from pathlib import Path
 from typing import Any
 
-from rust_engine_mcp.paths import repo_root
+from rust_engine_mcp.paths import repo_root, resolve_under_root
 from rust_engine_mcp.schemas import load_json_file, validate_building_grammar
 
 WITNESS_REL = "debug_runs/art_pipeline/dmcp_facility_binding_lane_live.json"
@@ -70,10 +70,37 @@ GRAMMAR_BINDING_EXPECTATIONS: dict[str, dict[str, str]] = {
 
 
 def power_tier_for_units(units: int) -> str:
+    """Same bands as ``power_tier_from_units``. Out-of-range consumption is not grid."""
+    from rust_engine_mcp.power_tier_bands import power_tier_from_units
+
+    # Bool and NaN must not enter the integer bands (True compares as 1).
+    power_tier_from_units(units)
     for lo, hi, label in POWER_TIER_BANDS:
         if lo <= units <= hi:
             return label
-    return "grid"
+    return power_tier_from_units(float(units))
+
+
+def _catalog_path(root: Path, catalog_id: str) -> Path | None:
+    """Catalog JSON under assets/configs/buildings. Reject path segments."""
+    name = str(catalog_id or "").strip()
+    if not name or any(sep in name for sep in ("/", "\\", ":")) or name in {".", ".."}:
+        return None
+    try:
+        path = resolve_under_root(root, f"assets/configs/buildings/{name}.json", label="catalog")
+    except ValueError:
+        return None
+    buildings = (root / "assets" / "configs" / "buildings").resolve()
+    if not path.is_relative_to(buildings):
+        return None
+    return path
+
+
+def _read_catalog(root: Path, catalog_id: str) -> tuple[Path | None, dict[str, Any]]:
+    path = _catalog_path(root, catalog_id)
+    if path is None or not path.is_file():
+        return path, {}
+    return path, json.loads(path.read_text(encoding="utf-8"))
 
 
 def _load_chain_step(root: Path, chain_id: str, role: str) -> dict[str, Any] | None:
@@ -89,9 +116,12 @@ def _load_chain_step(root: Path, chain_id: str, role: str) -> dict[str, Any] | N
 
 
 def _check_site_grid(root: Path, rel: str) -> dict[str, Any]:
-    path = root / rel
+    try:
+        path = resolve_under_root(root, rel, label="site plan")
+    except ValueError:
+        return {"green": False, "checks": {"on_disk": False, "path_inside_repo": False}}
     if not path.is_file():
-        return {"green": False, "checks": {"on_disk": False}}
+        return {"green": False, "checks": {"on_disk": False, "path_inside_repo": True}}
     body = json.loads(path.read_text(encoding="utf-8"))
     width = int(body.get("width") or 0)
     depth = int(body.get("depth") or 0)
@@ -99,6 +129,7 @@ def _check_site_grid(root: Path, rel: str) -> dict[str, Any]:
     expected = width * depth
     checks = {
         "on_disk": True,
+        "path_inside_repo": True,
         "schema_version": body.get("schema_version") == "site_zone_grid_v1",
         "cell_count": len(cells) == expected and expected > 0,
         "chain_id": body.get("chain_id") == "concrete_portland",
@@ -118,8 +149,7 @@ def _check_grammar_binding(root: Path, grammar_id: str) -> dict[str, Any]:
     validate_building_grammar(grammar)
     binding = grammar.get("facility_binding") or {}
     catalog_id = str(binding.get("catalog_id") or "")
-    catalog_path = root / f"assets/configs/buildings/{catalog_id}.json"
-    catalog = json.loads(catalog_path.read_text(encoding="utf-8")) if catalog_path.is_file() else {}
+    _, catalog = _read_catalog(root, catalog_id)
     power_units = int(catalog.get("power_consumption") or 0)
     expected_tier = power_tier_for_units(power_units)
     chain_row = _load_chain_step(
@@ -180,14 +210,13 @@ def _check_concrete_pilot(root: Path) -> dict[str, Any]:
             continue
         chain_row = _load_chain_step(root, "concrete_portland", role)
         catalog_id = str(step.get("catalog_id") or "")
-        catalog_path = root / f"assets/configs/buildings/{catalog_id}.json"
-        catalog = json.loads(catalog_path.read_text(encoding="utf-8")) if catalog_path.is_file() else {}
+        catalog_path, catalog = _read_catalog(root, catalog_id)
         ref_power = int(step.get("power_consumption_ref") or 0)
         catalog_power = int(catalog.get("power_consumption") or 0)
         site_rel = str(step.get("site_plan_json") or "")
         site_audit = _check_site_grid(root, site_rel)
         checks = {
-            "catalog_on_disk": catalog_path.is_file(),
+            "catalog_on_disk": catalog_path is not None and catalog_path.is_file(),
             "catalog_id_chain_match": chain_row is not None
             and str(chain_row.get("catalog_id")) == catalog_id,
             "power_ref_match": ref_power == catalog_power,
@@ -243,15 +272,15 @@ def run_facility_binding_lane_audit(*, repo: Path | None = None) -> dict[str, An
                 if row["schema_audit"].get("green") and row["deliverable_exists"]
                 else "fail"
             )
-            row["verdict"] = "PASS"
+            row["verdict"] = "PASS" if row["status"] == "done" else "FAIL"
         elif gate == "DMCP-GRAM-FACTORY-CLUSTER-001":
             row["grammar_audit"] = _check_all_grammar_bindings(root)
             row["status"] = "done" if row["grammar_audit"].get("green") else "fail"
-            row["verdict"] = "PASS"
+            row["verdict"] = "PASS" if row["status"] == "done" else "FAIL"
         elif gate == "DMCP-PILOT-CONCRETE-SITE-001":
             row["pilot_audit"] = _check_concrete_pilot(root)
             row["status"] = "done" if row["pilot_audit"].get("green") else "fail"
-            row["verdict"] = "PASS"
+            row["verdict"] = "PASS" if row["status"] == "done" else "FAIL"
         rows.append(row)
 
     done = sum(1 for r in rows if r["status"] == "done")

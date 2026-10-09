@@ -74,6 +74,38 @@ fn chunk_scalar_mean(values: &[f32]) -> f32 {
     values.iter().sum::<f32>() / values.len() as f32
 }
 
+/// Steepest cardinal step inside the chunk. Flat ground is 0.
+#[must_use]
+fn chunk_max_cardinal_slope(elev: &[f32], w: u32, h: u32) -> f32 {
+    let n = (w as usize).saturating_mul(h as usize);
+    if w == 0 || h == 0 || elev.len() != n {
+        return 0.0;
+    }
+    let mut max_d = 0.0f32;
+    for y in 0..h {
+        for x in 0..w {
+            let here = elev[(y * w + x) as usize];
+            if x + 1 < w {
+                max_d = max_d.max((here - elev[(y * w + x + 1) as usize]).abs());
+            }
+            if y + 1 < h {
+                max_d = max_d.max((here - elev[((y + 1) * w + x) as usize]).abs());
+            }
+        }
+    }
+    max_d
+}
+
+/// Same slope darken the play map uses on a moisture or temperature channel.
+#[must_use]
+fn shade_channel_for_slope(mut color: [u8; 4], channel: usize, slope: f32) -> [u8; 4] {
+    let steep = (slope / 0.2).clamp(0.0, 1.0);
+    color[channel] = ((color[channel] as f32) * (1.0 - steep * 0.45))
+        .round()
+        .clamp(0.0, 255.0) as u8;
+    color
+}
+
 #[must_use]
 pub fn chunk_base_rgba_for_graph(
     graph: &CompositePreviewGraph,
@@ -99,10 +131,14 @@ pub fn chunk_base_rgba_for_graph(
             return height_to_color(chunk_scalar_mean(&matrix.elevation));
         }
         if base.contains(PreviewLayers::MOISTURE) {
-            return moisture_to_color(chunk_scalar_mean(&matrix.moisture));
+            let color = moisture_to_color(chunk_scalar_mean(&matrix.moisture));
+            let slope = chunk_max_cardinal_slope(&matrix.elevation, matrix.size.x, matrix.size.y);
+            return shade_channel_for_slope(color, 2, slope);
         }
         if base.contains(PreviewLayers::TEMPERATURE) {
-            return temperature_to_color(chunk_scalar_mean(&matrix.temperature));
+            let color = temperature_to_color(chunk_scalar_mean(&matrix.temperature));
+            let slope = chunk_max_cardinal_slope(&matrix.elevation, matrix.size.x, matrix.size.y);
+            return shade_channel_for_slope(color, 0, slope);
         }
     }
     materialized_chunk_base_rgba(mat_chunk, reg)
@@ -180,5 +216,48 @@ mod tests {
         let graph = CompositePreviewGraph::from_layers(PreviewLayers::HEIGHT);
         let rgba = chunk_base_rgba_for_graph(&graph, &mat_chunk, &reg, None, Some(&matrix));
         assert_eq!(rgba, height_to_color(0.5));
+    }
+
+    fn empty_reg() -> MaterialRegistry {
+        MaterialRegistry {
+            schema_version: 1,
+            materials: Vec::new(),
+            name_to_id: Default::default(),
+        }
+    }
+
+    fn chunk_3x3(center_z: f32, moisture: f32, temperature: f32) -> (MaterializedChunk, ChunkCellMatrix) {
+        let mat = MaterializedChunk {
+            size: UVec2::new(3, 3),
+            materials: vec![MaterialId(0); 9],
+        };
+        let mut matrix = ChunkCellMatrix::new(UVec2::new(3, 3));
+        matrix.elevation = vec![0.55; 9];
+        matrix.elevation[4] = center_z;
+        matrix.moisture = vec![moisture; 9];
+        matrix.temperature = vec![temperature; 9];
+        (mat, matrix)
+    }
+
+    #[test]
+    fn editor_moisture_graph_steep_is_darker_than_flat() {
+        let reg = empty_reg();
+        let graph = CompositePreviewGraph::from_layers(PreviewLayers::MOISTURE);
+        let (flat_mat, flat) = chunk_3x3(0.55, 0.7, 0.0);
+        let (steep_mat, steep) = chunk_3x3(0.95, 0.7, 0.0);
+        let flat_c = chunk_base_rgba_for_graph(&graph, &flat_mat, &reg, None, Some(&flat));
+        let steep_c = chunk_base_rgba_for_graph(&graph, &steep_mat, &reg, None, Some(&steep));
+        assert!(steep_c[2] < flat_c[2], "steep {:?} flat {:?}", steep_c, flat_c);
+    }
+
+    #[test]
+    fn editor_temperature_graph_steep_is_darker_than_flat() {
+        let reg = empty_reg();
+        let graph = CompositePreviewGraph::from_layers(PreviewLayers::TEMPERATURE);
+        let (flat_mat, flat) = chunk_3x3(0.55, 0.0, 0.8);
+        let (steep_mat, steep) = chunk_3x3(0.95, 0.0, 0.8);
+        let flat_c = chunk_base_rgba_for_graph(&graph, &flat_mat, &reg, None, Some(&flat));
+        let steep_c = chunk_base_rgba_for_graph(&graph, &steep_mat, &reg, None, Some(&steep));
+        assert!(steep_c[0] < flat_c[0], "steep {:?} flat {:?}", steep_c, flat_c);
     }
 }

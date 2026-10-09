@@ -10,6 +10,7 @@ use bevy::window::{CursorOptions, PrimaryWindow};
 use bevy_egui::{egui, EguiContexts};
 
 use crate::engine::states::BaseState;
+use crate::engine::AppState;
 
 use crate::gui::hud::layout_store::HudLayoutStore;
 use crate::gui::hud::panel_state::HudPanelState;
@@ -26,7 +27,7 @@ use crate::gui::{
 use crate::gui::in_game_hud::CENTER_ROW_EDGE_PAD_PX;
 
 /// Per-frame simulation map pointer routing (chrome vs play area).
-#[derive(Resource, Clone, Copy, Debug, Default)]
+#[derive(Resource, Clone, Copy, Debug)]
 pub struct SimulationMapPointerGate {
     pub cursor: Vec2,
     pub window_logical: Vec2,
@@ -40,6 +41,24 @@ pub struct SimulationMapPointerGate {
     pub egui_blocks: bool,
     /// Last frame OS cursor visibility (debug / witness).
     pub os_cursor_visible: bool,
+    /// `Window::cursor_position()` was `Some` this frame. A missing cursor is not `(0, 0)`.
+    pub cursor_known: bool,
+}
+
+impl Default for SimulationMapPointerGate {
+    fn default() -> Self {
+        Self {
+            cursor: Vec2::ZERO,
+            window_logical: Vec2::ZERO,
+            chrome_blocks: false,
+            chrome_blocks_pre_egui: false,
+            in_play_area: false,
+            wheel_play_area: false,
+            egui_blocks: false,
+            os_cursor_visible: false,
+            cursor_known: true,
+        }
+    }
 }
 
 pub fn sync_simulation_map_pointer_gate_system(
@@ -48,13 +67,30 @@ pub fn sync_simulation_map_pointer_gate_system(
     left_stack: Res<CommandLeftStackState>,
     minimap: Res<MinimapShellState>,
     context_tray: Res<ContextTrayState>,
+    base: Option<Res<State<BaseState>>>,
+    strip: Option<Res<BuildStripState>>,
+    tool: Option<Res<ActiveBuildTool>>,
+    picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
+    power_sheet: Option<Res<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>>,
+    road_sheet: Option<Res<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
     let Ok(w) = window.single() else {
-        *gate = SimulationMapPointerGate::default();
+        *gate = SimulationMapPointerGate {
+            cursor_known: false,
+            ..Default::default()
+        };
         return;
     };
-    let cursor = w.cursor_position().unwrap_or(Vec2::ZERO);
+    let Some(cursor) = w.cursor_position() else {
+        gate.cursor_known = false;
+        gate.chrome_blocks = false;
+        gate.chrome_blocks_pre_egui = false;
+        gate.in_play_area = false;
+        gate.egui_blocks = false;
+        return;
+    };
+    gate.cursor_known = true;
     let window_logical = Vec2::new(w.width(), w.height());
     gate.cursor = cursor;
     gate.window_logical = window_logical;
@@ -66,6 +102,27 @@ pub fn sync_simulation_map_pointer_gate_system(
         context_tray.as_ref(),
     );
     gate.chrome_blocks_pre_egui = gate.chrome_blocks;
+    // Play clears the editor's last egui capture. Editor keeps it so tools can
+    // see the previous finalize pass without calling `ctx_mut` themselves.
+    let in_simulation = base
+        .as_ref()
+        .is_none_or(|state| matches!(state.get(), BaseState::Simulation));
+    if in_simulation {
+        gate.egui_blocks = false;
+        if open_play_sheet_holds_pointer(
+            cursor,
+            left_stack.collapsed,
+            strip.as_deref(),
+            tool.as_deref(),
+            picker.as_deref(),
+            power_sheet.as_deref(),
+            road_sheet.as_deref(),
+        ) {
+            gate.chrome_blocks = true;
+        }
+    } else if gate.egui_blocks {
+        gate.chrome_blocks = true;
+    }
     gate.in_play_area = if map_vp.is_adequate_for_camera() {
         (!map_vp.valid || map_vp.contains_cursor(cursor)) && !gate.chrome_blocks
     } else {
@@ -77,8 +134,96 @@ pub fn sync_simulation_map_pointer_gate_system(
         map_vp.as_ref(),
         gate.chrome_blocks_pre_egui,
     );
-    gate.egui_blocks = false;
-    gate.os_cursor_visible = true;
+    // `os_cursor_visible` is written only by `apply_simulation_unified_cursor_system`.
+    // Forcing it true here showed the OS cursor in the same frame the crosshair policy hid it.
+}
+
+/// Placement, demolish, and power-cut tools read this instead of `EguiContexts::ctx_mut`.
+///
+/// `Unavailable` matches a failed context read: the click does not commit.
+/// `HeldByChrome` matches `egui_wants_pointer_input`: preview clears, commit does not run.
+/// `Free` is the pointer that already reached today's commit function.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum SimulationToolPointer {
+    Unavailable,
+    HeldByChrome,
+    Free,
+}
+
+#[inline]
+#[must_use]
+pub fn simulation_tool_pointer(gate: Option<&SimulationMapPointerGate>) -> SimulationToolPointer {
+    match gate {
+        None => SimulationToolPointer::Unavailable,
+        Some(g) if !g.cursor_known => SimulationToolPointer::Unavailable,
+        Some(g) if g.chrome_blocks || g.egui_blocks => SimulationToolPointer::HeldByChrome,
+        Some(_) => SimulationToolPointer::Free,
+    }
+}
+
+/// Open Bevy picker / power / road sheet. The map commit path stays held while
+/// the cursor is on that sheet. Editor egui still uses the finalize pass.
+fn open_play_sheet_holds_pointer(
+    cursor: Vec2,
+    left_stack_collapsed: bool,
+    strip: Option<&BuildStripState>,
+    tool: Option<&ActiveBuildTool>,
+    picker: Option<&crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
+    power_sheet: Option<&crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>,
+    road_sheet: Option<&crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
+) -> bool {
+    let pt = egui::pos2(cursor.x, cursor.y);
+    let tool = tool.map(|t| t.tool);
+    let power_open = power_sheet.is_some_and(|s| s.open)
+        && matches!(tool, Some(BuildTool::PowerLine(_)));
+    if let Some(picker) = picker {
+        let strip_live = strip.is_some_and(|s| s.active != ToolContext::None);
+        if picker.open && strip_live && !power_open {
+            if sim_build_rail_submenu_block_rect(picker, left_stack_collapsed).contains(pt) {
+                return true;
+            }
+        }
+    }
+    if power_open {
+        let anchor = crate::gui::hud::simulation_shell_phase2::build_rail_slot_anchor_xy(
+            ToolContext::Utilities,
+            left_stack_collapsed,
+        );
+        let rect = egui::Rect::from_min_size(
+            anchor,
+            egui::vec2(
+                crate::gui::hud::sim_power_tool_sheet::POWER_TOOL_SHEET_W_PX,
+                crate::gui::hud::sim_power_tool_sheet::POWER_TOOL_SHEET_BLOCK_H_PX,
+            ),
+        );
+        if rect.contains(pt) {
+            return true;
+        }
+    }
+    let road_open = road_sheet.is_some_and(|s| s.open)
+        && matches!(tool, Some(BuildTool::Road(_) | BuildTool::Rail(_)));
+    if road_open {
+        let slot = strip.map(|s| s.active).unwrap_or(ToolContext::Roads);
+        let anchor = crate::gui::hud::simulation_shell_phase2::build_rail_slot_anchor_xy(
+            if slot == ToolContext::Rail {
+                ToolContext::Rail
+            } else {
+                ToolContext::Roads
+            },
+            left_stack_collapsed,
+        );
+        let rect = egui::Rect::from_min_size(
+            anchor,
+            egui::vec2(
+                crate::gui::hud::sim_road_tool_sheet::ROAD_TOOL_SHEET_W_PX,
+                crate::gui::hud::sim_road_tool_sheet::ROAD_TOOL_SHEET_BLOCK_H_PX,
+            ),
+        );
+        if rect.contains(pt) {
+            return true;
+        }
+    }
+    false
 }
 
 /// After egui HUD: block map picks / hide unified cursor when floating panels capture the pointer.
@@ -91,8 +236,24 @@ pub fn finalize_simulation_map_pointer_gate_egui_system(
     tool: Res<ActiveBuildTool>,
     picker: Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
     left_stack: Res<CommandLeftStackState>,
+    app: Option<Res<State<AppState>>>,
+    base: Option<Res<State<BaseState>>>,
     mut contexts: EguiContexts,
 ) {
+    // Play reads `simulation_tool_pointer`. This egui acquire is the editor pass only.
+    // Simulation must not call `ctx_mut` — sheet hits are resolved in the sync system.
+    if base
+        .as_ref()
+        .is_some_and(|state| matches!(state.get(), BaseState::Simulation))
+    {
+        return;
+    }
+    if app
+        .as_ref()
+        .is_some_and(|state| matches!(state.get(), AppState::WorldGen))
+    {
+        return;
+    }
     let Ok(ctx) = contexts.ctx_mut() else {
         return;
     };
@@ -256,6 +417,19 @@ pub fn simulation_unified_cursor_hide_os(
     matches!(base, BaseState::Simulation) && build_placement_active && in_hide_region
 }
 
+/// Armed tool over the play area: hide the OS cursor. Menu/chrome flags must not
+/// flip this back on — that alternates the OS cursor with the crosshair.
+#[inline]
+#[must_use]
+pub fn armed_play_area_hides_os_cursor(
+    base: BaseState,
+    build_placement_active: bool,
+    in_play_area: bool,
+    _menu_open: bool,
+) -> bool {
+    matches!(base, BaseState::Simulation) && build_placement_active && in_play_area
+}
+
 /// **TRIAGE-CURSOR-UNIFY-001** — build-scoped hide + rail continuity + idle show.
 #[must_use]
 pub fn triage_cursor_unify_001_witness_green() -> bool {
@@ -351,8 +525,15 @@ pub fn apply_simulation_unified_cursor_system(
         left_stack.as_ref(),
         gate.in_play_area,
     );
-    let hide_os =
-        !menu_open && simulation_unified_cursor_hide_os(*base.get(), build_active, in_hide_region);
+    let play_hide = armed_play_area_hides_os_cursor(
+        *base.get(),
+        build_active,
+        gate.in_play_area,
+        menu_open,
+    );
+    let rail_hide = !menu_open
+        && simulation_unified_cursor_hide_os(*base.get(), build_active, in_hide_region);
+    let hide_os = play_hide || rail_hide;
     gate.os_cursor_visible = !hide_os;
     for mut cursor in &mut cursors {
         cursor.visible = !hide_os;
@@ -573,6 +754,28 @@ mod tests {
         assert!(!simulation_unified_cursor_hide_region(
             Vec2::new(640.0, 10.0),
             &left,
+            false
+        ));
+    }
+
+    #[test]
+    fn cursor_hide_does_not_oscillate_over_armed_play_area() {
+        let mut seen = [false; 4];
+        for slot in &mut seen {
+            *slot = armed_play_area_hides_os_cursor(BaseState::Simulation, true, true, true);
+        }
+        assert!(seen.iter().all(|hide| *hide));
+        assert_eq!(seen[0], seen[3]);
+        assert!(!armed_play_area_hides_os_cursor(
+            BaseState::Simulation,
+            true,
+            false,
+            false
+        ));
+        assert!(!armed_play_area_hides_os_cursor(
+            BaseState::Simulation,
+            false,
+            true,
             false
         ));
     }

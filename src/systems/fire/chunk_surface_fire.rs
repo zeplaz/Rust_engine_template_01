@@ -7,17 +7,17 @@ use bevy::prelude::*;
 
 use super::chunk_fuel_profile::ChunkFuelProfile;
 use super::combustion::{
-    crown_boost_for_old_growth, ecology_fire_risk_spark_factor, profile_spark_multiplier_gated,
-    fuel_ignition_gate, DEFAULT_CELL_FUEL_SEED,
+    crown_boost_for_old_growth, ecology_fire_risk_spark_factor, fuel_ignition_gate,
+    profile_spark_multiplier_gated, DEFAULT_CELL_FUEL_SEED,
 };
-use crate::systems::ecology::VegetationField;
-use super::types::ChunkFireOverlay;
 use super::fire_fuel::FireFuelField;
+use super::surface_water::SurfaceWaterFireGate;
+use super::types::ChunkFireOverlay;
 use crate::systems::chunk_sim_lod::ChunkSimLod;
 use crate::systems::ecology::ChunkEcology;
+use crate::systems::ecology::VegetationField;
 use crate::systems::sim_control::SimControlState;
 use crate::systems::weather::ChunkWeather;
-use super::surface_water::SurfaceWaterFireGate;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
 /// Smolder / active heat in `[0, 1]` and a simple **fuel** proxy for future spread rules.
@@ -109,9 +109,7 @@ pub fn chunk_surface_fire_tick(
             .or_else(|| veg_opt.map(|v| v.old_growth))
             .unwrap_or(0.0);
         let wildland_mass = prof_opt.map(|p| p.wildland_fuel_mass).unwrap_or(0.0);
-        let profile_mult = prof_opt
-            .map(profile_spark_multiplier_gated)
-            .unwrap_or(0.0);
+        let profile_mult = prof_opt.map(profile_spark_multiplier_gated).unwrap_or(0.0);
         let crown = fuel_opt
             .map(|f| crown_boost_for_old_growth(old_growth, f))
             .unwrap_or(1.0);

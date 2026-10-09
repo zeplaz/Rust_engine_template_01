@@ -3,21 +3,26 @@
 use bevy::prelude::*;
 
 use crate::construction::site_stage::SiteStageProgress;
-use crate::construction::site_stage_transitions::next_site_stage;
+use crate::construction::site_stage_transitions::{
+    next_site_stage, phase_progress_step, saturating_phase_progress,
+};
 use crate::strategic::{
     BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
-    PlannedSite, SiteArchetype, SiteConstructionBook, SiteConstructionPhase, SiteId,
-    SiteIdIssuer,
+    PlannedSite, SiteArchetype, SiteConstructionBook, SiteConstructionPhase, SiteId, SiteIdIssuer,
 };
 use crate::systems::sim_control::{SimControlState, SimControlSystemSet, SimTick};
-
-/// v1 stub: one phase-unit per second at speed 1.0 (tunable per archetype later).
-const DEFAULT_PHASE_RATE: f32 = 1.0;
 
 /// Legacy backfill only — **CON-P2-001** attaches on commit; this covers pre-P2 spawns missing progress.
 pub fn init_site_stage_progress_for_planned_sites(
     mut commands: Commands,
-    q: Query<Entity, (With<ConstructionSite>, With<PlannedSite>, Without<SiteStageProgress>)>,
+    q: Query<
+        Entity,
+        (
+            With<ConstructionSite>,
+            With<PlannedSite>,
+            Without<SiteStageProgress>,
+        ),
+    >,
 ) {
     for entity in &q {
         commands.entity(entity).insert(SiteStageProgress::default());
@@ -29,11 +34,7 @@ pub fn advance_site_construction_tick_system(
     tick: Res<SimTick>,
     ctrl: Res<SimControlState>,
     mut last_tick: Local<Option<u64>>,
-    mut q: Query<(
-        &mut ConstructionSite,
-        &PlannedSite,
-        &mut SiteStageProgress,
-    )>,
+    mut q: Query<(&mut ConstructionSite, &PlannedSite, &mut SiteStageProgress)>,
     mut book: ResMut<SiteConstructionBook>,
 ) {
     if !ctrl.should_tick() {
@@ -44,12 +45,12 @@ pub fn advance_site_construction_tick_system(
         return;
     }
     *last_tick = Some(current);
-    let dt = DEFAULT_PHASE_RATE;
 
     for (mut site, planned, mut stage) in &mut q {
         if matches!(
             site.phase,
             SiteConstructionPhase::Operational
+                | SiteConstructionPhase::Provisioning
                 | SiteConstructionPhase::Damaged
                 | SiteConstructionPhase::Offline
                 | SiteConstructionPhase::Abandoned
@@ -57,7 +58,11 @@ pub fn advance_site_construction_tick_system(
             continue;
         }
 
-        stage.progress = (stage.progress + dt).min(1.0);
+        let dt = phase_progress_step(site.phase);
+        if dt <= 0.0 {
+            continue;
+        }
+        stage.progress = saturating_phase_progress(stage.progress, dt);
         if stage.progress < 1.0 {
             let sid = SiteId(site.site_id);
             if let Some(st) = book.by_site.get_mut(&sid) {
@@ -116,10 +121,7 @@ fn construction_site_stage_tick_002_self_check() -> Result<(), &'static str> {
         owner,
         archetype: SiteArchetype::Factory,
         origin: BuildSiteTile { x: 6, z: 6 },
-        footprint: FootprintTiles {
-            width: 2,
-            depth: 2,
-        },
+        footprint: FootprintTiles { width: 2, depth: 2 },
         layer: LayerType::Surface,
         catalog_id: None,
         placement: None,
@@ -128,10 +130,7 @@ fn construction_site_stage_tick_002_self_check() -> Result<(), &'static str> {
 
     {
         let world = app.world_mut();
-        let stage_count = world
-            .query::<&SiteStageProgress>()
-            .iter(world)
-            .count();
+        let stage_count = world.query::<&SiteStageProgress>().iter(world).count();
         if stage_count != 1 {
             return Err("CON-P2-001: SiteStageProgress must attach on commit");
         }
@@ -219,10 +218,7 @@ mod tests {
             owner,
             archetype: SiteArchetype::Factory,
             origin: BuildSiteTile { x: 4, z: 4 },
-            footprint: FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
+            footprint: FootprintTiles { width: 2, depth: 2 },
             layer: LayerType::Surface,
             catalog_id: None,
             placement: None,
@@ -251,10 +247,7 @@ mod tests {
             owner,
             archetype: SiteArchetype::Factory,
             origin: BuildSiteTile { x: 8, z: 8 },
-            footprint: FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
+            footprint: FootprintTiles { width: 2, depth: 2 },
             layer: LayerType::Surface,
             catalog_id: None,
             placement: None,

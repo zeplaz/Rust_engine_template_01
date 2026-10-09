@@ -27,7 +27,7 @@ use super::info_tabs::HudInfoLiveData;
 use super::panel_state::HudPanelState;
 use super::shell_diagnostics::ProductShellDiagnostics;
 use super::shell_framework::EGUI_SIM_SHELL_WIDGETS;
-use super::icon_atlas::{tool_context_uses_icon_atlas, IconAtlasManifest, IconAtlasUi, IconId};
+use super::icon_atlas::{IconAtlasManifest, IconAtlasUi, IconId};
 use super::ui_stress_state::{
     apply_minimap_stress_chrome_system, sync_ui_stress_from_sim_system, UiStressState,
 };
@@ -235,6 +235,24 @@ pub struct OpsStripWeather;
 
 #[derive(Component)]
 pub struct OpsStripPower;
+
+/// Filter control on the ops strip. One flag, not a window.
+#[derive(Component)]
+pub struct ZoneShadeToggleButton;
+
+#[derive(Component)]
+pub struct ZoneShadeToggleLabel;
+
+#[derive(Resource, Clone, Copy, Debug)]
+pub struct ZoneShadeToggle {
+    pub visible: bool,
+}
+
+impl Default for ZoneShadeToggle {
+    fn default() -> Self {
+        Self { visible: false }
+    }
+}
 
 #[derive(Component)]
 pub struct OpsStripTrayAffordance;
@@ -846,6 +864,7 @@ impl Plugin for SimulationShellPhase2Plugin {
         app.add_plugins(super::icon_atlas::IconAtlasPlugin);
         app.add_plugins(super::power_hud_icon_atlas::PowerHudIconAtlasPlugin);
         app.init_resource::<ContextTrayState>()
+            .init_resource::<ZoneShadeToggle>()
             .init_resource::<super::simulation_pointer_gate::SimulationMapPointerGate>()
             .init_resource::<crate::gui::MinimapEguiDevGate>()
             .init_resource::<super::minimap_bevy_interaction::MinimapBevyPointerState>()
@@ -891,14 +910,17 @@ impl Plugin for SimulationShellPhase2Plugin {
             )
             .add_systems(
                 Update,
+                (zone_shade_toggle_click_system, sync_zone_shade_toggle_label)
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
                 (
-                    crate::gui::hud::sim_build_picker_bevy::sync_picker_category_from_strip,
                     crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_layout,
                     crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_title,
                     crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_tabs,
                     crate::gui::hud::sim_build_picker_bevy::rebuild_sim_build_picker_bevy_body,
                     crate::gui::hud::sim_build_picker_bevy::sim_build_picker_bevy_close_system,
-                    crate::gui::hud::sim_build_picker_bevy::sim_build_picker_bevy_tab_system,
                     crate::gui::hud::sim_build_picker_bevy::sim_build_picker_bevy_action_system,
                 )
                     .run_if(in_simulation_or_editor),
@@ -912,6 +934,18 @@ impl Plugin for SimulationShellPhase2Plugin {
                     crate::gui::hud::sim_road_power_sheets_bevy::sim_power_sheet_actions,
                 )
                     .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
+                    crate::gui::hud::sim_play_bevy_chrome::sync_sim_play_plant_card,
+                    crate::gui::hud::sim_play_bevy_chrome::sync_sim_play_power_hover,
+                    crate::gui::hud::sim_play_bevy_chrome::sync_sim_play_crosshair,
+                    crate::gui::hud::sim_play_bevy_chrome::sync_context_tray_power_repair_list,
+                    crate::gui::hud::sim_play_bevy_chrome::context_tray_power_repair_clicks,
+                )
+                    .chain()
+                    .run_if(in_state(BaseState::Simulation)),
             )
             .add_systems(
                 Update,
@@ -931,7 +965,7 @@ impl Plugin for SimulationShellPhase2Plugin {
             .add_systems(
                 bevy_egui::EguiPrimaryContextPass,
                 super::simulation_pointer_gate::draw_simulation_unified_cursor_egui_system
-                    .run_if(in_simulation_or_editor),
+                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
             )
             .add_systems(
                 bevy_egui::EguiPrimaryContextPass,
@@ -943,8 +977,7 @@ impl Plugin for SimulationShellPhase2Plugin {
                 )
                     .chain()
                     .after(super::hud_root_tick::hud_product_shell_egui_root)
-                    .run_if(in_simulation_or_editor)
-                    .run_if(crate::gui::ui_gates::minimap_chrome_egui_sync_active),
+                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
             )
             .add_systems(
                 PostUpdate,
@@ -1117,6 +1150,30 @@ fn update_ops_strip_zone_lines_system(
     }
 }
 
+fn zone_shade_toggle_click_system(
+    q: Query<&Interaction, (Changed<Interaction>, With<ZoneShadeToggleButton>)>,
+    mut shade: ResMut<ZoneShadeToggle>,
+) {
+    for interaction in &q {
+        if *interaction == Interaction::Pressed {
+            shade.visible = !shade.visible;
+        }
+    }
+}
+
+fn sync_zone_shade_toggle_label(
+    shade: Res<ZoneShadeToggle>,
+    mut text: Query<&mut Text, With<ZoneShadeToggleLabel>>,
+) {
+    if !shade.is_changed() {
+        return;
+    }
+    let label = if shade.visible { "SHADE ON" } else { "SHADE" };
+    for mut line in &mut text {
+        *line = Text::new(label);
+    }
+}
+
 fn ops_strip_zone_click_system(
     q: Query<(&Interaction, &OpsStripZone), Changed<Interaction>>,
     mut tray: ResMut<ContextTrayState>,
@@ -1203,8 +1260,8 @@ fn build_rail_tool_click_system(
         if *interaction != Interaction::Pressed {
             continue;
         }
-        let deselect = strip.active == slot.0 && slot.0 != ToolContext::None;
-        if deselect {
+        let already_open = picker.open && picker.anchor_slot == slot.0;
+        if already_open {
             strip.active = ToolContext::None;
             crate::construction::apply_build_rail_tool_selection(&mut tool, ToolContext::None, true);
             picker.close();
@@ -1226,6 +1283,7 @@ fn build_rail_tool_click_system(
             } else if slot.0 == ToolContext::Utilities {
                 power_sheet.sync_from_tool(&tool);
                 road_sheet.close();
+                picker.close();
             } else {
                 road_sheet.close();
                 power_sheet.close();
@@ -1440,7 +1498,7 @@ fn sync_context_tray_tab_chrome_system(
 fn build_rail_icon_tint(palette: &UiPalette, interaction: &Interaction, selected: bool) -> Color {
     if selected {
         palette.bevy_accent_gold()
-    } else if *interaction == Interaction::Hovered {
+    } else if matches!(*interaction, Interaction::Hovered | Interaction::Pressed) {
         palette.bevy_accent_hot()
     } else {
         palette.bevy_text_muted().with_alpha(0.72)
@@ -1455,7 +1513,7 @@ fn build_rail_slot_border_color(
 ) -> Color {
     if selected {
         palette.bevy_accent_gold()
-    } else if *interaction == Interaction::Hovered {
+    } else if matches!(*interaction, Interaction::Hovered | Interaction::Pressed) {
         palette.bevy_accent_hot()
     } else {
         palette.bevy_border_subtle()
@@ -1464,7 +1522,7 @@ fn build_rail_slot_border_color(
 
 fn sync_build_rail_from_strip_system(
     strip: Res<BuildStripState>,
-    left_stack: Option<Res<crate::gui::CommandLeftStackState>>,
+    picker: Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
     palette: Res<UiPalette>,
     atlas_ui: Option<Res<IconAtlasUi>>,
     manifests: Res<Assets<IconAtlasManifest>>,
@@ -1480,70 +1538,60 @@ fn sync_build_rail_from_strip_system(
         With<Button>,
     >,
     mut icons: Query<
-        (&mut bevy::ui::widget::ImageNode, &mut Visibility),
+        &mut Visibility,
         (With<BuildRailToolIcon>, Without<BuildRailToolLabel>),
     >,
     mut labels: Query<
-        (&mut Text, &mut Visibility),
+        (&mut Text, &mut TextColor, &mut Visibility),
         (With<BuildRailToolLabel>, Without<BuildRailToolIcon>),
     >,
     mut witness: ResMut<UiShellMigrationWitness>,
 ) {
-    let expanded = left_stack.as_deref().map_or(false, |s| !s.collapsed);
     witness.build_rail_synced = true;
     witness.icon_atlas_loaded = atlas_ui.as_ref().is_some_and(|atlas| {
         atlas.manifest_loaded(&manifests) && images.get(&atlas.atlas).is_some()
     });
     for (slot, interaction, children, mut bg, mut border) in &mut slots {
-        let selected = slot.0 == strip.active;
-        if selected {
-            *bg = BackgroundColor(palette.bevy_bg_vellum());
-            *border = BorderColor::all(palette.bevy_accent_gold());
+        let selected = if picker.open {
+            slot.0 == picker.anchor_slot
         } else {
-            *bg = BackgroundColor(palette.bevy_hud_panel_fill());
-            *border = BorderColor::all(build_rail_slot_border_color(
-                &palette,
-                interaction,
-                selected,
-            ));
+            slot.0 == strip.active && slot.0 != ToolContext::None
+        };
+        let next_bg = if selected {
+            BackgroundColor(palette.bevy_bg_vellum())
+        } else {
+            BackgroundColor(palette.bevy_hud_panel_fill())
+        };
+        if *bg != next_bg {
+            *bg = next_bg;
+        }
+        let next_border = BorderColor::all(build_rail_slot_border_color(
+            &palette,
+            interaction,
+            selected,
+        ));
+        if *border != next_border {
+            *border = next_border;
         }
         let icon_tint = build_rail_icon_tint(&palette, interaction, selected);
-        let short = match slot.0 {
-            ToolContext::None => "—",
-            ToolContext::Roads => "Rd",
-            ToolContext::Rail => "Rl",
-            ToolContext::Utilities => "Ut",
-            ToolContext::Military => "Mi",
-            ToolContext::Industry => "In",
-            ToolContext::Ecology => "Ec",
-            ToolContext::Civil => "Cv",
-        };
-        let label = if expanded {
-            format!("{short} {}", slot.0.label())
-        } else {
-            short.to_string()
-        };
-        let show_text_only = !tool_context_uses_icon_atlas(slot.0) || expanded;
+        let word = crate::gui::hud::sim_hud_copy::rail_player_label(slot.0);
+        let next_color = TextColor(icon_tint);
         for child in children.iter() {
-            if let Ok((mut image, mut vis)) = icons.get_mut(child) {
-                if tool_context_uses_icon_atlas(slot.0) {
-                    *vis = Visibility::Visible;
-                    if let Some(atlas) = atlas_ui.as_ref() {
-                        if let Some(node) = atlas.image_node_for_tool(&manifests, slot.0) {
-                            *image = node.with_color(icon_tint);
-                        }
-                    }
-                } else {
+            if let Ok(mut vis) = icons.get_mut(child) {
+                if *vis != Visibility::Hidden {
                     *vis = Visibility::Hidden;
                 }
             }
-            if let Ok((mut text, mut vis)) = labels.get_mut(child) {
-                *text = Text::new(label.clone());
-                *vis = if show_text_only {
-                    Visibility::Visible
-                } else {
-                    Visibility::Hidden
-                };
+            if let Ok((mut text, mut color, mut vis)) = labels.get_mut(child) {
+                if text.as_str() != word {
+                    *text = Text::new(word);
+                }
+                if *color != next_color {
+                    *color = next_color;
+                }
+                if *vis != Visibility::Visible {
+                    *vis = Visibility::Visible;
+                }
             }
         }
     }
@@ -2180,6 +2228,7 @@ pub fn build_proof_payload(
         },
         "egui_sim_shell_widgets": EGUI_SIM_SHELL_WIDGETS,
         "egui_pass_count_in_sim": egui_pass_count_in_sim,
+        "sim_egui_context_acquires": shell_diag.sim_egui_context_acquires,
         "egui_pass_count_lifetime": shell_diag.egui_pass_count,
         "phase2_zones_live": witness.phase2_zones_live,
         "ui_oh_2a_001": {
@@ -2267,7 +2316,13 @@ pub fn build_proof_payload(
             "icon_atlas_loaded": witness.icon_atlas_loaded,
             "atlas_texture": crate::gui::hud::icon_atlas::ICON_ATLAS_TEXTURE_PATH,
             "manifest_ron": crate::gui::hud::icon_atlas::ICON_ATLAS_MANIFEST_PATH,
-            "rail_icons": ["RD", "RL", "UT", "IN", "CV"],
+            "rail_icons": [
+                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Roads),
+                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Rail),
+                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Utilities),
+                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Industry),
+                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Civil),
+            ],
             "p5_br_tab_wired": witness.petroleum_panel_tab_wired,
             "p4_veh_chips_wired": witness.logistics_vehicle_chips_wired,
         },
@@ -3122,6 +3177,10 @@ mod tests {
             serde_json::json!(crate::gui::hud::icon_atlas::ICON_ATLAS_TEXTURE_PATH)
         );
         assert_eq!(payload["phase4"]["p5_br_tab_wired"], serde_json::json!(true));
+        assert_eq!(
+            payload["phase4"]["rail_icons"],
+            serde_json::json!(["Roads", "Rail", "Power", "Industry", "Zones"])
+        );
         assert_eq!(payload["ui_w3_p4_001"]["green"], serde_json::json!(true));
     }
 

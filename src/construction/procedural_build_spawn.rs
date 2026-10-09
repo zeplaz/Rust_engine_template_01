@@ -8,11 +8,11 @@ use crate::construction::procedural::{
     footprint_grid_for_assembly, procedural_module_local_translation, FootprintGrid,
     ProceduralAssemblyRequest, ProceduralModuleRegistry, StylePackRegistry,
 };
+use crate::economy::site_placement::site_world_position;
 use crate::render::extraction::{
     assemble_procedural_build_instances, ProceduralBuildExtract, ProceduralBuildInstance,
     ProceduralModuleSceneCatalog, ProceduralModuleVisualPolicy,
 };
-use crate::economy::site_placement::site_world_position;
 use crate::strategic::{
     ConstructionSite, PlannedSite, ProceduralBuildingSpec, SiteConstructionPhase,
 };
@@ -64,7 +64,13 @@ pub fn spawn_procedural_build_on_site_operational(
     visual: Res<ProceduralModuleVisualPolicy>,
     iso_draw: Res<ConstructionIsoDrawScale>,
     q: Query<
-        (Entity, &ConstructionSite, &ProceduralBuildingSpec, &PlannedSite, Option<&Transform>),
+        (
+            Entity,
+            &ConstructionSite,
+            &ProceduralBuildingSpec,
+            &PlannedSite,
+            Option<&Transform>,
+        ),
         (With<PlannedSite>, Without<ProceduralBuildSpawned>),
     >,
 ) {
@@ -97,32 +103,35 @@ pub fn spawn_procedural_build_on_site_operational(
 
         let mut module_count = 0u32;
         let scale = iso_draw.visual_scale_vec3();
-        commands.entity(site_entity).with_children(|parent| {
-            for inst in instances.iter().filter(|i| !i.hidden) {
-                module_count += 1;
-                let mut local = Transform::from_translation(inst.local_translation);
-                local.rotation = Quat::from_rotation_y(inst.yaw_y);
-                local.scale = scale;
-                if let Some(scene) = inst.scene.as_ref() {
-                    parent.spawn((
-                        WorldAssetRoot(scene.clone()),
-                        local,
-                        crate::render::mig_a_static_bulk_bundle(),
-                        ProceduralBuildModuleChild {
-                            module_id: inst.module_id.clone(),
-                        },
-                    ));
-                } else {
-                    parent.spawn((
-                        local,
-                        crate::render::mig_a_static_bulk_bundle(),
-                        ProceduralBuildModuleChild {
-                            module_id: inst.module_id.clone(),
-                        },
-                    ));
+        commands
+            .entity(site_entity)
+            .with_children(|parent| {
+                for inst in instances.iter().filter(|i| !i.hidden) {
+                    module_count += 1;
+                    let mut local = Transform::from_translation(inst.local_translation);
+                    local.rotation = Quat::from_rotation_y(inst.yaw_y);
+                    local.scale = scale;
+                    if let Some(scene) = inst.scene.as_ref() {
+                        parent.spawn((
+                            WorldAssetRoot(scene.clone()),
+                            local,
+                            crate::render::mig_a_static_bulk_bundle(),
+                            ProceduralBuildModuleChild {
+                                module_id: inst.module_id.clone(),
+                            },
+                        ));
+                    } else {
+                        parent.spawn((
+                            local,
+                            crate::render::mig_a_static_bulk_bundle(),
+                            ProceduralBuildModuleChild {
+                                module_id: inst.module_id.clone(),
+                            },
+                        ));
+                    }
                 }
-            }
-        }).insert(ProceduralBuildSpawned { module_count });
+            })
+            .insert(ProceduralBuildSpawned { module_count });
     }
 }
 
@@ -134,8 +143,8 @@ pub fn procedural_pg2_spawn_witness_green() -> bool {
 
 fn procedural_pg2_spawn_self_check() -> Result<(), &'static str> {
     use crate::construction::procedural::{
-        load_procedural_module_registry, load_style_pack_registry, StylePackId,
-        ProceduralBuildingRequest,
+        load_procedural_module_registry, load_style_pack_registry, ProceduralBuildingRequest,
+        StylePackId,
     };
     use crate::render::extraction::ProceduralModuleSceneCatalog;
 
@@ -160,11 +169,7 @@ fn procedural_pg2_spawn_self_check() -> Result<(), &'static str> {
     let grid = FootprintGrid::from_request(&request);
     let catalog = ProceduralModuleSceneCatalog::default();
     let extract = assemble_procedural_build_instances(&request, pack, &grid, &registry, &catalog);
-    let visible = extract
-        .instances
-        .iter()
-        .filter(|i| !i.hidden)
-        .count();
+    let visible = extract.instances.iter().filter(|i| !i.hidden).count();
     if visible == 0 {
         return Err("no_visible_instances");
     }
@@ -216,7 +221,10 @@ fn spawn_operational_gate_self_check() -> Result<(), &'static str> {
         .init_resource::<ConstructionIsoDrawScale>()
         .add_message::<CommitConstructionSiteEvent>()
         .add_plugins(SiteStageTickPlugin)
-        .add_systems(Startup, (init_procedural_module_registry, init_style_pack_registry))
+        .add_systems(
+            Startup,
+            (init_procedural_module_registry, init_style_pack_registry),
+        )
         .add_systems(
             Update,
             (
@@ -227,7 +235,9 @@ fn spawn_operational_gate_self_check() -> Result<(), &'static str> {
         );
 
     {
-        let mut visual = app.world_mut().resource_mut::<ProceduralModuleVisualPolicy>();
+        let mut visual = app
+            .world_mut()
+            .resource_mut::<ProceduralModuleVisualPolicy>();
         visual.meshes_active = true;
         let mut ctrl = app.world_mut().resource_mut::<SimControlState>();
         ctrl.paused = true;
@@ -239,10 +249,7 @@ fn spawn_operational_gate_self_check() -> Result<(), &'static str> {
         owner,
         archetype: SiteArchetype::CivilHousing,
         origin: BuildSiteTile { x: 10, z: 10 },
-        footprint: FootprintTiles {
-            width: 4,
-            depth: 2,
-        },
+        footprint: FootprintTiles { width: 4, depth: 2 },
         layer: LayerType::Surface,
         catalog_id: None,
         placement: None,

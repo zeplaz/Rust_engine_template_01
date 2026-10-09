@@ -166,12 +166,34 @@ def _utility_score(quality: int, failures: list[str]) -> float:
     return round(max(0.0, quality - debt * 10 - _LAMBDA_TOKENS * 5 - _MU_COMPUTE * 3), 1)
 
 
+def _acceptance_finding(row: dict[str, Any]) -> bool:
+    if row.get("blocks_development") is False or row.get("role") == "acceptance":
+        return True
+    text = str(row.get("finding") or "").lower()
+    markers = (
+        "g-play-operator",
+        "g-play-01",
+        "human 10 min",
+        "sole operator blocker",
+        "manual keyframe",
+        "track b ship blocked",
+        "warehouse production bake paused",
+        "gate open — g-play",
+        "gate open - g-play",
+    )
+    return any(marker in text for marker in markers)
+
+
 def _compose_delta_wf(
     report_delta: list[Any],
     *,
     repo: Path | None = None,
 ) -> list[dict[str, Any]]:
-    """Merge ops_report delta_wf with open master_chain_tensor gates."""
+    """Merge ops_report delta_wf with open development gates.
+
+    Operator playtest and stills findings stay on the list as acceptance logs.
+    They are not the suggested next patch.
+    """
     rows: list[dict[str, Any]] = []
     for raw in report_delta:
         if isinstance(raw, dict) and raw.get("finding"):
@@ -191,7 +213,9 @@ def _compose_delta_wf(
                 "phi": gate.get("phi"),
             }
         )
-    return rows[:8]
+    dev = [row for row in rows if not _acceptance_finding(row)]
+    acceptance = [row for row in rows if _acceptance_finding(row)]
+    return (dev + acceptance)[:8]
 
 
 def ops_build_project_brief(
@@ -205,9 +229,10 @@ def ops_build_project_brief(
     q_score = int((qce.get("Q_coherence") or {}).get("score") or 70)
     report_delta = report.get("delta_wf") if isinstance(report.get("delta_wf"), list) else []
     delta_wf = _compose_delta_wf(report_delta, repo=root)
+    dev_rows = [row for row in delta_wf if not _acceptance_finding(row)]
     known_failures = [
         str(row.get("finding", "")).lower().replace(" ", "_").replace("—", "")[:64]
-        for row in delta_wf[:5]
+        for row in dev_rows[:5]
         if row.get("finding")
     ]
     top_failures = [
@@ -253,7 +278,11 @@ def ops_build_project_brief(
         "known_failures": known_failures[:5],
         "top_failures_ranked": top_failures,
         "recent_improvements": recent,
-        "suggested_focus": str(delta_wf[0].get("finding")) if delta_wf else "Spine green — pick phase3 ready row",
+        "suggested_focus": (
+            str(dev_rows[0].get("finding"))
+            if dev_rows
+            else "Patch known subsystem defects. Operator sessions are acceptance logs, not lane freezes."
+        ),
         "active_picks": _active_picks_from_phase3(root),
         "last_20_runs_summary": "ops_report_latest.json, ops_project_brief_v1.json, ops_dashboard_live.json",
         "metrics_tier1": metrics_tier1,
@@ -346,12 +375,32 @@ def ops_get_retry_guidance(task_id: str) -> dict[str, Any]:
     }
 
 
+def _acceptance_only_gate(spec: dict[str, Any]) -> bool:
+    """Playtest and stills logs. They do not freeze subsystem patches."""
+    if spec.get("blocks_development") is False or spec.get("role") == "acceptance":
+        return True
+    sub_gates = spec.get("sub_gates")
+    if not isinstance(sub_gates, dict) or not sub_gates:
+        return False
+    open_sub = [
+        s for s in sub_gates.values() if isinstance(s, dict) and s.get("closed") is not True
+    ]
+    return bool(open_sub) and all(
+        s.get("blocks_development") is False or s.get("role") == "acceptance" for s in open_sub
+    )
+
+
 def ops_get_active_blockers(*, repo: Path | None = None) -> dict[str, Any]:
-    """Open gates from master_chain_tensor_v1.json + G-PLAY rollup."""
+    """Development blockers from master_chain_tensor_v1.json.
+
+    Acceptance-only gates (operator playtest, keyframe stills) stay in
+    ``acceptance_pending`` and do not count as open development gates.
+    """
     root = repo or repo_root()
     tensor = _load_json(root / MASTER_CHAIN_TENSOR_REL) or {}
     gates = tensor.get("gates") if isinstance(tensor.get("gates"), dict) else {}
     open_gates: list[dict[str, Any]] = []
+    acceptance_pending: list[dict[str, Any]] = []
     for gate_id, spec in gates.items():
         if not isinstance(spec, dict):
             continue
@@ -365,6 +414,8 @@ def ops_get_active_blockers(*, repo: Path | None = None) -> dict[str, Any]:
             "plan": spec.get("operator") or spec.get("split"),
             "operator": spec.get("operator"),
             "note": spec.get("note"),
+            "role": spec.get("role") or "development",
+            "blocks_development": spec.get("blocks_development", True),
         }
         sub_gates = spec.get("sub_gates")
         if isinstance(sub_gates, dict):
@@ -376,7 +427,12 @@ def ops_get_active_blockers(*, repo: Path | None = None) -> dict[str, Any]:
             entry["open_sub_gates"] = open_sub
             if open_sub:
                 entry["owner"] = open_sub[0].get("agent") or "operator"
-        open_gates.append(entry)
+        if _acceptance_only_gate(spec):
+            entry["role"] = "acceptance"
+            entry["blocks_development"] = False
+            acceptance_pending.append(entry)
+        else:
+            open_gates.append(entry)
     review = review_order_brief()
     gplay = review.get("g_play") if isinstance(review.get("g_play"), dict) else {}
     return {
@@ -385,6 +441,7 @@ def ops_get_active_blockers(*, repo: Path | None = None) -> dict[str, Any]:
         "tensor_path": MASTER_CHAIN_TENSOR_REL,
         "open_gate_count": len(open_gates),
         "open_gates": open_gates,
+        "acceptance_pending": acceptance_pending,
         "g_play_rollup": gplay,
     }
 

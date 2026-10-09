@@ -9,12 +9,7 @@ use super::building_grammar::{load_building_grammar_registry, BuildingGrammar};
 pub const BQ_H3_LIVE_JSON: &str = "debug_runs/bq_h3_v0_retire_001_live.json";
 
 /// Massing ids that v0 bias tables know about (`arch_build_grammar_v0::massing_bias`).
-pub const V0_KNOWN_MASSING_IDS: &[&str] = &[
-    "long_hall",
-    "double_hall",
-    "l_shape",
-    "yard_complex",
-];
+pub const V0_KNOWN_MASSING_IDS: &[&str] = &["long_hall", "double_hall", "l_shape", "yard_complex"];
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct V0PresetValidation {
@@ -58,7 +53,10 @@ pub fn validate_v0_preset_against_grammar(
 }
 
 #[must_use]
-pub fn validate_massing_override_row(row: &MassingWeightOverride, grammar: &BuildingGrammar) -> bool {
+pub fn validate_massing_override_row(
+    row: &MassingWeightOverride,
+    grammar: &BuildingGrammar,
+) -> bool {
     grammar
         .massing
         .strategies
@@ -87,11 +85,7 @@ pub fn bq_h3_v0_shim_witness_green() -> bool {
             id: "not_a_real_massing".into(),
             weight: 10,
         },
-        registry
-            .grammars
-            .values()
-            .next()
-            .expect("grammar"),
+        registry.grammars.values().next().expect("grammar"),
     );
     preset_ok && reject_unknown
 }

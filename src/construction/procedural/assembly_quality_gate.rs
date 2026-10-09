@@ -127,11 +127,7 @@ pub fn compute_assembly_quality(
     assembly_id: &str,
     grid: Option<&super::FootprintGrid>,
 ) -> AssemblyQualityScore {
-    let visible_count = extract
-        .instances
-        .iter()
-        .filter(|i| !i.hidden)
-        .count() as u32;
+    let visible_count = extract.instances.iter().filter(|i| !i.hidden).count() as u32;
     let resolved_count = extract.instances.len() as u32;
     let missing_slot_count = extract.missing_slot_violations.len() as u32;
     let cross_style = extract.cross_style_fallback_count;
@@ -250,10 +246,7 @@ pub fn build_bq_a2_gate_001_witness_body() -> serde_json::Value {
         .iter()
         .map(|s| s.silhouette_continuity_pct)
         .fold(0.0_f32, f32::max);
-    let silh_honest = scored_any
-        && scores
-            .iter()
-            .all(|s| s.silhouette_continuity_pct <= 100.0);
+    let silh_honest = scored_any && scores.iter().all(|s| s.silhouette_continuity_pct <= 100.0);
     let coverage_ok =
         assembly_count >= BQ_SILH_MIN_ASSEMBLIES && style_pack_count >= BQ_SILH_MIN_STYLE_PACKS;
 
@@ -274,12 +267,8 @@ pub fn build_bq_a2_gate_001_witness_body() -> serde_json::Value {
                 && s.passes_gate
         });
 
-    let green = table_ok
-        && bq_a1_wired
-        && snapshot_aligned
-        && silh_honest
-        && coverage_ok
-        && quality_ok;
+    let green =
+        table_ok && bq_a1_wired && snapshot_aligned && silh_honest && coverage_ok && quality_ok;
 
     serde_json::json!({
         "gate": witness.gate,
@@ -314,10 +303,7 @@ pub fn refresh_building_quality_live_witness() -> bool {
     use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
     let body = build_bq_a2_gate_001_witness_body();
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
     let wrapped = wrap_debug_run(
         "BQ-A2-GATE-001",
         "refresh_building_quality_live_witness",
@@ -342,9 +328,7 @@ mod tests {
     fn bq_a2_computes_score_fields() {
         let reg = load_procedural_module_registry();
         let packs = load_style_pack_registry();
-        let pack = packs
-            .get("style_victorian")
-            .expect("style_victorian pack");
+        let pack = packs.get("style_victorian").expect("style_victorian pack");
         let request = ProceduralBuildingRequest {
             archetype_id: "rect_perimeter".into(),
             width: 4,
@@ -377,9 +361,7 @@ mod tests {
     fn bq_silh_honest_001_multi_story_clamped() {
         let reg = load_procedural_module_registry();
         let packs = load_style_pack_registry();
-        let pack = packs
-            .get("style_victorian")
-            .expect("style_victorian pack");
+        let pack = packs.get("style_victorian").expect("style_victorian pack");
         // Multi-story + roofs previously yielded visible/WDC ≈ 150%.
         let request = ProceduralBuildingRequest {
             archetype_id: "rect_perimeter".into(),
@@ -405,9 +387,8 @@ mod tests {
             score.silhouette_continuity_pct
         );
         // Dishonest WDC ratio would exceed 100 when roofs inflate visible count.
-        let dishonest =
-            100.0 * extract.instances.iter().filter(|i| !i.hidden).count() as f32
-                / extract.footprint_cells.max(1) as f32;
+        let dishonest = 100.0 * extract.instances.iter().filter(|i| !i.hidden).count() as f32
+            / extract.footprint_cells.max(1) as f32;
         assert!(
             dishonest > 100.0,
             "fixture must still exhibit dishonest WDC ratio (>100); got {dishonest}"
@@ -451,10 +432,7 @@ mod tests {
                 .get("silhouette_continuity_pct")
                 .and_then(|v| v.as_f64())
                 .unwrap_or(999.0);
-            assert!(
-                silh <= 100.0,
-                "silhouette_continuity_pct > 100: {silh}"
-            );
+            assert!(silh <= 100.0, "silhouette_continuity_pct > 100: {silh}");
         }
         assert_eq!(
             body.get("bq_silh_honest_001").and_then(|v| v.as_bool()),

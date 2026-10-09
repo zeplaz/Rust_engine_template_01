@@ -142,15 +142,17 @@
     "G-STAB-01": { "phi": 2, "closed": true },
     "G-PLAY-01": {
       "phi": 0,
+      "blocks_development": false,
+      "role": "acceptance",
       "operator": "src/dev/plan_g_play_close_001_checklist_v1.md",
       "split": "src/dev/plan_g_play_split_v1.md",
       "sub_gates": {
         "G-PLAY-CODER-FIRE": { "phi": 2, "closed": true },
         "G-PLAY-CODER-BUILD": { "phi": 2, "closed": true },
         "G-PLAY-CODER-VEG": { "phi": 2, "closed": true, "plan": "src/dev/plan_veg_runtime_proof_001_v1.md", "completed": "2026-06-17" },
-        "G-PLAY-OPERATOR-01": { "phi": 0, "closed": false }
+        "G-PLAY-OPERATOR-01": { "phi": 0, "closed": false, "blocks_development": false, "role": "acceptance" }
       },
-      "note": "Rollup OPEN — G-PLAY-CODER-VEG closed 2026-06-17 · operator only on G-PLAY-OPERATOR-01"
+      "note": "Acceptance log only. Coder sub-gates are closed. A missing playtest does not freeze subsystem patches."
     }
   },
   "a2c_template": {

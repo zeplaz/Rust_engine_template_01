@@ -1,23 +1,24 @@
 # Operator unlock + test guide `v1`
 
-**Audience:** human with a display (NEEDS-DISPLAY). Agents cannot self-certify pixels.  
+**Audience:** human with a display, when you want an acceptance note.  
+**These sessions do not freeze subsystem patches.** Agents fix known defects from witnesses and bug rows without waiting on A–D. A session records whether pixels matched. It does not unlock or block code.  
 **Repo:** `C:\dev\github\Rust_engine_template_01` · branch **`master`**  
-**Date:** 2026-08-12
+**Date:** 2026-09-25
 
-This is the **single start page**. Deep runbooks are linked; do not invent alternate bake/test paths.
+Agents still must not mark a pixel witness green from lib tests alone.
 
 ---
 
-## What you unlock (priority order)
+## Optional acceptance logs (not unlocks)
 
-| # | Session | Unlocks for agents | Time |
+| # | Session | What it records | Time |
 |:-:|:---|:---|:---|
-| **1** | **A — Bug / renderer triage** | Clear bug list for `@coder` / `@sim-steward`; refreshes Stage5 / VFX witnesses | 20–40 min |
-| **2** | **B — RPC-1-006** terrain bake pixel prove | Closes GPU terrain Phase 1; optional default flip later | 15–25 min |
-| **3** | **C — G-PLAY-OPERATOR-01** | Closes **G-PLAY-01** (only open tensor gate) | ≥10 min play |
-| **4** | **D — Warehouse keyframes (G4)** | Unpauses **MCP-PILOT-GRAMMAR-001** / Track B ship art · `@designer-mcp` / `@coder-mcp` | 45–90 min |
+| **1** | **A — Bug / renderer look** | Whether sparks, terrain, and flicker match the code fixes | 20–40 min |
+| **2** | **B — RPC-1-006** | Whether GPU bake pixels beat the CPU path | 15–25 min |
+| **3** | **C — G-PLAY-OPERATOR-01** | Play checklist. Tensor keeps this as acceptance, not a development blocker | ≥10 min play |
+| **4** | **D — Warehouse keyframes (G4)** | Whether 24 ship stills exist. Downstream kit use continues without them | 45–90 min |
 
-Do **A** first if you do not know current visual health. Do **D** when you want art fleet moving again.
+Do **A** when you want eyes on the renderer. Do **D** when you want ship stills. Neither pauses coder patches.
 
 ---
 
@@ -132,7 +133,7 @@ Write one line in chat or `debug_runs/terrain_gpu_bake_rpc1_006_operator_live.js
 - `recommend_default_flip: false` until proven better than CPU path
 - Capture paths
 
-**Unlock:** `@coder` may proceed on bake hardening / default-flip PR only if you set `recommend_default_flip: true`.
+**Record:** write `recommend_default_flip: true` only when bake pixels clearly beat the CPU path. Bake hardening in code does not wait on that line.
 
 ---
 
@@ -149,7 +150,7 @@ Walk checklist §1–8 (sim enter → build rail → mine/kiln/mixer → progres
 
 **Stop / do not sign if:** panic, need harness seed, construction invisible, pause broken.
 
-**On EXECUTED:** mark checklist Operator row + tell `@planner` to close G-PLAY-01 rollup.
+**On EXECUTED:** mark the checklist Operator row. The tensor already treats this as acceptance, not a freeze on other lanes.
 
 ---
 
@@ -209,7 +210,7 @@ Expect: 24/24 found → atlas pack → Phase C validators green · `keyframe_man
 
 Re-check / refresh warehouse G4 witness — minimum stills must exist; `proceed_ship` only after Phase C pass.
 
-**Unlock:** unpause **MCP-PILOT-GRAMMAR-001**; `@designer-mcp` can resume Track B; landscape `ship:false` atlases remain separate until their own G4.
+**Record:** 24/24 stills let ship art proceed. Module consumption and in-game presentation do not wait on this folder.
 
 ### Common keyframe failures
 
@@ -230,12 +231,12 @@ Ingested from `Documents/bug_out` → [`debug_runs/operator_bugs/`](../../debug_
 | ID | Severity | Symptom | Likely cause | Workaround now |
 |:---|:---|:---|:---|:---|
 | **B2** | **P0** | Build menu dead; stuck `Place 2x2`; cannot place/cancel | Shift+LMB queue had **no Enter drain** for buildings; Esc kept tool; tray queue read-only | **Fixed:** Esc clears queue+tool; Enter builds queued; tray **Build queued** / **Clear queue** |
-| **B1** | P2 | Yellow bar in water/sky — **static, not cursor** | Likely leftover road/path ghost or bad world polyline (not unified cursor) | Esc with Roads selected; capture again with placement debug OFF |
+| **B1** | P2 | Yellow marks in water/sky during `--test visual` | Placement debug overlay was forced on for `TestScene::Visual`, and off-map projections still painted | **Fixed:** overlay draws only when explicitly enabled; markers stay inside the map viewport |
 | **B3** | P1 | No fire on `--test vfx` | `VfxFireTestHighlightPlugin` was **never wired**; heat overlay off in VfxSandbox | **Fixed:** plugin wired in test mode + heat markers on; rebuild + `--test vfx` |
 | **B4** | P1 | `Path not found …\assets\assets\…` on visual | AssetServer got `assets/`-prefixed paths (doubled) | **Fixed in tree** — rebuild then re-run visual; GLBs exist |
 | **B5** | P3 | 10 rustc warnings | Hygiene only — compile still succeeds | Optional later; not a blocker |
 
-Triage packet: [`operator_session_20260812_triage_live.json`](../../debug_runs/operator_bugs/operator_session_20260812_triage_live.json). **Next coder pick: B2.**
+Triage packet: [`operator_session_20260812_triage_live.json`](../../debug_runs/operator_bugs/operator_session_20260812_triage_live.json). B1–B4 are patched in code. A later play session can record whether the screen matches; it does not gate the next patch.
 
 ---
 
@@ -258,8 +259,8 @@ Next agent pick unlocked: coder TODO-05 | terrain default flip | designer-mcp pi
 
 ## Do not
 
-- Claim G-PLAY or RPC-1-006 closed from lib tests alone  
+- Treat Sessions A–D as a lock on coder, art, or sim patches  
+- Claim G-PLAY or RPC-1-006 pixel-green from lib tests alone  
 - Use `tile_ortho_bake` / lod0 pilot atlases as production ship art  
-- Leave `TERRAIN_GPU_BAKE_SPIKE=1` as permanent shell default until signed  
-- Flip terrain production default ON without Session B pass  
+- Leave `TERRAIN_GPU_BAKE_SPIKE=1` as a permanent shell default  
 - Dump full cargo walls into chat — use witness paths + bug table  

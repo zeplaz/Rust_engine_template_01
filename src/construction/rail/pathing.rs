@@ -4,8 +4,8 @@ use bevy::prelude::*;
 
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::placement::{ActiveRailPlacement, RailSegmentPreview};
 use super::super::roads::spline::catmull_rom_chain;
+use super::placement::{ActiveRailPlacement, RailSegmentPreview};
 use super::validation::{segment_slope_ok, turn_radius_ok, validate_rail_segment};
 
 #[inline]
@@ -23,7 +23,11 @@ pub fn regenerate_rail_segments(
 ) -> Vec<RailSegmentPreview> {
     let mut chain: Vec<Vec3> = placement.control_points.to_vec();
     if let Some(c) = cursor_world {
-        if chain.last().copied().map_or(true, |last| (last - c).length_squared() > 0.01) {
+        if chain
+            .last()
+            .copied()
+            .map_or(true, |last| (last - c).length_squared() > 0.01)
+        {
             chain.push(c);
         }
     }
@@ -51,8 +55,7 @@ pub fn regenerate_rail_segments(
             } else {
                 true
             };
-            let validation =
-                validate_rail_segment(head, tail, start.y, end.y, max_slope, params);
+            let validation = validate_rail_segment(head, tail, start.y, end.y, max_slope, params);
             RailSegmentPreview {
                 start,
                 end,

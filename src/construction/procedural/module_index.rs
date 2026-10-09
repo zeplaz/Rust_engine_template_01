@@ -274,9 +274,7 @@ impl ProceduralModuleRegistry {
 
     #[must_use]
     pub fn modules_for_stylepack(&self) -> impl Iterator<Item = &ProceduralModuleEntry> {
-        self.entries
-            .iter()
-            .filter(|e| e.visible_in_stylepack())
+        self.entries.iter().filter(|e| e.visible_in_stylepack())
     }
 
     #[must_use]
@@ -486,7 +484,10 @@ fn entry_from_json(raw: ModuleIndexEntryJson) -> ProceduralModuleEntry {
     )
 }
 
-fn ingest_entries(registry: &mut ProceduralModuleRegistry, entries: impl Iterator<Item = ProceduralModuleEntry>) {
+fn ingest_entries(
+    registry: &mut ProceduralModuleRegistry,
+    entries: impl Iterator<Item = ProceduralModuleEntry>,
+) {
     for entry in entries {
         let module_id = entry.module_id.clone();
         let job_id = entry.job_id.clone();
@@ -519,10 +520,7 @@ pub fn load_procedural_module_registry_from_path(path: &Path) -> ProceduralModul
         match serde_json::from_str::<ModuleIndexFileJson>(&text) {
             Ok(file) => {
                 registry.schema_version = file.schema_version;
-                ingest_entries(
-                    &mut registry,
-                    file.entries.into_iter().map(entry_from_json),
-                );
+                ingest_entries(&mut registry, file.entries.into_iter().map(entry_from_json));
             }
             Err(e) => registry.load_errors.push(format!("JSON parse: {e}")),
         }
@@ -530,10 +528,7 @@ pub fn load_procedural_module_registry_from_path(path: &Path) -> ProceduralModul
         match ron::from_str::<ModuleIndexFileRon>(&text) {
             Ok(file) => {
                 registry.schema_version = file.schema_version;
-                ingest_entries(
-                    &mut registry,
-                    file.entries.into_iter().map(entry_from_ron),
-                );
+                ingest_entries(&mut registry, file.entries.into_iter().map(entry_from_ron));
             }
             Err(e) => registry.load_errors.push(format!("RON parse: {e}")),
         }
@@ -645,10 +640,7 @@ pub fn refresh_bq_f2_style_001_witness() -> bool {
     use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
     let body = build_bq_f2_style_001_witness_body();
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
     let wrapped = wrap_debug_run(
         "BQ-F2-STYLE-001",
         "refresh_bq_f2_style_001_witness",
@@ -665,11 +657,7 @@ mod tests {
     #[test]
     fn loads_kit_greybox_module_index() {
         let reg = load_procedural_module_registry();
-        assert!(
-            reg.load_errors.is_empty(),
-            "errors: {:?}",
-            reg.load_errors
-        );
+        assert!(reg.load_errors.is_empty(), "errors: {:?}", reg.load_errors);
         assert!(reg.len() >= 10);
         let wall = reg.get("wall_concrete_2u").expect("wall_concrete_2u");
         assert_eq!(wall.job_id, "wall_concrete_2u_production_run001");
@@ -714,9 +702,7 @@ mod tests {
     fn wall_brick_1u_resolves_to_best_stylepack_tier() {
         let reg = load_procedural_module_registry();
         assert!(reg.load_errors.is_empty(), "{:?}", reg.load_errors);
-        let entry = reg
-            .stylepack_entry("wall_brick_1u")
-            .expect("wall_brick_1u");
+        let entry = reg.stylepack_entry("wall_brick_1u").expect("wall_brick_1u");
         // Production wins when both tiers ship; otherwise lod0 is acceptable.
         assert!(
             matches!(
@@ -727,9 +713,7 @@ mod tests {
             entry.development_tier,
             entry.job_id
         );
-        let asset = reg
-            .stylepack_glb_asset("wall_brick_1u")
-            .expect("glb asset");
+        let asset = reg.stylepack_glb_asset("wall_brick_1u").expect("glb asset");
         assert!(asset.contains("wall_brick_1u"));
         if entry.development_tier == DevelopmentTier::Production {
             assert!(
@@ -776,11 +760,7 @@ mod tests {
         assert_eq!(entry.development_tier, DevelopmentTier::Lod0);
     }
 
-    fn stylepack_fixture(
-        job_id: &str,
-        tier: &str,
-        style_pack: &str,
-    ) -> ProceduralModuleEntry {
+    fn stylepack_fixture(job_id: &str, tier: &str, style_pack: &str) -> ProceduralModuleEntry {
         normalize_entry(
             "wall_brick_1u".into(),
             job_id.into(),
@@ -811,15 +791,20 @@ mod tests {
             "production",
             "style_industrial_west",
         );
-        let (picked, meta) =
-            pick_stylepack_entry([&same_lod0, &other_prod].into_iter(), Some("style_colonial"));
+        let (picked, meta) = pick_stylepack_entry(
+            [&same_lod0, &other_prod].into_iter(),
+            Some("style_colonial"),
+        );
         let picked = picked.expect("production row");
         assert_eq!(picked.development_tier, DevelopmentTier::Production);
         assert_eq!(picked.job_id, "wall_brick_1u_production_iw");
         assert!(meta.cross_style_fallback);
 
-        let same_prod =
-            stylepack_fixture("wall_brick_1u_production_colonial", "production", "style_colonial");
+        let same_prod = stylepack_fixture(
+            "wall_brick_1u_production_colonial",
+            "production",
+            "style_colonial",
+        );
         let (picked, meta) = pick_stylepack_entry(
             [&same_lod0, &other_prod, &same_prod].into_iter(),
             Some("style_colonial"),
@@ -832,8 +817,10 @@ mod tests {
 
         let other_lod0 =
             stylepack_fixture("wall_brick_1u_lod0_iw", "lod0", "style_industrial_west");
-        let (picked, meta) =
-            pick_stylepack_entry([&other_lod0, &same_lod0].into_iter(), Some("style_colonial"));
+        let (picked, meta) = pick_stylepack_entry(
+            [&other_lod0, &same_lod0].into_iter(),
+            Some("style_colonial"),
+        );
         let picked = picked.expect("same-pack lod0");
         assert_eq!(picked.development_tier, DevelopmentTier::Lod0);
         assert_eq!(picked.style_pack, "style_colonial");

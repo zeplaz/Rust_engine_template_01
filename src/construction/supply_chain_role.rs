@@ -44,10 +44,7 @@ impl IndustrialSupplyChainRole {
         }
     }
 
-    pub fn resolve(
-        catalog_id: &str,
-        json_role: Option<IndustrialSupplyChainRole>,
-    ) -> Option<Self> {
+    pub fn resolve(catalog_id: &str, json_role: Option<IndustrialSupplyChainRole>) -> Option<Self> {
         json_role.or_else(|| Self::from_catalog_id(catalog_id))
     }
 }

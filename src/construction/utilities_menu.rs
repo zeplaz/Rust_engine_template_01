@@ -97,7 +97,10 @@ pub fn draw_utilities_submenu(
     );
     ui.separator();
     ui.label(egui::RichText::new("Nodes").small().weak());
-    for archetype in [BuildingArchetypeId::PowerPlant, BuildingArchetypeId::WaterPlant] {
+    for archetype in [
+        BuildingArchetypeId::PowerPlant,
+        BuildingArchetypeId::WaterPlant,
+    ] {
         let preview = intent_from_archetype(archetype, registry);
         let place_icon = match archetype {
             BuildingArchetypeId::PowerPlant => PowerHudIconId::SubstationPlace,

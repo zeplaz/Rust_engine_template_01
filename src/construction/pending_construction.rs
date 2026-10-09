@@ -109,10 +109,7 @@ mod tests {
             label: label.into(),
             archetype: SiteArchetype::Factory,
             origin: BuildSiteTile { x: 0, z: 0 },
-            footprint: FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            footprint: FootprintTiles { width: 1, depth: 1 },
             layer: LayerType::Surface,
             rotation_quarter_turns: 0,
             mirror_x: false,

@@ -143,7 +143,7 @@ def validate_tile_batch(path: Path, *, compression_level: int = 3) -> Validation
                 signature="tile_batch_render_method",
             )
         )
-    if "seed" not in render:
+    if not isinstance(render, dict) or "seed" not in render:
         issues.append(
             ValidationIssue(
                 kind="MissingField",
@@ -154,6 +154,19 @@ def validate_tile_batch(path: Path, *, compression_level: int = 3) -> Validation
                 signature="tile_batch_missing_seed",
             )
         )
+    else:
+        seed = render.get("seed")
+        if isinstance(seed, bool) or not isinstance(seed, int):
+            issues.append(
+                ValidationIssue(
+                    kind="InvalidType",
+                    severity="error",
+                    file=str(path),
+                    field="render.seed",
+                    hint="render.seed must be an integer (deterministic_output)",
+                    signature="tile_batch_seed_not_int",
+                )
+            )
 
     variants = data.get("variants") or []
     if len(variants) < 2:

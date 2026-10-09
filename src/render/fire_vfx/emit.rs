@@ -3,12 +3,13 @@
 use bevy::math::{UVec2, Vec2, Vec4};
 use bevy::prelude::*;
 
+use crate::construction::world_map_tile_center;
 use crate::gui::GPU_FIRE_INSTANCE_BUDGET_CEILING;
 use crate::render::extraction::RenderProjectionGraph;
 use crate::render::extraction::sim_visual_extract::{
     ClimateVisualAggregate, FireVisualGpuInstance, SimChunkSmokeVisualExtract,
-    FIRE_VISUAL_ACTIVE_HEAT_EPS,
 };
+use crate::render::CHUNK_FIRE_OVERLAY_DISPLAY_MIN;
 use crate::render::{
     trace_particle_routing, ChunkCoord, DebugRenderTraceConfig, FireChunkLodState, FireLodBand,
 };
@@ -22,9 +23,11 @@ use super::consumable::{
 use super::frame::WorldFireParticleFrame;
 use super::pack::{GpuParticleInstance, ParticleClass};
 use super::witness::{
-    fire_spark_witness_phase, fire_spark_zoom_scatter_gate, FireSparkWitness,
-    FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE, FIRE_SPARK_SCATTER_MAX,
+    fire_spark_witness_phase, FireSparkWitness, FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_SCATTER_MAX,
 };
+
+/// Map-plane spark height. Same value as private `PLANE_Z` in `world_map_network_mesh`.
+const FIRE_SPARK_MAP_PLANE_Z: f32 = 1.04;
 
 /// Chunk slab size assumed when bootstrap rows lack matrix geometry (matches test harness).
 const FIRE_PARTICLE_BOOTSTRAP_SLAB: u32 = 32;
@@ -46,15 +49,10 @@ pub fn is_tactical_fire_particle_view(id: crate::gui::ViewId) -> bool {
     )
 }
 
-/// FIRE-VIS-001: `px_per_tile` is the camera's raw scale (`ExtractedCameraMetrics::zoom_level`),
-/// not `zoom_alpha` — see [`FIRE_SPARK_MIN_PX_PER_TILE`].
+/// Scatter slots from heat and budget pressure. Camera scale does not change the count.
 #[inline]
 #[must_use]
-pub fn fire_particle_scatter_count(heat: f32, px_per_tile: f32, budget_pressure: f32) -> usize {
-    let zoom_gate = fire_spark_zoom_scatter_gate(px_per_tile);
-    if zoom_gate <= 0.0 {
-        return 0;
-    }
+pub fn fire_particle_scatter_count(heat: f32, budget_pressure: f32) -> usize {
     let base = if heat >= 0.72 {
         11
     } else if heat >= 0.48 {
@@ -66,11 +64,7 @@ pub fn fire_particle_scatter_count(heat: f32, px_per_tile: f32, budget_pressure:
     } else {
         0
     };
-    let mut slots = ((base as f32) * zoom_gate).ceil() as usize;
-    if px_per_tile >= FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE * 0.75 && heat >= 0.12 {
-        slots = slots.max(2);
-    }
-    slots = slots.min(FIRE_SPARK_SCATTER_MAX);
+    let mut slots = base.min(FIRE_SPARK_SCATTER_MAX);
     if budget_pressure >= FIRE_SPARK_BUDGET_PRESSURE && slots > 1 {
         slots = (slots / 2).max(1);
     }
@@ -85,7 +79,8 @@ fn fire_particle_scatter_offset(chunk_xy: Vec2, heat: f32, slot: u32) -> Vec2 {
         .wrapping_add(slot.wrapping_mul(19349663));
     let a = (seed & 0xffff) as f32 / 65535.0;
     let b = ((seed >> 16) & 0xffff) as f32 / 65535.0;
-    let r = 10.0 + heat * 34.0;
+    // Stay on the burning cell (≤ ~0.5 world meters). A 10–44m spray is not that cell.
+    let r = 0.12 + heat * 0.28;
     Vec2::new((a * 2.0 - 1.0) * r, (b * 2.0 - 1.0) * r)
 }
 
@@ -106,12 +101,11 @@ fn fire_lod_band_for_instance_row(row: &FireVisualGpuInstance, chunk_lod: Option
 }
 
 /// Shapes a projected GPU row for particle emission from authoritative [`FireLodBand`].
-/// FIRE-VIS-001: `px_per_tile` is the camera's raw scale, not `zoom_alpha`.
+/// Class follows the band. Camera scale is not an input.
 #[must_use]
 fn shape_fire_row_for_particle_lod(
     mut row: FireVisualGpuInstance,
     band: FireLodBand,
-    px_per_tile: f32,
 ) -> Option<(FireVisualGpuInstance, ParticleClass)> {
     match band {
         FireLodBand::None => None,
@@ -126,15 +120,28 @@ fn shape_fire_row_for_particle_lod(
             row.chunk_xy_heat_lum.z *= 0.62;
             row.chunk_xy_heat_lum.w *= 0.82;
             row.smoke_ember_vis_priority.y *= 0.68;
-            let class = if px_per_tile >= FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE * 0.75 {
-                ParticleClass::Spark
-            } else {
-                ParticleClass::Ember
-            };
-            Some((row, class))
+            Some((row, ParticleClass::Ember))
         }
         FireLodBand::FullFlame => Some((row, ParticleClass::Spark)),
     }
+}
+
+/// Cell of the row's horizontal sample (`world_xyz_radius.xy`), then the map-tile center.
+/// `slot: None` sits on the center. `Some` adds a scatter offset that stays inside that cell.
+/// Z is the map plane, not the z returned by [`world_map_tile_center`].
+fn place_spark_on_map_cell(row: FireVisualGpuInstance, slot: Option<u32>) -> FireVisualGpuInstance {
+    let tile_x = row.world_xyz_radius.x.floor() as i32;
+    let tile_z = row.world_xyz_radius.y.floor() as i32;
+    let center = world_map_tile_center(tile_x, tile_z);
+    let offset = match slot {
+        Some(slot) => fire_particle_scatter_offset(row.chunk_grid_xy(), row.heat(), slot),
+        None => Vec2::ZERO,
+    };
+    let mut placed = row;
+    placed.world_xyz_radius.x = center.x + offset.x;
+    placed.world_xyz_radius.y = center.y + offset.y;
+    placed.world_xyz_radius.z = FIRE_SPARK_MAP_PLANE_Z;
+    placed
 }
 
 pub fn emit_world_fire_particles_from_projection(
@@ -246,8 +253,6 @@ pub fn update_world_fire_particles_from_projection(
     let mut budget_capped = false;
 
     // Operator debug: zoom cull disabled — emit whenever tactical + capacity allow.
-    // Density still soft-ramps via fire_spark_zoom_scatter_gate (MIN may be 0).
-    let px_per_tile = cam.zoom_level.max(0.01);
     if !tactical || capacity == 0 {
         frame.spark_witness = FireSparkWitness {
             phase: fire_spark_witness_phase(),
@@ -267,31 +272,32 @@ pub fn update_world_fire_particles_from_projection(
         .reserve(graph.fire.instance_buffer.len().min(capacity));
     for row in &graph.fire.instance_buffer {
         let band = fire_lod_band_for_instance_row(row, chunk_lod);
-        let Some((shaped, class)) = shape_fire_row_for_particle_lod(*row, band, px_per_tile) else {
+        let Some((shaped, class)) = shape_fire_row_for_particle_lod(*row, band) else {
             continue;
         };
-        if shaped.heat() < FIRE_VISUAL_ACTIVE_HEAT_EPS && shaped.smoke_ember_vis_priority.y < 0.02 {
+        // Overlay heat below the display floor is not a fire. Those rows were
+        // filling the operational cap (48) while `fire_heat_overlay_on` stayed false.
+        if shaped.heat() < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
             continue;
         }
         let heat = shaped.heat();
-        let chunk_xy = shaped.chunk_grid_xy();
         let budget_pressure = if capacity > 0 {
             frame.instances.len() as f32 / capacity as f32
         } else {
             1.0
         };
+        let anchor = place_spark_on_map_cell(shaped, None);
         frame
             .instances
-            .push(GpuParticleInstance::from_fire_visual(&shaped, class, cam));
-        let scatter_n = fire_particle_scatter_count(heat, px_per_tile, budget_pressure);
+            .push(GpuParticleInstance::from_fire_visual(&anchor, class, cam));
+        let scatter_n = fire_particle_scatter_count(heat, budget_pressure);
         scatter_slots = scatter_slots.saturating_add(scatter_n);
         for slot in 0u32..scatter_n as u32 {
             if frame.instances.len() >= capacity {
                 budget_capped = true;
                 break;
             }
-            let offset = fire_particle_scatter_offset(chunk_xy, heat, slot);
-            let scattered = fire_row_with_world_offset(shaped, offset);
+            let scattered = place_spark_on_map_cell(shaped, Some(slot));
             let scatter_class = if heat >= 0.28 {
                 ParticleClass::Spark
             } else {
@@ -331,7 +337,7 @@ pub fn update_world_fire_particles_from_projection(
             row.world_xyz_radius = Vec4::new(center.x, center.y, 0.0, 28.0);
             row.smoke_ember_vis_priority = Vec4::new(0.12, 0.55, 0.0, 1.0);
             if let Some((shaped, class)) =
-                shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame, px_per_tile)
+                shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame)
             {
                 frame.instances.push(GpuParticleInstance::from_fire_visual(
                     &shaped,
@@ -373,7 +379,6 @@ fn append_smoke_atmosphere_particles_from_extract(
         return;
     }
     let capacity = frame.gpu_capacity.max(1);
-    let px_per_tile = cam.zoom_level.max(0.01);
     for row in &smoke.instances {
         if frame.instances.len() >= capacity {
             break;
@@ -388,9 +393,7 @@ fn append_smoke_atmosphere_particles_from_extract(
         fv.chunk_xy_heat_lum = Vec4::new(coord.x as f32, coord.y as f32, density * 0.12, density);
         fv.world_xyz_radius = Vec4::new(center.x, center.y, 4.0, 22.0);
         fv.smoke_ember_vis_priority = Vec4::new(density.max(0.35), 0.0, 0.0, 1.0);
-        let Some((shaped, _)) =
-            shape_fire_row_for_particle_lod(fv, FireLodBand::SmokeOnly, px_per_tile)
-        else {
+        let Some((shaped, _)) = shape_fire_row_for_particle_lod(fv, FireLodBand::SmokeOnly) else {
             continue;
         };
         frame.instances.push(GpuParticleInstance::from_fire_visual(
@@ -414,7 +417,6 @@ pub fn seed_world_fire_particles_from_overlay_heat(
     cam: ExtractedCameraMetrics,
 ) {
     // FIRE-VIS-001: cull gate removed for operator debug — always seed from overlay heat.
-    let px_per_tile = cam.zoom_level.max(0.01);
     frame.instances.clear();
     let mut scatter_slots = 0usize;
     for (&coord, &heat) in chunk_fire_heat {
@@ -426,15 +428,14 @@ pub fn seed_world_fire_particles_from_overlay_heat(
         let center = chunk_world_center(coord, UVec2::splat(FIRE_PARTICLE_BOOTSTRAP_SLAB));
         row.world_xyz_radius = Vec4::new(center.x, center.y, 0.0, 28.0);
         row.smoke_ember_vis_priority = Vec4::new(0.12, 0.55, 0.0, 1.0);
-        let Some((shaped, class)) =
-            shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame, px_per_tile)
+        let Some((shaped, class)) = shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame)
         else {
             continue;
         };
         frame
             .instances
             .push(GpuParticleInstance::from_fire_visual(&shaped, class, cam));
-        let scatter_n = fire_particle_scatter_count(heat, px_per_tile, 0.0).max(2);
+        let scatter_n = fire_particle_scatter_count(heat, 0.0).max(2);
         scatter_slots = scatter_slots.saturating_add(scatter_n);
         for slot in 0..scatter_n as u32 {
             let offset = fire_particle_scatter_offset(shaped.chunk_grid_xy(), heat, slot);
@@ -470,7 +471,6 @@ pub fn append_effect_consumable_registry_particles(
     cam: ExtractedCameraMetrics,
 ) {
     let capacity = frame.gpu_capacity.max(1);
-    let px_per_tile = cam.zoom_level.max(0.01);
     let ctx = EffectSpawnResolveContext {
         overlay,
         climate,
@@ -489,14 +489,7 @@ pub fn append_effect_consumable_registry_particles(
         if def.particle_domain().is_none() {
             continue;
         }
-        pushed += push_consumable_def_instances(
-            def,
-            &consumable.resolved_spawn,
-            frame,
-            cam,
-            px_per_tile,
-            capacity,
-        );
+        pushed += push_consumable_def_instances(def, &consumable.resolved_spawn, frame, cam, capacity);
     }
 
     // Heat-/precip-coupled registry defs without live entities still emit from field samples.
@@ -524,9 +517,9 @@ pub fn append_effect_consumable_registry_particles(
             continue;
         }
         if def.sim_coupling == SimCoupling::HeatField && !frame.instances.is_empty() && pushed == 0 {
-            pushed += push_consumable_def_instances(def, &resolved, frame, cam, px_per_tile, capacity);
+            pushed += push_consumable_def_instances(def, &resolved, frame, cam, capacity);
         } else if def.sim_coupling != SimCoupling::HeatField || frame.instances.is_empty() {
-            pushed += push_consumable_def_instances(def, &resolved, frame, cam, px_per_tile, capacity);
+            pushed += push_consumable_def_instances(def, &resolved, frame, cam, capacity);
         }
     }
 
@@ -546,7 +539,6 @@ fn push_consumable_def_instances(
     resolved: &EffectResolvedSpawn,
     frame: &mut WorldFireParticleFrame,
     cam: ExtractedCameraMetrics,
-    px_per_tile: f32,
     capacity: usize,
 ) -> usize {
     let class = match def.lane {
@@ -589,9 +581,7 @@ fn push_consumable_def_instances(
     );
     row.world_xyz_radius = bevy::math::Vec4::new(world.x, world.y, world.z, 24.0);
     row.smoke_ember_vis_priority = bevy::math::Vec4::new(0.2, 0.7, 0.0, 1.0);
-    let Some((shaped, _)) =
-        shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame, px_per_tile)
-    else {
+    let Some((shaped, _)) = shape_fire_row_for_particle_lod(row, FireLodBand::FullFlame) else {
         return 0;
     };
     let mut pushed = 0usize;
@@ -619,7 +609,9 @@ pub fn effect_consumable_registry_emit_wired() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::fire_vfx::witness::FIRE_SPARK_FULL_SCATTER_PX_PER_TILE;
+    use crate::render::fire_vfx::witness::{
+        FIRE_SPARK_FULL_SCATTER_PX_PER_TILE, FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE,
+    };
     use crate::render::core::gpu_buffer_registry::{BufferId, FIRE_PARTICLE_INSTANCES_BUFFER};
     use crate::gui::{
         build_representation_inputs, build_representation_result, resolution_for_band,
@@ -642,6 +634,65 @@ mod tests {
         row.world_xyz_radius = Vec4::new(chunk.x as f32 * 64.0, chunk.y as f32 * 64.0, 0.0, 32.0);
         row.smoke_ember_vis_priority = Vec4::new(0.1, ember, 0.0, 1.0);
         row
+    }
+
+    #[test]
+    fn scatter_stays_on_burning_cell_world_meters() {
+        let row = sample_fire_row(IVec2::new(2, 3), 0.8, 0.4);
+        let cell = Vec2::new(row.world_xyz_radius.x, row.world_xyz_radius.y);
+        let chunk_index = row.chunk_grid_xy();
+        assert!((cell - chunk_index).length() > 10.0, "fixture world is not the tile index");
+        let offset = fire_particle_scatter_offset(chunk_index, 0.8, 1);
+        assert!(
+            offset.length() < 0.5,
+            "scatter must stay on the burning cell, got {}",
+            offset.length()
+        );
+        let scattered = fire_row_with_world_offset(row, offset);
+        let placed = Vec2::new(scattered.world_xyz_radius.x, scattered.world_xyz_radius.y);
+        assert!((placed - cell).length() < 0.5);
+        assert!((placed - chunk_index).length() > 10.0);
+    }
+
+    #[test]
+    fn spark_above_heat_floor_sits_on_map_tile_plane() {
+        let chunk = IVec2::new(2, 3);
+        let source = sample_fire_row(chunk, 0.8, 0.4);
+        let mut graph = RenderProjectionGraph::default();
+        graph.fire.gpu_instance_capacity = 64;
+        graph.fire.instance_buffer = vec![source];
+        let mut particles = WorldFireParticleFrame::default();
+        update_world_fire_particles_from_projection(
+            &graph,
+            &mut particles,
+            None,
+            ExtractedCameraMetrics {
+                zoom_level: 0.08,
+                ..Default::default()
+            },
+            None,
+        );
+        let tile_x = source.world_xyz_radius.x.floor() as i32;
+        let tile_z = source.world_xyz_radius.y.floor() as i32;
+        let center = world_map_tile_center(tile_x, tile_z);
+        assert!(particles.instances.len() > 1);
+        assert!(
+            particles.instances.iter().any(|inst| {
+                (inst.world_xyz_heat.x - center.x).abs() < 1e-4
+                    && (inst.world_xyz_heat.y - center.y).abs() < 1e-4
+            }),
+            "anchor spark must sit on the tile center"
+        );
+        for inst in &particles.instances {
+            let p = inst.world_xyz_heat;
+            let delta = Vec2::new(p.x - center.x, p.y - center.y).length();
+            assert!(delta < 0.5, "spark left the cell: {delta}");
+            assert!(
+                (p.z - FIRE_SPARK_MAP_PLANE_Z).abs() < 1e-5,
+                "spark z {} is not the map plane",
+                p.z
+            );
+        }
     }
 
     #[test]
@@ -751,7 +802,7 @@ mod tests {
             ..Default::default()
         };
         update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
-        let scatter = 1 + fire_particle_scatter_count(0.8, cam.zoom_level, 0.0);
+        let scatter = 1 + fire_particle_scatter_count(0.8, 0.0);
         assert_eq!(particles.instances.len(), scatter);
         assert_eq!(particles.snapshot_stamp, 7);
         assert_eq!(
@@ -879,7 +930,7 @@ mod tests {
         );
         assert_eq!(
             particles.instances.len(),
-            1 + fire_particle_scatter_count(0.9, cam.zoom_level, 0.0)
+            1 + fire_particle_scatter_count(0.9, 0.0)
         );
     }
 
@@ -942,7 +993,7 @@ mod tests {
         );
         assert_eq!(
             particles.instances.len(),
-            1 + fire_particle_scatter_count(0.95 * 0.15, cam.zoom_level, 0.0)
+            1 + fire_particle_scatter_count(0.95 * 0.15, 0.0)
         );
         assert!(
             (particles.instances[0].ember_class_radius_smoke.y - ParticleClass::AtmosphereFx.as_f32()).abs()
@@ -983,14 +1034,12 @@ mod tests {
 
     #[test]
     fn hot_cell_scatter_count_at_least_three() {
-        // FIRE-VIS-001: second arg is px-per-tile (tactical zoom, well above FIRE_SPARK_MIN_PX_PER_TILE).
-        assert!(fire_particle_scatter_count(0.8, 2.8, 0.0) >= 3);
+        assert!(fire_particle_scatter_count(0.8, 0.0) >= 3);
     }
 
     #[test]
     fn strategic_zoom_zeroes_scatter() {
-        // Soft density ramp: very far zoom still gets at least a thin scatter when heat is hot.
-        assert!(fire_particle_scatter_count(0.95, 0.08, 0.0) >= 1);
+        assert!(fire_particle_scatter_count(0.95, 0.0) >= 1);
     }
 
     #[test]
@@ -1045,7 +1094,7 @@ mod tests {
     }
 
     #[test]
-    fn low_flame_lod_routes_spark_class_at_operational_zoom() {
+    fn low_flame_lod_routes_ember_class_at_operational_zoom() {
         let mut graph = RenderProjectionGraph::default();
         graph.fire.gpu_instance_capacity = 16;
         graph.fire.instance_buffer = vec![sample_fire_row(IVec2::new(1, 1), 0.85, 0.5)];
@@ -1068,15 +1117,15 @@ mod tests {
             None,
         );
         assert!(
-            (particles.instances[0].ember_class_radius_smoke.y - ParticleClass::Spark.as_f32()).abs()
+            (particles.instances[0].ember_class_radius_smoke.y - ParticleClass::Ember.as_f32()).abs()
                 < 1e-4
         );
     }
 
     #[test]
     fn budget_pressure_halves_scatter_slots() {
-        let full = fire_particle_scatter_count(0.8, 2.8, 0.0);
-        let pressured = fire_particle_scatter_count(0.8, 2.8, FIRE_SPARK_BUDGET_PRESSURE);
+        let full = fire_particle_scatter_count(0.8, 0.0);
+        let pressured = fire_particle_scatter_count(0.8, FIRE_SPARK_BUDGET_PRESSURE);
         assert!(pressured <= full);
         assert!(pressured >= 1);
         assert_eq!(pressured, full / 2);

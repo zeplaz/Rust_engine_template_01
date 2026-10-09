@@ -5,7 +5,9 @@ use std::collections::BTreeMap;
 
 use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId};
 use super::building_catalog::BuildingFamily;
-use super::building_definitions::{intent_from_archetype, BuildingDefinition, BuildingDefinitionRegistry};
+use super::building_definitions::{
+    intent_from_archetype, BuildingDefinition, BuildingDefinitionRegistry,
+};
 use super::residential_menu::draw_intent_preview;
 
 fn pick(tool: &mut ActiveBuildTool, preview: super::building_catalog::BuildingIntentPreview) {
@@ -13,26 +15,35 @@ fn pick(tool: &mut ActiveBuildTool, preview: super::building_catalog::BuildingIn
     tool.building_intent = Some(preview);
 }
 
-fn draw_def_button(ui: &mut egui::Ui, tool: &mut ActiveBuildTool, registry: &BuildingDefinitionRegistry, id: &str) {
+fn draw_def_button(
+    ui: &mut egui::Ui,
+    tool: &mut ActiveBuildTool,
+    registry: &BuildingDefinitionRegistry,
+    id: &str,
+) {
     if let Some(def) = registry.get(id) {
-        let label = format!(
-            "{} ({:.0} power)",
-            def.display_name, def.power_consumption
-        );
+        let label = format!("{} ({:.0} power)", def.display_name, def.power_consumption);
         if ui.button(label).clicked() {
             pick(tool, registry.intent_preview(id).unwrap());
         }
     }
 }
 
-fn chain_groups(registry: &BuildingDefinitionRegistry) -> (BTreeMap<String, Vec<&BuildingDefinition>>, Vec<&BuildingDefinition>) {
+fn chain_groups(
+    registry: &BuildingDefinitionRegistry,
+) -> (
+    BTreeMap<String, Vec<&BuildingDefinition>>,
+    Vec<&BuildingDefinition>,
+) {
     let mut by_chain: BTreeMap<String, Vec<&BuildingDefinition>> = BTreeMap::new();
     let mut unchained = Vec::new();
     for id in registry.ids_by_family(BuildingFamily::Industry) {
         if id.starts_with("builtin:") {
             continue;
         }
-        let Some(def) = registry.get(id) else { continue };
+        let Some(def) = registry.get(id) else {
+            continue;
+        };
         if let Some(chain) = def.supply_chain.as_ref() {
             by_chain.entry(chain.clone()).or_default().push(def);
         } else {

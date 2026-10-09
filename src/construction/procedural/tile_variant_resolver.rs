@@ -10,7 +10,8 @@ use super::TileAtlasEntry;
 use crate::strategic::SiteConstructionPhase;
 
 pub const VARIANT_CATALOG_RON: &str = "assets/configs/buildings/_variant_catalog.ron";
-pub const PROCEDURAL_TILES_RUNTIME_LIVE_JSON: &str = "debug_runs/procedural_tiles_runtime_live.json";
+pub const PROCEDURAL_TILES_RUNTIME_LIVE_JSON: &str =
+    "debug_runs/procedural_tiles_runtime_live.json";
 const RESOLVER_VERSION: &str = "pt4_v1";
 
 #[derive(Debug, Clone, Deserialize)]
@@ -138,10 +139,8 @@ pub fn pt_5_002_fire_frame_tick_witness_green() -> bool {
     let Some(catalog) = load_variant_catalog() else {
         return false;
     };
-    let uvs = std::collections::HashMap::from([(
-        "burning_00".to_string(),
-        [0.0_f32, 0.0, 0.5, 0.5],
-    )]);
+    let uvs =
+        std::collections::HashMap::from([("burning_00".to_string(), [0.0_f32, 0.0, 0.5, 0.5])]);
     let ctx_a = TileVariantContext {
         phase: SiteConstructionPhase::Operational,
         fire_heat: 1.0,
@@ -182,7 +181,10 @@ fn pick_from_composite(
         .map(|r| r.key.clone())
 }
 
-fn fallback_key(catalog: &VariantCatalog, available: &std::collections::HashMap<String, [f32; 4]>) -> String {
+fn fallback_key(
+    catalog: &VariantCatalog,
+    available: &std::collections::HashMap<String, [f32; 4]>,
+) -> String {
     if available.contains_key(&catalog.default_fallback_key) {
         return catalog.default_fallback_key.clone();
     }
@@ -191,7 +193,11 @@ fn fallback_key(catalog: &VariantCatalog, available: &std::collections::HashMap<
             return key.clone();
         }
     }
-    available.keys().next().cloned().unwrap_or_else(|| "clean_day".into())
+    available
+        .keys()
+        .next()
+        .cloned()
+        .unwrap_or_else(|| "clean_day".into())
 }
 
 fn clamp_to_available(
@@ -253,11 +259,15 @@ pub fn resolve_tile_variant(
         SiteConstructionPhase::Planned => key_if_set(&catalog.construction_phase_keys.Planned),
         SiteConstructionPhase::Surveying => key_if_set(&catalog.construction_phase_keys.Surveying),
         SiteConstructionPhase::Clearing => key_if_set(&catalog.construction_phase_keys.Clearing),
-        SiteConstructionPhase::Foundation => key_if_set(&catalog.construction_phase_keys.Foundation),
+        SiteConstructionPhase::Foundation => {
+            key_if_set(&catalog.construction_phase_keys.Foundation)
+        }
         SiteConstructionPhase::UnderConstruction => {
             key_if_set(&catalog.construction_phase_keys.UnderConstruction)
         }
-        SiteConstructionPhase::Provisioning => key_if_set(&catalog.construction_phase_keys.Provisioning),
+        SiteConstructionPhase::Provisioning => {
+            key_if_set(&catalog.construction_phase_keys.Provisioning)
+        }
         SiteConstructionPhase::Damaged => key_if_set(&catalog.construction_phase_keys.Damaged),
         SiteConstructionPhase::Offline => key_if_set(&catalog.construction_phase_keys.Offline),
         SiteConstructionPhase::Abandoned => key_if_set(&catalog.construction_phase_keys.Abandoned),
@@ -372,7 +382,10 @@ fn procedural_tiles_runtime_self_check() -> Result<(), &'static str> {
     ]);
     let cases = [
         (SiteConstructionPhase::Operational, "clean_day"),
-        (SiteConstructionPhase::UnderConstruction, "under_construction_02"),
+        (
+            SiteConstructionPhase::UnderConstruction,
+            "under_construction_02",
+        ),
         (SiteConstructionPhase::Abandoned, "abandoned"),
     ];
     if !pt_5_002_fire_frame_tick_witness_green() {
@@ -414,7 +427,15 @@ pub fn build_procedural_tiles_runtime_witness_body() -> serde_json::Value {
     let uvs = pilot_uv_map();
     let mut cases = Vec::new();
     let sample_inputs: [(SiteConstructionPhase, f32, bool, bool, f32, u64, &str); 6] = [
-        (SiteConstructionPhase::Operational, 0.0, false, false, 0.0, 0, "clean_day"),
+        (
+            SiteConstructionPhase::Operational,
+            0.0,
+            false,
+            false,
+            0.0,
+            0,
+            "clean_day",
+        ),
         (
             SiteConstructionPhase::Operational,
             0.0,
@@ -433,7 +454,15 @@ pub fn build_procedural_tiles_runtime_witness_body() -> serde_json::Value {
             0,
             "under_construction_02",
         ),
-        (SiteConstructionPhase::Abandoned, 0.0, false, false, 0.0, 0, "abandoned"),
+        (
+            SiteConstructionPhase::Abandoned,
+            0.0,
+            false,
+            false,
+            0.0,
+            0,
+            "abandoned",
+        ),
         (
             SiteConstructionPhase::Operational,
             0.0,
@@ -708,7 +737,10 @@ mod tests {
     fn landscape_tile_resolver_maps_topology_and_extract_keys() {
         use crate::systems::ecology::load_landscape_atlas_registry;
         let registry = load_landscape_atlas_registry();
-        if !registry.lg5_entry().is_some_and(|e| e.chunk_stamp_allowed()) {
+        if !registry
+            .lg5_entry()
+            .is_some_and(|e| e.chunk_stamp_allowed())
+        {
             return;
         }
         assert!(super::landscape_tile_resolver_witness_green());

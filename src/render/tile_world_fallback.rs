@@ -498,6 +498,12 @@ fn mark_zoom_band_dirty(ctrl: &mut TileWorldFallbackRasterCtrl, desired: &MapCam
     }
 }
 
+/// Play-sprite heat strength. The overlay field is the input. Camera scale is not.
+#[must_use]
+pub fn play_sprite_fire_heat_boost() -> f32 {
+    1.0
+}
+
 /// MAP-ZOOM-001 — zoom-band crossing always schedules tile dirty (Option B partial; lib witness).
 #[must_use]
 pub fn tile_raster_dirty_on_zoom_band_change_enabled() -> bool {
@@ -542,7 +548,8 @@ pub struct TileWorldFallbackPlugin;
 
 impl Plugin for TileWorldFallbackPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<TileWorldFallbackState>()
+        app.init_resource::<crate::gui::map_tile_raster::PlayMapPixelMode>()
+            .init_resource::<TileWorldFallbackState>()
             .init_resource::<SimMinimapUiState>()
             .init_resource::<MinimapShellState>()
             .init_resource::<TileWorldFallbackRasterDirty>()
@@ -650,9 +657,9 @@ fn focus_main_camera_on_world_params(
         .as_ref()
         .map(|s| s.0)
         .is_some_and(|scene| match scene {
-            // VfxSandbox camera is owned by VfxFireTestRegion one-shot focus — do not also
-            // slam tactical proof zoom here (dual writers = shake / miss the burn cluster).
-            TestScene::VfxSandbox => false,
+            // VfxSandbox / City camera is owned by the one-shot harness focus — do not also
+            // slam tactical proof zoom here (dual writers = shake / miss the framed cluster).
+            TestScene::VfxSandbox | TestScene::Vfx | TestScene::City => false,
             TestScene::Visual => launch.as_ref().is_some_and(|l| l.full_capture_active()),
             _ => false,
         });
@@ -669,13 +676,13 @@ fn focus_main_camera_on_world_params(
         fit.clamp(zoom_lo, zoom_hi)
     } else {
         match test_scene.as_ref().map(|s| s.0) {
-            Some(TestScene::Fire) | Some(TestScene::Atmosphere) => {
+            Some(TestScene::Fire) | Some(TestScene::Atmosphere) | Some(TestScene::SubFx) => {
                 let margin = crate::terrain::world_scale_contract::WHOLE_MAP_FIT_MARGIN;
                 let fit: f32 = margin * (viewport.x / world_w).min(viewport.y / world_h);
                 fit.clamp(zoom_lo, zoom_hi)
             }
-            Some(TestScene::VfxSandbox) => {
-                // Interim until VfxFireTestRegion focuses the burn cluster — never whole-map fit.
+            Some(TestScene::VfxSandbox) | Some(TestScene::Vfx) | Some(TestScene::City) => {
+                // Interim until the harness focus frames the burn cluster or town centers.
                 let margin = crate::terrain::world_scale_contract::WHOLE_MAP_FIT_MARGIN;
                 let fit = margin * (viewport.x / world_w.max(1.0)).min(viewport.y / world_h.max(1.0));
                 fit.clamp(zoom_lo, zoom_hi)
@@ -910,11 +917,13 @@ struct MapOverlayRasterWatch {
     sim_fire: bool,
     minimap_layers: PreviewLayers,
     minimap_fire: bool,
+    height_slope: bool,
 }
 
 fn mark_tile_world_fallback_dirty_on_map_overlay_controls(
     map_views: Res<MapViewInstances>,
     presentation: Res<MapViewPresentationStates>,
+    play_map: Res<crate::gui::map_tile_raster::PlayMapPixelMode>,
     mut dirty: ResMut<TileWorldFallbackRasterDirty>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     mut last: Local<MapOverlayRasterWatch>,
@@ -925,11 +934,13 @@ fn mark_tile_world_fallback_dirty_on_map_overlay_controls(
         || sim.overlays.fire_heat != last.sim_fire
         || minimap.layers != last.minimap_layers
         || minimap.overlays.fire_heat != last.minimap_fire
+        || play_map.height_slope != last.height_slope
     {
         last.sim_layers = sim.layers;
         last.sim_fire = sim.overlays.fire_heat;
         last.minimap_layers = minimap.layers;
         last.minimap_fire = minimap.overlays.fire_heat;
+        last.height_slope = play_map.height_slope;
         raster_ctrl.chunk_grid.mark_all_dirty();
         dirty.bump();
     }
@@ -1130,6 +1141,13 @@ fn raster_tile_fallback_subregion(
     water_catalog: Option<&crate::render::WaterSurfaceVisualCatalog>,
     time_secs: f32,
     zoom_alpha: f32,
+    tracer_cells: &[(i32, i32)],
+    impact_cells: &[(i32, i32)],
+    // Play sprite (`state.image`) leaves town marks to `WorldMapTownLabel`.
+    // The CPU minimap image stamps centers when this is true.
+    stamp_town_centers: bool,
+    town_cells: &[(i32, i32)],
+    growth_cells: &[(i32, i32)],
 ) {
     let Some(mut image) = images.get_mut(handle) else {
         return;
@@ -1191,6 +1209,44 @@ fn raster_tile_fallback_subregion(
             zoom_alpha,
         );
     }
+    crate::gui::map_tile_raster::stamp_tracer_cells_subregion(
+        data.as_mut_slice(),
+        tex_w,
+        x0,
+        y0,
+        x1,
+        y1,
+        tracer_cells.iter().copied(),
+    );
+    crate::gui::map_tile_raster::stamp_impact_cells_subregion(
+        data.as_mut_slice(),
+        tex_w,
+        x0,
+        y0,
+        x1,
+        y1,
+        impact_cells.iter().copied(),
+    );
+    if stamp_town_centers {
+        crate::gui::map_tile_raster::stamp_town_centers_subregion(
+            data.as_mut_slice(),
+            tex_w,
+            x0,
+            y0,
+            x1,
+            y1,
+            town_cells.iter().copied(),
+        );
+    }
+    crate::gui::map_tile_raster::stamp_growth_origins_subregion(
+        data.as_mut_slice(),
+        tex_w,
+        x0,
+        y0,
+        x1,
+        y1,
+        growth_cells.iter().copied(),
+    );
 }
 
 /// Optional terrain sources that would exceed Bevy's system param limit if listed separately.
@@ -1199,6 +1255,11 @@ struct TileFallbackRasterExtras<'w> {
     dense_cache: Option<Res<'w, WorldGenDenseTerrainCache>>,
     water_catalog: Option<Res<'w, crate::render::WaterSurfaceVisualCatalog>>,
     zoom_frame: Res<'w, crate::gui::ZoomFrame>,
+    shots: Option<Res<'w, crate::strategic::ShotPulseBook>>,
+    sim_tick: Option<Res<'w, crate::systems::sim_control::SimTick>>,
+    towns: Option<Res<'w, crate::strategic::TownBook>>,
+    pending: Option<Res<'w, crate::construction::PendingConstructionQueue>>,
+    play_map: Res<'w, crate::gui::map_tile_raster::PlayMapPixelMode>,
 }
 
 fn tile_world_fallback_rasterize(
@@ -1233,7 +1294,45 @@ fn tile_world_fallback_rasterize(
         dense_cache,
         water_catalog,
         zoom_frame,
+        shots,
+        sim_tick,
+        towns,
+        pending,
+        play_map,
     } = extras;
+    let mut tracer_cells: Vec<(i32, i32)> = Vec::new();
+    let mut impact_cells: Vec<(i32, i32)> = Vec::new();
+    let town_cells: Vec<(i32, i32)> = towns
+        .as_ref()
+        .map(|book| {
+            book.towns
+                .values()
+                .map(|town| (town.center_tile.x, town.center_tile.y))
+                .collect()
+        })
+        .unwrap_or_default();
+    let growth_cells: Vec<(i32, i32)> = pending
+        .as_ref()
+        .map(|queue| {
+            queue
+                .entries
+                .iter()
+                .filter(|entry| entry.label.starts_with("growth:"))
+                .map(|entry| (entry.origin.x as i32, entry.origin.z as i32))
+                .collect()
+        })
+        .unwrap_or_default();
+    if let Some(book) = shots.as_ref() {
+        let tick = sim_tick.as_ref().map(|t| t.0).unwrap_or(0);
+        for shot in &book.recent {
+            let tile = crate::strategic::shot_trace_tile(shot, tick);
+            if crate::strategic::shot_impact_at(shot, tick, tile) > 0.0 {
+                impact_cells.push((tile.x, tile.y));
+            } else {
+                tracer_cells.push((tile.x, tile.y));
+            }
+        }
+    }
     if state.sprite_entity.is_none()
         || state.image == Handle::default()
         || state.minimap_image == Handle::default()
@@ -1342,18 +1441,8 @@ fn tile_world_fallback_rasterize(
         .collect();
 
     let raster_started = FrameBudgetTimer::start();
-    // VX-P0-01: strategic zoom boost only on the main overworld raster — minimap stays 1.0 so
-    // optional fire-heat toggle does not wash the whole panel when zoomed out.
-    // FIRE-VIS-001: keyed on px-per-tile (camera.scale.x), not zoom_alpha — matches the GPU spark
-    // cull axis so CPU heat boost and GPU sparks agree on "far zoom".
-    let px_per_tile = zoom_frame.px_per_tile;
-    let fire_boost_main = if crate::render::pipelines::gpu_particles::fire_spark_enabled_at_px_per_tile(px_per_tile)
-    {
-        // Operator findability: keep heat tint readable even at mid zoom (sparks are pinpoints).
-        (1.5 + 1.2 / px_per_tile.max(0.5)).clamp(1.5, 3.5)
-    } else {
-        1.25
-    };
+    // Sprite heat reads the overlay field at a fixed strength. Camera scale is the zoom.
+    let fire_boost_main = play_sprite_fire_heat_boost();
     let fire_boost_minimap = 1.0;
     let time_secs = time.elapsed_secs();
     let water_catalog = water_catalog.as_deref();
@@ -1384,10 +1473,7 @@ fn tile_world_fallback_rasterize(
         .collect();
 
     let sim = presentation.get(MapViewInstanceId::SimulationMap);
-    let mut sim_layers = sim.layers;
-    if sim_layers.base_bits().is_empty() {
-        sim_layers.replace_base(PreviewLayers::BIOME);
-    }
+    let sim_layers = crate::gui::map_tile_raster::layers_for_play_sprite(*play_map, sim.layers);
     let minimap = &map_views.minimap;
 
     rebuild_tile_world_fallback_index(
@@ -1447,6 +1533,11 @@ fn tile_world_fallback_rasterize(
                 water_catalog,
                 time_secs,
                 zoom_alpha,
+                &tracer_cells,
+                &impact_cells,
+                false,
+                &town_cells,
+                &growth_cells,
             );
 
             if !raster_ctrl.atlas_stamps.is_empty()
@@ -1502,6 +1593,11 @@ fn tile_world_fallback_rasterize(
                 water_catalog,
                 time_secs,
                 zoom_alpha,
+                &tracer_cells,
+                &impact_cells,
+                true,
+                &town_cells,
+                &growth_cells,
             );
         }
     }
@@ -2000,5 +2096,58 @@ mod chunk_grid_tests {
         let rest = grid.take_dirty_chunks(16);
         assert!(!rest.is_empty());
         assert!(!grid.has_dirty());
+    }
+
+    #[test]
+    fn pln_play_image_does_not_stamp_town_centers() {
+        let mut images = Assets::<Image>::default();
+        let play = images.add(make_rgba_image(4, 4, "pln_play_town"));
+        let minimap = images.add(make_rgba_image(4, 4, "pln_minimap_town"));
+        let overlay = SharedOverlayFieldBuffers::default();
+        let towns = [(1i32, 1i32)];
+        let paint = |images: &mut Assets<Image>, handle: &Handle<Image>, stamp_towns: bool| {
+            raster_tile_fallback_subregion(
+                images,
+                handle,
+                4,
+                4,
+                0,
+                0,
+                4,
+                4,
+                PreviewLayers::empty(),
+                false,
+                std::iter::empty(),
+                std::iter::empty(),
+                &[],
+                None,
+                None,
+                &[],
+                &[],
+                &overlay,
+                0.0,
+                None,
+                0.0,
+                1.0,
+                &[],
+                &[],
+                stamp_towns,
+                &towns,
+                &[],
+            );
+        };
+        paint(&mut images, &play, false);
+        paint(&mut images, &minimap, true);
+
+        let town = crate::gui::map_tile_raster::TOWN_STAMP_RGBA;
+        let rgba_at = |handle: &Handle<Image>, x: usize, y: usize| -> [u8; 4] {
+            let image = images.get(handle).expect("raster image");
+            let data = image.data.as_ref().expect("rgba");
+            let i = 4 * (y * 4 + x);
+            data[i..i + 4].try_into().expect("pixel")
+        };
+        assert_ne!(rgba_at(&play, 1, 1), town);
+        assert_eq!(rgba_at(&minimap, 1, 1), town);
+        assert_ne!(rgba_at(&minimap, 0, 0), town);
     }
 }

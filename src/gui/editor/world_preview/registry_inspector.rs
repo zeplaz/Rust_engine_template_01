@@ -29,6 +29,7 @@ impl PreviewRegistryInspectorHost {
     }
 }
 
+#[allow(dead_code)] // Registry list is not a WorldGen egui panel anymore.
 pub fn world_preview_registry_inspector(
     ui: &mut egui::Ui,
     host: PreviewRegistryInspectorHost,

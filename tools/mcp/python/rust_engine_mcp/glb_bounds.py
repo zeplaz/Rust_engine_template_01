@@ -18,10 +18,16 @@ def read_glb_json(path: Path) -> dict[str, Any] | None:
     while offset + 8 <= len(data):
         chunk_len, chunk_type = struct.unpack("<I4s", data[offset : offset + 8])
         offset += 8
+        if chunk_len > len(data) - offset:
+            return None
         chunk = data[offset : offset + chunk_len]
         offset += chunk_len
         if chunk_type == b"JSON":
-            return json.loads(chunk.decode("utf-8"))
+            try:
+                parsed = json.loads(chunk.decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError):
+                return None
+            return parsed if isinstance(parsed, dict) else None
     return None
 
 

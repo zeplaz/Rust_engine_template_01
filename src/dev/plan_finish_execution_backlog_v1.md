@@ -20,7 +20,7 @@ Owner: @orchestrator routes · @coder / @coder-mcp implement
 | **Intel officer bulk cull (2026-06-20)** | Rows marked `done`/`blocked` **without witness** | Reopen via `exit_predicate`; do not trust status alone |
 | **Stale plan copy** | e.g. designer backlog says **G0**, repo boots **G3** | `PLAN-APS-PRESENCE-PLAN-EDIT-001` + stop citing outdated §0 tables |
 | **HANDOFF drift** | Active programs table omits open queues | Sync HANDOFF when seeding new queue |
-| **Operator gates** | G-PLAY-OPERATOR-01, APS rubric walks | Machine green ≠ product sign-off |
+| **Operator gates** | Playtest and keyframe stills | Acceptance logs. They do not freeze subsystem patches (`blocks_development: false` on G-PLAY-01) |
 | **G4 content bar** | ~~Tier stuck G3~~ | **Done** 2026-07-03 — `aps_g4_coverage_live.json` · tier **G4** |
 
 **Rule:** No new SIGNED plans until the **top open row** in this backlog has a witness path or explicit defer in `defer_registry.json`.
@@ -66,22 +66,23 @@ Owner: @orchestrator routes · @coder / @coder-mcp implement
 
 | ID | Gate |
 |:---|:---|
-| G-PLAY-OPERATOR-01 | Human playtest checklist |
+| G-PLAY-OPERATOR-01 | Acceptance log — does not block subsystem patches |
 | PLAN-AUDIT-020 | Blocked on G-PLAY operator |
 | Iso utility tiles (Lane G) | Product confirms iso-first read |
 
 ---
 
-## Recommended pick order (next 2 weeks)
+## Recommended pick order
 
 ```text
-Week 1  @coder_a/@coder_b  CITY-G0-S11-001 / CITY-G0-S1C-001 (plan_city_grammar G0)
+Now     @coder   PLAN-LANDFORM-VEG-DRAIN-001
+        queue    tools/orchestrator/queues/landform_veg_drain_v1.json
+        next     coder rows done (MAP-SIM, VEG-CELL, VEG-DRAW, town place/seed, haul draw, weapon draw)
+        board    src/dev/landform_veg_drain_todos_v1.md
 
-Week 1  @operator   (optional) APS rubric v2 pixel follow-up @ display session
-
-Week 2  @coder      COD-NUCLEAR-GRID-LINK-001 P1 (LOOP/SCRAM only)
-        @designer-mcp DMCP-SPEC-SUBSTATION-YARD-001 + TRANSFORMER-PAD-001
-        @coder        Sim HUD build picker wire (COD-SIM-HUD-BUILD-PICKER-001)
+Skip    COD-NUCLEAR-COOLING-001 — P2 cooling is already in failure_modes.rs
+Skip    G-PLAY playtest and warehouse keyframe stills — acceptance logs
+Skip    mass-reopen of the 2026-06-20 intel cull
 ```
 
 ---

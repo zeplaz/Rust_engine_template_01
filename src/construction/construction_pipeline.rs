@@ -21,8 +21,8 @@ use super::corridor_transport::{
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use crate::strategic::BuildSiteTile;
 use super::terrain_conform::conform_world_y;
+use crate::strategic::BuildSiteTile;
 
 pub const ROAD_MARKER_Y_SCALE: f32 = 20.0;
 pub const ROAD_MARKER_Y_BIAS: f32 = 0.25;
@@ -148,7 +148,9 @@ pub fn validate_construction_plans_system(
             continue;
         }
         let validation = match plan.intent.entity_type {
-            ConstructionType::RoadSegment { head, tail } => validate_road_segment(head, tail, &params),
+            ConstructionType::RoadSegment { head, tail } => {
+                validate_road_segment(head, tail, &params)
+            }
             ConstructionType::RailSegment { head, tail } => {
                 super::rail::validate_rail_segment(head, tail, 0.0, 0.0, rail.max_slope, &params)
             }
@@ -184,7 +186,9 @@ pub fn execute_construction_plans_system(
     rail: Res<super::rail::ActiveRailPlacement>,
     raster_cfg: Option<Res<crate::strategic::StrategicRasterConfig>>,
     mut hydro_queue: Option<ResMut<crate::substrate::hydrology::HydrologyEventQueue>>,
-    mut hydro_coupling: Option<ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingWitness>>,
+    mut hydro_coupling: Option<
+        ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingWitness>,
+    >,
 ) {
     let mut executed = false;
     let cells_per_chunk = raster_cfg
@@ -197,9 +201,8 @@ pub fn execute_construction_plans_system(
         }
         plan.status = ConstructionStatus::Building;
         let endpoints = match plan.intent.entity_type {
-            ConstructionType::RoadSegment { head, tail } | ConstructionType::RailSegment { head, tail } => {
-                (head, tail)
-            }
+            ConstructionType::RoadSegment { head, tail }
+            | ConstructionType::RailSegment { head, tail } => (head, tail),
         };
         let result = match plan.intent.entity_type {
             ConstructionType::RoadSegment { head, tail } => apply_road_segment_to_world(
@@ -220,7 +223,8 @@ pub fn execute_construction_plans_system(
             ConstructionType::RailSegment { head, tail } => {
                 let hy = conform_world_y(head.x as f32 + 0.5, head.z as f32 + 0.5, &params);
                 let ty = conform_world_y(tail.x as f32 + 0.5, tail.z as f32 + 0.5, &params);
-                if !super::rail::validate_rail_segment(head, tail, hy, ty, rail.max_slope, &params).valid
+                if !super::rail::validate_rail_segment(head, tail, hy, ty, rail.max_slope, &params)
+                    .valid
                 {
                     None
                 } else {
@@ -313,11 +317,7 @@ fn apply_road_segment_to_world<M: Component + Copy>(
     if roads.tiles.len() > len_before {
         tiles_added.extend_from_slice(&roads.tiles[len_before..]);
     }
-    let marker_tiles: Vec<(u32, u32)> = roads
-        .tiles
-        .iter()
-        .map(|tile| (tile.x, tile.z))
-        .collect();
+    let marker_tiles: Vec<(u32, u32)> = roads.tiles.iter().map(|tile| (tile.x, tile.z)).collect();
     let snap = bake_snapshot_from_ordered_tile_markers(
         &marker_tiles,
         |_x, _z| 0.5,

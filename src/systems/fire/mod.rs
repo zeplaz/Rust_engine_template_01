@@ -6,47 +6,50 @@
 //! Design upgrade: [`terrain::fire`](crate::terrain::fire) fuel taxonomy + [`ChunkFuelProfile`](chunk_fuel_profile::ChunkFuelProfile)
 //! + [`ChunkSmokeField`](chunk_smoke_field::ChunkSmokeField) (`prompts/guides/base_fire_sim.md`).
 
+mod cell_spread;
 mod chunk_fire_overlay;
-mod surface_water;
 mod chunk_fuel_profile;
 mod chunk_smoke_field;
 mod chunk_surface_fire;
+pub mod combustion;
 mod ember_spot_ignition;
+mod fire_fuel;
 mod fire_light_emission;
 mod play_fire_visibility;
-pub mod combustion;
-mod fire_fuel;
-pub mod witness_collectors;
+mod surface_water;
 pub mod types;
+pub mod witness_collectors;
 
 pub(crate) use fire_fuel::{fire_fuel_field_tick, spawn_fire_fuel_field_on_new_chunk};
 
-pub use play_fire_visibility::{
-    sync_sim_map_fire_overlay_when_sim_has_heat, triage_fire_play_vis_001_green,
-    triage_fire_play_vis_001_witness_json, TriageFirePlayVis001Inputs,
-};
-pub use chunk_fuel_profile::{chunk_fuel_profile_from_vegetation, ChunkFuelProfile};
 pub use crate::terrain::fire::FuelLayer;
 pub use chunk_fire_overlay::chunk_fire_overlay_tick;
+pub use chunk_fuel_profile::{chunk_fuel_profile_from_vegetation, ChunkFuelProfile};
 pub use chunk_smoke_field::{
     chunk_smoke_field_pull_from_advected_atmosphere, chunk_smoke_field_tick, ChunkSmokeField,
     ATMOSPHERE_TO_CHUNK_SMOKE_BLEND, CHUNK_SMOKE_L0_PULL,
 };
-pub use fire_fuel::{derive_fire_fuel_from_vegetation, FireFuelField};
 pub use chunk_surface_fire::{chunk_surface_fire_tick, ChunkSurfaceFire};
-pub use fire_light_emission::FireLightEmission;
 pub use ember_spot_ignition::{
     apply_ember_spot_ignitions, emit_ember_spot_ignition_events, resolve_spot_ignite_cell,
     EmberSpotIgnitionEvent,
 };
-pub use surface_water::{init_surface_water_fire_gate, SurfaceWaterFireGate};
-pub use witness_collectors::{
-    finalize_fire_ecology_witness_frame, write_fire_ecology_live_proof_system, FireEcologyLiveProofState,
-    FireEcologyWitness,
+pub use fire_fuel::{derive_fire_fuel_from_vegetation, FireFuelField};
+pub use fire_light_emission::FireLightEmission;
+pub use play_fire_visibility::{
+    sync_sim_map_fire_overlay_when_sim_has_heat, triage_fire_play_vis_001_green,
+    triage_fire_play_vis_001_witness_json, TriageFirePlayVis001Inputs,
 };
+pub use surface_water::{init_surface_water_fire_gate, SurfaceWaterFireGate};
 pub use types::ChunkFireOverlay;
+pub use witness_collectors::{
+    finalize_fire_ecology_witness_frame, write_fire_ecology_live_proof_system,
+    FireEcologyLiveProofState, FireEcologyWitness,
+};
 
-pub(crate) use chunk_fuel_profile::{chunk_fuel_profile_tick, spawn_chunk_fuel_profile_on_new_chunk};
+pub(crate) use chunk_fuel_profile::{
+    chunk_fuel_profile_tick, spawn_chunk_fuel_profile_on_new_chunk,
+};
 
 use bevy::prelude::*;
 
@@ -121,7 +124,10 @@ mod fire_schedule_locks {
             .split_once("impl Plugin for FirePlugin")
             .expect("FirePlugin")
             .1;
-        let plugin = plugin.split("mod fire_schedule_locks").next().unwrap_or(plugin);
+        let plugin = plugin
+            .split("mod fire_schedule_locks")
+            .next()
+            .unwrap_or(plugin);
         let code: String = plugin
             .lines()
             .filter(|line| !line.trim_start().starts_with("//"))

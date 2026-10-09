@@ -27,7 +27,9 @@ pub fn profile_total_fuel_mass(profile: &ChunkFuelProfile) -> f32 {
 /// Maps profile mass into per-cell fuel reservoir cap `[0.02, 0.95]`.
 #[inline]
 pub fn profile_cell_fuel_seed(profile: &ChunkFuelProfile) -> f32 {
-    let m = profile.wildland_fuel_mass.max(profile_total_fuel_mass(profile));
+    let m = profile
+        .wildland_fuel_mass
+        .max(profile_total_fuel_mass(profile));
     (m * 0.72 + profile.canopy.dead_biomass * 0.12).clamp(0.02, 0.95)
 }
 
@@ -160,6 +162,9 @@ mod fuel_gate_tests {
             ..Default::default()
         });
         assert!(og.wildland_fuel_mass > sparse.wildland_fuel_mass);
-        assert!(fuel_ignition_gate(og.wildland_fuel_mass) > fuel_ignition_gate(sparse.wildland_fuel_mass));
+        assert!(
+            fuel_ignition_gate(og.wildland_fuel_mass)
+                > fuel_ignition_gate(sparse.wildland_fuel_mass)
+        );
     }
 }

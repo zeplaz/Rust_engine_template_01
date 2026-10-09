@@ -17,10 +17,10 @@ use super::arch_build_grammar_v0::{
 use super::building_grammar::generate_with_arch_dna_preset;
 use super::module_contract::{FLOOR_HEIGHT_M, GRID_UNIT_M};
 use super::{
-    grammar_reference_tags, DevelopmentTier, ExteriorFace, FootprintGrid, FootprintToken,
-    GrammarGenerateResult, MissingSlotReason, MissingSlotViolation, ProceduralBuildingRequest,
-    ProceduralModuleRegistry, RoofMode, StylePack, StylePackRegistry, StylePackSlotKey,
-    FallbackPolicy, GRAMMAR_RULES_VERSION, exterior_faces,
+    exterior_faces, grammar_reference_tags, DevelopmentTier, ExteriorFace, FallbackPolicy,
+    FootprintGrid, FootprintToken, GrammarGenerateResult, MissingSlotReason, MissingSlotViolation,
+    ProceduralBuildingRequest, ProceduralModuleRegistry, RoofMode, StylePack, StylePackRegistry,
+    StylePackSlotKey, GRAMMAR_RULES_VERSION,
 };
 
 pub const ASSEMBLY_SNAPSHOT_SCHEMA: u32 = 1;
@@ -175,7 +175,9 @@ pub fn grammar_rule_chain_snapshot(result: &GrammarGenerateResult) -> AssemblyGr
     };
     for step in &result.rule_chain {
         match step.layer {
-            "archetype" if chain.archetype.is_none() => chain.archetype = Some(step.rule_id.clone()),
+            "archetype" if chain.archetype.is_none() => {
+                chain.archetype = Some(step.rule_id.clone())
+            }
             "massing" if chain.massing.is_none() => chain.massing = Some(step.rule_id.clone()),
             "roof" if chain.roof.is_none() => chain.roof = Some(step.rule_id.clone()),
             "facade" if chain.facade.is_none() => chain.facade = Some(step.rule_id.clone()),
@@ -317,11 +319,7 @@ fn rotation_for_cell(
 }
 
 #[must_use]
-fn position_for_cell(
-    cell: &super::FootprintCell,
-    width: u32,
-    depth: u32,
-) -> [f64; 3] {
+fn position_for_cell(cell: &super::FootprintCell, width: u32, depth: u32) -> [f64; 3] {
     let v = if matches!(cell.token, FootprintToken::Roof)
         && cell.roof_mode == Some(RoofMode::FullFootprint)
     {
@@ -339,11 +337,19 @@ fn position_for_cell(
 
 /// Deterministic id — must match `rust_engine_mcp.assembly._assembly_id`.
 #[must_use]
-pub fn assembly_id_for(style_pack_id: &str, width: u32, depth: u32, floors: u32, seed: u64) -> String {
+pub fn assembly_id_for(
+    style_pack_id: &str,
+    width: u32,
+    depth: u32,
+    floors: u32,
+    seed: u64,
+) -> String {
     let raw = format!("{style_pack_id}:{width}x{depth}x{floors}:s{seed}");
     let digest = Sha256::digest(raw.as_bytes());
     let hex: String = digest.iter().take(2).map(|b| format!("{b:02x}")).collect();
-    let pack_suffix = style_pack_id.strip_prefix("style_").unwrap_or(style_pack_id);
+    let pack_suffix = style_pack_id
+        .strip_prefix("style_")
+        .unwrap_or(style_pack_id);
     format!("{pack_suffix}_{width}x{depth}_s{seed}_{hex}")
 }
 
@@ -384,12 +390,8 @@ pub fn build_assembly_snapshot_from_grammar_with_preset(
     registry: &ProceduralModuleRegistry,
     packs: &StylePackRegistry,
 ) -> Result<AssemblySnapshot, String> {
-    let grammar = generate_with_arch_dna_preset(
-        archetype_id,
-        district_style,
-        seed,
-        arch_dna_preset_id,
-    )?;
+    let grammar =
+        generate_with_arch_dna_preset(archetype_id, district_style, seed, arch_dna_preset_id)?;
     let request = grammar.procedural_request();
     let pack = packs
         .get(request.style.0.as_str())
@@ -557,24 +559,29 @@ fn build_assembly_snapshot_with_grammar(
         });
     }
 
-    let (procedural_rules_version, reference_tags, archetype_id, district_style, grammar_rule_chain) =
-        if let Some(g) = grammar {
-            (
-                GRAMMAR_RULES_VERSION.to_owned(),
-                grammar_reference_tags(g),
-                Some(g.archetype_id.clone()),
-                Some(g.district_style.clone()),
-                Some(grammar_rule_chain_snapshot(g)),
-            )
-        } else {
-            (
-                PROCEDURAL_RULES_VERSION.to_owned(),
-                Vec::new(),
-                None,
-                None,
-                None,
-            )
-        };
+    let (
+        procedural_rules_version,
+        reference_tags,
+        archetype_id,
+        district_style,
+        grammar_rule_chain,
+    ) = if let Some(g) = grammar {
+        (
+            GRAMMAR_RULES_VERSION.to_owned(),
+            grammar_reference_tags(g),
+            Some(g.archetype_id.clone()),
+            Some(g.district_style.clone()),
+            Some(grammar_rule_chain_snapshot(g)),
+        )
+    } else {
+        (
+            PROCEDURAL_RULES_VERSION.to_owned(),
+            Vec::new(),
+            None,
+            None,
+            None,
+        )
+    };
 
     let (arch_build_grammar_preset_id, arch_build_grammar_id, arch_dna, pressure_field) =
         if let Some(g) = grammar {
@@ -777,10 +784,7 @@ pub fn refresh_city_g0_wit_001_grammar_determinism_witness() -> bool {
     use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
     let body = build_city_g0_wit_001_witness_body();
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
     let wrapped = wrap_debug_run(
         "CITY-G0-WIT-001",
         "refresh_city_g0_wit_001_grammar_determinism_witness",
@@ -895,10 +899,7 @@ pub fn refresh_bq_f3_slot_001_witness() -> bool {
     use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
     let body = build_bq_f3_slot_001_witness_body();
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
+    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
     let wrapped = wrap_debug_run(
         "BQ-F3-SLOT-001",
         "refresh_bq_f3_slot_001_witness",
@@ -912,8 +913,8 @@ pub fn refresh_bq_f3_slot_001_witness() -> bool {
 mod tests {
     use super::*;
     use crate::construction::procedural::{
-        build_assembly_snapshot_from_grammar, load_procedural_module_registry, load_style_pack_registry,
-        ProceduralBuildingRequest, StylePackId, GRAMMAR_RULES_VERSION,
+        build_assembly_snapshot_from_grammar, load_procedural_module_registry,
+        load_style_pack_registry, ProceduralBuildingRequest, StylePackId, GRAMMAR_RULES_VERSION,
     };
 
     fn victorian_request(width: u32, depth: u32, seed: u64) -> ProceduralBuildingRequest {
@@ -950,7 +951,10 @@ mod tests {
         // Look v2: dual-face perimeter (14/floor × 2) + 1 full-footprint roof = 29
         assert_eq!(snapshot.module_placements.len(), 29);
         assert!(snapshot_passes_auto_001_contract(&snapshot));
-        let flags = snapshot.building_look_v2.as_ref().expect("building_look_v2");
+        let flags = snapshot
+            .building_look_v2
+            .as_ref()
+            .expect("building_look_v2");
         assert!(flags.dual_face_corners);
         assert!(flags.full_footprint_roof);
         assert!(!flags.ridge_row_roof);
@@ -1011,12 +1015,10 @@ mod tests {
         );
         assert_eq!(snapshot.district_style.as_deref(), Some("industrial_west"));
         assert!(snapshot.grammar_rule_chain.is_some());
-        assert!(
-            snapshot
-                .reference_tags
-                .iter()
-                .any(|t| t.starts_with("grammar:"))
-        );
+        assert!(snapshot
+            .reference_tags
+            .iter()
+            .any(|t| t.starts_with("grammar:")));
         assert!(snapshot_passes_auto_001_contract(&snapshot));
         assert!(snapshot.assembly_id.contains("industrial_west"));
         assert!(snapshot.assembly_id.contains("_s43_"));
@@ -1027,12 +1029,10 @@ mod tests {
                 .all(|p| !p.material_profile.is_empty()),
             "PG-MATERIAL-GENERATION-001: grammar must emit material_profile per placement"
         );
-        assert!(
-            snapshot
-                .module_placements
-                .iter()
-                .all(|p| p.weathering.as_deref().is_some_and(|w| !w.is_empty()))
-        );
+        assert!(snapshot
+            .module_placements
+            .iter()
+            .all(|p| p.weathering.as_deref().is_some_and(|w| !w.is_empty())));
     }
 
     #[test]
@@ -1055,8 +1055,14 @@ mod tests {
             &packs,
         )
         .expect("seed 50");
-        let mass_a = a.grammar_rule_chain.as_ref().and_then(|c| c.massing.clone());
-        let mass_b = b.grammar_rule_chain.as_ref().and_then(|c| c.massing.clone());
+        let mass_a = a
+            .grammar_rule_chain
+            .as_ref()
+            .and_then(|c| c.massing.clone());
+        let mass_b = b
+            .grammar_rule_chain
+            .as_ref()
+            .and_then(|c| c.massing.clone());
         assert_ne!(mass_a, mass_b);
         let roof_a = a
             .module_placements
@@ -1095,7 +1101,10 @@ mod tests {
         assert!(!text.is_empty(), "snapshot file must not be empty");
         let loaded: AssemblySnapshot = serde_json::from_str(&text).unwrap();
         assert_eq!(loaded.assembly_id, snapshot.assembly_id);
-        assert_eq!(loaded.module_placements.len(), snapshot.module_placements.len());
+        assert_eq!(
+            loaded.module_placements.len(),
+            snapshot.module_placements.len()
+        );
     }
 
     #[test]
@@ -1119,12 +1128,10 @@ mod tests {
         let grid = FootprintGrid::from_request(&request);
         let snapshot = build_assembly_snapshot(&request, &pack, &grid, &modules);
         assert!(!snapshot.missing_slot_violations.is_empty());
-        assert!(
-            snapshot
-                .missing_slot_violations
-                .iter()
-                .all(|v| v.style_pack_id == "style_industrial_west")
-        );
+        assert!(snapshot
+            .missing_slot_violations
+            .iter()
+            .all(|v| v.style_pack_id == "style_industrial_west"));
     }
 
     #[test]

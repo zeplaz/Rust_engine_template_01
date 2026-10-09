@@ -17,7 +17,7 @@ from typing import Any
 import jsonschema
 
 from rust_engine_mcp.aps_witness_honesty import write_aps_live_witness
-from rust_engine_mcp.paths import repo_root, schemas_dir
+from rust_engine_mcp.paths import repo_root, resolve_under_root, schemas_dir
 
 TASK_ID = "SPINE-BUILD-001"
 GATE = "SPINE-BUILD-001"
@@ -101,15 +101,30 @@ def graph_errors(data: dict[str, Any]) -> list[str]:
                 errors.append(
                     f"{nid}: depends_on {sorted(got)} != canonical {sorted(expected)}"
                 )
+        artifact = str(node.get("artifact") or "")
+        if _artifact_escapes(artifact):
+            errors.append(f"{nid}: artifact escapes repo: {artifact}")
 
     cycle = _find_cycle(by_id)
     if cycle:
         errors.append(f"cycle detected: {' → '.join(cycle)}")
 
-    if data.get("ship") and data.get("seed") is None:
+    seed = data.get("seed")
+    if data.get("ship") and (isinstance(seed, bool) or not isinstance(seed, int)):
         errors.append("ship=true requires seed for deterministic spine")
 
     return errors
+
+
+def _artifact_escapes(artifact: str) -> bool:
+    """Absolute paths and ``..`` segments leave the repo. Empty is not an escape."""
+    raw = artifact.replace("\\", "/").strip()
+    if not raw:
+        return False
+    if Path(artifact).is_absolute() or raw.startswith("/"):
+        return True
+    parts = [part for part in raw.split("/") if part not in {"", "."}]
+    return ".." in parts
 
 
 def _find_cycle(by_id: dict[str, dict[str, Any]]) -> list[str] | None:
@@ -180,13 +195,24 @@ def topological_order(data: dict[str, Any]) -> list[str]:
 def probe_node(node: dict[str, Any], *, root: Path) -> dict[str, Any]:
     """Per-node witness row: artifact presence + declared validation/cli."""
     nid = str(node.get("node_id") or "")
-    artifact = str(node.get("artifact") or "")
-    art_path = root / artifact if artifact and not Path(artifact).is_absolute() else Path(artifact)
+    artifact = str(node.get("artifact") or "").replace("\\", "/")
     required = nid in REQUIRED_ARTIFACT_NODES
-    exists = bool(artifact) and art_path.exists()
-    # Staging blend/atlas may be absent until bake — ok for contract if not required
-    ok = exists if required else True
-    status = "present" if exists else ("missing_required" if required else "deferred_staging")
+    escaped = _artifact_escapes(artifact)
+    art_path: Path | None = None
+    if artifact and not escaped:
+        try:
+            art_path = resolve_under_root(root, artifact, label="artifact")
+        except ValueError:
+            escaped = True
+    exists = art_path is not None and art_path.exists()
+    # Staging blend/atlas may be absent until bake — ok for contract if not required.
+    # An artifact outside the repo is never present, even when the file exists.
+    if escaped:
+        ok = False
+        status = "escapes_repo"
+    else:
+        ok = exists if required else True
+        status = "present" if exists else ("missing_required" if required else "deferred_staging")
     return {
         "node_id": nid,
         "depends_on": list(node.get("depends_on") or []),
@@ -311,11 +337,12 @@ def run_spine_build_audit(*, repo: Path | None = None) -> dict[str, Any]:
         "cli": "spine-build-001 / validate-report build_graph <graph.json>",
         "next_residual": NEXT_RESIDUAL,
         "rules_check": {
-            "passed": True,
-            "blocked_by": [],
+            "passed": bool(green),
+            "blocked_by": [] if green else ["spine_build_audit"],
             "seed": example.get("seed"),
             "no_ai_generated_images": True,
-            "deterministic_output": example.get("seed") is not None,
+            "deterministic_output": isinstance(example.get("seed"), int)
+            and not isinstance(example.get("seed"), bool),
             "batch_processing": True,
             "grid_alignment": True,
             "no_greybox_as_production": True,

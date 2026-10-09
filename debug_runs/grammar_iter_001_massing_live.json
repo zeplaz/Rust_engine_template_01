@@ -6,10 +6,10 @@
   "parent": "industrial_west_8x9_s43_f75a",
   "child": "industrial_10x6_s43_iter1",
   "diff": {
-    "cells_added": 62,
+    "cells_added": 35,
     "cells_removed": 18,
-    "cells_changed": 15,
-    "profiles_changed": 0,
+    "cells_changed": 20,
+    "profiles_changed": 20,
     "layers_touched": [
       "massing",
       "roof",
@@ -17,6 +17,6 @@
     ]
   },
   "determinism": "pass",
-  "snapshot_hash": "33da978c534adef5",
+  "snapshot_hash": "ebec35b1617fe2b3",
   "preview": "bevy_worker"
 }

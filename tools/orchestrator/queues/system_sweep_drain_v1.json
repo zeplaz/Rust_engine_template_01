@@ -1,0 +1,355 @@
+{
+  "_meta": {
+    "version": "1.0.0",
+    "program_id": "PLAN-SYSTEM-SWEEP-001",
+    "date": "2026-09-25",
+    "rule": "Fire ecology and construction code slices. Do not reopen MIG-*, PCI, nuclear cooling, kit G4, replay parity, or the June 20 cull. Do not mark a row done without the named lib test.",
+    "pick": "get-que coder --queue system_sweep",
+    "todo": "src/dev/system_sweep_todos_v1.md"
+  },
+  "drain": [
+    {
+      "id": "FIRE-SPARK-GATE-001",
+      "agent": "coder",
+      "priority": 10,
+      "status": "done",
+      "goal": "Ambient spark is zero below the wildland mass gate.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "sweep_spark_below_wildland_mass_is_zero passes",
+      "note": "2026-09-25. admit_spark in the overlay tick."
+    },
+    {
+      "id": "FIRE-CELL-FUEL-002",
+      "agent": "coder",
+      "priority": 11,
+      "status": "done",
+      "goal": "Spark stays zero when cell fuel is below the spread floor.",
+      "docs": ["src/systems/fire/cell_spread.rs"],
+      "exit": "sweep_spark_below_cell_fuel_is_zero passes"
+    },
+    {
+      "id": "FIRE-SPREAD-003",
+      "agent": "coder",
+      "priority": 12,
+      "status": "done",
+      "goal": "Burning cell deposits heat on an east or south neighbor and draws that fuel.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "sweep_spread_deposits_heat_and_draws_neighbor_fuel passes"
+    },
+    {
+      "id": "FIRE-BURN-HOLD-004",
+      "agent": "coder",
+      "priority": 13,
+      "status": "done",
+      "goal": "Depleted cell stays at residual heat for six ticks.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/types.rs"],
+      "exit": "sweep_burned_cell_holds_residual_for_fixed_tick_window passes"
+    },
+    {
+      "id": "CON-PREVIEW-005",
+      "agent": "coder",
+      "priority": 14,
+      "status": "done",
+      "goal": "Preview does not write occupation or the player pending queue.",
+      "docs": ["src/construction/preview_commit_guard.rs", "src/construction/build_interaction.rs"],
+      "exit": "sweep_preview_move_does_not_change_occupation_or_pending passes"
+    },
+    {
+      "id": "CON-OCCUPY-006",
+      "agent": "coder",
+      "priority": 15,
+      "status": "done",
+      "goal": "Unweighted footprint on an occupied tile blocks the commit funnel and keeps pending rows.",
+      "docs": ["src/construction/preview_commit_guard.rs", "src/construction/visual_authority.rs"],
+      "exit": "sweep_occupied_rect_blocks_commit_and_keeps_pending passes"
+    },
+    {
+      "id": "FIRE-RAIN-FUEL-007",
+      "agent": "coder",
+      "priority": 16,
+      "status": "done",
+      "goal": "Rain does not refill fuel consumed by heat.",
+      "docs": ["src/systems/fire/cell_spread.rs"],
+      "exit": "sweep_rain_does_not_restore_consumed_fuel passes"
+    },
+    {
+      "id": "FIRE-HOLD-NOSPREAD-008",
+      "agent": "coder",
+      "priority": 17,
+      "status": "done",
+      "goal": "A cell inside the burned window does not accept or emit neighbor spread.",
+      "docs": ["src/systems/fire/cell_spread.rs"],
+      "exit": "sweep_spread_does_not_land_on_a_held_burn_cell passes"
+    },
+    {
+      "id": "CON-PHASE-FOUNDATION-009",
+      "agent": "coder",
+      "priority": 18,
+      "status": "done",
+      "goal": "Foundation fill is outside the place-feedback pulse.",
+      "docs": ["src/construction/phase_fill.rs", "src/construction/phase_visual.rs"],
+      "exit": "sweep_foundation_rgba_is_not_a_place_feedback_color passes"
+    },
+    {
+      "id": "CON-PHASE-CLEARING-010",
+      "agent": "coder",
+      "priority": 19,
+      "status": "done",
+      "goal": "Clearing and Foundation paints differ.",
+      "docs": ["src/construction/phase_fill.rs"],
+      "exit": "sweep_clearing_rgba_differs_from_foundation passes"
+    },
+    {
+      "id": "CON-PHASE-OFFLINE-011",
+      "agent": "coder",
+      "priority": 20,
+      "status": "done",
+      "goal": "Offline fill differs from Damaged.",
+      "docs": ["src/construction/phase_fill.rs"],
+      "exit": "sweep_offline_rgba_differs_from_damaged passes"
+    },
+    {
+      "id": "FIRE-SNOW-SPREAD-012",
+      "agent": "coder",
+      "priority": 21,
+      "status": "done",
+      "goal": "Snow at or above 0.35 blocks a neighbor deposit.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "drain_snow_blocks_neighbor_spread passes"
+    },
+    {
+      "id": "FIRE-WET-SPREAD-013",
+      "agent": "coder",
+      "priority": 22,
+      "status": "done",
+      "goal": "A wet destination cell refuses neighbor heat and fuel draw.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "drain_wet_neighbor_refuses_spread passes"
+    },
+    {
+      "id": "FIRE-SNOW-HOLD-014",
+      "agent": "coder",
+      "priority": 23,
+      "status": "done",
+      "goal": "Deep snow clears the burned-tick window and residual heat.",
+      "docs": ["src/systems/fire/cell_spread.rs"],
+      "exit": "drain_snow_clears_the_burn_hold passes"
+    },
+    {
+      "id": "CON-PHASE-SURVEY-015",
+      "agent": "coder",
+      "priority": 24,
+      "status": "done",
+      "goal": "Surveying fill differs from Planned.",
+      "docs": ["src/construction/phase_fill.rs"],
+      "exit": "drain_surveying_rgba_differs_from_planned passes"
+    },
+    {
+      "id": "CON-PHASE-PROVISION-016",
+      "agent": "coder",
+      "priority": 25,
+      "status": "done",
+      "goal": "Provisioning fill differs from Under Construction.",
+      "docs": ["src/construction/phase_fill.rs"],
+      "exit": "drain_provisioning_rgba_differs_from_building passes"
+    },
+    {
+      "id": "CON-PHASE-RATE-017",
+      "agent": "coder",
+      "priority": 26,
+      "status": "done",
+      "goal": "Foundation advances at half the survey step. Damaged does not advance.",
+      "docs": ["src/construction/site_stage_transitions.rs", "src/construction/site_stage_tick.rs"],
+      "exit": "drain_foundation_step_is_slower_than_survey passes"
+    },
+    {
+      "id": "CON-EMPTY-FOOT-018",
+      "agent": "coder",
+      "priority": 27,
+      "status": "done",
+      "goal": "A zero-size footprint does not commit and does not touch occupation or pending rows.",
+      "docs": ["src/construction/preview_commit_guard.rs", "src/construction/build_interaction.rs"],
+      "exit": "drain_empty_footprint_does_not_commit passes"
+    },
+    {
+      "id": "FIRE-LIGHTNING-019",
+      "agent": "coder",
+      "priority": 28,
+      "status": "done",
+      "goal": "Lightning adds a spark only when the wildland gate and the cell fuel floor already allow ignition.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "live_lightning_spark_respects_the_fuel_gate passes"
+    },
+    {
+      "id": "FIRE-FOG-GAIN-020",
+      "agent": "coder",
+      "priority": 29,
+      "status": "done",
+      "goal": "Dense fog halves neighbor heat gain. Fuel draw stays the same. Clear air keeps the full gain.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "live_fog_halves_neighbor_heat_gain passes"
+    },
+    {
+      "id": "FIRE-SNOW-ARM-021",
+      "agent": "coder",
+      "priority": 30,
+      "status": "done",
+      "goal": "Deep snow does not arm a burned hold.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "live_snow_does_not_arm_a_burn_hold passes"
+    },
+    {
+      "id": "CON-CLEAR-RATE-022",
+      "agent": "coder",
+      "priority": 31,
+      "status": "done",
+      "goal": "Clearing advances at half the Planned step.",
+      "docs": ["src/construction/site_stage_transitions.rs"],
+      "exit": "live_clearing_advances_slower_than_planned passes"
+    },
+    {
+      "id": "CON-PLACEABLE-023",
+      "agent": "coder",
+      "priority": 32,
+      "status": "done",
+      "goal": "A zero-size or rejected footprint cannot enter the construction commit funnel.",
+      "docs": ["src/construction/preview_commit_guard.rs", "src/construction/build_interaction.rs"],
+      "exit": "live_unplaceable_footprint_cannot_queue_commit passes"
+    },
+    {
+      "id": "FIRE-RAIN-024",
+      "agent": "coder",
+      "priority": 33,
+      "status": "done",
+      "goal": "Rain at or above 0.85 stops cardinal spread and does not refill fuel.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "push_heavy_rain_blocks_neighbor_spread passes"
+    },
+    {
+      "id": "FIRE-EMBER-025",
+      "agent": "coder",
+      "priority": 34,
+      "status": "done",
+      "goal": "An ember does not heat a cell that is below the spread fuel floor.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/ember_spot_ignition.rs"],
+      "exit": "push_ember_skips_an_empty_cell passes"
+    },
+    {
+      "id": "FIRE-ONCE-026",
+      "agent": "coder",
+      "priority": 35,
+      "status": "done",
+      "goal": "A neighbor accepts one cardinal deposit per tick.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "push_second_neighbor_does_not_stack_heat passes"
+    },
+    {
+      "id": "CON-TURN-027",
+      "agent": "coder",
+      "priority": 36,
+      "status": "done",
+      "goal": "An odd quarter-turn swaps the committed footprint. A zero side stays unplaceable.",
+      "docs": ["src/construction/preview_commit_guard.rs", "src/construction/build_interaction.rs"],
+      "exit": "push_odd_turn_swaps_the_footprint passes"
+    },
+    {
+      "id": "CON-WORD-028",
+      "agent": "coder",
+      "priority": 37,
+      "status": "done",
+      "goal": "Map words keep Damaged off Built and Abandoned off Offline.",
+      "docs": ["src/construction/phase_visual.rs"],
+      "exit": "push_phase_words_keep_damaged_off_built passes"
+    },
+    {
+      "id": "FIRE-WIND-029",
+      "agent": "coder",
+      "priority": 38,
+      "status": "done",
+      "goal": "Wind burns cell fuel faster than still air. Rain still does not refill.",
+      "docs": ["src/systems/fire/cell_spread.rs", "src/systems/fire/chunk_fire_overlay.rs"],
+      "exit": "next_wind_burns_fuel_faster_than_still_air passes"
+    },
+    {
+      "id": "FIRE-DT-030",
+      "agent": "coder",
+      "priority": 39,
+      "status": "done",
+      "goal": "A zero or negative timestep does not consume fuel or arm a hold.",
+      "docs": ["src/systems/fire/cell_spread.rs"],
+      "exit": "next_zero_timestep_does_not_consume_fuel passes"
+    },
+    {
+      "id": "CON-CLEAR-031",
+      "agent": "coder",
+      "priority": 40,
+      "status": "done",
+      "goal": "Clearing with no substep starts on trees instead of skipping to foundation.",
+      "docs": ["src/construction/site_stage_transitions.rs"],
+      "exit": "next_clearing_without_substep_starts_on_trees passes"
+    },
+    {
+      "id": "CON-PROV-032",
+      "agent": "coder",
+      "priority": 41,
+      "status": "done",
+      "goal": "Provisioning does not advance and has no next stage.",
+      "docs": ["src/construction/site_stage_transitions.rs", "src/construction/site_stage_tick.rs"],
+      "exit": "next_provisioning_stage_does_not_move passes"
+    },
+    {
+      "id": "CON-MIRROR-033",
+      "agent": "coder",
+      "priority": 42,
+      "status": "done",
+      "goal": "A mirrored footprint flips the local column. Width 1 stays put.",
+      "docs": ["src/construction/parametric_commit.rs"],
+      "exit": "next_mirror_flips_the_local_column passes"
+    },
+    {
+      "id": "FIRE-SAT-034",
+      "agent": "coder",
+      "priority": 43,
+      "status": "done",
+      "goal": "A neighbor already at full heat does not give up more fuel.",
+      "docs": ["src/systems/fire/cell_spread.rs"],
+      "exit": "cont_saturated_neighbor_keeps_its_fuel passes"
+    },
+    {
+      "id": "FIRE-GAIN-035",
+      "agent": "coder",
+      "priority": 44,
+      "status": "done",
+      "goal": "A zero heat gain does not draw neighbor fuel.",
+      "docs": ["src/systems/fire/cell_spread.rs"],
+      "exit": "cont_zero_heat_gain_does_not_draw_fuel passes"
+    },
+    {
+      "id": "CON-TILES-036",
+      "agent": "coder",
+      "priority": 45,
+      "status": "done",
+      "goal": "A zero-size footprint lists no occupancy tiles.",
+      "docs": ["src/construction/preview_commit_guard.rs"],
+      "exit": "cont_empty_footprint_lists_no_tiles passes"
+    },
+    {
+      "id": "CON-RECT-037",
+      "agent": "coder",
+      "priority": 46,
+      "status": "done",
+      "goal": "The occupancy probe uses the quarter-turned footprint.",
+      "docs": ["src/construction/preview_commit_guard.rs", "src/construction/build_interaction.rs"],
+      "exit": "cont_occupancy_rect_follows_the_quarter_turn passes"
+    },
+    {
+      "id": "CON-PROG-038",
+      "agent": "coder",
+      "priority": 47,
+      "status": "done",
+      "goal": "Phase progress stops at one and a bad step does not move the site.",
+      "docs": ["src/construction/site_stage_transitions.rs", "src/construction/site_stage_tick.rs"],
+      "exit": "cont_phase_progress_stops_at_one passes"
+    }
+  ]
+}

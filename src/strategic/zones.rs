@@ -82,8 +82,11 @@ pub fn apply_zones_to_strategic_overlays_system(
                             ZoneKind::Supply => {
                                 overlay.logistics_strength[ci][slot] =
                                     (overlay.logistics_strength[ci][slot] + w).min(1.0);
-                                overlay.logistics_throughput[ci] =
-                                    (overlay.logistics_throughput[ci] + w * 0.5).min(1.0);
+                                // Edge inject already wrote this shipment. A second add would sum it.
+                                if overlay.logistics_throughput[ci] <= 0.0 {
+                                    overlay.logistics_throughput[ci] =
+                                        (overlay.logistics_throughput[ci] + w * 0.5).min(1.0);
+                                }
                             }
                             ZoneKind::Fire => {
                                 overlay.artillery_danger[ci][slot] =
@@ -141,5 +144,75 @@ mod tests {
         app.update();
         let overlay = app.world().entity(e).get::<ChunkStrategicOverlay>().unwrap();
         assert!(overlay.faction_control[0][0] > 0.0);
+    }
+
+    #[test]
+    fn link_one_throughput_cell_is_not_inject_plus_zone() {
+        use super::super::logistics_net::logistics_net_inject_into_overlays;
+        use super::super::{LogisticsEdge, LogisticsGraph, LogisticsNode, LogisticsNodeId};
+        use crate::terrain::generation::Chunk;
+        use crate::terrain::ChunkCellKey;
+
+        let mut app = App::new();
+        app.add_plugins(bevy::MinimalPlugins)
+            .init_resource::<StrategicRasterConfig>()
+            .init_resource::<LogisticsGraph>()
+            .init_resource::<super::super::schedule::StrategicOverlayCouplingScratch>()
+            .init_resource::<super::super::schedule::StrategicOverlayDisplayPolicy>()
+            .add_systems(
+                Update,
+                (
+                    logistics_net_inject_into_overlays,
+                    apply_zones_to_strategic_overlays_system,
+                )
+                    .chain(),
+            );
+        app.world_mut().resource_mut::<StrategicRasterConfig>().cells_per_chunk = UVec2::new(2, 1);
+        let capacity = 0.4f32;
+        app.world_mut().insert_resource(LogisticsGraph {
+            revision: 1,
+            nodes: vec![
+                LogisticsNode {
+                    id: LogisticsNodeId(0),
+                    throughput: 0.0,
+                    stockpile: 0.0,
+                    anchor: Some(ChunkCellKey::new(IVec2::ZERO, 0)),
+                },
+                LogisticsNode {
+                    id: LogisticsNodeId(1),
+                    throughput: 0.0,
+                    stockpile: 0.0,
+                    anchor: Some(ChunkCellKey::new(IVec2::ZERO, 1)),
+                },
+            ],
+            edges: vec![LogisticsEdge {
+                from: LogisticsNodeId(0),
+                to: LogisticsNodeId(1),
+                transport_edge: None,
+                capacity,
+                disruption: 0.0,
+                traversal_cost: 1.0,
+            }],
+        });
+        app.world_mut().spawn((
+            Chunk { coord: IVec2::ZERO },
+            ChunkStrategicOverlay::new(IVec2::ZERO, UVec2::new(2, 1)),
+        ));
+        app.world_mut().spawn(Zone {
+            kind: ZoneKind::Supply,
+            faction_slot: 0,
+            center_tile: IVec2::ZERO,
+            radius_tiles: 8.0,
+            intensity: 1.0,
+        });
+        app.update();
+        let mut q = app.world_mut().query::<&ChunkStrategicOverlay>();
+        let overlay = q.iter(app.world()).next().expect("overlay");
+        let injected = capacity * 0.5;
+        assert!(
+            (overlay.logistics_throughput[0] - injected).abs() < 1e-4,
+            "cell {} summed a second writer onto {injected}",
+            overlay.logistics_throughput[0]
+        );
     }
 }

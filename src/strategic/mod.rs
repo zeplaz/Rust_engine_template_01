@@ -68,9 +68,11 @@ mod plugin;
 mod program;
 mod runbook_rounds;
 mod schedule;
+mod shot_pulse;
 mod simulation_plugin;
 mod sim;
 mod site;
+mod site_sample;
 pub mod settlement;
 mod spatial_network;
 mod network_flow;
@@ -85,6 +87,12 @@ pub use behavior_emergence_log::{
 };
 pub use behavior_entities::{
     behavior_sync_entity_ids_system, Agent, AgentFactionLink, Faction,
+};
+pub use shot_pulse::{
+    apply_shot_impacts_to_power_lines_system, book_danger_at, book_danger_for_faction,
+    book_impact_at, book_impact_for_faction, committed_power_link_at_cell, record_shot,
+    shot_danger_at, shot_impact_at, shot_trace_tile, shot_travel_ticks, ShotPulse, ShotPulseBook,
+    SHOT_IMPACT_SIDE_FACTION,
 };
 pub use behavior_fracture::{
     faction_cohesion_pressure_system, faction_internal_stage_system,
@@ -276,6 +284,7 @@ pub use sim::{
 pub use runbook_rounds::city_planning::{
     site_score, utility_redundancy_weight, SettlementArchetype,
 };
+pub use site_sample::{sample_overlay_site, OverlaySiteSample, SiteSampleLabel};
 pub use runbook_rounds::corridor::{
     corridor_capacity_weight, corridor_total_cost, pick_cheaper_corridor_index, CorridorCost,
     CorridorType,
@@ -291,7 +300,11 @@ pub use runbook_rounds::settlement::{
     ecology_hazard_pressure, migration_pull, tier_from_population, SettlementTier,
 };
 
-pub use logistics_net::{edge_flow_for_overlay, logistics_net_inject_into_overlays};
+pub use logistics_net::{
+    disruption_after_cell_heat, edge_flow_for_overlay, haul_crosses_town_flow, haul_marker_cell,
+    haul_marker_t, haul_marker_t_for_edge, logistics_net_inject_into_overlays,
+    play_haul_cells_at_tick, play_haul_stamp_cells, HaulTrafficClass,
+};
 pub use plugin::{InfrastructureSiteSet, StrategicFieldPipeline, StrategicFieldsPlugin};
 pub use transport_bridge::{rebuild_logistics_graph_from_transport, StrategicRasterConfig};
 pub use world_field_layers::{

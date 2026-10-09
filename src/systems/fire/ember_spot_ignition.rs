@@ -10,11 +10,13 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::sim::effects::{SimEffectEvent, SimEffectKind, SimEffectQueue, SimEffectSource};
-use crate::systems::chunk_environment_persist::{ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks};
+use crate::systems::chunk_environment_persist::{
+    ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks,
+};
 use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::systems::weather::ChunkWeather;
-use crate::terrain::ChunkCellKey;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::terrain::ChunkCellKey;
 
 use super::chunk_surface_fire::ChunkSurfaceFire;
 use super::fire_fuel::FireFuelField;
@@ -219,7 +221,8 @@ pub fn apply_ember_spot_ignitions(
         return;
     }
 
-    let coord_to_entity: HashMap<IVec2, Entity> = chunks.iter().map(|(e, c)| (c.coord, e)).collect();
+    let coord_to_entity: HashMap<IVec2, Entity> =
+        chunks.iter().map(|(e, c)| (c.coord, e)).collect();
 
     for (coord, cells) in accum {
         let Some(&entity) = coord_to_entity.get(&coord) else {
@@ -246,6 +249,11 @@ pub fn apply_ember_spot_ignitions(
             let m = matrix.moisture.get(i).copied().unwrap_or(0.5);
             let damp = (1.0 - m * 0.9).max(0.05);
             let spark = spark * damp;
+            if spark <= 1e-6 {
+                continue;
+            }
+            let fuel = ovl.fuel.get(i).copied().unwrap_or(0.0);
+            let spark = super::cell_spread::ember_heat_deposit(fuel, spark);
             if spark <= 1e-6 {
                 continue;
             }

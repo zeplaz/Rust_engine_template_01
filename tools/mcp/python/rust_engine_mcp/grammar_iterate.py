@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from . import assembly, building_grammar
-from .paths import repo_root
+from .paths import repo_root, resolve_under_root
 
 DEFERRED_MODES = frozenset({"detail", "age"})
 SUPPORTED_MODES = frozenset({"full", "massing", "material_strategy", "placement", "roof", "facade"} | DEFERRED_MODES)
@@ -150,10 +150,20 @@ def _snapshot_hash(snapshot: dict[str, Any]) -> str:
     return hashlib.sha256(body.encode()).hexdigest()[:16]
 
 
+def _require_int_seed(raw: object) -> int:
+    """Seed 0 is valid. Booleans and numeric strings are not integers."""
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("seed must be an integer")
+    return raw
+
+
 def iterate_grammar(request: dict[str, Any]) -> dict[str, Any]:
     """Apply GRAMMAR-ITER-001 partial regen; returns grammar_iterate_result_v1 body."""
     mode = str(request.get("mode") or "")
-    seed = int(request.get("seed", 0))
+    if "seed" in request:
+        seed = _require_int_seed(request.get("seed"))
+    else:
+        seed = 0
     if mode not in SUPPORTED_MODES:
         return _error_result(mode, seed, f"unsupported mode: {mode}")
 
@@ -175,7 +185,9 @@ def iterate_grammar(request: dict[str, Any]) -> dict[str, Any]:
     if not archetype_id or not district_style:
         return _error_result(mode, seed, "archetype_id and district_style required")
 
-    seed = int(request.get("seed", base.get("seed", 42)))
+    if "seed" not in request:
+        raw_base = base.get("seed", 42)
+        seed = 42 if raw_base is None else _require_int_seed(raw_base)
     overrides = dict(request.get("overrides") or {})
     preserve = list(request.get("preserve_layers") or [])
     parent_id = str(
@@ -344,8 +356,10 @@ def run_grammar_iterate(
     write_witness: str | None = None,
 ) -> dict[str, Any]:
     path = Path(request_path)
-    if not path.is_absolute():
-        path = repo_root() / path
+    if path.is_absolute():
+        path = path.resolve()
+    else:
+        path = resolve_under_root(repo_root(), path, label="request path")
     request = json.loads(path.read_text(encoding="utf-8"))
     result = iterate_grammar(request)
     if result.get("ok") and write_snapshot:
@@ -354,7 +368,7 @@ def run_grammar_iterate(
             out_path = assembly.save_assembly_snapshot(snap)
             result["snapshot_path"] = str(out_path.relative_to(repo_root())).replace("\\", "/")
     if write_witness:
-        witness_path = repo_root() / write_witness
+        witness_path = resolve_under_root(repo_root(), write_witness, label="witness path")
         witness_path.parent.mkdir(parents=True, exist_ok=True)
         payload = build_massing_witness_payload(result) if "massing" in str(write_witness) else result
         witness_path.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")

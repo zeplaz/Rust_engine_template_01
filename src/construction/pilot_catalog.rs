@@ -139,10 +139,7 @@ fn load_mock_shapes_index() -> HashMap<String, MockShapeEntry> {
     let Ok(file) = ron::from_str::<MockShapesFile>(&text) else {
         return HashMap::new();
     };
-    file.shapes
-        .into_iter()
-        .map(|s| (s.id.clone(), s))
-        .collect()
+    file.shapes.into_iter().map(|s| (s.id.clone(), s)).collect()
 }
 
 fn footprint_from_entry(
@@ -199,18 +196,19 @@ impl PilotCatalog {
             let footprint = match footprint_from_entry(&entry, &mock_index) {
                 Ok(fp) => fp,
                 Err(reason) => {
-                    catalog.load_errors.push(format!(
-                        "pilot {} footprint: {reason}",
-                        entry.id
-                    ));
+                    catalog
+                        .load_errors
+                        .push(format!("pilot {} footprint: {reason}", entry.id));
                     continue;
                 }
             };
-            let pilot_kind = entry.pilot_kind.unwrap_or(if entry.arch_dna_preset.is_some() {
-                PilotKind::Grammar
-            } else {
-                PilotKind::ShapeQa
-            });
+            let pilot_kind = entry
+                .pilot_kind
+                .unwrap_or(if entry.arch_dna_preset.is_some() {
+                    PilotKind::Grammar
+                } else {
+                    PilotKind::ShapeQa
+                });
             let pilot_id = entry.id.clone();
             catalog.pilots.push(ResolvedPilotEntry {
                 catalog_id: format!("pilot:{}", pilot_id),
@@ -274,9 +272,9 @@ impl PilotCatalog {
 
     #[must_use]
     pub fn non_rect_shape_pilot(&self) -> Option<&ResolvedPilotEntry> {
-        self.pilots.iter().find(|p| {
-            p.pilot_kind == PilotKind::ShapeQa && p.footprint.is_non_rectangular()
-        })
+        self.pilots
+            .iter()
+            .find(|p| p.pilot_kind == PilotKind::ShapeQa && p.footprint.is_non_rectangular())
     }
 }
 

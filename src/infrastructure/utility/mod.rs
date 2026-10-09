@@ -7,7 +7,7 @@ pub mod graph;
 
 pub use activation_link::{
     facility_power_connected_from_graph, graph_node_id_at_transform, initial_utility_power_connected,
-    powered_utility_node_ids, sync_utility_connection_power_system,
+    plant_reaches_consumer, powered_utility_node_ids, sync_utility_connection_power_system,
     utility_activation_link_witness_green,
 };
 

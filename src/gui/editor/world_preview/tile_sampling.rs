@@ -125,3 +125,62 @@ pub fn slope_grade_from_world_elevation_neighbors(
     }
     max_d
 }
+
+/// Mean cardinal elevation minus the cell. Positive hollow, negative ridge.
+pub fn profile_curvature_from_world_elevation_neighbors(
+    tx: u32,
+    ty: u32,
+    world_w: u32,
+    world_h: u32,
+    center_h: f32,
+    elev_chunks: &[(IVec2, UVec2, &[f32])],
+    tile_height_lut: Option<&std::collections::HashMap<(u32, u32), f32>>,
+) -> f32 {
+    let mut acc = 0.0f32;
+    for (dx, dy) in [(1i32, 0), (-1, 0), (0, 1), (0, -1)] {
+        let nx = tx as i32 + dx;
+        let ny = ty as i32 + dy;
+        let nh = if nx < 0 || ny < 0 || nx >= world_w as i32 || ny >= world_h as i32 {
+            center_h
+        } else {
+            let nxu = nx as u32;
+            let nyu = ny as u32;
+            chunk_cell_layer_at_world_tile(nxu, nyu, elev_chunks)
+                .or_else(|| tile_height_lut.and_then(|m| m.get(&(nxu, nyu)).copied()))
+                .unwrap_or(center_h)
+        };
+        acc += nh;
+    }
+    ((acc * 0.25) - center_h).clamp(-1.0, 1.0)
+}
+
+/// Cardinal neighbors higher than the cell. A pit scores higher than a peak. This is a read, not an erosion writer.
+#[must_use]
+pub fn inflow_from_world_elevation_neighbors(
+    tx: u32,
+    ty: u32,
+    world_w: u32,
+    world_h: u32,
+    center_h: f32,
+    elev_chunks: &[(IVec2, UVec2, &[f32])],
+    tile_height_lut: Option<&std::collections::HashMap<(u32, u32), f32>>,
+) -> f32 {
+    let mut inflow = 0.0f32;
+    for (dx, dy) in [(1i32, 0), (-1, 0), (0, 1), (0, -1)] {
+        let nx = tx as i32 + dx;
+        let ny = ty as i32 + dy;
+        let nh = if nx < 0 || ny < 0 || nx >= world_w as i32 || ny >= world_h as i32 {
+            center_h
+        } else {
+            let nxu = nx as u32;
+            let nyu = ny as u32;
+            chunk_cell_layer_at_world_tile(nxu, nyu, elev_chunks)
+                .or_else(|| tile_height_lut.and_then(|m| m.get(&(nxu, nyu)).copied()))
+                .unwrap_or(center_h)
+        };
+        if nh > center_h + 1e-4 {
+            inflow += 1.0;
+        }
+    }
+    inflow
+}

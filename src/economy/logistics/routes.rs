@@ -143,6 +143,27 @@ pub fn path_edges_between_tiles(
     }
 }
 
+/// Sum of stored traversal costs for one already-chosen edge slice.
+/// Empty, missing, or non-finite costs return `None`. Does not search.
+#[must_use]
+pub fn sum_path_traversal_cost(
+    edge_ids: &[TransportEdgeId],
+    mut cost_of: impl FnMut(TransportEdgeId) -> Option<f32>,
+) -> Option<f32> {
+    if edge_ids.is_empty() {
+        return None;
+    }
+    let mut sum = 0.0_f32;
+    for &id in edge_ids {
+        let cost = cost_of(id)?;
+        if !cost.is_finite() {
+            return None;
+        }
+        sum += cost;
+    }
+    if sum.is_finite() { Some(sum) } else { None }
+}
+
 #[must_use]
 pub fn path_open_between_entities(
     nav: Res<TransportNavExport>,
@@ -155,6 +176,45 @@ pub fn path_open_between_entities(
 ) -> bool {
     let _ = (from_portal, to_portal);
     path_edges_between_tiles(&nav, &directory, from_tile, to_tile, mode).is_some()
+}
+
+fn nav_and_directory_without_closed_edges(
+    graph: Option<&LogisticsGraph>,
+    nav: &TransportNavExport,
+    directory: &TransportEdgeDirectory,
+) -> (TransportNavExport, TransportEdgeDirectory) {
+    let mut closed = HashSet::new();
+    if let Some(graph) = graph {
+        for edge in &graph.edges {
+            if edge.disruption >= 1.0 {
+                if let Some(id) = edge.transport_edge {
+                    closed.insert(id);
+                }
+            }
+        }
+    }
+    let mut directory_open = TransportEdgeDirectory::default();
+    for (id, meta) in &directory.by_edge {
+        if !closed.contains(id) {
+            directory_open.by_edge.insert(*id, meta.clone());
+        }
+    }
+    if closed.is_empty() {
+        return (nav.clone(), directory_open);
+    }
+    let nav_open = TransportNavExport {
+        edges: nav
+            .edges
+            .iter()
+            .filter(|edge| !closed.contains(&edge.id))
+            .map(|edge| {
+                let mut edge = edge.clone();
+                edge.successors.retain(|id| !closed.contains(id));
+                edge
+            })
+            .collect(),
+    };
+    (nav_open, directory_open)
 }
 
 pub fn refresh_resource_flow_routes_system(
@@ -188,6 +248,9 @@ pub fn refresh_resource_flow_routes_system(
     diagnostics.routes_open = 0;
     diagnostics.routes_blocked = 0;
 
+    let (nav_open, directory_open) =
+        nav_and_directory_without_closed_edges(graph.as_deref(), &nav, &directory);
+
     for edge in &mut flow.edges {
         let (Some((_from_p, from_tile)), Some((_to_p, to_tile))) =
             (portal_map.get(&edge.from), portal_map.get(&edge.to))
@@ -200,8 +263,8 @@ pub fn refresh_resource_flow_routes_system(
         let key = (edge.from, edge.to);
         if !route_cache.routes.contains_key(&key) {
             let path_edges = path_edges_between_tiles(
-                &nav,
-                &directory,
+                &nav_open,
+                &directory_open,
                 *from_tile,
                 *to_tile,
                 edge.transport_mode,

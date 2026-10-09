@@ -50,16 +50,17 @@ pub fn commit_power_line_to_utility_graph(
     graph: &mut UtilityGraph,
     voltage: VoltageClass,
 ) {
-    let segments: Vec<_> = placement
-        .generated_segments
-        .iter()
-        .filter(|s| s.valid)
-        .cloned()
-        .collect();
-    if segments.is_empty() {
+    if placement.generated_segments.is_empty()
+        || placement
+            .generated_segments
+            .iter()
+            .any(|seg| !seg.valid)
+    {
         return;
     }
 
+    let segments: Vec<_> = placement.generated_segments.clone();
+    let mut added = 0_u32;
     for seg in &segments {
         let head_key = node_key_for_world(seg.start);
         let tail_key = node_key_for_world(seg.end);
@@ -76,6 +77,10 @@ pub fn commit_power_line_to_utility_graph(
             utility_type: "power".into(),
         });
         snap.power_lines.push(PowerLine { link_id, voltage });
+        added = added.saturating_add(1);
+    }
+    if added == 0 {
+        return;
     }
 
     *graph = hydrate_utility_graph_from_snapshot(snap);
@@ -91,20 +96,17 @@ pub fn commit_power_line_to_utility_graph(
 #[must_use]
 pub fn power_line_commit_witness_green() -> bool {
     let mut placement = ActivePowerLinePlacement::default();
-    placement.generated_segments.push(super::placement::PowerLineSegmentPreview {
-        start: Vec3::new(0.5, 0.0, 0.5),
-        end: Vec3::new(3.5, 0.0, 0.5),
-        valid: true,
-    });
+    placement
+        .generated_segments
+        .push(super::placement::PowerLineSegmentPreview {
+            start: Vec3::new(0.5, 0.0, 0.5),
+            end: Vec3::new(3.5, 0.0, 0.5),
+            valid: true,
+        });
     let mut snap = crate::infrastructure::utility::fixture_utility_network_snapshot();
     let mut graph = hydrate_utility_graph_from_snapshot(&snap);
     let edges_before = snap.edges.len();
-    commit_power_line_to_utility_graph(
-        &mut placement,
-        &mut snap,
-        &mut graph,
-        VoltageClass::Medium,
-    );
+    commit_power_line_to_utility_graph(&mut placement, &mut snap, &mut graph, VoltageClass::Medium);
     edges_before < snap.edges.len() && graph.power_edges.len() >= 3
 }
 
@@ -116,11 +118,13 @@ mod tests {
     #[test]
     fn commit_adds_power_edge_to_snapshot_and_graph() {
         let mut placement = ActivePowerLinePlacement::default();
-        placement.generated_segments.push(super::super::placement::PowerLineSegmentPreview {
-            start: Vec3::new(1.5, 0.0, 1.5),
-            end: Vec3::new(5.5, 0.0, 1.5),
-            valid: true,
-        });
+        placement
+            .generated_segments
+            .push(super::super::placement::PowerLineSegmentPreview {
+                start: Vec3::new(1.5, 0.0, 1.5),
+                end: Vec3::new(5.5, 0.0, 1.5),
+                valid: true,
+            });
         let mut snap = fixture_utility_network_snapshot();
         let before = snap.edges.len();
         let mut graph = hydrate_utility_graph_from_snapshot(&snap);
@@ -133,5 +137,65 @@ mod tests {
         assert_eq!(snap.edges.len(), before + 1);
         assert!(graph.power_edges.len() > 2);
         assert!(placement.control_points.is_empty());
+    }
+
+    #[test]
+    fn grid_invalid_leg_blocks_commit() {
+        let mut placement = ActivePowerLinePlacement::default();
+        placement.control_points.push(Vec3::new(1.5, 0.0, 1.5));
+        placement.generated_segments.push(
+            super::super::placement::PowerLineSegmentPreview {
+                start: Vec3::new(1.5, 0.0, 1.5),
+                end: Vec3::new(5.5, 0.0, 1.5),
+                valid: true,
+            },
+        );
+        placement.generated_segments.push(
+            super::super::placement::PowerLineSegmentPreview {
+                start: Vec3::new(5.5, 0.0, 1.5),
+                end: Vec3::new(5.6, 0.0, 1.6),
+                valid: false,
+            },
+        );
+        let mut snap = fixture_utility_network_snapshot();
+        let before_edges = snap.edges.len();
+        let before_lines = snap.power_lines.len();
+        let mut graph = hydrate_utility_graph_from_snapshot(&snap);
+        let before_power = graph.power_edges.len();
+        commit_power_line_to_utility_graph(
+            &mut placement,
+            &mut snap,
+            &mut graph,
+            VoltageClass::Medium,
+        );
+        assert_eq!(snap.edges.len(), before_edges);
+        assert_eq!(snap.power_lines.len(), before_lines);
+        assert_eq!(graph.power_edges.len(), before_power);
+        assert_eq!(placement.control_points.len(), 1);
+    }
+
+    #[test]
+    fn grid_collapsed_span_keeps_the_draft() {
+        let mut placement = ActivePowerLinePlacement::default();
+        placement.control_points.push(Vec3::new(0.2, 0.0, 0.2));
+        placement
+            .generated_segments
+            .push(super::super::placement::PowerLineSegmentPreview {
+                start: Vec3::new(0.2, 0.0, 0.2),
+                end: Vec3::new(0.8, 0.0, 0.2),
+                valid: true,
+            });
+        let mut snap = fixture_utility_network_snapshot();
+        let before = snap.edges.len();
+        let mut graph = hydrate_utility_graph_from_snapshot(&snap);
+        commit_power_line_to_utility_graph(
+            &mut placement,
+            &mut snap,
+            &mut graph,
+            VoltageClass::Medium,
+        );
+        assert_eq!(snap.edges.len(), before);
+        assert_eq!(placement.control_points.len(), 1);
+        assert_eq!(placement.generated_segments.len(), 1);
     }
 }

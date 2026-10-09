@@ -913,6 +913,7 @@ mod tests {
             stamp,
             active_overlay_rows: 8,
             edge_rows: vec![(1, 1.0); 8],
+            haul_marker_t: Vec::new(),
             corridor_revision: 8,
         };
         let ecology = EcologyVisualSnapshot {

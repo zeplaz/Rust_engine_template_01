@@ -1,12 +1,17 @@
 {
   "task_id": "MCP-GUARD-004",
   "gate_id": "warehouse_track_guard",
-  "ok": true,
-  "green": true,
-  "scanned_files": 33,
+  "ok": false,
+  "green": false,
+  "scanned_files": 34,
   "manifest_path_count": 8,
-  "violation_count": 0,
-  "violations": [],
+  "violation_count": 1,
+  "violations": [
+    {
+      "file": "tools/mcp/schemas/examples/render_variant_warehouse_damage_heavy_v1.json",
+      "hint": "warehouse track needs building_set manifest row or _meta.teaches including grammar_eval/pilot_catalog"
+    }
+  ],
   "violations_truncated": false,
   "config": "tools/mcp/guard/build_set_guards_v1.json"
 }

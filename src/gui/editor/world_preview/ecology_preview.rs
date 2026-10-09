@@ -76,6 +76,9 @@ impl EcologyPreviewSample {
 
 /// Blend active flame + smoke into a base RGBA (`base_fire_sim.md` §7).
 pub fn blend_fire_overlay(base: [u8; 4], heat: f32, smoke: f32) -> [u8; 4] {
+    if base[3] == 0 {
+        return base;
+    }
     let heat = heat.clamp(0.0, 1.0);
     let smoke = smoke.clamp(0.0, 1.0);
     let mut r = base[0] as f32;
@@ -190,6 +193,62 @@ pub fn topology_kind_tint_modulator(topology_kinds: &[String]) -> [f32; 3] {
     [r, g, b]
 }
 
+/// Dry litter holds more surface fuel than the same litter on wet ground.
+#[must_use]
+pub fn surface_fuel_after_moisture(fuel: f32, moisture: f32) -> f32 {
+    (fuel.clamp(0.0, 1.0) * (1.0 - moisture.clamp(0.0, 1.0) * 0.55)).clamp(0.0, 1.0)
+}
+
+/// Preview color after the cell-cover scale. Hollow or wet cover reads greener.
+#[cfg(test)]
+#[must_use]
+pub fn vegetation_preview_with_cell_cover(
+    eco: &ChunkEcology,
+    veg: &VegetationField,
+    wx: &ChunkWeather,
+    fuel: Option<&FireFuelField>,
+    surface_heat: f32,
+    topology_tint_bias: f32,
+    cell_cover: f32,
+) -> [u8; 4] {
+    let mut rgba = vegetation_preview_rgba(eco, veg, wx, fuel, surface_heat, topology_tint_bias);
+    let scale = cell_cover.clamp(0.35, 1.35);
+    rgba[1] = ((rgba[1] as f32) * scale).round().clamp(0.0, 255.0) as u8;
+    rgba
+}
+
+/// Preview green after climate cover. Wet cool ground reads greener than dry heat.
+#[cfg(test)]
+#[must_use]
+pub fn vegetation_preview_with_climate(
+    eco: &ChunkEcology,
+    veg: &VegetationField,
+    wx: &ChunkWeather,
+    fuel: Option<&FireFuelField>,
+    surface_heat: f32,
+    topology_tint_bias: f32,
+    slope: f32,
+    curvature: f32,
+    moisture: f32,
+    temperature: f32,
+) -> [u8; 4] {
+    let scale = crate::terrain::generation::cell_canopy_scale_climate(
+        slope,
+        curvature,
+        moisture,
+        temperature,
+    );
+    vegetation_preview_with_cell_cover(
+        eco,
+        veg,
+        wx,
+        fuel,
+        surface_heat,
+        topology_tint_bias,
+        scale,
+    )
+}
+
 /// Lower-level entry: macro ecology + vegetation fields + weather; optional fuel/heat for charring / crown stress.
 pub fn vegetation_preview_rgba(
     eco: &ChunkEcology,
@@ -207,7 +266,10 @@ pub fn vegetation_preview_rgba(
 
     let heat = surface_heat.clamp(0.0, 1.0);
     let ladder = fuel.map(|f| f.ladder_fuel).unwrap_or(0.0).clamp(0.0, 1.0);
-    let fuel_surface = fuel.map(|f| f.surface_fuel).unwrap_or(veg.ground_fuel).clamp(0.0, 1.0);
+    let fuel_surface = surface_fuel_after_moisture(
+        fuel.map(|f| f.surface_fuel).unwrap_or(veg.ground_fuel),
+        wx.soil_moisture,
+    );
 
     let moisture = wx.soil_moisture.clamp(0.0, 1.0);
     let snow = wx.snow_depth.clamp(0.0, 1.0);
@@ -352,5 +414,51 @@ mod tests {
         ]);
         let rich = vegetation_preview_rgba(&eco, &veg, &wx, None, 0.0, (r + g + b) / 255.0);
         assert!(rich[1] > plain[1], "plain {:?} rich {:?}", plain, rich);
+    }
+
+    #[test]
+    fn wet_ground_holds_less_surface_fuel() {
+        assert!(surface_fuel_after_moisture(0.8, 0.0) > surface_fuel_after_moisture(0.8, 1.0));
+    }
+
+    #[test]
+    fn preview_green_follows_cell_cover() {
+        let eco = ChunkEcology::default();
+        let veg = VegetationField {
+            canopy_density: 0.6,
+            ..Default::default()
+        };
+        let wx = ChunkWeather::default();
+        let hollow = vegetation_preview_with_cell_cover(&eco, &veg, &wx, None, 0.0, 0.0, 1.3);
+        let ridge = vegetation_preview_with_cell_cover(&eco, &veg, &wx, None, 0.0, 0.0, 0.4);
+        assert!(hollow[1] > ridge[1], "hollow {:?} ridge {:?}", hollow, ridge);
+    }
+
+    #[test]
+    fn preview_green_follows_climate_cover() {
+        let eco = ChunkEcology::default();
+        let veg = VegetationField {
+            canopy_density: 0.6,
+            ..Default::default()
+        };
+        let wx = ChunkWeather::default();
+        let cool = vegetation_preview_with_climate(&eco, &veg, &wx, None, 0.0, 0.0, 0.0, 0.0, 1.0, 0.2);
+        let hot = vegetation_preview_with_climate(&eco, &veg, &wx, None, 0.0, 0.0, 0.0, 0.0, 0.0, 1.0);
+        assert!(cool[1] > hot[1], "cool {:?} hot {:?}", cool, hot);
+    }
+
+    #[test]
+    fn next_clear_pixel_ignores_fire_tint() {
+        let clear = [10u8, 20, 30, 0];
+        assert_eq!(blend_fire_overlay(clear, 1.0, 1.0), clear);
+    }
+
+    #[test]
+    fn next_smoke_does_not_raise_the_red_channel() {
+        let base = [80u8, 120, 90, 255];
+        let smoked = blend_fire_overlay(base, 0.0, 1.0);
+        assert!(smoked[0] <= base[0]);
+        assert!(smoked[1] < base[1]);
+        assert_eq!(smoked[3], base[3]);
     }
 }

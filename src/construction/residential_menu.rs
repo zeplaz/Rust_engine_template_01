@@ -2,9 +2,9 @@
 
 use bevy_egui::egui;
 
+use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId, ZoneTool};
 use super::building_catalog::{ApartmentForm, BuildingIntentPreview};
 use super::building_definitions::{intent_from_apartment_form, BuildingDefinitionRegistry};
-use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId, ZoneTool};
 
 fn pick_structure(tool: &mut ActiveBuildTool, preview: BuildingIntentPreview) {
     tool.tool = BuildTool::Building(BuildingArchetypeId::Housing);
@@ -19,7 +19,11 @@ pub fn draw_residential_submenu(
     ui.label(egui::RichText::new("Residential").strong());
 
     ui.collapsing("Zoning (district paint)", |ui| {
-        ui.label(egui::RichText::new("Paints zone overlay — not a building.").small().weak());
+        ui.label(
+            egui::RichText::new("Paints zone overlay — not a building.")
+                .small()
+                .weak(),
+        );
         if ui.button("Low Density").clicked() {
             tool.clear_building_intent();
             tool.tool = BuildTool::Zone(ZoneTool::ResidentialLow);
@@ -84,15 +88,14 @@ pub fn draw_intent_preview(ui: &mut egui::Ui, intent: &BuildingIntentPreview) {
         intent.footprint.width, intent.footprint.depth
     ));
     if !intent.unit_kinds.is_empty() {
-        let units: Vec<_> = intent
-            .unit_kinds
-            .iter()
-            .map(|u| format!("{u:?}"))
-            .collect();
+        let units: Vec<_> = intent.unit_kinds.iter().map(|u| format!("{u:?}")).collect();
         ui.label(format!("Units: {}", units.join(" + ")));
     }
     ui.label(format!("Construction cost: {}", intent.construction_cost));
-    ui.label(format!("Build time: {} ticks", intent.construction_time_ticks));
+    ui.label(format!(
+        "Build time: {} ticks",
+        intent.construction_time_ticks
+    ));
     ui.label(format!("Power: {:.0}", intent.power_consumption));
     ui.label(format!("Workers: {}", intent.workers_required));
 }

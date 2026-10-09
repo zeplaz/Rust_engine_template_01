@@ -40,8 +40,26 @@ impl Plugin for WorldGeneratorSubenginePlugin {
                handle_load_world_event,
            ))
            // Egui rendering systems go in EguiPrimaryContextPass (bevy_egui 0.39)
-           .add_systems(EguiPrimaryContextPass, world_gen_ui_system);
+           .add_systems(
+               EguiPrimaryContextPass,
+               world_gen_ui_system.run_if(subengine_world_gen_editor_only),
+           );
     }
+}
+
+/// Duplicate generator window stays off the playing session and off the WorldGen Bevy shell.
+fn subengine_world_gen_editor_only(
+    base: Option<Res<State<crate::engine::states::BaseState>>>,
+    app: Option<Res<State<crate::engine::AppState>>>,
+) -> bool {
+    if app
+        .as_ref()
+        .is_some_and(|state| matches!(state.get(), crate::engine::AppState::WorldGen))
+    {
+        return false;
+    }
+    base.as_ref()
+        .is_none_or(|state| matches!(state.get(), crate::engine::states::BaseState::Editor))
 }
 
 // World generation parameters

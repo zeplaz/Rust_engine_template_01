@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/des_place_feedback_anim_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_des_place_feedback_anim_witness",
-    "written_at_epoch_secs": 1790313305
+    "written_at_epoch_secs": 1790350112
   },
   "charter_on_disk": true,
   "charter_path": "src/dev/design_place_feedback_anim_v1.md",
@@ -104,7 +104,7 @@
   "note_counters": "AtomicU32 PLACE_FEEDBACK_STARTS/COMPLETES — starts on arm, completes on 280ms finish; abort on tool exit does not complete",
   "place_feedback_completes": 1,
   "place_feedback_counters_honest": true,
-  "place_feedback_starts": 5,
+  "place_feedback_starts": 2,
   "residuals": [
     {
       "id": "WALL-ARCHETYPE",

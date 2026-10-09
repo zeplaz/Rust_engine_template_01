@@ -110,7 +110,12 @@ mod tests {
             grid_step: 2.0,
             node_radius: 1.0,
         };
-        let out = snap_placement(Vec3::new(3.2, 0.0, 5.7), &s, &ExecutedRoadNetwork::default()).world;
+        let out = snap_placement(
+            Vec3::new(3.2, 0.0, 5.7),
+            &s,
+            &ExecutedRoadNetwork::default(),
+        )
+        .world;
         assert_eq!(out.x, 4.0);
         assert_eq!(out.z, 6.0);
     }

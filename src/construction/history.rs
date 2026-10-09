@@ -227,12 +227,7 @@ pub fn construction_redo_input_system(
         }
         ConstructionAction::DemolishedSites(events) => {
             for ev in events {
-                super::demolish::execute_demolish_at_tile(
-                    &mut commands,
-                    ev.origin,
-                    &sites,
-                    None,
-                );
+                super::demolish::execute_demolish_at_tile(&mut commands, ev.origin, &sites, None);
             }
         }
         // Site/zone redo needs spawn replay (undo despawn only); demolish redo above.
@@ -262,8 +257,8 @@ fn rebuild_road_transport(
     if hydrate_transport_from_snapshot(topology, fields, directory, &snap).is_ok() {
         align_corridor_book_with_transport_directory(directory, corridor_book);
         for mut mask in overlays.iter_mut() {
-            mask.mask |= crate::strategic::NETWORK_DIRTY_FLOW
-                | crate::strategic::NETWORK_DIRTY_CONNECTIVITY;
+            mask.mask |=
+                crate::strategic::NETWORK_DIRTY_FLOW | crate::strategic::NETWORK_DIRTY_CONNECTIVITY;
         }
     }
     let _ = params;
@@ -328,10 +323,7 @@ mod tests {
     #[test]
     fn road_redo_stack_records_and_replays_tiles() {
         let mut history = ConstructionHistory::default();
-        let tiles = vec![
-            BuildSiteTile { x: 1, z: 2 },
-            BuildSiteTile { x: 2, z: 2 },
-        ];
+        let tiles = vec![BuildSiteTile { x: 1, z: 2 }, BuildSiteTile { x: 2, z: 2 }];
         record_road_execution(&mut history, tiles.clone(), vec![], None, None);
         assert!(history.can_undo());
         let action = history.undo_stack.pop().unwrap();
@@ -352,10 +344,7 @@ mod tests {
             owner: Entity::PLACEHOLDER,
             archetype: SiteArchetype::MilitaryBase,
             origin: BuildSiteTile { x: 5, z: 7 },
-            footprint: FootprintTiles {
-                width: 2,
-                depth: 2,
-            },
+            footprint: FootprintTiles { width: 2, depth: 2 },
             layer: LayerType::Surface,
             catalog_id: Some("test_factory".into()),
             placement: None,

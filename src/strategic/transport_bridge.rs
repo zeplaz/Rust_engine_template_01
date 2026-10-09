@@ -125,8 +125,14 @@ pub fn rebuild_logistics_graph_from_transport(
         let cost = edge_traversal_cost(&state, weights, state.travel_time_base);
         let tf = book.traffic_factor(eid);
         let capacity = ((2.0 / cost.max(0.08)).min(3.0)) * tf;
+        let danger_term = if state.danger.is_finite() {
+            state.danger
+        } else {
+            0.0
+        };
         let disruption =
-            (state.damage + state.congestion * 0.45 + state.danger * 0.25).clamp(0.0, 1.0);
+            (state.damage + state.congestion * 0.45 + danger_term * 0.25).clamp(0.0, 1.0);
+        let disruption = super::disruption_after_cell_heat(disruption, state.danger);
 
         edges_out.push(LogisticsEdge {
             from,

@@ -17,8 +17,8 @@
     "quarter_turn_fallback": true
   },
   "material_profiles": [
+    "glass_panel_01",
     "roof_metal_01",
-    "steel_corner_01",
     "steel_door_warehouse_01",
     "steel_panel_01"
   ],
@@ -28,7 +28,7 @@
       "width": 4,
       "depth": 7,
       "floors": 2,
-      "wdc_cell_count": 36
+      "wdc_cell_count": 44
     },
     "pilot_tile_id": "tile_rail_warehouse_pilot_v1",
     "occupied_cells_target": 11

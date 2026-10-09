@@ -1,8 +1,6 @@
 //! WorldPreview plugin — resource init + raster / GPU lifecycle schedule glue.
 
 use bevy::prelude::*;
-use bevy_egui::EguiPrimaryContextPass;
-
 use crate::gui::ViewRepresentationSystemSet;
 use crate::render::{
     attrib_preview_cpu_raster_after, attrib_preview_cpu_raster_before,
@@ -10,9 +8,7 @@ use crate::render::{
 };
 
 use super::cache::WorldPreviewChunkCaches;
-use super::chrome::{
-    world_preview_chrome_active, world_preview_pipeline_enabled, WorldPreviewUiState,
-};
+use super::chrome::{world_preview_pipeline_enabled, WorldPreviewUiState};
 use super::composite_preview_graph::{self, CompositePreviewGraphResource};
 use super::gpu_preview::{self, WorldPreviewGpuRuntime};
 use super::preview_lifecycle::{
@@ -35,7 +31,6 @@ use super::texture_cache::{
 };
 use super::viewport_authority::{self, WorldPreviewViewportAuthority};
 use super::wave_p_witness;
-use super::window::display_world_preview;
 
 /// Deferred GPU resize → commit → camera bind (`render_target_barrier` lifecycle).
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -217,13 +212,6 @@ impl Plugin for WorldPreviewPlugin {
                     viewport_authority::debug_trace_world_preview_viewport_authority
                         .in_set(ViewRepresentationSystemSet::PostFX),
                 ),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                display_world_preview
-                    .after(crate::gui::sync_shell_layout_drag_gate)
-                    .in_set(ViewRepresentationSystemSet::UiCollect)
-                    .run_if(world_preview_chrome_active),
             )
             .add_systems(
                 Update,

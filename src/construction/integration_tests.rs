@@ -5,13 +5,13 @@ use bevy::prelude::*;
 use crate::strategic::BuildSiteTile;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::construction_pipeline::{
-    validate_road_segment, ConstructionIntent, ConstructionPlanQueue, ConstructionStatus,
-    ConstructionType,
-};
 use super::build_tool_authority::{
     shift_lmb_applies_to_active_tool, shift_lmb_queues_building_blueprint, BuildTool,
     BuildingArchetypeId, ZoneTool,
+};
+use super::construction_pipeline::{
+    validate_road_segment, ConstructionIntent, ConstructionPlanQueue, ConstructionStatus,
+    ConstructionType,
 };
 use super::pending_construction::PendingConstructionQueue;
 use super::roads::{regenerate_road_segments, IntersectionRegistry};
@@ -62,9 +62,9 @@ fn road_e2e_queue_validate_segments() {
 fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
     use super::construction_pipeline::{
         execute_construction_plans_system, validate_construction_plans_system,
-        ConstructionPlanQueue, ConstructionWorldRevision,
-        ExecutedRoadNetwork,
+        ConstructionPlanQueue, ConstructionWorldRevision, ExecutedRoadNetwork,
     };
+    use crate::strategic::CorridorConstructionBook;
     use crate::substrate::hydrology::{
         HydrologyConstructionCouplingWitness, HydrologyDirtyReason, HydrologyEventQueue,
     };
@@ -72,7 +72,6 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
         TransportCostCache, TransportCostWeights, TransportEdgeDirectory, TransportFieldStore,
         TransportTopology,
     };
-    use crate::strategic::CorridorConstructionBook;
     use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
     use bevy::state::app::StatesPlugin;
 
@@ -112,7 +111,9 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
         .add_systems(Update, validate_construction_plans_system);
 
     {
-        let mut coupling = app.world_mut().resource_mut::<HydrologyConstructionCouplingWitness>();
+        let mut coupling = app
+            .world_mut()
+            .resource_mut::<HydrologyConstructionCouplingWitness>();
         coupling.bridge_registered = true;
     }
 
@@ -128,12 +129,17 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
     app.add_systems(Update, execute_construction_plans_system);
     app.update();
     let hydro = app.world().resource::<HydrologyEventQueue>();
-    assert!(!hydro.pending.is_empty(), "execute must enqueue hydrology dirty events");
-    assert!(hydro.pending.iter().all(|e| matches!(
-        e.reason,
-        HydrologyDirtyReason::ConstructionComplete { .. }
-    )));
-    let coupling = app.world().resource::<HydrologyConstructionCouplingWitness>();
+    assert!(
+        !hydro.pending.is_empty(),
+        "execute must enqueue hydrology dirty events"
+    );
+    assert!(hydro
+        .pending
+        .iter()
+        .all(|e| matches!(e.reason, HydrologyDirtyReason::ConstructionComplete { .. })));
+    let coupling = app
+        .world()
+        .resource::<HydrologyConstructionCouplingWitness>();
     assert_eq!(coupling.preview_emit_count, 0);
     assert!(coupling.execute_emit_count > 0);
 }
@@ -142,16 +148,18 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
 fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
     use super::construction_pipeline::{
         execute_construction_plans_system, validate_construction_plans_system,
-        ConstructionPlanQueue, ConstructionWorldRevision, ExecutedRoadNetwork, SimRoadSegmentMarker,
+        ConstructionPlanQueue, ConstructionWorldRevision, ExecutedRoadNetwork,
+        SimRoadSegmentMarker,
     };
     use super::corridor_transport::SimCorridorEdgeBinding;
     use crate::economy::logistics::routes::path_edges_between_tiles;
     use crate::economy::resource_flow::TransportMode;
-    use crate::systems::transport::{
-        edge_traversal_cost, refresh_transport_nav_export, TransportCostCache, TransportCostWeights,
-        TransportEdgeDirectory, TransportEdgeId, TransportFieldStore, TransportNavExport, TransportTopology,
-    };
     use crate::strategic::CorridorConstructionBook;
+    use crate::systems::transport::{
+        edge_traversal_cost, refresh_transport_nav_export, TransportCostCache,
+        TransportCostWeights, TransportEdgeDirectory, TransportEdgeId, TransportFieldStore,
+        TransportNavExport, TransportTopology,
+    };
     use bevy::state::app::StatesPlugin;
 
     let params = WorldGenParams {
@@ -198,7 +206,11 @@ fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
     app.update();
 
     let topo = app.world().resource::<TransportTopology>();
-    assert_eq!(topo.neighbors.len(), 1, "execute should add one transport edge");
+    assert_eq!(
+        topo.neighbors.len(),
+        1,
+        "execute should add one transport edge"
+    );
 
     let bindings: Vec<TransportEdgeId> = {
         let world = app.world_mut();
@@ -220,7 +232,9 @@ fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
     let weights = app.world().resource::<TransportCostWeights>().clone();
     let mut cache = TransportCostCache::default();
     for (id, st) in &field.by_edge {
-        cache.by_edge.insert(*id, edge_traversal_cost(st, &weights, st.travel_time_base));
+        cache
+            .by_edge
+            .insert(*id, edge_traversal_cost(st, &weights, st.travel_time_base));
     }
     let mut nav = TransportNavExport::default();
     refresh_transport_nav_export(top, &cache, dir, &mut nav);
@@ -232,7 +246,10 @@ fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
         BuildSiteTile { x: 3, z: 1 },
         TransportMode::Truck,
     );
-    assert!(path.is_some(), "logistics path should exist after corridor execute");
+    assert!(
+        path.is_some(),
+        "logistics path should exist after corridor execute"
+    );
 }
 
 #[test]
@@ -241,11 +258,7 @@ fn zone_paint_queues_zone_pending_kind() {
     let mut paint = ActiveZonePaint::default();
     paint.zone = Some(ZoneTool::ResidentialLow);
     paint.push_unique(BuildSiteTile { x: 2, z: 3 });
-    let n = commit_painted_zones_to_pending(
-        ZoneTool::ResidentialLow,
-        &paint.painted,
-        &mut pending,
-    );
+    let n = commit_painted_zones_to_pending(ZoneTool::ResidentialLow, &paint.painted, &mut pending);
     assert_eq!(n, 1);
     assert_eq!(pending.entries.len(), 1);
     assert!(matches!(
@@ -273,7 +286,11 @@ fn scan_rs_for_legacy_gui_build(dir: &std::path::Path, violations: &mut Vec<Stri
             let Ok(text) = std::fs::read_to_string(&path) else {
                 continue;
             };
-            let legacy = ["use crate::gui::build", "use super::gui::build", "crate::gui::build::"];
+            let legacy = [
+                "use crate::gui::build",
+                "use super::gui::build",
+                "crate::gui::build::",
+            ];
             if legacy.iter().any(|needle| text.contains(needle)) {
                 violations.push(path.display().to_string());
             }

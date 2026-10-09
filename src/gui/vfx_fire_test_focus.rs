@@ -1,7 +1,9 @@
-//! One-shot camera focus onto harness-seeded fire for CLI `--test vfx|visual|fire|atmosphere`.
+//! One-shot camera focus for CLI `--test vfx|visual|fire|atmosphere` (seeded fire)
+//! and `--test city` (generated town centers).
 //!
 //! Not a draw path — gizmos/egui overlays were removed (wrong projection / shaking frames).
-//! Display truth for sparks is Core2d raster + heat tint, not this module.
+//! Display truth for sparks is Core2d raster + heat tint. Towns use the play-map center stamp.
+//! Same [`MainWorldCamera`] writer for both harnesses.
 
 use bevy::prelude::*;
 
@@ -64,6 +66,10 @@ impl VfxFireTestRegion {
 
 const REGION_PAD_TILES: f32 = 4.0;
 
+fn harness_camera_focus_armed(scene: crate::engine::TestScene) -> bool {
+    scene.seeds_fire_overlay() || matches!(scene, crate::engine::TestScene::City)
+}
+
 #[must_use]
 pub fn seeded_fire_region_from_chunks(
     fire_q: &Query<(Entity, &Chunk, &ChunkCellMatrix, &ChunkSurfaceFire)>,
@@ -110,7 +116,7 @@ fn sync_vfx_fire_test_region_armed(
     scene: Option<Res<ActiveTestScene>>,
     mut region: ResMut<VfxFireTestRegion>,
 ) {
-    let armed = scene.is_some_and(|s| s.0.seeds_fire_overlay());
+    let armed = scene.is_some_and(|s| harness_camera_focus_armed(s.0));
     if !armed {
         *region = VfxFireTestRegion::default();
         return;
@@ -118,6 +124,47 @@ fn sync_vfx_fire_test_region_armed(
     // Retry until focus runs — OnEnter world-fit can win the first frame before seeds publish.
     if region.is_valid() && !region.focus_applied {
         region.needs_camera_focus = true;
+    }
+}
+
+fn publish_city_town_test_region(
+    towns: &crate::strategic::TownBook,
+    params: &WorldGenParams,
+    region: &mut VfxFireTestRegion,
+) {
+    if region.is_valid() || towns.towns.is_empty() {
+        return;
+    }
+    let mut min = Vec2::splat(f32::INFINITY);
+    let mut max = Vec2::splat(f32::NEG_INFINITY);
+    for town in towns.towns.values() {
+        let p = Vec2::new(town.center_tile.x as f32, town.center_tile.y as f32);
+        min = min.min(p);
+        max = max.max(p + Vec2::ONE);
+    }
+    let world_max = Vec2::new(params.width.max(1) as f32, params.height.max(1) as f32);
+    min = (min - Vec2::splat(REGION_PAD_TILES)).max(Vec2::ZERO);
+    max = (max + Vec2::splat(REGION_PAD_TILES)).min(world_max);
+    if max.x <= min.x || max.y <= min.y {
+        return;
+    }
+    region.set_bounds(min, max, towns.towns.len() as u32);
+}
+
+fn sync_city_town_test_region(
+    scene: Option<Res<ActiveTestScene>>,
+    params: Res<WorldGenParams>,
+    towns: Option<Res<crate::strategic::TownBook>>,
+    mut region: ResMut<VfxFireTestRegion>,
+) {
+    if !scene.is_some_and(|s| matches!(s.0, crate::engine::TestScene::City)) {
+        return;
+    }
+    let Some(towns) = towns else {
+        return;
+    };
+    if !region.is_valid() {
+        publish_city_town_test_region(towns.as_ref(), params.as_ref(), region.as_mut());
     }
 }
 
@@ -151,9 +198,10 @@ fn focus_vfx_fire_test_camera_on_region(
     if !region.needs_camera_focus || !region.is_valid() {
         return;
     }
-    if !scene.is_some_and(|s| s.0.seeds_fire_overlay()) {
+    if !scene.as_ref().is_some_and(|s| harness_camera_focus_armed(s.0)) {
         return;
     }
+    let city = scene.is_some_and(|s| matches!(s.0, crate::engine::TestScene::City));
     let world_w = params.width.max(1) as f32;
     let world_h = params.height.max(1) as f32;
     let window_px = windows
@@ -172,13 +220,15 @@ fn focus_vfx_fire_test_camera_on_region(
         world_h,
         1.12,
     );
-    let z = desired
-        .scale
-        .x
-        .abs()
-        .max(FIRE_SPARK_FULL_SCATTER_PX_PER_TILE)
-        .max(FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE * 3.0);
-    desired.scale = Vec3::splat(z);
+    if !city {
+        let z = desired
+            .scale
+            .x
+            .abs()
+            .max(FIRE_SPARK_FULL_SCATTER_PX_PER_TILE)
+            .max(FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE * 3.0);
+        desired.scale = Vec3::splat(z);
+    }
     commit_map_camera_pose_to_view_authority(authority.as_mut(), trace.as_mut(), &desired);
     desired_res.0 = desired.clone();
     for (mut t, mut d) in cam.iter_mut() {
@@ -199,7 +249,7 @@ fn snap_vfx_fire_test_camera_pose(
     desired_res: Res<MapCameraDesiredRes>,
     mut cam: Query<(&mut Transform, &mut MapCameraDesired), With<MainWorldCamera>>,
 ) {
-    if !scene.is_some_and(|s| s.0.seeds_fire_overlay()) {
+    if !scene.is_some_and(|s| harness_camera_focus_armed(s.0)) {
         return;
     }
     if !region.focus_applied || region.needs_camera_focus {
@@ -225,6 +275,7 @@ impl Plugin for VfxFireTestFocusPlugin {
                 (
                     sync_vfx_fire_test_region_armed,
                     sync_vfx_fire_test_region_from_fire_system,
+                    sync_city_town_test_region,
                     focus_vfx_fire_test_camera_on_region
                         .after(MapCameraSystemSet::DeriveDesired)
                         .before(MapCameraSystemSet::Smooth),

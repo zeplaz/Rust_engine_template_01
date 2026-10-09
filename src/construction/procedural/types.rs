@@ -206,9 +206,7 @@ impl StylePackRegistry {
 
     /// Union of all slot `module_id` values referenced by loaded packs (for scene preload).
     pub fn referenced_module_ids(&self) -> impl Iterator<Item = &str> {
-        self.packs
-            .values()
-            .flat_map(|pack| pack.module_ids())
+        self.packs.values().flat_map(|pack| pack.module_ids())
     }
 }
 

@@ -41,7 +41,8 @@ pub fn bq_h1_generate_propagation_green() -> bool {
     let mut saw_double = false;
     let mut saw_yard = false;
     for seed in 0..128u64 {
-        let Ok(result) = generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", seed) else {
+        let Ok(result) = generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", seed)
+        else {
             return false;
         };
         match result.massing_strategy.as_str() {

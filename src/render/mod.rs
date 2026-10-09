@@ -3,6 +3,7 @@ pub mod extraction;
 pub mod lighting;
 pub mod shaders;
 mod tile_world_fallback;
+pub use tile_world_fallback::play_sprite_fire_heat_boost;
 mod visual_perf_budget;
 mod fire_vfx;
 mod weather_vfx;
@@ -13,6 +14,8 @@ mod viewport_pipeline;
 pub mod view_runtime;
 mod mig_a_static;
 pub mod minimap_compositor;
+mod world_map_network_mesh;
+pub use world_map_network_mesh::WorldMapNetworkMeshPlugin;
 
 #[cfg(feature = "bevy_tilemap_adapter")]
 pub mod tilemap_adapter;

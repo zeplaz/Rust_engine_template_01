@@ -31,7 +31,15 @@ pub use tile_chunk_map::{
     brush_tile_inclusive_bounds, tile_rect_to_chunk_coords, tile_to_chunk_coord,
 };
 pub use editor_chunk_tile_sync::sync_tile_markers_into_affected_chunk_matrices;
-pub use derived::{compute_slope_grade, stitch_all_chunk_slope_grades, stitch_chunk_slope_grades, ChunkDerivedMetrics};
+pub use derived::{
+    cell_canopy_scale, cell_canopy_scale_climate, cell_canopy_scales, compute_profile_curvature, compute_slope_grade,
+    concealment_from_landform, drainage_accumulation, drainage_with_neighbor_inflow,
+    erosion_from_slope_drainage,
+    fill_landform_layers, flood_basin_ids,
+    landform_means, stitch_all_chunk_slope_grades, stitch_chunk_landform,
+    stitch_chunk_profile_curvature, stitch_chunk_slope_grades, support_from_slope,
+    ChunkDerivedMetrics,
+};
 pub use chunk::{chunk_cell_world_center, chunk_world_center, chunk_world_origin, Chunk};
 pub use geo_plugin::*;
 pub use world_generator::*;

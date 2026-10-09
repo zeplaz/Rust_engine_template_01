@@ -12,6 +12,7 @@ pub struct EnginePlugin {}
 impl Plugin for EnginePlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(DefaultPlugins).add_plugins(EguiPlugin::default());
+        super::omit_egui_pointer_preupdate_in_simulation(app);
 
         // Historical: `add_plugins(MenuStatePlugin)`, `init_state`, `add_systems(OnEnter(...), …)`.
         //.add_state(AppState::MainMenu)

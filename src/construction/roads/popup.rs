@@ -57,25 +57,25 @@ pub fn draw_road_tool_popup_egui(
     let est_cost = valid_count.saturating_mul(10);
     let can_build = valid_count > 0;
 
-    let cursor_world = win
-        .single()
-        .ok()
-        .and_then(|window| {
-            cursor_world_on_map(
-                window,
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            )
-        });
+    let cursor_world = win.single().ok().and_then(|window| {
+        cursor_world_on_map(
+            window,
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        )
+    });
 
     egui::Window::new(title)
         .id(egui::Id::new("road_tool_popup"))
         .default_pos(egui::pos2(12.0, 200.0))
         .default_width(240.0)
         .show(contexts.ctx_mut()?, |ui| {
-            ui.label(format!("Control points: {}", placement.control_points.len()));
+            ui.label(format!(
+                "Control points: {}",
+                placement.control_points.len()
+            ));
             ui.label(format!("Segments: {}", placement.generated_segments.len()));
             ui.label(format!("Valid segments: {valid_count}"));
             ui.label(format!("Estimated cost: {est_cost}"));

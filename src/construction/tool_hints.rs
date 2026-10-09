@@ -66,7 +66,7 @@ pub fn draw_tool_hints_egui(
                 "RMB / Esc: unlock ghost",
                 "Esc again: cancel defense tool",
             ]
-        },
+        }
         BuildTool::Road(_) => vec![
             "LMB: add point",
             "RMB: undo point",
@@ -109,7 +109,11 @@ pub fn draw_tool_hints_egui(
                 );
             }
             if let Some(hint) = &path_feedback.snap_hint {
-                ui.label(egui::RichText::new(hint).small().color(egui::Color32::from_rgb(120, 200, 160)));
+                ui.label(
+                    egui::RichText::new(hint)
+                        .small()
+                        .color(egui::Color32::from_rgb(120, 200, 160)),
+                );
             }
             if !path_feedback.required_actions.is_empty() {
                 ui.label(
@@ -121,7 +125,11 @@ pub fn draw_tool_hints_egui(
                     .color(egui::Color32::from_rgb(220, 180, 96)),
                 );
             }
-            ui.label(egui::RichText::new("Ctrl+Z: undo last commit").small().weak());
+            ui.label(
+                egui::RichText::new("Ctrl+Z: undo last commit")
+                    .small()
+                    .weak(),
+            );
         });
     Ok(())
 }

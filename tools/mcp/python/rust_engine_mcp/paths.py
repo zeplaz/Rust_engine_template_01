@@ -50,6 +50,19 @@ def blender_exe() -> Path:
     )
 
 
+def resolve_under_root(root: Path, rel: str | Path, *, label: str = "path") -> Path:
+    """Resolve ``rel`` under ``root``. Reject ``..`` and paths that leave ``root``."""
+    raw = str(rel).replace("\\", "/").strip()
+    if not raw or raw in {".", ".."}:
+        raise ValueError(f"{label} escapes root: {rel!r}")
+    base = Path(root).resolve()
+    candidate = Path(raw)
+    dest = candidate.resolve() if candidate.is_absolute() else (base / candidate).resolve()
+    if dest == base or not dest.is_relative_to(base):
+        raise ValueError(f"{label} escapes root: {rel!r}")
+    return dest
+
+
 def staging_root() -> Path:
     return repo_root() / "assets" / "staging"
 

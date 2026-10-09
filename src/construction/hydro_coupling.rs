@@ -152,10 +152,10 @@ fn footprint_cell_indices(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::engine::states::BaseState;
     use crate::substrate::hydrology::drain::hydrology_drain_construction_events_system;
     use crate::substrate::{SubstratePlugin, WorldSubstrateRegistry};
     use bevy::state::app::StatesPlugin;
-    use crate::engine::states::BaseState;
 
     #[test]
     fn execute_emit_enqueued_preview_emits_zero() {
@@ -186,10 +186,7 @@ mod tests {
             &mut coupling,
             7,
             BuildSiteTile { x: 0, z: 0 },
-            FootprintTiles {
-                width: 2,
-                depth: 1,
-            },
+            FootprintTiles { width: 2, depth: 1 },
             UVec2::new(32, 32),
         );
         assert!(!queue.pending.is_empty());
@@ -213,23 +210,22 @@ mod tests {
         let key = ChunkKey::new(0, 0);
         {
             let mut reg = app.world_mut().resource_mut::<WorldSubstrateRegistry>();
-            reg.chunks
-                .insert(key, WorldChunkState::new_empty(key, 16));
+            reg.chunks.insert(key, WorldChunkState::new_empty(key, 16));
             reg.chunks.set_resident(key, true);
         }
         {
             app.world_mut()
                 .resource_mut::<HydrologyConstructionCouplingWitness>()
                 .bridge_registered = true;
-            let pushed = app
-                .world_mut()
-                .resource_mut::<HydrologyEventQueue>()
-                .push(HydrologyDirtyEvent {
-                    key,
-                    reason: HydrologyDirtyReason::ConstructionComplete { structure_id: 1 },
-                    structure_id: 1,
-                    affected_cells: vec![0],
-                });
+            let pushed =
+                app.world_mut()
+                    .resource_mut::<HydrologyEventQueue>()
+                    .push(HydrologyDirtyEvent {
+                        key,
+                        reason: HydrologyDirtyReason::ConstructionComplete { structure_id: 1 },
+                        structure_id: 1,
+                        affected_cells: vec![0],
+                    });
             assert!(pushed);
             app.world_mut()
                 .resource_mut::<HydrologyConstructionCouplingWitness>()
@@ -256,7 +252,9 @@ mod tests {
         );
         let queue = app.world().resource::<HydrologyEventQueue>();
         assert_eq!(queue.construction_events_drained, 1);
-        let coupling = app.world().resource::<HydrologyConstructionCouplingWitness>();
+        let coupling = app
+            .world()
+            .resource::<HydrologyConstructionCouplingWitness>();
         assert!(construction_hydro_coupling_witness_green(coupling, queue));
     }
 }

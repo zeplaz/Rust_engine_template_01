@@ -4,7 +4,8 @@
 // VR-07: single `let alpha` only — Naga rejects redefinition and the Core2d raster
 // pass silently no-ops (rain still draws; sparks/smoke billboards vanish).
 
-// View globals — `view_proj` from ExtractedCameraMetrics (RTT-B5); no MainWorldCamera query in raster sync.
+// View globals — `view_proj` is ExtractedCameraMetrics only (one tactical writer).
+// `time_secs` rises the billboard. Alpha must not be the only use of time.
 struct Globals {
     view_proj: mat4x4<f32>,
     vertex_count: u32,
@@ -37,7 +38,11 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
     let tri_corner = vertex_index % 6u;
     let corner_idx = array<u32, 6>(0u, 1u, 2u, 0u, 2u, 3u)[tri_corner];
     let row = expanded[quad * 4u + corner_idx];
-    let world = row.world_xy_heat_ember.xy;
+    // Same offset on every corner so the quad rises together on the burning cell.
+    let life = fract(globals.time_secs * 0.55 + f32(quad) * 0.173);
+    let rise = life * 1.8;
+    let sway = sin(globals.time_secs * 2.1 + f32(quad) * 0.61) * 0.22;
+    let world = row.world_xy_heat_ember.xy + vec2<f32>(sway, rise);
     let heat = row.world_xy_heat_ember.z;
     let ember = row.world_xy_heat_ember.w;
     let uvs = array<vec2<f32>, 4>(

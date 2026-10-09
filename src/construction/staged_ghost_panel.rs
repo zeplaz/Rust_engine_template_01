@@ -192,11 +192,8 @@ pub fn stage_active_ghost_on_lmb_system(
         Some(ghost.scale_factor),
     );
     let scale = clamp_scale_factor(placement.scale_factor);
-    let validity = staged_validity_from_preview(
-        preview.report.allows_commit,
-        scale,
-        &preview.report.errors,
-    );
+    let validity =
+        staged_validity_from_preview(preview.report.allows_commit, scale, &preview.report.errors);
     book.push_from_ghost(
         catalog_id,
         def.site_archetype,
@@ -231,7 +228,10 @@ pub fn parametric_active_ghost_hud_line(
     );
     let mass: f32 = snap.weights.iter().map(|(_, w)| *w).sum();
     let prod_pct = 100.0
-        * crate::economy::activation::scale::production_multiplier(snap.effective_scale, crate::economy::activation::scale::DEFAULT_K_PROD);
+        * crate::economy::activation::scale::production_multiplier(
+            snap.effective_scale,
+            crate::economy::activation::scale::DEFAULT_K_PROD,
+        );
     let short = catalog_id.chars().take(18).collect::<String>();
     let rot = ghost.rotation_quarter_turns as u32 * 90;
     let valid = if preview.report.allows_commit {
@@ -294,7 +294,8 @@ pub fn draw_staged_placements_panel_egui_system(
         .show(ctx, |ui| {
             ui.heading("Parametric placement");
             ui.checkbox(&mut staging.enabled, "Stage placements");
-            if let Some(line) = parametric_active_ghost_hud_line(&tool, &registry, &ghost, &preview) {
+            if let Some(line) = parametric_active_ghost_hud_line(&tool, &registry, &ghost, &preview)
+            {
                 ui.label(egui::RichText::new(line).small());
             }
             let panel_visible = staging.enabled || !book.rows.is_empty();
@@ -323,50 +324,52 @@ pub fn draw_staged_placements_panel_body(
     history: &mut ConstructionHistory,
     occupation: Option<&crate::strategic::TileOccupationBook>,
 ) {
-    ui.label(
-        egui::RichText::new(format!("Staged placements ({})", book.staged_count()))
-            .strong(),
-    );
+    ui.label(egui::RichText::new(format!("Staged placements ({})", book.staged_count())).strong());
     if book.rows.is_empty() {
         ui.label(
-            egui::RichText::new("No staged ghosts — adjust active ghost, then LMB on map.")
-                .weak(),
+            egui::RichText::new("No staged ghosts — adjust active ghost, then LMB on map.").weak(),
         );
     } else {
-        egui::ScrollArea::vertical().max_height(120.0).show(ui, |ui| {
-            let mut remove_idx = None;
-            for (idx, row) in book.rows.iter_mut().enumerate() {
-                ui.horizontal(|ui| {
-                    ui.checkbox(&mut row.approved, "");
-                    let label = row.catalog_id.chars().take(14).collect::<String>();
-                    ui.label(label);
-                    ui.label(format!("{:.2}×", row.scale));
-                    ui.label(format!("{}°", row.rotation_quarter_turns as u32 * 90));
-                    let badge = match row.validity {
-                        StagedValidity::Ok => "OK",
-                        StagedValidity::Warn => "Warn",
-                        StagedValidity::Bad => "Bad",
-                    };
-                    ui.label(egui::RichText::new(badge).weak());
-                    if ui.small_button("✕").clicked() {
-                        remove_idx = Some(idx);
-                    }
-                });
-            }
-            if let Some(idx) = remove_idx {
-                book.rows.remove(idx);
-            }
-        });
+        egui::ScrollArea::vertical()
+            .max_height(120.0)
+            .show(ui, |ui| {
+                let mut remove_idx = None;
+                for (idx, row) in book.rows.iter_mut().enumerate() {
+                    ui.horizontal(|ui| {
+                        ui.checkbox(&mut row.approved, "");
+                        let label = row.catalog_id.chars().take(14).collect::<String>();
+                        ui.label(label);
+                        ui.label(format!("{:.2}×", row.scale));
+                        ui.label(format!("{}°", row.rotation_quarter_turns as u32 * 90));
+                        let badge = match row.validity {
+                            StagedValidity::Ok => "OK",
+                            StagedValidity::Warn => "Warn",
+                            StagedValidity::Bad => "Bad",
+                        };
+                        ui.label(egui::RichText::new(badge).weak());
+                        if ui.small_button("✕").clicked() {
+                            remove_idx = Some(idx);
+                        }
+                    });
+                }
+                if let Some(idx) = remove_idx {
+                    book.rows.remove(idx);
+                }
+            });
     }
     ui.separator();
-    let approved_valid = book.rows.iter().any(|r| {
-        r.approved && r.allows_commit && r.validity != StagedValidity::Bad
-    });
+    let approved_valid = book
+        .rows
+        .iter()
+        .any(|r| r.approved && r.allows_commit && r.validity != StagedValidity::Bad);
     let any_valid = book
         .rows
         .iter()
         .any(|r| r.allows_commit && r.validity != StagedValidity::Bad);
-    let any_clear = book.rows.iter().any(|r| !r.approved || r.validity == StagedValidity::Bad);
+    let any_clear = book
+        .rows
+        .iter()
+        .any(|r| !r.approved || r.validity == StagedValidity::Bad);
     ui.horizontal(|ui| {
         if ui
             .add_enabled(approved_valid, egui::Button::new("Build approved"))
@@ -433,10 +436,7 @@ fn staging_panel_visible_self_check() -> Result<(), &'static str> {
             allows_commit: true,
             footprint_weights: vec![],
             archetype: SiteArchetype::Factory,
-            footprint: FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            footprint: FootprintTiles { width: 1, depth: 1 },
             layer: LayerType::Surface,
             placement: CommittedPlacementSnapshot {
                 origin: BuildSiteTile { x: 0, z: 0 },
@@ -579,10 +579,7 @@ fn build_approved_drains_staged_self_check() -> Result<(), &'static str> {
     book.push_from_ghost(
         "test_factory".into(),
         SiteArchetype::Factory,
-        FootprintTiles {
-            width: 1,
-            depth: 1,
-        },
+        FootprintTiles { width: 1, depth: 1 },
         LayerType::Surface,
         &ghost,
         placement,
@@ -634,10 +631,7 @@ mod tests {
         book.push_from_ghost(
             "a".into(),
             SiteArchetype::Factory,
-            FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            FootprintTiles { width: 1, depth: 1 },
             LayerType::Surface,
             &ghost,
             placement.clone(),
@@ -647,10 +641,7 @@ mod tests {
         book.push_from_ghost(
             "b".into(),
             SiteArchetype::Factory,
-            FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
+            FootprintTiles { width: 1, depth: 1 },
             LayerType::Surface,
             &ghost,
             placement,
@@ -681,14 +672,17 @@ mod tests {
 
         use super::super::build_interaction::build_confirm_site_system;
         use super::super::build_strip::{BuildStripState, ToolContext};
-        use super::super::build_tool_authority::{BuildingArchetypeId, BuildTool};
+        use super::super::build_tool_authority::{BuildTool, BuildingArchetypeId};
         use super::super::pending_construction::PendingConstructionQueue;
         use super::super::sessions::ActiveToolSession;
 
         #[derive(Resource, Default)]
         struct CommitCount(u32);
 
-        fn count(mut reader: MessageReader<CommitConstructionSiteEvent>, mut n: ResMut<CommitCount>) {
+        fn count(
+            mut reader: MessageReader<CommitConstructionSiteEvent>,
+            mut n: ResMut<CommitCount>,
+        ) {
             for _ in reader.read() {
                 n.0 = n.0.saturating_add(1);
             }
@@ -719,7 +713,9 @@ mod tests {
             app.world_mut().resource_mut::<BuildStripState>().active = ToolContext::Industry;
             app.world_mut().resource_mut::<ActiveBuildTool>().tool =
                 BuildTool::Building(BuildingArchetypeId::Factory);
-            app.world_mut().resource_mut::<StagedPlacementMode>().enabled = true;
+            app.world_mut()
+                .resource_mut::<StagedPlacementMode>()
+                .enabled = true;
             let mut ghost = app.world_mut().resource_mut::<BuildGhostState>();
             ghost.origin = Some(BuildSiteTile { x: 2, z: 2 });
             let mut preview = app.world_mut().resource_mut::<BuildPlacementPreview>();

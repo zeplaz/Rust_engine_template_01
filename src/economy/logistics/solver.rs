@@ -89,6 +89,9 @@ pub fn solve_throughput_greedy_system(
     mut book: ResMut<FreightReservationBook>,
     mut diagnostics: ResMut<LogisticsDiagnostics>,
 ) {
+    if flow_snapshot_unchanged(&solver, &flow) {
+        return;
+    }
     book.clear();
     for edge in flow.edges.iter() {
         if !edge.path_open {
@@ -154,6 +157,32 @@ pub fn solve_throughput_greedy_system(
             diagnostics.proofs.drain(0..32);
         }
     }
+    solver.solved_revision = Some(solver.topology_revision);
+    solver.solved_path_open.clear();
+    solver.solved_max_rate.clear();
+    solver
+        .solved_path_open
+        .extend(flow.edges.iter().map(|edge| edge.path_open));
+    solver
+        .solved_max_rate
+        .extend(flow.edges.iter().map(|edge| edge.max_rate));
+}
+
+fn flow_snapshot_unchanged(solver: &ThroughputSolverState, flow: &ResourceFlowRegistry) -> bool {
+    let Some(solved) = solver.solved_revision else {
+        return false;
+    };
+    if solved != solver.topology_revision {
+        return false;
+    }
+    if solver.solved_path_open.len() != flow.edges.len()
+        || solver.solved_max_rate.len() != flow.edges.len()
+    {
+        return false;
+    }
+    flow.edges.iter().enumerate().all(|(i, edge)| {
+        solver.solved_path_open[i] == edge.path_open && solver.solved_max_rate[i] == edge.max_rate
+    })
 }
 
 pub fn feedback_congestion_from_load_system(

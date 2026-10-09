@@ -4,11 +4,10 @@ use bevy::prelude::*;
 use bevy_egui::egui;
 
 use crate::gui::hud::{
-    capture_shell_layout, draw_virtualized_rows, shell_widget_runs_egui_with_budget,
-    floating_unanchored_default_pos, show_product_shell_window, HudDockRegistry, HudLayoutStore,
-    HudWidgetId,
-    PendingHudLayoutCommit, ProductShellUpdateBudget, ShellWidgetDiagnostics, ShellWindowHost,
-    WorldInteractionDiagnostics,
+    capture_shell_layout, draw_virtualized_rows, floating_unanchored_default_pos,
+    shell_widget_runs_egui_with_budget, show_product_shell_window, HudDockRegistry, HudLayoutStore,
+    HudWidgetId, PendingHudLayoutCommit, ProductShellUpdateBudget, ShellWidgetDiagnostics,
+    ShellWindowHost, WorldInteractionDiagnostics,
 };
 
 use super::blueprint_preset::{blueprint_collection_from_pending, BlueprintImportQueueMode};
@@ -67,7 +66,11 @@ pub fn draw_pending_construction_queue_egui(
                 egui::RichText::new(format!(
                     "Ghost validity: {}  commit {}  (terrain {:.0}% · logistics {:.0}%)",
                     if view.ghost_valid { "ok" } else { "blocked" },
-                    if view.commit_allowed { "allowed" } else { "blocked" },
+                    if view.commit_allowed {
+                        "allowed"
+                    } else {
+                        "blocked"
+                    },
                     view.terrain_score * 100.0,
                     view.logistics_score * 100.0,
                 ))
@@ -82,12 +85,15 @@ pub fn draw_pending_construction_queue_egui(
             }
             if !view.warnings.is_empty() {
                 ui.label(
-                    egui::RichText::new(format!("Warnings: {}", view.warnings.join(", ")))
-                        .weak(),
+                    egui::RichText::new(format!("Warnings: {}", view.warnings.join(", "))).weak(),
                 );
             }
             if let Some(hint) = &view.path_snap_hint {
-                ui.label(egui::RichText::new(hint).small().color(egui::Color32::from_rgb(120, 200, 160)));
+                ui.label(
+                    egui::RichText::new(hint)
+                        .small()
+                        .color(egui::Color32::from_rgb(120, 200, 160)),
+                );
             }
             if !view.path_required_actions.is_empty() {
                 ui.label(
@@ -117,13 +123,20 @@ pub fn draw_pending_construction_queue_egui(
                     ui.label(format!(
                         "Hover highlight {:.0}% · tooltip {}",
                         world.hover_highlight_strength * 100.0,
-                        if world.tooltip_pending { "pending" } else { "ready" }
+                        if world.tooltip_pending {
+                            "pending"
+                        } else {
+                            "ready"
+                        }
                     ));
                 }
             }
             ui.add(
                 egui::ProgressBar::new(view.pending_count as f32 / view.total_count.max(1) as f32)
-                    .text(format!("Queue {} / {}", view.pending_count, view.total_count)),
+                    .text(format!(
+                        "Queue {} / {}",
+                        view.pending_count, view.total_count
+                    )),
             );
             ui.label(
                 egui::RichText::new(
@@ -164,10 +177,9 @@ pub fn draw_pending_construction_queue_egui(
                                 "Replace queue",
                             );
                         });
-                        let replace_blocked = matches!(
-                            import_ui.mode,
-                            BlueprintImportQueueMode::Replace
-                        ) && !pending.entries.is_empty();
+                        let replace_blocked =
+                            matches!(import_ui.mode, BlueprintImportQueueMode::Replace)
+                                && !pending.entries.is_empty();
                         if replace_blocked {
                             ui.checkbox(
                                 &mut import_ui.replace_confirm,
@@ -183,10 +195,7 @@ pub fn draw_pending_construction_queue_egui(
                         ui.horizontal(|ui| {
                             ui.add_enabled_ui(import_enabled, |ui| {
                                 if ui
-                                    .button(format!(
-                                        "Import to queue ({})",
-                                        imported.presets.len()
-                                    ))
+                                    .button(format!("Import to queue ({})", imported.presets.len()))
                                     .clicked()
                                 {
                                     intents.write(ConstructionQueueIntent::ImportWaveSPresets {
@@ -197,10 +206,7 @@ pub fn draw_pending_construction_queue_egui(
                                 }
                             });
                             if ui
-                                .button(format!(
-                                    "Copy presets RON ({})",
-                                    imported.presets.len()
-                                ))
+                                .button(format!("Copy presets RON ({})", imported.presets.len()))
                                 .clicked()
                             {
                                 *preset_ron = ron::ser::to_string(imported).ok();
@@ -213,9 +219,11 @@ pub fn draw_pending_construction_queue_egui(
                 if !imported.presets.is_empty() {
                     ui.separator();
                     ui.label(
-                        egui::RichText::new("Wave S presets — Apply loads ghost only (Enter to commit)")
-                            .small()
-                            .weak(),
+                        egui::RichText::new(
+                            "Wave S presets — Apply loads ghost only (Enter to commit)",
+                        )
+                        .small()
+                        .weak(),
                     );
                     for (idx, preset) in imported.presets.iter().enumerate() {
                         ui.horizontal(|ui| {
@@ -285,7 +293,12 @@ pub fn draw_pending_construction_queue_egui(
         },
         widget_timing,
     ) {
-        capture_shell_layout(layout_store, HudWidgetId::ConstructionQueue, &response, Some(pending_layout));
+        capture_shell_layout(
+            layout_store,
+            HudWidgetId::ConstructionQueue,
+            &response,
+            Some(pending_layout),
+        );
     }
     dock.slot_mut(HudWidgetId::ConstructionQueue).visible = open;
 }

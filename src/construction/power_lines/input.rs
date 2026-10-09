@@ -2,15 +2,17 @@
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::EguiContexts;
 
+use crate::gui::hud::simulation_pointer_gate::{
+    simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
+};
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::infrastructure::utility::graph::{UtilityGraph, UtilityNetworkSnapshotResource};
 use crate::infrastructure::UtilityAuthoringMode;
 use crate::infrastructure::UtilityAuthoringTool;
 use crate::infrastructure::UtilityNetworkKind;
-use crate::render::PowerMapOverlayPresentation;
 use crate::render::view_runtime::ViewProjectionAuthority;
+use crate::render::PowerMapOverlayPresentation;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool};
@@ -24,6 +26,20 @@ use super::routing::{regenerate_power_line_segments, snap_power_grid};
 #[inline]
 fn power_line_tool_active(tool: BuildTool) -> bool {
     matches!(tool, BuildTool::PowerLine(_))
+}
+
+/// Shift+commit must not enter the graph when any control point or curve sample
+/// sits outside the generated map.
+fn power_path_leaves_map(placement: &ActivePowerLinePlacement, width: u32, height: u32) -> bool {
+    crate::construction::path_commit_leaves_generated_map(
+        &placement.control_points,
+        placement
+            .generated_segments
+            .iter()
+            .flat_map(|seg| [seg.start, seg.end]),
+        width,
+        height,
+    )
 }
 
 fn resolve_voltage(tool: BuildTool) -> crate::infrastructure::VoltageClass {
@@ -88,18 +104,19 @@ pub fn update_power_line_path_preview_system(
     map_vp: Res<SimulationMapViewport>,
     params: Res<WorldGenParams>,
     mut placement: ResMut<ActivePowerLinePlacement>,
-    mut egui_ctx: EguiContexts,
+    pointer_gate: Option<Res<SimulationMapPointerGate>>,
 ) {
     if !power_line_tool_active(tool.tool) {
         placement.generated_segments.clear();
         return;
     }
-    let Ok(ctx) = egui_ctx.ctx_mut() else {
-        return;
-    };
-    if ctx.egui_wants_pointer_input() {
-        placement.generated_segments.clear();
-        return;
+    match simulation_tool_pointer(pointer_gate.as_deref()) {
+        SimulationToolPointer::Unavailable => return,
+        SimulationToolPointer::HeldByChrome => {
+            placement.generated_segments.clear();
+            return;
+        }
+        SimulationToolPointer::Free => {}
     }
     let Ok(window) = win.single() else {
         return;
@@ -140,7 +157,11 @@ pub fn sync_power_line_build_preview(
     if !power_line_tool_active(tool.tool) {
         return;
     }
-    let valid_count = placement.generated_segments.iter().filter(|s| s.valid).count();
+    let valid_count = placement
+        .generated_segments
+        .iter()
+        .filter(|s| s.valid)
+        .count();
     let invalid = placement
         .generated_segments
         .iter()
@@ -195,15 +216,12 @@ pub fn power_line_path_input_system(
     mut placement: ResMut<ActivePowerLinePlacement>,
     mut snap_res: ResMut<UtilityNetworkSnapshotResource>,
     mut graph: ResMut<UtilityGraph>,
-    mut egui_ctx: EguiContexts,
+    pointer_gate: Option<Res<SimulationMapPointerGate>>,
 ) {
     if !power_line_tool_active(tool.tool) {
         return;
     }
-    let Ok(ctx) = egui_ctx.ctx_mut() else {
-        return;
-    };
-    if ctx.egui_wants_pointer_input() {
+    if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
         return;
     }
     let Ok(window) = win.single() else {
@@ -218,18 +236,21 @@ pub fn power_line_path_input_system(
     ) else {
         return;
     };
-    let world = if placement.routing_mode == PowerLineRoutingMode::Orthogonal90 && placement.grid_snap
-    {
-        snap_power_grid(raw)
-    } else {
-        raw
-    };
+    let world =
+        if placement.routing_mode == PowerLineRoutingMode::Orthogonal90 && placement.grid_snap {
+            snap_power_grid(raw)
+        } else {
+            raw
+        };
 
     let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
     let voltage = resolve_voltage(tool.tool);
 
     if buttons.just_pressed(MouseButton::Left) {
         if shift {
+            if power_path_leaves_map(placement.as_ref(), params.width, params.height) {
+                return;
+            }
             commit_power_line_to_utility_graph(
                 placement.as_mut(),
                 &mut snap_res.0,

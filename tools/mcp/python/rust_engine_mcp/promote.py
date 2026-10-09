@@ -24,9 +24,15 @@ from .library import (
     KIT_PROD_NONCORE_BQ_001_JOB_IDS,
     register_module,
 )
-from .paths import repo_root, staging_root
+from .paths import repo_root, resolve_under_root, staging_root
 from .schemas import load_json_file
 from .validators.asset import validate_asset_glb
+
+
+def _repo_file(raw: str | Path, *, label: str) -> Path | None:
+    """A file under the repo. Paths that leave the repo raise."""
+    path = resolve_under_root(repo_root(), raw, label=label)
+    return path if path.is_file() else None
 
 
 def _resolve_spec_path(job_id: str) -> Path | None:
@@ -38,22 +44,18 @@ def _resolve_spec_path(job_id: str) -> Path | None:
     status = read_status(job_id) or {}
     spec_ref = status.get("spec_ref")
     if spec_ref:
-        spec_path = Path(str(spec_ref))
-        if not spec_path.is_absolute():
-            spec_path = repo_root() / spec_path
-        if spec_path.is_file():
+        spec_path = _repo_file(str(spec_ref), label="spec_ref")
+        if spec_path is not None:
             return spec_path
 
     job_path = status.get("job_path")
     if job_path:
-        job_file = Path(str(job_path))
+        job_file = resolve_under_root(repo_root(), str(job_path), label="job path")
         if job_file.is_file():
             spec_ref = load_json_file(job_file).get("spec_ref")
             if spec_ref:
-                spec_path = Path(str(spec_ref))
-                if not spec_path.is_absolute():
-                    spec_path = repo_root() / spec_path
-                if spec_path.is_file():
+                spec_path = _repo_file(str(spec_ref), label="spec_ref")
+                if spec_path is not None:
                     return spec_path
 
     examples = repo_root() / "tools" / "mcp" / "schemas" / "examples"
@@ -68,10 +70,8 @@ def _resolve_spec_path(job_id: str) -> Path | None:
             spec_ref = job.get("spec_ref")
             if not spec_ref:
                 continue
-            spec_path = Path(str(spec_ref))
-            if not spec_path.is_absolute():
-                spec_path = repo_root() / spec_path
-            if spec_path.is_file():
+            spec_path = _repo_file(str(spec_ref), label="spec_ref")
+            if spec_path is not None:
                 return spec_path
     return None
 
@@ -108,6 +108,21 @@ def _infer_batch_id(job_id: str) -> str:
     return ""
 
 
+def _safe_job_id(job_id: str) -> str:
+    """One staging folder name. ``..`` and separators must not leave staging."""
+    name = str(job_id or "").strip()
+    if (
+        not name
+        or name in {".", ".."}
+        or "/" in name
+        or "\\" in name
+        or ":" in name
+        or Path(name).is_absolute()
+    ):
+        raise ValueError(f"job_id must be a single folder name: {job_id!r}")
+    return name
+
+
 def promote_module(
     job_id: str,
     *,
@@ -115,13 +130,15 @@ def promote_module(
     register: bool = True,
     allow_smoke: bool = False,
 ) -> dict:
+    job_id = _safe_job_id(job_id)
     src_dir = staging_root() / job_id
     glb = src_dir / "model.glb"
     if not glb.is_file():
-        candidates = list(src_dir.glob("**/*.glb"))
+        candidates = sorted(src_dir.glob("**/*.glb"), key=lambda p: p.as_posix().lower())
         if not candidates:
             raise FileNotFoundError(f"No glb under {src_dir}")
-        glb = candidates[0]
+        named = [p for p in candidates if p.name.lower() == "model.glb"]
+        glb = named[0] if named else candidates[0]
 
     spec_path = _resolve_spec_path(job_id)
     if spec_path is not None:

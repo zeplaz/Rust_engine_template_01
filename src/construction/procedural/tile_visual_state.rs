@@ -1,7 +1,9 @@
 //! TILE-FIX-003 — runtime [`VisualState`] (variant × facing × frame) for atlas UV lookup.
 
 use super::tile_atlas_index::TileAtlasRegistry;
-use super::tile_variant_resolver::{resolve_tile_variant, ResolvedTileVariant, TileVariantContext, VariantCatalog};
+use super::tile_variant_resolver::{
+    resolve_tile_variant, ResolvedTileVariant, TileVariantContext, VariantCatalog,
+};
 
 /// Runtime visual key for iso atlas lookup (buildings, vehicles, props share contract).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -54,11 +56,7 @@ impl VisualState {
 impl TileAtlasRegistry {
     /// v2 lookup: `(variant, facing, frame)` → UV. Falls back to v1 `variants` when facing/frame are 0.
     #[must_use]
-    pub fn resolve_visual_state_uv(
-        &self,
-        atlas_id: &str,
-        state: &VisualState,
-    ) -> Option<[f32; 4]> {
+    pub fn resolve_visual_state_uv(&self, atlas_id: &str, state: &VisualState) -> Option<[f32; 4]> {
         let entry = self.get(atlas_id)?;
         if let Some(uv) = entry.lookup_uv(&state.variant_key, state.facing, state.frame) {
             return Some(uv);

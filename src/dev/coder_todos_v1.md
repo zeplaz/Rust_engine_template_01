@@ -6,7 +6,7 @@
 
 
 
-**Queue sync (2026-07-04):** `sync_dispatch_subqueues` 0 stale · hub **pick_now:** `RGR-M1-001` (coder) · `PERF-INSTR-VFX-002` (coder_b, in_progress) · operator×3 · **@coder_a idle** (CHAIN-A lib closed)
+**Queue sync (2026-09-25):** operator sessions are acceptance logs, not lane freezes. `G-PLAY-01` stays unclosed as a playtest record and does not block coder patches. Placement-debug overlay no longer forces on `--test visual` (operator bug B1).
 
 
 
@@ -243,11 +243,10 @@ cd tools/mcp/python && python -m pytest tests/test_building_quality_qc.py tests/
 
 
 
-1. **Operator P0** — RTT-C-002/003 · DR-RTT-VR16 · PERF display accept  
-2. **@coder RGR-V2-001** — GPU raster ViewProjectionAuthority (after operator P0)  
-3. **@coder_b** — on-call only  
-4. **@coder-mcp** — BQ-Q2 tail blocked on operator · city C8 when G1 gate  
-5. **SCH-W2** — steward gate (`DR-SCHED-W2`) after operator P0 green
+1. **@coder landform + fan-out** — coder rows on `landform_veg` and `sim_fanout` are done. Board [`landform_veg_drain_todos_v1.md`](landform_veg_drain_todos_v1.md)
+2. **Operator** — eye check and playtest are acceptance logs. They do not sit in front of the drain.
+3. **@coder-mcp** — keyframe stills stay an art-promotion log
+4. **PCI-*** listed on the landform board — stay blocked
 
 
 

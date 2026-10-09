@@ -285,7 +285,11 @@ fn load_meta(meta_path: &Path) -> Result<MetaLoadResult, String> {
             });
         }
     }
-    let facings = if render_facings == 0 { 8 } else { render_facings };
+    let facings = if render_facings == 0 {
+        8
+    } else {
+        render_facings
+    };
     Ok(MetaLoadResult {
         variants,
         schema_version,
@@ -342,7 +346,11 @@ fn normalize_entry(raw: TileAtlasIndexEntryRaw) -> Result<TileAtlasEntry, String
     })
 }
 
-fn ingest_entry(registry: &mut TileAtlasRegistry, entry: TileAtlasEntry, active_runtime_only: bool) {
+fn ingest_entry(
+    registry: &mut TileAtlasRegistry,
+    entry: TileAtlasEntry,
+    active_runtime_only: bool,
+) {
     if active_runtime_only && !entry.runtime_stamp_allowed() {
         return;
     }
@@ -383,11 +391,9 @@ pub fn load_tile_atlas_registry_from_path(path: &Path) -> TileAtlasRegistry {
     };
 
     let parse_result = if path.extension().and_then(|e| e.to_str()) == Some("json") {
-        serde_json::from_str::<TileAtlasIndexFile>(&text)
-            .map_err(|e| format!("JSON parse: {e}"))
+        serde_json::from_str::<TileAtlasIndexFile>(&text).map_err(|e| format!("JSON parse: {e}"))
     } else {
-        ron::from_str::<TileAtlasIndexFile>(&text)
-            .map_err(|e| format!("RON parse: {e}"))
+        ron::from_str::<TileAtlasIndexFile>(&text).map_err(|e| format!("RON parse: {e}"))
     };
 
     match parse_result {
@@ -508,11 +514,7 @@ mod tests {
             .expect("archived pilot");
         assert_eq!(entry.batch_id, "tile_rowhouse_victorian_pilot_v1");
         assert!(!entry.runtime_stamp_allowed());
-        assert!(
-            entry
-                .atlas_png
-                .contains("archive/lod0_tile_pilots_2026-06")
-        );
+        assert!(entry.atlas_png.contains("archive/lod0_tile_pilots_2026-06"));
         assert_eq!(entry.variants.len(), 2);
     }
 

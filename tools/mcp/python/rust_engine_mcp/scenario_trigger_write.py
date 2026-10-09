@@ -6,6 +6,7 @@ fire_vfx / Bevy emit path — files only under ``assets/scenarios/triggers/``.
 
 from __future__ import annotations
 
+import re
 from pathlib import Path
 from typing import Any
 
@@ -78,6 +79,14 @@ def can_assign(entry: EffectBrowseEntry | None) -> bool:
     return bool(entry and entry.honest_gate == "honest")
 
 
+def _safe_marker_id(marker_id: str) -> str:
+    """Single trigger file name. ``force`` must not write outside the triggers folder."""
+    mid = str(marker_id or "").strip()
+    if not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", mid) or ".." in mid:
+        raise ValueError(f"marker_id must be a single file name: {marker_id!r}")
+    return mid
+
+
 def assign_effect_to_marker(
     effect_id: str,
     marker_id: str | None = None,
@@ -100,9 +109,7 @@ def assign_effect_to_marker(
             f"⊘ Assign blocked — preview honesty is {row.honest_gate}. "
             "Capture frames before binding to a scenario."
         )
-    mid = (marker_id or row.effect_id).strip()
-    if not mid:
-        raise ValueError("marker_id empty")
+    mid = _safe_marker_id(marker_id or row.effect_id)
     out_dir = root / TRIGGERS_REL
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path = out_dir / f"{mid}.trigger.ron"

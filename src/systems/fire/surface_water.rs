@@ -54,10 +54,7 @@ impl SurfaceWaterFireGate {
     }
 }
 
-pub fn init_surface_water_fire_gate(
-    mut commands: Commands,
-    params: Option<Res<WorldGenParams>>,
-) {
+pub fn init_surface_water_fire_gate(mut commands: Commands, params: Option<Res<WorldGenParams>>) {
     let water_line = params
         .as_ref()
         .map(|p| p.biome_tuning.shallow_water_height_max)
@@ -81,8 +78,8 @@ fn load_flooded_tag_id() -> Option<TagId> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::prelude::UVec2;
     use crate::terrain::material::TagSet;
+    use bevy::prelude::UVec2;
 
     #[test]
     fn standing_water_by_elevation_not_moisture() {

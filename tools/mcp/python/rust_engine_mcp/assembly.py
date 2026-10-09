@@ -10,7 +10,7 @@ from pathlib import Path
 from typing import Any
 
 from .library import load_index_json
-from .paths import repo_root, schemas_dir
+from .paths import repo_root, resolve_under_root, schemas_dir
 from .schemas import load_json_file, validate_assembly_snapshot
 from . import aps_tags
 
@@ -82,6 +82,20 @@ def list_style_packs() -> list[str]:
     return out
 
 
+def _job_name_tokens(job: str) -> set[str]:
+    return {part for part in re.split(r"[^a-z0-9]+", job.lower()) if part}
+
+
+def _row_is_named_tier(row: dict[str, Any], tier_name: str) -> bool:
+    """A lod0 row is not production just because its job id contains that word."""
+    tier = str(row.get("development_tier") or "")
+    if tier == tier_name:
+        return True
+    if tier in ("production", "lod0", "smoke"):
+        return False
+    return tier_name in _job_name_tokens(str(row.get("job_id") or ""))
+
+
 def _index_by_module_id(
     index: list[dict[str, Any]],
     *,
@@ -91,20 +105,14 @@ def _index_by_module_id(
     out: dict[str, dict[str, Any]] = {}
     for row in index:
         mid = str(row["module_id"])
-        job = str(row.get("job_id") or "")
-        tier = str(row.get("development_tier") or "")
         prev = out.get(mid)
         if prev is None:
             out[mid] = row
             continue
-        prev_job = str(prev.get("job_id") or "")
-        prev_tier = str(prev.get("development_tier") or "")
         if prefer_tier == "production":
-            if tier == "production" and prev_tier != "production":
+            if _row_is_named_tier(row, "production") and not _row_is_named_tier(prev, "production"):
                 out[mid] = row
-            elif "production" in job and "production" not in prev_job:
-                out[mid] = row
-        elif "lod0" in job and "lod0" not in prev_job:
+        elif _row_is_named_tier(row, "lod0") and not _row_is_named_tier(prev, "lod0"):
             out[mid] = row
     return out
 
@@ -543,13 +551,28 @@ def save_assembly_snapshot(
     out = enrich_snapshot(snapshot)
     validate_assembly_snapshot(out)
     assembly_id = str(out["assembly_id"])
-    out_path = Path(path) if path else default_snapshot_path(assembly_id)
-    if not out_path.is_absolute():
-        out_path = repo_root() / out_path
+    if path is None:
+        out_path = resolve_under_root(
+            repo_root(),
+            f"{SNAPSHOT_STAGING}/{assembly_id}.json",
+            label="snapshot path",
+        )
+    else:
+        out_path = resolve_under_root(repo_root(), path, label="snapshot path")
     out_path.parent.mkdir(parents=True, exist_ok=True)
     out_path.write_text(json.dumps(out, indent=2) + "\n", encoding="utf-8")
-    out["written_path"] = str(out_path.relative_to(repo_root())).replace("\\", "/")
+    out["written_path"] = out_path.relative_to(repo_root().resolve()).as_posix()
     return out_path
+
+
+def _snapshot_seed(snapshot: dict[str, Any]) -> int:
+    """Missing seed stays on the historical default of 42. Zero is a real seed."""
+    if "seed" not in snapshot or snapshot.get("seed") is None:
+        return 42
+    raw = snapshot.get("seed")
+    if isinstance(raw, bool) or not isinstance(raw, int):
+        raise ValueError("snapshot seed must be an integer")
+    return raw
 
 
 def footprint_cells_for_snapshot(snapshot: dict[str, Any]) -> list[dict[str, Any]]:
@@ -558,7 +581,7 @@ def footprint_cells_for_snapshot(snapshot: dict[str, Any]) -> list[dict[str, Any
     width = int(fp.get("width") or 4)
     depth = int(fp.get("depth") or 3)
     floors = int(fp.get("floors") or 2)
-    seed = int(snapshot.get("seed") or 42)
+    seed = _snapshot_seed(snapshot)
     archetype = snapshot.get("archetype_id")
     district = snapshot.get("district_style")
     if archetype and district:
@@ -702,11 +725,15 @@ def _module_width_cells(row: dict[str, Any] | None) -> int:
                 job = json.loads(job_path.read_text(encoding="utf-8"))
                 wm = (job.get("params") or {}).get("width_m")
                 if wm is not None:
-                    return max(1, int(round(float(wm) / GRID_UNIT_M)))
+                    from rust_engine_mcp.module_contract import grid_units_from_width_m
+
+                    return grid_units_from_width_m(float(wm))
             except (OSError, json.JSONDecodeError, TypeError, ValueError):
                 pass
     mid = str(row.get("module_id") or job_id or "")
-    if "_2u" in mid or mid.endswith("2u"):
+    # Token ``2u`` only. ``_2u`` as a substring matches ``foo_2unit``; ``endswith("2u")`` matches ``12u``.
+    parts = re.split(r"[^A-Za-z0-9]+", mid)
+    if "2u" in parts:
         return 2
     return 1
 

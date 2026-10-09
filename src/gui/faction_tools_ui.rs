@@ -44,7 +44,7 @@ impl Plugin for FactionToolsUiPlugin {
             .add_systems(Update, toggle_faction_tools.run_if(in_simulation_or_editor))
             .add_systems(
                 EguiPrimaryContextPass,
-                faction_tools_ui_system.run_if(in_simulation_or_editor),
+                faction_tools_ui_system.run_if(crate::gui::ui_gates::product_egui_shell_active),
             );
     }
 }

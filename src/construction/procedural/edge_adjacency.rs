@@ -34,8 +34,7 @@ impl FootprintGrid {
         if y + 1 < self.depth {
             out.push((x, y + 1));
         }
-        out
-            .into_iter()
+        out.into_iter()
             .filter(|(nx, ny)| is_perimeter(*nx, *ny, self.width, self.depth))
             .collect()
     }
@@ -44,7 +43,10 @@ impl FootprintGrid {
 fn is_facade_token(token: FootprintToken) -> bool {
     matches!(
         token,
-        FootprintToken::Wall | FootprintToken::Door | FootprintToken::Corner | FootprintToken::Opening
+        FootprintToken::Wall
+            | FootprintToken::Door
+            | FootprintToken::Corner
+            | FootprintToken::Opening
     )
 }
 
@@ -55,12 +57,13 @@ pub fn check_footprint_adjacency(grid: &FootprintGrid) -> Vec<AdjacencyViolation
 
     // Rule 2 — door cells never at corners.
     for cell in &grid.cells {
-        if cell.token == FootprintToken::Door
-            && is_corner(cell.x, cell.y, grid.width, grid.depth)
-        {
+        if cell.token == FootprintToken::Door && is_corner(cell.x, cell.y, grid.width, grid.depth) {
             violations.push(AdjacencyViolation {
                 rule_id: "door_not_corner",
-                message: format!("door at corner ({},{}) floor {}", cell.x, cell.y, cell.floor),
+                message: format!(
+                    "door at corner ({},{}) floor {}",
+                    cell.x, cell.y, cell.floor
+                ),
             });
         }
     }
@@ -151,7 +154,10 @@ pub fn check_footprint_adjacency(grid: &FootprintGrid) -> Vec<AdjacencyViolation
         if cell.token == FootprintToken::Door && cell.floor > 0 {
             violations.push(AdjacencyViolation {
                 rule_id: "door_ground_only",
-                message: format!("door above ground at ({},{}) floor {}", cell.x, cell.y, cell.floor),
+                message: format!(
+                    "door above ground at ({},{}) floor {}",
+                    cell.x, cell.y, cell.floor
+                ),
             });
         }
     }

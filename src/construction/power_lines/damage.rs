@@ -28,9 +28,29 @@ impl PowerLineSegmentHealth {
         }
     }
 
+    /// The circuit is open when the conductor cannot carry current.
+    #[must_use]
+    pub fn circuit_open(&self) -> bool {
+        self.destroyed
+            || !self.hp.is_finite()
+            || !self.max_hp.is_finite()
+            || self.max_hp <= 0.0
+            || self.hp <= 0.0
+    }
+
+    /// Share of nominal rating still conducted. An open circuit carries nothing.
+    #[must_use]
+    pub fn load_fraction(&self) -> f32 {
+        if self.circuit_open() {
+            0.0
+        } else {
+            (self.hp / self.max_hp).clamp(0.0, 1.0)
+        }
+    }
+
     #[must_use]
     pub fn overlay_state(&self) -> PowerLineOverlayState {
-        if self.destroyed || self.hp <= 0.0 {
+        if self.circuit_open() {
             PowerLineOverlayState::Destroyed
         } else if self.hp < self.max_hp {
             PowerLineOverlayState::Damaged
@@ -88,7 +108,7 @@ impl PowerLineDamageBook {
     pub fn damaged_link_ids(&self) -> HashSet<u64> {
         self.segments
             .values()
-            .filter(|s| !s.destroyed && s.hp < s.max_hp)
+            .filter(|s| !s.circuit_open() && s.hp < s.max_hp)
             .map(|s| s.link_id)
             .collect()
     }
@@ -97,10 +117,19 @@ impl PowerLineDamageBook {
     pub fn destroyed_link_ids(&self) -> HashSet<u64> {
         self.segments
             .values()
-            .filter(|s| s.destroyed)
+            .filter(|s| s.circuit_open())
             .map(|s| s.link_id)
             .collect()
     }
+}
+
+/// Conducted fraction for a committed link. An untracked link is still intact.
+#[must_use]
+pub fn power_line_load_fraction(book: &PowerLineDamageBook, link_id: u64) -> f32 {
+    book.segments
+        .get(&link_id)
+        .map(PowerLineSegmentHealth::load_fraction)
+        .unwrap_or(1.0)
 }
 
 #[must_use]
@@ -121,7 +150,11 @@ pub fn cut_power_line_segment(book: &mut PowerLineDamageBook, link_id: u64) -> b
     book.cut_segment(link_id)
 }
 
-pub fn damage_power_line_segment(book: &mut PowerLineDamageBook, link_id: u64, amount: f32) -> bool {
+pub fn damage_power_line_segment(
+    book: &mut PowerLineDamageBook,
+    link_id: u64,
+    amount: f32,
+) -> bool {
     book.damage_segment(link_id, amount)
 }
 
@@ -187,5 +220,79 @@ mod tests {
     #[test]
     fn power_damage_witness_green_lib() {
         assert!(power_damage_segment_witness_green());
+    }
+
+    #[test]
+    fn grid_zero_health_opens_the_line_without_the_flag() {
+        let mut book = PowerLineDamageBook::default();
+        let mut seg = PowerLineSegmentHealth::new(11);
+        seg.hp = 0.0;
+        seg.destroyed = false;
+        book.segments.insert(11, seg);
+        assert!(book.destroyed_link_ids().contains(&11));
+        assert!(!book.damaged_link_ids().contains(&11));
+        assert_eq!(power_line_load_fraction(&book, 11), 0.0);
+        assert_eq!(
+            book.segments.get(&11).unwrap().overlay_state(),
+            PowerLineOverlayState::Destroyed
+        );
+    }
+
+    #[test]
+    fn grid_non_finite_health_opens_the_line() {
+        let mut book = PowerLineDamageBook::default();
+        let mut seg = PowerLineSegmentHealth::new(11);
+        seg.hp = f32::NAN;
+        book.segments.insert(11, seg);
+        assert!(book.destroyed_link_ids().contains(&11));
+        assert_eq!(power_line_load_fraction(&book, 11), 0.0);
+    }
+
+    #[test]
+    fn grid_cut_drops_carried_load() {
+        use crate::infrastructure::utility::graph::apply_utility_power_with_line_load;
+        use crate::strategic::InfrastructureGraph;
+
+        let snap = fixture_utility_network_snapshot();
+        let graph = hydrate_utility_graph_from_snapshot(&snap);
+        let mut book = PowerLineDamageBook::default();
+        for edge in &graph.power_edges {
+            book.ensure_segment(edge.link_id);
+        }
+        assert!((power_line_load_fraction(&book, 10) - 1.0).abs() < 1e-5);
+        assert!(book.cut_segment(10));
+        assert_eq!(power_line_load_fraction(&book, 10), 0.0);
+        assert!((power_line_load_fraction(&book, 11) - 1.0).abs() < 1e-5);
+
+        let mut infra = InfrastructureGraph::default();
+        apply_utility_power_with_line_load(&graph, &mut infra, |id| {
+            power_line_load_fraction(&book, id)
+        });
+        let carried: f32 = infra.edges.iter().map(|e| e.throughput).sum();
+        assert!((carried - 1.0).abs() < 1e-4, "{carried}");
+        assert!(infra.edges.iter().any(|e| e.throughput <= 1e-6));
+        assert!(infra.edges.iter().any(|e| (e.throughput - 1.0).abs() < 1e-4));
+    }
+
+    #[test]
+    fn grid_partial_hit_derates_carried_load() {
+        use crate::infrastructure::utility::graph::apply_utility_power_with_line_load;
+        use crate::strategic::InfrastructureGraph;
+
+        let snap = fixture_utility_network_snapshot();
+        let graph = hydrate_utility_graph_from_snapshot(&snap);
+        let mut book = PowerLineDamageBook::default();
+        assert!(!book.damage_segment(10, 50.0));
+        let seg = book.segments.get(&10).unwrap();
+        assert!(!seg.circuit_open());
+        assert!((power_line_load_fraction(&book, 10) - 0.5).abs() < 1e-5);
+        assert!(book.damaged_link_ids().contains(&10));
+
+        let mut infra = InfrastructureGraph::default();
+        apply_utility_power_with_line_load(&graph, &mut infra, |id| {
+            power_line_load_fraction(&book, id)
+        });
+        let carried: f32 = infra.edges.iter().map(|e| e.throughput).sum();
+        assert!((carried - 1.5).abs() < 1e-4, "{carried}");
     }
 }

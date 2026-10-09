@@ -65,18 +65,22 @@ mod tests {
     #[test]
     fn commit_enqueues_valid_segments_only() {
         let mut placement = ActiveRoadPlacement::default();
-        placement.generated_segments.push(super::super::placement::RoadSegmentPreview {
-            start: Vec3::new(1.0, 0.0, 1.0),
-            end: Vec3::new(4.0, 0.0, 1.0),
-            width: 8.0,
-            valid: true,
-        });
-        placement.generated_segments.push(super::super::placement::RoadSegmentPreview {
-            start: Vec3::new(4.0, 0.0, 1.0),
-            end: Vec3::new(4.0, 0.0, 1.0),
-            width: 8.0,
-            valid: false,
-        });
+        placement
+            .generated_segments
+            .push(super::super::placement::RoadSegmentPreview {
+                start: Vec3::new(1.0, 0.0, 1.0),
+                end: Vec3::new(4.0, 0.0, 1.0),
+                width: 8.0,
+                valid: true,
+            });
+        placement
+            .generated_segments
+            .push(super::super::placement::RoadSegmentPreview {
+                start: Vec3::new(4.0, 0.0, 1.0),
+                end: Vec3::new(4.0, 0.0, 1.0),
+                width: 8.0,
+                valid: false,
+            });
         let mut queue = ConstructionPlanQueue::default();
         let params = WorldGenParams {
             width: 64,

@@ -68,8 +68,24 @@ pub fn commit_construction_site_system(
     district_book: Option<Res<super::super::settlement::DistrictBook>>,
     mut block_book: Option<ResMut<super::super::settlement::BlockBook>>,
     buildings: Option<Res<crate::construction::building_definitions::BuildingDefinitionRegistry>>,
+    water: Option<Res<crate::render::fx_spine::water_surface_visual::WaterSurfaceVisualCatalog>>,
 ) {
     for ev in reader.read() {
+        let tiles = footprint_tiles(ev.origin, ev.footprint);
+        if let Some(catalog) = water.as_deref() {
+            if crate::construction::land_building_blocked_on_water(
+                ev.catalog_id.as_deref(),
+                &tiles,
+                |x, z| {
+                    x >= 0
+                        && z >= 0
+                        && catalog.tile_kind(x as u32, z as u32)
+                            != crate::render::fx_spine::water_surface_visual::WaterSurfaceKind::None
+                },
+            ) {
+                continue;
+            }
+        }
         if let Some(placement) = ev.placement.as_ref() {
             let Some(occ) = occupation_book.as_mut() else {
                 warn!(

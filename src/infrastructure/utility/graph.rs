@@ -125,6 +125,15 @@ pub fn apply_utility_power_to_infrastructure(
     utility: &UtilityGraph,
     infra: &mut InfrastructureGraph,
 ) {
+    apply_utility_power_with_line_load(utility, infra, |_| 1.0);
+}
+
+/// Same merge, with each link's conducted fraction. An open line contributes no throughput.
+pub fn apply_utility_power_with_line_load(
+    utility: &UtilityGraph,
+    infra: &mut InfrastructureGraph,
+    load_of: impl Fn(u64) -> f32,
+) {
     if !utility.hydrated_from_snapshot || utility.power_edges.is_empty() {
         return;
     }
@@ -147,11 +156,17 @@ pub fn apply_utility_power_to_infrastructure(
         });
     }
     for edge in &utility.power_edges {
+        let raw = load_of(edge.link_id);
+        let frac = if raw.is_finite() {
+            raw.clamp(0.0, 1.0)
+        } else {
+            0.0
+        };
         infra.edges.push(InfrastructureEdge {
             from: edge.from,
             to: edge.to,
-            throughput: edge.throughput,
-            integrity: 1.0,
+            throughput: edge.throughput * frac,
+            integrity: frac,
             maintenance_cost: 0.0,
             linked_transport_edge: None,
         });
@@ -160,9 +175,15 @@ pub fn apply_utility_power_to_infrastructure(
 
 pub fn merge_utility_power_into_infrastructure_graph(
     utility: Res<UtilityGraph>,
+    book: Option<Res<crate::construction::PowerLineDamageBook>>,
     mut infra: ResMut<InfrastructureGraph>,
 ) {
-    apply_utility_power_to_infrastructure(&utility, &mut infra);
+    match book.as_deref() {
+        Some(book) => apply_utility_power_with_line_load(&utility, &mut infra, |id| {
+            crate::construction::power_line_load_fraction(book, id)
+        }),
+        None => apply_utility_power_to_infrastructure(&utility, &mut infra),
+    }
 }
 
 pub struct UtilityGraphPlugin;
