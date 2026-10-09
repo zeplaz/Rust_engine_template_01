@@ -3,6 +3,12 @@
 use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
+// Declared here (not in `gui/mod.rs`) so the logistics lane owns registration; resolves to
+// `src/gui/logistics_orders_panel.rs`.
+#[path = "logistics_orders_panel.rs"]
+pub mod logistics_orders_panel;
+pub use logistics_orders_panel::{LogisticsOrdersPanelPlugin, LogisticsOrdersPanelState};
+
 use crate::entities::production::core::{
     LogisticsSiteMember, LogisticsSiteRoot, ResourceStorage,
 };
@@ -29,6 +35,7 @@ pub struct LogisticsTargetsPanelPlugin;
 
 impl Plugin for LogisticsTargetsPanelPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(LogisticsOrdersPanelPlugin);
         app.init_resource::<LogisticsTargetsPanelState>()
             .add_systems(
                 Update,
@@ -60,6 +67,7 @@ fn logistics_targets_panel_ui(
     storages: Query<Entity, With<ResourceStorage>>,
     members: Query<&LogisticsSiteMember>,
     palette: Res<UiPalette>,
+    mut orders_panel: ResMut<LogisticsOrdersPanelState>,
 ) -> Result {
     if !state.visible {
         return Ok(());
@@ -73,6 +81,15 @@ fn logistics_targets_panel_ui(
     .default_size(egui::vec2(320.0, 440.0))
         .show(ctx, |ui| {
             primary_label(ui, palette.as_ref(), "Set HUD inventory focus (physical storage / site hub).");
+            if ui
+                .button(format!(
+                    "Supply lines & runs… (Shift+{})",
+                    InputBindings::format_key(bindings.toggle_logistics_targets_panel)
+                ))
+                .clicked()
+            {
+                orders_panel.visible = !orders_panel.visible;
+            }
             ui.separator();
             widget_scroll_vertical_fill("logistics_targets_list_scroll", ui.available_height()).show(ui, |ui| {
                 section_heading(ui, palette.as_ref(), CmdHeadingStyle::Gt, "Site hubs");
