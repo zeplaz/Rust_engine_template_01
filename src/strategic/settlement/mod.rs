@@ -33,6 +33,7 @@ pub use assign::{
     BLOCK_GRID_SIZE,
 };
 pub use block::{BlockBook, BlockRecord};
+pub use faction_step::{FactionPairStance, FactionStanceBook};
 pub use block_frame::{
     block_bounds_from_tiles, block_frame_debug_overlay_wired_witness_green,
     build_block_frame, build_city_g1_c2_001_witness_body, city_g1_c2_001_block_frame_witness_green,
