@@ -1830,9 +1830,26 @@ def _cmd_pixel_conclude(args: argparse.Namespace) -> int:
     return cli_main(argv)
 
 
-def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(prog="rust_engine_mcp.cli")
-    sub = parser.add_subparsers(dest="command", required=True)
+def build_parser() -> argparse.ArgumentParser:
+    """Full CLI parser — single source for ``main``, ``commands`` and MCP ``micro_tool_help``."""
+    parser = argparse.ArgumentParser(
+        prog="rust_engine_mcp.cli",
+        description="Rust engine MCP micro CLI (same code paths as the MCP server tools).",
+        epilog="List commands by group: `commands` (or `commands --grep tile`). "
+        "Per-command help: `help <command>` or `<command> --help`.",
+    )
+    sub = parser.add_subparsers(dest="command", required=True, metavar="<command>")
+
+    p = sub.add_parser("commands", help="List CLI commands grouped by lane")
+    p.add_argument("--grep", default="", help="Substring filter on command name or help")
+    p.add_argument("--group", default="", help="Only this group id (see output)")
+    p.add_argument("--no-witness", action="store_true", help="Hide *-witness writers")
+    p.add_argument("--json", action="store_true", help="Machine-readable catalog")
+    p.set_defaults(func=_cmd_commands)
+
+    p = sub.add_parser("help", help="Show help for one command")
+    p.add_argument("name", nargs="?", default="")
+    p.set_defaults(func=_cmd_help)
 
     sub.add_parser("ping").set_defaults(func=_cmd_ping)
     sub.add_parser("locate-blender").set_defaults(func=_cmd_locate_blender)
@@ -2598,7 +2615,58 @@ def main(argv: list[str] | None = None) -> int:
     p.add_argument("--out", default=None)
     p.set_defaults(func=_cmd_pixel_conclude)
 
-    args = parser.parse_args(argv)
+    return parser
+
+
+def _cmd_commands(args: argparse.Namespace) -> int:
+    from .cli_catalog import catalog, render_text
+
+    rows = catalog(
+        build_parser(),
+        grep=args.grep,
+        group=args.group,
+        include_witness=not args.no_witness,
+    )
+    if args.json:
+        print(json.dumps(rows, indent=2))
+    else:
+        print(render_text(rows))
+    return 0
+
+
+def _cmd_help(args: argparse.Namespace) -> int:
+    from .cli_catalog import subparser_map
+
+    parser = build_parser()
+    if not args.name:
+        parser.print_help()
+        return 0
+    sp = subparser_map(parser).get(args.name)
+    if sp is None:
+        print(json.dumps({"error": f"unknown command: {args.name}", "hint": "run `commands --grep <text>`"}))
+        return 2
+    sp.print_help()
+    return 0
+
+
+def _ensure_utf8_stdio() -> None:
+    """Symbolic output (arrows, ●◐○) must not crash on a cp1252 pipe / redirect."""
+    for stream in (sys.stdout, sys.stderr):
+        enc = (getattr(stream, "encoding", None) or "").lower().replace("-", "")
+        if enc == "utf8" or not hasattr(stream, "reconfigure"):
+            continue
+        try:
+            if stream.isatty():
+                stream.reconfigure(errors="replace")
+            else:
+                stream.reconfigure(encoding="utf-8", errors="replace")
+        except (OSError, ValueError):
+            pass
+
+
+def main(argv: list[str] | None = None) -> int:
+    _ensure_utf8_stdio()
+    args = build_parser().parse_args(argv)
     try:
         return args.func(args)
     except Exception as exc:  # noqa: BLE001 — CLI surface

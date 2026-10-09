@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import os
+import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 import pytest
@@ -15,7 +17,39 @@ for _p in (_APS_MCP, _APS_PY):
         sys.path.insert(0, str(_p))
 
 
+def _install_write_guard(config: pytest.Config) -> None:
+    """Roll back every repo file this session (and its child Pythons) writes — see test_write_guard."""
+    from rust_engine_mcp import paths, test_write_guard as guard
+
+    if os.environ.get(guard.ENV_KEEP, "").strip() == "1":
+        return
+    inherited = os.environ.get(guard.ENV_LEDGER, "").strip()
+    if inherited:
+        guard.install(inherited, paths.repo_root())  # nested session: the owner restores
+        return
+    ledger = tempfile.mkdtemp(prefix="mcp_test_write_guard_")
+    os.environ[guard.ENV_LEDGER] = ledger
+    guard.install(ledger, paths.repo_root())
+    config._mcp_write_guard_ledger = ledger  # type: ignore[attr-defined]
+
+
+def pytest_unconfigure(config: pytest.Config) -> None:
+    ledger = getattr(config, "_mcp_write_guard_ledger", None)
+    if not ledger:
+        return
+    from rust_engine_mcp import test_write_guard as guard
+
+    restored = guard.restore(ledger)
+    guard.deactivate()
+    os.environ.pop(guard.ENV_LEDGER, None)
+    shutil.rmtree(ledger, ignore_errors=True)
+    if restored:
+        print(f"\n[mcp write guard] rolled back {len(restored)} repo file(s) written by tests "
+              f"(keep them: {guard.ENV_KEEP}=1)")
+
+
 def pytest_configure(config: pytest.Config) -> None:
+    _install_write_guard(config)
     os.environ.setdefault("APS_TEST_HEADLESS", "1")
     os.environ.setdefault("RUST_ENGINE_BEVY_PREVIEW", "0")
     config.addinivalue_line(
