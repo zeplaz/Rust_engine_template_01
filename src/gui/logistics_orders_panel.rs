@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::economy::logistics::orders::{
-    CargoKind, ConsumerKind, DemandHealth, DemandRow, LogisticsOrderCommand,
+    suggest_lines_for_unserved, AdvisorGap, CargoKind, ConsumerKind, DemandHealth, DemandRow, LogisticsOrderCommand,
     LogisticsOrderRequest, LogisticsOrdersSnapshot, LogisticsOrdersSnapshotRes,
     OrderRow, OrderStatus, OwnerId, Priority, SiteId, SiteRole, CargoClassMask,
 };
@@ -509,6 +509,13 @@ fn demand_row_ui(
         )));
         ui.horizontal(|ui| {
             ui.label(format!("draw {} {}/min", d.draw_rate_per_min, d.unit));
+            if let Some(t) = d.time_to_empty_ticks {
+                let color = if t < 120 { palette.warn } else { palette.fg_muted };
+                ui.label(egui::RichText::new(format!("empty in {}", format_eta(t))).color(color));
+            }
+            if let (Some(n), Some(rt)) = (d.trucks_needed, d.round_trip_ticks) {
+                ui.label(format!("needs ⛟×{n} (round trip {})", format_eta(rt)));
+            }
             if d.shortfall_total > 0 {
                 ui.label(
                     egui::RichText::new(format!("short {} {}", d.shortfall_total, d.unit))
@@ -611,6 +618,26 @@ fn logistics_orders_panel_ui(
                 OrdersTab::Demands => {
                     if snap.demands.is_empty() {
                         muted_label(ui, palette, "No site publishes a draw demand yet.");
+                    }
+                    let advice = suggest_lines_for_unserved(snap, state.draft.owner);
+                    if !advice.commands.is_empty()
+                        && ui
+                            .button(format!(
+                                "Auto-supply: start {} line(s) from nearest stocked depots",
+                                advice.commands.len()
+                            ))
+                            .clicked()
+                    {
+                        out.extend(advice.commands.iter().cloned());
+                    }
+                    for gap in &advice.gaps {
+                        let AdvisorGap::NoSourceWithStock { site, cargo } = gap;
+                        let name = snap.site(*site).map_or("?", |s| s.name.as_str());
+                        crate::gui::style::warning_text(
+                            ui,
+                            palette,
+                            format!("{name}: no depot holds {cargo}"),
+                        );
                     }
                     for d in &snap.demands {
                         demand_row_ui(ui, palette, d, state);

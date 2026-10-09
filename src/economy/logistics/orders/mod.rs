@@ -5,6 +5,7 @@
 //! Writes go only through [`sim::LogisticsOrderCommand`] (in-app: [`plugin::LogisticsOrderRequest`]);
 //! UI, overlay and AI read only [`snapshot::LogisticsOrdersSnapshot`].
 
+pub mod advisor;
 pub mod model;
 pub mod plugin;
 pub mod sim;
@@ -14,6 +15,7 @@ pub mod travel;
 #[cfg(test)]
 mod tests;
 
+pub use advisor::{best_source_for, suggest_lines_for_unserved, AdvisorGap, SupplyAdvice};
 pub use model::*;
 pub use plugin::{
     DepotFleetSeed, LogisticsOrderRequest, LogisticsOrderSimRes, LogisticsOrderSite,

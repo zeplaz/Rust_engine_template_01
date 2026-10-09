@@ -130,6 +130,12 @@ pub struct DemandRow {
     pub served_by: u32,
     pub starved_ticks: u64,
     pub shortfall_total: u64,
+    /// Ticks until on-hand runs out at the draw rate (ignores inbound); `None` when not drawing.
+    pub time_to_empty_ticks: Option<u32>,
+    /// Round trip of the first serving line with the owner's largest compatible vehicle.
+    pub round_trip_ticks: Option<u32>,
+    /// Trucks that line needs running continuously to match the draw rate.
+    pub trucks_needed: Option<u32>,
 }
 
 impl DemandRow {
@@ -402,6 +408,34 @@ pub fn build_snapshot(
 
     for d in sim.demands.values() {
         let e = sim.stock.get(d.site, &d.cargo);
+        let time_to_empty_ticks = (d.draw_rate_per_min > 0).then(|| {
+            (u64::from(e.on_hand) * u64::from(sim.config.ticks_per_minute.max(1))
+                / u64::from(d.draw_rate_per_min))
+            .min(u64::from(u32::MAX)) as u32
+        });
+        let serving = sim.orders.values().find(|o| {
+            o.kind.is_standing()
+                && !o.status.is_terminal()
+                && o.sink == d.site
+                && o.cargo == d.cargo
+        });
+        let best_vehicle = serving.and_then(|o| {
+            let class = o.cargo.class();
+            sim.vehicles
+                .values()
+                .filter(|v| v.owner == o.owner && v.class_mask.accepts(class))
+                .max_by(|a, b| a.capacity_units.cmp(&b.capacity_units).then(b.id.cmp(&a.id)))
+        });
+        let round_trip_ticks = serving.zip(best_vehicle).and_then(|(o, v)| {
+            let leg = travel.travel_ticks(o.source, o.sink, v.speed_mps)?;
+            Some(2 * leg + sim.config.load_ticks + sim.config.unload_ticks)
+        });
+        let trucks_needed = round_trip_ticks.zip(best_vehicle).and_then(|(rt, v)| {
+            (d.draw_rate_per_min > 0).then(|| {
+                let per_truck = u64::from(v.capacity_units) * u64::from(sim.config.ticks_per_minute.max(1));
+                (u64::from(d.draw_rate_per_min) * u64::from(rt)).div_ceil(per_truck.max(1)) as u32
+            })
+        });
         snap.demands.push(DemandRow {
             site: d.site,
             site_name: site_name(meta, sim, d.site),
@@ -422,6 +456,9 @@ pub fn build_snapshot(
                 .unwrap_or(0),
             starved_ticks: d.starved_ticks,
             shortfall_total: d.shortfall_total,
+            time_to_empty_ticks,
+            round_trip_ticks,
+            trucks_needed,
         });
     }
 

@@ -451,6 +451,18 @@ pub enum DemandHealth {
     Starving,
 }
 
+impl DemandHealth {
+    /// 0 satisfied, 1 low, 2 starving — for urgency sorting.
+    #[must_use]
+    pub const fn severity(self) -> u8 {
+        match self {
+            Self::Satisfied => 0,
+            Self::Low => 1,
+            Self::Starving => 2,
+        }
+    }
+}
+
 /// A consumer's published need (fronts, depots, construction sites, units).
 #[derive(Clone, Debug, PartialEq)]
 pub struct DrawDemand {
