@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 
 use crate::economy::logistics::orders::{
-    suggest_lines_for_unserved, AdvisorGap, CargoKind, ConsumerKind, DemandHealth, DemandRow, LogisticsOrderCommand,
+    best_source_for, suggest_lines_for_unserved, AdvisorGap, CargoKind, ConsumerKind, DemandHealth, DemandRow, LogisticsOrderCommand,
     LogisticsOrderRequest, LogisticsOrdersSnapshot, LogisticsOrdersSnapshotRes,
     OrderRow, OrderStatus, OwnerId, Priority, SiteId, SiteRole, CargoClassMask,
 };
@@ -166,6 +166,32 @@ pub fn draft_commands(
         }
     }
     Ok(out)
+}
+
+/// Units a one-off run must bring to fill the demand to its buffer target.
+#[must_use]
+pub fn demand_deficit(d: &DemandRow) -> u32 {
+    d.buffer_target.saturating_sub(d.on_hand.saturating_add(d.inbound))
+}
+
+/// Fill the order form from a demand row (destination, cargo, priority, best source, deficit).
+pub fn prefill_from_demand(
+    state: &mut LogisticsOrdersPanelState,
+    snap: &LogisticsOrdersSnapshot,
+    d: &DemandRow,
+    kind: DraftKind,
+) {
+    state.draft.kind = kind;
+    state.draft.owner = d.owner;
+    state.draft.sink = Some(d.site);
+    state.draft.cargo = d.cargo.clone();
+    state.draft.priority = d.priority;
+    if let Some(src) = best_source_for(snap, d) {
+        state.draft.source = Some(src);
+    }
+    if kind == DraftKind::Run {
+        state.draft.quantity = demand_deficit(d).max(1);
+    }
 }
 
 /// `m:ss` from order-sim ticks (1 tick = 1 simulated second).
@@ -489,6 +515,7 @@ fn order_row_ui(
 fn demand_row_ui(
     ui: &mut egui::Ui,
     palette: &UiPalette,
+    snap: &LogisticsOrdersSnapshot,
     d: &DemandRow,
     state: &mut LogisticsOrdersPanelState,
 ) {
@@ -525,11 +552,11 @@ fn demand_row_ui(
             if d.served_by == 0 {
                 ui.label(egui::RichText::new("no supply line").color(palette.warn));
                 if ui.small_button("+ Create line").clicked() {
-                    state.draft.kind = DraftKind::Line;
-                    state.draft.sink = Some(d.site);
-                    state.draft.cargo = d.cargo.clone();
-                    state.draft.priority = d.priority;
-                    state.draft.owner = d.owner;
+                    prefill_from_demand(state, snap, d, DraftKind::Line);
+                }
+                let deficit = demand_deficit(d);
+                if deficit > 0 && ui.small_button(format!("+ Run {deficit} {}", d.unit)).clicked() {
+                    prefill_from_demand(state, snap, d, DraftKind::Run);
                 }
             } else {
                 ui.label(format!("served by {} line(s)", d.served_by));
@@ -640,7 +667,7 @@ fn logistics_orders_panel_ui(
                         );
                     }
                     for d in &snap.demands {
-                        demand_row_ui(ui, palette, d, state);
+                        demand_row_ui(ui, palette, snap, d, state);
                     }
                 }
                 OrdersTab::Fleet => fleet_tab(ui, palette, snap, state, &mut out),

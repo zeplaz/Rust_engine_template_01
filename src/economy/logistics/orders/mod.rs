@@ -6,6 +6,7 @@
 //! UI, overlay and AI read only [`snapshot::LogisticsOrdersSnapshot`].
 
 pub mod advisor;
+pub mod construction_demand;
 pub mod model;
 pub mod persistence;
 pub mod plugin;
