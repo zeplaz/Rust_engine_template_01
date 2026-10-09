@@ -46,6 +46,9 @@ mod ui_gates;
 mod world_gen_chrome_contract;
 mod input_bindings;
 mod input_frame;
+pub mod input_pick;
+#[cfg(test)]
+mod input_interaction_regression;
 mod gameplay_capture;
 mod options_keybindings_ui;
 mod pressure_tooling;
