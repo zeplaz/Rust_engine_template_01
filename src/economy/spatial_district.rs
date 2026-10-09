@@ -174,13 +174,15 @@ pub fn measure_layout_load_ratio(
         },
     ));
 
-    for &(x, z) in smelter_offsets_m {
+    for (i, &(x, z)) in smelter_offsets_m.iter().enumerate() {
         app.world_mut().spawn((
             Transform::from_translation(Vec3::new(x, 0.0, z)),
             GlobalTransform::default(),
             Building {
                 building_type: BuildingType::Generic,
             },
+            // Grid membership requires a connected power utility (grid_topology gate).
+            crate::infrastructure::UtilityConnection::power(i as u64 + 1, 1.0, true),
             ElectricalComponent {
                 base_load: 2.0,
                 current_load: 2.0,
