@@ -1,15 +1,61 @@
-# Fleet handoff summary — 2026-10-09 (v1)
+# Fleet handoff summary — 2026-10-09 (v1.1)
 
 | | |
 |:---|:---|
 | **Date** | 2026-10-09 |
 | **Baseline** | `374b0494` (checkpoint of prior WIP, 2026-10-08 23:10) |
-| **HEAD at writing** | `5d5c54b9` (6 fleet commits on top of baseline, all dated 2026-10-08) |
+| **HEAD at writing** | v1: `5d5c54b9`. **v1.1 update: `acfe6767`** (see §U below — supersedes stale parts of §0, §2, §3, §4) |
 | **Build** | `cargo check --lib` **green** (39 s, finished, 0 errors) on the **working tree as it stands**, i.e. including uncommitted work. It was not checked against a clean `HEAD` checkout, so some uncommitted files may be required for HEAD to compile (see section 3). |
-| **State** | All 11 fleets stopped by the user. Branch `master`, single canonical checkout, no side branches. |
+| **State** | All 11 fleets stopped by the user (confirmed idle at v1.1). Branch `master`, single canonical checkout, no side branches. |
 | **Resume** | Read, in order: [fleet charter](fleet_charter_20261008_v1.md) (ownership + commit protocol), [fleet board](fleet_board_20261008_v1.md) (asks + user priorities), then this file. Then the per-fleet logs in [`fleet_logs/`](fleet_logs/) and the plan docs in section 5. |
 
 Evidence base: `git log 374b0494..HEAD`, `git status --porcelain` (240 entries), the four existing logs, plans and ledgers, and file contents on disk. Anything not backed by a commit or a file is marked "unknown".
+
+## U. v1.1 update (read first — supersedes stale parts of §0, §2, §3, §4)
+
+**Build:** `cargo check --lib` green at `acfe6767`; `cargo test --lib --no-run` green; tests for
+`ai::faction combat:: strategic::frontline gui::input io::save infrastructure:: bevysubengines`:
+95 passed, 0 failed, 1 ignored (INT-005, below). Intermediate commits were not individually
+built; the final state was. MCP Python tests were **not** run.
+
+**Logistics kept running after the v1 summary** and landed LO-1 through LO-6-era work itself
+(17 commits, `a15f1462`…`0ff2faaf`): order sim core (one-off multi-trip runs, standing lines,
+draw demands), snapshot + distance travel model + Bevy adapter, orders panel
+(`src/gui/logistics_orders_panel.rs`), map overlay of routes/vehicles
+(`src/gui/logistics_orders_overlay.rs`), plant-buffer mirror-delta bridge, LG-61 topology gate,
+throughput reservation fix, transport snapshot v1→v2 migration, demand forecasts + supply
+advisor, order persistence in save bundles with site rebinding, construction sites publishing
+material draw demands, free-vehicle index + gated snapshot rebuilds. Its board posts list open
+asks (faction-slot mapping, orders-overlay manifest for legacy, advisor API for ai, settlement
+WorldAsset test panics). **§3.3 "uncommitted" no longer applies.** Read
+[`fleet_logs/logistics.md`](fleet_logs/logistics.md) and `git log --grep='\[logistics\]'` for the
+current next step.
+
+**Uncommitted real work from §4.1 is now committed, in dependency order:**
+
+| SHA | Tag | What |
+|:---|:---|:---|
+| `e20753ee` | ai/front | Shared prereq: `settlement` re-exports `FactionStanceBook`, `FactionPairStance` |
+| `8595c5fa` | front | FC-1: `src/combat/` + `assets/configs/combat/front_balance_v1.ron` + `frontline.rs` derivation + `CombatPlugin` registration + `pub mod combat`. **Data fix:** Bunker `anti_armor` 0.3 → 0.2 (table failed its own `cover + anti_armor <= 0.95` rule) |
+| `146d149c` | ai | FAI-1: `src/ai/faction/` + `FactionAiPlugin` registered in `SimulationPlugin` |
+| `d6a7c48c` | interaction | `input_pick.rs` (`TacticalMapPickFrame`; call sites **not yet migrated**), headless harness, ledger. **INT-005 added to ledger as open**; `int_005_first_lmb_locks_without_committing` is `#[ignore]`d (first LMB leaves `placement_mode` at `Place`, expected `Adjust`; product vs harness cause untriaged) |
+| `5b736992` | legacy | LG-01 save overlays (roads/rails/corridor rows/power lines), LG-03/04 wiring, LG-09 bevysubengines PARKED, `legacy_inventory_v1.md` |
+| `acfe6767` | tooling | MCP `cli_catalog.py` + pytest repo write guard (untested) |
+
+**Still uncommitted on purpose:**
+- `src/dev/veg_resolver_known_keys_v1.md` — owner unclear; rewrite drops rows while still claiming
+  `Parity | PASS`. Review before keeping.
+- About 190 generated files (`debug_runs/**`, `tools/mcp/jobs|cache/**`, `assets/staging/**`,
+  `assets/models/modules/*/manifest.json`, `assets/archive/*/MOVED_LOG.json`, two
+  `style_packs/*.ron`, five `tools/mcp/schemas/**` files) — test/proof churn per §4.2. Decide
+  discard vs track (hygiene's debug_runs policy item); nothing was done to them.
+
+**Top next steps (unchanged priorities):** interaction — migrate all picks to
+`TacticalMapPickFrame`, fix INT-001/002/005 (cursor stability P0); effects — fire/sparks realism
+(not started); drain — vegetation queues (not started); graphics — write
+`plan_graphics_25d_overhaul_v1.md` (not started); front — FC-2+; ai — FAI-2+ and adapters to
+logistics `LogisticsOrderCommand` / front deployment queue; tests — test inventory; tooling — run
+`pytest tools/mcp/python/tests/test_write_guard.py`.
 
 ## 0. Headline
 
