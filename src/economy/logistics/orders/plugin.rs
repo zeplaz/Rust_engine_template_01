@@ -83,6 +83,8 @@ pub struct LogisticsSiteRegistry {
     pub pending_rebind: Vec<SavedSite>,
     /// Frames left before unclaimed saved sites are removed from the sim.
     pub rebind_frames_left: u32,
+    /// Bumped on every registry mutation (snapshot rebuild fingerprint).
+    pub revision: u64,
 }
 
 /// Frames a loaded save waits for its endpoints to re-register (~10 s at 60 fps).
@@ -236,6 +238,7 @@ pub fn install_logistics_orders_save(
     registry.next = max_saved.max(max_sim);
     registry.pending_rebind = save.sites;
     registry.rebind_frames_left = REBIND_GRACE_FRAMES;
+    registry.revision += 1;
     mirror.0.clear();
 }
 
@@ -400,6 +403,7 @@ pub fn step_logistics_orders_system(
 
     for entity in removed.read() {
         if let Some(site) = registry.by_entity.remove(&entity) {
+            registry.revision += 1;
             registry.entity_of.remove(&site);
             registry.meta.remove(&site);
             registry.travel.positions.remove(&site);
@@ -427,6 +431,7 @@ pub fn step_logistics_orders_system(
             registry.next += 1;
             SiteId(registry.next)
         });
+        registry.revision += 1;
         registry.by_entity.insert(entity, id);
         registry.entity_of.insert(id, entity);
         registry.meta.insert(id, meta);
@@ -453,6 +458,7 @@ pub fn step_logistics_orders_system(
     }
 
     for (sid, site, t, g) in &known_sites {
+        registry.revision += 1;
         if let Some(meta) = registry.meta.get_mut(&sid.0) {
             meta.name = site.name.clone();
             meta.owner = site.owner;
@@ -498,14 +504,18 @@ pub fn step_logistics_orders_system(
     }
 }
 
+/// Rebuilds only when the sim ticked, a command applied, or the registry changed.
 pub fn publish_logistics_orders_snapshot_system(
     res: Res<LogisticsOrderSimRes>,
     registry: Res<LogisticsSiteRegistry>,
     mut snap: ResMut<LogisticsOrdersSnapshotRes>,
+    mut last: Local<Option<(u64, u64, u64)>>,
 ) {
-    if !res.is_changed() && !registry.is_changed() {
+    let fingerprint = (res.sim.tick, res.sim.command_seq, registry.revision);
+    if *last == Some(fingerprint) {
         return;
     }
+    *last = Some(fingerprint);
     snap.0 = build_snapshot(&res.sim, &registry.meta, &registry.travel);
 }
 

@@ -10,6 +10,9 @@ use serde::{Deserialize, Serialize};
 
 use super::model::*;
 
+/// Free vehicles of one tick's allocation: owner → current site → ids ascending.
+type FreePool = BTreeMap<OwnerId, BTreeMap<SiteId, Vec<VehicleId>>>;
+
 /// Travel time source. `None` = unreachable. Same-site travel should return `Some(0)`.
 pub trait TravelModel {
     fn travel_ticks(&self, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32>;
@@ -157,6 +160,9 @@ pub struct LogisticsOrderSim {
     pub demands: BTreeMap<(SiteId, CargoKind), DrawDemand>,
     pub events: Vec<OrderEvent>,
     pub rejected: Vec<(Tick, String)>,
+    /// Bumped by every [`Self::apply`] — with `tick` it fingerprints state for snapshot rebuilds.
+    #[serde(default)]
+    pub command_seq: u64,
     next_order: u32,
     next_vehicle: u32,
 }
@@ -173,6 +179,7 @@ impl LogisticsOrderSim {
     // ── commands ────────────────────────────────────────────────────────────────
 
     pub fn apply(&mut self, cmd: LogisticsOrderCommand) -> CommandOutcome {
+        self.command_seq = self.command_seq.wrapping_add(1);
         let out = self.apply_inner(cmd);
         if let CommandOutcome::Rejected(why) = &out {
             self.rejected.push((self.tick, why.clone()));
@@ -730,44 +737,68 @@ impl LogisticsOrderSim {
         o.priority.weight() + aging + if starving { self.config.starving_bonus } else { 0 }
     }
 
-    /// Free vehicle with the shortest deadhead to `source`, ties by id. Also returns
-    /// whether the owner has any compatible vehicle at all.
-    fn pick_vehicle(
-        &self,
-        o: &Order,
-        travel: &dyn TravelModel,
-    ) -> (Option<(VehicleId, u32)>, bool) {
-        let class = o.cargo.class();
-        let mut any_compatible = false;
-        let mut best: Option<(u32, VehicleId)> = None;
+    /// Free vehicles by owner → current site → ids (ascending), plus every `(owner, class)`
+    /// any vehicle of the owner can carry (free or busy) for wait reasons.
+    fn free_pool(&self) -> (FreePool, BTreeSet<(OwnerId, CargoClass)>) {
+        let mut pool: FreePool = BTreeMap::new();
+        let mut compatible = BTreeSet::new();
         for v in self.vehicles.values() {
-            if v.owner != o.owner || !v.class_mask.accepts(class) {
-                continue;
+            for class in CargoClass::ALL {
+                if v.class_mask.accepts(class) {
+                    compatible.insert((v.owner, class));
+                }
             }
-            any_compatible = true;
-            if !v.is_free() {
-                continue;
-            }
-            let Some(dead) = travel.travel_ticks(v.at, o.source, v.speed_mps) else {
-                continue;
-            };
-            if best.is_none_or(|(bd, bid)| (dead, v.id) < (bd, bid)) {
-                best = Some((dead, v.id));
+            if v.is_free() {
+                pool.entry(v.owner)
+                    .or_default()
+                    .entry(v.at)
+                    .or_default()
+                    .push(v.id);
             }
         }
-        (best.map(|(d, id)| (id, d)), any_compatible)
+        (pool, compatible)
+    }
+
+    /// Shortest-deadhead free vehicle for `owner` carrying `class` to `source`.
+    ///
+    /// Per site the lowest compatible id stands in; sites compete on `(deadhead, id)`.
+    /// Cost is O(sites holding free vehicles), not O(fleet).
+    fn pick_from_pool(
+        &self,
+        pool: &FreePool,
+        owner: OwnerId,
+        class: CargoClass,
+        source: SiteId,
+        travel: &dyn TravelModel,
+    ) -> Option<(SiteId, VehicleId, u32)> {
+        let mut best: Option<(u32, VehicleId, SiteId)> = None;
+        for (&at, ids) in pool.get(&owner)? {
+            let Some(&vid) = ids
+                .iter()
+                .find(|id| self.vehicles[id].class_mask.accepts(class))
+            else {
+                continue;
+            };
+            let Some(dead) = travel.travel_ticks(at, source, self.vehicles[&vid].speed_mps) else {
+                continue;
+            };
+            if best.is_none_or(|(bd, bid, _)| (dead, vid) < (bd, bid)) {
+                best = Some((dead, vid, at));
+            }
+        }
+        best.map(|(dead, vid, at)| (at, vid, dead))
     }
 
     fn allocate(&mut self, travel: &dyn TravelModel) {
         // Deterministic service order: weight desc, then id asc.
-        let mut order_ids: Vec<(u32, OrderId)> = self
+        let mut ranked: Vec<(u32, OrderId)> = self
             .orders
             .values()
             .filter(|o| o.status.accepts_trips())
             .map(|o| (self.effective_weight(o), o.id))
             .collect();
-        order_ids.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
-        let order_ids: Vec<OrderId> = order_ids.into_iter().map(|(_, id)| id).collect();
+        ranked.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+        let order_ids: Vec<OrderId> = ranked.into_iter().map(|(_, id)| id).collect();
 
         let mut served: BTreeSet<OrderId> = BTreeSet::new();
         let mut reason: BTreeMap<OrderId, Option<WaitReason>> = BTreeMap::new();
@@ -777,11 +808,14 @@ impl LogisticsOrderSim {
                 *held.entry(a.order).or_default() += 1;
             }
         }
+        let (mut pool, compatible) = self.free_pool();
 
-        // Round-robin: one vehicle per order per round until nothing changes.
-        loop {
-            let mut assigned_any = false;
-            for &id in &order_ids {
+        // Round-robin: one vehicle per order per round. Within a tick vehicles and stock only
+        // get consumed, so an order that could not be served drops out of later rounds.
+        let mut pending = order_ids.clone();
+        while !pending.is_empty() {
+            let mut next = Vec::new();
+            for &id in &pending {
                 let need = match self.need(id) {
                     Ok(n) => n,
                     Err(r) => {
@@ -793,27 +827,31 @@ impl LogisticsOrderSim {
                     reason.entry(id).or_insert(None);
                     continue;
                 }
-                let o = self.orders[&id].clone();
-                if let Some(cap) = o.vehicle_cap {
-                    if held.get(&id).copied().unwrap_or(0) >= cap {
-                        reason.insert(id, Some(WaitReason::VehicleCap));
-                        continue;
-                    }
+                let (owner, source, sink, cap_limit) = {
+                    let o = &self.orders[&id];
+                    (o.owner, o.source, o.sink, o.vehicle_cap)
+                };
+                let cargo = self.orders[&id].cargo.clone();
+                if cap_limit.is_some_and(|cap| held.get(&id).copied().unwrap_or(0) >= cap) {
+                    reason.insert(id, Some(WaitReason::VehicleCap));
+                    continue;
                 }
-                if travel.travel_ticks(o.source, o.sink, 1.0).is_none() {
+                if travel.travel_ticks(source, sink, 1.0).is_none() {
                     reason.insert(id, Some(WaitReason::Unreachable));
                     continue;
                 }
-                let available = self.stock.get(o.source, &o.cargo).available();
+                let available = self.stock.get(source, &cargo).available();
                 if available == 0 {
                     reason.insert(id, Some(WaitReason::SourceEmpty));
                     continue;
                 }
-                let (pick, any_compatible) = self.pick_vehicle(&o, travel);
-                let Some((vid, deadhead)) = pick else {
+                let class = cargo.class();
+                let Some((at, vid, deadhead)) =
+                    self.pick_from_pool(&pool, owner, class, source, travel)
+                else {
                     reason.insert(
                         id,
-                        Some(if any_compatible {
+                        Some(if compatible.contains(&(owner, class)) {
                             WaitReason::NoVehicles
                         } else {
                             WaitReason::NoCompatibleVehicle
@@ -821,16 +859,23 @@ impl LogisticsOrderSim {
                     );
                     continue;
                 };
-                let cap = self.vehicles[&vid].capacity_units;
-                let load = cap.min(need).min(available);
-                self.stock.entry_mut(o.source, &o.cargo).reserved_out += load;
-                self.stock.entry_mut(o.sink, &o.cargo).inbound += load;
+                if let Some(sites) = pool.get_mut(&owner) {
+                    if let Some(ids) = sites.get_mut(&at) {
+                        ids.retain(|v| *v != vid);
+                        if ids.is_empty() {
+                            sites.remove(&at);
+                        }
+                    }
+                }
+                let load = self.vehicles[&vid].capacity_units.min(need).min(available);
+                self.stock.entry_mut(source, &cargo).reserved_out += load;
+                self.stock.entry_mut(sink, &cargo).inbound += load;
                 let v = self.vehicles.get_mut(&vid).expect("picked");
                 v.assignment = Some(Assignment {
                     order: id,
-                    source: o.source,
-                    sink: o.sink,
-                    cargo: o.cargo.clone(),
+                    source,
+                    sink,
+                    cargo,
                     load,
                 });
                 v.phase = VehiclePhase::ToPickup(Leg::new(deadhead));
@@ -840,11 +885,9 @@ impl LogisticsOrderSim {
                 *held.entry(id).or_default() += 1;
                 served.insert(id);
                 reason.insert(id, None);
-                assigned_any = true;
+                next.push(id);
             }
-            if !assigned_any {
-                break;
-            }
+            pending = next;
         }
 
         // Status + aging.

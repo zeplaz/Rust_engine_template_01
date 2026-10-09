@@ -82,6 +82,14 @@ pub enum CargoClass {
 }
 
 impl CargoClass {
+    pub const ALL: [Self; 5] = [
+        Self::Bulk,
+        Self::Liquid,
+        Self::Munitions,
+        Self::Personnel,
+        Self::Deployable,
+    ];
+
     #[must_use]
     pub const fn bit(self) -> u8 {
         match self {

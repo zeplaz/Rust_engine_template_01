@@ -1218,3 +1218,72 @@ mod app {
         ));
     }
 }
+
+/// Scale probe: run with `--ignored --nocapture` to print timings.
+#[test]
+#[ignore]
+fn scale_probe_many_orders_and_vehicles() {
+    let mut sim = LogisticsOrderSim::new(cfg());
+    let mut d = Distances::default();
+    let n_sites = 60u32;
+    for i in 1..=n_sites {
+        ok(sim.apply(LogisticsOrderCommand::RegisterSite {
+            site: SiteId(i),
+            name: format!("S{i}"),
+        }));
+        for j in 1..i {
+            d = d.with(i, j, 50.0 + f32::from(((i * 7 + j * 13) % 40) as u16) * 25.0);
+        }
+    }
+    for i in 0..600u32 {
+        ok(sim.apply(LogisticsOrderCommand::AddVehicle {
+            owner: OwnerId::PLAYER,
+            home: SiteId(1 + i % 10),
+            class_mask: CargoClassMask::FREIGHT,
+            capacity_units: 10,
+            speed_mps: 12.0,
+        }));
+    }
+    for s in 1..=10 {
+        stock(&mut sim, SiteId(s), ammo(), 1_000_000);
+        stock(&mut sim, SiteId(s), cement(), 1_000_000);
+    }
+    for k in 0..300u32 {
+        let src = SiteId(1 + k % 10);
+        let dst = SiteId(11 + k % (n_sites - 10));
+        if k % 2 == 0 {
+            ok(sim.apply(LogisticsOrderCommand::CreateOneOffRun {
+                owner: OwnerId::PLAYER,
+                source: src,
+                sink: dst,
+                cargo: cement(),
+                quantity: 500,
+                priority: Priority::ALL[(k % 4) as usize],
+                vehicle_cap: None,
+            }));
+        } else {
+            demand(&mut sim, dst, ammo(), 200, 80, 30, Priority::High);
+            ok(sim.apply(LogisticsOrderCommand::CreateStandingLine {
+                owner: OwnerId::PLAYER,
+                source: src,
+                sink: dst,
+                cargo: ammo(),
+                priority: Priority::Normal,
+                vehicle_cap: Some(4),
+            }));
+        }
+    }
+    let t0 = std::time::Instant::now();
+    sim.tick(&d);
+    let first = t0.elapsed();
+    let t1 = std::time::Instant::now();
+    step(&mut sim, &d, 300);
+    let rest = t1.elapsed();
+    println!(
+        "first tick {:?}; 300 ticks {:?} ({:?}/tick); busy {}",
+        first,
+        rest,
+        rest / 300,
+        sim.vehicles.values().filter(|v| !v.is_free()).count()
+    );
+}

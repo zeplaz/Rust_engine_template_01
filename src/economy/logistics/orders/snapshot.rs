@@ -345,10 +345,38 @@ pub fn build_snapshot(
     }
     snap.fleets = fleets.into_values().collect();
 
+    // One pass over vehicles/orders instead of per-row scans (O(orders × vehicles) before).
+    let mut vehicles_per_order: BTreeMap<OrderId, u32> = BTreeMap::new();
+    let mut max_capacity: BTreeMap<(OwnerId, CargoClass), (u32, VehicleId)> = BTreeMap::new();
+    for v in sim.vehicles.values() {
+        if let Some(a) = &v.assignment {
+            *vehicles_per_order.entry(a.order).or_default() += 1;
+        }
+        for class in CargoClass::ALL {
+            if v.class_mask.accepts(class) {
+                let e = max_capacity.entry((v.owner, class)).or_insert((v.capacity_units, v.id));
+                if v.capacity_units > e.0 {
+                    *e = (v.capacity_units, v.id);
+                }
+            }
+        }
+    }
+    let planned_trips = |o: &Order| -> u32 {
+        let base = o.stats.trips_done + o.stats.trips_in_flight;
+        let remaining = o.run_remaining();
+        match max_capacity.get(&(o.owner, o.cargo.class())) {
+            Some(&(cap, _)) if remaining > 0 && cap > 0 => base + remaining.div_ceil(cap),
+            _ => base,
+        }
+    };
+    let mut first_serving_line: BTreeMap<(SiteId, CargoKind), OrderId> = BTreeMap::new();
     let mut lines_per_demand: BTreeMap<(SiteId, CargoKind), u32> = BTreeMap::new();
     let tpm = sim.config.ticks_per_minute.max(1) as f32;
     for o in sim.orders.values() {
         if o.kind.is_standing() && !o.status.is_terminal() {
+            first_serving_line
+                .entry((o.sink, o.cargo.clone()))
+                .or_insert(o.id);
             *lines_per_demand
                 .entry((o.sink, o.cargo.clone()))
                 .or_default() += 1;
@@ -396,8 +424,8 @@ pub fn build_snapshot(
             in_flight: o.stats.in_flight,
             remaining,
             trips_done: o.stats.trips_done,
-            trips_planned: sim.planned_trips(o),
-            vehicles: sim.vehicles_on(o.id),
+            trips_planned: planned_trips(o),
+            vehicles: vehicles_per_order.get(&o.id).copied().unwrap_or(0),
             vehicle_cap: o.vehicle_cap,
             next_eta_ticks: next_eta.get(&o.id).copied(),
             fill_ratio,
@@ -415,18 +443,13 @@ pub fn build_snapshot(
                 / u64::from(d.draw_rate_per_min))
             .min(u64::from(u32::MAX)) as u32
         });
-        let serving = sim.orders.values().find(|o| {
-            o.kind.is_standing()
-                && !o.status.is_terminal()
-                && o.sink == d.site
-                && o.cargo == d.cargo
-        });
+        let serving = first_serving_line
+            .get(&(d.site, d.cargo.clone()))
+            .and_then(|id| sim.orders.get(id));
         let best_vehicle = serving.and_then(|o| {
-            let class = o.cargo.class();
-            sim.vehicles
-                .values()
-                .filter(|v| v.owner == o.owner && v.class_mask.accepts(class))
-                .max_by(|a, b| a.capacity_units.cmp(&b.capacity_units).then(b.id.cmp(&a.id)))
+            max_capacity
+                .get(&(o.owner, o.cargo.class()))
+                .and_then(|(_, vid)| sim.vehicles.get(vid))
         });
         let round_trip_ticks = serving.zip(best_vehicle).and_then(|(o, v)| {
             let leg = travel.travel_ticks(o.source, o.sink, v.speed_mps)?;
