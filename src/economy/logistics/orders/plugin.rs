@@ -264,6 +264,7 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<LogisticsOrdersSnapshotRes>()
             .init_resource::<PlantStockMirror>()
             .init_resource::<LogisticsOrdersHydrateState>()
+            .init_resource::<super::construction_demand::ConstructionDemandBook>()
             .add_message::<LogisticsOrderRequest>()
             .configure_sets(
                 Update,
@@ -282,6 +283,7 @@ impl Plugin for LogisticsOrdersPlugin {
                     (
                         tag_logistics_hubs_as_order_sites,
                         tag_flow_facilities_as_order_sites,
+                        super::construction_demand::tag_construction_sites_as_order_sites,
                     ),
                 )
                     .chain()
@@ -299,7 +301,12 @@ impl Plugin for LogisticsOrdersPlugin {
             )
             .add_systems(
                 Update,
-                publish_logistics_orders_snapshot_system.in_set(LogisticsOrdersSet::Snapshot),
+                (
+                    publish_logistics_orders_snapshot_system,
+                    super::construction_demand::sync_construction_site_demands_system,
+                )
+                    .chain()
+                    .in_set(LogisticsOrdersSet::Snapshot),
             );
     }
 }

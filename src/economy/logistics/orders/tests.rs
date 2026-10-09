@@ -1108,6 +1108,86 @@ mod app {
     }
 
     #[test]
+    fn construction_site_publishes_material_demands_until_built() {
+        use crate::strategic::{
+            ConstructionSite, SiteArchetype, SiteConstructionPhase, SiteResourceManifest,
+        };
+        let mut app = app();
+        let depot = spawn_site(&mut app, "Depot", SiteRole::Depot, 0.0);
+        let site = app
+            .world_mut()
+            .spawn((
+                ConstructionSite {
+                    site_id: 7,
+                    owner: Entity::PLACEHOLDER,
+                    archetype: SiteArchetype::Factory,
+                    phase: SiteConstructionPhase::UnderConstruction,
+                    operational_readiness: 0.0,
+                },
+                SiteResourceManifest {
+                    concrete_required: 100.0,
+                    steel_required: 40.0,
+                    fuel_required: 20.0,
+                    machinery_required: 10.0,
+                    ..Default::default()
+                },
+                Transform::from_xyz(400.0, 0.0, 0.0),
+            ))
+            .id();
+        for _ in 0..3 {
+            app.update();
+        }
+        let src = app.world().resource::<LogisticsSiteRegistry>().site_of(depot).unwrap();
+        for (tag, n) in [("concrete", 300), ("steel", 100), ("fuel", 50), ("machinery", 30)] {
+            send(
+                &mut app,
+                LogisticsOrderCommand::SetStock {
+                    site: src,
+                    cargo: CargoKind::new(tag),
+                    on_hand: n,
+                },
+            );
+        }
+        app.update();
+        app.update();
+        let snap = app.world().resource::<LogisticsOrdersSnapshotRes>().0.clone();
+        let construction: Vec<_> = snap
+            .demands
+            .iter()
+            .filter(|d| d.consumer == ConsumerKind::Construction)
+            .collect();
+        assert_eq!(construction.len(), 4, "one demand per material");
+        let advice = suggest_lines_for_unserved(&snap, OwnerId::PLAYER);
+        assert_eq!(advice.commands.len(), 4);
+        for c in advice.commands {
+            send(&mut app, c);
+        }
+        advance_secs(&mut app, 900);
+        let m = app.world().get::<SiteResourceManifest>(site).unwrap();
+        assert_eq!(
+            (m.delivered_concrete, m.delivered_steel, m.delivered_fuel, m.delivered_machinery),
+            (100.0, 40.0, 20.0, 10.0),
+            "deliveries fill the manifest"
+        );
+        assert!((m.delivered_ratio() - 1.0).abs() < 1e-6);
+        let sid = app.world().resource::<LogisticsSiteRegistry>().site_of(site).unwrap();
+
+        app.world_mut().get_mut::<ConstructionSite>(site).unwrap().phase =
+            SiteConstructionPhase::Provisioning;
+        advance_secs(&mut app, 3);
+        let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        assert!(snap.demands.iter().all(|d| d.site != sid), "demands retracted");
+        assert!(snap.site(sid).unwrap().stock.is_empty(), "materials consumed");
+        assert!(
+            snap.orders
+                .iter()
+                .filter(|o| o.sink == sid)
+                .all(|o| o.status.is_terminal()),
+            "lines into the finished site closed"
+        );
+    }
+
+    #[test]
     fn despawned_site_fails_its_orders() {
         let mut app = app();
         let depot = spawn_site(&mut app, "Depot", SiteRole::Depot, 0.0);
