@@ -15,6 +15,9 @@ pub struct FactionPlugin;
 
 impl Plugin for FactionPlugin {
     fn build(&self, app: &mut App) {
+        if !app.is_plugin_added::<crate::combat::CombatPlugin>() {
+            app.add_plugins(crate::combat::CombatPlugin);
+        }
         app.add_systems(
             Update,
             (
