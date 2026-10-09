@@ -3,6 +3,7 @@
 pub mod async_district;
 pub mod district_scope;
 pub mod intent_draw;
+pub mod orders;
 pub mod portals;
 pub mod propagation;
 pub mod routes;
