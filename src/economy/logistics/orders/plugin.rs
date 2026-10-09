@@ -16,7 +16,7 @@ use crate::economy::resource_flow::ResourceFlowNode;
 use crate::entities::production::core::LogisticsSiteRoot;
 use crate::systems::sim_control::{SimControlSystemSet, SimTimeMicros};
 
-use super::model::{CargoClassMask, OwnerId, SiteId};
+use super::model::{CargoClassMask, CargoKind, OwnerId, SiteId};
 use super::sim::{CommandOutcome, LogisticsOrderCommand, LogisticsOrderSim, SimConfig};
 use super::snapshot::{build_snapshot, LogisticsOrdersSnapshot, SiteMeta, SiteRole};
 use super::travel::SiteDistanceTravel;
@@ -113,6 +113,78 @@ impl Default for DepotFleetSeed {
 #[derive(Resource, Debug, Default, Clone)]
 pub struct LogisticsOrdersSnapshotRes(pub LogisticsOrdersSnapshot);
 
+/// Last order-sim on-hand written from a plant's [`ResourceFlowNode`] buffer, per `(site, tag)`.
+///
+/// Sole writer: [`step_logistics_orders_system`] (via [`bridge_plant_stock`]).
+#[derive(Resource, Debug, Default, Clone)]
+pub struct PlantStockMirror(pub BTreeMap<(SiteId, CargoKind), u32>);
+
+/// Mirror-delta reconcile for one plant buffer (plan LO-5b).
+///
+/// The node buffer is the physical warehouse. Order-sim changes since the last mirror
+/// (deliveries add, pickups subtract) are applied to it as a delta; the sim then re-reads
+/// the whole units on hand. First contact pushes any pre-existing sim stock into the node.
+/// Returns `(node_amount, sim_on_hand, mirror)`.
+#[must_use]
+pub fn reconcile_plant_stock(node_amount: f32, sim_on_hand: u32, last_mirror: Option<u32>) -> (f32, u32, u32) {
+    let delta = i64::from(sim_on_hand) - i64::from(last_mirror.unwrap_or(0));
+    let node = (f64::from(node_amount.max(0.0)) + delta as f64).max(0.0) as f32;
+    let whole = node.floor().min(u32::MAX as f32) as u32;
+    (node, whole, whole)
+}
+
+/// Reconcile every plant site's buffers with the order sim (sole caller: step system).
+pub fn bridge_plant_stock(
+    sim: &mut LogisticsOrderSim,
+    registry: &LogisticsSiteRegistry,
+    mirror: &mut PlantStockMirror,
+    nodes: &mut Query<&mut ResourceFlowNode>,
+) {
+    for (&site, meta) in &registry.meta {
+        if meta.role != SiteRole::Plant {
+            continue;
+        }
+        let Some(&entity) = registry.entity_of.get(&site) else {
+            continue;
+        };
+        let Ok(mut node) = nodes.get_mut(entity) else {
+            continue;
+        };
+        let mut tags: Vec<String> = node.buffer_by_tag.keys().cloned().collect();
+        tags.extend(
+            sim.stock
+                .entries
+                .keys()
+                .filter(|(s, _)| *s == site)
+                .map(|(_, c)| c.0.clone()),
+        );
+        tags.sort();
+        tags.dedup();
+        for tag in tags {
+            let cargo = CargoKind::new(tag.clone());
+            let key = (site, cargo.clone());
+            let node_amount = node.buffer_by_tag.get(&tag).copied().unwrap_or(0.0);
+            let sim_on_hand = sim.stock.get(site, &cargo).on_hand;
+            let last = mirror.0.get(&key).copied();
+            if last == Some(sim_on_hand) && node_amount.floor() as u32 == sim_on_hand {
+                continue;
+            }
+            let (node_new, sim_new, mirror_new) = reconcile_plant_stock(node_amount, sim_on_hand, last);
+            if (node_new - node_amount).abs() > f32::EPSILON {
+                node.buffer_by_tag.insert(tag.clone(), node_new);
+            }
+            if sim_new != sim_on_hand {
+                sim.apply(LogisticsOrderCommand::SetStock {
+                    site,
+                    cargo,
+                    on_hand: sim_new,
+                });
+            }
+            mirror.0.insert(key, mirror_new);
+        }
+    }
+}
+
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum LogisticsOrdersSet {
     TagSites,
@@ -128,6 +200,7 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<LogisticsSiteRegistry>()
             .init_resource::<DepotFleetSeed>()
             .init_resource::<LogisticsOrdersSnapshotRes>()
+            .init_resource::<PlantStockMirror>()
             .add_message::<LogisticsOrderRequest>()
             .configure_sets(
                 Update,
@@ -239,6 +312,8 @@ pub fn step_logistics_orders_system(
         Or<(Changed<Transform>, Changed<LogisticsOrderSite>)>,
     >,
     mut removed: RemovedComponents<LogisticsOrderSiteId>,
+    mut mirror: ResMut<PlantStockMirror>,
+    mut flow_nodes: Query<&mut ResourceFlowNode>,
 ) {
     let res = &mut *res;
     let registry = &mut *registry;
@@ -249,6 +324,7 @@ pub fn step_logistics_orders_system(
             registry.meta.remove(&site);
             registry.travel.positions.remove(&site);
             res.sim.apply(LogisticsOrderCommand::RemoveSite { site });
+            mirror.0.retain(|(s, _), _| *s != site);
         }
     }
 
@@ -310,6 +386,8 @@ pub fn step_logistics_orders_system(
         let drop = res.last_outcomes.len() - 32;
         res.last_outcomes.drain(0..drop);
     }
+
+    bridge_plant_stock(&mut res.sim, registry, &mut mirror, &mut flow_nodes);
 
     let now = sim_time.map_or(0, |t| t.0);
     let (steps, new_last) = due_steps(
