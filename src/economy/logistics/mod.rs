@@ -79,6 +79,7 @@ pub struct LogisticsThroughputPlugin;
 
 impl Plugin for LogisticsThroughputPlugin {
     fn build(&self, app: &mut App) {
+        app.add_plugins(orders::LogisticsOrdersPlugin);
         app.init_resource::<PortalAttachmentMap>()
             .init_resource::<RouteCache>()
             .init_resource::<RoutePathStore>()

@@ -649,3 +649,182 @@ fn identical_command_streams_are_deterministic() {
     assert_eq!(a.vehicles, b.vehicles);
     assert_eq!(a.events, b.events);
 }
+
+// ── LO-3: snapshot + Bevy adapter ───────────────────────────────────────────────
+
+#[test]
+fn snapshot_rows_show_trip_progress_and_demand_service() {
+    let (mut sim, d) = world();
+    truck(&mut sim, OwnerId::PLAYER, 10);
+    stock(&mut sim, DEPOT, cement(), 100);
+    stock(&mut sim, DEPOT, ammo(), 100);
+    let id = run(&mut sim, cement(), SITE, 25);
+    demand(&mut sim, FRONT, ammo(), 20, 10, 0, Priority::High);
+    demand(&mut sim, SITE, ammo(), 5, 1, 0, Priority::Low);
+    line(&mut sim, ammo(), FRONT, Priority::Normal);
+    step(&mut sim, &d, 3);
+    let mut meta = BTreeMap::new();
+    meta.insert(
+        FRONT,
+        SiteMeta {
+            name: "Front Alpha".into(),
+            owner: OwnerId::PLAYER,
+            role: SiteRole::Front,
+            world_xz: [160.0, 32.0],
+        },
+    );
+    let snap = build_snapshot(&sim, &meta, &d);
+    let row = snap.orders.iter().find(|o| o.id == id).unwrap();
+    assert!(!row.standing);
+    assert_eq!(row.quantity, Some(25));
+    assert_eq!(row.unit, "t");
+    assert_eq!(row.sink_name, "Site");
+    assert!(row.trips_planned >= 3);
+    let front = snap.site(FRONT).unwrap();
+    assert_eq!(front.tile, [10, 2]);
+    assert_eq!(front.role, SiteRole::Front);
+    assert_eq!(snap.sites_of(OwnerId::PLAYER, SiteRole::Front).count(), 1);
+    let served: Vec<_> = snap.unserved_demands(OwnerId::PLAYER).map(|d| d.site).collect();
+    assert_eq!(served, vec![SITE], "front demand is served by the line; site demand is not");
+    assert_eq!(snap.fleet(OwnerId::PLAYER).total, 1);
+    assert_eq!(snap.fleet(OwnerId::PLAYER).busy, 1);
+    assert!(row.next_eta_ticks.is_some());
+}
+
+#[test]
+fn due_steps_counts_whole_seconds_and_caps_backlog() {
+    use super::plugin::due_steps;
+    assert_eq!(due_steps(None, 5_000_000, 1_000_000, 30), (0, 5_000_000));
+    assert_eq!(due_steps(Some(0), 2_500_000, 1_000_000, 30), (2, 2_000_000));
+    assert_eq!(due_steps(Some(2_000_000), 2_400_000, 1_000_000, 30), (0, 2_000_000));
+    assert_eq!(due_steps(Some(0), 100_000_000, 1_000_000, 30), (30, 100_000_000));
+}
+
+#[test]
+fn site_distance_travel_uses_metres_and_speed() {
+    let mut t = SiteDistanceTravel::default();
+    t.detour = 1.0;
+    t.positions.insert(SiteId(1), [0.0, 0.0]);
+    t.positions.insert(SiteId(2), [300.0, 400.0]); // 500 m
+    assert_eq!(t.travel_ticks(SiteId(1), SiteId(2), 10.0), Some(50));
+    assert_eq!(t.travel_ticks(SiteId(1), SiteId(1), 10.0), Some(0));
+    assert_eq!(t.travel_ticks(SiteId(1), SiteId(9), 10.0), None);
+}
+
+mod app {
+    use bevy::prelude::*;
+
+    use super::super::*;
+    use crate::systems::sim_control::SimTimeMicros;
+
+    fn app() -> App {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.init_resource::<SimTimeMicros>();
+        app.add_plugins(LogisticsOrdersPlugin);
+        app
+    }
+
+    fn advance_secs(app: &mut App, secs: u64) {
+        for _ in 0..secs {
+            app.world_mut().resource_mut::<SimTimeMicros>().0 += 1_000_000;
+            app.update();
+        }
+    }
+
+    fn spawn_site(app: &mut App, name: &str, role: SiteRole, x: f32) -> Entity {
+        app.world_mut()
+            .spawn((
+                LogisticsOrderSite {
+                    name: name.into(),
+                    owner: OwnerId::PLAYER,
+                    role,
+                },
+                Transform::from_xyz(x, 0.0, 0.0),
+            ))
+            .id()
+    }
+
+    fn send(app: &mut App, cmd: LogisticsOrderCommand) {
+        app.world_mut().write_message(LogisticsOrderRequest(cmd));
+    }
+
+    #[test]
+    fn requests_drive_a_multi_trip_run_to_completion_in_app() {
+        let mut app = app();
+        let depot = spawn_site(&mut app, "Depot North", SiteRole::Depot, 0.0);
+        let site = spawn_site(&mut app, "Bridge site", SiteRole::Construction, 240.0);
+        app.update();
+        app.update();
+        let reg = app.world().resource::<LogisticsSiteRegistry>();
+        let (src, dst) = (reg.site_of(depot).unwrap(), reg.site_of(site).unwrap());
+        let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        assert_eq!(snap.fleet(OwnerId::PLAYER).total, 6, "depot seeded with default fleet");
+
+        send(
+            &mut app,
+            LogisticsOrderCommand::SetStock {
+                site: src,
+                cargo: CargoKind::new("Cement"),
+                on_hand: 500,
+            },
+        );
+        send(
+            &mut app,
+            LogisticsOrderCommand::CreateOneOffRun {
+                owner: OwnerId::PLAYER,
+                source: src,
+                sink: dst,
+                cargo: CargoKind::new("Cement"),
+                quantity: 120,
+                priority: Priority::High,
+                vehicle_cap: None,
+            },
+        );
+        advance_secs(&mut app, 2);
+        let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        let row = snap.one_off_runs().next().expect("run row");
+        assert_eq!(row.vehicles, 4, "all four freight trucks dispatched");
+        assert_eq!(row.trips_planned, 12);
+        advance_secs(&mut app, 600);
+        let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        let row = snap.one_off_runs().next().expect("run row kept for review");
+        assert_eq!(row.status, OrderStatus::Completed);
+        assert_eq!(row.delivered, 120);
+        assert_eq!(row.trips_done, 12);
+        assert_eq!(snap.fleet(OwnerId::PLAYER).free, 6, "vehicles released");
+        let dst_row = snap.site(dst).unwrap();
+        assert_eq!(dst_row.stock[0].on_hand, 120);
+    }
+
+    #[test]
+    fn despawned_site_fails_its_orders() {
+        let mut app = app();
+        let depot = spawn_site(&mut app, "Depot", SiteRole::Depot, 0.0);
+        let front = spawn_site(&mut app, "Front", SiteRole::Front, 800.0);
+        app.update();
+        app.update();
+        let reg = app.world().resource::<LogisticsSiteRegistry>();
+        let (src, dst) = (reg.site_of(depot).unwrap(), reg.site_of(front).unwrap());
+        send(
+            &mut app,
+            LogisticsOrderCommand::CreateStandingLine {
+                owner: OwnerId::PLAYER,
+                source: src,
+                sink: dst,
+                cargo: CargoKind::new("ammo"),
+                priority: Priority::Normal,
+                vehicle_cap: None,
+            },
+        );
+        advance_secs(&mut app, 1);
+        app.world_mut().despawn(front);
+        advance_secs(&mut app, 1);
+        let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        assert!(snap.site(dst).is_none());
+        assert!(matches!(
+            snap.orders[0].status,
+            OrderStatus::Failed(FailReason::SiteRemoved)
+        ));
+    }
+}
