@@ -246,6 +246,19 @@ fn construction_instant_operational_enabled() -> bool {
         .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
 }
 
+/// Proof/dev switch: Portland chain commits jump straight to **Operational**.
+///
+/// Defaults from `RUST_ENGINE_CONSTRUCTION_INSTANT`; proof apps insert it explicitly so tests
+/// never depend on (or race over) process environment.
+#[derive(Resource, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct ConstructionInstantOperational(pub bool);
+
+impl Default for ConstructionInstantOperational {
+    fn default() -> Self {
+        Self(construction_instant_operational_enabled())
+    }
+}
+
 /// Proof fast-path after commit: move Portland steps to **Operational** with provisioning stats satisfied.
 pub fn fast_forward_portland_chain_sites_to_operational(
     mut sites: Query<(
@@ -255,8 +268,10 @@ pub fn fast_forward_portland_chain_sites_to_operational(
         &PlannedSite,
     )>,
     mut book: Option<ResMut<SiteConstructionBook>>,
+    instant: Option<Res<ConstructionInstantOperational>>,
 ) {
-    if !construction_instant_operational_enabled() {
+    let enabled = instant.map_or_else(construction_instant_operational_enabled, |r| r.0);
+    if !enabled {
         return;
     }
     for (def_ref, mut site, mut stats, planned) in &mut sites {

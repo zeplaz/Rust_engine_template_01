@@ -277,6 +277,9 @@ fn assemble_industrial_proof_app() -> App {
         .write_interval = 5;
 
     app.init_resource::<ConcreteChainE2eWitness>();
+    app.insert_resource(
+        crate::economy::activation::concrete_chain_e2e::ConstructionInstantOperational(true),
+    );
 
     app.add_plugins((ResourceFlowPlugin, PowerRuntimePlugin));
     app.add_plugins(super::grid_overload_ux::GridOverloadUxPlugin);

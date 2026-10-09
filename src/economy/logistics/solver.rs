@@ -68,7 +68,9 @@ pub fn sync_solver_capacity_from_graph_system(
         construction_rev.map(|r| r.revision).unwrap_or(0),
     );
     solver.ensure_len(max_id);
-    solver.clear_tick();
+    // Load/reserved are cleared by the solve pass itself; clearing here every tick left them
+    // zero whenever the solver reused its cached result (LOG-C-02 regression).
+    let mut capacity_changed = false;
 
     for edge in &graph.edges {
         let Some(tid) = edge.transport_edge else {
@@ -76,8 +78,16 @@ pub fn sync_solver_capacity_from_graph_system(
         };
         let idx = tid.0 as usize;
         if idx < solver.capacity.len() {
-            solver.capacity[idx] = edge.capacity * (1.0 - edge.disruption.clamp(0.0, 1.0));
+            let cap = edge.capacity * (1.0 - edge.disruption.clamp(0.0, 1.0));
+            if (solver.capacity[idx] - cap).abs() > 1e-6 {
+                capacity_changed = true;
+            }
+            solver.capacity[idx] = cap;
         }
+    }
+    if capacity_changed {
+        // Cached reservations may exceed the new capacity — force a fresh solve.
+        solver.solved_revision = None;
     }
 }
 
@@ -92,6 +102,7 @@ pub fn solve_throughput_greedy_system(
     if flow_snapshot_unchanged(&solver, &flow) {
         return;
     }
+    solver.clear_tick();
     book.clear();
     for edge in flow.edges.iter() {
         if !edge.path_open {
