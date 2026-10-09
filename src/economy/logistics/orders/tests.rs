@@ -692,6 +692,23 @@ fn snapshot_rows_show_trip_progress_and_demand_service() {
 }
 
 #[test]
+fn plant_reconcile_applies_order_deltas_to_the_node_buffer() {
+    use super::plugin::reconcile_plant_stock;
+    // First contact: node 50.7 t, sim empty → sim sees 50 whole units.
+    assert_eq!(reconcile_plant_stock(50.7, 0, None), (50.7, 50, 50));
+    // A truck picked up 10 since the mirror (sim 40, mirror 50) → node loses 10.
+    let (node, sim, mirror) = reconcile_plant_stock(50.7, 40, Some(50));
+    assert!((node - 40.7).abs() < 1e-4);
+    assert_eq!((sim, mirror), (40, 40));
+    // A delivery of 12 arrived (sim 52, mirror 40) while the plant consumed 5 (node 35.7).
+    let (node, sim, _) = reconcile_plant_stock(35.7, 52, Some(40));
+    assert!((node - 47.7).abs() < 1e-4);
+    assert_eq!(sim, 47);
+    // Dev-seeded sim stock before first contact is pushed into the node.
+    assert_eq!(reconcile_plant_stock(0.0, 8, None), (8.0, 8, 8));
+}
+
+#[test]
 fn due_steps_counts_whole_seconds_and_caps_backlog() {
     use super::plugin::due_steps;
     assert_eq!(due_steps(None, 5_000_000, 1_000_000, 30), (0, 5_000_000));
@@ -796,6 +813,69 @@ mod app {
         assert_eq!(snap.fleet(OwnerId::PLAYER).free, 6, "vehicles released");
         let dst_row = snap.site(dst).unwrap();
         assert_eq!(dst_row.stock[0].on_hand, 120);
+    }
+
+    #[test]
+    fn plant_buffers_feed_runs_and_receive_deliveries() {
+        use crate::economy::resource_flow::ResourceFlowNode;
+        use std::collections::HashMap;
+
+        let mut app = app();
+        let depot = spawn_site(&mut app, "Depot", SiteRole::Depot, 0.0);
+        let plant = app
+            .world_mut()
+            .spawn((
+                LogisticsOrderSite {
+                    name: "Cement works".into(),
+                    owner: OwnerId::PLAYER,
+                    role: SiteRole::Plant,
+                    position_m: Some([320.0, 0.0]),
+                },
+                ResourceFlowNode {
+                    catalog_id: "cement_works".into(),
+                    inventory: HashMap::new(),
+                    buffer_by_tag: HashMap::from([("Cement".to_string(), 50.5)]),
+                    throughput_limit: 10.0,
+                    production: vec![],
+                    consumption: vec![],
+                },
+            ))
+            .id();
+        app.update();
+        app.update();
+        let reg = app.world().resource::<LogisticsSiteRegistry>();
+        let (d, p) = (reg.site_of(depot).unwrap(), reg.site_of(plant).unwrap());
+        send(
+            &mut app,
+            LogisticsOrderCommand::SetStock {
+                site: d,
+                cargo: CargoKind::new("Limestone"),
+                on_hand: 100,
+            },
+        );
+        for (source, sink, cargo, quantity) in [(p, d, "Cement", 30), (d, p, "Limestone", 15)] {
+            send(
+                &mut app,
+                LogisticsOrderCommand::CreateOneOffRun {
+                    owner: OwnerId::PLAYER,
+                    source,
+                    sink,
+                    cargo: CargoKind::new(cargo),
+                    quantity,
+                    priority: Priority::Normal,
+                    vehicle_cap: None,
+                },
+            );
+        }
+        advance_secs(&mut app, 600);
+        let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        assert!(snap.one_off_runs().all(|o| o.status == OrderStatus::Completed), "{:?}", snap.orders);
+        let node = app.world().get::<ResourceFlowNode>(plant).unwrap();
+        assert!((node.buffer_by_tag["Cement"] - 20.5).abs() < 1e-4, "30 t picked up from the plant buffer");
+        assert!((node.buffer_by_tag["Limestone"] - 15.0).abs() < 1e-4, "delivery landed in the plant buffer");
+        let depot_row = snap.site(d).unwrap();
+        let cement = depot_row.stock.iter().find(|r| r.cargo == "Cement").unwrap();
+        assert_eq!(cement.on_hand, 30);
     }
 
     #[test]
