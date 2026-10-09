@@ -19,6 +19,10 @@ use crate::systems::sim_control::{SimControlSystemSet, SimTimeMicros};
 use super::model::{CargoClassMask, CargoKind, OwnerId, SiteId};
 use super::sim::{CommandOutcome, LogisticsOrderCommand, LogisticsOrderSim, SimConfig};
 use super::snapshot::{build_snapshot, LogisticsOrdersSnapshot, SiteMeta, SiteRole};
+use super::persistence::{
+    read_logistics_orders_overlay, saved_site_matches, write_logistics_orders_overlay,
+    LogisticsOrdersSave, SavedSite, LOGISTICS_ORDERS_SAVE_SCHEMA,
+};
 use super::travel::SiteDistanceTravel;
 
 /// Marks an entity as an order endpoint. Insert from any lane (fronts, construction, depots).
@@ -75,7 +79,14 @@ pub struct LogisticsSiteRegistry {
     pub meta: BTreeMap<SiteId, SiteMeta>,
     pub travel: SiteDistanceTravel,
     next: u32,
+    /// Saved sites awaiting their endpoint entity after a load (rebind by name/owner/role/tile).
+    pub pending_rebind: Vec<SavedSite>,
+    /// Frames left before unclaimed saved sites are removed from the sim.
+    pub rebind_frames_left: u32,
 }
+
+/// Frames a loaded save waits for its endpoints to re-register (~10 s at 60 fps).
+pub const REBIND_GRACE_FRAMES: u32 = 600;
 
 impl LogisticsSiteRegistry {
     #[must_use]
@@ -185,6 +196,57 @@ pub fn bridge_plant_stock(
     }
 }
 
+/// Snapshot the live order state for a save.
+#[must_use]
+pub fn capture_logistics_orders_save(
+    res: &LogisticsOrderSimRes,
+    registry: &LogisticsSiteRegistry,
+) -> LogisticsOrdersSave {
+    let mut sites: Vec<SavedSite> = registry
+        .meta
+        .iter()
+        .map(|(&id, meta)| SavedSite::from_meta(id, meta))
+        .collect();
+    // Sites still waiting for a rebind keep their saved identity.
+    sites.extend(registry.pending_rebind.iter().cloned());
+    sites.sort_by_key(|s| s.id);
+    LogisticsOrdersSave {
+        schema_version: LOGISTICS_ORDERS_SAVE_SCHEMA,
+        sim: res.sim.clone(),
+        sites,
+    }
+}
+
+/// Replace live order state with a save. Endpoint entities must re-register afterwards
+/// (the hydrate system strips their [`LogisticsOrderSiteId`]); they rebind to saved ids.
+pub fn install_logistics_orders_save(
+    res: &mut LogisticsOrderSimRes,
+    registry: &mut LogisticsSiteRegistry,
+    mirror: &mut PlantStockMirror,
+    save: LogisticsOrdersSave,
+) {
+    res.sim = save.sim;
+    res.last_sim_micros = None;
+    registry.by_entity.clear();
+    registry.entity_of.clear();
+    registry.meta.clear();
+    registry.travel.positions.clear();
+    let max_saved = save.sites.iter().map(|s| s.id.0).max().unwrap_or(0);
+    let max_sim = res.sim.sites.keys().map(|s| s.0).max().unwrap_or(0);
+    registry.next = max_saved.max(max_sim);
+    registry.pending_rebind = save.sites;
+    registry.rebind_frames_left = REBIND_GRACE_FRAMES;
+    mirror.0.clear();
+}
+
+/// Tracks the once-per-bundle-dir hydrate, mirroring the transport/utility overlays.
+#[derive(Resource, Debug, Default)]
+pub struct LogisticsOrdersHydrateState {
+    pub last_bundle_dir: Option<std::path::PathBuf>,
+    pub hydrate_attempted: bool,
+    pub hydrated: bool,
+}
+
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum LogisticsOrdersSet {
     TagSites,
@@ -201,6 +263,7 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<DepotFleetSeed>()
             .init_resource::<LogisticsOrdersSnapshotRes>()
             .init_resource::<PlantStockMirror>()
+            .init_resource::<LogisticsOrdersHydrateState>()
             .add_message::<LogisticsOrderRequest>()
             .configure_sets(
                 Update,
@@ -215,10 +278,20 @@ impl Plugin for LogisticsOrdersPlugin {
             .add_systems(
                 Update,
                 (
-                    tag_logistics_hubs_as_order_sites,
-                    tag_flow_facilities_as_order_sites,
+                    try_hydrate_logistics_orders_overlay_on_bundle_dir,
+                    (
+                        tag_logistics_hubs_as_order_sites,
+                        tag_flow_facilities_as_order_sites,
+                    ),
                 )
+                    .chain()
                     .in_set(LogisticsOrdersSet::TagSites),
+            )
+            .add_systems(
+                Update,
+                write_logistics_orders_overlay_on_save_flush
+                    .after(LogisticsOrdersSet::Step)
+                    .before(crate::io::save::flush_dirty_chunk_save_queue),
             )
             .add_systems(
                 Update,
@@ -332,26 +405,32 @@ pub fn step_logistics_orders_system(
         let Some(xz) = site_xz(site, t, g) else {
             continue;
         };
-        registry.next += 1;
-        let id = SiteId(registry.next);
+        let meta = SiteMeta {
+            name: site.name.clone(),
+            owner: site.owner,
+            role: site.role,
+            world_xz: xz,
+        };
+        let rebound = registry
+            .pending_rebind
+            .iter()
+            .position(|saved| saved_site_matches(saved, &meta))
+            .map(|i| registry.pending_rebind.swap_remove(i).id);
+        let id = rebound.unwrap_or_else(|| {
+            registry.next += 1;
+            SiteId(registry.next)
+        });
         registry.by_entity.insert(entity, id);
         registry.entity_of.insert(id, entity);
-        registry.meta.insert(
-            id,
-            SiteMeta {
-                name: site.name.clone(),
-                owner: site.owner,
-                role: site.role,
-                world_xz: xz,
-            },
-        );
+        registry.meta.insert(id, meta);
         registry.travel.positions.insert(id, xz);
         commands.entity(entity).insert(LogisticsOrderSiteId(id));
         res.sim.apply(LogisticsOrderCommand::RegisterSite {
             site: id,
             name: site.name.clone(),
         });
-        if seed.enabled && site.role == SiteRole::Depot {
+        // A rebound depot already has its saved fleet.
+        if rebound.is_none() && seed.enabled && site.role == SiteRole::Depot {
             for &(class_mask, capacity_units, speed_mps, count) in &seed.vehicles {
                 for _ in 0..count {
                     res.sim.apply(LogisticsOrderCommand::AddVehicle {
@@ -374,6 +453,15 @@ pub fn step_logistics_orders_system(
             if let Some(xz) = site_xz(site, t, g) {
                 meta.world_xz = xz;
                 registry.travel.positions.insert(sid.0, xz);
+            }
+        }
+    }
+
+    if !registry.pending_rebind.is_empty() {
+        registry.rebind_frames_left = registry.rebind_frames_left.saturating_sub(1);
+        if registry.rebind_frames_left == 0 {
+            for saved in std::mem::take(&mut registry.pending_rebind) {
+                res.sim.apply(LogisticsOrderCommand::RemoveSite { site: saved.id });
             }
         }
     }
@@ -412,4 +500,61 @@ pub fn publish_logistics_orders_snapshot_system(
         return;
     }
     snap.0 = build_snapshot(&res.sim, &registry.meta, &registry.travel);
+}
+
+/// Write `overlays/logistics_orders.ron` when a save flush is armed (before the manifest flush).
+pub fn write_logistics_orders_overlay_on_save_flush(
+    flush: Option<Res<crate::io::save::SaveFlushRequested>>,
+    settings: Option<Res<crate::io::save::WorldSaveBundleSettings>>,
+    res: Res<LogisticsOrderSimRes>,
+    registry: Res<LogisticsSiteRegistry>,
+) {
+    let (Some(flush), Some(settings)) = (flush, settings) else {
+        return;
+    };
+    if !flush.0 {
+        return;
+    }
+    let save = capture_logistics_orders_save(&res, &registry);
+    if let Err(err) = write_logistics_orders_overlay(&settings.bundle_dir, &save) {
+        bevy::log::warn!("logistics orders overlay write failed: {err}");
+    }
+}
+
+/// Hydrate order state once per bundle dir when the bundle carries the orders overlay.
+#[allow(clippy::too_many_arguments)]
+pub fn try_hydrate_logistics_orders_overlay_on_bundle_dir(
+    mut commands: Commands,
+    settings: Option<Res<crate::io::save::WorldSaveBundleSettings>>,
+    mut state: ResMut<LogisticsOrdersHydrateState>,
+    mut res: ResMut<LogisticsOrderSimRes>,
+    mut registry: ResMut<LogisticsSiteRegistry>,
+    mut mirror: ResMut<PlantStockMirror>,
+    bound: Query<Entity, With<LogisticsOrderSiteId>>,
+) {
+    let Some(settings) = settings else {
+        return;
+    };
+    if state.last_bundle_dir.as_deref() != Some(settings.bundle_dir.as_path()) {
+        state.last_bundle_dir = Some(settings.bundle_dir.clone());
+        state.hydrate_attempted = false;
+        state.hydrated = false;
+    }
+    if state.hydrate_attempted {
+        return;
+    }
+    state.hydrate_attempted = true;
+    let save = match read_logistics_orders_overlay(&settings.bundle_dir) {
+        Ok(Some(save)) => save,
+        Ok(None) => return,
+        Err(err) => {
+            bevy::log::warn!("logistics orders overlay unreadable: {err}");
+            return;
+        }
+    };
+    install_logistics_orders_save(&mut res, &mut registry, &mut mirror, save);
+    for entity in &bound {
+        commands.entity(entity).remove::<LogisticsOrderSiteId>();
+    }
+    state.hydrated = true;
 }

@@ -6,6 +6,8 @@
 
 use std::collections::{BTreeMap, BTreeSet};
 
+use serde::{Deserialize, Serialize};
+
 use super::model::*;
 
 /// Travel time source. `None` = unreachable. Same-site travel should return `Some(0)`.
@@ -14,7 +16,7 @@ pub trait TravelModel {
 }
 
 /// Tunables. Defaults assume one sim tick per simulated second.
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct SimConfig {
     pub load_ticks: u32,
     pub unload_ticks: u32,
@@ -46,7 +48,7 @@ impl Default for SimConfig {
 }
 
 /// Shared write API for player UI, AI and fronts (§5).
-#[derive(Clone, Debug, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum LogisticsOrderCommand {
     RegisterSite {
         site: SiteId,
@@ -128,7 +130,7 @@ pub enum CommandOutcome {
     Rejected(String),
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub enum OrderEventKind {
     Completed,
     Cancelled,
@@ -137,14 +139,14 @@ pub enum OrderEventKind {
     DemandStarving { site: SiteId, cargo: CargoKind },
 }
 
-#[derive(Clone, Debug, PartialEq, Eq)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 pub struct OrderEvent {
     pub tick: Tick,
     pub order: Option<OrderId>,
     pub kind: OrderEventKind,
 }
 
-#[derive(Clone, Debug, Default)]
+#[derive(Clone, Debug, Default, Serialize, Deserialize)]
 pub struct LogisticsOrderSim {
     pub config: SimConfig,
     pub tick: Tick,

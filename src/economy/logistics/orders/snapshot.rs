@@ -5,11 +5,13 @@
 
 use std::collections::BTreeMap;
 
+use serde::{Deserialize, Serialize};
+
 use super::model::*;
 use super::sim::{LogisticsOrderSim, OrderEventKind, TravelModel};
 
 /// What a site is for — lets the UI group pickers and the AI find depots vs fronts.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub enum SiteRole {
     #[default]
     Depot,
