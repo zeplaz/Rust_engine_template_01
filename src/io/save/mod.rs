@@ -14,6 +14,7 @@ mod settlement_overlay;
 mod fire_overlay;
 mod atmosphere_clipmap_overlay;
 mod transport_overlay;
+mod utility_overlay;
 mod wave_s_artifacts;
 mod wire_format;
 
@@ -73,8 +74,19 @@ pub use atmosphere_clipmap_overlay::{
     ATMOS_CLIPMAP_SAVE_ROUNDTRIP_JSON, ATMOS_CLIPMAP_SCHEMA_VERSION, ATMOS_CLIPMAP_STATE_REL_PATH,
 };
 pub use transport_overlay::{
-    read_transport_snapshot_ron, transport_overlay_ref, write_transport_snapshot_ron,
-    TRANSPORT_OVERLAY_NAME,
+    build_transport_overlay_refs, capture_transport_overlay_snapshot,
+    default_transport_overlay_ref, read_transport_overlay_from_manifest,
+    read_transport_snapshot_ron, transport_overlay_ref,
+    try_hydrate_transport_overlay_on_bundle_dir, write_transport_overlay_on_save_flush,
+    write_transport_overlay_to_bundle, write_transport_snapshot_ron,
+    TransportOverlayHydrateState, TRANSPORT_OVERLAY_NAME, TRANSPORT_OVERLAY_REL_PATH,
+};
+pub use utility_overlay::{
+    build_utility_overlay_refs, default_utility_overlay_ref, read_utility_network_ron,
+    read_utility_overlay_from_manifest, try_hydrate_utility_overlay_on_bundle_dir,
+    utility_overlay_ref, write_utility_network_ron, write_utility_overlay_on_save_flush,
+    write_utility_overlay_to_bundle, UtilityOverlayHydrateState, UTILITY_OVERLAY_NAME,
+    UTILITY_OVERLAY_REL_PATH,
 };
 pub use wave_s_artifacts::{
     apply_wave_s_shell_capture_requests, apply_wave_s_shell_restore_requests,
