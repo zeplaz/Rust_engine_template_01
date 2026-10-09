@@ -184,6 +184,8 @@ pub fn build_incremental_save_manifest(
             let mut overlays = crate::io::save::build_settlement_overlay_refs();
             overlays.push(crate::io::save::default_fire_overlay_ref());
             overlays.extend(crate::io::save::build_atmos_clipmap_overlay_refs());
+            overlays.extend(crate::io::save::build_transport_overlay_refs());
+            overlays.extend(crate::io::save::build_utility_overlay_refs());
             overlays
         },
 
@@ -476,6 +478,25 @@ impl Plugin for WorldSaveSpinePlugin {
             .init_resource::<crate::io::save::WaveSImportedBlueprints>()
             .init_resource::<crate::io::save::WaveSLiveProofState>()
             .init_resource::<crate::io::save::SettlementBooksHydrateState>()
+            .init_resource::<crate::io::save::TransportOverlayHydrateState>()
+            .init_resource::<crate::io::save::UtilityOverlayHydrateState>()
+            // Infrastructure overlays (roads/rails/power lines): write before the manifest flush,
+            // hydrate once per bundle dir like the settlement books.
+            .add_systems(
+                Update,
+                (
+                    crate::io::save::write_transport_overlay_on_save_flush,
+                    crate::io::save::write_utility_overlay_on_save_flush,
+                )
+                    .before(flush_dirty_chunk_save_queue),
+            )
+            .add_systems(
+                Update,
+                (
+                    crate::io::save::try_hydrate_transport_overlay_on_bundle_dir,
+                    crate::io::save::try_hydrate_utility_overlay_on_bundle_dir,
+                ),
+            )
 
             .add_message::<crate::io::save::dirty_queue::RequestWorldSaveFlush>()
 
