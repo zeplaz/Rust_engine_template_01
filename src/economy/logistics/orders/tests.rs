@@ -728,6 +728,108 @@ fn site_distance_travel_uses_metres_and_speed() {
     assert_eq!(t.travel_ticks(SiteId(1), SiteId(9), 10.0), None);
 }
 
+// ── LO-6: forecasts + advisor ───────────────────────────────────────────────────
+
+fn meta_for(sim: &LogisticsOrderSim, roles: &[(SiteId, SiteRole, f32)]) -> BTreeMap<SiteId, SiteMeta> {
+    roles
+        .iter()
+        .map(|&(id, role, x)| {
+            (
+                id,
+                SiteMeta {
+                    name: sim.sites[&id].clone(),
+                    owner: OwnerId::PLAYER,
+                    role,
+                    world_xz: [x, 0.0],
+                },
+            )
+        })
+        .collect()
+}
+
+#[test]
+fn demand_rows_forecast_time_to_empty_and_trucks_needed() {
+    let (mut sim, d) = world();
+    truck(&mut sim, OwnerId::PLAYER, 10);
+    stock(&mut sim, DEPOT, ammo(), 1_000);
+    stock(&mut sim, FRONT, ammo(), 60);
+    // 30 t/min; route 200 m at 10 m/s = 20 ticks/leg → round trip 20+20+2+2 = 44 ticks.
+    demand(&mut sim, FRONT, ammo(), 60, 10, 30, Priority::High);
+    line(&mut sim, ammo(), FRONT, Priority::High);
+    let snap = build_snapshot(&sim, &BTreeMap::new(), &d);
+    let row = &snap.demands[0];
+    assert_eq!(row.time_to_empty_ticks, Some(120), "60 t at 30 t/min = 2 min");
+    assert_eq!(row.round_trip_ticks, Some(44));
+    // 30 t/min × 44 s ÷ (10 t × 60 s/min) = 2.2 → 3 trucks.
+    assert_eq!(row.trucks_needed, Some(3));
+}
+
+#[test]
+fn advisor_picks_stocked_nearest_source_and_reports_gaps() {
+    let (mut sim, d) = world();
+    // SITE (100 m from depot, 150 m from front) acts as a second depot.
+    stock(&mut sim, DEPOT, ammo(), 500);
+    stock(&mut sim, SITE, ammo(), 500);
+    demand(&mut sim, FRONT, ammo(), 40, 10, 10, Priority::Critical);
+    demand(&mut sim, FRONT, CargoKind::new("fuel"), 20, 5, 0, Priority::Low);
+    let meta = meta_for(
+        &sim,
+        &[
+            (DEPOT, SiteRole::Depot, 0.0),
+            (SITE, SiteRole::Depot, 150.0),
+            (FRONT, SiteRole::Front, 200.0),
+        ],
+    );
+    let snap = build_snapshot(&sim, &meta, &d);
+    let advice = suggest_lines_for_unserved(&snap, OwnerId::PLAYER);
+    assert_eq!(
+        advice.commands,
+        vec![LogisticsOrderCommand::CreateStandingLine {
+            owner: OwnerId::PLAYER,
+            source: SITE,
+            sink: FRONT,
+            cargo: ammo(),
+            priority: Priority::Critical,
+            vehicle_cap: None,
+        }],
+        "nearer stocked depot wins"
+    );
+    assert_eq!(
+        advice.gaps,
+        vec![AdvisorGap::NoSourceWithStock {
+            site: FRONT,
+            cargo: "fuel".into()
+        }]
+    );
+    // Applying the advice serves the demand.
+    for c in advice.commands {
+        ok(sim.apply(c));
+    }
+    let snap = build_snapshot(&sim, &meta, &d);
+    assert!(snap
+        .unserved_demands(OwnerId::PLAYER)
+        .all(|r| r.cargo == "fuel"));
+}
+
+#[test]
+fn advisor_prefers_source_that_covers_the_whole_target() {
+    let (mut sim, d) = world();
+    stock(&mut sim, SITE, ammo(), 5); // near but nearly empty
+    stock(&mut sim, DEPOT, ammo(), 100); // farther, full
+    demand(&mut sim, FRONT, ammo(), 40, 10, 0, Priority::Normal);
+    let meta = meta_for(
+        &sim,
+        &[
+            (DEPOT, SiteRole::Depot, 0.0),
+            (SITE, SiteRole::Depot, 190.0),
+            (FRONT, SiteRole::Front, 200.0),
+        ],
+    );
+    let snap = build_snapshot(&sim, &meta, &d);
+    let demand_row = &snap.demands[0];
+    assert_eq!(best_source_for(&snap, demand_row), Some(DEPOT));
+}
+
 mod app {
     use bevy::prelude::*;
 
