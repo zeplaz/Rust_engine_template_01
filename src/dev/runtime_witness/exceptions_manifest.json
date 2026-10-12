@@ -63,6 +63,7 @@
     "src/dev/landscape_grammar_visual_smoke_live_proof.rs",
     "src/dev/landscape_map_stamp_contract_live_proof.rs",
     "src/dev/landscape_map_stamp_runtime_live_proof.rs",
+    "src/dev/map_sim_relief_001_live_proof.rs",
     "src/dev/map_zoom_coherence_live_proof.rs",
     "src/dev/mfg_03_domain_wire_live_proof.rs",
     "src/dev/minimap_fire_veg_coherence_live_proof.rs",
@@ -380,6 +381,11 @@
       "expire_on": "2026-12-23",
       "reason": "DEV-CONTAIN: src/dev live_proof backlog \u2014 migrate to runtime_witness or retire before expiry",
       "added_by": "ci_unblock_908f9af8"
+    },
+    "src/dev/map_sim_relief_001_live_proof.rs": {
+      "expire_on": "2026-12-23",
+      "reason": "DEV-CONTAIN: MAP-SIM-RELIEF-001 live_proof shim \u2014 migrate to runtime_witness or retire before expiry",
+      "added_by": "ci_unblock_51f8efb5"
     },
     "src/dev/map_zoom_coherence_live_proof.rs": {
       "expire_on": "2026-12-23",
