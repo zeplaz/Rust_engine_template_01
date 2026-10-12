@@ -274,7 +274,7 @@ mod tests {
     fn cod_b_wp_witness_001_simulation_120_frames_writes_wave_p_live_json() {
         use bevy::MinimalPlugins;
         use bevy::state::app::StatesPlugin;
-        use bevy_egui::egui::{self, Rect as EguiRect};
+        use bevy::prelude::Rect as EguiRect;
         use crate::engine::states::BaseState;
         use crate::engine::AppState;
         use crate::gui::editor::world_gen_ui::WorldGenUiState;
@@ -294,9 +294,9 @@ mod tests {
         app.insert_resource(PreviewPathAuthority::default());
         app.insert_resource(WorldPreviewUiState {
             window_open: true,
-            last_window_rect: Some(EguiRect::from_min_size(
-                egui::pos2(0.0, 0.0),
-                egui::vec2(1280.0, 720.0),
+            last_window_rect: Some(EguiRect::from_corners(
+                bevy::prelude::Vec2::new(0.0, 0.0),
+                bevy::prelude::Vec2::new(1280.0, 720.0),
             )),
             d07_corner_inset_active: true,
             d07_inset_side_px: d07_inset_side_px(),

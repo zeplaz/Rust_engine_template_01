@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/hud_a_sim_window_ban_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "coder_hud_a_window_ban",
-    "written_at_epoch_secs": 1790312394
+    "written_at_epoch_secs": 1791675138
   },
   "green": true,
   "placement_debug_editor_only": true,

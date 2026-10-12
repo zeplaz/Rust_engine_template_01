@@ -19,14 +19,15 @@ use crate::gui::hud::simulation_pointer_gate::{
 };
 use crate::gui::{InputBindings, MapCameraDesiredRes, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
-use crate::strategic::{
-    evaluate_site_placement_at_world_tile, BuildSiteTile, LayerType, StrategicRasterConfig,
-};
+use crate::strategic::{BuildSiteTile, LayerType, StrategicRasterConfig};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+use crate::terrain::generation::WorldGenDenseTerrainCache;
 
 use super::build_state::{
     BuildCommandActor, BuildGhostRoot, BuildGhostState, BuildPlacementMode, BuildPlacementPreview,
 };
+use super::build_validation::{evaluate_ghost_site_placement, ghost_valid_flag};
+use super::map_pick_params::ConstructionMapPick;
 use super::build_strip::{BuildStripState, ToolContext};
 use super::build_tool_authority::{ActiveBuildTool, BuildTool, DefenseKind};
 use super::building_definitions::BuildingDefinitionRegistry;
@@ -47,7 +48,7 @@ use super::place_feedback::{PlaceFeedbackPulse, TwoClickCommitParams};
 use super::sessions::ActiveToolSession;
 use super::terrain_conform::conform_world_y;
 use super::zones::spawn_zone_at_tile;
-use super::GhostBuildCursor;
+use super::{GhostBuildCursor, GhostValid};
 use crate::economy::logistics::{InTransitLedger, PendingSiteStagingDebits, SiteStagingStock};
 use crate::economy::resource_flow::ResourceFlowNode;
 use crate::strategic::FootprintTiles;
@@ -148,12 +149,7 @@ fn resolve_site_archetype(
 /// Second LMB commits in [`build_place_on_second_lmb_system`] (same funnel as Enter).
 pub fn build_pick_ghost_tile_system(
     buttons: Res<ButtonInput<MouseButton>>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesiredRes>,
-    map_vp: Res<SimulationMapViewport>,
-    params: Res<WorldGenParams>,
-    ortho: Res<crate::gui::MainWorldCameraOrthoTrace>,
+    pick: ConstructionMapPick,
     strip: Res<BuildStripState>,
     tool: Res<ActiveBuildTool>,
     pointer_gate: Option<Res<SimulationMapPointerGate>>,
@@ -194,7 +190,7 @@ pub fn build_pick_ghost_tile_system(
         return;
     }
 
-    let Ok(window) = win.single() else {
+    let Ok(window) = pick.win.single() else {
         return;
     };
     let Some(cursor_px) = window.cursor_position() else {
@@ -207,20 +203,20 @@ pub fn build_pick_ghost_tile_system(
     if !construction_map_pick_allowed(
         pointer_gate.as_deref(),
         false,
-        map_vp.as_ref(),
+        pick.map_vp.as_ref(),
         cursor_px,
     ) {
         return;
     }
 
     let proj = ConstructionMapProjection::resolve(
-        authority.as_deref(),
-        desired.as_ref(),
-        map_vp.as_ref(),
-        params.as_ref(),
+        pick.authority.as_deref(),
+        pick.desired.as_ref(),
+        pick.map_vp.as_ref(),
+        pick.params.as_ref(),
     );
     let Some(world_xy) = proj
-        .cursor_world_xy_with_ortho(cursor_px, ortho.as_ref())
+        .cursor_world_xy_with_ortho(cursor_px, pick.ortho.as_ref())
         .or_else(|| proj.cursor_world_xy(cursor_px))
     else {
         return;
@@ -229,7 +225,12 @@ pub fn build_pick_ghost_tile_system(
     let x = world_xy.x.floor().max(0.0) as u32;
     let z = world_xy.y.floor().max(0.0) as u32;
     let tile = BuildSiteTile { x, z };
-    let _conform_y = conform_world_y(world_xy.x, world_xy.y, &params);
+    let _conform_y = conform_world_y(
+        world_xy.x,
+        world_xy.y,
+        pick.params.as_ref(),
+        pick.height_grid(),
+    );
 
     let building_two_click = tool.tool.uses_two_click_place();
 
@@ -316,7 +317,7 @@ pub fn build_refresh_placement_validation_system(
     };
 
     preview.report =
-        evaluate_site_placement_at_world_tile(origin, ghost.footprint, config.as_deref(), &overlay);
+        evaluate_ghost_site_placement(origin, ghost.footprint, config.as_deref(), &overlay);
 
     let _stamped = super::preview_commit_guard::stamp_empty_footprint(
         &mut preview.report,
@@ -1649,13 +1650,17 @@ mod parametric_input_tests {
     }
 }
 
-/// Ensures a singleton [`BuildGhostRoot`] + [`GhostBuildCursor`] exists and tracks strip state.
+/// Ensures a singleton [`BuildGhostRoot`] + [`GhostBuildCursor`] + [`GhostValid`] exists.
 pub fn build_sync_ghost_cursor_entity_system(
     mut cmds: Commands,
     strip: Res<BuildStripState>,
     ghost: Res<BuildGhostState>,
+    preview: Res<BuildPlacementPreview>,
     root_q: Query<Entity, With<BuildGhostRoot>>,
-    mut cursor_q: Query<(&mut GhostBuildCursor, &mut Transform), With<BuildGhostRoot>>,
+    mut cursor_q: Query<
+        (&mut GhostBuildCursor, &mut GhostValid, &mut Transform),
+        With<BuildGhostRoot>,
+    >,
 ) {
     if root_q.is_empty() {
         cmds.spawn((
@@ -1665,16 +1670,18 @@ pub fn build_sync_ghost_cursor_entity_system(
                 origin: BuildSiteTile { x: 0, z: 0 },
                 footprint: ghost.footprint,
             },
+            GhostValid(ghost_valid_flag(&preview.report)),
             Transform::default(),
         ));
         return;
     }
 
-    let Ok((mut cur, mut xf)) = cursor_q.single_mut() else {
+    let Ok((mut cur, mut valid, mut xf)) = cursor_q.single_mut() else {
         return;
     };
 
     cur.footprint = ghost.footprint;
+    *valid = GhostValid(ghost_valid_flag(&preview.report));
     if strip.active == ToolContext::None {
         return;
     }

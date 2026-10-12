@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 use serde::{Deserialize, Serialize};
 
 use super::shell_framework::{HudDockRegistry, ProductShellWidgetId};
@@ -115,9 +114,9 @@ impl HudLayoutStore {
     pub fn capture_window_if_changed(
         &mut self,
         id: ProductShellWidgetId,
-        response: &egui::Response,
+        rect: Rect,
     ) -> bool {
-        let rect = response.rect;
+        let rect = rect;
         let next = HudWidgetFrame {
             pos: Vec2::new(rect.min.x, rect.min.y),
             size: Vec2::new(rect.size().x, rect.size().y),
@@ -138,25 +137,13 @@ impl HudLayoutStore {
         true
     }
 
-    pub fn capture_window(&mut self, id: ProductShellWidgetId, response: &egui::Response) {
-        let _ = self.capture_window_if_changed(id, response);
+    pub fn capture_window(&mut self, id: ProductShellWidgetId, rect: Rect) {
+        let _ = self.capture_window_if_changed(id, rect);
     }
 
-    pub fn apply_window<'a>(
-        &self,
-        id: ProductShellWidgetId,
-        window: egui::Window<'a>,
-        default_pos: egui::Pos2,
-        default_size: [f32; 2],
-    ) -> egui::Window<'a> {
-        let frame = self.frame(id);
-        if frame.initialized {
-            window
-                .default_pos(egui::pos2(frame.pos.x, frame.pos.y))
-                .default_size([frame.size.x, frame.size.y])
-        } else {
-            window.default_pos(default_pos).default_size(default_size)
-        }
+    pub fn apply_window_defaults(&self, id: ProductShellWidgetId) -> Option<HudWidgetFrame> {
+        let f = self.frame(id);
+        if f.initialized { Some(f) } else { None }
     }
 
     #[must_use]

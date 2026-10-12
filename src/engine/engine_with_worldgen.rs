@@ -55,7 +55,6 @@ use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
 use bevy::winit::WinitSettings;
 use bevy::window::{PresentMode, Window, WindowPlugin};
-use bevy_egui::EguiPlugin;
 
 /// Root camera for tactical map — renders to [`crate::gui::SimulationMapTexture`].
 fn spawn_primary_ui_camera(
@@ -117,7 +116,6 @@ impl Plugin for EnginePlugin {
             .add_systems(Startup, spawn_primary_ui_camera)
             .add_plugins(LocalLightPlugin)
             .add_plugins(DebugManeuverPlugin)
-            .add_plugins(EguiPlugin::default())
             .add_plugins(UiThemePlugin)
             .add_plugins(SplashPlugin)
             .add_plugins(BaseMenuPlugin)
@@ -137,7 +135,6 @@ impl Plugin for EnginePlugin {
             // Scenario script host (Wave 1): drains one step per frame before sim tick.
             .add_plugins(crate::sim::SimEffectsPlugin)
             .add_plugins(ScenarioScriptingPlugin);
-        super::omit_egui_pointer_preupdate_in_simulation(app);
         configure_chunk_environment_sets(app);
         app.add_plugins(crate::dev::runtime_witness::LiveProofCadencePlugin)
             .add_plugins(crate::substrate::SubstratePlugin)
@@ -198,7 +195,8 @@ impl Plugin for EnginePlugin {
         app.add_plugins(TilemapAdapterPlugin);
         // Plugin order still matters for init; cross-simulation ordering uses SystemSet edges
         // (see `SimControlSystemSet`, `TransportSchedule` — `prompts/guides/ecs_systems_schedule_runbook_v1.md`).
-        app.add_plugins(KeybindingsOptionsPlugin)
+        app.add_plugins(crate::gui::PanelPresencePlugin)
+            .add_plugins(KeybindingsOptionsPlugin)
             .add_plugins(GameplayCapturePlugin)
             .add_plugins(CameraFocusDebugPlugin)
             .add_plugins(crate::gui::GpuTileDebugPlugin)

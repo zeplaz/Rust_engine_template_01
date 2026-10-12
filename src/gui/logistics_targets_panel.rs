@@ -1,7 +1,7 @@
-//! Pick logistics HUD focus from a list (hotkey, **Options** keybindings, this egui panel).
+//! Pick logistics HUD focus from a list (hotkey, **Options** keybindings, this Bevy panel).
 
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
+use bevy::ui::FocusPolicy;
 
 // Declared here (not in `gui/mod.rs`) so the logistics lane owns registration; resolves to
 // `src/gui/logistics_orders_panel.rs`.
@@ -10,17 +10,14 @@ pub mod logistics_orders_panel;
 #[path = "logistics_orders_overlay.rs"]
 pub mod logistics_orders_overlay;
 pub use logistics_orders_panel::{LogisticsOrdersPanelPlugin, LogisticsOrdersPanelState};
+pub use logistics_orders_overlay::{build_orders_overlay, OrdersOverlayFrame, RouteTone};
 
-use crate::entities::production::core::{
-    LogisticsSiteMember, LogisticsSiteRoot, ResourceStorage,
-};
-
-use crate::gui::ui_gates::in_simulation_or_editor;
+use crate::entities::production::core::LogisticsSiteRoot;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::logistics_focus::HudLogisticsFocus;
-use crate::gui::style::{
-    primary_label, section_heading, widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette,
-};
+use crate::gui::panel_presence::PanelPresence;
+use crate::gui::style::{CmdUiMonoFont, UiPalette};
+use crate::gui::ui_gates::in_simulation_or_editor;
 
 #[derive(Resource, Debug, Clone)]
 pub struct LogisticsTargetsPanelState {
@@ -33,6 +30,17 @@ impl Default for LogisticsTargetsPanelState {
     }
 }
 
+#[derive(Component)]
+pub struct LogisticsTargetsBevyRoot;
+
+#[derive(Component)]
+struct LogisticsTargetsPickButton(Entity);
+
+#[derive(Default)]
+struct TargetsStamp {
+    key: u64,
+}
+
 pub struct LogisticsTargetsPanelPlugin;
 
 impl Plugin for LogisticsTargetsPanelPlugin {
@@ -41,11 +49,13 @@ impl Plugin for LogisticsTargetsPanelPlugin {
         app.init_resource::<LogisticsTargetsPanelState>()
             .add_systems(
                 Update,
-                toggle_logistics_targets_panel.run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                logistics_targets_panel_ui.run_if(crate::gui::ui_gates::product_egui_shell_active),
+                (
+                    toggle_logistics_targets_panel,
+                    sync_logistics_targets_bevy_panel,
+                    logistics_targets_pick_clicks,
+                )
+                    .chain()
+                    .run_if(in_simulation_or_editor),
             );
     }
 }
@@ -55,80 +65,134 @@ fn toggle_logistics_targets_panel(
     bindings: Res<InputBindings>,
     mut state: ResMut<LogisticsTargetsPanelState>,
 ) {
-    if keys.just_pressed(bindings.toggle_logistics_targets_panel) {
+    // Plain F6 — Shift+F6 is owned by the orders panel.
+    let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
+    if !shift && keys.just_pressed(bindings.toggle_logistics_targets_panel) {
         state.visible = !state.visible;
     }
 }
 
-fn logistics_targets_panel_ui(
-    mut contexts: EguiContexts,
+fn sync_logistics_targets_bevy_panel(
+    mut commands: Commands,
     state: Res<LogisticsTargetsPanelState>,
-    bindings: Res<InputBindings>,
-    mut focus: ResMut<HudLogisticsFocus>,
-    roots: Query<Entity, With<LogisticsSiteRoot>>,
-    storages: Query<Entity, With<ResourceStorage>>,
-    members: Query<&LogisticsSiteMember>,
+    focus: Res<HudLogisticsFocus>,
     palette: Res<UiPalette>,
-    mut orders_panel: ResMut<LogisticsOrdersPanelState>,
-) -> Result {
+    mono: Res<CmdUiMonoFont>,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<LogisticsTargetsBevyRoot>>,
+    sites: Query<(Entity, Option<&Name>), With<LogisticsSiteRoot>>,
+    mut stamp: Local<TargetsStamp>,
+) {
+    presence.logistics_targets_root = !roots.is_empty();
     if !state.visible {
-        return Ok(());
+        for e in &roots {
+            commands.entity(e).despawn();
+        }
+        presence.logistics_targets_root = false;
+        stamp.key = 0;
+        return;
     }
-    let ctx = contexts.ctx_mut()?;
 
-    crate::gui::std_floating(egui::Window::new(format!(
-        "Logistics targets ({})",
-        InputBindings::format_key(bindings.toggle_logistics_targets_panel)
-    )))
-    .default_size(egui::vec2(320.0, 440.0))
-        .show(ctx, |ui| {
-            primary_label(ui, palette.as_ref(), "Set HUD inventory focus (physical storage / site hub).");
-            if ui
-                .button(format!(
-                    "Supply lines & runs… (Shift+{})",
-                    InputBindings::format_key(bindings.toggle_logistics_targets_panel)
-                ))
-                .clicked()
-            {
-                orders_panel.visible = !orders_panel.visible;
+    let mut site_rows: Vec<(Entity, String)> = sites
+        .iter()
+        .map(|(e, name)| {
+            let label = name
+                .map(|n| n.as_str().to_string())
+                .unwrap_or_else(|| format!("site {e:?}"));
+            (e, label)
+        })
+        .collect();
+    site_rows.sort_by(|a, b| a.1.cmp(&b.1));
+
+    let mut key = site_rows.len() as u64 + state.visible as u64;
+    if let Some(sel) = focus.tracked_entity {
+        key = key.wrapping_add(sel.to_bits());
+    }
+    for (e, _) in site_rows.iter().take(64) {
+        key = key.wrapping_mul(0x9E37_79B9).wrapping_add(e.to_bits());
+    }
+
+    if !roots.is_empty() && stamp.key == key {
+        return;
+    }
+    for e in &roots {
+        commands.entity(e).despawn();
+    }
+
+    let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
+    commands
+        .spawn((
+            LogisticsTargetsBevyRoot,
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(64.0),
+                right: Val::Px(360.0),
+                width: Val::Px(280.0),
+                max_height: Val::Px(420.0),
+                padding: UiRect::all(Val::Px(10.0)),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(4.0),
+                border: UiRect::all(Val::Px(1.0)),
+                border_radius: BorderRadius::ZERO,
+                overflow: Overflow::scroll_y(),
+                ..default()
+            },
+            BackgroundColor(palette.bevy_hud_panel_fill()),
+            BorderColor::all(palette.bevy_wire_magenta()),
+            FocusPolicy::Block,
+            ZIndex(954),
+        ))
+        .with_children(|root| {
+            root.spawn((
+                Text::new("Logistics targets"),
+                tf.clone(),
+                TextColor(palette.bevy_primary_text()),
+            ));
+            if site_rows.is_empty() {
+                root.spawn((
+                    Text::new("(no LogisticsSiteRoot entities)"),
+                    tf.clone(),
+                    TextColor(palette.bevy_text_muted()),
+                ));
             }
-            ui.separator();
-            widget_scroll_vertical_fill("logistics_targets_list_scroll", ui.available_height()).show(ui, |ui| {
-                section_heading(ui, palette.as_ref(), CmdHeadingStyle::Gt, "Site hubs");
-                for hub in roots.iter() {
-                    if ui.button(format!("Hub {:?}", hub)).clicked() {
-                        focus.tracked_entity = Some(hub);
-                    }
-                }
-                ui.separator();
-                section_heading(ui, palette.as_ref(), CmdHeadingStyle::Gt, "Storage entities");
-                for e in storages.iter() {
-                    let label = if members.get(e).is_ok() {
-                        format!("{:?} (site member → uses hub focus)", e)
+            for (entity, label) in site_rows {
+                let selected = focus.tracked_entity == Some(entity);
+                root.spawn((
+                    LogisticsTargetsPickButton(entity),
+                    Button,
+                    Node {
+                        width: Val::Percent(100.0),
+                        padding: UiRect::axes(Val::Px(6.0), Val::Px(3.0)),
+                        border: UiRect::all(Val::Px(1.0)),
+                        ..default()
+                    },
+                    BackgroundColor(if selected {
+                        palette.bevy_button_idle()
                     } else {
-                        format!("{:?}", e)
-                    };
-                    if ui.button(label).clicked() {
-                        let is_hub = roots.get(e).is_ok();
-                        let m = members.get(e).ok();
-                        focus.tracked_entity = Some(
-                            crate::entities::production::core::resolve_logistics_focus_entity(
-                                e, m, is_hub,
-                            ),
-                        );
-                    }
-                }
-                ui.separator();
-                if ui.button("Clear focus").clicked() {
-                    focus.tracked_entity = None;
-                }
-                if let Some(t) = focus.tracked_entity {
-                    primary_label(ui, palette.as_ref(), format!("Current focus: {:?}", t));
-                } else {
-                    primary_label(ui, palette.as_ref(), "Current focus: none");
-                }
-            });
+                        palette.bevy_hud_panel_fill()
+                    }),
+                    BorderColor::all(palette.bevy_wire_magenta()),
+                ))
+                .with_children(|b| {
+                    b.spawn((
+                        Text::new(label),
+                        tf.clone(),
+                        TextColor(palette.bevy_primary_text()),
+                    ));
+                });
+            }
         });
+    stamp.key = key;
+    presence.logistics_targets_root = true;
+}
 
-    Ok(())
+fn logistics_targets_pick_clicks(
+    mut focus: ResMut<HudLogisticsFocus>,
+    interactions: Query<(&Interaction, &LogisticsTargetsPickButton), Changed<Interaction>>,
+) {
+    for (interaction, pick) in &interactions {
+        if *interaction == Interaction::Pressed {
+            focus.tracked_entity = Some(pick.0);
+        }
+    }
 }

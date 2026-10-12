@@ -3,7 +3,6 @@
 //! Does not own terrain or fire extraction; [`crate::render::TileWorldFallbackState`] + [`crate::render::SharedOverlayFieldBuffers`] remain authoritative.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 /// Title bar height for GPU minimap widget (MINIMAP-WIDGET-IMPL-001).
 pub const MINIMAP_TITLE_BAR_H_PX: f32 = 24.0;
@@ -160,15 +159,15 @@ pub struct MinimapShellState {
     pub compositor_revision: u64,
     pub cached_texture_revision: u64,
     pub native_window_requested: bool,
-    pub last_window_rect: Option<egui::Rect>,
-    pub last_image_rect: Option<egui::Rect>,
-    pub last_body_rect: Option<egui::Rect>,
-    pub title_bar_rect: Option<egui::Rect>,
-    pub top_rail_rect: Option<egui::Rect>,
-    pub bottom_rail_rect: Option<egui::Rect>,
-    pub left_rail_rect: Option<egui::Rect>,
-    pub right_rail_rect: Option<egui::Rect>,
-    pub resize_grip_rect: Option<egui::Rect>,
+    pub last_window_rect: Option<bevy::prelude::Rect>,
+    pub last_image_rect: Option<bevy::prelude::Rect>,
+    pub last_body_rect: Option<bevy::prelude::Rect>,
+    pub title_bar_rect: Option<bevy::prelude::Rect>,
+    pub top_rail_rect: Option<bevy::prelude::Rect>,
+    pub bottom_rail_rect: Option<bevy::prelude::Rect>,
+    pub left_rail_rect: Option<bevy::prelude::Rect>,
+    pub right_rail_rect: Option<bevy::prelude::Rect>,
+    pub resize_grip_rect: Option<bevy::prelude::Rect>,
     pub panel_screen_origin: Option<Vec2>,
     pub last_fit_body_size: Vec2,
     /// Non-authoritative panel extent from the latest egui layout pass.
@@ -302,22 +301,19 @@ impl MinimapShellState {
         self.panel_screen_origin = Some(Vec2::new(rect.min.x, rect.min.y));
     }
 
-    fn apply_window_rect_layout(&mut self, window: egui::Rect) {
+    fn apply_window_rect_layout(&mut self, window: bevy::prelude::Rect) {
         self.last_window_rect = Some(window);
-        let title = egui::Rect::from_min_size(
-            window.min,
-            egui::vec2(window.width(), MINIMAP_TITLE_BAR_H_PX),
-        );
+        let title = bevy::prelude::Rect::from_corners(window.min, window.min + bevy::prelude::Vec2::new(window.width(), MINIMAP_TITLE_BAR_H_PX),);
         self.title_bar_rect = Some(title);
-        let body_min = egui::pos2(
+        let body_min = bevy::prelude::Vec2::new(
             window.min.x + MINIMAP_EDGE_RAIL_PX,
             window.min.y + MINIMAP_TITLE_BAR_H_PX + MINIMAP_EDGE_RAIL_PX,
         );
-        let body_max = egui::pos2(
+        let body_max = bevy::prelude::Vec2::new(
             window.max.x - MINIMAP_EDGE_RAIL_PX,
             window.max.y - MINIMAP_EDGE_RAIL_PX - MINIMAP_RESIZE_GRIP_PX,
         );
-        let body = egui::Rect::from_min_max(body_min, body_max);
+        let body = bevy::prelude::Rect::from_corners(body_min, body_max);
         self.last_body_rect = Some(body);
         self.last_image_rect = Some(body);
         // PERF-INSTR-VFX-001: this body rect (derived from the outer `window` rect) becomes the
@@ -328,29 +324,29 @@ impl MinimapShellState {
             body.width(),
             body.height(),
         );
-        self.top_rail_rect = Some(egui::Rect::from_min_max(
-            egui::pos2(window.min.x, title.max.y),
-            egui::pos2(window.max.x, body_min.y),
+        self.top_rail_rect = Some(bevy::prelude::Rect::from_corners(
+            bevy::prelude::Vec2::new(window.min.x, title.max.y),
+            bevy::prelude::Vec2::new(window.max.x, body_min.y),
         ));
-        self.bottom_rail_rect = Some(egui::Rect::from_min_max(
-            egui::pos2(window.min.x, body_max.y),
-            egui::pos2(window.max.x, window.max.y - MINIMAP_RESIZE_GRIP_PX),
+        self.bottom_rail_rect = Some(bevy::prelude::Rect::from_corners(
+            bevy::prelude::Vec2::new(window.min.x, body_max.y),
+            bevy::prelude::Vec2::new(window.max.x, window.max.y - MINIMAP_RESIZE_GRIP_PX),
         ));
-        self.left_rail_rect = Some(egui::Rect::from_min_max(
-            egui::pos2(window.min.x, body_min.y),
-            egui::pos2(body_min.x, body_max.y),
+        self.left_rail_rect = Some(bevy::prelude::Rect::from_corners(
+            bevy::prelude::Vec2::new(window.min.x, body_min.y),
+            bevy::prelude::Vec2::new(body_min.x, body_max.y),
         ));
-        self.right_rail_rect = Some(egui::Rect::from_min_max(
-            egui::pos2(body_max.x, body_min.y),
-            egui::pos2(window.max.x, body_max.y),
+        self.right_rail_rect = Some(bevy::prelude::Rect::from_corners(
+            bevy::prelude::Vec2::new(body_max.x, body_min.y),
+            bevy::prelude::Vec2::new(window.max.x, body_max.y),
         ));
-        self.resize_grip_rect = Some(egui::Rect::from_min_size(
-            egui::pos2(
+        self.resize_grip_rect = Some(bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(
                 window.max.x - MINIMAP_RESIZE_GRIP_PX,
                 window.max.y - MINIMAP_RESIZE_GRIP_PX,
-            ),
-            egui::vec2(MINIMAP_RESIZE_GRIP_PX, MINIMAP_RESIZE_GRIP_PX),
-        ));
+            ), bevy::prelude::Vec2::new(
+                window.max.x - MINIMAP_RESIZE_GRIP_PX,
+                window.max.y - MINIMAP_RESIZE_GRIP_PX,
+            ) + bevy::prelude::Vec2::new(MINIMAP_RESIZE_GRIP_PX, MINIMAP_RESIZE_GRIP_PX),));
     }
 
     pub fn sync_layout_rects_from_panel_origin(&mut self) {
@@ -358,10 +354,7 @@ impl MinimapShellState {
             return;
         };
         let size = self.viewport_size;
-        let window = egui::Rect::from_min_size(
-            egui::pos2(origin.x, origin.y),
-            egui::vec2(size.x.max(120.0), size.y.max(120.0)),
-        );
+        let window = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(origin.x, origin.y), bevy::prelude::Vec2::new(origin.x, origin.y) + bevy::prelude::Vec2::new(size.x.max(120.0), size.y.max(120.0)),);
         self.apply_window_rect_layout(window);
     }
 
@@ -378,14 +371,14 @@ pub fn simulation_minimap_bootstrap_rect(
     window_width: f32,
     window_height: f32,
     viewport: Vec2,
-) -> egui::Rect {
+) -> bevy::prelude::Rect {
     let margin = 12.0;
     let top = 64.0;
     let w = viewport.x.min(window_width * 0.42);
     let h = viewport.y.min(window_height * 0.5);
     let x = (window_width - w - margin).max(margin);
     let y = (top + margin).min(window_height - h - margin);
-    egui::Rect::from_min_size(egui::pos2(x, y), egui::vec2(w, h))
+    bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(x, y), bevy::prelude::Vec2::new(x, y) + bevy::prelude::Vec2::new(w, h))
 }
 
 /// Map normalized click UV (0..1) on the minimap image to world tile coordinates.

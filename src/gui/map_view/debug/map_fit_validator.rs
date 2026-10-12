@@ -3,7 +3,6 @@
 use std::time::Instant;
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::gui::MapDisplayTransform;
 use crate::gui::MapViewInstanceId;
@@ -12,12 +11,12 @@ use crate::render::{intra_update_stall_log, FrameUpdateAttrib};
 
 #[derive(Clone, Debug)]
 pub struct MapFitValidation {
-    pub expected_image_rect: egui::Rect,
-    pub actual_image_rect: egui::Rect,
-    pub expected_viewport_rect: egui::Rect,
-    pub actual_viewport_rect: egui::Rect,
-    pub expected_uv_rect: egui::Rect,
-    pub actual_uv_rect: egui::Rect,
+    pub expected_image_rect: bevy::prelude::Rect,
+    pub actual_image_rect: bevy::prelude::Rect,
+    pub expected_viewport_rect: bevy::prelude::Rect,
+    pub actual_viewport_rect: bevy::prelude::Rect,
+    pub expected_uv_rect: bevy::prelude::Rect,
+    pub actual_uv_rect: bevy::prelude::Rect,
     pub delta_pixels: f32,
     pub uv_delta: f32,
     pub mismatch: bool,
@@ -26,12 +25,12 @@ pub struct MapFitValidation {
 impl MapFitValidation {
     #[must_use]
     pub fn compare(
-        expected_viewport: egui::Rect,
-        actual_viewport: egui::Rect,
-        expected_image: egui::Rect,
-        actual_image: egui::Rect,
-        expected_uv: egui::Rect,
-        actual_uv: egui::Rect,
+        expected_viewport: bevy::prelude::Rect,
+        actual_viewport: bevy::prelude::Rect,
+        expected_image: bevy::prelude::Rect,
+        actual_image: bevy::prelude::Rect,
+        expected_uv: bevy::prelude::Rect,
+        actual_uv: bevy::prelude::Rect,
     ) -> Self {
         let delta_pixels = rect_delta_pixels(expected_image, actual_image)
             .max(rect_delta_pixels(expected_viewport, actual_viewport));
@@ -159,7 +158,7 @@ pub fn validate_map_fit_system(
 }
 
 #[must_use]
-fn uv_delta_max(a: egui::Rect, b: egui::Rect) -> f32 {
+fn uv_delta_max(a: bevy::prelude::Rect, b: bevy::prelude::Rect) -> f32 {
     (a.min.x - b.min.x)
         .abs()
         .max((a.min.y - b.min.y).abs())
@@ -168,7 +167,7 @@ fn uv_delta_max(a: egui::Rect, b: egui::Rect) -> f32 {
 }
 
 #[must_use]
-fn rect_delta_pixels(a: egui::Rect, b: egui::Rect) -> f32 {
+fn rect_delta_pixels(a: bevy::prelude::Rect, b: bevy::prelude::Rect) -> f32 {
     let center = (a.center() - b.center()).length();
     let size = (a.size() - b.size()).length();
     center.max(size)
@@ -180,9 +179,9 @@ mod tests {
 
     #[test]
     fn uv_drift_flags_mismatch() {
-        let expected = egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0));
-        let actual = egui::Rect::from_min_max(egui::pos2(0.1, 0.0), egui::pos2(1.0, 1.0));
-        let panel = egui::Rect::from_min_size(egui::pos2(0.0, 0.0), egui::vec2(100.0, 100.0));
+        let expected = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(1.0, 1.0));
+        let actual = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.1, 0.0), bevy::prelude::Vec2::new(1.0, 1.0));
+        let panel = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(0.0, 0.0) + bevy::prelude::Vec2::new(100.0, 100.0));
         let validation = MapFitValidation::compare(panel, panel, panel, panel, expected, actual);
         assert!(validation.mismatch);
         assert!(validation.uv_delta > 0.0);

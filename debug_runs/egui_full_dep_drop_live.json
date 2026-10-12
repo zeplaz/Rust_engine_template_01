@@ -1,0 +1,23 @@
+{
+  "schema": "egui_full_dep_drop_live_v1",
+  "program": "PLAN-EGUI-FULL-DEP-DROP-v1",
+  "bevy_egui_in_cargo": false,
+  "egui_symbol_count": 0,
+  "forbidden_hits": [],
+  "cargo_check": {
+    "package": "proc_A_dine01",
+    "errors": 0,
+    "status": "warning",
+    "warning_count": 516
+  },
+  "phases_done": [
+    "EGR-FULL-1",
+    "EGR-FULL-2",
+    "EGR-FULL-3",
+    "EGR-FULL-4",
+    "EGR-FULL-5",
+    "EGR-FULL-6",
+    "EGR-FULL-7",
+    "EGR-FULL-8"
+  ]
+}

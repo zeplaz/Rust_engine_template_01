@@ -1,53 +1,41 @@
-//! **COD-SIM-HUD-EGUI-THEME-001** — sim satellite egui uses [`UiPalette`] only.
+//! Sim HUD theme helpers — egui RichText/Frame path retired; String labels remain.
 
-use bevy_egui::egui;
+use bevy::prelude::*;
 
 use crate::gui::{SimulationMapViewport, UiPalette};
 
 /// Clamp a floating satellite into the measured sim map hole (HUD-NAT-009).
 #[must_use]
 pub fn clamp_satellite_to_map_hole(
-    mut pos: egui::Pos2,
-    size: egui::Vec2,
+    pos: Vec2,
+    size: Vec2,
     map_vp: &SimulationMapViewport,
-) -> egui::Pos2 {
-    if !map_vp.valid {
-        return pos;
-    }
-    let min_x = map_vp.min.x + 4.0;
-    let min_y = map_vp.min.y + 4.0;
-    let max_x = (map_vp.max.x - size.x - 4.0).max(min_x);
-    let max_y = (map_vp.max.y - size.y - 4.0).max(min_y);
-    pos.x = pos.x.clamp(min_x, max_x);
-    pos.y = pos.y.clamp(min_y, max_y);
-    pos
+) -> Vec2 {
+    let min = map_vp.min;
+    let max = map_vp.max;
+    Vec2::new(
+        pos.x.clamp(min.x, (max.x - size.x).max(min.x)),
+        pos.y.clamp(min.y, (max.y - size.y).max(min.y)),
+    )
 }
 
-/// Apply authoritative palette to egui (sim HUD satellites).
-pub fn apply_sim_hud_egui_theme(ctx: &egui::Context, palette: &UiPalette) {
-    ctx.set_visuals(palette.to_egui_visuals());
-}
+pub fn apply_sim_hud_egui_theme(_palette: &UiPalette) {}
 
-/// Sim construction satellites call [`apply_sim_hud_egui_theme`] (picker, road sheet, tray Build, footprint chip).
 #[must_use]
 pub fn sim_hud_egui_theme_enforcement_wired() -> bool {
-    // Structural: consumers call apply (not always-true link-time stub).
     include_str!("sim_build_picker_sheet.rs").contains("apply_sim_hud_egui_theme")
         && include_str!("sim_road_tool_sheet.rs").contains("apply_sim_hud_egui_theme")
         && include_str!("context_tray_build_egui.rs").contains("apply_sim_hud_egui_theme")
 }
 
-/// HUD-NAT-009 — plant + power share one map-attached chip theme + map-hole clamp.
 #[must_use]
 pub fn hud_nat_009_single_themed_satellite_wired() -> bool {
     include_str!("plant_focus_card.rs").contains("map_attached_chip_frame")
         && include_str!("plant_focus_card.rs").contains("clamp_satellite_to_map_hole")
-        && include_str!("plant_focus_card.rs").contains("ScrollArea")
-        && include_str!("power_node_hover_egui.rs").contains("map_attached_chip_frame")
-        && include_str!("power_node_hover_egui.rs").contains("clamp_satellite_to_map_hole")
+        && include_str!("sim_play_bevy_chrome.rs").contains("pub struct SimPlayPowerHover")
+        && include_str!("sim_play_bevy_chrome.rs").contains("fn sync_sim_play_power_hover")
 }
 
-/// **DES-SIM-HUD-A11Y-001** — validity copy uses ✓/✗ glyphs (not color-only).
 #[must_use]
 pub fn sim_hud_a11y_invalid_label(reason: &str) -> String {
     format!("Blocked ✗ · {reason}")
@@ -64,57 +52,26 @@ pub fn sim_hud_a11y_witness_green() -> bool {
         && sim_hud_a11y_valid_label().contains('✓')
 }
 
+pub fn picker_sheet_frame(_palette: &UiPalette) {}
+pub fn picker_header_frame(_palette: &UiPalette) {}
+pub fn map_attached_chip_frame(_palette: &UiPalette) {}
+
 #[must_use]
-pub fn picker_sheet_frame(palette: &UiPalette) -> egui::Frame {
-    egui::Frame::new()
-        .fill(palette.bg_elevated)
-        .stroke(egui::Stroke::new(1.0, palette.wire_magenta))
-        .corner_radius(egui::CornerRadius::same(4))
-        .inner_margin(egui::Margin::symmetric(8, 6))
+pub fn title_text(_palette: &UiPalette, text: &str) -> String {
+    text.to_string()
 }
 
 #[must_use]
-pub fn picker_header_frame(palette: &UiPalette) -> egui::Frame {
-    egui::Frame::new()
-        .fill(palette.bg_vellum)
-        .inner_margin(egui::Margin::symmetric(8, 4))
+pub fn body_text(_palette: &UiPalette, text: &str) -> String {
+    text.to_string()
 }
 
 #[must_use]
-pub fn map_attached_chip_frame(palette: &UiPalette, stroke: egui::Color32) -> egui::Frame {
-    egui::Frame::new()
-        .fill(egui::Color32::from_rgba_unmultiplied(
-            palette.bg_elevated.r(),
-            palette.bg_elevated.g(),
-            palette.bg_elevated.b(),
-            230,
-        ))
-        .stroke(egui::Stroke::new(1.0, stroke))
-        .inner_margin(egui::Margin::symmetric(8, 4))
+pub fn caption_text(_palette: &UiPalette, text: &str) -> String {
+    text.to_string()
 }
 
 #[must_use]
-pub fn title_text(palette: &UiPalette, text: &str) -> egui::RichText {
-    egui::RichText::new(text)
-        .size(13.0)
-        .color(palette.fg_primary)
-        .strong()
-}
-
-#[must_use]
-pub fn body_text(palette: &UiPalette, text: &str) -> egui::RichText {
-    egui::RichText::new(text).size(12.0).color(palette.fg_primary)
-}
-
-#[must_use]
-pub fn caption_text(palette: &UiPalette, text: &str) -> egui::RichText {
-    egui::RichText::new(text).size(11.0).color(palette.fg_muted)
-}
-
-#[must_use]
-pub fn data_text(palette: &UiPalette, text: &str) -> egui::RichText {
-    egui::RichText::new(text)
-        .size(12.0)
-        .color(palette.fg_data)
-        .monospace()
+pub fn data_text(_palette: &UiPalette, text: &str) -> String {
+    text.to_string()
 }

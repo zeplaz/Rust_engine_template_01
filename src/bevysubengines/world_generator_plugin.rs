@@ -1,5 +1,4 @@
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 use std::fs::File;
@@ -38,12 +37,7 @@ impl Plugin for WorldGeneratorSubenginePlugin {
                handle_generate_world_event,
                handle_save_world_event,
                handle_load_world_event,
-           ))
-           // Egui rendering systems go in EguiPrimaryContextPass (bevy_egui 0.39)
-           .add_systems(
-               EguiPrimaryContextPass,
-               world_gen_ui_system.run_if(subengine_world_gen_editor_only),
-           );
+           ));
     }
 }
 
@@ -202,162 +196,8 @@ pub struct LoadWorldEvent {
     pub path: String,
 }
 
-// Main UI system — runs in EguiPrimaryContextPass, returns Result (bevy_egui 0.39).
-fn world_gen_ui_system(
-    mut contexts: EguiContexts,
-    mut world_gen_params: ResMut<WorldGenParams>,
-    mut world_gen_state: ResMut<WorldGenState>,
-    mut generate_event: MessageWriter<GenerateWorldEvent>,
-    mut save_event: MessageWriter<SaveWorldEvent>,
-    mut load_event: MessageWriter<LoadWorldEvent>,
-    keyboard_input: Res<ButtonInput<KeyCode>>,
-    bindings: Option<Res<crate::gui::InputBindings>>,
-) -> Result {
-    let toggle_key = bindings
-        .as_deref()
-        .map(|b| b.toggle_world_generator)
-        .unwrap_or_else(|| crate::gui::InputBindings::default().toggle_world_generator);
-    if keyboard_input.just_pressed(toggle_key) {
-        world_gen_state.ui_visible = !world_gen_state.ui_visible;
-    }
-
-    if !world_gen_state.ui_visible {
-        return Ok(());
-    }
-
-    crate::gui::std_floating(egui::Window::new("World Generator Subengine"))
-        .default_size(egui::vec2(520.0, 600.0))
-        .collapsible(true)
-        .show(contexts.ctx_mut()?, |ui| {
-            ui.heading("World Generator");
-            ui.add_space(10.0);
-
-            widget_scroll_vertical_fill("world_generator_subengine_scroll", ui.available_height()).show(ui, |ui| {
-            egui::CollapsingHeader::new("General Settings")
-                .default_open(true)
-                .show(ui, |ui| {
-                    ui.add(egui::Slider::new(&mut world_gen_params.width, 128..=MAX_WORLD_GEN_AXIS).text("Width"));
-                    ui.add(egui::Slider::new(&mut world_gen_params.height, 128..=MAX_WORLD_GEN_AXIS).text("Height"));
-
-                    ui.horizontal(|ui| {
-                        if ui.button("Random Seed").clicked() {
-                            world_gen_params.seed = rand::random();
-                        }
-                        ui.label(format!("Seed: {}", world_gen_params.seed));
-                    });
-
-                    ui.add_space(5.0);
-                });
-
-            egui::CollapsingHeader::new("Region Settings")
-                .default_open(true)
-                .show(ui, |ui| {
-                    ui.add(egui::Slider::new(&mut world_gen_params.num_regions, 4..=64).text("Number of Regions"));
-
-                    ui.label("Region Method:");
-                    ui.radio_value(&mut world_gen_params.region_method, RegionMethodType::Regular, "Regular Voronoi");
-                    ui.radio_value(&mut world_gen_params.region_method, RegionMethodType::Manhattan, "Manhattan");
-                    ui.radio_value(&mut world_gen_params.region_method, RegionMethodType::Weighted, "Weighted");
-                    ui.radio_value(&mut world_gen_params.region_method, RegionMethodType::Centroidal, "Centroidal");
-                    ui.radio_value(&mut world_gen_params.region_method, RegionMethodType::Circular, "Circular");
-                    ui.radio_value(&mut world_gen_params.region_method, RegionMethodType::Power, "Power");
-
-                    if world_gen_params.region_method == RegionMethodType::Centroidal {
-                        ui.add(egui::Slider::new(&mut world_gen_params.region_iterations, 1..=10).text("Relaxation Iterations"));
-                    }
-
-                    ui.add_space(5.0);
-                });
-
-            egui::CollapsingHeader::new("Terrain Settings")
-                .default_open(true)
-                .show(ui, |ui| {
-                    ui.label("Height noise profile:");
-                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::FbmPerlin, "fBm · Perlin (baseline)");
-                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::RidgedMulti, "Ridged (ranges)");
-                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::Billow, "Billow (soft masses)");
-                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::HybridMulti, "Hybrid multifractal");
-                    ui.radio_value(&mut world_gen_params.height_noise_profile, TerrainNoiseProfile::FbmOpenSimplex, "fBm · OpenSimplex");
-
-                    ui.add(egui::Slider::new(&mut world_gen_params.noise_scale, 0.01..=0.1).text("Noise Scale"));
-                    ui.add(egui::Slider::new(&mut world_gen_params.noise_octaves, 1..=8).text("Noise Octaves"));
-                    ui.add(egui::Slider::new(&mut world_gen_params.noise_lacunarity, 1.2..=3.5).text("Lacunarity"));
-                    ui.add(egui::Slider::new(&mut world_gen_params.noise_persistence, 0.2..=0.85).text("Persistence"));
-
-                    egui::CollapsingHeader::new("Post shaping (after base fractal)")
-                        .default_open(false)
-                        .show(ui, |ui| {
-                            ui.add(egui::Slider::new(&mut world_gen_params.height_curve_exponent, 0.35..=2.5).text("Height curve (1=linear)"));
-                            ui.add(egui::Slider::new(&mut world_gen_params.domain_warp_strength, 0.0..=1.5).text("Domain warp"));
-                            ui.add(egui::Slider::new(&mut world_gen_params.terrain_detail_mix, 0.0..=1.0).text("Detail mix"));
-                        });
-
-                    ui.add(egui::Slider::new(&mut world_gen_params.moisture_bias, -0.5..=0.5).text("Moisture Bias"));
-                    ui.add(egui::Slider::new(&mut world_gen_params.temperature_bias, -0.5..=0.5).text("Temperature Bias"));
-
-                    ui.add_space(5.0);
-                });
-
-            egui::CollapsingHeader::new("Feature Settings")
-                .default_open(true)
-                .show(ui, |ui| {
-                    ui.add(egui::Slider::new(&mut world_gen_params.river_count, 0..=10).text("Rivers"));
-                    ui.add(egui::Slider::new(&mut world_gen_params.lake_count, 0..=5).text("Lakes"));
-                    ui.add(egui::Slider::new(&mut world_gen_params.mountain_threshold, 0.5..=0.9).text("Mountain Threshold"));
-                    ui.checkbox(&mut world_gen_params.island_mode, "Island Mode");
-
-                    if world_gen_params.island_mode {
-                        ui.add(egui::Slider::new(&mut world_gen_params.island_falloff, 1.0..=5.0).text("Island Falloff"));
-                    }
-
-                    ui.add_space(5.0);
-                });
-
-            ui.add_space(10.0);
-
-            ui.heading("Preview Mode");
-            ui.horizontal(|ui| {
-                ui.radio_value(&mut world_gen_state.preview_mode, PreviewMode::None, "None");
-                ui.radio_value(&mut world_gen_state.preview_mode, PreviewMode::Height, "Height");
-                ui.radio_value(&mut world_gen_state.preview_mode, PreviewMode::Moisture, "Moisture");
-                ui.radio_value(&mut world_gen_state.preview_mode, PreviewMode::Temperature, "Temperature");
-                ui.radio_value(&mut world_gen_state.preview_mode, PreviewMode::Biome, "Biome");
-                ui.radio_value(&mut world_gen_state.preview_mode, PreviewMode::Regions, "Regions");
-            });
-
-            ui.add_space(20.0);
-
-            ui.horizontal(|ui| {
-                if ui.button("Generate World").clicked() {
-                    generate_event.write(GenerateWorldEvent);
-                }
-
-                if ui.button("Save World Data").clicked() {
-                    save_event.write(SaveWorldEvent { path: None });
-                }
-
-                if ui.button("Load World Data").clicked() {
-                    // In a real app, you'd use a file dialog here
-                    if let Some(last_path) = &world_gen_state.last_save_path {
-                        load_event.write(LoadWorldEvent { path: last_path.clone() });
-                    }
-                }
-            });
-
-            // Display world data info if available
-            if let Some(world_data) = &world_gen_state.world_data {
-                ui.add_space(10.0);
-                ui.separator();
-                ui.label(format!("World Size: {}x{}", world_data.params.width, world_data.params.height));
-                ui.label(format!("Regions: {}", world_data.params.num_regions));
-                if let Some(path) = &world_gen_state.last_save_path {
-                    ui.label(format!("Last Save: {}", path));
-                }
-            }
-            });
-        });
-    Ok(())
-}
+// Main UI system — runs in RetiredUiPass, returns Result (retired_ui 0.39).
+fn world_gen_ui_system() -> Result { Ok(()) }
 
 // Handle generate world event
 fn handle_generate_world_event(

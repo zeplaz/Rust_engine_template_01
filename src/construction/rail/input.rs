@@ -9,6 +9,8 @@ use crate::gui::hud::simulation_pointer_gate::{
 
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+use crate::terrain::generation::WorldGenDenseTerrainCache;
+use crate::construction::map_pick_params::ConstructionMapPick;
 
 use super::super::build_tool_authority::{ActiveBuildTool, BuildTool};
 use super::super::construction_pipeline::ConstructionPlanQueue;
@@ -35,11 +37,7 @@ pub fn sync_rail_placement_from_tool(
 pub fn update_rail_path_preview_system(
     tool: Res<ActiveBuildTool>,
     keys: Res<ButtonInput<KeyCode>>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesiredRes>,
-    map_vp: Res<SimulationMapViewport>,
-    params: Res<WorldGenParams>,
+    pick: ConstructionMapPick,
     snap: Res<RoadSnapSettings>,
     roads: Res<super::super::construction_pipeline::ExecutedRoadNetwork>,
     mut placement: ResMut<ActiveRailPlacement>,
@@ -60,28 +58,18 @@ pub fn update_rail_path_preview_system(
         }
         SimulationToolPointer::Free => {}
     }
-    let Ok(window) = win.single() else {
-        return;
-    };
     let ctrl_preview = keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight);
     let cursor = if ctrl_preview {
-        cursor_world_on_map(
-            &window,
-            authority.as_deref(),
-            desired.as_ref(),
-            map_vp.as_ref(),
-            params.as_ref(),
-        )
-        .map(|w| {
+        pick.cursor_world().map(|w| {
             let placed = snap_placement(w, snap.as_ref(), roads.as_ref());
             feedback.snap_hint = placed.target.as_ref().map(SnapTarget::hint_label);
-            conform_vec3(placed.world, params.as_ref())
+            conform_vec3(placed.world, pick.params.as_ref(), pick.height_grid())
         })
     } else {
         None
     };
     placement.generated_segments =
-        regenerate_rail_segments(placement.as_ref(), cursor, params.as_ref());
+        regenerate_rail_segments(placement.as_ref(), cursor, pick.params.as_ref());
 }
 
 pub fn sync_rail_path_build_preview(
@@ -125,8 +113,10 @@ pub fn sync_rail_path_build_preview(
         }
     }
     feedback.required_actions = actions.clone();
+    let ok = valid_count > 0 && !invalid;
     preview.report = crate::strategic::SitePlacementValidation {
-        allows_commit: valid_count > 0 && !invalid,
+        valid: ok,
+        allows_commit: ok,
         errors: if invalid {
             vec!["invalid rail segment (grade or curve)".into()]
         } else {
@@ -140,11 +130,7 @@ pub fn rail_path_input_system(
     tool: Res<ActiveBuildTool>,
     buttons: Res<ButtonInput<MouseButton>>,
     keys: Res<ButtonInput<KeyCode>>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    authority: Option<Res<crate::render::view_runtime::ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesiredRes>,
-    map_vp: Res<SimulationMapViewport>,
-    params: Res<WorldGenParams>,
+    pick: ConstructionMapPick,
     snap: Res<RoadSnapSettings>,
     roads: Res<super::super::construction_pipeline::ExecutedRoadNetwork>,
     mut placement: ResMut<ActiveRailPlacement>,
@@ -160,21 +146,12 @@ pub fn rail_path_input_system(
     if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
         return;
     }
-    let Ok(window) = win.single() else {
-        return;
-    };
-    let Some(raw) = cursor_world_on_map(
-        &window,
-        authority.as_deref(),
-        desired.as_ref(),
-        map_vp.as_ref(),
-        params.as_ref(),
-    ) else {
+    let Some(raw) = pick.cursor_world() else {
         return;
     };
     let placed = snap_placement(raw, snap.as_ref(), roads.as_ref());
     feedback.snap_hint = placed.target.as_ref().map(SnapTarget::hint_label);
-    let world = conform_vec3(placed.world, params.as_ref());
+    let world = conform_vec3(placed.world, pick.params.as_ref(), pick.height_grid());
     let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
     if buttons.just_pressed(MouseButton::Left) {
         if shift {
@@ -184,8 +161,8 @@ pub fn rail_path_input_system(
                     .generated_segments
                     .iter()
                     .flat_map(|seg| [seg.start, seg.end]),
-                params.width,
-                params.height,
+                pick.params.width,
+                pick.params.height,
             ) {
                 return;
             }
@@ -194,7 +171,7 @@ pub fn rail_path_input_system(
                 queue.as_mut(),
                 junctions.as_mut(),
                 roads.as_ref(),
-                params.as_ref(),
+                pick.params.as_ref(),
                 session.continuous_path,
             );
             session.record_commit();
@@ -205,6 +182,6 @@ pub fn rail_path_input_system(
     if buttons.just_pressed(MouseButton::Right) {
         placement.control_points.pop();
         placement.generated_segments =
-            regenerate_rail_segments(placement.as_ref(), None, params.as_ref());
+            regenerate_rail_segments(placement.as_ref(), None, pick.params.as_ref());
     }
 }

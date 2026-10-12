@@ -1,4 +1,4 @@
-//! Shared UI tokens (`UiPalette`, spacing) and egui **Visuals** wiring.
+//! Shared UI tokens (`UiPalette`, spacing) — Bevy-only after egui dep drop.
 //! Spec: `prompts/guides/ui_design_language_plan_v1.md`.
 
 mod density;
@@ -27,29 +27,23 @@ pub use scroll::{
 };
 pub use theme::UiThemePlugin;
 
-use bevy_egui::egui;
+use crate::gui::ui_types::UiRgba;
 
-/// **PLAN-UI-THEME-MERGE-001** — default tokens + egui visuals wired (no parallel theme plugins).
+/// **PLAN-UI-THEME-MERGE-001** — default tokens wired (egui visuals retired).
 #[must_use]
 pub fn ui_theme_merge_contract_ok() -> bool {
     let palette = UiPalette::default();
-    let visuals = palette.to_egui_visuals();
-    visuals.dark_mode
-        && palette.fg_primary != palette.bg_app
-        && palette.bevy_hud_panel_fill() != Color::NONE
+    palette.fg_primary != palette.bg_app && palette.bevy_hud_panel_fill() != Color::NONE
 }
 
-/// **UI-W3-THEME-001** — Wave 3 alias for theme merge contract.
 #[must_use]
 pub fn ui_w3_theme_001_green() -> bool {
     ui_theme_merge_contract_ok()
 }
 
-/// Spacing scale for egui layout — tokenized vertical rhythm ([`v_space`], [`VertSpace`]).
 #[derive(Debug, Clone, Resource)]
 pub struct UiSpacing {
     pub xs: f32,
-    /// Between [`VertSpace::Xs`] and [`VertSpace::Sm`] (tight block rhythm).
     pub inter: f32,
     pub sm: f32,
     pub md: f32,
@@ -70,7 +64,6 @@ impl Default for UiSpacing {
     }
 }
 
-/// Vertical gap tokens — use with [`v_space`] and [`UiSpacing`] from `Resources`.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum VertSpace {
     Xs,
@@ -83,7 +76,7 @@ pub enum VertSpace {
 
 impl VertSpace {
     #[inline]
-    fn px(self, s: &UiSpacing) -> f32 {
+    pub fn px(self, s: &UiSpacing) -> f32 {
         match self {
             VertSpace::Xs => s.xs,
             VertSpace::Inter => s.inter,
@@ -95,98 +88,22 @@ impl VertSpace {
     }
 }
 
+/// Retired egui spacer — no-op.
 #[inline]
-pub fn v_space(ui: &mut egui::Ui, spacing: &UiSpacing, step: VertSpace) {
-    ui.add_space(step.px(spacing));
-}
+pub fn v_space(_spacing: &UiSpacing, _step: VertSpace) {}
 
-/// Primary body line (mono, theme primary) — returns [`egui::Response`] for `.on_hover_text`, etc.
-#[inline]
-pub fn primary_label(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) -> egui::Response {
-    ui.label(
-        egui::RichText::new(text.as_ref())
-            .monospace()
-            .color(palette.fg_primary),
-    )
-}
-
-/// Small muted caption (mono) — for `.on_hover_text` chains.
-#[inline]
-pub fn muted_label(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) -> egui::Response {
-    ui.label(
-        egui::RichText::new(text.as_ref())
-            .small()
-            .monospace()
-            .color(palette.fg_muted),
-    )
-}
-
-/// Weak secondary line (mono, muted).
-pub fn weak_body(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) {
-    ui.label(
-        egui::RichText::new(text.as_ref())
-            .weak()
-            .monospace()
-            .color(palette.fg_muted),
-    );
-}
-
-/// Emphasized line (mono, primary).
-pub fn strong_body(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) {
-    ui.label(
-        egui::RichText::new(text.as_ref())
-            .strong()
-            .monospace()
-            .color(palette.fg_primary),
-    );
-}
-
-/// Optional CMD-style prefix for tooling section headers.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub enum CmdHeadingStyle {
     #[default]
     None,
-    /// Leading `> ` (e.g. notez / command cue).
     Gt,
-    /// Leading `~ ` (e.g. data / model cue).
     Tilde,
 }
 
-/// Section title: strong + optional CMD prefix; uses palette (no embedded hex).
-pub fn section_heading(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    style: CmdHeadingStyle,
-    title: impl AsRef<str>,
-) {
-    let title = title.as_ref();
-    let prefix = match style {
-        CmdHeadingStyle::None => "",
-        CmdHeadingStyle::Gt => "> ",
-        CmdHeadingStyle::Tilde => "~ ",
-    };
-    ui.label(
-        egui::RichText::new(format!("{prefix}{title}"))
-            .strong()
-            .monospace()
-            .color(palette.fg_primary),
-    );
-}
-
-/// Monospace muted path (save/load hints, runbook paths).
-pub fn path_hint(ui: &mut egui::Ui, palette: &UiPalette, path: impl AsRef<str>) {
-    ui.label(
-        egui::RichText::new(path.as_ref())
-            .monospace()
-            .small()
-            .color(palette.fg_muted),
-    );
-}
-
-/// Convert a Bevy [`Color`] (e.g. agent identity) to egui for small swatches — **not** a theme token.
-pub fn gameplay_color_swatch_egui(color: Color) -> egui::Color32 {
+#[must_use]
+pub fn gameplay_color_swatch_egui(color: Color) -> UiRgba {
     let s = color.to_srgba();
-    egui::Color32::from_rgba_unmultiplied(
+    UiRgba::from_rgba_unmultiplied(
         (s.red * 255.0) as u8,
         (s.green * 255.0) as u8,
         (s.blue * 255.0) as u8,
@@ -194,51 +111,11 @@ pub fn gameplay_color_swatch_egui(color: Color) -> egui::Color32 {
     )
 }
 
-// --- Semantic text (P1+) ---
-
-pub fn warning_text(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) {
-    ui.label(
-        egui::RichText::new(text.as_ref())
-            .monospace()
-            .color(palette.warn)
-            .strong(),
-    );
-}
-
-pub fn error_text(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) {
-    ui.label(
-        egui::RichText::new(text.as_ref())
-            .monospace()
-            .color(palette.danger)
-            .strong(),
-    );
-}
-
-pub fn success_text(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) {
-    ui.label(
-        egui::RichText::new(text.as_ref())
-            .monospace()
-            .color(palette.accent_terminal)
-            .strong(),
-    );
-}
-
-pub fn muted_text(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) {
-    let _ = muted_label(ui, palette, text);
-}
-
-/// Primary body copy (normal weight) — e.g. scenario status line, neutral confirmations.
-pub fn primary_text(ui: &mut egui::Ui, palette: &UiPalette, text: impl AsRef<str>) {
-    let _ = primary_label(ui, palette, text);
-}
-
-/// Tint for egui `painter.image` when the texture should display at full brightness (no modulation).
 #[inline]
-pub fn neutral_image_tint() -> egui::Color32 {
-    egui::Color32::WHITE
+pub fn neutral_image_tint() -> UiRgba {
+    UiRgba::WHITE
 }
 
-/// Four-step severity ramp (transmissions, alerts, dev overlay warnings).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SeverityTone {
     Routine,
@@ -248,7 +125,7 @@ pub enum SeverityTone {
 }
 
 #[inline]
-pub fn severity_tone_color(palette: &UiPalette, tone: SeverityTone) -> egui::Color32 {
+pub fn severity_tone_color(palette: &UiPalette, tone: SeverityTone) -> UiRgba {
     match tone {
         SeverityTone::Routine => palette.fg_muted,
         SeverityTone::Advisory => palette.fg_primary,
@@ -257,7 +134,6 @@ pub fn severity_tone_color(palette: &UiPalette, tone: SeverityTone) -> egui::Col
     }
 }
 
-/// Tonal palette for compact status lines (scenario, diagnostics, logistics).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum StatusTone {
     Success,
@@ -267,51 +143,23 @@ pub enum StatusTone {
     Muted,
 }
 
-pub fn status_badge(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    tone: StatusTone,
-    text: impl AsRef<str>,
-) {
-    let c = match tone {
-        StatusTone::Success => palette.accent_terminal,
-        StatusTone::Warning => palette.warn,
-        StatusTone::Danger => palette.danger,
-        StatusTone::Info => palette.fg_primary,
-        StatusTone::Muted => palette.fg_muted,
-    };
-    ui.label(
-        egui::RichText::new(text.as_ref())
-            .strong()
-            .monospace()
-            .color(c),
-    );
+// Retired egui text helpers — kept as no-ops so call sites in stubbed panels compile out.
+pub fn primary_label(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn muted_label(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn weak_body(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn strong_body(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn section_heading(_palette: &UiPalette, _style: CmdHeadingStyle, _title: impl AsRef<str>) {}
+pub fn path_hint(_palette: &UiPalette, _path: impl AsRef<str>) {}
+pub fn warning_text(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn error_text(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn success_text(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn muted_text(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn primary_text(_palette: &UiPalette, _text: impl AsRef<str>) {}
+pub fn status_badge(_palette: &UiPalette, _tone: StatusTone, _text: impl AsRef<str>) {}
+pub fn framed_group<R>(_palette: &UiPalette, add_contents: impl FnOnce() -> R) -> R {
+    add_contents()
 }
 
 use crate::scenario::script_host::ScenarioExecutionState;
 
-/// Scenario script host state → consistent colors (orchestration / scripting UI).
-pub fn scenario_execution_badge(ui: &mut egui::Ui, palette: &UiPalette, state: ScenarioExecutionState) {
-    let (tone, label) = match state {
-        ScenarioExecutionState::Idle => (StatusTone::Muted, "Idle"),
-        ScenarioExecutionState::Running => (StatusTone::Success, "Running"),
-        ScenarioExecutionState::Completed => (StatusTone::Info, "Completed"),
-        ScenarioExecutionState::Failed => (StatusTone::Danger, "Failed"),
-    };
-    status_badge(ui, palette, tone, label);
-}
-
-/// Inset panel with token background (diagnostics / objectives / queues).
-pub fn framed_group<R>(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    add_contents: impl FnOnce(&mut egui::Ui) -> R,
-) -> R {
-    egui::Frame::new()
-        .fill(palette.bg_elevated)
-        .stroke(egui::Stroke::new(1.0, palette.wire_magenta))
-        .corner_radius(egui::CornerRadius::same(4))
-        .inner_margin(egui::Margin::same(8))
-        .show(ui, add_contents)
-        .inner
-}
+pub fn scenario_execution_badge(_palette: &UiPalette, _state: ScenarioExecutionState) {}

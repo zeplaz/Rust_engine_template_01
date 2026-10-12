@@ -5,7 +5,6 @@
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::EguiContexts;
 
 use crate::engine::states::BaseState;
 use crate::engine::AppState;
@@ -199,47 +198,6 @@ pub fn hud_panel_click_outside_collapse_system(
     );
 }
 
-/// Editor click outside egui panels → collapse unpinned shells.
-pub fn hud_panel_click_outside_collapse_egui_system(
-    mut contexts: EguiContexts,
-    mouse: Res<ButtonInput<MouseButton>>,
-    map_vp: Res<SimulationMapViewport>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    base: Option<Res<State<BaseState>>>,
-    mut diag: Option<ResMut<ProductShellDiagnostics>>,
-    mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
-    mut layout: ResMut<crate::gui::hud::HudCommandShellLayout>,
-    mut transmission: ResMut<crate::gui::hud::TransmissionShellState>,
-    mut context_tray: ResMut<crate::gui::hud::ContextTrayState>,
-    app: Option<Res<State<AppState>>>,
-) {
-    if app
-        .as_ref()
-        .is_some_and(|state| matches!(state.get(), AppState::WorldGen))
-    {
-        return;
-    }
-    if !mouse.just_pressed(MouseButton::Left) || click_is_inside_map_hole(map_vp.as_ref(), &win) {
-        return;
-    }
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    let in_simulation = base
-        .as_ref()
-        .is_some_and(|state| matches!(state.get(), BaseState::Simulation));
-    note_egui_context_acquired(in_simulation, diag.as_deref_mut());
-    if ctx.is_pointer_over_egui() {
-        return;
-    }
-    collapse_unpinned_shells(
-        tray.as_mut(),
-        layout.as_mut(),
-        transmission.as_mut(),
-        context_tray.as_mut(),
-    );
-}
-
 pub struct HudPanelStatePlugin;
 
 impl Plugin for HudPanelStatePlugin {
@@ -249,11 +207,7 @@ impl Plugin for HudPanelStatePlugin {
             (
                 hud_panel_escape_collapse_system,
                 hud_panel_click_outside_collapse_system
-                    .after(hud_panel_escape_collapse_system)
-                    .run_if(in_state(BaseState::Simulation)),
-                hud_panel_click_outside_collapse_egui_system
-                    .after(hud_panel_escape_collapse_system)
-                    .run_if(not(in_state(BaseState::Simulation))),
+                    .after(hud_panel_escape_collapse_system),
                 super::hud_side_status_panel::hud_status_side_panel_toggle_system
                     .run_if(crate::gui::ui_gates::side_status_rail_egui_active),
             )

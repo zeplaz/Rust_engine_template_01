@@ -5,7 +5,6 @@ use std::collections::HashMap;
 use bevy::log::warn;
 use bevy::math::Vec2;
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use super::shell_diagnostics::ProductShellDiagnostics;
 
@@ -60,17 +59,17 @@ pub struct ViewportRectSanity {
 impl ViewportRectSanity {
     pub fn inspect_egui_rect(
         &mut self,
-        rect: egui::Rect,
+        rect: bevy::prelude::Rect,
         source: ViewportRectSource,
         fallback: Vec2,
         diag: Option<&mut ProductShellDiagnostics>,
-    ) -> egui::Rect {
+    ) -> bevy::prelude::Rect {
         let (size, kind) = classify_viewport_size(rect.width(), rect.height());
         let clamped = clamp_viewport_size(size, fallback, source);
         if let Some(kind) = kind {
             self.record_issue(source, kind, size, clamped, diag);
         }
-        egui::Rect::from_min_size(rect.min, egui::vec2(clamped.x, clamped.y))
+        bevy::prelude::Rect::from_corners(rect.min, rect.min + bevy::prelude::Vec2::new(clamped.x, clamped.y))
     }
 
     pub fn inspect_logical_size(
@@ -190,7 +189,7 @@ mod tests {
     fn collapsed_rect_clamps_to_fallback() {
         let mut sanity = ViewportRectSanity::default();
         let rect = sanity.inspect_egui_rect(
-            egui::Rect::from_min_size(egui::pos2(0.0, 0.0), egui::vec2(698.0, 1.0)),
+            bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(0.0, 0.0) + bevy::prelude::Vec2::new(698.0, 1.0)),
             ViewportRectSource::WorldPreviewCentralPanel,
             Vec2::new(320.0, 240.0),
             None,

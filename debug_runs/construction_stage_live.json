@@ -69,12 +69,12 @@
     "relative_path": "debug_runs/construction_stage_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "construction_live_proof",
-    "written_at_epoch_secs": 1790381100
+    "written_at_epoch_secs": 1791735611
   },
   "build_p_star": [
     {
       "id": "BUILD-P0-01",
-      "status": "Done"
+      "status": "Open"
     },
     {
       "id": "BUILD-P0-02",
@@ -94,7 +94,7 @@
     },
     {
       "id": "BUILD-P1-02",
-      "status": "Open"
+      "status": "Done"
     },
     {
       "id": "BUILD-P1-03",
@@ -118,7 +118,7 @@
     },
     {
       "id": "BUILD-P2-05",
-      "status": "Done"
+      "status": "Open"
     },
     {
       "id": "BUILD-P3-01",
@@ -151,19 +151,19 @@
   ],
   "con_e01_p9_green": false,
   "construction_bq128_apply_ghost_001": {
-    "apply_imported_preset_wired": true,
+    "apply_imported_preset_wired": false,
     "gate": "BQ-128-APPLY-001",
-    "ghost_only_no_queue_commit": true,
-    "green": true,
-    "panel_apply_ghost_wired": true,
+    "ghost_only_no_queue_commit": false,
+    "green": false,
+    "panel_apply_ghost_wired": false,
     "wave_s_roundtrip_ok": true
   },
   "construction_bq128_apply_merge_replace_002": {
-    "append_mode_wired": true,
+    "append_mode_wired": false,
     "gate": "BQ-128-APPLY-002",
-    "green": true,
-    "import_wave_s_presets_wired": true,
-    "replace_confirm_wired": true
+    "green": false,
+    "import_wave_s_presets_wired": false,
+    "replace_confirm_wired": false
   },
   "construction_growth_inspector_001": {
     "gate": "PROC-OG-UX-WIRE-001",
@@ -205,13 +205,13 @@
     "archetypes_loaded": true,
     "commit_carries_spec": true,
     "gate": "PROC-PG-3-001",
-    "green": true,
-    "mesh_tier_used": "lod0",
-    "pg2_assembly_wired": true,
+    "green": false,
+    "mesh_tier_used": "none",
+    "pg2_assembly_wired": false,
     "pg2_spawn_instance_count_min": 1,
     "pg2_spawn_operational_gate": true,
     "pg2_spawn_wired": true,
-    "pg2_tail_wired": true,
+    "pg2_tail_wired": false,
     "style_packs_loaded": true
   },
   "construction_r4_corridor_001": {

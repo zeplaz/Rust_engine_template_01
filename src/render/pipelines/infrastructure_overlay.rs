@@ -6,7 +6,6 @@
 use std::collections::{HashMap, HashSet, VecDeque};
 
 use bevy::prelude::*;
-use bevy_egui::EguiPrimaryContextPass;
 
 use crate::infrastructure::utility::graph::UtilityNetworkSnapshotResource;
 use crate::infrastructure::utility::{
@@ -684,11 +683,6 @@ impl Plugin for InfrastructureOverlayPlugin {
                 )
                     .chain()
                     .after(crate::systems::transport::TransportSchedule::Topology),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                crate::render::pipelines::power_map_overlay_draw::draw_power_map_overlay_egui
-                    .run_if(crate::gui::product_egui_shell_active),
             );
     }
 }

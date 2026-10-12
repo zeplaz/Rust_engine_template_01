@@ -9,7 +9,6 @@
 //! This pass does not touch the player two-click ghost.
 
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts};
 
 use crate::ai::construction::ConstructionAiOwner;
 use crate::construction::ConstructionMapProjection;
@@ -338,92 +337,9 @@ fn play_map_session(state: Option<&State<BaseState>>) -> bool {
 }
 
 /// Strokes haul polylines and the AI site outline. Off outside the play area or when egui has the pointer.
-pub fn draw_logistics_intent_overlay_egui(
-    mut contexts: EguiContexts,
-    frame: Res<LogisticsIntentDrawFrameRes>,
-    gate: Option<Res<SimulationMapPointerGate>>,
-    state: Option<Res<State<BaseState>>>,
-    authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Option<Res<MapCameraDesiredRes>>,
-    map_vp: Option<Res<SimulationMapViewport>>,
-    ortho: Option<Res<MainWorldCameraOrthoTrace>>,
-    params: Option<Res<WorldGenParams>>,
-) -> Result {
-    if !play_map_session(state.as_deref()) {
-        return Ok(());
-    }
-    let Some(gate) = gate.as_deref() else {
-        return Ok(());
-    };
-    let Some(desired) = desired.as_deref() else {
-        return Ok(());
-    };
-    let Some(map_vp) = map_vp.as_deref() else {
-        return Ok(());
-    };
-    let Some(params) = params.as_deref() else {
-        return Ok(());
-    };
-    if frame.0.haul.is_empty() && frame.0.ai_sites.is_empty() {
-        return Ok(());
-    }
-    if !map_vp.is_adequate_for_camera() {
-        return Ok(());
-    }
-    let ctx = contexts.ctx_mut()?;
-    if !logistics_intent_draw_allowed(gate, ctx.egui_wants_pointer_input()) {
-        return Ok(());
-    }
-    let ortho_ref = ortho.as_deref();
-    let authority_ref = authority.as_deref();
-    let proj = ConstructionMapProjection::resolve(authority_ref, desired, map_vp, params);
-    let tile_px = match (
-        proj.world_to_egui_rendered(Vec3::new(0.5, 0.0, 0.5), ortho_ref),
-        proj.world_to_egui_rendered(Vec3::new(1.5, 0.0, 0.5), ortho_ref),
-    ) {
-        (Some(p0), Some(p1)) => (p1 - p0).length().max(4.0 * proj.zoom_screen_scale()),
-        _ => 24.0 * proj.zoom_screen_scale(),
-    };
-    let world_to_screen = |world: Vec3| proj.world_to_egui_rendered(world, ortho_ref);
-    let painter = ctx.layer_painter(egui::LayerId::new(
-        egui::Order::Foreground,
-        egui::Id::new("logistics_intent_draw"),
-    ));
-    for haul in &frame.0.haul {
-        let color = rgba_color(haul.kind.rgba());
-        let stroke = egui::Stroke::new(2.0, color);
-        for pair in haul.points.windows(2) {
-            let Some(a) = world_to_screen(pair[0]) else {
-                continue;
-            };
-            let Some(b) = world_to_screen(pair[1]) else {
-                continue;
-            };
-            painter.line_segment([a, b], stroke);
-        }
-    }
-    let ai_stroke = egui::Stroke::new(1.75, rgba_color(AI_SITE_INTENT_RGBA));
-    for site in &frame.0.ai_sites {
-        for dz in 0..site.footprint.depth {
-            for dx in 0..site.footprint.width {
-                let world = tile_center(
-                    site.origin.x.saturating_add(dx),
-                    site.origin.z.saturating_add(dz),
-                );
-                let Some(screen) = world_to_screen(world) else {
-                    continue;
-                };
-                let side = tile_px * 0.92;
-                let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
-                painter.rect_stroke(rect, 0.0, ai_stroke, egui::epaint::StrokeKind::Inside);
-            }
-        }
-    }
-    Ok(())
-}
 
-fn rgba_color(rgba: [u8; 4]) -> egui::Color32 {
-    egui::Color32::from_rgba_unmultiplied(rgba[0], rgba[1], rgba[2], rgba[3])
+fn rgba_color(rgba: [u8; 4]) -> crate::gui::UiRgba {
+    crate::gui::UiRgba::from_rgba_unmultiplied(rgba[0], rgba[1], rgba[2], rgba[3])
 }
 
 #[cfg(test)]

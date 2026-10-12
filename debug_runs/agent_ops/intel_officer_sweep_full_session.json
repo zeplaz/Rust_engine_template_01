@@ -1,0 +1,177 @@
+{
+  "schema": "intel_officer_sweep_v1",
+  "ok": true,
+  "green": false,
+  "verdict": "FAIL",
+  "finding_count": 171,
+  "error_count": 146,
+  "by_signature": {
+    "INTEL-QUEUE-STALE": 69,
+    "INTEL-DONE-NO-EXIT": 32,
+    "INTEL-STUB-DELIVERABLE": 32,
+    "INTEL-DONE-NO-WITNESS": 7,
+    "INTEL-SIGNOFF-FALSE": 34,
+    "INTEL-GREEN-ZERO-COUNT": 1,
+    "INTEL-WITNESS-DISHONEST": 3
+  },
+  "cull_candidates": [
+    {
+      "id": "queue:APS-E1-CHROME-001:missing_exit_predicate",
+      "signature": "INTEL-QUEUE-STALE",
+      "severity": "error",
+      "source": "queue_integrity",
+      "slice_id": "APS-E1-CHROME-001",
+      "queue": "tools/orchestrator/queues/aps_option_d_agent_queue.json",
+      "witness": "",
+      "deliverable": "",
+      "reason": "missing_exit_predicate",
+      "recommended_action": "reopen"
+    },
+    {
+      "id": "APS-QC-REWIRE-001:stub:src/dev/build_read_unwired_spine_v1.md",
+      "signature": "INTEL-STUB-DELIVERABLE",
+      "severity": "error",
+      "source": "deliverable",
+      "slice_id": "APS-QC-REWIRE-001",
+      "queue": "tools/orchestrator/queues/post_drain_phase5_queue.json",
+      "witness": "debug_runs/aps_bevy_qc_hud_001_live.json",
+      "deliverable": "src/dev/build_read_unwired_spine_v1.md",
+      "reason": "stub_marker:stub",
+      "recommended_action": "reopen"
+    },
+    {
+      "id": "signoff:BUILD-READ-D-001_D004:stub",
+      "signature": "INTEL-SIGNOFF-FALSE",
+      "severity": "error",
+      "source": "designer_signoff_registry",
+      "slice_id": "BUILD-READ-D-001_D004",
+      "queue": "",
+      "witness": "src/dev/design_build_read_d001_d004_v1.md",
+      "deliverable": "",
+      "reason": "stub_marker:stub",
+      "recommended_action": "reopen_signoff"
+    },
+    {
+      "id": "queue:BUILD-READ-DESIGN-001:contradiction",
+      "signature": "INTEL-QUEUE-STALE",
+      "severity": "error",
+      "source": "queue_integrity",
+      "slice_id": "BUILD-READ-DESIGN-001",
+      "queue": "cross_queue",
+      "witness": "",
+      "deliverable": "",
+      "reason": "contradiction",
+      "recommended_action": "reopen"
+    },
+    {
+      "id": "BUILD-READ-DESIGN-001:stub:src/dev/design_build_readability_v1.md",
+      "signature": "INTEL-STUB-DELIVERABLE",
+      "severity": "error",
+      "source": "deliverable",
+      "slice_id": "BUILD-READ-DESIGN-001",
+      "queue": "tools/orchestrator/queues/post_drain_phase5_queue.json",
+      "witness": "src/dev/design_build_readability_v1.md",
+      "deliverable": "src/dev/design_build_readability_v1.md",
+      "reason": "stub_marker:stub",
+      "recommended_action": "reopen"
+    },
+    {
+      "id": "signoff:BUILD-READ-DESIGN-001:stub",
+      "signature": "INTEL-SIGNOFF-FALSE",
+      "severity": "error",
+      "source": "designer_signoff_registry",
+      "slice_id": "BUILD-READ-DESIGN-001",
+      "queue": "",
+      "witness": "src/dev/design_build_readability_v1.md",
+      "deliverable": "",
+      "reason": "stub_marker:stub",
+      "recommended_action": "reopen_signoff"
+    },
+    {
+      "id": "BUILD-READ-DESIGN-002:stub:src/dev/design_build_toolbox_hud_v1.md",
+      "signature": "INTEL-STUB-DELIVERABLE",
+      "severity": "error",
+      "source": "deliverable",
+      "slice_id": "BUILD-READ-DESIGN-002",
+      "queue": "tools/orchestrator/queues/post_drain_phase5_queue.json",
+      "witness": "debug_runs/design_build_toolbox_hud_live.json",
+      "deliverable": "src/dev/design_build_toolbox_hud_v1.md",
+      "reason": "stub_marker:stub",
+      "recommended_action": "reopen"
+    },
+    {
+      "id": "signoff:BUILD-READ-DESIGN-002:stub",
+      "signature": "INTEL-SIGNOFF-FALSE",
+      "severity": "error",
+      "source": "designer_signoff_registry",
+      "slice_id": "BUILD-READ-DESIGN-002",
+      "queue": "",
+      "witness": "src/dev/design_build_toolbox_hud_v1.md",
+      "deliverable": "",
+      "reason": "stub_marker:stub",
+      "recommended_action": "reopen_signoff"
+    },
+    {
+      "id": "BUILD-READ-REWIRE-003:stub:src/dev/build_read_unwired_spine_v1.md",
+      "signature": "INTEL-STUB-DELIVERABLE",
+      "severity": "error",
+      "source": "deliverable",
+      "slice_id": "BUILD-READ-REWIRE-003",
+      "queue": "tools/orchestrator/queues/post_drain_phase5_queue.json",
+      "witness": "debug_runs/map_zoom_coherence_live.json",
+      "deliverable": "src/dev/build_read_unwired_spine_v1.md",
+      "reason": "stub_marker:stub",
+      "recommended_action": "reopen"
+    },
+    {
+      "id": "queue:CDR-A-ECOLOGY-HARNESS-CLEAN-001:missing_exit_predicate",
+      "signature": "INTEL-QUEUE-STALE",
+      "severity": "error",
+      "source": "queue_integrity",
+      "slice_id": "CDR-A-ECOLOGY-HARNESS-CLEAN-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "witness": "",
+      "deliverable": "",
+      "reason": "missing_exit_predicate",
+      "recommended_action": "reopen"
+    },
+    {
+      "id": "queue:CDR-A-PRESET-PICK-LAMBDA-001:missing_exit_predicate",
+      "signature": "INTEL-QUEUE-STALE",
+      "severity": "error",
+      "source": "queue_integrity",
+      "slice_id": "CDR-A-PRESET-PICK-LAMBDA-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "witness": "",
+      "deliverable": "",
+      "reason": "missing_exit_predicate",
+      "recommended_action": "reopen"
+    },
+    {
+      "id": "queue:CDR-A-VEG-DOC-REFRESH-001:missing_exit_predicate",
+      "signature": "INTEL-QUEUE-STALE",
+      "severity": "error",
+      "source": "queue_integrity",
+      "slice_id": "CDR-A-VEG-DOC-REFRESH-001",
+      "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
+      "witness": "",
+      "deliverable": "",
+      "reason": "missing_exit_predicate",
+      "recommended_action": "reopen"
+    }
+  ],
+  "cull_candidates_truncated": true,
+  "queue_integrity_green": false,
+  "stale_count": 69,
+  "session_loop": [
+    "intel_officer_sweep() \u2192 review cull_candidates",
+    "intel_officer_apply(ids, dry_run=true) \u2192 preview reopen",
+    "intel_officer_apply(ids, dry_run=false) \u2192 supervised Q\u2713 rollback",
+    "Re-run sweep until green:true"
+  ],
+  "commands": [
+    "python -m rust_engine_mcp.cli intel-officer-sweep",
+    "python -m rust_engine_mcp.cli intel-officer-apply --ids ID1,ID2 --dry-run",
+    "python -m rust_engine_mcp.cli validate-report queue_integrity --compress 3"
+  ]
+}

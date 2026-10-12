@@ -5,7 +5,6 @@
 
 use bevy::math::{UVec2, Vec2};
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use super::MapViewInstanceId;
 use crate::gui::editor::world_preview::{
@@ -171,21 +170,7 @@ pub fn clear_active_map_view_input_before_map_widgets(mut active: ResMut<ActiveM
     active.0 = None;
 }
 
-pub fn sync_shell_layout_drag_gate(
-    mut contexts: bevy_egui::EguiContexts,
-    mut pending_layout: ResMut<crate::gui::hud::PendingHudLayoutCommit>,
-    mut gate: ResMut<MapShellPointerGate>,
-) -> Result {
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return Ok(());
-    };
-    // Only treat active drags as shell capture — `any_down` made every click freeze HUD layout
-    // and fight world-gen / dock widgets for the whole press duration.
-    let pointer_active = ctx.input(|input| input.pointer.is_decidedly_dragging());
-    pending_layout.set_drag_active(pointer_active);
-    gate.shell_pointer_active = pointer_active;
-    Ok(())
-}
+pub fn sync_shell_layout_drag_gate() -> Result { Ok(()) }
 
 /// Simulation shell drag comes from Bevy minimap chrome. Does not read an egui context.
 pub fn sync_shell_layout_drag_gate_from_bevy(
@@ -330,17 +315,7 @@ pub fn commit_map_view_interaction_system(
 }
 
 #[allow(dead_code)] // WorldGen placeholder text is a Bevy node; the egui helper stays compiled for the editor map path.
-pub fn paint_map_view_placeholder(ui: &mut egui::Ui, rect: egui::Rect, label: &str) {
-    let painter = ui.painter_at(rect);
-    painter.rect_filled(rect, 0.0, egui::Color32::from_rgb(18, 20, 24));
-    painter.text(
-        rect.center(),
-        egui::Align2::CENTER_CENTER,
-        label,
-        egui::FontId::monospace(12.0),
-        ui.visuals().weak_text_color(),
-    );
-}
+pub fn paint_map_view_placeholder() {}
 
 #[must_use]
 pub fn viewport_extent_ready(extent: UVec2) -> bool {

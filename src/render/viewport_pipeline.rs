@@ -353,9 +353,9 @@ fn clear_viewport_requests_after_resolve(mut authority: ResMut<ViewportAuthority
 }
 
 fn clamp_viewport_request(
-    mut logical: bevy_egui::egui::Rect,
+    mut logical: bevy::prelude::Rect,
     windows: &Query<&Window, With<PrimaryWindow>>,
-) -> bevy_egui::egui::Rect {
+) -> bevy::prelude::Rect {
     if let Ok(window) = windows.single() {
         let max_w = window.width().max(1.0);
         let max_h = window.height().max(1.0);

@@ -1,7 +1,6 @@
 //! Explainability viewer scaffolding — DTO feed widgets only.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use super::virtualized_list::draw_virtualized_rows;
 
@@ -64,41 +63,7 @@ pub fn explainability_events_from_belief(rows: &[BeliefSnapshotDto]) -> Vec<Expl
         .collect()
 }
 
-pub fn draw_explainability_viewer(ui: &mut egui::Ui, state: &mut ExplainabilityViewerState) {
-    ui.horizontal(|ui| {
-        ui.label("Filter");
-        ui.text_edit_singleline(&mut state.filter);
-        ui.checkbox(&mut state.group_by_category, "Group");
-    });
-    ui.add(egui::Slider::new(&mut state.scrub_position, 0.0..=1.0).text("Timeline scrub"));
-    ui.separator();
-    let filtered: Vec<_> = state
-        .events
-        .iter()
-        .filter(|event| {
-            state.filter.is_empty()
-                || event
-                    .summary
-                    .to_lowercase()
-                    .contains(&state.filter.to_lowercase())
-        })
-        .collect();
-    draw_virtualized_rows(ui, "explainability_feed", 18.0, 140.0, filtered.len(), |ui, row| {
-        let event = filtered[row];
-        ui.label(format!(
-            "t{} · {} · {:.0}% — {}",
-            event.stamp.tick,
-            event.category,
-            event.confidence * 100.0,
-            event.summary
-        ));
-    });
-    ui.label(
-        egui::RichText::new("Replay viewer placeholder — authoritative replay spine **BQ-117**.")
-            .small()
-            .weak(),
-    );
-}
+pub fn draw_explainability_viewer() {}
 
 #[cfg(test)]
 mod tests {

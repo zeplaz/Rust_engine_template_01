@@ -1,7 +1,6 @@
 //! Map image fit policy for egui consumers (presentation only).
 
 use bevy::math::{UVec2, Vec2};
-use bevy_egui::egui;
 
 use crate::gui::editor::world_preview::layers::PreviewLayers;
 use crate::gui::map_view::MapViewState as EditorViewport;
@@ -24,8 +23,8 @@ pub const MAP_PANEL_INSET_PX: f32 = 4.0;
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MapDisplayResult {
-    pub image_rect: egui::Rect,
-    pub uv_rect: egui::Rect,
+    pub image_rect: bevy::prelude::Rect,
+    pub uv_rect: bevy::prelude::Rect,
     pub scale: f32,
 }
 
@@ -52,11 +51,11 @@ pub const fn default_fit_mode_for(id: MapViewInstanceId) -> MapFitMode {
 /// Canonical strict fit — all map consumers must use this at the render boundary.
 #[must_use]
 pub fn compute_map_fit_strict(
-    viewport: egui::Rect,
+    viewport: bevy::prelude::Rect,
     texture_size: UVec2,
     mode: MapAspectMode,
 ) -> MapDisplayResult {
-    let texture_size = egui::vec2(texture_size.x.max(1) as f32, texture_size.y.max(1) as f32);
+    let texture_size = bevy::prelude::Vec2::new(texture_size.x.max(1) as f32, texture_size.y.max(1) as f32);
     if viewport.width() <= 0.0
         || viewport.height() <= 0.0
         || texture_size.x <= 0.0
@@ -64,7 +63,7 @@ pub fn compute_map_fit_strict(
     {
         return MapDisplayResult {
             image_rect: viewport,
-            uv_rect: egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+            uv_rect: bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(1.0, 1.0)),
             scale: 1.0,
         };
     }
@@ -72,7 +71,7 @@ pub fn compute_map_fit_strict(
     match mode {
         MapFitMode::Stretch => MapDisplayResult {
             image_rect: viewport,
-            uv_rect: egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+            uv_rect: bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(1.0, 1.0)),
             scale: (viewport.width() / texture_size.x).max(viewport.height() / texture_size.y),
         },
         MapFitMode::PixelPerfect => {
@@ -81,8 +80,8 @@ pub fn compute_map_fit_strict(
                 .min(1.0);
             let size = texture_size * scale;
             MapDisplayResult {
-                image_rect: egui::Rect::from_center_size(viewport.center(), size),
-                uv_rect: egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                image_rect: bevy::prelude::Rect::from_center_size(viewport.center(), size),
+                uv_rect: bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(1.0, 1.0)),
                 scale,
             }
         }
@@ -90,8 +89,8 @@ pub fn compute_map_fit_strict(
             let scale = (viewport.width() / texture_size.x).min(viewport.height() / texture_size.y);
             let size = texture_size * scale;
             MapDisplayResult {
-                image_rect: egui::Rect::from_center_size(viewport.center(), size),
-                uv_rect: egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+                image_rect: bevy::prelude::Rect::from_center_size(viewport.center(), size),
+                uv_rect: bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(1.0, 1.0)),
                 scale,
             }
         }
@@ -104,7 +103,7 @@ pub fn compute_map_fit_strict(
                 let u0 = (1.0 - uv_w) * 0.5;
                 MapDisplayResult {
                     image_rect: viewport,
-                    uv_rect: egui::Rect::from_min_max(egui::pos2(u0, 0.0), egui::pos2(u0 + uv_w, 1.0)),
+                    uv_rect: bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(u0, 0.0), bevy::prelude::Vec2::new(u0 + uv_w, 1.0)),
                     scale,
                 }
             } else {
@@ -112,7 +111,7 @@ pub fn compute_map_fit_strict(
                 let v0 = (1.0 - uv_h) * 0.5;
                 MapDisplayResult {
                     image_rect: viewport,
-                    uv_rect: egui::Rect::from_min_max(egui::pos2(0.0, v0), egui::pos2(1.0, v0 + uv_h)),
+                    uv_rect: bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, v0), bevy::prelude::Vec2::new(1.0, v0 + uv_h)),
                     scale,
                 }
             }
@@ -123,13 +122,16 @@ pub fn compute_map_fit_strict(
 /// Letterbox / crop / stretch a texture into a panel rect.
 #[must_use]
 pub fn map_fit_rect(
-    panel: egui::Rect,
-    texture_size: egui::Vec2,
+    panel: bevy::prelude::Rect,
+    texture_size: bevy::prelude::Vec2,
     fit: MapFitMode,
     padding: f32,
-) -> (egui::Rect, egui::Rect) {
+) -> (bevy::prelude::Rect, bevy::prelude::Rect) {
     let fit = compute_map_fit_strict(
-        panel.shrink(padding),
+        bevy::prelude::Rect::from_corners(
+            panel.min + bevy::prelude::Vec2::splat(padding),
+            panel.max - bevy::prelude::Vec2::splat(padding),
+        ),
         UVec2::new(texture_size.x.max(1.0) as u32, texture_size.y.max(1.0) as u32),
         fit,
     );
@@ -228,7 +230,7 @@ pub fn minimap_gpu_texture_uv_rect_from_world(
     rt_w: u32,
     rt_h: u32,
     panel: Vec2,
-) -> egui::Rect {
+) -> bevy::prelude::Rect {
     let crop = minimap_gpu_texture_pixel_rect_from_world(
         camera_center_world,
         zoom,
@@ -240,9 +242,9 @@ pub fn minimap_gpu_texture_uv_rect_from_world(
     );
     let tw = rt_w.max(1) as f32;
     let th = rt_h.max(1) as f32;
-    egui::Rect::from_min_max(
-        egui::pos2(crop.min.x / tw, crop.min.y / th),
-        egui::pos2(crop.max.x / tw, crop.max.y / th),
+    bevy::prelude::Rect::from_corners(
+        bevy::prelude::Vec2::new(crop.min.x / tw, crop.min.y / th),
+        bevy::prelude::Vec2::new(crop.max.x / tw, crop.max.y / th),
     )
 }
 
@@ -257,13 +259,13 @@ pub fn minimap_gpu_texture_uv_rect(
     tex_w: u32,
     tex_h: u32,
     panel: Vec2,
-) -> egui::Rect {
+) -> bevy::prelude::Rect {
     let crop = minimap_gpu_texture_pixel_rect(camera_center, zoom, tex_w, tex_h, panel);
     let tw = tex_w.max(1) as f32;
     let th = tex_h.max(1) as f32;
-    egui::Rect::from_min_max(
-        egui::pos2(crop.min.x / tw, crop.min.y / th),
-        egui::pos2(crop.max.x / tw, crop.max.y / th),
+    bevy::prelude::Rect::from_corners(
+        bevy::prelude::Vec2::new(crop.min.x / tw, crop.min.y / th),
+        bevy::prelude::Vec2::new(crop.max.x / tw, crop.max.y / th),
     )
 }
 
@@ -278,17 +280,23 @@ mod tests {
 
     #[test]
     fn contain_preserves_aspect_and_stays_inside_panel() {
-        let panel = egui::Rect::from_min_size(egui::pos2(0.0, 0.0), egui::vec2(400.0, 200.0));
-        let (image, uv) = map_fit_rect(panel, egui::vec2(320.0, 320.0), MapFitMode::Contain, 0.0);
-        assert!(panel.contains_rect(image));
-        assert_eq!(uv, egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)));
+        let panel = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(0.0, 0.0) + bevy::prelude::Vec2::new(400.0, 200.0));
+        let (image, uv) = map_fit_rect(panel, bevy::prelude::Vec2::new(320.0, 320.0), MapFitMode::Contain, 0.0);
+        assert!(
+            image.min.x >= panel.min.x - 1e-4
+                && image.min.y >= panel.min.y - 1e-4
+                && image.max.x <= panel.max.x + 1e-4
+                && image.max.y <= panel.max.y + 1e-4,
+            "fitted image must stay inside panel"
+        );
+        assert_eq!(uv, bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(1.0, 1.0)));
         assert!((image.width() / image.height() - 1.0).abs() < 0.01);
     }
 
     #[test]
     fn cover_crops_uv_when_panel_is_wider() {
-        let panel = egui::Rect::from_min_size(egui::pos2(0.0, 0.0), egui::vec2(400.0, 200.0));
-        let (_, uv) = map_fit_rect(panel, egui::vec2(320.0, 320.0), MapFitMode::Cover, 0.0);
+        let panel = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(0.0, 0.0) + bevy::prelude::Vec2::new(400.0, 200.0));
+        let (_, uv) = map_fit_rect(panel, bevy::prelude::Vec2::new(320.0, 320.0), MapFitMode::Cover, 0.0);
         assert!(uv.height() < 1.0);
         assert_eq!(uv.width(), 1.0);
     }

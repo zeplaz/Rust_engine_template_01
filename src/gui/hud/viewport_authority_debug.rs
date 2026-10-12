@@ -268,34 +268,5 @@ fn run_viewport_integrity_assert(
     assert_viewport_integrity(fill.as_ref(), None);
 }
 
-pub fn stroke_viewport_debug_rect(
-    painter: &bevy_egui::egui::Painter,
-    min: Vec2,
-    max: Vec2,
-    color: bevy_egui::egui::Color32,
-    label: &str,
-) {
-    if max.x <= min.x || max.y <= min.y {
-        return;
-    }
-    let wh = max - min;
-    let text = format!("{label} {:.0}x{:.0}", wh.x, wh.y);
-    let r = bevy_egui::egui::Rect::from_min_max(
-        bevy_egui::egui::pos2(min.x, min.y),
-        bevy_egui::egui::pos2(max.x, max.y),
-    );
-    painter.rect_stroke(
-        r,
-        0.0,
-        bevy_egui::egui::Stroke::new(3.0, color),
-        bevy_egui::egui::StrokeKind::Outside,
-    );
-    painter.text(
-        r.left_top() + bevy_egui::egui::vec2(4.0, 4.0),
-        bevy_egui::egui::Align2::LEFT_TOP,
-        text,
-        bevy_egui::egui::FontId::monospace(12.0),
-        color,
-    );
-}
+pub fn stroke_viewport_debug_rect() {}
 

@@ -73,12 +73,12 @@ pub(crate) struct WorldMapFootprintStamp {
     materials: HashMap<u32, Handle<ColorMaterial>>,
 }
 
-fn color32_bevy(c: bevy_egui::egui::Color32) -> Color {
-    Color::srgba_u8(c.r(), c.g(), c.b(), c.a())
+fn color32_bevy(c: crate::gui::UiRgba) -> Color {
+    Color::srgba_u8(c.r, c.g, c.b, c.a)
 }
 
 /// Validity color for one cell. The quad stays on [`world_map_tile_center`]; only the material changes.
-pub(crate) fn footprint_fill(kind: FootprintTileColorKind, fill: Option<bevy_egui::egui::Color32>) -> Color {
+pub(crate) fn footprint_fill(kind: FootprintTileColorKind, fill: Option<crate::gui::UiRgba>) -> Color {
     if let Some(c) = fill {
         return color32_bevy(c);
     }

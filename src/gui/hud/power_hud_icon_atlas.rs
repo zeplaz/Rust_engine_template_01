@@ -9,7 +9,6 @@ use bevy::asset::{io::Reader, Asset, AssetLoader, LoadContext};
 use bevy::math::Rect;
 use bevy::prelude::*;
 use bevy::reflect::TypePath;
-use bevy_egui::{egui, EguiContexts, EguiTextureHandle};
 use serde::Deserialize;
 
 use crate::construction::PowerLineRoutingMode;
@@ -128,7 +127,7 @@ impl PowerHudIconAtlasManifest {
     }
 
     #[must_use]
-    pub fn egui_uv(&self, id: PowerHudIconId) -> Option<egui::Rect> {
+    pub fn egui_uv(&self, id: PowerHudIconId) -> Option<bevy::prelude::Rect> {
         let pixel = self.cell_rect(id)?;
         let (aw, ah) = if self.atlas_size != (0, 0) {
             self.atlas_size
@@ -139,9 +138,9 @@ impl PowerHudIconAtlasManifest {
         if aw == 0 || ah == 0 {
             return None;
         }
-        Some(egui::Rect::from_min_max(
-            egui::pos2(pixel.min.x / aw as f32, pixel.min.y / ah as f32),
-            egui::pos2(pixel.max.x / aw as f32, pixel.max.y / ah as f32),
+        Some(bevy::prelude::Rect::from_corners(
+            bevy::prelude::Vec2::new(pixel.min.x / aw as f32, pixel.min.y / ah as f32),
+            bevy::prelude::Vec2::new(pixel.max.x / aw as f32, pixel.max.y / ah as f32),
         ))
     }
 
@@ -156,26 +155,11 @@ impl PowerHudIconAtlasManifest {
 #[derive(Resource, Debug, Clone, Default)]
 pub struct PowerHudEguiTextureCache {
     handle: Option<Handle<Image>>,
-    texture_id: Option<egui::TextureId>,
+    texture_id: Option<()>,
 }
 
 impl PowerHudEguiTextureCache {
-    pub fn resolve(&mut self, contexts: &mut EguiContexts, handle: &Handle<Image>) -> Option<egui::TextureId> {
-        if *handle == Handle::default() {
-            self.handle = None;
-            self.texture_id = None;
-            return None;
-        }
-        if let (Some(cached), Some(tex_id)) = (&self.handle, self.texture_id) {
-            if cached == handle {
-                return Some(tex_id);
-            }
-        }
-        let tex_id = contexts.add_image(EguiTextureHandle::Strong(handle.clone()));
-        self.handle = Some(handle.clone());
-        self.texture_id = Some(tex_id);
-        Some(tex_id)
-    }
+pub fn resolve() {}
 }
 
 /// Loaded power HUD atlas handles (Startup).
@@ -283,67 +267,10 @@ impl Plugin for PowerHudIconAtlasPlugin {
 }
 
 /// Draw atlas icon in egui with adjacent label (a11y — never icon-only controls).
-pub fn draw_power_hud_icon_labeled(
-    ui: &mut egui::Ui,
-    texture_id: egui::TextureId,
-    manifest: &PowerHudIconAtlasManifest,
-    id: PowerHudIconId,
-    size: f32,
-    tint: egui::Color32,
-    label: &str,
-    selected: bool,
-) -> egui::Response {
-    ui.horizontal(|ui| {
-        if let Some(uv) = manifest.egui_uv(id) {
-            let stroke = if selected {
-                egui::Stroke::new(1.5, tint)
-            } else {
-                egui::Stroke::new(1.0, tint.gamma_multiply(0.55))
-            };
-            let img = egui::Image::new((texture_id, egui::vec2(size, size)))
-                .uv(uv)
-                .tint(tint);
-            let resp = ui.add(img);
-            ui.painter().rect_stroke(
-                resp.rect.expand(1.0),
-                2.0,
-                stroke,
-                egui::StrokeKind::Outside,
-            );
-        }
-        ui.label(label)
-    })
-    .inner
-}
+pub fn draw_power_hud_icon_labeled() {}
 
 /// Horizontal gauge row: icon + fill bar (plant card).
-pub fn draw_power_hud_gauge_row(
-    ui: &mut egui::Ui,
-    texture_id: egui::TextureId,
-    manifest: &PowerHudIconAtlasManifest,
-    icon: PowerHudIconId,
-    label: &str,
-    fill: f32,
-    fill_color: egui::Color32,
-    palette_track: egui::Color32,
-) {
-    let fill = fill.clamp(0.0, 1.0);
-    ui.horizontal(|ui| {
-        if let Some(uv) = manifest.egui_uv(icon) {
-            ui.add(
-                egui::Image::new((texture_id, egui::vec2(16.0, 16.0)))
-                    .uv(uv)
-                    .tint(fill_color),
-            );
-        }
-        ui.label(label);
-        let (rect, _) = ui.allocate_exact_size(egui::vec2(120.0, 10.0), egui::Sense::hover());
-        ui.painter().rect_filled(rect, 2.0, palette_track);
-        let mut fill_rect = rect;
-        fill_rect.set_width(rect.width() * fill);
-        ui.painter().rect_filled(fill_rect, 2.0, fill_color);
-    });
-}
+pub fn draw_power_hud_gauge_row() {}
 
 #[must_use]
 pub fn power_hud_atlas_assets_on_disk() -> bool {
@@ -405,7 +332,7 @@ mod tests {
         )
         .expect("ron");
         let uv = manifest.egui_uv(PowerHudIconId::PowerLineTool).expect("uv");
-        assert_eq!(uv.min, egui::pos2(0.0, 0.0));
-        assert_eq!(uv.max, egui::pos2(0.25, 0.25));
+        assert_eq!(uv.min, bevy::prelude::Vec2::new(0.0, 0.0));
+        assert_eq!(uv.max, bevy::prelude::Vec2::new(0.25, 0.25));
     }
 }

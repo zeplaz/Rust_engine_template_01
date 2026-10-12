@@ -1,7 +1,6 @@
 //! Revision-keyed retained widget slices — skip static egui rebuilds when unchanged.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use super::shell_framework::ProductShellWidgetId;
 
@@ -10,7 +9,7 @@ pub struct RetainedWidgetFrame {
     pub content_revision: u64,
     pub layout_revision: u64,
     pub texture_revision: u64,
-    pub cached_primitives: Vec<egui::ClippedPrimitive>,
+    pub cached_primitives: Vec<()>,
     pub cached_lines: Vec<String>,
 }
 
@@ -77,24 +76,4 @@ impl RetainedWidgetCache {
     }
 }
 
-pub fn draw_retained_lines_or_build(
-    ui: &mut egui::Ui,
-    cache: &mut RetainedWidgetCache,
-    id: ProductShellWidgetId,
-    content_revision: u64,
-    layout_revision: u64,
-    texture_revision: u64,
-    mut build: impl FnMut(&mut egui::Ui) -> Vec<String>,
-) {
-    if cache.should_skip_static(id, content_revision, layout_revision) {
-        for line in cache.frame(id).cached_lines.clone() {
-            ui.label(line);
-        }
-        return;
-    }
-    let lines = build(ui);
-    cache.store_static(id, content_revision, layout_revision, texture_revision, lines.clone());
-    for line in lines {
-        ui.label(line);
-    }
-}
+pub fn draw_retained_lines_or_build() {}

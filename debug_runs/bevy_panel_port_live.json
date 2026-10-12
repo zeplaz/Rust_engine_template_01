@@ -1,0 +1,96 @@
+{
+  "schema": "bevy_panel_port_live_v1",
+  "program_id": "PLAN-BEVY-PANEL-PORT-v1",
+  "status": "CLOSED",
+  "updated": "2026-10-10",
+  "session": 3,
+  "slices_done": [
+    "PORT-0-WITNESS-HONESTY",
+    "PORT-F3-DIAGNOSTICS",
+    "PORT-F1-KEYBINDINGS",
+    "PORT-LOGISTICS-ORDERS-PANEL",
+    "PORT-LOGISTICS-OVERLAY",
+    "editor_dock",
+    "construction_toolbox",
+    "map_editor_chrome",
+    "PORT-ROAD-POPUP-BEVY",
+    "PORT-STAGED-MULTILINE",
+    "PORT-DEV-CHROME",
+    "PORT-MASS-STUB-PRUNE",
+    "PORT-PRODUCT-SHELL-ALIAS-DROP",
+    "PORT-P9-TERRAIN-CONFORM-DOC",
+    "PORT-PROGRAM-CLOSE"
+  ],
+  "slices_deferred": [
+    "P9_terrain_conform"
+  ],
+  "honest_witness_fixed": true,
+  "draw_egui_include_str_predicates_remaining": 0,
+  "honest_false_predicates_remaining": [
+    "ConstructionStageWitness.toolbox_panel (spawn-gated Editor — Simulation harness Open OK)",
+    "ConstructionStageWitness.road_popup (spawn-gated Editor — Simulation harness Open OK)",
+    "ConstructionStageWitness.shared_ghost_valid (unchanged stub)",
+    "ConstructionP9Witness.terrain_conform / PHASE2-BUILD-20 Open / con_e01_p9_green=false"
+  ],
+  "phase2_build_20": "Open — terrain_conform honest false until live height_grid (not height_norm_stub)",
+  "bevy_roots": {
+    "DiagnosticsBevyRoot": true,
+    "KeybindingsBevyRoot": true,
+    "LogisticsOrdersBevyRoot": true,
+    "LogisticsTargetsBevyRoot": true,
+    "SimPlayPowerHover": true,
+    "ContextTrayPowerRepairList": true,
+    "WorldMapOrdersSeg": true,
+    "EditorDockBevyRoot": true,
+    "BuildToolboxBevyRoot": true,
+    "MapEditorBevyShell": true,
+    "RoadToolPopupBevyRoot": true,
+    "FactionToolsBevyRoot": true,
+    "AiExplainabilityBevyRoot": true,
+    "PressureComposerBevyRoot": true,
+    "AssemblySnapshotQcBevyRoot": true,
+    "PanelPresence": true
+  },
+  "pointer_gate_blocks_while_open": [
+    "DiagnosticsUiState.visible",
+    "KeybindingsUiState.visible",
+    "LogisticsOrdersPanelState.visible",
+    "LogisticsTargetsPanelState.visible",
+    "PanelPresence.editor_dock_root",
+    "PanelPresence.build_toolbox_root",
+    "PanelPresence.map_editor_shell_root",
+    "PanelPresence.road_popup_root",
+    "PanelPresence.faction_tools_root",
+    "PanelPresence.ai_explainability_root",
+    "PanelPresence.pressure_composer_root",
+    "PanelPresence.assembly_snapshot_qc_root"
+  ],
+  "product_shell_gate": "product_shell_active",
+  "map_editor_gate": "map_editor_chrome_active",
+  "keybinding_resource": "InputBindings",
+  "logistics_edits": "draft_commands → LogisticsOrderRequest only",
+  "toolbox_intents": "ActiveBuildTool tool-select only (no execute)",
+  "road_popup_commit": "commit_road_path_to_queue / enqueue_road_upgrade only",
+  "cargo": {
+    "validator": "validate_cargo_report",
+    "status": "warning",
+    "summary": "cargo check: 0 errors, 361 warnings",
+    "error_count": 0,
+    "warning_count": 361,
+    "known_fixes": [],
+    "confidence": 0.95,
+    "compression_level": 4
+  },
+  "tests": {
+    "construction_stage_operational_green": "spawn-gated Editor for toolbox + road_popup",
+    "product_shell_gates": "alias product_egui_shell_* removed",
+    "road_tool_popup_bevy_root_marker": "RoadToolPopupBevyRoot"
+  },
+  "honest_witness": {
+    "toolbox_panel": "true when BuildToolboxBevyRoot spawned (Editor); false in Simulation harness",
+    "road_popup": "true when RoadToolPopupBevyRoot spawned (Editor); false in Simulation harness",
+    "terrain_conform": "false (PHASE2-BUILD-20 Open)"
+  },
+  "charter": "src/dev/plan_bevy_panel_port_v1.md",
+  "notes": "No bevy_egui re-add. Session 3: RoadToolPopupBevyRoot + staged tray multiline + dev chrome Bevy panels + mass stub prune + product_shell alias drop. Residual P9 terrain_conform only."
+}

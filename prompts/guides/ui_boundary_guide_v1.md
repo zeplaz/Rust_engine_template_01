@@ -1,8 +1,8 @@
 ## UI Boundary Guide v1
 
-> **STATUS:** ✅ **Rules stable** · **Shell refactor (2026-05):** main menu = Bevy (`app_shell.rs`); dev egui (F3/F4/…) gated to simulation/editor via `ui_gates.rs`.
+> **STATUS:** ✅ **Bevy-only (2026-10-10)** · Program [`plan_egui_full_dep_drop_v1.md`](../../src/dev/plan_egui_full_dep_drop_v1.md) removes `bevy_egui` from Cargo. All UI = native Bevy `Node` trees.
 
-Version: `v1.0.2`
+Version: `v1.1.0`
 Audience: agents and contributors deciding which UI system to use for a given feature. Strategic layout and mockup epics: [`ui_operational_direction_runbook_v1.md`](ui_operational_direction_runbook_v1.md) · layer index: [`experience_layer_orchestrator_v1.md`](experience_layer_orchestrator_v1.md).
 
 ---
@@ -10,11 +10,10 @@ Audience: agents and contributors deciding which UI system to use for a given fe
 ## Decision rule
 
 ```
-In-game or player-facing?  → Bevy native UI  (Node + components)
-Dev tooling / editor?      → egui            (EguiContexts)
+Any UI (player, editor, WorldGen, diagnostics)  → Bevy native UI  (Node + Text + Button + ImageNode)
 ```
 
-Do NOT mix the two in a single plugin.
+Do **not** add `bevy_egui`, `EguiContexts`, or `EguiPrimaryContextPass`. World paint uses meshes / compositor — never egui strokes.
 
 ---
 
@@ -81,56 +80,21 @@ fn button_system(q: Query<(&Interaction, &mut BackgroundColor), (Changed<Interac
 
 ---
 
-## egui — when and how
+## egui — retired
 
-### Use for
-- World generation inspector / parameter tuning
-- Production domain inspector (concrete, power, aluminum)
-- Terrain/biome visualizer / preview
-- Noise stack configuration
-- Debug overlays during development
-- Agent permissions editor
+`bevy_egui` is **not** a dependency. Do not reintroduce it. Editor / WorldGen / diagnostics panels use Bevy `Node` trees (see `simulation_shell_phase2`, `WorldGenShellRoot`, pause menu Bevy patterns).
 
-### Active plugins that use egui (keep here)
-| Plugin | File |
-|---|---|
-| `WorldGeneratorSubenginePlugin` | `src/bevysubengines/world_generator_plugin.rs` |
-| `WorldGenUiPlugin` | `src/gui/editor/world_gen_ui.rs` |
-| `WorldPreviewPlugin` | `src/gui/editor/world_preview.rs` |
-| `AgentPermissionsUiPlugin` | `src/gui/agent_permissions_ui.rs` |
-| `ProductionToolsUiPlugin` | `src/systems/production/tools_ui.rs` |
-
-### Current egui pattern (Bevy 0.18 / bevy_egui 0.39)
-```rust
-// Import: EguiContexts, EguiPrimaryContextPass, EguiPlugin
-// Source: https://github.com/vladbat00/bevy_egui
-
-fn my_tool_system(mut contexts: EguiContexts, ...) -> Result {
-    egui::Window::new("Tool Name").show(contexts.ctx_mut()?, |ui| {
-        ui.label("...");
-    });
-    Ok(())
-}
-
-// Plugin registration:
-app.add_plugins(EguiPlugin::default())
-   .add_systems(EguiPrimaryContextPass, my_tool_system);  // NOT Update
-```
-**Breaking changes in 0.39:**
-- `EguiPlugin` → `EguiPlugin::default()`
-- Systems must be in `EguiPrimaryContextPass`, not `Update`
-- `ctx_mut()` returns `Result` → use `ctx_mut()?`
-- System functions must return `Result`
-- `ResMut<EguiContext>` (pre-0.14 API) is fully gone — use `EguiContexts`
+Shared colors for construction/render helpers: `gui::ui_types::UiRgba` (not `egui::Color32`).
 
 ---
 
-## Implementation alignment (shell vs dev workspace)
+## Implementation alignment (shell vs workspace)
 
-- **Application shell:** `app_shell.rs` — main menu + load stub (Bevy UI only). World-gen flow may still open **egui** tooling while in `BaseState::MainMenu` when `WorldGenFlowState` is active (preview/full pipeline).
-- **Gameplay HUD:** `in_game_hud.rs` — logistics / placeholders only; **spawns when entering `BaseState::Simulation`** (not on main menu). No duplicate dev toolbars.
-- **Dev workspace (egui):** diagnostics, faction tools, logistics list — `EguiPrimaryContextPass` systems use `in_simulation_or_editor` (`ui_gates.rs`). Hotkeys (F3, F4, …) only affect tooling while in those modes.
-- **Strategic / field overlays:** prefer GPU/render layers (e.g. weather-fire compute field) over stacking **egui** windows for map truth.
+- **Application shell:** `app_shell.rs` — main menu + load stub (Bevy UI only).
+- **Gameplay HUD:** `in_game_hud.rs` + `simulation_shell_phase2` — Bevy; spawns on enter `BaseState::Simulation`.
+- **Editor / WorldGen / diagnostics:** Bevy Node panels; hotkeys via `ui_gates.rs` / session chrome.
+- **Strategic / field overlays:** GPU/render layers / meshes — never stroke APIs from a second UI crate.
+- **Pointer:** sole authority `SimulationMapPointerGate` + `TacticalMapPickFrame`.
 
 ---
 
@@ -138,39 +102,23 @@ app.add_plugins(EguiPlugin::default())
 
 ```
 src/gui/
-  splash.rs          → Bevy native UI  (splash screen)
-  app_shell.rs       → Bevy native UI  (main menu + load stub shell)
-  main_menu.rs       → states + shared UiState (no layout)
-  ui_gates.rs        → run_if helpers (shell vs dev separation)
-  in_game_ui.rs      → LEGACY (rewrite using native Bevy UI + Node)
-  in_game_hud.rs     → Bevy native UI  (simulation HUD; logistics + tactical placeholders)
-  ui_windows.rs      → shared Bevy UI helpers + egui scale config
-  gui_assets.rs      → asset loading only
-  gui_sets.rs        → SystemSet definitions only
-  agent_permissions_ui.rs → egui tooling
-  editor/
-    world_gen_ui.rs  → egui tooling
-    world_preview.rs → egui tooling
+  splash.rs          → Bevy native UI
+  app_shell.rs       → Bevy native UI
+  main_menu.rs       → states + shared UiState
+  ui_gates.rs        → run_if helpers
+  ui_types.rs        → UiRgba / logical rect (no egui)
+  in_game_hud.rs     → Bevy simulation HUD
+  hud/               → shells, pointer gate, Bevy panels
+  editor/            → Bevy editor / WorldGen chrome
 ```
-
----
-
-## Migration path for `in_game_ui.rs`
-
-The file is currently a `LEGACY MODULE (not actively wired)`. When rewriting:
-
-1. Replace `Visibility` query (old `Visible`) with the current `Visibility` / `InheritedVisibility` components.
-2. Replace `in_game_menu_state.current()` with `in_game_menu_state.get()`.
-3. Replace `add_system(x.run_if())` with `add_systems(Update, x.run_if(in_state(S)))`.
-4. Build the actual HUD as `Node`-based entities in `in_game_hud.rs`.
 
 ---
 
 ## Prompt fragment for future agents
 
 1. Read `prompts/guides/ui_boundary_guide_v1.md`.
-2. In-game UI → Bevy native `Node` + components.
-3. Tooling UI → `egui` with `EguiContexts`.
+2. All UI → Bevy native `Node` + components.
+3. Never add `bevy_egui` / `EguiContexts`.
 4. Never use `NodeBundle`, `TextBundle`, `ImageBundle`, `ButtonBundle` (removed 0.15+).
 5. Never use `Color::rgb(...)` — use `Color::srgb(...)`.
 6. Always use `despawn_recursive()` to clean up tag-component screen entities.

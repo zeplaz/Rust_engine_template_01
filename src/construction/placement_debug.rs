@@ -3,16 +3,15 @@
 //! Surfaces pick vs ghost alignment: pick uses live camera after viewport sync;
 //! footprint tiles use egui + live `world_to_viewport` (GPU instancing disabled).
 //!
-//! **HUD-A-003:** floating Window is editor-only (`product_egui_shell_active`).
+//! **HUD-A-003:** floating Window is editor-only (`product_shell_active`).
 
 /// Sim must not show this floating debug Window (editor product shell only).
-#[allow(dead_code)] // HUD-A-003 witness greps this const; schedule uses product_egui_shell_active
+#[allow(dead_code)] // HUD-A-003 witness greps this const; schedule uses product_shell_active
 pub const PLACEMENT_DEBUG_WINDOW_IN_SIM: bool = false;
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::{egui, EguiContexts};
 
 use crate::construction::build_interaction::placement_snapshot_for_building;
 use crate::construction::build_state::{BuildGhostState, BuildPlacementPreview};
@@ -21,7 +20,7 @@ use crate::construction::build_tool_authority::ActiveBuildTool;
 use crate::construction::building_definitions::BuildingDefinitionRegistry;
 use crate::construction::footprint_tile_instances::FootprintTileWitness;
 use crate::construction::map_egui_projection::{
-    tile_screen_extent, world_to_sim_map_egui_rendered, ConstructionMapProjection,
+    tile_screen_extent, world_to_sim_map_screen_rendered, ConstructionMapProjection,
 };
 use crate::construction::visual_authority::ConstructionVisualRequests;
 use crate::engine::launch_args::EngineLaunchArgs;
@@ -29,8 +28,8 @@ use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
 use crate::gui::{
     camera_map_plane_vec3_to_logical_screen, map_camera_desired_from_presentation,
     map_camera_pose_for_presentation, sim_map_projection_frame,
-    sim_map_screen_to_world_xy_in_frame, sim_map_world_vec3_to_egui,
-    sim_map_world_vec3_to_egui_rendered, MainWorldCamera, MainWorldCameraOrthoTrace,
+    sim_map_screen_to_world_xy_in_frame, sim_map_world_vec3_to_screen,
+    sim_map_world_vec3_to_screen_rendered, MainWorldCamera, MainWorldCameraOrthoTrace,
     MapCameraDesired, MapCameraDesiredRes, SimulationMapViewport, TileDebugDrawGlobals,
     TileGpuDebugSettings,
 };
@@ -148,7 +147,7 @@ fn construction_placement_001_self_check(
     }
 
     use crate::gui::{
-        sim_map_screen_to_world_xy, sim_map_world_xy_to_egui, MapCameraDesired,
+        sim_map_screen_to_world_xy, sim_map_world_xy_to_screen, MapCameraDesired,
         SimulationMapViewport,
     };
 
@@ -164,7 +163,7 @@ fn construction_placement_001_self_check(
         ..Default::default()
     };
     let world = Vec2::new(12.5, 8.5);
-    let screen = sim_map_world_xy_to_egui(world, &desired, &vp, world_w, world_h)
+    let screen = sim_map_world_xy_to_screen(world, &desired, &vp, world_w, world_h)
         .ok_or("world_to_screen")?;
     let back = sim_map_screen_to_world_xy(
         Vec2::new(screen.x, screen.y),
@@ -179,7 +178,7 @@ fn construction_placement_001_self_check(
         return Err("pick_delta_world");
     }
     let screen2 =
-        sim_map_world_xy_to_egui(back, &desired, &vp, world_w, world_h).ok_or("reproject")?;
+        sim_map_world_xy_to_screen(back, &desired, &vp, world_w, world_h).ok_or("reproject")?;
     let cursor_reproject_delta_px = Vec2::new(screen.x - screen2.x, screen.y - screen2.y).length();
     if cursor_reproject_delta_px > MAP_PICK_GHOST_SCREEN_DELTA_PX_MAX {
         return Err("cursor_reproject_delta");
@@ -419,7 +418,7 @@ pub fn sync_construction_placement_debug_probe(
         probe.ghost_center_world_xy = Some(center_xy);
         let center_v3 = Vec3::new(center_xy.x, 0.0, center_xy.y);
         probe.ghost_screen_egui = if let Ok((camera, xf)) = cam_q.single() {
-            sim_map_world_vec3_to_egui_rendered(
+            sim_map_world_vec3_to_screen_rendered(
                 center_v3,
                 desired.as_ref(),
                 map_vp.as_ref(),
@@ -434,7 +433,7 @@ pub fn sync_construction_placement_debug_probe(
                 .as_ref()
                 .and_then(|pose| {
                     let compat = map_camera_desired_from_presentation(pose);
-                    sim_map_world_vec3_to_egui(
+                    sim_map_world_vec3_to_screen(
                         center_v3,
                         &compat,
                         map_vp.as_ref(),
@@ -443,7 +442,7 @@ pub fn sync_construction_placement_debug_probe(
                     )
                     .map(|p| Vec2::new(p.x, p.y))
                 })
-                .or_else(|| proj.world_to_egui(center_v3).map(|p| Vec2::new(p.x, p.y)))
+                .or_else(|| proj.world_to_screen(center_v3).map(|p| Vec2::new(p.x, p.y)))
         };
         if let Ok((camera, xf)) = cam_q.single() {
             probe.ghost_screen_camera =
@@ -471,392 +470,9 @@ pub(crate) struct PlacementDebugOverlayExtras<'w> {
     tile_gpu: Res<'w, TileGpuDebugSettings>,
 }
 
-pub fn draw_construction_placement_debug_overlay(
-    mut contexts: EguiContexts,
-    mut overlay: ResMut<ConstructionPlacementDebugOverlay>,
-    launch: Option<Res<EngineLaunchArgs>>,
-    probe: Option<Res<ConstructionPlacementDebugProbe>>,
-    desired: Res<MapCameraDesiredRes>,
-    authority: Option<Res<ViewProjectionAuthority>>,
-    params: Res<WorldGenParams>,
-    strip: Res<BuildStripState>,
-    ghost: Res<BuildGhostState>,
-    preview: Res<BuildPlacementPreview>,
-    tool: Res<ActiveBuildTool>,
-    registry: Res<BuildingDefinitionRegistry>,
-    requests: Res<ConstructionVisualRequests>,
-    map_vp: Res<SimulationMapViewport>,
-    extras: PlacementDebugOverlayExtras,
-    cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
-) -> Result {
-    let PlacementDebugOverlayExtras { ortho, tile_gpu } = extras;
-    if !overlay_visible(overlay.as_ref(), launch.as_deref()) {
-        return Ok(());
-    }
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return Ok(());
-    };
+pub fn draw_construction_placement_debug_overlay() -> Result { Ok(()) }
 
-    let auth_cam = authority.as_ref().and_then(|a| {
-        a.surface(ViewSurfaceId::SimulationMap)
-            .or_else(|| a.surface(ViewSurfaceId::WorldMain))
-            .map(|s| s.camera)
-    });
-
-    egui::Window::new("Construction placement (debug)")
-        .default_pos(egui::pos2(340.0, 120.0))
-        .default_width(420.0)
-        .show(ctx, |ui| {
-            ui.checkbox(&mut overlay.enabled, "Enabled");
-            ui.checkbox(&mut overlay.show_crosshairs, "Map crosshairs");
-            ui.separator();
-            ui.label(
-                egui::RichText::new(
-                    "White=cursor · Magenta=ghost via live camera · Green=ghost via egui math · \
-                     Cyan=pick world reprojected · GPU footprints OFF",
-                )
-                .small()
-                .weak(),
-            );
-
-            if let Some(p) = probe.as_deref() {
-                ui.label(format!(
-                    "Pointer: play_area={} chrome_blocks={} egui_blocks={} os_cursor_hidden={} rtt_fill_valid={}",
-                    p.pointer_in_play_area,
-                    p.pointer_chrome_blocks,
-                    p.egui_blocks,
-                    p.os_cursor_hidden,
-                    p.rtt_fill_valid
-                ));
-                if let Some(c) = p.cursor_logical {
-                    ui.label(format!("Cursor logical: ({:.1},{:.1})", c.x, c.y));
-                }
-                if let Some(w) = p.pick_world_rendered {
-                    ui.label(format!(
-                        "Pick world (camera): ({:.2},{:.2}) tile ({},{})",
-                        w.x,
-                        w.y,
-                        w.x.floor().max(0.0) as u32,
-                        w.y.floor().max(0.0) as u32
-                    ));
-                }
-                if let Some(w) = p.pick_world_manual {
-                    ui.label(format!(
-                        "Pick world (egui inverse): ({:.2},{:.2})",
-                        w.x, w.y
-                    ));
-                }
-                if let Some(d) = p.pick_delta_world {
-                    if d > 0.05 {
-                        ui.colored_label(
-                            egui::Color32::YELLOW,
-                            format!("Pick Δ world (cam vs manual): {d:.3}"),
-                        );
-                    }
-                }
-                if let Some(d) = p.cursor_reproject_delta_px {
-                    ui.label(format!(
-                        "Pick roundtrip screen Δ (cam): {d:.1}px {}",
-                        if d > 4.0 { "⚠" } else { "ok" }
-                    ));
-                }
-                if let Some(d) = p.ghost_delta_camera_vs_egui_px {
-                    ui.label(format!(
-                        "Ghost screen Δ (camera vs egui): {d:.1}px {}",
-                        if d > 4.0 { "⚠ MISALIGN" } else { "ok" }
-                    ));
-                }
-                let runtime_green = p.runtime_map_pick_closure_green();
-                ui.colored_label(
-                    if runtime_green {
-                        egui::Color32::GREEN
-                    } else {
-                        egui::Color32::YELLOW
-                    },
-                    format!(
-                        "Runtime MAP-PICK closure: {}",
-                        if runtime_green { "GREEN" } else { "open" }
-                    ),
-                );
-                if let Some(vp) = p.camera_viewport_phys {
-                    ui.label(format!(
-                        "Camera viewport phys: x={} y={} w={} h={}",
-                        vp[0], vp[1], vp[2], vp[3]
-                    ));
-                }
-                if let Some(fwh) = p.ortho_fixed_wh {
-                    ui.label(format!("Ortho fixed world: {:.1}×{:.1}", fwh.x, fwh.y));
-                }
-                ui.label(format!(
-                    "Projection: camera_auth={} rect={:?} visible={:.0}×{:.1}",
-                    p.camera_authoritative,
-                    p.projection_screen_rect,
-                    p.projection_visible_wh.map(|v| v.x).unwrap_or(0.0),
-                    p.projection_visible_wh.map(|v| v.y).unwrap_or(0.0),
-                ));
-                ui.label(format!(
-                    "Yaw° transform={:.1} desired={:.1} authority={:.1}",
-                    p.transform_yaw_deg,
-                    p.desired_yaw_deg,
-                    p.authority_yaw_deg.unwrap_or(f32::NAN)
-                ));
-                ui.label(format!(
-                    "Footprint: egui={} gpu={} tiles={} · view_proj.w={:.4}",
-                    p.egui_footprint_active,
-                    p.gpu_footprint_active,
-                    p.footprint_tile_count,
-                    p.view_proj_w
-                ));
-                if p.gpu_footprint_active {
-                    ui.colored_label(
-                        egui::Color32::LIGHT_RED,
-                        "GPU footprint path active — expect bottom-left blobs",
-                    );
-                }
-            }
-
-            ui.separator();
-            ui.label(format!(
-                "Ghost origin: {:?} · drag={} · allows_commit={}",
-                ghost.origin, ghost.drag_active, preview.report.allows_commit
-            ));
-            ui.label(format!(
-                "Footprint cells: {}×{} · visual requests: {}",
-                ghost.footprint.width,
-                ghost.footprint.depth,
-                requests.footprint_tiles.len()
-            ));
-
-            if let Some(origin) = ghost.origin {
-                if let Some(snap) =
-                    placement_snapshot_for_building(&tool, &registry, &ghost, origin)
-                {
-                    ui.label(format!(
-                        "Parametric weights: {} · mass={:.2} · scale={:.2}",
-                        snap.weights.len(),
-                        snap.weights.iter().map(|(_, w)| *w).sum::<f32>(),
-                        ghost.scale_factor
-                    ));
-                }
-            }
-            if let Some(p) = probe.as_ref() {
-                ui.label(format!(
-                    "DEBUG-001: cursor_visible={} pick_world={:?} click_screen={:?} action_tile={:?}",
-                    p.cursor_visible,
-                    p.pick_world,
-                    p.click_screen,
-                    p.action_tile,
-                ));
-                ui.label(format!(
-                    "Adjust: scale_factor={:.2} weight_tiles={} site_preset={:?} zones={}",
-                    p.scale_factor,
-                    p.weight_tile_count,
-                    p.site_stub_preset,
-                    p.site_zone_label_count
-                ));
-            }
-
-            ui.separator();
-            ui.label(format!(
-                "MapCameraDesired: ({:.1},{:.1}) scale={:.3}",
-                desired.translation.x, desired.translation.y, desired.scale.x
-            ));
-            if let Some(cam) = auth_cam {
-                let dx = (cam.translation.x - desired.translation.x).abs();
-                let dz = (cam.translation.y - desired.translation.y).abs();
-                if dx > 1.0 || dz > 1.0 {
-                    ui.colored_label(
-                        egui::Color32::LIGHT_RED,
-                        format!("Authority drift Δxy=({dx:.1},{dz:.1})"),
-                    );
-                }
-            }
-            if map_vp.valid {
-                ui.label(format!(
-                    "Sim map vp: ({:.0},{:.0})→({:.0},{:.0})",
-                    map_vp.min.x, map_vp.min.y, map_vp.max.x, map_vp.max.y
-                ));
-            }
-            let tile_px = tile_screen_extent(
-                authority.as_deref(),
-                desired.as_ref(),
-                map_vp.as_ref(),
-                params.as_ref(),
-            );
-            ui.label(format!(
-                "Tile px: {tile_px:.1} · batched_overlay={}",
-                tile_gpu.use_batched_mesh_overlay
-            ));
-            ui.label(format!("Build strip: {:?}", strip.active));
-            if let Some(ctx) = crate::gui::hud::grammar_read_hud::resolve_grammar_read_context(
-                &tool,
-                &registry,
-                &ghost,
-            ) {
-                ui.label(egui::RichText::new(
-                    crate::gui::hud::grammar_read_hud::format_grammar_summary_chip(&ctx),
-                )
-                .small());
-            }
-        });
-
-    if overlay.show_crosshairs {
-        draw_placement_crosshairs(
-            ctx,
-            probe.as_deref(),
-            &ghost,
-            authority.as_deref(),
-            desired.as_ref(),
-            map_vp.as_ref(),
-            params.as_ref(),
-            ortho.as_ref(),
-            cam_q,
-        );
-    }
-
-    Ok(())
-}
-
-fn draw_placement_crosshairs(
-    ctx: &egui::Context,
-    probe: Option<&ConstructionPlacementDebugProbe>,
-    ghost: &BuildGhostState,
-    authority: Option<&ViewProjectionAuthority>,
-    desired: &MapCameraDesired,
-    map_vp: &SimulationMapViewport,
-    params: &WorldGenParams,
-    ortho: &crate::gui::MainWorldCameraOrthoTrace,
-    cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
-) {
-    if !map_vp.is_adequate_for_camera() {
-        return;
-    }
-    if probe.is_some_and(|p| !p.pointer_in_play_area || p.egui_blocks) {
-        return;
-    }
-    let layer = egui::LayerId::new(
-        egui::Order::Foreground,
-        egui::Id::new("construction_placement_debug_crosshairs"),
-    );
-    let painter = ctx.layer_painter(layer);
-
-    let presentation = cam_q
-        .single()
-        .ok()
-        .map(|(_, xf)| map_camera_pose_for_presentation(xf, desired));
-
-    let cursor = probe.and_then(|p| p.cursor_logical);
-
-    if let Some(c) = cursor {
-        if map_vp.contains_cursor(c) {
-            let p = egui::pos2(c.x, c.y);
-            painter.circle_stroke(p, 10.0, egui::Stroke::new(2.0, egui::Color32::WHITE));
-            painter.line_segment(
-                [p + egui::vec2(-14.0, 0.0), p + egui::vec2(14.0, 0.0)],
-                egui::Stroke::new(1.5, egui::Color32::WHITE),
-            );
-            painter.line_segment(
-                [p + egui::vec2(0.0, -14.0), p + egui::vec2(0.0, 14.0)],
-                egui::Stroke::new(1.5, egui::Color32::WHITE),
-            );
-        }
-    }
-
-    if let Some(p) = probe.and_then(|p| p.cursor_reproject_from_pick_camera) {
-        if map_vp.contains_cursor(p) {
-            let pt = egui::pos2(p.x, p.y);
-            painter.circle_stroke(
-                pt,
-                8.0,
-                egui::Stroke::new(1.5, egui::Color32::from_rgb(80, 220, 255)),
-            );
-        }
-    }
-
-    let Some(origin) = ghost.origin else {
-        return;
-    };
-
-    let center = Vec3::new(origin.x as f32 + 0.5, 0.0, origin.z as f32 + 0.5);
-
-    if let Ok((camera, xf)) = cam_q.single() {
-        if let Some(p) = camera_map_plane_vec3_to_logical_screen(camera, xf, center) {
-            if map_vp.contains_cursor(p) {
-                let pt = egui::pos2(p.x, p.y);
-                painter.circle_filled(pt, 5.0, egui::Color32::from_rgb(255, 80, 220));
-                painter.circle_stroke(
-                    pt,
-                    11.0,
-                    egui::Stroke::new(2.0, egui::Color32::from_rgb(255, 120, 240)),
-                );
-            }
-        }
-    }
-
-    if let Some(p) = probe.and_then(|p| p.ghost_screen_egui).or_else(|| {
-        presentation.as_ref().and_then(|pose| {
-            let compat = map_camera_desired_from_presentation(pose);
-            sim_map_world_vec3_to_egui(
-                center,
-                &compat,
-                map_vp,
-                params.width as f32,
-                params.height as f32,
-            )
-            .map(|ep| Vec2::new(ep.x, ep.y))
-        })
-    }) {
-        if map_vp.contains_cursor(p) {
-            let pt = egui::pos2(p.x, p.y);
-            painter.circle_filled(pt, 5.0, egui::Color32::from_rgb(80, 220, 80));
-            painter.circle_stroke(
-                pt,
-                11.0,
-                egui::Stroke::new(2.0, egui::Color32::from_rgb(120, 255, 120)),
-            );
-        }
-    } else if let Some(p) =
-        world_to_sim_map_egui_rendered(center, Some(ortho), authority, desired, map_vp, params)
-    {
-        let v = Vec2::new(p.x, p.y);
-        if map_vp.contains_cursor(v) {
-            painter.circle_stroke(p, 12.0, egui::Stroke::new(2.0, egui::Color32::GREEN));
-            painter.circle_filled(p, 4.0, egui::Color32::from_rgb(40, 220, 90));
-        }
-    }
-
-    let ox = origin.x as i32;
-    let oz = origin.z as i32;
-    for dz in 0..ghost.footprint.depth.min(3) as i32 {
-        for dx in 0..ghost.footprint.width.min(3) as i32 {
-            let world = Vec3::new((ox + dx) as f32 + 0.5, 0.0, (oz + dz) as f32 + 0.5);
-            if let Ok((camera, xf)) = cam_q.single() {
-                if let Some(p) = camera_map_plane_vec3_to_logical_screen(camera, xf, world) {
-                    if map_vp.contains_cursor(p) {
-                        painter.circle_filled(
-                            egui::pos2(p.x, p.y),
-                            2.5,
-                            egui::Color32::from_rgb(255, 180, 60),
-                        );
-                        continue;
-                    }
-                }
-            }
-            if let Some(p) = sim_map_world_vec3_to_egui(
-                world,
-                desired,
-                map_vp,
-                params.width as f32,
-                params.height as f32,
-            ) {
-                let v = Vec2::new(p.x, p.y);
-                if map_vp.contains_cursor(v) {
-                    painter.circle_filled(p, 2.0, egui::Color32::from_rgb(80, 200, 255));
-                }
-            }
-        }
-    }
-}
+fn draw_placement_crosshairs() {}
 
 #[cfg(test)]
 mod tests {

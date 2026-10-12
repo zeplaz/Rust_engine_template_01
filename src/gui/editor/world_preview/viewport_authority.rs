@@ -3,7 +3,6 @@
 use bevy::diagnostic::FrameCount;
 use bevy::math::{UVec2, Vec2};
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use super::layers::PreviewLayers;
 use super::preview_render_contract::{
@@ -17,9 +16,9 @@ use crate::render::{trace_camera_sync, trace_viewport, DebugRenderTraceConfig, R
 /// Committed layout + render routing for the world preview window (one frame).
 #[derive(Resource, Debug, Clone)]
 pub struct WorldPreviewViewportAuthority {
-    pub egui_clip_rect: Option<egui::Rect>,
-    pub display_rect: Option<egui::Rect>,
-    pub sample_uv_rect: egui::Rect,
+    pub egui_clip_rect: Option<bevy::prelude::Rect>,
+    pub display_rect: Option<bevy::prelude::Rect>,
+    pub sample_uv_rect: bevy::prelude::Rect,
     pub logical_viewport: Vec2,
     pub physical_render_extent: UVec2,
     pub world_map_extent: UVec2,
@@ -60,10 +59,7 @@ pub fn sync_world_preview_viewport_authority(
     let gpu = path.authoritative_surface == PreviewAuthoritativeSurface::GpuRenderTarget
         && preview_cam.mode == PreviewRenderMode::GpuRenderTarget;
     let logical_v = resolved.world_preview.logical_size;
-    let egui_clip = egui::Rect::from_min_size(
-        egui::pos2(0.0, 0.0),
-        egui::vec2(logical_v.x, logical_v.y),
-    );
+    let egui_clip = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(0.0, 0.0) + bevy::prelude::Vec2::new(logical_v.x, logical_v.y),);
 
     authority.gpu_authoritative = gpu;
     authority.logical_viewport = logical_v;

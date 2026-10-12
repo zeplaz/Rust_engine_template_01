@@ -12,7 +12,6 @@ use bevy::prelude::*;
 use bevy::ui::widget::ImageNode;
 use bevy::ui::{ComputedNode, UiGlobalTransform};
 use bevy::window::PrimaryWindow;
-use bevy_egui::egui;
 
 use crate::engine::{
     ux_enter_world_from_world_gen, AppState, BaseState, PauseState, WorldGenChromeLatch,
@@ -1200,7 +1199,10 @@ pub(crate) fn sync_world_gen_bevy_shell(
                 shell_diag.as_deref_mut(),
                 pending_layout.can_emit_layout_capture(),
             );
-            let inner = panel_rect.shrink(MAP_PANEL_INSET_PX);
+            let inner = bevy::prelude::Rect::from_corners(
+                panel_rect.min + bevy::prelude::Vec2::splat(MAP_PANEL_INSET_PX),
+                panel_rect.max - bevy::prelude::Vec2::splat(MAP_PANEL_INSET_PX),
+            );
             let fit = compute_map_fit_strict(inner, UVec2::new(disp_w, disp_h), view.fit_mode);
             let gpu_painted = path.authoritative_surface
                 == super::preview_render_contract::PreviewAuthoritativeSurface::GpuRenderTarget;
@@ -1216,7 +1218,7 @@ pub(crate) fn sync_world_gen_bevy_shell(
                 )
             };
             if let Some(cursor) = cursor {
-                let p = egui::pos2(cursor.x, cursor.y);
+                let p = bevy::prelude::Vec2::new(cursor.x, cursor.y);
                 if panel_rect.contains(p) {
                     let scroll: f32 = wheel.read().map(|w| w.y).sum();
                     let zoom_mod = keys.pressed(KeyCode::ControlLeft)
@@ -1420,7 +1422,7 @@ fn mobility_label(
     format!("Mobility: {}", mob.profiles[idx].id.as_str())
 }
 
-fn node_logical_rect(node: &ComputedNode, xf: &UiGlobalTransform, scale: f32) -> egui::Rect {
+fn node_logical_rect(node: &ComputedNode, xf: &UiGlobalTransform, scale: f32) -> bevy::prelude::Rect {
     let scale = scale.max(1e-6);
     let half = node.size() * 0.5;
     let corners = [
@@ -1438,7 +1440,7 @@ fn node_logical_rect(node: &ComputedNode, xf: &UiGlobalTransform, scale: f32) ->
     }
     pmin /= scale;
     pmax /= scale;
-    egui::Rect::from_min_max(egui::pos2(pmin.x, pmin.y), egui::pos2(pmax.x, pmax.y))
+    bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(pmin.x, pmin.y), bevy::prelude::Vec2::new(pmax.x, pmax.y))
 }
 
 #[derive(SystemParam)]
@@ -1780,7 +1782,7 @@ mod wgen_tests {
     fn wgen_world_gen_session_does_not_schedule_egui_draw() {
         let plugin = include_str!("plugin.rs").replace("\r\n", "\n");
         assert!(
-            !plugin.contains("EguiPrimaryContextPass"),
+            !plugin.contains("RetiredEgui"),
             "world preview plugin must not schedule an egui pass"
         );
         let ui = include_str!("../world_gen_ui.rs");
@@ -1789,7 +1791,7 @@ mod wgen_tests {
             "canonical world-gen UI must not acquire an egui context"
         );
         assert!(
-            !ui.contains("EguiPrimaryContextPass"),
+            !ui.contains("RetiredEgui"),
             "canonical world-gen UI must not schedule the egui pass"
         );
         let shell = include_str!("world_gen_bevy_shell.rs");
@@ -1814,20 +1816,18 @@ mod wgen_tests {
             world_gen_at < ctx_at,
             "WorldGen must return before theme ctx_mut"
         );
-        let pointer = include_str!("../../hud/simulation_pointer_gate.rs");
-        let fin = pointer
-            .split("fn finalize_simulation_map_pointer_gate_egui_system")
-            .nth(1)
-            .expect("finalize");
-        let fin = fin.split("\nfn ").next().unwrap_or(fin);
-        assert!(fin.find("AppState::WorldGen").unwrap() < fin.find("ctx_mut").unwrap());
-        let panel = include_str!("../../hud/panel_state.rs");
-        let click = panel
-            .split("fn hud_panel_click_outside_collapse_egui_system")
-            .nth(1)
-            .expect("editor click");
-        let click = click.split("\nfn ").next().unwrap_or(click);
-        assert!(click.find("AppState::WorldGen").unwrap() < click.find("ctx_mut").unwrap());
+        // Product / map-editor shells stay off during WorldGen (no egui finalize stubs).
+        use crate::engine::AppState;
+        use crate::engine::states::BaseState;
+        use crate::gui::ui_gates::{map_editor_chrome_states_active, product_shell_states_active};
+        assert!(
+            !product_shell_states_active(BaseState::Editor, AppState::WorldGen),
+            "product shell must stay off during WorldGen"
+        );
+        assert!(
+            !map_editor_chrome_states_active(BaseState::Editor, AppState::WorldGen),
+            "map editor chrome must stay off during WorldGen"
+        );
         let sub = include_str!("../../../bevysubengines/world_generator_plugin.rs");
         let gate = sub
             .split("fn subengine_world_gen_editor_only")

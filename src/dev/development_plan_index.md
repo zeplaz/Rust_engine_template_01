@@ -14,7 +14,7 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **GPU terrain / sim perf (ACTIVE):** [`gpu_todos_v1.md`](gpu_todos_v1.md) · [`plan_gpu_terrain_production_exec_001_v1.md`](plan_gpu_terrain_production_exec_001_v1.md) — P0-C′-PRIME next · P0-C tilemap **blocked DR-MIG-TILEMAP**
 
-**Play egui + one map (2026-09-27):** [`plan_egui_game_retirement_v1.md`](plan_egui_game_retirement_v1.md) — UPM-1..5 and the city-bug pass **DONE** · next **PLN-1 → PLN-3** · charter [`design_native_game_ui_v1.md`](design_native_game_ui_v1.md). Editor and WorldGen keep `bevy_egui`.
+**Play egui + one map (2026-09-27):** [`plan_egui_game_retirement_v1.md`](plan_egui_game_retirement_v1.md) — sim mesh/pointer rules still apply; **PLN-1..3 SUPERSEDED**. **Cargo drop CLOSED:** [`plan_egui_full_dep_drop_v1.md`](plan_egui_full_dep_drop_v1.md) — `bevy_egui` removed (EGR-FULL-0..8). **Panel port (CLOSED):** [`plan_bevy_panel_port_v1.md`](plan_bevy_panel_port_v1.md) · witness `debug_runs/bevy_panel_port_live.json` · residual **P9 terrain_conform** / PHASE2-BUILD-20 = construction residual (¬UI program).
 
 **VFX · spectator · scale · artist pipeline (ACTIVE — 2026-08-28):** [`plan_vfx_spectator_scale_program_v1.md`](plan_vfx_spectator_scale_program_v1.md) — **VSS-001** · child: [`plan_world_scale_contract_v1.md`](plan_world_scale_contract_v1.md) · [`plan_artist_vfx_toolchain_v1.md`](plan_artist_vfx_toolchain_v1.md) · queue [`vss_program_queue.json`](../tools/orchestrator/queues/vss_program_queue.json) · kickoff [`vss_001_kickoff_packet.yaml`](../debug_runs/agent_ops/vss_001_kickoff_packet.yaml)
 

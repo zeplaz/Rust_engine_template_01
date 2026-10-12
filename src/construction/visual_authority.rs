@@ -1,7 +1,6 @@
 //! Construction visual request buffer → unified draw pass (Round 3-C).
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::construction::map_egui_projection::map_zoom_screen_scale;
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
@@ -29,7 +28,7 @@ pub struct PathLineRequest {
 #[derive(Clone, Debug)]
 pub struct ZoneTileRequest {
     pub center: Vec3,
-    pub color: egui::Color32,
+    pub color: crate::gui::UiRgba,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -46,7 +45,7 @@ pub struct FootprintTileRequest {
     /// Partial-alpha weight from parametric raster (`α = weight`, capped at 1).
     pub weight: f32,
     /// Place-settle pulse (and similar) — when set, egui paints this RGBA instead of color_kind tokens.
-    pub fill_override: Option<egui::Color32>,
+    pub fill_override: Option<crate::gui::UiRgba>,
 }
 
 /// BUILD-READ-SITE-v0-002 — dashed site composition border.
@@ -67,7 +66,7 @@ pub struct SiteZoneLabelRequest {
 pub struct ConstructionVisualRequests {
     pub paths: Vec<PathLineRequest>,
     pub zone_tiles: Vec<ZoneTileRequest>,
-    pub control_points: Vec<(Vec3, egui::Color32)>,
+    pub control_points: Vec<(Vec3, crate::gui::UiRgba)>,
     pub footprint_tiles: Vec<FootprintTileRequest>,
     /// Tiles of the live ghost that take the gold lock ring (`BuildPlacementMode::Adjust` only).
     pub footprint_lock_tiles: Vec<IVec2>,
@@ -104,7 +103,7 @@ fn push_weighted_footprint_tiles(
     out: &mut Vec<FootprintTileRequest>,
     weights: &[(IVec2, f32)],
     kind: FootprintTileColorKind,
-    fill_override: Option<egui::Color32>,
+    fill_override: Option<crate::gui::UiRgba>,
 ) {
     for &(tile, w) in weights {
         if w > 0.001 {
@@ -144,7 +143,7 @@ pub fn sync_footprint_visual_requests(
     let occupy_fill = if super::preview_commit_guard::report_is_footprint_occupied(&preview.report)
     {
         let [r, g, b, a] = super::phase_fill::occupancy_reject_rgba();
-        Some(egui::Color32::from_rgba_unmultiplied(r, g, b, a))
+        Some(crate::gui::UiRgba::from_rgba_unmultiplied(r, g, b, a))
     } else {
         None
     };
@@ -303,215 +302,6 @@ pub fn partial_alpha_parametric_witness_green() -> bool {
         .any(|(_, w)| *w >= WEIGHT_OMIT_THRESHOLD && *w > 0.0 && *w < 1.0)
 }
 
-pub fn draw_construction_visual_requests_egui(
-    mut contexts: bevy_egui::EguiContexts,
-    requests: Res<ConstructionVisualRequests>,
-    authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesiredRes>,
-    map_vp: Res<SimulationMapViewport>,
-    ortho: Res<crate::gui::MainWorldCameraOrthoTrace>,
-    params: Res<WorldGenParams>,
-    test_scene: Option<Res<crate::engine::test_harness::ActiveTestScene>>,
-) -> Result {
-    if test_scene.as_deref().is_some_and(|s| {
-        matches!(
-            s.0,
-            crate::engine::launch_args::TestScene::VfxSandbox
-                | crate::engine::launch_args::TestScene::Fire
-        )
-    }) {
-        return Ok(());
-    }
-    if requests.paths.is_empty()
-        && requests.zone_tiles.is_empty()
-        && requests.control_points.is_empty()
-        && requests.footprint_tiles.is_empty()
-        && requests.corridor_paths.is_empty()
-        && requests.site_stub_boxes.is_empty()
-        && requests.site_zone_labels.is_empty()
-    {
-        return Ok(());
-    }
-    if !map_vp.is_adequate_for_camera() {
-        return Ok(());
-    }
-    let zoom = map_zoom_screen_scale(authority.as_deref(), desired.as_ref());
-    let ortho_ref = ortho.as_ref();
-    let ctx = contexts.ctx_mut()?;
-    let layer = egui::LayerId::new(
-        egui::Order::Foreground,
-        egui::Id::new("construction_visual_authority"),
-    );
-    let painter = ctx.layer_painter(layer);
-
-    let tile_px = crate::construction::map_egui_projection::tile_screen_extent_rendered(
-        Some(ortho_ref),
-        authority.as_deref(),
-        desired.as_ref(),
-        map_vp.as_ref(),
-        params.as_ref(),
-    );
-    let world_to_screen = |world: Vec3| {
-        crate::construction::map_egui_projection::world_to_sim_map_egui_rendered(
-            world,
-            Some(ortho_ref),
-            authority.as_deref(),
-            desired.as_ref(),
-            map_vp.as_ref(),
-            params.as_ref(),
-        )
-    };
-    for z in &requests.zone_tiles {
-        if let Some(screen) = world_to_screen(z.center) {
-            let side = tile_px * 0.92;
-            let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
-            painter.rect_filled(rect, 1.0, z.color);
-            painter.rect_stroke(
-                rect,
-                0.0,
-                egui::Stroke::new(1.0, egui::Color32::from_gray(220)),
-                egui::epaint::StrokeKind::Inside,
-            );
-        }
-    }
-
-    let dash = egui::Stroke::new(
-        1.5,
-        egui::Color32::from_rgba_unmultiplied(180, 200, 255, 200),
-    );
-    for stub in &requests.site_stub_boxes {
-        for edge in 0..stub.width {
-            for &dz in &[0, stub.depth.saturating_sub(1)] {
-                let world = Vec3::new(
-                    stub.origin.x as f32 + edge as f32 + 0.5,
-                    0.05,
-                    stub.origin.z as f32 + dz as f32 + 0.5,
-                );
-                if let Some(screen) = world_to_screen(world) {
-                    let side = tile_px * 0.92;
-                    let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
-                    painter.rect_stroke(rect, 0.0, dash, egui::epaint::StrokeKind::Inside);
-                }
-            }
-        }
-        for edge in 0..stub.depth {
-            for &dx in &[0, stub.width.saturating_sub(1)] {
-                let world = Vec3::new(
-                    stub.origin.x as f32 + dx as f32 + 0.5,
-                    0.05,
-                    stub.origin.z as f32 + edge as f32 + 0.5,
-                );
-                if let Some(screen) = world_to_screen(world) {
-                    let side = tile_px * 0.92;
-                    let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
-                    painter.rect_stroke(rect, 0.0, dash, egui::epaint::StrokeKind::Inside);
-                }
-            }
-        }
-    }
-
-    for label in &requests.site_zone_labels {
-        if let Some(screen) = world_to_screen(label.world) {
-            painter.text(
-                screen,
-                egui::Align2::CENTER_CENTER,
-                &label.text,
-                egui::FontId::proportional(11.0),
-                egui::Color32::from_rgba_unmultiplied(220, 230, 255, 230),
-            );
-        }
-    }
-
-    super::round4_corridor::draw_corridor_phase_paths(
-        &painter,
-        &requests.corridor_paths,
-        |world| world_to_screen(world),
-        zoom,
-    );
-
-    for path in &requests.paths {
-        let Some(a) = world_to_screen(path.start) else {
-            continue;
-        };
-        let Some(b) = world_to_screen(path.end) else {
-            continue;
-        };
-        let color = match (path.kind, path.valid, path.slope_ok, path.committed) {
-            (VisualPathKind::Road, true, _, true) => super::ghost_visual::road_committed_color(),
-            (VisualPathKind::Road, true, _, false) => super::ghost_visual::road_segment_color(true),
-            (VisualPathKind::Rail, true, true, _) => {
-                egui::Color32::from_rgba_unmultiplied(180, 120, 255, 150)
-            }
-            (VisualPathKind::Rail, _, false, _) => {
-                egui::Color32::from_rgba_unmultiplied(255, 140, 60, 180)
-            }
-            _ => egui::Color32::from_rgba_unmultiplied(240, 90, 90, 160),
-        };
-        let stroke_w = (path.width * 0.5 * zoom).clamp(1.0, 48.0);
-        painter.line_segment([a, b], egui::Stroke::new(stroke_w, color));
-    }
-
-    for (p, color) in &requests.control_points {
-        if let Some(screen) = world_to_screen(*p) {
-            let r = (5.0 * zoom.sqrt()).clamp(3.0, 14.0);
-            painter.circle_filled(screen, r, *color);
-        }
-    }
-
-    let mut lock_bounds: Option<egui::Rect> = None;
-    // Live ghost tiles own alpha (`ghost_visual` tokens). A settle fill_override on the
-    // same tile is a second writer and reads as a blink under the cursor.
-    let live_ghost_tiles: Vec<IVec2> = requests
-        .footprint_tiles
-        .iter()
-        .filter(|tile| tile.fill_override.is_none())
-        .map(|tile| tile.tile)
-        .collect();
-    for tile in &requests.footprint_tiles {
-        if tile.fill_override.is_some() && live_ghost_tiles.contains(&tile.tile) {
-            continue;
-        }
-        let world = Vec3::new(tile.tile.x as f32 + 0.5, 0.0, tile.tile.y as f32 + 0.5);
-        let Some(screen) = world_to_screen(world) else {
-            continue;
-        };
-        let (color, stroke) = if let Some(override_c) = tile.fill_override {
-            // Alpha is already baked in the settle color. Do not scale it again.
-            (override_c, Some(egui::Stroke::new(1.5, override_c)))
-        } else {
-            let base = match tile.color_kind {
-                FootprintTileColorKind::Valid => super::ghost_visual::footprint_valid_color(),
-                FootprintTileColorKind::Risky => super::ghost_visual::footprint_risky_color(),
-                FootprintTileColorKind::Invalid => super::ghost_visual::footprint_invalid_color(),
-            };
-            let color = if (tile.weight - 1.0).abs() <= f32::EPSILON {
-                base
-            } else {
-                let alpha = (base.a() as f32 * tile.weight).round() as u8;
-                egui::Color32::from_rgba_unmultiplied(base.r(), base.g(), base.b(), alpha)
-            };
-            (color, None)
-        };
-        let side = tile_px * 0.92;
-        let rect = egui::Rect::from_center_size(screen, egui::vec2(side, side));
-        painter.rect_filled(rect, 1.0, color);
-        if let Some(stroke) = stroke {
-            painter.rect_stroke(rect, 0.0, stroke, egui::epaint::StrokeKind::Inside);
-        }
-        if requests.footprint_lock_tiles.contains(&tile.tile) {
-            lock_bounds = Some(match lock_bounds {
-                Some(bounds) => bounds.union(rect),
-                None => rect,
-            });
-        }
-    }
-    if let Some(rect) = lock_bounds {
-        if let Some(stroke) = super::ghost_visual::footprint_lock_ring_stroke(true) {
-            painter.rect_stroke(rect, 1.0, stroke, egui::epaint::StrokeKind::Outside);
-        }
-    }
-    Ok(())
-}
 
 pub fn sync_road_visual_requests(
     tool: Res<crate::construction::build_tool_authority::ActiveBuildTool>,
@@ -616,7 +406,7 @@ pub fn sync_rail_visual_requests(
     for p in &placement.control_points {
         requests.control_points.push((
             *p,
-            egui::Color32::from_rgba_unmultiplied(200, 160, 255, 220),
+            crate::gui::UiRgba::from_rgba_unmultiplied(200, 160, 255, 220),
         ));
     }
 }

@@ -1,4 +1,4 @@
-//! Faction tools window — egui (`F4`).
+//! Faction tools window — Bevy UI (`F4`).
 //!
 //! Stub UI for the faction editor; populated against `FactionBlueprint` once the data model lands.
 //!
@@ -6,15 +6,14 @@
 //! - `prompts/designer_questions/factions/faction_editor/02_ui_egui_panels.md`
 //! - `prompts/designer_questions/factions/faction_editor/01_data_model.md`
 //! - `prompts/designer_questions/factions/implementation_questions_v1.md`
-//!
-//! Pattern mirrors `crate::systems::production::tools_ui::ProductionToolsUiPlugin`.
 
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
+use bevy::ui::FocusPolicy;
 
-use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::gui::input_bindings::InputBindings;
-use crate::gui::style::{primary_label, widget_scroll_vertical_fill, UiPalette};
+use crate::gui::panel_presence::PanelPresence;
+use crate::gui::style::{CmdUiMonoFont, UiPalette};
+use crate::gui::ui_gates::in_simulation_or_editor;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum FactionToolsPanel {
@@ -32,20 +31,36 @@ pub struct FactionToolsState {
 
 impl Default for FactionToolsState {
     fn default() -> Self {
-        Self { visible: false, active: FactionToolsPanel::Roster }
+        Self {
+            visible: false,
+            active: FactionToolsPanel::Roster,
+        }
     }
+}
+
+#[derive(Component)]
+pub struct FactionToolsBevyRoot;
+
+#[derive(Component)]
+struct FactionToolsBevyBodyText;
+
+#[derive(Default)]
+struct FactionToolsStamp {
+    key: u64,
 }
 
 pub struct FactionToolsUiPlugin;
 
 impl Plugin for FactionToolsUiPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<FactionToolsState>()
-            .add_systems(Update, toggle_faction_tools.run_if(in_simulation_or_editor))
-            .add_systems(
-                EguiPrimaryContextPass,
-                faction_tools_ui_system.run_if(crate::gui::ui_gates::product_egui_shell_active),
-            );
+        app.init_resource::<FactionToolsState>().add_systems(
+            Update,
+            (
+                toggle_faction_tools,
+                sync_faction_tools_bevy.after(toggle_faction_tools),
+            )
+                .run_if(in_simulation_or_editor),
+        );
     }
 }
 
@@ -59,52 +74,93 @@ fn toggle_faction_tools(
     }
 }
 
-pub fn faction_tools_ui_system(
-    mut contexts: EguiContexts,
-    mut state: ResMut<FactionToolsState>,
-    bindings: Res<InputBindings>,
+fn faction_tools_body(state: &FactionToolsState) -> String {
+    let tab = match state.active {
+        FactionToolsPanel::Roster => "Roster",
+        FactionToolsPanel::Blueprint => "Blueprint",
+        FactionToolsPanel::Diplomacy => "Diplomacy",
+        FactionToolsPanel::ImportExport => "Import / Export",
+    };
+    format!(
+        "Faction tools ({tab})\n\
+         Stub — FactionBlueprint data model pending.\n\
+         Tabs: Roster · Blueprint · Diplomacy · Import/Export"
+    )
+}
+
+fn sync_faction_tools_bevy(
+    mut commands: Commands,
+    state: Res<FactionToolsState>,
     palette: Res<UiPalette>,
-) -> Result {
+    mono: Res<CmdUiMonoFont>,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<FactionToolsBevyRoot>>,
+    mut body: Query<&mut Text, With<FactionToolsBevyBodyText>>,
+    mut stamp: Local<FactionToolsStamp>,
+) {
+    presence.faction_tools_root = !roots.is_empty();
     if !state.visible {
-        return Ok(());
+        for e in &roots {
+            commands.entity(e).despawn();
+        }
+        presence.faction_tools_root = false;
+        stamp.key = 0;
+        return;
     }
-    let ctx = contexts.ctx_mut()?;
 
-    crate::gui::std_floating(egui::Window::new(format!(
-        "Faction Tools ({})",
-        InputBindings::format_key(bindings.toggle_faction_tools)
-    )))
-    .default_size(egui::vec2(480.0, 420.0))
-        .show(ctx, |ui| {
-            ui.horizontal(|ui| {
-                ui.selectable_value(&mut state.active, FactionToolsPanel::Roster, "Roster");
-                ui.selectable_value(&mut state.active, FactionToolsPanel::Blueprint, "Blueprint");
-                ui.selectable_value(&mut state.active, FactionToolsPanel::Diplomacy, "Diplomacy");
-                ui.selectable_value(&mut state.active, FactionToolsPanel::ImportExport, "Import/Export");
+    let text = faction_tools_body(state.as_ref());
+    let mut key = text.len() as u64;
+    for b in text.bytes() {
+        key = key.wrapping_mul(0x9E37_79B9).wrapping_add(b as u64);
+    }
+    key = key.wrapping_add(match state.active {
+        FactionToolsPanel::Roster => 1,
+        FactionToolsPanel::Blueprint => 2,
+        FactionToolsPanel::Diplomacy => 3,
+        FactionToolsPanel::ImportExport => 4,
+    });
+
+    if roots.is_empty() {
+        let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
+        commands
+            .spawn((
+                FactionToolsBevyRoot,
+                Node {
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(64.0),
+                    right: Val::Px(16.0),
+                    width: Val::Px(320.0),
+                    max_height: Val::Px(360.0),
+                    padding: UiRect::all(Val::Px(10.0)),
+                    flex_direction: FlexDirection::Column,
+                    border: UiRect::all(Val::Px(1.0)),
+                    border_radius: BorderRadius::ZERO,
+                    overflow: Overflow::scroll_y(),
+                    ..default()
+                },
+                BackgroundColor(palette.bevy_hud_panel_fill()),
+                BorderColor::all(palette.bevy_wire_magenta()),
+                FocusPolicy::Block,
+                ZIndex(955),
+            ))
+            .with_children(|p| {
+                p.spawn((
+                    FactionToolsBevyBodyText,
+                    Text::new(text.clone()),
+                    tf,
+                    TextColor(palette.bevy_primary_text()),
+                ));
             });
-            ui.separator();
+        stamp.key = key;
+        presence.faction_tools_root = true;
+        return;
+    }
 
-            widget_scroll_vertical_fill("faction_tools_body_scroll", ui.available_height()).show(ui, |ui| {
-                match state.active {
-                    FactionToolsPanel::Roster => {
-                        primary_label(ui, palette.as_ref(), "Roster — bind to FactionBlueprint store when available.");
-                        // TODO: list + add/duplicate/retire (authority-gated).
-                    }
-                    FactionToolsPanel::Blueprint => {
-                        primary_label(ui, palette.as_ref(), "Blueprint inspector — name, HSL color picker, tags, emblem.");
-                        // TODO: bind selected FactionBlueprint fields.
-                    }
-                    FactionToolsPanel::Diplomacy => {
-                        primary_label(ui, palette.as_ref(), "Diplomacy matrix — pairwise stances + interlocking modifiers.");
-                        // TODO: render N×N stance grid; integrate DiplomaticRelations permission gate.
-                    }
-                    FactionToolsPanel::ImportExport => {
-                        primary_label(ui, palette.as_ref(), "Import/Export — RON blueprints (per assets matrix).");
-                        // TODO: file dialog (crate vs native — see implementation_questions §7).
-                    }
-                }
-            });
-        });
-
-    Ok(())
+    if stamp.key != key {
+        for mut t in &mut body {
+            *t = Text::new(text.clone());
+        }
+        stamp.key = key;
+    }
+    presence.faction_tools_root = true;
 }

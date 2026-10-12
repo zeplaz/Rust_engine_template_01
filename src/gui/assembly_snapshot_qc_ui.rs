@@ -1,13 +1,15 @@
-//! APS-BEVY-QC-HUD-001 — egui dev panel for assembly snapshot QC (Lane A′).
+//! APS-BEVY-QC-HUD-001 — Bevy UI panel for assembly snapshot QC (Lane A′).
 
 use std::path::{Path, PathBuf};
 
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
+use bevy::ui::FocusPolicy;
 use serde_json::Value;
 
 use crate::construction::procedural::AssemblySnapshot;
-use crate::gui::ui_gates::product_egui_shell_active;
+use crate::gui::panel_presence::PanelPresence;
+use crate::gui::style::{CmdUiMonoFont, UiPalette};
+use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::preview::{load_assembly_snapshot_json, repo_root_from_manifest};
 
 pub const APS_BEVY_QC_HUD_DEFAULT_SNAPSHOT: &str =
@@ -76,12 +78,29 @@ pub struct AssemblySnapshotQcUiPlugin;
 
 impl Plugin for AssemblySnapshotQcUiPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<AssemblySnapshotQcUiState>()
-            .add_systems(
-                EguiPrimaryContextPass,
-                draw_assembly_snapshot_qc_ui.run_if(crate::gui::ui_gates::product_egui_shell_active),
-            );
+        app.init_resource::<AssemblySnapshotQcUiState>().add_systems(
+            Update,
+            (
+                sync_assembly_snapshot_qc_bevy,
+                assembly_snapshot_qc_bevy_actions.after(sync_assembly_snapshot_qc_bevy),
+            )
+                .run_if(in_simulation_or_editor),
+        );
     }
+}
+
+#[derive(Component)]
+pub struct AssemblySnapshotQcBevyRoot;
+
+#[derive(Component)]
+struct AssemblySnapshotQcBevyBodyText;
+
+#[derive(Component)]
+struct AssemblySnapshotQcLoadBtn;
+
+#[derive(Default)]
+struct AssemblyQcStamp {
+    key: u64,
 }
 
 fn truncate(s: &str, max: usize) -> String {
@@ -216,116 +235,149 @@ fn apply_load(state: &mut AssemblySnapshotQcUiState, path: PathBuf) {
     }
 }
 
-pub fn draw_assembly_snapshot_qc_ui(
-    mut contexts: EguiContexts,
-    mut state: ResMut<AssemblySnapshotQcUiState>,
-    base: Res<State<crate::engine::BaseState>>,
-    app: Res<State<crate::engine::AppState>>,
+fn qc_panel_body(state: &AssemblySnapshotQcUiState) -> String {
+    let mut lines = vec![
+        "Assembly snapshot QC".to_string(),
+        format!("path: {}", state.path_input),
+    ];
+    if let Some(err) = &state.load_error {
+        lines.push(format!("error: {err}"));
+    }
+    if let Some(sum) = &state.summary {
+        lines.push(format!(
+            "assembly {} · {} placements",
+            sum.assembly_id, sum.placement_count
+        ));
+        for (i, row) in sum.rows.iter().take(16).enumerate() {
+            let st = match row.status {
+                QcRowStatus::Ok => "OK",
+                QcRowStatus::Warn => "Warn",
+                QcRowStatus::Fail => "Fail",
+            };
+            lines.push(format!(
+                "{i}: {cell} {mod_id} [{st}] {mat}",
+                cell = row.cell,
+                mod_id = row.module_id,
+                mat = row.material_profile,
+            ));
+        }
+        if sum.rows.len() > 16 {
+            lines.push(format!("… +{} more", sum.rows.len() - 16));
+        }
+    } else {
+        lines.push("No snapshot loaded — press Load.".into());
+    }
+    if !state.p0_issues.is_empty() {
+        lines.push("── P0 ──".into());
+        for issue in state.p0_issues.iter().take(6) {
+            lines.push(format!("· {}", issue.sentence));
+        }
+    }
+    lines.join("\n")
+}
+
+fn sync_assembly_snapshot_qc_bevy(
+    mut commands: Commands,
+    state: Res<AssemblySnapshotQcUiState>,
+    palette: Res<UiPalette>,
+    mono: Res<CmdUiMonoFont>,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<AssemblySnapshotQcBevyRoot>>,
+    mut body: Query<&mut Text, With<AssemblySnapshotQcBevyBodyText>>,
+    mut stamp: Local<AssemblyQcStamp>,
 ) {
-    if !product_egui_shell_active(base, app) || !state.visible {
+    presence.assembly_snapshot_qc_root = !roots.is_empty();
+    if !state.visible {
+        for e in &roots {
+            commands.entity(e).despawn();
+        }
+        presence.assembly_snapshot_qc_root = false;
+        stamp.key = 0;
         return;
     }
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    let repo_root = repo_root_from_manifest();
 
-    egui::Window::new("Assembly snapshot QC (APS-BEVY-QC-HUD-001)")
-        .default_size([720.0, 480.0])
-        .show(ctx, |ui| {
-            ui.label("Read-only QC — Ctrl+Shift+Q toggle · loads assembly_snapshot JSON from disk");
-            ui.horizontal(|ui| {
-                ui.text_edit_singleline(&mut state.path_input);
-                if ui.button("Load").clicked() {
-                    let path = repo_root.join(state.path_input.replace('\\', "/"));
-                    apply_load(&mut state, path);
-                }
-                if ui.button("Use example warehouse snapshot").clicked() {
-                    state.path_input = APS_BEVY_QC_HUD_DEFAULT_SNAPSHOT.into();
-                    apply_load(
-                        &mut state,
-                        repo_root.join(APS_BEVY_QC_HUD_DEFAULT_SNAPSHOT),
-                    );
-                }
-            });
+    let text = qc_panel_body(state.as_ref());
+    let mut key = text.len() as u64;
+    for b in text.bytes() {
+        key = key.wrapping_mul(0x9E37_79B9).wrapping_add(b as u64);
+    }
 
-            if let Some(err) = &state.load_error {
-                ui.colored_label(egui::Color32::LIGHT_RED, err);
-            }
-
-            let Some(summary) = state.summary.clone() else {
-                ui.label("Load a snapshot to inspect placements.");
-                return;
-            };
-
-            ui.separator();
-            ui.heading("Summary");
-            ui.label(format!(
-                "{} · {} placements",
-                summary.assembly_id, summary.placement_count
-            ));
-
-            ui.heading("P0 gate (read-only)");
-            if state.p0_issues.is_empty() {
-                ui.label("P0 gate: no blocking issues detected (read-only).");
-            } else {
-                for issue in &state.p0_issues {
-                    ui.label(&issue.sentence);
-                    ui.label(format!("→ {}", issue.fix_hint));
-                }
-            }
-
-            ui.horizontal(|ui| {
-                if ui.button("Spawn preview").clicked() {
-                    state.preview_active = true;
-                    state.last_preview_hint = Some(
-                        "Preview job queued — see debug_runs/preview/ for PNG output.".into(),
-                    );
-                }
-                if ui.button("Open in APS (shell hint)").clicked() {
-                    state.last_preview_hint = Some(format!(
-                        "python -m rust_engine_mcp.cli assembly open --snapshot {}",
-                        state.path_input
+    if roots.is_empty() {
+        let tf = TextFont::from_font_size(11.0).with_font(mono.0.clone());
+        commands
+            .spawn((
+                AssemblySnapshotQcBevyRoot,
+                Node {
+                    position_type: PositionType::Absolute,
+                    bottom: Val::Px(48.0),
+                    left: Val::Px(16.0),
+                    width: Val::Px(420.0),
+                    max_height: Val::Px(360.0),
+                    padding: UiRect::all(Val::Px(10.0)),
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(6.0),
+                    border: UiRect::all(Val::Px(1.0)),
+                    border_radius: BorderRadius::ZERO,
+                    overflow: Overflow::scroll_y(),
+                    ..default()
+                },
+                BackgroundColor(palette.bevy_hud_panel_fill()),
+                BorderColor::all(palette.bevy_wire_magenta()),
+                FocusPolicy::Block,
+                ZIndex(953),
+            ))
+            .with_children(|p| {
+                p.spawn((
+                    AssemblySnapshotQcBevyBodyText,
+                    Text::new(text.clone()),
+                    tf.clone(),
+                    TextColor(palette.bevy_primary_text()),
+                ));
+                p.spawn((
+                    AssemblySnapshotQcLoadBtn,
+                    Button,
+                    Node {
+                        padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)),
+                        border: UiRect::all(Val::Px(1.0)),
+                        ..default()
+                    },
+                    BackgroundColor(palette.bevy_button_idle()),
+                    BorderColor::all(palette.bevy_wire_magenta()),
+                    FocusPolicy::Block,
+                ))
+                .with_children(|b| {
+                    b.spawn((
+                        Text::new("Load"),
+                        tf,
+                        TextColor(palette.bevy_primary_text()),
                     ));
-                }
-            });
-            if let Some(hint) = &state.last_preview_hint {
-                ui.label(hint);
-            }
-
-            if state.preview_active {
-                ui.label("Footprint highlight — selected row highlighted on plan grid (preview active).");
-            } else {
-                ui.label("Spawn preview to enable footprint grid highlight.");
-            }
-
-            ui.heading("Placements");
-            egui::ScrollArea::vertical().max_height(280.0).show(ui, |ui| {
-                egui::Grid::new("qc_placements").striped(true).show(ui, |ui| {
-                    ui.label("Cell");
-                    ui.label("module_id");
-                    ui.label("material");
-                    ui.label("GLB");
-                    ui.label("status");
-                    ui.end_row();
-                    for (idx, row) in summary.rows.iter().enumerate() {
-                        let selected = state.selected_row == Some(idx);
-                        if ui.selectable_label(selected, &row.cell).clicked() {
-                            state.selected_row = Some(idx);
-                        }
-                        ui.label(&row.module_id);
-                        ui.label(&row.material_profile);
-                        ui.label(&row.glb);
-                        ui.label(match row.status {
-                            QcRowStatus::Ok => "OK",
-                            QcRowStatus::Warn => "WARN",
-                            QcRowStatus::Fail => "FAIL",
-                        });
-                        ui.end_row();
-                    }
                 });
             });
-        });
+        stamp.key = key;
+        presence.assembly_snapshot_qc_root = true;
+        return;
+    }
+
+    if stamp.key != key {
+        for mut t in &mut body {
+            *t = Text::new(text.clone());
+        }
+        stamp.key = key;
+    }
+    presence.assembly_snapshot_qc_root = true;
+}
+
+fn assembly_snapshot_qc_bevy_actions(
+    q: Query<&Interaction, (Changed<Interaction>, With<AssemblySnapshotQcLoadBtn>)>,
+    mut state: ResMut<AssemblySnapshotQcUiState>,
+) {
+    for interaction in &q {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+        let path = repo_root_from_manifest().join(state.path_input.replace('\\', "/"));
+        apply_load(state.as_mut(), path);
+    }
 }
 
 #[must_use]

@@ -6,13 +6,13 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-09-26 |
 | **Owner** | `@planner` (this file) · impl → `@coder` |
-| **Status** | **2026-09-27** — UPM-1..5 and the city-bug pass are **DONE**. Next work is **PLN-1 → PLN-3**. |
+| **Status** | **PLN-1..3 SUPERSEDED** (2026-10-11). UPM-1..5 / city-bug / EGR ★done. **PLN-1** (plugin-pass) **SUPERSEDED** by [`plan_egui_full_dep_drop_v1.md`](plan_egui_full_dep_drop_v1.md) (`bevy_egui` removed). **PLN-2 / PLN-3** queue rows **SUPERSEDED** (¬re-queue from this plan). Sim mesh/pointer / one-map tile rules below still apply. |
 | **Supersedes the shell-perf claim in** | [`ui_phase6_shell_perf_multiview_plan_v1.md`](ui_phase6_shell_perf_multiview_plan_v1.md) P6-1 only |
 | **Witness spec extended by** | [`ui_shell_witness_spec_v1.md`](ui_shell_witness_spec_v1.md) |
 | **Index codes** | GU-SHL · GU-HUD · GU-APP · CB-TOOL · RN-MMC |
 | **Locked files (other agent)** | `src/construction/world_map_frame.rs` · `src/construction/mod.rs` |
 
-Editor and world-gen keep egui. The playing session is `BaseState::Simulation`. The GPU minimap compositor stays the minimap. The world camera stays the world camera. No second camera, no second minimap, no new UI crate.
+Historical framing (pre Cargo drop): editor/world-gen kept egui; play was Bevy. **Cargo path SUPERSEDED** by [`plan_egui_full_dep_drop_v1.md`](plan_egui_full_dep_drop_v1.md) (`bevy_egui` removed). The playing session is `BaseState::Simulation`. The GPU minimap compositor stays the minimap. The world camera stays the world camera. No second camera, no second minimap, no new UI crate.
 
 ---
 
@@ -451,11 +451,13 @@ Unscheduled, so they do not acquire in play: `draw_road_path_ghost_egui`, `draw_
 - SHADE zone tint on the map plane (`WorldMapZoneTint`, `ZoneShadeToggle`).
 - Footprint fill and phase color stay on `world_map_frame.rs` / `phase_fill.rs`.
 
-## Next slices — PLN-1 → PLN-3
+## PLN-1 → PLN-3 — SUPERSEDED (not queued)
 
-Play and WorldGen chrome are Bevy. Editor chrome stays egui. The crate stays. One play camera (`MainWorldCamera`). Tile identity is `world_map_tile_center` (`tile + 0.5` on the sprite, z = 1). Path endpoints stored as `(x, 0, row)` land on that plane through `map_plane_horizontal_xy` / `construction_point_on_world_map` / `ribbon_transform` (`PLANE_Z` = 1.04). `GhostBuildCursor` already uses the same cell formula. Roads, rails, power, zone cells, zone tints, logistics ribbons, town labels, and footprint quads already read that identity. PLN-1 closes the plugin passes that still run after UPM-4. PLN-2 and PLN-3 attach fire sparks and the leftover town sprite stamp to that same tile.
+**SUPERSEDED** — do not pick PLN-1..3 from this plan. Plugin-pass work (**PLN-1**) is covered by [`plan_egui_full_dep_drop_v1.md`](plan_egui_full_dep_drop_v1.md) (`bevy_egui` removed). **PLN-2 / PLN-3** are not re-seeded here (¬invent new work). Standing rules below (one play camera, tile identity, mesh/pointer authorities) still apply when touching those systems.
 
-One owner per slice, in this order. No slice writes `src/construction/mod.rs` or `src/construction/world_map_frame.rs`. Calling `world_map_tile_center` is a read.
+One play camera (`MainWorldCamera`). Tile identity is `world_map_tile_center` (`tile + 0.5` on the sprite, z = 1). Path endpoints stored as `(x, 0, row)` land on that plane through `map_plane_horizontal_xy` / `construction_point_on_world_map` / `ribbon_transform` (`PLANE_Z` = 1.04). `GhostBuildCursor` already uses the same cell formula. Roads, rails, power, zone cells, zone tints, logistics ribbons, town labels, and footprint quads already read that identity.
+
+No slice from this plan writes `src/construction/mod.rs` or `src/construction/world_map_frame.rs`. Calling `world_map_tile_center` is a read.
 
 ### HEIGHT and SHADE stay on their writers
 
@@ -486,8 +488,8 @@ These toggles must not cover:
 
 | System | What it invents | In this pass |
 |:---|:---|:---|
-| `emit_world_fire_particles_from_projection` | `ExtractedCameraMetrics.zoom_level` (`ZoomFrame.px_per_tile`) feeds `fire_particle_scatter_count` and `shape_fire_row_for_particle_lod`. Scatter offset is added to extract `world_xyz` (x and y). `world.z` stays the extract value, not the map plane. | **PLN-2** |
-| `stamp_town_centers_subregion` | Still called from `raster_tile_fallback_subregion` on both the play image and the CPU minimap image. Town `Text2d` already exists. | **PLN-3** (play sprite only) |
+| `emit_world_fire_particles_from_projection` | `ExtractedCameraMetrics.zoom_level` (`ZoomFrame.px_per_tile`) feeds `fire_particle_scatter_count` and `shape_fire_row_for_particle_lod`. Scatter offset is added to extract `world_xyz` (x and y). `world.z` stays the extract value, not the map plane. | **PLN-2 SUPERSEDED** (standing tile rule; ¬queued) |
+| `stamp_town_centers_subregion` | Still called from `raster_tile_fallback_subregion` on both the play image and the CPU minimap image. Town `Text2d` already exists. | **PLN-3 SUPERSEDED** (standing play-sprite rule; ¬queued) |
 | `apply_water_surface_overlay_subregion` | `river_overlay_pixel` / `lake_overlay_pixel` switch readability at `WATER_STRATEGIC_ZOOM_ALPHA` (D-W09). Motion does not scale with zoom. | Leave. D-W09 owns that threshold. |
 | `stamp_tracer_cells_subregion`, `stamp_impact_cells_subregion`, `stamp_growth_origins_subregion` | Extra marks in sprite texels. No mesh twin yet. | Listed. No slice. |
 | `bump_tile_raster_on_main_camera_zoom` / `raster_zoom_band` | Zoom-band dirty invalidates chunks. Leave it. It is the sprite’s cache, not a second camera. | No slice |
@@ -495,60 +497,29 @@ These toggles must not cover:
 | Editor painters `draw_construction_visual_requests_egui`, road/rail/zone/power ghosts | `map_zoom_screen_scale` | Editor or unscheduled. They stay. |
 | `tactical_viewport_screen_rect` | Minimap frame in screen pixels | Minimap. It stays its own view. |
 
-### Simulation-time egui that can still steal the pointer or draw over the shell
+### Simulation-time egui / pointer — historical (SUPERSEDED)
 
-User `ctx_mut` systems are already behind `product_egui_shell_active`, `map_editor_chrome_active`, `subengine_world_gen_editor_only`, or `not(BaseState::Simulation)`. `EguiPreUpdateSet::ProcessInput` is already off in Simulation. Do not reopen those.
+**SUPERSEDED by** [`plan_egui_full_dep_drop_v1.md`](plan_egui_full_dep_drop_v1.md) — `bevy_egui` removed. Pointer authority for play is Bevy shell / `SimulationMapPointerGate` (and related product gates). Do not re-add egui plugin passes or invent a PLN-1 gate slice.
 
-`EguiPlugin::default()` (bevy_egui 0.41) still registers the following with no `BaseState` gate. Multipass is on. Default `ui_render_order` is `EguiAboveBevyUi`. Default features include `picking`, so `capture_pointer_input_system` is in PostUpdate and `EguiPickingOrder` is `0.6`.
+Historical note (pre-drop): user `ctx_mut` systems were behind `product_egui_shell_active` / `map_editor_chrome_active` / `subengine_world_gen_editor_only` / `not(BaseState::Simulation)`; `EguiPlugin` default sets could still run in play before Cargo drop. That inventory is archive only.
 
-| Pass | Systems (crate) | Why it still matters in play |
-|:---|:---|:---|
-| `EguiPreUpdateSet::InitContexts` | `setup_primary_egui_context_system`, `update_ui_screen_rect` | Context has to exist so Editor and WorldGen can paint. It does not draw. **Leave it running.** |
-| `EguiPreUpdateSet::BeginPass` | `begin_pass_system` | Skips the multipass primary context. Still begins any other context. Gate it off in Simulation. |
-| `EguiPostUpdateSet::EndPass` | `run_egui_context_pass_loop_system`, `end_pass_system` | Still calls `ctx.run_ui` and runs `EguiPrimaryContextPass` every play frame. User systems return. The plugin still produces `EguiFullOutput`, and the render order paints that output above Bevy UI. |
-| `EguiPostUpdateSet::ProcessOutput` | `process_output_system`, `write_egui_wants_input_system` | `process_output_system` writes `CursorIcon` when `EguiGlobalSettings.enable_cursor_icon_updates` is true (the default). That system is PostUpdate, after `apply_simulation_unified_cursor_system` in Update. `write_egui_wants_input_system` refreshes `EguiWantsInput`. |
-| `capture_pointer_input_system` | PostUpdate, not inside `ProcessInput` | When `EguiContextSettings.capture_pointer_input` and `egui_wants_pointer_input` are true, it writes `PointerHits` at `camera.order + 0.6`, above the Bevy shell. |
-| `EguiPostUpdateSet::PostProcessOutput` | `update_egui_textures_system` | Uploads textures from the output the EndPass just wrote. |
-| Render queue | `prepare_egui_transforms_system`, `queue_bind_groups_system`, `queue_pipelines_system` | Draws whatever `EguiRenderOutput` is still attached. Editor and WorldGen need these systems. On entering Simulation, clear the output so the last editor window is not the play frame. |
+### PLN-1 — stop the play egui plugin passes — **SUPERSEDED**
 
-Shutdown order inside PLN-1: clear the play output, then stop EndPass, ProcessOutput, and PostProcessOutput, then stop BeginPass, then stop pointer capture. InitContexts stays. Editor and WorldGen keep every set.
+**SUPERSEDED by** [`plan_egui_full_dep_drop_v1.md`](plan_egui_full_dep_drop_v1.md) (`bevy_egui` removed · EGR-FULL-0..8 CLOSED). Do not implement the former `configure_sets` / Simulation enter-exit egui output clear. Do not re-add `bevy_egui`.
 
-### PLN-1 — stop the play egui plugin passes
+**Standing (still apply):** do not move `simulation_tool_pointer`; do not edit `construction/mod.rs` from this plan.
 
-**Files.** `src/engine/states.rs` only. `omit_egui_pointer_preupdate_in_simulation` already receives `&mut App` and is called from both engines. Extend that function.
+### PLN-2 — fire sparks on the same tile — **SUPERSEDED**
 
-**Change.**
-- `configure_sets` so `EguiPreUpdateSet::BeginPass`, `EguiPostUpdateSet::EndPass`, `EguiPostUpdateSet::ProcessOutput`, and `EguiPostUpdateSet::PostProcessOutput` run only when the state is not `BaseState::Simulation`.
-- `OnEnter(BaseState::Simulation)`: clear `EguiFullOutput` on the primary context so the render queue has nothing to draw; set `EguiGlobalSettings.enable_cursor_icon_updates` false and `EguiContextSettings.capture_pointer_input` false. `OnExit(BaseState::Simulation)` restores both defaults (`true`). `capture_pointer_input_system` has no set of its own; the settings flag is the crate’s cut, and the system may still be scheduled.
-- Leave `EguiPreUpdateSet::InitContexts` and `EguiPreUpdateSet::ProcessInput` as they are (`ProcessInput` already skipped).
+**SUPERSEDED** as a queue row from this plan (¬re-seed · ¬invent new work). Standing mesh/tile rule if `src/render/fire_vfx/emit.rs` is touched later: sparks that pass the heat floor place via `world_map_tile_center` + cell scatter with z on the map plane (`PLANE_Z` 1.04); no second fire extract; do not write `SharedOverlayFieldBuffers` or edit `construction/mod.rs` / `world_map_frame.rs` from this plan.
 
-**Must not change.** Do not remove the `bevy_egui` crate. Do not gate Editor or WorldGen. Do not move `simulation_tool_pointer`. Do not edit `construction/mod.rs`.
+### PLN-3 — town mark is the Text2d only — **SUPERSEDED**
 
-**Proof.** Extend `egr_simulation_schedule_omits_drained_egui_systems` so it asserts those four set gates and the Simulation enter/exit cursor and capture flags, then `cargo test -p proc_A_dine01 --lib egr_simulation_schedule_omits_drained_egui_systems`
-
-### PLN-2 — fire sparks on the same tile
-
-**Files.** `src/render/fire_vfx/emit.rs` only.
-
-**Change.** Each spark that passes the existing heat floor (`CHUNK_FIRE_OVERLAY_DISPLAY_MIN`, 0.12) is placed with `world_map_tile_center` of the cell taken from the row’s horizontal position, then a scatter offset in that cell, with z on the map plane (`PLANE_Z` in `world_map_network_mesh`, 1.04). Scatter count and `shape_fire_row_for_particle_lod` stop taking `px_per_tile`. The row still comes from the existing `FireVisualFrame` inside `emit_world_fire_particles_from_projection`. `fire_particle_view_proj` already publishes `ExtractedCameraMetrics.view_proj`, which is `MainWorldCamera` when that camera is present.
-
-**Must not change.** Do not add a second fire extract. Do not edit `gpu_fire_particle_raster.rs` or the wgsl (`zoom_fade` is already 1.0). Do not write `SharedOverlayFieldBuffers`. Do not touch the minimap boost. Do not edit `construction/mod.rs` or `world_map_frame.rs`.
-
-**Proof.** `cargo test -p proc_A_dine01 --lib fire_vfx::emit`
-
-### PLN-3 — town mark is the Text2d only
-
-**Files.** `src/render/tile_world_fallback.rs` only.
-
-**Change.** `raster_tile_fallback_subregion` stops calling `stamp_town_centers_subregion` for the play image (`state.image`). The town picture in Simulation is `WorldMapTownLabel`. Leave the function defined so its unit tests still compile.
-
-**Must not change.** CPU minimap image when `cpu_minimap_pass` is on. `LogisticsVisualSnapshot.edge_rows`. Commit funnel. `MinimapCompositor`. Do not edit `construction/mod.rs`.
-
-**Proof.** Add `pln_play_image_does_not_stamp_town_centers` beside the raster tests, then `cargo test -p proc_A_dine01 --lib pln_play_image_does_not_stamp_town_centers`
+**SUPERSEDED** as a queue row from this plan (¬re-seed · ¬invent new work). Standing play-sprite rule if `src/render/tile_world_fallback.rs` is touched later: Simulation town picture is `WorldMapTownLabel`; do not dual-stamp play image via `stamp_town_centers_subregion`; leave CPU minimap / `LogisticsVisualSnapshot.edge_rows` / commit funnel / `MinimapCompositor` alone; do not edit `construction/mod.rs` from this plan.
 
 ## Historical slice list (closed by the 2026-09-27 reconcile)
 
-EGR and UPM are closed. The next pass is **PLN-1 → PLN-3**. Do not re-open an EGR or UPM row.
+EGR and UPM are closed. **PLN-1..3 SUPERSEDED** — do not re-open an EGR, UPM, or PLN row from this plan.
 
 | Slice | Status |
 |:---|:---|
@@ -558,7 +529,10 @@ EGR and UPM are closed. The next pass is **PLN-1 → PLN-3**. Do not re-open an 
 | EGR-4 power, logistics, road, rail, zone, corridor meshes; editor unschedule of those painters | **SHIPPED** (`WorldMapNetworkMeshPlugin`) |
 | EGR-4a footprint color / lock / phase label | **DONE** (`world_map_frame.rs`, `phase_fill.rs`) |
 | EGR-5 dev gates, drag-gate split, subengine world-gen off play | **SHIPPED** |
-| EGR-6 `sim_egui_context_acquires == 0` | Held by the user-system gates and UPM-4. PLN-1 stops the plugin EndPass from opening a play frame |
-| Delete ghost fns, delete `bevy_egui`, Bevy keybindings page | **DEFER** |
+| EGR-6 `sim_egui_context_acquires == 0` | **SUPERSEDED** — Cargo drop removed `bevy_egui` ([`plan_egui_full_dep_drop_v1.md`](plan_egui_full_dep_drop_v1.md)) |
+| Delete ghost fns, delete `bevy_egui`, Bevy keybindings page | **SUPERSEDED** — `bevy_egui` removed via EGR-FULL; keybindings via panel port |
+| PLN-1 plugin-pass gates | **SUPERSEDED** by [`plan_egui_full_dep_drop_v1.md`](plan_egui_full_dep_drop_v1.md) |
+| PLN-2 fire sparks tile align | **SUPERSEDED** (¬queued; standing tile rule retained) |
+| PLN-3 play town stamp | **SUPERSEDED** (¬queued; standing play-sprite rule retained) |
 
-`@coder` implements **PLN-1**, then **PLN-2**, then **PLN-3**. No slice writes `src/construction/mod.rs`.
+No `@coder` pick from this plan. No slice writes `src/construction/mod.rs`.

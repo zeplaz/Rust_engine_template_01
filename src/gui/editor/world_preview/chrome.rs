@@ -1,7 +1,6 @@
 //! World-gen / preview chrome gates, D01–D07 layout witnesses, and open/dismiss helpers.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::engine::states::{BaseState, WorldGenFlowState};
 use crate::engine::{AppState, WorldGenChromeLatch};
@@ -15,8 +14,8 @@ pub const WORLD_PREVIEW_UNIFIED_WORKSPACE: bool = true;
 #[derive(Resource)]
 pub struct WorldPreviewUiState {
     pub window_open: bool,
-    pub last_window_rect: Option<egui::Rect>,
-    pub last_viewport_rect: Option<egui::Rect>,
+    pub last_window_rect: Option<bevy::prelude::Rect>,
+    pub last_viewport_rect: Option<bevy::prelude::Rect>,
     /// D-07: corner overview painted on map viewport last frame.
     pub d07_corner_inset_active: bool,
     pub d07_inset_side_px: f32,

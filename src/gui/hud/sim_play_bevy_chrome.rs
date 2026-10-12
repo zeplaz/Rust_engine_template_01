@@ -17,6 +17,7 @@ use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
 use crate::gui::hud::simulation_shell_phase2::{
     ContextTrayState, ContextTrayTab, CONTEXT_TRAY_BODY_H_PX,
 };
+use crate::gui::panel_presence::PanelPresence;
 use crate::gui::UiPalette;
 
 #[derive(Component)]
@@ -99,9 +100,11 @@ pub(crate) fn sync_sim_play_power_hover(
     base: Res<State<BaseState>>,
     hover: Res<PowerNodeHoverState>,
     gate: Res<SimulationMapPointerGate>,
+    mut presence: ResMut<PanelPresence>,
     mut root: Query<(&mut Visibility, &mut Node), With<SimPlayPowerHover>>,
     mut text: Query<&mut Text, With<SimPlayPowerHoverText>>,
 ) {
+    presence.power_hover_root = !root.is_empty();
     let show = matches!(base.get(), BaseState::Simulation)
         && hover.card_visible
         && hover.card.is_some()
@@ -174,10 +177,12 @@ pub(crate) fn sync_context_tray_power_repair_list(
     tray: Res<ContextTrayState>,
     queue: Option<Res<PowerRepairQueue>>,
     palette: Res<UiPalette>,
+    mut presence: ResMut<PanelPresence>,
     fonts: Query<&TextFont, With<crate::gui::hud::simulation_shell_phase2::ContextTrayBodyLine>>,
     mut root: Query<(Entity, &mut Visibility, &mut Node), With<ContextTrayPowerRepairList>>,
     mut stamp: Local<RepairListStamp>,
 ) {
+    presence.power_repair_list_root = !root.is_empty();
     let Some(queue) = queue.as_deref() else {
         return;
     };

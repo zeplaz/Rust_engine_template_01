@@ -1,14 +1,16 @@
-//! Per-chunk CPU preview payloads (egui image); populated incrementally as chunk-diff preview matures.
+//! Per-chunk CPU preview payloads (RGBA8 bytes); egui ColorImage retired.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 use std::collections::HashMap;
 
-/// Cached RGBA for one chunk’s preview tile rect (Stage-2+); today raster still writes the global texture.
+/// Cached RGBA for one chunk’s preview tile rect.
 #[derive(Clone)]
 pub struct ChunkPreviewCache {
     pub version: u64,
-    pub image: egui::ColorImage,
+    /// Row-major RGBA8, length = width * height * 4.
+    pub image: Vec<u8>,
+    pub width: u32,
+    pub height: u32,
     pub dirty: bool,
 }
 
@@ -31,10 +33,7 @@ pub(crate) fn sync_chunk_preview_cache(
     let sy = size.y as usize;
     let x0 = coord.x as usize * sx;
     let y0 = coord.y as usize * sy;
-    let mut img = egui::ColorImage::new(
-        [sx, sy],
-        vec![egui::Color32::TRANSPARENT; sx * sy],
-    );
+    let mut img = vec![0u8; sx * sy * 4];
     for ly in 0..sy {
         for lx in 0..sx {
             let tx = x0 + lx;
@@ -46,12 +45,8 @@ pub(crate) fn sync_chunk_preview_cache(
             if i + 3 >= data.len() {
                 continue;
             }
-            img[(lx, ly)] = egui::Color32::from_rgba_unmultiplied(
-                data[i],
-                data[i + 1],
-                data[i + 2],
-                data[i + 3],
-            );
+            let o = 4 * (ly * sx + lx);
+            img[o..o + 4].copy_from_slice(&data[i..i + 4]);
         }
     }
     caches.chunks.insert(
@@ -59,6 +54,8 @@ pub(crate) fn sync_chunk_preview_cache(
         ChunkPreviewCache {
             version,
             image: img,
+            width: size.x,
+            height: size.y,
             dirty: false,
         },
     );
@@ -90,6 +87,7 @@ mod tests {
         );
         let entry = caches.chunks.get(&IVec2::ZERO).expect("chunk cache");
         assert_eq!(entry.version, 7);
-        assert_eq!(entry.image[(1, 1)], egui::Color32::from_rgba_unmultiplied(200, 10, 20, 255));
+        let o = 4 * (1 * 2 + 1);
+        assert_eq!(&entry.image[o..o + 4], &[200, 10, 20, 255]);
     }
 }

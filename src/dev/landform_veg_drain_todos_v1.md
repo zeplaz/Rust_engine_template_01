@@ -15,7 +15,7 @@ The June 20 intel cull marked old vegetation, phase-6, and APS layout rows block
 | MAP-PREVIEW-RELIEF-001 | Preview biome, height, and ecology tiles shade by slope and curvature. | `relief_curvature_brightens_ridges_and_darkens_hollows` |
 | VIS-BLOB-FIRE-RAIL-CURSOR-001 | Corner blob, spark motion, rail words, cursor writer. | Named lib tests in the queue row |
 | PLANT-FOCUS-LIVE-001 | Utilities card reads live containment. | `live_runtime_fills_scram_heat_and_fuel` |
-| MAP-SIM-RELIEF-001 | Play-map raster shades by slope and curvature. | `play_map_ridge_is_lighter_than_hollow` |
+| MAP-SIM-RELIEF-001 | Play-map raster shades by slope and curvature. | `play_map_ridge_is_lighter_than_hollow` · `debug_runs/map_sim_relief_001_live.json` |
 | VEG-CELL-CANOPY-001 | Ridge and hollow in one chunk get different cover. | `same_chunk_hollow_holds_more_cover_than_ridge` |
 | VEG-DRAW-FOLLOW-001 | Vegetation draw density follows the center cell. | `veg_draw_follows_center_curvature` |
 | LAND-LAYERS-002 | Drainage, support, concealment, and flood basins follow elevation. Erosion stays zero. | `valley_drains_and_hides_more_than_a_peak_and_erosion_stays_zero` |

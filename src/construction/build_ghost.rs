@@ -9,3 +9,8 @@ pub struct GhostBuildCursor {
     pub origin: BuildSiteTile,
     pub footprint: FootprintTiles,
 }
+
+/// Shared ghost validity on the singleton [`crate::construction::BuildGhostRoot`]
+/// (BUILD-P1-02) — mirrored from [`crate::construction::BuildPlacementPreview`].
+#[derive(Component, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct GhostValid(pub bool);

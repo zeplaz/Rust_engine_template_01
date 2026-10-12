@@ -53,12 +53,12 @@ pub static CONSTRUCTION_P9_TODOS: &[Stage5LiveTodo] = &[
     },
     Stage5LiveTodo {
         id: "PHASE2-BUILD-20",
-        status: TodoStatus::Done,
+        status: TodoStatus::Open,
         file: "src/construction/terrain_conform.rs",
         system: "TerrainConform",
-        goal: "Ghost + road control points set Y from terrain conform sampler.",
-        runtime_check: "conform_world_y non-zero on slopes; ghost entity Y updated.",
-        failure_mode: "All previews at y=0.",
+        goal: "Ghost + road control points set Y from live WorldGenDenseTerrainCache elevation.",
+        runtime_check: "terrain_conform true when dense height grid ready; Open + blocker if unavailable.",
+        failure_mode: "Stub-only conform claimed Done without live height grid.",
     },
 ];
 

@@ -189,12 +189,12 @@ pub static CONSTRUCTION_PHASE2_TODOS: &[Stage5LiveTodo] = &[
     },
     Stage5LiveTodo {
         id: "PHASE2-BUILD-20",
-        status: TodoStatus::Done,
+        status: TodoStatus::Open,
         file: "src/construction/terrain_conform.rs",
         system: "TerrainConform",
-        goal: "Road/site placement samples terrain height for ghost Y (conform stub).",
-        runtime_check: "Ghost Y follows heightfield at tile; commit uses same sample.",
-        failure_mode: "All previews at y=0 through slopes.",
+        goal: "Road/site placement samples WorldGenDenseTerrainCache elevation for ghost Y.",
+        runtime_check: "Witness terrain_conform when dense height grid live; Open if cache absent (stub fallback).",
+        failure_mode: "All previews at y=0 through slopes / stub-only without documented Open.",
     },
 ];
 

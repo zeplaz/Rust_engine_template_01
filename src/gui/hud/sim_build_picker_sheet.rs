@@ -3,7 +3,6 @@
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::construction::{
     draw_commercial_submenu, draw_mock_shapes_submenu, draw_residential_submenu,
@@ -133,15 +132,12 @@ pub fn build_rail_slot_anchor_y(slot: ToolContext) -> f32 {
 pub fn sim_build_picker_sheet_rect(
     state: &SimBuildPickerState,
     left_stack_collapsed: bool,
-) -> egui::Rect {
+) -> bevy::prelude::Rect {
     let anchor = super::simulation_shell_phase2::build_rail_slot_anchor_xy(
         state.anchor_slot,
         left_stack_collapsed,
     );
-    egui::Rect::from_min_size(
-        anchor,
-        egui::vec2(BUILD_PICKER_SHEET_W_PX, BUILD_PICKER_MAX_H_PX),
-    )
+    bevy::prelude::Rect::from_corners(anchor, anchor + bevy::prelude::Vec2::new(BUILD_PICKER_SHEET_W_PX, BUILD_PICKER_MAX_H_PX),)
 }
 
 #[must_use]
@@ -149,313 +145,14 @@ pub fn sim_build_picker_witness_green(state: &SimBuildPickerState) -> bool {
     !state.open || state.anchor_slot != ToolContext::None
 }
 
-pub fn draw_sim_build_picker_sheet_egui(
-    mut contexts: bevy_egui::EguiContexts,
-    base: Res<State<BaseState>>,
-    strip: Res<BuildStripState>,
-    left_stack: Res<crate::gui::CommandLeftStackState>,
-    palette: Res<UiPalette>,
-    mut tool: ResMut<ActiveBuildTool>,
-    mut picker: ResMut<SimBuildPickerState>,
-    registry: Res<BuildingDefinitionRegistry>,
-    atlas_ui: Option<Res<PowerHudIconAtlasUi>>,
-    manifests: Res<Assets<PowerHudIconAtlasManifest>>,
-    mut tex_cache: ResMut<PowerHudEguiTextureCache>,
-) -> Result {
-    if !matches!(base.get(), BaseState::Simulation) {
-        return Ok(());
-    }
-    if crate::gui::hud::sim_build_picker_bevy::SIM_BUILD_PICKER_USE_BEVY {
-        return Ok(());
-    }
-    if strip.active == ToolContext::None || !picker.open {
-        return Ok(());
-    }
 
-    let texture_id = atlas_ui
-        .as_ref()
-        .and_then(|atlas| tex_cache.resolve(&mut contexts, &atlas.atlas));
-    let manifest = atlas_ui
-        .as_ref()
-        .and_then(|atlas| manifests.get(&atlas.manifest));
-    let icon_ui = texture_id.zip(manifest).map(|(texture_id, manifest)| {
-        UtilitiesSubmenuIconUi {
-            texture_id,
-            manifest,
-            idle_tint: palette.accent_terminal,
-            selected_tint: palette.accent_action,
-        }
-    });
+fn draw_defense_picker_tab() {}
 
-    let ctx = contexts.ctx_mut()?;
-    apply_sim_hud_egui_theme(ctx, &palette);
+fn defense_row_clicked() {}
 
-    let anchor_bevy = sim_build_picker_sheet_rect(picker.as_ref(), left_stack.collapsed).min;
-    let anchor = crate::gui::bevy_logical_to_egui_pos(ctx, anchor_bevy);
-    let sheet_w = crate::gui::bevy_logical_vec_to_egui(
-        ctx,
-        egui::vec2(BUILD_PICKER_SHEET_W_PX, 0.0),
-    )
-    .x;
-    let sheet_body_h = crate::gui::bevy_logical_vec_to_egui(
-        ctx,
-        egui::vec2(0.0, BUILD_PICKER_MAX_H_PX - 72.0),
-    )
-    .y;
-    let mut close_requested = false;
+fn defense_row_with_caption_clicked() {}
 
-    egui::Area::new(egui::Id::new("sim_build_picker_sheet"))
-        .order(egui::Order::Foreground)
-        .fixed_pos(anchor)
-        .interactable(true)
-        .show(ctx, |ui| {
-            ui.set_width(sheet_w);
-            picker_sheet_frame(&palette).show(ui, |ui| {
-                picker_header_frame(&palette).show(ui, |ui| {
-                    ui.horizontal(|ui| {
-                        ui.label(title_text(&palette, picker.sheet_title()));
-                        ui.with_layout(egui::Layout::right_to_left(egui::Align::Center), |ui| {
-                            if ui
-                                .add(
-                                    egui::Button::new(body_text(&palette, "✕"))
-                                        .min_size(egui::vec2(
-                                            super::sim_build_picker_bevy::BUILD_PICKER_CLOSE_PX,
-                                            super::sim_build_picker_bevy::BUILD_PICKER_CLOSE_PX,
-                                        )),
-                                )
-                                .clicked()
-                            {
-                                close_requested = true;
-                            }
-                        });
-                    });
-                });
-                ui.label(caption_text(&palette, picker.category.title()));
-                ui.separator();
-                egui::ScrollArea::vertical()
-                    .max_height(sheet_body_h)
-                    .show(ui, |ui| {
-                        match picker.category {
-                            BuildPickerCategory::Zone => {
-                                draw_residential_submenu(ui, &mut tool, &registry);
-                            }
-                            BuildPickerCategory::Roads => {
-                                ui.label(caption_text(
-                                    &palette,
-                                    "Select Street or Highway from rail — path tools in road sheet.",
-                                ));
-                                if ui.button(body_text(&palette, "Street")).clicked() {
-                                    tool.tool = BuildTool::Road(RoadType::Street);
-                                    close_requested = true;
-                                }
-                                if ui.button(body_text(&palette, "Highway")).clicked() {
-                                    tool.tool = BuildTool::Road(RoadType::Highway);
-                                    close_requested = true;
-                                }
-                                if ui.button(body_text(&palette, "Rail — Standard")).clicked() {
-                                    tool.tool = BuildTool::Rail(RailType::Standard);
-                                    close_requested = true;
-                                }
-                            }
-                            BuildPickerCategory::Industry => {
-                                draw_industry_picker_tab(ui, &palette, &mut tool, &registry);
-                            }
-                            BuildPickerCategory::Utilities => {
-                                draw_utilities_submenu(ui, &mut tool, &registry, icon_ui.as_ref());
-                            }
-                            BuildPickerCategory::Shapes => {
-                                draw_mock_shapes_submenu(ui, &mut tool, &registry);
-                                draw_commercial_submenu(ui, &mut tool, &registry);
-                            }
-                            BuildPickerCategory::Defense => {
-                                draw_defense_picker_tab(ui, &palette, &mut tool);
-                            }
-                        }
-                    });
-            });
-        });
-
-    if close_requested {
-        picker.close();
-        tool.close_submenus();
-    } else if tool.building_intent.is_some() && picker.category == BuildPickerCategory::Industry {
-        picker.close();
-        tool.close_submenus();
-    } else if matches!(tool.tool, BuildTool::Defense(_))
-        && picker.category == BuildPickerCategory::Defense
-    {
-        picker.close();
-        tool.close_submenus();
-    }
-
-    Ok(())
-}
-
-fn draw_defense_picker_tab(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    tool: &mut ActiveBuildTool,
-) {
-    ui.label(caption_text(palette, PICKER_DEFENSE_LEAD));
-    ui.add_space(4.0);
-
-    ui.label(title_text(palette, PICKER_SECTION_WALLS));
-    if defense_row_clicked(ui, palette, tool, DefenseKind::DefensiveWall, PICKER_ROW_DEFENSIVE_WALL)
-    {
-        return;
-    }
-    ui.separator();
-    ui.label(title_text(palette, PICKER_SECTION_TRENCHES));
-    if defense_row_clicked(ui, palette, tool, DefenseKind::TrenchLine, PICKER_ROW_TRENCH_LINE) {
-        return;
-    }
-    ui.separator();
-    ui.label(title_text(palette, PICKER_SECTION_FORTIFICATION));
-    if defense_row_clicked(ui, palette, tool, DefenseKind::Bunker, PICKER_ROW_BUNKER) {
-        return;
-    }
-    ui.separator();
-    ui.label(title_text(palette, PICKER_SECTION_DEPLOYABLES));
-    if defense_row_with_caption_clicked(
-        ui,
-        palette,
-        tool,
-        DefenseKind::DragonTeeth,
-        PICKER_ROW_DRAGON_TEETH,
-        PICKER_ROW_CAPTION_DRAGON_TEETH,
-    ) {
-        return;
-    }
-    if defense_row_with_caption_clicked(
-        ui,
-        palette,
-        tool,
-        DefenseKind::Minefield,
-        PICKER_ROW_MINEFIELD,
-        PICKER_ROW_CAPTION_MINEFIELD,
-    ) {
-        return;
-    }
-    ui.separator();
-    ui.label(caption_text(palette, "Editing"));
-    let demolish_selected = matches!(tool.tool, BuildTool::Demolish);
-    let demolish_frame = egui::Frame::new()
-        .fill(palette.bg_interactive)
-        .stroke(egui::Stroke::new(
-            if demolish_selected { 3.0 } else { 1.0 },
-            if demolish_selected {
-                palette.accent_gold
-            } else {
-                palette.fg_muted
-            },
-        ))
-        .inner_margin(egui::Margin::symmetric(6, 4));
-    demolish_frame.show(ui, |ui| {
-        ui.set_min_height(40.0);
-        if ui
-            .button(body_text(palette, PICKER_ROW_DEMOLISH))
-            .clicked()
-        {
-            tool.clear_building_intent();
-            tool.tool = BuildTool::Demolish;
-        }
-    });
-    ui.add_space(4.0);
-    ui.label(caption_text(palette, PICKER_DEFENSE_FOOTER_HINT));
-}
-
-fn defense_row_clicked(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    tool: &mut ActiveBuildTool,
-    kind: DefenseKind,
-    label: &str,
-) -> bool {
-    defense_row_with_caption_clicked(ui, palette, tool, kind, label, "")
-}
-
-fn defense_row_with_caption_clicked(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    tool: &mut ActiveBuildTool,
-    kind: DefenseKind,
-    label: &str,
-    caption: &str,
-) -> bool {
-    let selected = matches!(tool.tool, BuildTool::Defense(k) if k == kind);
-    let frame = egui::Frame::new()
-        .fill(palette.bg_interactive)
-        .stroke(egui::Stroke::new(
-            if selected { 3.0 } else { 1.0 },
-            if selected {
-                palette.accent_gold
-            } else {
-                palette.fg_muted
-            },
-        ))
-        .inner_margin(egui::Margin::symmetric(6, 4));
-    let mut clicked = false;
-    frame.show(ui, |ui| {
-        ui.set_min_height(if caption.is_empty() { 48.0 } else { 56.0 });
-        ui.vertical(|ui| {
-            clicked = ui.button(body_text(palette, label)).clicked();
-            if !caption.is_empty() {
-                ui.label(caption_text(palette, caption));
-            }
-        });
-    });
-    if clicked {
-        tool.clear_building_intent();
-        tool.tool = BuildTool::Defense(kind);
-    }
-    clicked
-}
-
-fn draw_industry_picker_tab(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    tool: &mut ActiveBuildTool,
-    registry: &BuildingDefinitionRegistry,
-) {
-    ui.label(caption_text(palette, PICKER_INDUSTRY_LEAD));
-    ui.add_space(4.0);
-    for archetype in [BuildingArchetypeId::Factory, BuildingArchetypeId::Depot] {
-        let preview = intent_from_archetype(archetype, registry);
-        let label = if archetype == BuildingArchetypeId::Factory {
-            PICKER_GENERIC_FACTORY
-        } else {
-            PICKER_GENERIC_DEPOT
-        };
-        if ui.button(body_text(palette, label)).clicked() {
-            tool.tool = BuildTool::Building(archetype);
-            tool.building_intent = Some(preview);
-        }
-    }
-    let (chains, unchained) = industry_chain_groups(registry);
-    let industry_empty = chains.is_empty() && unchained.is_empty();
-    for (chain_id, defs) in chains {
-        ui.separator();
-        ui.label(title_text(palette, &human_chain_label(&chain_id)));
-        ui.columns(2, |cols| {
-            for (i, def) in defs.iter().enumerate() {
-                let col = &mut cols[i % 2];
-                if industry_card_clicked(col, palette, tool, registry, def) {
-                    return;
-                }
-            }
-        });
-    }
-    if !unchained.is_empty() {
-        ui.separator();
-        ui.label(title_text(palette, PICKER_INDUSTRY_OTHER));
-        for def in unchained {
-            let _ = industry_card_clicked(ui, palette, tool, registry, def);
-        }
-    }
-    if industry_empty {
-        ui.label(caption_text(palette, PICKER_EMPTY_CATEGORY));
-    }
-}
+fn draw_industry_picker_tab() {}
 
 fn industry_chain_groups(
     registry: &BuildingDefinitionRegistry,
@@ -480,72 +177,9 @@ fn industry_chain_groups(
     (by_chain, unchained)
 }
 
-fn industry_card_clicked(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    tool: &mut ActiveBuildTool,
-    registry: &BuildingDefinitionRegistry,
-    def: &BuildingDefinition,
-) -> bool {
-    let selected = tool
-        .building_intent
-        .as_ref()
-        .and_then(|i| i.catalog_id.as_deref())
-        == Some(def.id.as_str());
-    let power = power_tier_compact(def.power_consumption);
-    let frame = egui::Frame::new()
-        .fill(palette.bg_interactive)
-        .stroke(egui::Stroke::new(
-            if selected { 3.0 } else { 1.0 },
-            if selected {
-                palette.accent_gold
-            } else {
-                palette.fg_muted
-            },
-        ))
-        .inner_margin(egui::Margin::symmetric(6, 4));
-    let mut clicked = false;
-    frame.show(ui, |ui| {
-        ui.set_min_height(56.0);
-        ui.label(body_text(palette, &def.display_name));
-        ui.label(caption_text(palette, power));
-        clicked = ui.interact(ui.max_rect(), ui.id(), egui::Sense::click()).clicked();
-    });
-    if clicked {
-        tool.tool = BuildTool::Building(BuildingArchetypeId::Factory);
-        tool.building_intent = registry.intent_preview(def.id.as_str());
-    }
-    clicked
-}
+fn industry_card_clicked() {}
 
 /// Legacy entry — delegates to picker (retires floating submenus).
-pub fn draw_sim_build_rail_submenus_egui(
-    contexts: bevy_egui::EguiContexts,
-    base: Res<State<BaseState>>,
-    strip: Res<BuildStripState>,
-    left_stack: Res<crate::gui::CommandLeftStackState>,
-    palette: Res<UiPalette>,
-    tool: ResMut<ActiveBuildTool>,
-    picker: ResMut<SimBuildPickerState>,
-    registry: Res<BuildingDefinitionRegistry>,
-    atlas_ui: Option<Res<PowerHudIconAtlasUi>>,
-    manifests: Res<Assets<PowerHudIconAtlasManifest>>,
-    tex_cache: ResMut<PowerHudEguiTextureCache>,
-) -> Result {
-    draw_sim_build_picker_sheet_egui(
-        contexts,
-        base,
-        strip,
-        left_stack,
-        palette,
-        tool,
-        picker,
-        registry,
-        atlas_ui,
-        manifests,
-        tex_cache,
-    )
-}
 
 #[cfg(test)]
 mod tests {

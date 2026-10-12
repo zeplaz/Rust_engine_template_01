@@ -16,6 +16,7 @@ mod building_catalog;
 pub mod building_definitions;
 pub mod footprint_tile_instances;
 mod map_egui_projection;
+mod map_pick_params;
 pub mod procedural;
 mod supply_chain_role;
 mod utility_infrastructure_role;
@@ -28,7 +29,7 @@ pub use ghost_visual::{
     corridor_in_progress_color, corridor_planned_color, road_committed_color, road_segment_color,
 };
 pub use phase_visual::phase_map_word;
-pub use map_egui_projection::{world_to_sim_map_egui, ConstructionMapProjection};
+pub use map_egui_projection::{world_to_sim_map_egui, world_to_sim_map_screen, ConstructionMapProjection};
 mod build_confidence;
 mod build_state;
 mod build_strip;
@@ -126,14 +127,13 @@ mod zones;
 #[cfg(test)]
 mod integration_tests;
 
-pub use crate::gui::hud::sim_build_picker_sheet::draw_sim_build_rail_submenus_egui;
 pub use crate::substrate::hydrology::HydrologyConstructionCouplingWitness;
 pub use blueprint_preset::{
     blueprint_collection_from_pending, blueprint_preset_entry_from_pending,
     BlueprintImportQueueMode, BlueprintPresetCollectionR8, BlueprintPresetEntryR8,
 };
 pub use build_commit::queue_commit_construction_site;
-pub use build_ghost::GhostBuildCursor;
+pub use build_ghost::{GhostBuildCursor, GhostValid};
 pub use build_interaction::{
     build_adjust_blocks_map_wheel, build_adjust_modifiers_system, build_cancel_ghost_system,
     build_clear_pending_queue_system, build_confirm_site_system, build_drag_paint_queue_system,
@@ -154,8 +154,10 @@ pub use build_tool_authority::{
     apply_build_rail_tool_selection, ActiveBuildTool, BuildTool, BuildingArchetypeId, DefenseKind,
     RailType, RoadType, ZoneTool,
 };
-pub use build_toolbox::draw_build_toolbox_egui;
-pub use build_validation::validate_planned_site_stubs;
+pub use build_toolbox::{register_build_toolbox_bevy_systems, BuildToolboxBevyRoot};
+pub use build_validation::{
+    evaluate_ghost_site_placement, ghost_valid_flag, validate_planned_site_stubs,
+};
 pub use building_catalog::{
     default_preview_for_apartment, ApartmentForm, ApartmentUnitKind, BuildingFamily,
     BuildingIntentPreview, DetachedResidenceForm, FootprintMatrix, ResidentialBuildingForm,
@@ -199,21 +201,19 @@ pub use hydro_coupling::{
 };
 pub use mock_shapes_menu::draw_mock_shapes_submenu;
 pub use pending_construction::{PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind};
-pub use pending_construction_panel::draw_pending_construction_queue_egui;
 pub use power_lines::{
     commit_power_line_to_utility_graph, cut_power_line_segment, damage_power_line_segment,
-    draw_power_line_path_ghost_egui, node_key_for_world, power_damage_segment_witness_green,
-    power_line_cut_input_wired, power_line_demolish_cut_system, power_line_draw_witness_green,
+    node_key_for_world, power_damage_segment_witness_green, power_line_cut_input_wired,
+    power_line_demolish_cut_system, power_line_draw_witness_green,
     power_line_ghost_preview_dashed_witness_green, power_line_load_fraction,
-    power_line_path_input_system,
-    power_line_routing_mode_hotkey_system, power_repair_queue_witness_green,
-    preview_island_offline_from_cut, register_power_segments_from_graph_system,
-    sync_power_damage_to_presentation_system, sync_power_line_build_preview,
-    sync_power_line_from_build_tool, sync_power_line_preview_overlay_system,
-    tick_power_repair_queue_system, update_power_line_path_preview_system,
-    ActivePowerLinePlacement, PowerLineCutToast, PowerLineDamageBook, PowerLineRoutingMode,
-    PowerLineSegmentHealth, PowerRepairJob, PowerRepairQueue, POWER_REPAIR_PARTS_PER_SEGMENT,
-    POWER_REPAIR_TICKS_PER_JOB,
+    power_line_path_input_system, power_line_routing_mode_hotkey_system,
+    power_repair_queue_witness_green, preview_island_offline_from_cut,
+    register_power_segments_from_graph_system, sync_power_damage_to_presentation_system,
+    sync_power_line_build_preview, sync_power_line_from_build_tool,
+    sync_power_line_preview_overlay_system, tick_power_repair_queue_system,
+    update_power_line_path_preview_system, ActivePowerLinePlacement, PowerLineCutToast,
+    PowerLineDamageBook, PowerLineRoutingMode, PowerLineSegmentHealth, PowerRepairJob,
+    PowerRepairQueue, POWER_REPAIR_PARTS_PER_SEGMENT, POWER_REPAIR_TICKS_PER_JOB,
 };
 pub use procedural::{
     init_procedural_module_registry, init_style_pack_registry, init_tile_atlas_registry,
@@ -222,15 +222,15 @@ pub use procedural::{
     TileAtlasEntry, TileAtlasRegistry, MODULE_INDEX_RON, TILE_ATLAS_INDEX_RON,
 };
 pub use rail::{
-    draw_rail_path_ghost_egui, rail_path_input_system, sync_rail_path_build_preview,
-    sync_rail_placement_from_tool, update_rail_path_preview_system, ActiveRailPlacement,
+    rail_path_input_system, sync_rail_path_build_preview, sync_rail_placement_from_tool,
+    update_rail_path_preview_system, ActiveRailPlacement,
 };
 pub use residential_menu::draw_residential_submenu;
 pub use roads::{
-    commit_road_path_to_queue, cursor_world_on_map, draw_road_path_ghost_egui,
-    draw_road_tool_popup_egui, road_path_input_system, sync_road_path_build_preview,
-    sync_road_placement_width_from_tool, update_road_path_preview_system, ActiveRoadPlacement,
-    RoadSegmentPreview, RoadToolPopupState,
+    commit_road_path_to_queue, cursor_world_on_map, register_road_tool_popup_bevy_systems,
+    road_path_input_system, sync_road_path_build_preview, sync_road_placement_width_from_tool,
+    update_road_path_preview_system, ActiveRoadPlacement, RoadSegmentPreview,
+    RoadToolPopupBevyRoot, RoadToolPopupState,
 };
 pub use sessions::ActiveToolSession;
 pub use site_stage::{ClearingSubstep, SiteStageProgress};
@@ -241,7 +241,7 @@ pub use site_stage_tick::{
 pub use snap::RoadSnapSettings;
 pub use staged_ghost_panel::{
     build_approved_drains_staged_witness_green, commit_approved_staged_rows,
-    draw_staged_placements_panel_body, parametric_active_ghost_hud_line,
+    parametric_active_ghost_hud_line, staged_placements_tray_lines,
     staging_toggle_wired_witness_green, StagedPlacementBook, StagedPlacementMode,
     StagedPlacementRow, StagedValidity, STAGED_PANEL_FLOATING_SIM,
 };
@@ -260,8 +260,8 @@ pub use visual_authority::{
     VisualPathKind, ZoneTileRequest, sync_zone_visual_requests,
 };
 pub use zones::{
-    admin_zone_drag_input_system, draw_admin_zone_ink_egui, draw_zone_paint_ghost_egui,
-    sync_active_zone_from_tool, zone_paint_input_system, ActiveZonePaint,
+    admin_zone_drag_input_system, sync_active_zone_from_tool, zone_paint_input_system,
+    ActiveZonePaint,
 };
 
 pub use history::ConstructionHistory;
@@ -279,9 +279,7 @@ pub use witness_collectors::{
 };
 
 use bevy::prelude::*;
-use bevy_egui::EguiPrimaryContextPass;
-
-use crate::gui::{in_simulation_or_editor, product_egui_shell_active, InputBindings};
+use crate::gui::{in_simulation_or_editor, InputBindings};
 
 pub fn cycle_build_planning_tool_system(
     keyboard: Res<ButtonInput<KeyCode>>,
@@ -539,43 +537,9 @@ impl Plugin for BuildPlanningPlugin {
                 Update,
                 crate::gui::hud::context_tray_build_egui::ensure_context_tray_peek_when_build_armed
                     .run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                (
-                    draw_build_toolbox_egui.run_if(product_egui_shell_active),
-                    staged_ghost_panel::draw_staged_placements_panel_egui_system
-                        .run_if(product_egui_shell_active),
-                    crate::gui::hud::sim_build_picker_sheet::draw_sim_build_picker_sheet_egui
-                        .run_if(product_egui_shell_active),
-                    crate::gui::hud::context_tray_build_egui::draw_context_tray_build_body_egui
-                        .run_if(product_egui_shell_active),
-                    crate::gui::hud::context_tray_power_repair_egui::draw_context_tray_power_repair_egui
-                        .run_if(product_egui_shell_active),
-                    placement_debug::draw_construction_placement_debug_overlay
-                        .run_if(product_egui_shell_active),
-                    tool_hints::draw_tool_hints_egui.run_if(product_egui_shell_active),
-                    crate::gui::hud::sim_road_tool_sheet::draw_sim_road_tool_sheet_egui
-                        .run_if(product_egui_shell_active),
-                    crate::gui::hud::sim_power_tool_sheet::draw_sim_power_tool_sheet_egui
-                        .run_if(product_egui_shell_active),
-                    crate::gui::hud::plant_focus_card::draw_plant_focus_card_egui
-                        .run_if(product_egui_shell_active),
-                    crate::gui::hud::power_node_hover_egui::draw_power_node_hover_egui
-                        .run_if(product_egui_shell_active),
-                    draw_power_line_path_ghost_egui.run_if(product_egui_shell_active),
-                    visual_authority::draw_construction_visual_requests_egui
-                        .run_if(product_egui_shell_active),
-                    phase_visual::draw_construction_phase_labels_egui
-                        .run_if(product_egui_shell_active),
-                    build_footprint_overlay::build_footprint_validity_overlay_egui
-                        .run_if(product_egui_shell_active),
-                )
-                    .run_if(product_egui_shell_active),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                draw_admin_zone_ink_egui.run_if(product_egui_shell_active),
             );
+
+        register_build_toolbox_bevy_systems(app);
+        register_road_tool_popup_bevy_systems(app);
     }
 }

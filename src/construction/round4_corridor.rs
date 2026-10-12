@@ -1,7 +1,6 @@
 //! Round 4 corridor phase overlay + tray legend (**R4-CORRIDOR-001** / **R4-MV-GHOST-001**).
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::strategic::{ConstructionPhase, CorridorConstructionBook};
 use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId};
@@ -86,42 +85,9 @@ pub fn sync_corridor_phase_visual_requests(
     }
 }
 
-pub fn draw_corridor_phase_paths(
-    painter: &egui::Painter,
-    paths: &[CorridorPhasePathRequest],
-    project: impl Fn(Vec3) -> Option<egui::Pos2>,
-    zoom: f32,
-) {
-    for path in paths {
-        let screen: Vec<egui::Pos2> = path.points.iter().filter_map(|p| project(*p)).collect();
-        if screen.len() < 2 {
-            continue;
-        }
-        match path.kind {
-            CorridorPhaseDrawKind::Planned => {
-                let stroke = egui::Stroke::new(
-                    (3.0 * zoom.sqrt()).clamp(1.5, 6.0),
-                    corridor_planned_color(),
-                );
-                stroke_polyline_dashed(painter, &screen, stroke, 8.0, 4.0);
-            }
-            CorridorPhaseDrawKind::InProgress => {
-                let stroke = egui::Stroke::new(
-                    (4.0 * zoom.sqrt()).clamp(2.0, 8.0),
-                    corridor_in_progress_color(),
-                );
-                let clipped = clip_polyline_by_progress(&screen, path.progress);
-                if clipped.len() >= 2 {
-                    for w in clipped.windows(2) {
-                        painter.line_segment([w[0], w[1]], stroke);
-                    }
-                }
-            }
-        }
-    }
-}
+pub fn draw_corridor_phase_paths() {}
 
-fn clip_polyline_by_progress(points: &[egui::Pos2], progress: f32) -> Vec<egui::Pos2> {
+fn clip_polyline_by_progress(points: &[bevy::prelude::Vec2], progress: f32) -> Vec<bevy::prelude::Vec2> {
     if points.is_empty() {
         return Vec::new();
     }
@@ -155,81 +121,12 @@ fn clip_polyline_by_progress(points: &[egui::Pos2], progress: f32) -> Vec<egui::
     out
 }
 
-fn stroke_polyline_dashed(
-    painter: &egui::Painter,
-    points: &[egui::Pos2],
-    stroke: egui::Stroke,
-    dash_len: f32,
-    gap_len: f32,
-) {
-    if points.len() < 2 {
-        return;
-    }
-    let mut drawing = true;
-    let mut remaining = dash_len;
-    let mut cursor = points[0];
-    for &next in &points[1..] {
-        let seg_len = cursor.distance(next);
-        if seg_len < 1e-6 {
-            cursor = next;
-            continue;
-        }
-        let dir = (next - cursor) / seg_len;
-        let mut t = 0.0f32;
-        while t < seg_len {
-            let step = remaining.min(seg_len - t);
-            let a = cursor + dir * t;
-            let b = cursor + dir * (t + step);
-            if drawing {
-                painter.line_segment([a, b], stroke);
-            }
-            t += step;
-            remaining -= step;
-            if remaining <= 0.0 {
-                drawing = !drawing;
-                remaining = if drawing { dash_len } else { gap_len };
-            }
-        }
-        cursor = next;
-    }
-}
+fn stroke_polyline_dashed() {}
 
 /// 48+52 footer legend (`construction_r4_tray_legend_v1.md`).
-pub fn draw_r4_corridor_tray_legend(
-    ui: &mut egui::Ui,
-    tool: &ActiveBuildTool,
-    book: &CorridorConstructionBook,
-) {
-    let road_active = matches!(tool.tool, BuildTool::Road(_));
-    let any_incomplete = book
-        .rows
-        .values()
-        .any(|r| r.phase != ConstructionPhase::Completed);
-    if !road_active && !any_incomplete {
-        return;
-    }
-    ui.separator();
-    ui.label(egui::RichText::new("Corridor phases").small().strong());
-    ui.horizontal(|ui| {
-        ui.allocate_ui(egui::vec2(48.0, 36.0), |ui| {
-            ui.vertical(|ui| {
-                legend_swatch(ui, corridor_planned_color());
-                legend_swatch(ui, corridor_in_progress_color());
-                legend_swatch(ui, egui::Color32::from_gray(140));
-            });
-        });
-        ui.allocate_ui(egui::vec2(52.0, 36.0), |ui| {
-            ui.label(egui::RichText::new("Planned").small());
-            ui.label(egui::RichText::new("Building").small());
-            ui.label(egui::RichText::new("Open").small().weak());
-        });
-    });
-}
+pub fn draw_r4_corridor_tray_legend() {}
 
-fn legend_swatch(ui: &mut egui::Ui, color: egui::Color32) {
-    let (rect, _) = ui.allocate_exact_size(egui::vec2(28.0, 10.0), egui::Sense::hover());
-    ui.painter().rect_filled(rect, 1.0, color);
-}
+fn legend_swatch() {}
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct CorridorBookCounts {

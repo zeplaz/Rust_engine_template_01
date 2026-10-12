@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/fire_save_roundtrip_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "coder_fire_save_roundtrip",
-    "written_at_epoch_secs": 1790312396
+    "written_at_epoch_secs": 1791736111
   },
   "artifact": "overlays/chunk_fire_state.ron",
   "authority": "ChunkSurfaceFire (+ overlay smoke/toxic max when present)",

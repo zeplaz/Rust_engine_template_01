@@ -93,15 +93,15 @@ cd tools/mcp/python && python -m pytest tests/test_building_quality_qc.py tests/
 
 |:---:|:---|:---|
 
-| ☑ | **RTT-B5-001..003** | `ParticleViewGlobals` + fire/water raster from `ExtractedCameraMetrics` |
+| ☑ | **RTT-B5-001..003** | `ParticleViewGlobals` + fire/water raster from `ExtractedCameraMetrics` (B5-003 residual: water dropped `MainWorldCamera` dual path 2026-10-11) |
 
-| ☑ | **RTT-B5-004 lib** | PostUpdate sync after `ExtractedCameraMetricsSet::Sync` · `rtt_lane` tests |
+| ☑ | **RTT-B5-004 lib** | PostUpdate sync after `ExtractedCameraMetricsSet::Sync` · `rtt_lane` tests · `rtt_lane_witness_live.json` green |
 
 | ☑ | **RTT-A1-001..004** | Latch deleted · `TacticalMapFillRect` · fill streak witness |
 
 | ☑ | **RTT-C-004/005 lib** | `diagnosis_hints` + `image_node_bind` in `tactical_map_debug.rs` |
 
-| ☐ | **RTT-C-001..003** | **operator/steward** — release build · `--test vfx` · refresh `tactical_map_debug_live.json` |
+| ☐ | **RTT-C-001..003** | **operator/steward only** — release build · `--test vfx` · refresh `tactical_map_debug_live.json` (no coder slice left) |
 
 | ☐ | **DR-RTT-VR16** | **operator** — refresh `stage5_full_app_live.json` |
 

@@ -3,13 +3,11 @@
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::egui;
 
 use crate::construction::{
-    commit_road_path_to_queue, cursor_world_on_map, draw_road_tool_popup_egui,
-    enqueue_road_upgrade, ActiveBuildTool, ActiveRoadPlacement, ActiveToolSession,
-    BuildStripState, BuildTool, ConstructionPlanQueue, ExecutedRoadNetwork, RailType, RoadType,
-    RoadSnapSettings, RoadToolPopupState, ToolContext,
+    commit_road_path_to_queue, cursor_world_on_map, enqueue_road_upgrade, ActiveBuildTool,
+    ActiveRoadPlacement, ActiveToolSession, BuildStripState, BuildTool, ConstructionPlanQueue,
+    ExecutedRoadNetwork, RailType, RoadType, RoadSnapSettings, RoadToolPopupState, ToolContext,
 };
 use crate::engine::states::BaseState;
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport, UiPalette};
@@ -62,7 +60,7 @@ pub struct SimRoadToolSheetDrawParams<'w> {
 }
 
 #[must_use]
-pub fn road_tool_sheet_anchor(strip: &BuildStripState, left_stack_collapsed: bool) -> egui::Pos2 {
+pub fn road_tool_sheet_anchor(strip: &BuildStripState, left_stack_collapsed: bool) -> bevy::prelude::Vec2 {
     let slot = match strip.active {
         ToolContext::Rail => ToolContext::Rail,
         _ => ToolContext::Roads,
@@ -70,142 +68,3 @@ pub fn road_tool_sheet_anchor(strip: &BuildStripState, left_stack_collapsed: boo
     super::simulation_shell_phase2::build_rail_slot_anchor_xy(slot, left_stack_collapsed)
 }
 
-pub fn draw_sim_road_tool_sheet_egui(
-    mut contexts: bevy_egui::EguiContexts,
-    base: Res<State<BaseState>>,
-    mut draw: SimRoadToolSheetDrawParams,
-    left_stack: Res<crate::gui::CommandLeftStackState>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    authority: Option<Res<ViewProjectionAuthority>>,
-) -> Result {
-    if !matches!(base.get(), BaseState::Simulation) {
-        return draw_road_tool_popup_egui(
-            contexts,
-            draw.tool,
-            draw.placement,
-            draw.popup,
-            draw.queue,
-            draw.session,
-            draw.snap,
-            draw.roads,
-            draw.params,
-            win,
-            authority,
-            draw.desired,
-            draw.map_vp,
-        );
-    }
-    if crate::gui::hud::sim_road_power_sheets_bevy::SIM_ROAD_POWER_SHEETS_USE_BEVY {
-        return Ok(());
-    }
-
-    draw.road_sheet.sync_from_strip(draw.strip.as_ref());
-    if !draw.road_sheet.open {
-        return Ok(());
-    }
-    if !matches!(draw.tool.tool, BuildTool::Road(_) | BuildTool::Rail(_)) {
-        return Ok(());
-    }
-
-    draw.popup.cancel_requested = false;
-    let sheet_title = match draw.tool.tool {
-        BuildTool::Road(RoadType::Street) => "Road — Street",
-        BuildTool::Road(RoadType::Highway) => "Road — Highway",
-        BuildTool::Rail(RailType::Standard) => "Rail — Standard",
-        _ => return Ok(()),
-    };
-
-    let valid_count = draw
-        .placement
-        .generated_segments
-        .iter()
-        .filter(|s| s.valid)
-        .count();
-    let est_cost = valid_count.saturating_mul(10);
-    let can_build = valid_count > 0;
-
-    let cursor_world = win.single().ok().and_then(|window| {
-        cursor_world_on_map(
-            window,
-            authority.as_deref(),
-            draw.desired.as_ref(),
-            draw.map_vp.as_ref(),
-            draw.params.as_ref(),
-        )
-    });
-
-    let ctx = contexts.ctx_mut()?;
-    apply_sim_hud_egui_theme(ctx, &draw.palette);
-    let anchor = road_tool_sheet_anchor(draw.strip.as_ref(), left_stack.collapsed);
-
-    egui::Area::new(egui::Id::new("sim_road_tool_sheet"))
-        .order(egui::Order::Foreground)
-        .fixed_pos(anchor)
-        .show(ctx, |ui| {
-            ui.set_width(ROAD_TOOL_SHEET_W_PX);
-            picker_sheet_frame(&draw.palette).show(ui, |ui| {
-                picker_header_frame(&draw.palette).show(ui, |ui| {
-                    ui.label(title_text(&draw.palette, sheet_title));
-                });
-                ui.label(data_text(
-                    &draw.palette,
-                    &format!("Control points: {}", draw.placement.control_points.len()),
-                ));
-                ui.label(data_text(
-                    &draw.palette,
-                    &format!("Valid segments: {valid_count}"),
-                ));
-                ui.label(data_text(
-                    &draw.palette,
-                    &format!("Estimated cost: {est_cost}"),
-                ));
-                ui.label(data_text(
-                    &draw.palette,
-                    &format!("Width: {:.1}", draw.placement.width),
-                ));
-                ui.separator();
-                ui.checkbox(&mut draw.snap.grid_snap, "Grid snap");
-                ui.checkbox(&mut draw.snap.node_snap, "Node snap");
-                ui.checkbox(&mut draw.placement.use_curved_preview, "Curved preview");
-                ui.separator();
-                ui.label(caption_text(&draw.palette, ROAD_SHEET_HINT_INPUT));
-                ui.horizontal(|ui| {
-                    if ui
-                        .add_enabled(
-                            can_build,
-                            egui::Button::new(
-                                body_text(&draw.palette, ROAD_SHEET_BUILD)
-                                    .color(draw.palette.accent_action),
-                            ),
-                        )
-                        .clicked()
-                    {
-                        commit_road_path_to_queue(
-                            draw.placement.as_mut(),
-                            draw.queue.as_mut(),
-                            draw.params.as_ref(),
-                            draw.session.continuous_path,
-                        );
-                        draw.session.record_commit();
-                    }
-                    if ui.button(body_text(&draw.palette, ROAD_SHEET_CANCEL)).clicked() {
-                        draw.placement.control_points.clear();
-                        draw.placement.generated_segments.clear();
-                        draw.popup.cancel_requested = true;
-                    }
-                });
-                if ui.button(body_text(&draw.palette, ROAD_SHEET_UPGRADE)).clicked() {
-                    if let Some(world) = cursor_world {
-                        enqueue_road_upgrade(
-                            world,
-                            draw.roads.as_ref(),
-                            draw.queue.as_mut(),
-                            draw.placement.as_mut(),
-                            draw.params.as_ref(),
-                        );
-                    }
-                }
-            });
-        });
-    Ok(())
-}

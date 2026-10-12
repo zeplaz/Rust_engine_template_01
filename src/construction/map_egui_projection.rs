@@ -4,10 +4,9 @@
 //! (then `WorldMain`), with [`MapCameraDesired`] as compat fallback only.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::gui::{
-    sim_map_screen_to_world_xy, sim_map_world_vec3_to_egui, sim_map_world_xy_to_egui_with_ortho,
+    sim_map_screen_to_world_xy, sim_map_world_vec3_to_screen, sim_map_world_xy_to_screen_with_ortho,
     view_camera_state_from_map_camera_desired, MainWorldCameraOrthoTrace, MapCameraDesired,
     SimulationMapViewport, ViewCameraState,
 };
@@ -50,31 +49,31 @@ impl<'a> ConstructionMapProjection<'a> {
     }
 
     #[must_use]
-    pub fn world_to_egui(&self, world: Vec3) -> Option<egui::Pos2> {
+    pub fn world_to_screen(&self, world: Vec3) -> Option<bevy::prelude::Vec2> {
         let compat = self.map_camera_compat();
-        sim_map_world_vec3_to_egui(world, &compat, self.map_vp, self.world_w, self.world_h)
+        sim_map_world_vec3_to_screen(world, &compat, self.map_vp, self.world_w, self.world_h)
     }
 
     /// Prefer [`MainWorldCameraOrthoTrace`] — matches RTT stretch + tactical map camera.
     #[must_use]
-    pub fn world_to_egui_with_ortho(
+    pub fn world_to_screen_with_ortho(
         &self,
         world: Vec3,
         ortho: &MainWorldCameraOrthoTrace,
-    ) -> Option<egui::Pos2> {
-        sim_map_world_xy_to_egui_with_ortho(Vec2::new(world.x, world.z), self.map_vp, ortho)
+    ) -> Option<bevy::prelude::Vec2> {
+        sim_map_world_xy_to_screen_with_ortho(Vec2::new(world.x, world.z), self.map_vp, ortho)
     }
 
     #[must_use]
-    pub fn world_to_egui_rendered(
+    pub fn world_to_screen_rendered(
         &self,
         world: Vec3,
         ortho: Option<&MainWorldCameraOrthoTrace>,
-    ) -> Option<egui::Pos2> {
+    ) -> Option<bevy::prelude::Vec2> {
         if let Some(ortho) = ortho.filter(|o| o.fixed_width > 0.0 && o.fixed_height > 0.0) {
-            return self.world_to_egui_with_ortho(world, ortho);
+            return self.world_to_screen_with_ortho(world, ortho);
         }
-        self.world_to_egui(world)
+        self.world_to_screen(world)
     }
 
     #[must_use]
@@ -159,27 +158,27 @@ pub fn map_camera_desired_from_view_camera(camera: ViewCameraState) -> MapCamera
 }
 
 #[must_use]
-pub fn world_to_sim_map_egui(
+pub fn world_to_sim_map_screen(
     world: Vec3,
     authority: Option<&ViewProjectionAuthority>,
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
     params: &WorldGenParams,
-) -> Option<egui::Pos2> {
-    ConstructionMapProjection::resolve(authority, desired, map_vp, params).world_to_egui(world)
+) -> Option<bevy::prelude::Vec2> {
+    ConstructionMapProjection::resolve(authority, desired, map_vp, params).world_to_screen(world)
 }
 
 #[must_use]
-pub fn world_to_sim_map_egui_rendered(
+pub fn world_to_sim_map_screen_rendered(
     world: Vec3,
     ortho: Option<&MainWorldCameraOrthoTrace>,
     authority: Option<&ViewProjectionAuthority>,
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
     params: &WorldGenParams,
-) -> Option<egui::Pos2> {
+) -> Option<bevy::prelude::Vec2> {
     ConstructionMapProjection::resolve(authority, desired, map_vp, params)
-        .world_to_egui_rendered(world, ortho)
+        .world_to_screen_rendered(world, ortho)
 }
 
 #[must_use]
@@ -210,8 +209,8 @@ pub fn tile_screen_extent_rendered(
     params: &WorldGenParams,
 ) -> f32 {
     let proj = ConstructionMapProjection::resolve(authority, desired, map_vp, params);
-    let a = proj.world_to_egui_rendered(Vec3::new(0.5, 0.0, 0.5), ortho);
-    let b = proj.world_to_egui_rendered(Vec3::new(1.5, 0.0, 0.5), ortho);
+    let a = proj.world_to_screen_rendered(Vec3::new(0.5, 0.0, 0.5), ortho);
+    let b = proj.world_to_screen_rendered(Vec3::new(1.5, 0.0, 0.5), ortho);
     match (a, b) {
         // One map cell. A floor of `4 * zoom` drew quads larger than the cell and
         // kept that extra size when the camera zoomed.
@@ -248,7 +247,7 @@ pub fn egui_footprint_hotfix_a_witness_green() -> bool {
     let ext_zoom = tile_screen_extent(None, &zoomed, &map_vp, &params);
     ext > 0.5
         && (ext_zoom / ext - 2.0).abs() < 0.08
-        && world_to_sim_map_egui(Vec3::new(64.5, 0.0, 64.5), None, &desired, &map_vp, &params)
+        && world_to_sim_map_screen(Vec3::new(64.5, 0.0, 64.5), None, &desired, &map_vp, &params)
             .is_some()
 }
 
@@ -331,8 +330,8 @@ mod tests {
 
         let proj_low = ConstructionMapProjection::resolve(None, &zoom_low, &map_vp, &params);
         let proj_high = ConstructionMapProjection::resolve(None, &zoom_high, &map_vp, &params);
-        let screen_low = proj_low.world_to_egui(world).expect("low");
-        let screen_high = proj_high.world_to_egui(world).expect("high");
+        let screen_low = proj_low.world_to_screen(world).expect("low");
+        let screen_high = proj_high.world_to_screen(world).expect("high");
         assert!((screen_low - screen_high).length() > 1.0);
 
         let center = map_vp.min + (map_vp.max - map_vp.min) * 0.5;
@@ -343,3 +342,5 @@ mod tests {
         assert!(back_high.distance(world_xy) < 80.0);
     }
 }
+
+pub use world_to_sim_map_screen as world_to_sim_map_egui;

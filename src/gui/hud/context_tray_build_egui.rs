@@ -2,15 +2,11 @@
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_egui::egui;
-use bevy_egui::EguiContexts;
 
 use crate::construction::{
-    draw_r4_corridor_tray_legend, draw_staged_placements_panel_body,
-    parametric_active_ghost_hud_line, ActiveBuildTool, BuildCommandActor, BuildGhostState,
-    BuildPlacementPreview, BuildStripState, BuildTool, BuildingDefinitionRegistry,
-    ConstructionHistory, PendingConstructionQueue, SiteStubOverlayState, StagedPlacementBook,
-    StagedPlacementMode, ToolContext,
+    ActiveBuildTool, BuildCommandActor, BuildGhostState, BuildPlacementPreview, BuildStripState,
+    BuildTool, BuildingDefinitionRegistry, ConstructionHistory, PendingConstructionQueue,
+    SiteStubOverlayState, StagedPlacementBook, StagedPlacementMode, ToolContext,
 };
 use crate::engine::states::BaseState;
 use crate::gui::hud::panel_state::HudPanelState;
@@ -83,163 +79,6 @@ pub fn peek_shows_modifiers_wired() -> bool {
     !TRAY_PEEK_MODIFIERS.is_empty()
 }
 
-pub fn draw_context_tray_build_body_egui(
-    mut contexts: EguiContexts,
-    base: Res<State<BaseState>>,
-    mut params: ContextTrayBuildDrawParams,
-    mut events: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
-) -> Result {
-    if !matches!(base.get(), BaseState::Simulation) {
-        return Ok(());
-    }
-    // HUD-NAT-003 — Build tab body lives on Bevy ContextTrayBodyLine (+ chrome below).
-    if CONTEXT_TRAY_BUILD_USE_BEVY {
-        return Ok(());
-    }
-    if params.tray.active_tab != ContextTrayTab::Build {
-        return Ok(());
-    }
-    if params.tray.panel_state == HudPanelState::Collapsed {
-        return Ok(());
-    }
-
-    let ctx = contexts.ctx_mut()?;
-    apply_sim_hud_egui_theme(ctx, &params.palette);
-
-    let body_h = match params.tray.panel_state {
-        HudPanelState::Peek => CONTEXT_TRAY_PEEK_BODY_H_PX,
-        HudPanelState::Expanded | HudPanelState::Pinned => CONTEXT_TRAY_BODY_H_PX.max(156.0),
-        HudPanelState::Collapsed => return Ok(()),
-    };
-
-    let is_build = params.tool.tool.uses_two_click_place()
-        && params.strip.active != ToolContext::None;
-    let screen_h = ctx.input(|i| i.content_rect().height());
-    let anchor_y = screen_h - CONTEXT_TRAY_TAB_H_PX - body_h;
-
-    if params.tray.panel_state == HudPanelState::Peek {
-        if !is_build {
-            return Ok(());
-        }
-        egui::Area::new(egui::Id::new("context_tray_build_peek"))
-            .fixed_pos(egui::pos2(CONTEXT_TRAY_LEFT_INSET_PX, anchor_y))
-            .show(ctx, |ui| {
-                ui.set_width(400.0);
-                ui.label(caption_text(&params.palette, TRAY_PEEK_MODIFIERS));
-            });
-        return Ok(());
-    }
-
-    let site_legend = params.site_stub.preset_id.is_some() || !params.site_stub.zone_labels.is_empty();
-
-    egui::Area::new(egui::Id::new("context_tray_build_body"))
-        .fixed_pos(egui::pos2(CONTEXT_TRAY_LEFT_INSET_PX, anchor_y))
-        .show(ctx, |ui| {
-            ui.set_min_width(280.0);
-            picker_sheet_frame(&params.palette).show(ui, |ui| {
-                if site_legend {
-                    ui.label(title_text(&params.palette, TRAY_LEGEND_TITLE));
-                    ui.label(caption_text(&params.palette, TRAY_LEGEND_FOOTPRINT));
-                    ui.label(caption_text(&params.palette, TRAY_LEGEND_YARD));
-                    ui.label(caption_text(
-                        &params.palette,
-                        "Yard · Rail · Svc · Park · Load",
-                    ));
-                    ui.separator();
-                }
-                if let Some(book) = params.corridor_book.as_ref() {
-                    draw_r4_corridor_tray_legend(ui, &params.tool, book);
-                }
-                ui.label(title_text(&params.palette, TRAY_STAGING_TITLE));
-                ui.checkbox(&mut params.staging.enabled, "Stage placements");
-                if let Some(line) = parametric_active_ghost_hud_line(
-                    &params.tool,
-                    &params.registry,
-                    &params.ghost,
-                    &params.preview,
-                ) {
-                    ui.label(caption_text(&params.palette, &line));
-                }
-                if params.staging.enabled || !params.book.rows.is_empty() {
-                    draw_staged_placements_panel_body(
-                        ui,
-                        &mut params.book,
-                        params.actor.0,
-                        &mut events,
-                        &mut params.history,
-                        params.occupation.as_deref(),
-                    );
-                } else {
-                    ui.label(caption_text(&params.palette, TRAY_STAGING_EMPTY));
-                }
-                ui.separator();
-                ui.label(title_text(&params.palette, TRAY_QUEUE_TITLE));
-                let n = params.pending.pending_count();
-                let first = params
-                    .pending
-                    .entries
-                    .first()
-                    .map(|e| e.label.as_str())
-                    .unwrap_or("—");
-                ui.label(data_text(
-                    &params.palette,
-                    &tray_queue_summary(n, first),
-                ));
-                ui.horizontal(|ui| {
-                    if ui
-                        .add_enabled(
-                            !params.pending.entries.is_empty(),
-                            egui::Button::new("Build queued"),
-                        )
-                        .clicked()
-                    {
-                        params.pending.approve_all();
-                        for entry in params.pending.drain_approved() {
-                            if !matches!(
-                                entry.kind,
-                                crate::construction::PendingEntryKind::BuildSite
-                            ) {
-                                continue;
-                            }
-                            let placement = entry.catalog_id.as_deref().and_then(|id| {
-                                params.registry.get(id).map(|def| {
-                                    crate::construction::parametric_placement_snapshot(
-                                        &def.footprint,
-                                        def.family,
-                                        entry.origin,
-                                        entry.rotation_quarter_turns,
-                                        entry.mirror_x,
-                                        None,
-                                    )
-                                })
-                            });
-                            crate::construction::queue_commit_construction_site(
-                                &mut events,
-                                params.actor.0,
-                                entry.archetype,
-                                entry.origin,
-                                entry.footprint,
-                                entry.layer,
-                                entry.catalog_id.clone(),
-                                placement,
-                            );
-                            params.history.queue_site(entry.origin);
-                        }
-                    }
-                    if ui
-                        .add_enabled(
-                            !params.pending.entries.is_empty(),
-                            egui::Button::new("Clear queue"),
-                        )
-                        .clicked()
-                    {
-                        params.pending.clear();
-                    }
-                });
-            });
-        });
-    Ok(())
-}
 
 /// GUI-CRAFT-001 / HUD-A-002 — when a build tool is armed, keep the context tray at least Peek
 /// and force the Build tab while a building is mid-place (PLAY-01 may collapse idle trays).

@@ -25,7 +25,7 @@ use bevy::render::{
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
-use crate::gui::{MainWorldCamera, RepresentationResult, TileDebugRenderHost};
+use crate::gui::{RepresentationResult, TileDebugRenderHost};
 use crate::render::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
 };
@@ -108,11 +108,22 @@ pub fn register_world_water_particle_raster(app: &mut App) {
         );
 }
 
+/// Clip matrix for the water raster. Sole owner: [`ExtractedCameraMetrics::view_proj`]
+/// (parity with fire — RTT-B5-003). Identity means tactical camera not ready.
+#[inline]
+#[must_use]
+fn water_particle_view_proj(metrics: &ExtractedCameraMetrics) -> Option<Mat4> {
+    if metrics.view_proj == Mat4::IDENTITY {
+        None
+    } else {
+        Some(metrics.view_proj)
+    }
+}
+
 fn sync_water_particle_draw_globals(
     policy: Res<RepresentationResult>,
     particles: Res<WorldWaterParticleFrame>,
     metrics: Res<ExtractedCameraMetrics>,
-    cam_q: Query<(&Camera, &GlobalTransform), With<MainWorldCamera>>,
     mut globals: ResMut<WaterParticleDrawGlobals>,
 ) {
     *globals = WaterParticleDrawGlobals::default();
@@ -124,15 +135,9 @@ fn sync_water_particle_draw_globals(
     if cap == 0 {
         return;
     }
-    let view_proj = if let Ok((camera, gt)) = cam_q.single() {
-        let view_from_world = Mat4::from(gt.affine().inverse());
-        camera.clip_from_view() * view_from_world
-    } else {
-        metrics.view_proj
-    };
-    if view_proj == Mat4::IDENTITY {
+    let Some(view_proj) = water_particle_view_proj(&metrics) else {
         return;
-    }
+    };
     globals.view_proj = view_proj;
     globals.vertex_count = (cap as u32).saturating_mul(6);
     globals.time_secs = particles.anim_time_secs;
@@ -359,4 +364,23 @@ fn water_particle_raster_pass(
     pass.set_bind_group(0, bg0, &[]);
     pass.set_bind_group(1, bg1, &[]);
     pass.draw(0..globals.vertex_count, 0..1);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn draw_globals_use_extracted_metrics_view_proj() {
+        let metrics = ExtractedCameraMetrics::for_tests(2.0, 0.85);
+        assert_ne!(metrics.view_proj, Mat4::IDENTITY);
+        assert_eq!(water_particle_view_proj(&metrics), Some(metrics.view_proj));
+    }
+
+    #[test]
+    fn identity_metrics_publish_no_water_view() {
+        let metrics = ExtractedCameraMetrics::default();
+        assert_eq!(metrics.view_proj, Mat4::IDENTITY);
+        assert!(water_particle_view_proj(&metrics).is_none());
+    }
 }

@@ -1,7 +1,6 @@
 //! Map view plugin — schedule wiring only.
 
 use bevy::prelude::*;
-use bevy_egui::EguiPrimaryContextPass;
 
 use crate::gui::ViewRepresentationSystemSet;
 
@@ -80,11 +79,6 @@ impl Plugin for MapViewPlugin {
                         .run_if(in_state(crate::engine::states::BaseState::Simulation)),
                 )
                     .chain(),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                super::presentation::sync_shell_layout_drag_gate
-                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
             );
     }
 }

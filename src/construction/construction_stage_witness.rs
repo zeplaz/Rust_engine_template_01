@@ -45,12 +45,14 @@ pub fn refresh_construction_stage_witness(
     mode: Res<super::BuildModeState>,
     path: Res<super::roads::ActiveRoadPlacement>,
     zone: Res<super::zones::ActiveZonePaint>,
+    presence: Option<Res<crate::gui::PanelPresence>>,
     mut w: ResMut<ConstructionStageWitness>,
 ) {
     // Linked `Res` params prove these types are in the world; symbols prove module body.
     let _ = (tool.as_ref(), mode.as_ref(), path.as_ref(), zone.as_ref());
 
-    w.toolbox_panel = include_str!("build_toolbox.rs").contains("pub fn draw_build_toolbox_egui");
+    // BUILD-P0-01: Editor true only while `BuildToolboxBevyRoot` spawned; Simulation harness Open OK.
+    w.toolbox_panel = presence.as_ref().is_some_and(|p| p.build_toolbox_root);
     w.semicolon_demoted_in_help = true;
     w.active_build_tool =
         include_str!("build_tool_authority.rs").contains("pub struct ActiveBuildTool");
@@ -58,8 +60,10 @@ pub fn refresh_construction_stage_witness(
         && include_str!("build_mode.rs").contains("pub fn build_escape_cancel_system");
     w.ghost_commit_isolated =
         include_str!("build_ghost.rs").contains("pub struct GhostBuildCursor");
-    // Honest: build_validation only wraps evaluate_site_placement_stubs — not production GhostValid.
-    w.shared_ghost_valid = false;
+    // BUILD-P1-02: GhostValid component + shared evaluate_ghost_site_placement + sync on ghost root.
+    w.shared_ghost_valid = include_str!("build_ghost.rs").contains("pub struct GhostValid")
+        && include_str!("build_validation.rs").contains("pub fn evaluate_ghost_site_placement")
+        && include_str!("build_interaction.rs").contains("GhostValid(");
     w.residential_menu =
         include_str!("residential_menu.rs").contains("pub fn draw_residential_submenu");
     w.demolish_tool = include_str!("demolish.rs").contains("pub fn execute_demolish_at_tile");
@@ -68,10 +72,11 @@ pub fn refresh_construction_stage_witness(
     w.road_input_model = include_str!("roads/input.rs").contains("pub fn road_path_input_system");
     w.road_segment_preview =
         include_str!("roads/pathing.rs").contains("pub fn regenerate_road_segments");
-    w.road_ghost_draw = include_str!("visual_authority.rs")
-        .contains("pub fn sync_road_visual_requests")
-        || include_str!("roads/ghost.rs").contains("pub fn draw_road_path_ghost_egui");
-    w.road_popup = include_str!("roads/popup.rs").contains("pub fn draw_road_tool_popup_egui");
+    // Honest: buffer sync path only — not retired egui ghost painters.
+    w.road_ghost_draw =
+        include_str!("visual_authority.rs").contains("pub fn sync_road_visual_requests");
+    // Honest: true only while `RoadToolPopupBevyRoot` is spawned (Editor product shell).
+    w.road_popup = presence.as_ref().is_some_and(|p| p.road_popup_root);
     w.commit_funnel_audited = include_str!("construction_pipeline.rs")
         .contains("pub fn execute_construction_plans_system");
     w.road_commit_from_segments =
@@ -87,8 +92,7 @@ pub fn refresh_construction_stage_witness(
     let modules_ok = include_str!("map_egui_projection.rs")
         .contains("pub struct ConstructionMapProjection")
         && include_str!("visual_authority.rs").contains("pub struct ConstructionVisualRequests")
-        && (include_str!("roads/ghost.rs").contains("pub fn draw_road_path_ghost_egui")
-            || include_str!("zones/ghost.rs").contains("pub fn draw_zone_paint_ghost_egui"));
+        && include_str!("visual_authority.rs").contains("pub fn sync_road_visual_requests");
     let in_sim = matches!(
         base.as_deref().map(|s| s.get()),
         Some(crate::engine::states::BaseState::Simulation)
@@ -152,6 +156,7 @@ pub fn refresh_construction_phase2_witness_system(
     proof: Option<Res<super::witness_collectors::ConstructionLiveProofState>>,
     placement: Res<super::roads::ActiveRoadPlacement>,
     registry: Option<Res<super::building_definitions::BuildingDefinitionRegistry>>,
+    height_grid: Option<Res<crate::terrain::generation::WorldGenDenseTerrainCache>>,
     mut w: ResMut<crate::dev::construction_phase2_todos::ConstructionPhase2Witness>,
     mut p9: ResMut<crate::dev::construction_p9_todos::ConstructionP9Witness>,
 ) {
@@ -183,8 +188,8 @@ pub fn refresh_construction_phase2_witness_system(
     w.grid_and_node_snap = include_str!("snap.rs").contains("pub fn snap_placement")
         && include_str!("snap.rs").contains("pub fn nearest_road_node");
     w.road_upgrade_lane = include_str!("upgrade.rs").contains("pub fn enqueue_road_upgrade");
-    // Honest: height_norm_stub only — not live height_grid conform.
-    w.terrain_conform = false;
+    // PHASE2-BUILD-20: true only when live dense elevation grid is present (not stub-only).
+    w.terrain_conform = super::terrain_conform::live_height_grid_ready(height_grid.as_deref());
     *p9 = crate::dev::construction_p9_todos::ConstructionP9Witness::from_phase2(w.as_ref());
 }
 
@@ -302,9 +307,10 @@ pub fn refresh_construction_round3_witness_system(
     w.intersection_query = true;
     w.visual_request =
         include_str!("visual_authority.rs").contains("pub struct ConstructionVisualRequests");
+    // Honest: world-map mesh sync is the unified draw path (not retired egui painter).
     w.visual_unified_draw = w.visual_request
-        && include_str!("visual_authority.rs")
-            .contains("pub fn draw_construction_visual_requests_egui");
+        && include_str!("../render/world_map_network_mesh.rs")
+            .contains("fn sync_world_map_path_meshes");
     w.visual_viewport_doc =
         include_str!("../dev/construction_ownership.md").contains("Construction ownership");
     w.brush_mode = true;

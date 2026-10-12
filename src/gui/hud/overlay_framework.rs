@@ -84,25 +84,4 @@ pub fn default_overlay_channel_runtimes() -> Vec<OverlayChannelRuntime> {
     ]
 }
 
-pub fn draw_overlay_legend(ui: &mut bevy_egui::egui::Ui, channels: &[OverlayChannelRuntime]) {
-    for row in channels {
-        if !row.enabled {
-            continue;
-        }
-        let color = bevy_egui::egui::Color32::from_rgb(
-            row.descriptor.color_rgb[0],
-            row.descriptor.color_rgb[1],
-            row.descriptor.color_rgb[2],
-        );
-        ui.horizontal(|ui| {
-            ui.colored_label(color, "■");
-            ui.label(format!(
-                "{:?} / {:?} · opacity {:.0}% · blend {:.2}",
-                row.descriptor.utility,
-                row.descriptor.overlay,
-                row.opacity * 100.0,
-                row.blend_weight
-            ));
-        });
-    }
-}
+pub fn draw_overlay_legend() {}

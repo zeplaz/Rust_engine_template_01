@@ -8,13 +8,14 @@
 # PROGRAM METADATA
 # ═════════════════════════════════════════════════════════════════════
 # id:           PLAN-TACTICAL-MAP-RTT-v1
-# status:       ACTIVE — Tracks A/B **coder slices SHIPPED 2026-07-04**; Track C operator witness OPEN
+# status:       ACTIVE — Tracks A/B **lib SHIPPED** (RTT-B5-003 water metrics-only residual closed 2026-10-11) · Track C **operator-only** OPEN
 # priority:     P0 on master — **same lane as RTT/VFX operator verify** (HANDOFF ACTIVE)
 # owner:        @coder_a CHAIN-A (RTT B5→A1→C) · @coder_b CHAIN-B (migration+cleanup+BQ+city) · @sim-steward (C witness) · @operator (sign-off)
 # regression:   `cargo check -p proc_A_dine01` · `cargo run --release -- --test vfx` ·
 #               refresh `debug_runs/tactical_map_debug_live.json` every Track C slice
-# done_bar:     ☑ Track A lib (RTT-A1-001..004) · ☑ Track B lib (RTT-B5-001..004) ·
-#               ☐ Track C operator (`tactical_map_debug_live.json` frame 120+ · `--test vfx` display)
+# done_bar:     ☑ Track A lib (RTT-A1-001..004) · ☑ Track B lib (RTT-B5-001..004; water no MainWorldCamera) ·
+#               ☐ Track C operator (RTT-C-001..003 — release · `--test vfx` · frame 120+ witness)
+# next_coder:   **idle** — no non-operator Track A/B/C slice remains; lib witness `rtt_lane_witness_live.json` green
 
 # ═════════════════════════════════════════════════════════════════════
 # PARALLEL TRACKS (pick one per session; coordinate file ownership)

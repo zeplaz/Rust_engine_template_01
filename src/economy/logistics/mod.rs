@@ -178,11 +178,6 @@ impl Plugin for LogisticsThroughputPlugin {
                     .chain()
                     .in_set(LogisticsSimulationSet::Witness),
             )
-            .add_systems(PostUpdate, intent_draw::sync_logistics_intent_draw_frame)
-            .add_systems(
-                bevy_egui::EguiPrimaryContextPass,
-                intent_draw::draw_logistics_intent_overlay_egui
-                    .run_if(crate::gui::product_egui_shell_active),
-            );
+            .add_systems(PostUpdate, intent_draw::sync_logistics_intent_draw_frame);
     }
 }

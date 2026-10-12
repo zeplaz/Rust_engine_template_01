@@ -20,8 +20,9 @@ use super::corridor_transport::{
     transport_edge_from_binding, RailProfileSelection, SimCorridorEdgeBinding,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+use crate::terrain::generation::WorldGenDenseTerrainCache;
 
-use super::terrain_conform::conform_world_y;
+use super::terrain_conform::{conform_world_y, ConstructionTerrainConform};
 use crate::strategic::BuildSiteTile;
 
 pub const ROAD_MARKER_Y_SCALE: f32 = 20.0;
@@ -182,7 +183,7 @@ pub fn execute_construction_plans_system(
     mut overlays: Query<&mut NetworkDirtyMask, With<ChunkStrategicOverlay>>,
     mut history: ResMut<super::history::ConstructionHistory>,
     mut intersections: ResMut<super::roads::IntersectionRegistry>,
-    params: Res<WorldGenParams>,
+    terrain: ConstructionTerrainConform,
     rail: Res<super::rail::ActiveRailPlacement>,
     raster_cfg: Option<Res<crate::strategic::StrategicRasterConfig>>,
     mut hydro_queue: Option<ResMut<crate::substrate::hydrology::HydrologyEventQueue>>,
@@ -208,7 +209,7 @@ pub fn execute_construction_plans_system(
             ConstructionType::RoadSegment { head, tail } => apply_road_segment_to_world(
                 &mut commands,
                 &mut roads,
-                &params,
+                terrain.params.as_ref(),
                 &mut topology,
                 &mut fields,
                 &mut directory,
@@ -221,9 +222,19 @@ pub fn execute_construction_plans_system(
                 None,
             ),
             ConstructionType::RailSegment { head, tail } => {
-                let hy = conform_world_y(head.x as f32 + 0.5, head.z as f32 + 0.5, &params);
-                let ty = conform_world_y(tail.x as f32 + 0.5, tail.z as f32 + 0.5, &params);
-                if !super::rail::validate_rail_segment(head, tail, hy, ty, rail.max_slope, &params)
+                let hy = conform_world_y(
+                    head.x as f32 + 0.5,
+                    head.z as f32 + 0.5,
+                    terrain.params.as_ref(),
+                    terrain.height_grid.as_deref(),
+                );
+                let ty = conform_world_y(
+                    tail.x as f32 + 0.5,
+                    tail.z as f32 + 0.5,
+                    terrain.params.as_ref(),
+                    terrain.height_grid.as_deref(),
+                );
+                if !super::rail::validate_rail_segment(head, tail, hy, ty, rail.max_slope, terrain.params.as_ref())
                     .valid
                 {
                     None
@@ -231,7 +242,7 @@ pub fn execute_construction_plans_system(
                     apply_road_segment_to_world(
                         &mut commands,
                         &mut roads,
-                        &params,
+                        terrain.params.as_ref(),
                         &mut topology,
                         &mut fields,
                         &mut directory,

@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/sim_effect_fire_consumer_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "sim_steward_vss_t3_overlay_authority",
-    "written_at_epoch_secs": 1790312396
+    "written_at_epoch_secs": 1791736141
   },
   "authority_spine": {
     "ignition_waist": "SimEffectQueue → drain → EmberSpotIgnitionEvent → apply_ember_spot_ignitions",
