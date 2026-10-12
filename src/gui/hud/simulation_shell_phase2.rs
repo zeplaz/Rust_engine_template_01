@@ -4,7 +4,6 @@
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::egui;
 
 use crate::construction::{BuildStripState, ToolContext};
 use crate::engine::states::BaseState;
@@ -61,7 +60,7 @@ pub fn build_rail_slot_step_px() -> f32 {
 
 /// Screen anchor for an egui sheet beside the Bevy build rail (logical px).
 #[must_use]
-pub fn build_rail_slot_anchor_xy(slot: ToolContext, left_stack_collapsed: bool) -> egui::Pos2 {
+pub fn build_rail_slot_anchor_xy(slot: ToolContext, left_stack_collapsed: bool) -> bevy::prelude::Vec2 {
     use crate::gui::in_game_hud::{CENTER_ROW_EDGE_PAD_PX, SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX};
 
     let idx = match slot {
@@ -84,7 +83,7 @@ pub fn build_rail_slot_anchor_xy(slot: ToolContext, left_stack_collapsed: bool) 
     let y = SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX
         + BUILD_RAIL_CONTAINER_PAD_PX
         + idx as f32 * build_rail_slot_step_px();
-    egui::pos2(x, y)
+    bevy::prelude::Vec2::new(x, y)
 }
 
 /// Legacy Y-only helper — prefer [`build_rail_slot_anchor_xy`].
@@ -111,7 +110,7 @@ pub fn command_left_stack_footprint_px(collapsed: bool) -> f32 {
 pub fn sim_build_rail_submenu_block_rect(
     picker: &crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState,
     left_stack_collapsed: bool,
-) -> egui::Rect {
+) -> bevy::prelude::Rect {
     crate::gui::hud::sim_build_picker_sheet::sim_build_picker_sheet_rect(
         picker,
         left_stack_collapsed,
@@ -523,10 +522,10 @@ pub fn refresh_ui_oh_2a_001_live_witness() -> bool {
 /// **UI-P2A-WITNESS-TAIL** — five-lane shell + ops hover + build-rail authority tails.
 pub fn refresh_ui_p2a_001_live_witness() -> bool {
     use crate::engine::states::BaseState;
-    use crate::gui::ui_gates::product_egui_shell_base_active;
+    use crate::gui::ui_gates::product_shell_base_active;
 
     assert!(
-        !product_egui_shell_base_active(BaseState::Simulation),
+        !product_shell_base_active(BaseState::Simulation),
         "UI-P2A-001: egui product shell off in Simulation"
     );
     let mut dock = crate::gui::hud::HudDockRegistry::default();
@@ -730,10 +729,10 @@ pub fn ui_w3_p6_shell_perf_green(
 /// Writes `debug_runs/ui_shell_migration_live.json` with **UI-W3-P5-001** rollup green.
 pub fn refresh_ui_w3_p5_001_live_witness() -> bool {
     use crate::engine::states::BaseState;
-    use crate::gui::ui_gates::product_egui_shell_base_active;
+    use crate::gui::ui_gates::product_shell_base_active;
 
     assert!(
-        !product_egui_shell_base_active(BaseState::Simulation),
+        !product_shell_base_active(BaseState::Simulation),
         "UI-W3-P5-001: no egui product shell in Simulation"
     );
     let mut dock = crate::gui::hud::HudDockRegistry::default();
@@ -883,8 +882,18 @@ impl Plugin for SimulationShellPhase2Plugin {
                 Update,
                 (
                     super::simulation_pointer_gate::sync_simulation_map_pointer_gate_system,
-                    super::simulation_pointer_gate::apply_simulation_unified_cursor_system
+                    super::simulation_pointer_gate::apply_editor_bevy_panel_pointer_blocks_system
                         .after(super::simulation_pointer_gate::sync_simulation_map_pointer_gate_system),
+                    super::simulation_pointer_gate::apply_dev_bevy_panel_pointer_blocks_system
+                        .after(super::simulation_pointer_gate::apply_editor_bevy_panel_pointer_blocks_system),
+                    super::simulation_pointer_gate::apply_simulation_unified_cursor_system
+                        .after(super::simulation_pointer_gate::apply_dev_bevy_panel_pointer_blocks_system),
+                )
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
+                (
                     super::minimap_bevy_interaction::minimap_bevy_active_input_system
                         .before(crate::gui::tactical::map_camera::MapCameraSystemSet::ApplyInput),
                     super::minimap_bevy_interaction::minimap_bevy_scroll_zoom_system
@@ -961,39 +970,7 @@ impl Plugin for SimulationShellPhase2Plugin {
                 )
                     .after(super::hud_root_tick::hud_product_shell_egui_root)
                     .run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                bevy_egui::EguiPrimaryContextPass,
-                super::simulation_pointer_gate::draw_simulation_unified_cursor_egui_system
-                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
-            )
-            .add_systems(
-                bevy_egui::EguiPrimaryContextPass,
-                (
-                    super::simulation_pointer_gate::finalize_simulation_map_pointer_gate_egui_system,
-                    sync_minimap_chrome_root_system,
-                    sync_minimap_chrome_layout_system,
-                    super::minimap_bevy_interaction::draw_simulation_minimap_topology_legend_egui_system,
-                )
-                    .chain()
-                    .after(super::hud_root_tick::hud_product_shell_egui_root)
-                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
-            )
-            .add_systems(
-                PostUpdate,
-                (
-                    sync_minimap_chrome_root_system,
-                    sync_minimap_chrome_layout_system,
-                    sync_minimap_gpu_image_node_system,
-                    super::minimap_bevy_interaction::minimap_bevy_pointer_system,
-                    super::minimap_bevy_interaction::sync_minimap_viewport_frame_overlay_system,
-                    replay_ui_shell_witness_interactions_system,
-                    write_ui_shell_migration_live_proof_system,
-                )
-                    .chain()
-                    .run_if(in_state(BaseState::Simulation)),
-            )
-            .add_systems(OnEnter(BaseState::Simulation), reset_ui_shell_witness_replay);
+            );
     }
 }
 
@@ -1344,6 +1321,10 @@ fn sync_context_tray_visibility_system(
     player_log: Option<Res<crate::sim::effects::PlayerEventLog>>,
     tool: Option<Res<crate::construction::ActiveBuildTool>>,
     ghost: Option<Res<crate::construction::BuildGhostState>>,
+    preview: Option<Res<crate::construction::BuildPlacementPreview>>,
+    registry: Option<Res<crate::construction::BuildingDefinitionRegistry>>,
+    staging_mode: Option<Res<crate::construction::StagedPlacementMode>>,
+    staging_book: Option<Res<crate::construction::StagedPlacementBook>>,
     path_feedback: Option<Res<crate::construction::ConstructionPathFeedback>>,
     mut q: ParamSet<(
         Query<(&mut Node, &mut Visibility), With<ContextTrayRoot>>,
@@ -1416,13 +1397,37 @@ fn sync_context_tray_visibility_system(
                         && g.origin.is_some()
                 });
                 let snap = path_feedback.as_deref().and_then(|p| p.snap_hint.as_deref());
-                crate::gui::hud::sim_hud_copy::tray_build_status_line(
+                let mut body = crate::gui::hud::sim_hud_copy::tray_build_status_line(
                     pending,
                     unapproved,
                     subject.as_deref(),
                     locked,
                     snap,
-                )
+                );
+                if let (Some(t), Some(g), Some(p), Some(reg)) = (
+                    tool.as_deref(),
+                    ghost.as_deref(),
+                    preview.as_deref(),
+                    registry.as_deref(),
+                ) {
+                    if let Some(param) =
+                        crate::construction::parametric_active_ghost_hud_line(t, reg, g, p)
+                    {
+                        body.push('\n');
+                        body.push_str(&param);
+                    }
+                }
+                if let (Some(mode), Some(book)) =
+                    (staging_mode.as_deref(), staging_book.as_deref())
+                {
+                    if mode.enabled || book.staged_count() > 0 {
+                        body.push('\n');
+                        body.push_str(&crate::construction::staged_placements_tray_lines(
+                            mode, book,
+                        ));
+                    }
+                }
+                body
             }
             ContextTrayTab::Diagnostics => format!(
                 "DIAG · sim n={} · fire parts {} · pending {}/{}",
@@ -1760,7 +1765,7 @@ fn sync_minimap_gpu_image_node_system(
     let pad = MINIMAP_CHROME_STROKE_PAD_PX;
     let _ = chrome_q; // root geometry mirrors `last_window_rect`; rects come from the shell directly.
     if let (Some(content), Some(body)) = (shell.last_window_rect, shell.last_body_rect) {
-        let root_origin = egui::pos2(content.min.x - pad, content.min.y - pad);
+        let root_origin = bevy::prelude::Vec2::new(content.min.x - pad, content.min.y - pad);
         node.position_type = PositionType::Absolute;
         node.left = Val::Px(body.min.x - root_origin.x);
         node.top = Val::Px(body.min.y - root_origin.y);
@@ -1819,10 +1824,7 @@ fn sync_minimap_chrome_root_system(
     minimap.sync_layout_rects_from_panel_origin();
     let content = minimap
         .last_window_rect
-        .unwrap_or_else(|| egui::Rect::from_min_size(
-            egui::pos2(origin.x, origin.y),
-            egui::vec2(minimap.viewport_size.x, minimap.viewport_size.y),
-        ));
+        .unwrap_or_else(|| bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(origin.x, origin.y), bevy::prelude::Vec2::new(origin.x, origin.y) + bevy::prelude::Vec2::new(minimap.viewport_size.x, minimap.viewport_size.y),));
     *vis = Visibility::Visible;
     // Layout rects and cursor_position share logical client pixels (see `minimap_window_logical_size`).
     let pad = MINIMAP_CHROME_STROKE_PAD_PX;
@@ -1866,7 +1868,7 @@ fn sync_minimap_chrome_layout_system(
     };
     let pad = MINIMAP_CHROME_STROKE_PAD_PX;
     // Chrome root top-left in screen space (the outer stroke box).
-    let root_origin = egui::pos2(content.min.x - pad, content.min.y - pad);
+    let root_origin = bevy::prelude::Vec2::new(content.min.x - pad, content.min.y - pad);
 
     if let (Ok(mut title), Some(bar)) = (title_q.single_mut(), minimap.title_bar_rect) {
         title.position_type = PositionType::Absolute;
@@ -2056,10 +2058,10 @@ pub fn replay_coder_b_ui_five_lane_witness() -> UiShellMigrationWitness {
 /// Single writer: **2B** + **2C** + **P5** + **witness** + **P4** → `ui_shell_migration_live.json`.
 pub fn refresh_coder_b_ui_five_lane_witness() -> bool {
     use crate::engine::states::BaseState;
-    use crate::gui::ui_gates::product_egui_shell_base_active;
+    use crate::gui::ui_gates::product_shell_base_active;
 
     assert!(
-        !product_egui_shell_base_active(BaseState::Simulation),
+        !product_shell_base_active(BaseState::Simulation),
         "coder B five-lane: egui product shell off in Simulation"
     );
     let mut dock = crate::gui::hud::HudDockRegistry::default();
@@ -2112,10 +2114,10 @@ pub fn refresh_ui_w3_2c_001_live_witness() -> bool {
 /// Writes `debug_runs/ui_shell_migration_live.json` with **UI-OH-2B-001** rollup green.
 pub fn refresh_ui_oh_2b_001_live_witness() -> bool {
     use crate::engine::states::BaseState;
-    use crate::gui::ui_gates::product_egui_shell_base_active;
+    use crate::gui::ui_gates::product_shell_base_active;
 
     assert!(
-        !product_egui_shell_base_active(BaseState::Simulation),
+        !product_shell_base_active(BaseState::Simulation),
         "UI-OH-2B-001: hud_product_shell_egui_root must not run in Simulation"
     );
     let mut dock = crate::gui::hud::HudDockRegistry::default();
@@ -2189,14 +2191,14 @@ pub fn build_proof_payload(
         "ui_oh_2b_001": {
             "gate": "UI-OH-2B-001",
             "green": ui_oh_2b_001_green(witness, shell_diag),
-            "product_egui_shell_in_simulation": false,
+            "product_shell_in_simulation": false,
             "egui_pass_count_in_sim": egui_pass_count_in_sim,
         },
         "ui_w3_2b_001": {
             "gate": "UI-W3-2B-001",
             "green": ui_w3_2b_001_green(witness, shell_diag),
             "egui_pass_count_in_sim": egui_pass_count_in_sim,
-            "product_egui_shell_in_simulation": false,
+            "product_shell_in_simulation": false,
         },
         "ui_w3_2c_001": {
             "gate": "UI-W3-2C-001",
@@ -2915,15 +2917,15 @@ mod tests {
     #[test]
     fn ui_oh_2b_001_live_witness_refresh() {
         use crate::engine::states::BaseState;
-        use crate::gui::ui_gates::product_egui_shell_base_active;
+        use crate::gui::ui_gates::product_shell_base_active;
 
-        assert!(!product_egui_shell_base_active(BaseState::Simulation));
+        assert!(!product_shell_base_active(BaseState::Simulation));
         assert!(refresh_ui_oh_2b_001_live_witness());
         let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
         let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
         assert_eq!(body["ui_oh_2b_001"]["green"], serde_json::json!(true));
         assert_eq!(
-            body["ui_oh_2b_001"]["product_egui_shell_in_simulation"],
+            body["ui_oh_2b_001"]["product_shell_in_simulation"],
             serde_json::json!(false)
         );
         assert_eq!(body["egui_pass_count_in_sim"], serde_json::json!(0));
@@ -2983,9 +2985,9 @@ mod tests {
     #[test]
     fn ui_w3_p5_001_live_witness_refresh() {
         use crate::engine::states::BaseState;
-        use crate::gui::ui_gates::product_egui_shell_base_active;
+        use crate::gui::ui_gates::product_shell_base_active;
 
-        assert!(!product_egui_shell_base_active(BaseState::Simulation));
+        assert!(!product_shell_base_active(BaseState::Simulation));
         assert!(refresh_ui_w3_p5_001_live_witness());
         let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
         let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
@@ -3002,9 +3004,9 @@ mod tests {
     #[test]
     fn ui_w3_2b_001_live_witness_refresh() {
         use crate::engine::states::BaseState;
-        use crate::gui::ui_gates::product_egui_shell_base_active;
+        use crate::gui::ui_gates::product_shell_base_active;
 
-        assert!(!product_egui_shell_base_active(BaseState::Simulation));
+        assert!(!product_shell_base_active(BaseState::Simulation));
         assert!(refresh_ui_w3_2b_001_live_witness());
         let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
         let body: serde_json::Value = serde_json::from_str(&text).expect("parse");

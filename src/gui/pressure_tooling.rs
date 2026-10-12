@@ -11,19 +11,16 @@
 //! | Bevy HUD strip | bottom-right [`Text`] mirror |
 
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
+use bevy::ui::FocusPolicy;
 
 use crate::gui::input_bindings::InputBindings;
-use crate::gui::style::{
-    muted_label, primary_label, section_heading, v_space, weak_body, CmdHeadingStyle, UiPalette,
-    VertSpace, widget_scroll_vertical_capped, widget_scroll_vertical_fill,
-};
+use crate::gui::panel_presence::PanelPresence;
+use crate::gui::style::{CmdUiMonoFont, UiPalette};
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::strategic::{
-    mission_success_readout_note, ActiveMissions, Agent, AgentFactionLink, DecisionPipelineSink,
-    Faction, FractureOverlaySettings, FractureProbabilityOverlay, GpuBridgeState, HybridAgentTraits,
-    Mission as MissionT, MissionId, MissionPressure, PressureField, PressureProfile, RegionalStatsOverlay,
-    ScriptInfluence, StrategicEmergenceLog, WorldFields,
+    ActiveMissions, DecisionPipelineSink, FractureProbabilityOverlay, GpuBridgeState,
+    HybridAgentTraits, MissionPressure, PressureField, PressureProfile, StrategicEmergenceLog,
+    WorldFields,
 };
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -101,17 +98,25 @@ impl Plugin for PressureComposerPlugin {
             .init_resource::<PressureComposerScratch>()
             .add_systems(
                 Update,
-                toggle_pressure_composer.run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                pressure_composer_egui_system.run_if(crate::gui::ui_gates::product_egui_shell_active),
-            )
-            .add_systems(
-                Update,
-                sync_pressure_bevy_overlay_visibility.run_if(in_simulation_or_editor),
+                (
+                    toggle_pressure_composer,
+                    sync_pressure_composer_bevy.after(toggle_pressure_composer),
+                    sync_pressure_bevy_overlay_visibility,
+                )
+                    .run_if(in_simulation_or_editor),
             );
     }
+}
+
+#[derive(Component)]
+pub struct PressureComposerBevyRoot;
+
+#[derive(Component)]
+struct PressureComposerBevyBodyText;
+
+#[derive(Default)]
+struct PressureComposerStamp {
+    key: u64,
 }
 
 pub struct StrategicToolingPlugin;
@@ -242,368 +247,124 @@ fn sync_pressure_bevy_overlay_text(
     }
 }
 
-fn pressure_composer_egui_system(
-    mut contexts: EguiContexts,
-    mut state: ResMut<PressureComposerState>,
-    mut scratch: ResMut<PressureComposerScratch>,
-    mut world_f: ResMut<WorldFields>,
-    mut pressure_field: ResMut<PressureField>,
-    mut missions: ResMut<ActiveMissions>,
-    palette: Res<UiPalette>,
-    bindings: Res<InputBindings>,
-    mut faction_q: ParamSet<(Query<(Entity, &mut Faction)>, Query<&Faction>)>,
-    agents: Query<(Entity, &Agent, Option<&ScriptInfluence>)>,
-    links: Query<&AgentFactionLink>,
-    regional: Res<RegionalStatsOverlay>,
-    log: Res<StrategicEmergenceLog>,
-    sink: Res<DecisionPipelineSink>,
-    fracture: Res<FractureProbabilityOverlay>,
-    mut fracture_settings: ResMut<FractureOverlaySettings>,
-) -> Result {
-    if !state.visible {
-        return Ok(());
+fn pressure_composer_body(
+    state: &PressureComposerState,
+    world_f: &WorldFields,
+    pressure: &PressureField,
+    missions: Option<&ActiveMissions>,
+    log: &StrategicEmergenceLog,
+) -> String {
+    let tab = match state.tab {
+        PressureComposerTab::World => "World",
+        PressureComposerTab::Faction => "Faction",
+        PressureComposerTab::Agent => "Agent",
+        PressureComposerTab::Mission => "Mission",
+        PressureComposerTab::Graph => "Graph",
+        PressureComposerTab::Log => "Log",
+    };
+    let mut lines = vec![format!("Pressure composer ({tab})")];
+    lines.push(format!(
+        "Field  p {:.2} a {:.2} i {:.2} cd {:.2}",
+        pressure.paranoia, pressure.aggression, pressure.instability, pressure.cohesion_drift
+    ));
+    lines.push(format!(
+        "World  instab {:.2} econ {:.2}",
+        world_f.instability_index, world_f.economic_pressure
+    ));
+    if let Some(m) = missions {
+        lines.push(format!("Active missions: {}", m.missions.len()));
     }
-    let ctx = contexts.ctx_mut()?;
-
-    crate::gui::std_floating(egui::Window::new(format!(
-        "Pressure composer — climate, not script ({})",
-        InputBindings::format_key(bindings.toggle_pressure_composer)
-    )))
-    .default_size(egui::vec2(520.0, 620.0))
-    .show(ctx, |ui| {
-        // `UiSpacing` resource matches `Default`; keep local here — this system is at the param cap.
-        let spacing = crate::gui::UiSpacing::default();
-        let sp = &spacing;
-        weak_body(
-            ui,
-            &palette,
-            "Authoring: pressure fields + mission packages. No quest chains or forced outcomes.",
-        );
-        v_space(ui, sp, VertSpace::Xs);
-        ui.checkbox(&mut state.show_bevy_strip, "Show Bevy pressure strip (mirror)");
-        ui.collapsing("Fracture overlay (dev)", |ui| {
-            ui.checkbox(
-                &mut fracture_settings.spawn_sub_faction_stub_entities,
-                "Spawn SubFactionStub on fracture event (optional dev marker)",
-            );
-            primary_label(
-                ui,
-                &palette,
-                format!(
-                    "Fracture probability lens: mean {:.3} max {:.3} (informational)",
-                    fracture.mean_heuristic, fracture.max_heuristic
-                ),
-            );
-        });
-        ui.separator();
-        ui.horizontal(|ui| {
-            use PressureComposerTab::*;
-            ui.selectable_value(&mut state.tab, World, "World");
-            ui.selectable_value(&mut state.tab, Faction, "Faction");
-            ui.selectable_value(&mut state.tab, Agent, "Agent");
-            ui.selectable_value(&mut state.tab, Mission, "Mission");
-            ui.selectable_value(&mut state.tab, Graph, "Graph");
-            ui.selectable_value(&mut state.tab, Log, "Event log");
-        });
-        ui.separator();
-        let body_height = ui.available_height();
-        widget_scroll_vertical_fill("pressure_composer_body_scroll", body_height).show(ui, |ui| {
-        match state.tab {
-            PressureComposerTab::World => {
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "World inspector");
-                ui.add(egui::Slider::new(&mut world_f.economic_pressure, 0.0..=1.0).text("economic_pressure"));
-                ui.add(egui::Slider::new(&mut world_f.instability_index, 0.0..=1.0).text("instability_index"));
-                ui.add(egui::Slider::new(&mut world_f.war_tension, 0.0..=1.0).text("war_tension"));
-                ui.add(egui::Slider::new(&mut world_f.resource_scarcity, 0.0..=1.0).text("resource_scarcity"));
-                ui.add(egui::Slider::new(&mut world_f.public_sentiment, 0.0..=1.0).text("public_sentiment"));
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Global PressureField");
-                ui.add(egui::Slider::new(&mut pressure_field.paranoia, 0.0..=1.0).text("paranoia"));
-                ui.add(egui::Slider::new(&mut pressure_field.aggression, 0.0..=1.0).text("aggression"));
-                ui.add(egui::Slider::new(&mut pressure_field.instability, 0.0..=1.0).text("instability"));
-                ui.add(egui::Slider::new(&mut pressure_field.cohesion_drift, 0.0..=1.0).text("cohesion_drift"));
-                muted_label(ui, &palette, "Regional heat (sparse overlay):");
-                widget_scroll_vertical_capped("pressure_regional_heat_scroll", 160.0).show(ui, |ui| {
-                    let mut ids: Vec<u32> = regional.by_region_id.keys().copied().collect();
-                    ids.sort_unstable();
-                    for id in ids.iter().take(48) {
-                        let st = regional.by_region_id.get(id).copied().unwrap_or_default();
-                        primary_label(
-                            ui,
-                            &palette,
-                            format!(
-                                "region {id}: stability {:.2} corrupt {:.2} militar {:.2}",
-                                st.stability, st.corruption, st.militarization
-                            ),
-                        );
-                    }
-                    if ids.is_empty() {
-                        crate::gui::style::muted_text(ui, &palette, "No RegionalStatsOverlay entries yet.");
-                    }
-                });
-            }
-            PressureComposerTab::Faction => {
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Faction pressure editor");
-                crate::gui::style::warning_text(
-                    ui,
-                    &palette,
-                    "Direct numeric edits — scenario / debug only (inputs, not outcomes).",
-                );
-                for (_, mut f) in faction_q.p0().iter_mut() {
-                    ui.group(|ui| {
-                        ui.add(egui::Slider::new(&mut f.cohesion, 0.0..=1.0).text("cohesion"));
-                        ui.add(egui::Slider::new(&mut f.control_strength, 0.0..=1.0).text("control_strength"));
-                        ui.add(egui::Slider::new(&mut f.resources, 0.0..=500.0).text("resources"));
-                    });
-                }
-                if faction_q.p0().is_empty() {
-                    crate::gui::style::muted_text(ui, &palette, "No `Faction` entities in scene.");
-                }
-            }
-            PressureComposerTab::Agent => {
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Agent trait inspector");
-                widget_scroll_vertical_capped("pressure_agent_traits_scroll", 420.0).show(ui, |ui| {
-                    for (e, agent, script) in agents.iter() {
-                        let fac = links
-                            .iter()
-                            .find(|l| l.agent == e)
-                            .map(|l| format!("{:?}", l.faction))
-                            .unwrap_or_else(|| "—".into());
-                        ui.group(|ui| {
-                            primary_label(
-                                ui,
-                                &palette,
-                                format!("Entity {:?} | faction link {}", e, fac),
-                            );
-                            primary_label(
-                                ui,
-                                &palette,
-                                format!(
-                                    "mode {:?} | ambition {:.2} paranoia {:.2} empathy {:.2}",
-                                    agent.mode,
-                                    agent.traits.ambition,
-                                    agent.traits.paranoia,
-                                    agent.traits.empathy
-                                ),
-                            );
-                            primary_label(
-                                ui,
-                                &palette,
-                                format!(
-                                    "emotion fear {:.2} anger {:.2} conf {:.2}",
-                                    agent.emotional_state.fear,
-                                    agent.emotional_state.anger,
-                                    agent.emotional_state.confidence
-                                ),
-                            );
-                            if let Some(s) = script {
-                                primary_label(
-                                    ui,
-                                    &palette,
-                                    format!(
-                                        "ScriptInfluence pri {:.2} | card instability {:.2}",
-                                        s.priority, s.pressure_profile.instability
-                                    ),
-                                );
-                            } else {
-                                muted_label(ui, &palette, "no ScriptInfluence component");
-                            }
-                        });
-                    }
-                    if agents.is_empty() {
-                        crate::gui::style::muted_text(ui, &palette, "No `Agent` entities in scene.");
-                    }
-                });
-            }
-            PressureComposerTab::Mission => {
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Mission composer (pressure package)");
-                muted_label(
-                    ui,
-                    &palette,
-                    "UX-5 / L6 — `MissionPressure` injects mood into participants each tick (same path as authored missions).",
-                );
-                ui.add(
-                    egui::Slider::new(&mut state.draft_duration, 0..=20_000)
-                        .text("duration_ticks (0 = until removed)"),
-                );
-                if state.draft_duration == 0 {
-                    muted_label(ui, &palette, "0 = manual remove only.");
-                }
-                ui.add(egui::Slider::new(&mut state.draft_priority, 0.0..=1.0).text("influence priority"));
-                muted_label(ui, &palette, "Global pressure profile:");
-                ui.add(egui::Slider::new(&mut state.draft_pressure.paranoia, 0.0..=1.0).text("paranoia"));
-                ui.add(egui::Slider::new(&mut state.draft_pressure.aggression, 0.0..=1.0).text("aggression"));
-                ui.add(egui::Slider::new(&mut state.draft_pressure.instability, 0.0..=1.0).text("instability"));
-                ui.add(egui::Slider::new(&mut state.draft_pressure.cohesion_drift, 0.0..=1.0).text("cohesion_drift"));
-                muted_label(
-                    ui,
-                    &palette,
-                    "MissionPressure — trait / mood injection (authoring table: aggression, cooperation, fear, instability, paranoia):",
-                );
-                ui.add(
-                    egui::Slider::new(&mut state.draft_mission_pressure.aggression_bias, -0.5..=0.5)
-                        .text("aggression_bias"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut state.draft_mission_pressure.cooperation_bias, -0.5..=0.5)
-                        .text("cooperation_bias (empathy path)"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut state.draft_mission_pressure.fear_bias, -0.5..=0.5)
-                        .text("fear_bias (risk appetite)"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut state.draft_mission_pressure.instability_bias, -0.5..=0.5)
-                        .text("instability_bias"),
-                );
-                ui.add(
-                    egui::Slider::new(&mut state.draft_mission_pressure.paranoia_bias, -0.5..=0.5)
-                        .text("paranoia_bias"),
-                );
-                muted_label(ui, &palette, "Trait bias (ScriptInfluence.bias_vector):");
-                ui.add(egui::Slider::new(&mut state.draft_bias.ambition, -0.2..=0.2).text("ambition Δ"));
-                ui.add(egui::Slider::new(&mut state.draft_bias.paranoia, -0.2..=0.2).text("paranoia Δ"));
-                ui.add(egui::Slider::new(&mut state.draft_bias.cruelty, -0.2..=0.2).text("cruelty Δ"));
-                ui.add(egui::Slider::new(&mut state.draft_bias.empathy, -0.2..=0.2).text("empathy Δ"));
-                ui.horizontal(|ui| {
-                    primary_label(ui, &palette, "Success readout label:");
-                    ui.text_edit_singleline(&mut state.draft_success_label);
-                });
-
-                primary_label(ui, &palette, "Participants:");
-                let pick_list: Vec<Entity> = faction_q
-                    .p0()
-                    .iter()
-                    .map(|(e, _)| e)
-                    .chain(agents.iter().map(|(e, _, _)| e))
-                    .collect();
-                if !pick_list.is_empty() {
-                    state.entity_picker_cursor = state
-                        .entity_picker_cursor
-                        .min(pick_list.len().saturating_sub(1));
-                    let cur = pick_list[state.entity_picker_cursor];
-                    primary_label(ui, &palette, format!("cursor {} → {:?}", state.entity_picker_cursor, cur));
-                    ui.horizontal(|ui| {
-                        if ui.button("←").clicked() && state.entity_picker_cursor > 0 {
-                            state.entity_picker_cursor -= 1;
-                        }
-                        if ui.button("→").clicked() && state.entity_picker_cursor + 1 < pick_list.len() {
-                            state.entity_picker_cursor += 1;
-                        }
-                        if ui.button("add").clicked() && !state.draft_participants.contains(&cur) {
-                            state.draft_participants.push(cur);
-                        }
-                        if ui.button("clear").clicked() {
-                            state.draft_participants.clear();
-                        }
-                    });
-                }
-                primary_label(ui, &palette, format!("picked: {:?}", state.draft_participants));
-
-                if ui.button("Push mission").clicked() {
-                    scratch.next_mission_id = scratch.next_mission_id.wrapping_add(1);
-                    let dur = if state.draft_duration == 0 {
-                        None
-                    } else {
-                        Some(state.draft_duration)
-                    };
-                    let lab = if state.draft_success_label.trim().is_empty() {
-                        None
-                    } else {
-                        Some(state.draft_success_label.clone())
-                    };
-                    let inf = ScriptInfluence {
-                        priority: state.draft_priority,
-                        bias_vector: state.draft_bias,
-                        ..Default::default()
-                    };
-                    let mut m = MissionT::new(MissionId(scratch.next_mission_id), state.draft_participants.clone(), inf);
-                    m.global_pressure = state.draft_pressure;
-                    m.pressure = state.draft_mission_pressure;
-                    m.duration_ticks = dur;
-                    m.success_readout_label = lab;
-                    missions.missions.push(m);
-                }
-
-                ui.separator();
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Active missions");
-                let instab = world_f.instability_index;
-                let mut remove_idx: Option<usize> = None;
-                for (i, m) in missions.missions.iter().enumerate() {
-                    ui.group(|ui| {
-                        primary_label(
-                            ui,
-                            &palette,
-                            format!(
-                                "{:?} | elapsed {:?} / {:?} | n_part {}",
-                                m.id, m.ticks_elapsed, m.duration_ticks, m.participants.len()
-                            ),
-                        );
-                        primary_label(
-                            ui,
-                            &palette,
-                            format!(
-                                "MissionPressure: aggr {:+.2} coop {:+.2} fear {:+.2} inst {:+.2} par {:+.2}",
-                                m.pressure.aggression_bias,
-                                m.pressure.cooperation_bias,
-                                m.pressure.fear_bias,
-                                m.pressure.instability_bias,
-                                m.pressure.paranoia_bias
-                            ),
-                        );
-                        let note =
-                            mission_success_readout_note(m, &faction_q.p1(), &m.participants, instab);
-                        muted_label(ui, &palette, note);
-                        if ui.button("Remove").clicked() {
-                            remove_idx = Some(i);
-                        }
-                    });
-                }
-                if let Some(i) = remove_idx {
-                    missions.missions.remove(i);
-                }
-            }
-            PressureComposerTab::Graph => {
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Simulation graph (tabular v1)");
-                let instab = world_f.instability_index;
-                primary_label(
-                    ui,
-                    &palette,
-                    format!(
-                        "Fracture lens (informational): mean {:.3} max {:.3}",
-                        fracture.mean_heuristic, fracture.max_heuristic
-                    ),
-                );
-                widget_scroll_vertical_capped("pressure_graph_scroll", 480.0).show(ui, |ui| {
-                    primary_label(
-                        ui,
-                        &palette,
-                        format!(
-                            "pipeline mean {:.4} | samples {}",
-                            sink.last_mean_composed_score, sink.last_agent_samples
-                        ),
-                    );
-                    for (e, f) in faction_q.p0().iter() {
-                        let h = ((1.0 - f.cohesion) * instab).clamp(0.0, 1.0);
-                        primary_label(
-                            ui,
-                            &palette,
-                            format!(
-                                "{:?} | coh {:.2} ctrl {:.2} | heuristic {:.2}",
-                                e, f.cohesion, f.control_strength, h
-                            ),
-                        );
-                    }
-                });
-            }
-            PressureComposerTab::Log => {
-                section_heading(ui, &palette, CmdHeadingStyle::Gt, "Emergence event log");
-                widget_scroll_vertical_capped("pressure_event_log_scroll", 520.0).show(ui, |ui| {
-                    ui.monospace(log.tail_joined(120));
-                });
-            }
-        }
-        });
+    let tail = log.tail_joined(4);
+    lines.push("── log ──".into());
+    lines.push(if tail.is_empty() {
+        "—".into()
+    } else {
+        tail
     });
+    lines.push(format!(
+        "Bevy strip: {}",
+        if state.show_bevy_strip { "ON" } else { "OFF" }
+    ));
+    lines.join("\n")
+}
 
-    Ok(())
+fn sync_pressure_composer_bevy(
+    mut commands: Commands,
+    state: Res<PressureComposerState>,
+    world_f: Res<WorldFields>,
+    pressure: Res<PressureField>,
+    missions: Option<Res<ActiveMissions>>,
+    log: Res<StrategicEmergenceLog>,
+    palette: Res<UiPalette>,
+    mono: Res<CmdUiMonoFont>,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<PressureComposerBevyRoot>>,
+    mut body: Query<&mut Text, With<PressureComposerBevyBodyText>>,
+    mut stamp: Local<PressureComposerStamp>,
+) {
+    presence.pressure_composer_root = !roots.is_empty();
+    if !state.visible {
+        for e in &roots {
+            commands.entity(e).despawn();
+        }
+        presence.pressure_composer_root = false;
+        stamp.key = 0;
+        return;
+    }
+
+    let text = pressure_composer_body(
+        state.as_ref(),
+        world_f.as_ref(),
+        pressure.as_ref(),
+        missions.as_deref(),
+        log.as_ref(),
+    );
+    let mut key = text.len() as u64;
+    for b in text.bytes() {
+        key = key.wrapping_mul(0x9E37_79B9).wrapping_add(b as u64);
+    }
+
+    if roots.is_empty() {
+        let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
+        commands
+            .spawn((
+                PressureComposerBevyRoot,
+                Node {
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(56.0),
+                    left: Val::Px(16.0),
+                    width: Val::Px(340.0),
+                    max_height: Val::Px(440.0),
+                    padding: UiRect::all(Val::Px(10.0)),
+                    flex_direction: FlexDirection::Column,
+                    border: UiRect::all(Val::Px(1.0)),
+                    border_radius: BorderRadius::ZERO,
+                    overflow: Overflow::scroll_y(),
+                    ..default()
+                },
+                BackgroundColor(palette.bevy_hud_panel_fill()),
+                BorderColor::all(palette.bevy_wire_magenta()),
+                FocusPolicy::Block,
+                ZIndex(954),
+            ))
+            .with_children(|p| {
+                p.spawn((
+                    PressureComposerBevyBodyText,
+                    Text::new(text.clone()),
+                    tf,
+                    TextColor(palette.bevy_primary_text()),
+                ));
+            });
+        stamp.key = key;
+        presence.pressure_composer_root = true;
+        return;
+    }
+
+    if stamp.key != key {
+        for mut t in &mut body {
+            *t = Text::new(text.clone());
+        }
+        stamp.key = key;
+    }
+    presence.pressure_composer_root = true;
 }

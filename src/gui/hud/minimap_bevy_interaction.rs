@@ -5,8 +5,6 @@
 use bevy::input::mouse::MouseWheel;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::egui;
-use bevy_egui::EguiContexts;
 
 use crate::engine::states::BaseState;
 use crate::gui::map_view::MapViewInstanceId;
@@ -66,17 +64,17 @@ fn cursor_logical(window: &Window) -> Option<Vec2> {
 }
 
 #[inline]
-fn point_in_rect(cursor: Vec2, rect: Option<egui::Rect>) -> bool {
-    rect.is_some_and(|r| r.contains(egui::pos2(cursor.x, cursor.y)))
+fn point_in_rect(cursor: Vec2, rect: Option<bevy::prelude::Rect>) -> bool {
+    rect.is_some_and(|r| r.contains(bevy::prelude::Vec2::new(cursor.x, cursor.y)))
 }
 
 #[inline]
-fn minimap_widget_rect(shell: &MinimapShellState) -> Option<egui::Rect> {
+fn minimap_widget_rect(shell: &MinimapShellState) -> Option<bevy::prelude::Rect> {
     shell.last_window_rect
 }
 
 #[inline]
-fn minimap_image_rect(shell: &MinimapShellState) -> Option<egui::Rect> {
+fn minimap_image_rect(shell: &MinimapShellState) -> Option<bevy::prelude::Rect> {
     shell
         .last_image_rect
         .or(shell.last_body_rect)
@@ -84,13 +82,10 @@ fn minimap_image_rect(shell: &MinimapShellState) -> Option<egui::Rect> {
 }
 
 #[inline]
-fn minimap_title_bar_rect(shell: &MinimapShellState) -> Option<egui::Rect> {
+fn minimap_title_bar_rect(shell: &MinimapShellState) -> Option<bevy::prelude::Rect> {
     shell.title_bar_rect.or_else(|| {
         shell.last_window_rect.map(|window| {
-            egui::Rect::from_min_size(
-                window.min,
-                egui::vec2(window.width().max(1.0), crate::gui::minimap_shell::MINIMAP_TITLE_BAR_H_PX),
-            )
+            bevy::prelude::Rect::from_corners(window.min, window.min + bevy::prelude::Vec2::new(window.width().max(1.0), crate::gui::minimap_shell::MINIMAP_TITLE_BAR_H_PX),)
         })
     })
 }
@@ -101,7 +96,7 @@ fn cursor_on_title_bar(cursor: Vec2, shell: &MinimapShellState) -> bool {
 }
 
 #[inline]
-fn minimap_map_rect(shell: &MinimapShellState) -> Option<egui::Rect> {
+fn minimap_map_rect(shell: &MinimapShellState) -> Option<bevy::prelude::Rect> {
     minimap_image_rect(shell)
 }
 
@@ -354,7 +349,7 @@ pub fn minimap_bevy_pointer_system(
                         let center = Vec2::new(tex_w * 0.5, tex_h * 0.5);
                         let fit_zoom = map_views.minimap.zoom.max(1e-6);
                         let world = map_surface_screen_to_world(
-                            egui::pos2(cursor.x, cursor.y),
+                            bevy::prelude::Vec2::new(cursor.x, cursor.y),
                             image_rect,
                             center,
                             fit_zoom,
@@ -558,37 +553,6 @@ pub fn sync_minimap_viewport_frame_overlay_system(
 }
 
 /// **CDR-B-VEG-MINIMAP-LEGEND-UI-001** — topology/burn legend on GPU minimap chrome (not raster).
-pub fn draw_simulation_minimap_topology_legend_egui_system(
-    mut contexts: EguiContexts,
-    base: Res<State<BaseState>>,
-    gate: Res<MinimapEguiDevGate>,
-    mut shell: ResMut<MinimapShellState>,
-    map_views: Res<MapViewInstances>,
-    compositor: Option<Res<MinimapCompositorState>>,
-) -> Result {
-    if !matches!(base.get(), BaseState::Simulation) {
-        return Ok(());
-    }
-    if !bevy_minimap_gpu_active(shell.as_ref(), Some(gate.as_ref())) {
-        return Ok(());
-    }
-    if !shell.visible || shell.minimized {
-        return Ok(());
-    }
-    let ctx = contexts.ctx_mut()?;
-    let overlays = map_views.minimap.overlays;
-    let ecology_rows = compositor.as_ref().map(|c| c.ecology_rows).unwrap_or(0);
-    let veg_burn_rows = compositor.as_ref().map(|c| c.veg_burn_rows).unwrap_or(0);
-    super::minimap_topology_legend::draw_minimap_topology_legend_gpu_chrome(
-        ctx,
-        shell.as_mut(),
-        &overlays,
-        ecology_rows,
-        veg_burn_rows,
-        *base.get(),
-    );
-    Ok(())
-}
 
 /// Lib witness — GPU-path legend draw is registered (CDR-B).
 #[must_use]

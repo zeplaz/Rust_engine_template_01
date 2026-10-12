@@ -78,9 +78,9 @@ pub struct PowerNodeHoverState {
 
 #[must_use]
 pub fn power_node_hover_tier_map_attached() -> bool {
-    // Structural: hover card projects via sim-map egui (map-attached tier).
-    include_str!("power_node_hover_egui.rs").contains("world_to_sim_map_egui")
-        && include_str!("power_node_hover_egui.rs").contains("SimulationMapViewport")
+    // Honest: Bevy satellite follows SimulationMapPointerGate cursor (map-attached tier).
+    include_str!("sim_play_bevy_chrome.rs").contains("pub struct SimPlayPowerHover")
+        && include_str!("sim_play_bevy_chrome.rs").contains("SimulationMapPointerGate")
 }
 
 #[must_use]

@@ -3,7 +3,6 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use super::layout_store::{HudLayoutStore, HudWidgetFrame};
 use super::shell_framework::ProductShellWidgetId;
@@ -36,36 +35,7 @@ impl PendingHudLayoutCommit {
         }
     }
 
-    pub fn queue_capture(
-        &mut self,
-        id: ProductShellWidgetId,
-        response: &egui::Response,
-        layout: &HudLayoutStore,
-    ) -> bool {
-        if !self.can_emit_layout_capture() {
-            self.drag_mutation_attempts_frame = self.drag_mutation_attempts_frame.saturating_add(1);
-            *self.drag_mutation_by_widget.entry(id).or_insert(0) += 1;
-            return false;
-        }
-        let rect = response.rect;
-        let next = HudWidgetFrame {
-            pos: Vec2::new(rect.min.x, rect.min.y),
-            size: Vec2::new(rect.size().x, rect.size().y),
-            initialized: true,
-        };
-        let prev = layout.frame(id);
-        if prev.initialized {
-            let pos_delta = (prev.pos - next.pos).length_squared();
-            let size_delta = (prev.size - next.size).length_squared();
-            if pos_delta < HudLayoutStore::CAPTURE_EPS * HudLayoutStore::CAPTURE_EPS
-                && size_delta < HudLayoutStore::CAPTURE_EPS * HudLayoutStore::CAPTURE_EPS
-            {
-                return false;
-            }
-        }
-        self.pending.insert(id, next);
-        true
-    }
+pub fn queue_capture() {}
 
     pub fn flush(&mut self, layout: &mut HudLayoutStore) -> u32 {
         if self.drag_active || self.pending.is_empty() {

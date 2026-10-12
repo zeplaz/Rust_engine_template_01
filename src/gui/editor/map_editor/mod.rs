@@ -32,38 +32,28 @@ pub use transport_io::{
     MapEditorMapSnapshotIoRequest, MapEditorSaveDevTransportRequest, MapEditorSaveHybridWorldDevRequest,
 };
 
+use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::math::IVec2;
 use bevy::prelude::*;
 use bevy::render::render_resource::{
     Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
 };
-use bevy_egui::egui::{self, Sense};
-use bevy_egui::{EguiContexts, EguiPrimaryContextPass, EguiTextureHandle};
+use bevy::ui::widget::ImageNode;
+use bevy::ui::FocusPolicy;
 
-use crate::engine::{AppState, BaseState, InGameEditorState, MainMenuState, WorldGenFlowState};
-use crate::gui::std_floating;
-use crate::gui::ui_gates::map_editor_chrome_active;
-use crate::gui::editor::editor_world_commit_bridge::{
-    EditorTileEditCommitted, EditorTileEditKind,
-};
+use crate::engine::{AppState, BaseState, InGameEditorState};
+use crate::gui::style::{CmdUiMonoFont, UiPalette};
+use crate::gui::{map_editor_chrome_active, PanelPresence};
 use crate::gui::editor::scenario_script_panel::{
-    scenario_editor_tools_entry_window, scenario_script_panel_system,
     toggle_scenario_script_panel_hotkey, ScenarioScriptPanelState,
-};
-use crate::gui::style::{
-    framed_group, muted_label, path_hint, primary_label, section_heading, v_space, weak_body,
-    widget_scroll_both, widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette, VertSpace,
 };
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::{
-    Height, TerrainType, TileMarker, WorldGenParams, WorldMarker,
+    Height, TerrainType, TileMarker, WorldGenParams,
 };
 use crate::terrain::material::{MaterialId, MaterialRegistry};
 
-use brush::{
-    bresenham_tile_line, emit_editor_tile_commit_for_brush, sync_tool_to_substate,
-    terrain_family_combo, tile_in_brush,
-};
+use brush::{sync_tool_to_substate, tile_in_brush};
 use road_markers::{
     height_at_tile, map_editor_road_undo, place_road_marker, road_authoring_ghost_refresh,
 };
@@ -167,7 +157,7 @@ pub struct MapEditorMapTexture {
     pub width: u32,
     pub height: u32,
     /// Stable egui binding; cleared when [`Self::texture`] is recreated (`P0` — no `add_image` every frame).
-    pub egui_texture_cache: Option<(Handle<Image>, egui::TextureId)>,
+    pub egui_texture_cache: Option<(Handle<Image>, ())>,
 }
 
 impl Default for MapEditorMapTexture {
@@ -327,433 +317,239 @@ fn map_editor_raster_minimap(
     *last_applied_revision = Some(rev);
 }
 
-fn map_editor_minimap_window(
-    mut commands: Commands,
-    mut contexts: EguiContexts,
-    mut hover: ResMut<MapEditorHover>,
-    mut view: ResMut<MapEditorGridView>,
-    mut map_tex: ResMut<MapEditorMapTexture>,
-    tool: Res<MapEditorTool>,
-    params: Res<WorldGenParams>,
-    world_roots: Query<Entity, With<WorldMarker>>,
-    road_entities: Query<(Entity, &MapEditorRoadMarkerV1)>,
-    road_tf: Query<(&MapEditorRoadMarkerV1, &Transform), Without<TileMarker>>,
-    mut road_undo: ResMut<MapEditorRoadUndoStack>,
-    mut road_placement: ResMut<MapEditorRoadPlacementSeq>,
-    mut road_drag: ResMut<MapEditorRoadDragState>,
-    mut tile_queries: ParamSet<(
-        Query<
-            (&mut Transform, &mut Height, &mut TerrainType),
-            (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
-        >,
-        Query<
-            (&Transform, &Height),
-            (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
-        >,
-    )>,
-    mut edit_commits: MessageWriter<EditorTileEditCommitted>,
-    palette: Res<UiPalette>,
-) -> Result {
-    let handle = map_tex.texture.clone();
-    let cache_hit = map_tex
-        .egui_texture_cache
-        .as_ref()
-        .and_then(|(h, id)| (*h == handle).then_some(*id));
-    let texture_id = if let Some(id) = cache_hit {
-        id
-    } else {
-        let id = contexts.add_image(EguiTextureHandle::Strong(handle.clone()));
-        map_tex.egui_texture_cache = Some((handle, id));
-        id
-    };
-    let tex_w = map_tex.width as f32;
-    let tex_h = map_tex.height as f32;
-    if tex_w < 1.0 || tex_h < 1.0 {
-        hover.tile = None;
-        return Ok(());
-    }
+/// Single map-editor chrome root: palette | minimap | scenario (F10).
+#[derive(Component)]
+pub struct MapEditorBevyShell;
 
-    std_floating(egui::Window::new("Map editor — minimap (pick / paint)"))
-        .default_size(egui::vec2(640.0, 520.0))
-        .show(contexts.ctx_mut()?, |ui| {
-            let pal: &UiPalette = &*palette;
-            weak_body(
-                ui,
-                pal,
-                "TEMP-EGUI: one pixel ≈ one tile; Ctrl/⌘ + scroll to zoom. Road: click–drag on minimap to stroke a polyline (Ctrl/⌘+Z undoes last stroke).",
-            );
-            muted_label(
-                ui,
-                pal,
-                format!(
-                    "Coordinates: x = column, z = row; Y = Height × {HEIGHT_WORLD_SCALE} (see module docs)."
-                ),
-            );
+#[derive(Component)]
+struct MapEditorPaletteBody;
 
-            let z = view.zoom.clamp(MapEditorGridView::ZOOM_MIN, MapEditorGridView::ZOOM_MAX);
-            view.zoom = z;
-            let display_w = tex_w * z;
-            let display_h = tex_h * z;
+#[derive(Component)]
+struct MapEditorMinimapImage;
 
-            widget_scroll_both("map_editor_minimap_scroll").show(ui, |ui| {
-                    let sized = egui::load::SizedTexture::new(texture_id, [display_w, display_h]);
-                    let resp = ui.add(
-                        egui::Image::new(sized)
-                            .corner_radius(0.0)
-                            .sense(Sense::click_and_drag()),
-                    );
+#[derive(Component)]
+struct MapEditorMinimapFallbackText;
 
-                    hover.tile = None;
-                    if let Some(pos) = resp.hover_pos() {
-                        let rect = resp.rect;
-                        let local = pos - rect.min;
-                        if local.x >= 0.0 && local.y >= 0.0 && local.x < rect.width() && local.y < rect.height() {
-                            let px = (local.x / z).floor() as i32;
-                            let py = (local.y / z).floor() as i32;
-                            if px >= 0 && py >= 0 && (px as u32) < map_tex.width && (py as u32) < map_tex.height {
-                                hover.tile = Some((px as u32, py as u32));
-                            }
-                        }
-                    }
+#[derive(Component)]
+struct MapEditorScenarioBody;
 
-                    if resp.hovered() {
-                        let zoom_mod = ui.ctx().input(|i| i.modifiers.ctrl || i.modifiers.command);
-                        let scroll = ui.ctx().input(|i| i.smooth_scroll_delta.y);
-                        if zoom_mod && scroll != 0.0 {
-                            view.zoom *= 1.0 + scroll * 0.002;
-                            view.zoom = view
-                                .zoom
-                                .clamp(MapEditorGridView::ZOOM_MIN, MapEditorGridView::ZOOM_MAX);
-                        }
-                    }
+#[derive(Component, Clone, Copy)]
+struct MapEditorPalettePick(MapEditorToolKind);
 
-                    let primary = ui.ctx().input(|i| i.pointer.primary_down());
-                    let scroll_delta = ui.ctx().input(|i| i.smooth_scroll_delta.y);
-                    if let Some((cx, cy)) = hover.tile {
-                        if tool.kind == MapEditorToolKind::Terrain {
-                            let mut tiles = tile_queries.p0();
-                            if primary {
-                                match tool.terrain_paint {
-                                    MapEditorTerrainPaint::Height => {
-                                        apply_terrain_brush(&tool, cx, cy, &mut tiles, Some(0.02));
-                                        emit_editor_tile_commit_for_brush(
-                                            &mut edit_commits,
-                                            &params,
-                                            cx,
-                                            cy,
-                                            tool.brush_radius,
-                                            EditorTileEditKind::TerrainHeight,
-                                        );
-                                    }
-                                    MapEditorTerrainPaint::Biome => {
-                                        apply_terrain_brush(&tool, cx, cy, &mut tiles, None);
-                                        emit_editor_tile_commit_for_brush(
-                                            &mut edit_commits,
-                                            &params,
-                                            cx,
-                                            cy,
-                                            tool.brush_radius,
-                                            EditorTileEditKind::TerrainBiome,
-                                        );
-                                    }
-                                }
-                            } else if tool.terrain_paint == MapEditorTerrainPaint::Height
-                                && resp.hovered()
-                                && scroll_delta != 0.0
-                            {
-                                let step = (scroll_delta * 0.001).clamp(-0.08, 0.08);
-                                apply_terrain_brush(&tool, cx, cy, &mut tiles, Some(step));
-                                emit_editor_tile_commit_for_brush(
-                                    &mut edit_commits,
-                                    &params,
-                                    cx,
-                                    cy,
-                                    tool.brush_radius,
-                                    EditorTileEditKind::TerrainHeight,
-                                );
-                            }
-                        } else if tool.kind == MapEditorToolKind::Road {
-                            let just_pressed = ui.ctx().input(|i| i.pointer.primary_pressed());
-                            let primary_down = ui.ctx().input(|i| i.pointer.primary_down());
+#[derive(Default)]
+struct MapEditorShellStamp {
+    key: u64,
+}
 
-                            if just_pressed {
-                                let hn = {
-                                    let read = tile_queries.p1();
-                                    height_at_tile(&read, cx, cy)
-                                };
-                                let before = RoadMarkerUndoFrame::capture(&road_tf);
-                                road_undo.push_frame(before);
-                                place_road_marker(
-                                    &mut commands,
-                                    &world_roots,
-                                    &road_entities,
-                                    &mut *road_placement,
-                                    cx,
-                                    cy,
-                                    hn,
-                                );
-                                if params.width > 0 && params.height > 0 {
-                                    edit_commits.write(EditorTileEditCommitted {
-                                        min_tile: UVec2::new(cx, cy),
-                                        max_tile: UVec2::new(cx, cy),
-                                        kind: EditorTileEditKind::RoadMarker,
-                                    });
-                                }
-                                road_drag.last_hover_tile = Some((cx, cy));
-                            } else if primary_down {
-                                if let Some((lx, ly)) = road_drag.last_hover_tile {
-                                    if (lx, ly) != (cx, cy) {
-                                        let line = bresenham_tile_line(lx, ly, cx, cy);
-                                        let read = tile_queries.p1();
-                                        for (tx, tz) in line.into_iter().skip(1) {
-                                            let hn = height_at_tile(&read, tx, tz);
-                                            place_road_marker(
-                                                &mut commands,
-                                                &world_roots,
-                                                &road_entities,
-                                                &mut *road_placement,
-                                                tx,
-                                                tz,
-                                                hn,
-                                            );
-                                            if params.width > 0 && params.height > 0 {
-                                                edit_commits.write(EditorTileEditCommitted {
-                                                    min_tile: UVec2::new(tx, tz),
-                                                    max_tile: UVec2::new(tx, tz),
-                                                    kind: EditorTileEditKind::RoadMarker,
-                                                });
-                                            }
-                                        }
-                                        road_drag.last_hover_tile = Some((cx, cy));
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    if tool.kind == MapEditorToolKind::Road && !primary {
-                        road_drag.last_hover_tile = None;
-                    }
-                });
-        });
-
+/// Retired egui body — Bevy sync owns chrome via [`sync_map_editor_bevy_shell`].
+fn map_editor_minimap_window() -> Result {
     Ok(())
 }
 
-fn map_editor_palette_system(
-    mut contexts: EguiContexts,
-    mut tool: ResMut<MapEditorTool>,
-    mut next_base: ResMut<NextState<BaseState>>,
-    mut next_flow: ResMut<NextState<WorldGenFlowState>>,
-    mut next_menu: ResMut<NextState<MainMenuState>>,
-    mut next_sub: ResMut<NextState<InGameEditorState>>,
-    hover: Res<MapEditorHover>,
-    ghost: Res<RoadAuthoringGhostPreview>,
-    palette: Res<UiPalette>,
-    mut bake_events: MessageWriter<MapEditorBakeTransportRequest>,
-    mut save_dev_transport: MessageWriter<MapEditorSaveDevTransportRequest>,
-    mut load_dev_transport: MessageWriter<MapEditorLoadDevTransportRequest>,
-    mut save_hybrid: MessageWriter<MapEditorSaveHybridWorldDevRequest>,
-    mut load_hybrid: MessageWriter<MapEditorLoadHybridWorldDevRequest>,
-    mut map_snapshot_io: MessageWriter<MapEditorMapSnapshotIoRequest>,
-    mut road_undo: MessageWriter<MapEditorRoadUndoRequest>,
-) -> Result {
-    std_floating(egui::Window::new("Map editor — tools (TEMP-EGUI)"))
-        .anchor(egui::Align2::LEFT_TOP, [8.0, 8.0])
-        .default_size(egui::vec2(360.0, 720.0))
-        .collapsible(true)
-        .show(contexts.ctx_mut()?, |ui| {
-            let pal: &UiPalette = &*palette;
-            // `UiSpacing` resource matches `Default`; local avoids extra `SystemParam` (system at cap).
-            let spacing = crate::gui::UiSpacing::default();
-            let sp = &spacing;
-            weak_body(
-                ui,
-                pal,
-                "TEMP-EGUI tool palette; replace with Bevy UI per gui_runbook.",
-            );
-            v_space(ui, sp, VertSpace::Inter);
-            widget_scroll_vertical_fill("map_editor_tools_scroll", ui.available_height()).show(ui, |ui| {
-            framed_group(ui, pal, |ui| {
-                section_heading(ui, pal, CmdHeadingStyle::Gt, "Chunk Settings");
-                path_hint(ui, pal, "/assets/scenarios/test.ron");
-                v_space(ui, sp, VertSpace::Xs);
-                primary_label(ui, pal, format!("Active tool: {:?}", tool.kind));
-                if let Some((x, y)) = hover.tile {
-                    primary_label(ui, pal, format!("Hover tile: ({x}, {y})"));
-                } else {
-                    muted_label(ui, pal, "Hover tile: off-map");
-                }
-            });
-            v_space(ui, sp, VertSpace::Inter);
-
-            let prev = tool.kind;
-            ui.horizontal_wrapped(|ui| {
-                for k in MapEditorToolKind::ALL {
-                    ui.radio_value(&mut tool.kind, k, k.label());
-                }
-            });
-            if prev != tool.kind {
-                sync_tool_to_substate(&tool, &mut next_sub);
-            }
-
-            if tool.kind == MapEditorToolKind::Terrain {
-                v_space(ui, sp, VertSpace::Inter);
-                primary_label(ui, pal, "Terrain paint:");
-                ui.horizontal_wrapped(|ui| {
-                    ui.radio_value(
-                        &mut tool.terrain_paint,
-                        MapEditorTerrainPaint::Height,
-                        "Height (drag / scroll)",
-                    );
-                    ui.radio_value(
-                        &mut tool.terrain_paint,
-                        MapEditorTerrainPaint::Biome,
-                        "Biome (manual, no classify_biome)",
-                    );
-                });
-                if tool.terrain_paint == MapEditorTerrainPaint::Biome {
-                    terrain_family_combo(ui, &mut tool.paint_biome);
-                }
-                v_space(ui, sp, VertSpace::Xs);
-                primary_label(ui, pal, "Brush footprint (XZ tile plane):");
-                ui.horizontal_wrapped(|ui| {
-                    for s in MapEditorBrushShape::ALL {
-                        ui.radio_value(&mut tool.brush_shape, s, s.label());
-                    }
-                });
-            } else if tool.kind == MapEditorToolKind::Road {
-                v_space(ui, sp, VertSpace::Inter);
-                weak_body(
-                    ui,
-                    pal,
-                    "Road: click–drag on the minimap to stroke a polyline (orange markers). Single click still works.",
-                );
-                match ghost.snapshot.as_ref() {
-                    Some(s) => weak_body(
-                        ui,
-                        pal,
-                        format!(
-                            "Ghost preview (not baked): {} edges — bake to hydrate runtime.",
-                            s.edges.len()
-                        ),
-                    ),
-                    None => weak_body(ui, pal, "Ghost preview: need ≥2 markers after dedup."),
-                };
-                let key_undo = ui.ctx().input(|i| {
-                    i.key_pressed(egui::Key::Z) && (i.modifiers.ctrl || i.modifiers.command)
-                });
-                if key_undo {
-                    road_undo.write(MapEditorRoadUndoRequest);
-                }
-                ui.horizontal(|ui| {
-                    if ui
-                        .button("Undo last road stroke")
-                        .on_hover_text(
-                            "Restores all road markers to before this click–drag (stack ≤50). Ctrl/⌘+Z",
-                        )
-                        .clicked()
-                    {
-                        road_undo.write(MapEditorRoadUndoRequest);
-                    }
-                });
-                if ui
-                    .button("Bake roads → transport graph (W1 / R8 hydrate)")
-                    .on_hover_text("Markers in click order → TransportTopology; needs ≥2 markers after dedup.")
-                    .clicked()
-                {
-                    bake_events.write(MapEditorBakeTransportRequest);
-                }
-                v_space(ui, sp, VertSpace::Xs);
-                ui.horizontal(|ui| {
-                    if ui
-                        .button("Save transport (dev JSON)")
-                        .on_hover_text(format!("Writes {}", dev_transport_network_save_path().display()))
-                        .clicked()
-                    {
-                        save_dev_transport.write(MapEditorSaveDevTransportRequest);
-                    }
-                    if ui
-                        .button("Load transport (dev JSON)")
-                        .on_hover_text(format!("Reads {}", dev_transport_network_save_path().display()))
-                        .clicked()
-                    {
-                        load_dev_transport.write(MapEditorLoadDevTransportRequest);
-                    }
-                });
-                ui.horizontal(|ui| {
-                    if ui
-                        .button("Save hybrid world (dev)")
-                        .on_hover_text(format!(
-                            "M5/S stub: JSON header + transport JSON body → {}",
-                            dev_hybrid_world_save_path().display()
-                        ))
-                        .clicked()
-                    {
-                        save_hybrid.write(MapEditorSaveHybridWorldDevRequest);
-                    }
-                    if ui
-                        .button("Load hybrid world (dev)")
-                        .on_hover_text(format!("Reads {}", dev_hybrid_world_save_path().display()))
-                        .clicked()
-                    {
-                        load_hybrid.write(MapEditorLoadHybridWorldDevRequest);
-                    }
-                });
-            } else if matches!(
-                tool.kind,
-                MapEditorToolKind::Building | MapEditorToolKind::Rail
-            ) {
-                v_space(ui, sp, VertSpace::Inter);
-                weak_body(
-                    ui,
-                    pal,
-                    "Stub tool — no map paint yet. Buildings: spawn via production/manufacturing flows when wired. Rails: use Road markers + Bake transport for now; dedicated rail curves are planned.",
-                );
-            }
-
-            v_space(ui, sp, VertSpace::Sm);
-            ui.horizontal(|ui| {
-                primary_label(ui, pal, "Brush radius (tiles):");
-                ui.add(egui::Slider::new(&mut tool.brush_radius, 1.0..=32.0));
-            });
-            muted_label(
-                ui,
-                pal,
-                "Brush radius and footprint apply to the Terrain tool only.",
-            );
-            v_space(ui, sp, VertSpace::Sm);
-            ui.horizontal(|ui| {
-                if ui
-                    .button("Save map grid (M5 RON)")
-                    .on_hover_text(format!("Writes {}", dev_map_snapshot_path().display()))
-                    .clicked()
-                {
-                    map_snapshot_io.write(MapEditorMapSnapshotIoRequest::Save);
-                }
-                if ui
-                    .button("Load map grid (M5 RON)")
-                    .on_hover_text(format!("Reads {}", dev_map_snapshot_path().display()))
-                    .clicked()
-                {
-                    map_snapshot_io.write(MapEditorMapSnapshotIoRequest::Load);
-                }
-            });
-
-            v_space(ui, sp, VertSpace::Md);
-            ui.horizontal(|ui| {
-                if ui.button("Play (enter simulation)").clicked() {
-                    NextState::set_if_neq(&mut *next_base, BaseState::Simulation);
-                    NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::Idle);
-                }
-                if ui.button("Exit to main menu").clicked() {
-                    NextState::set_if_neq(&mut *next_base, BaseState::MainMenu);
-                    NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::Idle);
-                    NextState::set_if_neq(&mut *next_menu, MainMenuState::MainMenu);
-                }
-            });
-            });
-        });
+/// Retired egui body — Bevy sync owns chrome via [`sync_map_editor_bevy_shell`].
+fn map_editor_palette_system() -> Result {
     Ok(())
+}
+
+fn map_editor_shell_stamp(
+    tool: &MapEditorTool,
+    map_tex: &MapEditorMapTexture,
+    scenario: &ScenarioScriptPanelState,
+    image_ready: bool,
+) -> u64 {
+    let mut key = 0u64;
+    for b in format!("{:?}", tool.kind).bytes() {
+        key = key.wrapping_mul(31).wrapping_add(b as u64);
+    }
+    key = key
+        .wrapping_mul(31)
+        .wrapping_add(map_tex.width as u64)
+        .wrapping_mul(31)
+        .wrapping_add(map_tex.height as u64)
+        .wrapping_add(image_ready as u64)
+        .wrapping_add(scenario.window_open as u64)
+        .wrapping_add(scenario.tools_entry_visible as u64);
+    for b in scenario.file_path.bytes() {
+        key = key.wrapping_mul(31).wrapping_add(b as u64);
+    }
+    for b in scenario.status_line.bytes() {
+        key = key.wrapping_mul(31).wrapping_add(b as u64);
+    }
+    key
+}
+
+fn spawn_palette_button(
+    parent: &mut ChildSpawnerCommands,
+    palette: &UiPalette,
+    tf: &TextFont,
+    kind: MapEditorToolKind,
+    active: bool,
+) {
+    let label = if active {
+        format!("▶ {}", kind.label())
+    } else {
+        kind.label().to_string()
+    };
+    parent
+        .spawn((
+            MapEditorPalettePick(kind),
+            Button,
+            Node {
+                width: Val::Percent(100.0),
+                padding: UiRect::axes(Val::Px(6.0), Val::Px(3.0)),
+                border: UiRect::all(Val::Px(1.0)),
+                ..default()
+            },
+            BackgroundColor(if active {
+                palette.bevy_button_idle()
+            } else {
+                palette.bevy_hud_panel_fill()
+            }),
+            BorderColor::all(palette.bevy_wire_magenta()),
+            FocusPolicy::Block,
+        ))
+        .with_children(|btn| {
+            btn.spawn((
+                Text::new(label),
+                tf.clone(),
+                TextColor(palette.bevy_primary_text()),
+            ));
+        });
+}
+
+/// Bevy map-editor chrome (palette + minimap ImageNode/Text + scenario F10).
+pub fn sync_map_editor_bevy_shell(
+    mut commands: Commands,
+    tool: Res<MapEditorTool>,
+    map_tex: Res<MapEditorMapTexture>,
+    images: Res<Assets<Image>>,
+    scenario: Res<ScenarioScriptPanelState>,
+    palette: Res<UiPalette>,
+    mono: Res<CmdUiMonoFont>,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<MapEditorBevyShell>>,
+    mut stamp: Local<MapEditorShellStamp>,
+) {
+    presence.map_editor_shell_root = !roots.is_empty();
+    let image_ready = map_tex.texture != Handle::default() && images.get(&map_tex.texture).is_some();
+    let next = map_editor_shell_stamp(tool.as_ref(), map_tex.as_ref(), scenario.as_ref(), image_ready);
+    if !roots.is_empty() && stamp.key == next {
+        return;
+    }
+    for e in &roots {
+        commands.entity(e).despawn();
+    }
+
+    let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
+    let scenario_text = if scenario.window_open {
+        format!(
+            "Scenario (F10)\n  path: {}\n  status: {}\n  tools_entry={}",
+            scenario.file_path,
+            if scenario.status_line.is_empty() {
+                "(idle)"
+            } else {
+                scenario.status_line.as_str()
+            },
+            scenario.tools_entry_visible
+        )
+    } else {
+        "Scenario (F10) — closed · press F10 or use tools entry".into()
+    };
+
+    commands
+        .spawn((
+            MapEditorBevyShell,
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(40.0),
+                right: Val::Px(12.0),
+                width: Val::Px(300.0),
+                max_height: Val::Px(640.0),
+                padding: UiRect::all(Val::Px(10.0)),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(8.0),
+                border: UiRect::all(Val::Px(1.0)),
+                border_radius: BorderRadius::ZERO,
+                overflow: Overflow::scroll_y(),
+                ..default()
+            },
+            BackgroundColor(palette.bevy_hud_panel_fill()),
+            BorderColor::all(palette.bevy_wire_magenta()),
+            FocusPolicy::Block,
+            ZIndex(920),
+        ))
+        .with_children(|root| {
+            root.spawn((
+                MapEditorPaletteBody,
+                Text::new("Map editor · Palette"),
+                tf.clone(),
+                TextColor(palette.bevy_primary_text()),
+            ));
+            for kind in MapEditorToolKind::ALL {
+                spawn_palette_button(root, &palette, &tf, kind, tool.kind == kind);
+            }
+            root.spawn((
+                Text::new(format!(
+                    "Brush r={:.0}  paint={:?}",
+                    tool.brush_radius, tool.terrain_paint
+                )),
+                tf.clone(),
+                TextColor(palette.bevy_text_muted()),
+            ));
+
+            root.spawn((
+                Text::new("── Minimap ──"),
+                tf.clone(),
+                TextColor(palette.bevy_primary_text()),
+            ));
+            if image_ready {
+                root.spawn((
+                    MapEditorMinimapImage,
+                    ImageNode::new(map_tex.texture.clone()),
+                    Node {
+                        width: Val::Px(256.0),
+                        height: Val::Px(256.0),
+                        border: UiRect::all(Val::Px(1.0)),
+                        ..default()
+                    },
+                    BorderColor::all(palette.bevy_wire_magenta()),
+                    FocusPolicy::Block,
+                ));
+            } else {
+                root.spawn((
+                    MapEditorMinimapFallbackText,
+                    Text::new(format!(
+                        "Minimap texture not ready ({}×{})",
+                        map_tex.width, map_tex.height
+                    )),
+                    tf.clone(),
+                    TextColor(palette.bevy_text_muted()),
+                ));
+            }
+
+            root.spawn((
+                MapEditorScenarioBody,
+                Text::new(scenario_text),
+                tf,
+                TextColor(palette.bevy_primary_text()),
+            ));
+        });
+    stamp.key = next;
+    presence.map_editor_shell_root = true;
+}
+
+pub fn map_editor_palette_pick_system(
+    q: Query<(&Interaction, &MapEditorPalettePick), (Changed<Interaction>, With<Button>)>,
+    mut tool: ResMut<MapEditorTool>,
+    mut next_sub: ResMut<NextState<InGameEditorState>>,
+) {
+    for (interaction, pick) in &q {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+        tool.kind = pick.0;
+        sync_tool_to_substate(tool.as_ref(), &mut next_sub);
+    }
 }
 
 pub struct MapEditorPlugin;
@@ -805,25 +601,29 @@ impl Plugin for MapEditorPlugin {
             )
             .add_systems(
                 Update,
-                toggle_scenario_script_panel_hotkey.run_if(map_editor_chrome_active),
+                (
+                    toggle_scenario_script_panel_hotkey,
+                    sync_map_editor_bevy_shell,
+                    map_editor_palette_pick_system.after(sync_map_editor_bevy_shell),
+                )
+                    .run_if(map_editor_chrome_active),
             )
             .add_systems(
-                EguiPrimaryContextPass,
-                map_editor_minimap_window.run_if(map_editor_chrome_active),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                map_editor_palette_system.run_if(map_editor_chrome_active),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                scenario_editor_tools_entry_window.run_if(map_editor_chrome_active),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
-                scenario_script_panel_system.run_if(map_editor_chrome_active),
+                Update,
+                despawn_map_editor_bevy_shell_when_inactive.run_if(not(map_editor_chrome_active)),
             );
     }
+}
+
+fn despawn_map_editor_bevy_shell_when_inactive(
+    mut commands: Commands,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<MapEditorBevyShell>>,
+) {
+    for e in &roots {
+        commands.entity(e).despawn();
+    }
+    presence.map_editor_shell_root = false;
 }
 
 #[cfg(test)]

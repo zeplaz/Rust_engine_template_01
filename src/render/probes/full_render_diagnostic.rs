@@ -7,7 +7,6 @@ use bevy::diagnostic::FrameCount;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::egui;
 use serde::Serialize;
 
 use crate::engine::states::BaseState;
@@ -93,7 +92,7 @@ pub enum FullRenderUiSlot {
 
 #[derive(Resource, Debug, Default, Clone)]
 pub struct FullRenderUiLayoutProbe {
-    pub rects: HashMap<FullRenderUiSlot, egui::Rect>,
+    pub rects: HashMap<FullRenderUiSlot, bevy::prelude::Rect>,
 }
 
 #[derive(Resource, Debug, Default, Clone)]
@@ -110,7 +109,7 @@ pub struct FullRenderDiagnosticUiHook<'w> {
 }
 
 impl<'w> FullRenderDiagnosticUiHook<'w> {
-    pub fn record_rect(&mut self, slot: FullRenderUiSlot, rect: egui::Rect) {
+    pub fn record_rect(&mut self, slot: FullRenderUiSlot, rect: bevy::prelude::Rect) {
         record_full_render_diagnostic_ui_rect(Some(&self.gate), Some(&mut self.probe), slot, rect);
     }
 
@@ -127,7 +126,7 @@ pub fn record_full_render_diagnostic_ui_rect(
     gate: Option<&FullRenderDiagnosticGate>,
     probe: Option<&mut FullRenderUiLayoutProbe>,
     slot: FullRenderUiSlot,
-    rect: egui::Rect,
+    rect: bevy::prelude::Rect,
 ) {
     let Some(gate) = gate else {
         return;
@@ -163,8 +162,8 @@ struct Rect2 {
     height: f32,
 }
 
-impl From<egui::Rect> for Rect2 {
-    fn from(rect: egui::Rect) -> Self {
+impl From<bevy::prelude::Rect> for Rect2 {
+    fn from(rect: bevy::prelude::Rect) -> Self {
         Self {
             min_x: rect.min.x,
             min_y: rect.min.y,

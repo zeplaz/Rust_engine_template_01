@@ -26,7 +26,7 @@ pub use repair::{
 pub use commit::{
     commit_power_line_to_utility_graph, node_key_for_world, power_line_commit_witness_green,
 };
-pub use ghost::{draw_power_line_path_ghost_egui, power_line_ghost_preview_dashed_witness_green};
+pub use ghost::power_line_ghost_preview_dashed_witness_green;
 pub use input::{
     power_line_path_input_system, power_line_routing_mode_hotkey_system,
     sync_power_line_build_preview, sync_power_line_from_build_tool,

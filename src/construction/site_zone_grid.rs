@@ -2,7 +2,6 @@
 
 use std::path::Path;
 
-use bevy_egui::egui;
 use serde::Deserialize;
 
 use super::ghost_visual::footprint_valid_color;
@@ -75,22 +74,22 @@ pub fn cell_at(grid: &SiteZoneGrid, dx: u32, dz: u32) -> Option<SiteZoneCell> {
 }
 
 #[must_use]
-pub fn cell_fill(cell: SiteZoneCell) -> Option<egui::Color32> {
+pub fn cell_fill(cell: SiteZoneCell) -> Option<crate::gui::UiRgba> {
     match cell {
         SiteZoneCell::Void => None,
         SiteZoneCell::Primary | SiteZoneCell::Loading => {
             let c = footprint_valid_color();
-            Some(egui::Color32::from_rgba_unmultiplied(
-                c.r(),
-                c.g(),
-                c.b(),
+            Some(crate::gui::UiRgba::from_rgba_unmultiplied(
+                c.r,
+                c.g,
+                c.b,
                 90,
             ))
         }
-        SiteZoneCell::Utility => Some(egui::Color32::from_rgba_unmultiplied(200, 140, 40, 38)),
-        SiteZoneCell::Rail => Some(egui::Color32::from_rgba_unmultiplied(136, 136, 136, 64)),
-        SiteZoneCell::Service => Some(egui::Color32::from_rgba_unmultiplied(80, 200, 220, 48)),
-        SiteZoneCell::Parking => Some(egui::Color32::from_rgba_unmultiplied(68, 68, 68, 30)),
+        SiteZoneCell::Utility => Some(crate::gui::UiRgba::from_rgba_unmultiplied(200, 140, 40, 38)),
+        SiteZoneCell::Rail => Some(crate::gui::UiRgba::from_rgba_unmultiplied(136, 136, 136, 64)),
+        SiteZoneCell::Service => Some(crate::gui::UiRgba::from_rgba_unmultiplied(80, 200, 220, 48)),
+        SiteZoneCell::Parking => Some(crate::gui::UiRgba::from_rgba_unmultiplied(68, 68, 68, 30)),
     }
 }
 

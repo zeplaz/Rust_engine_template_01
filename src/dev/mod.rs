@@ -156,6 +156,7 @@ pub mod landscape_grammar_visual_smoke_live_proof;
 pub mod aps_dna_consumer_live_proof;
 pub mod landscape_map_stamp_contract_live_proof;
 pub mod landscape_map_stamp_runtime_live_proof;
+pub mod map_sim_relief_001_live_proof;
 pub mod des_build_read_hud_001_live_proof;
 pub mod des_build_read_hud_002_live_proof;
 pub mod sim_hud_esc_cascade_live_proof;

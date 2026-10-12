@@ -1,7 +1,6 @@
 //! UI layout requests for world preview — not authoritative until resolved.
 
 use bevy::math::{UVec2, Vec2};
-use bevy_egui::egui;
 
 use crate::gui::{
     submit_viewport_request, ViewportAuthority, ViewportRequest, VIEWPORT_PRIORITY_PREVIEW,
@@ -13,7 +12,7 @@ use crate::gui::hud::{
 /// Record layout intent from the central preview panel.
 pub fn write_world_preview_viewport_request(
     authority: &mut ViewportAuthority,
-    egui_clip: egui::Rect,
+    egui_clip: bevy::prelude::Rect,
     world_w: u32,
     world_h: u32,
     sanity: &mut ViewportRectSanity,

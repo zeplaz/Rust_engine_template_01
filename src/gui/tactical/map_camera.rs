@@ -12,7 +12,6 @@ use bevy::input::mouse::{AccumulatedMouseScroll, MouseWheel};
 use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
-use bevy_egui::egui;
 
 use crate::engine::states::BaseState;
 use crate::engine::{ActiveTestScene, TestScene};
@@ -1236,10 +1235,10 @@ pub fn primary_cursor_world_xy(
 }
 
 #[must_use]
-pub fn sim_map_image_rect(map_vp: &SimulationMapViewport) -> egui::Rect {
-    egui::Rect::from_min_max(
-        egui::pos2(map_vp.min.x, map_vp.min.y),
-        egui::pos2(map_vp.max.x, map_vp.max.y),
+pub fn sim_map_image_rect(map_vp: &SimulationMapViewport) -> bevy::prelude::Rect {
+    bevy::prelude::Rect::from_corners(
+        bevy::prelude::Vec2::new(map_vp.min.x, map_vp.min.y),
+        bevy::prelude::Vec2::new(map_vp.max.x, map_vp.max.y),
     )
 }
 
@@ -1270,26 +1269,26 @@ pub fn tactical_visible_world_span(
 
 /// World XY → egui screen (matches [`MainWorldCamera`] ortho over fill rect).
 #[must_use]
-pub fn sim_map_world_xy_to_egui(
+pub fn sim_map_world_xy_to_screen(
     world_xy: Vec2,
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
     world_w: f32,
     world_h: f32,
-) -> Option<egui::Pos2> {
-    sim_map_world_xy_to_egui_with_window(world_xy, desired, map_vp, world_w, world_h, None)
+) -> Option<bevy::prelude::Vec2> {
+    sim_map_world_xy_to_screen_with_window(world_xy, desired, map_vp, world_w, world_h, None)
 }
 
-/// Like [`sim_map_world_xy_to_egui`] with optional texture extent override.
+/// Like [`sim_map_world_xy_to_screen`] with optional texture extent override.
 #[must_use]
-pub fn sim_map_world_xy_to_egui_with_window(
+pub fn sim_map_world_xy_to_screen_with_window(
     world_xy: Vec2,
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
     world_w: f32,
     world_h: f32,
     tex_extent: Option<Vec2>,
-) -> Option<egui::Pos2> {
+) -> Option<bevy::prelude::Vec2> {
     if !map_vp.is_adequate_for_camera() {
         return None;
     }
@@ -1301,16 +1300,16 @@ pub fn sim_map_world_xy_to_egui_with_window(
     let sx = rect.center().x + (world_xy.x - cam.x) * (rect.width() / fw.max(1e-6));
     // World +Y is north; egui screen +Y is down — negate so map overlays track zoom/pan.
     let sy = rect.center().y - (world_xy.y - cam.y) * (rect.height() / fh.max(1e-6));
-    Some(egui::pos2(sx, sy))
+    Some(bevy::prelude::Vec2::new(sx, sy))
 }
 
 /// World XY → egui using the **last ortho** written to [`MainWorldCamera`] (pixel-perfect vs RTT).
 #[must_use]
-pub fn sim_map_world_xy_to_egui_with_ortho(
+pub fn sim_map_world_xy_to_screen_with_ortho(
     world_xy: Vec2,
     map_vp: &SimulationMapViewport,
     ortho: &MainWorldCameraOrthoTrace,
-) -> Option<egui::Pos2> {
+) -> Option<bevy::prelude::Vec2> {
     if !map_vp.is_adequate_for_camera() {
         return None;
     }
@@ -1324,10 +1323,10 @@ pub fn sim_map_world_xy_to_egui_with_ortho(
     let center = ortho.camera_center;
     let sx = rect.center().x + (world_xy.x - center.x) * (rect.width() / fw);
     let sy = rect.center().y - (world_xy.y - center.y) * (rect.height() / fh);
-    Some(egui::pos2(sx, sy))
+    Some(bevy::prelude::Vec2::new(sx, sy))
 }
 
-/// Inverse of [`sim_map_world_xy_to_egui_with_ortho`] — cursor → world on the tactical map plane.
+/// Inverse of [`sim_map_world_xy_to_screen_with_ortho`] — cursor → world on the tactical map plane.
 #[must_use]
 pub fn sim_map_screen_to_world_xy_with_ortho(
     screen_logical: Vec2,
@@ -1351,23 +1350,23 @@ pub fn sim_map_screen_to_world_xy_with_ortho(
 
 /// Axis-aligned world tile bounds → egui rect (tracks zoom via [`MainWorldCameraOrthoTrace`]).
 #[must_use]
-pub fn sim_map_world_aabb_to_egui_with_ortho(
+pub fn sim_map_world_aabb_to_screen_with_ortho(
     min_tile: Vec2,
     max_tile: Vec2,
     map_vp: &SimulationMapViewport,
     ortho: &MainWorldCameraOrthoTrace,
-) -> Option<egui::Rect> {
+) -> Option<bevy::prelude::Rect> {
     let corners = [
         Vec2::new(min_tile.x, min_tile.y),
         Vec2::new(max_tile.x, min_tile.y),
         Vec2::new(max_tile.x, max_tile.y),
         Vec2::new(min_tile.x, max_tile.y),
     ];
-    let mut min_s = egui::pos2(f32::INFINITY, f32::INFINITY);
-    let mut max_s = egui::pos2(f32::NEG_INFINITY, f32::NEG_INFINITY);
+    let mut min_s = bevy::prelude::Vec2::new(f32::INFINITY, f32::INFINITY);
+    let mut max_s = bevy::prelude::Vec2::new(f32::NEG_INFINITY, f32::NEG_INFINITY);
     let mut projected = 0u32;
     for world_xy in corners {
-        let Some(p) = sim_map_world_xy_to_egui_with_ortho(world_xy, map_vp, ortho) else {
+        let Some(p) = sim_map_world_xy_to_screen_with_ortho(world_xy, map_vp, ortho) else {
             continue;
         };
         min_s.x = min_s.x.min(p.x);
@@ -1379,10 +1378,10 @@ pub fn sim_map_world_aabb_to_egui_with_ortho(
     if projected < 2 {
         return None;
     }
-    Some(egui::Rect::from_min_max(min_s, max_s))
+    Some(bevy::prelude::Rect::from_corners(min_s, max_s))
 }
 
-/// Inverse of [`sim_map_world_xy_to_egui`] — logical cursor → world XY.
+/// Inverse of [`sim_map_world_xy_to_screen`] — logical cursor → world XY.
 #[must_use]
 pub fn sim_map_screen_to_world_xy(
     screen_logical: Vec2,
@@ -1453,16 +1452,16 @@ pub fn map_plane_horizontal_xy(world: Vec3) -> Vec2 {
     }
 }
 
-/// [`sim_map_world_xy_to_egui`] for world-space [`Vec3`] via [`map_plane_horizontal_xy`].
+/// [`sim_map_world_xy_to_screen`] for world-space [`Vec3`] via [`map_plane_horizontal_xy`].
 #[must_use]
-pub fn sim_map_world_vec3_to_egui(
+pub fn sim_map_world_vec3_to_screen(
     world: Vec3,
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
     world_w: f32,
     world_h: f32,
-) -> Option<egui::Pos2> {
-    sim_map_world_xy_to_egui(map_plane_horizontal_xy(world), desired, map_vp, world_w, world_h)
+) -> Option<bevy::prelude::Vec2> {
+    sim_map_world_xy_to_screen(map_plane_horizontal_xy(world), desired, map_vp, world_w, world_h)
 }
 
 /// Legacy alias — [`sync_main_world_camera_projection`].
@@ -1534,12 +1533,12 @@ mod tests {
             ..Default::default()
         };
         let world = Vec2::new(2048.0, 2048.0);
-        let screen = sim_map_world_xy_to_egui(world, &desired, &vp, 4096.0, 4096.0).unwrap();
+        let screen = sim_map_world_xy_to_screen(world, &desired, &vp, 4096.0, 4096.0).unwrap();
         let rect = sim_map_image_rect(&vp);
         assert!((screen.x - rect.center().x).abs() < 2.0);
         assert!((screen.y - rect.center().y).abs() < 2.0);
         let north = Vec2::new(2048.0, 2148.0);
-        let north_screen = sim_map_world_xy_to_egui(north, &desired, &vp, 4096.0, 4096.0).unwrap();
+        let north_screen = sim_map_world_xy_to_screen(north, &desired, &vp, 4096.0, 4096.0).unwrap();
         assert!(
             north_screen.y < rect.center().y,
             "world +Y must project above map center on screen"
@@ -1554,7 +1553,7 @@ mod tests {
             camera_center: desired.translation.truncate(),
             ..Default::default()
         };
-        let auth = sim_map_world_xy_to_egui_with_ortho(world, &vp, &ortho).unwrap();
+        let auth = sim_map_world_xy_to_screen_with_ortho(world, &vp, &ortho).unwrap();
         assert!((auth.x - screen.x).abs() < 2.0);
         assert!((auth.y - screen.y).abs() < 2.0);
         assert!((back.x - world.x).abs() < 0.5);
@@ -1631,9 +1630,9 @@ mod tests {
             camera_center: center,
             ..Default::default()
         };
-        let p_lo = sim_map_world_xy_to_egui_with_ortho(world, &vp, &ortho_lo).unwrap();
-        let p_hi = sim_map_world_xy_to_egui_with_ortho(world, &vp, &ortho_hi).unwrap();
-        let c = sim_map_world_xy_to_egui_with_ortho(center, &vp, &ortho_lo).unwrap();
+        let p_lo = sim_map_world_xy_to_screen_with_ortho(world, &vp, &ortho_lo).unwrap();
+        let p_hi = sim_map_world_xy_to_screen_with_ortho(world, &vp, &ortho_hi).unwrap();
+        let c = sim_map_world_xy_to_screen_with_ortho(center, &vp, &ortho_lo).unwrap();
         let span_lo = (p_lo.x - c.x).abs();
         let span_hi = (p_hi.x - c.x).abs();
         assert!(span_hi > span_lo * 1.8, "2x zoom should ~double screen span");
@@ -1657,13 +1656,13 @@ mod tests {
         };
         let north = Vec2::new(300.0, 500.0);
         let north_screen =
-            sim_map_world_xy_to_egui_with_ortho(north, &vp, &ortho).unwrap();
-        let base_screen = sim_map_world_xy_to_egui_with_ortho(world, &vp, &ortho).unwrap();
+            sim_map_world_xy_to_screen_with_ortho(north, &vp, &ortho).unwrap();
+        let base_screen = sim_map_world_xy_to_screen_with_ortho(world, &vp, &ortho).unwrap();
         assert!(
             north_screen.y < base_screen.y,
             "world +Y must map to smaller screen Y"
         );
-        let screen = sim_map_world_xy_to_egui_with_ortho(world, &vp, &ortho).unwrap();
+        let screen = sim_map_world_xy_to_screen_with_ortho(world, &vp, &ortho).unwrap();
         let back =
             sim_map_screen_to_world_xy_with_ortho(Vec2::new(screen.x, screen.y), &vp, &ortho)
                 .unwrap();
@@ -1688,3 +1687,7 @@ mod tests {
         assert!((xy.y - 42.0).abs() < 1e-5);
     }
 }
+
+pub use sim_map_world_xy_to_screen as sim_map_world_xy_to_egui;
+pub use sim_map_world_xy_to_screen_with_ortho as sim_map_world_xy_to_egui_with_ortho;
+pub use sim_map_world_vec3_to_screen as sim_map_world_vec3_to_egui;

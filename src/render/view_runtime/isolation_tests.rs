@@ -2,7 +2,6 @@
 
 use bevy::prelude::*;
 
-use bevy_egui::egui;
 
 use crate::gui::{
     commit_map_camera_pose_to_view_authority, sync_view_manager_world_main_from_authority,
@@ -243,8 +242,8 @@ fn deferred_preview_commits_preview_panel_writer() {
 #[test]
 fn infra_proj2_view_surface_screen_to_world_isolates_minimap_and_preview() {
     let mut manager = ViewManager::default();
-    let image_rect = egui::Rect::from_min_max(egui::pos2(10.0, 20.0), egui::pos2(110.0, 120.0));
-    let screen = egui::pos2(60.0, 70.0);
+    let image_rect = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(10.0, 20.0), bevy::prelude::Vec2::new(110.0, 120.0));
+    let screen = bevy::prelude::Vec2::new(60.0, 70.0);
     let tex = 128.0;
 
     let minimap_cam = ViewCameraState {

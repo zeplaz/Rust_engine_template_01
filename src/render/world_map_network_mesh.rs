@@ -12,7 +12,6 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::construction::{
     CorridorPhaseDrawKind, ConstructionVisualRequests, VisualPathKind, world_map_tile_center,
@@ -55,6 +54,9 @@ pub(crate) struct WorldMapPowerMark;
 pub(crate) struct WorldMapLogisticsSeg;
 
 #[derive(Component)]
+pub(crate) struct WorldMapOrdersSeg;
+
+#[derive(Component)]
 pub(crate) struct WorldMapPhaseLabel;
 
 #[derive(Component)]
@@ -90,8 +92,11 @@ impl Plugin for WorldMapNetworkMeshPlugin {
         );
         app.add_systems(
             PostUpdate,
-            sync_world_map_logistics_meshes
-                .after(crate::economy::logistics::intent_draw::sync_logistics_intent_draw_frame),
+            (
+                sync_world_map_logistics_meshes
+                    .after(crate::economy::logistics::intent_draw::sync_logistics_intent_draw_frame),
+                sync_world_map_orders_meshes,
+            ),
         );
     }
 }
@@ -103,8 +108,8 @@ pub fn construction_point_on_world_map(world: Vec3) -> Vec3 {
     Vec3::new(xy.x, xy.y, PLANE_Z)
 }
 
-fn color32(c: egui::Color32) -> Color {
-    Color::srgba_u8(c.r(), c.g(), c.b(), c.a())
+fn color32(c: crate::gui::UiRgba) -> Color {
+    Color::srgba_u8(c.r, c.g, c.b, c.a)
 }
 
 fn mix(key: &mut u64, n: u64) {
@@ -168,12 +173,12 @@ fn path_color(kind: VisualPathKind, valid: bool, slope_ok: bool, committed: bool
         (VisualPathKind::Road, true, _, true) => crate::construction::road_committed_color(),
         (VisualPathKind::Road, true, _, false) => crate::construction::road_segment_color(true),
         (VisualPathKind::Rail, true, true, _) => {
-            egui::Color32::from_rgba_unmultiplied(180, 120, 255, 150)
+            crate::gui::UiRgba::from_rgba_unmultiplied(180, 120, 255, 150)
         }
         (VisualPathKind::Rail, _, false, _) => {
-            egui::Color32::from_rgba_unmultiplied(255, 140, 60, 180)
+            crate::gui::UiRgba::from_rgba_unmultiplied(255, 140, 60, 180)
         }
-        _ => egui::Color32::from_rgba_unmultiplied(240, 90, 90, 160),
+        _ => crate::gui::UiRgba::from_rgba_unmultiplied(240, 90, 90, 160),
     };
     color32(token)
 }
@@ -642,6 +647,102 @@ pub(crate) fn sync_world_map_logistics_meshes(
     }
 }
 
+/// Orders overlay ribbons from [`build_orders_overlay`] (PORT-LOGISTICS-OVERLAY stretch).
+pub(crate) fn sync_world_map_orders_meshes(
+    mut commands: Commands,
+    base: Res<State<BaseState>>,
+    snap: Option<Res<crate::economy::logistics::orders::LogisticsOrdersSnapshotRes>>,
+    panel: Option<Res<crate::gui::LogisticsOrdersPanelState>>,
+    segs: Query<Entity, With<WorldMapOrdersSeg>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut mesh_slot: Local<Option<Handle<Mesh>>>,
+    mut mat_cache: Local<HashMap<u32, Handle<ColorMaterial>>>,
+    mut stamp: Local<LayerStamp>,
+) {
+    use crate::economy::logistics::orders::snapshot::METRES_PER_TILE;
+    use crate::gui::{build_orders_overlay, RouteTone};
+
+    let show = matches!(base.get(), BaseState::Simulation)
+        && panel
+            .as_ref()
+            .is_some_and(|p| p.visible || p.always_show_routes);
+    if !show {
+        despawn_query(&mut commands, &segs);
+        stamp.key = 0;
+        return;
+    }
+    let Some(snap) = snap else {
+        despawn_query(&mut commands, &segs);
+        stamp.key = 0;
+        return;
+    };
+    let with_sites = panel.as_ref().is_some_and(|p| p.visible);
+    let frame = build_orders_overlay(&snap.0, with_sites);
+    let mut key = frame.routes.len() as u64 + frame.vehicles.len() as u64 * 17;
+    for r in &frame.routes {
+        mix(&mut key, q(r.from.x) ^ q(r.from.y));
+        mix(&mut key, q(r.to.x) ^ q(r.to.y));
+        let tone = match r.tone {
+            RouteTone::Flowing => 1u64,
+            RouteTone::Waiting => 2,
+            RouteTone::Paused => 3,
+        };
+        mix(&mut key, r.standing as u64 + tone);
+    }
+    if key == stamp.key {
+        return;
+    }
+    despawn_query(&mut commands, &segs);
+    stamp.key = key;
+    let unit = unit_mesh(&mut meshes, &mut mesh_slot);
+    let tile_world = |t: Vec2| Vec3::new(t.x * METRES_PER_TILE, 0.0, t.y * METRES_PER_TILE);
+    for r in &frame.routes {
+        let color = match r.tone {
+            RouteTone::Flowing => Color::srgba(0.35, 0.85, 0.55, 0.9),
+            RouteTone::Waiting => Color::srgba(0.95, 0.75, 0.25, 0.9),
+            RouteTone::Paused => Color::srgba(0.7, 0.7, 0.7, 0.75),
+        };
+        let mat = material_for(&mut mat_cache, &mut materials, color);
+        let width = if r.standing { 0.14 } else { 0.1 };
+        commands.spawn((
+            WorldMapOrdersSeg,
+            Mesh2d(unit.clone()),
+            MeshMaterial2d(mat),
+            ribbon_transform(tile_world(r.from), tile_world(r.to), width),
+        ));
+    }
+    let loaded = material_for(
+        &mut mat_cache,
+        &mut materials,
+        Color::srgba(0.2, 0.9, 1.0, 0.95),
+    );
+    let empty = material_for(
+        &mut mat_cache,
+        &mut materials,
+        Color::srgba(0.85, 0.85, 0.9, 0.7),
+    );
+    for v in &frame.vehicles {
+        let mat = if v.loaded {
+            loaded.clone()
+        } else {
+            empty.clone()
+        };
+        let p = tile_world(v.at);
+        let xy = map_plane_horizontal_xy(p);
+        commands.spawn((
+            WorldMapOrdersSeg,
+            Mesh2d(unit.clone()),
+            MeshMaterial2d(mat),
+            Transform {
+                translation: Vec3::new(xy.x, xy.y, PLANE_Z + 0.01),
+                scale: Vec3::splat(0.22),
+                ..default()
+            },
+        ));
+    }
+}
+
 fn default_city_zone_shade(
     scene: Option<Res<crate::engine::ActiveTestScene>>,
     shade: Option<ResMut<crate::gui::hud::simulation_shell_phase2::ZoneShadeToggle>>,
@@ -911,7 +1012,7 @@ mod tests {
             ],
             zone_tiles: vec![crate::construction::ZoneTileRequest {
                 center: Vec3::new(2.5, 0.0, 8.5),
-                color: egui::Color32::from_rgba_unmultiplied(40, 80, 160, 140),
+                color: crate::gui::UiRgba::from_rgba_unmultiplied(40, 80, 160, 140),
             }],
             ..Default::default()
         });

@@ -26,10 +26,10 @@ pub struct ConstructionLiveTodo {
 pub static CONSTRUCTION_TODOS: &[ConstructionLiveTodo] = &[
     ConstructionLiveTodo {
         id: "BUILD-P0-01",
-        status: TodoStatus::Done,
+        status: TodoStatus::Open,
         file: "src/construction/build_toolbox.rs",
         goal: "Persistent left build toolbox replaces `;` as primary tool UX.",
-        runtime_check: "Simulation: Construction side panel visible; tool click sets active mode.",
+        runtime_check: "Editor: PanelPresence.build_toolbox_root (BuildToolboxBevyRoot spawned). Simulation harness Open OK (spawn-gated).",
     },
     ConstructionLiveTodo {
         id: "BUILD-P0-02",
@@ -64,7 +64,7 @@ pub static CONSTRUCTION_TODOS: &[ConstructionLiveTodo] = &[
         status: TodoStatus::Done,
         file: "src/construction/build_validation.rs",
         goal: "Shared GhostValid / placement preview for roads + buildings.",
-        runtime_check: "Witness `shared_ghost_valid`.",
+        runtime_check: "GhostValid on BuildGhostRoot synced from BuildPlacementPreview; evaluate_ghost_site_placement wired.",
     },
     ConstructionLiveTodo {
         id: "BUILD-P1-03",

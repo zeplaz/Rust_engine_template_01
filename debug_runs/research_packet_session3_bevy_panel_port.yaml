@@ -1,0 +1,140 @@
+# L0 research_packet — Session 3 Bevy panel port (PLAN-BEVY-PANEL-PORT-v1)
+# Generated: 2026-10-10 · repo: C:\dev\github\Rust_engine_template_01
+# Authority: live disk + git show 908f9af8 (pre–bevy_egui drop UX reference)
+
+program_id: PLAN-BEVY-PANEL-PORT-v1
+session: 3
+prior_witness: debug_runs/bevy_panel_port_live.json  # session=2, slices_deferred staged_multiline + mass_stub_prune + road_popup DEFER
+charter: src/dev/plan_bevy_panel_port_v1.md
+
+bevy_pattern:
+  name: BuildToolboxBevyRoot
+  reference_files:
+    - src/construction/build_toolbox.rs
+    - src/gui/diagnostics_ui.rs
+  contract:
+    - "Component *BevyRoot marker + spawn/despawn from Res visibility/dock"
+    - "sync_*_bevy rebuild on stamp when data changes"
+    - "Button + Interaction::Pressed for intents (tool-select only in toolbox; road popup may commit via existing funnel fns)"
+    - "FocusPolicy::Block on floating dev panels"
+    - "PanelPresence.*_root flags for witness + SimulationMapPointerGate chrome_blocks"
+    - "run_if(product_shell_active) for editor product chrome; run_if(in_simulation_or_editor) for dev toggles until gated"
+  sim_road_reference:
+    file: src/gui/hud/sim_road_power_sheets_bevy.rs
+    note: "Sim road sheet already ports Build/Cancel/upgrade/grid/node snap — clone for Editor RoadToolPopupBevyRoot at egui default_pos (12,200) w=240"
+
+slices:
+  - id: PORT-ROAD-POPUP-BEVY
+    order: 1
+    board: BUILD-P2-05
+    title: RoadToolPopup Bevy (editor)
+    current_state:
+      popup_rs: "23-line stub; draw_road_tool_popup_egui() -> Ok(())"
+      witness: "ConstructionStageWitness.road_popup hardcoded false (construction_stage_witness.rs L76-77)"
+      sim_path: "SIM_ROAD_POWER_SHEETS_USE_BEVY + sim_road_power_sheets_bevy.rs (Simulation only)"
+      editor_path: "draw_sim_road_tool_sheet_egui stub; no editor popup UI scheduled post egui drop"
+      ux_reference: "git show 908f9af8:src/construction/roads/popup.rs — Window stats, grid/node/curved toggles, Build/Cancel/Upgrade nearest"
+    files_touch:
+      - src/construction/roads/popup.rs
+      - src/construction/roads/mod.rs
+      - src/construction/construction_stage_witness.rs
+      - src/gui/panel_presence.rs
+      - src/gui/hud/simulation_pointer_gate.rs
+      - src/construction/build_toolbox.rs
+      - src/construction/mod.rs
+      - src/construction/witness_collectors.rs
+    exit_predicates:
+      - "RoadToolPopupBevyRoot sync + action systems under product_shell_active"
+      - "Parity with 908f9af8 popup UX (stats, snap, Build/Cancel/Upgrade)"
+      - "ConstructionStageWitness.road_popup true when root spawned"
+      - "BUILD-P2-05 Done in Editor harness; witness_collectors tests updated if needed"
+      - "Pointer gate blocks while popup root present"
+
+  - id: PORT-STAGED-MULTILINE
+    order: 2
+    title: staged_multiline (staged_ghost_panel + tray)
+    current_state:
+      logic_shipped: "StagedPlacementBook/Mode; parametric_active_ghost_hud_line multiline \\n"
+      ui_stubs: "draw_staged_placements_panel_* empty; tray Build tab lacks parametric/staged list in simulation_shell_phase2.rs"
+    files_touch:
+      - src/construction/staged_ghost_panel.rs
+      - src/gui/hud/context_tray_build_egui.rs
+      - src/gui/hud/simulation_shell_phase2.rs
+      - src/construction/mod.rs
+      - src/gui/panel_presence.rs
+    exit_predicates:
+      - "parametric_active_ghost_hud_line in Bevy context tray when armed"
+      - "Staged row summary in sim tray or editor StagedPlacementsBevyRoot"
+      - "staging_panel_visible_witness_green still passes"
+
+  - id: PORT-DEV-CHROME
+    order: 3
+    title: "Dev chrome: faction, AI explainability, pressure, assembly QC"
+    current_state:
+      common: "Toggles live; egui paint removed — all draw/system bodies empty stubs"
+      assembly_snapshot_qc_ui.rs: "load/evaluate logic intact; draw_assembly_snapshot_qc_ui {}"
+    files_touch:
+      - src/gui/faction_tools_ui.rs
+      - src/gui/ai_explainability_ui.rs
+      - src/gui/pressure_tooling.rs
+      - src/gui/assembly_snapshot_qc_ui.rs
+      - src/gui/panel_presence.rs
+      - src/gui/diagnostics_ui.rs
+      - src/gui/hud/simulation_pointer_gate.rs
+    exit_predicates:
+      - "Bevy roots + sync per diagnostics_ui pattern"
+      - "PanelPresence + pointer chrome_blocks when visible"
+      - "Assembly QC shows load + table from load_qc_snapshot"
+
+  - id: PORT-MASS-STUB-PRUNE
+    order: 4
+    title: mass_stub_prune draw_*_egui
+    current_state:
+      count_empty_ok_stubs: 27
+      scheduling: "No EguiPrimaryContextPass — stubs mostly dead symbols"
+    files_touch:
+      - src/construction/mod.rs
+      - src/gui/hud/hud_root_tick.rs
+      - "all src files matching pub fn draw_*_egui -> Ok(())"
+    exit_predicates:
+      - "Remove fns with zero call sites; keep grep'd witness symbols"
+      - "validate_cargo_report 0 errors"
+
+  - id: PORT-PRODUCT-SHELL-ALIAS-DROP
+    order: 5
+    title: product_egui_shell_active alias drop
+    current_state:
+      call_sites_rs: "product_egui_shell_active: 7 mentions; run_if on alias: 0"
+    files_touch:
+      - src/gui/ui_gates.rs
+      - src/gui/hud/hud_root_tick.rs
+      - src/gui/assembly_snapshot_qc_ui.rs
+      - debug_runs/bevy_panel_port_live.json
+    exit_predicates:
+      - "Remove alias fns; rg clean for product_egui_shell_active in src/"
+
+  - id: PORT-P9-TERRAIN-CONFORM-DOC
+    order: 6
+    title: P9 terrain_conform / PHASE2-BUILD-20
+    in_scope: false
+    files_touch:
+      - debug_runs/bevy_panel_port_live.json
+      - src/construction/construction_stage_witness.rs
+    exit_predicates:
+      - "Document-only defer; terrain_conform stays false (height_norm_stub)"
+      - "PHASE2-BUILD-20 Open until live height_grid"
+
+  - id: PORT-PROGRAM-CLOSE
+    order: 7
+    title: Close program witness
+    files_touch:
+      - debug_runs/bevy_panel_port_live.json
+      - src/dev/plan_bevy_panel_port_v1.md
+    exit_predicates:
+      - "session=3; slices_done updated; honest_false only terrain_conform + shared_ghost_valid (+ sim BUILD-P0-01 if unchanged)"
+      - "validate_cargo_report 0 errors"
+
+risks:
+  - "Road popup must use commit_road_path_to_queue / enqueue_road_upgrade only"
+  - "PanelPresence omission breaks editor pointer gate"
+  - "Stub prune vs include_str/doc witnesses (BUILD-P2-05, HUD-A-003)"

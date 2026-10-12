@@ -2,7 +2,6 @@
 // Compile with `--features legacy_engine` to include this stub.
 // Canonical entry: `engine::engine_with_worldgen::EnginePlugin` (re-exported as `crate::engine::EnginePlugin`).
 use bevy::prelude::*;
-use bevy_egui::EguiPlugin;
 
 /// Superseded by `engine_with_worldgen::EnginePlugin` (the `EnginePlugin` this crate re-exports).
 /// Kept only so historical plugin wiring can be revived without rewriting `DefaultPlugins` + egui setup.
@@ -11,8 +10,7 @@ pub struct EnginePlugin {}
 
 impl Plugin for EnginePlugin {
     fn build(&self, app: &mut App) {
-        app.add_plugins(DefaultPlugins).add_plugins(EguiPlugin::default());
-        super::omit_egui_pointer_preupdate_in_simulation(app);
+        app.add_plugins(DefaultPlugins);
 
         // Historical: `add_plugins(MenuStatePlugin)`, `init_state`, `add_systems(OnEnter(...), …)`.
         //.add_state(AppState::MainMenu)

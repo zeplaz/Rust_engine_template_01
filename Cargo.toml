@@ -61,19 +61,16 @@ reqwest = { version = "0.11", features = ["json"] }
 sha2 = "0.10"
 
 # --- Bevy and UI (Bevy 0.19 line) ---
-# Pin companions from https://github.com/vladbat00/bevy_egui compatibility table at lock time.
 bevy = { version = "0.19", features = ["serialize", "bevy_gizmos", "bevy_gizmos_render", "multi_threaded"] }
-# PNG + GIF for gameplay capture (match `bevy_egui` → `arboard` → image line).
+# PNG + GIF for gameplay capture.
 image = { version = "0.25", default-features = false, features = ["png", "gif"] }
-bevy_egui = "0.41"
 bitflags = "2"
 rustc-hash = "2.1"
 bytemuck = { version = "1.14", features = ["derive"] }
 smallvec = "1.13"
 clap = { version = "4", features = ["derive"] }
-# Optional: re-add bevy-inspector-egui when a release matches this Bevy line without duplicating ECS.
-# bevy-inspector-egui = "…"
-# egui is provided transitively by bevy_egui unless you pin it explicitly.
+# Optional: re-add bevy-inspector-ui when a release matches this Bevy line without duplicating ECS.
+# bevy-inspector-ui = "…"
 
 # --- World generation ---
 noise = "0.8.2"
@@ -93,7 +90,7 @@ linfa-ica = { version = "0.8.1", optional = true, default-features = false }
 linfa-kernel = { version = "0.8.1", optional = true, default-features = false }
 
 # Removed from previous Cargo.toml (incompatible with wgpu / Bevy architecture):
-#   imgui      — OpenGL ImGui; replaced by bevy_egui
+#   imgui / retired_egui — retired; Bevy UI only
 #   glfw       — OpenGL windowing; Bevy owns the window via winit
 #   glm        — OpenGL math; use bevy::math / glam
 #   gl         — OpenGL bindings; Bevy uses wgpu

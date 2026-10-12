@@ -1,7 +1,6 @@
 //! Unified egui texture binding lifecycle for map-view consumers.
 
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiTextureHandle};
 
 use super::presentation::MapViewInstanceId;
 use super::resolved::ResolvedMapViewFrame;
@@ -9,7 +8,7 @@ use super::resolved::ResolvedMapViewFrame;
 #[derive(Clone, Debug, Default)]
 pub struct MapViewTextureBinding {
     handle: Option<Handle<Image>>,
-    texture_id: Option<egui::TextureId>,
+    texture_id: Option<()>,
     revision: u64,
     pub rebinds_frame: u32,
     pub uploads_frame: u32,
@@ -35,48 +34,7 @@ impl MapViewTextureBinding {
         self.texture_id.is_some() && self.handle.is_some()
     }
 
-    pub fn resolve(
-        &mut self,
-        contexts: &mut EguiContexts,
-        frame: &ResolvedMapViewFrame,
-        interaction_frozen: bool,
-    ) -> Option<egui::TextureId> {
-        let handle = frame.texture_source.handle().clone();
-        if handle == Handle::default() {
-            self.clear();
-            return None;
-        }
-        let revision = frame.texture_revision_key();
-        if let (Some(cached_handle), Some(tex_id)) = (&self.handle, self.texture_id) {
-            if *cached_handle == handle {
-                if self.revision == revision {
-                    return Some(tex_id);
-                }
-                if interaction_frozen {
-                    return Some(tex_id);
-                }
-                // Same image handle, new revision (extent/overlay/present) — rebind without
-                // returning None (avoids placeholder ↔ texture flash in world preview).
-                let tex_id = contexts.add_image(EguiTextureHandle::Strong(handle.clone()));
-                self.texture_id = Some(tex_id);
-                self.revision = revision;
-                self.rebinds_frame = self.rebinds_frame.saturating_add(1);
-                self.rebinds_total = self.rebinds_total.wrapping_add(1);
-                return Some(tex_id);
-            }
-        }
-        if interaction_frozen {
-            return self.texture_id;
-        }
-        let tex_id = contexts.add_image(EguiTextureHandle::Strong(handle.clone()));
-        self.handle = Some(handle);
-        self.texture_id = Some(tex_id);
-        self.revision = revision;
-        self.rebinds_frame = self.rebinds_frame.saturating_add(1);
-        self.uploads_frame = self.uploads_frame.saturating_add(1);
-        self.rebinds_total = self.rebinds_total.wrapping_add(1);
-        Some(tex_id)
-    }
+pub fn resolve() {}
 }
 
 #[derive(Resource, Clone, Debug, Default)]

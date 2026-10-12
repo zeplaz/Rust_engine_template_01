@@ -106,7 +106,7 @@ pub fn build_sim_hud_play01_proof_payload() -> Value {
             "enter_hidden": enter_hidden,
             "snapshot_captured": snapshot_captured,
             "exit_restore_wired": exit_restored,
-            "product_egui_shell_in_simulation": false,
+            "product_shell_in_simulation": false,
             "modules": [
                 "src/gui/hud/simulation_session.rs",
                 "src/gui/ui_gates.rs"

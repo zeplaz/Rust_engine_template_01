@@ -1,19 +1,18 @@
-//! Logistics orders panel — issue and monitor standing supply lines (⟳) and one-off supply
-//! runs (➜), review draw demands and the vehicle fleet (PLAN-LOGISTICS-ORDERS-v1 §6).
-//!
-//! Presentation only: reads [`LogisticsOrdersSnapshotRes`], writes [`LogisticsOrderRequest`].
-//! Toggle: **Shift + logistics-targets key** (default Shift+F6) or the button in the targets panel.
+//! Logistics orders panel — Bevy UI for standing lines / one-off runs
+//! (PLAN-LOGISTICS-ORDERS-v1 §6). Presentation only: reads [`LogisticsOrdersSnapshotRes`],
+//! writes [`LogisticsOrderRequest`]. Toggle: **Shift + logistics-targets key** (default Shift+F6).
 
 use bevy::prelude::*;
-use bevy_egui::{egui, EguiContexts, EguiPrimaryContextPass};
+use bevy::ui::FocusPolicy;
 
 use crate::economy::logistics::orders::{
-    best_source_for, suggest_lines_for_unserved, AdvisorGap, CargoKind, ConsumerKind, DemandHealth, DemandRow, LogisticsOrderCommand,
-    LogisticsOrderRequest, LogisticsOrdersSnapshot, LogisticsOrdersSnapshotRes,
-    OrderRow, OrderStatus, OwnerId, Priority, SiteId, SiteRole, CargoClassMask,
+    best_source_for, CargoKind, ConsumerKind, DemandHealth, DemandRow, LogisticsOrderCommand,
+    LogisticsOrderRequest, LogisticsOrdersSnapshot, LogisticsOrdersSnapshotRes, OrderRow,
+    OrderStatus, OwnerId, Priority, SiteId, SiteRole,
 };
 use crate::gui::input_bindings::InputBindings;
-use crate::gui::style::{muted_label, primary_label, section_heading, CmdHeadingStyle, UiPalette};
+use crate::gui::panel_presence::PanelPresence;
+use crate::gui::style::{CmdUiMonoFont, UiPalette};
 use crate::gui::ui_gates::in_simulation_or_editor;
 
 /// Cargo offered in the picker besides whatever the source currently stocks.
@@ -101,9 +100,6 @@ pub fn consumer_for_role(role: SiteRole) -> ConsumerKind {
 }
 
 /// Validate the draft against the snapshot and produce the commands to send.
-///
-/// A line to a destination without a draw demand for that cargo also publishes one from the
-/// draft's buffer fields, so a new line is never stuck on "no demand at sink".
 pub fn draft_commands(
     draft: &OrderDraft,
     snap: &LogisticsOrdersSnapshot,
@@ -174,7 +170,7 @@ pub fn demand_deficit(d: &DemandRow) -> u32 {
     d.buffer_target.saturating_sub(d.on_hand.saturating_add(d.inbound))
 }
 
-/// Fill the order form from a demand row (destination, cargo, priority, best source, deficit).
+/// Fill the order form from a demand row.
 pub fn prefill_from_demand(
     state: &mut LogisticsOrdersPanelState,
     snap: &LogisticsOrdersSnapshot,
@@ -201,8 +197,6 @@ pub fn format_eta(ticks: u32) -> String {
 }
 
 /// Headline for a one-off run row, e.g. `24/40 t · trip 3/5`.
-///
-/// The current trip counts the one under way, if any trucks are out.
 #[must_use]
 pub fn run_progress_text(row: &OrderRow) -> String {
     let planned = row.trips_planned.max(row.trips_done);
@@ -228,21 +222,35 @@ pub fn line_progress_text(row: &OrderRow) -> String {
     )
 }
 
-fn status_color(status: OrderStatus, p: &UiPalette) -> egui::Color32 {
-    match status {
-        OrderStatus::Waiting(_) | OrderStatus::Paused | OrderStatus::Cancelling => p.warn,
-        OrderStatus::Failed(_) | OrderStatus::Cancelled => p.danger,
-        OrderStatus::Completed | OrderStatus::Idle => p.fg_muted,
-        OrderStatus::Pending | OrderStatus::Active => p.fg_data,
-    }
+/// Order rows of one kind that still need the player's attention (waiting / starving).
+#[must_use]
+pub fn attention_count(snap: &LogisticsOrdersSnapshot) -> usize {
+    snap.orders
+        .iter()
+        .filter(|o| matches!(o.status, OrderStatus::Waiting(_)))
+        .count()
+        + snap
+            .demands
+            .iter()
+            .filter(|d| d.health == DemandHealth::Starving)
+            .count()
 }
 
-fn health_color(h: DemandHealth, p: &UiPalette) -> egui::Color32 {
-    match h {
-        DemandHealth::Satisfied => p.fg_data,
-        DemandHealth::Low => p.warn,
-        DemandHealth::Starving => p.danger,
-    }
+#[derive(Component)]
+pub struct LogisticsOrdersBevyRoot;
+
+#[derive(Component)]
+struct LogisticsOrdersBodyText;
+
+#[derive(Component)]
+struct LogisticsOrdersSubmitButton;
+
+#[derive(Component)]
+struct LogisticsOrdersTabButton(OrdersTab);
+
+#[derive(Default)]
+struct OrdersPanelStamp {
+    key: u64,
 }
 
 pub struct LogisticsOrdersPanelPlugin;
@@ -252,16 +260,13 @@ impl Plugin for LogisticsOrdersPanelPlugin {
         app.init_resource::<LogisticsOrdersPanelState>()
             .add_systems(
                 Update,
-                toggle_logistics_orders_panel.run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                EguiPrimaryContextPass,
                 (
-                    super::logistics_orders_overlay::draw_logistics_orders_overlay_egui,
-                    logistics_orders_panel_ui,
+                    toggle_logistics_orders_panel,
+                    sync_logistics_orders_bevy_panel,
+                    logistics_orders_panel_clicks,
                 )
                     .chain()
-                    .run_if(crate::gui::ui_gates::product_egui_shell_active),
+                    .run_if(in_simulation_or_editor),
             );
     }
 }
@@ -282,541 +287,283 @@ fn site_label(snap: &LogisticsOrdersSnapshot, id: Option<SiteId>) -> String {
         .map_or_else(|| "—".into(), |s| format!("{} ({})", s.name, s.role.label()))
 }
 
-fn site_combo(
-    ui: &mut egui::Ui,
-    salt: &str,
-    snap: &LogisticsOrdersSnapshot,
-    owner: OwnerId,
-    value: &mut Option<SiteId>,
-) {
-    egui::ComboBox::from_id_salt(salt)
-        .selected_text(site_label(snap, *value))
-        .width(200.0)
-        .show_ui(ui, |ui| {
-            for s in snap.sites.iter().filter(|s| s.owner == owner) {
-                let stock: u32 = s.stock.iter().map(|r| r.on_hand).sum();
-                ui.selectable_value(
-                    value,
-                    Some(s.id),
-                    format!("{} ({}) · {stock} on hand", s.name, s.role.label()),
-                );
-            }
-        });
-}
-
-fn priority_combo(ui: &mut egui::Ui, salt: String, value: &mut Priority) -> bool {
-    let before = *value;
-    egui::ComboBox::from_id_salt(salt)
-        .selected_text(value.label())
-        .width(80.0)
-        .show_ui(ui, |ui| {
-            for p in Priority::ALL {
-                ui.selectable_value(value, p, p.label());
-            }
-        });
-    *value != before
-}
-
-fn new_order_form(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    state: &mut LogisticsOrdersPanelState,
-    snap: &LogisticsOrdersSnapshot,
-    out: &mut Vec<LogisticsOrderCommand>,
-) {
-    let draft = &mut state.draft;
-    ui.horizontal(|ui| {
-        ui.selectable_value(&mut draft.kind, DraftKind::Line, "⟳ Supply line");
-        ui.selectable_value(&mut draft.kind, DraftKind::Run, "➜ Supply run");
-    });
-    muted_label(
-        ui,
-        palette,
-        match draft.kind {
-            DraftKind::Line => {
-                "Continuous: trucks keep the destination topped up whenever its stock falls below the reorder point."
-            }
-            DraftKind::Run => {
-                "One-off: deliver a fixed amount using free trucks, repeating trips until done, then release them."
-            }
-        },
-    );
-    egui::Grid::new("logistics_order_form")
-        .num_columns(2)
-        .spacing([8.0, 4.0])
-        .show(ui, |ui| {
-            ui.label("From");
-            site_combo(ui, "lo_src", snap, draft.owner, &mut draft.source);
-            ui.end_row();
-            ui.label("To");
-            site_combo(ui, "lo_dst", snap, draft.owner, &mut draft.sink);
-            ui.end_row();
-            ui.label("Cargo");
-            ui.horizontal(|ui| {
-                let mut offered: Vec<String> = draft
-                    .source
-                    .and_then(|s| snap.site(s))
-                    .map(|s| s.stock.iter().map(|r| r.cargo.clone()).collect())
-                    .unwrap_or_default();
-                for c in COMMON_CARGO {
-                    if !offered.iter().any(|o| o == c) {
-                        offered.push((*c).to_string());
-                    }
+fn orders_panel_text(state: &LogisticsOrdersPanelState, snap: &LogisticsOrdersSnapshot) -> String {
+    let mut lines = vec![
+        format!(
+            "Logistics orders  attention={}  tab={:?}",
+            attention_count(snap),
+            state.tab
+        ),
+        format!(
+            "Draft  {:?}  {} → {}  cargo={}  qty={}",
+            state.draft.kind,
+            site_label(snap, state.draft.source),
+            site_label(snap, state.draft.sink),
+            state.draft.cargo,
+            state.draft.quantity
+        ),
+    ];
+    if let Some(err) = &state.last_error {
+        lines.push(format!("Error: {err}"));
+    }
+    match state.tab {
+        OrdersTab::Runs => {
+            lines.push("── One-off runs ──".into());
+            for o in snap.orders.iter().filter(|o| !o.standing) {
+                if !state.show_finished && o.status.is_terminal() {
+                    continue;
                 }
-                egui::ComboBox::from_id_salt("lo_cargo")
-                    .selected_text(draft.cargo.clone())
-                    .width(110.0)
-                    .show_ui(ui, |ui| {
-                        for c in offered {
-                            ui.selectable_value(&mut draft.cargo, c.clone(), c);
-                        }
-                    });
-                ui.add(egui::TextEdit::singleline(&mut draft.cargo).desired_width(80.0));
-            });
-            ui.end_row();
-            let unit = CargoKind::new(draft.cargo.clone()).unit_label();
-            match draft.kind {
-                DraftKind::Run => {
-                    ui.label("Quantity");
-                    ui.add(egui::DragValue::new(&mut draft.quantity).range(1..=100_000).suffix(format!(" {unit}")));
-                    ui.end_row();
-                }
-                DraftKind::Line => {
-                    let existing = draft.sink.and_then(|s| {
-                        snap.demands
-                            .iter()
-                            .find(|d| d.site == s && d.cargo == draft.cargo.trim())
-                    });
-                    if let Some(d) = existing {
-                        ui.label("Demand");
-                        ui.label(format!(
-                            "keep {} {unit}, reorder below {} (published by {})",
-                            d.buffer_target,
-                            d.reorder_point,
-                            d.consumer.label()
-                        ));
-                        ui.end_row();
-                    } else {
-                        ui.label("Keep on hand");
-                        ui.add(egui::DragValue::new(&mut draft.buffer_target).range(1..=100_000).suffix(format!(" {unit}")));
-                        ui.end_row();
-                        ui.label("Reorder below");
-                        ui.add(egui::DragValue::new(&mut draft.reorder_point).range(0..=draft.buffer_target).suffix(format!(" {unit}")));
-                        ui.end_row();
-                        ui.label("Consumption");
-                        ui.add(egui::DragValue::new(&mut draft.draw_rate_per_min).range(0..=10_000).suffix(format!(" {unit}/min")));
-                        ui.end_row();
-                    }
-                }
+                lines.push(format!(
+                    "#{} {}→{} {} [{}] {}",
+                    o.id.0,
+                    o.source_name,
+                    o.sink_name,
+                    o.cargo,
+                    o.status_label,
+                    run_progress_text(o)
+                ));
             }
-            ui.label("Priority");
-            priority_combo(ui, "lo_prio".into(), &mut draft.priority);
-            ui.end_row();
-            ui.label("Vehicles");
-            ui.horizontal(|ui| {
-                ui.checkbox(&mut draft.cap_vehicles, "cap at");
-                ui.add_enabled(
-                    draft.cap_vehicles,
-                    egui::DragValue::new(&mut draft.vehicle_cap).range(1..=64),
-                );
-                let fleet = snap.fleet(draft.owner);
-                ui.label(format!("· {} free / {} total", fleet.free, fleet.total));
-            });
-            ui.end_row();
-        });
-    let label = match draft.kind {
-        DraftKind::Line => "Start supply line",
-        DraftKind::Run => "Dispatch supply run",
-    };
-    if ui.button(label).clicked() {
-        match draft_commands(draft, snap) {
-            Ok(cmds) => {
-                out.extend(cmds);
-                state.last_error = None;
-                state.tab = match state.draft.kind {
-                    DraftKind::Line => OrdersTab::Lines,
-                    DraftKind::Run => OrdersTab::Runs,
-                };
+        }
+        OrdersTab::Lines => {
+            lines.push("── Standing lines ──".into());
+            for o in snap.orders.iter().filter(|o| o.standing) {
+                if !state.show_finished && o.status.is_terminal() {
+                    continue;
+                }
+                lines.push(format!(
+                    "#{} {}→{} {} [{}] {}",
+                    o.id.0,
+                    o.source_name,
+                    o.sink_name,
+                    o.cargo,
+                    o.status_label,
+                    line_progress_text(o)
+                ));
             }
-            Err(e) => state.last_error = Some(e.to_string()),
+        }
+        OrdersTab::Demands => {
+            lines.push("── Demands ──".into());
+            for d in &snap.demands {
+                lines.push(format!(
+                    "{} @ site {}  on_hand={} inbound={} buffer={} [{:?}]",
+                    d.cargo, d.site.0, d.on_hand, d.inbound, d.buffer_target, d.health
+                ));
+            }
+        }
+        OrdersTab::Fleet => {
+            lines.push("── Fleet ──".into());
+            for v in &snap.vehicles {
+                lines.push(format!(
+                    "veh {}  {:?}  order={:?}  {}→{}  {:.0}%",
+                    v.id.0,
+                    v.phase,
+                    v.order.map(|o| o.0),
+                    v.from.0,
+                    v.to.0,
+                    v.fraction * 100.0
+                ));
+            }
+        }
+        OrdersTab::Sites => {
+            lines.push("── Sites ──".into());
+            for s in &snap.sites {
+                lines.push(format!(
+                    "site {} {} ({}) stocks={}",
+                    s.id.0,
+                    s.name,
+                    s.role.label(),
+                    s.stock.len()
+                ));
+            }
         }
     }
-    if let Some(e) = &state.last_error {
-        crate::gui::style::warning_text(ui, palette, e);
-    }
+    lines.join("\n")
 }
 
-fn order_controls(ui: &mut egui::Ui, row: &OrderRow, out: &mut Vec<LogisticsOrderCommand>) {
-    if row.status.is_terminal() {
+fn snap_stamp(snap: &LogisticsOrdersSnapshot, state: &LogisticsOrdersPanelState) -> u64 {
+    let mut key = snap.orders.len() as u64
+        + snap.demands.len() as u64 * 17
+        + snap.vehicles.len() as u64 * 31
+        + snap.sites.len() as u64 * 61;
+    let tab_i = match state.tab {
+        OrdersTab::Runs => 0u64,
+        OrdersTab::Lines => 1,
+        OrdersTab::Demands => 2,
+        OrdersTab::Fleet => 3,
+        OrdersTab::Sites => 4,
+    };
+    key = key
+        .wrapping_add(tab_i)
+        .wrapping_add(state.visible as u64)
+        .wrapping_add(state.draft.quantity as u64);
+    for o in snap.orders.iter().take(32) {
+        key = key
+            .wrapping_mul(0x9E37_79B9)
+            .wrapping_add(o.id.0 as u64)
+            .wrapping_add(o.delivered as u64);
+    }
+    key
+}
+
+fn sync_logistics_orders_bevy_panel(
+    mut commands: Commands,
+    state: Res<LogisticsOrdersPanelState>,
+    snap: Option<Res<LogisticsOrdersSnapshotRes>>,
+    palette: Res<UiPalette>,
+    mono: Res<CmdUiMonoFont>,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<LogisticsOrdersBevyRoot>>,
+    mut stamp: Local<OrdersPanelStamp>,
+) {
+    presence.logistics_orders_root = !roots.is_empty();
+    let Some(snap) = snap else {
+        for e in &roots {
+            commands.entity(e).despawn();
+        }
+        presence.logistics_orders_root = false;
+        return;
+    };
+
+    if !state.visible {
+        for e in &roots {
+            commands.entity(e).despawn();
+        }
+        presence.logistics_orders_root = false;
+        stamp.key = 0;
         return;
     }
-    let mut prio = row.priority;
-    if priority_combo(ui, format!("lo_row_prio_{}", row.id.0), &mut prio) {
-        out.push(LogisticsOrderCommand::SetPriority {
-            order: row.id,
-            priority: prio,
-        });
-    }
-    if row.status == OrderStatus::Paused {
-        if ui.small_button("Resume").clicked() {
-            out.push(LogisticsOrderCommand::Resume { order: row.id });
-        }
-    } else if row.status != OrderStatus::Cancelling && ui.small_button("Pause").clicked() {
-        out.push(LogisticsOrderCommand::Pause { order: row.id });
-    }
-    if row.status != OrderStatus::Cancelling && ui.small_button("Cancel").clicked() {
-        out.push(LogisticsOrderCommand::Cancel { order: row.id });
-    }
-}
 
-fn order_row_ui(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    row: &OrderRow,
-    out: &mut Vec<LogisticsOrderCommand>,
-) {
-    ui.group(|ui| {
-        ui.horizontal(|ui| {
-            let glyph = if row.standing { "⟳" } else { "➜" };
-            ui.label(egui::RichText::new(format!("{glyph} #{}", row.id.0)).strong());
-            ui.label(format!(
-                "{} · {} → {}",
-                row.cargo, row.source_name, row.sink_name
-            ));
-        });
-        let text = if row.standing {
-            line_progress_text(row)
-        } else {
-            run_progress_text(row)
-        };
-        ui.add(egui::ProgressBar::new(row.progress()).text(text));
-        ui.horizontal(|ui| {
-            ui.label(
-                egui::RichText::new(&row.status_label).color(status_color(row.status, palette)),
-            );
-            ui.label(format!("⛟×{}", row.vehicles));
-            if let Some(cap) = row.vehicle_cap {
-                ui.label(format!("(cap {cap})"));
-            }
-            if let Some(eta) = row.next_eta_ticks {
-                ui.label(format!("next drop {}", format_eta(eta)));
-            }
-            if row.lost > 0 {
-                ui.label(
-                    egui::RichText::new(format!("lost {} {}", row.lost, row.unit))
-                        .color(palette.danger),
-                );
-            }
-        });
-        ui.horizontal(|ui| order_controls(ui, row, out));
-    });
-}
-
-fn demand_row_ui(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    snap: &LogisticsOrdersSnapshot,
-    d: &DemandRow,
-    state: &mut LogisticsOrdersPanelState,
-) {
-    ui.group(|ui| {
-        ui.horizontal(|ui| {
-            ui.label(egui::RichText::new("●").color(health_color(d.health, palette)));
-            ui.label(egui::RichText::new(&d.site_name).strong());
-            ui.label(format!(
-                "{} · {} · {}",
-                d.cargo,
-                d.consumer.label(),
-                d.priority.label()
-            ));
-        });
-        ui.add(egui::ProgressBar::new(d.fill_ratio()).text(format!(
-            "{}/{} {} (+{} inbound) · reorder < {}",
-            d.on_hand, d.buffer_target, d.unit, d.inbound, d.reorder_point
-        )));
-        ui.horizontal(|ui| {
-            ui.label(format!("draw {} {}/min", d.draw_rate_per_min, d.unit));
-            if let Some(t) = d.time_to_empty_ticks {
-                let color = if t < 120 { palette.warn } else { palette.fg_muted };
-                ui.label(egui::RichText::new(format!("empty in {}", format_eta(t))).color(color));
-            }
-            if let (Some(n), Some(rt)) = (d.trucks_needed, d.round_trip_ticks) {
-                ui.label(format!("needs ⛟×{n} (round trip {})", format_eta(rt)));
-            }
-            if d.shortfall_total > 0 {
-                ui.label(
-                    egui::RichText::new(format!("short {} {}", d.shortfall_total, d.unit))
-                        .color(palette.danger),
-                );
-            }
-            if d.served_by == 0 {
-                ui.label(egui::RichText::new("no supply line").color(palette.warn));
-                if ui.small_button("+ Create line").clicked() {
-                    prefill_from_demand(state, snap, d, DraftKind::Line);
-                }
-                let deficit = demand_deficit(d);
-                if deficit > 0 && ui.small_button(format!("+ Run {deficit} {}", d.unit)).clicked() {
-                    prefill_from_demand(state, snap, d, DraftKind::Run);
-                }
-            } else {
-                ui.label(format!("served by {} line(s)", d.served_by));
-            }
-        });
-    });
-}
-
-#[allow(clippy::too_many_arguments)]
-fn logistics_orders_panel_ui(
-    mut contexts: EguiContexts,
-    mut state: ResMut<LogisticsOrdersPanelState>,
-    snapshot: Res<LogisticsOrdersSnapshotRes>,
-    bindings: Res<InputBindings>,
-    palette: Res<UiPalette>,
-    mut requests: MessageWriter<LogisticsOrderRequest>,
-) -> Result {
-    if !state.visible {
-        return Ok(());
+    let next = snap_stamp(&snap.0, state.as_ref());
+    if !roots.is_empty() && stamp.key == next {
+        return;
     }
-    let ctx = contexts.ctx_mut()?;
-    let snap = &snapshot.0;
-    let palette = palette.as_ref();
-    let mut out: Vec<LogisticsOrderCommand> = Vec::new();
-    let mut open = true;
-    let state = &mut *state;
+    for e in &roots {
+        commands.entity(e).despawn();
+    }
 
-    crate::gui::std_floating(egui::Window::new(format!(
-        "Logistics orders (Shift+{})",
-        InputBindings::format_key(bindings.toggle_logistics_targets_panel)
-    )))
-    .open(&mut open)
-    .default_size(egui::vec2(420.0, 560.0))
-    .show(ctx, |ui| {
-        egui::CollapsingHeader::new("New order")
-            .default_open(true)
-            .show(ui, |ui| new_order_form(ui, palette, state, snap, &mut out));
-        ui.separator();
-        let lines = snap.standing_lines().filter(|o| !o.status.is_terminal()).count();
-        let runs = snap.one_off_runs().filter(|o| !o.status.is_terminal()).count();
-        let starving = snap
-            .demands
-            .iter()
-            .filter(|d| d.health == DemandHealth::Starving)
-            .count();
-        ui.horizontal(|ui| {
-            ui.selectable_value(&mut state.tab, OrdersTab::Runs, format!("➜ Runs ({runs})"));
-            ui.selectable_value(&mut state.tab, OrdersTab::Lines, format!("⟳ Lines ({lines})"));
-            let demands_label = if starving > 0 {
-                format!("Demands ({starving}!)")
-            } else {
-                format!("Demands ({})", snap.demands.len())
-            };
-            ui.selectable_value(&mut state.tab, OrdersTab::Demands, demands_label);
-            ui.selectable_value(&mut state.tab, OrdersTab::Fleet, "Fleet");
-            ui.selectable_value(&mut state.tab, OrdersTab::Sites, "Sites");
-        });
-        egui::ScrollArea::vertical()
-            .id_salt("logistics_orders_scroll")
-            .max_height(320.0)
-            .show(ui, |ui| match state.tab {
-                OrdersTab::Runs => {
-                    ui.checkbox(&mut state.show_finished, "show finished");
-                    let mut any = false;
-                    for row in snap
-                        .one_off_runs()
-                        .filter(|o| state.show_finished || !o.status.is_terminal())
-                    {
-                        any = true;
-                        order_row_ui(ui, palette, row, &mut out);
-                    }
-                    if !any {
-                        muted_label(ui, palette, "No supply runs. Use ➜ Supply run above.");
-                    }
-                }
-                OrdersTab::Lines => {
-                    let mut any = false;
-                    for row in snap.standing_lines().filter(|o| !o.status.is_terminal()) {
-                        any = true;
-                        order_row_ui(ui, palette, row, &mut out);
-                    }
-                    if !any {
-                        muted_label(ui, palette, "No supply lines. Use ⟳ Supply line above.");
-                    }
-                }
-                OrdersTab::Demands => {
-                    if snap.demands.is_empty() {
-                        muted_label(ui, palette, "No site publishes a draw demand yet.");
-                    }
-                    let advice = suggest_lines_for_unserved(snap, state.draft.owner);
-                    if !advice.commands.is_empty()
-                        && ui
-                            .button(format!(
-                                "Auto-supply: start {} line(s) from nearest stocked depots",
-                                advice.commands.len()
-                            ))
-                            .clicked()
-                    {
-                        out.extend(advice.commands.iter().cloned());
-                    }
-                    for gap in &advice.gaps {
-                        let AdvisorGap::NoSourceWithStock { site, cargo } = gap;
-                        let name = snap.site(*site).map_or("?", |s| s.name.as_str());
-                        crate::gui::style::warning_text(
-                            ui,
-                            palette,
-                            format!("{name}: no depot holds {cargo}"),
-                        );
-                    }
-                    for d in &snap.demands {
-                        demand_row_ui(ui, palette, snap, d, state);
-                    }
-                }
-                OrdersTab::Fleet => fleet_tab(ui, palette, snap, state, &mut out),
-                OrdersTab::Sites => sites_tab(ui, palette, snap, state, &mut out),
-            });
-        ui.separator();
-        ui.checkbox(&mut state.always_show_routes, "keep routes on map when closed");
-        section_heading(ui, palette, CmdHeadingStyle::Gt, "Recent");
-        for e in snap.events.iter().rev().take(5) {
-            muted_label(ui, palette, format!("t{} {}", e.tick, e.text));
-        }
-        if let Some(r) = snap.rejected.last() {
-            crate::gui::style::warning_text(ui, palette, format!("rejected {r}"));
-        }
-    });
-    if !open {
-        state.visible = false;
-    }
-    for cmd in out {
-        requests.write(LogisticsOrderRequest(cmd));
-    }
-    Ok(())
-}
-
-fn fleet_tab(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    snap: &LogisticsOrdersSnapshot,
-    state: &LogisticsOrdersPanelState,
-    out: &mut Vec<LogisticsOrderCommand>,
-) {
-    for f in &snap.fleets {
-        primary_label(
-            ui,
-            palette,
-            format!(
-                "Faction {}: {} vehicles · {} free · {} busy · {} units capacity",
-                f.owner.0, f.total, f.free, f.busy, f.capacity_total
-            ),
-        );
-    }
-    if let Some(home) = snap
-        .sites_of(state.draft.owner, SiteRole::Depot)
-        .next()
-        .map(|s| s.id)
-    {
-        ui.horizontal(|ui| {
-            muted_label(ui, palette, "Dev:");
-            for (label, mask, cap, speed) in [
-                ("+ truck", CargoClassMask::FREIGHT, 10, 12.0),
-                ("+ tanker", CargoClassMask::TANKER, 20, 11.0),
-                ("+ troop carrier", CargoClassMask::TROOP, 12, 15.0),
-            ] {
-                if ui.small_button(label).clicked() {
-                    out.push(LogisticsOrderCommand::AddVehicle {
-                        owner: state.draft.owner,
-                        home,
-                        class_mask: mask,
-                        capacity_units: cap,
-                        speed_mps: speed,
+    let text = orders_panel_text(state.as_ref(), &snap.0);
+    let tf = TextFont::from_font_size(11.5).with_font(mono.0.clone());
+    commands
+        .spawn((
+            LogisticsOrdersBevyRoot,
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(64.0),
+                left: Val::Px(380.0),
+                width: Val::Px(420.0),
+                max_height: Val::Px(520.0),
+                padding: UiRect::all(Val::Px(10.0)),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(6.0),
+                border: UiRect::all(Val::Px(1.0)),
+                border_radius: BorderRadius::ZERO,
+                overflow: Overflow::scroll_y(),
+                ..default()
+            },
+            BackgroundColor(palette.bevy_hud_panel_fill()),
+            BorderColor::all(palette.bevy_wire_magenta()),
+            FocusPolicy::Block,
+            ZIndex(955),
+        ))
+        .with_children(|root| {
+            root.spawn(Node {
+                flex_direction: FlexDirection::Row,
+                column_gap: Val::Px(4.0),
+                flex_wrap: FlexWrap::Wrap,
+                ..default()
+            })
+            .with_children(|tabs| {
+                for tab in [
+                    OrdersTab::Runs,
+                    OrdersTab::Lines,
+                    OrdersTab::Demands,
+                    OrdersTab::Fleet,
+                    OrdersTab::Sites,
+                ] {
+                    let label = format!("{tab:?}");
+                    tabs.spawn((
+                        LogisticsOrdersTabButton(tab),
+                        Button,
+                        Node {
+                            padding: UiRect::axes(Val::Px(6.0), Val::Px(3.0)),
+                            border: UiRect::all(Val::Px(1.0)),
+                            ..default()
+                        },
+                        BackgroundColor(if state.tab == tab {
+                            palette.bevy_button_idle()
+                        } else {
+                            palette.bevy_hud_panel_fill()
+                        }),
+                        BorderColor::all(palette.bevy_wire_magenta()),
+                    ))
+                    .with_children(|b| {
+                        b.spawn((
+                            Text::new(label),
+                            tf.clone(),
+                            TextColor(palette.bevy_primary_text()),
+                        ));
                     });
                 }
-            }
-        });
-    }
-    ui.separator();
-    for v in &snap.vehicles {
-        let at = snap.site(v.at).map_or("?", |s| s.name.as_str());
-        let job = match (v.order, &v.cargo) {
-            (Some(o), Some(c)) => format!("#{} {} {}", o.0, v.load, c),
-            _ => String::new(),
-        };
-        muted_label(
-            ui,
-            palette,
-            format!(
-                "⛟{} cap {} · {} · near {} {}",
-                v.id.0, v.capacity_units, v.phase, at, job
-            ),
-        );
-    }
-}
-
-fn sites_tab(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    snap: &LogisticsOrdersSnapshot,
-    state: &mut LogisticsOrdersPanelState,
-    out: &mut Vec<LogisticsOrderCommand>,
-) {
-    if state.seed_amount == 0 {
-        state.seed_amount = 100;
-    }
-    ui.horizontal(|ui| {
-        muted_label(ui, palette, "Dev seed:");
-        ui.add(egui::DragValue::new(&mut state.seed_amount).range(1..=100_000));
-        muted_label(ui, palette, format!("of {}", state.draft.cargo));
-    });
-    for s in &snap.sites {
-        ui.group(|ui| {
-            ui.horizontal(|ui| {
-                ui.label(egui::RichText::new(&s.name).strong());
-                ui.label(format!(
-                    "{} · faction {} · tile {},{}",
-                    s.role.label(),
-                    s.owner.0,
-                    s.tile[0],
-                    s.tile[1]
+            });
+            root.spawn((
+                LogisticsOrdersBodyText,
+                Text::new(text),
+                tf.clone(),
+                TextColor(palette.bevy_primary_text()),
+            ));
+            root.spawn((
+                LogisticsOrdersSubmitButton,
+                Button,
+                Node {
+                    padding: UiRect::axes(Val::Px(8.0), Val::Px(4.0)),
+                    border: UiRect::all(Val::Px(1.0)),
+                    ..default()
+                },
+                BackgroundColor(palette.bevy_button_idle()),
+                BorderColor::all(palette.bevy_wire_magenta()),
+            ))
+            .with_children(|b| {
+                b.spawn((
+                    Text::new("Submit draft (draft_commands)"),
+                    tf,
+                    TextColor(palette.bevy_primary_text()),
                 ));
-                if ui.small_button("+ stock").clicked() {
-                    out.push(LogisticsOrderCommand::AddStock {
-                        site: s.id,
-                        cargo: CargoKind::new(state.draft.cargo.trim()),
-                        amount: state.seed_amount,
-                    });
-                }
-                if ui.small_button("from").clicked() {
-                    state.draft.source = Some(s.id);
-                }
-                if ui.small_button("to").clicked() {
-                    state.draft.sink = Some(s.id);
-                }
             });
-            for r in &s.stock {
-                muted_label(
-                    ui,
-                    palette,
-                    format!(
-                        "  {}: {} {} (reserved {}, inbound {})",
-                        r.cargo, r.on_hand, r.unit, r.reserved_out, r.inbound
-                    ),
-                );
-            }
         });
-    }
+    stamp.key = next;
+    presence.logistics_orders_root = true;
 }
 
-/// Order rows of one kind that still need the player's attention (waiting / starving).
-#[must_use]
-pub fn attention_count(snap: &LogisticsOrdersSnapshot) -> usize {
-    snap.orders
-        .iter()
-        .filter(|o| matches!(o.status, OrderStatus::Waiting(_)))
-        .count()
-        + snap
-            .demands
-            .iter()
-            .filter(|d| d.health == DemandHealth::Starving)
-            .count()
+fn logistics_orders_panel_clicks(
+    mut state: ResMut<LogisticsOrdersPanelState>,
+    snap: Option<Res<LogisticsOrdersSnapshotRes>>,
+    mut requests: MessageWriter<LogisticsOrderRequest>,
+    tabs: Query<(&Interaction, &LogisticsOrdersTabButton), Changed<Interaction>>,
+    submit: Query<&Interaction, (Changed<Interaction>, With<LogisticsOrdersSubmitButton>)>,
+) {
+    for (interaction, tab) in &tabs {
+        if *interaction == Interaction::Pressed {
+            state.tab = tab.0;
+        }
+    }
+    for interaction in &submit {
+        if *interaction != Interaction::Pressed {
+            continue;
+        }
+        let Some(snap) = snap.as_ref() else {
+            state.last_error = Some("snapshot unavailable".into());
+            continue;
+        };
+        match draft_commands(&state.draft, &snap.0) {
+            Ok(cmds) => {
+                for cmd in cmds {
+                    requests.write(LogisticsOrderRequest(cmd));
+                }
+                state.last_error = None;
+            }
+            Err(e) => state.last_error = Some(e.into()),
+        }
+    }
 }
 
 #[cfg(test)]

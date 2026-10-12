@@ -1,10 +1,9 @@
 //! Sim-map projection helpers for construction placement debug (BUILD-READ-REWIRE-001).
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use super::tactical::map_camera::{
-    map_plane_horizontal_xy, sim_map_image_rect, sim_map_world_vec3_to_egui,
+    map_plane_horizontal_xy, sim_map_image_rect, sim_map_world_vec3_to_screen,
 };
 use super::{MainWorldCameraOrthoTrace, MapCameraDesired, SimulationMapViewport};
 
@@ -40,7 +39,7 @@ pub fn map_camera_desired_from_presentation(pose: &MapCameraPresentationPose) ->
 /// Healed sim-map hole + ortho span used by placement debug probes.
 #[derive(Debug, Clone, Copy)]
 pub struct SimMapProjectionFrame {
-    pub screen_rect: egui::Rect,
+    pub screen_rect: bevy::prelude::Rect,
     pub visible_w: f32,
     pub visible_h: f32,
     pub camera_authoritative: bool,
@@ -60,10 +59,7 @@ pub fn sim_map_projection_frame(
         && map_vp.window_logical.x > 1.0
         && map_vp.window_logical.y > 1.0
     {
-        egui::Rect::from_min_size(
-            egui::pos2(0.0, 0.0),
-            egui::vec2(map_vp.window_logical.x, map_vp.window_logical.y),
-        )
+        bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(0.0, 0.0) + bevy::prelude::Vec2::new(map_vp.window_logical.x, map_vp.window_logical.y),)
     } else {
         sim_map_image_rect(map_vp)
     };
@@ -106,7 +102,7 @@ pub fn camera_map_plane_vec3_to_logical_screen(
 }
 
 #[must_use]
-pub fn sim_map_world_vec3_to_egui_rendered(
+pub fn sim_map_world_vec3_to_screen_rendered(
     world: Vec3,
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
@@ -114,8 +110,8 @@ pub fn sim_map_world_vec3_to_egui_rendered(
     _xf: &GlobalTransform,
     _window: &Window,
     _ortho: Option<&MainWorldCameraOrthoTrace>,
-) -> Option<egui::Pos2> {
-    sim_map_world_vec3_to_egui(
+) -> Option<bevy::prelude::Vec2> {
+    sim_map_world_vec3_to_screen(
         world,
         desired,
         map_vp,

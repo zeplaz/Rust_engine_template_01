@@ -44,6 +44,28 @@ impl WorldGenDenseTerrainCache {
         self.width.saturating_mul(self.height)
     }
 
+    /// True when elevation is a dense `width × height` height grid (PHASE2-BUILD-20 live path).
+    #[must_use]
+    pub fn is_live_height_grid(&self) -> bool {
+        let n = (self.width as usize).saturating_mul(self.height as usize);
+        self.width > 0 && self.height > 0 && !self.elevation.is_empty() && self.elevation.len() == n
+    }
+
+    /// Sample normalized elevation at world XZ (tile units). `None` if empty / OOB.
+    #[must_use]
+    pub fn sample_elevation_norm(&self, world_x: f32, world_z: f32) -> Option<f32> {
+        if !self.is_live_height_grid() {
+            return None;
+        }
+        let x = world_x.floor() as i32;
+        let z = world_z.floor() as i32;
+        if x < 0 || z < 0 {
+            return None;
+        }
+        let idx = self.idx_xy(x as u32, z as u32)?;
+        self.elevation.get(idx).copied().map(|h| h.clamp(0.0, 1.0))
+    }
+
     #[inline]
     fn idx_xy(&self, x: u32, y: u32) -> Option<usize> {
         if x >= self.width || y >= self.height {

@@ -4,12 +4,14 @@ use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::map_egui_projection::ConstructionMapProjection;
+use crate::construction::map_pick_params::ConstructionMapPick;
 use crate::gui::hud::simulation_pointer_gate::{
     simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
 };
-use crate::gui::{MapCameraDesired, MapCameraDesiredRes, SimulationMapViewport};
+use crate::gui::{MapCameraDesired, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+use crate::terrain::generation::WorldGenDenseTerrainCache;
 
 use super::pathing::world_xy_to_tile;
 use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType, RoadType};
@@ -48,11 +50,12 @@ fn resolve_placement_world(
     snap: &RoadSnapSettings,
     roads: &crate::construction::construction_pipeline::ExecutedRoadNetwork,
     params: &WorldGenParams,
+    height_grid: Option<&WorldGenDenseTerrainCache>,
     feedback: &mut ConstructionPathFeedback,
 ) -> Vec3 {
     let placed = snap_placement(raw, snap, roads);
     feedback.snap_hint = placed.target.as_ref().map(SnapTarget::hint_label);
-    conform_vec3(placed.world, params)
+    conform_vec3(placed.world, params, height_grid)
 }
 
 pub fn sync_road_placement_width_from_tool(
@@ -70,11 +73,7 @@ pub fn sync_road_placement_width_from_tool(
 pub fn update_road_path_preview_system(
     tool: Res<ActiveBuildTool>,
     keys: Res<ButtonInput<KeyCode>>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesiredRes>,
-    map_vp: Res<SimulationMapViewport>,
-    params: Res<WorldGenParams>,
+    pick: ConstructionMapPick,
     snap: Res<RoadSnapSettings>,
     roads: Res<crate::construction::construction_pipeline::ExecutedRoadNetwork>,
     mut placement: ResMut<ActiveRoadPlacement>,
@@ -95,24 +94,15 @@ pub fn update_road_path_preview_system(
         }
         SimulationToolPointer::Free => {}
     }
-    let Ok(window) = win.single() else {
-        return;
-    };
     let ctrl_preview = keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight);
     let cursor = if ctrl_preview {
-        cursor_world_on_map(
-            &window,
-            authority.as_deref(),
-            desired.as_ref(),
-            map_vp.as_ref(),
-            params.as_ref(),
-        )
-        .map(|w| {
+        pick.cursor_world().map(|w| {
             resolve_placement_world(
                 w,
                 snap.as_ref(),
                 roads.as_ref(),
-                params.as_ref(),
+                pick.params.as_ref(),
+                pick.height_grid(),
                 feedback.as_mut(),
             )
         })
@@ -123,7 +113,7 @@ pub fn update_road_path_preview_system(
         &placement.control_points,
         cursor,
         placement.width,
-        params.as_ref(),
+        pick.params.as_ref(),
         placement.use_curved_preview,
     );
 }
@@ -161,8 +151,10 @@ pub fn sync_road_path_build_preview(
         }
     }
     feedback.required_actions = actions.clone();
+    let ok = valid_count > 0 && !invalid;
     preview.report = crate::strategic::SitePlacementValidation {
-        allows_commit: valid_count > 0 && !invalid,
+        valid: ok,
+        allows_commit: ok,
         errors: if invalid {
             vec!["invalid road segment in path".into()]
         } else {
@@ -176,11 +168,7 @@ pub fn road_path_input_system(
     tool: Res<ActiveBuildTool>,
     buttons: Res<ButtonInput<MouseButton>>,
     keys: Res<ButtonInput<KeyCode>>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Res<MapCameraDesiredRes>,
-    map_vp: Res<SimulationMapViewport>,
-    params: Res<WorldGenParams>,
+    pick: ConstructionMapPick,
     snap: Res<RoadSnapSettings>,
     roads: Res<crate::construction::construction_pipeline::ExecutedRoadNetwork>,
     mut placement: ResMut<ActiveRoadPlacement>,
@@ -195,23 +183,15 @@ pub fn road_path_input_system(
     if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
         return;
     }
-    let Ok(window) = win.single() else {
-        return;
-    };
-    let Some(raw) = cursor_world_on_map(
-        &window,
-        authority.as_deref(),
-        desired.as_ref(),
-        map_vp.as_ref(),
-        params.as_ref(),
-    ) else {
+    let Some(raw) = pick.cursor_world() else {
         return;
     };
     let world = resolve_placement_world(
         raw,
         snap.as_ref(),
         roads.as_ref(),
-        params.as_ref(),
+        pick.params.as_ref(),
+        pick.height_grid(),
         feedback.as_mut(),
     );
 
@@ -225,15 +205,15 @@ pub fn road_path_input_system(
                     .generated_segments
                     .iter()
                     .flat_map(|seg| [seg.start, seg.end]),
-                params.width,
-                params.height,
+                pick.params.width,
+                pick.params.height,
             ) {
                 return;
             }
             commit_road_path_to_queue(
                 placement.as_mut(),
                 queue.as_mut(),
-                params.as_ref(),
+                pick.params.as_ref(),
                 session.continuous_path,
             );
             session.record_commit();
@@ -248,7 +228,7 @@ pub fn road_path_input_system(
             &placement.control_points,
             None,
             placement.width,
-            params.as_ref(),
+            pick.params.as_ref(),
             placement.use_curved_preview,
         );
     }
@@ -270,11 +250,8 @@ mod egr_tests {
         app.add_plugins((MinimalPlugins, bevy::state::app::StatesPlugin));
         app.init_state::<BaseState>();
         app.init_resource::<ProductShellDiagnostics>();
-        app.init_resource::<bevy_egui::EguiUserTextures>();
-        app.world_mut().spawn((
-            bevy_egui::EguiContext::default(),
-            bevy_egui::PrimaryEguiContext,
-        ));
+        /* no egui textures */
+        /* no primary egui */
         app.init_resource::<ActiveBuildTool>();
         app.insert_resource(ButtonInput::<KeyCode>::default());
         app.init_resource::<crate::gui::MapCameraDesiredRes>();

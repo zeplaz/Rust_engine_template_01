@@ -1,37 +1,24 @@
 //! Detachable HUD docking + overlay tray scaffolding (**BQ-123**).
+//!
+//! Editor dock MVP: [`EditorDockBevyRoot`] hosts Command shell + Overlay tray +
+//! minimized strip + side status rail (visibility from [`HudDockRegistry`] /
+//! [`HudCommandShellLayout`]).
 
 use bevy::prelude::*;
-use bevy_egui::egui;
+use bevy::ui::FocusPolicy;
 
 use crate::engine::states::BaseState;
 use crate::gui::input_bindings::InputBindings;
-use crate::gui::ui_gates::{in_simulation_or_editor, product_egui_shell_active};
+use crate::gui::style::{CmdUiMonoFont, UiPalette};
+use crate::gui::{in_simulation_or_editor, product_shell_active, PanelPresence};
 use crate::gui::map_view::MapViewInstances;
 use crate::gui::{simulation_minimap_overlay_defaults, MinimapOverlayMask, MinimapShellState, TransmissionShellState};
 use crate::strategic::StrategicOverlayDisplayPolicy;
 
-use super::shell_diagnostics::ProductShellDiagnostics;
-use super::layout_store::{HudLayoutCollectionR8, HudLayoutStore};
-use super::shell_framework::{
-    capture_shell_layout, draw_minimized_shell_chip, shell_default_window_pos,
-    shell_widget_runs_egui_with_budget, show_product_shell_window, HudDockRegistry,
-    HudWidgetDockState, HudWidgetId, ShellWindowHost,
-};
-use super::shell_persistence::ProductShellPersistenceBundleR8;
-use super::stage5_spine_consumer::draw_stage5_spine_consumer_panel;
-use super::stage6_consumer::draw_stage6_residency_consumer_panel;
+use super::layout_store::HudLayoutStore;
+use super::shell_framework::{HudDockRegistry, HudWidgetDockState, HudWidgetId};
 use super::panel_state::HudPanelState;
-use super::stage6_telemetry::Stage6HudTelemetry;
-use super::hud_async_task_queue::HudAsyncTaskQueue;
-use super::interaction_latency::InteractionLatencyMetrics;
-use super::pending_hud_layout_commit::PendingHudLayoutCommit;
-use super::shell_update_budget::ProductShellUpdateBudget;
-use super::shell_widget_timing::ShellWidgetDiagnostics;
-use super::world_interaction_diagnostics::WorldInteractionDiagnostics;
-use crate::gui::editor::world_preview::{PreviewPathAuthority, PreviewPresentationDebug};
-use crate::gui::style::{widget_scroll_vertical_fill, UiPalette};
-use crate::gui::WorldRepresentationFrame;
-use crate::render::AppStage5ReadinessReport;
+use super::shell_diagnostics::ProductShellDiagnostics;
 
 /// Overlay tray toggles — strategic policy + minimap compositor [`MinimapOverlayMask`] (UI-P3-M2-TRAY-OPT).
 #[derive(Resource, Clone, Debug)]
@@ -133,6 +120,18 @@ impl HudCommandShellLayout {
     }
 }
 
+/// Editor product-shell dock root (Bevy UI — replaces retired egui dock bodies).
+#[derive(Component)]
+pub struct EditorDockBevyRoot;
+
+#[derive(Component)]
+struct EditorDockBodyText;
+
+#[derive(Default)]
+struct EditorDockStamp {
+    key: u64,
+}
+
 pub struct HudDockShellPlugin;
 
 impl Plugin for HudDockShellPlugin {
@@ -169,7 +168,9 @@ impl Plugin for HudDockShellPlugin {
                     sync_minimap_overlays_to_hud_tray,
                     mirror_hud_dock_registry_from_widgets,
                     sync_hud_shell_interaction_router,
-                    hud_dock_shell_keyboard_toggle.run_if(product_egui_shell_active),
+                    hud_dock_shell_keyboard_toggle.run_if(product_shell_active),
+                    sync_editor_dock_bevy_shell.run_if(product_shell_active),
+                    despawn_editor_dock_bevy_when_inactive.run_if(not(product_shell_active)),
                     super::shell_diagnostics::product_shell_diagnostics_tick,
                     super::shell_update_budget::sync_product_shell_update_budget,
                     super::shell_update_budget::advance_product_shell_update_budget,
@@ -324,354 +325,142 @@ fn hud_dock_shell_keyboard_toggle(
     }
 }
 
-pub fn draw_hud_overlay_tray_egui(
-    ctx: &mut egui::Context,
-    tray: &mut HudOverlayTrayState,
-    dock: &mut HudDockRegistry,
-    layout_store: &mut HudLayoutStore,
-    update_budget: &mut ProductShellUpdateBudget,
-    now_secs: f32,
-    widget_timing: Option<&mut ShellWidgetDiagnostics>,
-    pending_layout: &mut PendingHudLayoutCommit,
-) {
-    if !tray.tray_panel_state.shows_content() {
-        return;
-    }
-    let mut open = dock.slot(HudWidgetId::OverlayTray).visible;
-    if !shell_widget_runs_egui_with_budget(
-        dock,
-        HudWidgetId::OverlayTray,
-        open,
-        Some(update_budget),
-        now_secs,
-    ) {
-        return;
-    }
-    if let Some(response) = show_product_shell_window(
-        ctx,
-        ShellWindowHost {
-            id: HudWidgetId::OverlayTray,
-            title: "Overlay tray",
-            default_pos: shell_default_window_pos(ctx, HudWidgetId::OverlayTray, [200.0, 120.0]),
-            default_size: [200.0, 120.0],
-            min_size: [150.0, 100.0],
-        },
-        layout_store,
-        dock,
-        &mut open,
-        |ui| {
-            ui.checkbox(&mut tray.recon_visible, "Recon");
-            ui.checkbox(&mut tray.logistics_stress_visible, "Logistics stress");
-            ui.checkbox(&mut tray.congestion_visible, "Congestion");
-            ui.checkbox(&mut tray.ew_visible, "EW / denial");
-            ui.separator();
-            ui.label(egui::RichText::new("Minimap heat (GPU compositor)").strong());
-            ui.checkbox(&mut tray.fire_heat, "Fire heat");
-            ui.checkbox(&mut tray.logistics_heat, "Logistics heat");
-            ui.checkbox(&mut tray.construction_heat, "Construction heat");
-            ui.checkbox(&mut tray.ecology_heat, "Ecology / burn scar");
-        },
-        widget_timing,
-    ) {
-        capture_shell_layout(layout_store, HudWidgetId::OverlayTray, &response, Some(pending_layout));
-    }
-    dock.slot_mut(HudWidgetId::OverlayTray).visible = open;
-}
-
-pub fn draw_hud_command_shell_egui(
-    ctx: &mut egui::Context,
-    layout: &mut HudCommandShellLayout,
-    dock: &mut HudDockRegistry,
-    layout_store: &mut HudLayoutStore,
-    palette: &UiPalette,
-    world: &WorldRepresentationFrame,
-    readiness: Option<&AppStage5ReadinessReport>,
-    preview_authority: Option<&PreviewPathAuthority>,
-    preview_debug: Option<&PreviewPresentationDebug>,
-    stage6: Option<&Stage6HudTelemetry>,
-    update_budget: &mut ProductShellUpdateBudget,
-    now_secs: f32,
-    widget_timing: Option<&mut ShellWidgetDiagnostics>,
-    world_interaction: Option<&WorldInteractionDiagnostics>,
-    async_queue: &HudAsyncTaskQueue,
-    interaction_latency: &InteractionLatencyMetrics,
-    pending_layout: &mut PendingHudLayoutCommit,
-    wave_s_capture: &mut crate::io::save::WaveSShellCapturePending,
-    wave_s_restore: &mut crate::io::save::WaveSShellRestorePending,
-    wave_s_hydrate: &crate::io::save::WaveSShellHydrateWitness,
-    wave_s_imported: &crate::io::save::WaveSImportedBlueprints,
-) {
-    if !layout.command_tray_state.shows_content() {
-        return;
-    }
-
-    let mut open = HudCommandShellLayout::panel_open(layout.command_tray_state);
-    if !shell_widget_runs_egui_with_budget(
-        dock,
-        HudWidgetId::CommandShell,
-        open,
-        Some(update_budget),
-        now_secs,
-    ) {
-        return;
-    }
-    let layout_slot_count = layout_store.to_collection(dock).widgets.len();
-    let mut capture_layout = false;
-    let mut restore_layout = false;
-    let mut restore_wave_s = false;
-    let timing_rows = widget_timing.as_ref().map(|timing| timing.sorted_rows());
-    let defer_heavy = pending_layout.drag_active;
-    if let Some(response) = show_product_shell_window(
-        ctx,
-        ShellWindowHost {
-            id: HudWidgetId::CommandShell,
-            title: "Command shell",
-            default_pos: shell_default_window_pos(ctx, HudWidgetId::CommandShell, [250.0, 190.0]),
-            default_size: [250.0, 190.0],
-            min_size: [190.0, 140.0],
-        },
-        layout_store,
-        dock,
-        &mut open,
-        |ui| {
-            panel_state_checkbox(ui, "Overlay tray", &mut layout.overlay_tray_state);
-            panel_state_checkbox(ui, "Status side rail", &mut layout.status_side_panel_state);
-            panel_state_checkbox(ui, "Command window", &mut layout.command_tray_state);
-            panel_state_checkbox(ui, "Intel timeline (stub)", &mut layout.intel_timeline_state);
-            panel_state_checkbox(ui, "Command table (stub)", &mut layout.command_table_state);
-            if ui
-                .button(
-                    egui::RichText::new("Pin window")
-                        .small()
-                        .monospace(),
-                )
-                .clicked()
-            {
-                layout.command_tray_state.toggle_pin();
-            }
-            ui.separator();
-            if defer_heavy {
-                ui.label(egui::RichText::new("Layout drag active — telemetry deferred").small().weak());
-            } else {
-                widget_scroll_vertical_fill("hud_command_shell_body_scroll", ui.available_height())
-                    .show(ui, |ui| {
-                    draw_stage5_spine_consumer_panel(
-                        ui,
-                        palette,
-                        readiness,
-                        Some(world),
-                        preview_authority,
-                        preview_debug,
-                    );
-                    ui.separator();
-                    let residency = stage6
-                        .map(|telemetry| telemetry.residency.clone())
-                        .unwrap_or_default();
-                    draw_stage6_residency_consumer_panel(ui, palette, &residency);
-                    ui.separator();
-                    ui.label(egui::RichText::new("Telemetry tab").strong());
-                    if let Some(stage6) = stage6 {
-                        ui.label(format!(
-                            "GPU est {} KB · textures {} · RT {} · upload {:.1} KB/s",
-                            stage6.gpu.gpu_memory_estimate_bytes / 1024,
-                            stage6.gpu.texture_count_estimate,
-                            stage6.gpu.render_target_count_estimate,
-                            stage6.gpu.upload_throughput_bytes_per_sec / 1024.0
-                        ));
-                        ui.label(format!(
-                            "buffer residency {} KB · rebuilds {} · egui tex regs {}",
-                            stage6.gpu.buffer_residency_bytes / 1024,
-                            stage6.gpu.texture_rebuild_count,
-                            stage6.gpu.egui_texture_registrations_frame
-                        ));
-                    }
-                    if let Some(snapshot) = async_queue.cache.telemetry_snapshot.as_ref() {
-                        ui.label(snapshot.gpu_summary.clone());
-                        ui.label(snapshot.shell_metrics_line.clone());
-                        ui.label(format!(
-                            "async avg {:.2} ms · spikes {}",
-                            snapshot.avg_frame_ms, snapshot.spike_count
-                        ));
-                    }
-                    if let Some(summary) = async_queue.cache.telemetry_summary.as_deref() {
-                        ui.label(summary.to_string());
-                    }
-                    if let Some(world) = world_interaction {
-                        ui.label(format!(
-                            "Construction throughput {:.0}% · queue latency {:.1} ms · depth {}",
-                            world.construction_throughput_hint * 100.0,
-                            world.construction_queue_latency_ms,
-                            world.pending_queue_depth
-                        ));
-                        ui.label(format!(
-                            "Map interaction latency {:.1} ms · hover {}",
-                            world.map_interaction_latency_ms,
-                            world.hover_diagnostics_active
-                        ));
-                    }
-                    ui.label(format!(
-                        "UI click {:.1} ms · drag {:.1} ms · resize {:.1} ms · tooltip {:.1} ms · hover {:.1} ms",
-                        interaction_latency.click_to_response_ms,
-                        interaction_latency.drag_latency_ms,
-                        interaction_latency.panel_resize_latency_ms,
-                        interaction_latency.tooltip_resolve_ms,
-                        interaction_latency.hover_resolve_ms
-                    ));
-                    if let Some(rows) = timing_rows.as_ref() {
-                        egui::Grid::new("shell_widget_timing_grid")
-                            .striped(true)
-                            .show(ui, |ui| {
-                                ui.label("Widget");
-                                ui.label("Layout ms");
-                                ui.label("Paint ms");
-                                ui.label("Uploads");
-                                ui.label("Cause");
-                                ui.end_row();
-                                for (id, row) in rows.iter() {
-                                    if row.layout_us + row.paint_us == 0 && row.texture_uploads == 0 {
-                                        continue;
-                                    }
-                                    ui.label(id.label());
-                                    ui.label(format!("{:.2}", row.layout_us as f32 / 1000.0));
-                                    ui.label(format!("{:.2}", row.paint_us as f32 / 1000.0));
-                                    ui.label(row.texture_uploads.to_string());
-                                    ui.label(format!("{:?}", row.rebuild_reason));
-                                    ui.end_row();
-                                }
-                            });
-                    }
-                    ui.separator();
-                    ui.label(
-                        egui::RichText::new(format!(
-                            "Layout slots persisted: {} · bundle schema {}",
-                            layout_slot_count,
-                            ProductShellPersistenceBundleR8::CURRENT_SCHEMA
-                        ))
-                        .small()
-                        .weak(),
-                    );
-                    if ui.button("Capture layout to Wave S DTO").clicked() {
-                        capture_layout = true;
-                    }
-                    if ui.button("Restore layout from save bundle").clicked() {
-                        restore_wave_s = true;
-                    }
-                    if wave_s_hydrate.shell_loaded {
-                        ui.label(
-                            egui::RichText::new(format!(
-                                "Wave S loaded: {} widgets · {} blueprint presets",
-                                wave_s_hydrate.layout_widget_count, wave_s_hydrate.blueprint_count
-                            ))
-                            .small()
-                            .weak(),
-                        );
-                    } else if let Some(count) = wave_s_imported
-                        .collection
-                        .as_ref()
-                        .map(|c| c.presets.len())
-                    {
-                        ui.label(
-                            egui::RichText::new(format!("Wave S blueprints cached: {count}"))
-                                .small()
-                                .weak(),
-                        );
-                    }
-                    if let Some(path) = wave_s_capture.last_written_path.as_deref() {
-                        ui.label(
-                            egui::RichText::new(format!("Last Wave S write: {path}"))
-                                .small()
-                                .weak(),
-                        );
-                    } else if let Some(err) = wave_s_capture.last_error.as_deref() {
-                        ui.label(
-                            egui::RichText::new(format!("Wave S write: {err}"))
-                                .small()
-                                .color(palette.warn),
-                        );
-                    }
-                    if ui.button("Restore default layout DTO").clicked() {
-                        restore_layout = true;
-                    }
-                });
-            }
-        },
-        widget_timing,
-    ) {
-        capture_shell_layout(layout_store, HudWidgetId::CommandShell, &response, Some(pending_layout));
-    }
-    if capture_layout {
-        let captured = layout_store.to_collection(dock);
-        layout_store.apply_collection(&captured);
-        wave_s_capture.requested = true;
-    }
-    if restore_wave_s {
-        wave_s_restore.requested = true;
-    }
-    if restore_layout {
-        layout_store.apply_collection(&HudLayoutCollectionR8::new());
-    }
-    layout.command_tray_state = if open {
-        HudPanelState::Expanded
-    } else {
-        HudPanelState::Collapsed
-    };
-}
-
-fn panel_state_checkbox(ui: &mut egui::Ui, label: &str, state: &mut HudPanelState) {
-    let mut open = state.shows_content();
-    if ui.checkbox(&mut open, label).changed() {
-        *state = if open {
-            HudPanelState::Expanded
+fn editor_dock_body_text(
+    dock: &HudDockRegistry,
+    layout: &HudCommandShellLayout,
+    tray: &HudOverlayTrayState,
+) -> String {
+    let mut lines = Vec::new();
+    lines.push("Editor dock".into());
+    lines.push(format!(
+        "Command shell: {}",
+        if dock.slot(HudWidgetId::CommandShell).visible {
+            "open"
         } else {
-            HudPanelState::Collapsed
-        };
+            "closed"
+        }
+    ));
+    lines.push(format!(
+        "  tray={:?}  status_rail={:?}  intel={:?}  table={:?}",
+        layout.command_tray_state,
+        layout.status_side_panel_state,
+        layout.intel_timeline_state,
+        layout.command_table_state
+    ));
+    lines.push(format!(
+        "Overlay tray: {}  fire={} logistics={} construction={} ecology={}",
+        if dock.slot(HudWidgetId::OverlayTray).visible {
+            "open"
+        } else {
+            "closed"
+        },
+        tray.fire_heat,
+        tray.logistics_heat,
+        tray.construction_heat,
+        tray.ecology_heat
+    ));
+    lines.push("── Minimized strip ──".into());
+    let mut any_min = false;
+    for id in HudWidgetId::ALL {
+        let slot = dock.slot(id);
+        if slot.minimized && slot.visible {
+            any_min = true;
+            lines.push(format!("  · {}", id.label()));
+        }
+    }
+    if !any_min {
+        lines.push("  (none)".into());
+    }
+    lines.push("── Side status rail ──".into());
+    if HudCommandShellLayout::panel_open(layout.status_side_panel_state) {
+        lines.push("  status rail expanded (Bevy MVP)".into());
+    } else {
+        lines.push("  status rail collapsed".into());
+    }
+    lines.join("\n")
+}
+
+fn despawn_editor_dock_bevy_when_inactive(
+    mut commands: Commands,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<EditorDockBevyRoot>>,
+) {
+    for e in &roots {
+        commands.entity(e).despawn();
+    }
+    presence.editor_dock_root = false;
+}
+
+/// Bevy sync for editor dock chrome (Command shell + Overlay tray + strip + status rail).
+pub fn sync_editor_dock_bevy_shell(
+    mut commands: Commands,
+    dock: Res<HudDockRegistry>,
+    layout: Res<HudCommandShellLayout>,
+    tray: Res<HudOverlayTrayState>,
+    palette: Res<UiPalette>,
+    mono: Res<CmdUiMonoFont>,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<EditorDockBevyRoot>>,
+    mut body: Query<&mut Text, With<EditorDockBodyText>>,
+    mut stamp: Local<EditorDockStamp>,
+) {
+    presence.editor_dock_root = !roots.is_empty();
+    // Product-shell gate already scopes this system to Editor (¬WorldGen).
+    // Always host the dock MVP summary; child slot lines follow HudDockRegistry.
+    let text = editor_dock_body_text(dock.as_ref(), layout.as_ref(), tray.as_ref());
+    let mut key = text.len() as u64;
+    for b in text.bytes() {
+        key = key.wrapping_mul(0x9E37_79B9).wrapping_add(b as u64);
+    }
+
+    if roots.is_empty() {
+        let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
+        commands
+            .spawn((
+                EditorDockBevyRoot,
+                Node {
+                    position_type: PositionType::Absolute,
+                    top: Val::Px(40.0),
+                    left: Val::Px(8.0),
+                    width: Val::Px(280.0),
+                    max_height: Val::Px(360.0),
+                    padding: UiRect::all(Val::Px(10.0)),
+                    flex_direction: FlexDirection::Column,
+                    border: UiRect::all(Val::Px(1.0)),
+                    border_radius: BorderRadius::ZERO,
+                    overflow: Overflow::scroll_y(),
+                    ..default()
+                },
+                BackgroundColor(palette.bevy_hud_panel_fill()),
+                BorderColor::all(palette.bevy_wire_magenta()),
+                FocusPolicy::Block,
+                ZIndex(930),
+            ))
+            .with_children(|p| {
+                p.spawn((
+                    EditorDockBodyText,
+                    Text::new(text.clone()),
+                    tf,
+                    TextColor(palette.bevy_primary_text()),
+                ));
+            });
+        stamp.key = key;
+        presence.editor_dock_root = true;
+        return;
+    }
+
+    if stamp.key != key {
+        for mut t in &mut body {
+            *t = Text::new(text.clone());
+        }
+        stamp.key = key;
     }
 }
 
-pub fn draw_hud_dock_minimized_strip_egui(
-    ui: &mut egui::Ui,
-    policy: &super::widget_presentation::WidgetPresentationPolicy,
-    dock: &mut HudDockRegistry,
-    minimap: &mut MinimapShellState,
-    transmission: &mut TransmissionShellState,
-    tray: &mut HudOverlayTrayState,
-    layout: &mut HudCommandShellLayout,
-    update_budget: &mut ProductShellUpdateBudget,
-) {
-    if !HudWidgetId::ALL.iter().any(|id| dock.slot(*id).minimized) {
-        return;
-    }
-    egui::Panel::bottom("hud_dock_minimized_strip")
-        .frame(egui::Frame::NONE)
-        .show(ui, |ui| {
-            ui.horizontal(|ui| {
-                for id in HudWidgetId::ALL {
-                    if draw_minimized_shell_chip(ui, id, dock) {
-                        update_budget.bump_widget_event(id);
-                        match id {
-                            HudWidgetId::Minimap => {
-                                minimap.visible = true;
-                                minimap.minimized = false;
-                            }
-                            HudWidgetId::Transmission => {
-                                if policy.widget_enabled(HudWidgetId::Transmission) {
-                                    transmission.active = true;
-                                    transmission.minimized = false;
-                                }
-                            }
-                            HudWidgetId::OverlayTray => {
-                                tray.tray_panel_state = HudPanelState::Expanded;
-                            }
-                            HudWidgetId::CommandShell => {
-                                layout.command_tray_state = HudPanelState::Expanded;
-                            }
-                            _ => {}
-                        }
-                    }
-                }
-            });
-        });
-}
+
+
+fn panel_state_checkbox() {}
+
 
 #[cfg(test)]
 mod tests {

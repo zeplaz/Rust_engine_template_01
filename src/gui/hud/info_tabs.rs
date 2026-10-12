@@ -2,7 +2,6 @@
 
 use bevy::prelude::*;
 
-use bevy_egui::egui;
 
 use crate::construction::PendingConstructionQueue;
 use crate::gui::construction_growth_inspector::EcologyGrowthHint;
@@ -159,23 +158,7 @@ pub fn sync_hud_info_live_data(
     }
 }
 
-pub fn draw_info_tab_bar(ui: &mut egui::Ui, palette: &UiPalette, state: &mut HudInfoTabState) {
-    ui.horizontal(|ui| {
-        for (tab, label) in [
-            (HudInfoTab::Layers, "Layers"),
-            (HudInfoTab::Economy, "Economy"),
-            (HudInfoTab::Logistics, "Logistics"),
-            (HudInfoTab::Alerts, "Alerts"),
-            (HudInfoTab::Diagnostics, "Diag"),
-        ] {
-            if flat_v2_tray_tab(ui, palette, label, state.active == tab).clicked() {
-                state.active = tab;
-            }
-            ui.add_space(4.0);
-        }
-    });
-    ui.separator();
-}
+pub fn draw_info_tab_bar() {}
 
 fn sync_infra_overlay_from_utility_group(
     shell: &OverlayShellState,
@@ -191,194 +174,9 @@ fn sync_infra_overlay_from_utility_group(
     }
 }
 
-fn draw_infrastructure_overlay_legend(
-    ui: &mut egui::Ui,
-    settings: &mut InfrastructureOverlaySettings,
-) {
-    ui.separator();
-    ui.label(egui::RichText::new("Infrastructure network").strong());
-    ui.checkbox(&mut settings.enabled, "Show network overlay");
-    if !settings.enabled {
-        return;
-    }
-    ui.checkbox(&mut settings.road, "Roads");
-    ui.checkbox(&mut settings.rail, "Rail");
-    ui.checkbox(&mut settings.power, "Power");
-    ui.checkbox(&mut settings.water, "Water");
-    ui.checkbox(&mut settings.sewer, "Sewer");
-    ui.separator();
-    ui.label(egui::RichText::new("Stroke legend").small());
-    for row in infrastructure_overlay_legend_rows() {
-        ui.horizontal(|ui| {
-            let [r, g, b] = row.stroke.color_rgb;
-            let color = egui::Color32::from_rgb(r, g, b);
-            let height = row.stroke.weight_px.max(2.0);
-            let (rect, _) =
-                ui.allocate_exact_size(egui::vec2(28.0, height + 4.0), egui::Sense::hover());
-            let y = rect.center().y;
-            ui.painter().line_segment(
-                [egui::pos2(rect.left(), y), egui::pos2(rect.right(), y)],
-                egui::Stroke::new(row.stroke.weight_px, color),
-            );
-            ui.label(row.label);
-        });
-    }
-}
+fn draw_infrastructure_overlay_legend() {}
 
-pub fn draw_info_tab_body(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    tab: HudInfoTab,
-    tabs: &mut HudInfoTabState,
-    shell: &mut OverlayShellState,
-    framework: &mut OverlayFrameworkState,
-    world: Option<&WorldRepresentationFrame>,
-    readiness: Option<&AppStage5ReadinessReport>,
-    live: Option<&HudInfoLiveData>,
-    minimap_legend: Option<&str>,
-    infra_settings: &mut InfrastructureOverlaySettings,
-) {
-    match tab {
-        HudInfoTab::Layers => {
-            ui.label(egui::RichText::new("Map overlays").strong());
-            ui.label(egui::RichText::new("Tactical layers").small().weak());
-            ui.checkbox(shell.group_mut(OverlayToggleGroup::Threat), "Threat");
-            ui.checkbox(shell.group_mut(OverlayToggleGroup::Logistics), "Logistics routes");
-            ui.checkbox(shell.group_mut(OverlayToggleGroup::Recon), "Recon");
-            ui.separator();
-            ui.label(egui::RichText::new("Utilities & networks").small().weak());
-            ui.checkbox(shell.group_mut(OverlayToggleGroup::Utility), "Utilities");
-            sync_infra_overlay_from_utility_group(shell, infra_settings);
-            if shell.groups[3] {
-                draw_infrastructure_overlay_legend(ui, infra_settings);
-            }
-            ui.separator();
-            ui.checkbox(&mut shell.legend_open, "Channel legend");
-            if shell.legend_open {
-                ui.label(egui::RichText::new("Minimap / map channels").small().weak());
-                if let Some(legend) = minimap_legend {
-                    ui.label(egui::RichText::new(legend).small());
-                }
-                for channel in &mut framework.channels {
-                    ui.horizontal(|ui| {
-                        ui.checkbox(&mut channel.enabled, format!("{:?}", channel.descriptor.overlay));
-                        ui.add(egui::Slider::new(&mut channel.opacity, 0.0..=1.0).text("α"));
-                        ui.add(egui::Slider::new(&mut channel.blend_weight, 0.0..=1.0).text("blend"));
-                    });
-                }
-            }
-        }
-        HudInfoTab::Economy => {
-            ui.label(egui::RichText::new("Economy & pressure").strong());
-            if let Some(d) = live {
-                ui.label(format!(
-                    "SIM n={}  {}  v={:.1}x",
-                    d.sim_tick,
-                    if d.sim_paused { "PAUSE" } else { "RUN" },
-                    d.sim_speed
-                ));
-                ui.separator();
-                ui.label(format!("Economic pressure {:.2}", d.economic_pressure));
-                ui.label(format!("Instability {:.2}", d.instability_index));
-                ui.label(format!("Resource scarcity {:.2}", d.resource_scarcity));
-                ui.label(format!("Public sentiment {:.2}", d.public_sentiment));
-                ui.label(format!(
-                    "Logistics strength μ {:.2}  contested chunks {}",
-                    d.mean_logistics_strength, d.contested_chunks
-                ));
-                ui.label(format!(
-                    "Planning score {:.2}  rebuild pressure {:.2}",
-                    d.planning_site_score, d.planning_rebuild_pressure
-                ));
-            } else {
-                ui.label(egui::RichText::new("Live economy feed not ready.").small().weak());
-            }
-            if let Some(w) = world {
-                ui.label(format!("LOD band: {:?}", w.global_band()));
-            }
-        }
-        HudInfoTab::Logistics => {
-            ui.label(egui::RichText::new("Logistics throughput").strong());
-            if let Some(d) = live {
-                ui.label(format!(
-                    "Routes layer {}  congestion {:.2}  edge damage {:.2}",
-                    if d.routes_layer_on { "on" } else { "off" },
-                    d.logistics_congestion,
-                    d.logistics_edge_damage
-                ));
-                ui.label(format!(
-                    "Stockpile {:.2}  industrial {:.2}  transport edges {}",
-                    d.logistics_stockpile, d.logistics_industrial, d.transport_edges
-                ));
-            }
-            ui.separator();
-            for desc in mock_overlay_channel_descriptors() {
-                ui.label(format!("{:?} · {:?}", desc.overlay, desc.utility));
-            }
-        }
-        HudInfoTab::Alerts => {
-            ui.label(egui::RichText::new("Active alerts").strong());
-            if let Some(d) = live {
-                ui.label(format!(
-                    "Missions {}  |  T0 threat {:.2}  factions {}",
-                    d.mission_count, d.mean_threat_slot0, d.theater_faction_slots
-                ));
-                ui.label(format!("Primary objective: {}", d.mission_hint));
-                ui.label(format!(
-                    "Fracture μ {:.2}  max {:.2}",
-                    d.fracture_mean, d.fracture_max
-                ));
-                ui.label(format!(
-                    "Pending construction {}/{} approved",
-                    d.pending_total.saturating_sub(d.pending_unapproved),
-                    d.pending_total
-                ));
-                if d.fire_smoke_density > 0.05 || d.fire_heat_energy > 0.05 {
-                    ui.label(format!(
-                        "Fire atmosphere smoke {:.2}  heat {:.2}  GPU particles {}",
-                        d.fire_smoke_density, d.fire_heat_energy, d.fire_particle_rows
-                    ));
-                }
-                if d.focus_has_site {
-                    ui.label(egui::RichText::new("Logistics focus active — see CAUSE strip.").small());
-                }
-            } else {
-                ui.label(egui::RichText::new("Live alert feed not ready.").small().weak());
-            }
-        }
-        HudInfoTab::Diagnostics => {
-            ui.label(egui::RichText::new("Runtime diagnostics").strong());
-            if let Some(d) = live {
-                if d.ecology_program_chunks > 0 {
-                    ui.label(format!(
-                        "Ecology programs: {} chunks · {} presets · {} topology kinds",
-                        d.ecology_program_chunks, d.ecology_unique_presets, d.ecology_topology_kinds
-                    ));
-                    ui.separator();
-                }
-            }
-            if let Some(r) = readiness {
-                ui.label(format!(
-                    "Stage5 passes={} vt4={} vt5={} phase_f={}",
-                    r.vt4_ok && r.vt5_ok && r.phase_f_ok,
-                    r.vt4_ok,
-                    r.vt5_ok,
-                    r.phase_f_ok
-                ));
-                if !r.violations.is_empty() {
-                    for v in r.violations.iter().take(6) {
-                        error_text(ui, palette, v);
-                    }
-                }
-            } else {
-                ui.label(egui::RichText::new("Readiness report not wired this frame.").small().weak());
-            }
-            if ui.button("Reset HUD layout (defaults)").clicked() {
-                tabs.request_layout_reset = true;
-            }
-        }
-    }
-}
+pub fn draw_info_tab_body() {}
 
 pub struct HudInfoTabPlugin;
 

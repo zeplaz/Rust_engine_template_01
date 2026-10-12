@@ -14,7 +14,7 @@ pub use super::pipelines::infrastructure_overlay::{
     sync_power_overlay_auto_on_system, refresh_power_island_from_damage_system,
 };
 pub use super::pipelines::power_map_overlay_draw::{
-    draw_power_map_overlay_egui, paint_stroke_line, power_map_overlay_draw_witness_green,
+    paint_stroke_line, power_map_overlay_draw_witness_green,
 };
 pub use super::core::terrain_render_authority::{
     resolve_sim_default_authority, terrain_cpu_fallback_env_forced, TerrainRenderAuthority,
@@ -40,7 +40,7 @@ pub use super::pipelines::terrain_gpu_bake_spike::{
     TERRAIN_GPU_BAKE_SPIKE_LIVE_JSON,
 };
 pub use super::tile_world_fallback::{
-    draw_simulation_minimap_egui, simulation_minimap_egui_texture, SimMinimapUiState,
+    simulation_minimap_egui_texture, SimMinimapUiState,
     tile_raster_dirty_on_zoom_band_change_enabled, TileFallbackRasterPolicy,
     TileWorldFallbackAfterFireExtract, TileWorldFallbackChunkGrid, TileWorldFallbackPlugin,
     TileWorldFallbackRasterCtrl, TileWorldFallbackRasterDirty, TileWorldFallbackSprite,

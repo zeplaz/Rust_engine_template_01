@@ -11,7 +11,6 @@
 //! bridge has not populated [`ViewManager`] yet).
 
 use bevy::math::{Rect, Vec2};
-use bevy_egui::egui;
 
 use crate::gui::map_view_projection::{map_surface_screen_to_world, map_surface_world_to_screen};
 use crate::gui::{ViewId, ViewInstance, ViewManager};
@@ -46,10 +45,10 @@ pub fn view_surface_world_to_screen(
     manager: &ViewManager,
     id: ViewId,
     world_tile: Vec2,
-    image_rect: egui::Rect,
+    image_rect: bevy::prelude::Rect,
     tex_w: f32,
     tex_h: f32,
-) -> Option<egui::Pos2> {
+) -> Option<bevy::prelude::Vec2> {
     let v = view_instance(manager, id)?;
     Some(map_surface_world_to_screen(
         world_tile,
@@ -66,8 +65,8 @@ pub fn view_surface_world_to_screen(
 pub fn view_surface_screen_to_world(
     manager: &ViewManager,
     id: ViewId,
-    screen: egui::Pos2,
-    image_rect: egui::Rect,
+    screen: bevy::prelude::Vec2,
+    image_rect: bevy::prelude::Rect,
     tex_w: f32,
     tex_h: f32,
 ) -> Option<Vec2> {

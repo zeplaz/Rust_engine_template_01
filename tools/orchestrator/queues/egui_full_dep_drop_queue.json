@@ -1,0 +1,69 @@
+{
+  "program": "PLAN-EGUI-FULL-DEP-DROP-v1",
+  "plan": "src/dev/plan_egui_full_dep_drop_v1.md",
+  "rows": [
+    {
+      "id": "EGR-FULL-0",
+      "title": "Charter + ui_boundary Bevy-only + queue seed",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    },
+    {
+      "id": "EGR-FULL-1",
+      "title": "Decouple UiRgba / logical rect from egui Color32/Rect",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    },
+    {
+      "id": "EGR-FULL-2",
+      "title": "Zero sim egui acquires; mesh-only world paints",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    },
+    {
+      "id": "EGR-FULL-3",
+      "title": "Retire hud_product_shell_egui_root; Bevy editor shell",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    },
+    {
+      "id": "EGR-FULL-4",
+      "title": "Remove EguiTextureHandle RTT paths",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    },
+    {
+      "id": "EGR-FULL-5",
+      "title": "Construction egui cluster + map editor \u2192 Bevy",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    },
+    {
+      "id": "EGR-FULL-6",
+      "title": "Logistics panels + WorldGen/subengine \u2192 Bevy",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    },
+    {
+      "id": "EGR-FULL-7",
+      "title": "Diagnostics/faction/options/QC \u2192 Bevy",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    },
+    {
+      "id": "EGR-FULL-8",
+      "title": "Remove EguiPlugin + bevy_egui; witness green",
+      "status": "done",
+      "owner": "coder",
+      "note": "debug_runs/egui_full_dep_drop_live.json"
+    }
+  ]
+}

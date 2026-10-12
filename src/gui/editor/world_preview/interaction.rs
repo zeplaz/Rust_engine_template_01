@@ -1,6 +1,5 @@
 //! Viewport pointer mapping: zoom-to-cursor and middle-mouse pan.
 
-use bevy_egui::egui;
 
 use crate::gui::map_view_projection::map_surface_screen_to_world;
 use crate::gui::{view_surface_screen_to_world, ViewId, ViewManager};
@@ -11,8 +10,8 @@ use bevy::math::{UVec2, Vec2};
 
 pub fn apply_zoom_toward(
     viewport: &mut EditorViewport,
-    pointer_screen: egui::Pos2,
-    viewport_center: egui::Pos2,
+    pointer_screen: bevy::prelude::Vec2,
+    viewport_center: bevy::prelude::Vec2,
     zoom_factor: f32,
 ) {
     let z_old = viewport
@@ -40,9 +39,9 @@ pub fn apply_pan(viewport: &mut EditorViewport, delta_screen: Vec2) {
 pub fn update_hover_tile(
     manager: &ViewManager,
     viewport: &mut EditorViewport,
-    pointer_screen: Option<egui::Pos2>,
-    panel_rect: egui::Rect,
-    image_rect: egui::Rect,
+    pointer_screen: Option<bevy::prelude::Vec2>,
+    panel_rect: bevy::prelude::Rect,
+    image_rect: bevy::prelude::Rect,
     tex_w: u32,
     tex_h: u32,
 ) {

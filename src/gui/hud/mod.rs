@@ -77,11 +77,9 @@ pub use cause_chain::{
 };
 pub use contextual_tip::{update_developmental_context_strip_system, DevelopmentalContextStripLine};
 pub use dock_shell::{
-    HudCommandShellLayout, HudDockShellPlugin, HudOverlayTrayState,
+    EditorDockBevyRoot, HudCommandShellLayout, HudDockShellPlugin, HudOverlayTrayState,
 };
-pub use hud_side_status_panel::{
-    draw_hud_side_status_panel_egui, hud_status_side_panel_toggle_system,
-};
+pub use hud_side_status_panel::hud_status_side_panel_toggle_system;
 pub use panel_state::{HudPanel, HudPanelState, HudPanelStatePlugin, HudPanelStateWitness};
 pub use icon_atlas::{
     tool_context_uses_icon_atlas, IconAtlasManifest, IconAtlasPlugin, IconAtlasUi, IconId,
@@ -92,8 +90,7 @@ pub use power_hud_icon_atlas::{
     PowerHudIconAtlasUi, PowerHudIconId,
 };
 pub use plant_focus_card::{
-    draw_plant_focus_card_egui, plant_focus_card_gauges_wired, sync_plant_focus_card_visibility,
-    PlantFocusCardSnapshot,
+    plant_focus_card_gauges_wired, sync_plant_focus_card_visibility, PlantFocusCardSnapshot,
 };
 pub use sim_build_picker_sheet::{
     BuildPickerCategory, SimBuildPickerState, AD_HOC_SUBMENU_WINDOWS, BUILD_PICKER_RAIL_GAP_PX,

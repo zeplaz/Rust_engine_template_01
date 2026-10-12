@@ -7,7 +7,6 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use super::build_strip::{BuildStripState, ToolContext};
 use super::build_tool_authority::{ActiveBuildTool, BuildTool};
@@ -65,7 +64,7 @@ pub const PLACE_FEEDBACK_LOCK_HOLD_T: f32 = 0.62;
 /// Until [`PLACE_FEEDBACK_LOCK_HOLD_T`]: valid fill (locked footprint).
 /// Tail: ease-out cubic crossfade → Planned settle. Alpha multiplier is 1.0.
 #[must_use]
-pub fn place_feedback_fill_at(t: f32) -> egui::Color32 {
+pub fn place_feedback_fill_at(t: f32) -> crate::gui::UiRgba {
     let t = t.clamp(0.0, 1.0);
     // Unmultiplied RGBA — do not read Color32.r/g/b (premultiplied storage).
     let valid = [48_u8, 140, 72, 220];
@@ -78,7 +77,7 @@ pub fn place_feedback_fill_at(t: f32) -> egui::Color32 {
             ((t - PLACE_FEEDBACK_LOCK_HOLD_T) / (1.0 - PLACE_FEEDBACK_LOCK_HOLD_T)).clamp(0.0, 1.0);
         ease_out_cubic(u)
     };
-    egui::Color32::from_rgba_unmultiplied(
+    crate::gui::UiRgba::from_rgba_unmultiplied(
         lerp_u8(valid[0], settle[0], hue_blend),
         lerp_u8(valid[1], settle[1], hue_blend),
         lerp_u8(valid[2], settle[2], hue_blend),
@@ -194,8 +193,8 @@ pub fn sync_place_feedback_visual_requests(
             continue;
         }
         let weight = w.clamp(0.05, 1.0);
-        let a = ((fill.a() as f32) * weight).round().clamp(0.0, 255.0) as u8;
-        let color = egui::Color32::from_rgba_unmultiplied(fill.r(), fill.g(), fill.b(), a);
+        let a = ((fill.a as f32) * weight).round().clamp(0.0, 255.0) as u8;
+        let color = crate::gui::UiRgba::from_rgba_unmultiplied(fill.r, fill.g, fill.b, a);
         requests.footprint_tiles.push(FootprintTileRequest {
             tile,
             color_kind: FootprintTileColorKind::Valid,
@@ -211,7 +210,7 @@ pub fn refresh_des_place_feedback_anim_witness() -> bool {
     let starts = place_feedback_start_count();
     let completes = place_feedback_complete_count();
     let tokens_ok = footprint_place_settle_color()
-        == egui::Color32::from_rgba_unmultiplied(100, 144, 220, 200)
+        == crate::gui::UiRgba::from_rgba_unmultiplied(100, 144, 220, 200)
         && (place_feedback_duration_secs() - 0.28).abs() < 1e-4
         && (ease_out_cubic(0.0) - 0.0).abs() < 1e-5
         && (ease_out_cubic(1.0) - 1.0).abs() < 1e-5;
@@ -310,16 +309,16 @@ mod tests {
         assert_eq!(place_feedback_fill_at(0.0), v);
         assert_eq!(place_feedback_fill_at(1.0), s);
         assert_eq!(place_feedback_fill_at(PLACE_FEEDBACK_LOCK_HOLD_T), v);
-        let cap = v.a().max(s.a());
+        let cap = v.a.max(s.a);
         for i in 0..=16 {
-            assert!(place_feedback_fill_at(i as f32 / 16.0).a() <= cap);
+            assert!(place_feedback_fill_at(i as f32 / 16.0).a <= cap);
         }
         assert_eq!(
             super::super::ghost_visual::footprint_lock_ring_stroke_px(),
             2.0
         );
         assert_eq!(
-            super::super::ghost_visual::footprint_lock_ring_color().a(),
+            super::super::ghost_visual::footprint_lock_ring_color().a,
             230
         );
         let locked = super::super::ghost_visual::footprint_lock_ring_stroke(true)

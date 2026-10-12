@@ -1,7 +1,6 @@
 //! Unified product shell — dock, minimize, resize, focus, and layout persistence.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::engine::states::BaseState;
 
@@ -110,8 +109,8 @@ impl ProductShellWidgetId {
     }
 
     #[must_use]
-    pub fn egui_window_id(self) -> egui::Id {
-        egui::Id::new(match self {
+    pub fn egui_window_id(self) -> &'static str {
+        match self {
             Self::Minimap => "product_shell_minimap",
             Self::Transmission => "product_shell_transmission",
             Self::OverlayTray => "product_shell_overlay_tray",
@@ -121,7 +120,7 @@ impl ProductShellWidgetId {
             Self::BuildToolbox => "product_shell_build_toolbox",
             Self::IntelTimeline => "product_shell_intel",
             Self::Explainability => "product_shell_explainability",
-        })
+        }
     }
 }
 
@@ -145,7 +144,7 @@ pub const SIM_SUPPRESSED_FLOATING_SHELLS: &[ProductShellWidgetId] = &[
 /// Whether a floating product-shell egui body may run in this session profile.
 #[must_use]
 pub fn floating_product_shell_egui_active(id: ProductShellWidgetId, base: BaseState) -> bool {
-    product_egui_shell_base_active(base) && !sim_suppresses_floating_shell(id, base)
+    product_shell_base_active(base) && !sim_suppresses_floating_shell(id, base)
 }
 
 /// PLAY-01 Sprint 3.2 — floating shells on the suppression list are editor-only.
@@ -157,7 +156,7 @@ pub fn sim_suppresses_floating_shell(id: ProductShellWidgetId, base: BaseState) 
 /// Whether a docked product widget may bind an egui window/texture body in this session.
 #[must_use]
 pub fn product_shell_widget_egui_dock_active(id: ProductShellWidgetId, base: BaseState) -> bool {
-    if !product_egui_shell_base_active(base) {
+    if !product_shell_base_active(base) {
         return false;
     }
     match id {
@@ -170,22 +169,22 @@ pub fn product_shell_widget_egui_dock_active(id: ProductShellWidgetId, base: Bas
 /// Minimap egui texture dock — editor only until UX-E01 GPU minimap in sim.
 #[must_use]
 pub const fn minimap_egui_texture_dock_active(base: BaseState) -> bool {
-    product_egui_shell_base_active(base)
+    product_shell_base_active(base)
 }
 
 /// BuildToolbox egui window — editor only; sim uses Bevy build rail (Phase 2B).
 #[must_use]
 pub const fn build_toolbox_egui_dock_active(base: BaseState) -> bool {
-    product_egui_shell_base_active(base)
+    product_shell_base_active(base)
 }
 
 /// Left egui status rail — editor only; sim uses Bevy context rail (Phase 2B).
 #[must_use]
 pub const fn side_status_rail_egui_dock_active(base: BaseState) -> bool {
-    product_egui_shell_base_active(base)
+    product_shell_base_active(base)
 }
 
-pub use crate::gui::ui_gates::product_egui_shell_base_active;
+pub use crate::gui::ui_gates::product_shell_base_active;
 
 /// Force floating egui dock slots closed (PLAY-01 sim enter + enforce).
 pub fn suppress_simulation_floating_shell_slots(dock: &mut ProductShellRegistry) {
@@ -263,103 +262,26 @@ impl ProductShellRegistry {
 }
 
 /// Raise the focused product-shell window so click-to-focus wins over fixed draw order.
-pub fn raise_focused_product_shell_window(ctx: &mut egui::Context, registry: &ProductShellRegistry) {
-    if let Some(id) = registry.focused {
-        let layer = egui::LayerId::new(egui::Order::Middle, id.egui_window_id());
-        ctx.move_to_top(layer);
-    }
-}
+pub fn raise_focused_product_shell_window() {}
 
 pub struct ShellWindowHost<'a> {
     pub id: ProductShellWidgetId,
     pub title: &'a str,
-    pub default_pos: egui::Pos2,
+    pub default_pos: bevy::prelude::Vec2,
     pub default_size: [f32; 2],
     pub min_size: [f32; 2],
 }
 
 /// Movable first-run placement for minimap / construction / build toolbox (not corner-locked).
 #[must_use]
-pub fn floating_unanchored_default_pos(
-    ctx: &egui::Context,
-    id: ProductShellWidgetId,
-    size: [f32; 2],
-) -> egui::Pos2 {
-    let screen = ctx.content_rect();
-    let w = size[0].min(screen.width() * 0.42);
-    let h = size[1].min(screen.height() * 0.5);
-    let margin = 12.0;
-    let top = screen.min.y + 64.0;
-    let (x, y) = match id {
-        ProductShellWidgetId::Minimap => (
-            screen.max.x - w - margin,
-            top + margin,
-        ),
-        ProductShellWidgetId::BuildToolbox => (
-            margin,
-            screen.center().y - h * 0.55,
-        ),
-        ProductShellWidgetId::ConstructionQueue => (
-            margin,
-            screen.center().y + h * 0.05,
-        ),
-        _ => {
-            let hash = id.index() as f32;
-            (
-                screen.center().x - w * 0.5 + (hash - 3.0) * 36.0,
-                screen.center().y - h * 0.5 + (hash - 3.0) * 28.0,
-            )
-        }
-    };
-    egui::pos2(
-        x.clamp(screen.min.x + margin, screen.max.x - w - margin),
-        y.clamp(top, screen.max.y - h - margin),
-    )
-}
+pub fn floating_unanchored_default_pos() {}
 
 /// Screen-aware grid for transmission, info rail, command shell, intel, explainability.
 #[must_use]
-pub fn shell_anchored_default_pos(
-    ctx: &egui::Context,
-    id: ProductShellWidgetId,
-    size: [f32; 2],
-) -> egui::Pos2 {
-    let screen = ctx.content_rect();
-    let w = size[0].min(screen.width() * 0.38);
-    let h = size[1].min(screen.height() * 0.45);
-    let margin = 12.0;
-    let top = screen.min.y + 64.0;
-    let right_x = screen.max.x - w - margin;
-    match id {
-        ProductShellWidgetId::Transmission => egui::pos2(right_x, top),
-        ProductShellWidgetId::OverlayTray => egui::pos2(margin, top + 52.0),
-        ProductShellWidgetId::OverlaysPanel => egui::pos2(right_x, top + 56.0),
-        ProductShellWidgetId::CommandShell => {
-            egui::pos2(margin, screen.max.y - h - 72.0)
-        }
-        ProductShellWidgetId::IntelTimeline => {
-            egui::pos2(right_x, screen.center().y - h * 0.35)
-        }
-        ProductShellWidgetId::Explainability => egui::pos2(
-            (screen.center().x - w * 0.5).clamp(margin, screen.max.x - w - margin),
-            screen.max.y - h - 56.0,
-        ),
-        _ => egui::pos2(margin + 220.0, top + 120.0),
-    }
-}
+pub fn shell_anchored_default_pos() {}
 
 #[must_use]
-pub fn shell_default_window_pos(
-    ctx: &egui::Context,
-    id: ProductShellWidgetId,
-    size: [f32; 2],
-) -> egui::Pos2 {
-    if id.uses_unanchored_default() {
-        floating_unanchored_default_pos(ctx, id, size)
-    } else {
-        shell_anchored_default_pos(ctx, id, size)
-    }
-}
+pub fn shell_default_window_pos() {}
 
 pub struct ShellWindowOutcome {
     pub open: bool,
@@ -396,112 +318,13 @@ pub fn shell_widget_runs_egui_with_budget(
     }
 }
 
-pub fn draw_shell_window_chrome(ui: &mut egui::Ui, minimized: &mut bool, detached: &mut bool, lightweight: bool) {
-    if lightweight {
-        ui.label(egui::RichText::new("Dragging…").small().weak());
-        return;
-    }
-    ui.horizontal(|ui| {
-        if ui.button("Min").clicked() {
-            *minimized = true;
-        }
-        if ui.button("Detach").clicked() {
-            *detached = !*detached;
-        }
-    });
-}
+pub fn draw_shell_window_chrome() {}
 
-pub fn show_product_shell_window(
-    ctx: &mut egui::Context,
-    host: ShellWindowHost<'_>,
-    layout: &HudLayoutStore,
-    registry: &mut ProductShellRegistry,
-    open: &mut bool,
-    mut body: impl FnMut(&mut egui::Ui),
-    widget_timing: Option<&mut ShellWidgetDiagnostics>,
-) -> Option<egui::Response> {
-    let slot = registry.slot(host.id);
-    if slot.minimized || !*open || !slot.visible {
-        return None;
-    }
+pub fn show_product_shell_window() {}
 
-    let window = layout.apply_window(
-        host.id,
-        crate::gui::std_floating(egui::Window::new(host.title))
-            .id(host.id.egui_window_id())
-            .min_size(host.min_size),
-        host.default_pos,
-        host.default_size,
-    );
-    let mut minimized = slot.minimized;
-    let mut detached = slot.detached;
-    let started = std::time::Instant::now();
-    let inner = window.open(open).show(ctx, |ui| {
-        let response = ui.response();
-        let lightweight = response.dragged() || response.drag_started();
-        draw_shell_window_chrome(ui, &mut minimized, &mut detached, lightweight);
-        body(ui);
-    })?;
-    if let Some(timing) = widget_timing {
-        let elapsed = started.elapsed();
-        let total_us = elapsed.as_micros() as u32;
-        timing.record(
-            host.id,
-            total_us / 3,
-            total_us.saturating_sub(total_us / 3),
-            0,
-            0,
-            WidgetRebuildReason::EguiWindow,
-        );
-    }
-    let focused = inner.response.hovered() || inner.response.has_focus();
-    if focused {
-        registry.focus(host.id);
-    }
-    sync_shell_slot_from_outcome(
-        registry,
-        host.id,
-        &ShellWindowOutcome {
-            open: *open,
-            minimized,
-            detached,
-            focused,
-        },
-    );
-    Some(inner.response)
-}
+pub fn draw_minimized_shell_chip() {}
 
-pub fn draw_minimized_shell_chip(
-    ui: &mut egui::Ui,
-    id: ProductShellWidgetId,
-    registry: &mut ProductShellRegistry,
-) -> bool {
-    let slot = registry.slot(id);
-    if !slot.minimized {
-        return false;
-    }
-    let clicked = ui.button(format!("{} ○", id.label())).clicked();
-    if clicked {
-        registry.restore(id);
-    }
-    clicked
-}
-
-pub fn capture_shell_layout(
-    layout: &mut HudLayoutStore,
-    id: ProductShellWidgetId,
-    response: &egui::Response,
-    pending: Option<&mut PendingHudLayoutCommit>,
-) {
-    if let Some(pending) = pending {
-        if !pending.can_emit_layout_capture() {
-            return;
-        }
-        let _ = pending.queue_capture(id, response, layout);
-        return;
-    }
-    let _ = layout.capture_window_if_changed(id, response);
-}
+pub fn capture_shell_layout() {}
 
 pub fn sync_shell_slot_from_outcome(
     registry: &mut ProductShellRegistry,
@@ -557,11 +380,11 @@ mod tests {
     }
 
     #[test]
-    fn phase2b_product_egui_shell_editor_only() {
+    fn phase2b_product_shell_editor_only() {
         use crate::engine::states::BaseState;
 
-        assert!(!product_egui_shell_base_active(BaseState::Simulation));
-        assert!(product_egui_shell_base_active(BaseState::Editor));
+        assert!(!product_shell_base_active(BaseState::Simulation));
+        assert!(product_shell_base_active(BaseState::Editor));
         assert!(!product_shell_widget_egui_dock_active(
             ProductShellWidgetId::BuildToolbox,
             BaseState::Simulation

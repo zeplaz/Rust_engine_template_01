@@ -1,242 +1,298 @@
-//! Movable construction toolbox (floating product-shell window — not left-anchored).
+//! Movable construction toolbox — Bevy UI (editor product shell).
+//!
+//! Tool-select intents only: mutates [`ActiveBuildTool`]; never executes placement.
 
+use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::prelude::*;
-use bevy_egui::egui;
+use bevy::ui::FocusPolicy;
 
-use crate::gui::hud::{
-    capture_shell_layout, draw_shell_window_chrome, floating_unanchored_default_pos,
-    shell_widget_runs_egui_with_budget, HudDockRegistry, HudLayoutStore, HudWidgetId,
-    PendingHudLayoutCommit, ProductShellUpdateBudget,
-};
-use crate::gui::std_floating;
-use crate::gui::InputBindings;
+use crate::gui::hud::{HudDockRegistry, HudWidgetId};
+use crate::gui::style::{CmdUiMonoFont, UiPalette};
+use crate::gui::{product_shell_active, PanelPresence};
 
-use super::build_state::{BuildGhostState, BuildPlacementPreview};
 use super::build_tool_authority::{
-    ActiveBuildTool, BuildTool, DefenseKind, RailType, RoadType, ZoneTool,
+    ActiveBuildTool, BuildTool, BuildingArchetypeId, DefenseKind, RailType, RoadType, ZoneTool,
 };
 use super::building_definitions::BuildingDefinitionRegistry;
-use super::commercial_menu::draw_commercial_submenu;
-use super::industrial_menu::draw_industrial_submenu;
-use super::mock_shapes_menu::draw_mock_shapes_submenu;
-use super::residential_menu::{draw_intent_preview, draw_residential_submenu};
-use super::utilities_menu::draw_utilities_submenu;
-use crate::strategic::CorridorConstructionBook;
 
-pub fn draw_build_toolbox_egui(
-    mut contexts: bevy_egui::EguiContexts,
-    mut tool: ResMut<ActiveBuildTool>,
+/// Editor construction toolbox root (Bevy UI).
+#[derive(Component)]
+pub struct BuildToolboxBevyRoot;
+
+#[derive(Component, Clone, Copy, Debug)]
+enum BuildToolboxAction {
+    ZoneResidential,
+    Commercial,
+    Industrial,
+    Utilities,
+    MockShapes,
+    Road,
+    Rail,
+    Demolish,
+    Clear,
+    Defense(DefenseKind),
+}
+
+#[derive(Default)]
+struct BuildToolboxStamp {
+    key: u64,
+}
+
+
+fn toolbox_stamp(tool: &ActiveBuildTool, dock_visible: bool, catalog_n: usize) -> u64 {
+    let mut key = dock_visible as u64;
+    key = key
+        .wrapping_mul(31)
+        .wrapping_add(catalog_n as u64)
+        .wrapping_mul(31)
+        .wrapping_add(tool.tool.label().len() as u64);
+    for b in format!("{:?}", tool.tool).bytes() {
+        key = key.wrapping_mul(31).wrapping_add(b as u64);
+    }
+    key = key
+        .wrapping_add(tool.residential_menu_open as u64)
+        .wrapping_add(tool.commercial_menu_open as u64)
+        .wrapping_add(tool.industrial_menu_open as u64)
+        .wrapping_add(tool.utilities_menu_open as u64)
+        .wrapping_add(tool.mock_shapes_menu_open as u64);
+    key
+}
+
+/// Spawn/despawn editor construction toolbox from dock visibility.
+pub fn sync_build_toolbox_bevy(
+    mut commands: Commands,
+    dock: Res<HudDockRegistry>,
+    tool: Res<ActiveBuildTool>,
     registry: Res<BuildingDefinitionRegistry>,
-    corridor_book: Option<Res<CorridorConstructionBook>>,
-    mut dock: ResMut<HudDockRegistry>,
-    mut layout_store: ResMut<HudLayoutStore>,
-    mut update_budget: ResMut<ProductShellUpdateBudget>,
-    mut pending_layout: ResMut<PendingHudLayoutCommit>,
-    ghost: Res<BuildGhostState>,
-    preview: Res<BuildPlacementPreview>,
-    bindings: Res<InputBindings>,
-    time: Res<Time>,
-) -> Result {
-    let ctx = contexts.ctx_mut()?;
-    let now_secs = time.elapsed_secs();
-    let mut open = dock.slot(HudWidgetId::BuildToolbox).visible;
-    if !shell_widget_runs_egui_with_budget(
-        &dock,
-        HudWidgetId::BuildToolbox,
-        open,
-        Some(&mut *update_budget),
-        now_secs,
-    ) {
-        return Ok(());
+    palette: Res<UiPalette>,
+    mono: Res<CmdUiMonoFont>,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<BuildToolboxBevyRoot>>,
+    mut stamp: Local<BuildToolboxStamp>,
+) {
+    presence.build_toolbox_root = !roots.is_empty();
+    let visible = dock.slot(HudWidgetId::BuildToolbox).visible
+        && !dock.slot(HudWidgetId::BuildToolbox).minimized;
+    if !visible {
+        for e in &roots {
+            commands.entity(e).despawn();
+        }
+        presence.build_toolbox_root = false;
+        stamp.key = 0;
+        return;
     }
 
-    let default_size = [240.0, 420.0];
-    let default_pos = floating_unanchored_default_pos(ctx, HudWidgetId::BuildToolbox, default_size);
-    let frame = layout_store.frame(HudWidgetId::BuildToolbox);
-    let window = if frame.initialized {
-        std_floating(egui::Window::new("Construction"))
-            .id(HudWidgetId::BuildToolbox.egui_window_id())
-            .default_pos(egui::pos2(frame.pos.x, frame.pos.y))
-            .default_size([frame.size.x, frame.size.y])
-            .min_size([180.0, 240.0])
-            .resizable(true)
-    } else {
-        std_floating(egui::Window::new("Construction"))
-            .id(HudWidgetId::BuildToolbox.egui_window_id())
-            .default_pos(default_pos)
-            .default_size(default_size)
-            .min_size([180.0, 240.0])
-            .resizable(true)
-    };
+    let next = toolbox_stamp(tool.as_ref(), visible, registry.by_id.len());
+    if !roots.is_empty() && stamp.key == next {
+        return;
+    }
+    for e in &roots {
+        commands.entity(e).despawn();
+    }
 
-    let mut minimized = dock.slot(HudWidgetId::BuildToolbox).minimized;
-    let mut detached = dock.slot(HudWidgetId::BuildToolbox).detached;
-    if let Some(inner) = window.open(&mut open).show(ctx, |ui| {
-        let response = ui.response();
-        let lightweight = response.dragged() || response.drag_started();
-        draw_shell_window_chrome(ui, &mut minimized, &mut detached, lightweight);
-        ui.label(
-            egui::RichText::new("Drag title bar to move · drag edges to resize")
-                .small()
-                .weak(),
-        );
-        ui.separator();
-        if tool.tool.uses_two_click_place() {
-            let in_adjust = ghost.placement_mode == crate::construction::BuildPlacementMode::Adjust
-                && ghost.origin.is_some();
-            let can_place = in_adjust && preview.report.allows_commit;
-            let row = match tool.tool {
-                BuildTool::Defense(kind) => kind.player_label(),
-                _ => "building",
-            };
-            let place_label = if !in_adjust {
-                format!("Lock {row} — click map")
-            } else if can_place {
-                format!("Place {row} — click map again")
-            } else {
-                "Cannot place — fix validation".to_string()
-            };
-            ui.add_enabled_ui(can_place || !in_adjust, |ui| {
-                let _ = ui.button(place_label);
-            });
-            ui.label(
-                egui::RichText::new(format!(
-                    "Shortcut: {}",
-                    InputBindings::format_key(bindings.confirm_build_placement)
-                ))
-                .small()
-                .weak(),
-            );
-            if !in_adjust {
-                let hint = if matches!(tool.tool, BuildTool::Defense(_)) {
-                    "Pick a defense row in the Military picker, then click the map to lock."
-                } else {
-                    "Pick a catalog building below, then click the map to lock."
-                };
-                ui.label(egui::RichText::new(hint).small().weak());
+    let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
+    let active = format!("Active: {:?}", tool.tool);
+    let catalog = format!("Catalog rows: {}", registry.by_id.len());
+
+    commands
+        .spawn((
+            BuildToolboxBevyRoot,
+            Node {
+                position_type: PositionType::Absolute,
+                top: Val::Px(72.0),
+                right: Val::Px(16.0),
+                width: Val::Px(240.0),
+                max_height: Val::Px(480.0),
+                padding: UiRect::all(Val::Px(10.0)),
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(4.0),
+                border: UiRect::all(Val::Px(1.0)),
+                border_radius: BorderRadius::ZERO,
+                overflow: Overflow::scroll_y(),
+                ..default()
+            },
+            BackgroundColor(palette.bevy_hud_panel_fill()),
+            BorderColor::all(palette.bevy_wire_magenta()),
+            FocusPolicy::Block,
+            ZIndex(940),
+        ))
+        .with_children(|root| {
+            root.spawn((
+                Text::new("Construction"),
+                tf.clone(),
+                TextColor(palette.bevy_primary_text()),
+            ));
+            root.spawn((
+                Text::new(active),
+                tf.clone(),
+                TextColor(palette.bevy_text_muted()),
+            ));
+            root.spawn((
+                Text::new(catalog),
+                tf.clone(),
+                TextColor(palette.bevy_text_muted()),
+            ));
+            spawn_toolbox_button(root, &palette, &tf, "Zoning · Residential…", BuildToolboxAction::ZoneResidential);
+            spawn_toolbox_button(root, &palette, &tf, "Buildings · Commercial…", BuildToolboxAction::Commercial);
+            spawn_toolbox_button(root, &palette, &tf, "Buildings · Industrial…", BuildToolboxAction::Industrial);
+            spawn_toolbox_button(root, &palette, &tf, "Buildings · Utilities…", BuildToolboxAction::Utilities);
+            spawn_toolbox_button(root, &palette, &tf, "Mock shapes (T/O/L)…", BuildToolboxAction::MockShapes);
+            spawn_toolbox_button(root, &palette, &tf, "Roads", BuildToolboxAction::Road);
+            spawn_toolbox_button(root, &palette, &tf, "Rail", BuildToolboxAction::Rail);
+            spawn_toolbox_button(root, &palette, &tf, "Demolish", BuildToolboxAction::Demolish);
+            spawn_toolbox_button(root, &palette, &tf, "Clear tool", BuildToolboxAction::Clear);
+            for (kind, label) in [
+                (DefenseKind::DefensiveWall, "Defense · Wall"),
+                (DefenseKind::TrenchLine, "Defense · Trench"),
+                (DefenseKind::Bunker, "Defense · Bunker"),
+                (DefenseKind::DragonTeeth, "Defense · Dragon teeth"),
+                (DefenseKind::Minefield, "Defense · Minefield"),
+            ] {
+                spawn_toolbox_button(
+                    root,
+                    &palette,
+                    &tf,
+                    label,
+                    BuildToolboxAction::Defense(kind),
+                );
             }
-            ui.separator();
+        });
+    stamp.key = next;
+    presence.build_toolbox_root = true;
+}
+
+fn spawn_toolbox_button(
+    parent: &mut ChildSpawnerCommands,
+    palette: &UiPalette,
+    tf: &TextFont,
+    label: &str,
+    action: BuildToolboxAction,
+) {
+    parent
+        .spawn((
+            action,
+            Button,
+            Node {
+                width: Val::Percent(100.0),
+                padding: UiRect::axes(Val::Px(6.0), Val::Px(4.0)),
+                border: UiRect::all(Val::Px(1.0)),
+                ..default()
+            },
+            BackgroundColor(palette.bevy_button_idle()),
+            BorderColor::all(palette.bevy_wire_magenta()),
+            FocusPolicy::Block,
+        ))
+        .with_children(|btn| {
+            btn.spawn((
+                Text::new(label.to_string()),
+                tf.clone(),
+                TextColor(palette.bevy_primary_text()),
+            ));
+        });
+}
+
+/// Tool-select intents only — no execute / place / queue mutation.
+pub fn build_toolbox_bevy_action_system(
+    q: Query<(&Interaction, &BuildToolboxAction), (Changed<Interaction>, With<Button>)>,
+    mut tool: ResMut<ActiveBuildTool>,
+) {
+    for (interaction, action) in &q {
+        if *interaction != Interaction::Pressed {
+            continue;
         }
-        ui.collapsing("Zoning", |ui| {
-            if ui.button("Residential…").clicked() {
+        match *action {
+            BuildToolboxAction::ZoneResidential => {
                 tool.close_submenus();
                 tool.residential_menu_open = true;
                 tool.tool = BuildTool::Zone(ZoneTool::ResidentialLow);
             }
-        });
-        ui.collapsing("Buildings", |ui| {
-            if ui.button("Commercial…").clicked() {
+            BuildToolboxAction::Commercial => {
                 tool.close_submenus();
                 tool.commercial_menu_open = true;
                 tool.clear_building_intent();
-                tool.tool =
-                    BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Office);
+                tool.tool = BuildTool::Building(BuildingArchetypeId::Office);
             }
-            if ui.button("Industrial…").clicked() {
+            BuildToolboxAction::Industrial => {
                 tool.close_submenus();
                 tool.industrial_menu_open = true;
                 tool.clear_building_intent();
-                tool.tool =
-                    BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Factory);
+                tool.tool = BuildTool::Building(BuildingArchetypeId::Factory);
             }
-            if ui.button("Utilities…").clicked() {
+            BuildToolboxAction::Utilities => {
                 tool.close_submenus();
                 tool.utilities_menu_open = true;
                 tool.clear_building_intent();
-                tool.tool = BuildTool::Building(
-                    super::build_tool_authority::BuildingArchetypeId::WaterPlant,
-                );
+                tool.tool = BuildTool::Building(BuildingArchetypeId::WaterPlant);
             }
-            if ui.button("Mock shapes (T/O/L)…").clicked() {
+            BuildToolboxAction::MockShapes => {
                 tool.close_submenus();
                 tool.mock_shapes_menu_open = true;
                 tool.clear_building_intent();
-                tool.tool =
-                    BuildTool::Building(super::build_tool_authority::BuildingArchetypeId::Factory);
+                tool.tool = BuildTool::Building(BuildingArchetypeId::Factory);
             }
-        });
-        ui.collapsing("Infrastructure", |ui| {
-            if ui.button("Roads").clicked() {
+            BuildToolboxAction::Road => {
                 tool.close_submenus();
                 tool.clear_building_intent();
                 tool.tool = BuildTool::Road(RoadType::Street);
             }
-            if ui.button("Rail").clicked() {
+            BuildToolboxAction::Rail => {
                 tool.close_submenus();
                 tool.clear_building_intent();
                 tool.tool = BuildTool::Rail(RailType::Standard);
             }
-        });
-        ui.collapsing("Editing", |ui| {
-            if ui.button("Demolish").clicked() {
+            BuildToolboxAction::Demolish => {
                 tool.close_submenus();
                 tool.clear_building_intent();
                 tool.tool = BuildTool::Demolish;
             }
-            if ui.button("Clear tool").clicked() {
+            BuildToolboxAction::Clear => {
                 tool.tool = BuildTool::None;
                 tool.close_submenus();
                 tool.clear_building_intent();
             }
-        });
-        ui.collapsing("Defense (Military)", |ui| {
-            for (kind, label) in [
-                (DefenseKind::DefensiveWall, "Defensive wall"),
-                (DefenseKind::TrenchLine, "Trench line"),
-                (DefenseKind::Bunker, "Bunker"),
-                (DefenseKind::DragonTeeth, "Dragon's teeth"),
-                (DefenseKind::Minefield, "Minefield"),
-            ] {
-                if ui.button(label).clicked() {
-                    tool.close_submenus();
-                    tool.clear_building_intent();
-                    tool.tool = BuildTool::Defense(kind);
-                }
+            BuildToolboxAction::Defense(kind) => {
+                tool.close_submenus();
+                tool.clear_building_intent();
+                tool.tool = BuildTool::Defense(kind);
             }
-        });
-        if tool.residential_menu_open {
-            ui.separator();
-            draw_residential_submenu(ui, &mut tool, &registry);
-        }
-        if tool.commercial_menu_open {
-            ui.separator();
-            draw_commercial_submenu(ui, &mut tool, &registry);
-        }
-        if tool.industrial_menu_open {
-            ui.separator();
-            draw_industrial_submenu(ui, &mut tool, &registry);
-        }
-        if tool.utilities_menu_open {
-            ui.separator();
-            draw_utilities_submenu(ui, &mut tool, &registry, None);
-        }
-        if tool.mock_shapes_menu_open {
-            ui.separator();
-            draw_mock_shapes_submenu(ui, &mut tool, &registry);
-        }
-        if let Some(intent) = tool.building_intent.as_ref() {
-            ui.separator();
-            draw_intent_preview(ui, intent);
-        }
-        if let Some(book) = corridor_book.as_ref() {
-            super::round4_corridor::draw_r4_corridor_tray_legend(ui, &tool, book);
-        }
-    }) {
-        if pending_layout.can_emit_layout_capture() {
-            capture_shell_layout(
-                &mut layout_store,
-                HudWidgetId::BuildToolbox,
-                &inner.response,
-                Some(&mut *pending_layout),
-            );
-        }
-        if inner.response.hovered() || inner.response.has_focus() {
-            dock.focus(HudWidgetId::BuildToolbox);
         }
     }
+}
 
-    let slot = dock.slot_mut(HudWidgetId::BuildToolbox);
-    slot.minimized = minimized;
-    slot.detached = detached;
-    Ok(())
+fn despawn_build_toolbox_bevy_when_inactive(
+    mut commands: Commands,
+    mut presence: ResMut<PanelPresence>,
+    roots: Query<Entity, With<BuildToolboxBevyRoot>>,
+) {
+    for e in &roots {
+        commands.entity(e).despawn();
+    }
+    presence.build_toolbox_root = false;
+}
+
+/// Systems for [`crate::construction::BuildPlanningPlugin`].
+pub fn register_build_toolbox_bevy_systems(app: &mut App) {
+    app.add_systems(
+        Update,
+        (
+            sync_build_toolbox_bevy,
+            build_toolbox_bevy_action_system.after(sync_build_toolbox_bevy),
+        )
+            .run_if(product_shell_active),
+    )
+    .add_systems(
+        Update,
+        despawn_build_toolbox_bevy_when_inactive.run_if(not(product_shell_active)),
+    );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn build_toolbox_bevy_root_marker_present() {
+        assert!(include_str!("build_toolbox.rs").contains("BuildToolboxBevyRoot"));
+        assert!(include_str!("build_toolbox.rs").contains("sync_build_toolbox_bevy"));
+    }
 }

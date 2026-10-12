@@ -7,7 +7,6 @@
 use bevy::math::Vec2;
 use bevy::prelude::*;
 use bevy::window::{CursorOptions, PrimaryWindow};
-use bevy_egui::{egui, EguiContexts};
 
 use crate::engine::states::BaseState;
 use crate::engine::AppState;
@@ -73,6 +72,10 @@ pub fn sync_simulation_map_pointer_gate_system(
     picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
     power_sheet: Option<Res<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>>,
     road_sheet: Option<Res<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>>,
+    diagnostics: Option<Res<crate::gui::DiagnosticsUiState>>,
+    keybindings: Option<Res<crate::gui::KeybindingsUiState>>,
+    logistics_orders: Option<Res<crate::gui::LogisticsOrdersPanelState>>,
+    logistics_targets: Option<Res<crate::gui::LogisticsTargetsPanelState>>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
     let Ok(w) = window.single() else {
@@ -120,6 +123,14 @@ pub fn sync_simulation_map_pointer_gate_system(
         ) {
             gate.chrome_blocks = true;
         }
+        // Bevy floating panels block map pick while open (F1 / F3 / logistics).
+        if diagnostics.as_ref().is_some_and(|d| d.visible)
+            || keybindings.as_ref().is_some_and(|k| k.visible)
+            || logistics_orders.as_ref().is_some_and(|p| p.visible)
+            || logistics_targets.as_ref().is_some_and(|p| p.visible)
+        {
+            gate.chrome_blocks = true;
+        }
     } else if gate.egui_blocks {
         gate.chrome_blocks = true;
     }
@@ -138,7 +149,63 @@ pub fn sync_simulation_map_pointer_gate_system(
     // Forcing it true here showed the OS cursor in the same frame the crosshair policy hid it.
 }
 
-/// Placement, demolish, and power-cut tools read this instead of `EguiContexts::ctx_mut`.
+/// Editor Bevy roots (dock / toolbox / map-editor shell) block map pick.
+/// Kept separate so [`sync_simulation_map_pointer_gate_system`] stays under the
+/// Bevy system-param budget used by `.after(...)` ordering.
+pub fn apply_editor_bevy_panel_pointer_blocks_system(
+    base: Option<Res<State<BaseState>>>,
+    presence: Option<Res<crate::gui::PanelPresence>>,
+    map_vp: Res<SimulationMapViewport>,
+    mut gate: ResMut<SimulationMapPointerGate>,
+) {
+    let in_editor = base
+        .as_ref()
+        .is_some_and(|state| matches!(state.get(), BaseState::Editor));
+    if !in_editor {
+        return;
+    }
+    let bevy_editor_chrome = presence.as_ref().is_some_and(|p| {
+        p.editor_dock_root
+            || p.build_toolbox_root
+            || p.map_editor_shell_root
+            || p.road_popup_root
+            || p.staged_placements_root
+    });
+    if !bevy_editor_chrome {
+        return;
+    }
+    gate.chrome_blocks = true;
+    gate.in_play_area = if map_vp.is_adequate_for_camera() {
+        (!map_vp.valid || map_vp.contains_cursor(gate.cursor)) && !gate.chrome_blocks
+    } else {
+        false
+    };
+}
+
+/// Floating Bevy dev panels (faction / AI explain / pressure / assembly QC) block map pick.
+pub fn apply_dev_bevy_panel_pointer_blocks_system(
+    presence: Option<Res<crate::gui::PanelPresence>>,
+    map_vp: Res<SimulationMapViewport>,
+    mut gate: ResMut<SimulationMapPointerGate>,
+) {
+    let blocks = presence.as_ref().is_some_and(|p| {
+        p.faction_tools_root
+            || p.ai_explainability_root
+            || p.pressure_composer_root
+            || p.assembly_snapshot_qc_root
+    });
+    if !blocks {
+        return;
+    }
+    gate.chrome_blocks = true;
+    gate.in_play_area = if map_vp.is_adequate_for_camera() {
+        (!map_vp.valid || map_vp.contains_cursor(gate.cursor)) && !gate.chrome_blocks
+    } else {
+        false
+    };
+}
+
+/// Placement, demolish, and power-cut tools read this instead of `ctx_mut`.
 ///
 /// `Unavailable` matches a failed context read: the click does not commit.
 /// `HeldByChrome` matches `egui_wants_pointer_input`: preview clears, commit does not run.
@@ -172,7 +239,7 @@ fn open_play_sheet_holds_pointer(
     power_sheet: Option<&crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>,
     road_sheet: Option<&crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
 ) -> bool {
-    let pt = egui::pos2(cursor.x, cursor.y);
+    let pt = bevy::prelude::Vec2::new(cursor.x, cursor.y);
     let tool = tool.map(|t| t.tool);
     let power_open = power_sheet.is_some_and(|s| s.open)
         && matches!(tool, Some(BuildTool::PowerLine(_)));
@@ -189,13 +256,10 @@ fn open_play_sheet_holds_pointer(
             ToolContext::Utilities,
             left_stack_collapsed,
         );
-        let rect = egui::Rect::from_min_size(
-            anchor,
-            egui::vec2(
+        let rect = bevy::prelude::Rect::from_corners(anchor, anchor + bevy::prelude::Vec2::new(
                 crate::gui::hud::sim_power_tool_sheet::POWER_TOOL_SHEET_W_PX,
                 crate::gui::hud::sim_power_tool_sheet::POWER_TOOL_SHEET_BLOCK_H_PX,
-            ),
-        );
+            ),);
         if rect.contains(pt) {
             return true;
         }
@@ -212,13 +276,10 @@ fn open_play_sheet_holds_pointer(
             },
             left_stack_collapsed,
         );
-        let rect = egui::Rect::from_min_size(
-            anchor,
-            egui::vec2(
+        let rect = bevy::prelude::Rect::from_corners(anchor, anchor + bevy::prelude::Vec2::new(
                 crate::gui::hud::sim_road_tool_sheet::ROAD_TOOL_SHEET_W_PX,
                 crate::gui::hud::sim_road_tool_sheet::ROAD_TOOL_SHEET_BLOCK_H_PX,
-            ),
-        );
+            ),);
         if rect.contains(pt) {
             return true;
         }
@@ -227,74 +288,6 @@ fn open_play_sheet_holds_pointer(
 }
 
 /// After egui HUD: block map picks / hide unified cursor when floating panels capture the pointer.
-pub fn finalize_simulation_map_pointer_gate_egui_system(
-    mut gate: ResMut<SimulationMapPointerGate>,
-    map_vp: Res<SimulationMapViewport>,
-    dock: Res<HudDockRegistry>,
-    layout: Res<HudLayoutStore>,
-    strip: Res<BuildStripState>,
-    tool: Res<ActiveBuildTool>,
-    picker: Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
-    left_stack: Res<CommandLeftStackState>,
-    app: Option<Res<State<AppState>>>,
-    base: Option<Res<State<BaseState>>>,
-    mut contexts: EguiContexts,
-) {
-    // Play reads `simulation_tool_pointer`. This egui acquire is the editor pass only.
-    // Simulation must not call `ctx_mut` — sheet hits are resolved in the sync system.
-    if base
-        .as_ref()
-        .is_some_and(|state| matches!(state.get(), BaseState::Simulation))
-    {
-        return;
-    }
-    if app
-        .as_ref()
-        .is_some_and(|state| matches!(state.get(), AppState::WorldGen))
-    {
-        return;
-    }
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    let over_floating_hud = cursor_over_visible_hud_widget(gate.cursor, &dock, &layout)
-        || sim_build_rail_submenu_blocks_pointer(
-            strip.as_ref(),
-            tool.as_ref(),
-            picker.as_ref(),
-            left_stack.as_ref(),
-            gate.cursor,
-        );
-    // GUI-ESC-001: over left build rail / stack, ignore egui wants_pointer so rail clicks work
-    // even when placement-debug egui chrome is open.
-    let left_block_w =
-        CENTER_ROW_EDGE_PAD_PX + command_left_stack_footprint_px(left_stack.collapsed);
-    let over_build_rail = gate.cursor.x < left_block_w
-        || sim_build_rail_submenu_blocks_pointer(
-            strip.as_ref(),
-            tool.as_ref(),
-            picker.as_ref(),
-            left_stack.as_ref(),
-            gate.cursor,
-        );
-    let egui_wants = ctx.egui_wants_pointer_input();
-    let egui_blocks = if over_build_rail {
-        false
-    } else {
-        egui_wants || over_floating_hud
-    };
-    gate.egui_blocks = egui_blocks;
-    if egui_blocks {
-        gate.chrome_blocks = true;
-        gate.in_play_area = false;
-    }
-    gate.wheel_play_area = map_wheel_play_area_allowed(
-        gate.cursor,
-        gate.window_logical,
-        map_vp.as_ref(),
-        gate.chrome_blocks_pre_egui,
-    ) && !over_floating_hud;
-}
 
 /// Whether the cursor is over the tactical map hole (excluding chrome), for wheel zoom routing.
 #[inline]
@@ -338,7 +331,7 @@ fn sim_build_rail_submenu_blocks_pointer(
         return false;
     }
     sim_build_rail_submenu_block_rect(picker, left_stack.collapsed)
-        .contains(egui::pos2(cursor.x, cursor.y))
+        .contains(bevy::prelude::Vec2::new(cursor.x, cursor.y))
 }
 
 #[inline]
@@ -347,7 +340,7 @@ fn cursor_over_visible_hud_widget(
     dock: &HudDockRegistry,
     layout: &HudLayoutStore,
 ) -> bool {
-    let pt = egui::pos2(cursor.x, cursor.y);
+    let pt = bevy::prelude::Vec2::new(cursor.x, cursor.y);
     for widget in ProductShellWidgetId::ALL {
         let slot = dock.slot(widget);
         if !slot.visible || slot.minimized {
@@ -357,10 +350,7 @@ fn cursor_over_visible_hud_widget(
         if !frame.initialized {
             continue;
         }
-        let rect = egui::Rect::from_min_size(
-            egui::pos2(frame.pos.x, frame.pos.y),
-            egui::vec2(frame.size.x.max(1.0), frame.size.y.max(1.0)),
-        );
+        let rect = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(frame.pos.x, frame.pos.y), bevy::prelude::Vec2::new(frame.pos.x, frame.pos.y) + bevy::prelude::Vec2::new(frame.size.x.max(1.0), frame.size.y.max(1.0)),);
         if rect.contains(pt) {
             return true;
         }
@@ -501,8 +491,11 @@ pub fn apply_simulation_unified_cursor_system(
     picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
     tool: Option<Res<ActiveBuildTool>>,
     diagnostics: Option<Res<crate::gui::DiagnosticsUiState>>,
+    keybindings: Option<Res<crate::gui::KeybindingsUiState>>,
+    logistics_orders: Option<Res<crate::gui::LogisticsOrdersPanelState>>,
+    logistics_targets: Option<Res<crate::gui::LogisticsTargetsPanelState>>,
 ) {
-    // Catalog / tool menus / diagnostics / floating egui need OS cursor for accurate hits.
+    // Catalog / tool menus / diagnostics / floating panels need OS cursor for accurate hits.
     // Do **not** treat all chrome_blocks as menu_open — that popped the OS cursor on the
     // build rail during place mode (dual-cursor glitch vs play-area hide).
     let picker_open = picker.as_ref().is_some_and(|p| p.open);
@@ -514,7 +507,10 @@ pub fn apply_simulation_unified_cursor_system(
             || t.mock_shapes_menu_open
     });
     let diag_open = diagnostics.as_ref().is_some_and(|d| d.visible);
-    let menu_open = picker_open || tool_menus || diag_open || gate.egui_blocks;
+    let keys_open = keybindings.as_ref().is_some_and(|k| k.visible);
+    let logi_open = logistics_orders.as_ref().is_some_and(|p| p.visible)
+        || logistics_targets.as_ref().is_some_and(|p| p.visible);
+    let menu_open = picker_open || tool_menus || diag_open || keys_open || logi_open || gate.egui_blocks;
 
     let build_active = strip
         .as_ref()
@@ -542,47 +538,10 @@ pub fn apply_simulation_unified_cursor_system(
 
 /// Draw crosshair when OS cursor is hidden (TRIAGE-CURSOR-UNIFY-001).
 /// Position = gate.cursor (same logical px as map pick) converted to egui points.
-pub fn draw_simulation_unified_cursor_egui_system(
-    base: Res<State<BaseState>>,
-    gate: Res<SimulationMapPointerGate>,
-    mut contexts: EguiContexts,
-) {
-    // Sole visibility authority is apply_* → gate.os_cursor_visible (no second policy).
-    if gate.os_cursor_visible || !matches!(*base.get(), BaseState::Simulation) {
-        return;
-    }
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    // Align with Window::cursor_position / pick — not egui latest_pos (density PPP drift).
-    let pos = crate::gui::bevy_logical_to_egui_pos(
-        ctx,
-        egui::pos2(gate.cursor.x, gate.cursor.y),
-    );
-    let layer = egui::LayerId::new(egui::Order::Foreground, egui::Id::new("sim_unified_cursor"));
-    let painter = ctx.layer_painter(layer);
-    // `design_build_place_feel_v1.md` — one tight crosshair, dark halo so it reads on bright terrain.
-    let r = 5.0;
-    let gold = egui::Color32::from_rgb(255, 220, 120);
-    painter.circle_stroke(
-        pos,
-        r + 1.0,
-        egui::Stroke::new(2.0, egui::Color32::from_rgba_unmultiplied(0, 0, 0, 180)),
-    );
-    painter.circle_stroke(pos, r, egui::Stroke::new(1.25, egui::Color32::WHITE));
-    painter.line_segment(
-        [pos + egui::vec2(-r * 1.6, 0.0), pos + egui::vec2(r * 1.6, 0.0)],
-        egui::Stroke::new(1.0, gold),
-    );
-    painter.line_segment(
-        [pos + egui::vec2(0.0, -r * 1.6), pos + egui::vec2(0.0, r * 1.6)],
-        egui::Stroke::new(1.0, gold),
-    );
-}
 
 #[inline]
-fn rect_contains(rect: egui::Rect, cursor: Vec2) -> bool {
-    rect.contains(egui::pos2(cursor.x, cursor.y))
+fn rect_contains(rect: bevy::prelude::Rect, cursor: Vec2) -> bool {
+    rect.contains(bevy::prelude::Vec2::new(cursor.x, cursor.y))
 }
 
 /// Bottom context tray height when visible (logical px).

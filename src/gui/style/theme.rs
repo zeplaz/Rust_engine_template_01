@@ -1,93 +1,17 @@
 use bevy::prelude::*;
-use bevy_egui::{update_ui_screen_rect, EguiContext, EguiContexts, EguiPreUpdateSet};
 
-use crate::engine::states::BaseState;
-use crate::engine::AppState;
-use crate::gui::hud::shell_diagnostics::{note_egui_context_acquired, ProductShellDiagnostics};
+use super::fonts::load_cmd_ui_mono_font;
+use super::{HudDensityProfile, UiPalette, UiScaleApplicationGate, UiSpacing};
 
-use super::fonts::{install_egui_cmd_mono_font, load_cmd_ui_mono_font};
-use super::{
-    apply_hud_density_profile, apply_scroll_style, sync_egui_context_scale_factor,
-    HudDensityProfile, UiPalette,
-};
-use super::{reset_ui_scale_application_gate, UiScaleApplicationGate};
-
-/// Ensures egui monospace / proportional default to CMD mono once.
-#[derive(Resource, Default)]
-struct EguiCmdMonoFontLoaded(bool);
-
-/// Applies [`UiPalette`] + **Fira Mono** to the primary egui context.
+/// Bevy-only UI theme tokens (egui visuals path retired — PLAN-EGUI-FULL-DEP-DROP-v1).
 pub struct UiThemePlugin;
 
 impl Plugin for UiThemePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<UiPalette>()
-            .init_resource::<super::UiSpacing>()
+            .init_resource::<UiSpacing>()
             .init_resource::<HudDensityProfile>()
             .init_resource::<UiScaleApplicationGate>()
-            .init_resource::<EguiCmdMonoFontLoaded>()
-            .add_systems(Startup, load_cmd_ui_mono_font)
-            .add_systems(
-                PreUpdate,
-                (
-                    reset_ui_scale_application_gate_system,
-                    sync_egui_density_scale_system
-                        .before(update_ui_screen_rect)
-                        .run_if(not(in_state(BaseState::Simulation))),
-                )
-                    .chain(),
-            )
-            .add_systems(
-                PreUpdate,
-                apply_egui_theme_system
-                    .after(EguiPreUpdateSet::BeginPass)
-                    .run_if(not(in_state(BaseState::Simulation))),
-            );
+            .add_systems(Startup, load_cmd_ui_mono_font);
     }
-}
-
-fn reset_ui_scale_application_gate_system(mut gate: ResMut<UiScaleApplicationGate>) {
-    reset_ui_scale_application_gate(&mut gate);
-}
-
-fn sync_egui_density_scale_system(
-    density: Res<HudDensityProfile>,
-    mut contexts: Query<&mut EguiContext>,
-    mut gate: ResMut<UiScaleApplicationGate>,
-) {
-    for mut ctx in &mut contexts {
-        sync_egui_context_scale_factor(&density, ctx.get_mut(), &mut gate);
-    }
-}
-
-fn apply_egui_theme_system(
-    palette: Res<UiPalette>,
-    density: Res<HudDensityProfile>,
-    mut contexts: EguiContexts,
-    mut loaded: ResMut<EguiCmdMonoFontLoaded>,
-    base: Option<Res<State<BaseState>>>,
-    app: Option<Res<State<AppState>>>,
-    mut diag: Option<ResMut<ProductShellDiagnostics>>,
-) {
-    // WorldGen session chrome is Bevy UI. Editor and menus still theme egui.
-    if app
-        .as_ref()
-        .is_some_and(|state| matches!(state.get(), AppState::WorldGen))
-    {
-        return;
-    }
-    let Ok(ctx) = contexts.ctx_mut() else {
-        return;
-    };
-    let in_simulation = base
-        .as_ref()
-        .is_some_and(|state| matches!(state.get(), BaseState::Simulation));
-    note_egui_context_acquired(in_simulation, diag.as_deref_mut());
-    if !loaded.0 {
-        install_egui_cmd_mono_font(ctx);
-        loaded.0 = true;
-    }
-    ctx.set_visuals(palette.to_egui_visuals());
-    apply_hud_density_profile(ctx, &density);
-    ctx.global_style_mut(|style| apply_scroll_style(style, &palette));
 }

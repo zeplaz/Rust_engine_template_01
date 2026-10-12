@@ -1,10 +1,10 @@
 // GUI systems
 // Boundary: see prompts/guides/ui_boundary_guide_v1.md
 //   splash, app_shell, in_game_hud → Bevy shell / simulation HUD
-//   editor/* + selected egui panels  → dev tooling (gated via ui_gates)
-//   pressure_tooling.rs             → F2 pressure composer (egui) + Bevy strip
+//   editor/* → Bevy shell / retired egui panels
+//   pressure_tooling.rs             → F2 pressure Bevy strip
 //   ai_explainability_ui.rs         → L7 pipeline + macro explain (default Insert)
-//   agent_permissions_ui.rs         → egui tooling
+//   agent_permissions_ui.rs         → Bevy/dev tooling
 
 pub mod debug;
 pub mod hud;
@@ -51,6 +51,7 @@ pub mod input_pick;
 mod input_interaction_regression;
 mod gameplay_capture;
 mod options_keybindings_ui;
+mod panel_presence;
 mod pressure_tooling;
 mod logistics_focus;
 mod authoritative_viewport;
@@ -74,6 +75,7 @@ mod gpu_tile_debug;
 mod tile_readability;
 mod strategic_icon_instances;
 pub mod style;
+pub mod ui_types;
 pub mod components;
 pub mod editor;
 
@@ -134,6 +136,7 @@ pub use hud::{HudPanelStateWitness, HudPanelState, HudPanelStatePlugin,
     HudCommandShellLayout, HudDockRegistry, HudDockShellPlugin, HudOverlayTrayState,
     TransmissionShellPlugin, TransmissionShellState,
 };
+pub use ui_types::{UiPos2, UiRect, UiRgba, UiStroke, ui_pos2};
 pub use style::{
     bevy_logical_to_egui_pos,
     bevy_logical_vec_to_egui,
@@ -162,8 +165,6 @@ pub use style::{
     UiThemePlugin,
     VertSpace,
 };
-pub use egui_root::new_root_ui;
-pub use egui_window::std_floating;
 pub use tactical::sim_map_rtt::{
     apply_simulation_map_camera_clear, insert_simulation_map_texture, rtt_core2d_overlay_hosts_enabled,
     rtt_diag_camera_mode, simulation_map_rtt_clear_color, simulation_map_rtt_image,
@@ -187,8 +188,8 @@ pub use tactical::map_camera::{
     map_scale_for_zoom_alpha, map_zoom_alpha, map_zoom_alpha_with_limits,
     on_world_main_pose_committed,
     sim_map_cursor_world_xy, sim_map_image_rect,
-    sim_map_screen_to_world_xy, sim_map_screen_to_world_xy_with_ortho, sim_map_visible_world_span, sim_map_world_vec3_to_egui,
-    sim_map_world_xy_to_egui, sim_map_world_xy_to_egui_with_ortho, TACTICAL_VFX_PROOF_ZOOM_ALPHA,
+    sim_map_screen_to_world_xy, sim_map_screen_to_world_xy_with_ortho, sim_map_visible_world_span, sim_map_world_vec3_to_screen,
+    sim_map_world_xy_to_screen, sim_map_world_xy_to_screen_with_ortho, sim_map_world_xy_to_egui, sim_map_world_xy_to_egui_with_ortho, TACTICAL_VFX_PROOF_ZOOM_ALPHA,
     trace_map_camera_desired_write_if_full_app, MAP_ZOOM_CLAMP, MAP_ZOOM_AXIS_SNAP_EPS,
 };
 pub use map_zoom_coherence::{
@@ -201,7 +202,7 @@ pub use sim_map_projection::{
     camera_map_plane_vec3_to_logical_screen, map_camera_desired_from_presentation,
     map_camera_pose_for_presentation, sim_map_projection_frame,
     sim_map_screen_to_world_xy_in_frame,
-    sim_map_world_vec3_to_egui_rendered, MapCameraPresentationPose, SimMapProjectionFrame,
+    sim_map_world_vec3_to_screen_rendered, MapCameraPresentationPose, SimMapProjectionFrame,
 };
 pub use camera_focus_debug::{
     camera_focus_debug_env_armed, camera_focus_lod_paint_active,
@@ -290,6 +291,7 @@ pub use input_bindings::*;
 pub use input_frame::{InputFrame, InputFramePlugin};
 pub use gameplay_capture::*;
 pub use options_keybindings_ui::*;
+pub use panel_presence::{PanelPresence, PanelPresencePlugin};
 pub use ui_gates::*;
 pub use logistics_focus::*;
 pub use in_game_hud::*;

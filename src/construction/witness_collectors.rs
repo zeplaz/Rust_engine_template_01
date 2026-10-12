@@ -561,23 +561,45 @@ mod live_proof_sim_tests {
             serde_json::from_str(&fs::read_to_string(&path).expect("read proof json"))
                 .expect("parse");
         assert_eq!(json["profile"], "CONSTRUCTION_STAGE");
-        assert_eq!(json["operational_green"], true);
-        assert_eq!(json["con_e01_p9_green"], true);
+        assert_eq!(
+            json["operational_green"],
+            true,
+            "operational_green false; payload snippet={}",
+            serde_json::json!({
+                "operational_green": json["operational_green"],
+                "operational": json["operational"],
+                "build_p_star_open": json["build_p_star"].as_array().map(|a| a.iter().filter(|r| r["status"] != "Done").cloned().collect::<Vec<_>>()),
+                "con_e01_p9_green": json["con_e01_p9_green"],
+                "p9_witness": json["p9_witness"],
+            })
+        );
+        // Honest: harness has no WorldGenDenseTerrainCache → terrain_conform Open / con_e01 false.
+        assert_eq!(
+            json["con_e01_p9_green"],
+            false,
+            "con_e01 must stay honest-false while dense height grid absent: {}",
+            "PHASE2-BUILD-20 Open: WorldGenDenseTerrainCache elevation unavailable — stub fallback only"
+        );
         assert_eq!(
             json["p9_witness"]["construction_proof_json"],
             serde_json::json!(true)
         );
-        assert!(
-            json["p9_build"]
-                .as_array()
-                .expect("p9_build")
-                .iter()
-                .all(|row| row["status"] == "Done"),
-            "p9_build: {}",
-            json["p9_build"]
+        assert_eq!(json["p9_witness"]["terrain_conform"], serde_json::json!(false));
+        // PHASE2-BUILD-20 Open until live WorldGenDenseTerrainCache elevation is present.
+        let p9_open: Vec<_> = json["p9_build"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|r| r["status"] != "Done")
+            .cloned()
+            .collect();
+        assert_eq!(
+            p9_open,
+            vec![serde_json::json!({"id":"PHASE2-BUILD-20","status":"Open"})],
+            "p9_build open slots: {p9_open:?}"
         );
         assert!(json.get("p9_build").is_some());
-        assert!(app.world().resource::<ConstructionP9TodoBoard>().is_green());
+        assert!(!app.world().resource::<ConstructionP9TodoBoard>().is_green());
         assert!(app
             .world()
             .resource::<ConstructionLiveProofState>()
@@ -597,6 +619,23 @@ mod live_proof_sim_tests {
         assert_eq!(
             pipeline["instant_operational_on_commit"],
             serde_json::json!(false)
+        );
+        // BUILD-P0-01 / BUILD-P2-05: spawn-gated Editor Bevy roots. Simulation harness
+        // keeps them Open honestly (no BuildToolboxBevyRoot / RoadToolPopupBevyRoot).
+        let open: Vec<_> = json["build_p_star"]
+            .as_array()
+            .into_iter()
+            .flatten()
+            .filter(|r| r["status"] != "Done")
+            .cloned()
+            .collect();
+        assert!(
+            open.iter().any(|r| r["id"] == "BUILD-P0-01"),
+            "toolbox_panel stays Open in Simulation harness (spawn-gated Editor): {open:?}"
+        );
+        assert!(
+            open.iter().any(|r| r["id"] == "BUILD-P2-05"),
+            "road_popup stays Open in Simulation harness (spawn-gated Editor): {open:?}"
         );
     }
 

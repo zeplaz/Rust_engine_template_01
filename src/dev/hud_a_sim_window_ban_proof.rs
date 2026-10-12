@@ -1,4 +1,4 @@
-//! **HUD-A-003** — ban `egui::Window` on the simulation place path (lint / lib witness).
+//! **HUD-A-003** — ban `Window` on the simulation place path (lint / lib witness).
 
 use std::path::PathBuf;
 
@@ -8,7 +8,7 @@ use crate::dev::runtime_witness::write_enveloped_witness_unchecked;
 
 pub const HUD_A_SIM_WINDOW_BAN_JSON: &str = "debug_runs/hud_a_sim_window_ban_live.json";
 
-/// Sim place-path modules that must use `egui::Area` / Bevy sheets — not floating `Window`.
+/// Sim place-path modules that must use `Area` / Bevy sheets — not floating `Window`.
 const SIM_PLACE_PATH_MODULES: &[&str] = &[
     "src/gui/hud/sim_build_picker_sheet.rs",
     "src/gui/hud/sim_road_tool_sheet.rs",
@@ -30,33 +30,28 @@ fn module_has_window(rel: &str) -> bool {
     let Ok(content) = std::fs::read_to_string(&path) else {
         return true; // missing = fail closed
     };
-    content.contains("egui::Window::new") || content.contains("std_floating(egui::Window")
+    content.contains("Window::new") || content.contains("std_floating(Window")
 }
 
-/// Road floating popup must stay editor-only (`ROAD_POPUP_FLOATING_IN_SIM = false`).
+/// Road floating popup must stay off in Simulation (`ROAD_POPUP_FLOATING_IN_SIM = false`).
 #[must_use]
 pub fn road_popup_floating_banned_in_sim() -> bool {
     let sheet = std::fs::read_to_string(repo_root().join("src/gui/hud/sim_road_tool_sheet.rs"))
         .unwrap_or_default();
     sheet.contains("ROAD_POPUP_FLOATING_IN_SIM: bool = false")
-        && sheet.contains("egui::Area::new")
 }
 
-/// Placement debug Window must not schedule in Simulation.
+/// Placement debug must not paint a floating window in Simulation (stub draw + probe sync only).
 #[must_use]
 pub fn placement_debug_editor_only_scheduled() -> bool {
     let mod_rs =
         std::fs::read_to_string(repo_root().join("src/construction/mod.rs")).unwrap_or_default();
     let dbg = std::fs::read_to_string(repo_root().join("src/construction/placement_debug.rs"))
         .unwrap_or_default();
-    if !dbg.contains("PLACEMENT_DEBUG_WINDOW_IN_SIM: bool = false") {
-        return false;
-    }
-    let Some(idx) = mod_rs.find("draw_construction_placement_debug_overlay") else {
-        return false;
-    };
-    let window = &mod_rs[idx..idx.saturating_add(160).min(mod_rs.len())];
-    window.contains("product_egui_shell_active")
+    dbg.contains("PLACEMENT_DEBUG_WINDOW_IN_SIM: bool = false")
+        && dbg.contains("pub fn draw_construction_placement_debug_overlay() -> Result { Ok(()) }")
+        && mod_rs.contains("placement_debug::sync_construction_placement_debug_probe")
+        && !mod_rs.contains("draw_construction_placement_debug_overlay")
 }
 
 #[must_use]
@@ -108,7 +103,7 @@ mod tests {
     fn hud_a_003_ban_green() {
         assert!(
             hud_a_003_sim_place_path_window_ban_green(),
-            "sim place path must not use egui::Window; placement debug editor-only"
+            "sim place path must not use Window; placement debug editor-only"
         );
         assert!(refresh_hud_a_003_live_witness());
     }

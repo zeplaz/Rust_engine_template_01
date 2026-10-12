@@ -8,7 +8,6 @@
 use std::time::Instant;
 
 use bevy::prelude::*;
-use bevy_egui::EguiPostUpdateSet;
 
 const PERF_SLOW_MS: f32 = 16.0;
 
@@ -919,8 +918,8 @@ impl Plugin for FramePerfPlugin {
                 (
                     stamp_frame_wall_pre_egui
                         .after(crate::render::stall_pre_egui)
-                        .before(EguiPostUpdateSet::EndPass),
-                    stamp_frame_wall_post_egui.after(EguiPostUpdateSet::PostProcessOutput),
+                        ,
+                    stamp_frame_wall_post_egui,
                 ),
             )
             .add_systems(

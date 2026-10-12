@@ -215,7 +215,7 @@
       "completed": "2026-09-23",
       "blocked_on": [],
       "witness": "debug_runs/fire_save_roundtrip_live.json",
-      "note": "chunk_fire_state.ron overlay + hash RT; exit_predicates.fire_save_roundtrip_hash"
+      "note": "chunk_fire_state.ron overlay + hash RT; exit_predicates.fire_save_roundtrip_hash · reverify 2026-10-11 lib green + witness refresh"
     },
     {
       "id": "VSS-T3-004",
@@ -226,7 +226,7 @@
       "completed": "2026-09-23",
       "blocked_on": [],
       "witness": "debug_runs/sim_effect_fire_consumer_live.json",
-      "note": "SMOKE_VOLUME_WGSL const pruned; stubs already off schedule; bridge/WeatherVisual/gpu_particles KEEP"
+      "note": "SMOKE_VOLUME_WGSL const pruned; stubs already off schedule; bridge/WeatherVisual/gpu_particles KEEP · reverify 2026-10-11 effects_stub_schedule_clean"
     }
   ],
   "t3_gate_witness": "debug_runs/sim_effect_fire_consumer_live.json",

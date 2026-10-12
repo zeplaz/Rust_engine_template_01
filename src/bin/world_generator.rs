@@ -3,7 +3,6 @@
 //! reintroduce it here — see `prompts/guides/world_assets_tools_rulebook_v1.md`.
 
 use bevy::prelude::*;
-use bevy_egui::EguiPlugin;
 use proc_A_dine01::gui::{KeybindingsOptionsPlugin, UiThemePlugin, VisualCadence};
 use proc_A_dine01::strategic::StrategicFieldsAndAiPlugin;
 use proc_A_dine01::systems::terrain::MaterialUnificationPlugin;
@@ -12,7 +11,7 @@ use proc_A_dine01::terrain::generation::WorldGenToolsPlugin;
 fn main() {
     App::new()
         .add_plugins(DefaultPlugins)
-        .add_plugins(EguiPlugin::default())
+        
         .add_plugins(UiThemePlugin)
         .add_plugins(MaterialUnificationPlugin)
         .add_plugins(StrategicFieldsAndAiPlugin)

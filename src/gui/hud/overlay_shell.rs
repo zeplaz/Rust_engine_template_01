@@ -1,7 +1,6 @@
 //! Overlay shell — toggle groups + legend widgets (mock consumers only).
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 use crate::gui::style::UiPalette;
 use crate::gui::world_representation::WorldRepresentationFrame;
@@ -74,68 +73,3 @@ impl Plugin for OverlayShellPlugin {
     }
 }
 
-pub fn draw_overlay_shell_egui(
-    ctx: &mut egui::Context,
-    palette: &UiPalette,
-    shell: &mut OverlayShellState,
-    framework: &mut OverlayFrameworkState,
-    tabs: &mut HudInfoTabState,
-    dock: &mut HudDockRegistry,
-    layout_store: &mut HudLayoutStore,
-    update_budget: &mut ProductShellUpdateBudget,
-    now_secs: f32,
-    widget_timing: Option<&mut ShellWidgetDiagnostics>,
-    minimap_legend: Option<&str>,
-    _retained: &mut RetainedWidgetCache,
-    _legend_revision: u64,
-    pending_layout: &mut PendingHudLayoutCommit,
-    world: Option<&WorldRepresentationFrame>,
-    readiness: Option<&AppStage5ReadinessReport>,
-    live: Option<&HudInfoLiveData>,
-    infra_settings: &mut InfrastructureOverlaySettings,
-) {
-    let mut open = dock.slot(HudWidgetId::OverlaysPanel).visible;
-    if !shell_widget_runs_egui_with_budget(
-        dock,
-        HudWidgetId::OverlaysPanel,
-        open,
-        Some(update_budget),
-        now_secs,
-    ) {
-        return;
-    }
-    let default_size = [300.0, 280.0];
-    if let Some(response) = show_product_shell_window(
-        ctx,
-        ShellWindowHost {
-            id: HudWidgetId::OverlaysPanel,
-            title: "Info & overlays",
-            default_pos: shell_default_window_pos(ctx, HudWidgetId::OverlaysPanel, default_size),
-            default_size,
-            min_size: [240.0, 200.0],
-        },
-        layout_store,
-        dock,
-        &mut open,
-        |ui| {
-            draw_info_tab_bar(ui, palette, tabs);
-            draw_info_tab_body(
-                ui,
-                palette,
-                tabs.active,
-                tabs,
-                shell,
-                framework,
-                world,
-                readiness,
-                live,
-                minimap_legend,
-                infra_settings,
-            );
-        },
-        widget_timing,
-    ) {
-        capture_shell_layout(layout_store, HudWidgetId::OverlaysPanel, &response, Some(pending_layout));
-    }
-    dock.slot_mut(HudWidgetId::OverlaysPanel).visible = open;
-}

@@ -13,7 +13,6 @@
 use std::time::Instant;
 
 use bevy::prelude::*;
-use bevy_egui::EguiPostUpdateSet;
 
 use crate::render::evaluate_app_stage5_readiness;
 use crate::render::probes::frame_perf::{
@@ -427,8 +426,8 @@ impl Plugin for StallWatchPlugin {
             .add_systems(
                 PostUpdate,
                 (
-                    stall_pre_egui.before(EguiPostUpdateSet::EndPass),
-                    stall_post_egui.after(EguiPostUpdateSet::PostProcessOutput),
+                    stall_pre_egui,
+                    stall_post_egui,
                 ),
             )
             .add_systems(

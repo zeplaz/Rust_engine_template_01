@@ -295,7 +295,7 @@ pub(super) fn map_view_consumer_payload(
     })
 }
 
-pub(super) fn rect_json(rect: bevy_egui::egui::Rect) -> serde_json::Value {
+pub(super) fn rect_json(rect: bevy::prelude::Rect) -> serde_json::Value {
     serde_json::json!({
         "min": { "x": rect.min.x, "y": rect.min.y },
         "max": { "x": rect.max.x, "y": rect.max.y },

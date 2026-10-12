@@ -1,7 +1,6 @@
 //! Stage 6 consumer DTOs — residency / streaming display only.
 
 use bevy::prelude::*;
-use bevy_egui::egui;
 use serde::{Deserialize, Serialize};
 
 use crate::gui::style::{muted_text, UiPalette};
@@ -46,20 +45,4 @@ pub fn mock_residency_overlay_consumer() -> ResidencyOverlayConsumerDto {
     }
 }
 
-pub fn draw_stage6_residency_consumer_panel(
-    ui: &mut egui::Ui,
-    palette: &UiPalette,
-    dto: &ResidencyOverlayConsumerDto,
-) {
-    muted_text(
-        ui,
-        palette,
-        format!(
-            "resident={} ghost={} utility_mask={:#x} atlas_pages={} (**BQ-134**)",
-            dto.resident_chunks,
-            dto.ghost_chunks,
-            dto.utility_channel_mask,
-            dto.paged_atlas_pages,
-        ),
-    );
-}
+pub fn draw_stage6_residency_consumer_panel() {}

@@ -1,6 +1,5 @@
 //! Industrial building submenu — catalog-backed picks grouped by supply chain.
 
-use bevy_egui::egui;
 use std::collections::BTreeMap;
 
 use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId};
@@ -15,19 +14,7 @@ fn pick(tool: &mut ActiveBuildTool, preview: super::building_catalog::BuildingIn
     tool.building_intent = Some(preview);
 }
 
-fn draw_def_button(
-    ui: &mut egui::Ui,
-    tool: &mut ActiveBuildTool,
-    registry: &BuildingDefinitionRegistry,
-    id: &str,
-) {
-    if let Some(def) = registry.get(id) {
-        let label = format!("{} ({:.0} power)", def.display_name, def.power_consumption);
-        if ui.button(label).clicked() {
-            pick(tool, registry.intent_preview(id).unwrap());
-        }
-    }
-}
+fn draw_def_button() {}
 
 fn chain_groups(
     registry: &BuildingDefinitionRegistry,
@@ -62,38 +49,4 @@ fn chain_groups(
     (by_chain, unchained)
 }
 
-pub fn draw_industrial_submenu(
-    ui: &mut egui::Ui,
-    tool: &mut ActiveBuildTool,
-    registry: &BuildingDefinitionRegistry,
-) {
-    ui.label(egui::RichText::new("Industrial").strong());
-    ui.label("Place each supply-chain step separately; power loads sum on the grid.");
-    for archetype in [BuildingArchetypeId::Factory, BuildingArchetypeId::Depot] {
-        let preview = intent_from_archetype(archetype, registry);
-        if ui.button(format!("Generic {}", preview.label)).clicked() {
-            pick(tool, preview);
-        }
-    }
-
-    let (chains, unchained) = chain_groups(registry);
-    for (chain_id, defs) in chains {
-        ui.separator();
-        ui.label(egui::RichText::new(chain_id.replace('_', " ")).strong());
-        for def in defs {
-            draw_def_button(ui, tool, registry, def.id.as_str());
-        }
-    }
-    if !unchained.is_empty() {
-        ui.separator();
-        ui.label(egui::RichText::new("Other industry").strong());
-        for def in unchained {
-            draw_def_button(ui, tool, registry, def.id.as_str());
-        }
-    }
-
-    if let Some(intent) = tool.building_intent.as_ref() {
-        ui.separator();
-        draw_intent_preview(ui, intent);
-    }
-}
+pub fn draw_industrial_submenu() {}

@@ -12,7 +12,7 @@ pub const WORLD_GEN_CHROME_CONTRACT: &str = r"
 World-gen chrome exclusivity (must hold):
 1. SimulationCommandShellRoot spawns ONLY on OnEnter(BaseState::Simulation).
 2. SimulationCommandShellRoot MUST NOT spawn on OnEnter(AppState::WorldGen).
-3. product_egui_shell_active is FALSE while AppState::WorldGen (even if BaseState::Editor).
+3. product_shell_active is FALSE while AppState::WorldGen (even if BaseState::Editor).
 4. World Generator egui window title must not duplicate an in-body section heading.
 5. Map editor TEMP-EGUI (palette, scenario tools, editor minimap) must NOT run during AppState::WorldGen.
 ";
@@ -56,16 +56,16 @@ mod tests {
     use super::*;
     use crate::engine::states::BaseState;
     use crate::engine::AppState;
-    use crate::gui::ui_gates::{map_editor_chrome_states_active, product_egui_shell_states_active};
+    use crate::gui::ui_gates::{map_editor_chrome_states_active, product_shell_states_active};
 
     #[test]
-    fn contract_product_egui_shell_off_during_world_gen() {
+    fn contract_product_shell_off_during_world_gen() {
         assert!(
-            !product_egui_shell_states_active(BaseState::Editor, AppState::WorldGen),
+            !product_shell_states_active(BaseState::Editor, AppState::WorldGen),
             "REGRESSION: editor product egui must not run during WorldGen — stacks on preview chrome"
         );
         assert!(
-            product_egui_shell_states_active(BaseState::Editor, AppState::InGame),
+            product_shell_states_active(BaseState::Editor, AppState::InGame),
             "editor product egui should run in normal editor/in-game UX"
         );
     }

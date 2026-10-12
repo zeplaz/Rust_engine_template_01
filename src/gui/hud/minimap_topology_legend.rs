@@ -1,6 +1,5 @@
 //! DES-MINIMAP-VEG-LEGEND-001 / **DES-MINIMAP-VEG-LEGEND-002** — collapsible topology + burn legend.
 
-use bevy_egui::egui;
 
 use crate::engine::states::BaseState;
 use crate::gui::minimap_shell::{MinimapOverlayMask, MinimapShellState};
@@ -64,15 +63,15 @@ pub const FIRE_LEGEND_ENTRIES: [TopologyLegendEntry; 3] = [
     },
 ];
 
-fn hex_to_color32(hex: &str) -> egui::Color32 {
+fn hex_to_color32(hex: &str) -> crate::gui::UiRgba {
     let s = hex.trim_start_matches('#');
     if s.len() != 6 {
-        return egui::Color32::GRAY;
+        return crate::gui::UiRgba::GRAY;
     }
     let r = u8::from_str_radix(&s[0..2], 16).unwrap_or(128);
     let g = u8::from_str_radix(&s[2..4], 16).unwrap_or(128);
     let b = u8::from_str_radix(&s[4..6], 16).unwrap_or(128);
-    egui::Color32::from_rgb(r, g, b)
+    crate::gui::UiRgba::from_rgb(r, g, b)
 }
 
 #[must_use]
@@ -119,99 +118,12 @@ pub fn minimap_topology_legend_status_copy(
     None
 }
 
-fn draw_legend_grid(ui: &mut egui::Ui, entries: &[TopologyLegendEntry]) {
-    egui::Grid::new(egui::Id::new(format!("minimap_legend_grid_{:p}", entries.as_ptr())))
-        .num_columns(3)
-        .spacing([8.0, 4.0])
-        .show(ui, |ui| {
-            for entry in entries {
-                let color = hex_to_color32(entry.hex);
-                let (rect, _) = ui.allocate_exact_size(egui::vec2(10.0, 10.0), egui::Sense::hover());
-                ui.painter().rect_filled(rect, 1.0, color);
-                ui.label(egui::RichText::new(entry.glyph).small().strong());
-                ui.label(egui::RichText::new(entry.word).small());
-                ui.end_row();
-            }
-        });
-}
+fn draw_legend_grid() {}
 
 /// GPU compositor path — legend chrome below the Bevy minimap image (not map raster).
-pub fn draw_minimap_topology_legend_gpu_chrome(
-    ctx: &egui::Context,
-    shell: &mut MinimapShellState,
-    overlays: &MinimapOverlayMask,
-    ecology_rows: u32,
-    veg_burn_rows: u32,
-    base: BaseState,
-) {
-    let Some(content) = shell.last_window_rect else {
-        return;
-    };
-    let legend_top = shell
-        .last_image_rect
-        .map(|r| r.max.y)
-        .unwrap_or(content.max.y);
-    let available_h = (content.max.y - legend_top).max(0.0);
-    if available_h < 20.0 {
-        return;
-    }
-    let est_h: f32 = if shell.topology_legend_expanded {
-        72.0
-    } else {
-        26.0
-    };
-    let width = content.width().max(120.0);
-    let height = est_h.min(available_h);
-    crate::render::trace_minimap_size_writer("legend.gpu_chrome", width, height);
-    egui::Area::new(egui::Id::new("minimap_topology_legend_gpu"))
-        .fixed_pos(egui::pos2(content.min.x, legend_top))
-        .show(ctx, |ui| {
-            ui.set_width(width);
-            draw_minimap_topology_legend_ui(ui, shell, overlays, ecology_rows, veg_burn_rows, base);
-        });
-}
+pub fn draw_minimap_topology_legend_gpu_chrome() {}
 
-pub fn draw_minimap_topology_legend_ui(
-    ui: &mut egui::Ui,
-    shell: &mut MinimapShellState,
-    overlays: &MinimapOverlayMask,
-    ecology_rows: u32,
-    veg_burn_rows: u32,
-    base: BaseState,
-) {
-    let map_updating = shell.compositor_revision != shell.cached_texture_revision;
-    if let Some(status) = minimap_topology_legend_status_copy(overlays, ecology_rows, map_updating) {
-        ui.label(egui::RichText::new(status).small().weak());
-        return;
-    }
-
-    let default_open = !matches!(base, BaseState::Simulation);
-    if !shell.topology_legend_user_toggled {
-        shell.topology_legend_expanded = default_open;
-    }
-
-    let header = if shell.topology_legend_expanded {
-        "▼ Ecology kinds".to_string()
-    } else {
-        minimap_topology_legend_collapsed_label()
-    };
-    let resp = ui
-        .add(egui::Button::new(egui::RichText::new(header).small()).min_size(egui::vec2(0.0, 22.0)))
-        .interact(egui::Sense::click());
-    if resp.clicked() {
-        shell.topology_legend_expanded = !shell.topology_legend_expanded;
-        shell.topology_legend_user_toggled = true;
-    }
-
-    if shell.topology_legend_expanded {
-        draw_legend_grid(ui, &TOPOLOGY_LEGEND_ENTRIES);
-        if minimap_burn_legend_visible(overlays.ecology_heat, veg_burn_rows) {
-            ui.separator();
-            ui.label(egui::RichText::new("── Fire read ──").small().weak());
-            draw_legend_grid(ui, &FIRE_LEGEND_ENTRIES);
-        }
-    }
-}
+pub fn draw_minimap_topology_legend_ui() {}
 
 #[must_use]
 pub fn minimap_topology_legend_ui_witness_green() -> bool {

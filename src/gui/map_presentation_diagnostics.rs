@@ -6,7 +6,6 @@ use bevy::math::{Rect, UVec2, Vec2};
 
 use bevy::prelude::*;
 
-use bevy_egui::egui;
 
 
 
@@ -22,9 +21,9 @@ use crate::gui::map_view::MapViewInstanceId;
 
 pub struct MapPresentationConsumerDiagnostics {
 
-    pub allocated_rect: Option<egui::Rect>,
+    pub allocated_rect: Option<bevy::prelude::Rect>,
 
-    pub image_rect: Option<egui::Rect>,
+    pub image_rect: Option<bevy::prelude::Rect>,
 
     pub fit_mode: MapFitMode,
 
@@ -34,7 +33,7 @@ pub struct MapPresentationConsumerDiagnostics {
 
     pub viewport_extent: UVec2,
 
-    pub uv_rect: egui::Rect,
+    pub uv_rect: bevy::prelude::Rect,
 
     pub padding: f32,
 
@@ -72,7 +71,7 @@ impl Default for MapPresentationConsumerDiagnostics {
 
             viewport_extent: UVec2::ONE,
 
-            uv_rect: egui::Rect::from_min_max(egui::pos2(0.0, 0.0), egui::pos2(1.0, 1.0)),
+            uv_rect: bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(0.0, 0.0), bevy::prelude::Vec2::new(1.0, 1.0)),
 
             padding: 0.0,
 
@@ -144,7 +143,7 @@ impl MapPresentationDiagnostics {
 
         id: MapViewInstanceId,
 
-        viewport_rect: egui::Rect,
+        viewport_rect: bevy::prelude::Rect,
 
         texture_size: UVec2,
 
@@ -152,9 +151,9 @@ impl MapPresentationDiagnostics {
 
         padding: f32,
 
-        actual_image_rect: egui::Rect,
+        actual_image_rect: bevy::prelude::Rect,
 
-        actual_uv_rect: egui::Rect,
+        actual_uv_rect: bevy::prelude::Rect,
 
         viewport_extent: UVec2,
 
@@ -257,9 +256,9 @@ impl MapPresentationDiagnostics {
 
         id: MapViewInstanceId,
 
-        allocated_rect: egui::Rect,
+        allocated_rect: bevy::prelude::Rect,
 
-        image_rect: egui::Rect,
+        image_rect: bevy::prelude::Rect,
 
         fit_mode: MapFitMode,
 
@@ -267,7 +266,7 @@ impl MapPresentationDiagnostics {
 
         viewport_extent: UVec2,
 
-        uv_rect: egui::Rect,
+        uv_rect: bevy::prelude::Rect,
 
         padding: f32,
 

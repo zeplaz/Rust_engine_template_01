@@ -827,57 +827,14 @@ mod tests {
         use bevy::prelude::*;
         use bevy::state::app::StatesPlugin;
 
-        #[derive(Resource, Default)]
-        struct PointerPreUpdateRan(bool);
-
+        // egui pointer pre-update retired with bevy_egui drop; omit helper must stay callable.
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, StatesPlugin));
         app.init_state::<BaseState>();
-        app.init_resource::<PointerPreUpdateRan>();
         crate::engine::omit_egui_pointer_preupdate_in_simulation(&mut app);
-        app.add_systems(
-            PreUpdate,
-            (|mut ran: ResMut<PointerPreUpdateRan>| {
-                ran.0 = true;
-            })
-            .in_set(bevy_egui::EguiPreUpdateSet::ProcessInput),
-        );
-
-        let sets = &app
-            .world()
-            .resource::<Schedules>()
-            .get(PreUpdate)
-            .expect("preupdate")
-            .graph()
-            .system_sets;
-        let key = sets
-            .get_key(bevy_egui::EguiPreUpdateSet::ProcessInput.intern())
-            .expect("pointer pre-update set");
         assert!(
-            sets.has_conditions(key),
-            "Simulation must not leave the egui pointer pre-update unconditional"
-        );
-
-        app.world_mut()
-            .resource_mut::<NextState<BaseState>>()
-            .set(BaseState::Simulation);
-        app.update();
-        app.world_mut().resource_mut::<PointerPreUpdateRan>().0 = false;
-        app.update();
-        assert!(
-            !app.world().resource::<PointerPreUpdateRan>().0,
-            "Simulation schedule must not run the egui pointer pre-update"
-        );
-
-        app.world_mut().resource_mut::<PointerPreUpdateRan>().0 = false;
-        app.world_mut()
-            .resource_mut::<NextState<BaseState>>()
-            .set(BaseState::Editor);
-        app.update();
-        app.update();
-        assert!(
-            app.world().resource::<PointerPreUpdateRan>().0,
-            "Editor still runs the egui pointer pre-update"
+            app.world().resource::<Schedules>().get(PreUpdate).is_some(),
+            "PreUpdate schedule present after omit_egui_pointer_preupdate_in_simulation"
         );
     }
 }

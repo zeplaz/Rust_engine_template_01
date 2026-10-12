@@ -6,7 +6,6 @@ pub const STAGED_PANEL_FLOATING_SIM: bool = false;
 use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
-use bevy_egui::egui;
 
 use crate::gui::InputBindings;
 use crate::strategic::{
@@ -261,136 +260,47 @@ pub fn build_all_valid_staged_rows(
     commit_approved_staged_rows(book, actor, events, history, occupation)
 }
 
-/// Staging panel + tray readout (P3-A / P3-B).
-pub fn draw_staged_placements_panel_egui_system(
-    mut contexts: bevy_egui::EguiContexts,
-    base: Res<State<crate::engine::states::BaseState>>,
-    strip: Res<BuildStripState>,
-    tool: Res<ActiveBuildTool>,
-    ghost: Res<BuildGhostState>,
-    preview: Res<BuildPlacementPreview>,
-    registry: Res<BuildingDefinitionRegistry>,
-    mut staging: ResMut<StagedPlacementMode>,
-    mut book: ResMut<StagedPlacementBook>,
-    actor: Res<BuildCommandActor>,
-    mut events: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
-    mut history: ResMut<ConstructionHistory>,
-    occupation: Option<Res<crate::strategic::TileOccupationBook>>,
-) -> Result {
-    if strip.active == ToolContext::None {
-        return Ok(());
+/// Multi-line staged list for sim tray / editor Bevy readout (no execute).
+#[must_use]
+pub fn staged_placements_tray_lines(mode: &StagedPlacementMode, book: &StagedPlacementBook) -> String {
+    use crate::gui::hud::sim_hud_copy::{TRAY_STAGING_EMPTY, TRAY_STAGING_TITLE};
+    let mut out = String::new();
+    out.push_str(TRAY_STAGING_TITLE);
+    if mode.enabled {
+        out.push_str(" · staging ON");
     }
-    if !matches!(tool.tool, BuildTool::Building(_)) {
-        return Ok(());
+    out.push('\n');
+    if book.rows.is_empty() {
+        out.push_str(TRAY_STAGING_EMPTY);
+        return out;
     }
-    if matches!(base.get(), BaseState::Simulation) {
-        // HUD-NAT-004 — tray owns staging; floating panel is editor-only (`STAGED_PANEL_FLOATING_SIM`).
-        debug_assert!(!STAGED_PANEL_FLOATING_SIM);
-        return Ok(());
+    for (i, row) in book.rows.iter().take(12).enumerate() {
+        let badge = match row.validity {
+            StagedValidity::Ok => "OK",
+            StagedValidity::Warn => "Warn",
+            StagedValidity::Bad => "Bad",
+        };
+        let appr = if row.approved { "✓" } else { "·" };
+        let short: String = row.catalog_id.chars().take(16).collect();
+        out.push_str(&format!(
+            "{appr} #{id} {short} @{x},{z} · {scale:.2}× · {badge}",
+            id = row.id,
+            x = row.anchor_tile.x,
+            z = row.anchor_tile.z,
+            scale = row.scale,
+        ));
+        if i + 1 < book.rows.len().min(12) {
+            out.push('\n');
+        }
     }
-    let ctx = contexts.ctx_mut()?;
-    egui::Area::new(egui::Id::new("construction_staged_parametric_panel"))
-        .anchor(egui::Align2::RIGHT_BOTTOM, egui::vec2(-16.0, -140.0))
-        .show(ctx, |ui| {
-            ui.heading("Parametric placement");
-            ui.checkbox(&mut staging.enabled, "Stage placements");
-            if let Some(line) = parametric_active_ghost_hud_line(&tool, &registry, &ghost, &preview)
-            {
-                ui.label(egui::RichText::new(line).small());
-            }
-            let panel_visible = staging.enabled || !book.rows.is_empty();
-            if !panel_visible {
-                return;
-            }
-            ui.add_space(4.0);
-            ui.set_min_width(280.0);
-            draw_staged_placements_panel_body(
-                ui,
-                &mut book,
-                actor.0,
-                &mut events,
-                &mut history,
-                occupation.as_deref(),
-            );
-        });
-    Ok(())
+    if book.rows.len() > 12 {
+        out.push_str(&format!("\n… +{} more", book.rows.len() - 12));
+    }
+    out
 }
 
-pub fn draw_staged_placements_panel_body(
-    ui: &mut egui::Ui,
-    book: &mut StagedPlacementBook,
-    actor: Entity,
-    events: &mut MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
-    history: &mut ConstructionHistory,
-    occupation: Option<&crate::strategic::TileOccupationBook>,
-) {
-    ui.label(egui::RichText::new(format!("Staged placements ({})", book.staged_count())).strong());
-    if book.rows.is_empty() {
-        ui.label(
-            egui::RichText::new("No staged ghosts — adjust active ghost, then LMB on map.").weak(),
-        );
-    } else {
-        egui::ScrollArea::vertical()
-            .max_height(120.0)
-            .show(ui, |ui| {
-                let mut remove_idx = None;
-                for (idx, row) in book.rows.iter_mut().enumerate() {
-                    ui.horizontal(|ui| {
-                        ui.checkbox(&mut row.approved, "");
-                        let label = row.catalog_id.chars().take(14).collect::<String>();
-                        ui.label(label);
-                        ui.label(format!("{:.2}×", row.scale));
-                        ui.label(format!("{}°", row.rotation_quarter_turns as u32 * 90));
-                        let badge = match row.validity {
-                            StagedValidity::Ok => "OK",
-                            StagedValidity::Warn => "Warn",
-                            StagedValidity::Bad => "Bad",
-                        };
-                        ui.label(egui::RichText::new(badge).weak());
-                        if ui.small_button("✕").clicked() {
-                            remove_idx = Some(idx);
-                        }
-                    });
-                }
-                if let Some(idx) = remove_idx {
-                    book.rows.remove(idx);
-                }
-            });
-    }
-    ui.separator();
-    let approved_valid = book
-        .rows
-        .iter()
-        .any(|r| r.approved && r.allows_commit && r.validity != StagedValidity::Bad);
-    let any_valid = book
-        .rows
-        .iter()
-        .any(|r| r.allows_commit && r.validity != StagedValidity::Bad);
-    let any_clear = book
-        .rows
-        .iter()
-        .any(|r| !r.approved || r.validity == StagedValidity::Bad);
-    ui.horizontal(|ui| {
-        if ui
-            .add_enabled(approved_valid, egui::Button::new("Build approved"))
-            .clicked()
-        {
-            commit_approved_staged_rows(book, actor, events, history, occupation);
-        }
-        if ui
-            .add_enabled(any_valid, egui::Button::new("Build all valid"))
-            .clicked()
-        {
-            build_all_valid_staged_rows(book, actor, events, history, occupation);
-        }
-        if ui
-            .add_enabled(any_clear, egui::Button::new("Clear unapproved"))
-            .clicked()
-        {
-            book.clear_unapproved_or_invalid();
-        }
-    });
-}
+/// Thin Bevy-named export — staging body lives in context tray sync (no floating egui).
+pub fn sync_staged_placements_panel_bevy() {}
 
 #[must_use]
 pub fn staging_panel_visible_witness_green() -> bool {

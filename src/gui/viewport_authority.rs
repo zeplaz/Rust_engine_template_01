@@ -2,7 +2,6 @@
 
 use bevy::math::UVec2;
 use bevy::prelude::*;
-use bevy_egui::egui;
 
 pub const VIEWPORT_PRIORITY_PREVIEW: u8 = 10;
 pub const VIEWPORT_PRIORITY_MINIMAP: u8 = 5;
@@ -10,14 +9,14 @@ pub const VIEWPORT_PRIORITY_DEBUG: u8 = 1;
 
 #[derive(Clone, Debug)]
 pub struct ViewportRequest {
-    pub logical_rect: egui::Rect,
+    pub logical_rect: bevy::prelude::Rect,
     pub priority: u8,
     pub world_extent: UVec2,
 }
 
 #[derive(Clone, Debug)]
 pub struct ResolvedViewport {
-    pub logical: egui::Rect,
+    pub logical: bevy::prelude::Rect,
     pub physical: UVec2,
     pub world_extent: UVec2,
 }

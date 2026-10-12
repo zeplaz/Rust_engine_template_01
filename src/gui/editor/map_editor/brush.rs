@@ -186,15 +186,4 @@ pub(crate) fn emit_editor_tile_commit_for_brush(
     });
 }
 
-pub(crate) fn terrain_family_combo(ui: &mut bevy_egui::egui::Ui, current: &mut TerrainFamilyId) {
-    let reg = crate::terrain::default_terrain_families();
-    let sel = reg.def(*current).map(|d| d.name.as_str()).unwrap_or("?");
-    bevy_egui::egui::ComboBox::from_id_salt("map_editor_biome_pick")
-        .selected_text(sel)
-        .show_ui(ui, |ui| {
-            for (i, def) in reg.families.iter().enumerate() {
-                let id = TerrainFamilyId(i as u16);
-                ui.selectable_value(current, id, def.name.as_str());
-            }
-        });
-}
+pub fn terrain_family_combo() {}
