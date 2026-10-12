@@ -1,0 +1,3112 @@
+   Compiling proc_A_dine01 v0.1.1 (C:\dev\github\Rust_engine_template_01)
+warning: unused import: `HudLayoutCollectionR8`
+  --> src\gui\hud\dock_shell.rs:13:27
+   |
+13 | use super::layout_store::{HudLayoutCollectionR8, HudLayoutStore};
+   |                           ^^^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused imports: `ShellWindowHost`, `capture_shell_layout`, `draw_minimized_shell_chip`, `shell_default_window_pos`, `shell_widget_runs_egui_with_budget`, and `show_product_shell_window`
+  --> src\gui\hud\dock_shell.rs:15:5
+   |
+15 |     capture_shell_layout, draw_minimized_shell_chip, shell_default_window_pos,
+   |     ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+16 |     shell_widget_runs_egui_with_budget, show_product_shell_window, HudDockRegistry,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^
+17 |     HudWidgetDockState, HudWidgetId, ShellWindowHost,
+   |                                      ^^^^^^^^^^^^^^^
+
+warning: unused import: `super::shell_persistence::ProductShellPersistenceBundleR8`
+  --> src\gui\hud\dock_shell.rs:19:5
+   |
+19 | use super::shell_persistence::ProductShellPersistenceBundleR8;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::stage5_spine_consumer::draw_stage5_spine_consumer_panel`
+  --> src\gui\hud\dock_shell.rs:20:5
+   |
+20 | use super::stage5_spine_consumer::draw_stage5_spine_consumer_panel;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::stage6_consumer::draw_stage6_residency_consumer_panel`
+  --> src\gui\hud\dock_shell.rs:21:5
+   |
+21 | use super::stage6_consumer::draw_stage6_residency_consumer_panel;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::stage6_telemetry::Stage6HudTelemetry`
+  --> src\gui\hud\dock_shell.rs:23:5
+   |
+23 | use super::stage6_telemetry::Stage6HudTelemetry;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::hud_async_task_queue::HudAsyncTaskQueue`
+  --> src\gui\hud\dock_shell.rs:24:5
+   |
+24 | use super::hud_async_task_queue::HudAsyncTaskQueue;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::interaction_latency::InteractionLatencyMetrics`
+  --> src\gui\hud\dock_shell.rs:25:5
+   |
+25 | use super::interaction_latency::InteractionLatencyMetrics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::pending_hud_layout_commit::PendingHudLayoutCommit`
+  --> src\gui\hud\dock_shell.rs:26:5
+   |
+26 | use super::pending_hud_layout_commit::PendingHudLayoutCommit;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::shell_update_budget::ProductShellUpdateBudget`
+  --> src\gui\hud\dock_shell.rs:27:5
+   |
+27 | use super::shell_update_budget::ProductShellUpdateBudget;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::shell_widget_timing::ShellWidgetDiagnostics`
+  --> src\gui\hud\dock_shell.rs:28:5
+   |
+28 | use super::shell_widget_timing::ShellWidgetDiagnostics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::world_interaction_diagnostics::WorldInteractionDiagnostics`
+  --> src\gui\hud\dock_shell.rs:29:5
+   |
+29 | use super::world_interaction_diagnostics::WorldInteractionDiagnostics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PreviewPathAuthority` and `PreviewPresentationDebug`
+  --> src\gui\hud\dock_shell.rs:30:41
+   |
+30 | use crate::gui::editor::world_preview::{PreviewPathAuthority, PreviewPresentationDebug};
+   |                                         ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `UiPalette` and `widget_scroll_vertical_fill`
+  --> src\gui\hud\dock_shell.rs:31:25
+   |
+31 | use crate::gui::style::{widget_scroll_vertical_fill, UiPalette};
+   |                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `crate::gui::WorldRepresentationFrame`
+  --> src\gui\hud\dock_shell.rs:32:5
+   |
+32 | use crate::gui::WorldRepresentationFrame;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::AppStage5ReadinessReport`
+  --> src\gui\hud\dock_shell.rs:33:5
+   |
+33 | use crate::render::AppStage5ReadinessReport;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::AppState`
+  --> src\gui\hud\panel_state.rs:10:5
+   |
+10 | use crate::engine::AppState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ProductShellDiagnostics` and `note_egui_context_acquired`
+  --> src\gui\hud\panel_state.rs:11:42
+   |
+11 | use crate::gui::hud::shell_diagnostics::{note_egui_context_acquired, ProductShellDiagnostics};
+   |                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::virtualized_list::draw_virtualized_rows`
+ --> src\gui\hud\explainability_viewer.rs:5:5
+  |
+5 | use super::virtualized_list::draw_virtualized_rows;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveMapViewInput`, `MapFitValidationLog`, `MapPresentationDiagnostics`, `MapViewInstanceId`, `MapViewTextureCache`, `MinimapShellState`, `PerViewLodHints`, and `ViewManager`
+ --> src\gui\hud\hud_dev_overlay.rs:6:5
+  |
+6 |     ActiveMapViewInput, MapFitValidationLog, MapPresentationDiagnostics, MapViewInstanceId,
+  |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+7 |     MapViewTextureCache, MinimapShellState, PerViewLodHints, ViewManager,
+  |     ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `crate::render::DebugRenderTraceConfig`
+ --> src\gui\hud\hud_dev_overlay.rs:9:5
+  |
+9 | use crate::render::DebugRenderTraceConfig;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::systems::weather::WeatherVisualSettings`
+  --> src\gui\hud\hud_dev_overlay.rs:10:5
+   |
+10 | use crate::systems::weather::WeatherVisualSettings;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `DEFAULT_UI_GLOBAL_SCALE`, `UiPalette`, `native_ui_pixels_per_point`, and `resolve_ui_scale`
+  --> src\gui\hud\hud_dev_overlay.rs:12:5
+   |
+12 |     native_ui_pixels_per_point, resolve_ui_scale, HudDensityProfile, UiPalette,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^                     ^^^^^^^^^
+13 |     DEFAULT_UI_GLOBAL_SCALE, UI_GLOBAL_SCALE_STEP,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `FRAME_HISTORY_LEN`, `FrameBudgetBucket`, and `FrameBudgetDiagnostics`
+  --> src\gui\hud\hud_dev_overlay.rs:15:39
+   |
+15 | use super::frame_budget_diagnostics::{FrameBudgetBucket, FrameBudgetDiagnostics, FRAME_HISTORY_LEN};
+   |                                       ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::hud_async_task_queue::HudAsyncTaskQueue`
+  --> src\gui\hud\hud_dev_overlay.rs:16:5
+   |
+16 | use super::hud_async_task_queue::HudAsyncTaskQueue;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::hud_interaction_budget::HudFrameBudget`
+  --> src\gui\hud\hud_dev_overlay.rs:17:5
+   |
+17 | use super::hud_interaction_budget::HudFrameBudget;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::interaction_latency::InteractionLatencyMetrics`
+  --> src\gui\hud\hud_dev_overlay.rs:18:5
+   |
+18 | use super::interaction_latency::InteractionLatencyMetrics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::retained_widget_cache::RetainedWidgetCache`
+  --> src\gui\hud\hud_dev_overlay.rs:19:5
+   |
+19 | use super::retained_widget_cache::RetainedWidgetCache;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::layout_store::HudLayoutStore`
+  --> src\gui\hud\hud_dev_overlay.rs:20:5
+   |
+20 | use super::layout_store::HudLayoutStore;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::player_intent_panel::PlayerIntentPanelState`
+  --> src\gui\hud\hud_dev_overlay.rs:21:5
+   |
+21 | use super::player_intent_panel::PlayerIntentPanelState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::shell_update_budget::ProductShellUpdateBudget`
+  --> src\gui\hud\hud_dev_overlay.rs:22:5
+   |
+22 | use super::shell_update_budget::ProductShellUpdateBudget;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::shell_widget_timing::ShellWidgetDiagnostics`
+  --> src\gui\hud\hud_dev_overlay.rs:23:5
+   |
+23 | use super::shell_widget_timing::ShellWidgetDiagnostics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::stage6_telemetry::Stage6HudTelemetry`
+  --> src\gui\hud\hud_dev_overlay.rs:24:5
+   |
+24 | use super::stage6_telemetry::Stage6HudTelemetry;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::shell_diagnostics::ProductShellDiagnostics`
+  --> src\gui\hud\hud_dev_overlay.rs:25:5
+   |
+25 | use super::shell_diagnostics::ProductShellDiagnostics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudDockRegistry` and `HudWidgetId`
+  --> src\gui\hud\hud_dev_overlay.rs:26:30
+   |
+26 | use super::shell_framework::{HudDockRegistry, HudWidgetId};
+   |                              ^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `super::viewport_rect_sanity::ViewportRectSanity`
+  --> src\gui\hud\hud_dev_overlay.rs:27:5
+   |
+27 | use super::viewport_rect_sanity::ViewportRectSanity;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::world_interaction_diagnostics::WorldInteractionDiagnostics`
+  --> src\gui\hud\hud_dev_overlay.rs:28:5
+   |
+28 | use super::world_interaction_diagnostics::WorldInteractionDiagnostics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ConstructionBlueprintImportUi`, `ConstructionQueueIntent`, `PendingConstructionQueue`, and `draw_pending_construction_queue_egui`
+ --> src\gui\hud\hud_root_tick.rs:7:5
+  |
+7 |     draw_pending_construction_queue_egui, ConstructionBlueprintImportUi, ConstructionQueueIntent,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+8 |     ConstructionQueuePanelView, PendingConstructionQueue,
+  |                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_organic_growth_inspector_egui`
+  --> src\gui\hud\hud_root_tick.rs:11:5
+   |
+11 |     draw_organic_growth_inspector_egui, sync_ecology_growth_hint, EcologyGrowthHint,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::ui_gates::product_egui_shell_active`
+  --> src\gui\hud\hud_root_tick.rs:16:5
+   |
+16 | use crate::gui::ui_gates::product_egui_shell_active;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `minimap::resolve_minimap_egui_texture`
+  --> src\gui\hud\hud_root_tick.rs:18:5
+   |
+18 |     minimap::resolve_minimap_egui_texture, MapCameraDesiredRes, MapPresentationDiagnostics,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_simulation_minimap_egui`
+  --> src\gui\hud\hud_root_tick.rs:22:5
+   |
+22 |     draw_simulation_minimap_egui, AppStage5ReadinessReport,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `draw_hud_command_shell_egui`, `draw_hud_dock_minimized_strip_egui`, and `draw_hud_overlay_tray_egui`
+  --> src\gui\hud\hud_root_tick.rs:28:5
+   |
+28 |     draw_hud_command_shell_egui, draw_hud_dock_minimized_strip_egui, draw_hud_overlay_tray_egui,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::hud_side_status_panel::draw_hud_side_status_panel_egui`
+  --> src\gui\hud\hud_root_tick.rs:31:5
+   |
+31 | use super::hud_side_status_panel::draw_hud_side_status_panel_egui;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool`, `BuildGhostState`, and `BuildPlacementPreview`
+  --> src\gui\hud\hud_root_tick.rs:32:27
+   |
+32 | use crate::construction::{ActiveBuildTool, BuildGhostState, BuildPlacementPreview};
+   |                           ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::InputBindings`
+  --> src\gui\hud\hud_root_tick.rs:33:5
+   |
+33 | use crate::gui::InputBindings;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::CommandLeftStackState`
+  --> src\gui\hud\hud_root_tick.rs:34:5
+   |
+34 | use crate::gui::CommandLeftStackState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `SimControlState` and `SimTick`
+  --> src\gui\hud\hud_root_tick.rs:35:35
+   |
+35 | use crate::systems::sim_control::{SimControlState, SimTick};
+   |                                   ^^^^^^^^^^^^^^^  ^^^^^^^
+
+warning: unused import: `crate::strategic::OperationalTheaterSummary`
+  --> src\gui\hud\hud_root_tick.rs:36:5
+   |
+36 | use crate::strategic::OperationalTheaterSummary;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_hud_dev_overlay_egui`
+  --> src\gui\hud\hud_root_tick.rs:37:30
+   |
+37 | use super::hud_dev_overlay::{draw_hud_dev_overlay_egui, HudDevOverlayState};
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `HudAsyncTask`
+  --> src\gui\hud\hud_root_tick.rs:38:35
+   |
+38 | use super::hud_async_task_queue::{HudAsyncTask, HudAsyncTaskQueue};
+   |                                   ^^^^^^^^^^^^
+
+warning: unused import: `draw_overlay_shell_egui`
+  --> src\gui\hud\hud_root_tick.rs:42:28
+   |
+42 | use super::overlay_shell::{draw_overlay_shell_egui, OverlayShellState};
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `FrameBudgetBucket` and `FrameBudgetTimer`
+  --> src\gui\hud\hud_root_tick.rs:51:39
+   |
+51 | use super::frame_budget_diagnostics::{FrameBudgetBucket, FrameBudgetDiagnostics, FrameBudgetTimer};
+   |                                       ^^^^^^^^^^^^^^^^^                          ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudWidgetId`, `ProductShellWidgetId`, and `raise_focused_product_shell_window`
+  --> src\gui\hud\hud_root_tick.rs:57:5
+   |
+57 |     raise_focused_product_shell_window, HudDockRegistry, HudWidgetId, ProductShellWidgetId,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                   ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_stage7_ui_shell_egui`
+  --> src\gui\hud\hud_root_tick.rs:59:30
+   |
+59 | use super::stage7_ui_shell::{draw_stage7_ui_shell_egui, Stage7UiShellState};
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_transmission_shell_egui`
+  --> src\gui\hud\hud_root_tick.rs:60:27
+   |
+60 | use super::transmission::{draw_transmission_shell_egui, TransmissionMediaProvider, TransmissionShellState};
+   |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool`, `BuildGhostState`, and `BuildPlacementPreview`
+ --> src\gui\hud\hud_side_status_panel.rs:8:27
+  |
+8 | use crate::construction::{ActiveBuildTool, BuildPlacementPreview, BuildGhostState};
+  |                           ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::widget_scroll_vertical_fill`
+  --> src\gui\hud\hud_side_status_panel.rs:11:5
+   |
+11 | use crate::gui::style::widget_scroll_vertical_fill;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::CommandLeftStackState`
+  --> src\gui\hud\hud_side_status_panel.rs:12:5
+   |
+12 | use crate::gui::CommandLeftStackState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::AppStage5ReadinessReport`
+  --> src\gui\hud\hud_side_status_panel.rs:13:5
+   |
+13 | use crate::render::AppStage5ReadinessReport;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `SimControlState` and `SimTick`
+  --> src\gui\hud\hud_side_status_panel.rs:14:35
+   |
+14 | use crate::systems::sim_control::{SimControlState, SimTick};
+   |                                   ^^^^^^^^^^^^^^^  ^^^^^^^
+
+warning: unused import: `crate::strategic::OperationalTheaterSummary`
+  --> src\gui\hud\hud_side_status_panel.rs:15:5
+   |
+15 | use crate::strategic::OperationalTheaterSummary;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudChromeIcon`, `draw_collapsed_side_rail`, `hud_side_rail_frame`, `section_rule`, `side_panel_header`, and `stat_chip`
+  --> src\gui\hud\hud_side_status_panel.rs:19:5
+   |
+19 |     draw_collapsed_side_rail, section_rule, side_panel_header, stat_chip, hud_side_rail_frame,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+20 |     HudChromeIcon,
+   |     ^^^^^^^^^^^^^
+
+warning: unused import: `super::stage5_spine_consumer::draw_stage5_spine_consumer_panel`
+  --> src\gui\hud\hud_side_status_panel.rs:24:5
+   |
+24 | use super::stage5_spine_consumer::draw_stage5_spine_consumer_panel;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::stage6_consumer::draw_stage6_residency_consumer_panel`
+  --> src\gui\hud\hud_side_status_panel.rs:25:5
+   |
+25 | use super::stage6_consumer::draw_stage6_residency_consumer_panel;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::stage6_telemetry::Stage6HudTelemetry`
+  --> src\gui\hud\hud_side_status_panel.rs:26:5
+   |
+26 | use super::stage6_telemetry::Stage6HudTelemetry;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::hud_async_task_queue::HudAsyncTaskQueue`
+  --> src\gui\hud\hud_side_status_panel.rs:27:5
+   |
+27 | use super::hud_async_task_queue::HudAsyncTaskQueue;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::interaction_latency::InteractionLatencyMetrics`
+  --> src\gui\hud\hud_side_status_panel.rs:28:5
+   |
+28 | use super::interaction_latency::InteractionLatencyMetrics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::world_interaction_diagnostics::WorldInteractionDiagnostics`
+  --> src\gui\hud\hud_side_status_panel.rs:29:5
+   |
+29 | use super::world_interaction_diagnostics::WorldInteractionDiagnostics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PreviewPathAuthority` and `PreviewPresentationDebug`
+  --> src\gui\hud\hud_side_status_panel.rs:30:41
+   |
+30 | use crate::gui::editor::world_preview::{PreviewPathAuthority, PreviewPresentationDebug};
+   |                                         ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::UiPalette`
+  --> src\gui\hud\hud_side_status_panel.rs:31:5
+   |
+31 | use crate::gui::style::UiPalette;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::WorldRepresentationFrame`
+  --> src\gui\hud\hud_side_status_panel.rs:32:5
+   |
+32 | use crate::gui::WorldRepresentationFrame;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, `muted_text`, and `section_heading`
+ --> src\gui\hud\shell_cohesion.rs:4:25
+  |
+4 | use crate::gui::style::{muted_text, section_heading, CmdHeadingStyle, UiPalette};
+  |                         ^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `super::layout_store::HudLayoutStore`
+ --> src\gui\hud\shell_framework.rs:7:5
+  |
+7 | use super::layout_store::HudLayoutStore;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::pending_hud_layout_commit::PendingHudLayoutCommit`
+ --> src\gui\hud\shell_framework.rs:8:5
+  |
+8 | use super::pending_hud_layout_commit::PendingHudLayoutCommit;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ShellWidgetDiagnostics` and `WidgetRebuildReason`
+  --> src\gui\hud\shell_framework.rs:10:34
+   |
+10 | use super::shell_widget_timing::{ShellWidgetDiagnostics, WidgetRebuildReason};
+   |                                  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::prelude::*`
+ --> src\gui\hud\stage5_spine_consumer.rs:3:5
+  |
+3 | use bevy::prelude::*;
+  |     ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PreviewPathAuthority` and `PreviewPresentationDebug`
+ --> src\gui\hud\stage5_spine_consumer.rs:5:41
+  |
+5 | use crate::gui::editor::world_preview::{PreviewPathAuthority, PreviewPresentationDebug};
+  |                                         ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `UiPalette`, `error_text`, and `muted_text`
+ --> src\gui\hud\stage5_spine_consumer.rs:6:25
+  |
+6 | use crate::gui::style::{error_text, muted_text, UiPalette};
+  |                         ^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `crate::gui::WorldRepresentationFrame`
+ --> src\gui\hud\stage5_spine_consumer.rs:7:5
+  |
+7 | use crate::gui::WorldRepresentationFrame;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::AppStage5ReadinessReport`
+ --> src\gui\hud\stage5_spine_consumer.rs:8:5
+  |
+8 | use crate::render::AppStage5ReadinessReport;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `UiPalette` and `muted_text`
+ --> src\gui\hud\stage6_consumer.rs:6:25
+  |
+6 | use crate::gui::style::{muted_text, UiPalette};
+  |                         ^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `crate::gui::world_representation::WorldRepresentationFrame`
+  --> src\gui\hud\info_tabs.rs:10:5
+   |
+10 | use crate::gui::world_representation::WorldRepresentationFrame;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AppStage5ReadinessReport` and `infrastructure_overlay_legend_rows`
+  --> src\gui\hud\info_tabs.rs:11:21
+   |
+11 | use crate::render::{AppStage5ReadinessReport, FireAtmosphereAggregate, GpuRepresentationMetrics,
+   |                     ^^^^^^^^^^^^^^^^^^^^^^^^
+12 |     infrastructure_overlay_legend_rows, InfrastructureOverlaySettings};
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::hud_chrome::flat_v2_tray_tab`
+  --> src\gui\hud\info_tabs.rs:19:5
+   |
+19 | use super::hud_chrome::flat_v2_tray_tab;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::overlay_framework::OverlayFrameworkState`
+  --> src\gui\hud\info_tabs.rs:20:5
+   |
+20 | use super::overlay_framework::OverlayFrameworkState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `OverlayToggleGroup` and `mock_overlay_channel_descriptors`
+  --> src\gui\hud\info_tabs.rs:21:28
+   |
+21 | use super::overlay_shell::{mock_overlay_channel_descriptors, OverlayShellState, OverlayToggleGroup};
+   |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^                     ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `UiPalette` and `error_text`
+  --> src\gui\hud\info_tabs.rs:22:25
+   |
+22 | use crate::gui::style::{error_text, UiPalette};
+   |                         ^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `crate::gui::style::UiPalette`
+ --> src\gui\hud\overlay_shell.rs:5:5
+  |
+5 | use crate::gui::style::UiPalette;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::world_representation::WorldRepresentationFrame`
+ --> src\gui\hud\overlay_shell.rs:6:5
+  |
+6 | use crate::gui::world_representation::WorldRepresentationFrame;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::AppStage5ReadinessReport`
+ --> src\gui\hud\overlay_shell.rs:7:5
+  |
+7 | use crate::render::AppStage5ReadinessReport;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::InfrastructureOverlaySettings`
+ --> src\gui\hud\overlay_shell.rs:8:5
+  |
+8 | use crate::render::InfrastructureOverlaySettings;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudInfoLiveData`, `HudInfoTabState`, `draw_info_tab_bar`, and `draw_info_tab_body`
+  --> src\gui\hud\overlay_shell.rs:11:5
+   |
+11 |     draw_info_tab_bar, draw_info_tab_body, HudInfoLiveData, HudInfoTabState,
+   |     ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused import: `super::layout_store::HudLayoutStore`
+  --> src\gui\hud\overlay_shell.rs:13:5
+   |
+13 | use super::layout_store::HudLayoutStore;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudDockRegistry`, `HudWidgetId`, `ShellWindowHost`, `capture_shell_layout`, `shell_default_window_pos`, `shell_widget_runs_egui_with_budget`, and `show_product_shell_window`
+  --> src\gui\hud\overlay_shell.rs:16:5
+   |
+16 |     capture_shell_layout, shell_default_window_pos, shell_widget_runs_egui_with_budget,
+   |     ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+17 |     show_product_shell_window, HudDockRegistry, HudWidgetId, ShellWindowHost,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused import: `super::shell_update_budget::ProductShellUpdateBudget`
+  --> src\gui\hud\overlay_shell.rs:19:5
+   |
+19 | use super::shell_update_budget::ProductShellUpdateBudget;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::shell_widget_timing::ShellWidgetDiagnostics`
+  --> src\gui\hud\overlay_shell.rs:20:5
+   |
+20 | use super::shell_widget_timing::ShellWidgetDiagnostics;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::pending_hud_layout_commit::PendingHudLayoutCommit`
+  --> src\gui\hud\overlay_shell.rs:21:5
+   |
+21 | use super::pending_hud_layout_commit::PendingHudLayoutCommit;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::retained_widget_cache::RetainedWidgetCache`
+  --> src\gui\hud\overlay_shell.rs:22:5
+   |
+22 | use super::retained_widget_cache::RetainedWidgetCache;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_explainability_viewer`
+  --> src\gui\hud\stage7_ui_shell.rs:10:36
+   |
+10 | use super::explainability_viewer::{draw_explainability_viewer, ExplainabilityViewerState};
+   |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudAsyncTaskQueue` and `HudAsyncTask`
+  --> src\gui\hud\stage7_ui_shell.rs:11:35
+   |
+11 | use super::hud_async_task_queue::{HudAsyncTask, HudAsyncTaskQueue};
+   |                                   ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::virtualized_list::draw_virtualized_rows`
+  --> src\gui\hud\stage7_ui_shell.rs:12:5
+   |
+12 | use super::virtualized_list::draw_virtualized_rows;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\gui\hud\minimap_topology_legend.rs:4:5
+  |
+4 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MinimapShellState`
+ --> src\gui\hud\minimap_topology_legend.rs:5:53
+  |
+5 | use crate::gui::minimap_shell::{MinimapOverlayMask, MinimapShellState};
+  |                                                     ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudAsyncTaskQueue`, `HudAsyncTask`, `HudDockRegistry`, `HudLayoutStore`, `HudWidgetId`, `PendingHudLayoutCommit`, `ProductShellUpdateBudget`, `ProductShellWidgetId`, `RetainedWidgetCache`, `ShellWidgetDiagnostics`, `ShellWindowHost`, `capture_shell_layout`, `draw_retained_lines_or_build`, `draw_virtualized_rows`, `shell_widget_runs_egui_with_budget`, and `show_product_shell_window`
+  --> src\gui\hud\transmission.rs:11:5
+   |
+11 |     capture_shell_layout, draw_virtualized_rows, shell_widget_runs_egui_with_budget,
+   |     ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+12 |     show_product_shell_window, HudDockRegistry, HudLayoutStore, HudWidgetId, HudAsyncTask,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^^^^
+13 |     HudAsyncTaskQueue, PendingHudLayoutCommit, ProductShellUpdateBudget, ProductShellWidgetId,
+   |     ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+14 |     RetainedWidgetCache, ShellWidgetDiagnostics, ShellWindowHost, draw_retained_lines_or_build,
+   |     ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::AppState`
+  --> src\gui\hud\simulation_pointer_gate.rs:12:5
+   |
+12 | use crate::engine::AppState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::minimap_compositor::MinimapCompositorState`
+  --> src\gui\hud\minimap_bevy_interaction.rs:22:5
+   |
+22 | use crate::render::minimap_compositor::MinimapCompositorState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\gui\hud\plant_focus_card.rs:9:5
+  |
+9 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PowerHudEguiTextureCache`, `PowerHudIconAtlasManifest`, `PowerHudIconAtlasUi`, `draw_power_hud_gauge_row`, and `draw_power_hud_icon_labeled`
+  --> src\gui\hud\plant_focus_card.rs:11:5
+   |
+11 |     draw_power_hud_gauge_row, draw_power_hud_icon_labeled, PowerHudEguiTextureCache,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+12 |     PowerHudIconAtlasManifest, PowerHudIconAtlasUi, PowerHudIconId,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::power_node_hover::PowerNodeHoverState`
+  --> src\gui\hud\plant_focus_card.rs:14:5
+   |
+14 | use crate::gui::hud::power_node_hover::PowerNodeHoverState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate`
+  --> src\gui\hud\plant_focus_card.rs:15:5
+   |
+15 | use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `SimulationMapViewport` and `UiPalette`
+  --> src\gui\hud\plant_focus_card.rs:16:18
+   |
+16 | use crate::gui::{SimulationMapViewport, UiPalette};
+   |                  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `apply_sim_hud_egui_theme`, `caption_text`, `clamp_satellite_to_map_hole`, `data_text`, `map_attached_chip_frame`, `picker_header_frame`, and `title_text`
+  --> src\gui\hud\plant_focus_card.rs:19:5
+   |
+19 |     apply_sim_hud_egui_theme, caption_text, clamp_satellite_to_map_hole, data_text,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^
+20 |     map_attached_chip_frame, picker_header_frame, title_text,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool`, `BuildStripState`, `BuildTool`, `BuildingArchetypeId`, `DefenseKind`, `RailType`, `RoadType`, `UtilitiesSubmenuIconUi`, `draw_commercial_submenu`, `draw_mock_shapes_submenu`, `draw_residential_submenu`, and `draw_utilities_submenu`
+  --> src\gui\hud\sim_build_picker_sheet.rs:8:5
+   |
+ 8 |     draw_commercial_submenu, draw_mock_shapes_submenu, draw_residential_submenu,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+ 9 |     draw_utilities_submenu, ActiveBuildTool, BuildStripState, BuildTool, BuildingArchetypeId,
+   |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+10 |     BuildingDefinition, BuildingDefinitionRegistry, BuildingFamily, DefenseKind, RailType, RoadType,
+   |                                                                     ^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^
+11 |     ToolContext, UtilitiesSubmenuIconUi,
+   |                  ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::building_definitions::intent_from_archetype`
+  --> src\gui\hud\sim_build_picker_sheet.rs:13:5
+   |
+13 | use crate::construction::building_definitions::intent_from_archetype;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+  --> src\gui\hud\sim_build_picker_sheet.rs:14:5
+   |
+14 | use crate::engine::states::BaseState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PowerHudEguiTextureCache`, `PowerHudIconAtlasManifest`, and `PowerHudIconAtlasUi`
+  --> src\gui\hud\sim_build_picker_sheet.rs:16:5
+   |
+16 |     PowerHudEguiTextureCache, PowerHudIconAtlasManifest, PowerHudIconAtlasUi,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::UiPalette`
+  --> src\gui\hud\sim_build_picker_sheet.rs:18:5
+   |
+18 | use crate::gui::UiPalette;
+   |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PICKER_DEFENSE_FOOTER_HINT`, `PICKER_DEFENSE_LEAD`, `PICKER_EMPTY_CATEGORY`, `PICKER_GENERIC_DEPOT`, `PICKER_GENERIC_FACTORY`, `PICKER_INDUSTRY_LEAD`, `PICKER_INDUSTRY_OTHER`, `PICKER_ROW_BUNKER`, `PICKER_ROW_CAPTION_DRAGON_TEETH`, `PICKER_ROW_CAPTION_MINEFIELD`, `PICKER_ROW_DEFENSIVE_WALL`, `PICKER_ROW_DEMOLISH`, `PICKER_ROW_DRAGON_TEETH`, `PICKER_ROW_MINEFIELD`, `PICKER_ROW_TRENCH_LINE`, `PICKER_SECTION_DEPLOYABLES`, `PICKER_SECTION_FORTIFICATION`, `PICKER_SECTION_TRENCHES`, `PICKER_SECTION_WALLS`, `human_chain_label`, and `power_tier_compact`
+  --> src\gui\hud\sim_build_picker_sheet.rs:21:5
+   |
+21 |     human_chain_label, power_tier_compact, PICKER_DEFENSE_FOOTER_HINT, PICKER_DEFENSE_LEAD,
+   |     ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+22 |     PICKER_EMPTY_CATEGORY, PICKER_GENERIC_DEPOT, PICKER_GENERIC_FACTORY, PICKER_INDUSTRY_LEAD,
+   |     ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^
+23 |     PICKER_INDUSTRY_OTHER, PICKER_ROW_BUNKER, PICKER_ROW_CAPTION_DRAGON_TEETH,
+   |     ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+24 |     PICKER_ROW_CAPTION_MINEFIELD, PICKER_ROW_DEFENSIVE_WALL, PICKER_ROW_DEMOLISH,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+25 |     PICKER_ROW_DRAGON_TEETH, PICKER_ROW_MINEFIELD, PICKER_ROW_TRENCH_LINE,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^
+26 |     PICKER_SECTION_DEPLOYABLES, PICKER_SECTION_FORTIFICATION, PICKER_SECTION_TRENCHES,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+27 |     PICKER_SECTION_WALLS, PICKER_TITLE_DEFENSE, PICKER_TITLE_INDUSTRY, PICKER_TITLE_ROADS,
+   |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `apply_sim_hud_egui_theme`, `body_text`, `caption_text`, `picker_header_frame`, `picker_sheet_frame`, and `title_text`
+  --> src\gui\hud\sim_build_picker_sheet.rs:31:5
+   |
+31 |     apply_sim_hud_egui_theme, body_text, caption_text, picker_header_frame,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+32 |     picker_sheet_frame, title_text,
+   |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^
+
+warning: unused import: `bevy::window::PrimaryWindow`
+ --> src\gui\hud\sim_road_tool_sheet.rs:5:5
+  |
+5 | use bevy::window::PrimaryWindow;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildTool`, `RailType`, `RoadType`, `commit_road_path_to_queue`, `cursor_world_on_map`, `draw_road_tool_popup_egui`, and `enqueue_road_upgrade`
+  --> src\gui\hud\sim_road_tool_sheet.rs:8:5
+   |
+ 8 |     commit_road_path_to_queue, cursor_world_on_map, draw_road_tool_popup_egui,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^
+ 9 |     enqueue_road_upgrade, ActiveBuildTool, ActiveRoadPlacement, ActiveToolSession,
+   |     ^^^^^^^^^^^^^^^^^^^^
+10 |     BuildStripState, BuildTool, ConstructionPlanQueue, ExecutedRoadNetwork, RailType, RoadType,
+   |                      ^^^^^^^^^                                              ^^^^^^^^  ^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+  --> src\gui\hud\sim_road_tool_sheet.rs:13:5
+   |
+13 | use crate::engine::states::BaseState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+  --> src\gui\hud\sim_road_tool_sheet.rs:15:5
+   |
+15 | use crate::render::view_runtime::ViewProjectionAuthority;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ROAD_SHEET_BUILD`, `ROAD_SHEET_CANCEL`, `ROAD_SHEET_HINT_INPUT`, and `ROAD_SHEET_UPGRADE`
+  --> src\gui\hud\sim_road_tool_sheet.rs:18:27
+   |
+18 | use super::sim_hud_copy::{ROAD_SHEET_BUILD, ROAD_SHEET_CANCEL, ROAD_SHEET_HINT_INPUT, ROAD_SHEET_UPGRADE};
+   |                           ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `apply_sim_hud_egui_theme`, `body_text`, `caption_text`, `data_text`, `picker_header_frame`, `picker_sheet_frame`, and `title_text`
+  --> src\gui\hud\sim_road_tool_sheet.rs:20:5
+   |
+20 |     apply_sim_hud_egui_theme, body_text, caption_text, data_text, picker_header_frame,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+21 |     picker_sheet_frame, title_text,
+   |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^
+
+warning: unused import: `commit_power_line_to_utility_graph`
+ --> src\gui\hud\sim_power_tool_sheet.rs:7:5
+  |
+7 |     commit_power_line_to_utility_graph, ActivePowerLinePlacement, ActiveBuildTool, BuildStripState,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+  --> src\gui\hud\sim_power_tool_sheet.rs:10:5
+   |
+10 | use crate::engine::states::BaseState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_power_hud_icon_labeled`
+  --> src\gui\hud\sim_power_tool_sheet.rs:12:5
+   |
+12 |     draw_power_hud_icon_labeled, PowerHudEguiTextureCache, PowerHudIconAtlasManifest,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `apply_sim_hud_egui_theme`, `body_text`, `caption_text`, `data_text`, `picker_header_frame`, `picker_sheet_frame`, and `title_text`
+  --> src\gui\hud\sim_power_tool_sheet.rs:20:5
+   |
+20 |     apply_sim_hud_egui_theme, body_text, caption_text, data_text, picker_header_frame,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+21 |     picker_sheet_frame, title_text,
+   |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^
+
+warning: unused imports: `draw_r4_corridor_tray_legend`, `draw_staged_placements_panel_body`, and `parametric_active_ghost_hud_line`
+ --> src\gui\hud\context_tray_build_egui.rs:7:5
+  |
+7 |     draw_r4_corridor_tray_legend, draw_staged_placements_panel_body,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+8 |     parametric_active_ghost_hud_line, ActiveBuildTool, BuildCommandActor, BuildGhostState,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+  --> src\gui\hud\context_tray_build_egui.rs:13:5
+   |
+13 | use crate::engine::states::BaseState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CONTEXT_TRAY_BODY_H_PX`, `CONTEXT_TRAY_PEEK_BODY_H_PX`, and `CONTEXT_TRAY_TAB_H_PX`
+  --> src\gui\hud\context_tray_build_egui.rs:16:39
+   |
+16 |     ContextTrayState, ContextTrayTab, CONTEXT_TRAY_BODY_H_PX, CONTEXT_TRAY_PEEK_BODY_H_PX,
+   |                                       ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+17 |     CONTEXT_TRAY_TAB_H_PX,
+   |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::in_game_hud::CONTEXT_TRAY_LEFT_INSET_PX`
+  --> src\gui\hud\context_tray_build_egui.rs:19:5
+   |
+19 | use crate::gui::in_game_hud::CONTEXT_TRAY_LEFT_INSET_PX;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `TRAY_QUEUE_TITLE`, `TRAY_STAGING_EMPTY`, `TRAY_STAGING_TITLE`, and `tray_queue_summary`
+  --> src\gui\hud\context_tray_build_egui.rs:24:5
+   |
+24 |     tray_queue_summary, TRAY_LEGEND_FOOTPRINT, TRAY_LEGEND_TITLE, TRAY_LEGEND_YARD,
+   |     ^^^^^^^^^^^^^^^^^^
+25 |     TRAY_PEEK_MODIFIERS, TRAY_QUEUE_TITLE, TRAY_STAGING_EMPTY, TRAY_STAGING_TITLE,
+   |                          ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `apply_sim_hud_egui_theme`, `caption_text`, `data_text`, `picker_sheet_frame`, and `title_text`
+  --> src\gui\hud\context_tray_build_egui.rs:28:5
+   |
+28 |     apply_sim_hud_egui_theme, caption_text, data_text, picker_sheet_frame, title_text,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::UiPalette`
+ --> src\gui\minimap_viewport_frame.rs:9:5
+  |
+9 | use crate::gui::style::UiPalette;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BlockBook`, `BlockFrameBook`, `BlockFrame`, `scatter_interior_tiles`, and `street_edge_tiles`
+  --> src\gui\settlement_block_frame_debug.rs:10:5
+   |
+10 |     scatter_interior_tiles, street_edge_tiles, BlockArchetype, BlockBook, BlockFrame,
+   |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^                  ^^^^^^^^^  ^^^^^^^^^^
+11 |     BlockFrameBook,
+   |     ^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::ui_gates::product_egui_shell_active`
+ --> src\gui\assembly_snapshot_qc_ui.rs:9:5
+  |
+9 | use crate::gui::ui_gates::product_egui_shell_active;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::prelude::*`
+ --> src\gui\map_view\consumers\minimap.rs:3:5
+  |
+3 | use bevy::prelude::*;
+  |     ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudWidgetId` and `shell_widget_runs_egui`
+ --> src\gui\map_view\consumers\minimap.rs:5:40
+  |
+5 | use crate::gui::hud::shell_framework::{shell_widget_runs_egui, HudWidgetId};
+  |                                        ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::HudDockRegistry`
+ --> src\gui\map_view\consumers\minimap.rs:6:5
+  |
+6 | use crate::gui::hud::HudDockRegistry;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapViewInstanceId` and `MapViewReadyStates`
+ --> src\gui\map_view\consumers\minimap.rs:7:42
+  |
+7 | use crate::gui::map_view::presentation::{MapViewInstanceId, MapViewReadyStates};
+  |                                          ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::map_view::projection::ResolvedMapViewFrames`
+ --> src\gui\map_view\consumers\minimap.rs:8:5
+  |
+8 | use crate::gui::map_view::projection::ResolvedMapViewFrames;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::map_view::texture_cache::MapViewTextureCache`
+ --> src\gui\map_view\consumers\minimap.rs:9:5
+  |
+9 | use crate::gui::map_view::texture_cache::MapViewTextureCache;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MinimapShellState`
+  --> src\gui\map_view\consumers\minimap.rs:10:18
+   |
+10 | use crate::gui::{MinimapShellState};
+   |                  ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `SimMinimapUiState` and `TileWorldFallbackState`
+  --> src\gui\map_view\consumers\minimap.rs:11:21
+   |
+11 | use crate::render::{SimMinimapUiState, TileWorldFallbackState};
+   |                     ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapViewInstanceId` and `MapViewReadyStates`
+ --> src\gui\map_view\consumers\world_preview.rs:4:42
+  |
+4 | use crate::gui::map_view::presentation::{MapViewInstanceId, MapViewReadyStates};
+  |                                          ^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::map_view::projection::ResolvedMapViewFrames`
+ --> src\gui\map_view\consumers\world_preview.rs:5:5
+  |
+5 | use crate::gui::map_view::projection::ResolvedMapViewFrames;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::map_view::texture_cache::MapViewTextureCache`
+ --> src\gui\map_view\consumers\world_preview.rs:6:5
+  |
+6 | use crate::gui::map_view::texture_cache::MapViewTextureCache;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::resolved::ResolvedMapViewFrame`
+ --> src\gui\map_view\texture_cache\mod.rs:6:5
+  |
+6 | use super::resolved::ResolvedMapViewFrame;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::editor::world_preview::layers::PreviewLayers`
+ --> src\gui\map_view\widgets\map_toolbar.rs:4:5
+  |
+4 | use crate::gui::editor::world_preview::layers::PreviewLayers;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `PreviewCameraState` and `PreviewRenderMode`
+ --> src\gui\map_view\widgets\map_toolbar.rs:5:41
+  |
+5 | use crate::gui::editor::world_preview::{PreviewCameraState, PreviewRenderMode};
+  |                                         ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::map_view::MapViewState as EditorViewport`
+ --> src\gui\map_view\widgets\map_toolbar.rs:6:5
+  |
+6 | use crate::gui::map_view::MapViewState as EditorViewport;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::map_view::MapViewState`
+ --> src\gui\map_view\widgets\map_toolbar.rs:7:5
+  |
+7 | use crate::gui::map_view::MapViewState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::map_presentation_controls::map_overlay_controls_ui`
+ --> src\gui\map_view\widgets\map_toolbar.rs:8:5
+  |
+8 | use crate::gui::map_presentation_controls::map_overlay_controls_ui;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, `muted_label`, `primary_label`, and `section_heading`
+ --> src\gui\map_view\widgets\map_toolbar.rs:9:25
+  |
+9 | use crate::gui::style::{muted_label, primary_label, section_heading, CmdHeadingStyle, UiPalette};
+  |                         ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `MinimapCameraBookmark` and `MinimapShellState`
+  --> src\gui\map_view\widgets\map_toolbar.rs:10:18
+   |
+10 | use crate::gui::{MinimapCameraBookmark, MinimapShellState};
+   |                  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused import: `minimap_main_display_uses_gpu_compositor`
+  --> src\gui\map_view\mod.rs:15:40
+   |
+15 |     minimap_bevy_display_texel_extent, minimap_main_display_uses_gpu_compositor,
+   |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::editor::world_gen_hints as hints`
+ --> src\gui\map_presentation_controls.rs:4:5
+  |
+4 | use crate::gui::editor::world_gen_hints as hints;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::map_view::MapViewState`
+ --> src\gui\map_presentation_controls.rs:6:5
+  |
+6 | use crate::gui::map_view::MapViewState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, and `section_heading`
+ --> src\gui\map_presentation_controls.rs:7:25
+  |
+7 | use crate::gui::style::{section_heading, CmdHeadingStyle, UiPalette};
+  |                         ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `crate::gui::MinimapFollowMode`
+ --> src\gui\map_presentation_controls.rs:8:5
+  |
+8 | use crate::gui::MinimapFollowMode;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `AutoBuildPolicyBook`
+ --> src\gui\construction_growth_inspector.rs:6:18
+  |
+6 |     ArchetypeId, AutoBuildPolicyBook, GrowthProposal, GrowthProposalQueue,
+  |                  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `VertSpace`, `muted_label`, `primary_label`, `section_heading`, `v_space`, `weak_body`, `widget_scroll_vertical_capped`, and `widget_scroll_vertical_fill`
+  --> src\gui\pressure_tooling.rs:17:5
+   |
+17 |     muted_label, primary_label, section_heading, v_space, weak_body, CmdHeadingStyle, UiPalette,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^
+18 |     VertSpace, widget_scroll_vertical_capped, widget_scroll_vertical_fill,
+   |     ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveMissions`, `AgentFactionLink`, `Agent`, `Faction`, `FractureOverlaySettings`, `Mission as MissionT`, `MissionId`, `RegionalStatsOverlay`, `ScriptInfluence`, and `mission_success_readout_note`
+  --> src\gui\pressure_tooling.rs:22:5
+   |
+22 |     mission_success_readout_note, ActiveMissions, Agent, AgentFactionLink, DecisionPipelineSink,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^  ^^^^^^^^^^^^^^^^
+23 |     Faction, FractureOverlaySettings, FractureProbabilityOverlay, GpuBridgeState, HybridAgentTraits,
+   |     ^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+24 |     Mission as MissionT, MissionId, MissionPressure, PressureField, PressureProfile, RegionalStatsOverlay,
+   |     ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^                                                   ^^^^^^^^^^^^^^^^^^^^
+25 |     ScriptInfluence, StrategicEmergenceLog, WorldFields,
+   |     ^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::ConstructionMapProjection`
+  --> src\gui\logistics_orders_overlay.rs:10:5
+   |
+10 | use crate::construction::ConstructionMapProjection;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `LogisticsOrdersSnapshotRes`
+  --> src\gui\logistics_orders_overlay.rs:13:30
+   |
+13 |     LogisticsOrdersSnapshot, LogisticsOrdersSnapshotRes, OrderStatus, SiteRole,
+   |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::UiPalette`
+  --> src\gui\logistics_orders_overlay.rs:16:5
+   |
+16 | use crate::gui::style::UiPalette;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MainWorldCameraOrthoTrace`, `MapCameraDesiredRes`, and `SimulationMapViewport`
+  --> src\gui\logistics_orders_overlay.rs:17:18
+   |
+17 | use crate::gui::{MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport};
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+  --> src\gui\logistics_orders_overlay.rs:18:5
+   |
+18 | use crate::render::view_runtime::ViewProjectionAuthority;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+  --> src\gui\logistics_orders_overlay.rs:19:5
+   |
+19 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::logistics_orders_panel::LogisticsOrdersPanelState`
+  --> src\gui\logistics_orders_overlay.rs:21:5
+   |
+21 | use super::logistics_orders_panel::LogisticsOrdersPanelState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `window::PrimaryWindow`
+ --> src\gui\ui_windows.rs:1:24
+  |
+1 | use bevy::{prelude::*, window::PrimaryWindow};
+  |                        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::InputBindings`
+ --> src\gui\ui_windows.rs:3:5
+  |
+3 | use crate::gui::InputBindings;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AccessLevel`, `AgentPermissions`, `Agent`, `PermissionGrantEvent`, `PermissionGrant`, and `PermissionRevokeEvent`
+ --> src\gui\agent_permissions_ui.rs:5:5
+  |
+5 |     Agent, AgentPermissions, PermissionDomain, AccessLevel, PermissionGrant, 
+  |     ^^^^^  ^^^^^^^^^^^^^^^^                    ^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+6 |     PermissionGrantEvent, PermissionRevokeEvent
+  |     ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::systems::agents::agent_manager::AgentManager`
+ --> src\gui\agent_permissions_ui.rs:8:5
+  |
+8 | use crate::systems::agents::agent_manager::AgentManager;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::events::ownership_events::FactionColors`
+ --> src\gui\agent_permissions_ui.rs:9:5
+  |
+9 | use crate::events::ownership_events::FactionColors;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::gameplay_color_swatch_egui`
+  --> src\gui\agent_permissions_ui.rs:10:5
+   |
+10 | use crate::gui::style::gameplay_color_swatch_egui;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, `UiSpacing`, `VertSpace`, `muted_label`, `primary_label`, `section_heading`, `strong_body`, `v_space`, `warning_text`, and `widget_scroll_vertical_fill`
+  --> src\gui\agent_permissions_ui.rs:12:5
+   |
+12 |     muted_label, primary_label, section_heading, strong_body, v_space, warning_text, CmdHeadingStyle,
+   |     ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+13 |     UiPalette, UiSpacing, VertSpace, widget_scroll_vertical_fill,
+   |     ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, `muted_label`, `primary_label`, `section_heading`, and `widget_scroll_vertical_fill`
+ --> src\gui\ai_explainability_ui.rs:7:5
+  |
+7 |     muted_label, primary_label, section_heading, widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette,
+  |     ^^^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `DecisionExplainabilitySnapshot`, `HybridSimLastResolved`, and `format_hybrid_telemetry_explain`
+  --> src\gui\ai_explainability_ui.rs:11:5
+   |
+11 |     format_hybrid_telemetry_explain, DecisionExplainabilitySnapshot, HybridSimLastResolved,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `UiPalette`, `primary_label`, and `widget_scroll_vertical_fill`
+  --> src\gui\faction_tools_ui.rs:16:25
+   |
+16 | use crate::gui::style::{primary_label, widget_scroll_vertical_fill, UiPalette};
+   |                         ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, `UiSpacing`, `VertSpace`, `error_text`, `framed_group`, `muted_text`, `path_hint`, `primary_text`, `scenario_execution_badge`, `section_heading`, `success_text`, `v_space`, `warning_text`, `widget_scroll_vertical_capped`, and `widget_scroll_vertical_fill`
+  --> src\gui\editor\scenario_script_panel.rs:11:5
+   |
+11 |     error_text, framed_group, muted_text, path_hint, primary_text, scenario_execution_badge,
+   |     ^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+12 |     section_heading, success_text, v_space, warning_text, widget_scroll_vertical_capped,
+   |     ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+13 |     widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette, UiSpacing, VertSpace,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `crate::scenario::scenario_steps::ScenarioStep`
+  --> src\gui\editor\scenario_script_panel.rs:15:5
+   |
+15 | use crate::scenario::scenario_steps::ScenarioStep;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::scenario::scenario_types::ScenarioFileV1`
+  --> src\gui\editor\scenario_script_panel.rs:16:5
+   |
+16 | use crate::scenario::scenario_types::ScenarioFileV1;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::scenario::script_host::EngineScriptHost`
+  --> src\gui\editor\scenario_script_panel.rs:17:5
+   |
+17 | use crate::scenario::script_host::EngineScriptHost;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MainMenuState` and `WorldGenFlowState`
+  --> src\gui\editor\map_editor\mod.rs:41:61
+   |
+41 | use crate::engine::{AppState, BaseState, InGameEditorState, MainMenuState, WorldGenFlowState};
+   |                                                             ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `EditorTileEditCommitted` and `EditorTileEditKind`
+  --> src\gui\editor\map_editor\mod.rs:44:5
+   |
+44 |     EditorTileEditCommitted, EditorTileEditKind,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `scenario_editor_tools_entry_window` and `scenario_script_panel_system`
+  --> src\gui\editor\map_editor\mod.rs:47:5
+   |
+47 |     scenario_editor_tools_entry_window, scenario_script_panel_system,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, `VertSpace`, `framed_group`, `muted_label`, `path_hint`, `primary_label`, `section_heading`, `v_space`, `weak_body`, `widget_scroll_both`, and `widget_scroll_vertical_fill`
+  --> src\gui\editor\map_editor\mod.rs:51:5
+   |
+51 |     framed_group, muted_label, path_hint, primary_label, section_heading, v_space, weak_body,
+   |     ^^^^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^
+52 |     widget_scroll_both, widget_scroll_vertical_fill, CmdHeadingStyle, UiPalette, VertSpace,
+   |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `WorldMarker`
+  --> src\gui\editor\map_editor\mod.rs:56:54
+   |
+56 |     Height, TerrainType, TileMarker, WorldGenParams, WorldMarker,
+   |                                                      ^^^^^^^^^^^
+
+warning: unused imports: `bresenham_tile_line`, `emit_editor_tile_commit_for_brush`, `sync_tool_to_substate`, and `terrain_family_combo`
+  --> src\gui\editor\map_editor\mod.rs:61:5
+   |
+61 |     bresenham_tile_line, emit_editor_tile_commit_for_brush, sync_tool_to_substate,
+   |     ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+62 |     terrain_family_combo, tile_in_brush,
+   |     ^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `height_at_tile` and `place_road_marker`
+  --> src\gui\editor\map_editor\mod.rs:65:5
+   |
+65 |     height_at_tile, map_editor_road_undo, place_road_marker, road_authoring_ghost_refresh,
+   |     ^^^^^^^^^^^^^^                        ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `dev_hybrid_world_save_path`, `dev_map_snapshot_path`, and `dev_transport_network_save_path`
+  --> src\gui\editor\map_editor\mod.rs:68:5
+   |
+68 |     dev_hybrid_world_save_path, dev_map_snapshot_path, dev_transport_network_save_path,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::math::UVec2`
+ --> src\gui\editor\world_preview\minimap.rs:3:5
+  |
+3 | use bevy::math::UVec2;
+  |     ^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MAP_PANEL_INSET_PX`, `MapFitMode`, and `compute_map_fit_strict`
+ --> src\gui\editor\world_preview\minimap.rs:5:40
+  |
+5 | use crate::gui::map_presentation_fit::{compute_map_fit_strict, MapFitMode, MAP_PANEL_INSET_PX};
+  |                                        ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::UiPalette`
+ --> src\gui\editor\world_preview\minimap.rs:6:5
+  |
+6 | use crate::gui::style::UiPalette;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `material_registry_interchange_path`, `open_registry_interchange_in_desktop_shell`, and `tag_registry_interchange_path`
+ --> src\gui\editor\world_preview\registry_inspector.rs:5:5
+  |
+5 |     material_registry_interchange_path, open_registry_interchange_in_desktop_shell,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+6 |     tag_registry_interchange_path,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, `UiSpacing`, `muted_label`, `section_heading`, and `widget_scroll_vertical_capped`
+ --> src\gui\editor\world_preview\registry_inspector.rs:9:5
+  |
+9 |     muted_label, section_heading, CmdHeadingStyle, UiPalette, UiSpacing, widget_scroll_vertical_capped,
+  |     ^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::systems::terrain::TerrainRegistriesHandles`
+  --> src\gui\editor\world_preview\registry_inspector.rs:11:5
+   |
+11 | use crate::systems::terrain::TerrainRegistriesHandles;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MaterialRegistry` and `TagRegistry`
+  --> src\gui\editor\world_preview\registry_inspector.rs:12:32
+   |
+12 | use crate::terrain::material::{MaterialRegistry, TagRegistry};
+   |                                ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `crate::gui::editor::world_gen_hints as hints`
+ --> src\gui\editor\world_preview\ui_sidebar.rs:4:5
+  |
+4 | use crate::gui::editor::world_gen_hints as hints;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::editor::world_gen_ui::WorldGenUiState`
+ --> src\gui\editor\world_preview\ui_sidebar.rs:5:5
+  |
+5 | use crate::gui::editor::world_gen_ui::WorldGenUiState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CmdHeadingStyle`, `UiPalette`, `UiSpacing`, `VertSpace`, `muted_label`, `section_heading`, `v_space`, and `widget_scroll_vertical_capped`
+ --> src\gui\editor\world_preview\ui_sidebar.rs:7:5
+  |
+7 |     muted_label, section_heading, v_space, CmdHeadingStyle, UiPalette, UiSpacing, VertSpace,
+  |     ^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^
+8 |     widget_scroll_vertical_capped,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::systems::terrain::TerrainRegistriesHandles`
+  --> src\gui\editor\world_preview\ui_sidebar.rs:10:5
+   |
+10 | use crate::systems::terrain::TerrainRegistriesHandles;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+  --> src\gui\editor\world_preview\ui_sidebar.rs:11:5
+   |
+11 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::material::TagId`
+  --> src\gui\editor\world_preview\ui_sidebar.rs:12:5
+   |
+12 | use crate::terrain::material::TagId;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::prelude::*`
+  --> src\gui\editor\world_preview\ui_sidebar.rs:13:5
+   |
+13 | use bevy::prelude::*;
+   |     ^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::editor::world_preview::layers::PreviewLayers`
+ --> src\gui\editor\world_preview\ui_statusbar.rs:4:5
+  |
+4 | use crate::gui::editor::world_preview::layers::PreviewLayers;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::editor::world_preview::viewport::EditorViewport`
+ --> src\gui\editor\world_preview\ui_statusbar.rs:5:5
+  |
+5 | use crate::gui::editor::world_preview::viewport::EditorViewport;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `UiPalette` and `primary_label`
+ --> src\gui\editor\world_preview\ui_statusbar.rs:6:25
+  |
+6 | use crate::gui::style::{primary_label, UiPalette};
+  |                         ^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `crate::gui::editor::world_preview::preview_render_contract::PreviewCameraState`
+ --> src\gui\editor\world_preview\ui_toolbar.rs:4:5
+  |
+4 | use crate::gui::editor::world_preview::preview_render_contract::PreviewCameraState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapToolbarConfig`, `MapViewState`, `map_toolbar_preview_zoom`, and `map_toolbar`
+ --> src\gui\editor\world_preview\ui_toolbar.rs:5:28
+  |
+5 | use crate::gui::map_view::{map_toolbar, map_toolbar_preview_zoom, MapToolbarConfig, MapViewState};
+  |                            ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::UiPalette`
+ --> src\gui\editor\world_preview\ui_toolbar.rs:6:5
+  |
+6 | use crate::gui::style::UiPalette;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MapViewState`
+  --> src\render\tile_world_fallback.rs:31:63
+   |
+31 | use crate::gui::{MapViewInstances, MapViewPresentationStates, MapViewState};
+   |                                                               ^^^^^^^^^^^^
+
+warning: unused imports: `MapToolbarConfig`, `map_toolbar_minimap_zoom`, and `map_toolbar`
+  --> src\render\tile_world_fallback.rs:32:18
+   |
+32 | use crate::gui::{map_toolbar, map_toolbar_minimap_zoom, MapToolbarConfig};
+   |                  ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveMapViewInput`, `MAP_PANEL_INSET_PX`, `MapPresentationDiagnostics`, `MinimapInteractionBuffer`, `ResolvedMapViewFrames`, `SimulationMapViewport`, `compute_map_fit_strict`, `native_minimap_window_supported`, `paint_tactical_viewport_frame_on_minimap`, and `view_surface_screen_to_world`
+  --> src\render\tile_world_fallback.rs:34:25
+   |
+34 |     camera_translation, compute_map_fit_strict, resolve_minimap_texture_source,
+   |                         ^^^^^^^^^^^^^^^^^^^^^^
+35 |     ActiveMapViewInput, InputBindings, MapCameraDesired, MapCameraDesiredRes, MapPresentationDiagnostics,
+   |     ^^^^^^^^^^^^^^^^^^                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+36 |     MapTextureSource, MapViewInstanceId, MinimapInteractionBuffer, MinimapPresentationSource,
+   |                                          ^^^^^^^^^^^^^^^^^^^^^^^^
+37 |     MinimapShellState, ResolvedMapViewFrames, SimulationMapViewport, ViewAuthoritySystemSet,
+   |                        ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+38 |     ViewId, ViewManager, native_minimap_window_supported, paint_tactical_viewport_frame_on_minimap,
+   |                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+39 |     MAP_PANEL_INSET_PX, view_surface_screen_to_world,
+   |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::cached_egui_texture::HudEguiTextureCache`
+  --> src\render\tile_world_fallback.rs:42:5
+   |
+42 | use crate::gui::hud::cached_egui_texture::HudEguiTextureCache;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::layout_store::HudLayoutStore`
+  --> src\render\tile_world_fallback.rs:44:5
+   |
+44 | use crate::gui::hud::layout_store::HudLayoutStore;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::hud::pending_hud_layout_commit::PendingHudLayoutCommit`
+  --> src\render\tile_world_fallback.rs:45:5
+   |
+45 | use crate::gui::hud::pending_hud_layout_commit::PendingHudLayoutCommit;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudWidgetId` and `capture_shell_layout`
+  --> src\render\tile_world_fallback.rs:46:40
+   |
+46 | use crate::gui::hud::shell_framework::{capture_shell_layout, HudWidgetId};
+   |                                        ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused imports: `ProductShellDiagnostics`, `ViewportRectSanity`, and `ViewportRectSource`
+  --> src\render\tile_world_fallback.rs:47:23
+   |
+47 | use crate::gui::hud::{ProductShellDiagnostics, ViewportRectSanity, ViewportRectSource};
+   |                       ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ensure_viewport_camera_initialized` and `fit_viewport_to_map`
+  --> src\render\tile_world_fallback.rs:50:18
+   |
+50 | use crate::gui::{ensure_viewport_camera_initialized, fit_viewport_to_map};
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::FireAtmosphereAggregate`
+  --> src\render\tile_world_fallback.rs:53:5
+   |
+53 | use crate::render::FireAtmosphereAggregate;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::UiPalette`
+  --> src\render\tile_world_fallback.rs:54:5
+   |
+54 | use crate::gui::style::UiPalette;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::world_to_sim_map_screen`
+ --> src\render\pipelines\power_map_overlay_draw.rs:5:5
+  |
+5 | use crate::construction::world_to_sim_map_screen;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\render\pipelines\power_map_overlay_draw.rs:6:5
+  |
+6 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapCameraDesiredRes` and `SimulationMapViewport`
+ --> src\render\pipelines\power_map_overlay_draw.rs:7:18
+  |
+7 | use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
+  |                  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+ --> src\render\pipelines\power_map_overlay_draw.rs:9:5
+  |
+9 | use crate::render::view_runtime::ViewProjectionAuthority;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+  --> src\render\pipelines\power_map_overlay_draw.rs:10:5
+   |
+10 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `InfrastructureNetworkLayer`, `InfrastructureOverlayDrawRequests`, `InfrastructureOverlaySettings`, `PowerLineOverlayState`, `PowerMapOverlayPresentation`, and `stroke_for_power_line_state`
+  --> src\render\pipelines\power_map_overlay_draw.rs:13:5
+   |
+13 |     InfrastructureNetworkLayer, InfrastructureOverlayDrawRequests, InfrastructureOverlaySettings,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+14 |     InfrastructureOverlayStroke, PowerLineOverlayState, PowerMapOverlayPresentation,
+   |                                  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+15 |     stroke_for_power_line_state,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::window::PrimaryWindow`
+ --> src\render\probes\debug_viewport_overlay.rs:4:5
+  |
+4 | use bevy::window::PrimaryWindow;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `CameraProjectionInfo`, `UiViewportRect`, and `stroke_viewport_debug_rect`
+ --> src\render\probes\debug_viewport_overlay.rs:7:5
+  |
+7 |     stroke_viewport_debug_rect, viewport_debug_overlay_enabled, CameraProjectionInfo,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^                                  ^^^^^^^^^^^^^^^^^^^^
+8 |     UiViewportRect,
+  |     ^^^^^^^^^^^^^^
+
+warning: unused imports: `MainWorldCameraOrthoTrace`, `SimulationMapTexture`, `SimulationMapViewportDebug`, `SimulationMapViewportTrace`, and `SimulationMapViewport`
+  --> src\render\probes\debug_viewport_overlay.rs:11:5
+   |
+11 |     MainWorldCameraOrthoTrace, SimulationMapTexture, SimulationMapViewport,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+12 |     SimulationMapViewportDebug, SimulationMapViewportTrace,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::simulation_map_texture_extent`
+  --> src\render\probes\debug_viewport_overlay.rs:14:5
+   |
+14 | use crate::gui::simulation_map_texture_extent;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::ResolvedViewports`
+  --> src\render\probes\debug_viewport_overlay.rs:15:5
+   |
+15 | use crate::render::ResolvedViewports;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `tile_screen_extent` and `world_to_sim_map_screen`
+ --> src\construction\build_footprint_overlay.rs:5:48
+  |
+5 | use crate::construction::map_egui_projection::{tile_screen_extent, world_to_sim_map_screen};
+  |                                                ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::tile_visual::ConstructionTileVisualSettings`
+ --> src\construction\build_footprint_overlay.rs:6:5
+  |
+6 | use crate::construction::tile_visual::ConstructionTileVisualSettings;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\construction\build_footprint_overlay.rs:7:5
+  |
+7 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapCameraDesiredRes` and `SimulationMapViewport`
+ --> src\construction\build_footprint_overlay.rs:8:18
+  |
+8 | use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
+  |                  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+ --> src\construction\build_footprint_overlay.rs:9:5
+  |
+9 | use crate::render::view_runtime::ViewProjectionAuthority;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildConfidence` and `confidence_from_validation`
+  --> src\construction\build_footprint_overlay.rs:11:31
+   |
+11 | use super::build_confidence::{confidence_from_validation, BuildConfidence};
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildGhostState` and `BuildPlacementPreview`
+  --> src\construction\build_footprint_overlay.rs:12:26
+   |
+12 | use super::build_state::{BuildGhostState, BuildPlacementPreview};
+   |                          ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildStripState` and `ToolContext`
+  --> src\construction\build_footprint_overlay.rs:13:26
+   |
+13 | use super::build_strip::{BuildStripState, ToolContext};
+   |                          ^^^^^^^^^^^^^^^  ^^^^^^^^^^^
+
+warning: unused import: `super::build_tool_authority::ActiveBuildTool`
+  --> src\construction\build_footprint_overlay.rs:14:5
+   |
+14 | use super::build_tool_authority::ActiveBuildTool;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `footprint_invalid_color`, `footprint_risky_color`, and `footprint_valid_color`
+  --> src\construction\build_footprint_overlay.rs:15:27
+   |
+15 | use super::ghost_visual::{footprint_invalid_color, footprint_risky_color, footprint_valid_color};
+   |                           ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudDockRegistry`, `HudLayoutStore`, `HudWidgetId`, `PendingHudLayoutCommit`, `ProductShellUpdateBudget`, `capture_shell_layout`, `draw_shell_window_chrome`, `floating_unanchored_default_pos`, and `shell_widget_runs_egui_with_budget`
+ --> src\construction\build_toolbox.rs:6:5
+  |
+6 |     capture_shell_layout, draw_shell_window_chrome, floating_unanchored_default_pos,
+  |     ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7 |     shell_widget_runs_egui_with_budget, HudDockRegistry, HudLayoutStore, HudWidgetId,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^  ^^^^^^^^^^^
+8 |     PendingHudLayoutCommit, ProductShellUpdateBudget,
+  |     ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::InputBindings`
+  --> src\construction\build_toolbox.rs:10:5
+   |
+10 | use crate::gui::InputBindings;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildGhostState` and `BuildPlacementPreview`
+  --> src\construction\build_toolbox.rs:12:26
+   |
+12 | use super::build_state::{BuildGhostState, BuildPlacementPreview};
+   |                          ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool`, `BuildTool`, `DefenseKind`, `RailType`, `RoadType`, and `ZoneTool`
+  --> src\construction\build_toolbox.rs:14:5
+   |
+14 |     ActiveBuildTool, BuildTool, DefenseKind, RailType, RoadType, ZoneTool,
+   |     ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^  ^^^^^^^^  ^^^^^^^^  ^^^^^^^^
+
+warning: unused import: `super::building_definitions::BuildingDefinitionRegistry`
+  --> src\construction\build_toolbox.rs:16:5
+   |
+16 | use super::building_definitions::BuildingDefinitionRegistry;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::commercial_menu::draw_commercial_submenu`
+  --> src\construction\build_toolbox.rs:17:5
+   |
+17 | use super::commercial_menu::draw_commercial_submenu;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::industrial_menu::draw_industrial_submenu`
+  --> src\construction\build_toolbox.rs:18:5
+   |
+18 | use super::industrial_menu::draw_industrial_submenu;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::mock_shapes_menu::draw_mock_shapes_submenu`
+  --> src\construction\build_toolbox.rs:19:5
+   |
+19 | use super::mock_shapes_menu::draw_mock_shapes_submenu;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `draw_intent_preview` and `draw_residential_submenu`
+  --> src\construction\build_toolbox.rs:20:31
+   |
+20 | use super::residential_menu::{draw_intent_preview, draw_residential_submenu};
+   |                               ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::utilities_menu::draw_utilities_submenu`
+  --> src\construction\build_toolbox.rs:21:5
+   |
+21 | use super::utilities_menu::draw_utilities_submenu;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::strategic::CorridorConstructionBook`
+  --> src\construction\build_toolbox.rs:22:5
+   |
+22 | use crate::strategic::CorridorConstructionBook;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `world_to_sim_map_screen as world_to_sim_map_egui`
+   --> src\construction\map_egui_projection.rs:346:9
+    |
+346 | pub use world_to_sim_map_screen as world_to_sim_map_egui;
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::map_egui_projection::map_zoom_screen_scale`
+ --> src\construction\visual_authority.rs:5:5
+  |
+5 | use crate::construction::map_egui_projection::map_zoom_screen_scale;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapCameraDesiredRes` and `SimulationMapViewport`
+ --> src\construction\visual_authority.rs:6:18
+  |
+6 | use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
+  |                  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+ --> src\construction\visual_authority.rs:7:5
+  |
+7 | use crate::render::view_runtime::ViewProjectionAuthority;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+ --> src\construction\visual_authority.rs:9:5
+  |
+9 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::building_catalog::BuildingFamily`
+ --> src\construction\commercial_menu.rs:5:5
+  |
+5 | use super::building_catalog::BuildingFamily;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildingDefinitionRegistry` and `intent_from_archetype`
+ --> src\construction\commercial_menu.rs:6:35
+  |
+6 | use super::building_definitions::{intent_from_archetype, BuildingDefinitionRegistry};
+  |                                   ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::residential_menu::draw_intent_preview`
+ --> src\construction\commercial_menu.rs:7:5
+  |
+7 | use super::residential_menu::draw_intent_preview;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `intent_from_archetype`
+ --> src\construction\industrial_menu.rs:8:5
+  |
+8 |     intent_from_archetype, BuildingDefinition, BuildingDefinitionRegistry,
+  |     ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::residential_menu::draw_intent_preview`
+  --> src\construction\industrial_menu.rs:10:5
+   |
+10 | use super::residential_menu::draw_intent_preview;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool`, `BuildTool`, and `BuildingArchetypeId`
+ --> src\construction\mock_shapes_menu.rs:4:35
+  |
+4 | use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId};
+  |                                   ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::building_definitions::BuildingDefinitionRegistry`
+ --> src\construction\mock_shapes_menu.rs:5:5
+  |
+5 | use super::building_definitions::BuildingDefinitionRegistry;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::residential_menu::draw_intent_preview`
+ --> src\construction\mock_shapes_menu.rs:6:5
+  |
+6 | use super::residential_menu::draw_intent_preview;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::prelude::*`
+ --> src\construction\pending_construction_panel.rs:3:5
+  |
+3 | use bevy::prelude::*;
+  |     ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `HudDockRegistry`, `HudLayoutStore`, `HudWidgetId`, `PendingHudLayoutCommit`, `ProductShellUpdateBudget`, `ShellWidgetDiagnostics`, `ShellWindowHost`, `WorldInteractionDiagnostics`, `capture_shell_layout`, `draw_virtualized_rows`, `floating_unanchored_default_pos`, `shell_widget_runs_egui_with_budget`, and `show_product_shell_window`
+ --> src\construction\pending_construction_panel.rs:6:5
+  |
+6 |     capture_shell_layout, draw_virtualized_rows, floating_unanchored_default_pos,
+  |     ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+7 |     shell_widget_runs_egui_with_budget, show_product_shell_window, HudDockRegistry, HudLayoutStore,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^
+8 |     HudWidgetId, PendingHudLayoutCommit, ProductShellUpdateBudget, ShellWidgetDiagnostics,
+  |     ^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^
+9 |     ShellWindowHost, WorldInteractionDiagnostics,
+  |     ^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BlueprintImportQueueMode` and `blueprint_collection_from_pending`
+  --> src\construction\pending_construction_panel.rs:12:31
+   |
+12 | use super::blueprint_preset::{blueprint_collection_from_pending, BlueprintImportQueueMode};
+   |                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ConstructionBlueprintImportUi`, `ConstructionQueueIntent`, and `ConstructionQueuePanelView`
+  --> src\construction\pending_construction_panel.rs:14:5
+   |
+14 |     ConstructionBlueprintImportUi, ConstructionQueueIntent, ConstructionQueuePanelView,
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::pending_construction::PendingConstructionQueue`
+  --> src\construction\pending_construction_panel.rs:16:5
+   |
+16 | use super::pending_construction::PendingConstructionQueue;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `tile_screen_extent_rendered` and `world_to_sim_map_screen_rendered`
+ --> src\construction\phase_visual.rs:6:5
+  |
+6 |     tile_screen_extent_rendered, world_to_sim_map_screen_rendered,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::tile_visual::ConstructionTileVisualSettings`
+ --> src\construction\phase_visual.rs:8:5
+  |
+8 | use crate::construction::tile_visual::ConstructionTileVisualSettings;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\construction\phase_visual.rs:9:5
+  |
+9 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MainWorldCameraOrthoTrace` and `MapCameraDesiredRes`
+  --> src\construction\phase_visual.rs:10:18
+   |
+10 | use crate::gui::{MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport};
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+  --> src\construction\phase_visual.rs:11:5
+   |
+11 | use crate::render::view_runtime::ViewProjectionAuthority;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ConstructionSite`, `PlannedSite`, and `SiteFootprint`
+  --> src\construction\phase_visual.rs:13:5
+   |
+13 |     ConstructionSite, PlannedSite, SiteArchetype, SiteConstructionPhase, SiteFootprint,
+   |     ^^^^^^^^^^^^^^^^  ^^^^^^^^^^^                                        ^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+  --> src\construction\phase_visual.rs:15:5
+   |
+15 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `BuildPlacementPreview`
+  --> src\construction\placement_debug.rs:17:57
+   |
+17 | use crate::construction::build_state::{BuildGhostState, BuildPlacementPreview};
+   |                                                         ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::build_strip::BuildStripState`
+  --> src\construction\placement_debug.rs:18:5
+   |
+18 | use crate::construction::build_strip::BuildStripState;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `tile_screen_extent` and `world_to_sim_map_screen_rendered`
+  --> src\construction\placement_debug.rs:23:5
+   |
+23 |     tile_screen_extent, world_to_sim_map_screen_rendered, ConstructionMapProjection,
+   |     ^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::visual_authority::ConstructionVisualRequests`
+  --> src\construction\placement_debug.rs:25:5
+   |
+25 | use crate::construction::visual_authority::ConstructionVisualRequests;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `MapCameraDesired`
+  --> src\construction\placement_debug.rs:33:5
+   |
+33 |     MapCameraDesired, MapCameraDesiredRes, SimulationMapViewport, TileDebugDrawGlobals,
+   |     ^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool` and `BuildTool`
+ --> src\construction\round4_corridor.rs:9:35
+  |
+9 | use super::build_tool_authority::{ActiveBuildTool, BuildTool};
+  |                                   ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `corridor_in_progress_color` and `corridor_planned_color`
+  --> src\construction\round4_corridor.rs:10:27
+   |
+10 | use super::ghost_visual::{corridor_in_progress_color, corridor_planned_color};
+   |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::InputBindings`
+ --> src\construction\tool_hints.rs:5:5
+  |
+5 | use crate::gui::InputBindings;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool` and `BuildTool`
+ --> src\construction\tool_hints.rs:7:35
+  |
+7 | use super::build_tool_authority::{ActiveBuildTool, BuildTool};
+  |                                   ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused import: `super::path_feedback::ConstructionPathFeedback`
+ --> src\construction\tool_hints.rs:8:5
+  |
+8 | use super::path_feedback::ConstructionPathFeedback;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\construction\power_lines\ghost.rs:5:5
+  |
+5 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapCameraDesiredRes` and `SimulationMapViewport`
+ --> src\construction\power_lines\ghost.rs:6:18
+  |
+6 | use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
+  |                  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+ --> src\construction\power_lines\ghost.rs:7:5
+  |
+7 | use crate::render::view_runtime::ViewProjectionAuthority;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `InfrastructureOverlayStroke` and `paint_stroke_line`
+ --> src\construction\power_lines\ghost.rs:8:21
+  |
+8 | use crate::render::{paint_stroke_line, stroke_for_voltage_class, InfrastructureOverlayStroke};
+  |                     ^^^^^^^^^^^^^^^^^                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+ --> src\construction\power_lines\ghost.rs:9:5
+  |
+9 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool` and `BuildTool`
+  --> src\construction\power_lines\ghost.rs:11:49
+   |
+11 | use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool};
+   |                                                 ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `map_zoom_screen_scale` and `world_to_sim_map_screen`
+  --> src\construction\power_lines\ghost.rs:12:48
+   |
+12 | use crate::construction::map_egui_projection::{map_zoom_screen_scale, world_to_sim_map_screen};
+   |                                                ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::placement::ActivePowerLinePlacement`
+  --> src\construction\power_lines\ghost.rs:14:5
+   |
+14 | use super::placement::ActivePowerLinePlacement;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\construction\rail\ghost.rs:5:5
+  |
+5 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapCameraDesiredRes` and `SimulationMapViewport`
+ --> src\construction\rail\ghost.rs:6:18
+  |
+6 | use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
+  |                  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+ --> src\construction\rail\ghost.rs:7:5
+  |
+7 | use crate::render::view_runtime::ViewProjectionAuthority;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+ --> src\construction\rail\ghost.rs:8:5
+  |
+8 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool` and `BuildTool`
+  --> src\construction\rail\ghost.rs:10:42
+   |
+10 | use super::super::build_tool_authority::{ActiveBuildTool, BuildTool};
+   |                                          ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `map_zoom_screen_scale` and `world_to_sim_map_screen`
+  --> src\construction\rail\ghost.rs:11:41
+   |
+11 | use super::super::map_egui_projection::{map_zoom_screen_scale, world_to_sim_map_screen};
+   |                                         ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::placement::ActiveRailPlacement`
+  --> src\construction\rail\ghost.rs:12:5
+   |
+12 | use super::placement::ActiveRailPlacement;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `ZoneTool`
+ --> src\construction\residential_menu.rs:4:84
+  |
+4 | use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId, ZoneTool};
+  |                                                                                    ^^^^^^^^
+
+warning: unused import: `ApartmentForm`
+ --> src\construction\residential_menu.rs:5:31
+  |
+5 | use super::building_catalog::{ApartmentForm, BuildingIntentPreview};
+  |                               ^^^^^^^^^^^^^
+
+warning: unused imports: `BuildingDefinitionRegistry` and `intent_from_apartment_form`
+ --> src\construction\residential_menu.rs:6:35
+  |
+6 | use super::building_definitions::{intent_from_apartment_form, BuildingDefinitionRegistry};
+  |                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\construction\roads\ghost.rs:5:5
+  |
+5 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapCameraDesiredRes` and `SimulationMapViewport`
+ --> src\construction\roads\ghost.rs:6:18
+  |
+6 | use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
+  |                  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+ --> src\construction\roads\ghost.rs:7:5
+  |
+7 | use crate::render::view_runtime::ViewProjectionAuthority;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+ --> src\construction\roads\ghost.rs:8:5
+  |
+8 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool` and `BuildTool`
+  --> src\construction\roads\ghost.rs:10:49
+   |
+10 | use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool};
+   |                                                 ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `road_control_point_color` and `road_segment_color`
+  --> src\construction\roads\ghost.rs:11:41
+   |
+11 | use crate::construction::ghost_visual::{road_control_point_color, road_segment_color};
+   |                                         ^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `map_zoom_screen_scale` and `world_to_sim_map_screen`
+  --> src\construction\roads\ghost.rs:12:48
+   |
+12 | use crate::construction::map_egui_projection::{map_zoom_screen_scale, world_to_sim_map_screen};
+   |                                                ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::roads::ActiveRoadPlacement`
+  --> src\construction\roads\ghost.rs:13:5
+   |
+13 | use crate::construction::roads::ActiveRoadPlacement;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `bevy::window::PrimaryWindow`
+ --> src\construction\roads\popup.rs:4:5
+  |
+4 | use bevy::window::PrimaryWindow;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool`, `BuildTool`, `RailType`, and `RoadType`
+ --> src\construction\roads\popup.rs:6:49
+  |
+6 | use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType, RoadType};
+  |                                                 ^^^^^^^^^^^^^^^  ^^^^^^^^^  ^^^^^^^^  ^^^^^^^^
+
+warning: unused imports: `ConstructionPlanQueue` and `ExecutedRoadNetwork`
+ --> src\construction\roads\popup.rs:7:50
+  |
+7 | use crate::construction::construction_pipeline::{ConstructionPlanQueue, ExecutedRoadNetwork};
+  |                                                  ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::sessions::ActiveToolSession`
+ --> src\construction\roads\popup.rs:8:5
+  |
+8 | use crate::construction::sessions::ActiveToolSession;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::snap::RoadSnapSettings`
+ --> src\construction\roads\popup.rs:9:5
+  |
+9 | use crate::construction::snap::RoadSnapSettings;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::upgrade::enqueue_road_upgrade`
+  --> src\construction\roads\popup.rs:10:5
+   |
+10 | use crate::construction::upgrade::enqueue_road_upgrade;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapCameraDesiredRes` and `SimulationMapViewport`
+  --> src\construction\roads\popup.rs:11:18
+   |
+11 | use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
+   |                  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+  --> src\construction\roads\popup.rs:12:5
+   |
+12 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::commit::commit_road_path_to_queue`
+  --> src\construction\roads\popup.rs:14:5
+   |
+14 | use super::commit::commit_road_path_to_queue;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::input::cursor_world_on_map`
+  --> src\construction\roads\popup.rs:15:5
+   |
+15 | use super::input::cursor_world_on_map;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::placement::ActiveRoadPlacement`
+  --> src\construction\roads\popup.rs:16:5
+   |
+16 | use super::placement::ActiveRoadPlacement;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\construction\staged_ghost_panel.rs:8:5
+  |
+8 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `draw_power_hud_icon_labeled`
+ --> src\construction\utilities_menu.rs:5:5
+  |
+5 |     draw_power_hud_icon_labeled, PowerHudIconAtlasManifest, PowerHudIconId,
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::building_catalog::BuildingFamily`
+  --> src\construction\utilities_menu.rs:10:5
+   |
+10 | use super::building_catalog::BuildingFamily;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `BuildingDefinitionRegistry` and `intent_from_archetype`
+  --> src\construction\utilities_menu.rs:11:35
+   |
+11 | use super::building_definitions::{intent_from_archetype, BuildingDefinitionRegistry};
+   |                                   ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::residential_menu::draw_intent_preview`
+  --> src\construction\utilities_menu.rs:12:5
+   |
+12 | use super::residential_menu::draw_intent_preview;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::engine::states::BaseState`
+ --> src\construction\zones\ghost.rs:5:5
+  |
+5 | use crate::engine::states::BaseState;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MapCameraDesiredRes` and `SimulationMapViewport`
+ --> src\construction\zones\ghost.rs:6:18
+  |
+6 | use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
+  |                  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+ --> src\construction\zones\ghost.rs:7:5
+  |
+7 | use crate::render::view_runtime::ViewProjectionAuthority;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+ --> src\construction\zones\ghost.rs:8:5
+  |
+8 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `ActiveBuildTool` and `BuildTool`
+  --> src\construction\zones\ghost.rs:10:42
+   |
+10 | use super::super::build_tool_authority::{ActiveBuildTool, BuildTool, ZoneTool};
+   |                                          ^^^^^^^^^^^^^^^  ^^^^^^^^^
+
+warning: unused imports: `map_zoom_screen_scale` and `world_to_sim_map_screen`
+  --> src\construction\zones\ghost.rs:11:41
+   |
+11 | use super::super::map_egui_projection::{map_zoom_screen_scale, world_to_sim_map_screen};
+   |                                         ^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `super::placement::ActiveZonePaint`
+  --> src\construction\zones\ghost.rs:12:5
+   |
+12 | use super::placement::ActiveZonePaint;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `AdminZoneDrag` and `admin_zone_drag_rect`
+  --> src\construction\zones\ghost.rs:13:36
+   |
+13 | use crate::strategic::settlement::{admin_zone_drag_rect, AdminZoneDrag};
+   |                                    ^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^
+
+warning: unused import: `product_egui_shell_active`
+   --> src\construction\mod.rs:284:43
+    |
+284 | use crate::gui::{in_simulation_or_editor, product_egui_shell_active, InputBindings};
+    |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::construction::ConstructionMapProjection`
+  --> src\economy\logistics\intent_draw.rs:14:5
+   |
+14 | use crate::construction::ConstructionMapProjection;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused imports: `MainWorldCameraOrthoTrace`, `MapCameraDesiredRes`, and `SimulationMapViewport`
+  --> src\economy\logistics\intent_draw.rs:18:18
+   |
+18 | use crate::gui::{MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport};
+   |                  ^^^^^^^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^  ^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::render::view_runtime::ViewProjectionAuthority`
+  --> src\economy\logistics\intent_draw.rs:19:5
+   |
+19 | use crate::render::view_runtime::ViewProjectionAuthority;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::WorldGenParams`
+  --> src\economy\logistics\intent_draw.rs:24:5
+   |
+24 | use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::gui::style::widget_scroll_vertical_fill`
+ --> src\bevysubengines\world_generator_plugin.rs:7:5
+  |
+7 | use crate::gui::style::widget_scroll_vertical_fill;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `crate::terrain::generation::world_generator_enhanced::MAX_WORLD_GEN_AXIS`
+  --> src\bevysubengines\world_generator_plugin.rs:22:5
+   |
+22 | use crate::terrain::generation::world_generator_enhanced::MAX_WORLD_GEN_AXIS;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: variable does not need to be mutable
+   --> src\combat\front.rs:243:9
+    |
+243 |     let mut walk = |start: usize, used: &mut Vec<bool>| -> FrontPolyline {
+    |         ----^^^^
+    |         |
+    |         help: remove this `mut`
+    |
+    = note: `#[warn(unused_mut)]` (part of `#[warn(unused)]`) on by default
+
+warning: type `DiagnosticsBevyBodyText` is more private than the item `diagnostics_ui_system`
+   --> src\gui\diagnostics_ui.rs:166:1
+    |
+166 | / pub fn diagnostics_ui_system(
+167 | |     mut commands: Commands,
+168 | |     state: Res<DiagnosticsUiState>,
+169 | |     sim: Option<Res<SimControlState>>,
+...   |
+176 | |     mut stamp: Local<DiagnosticsStamp>,
+177 | | ) {
+    | |_^ function `diagnostics_ui_system` is reachable at visibility `pub`
+    |
+note: but type `DiagnosticsBevyBodyText` is only usable at visibility `pub(self)`
+   --> src\gui\diagnostics_ui.rs:46:1
+    |
+ 46 | struct DiagnosticsBevyBodyText;
+    | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    = note: `#[warn(private_interfaces)]` on by default
+
+warning: type `DiagnosticsStamp` is more private than the item `diagnostics_ui_system`
+   --> src\gui\diagnostics_ui.rs:166:1
+    |
+166 | / pub fn diagnostics_ui_system(
+167 | |     mut commands: Commands,
+168 | |     state: Res<DiagnosticsUiState>,
+169 | |     sim: Option<Res<SimControlState>>,
+...   |
+176 | |     mut stamp: Local<DiagnosticsStamp>,
+177 | | ) {
+    | |_^ function `diagnostics_ui_system` is reachable at visibility `pub`
+    |
+note: but type `DiagnosticsStamp` is only usable at visibility `pub(self)`
+   --> src\gui\diagnostics_ui.rs:49:1
+    |
+ 49 | struct DiagnosticsStamp {
+    | ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `panel_state_checkbox` is never used
+   --> src\gui\hud\dock_shell.rs:330:4
+    |
+330 | fn panel_state_checkbox() {}
+    |    ^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `draw_frame_time_graph` is never used
+  --> src\gui\hud\hud_dev_overlay.rs:82:4
+   |
+82 | fn draw_frame_time_graph() {}
+   |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: multiple fields are never read
+   --> src\gui\hud\hud_root_tick.rs:79:5
+    |
+ 78 | pub struct HudProductShellEguiParams<'w> {
+    |            ------------------------- fields in this struct
+ 79 |     tray: ResMut<'w, HudOverlayTrayState>,
+    |     ^^^^
+ 80 |     layout: ResMut<'w, HudCommandShellLayout>,
+    |     ^^^^^^
+ 81 |     dock: ResMut<'w, HudDockRegistry>,
+    |     ^^^^
+ 82 |     layout_store: ResMut<'w, HudLayoutStore>,
+    |     ^^^^^^^^^^^^
+ 83 |     palette: Res<'w, UiPalette>,
+    |     ^^^^^^^
+ 84 |     world: Res<'w, WorldRepresentationFrame>,
+    |     ^^^^^
+ 85 |     readiness: Option<Res<'w, AppStage5ReadinessReport>>,
+    |     ^^^^^^^^^
+ 86 |     preview_authority: Option<Res<'w, PreviewPathAuthority>>,
+    |     ^^^^^^^^^^^^^^^^^
+ 87 |     preview_debug: Option<Res<'w, PreviewPresentationDebug>>,
+    |     ^^^^^^^^^^^^^
+ 88 |     minimap: ResMut<'w, MinimapShellState>,
+    |     ^^^^^^^
+ 89 |     legacy_minimap: ResMut<'w, SimMinimapUiState>,
+    |     ^^^^^^^^^^^^^^
+ 90 |     map_desired: Res<'w, MapCameraDesiredRes>,
+    |     ^^^^^^^^^^^
+ 91 |     map_views: ResMut<'w, crate::gui::MapViewInstances>,
+    |     ^^^^^^^^^
+ 92 |     map_ready: ResMut<'w, crate::gui::MapViewReadyStates>,
+    |     ^^^^^^^^^
+ 93 |     map_view_interaction: ResMut<'w, crate::gui::MapViewInteractionByView>,
+    |     ^^^^^^^^^^^^^^^^^^^^
+ 94 |     active_map_input: ResMut<'w, crate::gui::ActiveMapViewInput>,
+    |     ^^^^^^^^^^^^^^^^
+ 95 |     map_frames: Res<'w, ResolvedMapViewFrames>,
+    |     ^^^^^^^^^^
+ 96 |     map_presentation_diag: ResMut<'w, MapPresentationDiagnostics>,
+    |     ^^^^^^^^^^^^^^^^^^^^^
+ 97 |     fallback: Res<'w, TileWorldFallbackState>,
+    |     ^^^^^^^^
+ 98 |     raster_dirty: Res<'w, TileWorldFallbackRasterDirty>,
+    |     ^^^^^^^^^^^^
+ 99 |     fire_atm: Option<Res<'w, FireAtmosphereAggregate>>,
+    |     ^^^^^^^^
+100 |     transmission: ResMut<'w, TransmissionShellState>,
+    |     ^^^^^^^^^^^^
+101 |     transmission_media: ResMut<'w, TransmissionMediaProvider>,
+    |     ^^^^^^^^^^^^^^^^^^
+102 |     overlay_shell: ResMut<'w, OverlayShellState>,
+    |     ^^^^^^^^^^^^^
+103 |     overlay_framework: ResMut<'w, OverlayFrameworkState>,
+    |     ^^^^^^^^^^^^^^^^^
+104 |     info_tabs: ResMut<'w, HudInfoTabState>,
+    |     ^^^^^^^^^
+105 |     info_live: Res<'w, HudInfoLiveData>,
+    |     ^^^^^^^^^
+106 |     stage7: ResMut<'w, Stage7UiShellState>,
+    |     ^^^^^^
+107 |     explainability: ResMut<'w, ExplainabilityViewerState>,
+    |     ^^^^^^^^^^^^^^
+108 |     construction_view: Res<'w, ConstructionQueuePanelView>,
+    |     ^^^^^^^^^^^^^^^^^
+109 |     dev_overlay: ResMut<'w, HudDevOverlayState>,
+    |     ^^^^^^^^^^^
+110 |     shell_diag: ResMut<'w, ProductShellDiagnostics>,
+    |     ^^^^^^^^^^
+111 |     viewport_rect_sanity: ResMut<'w, ViewportRectSanity>,
+    |     ^^^^^^^^^^^^^^^^^^^^
+112 |     stage6_telemetry: Option<Res<'w, Stage6HudTelemetry>>,
+    |     ^^^^^^^^^^^^^^^^
+113 |     frame_budget: ResMut<'w, FrameBudgetDiagnostics>,
+    |     ^^^^^^^^^^^^
+114 |     update_budget: ResMut<'w, ProductShellUpdateBudget>,
+    |     ^^^^^^^^^^^^^
+115 |     widget_timing: ResMut<'w, ShellWidgetDiagnostics>,
+    |     ^^^^^^^^^^^^^
+116 |     world_interaction: Option<Res<'w, WorldInteractionDiagnostics>>,
+    |     ^^^^^^^^^^^^^^^^^
+117 |     presentation: Res<'w, WidgetPresentationPolicy>,
+    |     ^^^^^^^^^^^^
+118 |     async_queue: ResMut<'w, HudAsyncTaskQueue>,
+    |     ^^^^^^^^^^^
+119 |     pending_layout: ResMut<'w, PendingHudLayoutCommit>,
+    |     ^^^^^^^^^^^^^^
+120 |     wave_s_capture: ResMut<'w, crate::io::save::WaveSShellCapturePending>,
+    |     ^^^^^^^^^^^^^^
+121 |     wave_s_restore: ResMut<'w, crate::io::save::WaveSShellRestorePending>,
+    |     ^^^^^^^^^^^^^^
+122 |     wave_s_hydrate: Res<'w, crate::io::save::WaveSShellHydrateWitness>,
+    |     ^^^^^^^^^^^^^^
+123 |     wave_s_imported: Res<'w, crate::io::save::WaveSImportedBlueprints>,
+    |     ^^^^^^^^^^^^^^^
+124 |     texture_cache: ResMut<'w, MapViewTextureCache>,
+    |     ^^^^^^^^^^^^^
+125 |     interaction_budget: ResMut<'w, HudFrameBudget>,
+    |     ^^^^^^^^^^^^^^^^^^
+126 |     retained: ResMut<'w, RetainedWidgetCache>,
+    |     ^^^^^^^^
+127 |     interaction_latency: Res<'w, InteractionLatencyMetrics>,
+    |     ^^^^^^^^^^^^^^^^^^^
+128 |     map_fit_log: Res<'w, MapFitValidationLog>,
+    |     ^^^^^^^^^^^
+129 |     density: ResMut<'w, HudDensityProfile>,
+    |     ^^^^^^^
+130 |     time: Res<'w, Time>,
+    |     ^^^^
+131 |     trace: Res<'w, DebugRenderTraceConfig>,
+    |     ^^^^^
+132 |     weather: Res<'w, WeatherVisualSettings>,
+    |     ^^^^^^^
+133 |     intent: Res<'w, PlayerIntentPanelState>,
+    |     ^^^^^^
+134 |     view_manager: Res<'w, crate::gui::ViewManager>,
+    |     ^^^^^^^^^^^^
+135 |     sim_map_viewport: Res<'w, crate::gui::SimulationMapViewport>,
+    |     ^^^^^^^^^^^^^^^^
+136 |     per_view_lod: Res<'w, crate::gui::PerViewLodHints>,
+    |     ^^^^^^^^^^^^
+137 |     view_isolation: Res<'w, crate::gui::ViewIsolationDiagnostics>,
+    |     ^^^^^^^^^^^^^^
+138 |     update_attrib: Option<ResMut<'w, crate::render::FrameUpdateAttrib>>,
+    |     ^^^^^^^^^^^^^
+139 |     infra_overlay: ResMut<'w, crate::render::InfrastructureOverlaySettings>,
+    |     ^^^^^^^^^^^^^
+140 |     infra_draw: Res<'w, crate::render::InfrastructureOverlayDrawRequests>,
+    |     ^^^^^^^^^^
+141 |     power_presentation: Res<'w, crate::render::PowerMapOverlayPresentation>,
+    |     ^^^^^^^^^^^^^^^^^^
+142 |     growth_ui: ResMut<'w, GrowthInspectorUiState>,
+    |     ^^^^^^^^^
+143 |     growth_queue: ResMut<'w, GrowthProposalQueue>,
+    |     ^^^^^^^^^^^^
+144 |     growth_policy: Option<Res<'w, AutoBuildPolicyBook>>,
+    |     ^^^^^^^^^^^^^
+145 |     ecology_growth_hint: Option<Res<'w, crate::gui::construction_growth_inspector::EcologyGrowthHint>>,
+    |     ^^^^^^^^^^^^^^^^^^^
+146 |     base: Res<'w, State<crate::engine::BaseState>>,
+    |     ^^^^
+147 |     compositor: Option<Res<'w, crate::render::MinimapCompositorState>>,
+    |     ^^^^^^^^^^
+
+warning: function `egui_probe_label` is never used
+  --> src\gui\hud\shell_diagnostics.rs:91:4
+   |
+91 | fn egui_probe_label() {}
+   |    ^^^^^^^^^^^^^^^^
+
+warning: function `sync_infra_overlay_from_utility_group` is never used
+   --> src\gui\hud\info_tabs.rs:163:4
+    |
+163 | fn sync_infra_overlay_from_utility_group(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_infrastructure_overlay_legend` is never used
+   --> src\gui\hud\info_tabs.rs:177:4
+    |
+177 | fn draw_infrastructure_overlay_legend() {}
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `hex_to_color32` is never used
+  --> src\gui\hud\minimap_topology_legend.rs:66:4
+   |
+66 | fn hex_to_color32(hex: &str) -> crate::gui::UiRgba {
+   |    ^^^^^^^^^^^^^^
+
+warning: function `draw_legend_grid` is never used
+   --> src\gui\hud\minimap_topology_legend.rs:121:4
+    |
+121 | fn draw_legend_grid() {}
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `severity_color` is never used
+   --> src\gui\hud\transmission.rs:259:4
+    |
+259 | fn severity_color(palette: &UiPalette, severity: TransmissionSeverity) -> crate::gui::UiRgba {
+    |    ^^^^^^^^^^^^^^
+
+warning: function `cursor_over_visible_hud_widget` is never used
+   --> src\gui\hud\simulation_pointer_gate.rs:283:4
+    |
+283 | fn cursor_over_visible_hud_widget(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: fields `handle` and `texture_id` are never read
+   --> src\gui\hud\power_hud_icon_atlas.rs:157:5
+    |
+156 | pub struct PowerHudEguiTextureCache {
+    |            ------------------------ fields in this struct
+157 |     handle: Option<Handle<Image>>,
+    |     ^^^^^^
+158 |     texture_id: Option<()>,
+    |     ^^^^^^^^^^
+    |
+    = note: `PowerHudEguiTextureCache` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `sim_frames`, `done`, and `needs_proof_flush` are never read
+   --> src\gui\hud\simulation_shell_phase2.rs:383:5
+    |
+382 | pub(crate) struct UiShellMigrationWitnessReplay {
+    |                   ----------------------------- fields in this struct
+383 |     sim_frames: u32,
+    |     ^^^^^^^^^^
+384 |     done: bool,
+    |     ^^^^
+385 |     needs_proof_flush: bool,
+    |     ^^^^^^^^^^^^^^^^^
+    |
+    = note: `UiShellMigrationWitnessReplay` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: constant `WITNESS_REPLAY_MIN_SIM_FRAMES` is never used
+   --> src\gui\hud\simulation_shell_phase2.rs:389:7
+    |
+389 | const WITNESS_REPLAY_MIN_SIM_FRAMES: u32 = 30;
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `witness_capture_replay_active` is never used
+   --> src\gui\hud\simulation_shell_phase2.rs:392:4
+    |
+392 | fn witness_capture_replay_active(launch: &EngineLaunchArgs) -> bool {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `reset_ui_shell_witness_replay` is never used
+   --> src\gui\hud\simulation_shell_phase2.rs:396:4
+    |
+396 | fn reset_ui_shell_witness_replay(mut replay: ResMut<UiShellMigrationWitnessReplay>) {
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `replay_ui_shell_witness_interactions_system` is never used
+   --> src\gui\hud\simulation_shell_phase2.rs:784:4
+    |
+784 | fn replay_ui_shell_witness_interactions_system(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `sync_minimap_gpu_image_node_system` is never used
+    --> src\gui\hud\simulation_shell_phase2.rs:1658:4
+     |
+1658 | fn sync_minimap_gpu_image_node_system(
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `sync_minimap_chrome_root_system` is never used
+    --> src\gui\hud\simulation_shell_phase2.rs:1745:4
+     |
+1745 | fn sync_minimap_chrome_root_system(
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `sync_minimap_chrome_layout_system` is never used
+    --> src\gui\hud\simulation_shell_phase2.rs:1811:4
+     |
+1811 | fn sync_minimap_chrome_layout_system(
+     |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `write_ui_shell_migration_live_proof_system` is never used
+    --> src\gui\hud\simulation_shell_phase2.rs:2505:15
+     |
+2505 | pub(crate) fn write_ui_shell_migration_live_proof_system(
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_defense_picker_tab` is never used
+   --> src\gui\hud\sim_build_picker_sheet.rs:150:4
+    |
+150 | fn draw_defense_picker_tab() {}
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `defense_row_clicked` is never used
+   --> src\gui\hud\sim_build_picker_sheet.rs:152:4
+    |
+152 | fn defense_row_clicked() {}
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `defense_row_with_caption_clicked` is never used
+   --> src\gui\hud\sim_build_picker_sheet.rs:154:4
+    |
+154 | fn defense_row_with_caption_clicked() {}
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_industry_picker_tab` is never used
+   --> src\gui\hud\sim_build_picker_sheet.rs:156:4
+    |
+156 | fn draw_industry_picker_tab() {}
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `industry_chain_groups` is never used
+   --> src\gui\hud\sim_build_picker_sheet.rs:158:4
+    |
+158 | fn industry_chain_groups(
+    |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `industry_card_clicked` is never used
+   --> src\gui\hud\sim_build_picker_sheet.rs:181:4
+    |
+181 | fn industry_card_clicked() {}
+    |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `voltage_label` is never used
+  --> src\gui\hud\sim_power_tool_sheet.rs:66:4
+   |
+66 | fn voltage_label(v: VoltageClass) -> &'static str {
+   |    ^^^^^^^^^^^^^
+
+warning: function `block_frame_debug_env_armed` is never used
+  --> src\gui\settlement_block_frame_debug.rs:21:4
+   |
+21 | fn block_frame_debug_env_armed() -> bool {
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `block_frame_debug_may_draw` is never used
+  --> src\gui\settlement_block_frame_debug.rs:28:4
+   |
+28 | fn block_frame_debug_may_draw(base: BaseState, ui_state: &BlockFrameDebugUiState) -> bool {
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `archetype_color` is never used
+  --> src\gui\settlement_block_frame_debug.rs:37:4
+   |
+37 | fn archetype_color(archetype: Option<BlockArchetype>) -> crate::gui::UiRgba {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `paint_block_mini_grid` is never used
+  --> src\gui\settlement_block_frame_debug.rs:49:4
+   |
+49 | fn paint_block_mini_grid() {}
+   |    ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `apply_load` is never used
+   --> src\gui\assembly_snapshot_qc_ui.rs:194:4
+    |
+194 | fn apply_load(state: &mut AssemblySnapshotQcUiState, path: PathBuf) {
+    |    ^^^^^^^^^^
+
+warning: function `draw_assembly_snapshot_qc_ui` is never used
+   --> src\gui\assembly_snapshot_qc_ui.rs:214:8
+    |
+214 | pub fn draw_assembly_snapshot_qc_ui() {}
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `tt` is never used
+  --> src\gui\map_presentation_controls.rs:11:4
+   |
+11 | fn tt() {}
+   |    ^^
+
+warning: function `base_layer_label` is never used
+  --> src\gui\map_presentation_controls.rs:13:4
+   |
+13 | fn base_layer_label(b: PreviewLayers) -> &'static str {
+   |    ^^^^^^^^^^^^^^^^
+
+warning: function `std_floating` is never used
+ --> src\gui\egui_window.rs:6:8
+  |
+6 | pub fn std_floating() {}
+  |        ^^^^^^^^^^^^
+
+warning: methods `press_key` and `release_key` are never used
+   --> src\gui\input_interaction_regression.rs:155:12
+    |
+ 50 | impl InteractionHarness {
+    | ----------------------- methods in this implementation
+...
+155 |     pub fn press_key(&mut self, k: KeyCode) {
+    |            ^^^^^^^^^
+...
+159 |     pub fn release_key(&mut self, k: KeyCode) {
+    |            ^^^^^^^^^^^
+
+warning: field `next_mission_id` is never read
+  --> src\gui\pressure_tooling.rs:86:9
+   |
+85 | pub struct PressureComposerScratch {
+   |            ----------------------- field in this struct
+86 |     pub next_mission_id: u64,
+   |         ^^^^^^^^^^^^^^^
+   |
+   = note: `PressureComposerScratch` has a derived impl for the trait `Debug`, but this is intentionally ignored during dead code analysis
+
+warning: function `sync_pressure_bevy_overlay_visibility` is never used
+   --> src\gui\pressure_tooling.rs:145:4
+    |
+145 | fn sync_pressure_bevy_overlay_visibility(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `pressure_composer_egui_system` is never used
+   --> src\gui\pressure_tooling.rs:236:4
+    |
+236 | fn pressure_composer_egui_system() -> Result { Ok(()) }
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `map_session` is never used
+   --> src\gui\logistics_orders_overlay.rs:105:4
+    |
+105 | fn map_session(state: Option<&State<BaseState>>) -> bool {
+    |    ^^^^^^^^^^^
+
+warning: function `ai_explainability_egui_system` is never used
+  --> src\gui\ai_explainability_ui.rs:41:4
+   |
+41 | fn ai_explainability_egui_system() -> Result { Ok(()) }
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: constant `RUNBOOK_PATH` is never used
+  --> src\gui\editor\scenario_script_panel.rs:19:7
+   |
+19 | const RUNBOOK_PATH: &str = "prompts/guides/scenario_campaign_scripted_tools_runbook_v1.md";
+   |       ^^^^^^^^^^^^
+
+warning: function `manifest_join_relative` is never used
+  --> src\gui\editor\scenario_script_panel.rs:21:4
+   |
+21 | fn manifest_join_relative(user_path: &str) -> PathBuf {
+   |    ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `export_json_path_for` is never used
+  --> src\gui\editor\scenario_script_panel.rs:31:4
+   |
+31 | fn export_json_path_for(ron_path: &Path) -> PathBuf {
+   |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `apply_terrain_brush` is never used
+  --> src\gui\editor\map_editor\mod.rs:76:4
+   |
+76 | fn apply_terrain_brush(
+   |    ^^^^^^^^^^^^^^^^^^^
+
+warning: function `map_editor_minimap_window` is never used
+   --> src\gui\editor\map_editor\mod.rs:327:4
+    |
+327 | fn map_editor_minimap_window() -> Result { Ok(()) }
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `map_editor_palette_system` is never used
+   --> src\gui\editor\map_editor\mod.rs:329:4
+    |
+329 | fn map_editor_palette_system() -> Result { Ok(()) }
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `ALL` and `label` are never used
+  --> src\gui\editor\map_editor\brush.rs:23:22
+   |
+22 | impl MapEditorBrushShape {
+   | ------------------------ associated items in this implementation
+23 |     pub(crate) const ALL: [Self; 3] = [Self::Disk, Self::Square, Self::Diamond];
+   |                      ^^^
+24 |
+25 |     pub(crate) fn label(self) -> &'static str {
+   |                   ^^^^^
+
+warning: function `tile_in_brush` is never used
+  --> src\gui\editor\map_editor\brush.rs:35:15
+   |
+35 | pub(crate) fn tile_in_brush(
+   |               ^^^^^^^^^^^^^
+
+warning: function `bresenham_tile_line` is never used
+  --> src\gui\editor\map_editor\brush.rs:53:15
+   |
+53 | pub(crate) fn bresenham_tile_line(x0: u32, y0: u32, x1: u32, y1: u32) -> Vec<(u32, u32)> {
+   |               ^^^^^^^^^^^^^^^^^^^
+
+warning: associated items `to_in_game`, `ALL`, and `label` are never used
+   --> src\gui\editor\map_editor\brush.rs:108:19
+    |
+107 | impl MapEditorToolKind {
+    | ---------------------- associated items in this implementation
+108 |     pub(crate) fn to_in_game(self) -> InGameEditorState {
+    |                   ^^^^^^^^^^
+...
+118 |     pub(crate) const ALL: [Self; 5] = [
+    |                      ^^^
+...
+126 |     pub(crate) fn label(self) -> &'static str {
+    |                   ^^^^^
+
+warning: function `sync_tool_to_substate` is never used
+   --> src\gui\editor\map_editor\brush.rs:159:15
+    |
+159 | pub(crate) fn sync_tool_to_substate(tool: &MapEditorTool, next_sub: &mut NextState<InGameEditorState>) {
+    |               ^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `emit_editor_tile_commit_for_brush` is never used
+   --> src\gui\editor\map_editor\brush.rs:164:15
+    |
+164 | pub(crate) fn emit_editor_tile_commit_for_brush(
+    |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `terrain_family_combo` is never used
+   --> src\gui\editor\map_editor\brush.rs:189:8
+    |
+189 | pub fn terrain_family_combo() {}
+    |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: associated function `capture` is never used
+  --> src\gui\editor\map_editor\road_markers.rs:31:19
+   |
+30 | impl RoadMarkerUndoFrame {
+   | ------------------------ associated function in this implementation
+31 |     pub(crate) fn capture(
+   |                   ^^^^^^^
+
+warning: method `push_frame` is never used
+  --> src\gui\editor\map_editor\road_markers.rs:64:19
+   |
+63 | impl MapEditorRoadUndoStack {
+   | --------------------------- method in this implementation
+64 |     pub(crate) fn push_frame(&mut self, frame: RoadMarkerUndoFrame) {
+   |                   ^^^^^^^^^^
+
+warning: function `height_at_tile` is never used
+  --> src\gui\editor\map_editor\road_markers.rs:88:15
+   |
+88 | pub(crate) fn height_at_tile(
+   |               ^^^^^^^^^^^^^^
+
+warning: function `despawn_road_markers_at` is never used
+   --> src\gui\editor\map_editor\road_markers.rs:104:4
+    |
+104 | fn despawn_road_markers_at(
+    |    ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `place_road_marker` is never used
+   --> src\gui\editor\map_editor\road_markers.rs:120:15
+    |
+120 | pub(crate) fn place_road_marker(
+    |               ^^^^^^^^^^^^^^^^^
+
+warning: constant `D07_CORNER_MARGIN_PX` is never used
+ --> src\gui\editor\world_preview\minimap.rs:9:7
+  |
+9 | const D07_CORNER_MARGIN_PX: f32 = 10.0;
+  |       ^^^^^^^^^^^^^^^^^^^^
+
+warning: variant `DesktopAssetTool` is never constructed
+  --> src\gui\editor\world_preview\registry_inspector.rs:18:5
+   |
+15 | pub enum PreviewRegistryInspectorHost {
+   |          ---------------------------- variant in this enum
+...
+18 |     DesktopAssetTool,
+   |     ^^^^^^^^^^^^^^^^
+   |
+   = note: `PreviewRegistryInspectorHost` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: method `label` is never used
+  --> src\gui\editor\world_preview\registry_inspector.rs:23:18
+   |
+21 | impl PreviewRegistryInspectorHost {
+   | --------------------------------- method in this implementation
+22 |     #[must_use]
+23 |     pub const fn label(self) -> &'static str {
+   |                  ^^^^^
+
+warning: function `tt` is never used
+  --> src\gui\editor\world_preview\ui_sidebar.rs:16:4
+   |
+16 | fn tt() {}
+   |    ^^
+
+warning: function `stroke_color` is never used
+  --> src\render\pipelines\power_map_overlay_draw.rs:21:4
+   |
+21 | fn stroke_color(stroke: InfrastructureOverlayStroke) -> crate::gui::UiRgba {
+   |    ^^^^^^^^^^^^
+
+warning: function `paint_dashed_line` is never used
+  --> src\render\pipelines\power_map_overlay_draw.rs:29:4
+   |
+29 | fn paint_dashed_line() {}
+   |    ^^^^^^^^^^^^^^^^^
+
+warning: function `paint_gap_line` is never used
+  --> src\render\pipelines\power_map_overlay_draw.rs:31:4
+   |
+31 | fn paint_gap_line() {}
+   |    ^^^^^^^^^^^^^^
+
+warning: function `draw_power_strokes_on_minimap` is never used
+  --> src\render\pipelines\power_map_overlay_draw.rs:41:8
+   |
+41 | pub fn draw_power_strokes_on_minimap() {}
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `build_footprint_validity_overlay_egui` is never used
+  --> src\construction\build_footprint_overlay.rs:17:8
+   |
+17 | pub fn build_footprint_validity_overlay_egui() -> Result { Ok(()) }
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `world_to_sim_map_screen_rendered` is never used
+   --> src\construction\map_egui_projection.rs:172:8
+    |
+172 | pub fn world_to_sim_map_screen_rendered(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `map_zoom_screen_scale` is never used
+   --> src\construction\map_egui_projection.rs:185:8
+    |
+185 | pub fn map_zoom_screen_scale(
+    |        ^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `ConstructionMapPick` is never constructed
+  --> src\construction\map_pick_params.rs:14:12
+   |
+14 | pub struct ConstructionMapPick<'w, 's> {
+   |            ^^^^^^^^^^^^^^^^^^^
+
+warning: method `cursor_world` is never used
+  --> src\construction\map_pick_params.rs:25:12
+   |
+23 | impl ConstructionMapPick<'_, '_> {
+   | -------------------------------- method in this implementation
+24 |     #[must_use]
+25 |     pub fn cursor_world(&self) -> Option<Vec3> {
+   |            ^^^^^^^^^^^^
+
+warning: function `draw_construction_visual_requests_egui` is never used
+   --> src\construction\visual_authority.rs:305:8
+    |
+305 | pub fn draw_construction_visual_requests_egui() -> Result { Ok(()) }
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `pick` is never used
+ --> src\construction\commercial_menu.rs:9:4
+  |
+9 | fn pick(tool: &mut ActiveBuildTool, preview: super::building_catalog::BuildingIntentPreview) {
+  |    ^^^^
+
+warning: function `pick` is never used
+  --> src\construction\industrial_menu.rs:12:4
+   |
+12 | fn pick(tool: &mut ActiveBuildTool, preview: super::building_catalog::BuildingIntentPreview) {
+   |    ^^^^
+
+warning: function `draw_def_button` is never used
+  --> src\construction\industrial_menu.rs:17:4
+   |
+17 | fn draw_def_button() {}
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `chain_groups` is never used
+  --> src\construction\industrial_menu.rs:19:4
+   |
+19 | fn chain_groups(
+   |    ^^^^^^^^^^^^
+
+warning: function `draw_industrial_submenu` is never used
+  --> src\construction\industrial_menu.rs:52:8
+   |
+52 | pub fn draw_industrial_submenu() {}
+   |        ^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `site_archetype_label` is never used
+  --> src\construction\phase_visual.rs:17:4
+   |
+17 | fn site_archetype_label(archetype: SiteArchetype) -> &'static str {
+   |    ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `phase_color` is never used
+  --> src\construction\phase_visual.rs:51:4
+   |
+51 | fn phase_color(phase: SiteConstructionPhase) -> crate::gui::UiRgba {
+   |    ^^^^^^^^^^^
+
+warning: function `draw_construction_phase_labels_egui` is never used
+  --> src\construction\phase_visual.rs:60:8
+   |
+60 | pub fn draw_construction_phase_labels_egui() -> Result { Ok(()) }
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: field `show_crosshairs` is never read
+  --> src\construction\placement_debug.rs:44:9
+   |
+41 | pub struct ConstructionPlacementDebugOverlay {
+   |            --------------------------------- field in this struct
+...
+44 |     pub show_crosshairs: bool,
+   |         ^^^^^^^^^^^^^^^
+   |
+   = note: `ConstructionPlacementDebugOverlay` has derived impls for the traits `Debug` and `Clone`, but these are intentionally ignored during dead code analysis
+
+warning: method `runtime_map_pick_closure_green` is never used
+   --> src\construction\placement_debug.rs:112:12
+    |
+109 | impl ConstructionPlacementDebugProbe {
+    | ------------------------------------ method in this implementation
+...
+112 |     pub fn runtime_map_pick_closure_green(&self) -> bool {
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: struct `PlacementDebugOverlayExtras` is never constructed
+   --> src\construction\placement_debug.rs:468:19
+    |
+468 | pub(crate) struct PlacementDebugOverlayExtras<'w> {
+    |                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_construction_placement_debug_overlay` is never used
+   --> src\construction\placement_debug.rs:473:8
+    |
+473 | pub fn draw_construction_placement_debug_overlay() -> Result { Ok(()) }
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_placement_crosshairs` is never used
+   --> src\construction\placement_debug.rs:475:4
+    |
+475 | fn draw_placement_crosshairs() {}
+    |    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_corridor_phase_paths` is never used
+  --> src\construction\round4_corridor.rs:88:8
+   |
+88 | pub fn draw_corridor_phase_paths() {}
+   |        ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `clip_polyline_by_progress` is never used
+  --> src\construction\round4_corridor.rs:90:4
+   |
+90 | fn clip_polyline_by_progress(points: &[bevy::prelude::Vec2], progress: f32) -> Vec<bevy::prelude::Vec2> {
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `stroke_polyline_dashed` is never used
+   --> src\construction\round4_corridor.rs:124:4
+    |
+124 | fn stroke_polyline_dashed() {}
+    |    ^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `legend_swatch` is never used
+   --> src\construction\round4_corridor.rs:129:4
+    |
+129 | fn legend_swatch() {}
+    |    ^^^^^^^^^^^^^
+
+warning: function `draw_tool_hints_egui` is never used
+  --> src\construction\tool_hints.rs:13:8
+   |
+13 | pub fn draw_tool_hints_egui() -> Result { Ok(()) }
+   |        ^^^^^^^^^^^^^^^^^^^^
+
+warning: function `rail_segment_color` is never used
+  --> src\construction\rail\ghost.rs:15:4
+   |
+15 | fn rail_segment_color(valid: bool, slope_ok: bool) -> crate::gui::UiRgba {
+   |    ^^^^^^^^^^^^^^^^^^
+
+warning: function `pick_structure` is never used
+ --> src\construction\residential_menu.rs:8:4
+  |
+8 | fn pick_structure(tool: &mut ActiveBuildTool, preview: BuildingIntentPreview) {
+  |    ^^^^^^^^^^^^^^
+
+warning: function `draw_intent_preview` is never used
+  --> src\construction\residential_menu.rs:15:8
+   |
+15 | pub fn draw_intent_preview() {}
+   |        ^^^^^^^^^^^^^^^^^^^
+
+warning: function `build_all_valid_staged_rows` is never used
+   --> src\construction\staged_ghost_panel.rs:252:8
+    |
+252 | pub fn build_all_valid_staged_rows(
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `draw_staged_placements_panel_egui_system` is never used
+   --> src\construction\staged_ghost_panel.rs:264:8
+    |
+264 | pub fn draw_staged_placements_panel_egui_system() -> Result { Ok(()) }
+    |        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `pick` is never used
+  --> src\construction\utilities_menu.rs:22:4
+   |
+22 | fn pick(
+   |    ^^^^
+
+warning: function `pick_power_line` is never used
+  --> src\construction\utilities_menu.rs:31:4
+   |
+31 | fn pick_power_line(tool: &mut ActiveBuildTool, voltage: VoltageClass) {
+   |    ^^^^^^^^^^^^^^^
+
+warning: function `power_line_row` is never used
+  --> src\construction\utilities_menu.rs:36:4
+   |
+36 | fn power_line_row() {}
+   |    ^^^^^^^^^^^^^^
+
+warning: function `play_map_session` is never used
+   --> src\economy\logistics\intent_draw.rs:335:4
+    |
+335 | fn play_map_session(state: Option<&State<BaseState>>) -> bool {
+    |    ^^^^^^^^^^^^^^^^
+
+warning: function `rgba_color` is never used
+   --> src\economy\logistics\intent_draw.rs:342:4
+    |
+342 | fn rgba_color(rgba: [u8; 4]) -> crate::gui::UiRgba {
+    |    ^^^^^^^^^^
+
+warning: function `subengine_world_gen_editor_only` is never used
+  --> src\bevysubengines\world_generator_plugin.rs:45:4
+   |
+45 | fn subengine_world_gen_editor_only(
+   |    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: function `world_gen_ui_system` is never used
+   --> src\bevysubengines\world_generator_plugin.rs:200:4
+    |
+200 | fn world_gen_ui_system() -> Result { Ok(()) }
+    |    ^^^^^^^^^^^^^^^^^^^
+
+warning: `proc_A_dine01` (lib test) generated 457 warnings (run `cargo fix --lib -p proc_A_dine01 --tests` to apply 351 suggestions)
+    Finished `test` profile [unoptimized + debuginfo] target(s) in 1m 31s
+     Running unittests src\lib.rs (target\debug\deps\proc_A_dine01-4a250dcd8400ead4.exe)
+
+running 1 test
+test construction::witness_collectors::live_proof_sim_tests::simulation_writes_construction_stage_live_json_operational_green ... FAILED
+
+failures:
+
+---- construction::witness_collectors::live_proof_sim_tests::simulation_writes_construction_stage_live_json_operational_green stdout ----
+
+thread 'construction::witness_collectors::live_proof_sim_tests::simulation_writes_construction_stage_live_json_operational_green' (9784) panicked at src\construction\witness_collectors.rs:565:9:
+assertion `left == right` failed
+  left: Bool(false)
+ right: true
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+
+failures:
+    construction::witness_collectors::live_proof_sim_tests::simulation_writes_construction_stage_live_json_operational_green
+
+test result: FAILED. 0 passed; 1 failed; 0 ignored; 0 measured; 2041 filtered out; finished in 0.56s
+
+error: test failed, to rerun pass `-p proc_A_dine01 --lib`

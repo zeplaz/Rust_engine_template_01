@@ -1,18 +1,35 @@
 {
   "gate": "DMCP-OVR-G0-AUDIT-001",
   "charter_section": "plan_aps_uiux_overhaul \u00a72b",
-  "violation_count": 0,
+  "violation_count": 2,
   "p0_violation_count": 0,
-  "by_rule": {},
-  "by_file": {},
-  "violations": [],
+  "by_rule": {
+    "gate_p0": 2
+  },
+  "by_file": {
+    "tools/mcp/art_pipeline_suite/effect_library_widget.py": 2
+  },
+  "violations": [
+    {
+      "rule": "gate_p0",
+      "path": "tools/mcp/art_pipeline_suite/effect_library_widget.py",
+      "line": 274,
+      "excerpt": "[set] P0 \u2014 select an effect",
+      "source": "runtime_surface"
+    },
+    {
+      "rule": "gate_p0",
+      "path": "tools/mcp/art_pipeline_suite/effect_library_widget.py",
+      "line": 289,
+      "excerpt": "[set] P0 \u2014 spawn_hook={} \u00b7 tile token",
+      "source": "runtime_surface"
+    }
+  ],
   "truncated": false,
   "audit_complete": true,
-  "ui_clean": true,
-  "verdict": "PASS",
-  "blocks": [
-    "OVR-P2-TEXT-001"
-  ],
+  "ui_clean": false,
+  "verdict": "FAIL",
+  "blocks": [],
   "unblocks_p2_when_clean": true,
   "green": true,
   "deliverable": "src/dev/design_aps_uiux_g0_audit_v1.md",
@@ -24,7 +41,7 @@
   "parallel_with": "OVR-P1-TOKENS-001",
   "_agent_meta": {
     "schema": "dmcp_ovr_g0_audit_live_v1",
-    "written_at_epoch_secs": 1783098009,
+    "written_at_epoch_secs": 1791515937,
     "profile": "DMCP_OVR_G0_AUDIT",
     "source_system": "aps_uiux_g0_audit",
     "relative_path": "debug_runs/art_pipeline/dmcp_ovr_g0_audit_live.json",

@@ -131,7 +131,7 @@
   "notes": "Charter PASS at 100% slot resolution; style purity closes when @coder-mcp wires K1 batch",
   "_agent_meta": {
     "schema": "bq_k2_coverage_live_v1",
-    "written_at_epoch_secs": 1783133239,
+    "written_at_epoch_secs": 1791515963,
     "profile": "BQ_K2_COVERAGE",
     "source_system": "kit_coverage_audit",
     "relative_path": "debug_runs/bq_k2_coverage_001_live.json",

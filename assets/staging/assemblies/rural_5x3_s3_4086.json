@@ -287,14 +287,14 @@
       }
     },
     {
-      "module_id": "wall_wood_1u",
-      "job_id": "wall_wood_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_wood_1u",
+      "job_id": "win_wood_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 0,
       "grid_y": 1,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_wood_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_wood_1u_production_run001/model.glb",
       "position": [
         -2.0,
         0.0,
@@ -306,11 +306,11 @@
         0.0
       ],
       "face": "W",
-      "node_id": "wall_wood_1u_0_1_f0_W",
+      "node_id": "win_wood_1u_0_1_f0_W",
       "material_profile": "wood_plank_01",
       "placement_tags": [
         "exterior",
-        "industrial"
+        "window_band"
       ],
       "variant_tags": [
         "clean"
@@ -320,20 +320,20 @@
         "location": [
           "street_facing"
         ],
-        "architectural": [
-          "industrial"
+        "detail": [
+          "window_band"
         ]
       }
     },
     {
-      "module_id": "wall_wood_1u",
-      "job_id": "wall_wood_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_wood_1u",
+      "job_id": "win_wood_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 4,
       "grid_y": 1,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_wood_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_wood_1u_production_run001/model.glb",
       "position": [
         18.0,
         0.0,
@@ -345,11 +345,11 @@
         0.0
       ],
       "face": "E",
-      "node_id": "wall_wood_1u_4_1_f0_E",
+      "node_id": "win_wood_1u_4_1_f0_E",
       "material_profile": "wood_plank_01",
       "placement_tags": [
         "exterior",
-        "industrial"
+        "window_band"
       ],
       "variant_tags": [
         "clean"
@@ -359,20 +359,20 @@
         "location": [
           "street_facing"
         ],
-        "architectural": [
-          "industrial"
+        "detail": [
+          "window_band"
         ]
       }
     },
     {
-      "module_id": "wall_wood_1u",
-      "job_id": "wall_wood_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_wood_1u",
+      "job_id": "win_wood_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 0,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_wood_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_wood_1u_production_run001/model.glb",
       "position": [
         0.0,
         0.0,
@@ -384,11 +384,11 @@
         0.0
       ],
       "face": "N",
-      "node_id": "wall_wood_1u_0_2_f0_N",
+      "node_id": "win_wood_1u_0_2_f0_N",
       "material_profile": "wood_plank_01",
       "placement_tags": [
         "exterior",
-        "industrial"
+        "window_band"
       ],
       "variant_tags": [
         "clean"
@@ -398,8 +398,8 @@
         "location": [
           "street_facing"
         ],
-        "architectural": [
-          "industrial"
+        "detail": [
+          "window_band"
         ]
       }
     },
@@ -443,14 +443,14 @@
       }
     },
     {
-      "module_id": "wall_wood_1u",
-      "job_id": "wall_wood_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_wood_1u",
+      "job_id": "win_wood_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 1,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_wood_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_wood_1u_production_run001/model.glb",
       "position": [
         4.0,
         0.0,
@@ -462,11 +462,11 @@
         0.0
       ],
       "face": "N",
-      "node_id": "wall_wood_1u_1_2_f0_N",
+      "node_id": "win_wood_1u_1_2_f0_N",
       "material_profile": "wood_plank_01",
       "placement_tags": [
         "exterior",
-        "industrial"
+        "window_band"
       ],
       "variant_tags": [
         "clean"
@@ -476,8 +476,8 @@
         "location": [
           "street_facing"
         ],
-        "architectural": [
-          "industrial"
+        "detail": [
+          "window_band"
         ]
       }
     },
@@ -521,14 +521,14 @@
       }
     },
     {
-      "module_id": "wall_wood_1u",
-      "job_id": "wall_wood_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_wood_1u",
+      "job_id": "win_wood_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 3,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_wood_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_wood_1u_production_run001/model.glb",
       "position": [
         12.0,
         0.0,
@@ -540,11 +540,11 @@
         0.0
       ],
       "face": "N",
-      "node_id": "wall_wood_1u_3_2_f0_N",
+      "node_id": "win_wood_1u_3_2_f0_N",
       "material_profile": "wood_plank_01",
       "placement_tags": [
         "exterior",
-        "industrial"
+        "window_band"
       ],
       "variant_tags": [
         "clean"
@@ -554,20 +554,20 @@
         "location": [
           "street_facing"
         ],
-        "architectural": [
-          "industrial"
+        "detail": [
+          "window_band"
         ]
       }
     },
     {
-      "module_id": "wall_wood_1u",
-      "job_id": "wall_wood_1u_production_run001",
-      "slot_key": "wall_1u",
-      "token": "W",
+      "module_id": "win_wood_1u",
+      "job_id": "win_wood_1u_production_run001",
+      "slot_key": "window_1u",
+      "token": "O",
       "grid_x": 4,
       "grid_y": 2,
       "floor": 0,
-      "glb_path": "assets/models/modules/wall_wood_1u_production_run001/model.glb",
+      "glb_path": "assets/models/modules/win_wood_1u_production_run001/model.glb",
       "position": [
         16.0,
         0.0,
@@ -579,11 +579,11 @@
         0.0
       ],
       "face": "N",
-      "node_id": "wall_wood_1u_4_2_f0_N",
+      "node_id": "win_wood_1u_4_2_f0_N",
       "material_profile": "wood_plank_01",
       "placement_tags": [
         "exterior",
-        "industrial"
+        "window_band"
       ],
       "variant_tags": [
         "clean"
@@ -593,8 +593,8 @@
         "location": [
           "street_facing"
         ],
-        "architectural": [
-          "industrial"
+        "detail": [
+          "window_band"
         ]
       }
     },
@@ -638,14 +638,14 @@
       }
     },
     {
-      "module_id": "roof_pitched_gable",
-      "job_id": "roof_pitched_gable_production_run001",
+      "module_id": "roof_wood_gable_2u",
+      "job_id": "roof_wood_gable_2u_production_run001",
       "slot_key": "roof_default",
       "token": "R",
       "grid_x": 2,
       "grid_y": 1,
       "floor": 1,
-      "glb_path": "assets/models/modules/roof_pitched_gable_production_run001/model.glb",
+      "glb_path": "assets/models/modules/roof_wood_gable_2u_production_run001/model.glb",
       "position": [
         8.0,
         3.0,
@@ -656,9 +656,14 @@
         1.5707963267948966,
         0.0
       ],
+      "scale": [
+        1.5,
+        1.0,
+        1.25
+      ],
       "roof_mode": "full_footprint",
-      "node_id": "roof_pitched_gable_2_1_f1",
-      "material_profile": "roof_tile_01",
+      "node_id": "roof_wood_gable_2u_2_1_f1",
+      "material_profile": "wood_plank_01",
       "placement_tags": [
         "exterior",
         "industrial"

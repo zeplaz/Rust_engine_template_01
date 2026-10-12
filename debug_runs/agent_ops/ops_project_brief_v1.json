@@ -26,7 +26,7 @@
     "rtr": null,
     "status": "measured",
     "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
-    "events_per_day": 0.14
+    "events_per_day": 0.86
   },
   "build_set_health": {
     "green": true,
@@ -113,7 +113,7 @@
   },
   "_agent_meta": {
     "schema": "ops_project_brief_v1",
-    "written_at_epoch_secs": 1790347514,
+    "written_at_epoch_secs": 1791516117,
     "profile": "OPS_PROJECT_BRIEF",
     "source_system": "ops_intelligence",
     "relative_path": "debug_runs/agent_ops/ops_project_brief_v1.json"

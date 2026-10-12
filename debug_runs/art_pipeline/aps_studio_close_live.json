@@ -1,8 +1,8 @@
 {
   "gate": "APS-STUDIO-CLOSE-001",
-  "green": true,
-  "onboard_witness": true,
-  "assembly_onboard_strip": true,
+  "green": false,
+  "onboard_witness": false,
+  "assembly_onboard_strip": false,
   "preview_variant_state_module": true,
   "p7_style_tests_on_disk": true,
   "depends_on": [
@@ -11,7 +11,7 @@
   ],
   "_agent_meta": {
     "schema": "aps_studio_close_live_v1",
-    "written_at_epoch_secs": 1783098008,
+    "written_at_epoch_secs": 1791515936,
     "profile": "APS_STUDIO_CLOSE",
     "relative_path": "debug_runs/art_pipeline/aps_studio_close_live.json"
   }

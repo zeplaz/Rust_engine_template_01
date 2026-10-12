@@ -19,20 +19,60 @@
       "name": "python.exe",
       "is_dcc": false,
       "seen_at": "2026-06-21T04:29:26.815678+00:00"
+    },
+    "9976": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-10-09T03:18:40.500912+00:00"
+    },
+    "17920": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-10-09T03:18:40.500924+00:00"
+    },
+    "3952": {
+      "name": "cargo.exe",
+      "is_dcc": false,
+      "seen_at": "2026-10-09T03:18:40.500928+00:00"
+    },
+    "30344": {
+      "name": "cargo.exe",
+      "is_dcc": false,
+      "seen_at": "2026-10-09T03:18:40.500930+00:00"
+    },
+    "9412": {
+      "name": "rustc.exe",
+      "is_dcc": false,
+      "seen_at": "2026-10-09T03:18:40.500932+00:00"
+    },
+    "12744": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-10-09T03:18:40.500933+00:00"
+    },
+    "17624": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-10-09T03:18:40.500935+00:00"
+    },
+    "2644": {
+      "name": "python.exe",
+      "is_dcc": false,
+      "seen_at": "2026-10-09T03:18:40.500937+00:00"
     }
   },
-  "last_scan_epoch": 1782016166,
-  "previous_hash": "",
-  "content_hash": "1ebbb47d965abe92722382d456f35003103a6b3cc00f639cdb7d1ff0adae111a",
+  "last_scan_epoch": 1791515920,
+  "previous_hash": "1ebbb47d965abe92722382d456f35003103a6b3cc00f639cdb7d1ff0adae111a",
+  "content_hash": "f9c1ad9a710ce655d6c8df1f104dd8bc95a4eb306823df867df7617f4ec51cf2",
   "hash_lock_id": "granfina_has\u2026",
   "glyph_chain": "\u2705",
   "_agent_meta": {
     "schema": "debug_run_envelope_v1",
-    "written_at_epoch_secs": 1782016166,
+    "written_at_epoch_secs": 1791515920,
     "profile": "CRASH-DAEMON-STATE",
     "source_system": "ops_crash_exporter",
     "relative_path": "debug_runs/agent_ops/crash_daemon_state.json",
     "agent": "ops_crash_exporter",
-    "content_hash": "1ebbb47d965abe92722382d456f35003103a6b3cc00f639cdb7d1ff0adae111a"
+    "content_hash": "f9c1ad9a710ce655d6c8df1f104dd8bc95a4eb306823df867df7617f4ec51cf2"
   }
 }

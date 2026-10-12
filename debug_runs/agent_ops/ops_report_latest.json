@@ -1,7 +1,7 @@
 {
   "_agent_meta": {
     "schema": "ops_report_v2",
-    "written_at_epoch_secs": 1790347513,
+    "written_at_epoch_secs": 1791516114,
     "profile": "OPS_REPORT",
     "source_system": "ops_witness_index+ops_project_brief",
     "relative_path": "debug_runs/agent_ops/ops_report_latest.json",
@@ -22,7 +22,7 @@
     "WAVE/STAGE6: 0 green / 0 proofs",
     "STAGE7/PLAY: 0 green / 1 proofs",
     "ART-A/B/C: 3/117/1 proofs \u00b7 B ship\u26d4=True",
-    "UI: 0 proofs \u00b7 UNCLASSIFIED: 481",
+    "UI: 0 proofs \u00b7 UNCLASSIFIED: 482",
     "FAIL-PROP[art_B]: Track B manual keyframe \u2014 warehouse paused (does not block ATL\u2605/RT\u2605)"
   ],
   "qce": {
@@ -96,7 +96,7 @@
     },
     "art_B": {
       "count": 117,
-      "green_count": 76,
+      "green_count": 71,
       "label": "MCP pipeline spine / warehouse integration"
     },
     "art_C": {
@@ -120,8 +120,8 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 481,
-      "green_count": 392,
+      "count": 482,
+      "green_count": 389,
       "label": null
     },
     "vss_spectator_scale": {
@@ -224,29 +224,29 @@
   "handoff_path": "tools/orchestrator/queues/HANDOFF.md",
   "doc_reads": {
     "witness_path": "debug_runs/agent_ops/doc_reads_brief_latest.json",
-    "total_reads_in_window": 259,
+    "total_reads_in_window": 380,
     "hot_path_count": 12,
     "promotion_candidates": 12,
     "top_hot_paths": [
       {
-        "path": "src/dev/plan_mcp_agent_lang_program_v1.md",
-        "count": 49
-      },
-      {
         "path": "src/dev/agent_lang_v1.md",
-        "count": 44
+        "count": 72
       },
       {
         "path": "prompts/llm_agent_brief.md",
-        "count": 37
+        "count": 65
       },
       {
         "path": ".cursor/skills/agent-lang/SKILL.md",
-        "count": 34
+        "count": 62
       },
       {
         "path": "docs/archive/2026-06-src-dev/plans/agent_meta_grammar_v3_lattice.md",
-        "count": 25
+        "count": 53
+      },
+      {
+        "path": "src/dev/plan_mcp_agent_lang_program_v1.md",
+        "count": 49
       }
     ]
   },
@@ -257,6 +257,6 @@
     "rtr": null,
     "status": "measured",
     "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
-    "events_per_day": 0.14
+    "events_per_day": 0.86
   }
 }

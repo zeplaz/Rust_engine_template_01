@@ -1,7 +1,7 @@
 {
   "gate": "DMCP-VEG-WAVE-TAIL-RECONCILE-001",
   "slice_count": 8,
-  "done_count": 8,
+  "done_count": 7,
   "rows": [
     {
       "id": "DMCP-TILE-BATCH-EXPAND-SPEC-001",
@@ -53,35 +53,35 @@
       "id": "DMCP-PILOT-TEACH-ANNOT-001",
       "deliverable": "assets/staging/tiles/tile_landscape_lg5_pilot_v1/batch_status.json",
       "deliverable_exists": true,
-      "status": "done",
+      "status": "fail",
       "pilot_spec": "tools/mcp/schemas/examples/tile_batch_landscape_lg5_pilot_v1.json",
       "pilot_spec_exists": true,
       "pilot_teach": {
-        "green": true,
+        "green": false,
         "checks": {
           "batch_status_on_disk": true,
           "pilot_spec_on_disk": true,
           "atlas_meta_on_disk": true,
-          "batch_status_not_a_ship_target": true,
-          "batch_status_teach_gate": true,
+          "batch_status_not_a_ship_target": false,
+          "batch_status_teach_gate": false,
           "spec_not_a_ship_target": true,
-          "atlas_meta_not_a_ship_target": true
+          "atlas_meta_not_a_ship_target": false
         }
       }
     }
   ],
   "audit_complete": true,
-  "green": true,
-  "verdict": "PASS",
+  "green": false,
+  "verdict": "FAIL",
   "queue": "tools/orchestrator/queues/parallel_wave_aps_veg_dispatch_v1.json",
   "wave0_witness": "debug_runs/art_pipeline/designer_mcp_parallel_wave0_live.json",
   "_agent_meta": {
     "schema": "dmcp_veg_wave_tail_reconcile_live_v1",
-    "written_at_epoch_secs": 1781755159,
+    "written_at_epoch_secs": 1791515964,
     "profile": "DMCP_VEG_WAVE_TAIL",
     "source_system": "dmcp_veg_wave_tail_reconcile",
     "relative_path": "debug_runs/art_pipeline/dmcp_veg_wave_tail_reconcile_live.json",
-    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-VEG-WAVE-TAIL-RECONCILE",
+    "ritual": "BLANG:WIT-HON FAIL",
     "agent": "designer-mcp"
   }
 }

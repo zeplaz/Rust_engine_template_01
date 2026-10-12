@@ -214,16 +214,16 @@
           "resolved_job_id": "win_brick_1u_production_run001",
           "resolved_tier": "production",
           "resolved_batch_id": "kit_fill_bq_k1_001",
-          "resolved_style_pack": "style_colonial",
+          "resolved_style_pack": "style_victorian",
           "available_tiers": [
             "production"
           ],
           "available_style_packs": [
-            "style_colonial"
+            "style_victorian"
           ],
           "production_row_count": 1,
-          "same_pack_production_count": 1,
-          "cross_pack_production_count": 0,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
           "reason": "production_hit",
           "non_production": false,
           "is_core_slot": true
@@ -234,16 +234,16 @@
           "resolved_job_id": "win_brick_2u_production_run001",
           "resolved_tier": "production",
           "resolved_batch_id": "kit_fill_bq_k1_001",
-          "resolved_style_pack": "style_colonial",
+          "resolved_style_pack": "style_victorian",
           "available_tiers": [
             "production"
           ],
           "available_style_packs": [
-            "style_colonial"
+            "style_victorian"
           ],
           "production_row_count": 1,
-          "same_pack_production_count": 1,
-          "cross_pack_production_count": 0,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
           "reason": "production_hit",
           "non_production": false,
           "is_core_slot": false
@@ -1111,10 +1111,10 @@
         },
         {
           "slot": "roof_default",
-          "module_id": "roof_tile",
-          "resolved_job_id": "roof_tile_production_run001",
+          "module_id": "roof_wood_gable_2u",
+          "resolved_job_id": "roof_wood_gable_2u_production_run001",
           "resolved_tier": "production",
-          "resolved_batch_id": "kit_prod_noncore_bq_001",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
           "resolved_style_pack": "style_rural",
           "available_tiers": [
             "production"
@@ -1131,20 +1131,20 @@
         },
         {
           "slot": "roof_flat",
-          "module_id": "roof_tile",
-          "resolved_job_id": "roof_tile_production_run001",
+          "module_id": "roof_pitched_gable",
+          "resolved_job_id": "roof_pitched_gable_production_run001",
           "resolved_tier": "production",
-          "resolved_batch_id": "kit_prod_noncore_bq_001",
-          "resolved_style_pack": "style_rural",
+          "resolved_batch_id": "kit_production_001",
+          "resolved_style_pack": "style_victorian",
           "available_tiers": [
             "production"
           ],
           "available_style_packs": [
-            "style_rural"
+            "style_victorian"
           ],
           "production_row_count": 1,
-          "same_pack_production_count": 1,
-          "cross_pack_production_count": 0,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
           "reason": "production_hit",
           "non_production": false,
           "is_core_slot": false
@@ -1268,20 +1268,20 @@
         },
         {
           "slot": "door_default",
-          "module_id": "door_residential",
-          "resolved_job_id": "door_residential_production_run001",
+          "module_id": "door_brick_residential_1u",
+          "resolved_job_id": "door_brick_residential_1u_production_run001",
           "resolved_tier": "production",
-          "resolved_batch_id": "kit_production_001",
-          "resolved_style_pack": "style_victorian",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_colonial",
           "available_tiers": [
             "production"
           ],
           "available_style_packs": [
-            "style_victorian"
+            "style_colonial"
           ],
           "production_row_count": 1,
-          "same_pack_production_count": 1,
-          "cross_pack_production_count": 0,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
           "reason": "production_hit",
           "non_production": false,
           "is_core_slot": true
@@ -1308,20 +1308,20 @@
         },
         {
           "slot": "roof_default",
-          "module_id": "roof_pitched_gable",
-          "resolved_job_id": "roof_pitched_gable_production_run001",
+          "module_id": "roof_brick_gable_2u",
+          "resolved_job_id": "roof_brick_gable_2u_production_run001",
           "resolved_tier": "production",
-          "resolved_batch_id": "kit_production_001",
-          "resolved_style_pack": "style_victorian",
+          "resolved_batch_id": "kit_fill_bq_k1_001",
+          "resolved_style_pack": "style_colonial",
           "available_tiers": [
             "production"
           ],
           "available_style_packs": [
-            "style_victorian"
+            "style_colonial"
           ],
           "production_row_count": 1,
-          "same_pack_production_count": 1,
-          "cross_pack_production_count": 0,
+          "same_pack_production_count": 0,
+          "cross_pack_production_count": 1,
           "reason": "production_hit",
           "non_production": false,
           "is_core_slot": true
@@ -1392,16 +1392,16 @@
           "resolved_job_id": "win_brick_1u_production_run001",
           "resolved_tier": "production",
           "resolved_batch_id": "kit_fill_bq_k1_001",
-          "resolved_style_pack": "style_colonial",
+          "resolved_style_pack": "style_victorian",
           "available_tiers": [
             "production"
           ],
           "available_style_packs": [
-            "style_colonial"
+            "style_victorian"
           ],
           "production_row_count": 1,
-          "same_pack_production_count": 0,
-          "cross_pack_production_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
           "reason": "production_hit",
           "non_production": false,
           "is_core_slot": true
@@ -1412,16 +1412,16 @@
           "resolved_job_id": "win_brick_2u_production_run001",
           "resolved_tier": "production",
           "resolved_batch_id": "kit_fill_bq_k1_001",
-          "resolved_style_pack": "style_colonial",
+          "resolved_style_pack": "style_victorian",
           "available_tiers": [
             "production"
           ],
           "available_style_packs": [
-            "style_colonial"
+            "style_victorian"
           ],
           "production_row_count": 1,
-          "same_pack_production_count": 0,
-          "cross_pack_production_count": 1,
+          "same_pack_production_count": 1,
+          "cross_pack_production_count": 0,
           "reason": "production_hit",
           "non_production": false,
           "is_core_slot": false
@@ -1541,7 +1541,7 @@
   "notes": "Audit inventory. Focus + deferred CORE slots production-only and smoke index cleared after BQ-PROD-DEFER-PACKS-001. Residual non-core lod0 \u2192 SPINE-RENDER-001.",
   "_agent_meta": {
     "schema": "bq_smoke_tier_audit_live_v1",
-    "written_at_epoch_secs": 1790257914,
+    "written_at_epoch_secs": 1791515953,
     "profile": "BQ_SMOKE_TIER_AUDIT",
     "source_system": "bq_smoke_tier_audit",
     "relative_path": "debug_runs/bq_smoke_tier_audit_live.json",

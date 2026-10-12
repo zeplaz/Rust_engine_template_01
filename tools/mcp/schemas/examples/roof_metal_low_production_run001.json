@@ -7,12 +7,11 @@
   "operation": "module_roof",
   "params": {
     "width_m": 8,
-    "thickness_m": 0.35,
-    "depth_m": 16,
-    "pitch_height_m": 0.7,
+    "thickness_m": 0.25,
+    "depth_m": 4,
     "material_profile": "roof_metal_01",
     "seed": 560002,
-    "profile": "shed"
+    "profile": "flat"
   },
   "output": {
     "glb": "assets/staging/roof_metal_low_production_run001/model.glb",

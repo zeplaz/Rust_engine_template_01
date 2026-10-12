@@ -1,7 +1,7 @@
 {
   "gate": "PWR-ART-DOWNSTREAM-CLOSE-001",
   "program_id": "PLAN-POWER-GRID-ART-ASSETS-001",
-  "green": true,
+  "green": false,
   "child_witnesses": {
     "debug_runs/art_pipeline/mcp_pwr_utility_manifest_live.json": true,
     "debug_runs/art_pipeline/mcp_pwr_substation_batch_live.json": true,
@@ -10,7 +10,7 @@
     "debug_runs/art_pipeline/mcp_pwr_transformer_promote_live.json": true,
     "debug_runs/art_pipeline/dmcp_qc_substation_live.json": true,
     "debug_runs/art_pipeline/dmcp_qc_transformer_live.json": true,
-    "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json": true,
+    "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json": false,
     "debug_runs/sim_hud_power_icons_live.json": true
   },
   "power_utility_art": {
@@ -39,7 +39,7 @@
       "eq": true
     },
     "nuclear_spec_green": {
-      "eq": true
+      "eq": false
     },
     "hud_atlas_green": {
       "eq": true
@@ -50,7 +50,7 @@
   },
   "_agent_meta": {
     "schema": "power_grid_art_downstream_close_live_v1",
-    "written_at_epoch_secs": 1782008699,
+    "written_at_epoch_secs": 1791515991,
     "profile": "PWR_ART_DOWNSTREAM_CLOSE",
     "source_system": "mcp_pwr_utility",
     "relative_path": "debug_runs/art_pipeline/power_grid_art_downstream_close_live.json",

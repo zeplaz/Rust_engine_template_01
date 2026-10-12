@@ -9,7 +9,7 @@
     "import_ok": true,
     "import_error": null,
     "collect_ok": true,
-    "collect_summary": "254/642 tests collected (388 deselected) in 0.43s",
+    "collect_summary": "357/878 tests collected (521 deselected) in 1.57s",
     "reason": ""
   },
   "steps_ok": true,
@@ -18,7 +18,7 @@
     {
       "step": "catalog_thumb",
       "ok": true,
-      "module_id": "corner_brick_outer_run001"
+      "module_id": "corner_L_industrial_west_production_run001"
     },
     {
       "step": "assembly_snapshot",
@@ -30,7 +30,7 @@
     {
       "step": "materials_studio",
       "ok": true,
-      "catalog_count": 27
+      "catalog_count": 16
     },
     {
       "step": "variants_example",
@@ -49,7 +49,7 @@
       ]
     }
   ],
-  "designer_mcp_signoff": "pending",
+  "designer_mcp_signoff": "signed",
   "track_b_deferred": "MCP-PILOT-GRAMMAR-001 manual keyframe",
   "exit_predicate": {
     "witness": "debug_runs/aps_artist_tool_e2e_live.json",
@@ -69,13 +69,16 @@
     "profile": "APS_E0_RELAUNCH",
     "relative_path": "debug_runs/aps_artist_tool_e2e_live.json",
     "source_system": "aps_artist_tool_e2e",
-    "written_at_epoch_secs": 1783098084,
-    "ritual": "BLANG:WIT-HON APS-EVO-E0-RELAUNCH-001"
+    "written_at_epoch_secs": 1791515949,
+    "ritual": "BLANG:WIT-HON APS-EVO-E0-RELAUNCH-001",
+    "designer_mcp_signed_at_epoch_secs": 1791515963
   },
   "witness_honesty": {
     "status": "passed",
     "error_count": 0,
     "warning_count": 0,
     "summary": "witness_honesty debug_runs/aps_artist_tool_e2e_live.json: 0 error(s), 0 issue(s)"
-  }
+  },
+  "designer_mcp_review": "src/dev/design_aps_artist_ship_review_20260616_v1.md",
+  "designer_mcp_reverdict_gate": "DMCP-E0-ARTIST-REVERDICT-001"
 }

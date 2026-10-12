@@ -3,7 +3,7 @@
   "lane": "tile_batch",
   "_agent_meta": {
     "agent": "coder-mcp",
-    "updated_at": "2026-06-17T04:23:41.194968+00:00",
+    "updated_at": "2026-10-09T03:19:49.446736+00:00",
     "program": "MCP-TILE-CLOSE-001",
     "dry_run": false
   },
@@ -82,8 +82,9 @@
     },
     "written": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\landscape\\_landscape_atlas_index.ron",
     "json_mirror": "C:\\dev\\github\\Rust_engine_template_01\\assets\\configs\\landscape\\_landscape_atlas_index.json",
-    "entry_count": 1,
+    "entry_count": 2,
     "atlas_ids": [
+      "landscape_lg5_expanded_v1",
       "landscape_lg5_pilot_v1"
     ]
   }

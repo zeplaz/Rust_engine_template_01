@@ -18,8 +18,10 @@
   },
   "sample_semantic_tags": {
     "location": [
-      "street_facing",
-      "corner"
+      "street_facing"
+    ],
+    "detail": [
+      "window_band"
     ]
   }
 }

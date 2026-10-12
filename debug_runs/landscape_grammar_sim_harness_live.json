@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/landscape_grammar_sim_harness_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_landscape_grammar_harness_witnesses",
-    "written_at_epoch_secs": 1790312396
+    "written_at_epoch_secs": 1791516190
   },
   "chunks_with_program": 17,
   "construction_disturbances": 1,

@@ -2,8 +2,8 @@
   "schema": "ops_dashboard_v1",
   "task_id": "OPS-DASHBOARD-001",
   "ok": true,
-  "generated_at": "2026-09-25T14:45:16.306284+00:00",
-  "run_id": "9bd1c9c4-a376-43c8-91a0-2d62c8b49dfe",
+  "generated_at": "2026-10-09T03:23:22.292217+00:00",
+  "run_id": "61d54773-3589-44a9-83df-c924603514cc",
   "auth_spine": "AUTH: MAT\u2605\u21e2APS\u2605\u21e2SNAP\u2605\u21e2WRK\u2605\u21e2ATL\u2605\u21e2RT\u2605 | SIM\u2605\u21e2CON\u2605\u21e2INFRA\u2605\u21e2FIRE\u2605\u21e2ECO\u2605",
   "qce": {
     "Q_coherence": {
@@ -32,14 +32,14 @@
     }
   },
   "metrics_tier1": {
-    "ftr": null,
+    "ftr": 0.0,
     "rtr": null,
-    "events_per_day": 0.0,
-    "status": "sparse",
+    "events_per_day": 6.0,
+    "status": "measured",
     "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
     "drift_alerts": 8,
     "drift_warns": 9,
-    "active_processes": 5,
+    "active_processes": 0,
     "crash_alert_count": 0,
     "dcc_process_count": 0,
     "glyph_summary": "\ud83d\udd34"
@@ -49,24 +49,60 @@
     "schema": "ops_run_events_rollup_v1",
     "ok": true,
     "window_hours": 24,
-    "total_events": 0,
-    "non_test_events": 0,
-    "by_agent": {},
-    "by_status": {},
-    "top_slices": [],
-    "top_tools": [],
+    "total_events": 6,
+    "non_test_events": 2,
+    "by_agent": {
+      "pytest": 2,
+      "witness": 2,
+      "coder-mcp": 2
+    },
+    "by_status": {
+      "unknown": 6
+    },
+    "top_slices": [
+      {
+        "slice_id": "test-slice",
+        "count": 2
+      },
+      {
+        "slice_id": "MCP-DOC-READ-002-IMPL",
+        "count": 2
+      },
+      {
+        "slice_id": "MCP-P2-RUN-EVENT-001",
+        "count": 2
+      }
+    ],
+    "top_tools": [
+      {
+        "tool": "agent_doc_touch",
+        "count": 4
+      },
+      {
+        "tool": "agent_run_append",
+        "count": 4
+      },
+      {
+        "tool": "pipeline_preflight",
+        "count": 2
+      },
+      {
+        "tool": "coder_mcp_drain_brief",
+        "count": 2
+      }
+    ],
     "demo_event_count": 0,
-    "pytest_event_count": 0,
+    "pytest_event_count": 2,
     "done_count": 0,
     "metrics_tier1": {
-      "ftr": null,
+      "ftr": 0.0,
       "rtr": null,
-      "events_per_day": 0.0,
-      "status": "sparse",
+      "events_per_day": 6.0,
+      "status": "measured",
       "note": "FTR/RTR from status=done on non-test events; sparse if HANDOFF -OpsEvent unused",
       "drift_alerts": 8,
       "drift_warns": 9,
-      "active_processes": 5,
+      "active_processes": 0,
       "crash_alert_count": 0,
       "dcc_process_count": 0,
       "glyph_summary": "\ud83d\udd34"
@@ -79,34 +115,8 @@
     "schema": "ops_process_scan_v1",
     "ok": true,
     "error": null,
-    "process_count": 5,
-    "processes": [
-      {
-        "name": "python.exe",
-        "pid": "8548",
-        "mem": "10\u00ff164 Ko"
-      },
-      {
-        "name": "python.exe",
-        "pid": "18928",
-        "mem": "18\u00ff224 Ko"
-      },
-      {
-        "name": "python.exe",
-        "pid": "19840",
-        "mem": "13\u00ff416 Ko"
-      },
-      {
-        "name": "python.exe",
-        "pid": "5032",
-        "mem": "53\u00ff404 Ko"
-      },
-      {
-        "name": "python.exe",
-        "pid": "6420",
-        "mem": "38\u00ff008 Ko"
-      }
-    ],
+    "process_count": 0,
+    "processes": [],
     "slip_ups": [],
     "platform": "win32"
   },
@@ -114,7 +124,7 @@
     "task_id": "OPS-TEL-DRIFT-001",
     "schema": "ops_drift_scan_v1",
     "ok": true,
-    "instance_count": 31,
+    "instance_count": 33,
     "alert_count": 8,
     "warn_count": 9,
     "instances": [
@@ -360,6 +370,22 @@
         "slice_id": "AGENT-LANG-DEMO-001",
         "delta_wf": "\u0394WF\u2192@designer-mcp",
         "ts": "2026-06-17T04:23:20+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-10-09T03:14:21+00:00"
+      },
+      {
+        "kind": "agent_marker",
+        "severity": "info",
+        "agent": "pytest",
+        "slice_id": "AGENT-LANG-DEMO-001",
+        "delta_wf": "\u0394WF\u2192@designer-mcp",
+        "ts": "2026-10-09T03:15:41+00:00"
       }
     ],
     "unified_index_path": "debug_runs/unified_witness_index.json"
@@ -516,7 +542,7 @@
     },
     "art_B": {
       "count": 117,
-      "green_count": 76,
+      "green_count": 71,
       "label": "MCP pipeline spine / warehouse integration"
     },
     "art_C": {
@@ -540,8 +566,8 @@
       "label": "Stage 7 play scenarios"
     },
     "unclassified": {
-      "count": 481,
-      "green_count": 392,
+      "count": 482,
+      "green_count": 389,
       "label": null
     },
     "vss_spectator_scale": {
@@ -606,7 +632,7 @@
   },
   "_agent_meta": {
     "schema": "ops_dashboard_v1",
-    "written_at_epoch_secs": 1790347516,
+    "written_at_epoch_secs": 1791516202,
     "profile": "OPS_DASHBOARD",
     "source_system": "ops_telemetry",
     "relative_path": "debug_runs/agent_ops/ops_dashboard_live.json",

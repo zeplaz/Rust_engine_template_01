@@ -1,20 +1,20 @@
 {
   "gate": "DMCP-OVR-P2-IMPL-AUDIT-001",
   "ban_list": {
-    "violation_count": 0,
-    "verdict": "PASS",
-    "clean": true
+    "violation_count": 2,
+    "verdict": "FAIL",
+    "clean": false
   },
   "copy_pack": {
     "total": 32,
-    "pass": 22,
+    "pass": 18,
     "partial": 0,
-    "fail": 9,
+    "fail": 13,
     "deferred": 1,
     "by_status": {
-      "pass": 22,
+      "pass": 18,
       "deferred": 1,
-      "fail": 9
+      "fail": 13
     }
   },
   "findings": [
@@ -72,7 +72,7 @@
       "id": "CP-06",
       "section": "\u00a72 assembly",
       "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "Generate snapshot",
       "new": "Generate Assembly",
@@ -82,7 +82,7 @@
       "id": "CP-07",
       "section": "\u00a72 assembly",
       "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "text=\"P0 gate\"",
       "new": "Run ship check",
@@ -92,7 +92,7 @@
       "id": "CP-08",
       "section": "\u00a72 assembly",
       "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "ui_must",
       "old": "text=\"Validate\"",
       "new": "Check schema",
@@ -102,7 +102,7 @@
       "id": "CP-09",
       "section": "\u00a72 assembly",
       "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
-      "status": "pass",
+      "status": "fail",
       "kind": "log_ok_old",
       "old": "P0 gate failed",
       "new": "Ship check failed",
@@ -351,6 +351,46 @@
       "note": ""
     },
     {
+      "id": "CP-06",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "Generate snapshot",
+      "new": "Generate Assembly",
+      "note": ""
+    },
+    {
+      "id": "CP-07",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "text=\"P0 gate\"",
+      "new": "Run ship check",
+      "note": ""
+    },
+    {
+      "id": "CP-08",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "fail",
+      "kind": "ui_must",
+      "old": "text=\"Validate\"",
+      "new": "Check schema",
+      "note": ""
+    },
+    {
+      "id": "CP-09",
+      "section": "\u00a72 assembly",
+      "path": "tools/mcp/art_pipeline_suite/assembly_panel.py",
+      "status": "fail",
+      "kind": "log_ok_old",
+      "old": "P0 gate failed",
+      "new": "Ship check failed",
+      "note": "status/log/dialog \u2014 artist-visible"
+    },
+    {
       "id": "CP-18",
       "section": "\u00a75 materials",
       "path": "tools/mcp/art_pipeline_suite/material_preview_modes.py",
@@ -457,7 +497,7 @@
   "guard_test": "tools/mcp/python/tests/test_aps_no_jargon.py",
   "_agent_meta": {
     "schema": "dmcp_ovr_p2_impl_audit_live_v1",
-    "written_at_epoch_secs": 1783098009,
+    "written_at_epoch_secs": 1791515936,
     "profile": "DMCP_OVR_P2_IMPL_AUDIT",
     "source_system": "aps_uiux_p2_impl_audit",
     "relative_path": "debug_runs/art_pipeline/dmcp_ovr_p2_impl_audit_live.json",

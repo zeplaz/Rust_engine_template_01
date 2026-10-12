@@ -178,3 +178,28 @@ def render_text(rows: list[dict[str, str]]) -> str:
         sig = f"{row['name']} {row['args']}".strip()
         lines.append(f"  {sig}" + (f"  — {row['help']}" if row["help"] else ""))
     return "\n".join(lines)
+
+
+def mcp_help_payload(parser: argparse.ArgumentParser) -> dict:
+    """Compact live catalog for MCP ``micro_tool_help`` — no hand-maintained command lists.
+
+    Prefer ``commands_by_group`` + ``cli commands --grep`` over pasting every signature into chat.
+    """
+    rows = catalog(parser)
+    by_group: dict[str, list[str]] = {}
+    commands: list[str] = []
+    for row in rows:
+        sig = f"{row['name']} {row['args']}".strip()
+        commands.append(sig)
+        by_group.setdefault(row["group"], []).append(sig)
+    return {
+        "cli": "python -m rust_engine_mcp.cli",
+        "command_count": len(commands),
+        "commands_by_group": by_group,
+        "hint": "python -m rust_engine_mcp.cli commands [--grep X] [--group Y] | help <command>",
+        "philosophy": (
+            "Validators return ValidationReport JSON; agents must not read raw cargo/build "
+            "logs when a validator exists. Prefer file-digest / witness-brief / token-savings-guide "
+            "over pasting full files."
+        ),
+    }

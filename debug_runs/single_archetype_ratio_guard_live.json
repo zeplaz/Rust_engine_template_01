@@ -3,7 +3,7 @@
   "gate_id": "single_archetype_ratio_guard",
   "ok": true,
   "green": true,
-  "scanned_files": 456,
+  "scanned_files": 457,
   "total_refs": 23,
   "archetype_counts": {
     "IndustrialWarehouse": 17,

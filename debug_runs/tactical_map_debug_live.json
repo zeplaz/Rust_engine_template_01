@@ -6,7 +6,8 @@
       "lod_paint_active": false
     },
     "diagnosis_hints": [
-      "FALLBACK_IMAGE_CPU_OK: sim terrain painted — if tactical map void, check RTT RenderLayers + ImageNode bind + ExtractedCameraMetrics view_proj (particles)"
+      "FALLBACK_IMAGE_CPU_OK: sim terrain painted — if tactical map void, check RTT RenderLayers + ImageNode bind + ExtractedCameraMetrics view_proj (particles)",
+      "TILE_DEBUG_OVERLAY_ON: red/green GPU chunk squares drawn on tactical RTT (fire + LOD debug)"
     ],
     "fallback_raster": {
       "chunk_grid_dirty": true,
@@ -49,8 +50,8 @@
         "texture_usages": "TextureUsages(COPY_DST | TEXTURE_BINDING)",
         "width": 320
       },
-      "raster_applied_revision": 13,
-      "raster_revision": 16,
+      "raster_applied_revision": 15,
+      "raster_revision": 15,
       "sim_image": {
         "asset_usage": "RenderAssetUsages(MAIN_WORLD | RENDER_WORLD)",
         "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 133 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
@@ -59,15 +60,15 @@
         "loaded": true,
         "pixels": {
           "center": [
-            40,
-            93,
-            56,
+            159,
+            94,
+            55,
             255
           ],
           "corner_br": [
-            30,
-            62,
-            100,
+            47,
+            88,
+            76,
             255
           ],
           "corner_tl": [
@@ -77,7 +78,7 @@
             255
           ],
           "coverage_ratio": 1.0,
-          "luma_sum": 23609687,
+          "luma_sum": 21324676,
           "nonzero_pixels": 102400,
           "total_pixels": 102400,
           "valid": true
@@ -90,7 +91,7 @@
       "sprite_entity": true,
       "test_harness_boost": false
     },
-    "frame": 122820,
+    "frame": 780,
     "gpu_bake_spike": {
       "bake_revision": 0,
       "consumers_ready": false,
@@ -112,18 +113,18 @@
       "construction_footprint_tiles": 0,
       "construction_paths": 0,
       "fire_debug_force_visible": false,
-      "overlay_revision": 0,
-      "shared_overlay_fire_cells": 0,
-      "tile_debug_batched_overlay": false
+      "overlay_revision": 190,
+      "shared_overlay_fire_cells": 6,
+      "tile_debug_batched_overlay": true
     },
     "rtt_diag_mode": "Production",
     "rtt_render_trace": {
       "bind_barrier": {
-        "bound_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 1, index: 129 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "bound_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
         "bound_matches_sim_tex": true,
         "pending": null,
-        "revision": 3,
-        "sim_tex_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 1, index: 129 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }"
+        "revision": 0,
+        "sim_tex_handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }"
       },
       "coverage": {
         "fallback_sim_cpu": 1.0,
@@ -132,17 +133,17 @@
       },
       "extracted_camera_metrics": {
         "view_pixels": [
-          2560.0,
-          1377.0
+          1280.0,
+          720.0
         ],
         "view_proj_degenerate": false,
-        "zoom_alpha": 0.00023925873392727226,
-        "zoom_level": 2.7425036430358887
+        "zoom_alpha": 0.0005859077209606767,
+        "zoom_level": 6.208872318267822
       },
       "fire_particle_raster": {
         "draw_diagnostics": {
-          "cap_zero_skip": 145,
-          "draw_ok": 122674,
+          "cap_zero_skip": 93,
+          "draw_ok": 686,
           "identity_skip": 0,
           "policy_skip": 0
         },
@@ -163,10 +164,10 @@
       "main_world_camera": {
         "is_active": true,
         "order": 0,
-        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 933.4536, height: 502.09595 }, scale: 1.0, area: Rect { min: Vec2(-466.7268, -251.04797), max: Vec2(466.7268, 251.04797) } })",
+        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 206.1566, height: 115.96309 }, scale: 1.0, area: Rect { min: Vec2(-103.0783, -57.981544), max: Vec2(103.0783, 57.981544) } })",
         "render_layers": null,
         "render_target": {
-          "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 1, index: 129 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+          "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
           "kind": "image",
           "matches_barrier_bound": true,
           "matches_sim_tex": true,
@@ -175,32 +176,32 @@
         "viewport": null,
         "visibility": "Inherited",
         "world_position": [
-          222.03831481933594,
-          159.795654296875,
+          160.0,
+          144.0,
           999.0
         ]
       },
       "map_camera_desired": {
-        "scale": 2.7425036430358887,
+        "scale": 6.208872318267822,
         "translation": [
-          222.03831481933594,
-          159.795654296875
+          160.0,
+          144.0
         ]
       },
       "ortho_trace": {
-        "authority_zoom": 2.7425036430358887,
+        "authority_zoom": 6.208872318267822,
         "camera_center": [
-          222.03831481933594,
-          159.795654296875
+          160.0,
+          144.0
         ],
-        "desired_zoom": 2.7425036430358887,
+        "desired_zoom": 6.208872318267822,
         "fixed_world_span": [
-          933.45361328125,
-          502.095947265625
+          206.15660095214844,
+          115.96308898925781
         ],
         "view_pixels": [
-          2560.0,
-          1377.0
+          1280.0,
+          720.0
         ]
       },
       "primary_void_suspect": "UNKNOWN_GPU_VOID",
@@ -225,16 +226,16 @@
       "void_suspects": [],
       "zoom_frame": {
         "lod_band": "Operational",
-        "px_per_tile": 2.7425036430358887,
-        "zoom_alpha": 0.00023925873392727226
+        "px_per_tile": 6.208872318267822,
+        "zoom_alpha": 0.0005859077209606767
       }
     },
     "schema": "tactical_map_debug_v2",
-    "sim_time_micros": 10974327766,
+    "sim_time_micros": 106276105,
     "tactical_rtt": {
       "fill_logical_px": [
-        2560.0,
-        1377.0
+        1280.0,
+        720.0
       ],
       "fill_steady_invalid_flip_count": 0,
       "fill_valid": true,
@@ -248,19 +249,19 @@
         "is_active": true,
         "order": 0,
         "output_mode": "Write { blend_state: None, clear_color: Custom(Srgba(Srgba { red: 0.48, green: 0.54, blue: 0.64, alpha: 1.0 })) }",
-        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 933.4536, height: 502.09595 }, scale: 1.0, area: Rect { min: Vec2(-466.7268, -251.04797), max: Vec2(466.7268, 251.04797) } })",
+        "projection": "Orthographic(OrthographicProjection { near: -1000.0, far: 1000.0, viewport_origin: Vec2(0.5, 0.5), scaling_mode: Fixed { width: 206.1566, height: 115.96309 }, scale: 1.0, area: Rect { min: Vec2(-103.0783, -57.981544), max: Vec2(103.0783, 57.981544) } })",
         "visibility": "Inherited",
         "world_position": [
-          222.03831481933594,
-          159.795654296875,
+          160.0,
+          144.0,
           999.0
         ]
       },
       "rtt_image": {
         "asset_usage": "RenderAssetUsages(MAIN_WORLD | RENDER_WORLD)",
-        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 1, index: 129 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
+        "handle": "StrongHandle<Image>{ index: AssetIndex { generation: 0, index: 15 }, type_id: TypeId(0x18213da24aa98d6d603d4859a0ae782b), path: None }",
         "has_cpu_data": true,
-        "height": 1377,
+        "height": 720,
         "loaded": true,
         "pixels": {
           "center": [
@@ -284,13 +285,13 @@
           "coverage_ratio": 0.0,
           "luma_sum": 0,
           "nonzero_pixels": 0,
-          "total_pixels": 3525120,
+          "total_pixels": 921600,
           "valid": true
         },
         "render_world": true,
         "texture_format": "Rgba8UnormSrgb",
         "texture_usages": "TextureUsages(COPY_DST | TEXTURE_BINDING | RENDER_ATTACHMENT)",
-        "width": 2560
+        "width": 1280
       }
     },
     "terrain_authority": "GpuBake",
@@ -306,16 +307,16 @@
       "test_scene_chunk_entities": 100,
       "tile_marker_entities": 0
     },
-    "test_scene": "City",
+    "test_scene": "Vfx",
     "uses_cpu_fallback_raster": false,
     "uses_gpu_sprite_display": true,
     "vt4": {
-      "failing_surface_mask": "0x0",
-      "mismatch_count": 0,
-      "stamp": 122821
+      "failing_surface_mask": "0x4",
+      "mismatch_count": 2,
+      "stamp": 781
     },
     "weather_precip_smoke": {
-      "instance_count": 84,
+      "instance_count": 63,
       "rain_present": true
     },
     "world_gen": {
@@ -332,5 +333,5 @@
     }
   },
   "path": "debug_runs/tactical_map_debug_live.json",
-  "written_at_epoch_secs": 1790560391
+  "written_at_epoch_secs": 1791516070
 }

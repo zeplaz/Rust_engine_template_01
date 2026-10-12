@@ -247,21 +247,20 @@ class MaterialLibraryWidget(ttk.Frame):
         self._build_preview_strip(preview_wrap)
 
     def _build_studio_tree(self) -> None:
-        """APS-MAT-002 at scale — category tree + profile list (not card grid)."""
+        """APS-MAT-002 at scale — category tree + profile list (not card grid).
+
+        MAT-1: one horizontal paned (Categories | Profiles | Preview) — no nested
+        paned-in-paned that starves nav below Categories+Profiles minsize (~327px).
+        """
         body = horizontal_paned(self)
         body.pack(fill=tk.BOTH, expand=True)
-        nav = ttk.Frame(body, padding=2)
-        add_pane(body, nav, weight=1, minsize=240)
+        tree_wrap = ttk.LabelFrame(body, text="Categories", padding=4)
+        add_pane(body, tree_wrap, weight=1, minsize=140)
+        list_wrap = ttk.LabelFrame(body, text="Profiles", padding=4)
+        add_pane(body, list_wrap, weight=2, minsize=180)
         preview_wrap = ttk.Frame(body, padding=2)
         add_pane(body, preview_wrap, weight=2, minsize=320)
         self._build_preview_strip(preview_wrap)
-
-        nav_row = horizontal_paned(nav)
-        nav_row.pack(fill=tk.BOTH, expand=True)
-        tree_wrap = ttk.LabelFrame(nav_row, text="Categories", padding=4)
-        add_pane(nav_row, tree_wrap, weight=1, minsize=140)
-        list_wrap = ttk.LabelFrame(nav_row, text="Profiles", padding=4)
-        add_pane(nav_row, list_wrap, weight=2, minsize=180)
 
         self._category_tree = ttk.Treeview(tree_wrap, show="tree", height=14)
         tree_scroll = ttk.Scrollbar(tree_wrap, orient=tk.VERTICAL, command=self._category_tree.yview)

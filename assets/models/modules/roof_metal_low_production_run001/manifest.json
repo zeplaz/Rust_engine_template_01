@@ -9,7 +9,7 @@
     "validator": "asset_glb",
     "status": "passed",
     "compression_level": 1,
-    "summary": "model.glb: verts=48 tier=production arch=module_roof profile=shed",
+    "summary": "model.glb: verts=48 tier=production arch=module_roof profile=flat",
     "error_count": 0,
     "warning_count": 0,
     "errors": [],

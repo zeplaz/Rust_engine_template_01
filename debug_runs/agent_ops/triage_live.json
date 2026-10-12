@@ -2,13 +2,13 @@
   "schema": "ops_triage_live_v1",
   "task_id": "OPS-TRIAGE-DASH-001",
   "ok": true,
-  "generated_at": "2026-09-25T14:45:17.084993+00:00",
+  "generated_at": "2026-10-09T03:21:52.051863+00:00",
   "ignore_dcc_status_bar": true,
   "metrics": {
     "crash_alerts": 0,
     "slip_ups": 21,
     "open_gates": 0,
-    "ftr": null,
+    "ftr": 0.0,
     "dcc_processes": 0
   },
   "glyph_chain": "\ud83d\udd34\u26a0\u26d4",
@@ -149,8 +149,8 @@
     "task_id": "OPS-CRASH-EXPORT-001",
     "schema": "ops_crash_scan_v1",
     "ok": true,
-    "scanned_at": "2026-09-25T14:45:16.569286+00:00",
-    "process_count": 5,
+    "scanned_at": "2026-10-09T03:21:47.320486+00:00",
+    "process_count": 0,
     "dcc_process_count": 0,
     "crash_alert_count": 0,
     "slip_up_count": 2,
@@ -170,38 +170,7 @@
         "glyph": "\ud83d\udd34"
       }
     ],
-    "processes": [
-      {
-        "name": "python.exe",
-        "pid": "8548",
-        "mem": "10\u00ff164 Ko",
-        "is_dcc": false
-      },
-      {
-        "name": "python.exe",
-        "pid": "18928",
-        "mem": "18\u00ff224 Ko",
-        "is_dcc": false
-      },
-      {
-        "name": "python.exe",
-        "pid": "19840",
-        "mem": "13\u00ff416 Ko",
-        "is_dcc": false
-      },
-      {
-        "name": "python.exe",
-        "pid": "5032",
-        "mem": "53\u00ff404 Ko",
-        "is_dcc": false
-      },
-      {
-        "name": "python.exe",
-        "pid": "6420",
-        "mem": "38\u00ff348 Ko",
-        "is_dcc": false
-      }
-    ],
+    "processes": [],
     "glyph_summary": "\ud83d\udd34",
     "prometheus_path": "debug_runs/agent_ops/prometheus/rust_engine_ops.prom"
   },
@@ -217,16 +186,16 @@
     "triage_dashboard": "tools/orchestrator/dashboard/grafana_triage_overview.json",
     "alert_rules": "tools/orchestrator/dashboard/prometheus_alert_rules.yml"
   },
-  "previous_hash": "7f094918f9e5e42b4705429de4978199bd15b989acbb172bf0064873dca59b3e",
-  "content_hash": "a48e2ec81d99a7895a9b12c54dd23218f755987cfe3f265d04afecf829509eea",
+  "previous_hash": "e3f06347d7cdf7d07202785c15f9d62c401beb2bbf0925ad449850659b6eecc3",
+  "content_hash": "f1f0b63b12daab70cb6a6d32036cb781b98ad084ffced2b99ef489bc5dac2e7d",
   "hash_lock_id": "granfina_has\u2026",
   "_agent_meta": {
     "schema": "debug_run_envelope_v1",
-    "written_at_epoch_secs": 1790347517,
+    "written_at_epoch_secs": 1791516112,
     "profile": "OPS-TRIAGE-LIVE",
     "source_system": "ops_crash_exporter",
     "relative_path": "debug_runs/agent_ops/triage_live.json",
     "agent": "ops_crash_exporter",
-    "content_hash": "a48e2ec81d99a7895a9b12c54dd23218f755987cfe3f265d04afecf829509eea"
+    "content_hash": "f1f0b63b12daab70cb6a6d32036cb781b98ad084ffced2b99ef489bc5dac2e7d"
   }
 }
