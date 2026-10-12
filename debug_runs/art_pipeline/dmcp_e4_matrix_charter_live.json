@@ -36,10 +36,10 @@
     "APS-EVO-E4-ATLAS-EXPAND-001"
   ],
   "missing_in_catalog": [],
-  "reviewed_at": "2026-06-17",
+  "reviewed_at": "2026-10-09",
   "_agent_meta": {
     "schema": "dmcp_e4_matrix_charter_live_v1",
-    "written_at_epoch_secs": 1781670218,
+    "written_at_epoch_secs": 1791515963,
     "profile": "DMCP_E4_MATRIX_CHARTER",
     "source_system": "dmcp_designer_signoff",
     "relative_path": "debug_runs/art_pipeline/dmcp_e4_matrix_charter_live.json",

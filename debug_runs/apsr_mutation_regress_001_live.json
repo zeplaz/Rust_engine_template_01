@@ -58,7 +58,7 @@
     "profile": "APSR_MUTATION_REGRESS",
     "relative_path": "debug_runs/apsr_mutation_regress_001_live.json",
     "source_system": "apsr_mutation_regress",
-    "written_at_epoch_secs": 1790255188,
+    "written_at_epoch_secs": 1791515949,
     "ritual": "BLANG:WIT-HON\u2192Q\u2713 APSR-MUTATION-REGRESS-001",
     "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
     "task_id": "APSR-MUTATION-REGRESS-001",

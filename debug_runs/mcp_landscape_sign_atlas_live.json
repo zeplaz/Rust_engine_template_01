@@ -35,7 +35,7 @@
   ],
   "_agent_meta": {
     "schema": "mcp_landscape_sign_atlas_live_v1",
-    "written_at_epoch_secs": 1781983745,
+    "written_at_epoch_secs": 1791515990,
     "profile": "MCP_LANDSCAPE_SIGN_ATLAS",
     "source_system": "landscape_sign_atlas",
     "relative_path": "debug_runs/mcp_landscape_sign_atlas_live.json"

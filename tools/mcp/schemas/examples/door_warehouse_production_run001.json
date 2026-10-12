@@ -8,12 +8,10 @@
   "params": {
     "width_m": 4,
     "height_m": 3,
-    "depth_m": 0.4,
-    "opening_width_m": 3.1,
-    "opening_height_m": 2.7,
+    "depth_m": 0.25,
     "material_profile": "steel_door_warehouse_01",
     "seed": 42,
-    "profile": "warehouse"
+    "profile": "frame"
   },
   "output": {
     "glb": "assets/staging/door_warehouse_production_run001/model.glb",

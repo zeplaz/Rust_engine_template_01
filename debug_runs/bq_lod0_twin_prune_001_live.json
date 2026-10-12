@@ -84,7 +84,7 @@
     "profile": "BQ_LOD0_TWIN_PRUNE",
     "relative_path": "debug_runs/bq_lod0_twin_prune_001_live.json",
     "source_system": "bq_lod0_twin_prune",
-    "written_at_epoch_secs": 1790257942,
+    "written_at_epoch_secs": 1791515951,
     "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-LOD0-TWIN-PRUNE-001",
     "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
     "task_id": "BQ-LOD0-TWIN-PRUNE-001",

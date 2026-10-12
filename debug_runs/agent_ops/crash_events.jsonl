@@ -1,0 +1,2 @@
+{"ts":"2026-10-09T03:18:40.522988+00:00","run_id":"442ea585-71e1-40f0-9024-06f658eb47b8","kind":"preview_job_failure","path":"debug_runs/preview_jobs/preview_industrial_west_4x2_s1_4bf6_e7beb892.status.json","status":"failed","exit_code":null,"glyph":"\ud83d\udd34"}
+{"ts":"2026-10-09T03:18:40.524453+00:00","run_id":"4f084eba-6624-4056-9873-8ee9f501820d","kind":"preview_job_failure","path":"debug_runs/preview_jobs/preview_rural_5x3_s3_4086_528a9530.status.json","status":"failed","exit_code":null,"glyph":"\ud83d\udd34"}

@@ -3,8 +3,8 @@
   "green": false,
   "verdict": "FAIL",
   "registry": "tools/mcp/schemas/queue_registry_v1.json",
-  "contradiction_count": 10,
-  "error_count": 67,
+  "contradiction_count": 13,
+  "error_count": 69,
   "warning_count": 0,
   "contradictions": [
     {
@@ -19,16 +19,6 @@
       "by_queue": {
         "tools/orchestrator/queues/post_drain_phase5_queue.json": "closed",
         "tools/orchestrator/queues/coder_master_drain_queue.json": "open"
-      }
-    },
-    {
-      "id": "SIM-STEWARD-FIRE-REGRESS-001",
-      "by_queue": {
-        "tools/orchestrator/queues/post_drain_phase5_queue.json": "open",
-        "tools/orchestrator/queues/post_drain_phase4_queue.json": "open",
-        "tools/orchestrator/queues/coder_master_drain_queue.json": "open",
-        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
-        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "closed"
       }
     },
     {
@@ -67,6 +57,34 @@
       }
     },
     {
+      "id": "COD-SIM-HUD-EGUI-THEME-001",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "COD-SIM-HUD-BUILD-PICKER-001",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "COD-SIM-HUD-TRAY-BUILD-001",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
+      "id": "COD-SIM-HUD-POPUP-MIGRATE-001",
+      "by_queue": {
+        "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
+        "tools/orchestrator/queues/multi_parallel_tracks_dispatch_v1.json": "open"
+      }
+    },
+    {
       "id": "DES-SIM-HUD-OPS-002",
       "by_queue": {
         "tools/orchestrator/queues/multi_parallel_home_queues_v1.json": "closed",
@@ -81,13 +99,7 @@
       }
     }
   ],
-  "snag_done": [
-    {
-      "id": "VEG-F02-MCP-ATLAS-001",
-      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
-      "snag": "coder-mcp_blocked"
-    }
-  ],
+  "snag_done": [],
   "exit_predicate_failures": [
     {
       "id": "CDR-B-VEG-MINIMAP-LEGEND-UI-001",
@@ -274,13 +286,13 @@
       "reason": "witness_missing"
     },
     {
-      "id": "VEG-F02-MCP-ATLAS-001",
-      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
-      "reason": "snag_done"
+      "id": "TRIAGE-BUILD-CLICK-PLACE-001",
+      "queue": "tools/orchestrator/queues/post_drain_phase4_queue.json",
+      "reason": "missing_exit_predicate"
     },
     {
-      "id": "VEG-F02-MCP-ATLAS-001",
-      "queue": "tools/orchestrator/queues/coder_vegetation_drain_queue.json",
+      "id": "TRIAGE-CURSOR-UNIFY-001",
+      "queue": "tools/orchestrator/queues/post_drain_phase4_queue.json",
       "reason": "missing_exit_predicate"
     },
     {
@@ -352,7 +364,7 @@
   ],
   "_agent_meta": {
     "schema": "queue_integrity_reconcile_live_v1",
-    "written_at_epoch_secs": 1786569984,
+    "written_at_epoch_secs": 1791516203,
     "profile": "MCP_WIT_QUEUE_INTEGRITY",
     "source_system": "queue_integrity",
     "relative_path": "debug_runs/queue_integrity_reconcile_live.json",

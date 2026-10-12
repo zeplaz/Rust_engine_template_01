@@ -34,16 +34,18 @@
     "hero_module": true,
     "whitelist_complete": true,
     "composition_covers_whitelist": true,
-    "spec_only_flag": true,
-    "bpy_blocked": true,
+    "spec_only_flag": false,
+    "bpy_blocked": false,
     "development_tier_production": true
   },
-  "errors": [],
+  "errors": [
+    "spec wave requires spec_only + bpy_blocked"
+  ],
   "spec_only": true,
   "bpy_blocked": true,
   "audit_complete": true,
-  "green": true,
-  "verdict": "PASS",
+  "green": false,
+  "verdict": "FAIL",
   "handoff": {
     "coder_mcp": "MCP-PWR-NUCLEAR-BATCH-001",
     "deliverable": "assets/staging/specs/kit_nuclear_pwr_production_001.json",
@@ -51,11 +53,11 @@
   },
   "_agent_meta": {
     "schema": "dmcp_nuclear_pwr_spec_live_v1",
-    "written_at_epoch_secs": 1782004068,
+    "written_at_epoch_secs": 1791515964,
     "profile": "DMCP_NUCLEAR_PWR_SPEC",
     "source_system": "dmcp_nuclear_pwr_spec",
     "relative_path": "debug_runs/art_pipeline/dmcp_nuclear_pwr_spec_live.json",
-    "ritual": "BLANG:WIT-HON\u2192Q\u2713 DMCP-SPEC-NUCLEAR-PWR-001",
+    "ritual": "BLANG:WIT-HON FAIL",
     "agent": "designer-mcp"
   }
 }

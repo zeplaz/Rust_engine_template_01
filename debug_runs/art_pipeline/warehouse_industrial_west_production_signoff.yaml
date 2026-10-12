@@ -4,7 +4,7 @@ task_id: MCP-PT-1-002
 kit_gate: MCP-P2-KIT002-G4
 gate: G4
 designer_mcp: production_keyframe_signoff
-reviewed_at: "2026-06-17"
+reviewed_at: "2026-10-09"
 proceed_ship: no
 
 kit_production_002_signoff: debug_runs/art_pipeline/kit_production_002_g4_signoff.yaml

@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/logistics_throughput_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "logistics_throughput_live_proof",
-    "written_at_epoch_secs": 1790313735
+    "written_at_epoch_secs": 1791674817
   },
   "edge_saturation_max": 1.0,
   "graph_only_paths": true,
@@ -81,28 +81,21 @@
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
       "delivered": 4.0,
-      "request_id": 190,
+      "request_id": 3,
       "requested": 4.0
     },
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
       "delivered": 4.0,
-      "request_id": 189,
+      "request_id": 2,
       "requested": 4.0
     },
     {
       "blocked_at": null,
       "bottleneck_capacity": 2.0,
-      "delivered": 4.0,
-      "request_id": 188,
-      "requested": 4.0
-    },
-    {
-      "blocked_at": null,
-      "bottleneck_capacity": 2.0,
-      "delivered": 4.0,
-      "request_id": 187,
+      "delivered": 2.0,
+      "request_id": 1,
       "requested": 4.0
     }
   ],

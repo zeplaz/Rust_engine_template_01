@@ -19,10 +19,10 @@
     "stamped": "debug_runs/aps_artist_tool_e2e_live.json",
     "designer_mcp_signoff": "signed"
   },
-  "reviewed_at": "2026-06-17",
+  "reviewed_at": "2026-10-09",
   "_agent_meta": {
     "schema": "dmcp_e0_artist_reverdict_live_v1",
-    "written_at_epoch_secs": 1781710794,
+    "written_at_epoch_secs": 1791515963,
     "profile": "DMCP_E0_ARTIST_REVERDICT",
     "source_system": "dmcp_designer_signoff",
     "relative_path": "debug_runs/art_pipeline/dmcp_e0_artist_reverdict_live.json",

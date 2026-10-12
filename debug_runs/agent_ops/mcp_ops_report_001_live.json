@@ -11,7 +11,7 @@
       "ok": true,
       "step": "witness_index",
       "exit_code": 0,
-      "stdout_tail": "Wrote debug_runs/unified_witness_index.json (610 proofs, 9 programs)\nWrote debug_runs/agent_ops/ops_report_latest.json\nWrote debug_runs/agent_ops/ops_project_brief_v1.json\nWrote debug_runs/agent_ops/ops_mcp_function_layer_live.json\n",
+      "stdout_tail": "Wrote debug_runs/unified_witness_index.json (611 proofs, 9 programs)\nWrote debug_runs/agent_ops/ops_report_latest.json\nWrote debug_runs/agent_ops/ops_project_brief_v1.json\nWrote debug_runs/agent_ops/ops_mcp_function_layer_live.json\n",
       "stderr_tail": "",
       "wrote": [
         "debug_runs/unified_witness_index.json",
@@ -87,7 +87,7 @@
     "profile": "MCP_OPS_REPORT",
     "relative_path": "debug_runs/agent_ops/mcp_ops_report_001_live.json",
     "source_system": "ops_intelligence_scan",
-    "written_at_epoch_secs": 1790347517,
+    "written_at_epoch_secs": 1791516112,
     "ritual": "MCP-OPS-REPORT-001",
     "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
     "task_id": "MCP-OPS-REPORT-001",

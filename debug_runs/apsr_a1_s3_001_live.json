@@ -2,7 +2,7 @@
   "task_id": "APSR-A1-S3-001",
   "gate": "APSR-A1-S3-001",
   "green": true,
-  "app_loc": 541,
+  "app_loc": 550,
   "app_loc_max": 700,
   "shell_sync_from_state_lines": [],
   "lane_changed_event": true,
@@ -14,7 +14,7 @@
     "profile": "APSR_A1_S3",
     "relative_path": "debug_runs/apsr_a1_s3_001_live.json",
     "source_system": "apsr_a1_s3",
-    "written_at_epoch_secs": 1783114041,
+    "written_at_epoch_secs": 1791515949,
     "ritual": "BLANG:WIT-HON APSR-A1-S3-001"
   },
   "witness_honesty": {

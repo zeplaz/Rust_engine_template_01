@@ -3,21 +3,21 @@
   "gate": "APSR-A0-T1-001",
   "sites": [
     {
-      "id": "tools/mcp/art_pipeline_suite/app.py:68",
+      "id": "tools/mcp/art_pipeline_suite/app.py:69",
       "file": "tools/mcp/art_pipeline_suite/app.py",
-      "line": 68,
+      "line": 69,
       "field": "art_domain"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/app.py:183",
+      "id": "tools/mcp/art_pipeline_suite/app.py:184",
       "file": "tools/mcp/art_pipeline_suite/app.py",
-      "line": 183,
+      "line": 184,
       "field": "art_domain"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/app.py:534",
+      "id": "tools/mcp/art_pipeline_suite/app.py:543",
       "file": "tools/mcp/art_pipeline_suite/app.py",
-      "line": 534,
+      "line": 543,
       "field": "landscape_stamp_registered"
     },
     {
@@ -81,45 +81,45 @@
       "field": "style_pack_id"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/domain_router.py:97",
+      "id": "tools/mcp/art_pipeline_suite/domain_router.py:102",
       "file": "tools/mcp/art_pipeline_suite/domain_router.py",
-      "line": 97,
+      "line": 102,
       "field": "grammar_set_tier"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/domain_router.py:265",
+      "id": "tools/mcp/art_pipeline_suite/domain_router.py:272",
       "file": "tools/mcp/art_pipeline_suite/domain_router.py",
-      "line": 265,
+      "line": 272,
       "field": "selected_module_id"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/domain_router.py:266",
+      "id": "tools/mcp/art_pipeline_suite/domain_router.py:273",
       "file": "tools/mcp/art_pipeline_suite/domain_router.py",
-      "line": 266,
+      "line": 273,
       "field": "selected_module_ids"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/domain_router.py:268",
+      "id": "tools/mcp/art_pipeline_suite/domain_router.py:275",
       "file": "tools/mcp/art_pipeline_suite/domain_router.py",
-      "line": 268,
+      "line": 275,
       "field": "selected_landscape_preset_id"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:75",
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:79",
       "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
-      "line": 75,
+      "line": 79,
       "field": "assembly_generation_approved"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:84",
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:88",
       "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
-      "line": 84,
+      "line": 88,
       "field": "assembly_generation_approved"
     },
     {
-      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:127",
+      "id": "tools/mcp/art_pipeline_suite/generation_trace_strip.py:131",
       "file": "tools/mcp/art_pipeline_suite/generation_trace_strip.py",
-      "line": 127,
+      "line": 131,
       "field": "assembly_generation_approved"
     },
     {

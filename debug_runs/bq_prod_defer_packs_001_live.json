@@ -83,7 +83,7 @@
       "job_id": "wall_wood_1u_production_run001",
       "ok": true,
       "status": "passed",
-      "summary": "model.glb: verts=24 tier=production arch=module_wall profile=flat",
+      "summary": "model.glb: verts=48 tier=production arch=module_wall profile=flat",
       "error_count": 0
     },
     {
@@ -174,7 +174,7 @@
     "audit_green": true,
     "ok": true
   },
-  "index_entries": 92,
+  "index_entries": 54,
   "errors": [],
   "green": true,
   "verdict": "PASS",
@@ -205,7 +205,7 @@
     "profile": "BQ_PROD_DEFER_PACKS",
     "relative_path": "debug_runs/bq_prod_defer_packs_001_live.json",
     "source_system": "bq_prod_defer_packs",
-    "written_at_epoch_secs": 1790254524,
+    "written_at_epoch_secs": 1791515951,
     "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-PROD-DEFER-PACKS-001",
     "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
     "task_id": "BQ-PROD-DEFER-PACKS-001",

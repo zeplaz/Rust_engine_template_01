@@ -2,7 +2,7 @@
   "task_id": "APSR-A3-D2-001",
   "gate": "APSR-A3-D2-001",
   "green": true,
-  "bind_aps_tooltip_calls": 103,
+  "bind_aps_tooltip_calls": 109,
   "gap_count": 0,
   "plan_ref": "src/dev/plan_aps_refactor_v1.md#APSR-D2",
   "_agent_meta": {
@@ -10,7 +10,7 @@
     "profile": "APSR_A3_D2",
     "relative_path": "debug_runs/apsr_a3_d2_001_live.json",
     "source_system": "apsr_a3_d2",
-    "written_at_epoch_secs": 1783133239,
+    "written_at_epoch_secs": 1791515949,
     "ritual": "BLANG:WIT-HON APSR-A3-D2-001"
   },
   "witness_honesty": {

@@ -14,7 +14,7 @@ batch_id: tile_warehouse_industrial_west_production_v1
 kit_batch_id: kit_production_002
 source_tier: production
 g4_review_mode: keyframe_stills
-reviewed_at: "2026-06-17"
+reviewed_at: "2026-10-09"
 proceed_ship: no
 
 reference_tags:

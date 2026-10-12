@@ -60,13 +60,6 @@
   },
   "cli": "spine-render-001 / validate-report render_variant <job.json>",
   "next_residual": "SPINE-BUILD-001",
-  "_agent_meta_extra": {
-    "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
-    "task_id": "SPINE-RENDER-001",
-    "proceed_ship": false,
-    "art_quality": "contract_only_no_ship_art",
-    "agent": "coder-mcp"
-  },
   "exit_predicate": {
     "witness": "debug_runs/spine_render_001_live.json",
     "must": [
@@ -89,7 +82,7 @@
     "profile": "SPINE_RENDER",
     "relative_path": "debug_runs/spine_render_001_live.json",
     "source_system": "spine_render_contract",
-    "written_at_epoch_secs": 1790254661,
+    "written_at_epoch_secs": 1791516204,
     "ritual": "BLANG:WIT-HON\u2192Q\u2713 SPINE-RENDER-001",
     "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
     "task_id": "SPINE-RENDER-001",

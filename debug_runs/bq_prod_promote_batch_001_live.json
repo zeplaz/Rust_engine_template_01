@@ -64,14 +64,14 @@
       "job_id": "win_double_1u_production_run001",
       "ok": true,
       "status": "passed",
-      "summary": "model.glb: verts=48 tier=production arch=module_window profile=frame_mullion",
+      "summary": "model.glb: verts=120 tier=production arch=module_window profile=frame_mullion",
       "error_count": 0
     },
     {
       "job_id": "roof_metal_low_production_run001",
       "ok": true,
       "status": "passed",
-      "summary": "model.glb: verts=24 tier=production arch=module_roof profile=flat",
+      "summary": "model.glb: verts=48 tier=production arch=module_roof profile=flat",
       "error_count": 0
     },
     {
@@ -155,7 +155,7 @@
     "colonial_production_only": true,
     "promoted_targets_still_lod0": [],
     "focus_lod0_slot_hits": 0,
-    "selectable_smoke_ids_count": 14,
+    "selectable_smoke_ids_count": 0,
     "smoke_note": "stylepack_visible smoke already 0; lod0 focus promote targets cleared",
     "audit_focus": {
       "ids": [
@@ -193,7 +193,7 @@
     },
     "ok": true
   },
-  "index_entries": 117,
+  "index_entries": 54,
   "errors": [],
   "green": true,
   "verdict": "PASS",
@@ -231,7 +231,7 @@
     "profile": "BQ_PROD_PROMOTE_BATCH",
     "relative_path": "debug_runs/bq_prod_promote_batch_001_live.json",
     "source_system": "bq_prod_promote_batch",
-    "written_at_epoch_secs": 1790254015,
+    "written_at_epoch_secs": 1791515952,
     "ritual": "BLANG:WIT-HON\u2192Q\u2713 BQ-PROD-PROMOTE-BATCH-001",
     "track": "PLAN-MCP-APS-TOOLING-FINISH-001",
     "task_id": "BQ-PROD-PROMOTE-BATCH-001",

@@ -68,7 +68,7 @@
     "relative_path": "debug_runs/atmosphere_clipmap_save_roundtrip_live.json",
     "schema": "debug_run_envelope_v1",
     "source_system": "refresh_atmosphere_clipmap_save_roundtrip_witness",
-    "written_at_epoch_secs": 1790312398
+    "written_at_epoch_secs": 1791553230
   },
   "clipmap_snapshot_contract": true,
   "gate_id": "ES-6-4",

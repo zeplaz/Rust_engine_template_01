@@ -15,8 +15,8 @@
       "silhouette_continuity_pct": 100.0,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583677+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877196+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     },
     {
@@ -31,8 +31,8 @@
       "silhouette_continuity_pct": 100.0,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583695+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877208+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     },
     {
@@ -47,8 +47,8 @@
       "silhouette_continuity_pct": 100.0,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583701+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877213+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     },
     {
@@ -63,8 +63,8 @@
       "silhouette_continuity_pct": 100.0,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583705+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877217+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     },
     {
@@ -79,8 +79,8 @@
       "silhouette_continuity_pct": 100.0,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583709+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877221+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     },
     {
@@ -95,8 +95,8 @@
       "silhouette_continuity_pct": 100.0,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583713+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877224+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     },
     {
@@ -111,8 +111,8 @@
       "silhouette_continuity_pct": 100.0,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583717+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877227+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     },
     {
@@ -127,8 +127,8 @@
       "silhouette_continuity_pct": 75.0,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583720+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877230+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     },
     {
@@ -143,8 +143,8 @@
       "silhouette_continuity_pct": 83.33333587646484,
       "passes_gate_a2": true,
       "note": "Screenshot attached \u2014 operator must judge 'reads as a real building'.",
-      "recorded_at": "2026-09-24T13:39:22.583724+00:00",
-      "rubric_ref": "src/dev/design_aps_operator_rubric_v2.md#BQ-Q2",
+      "recorded_at": "2026-10-09T03:19:13.877233+00:00",
+      "rubric_ref": "src/dev/design_building_visual_concept_v2.md#look-gates",
       "recorded_by": "coder-mcp-machine"
     }
   ]

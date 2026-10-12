@@ -5,8 +5,8 @@
   "atlas_id": "rowhouse_victorian_production_v1",
   "lookup_stamp": {
     "schema_version": 1,
-    "lookup_count": 14,
-    "stamp": "64db3656419208eb",
+    "lookup_count": 18,
+    "stamp": "847782c2ae15c8e8",
     "variant_keys_sample": [
       "burning_00",
       "burning_01",
@@ -31,8 +31,8 @@
     "atlas_meta_schema": "v1",
     "lookup_stamp": {
       "schema_version": 1,
-      "lookup_count": 14,
-      "stamp": "64db3656419208eb",
+      "lookup_count": 18,
+      "stamp": "847782c2ae15c8e8",
       "variant_keys_sample": [
         "burning_00",
         "burning_01",
@@ -49,7 +49,7 @@
     "atlas_png_present": true,
     "artist_messages": [
       {
-        "sentence": "Atlas meta is v1 with 14 variant tiles \u2014 acceptable for rowhouse production register.",
+        "sentence": "Atlas meta is v1 with 18 variant tiles \u2014 acceptable for rowhouse production register.",
         "fix": "Warehouse Track B uses v2; rowhouse production stays on v1 stamp",
         "legend_code": "RT_META_V1_OK"
       }

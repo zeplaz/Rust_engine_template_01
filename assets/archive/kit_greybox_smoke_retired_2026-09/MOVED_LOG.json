@@ -2,7 +2,7 @@
   "schema": "archive_moved_log_v1",
   "bundle": "kit_greybox_smoke_retired_2026-09",
   "gate": "BQ-PROD-DEFER-PACKS-001",
-  "written_at_epoch_secs": 1790254524,
+  "written_at_epoch_secs": 1791515951,
   "moved_count": 31,
   "moved_this_run": 0,
   "moved": [

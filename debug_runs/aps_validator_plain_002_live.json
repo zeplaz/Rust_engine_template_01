@@ -1,7 +1,7 @@
 {
   "program_id": "APS-VALIDATOR-PLAIN-002",
   "gate": "APS-VALIDATOR-PLAIN-002",
-  "green": true,
+  "green": false,
   "code_count": 25,
   "signatures": [
     "assembly_graph_material_profile",
@@ -30,5 +30,5 @@
     "material_profiles_snapshot_missing",
     "material_profiles_unknown_id"
   ],
-  "assembly_panel_wired": true
+  "assembly_panel_wired": false
 }

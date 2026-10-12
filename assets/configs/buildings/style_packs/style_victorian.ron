@@ -7,10 +7,10 @@
     slots: (
         wall_1u: "wall_brick_1u",
         wall_2u: "wall_brick_1u",
-        door_default: "door_residential",
+        door_default: "door_brick_residential_1u",
         window_1u: "win_brick_1u",
         window_2u: "win_brick_2u",
-        roof_default: "roof_pitched_gable",
+        roof_default: "roof_brick_gable_2u",
         roof_flat: "roof_pitched_gable",
         corner_outer: "corner_L",
         prop_clutter: "prop_chimney",
