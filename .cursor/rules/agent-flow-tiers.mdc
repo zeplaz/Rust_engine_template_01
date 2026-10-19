@@ -1,11 +1,13 @@
 ---
-description: Cheap→hard→exec agent flow — call agent_flow_route before Tasks; reserve quality models for contested gates.
+description: Cheap→hard→exec agent flow — call agent_flow_route before Tasks; skip for single-owner bounded edits. Reserve quality models for contested gates.
 alwaysApply: true
 ---
 
 # Agent flow tiers (token efficiency)
 
-Before spawning Task/subagents for multi-step work:
+**Default chat path does not require this.** Single-owner bounded edits → implement + `validate-report`. See `agent-orchestration-lean-path.mdc`.
+
+Before spawning **Task/subagents** or multi-owner multi-step work:
 
 1. Call MCP **`agent_flow_route(goal, domain)`** (or CLI `agent-flow-route --goal …`).
 2. Follow the returned `phases[]` order — do not invent a parallel graph.
@@ -15,4 +17,5 @@ Before spawning Task/subagents for multi-step work:
 
 Never put raw cargo walls or full-file research on L1/L2 models. Prefer `token_savings_guide` + briefs.
 
-Agent: `@flow-controller` · fragment: `.cursor/agents/_fragments/model_tier_routing_v1.md`
+`@flow-controller` = multi-step dispatch only — **not** default chat entry.  
+Fragment: `.cursor/agents/_fragments/model_tier_routing_v1.md`

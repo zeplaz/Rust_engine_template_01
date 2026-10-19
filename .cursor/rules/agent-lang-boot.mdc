@@ -1,24 +1,36 @@
 ---
-description: Session bootstrap + operating rules for the BLANG/agent-lang multi-agent system — run the boot ritual, reason on witnesses (not raw logs or stale queue rows), and use the MCP CLI driver.
+description: Session bootstrap + operating rules for the BLANG/agent-lang multi-agent system — lean by default; full boot on program slices; reason on witnesses (not raw logs or stale queue rows).
 alwaysApply: true
 ---
 
 # Agent-lang boot + operating rules
 
-Full skill: `.cursor/skills/agent-lang/SKILL.md`.
+Full skill: `.cursor/skills/agent-lang/SKILL.md`.  
+Lean defaults: `prompts/guides/agent_orchestration_minimal_harness_v1.md` · rule `agent-orchestration-lean-path.mdc`.
 
-## Every session
-Run the boot ritual: `node .claude/skills/agent-lang/driver.mjs boot <agent>` (PRE → BOOT → HO). It runs preflight, loads `prompts/llm_agent_brief.md` + `prompts/SYMBOLIC_LANGUAGE.meta.md`, and returns per-agent queue picks.
+## When to boot (not every keystroke)
+
+Run the full boot ritual `node .claude/skills/agent-lang/driver.mjs boot <agent>` (PRE → BOOT → HO) when **any** of:
+
+- program / HANDOFF lease slice
+- queue pick leading to **Q✓**
+- multi-domain or multi-owner work
+- first session attach after skill sync repair
+
+Otherwise: ensure `agent-lang` SKILL is non-empty; orient via `prompts/llm_agent_brief.md` §FIELD◈ only if needed; skip full PRE/HO.
 
 ## Source of truth
+
 - Trust live witness JSON in `debug_runs/` + files on disk **over** queue-row status, the orchestrator snap, or status docs — these drift both ways (false-`done` AND stale-`blocked`). Reconcile against the witness.
 - "Green" is **scoped**: schema-green ≠ bake-green (G0–G3) ≠ runtime-stamp-green ≠ art-ship-green (G4/G5). Always state which scope.
 - `lib green ≠ done` — require the live exit-predicate witness (counters non-zero), not just a passing lib test.
 
 ## Use the tools, not the wall
+
 - Structured reports over raw logs: `validate-report` / the `validate_*` MCP tools.
 - Witness digest over full JSON: `witness-brief <path>`.
-- Queue: `agent-queue-next <agent>` / `agent-queue-update <id> done --note <witness>`.
+- Queue: `agent-queue-next <agent>` / `agent-queue-update <id> done --note <witness>` — **WIT-HON before Q✓** on product rows.
 
 ## Interpreter gotcha (this machine)
+
 The MCP server/CLI needs `mcp` + `jsonschema` + `Pillow`. `python` (3.14) has all three; `py -3.13` lacks Pillow. Use the 3.14 interpreter for art/preview tools (or `pip install Pillow` into 3.13). The driver auto-sets `PYTHONUTF8=1` and runs from `tools/mcp/python`.

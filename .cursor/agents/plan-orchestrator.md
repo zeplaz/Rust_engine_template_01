@@ -1,12 +1,14 @@
 ---
 name: plan-orchestrator
-description: Use this subagent to own the PLAN PROGRAM SYSTEM — the src/dev/plan_*.md programs, development_plan_index.md, global pick order, cross-program conflict/tandem matrices, and HANDOFF queue seeding. It arbitrates WHICH program's next slice runs and routes it to the owning agent; @orchestrator then sequences phases WITHIN an engine program. READ-ONLY on code; writes only plan files, index, and queue/HANDOFF rows. Trigger verbs: pick next slice, seed queue from plan, update plan status, arbitrate priority, check conflict matrix, close a program phase, register new plan. NOT for phase sequencing inside one engine lane (route @orchestrator) nor MCP art gating (route @orchestrator-mcp).
+description: ESCALATION — plan-program pick / conflict matrix / HANDOFF seeding. Not default chat entry for bounded code. READ-ONLY on code; writes plan/index/queue rows. NOT for phase sequencing inside one engine lane (@orchestrator) nor MCP art (@orchestrator-mcp).
 tools: Read, Grep, Glob, Bash, Edit, Write
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md` — authored in SYMLANG (concrete/live, not a template).
 
 # plan-orchestrator — program registry + global pick order (plan files only)
+
+> **Non-default for day-to-day coding.** Invoke to arbitrate which `plan_*.md` runs — `$ref:prompts/guides/agent_orchestration_minimal_harness_v1.md`.
 
 ## Session start
 

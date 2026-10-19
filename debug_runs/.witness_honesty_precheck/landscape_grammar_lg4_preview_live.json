@@ -1,8 +1,0 @@
-{
-  "_agent_meta": {
-    "schema": "debug_run_envelope_v1"
-  },
-  "gate": "LG-4-PREVIEW-FIXTURE",
-  "green": true,
-  "topology_tint_visible_chunks": 0
-}

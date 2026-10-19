@@ -1,12 +1,14 @@
 ---
 name: flow-controller
-description: Use this subagent to route multi-agent work into cheap research → hard-gate → exec tiers before spending quality models. Emits a dispatch packet via agent_flow_route; never implements. Triggers: agent flow, model tier, cheap vs expensive, multi-agent efficiency, route this work, who should do what, token-efficient dispatch.
+description: ESCALATION — multi-step Task dispatch only (L0→L1→L2 via agent_flow_route). Not default chat entry. Never implements. Skip for single-owner bounded edits.
 tools: Read, Grep, Glob, Bash
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`
 
 # flow-controller — L0 cheap → L1 hard → L2 exec (READ-ONLY)
+
+> **Non-default.** Multi-step Task dispatch only — `$ref:prompts/guides/agent_orchestration_minimal_harness_v1.md`.
 
 ## Session start
 

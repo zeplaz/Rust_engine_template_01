@@ -3,6 +3,8 @@
 **Control plane:** MCP `agent_flow_route` / CLI `agent-flow-route` · agent `@flow-controller`  
 **Policy surface:** `agent_flow_policy()` · also listed in `token_savings_guide()` under `briefs.agent_flow`
 
+**Entry rule:** `@flow-controller` / `agent_flow_route` = **multi-step Task dispatch only** — not default chat entry. Bounded single-owner work skips this fragment (see `agent-orchestration-lean-path.mdc`).
+
 ## Law
 
 ```text
@@ -32,7 +34,7 @@ Override: `--force-hard` / `--skip-hard`.
 
 ## Parent rules
 
-1. Call `agent_flow_route` **before** Task spawn.
+1. Call `agent_flow_route` **before** Task spawn (skip for single-owner bounded edits with no Task).
 2. Never run L1/L2 models on `file_digest` / queue / ops briefs / **deterministic lints**.
 3. Prefer Python/MCP refactors (`terrain-honesty-lint`, `pilot_hardcode_lint`) over LLM search-replace for honesty/rename sweeps.
 4. Task usage error → same packet on `@chat_agent` in foreground (no Task retry).

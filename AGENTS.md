@@ -73,33 +73,44 @@ FULL_APP green means the **spine is authoritative and measurable** in the runnin
 
 ## Agent routing (three layers)
 
-### 1. Cursor custom agents (authoritative roles) — [`.cursor/agents/`](.cursor/agents/)
-
-**Session bootstrap (all agents):** Every agent file mandates [`_fragments/session_bootstrap_v1.md`](.cursor/agents/_fragments/session_bootstrap_v1.md). **Skill sync first** if `.cursor/skills/agent-lang/SKILL.md` is empty — then:
+**Minimal harness (default):** Strong single-agent + tools beat elaborate outer scaffolding ([arXiv:2609.40303](https://arxiv.org/abs/2609.40303)). Guide: [`prompts/guides/agent_orchestration_minimal_harness_v1.md`](prompts/guides/agent_orchestration_minimal_harness_v1.md) · rule `.cursor/rules/agent-orchestration-lean-path.mdc`.
 
 ```text
-SKILL-SYNC ⊳ node .claude/skills/agent-lang/driver.mjs boot <agent> ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
+DEFAULT: Auto / @coder | @designer | @planner → edit → validate-report
+ESCALATE: @orchestrator* / @flow-controller / @ops / continuity agents — only on triggers in the guide
 ```
 
-Attach [`.cursor/skills/agent-lang/SKILL.md`](.cursor/skills/agent-lang/SKILL.md) every session. BOOT reads [`prompts/llm_agent_brief.md`](prompts/llm_agent_brief.md) **§FIELD◈ · SYMLANG◈** + [`prompts/SYMBOLIC_LANGUAGE.meta.md`](prompts/SYMBOLIC_LANGUAGE.meta.md) directly (or via `driver.mjs doc <path>`). **Removed CLI:** `agent_session_bootstrap`, `agent_doc_touch`, `agent_doc_reads_brief`.
+### 1. Cursor custom agents (authoritative roles) — [`.cursor/agents/`](.cursor/agents/)
 
-Copied from user profile into the repo so the team shares one definition. Each file uses **`model: auto`** in frontmatter (agent picker or `@orchestrator` / `@planner` / `@coder` / `@designer` / **`@orchestrator-mcp` / `@planner-mcp` / `@coder-mcp` / `@designer-mcp`** / `@sim-steward`).
+**Session bootstrap:** Every agent file references [`_fragments/session_bootstrap_v1.md`](.cursor/agents/_fragments/session_bootstrap_v1.md). **L0 lean** = skill parity if empty + domain skill + validate on build. **Full boot** (`driver.mjs boot <agent>` → Q+ → WIT-HON → Q✓) = L1/L2 program slices and product closes — not every edit.
+
+Attach [`.cursor/skills/agent-lang/SKILL.md`](.cursor/skills/agent-lang/SKILL.md) when using queue/witness/BLANG. Orient: [`prompts/llm_agent_brief.md`](prompts/llm_agent_brief.md) **§FIELD◈** (full SYMLANG only when needed). **Removed CLI:** `agent_session_bootstrap`, `agent_doc_touch`, `agent_doc_reads_brief`.
+
+Copied from user profile into the repo so the team shares one definition. Each file uses **`model: auto`** in frontmatter.
+
+#### Primary (default entry)
 
 | Agent file | Role | Delegates to |
 |------------|------|--------------|
-| [`.cursor/agents/orchestrator.md`](.cursor/agents/orchestrator.md) | Sequencing only — never writes production code | `planner` first, then `coder` / `designer` |
-| [`.cursor/agents/orchestrator-mcp.md`](.cursor/agents/orchestrator-mcp.md) | **MCP art pipeline** sequencing — gates spec→validate→promote | `planner-mcp` → `designer-mcp` → `coder-mcp` |
-| [`.cursor/agents/planner.md`](.cursor/agents/planner.md) | Architecture plans, phases, authority map (readonly) | — |
-| [`.cursor/agents/planner-mcp.md`](.cursor/agents/planner-mcp.md) | MCP toolchain architecture — schemas, tool categories, batch rollout | — |
 | [`.cursor/agents/coder.md`](.cursor/agents/coder.md) | ECS, render, viewport, logistics, diagnostics `src/` — **production bar**, rejects subs/hacks | bevy-simulation-grade (**07** first) + validation-first; consumer MCP only |
-| [`.cursor/agents/coder-mcp.md`](.cursor/agents/coder-mcp.md) | `tools/mcp/` Python/CLI, bpy ops, validators | — |
+| [`.cursor/agents/planner.md`](.cursor/agents/planner.md) | Architecture plans, phases, authority map (readonly) | — |
 | [`.cursor/agents/designer.md`](.cursor/agents/designer.md) | HUD, overlays, multiview UX, ghosts (presentation) | — |
+| [`.cursor/agents/coder-mcp.md`](.cursor/agents/coder-mcp.md) | `tools/mcp/` Python/CLI, bpy ops, validators | — |
+| [`.cursor/agents/planner-mcp.md`](.cursor/agents/planner-mcp.md) | MCP toolchain architecture — schemas, tool categories, batch rollout | — |
 | [`.cursor/agents/designer-mcp.md`](.cursor/agents/designer-mcp.md) | MCP art pipeline — AssetSpec, quality gates; **critiques orders**, no shortcuts | MCP skills · `@coder-mcp` for tool execution |
-| [`.cursor/agents/sim-steward.md`](.cursor/agents/sim-steward.md) | **Simulation steward** — bevy-simulation-grade + debug-intelligence + cleanup-completion-intelligence; **sequential shifts A→B→C** in main chat when Task quota blocked | `coder` / `planner` / `designer` for out-of-scope slices |
-| [`.cursor/agents/main-thread-orchestrator.md`](.cursor/agents/main-thread-orchestrator.md) | **Main-thread continuity** — Task attempt + fail-cycle escalation + foreground queue when Task/debug/cleanup fail; never stop on usage errors | Runs Shift A→B→C inline or via `@sim-steward` |
-| [`.cursor/agents/coparent-orchestrator.md`](.cursor/agents/coparent-orchestrator.md) | **Secondary pathways** — parallel lanes (operator, VFX capture, designer tails, parametric placement); conflict matrix vs primary P1 | Promotes slices to `@orchestrator`; routes drift to `@sim-steward` |
-| [`.cursor/agents/operations-intelligence.md`](.cursor/agents/operations-intelligence.md) | **Pipeline + agent ops analyst** — DSM authority/risk/cost surfaces, witness rollup, complexity-budget proposal review, ΔWF routing (readonly) | `orchestrator` / `planner` / `sim-steward`; defers ECS drift to `debug-intelligence` |
-| [`.cursor/agents/flow-controller.md`](.cursor/agents/flow-controller.md) | **Tier router** — L0 cheap → L1 hard → L2 exec via `agent_flow_route` (readonly); reserves quality models for contested gates | Parent spawns Task/`@` agents from packet |
+| [`.cursor/agents/sim-steward.md`](.cursor/agents/sim-steward.md) | **Simulation steward** — authority drift / cleanup / sequential A→B→C | `coder` / `planner` / `designer` for out-of-scope slices |
+
+#### Escalation (opt-in — not default chat entry)
+
+| Agent file | Role | Invoke when |
+|------------|------|-------------|
+| [`.cursor/agents/orchestrator.md`](.cursor/agents/orchestrator.md) | Sequencing only — never writes production code | Multi-phase engine graph across owners |
+| [`.cursor/agents/orchestrator-mcp.md`](.cursor/agents/orchestrator-mcp.md) | **MCP art pipeline** sequencing — gates spec→validate→promote | Art program G0–G5 |
+| [`.cursor/agents/plan-orchestrator.md`](.cursor/agents/plan-orchestrator.md) | Plan-program pick / conflict matrix | Which `plan_*.md` runs next |
+| [`.cursor/agents/main-thread-orchestrator.md`](.cursor/agents/main-thread-orchestrator.md) | Task fail-cycle → foreground continuity | Task quota / subagent failures |
+| [`.cursor/agents/coparent-orchestrator.md`](.cursor/agents/coparent-orchestrator.md) | Secondary pathways vs P1 | Explicit parallel secondary lanes |
+| [`.cursor/agents/operations-intelligence.md`](.cursor/agents/operations-intelligence.md) | Pipeline + agent ops DSM (readonly) | Lane close, pre-architecture, supervisor review — **not** every cargo check |
+| [`.cursor/agents/flow-controller.md`](.cursor/agents/flow-controller.md) | L0→L1→L2 via `agent_flow_route` | Multi-step Task dispatch only |
 
 **Handoff chain (orchestrator.md):** `orchestrator` → **`planner`** (plan) → **`coder`** / **`designer`** (implement) → verification (`cargo check` / tests / witness JSON).
 
@@ -111,7 +122,7 @@ Copied from user profile into the repo so the team shares one definition. Each f
 
 **Iso tile bake spine (mandatory for ship art):** [`docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md`](docs/archive/2026-06-src-dev/plans/design_tile_bake_spine_convergence_v1.md) — production = `Light_keysshotsetup.blend` + `utils/keyframe_render.py` → `tile-atlas-pack` (tilemapgen). **`tile_ortho_bake` / lod0 pilot atlases are CI/smoke only** — not building production templates. Agents/skills: `tile-generation`, `mcp-production-rules` (`bake_source: keyframe_pack` when `ship: true`).
 
-**`@coparent-orchestrator`** runs parallel secondary lanes without preempting primary P1.
+**`@coparent-orchestrator`** runs parallel secondary lanes without preempting primary P1 — escalate only when those lanes are explicit.
 
 ### Subagent continuity (mission-critical)
 
@@ -119,9 +130,10 @@ Task background workers can fail with *“Switch to Auto”* — that blocks **T
 
 | Channel | When to use |
 |---------|-------------|
-| **Main chat (Auto)** | Default implementation after any Task failure |
-| **`@coder` / `@planner` / `@sim-steward` / `@main-thread-orchestrator` / `@coparent-orchestrator` in chat** | Same roles as Task; `.cursor/agents/*` use `model: auto` (different meter than Task). **`@sim-steward`** = shifts A→B→C; **`@main-thread-orchestrator`** = Task fail-cycle + slice queue; **`@coparent-orchestrator`** = secondary parallel pathways |
-| **Task tool** | **Separate subagent quota** — when exhausted, **do not retry** (incl. `composer-2.5-fast`); use Auto / `@coder` |
+| **Main chat (Auto) / `@coder`** | **Default** implementation path |
+| **`@planner` / `@designer` / `@sim-steward` in chat** | Plan / UX / authority-repair when needed |
+| **`@main-thread-orchestrator` / `@coparent-orchestrator`** | Escalation only (Task fail-cycle / secondary lanes) |
+| **Task tool** | Multi-step dispatch after `agent_flow_route`; when exhausted, **do not retry** — use Auto / `@coder` |
 | **`HANDOFF.md`** | Session handoff — template: [`tools/orchestrator/queues/HANDOFF.template.md`](tools/orchestrator/queues/HANDOFF.template.md); script: `tools/orchestrator/invoke_handoff.ps1` |
 | **SDK `@cursor/sdk`** | Local `Agent.prompt` + `composer-2` when IDE Task pool is exhausted |
 
