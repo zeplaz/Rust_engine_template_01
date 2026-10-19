@@ -1,0 +1,34 @@
+---
+description: Default lean agent path — single owner + validation-first; full boot/Task/ops/orchestrator stacks are opt-in. Thesis arXiv:2609.40303.
+alwaysApply: true
+---
+
+# Agent orchestration — lean path (default)
+
+Full guide: `prompts/guides/agent_orchestration_minimal_harness_v1.md`.
+
+## Default (almost all work)
+
+```text
+Auto / @coder | @designer | @planner → edit → validate-report on build/test
+```
+
+- Prefer **one owner**, flat modules, direct exec. No speculative wrappers or multi-agent scaffolding.
+- Do **not** spawn Task trees, `@orchestrator`, `@flow-controller`, or ops scans unless a trigger below matches.
+- Skill parity: sync/read `agent-lang` only if empty/stale — not a full BLANG boot for every typo.
+
+## Opt-in triggers (then use the full tools)
+
+| Trigger | Then |
+|:---|:---|
+| Spawning Task/subagents or multi-step multi-owner work | `agent_flow_route` → follow phases |
+| HANDOFF lease / program slice / multi-domain | `driver.mjs boot <agent>` |
+| Product queue row close (`exit_predicate`) | **WIT-HON → WIT → Q✓** (mandatory) |
+| MCP art program | `@orchestrator-mcp` lane (not engine `@orchestrator`) |
+| Task quota fail-cycle | `@main-thread-orchestrator` / foreground `@coder` |
+| Lane close / pre-architecture / supervisor review | `@operations-intelligence` |
+| Explicit parallel secondary vs P1 | `@coparent-orchestrator` |
+
+## Never thin away
+
+validation-first · witness spine · WIT-HON before product Q✓ · consumer vs `*-mcp` · bevy-simulation-grade authority

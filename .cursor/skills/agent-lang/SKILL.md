@@ -29,9 +29,20 @@ Re-run every session. Orient via `… doc <path>` (file-digest ⊚digest) ¬raw-
 
 ## BLANG session loop ⟶ command
 
+**Lean default:** `$ref:prompts/guides/agent_orchestration_minimal_harness_v1.md` — L0 = skill parity + validate-report; full chain = L1/L2 only.
+
 ```text
-SKILL-SYNC ⊳ PRE ⊳ BOOT ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
+L0:  SKILL-SYNC? ⊳ work ⊳ validate-report
+L1+: SKILL-SYNC ⊳ PRE ⊳ BOOT ⊳ Q+ ⊳ work
+L2:  … ⊳ WIT-HON ⊳ WIT ⊳ Q✓   (product / exit_predicate rows — never skip WIT-HON)
 ```
+
+| Mandatory | Optional |
+|:---|:---|
+| `validate-report` after build/test | Full `boot` on every typo |
+| `witness-brief` when reading witnesses | `Q+` when not on a queue lease |
+| **WIT-HON before Q✓** on product rows | `intel_officer_sweep` on bulk done only |
+| Skill sync if `agent-lang` empty/stale | Ops/DSM scan every cargo check |
 
 ## Skill parity (mandatory — every session)
 

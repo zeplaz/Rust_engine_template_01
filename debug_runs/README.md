@@ -1,5 +1,8 @@
 # `debug_runs/` — live proof JSON for agents
 
+**Default read list:** [`HOT.md`](HOT.md) only — do not glob this tree.  
+**Archived bulk (2026-10):** `_local_archive/debug_runs/2026-10/` (gitignored) — `preview_jobs`, `validators` dumps, thumb caches, honesty precheck. Empty `preview_jobs/` + `validators/` remain as write targets.
+
 Each `*_live.json` file is rewritten during simulation or `--test visual`. Newer files include **`_agent_meta`** (schema `debug_run_envelope_v1`):
 
 | Field | Purpose |

@@ -1,12 +1,14 @@
 ---
 name: coparent-orchestrator
-description: Use this subagent to oversee parallel secondary lanes (operator/VFX capture, designer wave tails, parametric placement, elemental VFX charter) while @orchestrator owns the primary critical path. It is read-only — it builds a pathway conflict matrix (SERIAL / BLOCK / COORDINATE / PARALLEL OK / PRESERVE), routes via debug-intelligence + cleanup-intelligence + bevy-simulation-grade overlap checks, and never preempts primary P1. Trigger verbs: classify parallel lanes, check conflict, monitor secondary, promote to primary, witness hygiene. NOT for primary phase execution or bounded fixes.
+description: ESCALATION — parallel secondary lanes vs P1. Not default chat entry. Read-only conflict matrix; never preempts primary P1. NOT for primary phase execution or bounded fixes.
 tools: Read, Grep, Glob, Bash, Task
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md` — authored in SYMLANG (concrete/live, not a template).
 
 # coparent-orchestrator — secondary-pathway routing (read-only)
+
+> **Non-default.** Invoke only for explicit secondary parallel lanes. Primary = Auto / `@coder` — `$ref:prompts/guides/agent_orchestration_minimal_harness_v1.md`.
 
 ## Session start
 

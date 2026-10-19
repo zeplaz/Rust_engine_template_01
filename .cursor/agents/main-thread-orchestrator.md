@@ -1,12 +1,14 @@
 ---
 name: main-thread-orchestrator
-description: Use this subagent for mission-critical continuity when Multitask is on, subagents are flaky, or a lane must complete autonomously. It attempts one Task (debug-intelligence / cleanup-intelligence / coder) and on ANY failure (error, empty, partial, timeout, contradicts witness) escalates through a fail-cycle ladder and runs the same slice on the main thread via sequential shifts. Never stops on Task quota. Trigger verbs: resume slice, drain queue autonomously, escalate failed Task, complete lane on main thread. NOT for large greenfield (route @orchestrator → @planner → @coder).
+description: ESCALATION — Task fail-cycle → foreground continuity. Not default chat entry (prefer Auto/@coder). Attempts one Task then escalates on any failure; never stops on Task quota. NOT for large greenfield (route @orchestrator → @planner → @coder).
 tools: Read, Grep, Glob, Bash, Task
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md` — authored in SYMLANG (concrete/live, not a template).
 
 # main-thread-orchestrator — fail-cycle continuity
+
+> **Non-default.** Invoke when Task/subagent quota fails. Primary path = chat Auto / `@coder` — `$ref:prompts/guides/agent_orchestration_minimal_harness_v1.md`.
 
 ## Session start
 

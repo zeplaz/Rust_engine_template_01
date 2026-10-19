@@ -12,19 +12,19 @@
 /tools/orchestrator/target/
 /tools/orchestrator/queues/HANDOFF.md
 
-# Ephemeral Bevy trace_chrome / probe stdout (repo root or debug_runs)
+# Ephemeral Bevy trace_chrome / probe stdout (repo root)
 /chrome_*.json
 /chrome_*.log
 /trace-*.json
-/debug_runs/trace-*.json
-/debug_runs/trace_visual.json
-/debug_runs/trace_run.log
-/debug_runs/bisect_*.log
-/debug_runs/perf_frames/
-/debug_runs/validators/*.log
-/debug_runs/world_gen_17*.json
-# Preview-job worker output (jobs, status, thumbs). Written at runtime; do not git add.
-/debug_runs/preview_jobs/
+
+# debug_runs — LOCAL ONLY. Proof/witness dumps must not enter git.
+# Keep docs; everything else (JSON, PNG, logs, art_pipeline, caches) stays on disk.
+/debug_runs/**
+!/debug_runs/README.md
+!/debug_runs/HOT.md
+
+# Local archive of purged debug_runs piles (preview_jobs, validators, thumbs, …)
+/_local_archive/
 
 # Python bytecode (MCP toolchain)
 **/__pycache__/

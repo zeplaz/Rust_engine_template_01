@@ -30,7 +30,21 @@ Replace `<AGENT>` with this agent file's `name:` frontmatter (e.g. `coder`, `pla
 
 **Domain skills** (read after agent-lang each session when in role matrix): validation-first, bevy-simulation-grade, debug-intelligence, mcp-production-rules, operations-intelligence, …
 
-**VSS-001 active programs:** Read `$ref:.cursor/agents/_fragments/tribunal_trip_v1.md` and `$ref:tools/orchestrator/queues/vss_trip_artifact_registry.json` before editing trip-listed paths. Use `symbolic_build_digest_tool` — never raw cargo walls.
+**VSS-001 / tribunal:** Only if the edit path is listed in `$ref:tools/orchestrator/queues/vss_trip_artifact_registry.json` — then read `$ref:.cursor/agents/_fragments/tribunal_trip_v1.md`. Use `symbolic_build_digest_tool` — never raw cargo walls. Not a global pre-edit gate.
+
+**Lean defaults:** `$ref:prompts/guides/agent_orchestration_minimal_harness_v1.md` · rule `agent-orchestration-lean-path.mdc`.
+
+---
+
+## Harness tiers (default = L0)
+
+| Tier | When | Ritual |
+|:---|:---|:---|
+| **L0 lean** | Bounded single-owner edit | Skill parity if empty; domain skill; `validate-report` on build/test |
+| **L1 program** | HANDOFF lease, multi-domain, Task spawn | Full `driver.mjs boot <AGENT>` + `agent_flow_route` before Tasks |
+| **L2 product close** | Queue row with `exit_predicate` | work → **WIT-HON** → WIT → **Q✓** |
+
+Do **not** run the full SKILL-SYNC⊳BOOT⊳Q+ chain for every typo. Escalation personas (`@orchestrator`, `@main-thread-orchestrator`, `@coparent-orchestrator`, `@flow-controller`, `@operations-intelligence`) are **opt-in**.
 
 ---
 
@@ -48,23 +62,23 @@ Stack: domain skills ON TOP — never skip agent-lang for BLANG / $ref / validat
 
 ---
 
-## Mandatory session chain (current CLI — 2026-06)
+## Session chain (L1/L2 — program slices and product closes)
 
 ```text
 SKILL-SYNC ⊳ DRIVER-BOOT ⊳ PRE ⊳ Q+ ⊳ work ⊳ WIT-HON ⊳ WIT ⊳ Q✓
 ```
 
-| Step | Command | Purpose |
-|:---|:---|:---|
-| **SKILL-SYNC** | `sync.ps1` if agent-lang empty/stale | Repair broken skill attach |
-| **DRIVER-BOOT** | `node .claude/skills/agent-lang/driver.mjs boot <AGENT>` | PRE + read brief/SYMLANG + HO |
-| **BLANG:PRE** | `pipeline-preflight` (via driver or CLI) | Env + queue staleness |
-| **BLANG:Q+** | `agent-queue-next '<AGENT>'` | Pick slice |
-| **BLANG:HO** | `handoff-brief` | HANDOFF spine only |
-| **work** | slice implementation | validate-report not raw logs |
-| **BLANG:WIT-HON** | `validate-report witness_honesty <witness>` or `--scan debug_runs` | **Required before Q✓** on product rows |
-| **BLANG:WIT** | `witness-brief <path>` | Compressed witness read |
-| **BLANG:Q✓** | `agent-queue-update <id> done --note <witness>` | Only if WIT-HON pass (or report-only mode) |
+| Step | Command | Purpose | Tier |
+|:---|:---|:---|:---|
+| **SKILL-SYNC** | `sync.ps1` if agent-lang empty/stale | Repair broken skill attach | L0+ |
+| **DRIVER-BOOT** | `node .claude/skills/agent-lang/driver.mjs boot <AGENT>` | PRE + read brief/SYMLANG + HO | L1+ |
+| **BLANG:PRE** | `pipeline-preflight` (via driver or CLI) | Env + queue staleness | L1+ |
+| **BLANG:Q+** | `agent-queue-next '<AGENT>'` / `get-que` | Pick slice when on a queue lease | L1+ |
+| **BLANG:HO** | `handoff-brief` | HANDOFF spine only | L1+ |
+| **work** | slice implementation | validate-report not raw logs | L0+ |
+| **BLANG:WIT-HON** | `validate-report witness_honesty <witness>` or `--scan debug_runs` | **Required before Q✓** on product rows | L2 |
+| **BLANG:WIT** | `witness-brief <path>` | Compressed witness read | L2 / any witness read |
+| **BLANG:Q✓** | `agent-queue-update <id> done --note <witness>` | Only if WIT-HON pass (or report-only mode) | L2 |
 
 **Passthrough:** `node .claude/skills/agent-lang/driver.mjs <any-cli-args>` → `python -m rust_engine_mcp.cli`
 

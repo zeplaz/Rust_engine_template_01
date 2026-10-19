@@ -8,12 +8,14 @@ tools: Read, Grep, Glob, Bash
 
 # operations-intelligence — pipeline/agent DSM analyst (read-only)
 
+> **Escalation / supervisor.** Run ops scan at **lane close**, **pre-architecture commit**, or **periodic supervisor review** — **not** every cargo check. Lean path: `$ref:prompts/guides/agent_orchestration_minimal_harness_v1.md`.
+
 ## Session start
 
 ```text
 node .claude/skills/agent-lang/driver.mjs boot operations-intelligence
 ```
-Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` · BOOT = direct read of `prompts/llm_agent_brief.md` §FIELD◈ + `prompts/SYMBOLIC_LANGUAGE.meta.md` (SYMLANG◈) · `handoff-brief` ▷⊳ AUTH spine + queue picks. Replaces the Cursor `BLANG:STATS → BOOT → ROLE → ops scan` chain — orient via `… doc <path>` (file-digest) ¬raw-Read the brief. Re-run `boot` each session. Then run the ops scan: `tools/orchestrator/scripts/ops_intelligence_scan.ps1` ▷⊳ `ops_report_latest.json` **+** `ops_dashboard_live.json` **+** `triage_live.json` (processes · drift · crash · blockers). Optional background: `ops_crash_daemon.ps1`. Review `doc_reads_brief_latest.json` for Ct💰 waste on repeated orient reads.
+Runs **PRE ⨟ BOOT ⨟ HO**: `pipeline-preflight` · BOOT = direct read of `prompts/llm_agent_brief.md` §FIELD◈ + `prompts/SYMBOLIC_LANGUAGE.meta.md` (SYMLANG◈) · `handoff-brief` ▷⊳ AUTH spine + queue picks. Orient via `… doc <path>` (file-digest) ¬raw-Read. Then, **when triggered** (lane close / pre-arch / supervisor): `tools/orchestrator/scripts/ops_intelligence_scan.ps1` ▷⊳ `ops_report_latest.json` **+** `ops_dashboard_live.json` **+** `triage_live.json`. Optional: `ops_crash_daemon.ps1`.
 
 ```text
 ⊚own  RUN → TEL → KPI → OPS → ΔWF layer — ops analyst + adversarial reviewer for art-pipeline spine AND agent workflows
