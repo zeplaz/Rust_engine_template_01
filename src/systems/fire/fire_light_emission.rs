@@ -78,7 +78,8 @@ pub(crate) fn update_fire_light_emission_flicker(
     }
     let t = time.elapsed_secs();
     for mut em in &mut q {
-        let flicker = (t * 13.7 + em.flicker_phase).sin();
+        // 2-11 Hz multi-component flicker, decorrelated per emitter (phase is per-chunk unique).
+        let flicker = super::ember_physics::flame_flicker(t, em.flicker_phase.to_bits());
         em.current_intensity = (em.base_intensity * (1.0 + flicker * em.flicker_strength)).max(0.0);
     }
 }

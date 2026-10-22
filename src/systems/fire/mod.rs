@@ -12,6 +12,7 @@ mod chunk_fuel_profile;
 mod chunk_smoke_field;
 mod chunk_surface_fire;
 pub mod combustion;
+pub mod ember_physics;
 mod ember_spot_ignition;
 mod fire_fuel;
 mod fire_light_emission;

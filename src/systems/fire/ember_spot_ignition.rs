@@ -19,6 +19,7 @@ use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::ChunkCellKey;
 
 use super::chunk_surface_fire::ChunkSurfaceFire;
+use super::ember_physics::spot_landing_offset_tiles;
 use super::fire_fuel::FireFuelField;
 use super::surface_water::SurfaceWaterFireGate;
 use super::types::ChunkFireOverlay;
@@ -116,6 +117,9 @@ pub fn emit_ember_spot_ignition_events(
     const SALT_PROB: u32 = 0xE0BE_5700;
     const SALT_D: u32 = 0xE0BE_5701;
     const SALT_ANG: u32 = 0xE0BE_5702;
+    const SALT_SIZE: u32 = 0xE0BE_5703;
+    const SALT_UP: u32 = 0xE0BE_5704;
+    const SALT_WIND: u32 = 0xE0BE_5705;
 
     let mut cells: Vec<(ChunkCellKey, f32)> = Vec::new();
 
@@ -156,11 +160,25 @@ pub fn emit_ember_spot_ignition_events(
 
             let ly = i / sx_u;
             let lx = i % sx_u;
-            let d_raw = hash01(tick.0, chunk.coord, i as u32, SALT_D);
-            let dist = 2 + (d_raw * 6.0).floor() as i32;
-            let angle = hash01(tick.0, chunk.coord, i as u32, SALT_ANG) * std::f32::consts::TAU;
-            let ox = (angle.cos() * dist as f32).round() as i32;
-            let oy = (angle.sin() * dist as f32).round() as i32;
+            // Same ballistic ember model as the visual embers (`ember_physics`): buoyant lofting,
+            // drag, wind drift, cooling. An ember that goes dark before landing ignites nothing.
+            let size01 = 0.25 + 0.75 * hash01(tick.0, chunk.coord, i as u32, SALT_SIZE);
+            let Some(off) = spot_landing_offset_tiles(
+                h,
+                wx.wind_speed,
+                size01,
+                hash01(tick.0, chunk.coord, i as u32, SALT_ANG),
+                hash01(tick.0, chunk.coord, i as u32, SALT_D),
+                hash01(tick.0, chunk.coord, i as u32, SALT_UP),
+                hash01(tick.0, chunk.coord, i as u32, SALT_WIND),
+            ) else {
+                continue;
+            };
+            let ox = off.x.round() as i32;
+            let oy = off.y.round() as i32;
+            if ox == 0 && oy == 0 {
+                continue; // lands on its own (already burning) cell
+            }
 
             let Some(target) = resolve_spot_ignite_cell(
                 chunk.coord,

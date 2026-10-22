@@ -66,11 +66,21 @@ pub fn init_surface_water_fire_gate(mut commands: Commands, params: Option<Res<W
     });
 }
 
+/// LG-22: same prefer-RON-then-JSON resolution as the terrain registry loaders
+/// (`registry_interchange::prefer_ron_then_json`); extension dispatch is in
+/// [`TagRegistry::load_from_path`].
+fn tag_registry_path() -> std::path::PathBuf {
+    let dir = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/config/terrain");
+    let ron = dir.join("tag_registry.example.ron");
+    if ron.exists() {
+        ron
+    } else {
+        dir.join("tag_registry.example.json")
+    }
+}
+
 fn load_flooded_tag_id() -> Option<TagId> {
-    let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-        .join("assets/config/terrain/tag_registry.example.json");
-    let path = path.to_str()?;
-    TagRegistry::load_from_json(path)
+    TagRegistry::load_from_path(&tag_registry_path())
         .ok()
         .and_then(|reg| reg.tag_id("flooded"))
 }
@@ -94,6 +104,13 @@ mod tests {
         matrix.elevation[0] = 0.9;
         matrix.moisture[0] = 0.05;
         assert!(!gate.cell_has_standing_water(&matrix, 0));
+    }
+
+    #[test]
+    fn tag_registry_resolves_ron_first_and_has_flooded_tag() {
+        let path = tag_registry_path();
+        assert_eq!(path.extension().and_then(|e| e.to_str()), Some("ron"));
+        assert!(load_flooded_tag_id().is_some(), "flooded tag must resolve from RON");
     }
 
     #[test]

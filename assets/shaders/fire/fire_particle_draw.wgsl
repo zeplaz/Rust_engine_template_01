@@ -38,11 +38,9 @@ fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
     let tri_corner = vertex_index % 6u;
     let corner_idx = array<u32, 6>(0u, 1u, 2u, 0u, 2u, 3u)[tri_corner];
     let row = expanded[quad * 4u + corner_idx];
-    // Same offset on every corner so the quad rises together on the burning cell.
-    let life = fract(globals.time_secs * 0.55 + f32(quad) * 0.173);
-    let rise = life * 1.8;
-    let sway = sin(globals.time_secs * 2.1 + f32(quad) * 0.61) * 0.22;
-    let world = row.world_xy_heat_ember.xy + vec2<f32>(sway, rise);
+    // Motion (rise, wind drift, flicker) is evaluated on the CPU per particle from its own age;
+    // a shared sawtooth here made every quad loop and pop in sync.
+    let world = row.world_xy_heat_ember.xy;
     let heat = row.world_xy_heat_ember.z;
     let ember = row.world_xy_heat_ember.w;
     let uvs = array<vec2<f32>, 4>(
@@ -66,8 +64,39 @@ const COLOR_HOT: vec3<f32> = vec3<f32>(0.902, 0.27, 0.0);
 const COLOR_DIRTY_AMBER: vec3<f32> = vec3<f32>(0.902, 0.515, 0.082);
 const COLOR_GOLD: vec3<f32> = vec3<f32>(0.91, 0.75, 0.23);
 
+// Blackbody-like glow ramp; mirror of `ember_physics::glow_rgb` (u: 0 = 700 K dark, 1 = 1500 K).
+fn glow_rgb(u: f32) -> vec3<f32> {
+    let k0 = vec3<f32>(0.060, 0.006, 0.003);
+    let k1 = vec3<f32>(0.30, 0.040, 0.011);
+    let k2 = vec3<f32>(0.85, 0.44, 0.085);
+    let k3 = vec3<f32>(1.00, 0.93, 0.72);
+    let x = clamp(u, 0.0, 1.0);
+    if x <= 0.25 {
+        return mix(k0, k1, x / 0.25);
+    }
+    if x <= 0.625 {
+        return mix(k1, k2, (x - 0.25) / 0.375);
+    }
+    return mix(k2, k3, (x - 0.625) / 0.375);
+}
+
 @fragment
 fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
+    // New-style CPU-animated rows (see fire_particle.wgsl): ember < 0 carries the alpha envelope.
+    if in.ember < 0.0 {
+        let env = -in.ember;
+        let r = distance(in.uv, vec2<f32>(0.5, 0.5)) * 2.0;
+        let fall = 1.0 - smoothstep(0.0, 1.0, r);
+        if in.heat >= 2.0 {
+            // Smoke: soft grey disc; additive blend can only lighten, so keep it faint.
+            let tone = clamp(in.heat - 2.0, 0.0, 1.0);
+            let a = fall * fall * env * 0.22;
+            return vec4<f32>(vec3<f32>(0.34, 0.33, 0.32) * (0.6 + 0.4 * tone), a);
+        }
+        // Glow: hot core, soft halo.
+        let a = clamp(fall * fall * (0.35 + 0.65 * fall) * env, 0.0, 1.0);
+        return vec4<f32>(glow_rgb(in.heat) * (1.0 + 0.6 * fall * fall), a);
+    }
     // Soft pin — readable, not a giant yellow disc.
     let d = distance(in.uv, vec2<f32>(0.5, 0.5));
     let core = 1.0 - smoothstep(0.05, 0.42, d);
