@@ -204,7 +204,8 @@ impl Plugin for HudPanelStatePlugin {
             (
                 hud_panel_escape_collapse_system,
                 hud_panel_click_outside_collapse_system
-                    .after(hud_panel_escape_collapse_system),
+                    .after(hud_panel_escape_collapse_system)
+                    .after(super::simulation_pointer_gate::PointerGateSet::Publish),
                 super::hud_side_status_panel::hud_status_side_panel_toggle_system
                     .run_if(crate::gui::ui_gates::side_status_rail_egui_active),
             )

@@ -723,6 +723,12 @@ pub fn build_place_on_second_lmb_system(
     if !buttons.just_pressed(MouseButton::Left) {
         return;
     }
+    // INT-005: the click that locks Preview→Adjust (earlier in the chain, same frame) must not
+    // also commit; only a later click on the locked ghost places it (same predicate as
+    // `stage_active_ghost_on_lmb_system`).
+    if commit.ghost.placement_mode != BuildPlacementMode::Adjust || commit.ghost.locked_this_frame {
+        return;
+    }
 
     let Ok(window) = win.single() else {
         return;

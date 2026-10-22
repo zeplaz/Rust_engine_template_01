@@ -447,7 +447,7 @@ impl Plugin for BuildPlanningPlugin {
                     footprint_tile_instances::sync_visual_aidv2_footprint_witness,
                 )
                     .chain()
-                    .after(crate::gui::hud::simulation_pointer_gate::sync_simulation_map_pointer_gate_system)
+                    .after(crate::gui::hud::simulation_pointer_gate::PointerGateSet::Publish)
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(
@@ -486,7 +486,7 @@ impl Plugin for BuildPlanningPlugin {
                     crate::gui::hud::power_node_hover::sync_power_node_hover_pick,
                 )
                     .chain()
-                    .after(crate::gui::hud::simulation_pointer_gate::sync_simulation_map_pointer_gate_system)
+                    .after(crate::gui::hud::simulation_pointer_gate::PointerGateSet::Publish)
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(
@@ -520,7 +520,7 @@ impl Plugin for BuildPlanningPlugin {
                     build_confirm_site_system,
                 )
                     .chain()
-                    .after(crate::gui::hud::simulation_pointer_gate::sync_simulation_map_pointer_gate_system)
+                    .after(crate::gui::hud::simulation_pointer_gate::PointerGateSet::Publish)
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(

@@ -21,9 +21,14 @@ use crate::construction::{
     StagedPlacementMode, ToolContext,
 };
 use crate::construction::ActiveToolSession;
-use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
+use crate::engine::states::BaseState;
+use crate::gui::hud::simulation_pointer_gate::{
+    add_pointer_gate_systems, PointerGateSet, SimulationMapPointerGate,
+};
+use crate::gui::hud::simulation_shell_phase2::ContextTrayState;
 use crate::gui::{
-    InputBindings, MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport,
+    CommandLeftStackState, InputBindings, MainWorldCameraOrthoTrace, MapCameraDesiredRes,
+    MinimapShellState, SimulationMapViewport,
 };
 use crate::strategic::CommitConstructionSiteEvent;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -96,7 +101,24 @@ impl InteractionHarness {
     /// (pick → second-LMB commit → cancel), minus validation (preview is set by the test).
     #[must_use]
     pub fn building_placement() -> Self {
+        Self::building_placement_with_gate(None)
+    }
+
+    /// As [`Self::building_placement`], optionally with the real pointer-gate systems
+    /// ([`PointerGateSet`]) scheduled in `base` state; consumers run after the publish set,
+    /// exactly as in `BuildPlanningPlugin`.
+    #[must_use]
+    pub fn building_placement_with_gate(gate_base: Option<BaseState>) -> Self {
         let mut h = Self::new();
+        if let Some(base) = gate_base {
+            h.app
+                .add_plugins(bevy::state::app::StatesPlugin)
+                .insert_state(base)
+                .init_resource::<CommandLeftStackState>()
+                .init_resource::<MinimapShellState>()
+                .init_resource::<ContextTrayState>();
+            add_pointer_gate_systems(&mut h.app);
+        }
         let actor = h.app.world_mut().spawn_empty().id();
         h.app
             .insert_resource(BuildCommandActor(actor))
@@ -110,15 +132,31 @@ impl InteractionHarness {
             .init_resource::<crate::construction::BuildingDefinitionRegistry>()
             .init_resource::<ConstructionHistory>()
             .init_resource::<PlaceFeedbackPulse>();
-        h.add_update(
-            (
-                crate::construction::build_pick_ghost_tile_system,
-                crate::construction::build_place_on_second_lmb_system,
-                count_commit_events,
-            )
-                .chain(),
-        );
+        let chain = (
+            crate::construction::build_pick_ghost_tile_system,
+            crate::construction::build_place_on_second_lmb_system,
+            count_commit_events,
+        )
+            .chain();
+        if gate_base.is_some() {
+            h.add_update(chain.after(PointerGateSet::Publish));
+        } else {
+            h.add_update(chain);
+        }
         h
+    }
+
+    /// Spawn a laid-out UI panel root (`marker`) covering `min..max` in window physical px.
+    pub fn spawn_panel<M: Component>(&mut self, marker: M, min: Vec2, max: Vec2) {
+        let size = max - min;
+        self.app.world_mut().spawn((
+            marker,
+            ComputedNode {
+                size,
+                ..Default::default()
+            },
+            UiGlobalTransform::from_translation(min + size * 0.5),
+        ));
     }
 
     pub fn add_update(&mut self, systems: ScheduleConfigs<ScheduleSystem>) -> &mut Self {
@@ -205,7 +243,15 @@ impl InteractionHarness {
     pub fn arm_factory(&mut self) {
         use crate::construction::BuildingArchetypeId;
         self.res_mut::<BuildStripState>().active = ToolContext::Industry;
-        self.res_mut::<ActiveBuildTool>().tool = BuildTool::Building(BuildingArchetypeId::Factory);
+        let intent = crate::construction::intent_from_archetype(
+            BuildingArchetypeId::Factory,
+            self.res::<crate::construction::BuildingDefinitionRegistry>(),
+        );
+        let mut tool = self.res_mut::<ActiveBuildTool>();
+        tool.tool = BuildTool::Building(BuildingArchetypeId::Factory);
+        // The pick system holds the ghost until a catalog row sets the intent.
+        tool.building_intent = Some(intent);
+        drop(tool);
         self.allow_commit();
     }
 
@@ -225,7 +271,6 @@ impl Default for InteractionHarness {
 // ── INT-005: two-click place FSM ─────────────────────────────────────────────
 
 #[test]
-#[ignore = "INT-005 open: first LMB leaves placement_mode at Place instead of Adjust; product vs harness cause not yet triaged (interaction_bug_ledger_v1.md)"]
 fn int_005_first_lmb_locks_without_committing() {
     let mut h = InteractionHarness::building_placement();
     h.arm_factory();
@@ -253,4 +298,63 @@ fn int_005_locked_origin_survives_cursor_motion() {
     h.set_cursor(h.screen_for_world(Vec2::new(40.5, 60.5)));
     h.step();
     assert_eq!(h.res::<BuildGhostState>().origin, locked);
+}
+
+// ── R-H4 / R-H5: panel rect blocking through the real gate systems ───────────
+
+/// Build a gated harness, arm the factory and park the cursor on world (100.5, 200.5).
+fn gated_factory(base: BaseState) -> (InteractionHarness, Vec2) {
+    let mut h = InteractionHarness::building_placement_with_gate(Some(base));
+    h.arm_factory();
+    let at = h.screen_for_world(Vec2::new(100.5, 200.5));
+    h.set_cursor(at);
+    (h, at)
+}
+
+fn physical_rect_around(p: Vec2, half: f32) -> (Vec2, Vec2) {
+    (p - Vec2::splat(half), p + Vec2::splat(half))
+}
+
+#[test]
+fn panel_open_cursor_outside_rect_reaches_placement() {
+    let (mut h, at) = gated_factory(BaseState::Simulation);
+    // Panel on the far right; the cursor is nowhere near it.
+    h.spawn_panel(
+        crate::gui::diagnostics_ui::DiagnosticsBevyRoot,
+        Vec2::new(980.0, 60.0),
+        Vec2::new(1260.0, 400.0),
+    );
+    assert!(at.x < 900.0);
+    h.step();
+    h.click(MouseButton::Left);
+    assert_eq!(h.res::<BuildGhostState>().placement_mode, BuildPlacementMode::Adjust);
+    h.allow_commit();
+    h.click(MouseButton::Left);
+    assert_eq!(h.commits(), 1);
+}
+
+#[test]
+fn panel_open_cursor_over_rect_blocks_placement() {
+    let (mut h, at) = gated_factory(BaseState::Simulation);
+    let (min, max) = physical_rect_around(at, 40.0);
+    h.spawn_panel(crate::gui::diagnostics_ui::DiagnosticsBevyRoot, min, max);
+    h.step();
+    h.click(MouseButton::Left);
+    assert_eq!(h.res::<BuildGhostState>().placement_mode, BuildPlacementMode::Place);
+    h.click(MouseButton::Left);
+    assert_eq!(h.commits(), 0);
+}
+
+#[test]
+fn editor_dock_present_cursor_off_dock_reaches_placement() {
+    let (mut h, at) = gated_factory(BaseState::Editor);
+    h.spawn_panel(
+        crate::gui::hud::dock_shell::EditorDockBevyRoot,
+        Vec2::new(8.0, 40.0),
+        Vec2::new(288.0, 400.0),
+    );
+    assert!(at.x > 300.0);
+    h.step();
+    h.click(MouseButton::Left);
+    assert_eq!(h.res::<BuildGhostState>().placement_mode, BuildPlacementMode::Adjust);
 }

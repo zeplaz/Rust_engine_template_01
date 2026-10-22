@@ -69,10 +69,6 @@ pub fn sync_simulation_map_pointer_gate_system(
     picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
     power_sheet: Option<Res<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>>,
     road_sheet: Option<Res<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>>,
-    diagnostics: Option<Res<crate::gui::DiagnosticsUiState>>,
-    keybindings: Option<Res<crate::gui::KeybindingsUiState>>,
-    logistics_orders: Option<Res<crate::gui::LogisticsOrdersPanelState>>,
-    logistics_targets: Option<Res<crate::gui::LogisticsTargetsPanelState>>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
     let Ok(w) = window.single() else {
@@ -120,14 +116,8 @@ pub fn sync_simulation_map_pointer_gate_system(
         ) {
             gate.chrome_blocks = true;
         }
-        // Bevy floating panels block map pick while open (F1 / F3 / logistics).
-        if diagnostics.as_ref().is_some_and(|d| d.visible)
-            || keybindings.as_ref().is_some_and(|k| k.visible)
-            || logistics_orders.as_ref().is_some_and(|p| p.visible)
-            || logistics_targets.as_ref().is_some_and(|p| p.visible)
-        {
-            gate.chrome_blocks = true;
-        }
+        // Floating Bevy panels (F1 / F3 / logistics / dev) are rect-tested in
+        // `apply_bevy_panel_pointer_blocks_system` (`PointerGateSet::Block`).
     } else if gate.egui_blocks {
         gate.chrome_blocks = true;
     }
@@ -146,60 +136,97 @@ pub fn sync_simulation_map_pointer_gate_system(
     // Forcing it true here showed the OS cursor in the same frame the crosshair policy hid it.
 }
 
-/// Editor Bevy roots (dock / toolbox / map-editor shell) block map pick.
-/// Kept separate so [`sync_simulation_map_pointer_gate_system`] stays under the
-/// Bevy system-param budget used by `.after(...)` ordering.
-pub fn apply_editor_bevy_panel_pointer_blocks_system(
-    base: Option<Res<State<BaseState>>>,
-    presence: Option<Res<crate::gui::PanelPresence>>,
-    map_vp: Res<SimulationMapViewport>,
-    mut gate: ResMut<SimulationMapPointerGate>,
-) {
-    let in_editor = base
-        .as_ref()
-        .is_some_and(|state| matches!(state.get(), BaseState::Editor));
-    if !in_editor {
-        return;
-    }
-    let bevy_editor_chrome = presence.as_ref().is_some_and(|p| {
-        p.editor_dock_root
-            || p.build_toolbox_root
-            || p.map_editor_shell_root
-            || p.road_popup_root
-            || p.staged_placements_root
-    });
-    if !bevy_editor_chrome {
-        return;
-    }
-    gate.chrome_blocks = true;
-    gate.in_play_area = if map_vp.is_adequate_for_camera() {
-        (!map_vp.valid || map_vp.contains_cursor(gate.cursor)) && !gate.chrome_blocks
-    } else {
-        false
-    };
+/// Ordered stages of the per-frame map pointer gate. Every consumer of
+/// [`SimulationMapPointerGate`] (placement, demolish, draw tools, hover picks) must run
+/// `.after(PointerGateSet::Publish)` so a click can never reach the map before the chrome and
+/// panel blockers have finalized `chrome_blocks` / `in_play_area` for the frame (R-H5).
+#[derive(SystemSet, Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum PointerGateSet {
+    /// Cursor + chrome rect sync ([`sync_simulation_map_pointer_gate_system`]).
+    Sync,
+    /// Bevy panel root rect hit-test ([`apply_bevy_panel_pointer_blocks_system`]).
+    Block,
+    /// Final gate state published (OS cursor policy). Consumers run after this set.
+    Publish,
 }
 
-/// Floating Bevy dev panels (faction / AI explain / pressure / assembly QC) block map pick.
-pub fn apply_dev_bevy_panel_pointer_blocks_system(
-    presence: Option<Res<crate::gui::PanelPresence>>,
-    map_vp: Res<SimulationMapViewport>,
+/// Chain [`PointerGateSet`] in `Update`. Idempotent per app only if called once.
+pub fn configure_pointer_gate_sets(app: &mut App) {
+    app.configure_sets(
+        Update,
+        (PointerGateSet::Sync, PointerGateSet::Block, PointerGateSet::Publish).chain(),
+    );
+}
+
+/// Register the three gate systems into their [`PointerGateSet`] stages (single source of truth
+/// for the production plugin and the interaction regression harness).
+pub fn add_pointer_gate_systems(app: &mut App) {
+    configure_pointer_gate_sets(app);
+    app.add_systems(
+        Update,
+        (
+            sync_simulation_map_pointer_gate_system.in_set(PointerGateSet::Sync),
+            apply_bevy_panel_pointer_blocks_system.in_set(PointerGateSet::Block),
+            apply_simulation_unified_cursor_system.in_set(PointerGateSet::Publish),
+        ),
+    );
+}
+
+/// Bevy UI panel roots that block map picks while the cursor is **over their on-screen rect**
+/// (editor dock / toolbox / map-editor shell / road popup, floating dev panels, F1 / F3 and
+/// logistics panels). Presence alone never blocks (R-H4).
+type PointerBlockingPanelRoots = Or<(
+    With<crate::gui::hud::dock_shell::EditorDockBevyRoot>,
+    With<crate::construction::BuildToolboxBevyRoot>,
+    With<crate::gui::editor::map_editor::MapEditorBevyShell>,
+    With<crate::construction::RoadToolPopupBevyRoot>,
+    With<crate::gui::faction_tools_ui::FactionToolsBevyRoot>,
+    With<crate::gui::ai_explainability_ui::AiExplainabilityBevyRoot>,
+    With<crate::gui::pressure_tooling::PressureComposerBevyRoot>,
+    With<crate::gui::assembly_snapshot_qc_ui::AssemblySnapshotQcBevyRoot>,
+    With<crate::gui::diagnostics_ui::DiagnosticsBevyRoot>,
+    With<crate::gui::options_keybindings_ui::KeybindingsBevyRoot>,
+    With<crate::gui::logistics_orders_panel::LogisticsOrdersBevyRoot>,
+    With<crate::gui::logistics_targets_panel::LogisticsTargetsBevyRoot>,
+)>;
+
+/// True when `physical_cursor` (window physical px — the space `ComputedNode` /
+/// `UiGlobalTransform` use, independent of window scale factor and `UiScale`) is inside a laid-out,
+/// non-empty node.
+#[inline]
+#[must_use]
+pub fn cursor_over_ui_node(
+    node: &ComputedNode,
+    transform: &UiGlobalTransform,
+    physical_cursor: Vec2,
+) -> bool {
+    !node.is_empty() && node.contains_point(*transform, physical_cursor)
+}
+
+/// Block map pick when the cursor is over any registered Bevy panel root's actual rect.
+/// Runs in [`PointerGateSet::Block`] (after the gate sync, before consumers).
+pub fn apply_bevy_panel_pointer_blocks_system(
+    window: Query<&Window, With<PrimaryWindow>>,
+    panels: Query<(&ComputedNode, &UiGlobalTransform), PointerBlockingPanelRoots>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
-    let blocks = presence.as_ref().is_some_and(|p| {
-        p.faction_tools_root
-            || p.ai_explainability_root
-            || p.pressure_composer_root
-            || p.assembly_snapshot_qc_root
-    });
-    if !blocks {
+    if !gate.cursor_known {
+        return;
+    }
+    // `Window::physical_cursor_position` is the exact source of the logical `gate.cursor`
+    // (`cursor_position` = physical / scale_factor), so both stay in one coordinate story.
+    let Some(physical) = window.single().ok().and_then(Window::physical_cursor_position) else {
+        return;
+    };
+    let over_panel = panels
+        .iter()
+        .any(|(node, tf)| cursor_over_ui_node(node, tf, physical));
+    if !over_panel {
         return;
     }
     gate.chrome_blocks = true;
-    gate.in_play_area = if map_vp.is_adequate_for_camera() {
-        (!map_vp.valid || map_vp.contains_cursor(gate.cursor)) && !gate.chrome_blocks
-    } else {
-        false
-    };
+    gate.in_play_area = false;
+    gate.wheel_play_area = false;
 }
 
 /// Placement, demolish, and power-cut tools read this instead of `ctx_mut`.

@@ -867,6 +867,16 @@ impl Plugin for SimulationShellPhase2Plugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(super::icon_atlas::IconAtlasPlugin);
         app.add_plugins(super::power_hud_icon_atlas::PowerHudIconAtlasPlugin);
+        super::simulation_pointer_gate::add_pointer_gate_systems(app);
+        app.configure_sets(
+            Update,
+            (
+                super::simulation_pointer_gate::PointerGateSet::Sync,
+                super::simulation_pointer_gate::PointerGateSet::Block,
+                super::simulation_pointer_gate::PointerGateSet::Publish,
+            )
+                .run_if(in_simulation_or_editor),
+        );
         app.init_resource::<ContextTrayState>()
             .init_resource::<ZoneShadeToggle>()
             .init_resource::<super::simulation_pointer_gate::SimulationMapPointerGate>()
@@ -883,19 +893,6 @@ impl Plugin for SimulationShellPhase2Plugin {
             .init_resource::<UiStressState>()
             .init_resource::<ProductShellDiagnostics>()
             .configure_sets(Update, OpsStripZoneLinesSet)
-            .add_systems(
-                Update,
-                (
-                    super::simulation_pointer_gate::sync_simulation_map_pointer_gate_system,
-                    super::simulation_pointer_gate::apply_editor_bevy_panel_pointer_blocks_system
-                        .after(super::simulation_pointer_gate::sync_simulation_map_pointer_gate_system),
-                    super::simulation_pointer_gate::apply_dev_bevy_panel_pointer_blocks_system
-                        .after(super::simulation_pointer_gate::apply_editor_bevy_panel_pointer_blocks_system),
-                    super::simulation_pointer_gate::apply_simulation_unified_cursor_system
-                        .after(super::simulation_pointer_gate::apply_dev_bevy_panel_pointer_blocks_system),
-                )
-                    .run_if(in_simulation_or_editor),
-            )
             .add_systems(
                 Update,
                 (
@@ -959,6 +956,7 @@ impl Plugin for SimulationShellPhase2Plugin {
                     crate::gui::hud::sim_play_bevy_chrome::context_tray_power_repair_clicks,
                 )
                     .chain()
+                    .after(super::simulation_pointer_gate::PointerGateSet::Publish)
                     .run_if(in_state(BaseState::Simulation)),
             )
             .add_systems(
