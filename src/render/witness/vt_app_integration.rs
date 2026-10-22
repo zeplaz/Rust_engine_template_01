@@ -60,6 +60,7 @@ mod tests {
             &overlay,
             Some(&graph),
             Some(&probe),
+            None,
             &mut agreement,
         );
         overlay_debug.stamp = agreement.stamp;

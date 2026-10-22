@@ -30,8 +30,7 @@ use crate::compute::ComputeDispatchPlugin;
 use crate::render::{
     Core2dOverlayOrderPlugin, FramePerfPlugin, GpuWeatherFireFieldPlugin, LocalLightPlugin,
     SharedOverlayFieldBuffersPlugin,
-    StallWatchPlugin, Stage5ReadinessProfile, TerrainGpuBakeSpikePlugin,
-    TerrainInstancedDrawPlugin,
+    StallWatchPlugin, TerrainGpuBakeSpikePlugin, TerrainInstancedDrawPlugin,
     TerrainMaterialAtlasPlugin, TerrainRenderAuthorityPlugin, TileWorldFallbackPlugin,
     ViewportPipelinePlugin,
     ViewRuntimePlugin, GpuWaterParticlesPlugin, WaterSurfaceVisualPlugin,
@@ -204,8 +203,6 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::StrategicIconInstancesPlugin)
             .add_plugins(ViewRepresentationPlugin)
             .add_plugins(StallWatchPlugin)
-            .add_plugins(crate::dev::diagnostics::VisualReadinessWitnessPlugin)
-            .add_plugins(crate::dev::TestRunInstrumentationPlugin)
             .add_plugins(crate::dev::SimSpectrumAnalyticsPlugin)
             .add_plugins(ComputeDispatchPlugin);
         app.add_plugins((TestHarnessStatePlugin, TestHarnessMenuPlugin));
@@ -214,11 +211,11 @@ impl Plugin for EnginePlugin {
             .get_resource::<crate::engine::EngineLaunchArgs>()
             .is_some_and(|launch| launch.test_mode());
         if test_mode {
+            // Seeds, proof boards, FULL_APP readiness — never mixed into the product plugin body.
             app.add_plugins(TestHarnessPlugin);
             app.add_plugins(crate::gui::VfxFireTestFocusPlugin);
         }
         init_preview_render_contract_resources(app);
-        app.insert_resource(Stage5ReadinessProfile::FULL_APP);
         app.configure_sets(
             Update,
             (
@@ -249,6 +246,8 @@ impl Plugin for EnginePlugin {
             .add_plugins(StrategicToolingPlugin)
             .add_plugins(InGameHudPlugin)
             .add_plugins(crate::gui::hud::SimulationSessionPlugin)
+            .add_plugins(crate::gui::WorldPresentationModePlugin)
+            .add_plugins(crate::gui::ArtPresentationTargetPlugin)
             .add_plugins(crate::render::VfxCaptureHookPlugin)
             .add_plugins(MapCameraPlugin)
             .add_plugins(InGamePauseMenuPlugin)
@@ -276,20 +275,6 @@ impl Plugin for EnginePlugin {
             offscreen_renderer_ready: true,
             ..default()
         });
-
-        app.add_plugins(crate::dev::OrchestratorHealthPlugin);
-        app.add_plugins(crate::dev::engine_deep_debug::EngineDeepDebugPlugin);
-        crate::dev::stage5_live_todos::register_stage5_todo_runtime_hooks(app);
-        crate::dev::visual_aidv2_live_todos::register_visual_aidv2_runtime_hooks(app);
-        crate::dev::construction_live_todos::register_construction_todo_runtime_hooks(app);
-        crate::dev::construction_finish_todos::register_construction_finish_todo_hooks(app);
-        crate::dev::construction_phase2_todos::register_construction_phase2_todo_hooks(app);
-        crate::dev::construction_round2_todos::register_construction_round2_todo_hooks(app);
-        crate::dev::construction_round3_todos::register_construction_round3_todo_hooks(app);
-        crate::dev::construction_operational_todos::register_construction_operational_todo_hooks(app);
-        crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks(app);
-        crate::dev::logistics_throughput_todos::register_logistics_throughput_todo_hooks(app);
-        crate::dev::replay_editor_parity::register_replay_editor_parity_hooks(app);
 
         // PERF-VFX-002: serialize the hot Update spine so stall probes and extract don't interleave.
         app.configure_sets(

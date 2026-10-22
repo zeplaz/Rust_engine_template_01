@@ -248,7 +248,19 @@ pub fn apply_vt4_ci_surface_checks(
             report.record_surface_mismatch(Vt4SurfaceId::WorldPreview);
         }
 
-        if scenario.preview_probe.overlay_heat_hash != agreement.sim_overlay_heat_hash {
+        // Preview samples written shared buffers. Exact equality with filtered sim hash
+        // fails under CHUNK_FIRE_HEAT_OVERLAY_EPS sticky — pass when probe matches shared
+        // and shared is EPS-equivalent to the filtered desired map.
+        let shared_hash = hash_shared_overlay_heat(&scenario.shared.chunk_fire_heat);
+        let filtered =
+            crate::render::extraction::build_chunk_fire_heat_overlay_map(&scenario.sim, None);
+        let overlay_eps_agrees = !crate::render::chunk_fire_heat_maps_differ(
+            &scenario.shared.chunk_fire_heat,
+            &filtered,
+        );
+        let preview_ok = scenario.preview_probe.overlay_heat_hash == agreement.sim_overlay_heat_hash
+            || (scenario.preview_probe.overlay_heat_hash == shared_hash && overlay_eps_agrees);
+        if !preview_ok {
             report.record_surface_mismatch(Vt4SurfaceId::WorldPreview);
         }
     }
@@ -289,6 +301,7 @@ pub fn run_vt4_ci_matrix(
         &scenario.overlay,
         Some(&scenario.graph),
         Some(&scenario.preview_probe),
+        None,
         agreement,
     );
     apply_vt4_ci_surface_checks(scenario, agreement, report);

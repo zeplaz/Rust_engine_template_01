@@ -274,6 +274,15 @@ fn full_app_hooks_enabled(profile: Res<Stage5ReadinessProfile>) -> bool {
     *profile == Stage5ReadinessProfile::FULL_APP
 }
 
+/// Aggressive todo reopen/reconcile stays harness-only so product play cannot thrash the board
+/// even if FULL_APP is forced via `STAGE5_FULL_APP=1`.
+#[inline]
+fn stage5_todo_board_harness_reconcile_enabled(world: &World) -> bool {
+    world
+        .get_resource::<crate::engine::EngineLaunchArgs>()
+        .is_some_and(|launch| launch.test_mode())
+}
+
 /// Log the current **next spine work item** (root gate sequence first) whenever a hooked subsystem runs.
 pub fn emit_active_stage5_todo_context(world: &mut World, subsystem: &'static str) {
     if *world.resource::<Stage5ReadinessProfile>() != Stage5ReadinessProfile::FULL_APP {
@@ -497,6 +506,11 @@ pub fn hook_post_readiness_evaluate(world: &mut World) {
             "STAGE5_READINESS_HOOK passes={passes} violations_first={first_v} producer_count={}",
             fire_visual_producer_count()
         );
+    }
+    // Board reopen/reconcile is harness-only (`--test visual` / test_mode). Product play must
+    // not thrash STAGE5_TODO_BOARD when readiness flickers mid-boot.
+    if !stage5_todo_board_harness_reconcile_enabled(world) {
+        return;
     }
     if !passes {
         if let Some(mut board) = world.get_resource_mut::<Stage5LiveTodoBoard>() {
