@@ -882,7 +882,8 @@
     "priority": 20,
     "status": "deferred",
     "goal": "Do not mass-reopen the June 20 cull. Old vegetation, phase-6, and APS layout rows stay blocked until a slice in this queue names the file and the test.",
-    "note": "339 blocked rows. 179 are hub copies. The cull means do not claim done, not do not code."
+    "note": "339 blocked rows. 179 are hub copies. The cull means do not claim done, not do not code.",
+    "triage_20261022": "STILL-DEFERRED (scope narrowed): the 55 vegetation rows of the June 20 cull were triaged 2026-10-22 (33 done-already, 3 superseded, 3 still blocked, 16 ready) in src/dev/veg_queue_triage_20261022_v1.md and tools/orchestrator/queues/coder_vegetation_drain_queue.json. Phase-6 and APS layout rows are untouched and stay blocked."
   },
   {
     "id": "OPS-VIS-EYE",
@@ -891,7 +892,8 @@
     "status": "deferred",
     "role": "acceptance",
     "goal": "Look at sparks, rail labels, the placement ghost, and the corner blob in a running window.",
-    "note": "Does not block MAP-SIM-RELIEF-001 or VEG-CELL-CANOPY-001."
+    "note": "Does not block MAP-SIM-RELIEF-001 or VEG-CELL-CANOPY-001.",
+    "triage_20261022": "STILL-DEFERRED (operator eyeball). Since a1f3f37d run it in BOTH TacticalFlat2D and PixelWorld3D; vegetation draw in Tactical lands with VEG-H02-TACTICAL-VEG-DRAW-001."
   },
   {
     "id": "G-PLAY-OPERATOR-01",
@@ -900,7 +902,8 @@
     "status": "deferred",
     "role": "acceptance",
     "goal": "Optional playtest log. Coder sub-gates are closed.",
-    "note": "blocks_development false. FACTION-REACT-001 is not waiting on this."
+    "note": "blocks_development false. FACTION-REACT-001 is not waiting on this.",
+    "triage_20261022": "STILL-DEFERRED (operator playtest). g_play_product_close_live.json: g_play_coder_veg_sub_gate_green true but green false and proof_grade_honest false (lib_fixture); coder veg gate does not wait on this row."
   },
   {
     "id": "KIT-G4-STILLS",
@@ -909,7 +912,8 @@
     "status": "deferred",
     "role": "acceptance",
     "goal": "Warehouse and kit keyframe stills. Ship art stays rejected until stills exist.",
-    "note": "Art promotion only. Does not block landform or vegetation code."
+    "note": "Art promotion only. Does not block landform or vegetation code.",
+    "triage_20261022": "STILL-DEFERRED, not vegetation: warehouse/kit art promotion only; vegetation art-ship gate is VEG-F01-DESIGN-ATLAS-001 (both LG-5 atlases ship_allowed false, tier pilot)."
   },
   {
     "id": "PCI-DO-NOT-DRAIN",
@@ -917,7 +921,8 @@
     "priority": 40,
     "status": "blocked",
     "goal": "Keep PCI-04, 08, 12, 15, 25, 26, 29, 30, 35, 36, 37, 39 blocked.",
-    "note": "No heartbeat daemon, no default-on terrain bake, no sole-writer lie, shims stay until classified."
+    "note": "No heartbeat daemon, no default-on terrain bake, no sole-writer lie, shims stay until classified.",
+    "triage_20261022": "STILL-BLOCKED (permanent policy guard, not a work row). No vegetation dependency."
   },
   {
     "id": "SIM-STEWARD-FIRE-REPLAY-001",
@@ -925,6 +930,7 @@
     "priority": 41,
     "status": "blocked",
     "goal": "Replay parity stays deferred while parity_green is false.",
-    "witness": "debug_runs/replay_editor_parity_live.json"
+    "witness": "debug_runs/replay_editor_parity_live.json",
+    "triage_20261022": "STILL-BLOCKED: replay_editor_parity_live.json on disk 2026-10-22 has parity_green=false, replay_ring_len=0, proof_grade lib_fixture_retired. Unblock = a real replay runtime ring and parity witness (sim-steward), not vegetation code. Also reopened VEG-G02-STEWARD-REGRESS-001 in the coder vegetation queue."
   }
 ]

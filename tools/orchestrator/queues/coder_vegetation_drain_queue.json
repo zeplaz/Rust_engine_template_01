@@ -1,6 +1,6 @@
 {
   "_meta": {
-    "version": "3.0.1",
+    "version": "3.1.0",
     "bulk_reopen": "PLAN-WITNESS-REOPEN-001 operator approved 2026-06-02",
     "program_id": "VEGETATION-PROGRAM-001",
     "date": "2026-06-13",
@@ -30,8 +30,21 @@
         }
       }
     },
-    "last_sync": "2026-06-15",
-    "harness_witness": "debug_runs/landscape_grammar_sim_harness_live.json"
+    "last_sync": "2026-10-22",
+    "harness_witness": "debug_runs/landscape_grammar_sim_harness_live.json",
+    "triage_20261022": {
+      "doc": "src/dev/veg_queue_triage_20261022_v1.md",
+      "blocked_rows_triaged": 55,
+      "verdicts": {
+        "DONE-ALREADY": 33,
+        "OBSOLETE": 3,
+        "STILL-BLOCKED": 3,
+        "UNBLOCKED": 16
+      },
+      "status_mapping": "DONE-ALREADY->done \u00b7 OBSOLETE->superseded \u00b7 STILL-BLOCKED->blocked \u00b7 UNBLOCKED->ready",
+      "other": "VEG-G02 reopened (replay parity witness now false); VEG-H01..H04 added",
+      "context": "egui removed 51f8efb5 \u00b7 debug_runs gitignored 0e199885 \u00b7 dual-view a1f3f37d"
+    }
   },
   "phases": {
     "A": {
@@ -68,6 +81,11 @@
       "seq": "79-82",
       "label": "Scale + steward",
       "exit": "queue sync"
+    },
+    "H": {
+      "seq": "83-86",
+      "label": "L4 triage 2026-10-22 follow-ups",
+      "exit": "rows done with test or witness; both TacticalFlat2D and PixelWorld3D checked where flagged"
     }
   },
   "done_lib_only": [
@@ -127,7 +145,7 @@
       "seq": 1,
       "phase": "A",
       "id": "VEG-A01-HARNESS-001",
-      "status": "blocked",
+      "status": "done",
       "reopen_reason": "WIT-HON FAIL landscape_grammar_sim_harness_live.json \u2014 operator+lib fixture on lib harness",
       "reopen_date": "2026-06-02",
       "reconcile_note": "CDR-A-WIT-HON-ROLLUP-001 + sim_harness_refreshes_witness_json_green green 2026-06-17",
@@ -146,13 +164,14 @@
       "live_sim_required": true,
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: dev/landscape_grammar_sim_harness.rs build_landscape_grammar_harness_app + sim_harness_refreshes_witness_json_green; landscape_grammar_sim_harness_live.json green (17 chunks, fire=1, build=1). Grade headless_sim, not live app."
     },
     {
       "seq": 2,
       "phase": "A",
       "id": "VEG-A02-SCHEDULE-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "LG2 systems in Simulation schedule after fire tick",
@@ -167,13 +186,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: landscape_grammar_lg2_plugin chain runs in ChunkEnvironmentSet::Ecology; Fire set is .after(Ecology) (systems/chunk_environment_set.rs:29); wired by EcologyPlugin. Caveat: no ordering vs vegetation_field_tick -> VEG-C07."
     },
     {
       "seq": 3,
       "phase": "A",
       "id": "VEG-A03-FIRE-IGNITE-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Play/demo scenario ignites chunk with LandscapeProgramOnChunk",
@@ -189,7 +209,8 @@
       "live_sim_required": true,
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: Harness heats a chunk carrying LandscapeProgramOnChunk; test live_fire_disturbance_old_growth_to_burn_scar. headless_sim grade only; live-app proof tracked by VEG-C13 / VEG-H03."
     },
     {
       "seq": 4,
@@ -224,7 +245,7 @@
       "seq": 5,
       "phase": "A",
       "id": "VEG-A05-FIRE-STAGE-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "OldGrowth to BurnScar SuccessionTopologyStage transition",
@@ -238,7 +259,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: apply_fire_disturbance_on_heat sets OldGrowth->BurnScar (landscape_grammar_lg2.rs:197); test live_fire_disturbance_old_growth_to_burn_scar; lg2 witness fire_disturbances=1. Note: only OldGrowth chunks log a Fire event."
     },
     {
       "seq": 6,
@@ -280,7 +302,7 @@
       "seq": 7,
       "phase": "A",
       "id": "VEG-A07-BUILD-FOOTPRINT-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P0",
       "owner": "coder_a",
       "goal": "Construction commit maps footprint tiles to chunk entities",
@@ -292,7 +314,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: apply_construction_clear_disturbance maps CommitConstructionSiteEvent footprint via footprint_affected_chunk_coords; test construction_disturbance_maps_footprint_chunk; lg2 witness construction_disturbances=1."
     },
     {
       "seq": 8,
@@ -365,7 +388,7 @@
       "seq": 10,
       "phase": "A",
       "id": "VEG-A10-RECOVERY-TICK-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "BurnScar recovery ticks when heat clears",
@@ -377,7 +400,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: tick_succession_age_on_ecology advances age and counts recovery_ticks once heat clears; lg2 witness recovery_ticks=1; test recovery_advances_after_fire_clears."
     },
     {
       "seq": 11,
@@ -411,7 +435,7 @@
       "seq": 12,
       "phase": "A",
       "id": "VEG-A12-FUEL-MOD-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "SuccessionTopologyStage modulates ChunkFuelProfile",
@@ -426,7 +450,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: sync_fuel_bridge_from_succession maps stage to ChunkFuelProfile.old_growth; fire_ecology_live.json f1 green. Caveat: it also writes VegetationField.canopy_density (see VEG-C07)."
     },
     {
       "seq": 13,
@@ -452,7 +477,7 @@
       "seq": 14,
       "phase": "A",
       "id": "VEG-A14-HARVEST-PATH-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P2",
       "owner": "coder_a",
       "goal": "DisturbanceKind::Harvest event path",
@@ -463,7 +488,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: LandscapeDisturbanceQueue + drain_landscape_disturbance_queue + SimEffectKind::LandscapeDisturbance (sim/effects/drain.rs:106); test harvest_queue_drains_to_history; lg2 witness harvest_disturbances=1. Caveat: no real-app producer, and harvest does not reset succession -> VEG-D06 / VEG-D03."
     },
     {
       "seq": 15,
@@ -497,7 +523,7 @@
       "seq": 16,
       "phase": "A",
       "id": "VEG-A16-LIVE-PROOF-WIRE-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "landscape_grammar_live_proof in dev/mod.rs (not cfg(test) only)",
@@ -510,7 +536,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: dev/mod.rs:95-97 declares landscape_grammar_live_proof / sim_harness / veg_runtime_proof_live as plain pub mod (not cfg(test)); landscape_grammar_live_proof.json green."
     },
     {
       "seq": 17,
@@ -560,7 +587,7 @@
       "seq": 19,
       "phase": "B",
       "id": "VEG-BIND-LOAD-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset industrial_barrier_v0.json",
@@ -575,13 +602,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: industrial_barrier_v0.json carries BARRIER_THICK; signed in mcp_landscape_grammar_sign_live.json (10/10); tests catalog_loads_all_indexed_presets + preset_index_loads_ten_presets (systems/ecology/landscape_grammar_map.rs)."
     },
     {
       "seq": 20,
       "phase": "B",
       "id": "VEG-BIND-EVAL-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for INDUSTRIAL preset",
@@ -595,13 +623,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: rollout_landscape_program_on_chunks evaluates every indexed preset via evaluate_landscape_program_with_inputs (industrial_barrier_v0); lg3 witness industrial+military anchored. Caveat: only agri_riparian has a dedicated eval unit test; per-preset loop test folded into VEG-F07."
     },
     {
       "seq": 21,
       "phase": "B",
       "id": "VEG-BMIL-LOAD-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset military_defensive_v0.json",
@@ -616,13 +645,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: military_defensive_v0.json carries RING_FORTIFIED; signed in mcp_landscape_grammar_sign_live.json (10/10); tests catalog_loads_all_indexed_presets + preset_index_loads_ten_presets (systems/ecology/landscape_grammar_map.rs)."
     },
     {
       "seq": 22,
       "phase": "B",
       "id": "VEG-BMIL-EVAL-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for MILITARY preset",
@@ -636,13 +666,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: rollout_landscape_program_on_chunks evaluates every indexed preset via evaluate_landscape_program_with_inputs (military_defensive_v0); lg3 witness industrial+military anchored. Caveat: only agri_riparian has a dedicated eval unit test; per-preset loop test folded into VEG-F07."
     },
     {
       "seq": 23,
       "phase": "B",
       "id": "VEG-BSET-LOAD-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset settlement_park_v0.json",
@@ -657,13 +688,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: settlement_park_v0.json carries PATCH_IRREGULAR; signed in mcp_landscape_grammar_sign_live.json (10/10); tests catalog_loads_all_indexed_presets + preset_index_loads_ten_presets (systems/ecology/landscape_grammar_map.rs)."
     },
     {
       "seq": 24,
       "phase": "B",
       "id": "VEG-BSET-EVAL-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for SETTLEMENT preset",
@@ -677,13 +709,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: rollout_landscape_program_on_chunks evaluates every indexed preset via evaluate_landscape_program_with_inputs (settlement_park_v0); lg3 witness industrial+military anchored. Caveat: only agri_riparian has a dedicated eval unit test; per-preset loop test folded into VEG-F07."
     },
     {
       "seq": 25,
       "phase": "B",
       "id": "VEG-BFOR-LOAD-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset old_growth_core_v0.json",
@@ -698,13 +731,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: old_growth_core_v0.json carries PATCH_IRREGULAR; signed in mcp_landscape_grammar_sign_live.json (10/10); tests catalog_loads_all_indexed_presets + preset_index_loads_ten_presets (systems/ecology/landscape_grammar_map.rs)."
     },
     {
       "seq": 26,
       "phase": "B",
       "id": "VEG-BFOR-EVAL-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for FOREST preset",
@@ -718,13 +752,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: rollout_landscape_program_on_chunks evaluates every indexed preset via evaluate_landscape_program_with_inputs (old_growth_core_v0); lg3 witness industrial+military anchored. Caveat: only agri_riparian has a dedicated eval unit test; per-preset loop test folded into VEG-F07."
     },
     {
       "seq": 27,
       "phase": "B",
       "id": "VEG-BAGR-LOAD-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Load + validate preset agri_riparian_v0.json",
@@ -739,13 +774,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: agri_riparian_v0.json carries CORRIDOR_RIPARIAN; signed in mcp_landscape_grammar_sign_live.json (10/10); tests catalog_loads_all_indexed_presets + preset_index_loads_ten_presets (systems/ecology/landscape_grammar_map.rs)."
     },
     {
       "seq": 28,
       "phase": "B",
       "id": "VEG-BAGR-EVAL-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Evaluator produces graph for AGRI preset",
@@ -759,7 +795,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: rollout_landscape_program_on_chunks evaluates every indexed preset via evaluate_landscape_program_with_inputs (agri_riparian_v0); lg3 witness industrial+military anchored. Caveat: only agri_riparian has a dedicated eval unit test; per-preset loop test folded into VEG-F07."
     },
     {
       "seq": 29,
@@ -793,7 +830,7 @@
       "seq": 30,
       "phase": "B",
       "id": "VEG-B-ROLLOUT-Q1-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Map rollout quarter 1: attach LandscapeProgramOnChunk (+4 chunks)",
@@ -809,13 +846,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: Superseded by continuous rollout_landscape_program_on_chunks (attaches to every chunk without a program); landscape_grammar_map_rollout_live.json chunks_with_program=17 >=16, green."
     },
     {
       "seq": 31,
       "phase": "B",
       "id": "VEG-B-ROLLOUT-Q2-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Map rollout quarter 2: attach LandscapeProgramOnChunk (+4 chunks)",
@@ -831,13 +869,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: Superseded by continuous rollout_landscape_program_on_chunks (attaches to every chunk without a program); landscape_grammar_map_rollout_live.json chunks_with_program=17 >=16, green."
     },
     {
       "seq": 32,
       "phase": "B",
       "id": "VEG-B-ROLLOUT-Q3-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Map rollout quarter 3: attach LandscapeProgramOnChunk (+4 chunks)",
@@ -853,13 +892,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: Superseded by continuous rollout_landscape_program_on_chunks (attaches to every chunk without a program); landscape_grammar_map_rollout_live.json chunks_with_program=17 >=16, green."
     },
     {
       "seq": 33,
       "phase": "B",
       "id": "VEG-B-ROLLOUT-Q4-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Map rollout quarter 4: attach LandscapeProgramOnChunk (+4 chunks)",
@@ -875,7 +915,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: Superseded by continuous rollout_landscape_program_on_chunks (attaches to every chunk without a program); landscape_grammar_map_rollout_live.json chunks_with_program=17 >=16, green."
     },
     {
       "seq": 34,
@@ -918,7 +959,7 @@
       "seq": 35,
       "phase": "B",
       "id": "VEG-B-LAMBDA-HYDRO-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "LambdaExternalInputs reads hydrology (read-only)",
@@ -930,13 +971,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: lambda_inputs_from_live_fields (landscape_grammar_map.rs:168) sets hydrology_bias = ChunkWeather.soil_moisture only; substrate/hydrology has no per-chunk read API. Now unblocked by terrain derived layers (ChunkCellLayers drainage + flood_basin_id, LAND-LAYERS-002 done 2026-09-25, terrain/generation/derived.rs). Read-only."
     },
     {
       "seq": 36,
       "phase": "B",
       "id": "VEG-B-LAMBDA-TRANSPORT-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "LambdaExternalInputs reads transport (read-only)",
@@ -948,13 +990,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: transport_access is cells_per_chunk*0.01 + root_strength*0.12 (stand-in). Real source: infrastructure::transport::graph::TransportGraph resource (edges.control_points) -> chunk proximity. Read-only adapter in systems/ecology; do not edit infrastructure."
     },
     {
       "seq": 37,
       "phase": "B",
       "id": "VEG-B-LAMBDA-CONSTRUCTION-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "LambdaExternalInputs reads construction (read-only)",
@@ -966,13 +1009,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: construction_pressure is ecology.fire_risk*0.45 + burn_severity*0.35 (fire proxy, not construction). Real source: DisturbanceHistory ConstructionClear counts + strategic settlement DevelopmentPressureBook/DistrictMetricsBook (read-only)."
     },
     {
       "seq": 38,
       "phase": "B",
       "id": "VEG-B-PARTITION-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "3-8 topology nodes per chunk partition",
@@ -987,13 +1031,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: Exit mean_topology_kind_count>=3 met: map_rollout witness 6.0. Caveat: agri_riparian_v0 has 9 flat nodes incl. macros (>8) and no test enforces 3..=8 -> folded into VEG-F07."
     },
     {
       "seq": 39,
       "phase": "B",
       "id": "VEG-B-NESTED-DEPTH-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "nested_depth_max >= 2 map-wide mean",
@@ -1007,7 +1052,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:25Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: lg2 witness nested_depth_max=3; old_growth_core depth 3, agri depth 2 (test agri_riparian_flattens_four_topology_kinds_and_nested_depth)."
     },
     {
       "seq": 40,
@@ -1036,7 +1082,7 @@
       "seq": 41,
       "phase": "C",
       "id": "VEG-C01-PREVIEW-RASTER-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Wire topology_kind to ecology preview raster tint",
@@ -1049,13 +1095,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: world_preview/ecology_preview.rs topology_tint_bias + with_topology_kinds; gpu_preview.rs:361 and render_raster.rs sample LandscapeProgramOnChunk; lg4 witness topology_tint_wired true. Scope = editor world preview only."
     },
     {
       "seq": 42,
       "phase": "C",
       "id": "VEG-C02-PREVIEW-SHADER-001",
-      "status": "blocked",
+      "status": "superseded",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Material path samples topology tint not biome scalar only",
@@ -1068,13 +1115,15 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "OBSOLETE: Terrain material path has no topology input by design: play map = RTT raster (gui/map_tile_raster.rs biome+relief) and PixelWorld3D stamps LG-5 atlas tiles per chunk (render/tile_world_fallback.rs queue_pixel_world_landscape_atlas_stamps); editor GPU preview already samples topology kinds. Superseded by dual-view (a1f3f37d) + VEG-H02.",
+      "superseded_by": "a1f3f37d dual-view PixelWorld atlas stamps + VEG-H02-TACTICAL-VEG-DRAW-001"
     },
     {
       "seq": 43,
       "phase": "C",
       "id": "VEG-C03-PREVIEW-HEterogeneity-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Pixel heterogeneity test: >=2 distinct tint buckets per chunk",
@@ -1086,7 +1135,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: count_distinct_topology_visible_rgba + preview_samples_from_topology_kinds; lg4 witness pixel_heterogeneity_wired true, topology_kind_count_visible 3."
     },
     {
       "seq": 44,
@@ -1132,7 +1182,7 @@
       "seq": 45,
       "phase": "C",
       "id": "VEG-C05-PREVIEW-GLYPH-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Lexicon glyph map deterministic per topology kind",
@@ -1144,13 +1194,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: planning_glyph_for_node (metadata glyph_planning) + extract_glyph_for_burn deterministic; test planning_glyphs_are_deterministic_per_node; extract witness extract_glyph_deterministic true. Note extract glyph keys on succession/burn phase, not topology kind."
     },
     {
       "seq": 46,
       "phase": "C",
       "id": "VEG-C06-PREVIEW-OVERLAY-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Diagnostics ecology overlay section wired",
@@ -1163,13 +1214,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: Regressed by egui drop 51f8efb5: EcologyDiagnosticsPanels + VegExtractDiagnosticsPanel deleted from gui/diagnostics_ui.rs (now a 239-line Bevy text panel, no ecology section). veg_diag_extract_panel_live.json still claims code=diagnostics_ui.rs (false-green). Re-add as Bevy UI text lines."
     },
     {
       "seq": 47,
       "phase": "C",
       "id": "VEG-C07-POPULATION-AUTH-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "VegetationPopulation authority over vegetation_field_tick",
@@ -1182,13 +1234,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: Three unordered writers of VegetationField.canopy_density: vegetation_field_tick (vegetation_field.rs:256-258, snow/climate/burn), derive_vegetation_population_from_graph (overwrites with pop.mean_density) and sync_fuel_bridge_from_succession (max(og*0.6)); EcologyPlugin and lg2 plugin tuples share ChunkEnvironmentSet::Ecology with no relative order."
     },
     {
       "seq": 48,
       "phase": "C",
       "id": "VEG-C08-POPULATION-WITNESS-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "canopy_density tracks graph not biome alone",
@@ -1200,13 +1253,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: derive_vegetation_population_from_graph derives mean_density from topology_kind_count * succession stage; veg_runtime_proof_live.json ladder green. Authority/ordering caveat -> VEG-C07."
     },
     {
       "seq": 49,
       "phase": "C",
       "id": "VEG-C09-MINIMAP-LAYER-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Minimap ecology layer topology boundaries",
@@ -1219,7 +1273,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: render/minimap_compositor/composite.rs fill_ecology_heat_from_snapshot + merge_veg_extract_burn_into_ecology_heat (VEG-MINIMAP-BURN-MERGE-001) + gui/hud/minimap_topology_legend.rs; GPU compositor, not egui; minimap_topology_legend_live.json."
     },
     {
       "seq": 50,
@@ -1314,7 +1369,8 @@
       "operator_visible": true,
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "STILL-BLOCKED: Needs a real windowed GPU capture (cargo test -p proc_A_dine01 --test visual); landscape_grammar_visual_smoke_live.json is lib_smoke only (visual_capture_required true). Unblock: run on a display machine after VEG-H02 so vegetation is actually drawn; record PNG path."
     },
     {
       "seq": 54,
@@ -1333,7 +1389,9 @@
         "eval_math_without_render"
       ],
       "live_sim_required": true,
-      "operator_visible": true
+      "operator_visible": true,
+      "triage_20261022": "STILL-BLOCKED: Operator human sign-off (blocked_owner operator); see G-PLAY-OPERATOR-01 in landform_veg_drain_v1.json. Not coder-flippable.",
+      "updated_at": "2026-10-22T00:00:00Z"
     },
     {
       "seq": 55,
@@ -1364,7 +1422,7 @@
       "seq": 56,
       "phase": "D",
       "id": "VEG-D01-SETTLEMENT-LANDUSE-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Settlement district to LandUseInfluence (remove x%16 hack)",
@@ -1379,13 +1437,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: x%16 hack already gone (CDR-A-PRESET-PICK-LAMBDA-001) but nothing reads strategic::settlement DistrictBook/DistrictRecord; LandUseInfluence has no writer outside ecology; lg3 witness anchor_source 'live_transport_settlement' is a string literal (landscape_grammar_map.rs:315). Needs read-only adapter; do not edit src/strategic."
     },
     {
       "seq": 57,
       "phase": "D",
       "id": "VEG-D02-TRANSPORT-CORRIDOR-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Transport edge proximity biases CORRIDOR preset",
@@ -1400,13 +1459,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: No read of TransportGraph anywhere in systems/ecology; corridor bias is the cells_per_chunk stand-in. Pair with VEG-B-LAMBDA-TRANSPORT-001."
     },
     {
       "seq": 58,
       "phase": "D",
       "id": "VEG-D03-CONSTRUCTION-CLEAR-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Construction site clear couples to lg2 disturbance",
@@ -1421,13 +1481,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: apply_construction_clear_disturbance only pushes history + witness counter; SuccessionState/age and canopy untouched, so a built-over footprint stays OldGrowth (sim/effects/drain.rs also only logs). Needs a real clear effect (reset stage/age, dip canopy) in systems/ecology."
     },
     {
       "seq": 59,
       "phase": "D",
       "id": "VEG-D04-HYDRO-RIPARIAN-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Hydrology band biases riparian preset pick",
@@ -1442,7 +1503,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: No hydrology/drainage input; riparian/wetland pick only via soil_moisture thresholds (pick_preset_id_for_chunk_with_inputs). Pair with VEG-B-LAMBDA-HYDRO-001 using terrain drainage/flood layers."
     },
     {
       "seq": 60,
@@ -1476,7 +1538,7 @@
       "seq": 61,
       "phase": "D",
       "id": "VEG-D06-SIM-EFFECT-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "SimEffect hook for landscape disturbance telemetry",
@@ -1491,7 +1553,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: Sink exists (SimEffectKind::LandscapeDisturbance, sim/effects/drain.rs, player_event_log, faction_react) but only the harness pushes it (push_post_fire_harvest_sim_effect); real fire/construction disturbances emit no SimEffect. Emit telemetry-only to avoid double-count: drain maps non-harvest to a ConstructionClear history row."
     },
     {
       "seq": 62,
@@ -1520,7 +1583,7 @@
       "seq": 63,
       "phase": "E",
       "id": "VEG-E01-SUBCELL-GRID-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "4x4 subcell population grid per chunk",
@@ -1534,13 +1597,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: SubcellPopulationGrid ([f32;16]) filled in derive_vegetation_population_from_graph. Caveat: values are an index bias (i%4*0.04 + i/4*0.03), not terrain-driven, and nothing outside lg2 reads the grid -> real work folded into VEG-E02."
     },
     {
       "seq": 64,
       "phase": "E",
       "id": "VEG-E02-INSTANCE-SPAWN-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Deterministic instance spawn bounded by budget",
@@ -1554,13 +1618,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: VegetationPopulation.instance_budget is computed but nothing spawns instances; extract has one row per chunk (extract witness row_count=17). Terrain per-cell inputs now exist (cell_canopy_scales, drainage, flood_basin_id)."
     },
     {
       "seq": 65,
       "phase": "E",
       "id": "VEG-E03-INSTANCE-EXTRACT-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Extract glyph per instance from lexicon",
@@ -1574,13 +1639,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: VegetationExtractFrame.rows is one per chunk, glyph from succession/burn phase not per instance; depends on VEG-E02. Consumers today: minimap compositor only (not the main sim map)."
     },
     {
       "seq": 66,
       "phase": "E",
       "id": "VEG-E04-FIRE-CORRIDOR-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Fire corridor reads population fuel corridor",
@@ -1594,13 +1660,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: Fuel bridge reads SuccessionState only; systems/fire has no VegetationPopulation/SubcellPopulationGrid reference; fire_corridor_population_fuel_witness_green only asserts pop.mean_density>0 && fuel.old_growth>0."
     },
     {
       "seq": 67,
       "phase": "E",
       "id": "VEG-E05-SUCCESSION-GRAPH-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Graph node stage on disturbance not scalar only",
@@ -1614,7 +1681,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: SuccessionState is one enum per chunk, not per topology node; stage is re-derived from age each tick so harvest/construction cannot persist; DisturbanceEvent.topology_kind is a label only."
     },
     {
       "seq": 68,
@@ -1694,7 +1762,9 @@
         "lib_test_only",
         "witness_counter_zero",
         "witness_lib_green_without_green"
-      ]
+      ],
+      "triage_20261022": "STILL-BLOCKED: Art-ship G4 manual keyframe review + proceed_ship (designer-mcp). _landscape_atlas_index.ron: both LG-5 atlases development_tier pilot, ship_allowed false. PixelWorld3D vegetation art stays pilot until this; not a code gate.",
+      "updated_at": "2026-10-22T00:00:00Z"
     },
     {
       "seq": 72,
@@ -1723,7 +1793,7 @@
       "seq": 73,
       "phase": "F",
       "id": "VEG-F03-REGISTRY-STAMP-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Bevy registry + chunk UV stamp from atlas meta",
@@ -1737,7 +1807,8 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: LandscapeAtlasRegistry (systems/ecology/landscape_atlas_registry.rs) + gui/landscape_chunk_atlas_stamp.rs + tile_world_fallback queue_pixel_world_landscape_atlas_stamps; landscape_grammar_lg5_live.json registry_stamp + bevy_chunk_uv_stamp true. PixelWorld only by design."
     },
     {
       "seq": 74,
@@ -1785,7 +1856,7 @@
       "seq": 76,
       "phase": "F",
       "id": "VEG-F06-PRESET-EXPAND-001",
-      "status": "blocked",
+      "status": "done",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "presets_on_disk >= 10",
@@ -1799,13 +1870,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "DONE-ALREADY: 10 presets in assets/configs/landscape/presets + _preset_index.ron; test preset_index_loads_ten_presets; mcp sign ship_preset_count 10."
     },
     {
       "seq": 77,
       "phase": "F",
       "id": "VEG-F07-NESTED-DEPTH-003-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "nested_depth_max >= 3 on industrial+forest",
@@ -1819,13 +1891,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: old_growth_core_v0 depth 3 ok; industrial_barrier_v0 max depth 2 (Network->Pocket->Cluster). Also agri_riparian_v0 = 9 flat nodes (>8) and only agri has an eval test. Data edit + validate-report landscape_grammar."
     },
     {
       "seq": 78,
       "phase": "F",
       "id": "VEG-F08-QUEUE-SYNC-001",
-      "status": "blocked",
+      "status": "superseded",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Sync HANDOFF + coder_active_queue",
@@ -1839,13 +1912,15 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "OBSOLETE: Process row. HANDOFF ACTIVE already points at landform_veg_drain_v1.json; coder_active_queue superseded. This triage + src/dev/veg_queue_triage_20261022_v1.md is the sync.",
+      "superseded_by": "src/dev/veg_queue_triage_20261022_v1.md"
     },
     {
       "seq": 79,
       "phase": "G",
       "id": "VEG-G01-OPERATOR-HISTORY-001",
-      "status": "blocked",
+      "status": "ready",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "DisturbanceHistory timeline in diagnostics UI",
@@ -1860,13 +1935,14 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "UNBLOCKED: Regressed by egui drop: DisturbanceHistory is read only by ecology + harness (no UI consumer); the egui timeline in diagnostics_ui.rs was deleted in 51f8efb5. Re-add as Bevy UI text section."
     },
     {
       "seq": 80,
       "phase": "G",
       "id": "VEG-G02-STEWARD-REGRESS-001",
-      "status": "done",
+      "status": "blocked",
       "priority": "P1",
       "owner": "sim-steward",
       "goal": "sim-steward replay editor parity regress",
@@ -1879,7 +1955,10 @@
         "witness_counter_zero",
         "witness_lib_green_without_green"
       ],
-      "completed": "2026-06-13"
+      "completed": "2026-06-13",
+      "triage_20261022": "REOPENED (done row regressed): replay_editor_parity_live.json now parity_green=false, replay_ring_len=0, proof_grade lib_fixture_retired (CLN-WIT-001). Owner sim-steward; not vegetation code. See SIM-STEWARD-FIRE-REPLAY-001 in landform_veg_drain_v1.json.",
+      "blocked_owner": "sim-steward",
+      "updated_at": "2026-10-22T00:00:00Z"
     },
     {
       "seq": 81,
@@ -1892,13 +1971,15 @@
       "depends_on": [
         "VEG-F04-LG5-WITNESS-001"
       ],
-      "snag": "deferred_lg6"
+      "snag": "deferred_lg6",
+      "triage_20261022": "STILL-DEFERRED: LG-6 flowers is a designer-mcp aesthetic charter (guide_landscape_grammar_v1.md); no code dependency; gated behind VEG-F01 art ship.",
+      "updated_at": "2026-10-22T00:00:00Z"
     },
     {
       "seq": 82,
       "phase": "G",
       "id": "VEG-G04-DRAIN-SYNC-001",
-      "status": "blocked",
+      "status": "superseded",
       "priority": "P1",
       "owner": "coder_a",
       "goal": "Mark v3 drained; archive v2 false-done audit",
@@ -1907,7 +1988,97 @@
       ],
       "completed": "2026-06-13",
       "note": "INTEL-OFFICER-001 bulk supervised cull 2026-06-20 \u00b7 done without witness path or exit_predicate",
-      "updated_at": "2026-06-20T21:19:26Z"
+      "updated_at": "2026-10-22T00:00:00Z",
+      "triage_20261022": "OBSOLETE: v3 is not drained by design; replaced by this triage + VEG-H* rows. False-done audit already archived in src/dev/veg_queue_reconciliation_20260616_v1.md.",
+      "superseded_by": "src/dev/veg_queue_triage_20261022_v1.md"
+    },
+    {
+      "seq": 83,
+      "phase": "H",
+      "id": "VEG-H01-DISTRICT-CLASS-MAP-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "district_kind_from_preset_class matches class 'forest'/'industrial'/'military'/'settlement'/_ but presets on disk use agricultural|natural|industrial|military|settlement: 'natural' (old_growth_core, fire_recovery, coastal_scrub, scrub_highland, wetland_margin) falls through to AgriculturalRiparian so OldGrowthCore is never assigned.",
+      "territory": "src/systems/ecology/landscape_grammar_map.rs",
+      "verify_commands": [
+        "cargo test -p proc_A_dine01 --lib landscape_grammar_map"
+      ],
+      "depends_on": [],
+      "exit": "Test over all 10 presets: old_growth_core_v0 -> OldGrowthCore; >=4 distinct LandUseDistrictKind values.",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero"
+      ],
+      "triage_20261022": "NEW (found during 2026-10-22 triage); see src/dev/veg_queue_triage_20261022_v1.md",
+      "updated_at": "2026-10-22T00:00:00Z"
+    },
+    {
+      "seq": 84,
+      "phase": "H",
+      "id": "VEG-H02-TACTICAL-VEG-DRAW-001",
+      "status": "ready",
+      "priority": "P0",
+      "owner": "coder_a",
+      "live_sim_required": true,
+      "goal": "TacticalFlat2D has no vegetation draw: VegetationExtractFrame is consumed only by the minimap compositor; PixelWorld3D has LG-5 stamps. Draw cover/burn symbols from VegetationExtractFrame (density, extract_glyph, burn frame) into the sim RTT raster under Tactical, using symbol/icon style per design_dual_view_art_home_v1.md.",
+      "territory": "src/render/tile_world_fallback.rs; src/gui/map_tile_raster.rs; src/render/extraction/vegetation_visual_extract.rs (read-only)",
+      "verify_commands": [
+        "cargo test -p proc_A_dine01 --lib map_tile_raster",
+        "cargo test -p proc_A_dine01 --lib vegetation_visual_extract"
+      ],
+      "depends_on": [
+        "VEG-C07-POPULATION-AUTH-001"
+      ],
+      "exit": "Test: Tactical raster pixels differ between a dense-canopy and a BurnScar chunk; no write to WorldPresentationMode / RepresentationResult; PixelWorld path unchanged.",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero"
+      ],
+      "triage_20261022": "NEW (found during 2026-10-22 triage); see src/dev/veg_queue_triage_20261022_v1.md",
+      "updated_at": "2026-10-22T00:00:00Z"
+    },
+    {
+      "seq": 85,
+      "phase": "H",
+      "id": "VEG-H03-WITNESS-HONESTY-001",
+      "status": "ready",
+      "priority": "P1",
+      "owner": "coder_a",
+      "goal": "Witnesses over-claim: harness hard-codes phase_d_green=true / phase_e_green=true in VegetationProgramCloseBody; lg3 anchor_source is a literal; veg_diag_extract_panel_live.json claims diagnostics_ui.rs hosts a panel that 51f8efb5 deleted; harness test asserts on gitignored play_scenario_live.json / stage5_full_app_live.json it does not write (R-M4).",
+      "territory": "src/dev/landscape_grammar_sim_harness.rs; src/dev/veg_diag_extract_panel_live_proof.rs; src/systems/ecology/landscape_grammar_map.rs",
+      "verify_commands": [
+        "cargo test -p proc_A_dine01 --lib landscape_grammar"
+      ],
+      "depends_on": [],
+      "exit": "phase D/E computed from real sub-witnesses; anchor_source derived from the adapters in VEG-D01/D02 (else 'proxy'); diag witness reads real UI state or is retired. Coordinate: other agents are editing src/dev/*.rs.",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero"
+      ],
+      "triage_20261022": "NEW (found during 2026-10-22 triage); see src/dev/veg_queue_triage_20261022_v1.md",
+      "updated_at": "2026-10-22T00:00:00Z"
+    },
+    {
+      "seq": 86,
+      "phase": "H",
+      "id": "VEG-H04-ATLAS-KIND-COVERAGE-001",
+      "status": "ready",
+      "priority": "P2",
+      "owner": "coder_a",
+      "goal": "topology_kind_to_variant_key covers 5 of 10 on-disk topology kinds (Network, Pocket, Barrier, Spine, Basin have no LG-5 key), so those chunks get no PixelWorld stamp; stamp uses only topology_kinds.first().",
+      "territory": "src/systems/ecology/landscape_atlas_registry.rs; src/gui/landscape_chunk_atlas_stamp.rs",
+      "verify_commands": [
+        "cargo test -p proc_A_dine01 --lib landscape_chunk_atlas_stamp"
+      ],
+      "depends_on": [],
+      "exit": "Every preset topology kind resolves to a base key via explicit fallback (nearest kind), tested over all 10 presets; art rows for new kinds remain VEG-F01.",
+      "forbidden_exit": [
+        "lib_test_only",
+        "witness_counter_zero"
+      ],
+      "triage_20261022": "NEW (found during 2026-10-22 triage); see src/dev/veg_queue_triage_20261022_v1.md",
+      "updated_at": "2026-10-22T00:00:00Z"
     }
   ],
   "maintain_after_each_seq": [
