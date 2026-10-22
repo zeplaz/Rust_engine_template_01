@@ -25,7 +25,12 @@
   "landscape_program": {
     "class": "natural",
     "district_ref": "old_growth_reserve_02",
-    "required_topologies": ["CORRIDOR_RIPARIAN", "RING_SHELTERBELT", "PATCH_IRREGULAR", "FRINGE_EDGE"]
+    "required_topologies": [
+      "CORRIDOR_RIPARIAN",
+      "RING_SHELTERBELT",
+      "PATCH_IRREGULAR",
+      "FRINGE_EDGE"
+    ]
   },
   "topology_graph": [
     {
@@ -35,7 +40,10 @@
       "scale_band": "L",
       "anchor_ref": "partition:chunk_02_og",
       "parent_topology_id": null,
-      "operator_stack": ["anchor_partition", "network_link"]
+      "operator_stack": [
+        "anchor_partition",
+        "network_link"
+      ]
     },
     {
       "id": "corr_creek_01",
@@ -44,8 +52,14 @@
       "scale_band": "M",
       "anchor_ref": "hydro:creek_axis_02",
       "parent_topology_id": "net_og_01",
-      "operator_stack": ["anchor_river", "corridor", "drift"],
-      "metadata": { "glyph_planning": "≈≈≈╬≈≈≈" }
+      "operator_stack": [
+        "anchor_river",
+        "corridor",
+        "drift"
+      ],
+      "metadata": {
+        "glyph_planning": "≈≈≈╬≈≈≈"
+      }
     },
     {
       "id": "ring_canopy_01",
@@ -54,8 +68,13 @@
       "scale_band": "M",
       "anchor_ref": "site:reserve_edge",
       "parent_topology_id": "net_og_01",
-      "operator_stack": ["ring", "expand"],
-      "metadata": { "glyph_planning": "(█)" }
+      "operator_stack": [
+        "ring",
+        "expand"
+      ],
+      "metadata": {
+        "glyph_planning": "(█)"
+      }
     },
     {
       "id": "patch_core_01",
@@ -64,7 +83,11 @@
       "scale_band": "M",
       "anchor_ref": "site:core_stand",
       "parent_topology_id": "net_og_01",
-      "operator_stack": ["seed_patch", "cluster", "expand"],
+      "operator_stack": [
+        "seed_patch",
+        "cluster",
+        "expand"
+      ],
       "children": [
         {
           "id": "cluster_og_01",
@@ -91,7 +114,12 @@
       "scale_band": "S",
       "anchor_ref": "field:reserve_margin",
       "parent_topology_id": "net_og_01",
-      "operator_stack": ["fringe"]
+      "operator_stack": [
+        "fringe"
+      ]
     }
-  ]
+  ],
+  "_meta": {
+    "presentation": "pixel_world"
+  }
 }

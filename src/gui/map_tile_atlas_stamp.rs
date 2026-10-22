@@ -1,4 +1,8 @@
-//! Tactical / simulation map tile material swap via [`TileAtlasRegistry::resolve_variant_uv`].
+//! Simulation map building iso stamps via [`TileAtlasRegistry::resolve_variant_uv`].
+//!
+//! **Dual-view:** CPU/GPU stamp blit into the play RTT is queued only under
+//! [`crate::gui::WorldPresentationKind::PixelWorld3D`] (see `tile_world_fallback`).
+//! TacticalFlat2D keeps occupation / icon tokens — no APS module-kit dump.
 //!
 //! Stamps MCP ortho atlas sub-rects onto the CPU fallback raster at committed site footprints.
 //! Separate from PG-2 procedural GLB assembly (`procedural_build_extract`).
@@ -820,10 +824,10 @@ mod tests {
     }
 
     #[test]
-    fn eng_pt_4_rowhouse_stamp_blocked_until_atlas_v2() {
+    fn eng_pt_4_rowhouse_stamp_ship_green_under_pixel_world() {
         assert!(
-            !super::eng_pt_4_001_rowhouse_map_stamp_witness_green(),
-            "TILE-FIX-001: greybox production de-indexed until v2 promotes"
+            super::eng_pt_4_001_rowhouse_map_stamp_witness_green(),
+            "TILE-FIX-001 close: production rowhouse resolves for PixelWorld ship stamps"
         );
     }
 

@@ -25,7 +25,12 @@
   "landscape_program": {
     "class": "settlement",
     "district_ref": "settlement_park_05",
-    "required_topologies": ["CORRIDOR_ROADSIDE", "RING_SHELTERBELT", "PATCH_IRREGULAR", "FRINGE_EDGE"]
+    "required_topologies": [
+      "CORRIDOR_ROADSIDE",
+      "RING_SHELTERBELT",
+      "PATCH_IRREGULAR",
+      "FRINGE_EDGE"
+    ]
   },
   "topology_graph": [
     {
@@ -35,7 +40,10 @@
       "scale_band": "L",
       "anchor_ref": "partition:chunk_05_park",
       "parent_topology_id": null,
-      "operator_stack": ["anchor_partition", "network_link"]
+      "operator_stack": [
+        "anchor_partition",
+        "network_link"
+      ]
     },
     {
       "id": "corr_path_01",
@@ -44,8 +52,13 @@
       "scale_band": "M",
       "anchor_ref": "transport:park_path_05",
       "parent_topology_id": "net_sett_01",
-      "operator_stack": ["anchor_road", "corridor"],
-      "metadata": { "glyph_planning": "≈≈≈" }
+      "operator_stack": [
+        "anchor_road",
+        "corridor"
+      ],
+      "metadata": {
+        "glyph_planning": "≈≈≈"
+      }
     },
     {
       "id": "ring_park_01",
@@ -54,8 +67,13 @@
       "scale_band": "M",
       "anchor_ref": "site:park_ring",
       "parent_topology_id": "net_sett_01",
-      "operator_stack": ["ring", "expand"],
-      "metadata": { "glyph_planning": "(█)" }
+      "operator_stack": [
+        "ring",
+        "expand"
+      ],
+      "metadata": {
+        "glyph_planning": "(█)"
+      }
     },
     {
       "id": "patch_grove_01",
@@ -64,7 +82,10 @@
       "scale_band": "M",
       "anchor_ref": "site:grove_center",
       "parent_topology_id": "net_sett_01",
-      "operator_stack": ["seed_patch", "cluster"],
+      "operator_stack": [
+        "seed_patch",
+        "cluster"
+      ],
       "children": [
         {
           "id": "cluster_trees_01",
@@ -82,7 +103,12 @@
       "scale_band": "S",
       "anchor_ref": "field:lawn_edge",
       "parent_topology_id": "net_sett_01",
-      "operator_stack": ["fringe"]
+      "operator_stack": [
+        "fringe"
+      ]
     }
-  ]
+  ],
+  "_meta": {
+    "presentation": "pixel_world"
+  }
 }

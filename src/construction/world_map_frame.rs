@@ -66,11 +66,21 @@ pub(crate) struct WorldMapFootprintTile {
     tile: IVec2,
 }
 
+/// Presentation-only massing stack layer (Ebbtide column silhouette).
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub(crate) struct WorldMapMassingTile {
+    tile: IVec2,
+    floor: u8,
+}
+
 #[derive(Resource, Default)]
 pub(crate) struct WorldMapFootprintStamp {
     key: u64,
-    mesh: Option<Handle<Mesh>>,
+    fill_mesh: Option<Handle<Mesh>>,
+    rim_mesh: Option<Handle<Mesh>>,
     materials: HashMap<u32, Handle<ColorMaterial>>,
+    /// Cached stack/fill mesh sizes (quantized hundredths of a tile).
+    stack_meshes: HashMap<u32, Handle<Mesh>>,
 }
 
 fn color32_bevy(c: crate::gui::UiRgba) -> Color {
@@ -88,6 +98,37 @@ pub(crate) fn footprint_fill(kind: FootprintTileColorKind, fill: Option<crate::g
         FootprintTileColorKind::Invalid => super::ghost_visual::footprint_invalid_color(),
     };
     color32_bevy(token)
+}
+
+fn footprint_rim(kind: FootprintTileColorKind) -> Color {
+    let valid_family = !matches!(kind, FootprintTileColorKind::Invalid);
+    color32_bevy(super::ghost_visual::footprint_rim_color(valid_family))
+}
+
+fn massing_rim(kind: FootprintTileColorKind) -> Color {
+    let valid_family = !matches!(kind, FootprintTileColorKind::Invalid);
+    color32_bevy(super::ghost_visual::massing_stack_rim_color(valid_family))
+}
+
+fn color_kind_key(kind: FootprintTileColorKind) -> u64 {
+    match kind {
+        FootprintTileColorKind::Valid => 1,
+        FootprintTileColorKind::Risky => 2,
+        FootprintTileColorKind::Invalid => 3,
+    }
+}
+
+fn massing_key(columns: &[super::voxel_massing::VoxelColumnRequest]) -> u64 {
+    let mut key = columns.len() as u64;
+    for col in columns {
+        key = key
+            .wrapping_mul(0x9E37_79B9)
+            .wrapping_add(col.tile.x as u64)
+            .wrapping_add((col.tile.y as u64) << 32)
+            .wrapping_add(u64::from(col.floors) << 16)
+            .wrapping_add(color_kind_key(col.color_kind));
+    }
+    key
 }
 
 fn rgba_key(color: Color) -> u32 {
@@ -110,34 +151,50 @@ fn footprint_key(tiles: &[(IVec2, u32)]) -> u64 {
 
 const SITE_CELL: Color = Color::srgb(0.72, 0.58, 0.36);
 
+struct FootprintDraw {
+    tile: IVec2,
+    fill: Color,
+    kind: FootprintTileColorKind,
+}
+
 fn collect_footprint_tiles(
     requests: &ConstructionVisualRequests,
     sites: &Query<&SiteFootprint, With<ConstructionSite>>,
-) -> Vec<(IVec2, Color)> {
-    let mut tiles: HashMap<IVec2, Color> = HashMap::new();
+) -> Vec<FootprintDraw> {
+    let mut tiles: HashMap<IVec2, FootprintDraw> = HashMap::new();
     for foot in sites.iter() {
         for tile in &foot.tiles {
-            tiles.entry(*tile).or_insert(SITE_CELL);
+            tiles.entry(*tile).or_insert(FootprintDraw {
+                tile: *tile,
+                fill: SITE_CELL,
+                kind: FootprintTileColorKind::Valid,
+            });
         }
     }
     for request in &requests.footprint_tiles {
         tiles.insert(
             request.tile,
-            footprint_fill(request.color_kind, request.fill_override),
+            FootprintDraw {
+                tile: request.tile,
+                fill: footprint_fill(request.color_kind, request.fill_override),
+                kind: request.color_kind,
+            },
         );
     }
-    let mut ordered: Vec<_> = tiles.into_iter().collect();
-    ordered.sort_by(|a, b| a.0.y.cmp(&b.0.y).then(a.0.x.cmp(&b.0.x)));
+    let mut ordered: Vec<_> = tiles.into_values().collect();
+    ordered.sort_by(|a, b| a.tile.y.cmp(&b.tile.y).then(a.tile.x.cmp(&b.tile.x)));
     ordered
 }
 
-/// Places one quad per footprint cell on the world map. Editor keeps egui.
+/// Places rim + fill quads per footprint cell on the world map (Bevy mesh; no egui).
+/// Also paints VoxelMassing column stacks (presentation-only height silhouette).
 pub fn sync_world_map_footprints(
     mut commands: Commands,
     base: Res<State<BaseState>>,
     requests: Res<ConstructionVisualRequests>,
     sites: Query<&SiteFootprint, With<ConstructionSite>>,
     existing: Query<(Entity, &WorldMapFootprintTile)>,
+    massing_existing: Query<(Entity, &WorldMapMassingTile)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut stamp: Local<WorldMapFootprintStamp>,
@@ -146,43 +203,135 @@ pub fn sync_world_map_footprints(
         for (entity, _) in &existing {
             commands.entity(entity).despawn();
         }
+        for (entity, _) in &massing_existing {
+            commands.entity(entity).despawn();
+        }
         stamp.key = 0;
         return;
     }
     let colored = collect_footprint_tiles(&requests, &sites);
     let keyed: Vec<(IVec2, u32)> = colored
         .iter()
-        .map(|(tile, color)| (*tile, rgba_key(*color)))
+        .map(|d| (d.tile, rgba_key(d.fill)))
         .collect();
-    let key = footprint_key(&keyed);
-    if key == stamp.key && existing.iter().count() == colored.len() {
+    let foot_key = footprint_key(&keyed);
+    let mass_key = massing_key(&requests.massing_columns);
+    let key = foot_key.wrapping_mul(0xC2B2_AE3D).wrapping_add(mass_key);
+    let massing_quads: usize = requests
+        .massing_columns
+        .iter()
+        .map(|c| usize::from(c.floors.saturating_sub(1)) * 2)
+        .sum();
+    // Rim + fill per footprint tile; stacked floors above base (floors>1).
+    let expected = colored.len().saturating_mul(2) + massing_quads;
+    if key == stamp.key
+        && existing.iter().count() + massing_existing.iter().count() == expected
+    {
         return;
     }
     for (entity, _) in &existing {
         commands.entity(entity).despawn();
     }
-    if colored.is_empty() {
+    for (entity, _) in &massing_existing {
+        commands.entity(entity).despawn();
+    }
+    if colored.is_empty() && requests.massing_columns.is_empty() {
         stamp.key = key;
         return;
     }
-    let mesh = stamp
-        .mesh
-        .get_or_insert_with(|| meshes.add(Rectangle::new(0.92, 0.92)))
+    let rim_mesh = stamp
+        .rim_mesh
+        .get_or_insert_with(|| meshes.add(Rectangle::new(1.0, 1.0)))
         .clone();
-    for (tile, color) in colored {
-        let rgba = rgba_key(color);
-        let material = stamp
+    let fill_mesh = stamp
+        .fill_mesh
+        .get_or_insert_with(|| meshes.add(Rectangle::new(0.84, 0.84)))
+        .clone();
+    for draw in colored {
+        let rim = footprint_rim(draw.kind);
+        let rim_key = rgba_key(rim);
+        let rim_mat = stamp
             .materials
-            .entry(rgba)
-            .or_insert_with(|| materials.add(ColorMaterial::from_color(color)))
+            .entry(rim_key)
+            .or_insert_with(|| materials.add(ColorMaterial::from_color(rim)))
             .clone();
-        let center = world_map_tile_center(tile.x, tile.y);
+        let fill_key = rgba_key(draw.fill);
+        let fill_mat = stamp
+            .materials
+            .entry(fill_key)
+            .or_insert_with(|| materials.add(ColorMaterial::from_color(draw.fill)))
+            .clone();
+        let center = world_map_tile_center(draw.tile.x, draw.tile.y);
         commands.spawn((
-            WorldMapFootprintTile { tile },
-            Mesh2d(mesh.clone()),
-            MeshMaterial2d(material),
+            WorldMapFootprintTile { tile: draw.tile },
+            Mesh2d(rim_mesh.clone()),
+            MeshMaterial2d(rim_mat),
+            Transform::from_translation(center + Vec3::new(0.0, 0.0, -0.02)),
+        ));
+        commands.spawn((
+            WorldMapFootprintTile { tile: draw.tile },
+            Mesh2d(fill_mesh.clone()),
+            MeshMaterial2d(fill_mat),
             Transform::from_translation(center),
         ));
+    }
+    let floor_off = super::ghost_visual::massing_floor_offset_world();
+    let shrink = super::ghost_visual::massing_floor_shrink();
+    for col in &requests.massing_columns {
+        if col.floors <= 1 {
+            continue;
+        }
+        let base_fill = footprint_fill(col.color_kind, None);
+        let rim = massing_rim(col.color_kind);
+        let rim_key = rgba_key(rim);
+        let rim_mat = stamp
+            .materials
+            .entry(rim_key)
+            .or_insert_with(|| materials.add(ColorMaterial::from_color(rim)))
+            .clone();
+        let fill_key = rgba_key(base_fill);
+        let fill_mat = stamp
+            .materials
+            .entry(fill_key)
+            .or_insert_with(|| materials.add(ColorMaterial::from_color(base_fill)))
+            .clone();
+        let center = world_map_tile_center(col.tile.x, col.tile.y);
+        for floor in 1..col.floors {
+            let t = f32::from(floor);
+            let size = (0.84 - shrink * t).max(0.35);
+            let size_q = (size * 100.0).round() as u32;
+            let rim_q = ((size + 0.12) * 100.0).round() as u32;
+            let stack_mesh = stamp
+                .stack_meshes
+                .entry(size_q)
+                .or_insert_with(|| meshes.add(Rectangle::new(size, size)))
+                .clone();
+            let stack_rim = stamp
+                .stack_meshes
+                .entry(rim_q)
+                .or_insert_with(|| meshes.add(Rectangle::new(size + 0.12, size + 0.12)))
+                .clone();
+            let y = center.y + floor_off * t;
+            let z = center.z + 0.04 * t;
+            commands.spawn((
+                WorldMapMassingTile {
+                    tile: col.tile,
+                    floor,
+                },
+                Mesh2d(stack_rim),
+                MeshMaterial2d(rim_mat.clone()),
+                Transform::from_translation(Vec3::new(center.x, y, z - 0.01)),
+            ));
+            commands.spawn((
+                WorldMapMassingTile {
+                    tile: col.tile,
+                    floor,
+                },
+                Mesh2d(stack_mesh),
+                MeshMaterial2d(fill_mat.clone()),
+                Transform::from_translation(Vec3::new(center.x, y, z)),
+            ));
+        }
     }
     stamp.key = key;
 }

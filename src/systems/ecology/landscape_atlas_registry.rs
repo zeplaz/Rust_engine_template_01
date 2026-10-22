@@ -211,6 +211,8 @@ pub fn topology_kind_to_variant_key(kind: &str) -> Option<&'static str> {
         "Patch" => Some("topology_patch"),
         "Corridor" => Some("topology_corridor"),
         "Ring" => Some("topology_ring"),
+        "Cluster" => Some("topology_cluster"),
+        "Fringe" => Some("topology_fringe"),
         _ => None,
     }
 }

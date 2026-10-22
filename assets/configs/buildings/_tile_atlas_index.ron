@@ -12,6 +12,7 @@
             development_tier: "production",
             style_pack_id: "style_industrial_west",
             ship_allowed: true,
+            presentation: "pixel_world",
         ),
         (
             atlas_id: "rowhouse_victorian_pilot_v1",
@@ -34,6 +35,7 @@
             development_tier: "production",
             style_pack_id: "style_victorian",
             ship_allowed: true,
+            presentation: "pixel_world",
         ),
         (
             atlas_id: "warehouse_industrial_west_v2",
@@ -45,6 +47,7 @@
             development_tier: "production",
             style_pack_id: "",
             ship_allowed: true,
+            presentation: "pixel_world",
         ),
     ],
 )

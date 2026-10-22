@@ -28,30 +28,19 @@ use bevy::render::render_resource::{Extent3d, TextureDescriptor, TextureDimensio
 
 
 use crate::engine::{ActiveTestScene, BaseState, EngineLaunchArgs, TestScene};
-use crate::gui::{MapViewInstances, MapViewPresentationStates, MapViewState};
-use crate::gui::{map_toolbar, map_toolbar_minimap_zoom, MapToolbarConfig};
+use crate::gui::{MapViewInstances, MapViewPresentationStates};
 use crate::gui::{
-    camera_translation, compute_map_fit_strict, resolve_minimap_texture_source,
-    ActiveMapViewInput, InputBindings, MapCameraDesired, MapCameraDesiredRes, MapPresentationDiagnostics,
-    MapTextureSource, MapViewInstanceId, MinimapInteractionBuffer, MinimapPresentationSource,
-    MinimapShellState, ResolvedMapViewFrames, SimulationMapViewport, ViewAuthoritySystemSet,
-    ViewId, ViewManager, native_minimap_window_supported, paint_tactical_viewport_frame_on_minimap,
-    MAP_PANEL_INSET_PX, view_surface_screen_to_world,
+    camera_translation, resolve_minimap_texture_source, InputBindings, MapCameraDesired, MapCameraDesiredRes,
+    MapTextureSource, MapViewInstanceId,
+    MinimapShellState, ViewAuthoritySystemSet,
+    ViewId, ViewManager,
 };
 use crate::render::MinimapRenderTargetRegistry;
-use crate::gui::hud::cached_egui_texture::HudEguiTextureCache;
 use crate::gui::hud::frame_budget_diagnostics::{FrameBudgetBucket, FrameBudgetDiagnostics, FrameBudgetTimer};
-use crate::gui::hud::layout_store::HudLayoutStore;
-use crate::gui::hud::pending_hud_layout_commit::PendingHudLayoutCommit;
-use crate::gui::hud::shell_framework::{capture_shell_layout, HudWidgetId};
-use crate::gui::hud::{ProductShellDiagnostics, ViewportRectSanity, ViewportRectSource};
 use crate::gui::MainWorldCamera;
 use crate::gui::editor::world_preview::layers::PreviewLayers;
-use crate::gui::{ensure_viewport_camera_initialized, fit_viewport_to_map};
 use crate::gui::preview_partial_min_interval_from_hz;
 use crate::render::{FireVisualFrameSet, SharedOverlayFieldBuffers};
-use crate::render::FireAtmosphereAggregate;
-use crate::gui::style::UiPalette;
 use crate::gui::editor::map_editor::MapEditorRoadMarkerV1;
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::{
@@ -69,6 +58,16 @@ pub struct TileWorldFallbackSprite;
 struct TileFallbackGpuStampInputs<'w> {
     authority: Res<'w, TerrainRenderAuthority>,
     gpu_stamps: ResMut<'w, crate::gui::map_tile_atlas_stamp::TerrainGpuStampIndices>,
+}
+
+/// Dual-view + atlas cache inputs (keeps `sync_tile_fallback_raster_policy` under Bevy param limits).
+#[derive(SystemParam)]
+struct TileFallbackDualViewAtlasInputs<'w> {
+    world_mode: Option<Res<'w, crate::gui::WorldPresentationMode>>,
+    consume: Option<ResMut<'w, crate::gui::PixelWorldLandscapeConsume>>,
+    atlas_cache: ResMut<'w, crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
+    tile_registry: Option<Res<'w, crate::construction::procedural::TileAtlasRegistry>>,
+    catalog: Option<Res<'w, crate::construction::procedural::VariantCatalog>>,
 }
 
 #[derive(Resource, Default)]
@@ -429,6 +428,8 @@ pub struct TileWorldFallbackRasterCtrl {
     last_raster_zoom_band: Option<u8>,
     /// Building iso stamps for tactical map material swap (from [`TileAtlasRegistry`]).
     pub atlas_stamps: Vec<crate::gui::map_tile_atlas_stamp::TileAtlasStampRequest>,
+    /// PixelWorld landscape LG-5 atlas stamps (same RTT hole; cleared in Tactical).
+    pub landscape_atlas_stamps: Vec<crate::gui::map_tile_atlas_stamp::TileAtlasStampRequest>,
 }
 
 impl TileWorldFallbackRasterCtrl {
@@ -601,8 +602,10 @@ impl Plugin for TileWorldFallbackPlugin {
                         .after(mark_tile_world_fallback_dirty_on_changes),
                     sync_tile_fallback_raster_policy
                         .after(mark_tile_world_fallback_dirty_on_map_overlay_controls),
+                    queue_pixel_world_landscape_atlas_stamps
+                        .after(sync_tile_fallback_raster_policy),
                     tile_world_fallback_rasterize
-                        .after(sync_tile_fallback_raster_policy)
+                        .after(queue_pixel_world_landscape_atlas_stamps)
                         .after(crate::render::WaterSurfaceVisualSet)
                         .run_if(in_state(BaseState::Simulation).or_else(in_state(BaseState::Editor))),
                     sync_tile_fallback_sprite_after_raster.after(tile_world_fallback_rasterize),
@@ -916,29 +919,35 @@ struct MapOverlayRasterWatch {
     minimap_layers: PreviewLayers,
     minimap_fire: bool,
     height_slope: bool,
+    /// PixelWorld landscape relief (from [`crate::gui::PixelWorldLandscapeIntent`]).
+    pixel_world_relief: bool,
 }
 
 fn mark_tile_world_fallback_dirty_on_map_overlay_controls(
     map_views: Res<MapViewInstances>,
     presentation: Res<MapViewPresentationStates>,
     play_map: Res<crate::gui::map_tile_raster::PlayMapPixelMode>,
+    pixel_world: Option<Res<crate::gui::PixelWorldLandscapeIntent>>,
     mut dirty: ResMut<TileWorldFallbackRasterDirty>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
     mut last: Local<MapOverlayRasterWatch>,
 ) {
     let sim = presentation.get(MapViewInstanceId::SimulationMap);
     let minimap = &map_views.minimap;
+    let pixel_world_relief = pixel_world.map(|i| i.relief_active()).unwrap_or(false);
     if sim.layers != last.sim_layers
         || sim.overlays.fire_heat != last.sim_fire
         || minimap.layers != last.minimap_layers
         || minimap.overlays.fire_heat != last.minimap_fire
         || play_map.height_slope != last.height_slope
+        || pixel_world_relief != last.pixel_world_relief
     {
         last.sim_layers = sim.layers;
         last.sim_fire = sim.overlays.fire_heat;
         last.minimap_layers = minimap.layers;
         last.minimap_fire = minimap.overlays.fire_heat;
         last.height_slope = play_map.height_slope;
+        last.pixel_world_relief = pixel_world_relief;
         raster_ctrl.chunk_grid.mark_all_dirty();
         dirty.bump();
     }
@@ -951,22 +960,27 @@ fn sync_tile_fallback_raster_policy(
     spike_guard: Option<Res<crate::engine::UxFrameSpikeGuard>>,
     raster_spike_feedback: Option<Res<crate::render::TileRasterSpikeFeedback>>,
     mut raster_budget: ResMut<crate::render::TileRasterBudget>,
-    tile_registry: Option<Res<crate::construction::procedural::TileAtlasRegistry>>,
     asset_server: Res<AssetServer>,
+    dual_view: TileFallbackDualViewAtlasInputs,
     sites: Query<(
         &crate::strategic::PlannedSite,
         &crate::strategic::ConstructionSite,
         &crate::strategic::SiteFootprint,
         Option<&crate::strategic::ProceduralBuildingSpec>,
     )>,
-    catalog: Option<Res<crate::construction::procedural::VariantCatalog>>,
     sim_tick: Option<Res<crate::systems::sim_control::SimTick>>,
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
     mut policy: ResMut<TileFallbackRasterPolicy>,
     mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
-    mut atlas_cache: ResMut<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
     mut gpu_stamp_inputs: TileFallbackGpuStampInputs,
 ) {
+    let TileFallbackDualViewAtlasInputs {
+        world_mode,
+        mut consume,
+        mut atlas_cache,
+        tile_registry,
+        catalog,
+    } = dual_view;
     let authority = gpu_stamp_inputs.authority.as_ref();
     let spike_active = spike_guard
         .as_deref()
@@ -991,32 +1005,41 @@ fn sync_tile_fallback_raster_policy(
         atlas_cache.as_mut(),
     );
     raster_ctrl.atlas_stamps.clear();
-    if let Some(registry) = tile_registry.as_deref() {
-        let tick = sim_tick.as_deref().map(|t| t.0).unwrap_or(0);
-        let overlay_heat = overlay
-            .as_deref()
-            .map(|o| {
-                o.chunk_fire_heat
-                    .values()
-                    .copied()
-                    .fold(0.0f32, f32::max)
-            })
-            .unwrap_or(0.0);
-        for (planned, site, footprint, spec) in &sites {
-            if let Some(stamp) = crate::gui::map_tile_atlas_stamp::stamp_request_for_site(
-                registry,
-                catalog.as_deref(),
-                tick,
-                overlay_heat,
-                planned,
-                site,
-                footprint,
-                spec,
-            ) {
-                raster_ctrl.atlas_stamps.push(stamp);
+    // Dual-view: building iso atlases are PixelWorld art home only.
+    // Tactical keeps occupation/icons — no APS module-kit dump (plan_dual_view_pixel_world_v1).
+    let pixel_world = world_mode.as_ref().is_some_and(|m| m.is_pixel_world());
+    if pixel_world {
+        if let Some(registry) = tile_registry.as_deref() {
+            let tick = sim_tick.as_deref().map(|t| t.0).unwrap_or(0);
+            let overlay_heat = overlay
+                .as_deref()
+                .map(|o| {
+                    o.chunk_fire_heat
+                        .values()
+                        .copied()
+                        .fold(0.0f32, f32::max)
+                })
+                .unwrap_or(0.0);
+            for (planned, site, footprint, spec) in &sites {
+                if let Some(stamp) = crate::gui::map_tile_atlas_stamp::stamp_request_for_site(
+                    registry,
+                    catalog.as_deref(),
+                    tick,
+                    overlay_heat,
+                    planned,
+                    site,
+                    footprint,
+                    spec,
+                ) {
+                    raster_ctrl.atlas_stamps.push(stamp);
+                }
             }
         }
     }
+    if let Some(ref mut c) = consume {
+        c.building_stamp_count = raster_ctrl.atlas_stamps.len();
+    }
+    // Landscape stamps are queued by `queue_pixel_world_landscape_atlas_stamps` (PixelWorld only).
     if authority.is_gpu() {
         crate::gui::map_tile_atlas_stamp::queue_gpu_terrain_stamp_indices(
             &raster_ctrl.atlas_stamps,
@@ -1024,6 +1047,100 @@ fn sync_tile_fallback_raster_policy(
         );
     } else {
         gpu_stamp_inputs.gpu_stamps.tiles.clear();
+    }
+}
+
+/// PixelWorld only — stamp real LG-5 landscape atlas tiles into the same RTT hole.
+fn queue_pixel_world_landscape_atlas_stamps(
+    mode: Option<Res<crate::gui::WorldPresentationMode>>,
+    landscape: Option<Res<crate::systems::ecology::LandscapeAtlasRegistry>>,
+    asset_server: Res<AssetServer>,
+    mut atlas_cache: ResMut<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
+    mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
+    mut dirty: ResMut<TileWorldFallbackRasterDirty>,
+    mut consume: Option<ResMut<crate::gui::PixelWorldLandscapeConsume>>,
+    chunks: Query<(
+        &crate::terrain::generation::Chunk,
+        &crate::terrain::generation::ChunkCellMatrix,
+        Option<&crate::systems::ecology::LandscapeProgramOnChunk>,
+        Option<&crate::systems::ecology::VegetationField>,
+        Option<&crate::systems::ecology::ActiveBurn>,
+        Option<&crate::systems::ecology::SuccessionState>,
+    )>,
+    mut last_stamp_count: Local<usize>,
+) {
+    let pixel = mode.as_ref().is_some_and(|m| m.is_pixel_world());
+    if !pixel {
+        if !raster_ctrl.landscape_atlas_stamps.is_empty() {
+            raster_ctrl.landscape_atlas_stamps.clear();
+            dirty.bump();
+            *last_stamp_count = 0;
+        }
+        if let Some(ref mut c) = consume {
+            c.active_band = crate::gui::PixelWorldLandscapeBand::LandformRelief;
+            c.stamped_chunk_count = 0;
+            c.veg_modulated_stamp_count = 0;
+        }
+        return;
+    }
+
+    crate::gui::landscape_chunk_atlas_stamp::preload_landscape_atlas_gpu_cache(
+        landscape.as_deref(),
+        asset_server.as_ref(),
+        atlas_cache.as_mut(),
+    );
+
+    let Some(registry) = landscape.as_deref() else {
+        raster_ctrl.landscape_atlas_stamps.clear();
+        return;
+    };
+    if registry.lg5_entry().is_none() {
+        raster_ctrl.landscape_atlas_stamps.clear();
+        return;
+    }
+
+    let stamps =
+        crate::gui::landscape_chunk_atlas_stamp::build_pixel_world_landscape_tile_stamps(
+            registry,
+            chunks.iter().map(|(chunk, matrix, program, veg, burn, succ)| {
+                (
+                    chunk,
+                    matrix,
+                    program,
+                    crate::gui::landscape_chunk_atlas_stamp::PixelWorldVegStampInputs {
+                        veg,
+                        burn,
+                        succession: succ,
+                    },
+                )
+            }),
+        );
+    let count = stamps.len();
+    let veg_modulated = stamps
+        .iter()
+        .filter(|s| {
+            s.variant_key.contains("burn")
+                || s.variant_key.contains("scar")
+                || s.variant_key.contains("regrowth")
+        })
+        .count();
+    if count != *last_stamp_count {
+        dirty.bump();
+        raster_ctrl.chunk_grid.mark_all_dirty();
+        *last_stamp_count = count;
+    }
+    raster_ctrl.landscape_atlas_stamps = stamps;
+
+    if let Some(ref mut c) = consume {
+        c.pixel_world_active = true;
+        c.stamped_chunk_count = count;
+        c.veg_modulated_stamp_count = veg_modulated;
+        c.active_band = if count > 0 {
+            crate::gui::PixelWorldLandscapeBand::LandscapeAtlasStamp
+        } else {
+            crate::gui::PixelWorldLandscapeBand::LandformRelief
+        };
+        c.primary_pack_id = Some(crate::systems::ecology::LG5_ATLAS_ID.to_string());
     }
 }
 
@@ -1258,6 +1375,7 @@ struct TileFallbackRasterExtras<'w> {
     towns: Option<Res<'w, crate::strategic::TownBook>>,
     pending: Option<Res<'w, crate::construction::PendingConstructionQueue>>,
     play_map: Res<'w, crate::gui::map_tile_raster::PlayMapPixelMode>,
+    pixel_world: Option<Res<'w, crate::gui::PixelWorldLandscapeIntent>>,
 }
 
 fn tile_world_fallback_rasterize(
@@ -1297,6 +1415,7 @@ fn tile_world_fallback_rasterize(
         towns,
         pending,
         play_map,
+        pixel_world,
     } = extras;
     let mut tracer_cells: Vec<(i32, i32)> = Vec::new();
     let mut impact_cells: Vec<(i32, i32)> = Vec::new();
@@ -1412,25 +1531,27 @@ fn tile_world_fallback_rasterize(
     }
 
     let mut atlas_owned: HashMap<String, (Vec<u8>, usize, usize)> = HashMap::new();
-    if !raster_ctrl.atlas_stamps.is_empty() {
-        for req in &raster_ctrl.atlas_stamps {
-            if atlas_owned.contains_key(&req.atlas_id) {
-                continue;
-            }
-            let Some(handle) = atlas_cache.handles.get(&req.atlas_id) else {
-                continue;
-            };
-            let Some(image) = images.get(handle) else {
-                continue;
-            };
-            let Some(data) = image.data.as_ref() else {
-                continue;
-            };
-            let w = image.width() as usize;
-            let h = image.height() as usize;
-            if w > 0 && h > 0 {
-                atlas_owned.insert(req.atlas_id.clone(), (data.to_vec(), w, h));
-            }
+    let stamp_iters = raster_ctrl
+        .atlas_stamps
+        .iter()
+        .chain(raster_ctrl.landscape_atlas_stamps.iter());
+    for req in stamp_iters {
+        if atlas_owned.contains_key(&req.atlas_id) {
+            continue;
+        }
+        let Some(handle) = atlas_cache.handles.get(&req.atlas_id) else {
+            continue;
+        };
+        let Some(image) = images.get(handle) else {
+            continue;
+        };
+        let Some(data) = image.data.as_ref() else {
+            continue;
+        };
+        let w = image.width() as usize;
+        let h = image.height() as usize;
+        if w > 0 && h > 0 {
+            atlas_owned.insert(req.atlas_id.clone(), (data.to_vec(), w, h));
         }
     }
     let atlas_slices: HashMap<String, (&[u8], usize, usize)> = atlas_owned
@@ -1471,7 +1592,16 @@ fn tile_world_fallback_rasterize(
         .collect();
 
     let sim = presentation.get(MapViewInstanceId::SimulationMap);
-    let sim_layers = crate::gui::map_tile_raster::layers_for_play_sprite(*play_map, sim.layers);
+    let pixel_world_relief = pixel_world
+        .as_ref()
+        .map(|i| i.relief_active())
+        .unwrap_or(false);
+    let play_effective = crate::gui::map_tile_raster::effective_play_map_pixel_mode(
+        *play_map,
+        pixel_world_relief,
+    );
+    let sim_layers =
+        crate::gui::map_tile_raster::layers_for_play_sprite(play_effective, sim.layers);
     let minimap = &map_views.minimap;
 
     rebuild_tile_world_fallback_index(
@@ -1538,22 +1668,35 @@ fn tile_world_fallback_rasterize(
                 &growth_cells,
             );
 
-            if !raster_ctrl.atlas_stamps.is_empty()
-                && !atlas_slices.is_empty()
+            if !atlas_slices.is_empty()
                 && crate::gui::map_tile_atlas_stamp::stamp_cpu_rgba_blit_enabled(*authority)
             {
                 if let Some(mut dest_image) = images.get_mut(&state.image) {
                     if let Some(data) = dest_image.data.as_mut() {
-                        crate::gui::map_tile_atlas_stamp::apply_atlas_stamps_to_rgba_subregion(
-                            data,
-                            tex_w,
-                            x0,
-                            y0,
-                            x1,
-                            y1,
-                            &raster_ctrl.atlas_stamps,
-                            &atlas_slices,
-                        );
+                        if !raster_ctrl.atlas_stamps.is_empty() {
+                            crate::gui::map_tile_atlas_stamp::apply_atlas_stamps_to_rgba_subregion(
+                                data,
+                                tex_w,
+                                x0,
+                                y0,
+                                x1,
+                                y1,
+                                &raster_ctrl.atlas_stamps,
+                                &atlas_slices,
+                            );
+                        }
+                        if !raster_ctrl.landscape_atlas_stamps.is_empty() {
+                            crate::gui::map_tile_atlas_stamp::apply_atlas_stamps_to_rgba_subregion(
+                                data,
+                                tex_w,
+                                x0,
+                                y0,
+                                x1,
+                                y1,
+                                &raster_ctrl.landscape_atlas_stamps,
+                                &atlas_slices,
+                            );
+                        }
                     }
                 }
             }
@@ -1688,6 +1831,8 @@ pub fn simulation_minimap_egui_texture() {}
 #[cfg(test)]
 mod chunk_grid_tests {
     use super::*;
+    use crate::gui::MinimapPresentationSource;
+
     #[test]
     fn cpu_minimap_raster_skipped_on_main_sim_gpu_path() {
         let shell = MinimapShellState {

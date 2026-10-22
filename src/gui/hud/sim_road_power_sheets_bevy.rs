@@ -10,6 +10,7 @@ use crate::construction::{
     PowerLineRoutingMode, RailType, RoadSnapSettings, RoadToolPopupState, RoadType, ToolContext,
 };
 use crate::engine::states::BaseState;
+use crate::gui::hud::power_hud_icon_atlas::{PowerHudDrawnIcon, PowerHudIconId};
 use crate::gui::hud::sim_hud_copy::{
     ROAD_SHEET_BUILD, ROAD_SHEET_CANCEL, ROAD_SHEET_HINT_INPUT, ROAD_SHEET_UPGRADE,
 };
@@ -99,6 +100,50 @@ fn spawn_sheet_button(
             marker,
         ))
         .with_children(|b| {
+            b.spawn((
+                Text::new(label.to_string()),
+                TextFont::from_font_size(12.0).with_font(font.clone()),
+                TextColor(palette.bevy_primary_text()),
+            ));
+        });
+}
+
+fn spawn_sheet_button_with_icon(
+    parent: &mut ChildSpawnerCommands<'_>,
+    font: &Handle<Font>,
+    palette: &UiPalette,
+    icon: PowerHudIconId,
+    label: &str,
+    marker: impl Bundle,
+) {
+    parent
+        .spawn((
+            Button,
+            Node {
+                min_height: Val::Px(32.0),
+                padding: UiRect::axes(Val::Px(8.0), Val::Px(6.0)),
+                border: UiRect::all(Val::Px(1.0)),
+                justify_content: JustifyContent::Center,
+                align_items: AlignItems::Center,
+                column_gap: Val::Px(4.0),
+                flex_direction: FlexDirection::Row,
+                ..default()
+            },
+            BackgroundColor(palette.bevy_hud_panel_fill()),
+            BorderColor::all(palette.bevy_border_subtle()),
+            marker,
+        ))
+        .with_children(|b| {
+            b.spawn((
+                Node {
+                    width: Val::Px(16.0),
+                    height: Val::Px(16.0),
+                    flex_shrink: 0.0,
+                    ..default()
+                },
+                PowerHudDrawnIcon(icon),
+                bevy::ui::widget::ImageNode::default(),
+            ));
             b.spawn((
                 Text::new(label.to_string()),
                 TextFont::from_font_size(12.0).with_font(font.clone()),
@@ -200,11 +245,31 @@ pub fn spawn_sim_road_power_sheets_bevy(
         ))
         .with_children(|root| {
             root.spawn((
-                Text::new("Power line"),
-                TextFont::from_font_size(14.0).with_font(font.clone()),
-                TextColor(palette.bevy_primary_text()),
-                SimPowerSheetTitle,
-            ));
+                Node {
+                    flex_direction: FlexDirection::Row,
+                    align_items: AlignItems::Center,
+                    column_gap: Val::Px(6.0),
+                    ..default()
+                },
+            ))
+            .with_children(|title_row| {
+                title_row.spawn((
+                    Node {
+                        width: Val::Px(20.0),
+                        height: Val::Px(20.0),
+                        flex_shrink: 0.0,
+                        ..default()
+                    },
+                    PowerHudDrawnIcon(PowerHudIconId::PowerLineTool),
+                    bevy::ui::widget::ImageNode::default(),
+                ));
+                title_row.spawn((
+                    Text::new("Power line"),
+                    TextFont::from_font_size(14.0).with_font(font.clone()),
+                    TextColor(palette.bevy_primary_text()),
+                    SimPowerSheetTitle,
+                ));
+            });
             root.spawn((
                 Node {
                     flex_direction: FlexDirection::Row,
@@ -217,7 +282,14 @@ pub fn spawn_sim_road_power_sheets_bevy(
                     (PowerLineRoutingMode::Curved, "Curved"),
                     (PowerLineRoutingMode::Orthogonal90, "90°"),
                 ] {
-                    spawn_sheet_button(row, &font, &palette, label, SimPowerModePick(mode));
+                    spawn_sheet_button_with_icon(
+                        row,
+                        &font,
+                        &palette,
+                        PowerHudIconId::for_routing_mode(mode),
+                        label,
+                        SimPowerModePick(mode),
+                    );
                 }
             });
             root.spawn((
@@ -233,7 +305,14 @@ pub fn spawn_sim_road_power_sheets_bevy(
                     (VoltageClass::Medium, "Medium"),
                     (VoltageClass::High, "Transmission"),
                 ] {
-                    spawn_sheet_button(row, &font, &palette, label, SimPowerVoltagePick(v));
+                    spawn_sheet_button_with_icon(
+                        row,
+                        &font,
+                        &palette,
+                        PowerHudIconId::for_voltage(v),
+                        label,
+                        SimPowerVoltagePick(v),
+                    );
                 }
             });
             root.spawn((

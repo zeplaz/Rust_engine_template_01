@@ -342,7 +342,12 @@
         },
         "lexicon": { "type": "string" },
         "operator_source": { "type": "string" },
-        "pictorial_ref": { "type": "string" }
+        "pictorial_ref": { "type": "string" },
+        "presentation": {
+          "type": "string",
+          "description": "Dual-view ship target — default pixel_world (DESIGN-DUAL-VIEW-ART-HOME-001). tactical_icon is thin symbols only.",
+          "enum": ["pixel_world", "tactical_icon"]
+        }
       },
       "additionalProperties": false
     },

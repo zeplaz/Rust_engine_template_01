@@ -33,6 +33,19 @@ impl Default for PlayMapPixelMode {
     }
 }
 
+/// Merge ops-strip [`PlayMapPixelMode`] with PixelWorld landscape intent (view-only OR).
+///
+/// Does **not** write `PlayMapPixelMode` — PixelWorld reads [`crate::gui::PixelWorldLandscapeIntent`].
+#[must_use]
+pub fn effective_play_map_pixel_mode(
+    play: PlayMapPixelMode,
+    pixel_world_relief: bool,
+) -> PlayMapPixelMode {
+    PlayMapPixelMode {
+        height_slope: play.height_slope || pixel_world_relief,
+    }
+}
+
 /// Layers painted into [`crate::render::TileWorldFallbackSprite`].
 ///
 /// Off: the presentation mask, with an empty base filled by biome plus relief.
@@ -797,6 +810,10 @@ mod tests {
         let mut data = vec![0u8; 4];
         paint_one(PlayMapPixelMode::default(), &mut data);
         let biome = data.clone();
+        assert!(
+            effective_play_map_pixel_mode(PlayMapPixelMode::default(), true).height_slope,
+            "PixelWorld relief ORs into play height_slope without writing PlayMapPixelMode"
+        );
         let on = PlayMapPixelMode { height_slope: true };
         let layers = layers_for_play_sprite(on, PreviewLayers::BIOME);
         assert!(layers.base_bits().contains(PreviewLayers::HEIGHT));

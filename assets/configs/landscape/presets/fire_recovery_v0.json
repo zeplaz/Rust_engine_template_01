@@ -25,7 +25,12 @@
   "landscape_program": {
     "class": "natural",
     "district_ref": "fire_recovery_08",
-    "required_topologies": ["PATCH_IRREGULAR", "CORRIDOR_RAILSIDE", "CLUSTER_NATURAL", "FRINGE_EDGE"]
+    "required_topologies": [
+      "PATCH_IRREGULAR",
+      "CORRIDOR_RAILSIDE",
+      "CLUSTER_NATURAL",
+      "FRINGE_EDGE"
+    ]
   },
   "topology_graph": [
     {
@@ -35,7 +40,10 @@
       "scale_band": "L",
       "anchor_ref": "partition:chunk_08_burn",
       "parent_topology_id": null,
-      "operator_stack": ["anchor_partition", "network_link"]
+      "operator_stack": [
+        "anchor_partition",
+        "network_link"
+      ]
     },
     {
       "id": "patch_burn_01",
@@ -44,8 +52,13 @@
       "scale_band": "M",
       "anchor_ref": "site:burn_scar_a",
       "parent_topology_id": "net_fire_01",
-      "operator_stack": ["seed_patch", "clear_suppress"],
-      "metadata": { "glyph_planning": "○▒▒" }
+      "operator_stack": [
+        "seed_patch",
+        "clear_suppress"
+      ],
+      "metadata": {
+        "glyph_planning": "○▒▒"
+      }
     },
     {
       "id": "corr_spoil_01",
@@ -54,7 +67,10 @@
       "scale_band": "M",
       "anchor_ref": "transport:spoil_line_08",
       "parent_topology_id": "net_fire_01",
-      "operator_stack": ["anchor_road", "corridor"]
+      "operator_stack": [
+        "anchor_road",
+        "corridor"
+      ]
     },
     {
       "id": "cluster_regrow_01",
@@ -62,8 +78,13 @@
       "preset_id": "CLUSTER_NATURAL",
       "scale_band": "S",
       "parent_topology_id": "patch_burn_01",
-      "operator_stack": ["cluster", "expand"],
-      "metadata": { "glyph_planning": "◊◊" }
+      "operator_stack": [
+        "cluster",
+        "expand"
+      ],
+      "metadata": {
+        "glyph_planning": "◊◊"
+      }
     },
     {
       "id": "fringe_edge_01",
@@ -72,7 +93,12 @@
       "scale_band": "S",
       "anchor_ref": "field:burn_margin",
       "parent_topology_id": "net_fire_01",
-      "operator_stack": ["fringe"]
+      "operator_stack": [
+        "fringe"
+      ]
     }
-  ]
+  ],
+  "_meta": {
+    "presentation": "pixel_world"
+  }
 }

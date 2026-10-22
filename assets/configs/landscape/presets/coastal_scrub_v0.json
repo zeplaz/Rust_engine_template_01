@@ -25,7 +25,12 @@
   "landscape_program": {
     "class": "natural",
     "district_ref": "coastal_scrub_03",
-    "required_topologies": ["CORRIDOR_ROADSIDE", "PATCH_IRREGULAR", "FRINGE_EDGE", "CLUSTER_NATURAL"]
+    "required_topologies": [
+      "CORRIDOR_ROADSIDE",
+      "PATCH_IRREGULAR",
+      "FRINGE_EDGE",
+      "CLUSTER_NATURAL"
+    ]
   },
   "topology_graph": [
     {
@@ -35,7 +40,10 @@
       "scale_band": "L",
       "anchor_ref": "partition:chunk_08_coast",
       "parent_topology_id": null,
-      "operator_stack": ["anchor_partition", "network_link"]
+      "operator_stack": [
+        "anchor_partition",
+        "network_link"
+      ]
     },
     {
       "id": "corr_dune_01",
@@ -44,8 +52,14 @@
       "scale_band": "M",
       "anchor_ref": "coast:dune_edge_08",
       "parent_topology_id": "net_coast_01",
-      "operator_stack": ["anchor_road", "corridor", "expand"],
-      "metadata": { "glyph_planning": "═══" }
+      "operator_stack": [
+        "anchor_road",
+        "corridor",
+        "expand"
+      ],
+      "metadata": {
+        "glyph_planning": "═══"
+      }
     },
     {
       "id": "patch_scrub_01",
@@ -54,7 +68,11 @@
       "scale_band": "M",
       "anchor_ref": "site:scrub_patch_a",
       "parent_topology_id": "net_coast_01",
-      "operator_stack": ["seed_patch", "cluster", "expand"]
+      "operator_stack": [
+        "seed_patch",
+        "cluster",
+        "expand"
+      ]
     },
     {
       "id": "fringe_salt_01",
@@ -63,7 +81,10 @@
       "scale_band": "S",
       "anchor_ref": "coast:salt_margin",
       "parent_topology_id": "net_coast_01",
-      "operator_stack": ["anchor_site_edge", "fringe"]
+      "operator_stack": [
+        "anchor_site_edge",
+        "fringe"
+      ]
     },
     {
       "id": "cluster_wind_01",
@@ -71,7 +92,12 @@
       "preset_id": "CLUSTER_NATURAL",
       "scale_band": "S",
       "parent_topology_id": "patch_scrub_01",
-      "operator_stack": ["cluster"]
+      "operator_stack": [
+        "cluster"
+      ]
     }
-  ]
+  ],
+  "_meta": {
+    "presentation": "pixel_world"
+  }
 }

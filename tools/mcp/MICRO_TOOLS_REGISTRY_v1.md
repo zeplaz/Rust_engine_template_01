@@ -214,7 +214,9 @@ Doc: [`docs/archive/2026-06-src-dev/plans/mcp_productivity_p1_plan_v1.md`](../..
 | `refresh_mcp_landscape_grammar_sign_witness.py` | Thin wrapper → batch module | **SHIPPED** |
 
 **Index:** `assets/configs/landscape/_preset_index.json` (30 topology + 10 ship presets)  
-**Witness:** `debug_runs/mcp_landscape_grammar_sign_live.json` · batch: `debug_runs/mcp_landscape_grammar_preset_batch_live.json`  
+**Witness:** `debug_runs/mcp_landscape_grammar_sign_live.json` · batch: `debug_runs/mcp_landscape_grammar_preset_batch_live.json`
+
+**Dual-view:** ship landscape presets use `_meta.presentation: "pixel_world"` → engine `PixelWorldLandscapePackIndex` (`src/gui/art_presentation_target.rs`). Tactical icons stay `presentation: tactical_icon`. Building kits → **DR-PIXEL-WORLD-APS-MESH**. Charter: `src/dev/design_dual_view_art_home_v1.md`.  
 **Hook:** `tools/orchestrator/hooks/post_build.ps1` (disable: `$env:RUST_ENGINE_LG_PRESET_HOOK='0'`)
 
 ## Tier 1h — Variant graph (ARCH-002) (**SIGNED** 2026-06-14)
