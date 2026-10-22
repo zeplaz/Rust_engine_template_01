@@ -4,22 +4,17 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 use crate::construction::{
-    commit_power_line_to_utility_graph, ActivePowerLinePlacement, ActiveBuildTool, BuildStripState,
+    ActivePowerLinePlacement, ActiveBuildTool, BuildStripState,
     BuildTool, PowerLineRoutingMode, ToolContext,
 };
-use crate::engine::states::BaseState;
 use crate::gui::hud::power_hud_icon_atlas::{
-    draw_power_hud_icon_labeled, PowerHudEguiTextureCache, PowerHudIconAtlasManifest,
+    PowerHudEguiTextureCache, PowerHudIconAtlasManifest,
     PowerHudIconAtlasUi, PowerHudIconId,
 };
 use crate::gui::UiPalette;
 use crate::infrastructure::utility::graph::{UtilityGraph, UtilityNetworkSnapshotResource};
 use crate::infrastructure::VoltageClass;
 
-use super::sim_hud_egui_theme::{
-    apply_sim_hud_egui_theme, body_text, caption_text, data_text, picker_header_frame,
-    picker_sheet_frame, title_text,
-};
 
 pub const POWER_TOOL_SHEET_W_PX: f32 = 300.0;
 /// Logical height of the Bevy power sheet, used by the pointer gate (not a second window).
@@ -63,18 +58,12 @@ pub fn power_tool_sheet_anchor(strip: &BuildStripState, left_stack_collapsed: bo
     )
 }
 
-fn voltage_label(v: VoltageClass) -> &'static str {
-    match v {
-        VoltageClass::Low => "Distribution",
-        VoltageClass::Medium => "Medium",
-        VoltageClass::High => "Transmission",
-    }
-}
-
-
 #[must_use]
 pub fn sim_power_tool_sheet_icons_wired() -> bool {
     crate::gui::hud::power_hud_icon_atlas::power_hud_atlas_assets_on_disk()
+        && crate::gui::hud::power_hud_icon_atlas::power_hud_bevy_draw_path_wired()
+        && include_str!("sim_road_power_sheets_bevy.rs").contains("spawn_sheet_button_with_icon")
+        && include_str!("sim_road_power_sheets_bevy.rs").contains("PowerHudDrawnIcon")
         && PowerHudIconId::for_voltage(VoltageClass::Medium) == PowerHudIconId::VoltageMedium
         && PowerHudIconId::for_routing_mode(PowerLineRoutingMode::Curved) == PowerHudIconId::RouteCurved
 }

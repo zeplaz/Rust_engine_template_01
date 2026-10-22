@@ -209,9 +209,10 @@ pub use super::witness::stage5_closure_witnesses::{
     Stage5MapCameraBridgeWitness,
 };
 pub use super::witness::stage5_readiness::{
-    evaluate_app_stage5_readiness, evaluate_stage5_spine_checklist, stage5_readiness_passes,
-    AppStage5ReadinessReport, Stage5ReadinessEvalInvocation, Stage5ReadinessPlugin,
-    Stage5ReadinessProfile, Stage5SpineChecklist, PERF_PLAY_READINESS_GREEN_LOG_INTERVAL,
+    evaluate_app_stage5_readiness, evaluate_stage5_spine_checklist, stage5_full_app_env_requested,
+    stage5_full_app_profile_requested, stage5_readiness_passes, AppStage5ReadinessReport,
+    Stage5ReadinessEvalInvocation, Stage5ReadinessPlugin, Stage5ReadinessProfile,
+    Stage5SpineChecklist, PERF_PLAY_READINESS_GREEN_LOG_INTERVAL,
 };
 pub use super::probes::debug_render_trace::{
     trace_camera_sync, trace_particle_routing, trace_render_target, trace_viewport,
@@ -281,6 +282,7 @@ pub use super::pipelines::overlay_field_buffers::{
     chunk_fire_heat_maps_differ, chunk_fire_heat_maps_differ_eps, CHUNK_FIRE_HEAT_OVERLAY_EPS,
     CHUNK_FIRE_OVERLAY_DISPLAY_MIN, SharedOverlayFieldBuffers, SharedOverlayFieldBuffersPlugin,
 };
+pub use super::extraction::build_chunk_fire_heat_overlay_map;
 pub use super::witness::visual_agreement::{
     hash_chunk_fire_heat, hash_shared_overlay_heat, hash_simulation_chunk_heat_for_overlay,
     record_visual_agreement_frame,

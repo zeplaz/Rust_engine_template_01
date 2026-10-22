@@ -379,6 +379,7 @@ pub struct UiShellMigrationWitness {
 }
 
 #[derive(Resource, Default, Debug)]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub(crate) struct UiShellMigrationWitnessReplay {
     sim_frames: u32,
     done: bool,
@@ -386,13 +387,16 @@ pub(crate) struct UiShellMigrationWitnessReplay {
 }
 
 /// Minimum sim frames before capture harness replays P1/P2 interaction witnesses (task 1.6).
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 const WITNESS_REPLAY_MIN_SIM_FRAMES: u32 = 30;
 
 #[must_use]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn witness_capture_replay_active(launch: &EngineLaunchArgs) -> bool {
     launch.maneuver.writes_full_capture_proof() && launch.test_scene == crate::engine::TestScene::Visual
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn reset_ui_shell_witness_replay(mut replay: ResMut<UiShellMigrationWitnessReplay>) {
     *replay = UiShellMigrationWitnessReplay::default();
 }
@@ -781,6 +785,7 @@ pub fn ui_witness_interaction_block_green(witness: &UiShellMigrationWitness) -> 
 }
 
 /// Full-capture harness: replay ALERTS / INTEL / Escape once so live JSON witnesses §1.6 without manual clicks.
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn replay_ui_shell_witness_interactions_system(
     launch: Option<Res<EngineLaunchArgs>>,
     base: Res<State<BaseState>>,
@@ -1693,6 +1698,7 @@ fn sync_petroleum_panel_tab_system(
     }
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn sync_minimap_gpu_image_node_system(
     registry: Res<MinimapRenderTargetRegistry>,
     fallback: Res<crate::render::TileWorldFallbackState>,
@@ -1780,6 +1786,7 @@ fn sync_minimap_gpu_image_node_system(
     compositor.dual_minimap_present = false;
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn sync_minimap_chrome_root_system(
     mut minimap: ResMut<MinimapShellState>,
     win: Query<&Window, With<PrimaryWindow>>,
@@ -1846,6 +1853,7 @@ fn sync_minimap_chrome_root_system(
 /// pointer system's `title_bar_rect` / `resize_grip_rect`. Read-only over the size authority: it only
 /// places children inside the already-resolved content box, never resizes the panel.
 #[allow(clippy::type_complexity)]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn sync_minimap_chrome_layout_system(
     minimap: Res<MinimapShellState>,
     mut title_q: Query<
@@ -2540,6 +2548,7 @@ pub fn commit_ui_shell_migration_live_proof_with_gates(
     crate::dev::debug_run_envelope::write_debug_run_json(UI_SHELL_MIGRATION_LIVE_PROOF_PATH, payload)
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub(crate) fn write_ui_shell_migration_live_proof_system(
     mut state: ResMut<UiShellMigrationLiveProofState>,
     witness: Res<UiShellMigrationWitness>,

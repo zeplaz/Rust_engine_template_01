@@ -19,7 +19,6 @@ use crate::gui::{
 };
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewRuntimeTrace};
 use crate::gui::minimap_egui_dev::{minimap_egui_dev_enabled, MinimapEguiDevGate};
-use crate::render::minimap_compositor::MinimapCompositorState;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 /// Gold viewport indicator drawn over the GPU minimap image (Bevy UI host).

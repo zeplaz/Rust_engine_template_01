@@ -1,6 +1,5 @@
 //! One overlay cell scored through `site_score`. Nothing is stored.
 
-use bevy::prelude::IVec2;
 
 use super::runbook_rounds::city_planning::site_score;
 
@@ -45,6 +44,8 @@ pub fn sample_overlay_site(
 
 #[cfg(test)]
 mod tests {
+    use bevy::math::IVec2;
+
     use super::*;
     use crate::strategic::site_score;
 

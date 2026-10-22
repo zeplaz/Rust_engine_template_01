@@ -1,21 +1,17 @@
 //! Rail path input (parallel to roads — separate placement resource).
 
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 
 use crate::gui::hud::simulation_pointer_gate::{
     simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
 };
 
-use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use crate::terrain::generation::WorldGenDenseTerrainCache;
 use crate::construction::map_pick_params::ConstructionMapPick;
 
 use super::super::build_tool_authority::{ActiveBuildTool, BuildTool};
 use super::super::construction_pipeline::ConstructionPlanQueue;
 use super::super::path_feedback::ConstructionPathFeedback;
-use super::super::roads::cursor_world_on_map;
 use super::super::sessions::ActiveToolSession;
 use super::super::snap::{snap_placement, RoadSnapSettings, SnapTarget};
 use super::super::terrain_conform::conform_vec3;

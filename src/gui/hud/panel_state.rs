@@ -6,9 +6,6 @@
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
-use crate::engine::states::BaseState;
-use crate::engine::AppState;
-use crate::gui::hud::shell_diagnostics::{note_egui_context_acquired, ProductShellDiagnostics};
 use crate::gui::hud::simulation_pointer_gate::{
     simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
 };

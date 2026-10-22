@@ -129,11 +129,14 @@ pub fn build_view_representation_snapshot(
 pub fn validate_view_representation_snapshot(
     profile: Res<Stage5ReadinessProfile>,
     snapshot: Res<ViewRepresentationSnapshot>,
-    mut report: ResMut<AppStage5ReadinessReport>,
+    report: Option<ResMut<AppStage5ReadinessReport>>,
 ) {
     if *profile != Stage5ReadinessProfile::FULL_APP || !snapshot.committed {
         return;
     }
+    let Some(mut report) = report else {
+        return;
+    };
     if snapshot.gpu_target_size.x == 0 || snapshot.gpu_target_size.y == 0 {
         report
             .violations

@@ -87,5 +87,3 @@ pub fn note_egui_context_acquired(
 
 /// Simulation-scheduled egui draw used by the EGR-1 lib test. Not registered on the game app.
 pub fn egr_probe_sim_egui_draw_system() -> Result { Ok(()) }
-
-fn egui_probe_label() {}

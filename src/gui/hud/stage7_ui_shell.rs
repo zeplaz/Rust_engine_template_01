@@ -7,9 +7,7 @@ use crate::strategic::{
     OverlayChannelDescriptor, UtilityChannel,
 };
 
-use super::explainability_viewer::{draw_explainability_viewer, ExplainabilityViewerState};
-use super::hud_async_task_queue::{HudAsyncTask, HudAsyncTaskQueue};
-use super::virtualized_list::draw_virtualized_rows;
+use super::explainability_viewer::ExplainabilityViewerState;
 use crate::systems::sim_control::SimStepStamp;
 
 #[derive(Resource, Clone, Debug, Default)]

@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 
 use crate::strategic::settlement::{
-    ArchetypeId, AutoBuildPolicyBook, GrowthProposal, GrowthProposalQueue,
+    ArchetypeId, GrowthProposal, GrowthProposalQueue,
 };
 use crate::systems::ecology::LandscapeProgramOnChunk;
 

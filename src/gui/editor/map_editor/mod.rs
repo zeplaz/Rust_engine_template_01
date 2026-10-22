@@ -53,56 +53,17 @@ use crate::terrain::generation::world_generator_enhanced::{
 };
 use crate::terrain::material::{MaterialId, MaterialRegistry};
 
-use brush::{sync_tool_to_substate, tile_in_brush};
+use brush::sync_tool_to_substate;
 use road_markers::{
-    height_at_tile, map_editor_road_undo, place_road_marker, road_authoring_ghost_refresh,
+    map_editor_road_undo, road_authoring_ghost_refresh,
 };
 use transport_io::{
-    dev_hybrid_world_save_path, dev_map_snapshot_path, dev_transport_network_save_path,
     map_editor_bake_transport, map_editor_dev_load_hybrid_world, map_editor_dev_load_transport,
     map_editor_dev_save_hybrid_world, map_editor_dev_save_transport, map_editor_map_snapshot_io,
 };
 
 /// Vertical exaggeration in world units; must stay in sync with world generator tile spawn.
 pub const HEIGHT_WORLD_SCALE: f32 = 20.0;
-
-fn apply_terrain_brush(
-    tool: &MapEditorTool,
-    center_x: u32,
-    center_y: u32,
-    tiles: &mut Query<
-        (&mut Transform, &mut Height, &mut TerrainType),
-        (With<TileMarker>, Without<MapEditorRoadMarkerV1>),
-    >,
-    height_delta_opt: Option<f32>,
-) {
-    let r = tool.brush_radius.max(1.0);
-    let cx = center_x as f32;
-    let cy = center_y as f32;
-
-    for (mut tf, mut height, mut terrain) in tiles.iter_mut() {
-        let tx = tf.translation.x;
-        let tz = tf.translation.z;
-        if !tile_in_brush(tool.brush_shape, cx, cy, tx, tz, r) {
-            continue;
-        }
-        match tool.kind {
-            MapEditorToolKind::Terrain => match tool.terrain_paint {
-                MapEditorTerrainPaint::Height => {
-                    if let Some(d) = height_delta_opt {
-                        let v = (height.0 + d).clamp(0.0, 1.0);
-                        height.0 = v;
-                        tf.translation.y = v * HEIGHT_WORLD_SCALE;
-                    }
-                }
-                MapEditorTerrainPaint::Biome => {
-                    terrain.0 = tool.paint_biome;
-                }
-            },
-            _ => {}
-        }
-    }
-}
 
 fn on_enter_editor(
     app: Res<State<AppState>>,
@@ -334,21 +295,11 @@ struct MapEditorMinimapFallbackText;
 struct MapEditorScenarioBody;
 
 #[derive(Component, Clone, Copy)]
-struct MapEditorPalettePick(MapEditorToolKind);
+pub struct MapEditorPalettePick(MapEditorToolKind);
 
 #[derive(Default)]
-struct MapEditorShellStamp {
+pub struct MapEditorShellStamp {
     key: u64,
-}
-
-/// Retired egui body — Bevy sync owns chrome via [`sync_map_editor_bevy_shell`].
-fn map_editor_minimap_window() -> Result {
-    Ok(())
-}
-
-/// Retired egui body — Bevy sync owns chrome via [`sync_map_editor_bevy_shell`].
-fn map_editor_palette_system() -> Result {
-    Ok(())
 }
 
 fn map_editor_shell_stamp(

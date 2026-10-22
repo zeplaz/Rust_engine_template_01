@@ -3,7 +3,6 @@
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-use crate::gui::style::{muted_text, UiPalette};
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct StreamedChunkDiagnosticDto {

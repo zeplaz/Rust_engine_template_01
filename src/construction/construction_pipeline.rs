@@ -20,7 +20,6 @@ use super::corridor_transport::{
     transport_edge_from_binding, RailProfileSelection, SimCorridorEdgeBinding,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use crate::terrain::generation::WorldGenDenseTerrainCache;
 
 use super::terrain_conform::{conform_world_y, ConstructionTerrainConform};
 use crate::strategic::BuildSiteTile;

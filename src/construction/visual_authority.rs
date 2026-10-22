@@ -2,11 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::construction::map_egui_projection::map_zoom_screen_scale;
-use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
-use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::strategic::BuildSiteTile;
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 #[derive(Clone, Copy, Debug)]
 pub enum VisualPathKind {
@@ -70,6 +66,8 @@ pub struct ConstructionVisualRequests {
     pub footprint_tiles: Vec<FootprintTileRequest>,
     /// Tiles of the live ghost that take the gold lock ring (`BuildPlacementMode::Adjust` only).
     pub footprint_lock_tiles: Vec<IVec2>,
+    /// Ebbtide-style column stacks — presentation only ([`super::voxel_massing`]).
+    pub massing_columns: Vec<super::voxel_massing::VoxelColumnRequest>,
     pub corridor_paths: Vec<super::round4_corridor::CorridorPhasePathRequest>,
     pub site_stub_boxes: Vec<SiteStubBoxRequest>,
     pub site_zone_labels: Vec<SiteZoneLabelRequest>,
@@ -82,6 +80,7 @@ impl ConstructionVisualRequests {
         self.control_points.clear();
         self.footprint_tiles.clear();
         self.footprint_lock_tiles.clear();
+        self.massing_columns.clear();
         self.corridor_paths.clear();
         self.site_stub_boxes.clear();
         self.site_zone_labels.clear();

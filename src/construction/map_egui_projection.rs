@@ -169,6 +169,7 @@ pub fn world_to_sim_map_screen(
 }
 
 #[must_use]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn world_to_sim_map_screen_rendered(
     world: Vec3,
     ortho: Option<&MainWorldCameraOrthoTrace>,
@@ -182,6 +183,7 @@ pub fn world_to_sim_map_screen_rendered(
 }
 
 #[must_use]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn map_zoom_screen_scale(
     authority: Option<&ViewProjectionAuthority>,
     desired: &MapCameraDesired,

@@ -9,11 +9,8 @@ use bevy::prelude::*;
 use bevy::window::{CursorOptions, PrimaryWindow};
 
 use crate::engine::states::BaseState;
-use crate::engine::AppState;
 
-use crate::gui::hud::layout_store::HudLayoutStore;
 use crate::gui::hud::panel_state::HudPanelState;
-use crate::gui::hud::shell_framework::{HudDockRegistry, ProductShellWidgetId};
 use crate::gui::hud::simulation_shell_phase2::{
     command_left_stack_footprint_px, sim_build_rail_submenu_block_rect, ContextTrayState,
     CONTEXT_TRAY_BODY_H_PX, CONTEXT_TRAY_PEEK_BODY_H_PX, CONTEXT_TRAY_TAB_H_PX,
@@ -332,30 +329,6 @@ fn sim_build_rail_submenu_blocks_pointer(
     }
     sim_build_rail_submenu_block_rect(picker, left_stack.collapsed)
         .contains(bevy::prelude::Vec2::new(cursor.x, cursor.y))
-}
-
-#[inline]
-fn cursor_over_visible_hud_widget(
-    cursor: Vec2,
-    dock: &HudDockRegistry,
-    layout: &HudLayoutStore,
-) -> bool {
-    let pt = bevy::prelude::Vec2::new(cursor.x, cursor.y);
-    for widget in ProductShellWidgetId::ALL {
-        let slot = dock.slot(widget);
-        if !slot.visible || slot.minimized {
-            continue;
-        }
-        let frame = layout.frame(widget);
-        if !frame.initialized {
-            continue;
-        }
-        let rect = bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(frame.pos.x, frame.pos.y), bevy::prelude::Vec2::new(frame.pos.x, frame.pos.y) + bevy::prelude::Vec2::new(frame.size.x.max(1.0), frame.size.y.max(1.0)),);
-        if rect.contains(pt) {
-            return true;
-        }
-    }
-    false
 }
 
 /// **TRIAGE-CURSOR-UNIFY-001** / design_build_ux §5 — placement active when strip or tool selected.

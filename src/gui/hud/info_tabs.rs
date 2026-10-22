@@ -7,19 +7,12 @@ use crate::construction::PendingConstructionQueue;
 use crate::gui::construction_growth_inspector::EcologyGrowthHint;
 use crate::gui::logistics_focus::HudLogisticsFocus;
 use crate::gui::ui_gates::in_simulation_or_editor;
-use crate::gui::world_representation::WorldRepresentationFrame;
-use crate::render::{AppStage5ReadinessReport, FireAtmosphereAggregate, GpuRepresentationMetrics,
-    infrastructure_overlay_legend_rows, InfrastructureOverlaySettings};
+use crate::render::{FireAtmosphereAggregate, GpuRepresentationMetrics};
 use crate::strategic::{
     ActiveMissions, CityPlanningHints, FractureProbabilityOverlay, LogisticsAiRuntime,
     OperationalTheaterSummary, StrategicOverlayDisplayPolicy, WorldFields, WorldReadSnapshot,
 };
 use crate::systems::sim_control::{SimControlState, SimTick};
-
-use super::hud_chrome::flat_v2_tray_tab;
-use super::overlay_framework::OverlayFrameworkState;
-use super::overlay_shell::{mock_overlay_channel_descriptors, OverlayShellState, OverlayToggleGroup};
-use crate::gui::style::{error_text, UiPalette};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum HudInfoTab {
@@ -158,24 +151,10 @@ pub fn sync_hud_info_live_data(
     }
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_info_tab_bar() {}
 
-fn sync_infra_overlay_from_utility_group(
-    shell: &OverlayShellState,
-    settings: &mut InfrastructureOverlaySettings,
-) {
-    let utility_on = shell.groups[3];
-    if utility_on && !settings.enabled {
-        settings.enabled = true;
-        settings.road = true;
-        settings.rail = true;
-    } else if !utility_on {
-        settings.enabled = false;
-    }
-}
-
-fn draw_infrastructure_overlay_legend() {}
-
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_info_tab_body() {}
 
 pub struct HudInfoTabPlugin;

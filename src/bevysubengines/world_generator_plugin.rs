@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::Write;
 use std::path::Path;
-use crate::gui::style::widget_scroll_vertical_fill;
 use crate::terrain::{
     additively_weighted_voronoi_diagram_generation,
     centroidal_voronoi_diagram_generation,
@@ -19,7 +18,6 @@ use crate::terrain::ecology::estimate_ecological_suitability;
 use crate::terrain::generation::terrain_noise::{
     build_fbm_perlin, build_height_noise, sample_height_field, NoiseSamplingTuning, TerrainNoiseProfile,
 };
-use crate::terrain::generation::world_generator_enhanced::MAX_WORLD_GEN_AXIS;
 use noise::NoiseFn;
 
 // Separate subengine plugin for world generation
@@ -42,6 +40,7 @@ impl Plugin for WorldGeneratorSubenginePlugin {
 }
 
 /// Duplicate generator window stays off the playing session and off the WorldGen Bevy shell.
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn subengine_world_gen_editor_only(
     base: Option<Res<State<crate::engine::states::BaseState>>>,
     app: Option<Res<State<crate::engine::AppState>>>,
@@ -196,8 +195,11 @@ pub struct LoadWorldEvent {
     pub path: String,
 }
 
-// Main UI system — runs in RetiredUiPass, returns Result (retired_ui 0.39).
-fn world_gen_ui_system() -> Result { Ok(()) }
+// Main UI system — retired egui body; Bevy WorldGen shell owns chrome.
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
+fn world_gen_ui_system() -> Result {
+    Ok(())
+}
 
 // Handle generate world event
 fn handle_generate_world_event(

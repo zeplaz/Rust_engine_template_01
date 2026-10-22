@@ -1,15 +1,10 @@
 //! Residential submenu — zoning + catalog-backed structures.
+//! egui body retired; Bevy build picker owns chrome.
 
-
-use super::build_tool_authority::{ActiveBuildTool, BuildTool, BuildingArchetypeId, ZoneTool};
-use super::building_catalog::{ApartmentForm, BuildingIntentPreview};
-use super::building_definitions::{intent_from_apartment_form, BuildingDefinitionRegistry};
-
-fn pick_structure(tool: &mut ActiveBuildTool, preview: BuildingIntentPreview) {
-    tool.tool = BuildTool::Building(BuildingArchetypeId::Housing);
-    tool.building_intent = Some(preview);
-}
-
+/// Retired egui entry — Bevy picker owns residential picks.
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_residential_submenu() {}
 
+/// Retired egui intent preview paint.
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_intent_preview() {}

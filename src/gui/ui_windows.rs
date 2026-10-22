@@ -1,6 +1,5 @@
-use bevy::{prelude::*, window::PrimaryWindow};
+use bevy::prelude::*;
 
-use crate::gui::InputBindings;
 // will go in gui:
 pub fn run_prompt_getter() {
     //    let mut input_box = InputBoxState::new();

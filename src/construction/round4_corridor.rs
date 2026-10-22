@@ -6,8 +6,6 @@ use crate::strategic::{ConstructionPhase, CorridorConstructionBook};
 use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId};
 
 use super::build_strip::{BuildStripState, ToolContext};
-use super::build_tool_authority::{ActiveBuildTool, BuildTool};
-use super::ghost_visual::{corridor_in_progress_color, corridor_planned_color};
 use super::visual_authority::ConstructionVisualRequests;
 
 /// Product gate for Round 4 coder lanes (`construction_round4_product_gate_plan_v1.md`).
@@ -85,48 +83,13 @@ pub fn sync_corridor_phase_visual_requests(
     }
 }
 
+/// Retired egui corridor path paint — Bevy network mesh owns live strokes.
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_corridor_phase_paths() {}
 
-fn clip_polyline_by_progress(points: &[bevy::prelude::Vec2], progress: f32) -> Vec<bevy::prelude::Vec2> {
-    if points.is_empty() {
-        return Vec::new();
-    }
-    if progress <= 0.0 {
-        return vec![points[0]];
-    }
-    if progress >= 1.0 {
-        return points.to_vec();
-    }
-    let mut total = 0.0f32;
-    for w in points.windows(2) {
-        total += w[0].distance(w[1]);
-    }
-    let target = total * progress;
-    let mut out = vec![points[0]];
-    let mut walked = 0.0f32;
-    for w in points.windows(2) {
-        let seg = w[0].distance(w[1]);
-        if walked + seg >= target {
-            let t = if seg > 1e-6 {
-                ((target - walked) / seg).clamp(0.0, 1.0)
-            } else {
-                0.0
-            };
-            out.push(w[0].lerp(w[1], t));
-            return out;
-        }
-        walked += seg;
-        out.push(w[1]);
-    }
-    out
-}
-
-fn stroke_polyline_dashed() {}
-
 /// 48+52 footer legend (`construction_r4_tray_legend_v1.md`).
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_r4_corridor_tray_legend() {}
-
-fn legend_swatch() {}
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct CorridorBookCounts {

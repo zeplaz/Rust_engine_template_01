@@ -7,13 +7,6 @@ use std::collections::VecDeque;
 use bevy::prelude::*;
 
 use crate::gui::input_bindings::InputBindings;
-use crate::gui::hud::{
-    capture_shell_layout, draw_virtualized_rows, shell_widget_runs_egui_with_budget,
-    show_product_shell_window, HudDockRegistry, HudLayoutStore, HudWidgetId, HudAsyncTask,
-    HudAsyncTaskQueue, PendingHudLayoutCommit, ProductShellUpdateBudget, ProductShellWidgetId,
-    RetainedWidgetCache, ShellWidgetDiagnostics, ShellWindowHost, draw_retained_lines_or_build,
-};
-use crate::gui::style::{severity_tone_color, SeverityTone, UiPalette};
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::strategic::{DispatchEnvelope, NarrativeCategory, NarrativeObservationBus};
 use crate::systems::sim_control::SimStepStamp;
@@ -254,16 +247,6 @@ fn mock_dispatch_for_event(event: &TransmissionEvent) -> DispatchEnvelope {
             _ => 0.05,
         },
     }
-}
-
-fn severity_color(palette: &UiPalette, severity: TransmissionSeverity) -> crate::gui::UiRgba {
-    let tone = match severity {
-        TransmissionSeverity::Routine => SeverityTone::Routine,
-        TransmissionSeverity::Advisory => SeverityTone::Advisory,
-        TransmissionSeverity::Urgent => SeverityTone::Urgent,
-        TransmissionSeverity::Emergency => SeverityTone::Emergency,
-    };
-    severity_tone_color(palette, tone)
 }
 
 pub struct TransmissionShellPlugin;

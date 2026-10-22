@@ -11,10 +11,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use crate::compute::ComputeDispatchGraph;
-use crate::render::{
-    record_visual_agreement_frame, GpuRepresentationMetrics, VisualAgreementFrame,
-    ViewportPipelineSet, WorldFireParticleFrame,
-};
+use crate::render::{GpuRepresentationMetrics, ViewportPipelineSet, WorldFireParticleFrame};
 use crate::render::extraction::RenderProjectionGraph;
 
 use super::representation_policy::RepresentationResult;
@@ -455,18 +452,14 @@ pub struct ViewRepresentationPlugin;
 impl Plugin for ViewRepresentationPlugin {
     fn build(&self, app: &mut App) {
         super::world_representation::register_world_representation_frame(app);
-        app.add_plugins(crate::render::Stage5ReadinessPlugin);
-        app.add_plugins(crate::render::FullRenderDiagnosticPlugin);
+        // Product spine only. Stage5 readiness / VT-CI / visual agreement / FULL_APP proof
+        // plugins live on TestHarnessPlugin — not here.
         app.add_plugins(crate::render::MinimapCompositorPlugin);
-        app.add_plugins(crate::render::VtCiMatrixPlugin);
-        app.add_plugins(crate::render::PhaseFLodProofPlugin);
         app.add_plugins(crate::render::DomainProjectionFramePlugin);
         app.add_plugins(crate::render::GpuIndirectDrawSpinePlugin);
         app.add_plugins(crate::io::streaming::StreamingSpinePlugin);
         app.add_plugins(super::map_view::MapViewPlugin);
-        app.init_resource::<VisualAgreementFrame>()
-            .init_resource::<crate::render::OverlayAgreementDebug>()
-            .init_resource::<GpuRepresentationMetrics>()
+        app.init_resource::<GpuRepresentationMetrics>()
             .init_resource::<crate::render::LogisticsVisualSnapshot>()
             .init_resource::<crate::render::EcologyVisualSnapshot>()
             .init_resource::<CameraVisualState>()
@@ -540,14 +533,6 @@ impl Plugin for ViewRepresentationPlugin {
                     .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)
                     .after(crate::render::extraction::FireVisualFrameSet::EmitParticles)
                     .in_set(ViewRepresentationSystemSet::SyncRepresentationMetrics),
-            )
-            .add_systems(
-                Update,
-                record_visual_agreement_frame
-                    .after(ViewRepresentationSystemSet::SyncOverlayField)
-                    .after(crate::render::extraction::sync_shared_overlay_from_simulation)
-                    .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)
-                    .after(crate::gui::editor::world_preview::capture_world_preview_vt4_probe),
             )
             .add_systems(
                 Update,

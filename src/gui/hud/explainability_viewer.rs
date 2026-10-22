@@ -2,7 +2,6 @@
 
 use bevy::prelude::*;
 
-use super::virtualized_list::draw_virtualized_rows;
 
 use crate::strategic::BeliefSnapshotDto;
 use crate::systems::sim_control::SimStepStamp;

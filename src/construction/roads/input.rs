@@ -1,7 +1,6 @@
 //! Road path input: LMB add, RMB undo last, Shift+LMB commit (P2-02).
 
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 
 use crate::construction::map_egui_projection::ConstructionMapProjection;
 use crate::construction::map_pick_params::ConstructionMapPick;

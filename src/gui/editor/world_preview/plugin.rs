@@ -65,7 +65,9 @@ fn seed_full_app_gpu_preview_authority_for_readiness(
 
 impl Plugin for WorldPreviewPlugin {
     fn build(&self, app: &mut App) {
-        app.insert_resource(crate::render::Stage5ReadinessProfile::FULL_APP);
+        // Do not force FULL_APP here — EnginePlugin owns the profile (HEADLESS default;
+        // FULL_APP only under test_mode / STAGE5_FULL_APP=1). Preview GPU authority seeds
+        // from the live profile via `seed_full_app_gpu_preview_authority_for_readiness`.
         app.init_resource::<CompositePreviewGraphResource>();
         preview_render_contract::init_preview_render_contract_resources(app);
         app.init_resource::<crate::gui::SwapImageBuffers>()

@@ -240,7 +240,7 @@ pub fn chain_edges(mut edges: Vec<(IVec2, IVec2)>, left_slot: u8, right_slot: u8
     }
     let mut used = vec![false; edges.len()];
     let mut lines = Vec::new();
-    let mut walk = |start: usize, used: &mut Vec<bool>| -> FrontPolyline {
+    let walk = |start: usize, used: &mut Vec<bool>| -> FrontPolyline {
         let (s, e) = edges[start];
         used[start] = true;
         let mut pts = vec![s, e];

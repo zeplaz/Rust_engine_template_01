@@ -6,7 +6,7 @@ mod resolve;
 mod types;
 
 pub use display::{
-    minimap_bevy_display_texel_extent, minimap_main_display_uses_gpu_compositor,
+    minimap_bevy_display_texel_extent,
     resolve_minimap_bevy_display_handle,
 };
 pub use preview::resolve_world_preview_texture_source;
