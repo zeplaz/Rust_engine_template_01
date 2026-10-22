@@ -276,7 +276,11 @@ fn sim_has_display_chunk_heat(
     })
 }
 
-fn build_chunk_fire_heat_overlay_map(
+/// Filtered overlay heat map — same contract as [`sync_shared_overlay_from_simulation`]:
+/// max heat per chunk, [`CHUNK_FIRE_OVERLAY_DISPLAY_MIN`] floor, optional residency gate.
+/// VT-4 agreement must hash this map (not raw max-of-all sim heat).
+#[must_use]
+pub fn build_chunk_fire_heat_overlay_map(
     sim: &FireSimulationSnapshot,
     residency: Option<&crate::io::streaming::ChunkResidencyTable>,
 ) -> HashMap<IVec2, f32> {
@@ -510,6 +514,13 @@ fn ingest_fire_chunk_row(
                 if cell_heat < FIRE_VISUAL_ACTIVE_HEAT_EPS {
                     continue;
                 }
+                // Fire event = heat with fuel still burning, or burn-hold residue after fuel drop.
+                // Empty water has neither — a ship/building on water carries fuel and passes.
+                let cell_fuel = ovl.fuel.get(idx).copied().unwrap_or(0.0);
+                let burn_hold = ovl.burn_hold.get(idx).copied().unwrap_or(0);
+                if cell_fuel <= 0.0 && burn_hold == 0 {
+                    continue;
+                }
                 let cell_xy = crate::terrain::generation::chunk_cell_world_center(
                     chunk.coord,
                     matrix.size,
@@ -524,7 +535,12 @@ fn ingest_fire_chunk_row(
             }
         }
     }
-    if instances_written == 0 {
+    // No geographic water cull: sparks follow fire events. Chunk-center fallback only when
+    // the scalar surface fire still has fuel (avoids inventing sparks over empty ocean).
+    if instances_written == 0
+        && profile.heat > FIRE_VISUAL_ACTIVE_HEAT_EPS
+        && fire.fuel > 0.0
+    {
         sim.instances.push(FireVisualGpuInstance::from(&profile));
         instances_written = 1;
     }
@@ -1056,7 +1072,7 @@ mod vt1_full_world_fire_extract_tests {
     use crate::render::pipelines::light::RequestLocalLight;
     use crate::render::SharedOverlayFieldBuffersPlugin;
     use crate::systems::atmosphere::AtmosphereDiagnostics;
-    use crate::systems::fire::{ChunkSurfaceFire, FireLightEmission};
+    use crate::systems::fire::{ChunkFireOverlay, ChunkSurfaceFire, FireLightEmission};
     use crate::terrain::generation::{Chunk, ChunkCellMatrix};
     use bevy::math::{IVec2, UVec2};
     use bevy::prelude::*;
@@ -1142,6 +1158,80 @@ mod vt1_full_world_fire_extract_tests {
         );
         *world.resource_mut::<RepresentationResult>() =
             build_representation_result(&frame, &inputs);
+    }
+
+    #[test]
+    fn heat_without_fuel_or_burn_hold_does_not_emit_visual_fire() {
+        // Sparks follow fire events (fuel / burn-hold), not bare heat ghosts (e.g. empty water).
+        let mut app = fire_visual_test_app();
+        insert_operational_view_manager(app.world_mut());
+        let cell = UVec2::new(4, 4);
+        let n = (cell.x * cell.y) as usize;
+        app.world_mut().spawn((
+            Chunk {
+                coord: IVec2::ZERO,
+            },
+            ChunkCellMatrix::new(cell),
+            ChunkSurfaceFire {
+                heat: 0.9,
+                fuel: 0.0,
+            },
+            ChunkFireOverlay {
+                heat: vec![0.9; n],
+                fuel: vec![0.0; n],
+                smoke: vec![0.0; n],
+                toxic: vec![0.0; n],
+                burn_hold: vec![0; n],
+            },
+            sample_emitter(),
+        ));
+        sync_representation_policy(app.world_mut());
+        app.update();
+        let by_view = app.world().resource::<FireVisualFramesByView>();
+        let frame = tactical_fire_visual(by_view);
+        assert!(
+            frame.instances.is_empty(),
+            "ghost heat with no fuel/burn-hold must not invent fire visuals"
+        );
+    }
+
+    #[test]
+    fn fueled_heat_on_cells_emits_visual_fire_even_if_chunk_is_coastal() {
+        // Ship/building fuel on a water-adjacent chunk still burns — no geographic ban.
+        let mut app = fire_visual_test_app();
+        insert_operational_view_manager(app.world_mut());
+        let cell = UVec2::new(4, 4);
+        let n = (cell.x * cell.y) as usize;
+        let mut fuel = vec![0.0; n];
+        fuel[0] = 0.8;
+        let mut heat = vec![0.0; n];
+        heat[0] = 0.85;
+        app.world_mut().spawn((
+            Chunk {
+                coord: IVec2::ZERO,
+            },
+            ChunkCellMatrix::new(cell),
+            ChunkSurfaceFire {
+                heat: 0.85,
+                fuel: 0.8,
+            },
+            ChunkFireOverlay {
+                heat,
+                fuel,
+                smoke: vec![0.0; n],
+                toxic: vec![0.0; n],
+                burn_hold: vec![0; n],
+            },
+            sample_emitter(),
+        ));
+        sync_representation_policy(app.world_mut());
+        app.update();
+        let by_view = app.world().resource::<FireVisualFramesByView>();
+        let frame = tactical_fire_visual(by_view);
+        assert!(
+            !frame.instances.is_empty(),
+            "fueled fire event must produce visual instances"
+        );
     }
 
     #[test]

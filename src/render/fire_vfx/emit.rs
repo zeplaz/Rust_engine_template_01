@@ -1,4 +1,7 @@
 //! Fire particle emission from post-LOD projection graph (frontend).
+//!
+//! Sparks follow **fire events** (heat with fuel / burn-hold), not geography.
+//! Empty water does not burn in sim; a fueled fire on water (e.g. ship) still emits.
 
 use bevy::math::{UVec2, Vec2, Vec4};
 use bevy::prelude::*;
@@ -1301,4 +1304,5 @@ mod tests {
         );
         assert!(frame.spark_witness.rows > 0);
     }
+
 }

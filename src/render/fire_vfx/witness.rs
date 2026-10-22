@@ -71,6 +71,7 @@ pub(crate) fn fire_spark_witness_phase() -> &'static str {
 /// Camera scale axis for spark cull / heat boost (px-per-world-unit == px-per-tile).
 #[inline]
 #[must_use]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn fire_spark_px_per_tile(scale_x: f32) -> f32 {
     scale_x.abs()
 }
@@ -78,6 +79,7 @@ pub fn fire_spark_px_per_tile(scale_x: f32) -> f32 {
 /// True when GPU sparks and CPU heat boost should both be active at this zoom.
 #[inline]
 #[must_use]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn fire_spark_enabled_at_px_per_tile(px_per_tile: f32) -> bool {
     fire_spark_px_per_tile(px_per_tile) >= FIRE_SPARK_MIN_PX_PER_TILE
 }
@@ -85,6 +87,7 @@ pub fn fire_spark_enabled_at_px_per_tile(px_per_tile: f32) -> bool {
 /// FIRE-VIS-001: scatter ramp on **px-per-tile** (camera `zoom_level`), not `zoom_alpha` — see
 /// [`FIRE_SPARK_MIN_PX_PER_TILE`]. Continuous ramp 0..1 between min and full-scatter px-per-tile.
 #[inline]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub(crate) fn fire_spark_zoom_scatter_gate(px_per_tile: f32) -> f32 {
     let span = (FIRE_SPARK_FULL_SCATTER_PX_PER_TILE - FIRE_SPARK_MIN_PX_PER_TILE).max(1e-4);
     ((px_per_tile - FIRE_SPARK_MIN_PX_PER_TILE) / span).clamp(0.0, 1.0)
