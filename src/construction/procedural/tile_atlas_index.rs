@@ -35,6 +35,9 @@ struct TileAtlasIndexEntryRaw {
     style_pack_id: String,
     #[serde(default = "default_ship_allowed")]
     ship_allowed: bool,
+    /// Dual-view art home — `pixel_world` | `tactical_icon` (ignored by stamp path; policy only).
+    #[serde(default)]
+    presentation: String,
 }
 
 fn default_ship_allowed() -> bool {
@@ -101,6 +104,8 @@ pub struct TileAtlasEntry {
     pub style_pack_id: String,
     /// Explicit ship flag; defaults from tier when omitted in index file.
     pub ship_allowed: bool,
+    /// Art presentation home (`pixel_world` / `tactical_icon` / empty = ship default PixelWorld).
+    pub presentation: String,
     /// v1 fallback: variant_key → UV (facing 0 / frame 0).
     pub variants: HashMap<String, [f32; 4]>,
     pub meta_schema_version: u32,
@@ -114,6 +119,16 @@ impl TileAtlasEntry {
     #[must_use]
     pub fn runtime_stamp_allowed(&self) -> bool {
         self.ship_allowed && self.development_tier.atlas_runtime_stamp_allowed()
+    }
+
+    /// PixelWorld art-home policy — empty presentation defaults to PixelWorld for ship rows.
+    #[must_use]
+    pub fn is_pixel_world_presentation(&self) -> bool {
+        match self.presentation.trim().to_ascii_lowercase().as_str() {
+            "" | "pixel_world" | "pixelworld" | "world" => true,
+            "tactical_icon" | "tactical" | "icon" => false,
+            _ => true,
+        }
     }
 
     #[must_use]
@@ -338,6 +353,7 @@ fn normalize_entry(raw: TileAtlasIndexEntryRaw) -> Result<TileAtlasEntry, String
         development_tier: tier,
         style_pack_id: raw.style_pack_id,
         ship_allowed,
+        presentation: raw.presentation,
         variants: meta.variants,
         meta_schema_version: meta.schema_version,
         render_facings: meta.render_facings,
@@ -491,17 +507,17 @@ mod tests {
     fn tile_atlas_active_index_ships_production_not_lod0_pilot() {
         let reg = load_tile_atlas_registry();
         assert!(reg.load_errors.is_empty(), "{:?}", reg.load_errors);
+        let prod = reg
+            .get("rowhouse_victorian_production_v1")
+            .expect("TILE-FIX-002: production rowhouse atlas indexed for runtime stamp");
+        assert!(prod.runtime_stamp_allowed());
         assert!(
-            reg.get("rowhouse_victorian_production_v1")
-                .is_some_and(|e| e.runtime_stamp_allowed()),
-            "TILE-FIX-002: production rowhouse atlas indexed for runtime stamp"
+            prod.is_pixel_world_presentation(),
+            "ship production atlases target PixelWorld"
         );
-        let pilot = reg
-            .get("rowhouse_victorian_pilot_v1")
-            .expect("pilot row indexed for tooling");
         assert!(
-            !pilot.runtime_stamp_allowed(),
-            "lod0 pilot must not runtime-stamp"
+            reg.get("rowhouse_victorian_pilot_v1").is_none(),
+            "lod0 pilot stays out of active runtime index (archive only)"
         );
     }
 

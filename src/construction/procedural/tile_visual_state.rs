@@ -129,6 +129,7 @@ mod tests {
             development_tier: DevelopmentTier::Production,
             style_pack_id: String::new(),
             ship_allowed: true,
+            presentation: "pixel_world".into(),
             meta_schema_version: 2,
             render_facings: 8,
             quarter_turn_fallback: true,

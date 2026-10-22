@@ -20,7 +20,7 @@ use super::building_definitions::BuildingDefinitionRegistry;
 pub struct BuildToolboxBevyRoot;
 
 #[derive(Component, Clone, Copy, Debug)]
-enum BuildToolboxAction {
+pub(crate) enum BuildToolboxAction {
     ZoneResidential,
     Commercial,
     Industrial,
@@ -34,7 +34,7 @@ enum BuildToolboxAction {
 }
 
 #[derive(Default)]
-struct BuildToolboxStamp {
+pub(crate) struct BuildToolboxStamp {
     key: u64,
 }
 
@@ -91,8 +91,9 @@ pub fn sync_build_toolbox_bevy(
     }
 
     let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
-    let active = format!("Active: {:?}", tool.tool);
+    let active_label = format!("Active: {:?}", tool.tool);
     let catalog = format!("Catalog rows: {}", registry.by_id.len());
+    let active_tool = tool.as_ref();
 
     commands
         .spawn((
@@ -123,7 +124,7 @@ pub fn sync_build_toolbox_bevy(
                 TextColor(palette.bevy_primary_text()),
             ));
             root.spawn((
-                Text::new(active),
+                Text::new(active_label),
                 tf.clone(),
                 TextColor(palette.bevy_text_muted()),
             ));
@@ -132,15 +133,78 @@ pub fn sync_build_toolbox_bevy(
                 tf.clone(),
                 TextColor(palette.bevy_text_muted()),
             ));
-            spawn_toolbox_button(root, &palette, &tf, "Zoning · Residential…", BuildToolboxAction::ZoneResidential);
-            spawn_toolbox_button(root, &palette, &tf, "Buildings · Commercial…", BuildToolboxAction::Commercial);
-            spawn_toolbox_button(root, &palette, &tf, "Buildings · Industrial…", BuildToolboxAction::Industrial);
-            spawn_toolbox_button(root, &palette, &tf, "Buildings · Utilities…", BuildToolboxAction::Utilities);
-            spawn_toolbox_button(root, &palette, &tf, "Mock shapes (T/O/L)…", BuildToolboxAction::MockShapes);
-            spawn_toolbox_button(root, &palette, &tf, "Roads", BuildToolboxAction::Road);
-            spawn_toolbox_button(root, &palette, &tf, "Rail", BuildToolboxAction::Rail);
-            spawn_toolbox_button(root, &palette, &tf, "Demolish", BuildToolboxAction::Demolish);
-            spawn_toolbox_button(root, &palette, &tf, "Clear tool", BuildToolboxAction::Clear);
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Zoning · Residential…",
+                BuildToolboxAction::ZoneResidential,
+                toolbox_action_selected(&BuildToolboxAction::ZoneResidential, active_tool),
+            );
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Buildings · Commercial…",
+                BuildToolboxAction::Commercial,
+                toolbox_action_selected(&BuildToolboxAction::Commercial, active_tool),
+            );
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Buildings · Industrial…",
+                BuildToolboxAction::Industrial,
+                toolbox_action_selected(&BuildToolboxAction::Industrial, active_tool),
+            );
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Buildings · Utilities…",
+                BuildToolboxAction::Utilities,
+                toolbox_action_selected(&BuildToolboxAction::Utilities, active_tool),
+            );
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Mock shapes (T/O/L)…",
+                BuildToolboxAction::MockShapes,
+                toolbox_action_selected(&BuildToolboxAction::MockShapes, active_tool),
+            );
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Roads",
+                BuildToolboxAction::Road,
+                toolbox_action_selected(&BuildToolboxAction::Road, active_tool),
+            );
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Rail",
+                BuildToolboxAction::Rail,
+                toolbox_action_selected(&BuildToolboxAction::Rail, active_tool),
+            );
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Demolish",
+                BuildToolboxAction::Demolish,
+                toolbox_action_selected(&BuildToolboxAction::Demolish, active_tool),
+            );
+            spawn_toolbox_button(
+                root,
+                &palette,
+                &tf,
+                "Clear tool",
+                BuildToolboxAction::Clear,
+                false,
+            );
             for (kind, label) in [
                 (DefenseKind::DefensiveWall, "Defense · Wall"),
                 (DefenseKind::TrenchLine, "Defense · Trench"),
@@ -148,17 +212,28 @@ pub fn sync_build_toolbox_bevy(
                 (DefenseKind::DragonTeeth, "Defense · Dragon teeth"),
                 (DefenseKind::Minefield, "Defense · Minefield"),
             ] {
-                spawn_toolbox_button(
-                    root,
-                    &palette,
-                    &tf,
-                    label,
-                    BuildToolboxAction::Defense(kind),
-                );
+                let action = BuildToolboxAction::Defense(kind);
+                let selected = toolbox_action_selected(&action, active_tool);
+                spawn_toolbox_button(root, &palette, &tf, label, action, selected);
             }
         });
     stamp.key = next;
     presence.build_toolbox_root = true;
+}
+
+fn toolbox_action_selected(action: &BuildToolboxAction, tool: &ActiveBuildTool) -> bool {
+    match (action, &tool.tool) {
+        (BuildToolboxAction::ZoneResidential, BuildTool::Zone(_)) => tool.residential_menu_open,
+        (BuildToolboxAction::Commercial, BuildTool::Building(_)) => tool.commercial_menu_open,
+        (BuildToolboxAction::Industrial, BuildTool::Building(_)) => tool.industrial_menu_open,
+        (BuildToolboxAction::Utilities, BuildTool::Building(_)) => tool.utilities_menu_open,
+        (BuildToolboxAction::MockShapes, BuildTool::Building(_)) => tool.mock_shapes_menu_open,
+        (BuildToolboxAction::Road, BuildTool::Road(_)) => true,
+        (BuildToolboxAction::Rail, BuildTool::Rail(_)) => true,
+        (BuildToolboxAction::Demolish, BuildTool::Demolish) => true,
+        (BuildToolboxAction::Defense(a), BuildTool::Defense(b)) => a == b,
+        _ => false,
+    }
 }
 
 fn spawn_toolbox_button(
@@ -167,7 +242,13 @@ fn spawn_toolbox_button(
     tf: &TextFont,
     label: &str,
     action: BuildToolboxAction,
+    selected: bool,
 ) {
+    let (bg, border) = if selected {
+        (palette.bevy_accent_action(), palette.bevy_accent_gold())
+    } else {
+        (palette.bevy_button_idle(), palette.bevy_wire_magenta())
+    };
     parent
         .spawn((
             action,
@@ -175,11 +256,11 @@ fn spawn_toolbox_button(
             Node {
                 width: Val::Percent(100.0),
                 padding: UiRect::axes(Val::Px(6.0), Val::Px(4.0)),
-                border: UiRect::all(Val::Px(1.0)),
+                border: UiRect::all(Val::Px(if selected { 2.0 } else { 1.0 })),
                 ..default()
             },
-            BackgroundColor(palette.bevy_button_idle()),
-            BorderColor::all(palette.bevy_wire_magenta()),
+            BackgroundColor(bg),
+            BorderColor::all(border),
             FocusPolicy::Block,
         ))
         .with_children(|btn| {
@@ -288,8 +369,6 @@ pub fn register_build_toolbox_bevy_systems(app: &mut App) {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn build_toolbox_bevy_root_marker_present() {
         assert!(include_str!("build_toolbox.rs").contains("BuildToolboxBevyRoot"));

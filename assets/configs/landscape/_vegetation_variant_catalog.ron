@@ -10,6 +10,7 @@
     _meta: (
         gate: "DMCP-E3-VARIANT-KEY-SET-001",
         ship_catalog_version: 2,
+        presentation: "pixel_world",
         charter: "src/dev/plan_veg_variant_key_naming_v1.md",
         matrix: "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
         keyframe_reqs: "src/dev/design_landscape_keyframe_burn_reqs_v1.md",
@@ -20,7 +21,7 @@
             atlas_bake_v1: 16,
             atlas_sparse_v1: 6,
         ),
-        review: "DMCP-E3 ship catalog v1.1 — sparse atlas rows from keyframe reqs; veg byte parity unchanged",
+        review: "DMCP-E3 ship catalog v1.1 — sparse atlas rows from keyframe reqs; veg byte parity unchanged; PixelWorld presentation home",
     ),
     axes: (
         burn_frame_count: 8,

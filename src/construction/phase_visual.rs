@@ -1,37 +1,8 @@
 //! Construction phase tiles on the map (Syx-style occupation + optional labels).
 
-use bevy::prelude::*;
 
-use crate::construction::map_egui_projection::{
-    tile_screen_extent_rendered, world_to_sim_map_screen_rendered,
-};
-use crate::construction::tile_visual::ConstructionTileVisualSettings;
-use crate::engine::states::BaseState;
-use crate::gui::{MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport};
-use crate::render::view_runtime::ViewProjectionAuthority;
-use crate::strategic::{
-    ConstructionSite, PlannedSite, SiteArchetype, SiteConstructionPhase, SiteFootprint,
-};
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-
-fn site_archetype_label(archetype: SiteArchetype) -> &'static str {
-    match archetype {
-        SiteArchetype::CivilHousing => "Housing",
-        SiteArchetype::Factory => "Factory",
-        SiteArchetype::PowerPlant => "Power",
-        SiteArchetype::RailDepot => "Depot",
-        SiteArchetype::MilitaryBase => "Military",
-        SiteArchetype::RadarSite => "Radar",
-        SiteArchetype::SensorPost => "Sensor",
-        SiteArchetype::TrenchLine => "Trench",
-        SiteArchetype::BunkerComplex => "Bunker",
-        SiteArchetype::DefensiveWall => "Wall",
-        SiteArchetype::DragonTeeth => "Dragon's teeth",
-        SiteArchetype::Minefield => "Minefield",
-        SiteArchetype::FuelDepot => "Fuel depot",
-        SiteArchetype::WaterPlant => "Water",
-    }
-}
+use crate::gui::SimulationMapViewport;
+use crate::strategic::SiteConstructionPhase;
 
 pub fn phase_map_word(phase: SiteConstructionPhase) -> &'static str {
     match phase {
@@ -48,11 +19,47 @@ pub fn phase_map_word(phase: SiteConstructionPhase) -> &'static str {
     }
 }
 
-fn phase_color(phase: SiteConstructionPhase) -> crate::gui::UiRgba {
-    let [r, g, b, a] = super::phase_fill::site_phase_rgba(phase);
-    crate::gui::UiRgba::from_rgba_unmultiplied(r, g, b, a)
+/// Ebbtide FOB-style modular stack band (shell → circulation → aperture → fittings).
+/// Presentation copy for phase readability without relying on hue alone.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum PhaseStackBand {
+    Shell,
+    Circulation,
+    Aperture,
+    Fittings,
+    Complete,
+    Compromised,
 }
 
+#[must_use]
+pub fn phase_stack_band(phase: SiteConstructionPhase) -> PhaseStackBand {
+    match phase {
+        SiteConstructionPhase::Planned | SiteConstructionPhase::Surveying => PhaseStackBand::Shell,
+        SiteConstructionPhase::Clearing | SiteConstructionPhase::Foundation => {
+            PhaseStackBand::Circulation
+        }
+        SiteConstructionPhase::UnderConstruction => PhaseStackBand::Aperture,
+        SiteConstructionPhase::Provisioning => PhaseStackBand::Fittings,
+        SiteConstructionPhase::Operational => PhaseStackBand::Complete,
+        SiteConstructionPhase::Damaged
+        | SiteConstructionPhase::Offline
+        | SiteConstructionPhase::Abandoned => PhaseStackBand::Compromised,
+    }
+}
+
+#[must_use]
+pub fn phase_stack_band_word(band: PhaseStackBand) -> &'static str {
+    match band {
+        PhaseStackBand::Shell => "Shell",
+        PhaseStackBand::Circulation => "Circulation",
+        PhaseStackBand::Aperture => "Aperture",
+        PhaseStackBand::Fittings => "Fittings",
+        PhaseStackBand::Complete => "Complete",
+        PhaseStackBand::Compromised => "Compromised",
+    }
+}
+
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn phase_point_inside_map(map_vp: &SimulationMapViewport, pos: bevy::prelude::Vec2) -> bool {
     pos.x >= map_vp.min.x && pos.x <= map_vp.max.x && pos.y >= map_vp.min.y && pos.y <= map_vp.max.y
 }
@@ -60,7 +67,10 @@ fn phase_point_inside_map(map_vp: &SimulationMapViewport, pos: bevy::prelude::Ve
 
 #[cfg(test)]
 mod tests {
-    use super::{phase_map_word, phase_point_inside_map};
+    use super::{
+        phase_map_word, phase_point_inside_map, phase_stack_band, phase_stack_band_word,
+        PhaseStackBand,
+    };
     use crate::gui::SimulationMapViewport;
     use crate::strategic::SiteConstructionPhase;
 
@@ -101,6 +111,34 @@ mod tests {
         assert_ne!(
             phase_map_word(SiteConstructionPhase::Foundation),
             phase_map_word(SiteConstructionPhase::UnderConstruction)
+        );
+    }
+
+    #[test]
+    fn fob_style_stack_bands_progress_without_hue() {
+        assert_eq!(
+            phase_stack_band(SiteConstructionPhase::Planned),
+            PhaseStackBand::Shell
+        );
+        assert_eq!(
+            phase_stack_band(SiteConstructionPhase::Foundation),
+            PhaseStackBand::Circulation
+        );
+        assert_eq!(
+            phase_stack_band(SiteConstructionPhase::UnderConstruction),
+            PhaseStackBand::Aperture
+        );
+        assert_eq!(
+            phase_stack_band(SiteConstructionPhase::Provisioning),
+            PhaseStackBand::Fittings
+        );
+        assert_eq!(
+            phase_stack_band(SiteConstructionPhase::Operational),
+            PhaseStackBand::Complete
+        );
+        assert_ne!(
+            phase_stack_band_word(PhaseStackBand::Shell),
+            phase_stack_band_word(PhaseStackBand::Fittings)
         );
     }
 }

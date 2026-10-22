@@ -21,14 +21,20 @@ pub mod procedural;
 mod supply_chain_role;
 mod utility_infrastructure_role;
 mod visual_authority;
+mod voxel_massing;
 mod world_map_frame;
 pub use world_map_frame::{
     path_commit_leaves_generated_map, path_samples_leave_generated_map, world_map_tile_center,
 };
 pub use ghost_visual::{
-    corridor_in_progress_color, corridor_planned_color, road_committed_color, road_segment_color,
+    corridor_in_progress_color, corridor_planned_color, footprint_place_settle_color,
+    footprint_valid_color, road_committed_color, road_segment_color,
 };
-pub use phase_visual::phase_map_word;
+pub use phase_visual::{phase_map_word, phase_stack_band, phase_stack_band_word, PhaseStackBand};
+pub use voxel_massing::{
+    derive_massing_floors, voxel_massing_presentation_witness_green, VoxelColumnRequest,
+    MASSING_FLOORS_MAX,
+};
 pub use map_egui_projection::{world_to_sim_map_egui, world_to_sim_map_screen, ConstructionMapProjection};
 mod build_confidence;
 mod build_state;
@@ -43,7 +49,7 @@ mod corridor_transport;
 mod defense_concrete_stock;
 mod defense_staging_stock;
 mod demolish;
-mod ghost_visual;
+pub(crate) mod ghost_visual;
 mod grammar_labels;
 mod history;
 mod hydro_coupling;
@@ -446,8 +452,13 @@ impl Plugin for BuildPlanningPlugin {
             )
             .add_systems(
                 Update,
-                world_map_frame::sync_world_map_footprints
-                    .after(visual_authority::sync_footprint_visual_requests)
+                (
+                    voxel_massing::sync_voxel_massing_visual_requests
+                        .after(visual_authority::sync_footprint_visual_requests),
+                    world_map_frame::sync_world_map_footprints
+                        .after(voxel_massing::sync_voxel_massing_visual_requests),
+                )
+                    .chain()
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(

@@ -2,6 +2,11 @@
 //! @orchestrator-owner render_pipeline_agent
 //! @orchestrator-do-not-cleanup
 //! Strategic / macro icon instance scaffold (Visual Aid v2 VA6).
+//!
+//! **Dual-view policy:** this buffer is the **TacticalFlat2D** symbol language
+//! ([`TACTICAL_ICONS_PRESENTATION`](crate::gui::TACTICAL_ICONS_PRESENTATION)).
+//! Do **not** dump APS module kits / keyframe atlases here — those ship to
+//! [`WorldPresentationKind::PixelWorld3D`](crate::gui::WorldPresentationKind).
 
 use bevy::prelude::*;
 

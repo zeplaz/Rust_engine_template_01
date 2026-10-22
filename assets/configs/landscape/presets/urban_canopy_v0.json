@@ -25,7 +25,12 @@
   "landscape_program": {
     "class": "settlement",
     "district_ref": "urban_canopy_04",
-    "required_topologies": ["PATCH_ROUNDED", "CORRIDOR_ROADSIDE", "RING_SHELTERBELT", "FRINGE_EDGE"]
+    "required_topologies": [
+      "PATCH_ROUNDED",
+      "CORRIDOR_ROADSIDE",
+      "RING_SHELTERBELT",
+      "FRINGE_EDGE"
+    ]
   },
   "topology_graph": [
     {
@@ -35,7 +40,10 @@
       "scale_band": "L",
       "anchor_ref": "partition:chunk_04_urb",
       "parent_topology_id": null,
-      "operator_stack": ["anchor_partition", "network_link"]
+      "operator_stack": [
+        "anchor_partition",
+        "network_link"
+      ]
     },
     {
       "id": "patch_park_01",
@@ -44,7 +52,10 @@
       "scale_band": "M",
       "anchor_ref": "site:urban_park_04",
       "parent_topology_id": "net_urb_01",
-      "operator_stack": ["seed_patch", "expand"]
+      "operator_stack": [
+        "seed_patch",
+        "expand"
+      ]
     },
     {
       "id": "corr_street_01",
@@ -53,8 +64,13 @@
       "scale_band": "M",
       "anchor_ref": "transport:street_grid_04",
       "parent_topology_id": "net_urb_01",
-      "operator_stack": ["anchor_road", "corridor"],
-      "metadata": { "glyph_planning": "════════" }
+      "operator_stack": [
+        "anchor_road",
+        "corridor"
+      ],
+      "metadata": {
+        "glyph_planning": "════════"
+      }
     },
     {
       "id": "ring_plaza_01",
@@ -63,7 +79,10 @@
       "scale_band": "M",
       "anchor_ref": "site:plaza_ring",
       "parent_topology_id": "net_urb_01",
-      "operator_stack": ["ring", "contract_maintain"]
+      "operator_stack": [
+        "ring",
+        "contract_maintain"
+      ]
     },
     {
       "id": "fringe_edge_01",
@@ -72,7 +91,12 @@
       "scale_band": "S",
       "anchor_ref": "field:sidewalk_edge",
       "parent_topology_id": "net_urb_01",
-      "operator_stack": ["fringe"]
+      "operator_stack": [
+        "fringe"
+      ]
     }
-  ]
+  ],
+  "_meta": {
+    "presentation": "pixel_world"
+  }
 }

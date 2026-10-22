@@ -777,6 +777,7 @@ mod tests {
             development_tier: DevelopmentTier::Production,
             style_pack_id: "style_victorian".into(),
             ship_allowed: true,
+            presentation: "pixel_world".into(),
             variants: HashMap::from([("clean_day".into(), [0.0, 0.0, 0.5, 1.0])]),
             meta_schema_version: 1,
             render_facings: 8,

@@ -71,6 +71,8 @@
 | **DR-SCHED-W2** | Schedule sync Wave 2+ (fire authority SCH-E2…) | program_gate | Wave 1 gate recorded **AND** no file conflict with RTT lane per HANDOFF matrix | `plan_schedule_sync_v1.md` |
 | **DR-CLEANUP-P2** | Cleanup Phase 2+ authority/perf splits | program_gate | Phase 0 started **OR** PERF baseline captured **AND** steward sign-off on slice | `plan_cleanup_v1.md` |
 | **DR-GPU-TERRAIN-P0C** | Enable tilemap adapter as sim default | ecosystem_blocked | **DR-MIG-TILEMAP** all predicates **OR** P0-C′ instanced path signed without tilemap | `plan_gpu_terrain_production_exec_001_v1.md` |
+| **DR-VOXEL-OCCUPATION** | Promote voxels to **sim** occupation authority (replace `FootprintMatrix` XY) | product_blocked | Signed `plan_voxel_occupation_v1.md` + conflict matrix vs roads/zones/`RepresentationResult` + steward EV/Cx PASS | `plan_voxel_massing_presentation_v1.md` (presentation-only now) · `design_ebbtide_build_style_rubric_v1.md` |
+| **DR-PIXEL-WORLD-APS-MESH** | Landscape LG-5 atlas → PixelWorld RTT | **closed_landscape_atlas_rtt** | LG-5 + ship building iso stamps under PixelWorld3D (witness dual_view v6) | `plan_dual_view_pixel_world_v1.md` · residual = extra module-kit / 3D mesh G4 |
 
 ---
 

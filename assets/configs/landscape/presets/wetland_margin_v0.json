@@ -25,7 +25,12 @@
   "landscape_program": {
     "class": "natural",
     "district_ref": "wetland_margin_05",
-    "required_topologies": ["CORRIDOR_RIPARIAN", "PATCH_IRREGULAR", "FRINGE_EDGE", "BASIN_WETLAND"]
+    "required_topologies": [
+      "CORRIDOR_RIPARIAN",
+      "PATCH_IRREGULAR",
+      "FRINGE_EDGE",
+      "BASIN_WETLAND"
+    ]
   },
   "topology_graph": [
     {
@@ -35,7 +40,10 @@
       "scale_band": "L",
       "anchor_ref": "partition:chunk_05_wet",
       "parent_topology_id": null,
-      "operator_stack": ["anchor_partition", "network_link"]
+      "operator_stack": [
+        "anchor_partition",
+        "network_link"
+      ]
     },
     {
       "id": "corr_riparian_01",
@@ -44,8 +52,14 @@
       "scale_band": "M",
       "anchor_ref": "hydro:marsh_channel_05",
       "parent_topology_id": "net_wet_01",
-      "operator_stack": ["anchor_river", "corridor", "drift"],
-      "metadata": { "glyph_planning": "≈≈≈" }
+      "operator_stack": [
+        "anchor_river",
+        "corridor",
+        "drift"
+      ],
+      "metadata": {
+        "glyph_planning": "≈≈≈"
+      }
     },
     {
       "id": "patch_marsh_01",
@@ -54,7 +68,10 @@
       "scale_band": "M",
       "anchor_ref": "site:marsh_patch",
       "parent_topology_id": "net_wet_01",
-      "operator_stack": ["seed_patch", "expand"]
+      "operator_stack": [
+        "seed_patch",
+        "expand"
+      ]
     },
     {
       "id": "basin_wet_01",
@@ -63,7 +80,10 @@
       "scale_band": "M",
       "anchor_ref": "hydro:basin_pool_05",
       "parent_topology_id": "net_wet_01",
-      "operator_stack": ["anchor_river", "expand"]
+      "operator_stack": [
+        "anchor_river",
+        "expand"
+      ]
     },
     {
       "id": "fringe_mud_01",
@@ -72,7 +92,12 @@
       "scale_band": "S",
       "anchor_ref": "field:mud_margin",
       "parent_topology_id": "net_wet_01",
-      "operator_stack": ["fringe"]
+      "operator_stack": [
+        "fringe"
+      ]
     }
-  ]
+  ],
+  "_meta": {
+    "presentation": "pixel_world"
+  }
 }

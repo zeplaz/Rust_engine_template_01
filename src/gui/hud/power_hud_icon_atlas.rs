@@ -153,6 +153,7 @@ impl PowerHudIconAtlasManifest {
 }
 
 #[derive(Resource, Debug, Clone, Default)]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub struct PowerHudEguiTextureCache {
     handle: Option<Handle<Image>>,
     texture_id: Option<()>,
@@ -262,15 +263,126 @@ impl Plugin for PowerHudIconAtlasPlugin {
         app.init_asset::<PowerHudIconAtlasManifest>()
             .register_asset_loader(PowerHudIconAtlasManifestLoader)
             .init_resource::<PowerHudEguiTextureCache>()
-            .add_systems(Startup, load_power_hud_icon_atlas_system);
+            .add_systems(Startup, load_power_hud_icon_atlas_system)
+            .add_systems(Update, sync_power_hud_drawn_icons);
     }
 }
 
-/// Draw atlas icon in egui with adjacent label (a11y — never icon-only controls).
-pub fn draw_power_hud_icon_labeled() {}
+/// Marker on a Bevy `ImageNode` that should sample [`PowerHudIconAtlasUi`].
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PowerHudDrawnIcon(pub PowerHudIconId);
+
+/// Spawn atlas icon + adjacent label (a11y — never icon-only controls).
+pub fn spawn_power_hud_icon_labeled(
+    parent: &mut ChildSpawnerCommands<'_>,
+    id: PowerHudIconId,
+    label: &str,
+    font: &Handle<Font>,
+    text_color: Color,
+    size_px: f32,
+) {
+    parent
+        .spawn(Node {
+            flex_direction: FlexDirection::Row,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(4.0),
+            ..default()
+        })
+        .with_children(|row| {
+            row.spawn((
+                Node {
+                    width: Val::Px(size_px),
+                    height: Val::Px(size_px),
+                    flex_shrink: 0.0,
+                    ..default()
+                },
+                PowerHudDrawnIcon(id),
+                bevy::ui::widget::ImageNode::default(),
+            ));
+            row.spawn((
+                Text::new(label.to_string()),
+                TextFont::from_font_size(11.0).with_font(font.clone()),
+                TextColor(text_color),
+            ));
+        });
+}
 
 /// Horizontal gauge row: icon + fill bar (plant card).
-pub fn draw_power_hud_gauge_row() {}
+pub fn spawn_power_hud_gauge_row(
+    parent: &mut ChildSpawnerCommands<'_>,
+    id: PowerHudIconId,
+    fill: f32,
+    bar_color: Color,
+    track_color: Color,
+    size_px: f32,
+) {
+    let fill = fill.clamp(0.0, 1.0);
+    parent
+        .spawn(Node {
+            flex_direction: FlexDirection::Row,
+            align_items: AlignItems::Center,
+            column_gap: Val::Px(4.0),
+            width: Val::Percent(100.0),
+            ..default()
+        })
+        .with_children(|row| {
+            row.spawn((
+                Node {
+                    width: Val::Px(size_px),
+                    height: Val::Px(size_px),
+                    flex_shrink: 0.0,
+                    ..default()
+                },
+                PowerHudDrawnIcon(id),
+                bevy::ui::widget::ImageNode::default(),
+            ));
+            row.spawn((
+                Node {
+                    flex_grow: 1.0,
+                    height: Val::Px(6.0),
+                    border: UiRect::all(Val::Px(1.0)),
+                    ..default()
+                },
+                BackgroundColor(track_color),
+                BorderColor::all(track_color),
+            ))
+            .with_children(|track| {
+                track.spawn((
+                    Node {
+                        width: Val::Percent(fill * 100.0),
+                        height: Val::Percent(100.0),
+                        ..default()
+                    },
+                    BackgroundColor(bar_color),
+                ));
+            });
+        });
+}
+
+/// Apply atlas UVs to every [`PowerHudDrawnIcon`] ImageNode (power sheet + plant gauges).
+pub fn sync_power_hud_drawn_icons(
+    atlas_ui: Option<Res<PowerHudIconAtlasUi>>,
+    manifests: Res<Assets<PowerHudIconAtlasManifest>>,
+    mut icons: Query<(&PowerHudDrawnIcon, &mut bevy::ui::widget::ImageNode)>,
+) {
+    let Some(atlas) = atlas_ui.as_ref() else {
+        return;
+    };
+    for (drawn, mut node) in &mut icons {
+        if let Some(next) = atlas.image_node_for_id(&manifests, drawn.0) {
+            *node = next;
+        }
+    }
+}
+
+/// Live Bevy draw path present (not merely PNG/manifest on disk).
+#[must_use]
+pub fn power_hud_bevy_draw_path_wired() -> bool {
+    include_str!("power_hud_icon_atlas.rs").contains("PowerHudDrawnIcon")
+        && include_str!("power_hud_icon_atlas.rs").contains("sync_power_hud_drawn_icons")
+        && include_str!("sim_road_power_sheets_bevy.rs").contains("PowerHudDrawnIcon")
+        && include_str!("sim_play_bevy_chrome.rs").contains("spawn_power_hud_gauge_row")
+}
 
 #[must_use]
 pub fn power_hud_atlas_assets_on_disk() -> bool {
@@ -286,6 +398,7 @@ pub fn power_hud_icon_atlas_registration_witness_green() -> bool {
     ))
     .expect("power hud manifest");
     power_hud_atlas_assets_on_disk()
+        && power_hud_bevy_draw_path_wired()
         && manifest.all_ids_registered()
         && manifest.cell_size == (20, 20)
         && manifest.chip_size == (16, 16)

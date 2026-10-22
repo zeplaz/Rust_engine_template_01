@@ -7,6 +7,7 @@ use crate::strategic::SiteConstructionPhase;
 
 /// Unmultiplied RGBA for one construction phase.
 #[must_use]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn site_phase_rgba(phase: SiteConstructionPhase) -> [u8; 4] {
     match phase {
         SiteConstructionPhase::Planned => [100, 160, 220, 200],
@@ -32,15 +33,21 @@ pub fn occupancy_reject_rgba() -> [u8; 4] {
 mod tests {
     use super::*;
 
-    /// Endpoints of `place_feedback_fill_at` (unmultiplied valid green and Planned settle).
-    const PLACE_FEEDBACK_VALID: [u8; 4] = [48, 140, 72, 220];
-    const PLACE_FEEDBACK_SETTLE: [u8; 4] = [100, 144, 220, 200];
+    fn place_feedback_valid_rgba() -> [u8; 4] {
+        let c = crate::construction::footprint_valid_color();
+        [c.r, c.g, c.b, c.a]
+    }
+
+    fn place_feedback_settle_rgba() -> [u8; 4] {
+        let c = crate::construction::footprint_place_settle_color();
+        [c.r, c.g, c.b, c.a]
+    }
 
     #[test]
     fn sweep_foundation_rgba_is_not_a_place_feedback_color() {
         let foundation = site_phase_rgba(SiteConstructionPhase::Foundation);
-        assert_ne!(foundation, PLACE_FEEDBACK_VALID);
-        assert_ne!(foundation, PLACE_FEEDBACK_SETTLE);
+        assert_ne!(foundation, place_feedback_valid_rgba());
+        assert_ne!(foundation, place_feedback_settle_rgba());
         assert_ne!(foundation, site_phase_rgba(SiteConstructionPhase::Planned));
     }
 
@@ -57,8 +64,8 @@ mod tests {
         let offline = site_phase_rgba(SiteConstructionPhase::Offline);
         let damaged = site_phase_rgba(SiteConstructionPhase::Damaged);
         assert_ne!(offline, damaged);
-        assert_ne!(offline, PLACE_FEEDBACK_VALID);
-        assert_ne!(offline, PLACE_FEEDBACK_SETTLE);
+        assert_ne!(offline, place_feedback_valid_rgba());
+        assert_ne!(offline, place_feedback_settle_rgba());
     }
 
     #[test]

@@ -28,6 +28,8 @@ mod representation_governance;
 mod representation_policy;
 mod representation_spine_audit;
 mod view_representation;
+mod art_presentation_target;
+mod world_presentation_mode;
 mod view_representation_snapshot;
 mod viewport_authority;
 mod viewport_layout_solver;
@@ -284,6 +286,17 @@ pub use view_representation::{
     CameraVisualState, FireLodSelection, FireVisualLod, FxVisibilitySettings, OverlayChannel,
     OverlayFieldFrame, SwapImageBuffers, ViewRepresentationPlugin, VisualBudgetSettings,
     VisualCadence, WorldFireFx,
+};
+pub use art_presentation_target::{
+    landscape_atlas_stamp_path_green, landscape_ship_packs_registered_green, ArtPresentationTarget,
+    ArtPresentationTargetPlugin, PixelWorldLandscapeBand, PixelWorldLandscapeConsume,
+    PixelWorldLandscapePackIndex, PIXEL_WORLD_LANDSCAPE_SHIP_PRESETS,
+};
+pub use world_presentation_mode::{
+    dual_view_scaffold_witness_green, mode_does_not_write_representation_result,
+    tactical_icons_only_policy_green, PixelWorldConsumerSystemSet, PixelWorldLandscapeIntent,
+    WorldPresentationKind, WorldPresentationMode, WorldPresentationModePlugin,
+    PIXEL_WORLD_VIEW_SCAFFOLD, TACTICAL_ICONS_PRESENTATION,
 };
 pub use main_menu::*;
 pub use splash::*;

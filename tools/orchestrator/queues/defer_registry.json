@@ -92,6 +92,48 @@
       "plans": ["plan_cleanup_v1.md"]
     },
     {
+      "id": "DR-VOXEL-OCCUPATION",
+      "track": "CONSTRUCTION",
+      "class": "product_blocked",
+      "reason": "Freeform voxel sim occupation would rewrite FootprintMatrix XY, tile-strip roads, zones, FootprintTiles — hybrid VoxelMassing presentation only until signed plan_voxel_occupation_v1",
+      "unblock_when": [
+        "plan_voxel_occupation_v1.md signed",
+        "conflict matrix vs roads/zones/RepresentationResult recorded",
+        "steward EV/Cx PASS"
+      ],
+      "witness": "debug_runs/design_ebbtide_build_style_live.json",
+      "plans": [
+        "design_ebbtide_build_style_rubric_v1.md",
+        "plan_voxel_massing_presentation_v1.md"
+      ]
+    },
+    {
+      "id": "DR-PIXEL-WORLD-APS-MESH",
+      "track": "DUAL_VIEW",
+      "class": "program_gate",
+      "reason": "Landscape LG-5 atlas stamps paint SimulationMapTexture under PixelWorld — closed for landscape/env. Building module-kit 3D mesh wave is a separate product pick.",
+      "status": "closed_landscape_atlas_rtt",
+      "progress": [
+        "ArtPresentationTarget + PixelWorldLandscapePackIndex shipped",
+        "10 ship presets tagged presentation: pixel_world + LG5 atlas registered",
+        "queue_pixel_world_landscape_atlas_stamps blits LG-5 into same RTT (no stub / no parallel extract)",
+        "VoxelMassing gated to PixelWorld3D + zoom collapse <24px/tile",
+        "ship building atlases registered presentation:pixel_world (iso stamp wave)",
+        "residual: extra module-kit content / 3D mesh → product follow-on G4"
+      ],
+      "unblock_when": [
+        "PixelWorld landform relief green under dual_view_pixel_world_live.json",
+        "ship packs tagged presentation: pixel_world",
+        "APS landscape mesh or atlas band paints into same RTT under PixelWorld3D",
+        "no parallel extract outside RepresentationResult band"
+      ],
+      "witness": "debug_runs/dual_view_pixel_world_live.json",
+      "plans": [
+        "plan_dual_view_pixel_world_v1.md",
+        "design_dual_view_art_home_v1.md"
+      ]
+    },
+    {
       "id": "DR-RTT-VR16",
       "track": "RTT",
       "class": "verify",

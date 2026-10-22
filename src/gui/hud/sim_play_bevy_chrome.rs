@@ -12,6 +12,7 @@ use crate::construction::{
 use crate::engine::states::BaseState;
 use crate::gui::hud::panel_state::HudPanelState;
 use crate::gui::hud::plant_focus_card::PlantFocusCardSnapshot;
+use crate::gui::hud::power_hud_icon_atlas::{spawn_power_hud_gauge_row, PowerHudIconId};
 use crate::gui::hud::power_node_hover::PowerNodeHoverState;
 use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
 use crate::gui::hud::simulation_shell_phase2::{
@@ -25,6 +26,9 @@ pub struct SimPlayPlantCard;
 
 #[derive(Component)]
 pub struct SimPlayPlantCardText;
+
+#[derive(Component)]
+pub struct SimPlayPlantGaugeRow;
 
 #[derive(Component)]
 pub struct SimPlayPowerHover;
@@ -56,19 +60,30 @@ pub(crate) struct RepairListStamp {
 }
 
 pub(crate) fn sync_sim_play_plant_card(
+    mut commands: Commands,
     base: Res<State<BaseState>>,
     card: Res<PlantFocusCardSnapshot>,
     hover: Res<PowerNodeHoverState>,
-    mut root: Query<&mut Visibility, With<SimPlayPlantCard>>,
+    palette: Res<UiPalette>,
+    mut root: Query<(Entity, &mut Visibility), With<SimPlayPlantCard>>,
     mut text: Query<&mut Text, With<SimPlayPlantCardText>>,
+    gauge_row: Query<Entity, With<SimPlayPlantGaugeRow>>,
 ) {
     let show = matches!(base.get(), BaseState::Simulation) && card.visible && !hover.card_visible;
-    for mut vis in &mut root {
-        *vis = if show { Visibility::Visible } else { Visibility::Hidden };
-    }
+    let card_entity = root.iter_mut().next().map(|(e, mut vis)| {
+        *vis = if show {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+        e
+    });
     if !show {
         return;
     }
+    let Some(card_entity) = card_entity else {
+        return;
+    };
     let status = match card.status {
         crate::gui::hud::plant_focus_card::PlantOperationalStatus::Operational => "Operational",
         crate::gui::hud::plant_focus_card::PlantOperationalStatus::Scram => "SCRAM",
@@ -93,6 +108,57 @@ pub(crate) fn sync_sim_play_plant_card(
     );
     for mut t in &mut text {
         *t = Text::new(line.clone());
+    }
+
+    // Spawn gauge icon row once under the plant card (ImageNodes filled by sync_power_hud_drawn_icons).
+    if gauge_row.is_empty() {
+        let island_fill = if card.offsite_connected { 1.0 } else { 0.35 };
+        let scram_fill = match card.status {
+            crate::gui::hud::plant_focus_card::PlantOperationalStatus::Operational => 0.15,
+            crate::gui::hud::plant_focus_card::PlantOperationalStatus::Scram => 0.85,
+            crate::gui::hud::plant_focus_card::PlantOperationalStatus::Meltdown => 1.0,
+        };
+        let bar = palette.bevy_accent_hot();
+        let track = palette.bevy_border_subtle();
+        commands.entity(card_entity).with_children(|parent| {
+            parent
+                .spawn((
+                    Node {
+                        flex_direction: FlexDirection::Column,
+                        row_gap: Val::Px(4.0),
+                        width: Val::Percent(100.0),
+                        margin: UiRect::top(Val::Px(6.0)),
+                        ..default()
+                    },
+                    SimPlayPlantGaugeRow,
+                ))
+                .with_children(|gauges| {
+                    spawn_power_hud_gauge_row(
+                        gauges,
+                        PowerHudIconId::Diesel,
+                        card.diesel_fuel,
+                        bar,
+                        track,
+                        16.0,
+                    );
+                    spawn_power_hud_gauge_row(
+                        gauges,
+                        PowerHudIconId::Scram,
+                        scram_fill,
+                        bar,
+                        track,
+                        16.0,
+                    );
+                    spawn_power_hud_gauge_row(
+                        gauges,
+                        PowerHudIconId::Island,
+                        island_fill,
+                        bar,
+                        track,
+                        16.0,
+                    );
+                });
+        });
     }
 }
 

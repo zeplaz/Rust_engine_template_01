@@ -25,7 +25,12 @@
   "landscape_program": {
     "class": "military",
     "district_ref": "defensive_sector_04",
-    "required_topologies": ["CORRIDOR_ROADSIDE", "RING_FORTIFIED", "POCKET_INTERNAL", "FRINGE_EDGE"]
+    "required_topologies": [
+      "CORRIDOR_ROADSIDE",
+      "RING_FORTIFIED",
+      "POCKET_INTERNAL",
+      "FRINGE_EDGE"
+    ]
   },
   "topology_graph": [
     {
@@ -35,7 +40,10 @@
       "scale_band": "L",
       "anchor_ref": "partition:chunk_04_mil",
       "parent_topology_id": null,
-      "operator_stack": ["anchor_partition", "network_link"]
+      "operator_stack": [
+        "anchor_partition",
+        "network_link"
+      ]
     },
     {
       "id": "corr_patrol_01",
@@ -44,8 +52,13 @@
       "scale_band": "M",
       "anchor_ref": "transport:patrol_road_04",
       "parent_topology_id": "net_mil_01",
-      "operator_stack": ["anchor_road", "corridor"],
-      "metadata": { "glyph_planning": "═══" }
+      "operator_stack": [
+        "anchor_road",
+        "corridor"
+      ],
+      "metadata": {
+        "glyph_planning": "═══"
+      }
     },
     {
       "id": "ring_bunker_01",
@@ -54,8 +67,13 @@
       "scale_band": "M",
       "anchor_ref": "site:perimeter_ring",
       "parent_topology_id": "net_mil_01",
-      "operator_stack": ["ring", "barrier_block"],
-      "metadata": { "glyph_planning": "(█)" }
+      "operator_stack": [
+        "ring",
+        "barrier_block"
+      ],
+      "metadata": {
+        "glyph_planning": "(█)"
+      }
     },
     {
       "id": "patch_bivouac_01",
@@ -64,7 +82,10 @@
       "scale_band": "M",
       "anchor_ref": "site:bivouac_clearing",
       "parent_topology_id": "net_mil_01",
-      "operator_stack": ["clear_suppress", "contract_maintain"],
+      "operator_stack": [
+        "clear_suppress",
+        "contract_maintain"
+      ],
       "children": [
         {
           "id": "cluster_cam_01",
@@ -82,7 +103,12 @@
       "scale_band": "S",
       "anchor_ref": "field:wire_margin",
       "parent_topology_id": "net_mil_01",
-      "operator_stack": ["fringe"]
+      "operator_stack": [
+        "fringe"
+      ]
     }
-  ]
+  ],
+  "_meta": {
+    "presentation": "pixel_world"
+  }
 }

@@ -276,8 +276,25 @@ Rail Spur═══════╗
 
 ---
 
+## 10. Ebbtide silhouette / LOD / height bands (DESIGN-EBBTIDE-BUILD-STYLE-001)
+
+Presentation attach for **VoxelMassing** + production bake into `RepresentationResult`. Does **not** promote voxels to sim occupation (**DR-VOXEL-OCCUPATION**).
+
+| Band | Rule | Consumer |
+|:---|:---|:---|
+| **Edge silhouette** | ~1px outline / hard rim on occupied cells + stacked floors | `ghost_visual::footprint_outline_stroke_px` · massing stack rim |
+| **Zoom LOD** | Operational zoom = mass read; max zoom ≈ **2×** structure detail | `iso_draw_scale` + readability table; bake LODs via keyframe pack when `ship: true` |
+| **Height bands** | Floors clamp **1..=4** from occupied XY + family bonus · `βvert` may re-weight later | `voxel_massing::derive_massing_floors` · ARCH-DNA `βvert` |
+| **Stable blocks** | No crawling edges under camera motion — mesh on tile centers | `world_map_frame` stamp |
+| **Bake target** | Production iso/mesh massing → `RepresentationResult` only | MCP bake spine · no parallel extractor |
+
+**Refs:** [`design_ebbtide_build_style_rubric_v1.md`](design_ebbtide_build_style_rubric_v1.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md)
+
+---
+
 ## Changelog
 
 | Ver | Date | Note |
 |:---|:---|:---|
+| v1.1.0 | 2026-10-17 | @designer-mcp — §10 Ebbtide silhouette / LOD / height bands |
 | v1.0.0 | 2026-06-13 | @planner-mcp — v0 baseline per BUILD-READ-GRAMMAR-v0-001 |
