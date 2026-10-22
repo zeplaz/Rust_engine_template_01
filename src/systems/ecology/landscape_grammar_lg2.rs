@@ -12,6 +12,7 @@ use super::landscape_grammar::{
     evaluate_landscape_program, LandscapeGrammarCatalog, LandscapeProgramEvaluation,
     LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID,
 };
+use super::vegetation_field::{CanopyDrivers, VegetationCanopySet, CANOPY_CLEARED_DENSITY};
 use super::{ChunkEcology, VegetationField};
 use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 use crate::strategic::{
@@ -236,12 +237,33 @@ pub fn apply_fire_disturbance_on_heat(
     }
 }
 
+/// VEG-D03 — cleared or harvested land regrows from the start: succession resets to age 0 / `Grass`
+/// and the canopy writer is asked (one-shot) to cap cover at [`CANOPY_CLEARED_DENSITY`].
+fn reset_chunk_vegetation_for_clear(
+    tick: u64,
+    succession: Option<&mut SuccessionState>,
+    drivers: Option<&mut CanopyDrivers>,
+) {
+    if let Some(succ) = succession {
+        succ.age_ticks = 0;
+        succ.stage = SuccessionTopologyStage::Grass;
+        succ.last_disturbance_tick = Some(tick);
+    }
+    if let Some(drivers) = drivers {
+        drivers.clear_to = Some(CANOPY_CLEARED_DENSITY);
+    }
+}
+
 pub fn apply_construction_clear_disturbance(
     tick: Res<crate::systems::sim_control::SimTick>,
     events: Option<MessageReader<CommitConstructionSiteEvent>>,
     raster: Option<Res<StrategicRasterConfig>>,
-    chunk_q: Query<(Entity, &Chunk), With<DisturbanceHistory>>,
-    mut history_q: Query<&mut DisturbanceHistory>,
+    mut chunk_q: Query<(
+        &Chunk,
+        &mut DisturbanceHistory,
+        Option<&mut SuccessionState>,
+        Option<&mut CanopyDrivers>,
+    )>,
     mut witness: ResMut<LandscapeGrammarLg2Witness>,
 ) {
     let Some(mut events) = events else {
@@ -253,19 +275,22 @@ pub fn apply_construction_clear_disturbance(
     for ev in events.read() {
         let coords = footprint_affected_chunk_coords(ev.origin, ev.footprint, cells);
         for cc in coords {
-            for (entity, chunk) in &chunk_q {
+            for (chunk, mut history, succession, drivers) in &mut chunk_q {
                 if chunk.coord != cc {
                     continue;
                 }
-                if let Ok(mut history) = history_q.get_mut(entity) {
-                    history.push(DisturbanceEvent {
-                        tick: tick.0,
-                        kind: DisturbanceKind::ConstructionClear,
-                        topology_kind: "BuildingFootprint".into(),
-                    });
-                    witness.construction_disturbances =
-                        witness.construction_disturbances.saturating_add(1);
-                }
+                history.push(DisturbanceEvent {
+                    tick: tick.0,
+                    kind: DisturbanceKind::ConstructionClear,
+                    topology_kind: "BuildingFootprint".into(),
+                });
+                reset_chunk_vegetation_for_clear(
+                    tick.0,
+                    succession.map(Mut::into_inner),
+                    drivers.map(Mut::into_inner),
+                );
+                witness.construction_disturbances =
+                    witness.construction_disturbances.saturating_add(1);
             }
         }
     }
@@ -291,34 +316,59 @@ pub fn push_post_fire_harvest_sim_effect(
 pub fn drain_landscape_disturbance_queue(
     tick: Res<crate::systems::sim_control::SimTick>,
     mut queue: ResMut<LandscapeDisturbanceQueue>,
-    chunk_q: Query<(Entity, &Chunk), With<DisturbanceHistory>>,
-    mut history_q: Query<&mut DisturbanceHistory>,
+    mut chunk_q: Query<(
+        &Chunk,
+        &mut DisturbanceHistory,
+        Option<&mut SuccessionState>,
+        Option<&mut CanopyDrivers>,
+    )>,
     mut witness: ResMut<LandscapeGrammarLg2Witness>,
 ) {
     let pending = std::mem::take(&mut queue.pending);
     for (coord, kind) in pending {
-        for (entity, chunk) in &chunk_q {
+        for (chunk, mut history, succession, drivers) in &mut chunk_q {
             if chunk.coord != coord {
                 continue;
             }
-            if let Ok(mut history) = history_q.get_mut(entity) {
-                history.push(DisturbanceEvent {
-                    tick: tick.0,
-                    kind,
-                    topology_kind: "SimEffect".into(),
-                });
-                if kind == DisturbanceKind::Harvest {
+            history.push(DisturbanceEvent {
+                tick: tick.0,
+                kind,
+                topology_kind: "SimEffect".into(),
+            });
+            match kind {
+                DisturbanceKind::Harvest => {
                     witness.harvest_disturbances = witness.harvest_disturbances.saturating_add(1);
+                    reset_chunk_vegetation_for_clear(
+                        tick.0,
+                        succession.map(Mut::into_inner),
+                        drivers.map(Mut::into_inner),
+                    );
                 }
+                DisturbanceKind::ConstructionClear => {
+                    reset_chunk_vegetation_for_clear(
+                        tick.0,
+                        succession.map(Mut::into_inner),
+                        drivers.map(Mut::into_inner),
+                    );
+                }
+                // Fire resets succession through `apply_fire_disturbance_on_heat`.
+                DisturbanceKind::Fire => {}
             }
         }
     }
 }
 
+/// Canopy input only: succession sets a floor on the canopy target. `vegetation_field_tick` writes
+/// `canopy_density` (VEG-C07), so the fuel bridge reads the result next frame.
 pub fn sync_fuel_bridge_from_succession(
-    mut q: Query<(&SuccessionState, &mut VegetationField, &mut ChunkFuelProfile)>,
+    mut q: Query<(
+        &SuccessionState,
+        &mut VegetationField,
+        &mut ChunkFuelProfile,
+        &mut CanopyDrivers,
+    )>,
 ) {
-    for (succ, mut veg, mut fuel) in &mut q {
+    for (succ, mut veg, mut fuel, mut drivers) in &mut q {
         let og = match succ.stage {
             SuccessionTopologyStage::OldGrowth => 0.85,
             SuccessionTopologyStage::YoungForest => 0.45,
@@ -328,7 +378,7 @@ pub fn sync_fuel_bridge_from_succession(
         };
         veg.old_growth = og;
         fuel.old_growth = og;
-        veg.canopy_density = veg.canopy_density.max(og * 0.6);
+        drivers.succession_floor = og * 0.6;
     }
 }
 
@@ -358,10 +408,10 @@ pub fn derive_vegetation_population_from_graph(
         &SuccessionState,
         &mut VegetationPopulation,
         &mut SubcellPopulationGrid,
-        &mut VegetationField,
+        &mut CanopyDrivers,
     )>,
 ) {
-    for (program, succ, mut pop, mut subcell, mut veg) in &mut q {
+    for (program, succ, mut pop, mut subcell, mut drivers) in &mut q {
         let eval = &program.evaluation;
         let stage_factor = match succ.stage {
             SuccessionTopologyStage::Grass => 0.35,
@@ -374,7 +424,7 @@ pub fn derive_vegetation_population_from_graph(
         pop.mean_density = (eval.topology_kind_count as f32 * 0.08 * stage_factor).clamp(0.05, 1.0);
         pop.instance_budget =
             (pop.topology_kind_count.saturating_mul(8) as f32 * stage_factor) as u32;
-        veg.canopy_density = pop.mean_density;
+        drivers.population_density = Some(pop.mean_density);
         let base = pop.mean_density;
         for (i, cell) in subcell.cells.iter_mut().enumerate() {
             let bias = ((i % 4) as f32 * 0.04 + (i / 4) as f32 * 0.03).clamp(0.0, 0.12);
@@ -601,7 +651,8 @@ pub fn landscape_grammar_lg2_plugin(app: &mut App) {
                 derive_vegetation_population_from_graph,
             )
                 .chain()
-                .in_set(ChunkEnvironmentSet::Ecology),
+                .in_set(ChunkEnvironmentSet::Ecology)
+                .in_set(VegetationCanopySet::Inputs),
         );
 }
 
@@ -781,5 +832,91 @@ mod tests {
 
         let witness = app.world().resource::<LandscapeGrammarLg2Witness>();
         assert_eq!(witness.harvest_disturbances, 1);
+    }
+
+    #[test]
+    fn harvest_resets_succession_and_requests_canopy_clear() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .init_resource::<SimTick>()
+            .init_resource::<LandscapeGrammarLg2Witness>()
+            .init_resource::<LandscapeDisturbanceQueue>()
+            .add_systems(Update, drain_landscape_disturbance_queue);
+        let entity = app
+            .world_mut()
+            .spawn((
+                Chunk { coord: IVec2::ZERO },
+                DisturbanceHistory {
+                    events: VecDeque::new(),
+                    capacity: 8,
+                },
+                SuccessionState {
+                    age_ticks: 500,
+                    stage: SuccessionTopologyStage::OldGrowth,
+                    last_disturbance_tick: None,
+                },
+                CanopyDrivers::default(),
+            ))
+            .id();
+        app.world_mut()
+            .resource_mut::<LandscapeDisturbanceQueue>()
+            .pending
+            .push((IVec2::ZERO, DisturbanceKind::Harvest));
+        app.update();
+        let succ = app.world().get::<SuccessionState>(entity).unwrap();
+        assert_eq!(succ.age_ticks, 0);
+        assert_eq!(succ.stage, SuccessionTopologyStage::Grass);
+        let drivers = app.world().get::<CanopyDrivers>(entity).unwrap();
+        assert_eq!(drivers.clear_to, Some(CANOPY_CLEARED_DENSITY));
+    }
+
+    #[test]
+    fn construction_clear_resets_succession_and_requests_canopy_clear() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .init_resource::<SimTick>()
+            .init_resource::<LandscapeGrammarLg2Witness>()
+            .init_resource::<StrategicRasterConfig>()
+            .add_message::<CommitConstructionSiteEvent>()
+            .add_systems(Update, apply_construction_clear_disturbance);
+        let entity = app
+            .world_mut()
+            .spawn((
+                Chunk {
+                    coord: IVec2::new(2, 2),
+                },
+                DisturbanceHistory {
+                    events: VecDeque::new(),
+                    capacity: 8,
+                },
+                SuccessionState {
+                    age_ticks: 500,
+                    stage: SuccessionTopologyStage::OldGrowth,
+                    last_disturbance_tick: None,
+                },
+                CanopyDrivers::default(),
+            ))
+            .id();
+        app.world_mut().write_message(CommitConstructionSiteEvent {
+            site_id: SiteId::UNASSIGNED,
+            owner: Entity::PLACEHOLDER,
+            archetype: SiteArchetype::Factory,
+            origin: BuildSiteTile { x: 64, z: 64 },
+            footprint: FootprintTiles {
+                width: 2,
+                depth: 2,
+            },
+            layer: LayerType::Surface,
+            catalog_id: None,
+            placement: None,
+        });
+        app.update();
+        let succ = app.world().get::<SuccessionState>(entity).unwrap();
+        assert_eq!(succ.age_ticks, 0);
+        assert_eq!(succ.stage, SuccessionTopologyStage::Grass);
+        assert_eq!(
+            app.world().get::<CanopyDrivers>(entity).unwrap().clear_to,
+            Some(CANOPY_CLEARED_DENSITY)
+        );
     }
 }
