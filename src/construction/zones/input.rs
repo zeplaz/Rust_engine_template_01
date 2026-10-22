@@ -264,7 +264,17 @@ pub fn admin_zone_drag_input_system(
     mut districts: Option<ResMut<crate::strategic::settlement::DistrictBook>>,
     towns: Option<Res<TownBook>>,
     sites: Query<(&ConstructionSite, &SiteFootprint)>,
+    pointer_gate: Option<Res<SimulationMapPointerGate>>,
+    mut press_started_on_map: Local<bool>,
 ) {
+    // A press only starts / closes / deletes when the pointer is free of chrome. A drag that
+    // started on the map stays alive until release, even if the cursor crosses a panel.
+    let free = simulation_tool_pointer(pointer_gate.as_deref()) == SimulationToolPointer::Free;
+    if buttons.just_pressed(MouseButton::Left) {
+        *press_started_on_map = free;
+    } else if !buttons.pressed(MouseButton::Left) {
+        *press_started_on_map = false;
+    }
     let Some(mut drag) = drag else {
         return;
     };
@@ -293,6 +303,9 @@ pub fn admin_zone_drag_input_system(
         if !matches!(tool.tool, BuildTool::Zone(_)) || !control {
             return;
         }
+        if !free {
+            return;
+        }
         if buttons.just_pressed(MouseButton::Right) {
             if let Some(zone) = zone_at_tile(districts, &town_id, tile) {
                 let _ = delete_admin_zone(districts, &zone);
@@ -318,7 +331,7 @@ pub fn admin_zone_drag_input_system(
         return;
     }
 
-    if buttons.just_pressed(MouseButton::Right) || keys.just_pressed(KeyCode::Delete) {
+    if (buttons.just_pressed(MouseButton::Right) && free) || keys.just_pressed(KeyCode::Delete) {
         if let Some(zone) = drag.zone.clone() {
             let _ = delete_admin_zone(districts, &zone);
         }
@@ -338,12 +351,12 @@ pub fn admin_zone_drag_input_system(
         return;
     }
 
-    if buttons.just_pressed(MouseButton::Left) && admin_ring_should_close(&drag, tile) {
+    if buttons.just_pressed(MouseButton::Left) && free && admin_ring_should_close(&drag, tile) {
         finish_ring(districts, &mut drag, &sites);
         return;
     }
 
-    let drawing = buttons.pressed(MouseButton::Left);
+    let drawing = buttons.pressed(MouseButton::Left) && *press_started_on_map;
     if drawing && drag.vertices.last().copied() != Some(tile) {
         append_admin_ring_vertex(&mut drag, tile);
     }

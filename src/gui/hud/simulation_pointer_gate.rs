@@ -208,9 +208,19 @@ pub fn cursor_over_ui_node(
 pub fn apply_bevy_panel_pointer_blocks_system(
     window: Query<&Window, With<PrimaryWindow>>,
     panels: Query<(&ComputedNode, &UiGlobalTransform), PointerBlockingPanelRoots>,
+    fresh_panels: Query<&ComputedNode, (PointerBlockingPanelRoots, Added<Node>)>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
     if !gate.cursor_known {
+        return;
+    }
+    // A panel root spawned this frame has no layout yet (`ComputedNode` is empty until
+    // `PostUpdate`), so its rect cannot be tested: hold the pointer for that one frame.
+    let layout_pending = fresh_panels.iter().any(ComputedNode::is_empty);
+    if layout_pending {
+        gate.chrome_blocks = true;
+        gate.in_play_area = false;
+        gate.wheel_play_area = false;
         return;
     }
     // `Window::physical_cursor_position` is the exact source of the logical `gate.cursor`

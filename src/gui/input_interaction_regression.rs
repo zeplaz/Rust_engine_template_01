@@ -358,3 +358,56 @@ fn editor_dock_present_cursor_off_dock_reaches_placement() {
     h.click(MouseButton::Left);
     assert_eq!(h.res::<BuildGhostState>().placement_mode, BuildPlacementMode::Adjust);
 }
+
+#[test]
+fn panel_spawned_this_frame_blocks_first_click() {
+    let (mut h, _at) = gated_factory(BaseState::Simulation);
+    h.step();
+    // Spawned, not laid out yet (`ComputedNode` empty): the first click must not pass through.
+    h.app
+        .world_mut()
+        .spawn((crate::gui::diagnostics_ui::DiagnosticsBevyRoot, Node::default()));
+    h.press_mouse(MouseButton::Left);
+    h.step();
+    assert_eq!(h.res::<BuildGhostState>().placement_mode, BuildPlacementMode::Place);
+}
+
+#[test]
+fn admin_zone_drag_press_on_chrome_ignored_and_map_drag_survives_panel() {
+    use crate::construction::ZoneTool;
+    use crate::strategic::settlement::{AdminZoneDrag, DistrictBook, TownBook, TownId};
+    let mut h = InteractionHarness::new();
+    h.app
+        .insert_resource(ActiveBuildTool {
+            tool: BuildTool::Zone(ZoneTool::ResidentialLow),
+            ..Default::default()
+        })
+        .init_resource::<AdminZoneDrag>()
+        .init_resource::<DistrictBook>()
+        .insert_resource(TownBook {
+            default_town: Some(TownId("t".into())),
+            ..Default::default()
+        });
+    h.add_update(crate::construction::admin_zone_drag_input_system.into_configs());
+    h.press_key(KeyCode::ControlLeft);
+    h.set_cursor(Vec2::new(300.0, 300.0));
+
+    // Press over chrome: no drag starts.
+    h.res_mut::<SimulationMapPointerGate>().chrome_blocks = true;
+    h.press_mouse(MouseButton::Left);
+    h.step();
+    assert!(!h.res::<AdminZoneDrag>().armed);
+    h.release_mouse(MouseButton::Left);
+    h.step();
+
+    // Press on the map: drag starts. Then the cursor crosses a panel: drag keeps growing.
+    h.res_mut::<SimulationMapPointerGate>().chrome_blocks = false;
+    h.press_mouse(MouseButton::Left);
+    h.step();
+    assert!(h.res::<AdminZoneDrag>().armed);
+    let before = h.res::<AdminZoneDrag>().vertices.len();
+    h.res_mut::<SimulationMapPointerGate>().chrome_blocks = true;
+    h.set_cursor(Vec2::new(900.0, 600.0));
+    h.step();
+    assert!(h.res::<AdminZoneDrag>().vertices.len() > before);
+}
