@@ -88,12 +88,12 @@ the parent commits per lane as `[lane] …` after checking. Cheap model (Sonnet)
 - [ ] Map editor: brush, minimap road markers, save/load via `MapEditorMapSnapshotIoRequest`, Play/Exit, scenario Load/Save/Run/Stop.
 - [ ] `world_generator` binary: insert `PanelPresence` (or make the plugin self-init) + smoke test that builds the binary's app for one frame.
 - [ ] Keybinding save/reset; panel scroll + Esc close; road popup update-in-place.
-- [ ] Decide per dropped egui surface (R-M8): port to Bevy, fold into F3, or retire — record in `plan_bevy_panel_port_v1.md`.
+- [ ] R-M8 decided: see L5b (keep only panels with actual use).
 
 ### L6 — Hygiene & guards
 - [ ] Test write guard for Rust tests (like the MCP pytest guard): tests that write must target temp dirs or `debug_runs/`; add a CI check that `git status --porcelain` is clean after `cargo test --lib`.
 - [ ] AGENTS.md: reconcile with the lean harness (R-M6); drop links to untracked debug_runs JSON.
-- [ ] LG-60: remove stray worktree `.claude/worktrees/loving-mestorf-ab9564` (**confirm with user first**).
+- [x] LG-60: stray worktree removed (2026-10-22).
 - [ ] `tools/mcp/python/rust_engine_mcp/validators/mcp_schema.py` → LF; run MCP pytest under the write guard.
 - [ ] Rename egui-era misnomers (`*_egui.rs`, `map_egui_projection`) in a dedicated rename commit; drain containment manifest (R-M5).
 - [ ] Test inventory doc (`test_inventory_v1.md`) with tiers: smoke / module / full / witness-tier.
@@ -103,8 +103,14 @@ the parent commits per lane as `[lane] …` after checking. Cheap model (Sonnet)
 - [ ] AI FAI-2…FAI-4 (`plan_ai_fleet_v1.md`): deterministic seeding, headless scenario, session seeding; then adapters to `LogisticsOrderCommand` and the deployment queue.
 - [ ] Dual-view next steps per `plan_dual_view_pixel_world_v1.md` (DR-PIXEL-WORLD-APS-MESH residual 3D module-kit wave).
 
-## 4. Decisions needed from the user
-1. Golden seed hash drift (L0a): approve updating `GOLDEN_SEED_SET_V1` if the drift is from intended changes.
-2. rgr_m1 `api.rs` pub-use budget (L0c), if the agent finds the growth legitimate.
-3. LG-60 stray worktree removal.
-4. R-M8: which dropped dev panels to port vs retire.
+## 4. User decisions (2026-10-22)
+1. **Golden seed hashes: APPROVED** — update `GOLDEN_SEED_SET_V1` via `bq_q3_golden_bootstrap_hashes` once the drift cause is recorded (L0a).
+2. rgr_m1 `api.rs` pub-use budget (L0c): still open if the agent finds the growth legitimate.
+3. **LG-60: DONE** — stray worktree `.claude/worktrees/loving-mestorf-ab9564` (clean, `d96eccb3` already in master) removed and pruned.
+4. **R-M8 dev panels: keep only panels with actual use; drop everything else.** Lane L5b below.
+
+### L5b — Dev-panel cull (from decision 4)
+- [ ] Inventory every panel/overlay root, egui-retired stub and toggle (F1/F3/F4, agent permissions, plant focus card, growth inspector, side status rail, stage7 shell, shell diagnostics, info tabs, power stroke painters, `*_egui.rs` stubs).
+- [ ] "Actual use" = reachable in product or editor play (keybind/menu), shows live data a player/operator acts on, or is read by a non-test system. Proof-only `include_str!` "wired" predicates do not count.
+- [ ] Keep + finish the used ones (Bevy UI); delete the rest outright: module, state resources, toggle events, keybindings, plugin registration, and tests/proofs that only assert their wiring. Classify before deleting (cleanup-completion-intelligence), one commit per panel family.
+- [ ] Run after L0 lands (it touches the same `src/gui` files).
