@@ -415,7 +415,8 @@ impl Plugin for BuildPlanningPlugin {
                 Update,
                 (
                     tile_visual::toggle_construction_tile_info_labels,
-                    admin_zone_drag_input_system,
+                    admin_zone_drag_input_system
+                        .after(crate::gui::hud::simulation_pointer_gate::PointerGateSet::Publish),
                 )
                     .run_if(in_simulation_or_editor),
             )
