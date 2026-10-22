@@ -36,6 +36,10 @@ pub struct LogisticsTargetsBevyRoot;
 #[derive(Component)]
 struct LogisticsTargetsPickButton(Entity);
 
+/// Opens the orders panel (also Shift+F6) so players can find it.
+#[derive(Component)]
+struct LogisticsTargetsOpenOrdersButton;
+
 #[derive(Default)]
 struct TargetsStamp {
     key: u64,
@@ -148,6 +152,24 @@ fn sync_logistics_targets_bevy_panel(
                 tf.clone(),
                 TextColor(palette.bevy_primary_text()),
             ));
+            root.spawn((
+                LogisticsTargetsOpenOrdersButton,
+                Button,
+                Node {
+                    padding: UiRect::axes(Val::Px(6.0), Val::Px(3.0)),
+                    border: UiRect::all(Val::Px(1.0)),
+                    ..default()
+                },
+                BackgroundColor(palette.bevy_button_idle()),
+                BorderColor::all(palette.bevy_accent_action()),
+            ))
+            .with_children(|b| {
+                b.spawn((
+                    Text::new("Issue supply orders (Shift+F6)"),
+                    tf.clone(),
+                    TextColor(palette.bevy_primary_text()),
+                ));
+            });
             if site_rows.is_empty() {
                 root.spawn((
                     Text::new("(no LogisticsSiteRoot entities)"),
@@ -189,7 +211,14 @@ fn sync_logistics_targets_bevy_panel(
 fn logistics_targets_pick_clicks(
     mut focus: ResMut<HudLogisticsFocus>,
     interactions: Query<(&Interaction, &LogisticsTargetsPickButton), Changed<Interaction>>,
+    open_orders: Query<&Interaction, (Changed<Interaction>, With<LogisticsTargetsOpenOrdersButton>)>,
+    mut orders: ResMut<LogisticsOrdersPanelState>,
 ) {
+    for interaction in &open_orders {
+        if *interaction == Interaction::Pressed {
+            orders.visible = true;
+        }
+    }
     for (interaction, pick) in &interactions {
         if *interaction == Interaction::Pressed {
             focus.tracked_entity = Some(pick.0);

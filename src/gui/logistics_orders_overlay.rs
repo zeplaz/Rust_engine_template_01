@@ -2,8 +2,10 @@
 //!
 //! Standing lines draw solid, one-off runs dashed, waiting orders in the warning colour;
 //! vehicles are dots interpolated along their current leg (filled = loaded, ring = empty).
-//! Reads only [`LogisticsOrdersSnapshotRes`]; painted on the egui background layer so panels
-//! stay on top. Map space is tiles (`world_xz / METRES_PER_TILE`).
+//! Built from the snapshot and drawn as world-map meshes by
+//! `render::world_map_network_mesh::sync_world_map_orders_meshes`. Map space is tiles
+//! (`world_xz / METRES_PER_TILE`) — the same `(x, row)` axes as roads and rails, so it must not
+//! be scaled back to metres.
 
 use bevy::prelude::*;
 
@@ -45,6 +47,37 @@ pub struct OrdersOverlayFrame {
     pub routes: Vec<RouteStroke>,
     pub vehicles: Vec<VehicleDot>,
     pub sites: Vec<SiteMarker>,
+}
+
+impl OrdersOverlayFrame {
+    /// Change key for redraw detection: routes, site markers and quantized vehicle positions
+    /// (vehicles move every sim tick, so their positions must be part of it).
+    #[must_use]
+    pub fn change_key(&self) -> u64 {
+        fn mix(key: &mut u64, n: u64) {
+            *key = key.wrapping_mul(0x9E37_79B9).wrapping_add(n);
+        }
+        fn q(v: Vec2) -> u64 {
+            let c = |f: f32| (f * 32.0).round() as i64 as u64;
+            c(v.x) ^ c(v.y).rotate_left(21)
+        }
+        let mut key = 0x51_7C_C1u64;
+        for r in &self.routes {
+            mix(&mut key, q(r.from));
+            mix(&mut key, q(r.to));
+            mix(&mut key, u64::from(r.standing) + 2 * r.tone as u64);
+        }
+        for v in &self.vehicles {
+            mix(&mut key, q(v.at));
+            mix(&mut key, u64::from(v.loaded));
+        }
+        for s in &self.sites {
+            mix(&mut key, q(s.at));
+            mix(&mut key, s.role as u64);
+        }
+        mix(&mut key, (self.routes.len() + 7 * self.vehicles.len() + 31 * self.sites.len()) as u64);
+        key
+    }
 }
 
 fn tile_xz(world_xz: [f32; 2]) -> Vec2 {
@@ -177,5 +210,10 @@ mod tests {
         assert_eq!(f.vehicles, vec![VehicleDot { at: Vec2::new(5.0, 0.0), loaded: true }]);
         assert_eq!(f.sites.len(), 2);
         assert!(build_orders_overlay(&snap, false).sites.is_empty());
+
+        // A moving vehicle must change the redraw key.
+        let mut moved = snap.clone();
+        moved.vehicles[0].fraction = 0.75;
+        assert_ne!(f.change_key(), build_orders_overlay(&moved, true).change_key());
     }
 }
