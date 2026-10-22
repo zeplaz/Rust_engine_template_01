@@ -1,5 +1,8 @@
 {
   "schema_version": 1,
+  "gate": "DMCP-PILOT-TEACH-ANNOT-001",
+  "not_a_ship_target": true,
+  "teach_exception": "3-tile pilot — topology extract teach only; not production ship",
   "batch_id": "tile_landscape_lg5_pilot_v1",
   "tile_id": "landscape_lg5",
   "atlas_id": "landscape_lg5_pilot_v1",
