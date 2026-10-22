@@ -64,7 +64,9 @@ pub use landscape_grammar_map::{
     LG5_ATLAS_ID,
 };
 pub use vegetation_field::{
-    derive_vegetation_structure, integrate_vegetation_field_step, succession_stage_from_vegetation,
+    derive_vegetation_structure, integrate_vegetation_field_step,
+    integrate_vegetation_field_step_with_drivers, succession_stage_from_vegetation,
+    CanopyDrivers, VegetationCanopySet, CANOPY_CLEARED_DENSITY,
     veg_draw_density, veg_draw_density_after_impact, veg_draw_density_under_snow,
     EcologicalSuccessionStage, VegetationField, VegetationStructure,
 };
@@ -109,6 +111,10 @@ pub struct EcologyPlugin;
 
 impl Plugin for EcologyPlugin {
     fn build(&self, app: &mut App) {
+        app.configure_sets(
+            Update,
+            VegetationCanopySet::Inputs.before(VegetationCanopySet::Apply),
+        );
         landscape_grammar::landscape_grammar_plugin(app);
         landscape_grammar_lg2::landscape_grammar_lg2_plugin(app);
         landscape_grammar_burn::landscape_grammar_burn_plugin(app);
@@ -122,7 +128,9 @@ impl Plugin for EcologyPlugin {
                 spawn_chunk_fuel_profile_on_new_chunk.in_set(ChunkEnvironmentSet::Ecology),
                 spawn_fire_fuel_field_on_new_chunk.in_set(ChunkEnvironmentSet::Ecology),
                 chunk_ecology_tick.in_set(ChunkEnvironmentSet::Ecology),
-                vegetation_field_tick.in_set(ChunkEnvironmentSet::Ecology),
+                vegetation_field_tick
+                    .in_set(ChunkEnvironmentSet::Ecology)
+                    .in_set(VegetationCanopySet::Apply),
                 fire_fuel_field_tick.in_set(ChunkEnvironmentSet::Ecology),
                 chunk_fuel_profile_tick.in_set(ChunkEnvironmentSet::Ecology),
                 ecology_preview_bump_on_vegetation_change.in_set(ChunkEnvironmentSet::Ecology),

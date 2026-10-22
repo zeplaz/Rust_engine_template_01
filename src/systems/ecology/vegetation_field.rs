@@ -36,7 +36,33 @@ pub enum EcologicalSuccessionStage {
     OldGrowth,
 }
 
+/// Ordering of the canopy single-writer pipeline (VEG-C07).
+///
+/// `Inputs` systems only fill [`CanopyDrivers`]; `Apply` ([`vegetation_field_tick`]) is the one
+/// system that writes `VegetationField::canopy_density`.
+#[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
+pub enum VegetationCanopySet {
+    Inputs,
+    Apply,
+}
+
+/// Canopy cover left after a clear or harvest, before regrowth.
+pub const CANOPY_CLEARED_DENSITY: f32 = 0.05;
+
+/// Inputs to the canopy writer. Other systems set these; only [`vegetation_field_tick`] reads them
+/// and writes `canopy_density`.
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq)]
+pub struct CanopyDrivers {
+    /// Graph-derived target density for chunks with a landscape program. Replaces the biomass target.
+    pub population_density: Option<f32>,
+    /// Succession floor: the canopy target never drops below this.
+    pub succession_floor: f32,
+    /// One-shot clear (construction, harvest): caps canopy at this value, then is consumed.
+    pub clear_to: Option<f32>,
+}
+
 #[derive(Component, Clone, Copy, Debug)]
+#[require(CanopyDrivers)]
 pub struct VegetationField {
     pub canopy_density: f32,
     pub understory_density: f32,
@@ -223,6 +249,31 @@ pub fn integrate_vegetation_field_step(
     heat: f32,
     veg: &mut VegetationField,
 ) {
+    integrate_vegetation_field_step_with_drivers(
+        dt_e,
+        matrix_opt,
+        eco,
+        wx,
+        heat,
+        &CanopyDrivers::default(),
+        veg,
+    );
+}
+
+/// Same step as [`integrate_vegetation_field_step`], with the canopy inputs applied in a fixed order:
+/// clear cap, then target (population or biomass) with the succession floor, then smoothing, burn, snow.
+pub fn integrate_vegetation_field_step_with_drivers(
+    dt_e: f32,
+    matrix_opt: Option<&ChunkCellMatrix>,
+    eco: &ChunkEcology,
+    wx: &ChunkWeather,
+    heat: f32,
+    drivers: &CanopyDrivers,
+    veg: &mut VegetationField,
+) {
+    if let Some(cap) = drivers.clear_to {
+        veg.canopy_density = veg.canopy_density.min(cap.clamp(0.0, 1.0));
+    }
     if dt_e <= 0.0 {
         return;
     }
@@ -251,7 +302,12 @@ pub fn integrate_vegetation_field_step(
     let landform = matrix_opt
         .map(landform_cover_scale)
         .unwrap_or(1.0);
-    let canopy_target = ((eco.biomass * 0.92 + eco.shade_factor * 0.35) * landform).clamp(0.0, 1.0);
+    let canopy_target = match drivers.population_density {
+        Some(p) => p * landform,
+        None => (eco.biomass * 0.92 + eco.shade_factor * 0.35) * landform,
+    }
+    .max(drivers.succession_floor)
+    .clamp(0.0, 1.0);
     let ck = (0.16 * dt_e).min(0.28);
     veg.canopy_density = veg.canopy_density * (1.0 - ck) + canopy_target * ck;
     veg.canopy_density = (veg.canopy_density - veg.burn_severity * 0.04 * dt_e * 18.0).clamp(0.0, 1.0);
@@ -372,6 +428,7 @@ pub(crate) fn vegetation_field_tick(
         &ChunkWeather,
         &ChunkSimLod,
         Option<&crate::systems::fire::ChunkSurfaceFire>,
+        &mut CanopyDrivers,
         &mut VegetationField,
     )>,
 ) {
@@ -383,17 +440,100 @@ pub(crate) fn vegetation_field_tick(
         return;
     }
 
-    for (matrix_opt, eco, wx, lod, fire_opt, mut veg) in &mut q {
+    for (matrix_opt, eco, wx, lod, fire_opt, mut drivers, mut veg) in &mut q {
         let lod_s = lod.dt_scale();
         let dt_e = dt * lod_s;
         let heat = fire_opt.map(|f| f.heat).unwrap_or(0.0);
-        integrate_vegetation_field_step(dt_e, matrix_opt, eco, wx, heat, &mut veg);
+        integrate_vegetation_field_step_with_drivers(
+            dt_e,
+            matrix_opt,
+            eco,
+            wx,
+            heat,
+            &drivers,
+            &mut veg,
+        );
+        // Consume the one-shot clear (only when it was set: avoids marking the component changed).
+        if drivers.clear_to.is_some() {
+            drivers.clear_to = None;
+        }
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn drivers_test_eco() -> ChunkEcology {
+        ChunkEcology {
+            biomass: 0.5,
+            fire_risk: 0.1,
+            regrowth_rate: 0.15,
+            moisture_need: 0.4,
+            root_strength: 0.5,
+            shade_factor: 0.4,
+            harvest_value: 0.2,
+            disease_resistance: 0.5,
+        }
+    }
+
+    fn run_canopy(drivers: CanopyDrivers, snow: f32, steps: usize) -> f32 {
+        let eco = drivers_test_eco();
+        let wx = ChunkWeather {
+            snow_depth: snow,
+            ..ChunkWeather::default()
+        };
+        let mut veg = VegetationField::default();
+        for _ in 0..steps {
+            integrate_vegetation_field_step_with_drivers(0.5, None, &eco, &wx, 0.0, &drivers, &mut veg);
+        }
+        veg.canopy_density
+    }
+
+    #[test]
+    fn canopy_single_writer_is_deterministic_and_keeps_snow_effect() {
+        let drivers = CanopyDrivers {
+            population_density: Some(0.8),
+            succession_floor: 0.1,
+            clear_to: None,
+        };
+        let a = run_canopy(drivers, 0.0, 40);
+        assert_eq!(a, run_canopy(drivers, 0.0, 40));
+        let snowy = run_canopy(drivers, 0.8, 40);
+        assert!(snowy < a, "snow must still thin a program chunk: {snowy} vs {a}");
+        // Population target pulls canopy above the biomass-only result.
+        let biomass_only = run_canopy(CanopyDrivers::default(), 0.0, 40);
+        assert!(a > biomass_only, "{a} vs {biomass_only}");
+    }
+
+    #[test]
+    fn canopy_clear_caps_cover_then_regrows() {
+        let eco = drivers_test_eco();
+        let wx = ChunkWeather::default();
+        let mut veg = VegetationField {
+            canopy_density: 0.9,
+            ..VegetationField::default()
+        };
+        let clear = CanopyDrivers {
+            clear_to: Some(CANOPY_CLEARED_DENSITY),
+            ..CanopyDrivers::default()
+        };
+        integrate_vegetation_field_step_with_drivers(0.05, None, &eco, &wx, 0.0, &clear, &mut veg);
+        assert!(veg.canopy_density < 0.2, "{}", veg.canopy_density);
+        let after_clear = veg.canopy_density;
+        for _ in 0..30 {
+            integrate_vegetation_field_step_with_drivers(
+                0.5,
+                None,
+                &eco,
+                &wx,
+                0.0,
+                &CanopyDrivers::default(),
+                &mut veg,
+            );
+        }
+        assert!(veg.canopy_density > after_clear);
+    }
 
     #[test]
     fn high_heat_raises_burn_and_drops_canopy() {
