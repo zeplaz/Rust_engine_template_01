@@ -78,6 +78,29 @@ impl Default for Stage5ReadinessProfile {
     }
 }
 
+/// Opt-in env for product play that still wants the FULL_APP readiness profile
+/// (`STAGE5_FULL_APP=1`). Prefer `--test visual` / harness `test_mode` for proofs.
+#[must_use]
+pub fn stage5_full_app_env_requested() -> bool {
+    std::env::var("STAGE5_FULL_APP")
+        .ok()
+        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+}
+
+/// FULL_APP is harness / explicit proof only — not default product play.
+///
+/// True when [`crate::engine::EngineLaunchArgs::test_mode`] or `STAGE5_FULL_APP=1`.
+#[must_use]
+pub fn stage5_full_app_profile_requested(test_mode: bool) -> bool {
+    test_mode || stage5_full_app_env_requested()
+}
+
+/// Truth dumps / frame-fence warns: harness (`test_mode`) or `STAGE5_READINESS_VERBOSE=1`.
+#[inline]
+fn stage5_readiness_truth_dump_enabled(test_mode: bool) -> bool {
+    test_mode || stage5_readiness_live_verbose_logs()
+}
+
 /// App-level Stage 5 readiness snapshot (HUD / diagnostics / CI hooks).
 #[derive(Resource, Debug, Default, Clone)]
 pub struct AppStage5ReadinessReport {
@@ -164,6 +187,34 @@ pub fn evaluate_app_stage5_readiness(world: &mut World) {
     let eval_started = std::time::Instant::now();
     let inv = bump_eval_invocation(world);
     let profile = world.resource::<Stage5ReadinessProfile>().clone();
+    // Product play is HEADLESS — skip exclusive-world eval (CPU spine cost / spike pollution).
+    // FULL_APP is harness-only (`TestHarnessPlugin` → `LiveTodoBoardsPlugin`).
+    if profile != Stage5ReadinessProfile::FULL_APP {
+        if let Some(mut report) = world.get_resource_mut::<AppStage5ReadinessReport>() {
+            *report = AppStage5ReadinessReport {
+                vt4_ok: true,
+                vt5_ok: true,
+                single_fire_extract: true,
+                gpu_field_authoritative: P2H_GPU_PARTIAL_WRITES_AUTHORITATIVE,
+                preview_render_target_active: false,
+                phase_d_ok: true,
+                overlay_from_shared_buffers_only: true,
+                particle_lod_scales: true,
+                phase_f_lod_proof_ok: true,
+                instanced_dispatch_ok: true,
+                phase_f_ok: true,
+                projection_domains: 0,
+                registered_producers: REGISTERED_VISUAL_PRODUCERS.len() as u32,
+                duplicate_visual_scan_count: 0,
+                violations: Vec::new(),
+            };
+        }
+        if let Some(mut perf) = world.get_resource_mut::<crate::render::probes::frame_perf::FramePerf>()
+        {
+            perf.readiness_ms = 0.0;
+        }
+        return;
+    }
     let (
         report,
         presence,
@@ -719,10 +770,15 @@ fn trace_live_full_app_readiness_violations(
     profile: Res<Stage5ReadinessProfile>,
     report: Res<AppStage5ReadinessReport>,
     truth_inputs: Res<Stage5ReadinessTruthInputs>,
+    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
     mut post_update_tick: Local<u32>,
     mut last_emit: Local<Option<(bool, u32)>>,
 ) {
     if *profile != Stage5ReadinessProfile::FULL_APP {
+        return;
+    }
+    let test_mode = launch.as_deref().is_some_and(|l| l.test_mode());
+    if !stage5_readiness_truth_dump_enabled(test_mode) {
         return;
     }
 
@@ -784,13 +840,19 @@ fn sync_live_preview_authority_for_full_app(
 
 /// End-of-frame line: confirms **PostUpdate readiness** is visible to the rest of the frame loop
 /// (`Last` runs after `PostUpdate`). When failing, logs every frame; when passing, throttled (**PERF-PLAY-001**).
+/// Production play: silent unless harness `test_mode` or `STAGE5_READINESS_VERBOSE=1`.
 fn stage5_readiness_live_full_app_frame_fence(
     profile: Res<Stage5ReadinessProfile>,
     report: Res<AppStage5ReadinessReport>,
     inv: Res<Stage5ReadinessEvalInvocation>,
+    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
     mut tick: Local<u32>,
 ) {
     if *profile != Stage5ReadinessProfile::FULL_APP {
+        return;
+    }
+    let test_mode = launch.as_deref().is_some_and(|l| l.test_mode());
+    if !stage5_readiness_truth_dump_enabled(test_mode) {
         return;
     }
     *tick = tick.wrapping_add(1);

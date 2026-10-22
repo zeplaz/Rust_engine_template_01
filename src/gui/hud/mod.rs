@@ -27,7 +27,6 @@ pub mod shell_framework;
 pub mod shell_persistence;
 pub mod shell_update_budget;
 pub mod shell_widget_timing;
-pub mod stage5_spine_consumer;
 pub mod stage6_consumer;
 pub mod info_tabs;
 pub mod overlay_shell;
@@ -85,9 +84,9 @@ pub use icon_atlas::{
     tool_context_uses_icon_atlas, IconAtlasManifest, IconAtlasPlugin, IconAtlasUi, IconId,
 };
 pub use power_hud_icon_atlas::{
-    power_hud_atlas_assets_on_disk, power_hud_icon_atlas_registration_witness_green,
-    PowerHudEguiTextureCache, PowerHudIconAtlasManifest, PowerHudIconAtlasPlugin,
-    PowerHudIconAtlasUi, PowerHudIconId,
+    power_hud_atlas_assets_on_disk, power_hud_bevy_draw_path_wired,
+    power_hud_icon_atlas_registration_witness_green, PowerHudDrawnIcon, PowerHudEguiTextureCache,
+    PowerHudIconAtlasManifest, PowerHudIconAtlasPlugin, PowerHudIconAtlasUi, PowerHudIconId,
 };
 pub use plant_focus_card::{
     plant_focus_card_gauges_wired, sync_plant_focus_card_visibility, PlantFocusCardSnapshot,
@@ -207,7 +206,6 @@ pub use shell_persistence::{
     MinimapBookmarkCollectionR8, MinimapBookmarkEntryR8, OverlayPresetCollectionR8,
     OverlayPresetEntryR8, ProductShellPersistenceBundleR8,
 };
-pub use stage5_spine_consumer::draw_stage5_spine_consumer_panel;
 pub use stage6_consumer::{
     draw_stage6_residency_consumer_panel, mock_residency_overlay_consumer,
     ResidencyOverlayConsumerDto,

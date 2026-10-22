@@ -42,6 +42,7 @@ pub mod replay_editor_parity;
 pub mod stage5_live_todos;
 pub mod stage5_finish_todos;
 pub mod visual_aidv2_live_todos;
+pub mod live_todo_boards_plugin;
 // Lib witness refresh bundles — compiled only for `cargo test --lib` (not runtime).
 #[cfg(test)]
 pub mod steward_witness_sync_proof;
@@ -189,6 +190,7 @@ pub use stage5_live_todos::{
     emit_active_stage5_todo_context, Stage5LiveTodo, Stage5LiveTodoBoard, TodoStatus,
     STAGE5_ROOT_GATE_SEQUENCE, STAGE5_TODOS,
 };
+pub use live_todo_boards_plugin::LiveTodoBoardsPlugin;
 pub use orchestrator_health::{
     orchestrator_health_path, OrchestratorHealthPlugin, OrchestratorThreadHealthExport,
 };

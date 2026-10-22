@@ -442,10 +442,10 @@ fn ux_frame_spike_watchdog(
     mut guard: ResMut<UxFrameSpikeGuard>,
 ) {
     let shell_ms = budget.map(|b| b.frame_time_ms).unwrap_or(0.0);
+    // Product CPU spine only — readiness_ms is harness/FULL_APP proof cost (not product).
     let spine_ms = perf.as_ref().map(|p| {
         p.world_repr_ms
             + p.projection_graph_ms
-            + p.readiness_ms
             + if p.tile_raster_ran { p.tile_raster_ms } else { 0.0 }
     }).unwrap_or(0.0);
     let attrib_ms = attrib.as_ref().map(|a| a.attrib_sum_ms()).unwrap_or(0.0);

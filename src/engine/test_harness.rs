@@ -182,6 +182,24 @@ pub struct TestHarnessPlugin;
 
 impl Plugin for TestHarnessPlugin {
     fn build(&self, app: &mut App) {
+        // Closed-program live todo boards + FULL_APP readiness + VT proof spine — not product.
+        app.add_plugins(crate::dev::LiveTodoBoardsPlugin);
+        app.init_resource::<crate::render::VisualAgreementFrame>()
+            .init_resource::<crate::render::OverlayAgreementDebug>();
+        app.add_plugins(crate::render::VtCiMatrixPlugin);
+        app.add_plugins(crate::render::PhaseFLodProofPlugin);
+        app.add_plugins(crate::render::FullRenderDiagnosticPlugin);
+        app.add_plugins(crate::render::Stage5ReadinessPlugin);
+        app.add_systems(
+            Update,
+            crate::render::record_visual_agreement_frame
+                .after(crate::gui::ViewRepresentationSystemSet::SyncOverlayField)
+                .after(crate::render::extraction::sync_shared_overlay_from_simulation)
+                .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)
+                .after(crate::gui::editor::world_preview::capture_world_preview_vt4_probe),
+        );
+        app.add_plugins(crate::dev::diagnostics::VisualReadinessWitnessPlugin);
+        app.add_plugins(crate::dev::TestRunInstrumentationPlugin);
         app.add_plugins(crate::dev::tactical_map_debug::TacticalMapDebugPlugin);
         app.add_systems(
                 Startup,
