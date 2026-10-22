@@ -3,7 +3,6 @@
 use bevy::prelude::*;
 
 use super::presentation::MapViewInstanceId;
-use super::resolved::ResolvedMapViewFrame;
 
 #[derive(Clone, Debug, Default)]
 pub struct MapViewTextureBinding {

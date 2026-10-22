@@ -125,10 +125,10 @@ impl HudCommandShellLayout {
 pub struct EditorDockBevyRoot;
 
 #[derive(Component)]
-struct EditorDockBodyText;
+pub struct EditorDockBodyText;
 
 #[derive(Default)]
-struct EditorDockStamp {
+pub struct EditorDockStamp {
     key: u64,
 }
 
@@ -457,9 +457,6 @@ pub fn sync_editor_dock_bevy_shell(
     }
 }
 
-
-
-fn panel_state_checkbox() {}
 
 
 #[cfg(test)]

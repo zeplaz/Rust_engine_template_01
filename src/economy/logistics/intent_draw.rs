@@ -11,17 +11,12 @@
 use bevy::prelude::*;
 
 use crate::ai::construction::ConstructionAiOwner;
-use crate::construction::ConstructionMapProjection;
-use crate::engine::states::BaseState;
 use crate::entities::production::core::{BUFFER_TAG_DRAGON_TEETH_UNIT, BUFFER_TAG_MINE_UNIT};
 use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
-use crate::gui::{MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport};
-use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::strategic::{
     BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles, LogisticsGraph, LogisticsNodeId,
 };
 use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId, TransportEdgeMeta};
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::types::{FreightLot, InTransitLedger, RoutePathStore};
 
@@ -332,16 +327,6 @@ pub fn sync_logistics_intent_draw_frame(
     );
 }
 
-fn play_map_session(state: Option<&State<BaseState>>) -> bool {
-    state.is_some_and(|s| matches!(s.get(), BaseState::Editor))
-}
-
-/// Strokes haul polylines and the AI site outline. Off outside the play area or when egui has the pointer.
-
-fn rgba_color(rgba: [u8; 4]) -> crate::gui::UiRgba {
-    crate::gui::UiRgba::from_rgba_unmultiplied(rgba[0], rgba[1], rgba[2], rgba[3])
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -504,8 +489,9 @@ mod tests {
         assert_eq!(frame.ai_sites.len(), 1);
         assert_eq!(frame.ai_sites[0].origin, BuildSiteTile { x: 6, z: 3 });
         assert_ne!(AI_SITE_INTENT_RGBA, HaulKind::DragonTeeth.rgba());
-        const PLAYER_GHOST_VALID_RGBA: [u8; 4] = [48, 140, 72, 220];
-        assert_ne!(AI_SITE_INTENT_RGBA, PLAYER_GHOST_VALID_RGBA);
+        let player_ghost = crate::construction::footprint_valid_color();
+        let player_ghost_rgba = [player_ghost.r, player_ghost.g, player_ghost.b, player_ghost.a];
+        assert_ne!(AI_SITE_INTENT_RGBA, player_ghost_rgba);
 
         let mut gate = SimulationMapPointerGate::default();
         gate.in_play_area = true;

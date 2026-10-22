@@ -2,23 +2,15 @@
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 
 use crate::construction::{
-    commit_road_path_to_queue, cursor_world_on_map, enqueue_road_upgrade, ActiveBuildTool,
-    ActiveRoadPlacement, ActiveToolSession, BuildStripState, BuildTool, ConstructionPlanQueue,
-    ExecutedRoadNetwork, RailType, RoadType, RoadSnapSettings, RoadToolPopupState, ToolContext,
+    ActiveBuildTool,
+    ActiveRoadPlacement, ActiveToolSession, BuildStripState, ConstructionPlanQueue,
+    ExecutedRoadNetwork, RoadSnapSettings, RoadToolPopupState, ToolContext,
 };
-use crate::engine::states::BaseState;
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport, UiPalette};
-use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::sim_hud_copy::{ROAD_SHEET_BUILD, ROAD_SHEET_CANCEL, ROAD_SHEET_HINT_INPUT, ROAD_SHEET_UPGRADE};
-use super::sim_hud_egui_theme::{
-    apply_sim_hud_egui_theme, body_text, caption_text, data_text, picker_header_frame,
-    picker_sheet_frame, title_text,
-};
 
 pub const ROAD_TOOL_SHEET_W_PX: f32 = 280.0;
 /// Logical height of the Bevy road/rail sheet, used by the pointer gate.

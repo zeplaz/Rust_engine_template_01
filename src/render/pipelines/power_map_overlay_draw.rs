@@ -1,33 +1,10 @@
 //! Power grid overlay — egui vector draw on simulation map (COD-POWER-OVERLAY-RENDER-001).
 
-use bevy::prelude::*;
-
-use crate::construction::world_to_sim_map_screen;
-use crate::engine::states::BaseState;
-use crate::gui::{MapCameraDesiredRes, SimulationMapViewport};
 use crate::infrastructure::utility::VoltageClass;
-use crate::render::view_runtime::ViewProjectionAuthority;
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use crate::render::pipelines::infrastructure_overlay::{
-    InfrastructureNetworkLayer, InfrastructureOverlayDrawRequests, InfrastructureOverlaySettings,
-    InfrastructureOverlayStroke, PowerLineOverlayState, PowerMapOverlayPresentation,
-    stroke_for_power_line_state,
-};
-
-
-#[inline]
-fn stroke_color(stroke: InfrastructureOverlayStroke) -> crate::gui::UiRgba {
-    let [r, g, b] = stroke.color_rgb;
-    let a = (stroke.alpha.clamp(0.0, 1.0) * 255.0).round() as u8;
-    crate::gui::UiRgba::from_rgba_unmultiplied(r, g, b, a)
-}
-
+/// Retired egui stroke paint — Bevy/GPU overlay owns live strokes.
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn paint_stroke_line() {}
-
-fn paint_dashed_line() {}
-
-fn paint_gap_line() {}
 
 #[must_use]
 pub fn power_map_overlay_draw_witness_green() -> bool {
@@ -37,6 +14,7 @@ pub fn power_map_overlay_draw_witness_green() -> bool {
 }
 
 /// Power line strokes on the CPU minimap image (COD-POWER-OVERLAY-MINIMAP-001).
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_power_strokes_on_minimap() {}
 
 #[cfg(test)]

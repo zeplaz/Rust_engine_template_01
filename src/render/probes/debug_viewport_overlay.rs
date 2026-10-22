@@ -1,18 +1,8 @@
 //! On-screen viewport debug window + stroke overlays (RTT fill rect + ortho trace).
 
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
 
-use crate::gui::hud::{
-    stroke_viewport_debug_rect, viewport_debug_overlay_enabled, CameraProjectionInfo,
-    UiViewportRect,
-};
-use crate::gui::{
-    MainWorldCameraOrthoTrace, SimulationMapTexture, SimulationMapViewport,
-    SimulationMapViewportDebug, SimulationMapViewportTrace,
-};
-use crate::gui::simulation_map_texture_extent;
-use crate::render::ResolvedViewports;
+use crate::gui::hud::viewport_debug_overlay_enabled;
 
 #[inline]
 pub fn debug_viewport_overlay_enabled() -> bool {

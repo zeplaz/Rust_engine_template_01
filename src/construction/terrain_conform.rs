@@ -13,6 +13,7 @@ use crate::terrain::generation::WorldGenDenseTerrainCache;
 pub const TERRAIN_CONFORM_Y_SCALE: f32 = 28.0;
 
 /// Blocker note when live height grid is missing (witness / board Open).
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub const TERRAIN_CONFORM_HEIGHT_GRID_BLOCKER: &str =
     "PHASE2-BUILD-20 Open: WorldGenDenseTerrainCache elevation unavailable — stub fallback only";
 

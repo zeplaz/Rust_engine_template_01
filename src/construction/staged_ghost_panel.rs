@@ -5,7 +5,6 @@ pub const STAGED_PANEL_FLOATING_SIM: bool = false;
 
 use bevy::prelude::*;
 
-use crate::engine::states::BaseState;
 
 use crate::gui::InputBindings;
 use crate::strategic::{
@@ -249,6 +248,7 @@ pub fn parametric_active_ghost_hud_line(
     ))
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn build_all_valid_staged_rows(
     book: &mut StagedPlacementBook,
     actor: Entity,
@@ -300,6 +300,7 @@ pub fn staged_placements_tray_lines(mode: &StagedPlacementMode, book: &StagedPla
 }
 
 /// Thin Bevy-named export — staging body lives in context tray sync (no floating egui).
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn sync_staged_placements_panel_bevy() {}
 
 #[must_use]

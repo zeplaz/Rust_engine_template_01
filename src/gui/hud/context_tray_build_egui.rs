@@ -8,22 +8,16 @@ use crate::construction::{
     BuildTool, BuildingDefinitionRegistry, ConstructionHistory, PendingConstructionQueue,
     SiteStubOverlayState, StagedPlacementBook, StagedPlacementMode, ToolContext,
 };
-use crate::engine::states::BaseState;
 use crate::gui::hud::panel_state::HudPanelState;
 use crate::gui::hud::simulation_shell_phase2::{
-    ContextTrayState, ContextTrayTab, CONTEXT_TRAY_BODY_H_PX, CONTEXT_TRAY_PEEK_BODY_H_PX,
-    CONTEXT_TRAY_TAB_H_PX,
+    ContextTrayState, ContextTrayTab,
 };
-use crate::gui::in_game_hud::CONTEXT_TRAY_LEFT_INSET_PX;
 use crate::gui::UiPalette;
 use crate::strategic::{CorridorConstructionBook, TileOccupationBook};
 
 use super::sim_hud_copy::{
-    tray_queue_summary, TRAY_LEGEND_FOOTPRINT, TRAY_LEGEND_TITLE, TRAY_LEGEND_YARD,
-    TRAY_PEEK_MODIFIERS, TRAY_QUEUE_TITLE, TRAY_STAGING_EMPTY, TRAY_STAGING_TITLE,
-};
-use super::sim_hud_egui_theme::{
-    apply_sim_hud_egui_theme, caption_text, data_text, picker_sheet_frame, title_text,
+    TRAY_LEGEND_FOOTPRINT, TRAY_LEGEND_TITLE, TRAY_LEGEND_YARD,
+    TRAY_PEEK_MODIFIERS,
 };
 
 /// HUD-NAT-003 — Bevy tray body owns Build tab content in Simulation.

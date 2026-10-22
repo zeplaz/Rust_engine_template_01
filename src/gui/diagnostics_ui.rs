@@ -43,10 +43,10 @@ impl Default for DiagnosticsUiState {
 pub struct DiagnosticsBevyRoot;
 
 #[derive(Component)]
-struct DiagnosticsBevyBodyText;
+pub struct DiagnosticsBevyBodyText;
 
 #[derive(Default)]
-struct DiagnosticsStamp {
+pub struct DiagnosticsStamp {
     key: u64,
 }
 

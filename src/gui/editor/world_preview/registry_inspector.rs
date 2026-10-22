@@ -1,17 +1,9 @@
 //! Read-only registry tables for Wave P preview tooling (consumer-only).
 
 
-use super::registry_interchange::{
-    material_registry_interchange_path, open_registry_interchange_in_desktop_shell,
-    tag_registry_interchange_path,
-};
-use crate::gui::style::{
-    muted_label, section_heading, CmdHeadingStyle, UiPalette, UiSpacing, widget_scroll_vertical_capped,
-};
-use crate::systems::terrain::TerrainRegistriesHandles;
-use crate::terrain::material::{MaterialRegistry, TagRegistry};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub enum PreviewRegistryInspectorHost {
     #[default]
     EguiSidebar,
@@ -20,6 +12,7 @@ pub enum PreviewRegistryInspectorHost {
 
 impl PreviewRegistryInspectorHost {
     #[must_use]
+    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
     pub const fn label(self) -> &'static str {
         match self {
             Self::EguiSidebar => "egui sidebar",

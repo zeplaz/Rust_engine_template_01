@@ -81,6 +81,7 @@ impl Default for PressureComposerState {
 
 #[derive(Resource, Debug, Default)]
 pub struct PressureComposerScratch {
+    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
     pub next_mission_id: u64,
 }
 

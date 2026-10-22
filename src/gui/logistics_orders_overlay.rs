@@ -7,19 +7,10 @@
 
 use bevy::prelude::*;
 
-use crate::construction::ConstructionMapProjection;
 use crate::economy::logistics::orders::snapshot::METRES_PER_TILE;
 use crate::economy::logistics::orders::{
-    LogisticsOrdersSnapshot, LogisticsOrdersSnapshotRes, OrderStatus, SiteRole,
+    LogisticsOrdersSnapshot, OrderStatus, SiteRole,
 };
-use crate::engine::states::BaseState;
-use crate::gui::style::UiPalette;
-use crate::gui::{MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport};
-use crate::render::view_runtime::ViewProjectionAuthority;
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-
-use super::logistics_orders_panel::LogisticsOrdersPanelState;
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum RouteTone {
     Flowing,
@@ -101,12 +92,6 @@ pub fn build_orders_overlay(snap: &LogisticsOrdersSnapshot, with_sites: bool) ->
     }
     frame
 }
-
-fn map_session(state: Option<&State<BaseState>>) -> bool {
-    state.is_some_and(|s| matches!(s.get(), BaseState::Editor | BaseState::Simulation))
-}
-
-#[allow(clippy::too_many_arguments)]
 
 #[cfg(test)]
 mod tests {

@@ -1,13 +1,13 @@
 //! DES-MINIMAP-VEG-LEGEND-001 / **DES-MINIMAP-VEG-LEGEND-002** — collapsible topology + burn legend.
 
 
-use crate::engine::states::BaseState;
-use crate::gui::minimap_shell::{MinimapOverlayMask, MinimapShellState};
+use crate::gui::minimap_shell::MinimapOverlayMask;
 
 #[derive(Clone, Copy, Debug)]
 pub struct TopologyLegendEntry {
     pub glyph: &'static str,
     pub word: &'static str,
+    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
     pub hex: &'static str,
 }
 
@@ -63,17 +63,6 @@ pub const FIRE_LEGEND_ENTRIES: [TopologyLegendEntry; 3] = [
     },
 ];
 
-fn hex_to_color32(hex: &str) -> crate::gui::UiRgba {
-    let s = hex.trim_start_matches('#');
-    if s.len() != 6 {
-        return crate::gui::UiRgba::GRAY;
-    }
-    let r = u8::from_str_radix(&s[0..2], 16).unwrap_or(128);
-    let g = u8::from_str_radix(&s[2..4], 16).unwrap_or(128);
-    let b = u8::from_str_radix(&s[4..6], 16).unwrap_or(128);
-    crate::gui::UiRgba::from_rgb(r, g, b)
-}
-
 #[must_use]
 pub fn minimap_topology_legend_collapsed_label() -> String {
     format!("▶ {} kinds", TOPOLOGY_LEGEND_ENTRIES.len())
@@ -118,11 +107,11 @@ pub fn minimap_topology_legend_status_copy(
     None
 }
 
-fn draw_legend_grid() {}
-
 /// GPU compositor path — legend chrome below the Bevy minimap image (not map raster).
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_minimap_topology_legend_gpu_chrome() {}
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_minimap_topology_legend_ui() {}
 
 #[must_use]

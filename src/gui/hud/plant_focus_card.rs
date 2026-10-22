@@ -6,19 +6,8 @@ use bevy::prelude::*;
 
 use crate::construction::BuildStripState;
 use crate::construction::ToolContext;
-use crate::engine::states::BaseState;
-use crate::gui::hud::power_hud_icon_atlas::{
-    draw_power_hud_gauge_row, draw_power_hud_icon_labeled, PowerHudEguiTextureCache,
-    PowerHudIconAtlasManifest, PowerHudIconAtlasUi, PowerHudIconId,
-};
-use crate::gui::hud::power_node_hover::PowerNodeHoverState;
-use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
-use crate::gui::{SimulationMapViewport, UiPalette};
+use crate::gui::hud::power_hud_icon_atlas::PowerHudIconId;
 
-use super::sim_hud_egui_theme::{
-    apply_sim_hud_egui_theme, caption_text, clamp_satellite_to_map_hole, data_text,
-    map_attached_chip_frame, picker_header_frame, title_text,
-};
 
 pub const PLANT_FOCUS_CARD_W: f32 = 260.0;
 pub const PLANT_FOCUS_CARD_MAX_H: f32 = 280.0;
@@ -176,9 +165,15 @@ pub fn sync_plant_focus_card_visibility(
 
 #[must_use]
 pub fn plant_focus_card_gauges_wired() -> bool {
-    PowerHudIconId::inventory()
-        .iter()
-        .any(|id| matches!(id, PowerHudIconId::Diesel | PowerHudIconId::Scram | PowerHudIconId::Island))
+    crate::gui::hud::power_hud_icon_atlas::power_hud_bevy_draw_path_wired()
+        && include_str!("sim_play_bevy_chrome.rs").contains("spawn_power_hud_gauge_row")
+        && include_str!("sim_play_bevy_chrome.rs").contains("SimPlayPlantGaugeRow")
+        && PowerHudIconId::inventory().iter().any(|id| {
+            matches!(
+                id,
+                PowerHudIconId::Diesel | PowerHudIconId::Scram | PowerHudIconId::Island
+            )
+        })
 }
 
 #[must_use]

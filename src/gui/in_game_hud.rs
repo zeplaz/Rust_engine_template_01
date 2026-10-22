@@ -1275,9 +1275,11 @@ fn spawn_simulation_command_shell(
                     left: Val::Px(8.0 + crate::gui::hud::simulation_shell_phase2::BUILD_RAIL_W_PX + 12.0),
                     top: Val::Px(40.0),
                     width: Val::Px(220.0),
-                    max_height: Val::Px(160.0),
+                    max_height: Val::Px(200.0),
                     padding: UiRect::all(Val::Px(8.0)),
                     border: UiRect::all(Val::Px(1.0)),
+                    flex_direction: FlexDirection::Column,
+                    row_gap: Val::Px(4.0),
                     ..default()
                 },
                 BackgroundColor(palette.bevy_bg_vellum()),

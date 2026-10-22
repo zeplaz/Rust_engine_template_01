@@ -439,9 +439,21 @@ pub fn finalize_frame_budget_diagnostics(
 
     let avg_frame_ms = budget.avg_frame_ms;
     if frame_ms >= FRAME_SPIKE_MS {
+        let top = budget.top_buckets_by_last_ms(2);
+        let bucket_hint = if top.is_empty() {
+            "buckets=n/a".to_string()
+        } else {
+            top.iter()
+                .map(|(b, ms)| format!("{}={:.1}ms", b.label(), ms))
+                .collect::<Vec<_>>()
+                .join(" ")
+        };
         budget.note_anomaly(
             FrameBudgetAnomalyKind::FrameSpike,
-            format!("frame {:.1} ms (avg {:.1} ms)", frame_ms, avg_frame_ms),
+            format!(
+                "frame {:.1} ms (avg {:.1} ms) {}",
+                frame_ms, avg_frame_ms, bucket_hint
+            ),
             now,
         );
     }

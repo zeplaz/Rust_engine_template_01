@@ -2,24 +2,8 @@
 
 use bevy::prelude::*;
 
-use crate::gui::style::UiPalette;
-use crate::gui::world_representation::WorldRepresentationFrame;
-use crate::render::AppStage5ReadinessReport;
-use crate::render::InfrastructureOverlaySettings;
 
-use super::info_tabs::{
-    draw_info_tab_bar, draw_info_tab_body, HudInfoLiveData, HudInfoTabState,
-};
-use super::layout_store::HudLayoutStore;
 use super::overlay_framework::OverlayFrameworkState;
-use super::shell_framework::{
-    capture_shell_layout, shell_default_window_pos, shell_widget_runs_egui_with_budget,
-    show_product_shell_window, HudDockRegistry, HudWidgetId, ShellWindowHost,
-};
-use super::shell_update_budget::ProductShellUpdateBudget;
-use super::shell_widget_timing::ShellWidgetDiagnostics;
-use super::pending_hud_layout_commit::PendingHudLayoutCommit;
-use super::retained_widget_cache::RetainedWidgetCache;
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
 pub enum OverlayToggleGroup {

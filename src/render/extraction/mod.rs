@@ -35,8 +35,9 @@ pub use fire_emission_profile::{
 };
 pub use crate::render::extraction::sim_visual_extract::FireVisualGpuInstance;
 pub use fire_visual_extract::{
-    extract_fire_simulation_snapshot, sync_shared_overlay_from_simulation, FireAtmosphereAggregate,
-    FireVisualFramePlugin, FireVisualFrameSet,
+    build_chunk_fire_heat_overlay_map, extract_fire_simulation_snapshot,
+    sync_shared_overlay_from_simulation, FireAtmosphereAggregate, FireVisualFramePlugin,
+    FireVisualFrameSet,
 };
 pub use fire_extract_scan::{
     build_fire_extract_scan_set, expand_moore_rim_one, fire_extract_glow_domain,

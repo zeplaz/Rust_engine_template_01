@@ -55,6 +55,7 @@ pub fn minimap_bevy_display_texel_extent(
 
 /// Best-effort texture for Bevy minimap chrome — GPU RT when composited, else main/CPU terrain.
 #[must_use]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn resolve_minimap_bevy_display_handle(
     shell: &MinimapShellState,
     fallback: &TileWorldFallbackState,

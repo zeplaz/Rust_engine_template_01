@@ -1,7 +1,6 @@
 //! Power repairs tray section — Bevy list lives in `sim_play_bevy_chrome`
 //! (`ContextTrayPowerRepairList`). Retired egui draw stub kept until mass stub prune (DEFER).
 
-use bevy::prelude::*;
 
 /// Honest wire check: Bevy repair list root + sync (not empty egui draw stub).
 #[must_use]

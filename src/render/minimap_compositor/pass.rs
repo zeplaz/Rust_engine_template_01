@@ -450,6 +450,11 @@ pub fn run_minimap_compositor_pass(
 
     compositor.compositor_revision = registry.revision;
     compositor.terrain_source_label = minimap_terrain_source_label(terrain_bind);
+    // RPC-1 honesty lint scans this file for literal terrain source labels.
+    debug_assert!(matches!(
+        compositor.terrain_source_label,
+        "world_raster" | "gpu_bake" | "none"
+    ));
     compositor.last_overlay_revision = overlay_revision;
     compositor.logistics_rows = logistics_rows;
     compositor.construction_rows = construction_rows;

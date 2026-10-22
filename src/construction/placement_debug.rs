@@ -9,20 +9,15 @@
 #[allow(dead_code)] // HUD-A-003 witness greps this const; schedule uses product_shell_active
 pub const PLACEMENT_DEBUG_WINDOW_IN_SIM: bool = false;
 
-use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::build_interaction::placement_snapshot_for_building;
-use crate::construction::build_state::{BuildGhostState, BuildPlacementPreview};
-use crate::construction::build_strip::BuildStripState;
+use crate::construction::build_state::BuildGhostState;
 use crate::construction::build_tool_authority::ActiveBuildTool;
 use crate::construction::building_definitions::BuildingDefinitionRegistry;
 use crate::construction::footprint_tile_instances::FootprintTileWitness;
-use crate::construction::map_egui_projection::{
-    tile_screen_extent, world_to_sim_map_screen_rendered, ConstructionMapProjection,
-};
-use crate::construction::visual_authority::ConstructionVisualRequests;
+use crate::construction::map_egui_projection::ConstructionMapProjection;
 use crate::engine::launch_args::EngineLaunchArgs;
 use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
 use crate::gui::{
@@ -30,14 +25,14 @@ use crate::gui::{
     map_camera_pose_for_presentation, sim_map_projection_frame,
     sim_map_screen_to_world_xy_in_frame, sim_map_world_vec3_to_screen,
     sim_map_world_vec3_to_screen_rendered, MainWorldCamera, MainWorldCameraOrthoTrace,
-    MapCameraDesired, MapCameraDesiredRes, SimulationMapViewport, TileDebugDrawGlobals,
-    TileGpuDebugSettings,
+    MapCameraDesiredRes, SimulationMapViewport, TileDebugDrawGlobals,
 };
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewSurfaceId};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 /// Toggle in-window or via `CONSTRUCTION_PLACEMENT_DEBUG=1`.
 #[derive(Resource, Clone, Debug)]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub struct ConstructionPlacementDebugOverlay {
     pub enabled: bool,
     /// Draw cursor vs projected ghost markers on the map.
@@ -109,6 +104,7 @@ pub const MAP_PICK_GHOST_SCREEN_DELTA_PX_MAX: f32 = 4.0;
 impl ConstructionPlacementDebugProbe {
     /// Runtime overlay metrics — requires active ghost + pointer in play area.
     #[must_use]
+    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
     pub fn runtime_map_pick_closure_green(&self) -> bool {
         self.pointer_in_play_area
             && !self.egui_blocks
@@ -455,6 +451,7 @@ pub fn sync_construction_placement_debug_probe(
 }
 
 #[inline]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn overlay_visible(
     overlay: &ConstructionPlacementDebugOverlay,
     _launch: Option<&EngineLaunchArgs>,
@@ -464,15 +461,9 @@ fn overlay_visible(
     overlay.enabled
 }
 
-#[derive(SystemParam)]
-pub(crate) struct PlacementDebugOverlayExtras<'w> {
-    ortho: Res<'w, crate::gui::MainWorldCameraOrthoTrace>,
-    tile_gpu: Res<'w, TileGpuDebugSettings>,
-}
-
+/// Retired egui placement debug paint — probe sync remains scheduled.
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_construction_placement_debug_overlay() -> Result { Ok(()) }
-
-fn draw_placement_crosshairs() {}
 
 #[cfg(test)]
 mod tests {

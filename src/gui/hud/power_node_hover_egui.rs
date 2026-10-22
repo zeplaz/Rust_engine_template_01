@@ -2,7 +2,6 @@
 //!
 //! Retired egui draw stub kept for call-site stability until mass stub prune (DEFER).
 
-use bevy::prelude::*;
 
 /// HUD-NAT-009 — keep power hover readable inside the map hole.
 pub const HOVER_CARD_MAX_H: f32 = 160.0;

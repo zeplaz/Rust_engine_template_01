@@ -1,34 +1,9 @@
-//! Per-consumer map layer / overlay / follow controls (shared UI widget, local state).
+//! Retired egui map overlay controls.
+//!
+//! Simulation presentation toggle lives in [`crate::gui::world_presentation_mode`]
+//! (`WorldPresentationModePlugin` — **View: Tactical / World** Bevy UI button).
+//! Ops-strip height/slope remains [`crate::gui::map_tile_raster::PlayMapPixelMode`].
 
-
-use crate::gui::editor::world_gen_hints as hints;
-use crate::gui::editor::world_preview::layers::PreviewLayers;
-use crate::gui::map_view::MapViewState;
-use crate::gui::style::{section_heading, CmdHeadingStyle, UiPalette};
-use crate::gui::MinimapFollowMode;
-
-#[inline]
-fn tt() {}
-
-fn base_layer_label(b: PreviewLayers) -> &'static str {
-    if b.is_empty() {
-        "None"
-    } else if b.contains(PreviewLayers::REGIONS) {
-        "Regions"
-    } else if b.contains(PreviewLayers::ECOLOGY) {
-        "Ecology"
-    } else if b.contains(PreviewLayers::BIOME) {
-        "Biome"
-    } else if b.contains(PreviewLayers::HEIGHT) {
-        "Height"
-    } else if b.contains(PreviewLayers::MOISTURE) {
-        "Moisture"
-    } else if b.contains(PreviewLayers::TEMPERATURE) {
-        "Temperature"
-    } else {
-        "Base"
-    }
-}
-
-/// Layer / overlay / follow controls for one map consumer.
+/// No-op stub retained for callers that still import the old egui entry.
+/// Prefer [`crate::gui::WorldPresentationMode`] + sim shell toggle.
 pub fn map_overlay_controls_ui() {}

@@ -33,13 +33,13 @@ pub struct RoadToolPopupState {
 pub struct RoadToolPopupBevyRoot;
 
 #[derive(Component)]
-struct RoadToolPopupTitle;
+pub(crate) struct RoadToolPopupTitle;
 
 #[derive(Component)]
-struct RoadToolPopupStats;
+pub(crate) struct RoadToolPopupStats;
 
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
-enum RoadPopupAction {
+pub(crate) enum RoadPopupAction {
     Build,
     Cancel,
     Upgrade,
@@ -49,7 +49,7 @@ enum RoadPopupAction {
 }
 
 #[derive(Default)]
-struct RoadPopupStamp {
+pub(crate) struct RoadPopupStamp {
     key: u64,
 }
 

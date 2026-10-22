@@ -178,7 +178,7 @@ fn path_color(kind: VisualPathKind, valid: bool, slope_ok: bool, committed: bool
         (VisualPathKind::Rail, _, false, _) => {
             crate::gui::UiRgba::from_rgba_unmultiplied(255, 140, 60, 180)
         }
-        _ => crate::gui::UiRgba::from_rgba_unmultiplied(240, 90, 90, 160),
+        _ => crate::construction::road_segment_color(false),
     };
     color32(token)
 }

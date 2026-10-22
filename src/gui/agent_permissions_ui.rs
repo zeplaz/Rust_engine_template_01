@@ -1,17 +1,7 @@
 use bevy::prelude::*;
 
 use crate::idgen::EntityId;
-use crate::systems::agents::permissions::{
-    Agent, AgentPermissions, PermissionDomain, AccessLevel, PermissionGrant, 
-    PermissionGrantEvent, PermissionRevokeEvent
-};
-use crate::systems::agents::agent_manager::AgentManager;
-use crate::events::ownership_events::FactionColors;
-use crate::gui::style::gameplay_color_swatch_egui;
-use crate::gui::style::{
-    muted_label, primary_label, section_heading, strong_body, v_space, warning_text, CmdHeadingStyle,
-    UiPalette, UiSpacing, VertSpace, widget_scroll_vertical_fill,
-};
+use crate::systems::agents::permissions::PermissionDomain;
 
 /// UI state for the permissions window
 #[derive(Resource)]

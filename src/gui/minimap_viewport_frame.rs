@@ -6,7 +6,6 @@
 use bevy::math::{Rect, Vec2};
 
 use crate::gui::tactical::map_camera::sim_map_visible_world_span;
-use crate::gui::style::UiPalette;
 use crate::gui::view_authority::tactical_camera_world_pose;
 use crate::gui::{MapCameraDesired, SimulationMapViewport, ViewId, ViewManager};
 use crate::render::view_runtime::ViewProjectionAuthority;

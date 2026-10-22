@@ -20,8 +20,10 @@ pub enum MapEditorBrushShape {
 }
 
 impl MapEditorBrushShape {
+    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
     pub(crate) const ALL: [Self; 3] = [Self::Disk, Self::Square, Self::Diamond];
 
+    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
     pub(crate) fn label(self) -> &'static str {
         match self {
             Self::Disk => "Disk",
@@ -32,6 +34,7 @@ impl MapEditorBrushShape {
 }
 
 #[inline]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub(crate) fn tile_in_brush(
     shape: MapEditorBrushShape,
     cx: f32,
@@ -50,6 +53,7 @@ pub(crate) fn tile_in_brush(
 }
 
 /// Raster-ordered grid cells from `(x0,y0)` to `(x1,y1)` inclusive (tile column, tile row).
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub(crate) fn bresenham_tile_line(x0: u32, y0: u32, x1: u32, y1: u32) -> Vec<(u32, u32)> {
     let mut out = Vec::new();
     let xa = x0 as i32;
@@ -161,6 +165,7 @@ pub(crate) fn sync_tool_to_substate(tool: &MapEditorTool, next_sub: &mut NextSta
 }
 
 #[inline]
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub(crate) fn emit_editor_tile_commit_for_brush(
     edit_commits: &mut MessageWriter<EditorTileEditCommitted>,
     params: &WorldGenParams,
@@ -185,5 +190,3 @@ pub(crate) fn emit_editor_tile_commit_for_brush(
         kind,
     });
 }
-
-pub fn terrain_family_combo() {}

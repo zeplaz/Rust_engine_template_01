@@ -28,6 +28,7 @@ pub struct RoadMarkerUndoFrame {
 }
 
 impl RoadMarkerUndoFrame {
+    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
     pub(crate) fn capture(
         q: &Query<(&MapEditorRoadMarkerV1, &Transform), Without<TileMarker>>,
     ) -> Self {
@@ -61,6 +62,7 @@ impl Default for MapEditorRoadUndoStack {
 }
 
 impl MapEditorRoadUndoStack {
+    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
     pub(crate) fn push_frame(&mut self, frame: RoadMarkerUndoFrame) {
         while self.frames.len() >= self.max_frames {
             self.frames.remove(0);
@@ -85,6 +87,7 @@ pub struct MapEditorRoadMarkerV1 {
     pub placement_seq: u32,
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub(crate) fn height_at_tile(
     tiles: &Query<
         (&Transform, &Height),
@@ -101,6 +104,7 @@ pub(crate) fn height_at_tile(
     0.0
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 fn despawn_road_markers_at(
     commands: &mut Commands,
     road_q: &Query<(Entity, &MapEditorRoadMarkerV1)>,
@@ -117,6 +121,7 @@ fn despawn_road_markers_at(
     }
 }
 
+#[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub(crate) fn place_road_marker(
     commands: &mut Commands,
     world_roots: &Query<Entity, With<WorldMarker>>,

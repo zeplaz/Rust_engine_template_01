@@ -17,11 +17,8 @@ use crate::construction::map_egui_projection::ConstructionMapProjection;
 use crate::gui::hud::simulation_pointer_gate::{
     simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
 };
-use crate::gui::{InputBindings, MapCameraDesiredRes, SimulationMapViewport};
-use crate::render::view_runtime::ViewProjectionAuthority;
+use crate::gui::{InputBindings, SimulationMapViewport};
 use crate::strategic::{BuildSiteTile, LayerType, StrategicRasterConfig};
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use crate::terrain::generation::WorldGenDenseTerrainCache;
 
 use super::build_state::{
     BuildCommandActor, BuildGhostRoot, BuildGhostState, BuildPlacementMode, BuildPlacementPreview,

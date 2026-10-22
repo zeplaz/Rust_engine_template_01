@@ -1,35 +1,12 @@
 //! **COD-SIM-HUD-BUILD-PICKER-001** — rail-anchored build picker sheet (sim only).
 
-use std::collections::BTreeMap;
-
 use bevy::prelude::*;
 
-use crate::construction::{
-    draw_commercial_submenu, draw_mock_shapes_submenu, draw_residential_submenu,
-    draw_utilities_submenu, ActiveBuildTool, BuildStripState, BuildTool, BuildingArchetypeId,
-    BuildingDefinition, BuildingDefinitionRegistry, BuildingFamily, DefenseKind, RailType, RoadType,
-    ToolContext, UtilitiesSubmenuIconUi,
-};
-use crate::construction::building_definitions::intent_from_archetype;
-use crate::engine::states::BaseState;
-use crate::gui::hud::power_hud_icon_atlas::{
-    PowerHudEguiTextureCache, PowerHudIconAtlasManifest, PowerHudIconAtlasUi,
-};
-use crate::gui::UiPalette;
+use crate::construction::ToolContext;
 
 use super::sim_hud_copy::{
-    human_chain_label, power_tier_compact, PICKER_DEFENSE_FOOTER_HINT, PICKER_DEFENSE_LEAD,
-    PICKER_EMPTY_CATEGORY, PICKER_GENERIC_DEPOT, PICKER_GENERIC_FACTORY, PICKER_INDUSTRY_LEAD,
-    PICKER_INDUSTRY_OTHER, PICKER_ROW_BUNKER, PICKER_ROW_CAPTION_DRAGON_TEETH,
-    PICKER_ROW_CAPTION_MINEFIELD, PICKER_ROW_DEFENSIVE_WALL, PICKER_ROW_DEMOLISH,
-    PICKER_ROW_DRAGON_TEETH, PICKER_ROW_MINEFIELD, PICKER_ROW_TRENCH_LINE,
-    PICKER_SECTION_DEPLOYABLES, PICKER_SECTION_FORTIFICATION, PICKER_SECTION_TRENCHES,
-    PICKER_SECTION_WALLS, PICKER_TITLE_DEFENSE, PICKER_TITLE_INDUSTRY, PICKER_TITLE_ROADS,
+    PICKER_TITLE_DEFENSE, PICKER_TITLE_INDUSTRY, PICKER_TITLE_ROADS,
     PICKER_TITLE_SHAPES, PICKER_TITLE_UTILITIES, PICKER_TITLE_ZONE,
-};
-use super::sim_hud_egui_theme::{
-    apply_sim_hud_egui_theme, body_text, caption_text, picker_header_frame,
-    picker_sheet_frame, title_text,
 };
 
 pub const BUILD_PICKER_SHEET_W_PX: f32 = 320.0;
@@ -145,41 +122,6 @@ pub fn sim_build_picker_witness_green(state: &SimBuildPickerState) -> bool {
     !state.open || state.anchor_slot != ToolContext::None
 }
 
-
-fn draw_defense_picker_tab() {}
-
-fn defense_row_clicked() {}
-
-fn defense_row_with_caption_clicked() {}
-
-fn draw_industry_picker_tab() {}
-
-fn industry_chain_groups(
-    registry: &BuildingDefinitionRegistry,
-) -> (BTreeMap<String, Vec<&BuildingDefinition>>, Vec<&BuildingDefinition>) {
-    let mut by_chain: BTreeMap<String, Vec<&BuildingDefinition>> = BTreeMap::new();
-    let mut unchained = Vec::new();
-    for id in registry.ids_by_family(BuildingFamily::Industry) {
-        if id.starts_with("builtin:") {
-            continue;
-        }
-        let Some(def) = registry.get(id) else { continue };
-        if let Some(chain) = def.supply_chain.as_ref() {
-            by_chain.entry(chain.clone()).or_default().push(def);
-        } else {
-            unchained.push(def);
-        }
-    }
-    for defs in by_chain.values_mut() {
-        defs.sort_by(|a, b| a.display_name.cmp(&b.display_name));
-    }
-    unchained.sort_by(|a, b| a.display_name.cmp(&b.display_name));
-    (by_chain, unchained)
-}
-
-fn industry_card_clicked() {}
-
-/// Legacy entry — delegates to picker (retires floating submenus).
 
 #[cfg(test)]
 mod tests {
