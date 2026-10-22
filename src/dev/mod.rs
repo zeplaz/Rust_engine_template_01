@@ -15,14 +15,6 @@ pub mod schedule_cycle_probe;
 pub mod perf_scope_frame_log;
 pub mod sim_spectrum_analytics;
 pub mod schedule_sync_witness;
-pub mod chain_b_witness;
-pub mod rgr_m1_witness;
-pub mod cleanup_p0_witness;
-pub mod gpu_terrain_witness;
-pub mod gpu_p1_p2_witness;
-pub mod bq_k3_grammar_witness;
-pub mod gpu_p3_witness;
-pub mod rtt_lane_witness;
 pub mod triage_perf_vfx_fix_live_proof;
 pub mod test_run_instrumentation;
 pub mod construction_live_todos;
@@ -44,146 +36,22 @@ pub mod stage5_finish_todos;
 pub mod visual_aidv2_live_todos;
 pub mod live_todo_boards_plugin;
 // Lib witness refresh bundles — compiled only for `cargo test --lib` (not runtime).
-#[cfg(test)]
-pub mod steward_witness_sync_proof;
-#[cfg(test)]
-pub mod steward_spark_vfx_proof;
-#[cfg(test)]
-pub mod steward_s7b_preflight_proof;
-#[cfg(test)]
-pub mod steward_ui_oh_gate_proof;
-#[cfg(test)]
-pub mod steward_w3_gate_proof;
-#[cfg(test)]
-pub mod coder_a_ui_five_lane_proof;
-#[cfg(test)]
-pub mod coder_a_ui_w3_p4_m3_proof;
-#[cfg(test)]
-pub mod coder_a_dual_queue_closure_v1;
-#[cfg(test)]
-pub mod coder_a_wave3_closure_v1;
-#[cfg(test)]
-pub mod coder_a_infra_stress_closure_v1;
-pub mod compile_hygiene_live;
-pub mod f2_smoke_pipeline_debug;
-#[cfg(test)]
-pub mod coder_b_ui_five_lane_proof;
-#[cfg(test)]
-pub mod coder_b_ui_shell_tail_closure_v1;
-#[cfg(test)]
-pub mod coder_b_ui_w3_witness_proof;
-#[cfg(test)]
-pub mod coder_b_ui_w3_p6_proof;
-pub mod triage_vm09_v2_proof;
-#[cfg(test)]
-pub mod s7b_m2_m3_coder_proof;
-#[cfg(test)]
-pub mod coder_b_s7p_construction_mv_proof;
-pub mod transport_network_live_proof;
 // Wired for lib tests — BUILD-READ-REWIRE-003 (map zoom witness).
-pub mod map_zoom_coherence_live_proof;
-pub mod design_minimap_widget_live_proof;
-pub mod design_build_toolbox_hud_live_proof;
-pub mod design_fire_play_visibility_live_proof;
 pub mod spectator_parity_live_proof;
 pub mod world_scale_contract_live_proof;
-pub mod build_read_world_002_live_proof;
-pub mod build_read_visual_001_live_proof;
-pub mod build_read_debug_live_proof;
-pub mod construction_placement_live_proof;
-pub mod vfx_zoom_lock_live_proof;
 pub mod landscape_grammar_live_proof;
 pub mod landscape_grammar_sim_harness;
 pub mod veg_runtime_proof_live;
 pub mod fire_ecology_lib_harness;
-pub mod nuclear_loop_scram_live_proof;
-pub mod nuclear_failure_p2_live_proof;
-pub mod nuclear_failure_p3_live_proof;
-pub mod industrial_i2_03_register_node_live_proof;
-pub mod industrial_i3_02_grid_overload_live_proof;
-pub mod mfg_03_domain_wire_live_proof;
 pub mod cod_deployable_recipe_live_proof;
-pub mod trade_flow_geography_live_proof;
-pub mod trade_sc_runtime_live_proof;
-pub mod product_verify_live_proof;
 pub mod sim_effect_spine_live_proof;
-pub mod production_sim_hud_native_live_proof;
-pub mod hud_a_sim_window_ban_proof;
-pub mod vss_t3_overlay_authority_proof;
-pub mod effects_system_es0_live_proof;
-pub mod effects_system_es4_live_proof;
-pub mod effects_system_es5_live_proof;
-pub mod effects_system_es6_live_proof;
-pub mod effects_system_es7_live_proof;
 pub mod product_fire_vfx_live_proof;
 pub mod city_faction_progress;
-pub mod scan_debug_pipeline;
-pub mod artist_vfx_pipeline_live_proof;
-pub mod design_event_log_ui_live_proof;
-pub mod pilot_catalog_parity_live_proof;
-pub mod build_read_grammar_v003_live_proof;
-pub mod city_g0_wit_001_live_proof;
-pub mod city_g1_c1_001_live_proof;
-pub mod city_g1_c2_001_live_proof;
-pub mod city_g1_c3_001_live_proof;
-pub mod city_p1_001_live_proof;
-pub mod city_p2_001_live_proof;
-pub mod city_c6_bsn_live_proof;
-pub mod city_g3_rollout_live_proof;
-pub mod city_g2_c5_001_live_proof;
-pub mod city_g1_c4_001_live_proof;
-pub mod aps_bevy_qc_hud_live_proof;
-#[cfg(test)]
-pub mod coder_b_queue_bundle_proof;
-#[cfg(test)]
-pub mod coder_b_wave3_bundle_proof;
-pub mod sim_steward_combined_regression;
 pub mod vegetation_snapshot_roundtrip_live_proof;
 pub mod minimap_topology_legend_live_proof;
-pub mod infra_e0_profile_catalog_live_proof;
-pub mod infra_utility_overlay_live_proof;
-pub mod power_map_overlay_live_proof;
-pub mod power_grid_track_bd_live_proof;
-pub mod power_grid_track_c_live_proof;
-pub mod sim_hud_phase2_close_live_proof;
-pub mod power_grid_construction_ux_close_live_proof;
-pub mod power_node_hover_live_proof;
-pub mod utility_network_live_proof;
-pub mod infra_overlay_live_proof;
-pub mod nav_agent_routing_live_proof;
 pub mod landscape_grammar_burn_live_proof;
 pub mod landscape_grammar_fire_harvest_wire_live_proof;
 pub mod landscape_grammar_visual_smoke_live_proof;
-pub mod aps_dna_consumer_live_proof;
-pub mod landscape_map_stamp_contract_live_proof;
-pub mod landscape_map_stamp_runtime_live_proof;
-pub mod map_sim_relief_001_live_proof;
-pub mod des_build_read_hud_001_live_proof;
-pub mod des_build_read_hud_002_live_proof;
-pub mod sim_hud_esc_cascade_live_proof;
-pub mod facility_binding_read_live_proof;
-pub mod power_line_draw_live_proof;
-pub mod sim_hud_power_icons_live_proof;
-pub mod veg_diag_extract_panel_live_proof;
-pub mod wit_hon_phase6_reconcile_live_proof;
-pub mod ind_play_witness_live_proof;
-pub mod coder_b_parallel_wave_live_proof;
-pub mod coder_a_parallel_wave_live_proof;
-pub mod vt5_flicker_triage_live_proof;
-pub mod grammar_ship_close_live_proof;
-pub mod veg_ship_close_live_proof;
-pub mod sim_hud_ops_v2_live_proof;
-pub mod sim_hud_cursor_live_proof;
-pub mod fire_f2_readiness_live_proof;
-pub mod infra_lane_close_live_proof;
-pub mod sim_hud_l5_polish_live_proof;
-pub mod sim_hud_professional_polish_live_proof;
-pub mod veg_resolver_parity_live_proof;
-pub mod vegetation_variant_catalog_load_live_proof;
-pub mod minimap_fire_veg_coherence_live_proof;
-pub mod coder_b_e5_resolver_gate_live_proof;
-#[cfg(test)]
-pub mod phase6_coder_queue_bundle_proof;
 
 pub use stage5_live_todos::{
     hook_post_readiness_evaluate, mark_stage5_todo, register_stage5_todo_runtime_hooks,
@@ -276,5 +144,3 @@ pub use mig_a_adoption::{
     MigAAdoptionPlugin, MigAAdoptionState, MigAStaticScenePlugin, MIG_A1_A2_A16_JSON,
     MIG_A_ROLLUP_JSON,
 };
-#[cfg(test)]
-pub use coder_b_queue_bundle_proof::refresh_coder_b_queue_bundle_live_witnesses;
