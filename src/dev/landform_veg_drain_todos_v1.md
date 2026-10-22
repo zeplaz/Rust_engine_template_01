@@ -97,7 +97,7 @@ Same session. These lanes do not wait on playtest, keyframe stills, or the June 
 
 ## Drain now
 
-Nothing left on the coder drain. Acceptance and blocked rows stay where they are.
+The landform rows above are done. The June 20 vegetation cull was triaged on 2026-10-22: of 55 blocked rows, 33 are already implemented, 3 are superseded, 3 stay blocked on operator or art, and 16 are ready. Four new rows (VEG-H01..H04) came out of the triage. Pick order and files: [`veg_queue_triage_20261022_v1.md`](veg_queue_triage_20261022_v1.md). Queue: [`coder_vegetation_drain_queue.json`](../tools/orchestrator/queues/coder_vegetation_drain_queue.json) (`ready` rows).
 
 ## Do not wait
 
@@ -107,7 +107,7 @@ Nothing left on the coder drain. Acceptance and blocked rows stay where they are
 | Eye check `OPS-VIS-EYE` | Sparks, labels, ghost, blob. Comes after the code, does not gate the next slice. |
 | Kit and warehouse keyframe stills | Art promotion. `MCP-P2-KIT002-G4` stays rejected until stills exist. |
 | `FACTION-REACT-001` blocked on G-PLAY | The dependency is the playtest row. Code does not wait. |
-| 56 vegetation-drain rows and the phase-6 coder board | Same June 20 cull note. Pick this queue instead of those ids. |
+| Vegetation-drain rows | Triaged 2026-10-22. Pick the `ready` rows in the coder vegetation queue in the order in the triage doc. The phase-6 coder board stays blocked. |
 
 ## Stay blocked
 
