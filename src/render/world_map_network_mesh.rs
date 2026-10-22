@@ -647,7 +647,29 @@ pub(crate) fn sync_world_map_logistics_meshes(
     }
 }
 
-/// Orders overlay ribbons from [`build_orders_overlay`] (PORT-LOGISTICS-OVERLAY stretch).
+fn orders_site_color(role: crate::economy::logistics::orders::SiteRole) -> Color {
+    use crate::economy::logistics::orders::SiteRole;
+    match role {
+        SiteRole::Depot => Color::srgba(0.35, 0.6, 1.0, 0.95),
+        SiteRole::Front => Color::srgba(1.0, 0.35, 0.3, 0.95),
+        SiteRole::Construction => Color::srgba(0.95, 0.75, 0.25, 0.95),
+        SiteRole::Plant => Color::srgba(0.45, 0.9, 0.5, 0.95),
+        SiteRole::Unit => Color::srgba(0.95, 0.95, 0.95, 0.95),
+    }
+}
+
+/// Orders overlay tile-space point -> map-plane transform for a vehicle/site marker.
+/// The overlay already works in tile units `(x, row)`, the same axes roads and rails use, so
+/// no metre scaling happens here.
+fn orders_marker_transform(at: Vec2, size: f32, z: f32) -> Transform {
+    Transform {
+        translation: Vec3::new(at.x, at.y, z),
+        scale: Vec3::splat(size),
+        ..default()
+    }
+}
+
+/// Orders overlay ribbons, vehicle dots and (panel open) site markers from [`build_orders_overlay`].
 pub(crate) fn sync_world_map_orders_meshes(
     mut commands: Commands,
     base: Res<State<BaseState>>,
@@ -660,7 +682,6 @@ pub(crate) fn sync_world_map_orders_meshes(
     mut mat_cache: Local<HashMap<u32, Handle<ColorMaterial>>>,
     mut stamp: Local<LayerStamp>,
 ) {
-    use crate::economy::logistics::orders::snapshot::METRES_PER_TILE;
     use crate::gui::{build_orders_overlay, RouteTone};
 
     let show = matches!(base.get(), BaseState::Simulation)
@@ -679,24 +700,15 @@ pub(crate) fn sync_world_map_orders_meshes(
     };
     let with_sites = panel.as_ref().is_some_and(|p| p.visible);
     let frame = build_orders_overlay(&snap.0, with_sites);
-    let mut key = frame.routes.len() as u64 + frame.vehicles.len() as u64 * 17;
-    for r in &frame.routes {
-        mix(&mut key, q(r.from.x) ^ q(r.from.y));
-        mix(&mut key, q(r.to.x) ^ q(r.to.y));
-        let tone = match r.tone {
-            RouteTone::Flowing => 1u64,
-            RouteTone::Waiting => 2,
-            RouteTone::Paused => 3,
-        };
-        mix(&mut key, r.standing as u64 + tone);
-    }
+    let key = frame.change_key();
     if key == stamp.key {
         return;
     }
     despawn_query(&mut commands, &segs);
     stamp.key = key;
     let unit = unit_mesh(&mut meshes, &mut mesh_slot);
-    let tile_world = |t: Vec2| Vec3::new(t.x * METRES_PER_TILE, 0.0, t.y * METRES_PER_TILE);
+    // Tile space == map-plane space (same as roads/rails): `(x, 0, row)` through ribbon_transform.
+    let plane = |t: Vec2| Vec3::new(t.x, 0.0, t.y);
     for r in &frame.routes {
         let color = match r.tone {
             RouteTone::Flowing => Color::srgba(0.35, 0.85, 0.55, 0.9),
@@ -709,7 +721,28 @@ pub(crate) fn sync_world_map_orders_meshes(
             WorldMapOrdersSeg,
             Mesh2d(unit.clone()),
             MeshMaterial2d(mat),
-            ribbon_transform(tile_world(r.from), tile_world(r.to), width),
+            ribbon_transform(plane(r.from), plane(r.to), width),
+        ));
+    }
+    for s in &frame.sites {
+        let mat = material_for(&mut mat_cache, &mut materials, orders_site_color(s.role));
+        commands.spawn((
+            WorldMapOrdersSeg,
+            Mesh2d(unit.clone()),
+            MeshMaterial2d(mat),
+            orders_marker_transform(s.at, 0.5, PLANE_Z + 0.005),
+        ));
+        commands.spawn((
+            WorldMapOrdersSeg,
+            Text2d::new(s.name.clone()),
+            TextFont {
+                font_size: FontSize::Px(32.0),
+                ..default()
+            },
+            TextColor(Color::srgb(0.93, 0.95, 0.9)),
+            bevy::sprite::Anchor::CENTER,
+            Transform::from_translation(Vec3::new(s.at.x, s.at.y + 0.55, PLANE_Z + 0.03))
+                .with_scale(Vec3::splat(0.4 / 32.0)),
         ));
     }
     let loaded = material_for(
@@ -728,17 +761,11 @@ pub(crate) fn sync_world_map_orders_meshes(
         } else {
             empty.clone()
         };
-        let p = tile_world(v.at);
-        let xy = map_plane_horizontal_xy(p);
         commands.spawn((
             WorldMapOrdersSeg,
             Mesh2d(unit.clone()),
             MeshMaterial2d(mat),
-            Transform {
-                translation: Vec3::new(xy.x, xy.y, PLANE_Z + 0.01),
-                scale: Vec3::splat(0.22),
-                ..default()
-            },
+            orders_marker_transform(v.at, 0.22, PLANE_Z + 0.01),
         ));
     }
 }
