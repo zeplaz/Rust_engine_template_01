@@ -16,6 +16,8 @@ pub enum ParticleClass {
     Ember,
     /// SmokeOnly / macro garnish (class_id > 0.5 in WGSL expand).
     AtmosphereFx,
+    /// Fire-column smoke puff (class 0.75): physical-size, alpha-enveloped rows.
+    Smoke,
 }
 
 impl ParticleClass {
@@ -25,6 +27,7 @@ impl ParticleClass {
             Self::Spark => 0.0,
             Self::Ember => 0.25,
             Self::AtmosphereFx => 1.0,
+            Self::Smoke => 0.75,
         }
     }
 
@@ -34,6 +37,8 @@ impl ParticleClass {
             Self::Spark
         } else if id <= 0.5 {
             Self::Ember
+        } else if id <= 0.875 {
+            Self::Smoke
         } else {
             Self::AtmosphereFx
         }
@@ -43,7 +48,7 @@ impl ParticleClass {
     #[inline]
     pub const fn transparent_draw_order(self) -> u8 {
         match self {
-            Self::AtmosphereFx => 0,
+            Self::AtmosphereFx | Self::Smoke => 0,
             Self::Ember => 1,
             Self::Spark => 2,
         }
@@ -102,11 +107,12 @@ fn fire_particle_quad_base_half_world(
 ) -> f32 {
     let _ = (influence_light_radius_world, camera_zoom, zoom_alpha);
     let h = heat.clamp(0.0, 1.0);
-    // Readable spark half-edge on tactical map (still far below old chunk-sized blobs).
-    let base = 0.85 + h * h * 0.55;
+    // Physical half-edge in tiles (1 tile = FIRE_TILE_METERS): flame/ember glow of a few
+    // decimetres. The shader enforces the screen-space minimum and compensates alpha.
     match class {
-        ParticleClass::Spark => base.clamp(0.65, 2.0),
-        ParticleClass::Ember => (base * 1.55).clamp(0.9, 2.8),
-        ParticleClass::AtmosphereFx => (base * 0.85).clamp(0.5, 1.6),
+        ParticleClass::Spark => 0.05 + 0.06 * h,
+        ParticleClass::Ember => 0.03 + 0.04 * h,
+        ParticleClass::Smoke => 0.25 + 0.20 * h,
+        ParticleClass::AtmosphereFx => 0.85 + h * h * 0.55,
     }
 }

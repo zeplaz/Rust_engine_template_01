@@ -51,15 +51,32 @@ fn expand_instances(@builtin(global_invocation_id) gid: vec3<u32>) {
     if params.spark_sim_enabled > 0.5 {
         world = spark_state[i].pos.xyz;
     }
+    let base = i * 4u;
+    // Fire / ember / smoke rows (class <= 0.875) are animated on the CPU
+    // (`fire_vfx::particle_anim`): `base_half` is a PHYSICAL half-edge in tiles, heat is the glow
+    // temperature (or smoke density), ember is the alpha envelope. Here we only enforce a
+    // screen-space minimum size and conserve energy (alpha ~ area ratio) so sparks fade
+    // smoothly instead of popping as the camera zooms. Negative ember = "new style" marker for
+    // fire_particle_draw.wgsl. Other classes (weather streaks) keep the legacy mapping.
+    if class_id <= 0.875 {
+        let zoom = max(params.camera_zoom, 0.05);
+        let min_px = select(1.4, 2.5, class_id > 0.5);
+        let half_n = max(base_half, min_px / zoom);
+        let comp = clamp((base_half * base_half) / (half_n * half_n), 0.10, 1.0);
+        let out_heat = select(heat, 2.0 + heat, class_id > 0.5);
+        let out_ember = -(max(ember, 0.0) * comp + 0.0001);
+        expanded[base + 0u] = GpuParticleQuadVertex(vec4(world.x - half_n, world.y - half_n, out_heat, out_ember));
+        expanded[base + 1u] = GpuParticleQuadVertex(vec4(world.x + half_n, world.y - half_n, out_heat, out_ember));
+        expanded[base + 2u] = GpuParticleQuadVertex(vec4(world.x + half_n, world.y + half_n, out_heat, out_ember));
+        expanded[base + 3u] = GpuParticleQuadVertex(vec4(world.x - half_n, world.y + half_n, out_heat, out_ember));
+        return;
+    }
     var half = base_half * (0.92 + heat * 0.18);
     // Screen-stable but capped — avoid chunk-sized yellow blobs.
     let zoom_ref = clamp(params.camera_zoom, 0.85, 20.0);
     half = half * (2.4 / zoom_ref);
     half = clamp(half, 0.85, 4.5);
-    if class_id > 0.5 {
-        half = half * 0.8;
-    }
-    // Soft bob when spark-sim is off / stalled — avoid frozen "puff" look without large shake.
+    half = half * 0.8;
     if params.spark_sim_enabled < 0.5 {
         let bob = sin(params.time_secs * 2.8 + f32(i) * 0.37) * (0.04 + ember * 0.1);
         world.y = world.y + bob;
@@ -68,7 +85,6 @@ fn expand_instances(@builtin(global_invocation_id) gid: vec3<u32>) {
     }
     let ember_scale = max(ember, 0.4) * (0.5 + class_id * 0.2);
     let heat_scale = max(heat, 0.3) * (0.5 + smoke * 0.35);
-    let base = i * 4u;
     expanded[base + 0u] = GpuParticleQuadVertex(vec4(world.x - half, world.y - half, heat_scale, ember_scale));
     expanded[base + 1u] = GpuParticleQuadVertex(vec4(world.x + half, world.y - half, heat_scale, ember_scale));
     expanded[base + 2u] = GpuParticleQuadVertex(vec4(world.x + half, world.y + half, heat_scale, ember_scale));

@@ -6,6 +6,7 @@ pub mod consumable;
 pub mod emit;
 pub mod frame;
 pub mod pack;
+pub mod particle_anim;
 pub mod witness;
 
 pub use consumable::{

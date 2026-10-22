@@ -13,6 +13,7 @@
 //! 3. **[`RenderProjectionGraph`]** — CPU projection orchestrator; fire node output is **extracted** for GPU instance upload.
 //! 4. **`SharedOverlayFieldBuffers`** — derived from **full** [`FireSimulationSnapshot::chunk_heat`] (global overlay truth).
 
+use crate::systems::fire::ember_physics::BurnStage;
 use bevy::ecs::system::SystemParam;
 use bevy::math::IVec2;
 use bevy::prelude::*;
@@ -526,9 +527,26 @@ fn ingest_fire_chunk_row(
                     matrix.size,
                     idx,
                 );
+                // Burn stage (ignition -> flaming -> smouldering -> out) shapes what the cell
+                // emits: embers need flames, smouldering cells mostly smoke. The chunk profile
+                // carries chunk-wide ember/smoke scalars; scale them to this cell.
+                let stage = BurnStage::classify(cell_heat, cell_fuel, burn_hold);
+                if stage == BurnStage::Out {
+                    continue;
+                }
+                let em = stage.emission();
+                let cell_smoke = ovl.smoke.get(idx).copied().unwrap_or(0.0);
                 let mut cell_profile = profile;
                 cell_profile.heat = cell_heat;
                 cell_profile.world_pos = Vec3::new(cell_xy.x, cell_xy.y, 0.0);
+                let heat_ratio = (cell_heat / profile.heat.max(1e-3)).clamp(0.0, 1.0);
+                cell_profile.ember_rate =
+                    (profile.ember_rate * heat_ratio).max(0.2 * cell_heat) * em.ember;
+                cell_profile.smoke_density = ((cell_smoke * 0.6
+                    + profile.smoke_density * 0.4 * heat_ratio)
+                    .max(0.15 * cell_heat)
+                    * em.smoke)
+                    .clamp(0.0, 1.0);
                 sim.instances
                     .push(FireVisualGpuInstance::from(&cell_profile));
                 instances_written += 1;
