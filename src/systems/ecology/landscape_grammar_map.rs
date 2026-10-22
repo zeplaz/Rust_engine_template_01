@@ -186,14 +186,32 @@ pub fn lambda_inputs_from_live_fields(
     }
 }
 
+/// VEG-H01 — explicit preset class → district mapping (no silent fallthrough).
+///
+/// Every class on disk is listed. `natural` is a broad class (old growth, scrub, wetland,
+/// coastal, post-fire), so it is refined by preset id: water-edge presets are
+/// `AgriculturalRiparian` (riparian), all other natural presets are `OldGrowthCore`.
+/// Returns `None` for a class this table does not know so the caller must decide.
 #[must_use]
-pub fn district_kind_from_preset_class(class: &str) -> LandUseDistrictKind {
+pub fn district_kind_from_preset_class(
+    preset_id: &str,
+    class: &str,
+) -> Option<LandUseDistrictKind> {
     match class {
-        "industrial" => LandUseDistrictKind::IndustrialBarrier,
-        "military" => LandUseDistrictKind::MilitaryDefensive,
-        "settlement" => LandUseDistrictKind::SettlementPark,
-        "forest" => LandUseDistrictKind::OldGrowthCore,
-        _ => LandUseDistrictKind::AgriculturalRiparian,
+        "industrial" => Some(LandUseDistrictKind::IndustrialBarrier),
+        "military" => Some(LandUseDistrictKind::MilitaryDefensive),
+        "settlement" => Some(LandUseDistrictKind::SettlementPark),
+        "agricultural" => Some(LandUseDistrictKind::AgriculturalRiparian),
+        "forest" => Some(LandUseDistrictKind::OldGrowthCore),
+        "natural" => Some(match preset_id {
+            "wetland_margin_v0" | "coastal_scrub_v0" => LandUseDistrictKind::AgriculturalRiparian,
+            "old_growth_core_v0" | "scrub_highland_v0" | "fire_recovery_v0" => {
+                LandUseDistrictKind::OldGrowthCore
+            }
+            // Unlisted natural preset: natural cover is the class default.
+            _ => LandUseDistrictKind::OldGrowthCore,
+        }),
+        _ => None,
     }
 }
 
@@ -228,7 +246,15 @@ pub fn rollout_landscape_program_on_chunks(
         count = count.saturating_add(1);
         presets_seen.insert(preset_id.clone());
 
-        let district = district_kind_from_preset_class(&preset.landscape_program.class);
+        let district = district_kind_from_preset_class(&preset_id, &preset.landscape_program.class)
+            .unwrap_or_else(|| {
+                // Runs once per chunk (the program is inserted below), so this cannot spam.
+                warn!(
+                    "landscape preset {preset_id} has unmapped class {:?}; using OldGrowthCore",
+                    preset.landscape_program.class
+                );
+                LandUseDistrictKind::OldGrowthCore
+            });
         commands.entity(entity).insert((
             LandscapeProgramOnChunk {
                 preset_id: preset_id.clone(),
@@ -543,6 +569,26 @@ mod tests {
             pick_preset_id_for_chunk(LG1_PILOT_CHUNK, &index),
             LG1_PILOT_PRESET_ID
         );
+    }
+
+    #[test]
+    fn every_preset_class_maps_and_old_growth_is_assigned() {
+        use std::collections::HashSet;
+        let catalog = load_landscape_grammar_catalog();
+        let index = LandscapePresetIndex::load();
+        let mut districts = HashSet::new();
+        for id in &index.preset_ids {
+            let preset = catalog.presets.get(id).expect("preset in catalog");
+            let d = district_kind_from_preset_class(id, &preset.landscape_program.class)
+                .unwrap_or_else(|| panic!("unmapped class for {id}"));
+            districts.insert(format!("{d:?}"));
+            if id == "old_growth_core_v0" {
+                assert_eq!(d, LandUseDistrictKind::OldGrowthCore);
+            }
+        }
+        assert!(districts.len() >= 4, "{districts:?}");
+        assert!(districts.contains("OldGrowthCore"));
+        assert!(district_kind_from_preset_class("x", "unknown_class").is_none());
     }
 
     #[test]
