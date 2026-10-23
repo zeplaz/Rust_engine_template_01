@@ -7,6 +7,7 @@ mod fonts;
 mod palette;
 mod scroll;
 mod theme;
+pub mod widgets;
 
 use bevy::prelude::Color;
 use bevy::prelude::Resource;
