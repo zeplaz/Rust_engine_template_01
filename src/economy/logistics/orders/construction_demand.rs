@@ -1,7 +1,7 @@
 //! Construction sites as draw-demand consumers (plan §4, LO-8).
 //!
 //! A site under construction publishes one draw demand per material its
-//! [`SiteResourceManifest`] still needs (`concrete`, `steel`, `fuel`, `machinery`). Materials on
+//! [`SiteResourceManifest`] still needs (`Concrete`, `Steel`, `Fuel`, `Machinery`). Materials on
 //! hand at the site *are* the delivered amount: [`sync_construction_site_demands_system`] is the
 //! sole production writer of `SiteResourceManifest::delivered_*`. When the site leaves
 //! `UnderConstruction` its demands are retracted and the materials are consumed into the building.
@@ -18,27 +18,28 @@ use super::sim::LogisticsOrderCommand;
 use super::snapshot::{LogisticsOrdersSnapshot, SiteRole};
 use super::plugin::LogisticsOrdersSnapshotRes;
 
-/// Manifest materials and their cargo tags.
-pub const CONSTRUCTION_MATERIALS: [&str; 4] = ["concrete", "steel", "fuel", "machinery"];
+/// Manifest materials and their cargo tags. Same vocabulary as the industrial catalog
+/// (`produces_resources`), so a plant making `Concrete` supplies the sites that need `Concrete`.
+pub const CONSTRUCTION_MATERIALS: [&str; 4] = ["Concrete", "Steel", "Fuel", "Machinery"];
 
 /// `(required, delivered)` for one material of a manifest.
 #[must_use]
 pub fn manifest_material(m: &SiteResourceManifest, tag: &str) -> (f32, f32) {
     match tag {
-        "concrete" => (m.concrete_required, m.delivered_concrete),
-        "steel" => (m.steel_required, m.delivered_steel),
-        "fuel" => (m.fuel_required, m.delivered_fuel),
-        "machinery" => (m.machinery_required, m.delivered_machinery),
+        "Concrete" => (m.concrete_required, m.delivered_concrete),
+        "Steel" => (m.steel_required, m.delivered_steel),
+        "Fuel" => (m.fuel_required, m.delivered_fuel),
+        "Machinery" => (m.machinery_required, m.delivered_machinery),
         _ => (0.0, 0.0),
     }
 }
 
 fn set_delivered(m: &mut SiteResourceManifest, tag: &str, value: f32) {
     match tag {
-        "concrete" => m.delivered_concrete = value,
-        "steel" => m.delivered_steel = value,
-        "fuel" => m.delivered_fuel = value,
-        "machinery" => m.delivered_machinery = value,
+        "Concrete" => m.delivered_concrete = value,
+        "Steel" => m.delivered_steel = value,
+        "Fuel" => m.delivered_fuel = value,
+        "Machinery" => m.delivered_machinery = value,
         _ => {}
     }
 }

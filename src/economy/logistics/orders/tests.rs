@@ -1138,7 +1138,7 @@ mod app {
             app.update();
         }
         let src = app.world().resource::<LogisticsSiteRegistry>().site_of(depot).unwrap();
-        for (tag, n) in [("concrete", 300), ("steel", 100), ("fuel", 50), ("machinery", 30)] {
+        for (tag, n) in [("Concrete", 300), ("Steel", 100), ("Fuel", 50), ("Machinery", 30)] {
             send(
                 &mut app,
                 LogisticsOrderCommand::SetStock {

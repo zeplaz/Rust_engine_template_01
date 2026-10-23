@@ -9,6 +9,7 @@ pub mod advisor;
 pub mod construction_demand;
 pub mod model;
 pub mod persistence;
+pub mod plant_demand;
 pub mod plugin;
 pub mod sim;
 pub mod snapshot;
