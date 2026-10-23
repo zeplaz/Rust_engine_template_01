@@ -1,10 +1,9 @@
 //! Road tool popup — Bevy UI (editor product shell). Segment summary, Build / Cancel / snap / upgrade (P2-05 + P9).
 //!
-//! Commit intents only via [`commit_road_path_to_queue`] / [`enqueue_road_upgrade`].
+//! Spawned once while a road/rail tool is armed; values, toggles and Build enablement are
+//! updated in place. Commit intents only via [`commit_road_path_to_queue`] / [`enqueue_road_upgrade`].
 
-use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::prelude::*;
-use bevy::ui::FocusPolicy;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType, RoadType};
@@ -12,6 +11,10 @@ use crate::construction::construction_pipeline::{ConstructionPlanQueue, Executed
 use crate::construction::sessions::ActiveToolSession;
 use crate::construction::snap::RoadSnapSettings;
 use crate::construction::upgrade::enqueue_road_upgrade;
+use crate::gui::style::widgets::{
+    panel_bundle, spawn_button, spawn_header, spawn_label_row, spawn_note, spawn_section_header,
+    spawn_toggle, ui_button_fired, ToggleState, UiButton, UiButtonVariant, UiKit, UiTooltip, GAP,
+};
 use crate::gui::style::{CmdUiMonoFont, UiPalette};
 use crate::gui::{
     product_shell_active, MapCameraDesiredRes, PanelPresence, SimulationMapViewport,
@@ -35,8 +38,15 @@ pub struct RoadToolPopupBevyRoot;
 #[derive(Component)]
 pub(crate) struct RoadToolPopupTitle;
 
-#[derive(Component)]
-pub(crate) struct RoadToolPopupStats;
+/// Right-hand value text of one stats row.
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
+pub(crate) enum RoadPopupStat {
+    Points,
+    Segments,
+    Valid,
+    Cost,
+    Width,
+}
 
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
 pub(crate) enum RoadPopupAction {
@@ -48,221 +58,177 @@ pub(crate) enum RoadPopupAction {
     ToggleCurved,
 }
 
-#[derive(Default)]
-pub(crate) struct RoadPopupStamp {
-    key: u64,
-}
-
 fn road_tool_active(tool: &ActiveBuildTool) -> bool {
     matches!(tool.tool, BuildTool::Road(_) | BuildTool::Rail(_))
 }
 
 fn popup_title(tool: &ActiveBuildTool) -> &'static str {
     match tool.tool {
-        BuildTool::Road(RoadType::Street) => "Road — Street",
-        BuildTool::Road(RoadType::Highway) => "Road — Highway",
-        BuildTool::Rail(RailType::Standard) => "Rail — Standard",
+        BuildTool::Road(RoadType::Street) => "Road - Street",
+        BuildTool::Road(RoadType::Highway) => "Road - Highway",
+        BuildTool::Rail(RailType::Standard) => "Rail - Standard",
         _ => "Road",
     }
 }
 
-fn popup_stats(placement: &ActiveRoadPlacement) -> String {
-    let valid = placement
-        .generated_segments
-        .iter()
-        .filter(|s| s.valid)
-        .count();
-    let est = valid.saturating_mul(10);
-    format!(
-        "Control points: {}\nSegments: {}\nValid segments: {valid}\nEstimated cost: {est}\nWidth: {:.1}",
-        placement.control_points.len(),
-        placement.generated_segments.len(),
-        placement.width
-    )
+fn valid_segments(placement: &ActiveRoadPlacement) -> usize {
+    placement.generated_segments.iter().filter(|s| s.valid).count()
 }
 
-fn popup_stamp(
-    tool: &ActiveBuildTool,
-    placement: &ActiveRoadPlacement,
-    snap: &RoadSnapSettings,
-) -> u64 {
-    let mut key = placement.control_points.len() as u64;
-    key = key
-        .wrapping_mul(31)
-        .wrapping_add(placement.generated_segments.len() as u64);
-    key = key.wrapping_mul(31).wrapping_add(
-        placement
-            .generated_segments
-            .iter()
-            .filter(|s| s.valid)
-            .count() as u64,
-    );
-    key = key
-        .wrapping_add(snap.grid_snap as u64)
-        .wrapping_add((snap.node_snap as u64) << 1)
-        .wrapping_add((placement.use_curved_preview as u64) << 2);
-    for b in format!("{:?}", tool.tool).bytes() {
-        key = key.wrapping_mul(31).wrapping_add(b as u64);
+fn stat_text(stat: RoadPopupStat, placement: &ActiveRoadPlacement) -> String {
+    let valid = valid_segments(placement);
+    match stat {
+        RoadPopupStat::Points => placement.control_points.len().to_string(),
+        RoadPopupStat::Segments => placement.generated_segments.len().to_string(),
+        RoadPopupStat::Valid => valid.to_string(),
+        RoadPopupStat::Cost => valid.saturating_mul(10).to_string(),
+        RoadPopupStat::Width => format!("{:.1}", placement.width),
     }
-    key
 }
 
-fn spawn_popup_button(
-    parent: &mut ChildSpawnerCommands,
-    palette: &UiPalette,
-    tf: &TextFont,
-    label: &str,
-    action: RoadPopupAction,
-) {
-    parent
-        .spawn((
-            action,
-            Button,
-            Node {
-                width: Val::Percent(100.0),
-                padding: UiRect::axes(Val::Px(6.0), Val::Px(4.0)),
-                border: UiRect::all(Val::Px(1.0)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor(palette.bevy_button_idle()),
-            BorderColor::all(palette.bevy_wire_magenta()),
-            FocusPolicy::Block,
-        ))
-        .with_children(|btn| {
-            btn.spawn((
-                Text::new(label.to_string()),
-                tf.clone(),
-                TextColor(palette.bevy_primary_text()),
-            ));
-        });
-}
-
-/// Spawn/despawn editor road popup when a road/rail tool is armed.
+/// Spawn the popup once when a road/rail tool is armed; despawn when it is not.
 pub fn sync_road_tool_popup_bevy(
     mut commands: Commands,
     tool: Res<ActiveBuildTool>,
-    placement: Res<ActiveRoadPlacement>,
     snap: Res<RoadSnapSettings>,
+    placement: Res<ActiveRoadPlacement>,
     palette: Res<UiPalette>,
     mono: Res<CmdUiMonoFont>,
     mut presence: ResMut<PanelPresence>,
     roots: Query<Entity, With<RoadToolPopupBevyRoot>>,
-    mut title_q: Query<&mut Text, (With<RoadToolPopupTitle>, Without<RoadToolPopupStats>)>,
-    mut stats_q: Query<&mut Text, (With<RoadToolPopupStats>, Without<RoadToolPopupTitle>)>,
-    mut stamp: Local<RoadPopupStamp>,
 ) {
-    presence.road_popup_root = !roots.is_empty();
-    let visible = road_tool_active(tool.as_ref());
-    if !visible {
+    if !road_tool_active(tool.as_ref()) {
         for e in &roots {
             commands.entity(e).despawn();
         }
         presence.road_popup_root = false;
-        stamp.key = 0;
         return;
     }
-
-    let next = popup_stamp(tool.as_ref(), placement.as_ref(), snap.as_ref());
-    let title = popup_title(tool.as_ref());
-    let stats = popup_stats(placement.as_ref());
-
-    if roots.is_empty() {
-        let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
-        let grid = if snap.grid_snap {
-            "Grid snap · ON"
-        } else {
-            "Grid snap · OFF"
-        };
-        let node = if snap.node_snap {
-            "Node snap · ON"
-        } else {
-            "Node snap · OFF"
-        };
-        let curved = if placement.use_curved_preview {
-            "Curved preview · ON"
-        } else {
-            "Curved preview · OFF"
-        };
-        commands
-            .spawn((
-                RoadToolPopupBevyRoot,
+    if !roots.is_empty() {
+        presence.road_popup_root = true;
+        return;
+    }
+    let kit = UiKit::new(&palette, mono.0.clone());
+    commands
+        .spawn((
+            RoadToolPopupBevyRoot,
+            panel_bundle(
+                &palette,
                 Node {
                     position_type: PositionType::Absolute,
                     left: Val::Px(12.0),
                     top: Val::Px(200.0),
-                    width: Val::Px(240.0),
-                    padding: UiRect::all(Val::Px(10.0)),
-                    flex_direction: FlexDirection::Column,
-                    row_gap: Val::Px(4.0),
-                    border: UiRect::all(Val::Px(1.0)),
-                    border_radius: BorderRadius::ZERO,
+                    width: Val::Px(248.0),
                     ..default()
                 },
-                BackgroundColor(palette.bevy_hud_panel_fill()),
-                BorderColor::all(palette.bevy_wire_magenta()),
-                FocusPolicy::Block,
-                ZIndex(950),
-            ))
-            .with_children(|root| {
-                root.spawn((
-                    RoadToolPopupTitle,
-                    Text::new(title),
-                    tf.clone(),
-                    TextColor(palette.bevy_primary_text()),
-                ));
-                root.spawn((
-                    RoadToolPopupStats,
-                    Text::new(stats.clone()),
-                    tf.clone(),
-                    TextColor(palette.bevy_text_muted()),
-                ));
-                spawn_popup_button(root, &palette, &tf, grid, RoadPopupAction::ToggleGrid);
-                spawn_popup_button(root, &palette, &tf, node, RoadPopupAction::ToggleNode);
-                spawn_popup_button(root, &palette, &tf, curved, RoadPopupAction::ToggleCurved);
-                root.spawn((
-                    Text::new("LMB add · RMB undo · Shift+LMB commit"),
-                    tf.clone(),
-                    TextColor(palette.bevy_text_muted()),
-                ));
-                spawn_popup_button(root, &palette, &tf, "Build", RoadPopupAction::Build);
-                spawn_popup_button(root, &palette, &tf, "Cancel", RoadPopupAction::Cancel);
-                spawn_popup_button(
-                    root,
-                    &palette,
-                    &tf,
-                    "Upgrade nearest segment",
-                    RoadPopupAction::Upgrade,
-                );
+            ),
+            ZIndex(950),
+            Name::new("road_tool_popup_bevy"),
+        ))
+        .with_children(|root| {
+            spawn_header(
+                root,
+                &kit,
+                popup_title(tool.as_ref()),
+                RoadToolPopupTitle,
+                None::<()>,
+            );
+            for (label, stat) in [
+                ("Control points", RoadPopupStat::Points),
+                ("Segments", RoadPopupStat::Segments),
+                ("Valid segments", RoadPopupStat::Valid),
+                ("Est. cost", RoadPopupStat::Cost),
+                ("Width", RoadPopupStat::Width),
+            ] {
+                spawn_label_row(root, &kit, label, &stat_text(stat, placement.as_ref()), stat);
+            }
+            spawn_section_header(root, &kit, "Snapping");
+            spawn_toggle(root, &kit, "Grid snap", snap.grid_snap, RoadPopupAction::ToggleGrid);
+            spawn_toggle(root, &kit, "Node snap", snap.node_snap, RoadPopupAction::ToggleNode);
+            spawn_toggle(
+                root,
+                &kit,
+                "Curved preview",
+                placement.use_curved_preview,
+                RoadPopupAction::ToggleCurved,
+            );
+            spawn_note(root, &kit, "LMB add - RMB undo - Shift+LMB commit", true, ());
+            root.spawn(Node {
+                width: Val::Percent(100.0),
+                flex_direction: FlexDirection::Row,
+                column_gap: Val::Px(GAP),
+                margin: UiRect::top(Val::Px(GAP)),
+                ..default()
+            })
+            .with_children(|row| {
+                spawn_button(
+                    row,
+                    &kit,
+                    "Build",
+                    UiButton::new(UiButtonVariant::Primary)
+                        .disabled(valid_segments(placement.as_ref()) == 0),
+                    RoadPopupAction::Build,
+                )
+                .insert(UiTooltip("Queue the valid segments for construction".into()));
+                spawn_button(row, &kit, "Cancel", UiButton::default(), RoadPopupAction::Cancel)
+                    .insert(UiTooltip("Clear the path being drawn".into()));
             });
-        stamp.key = next;
-        presence.road_popup_root = true;
-        return;
-    }
-
-    if stamp.key != next {
-        for mut t in &mut title_q {
-            *t = Text::new(title);
-        }
-        for mut t in &mut stats_q {
-            *t = Text::new(stats.clone());
-        }
-        // Toggle labels need a rebuild when snap/curved flip.
-        for e in &roots {
-            commands.entity(e).despawn();
-        }
-        stamp.key = 0;
-        presence.road_popup_root = false;
-        return;
-    }
-
+            spawn_button(
+                root,
+                &kit,
+                "Upgrade nearest segment",
+                UiButton::default(),
+                RoadPopupAction::Upgrade,
+            )
+            .insert(UiTooltip("Upgrade the existing segment under the cursor".into()));
+        });
     presence.road_popup_root = true;
+}
+
+/// Refresh title, stat values, toggle state and Build enablement in place.
+fn sync_road_tool_popup_values(
+    tool: Res<ActiveBuildTool>,
+    snap: Res<RoadSnapSettings>,
+    placement: Res<ActiveRoadPlacement>,
+    mut title_q: Query<&mut Text, (With<RoadToolPopupTitle>, Without<RoadPopupStat>)>,
+    mut stats_q: Query<(&RoadPopupStat, &mut Text), Without<RoadToolPopupTitle>>,
+    mut toggles: Query<(&RoadPopupAction, &mut ToggleState)>,
+    mut buttons: Query<(&RoadPopupAction, &mut UiButton), Without<ToggleState>>,
+) {
+    let title = popup_title(tool.as_ref());
+    for mut t in &mut title_q {
+        if t.0 != title {
+            t.0 = title.to_string();
+        }
+    }
+    for (stat, mut t) in &mut stats_q {
+        let next = stat_text(*stat, placement.as_ref());
+        if t.0 != next {
+            t.0 = next;
+        }
+    }
+    for (action, mut state) in &mut toggles {
+        let on = match action {
+            RoadPopupAction::ToggleGrid => snap.grid_snap,
+            RoadPopupAction::ToggleNode => snap.node_snap,
+            RoadPopupAction::ToggleCurved => placement.use_curved_preview,
+            _ => continue,
+        };
+        if state.0 != on {
+            state.0 = on;
+        }
+    }
+    let no_valid = valid_segments(placement.as_ref()) == 0;
+    for (action, mut btn) in &mut buttons {
+        if *action == RoadPopupAction::Build && btn.disabled != no_valid {
+            btn.disabled = no_valid;
+        }
+    }
 }
 
 /// Commit / cancel / snap / upgrade — funnel only (no direct graph mutate).
 pub fn road_tool_popup_bevy_action_system(
-    q: Query<(&Interaction, &RoadPopupAction), (Changed<Interaction>, With<Button>)>,
+    q: Query<(&Interaction, &UiButton, &RoadPopupAction), Changed<Interaction>>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut queue: ResMut<ConstructionPlanQueue>,
     mut session: ResMut<ActiveToolSession>,
@@ -275,20 +241,12 @@ pub fn road_tool_popup_bevy_action_system(
     desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
 ) {
-    for (interaction, action) in &q {
-        if *interaction != Interaction::Pressed {
+    for (interaction, button, action) in &q {
+        if !ui_button_fired(interaction, button) {
             continue;
         }
         match *action {
             RoadPopupAction::Build => {
-                let valid = placement
-                    .generated_segments
-                    .iter()
-                    .filter(|s| s.valid)
-                    .count();
-                if valid == 0 {
-                    continue;
-                }
                 commit_road_path_to_queue(
                     placement.as_mut(),
                     queue.as_mut(),
@@ -351,8 +309,10 @@ pub fn register_road_tool_popup_bevy_systems(app: &mut App) {
         Update,
         (
             sync_road_tool_popup_bevy,
-            road_tool_popup_bevy_action_system.after(sync_road_tool_popup_bevy),
+            sync_road_tool_popup_values,
+            road_tool_popup_bevy_action_system,
         )
+            .chain()
             .run_if(product_shell_active),
     )
     .add_systems(
