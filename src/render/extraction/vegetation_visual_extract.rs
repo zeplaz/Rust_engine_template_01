@@ -8,7 +8,7 @@ use crate::gui::ViewAuthoritySystemSet;
 use crate::render::extraction::FireVisualFrameSet;
 use crate::systems::ecology::{
     extract_glyph_for_burn, planning_glyph_for_burn, variant_key_for_burn_row, ActiveBurn,
-    LandscapeProgramOnChunk, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
+    ChunkVegetationSuitability, LandscapeProgramOnChunk, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
     ACTIVE_BURN_HEAT_EPS,
 };
 use crate::systems::sim_control::SimStepStamp;
@@ -92,6 +92,20 @@ fn center_cell_cover_scale(matrix: &crate::terrain::generation::ChunkCellMatrix)
         .unwrap_or(1.0)
 }
 
+/// Biome gate: the row samples the centre cell, so water cells draw nothing and land cells get the
+/// chunk cover re-based onto the land fraction. No suitability data leaves the density unchanged.
+#[must_use]
+fn vegetation_density_on_centre_cell(
+    chunk_density: f32,
+    matrix: Option<&crate::terrain::generation::ChunkCellMatrix>,
+    suitability: Option<&ChunkVegetationSuitability>,
+) -> f32 {
+    match (matrix, suitability) {
+        (Some(m), Some(suit)) => suit.cell_density(chunk_density, m.idx(m.size.x / 2, m.size.y / 2)),
+        _ => chunk_density,
+    }
+}
+
 fn shot_impact_in_chunk(
     book: Option<&crate::strategic::ShotPulseBook>,
     tick: u64,
@@ -129,6 +143,7 @@ pub fn build_vegetation_extract_frame(
         Option<&VegetationPopulation>,
         Option<&LandscapeProgramOnChunk>,
         Option<&crate::terrain::generation::ChunkCellMatrix>,
+        Option<&ChunkVegetationSuitability>,
     )>,
 ) {
     // PERF-INSTR-VFX-001: name this per-chunk veg scan inside the Update wall window (STALL/PERF only).
@@ -140,12 +155,13 @@ pub fn build_vegetation_extract_frame(
     frame.revision = frame.revision.saturating_add(1);
     frame.stamp = stamp;
     frame.rows.clear();
-    for (chunk, succ, burn, pop, program, matrix) in &q {
+    for (chunk, succ, burn, pop, program, matrix, suitability) in &q {
         let burn_active = burn.is_some_and(|b| b.heat > crate::systems::ecology::ACTIVE_BURN_HEAT_EPS);
         let planning_glyph = planning_glyph_for_burn(burn, succ.stage);
         let extract_glyph = extract_glyph_for_burn(burn, succ.stage);
         let variant_key = variant_key_for_extract_row(program, burn, succ.stage);
         let base_density = pop.map(|p| p.mean_density).unwrap_or(0.0);
+        let base_density = vegetation_density_on_centre_cell(base_density, matrix, suitability);
         let cell_scale = matrix
             .map(center_cell_cover_scale)
             .unwrap_or(1.0);
@@ -347,6 +363,50 @@ mod tests {
         LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID, VegetationField,
     };
     use crate::systems::weather::ChunkWeather;
+
+    #[test]
+    fn water_centre_cell_draws_no_vegetation_and_land_is_rebased() {
+        use crate::systems::ecology::{rate_chunk_vegetation_suitability, VegetationSuitabilityTable};
+        use crate::systems::fire::SurfaceWaterFireGate;
+        use crate::terrain::generation::ChunkCellMatrix;
+        use crate::terrain::{default_terrain_families, TerrainFamilyId};
+
+        let families = default_terrain_families();
+        let id = |n: &str| -> TerrainFamilyId { families.id(n).unwrap() };
+        let mut m = ChunkCellMatrix::new(UVec2::new(4, 4));
+        for i in 0..16 {
+            m.elevation[i] = 0.6;
+            m.family[i] = id("DenseForest");
+        }
+        // Left half is ocean; the centre cell (2,2) is land.
+        for y in 0..4 {
+            for x in 0..2 {
+                let i = m.idx(x, y);
+                m.family[i] = id("DeepWater");
+                m.elevation[i] = 0.1;
+            }
+        }
+        let suit = rate_chunk_vegetation_suitability(
+            &m,
+            families,
+            &VegetationSuitabilityTable::default(),
+            &SurfaceWaterFireGate::default(),
+        );
+        let land = vegetation_density_on_centre_cell(0.4, Some(&m), Some(&suit));
+        assert!((land - 0.8).abs() < 1e-6, "{land}");
+        // Same chunk with the centre flipped to water draws nothing.
+        let c = m.idx(2, 2);
+        m.family[c] = id("DeepWater");
+        m.elevation[c] = 0.1;
+        let suit = rate_chunk_vegetation_suitability(
+            &m,
+            families,
+            &VegetationSuitabilityTable::default(),
+            &SurfaceWaterFireGate::default(),
+        );
+        assert_eq!(vegetation_density_on_centre_cell(0.4, Some(&m), Some(&suit)), 0.0);
+        assert_eq!(vegetation_density_on_centre_cell(0.4, Some(&m), None), 0.4);
+    }
 
     #[test]
     fn vegetation_extract_builds_burn_rows() {
