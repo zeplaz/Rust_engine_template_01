@@ -76,6 +76,49 @@ pub struct FrontThresholds {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ControlParams {
     pub half_life_s: f32,
+    /// Sim seconds between relaxation steps (cadence gate; elapsed time is integrated, never lost).
+    #[serde(default = "default_relax_step_s")]
+    pub relax_step_s: f32,
+    /// Largest single integration sub-step; longer gaps are split (explicit-scheme stability).
+    #[serde(default = "default_relax_max_substep_s")]
+    pub relax_max_substep_s: f32,
+    /// Control gained per second at full presence (a `Zone{Control}` at its centre) and full supply.
+    #[serde(default = "default_stamp_gain_per_s")]
+    pub stamp_gain_per_s: f32,
+    /// Control lost per second per unit of adjacent / co-located hostile control.
+    #[serde(default = "default_pressure_per_s")]
+    pub pressure_per_s: f32,
+    /// Spill rate of control into lower neighbours of the same slot (how an advance creeps forward).
+    #[serde(default = "default_spread_per_s")]
+    pub spread_per_s: f32,
+    /// Fraction of gain / spill kept at zero supply (`logistics_strength == 0`).
+    #[serde(default = "default_supply_floor")]
+    pub supply_floor: f32,
+    /// Share of control eroded by a hostile that is credited to that hostile (ground changes hands).
+    #[serde(default = "default_conquest_transfer")]
+    pub conquest_transfer: f32,
+}
+
+fn default_conquest_transfer() -> f32 {
+    0.9
+}
+fn default_relax_step_s() -> f32 {
+    0.5
+}
+fn default_relax_max_substep_s() -> f32 {
+    2.0
+}
+fn default_stamp_gain_per_s() -> f32 {
+    0.03
+}
+fn default_pressure_per_s() -> f32 {
+    0.12
+}
+fn default_spread_per_s() -> f32 {
+    0.006
+}
+fn default_supply_floor() -> f32 {
+    0.3
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -250,6 +293,13 @@ impl FrontBalance {
             issues.push("front.derive_every_ticks must be >= 1".into());
         }
         non_negative("control.half_life_s", self.control.half_life_s, &mut issues);
+        positive("control.relax_step_s", self.control.relax_step_s, &mut issues);
+        positive("control.relax_max_substep_s", self.control.relax_max_substep_s, &mut issues);
+        non_negative("control.stamp_gain_per_s", self.control.stamp_gain_per_s, &mut issues);
+        non_negative("control.pressure_per_s", self.control.pressure_per_s, &mut issues);
+        non_negative("control.spread_per_s", self.control.spread_per_s, &mut issues);
+        unit01("control.supply_floor", self.control.supply_floor, &mut issues);
+        unit01("control.conquest_transfer", self.control.conquest_transfer, &mut issues);
         positive("theater.max_len_m", self.theater.max_len_m, &mut issues);
         positive("theater.depth_m", self.theater.depth_m, &mut issues);
         unit01("theater.id_keep_overlap", self.theater.id_keep_overlap, &mut issues);

@@ -10,6 +10,7 @@ use std::collections::{BTreeMap, HashMap};
 
 use bevy::prelude::IVec2;
 
+use crate::strategic::settlement::{FactionPairStance, FactionStanceBook};
 use crate::strategic::MAX_STRATEGIC_FACTION_SLOTS;
 
 pub type SlotControl = [f32; MAX_STRATEGIC_FACTION_SLOTS];
@@ -61,6 +62,20 @@ impl Hostility {
     #[must_use]
     pub fn is_empty(&self) -> bool {
         self.mask.iter().all(|m| *m == 0)
+    }
+}
+
+/// Hostility from the stance book; with no `Enemy` pair anywhere, slots 0/1 stay at war (legacy front).
+#[must_use]
+pub fn hostility_from_stances(stances: Option<&FactionStanceBook>) -> Hostility {
+    let Some(book) = stances else {
+        return Hostility::legacy_pair();
+    };
+    let h = Hostility::from_fn(|a, b| book.stance(a, b) == FactionPairStance::Enemy);
+    if h.is_empty() {
+        Hostility::legacy_pair()
+    } else {
+        h
     }
 }
 

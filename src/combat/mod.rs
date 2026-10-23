@@ -8,15 +8,17 @@ use bevy::prelude::*;
 
 pub mod balance;
 pub mod front;
+pub mod relax;
 
 pub use balance::{
     load_front_balance, load_front_balance_from_path, parse_front_balance, FortKind,
     FortificationProfile, FrontBalance, UnitKind, UnitProfile, FRONT_BALANCE_RON,
 };
 pub use front::{
-    classify_cell, derive_fronts, ControlGrid, FrontCell, FrontDerivation, FrontPolyline, FrontSegment,
+    classify_cell, derive_fronts, hostility_from_stances, ControlGrid, FrontCell, FrontDerivation, FrontPolyline, FrontSegment,
     Hostility,
 };
+pub use relax::{control_relaxation_system, relax_step, ControlRelaxation, RelaxCell, RelaxGrid, RelaxParams};
 
 /// Load outcome of [`FrontBalance`] (disk error keeps the compiled-in default).
 #[derive(Resource, Clone, Debug, Default)]
@@ -37,5 +39,12 @@ impl Plugin for CombatPlugin {
             app.insert_resource(balance)
                 .insert_resource(FrontBalanceLoadReport { error });
         }
+        // FC-2: control relaxes over sim time; the zone pass stops stamping Control zones once this exists.
+        app.init_resource::<ControlRelaxation>().add_systems(
+            Update,
+            control_relaxation_system
+                .before(crate::strategic::apply_zones_to_strategic_overlays_system)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        );
     }
 }

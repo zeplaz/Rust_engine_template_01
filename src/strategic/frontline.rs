@@ -7,8 +7,8 @@
 
 use bevy::prelude::*;
 
-use crate::combat::{derive_fronts, ControlGrid, FrontBalance, FrontSegment, Hostility};
-use crate::strategic::settlement::{FactionPairStance, FactionStanceBook};
+use crate::combat::{derive_fronts, hostility_from_stances, ControlGrid, FrontBalance, FrontSegment};
+use crate::strategic::settlement::FactionStanceBook;
 use crate::strategic::ChunkStrategicOverlay;
 use crate::systems::sim_control::SimTick;
 
@@ -35,20 +35,6 @@ impl FrontlineState {
     #[must_use]
     pub fn total_length_m(&self) -> f32 {
         self.segments.iter().map(|s| s.length_m).sum()
-    }
-}
-
-/// Hostility from the stance book; with no `Enemy` pair anywhere, slots 0/1 stay at war (legacy front).
-#[must_use]
-pub fn hostility_from_stances(stances: Option<&FactionStanceBook>) -> Hostility {
-    let Some(book) = stances else {
-        return Hostility::legacy_pair();
-    };
-    let h = Hostility::from_fn(|a, b| book.stance(a, b) == FactionPairStance::Enemy);
-    if h.is_empty() {
-        Hostility::legacy_pair()
-    } else {
-        h
     }
 }
 
@@ -134,6 +120,8 @@ pub fn derive_frontline_from_control_system(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::combat::Hostility;
+    use crate::strategic::settlement::FactionPairStance;
 
     fn app_with_overlay(ov: ChunkStrategicOverlay, with_balance: bool) -> App {
         let mut app = App::new();

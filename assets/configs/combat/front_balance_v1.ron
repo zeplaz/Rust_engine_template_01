@@ -16,6 +16,17 @@
     control: (
         // Overlay faction_control half-life when nothing re-stamps it (seconds of sim time).
         half_life_s: 120.0,
+        // Relaxation cadence and sub-step bound (sim seconds).
+        relax_step_s: 0.5,
+        relax_max_substep_s: 2.0,
+        // Control gained per second at full presence + full supply (a Zone{Control} centre).
+        stamp_gain_per_s: 0.03,
+        // Control lost per second per unit of adjacent/co-located hostile control.
+        pressure_per_s: 0.12,
+        // Spill of control into lower same-slot neighbours (how an advance creeps forward).
+        spread_per_s: 0.006,
+        // Fraction of gain/spill kept at zero supply.
+        supply_floor: 0.3,
     ),
     theater: (
         max_len_m: 2000.0,
