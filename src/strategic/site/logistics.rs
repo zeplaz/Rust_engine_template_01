@@ -2,16 +2,25 @@
 
 use bevy::prelude::*;
 
-use super::components::{ConstructionSite, SiteConstructionRate, SiteResourceManifest};
+use super::components::{
+    ConstructionSite, SiteConstructionRate, SiteResourceManifest, SiteStageProgress,
+};
 use super::resources::{SiteConstructionBook, SiteConstructionPhase, SiteId};
 
 /// Advances `operational_readiness` from manifest ratios × rate modifiers (not wall-clock timers).
+///
+/// Legacy path only: sites carrying [`SiteStageProgress`] are staged by
+/// `construction::advance_site_construction_tick_system`, which gates `UnderConstruction` on the
+/// same manifest ratio and is their single phase writer.
 pub fn site_construction_progression_system(
-    mut q: Query<(
-        &mut ConstructionSite,
-        &SiteResourceManifest,
-        Option<&SiteConstructionRate>,
-    )>,
+    mut q: Query<
+        (
+            &mut ConstructionSite,
+            &SiteResourceManifest,
+            Option<&SiteConstructionRate>,
+        ),
+        Without<SiteStageProgress>,
+    >,
     mut book: ResMut<SiteConstructionBook>,
 ) {
     for (mut site, manifest, rate) in &mut q {

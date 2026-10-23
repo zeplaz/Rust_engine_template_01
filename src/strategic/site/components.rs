@@ -98,6 +98,20 @@ impl Default for SiteResourceManifest {
 }
 
 impl SiteResourceManifest {
+    /// Bill of materials for a catalog building: whole units scaled from its `construction_cost`
+    /// (cost 500 gives 100 concrete, 40 steel, 20 fuel, 10 machinery, the old stub bill).
+    #[must_use]
+    pub fn bill_for_construction_cost(construction_cost: u32) -> Self {
+        let c = construction_cost.max(1) as f32;
+        Self {
+            concrete_required: (c * 0.20).ceil(),
+            steel_required: (c * 0.08).ceil(),
+            fuel_required: (c * 0.04).ceil(),
+            machinery_required: (c * 0.02).ceil(),
+            ..Self::default()
+        }
+    }
+
     /// Aggregate delivered / required in [0, 1]; 1 = fully supplied for construction phase.
     #[inline]
     pub fn delivered_ratio(&self) -> f32 {
@@ -124,6 +138,15 @@ impl SiteResourceManifest {
         }
         acc / num as f32
     }
+}
+
+/// A staged site in `UnderConstruction` whose progress is held back by missing materials
+/// (written by `construction::advance_site_construction_tick_system`, cleared once the bill is
+/// delivered). Presentation reads it to show why a site is not advancing.
+#[derive(Component, Debug, Clone, Copy)]
+pub struct SiteMaterialStarved {
+    /// Delivered / required across the manifest, `[0, 1)`.
+    pub delivered_ratio: f32,
 }
 
 #[derive(Component, Debug, Clone)]

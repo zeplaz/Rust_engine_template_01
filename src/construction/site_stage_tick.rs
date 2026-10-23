@@ -9,6 +9,7 @@ use crate::construction::site_stage_transitions::{
 use crate::strategic::{
     BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
     PlannedSite, SiteArchetype, SiteConstructionBook, SiteConstructionPhase, SiteId, SiteIdIssuer,
+    SiteMaterialStarved, SiteResourceManifest,
 };
 use crate::systems::sim_control::{SimControlState, SimControlSystemSet, SimTick};
 
@@ -30,11 +31,24 @@ pub fn init_site_stage_progress_for_planned_sites(
 }
 
 /// Advance `SiteStageProgress` and sync `ConstructionSite` + book (one phase step per sim tick).
+///
+/// `UnderConstruction` is material-gated: progress never runs ahead of the manifest's delivered
+/// ratio (`SiteResourceManifest::delivered_ratio`, filled by logistics), so a starved site stalls
+/// and carries [`SiteMaterialStarved`] until the missing material arrives. Sites without a bill
+/// (ratio 1) build on the clock alone.
 pub fn advance_site_construction_tick_system(
+    mut commands: Commands,
     tick: Res<SimTick>,
     ctrl: Res<SimControlState>,
     mut last_tick: Local<Option<u64>>,
-    mut q: Query<(&mut ConstructionSite, &PlannedSite, &mut SiteStageProgress)>,
+    mut q: Query<(
+        Entity,
+        &mut ConstructionSite,
+        &PlannedSite,
+        &mut SiteStageProgress,
+        Option<&SiteResourceManifest>,
+        Has<SiteMaterialStarved>,
+    )>,
     mut book: ResMut<SiteConstructionBook>,
 ) {
     if !ctrl.should_tick() {
@@ -46,7 +60,7 @@ pub fn advance_site_construction_tick_system(
     }
     *last_tick = Some(current);
 
-    for (mut site, planned, mut stage) in &mut q {
+    for (entity, mut site, planned, mut stage, manifest, was_starved) in &mut q {
         if matches!(
             site.phase,
             SiteConstructionPhase::Operational
@@ -62,7 +76,32 @@ pub fn advance_site_construction_tick_system(
         if dt <= 0.0 {
             continue;
         }
-        stage.progress = saturating_phase_progress(stage.progress, dt);
+        let wanted = saturating_phase_progress(stage.progress, dt);
+        let mut starved = None;
+        stage.progress = if site.phase == SiteConstructionPhase::UnderConstruction {
+            let ratio = manifest.map_or(1.0, SiteResourceManifest::delivered_ratio);
+            if ratio < 1.0 {
+                // Never regress, never run ahead of what has been delivered.
+                let capped = wanted.min(ratio).max(stage.progress);
+                starved = Some(ratio);
+                capped
+            } else {
+                wanted
+            }
+        } else {
+            wanted
+        };
+        match (starved, was_starved) {
+            (Some(delivered_ratio), _) => {
+                commands
+                    .entity(entity)
+                    .insert(SiteMaterialStarved { delivered_ratio });
+            }
+            (None, true) => {
+                commands.entity(entity).remove::<SiteMaterialStarved>();
+            }
+            (None, false) => {}
+        }
         if stage.progress < 1.0 {
             let sid = SiteId(site.site_id);
             if let Some(st) = book.by_site.get_mut(&sid) {

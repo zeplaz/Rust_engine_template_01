@@ -223,6 +223,7 @@ pub use site::{
     SiteFootprint,
     SiteId,
     SiteIdIssuer,
+    SiteMaterialStarved,
     SiteNetworkAttachment,
     SiteOperationalStats,
     SitePlacementValidation,
