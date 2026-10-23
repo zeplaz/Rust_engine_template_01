@@ -344,7 +344,14 @@ pub fn write_play_scenario_live_proof_from_sim(
         return;
     };
     proof.frames_since_write = proof.frames_since_write.saturating_add(1);
-    if proof.frames_since_write < proof.write_interval {
+    // The payload runs lib-contract witnesses and writes JSON synchronously (tens of ms): a
+    // visible hitch. Keep the tight cadence for `--test` / instrumented runs, stretch it in play.
+    let interval = if crate::dev::test_run_instrumentation::instrumentation_active() {
+        proof.write_interval
+    } else {
+        proof.write_interval.saturating_mul(30)
+    };
+    if proof.frames_since_write < interval {
         return;
     }
     proof.frames_since_write = 0;

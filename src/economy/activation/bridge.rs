@@ -166,7 +166,15 @@ pub fn refresh_industrial_activation_witness_system(
     mut w: ResMut<crate::dev::IndustrialActivationWitness>,
     buildings: Option<Res<BuildingDefinitionRegistry>>,
     flow: Option<Res<crate::economy::resource_flow::ResourceFlowSimWitness>>,
+    mut frames: Local<u32>,
 ) {
+    // Dozens of `stat` syscalls per run; the answers (file presence, registry violations) move on
+    // human timescales, so refresh on the first frame and then every ~5 s of frames.
+    let due = *frames % 300 == 0;
+    *frames = frames.wrapping_add(1);
+    if !due {
+        return;
+    }
     w.catalog_id_on_commit = path_exists("src/strategic/site/events.rs")
         && path_exists("src/economy/activation/bridge.rs");
     w.activation_system = true;
