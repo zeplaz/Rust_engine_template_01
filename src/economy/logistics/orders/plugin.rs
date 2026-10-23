@@ -12,7 +12,8 @@ use std::collections::{BTreeMap, HashMap};
 
 use bevy::prelude::*;
 
-use crate::economy::resource_flow::ResourceFlowNode;
+use crate::economy::resource_flow::{resource_type_from_tag, ResourceFlowNode};
+use crate::entities::types::p_enumz::ResourceType;
 use crate::entities::production::core::LogisticsSiteRoot;
 use crate::systems::sim_control::{SimControlSystemSet, SimTimeMicros};
 
@@ -146,7 +147,42 @@ pub fn reconcile_plant_stock(node_amount: f32, sim_on_hand: u32, last_mirror: Op
     (node, whole, whole)
 }
 
+/// Where a cargo tag physically lives on a [`ResourceFlowNode`]: typed resources (`Concrete`,
+/// `Steel`, `Fuel`, ...) in `inventory`, designer tags (`Cement`, `Gravel`, ...) in `buffer_by_tag`.
+#[derive(Clone, PartialEq, Eq, Hash)]
+enum NodeSlot {
+    Tag(String),
+    Typed(ResourceType),
+}
+
+impl NodeSlot {
+    fn of(tag: &str) -> Self {
+        resource_type_from_tag(tag).map_or_else(|| Self::Tag(tag.to_string()), Self::Typed)
+    }
+
+    fn amount(&self, node: &ResourceFlowNode) -> f32 {
+        match self {
+            Self::Tag(t) => node.buffer_by_tag.get(t).copied().unwrap_or(0.0),
+            Self::Typed(rt) => node.inventory.get(rt).copied().unwrap_or(0.0),
+        }
+    }
+
+    fn set(&self, node: &mut ResourceFlowNode, value: f32) {
+        match self {
+            Self::Tag(t) => {
+                node.buffer_by_tag.insert(t.clone(), value);
+            }
+            Self::Typed(rt) => {
+                node.inventory.insert(*rt, value);
+            }
+        }
+    }
+}
+
 /// Reconcile every plant site's buffers with the order sim (sole caller: step system).
+///
+/// Tags that alias one typed resource (`Fuel` / `Diesel`) share a slot; the first tag the node
+/// itself names (production, consumption, buffer) is the one the order sim sees.
 pub fn bridge_plant_stock(
     sim: &mut LogisticsOrderSim,
     registry: &LogisticsSiteRegistry,
@@ -163,20 +199,33 @@ pub fn bridge_plant_stock(
         let Ok(mut node) = nodes.get_mut(entity) else {
             continue;
         };
-        let mut tags: Vec<String> = node.buffer_by_tag.keys().cloned().collect();
-        tags.extend(
-            sim.stock
-                .entries
-                .keys()
-                .filter(|(s, _)| *s == site)
-                .map(|(_, c)| c.0.clone()),
-        );
-        tags.sort();
-        tags.dedup();
-        for tag in tags {
-            let cargo = CargoKind::new(tag.clone());
+        let mut buffer_tags: Vec<String> = node.buffer_by_tag.keys().cloned().collect();
+        buffer_tags.sort();
+        let candidates: Vec<String> = node
+            .production
+            .iter()
+            .chain(node.consumption.iter())
+            .map(|r| r.tag.clone())
+            .chain(buffer_tags)
+            .chain(
+                sim.stock
+                    .entries
+                    .keys()
+                    .filter(|(s, _)| *s == site)
+                    .map(|(_, c)| c.0.clone()),
+            )
+            .collect();
+        let mut slots: Vec<(String, NodeSlot)> = Vec::new();
+        for tag in candidates {
+            let slot = NodeSlot::of(&tag);
+            if !slots.iter().any(|(_, s)| *s == slot) {
+                slots.push((tag, slot));
+            }
+        }
+        for (tag, slot) in slots {
+            let cargo = CargoKind::new(tag);
             let key = (site, cargo.clone());
-            let node_amount = node.buffer_by_tag.get(&tag).copied().unwrap_or(0.0);
+            let node_amount = slot.amount(&node);
             let sim_on_hand = sim.stock.get(site, &cargo).on_hand;
             let last = mirror.0.get(&key).copied();
             if last == Some(sim_on_hand) && node_amount.floor() as u32 == sim_on_hand {
@@ -184,7 +233,7 @@ pub fn bridge_plant_stock(
             }
             let (node_new, sim_new, mirror_new) = reconcile_plant_stock(node_amount, sim_on_hand, last);
             if (node_new - node_amount).abs() > f32::EPSILON {
-                node.buffer_by_tag.insert(tag.clone(), node_new);
+                slot.set(&mut node, node_new);
             }
             if sim_new != sim_on_hand {
                 sim.apply(LogisticsOrderCommand::SetStock {
@@ -268,6 +317,7 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<PlantStockMirror>()
             .init_resource::<LogisticsOrdersHydrateState>()
             .init_resource::<super::construction_demand::ConstructionDemandBook>()
+            .init_resource::<super::plant_demand::PlantDemandBook>()
             .add_message::<LogisticsOrderRequest>()
             .configure_sets(
                 Update,
@@ -307,6 +357,7 @@ impl Plugin for LogisticsOrdersPlugin {
                 (
                     publish_logistics_orders_snapshot_system,
                     super::construction_demand::sync_construction_site_demands_system,
+                    super::plant_demand::sync_plant_input_demands_system,
                 )
                     .chain()
                     .in_set(LogisticsOrdersSet::Snapshot),
@@ -330,20 +381,33 @@ pub fn tag_logistics_hubs_as_order_sites(
 }
 
 /// Activated industrial facilities become plant endpoints (sources/sinks for runs and lines).
+///
+/// A finished building was a `Construction` endpoint while it was being built; it keeps its site
+/// id and becomes the plant in place, so orders and stock identity survive the hand-over.
 pub fn tag_flow_facilities_as_order_sites(
     mut commands: Commands,
     nodes: Query<
-        (Entity, &ResourceFlowNode),
-        (Without<LogisticsOrderSite>, Without<LogisticsSiteRoot>),
+        (Entity, &ResourceFlowNode, Option<&mut LogisticsOrderSite>),
+        Without<LogisticsSiteRoot>,
     >,
 ) {
-    for (entity, node) in &nodes {
-        commands.entity(entity).insert(LogisticsOrderSite {
-            name: format!("{} #{}", node.catalog_id, entity.index()),
-            owner: OwnerId::PLAYER,
-            role: SiteRole::Plant,
-            position_m: None,
-        });
+    for (entity, node, existing) in nodes {
+        let name = format!("{} #{}", node.catalog_id, entity.index());
+        match existing {
+            None => {
+                commands.entity(entity).insert(LogisticsOrderSite {
+                    name,
+                    owner: OwnerId::PLAYER,
+                    role: SiteRole::Plant,
+                    position_m: None,
+                });
+            }
+            Some(mut site) if site.role == SiteRole::Construction => {
+                site.role = SiteRole::Plant;
+                site.name = name;
+            }
+            Some(_) => {}
+        }
     }
 }
 
