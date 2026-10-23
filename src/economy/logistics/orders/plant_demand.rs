@@ -26,10 +26,7 @@ pub const PLANT_INPUT_REORDER_UNITS: u32 = 12;
 /// Consumption tags that are not hauled cargo.
 #[must_use]
 pub fn is_cargo_tag(tag: &str) -> bool {
-    !matches!(
-        tag.to_ascii_lowercase().as_str(),
-        "labour" | "electricity" | "energy" | "knowledge"
-    )
+    !crate::economy::facility_inputs::is_supply_input_tag(tag)
 }
 
 /// What this system last published per plant, so it only sends changes.

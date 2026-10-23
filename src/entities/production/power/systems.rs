@@ -116,7 +116,8 @@ fn overload_shed_rank(
             IndustrialSupplyChainRole::AggregateMine => Some(4),
             IndustrialSupplyChainRole::BauxiteMine => Some(5),
             IndustrialSupplyChainRole::AluminaRefinery
-            | IndustrialSupplyChainRole::IntegratedPlant => None,
+            | IndustrialSupplyChainRole::IntegratedPlant
+            | IndustrialSupplyChainRole::MaterialsProducer => None,
         };
     }
     match utility {

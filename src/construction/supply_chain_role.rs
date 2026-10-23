@@ -11,6 +11,8 @@ pub enum IndustrialSupplyChainRole {
     AluminaRefinery,
     AluminumSmelter,
     AluminumFabrication,
+    /// Construction-material producers and the import terminal (`construction_materials` chain).
+    MaterialsProducer,
 }
 
 impl IndustrialSupplyChainRole {
@@ -40,6 +42,7 @@ impl IndustrialSupplyChainRole {
             "alumina_refinery" => Some(Self::AluminaRefinery),
             "aluminum_smelter" => Some(Self::AluminumSmelter),
             "aluminum_fabrication" => Some(Self::AluminumFabrication),
+            "materials_producer" => Some(Self::MaterialsProducer),
             _ => None,
         }
     }

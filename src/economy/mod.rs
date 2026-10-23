@@ -2,6 +2,7 @@
 
 pub mod activation;
 pub mod concrete_batch;
+pub mod facility_inputs;
 #[cfg(test)]
 mod game_loop_e2e;
 pub mod logistics;
