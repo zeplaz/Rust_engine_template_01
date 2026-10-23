@@ -33,6 +33,20 @@ impl OwnerId {
 pub struct CargoKind(pub String);
 
 impl CargoKind {
+    /// Pre-catalog-vocabulary construction tags (saves from before `Concrete`/`Steel`/`Fuel`/
+    /// `Machinery`) mapped to the catalog spelling; `None` for every other tag.
+    #[must_use]
+    pub fn legacy_catalog_spelling(&self) -> Option<CargoKind> {
+        let fixed = match self.0.as_str() {
+            "concrete" => "Concrete",
+            "steel" => "Steel",
+            "fuel" => "Fuel",
+            "machinery" => "Machinery",
+            _ => return None,
+        };
+        Some(CargoKind::new(fixed))
+    }
+
     #[must_use]
     pub fn new(tag: impl Into<String>) -> Self {
         Self(tag.into())

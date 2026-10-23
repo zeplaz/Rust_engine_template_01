@@ -46,7 +46,7 @@ pub fn advance_site_construction_tick_system(
         &mut ConstructionSite,
         &PlannedSite,
         &mut SiteStageProgress,
-        Option<&SiteResourceManifest>,
+        Option<&mut SiteResourceManifest>,
         Has<SiteMaterialStarved>,
     )>,
     mut book: ResMut<SiteConstructionBook>,
@@ -60,7 +60,7 @@ pub fn advance_site_construction_tick_system(
     }
     *last_tick = Some(current);
 
-    for (entity, mut site, planned, mut stage, manifest, was_starved) in &mut q {
+    for (entity, mut site, planned, mut stage, mut manifest, was_starved) in &mut q {
         if matches!(
             site.phase,
             SiteConstructionPhase::Operational
@@ -77,25 +77,31 @@ pub fn advance_site_construction_tick_system(
             continue;
         }
         let wanted = saturating_phase_progress(stage.progress, dt);
-        let mut starved = None;
+        let mut held_by: Option<SiteMaterialStarved> = None;
         stage.progress = if site.phase == SiteConstructionPhase::UnderConstruction {
-            let ratio = manifest.map_or(1.0, SiteResourceManifest::delivered_ratio);
-            if ratio < 1.0 {
-                // Never regress, never run ahead of what has been delivered.
-                let capped = wanted.min(ratio).max(stage.progress);
-                starved = Some(ratio);
-                capped
-            } else {
-                wanted
+            match manifest.as_deref_mut() {
+                Some(m) => {
+                    // Never regress, never run ahead of the scarcest delivered material.
+                    let ratio = m.min_delivered_ratio();
+                    let capped = wanted.min(ratio).max(stage.progress);
+                    if capped < wanted {
+                        held_by = Some(SiteMaterialStarved {
+                            delivered_ratio: ratio,
+                            missing: m.short_materials(),
+                        });
+                    }
+                    // Built-in material leaves the site's stock as the stage advances.
+                    m.consume_to_progress(capped);
+                    capped
+                }
+                None => wanted,
             }
         } else {
             wanted
         };
-        match (starved, was_starved) {
-            (Some(delivered_ratio), _) => {
-                commands
-                    .entity(entity)
-                    .insert(SiteMaterialStarved { delivered_ratio });
+        match (held_by, was_starved) {
+            (Some(starved), _) => {
+                commands.entity(entity).insert(starved);
             }
             (None, true) => {
                 commands.entity(entity).remove::<SiteMaterialStarved>();

@@ -483,7 +483,7 @@ pub(crate) fn sync_world_map_phase_and_locks(
     mut commands: Commands,
     base: Res<State<BaseState>>,
     requests: Option<Res<ConstructionVisualRequests>>,
-    sites: Query<(&ConstructionSite, &SiteFootprint)>,
+    sites: Query<(&ConstructionSite, &SiteFootprint, Option<&crate::strategic::SiteMaterialStarved>)>,
     labels: Query<Entity, With<WorldMapPhaseLabel>>,
     locks: Query<Entity, With<WorldMapLockRing>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -498,10 +498,14 @@ pub(crate) fn sync_world_map_phase_and_locks(
         return;
     }
     let mut key = sites.iter().count() as u64;
-    for (site, foot) in &sites {
+    for (site, foot, starved) in &sites {
         mix(&mut key, site.site_id);
         mix(&mut key, phase_id(site.phase));
         mix(&mut key, foot.tiles.len() as u64);
+        if let Some(s) = starved {
+            // Redraw when the missing bill changes, not on every delivery tick.
+            mix(&mut key, 1 + s.missing.iter().map(|(_, n)| u64::from(*n)).sum::<u64>());
+        }
     }
     if let Some(req) = requests.as_deref() {
         mix(&mut key, req.footprint_lock_tiles.len() as u64);
@@ -512,7 +516,7 @@ pub(crate) fn sync_world_map_phase_and_locks(
     despawn_query(&mut commands, &labels);
     despawn_query(&mut commands, &locks);
     stamp.key = key;
-    for (site, foot) in &sites {
+    for (site, foot, starved) in &sites {
         if foot.tiles.is_empty() {
             continue;
         }
@@ -524,12 +528,29 @@ pub(crate) fn sync_world_map_phase_and_locks(
         acc.z = PLANE_Z + 0.03;
         commands.spawn((
             WorldMapPhaseLabel,
-            Text2d::new(crate::construction::phase_map_word(site.phase)),
+            Text2d::new(match starved {
+                // A held site says why it is not advancing.
+                Some(s) => format!(
+                    "{}
+STALLED - needs {}",
+                    crate::construction::phase_map_word(site.phase),
+                    s.missing
+                        .iter()
+                        .map(|(tag, n)| format!("{tag} x{n}"))
+                        .collect::<Vec<_>>()
+                        .join(", ")
+                ),
+                None => crate::construction::phase_map_word(site.phase).to_string(),
+            }),
             TextFont {
                 font_size: FontSize::Px(32.0),
                 ..default()
             },
-            TextColor(Color::srgb(0.93, 0.93, 0.9)),
+            TextColor(if starved.is_some() {
+                Color::srgb(0.98, 0.72, 0.22)
+            } else {
+                Color::srgb(0.93, 0.93, 0.9)
+            }),
             bevy::sprite::Anchor::CENTER,
             Transform::from_translation(acc).with_scale(Vec3::splat(0.28 / 32.0)),
         ));

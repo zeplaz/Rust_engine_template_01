@@ -893,6 +893,20 @@ fn saved_sites_rebind_by_name_owner_role_within_a_tile() {
     assert!(!saved_site_matches(&saved, &meta));
 }
 
+#[test]
+fn legacy_lowercase_construction_tags_migrate_on_load() {
+    let (mut sim, _) = world();
+    stock(&mut sim, SITE, CargoKind::new("steel"), 7);
+    stock(&mut sim, SITE, CargoKind::new("Steel"), 3);
+    demand(&mut sim, SITE, CargoKind::new("concrete"), 100, 100, 0, Priority::Normal);
+    sim.migrate_legacy_cargo_tags();
+    assert_eq!(sim.stock.get(SITE, &CargoKind::new("Steel")).on_hand, 10);
+    assert_eq!(sim.stock.get(SITE, &CargoKind::new("steel")).on_hand, 0);
+    assert!(sim.demands.contains_key(&(SITE, CargoKind::new("Concrete"))));
+    sim.migrate_legacy_cargo_tags();
+    assert_eq!(sim.stock.get(SITE, &CargoKind::new("Steel")).on_hand, 10, "idempotent");
+}
+
 mod app {
     use bevy::prelude::*;
 
@@ -1113,6 +1127,8 @@ mod app {
             ConstructionSite, SiteArchetype, SiteConstructionPhase, SiteResourceManifest,
         };
         let mut app = app();
+        // This test drives the advisor by hand.
+        app.world_mut().resource_mut::<AutoSupplyPolicy>().set(OwnerId::PLAYER, false);
         let depot = spawn_site(&mut app, "Depot", SiteRole::Depot, 0.0);
         let site = app
             .world_mut()

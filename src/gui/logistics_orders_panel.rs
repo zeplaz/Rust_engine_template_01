@@ -103,6 +103,8 @@ pub struct LogisticsOrdersPanelState {
     pub always_show_routes: bool,
     /// Dev seeding (Sites tab): amount added per click.
     pub seed_amount: u32,
+    /// Mirror of `AutoSupplyPolicy::enabled(draft.owner)` (the policy resource is the authority).
+    pub auto_supply: bool,
 }
 
 impl LogisticsOrdersPanelState {
@@ -483,6 +485,8 @@ pub enum PanelAction {
     ToggleShowFinished,
     ToggleAlwaysRoutes,
     AutoSupply,
+    /// Flip the faction's `AutoSupplyPolicy` (applied by the click system, not the pure funnel).
+    ToggleAutoSupply,
     PrefillDemand {
         site: SiteId,
         cargo: String,
@@ -598,6 +602,7 @@ pub fn apply_panel_action(
                 out = advice.commands;
             }
         }
+        PanelAction::ToggleAutoSupply => {}
         PanelAction::PrefillDemand { site, cargo, kind } => {
             match snap.demands.iter().find(|d| d.site == site && d.cargo == cargo) {
                 Some(d) => {
@@ -665,6 +670,11 @@ pub struct LogisticsOrdersPanelPlugin;
 
 impl Plugin for LogisticsOrdersPanelPlugin {
     fn build(&self, app: &mut App) {
+        // A windowed game leaves the player's supply lines to the player; the panel toggles it.
+        app.init_resource::<crate::economy::logistics::orders::AutoSupplyPolicy>();
+        app.world_mut()
+            .resource_mut::<crate::economy::logistics::orders::AutoSupplyPolicy>()
+            .player_default = false;
         app.init_resource::<LogisticsOrdersPanelState>()
             .add_systems(
                 Update,
@@ -673,6 +683,7 @@ impl Plugin for LogisticsOrdersPanelPlugin {
                 (
                     toggle_logistics_orders_panel,
                     logistics_orders_panel_clicks,
+                    sync_auto_supply_mirror,
                     sync_logistics_orders_bevy_panel,
                     logistics_orders_panel_scroll,
                 )
@@ -1183,6 +1194,17 @@ fn build_demands_tab(root: &mut ChildSpawnerCommands<'_>, look: &Look, state: &L
     if snap.demands.is_empty() {
         label(root, look, "No site publishes a draw demand yet.", look.muted());
     }
+    button(
+        root,
+        look,
+        if state.auto_supply {
+            "Auto-supply ON: new demands get lines from the nearest stocked depot"
+        } else {
+            "Auto-supply OFF: click to start lines for new demands automatically"
+        },
+        PanelAction::ToggleAutoSupply,
+        BtnStyle::Pick(state.auto_supply),
+    );
     let advice = suggest_lines_for_unserved(snap, state.draft.owner);
     if !advice.commands.is_empty() {
         button(
@@ -1460,8 +1482,19 @@ fn logistics_orders_panel_scroll(
     }
 }
 
+fn sync_auto_supply_mirror(
+    policy: Res<crate::economy::logistics::orders::AutoSupplyPolicy>,
+    mut state: ResMut<LogisticsOrdersPanelState>,
+) {
+    let on = policy.enabled(state.draft.owner);
+    if state.auto_supply != on {
+        state.auto_supply = on;
+    }
+}
+
 fn logistics_orders_panel_clicks(
     mut state: ResMut<LogisticsOrdersPanelState>,
+    mut policy: ResMut<crate::economy::logistics::orders::AutoSupplyPolicy>,
     snap: Option<Res<LogisticsOrdersSnapshotRes>>,
     mut requests: MessageWriter<LogisticsOrderRequest>,
     buttons: Query<(&Interaction, &LogisticsOrdersAction), Changed<Interaction>>,
@@ -1470,6 +1503,13 @@ fn logistics_orders_panel_clicks(
     let snap = snap.as_deref().map_or(&empty, |s| &s.0);
     for (interaction, action) in &buttons {
         if *interaction != Interaction::Pressed {
+            continue;
+        }
+        if action.0 == PanelAction::ToggleAutoSupply {
+            let owner = state.draft.owner;
+            let on = !policy.enabled(owner);
+            policy.set(owner, on);
+            state.ok(if on { "Auto-supply on" } else { "Auto-supply off" });
             continue;
         }
         for cmd in apply_panel_action(&mut state, snap, action.0.clone()) {
