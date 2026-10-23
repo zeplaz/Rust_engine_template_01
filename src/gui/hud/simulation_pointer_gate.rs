@@ -188,6 +188,7 @@ type PointerBlockingPanelRoots = Or<(
     With<crate::gui::options_keybindings_ui::KeybindingsBevyRoot>,
     With<crate::gui::logistics_orders_panel::LogisticsOrdersBevyRoot>,
     With<crate::gui::logistics_targets_panel::LogisticsTargetsBevyRoot>,
+    With<crate::gui::world_presentation_mode::WorldPresentationToggleRoot>,
 )>;
 
 /// True when `physical_cursor` (window physical px — the space `ComputedNode` /
