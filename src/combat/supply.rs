@@ -9,11 +9,12 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
-use super::balance::FrontBalance;
+use super::balance::{DrawRates, FrontBalance};
+use super::formation::{Formation, Posture};
 use super::theater::{Theater, TheaterBook, TheaterId};
 use crate::economy::logistics::orders::{
     CargoKind, ConsumerKind, LogisticsOrderCommand, LogisticsOrderRequest, LogisticsOrderSite, LogisticsOrderSiteId,
-    OwnerId, Priority, SiteRole,
+    LogisticsOrdersSnapshotRes, OwnerId, Priority, SiteRole,
 };
 
 /// Marks the logistics endpoint of one side of one theater.
@@ -30,19 +31,86 @@ pub struct FrontSupplyPoints {
     pub published: BTreeMap<(TheaterId, u8), Vec<(&'static str, u32)>>,
 }
 
-/// `(cargo tag, buffer target)` for a front held by `side` in `theater`; zero-draw classes are skipped.
+/// Delivered-stock coverage (0..1) of each front supply point, from the logistics snapshot.
+#[derive(Resource, Clone, Debug, Default)]
+pub struct FrontSupplyCoverage {
+    pub by_point: BTreeMap<(TheaterId, u8), f32>,
+}
+
+/// Combat draw of the formations of `side` standing in `theater`'s area of responsibility; `None` when
+/// there are none (the front then publishes the notional garrison demand instead).
 #[must_use]
-pub fn front_demand_targets(theater: &Theater, balance: &FrontBalance) -> Vec<(&'static str, u32)> {
+pub fn formation_draw<'a>(
+    theater: &Theater,
+    side: u8,
+    depth_tiles: f32,
+    balance: &FrontBalance,
+    formations: impl Iterator<Item = &'a Formation>,
+) -> Option<DrawRates> {
+    let mut total = DrawRates::default();
+    let mut any = false;
+    for f in formations.filter(|f| f.faction_slot == side && theater.aor_contains(f.tile, depth_tiles)) {
+        any = true;
+        let d = balance.unit(f.kind).draw_kg_per_s;
+        let w = f.strength
+            * if f.engaged || f.posture == Posture::Attack { 1.0 } else { balance.combat.idle_draw_fraction };
+        total.ammunition += d.ammunition * w;
+        total.fuel += d.fuel * w;
+        total.rations += d.rations * w;
+        total.engineering += d.engineering * w;
+    }
+    any.then_some(total)
+}
+
+/// `(cargo tag, buffer target)` for a front held by `side` in `theater`; zero-draw classes are skipped.
+/// `draw` is the standing formations' draw when any; otherwise a notional garrison sized from front length.
+#[must_use]
+pub fn front_demand_targets(theater: &Theater, balance: &FrontBalance, draw: Option<DrawRates>) -> Vec<(&'static str, u32)> {
     let p = &balance.supply;
-    let units = (theater.length_m / 1000.0 * p.garrison_per_km).ceil().max(1.0);
-    let d = balance.unit(super::balance::UnitKind::Infantry).draw_kg_per_s;
+    let d = draw.unwrap_or_else(|| {
+        let units = (theater.length_m / 1000.0 * p.garrison_per_km).ceil().max(1.0);
+        let i = balance.unit(super::balance::UnitKind::Infantry).draw_kg_per_s;
+        DrawRates {
+            ammunition: i.ammunition * units,
+            fuel: i.fuel * units,
+            rations: i.rations * units,
+            engineering: i.engineering * units,
+        }
+    });
     [("ammo", d.ammunition), ("fuel", d.fuel), ("rations", d.rations), ("engineering", d.engineering)]
         .into_iter()
         .filter_map(|(tag, kg_s)| {
-            let target = (kg_s * units * p.buffer_s).ceil();
+            let target = (kg_s * p.buffer_s).ceil();
             (target >= 1.0).then_some((tag, target as u32))
         })
         .collect()
+}
+
+/// Mean fill (on hand / buffer target) of each registered front supply point.
+pub fn update_front_supply_coverage_system(
+    points: Res<FrontSupplyPoints>,
+    sites: Query<&LogisticsOrderSiteId>,
+    snapshot: Option<Res<LogisticsOrdersSnapshotRes>>,
+    mut coverage: ResMut<FrontSupplyCoverage>,
+) {
+    coverage.by_point.clear();
+    let Some(snapshot) = snapshot else { return };
+    for (key, e) in &points.entities {
+        let (Ok(site), Some(targets)) = (sites.get(*e), points.published.get(key)) else { continue };
+        let Some(row) = snapshot.0.site(site.0) else { continue };
+        if targets.is_empty() {
+            continue;
+        }
+        let fill: f32 = targets
+            .iter()
+            .map(|(tag, target)| {
+                let have = row.stock.iter().find(|r| r.cargo == *tag).map_or(0, |r| r.on_hand);
+                (have as f32 / (*target).max(1) as f32).min(1.0)
+            })
+            .sum::<f32>()
+            / targets.len() as f32;
+        coverage.by_point.insert(*key, fill);
+    }
 }
 
 fn side_position_m(theater: &Theater, side: u8, tile_size_m: f32) -> Vec2 {
@@ -59,6 +127,7 @@ pub fn publish_front_supply_demands_system(
     balance: Res<FrontBalance>,
     mut points: ResMut<FrontSupplyPoints>,
     sites: Query<&LogisticsOrderSiteId>,
+    formations: Query<&Formation>,
     mut commands: Commands,
     requests: Option<ResMut<Messages<LogisticsOrderRequest>>>,
 ) {
@@ -94,7 +163,8 @@ pub fn publish_front_supply_demands_system(
             let Some(site) = points.entities.get(&key).and_then(|e| sites.get(*e).ok()).map(|s| s.0) else {
                 continue;
             };
-            let targets = front_demand_targets(t, &balance);
+            let draw = formation_draw(t, side, theaters.depth_tiles, &balance, formations.iter());
+            let targets = front_demand_targets(t, &balance, draw);
             if points.published.get(&key) == Some(&targets) {
                 continue;
             }
@@ -148,8 +218,8 @@ mod tests {
     #[test]
     fn longer_front_demands_more() {
         let b = FrontBalance::default();
-        let short = front_demand_targets(&theater(20), &b);
-        let long = front_demand_targets(&theater(70), &b);
+        let short = front_demand_targets(&theater(20), &b, None);
+        let long = front_demand_targets(&theater(70), &b, None);
         assert!(!short.is_empty());
         assert!(short.iter().zip(&long).all(|(s, l)| l.1 > s.1));
     }

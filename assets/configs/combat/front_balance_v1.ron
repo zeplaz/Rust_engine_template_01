@@ -66,6 +66,19 @@
         retreat_mult: 0.3,
         // Attacker exposure: an attacking formation does not benefit from fortification cover.
         attacker_cover_scale: 0.0,
+        // Fraction of combat draw a formation not in contact still pulls.
+        idle_draw_fraction: 0.35,
+        // Supply regained per second while the front's delivered stock covers it; extra burn in contact.
+        supply_recover_per_s: 0.01,
+        engaged_burn_mult: 3.0,
+        // Morale lost per second per unit of missing supply while in contact.
+        morale_loss_unsupplied_per_s: 0.002,
+        // Fall-back distance of a broken formation (tiles); movement slowdown per unit mobility cost.
+        retreat_tiles: 10.0,
+        mobility_slow_k: 1.0,
+        // Artillery Zone{Fire} radius as a fraction of range; strength at or below which a formation dies.
+        fire_zone_range_fraction: 0.15,
+        destroyed_strength: 0.02,
     ),
     units: [
         (kind: Infantry,    firepower: 1.0, range_m: 400.0,  control_radius_m: 300.0, speed_mps: 1.2,  toe_personnel: 600,
@@ -106,7 +119,7 @@
         // obstacle_slow: fraction of attacker movement speed removed when crossing.
         // anti_armor: extra cover against Armor / Mechanized attackers.
         (kind: Trench,      cover: 0.45, obstacle_slow: 0.2,  mobility_cost_add: 0.2,  anti_armor: 0.15, build_effort_person_hours: 600.0),
-        (kind: Bunker,      cover: 0.7,  obstacle_slow: 0.1,  mobility_cost_add: 0.1,  anti_armor: 0.2,  build_effort_person_hours: 2400.0),
+        (kind: Bunker,      cover: 0.7,  obstacle_slow: 0.1,  mobility_cost_add: 0.1,  anti_armor: 0.24, build_effort_person_hours: 2400.0),
         (kind: Wall,        cover: 0.35, obstacle_slow: 0.6,  mobility_cost_add: 0.5,  anti_armor: 0.25, build_effort_person_hours: 1500.0),
         (kind: DragonTeeth, cover: 0.05, obstacle_slow: 0.7,  mobility_cost_add: 0.6,  anti_armor: 0.5,  build_effort_person_hours: 900.0),
         (kind: Minefield,   cover: 0.0,  obstacle_slow: 0.5,  mobility_cost_add: 0.4,  anti_armor: 0.4,  build_effort_person_hours: 300.0),

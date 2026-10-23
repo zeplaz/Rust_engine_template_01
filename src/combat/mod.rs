@@ -7,12 +7,14 @@
 use bevy::prelude::*;
 
 pub mod balance;
+pub mod formation;
 pub mod fortification;
 pub mod front;
 pub mod orders;
 pub mod pressure;
 pub mod supply;
 pub mod relax;
+pub mod resolve;
 pub mod theater;
 
 pub use balance::{
@@ -32,8 +34,19 @@ pub use pressure::{
     score_cell, score_pressure_points_system, score_theater, CellFields, PressureDrivers, PressureKind, PressurePoint,
     PressurePointBook,
 };
-pub use orders::{DeploymentKind, DeploymentOrder, DeploymentOrderId, DeploymentOrderQueue, EnqueueError};
-pub use supply::{front_demand_targets, publish_front_supply_demands_system, FrontSupplyPoint, FrontSupplyPoints};
+pub use formation::{
+    advance_combat_clock_system, advance_formations_system, formation_supply_system, spawn_formation,
+    sync_formation_zones_system, CombatClock, Formation, FormationFireZone, Posture,
+};
+pub use orders::{
+    apply_deployment_order, execute_deployment_orders_system, order_for_pressure_point, DeploymentKind,
+    DeploymentOrder, DeploymentOrderId, DeploymentOrderQueue, DeploymentOutcomes, DeploymentReject, EnqueueError,
+};
+pub use resolve::{combat_resolve_system, resolve_step, Combatant, Outcome};
+pub use supply::{
+    formation_draw, front_demand_targets, publish_front_supply_demands_system, update_front_supply_coverage_system,
+    FrontSupplyCoverage, FrontSupplyPoint, FrontSupplyPoints,
+};
 
 /// Load outcome of [`FrontBalance`] (disk error keeps the compiled-in default).
 #[derive(Resource, Clone, Debug, Default)]
@@ -79,12 +92,32 @@ impl Plugin for CombatPlugin {
             );
         // FC-6 groundwork: one order queue for UI + AI; fronts publish supply demand to logistics.
         app.init_resource::<DeploymentOrderQueue>()
+            .init_resource::<DeploymentOutcomes>()
             .init_resource::<FrontSupplyPoints>()
+            .init_resource::<FrontSupplyCoverage>()
             .add_systems(
                 Update,
-                publish_front_supply_demands_system
-                    .after(derive_theaters_system)
+                (
+                    publish_front_supply_demands_system.after(derive_theaters_system),
+                    update_front_supply_coverage_system.after(publish_front_supply_demands_system),
+                )
                     .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
             );
+        // FC-5: formations. Orders -> supply -> combat -> movement -> zones, all before the relaxation
+        // that reads those zones, so a formation's presence this frame is what moves control.
+        app.init_resource::<CombatClock>().add_systems(
+            Update,
+            (
+                advance_combat_clock_system,
+                execute_deployment_orders_system,
+                formation_supply_system,
+                combat_resolve_system,
+                advance_formations_system,
+                sync_formation_zones_system,
+            )
+                .chain()
+                .before(control_relaxation_system)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        );
     }
 }
