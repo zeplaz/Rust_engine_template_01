@@ -12,6 +12,7 @@ impl Plugin for UiThemePlugin {
             .init_resource::<UiSpacing>()
             .init_resource::<HudDensityProfile>()
             .init_resource::<UiScaleApplicationGate>()
+            .add_plugins(super::widgets::UiWidgetsPlugin)
             .add_systems(Startup, load_cmd_ui_mono_font);
     }
 }
