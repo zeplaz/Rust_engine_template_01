@@ -366,17 +366,12 @@ pub fn drain_landscape_disturbance_queue(
     }
 }
 
-/// Canopy input only: succession sets a floor on the canopy target. `vegetation_field_tick` writes
-/// `canopy_density` (VEG-C07), so the fuel bridge reads the result next frame.
+/// Canopy and old-growth input only: succession sets a canopy floor and an old-growth target.
+/// `vegetation_field_tick` writes `canopy_density` and `old_growth` (VEG-C07), so the fuel bridge reads the result next frame.
 pub fn sync_fuel_bridge_from_succession(
-    mut q: Query<(
-        &SuccessionState,
-        &mut VegetationField,
-        &mut ChunkFuelProfile,
-        &mut CanopyDrivers,
-    )>,
+    mut q: Query<(&SuccessionState, &mut ChunkFuelProfile, &mut CanopyDrivers)>,
 ) {
-    for (succ, mut veg, mut fuel, mut drivers) in &mut q {
+    for (succ, mut fuel, mut drivers) in &mut q {
         let og: f32 = match succ.stage {
             SuccessionTopologyStage::OldGrowth => 0.85,
             SuccessionTopologyStage::YoungForest => 0.45,
@@ -385,7 +380,7 @@ pub fn sync_fuel_bridge_from_succession(
             SuccessionTopologyStage::BurnScar => 0.02,
         };
         let og = og.min(drivers.suitability_cap);
-        veg.old_growth = og;
+        drivers.old_growth_target = Some(og);
         fuel.old_growth = og;
         drivers.succession_floor = og * 0.6;
     }

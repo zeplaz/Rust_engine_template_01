@@ -57,6 +57,9 @@ pub struct CanopyDrivers {
     pub population_density: Option<f32>,
     /// Succession floor: the canopy target never drops below this.
     pub succession_floor: f32,
+    /// Succession-derived `old_growth` value. Applied directly by the tick (the one writer);
+    /// `None` leaves the biomass-driven smoothing.
+    pub old_growth_target: Option<f32>,
     /// One-shot clear (construction, harvest): caps canopy at this value, then is consumed.
     pub clear_to: Option<f32>,
     /// Biome ceiling: canopy, understory, old growth and fuel never exceed it (0 = nothing grows).
@@ -71,6 +74,7 @@ impl Default for CanopyDrivers {
         Self {
             population_density: None,
             succession_floor: 0.0,
+            old_growth_target: None,
             clear_to: None,
             suitability_cap: 1.0,
             growth_scale: 1.0,
@@ -361,9 +365,14 @@ pub fn integrate_vegetation_field_step_with_drivers(
         veg.fuel_load = 0.0;
     }
 
-    let og_target = (eco.biomass * eco.regrowth_rate * 1.2).min(1.0);
-    let ok = (0.05 * dt_e).min(0.12);
-    veg.old_growth = veg.old_growth * (1.0 - ok) + og_target * ok;
+    match drivers.old_growth_target {
+        Some(target) => veg.old_growth = target.clamp(0.0, 1.0),
+        None => {
+            let og_target = (eco.biomass * eco.regrowth_rate * 1.2).min(1.0);
+            let ok = (0.05 * dt_e).min(0.12);
+            veg.old_growth = veg.old_growth * (1.0 - ok) + og_target * ok;
+        }
+    }
     veg.old_growth *= (1.0 - veg.burn_severity * 0.06 * dt_e * 10.0).clamp(0.65, 1.0);
     veg.old_growth = veg.old_growth.min(biome_cap);
 
