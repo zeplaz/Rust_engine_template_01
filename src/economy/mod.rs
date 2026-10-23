@@ -2,6 +2,8 @@
 
 pub mod activation;
 pub mod concrete_batch;
+#[cfg(test)]
+mod game_loop_e2e;
 pub mod logistics;
 pub mod logistics_bridge;
 pub mod resource_flow;
