@@ -170,7 +170,8 @@ pub fn refresh_industrial_activation_witness_system(
 ) {
     // Dozens of `stat` syscalls per run; the answers (file presence, registry violations) move on
     // human timescales, so refresh on the first frame and then every ~5 s of frames.
-    let due = *frames % 300 == 0;
+    // Unit tests drive a handful of frames and expect every frame to refresh.
+    let due = cfg!(test) || *frames % 300 == 0;
     *frames = frames.wrapping_add(1);
     if !due {
         return;
