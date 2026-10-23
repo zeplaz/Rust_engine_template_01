@@ -80,6 +80,13 @@ pub struct SiteResourceManifest {
     pub delivered_steel: f32,
     pub delivered_fuel: f32,
     pub delivered_machinery: f32,
+
+    /// Cumulative units built into the building (written by the construction stage tick as
+    /// progress advances; logistics removes the same units from the site's stock).
+    pub consumed_concrete: f32,
+    pub consumed_steel: f32,
+    pub consumed_fuel: f32,
+    pub consumed_machinery: f32,
 }
 
 impl Default for SiteResourceManifest {
@@ -93,11 +100,55 @@ impl Default for SiteResourceManifest {
             delivered_steel: 0.0,
             delivered_fuel: 0.0,
             delivered_machinery: 0.0,
+            consumed_concrete: 0.0,
+            consumed_steel: 0.0,
+            consumed_fuel: 0.0,
+            consumed_machinery: 0.0,
         }
     }
 }
 
 impl SiteResourceManifest {
+    /// Smallest delivered / required over the materials with a bill; 1 without a bill.
+    /// Progressive construction can only reach this fraction: the scarcest material limits it.
+    #[must_use]
+    pub fn min_delivered_ratio(&self) -> f32 {
+        [
+            (self.concrete_required, self.delivered_concrete),
+            (self.steel_required, self.delivered_steel),
+            (self.fuel_required, self.delivered_fuel),
+            (self.machinery_required, self.delivered_machinery),
+        ]
+        .into_iter()
+        .filter(|(required, _)| *required > 0.0)
+        .map(|(required, delivered)| (delivered / required).clamp(0.0, 1.0))
+        .fold(1.0, f32::min)
+    }
+
+    /// Materials with a bill not yet fully delivered, with the whole units still missing.
+    #[must_use]
+    pub fn short_materials(&self) -> Vec<(&'static str, u32)> {
+        [
+            ("Concrete", self.concrete_required, self.delivered_concrete),
+            ("Steel", self.steel_required, self.delivered_steel),
+            ("Fuel", self.fuel_required, self.delivered_fuel),
+            ("Machinery", self.machinery_required, self.delivered_machinery),
+        ]
+        .into_iter()
+        .filter(|(_, required, delivered)| delivered < required)
+        .map(|(tag, required, delivered)| (tag, (required - delivered).ceil() as u32))
+        .collect()
+    }
+
+    /// Mark `progress` (0..=1) of the bill as built into the building. Never decreases.
+    pub fn consume_to_progress(&mut self, progress: f32) {
+        let p = progress.clamp(0.0, 1.0);
+        self.consumed_concrete = self.consumed_concrete.max(self.concrete_required * p);
+        self.consumed_steel = self.consumed_steel.max(self.steel_required * p);
+        self.consumed_fuel = self.consumed_fuel.max(self.fuel_required * p);
+        self.consumed_machinery = self.consumed_machinery.max(self.machinery_required * p);
+    }
+
     /// Bill of materials for a catalog building: whole units scaled from its `construction_cost`
     /// (cost 500 gives 100 concrete, 40 steel, 20 fuel, 10 machinery, the old stub bill).
     #[must_use]
@@ -143,10 +194,12 @@ impl SiteResourceManifest {
 /// A staged site in `UnderConstruction` whose progress is held back by missing materials
 /// (written by `construction::advance_site_construction_tick_system`, cleared once the bill is
 /// delivered). Presentation reads it to show why a site is not advancing.
-#[derive(Component, Debug, Clone, Copy)]
+#[derive(Component, Debug, Clone)]
 pub struct SiteMaterialStarved {
-    /// Delivered / required across the manifest, `[0, 1)`.
+    /// Scarcest delivered / required fraction across the bill, `[0, 1)`.
     pub delivered_ratio: f32,
+    /// Materials still short, with whole units missing (`("Steel", 40)`).
+    pub missing: Vec<(&'static str, u32)>,
 }
 
 #[derive(Component, Debug, Clone)]

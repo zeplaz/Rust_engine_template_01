@@ -277,6 +277,7 @@ pub fn install_logistics_orders_save(
     save: LogisticsOrdersSave,
 ) {
     res.sim = save.sim;
+    res.sim.migrate_legacy_cargo_tags();
     res.last_sim_micros = None;
     registry.by_entity.clear();
     registry.entity_of.clear();
@@ -318,6 +319,7 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<LogisticsOrdersHydrateState>()
             .init_resource::<super::construction_demand::ConstructionDemandBook>()
             .init_resource::<super::plant_demand::PlantDemandBook>()
+            .init_resource::<super::auto_supply::AutoSupplyPolicy>()
             .add_message::<LogisticsOrderRequest>()
             .configure_sets(
                 Update,
@@ -358,6 +360,7 @@ impl Plugin for LogisticsOrdersPlugin {
                     publish_logistics_orders_snapshot_system,
                     super::construction_demand::sync_construction_site_demands_system,
                     super::plant_demand::sync_plant_input_demands_system,
+                    super::auto_supply::auto_supply_unserved_system,
                 )
                     .chain()
                     .in_set(LogisticsOrdersSet::Snapshot),

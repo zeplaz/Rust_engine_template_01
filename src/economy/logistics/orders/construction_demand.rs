@@ -34,6 +34,18 @@ pub fn manifest_material(m: &SiteResourceManifest, tag: &str) -> (f32, f32) {
     }
 }
 
+/// Units of `tag` built into the building so far (construction writes, logistics applies).
+#[must_use]
+pub fn manifest_consumed(m: &SiteResourceManifest, tag: &str) -> f32 {
+    match tag {
+        "Concrete" => m.consumed_concrete,
+        "Steel" => m.consumed_steel,
+        "Fuel" => m.consumed_fuel,
+        "Machinery" => m.consumed_machinery,
+        _ => 0.0,
+    }
+}
+
 fn set_delivered(m: &mut SiteResourceManifest, tag: &str, value: f32) {
     match tag {
         "Concrete" => m.delivered_concrete = value,
@@ -102,6 +114,8 @@ pub fn tag_construction_sites_as_order_sites(
 #[derive(Resource, Debug, Default)]
 pub struct ConstructionDemandBook {
     pub published: BTreeMap<SiteId, Vec<(&'static str, u32)>>,
+    /// Units already removed from each site's stock as built-in material.
+    pub consumed_applied: BTreeMap<(SiteId, &'static str), u32>,
 }
 
 /// Publish / retract construction demands and mirror on-site stock into the manifest.
@@ -121,9 +135,23 @@ pub fn sync_construction_site_demands_system(
         live.push(id);
         let targets = construction_demand_targets(&manifest);
         for &(tag, required) in &targets {
-            let delivered = on_hand(snap, id, tag).min(required) as f32;
+            // Delivered is cumulative: stock still on site plus what was built in already.
+            let applied = book.consumed_applied.get(&(id, tag)).copied().unwrap_or(0);
+            let on_site = on_hand(snap, id, tag);
+            let delivered = (on_site + applied).min(required) as f32;
             if (manifest_material(&manifest, tag).1 - delivered).abs() > f32::EPSILON {
                 set_delivered(&mut manifest, tag, delivered);
+            }
+            // Progressive consumption: remove what the stage tick has built in so far.
+            let want = manifest_consumed(&manifest, tag).ceil() as u32;
+            let delta = want.saturating_sub(applied).min(on_site);
+            if delta > 0 {
+                requests.write(LogisticsOrderRequest(LogisticsOrderCommand::ConsumeStock {
+                    site: id,
+                    cargo: CargoKind::new(tag),
+                    amount: delta,
+                }));
+                book.consumed_applied.insert((id, tag), applied + delta);
             }
         }
         if book.published.get(&id) != Some(&targets) {
@@ -150,6 +178,7 @@ pub fn sync_construction_site_demands_system(
         .collect();
     for id in done {
         let targets = book.published.remove(&id).unwrap_or_default();
+        book.consumed_applied.retain(|(s, _), _| *s != id);
         if snap.site(id).is_none() {
             continue;
         }

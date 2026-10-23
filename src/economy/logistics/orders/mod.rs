@@ -6,6 +6,7 @@
 //! UI, overlay and AI read only [`snapshot::LogisticsOrdersSnapshot`].
 
 pub mod advisor;
+pub mod auto_supply;
 pub mod construction_demand;
 pub mod model;
 pub mod persistence;
@@ -18,6 +19,7 @@ pub mod travel;
 #[cfg(test)]
 mod tests;
 
+pub use auto_supply::{auto_supply_unserved_system, AutoSupplyPolicy};
 pub use advisor::{best_source_for, suggest_lines_for_unserved, AdvisorGap, SupplyAdvice};
 pub use model::*;
 pub use persistence::{LogisticsOrdersSave, SavedSite};

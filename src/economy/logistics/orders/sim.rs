@@ -78,6 +78,12 @@ pub enum LogisticsOrderCommand {
         cargo: CargoKind,
         amount: u32,
     },
+    /// Removes from on-hand stock, saturating at zero (a site consuming what it holds).
+    ConsumeStock {
+        site: SiteId,
+        cargo: CargoKind,
+        amount: u32,
+    },
     CreateStandingLine {
         owner: OwnerId,
         source: SiteId,
@@ -258,6 +264,18 @@ impl LogisticsOrderSim {
                 }
                 let e = self.stock.entry_mut(site, &cargo);
                 e.on_hand = e.on_hand.saturating_add(amount);
+                CommandOutcome::Ok
+            }
+            C::ConsumeStock {
+                site,
+                cargo,
+                amount,
+            } => {
+                if !self.sites.contains_key(&site) {
+                    return CommandOutcome::Rejected(format!("unknown site {}", site.0));
+                }
+                let e = self.stock.entry_mut(site, &cargo);
+                e.on_hand = e.on_hand.saturating_sub(amount);
                 CommandOutcome::Ok
             }
             C::CreateStandingLine {
@@ -931,6 +949,35 @@ impl LogisticsOrderSim {
 
     /// Display estimate of total trips for a one-off run (done + in flight + still needed).
     #[must_use]
+    /// Rewrite legacy lowercase construction cargo tags (stock, demands, orders, trips) to the
+    /// catalog spelling. Idempotent; merges stock if both spellings exist.
+    pub fn migrate_legacy_cargo_tags(&mut self) {
+        let old = std::mem::take(&mut self.stock.entries);
+        for ((site, cargo), e) in old {
+            let cargo = cargo.legacy_catalog_spelling().unwrap_or(cargo);
+            let slot = self.stock.entries.entry((site, cargo)).or_default();
+            slot.on_hand = slot.on_hand.saturating_add(e.on_hand);
+            slot.reserved_out = slot.reserved_out.saturating_add(e.reserved_out);
+            slot.inbound = slot.inbound.saturating_add(e.inbound);
+        }
+        let old = std::mem::take(&mut self.demands);
+        for ((site, cargo), mut d) in old {
+            let cargo = cargo.legacy_catalog_spelling().unwrap_or(cargo);
+            d.cargo = cargo.clone();
+            self.demands.insert((site, cargo), d);
+        }
+        for o in self.orders.values_mut() {
+            if let Some(c) = o.cargo.legacy_catalog_spelling() {
+                o.cargo = c;
+            }
+        }
+        for a in self.vehicles.values_mut().filter_map(|v| v.assignment.as_mut()) {
+            if let Some(c) = a.cargo.legacy_catalog_spelling() {
+                a.cargo = c;
+            }
+        }
+    }
+
     pub fn planned_trips(&self, o: &Order) -> u32 {
         let base = o.stats.trips_done + o.stats.trips_in_flight;
         let remaining = o.run_remaining();
