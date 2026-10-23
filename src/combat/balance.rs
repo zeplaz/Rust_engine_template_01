@@ -172,6 +172,55 @@ pub struct CombatParams {
     pub defend_mult: f32,
     pub retreat_mult: f32,
     pub attacker_cover_scale: f32,
+    /// Fraction of combat draw a formation not in contact still pulls.
+    #[serde(default = "default_idle_draw_fraction")]
+    pub idle_draw_fraction: f32,
+    /// Supply (0..1) regained per second while the front's delivered stock covers it.
+    #[serde(default = "default_supply_recover_per_s")]
+    pub supply_recover_per_s: f32,
+    /// Extra supply burn multiplier while in contact (`burn * (1 + this)`).
+    #[serde(default = "default_engaged_burn_mult")]
+    pub engaged_burn_mult: f32,
+    /// Morale lost per second per unit of missing supply while in contact.
+    #[serde(default = "default_morale_loss_unsupplied_per_s")]
+    pub morale_loss_unsupplied_per_s: f32,
+    /// How far (tiles) a broken formation falls back.
+    #[serde(default = "default_retreat_tiles")]
+    pub retreat_tiles: f32,
+    /// Movement slowdown per unit of overlay `mobility_cost`.
+    #[serde(default = "default_mobility_slow_k")]
+    pub mobility_slow_k: f32,
+    /// Artillery `Zone{Fire}` radius as a fraction of its range (keeps the stamp disk bounded).
+    #[serde(default = "default_fire_zone_range_fraction")]
+    pub fire_zone_range_fraction: f32,
+    /// A formation at or below this strength is destroyed.
+    #[serde(default = "default_destroyed_strength")]
+    pub destroyed_strength: f32,
+}
+
+fn default_idle_draw_fraction() -> f32 {
+    0.35
+}
+fn default_supply_recover_per_s() -> f32 {
+    0.01
+}
+fn default_engaged_burn_mult() -> f32 {
+    3.0
+}
+fn default_morale_loss_unsupplied_per_s() -> f32 {
+    0.002
+}
+fn default_retreat_tiles() -> f32 {
+    10.0
+}
+fn default_mobility_slow_k() -> f32 {
+    1.0
+}
+fn default_fire_zone_range_fraction() -> f32 {
+    0.15
+}
+fn default_destroyed_strength() -> f32 {
+    0.02
 }
 
 /// Sustainment draw in kilograms per second at full strength, combat posture.
@@ -361,6 +410,14 @@ impl FrontBalance {
             non_negative(n, v, &mut issues);
         }
         unit01("combat.attacker_cover_scale", c.attacker_cover_scale, &mut issues);
+        unit01("combat.idle_draw_fraction", c.idle_draw_fraction, &mut issues);
+        non_negative("combat.supply_recover_per_s", c.supply_recover_per_s, &mut issues);
+        non_negative("combat.engaged_burn_mult", c.engaged_burn_mult, &mut issues);
+        non_negative("combat.morale_loss_unsupplied_per_s", c.morale_loss_unsupplied_per_s, &mut issues);
+        non_negative("combat.retreat_tiles", c.retreat_tiles, &mut issues);
+        non_negative("combat.mobility_slow_k", c.mobility_slow_k, &mut issues);
+        unit01("combat.fire_zone_range_fraction", c.fire_zone_range_fraction, &mut issues);
+        unit01("combat.destroyed_strength", c.destroyed_strength, &mut issues);
         for kind in UnitKind::ALL {
             let rows: Vec<_> = self.units.iter().filter(|u| u.kind == kind).collect();
             match rows.len() {

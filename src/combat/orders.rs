@@ -6,7 +6,9 @@ use std::collections::VecDeque;
 
 use bevy::prelude::*;
 
-use super::theater::TheaterId;
+use super::formation::{Formation, Posture};
+use super::pressure::{PressureKind, PressurePoint};
+use super::theater::{TheaterBook, TheaterId};
 use crate::strategic::MAX_STRATEGIC_FACTION_SLOTS;
 
 /// What a formation is told to do.
@@ -84,6 +86,99 @@ impl DeploymentOrderQueue {
     /// Executor-side: take every pending order in issue order.
     pub fn drain(&mut self) -> Vec<(DeploymentOrderId, DeploymentOrder)> {
         self.pending.drain(..).collect()
+    }
+}
+
+/// Order that sends `formation` to a pressure point: reinforce a threatened one, attack through an opportunity.
+#[must_use]
+pub fn order_for_pressure_point(formation: Entity, point: &PressurePoint) -> DeploymentOrder {
+    DeploymentOrder {
+        formation,
+        issued_by: point.side,
+        kind: match point.kind {
+            PressureKind::Threatened => DeploymentKind::Reinforce { theater: point.theater, tile: point.tile },
+            PressureKind::Opportunity => DeploymentKind::Attack(point.tile),
+        },
+    }
+}
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum DeploymentReject {
+    NoSuchFormation,
+    /// The formation belongs to another faction.
+    NotOwner,
+    /// Broken formations take no orders until they rally.
+    Broken,
+    UnknownTheater,
+    /// Fortify orders need the FC-7 planner.
+    Unsupported,
+}
+
+/// Outcomes of the most recent executor pass (capped), for UI feedback and tests.
+#[derive(Resource, Clone, Debug, Default)]
+pub struct DeploymentOutcomes {
+    pub last: Vec<(DeploymentOrderId, Result<(), DeploymentReject>)>,
+}
+
+const OUTCOME_CAP: usize = 64;
+
+/// Pure validation + effect of one order on one formation.
+pub fn apply_deployment_order(
+    f: &mut Formation,
+    order: &DeploymentOrder,
+    theaters: &TheaterBook,
+) -> Result<(), DeploymentReject> {
+    if f.faction_slot != order.issued_by {
+        return Err(DeploymentReject::NotOwner);
+    }
+    if f.posture == Posture::Retreat {
+        return Err(DeploymentReject::Broken);
+    }
+    let go = |f: &mut Formation, posture: Posture, tile: IVec2| {
+        f.posture = posture;
+        f.target = (tile != f.tile).then_some(tile);
+        f.move_progress = 0.0;
+        if tile == f.tile {
+            f.posture = Posture::Hold;
+        }
+    };
+    match order.kind {
+        DeploymentKind::Move(t) => go(f, Posture::Move, t),
+        DeploymentKind::Attack(t) => go(f, Posture::Attack, t),
+        DeploymentKind::Hold => {
+            f.posture = Posture::Hold;
+            f.target = None;
+        }
+        DeploymentKind::Reinforce { theater, tile } => {
+            if theaters.get(theater).is_none() {
+                return Err(DeploymentReject::UnknownTheater);
+            }
+            go(f, Posture::Move, tile);
+        }
+        DeploymentKind::Fortify(_) => return Err(DeploymentReject::Unsupported),
+    }
+    Ok(())
+}
+
+/// Sole writer of formation posture / target from orders: drains the queue in issue order.
+pub fn execute_deployment_orders_system(
+    mut queue: ResMut<DeploymentOrderQueue>,
+    theaters: Res<TheaterBook>,
+    mut outcomes: ResMut<DeploymentOutcomes>,
+    mut formations: Query<&mut Formation>,
+) {
+    if queue.is_empty() {
+        return;
+    }
+    outcomes.last.clear();
+    for (id, order) in queue.drain() {
+        let result = match formations.get_mut(order.formation) {
+            Ok(mut f) => apply_deployment_order(&mut f, &order, &theaters),
+            Err(_) => Err(DeploymentReject::NoSuchFormation),
+        };
+        if outcomes.last.len() < OUTCOME_CAP {
+            outcomes.last.push((id, result));
+        }
     }
 }
 

@@ -16,7 +16,7 @@ pub enum ZoneKind {
 }
 
 /// Radial field emitter in **world tile** space (`center_tile.x` = column, `.y` = row / Z).
-#[derive(Component, Clone, Debug)]
+#[derive(Component, Clone, Debug, PartialEq)]
 pub struct Zone {
     pub kind: ZoneKind,
     pub faction_slot: u8,
