@@ -16,6 +16,8 @@ mod mig_a_static;
 pub mod minimap_compositor;
 mod world_map_network_mesh;
 pub use world_map_network_mesh::WorldMapNetworkMeshPlugin;
+mod world_map_vegetation_mesh;
+pub use world_map_vegetation_mesh::WorldMapVegetationMeshPlugin;
 
 #[cfg(feature = "bevy_tilemap_adapter")]
 pub mod tilemap_adapter;
