@@ -21,7 +21,7 @@ use crate::dev::debug_run_envelope::{witness_refresh_due, wrap_debug_run, write_
 use crate::strategic::StrategicRasterConfig;
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::weather::ChunkWeather;
-use crate::terrain::generation::Chunk;
+use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics};
 
 pub const LANDSCAPE_GRAMMAR_MAP_ROLLOUT_LIVE_JSON: &str =
     "debug_runs/landscape_grammar_map_rollout_live.json";
@@ -115,13 +115,14 @@ pub fn pick_preset_id_for_chunk_with_inputs(
             return id;
         }
     }
-    if inputs.hydrology_bias >= 0.65 {
-        if let Some(id) = pick_if_present("settlement_park_v0") {
+    // Wetland (stronger signal) is checked before the park so the 0.75 tier is reachable.
+    if inputs.hydrology_bias >= 0.75 {
+        if let Some(id) = pick_if_present("wetland_margin_v0") {
             return id;
         }
     }
-    if inputs.hydrology_bias >= 0.75 {
-        if let Some(id) = pick_if_present("wetland_margin_v0") {
+    if inputs.hydrology_bias >= 0.65 {
+        if let Some(id) = pick_if_present("settlement_park_v0") {
             return id;
         }
     }
@@ -163,7 +164,30 @@ fn pick_preset_from_lambda_influence(
     best_id.to_string()
 }
 
+/// VEG-B-LAMBDA-HYDRO-001 / VEG-D04 — hydrology bias from terrain `drainage` and `flood_basin_id`.
+///
+/// Two signals, both chunk-local:
+/// - convergence: the largest accumulated drainage as a share of the chunk (`max(drainage) / cells`).
+///   A valley or bowl funnels most of the chunk to one outlet; a ridge or dome spreads flow out.
+/// - basin share: the fraction of cells flagged `flood_basin_id != 0` (cells at the chunk minimum).
+///
+/// Returns `None` when the layers are missing or mismatched so the caller can fall back.
+#[must_use]
+pub fn hydrology_bias_from_terrain(derived: &ChunkDerivedMetrics) -> Option<f32> {
+    let n = derived.drainage.len();
+    if n == 0 || derived.flood_basin_id.len() != n {
+        return None;
+    }
+    let max_flow = derived.drainage.iter().copied().fold(0.0f32, f32::max);
+    let convergence = (max_flow / n as f32).clamp(0.0, 1.0);
+    let basin_cells = derived.flood_basin_id.iter().filter(|id| **id != 0).count();
+    let basin_share = (basin_cells as f32 * 8.0 / n as f32).clamp(0.0, 1.0);
+    Some((convergence * 0.8 + basin_share * 0.2).clamp(0.0, 1.0))
+}
+
 /// Read-only λ inputs from live ecology + weather (+ transport raster when present) — VEG-λ-LIVE-001.
+///
+/// Hydrology uses `soil_moisture` only; prefer [`lambda_inputs_from_live_fields_with_terrain`].
 #[must_use]
 pub fn lambda_inputs_from_live_fields(
     ecology: &ChunkEcology,
@@ -171,11 +195,25 @@ pub fn lambda_inputs_from_live_fields(
     weather: &ChunkWeather,
     raster: Option<&StrategicRasterConfig>,
 ) -> LambdaExternalInputs {
+    lambda_inputs_from_live_fields_with_terrain(ecology, veg, weather, raster, None)
+}
+
+/// λ inputs with terrain hydrology. Without derived metrics, hydrology falls back to `soil_moisture`.
+#[must_use]
+pub fn lambda_inputs_from_live_fields_with_terrain(
+    ecology: &ChunkEcology,
+    veg: &VegetationField,
+    weather: &ChunkWeather,
+    raster: Option<&StrategicRasterConfig>,
+    derived: Option<&ChunkDerivedMetrics>,
+) -> LambdaExternalInputs {
     let transport = raster
         .map(|r| (r.cells_per_chunk.x as f32 * 0.01).clamp(0.0, 1.0))
         .unwrap_or(0.0)
         + ecology.root_strength.clamp(0.0, 1.0) * 0.12;
-    let hydrology = weather.soil_moisture.clamp(0.0, 1.0);
+    let hydrology = derived
+        .and_then(hydrology_bias_from_terrain)
+        .unwrap_or_else(|| weather.soil_moisture.clamp(0.0, 1.0));
     let construction =
         (ecology.fire_risk.clamp(0.0, 1.0) * 0.45 + veg.burn_severity.clamp(0.0, 1.0) * 0.35)
             .clamp(0.0, 1.0);
@@ -226,7 +264,15 @@ pub fn rollout_landscape_program_on_chunks(
     mut commands: Commands,
     mut witness: ResMut<LandscapeMapRolloutWitness>,
     q: Query<
-        (Entity, &Chunk, &ChunkEcology, &VegetationField, &ChunkWeather),
+        (
+            Entity,
+            &Chunk,
+            &ChunkEcology,
+            &VegetationField,
+            &ChunkWeather,
+            Option<&ChunkCellMatrix>,
+            Option<&ChunkDerivedMetrics>,
+        ),
         Without<LandscapeProgramOnChunk>,
     >,
 ) {
@@ -234,8 +280,19 @@ pub fn rollout_landscape_program_on_chunks(
     let mut count = 0u32;
     let mut presets_seen = std::collections::HashSet::new();
 
-    for (entity, chunk, ecology, veg, weather) in &q {
-        let inputs = lambda_inputs_from_live_fields(ecology, veg, weather, raster.as_deref());
+    for (entity, chunk, ecology, veg, weather, matrix, derived) in &q {
+        // A generated chunk gets its derived layers with materialization. Wait for them so the
+        // preset pick (made once per chunk) sees terrain hydrology instead of the fallback.
+        if matrix.is_some() && derived.is_none() {
+            continue;
+        }
+        let inputs = lambda_inputs_from_live_fields_with_terrain(
+            ecology,
+            veg,
+            weather,
+            raster.as_deref(),
+            derived,
+        );
         let preset_id = pick_preset_id_for_chunk_with_inputs(chunk.coord, &index, &inputs);
         let Some(preset) = catalog.presets.get(&preset_id) else {
             continue;
@@ -589,6 +646,69 @@ mod tests {
         assert!(districts.len() >= 4, "{districts:?}");
         assert!(districts.contains("OldGrowthCore"));
         assert!(district_kind_from_preset_class("x", "unknown_class").is_none());
+    }
+
+    fn derived_for(elevation: impl Fn(u32, u32) -> f32) -> ChunkDerivedMetrics {
+        let size = UVec2::new(8, 8);
+        let mut m = ChunkCellMatrix::new(size);
+        for y in 0..size.y {
+            for x in 0..size.x {
+                let i = m.idx(x, y);
+                m.elevation[i] = elevation(x, y);
+            }
+        }
+        ChunkDerivedMetrics::from_chunk_matrix(&m)
+    }
+
+    #[test]
+    fn valley_chunk_picks_wetland_and_ridge_does_not() {
+        let index = LandscapePresetIndex::load();
+        let ecology = ChunkEcology::default();
+        let veg = VegetationField::default();
+        // Same soil moisture on both: only terrain differs.
+        let weather = ChunkWeather {
+            soil_moisture: 0.3,
+            ..ChunkWeather::default()
+        };
+        let centre = |x: u32, y: u32| {
+            let dx = x as f32 - 3.2;
+            let dy = y as f32 - 3.1;
+            (dx * dx + dy * dy).sqrt() / 5.0
+        };
+        let valley = derived_for(|x, y| centre(x, y));
+        let ridge = derived_for(|x, y| 1.0 - centre(x, y));
+
+        let v = lambda_inputs_from_live_fields_with_terrain(&ecology, &veg, &weather, None, Some(&valley));
+        let r = lambda_inputs_from_live_fields_with_terrain(&ecology, &veg, &weather, None, Some(&ridge));
+        assert!(v.hydrology_bias >= 0.75, "valley {}", v.hydrology_bias);
+        assert!(r.hydrology_bias < 0.65, "ridge {}", r.hydrology_bias);
+
+        let coord = IVec2::new(40, 40);
+        assert_eq!(
+            pick_preset_id_for_chunk_with_inputs(coord, &index, &v),
+            "wetland_margin_v0"
+        );
+        // The ridge stays below both hydrology tiers (it can still win the weak λ fallback).
+        assert_ne!(
+            pick_preset_id_for_chunk_with_inputs(coord, &index, &r),
+            "settlement_park_v0"
+        );
+    }
+
+    #[test]
+    fn hydrology_falls_back_to_soil_moisture_without_terrain() {
+        let weather = ChunkWeather {
+            soil_moisture: 0.42,
+            ..ChunkWeather::default()
+        };
+        let inputs = lambda_inputs_from_live_fields_with_terrain(
+            &ChunkEcology::default(),
+            &VegetationField::default(),
+            &weather,
+            None,
+            None,
+        );
+        assert!((inputs.hydrology_bias - 0.42).abs() < 1e-6);
     }
 
     #[test]
