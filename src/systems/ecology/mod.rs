@@ -7,6 +7,7 @@ mod landscape_grammar_lg2;
 mod landscape_grammar_map;
 mod landscape_atlas_registry;
 mod vegetation_field;
+mod vegetation_suitability;
 mod vegetation_variant_catalog;
 
 pub use chunk_ecology::{chunk_ecology_tick, ChunkEcology};
@@ -71,6 +72,11 @@ pub use vegetation_field::{
     veg_draw_density, veg_draw_density_after_impact, veg_draw_density_under_snow,
     EcologicalSuccessionStage, VegetationField, VegetationStructure,
 };
+pub use vegetation_suitability::{
+    clamp_stage_to_cap, max_stage_for_canopy_cap, rate_chunk_vegetation_suitability,
+    ChunkVegetationSuitability, SuitabilityEntry, SuitabilityParams, VegetationSuitabilityTable,
+    VEGETATION_SUITABILITY_RON,
+};
 pub use vegetation_variant_catalog::{
     catalog_clamp_witness_green, catalog_variant_key_set, clamp_vegetation_variant_to_catalog,
     init_vegetation_variant_catalog, load_vegetation_variant_catalog, resolve_vegetation_variant,
@@ -120,7 +126,14 @@ impl Plugin for EcologyPlugin {
         landscape_grammar_lg2::landscape_grammar_lg2_plugin(app);
         landscape_grammar_burn::landscape_grammar_burn_plugin(app);
         landscape_grammar_map::landscape_grammar_map_plugin(app);
-        app.add_systems(Startup, (init_vegetation_variant_catalog, init_landscape_atlas_registry));
+        app.add_systems(
+            Startup,
+            (
+                init_vegetation_variant_catalog,
+                init_landscape_atlas_registry,
+                vegetation_suitability::init_vegetation_suitability_table,
+            ),
+        );
         app.add_systems(
             Update,
             (

@@ -12,6 +12,7 @@ use super::landscape_grammar::{
     evaluate_landscape_program, LandscapeGrammarCatalog, LandscapeProgramEvaluation,
     LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID,
 };
+use super::vegetation_suitability::{clamp_stage_to_cap, update_chunk_vegetation_suitability};
 use super::vegetation_field::{CanopyDrivers, VegetationCanopySet, CANOPY_CLEARED_DENSITY};
 use super::{ChunkEcology, VegetationField};
 use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
@@ -174,10 +175,15 @@ pub fn attach_lg2_bundle_on_chunk(commands: &mut Commands, entity: Entity, pilot
 
 pub fn tick_succession_age_on_ecology(
     tick: Res<crate::systems::sim_control::SimTick>,
-    mut q: Query<(&mut SuccessionState, &DisturbanceHistory, Option<&ChunkSurfaceFire>)>,
+    mut q: Query<(
+        &mut SuccessionState,
+        &DisturbanceHistory,
+        Option<&ChunkSurfaceFire>,
+        Option<&CanopyDrivers>,
+    )>,
     mut witness: ResMut<LandscapeGrammarLg2Witness>,
 ) {
-    for (mut state, history, fire) in &mut q {
+    for (mut state, history, fire, drivers) in &mut q {
         let heat = fire.map(|f| f.heat).unwrap_or(0.0);
         let burned_recently = heat > 0.35
             || history
@@ -189,7 +195,9 @@ pub fn tick_succession_age_on_ecology(
                 witness.recovery_ticks = witness.recovery_ticks.saturating_add(1);
             }
         }
-        state.stage = succession_stage_from_age(state.age_ticks, burned_recently);
+        let stage = succession_stage_from_age(state.age_ticks, burned_recently);
+        // Biome suitability: unsuitable ground never reaches the stages that carry trees.
+        state.stage = clamp_stage_to_cap(stage, drivers.map_or(1.0, |d| d.suitability_cap));
         state.last_disturbance_tick = history.events.back().map(|e| e.tick);
     }
     witness.succession_ticks = tick.0;
@@ -369,13 +377,14 @@ pub fn sync_fuel_bridge_from_succession(
     )>,
 ) {
     for (succ, mut veg, mut fuel, mut drivers) in &mut q {
-        let og = match succ.stage {
+        let og: f32 = match succ.stage {
             SuccessionTopologyStage::OldGrowth => 0.85,
             SuccessionTopologyStage::YoungForest => 0.45,
             SuccessionTopologyStage::Shrub => 0.2,
             SuccessionTopologyStage::Grass => 0.05,
             SuccessionTopologyStage::BurnScar => 0.02,
         };
+        let og = og.min(drivers.suitability_cap);
         veg.old_growth = og;
         fuel.old_growth = og;
         drivers.succession_floor = og * 0.6;
@@ -413,6 +422,7 @@ pub fn derive_vegetation_population_from_graph(
 ) {
     for (program, succ, mut pop, mut subcell, mut drivers) in &mut q {
         let eval = &program.evaluation;
+        let cap = drivers.suitability_cap.clamp(0.0, 1.0);
         let stage_factor = match succ.stage {
             SuccessionTopologyStage::Grass => 0.35,
             SuccessionTopologyStage::Shrub => 0.55,
@@ -421,14 +431,16 @@ pub fn derive_vegetation_population_from_graph(
             SuccessionTopologyStage::BurnScar => 0.15,
         };
         pop.topology_kind_count = eval.topology_kind_count.max(1) as u32;
-        pop.mean_density = (eval.topology_kind_count as f32 * 0.08 * stage_factor).clamp(0.05, 1.0);
+        // Biome ceiling applies to every population output: no instances, no density on water.
+        pop.mean_density =
+            ((eval.topology_kind_count as f32 * 0.08 * stage_factor).clamp(0.05, 1.0)).min(cap);
         pop.instance_budget =
-            (pop.topology_kind_count.saturating_mul(8) as f32 * stage_factor) as u32;
+            (pop.topology_kind_count.saturating_mul(8) as f32 * stage_factor * cap) as u32;
         drivers.population_density = Some(pop.mean_density);
         let base = pop.mean_density;
         for (i, cell) in subcell.cells.iter_mut().enumerate() {
             let bias = ((i % 4) as f32 * 0.04 + (i / 4) as f32 * 0.03).clamp(0.0, 0.12);
-            *cell = (base + bias).clamp(0.05, 1.0);
+            *cell = (base + bias).clamp(0.05, 1.0).min(cap);
         }
     }
 }
@@ -642,6 +654,7 @@ pub fn landscape_grammar_lg2_plugin(app: &mut App) {
         .add_systems(
             Update,
             (
+                update_chunk_vegetation_suitability,
                 attach_lg2_components_on_pilot,
                 tick_succession_age_on_ecology,
                 apply_fire_disturbance_on_heat,

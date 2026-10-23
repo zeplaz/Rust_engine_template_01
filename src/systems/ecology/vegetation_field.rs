@@ -51,7 +51,7 @@ pub const CANOPY_CLEARED_DENSITY: f32 = 0.05;
 
 /// Inputs to the canopy writer. Other systems set these; only [`vegetation_field_tick`] reads them
 /// and writes `canopy_density`.
-#[derive(Component, Clone, Copy, Debug, Default, PartialEq)]
+#[derive(Component, Clone, Copy, Debug, PartialEq)]
 pub struct CanopyDrivers {
     /// Graph-derived target density for chunks with a landscape program. Replaces the biomass target.
     pub population_density: Option<f32>,
@@ -59,6 +59,23 @@ pub struct CanopyDrivers {
     pub succession_floor: f32,
     /// One-shot clear (construction, harvest): caps canopy at this value, then is consumed.
     pub clear_to: Option<f32>,
+    /// Biome ceiling: canopy, understory, old growth and fuel never exceed it (0 = nothing grows).
+    /// Set from terrain suitability; 1 means unrestricted.
+    pub suitability_cap: f32,
+    /// Biome growth rate multiplier on the canopy and understory smoothing step.
+    pub growth_scale: f32,
+}
+
+impl Default for CanopyDrivers {
+    fn default() -> Self {
+        Self {
+            population_density: None,
+            succession_floor: 0.0,
+            clear_to: None,
+            suitability_cap: 1.0,
+            growth_scale: 1.0,
+        }
+    }
 }
 
 #[derive(Component, Clone, Copy, Debug)]
@@ -260,6 +277,12 @@ pub fn integrate_vegetation_field_step(
     );
 }
 
+fn clamp_to_biome(veg: &mut VegetationField, cap: f32) {
+    veg.canopy_density = veg.canopy_density.min(cap);
+    veg.understory_density = veg.understory_density.min(cap);
+    veg.old_growth = veg.old_growth.min(cap);
+}
+
 /// Same step as [`integrate_vegetation_field_step`], with the canopy inputs applied in a fixed order:
 /// clear cap, then target (population or biomass) with the succession floor, then smoothing, burn, snow.
 pub fn integrate_vegetation_field_step_with_drivers(
@@ -271,9 +294,12 @@ pub fn integrate_vegetation_field_step_with_drivers(
     drivers: &CanopyDrivers,
     veg: &mut VegetationField,
 ) {
+    let biome_cap = drivers.suitability_cap.clamp(0.0, 1.0);
     if let Some(cap) = drivers.clear_to {
         veg.canopy_density = veg.canopy_density.min(cap.clamp(0.0, 1.0));
     }
+    // Existing cover on unsuitable ground clears on the first tick, even while paused.
+    clamp_to_biome(veg, biome_cap);
     if dt_e <= 0.0 {
         return;
     }
@@ -307,29 +333,39 @@ pub fn integrate_vegetation_field_step_with_drivers(
         None => (eco.biomass * 0.92 + eco.shade_factor * 0.35) * landform,
     }
     .max(drivers.succession_floor)
-    .clamp(0.0, 1.0);
-    let ck = (0.16 * dt_e).min(0.28);
+    .clamp(0.0, biome_cap);
+    let ck = (0.16 * dt_e * drivers.growth_scale.clamp(0.0, 1.0)).min(0.28);
     veg.canopy_density = veg.canopy_density * (1.0 - ck) + canopy_target * ck;
     veg.canopy_density = (veg.canopy_density - veg.burn_severity * 0.04 * dt_e * 18.0).clamp(0.0, 1.0);
     veg.canopy_density = canopy_after_snow(veg.canopy_density, wx.snow_depth);
+    veg.canopy_density = veg.canopy_density.min(biome_cap);
 
     let understory_target = (veg.canopy_density * 0.65 * (1.0 - veg.burn_severity * 0.85) + eco.biomass * 0.15).clamp(0.0, 1.0);
     veg.understory_density = veg.understory_density * (1.0 - ck) + understory_target * ck;
-    veg.understory_density = understory_after_snow(veg.understory_density, wx.snow_depth);
+    veg.understory_density = understory_after_snow(veg.understory_density, wx.snow_depth).min(biome_cap);
 
     veg.ground_fuel = ((veg.understory_density * 0.5 + veg.dryness * 0.45) * (1.0 + wetland_w * 0.35))
         .clamp(0.0, 1.0);
     veg.ground_fuel = ground_fuel_after_heat(veg.ground_fuel, heat_c);
 
+    if biome_cap <= 0.0 {
+        // No vegetation, no fuel (open water, bare rock, ice).
+        veg.ground_fuel = 0.0;
+    }
+
     veg.fuel_load = fuel_load_after_rain(
         (veg.ground_fuel * 0.55 + veg.canopy_density * 0.45 * (1.0 + veg.dryness * 0.4)).clamp(0.0, 1.0),
         wx.rain_intensity,
     );
+    if biome_cap <= 0.0 {
+        veg.fuel_load = 0.0;
+    }
 
     let og_target = (eco.biomass * eco.regrowth_rate * 1.2).min(1.0);
     let ok = (0.05 * dt_e).min(0.12);
     veg.old_growth = veg.old_growth * (1.0 - ok) + og_target * ok;
     veg.old_growth *= (1.0 - veg.burn_severity * 0.06 * dt_e * 10.0).clamp(0.65, 1.0);
+    veg.old_growth = veg.old_growth.min(biome_cap);
 
     veg.fragmentation =
         fragmentation_after_heat(eco.root_strength, veg.burn_severity, heat_c, wx.snow_depth);
@@ -496,6 +532,7 @@ mod tests {
             population_density: Some(0.8),
             succession_floor: 0.1,
             clear_to: None,
+            ..CanopyDrivers::default()
         };
         let a = run_canopy(drivers, 0.0, 40);
         assert_eq!(a, run_canopy(drivers, 0.0, 40));

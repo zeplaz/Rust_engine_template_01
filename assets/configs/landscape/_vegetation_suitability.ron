@@ -1,0 +1,25 @@
+// Per-terrain-family vegetation ceiling and growth rate. Water: nothing. Wetland: low cover.
+// Desert / beach / rock / ice: none or sparse. Tundra / alpine: low scrub. Grassland: scattered.
+// Forest families: full succession. A family missing here uses default_max_canopy.
+(
+    schema_version: 1,
+    default_max_canopy: 1.0,
+    entries: [
+        (family: "DeepWater", max_canopy: 0.0, growth: 0.0),
+        (family: "ShallowWater", max_canopy: 0.0, growth: 0.0),
+        (family: "Beach", max_canopy: 0.05, growth: 0.4),
+        (family: "Desert", max_canopy: 0.05, growth: 0.3),
+        (family: "Grassland", max_canopy: 0.3, growth: 0.9),
+        (family: "Forest", max_canopy: 0.85, growth: 1.0),
+        (family: "DenseForest", max_canopy: 1.0, growth: 1.0),
+        (family: "Mountain", max_canopy: 0.2, growth: 0.5),
+        (family: "SnowCappedMountain", max_canopy: 0.0, growth: 0.0),
+        (family: "Tundra", max_canopy: 0.15, growth: 0.4),
+        (family: "Swamp", max_canopy: 0.35, growth: 0.8),
+        (family: "Cliff", max_canopy: 0.0, growth: 0.0),
+        (family: "Concrete", max_canopy: 0.0, growth: 0.0),
+        (family: "Dirt", max_canopy: 0.1, growth: 0.6),
+        (family: "Snow", max_canopy: 0.0, growth: 0.0),
+        (family: "Stone", max_canopy: 0.0, growth: 0.0),
+    ],
+)
