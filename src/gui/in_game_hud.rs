@@ -285,7 +285,7 @@ fn register_sim_command_shell_lifecycle(app: &mut App) {
         OnEnter(BaseState::Simulation),
         (
             spawn_simulation_command_shell,
-            crate::gui::hud::sim_build_picker_bevy::spawn_sim_build_picker_bevy
+            crate::gui::hud::sim_build_picker_panel::spawn_sim_build_picker_panel
                 .after(spawn_simulation_command_shell),
             crate::gui::hud::sim_road_power_sheets_bevy::spawn_sim_road_power_sheets_bevy
                 .after(spawn_simulation_command_shell),
@@ -312,7 +312,7 @@ fn despawn_simulation_command_shell(
     roots: Query<Entity, With<SimulationCommandShellRoot>>,
     pickers: Query<
         Entity,
-        With<crate::gui::hud::sim_build_picker_bevy::SimBuildPickerRoot>,
+        With<crate::gui::hud::sim_build_picker_panel::SimBuildPickerPanelRoot>,
     >,
     road_sheets: Query<
         Entity,

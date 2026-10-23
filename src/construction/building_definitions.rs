@@ -628,6 +628,8 @@ pub mod menu_rows {
     use super::super::building_catalog::BuildingIntentPreview;
     use crate::infrastructure::VoltageClass;
 
+    pub use super::super::industrial_menu::draw_industrial_submenu as industrial_rows;
+
     #[derive(Clone, Debug)]
     pub enum MenuPick {
         Zone(ZoneTool),
