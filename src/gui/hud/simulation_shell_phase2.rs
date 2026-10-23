@@ -996,6 +996,9 @@ struct OpsStripZoneCache {
     power_fp: Option<i32>,
     power_line: String,
     tray_line: String,
+    /// `mock_shapes_parity_green()` re-reads the building-definition directory from disk; the
+    /// answer is static for the session, so compute it once.
+    mock_parity: Option<bool>,
 }
 
 fn update_ops_strip_zone_lines_system(
@@ -1023,7 +1026,9 @@ fn update_ops_strip_zone_lines_system(
 ) {
     witness.ops_zones_wired = true;
     witness.phase2_zones_live = true;
-    witness.mock_zone_parity = crate::construction::mock_shapes_parity_green();
+    witness.mock_zone_parity = *cache
+        .mock_parity
+        .get_or_insert_with(crate::construction::mock_shapes_parity_green);
 
     let time_fp = (tick.0, ctrl.paused, (ctrl.speed * 100.0).round() as i32);
     if cache.time_fp != Some(time_fp) {
