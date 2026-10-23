@@ -713,7 +713,7 @@ fn build_sheet(
             "1  Generate preview",
             UiButtonVariant::Primary,
             WgAct::GeneratePreview,
-            "Build a small preview terrain from the parameters below",
+            "Build a small preview terrain from the parameters below (disabled once a full world exists: enter or discard it first)",
         ));
     });
     sheet.spawn(row(100.0)).with_children(|r| {
@@ -1145,9 +1145,9 @@ fn sync_world_gen_panel(
             WgAct::ParamsToggle => (res.ui_state.generator_sheet_open, false, None),
             WgAct::GeneratePreview => (
                 false,
-                is_busy,
+                is_busy || full_ready,
                 Some(
-                    if preview_ready || full_ready {
+                    if preview_ready {
                         "1  Regenerate preview"
                     } else {
                         "1  Generate preview"
@@ -1270,7 +1270,7 @@ fn world_gen_panel_flow_actions(
             continue;
         }
         match *act {
-            WgAct::GeneratePreview if !is_busy => {
+            WgAct::GeneratePreview if !is_busy && flow != WorldGenFlowState::FullReady => {
                 if matches!(flow, WorldGenFlowState::Idle) {
                     NextState::set_if_neq(&mut res.next_flow, WorldGenFlowState::NewWorldSetup);
                 }
