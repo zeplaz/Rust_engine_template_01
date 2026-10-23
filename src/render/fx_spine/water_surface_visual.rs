@@ -491,6 +491,26 @@ pub fn apply_water_surface_overlay_subregion(
     if !catalog.has_motion() {
         return;
     }
+    // `flow_at` scans river segments per river pixel; only segments that can reach this
+    // subregion matter (order preserved so the first-match flow is identical).
+    let margin = 2.0_f32;
+    let (rx0, ry0, rx1, ry1) = (
+        x0 as f32 - margin,
+        y0 as f32 - margin,
+        x1 as f32 + margin,
+        y1 as f32 + margin,
+    );
+    let local_segments: Vec<&RiverPolylineSegment> = catalog
+        .river_segments
+        .iter()
+        .filter(|seg| {
+            let reach = seg.half_width + 0.6;
+            seg.start.x.max(seg.end.x) + reach >= rx0
+                && seg.start.x.min(seg.end.x) - reach <= rx1
+                && seg.start.y.max(seg.end.y) + reach >= ry0
+                && seg.start.y.min(seg.end.y) - reach <= ry1
+        })
+        .collect();
     for y in y0..y1 {
         for x in x0..x1 {
             let tx = x as u32;
@@ -506,7 +526,8 @@ pub fn apply_water_surface_overlay_subregion(
             let out = match catalog.tile_kind(tx, ty) {
                 WaterSurfaceKind::None => continue,
                 WaterSurfaceKind::River => {
-                    river_overlay_pixel(base, tx, ty, catalog.flow_at(tx, ty), time_secs, zoom_alpha)
+                    let flow = flow_from_segments(local_segments.iter().copied(), tx, ty);
+                    river_overlay_pixel(base, tx, ty, flow, time_secs, zoom_alpha)
                 }
                 WaterSurfaceKind::Lake => lake_overlay_pixel(base, tx, ty, time_secs, zoom_alpha),
                 WaterSurfaceKind::Ocean => ocean_overlay_pixel(base, tx, ty, time_secs),
@@ -519,13 +540,23 @@ pub fn apply_water_surface_overlay_subregion(
 impl WaterSurfaceVisualCatalog {
     #[inline]
     fn flow_at(&self, x: u32, y: u32) -> Vec2 {
-        for seg in &self.river_segments {
-            if point_near_segment(Vec2::new(x as f32 + 0.5, y as f32 + 0.5), seg) {
-                return seg.flow_dir;
-            }
-        }
-        Vec2::X
+        flow_from_segments(self.river_segments.iter(), x, y)
     }
+}
+
+#[inline]
+fn flow_from_segments<'a>(
+    segments: impl Iterator<Item = &'a RiverPolylineSegment>,
+    x: u32,
+    y: u32,
+) -> Vec2 {
+    let p = Vec2::new(x as f32 + 0.5, y as f32 + 0.5);
+    for seg in segments {
+        if point_near_segment(p, seg) {
+            return seg.flow_dir;
+        }
+    }
+    Vec2::X
 }
 
 fn point_near_segment(p: Vec2, seg: &RiverPolylineSegment) -> bool {
@@ -706,19 +737,31 @@ impl Plugin for WaterSurfaceVisualPlugin {
     }
 }
 
+/// Water ripple repaint cadence (seconds). Animated water re-rasterizes every chunk that
+/// contains water; doing so every frame starves the raster queue and pins the frame budget.
+const WATER_MOTION_REPAINT_SECS: f32 = 0.2;
+
 fn mark_water_surface_motion_dirty(
     catalog: Res<WaterSurfaceVisualCatalog>,
     mut last: ResMut<LastWaterCatalogRevision>,
     mut raster_ctrl: ResMut<crate::render::TileWorldFallbackRasterCtrl>,
+    time: Res<Time>,
+    mut acc: Local<f32>,
 ) {
     if !catalog.has_motion() {
         return;
     }
     if last.0 != catalog.stamp {
         last.0 = catalog.stamp;
+        *acc = 0.0;
         raster_ctrl.chunk_grid.mark_all_dirty();
         return;
     }
+    *acc += time.delta_secs();
+    if *acc < WATER_MOTION_REPAINT_SECS {
+        return;
+    }
+    *acc = 0.0;
     const CHUNK: u32 = crate::render::tile_world_fallback::RASTER_CHUNK_TILES;
     for &(tx, ty) in catalog
         .river_tiles
