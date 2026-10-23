@@ -39,13 +39,16 @@ pub fn apply_zones_to_strategic_overlays_system(
     zones: Query<&Zone>,
     mut overlays: Query<&mut ChunkStrategicOverlay>,
     cfg: Res<StrategicRasterConfig>,
+    relaxation: Option<Res<crate::combat::ControlRelaxation>>,
 ) {
+    // FC-2: with relaxation present it owns `faction_control` from Control zones (gain, decay, pressure).
+    let relaxed_control = relaxation.is_some();
     let cw = cfg.cells_per_chunk.x.max(1);
     let ch = cfg.cells_per_chunk.y.max(1);
 
     for z in zones.iter() {
         let r = z.radius_tiles.max(0.0);
-        if r <= 0.0 || z.intensity <= 0.0 {
+        if r <= 0.0 || z.intensity <= 0.0 || (relaxed_control && z.kind == ZoneKind::Control) {
             continue;
         }
         let slot = (z.faction_slot as usize).min(MAX_STRATEGIC_FACTION_SLOTS.saturating_sub(1));
@@ -121,6 +124,30 @@ pub fn apply_zones_to_strategic_overlays_system(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn relaxation_resource_takes_control_zones_off_the_latch() {
+        let mut app = App::new();
+        app.init_resource::<StrategicRasterConfig>()
+            .init_resource::<crate::combat::ControlRelaxation>()
+            .add_systems(Update, apply_zones_to_strategic_overlays_system);
+        let e = app
+            .world_mut()
+            .spawn((
+                Zone {
+                    kind: ZoneKind::Control,
+                    faction_slot: 0,
+                    center_tile: IVec2::new(2, 2),
+                    radius_tiles: 3.0,
+                    intensity: 1.0,
+                },
+                ChunkStrategicOverlay::new(IVec2::ZERO, UVec2::new(4, 4)),
+            ))
+            .id();
+        app.update();
+        let overlay = app.world().entity(e).get::<ChunkStrategicOverlay>().unwrap();
+        assert_eq!(overlay.faction_control[0][0], 0.0);
+    }
 
     #[test]
     fn zone_boosts_control_slice() {
