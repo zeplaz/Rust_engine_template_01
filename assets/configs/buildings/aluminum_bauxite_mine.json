@@ -13,6 +13,6 @@
     "construction_cost": 1200,
     "power_consumption": 22,
     "produces_resources": ["Bauxite"],
-    "consumes_resources": ["Labour", "Diesel", "Water"],
+    "consumes_resources": ["Labour", "Fuel", "Water"],
     "version": "1.0.0"
 }

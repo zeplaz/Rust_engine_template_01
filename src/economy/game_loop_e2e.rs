@@ -3,6 +3,8 @@
 //! advances stages (stalls while starved) → operational → industrial activation → plant output
 //! becomes order stock → output feeds the construction of the next building.
 //!
+//! The faction's `AutoSupplyPolicy` (on by default headless) issues the supply lines.
+//!
 //! Real systems throughout: `commit_construction_site_system` (the construction funnel),
 //! `StrategicFieldsPlugin` site sets, `SiteStageTickPlugin`, `LogisticsOrdersPlugin`,
 //! `activate_industrial_facilities_system` and `ResourceFlowPlugin`.
@@ -18,10 +20,11 @@ use crate::economy::activation::{
 };
 use crate::economy::logistics::orders::construction_demand::CONSTRUCTION_MATERIALS;
 use crate::economy::logistics::orders::{
-    suggest_lines_for_unserved, CargoKind, ConsumerKind, LogisticsOrderCommand, LogisticsOrderRequest,
+    CargoKind, ConsumerKind, CargoClassMask, LogisticsOrderCommand, LogisticsOrderRequest,
     LogisticsOrderSite, LogisticsOrderSiteId, LogisticsOrdersPlugin, LogisticsOrdersSnapshotRes,
     LogisticsSiteRegistry, OwnerId, SiteRole,
 };
+use crate::economy::facility_inputs::FacilityInputs;
 use crate::economy::resource_flow::{ResourceFlowNode, ResourceFlowPlugin};
 use crate::strategic::{
     BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
@@ -54,9 +57,58 @@ fn loop_app() -> App {
                 crate::economy::ensure_site_world_transform_system,
                 activate_industrial_facilities_system
                     .after(crate::strategic::site_provisioning_system),
+                crate::infrastructure::sync_utility_connection_power_system,
             ),
         );
+    seed_town_and_grid(&mut app);
     app
+}
+
+/// A town near the build area (workforce) and a power graph feeding both build tiles.
+fn seed_town_and_grid(app: &mut App) {
+    use crate::infrastructure::utility::{UtilityGraph, UtilityGraphEdge, UtilityGraphNode};
+    use crate::strategic::settlement::TownAccessPolicy;
+    use crate::strategic::{TownBook, TownId, TownRecord};
+    let id = TownId("e2e_town".into());
+    app.world_mut().resource_mut::<TownBook>().towns.insert(
+        id.clone(),
+        TownRecord {
+            id,
+            name: "E2E".into(),
+            region_name: "E2E".into(),
+            center_tile: IVec2::new(5, 5),
+            population: 2_000,
+            jobs: 100,
+            housing: 1_000,
+            faction: 1,
+            access: TownAccessPolicy::FreeLabor,
+            required_clearance: 0,
+        },
+    );
+    let keys = ["power_plant_main", "pwr_160_0", "pwr_0_160", "pwr_160_160"];
+    let nodes = keys
+        .iter()
+        .enumerate()
+        .map(|(i, k)| UtilityGraphNode {
+            id: 1 + i as u64,
+            key: (*k).into(),
+            position: Vec2::new(i as f32, 0.0),
+        })
+        .collect();
+    let power_edges = [2_u64, 3, 4]
+        .iter()
+        .map(|&to| UtilityGraphEdge {
+            from: 1,
+            to,
+            link_id: 100 + to,
+            throughput: 1.0,
+        })
+        .collect();
+    app.insert_resource(UtilityGraph {
+        nodes,
+        power_edges,
+        hydrated_from_snapshot: true,
+    });
 }
 
 /// One sim second: tick counter and sim clock advance, then one frame.
@@ -69,14 +121,6 @@ fn frame(app: &mut App) {
 fn frames(app: &mut App, n: u32) {
     for _ in 0..n {
         frame(app);
-    }
-}
-
-/// Same as pressing "Auto-supply" in the logistics panel.
-fn auto_supply(app: &mut App) {
-    let snap = app.world().resource::<LogisticsOrdersSnapshotRes>().0.clone();
-    for cmd in suggest_lines_for_unserved(&snap, OwnerId::PLAYER).commands {
-        app.world_mut().write_message(LogisticsOrderRequest(cmd));
     }
 }
 
@@ -141,14 +185,14 @@ fn building_logistics_construction_production_logistics_loop_closes() {
         .id();
     frames(&mut app, 3);
 
-    // 1. Player places a concrete mixer through the commit funnel.
-    place(&mut app, "concrete_mixer_plant", 10, 0);
+    // 1. Player places a materials import terminal through the commit funnel.
+    place(&mut app, "materials_import_terminal", 10, 0);
     frames(&mut app, 2);
-    let mixer = site_entity(&mut app, "concrete_mixer_plant").expect("commit spawned a site");
+    let terminal = site_entity(&mut app, "materials_import_terminal").expect("commit spawned a site");
 
     // 2. The site publishes one draw demand per material of its bill.
     frames(&mut app, 3);
-    let manifest = app.world().get::<SiteResourceManifest>(mixer).expect("manifest").clone();
+    let manifest = app.world().get::<SiteResourceManifest>(terminal).expect("manifest").clone();
     assert!(manifest.concrete_required > 0.0, "committed site carries a material bill: {manifest:?}");
     {
         let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
@@ -157,50 +201,49 @@ fn building_logistics_construction_production_logistics_loop_closes() {
     }
 
     // 3. Starved: the depot is empty, so the site must not finish however long we wait.
-    frames(&mut app, 40);
-    auto_supply(&mut app);
-    frames(&mut app, 40);
-    assert_ne!(phase(&app, mixer), SiteConstructionPhase::Operational, "starved site must stall");
-    assert_ne!(phase(&app, mixer), SiteConstructionPhase::Provisioning);
-    assert!(app.world().get::<SiteStageProgress>(mixer).is_some());
-    assert!(
-        app.world().get::<SiteMaterialStarved>(mixer).is_some(),
-        "starvation is visible on the site"
-    );
+    frames(&mut app, 80);
+    assert_ne!(phase(&app, terminal), SiteConstructionPhase::Operational, "starved site must stall");
+    assert_ne!(phase(&app, terminal), SiteConstructionPhase::Provisioning);
+    assert!(app.world().get::<SiteStageProgress>(terminal).is_some());
+    {
+        let starved = app.world().get::<SiteMaterialStarved>(terminal);
+        assert!(starved.is_some(), "starvation is visible on the site");
+        assert_eq!(starved.unwrap().missing.len(), 4, "all four materials are missing");
+    }
 
-    // 4. Fill the depot; logistics delivers; the site builds out.
+    // 4. Starting stockpile arrives at the depot; logistics delivers; the site builds out, using
+    // material progressively (steel is consumed while the stage is still running).
     for tag in CONSTRUCTION_MATERIALS {
         depot_stock(&mut app, depot, tag, 500);
     }
+    let mut saw_partial_consumption = false;
     let mut guard = 0;
-    while phase(&app, mixer) != SiteConstructionPhase::Operational && guard < 600 {
-        if guard % 5 == 0 {
-            auto_supply(&mut app);
-        }
+    while phase(&app, terminal) != SiteConstructionPhase::Operational && guard < 600 {
         frame(&mut app);
         guard += 1;
+        let m = app.world().get::<SiteResourceManifest>(terminal).unwrap();
+        if phase(&app, terminal) == SiteConstructionPhase::UnderConstruction
+            && m.consumed_steel > 0.0
+            && m.consumed_steel < m.steel_required
+        {
+            saw_partial_consumption = true;
+        }
     }
     assert_eq!(
-        phase(&app, mixer),
+        phase(&app, terminal),
         SiteConstructionPhase::Operational,
-        "site finished after deliveries (frames={guard}, manifest={:?})",
-        app.world().get::<SiteResourceManifest>(mixer)
+        "terminal finished after deliveries (frames={guard}, manifest={:?})",
+        app.world().get::<SiteResourceManifest>(terminal)
     );
+    assert!(saw_partial_consumption, "materials are consumed progressively, not at phase exit");
+    assert!(app.world().get::<SiteMaterialStarved>(terminal).is_none());
 
-    // 5. Operational: activation attaches the facility + flow node; demands retract, stock consumed.
+    // 5. Operational: activation attaches the facility + flow node; demands retract.
     frames(&mut app, 4);
-    assert!(app.world().get::<IndustrialFacilityActivated>(mixer).is_some());
-    assert!(app.world().get::<ResourceFlowNode>(mixer).is_some(), "flow node registered");
-    for tag in ["Steel", "Fuel", "Machinery"] {
-        assert_eq!(stock_of(&app, mixer, tag), 0, "{tag} consumed into the building");
-    }
-    // The mixer already produces Concrete, so its stock is output, not the delivered bill.
-    assert!(
-        (stock_of(&app, mixer, "Concrete") as f32) < manifest.concrete_required / 2.0,
-        "delivered concrete consumed into the building"
-    );
+    assert!(app.world().get::<IndustrialFacilityActivated>(terminal).is_some());
+    assert!(app.world().get::<ResourceFlowNode>(terminal).is_some(), "flow node registered");
     {
-        let sid = app.world().get::<LogisticsOrderSiteId>(mixer).unwrap().0;
+        let sid = app.world().get::<LogisticsOrderSiteId>(terminal).unwrap().0;
         let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
         assert_eq!(snap.site(sid).unwrap().role, SiteRole::Plant, "finished building is a plant endpoint");
         assert!(
@@ -208,52 +251,91 @@ fn building_logistics_construction_production_logistics_loop_closes() {
             "construction demands retracted"
         );
     }
+    // Labour and power come from the town and the grid, not from a buffer.
+    let inputs = *app.world().get::<FacilityInputs>(terminal).expect("facility inputs");
+    assert_eq!(inputs, FacilityInputs { workforce: 1.0, power: 1.0 }, "{inputs:?}");
 
-    // 6a. Production lands in order stock.
+    // 6. Production lands in order stock: the terminal makes the materials nothing else does.
     frames(&mut app, 30);
-    let made = stock_of(&app, mixer, "Concrete");
-    assert!(made > 0, "plant output is visible to logistics as stock");
+    assert!(stock_of(&app, terminal, "Steel") > 0, "plant output is visible to logistics as stock");
 
-    // 6b. Inputs publish draw demands.
+    // 7. The starting stockpile of steel/machinery/fuel is gone; the next building (a concrete
+    // mixer) has to be built from the terminal's output.
+    for tag in ["Steel", "Fuel", "Machinery"] {
+        depot_stock(&mut app, depot, tag, 0);
+    }
+    frames(&mut app, 2);
+    place(&mut app, "concrete_mixer_plant", 0, 10);
+    frames(&mut app, 4);
+    let mixer = site_entity(&mut app, "concrete_mixer_plant").expect("second site");
+    let mut guard = 0;
+    while phase(&app, mixer) != SiteConstructionPhase::Operational && guard < 1500 {
+        frame(&mut app);
+        guard += 1;
+    }
+    assert_eq!(
+        phase(&app, mixer),
+        SiteConstructionPhase::Operational,
+        "mixer built from terminal output (frames={guard}, manifest={:?})",
+        app.world().get::<SiteResourceManifest>(mixer)
+    );
+    let terminal_id = app.world().get::<LogisticsOrderSiteId>(terminal).unwrap().0;
+    {
+        let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        assert!(
+            snap.orders.iter().any(|o| o.source == terminal_id && o.cargo == "Steel" && o.delivered > 0),
+            "steel for the mixer was hauled from the terminal: {:?}",
+            snap.orders
+        );
+    }
+
+    // 8. The mixer's own inputs publish demands, the depot (starting stock) feeds them, and its
+    // concrete output builds the next building: the loop closes.
+    frames(&mut app, 4);
     {
         let sid = app.world().get::<LogisticsOrderSiteId>(mixer).unwrap().0;
         let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
         assert!(
-            snap.demands.iter().any(|d| d.site == sid && d.consumer != ConsumerKind::Construction),
+            snap.demands.iter().any(|d| d.site == sid && d.consumer == ConsumerKind::Plant),
             "operational plant publishes input demands: {:?}",
             snap.demands
         );
     }
-
-    // 7. Close the loop: the next building's concrete can only come from the plant.
     depot_stock(&mut app, depot, "Concrete", 0);
-    // The depot also stocks the mixer's inputs, which the plant's own demands pull in.
-    for tag in ["Cement", "Water", "Gravel", "Chemicals"] {
+    // A bigger fleet: the mixer eats four hauled inputs per unit of concrete.
+    let depot_site = app.world().resource::<LogisticsSiteRegistry>().site_of(depot).unwrap();
+    for _ in 0..16 {
+        app.world_mut().write_message(LogisticsOrderRequest(LogisticsOrderCommand::AddVehicle {
+            owner: OwnerId::PLAYER,
+            home: depot_site,
+            class_mask: CargoClassMask::FREIGHT,
+            capacity_units: 10,
+            speed_mps: 12.0,
+        }));
+    }
+    for tag in ["Cement", "Gravel"] {
         depot_stock(&mut app, depot, tag, 2000);
     }
     frames(&mut app, 2);
-    place(&mut app, "concrete_cement_kiln", 0, 10);
+    place(&mut app, "concrete_cement_kiln", 10, 10);
     frames(&mut app, 4);
-    let kiln = site_entity(&mut app, "concrete_cement_kiln").expect("second site");
+    let kiln = site_entity(&mut app, "concrete_cement_kiln").expect("third site");
     let mut guard = 0;
-    while phase(&app, kiln) != SiteConstructionPhase::Operational && guard < 2000 {
-        if guard % 5 == 0 {
-            auto_supply(&mut app);
-        }
+    while phase(&app, kiln) != SiteConstructionPhase::Operational && guard < 2500 {
         frame(&mut app);
         guard += 1;
     }
     assert_eq!(
         phase(&app, kiln),
         SiteConstructionPhase::Operational,
-        "second building built from plant concrete (frames={guard}, manifest={:?})",
+        "kiln built from plant concrete (frames={guard}, manifest={:?})",
         app.world().get::<SiteResourceManifest>(kiln)
     );
-    let plant_id = app.world().get::<LogisticsOrderSiteId>(mixer).unwrap().0;
+    let mixer_id = app.world().get::<LogisticsOrderSiteId>(mixer).unwrap().0;
     let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
     assert!(
-        snap.orders.iter().any(|o| o.source == plant_id && o.cargo == "Concrete" && o.delivered > 0),
-        "concrete for the second building was hauled from the plant: {:?}",
+        snap.orders.iter().any(|o| o.source == mixer_id && o.cargo == "Concrete" && o.delivered > 0),
+        "concrete for the kiln was hauled from the mixer: {:?}",
         snap.orders
     );
     assert!(app.world().get::<SiteMaterialStarved>(kiln).is_none(), "no stall flag once built");

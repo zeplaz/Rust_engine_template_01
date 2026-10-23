@@ -1,0 +1,19 @@
+{
+    "asset_name": "Materials import terminal",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Explicit trade source: imports construction and process materials (steel, machinery, fuel, coal, water, chemicals) from outside the map at a capped rate.",
+    "supply_chain": "construction_materials",
+    "supply_chain_role": "materials_producer",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 2,
+    "building_height": 1,
+    "construction_cost": 600,
+    "power_generation": 0,
+    "power_consumption": 70,
+    "produces_resources": ["Steel", "Machinery", "Fuel", "Coal", "Water", "Chemicals"],
+    "consumes_resources": ["Labour", "Electricity"],
+    "version": "1.0.0"
+}

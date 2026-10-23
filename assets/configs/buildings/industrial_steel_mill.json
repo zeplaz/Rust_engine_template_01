@@ -1,0 +1,19 @@
+{
+    "asset_name": "Steel mill",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Smelts ore with coal into structural steel.",
+    "supply_chain": "construction_materials",
+    "supply_chain_role": "materials_producer",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 4,
+    "building_size_y": 3,
+    "building_height": 1,
+    "construction_cost": 1400,
+    "power_generation": 0,
+    "power_consumption": 60,
+    "produces_resources": ["Steel"],
+    "consumes_resources": ["Metal", "Coal", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

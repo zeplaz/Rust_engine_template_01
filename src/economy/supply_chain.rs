@@ -262,6 +262,10 @@ pub fn insert_supply_chain_runtime(commands: &mut Commands, entity: Entity, def:
                 electrical,
             ));
         }
+        IndustrialSupplyChainRole::MaterialsProducer => {
+            // No dedicated runtime: output comes from the flow node built from the catalog row.
+            commands.entity(entity).insert((building, electrical));
+        }
         IndustrialSupplyChainRole::AluminumFabrication => {
             commands.entity(entity).insert((
                 AluminumFabricationPlantRuntime {

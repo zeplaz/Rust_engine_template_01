@@ -1,0 +1,19 @@
+{
+    "asset_name": "Fuel refinery",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Refines crude oil into Fuel.",
+    "supply_chain": "construction_materials",
+    "supply_chain_role": "materials_producer",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 3,
+    "building_height": 1,
+    "construction_cost": 1100,
+    "power_generation": 0,
+    "power_consumption": 40,
+    "produces_resources": ["Fuel"],
+    "consumes_resources": ["Oil", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

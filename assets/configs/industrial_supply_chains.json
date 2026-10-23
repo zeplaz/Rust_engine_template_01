@@ -11,7 +11,7 @@
           "catalog_id": "concrete_aggregate_mine",
           "power_consumption": 18,
           "produces": ["Gravel", "Limestone"],
-          "consumes": ["Labour", "Diesel"]
+          "consumes": ["Labour", "Fuel"]
         },
         {
           "role": "cement_kiln",
@@ -70,7 +70,7 @@
           "catalog_id": "aluminum_bauxite_mine",
           "power_consumption": 22,
           "produces": ["Bauxite"],
-          "consumes": ["Labour", "Diesel", "Water"]
+          "consumes": ["Labour", "Fuel", "Water"]
         },
         {
           "role": "alumina_refinery",

@@ -312,6 +312,10 @@ fn add_production(node: &mut ResourceFlowNode, scale: f32) {
 fn try_consume(node: &mut ResourceFlowNode, scale: f32) -> bool {
     let mut ok = true;
     for rate in &node.consumption {
+        // Labour / electricity come from `FacilityInputs`, not from a stocked buffer.
+        if crate::economy::facility_inputs::is_supply_input_tag(&rate.tag) {
+            continue;
+        }
         let need = rate.rate_per_tick * scale;
         if let Some(rt) = rate.resource {
             let have = node.inventory.get(&rt).copied().unwrap_or(0.0);
@@ -361,11 +365,18 @@ pub fn transfer_along_edge(
 pub fn propagate_resource_flow_system(
     _flow: Res<ResourceFlowRegistry>,
     mut witness: ResMut<ResourceFlowSimWitness>,
-    mut nodes: Query<(Entity, &mut ResourceFlowNode, &mut FacilityFlowState)>,
+    mut nodes: Query<(
+        Entity,
+        &mut ResourceFlowNode,
+        &mut FacilityFlowState,
+        Option<&crate::economy::facility_inputs::FacilityInputs>,
+    )>,
 ) {
     // Freight moves via [`InTransitLedger`](crate::economy::logistics::InTransitLedger) — no teleport.
-    for (_, mut node, mut state) in &mut nodes {
-        add_production(&mut node, state.output_scale);
+    for (_, mut node, mut state, inputs) in &mut nodes {
+        // Workforce and power cap output; material starvation decays `output_scale` on top.
+        let supply = inputs.map_or(1.0, crate::economy::facility_inputs::FacilityInputs::factor);
+        add_production(&mut node, state.output_scale * supply);
         let fed = try_consume(&mut node, state.output_scale);
         state.starved = !fed;
         if !fed {
@@ -443,6 +454,7 @@ impl Plugin for ResourceFlowPlugin {
             .add_systems(
                 Update,
                 (
+                    crate::economy::facility_inputs::update_facility_inputs_system,
                     propagate_resource_flow_system,
                     apply_starvation_to_smelter_system,
                     transformer_thermal_stress_system,

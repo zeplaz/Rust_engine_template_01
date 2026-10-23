@@ -1,0 +1,19 @@
+{
+    "asset_name": "Metal ore mine",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Mines metal ore.",
+    "supply_chain": "construction_materials",
+    "supply_chain_role": "materials_producer",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 2,
+    "building_height": 1,
+    "construction_cost": 700,
+    "power_generation": 0,
+    "power_consumption": 20,
+    "produces_resources": ["Metal"],
+    "consumes_resources": ["Labour", "Fuel"],
+    "version": "1.0.0"
+}
