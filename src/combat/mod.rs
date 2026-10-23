@@ -9,6 +9,7 @@ use bevy::prelude::*;
 pub mod balance;
 pub mod front;
 pub mod relax;
+pub mod theater;
 
 pub use balance::{
     load_front_balance, load_front_balance_from_path, parse_front_balance, FortKind,
@@ -19,6 +20,9 @@ pub use front::{
     Hostility,
 };
 pub use relax::{control_relaxation_system, relax_step, ControlRelaxation, RelaxCell, RelaxGrid, RelaxParams};
+pub use theater::{
+    assign_stable_ids, derive_theaters_system, partition_segments, Theater, TheaterBook, TheaterCandidate, TheaterId,
+};
 
 /// Load outcome of [`FrontBalance`] (disk error keeps the compiled-in default).
 #[derive(Resource, Clone, Debug, Default)]
@@ -44,6 +48,13 @@ impl Plugin for CombatPlugin {
             Update,
             control_relaxation_system
                 .before(crate::strategic::apply_zones_to_strategic_overlays_system)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        );
+        // FC-3: theaters follow the derived front.
+        app.init_resource::<TheaterBook>().add_systems(
+            Update,
+            derive_theaters_system
+                .after(crate::strategic::derive_frontline_from_control_system)
                 .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
         );
     }
