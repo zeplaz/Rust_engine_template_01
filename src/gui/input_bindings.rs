@@ -93,6 +93,8 @@ pub struct InputBindings {
     pub map_frame_world: KeyCode,
     /// Cycle map camera mode label: Strategic → Tactical → Cinematic (default M).
     pub map_cycle_camera_mode: KeyCode,
+    /// Toggle world presentation: Tactical (top-down) ↔ World (PixelWorld3D / voxel massing) (default V).
+    pub toggle_world_presentation: KeyCode,
 }
 
 impl Default for InputBindings {
@@ -141,6 +143,7 @@ impl Default for InputBindings {
             map_reset_zoom: KeyCode::KeyZ,
             map_frame_world: KeyCode::KeyB,
             map_cycle_camera_mode: KeyCode::KeyM,
+            toggle_world_presentation: KeyCode::KeyV,
         }
     }
 }

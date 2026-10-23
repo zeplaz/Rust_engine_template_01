@@ -144,7 +144,7 @@ pub fn spawn_world_presentation_toggle(
     palette: Res<UiPalette>,
     existing: Query<Entity, With<WorldPresentationToggleRoot>>,
 ) {
-    if !matches!(base.get(), BaseState::Simulation) {
+    if !matches!(base.get(), BaseState::Simulation | BaseState::Editor) {
         for e in &existing {
             commands.entity(e).despawn();
         }
@@ -160,7 +160,7 @@ pub fn spawn_world_presentation_toggle(
                 position_type: PositionType::Absolute,
                 top: Val::Px(12.0),
                 right: Val::Px(12.0),
-                width: Val::Px(148.0),
+                width: Val::Px(196.0),
                 height: Val::Px(36.0),
                 justify_content: JustifyContent::Center,
                 align_items: AlignItems::Center,
@@ -188,7 +188,7 @@ pub fn spawn_world_presentation_toggle(
                 .with_children(|btn| {
                     btn.spawn((
                         WorldPresentationToggleLabel,
-                        Text::new("View: Tactical"),
+                        Text::new("View: Top-down (V)"),
                         TextFont::from_font_size(14.0),
                         TextColor(palette.bevy_primary_text()),
                     ));
@@ -204,14 +204,18 @@ pub fn world_presentation_toggle_system(
         (Changed<Interaction>, With<WorldPresentationToggleButton>),
     >,
     mut labels: Query<&mut Text, With<WorldPresentationToggleLabel>>,
+    keys: Option<Res<ButtonInput<KeyCode>>>,
+    bindings: Option<Res<crate::gui::InputBindings>>,
 ) {
     let pressed = interactions.iter().any(|i| *i == Interaction::Pressed);
-    if pressed {
+    let hotkey = bindings.as_ref().map_or(KeyCode::KeyV, |b| b.toggle_world_presentation);
+    let key_pressed = keys.as_ref().is_some_and(|k| k.just_pressed(hotkey));
+    if pressed || key_pressed {
         mode.toggle();
     }
     let label = match mode.kind {
-        WorldPresentationKind::TacticalFlat2D => "View: Tactical",
-        WorldPresentationKind::PixelWorld3D => "View: World",
+        WorldPresentationKind::TacticalFlat2D => "View: Top-down (V)",
+        WorldPresentationKind::PixelWorld3D => "View: Voxel world (V)",
     };
     for mut text in &mut labels {
         *text = Text::new(label);
@@ -289,7 +293,7 @@ impl Plugin for WorldPresentationModePlugin {
                     .chain()
                     .after(ViewRepresentationSystemSet::UiCollect)
                     .before(ViewRepresentationSystemSet::ResolveViewport)
-                    .run_if(in_state(BaseState::Simulation)),
+                    .run_if(in_state(BaseState::Simulation).or(in_state(BaseState::Editor))),
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),
@@ -302,7 +306,7 @@ impl Plugin for WorldPresentationModePlugin {
                     world_presentation_toggle_system
                         .in_set(ViewRepresentationSystemSet::UiCollect),
                 )
-                    .run_if(in_state(BaseState::Simulation)),
+                    .run_if(in_state(BaseState::Simulation).or(in_state(BaseState::Editor))),
             )
             .add_systems(
                 Update,
