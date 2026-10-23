@@ -48,7 +48,7 @@ pub fn draw_industrial_submenu(registry: &BuildingDefinitionRegistry) -> Vec<Men
     unchained.sort_by(|a, b| a.display_name.cmp(&b.display_name));
 
     for (chain, defs) in by_chain {
-        rows.push(MenuRow::Section(chain.replace('_', " ")));
+        rows.push(MenuRow::Section(crate::gui::hud::sim_hud_copy::human_chain_label(&chain)));
         for def in defs {
             rows.push(MenuRow::Item(MenuItem::building(
                 BuildingArchetypeId::Factory,

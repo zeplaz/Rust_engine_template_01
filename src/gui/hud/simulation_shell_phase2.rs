@@ -924,16 +924,16 @@ impl Plugin for SimulationShellPhase2Plugin {
                 (zone_shade_toggle_click_system, sync_zone_shade_toggle_label)
                     .run_if(in_simulation_or_editor),
             )
+            .init_resource::<crate::gui::hud::sim_build_picker_panel::SimBuildPickerCache>()
             .add_systems(
                 Update,
                 (
-                    crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_layout,
-                    crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_title,
-                    crate::gui::hud::sim_build_picker_bevy::sync_sim_build_picker_bevy_tabs,
-                    crate::gui::hud::sim_build_picker_bevy::rebuild_sim_build_picker_bevy_body,
-                    crate::gui::hud::sim_build_picker_bevy::sim_build_picker_bevy_close_system,
-                    crate::gui::hud::sim_build_picker_bevy::sim_build_picker_bevy_action_system,
+                    crate::gui::hud::sim_build_picker_panel::sync_sim_build_picker_panel_layout,
+                    crate::gui::hud::sim_build_picker_panel::rebuild_sim_build_picker_panel_list,
+                    crate::gui::hud::sim_build_picker_panel::sync_sim_build_picker_panel_selection,
+                    crate::gui::hud::sim_build_picker_panel::sim_build_picker_panel_actions,
                 )
+                    .chain()
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(
