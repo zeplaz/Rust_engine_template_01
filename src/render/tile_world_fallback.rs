@@ -126,6 +126,9 @@ pub struct TileWorldFallbackChunkGrid {
     chunks_x: u32,
     chunks_z: u32,
     dirty: Vec<bool>,
+    /// Next chunk index to consider in [`Self::take_dirty_chunks`] (round-robin fairness: a
+    /// perpetually re-dirtied low-index chunk must not starve the rest of the map).
+    cursor: usize,
 }
 
 impl Default for TileWorldFallbackChunkGrid {
@@ -134,6 +137,7 @@ impl Default for TileWorldFallbackChunkGrid {
             chunks_x: 0,
             chunks_z: 0,
             dirty: Vec::new(),
+            cursor: 0,
         }
     }
 }
@@ -205,18 +209,25 @@ impl TileWorldFallbackChunkGrid {
     }
 
     /// Take up to `budget` dirty chunk coords and clear their dirty flags.
+    ///
+    /// Scans round-robin from where the previous call stopped so continuously re-dirtied chunks
+    /// (animated water) cannot starve other dirty chunks under a small per-frame budget.
     pub fn take_dirty_chunks(&mut self, budget: usize) -> Vec<(u32, u32)> {
-        let mut out = Vec::with_capacity(budget.min(self.dirty.len()));
-        for cz in 0..self.chunks_z {
-            for cx in 0..self.chunks_x {
-                if out.len() >= budget {
-                    return out;
-                }
-                let i = (cz * self.chunks_x + cx) as usize;
-                if self.dirty.get(i) == Some(&true) {
-                    self.dirty[i] = false;
-                    out.push((cx, cz));
-                }
+        let n = self.dirty.len();
+        let mut out = Vec::with_capacity(budget.min(n));
+        if n == 0 || self.chunks_x == 0 {
+            return out;
+        }
+        let start = self.cursor % n;
+        for step in 0..n {
+            if out.len() >= budget {
+                break;
+            }
+            let i = (start + step) % n;
+            if self.dirty[i] {
+                self.dirty[i] = false;
+                out.push((i as u32 % self.chunks_x, i as u32 / self.chunks_x));
+                self.cursor = i + 1;
             }
         }
         out

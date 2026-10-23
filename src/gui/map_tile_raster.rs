@@ -163,12 +163,12 @@ pub fn raster_sim_minimap_layered_to_subregion(
     clear_rgba_subregion(data, tex_w, x0, y0, x1, y1);
 
     let samples: Vec<_> = tiles.collect();
-    let mut elev: HashMap<(usize, usize), f32> = HashMap::with_capacity(samples.len());
-    for (x, y, _, height, _, _) in &samples {
-        elev.insert((*x, *y), *height);
-    }
+    let elev = ElevGrid::from_samples(samples.iter().map(|(x, y, _, height, _, _)| (*x, *y, *height)));
 
-    let hydro = play_hydro_field(&elev);
+    // Drainage / basin solve is O(grid) and a pure function of the sample heights; repaints of an
+    // unchanged region (animated water, overlay repaint) reuse the cached field.
+    let hydro = cached_play_hydro_field((x0, y0, x1, y1), &elev);
+    let hydro = hydro.as_deref();
     let base = layers.base_bits();
     for (x, y, family, height, moisture, temperature) in samples {
         if x < x0 || x >= x1 || y < y0 || y >= y1 {
@@ -207,7 +207,7 @@ pub fn raster_sim_minimap_layered_to_subregion(
                 .round()
                 .clamp(0.0, 255.0) as u8;
         }
-        if let Some(field) = hydro.as_ref() {
+        if let Some(field) = hydro {
             color = tint_play_hydro(color, field, x, y, slope, curve);
         }
         if layers.contains(PreviewLayers::DERIVED_SLOPE_OVERLAY) {
@@ -338,6 +338,86 @@ pub fn apply_cell_fire_heat_to_rgba_subregion(
     }
 }
 
+/// Dense `(x, y) -> height` lookup over the bounding box of a sample set (NaN = no sample).
+struct ElevGrid {
+    x_min: usize,
+    y_min: usize,
+    w: usize,
+    h: usize,
+    data: Vec<f32>,
+    /// Max sample x / y (used to size the hydro grid exactly as the sparse map did).
+    max_x: usize,
+    max_y: usize,
+    hash: u64,
+}
+
+impl ElevGrid {
+    fn from_samples(samples: impl Iterator<Item = (usize, usize, f32)> + Clone) -> Self {
+        let (mut x_min, mut y_min, mut max_x, mut max_y) = (usize::MAX, usize::MAX, 0usize, 0usize);
+        let mut any = false;
+        for (x, y, _) in samples.clone() {
+            any = true;
+            x_min = x_min.min(x);
+            y_min = y_min.min(y);
+            max_x = max_x.max(x);
+            max_y = max_y.max(y);
+        }
+        if !any {
+            return Self {
+                x_min: 0,
+                y_min: 0,
+                w: 0,
+                h: 0,
+                data: Vec::new(),
+                max_x: 0,
+                max_y: 0,
+                hash: 0,
+            };
+        }
+        let w = max_x - x_min + 1;
+        let h = max_y - y_min + 1;
+        let mut data = vec![f32::NAN; w * h];
+        let mut hash = 0xcbf2_9ce4_8422_2325_u64;
+        for (x, y, z) in samples {
+            data[(y - y_min) * w + (x - x_min)] = z;
+            for v in [x as u64, y as u64, u64::from(z.to_bits())] {
+                hash = (hash ^ v).wrapping_mul(0x0000_0100_0000_01b3);
+            }
+        }
+        Self {
+            x_min,
+            y_min,
+            w,
+            h,
+            data,
+            max_x,
+            max_y,
+            hash,
+        }
+    }
+
+    #[inline]
+    fn get(&self, x: usize, y: usize) -> Option<f32> {
+        if x < self.x_min || y < self.y_min {
+            return None;
+        }
+        let (lx, ly) = (x - self.x_min, y - self.y_min);
+        if lx >= self.w || ly >= self.h {
+            return None;
+        }
+        let v = self.data[ly * self.w + lx];
+        if v.is_nan() {
+            None
+        } else {
+            Some(v)
+        }
+    }
+
+    fn is_empty(&self) -> bool {
+        self.data.is_empty()
+    }
+}
+
 struct PlayHydroField {
     w: usize,
     drainage: Vec<f32>,
@@ -345,22 +425,51 @@ struct PlayHydroField {
     max_drain: f32,
 }
 
-fn play_hydro_field(elev: &HashMap<(usize, usize), f32>) -> Option<PlayHydroField> {
+type PlayHydroCacheKey = (usize, usize, usize, usize);
+
+/// Small region-keyed cache of [`PlayHydroField`] (validated by a hash of the sample heights).
+fn cached_play_hydro_field(
+    key: PlayHydroCacheKey,
+    elev: &ElevGrid,
+) -> Option<std::sync::Arc<PlayHydroField>> {
+    use std::sync::{Arc, Mutex, OnceLock};
+    static CACHE: OnceLock<Mutex<HashMap<PlayHydroCacheKey, (u64, Arc<PlayHydroField>)>>> =
+        OnceLock::new();
+    const CAP: usize = 256;
     if elev.is_empty() {
         return None;
     }
-    let mut max_x = 0usize;
-    let mut max_y = 0usize;
-    for &(x, y) in elev.keys() {
-        max_x = max_x.max(x);
-        max_y = max_y.max(y);
+    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
+    if let Ok(guard) = cache.lock() {
+        if let Some((hash, field)) = guard.get(&key) {
+            if *hash == elev.hash {
+                return Some(Arc::clone(field));
+            }
+        }
     }
-    let w = max_x + 1;
-    let h = max_y + 1;
+    let field = Arc::new(play_hydro_field(elev)?);
+    if let Ok(mut guard) = cache.lock() {
+        if guard.len() >= CAP {
+            guard.clear();
+        }
+        guard.insert(key, (elev.hash, Arc::clone(&field)));
+    }
+    Some(field)
+}
+
+fn play_hydro_field(elev: &ElevGrid) -> Option<PlayHydroField> {
+    if elev.is_empty() {
+        return None;
+    }
+    let w = elev.max_x + 1;
+    let h = elev.max_y + 1;
     let mut grid = vec![0.5f32; w * h];
-    for (&(x, y), &z) in elev {
-        if x < w && y < h {
-            grid[y * w + x] = z;
+    for ly in 0..elev.h {
+        for lx in 0..elev.w {
+            let z = elev.data[ly * elev.w + lx];
+            if !z.is_nan() {
+                grid[(ly + elev.y_min) * w + (lx + elev.x_min)] = z;
+            }
         }
     }
     let drainage =
@@ -545,7 +654,7 @@ fn stamp_cells_rgba(
 }
 
 fn landform_from_neighbor_elev(
-    elev: &HashMap<(usize, usize), f32>,
+    elev: &ElevGrid,
     x: usize,
     y: usize,
     height: f32,
@@ -556,9 +665,7 @@ fn landform_from_neighbor_elev(
         let nx = x as isize + dx;
         let ny = y as isize + dy;
         let nh = if nx >= 0 && ny >= 0 {
-            elev.get(&(nx as usize, ny as usize))
-                .copied()
-                .unwrap_or(height)
+            elev.get(nx as usize, ny as usize).unwrap_or(height)
         } else {
             height
         };
@@ -752,9 +859,7 @@ mod tests {
 
     #[test]
     fn fold_play_clear_pixel_stays_zero() {
-        let mut elev = HashMap::new();
-        elev.insert((0usize, 0usize), 0.1);
-        elev.insert((1, 0), 0.9);
+        let elev = ElevGrid::from_samples([(0usize, 0usize, 0.1_f32), (1, 0, 0.9)].into_iter());
         let field = play_hydro_field(&elev).expect("hydro");
         let clear = [40, 80, 20, 0];
         assert_eq!(tint_play_hydro(clear, &field, 0, 0, 0.4, 0.2), clear);
@@ -762,9 +867,7 @@ mod tests {
 
     #[test]
     fn fold_dry_non_basin_skips_darken() {
-        let mut elev = HashMap::new();
-        elev.insert((0usize, 0usize), 0.1);
-        elev.insert((1, 0), 0.9);
+        let elev = ElevGrid::from_samples([(0usize, 0usize, 0.1_f32), (1, 0, 0.9)].into_iter());
         let field = play_hydro_field(&elev).expect("hydro");
         assert_eq!(field.basins[0], 1);
         assert_eq!(field.basins[1], 0);
