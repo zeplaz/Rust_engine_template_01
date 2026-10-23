@@ -126,6 +126,14 @@ pub fn commit_construction_site_system(
         let tiles = footprint_tiles(ev.origin, ev.footprint);
         let block_tiles = tiles.clone();
         let emitter = zone_emitter_for_archetype(ev.archetype);
+        // Catalog buildings carry a material bill; logistics fills it and the stage tick gates on it.
+        let manifest = ev
+            .catalog_id
+            .as_deref()
+            .and_then(|cid| buildings.as_deref().and_then(|b| b.get(cid)))
+            .map_or_else(SiteResourceManifest::default, |def| {
+                SiteResourceManifest::bill_for_construction_cost(def.construction_cost)
+            });
         let mut entity = commands.spawn((
             PlannedSite {
                 site_id: id,
@@ -148,7 +156,7 @@ pub fn commit_construction_site_system(
                 tiles,
                 layer: ev.layer,
             },
-            SiteResourceManifest::default(),
+            manifest,
             SiteNetworkAttachment::default(),
             SiteTerrainValidation::default(),
             SiteOperationalStats::default(),
