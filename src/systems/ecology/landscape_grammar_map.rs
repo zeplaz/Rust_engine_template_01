@@ -16,6 +16,7 @@ use super::landscape_grammar::{
     LG1_PILOT_PRESET_ID,
 };
 use super::landscape_grammar_lg2::{attach_lg2_bundle_on_chunk, LandUseDistrictKind, LandUseInfluence};
+use super::vegetation_suitability::SuitabilityParams;
 use super::{ChunkEcology, VegetationField};
 use crate::dev::debug_run_envelope::{witness_refresh_due, wrap_debug_run, write_debug_run_json};
 use crate::strategic::StrategicRasterConfig;
@@ -258,6 +259,7 @@ fn startup_load_preset_index(mut commands: Commands) {
 }
 
 pub fn rollout_landscape_program_on_chunks(
+    suitability: SuitabilityParams,
     catalog: Res<LandscapeGrammarCatalog>,
     index: Res<LandscapePresetIndex>,
     raster: Option<Res<StrategicRasterConfig>>,
@@ -284,6 +286,10 @@ pub fn rollout_landscape_program_on_chunks(
         // A generated chunk gets its derived layers with materialization. Wait for them so the
         // preset pick (made once per chunk) sees terrain hydrology instead of the fallback.
         if matrix.is_some() && derived.is_none() {
+            continue;
+        }
+        // Vegetation programs are not stamped on ground that cannot grow anything (open water, bare rock).
+        if matrix.is_some_and(|m| suitability.rate(m).max_canopy <= 0.0) {
             continue;
         }
         let inputs = lambda_inputs_from_live_fields_with_terrain(
