@@ -140,6 +140,23 @@ pub struct PressureWeights {
     pub top_k: usize,
 }
 
+/// How a front publishes sustainment demand to logistics (FC-6).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct FrontSupplyParams {
+    /// Notional infantry-equivalent formations holding each kilometre of front.
+    pub garrison_per_km: f32,
+    /// Seconds of combat draw the front tries to keep on hand.
+    pub buffer_s: f32,
+    /// Reorder when on-hand falls to this fraction of the buffer.
+    pub reorder_fraction: f32,
+}
+
+impl Default for FrontSupplyParams {
+    fn default() -> Self {
+        Self { garrison_per_km: 2.0, buffer_s: 900.0, reorder_fraction: 0.5 }
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CombatParams {
     pub step_s: f32,
@@ -211,6 +228,8 @@ pub struct FrontBalance {
     pub control: ControlParams,
     pub theater: TheaterParams,
     pub pressure: PressureWeights,
+    #[serde(default)]
+    pub supply: FrontSupplyParams,
     pub combat: CombatParams,
     pub units: Vec<UnitProfile>,
     pub effectiveness_default: f32,
@@ -318,6 +337,9 @@ impl FrontBalance {
         if p.top_k == 0 {
             issues.push("pressure.top_k must be >= 1".into());
         }
+        positive("supply.garrison_per_km", self.supply.garrison_per_km, &mut issues);
+        positive("supply.buffer_s", self.supply.buffer_s, &mut issues);
+        unit01("supply.reorder_fraction", self.supply.reorder_fraction, &mut issues);
         let c = &self.combat;
         positive("combat.step_s", c.step_s, &mut issues);
         positive("combat.k_attrition", c.k_attrition, &mut issues);

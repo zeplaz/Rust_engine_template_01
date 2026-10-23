@@ -7,7 +7,11 @@
 use bevy::prelude::*;
 
 pub mod balance;
+pub mod fortification;
 pub mod front;
+pub mod orders;
+pub mod pressure;
+pub mod supply;
 pub mod relax;
 pub mod theater;
 
@@ -23,6 +27,13 @@ pub use relax::{control_relaxation_system, relax_step, ControlRelaxation, RelaxC
 pub use theater::{
     assign_stable_ids, derive_theaters_system, partition_segments, Theater, TheaterBook, TheaterCandidate, TheaterId,
 };
+pub use fortification::FortificationIndex;
+pub use pressure::{
+    score_cell, score_pressure_points_system, score_theater, CellFields, PressureDrivers, PressureKind, PressurePoint,
+    PressurePointBook,
+};
+pub use orders::{DeploymentKind, DeploymentOrder, DeploymentOrderId, DeploymentOrderQueue, EnqueueError};
+pub use supply::{front_demand_targets, publish_front_supply_demands_system, FrontSupplyPoint, FrontSupplyPoints};
 
 /// Load outcome of [`FrontBalance`] (disk error keeps the compiled-in default).
 #[derive(Resource, Clone, Debug, Default)]
@@ -57,5 +68,23 @@ impl Plugin for CombatPlugin {
                 .after(crate::strategic::derive_frontline_from_control_system)
                 .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
         );
+        // FC-4: pressure points over the theaters.
+        app.init_resource::<FortificationIndex>()
+            .init_resource::<PressurePointBook>()
+            .add_systems(
+                Update,
+                score_pressure_points_system
+                    .after(derive_theaters_system)
+                    .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+            );
+        // FC-6 groundwork: one order queue for UI + AI; fronts publish supply demand to logistics.
+        app.init_resource::<DeploymentOrderQueue>()
+            .init_resource::<FrontSupplyPoints>()
+            .add_systems(
+                Update,
+                publish_front_supply_demands_system
+                    .after(derive_theaters_system)
+                    .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+            );
     }
 }

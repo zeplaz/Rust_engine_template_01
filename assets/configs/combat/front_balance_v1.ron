@@ -43,6 +43,13 @@
         nms_radius_m: 250.0,
         top_k: 3,
     ),
+    supply: (
+        // Notional infantry-equivalent formations per km of front, for the demand a front publishes.
+        garrison_per_km: 2.0,
+        // Seconds of combat draw kept on hand, and the fraction at which to reorder.
+        buffer_s: 900.0,
+        reorder_fraction: 0.5,
+    ),
     combat: (
         step_s: 1.0,
         // Fraction of target strength removed per second by a full-strength, effectiveness-1 attacker.
