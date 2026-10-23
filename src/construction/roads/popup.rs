@@ -323,6 +323,16 @@ pub fn register_road_tool_popup_bevy_systems(app: &mut App) {
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::gui::style::widgets::test_support::init_ok;
+
+    #[test]
+    fn popup_systems_have_disjoint_queries() {
+        init_ok(sync_road_tool_popup_bevy);
+        init_ok(sync_road_tool_popup_values);
+        init_ok(road_tool_popup_bevy_action_system);
+    }
+
     #[test]
     fn road_tool_popup_bevy_root_marker_present() {
         assert!(include_str!("popup.rs").contains("RoadToolPopupBevyRoot"));
