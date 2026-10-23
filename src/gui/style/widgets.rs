@@ -333,6 +333,18 @@ pub fn spawn_button<'a>(
     state: UiButton,
     marker: impl Bundle,
 ) -> EntityCommands<'a> {
+    spawn_button_with(parent, kit, label, state, marker, |_| {})
+}
+
+/// [`spawn_button`] with extra children (icon, glyph) placed before the label.
+pub fn spawn_button_with<'a>(
+    parent: &'a mut ChildSpawnerCommands<'_>,
+    kit: &UiKit,
+    label: &str,
+    state: UiButton,
+    marker: impl Bundle,
+    leading: impl FnOnce(&mut ChildSpawnerCommands<'_>),
+) -> EntityCommands<'a> {
     let (bg, bd, tx) = button_colors(kit.palette, &state, Interaction::None);
     let mut ec = parent.spawn((
         Button,
@@ -342,6 +354,7 @@ pub fn spawn_button<'a>(
             min_height: Val::Px(ROW_H),
             padding: UiRect::axes(Val::Px(SECTION_GAP), Val::Px(GAP)),
             border: UiRect::all(Val::Px(1.0)),
+            column_gap: Val::Px(GAP),
             justify_content: JustifyContent::Center,
             align_items: AlignItems::Center,
             ..default()
@@ -351,6 +364,7 @@ pub fn spawn_button<'a>(
         FocusPolicy::Block,
     ));
     ec.with_children(|b| {
+        leading(b);
         b.spawn((
             UiButtonLabel,
             Text::new(label),

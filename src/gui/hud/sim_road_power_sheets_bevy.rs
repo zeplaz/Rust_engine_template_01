@@ -1,4 +1,8 @@
 //! **HUD-NAT-002** — Bevy road + power tool sheets (sim). Gates egui Area draws off.
+//!
+//! Both sheets are spawned once on entering Simulation and updated in place: values,
+//! toggle state, selection and Build enablement never respawn the panel. Sheet heights stay
+//! inside `ROAD_TOOL_SHEET_BLOCK_H_PX` / `POWER_TOOL_SHEET_BLOCK_H_PX` (pointer-gate rects).
 
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -17,6 +21,12 @@ use crate::gui::hud::sim_hud_copy::{
 use crate::gui::hud::sim_power_tool_sheet::{SimPowerToolSheetState, POWER_TOOL_SHEET_W_PX};
 use crate::gui::hud::sim_road_tool_sheet::{SimRoadToolSheetState, ROAD_TOOL_SHEET_W_PX};
 use crate::gui::hud::simulation_shell_phase2::build_rail_slot_anchor_xy;
+use crate::gui::style::widgets::{
+    panel_bundle, spawn_button, spawn_button_with, spawn_header, spawn_label_row, spawn_note,
+    spawn_toggle, ui_button_fired, ToggleState, UiButton, UiButtonVariant, UiKit, UiTooltip, GAP,
+    ROW_H, SECTION_GAP,
+};
+use crate::gui::style::CmdUiMonoFont;
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport, UiPalette};
 use crate::infrastructure::utility::graph::{UtilityGraph, UtilityNetworkSnapshotResource};
 use crate::infrastructure::VoltageClass;
@@ -31,8 +41,13 @@ pub struct SimRoadSheetRoot;
 #[derive(Component)]
 pub struct SimRoadSheetTitle;
 
-#[derive(Component)]
-pub struct SimRoadSheetStats;
+/// Value text of one road-sheet stats row.
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
+pub enum SimSheetStat {
+    Points,
+    Valid,
+    Cost,
+}
 
 #[derive(Component)]
 pub struct SimRoadSheetBuild;
@@ -56,9 +71,6 @@ pub struct SimPowerSheetRoot;
 pub struct SimPowerSheetTitle;
 
 #[derive(Component)]
-pub struct SimPowerSheetStats;
-
-#[derive(Component)]
 pub struct SimPowerSheetBuild;
 
 #[derive(Component)]
@@ -70,6 +82,10 @@ pub struct SimPowerVoltagePick(pub VoltageClass);
 #[derive(Component, Clone, Copy)]
 pub struct SimPowerModePick(pub PowerLineRoutingMode);
 
+/// Value text of a power-sheet stats row (shares [`SimSheetStat`] kinds).
+#[derive(Component, Clone, Copy, PartialEq, Eq)]
+pub struct SimPowerStat(pub SimSheetStat);
+
 #[must_use]
 pub fn sim_road_power_sheets_native_wired() -> bool {
     SIM_ROAD_POWER_SHEETS_USE_BEVY
@@ -77,262 +93,194 @@ pub fn sim_road_power_sheets_native_wired() -> bool {
         && include_str!("sim_road_tool_sheet.rs").contains("SIM_ROAD_POWER_SHEETS_USE_BEVY")
 }
 
-fn spawn_sheet_button(
-    parent: &mut ChildSpawnerCommands<'_>,
-    font: &Handle<Font>,
-    palette: &UiPalette,
-    label: &str,
-    marker: impl Bundle,
-) {
-    parent
-        .spawn((
-            Button,
-            Node {
-                min_height: Val::Px(32.0),
-                padding: UiRect::axes(Val::Px(10.0), Val::Px(6.0)),
-                border: UiRect::all(Val::Px(1.0)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                ..default()
-            },
-            BackgroundColor(palette.bevy_hud_panel_fill()),
-            BorderColor::all(palette.bevy_border_subtle()),
-            marker,
-        ))
-        .with_children(|b| {
-            b.spawn((
-                Text::new(label.to_string()),
-                TextFont::from_font_size(12.0).with_font(font.clone()),
-                TextColor(palette.bevy_primary_text()),
-            ));
-        });
-}
-
+/// Icon + label button used by the power sheet (mode / voltage picks).
 fn spawn_sheet_button_with_icon(
-    parent: &mut ChildSpawnerCommands<'_>,
-    font: &Handle<Font>,
-    palette: &UiPalette,
+    parent: &mut bevy::ecs::hierarchy::ChildSpawnerCommands<'_>,
+    kit: &UiKit,
     icon: PowerHudIconId,
     label: &str,
+    tooltip: &str,
     marker: impl Bundle,
 ) {
-    parent
-        .spawn((
-            Button,
+    spawn_button_with(parent, kit, label, UiButton::default(), marker, |b| {
+        b.spawn((
             Node {
-                min_height: Val::Px(32.0),
-                padding: UiRect::axes(Val::Px(8.0), Val::Px(6.0)),
-                border: UiRect::all(Val::Px(1.0)),
-                justify_content: JustifyContent::Center,
-                align_items: AlignItems::Center,
-                column_gap: Val::Px(4.0),
-                flex_direction: FlexDirection::Row,
+                width: Val::Px(16.0),
+                height: Val::Px(16.0),
+                flex_shrink: 0.0,
                 ..default()
             },
-            BackgroundColor(palette.bevy_hud_panel_fill()),
-            BorderColor::all(palette.bevy_border_subtle()),
-            marker,
-        ))
-        .with_children(|b| {
-            b.spawn((
-                Node {
-                    width: Val::Px(16.0),
-                    height: Val::Px(16.0),
-                    flex_shrink: 0.0,
-                    ..default()
-                },
-                PowerHudDrawnIcon(icon),
-                bevy::ui::widget::ImageNode::default(),
-            ));
-            b.spawn((
-                Text::new(label.to_string()),
-                TextFont::from_font_size(12.0).with_font(font.clone()),
-                TextColor(palette.bevy_primary_text()),
-            ));
-        });
+            PowerHudDrawnIcon(icon),
+            bevy::ui::widget::ImageNode::default(),
+        ));
+    })
+    .insert((
+        Node {
+            flex_grow: 1.0,
+            flex_basis: Val::Px(0.0),
+            min_height: Val::Px(ROW_H + 4.0),
+            padding: UiRect::axes(Val::Px(GAP), Val::Px(GAP)),
+            border: UiRect::all(Val::Px(1.0)),
+            column_gap: Val::Px(GAP),
+            justify_content: JustifyContent::Center,
+            align_items: AlignItems::Center,
+            flex_direction: FlexDirection::Row,
+            ..default()
+        },
+        UiTooltip(tooltip.to_string()),
+    ));
+}
+
+fn grow_node(min_h: f32) -> Node {
+    Node {
+        flex_grow: 1.0,
+        flex_basis: Val::Px(0.0),
+        min_height: Val::Px(min_h),
+        padding: UiRect::axes(Val::Px(SECTION_GAP), Val::Px(GAP)),
+        border: UiRect::all(Val::Px(1.0)),
+        column_gap: Val::Px(SECTION_GAP),
+        justify_content: JustifyContent::Center,
+        align_items: AlignItems::Center,
+        ..default()
+    }
+}
+
+fn row_node() -> Node {
+    Node {
+        width: Val::Percent(100.0),
+        flex_direction: FlexDirection::Row,
+        column_gap: Val::Px(GAP),
+        ..default()
+    }
 }
 
 pub fn spawn_sim_road_power_sheets_bevy(
     mut commands: Commands,
     palette: Res<UiPalette>,
-    asset_server: Res<AssetServer>,
+    mono: Res<CmdUiMonoFont>,
 ) {
-    let font = asset_server.load("fonts/FiraSans-Bold.ttf");
+    let kit = UiKit::new(&palette, mono.0.clone());
 
     commands
         .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: Val::Px(0.0),
-                top: Val::Px(0.0),
-                width: Val::Px(ROAD_TOOL_SHEET_W_PX),
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(6.0),
-                padding: UiRect::all(Val::Px(8.0)),
-                border: UiRect::all(Val::Px(1.0)),
-                ..default()
-            },
-            BackgroundColor(palette.bevy_hud_panel_fill()),
-            BorderColor::all(palette.bevy_border_subtle()),
+            panel_bundle(
+                &palette,
+                Node {
+                    position_type: PositionType::Absolute,
+                    left: Val::Px(0.0),
+                    top: Val::Px(0.0),
+                    width: Val::Px(ROAD_TOOL_SHEET_W_PX),
+                    ..default()
+                },
+            ),
             Visibility::Hidden,
             ZIndex(945),
             SimRoadSheetRoot,
             Name::new("sim_road_sheet_bevy"),
         ))
         .with_children(|root| {
-            root.spawn((
-                Text::new("Road"),
-                TextFont::from_font_size(14.0).with_font(font.clone()),
-                TextColor(palette.bevy_primary_text()),
-                SimRoadSheetTitle,
-            ));
-            root.spawn((
-                Text::new("—"),
-                TextFont::from_font_size(11.0).with_font(font.clone()),
-                TextColor(palette.bevy_secondary_text()),
-                SimRoadSheetStats,
-            ));
-            root.spawn((
-                Text::new(ROAD_SHEET_HINT_INPUT),
-                TextFont::from_font_size(10.0).with_font(font.clone()),
-                TextColor(palette.bevy_text_muted()),
-            ));
-            root.spawn((
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(6.0),
-                    ..default()
-                },
-            ))
-            .with_children(|row| {
-                spawn_sheet_button(row, &font, &palette, "Grid snap", SimRoadSheetToggleGrid);
-                spawn_sheet_button(row, &font, &palette, "Node snap", SimRoadSheetToggleNode);
+            spawn_header(root, &kit, "Road", SimRoadSheetTitle, None::<()>);
+            spawn_label_row(root, &kit, "Control points", "0", SimSheetStat::Points);
+            spawn_label_row(root, &kit, "Valid segments", "0 of 0", SimSheetStat::Valid);
+            spawn_label_row(root, &kit, "Est. cost / width", "0", SimSheetStat::Cost);
+            root.spawn(row_node()).with_children(|row| {
+                spawn_toggle(row, &kit, "Grid snap", true, SimRoadSheetToggleGrid)
+                    .insert(grow_node(ROW_H));
+                spawn_toggle(row, &kit, "Node snap", true, SimRoadSheetToggleNode)
+                    .insert(grow_node(ROW_H));
             });
-            root.spawn((
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(6.0),
-                    flex_wrap: FlexWrap::Wrap,
-                    ..default()
-                },
-            ))
-            .with_children(|row| {
-                spawn_sheet_button(row, &font, &palette, ROAD_SHEET_BUILD, SimRoadSheetBuild);
-                spawn_sheet_button(row, &font, &palette, ROAD_SHEET_CANCEL, SimRoadSheetCancel);
-                spawn_sheet_button(row, &font, &palette, ROAD_SHEET_UPGRADE, SimRoadSheetUpgrade);
+            spawn_note(root, &kit, ROAD_SHEET_HINT_INPUT, true, ());
+            root.spawn(row_node()).with_children(|row| {
+                spawn_button(
+                    row,
+                    &kit,
+                    ROAD_SHEET_BUILD,
+                    UiButton::new(UiButtonVariant::Primary).disabled(true),
+                    SimRoadSheetBuild,
+                )
+                .insert(grow_node(ROW_H))
+                .insert(UiTooltip("Queue the valid segments for construction".into()));
+                spawn_button(row, &kit, ROAD_SHEET_CANCEL, UiButton::default(), SimRoadSheetCancel)
+                    .insert(grow_node(ROW_H))
+                    .insert(UiTooltip("Clear the path being drawn".into()));
+                spawn_button(row, &kit, "Upgrade", UiButton::default(), SimRoadSheetUpgrade)
+                    .insert(grow_node(ROW_H))
+                    .insert(UiTooltip(ROAD_SHEET_UPGRADE.into()));
             });
         });
 
     commands
         .spawn((
-            Node {
-                position_type: PositionType::Absolute,
-                left: Val::Px(0.0),
-                top: Val::Px(0.0),
-                width: Val::Px(POWER_TOOL_SHEET_W_PX),
-                flex_direction: FlexDirection::Column,
-                row_gap: Val::Px(6.0),
-                padding: UiRect::all(Val::Px(8.0)),
-                border: UiRect::all(Val::Px(1.0)),
-                ..default()
-            },
-            BackgroundColor(palette.bevy_hud_panel_fill()),
-            BorderColor::all(palette.bevy_border_subtle()),
+            panel_bundle(
+                &palette,
+                Node {
+                    position_type: PositionType::Absolute,
+                    left: Val::Px(0.0),
+                    top: Val::Px(0.0),
+                    width: Val::Px(POWER_TOOL_SHEET_W_PX),
+                    ..default()
+                },
+            ),
             Visibility::Hidden,
             ZIndex(946),
             SimPowerSheetRoot,
             Name::new("sim_power_sheet_bevy"),
         ))
         .with_children(|root| {
-            root.spawn((
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    align_items: AlignItems::Center,
-                    column_gap: Val::Px(6.0),
-                    ..default()
-                },
-            ))
-            .with_children(|title_row| {
-                title_row.spawn((
-                    Node {
-                        width: Val::Px(20.0),
-                        height: Val::Px(20.0),
-                        flex_shrink: 0.0,
-                        ..default()
-                    },
-                    PowerHudDrawnIcon(PowerHudIconId::PowerLineTool),
-                    bevy::ui::widget::ImageNode::default(),
-                ));
-                title_row.spawn((
-                    Text::new("Power line"),
-                    TextFont::from_font_size(14.0).with_font(font.clone()),
-                    TextColor(palette.bevy_primary_text()),
-                    SimPowerSheetTitle,
-                ));
-            });
-            root.spawn((
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(4.0),
-                    ..default()
-                },
-            ))
-            .with_children(|row| {
-                for (mode, label) in [
-                    (PowerLineRoutingMode::Curved, "Curved"),
-                    (PowerLineRoutingMode::Orthogonal90, "90°"),
+            spawn_header(root, &kit, "Power line", SimPowerSheetTitle, None::<()>);
+            root.spawn(row_node()).with_children(|row| {
+                for (mode, label, tip) in [
+                    (PowerLineRoutingMode::Curved, "Curved", "Smooth curved routing"),
+                    (PowerLineRoutingMode::Orthogonal90, "90°", "Orthogonal routing, grid snapped"),
                 ] {
                     spawn_sheet_button_with_icon(
                         row,
-                        &font,
-                        &palette,
+                        &kit,
                         PowerHudIconId::for_routing_mode(mode),
                         label,
+                        tip,
                         SimPowerModePick(mode),
                     );
                 }
             });
-            root.spawn((
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(4.0),
-                    ..default()
-                },
-            ))
-            .with_children(|row| {
-                for (v, label) in [
-                    (VoltageClass::Low, "Distribution"),
-                    (VoltageClass::Medium, "Medium"),
-                    (VoltageClass::High, "Transmission"),
+            root.spawn(row_node()).with_children(|row| {
+                for (v, label, tip) in [
+                    (VoltageClass::Low, "Low", "Distribution"),
+                    (VoltageClass::Medium, "Medium", "Medium voltage"),
+                    (VoltageClass::High, "High", "Transmission"),
                 ] {
                     spawn_sheet_button_with_icon(
                         row,
-                        &font,
-                        &palette,
+                        &kit,
                         PowerHudIconId::for_voltage(v),
                         label,
+                        tip,
                         SimPowerVoltagePick(v),
                     );
                 }
             });
-            root.spawn((
-                Text::new("—"),
-                TextFont::from_font_size(11.0).with_font(font.clone()),
-                TextColor(palette.bevy_secondary_text()),
-                SimPowerSheetStats,
-            ));
-            root.spawn((
-                Node {
-                    flex_direction: FlexDirection::Row,
-                    column_gap: Val::Px(6.0),
-                    ..default()
-                },
-            ))
-            .with_children(|row| {
-                spawn_sheet_button(row, &font, &palette, "Build line", SimPowerSheetBuild);
-                spawn_sheet_button(row, &font, &palette, "Cancel", SimPowerSheetCancel);
+            spawn_label_row(root, &kit, "Control points", "0", SimPowerStat(SimSheetStat::Points));
+            spawn_label_row(root, &kit, "Valid segments", "0 of 0", SimPowerStat(SimSheetStat::Valid));
+            spawn_label_row(root, &kit, "Est. cost", "0", SimPowerStat(SimSheetStat::Cost));
+            root.spawn(row_node()).with_children(|row| {
+                spawn_button(
+                    row,
+                    &kit,
+                    "Build line",
+                    UiButton::new(UiButtonVariant::Primary).disabled(true),
+                    SimPowerSheetBuild,
+                )
+                .insert(grow_node(ROW_H));
+                spawn_button(row, &kit, "Cancel", UiButton::default(), SimPowerSheetCancel)
+                    .insert(grow_node(ROW_H));
             });
         });
+}
+
+fn set_text(text: &mut Text, next: &str) {
+    if text.0 != next {
+        text.0 = next.to_string();
+    }
 }
 
 pub fn sync_sim_road_sheet_bevy(
@@ -341,10 +289,14 @@ pub fn sync_sim_road_sheet_bevy(
     tool: Res<ActiveBuildTool>,
     mut road_sheet: ResMut<SimRoadToolSheetState>,
     placement: Res<ActiveRoadPlacement>,
+    snap: Res<RoadSnapSettings>,
     left_stack: Res<crate::gui::CommandLeftStackState>,
     mut root_q: Query<(&mut Node, &mut Visibility), With<SimRoadSheetRoot>>,
-    mut title_q: Query<&mut Text, (With<SimRoadSheetTitle>, Without<SimRoadSheetStats>)>,
-    mut stats_q: Query<&mut Text, (With<SimRoadSheetStats>, Without<SimRoadSheetTitle>)>,
+    mut title_q: Query<&mut Text, (With<SimRoadSheetTitle>, Without<SimSheetStat>)>,
+    mut stats_q: Query<(&SimSheetStat, &mut Text), Without<SimRoadSheetTitle>>,
+    mut grid_q: Query<&mut ToggleState, (With<SimRoadSheetToggleGrid>, Without<SimRoadSheetToggleNode>)>,
+    mut node_q: Query<&mut ToggleState, (With<SimRoadSheetToggleNode>, Without<SimRoadSheetToggleGrid>)>,
+    mut build_q: Query<&mut UiButton, With<SimRoadSheetBuild>>,
 ) {
     road_sheet.sync_from_strip(strip.as_ref());
     let Ok((mut node, mut vis)) = root_q.single_mut() else {
@@ -354,11 +306,10 @@ pub fn sync_sim_road_sheet_bevy(
         && matches!(base.get(), BaseState::Simulation)
         && road_sheet.open
         && matches!(tool.tool, BuildTool::Road(_) | BuildTool::Rail(_));
-    *vis = if show {
-        Visibility::Visible
-    } else {
-        Visibility::Hidden
-    };
+    let want_vis = if show { Visibility::Visible } else { Visibility::Hidden };
+    if *vis != want_vis {
+        *vis = want_vis;
+    }
     if !show {
         return;
     }
@@ -367,29 +318,46 @@ pub fn sync_sim_road_sheet_bevy(
         _ => ToolContext::Roads,
     };
     let anchor = build_rail_slot_anchor_xy(slot, left_stack.collapsed);
-    node.left = Val::Px(anchor.x);
-    node.top = Val::Px(anchor.y);
+    if node.left != Val::Px(anchor.x) {
+        node.left = Val::Px(anchor.x);
+    }
+    if node.top != Val::Px(anchor.y) {
+        node.top = Val::Px(anchor.y);
+    }
 
     let title = match tool.tool {
-        BuildTool::Road(RoadType::Street) => "Road — Street",
-        BuildTool::Road(RoadType::Highway) => "Road — Highway",
-        BuildTool::Rail(RailType::Standard) => "Rail — Standard",
+        BuildTool::Road(RoadType::Street) => "Road - Street",
+        BuildTool::Road(RoadType::Highway) => "Road - Highway",
+        BuildTool::Rail(RailType::Standard) => "Rail - Standard",
         _ => "Road",
     };
     for mut t in &mut title_q {
-        *t = Text::new(title);
+        set_text(&mut t, title);
     }
     let valid = placement.generated_segments.iter().filter(|s| s.valid).count();
-    let est = valid.saturating_mul(10);
-    let stats = format!(
-        "Pts {} · Valid {} · Cost {} · W {:.1}",
-        placement.control_points.len(),
-        valid,
-        est,
-        placement.width
-    );
-    for mut t in &mut stats_q {
-        *t = Text::new(stats.clone());
+    let total = placement.generated_segments.len();
+    for (stat, mut t) in &mut stats_q {
+        let next = match stat {
+            SimSheetStat::Points => placement.control_points.len().to_string(),
+            SimSheetStat::Valid => format!("{valid} of {total}"),
+            SimSheetStat::Cost => format!("{} / w {:.1}", valid.saturating_mul(10), placement.width),
+        };
+        set_text(&mut t, &next);
+    }
+    for mut s in &mut grid_q {
+        if s.0 != snap.grid_snap {
+            s.0 = snap.grid_snap;
+        }
+    }
+    for mut s in &mut node_q {
+        if s.0 != snap.node_snap {
+            s.0 = snap.node_snap;
+        }
+    }
+    for mut b in &mut build_q {
+        if b.disabled != (valid == 0) {
+            b.disabled = valid == 0;
+        }
     }
 }
 
@@ -399,12 +367,12 @@ pub fn sync_sim_power_sheet_bevy(
     mut power_sheet: ResMut<SimPowerToolSheetState>,
     placement: Res<ActivePowerLinePlacement>,
     left_stack: Res<crate::gui::CommandLeftStackState>,
-    palette: Res<UiPalette>,
     mut root_q: Query<(&mut Node, &mut Visibility), With<SimPowerSheetRoot>>,
-    mut title_q: Query<&mut Text, (With<SimPowerSheetTitle>, Without<SimPowerSheetStats>)>,
-    mut stats_q: Query<&mut Text, (With<SimPowerSheetStats>, Without<SimPowerSheetTitle>)>,
-    mut voltage_btns: Query<(&SimPowerVoltagePick, &mut BorderColor), With<Button>>,
-    mut mode_btns: Query<(&SimPowerModePick, &mut BorderColor), (With<Button>, Without<SimPowerVoltagePick>)>,
+    mut title_q: Query<&mut Text, (With<SimPowerSheetTitle>, Without<SimPowerStat>)>,
+    mut stats_q: Query<(&SimPowerStat, &mut Text), Without<SimPowerSheetTitle>>,
+    mut voltage_btns: Query<(&SimPowerVoltagePick, &mut UiButton), Without<SimPowerModePick>>,
+    mut mode_btns: Query<(&SimPowerModePick, &mut UiButton), Without<SimPowerVoltagePick>>,
+    mut build_q: Query<&mut UiButton, (With<SimPowerSheetBuild>, Without<SimPowerVoltagePick>, Without<SimPowerModePick>)>,
 ) {
     power_sheet.sync_from_tool(tool.as_ref());
     let Ok((mut node, mut vis)) = root_q.single_mut() else {
@@ -414,64 +382,68 @@ pub fn sync_sim_power_sheet_bevy(
         && matches!(base.get(), BaseState::Simulation)
         && power_sheet.open
         && matches!(tool.tool, BuildTool::PowerLine(_));
-    *vis = if show {
-        Visibility::Visible
-    } else {
-        Visibility::Hidden
-    };
+    let want_vis = if show { Visibility::Visible } else { Visibility::Hidden };
+    if *vis != want_vis {
+        *vis = want_vis;
+    }
     if !show {
         return;
     }
     let anchor = build_rail_slot_anchor_xy(ToolContext::Utilities, left_stack.collapsed);
-    node.left = Val::Px(anchor.x);
-    node.top = Val::Px(anchor.y);
+    if node.left != Val::Px(anchor.x) {
+        node.left = Val::Px(anchor.x);
+    }
+    if node.top != Val::Px(anchor.y) {
+        node.top = Val::Px(anchor.y);
+    }
 
     let active = match tool.tool {
         BuildTool::PowerLine(v) => v,
         _ => VoltageClass::Low,
     };
     let title = match active {
-        VoltageClass::Low => "Power line — Distribution",
-        VoltageClass::Medium => "Power line — Medium",
-        VoltageClass::High => "Power line — Transmission",
+        VoltageClass::Low => "Power line - Distribution",
+        VoltageClass::Medium => "Power line - Medium",
+        VoltageClass::High => "Power line - Transmission",
     };
     for mut t in &mut title_q {
-        *t = Text::new(title);
+        set_text(&mut t, title);
     }
     let valid = placement.generated_segments.iter().filter(|s| s.valid).count();
-    let stats = format!(
-        "Pts {} · Valid {} · Cost {}",
-        placement.control_points.len(),
-        valid,
-        valid.saturating_mul(12)
-    );
-    for mut t in &mut stats_q {
-        *t = Text::new(stats.clone());
-    }
-    let gold = palette.bevy_accent_hot();
-    let idle = palette.bevy_border_subtle();
-    for (pick, mut border) in &mut voltage_btns {
-        *border = if pick.0 == active {
-            BorderColor::all(gold)
-        } else {
-            BorderColor::all(idle)
+    let total = placement.generated_segments.len();
+    for (stat, mut t) in &mut stats_q {
+        let next = match stat.0 {
+            SimSheetStat::Points => placement.control_points.len().to_string(),
+            SimSheetStat::Valid => format!("{valid} of {total}"),
+            SimSheetStat::Cost => valid.saturating_mul(12).to_string(),
         };
+        set_text(&mut t, &next);
     }
-    for (pick, mut border) in &mut mode_btns {
-        *border = if pick.0 == placement.routing_mode {
-            BorderColor::all(gold)
-        } else {
-            BorderColor::all(idle)
-        };
+    for (pick, mut b) in &mut voltage_btns {
+        let sel = pick.0 == active;
+        if b.selected != sel {
+            b.selected = sel;
+        }
+    }
+    for (pick, mut b) in &mut mode_btns {
+        let sel = pick.0 == placement.routing_mode;
+        if b.selected != sel {
+            b.selected = sel;
+        }
+    }
+    for mut b in &mut build_q {
+        if b.disabled != (valid == 0) {
+            b.disabled = valid == 0;
+        }
     }
 }
 
 pub fn sim_road_sheet_actions(
-    build_q: Query<&Interaction, (Changed<Interaction>, With<SimRoadSheetBuild>)>,
-    cancel_q: Query<&Interaction, (Changed<Interaction>, With<SimRoadSheetCancel>)>,
-    upgrade_q: Query<&Interaction, (Changed<Interaction>, With<SimRoadSheetUpgrade>)>,
-    grid_q: Query<&Interaction, (Changed<Interaction>, With<SimRoadSheetToggleGrid>)>,
-    node_q: Query<&Interaction, (Changed<Interaction>, With<SimRoadSheetToggleNode>)>,
+    build_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetBuild>)>,
+    cancel_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetCancel>)>,
+    upgrade_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetUpgrade>)>,
+    grid_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetToggleGrid>)>,
+    node_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetToggleNode>)>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut queue: ResMut<ConstructionPlanQueue>,
     mut session: ResMut<ActiveToolSession>,
@@ -484,8 +456,8 @@ pub fn sim_road_sheet_actions(
     desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
 ) {
-    for i in &build_q {
-        if *i == Interaction::Pressed {
+    for (i, b) in &build_q {
+        if ui_button_fired(i, b) {
             commit_road_path_to_queue(
                 placement.as_mut(),
                 queue.as_mut(),
@@ -495,15 +467,15 @@ pub fn sim_road_sheet_actions(
             session.record_commit();
         }
     }
-    for i in &cancel_q {
-        if *i == Interaction::Pressed {
+    for (i, b) in &cancel_q {
+        if ui_button_fired(i, b) {
             placement.control_points.clear();
             placement.generated_segments.clear();
             popup.cancel_requested = true;
         }
     }
-    for i in &upgrade_q {
-        if *i == Interaction::Pressed {
+    for (i, b) in &upgrade_q {
+        if ui_button_fired(i, b) {
             if let Some(world) = win.single().ok().and_then(|window| {
                 cursor_world_on_map(
                     window,
@@ -523,45 +495,42 @@ pub fn sim_road_sheet_actions(
             }
         }
     }
-    for i in &grid_q {
-        if *i == Interaction::Pressed {
+    for (i, b) in &grid_q {
+        if ui_button_fired(i, b) {
             snap.grid_snap = !snap.grid_snap;
         }
     }
-    for i in &node_q {
-        if *i == Interaction::Pressed {
+    for (i, b) in &node_q {
+        if ui_button_fired(i, b) {
             snap.node_snap = !snap.node_snap;
         }
     }
 }
 
 pub fn sim_power_sheet_actions(
-    build_q: Query<&Interaction, (Changed<Interaction>, With<SimPowerSheetBuild>)>,
-    cancel_q: Query<&Interaction, (Changed<Interaction>, With<SimPowerSheetCancel>)>,
-    voltage_q: Query<
-        (&Interaction, &SimPowerVoltagePick),
-        (Changed<Interaction>, With<Button>),
-    >,
-    mode_q: Query<(&Interaction, &SimPowerModePick), (Changed<Interaction>, With<Button>)>,
+    build_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimPowerSheetBuild>)>,
+    cancel_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimPowerSheetCancel>)>,
+    voltage_q: Query<(&Interaction, &UiButton, &SimPowerVoltagePick), Changed<Interaction>>,
+    mode_q: Query<(&Interaction, &UiButton, &SimPowerModePick), Changed<Interaction>>,
     mut tool: ResMut<ActiveBuildTool>,
     mut placement: ResMut<ActivePowerLinePlacement>,
     mut snap_res: ResMut<UtilityNetworkSnapshotResource>,
     mut graph: ResMut<UtilityGraph>,
 ) {
-    for (i, pick) in &voltage_q {
-        if *i == Interaction::Pressed {
+    for (i, b, pick) in &voltage_q {
+        if ui_button_fired(i, b) {
             placement.voltage = pick.0;
             tool.tool = BuildTool::PowerLine(pick.0);
         }
     }
-    for (i, pick) in &mode_q {
-        if *i == Interaction::Pressed {
+    for (i, b, pick) in &mode_q {
+        if ui_button_fired(i, b) {
             placement.routing_mode = pick.0;
             placement.grid_snap = pick.0 == PowerLineRoutingMode::Orthogonal90;
         }
     }
-    for i in &build_q {
-        if *i == Interaction::Pressed {
+    for (i, b) in &build_q {
+        if ui_button_fired(i, b) {
             let voltage = placement.voltage;
             commit_power_line_to_utility_graph(
                 placement.as_mut(),
@@ -571,8 +540,8 @@ pub fn sim_power_sheet_actions(
             );
         }
     }
-    for i in &cancel_q {
-        if *i == Interaction::Pressed {
+    for (i, b) in &cancel_q {
+        if ui_button_fired(i, b) {
             placement.clear_path();
         }
     }
