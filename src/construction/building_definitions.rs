@@ -619,6 +619,118 @@ pub fn init_building_definition_registry(
     commands.insert_resource(registry);
 }
 
+/// Row model shared by every build menu (editor toolbox, sim picker). Menus describe rows;
+/// the Bevy side only paints them and calls [`menu_rows::MenuItem::apply`].
+pub mod menu_rows {
+    use super::super::build_tool_authority::{
+        ActiveBuildTool, BuildTool, BuildingArchetypeId, ZoneTool,
+    };
+    use super::super::building_catalog::BuildingIntentPreview;
+    use crate::infrastructure::VoltageClass;
+
+    #[derive(Clone, Debug)]
+    pub enum MenuPick {
+        Zone(ZoneTool),
+        Building(BuildingArchetypeId, Box<BuildingIntentPreview>),
+        PowerLine(VoltageClass),
+    }
+
+    #[derive(Clone, Debug)]
+    pub struct MenuItem {
+        pub label: String,
+        /// One-line cost / footprint / power summary (empty when not applicable).
+        pub detail: String,
+        pub pick: MenuPick,
+    }
+
+    #[derive(Clone, Debug)]
+    pub enum MenuRow {
+        Section(String),
+        Note(String),
+        Item(MenuItem),
+    }
+
+    impl MenuItem {
+        #[must_use]
+        pub fn building(
+            archetype: BuildingArchetypeId,
+            preview: BuildingIntentPreview,
+            label: Option<String>,
+        ) -> Self {
+            Self {
+                label: label.unwrap_or_else(|| preview.label.clone()),
+                detail: item_detail(&preview),
+                pick: MenuPick::Building(archetype, Box::new(preview)),
+            }
+        }
+
+        /// Tool intent only — never places anything.
+        pub fn apply(&self, tool: &mut ActiveBuildTool) {
+            match &self.pick {
+                MenuPick::Zone(z) => {
+                    tool.clear_building_intent();
+                    tool.tool = BuildTool::Zone(*z);
+                }
+                MenuPick::Building(arch, preview) => {
+                    tool.tool = BuildTool::Building(*arch);
+                    tool.building_intent = Some((**preview).clone());
+                }
+                MenuPick::PowerLine(v) => {
+                    tool.clear_building_intent();
+                    tool.tool = BuildTool::PowerLine(*v);
+                }
+            }
+        }
+
+        #[must_use]
+        pub fn is_selected(&self, tool: &ActiveBuildTool) -> bool {
+            match &self.pick {
+                MenuPick::Zone(z) => tool.tool == BuildTool::Zone(*z),
+                MenuPick::PowerLine(v) => tool.tool == BuildTool::PowerLine(*v),
+                MenuPick::Building(arch, preview) => {
+                    tool.tool == BuildTool::Building(*arch)
+                        && tool.building_intent.as_ref().is_some_and(|cur| {
+                            cur.catalog_id == preview.catalog_id && cur.label == preview.label
+                        })
+                }
+            }
+        }
+    }
+
+    /// `cost 500 · 3x2 · 12 pwr · 4 wk`
+    #[must_use]
+    pub fn item_detail(p: &BuildingIntentPreview) -> String {
+        format!(
+            "cost {} · {}x{} · {:.0} pwr · {} wk",
+            p.construction_cost,
+            p.footprint.width,
+            p.footprint.depth,
+            p.power_consumption,
+            p.workers_required
+        )
+    }
+
+    /// Detail block for the active intent (footprint, cost, time, power, workers, units).
+    #[must_use]
+    pub fn intent_detail_lines(p: &BuildingIntentPreview) -> Vec<String> {
+        let mut lines = vec![
+            format!("Footprint  {}x{} tiles", p.footprint.width, p.footprint.depth),
+            format!("Cost  {}", p.construction_cost),
+            format!("Build time  {} ticks", p.construction_time_ticks),
+            format!("Power  {:.0}", p.power_consumption),
+            format!("Workers  {}", p.workers_required),
+        ];
+        if !p.unit_kinds.is_empty() {
+            let units: Vec<_> = p.unit_kinds.iter().map(|u| format!("{u:?}")).collect();
+            lines.push(format!("Units  {}", units.join(" + ")));
+        }
+        if let Some(id) = &p.catalog_id {
+            lines.push(format!("Catalog  {id}"));
+        }
+        lines
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
