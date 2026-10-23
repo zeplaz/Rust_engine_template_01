@@ -252,6 +252,9 @@ pub fn sync_dynamic_overlay_migrate_system(
     dual: Res<crate::substrate::shim::DualWriteShimState>,
     mut registry: ResMut<WorldSubstrateRegistry>,
     mut pr4: ResMut<SubstratePr4Witness>,
+    time: Res<Time>,
+    mut last_generation: Local<Option<u64>>,
+    mut since_migrate_secs: Local<f32>,
 ) {
     if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
         return;
@@ -259,6 +262,18 @@ pub fn sync_dynamic_overlay_migrate_system(
     let Some(overlay) = overlay else {
         return;
     };
+    // Full-map migrate + compare is O(all overlay cells). The writers already mirror every cell
+    // they touch into the slab, so this is a reconcile pass: run it rarely and only after a
+    // writer pass changed something.
+    *since_migrate_secs += time.delta_secs();
+    if last_generation.is_some() && *since_migrate_secs < 2.0 {
+        return;
+    }
+    if *last_generation == Some(overlay.generation) {
+        return;
+    }
+    *since_migrate_secs = 0.0;
+    *last_generation = Some(overlay.generation);
     let _ = migrate_dynamic_overlay_to_slab(&mut registry, overlay.as_ref());
     pr4.dynamic_overlay_migrated = crate::substrate::shim::dual_write_shim_green(&dual)
         && dynamic_overlay_matches_slab(registry.as_ref(), overlay.as_ref());
