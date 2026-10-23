@@ -143,5 +143,6 @@ impl Plugin for WorldGenUiPlugin {
                     .run_if(in_state(AppState::WorldGen))
                     .in_set(crate::gui::ViewRepresentationSystemSet::UiCollect),
             );
+        crate::gui::editor::world_preview::world_gen_panel::register_world_gen_panel(app);
     }
 }

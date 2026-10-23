@@ -86,9 +86,25 @@ pub struct UiButtonLabel;
 #[derive(Component)]
 pub struct UiToggleBox;
 
-/// Value bar fill inside a stepper; width = `fraction` of the track.
+/// Value bar fill inside a stepper; width follows [`UiSlider::fraction`].
 #[derive(Component)]
 pub struct UiMeterFill;
+
+/// Click / drag track under a stepper. Callers write `fraction` (0..1) from their value and
+/// read drags with [`ui_slider_drag`].
+#[derive(Component, Clone, Copy, Debug, Default, PartialEq)]
+pub struct UiSlider {
+    pub fraction: f32,
+}
+
+/// Fraction (0..1) under the cursor while the slider track is held, else `None`.
+#[must_use]
+pub fn ui_slider_drag(interaction: &Interaction, cursor: &RelativeCursorPosition) -> Option<f32> {
+    if *interaction != Interaction::Pressed {
+        return None;
+    }
+    cursor.normalized.map(|n| (n.x + 0.5).clamp(0.0, 1.0))
+}
 
 /// Mouse-wheel scrollable column (needs `overflow: scroll_y`).
 #[derive(Component)]
@@ -449,7 +465,8 @@ pub fn spawn_toggle<'a>(
 #[derive(Component, Clone, Copy, Debug)]
 pub struct ToggleState(pub bool);
 
-/// `label  [-] value [+]` with a fill meter underneath. Markers are caller-owned.
+/// `label  [-] value [+]` with a click/drag slider underneath. Markers are caller-owned;
+/// `slider` lands on the track entity (which carries [`UiSlider`]).
 pub fn spawn_stepper(
     parent: &mut ChildSpawnerCommands<'_>,
     kit: &UiKit,
@@ -458,7 +475,7 @@ pub fn spawn_stepper(
     plus: impl Bundle,
     readout: impl Bundle,
     initial: &str,
-    meter: impl Bundle,
+    slider: impl Bundle,
     fraction: f32,
 ) {
     parent
@@ -513,19 +530,25 @@ pub fn spawn_stepper(
                     });
             });
             col.spawn((
+                UiSlider { fraction: fraction.clamp(0.0, 1.0) },
+                slider,
+                Interaction::default(),
+                RelativeCursorPosition::default(),
+                FocusPolicy::Block,
                 Node {
                     width: Val::Percent(100.0),
-                    height: Val::Px(3.0),
+                    height: Val::Px(8.0),
+                    border: UiRect::all(Val::Px(1.0)),
                     ..default()
                 },
                 BackgroundColor(mix(kit.palette.bevy_button_idle(), Color::BLACK, 0.3)),
+                BorderColor::all(kit.palette.bevy_border_subtle()),
             ))
             .with_children(|track| {
                 track.spawn((
                     UiMeterFill,
-                    meter,
                     Node {
-                        width: Val::Percent((fraction.clamp(0.0, 1.0)) * 100.0),
+                        width: Val::Percent(fraction.clamp(0.0, 1.0) * 100.0),
                         height: Val::Percent(100.0),
                         ..default()
                     },
@@ -597,6 +620,22 @@ fn sync_toggle_visuals(
         let next = if on { on_color } else { Color::NONE };
         if bg.0 != next {
             bg.0 = next;
+        }
+    }
+}
+
+fn sync_slider_fill(
+    sliders: Query<(&UiSlider, &Children), Changed<UiSlider>>,
+    mut fills: Query<&mut Node, With<UiMeterFill>>,
+) {
+    for (slider, children) in &sliders {
+        for child in children.iter() {
+            if let Ok(mut node) = fills.get_mut(child) {
+                let w = Val::Percent(slider.fraction.clamp(0.0, 1.0) * 100.0);
+                if node.width != w {
+                    node.width = w;
+                }
+            }
         }
     }
 }
@@ -692,14 +731,43 @@ impl Plugin for UiWidgetsPlugin {
         app.add_systems(Startup, spawn_tooltip_root)
             .add_systems(
                 Update,
-                (sync_button_visuals, sync_toggle_visuals, scroll_wheel, sync_tooltip),
+                (
+                    sync_button_visuals,
+                    sync_toggle_visuals,
+                    sync_slider_fill,
+                    scroll_wheel,
+                    sync_tooltip,
+                ),
             );
+    }
+}
+
+/// Test helper: query-access conflicts (B0001) panic at system init — catch them in tests.
+#[cfg(test)]
+pub(crate) mod test_support {
+    use bevy::prelude::*;
+
+    pub(crate) fn init_ok<M>(f: impl IntoSystem<(), (), M>) {
+        use bevy::ecs::system::System;
+        let mut world = World::new();
+        let mut sys = IntoSystem::into_system(f);
+        sys.initialize(&mut world);
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use super::test_support::init_ok;
     use super::*;
+
+    #[test]
+    fn widget_systems_have_disjoint_queries() {
+        init_ok(sync_button_visuals);
+        init_ok(sync_toggle_visuals);
+        init_ok(sync_slider_fill);
+        init_ok(scroll_wheel);
+        init_ok(sync_tooltip);
+    }
 
     #[test]
     fn disabled_button_never_fires() {

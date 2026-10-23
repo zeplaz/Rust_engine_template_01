@@ -39,6 +39,7 @@ mod viewport_suggestion;
 mod wave_p_readiness;
 mod wave_p_witness;
 pub(crate) mod world_gen_bevy_shell;
+pub(crate) mod world_gen_panel;
 mod window;
 
 pub use chrome::{
