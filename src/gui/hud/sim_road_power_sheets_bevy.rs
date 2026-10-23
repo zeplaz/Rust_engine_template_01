@@ -549,6 +549,17 @@ pub fn sim_power_sheet_actions(
 
 #[cfg(test)]
 mod tests {
+    use super::*;
+    use crate::gui::style::widgets::test_support::init_ok;
+
+    #[test]
+    fn sheet_systems_have_disjoint_queries() {
+        init_ok(sync_sim_road_sheet_bevy);
+        init_ok(sync_sim_power_sheet_bevy);
+        init_ok(sim_road_sheet_actions);
+        init_ok(sim_power_sheet_actions);
+    }
+
     #[test]
     fn hud_nat_005_tool_hints_off_in_sim() {
         assert!(!crate::construction::TOOL_HINTS_DRAW_IN_SIM);

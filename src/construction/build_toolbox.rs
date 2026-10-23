@@ -577,6 +577,16 @@ pub fn register_build_toolbox_bevy_systems(app: &mut App) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::gui::style::widgets::test_support::init_ok;
+
+    #[test]
+    fn toolbox_systems_have_disjoint_queries() {
+        init_ok(sync_build_toolbox_bevy);
+        init_ok(rebuild_toolbox_menu_list);
+        init_ok(sync_toolbox_state);
+        init_ok(build_toolbox_bevy_action_system);
+    }
+
 
     #[test]
     fn menu_rows_have_selectable_items_for_every_category() {
