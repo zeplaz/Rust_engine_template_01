@@ -60,7 +60,6 @@ pub mod sim_hud_l5_polish;
 pub mod sim_hud_copy;
 pub mod sim_hud_egui_theme;
 pub mod sim_build_picker_sheet;
-pub mod sim_build_picker_bevy;
 pub mod sim_build_picker_panel;
 pub mod sim_road_power_sheets_bevy;
 pub mod sim_road_tool_sheet;
