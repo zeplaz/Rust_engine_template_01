@@ -264,9 +264,9 @@ pub fn sync_dynamic_overlay_migrate_system(
     };
     // Full-map migrate + compare is O(all overlay cells). The writers already mirror every cell
     // they touch into the slab, so this is a reconcile pass: run it rarely and only after a
-    // writer pass changed something.
+    // writer pass changed something. The pass is a ~10 ms whole-map walk, so it runs at most every 30 s.
     *since_migrate_secs += time.delta_secs();
-    if last_generation.is_some() && *since_migrate_secs < 2.0 {
+    if last_generation.is_some() && *since_migrate_secs < 30.0 {
         return;
     }
     if *last_generation == Some(overlay.generation) {
