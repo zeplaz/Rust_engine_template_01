@@ -43,6 +43,10 @@ pub struct Formation {
     pub engaged: bool,
     /// Fractional progress toward the next tile.
     pub move_progress: f32,
+    /// Ordered to dig in (Fortify): it entrenches while holding still out of contact.
+    pub fortify: bool,
+    /// Field works finished (0..1); gives trench cover scaled by this. Lost when the formation moves.
+    pub dug_in: f32,
 }
 
 impl Formation {
@@ -59,6 +63,8 @@ impl Formation {
             target: None,
             engaged: false,
             move_progress: 0.0,
+            fortify: false,
+            dug_in: 0.0,
         }
     }
 }
@@ -205,6 +211,7 @@ pub fn advance_formations_system(
             f.move_progress -= 1.0;
             let d = target - f.tile;
             f.tile += if d.x.abs() >= d.y.abs() { IVec2::new(d.x.signum(), 0) } else { IVec2::new(0, d.y.signum()) };
+            f.dug_in = 0.0;
         }
         if f.tile == target {
             f.target = None;
@@ -213,6 +220,24 @@ pub fn advance_formations_system(
                 f.posture = Posture::Hold;
             }
         }
+    }
+}
+
+/// Entrench formations under a Fortify order: they dig while holding still out of contact, at
+/// `trench effort / (personnel * strength)` sped up by `dig_in_rate_mult` (engineers faster).
+pub fn dig_in_system(clock: Res<CombatClock>, balance: Res<FrontBalance>, mut formations: Query<&mut Formation>) {
+    if clock.dt_s <= 0.0 {
+        return;
+    }
+    let Some(trench) = balance.fortification(super::balance::FortKind::Trench) else { return };
+    let effort_s = (trench.build_effort_person_hours * 3600.0).max(1.0);
+    for mut f in &mut formations {
+        if !f.fortify || f.posture != Posture::Hold || f.target.is_some() || f.engaged || f.dug_in >= 1.0 {
+            continue;
+        }
+        let kind_mult = if f.kind == UnitKind::Engineer { balance.combat.engineer_dig_mult } else { 1.0 };
+        let persons = balance.unit(f.kind).toe_personnel as f32 * f.strength;
+        f.dug_in = (f.dug_in + clock.dt_s * persons * kind_mult * balance.combat.dig_in_rate_mult / effort_s).min(1.0);
     }
 }
 
@@ -332,5 +357,29 @@ mod tests {
             || app.world().entity(defender).get::<Formation>().is_some_and(|f| f.posture == Posture::Retreat);
         assert!(defender_gone, "defender destroyed or broken");
         assert_eq!(owner_at(&mut app, 36), Some(0), "ground changed hands");
+    }
+
+    #[test]
+    fn fortify_order_digs_in_over_time_and_queues_construction_rows() {
+        let mut app = world([1.0, 1.0]);
+        app.init_resource::<crate::construction::PendingConstructionQueue>();
+        let e = spawn(&mut app, Formation::new(0, UnitKind::Infantry, IVec2::new(28, 0)));
+        tick(&mut app, 30);
+        let theater = app.world().resource::<TheaterBook>().theaters.first().map(|t| t.id).expect("front -> theater");
+        let o = DeploymentOrder { formation: e, kind: DeploymentKind::Fortify(theater), issued_by: 0 };
+        app.world_mut().resource_mut::<DeploymentOrderQueue>().enqueue(o).unwrap();
+        tick(&mut app, 2);
+        let early = app.world().entity(e).get::<Formation>().unwrap().dug_in;
+        assert!(early > 0.0 && early < 1.0, "digging takes time, got {early}");
+        tick(&mut app, 900);
+        let f = app.world().entity(e).get::<Formation>().unwrap();
+        assert!(f.fortify && f.dug_in >= 1.0, "dug in: {}", f.dug_in);
+        let q = app.world().resource::<crate::construction::PendingConstructionQueue>();
+        assert!(!q.entries.is_empty() && q.entries.iter().all(|e| !e.approved), "rows wait for the construction funnel");
+        // Moving away abandons the works.
+        let mv = DeploymentOrder { formation: e, kind: DeploymentKind::Move(IVec2::new(20, 0)), issued_by: 0 };
+        app.world_mut().resource_mut::<DeploymentOrderQueue>().enqueue(mv).unwrap();
+        tick(&mut app, 2);
+        assert_eq!(app.world().entity(e).get::<Formation>().unwrap().dug_in, 0.0);
     }
 }

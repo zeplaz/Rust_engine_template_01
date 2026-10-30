@@ -79,6 +79,12 @@
         // Artillery Zone{Fire} radius as a fraction of range; strength at or below which a formation dies.
         fire_zone_range_fraction: 0.15,
         destroyed_strength: 0.02,
+        // Dig-in speed vs the trench build effort; engineers dig faster.
+        dig_in_rate_mult: 10.0,
+        engineer_dig_mult: 3.0,
+        // Fortify order: how far behind the front rows are planned, and the most rows per order.
+        fortify_setback_m: 100.0,
+        fortify_max_rows: 8,
     ),
     units: [
         (kind: Infantry,    firepower: 1.0, range_m: 400.0,  control_radius_m: 300.0, speed_mps: 1.2,  toe_personnel: 600,

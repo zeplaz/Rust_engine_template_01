@@ -33,6 +33,8 @@ pub struct Combatant {
     pub morale: f32,
     pub supply: f32,
     pub posture: Posture,
+    /// Field works finished (0..1), from a Fortify order.
+    pub dug_in: f32,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -57,10 +59,20 @@ fn lerp(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * t.clamp(0.0, 1.0)
 }
 
-/// Fraction of incoming fire the target's tile absorbs from this attacker.
-fn cover_against(target: &Combatant, attacker: UnitKind, fort: Option<&FortificationProfile>, b: &FrontBalance) -> f32 {
-    let Some(f) = fort else { return 0.0 };
-    let mut cover = f.cover + if attacker.is_armored() { f.anti_armor } else { 0.0 };
+/// Fraction of incoming fire the target's tile absorbs from this attacker: the better of the
+/// fortification it holds and its own field works (a trench scaled by how far it dug in).
+fn cover_against(
+    target: &Combatant,
+    attacker: UnitKind,
+    fort: Option<&FortificationProfile>,
+    trench: Option<&FortificationProfile>,
+    b: &FrontBalance,
+) -> f32 {
+    let one = |f: &FortificationProfile, k: f32| (f.cover * k) + if attacker.is_armored() { f.anti_armor * k } else { 0.0 };
+    let mut cover = fort.map_or(0.0, |f| one(f, 1.0));
+    if target.dug_in > 0.0 {
+        cover = cover.max(trench.map_or(0.0, |t| one(t, target.dug_in)));
+    }
     if target.posture == Posture::Attack {
         // An attacker is out of its works.
         cover *= b.combat.attacker_cover_scale;
@@ -109,7 +121,7 @@ pub fn resolve_step(
             Posture::Hold | Posture::Move => c.defend_mult,
         };
         let fort_here = fort(t.tile, t.slot);
-        let cover = cover_against(t, a.kind, fort_here.as_ref(), b);
+        let cover = cover_against(t, a.kind, fort_here.as_ref(), b.fortification(super::balance::FortKind::Trench), b);
         let l = c.k_attrition
             * a.strength
             * b.unit(a.kind).firepower
@@ -189,6 +201,7 @@ pub fn combat_resolve_system(
             morale: f.morale,
             supply: f.supply,
             posture: f.posture,
+            dug_in: f.dug_in,
         })
         .collect();
     let hostility = hostility_from_stances(stances.as_deref());
@@ -235,6 +248,7 @@ mod tests {
             morale: 1.0,
             supply: 1.0,
             posture: Posture::Hold,
+            dug_in: 0.0,
         }
     }
 
@@ -314,5 +328,20 @@ mod tests {
         let (a_fort, i_fort) = fight(true);
         assert!(a_open > i_open, "armor wins in the open");
         assert!(i_fort > a_fort, "infantry in a bunker beats the same armor");
+    }
+
+    #[test]
+    fn dug_in_defender_takes_less_fire() {
+        let b = FrontBalance::default();
+        let take = |dug: f32| {
+            let mut u = vec![unit(1, 0, UnitKind::Infantry, 0), unit(2, 1, UnitKind::Infantry, 5)];
+            u[0].posture = Posture::Attack;
+            u[1].dug_in = dug;
+            for _ in 0..60 {
+                resolve_step(&mut u, &Hostility::legacy_pair(), &b, &no_fort, 1.0);
+            }
+            1.0 - u[1].strength
+        };
+        assert!(take(1.0) < take(0.0) * 0.7);
     }
 }

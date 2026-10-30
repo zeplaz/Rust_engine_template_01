@@ -196,6 +196,31 @@ pub struct CombatParams {
     /// A formation at or below this strength is destroyed.
     #[serde(default = "default_destroyed_strength")]
     pub destroyed_strength: f32,
+    /// Multiplier on field-works (dig-in) speed versus the trench build effort.
+    #[serde(default = "default_dig_in_rate_mult")]
+    pub dig_in_rate_mult: f32,
+    /// Engineers dig this many times faster than a line unit.
+    #[serde(default = "default_engineer_dig_mult")]
+    pub engineer_dig_mult: f32,
+    /// How far behind the front line fortification rows are planned.
+    #[serde(default = "default_fortify_setback_m")]
+    pub fortify_setback_m: f32,
+    /// Most construction rows one Fortify order plans.
+    #[serde(default = "default_fortify_max_rows")]
+    pub fortify_max_rows: usize,
+}
+
+fn default_dig_in_rate_mult() -> f32 {
+    10.0
+}
+fn default_engineer_dig_mult() -> f32 {
+    3.0
+}
+fn default_fortify_setback_m() -> f32 {
+    100.0
+}
+fn default_fortify_max_rows() -> usize {
+    8
 }
 
 fn default_idle_draw_fraction() -> f32 {
@@ -418,6 +443,12 @@ impl FrontBalance {
         non_negative("combat.mobility_slow_k", c.mobility_slow_k, &mut issues);
         unit01("combat.fire_zone_range_fraction", c.fire_zone_range_fraction, &mut issues);
         unit01("combat.destroyed_strength", c.destroyed_strength, &mut issues);
+        positive("combat.dig_in_rate_mult", c.dig_in_rate_mult, &mut issues);
+        positive("combat.engineer_dig_mult", c.engineer_dig_mult, &mut issues);
+        non_negative("combat.fortify_setback_m", c.fortify_setback_m, &mut issues);
+        if c.fortify_max_rows == 0 {
+            issues.push("combat.fortify_max_rows must be >= 1".into());
+        }
         for kind in UnitKind::ALL {
             let rows: Vec<_> = self.units.iter().filter(|u| u.kind == kind).collect();
             match rows.len() {
