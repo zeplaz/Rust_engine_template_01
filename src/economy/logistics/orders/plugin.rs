@@ -98,6 +98,25 @@ impl LogisticsSiteRegistry {
     }
 }
 
+/// Faction slot that owns the entity this is attached to (a construction-site owner, a hub).
+/// Endpoints created for an entity take their logistics owner from it; no slot means the player.
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FactionSlot(pub u8);
+
+/// Stock a depot starts with when it first registers: `(cargo, units)` in the cargo's own unit
+/// (tonnes for bulk, m3 for liquids). Data-defined by the faction start config.
+#[derive(Component, Clone, Debug, Default, PartialEq)]
+pub struct DepotStartingStock(pub Vec<(String, u32)>);
+
+/// Fleet a depot starts with instead of the global [`DepotFleetSeed`]:
+/// `(class_mask, capacity_units, speed_mps, count)`.
+#[derive(Component, Clone, Debug, Default, PartialEq)]
+pub struct DepotStartingFleet(pub Vec<(CargoClassMask, u32, f32, u32)>);
+
+fn owner_of(slots: &Query<&FactionSlot>, entity: Entity) -> OwnerId {
+    slots.get(entity).map_or(OwnerId::PLAYER, |s| OwnerId(s.0))
+}
+
 /// Starting vehicles granted to each newly registered depot.
 ///
 /// Interim until vehicle production feeds the pool (plan LO-5); `AddVehicle` requests work any time.
@@ -371,12 +390,15 @@ impl Plugin for LogisticsOrdersPlugin {
 /// Logistics hubs (`LogisticsSiteRoot`) become player depots.
 pub fn tag_logistics_hubs_as_order_sites(
     mut commands: Commands,
-    hubs: Query<(Entity, Option<&Name>), (With<LogisticsSiteRoot>, Without<LogisticsOrderSite>)>,
+    hubs: Query<
+        (Entity, Option<&Name>, Option<&FactionSlot>),
+        (With<LogisticsSiteRoot>, Without<LogisticsOrderSite>),
+    >,
 ) {
-    for (entity, name) in &hubs {
+    for (entity, name, slot) in &hubs {
         commands.entity(entity).insert(LogisticsOrderSite {
             name: name.map_or_else(|| format!("Depot {}", entity.index()), |n| n.to_string()),
-            owner: OwnerId::PLAYER,
+            owner: slot.map_or(OwnerId::PLAYER, |s| OwnerId(s.0)),
             role: SiteRole::Depot,
             position_m: None,
         });
@@ -390,17 +412,23 @@ pub fn tag_logistics_hubs_as_order_sites(
 pub fn tag_flow_facilities_as_order_sites(
     mut commands: Commands,
     nodes: Query<
-        (Entity, &ResourceFlowNode, Option<&mut LogisticsOrderSite>),
+        (
+            Entity,
+            &ResourceFlowNode,
+            Option<&mut LogisticsOrderSite>,
+            Option<&crate::strategic::ConstructionSite>,
+        ),
         Without<LogisticsSiteRoot>,
     >,
+    slots: Query<&FactionSlot>,
 ) {
-    for (entity, node, existing) in nodes {
+    for (entity, node, existing, built) in nodes {
         let name = format!("{} #{}", node.catalog_id, entity.index());
         match existing {
             None => {
                 commands.entity(entity).insert(LogisticsOrderSite {
                     name,
-                    owner: OwnerId::PLAYER,
+                    owner: built.map_or(OwnerId::PLAYER, |b| owner_of(&slots, b.owner)),
                     role: SiteRole::Plant,
                     position_m: None,
                 });
@@ -454,7 +482,14 @@ pub fn step_logistics_orders_system(
     sim_time: Option<Res<SimTimeMicros>>,
     mut requests: MessageReader<LogisticsOrderRequest>,
     new_sites: Query<
-        (Entity, &LogisticsOrderSite, Option<&Transform>, Option<&GlobalTransform>),
+        (
+            Entity,
+            &LogisticsOrderSite,
+            Option<&Transform>,
+            Option<&GlobalTransform>,
+            Option<&DepotStartingStock>,
+            Option<&DepotStartingFleet>,
+        ),
         Without<LogisticsOrderSiteId>,
     >,
     known_sites: Query<
@@ -479,7 +514,7 @@ pub fn step_logistics_orders_system(
         }
     }
 
-    for (entity, site, t, g) in &new_sites {
+    for (entity, site, t, g, start_stock, start_fleet) in &new_sites {
         let Some(xz) = site_xz(site, t, g) else {
             continue;
         };
@@ -508,8 +543,29 @@ pub fn step_logistics_orders_system(
             site: id,
             name: site.name.clone(),
         });
-        // A rebound depot already has its saved fleet.
-        if rebound.is_none() && seed.enabled && site.role == SiteRole::Depot {
+        // A rebound site already has its saved stock and fleet.
+        if rebound.is_none() {
+            for (cargo, units) in start_stock.map_or(&[][..], |s| s.0.as_slice()) {
+                res.sim.apply(LogisticsOrderCommand::AddStock {
+                    site: id,
+                    cargo: CargoKind::new(cargo.clone()),
+                    amount: *units,
+                });
+            }
+        }
+        if rebound.is_none() && site.role == SiteRole::Depot && start_fleet.is_some() {
+            for &(class_mask, capacity_units, speed_mps, count) in &start_fleet.unwrap().0 {
+                for _ in 0..count {
+                    res.sim.apply(LogisticsOrderCommand::AddVehicle {
+                        owner: site.owner,
+                        home: id,
+                        class_mask,
+                        capacity_units,
+                        speed_mps,
+                    });
+                }
+            }
+        } else if rebound.is_none() && seed.enabled && site.role == SiteRole::Depot {
             for &(class_mask, capacity_units, speed_mps, count) in &seed.vehicles {
                 for _ in 0..count {
                     res.sim.apply(LogisticsOrderCommand::AddVehicle {

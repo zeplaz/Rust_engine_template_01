@@ -1,0 +1,61 @@
+// Game start per faction slot (src/ai/faction/start.rs).
+// Units: cargo in its own unit (t for bulk goods, m3 for liquids); capacity in t (m3 tanker, seats
+// troop); speed in m/s; tiles are 16 m.
+(
+    schema_version: 1,
+    territory_wait_frames: 300,
+    factions: [
+        (
+            slot: 0,
+            name: "Player HQ",
+            ai: None,
+            hq: Territory(fallback_tile: (24, 24)),
+            stockpile: [
+                (cargo: "Concrete", amount: 1000),
+                (cargo: "Steel", amount: 400),
+                (cargo: "Fuel", amount: 300),
+                (cargo: "Machinery", amount: 80),
+                (cargo: "Cement", amount: 500),
+                (cargo: "Gravel", amount: 700),
+                (cargo: "Limestone", amount: 500),
+                (cargo: "Coal", amount: 300),
+                (cargo: "Water", amount: 400),
+                (cargo: "Chemicals", amount: 150),
+            ],
+            fleet: [
+                (class: Freight, count: 10, capacity: 10, speed_mps: 12.0),
+                (class: Tanker, count: 2, capacity: 20, speed_mps: 11.0),
+                (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
+            ],
+        ),
+        (
+            slot: 1,
+            name: "AI HQ",
+            ai: Some((
+                aggression: 0.5,
+                caution: 0.5,
+                logistics_focus: 0.5,
+                development_focus: 0.5,
+                commitment: 0.1,
+            )),
+            hq: Territory(fallback_tile: (104, 104)),
+            stockpile: [
+                (cargo: "Concrete", amount: 1000),
+                (cargo: "Steel", amount: 400),
+                (cargo: "Fuel", amount: 300),
+                (cargo: "Machinery", amount: 80),
+                (cargo: "Cement", amount: 500),
+                (cargo: "Gravel", amount: 700),
+                (cargo: "Limestone", amount: 500),
+                (cargo: "Coal", amount: 300),
+                (cargo: "Water", amount: 400),
+                (cargo: "Chemicals", amount: 150),
+            ],
+            fleet: [
+                (class: Freight, count: 10, capacity: 10, speed_mps: 12.0),
+                (class: Tanker, count: 2, capacity: 20, speed_mps: 11.0),
+                (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
+            ],
+        ),
+    ],
+)

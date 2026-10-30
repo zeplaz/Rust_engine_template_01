@@ -21,6 +21,7 @@ pub mod military;
 pub mod orders;
 pub mod perception;
 pub mod rng;
+pub mod start;
 
 #[cfg(test)]
 mod scenario;
@@ -38,7 +39,7 @@ use crate::construction::BuildingDefinitionRegistry;
 use crate::economy::activation::BuildingDefinitionRef;
 use crate::economy::logistics::orders::construction_demand::site_accepts_materials;
 use crate::economy::logistics::orders::{
-    AutoSupplyPolicy, LogisticsOrderRequest, LogisticsOrderSite, LogisticsOrdersSnapshot, LogisticsOrdersSnapshotRes, OwnerId,
+    AutoSupplyPolicy, FactionSlot, LogisticsOrderRequest, LogisticsOrderSite, LogisticsOrdersSnapshot, LogisticsOrdersSnapshotRes, OwnerId,
     SiteRole,
 };
 use crate::strategic::{
@@ -58,6 +59,7 @@ pub use orders::{
 };
 pub use perception::{perceive_faction, FactionPerception, FrontCell};
 pub use rng::{AiSeed, DetRng};
+pub use start::{FactionHq, FactionStartConfig, FactionStartPlugin};
 
 /// Default sim ticks between two decisions of one faction.
 pub const DEFAULT_DECISION_INTERVAL_TICKS: u64 = 60;
@@ -209,6 +211,8 @@ pub struct AiWorld<'w, 's> {
     pub raster: Option<Res<'w, StrategicRasterConfig>>,
     pub ai_seed: Option<Res<'w, AiSeed>>,
     pub world_gen: Option<Res<'w, WorldGenParams>>,
+    pub hqs: Query<'w, 's, &'static FactionHq>,
+    pub start: Option<Res<'w, FactionStartConfig>>,
 }
 
 /// Per-decision scratch: what a decision has ordered and why.
@@ -386,8 +390,12 @@ fn run_economy_brain(
     let owner = OwnerId(c.slot);
     // The faction needs somewhere for supplies to come from before it can build anything.
     if !c.depot_founded {
-        if snap.sites_of(owner, SiteRole::Depot).next().is_some() {
+        if snap.sites_of(owner, SiteRole::Depot).next().is_some() || world.hqs.iter().any(|h| h.slot == c.slot) {
+            // The faction's HQ (start config) is its first depot; nothing to found.
             c.depot_founded = true;
+        } else if world.start.as_deref().is_some_and(|cfg| cfg.factions.iter().any(|f| f.slot == c.slot)) {
+            // The start config gives this faction an HQ; it appears once the faction holds ground.
+            return;
         } else if let Some(tile) = perception.rear_anchor {
             let centre = (tile.as_vec2() + Vec2::splat(0.5)) * METRES_PER_TILE;
             commands.spawn((
@@ -585,20 +593,14 @@ pub fn faction_ai_tick_system(
     }
 }
 
-/// Sites committed by an AI faction belong to that faction's logistics owner. The construction lane
-/// tags every new site as the player's (`tag_construction_sites_as_order_sites`); this hands the
-/// endpoint to the faction that placed it so its own advisor supplies it. Sole writer of
-/// `LogisticsOrderSite.owner` for AI-owned sites.
-pub fn claim_ai_sites_system(
-    controllers: Query<&FactionAiController>,
-    mut sites: Query<(&ConstructionSite, &mut LogisticsOrderSite)>,
+/// The faction's controller entity is the `owner` of the sites it commits; its [`FactionSlot`] is how
+/// the logistics lane maps those sites onto the faction's own order books (no after-the-fact patching).
+pub fn ensure_controller_faction_slot_system(
+    mut commands: Commands,
+    controllers: Query<(Entity, &FactionAiController), Without<FactionSlot>>,
 ) {
-    for (site, mut endpoint) in &mut sites {
-        let Ok(c) = controllers.get(site.owner) else { continue };
-        let want = OwnerId(c.slot);
-        if endpoint.owner != want {
-            endpoint.owner = want;
-        }
+    for (entity, c) in &controllers {
+        commands.entity(entity).insert(FactionSlot(c.slot));
     }
 }
 
@@ -619,8 +621,8 @@ impl Plugin for FactionAiPlugin {
                 Update,
                 (
                     seed_faction_ai_controllers_system,
+                    ensure_controller_faction_slot_system,
                     faction_ai_tick_system,
-                    claim_ai_sites_system,
                 )
                     .chain()
                     .in_set(FactionAiSet::Tick),
