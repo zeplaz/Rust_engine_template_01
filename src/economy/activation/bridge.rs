@@ -35,6 +35,8 @@ impl Plugin for IndustrialActivationPlugin {
             super::grid_overload_ux::GridOverloadUxPlugin,
             super::power_island_ux::PowerIslandUxPlugin,
         ));
+        // Systems below read these in normal runs; only the test harness plugin used to init them.
+        crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks(app);
         app.init_resource::<super::witness_collectors::IndustrialActivationLiveProofState>()
             .init_resource::<crate::dev::Stage7PlayLiveProofState>()
             .init_resource::<crate::dev::Stage7BehavioralLiveProofState>()
