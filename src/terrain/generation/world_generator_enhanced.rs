@@ -127,7 +127,11 @@ impl Default for WorldGenParams {
         let mut p = Self {
             width: 512,
             height: 512,
-            seed: rand::random(),
+            // `WORLD_GEN_SEED=<u64>` pins the world for repeatable captures; otherwise a fresh random world.
+            seed: std::env::var("WORLD_GEN_SEED")
+                .ok()
+                .and_then(|s| s.trim().parse::<u64>().ok())
+                .unwrap_or_else(rand::random),
             num_regions: 0,
             region_method: RegionMethod::Centroidal,
             region_iterations: 3,
@@ -747,11 +751,13 @@ fn world_gen_pipeline_tick(
 
                     // The one water decision for this world: sim chunks, the dense cache and the render
                     // catalog all read it.
-                    let water_grid = super::water_class::WorldWaterGrid::from_hydrology(
+                    let water_grid = super::water_class::WorldWaterGrid::from_hydrology_on_terrain(
                         &hydro,
                         job.run_params.width,
                         job.run_params.height,
                         job.run_params.seed ^ 0xA7E2_0001,
+                        &job.height_grid,
+                        job.run_params.biome_tuning.shallow_water_height_max,
                     );
                     if chunk_authoritative {
                         if let Some(cache) = dense_cache.as_mut() {

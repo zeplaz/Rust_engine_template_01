@@ -132,7 +132,15 @@ impl WorldGenDenseTerrainCache {
                 WaterClass::Wetland => {
                     self.moisture[i] = self.moisture[i].max(0.78);
                 }
-                WaterClass::Ocean | WaterClass::Dry => {}
+                WaterClass::Ocean => {
+                    // Sea-level water is already low terrain; an edge-connected depression above the line is not.
+                    if self.elevation[i] > water_line {
+                        self.elevation[i] = lake_depth;
+                        self.moisture[i] = 0.98;
+                        self.family[i] = shallow;
+                    }
+                }
+                WaterClass::Dry => {}
             }
         }
     }
