@@ -500,6 +500,9 @@ mod tests {
         let mut pending = PendingConstructionQueue::default();
         let mut player = growth_sites_for_towns(&towns, &districts)[0].clone();
         player.label = "player".into();
+        // A player row at a growth site's origin would (by design) suppress that site, so park
+        // the player blueprint away from every town to isolate the once-only / keep-rows invariant.
+        player.origin.x += 10_000;
         pending.push(player);
         let mut placed = false;
         assert_eq!(

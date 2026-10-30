@@ -1153,8 +1153,9 @@ mod tests {
 
     #[test]
     fn interest_radius_stable_within_zoom_quantum_band() {
-        let a = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.14));
-        let b = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.16));
+        let a = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.11));
+        // Quantizer rounds to nearest 0.1, so the 0.1 band spans [0.05, 0.15); 0.16 would be the next band.
+        let b = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.14));
         assert_eq!(a, b);
         let c = interest_radius_chunks_from_zoom_alpha(quantize_zoom_alpha_for_interest(0.24));
         assert_ne!(a, c);

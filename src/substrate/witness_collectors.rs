@@ -476,6 +476,9 @@ mod tests {
     /// **DEHACK-WSS-002** — slab authoritative; dual-write compare-only by default.
     #[test]
     fn dehack_wss_002_slab_authoritative_witness_default() {
+        let _env = crate::substrate::shim::DUAL_WRITE_ENV_TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let _ = std::env::remove_var("RUST_ENGINE_SUBSTRATE_DUAL_WRITE");
         assert!(refresh_wss_substrate_live_witness());
         let raw = std::fs::read_to_string(WSS_SUBSTRATE_LIVE_JSON).expect("witness json");
@@ -493,6 +496,9 @@ mod tests {
     /// **DEHACK-WSS-001** — compare-only default on disk witness (mirror env opt-in).
     #[test]
     fn dehack_wss_001_witness_compare_only_default() {
+        let _env = crate::substrate::shim::DUAL_WRITE_ENV_TEST_LOCK
+            .lock()
+            .unwrap_or_else(|e| e.into_inner());
         let _ = std::env::remove_var("RUST_ENGINE_SUBSTRATE_DUAL_WRITE");
         assert!(refresh_wss_substrate_live_witness());
         let raw = std::fs::read_to_string(WSS_SUBSTRATE_LIVE_JSON).expect("witness json");

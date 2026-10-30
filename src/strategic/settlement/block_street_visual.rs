@@ -123,11 +123,16 @@ fn assembled_blocks(staging: &BlockRolloutStagingBook) -> Vec<BlockId> {
 
 pub fn load_block_street_furniture_scenes(
     mut catalog: ResMut<BlockStreetFurnitureCatalog>,
-    asset_server: Res<AssetServer>,
+    asset_server: Option<Res<AssetServer>>,
+    world_assets: Option<Res<Assets<bevy::world_serialization::WorldAsset>>>,
 ) {
     if catalog.load_started {
         return;
     }
+    // Headless / minimal apps (sim harness, tests) lack `AssetServer` / `WorldAsset`; loading would panic.
+    let (Some(asset_server), Some(_)) = (asset_server, world_assets) else {
+        return;
+    };
     let jobs = [
         "prop_fence_lod0_run001",
         "prop_light_lod0_run001",

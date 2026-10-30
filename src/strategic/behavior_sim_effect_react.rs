@@ -15,12 +15,16 @@ use super::behavior_pressure::{PressureField, PressureProfile};
 
 /// Scan new telemetry rows after sim-effect drain; accumulate mission climate pressure only.
 pub fn apply_sim_effect_telemetry_faction_stress_system(
-    ledger: Res<SimEffectTelemetryLedger>,
+    ledger: Option<Res<SimEffectTelemetryLedger>>,
     mut pressure: ResMut<PressureField>,
     mut fracture_bus: ResMut<FractureEventBus>,
-    mut witness: ResMut<SimEffectFactionReactWitness>,
+    witness: Option<ResMut<SimEffectFactionReactWitness>>,
     factions: Query<Entity, With<Faction>>,
 ) {
+    // `SimEffectsPlugin` owns the ledger + witness; strategic-only apps (no sim effects) have nothing to scan.
+    let (Some(ledger), Some(mut witness)) = (ledger, witness) else {
+        return;
+    };
     witness.wired = true;
     let cursor = witness.scan_cursor();
     let (hooks, max_id) = scan_faction_stress_rows(&ledger, cursor);

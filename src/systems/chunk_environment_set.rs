@@ -90,6 +90,8 @@ mod tests {
         app.add_plugins(MinimalPlugins);
         app.add_plugins(InputPlugin);
         app.init_resource::<InputBindings>();
+        // Fire's ember-spot emitter enqueues through the sim-effect queue (owned by `SimEffectsPlugin`).
+        app.init_resource::<crate::sim::effects::SimEffectQueue>();
         app.add_plugins(SimControlPlugin);
         super::configure_chunk_environment_sets(&mut app);
         app.add_plugins((

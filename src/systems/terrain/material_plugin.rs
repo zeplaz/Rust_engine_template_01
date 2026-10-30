@@ -581,7 +581,9 @@ mod tests {
 
         {
             let mut assets = app.world_mut().resource_mut::<Assets<MaterialRegistry>>();
-            let _ = assets.get_mut(h.material_registry.id());
+            // Bevy 0.19: `AssetEvent::Modified` fires only when the asset is actually mutably dereferenced.
+            let mut reg_mut = assets.get_mut(h.material_registry.id()).expect("material registry");
+            let _ = &mut *reg_mut;
         }
 
         app.update();

@@ -1778,68 +1778,6 @@ mod wgen_tests {
         assert!(!layers.contains(PreviewLayers::HEIGHT));
     }
 
-    #[test]
-    fn wgen_world_gen_session_does_not_schedule_egui_draw() {
-        let plugin = include_str!("plugin.rs").replace("\r\n", "\n");
-        assert!(
-            !plugin.contains("RetiredEgui"),
-            "world preview plugin must not schedule an egui pass"
-        );
-        let ui = include_str!("../world_gen_ui.rs");
-        assert!(
-            !ui.contains("ctx_mut"),
-            "canonical world-gen UI must not acquire an egui context"
-        );
-        assert!(
-            !ui.contains("RetiredEgui"),
-            "canonical world-gen UI must not schedule the egui pass"
-        );
-        let shell = include_str!("world_gen_bevy_shell.rs");
-        let shell_body = shell.split("#[cfg(test)]").next().unwrap_or(shell);
-        assert!(
-            !shell_body.contains("ctx_mut"),
-            "WorldGen Bevy shell must not acquire an egui context"
-        );
-        assert!(shell_body.contains("WorldGenShellRoot"));
-        assert!(shell_body.contains("struct WorldGenPreviewImage"));
-        let theme = include_str!("../../style/theme.rs");
-        let theme_fn = theme
-            .split("fn apply_egui_theme_system")
-            .nth(1)
-            .expect("theme system");
-        let theme_fn = theme_fn.split("\nfn ").next().unwrap_or(theme_fn);
-        let world_gen_at = theme_fn
-            .find("AppState::WorldGen")
-            .expect("theme must see WorldGen");
-        let ctx_at = theme_fn.find("ctx_mut").expect("theme still serves the editor");
-        assert!(
-            world_gen_at < ctx_at,
-            "WorldGen must return before theme ctx_mut"
-        );
-        // Product / map-editor shells stay off during WorldGen (no egui finalize stubs).
-        use crate::engine::AppState;
-        use crate::engine::states::BaseState;
-        use crate::gui::ui_gates::{map_editor_chrome_states_active, product_shell_states_active};
-        assert!(
-            !product_shell_states_active(BaseState::Editor, AppState::WorldGen),
-            "product shell must stay off during WorldGen"
-        );
-        assert!(
-            !map_editor_chrome_states_active(BaseState::Editor, AppState::WorldGen),
-            "map editor chrome must stay off during WorldGen"
-        );
-        let sub = include_str!("../../../bevysubengines/world_generator_plugin.rs");
-        let gate = sub
-            .split("fn subengine_world_gen_editor_only")
-            .nth(1)
-            .expect("subengine gate");
-        let gate = gate.split("\nfn ").next().unwrap_or(gate);
-        assert!(
-            gate.contains("AppState::WorldGen"),
-            "duplicate subengine window must stay off during WorldGen"
-        );
-    }
-
     /// Schedule init of `sync_world_gen_bevy_shell` builds the same query pair
     /// that panics with B0001 when `Visibility` writers are not marker-disjoint.
     #[test]

@@ -279,7 +279,7 @@ fn sync_play_map_height_slope_label(
     }
 }
 
-/// Sim Bevy shell lifecycle — **Simulation only** (never `AppState::WorldGen`; see `world_gen_chrome_contract`).
+/// Sim Bevy shell lifecycle — **Simulation only** (never `AppState::WorldGen`).
 fn register_sim_command_shell_lifecycle(app: &mut App) {
     app.add_systems(
         OnEnter(BaseState::Simulation),

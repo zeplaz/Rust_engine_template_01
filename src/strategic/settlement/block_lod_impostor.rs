@@ -66,11 +66,16 @@ fn block_center_world(block_id: &BlockId, blocks: &BlockBook, frames: &BlockFram
 
 pub fn load_block_lod_impostor_scene(
     mut catalog: ResMut<BlockLodImpostorCatalog>,
-    asset_server: Res<AssetServer>,
+    asset_server: Option<Res<AssetServer>>,
+    world_assets: Option<Res<Assets<bevy::world_serialization::WorldAsset>>>,
 ) {
     if catalog.load_started {
         return;
     }
+    // Headless / minimal apps (sim harness, tests) lack `AssetServer` / `WorldAsset`; loading would panic.
+    let (Some(asset_server), Some(_)) = (asset_server, world_assets) else {
+        return;
+    };
     let path = if std::path::Path::new("assets/staging/city_c8_pilot_merge_run001/model.glb").is_file() {
         C8_PILOT_IMPOSTOR_GLB
     } else {

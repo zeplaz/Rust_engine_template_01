@@ -257,7 +257,10 @@ impl ChunkStreamingScheduler {
     #[must_use]
     pub fn select_disk_hydrate_batch(&self, cache: &ChunkCache, max: usize) -> Vec<IVec2> {
         let mut out = Vec::with_capacity(max.min(self.jobs.len()));
-        for job in &self.jobs {
+        // Highest priority first regardless of how `jobs` was last mutated (stable for ties).
+        let mut ordered: Vec<&ChunkStreamJob> = self.jobs.iter().collect();
+        ordered.sort_by(|a, b| b.priority.partial_cmp(&a.priority).unwrap_or(std::cmp::Ordering::Equal));
+        for job in ordered {
             if out.len() >= max {
                 break;
             }
