@@ -34,8 +34,12 @@ impl ChunkCellKey {
 /// Each frame now processes one chunk slice (`1 / DYNAMIC_OVERLAY_SLICES` of the map) with the
 /// `dt` accumulated since that slice was last visited, so the cost is flat instead of spiking.
 /// 32 slices (was 8): at 8 the three passes still cost ~7 ms/frame combined on a 320x320 world;
-/// a slice is revisited about once per second, which is far below the field's own timescale.
+/// each slice is revisited every couple of seconds, which is far below the field's own timescale.
 pub const DYNAMIC_OVERLAY_SLICES: usize = 32;
+
+/// Minimum sim time between runs of one writer pass (~16 Hz): every slice is still revisited every
+/// couple of seconds, which is far below the mud/snow timescale (tens of seconds).
+const SLICE_PASS_INTERVAL_SECS: f32 = 1.0 / 16.0;
 
 /// Chunk -> slice index (interleaved so neighbouring chunks land on different frames).
 #[inline]
@@ -57,6 +61,8 @@ pub struct DynamicTerrainOverlay {
     slice_acc: [[f32; DYNAMIC_OVERLAY_SLICES]; 3],
     /// Next slice each writer pass visits.
     slice_cursor: [usize; 3],
+    /// Sim seconds since each writer pass last ran (see [`SLICE_PASS_INTERVAL_SECS`]).
+    pass_clock: [f32; 3],
 }
 
 impl Default for DynamicTerrainOverlay {
@@ -70,21 +76,29 @@ impl Default for DynamicTerrainOverlay {
             slice_acc: [[0.0; DYNAMIC_OVERLAY_SLICES]; 3],
             // Offset so the three passes do not all hit the same slice on the same frame.
             slice_cursor: [0, 3, 5],
+            pass_clock: [0.0; 3],
         }
     }
 }
 
 impl DynamicTerrainOverlay {
-    /// Advance writer pass `slot` by `dt`; returns `(slice, batched_dt)` to process this frame.
-    fn begin_slice_pass(&mut self, slot: usize, dt: f32) -> (usize, f32) {
+    /// Advance writer pass `slot` by `dt`; returns `(slice, batched_dt)` to process this frame, or `None`
+    /// when the pass is not due yet. Each pass walks whole hash maps to find its slice's entries (decay),
+    /// so running it every frame costs O(all cells); it runs at most [`SLICE_PASS_INTERVAL_SECS`] apart.
+    fn begin_slice_pass(&mut self, slot: usize, dt: f32) -> Option<(usize, f32)> {
         for a in self.slice_acc[slot].iter_mut() {
             *a = (*a + dt).min(4.0);
         }
+        self.pass_clock[slot] += dt;
+        if self.pass_clock[slot] < SLICE_PASS_INTERVAL_SECS {
+            return None;
+        }
+        self.pass_clock[slot] = 0.0;
         let slice = self.slice_cursor[slot];
         self.slice_cursor[slot] = (slice + 1) % DYNAMIC_OVERLAY_SLICES;
         let due = std::mem::take(&mut self.slice_acc[slot][slice]);
         self.generation = self.generation.wrapping_add(1);
-        (slice, due)
+        Some((slice, due))
     }
 }
 
@@ -141,7 +155,9 @@ pub fn decay_dynamic_terrain_overlay(
     if dt <= 0.0 {
         return;
     }
-    let (slice, dt) = overlay.begin_slice_pass(2, dt);
+    let Some((slice, dt)) = overlay.begin_slice_pass(2, dt) else {
+        return;
+    };
     if dt <= 0.0 {
         return;
     }
@@ -191,7 +207,9 @@ pub fn stub_accumulate_overlay_from_chunk_fields(
     if dt <= 0.0 {
         return;
     }
-    let (slice, dt) = overlay.begin_slice_pass(0, dt);
+    let Some((slice, dt)) = overlay.begin_slice_pass(0, dt) else {
+        return;
+    };
     if dt <= 0.0 {
         return;
     }
@@ -250,7 +268,9 @@ pub fn apply_chunk_weather_to_dynamic_overlay(
     if dt <= 0.0 {
         return;
     }
-    let (slice, dt) = overlay.begin_slice_pass(1, dt);
+    let Some((slice, dt)) = overlay.begin_slice_pass(1, dt) else {
+        return;
+    };
     if dt <= 0.0 {
         return;
     }
