@@ -313,6 +313,9 @@ fn refresh_settlement_socio_signals(
     }
 }
 
+/// Frames between runs of [`strategic_fields_coupling_tick`].
+const COUPLING_EVERY_N_FRAMES: u32 = 3;
+
 /// **strategic_overlay** + **logistics_ai** + **operational** — overlay coupling and theater aggregates.
 /// [`strategic_city_planning_hints_tick`] fills [`CityPlanningHints`] from read-only overlay passes (avoids conflicting `Query`s).
 #[allow(clippy::too_many_arguments)]
@@ -331,7 +334,22 @@ fn strategic_fields_coupling_tick(
     caps: Query<&ResourceStorageCapacity>,
     producers: Query<&ResourceProducer>,
     production_manifest: Option<Res<crate::systems::production::ProductionManifest>>,
+    mut frames_since_run: Local<Option<u32>>,
 ) {
+    // The pass is O(all overlay cells) and its outputs (derived mobility/stability, sensor decay, theater
+    // means) move on a timescale of seconds, so it runs every `COUPLING_EVERY_N_FRAMES` frames (first call
+    // immediately). The per-frame sensor-confidence decay is compounded over the skipped frames so the
+    // per-second decay rate is unchanged.
+    let elapsed = match *frames_since_run {
+        None => 1,
+        Some(n) if n + 1 >= COUPLING_EVERY_N_FRAMES => n + 1,
+        Some(n) => {
+            *frames_since_run = Some(n + 1);
+            return;
+        }
+    };
+    *frames_since_run = Some(0);
+    let decay_steps = elapsed as i32;
     scratch.frame_counter = scratch.frame_counter.wrapping_add(1);
     let global_refresh = scratch.dormant_global_refresh();
     let dirty_snapshot: std::collections::HashSet<IVec2> = scratch.dirty_chunks.clone();
@@ -364,8 +382,8 @@ fn strategic_fields_coupling_tick(
                 if i < o.recon_confidence.len() {
                     for slot in 0..MAX_STRATEGIC_FACTION_SLOTS {
                         let base = o.recon_confidence[i][slot];
-                        o.recon_confidence[i][slot] =
-                            (base * (1.0 - ew * 0.65) * sensor_weather).clamp(0.0, 1.0);
+                        let step = (1.0 - ew * 0.65) * sensor_weather;
+                        o.recon_confidence[i][slot] = (base * step.powi(decay_steps)).clamp(0.0, 1.0);
                     }
                 }
             }

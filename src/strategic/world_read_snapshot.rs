@@ -21,13 +21,24 @@ pub struct WorldReadSnapshot {
     pub contested_chunk_count: u32,
 }
 
+/// Frames between [`world_read_snapshot_refresh_system`] refreshes.
+const WORLD_READ_REFRESH_EVERY_N_FRAMES: u32 = 12;
+
 pub fn world_read_snapshot_refresh_system(
     overlays: Query<&ChunkStrategicOverlay>,
     directory: Res<TransportEdgeDirectory>,
     front: Res<FrontlineState>,
     mut snap: ResMut<WorldReadSnapshot>,
     mut seq: Local<u64>,
+    mut frames: Local<u32>,
 ) {
+    // Whole-map means for the info panel: O(all cells), so refresh a few times per second.
+    // The first call runs immediately.
+    let due = *seq == 0 || *frames >= WORLD_READ_REFRESH_EVERY_N_FRAMES;
+    *frames = if due { 0 } else { *frames + 1 };
+    if !due {
+        return;
+    }
     let mut n = 0usize;
     let mut ls = 0.0f32;
     let mut mob = 0.0f32;
