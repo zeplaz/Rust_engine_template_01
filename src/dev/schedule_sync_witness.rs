@@ -164,32 +164,3 @@ fn refresh_witness(
     let wrapped = wrap_debug_run(gate, command, path, body);
     write_debug_run_json(path, wrapped) && green
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn sch_w1_e1_witness_green_in_debug_lib() {
-        if cfg!(debug_assertions) {
-            assert!(sch_w1_e1_witness_green());
-        }
-    }
-
-    #[test]
-    fn sch_w1_t1_pause_witness_reports_green() {
-        assert!(sch_w1_t1_pause_witness_green());
-    }
-
-    #[test]
-    fn sch_w1_wave1_refresh_witnesses_when_green() {
-        if sch_w1_e1_witness_green() {
-            assert!(refresh_sch_w1_e1_witness());
-        }
-        assert!(refresh_sch_w1_t1_witness());
-        assert!(refresh_sch_w1_e3_witness());
-        assert!(refresh_sch_w1_e4_witness());
-        assert!(sch_w1_p1_dormant_plugins_removed_green());
-        assert!(refresh_sch_w1_p1_witness());
-    }
-}

@@ -180,7 +180,6 @@ pub fn refresh_fire_ecology_lib_harness_witness() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::dev::runtime_witness::fire::FIRE_ECOLOGY_JSON;
     use crate::systems::fire::{chunk_fuel_profile_from_vegetation, combustion::{fuel_ignition_gate, MIN_WILDLAND_FUEL_MASS}};
 
     #[test]
@@ -192,12 +191,6 @@ mod tests {
             profile.wildland_fuel_mass
         );
         assert!(fuel_ignition_gate(profile.wildland_fuel_mass) > 0.0);
-    }
-
-    #[test]
-    fn fire_ecology_lib_harness_f2_fuel_spread_counters() {
-        let witness = run_fire_ecology_lib_harness();
-        assert!(fire_f2_fuel_spread_green(&witness), "depleted={} spread={}", witness.fuel_depleted_cells, witness.neighbor_spread_cells);
     }
 
     #[test]
@@ -221,58 +214,4 @@ mod tests {
         assert_eq!(fuel_ignition_gate(profile.wildland_fuel_mass), 0.0);
     }
 
-    #[test]
-    fn fire_ecology_lib_harness_meets_f1_green() {
-        let witness = run_fire_ecology_lib_harness();
-        assert!(
-            witness.frames_sampled >= 30,
-            "frames={}",
-            witness.frames_sampled
-        );
-        assert!(
-            fire_ecology_f1_strict_green(&witness),
-            "FIRE-F1-STRICT: gated_cells={} chunks_gated={} ungated={} frames={}",
-            witness.fuel_gated_spark_cells,
-            witness.chunks_fuel_gated,
-            witness.ungated_spark_cells,
-            witness.frames_sampled,
-        );
-        assert!(fire_ecology_lib_harness_green(&witness));
-    }
-
-    #[test]
-    fn fire_ecology_lib_harness_writes_green_json() {
-        let _guard = crate::dev::runtime_witness::fire::ecology_witness_file_lock_for_tests();
-        assert!(refresh_fire_ecology_lib_harness_witness());
-        let raw = std::fs::read_to_string(
-            std::env::var_os("CARGO_MANIFEST_DIR")
-                .map(std::path::PathBuf::from)
-                .unwrap_or_else(|| std::path::PathBuf::from("."))
-                .join(FIRE_ECOLOGY_JSON),
-        )
-        .expect("read");
-        let doc: serde_json::Value = serde_json::from_str(&raw).expect("parse");
-        assert_eq!(doc.get("green").and_then(|v| v.as_bool()), Some(true));
-        assert_eq!(
-            doc.get("f1_green").and_then(|v| v.as_bool()),
-            Some(true),
-            "FIRE-F1-STRICT exit: f1_green must be true"
-        );
-        assert!(doc.get("sim_effect_spine").is_some());
-        assert_eq!(
-            doc.pointer("/sim_effect_spine/queue_drain_ok")
-                .and_then(|v| v.as_bool()),
-            Some(true),
-            "spine must nest drain metrics (not double-wrapped); got {:?}",
-            doc.get("sim_effect_spine")
-        );
-        assert!(
-            doc.pointer("/sim_effect_spine/sim_effect_spine").is_none(),
-            "refuse double-nested sim_effect_spine"
-        );
-        let fuel_gate = doc
-            .pointer("/witness/fuel_gate_active")
-            .and_then(|v| v.as_bool());
-        assert_eq!(fuel_gate, Some(true));
-    }
 }

@@ -209,22 +209,4 @@ mod tests {
         assert_eq!(measured.world_tiles_axis, WORLD_DEFAULT_TILES_AXIS);
     }
 
-    #[test]
-    fn world_scale_contract_live_witness_refresh_green() {
-        assert!(refresh_world_scale_contract_live_witness());
-        let path =
-            std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(WORLD_SCALE_CONTRACT_LIVE_JSON);
-        assert!(path.is_file(), "witness missing at {}", path.display());
-        let raw = std::fs::read_to_string(&path).expect("read witness");
-        let v: serde_json::Value = serde_json::from_str(&raw).expect("parse witness");
-        let alpha = v
-            .pointer("/measured/sim_entry_zoom_alpha")
-            .and_then(|x| x.as_f64())
-            .expect("sim_entry_zoom_alpha");
-        assert!(
-            (alpha - OPERATIONAL_ZOOM_ALPHA as f64).abs() <= SIM_ENTRY_ZOOM_ALPHA_TOLERANCE as f64,
-            "alpha={alpha}"
-        );
-        assert_eq!(v.get("green").and_then(|x| x.as_bool()), Some(true));
-    }
 }

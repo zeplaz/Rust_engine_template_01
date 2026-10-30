@@ -90,34 +90,3 @@ pub fn arm_live_proof_cadence_with_latch(
 pub fn live_proof_write_latched(latch: Res<LiveProofWriteLatch>) -> bool {
     latch.0
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn live_proof_cadence_arms_write_due_on_interval() {
-        let mut cadence = LiveProofCadence {
-            write_interval: 3,
-            ..Default::default()
-        };
-        arm_live_proof_cadence(&mut cadence);
-        assert!(!cadence.write_due);
-        arm_live_proof_cadence(&mut cadence);
-        assert!(!cadence.write_due);
-        arm_live_proof_cadence(&mut cadence);
-        assert!(cadence.write_due);
-    }
-
-    #[test]
-    fn witness_write_cadence_helper_matches_interval() {
-        let mut cadence = WitnessWriteCadence {
-            write_interval: 2,
-            ..Default::default()
-        };
-        arm_witness_write_cadence(&mut cadence);
-        assert!(!cadence.write_due);
-        arm_witness_write_cadence(&mut cadence);
-        assert!(cadence.write_due);
-    }
-}

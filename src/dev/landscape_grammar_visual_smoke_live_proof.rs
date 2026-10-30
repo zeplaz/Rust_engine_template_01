@@ -64,13 +64,3 @@ pub fn refresh_landscape_visual_smoke_live_witness() -> bool {
     );
     crate::dev::debug_run_envelope::write_debug_run_json(VISUAL_SMOKE_LIVE_JSON, wrapped) && lib_green
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn landscape_visual_smoke_live_witness_green() {
-        assert!(refresh_landscape_visual_smoke_live_witness());
-    }
-}

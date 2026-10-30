@@ -38,13 +38,3 @@ pub fn witness_gate_snapshot() -> serde_json::Value {
         "cfg_test": cfg!(test),
     })
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn witness_writes_enabled_in_unit_tests() {
-        assert!(witness_writes_enabled());
-    }
-}

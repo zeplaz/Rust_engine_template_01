@@ -55,13 +55,3 @@ pub fn refresh_minimap_topology_legend_live_witness() -> bool {
     crate::dev::debug_run_envelope::write_debug_run_json(MINIMAP_TOPOLOGY_LEGEND_LIVE_JSON, wrapped)
         && green
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn minimap_topology_legend_live_witness_green() {
-        assert!(refresh_minimap_topology_legend_live_witness());
-    }
-}

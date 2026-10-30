@@ -35,8 +35,6 @@ pub mod stage5_live_todos;
 pub mod stage5_finish_todos;
 pub mod visual_aidv2_live_todos;
 pub mod live_todo_boards_plugin;
-// Lib witness refresh bundles — compiled only for `cargo test --lib` (not runtime).
-// Wired for lib tests — BUILD-READ-REWIRE-003 (map zoom witness).
 pub mod spectator_parity_live_proof;
 pub mod world_scale_contract_live_proof;
 pub mod landscape_grammar_live_proof;

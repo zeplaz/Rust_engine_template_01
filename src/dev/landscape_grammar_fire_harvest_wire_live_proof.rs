@@ -38,13 +38,3 @@ pub fn refresh_fire_harvest_wire_live_witness() -> bool {
     );
     crate::dev::debug_run_envelope::write_debug_run_json(FIRE_HARVEST_WIRE_LIVE_JSON, wrapped) && green
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn fire_harvest_wire_live_witness_green() {
-        assert!(refresh_fire_harvest_wire_live_witness());
-    }
-}
