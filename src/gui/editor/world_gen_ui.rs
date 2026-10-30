@@ -114,7 +114,7 @@ pub struct WorldGenUiPlugin;
 impl Plugin for WorldGenUiPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldGenUiState>()
-            .init_resource::<crate::gui::editor::world_preview::world_gen_bevy_shell::WorldGenTuningNote>()
+            .init_resource::<crate::gui::editor::world_preview::world_gen_panel::WorldGenTuningNote>()
             .add_message::<ToggleWorldGenUiEvent>()
             .add_systems(
                 OnEnter(WorldGenFlowState::FullReady),

@@ -1,8 +1,8 @@
 //! World-generator control surface — grouped parameters, step flow, progress, view toolbar.
 //!
-//! [`super::world_gen_bevy_shell`] still owns the preview raster / viewport placement. This
-//! module takes over the **toolbar** and **parameter sheet** of that shell once it spawns
-//! (`adopt_world_gen_shell`) and rebuilds them on the shared widget kit: collapsible parameter
+//! [`super::world_gen_bevy_shell`] owns the preview raster / viewport placement and spawns
+//! empty toolbar + sheet containers; this module fills them (`fill_world_gen_panel`) on the
+//! shared widget kit: collapsible parameter
 //! groups with sliders + steppers (hold to repeat), a two-step Generate -> Full world flow with
 //! progress, disabled-with-reason buttons, wheel scrolling and hover / pressed states.
 //!
@@ -10,7 +10,7 @@
 
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::prelude::*;
-use bevy::ui::{FocusPolicy, OverflowAxis, RelativeCursorPosition};
+use bevy::ui::{FocusPolicy, RelativeCursorPosition};
 
 use crate::engine::{WorldGenFlowState, WorldGenState};
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
@@ -35,10 +35,102 @@ use crate::terrain::world_map_scale::TileExtentPreset;
 use super::layers::PreviewLayers;
 use super::preview_render_contract::{PreviewCameraState, PreviewRenderMode};
 use super::texture_cache::WorldPreviewTexture;
-use super::world_gen_bevy_shell::{
-    step_world_gen_knob, WgKnob, WorldGenShellRoot, WorldGenTuningNote,
-};
+use super::world_gen_bevy_shell::{WorldGenSheetRoot, WorldGenToolbarRoot};
 use super::{WorldPreviewLifecycle, WorldPreviewUiState};
+
+/// Last tuning I/O line (reload / save / reset). Session chrome only.
+#[derive(Resource, Default)]
+pub struct WorldGenTuningNote(pub String);
+
+#[derive(Clone, Copy)]
+enum WgKnob {
+    Width,
+    Height,
+    NumRegions,
+    RegionIterations,
+    StrategicCoupling,
+    MoistureBias,
+    TemperatureBias,
+    MoistureScale,
+    TemperatureScale,
+    MoistureFreq,
+    TemperatureFreq,
+    NoiseScale,
+    NoiseOctaves,
+    Lacunarity,
+    Persistence,
+    HeightCurve,
+    DomainWarp,
+    DetailMix,
+    WarpScale,
+    WarpOctaves,
+    WarpSeed,
+    DetailScale,
+    DetailOctaves,
+    DetailSeed,
+    WarpFreq,
+    WarpZ,
+    WarpPhaseX,
+    WarpPhaseY,
+    WarpDisplacement,
+    DetailFreq,
+    DetailPersistence,
+    Rivers,
+    Lakes,
+    MountainThreshold,
+    IslandFalloff,
+    SeaLevel,
+    DeepWater,
+    ShallowWater,
+    Beach,
+    MountainHeight,
+    GrasslandMoist,
+    DesertMoist,
+    SwampMoist,
+    ForestMoist,
+    HotLowlands,
+    Tundra,
+    SnowPeak,
+    /// How many towns a full generation may place. Zero leaves the town book empty.
+    Settlements,
+}
+
+
+fn step_world_gen_knob(params: &mut WorldGenParams, knob: WgKnob, dir: i8) {
+    if dir == 0 {
+        return;
+    }
+    match knob {
+        WgKnob::WarpSeed => {
+            let next = params.noise_sampling.warp_seed_offset as i128 + dir as i128;
+            params.noise_sampling.warp_seed_offset = next.max(0) as u64;
+            return;
+        }
+        WgKnob::DetailSeed => {
+            let next = params.noise_sampling.detail_seed_offset as i128 + dir as i128;
+            params.noise_sampling.detail_seed_offset = next.max(0) as u64;
+            return;
+        }
+        _ => {}
+    }
+    let Some((min, max)) = knob_bounds(knob) else {
+        return;
+    };
+    let span = (max - min).max(1e-6);
+    let step = if knob_integer(knob) {
+        if matches!(knob, WgKnob::Width | WgKnob::Height) {
+            32.0
+        } else {
+            1.0
+        }
+    } else {
+        span / 40.0
+    };
+    let current = knob_get(params, knob);
+    let next = (current + step * f64::from(dir)).clamp(min, max);
+    knob_set(params, knob, next);
+}
+
 
 const SHEET_W_PX: f32 = 380.0;
 /// Clear zone for the top-right view toggle (196 x 36 at 12 / 12).
@@ -46,9 +138,8 @@ const TOP_RIGHT_CLEAR_PX: f32 = 224.0;
 const HOLD_DELAY_S: f32 = 0.35;
 const HOLD_REPEAT_S: f32 = 0.05;
 
-/// Marks a shell whose toolbar + sheet were replaced.
 #[derive(Component)]
-pub struct WorldGenPanelAdopted;
+struct WgToolbarFilled;
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
 enum LayerSel {
@@ -907,57 +998,38 @@ fn build_sheet(
 }
 
 // ---------------------------------------------------------------------------------------------
-// Adoption of the shell's toolbar + sheet
+// Fill the shell's toolbar + sheet containers
 // ---------------------------------------------------------------------------------------------
 
-/// Replace the shell's toolbar and sheet content once the shell has spawned.
-fn adopt_world_gen_shell(
+/// Build the toolbar and parameter sheet into the containers the shell spawned.
+fn fill_world_gen_panel(
     mut commands: Commands,
     palette: Res<UiPalette>,
     mono: Res<CmdUiMonoFont>,
     params: Res<WorldGenParams>,
     state: Res<WorldGenPanelState>,
-    roots: Query<(Entity, &Children), (With<WorldGenShellRoot>, Without<WorldGenPanelAdopted>)>,
-    kids: Query<&Children>,
-    nodes: Query<&Node>,
+    toolbars: Query<Entity, (With<WorldGenToolbarRoot>, Without<WgToolbarFilled>)>,
+    sheets: Query<Entity, (With<WorldGenSheetRoot>, Without<WgSheetRoot>)>,
 ) {
     let kit = UiKit::new(&palette, mono.0.clone());
-    for (root, children) in &roots {
-        commands.entity(root).insert(WorldGenPanelAdopted);
-        let ch: Vec<Entity> = children.iter().collect();
-        let (Some(&flow), Some(&toolbar), Some(&body), Some(&status)) =
-            (ch.first(), ch.get(1), ch.get(2), ch.get(3))
-        else {
-            warn!(target: "world_gen::ui", "world-gen shell layout changed; panel not adopted");
-            continue;
-        };
-        let Some(sheet) = kids.get(body).ok().and_then(|c| c.iter().next()) else {
-            continue;
-        };
-        if nodes.get(sheet).map(|n| n.overflow.y) != Ok(OverflowAxis::Scroll) {
-            warn!(target: "world_gen::ui", "world-gen sheet not found; panel not adopted");
-            continue;
-        }
-        // Old header line is superseded by the sheet's stage line.
-        commands
-            .entity(flow)
-            .insert(Node { display: Display::None, ..default() });
-        // Toolbar.
-        commands.entity(toolbar).despawn_related::<Children>();
-        commands.entity(toolbar).insert(Node {
-            flex_direction: FlexDirection::Column,
-            row_gap: Val::Px(GAP),
-            padding: UiRect {
-                left: Val::Px(SECTION_GAP),
-                right: Val::Px(TOP_RIGHT_CLEAR_PX),
-                top: Val::Px(SECTION_GAP),
-                bottom: Val::Px(GAP),
+    for toolbar in &toolbars {
+        commands.entity(toolbar).insert((
+            WgToolbarFilled,
+            Node {
+                flex_direction: FlexDirection::Column,
+                row_gap: Val::Px(GAP),
+                padding: UiRect {
+                    left: Val::Px(SECTION_GAP),
+                    right: Val::Px(TOP_RIGHT_CLEAR_PX),
+                    top: Val::Px(SECTION_GAP),
+                    bottom: Val::Px(GAP),
+                },
+                ..default()
             },
-            ..default()
-        });
+        ));
         commands.entity(toolbar).with_children(|bar| build_toolbar(bar, &kit));
-        // Sheet.
-        commands.entity(sheet).despawn_related::<Children>();
+    }
+    for sheet in &sheets {
         commands.entity(sheet).insert((
             WgSheetRoot,
             Node {
@@ -977,40 +1049,6 @@ fn adopt_world_gen_shell(
         commands
             .entity(sheet)
             .with_children(|s| build_sheet(s, &kit, &params, &state));
-        // Status strip.
-        commands.entity(status).insert((
-            kit.text_font(FONT_SMALL),
-            TextColor(palette.bevy_text_muted()),
-            Node {
-                padding: UiRect::axes(Val::Px(SECTION_GAP), Val::Px(GAP)),
-                ..default()
-            },
-        ));
-        // Close-while-running confirm dialog.
-        if let Some(&confirm) = ch.get(4) {
-            commands.entity(confirm).insert((
-                BorderColor::all(palette.bevy_accent_gold()),
-                FocusPolicy::Block,
-            ));
-            if let Ok(parts) = kids.get(confirm) {
-                for part in parts.iter() {
-                    if let Ok(label_kids) = kids.get(part) {
-                        // A button: it owns a text child.
-                        commands.entity(part).insert(UiButton::default());
-                        for t in label_kids.iter() {
-                            commands.entity(t).insert((
-                                UiButtonLabel,
-                                kit.text_font(FONT_BODY),
-                            ));
-                        }
-                    } else {
-                        commands
-                            .entity(part)
-                            .insert(kit.text_font(FONT_BODY));
-                    }
-                }
-            }
-        }
     }
 }
 
@@ -1516,17 +1554,13 @@ fn world_gen_panel_param_actions(
     }
 }
 
-/// Register on the world-gen session. Order: shell spawn -> adopt -> sync -> actions.
+/// Register on the world-gen session. Order: shell spawn -> fill -> sync -> actions.
 pub(crate) fn register_world_gen_panel(app: &mut App) {
     use crate::engine::AppState;
     app.init_resource::<WorldGenPanelState>().add_systems(
         Update,
         (
-            // Adoption rebuilds the old shell's toolbar/sheet subtrees; it must flush before the
-            // legacy shell sync touches those entities, or the sync's queued commands target
-            // despawned children (panicked on world-gen re-arm).
-            adopt_world_gen_shell
-                .before(super::world_gen_bevy_shell::sync_world_gen_bevy_shell),
+            fill_world_gen_panel,
             sync_world_gen_panel,
             world_gen_panel_flow_actions,
             world_gen_panel_view_actions,
@@ -1545,11 +1579,24 @@ mod tests {
 
     #[test]
     fn panel_systems_have_disjoint_queries() {
-        init_ok(adopt_world_gen_shell);
+        init_ok(fill_world_gen_panel);
         init_ok(sync_world_gen_panel);
         init_ok(world_gen_panel_flow_actions);
         init_ok(world_gen_panel_view_actions);
         init_ok(world_gen_panel_param_actions);
+    }
+
+    #[test]
+    fn width_step_stays_inside_slider_range() {
+        let mut params = WorldGenParams::default();
+        params.width = 128;
+        step_world_gen_knob(&mut params, WgKnob::Width, -1);
+        assert_eq!(params.width, 128);
+        step_world_gen_knob(&mut params, WgKnob::Width, 1);
+        assert!(params.width > 128 && params.width <= MAX_WORLD_GEN_AXIS);
+        params.width = MAX_WORLD_GEN_AXIS;
+        step_world_gen_knob(&mut params, WgKnob::Width, 1);
+        assert_eq!(params.width, MAX_WORLD_GEN_AXIS);
     }
 
     #[test]
