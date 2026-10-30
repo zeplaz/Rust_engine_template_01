@@ -67,7 +67,6 @@ mod in_game_ui;
 mod gui_assets;
 mod gui_sets;
 mod ui_windows;
-mod agent_permissions_ui;
 mod ai_explainability_ui;
 mod diagnostics_ui;
 mod faction_tools_ui;
@@ -319,7 +318,6 @@ pub use logistics_targets_panel::*;
 #[cfg(feature = "legacy_engine")]
 pub use in_game_ui::*;
 pub use ui_windows::*;
-pub use agent_permissions_ui::*;
 pub use ai_explainability_ui::AiExplainabilityPlugin;
 pub use diagnostics_ui::*;
 pub use faction_tools_ui::*;

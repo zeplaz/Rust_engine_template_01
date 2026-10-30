@@ -4,7 +4,7 @@
 //!
 //! **Inventory** (search `KeyCode::` outside this file — should only be defaults, presets, tests,
 //! and fallbacks tied to `InputBindings`):
-//! - Diagnostics, AI explainability (L7), faction tools, logistics cycle / list, world gen, agent permissions, egui scale
+//! - Diagnostics, AI explainability (L7), faction tools, logistics cycle / list, world gen
 //! - Options window, simulation pause toggle (`SimControlState` via `sim_control`), capture cancel
 //! - Gameplay capture: window screenshots → PNG sequence + GIF (`gameplay_capture`)
 //! - Map camera: WASD / edge scroll / wheel+keys zoom / grip pan / rotate (`map_camera`)
@@ -59,7 +59,6 @@ pub struct InputBindings {
     /// Clear pending blueprint queue while planning.
     pub clear_pending_blueprints: KeyCode,
     pub toggle_world_generator: KeyCode,
-    pub toggle_agent_permissions: KeyCode,
     /// Toggles egui scale compensation (`ui_windows::update_ui_scale_factor_system`).
     pub toggle_egui_ui_scale: KeyCode,
     /// Toggle `SimControlState.paused` (`systems::sim_control::keyboard_toggle_pause`).
@@ -142,7 +141,6 @@ impl Default for InputBindings {
             mirror_build_ghost: KeyCode::KeyX,
             clear_pending_blueprints: KeyCode::Backspace,
             toggle_world_generator: KeyCode::F8,
-            toggle_agent_permissions: KeyCode::F7,
             toggle_egui_ui_scale: KeyCode::Slash,
             toggle_simulation_pause: KeyCode::KeyP,
             cancel_keybinding_capture: KeyCode::Escape,
