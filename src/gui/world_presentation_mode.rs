@@ -169,7 +169,7 @@ pub fn spawn_world_presentation_toggle(
             },
             BackgroundColor(Color::srgba(0.08, 0.10, 0.14, 0.92)),
             BorderColor::all(Color::srgba(0.45, 0.55, 0.65, 0.9)),
-            ZIndex(40),
+            GlobalZIndex(1000),
         ))
         .with_children(|parent| {
             parent
