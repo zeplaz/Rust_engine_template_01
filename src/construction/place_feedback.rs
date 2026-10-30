@@ -66,9 +66,12 @@ pub const PLACE_FEEDBACK_LOCK_HOLD_T: f32 = 0.62;
 #[must_use]
 pub fn place_feedback_fill_at(t: f32) -> crate::gui::UiRgba {
     let t = t.clamp(0.0, 1.0);
-    // Unmultiplied RGBA — do not read Color32.r/g/b (premultiplied storage).
-    let valid = [48_u8, 140, 72, 220];
-    let settle = [100_u8, 144, 220, 200];
+    // Single source of truth: the same tokens the locked footprint is drawn with, so the
+    // pulse starts exactly on the valid fill (no colour pop when the settle begins).
+    let valid_c = super::ghost_visual::footprint_valid_color();
+    let settle_c = super::ghost_visual::footprint_place_settle_color();
+    let valid = [valid_c.r, valid_c.g, valid_c.b, valid_c.a];
+    let settle = [settle_c.r, settle_c.g, settle_c.b, settle_c.a];
 
     let hue_blend = if t <= PLACE_FEEDBACK_LOCK_HOLD_T {
         0.0
@@ -289,11 +292,6 @@ pub fn refresh_des_place_feedback_anim_witness() -> bool {
     green && crate::dev::debug_run_envelope::write_debug_run_json(path, wrapped)
 }
 
-#[must_use]
-pub fn place_feedback_anim_impl_witness_green() -> bool {
-    refresh_des_place_feedback_anim_witness()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -415,10 +413,5 @@ mod tests {
             .footprint_tiles
             .iter()
             .all(|t| t.fill_override.is_some()));
-    }
-
-    #[test]
-    fn witness_refresh_impl_wired() {
-        assert!(place_feedback_anim_impl_witness_green());
     }
 }

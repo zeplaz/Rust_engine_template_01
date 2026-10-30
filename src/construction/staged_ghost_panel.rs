@@ -614,6 +614,7 @@ mod tests {
             .init_resource::<ConstructionHistory>()
             .init_resource::<StagedPlacementMode>()
             .init_resource::<StagedPlacementBook>()
+            .init_resource::<super::super::place_feedback::PlaceFeedbackPulse>()
             .init_resource::<CommitCount>()
             .add_message::<CommitConstructionSiteEvent>()
             .add_systems(Update, (build_confirm_site_system, count).chain());

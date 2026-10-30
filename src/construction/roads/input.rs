@@ -255,6 +255,7 @@ mod egr_tests {
         app.insert_resource(ButtonInput::<KeyCode>::default());
         app.init_resource::<crate::gui::MapCameraDesiredRes>();
         app.init_resource::<crate::gui::SimulationMapViewport>();
+        app.init_resource::<crate::gui::MainWorldCameraOrthoTrace>();
         app.init_resource::<crate::terrain::generation::world_generator_enhanced::WorldGenParams>();
         app.init_resource::<crate::construction::snap::RoadSnapSettings>();
         app.init_resource::<crate::construction::construction_pipeline::ExecutedRoadNetwork>();

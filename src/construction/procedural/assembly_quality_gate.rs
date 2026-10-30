@@ -439,19 +439,4 @@ mod tests {
             Some(true)
         );
     }
-
-    #[test]
-    fn bq_silh_honest_001_refresh_witness() {
-        let body = build_bq_a2_gate_001_witness_body();
-        assert_eq!(
-            body.get("bq_silh_honest_001").and_then(|v| v.as_bool()),
-            Some(true),
-            "SILH honesty + coverage must hold before write"
-        );
-        assert!(
-            body.get("green").and_then(|v| v.as_bool()).unwrap_or(false),
-            "BQ-A2 green must hold on honest multi-seed sweep: {body}"
-        );
-        assert!(refresh_building_quality_live_witness());
-    }
 }

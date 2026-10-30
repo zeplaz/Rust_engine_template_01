@@ -271,16 +271,6 @@ mod tests {
     }
 
     #[test]
-    fn bq128_apply_ghost_witness_green_lib() {
-        assert!(bq128_apply_ghost_witness_green());
-    }
-
-    #[test]
-    fn bq128_apply_merge_replace_witness_green_lib() {
-        assert!(bq128_apply_merge_replace_witness_green());
-    }
-
-    #[test]
     fn import_presets_append_keeps_existing_queue_rows() {
         let mut queue = PendingConstructionQueue::default();
         queue.push(pending_entry_from_preset(

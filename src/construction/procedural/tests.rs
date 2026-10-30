@@ -235,14 +235,15 @@ use crate::construction::building_definitions::{
 };
 
 #[test]
-fn registry_resolves_lod0_module_glb_by_catalog_id() {
+fn registry_resolves_module_glb_by_catalog_id() {
     let modules = load_procedural_module_registry();
     assert!(modules.load_errors.is_empty(), "{:?}", modules.load_errors);
 
     let buildings = load_building_definitions_from_dir(default_buildings_dir());
     let asset = buildings.procedural_glb_asset(&modules, "wall_brick_1u");
-    assert!(asset.is_some(), "lod0 module id lookup");
-    assert!(asset.unwrap().contains("wall_brick_1u_lod0_run001"));
+    assert!(asset.is_some(), "module id lookup");
+    // lod0 twins retired (BQ-LOD0-TWIN-PRUNE-001): catalog ids resolve to production GLBs.
+    assert!(asset.unwrap().contains("wall_brick_1u_production_run001"));
 }
 
 #[test]
@@ -300,5 +301,5 @@ fn attach_paths_from_procedural_module_id_field() {
         .procedural_glb_asset
         .as_deref()
         .unwrap_or("")
-        .contains("door_residential_lod0_run001"));
+        .contains("door_residential_production_run001"));
 }
