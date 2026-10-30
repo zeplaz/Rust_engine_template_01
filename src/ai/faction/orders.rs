@@ -32,6 +32,8 @@ pub enum DeployKind {
     Reinforce,
     /// Push through an opportunity point (`DeploymentKind::Attack`).
     Attack,
+    /// Dig in where a threatened point is held (`DeploymentKind::Fortify`).
+    Fortify,
 }
 
 /// Why the economy brain asks for a building.
@@ -95,6 +97,7 @@ impl AiOrder {
                 match kind {
                     DeployKind::Reinforce => "reinforce with",
                     DeployKind::Attack => "attack with",
+                    DeployKind::Fortify => "dig in with",
                 },
                 formation.0.index(),
                 tile.x,

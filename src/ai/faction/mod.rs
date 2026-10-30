@@ -198,6 +198,8 @@ impl AiOrderSinks<'_> {
 pub struct AiWorld<'w, 's> {
     pub overlays: Query<'w, 's, &'static ChunkStrategicOverlay>,
     pub pressure: Option<Res<'w, PressurePointBook>>,
+    /// Executor feedback: refused orders are not re-issued.
+    pub outcomes: Option<Res<'w, crate::combat::DeploymentOutcomes>>,
     pub formations: Query<'w, 's, (Entity, &'static Formation)>,
     pub snapshot: Option<Res<'w, LogisticsOrdersSnapshotRes>>,
     pub auto_supply: Option<Res<'w, AutoSupplyPolicy>>,
@@ -312,12 +314,16 @@ fn run_logistics_brain(
     }
 }
 
+/// A formation whose order was refused sits out new orders this long (sim seconds).
+const REJECT_WINDOW_S: f32 = 60.0;
+
 fn run_military_brain(
     c: &FactionAiController,
     goal: StrategicGoal,
     perception: &FactionPerception,
     snap: Option<&LogisticsOrdersSnapshot>,
     world: &AiWorld,
+    now_micros: u64,
     sinks: &mut AiOrderSinks,
     out: &mut Decision,
 ) {
@@ -333,6 +339,7 @@ fn run_military_brain(
         .filter(|(_, f)| f.faction_slot == c.slot)
         .map(|(e, f)| military::FormationView::of(e, f))
         .collect();
+    formations.retain(|f| world.outcomes.as_deref().is_none_or(|o| o.recently_rejected(f.entity, now_micros, REJECT_WINDOW_S).is_none()));
     if formations.is_empty() {
         return;
     }
@@ -344,6 +351,7 @@ fn run_military_brain(
         let kind = match d.kind {
             DeployKind::Reinforce => DeploymentKind::Reinforce { theater: TheaterId(d.theater), tile: d.tile },
             DeployKind::Attack => DeploymentKind::Attack(d.tile),
+            DeployKind::Fortify => DeploymentKind::Fortify(TheaterId(d.theater)),
         };
         let outcome = match queue.enqueue(DeploymentOrder { formation: d.formation, kind, issued_by: c.slot }) {
             Ok(id) => OrderOutcome::Issued { api: API_DEPLOYMENT_QUEUE, id },
@@ -553,7 +561,7 @@ pub fn faction_ai_tick_system(
                 );
             }
         }
-        run_military_brain(&c, goal, &perception, snap, &world, &mut sinks, &mut out);
+        run_military_brain(&c, goal, &perception, snap, &world, stamp.sim_time_micros, &mut sinks, &mut out);
 
         c.goal = Some(goal);
         c.next_decision_tick = now.saturating_add(c.decision_interval_ticks.max(1));
