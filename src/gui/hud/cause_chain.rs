@@ -62,7 +62,8 @@ pub fn update_developmental_cause_strip_system(
             *v = Visibility::Visible;
         }
         for mut t in &mut text_q {
-            *t = Text::new(
+            crate::gui::style::widgets::set_text_if_changed(
+                &mut t,
                 "CAUSE — Pick or cycle logistics focus (F9) to read live dependency chains on a site.",
             );
         }
@@ -75,7 +76,8 @@ pub fn update_developmental_cause_strip_system(
             *v = Visibility::Visible;
         }
         for mut t in &mut text_q {
-            *t = Text::new(
+            crate::gui::style::widgets::set_text_if_changed(
+                &mut t,
                 "CAUSE — Focus is not a territorial site — switch to a hub row or map-picked depot.",
             );
         }
@@ -133,6 +135,6 @@ pub fn update_developmental_cause_strip_system(
         *v = show;
     }
     for mut t in &mut text_q {
-        *t = Text::new(line.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut t, line.clone());
     }
 }

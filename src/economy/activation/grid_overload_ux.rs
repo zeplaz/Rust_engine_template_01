@@ -78,7 +78,7 @@ pub fn apply_grid_overload_ops_strip_toast_system(
     }
     let line = format!("PWR  ⚠ {}", toast.last_message);
     for mut t in power.iter_mut() {
-        *t = Text::new(line.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut t, line.clone());
     }
 }
 

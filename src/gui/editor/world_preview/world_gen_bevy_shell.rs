@@ -548,7 +548,7 @@ pub(crate) fn sync_world_gen_bevy_shell(
                 *vis = if ready { Visibility::Visible } else { Visibility::Hidden };
             }
             if let Ok((mut text, mut vis)) = placeholder.single_mut() {
-                *text = Text::new(lifecycle.phase.placeholder_label());
+                crate::gui::style::widgets::set_text_if_changed(&mut text, lifecycle.phase.placeholder_label());
                 *vis = if ready { Visibility::Hidden } else { Visibility::Visible };
             }
             let _ = gpu_painted;
