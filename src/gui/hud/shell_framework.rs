@@ -175,12 +175,6 @@ pub const fn build_toolbox_egui_dock_active(base: BaseState) -> bool {
     product_shell_base_active(base)
 }
 
-/// Left egui status rail — editor only; sim uses Bevy context rail (Phase 2B).
-#[must_use]
-pub const fn side_status_rail_egui_dock_active(base: BaseState) -> bool {
-    product_shell_base_active(base)
-}
-
 pub use crate::gui::ui_gates::product_shell_base_active;
 
 /// Force floating egui dock slots closed (PLAY-01 sim enter + enforce).
@@ -386,13 +380,11 @@ mod tests {
             ProductShellWidgetId::BuildToolbox,
             BaseState::Simulation
         ));
-        assert!(!side_status_rail_egui_dock_active(BaseState::Simulation));
         assert!(!minimap_egui_texture_dock_active(BaseState::Simulation));
         assert!(product_shell_widget_egui_dock_active(
             ProductShellWidgetId::BuildToolbox,
             BaseState::Editor
         ));
-        assert!(side_status_rail_egui_dock_active(BaseState::Editor));
         assert!(!floating_product_shell_egui_active(
             ProductShellWidgetId::OverlaysPanel,
             BaseState::Simulation

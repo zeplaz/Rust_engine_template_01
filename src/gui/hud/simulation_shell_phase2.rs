@@ -360,7 +360,6 @@ pub struct UiShellMigrationWitness {
     pub build_rail_synced: bool,
     pub build_rail_authoritative: bool,
     pub build_toolbox_egui_gated: bool,
-    pub side_status_rail_egui_gated: bool,
     pub floating_egui_shells_gated: bool,
     pub minimap_gpu_path: bool,
     pub icon_atlas_loaded: bool,
@@ -498,7 +497,6 @@ pub fn replay_ui_oh_2a_001_witness() -> UiShellMigrationWitness {
     witness.last_minimap_rect_delta_px = MINIMAP_CHROME_STROKE_PAD_PX;
     witness.flat_v2_tab_chrome = true;
     witness.build_toolbox_egui_gated = true;
-    witness.side_status_rail_egui_gated = true;
     witness.floating_egui_shells_gated = true;
     let mut strip = BuildStripState::default();
     let mut tool = ActiveBuildTool::default();
@@ -534,16 +532,10 @@ pub fn refresh_ui_p2a_001_live_witness() -> bool {
     );
     let mut dock = crate::gui::hud::HudDockRegistry::default();
     crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
-    let mut layout = crate::gui::hud::HudCommandShellLayout::default();
-    layout.status_side_panel_state = crate::gui::hud::HudPanelState::Collapsed;
 
     let mut witness = replay_coder_b_ui_five_lane_witness();
     witness_ops_strip_zone_hover_replay(&mut witness);
-    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(
-        &dock,
-        &layout,
-        &mut witness,
-    );
+    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
     let shell_diag = ProductShellDiagnostics::default();
     assert!(ui_p2a_f03_green(&witness), "UI-P2A-F03");
     assert!(ui_p2a_p4_auth_green(&witness), "UI-P2A-P4-AUTH");
@@ -567,7 +559,6 @@ pub fn refresh_ui_p2a_001_live_witness() -> bool {
         &ContextTrayState::default(),
         &shell_diag,
         Some(&dock),
-        Some(&layout),
     )
 }
 
@@ -741,15 +732,9 @@ pub fn refresh_ui_w3_p5_001_live_witness() -> bool {
     );
     let mut dock = crate::gui::hud::HudDockRegistry::default();
     crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
-    let mut layout = crate::gui::hud::HudCommandShellLayout::default();
-    layout.status_side_panel_state = crate::gui::hud::HudPanelState::Collapsed;
 
     let mut witness = replay_ui_w3_p5_001_witness();
-    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(
-        &dock,
-        &layout,
-        &mut witness,
-    );
+    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
     let shell_diag = ProductShellDiagnostics::default();
     assert!(
         ui_w3_p5_001_green(&witness, &shell_diag),
@@ -760,7 +745,6 @@ pub fn refresh_ui_w3_p5_001_live_witness() -> bool {
         &ContextTrayState::default(),
         &shell_diag,
         Some(&dock),
-        Some(&layout),
     )
 }
 
@@ -777,7 +761,6 @@ pub fn ui_witness_interaction_block_green(witness: &UiShellMigrationWitness) -> 
         && witness.build_rail_synced
         && witness.build_rail_authoritative
         && witness.build_toolbox_egui_gated
-        && witness.side_status_rail_egui_gated
         && witness.floating_egui_shells_gated
         && witness.ops_zone_hover_token
         && (witness.last_minimap_rect_delta_px - MINIMAP_CHROME_STROKE_PAD_PX).abs()
@@ -1917,7 +1900,6 @@ pub fn ui_p2b_coder_b_green(
 ) -> bool {
     shell_diag.egui_pass_count_sim_session == 0
         && witness.build_toolbox_egui_gated
-        && witness.side_status_rail_egui_gated
         && witness.floating_egui_shells_gated
 }
 
@@ -2081,15 +2063,9 @@ pub fn refresh_coder_b_ui_five_lane_witness() -> bool {
     );
     let mut dock = crate::gui::hud::HudDockRegistry::default();
     crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
-    let mut layout = crate::gui::hud::HudCommandShellLayout::default();
-    layout.status_side_panel_state = crate::gui::hud::HudPanelState::Collapsed;
 
     let mut witness = replay_coder_b_ui_five_lane_witness();
-    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(
-        &dock,
-        &layout,
-        &mut witness,
-    );
+    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
     let shell_diag = ProductShellDiagnostics::default();
     assert!(
         ui_w3_2b_001_green(&witness, &shell_diag),
@@ -2111,7 +2087,6 @@ pub fn refresh_coder_b_ui_five_lane_witness() -> bool {
         &ContextTrayState::default(),
         &shell_diag,
         Some(&dock),
-        Some(&layout),
     )
 }
 
@@ -2137,18 +2112,12 @@ pub fn refresh_ui_oh_2b_001_live_witness() -> bool {
     );
     let mut dock = crate::gui::hud::HudDockRegistry::default();
     crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
-    let mut layout = crate::gui::hud::HudCommandShellLayout::default();
-    layout.status_side_panel_state = crate::gui::hud::HudPanelState::Collapsed;
     // Preserve Phase 2A ops/tray witnesses — do not commit from empty default witness.
     let mut witness = replay_ui_w3_2a_001_witness();
     witness.minimap_chrome_aligned = true;
     witness.last_minimap_rect_delta_px = MINIMAP_CHROME_STROKE_PAD_PX;
     witness.mock_zone_parity = crate::construction::mock_shapes_parity_green();
-    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(
-        &dock,
-        &layout,
-        &mut witness,
-    );
+    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
     let shell_diag = ProductShellDiagnostics::default();
     assert!(
         ui_oh_2b_001_green(&witness, &shell_diag),
@@ -2159,7 +2128,6 @@ pub fn refresh_ui_oh_2b_001_live_witness() -> bool {
         &ContextTrayState::default(),
         &shell_diag,
         Some(&dock),
-        Some(&layout),
     )
 }
 
@@ -2199,7 +2167,6 @@ pub fn build_proof_payload(
             "green": ui_p2b_coder_b_green(witness, shell_diag),
             "egui_pass_count_in_sim": egui_pass_count_in_sim,
             "build_toolbox_egui_gated": witness.build_toolbox_egui_gated,
-            "side_status_rail_egui_gated": witness.side_status_rail_egui_gated,
             "floating_egui_shells_gated": witness.floating_egui_shells_gated,
         },
         "ui_p2b_coder_b_green": ui_p2b_coder_b_green(witness, shell_diag),
@@ -2314,7 +2281,6 @@ pub fn build_proof_payload(
             "build_rail_synced": witness.build_rail_synced,
             "build_rail_authoritative": witness.build_rail_authoritative,
             "build_toolbox_egui_gated": witness.build_toolbox_egui_gated,
-            "side_status_rail_egui_gated": witness.side_status_rail_egui_gated,
             "floating_egui_shells_gated": witness.floating_egui_shells_gated,
             "ops_zone_hover_token": witness.ops_zone_hover_token,
             "last_mission_count": witness.last_mission_count,
@@ -2366,7 +2332,6 @@ pub fn build_proof_payload(
                 "sim_allowed": EGUI_SIM_SHELL_WIDGETS,
                 "editor_product_shell": true,
                 "build_toolbox_egui": "editor_only",
-                "side_status_rail_egui": "editor_only",
                 "overlays_panel_egui": "editor_only",
                 "overlay_tray_egui": "editor_only",
                 "command_shell_egui": "editor_only",
@@ -2523,25 +2488,22 @@ pub fn commit_ui_shell_migration_live_proof(
     tray: &ContextTrayState,
     shell_diag: &ProductShellDiagnostics,
 ) -> bool {
-    commit_ui_shell_migration_live_proof_with_gates(witness, tray, shell_diag, None, None)
+    commit_ui_shell_migration_live_proof_with_gates(witness, tray, shell_diag, None)
 }
 
-/// **UI-P2B-CODER-B** — optional dock/layout refresh so `witness.*_egui_gated` matches sim suppression.
+/// **UI-P2B-CODER-B** — optional dock refresh so `witness.*_egui_gated` matches sim suppression.
 #[must_use]
 pub fn commit_ui_shell_migration_live_proof_with_gates(
     witness: &UiShellMigrationWitness,
     tray: &ContextTrayState,
     shell_diag: &ProductShellDiagnostics,
     dock: Option<&crate::gui::hud::HudDockRegistry>,
-    layout: Option<&crate::gui::hud::HudCommandShellLayout>,
 ) -> bool {
     #[cfg(test)]
     let _proof_file_guard = ui_shell_migration_proof_file_lock();
     let mut snap = witness.clone();
-    if let (Some(dock), Some(layout)) = (dock, layout) {
-        crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(
-            dock, layout, &mut snap,
-        );
+    if let Some(dock) = dock {
+        crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(dock, &mut snap);
     }
     // UI-P2A-CODER-B — parity is lib-checkable; refresh at commit so early writes stay green.
     snap.mock_zone_parity = crate::construction::mock_shapes_parity_green();
@@ -2562,7 +2524,6 @@ pub(crate) fn write_ui_shell_migration_live_proof_system(
     tray: Res<ContextTrayState>,
     shell_diag: Res<ProductShellDiagnostics>,
     dock: Res<crate::gui::hud::HudDockRegistry>,
-    layout: Res<crate::gui::hud::HudCommandShellLayout>,
     mut replay: ResMut<UiShellMigrationWitnessReplay>,
 ) {
     state.frames_since_write = state.frames_since_write.saturating_add(1);
@@ -2583,7 +2544,6 @@ pub(crate) fn write_ui_shell_migration_live_proof_system(
         &tray,
         &shell_diag,
         Some(dock.as_ref()),
-        Some(layout.as_ref()),
     ) {
         state.written = true;
         if interactions_complete {
@@ -2753,7 +2713,6 @@ mod tests {
             phase2_zones_live: true,
             flat_v2_tab_chrome: true,
             build_toolbox_egui_gated: true,
-            side_status_rail_egui_gated: true,
             floating_egui_shells_gated: true,
             ..Default::default()
         };
@@ -2798,7 +2757,6 @@ mod tests {
     fn ui_p2b_coder_b_green_false_when_sim_session_egui_passes() {
         let witness = UiShellMigrationWitness {
             build_toolbox_egui_gated: true,
-            side_status_rail_egui_gated: true,
             floating_egui_shells_gated: true,
             ..Default::default()
         };
@@ -2816,7 +2774,6 @@ mod tests {
             flat_v2_tab_chrome: true,
             minimap_chrome_aligned: true,
             build_toolbox_egui_gated: true,
-            side_status_rail_egui_gated: true,
             floating_egui_shells_gated: true,
             ..Default::default()
         };
@@ -2831,10 +2788,6 @@ mod tests {
         );
         assert_eq!(
             payload["witness"]["build_toolbox_egui_gated"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            payload["witness"]["side_status_rail_egui_gated"],
             serde_json::json!(true)
         );
         assert!(payload.get("phase2").is_some());

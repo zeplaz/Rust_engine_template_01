@@ -61,15 +61,6 @@ pub const fn map_editor_chrome_states_active(base: BaseState, app: AppState) -> 
         )
 }
 
-/// 2B-03 — left status rail (duplicate of Bevy context rail in sim).
-#[must_use]
-pub fn side_status_rail_egui_active(
-    base: Res<State<BaseState>>,
-    app: Res<State<AppState>>,
-) -> bool {
-    product_shell_active(base, app)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

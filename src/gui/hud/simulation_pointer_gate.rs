@@ -176,7 +176,6 @@ pub fn add_pointer_gate_systems(app: &mut App) {
 /// (editor dock / toolbox / map-editor shell / road popup, floating dev panels, F1 / F3 and
 /// logistics panels). Presence alone never blocks (R-H4).
 type PointerBlockingPanelRoots = Or<(
-    With<crate::gui::hud::dock_shell::EditorDockBevyRoot>,
     With<crate::construction::BuildToolboxBevyRoot>,
     With<crate::gui::editor::map_editor::MapEditorBevyShell>,
     With<crate::construction::RoadToolPopupBevyRoot>,

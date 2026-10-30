@@ -13,7 +13,6 @@ pub struct PanelPresence {
     pub logistics_targets_root: bool,
     pub power_hover_root: bool,
     pub power_repair_list_root: bool,
-    pub editor_dock_root: bool,
     pub build_toolbox_root: bool,
     pub map_editor_shell_root: bool,
     pub road_popup_root: bool,

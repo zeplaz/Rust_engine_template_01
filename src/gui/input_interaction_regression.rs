@@ -346,10 +346,10 @@ fn panel_open_cursor_over_rect_blocks_placement() {
 }
 
 #[test]
-fn editor_dock_present_cursor_off_dock_reaches_placement() {
+fn panel_present_cursor_off_panel_reaches_placement() {
     let (mut h, at) = gated_factory(BaseState::Editor);
     h.spawn_panel(
-        crate::gui::hud::dock_shell::EditorDockBevyRoot,
+        crate::gui::options_keybindings_ui::KeybindingsBevyRoot,
         Vec2::new(8.0, 40.0),
         Vec2::new(288.0, 400.0),
     );

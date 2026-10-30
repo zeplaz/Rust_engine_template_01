@@ -35,8 +35,6 @@ pub struct InputBindings {
     pub toggle_strategic_hud_strip_compact: KeyCode,
     /// Collapse / expand the left command context stack (Bevy HUD panel under the operations strip).
     pub toggle_command_left_stack: KeyCode,
-    /// Toggle docked left **status** side panel (`HudCommandShellLayout::status_side_panel_state`).
-    pub toggle_hud_status_side_panel: KeyCode,
     /// Toggle painting **routing congestion** transport splats into [`ChunkStrategicOverlay`](crate::strategic::ChunkStrategicOverlay).
     pub toggle_strategic_overlay_routing_congestion: KeyCode,
     /// Toggle painting **EW / denial** proxy splats from transport fields.
@@ -127,7 +125,6 @@ impl Default for InputBindings {
             toggle_scenario_script_panel: KeyCode::F10,
             toggle_strategic_hud_strip_compact: KeyCode::F5,
             toggle_command_left_stack: KeyCode::Backquote,
-            toggle_hud_status_side_panel: KeyCode::Equal,
             toggle_strategic_overlay_routing_congestion: KeyCode::Digit7,
             toggle_strategic_overlay_ew_denial: KeyCode::Digit8,
             cycle_build_planning_tool: KeyCode::Semicolon,
