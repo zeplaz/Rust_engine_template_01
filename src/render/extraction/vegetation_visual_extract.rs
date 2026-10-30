@@ -367,8 +367,7 @@ mod tests {
     #[test]
     fn water_centre_cell_draws_no_vegetation_and_land_is_rebased() {
         use crate::systems::ecology::{rate_chunk_vegetation_suitability, VegetationSuitabilityTable};
-        use crate::systems::fire::SurfaceWaterFireGate;
-        use crate::terrain::generation::ChunkCellMatrix;
+        use crate::terrain::generation::{ChunkCellMatrix, WaterClass};
         use crate::terrain::{default_terrain_families, TerrainFamilyId};
 
         let families = default_terrain_families();
@@ -382,28 +381,16 @@ mod tests {
         for y in 0..4 {
             for x in 0..2 {
                 let i = m.idx(x, y);
-                m.family[i] = id("DeepWater");
-                m.elevation[i] = 0.1;
+                m.water[i] = WaterClass::Ocean;
             }
         }
-        let suit = rate_chunk_vegetation_suitability(
-            &m,
-            families,
-            &VegetationSuitabilityTable::default(),
-            &SurfaceWaterFireGate::default(),
-        );
+        let suit = rate_chunk_vegetation_suitability(&m, families, &VegetationSuitabilityTable::default());
         let land = vegetation_density_on_centre_cell(0.4, Some(&m), Some(&suit));
         assert!((land - 0.8).abs() < 1e-6, "{land}");
         // Same chunk with the centre flipped to water draws nothing.
         let c = m.idx(2, 2);
-        m.family[c] = id("DeepWater");
-        m.elevation[c] = 0.1;
-        let suit = rate_chunk_vegetation_suitability(
-            &m,
-            families,
-            &VegetationSuitabilityTable::default(),
-            &SurfaceWaterFireGate::default(),
-        );
+        m.water[c] = WaterClass::Lake;
+        let suit = rate_chunk_vegetation_suitability(&m, families, &VegetationSuitabilityTable::default());
         assert_eq!(vegetation_density_on_centre_cell(0.4, Some(&m), Some(&suit)), 0.0);
         assert_eq!(vegetation_density_on_centre_cell(0.4, Some(&m), None), 0.4);
     }

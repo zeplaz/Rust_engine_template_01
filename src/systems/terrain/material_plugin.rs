@@ -13,7 +13,7 @@ use crate::terrain::generation::passes::{
 use crate::terrain::generation::passes::materialize_traced;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{
-    Chunk, ChunkCellMatrix, ChunkDerivedMetrics, ChunkWorldgenSchedulerPlugin, drainage_with_neighbor_inflow,
+    WorldWaterGrid, Chunk, ChunkCellMatrix, ChunkDerivedMetrics, ChunkWorldgenSchedulerPlugin, drainage_with_neighbor_inflow,
     erosion_from_slope_drainage, fill_landform_layers, stitch_chunk_landform,
 };
 use crate::substrate::WorldSubstrateRegistry;
@@ -45,6 +45,8 @@ use crate::terrain::material::{
     WorldProfileLoader,
     WorldProfileSelector,
     DIRTY_ALL,
+    DIRTY_PASS3,
+    DIRTY_PASS4,
     DIRTY_PASS6,
     DIRTY_PASSES_2_THROUGH_6,
 };
@@ -249,13 +251,21 @@ fn run_passes_from(
     params: &WorldGenParams,
     tag_reg: &TagRegistry,
     families: &TerrainFamilyRegistry,
+    world_water: Option<&WorldWaterGrid>,
 ) {
     for p in low..5 {
         match p {
             0 => fill_fields(matrix, chunk_coord, params, None),
             1 => apply_threshold_tags(matrix, &params.biome_tuning, tag_reg, &params.tag_pool),
             2 => classify_cells(matrix, &params.biome_tuning, tag_reg, families),
-            3 => apply_hydrology_chunk(matrix, &params.biome_tuning, tag_reg, &params.tag_pool),
+            3 => apply_hydrology_chunk(
+                matrix,
+                chunk_coord,
+                &params.biome_tuning,
+                tag_reg,
+                &params.tag_pool,
+                world_water,
+            ),
             4 => apply_agent_overlay(matrix),
             _ => {}
         }
@@ -291,6 +301,23 @@ fn stitch_chunk_derived_slopes(
     }
 }
 
+/// The world water grid changed (new world generation): re-run classification and hydrology on every chunk
+/// so the per-cell water class stays the current answer.
+pub(crate) fn mark_chunks_dirty_on_water_grid_change(
+    grid: Option<Res<WorldWaterGrid>>,
+    mut q: Query<&mut ChunkDirty, With<ChunkDependency>>,
+) {
+    let Some(grid) = grid else {
+        return;
+    };
+    if !grid.is_changed() {
+        return;
+    }
+    for mut d in &mut q {
+        d.passes |= DIRTY_PASS3 | DIRTY_PASS4;
+    }
+}
+
 pub(crate) fn rebuild_dirty_chunks(
     handles: Res<TerrainRegistriesHandles>,
     family_assets: Res<Assets<TerrainFamilyRegistry>>,
@@ -298,6 +325,7 @@ pub(crate) fn rebuild_dirty_chunks(
     tag_assets: Res<Assets<TagRegistry>>,
     rule_assets: Res<Assets<RuleSet>>,
     params: Res<WorldGenParams>,
+    world_water: Option<Res<WorldWaterGrid>>,
     mut commands: Commands,
     mut preview_state: ResMut<WorldPreviewState>,
     all_chunks: Query<&Chunk, With<ChunkDependency>>,
@@ -342,6 +370,7 @@ pub(crate) fn rebuild_dirty_chunks(
             &params,
             tag_reg,
             families,
+            world_water.as_deref(),
         );
         #[cfg(feature = "dev_tools")]
         {
@@ -389,6 +418,7 @@ pub fn materialize_chunks(
     tag_assets: Res<Assets<TagRegistry>>,
     rule_assets: Res<Assets<RuleSet>>,
     params: Res<WorldGenParams>,
+    world_water: Option<Res<WorldWaterGrid>>,
     mut commands: Commands,
     mut preview_state: ResMut<WorldPreviewState>,
     mut q: Query<
@@ -419,7 +449,14 @@ pub fn materialize_chunks(
         }
         apply_threshold_tags(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);
         classify_cells(&mut matrix, &params.biome_tuning, tag_reg, families);
-        apply_hydrology_chunk(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);
+        apply_hydrology_chunk(
+            &mut matrix,
+            chunk.coord,
+            &params.biome_tuning,
+            tag_reg,
+            &params.tag_pool,
+            world_water.as_deref(),
+        );
         apply_agent_overlay(&mut matrix);
         #[cfg(feature = "dev_tools")]
         let (data, trace) = materialize_traced(&matrix, rule_set, reg, tag_reg);
@@ -506,6 +543,7 @@ impl Plugin for MaterialUnificationPlugin {
                 (
                     mark_chunks_dirty_on_asset_change,
                     mark_chunks_dirty_on_world_gen_params_change,
+                    mark_chunks_dirty_on_water_grid_change,
                     rebuild_dirty_chunks,
                     stitch_chunk_derived_slopes,
                 )

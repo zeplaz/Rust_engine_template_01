@@ -9,7 +9,7 @@ use bevy::prelude::*;
 use crate::terrain::family::{default_terrain_families, TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
 use crate::terrain::generation::cell_matrix::ChunkCellMatrix;
 use crate::terrain::generation::chunk::Chunk;
-use crate::terrain::generation::hydrology::HydrologyResult;
+use crate::terrain::generation::water_class::{WaterClass, WorldWaterGrid};
 use crate::terrain::generation::world_generator_enhanced::{TileSpawnData, WorldGenParams};
 use crate::terrain::world_map_scale::TerrainFieldStorage;
 use crate::render::TileWorldFallbackRasterDirty;
@@ -99,7 +99,13 @@ impl WorldGenDenseTerrainCache {
         }
     }
 
-    pub fn apply_hydrology(&mut self, params: &WorldGenParams, hydro: &HydrologyResult) {
+    /// Carve the world water grid into the dense terrain: river and lake cells sit under the water line as
+    /// shallow water, wetland cells are wet. Ocean cells are already low terrain. The classes themselves are
+    /// not stored here; pass 4 stamps them into each chunk from the same grid.
+    pub fn apply_water_grid(&mut self, params: &WorldGenParams, grid: &WorldWaterGrid) {
+        if grid.width != self.width || grid.height != self.height {
+            return;
+        }
         let shallow = default_terrain_families()
             .id("ShallowWater")
             .expect("terrain family registry must define ShallowWater");
@@ -108,24 +114,25 @@ impl WorldGenDenseTerrainCache {
         let lake_depth = ((params.biome_tuning.deep_water_height_max + water_line) * 0.5)
             .clamp(0.02, 0.98);
 
-        for path in &hydro.rivers {
-            for &(tx, ty) in path {
-                let Some(i) = self.idx_xy(tx, ty) else {
-                    continue;
-                };
-                self.elevation[i] = river_depth;
-                self.moisture[i] = 0.95;
-                self.family[i] = shallow;
+        for (i, class) in grid.classes.iter().enumerate() {
+            if i >= self.elevation.len() {
+                break;
             }
-        }
-        for lake in &hydro.lakes {
-            for &(lx, ly) in &lake.cells {
-                let Some(i) = self.idx_xy(lx, ly) else {
-                    continue;
-                };
-                self.elevation[i] = lake_depth;
-                self.moisture[i] = 0.98;
-                self.family[i] = shallow;
+            match class {
+                WaterClass::River => {
+                    self.elevation[i] = self.elevation[i].min(river_depth);
+                    self.moisture[i] = 0.95;
+                    self.family[i] = shallow;
+                }
+                WaterClass::Lake => {
+                    self.elevation[i] = self.elevation[i].min(lake_depth);
+                    self.moisture[i] = 0.98;
+                    self.family[i] = shallow;
+                }
+                WaterClass::Wetland => {
+                    self.moisture[i] = self.moisture[i].max(0.78);
+                }
+                WaterClass::Ocean | WaterClass::Dry => {}
             }
         }
     }

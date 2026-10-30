@@ -1,9 +1,12 @@
-// Per-terrain-family vegetation ceiling and growth rate. Water: nothing. Wetland: low cover.
+// Per-terrain-family vegetation ceiling and growth rate. Open water (river / lake / ocean cells by water
+// class): nothing grows, whatever the family says. Wetland-class ground: `wetland` row only (reeds and
+// riparian cover, grass stage), further limited by the family ceiling.
 // Desert / beach / rock / ice: none or sparse. Tundra / alpine: low scrub. Grassland: scattered.
 // Forest families: full succession. A family missing here uses default_max_canopy.
 (
     schema_version: 1,
     default_max_canopy: 1.0,
+    wetland: (max_canopy: 0.15, growth: 0.8),
     entries: [
         (family: "DeepWater", max_canopy: 0.0, growth: 0.0),
         (family: "ShallowWater", max_canopy: 0.0, growth: 0.0),

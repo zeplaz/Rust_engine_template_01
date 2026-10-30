@@ -2,8 +2,11 @@
 //!
 //! Designer context: impl Q **§55–58** (`implementation_questions_v1.md`).
 
-use crate::terrain::biome::BiomeTuning;
+use bevy::prelude::IVec2;
+
+use crate::terrain::biome::{BiomeId, BiomeTuning};
 use crate::terrain::generation::cell_matrix::ChunkCellMatrix;
+use crate::terrain::generation::water_class::{WaterClass, WorldWaterGrid};
 use crate::terrain::generation::hydrology::{
     compute_hydrology_rect, HydrologyParams,
 };
@@ -28,7 +31,53 @@ fn insert_tag_if(
     set.insert(id);
 }
 
+/// Stamp [`ChunkCellMatrix::water`] — the one writer of the per-cell water class.
+///
+/// The class comes from the world water grid (decided once by world generation). A cell the grid does not
+/// cover, or a world without a grid (editor / legacy chunk fill), falls back to terrain alone: elevation at
+/// or under `water_line` is standing water. Wet biome ground that is not open water is [`WaterClass::Wetland`].
+pub fn stamp_water_class(
+    matrix: &mut ChunkCellMatrix,
+    chunk_coord: IVec2,
+    water_line: f32,
+    world: Option<&WorldWaterGrid>,
+) {
+    let n = matrix.elevation.len();
+    if matrix.water.len() != n {
+        matrix.water = vec![WaterClass::Dry; n];
+    }
+    let (sx, sy) = (matrix.size.x as i32, matrix.size.y as i32);
+    for y in 0..matrix.size.y {
+        for x in 0..matrix.size.x {
+            let i = matrix.idx(x, y);
+            let wx = chunk_coord.x * sx + x as i32;
+            let wy = chunk_coord.y * sy + y as i32;
+            let mut class = world
+                .and_then(|g| g.class_at(wx, wy))
+                .unwrap_or(WaterClass::Dry);
+            if !class.is_open_water() && matrix.elevation[i] <= water_line {
+                class = if world.is_some() {
+                    WaterClass::Lake
+                } else {
+                    WaterClass::Ocean
+                };
+            }
+            if class == WaterClass::Dry
+                && matrix
+                    .weights
+                    .get(i)
+                    .is_some_and(|w| w.primary() == BiomeId::Wetland)
+            {
+                class = WaterClass::Wetland;
+            }
+            matrix.water[i] = class;
+        }
+    }
+}
+
 /// Merge hydrology-related tags into each cell's [`TagSet`] (preserves pass 2–3 tags).
+///
+/// `flooded` is the water class (open water); `eroded` / `silted` come from the chunk-local flow solve.
 pub fn apply_hydrology_with_params(
     matrix: &mut ChunkCellMatrix,
     tuning: &BiomeTuning,
@@ -45,9 +94,7 @@ pub fn apply_hydrology_with_params(
             let i = matrix.idx(x, y);
             let mut tags = matrix.tags[i];
 
-            let flooded = hydro.lake_mask[i as usize]
-                || matrix.elevation[i] <= params.water_line
-                || hydro.river_mask[i as usize];
+            let flooded = matrix.water.get(i).is_some_and(|c| c.is_open_water());
 
             let mut max_slope = 0.0f32;
             for (_dx, nnx, nny) in [
@@ -85,6 +132,12 @@ pub fn apply_hydrology_with_params(
 /// Default hydrology params derived from [`BiomeTuning::default`]; prefer
 /// [`apply_hydrology_with_params`] with live tuning from [`WorldGenParams`](crate::terrain::generation::world_generator_enhanced::WorldGenParams).
 pub fn apply_hydrology(matrix: &mut ChunkCellMatrix) {
+    stamp_water_class(
+        matrix,
+        IVec2::ZERO,
+        BiomeTuning::default().shallow_water_height_max,
+        None,
+    );
     let tuning = BiomeTuning::default();
     let tag_path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
         .join("assets/config/terrain/tag_registry.example.json");
@@ -97,10 +150,13 @@ pub fn apply_hydrology(matrix: &mut ChunkCellMatrix) {
 /// Chunk pipeline entry: uses world tuning + loaded tag registry (same files as material plugin).
 pub fn apply_hydrology_chunk(
     matrix: &mut ChunkCellMatrix,
+    chunk_coord: IVec2,
     tuning: &BiomeTuning,
     tag_registry: &TagRegistry,
     tag_pool: &TagSet,
+    world_water: Option<&WorldWaterGrid>,
 ) {
+    stamp_water_class(matrix, chunk_coord, tuning.shallow_water_height_max, world_water);
     let params = HydrologyParams::from_biome_tuning(tuning);
     apply_hydrology_with_params(matrix, tuning, tag_registry, &params, tag_pool);
 }
@@ -141,8 +197,17 @@ mod tests {
                 matrix.moisture[i] = 0.5;
             }
         }
-        let params = HydrologyParams::from_biome_tuning(&tuning);
-        apply_hydrology_with_params(&mut matrix, &tuning, &tag_registry, &params, &TagSet::ALL);
+        apply_hydrology_chunk(
+            &mut matrix,
+            IVec2::ZERO,
+            &tuning,
+            &tag_registry,
+            &TagSet::ALL,
+            None,
+        );
         assert!(matrix.tags[matrix.idx(2, 2)].contains(flood_id));
+        assert_eq!(matrix.water[matrix.idx(2, 2)], WaterClass::Ocean);
+        assert_eq!(matrix.water[matrix.idx(0, 0)], WaterClass::Dry);
+        assert!(!matrix.tags[matrix.idx(0, 0)].contains(flood_id));
     }
 }
