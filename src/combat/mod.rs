@@ -29,18 +29,21 @@ pub use relax::{control_relaxation_system, relax_step, ControlRelaxation, RelaxC
 pub use theater::{
     assign_stable_ids, derive_theaters_system, partition_segments, Theater, TheaterBook, TheaterCandidate, TheaterId,
 };
-pub use fortification::FortificationIndex;
+pub use fortification::{
+    fort_kind_of, plan_fortification_rows, rebuild_fortification_index_system, FortificationIndex, FortifyRow,
+};
 pub use pressure::{
     score_cell, score_pressure_points_system, score_theater, CellFields, PressureDrivers, PressureKind, PressurePoint,
     PressurePointBook,
 };
 pub use formation::{
-    advance_combat_clock_system, advance_formations_system, formation_supply_system, spawn_formation,
+    advance_combat_clock_system, advance_formations_system, dig_in_system, formation_supply_system, spawn_formation,
     sync_formation_zones_system, CombatClock, Formation, FormationFireZone, Posture,
 };
 pub use orders::{
     apply_deployment_order, execute_deployment_orders_system, order_for_pressure_point, DeploymentKind,
     DeploymentOrder, DeploymentOrderId, DeploymentOrderQueue, DeploymentOutcomes, DeploymentReject, EnqueueError,
+    FortifyPlans, OrderEffect, OutcomeRecord,
 };
 pub use resolve::{combat_resolve_system, resolve_step, Combatant, Outcome};
 pub use supply::{
@@ -93,6 +96,7 @@ impl Plugin for CombatPlugin {
         // FC-6 groundwork: one order queue for UI + AI; fronts publish supply demand to logistics.
         app.init_resource::<DeploymentOrderQueue>()
             .init_resource::<DeploymentOutcomes>()
+            .init_resource::<FortifyPlans>()
             .init_resource::<FrontSupplyPoints>()
             .init_resource::<FrontSupplyCoverage>()
             .add_systems(
@@ -105,6 +109,12 @@ impl Plugin for CombatPlugin {
             );
         // FC-5: formations. Orders -> supply -> combat -> movement -> zones, all before the relaxation
         // that reads those zones, so a formation's presence this frame is what moves control.
+        app.add_systems(
+            Update,
+            rebuild_fortification_index_system
+                .before(combat_resolve_system)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        );
         app.init_resource::<CombatClock>().add_systems(
             Update,
             (
@@ -113,6 +123,7 @@ impl Plugin for CombatPlugin {
                 formation_supply_system,
                 combat_resolve_system,
                 advance_formations_system,
+                dig_in_system,
                 sync_formation_zones_system,
             )
                 .chain()
