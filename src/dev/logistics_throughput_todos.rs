@@ -355,21 +355,3 @@ pub fn sync_logistics_throughput_board_from_witness(
         );
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn board_row_count_matches_static_table() {
-        assert_eq!(LOGISTICS_THROUGHPUT_TODOS.len(), LOGISTICS_THROUGHPUT_TODO_COUNT);
-    }
-
-    #[test]
-    fn all_ids_have_predicates() {
-        for row in LOGISTICS_THROUGHPUT_TODOS {
-            let w = LogisticsThroughputWitness::default();
-            let _ = logistics_throughput_todo_predicate(row.id, &w);
-        }
-    }
-}

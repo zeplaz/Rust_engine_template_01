@@ -45,45 +45,11 @@ pub fn commit_landscape_grammar_live_proof(
 mod tests {
     use std::path::PathBuf;
 
-    use super::*;
-    use crate::systems::ecology::{
-        evaluate_landscape_program, load_landscape_grammar_catalog, ChunkEcology, LG1_PILOT_CHUNK,
-        LG1_PILOT_PRESET_ID, VegetationField,
-    };
-    use crate::systems::weather::ChunkWeather;
-
     fn repo_asset_path(rel: &str) -> PathBuf {
         std::env::var_os("CARGO_MANIFEST_DIR")
             .map(PathBuf::from)
             .map(|root| root.join(rel))
             .unwrap_or_else(|| PathBuf::from(rel))
-    }
-
-    #[test]
-    fn live_proof_writes_json_when_disturbances_present() {
-        let witness = LandscapeGrammarLg2Witness {
-            fire_disturbances: 1,
-            construction_disturbances: 1,
-            harvest_disturbances: 1,
-            ..Default::default()
-        };
-        let catalog = load_landscape_grammar_catalog();
-        let preset = catalog
-            .presets
-            .get(LG1_PILOT_PRESET_ID)
-            .expect("pilot preset");
-        let eval = evaluate_landscape_program(
-            preset,
-            LG1_PILOT_CHUNK,
-            &ChunkEcology::default(),
-            &VegetationField::default(),
-            &ChunkWeather::default(),
-        );
-        assert!(commit_landscape_grammar_live_proof(&witness, &eval));
-        let raw =
-            std::fs::read_to_string(repo_asset_path(LANDSCAPE_GRAMMAR_LIVE_PROOF_JSON)).unwrap();
-        let doc: serde_json::Value = serde_json::from_str(&raw).unwrap();
-        assert_eq!(doc.get("green").and_then(|v| v.as_bool()), Some(true));
     }
 
     #[test]

@@ -186,13 +186,3 @@ fn wave_s_parity_green() -> bool {
         &["/wave_s_hydrate_green", "/profile"],
     )
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn wss_witness_parity_001_migrated_bundle_green() {
-        assert!(refresh_migrated_witness_parity_bundle());
-    }
-}

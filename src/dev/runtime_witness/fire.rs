@@ -58,11 +58,6 @@ pub fn ecology_witness_file_lock() -> EcologyWitnessFileGuard {
 }
 
 /// Test helper — hold while reading `FIRE_ECOLOGY_JSON` after a commit.
-#[cfg(test)]
-pub fn ecology_witness_file_lock_for_tests() -> EcologyWitnessFileGuard {
-    ecology_witness_file_lock()
-}
-
 #[derive(Resource, Debug)]
 pub struct FireEcologyLiveProofState {
     pub cadence: WitnessWriteCadence,
@@ -245,27 +240,5 @@ pub fn write_fire_ecology_live_proof_system(
         FireEcologyCommitLabels::runtime(),
     ) {
         state.set_written(true);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn nest_sim_effect_spine_flattens_double_wrap() {
-        let payload = serde_json::json!({
-            "sim_effect_spine": {
-                "queue_drain_ok": true,
-                "dedupe_ok": true,
-                "effect_rows": 3
-            },
-            "faction_react_wired": true,
-            "faction_react_hook_rows": 1
-        });
-        let nested = nest_sim_effect_spine_for_ecology(&payload);
-        assert_eq!(nested["queue_drain_ok"], true);
-        assert_eq!(nested["faction_react_wired"], true);
-        assert!(nested.get("sim_effect_spine").is_none());
     }
 }

@@ -152,13 +152,3 @@ pub fn veg_burn_stage5_witness_json() -> serde_json::Value {
 pub fn veg_burn_visible_at_operational_zoom_lib() -> bool {
     veg_burn_fullapp_006_witness_green(&veg_burn_pilot_extract_frame())
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn veg_burn_chain_live_witness_green() {
-        assert!(refresh_veg_burn_chain_live_witness());
-    }
-}

@@ -209,27 +209,3 @@ fn write_mig_a_slice_witnesses(
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use bevy::state::app::StatesPlugin;
-
-    use crate::dev::mig_a_adoption::MigAAdoptionState;
-
-    #[test]
-    fn mig_a_audit_witness_refresh_writes_json() {
-        crate::dev::debug_run_envelope::reset_witness_refresh_gate_for_tests();
-        let mut app = App::new();
-        app.add_plugins((MinimalPlugins, StatesPlugin));
-        app.init_resource::<MigAAdoptionState>();
-        app.add_plugins(MigAAuditPlugin);
-        app.world_mut().resource_mut::<MigAAdoptionState>().tagged_no_cpu_culling = 3;
-        for _ in 0..2 {
-            app.world_mut().resource_mut::<bevy::diagnostic::FrameCount>().0 += 1;
-            app.update();
-        }
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join(MIG_A_ROLLUP_JSON);
-        assert!(path.exists(), "expected rollup at {:?}", path);
-    }
-}

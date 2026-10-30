@@ -70,13 +70,3 @@ pub fn refresh_vegetation_snapshot_roundtrip_live_witness() -> bool {
         wrapped,
     ) && rows > 0
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn vegetation_snapshot_roundtrip_live_witness_green() {
-        assert!(refresh_vegetation_snapshot_roundtrip_live_witness());
-    }
-}

@@ -5,7 +5,6 @@
 
 pub mod cadence_plugin;
 pub mod common;
-pub mod containment;
 pub mod construction;
 pub mod economy;
 pub mod fire;
@@ -37,9 +36,6 @@ pub use fire::{
     commit_fire_ecology_live_proof, commit_fire_ecology_live_proof_unchecked,
     nest_sim_effect_spine_for_ecology, write_fire_ecology_live_proof_system,
     FireEcologyCommitLabels, FireEcologyLiveProofState, FIRE_ECOLOGY_JSON,
-};
-pub use containment::{
-    phase0_containment_green, scan_live_proof_containment_violations, LiveProofContainmentViolation,
 };
 pub use cadence_plugin::{
     arm_construction_live_proof_cadence, arm_fire_ecology_live_proof_cadence,

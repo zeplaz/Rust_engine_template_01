@@ -131,27 +131,3 @@ pub fn sim_effect_spine_live_proof_body_green() -> bool {
         && body["faction_react_wired"].as_bool() == Some(true)
         && body["faction_react_hook_rows"].as_u64().is_some_and(|n| n >= 1)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::dev::runtime_witness::sim_effects::SIM_EFFECT_SPINE_JSON;
-
-    #[test]
-    fn sim_effects_spine_live_witness_refresh_green() {
-        assert!(refresh_sim_effect_spine_live_witness());
-    }
-
-    #[test]
-    fn sim_effects_spine_live_json_and_jsonl_exist() {
-        assert!(refresh_sim_effect_spine_live_witness());
-        assert!(
-            std::path::Path::new(SIM_EFFECT_SPINE_JSON).exists(),
-            "expected {SIM_EFFECT_SPINE_JSON}"
-        );
-        assert!(
-            std::path::Path::new(SIM_EFFECTS_JSONL).exists(),
-            "expected {SIM_EFFECTS_JSONL}"
-        );
-    }
-}

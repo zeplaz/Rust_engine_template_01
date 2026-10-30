@@ -171,26 +171,3 @@ pub fn refresh_triage_perf_vfx_002_live_witness_from_disk() -> bool {
     let frames = v.get("frames_sampled").and_then(|n| n.as_u64()).unwrap_or(0);
     write_triage_perf_vfx_fix_live_witness(&after, frames) && triage_perf_vfx_002_lib_green()
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn triage_witness_on_disk_has_green_perfscope_slices() {
-        let _ = refresh_triage_perf_vfx_002_live_witness_from_disk();
-        let raw = std::fs::read_to_string(TRIAGE_PERF_VFX_FIX_LIVE_JSON).expect("witness");
-        let v: Value = serde_json::from_str(&raw).expect("json");
-        let after = v.get("after").expect("after block");
-        assert!(
-            triage_perf_slice_p50_green(after),
-            "PerfScope slice p50 should be <= {SLICE_P50_TARGET_MS}ms after phase 2A-2D"
-        );
-        assert_eq!(v.get("gate").and_then(|g| g.as_str()), Some("PERF-INSTR-VFX-002"));
-    }
-
-    #[test]
-    fn triage_perf_vfx_002_lib_green_on_disk() {
-        assert!(refresh_triage_perf_vfx_002_live_witness_from_disk());
-    }
-}

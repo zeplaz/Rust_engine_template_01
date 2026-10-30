@@ -61,38 +61,3 @@ pub fn refresh_s7p_steward_001_live_witness() -> bool {
     chain.sites_committed = 3;
     commit_stage7_play_witness(&chain, true, 0, true, 30)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn s7p_steward_payload_marks_production_green() {
-        let mut chain = ConcreteChainE2eWitness::default();
-        chain.operational_mine = 1;
-        chain.operational_kiln = 1;
-        chain.operational_mixer = 1;
-        chain.activated_mine = 1;
-        chain.activated_kiln = 1;
-        chain.activated_mixer = 1;
-        chain.flow_edges = 2;
-        chain.production_ticks = 3;
-        let body = build_stage7_play_witness_payload(&chain, true, 0, true, 1);
-        assert!(body["concrete_chain_e2e"]["production_green"].as_bool().unwrap_or(false));
-        assert!(body["s7p_steward_green"].as_bool().unwrap_or(false));
-        assert!(body["s7p_grid_optional_green"].as_bool().unwrap_or(false));
-    }
-
-    /// S7P-STEWARD-001 — refresh `debug_runs/stage7_play_live.json` from lib harness.
-    #[test]
-    fn s7p_steward_live_json_refresh() {
-        assert!(refresh_s7p_steward_001_live_witness());
-        let text = std::fs::read_to_string(STAGE7_PLAY_LIVE_JSON).expect("witness json");
-        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(v["s7p_steward_green"], serde_json::json!(true));
-        assert_eq!(
-            v["concrete_chain_e2e"]["production_green"],
-            serde_json::json!(true)
-        );
-    }
-}

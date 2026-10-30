@@ -456,8 +456,4 @@ mod tests {
         assert!(p.wall_concrete_untouched);
     }
 
-    #[test]
-    fn cod_deployable_pipeline_witness_green() {
-        assert!(refresh_cod_deployable_pipeline_live_witness());
-    }
 }

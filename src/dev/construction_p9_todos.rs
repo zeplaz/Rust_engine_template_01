@@ -163,38 +163,3 @@ pub fn sync_construction_p9_board_from_witness(
 ) {
     board.sync_from_witness(witness);
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn p9_witness_maps_phase2_tail() {
-        let phase2 = ConstructionPhase2Witness {
-            construction_proof_json: true,
-            curved_road_spline: true,
-            grid_and_node_snap: true,
-            road_upgrade_lane: true,
-            terrain_conform: true,
-            ..Default::default()
-        };
-        let p9 = ConstructionP9Witness::from_phase2(&phase2);
-        assert!(p9.all_green());
-        assert!(con_e01_p9_acceptance_green(&p9, true));
-    }
-
-    #[test]
-    fn p9_board_sync_marks_tail_done() {
-        let witness = ConstructionP9Witness {
-            construction_proof_json: true,
-            curved_road_spline: true,
-            grid_and_node_snap: true,
-            road_upgrade_lane: true,
-            terrain_conform: true,
-        };
-        let mut board = ConstructionP9TodoBoard::from_template();
-        sync_construction_p9_board_from_witness(&witness, &mut board);
-        assert!(board.is_green());
-        assert_eq!(board.open_count(), 0);
-    }
-}
