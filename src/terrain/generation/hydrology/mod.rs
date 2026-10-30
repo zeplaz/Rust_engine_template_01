@@ -34,7 +34,8 @@ impl HydrologyParams {
     pub fn from_biome_tuning(t: &BiomeTuning) -> Self {
         Self {
             water_line: t.shallow_water_height_max,
-            river_acc_quantile: 0.10,
+            // Major drainage channels only: ~1.5% of cells (0.10 flooded the map with a web of tributaries).
+            river_acc_quantile: 0.015,
             erosion_slope_threshold: 0.08,
             silt_moisture_threshold: (t.wetland_moist_threshold * 0.85).min(1.0),
         }
