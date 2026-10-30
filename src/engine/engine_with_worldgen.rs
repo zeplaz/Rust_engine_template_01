@@ -5,7 +5,7 @@ use crate::gui::{
     editor::world_preview::{
         init_preview_render_contract_resources, WorldPreviewGpuRuntime,
     },
-    AppShellPlugin, BaseMenuPlugin, BuildPlanningPlugin, DiagnosticsUiPlugin, FactionToolsUiPlugin,
+    AppShellPlugin, BaseMenuPlugin, BuildPlanningPlugin, DiagnosticsUiPlugin,
     GameplayCapturePlugin, InGameHudPlugin, InGamePauseMenuPlugin, KeybindingsOptionsPlugin,
     LogisticsTargetsPanelPlugin,
     hud::TransmissionShellPlugin,
@@ -244,7 +244,6 @@ impl Plugin for EnginePlugin {
             .add_plugins(ViewAuthorityPlugin)
             .add_plugins(SharedOverlayFieldBuffersPlugin)
             .add_plugins(DiagnosticsUiPlugin)
-            .add_plugins(FactionToolsUiPlugin)
             .add_plugins(crate::gui::AiExplainabilityPlugin)
             .add_plugins(StrategicToolingPlugin)
             .add_plugins(InGameHudPlugin)

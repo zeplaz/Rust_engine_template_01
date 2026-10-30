@@ -180,7 +180,6 @@ type PointerBlockingPanelRoots = Or<(
     With<crate::construction::BuildToolboxBevyRoot>,
     With<crate::gui::editor::map_editor::MapEditorBevyShell>,
     With<crate::construction::RoadToolPopupBevyRoot>,
-    With<crate::gui::faction_tools_ui::FactionToolsBevyRoot>,
     With<crate::gui::ai_explainability_ui::AiExplainabilityBevyRoot>,
     With<crate::gui::pressure_tooling::PressureComposerBevyRoot>,
     With<crate::gui::assembly_snapshot_qc_ui::AssemblySnapshotQcBevyRoot>,
