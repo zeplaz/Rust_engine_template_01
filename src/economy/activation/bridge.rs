@@ -35,8 +35,8 @@ impl Plugin for IndustrialActivationPlugin {
             super::grid_overload_ux::GridOverloadUxPlugin,
             super::power_island_ux::PowerIslandUxPlugin,
         ));
-        // Systems below read these in normal runs; only the test harness plugin used to init them.
-        crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks(app);
+        // Witness / todo-board resources are harness-only (`LiveTodoBoardsPlugin`); the witness
+        // systems below take them as `Option` and no-op in product runs.
         app.init_resource::<super::witness_collectors::IndustrialActivationLiveProofState>()
             .init_resource::<crate::dev::Stage7PlayLiveProofState>()
             .init_resource::<crate::dev::Stage7BehavioralLiveProofState>()
@@ -108,9 +108,12 @@ impl Plugin for IndustrialActivationPlugin {
 }
 
 pub fn sync_industrial_activation_board_system(
-    witness: Res<crate::dev::IndustrialActivationWitness>,
-    mut board: ResMut<IndustrialActivationTodoBoard>,
+    witness: Option<Res<crate::dev::IndustrialActivationWitness>>,
+    board: Option<ResMut<IndustrialActivationTodoBoard>>,
 ) {
+    let (Some(witness), Some(mut board)) = (witness, board) else {
+        return;
+    };
     sync_industrial_activation_board_from_witness(witness.as_ref(), board.as_mut());
 }
 
@@ -165,11 +168,15 @@ fn path_exists(p: &str) -> bool {
 }
 
 pub fn refresh_industrial_activation_witness_system(
-    mut w: ResMut<crate::dev::IndustrialActivationWitness>,
+    w: Option<ResMut<crate::dev::IndustrialActivationWitness>>,
     buildings: Option<Res<BuildingDefinitionRegistry>>,
     flow: Option<Res<crate::economy::resource_flow::ResourceFlowSimWitness>>,
     mut frames: Local<u32>,
 ) {
+    // Harness-only witness: product runs never insert it, so skip the repo-file stat sweep.
+    let Some(mut w) = w else {
+        return;
+    };
     // Dozens of `stat` syscalls per run; the answers (file presence, registry violations) move on
     // human timescales, so refresh on the first frame and then every ~5 s of frames.
     // Unit tests drive a handful of frames and expect every frame to refresh.
