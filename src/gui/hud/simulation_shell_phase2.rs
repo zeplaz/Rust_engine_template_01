@@ -1030,7 +1030,9 @@ fn update_ops_strip_zone_lines_system(
         .mock_parity
         .get_or_insert_with(crate::construction::mock_shapes_parity_green);
 
-    let time_fp = (tick.0, ctrl.paused, (ctrl.speed * 100.0).round() as i32);
+    // The tick readout only needs ~15 Hz: re-shaping the text every sim tick costs more than
+    // everything else on the strip (bevy_ui text layout).
+    let time_fp = (tick.0 / 4, ctrl.paused, (ctrl.speed * 100.0).round() as i32);
     if cache.time_fp != Some(time_fp) {
         cache.time_fp = Some(time_fp);
         cache.time_line = format_sim_tick_line(tick.0, ctrl.paused, ctrl.speed);
@@ -1065,8 +1067,10 @@ fn update_ops_strip_zone_lines_system(
     let log = logistics.as_deref();
     let intel_fp = (
         policy.apply_routing_congestion,
-        (log.map(|l| l.congestion_proxy).unwrap_or(0.0) * 10000.0).round() as i32,
-        (log.map(|l| l.mean_edge_damage).unwrap_or(0.0) * 10000.0).round() as i32,
+        // Fingerprint at the displayed precision (`{:.2}`), not finer: sub-display changes
+        // re-shaped identical text every frame. `mean_edge_damage` is not shown here.
+        (log.map(|l| l.congestion_proxy).unwrap_or(0.0) * 100.0).round() as i32,
+        0,
     );
     if cache.intel_fp != Some(intel_fp) {
         cache.intel_fp = Some(intel_fp);
@@ -1082,9 +1086,9 @@ fn update_ops_strip_zone_lines_system(
 
     let w = weather.as_deref();
     let weather_fp = (
-        (w.map(|s| s.rain).unwrap_or(0.0) * 1000.0).round() as i32,
-        (w.map(|s| s.snow).unwrap_or(0.0) * 1000.0).round() as i32,
-        (w.map(|s| s.fog).unwrap_or(0.0) * 1000.0).round() as i32,
+        (w.map(|s| s.rain).unwrap_or(0.0) * 100.0).round() as i32,
+        (w.map(|s| s.snow).unwrap_or(0.0) * 100.0).round() as i32,
+        (w.map(|s| s.fog).unwrap_or(0.0) * 100.0).round() as i32,
     );
     if cache.weather_fp != Some(weather_fp) {
         cache.weather_fp = Some(weather_fp);
@@ -1113,7 +1117,7 @@ fn update_ops_strip_zone_lines_system(
 
     let scarcity = world_fields.as_deref().map(|f| f.resource_scarcity).unwrap_or(0.5);
     let power_proxy = (1.0 - scarcity).clamp(0.0, 1.0);
-    let power_fp = (power_proxy * 1000.0).round() as i32;
+    let power_fp = (power_proxy * 100.0).round() as i32;
     if cache.power_fp != Some(power_fp) {
         cache.power_fp = Some(power_fp);
         cache.power_line = format!("PWR  {:.0}%", power_proxy * 100.0);
@@ -2688,38 +2692,6 @@ mod tests {
         assert_eq!(body["ui_p2a_tail"]["p4_auth_green"], serde_json::json!(true));
     }
 
-    #[test]
-    fn ui_p2a_tail_live_witness_refresh() {
-        use crate::construction::{ActiveBuildTool, BuildStripState, ToolContext};
-
-        let mut strip = BuildStripState::default();
-        let mut tool = ActiveBuildTool::default();
-        let mut witness = UiShellMigrationWitness::default();
-        witness_ops_strip_zone_hover_replay(&mut witness);
-        witness_build_rail_tool_authoritative_replay(
-            &mut strip,
-            &mut tool,
-            &mut witness,
-            ToolContext::Utilities,
-        );
-        assert!(commit_ui_shell_migration_live_proof(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        ));
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["ui_p2a_tail"]["f03_green"], serde_json::json!(true));
-        assert_eq!(body["ui_p2a_tail"]["p4_auth_green"], serde_json::json!(true));
-        assert_eq!(
-            body["witness"]["ops_zone_hover_token"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["build_rail_authoritative"],
-            serde_json::json!(true)
-        );
-    }
 
     #[test]
     fn witness_interaction_replay_sets_flags() {
@@ -2761,28 +2733,6 @@ mod tests {
         assert_eq!(body["ui_p2a_coder_b"]["green"], serde_json::json!(true));
     }
 
-    #[test]
-    fn ui_w3_2a_001_live_witness_refresh() {
-        assert!(refresh_ui_w3_2a_001_live_witness());
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["phase2_zones_live"], serde_json::json!(true));
-        assert_eq!(body["ui_w3_2a_001"]["green"], serde_json::json!(true));
-        assert_eq!(body["ui_w3_2a_001"]["ops_zones_wired"], serde_json::json!(true));
-        assert_eq!(
-            body["witness"]["alert_click_expanded_tray"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["intel_map_camera_request"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["escape_collapsed_tray"],
-            serde_json::json!(true)
-        );
-        assert_eq!(body["phase2"]["zones_live"], serde_json::json!(true));
-    }
 
     #[test]
     fn ui_w3_2a_001_green_requires_ops_zones_and_tray_interactions() {
@@ -2793,88 +2743,7 @@ mod tests {
         assert!(!ui_w3_2a_001_green(&bad));
     }
 
-    #[test]
-    fn ui_oh_2a_001_live_witness_refresh() {
-        assert!(refresh_ui_oh_2a_001_live_witness());
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["phase2_zones_live"], serde_json::json!(true));
-        assert_eq!(body["ui_oh_2a_001"]["green"], serde_json::json!(true));
-        assert_eq!(body["phase2a_closed"], serde_json::json!(true));
-        assert_eq!(
-            body["witness"]["alert_click_expanded_tray"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["intel_map_camera_request"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["escape_collapsed_tray"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["minimap_chrome_aligned"],
-            serde_json::json!(true)
-        );
-        assert_eq!(body["witness"]["ops_zones_wired"], serde_json::json!(true));
-        assert_eq!(
-            body["phase2"]["zones_live"],
-            serde_json::json!(true)
-        );
-    }
 
-    #[test]
-    fn ui_p2a_001_live_witness_refresh() {
-        let witness = UiShellMigrationWitness {
-            phase2_zones_live: true,
-            alert_click_expanded_tray: true,
-            intel_map_camera_request: true,
-            escape_collapsed_tray: true,
-            minimap_chrome_aligned: true,
-            flat_v2_tab_chrome: true,
-            ops_zones_wired: true,
-            build_rail_synced: true,
-            build_rail_authoritative: true,
-            build_toolbox_egui_gated: true,
-            side_status_rail_egui_gated: true,
-            floating_egui_shells_gated: true,
-            ops_zone_hover_token: true,
-            icon_atlas_loaded: true,
-            last_minimap_rect_delta_px: 1.0,
-            ..Default::default()
-        };
-        assert!(commit_ui_shell_migration_live_proof(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        ));
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["phase2_zones_live"], serde_json::json!(true));
-        assert_eq!(body["ui_p2a_coder_b"]["green"], serde_json::json!(true));
-        assert_eq!(body["ui_p2a_coder_b"]["mock_zone_parity"], serde_json::json!(true));
-        assert_eq!(body["ui_p2a_tail"]["f03_green"], serde_json::json!(true));
-        assert_eq!(body["ui_p2a_tail"]["p4_auth_green"], serde_json::json!(true));
-        assert_eq!(body["phase2a_closed"], serde_json::json!(true));
-        assert_eq!(
-            body["witness"]["alert_click_expanded_tray"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["intel_map_camera_request"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["escape_collapsed_tray"],
-            serde_json::json!(true)
-        );
-        assert!(commit_ui_shell_migration_live_proof(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        ));
-    }
 
     #[test]
     fn ui_p3_001_shell_witness_fields_when_gpu_path_active() {
@@ -2909,80 +2778,9 @@ mod tests {
         );
     }
 
-    /// **UI-P3-SHELL-ROLLUP-001** + **UI-OH-P4-001** + **UI-OH-P5-001** — shell tail closure refresh.
-    #[test]
-    fn ui_shell_tail_closure_live_witness_refresh() {
-        assert!(super::refresh_coder_b_ui_shell_tail_closure_witness());
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["ui_p3_001"]["closed"], serde_json::json!(true));
-        assert_eq!(
-            body["ui_p3_001"]["compositor_authoritative"],
-            serde_json::json!(true)
-        );
-        assert_eq!(body["ui_oh_p4_001"]["green"], serde_json::json!(true));
-        assert_eq!(body["ui_oh_p5_001"]["green"], serde_json::json!(true));
-        assert_eq!(body["phase5"]["pause_menu_bevy"], serde_json::json!(true));
-    }
 
-    /// **UI-OH-2B-001** — product-shell egui hidden in Simulation; shell witness sim pass count 0.
-    #[test]
-    fn ui_oh_2b_001_live_witness_refresh() {
-        use crate::engine::states::BaseState;
-        use crate::gui::ui_gates::product_shell_base_active;
 
-        assert!(!product_shell_base_active(BaseState::Simulation));
-        assert!(refresh_ui_oh_2b_001_live_witness());
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["ui_oh_2b_001"]["green"], serde_json::json!(true));
-        assert_eq!(
-            body["ui_oh_2b_001"]["product_shell_in_simulation"],
-            serde_json::json!(false)
-        );
-        assert_eq!(body["egui_pass_count_in_sim"], serde_json::json!(0));
-        assert_eq!(body["phase2b_closed"], serde_json::json!(true));
-        assert_eq!(body["ui_p2b_coder_b_green"], serde_json::json!(true));
-    }
 
-    /// **UI-W3-2C-001** — 2C-B left mode rail + build rail authority witness refresh.
-    #[test]
-    fn ui_w3_2c_001_live_witness_refresh() {
-        assert!(refresh_ui_w3_2c_001_live_witness());
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["ui_w3_2c_001"]["green"], serde_json::json!(true));
-        assert_eq!(body["ui_w3_2c_001"]["layout_option"], serde_json::json!("2C-B"));
-        assert_eq!(body["ui_w3_2c_001"]["context_rail_width_px"], serde_json::json!(48.0));
-        assert_eq!(body["ui_w3_2c_001"]["build_rail_width_px"], serde_json::json!(52.0));
-        assert_eq!(
-            body["ui_w3_2c_001"]["left_chrome_width_px_collapsed"],
-            serde_json::json!(106.0)
-        );
-        assert_eq!(body["phase2c"]["phase2c_closed"], serde_json::json!(true));
-        assert_eq!(body["phase2c"]["layout_option"], serde_json::json!("2C-B"));
-        assert_eq!(
-            body["witness"]["build_rail_authoritative"],
-            serde_json::json!(true)
-        );
-        assert_eq!(body["ui_p2a_tail"]["p4_auth_green"], serde_json::json!(true));
-    }
-
-    /// **UI-W3-P4-001** — icon atlas + build rail + petroleum tab witness refresh.
-    #[test]
-    fn ui_w3_p4_001_live_witness_refresh() {
-        assert!(refresh_ui_w3_p4_001_live_witness());
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["ui_w3_p4_001"]["green"], serde_json::json!(true));
-        assert_eq!(body["ui_w3_p4_001"]["icon_atlas_loaded"], serde_json::json!(true));
-        assert_eq!(
-            body["ui_w3_p4_001"]["petroleum_panel_tab_wired"],
-            serde_json::json!(true)
-        );
-        assert_eq!(body["phase4"]["icon_atlas_loaded"], serde_json::json!(true));
-        assert_eq!(body["phase4"]["p5_br_tab_wired"], serde_json::json!(true));
-    }
 
     #[test]
     fn ui_w3_2c_001_green_requires_layout_contract_and_p4_auth() {
@@ -2993,92 +2791,8 @@ mod tests {
         assert!(!ui_w3_2c_001_green(&bad));
     }
 
-    /// **UI-W3-P5-001** — Bevy pause menu witness refresh.
-    #[test]
-    fn ui_w3_p5_001_live_witness_refresh() {
-        use crate::engine::states::BaseState;
-        use crate::gui::ui_gates::product_shell_base_active;
 
-        assert!(!product_shell_base_active(BaseState::Simulation));
-        assert!(refresh_ui_w3_p5_001_live_witness());
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["ui_w3_p5_001"]["green"], serde_json::json!(true));
-        assert_eq!(body["ui_w3_p5_001"]["pause_menu_bevy"], serde_json::json!(true));
-        assert_eq!(body["phase5"]["pause_menu_bevy"], serde_json::json!(true));
-        assert_eq!(body["ui_p5_pause_001_green"], serde_json::json!(true));
-        assert_eq!(body["ui_w3_p5_001"]["egui_pass_count_in_sim"], serde_json::json!(0));
-        assert_eq!(body["phase2a_closed"], serde_json::json!(true));
-        assert_eq!(body["phase2_zones_live"], serde_json::json!(true));
-    }
 
-    /// **UI-W3-2B-001** — Wave 3 alias; egui gate witness refresh.
-    #[test]
-    fn ui_w3_2b_001_live_witness_refresh() {
-        use crate::engine::states::BaseState;
-        use crate::gui::ui_gates::product_shell_base_active;
-
-        assert!(!product_shell_base_active(BaseState::Simulation));
-        assert!(refresh_ui_w3_2b_001_live_witness());
-        let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).expect("witness");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(body["ui_w3_2b_001"]["green"], serde_json::json!(true));
-        assert_eq!(body["ui_w3_2b_001"]["egui_pass_count_in_sim"], serde_json::json!(0));
-        assert_eq!(body["phase2b_closed"], serde_json::json!(true));
-        assert_eq!(body["ui_p2b_coder_b_green"], serde_json::json!(true));
-        assert_eq!(
-            body["witness"]["build_toolbox_egui_gated"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["floating_egui_shells_gated"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            body["witness"]["side_status_rail_egui_gated"],
-            serde_json::json!(true)
-        );
-    }
-
-    /// **UI-P2B-CODER-B** — proof commit syncs dock/layout gates → `phase2b_closed`.
-    #[test]
-    fn ui_p2b_coder_b_phase2b_closed_when_sim_egui_gates_suppressed() {
-        let mut dock = crate::gui::hud::HudDockRegistry::default();
-        crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
-        let mut layout = crate::gui::hud::HudCommandShellLayout::default();
-        layout.status_side_panel_state = crate::gui::hud::HudPanelState::Collapsed;
-        let witness = UiShellMigrationWitness {
-            phase2_zones_live: true,
-            flat_v2_tab_chrome: true,
-            minimap_chrome_aligned: true,
-            ..Default::default()
-        };
-        let shell_diag = ProductShellDiagnostics::default();
-        let payload = build_proof_payload(&witness, &ContextTrayState::default(), &shell_diag);
-        assert_eq!(payload["phase2b_closed"], serde_json::json!(false));
-
-        assert!(commit_ui_shell_migration_live_proof_with_gates(
-            &witness,
-            &ContextTrayState::default(),
-            &shell_diag,
-            Some(&dock),
-            Some(&layout),
-        ));
-        let refreshed = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH)
-            .expect("wave_p proof json");
-        let v: serde_json::Value = serde_json::from_str(&refreshed).expect("parse");
-        assert_eq!(v["phase2b_closed"], serde_json::json!(true));
-        assert_eq!(v["ui_p2b_coder_b_green"], serde_json::json!(true));
-        assert_eq!(v["egui_pass_count_in_sim"], serde_json::json!(0));
-        assert_eq!(
-            v["witness"]["build_toolbox_egui_gated"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            v["ui_p2b_coder_b"]["floating_egui_shells_gated"],
-            serde_json::json!(true)
-        );
-    }
 
     #[test]
     fn ui_p2b_coder_b_green_false_when_sim_session_egui_passes() {

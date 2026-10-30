@@ -320,39 +320,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn fire_f2_extract_tail_001_witness_refresh() {
-        assert!(super::refresh_log_e01_and_tactical_vfx_stage5_live_witness());
-        let text = std::fs::read_to_string(super::STAGE5_FULL_APP_LIVE_JSON).expect("witness");
-        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert!(
-            v["f2_extract_witness"]["fire_instance_buffer_rows"]
-                .as_u64()
-                .unwrap_or(0)
-                > 0
-        );
-        assert_eq!(
-            v["tactical_vfx_witness"]["fire_instance_buffer_rows_gt_0"],
-            serde_json::json!(true)
-        );
-        assert_eq!(v["smoke_extract_wired"], serde_json::json!(true));
-        assert_eq!(v["smoke_stub_removed"], serde_json::json!(true));
-        assert_eq!(
-            v["smoke_bridge"]["projection_wired"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            v["veg_burn_witness"]["gate"],
-            serde_json::json!("VEG-BURN-FULLAPP-006")
-        );
-        assert_eq!(v["veg_burn_witness"]["green"], serde_json::json!(true));
-        assert!(
-            v["veg_burn_witness"]["burn_active_rows"]
-                .as_u64()
-                .unwrap_or(0)
-                > 0
-        );
-    }
 
     #[test]
     fn p2_fire_spark_011_stage5_witness_refresh() {

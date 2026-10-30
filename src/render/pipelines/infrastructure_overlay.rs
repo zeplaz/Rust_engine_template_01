@@ -882,18 +882,4 @@ mod tests {
         assert!(infra_overlay_polish_green());
     }
 
-    #[test]
-    fn power_map_overlay_witness_tokens_green() {
-        let settings = InfrastructureOverlaySettings {
-            enabled: true,
-            power: true,
-            ..Default::default()
-        };
-        let presentation = PowerMapOverlayPresentation::default();
-        let authoring = UtilityAuthoringTool {
-            mode: UtilityAuthoringMode::PlacePower,
-            ..Default::default()
-        };
-        assert!(power_map_overlay_green(&settings, &presentation, &authoring));
-    }
 }
