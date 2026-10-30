@@ -45,6 +45,7 @@ mod app_shell;
 mod main_menu;
 mod splash;
 mod ui_gates;
+pub mod front_controls;
 mod input_bindings;
 mod input_frame;
 pub mod input_pick;
@@ -95,6 +96,10 @@ pub use vfx_fire_test_focus::{
 pub use settlement_block_frame_debug::{
     draw_block_frame_debug_overlay, settlement_block_frame_debug_overlay_wired_witness_green,
     BlockFrameDebugUiState, SettlementBlockFrameDebugPlugin,
+};
+pub use front_controls::{
+    FrontControlsPlugin, FrontControlsSet, FrontDragBox, FrontMapCursor, FrontOrderFeedback, FrontOverlaySettings,
+    SelectedFormation,
 };
 pub use input_bindings::InputBindings;
 pub use minimap_shell::{

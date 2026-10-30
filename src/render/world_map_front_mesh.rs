@@ -25,28 +25,23 @@
 //! primitives (its projection is the LG-5 atlas path), so the layer is hidden there and selection /
 //! ordering is disabled; a billboard/decal path for the same primitives is the graphics lane's ask.
 //!
-//! Controls (v1): left click selects one of the player's formations (click empty ground to deselect);
-//! right click orders the selection: an enemy formation or enemy-held front cell is an Attack, a
-//! Threatened pressure point of ours is a Reinforce, anything else a Move.
+//! Selection, orders, hotkeys, feedback and the readout panel live in `gui::front_controls`; this file
+//! only draws their state (selection rings, the drag box, order markers and refusal flashes).
 
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
-use bevy::window::PrimaryWindow;
-
 use crate::combat::{
-    DeploymentKind, DeploymentOrder, DeploymentOrderQueue, Formation, FrontBalance, Posture, PressureKind,
-    PressurePointBook, TheaterBook, UnitKind,
+    DeploymentKind, Formation, FrontBalance, Posture, PressureKind, PressurePointBook, TheaterBook, UnitKind,
 };
-use crate::construction::{cursor_world_on_map, ActiveBuildTool, BuildTool};
 use crate::engine::states::BaseState;
-use crate::gui::hud::simulation_pointer_gate::{
-    simulation_tool_pointer, PointerGateSet, SimulationMapPointerGate, SimulationToolPointer,
+use crate::gui::front_controls::{
+    reject_text, FrontControlsSet, FrontDragBox, FrontOrderFeedback, FrontOverlaySettings, MarkerState, OrderMarker,
+    SelectedFormation, PLAYER_SLOT,
 };
-use crate::gui::{MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport, WorldPresentationMode};
-use crate::render::view_runtime::ViewProjectionAuthority;
+use crate::gui::{MainWorldCameraOrthoTrace, WorldPresentationMode};
 use crate::strategic::FrontlineState;
-use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+use bevy::ecs::system::SystemParam;
 
 /// Above the network ribbons (1.04); below nothing the player needs to click.
 pub const FRONT_Z: f32 = 1.10;
@@ -55,8 +50,6 @@ const PRESSURE_Z: f32 = 1.12;
 const SYMBOL_Z: f32 = 1.15;
 const LABEL_Z: f32 = 1.2;
 
-/// The slot whose formations the local player commands.
-pub const PLAYER_SLOT: u8 = 0;
 
 /// Symbol edge in screen pixels (converted to tiles per zoom).
 const SYMBOL_PX: f32 = 20.0;
@@ -68,37 +61,6 @@ pub(crate) struct WorldMapFrontLayer;
 
 #[derive(Component)]
 pub(crate) struct WorldMapFrontLabel;
-
-/// What the layer draws. All on by default.
-#[derive(Resource, Clone, Copy, Debug, PartialEq, Eq)]
-pub struct FrontOverlaySettings {
-    pub fronts: bool,
-    pub theaters: bool,
-    pub pressure: bool,
-    pub formations: bool,
-    pub labels: bool,
-}
-
-impl Default for FrontOverlaySettings {
-    fn default() -> Self {
-        Self { fronts: true, theaters: true, pressure: true, formations: true, labels: true }
-    }
-}
-
-/// The player's selected formation.
-#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct SelectedFormation(pub Option<Entity>);
-
-/// Cursor on the map plane, published each frame after the pointer gate.
-#[derive(Resource, Clone, Copy, Debug, Default, PartialEq)]
-pub struct FrontMapCursor {
-    /// Map-plane position in tile units (`x`, row).
-    pub xy: Option<Vec2>,
-    /// The gate lets the map see the pointer (not over chrome / panels).
-    pub free: bool,
-    /// Screen pixels per tile (symbol hit radius is derived from it).
-    pub px_per_tile: f32,
-}
 
 // ---------------------------------------------------------------------------------------------
 // Geometry
@@ -422,6 +384,65 @@ pub(crate) fn build_formation_symbol(geo: &mut Geo, f: &Formation, friend: bool,
 }
 
 // ---------------------------------------------------------------------------------------------
+// Controls feedback: drag box and order markers
+// ---------------------------------------------------------------------------------------------
+
+/// Rubber-band box while the player drags a selection.
+pub(crate) fn build_drag_box(geo: &mut Geo, lo: Vec2, hi: Vec2, px_per_tile: f32) {
+    let ring = [lo, Vec2::new(hi.x, lo.y), hi, Vec2::new(lo.x, hi.y)];
+    geo.quad(ring[0], ring[1], ring[2], ring[3], SYMBOL_Z - 0.01, [1.0, 0.92, 0.2, 0.12]);
+    geo.polyline(&ring, true, px_to_tiles(1.5, px_per_tile), SYMBOL_Z - 0.005, [1.0, 0.92, 0.2, 0.9]);
+}
+
+/// Brief marker for an issued order: a shape by kind at the target, a red X over the formation when the
+/// order was refused. It fades over its lifetime.
+pub(crate) fn build_order_marker(geo: &mut Geo, m: &OrderMarker, px_per_tile: f32) {
+    let z = SYMBOL_Z + 0.02;
+    let size = px_to_tiles(18.0, px_per_tile).clamp(0.8, 10.0);
+    let w = px_to_tiles(2.0, px_per_tile).max(0.05);
+    let fade = (1.0 - m.age_s / 3.5).clamp(0.25, 1.0);
+    let ring = |geo: &mut Geo, c: Vec2, r: f32, col: Rgba| {
+        let pts: Vec<Vec2> =
+            (0..12).map(|i| c + Vec2::from_angle(i as f32 * std::f32::consts::TAU / 12.0) * r).collect();
+        geo.polyline(&pts, true, w, z, col);
+    };
+    match m.state {
+        MarkerState::Rejected(_) => {
+            let c = m.from;
+            let h = size * 0.5;
+            let col = [1.0, 0.2, 0.15, fade.max(0.5)];
+            geo.line(c + Vec2::new(-h, -h), c + Vec2::new(h, h), w * 1.8, z, col);
+            geo.line(c + Vec2::new(-h, h), c + Vec2::new(h, -h), w * 1.8, z, col);
+            ring(geo, c, size * 0.75, col);
+        }
+        MarkerState::Pending | MarkerState::Accepted => {
+            let c = m.target;
+            let a = if matches!(m.state, MarkerState::Accepted) { fade } else { 0.6 };
+            match m.kind {
+                DeploymentKind::Move(_) => {
+                    let col = [0.95, 0.9, 0.3, a];
+                    ring(geo, c, size * 0.5, col);
+                    geo.fan(c, &[c + Vec2::new(0.1, 0.0), c + Vec2::new(0.0, 0.1), c + Vec2::new(-0.1, 0.0), c + Vec2::new(0.0, -0.1)], z, col);
+                }
+                DeploymentKind::Attack(_) => {
+                    let col = [1.0, 0.25, 0.15, a];
+                    ring(geo, c, size * 0.5, col);
+                    geo.line(c + Vec2::new(-size * 0.7, 0.0), c + Vec2::new(size * 0.7, 0.0), w, z, col);
+                    geo.line(c + Vec2::new(0.0, -size * 0.7), c + Vec2::new(0.0, size * 0.7), w, z, col);
+                }
+                DeploymentKind::Reinforce { .. } => ring(geo, c, size * 0.55, [0.3, 0.6, 1.0, a]),
+                DeploymentKind::Fortify(_) => {
+                    let h = size * 0.4;
+                    let corners = [c + Vec2::new(-h, -h), c + Vec2::new(h, -h), c + Vec2::new(h, h), c + Vec2::new(-h, h)];
+                    geo.polyline(&corners, true, w, z, [0.7, 0.5, 0.25, a]);
+                }
+                DeploymentKind::Hold => ring(geo, c, size * 0.45, [0.85, 0.85, 0.9, a]),
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------------------------
 // Sync
 // ---------------------------------------------------------------------------------------------
 
@@ -452,17 +473,25 @@ struct LayerState {
     material: Option<Handle<ColorMaterial>>,
 }
 
+/// The controls' state this layer draws (bundled to stay under the system parameter limit).
+#[derive(SystemParam)]
+pub(crate) struct FrontControlsView<'w> {
+    selected: Option<Res<'w, SelectedFormation>>,
+    drag: Option<Res<'w, FrontDragBox>>,
+    feedback: Option<Res<'w, FrontOrderFeedback>>,
+    settings: Option<Res<'w, FrontOverlaySettings>>,
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn sync_world_map_front_overlay(
     mut commands: Commands,
     base: Res<State<BaseState>>,
     mode: Option<Res<WorldPresentationMode>>,
-    settings: Option<Res<FrontOverlaySettings>>,
+    ctl: FrontControlsView,
     front: Option<Res<FrontlineState>>,
     theaters: Option<Res<TheaterBook>>,
     pressure: Option<Res<PressurePointBook>>,
     balance: Option<Res<FrontBalance>>,
-    selected: Option<Res<SelectedFormation>>,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
     formations: Query<(Entity, &Formation)>,
     mut layer: Query<(Entity, &mut Visibility), With<WorldMapFrontLayer>>,
@@ -483,10 +512,12 @@ pub(crate) fn sync_world_map_front_overlay(
         state.built_key = None;
         return;
     }
-    let settings = settings.as_deref().copied().unwrap_or_default();
+    let settings = ctl.settings.as_deref().copied().unwrap_or_default();
     let default_trace = MainWorldCameraOrthoTrace::default();
     let px = px_per_tile(trace.as_deref().unwrap_or(&default_trace));
-    let selected = selected.as_deref().and_then(|s| s.0);
+    let selected: Vec<Entity> = ctl.selected.as_deref().map(|s| s.0.clone()).unwrap_or_default();
+    let drag_rect = ctl.drag.as_deref().and_then(FrontDragBox::rect);
+    let markers: Vec<OrderMarker> = ctl.feedback.as_deref().map(|f| f.markers.clone()).unwrap_or_default();
     let contest_band = balance.as_deref().map_or(0.3, |b| b.front.contest_band);
 
     let mut key = mix64(zoom_band(px) as u64 ^ (u64::from(settings.fronts) | u64::from(settings.theaters) << 1 | u64::from(settings.pressure) << 2 | u64::from(settings.formations) << 3 | u64::from(settings.labels) << 4) << 40);
@@ -516,7 +547,26 @@ pub(crate) fn sync_world_map_front_overlay(
                 ^ f.target.map_or(0, |t| (t.x as u32 as u64) ^ (t.y as u32 as u64) << 16),
         );
     }
-    key = mix64(key ^ selected.map_or(0, |e| e.to_bits()));
+    for e in &selected {
+        key = mix64(key ^ e.to_bits());
+    }
+    if let Some((lo, hi)) = drag_rect {
+        key = mix64(
+            key ^ ((lo.x * 16.0) as i64 as u64)
+                ^ ((lo.y * 16.0) as i64 as u64) << 16
+                ^ ((hi.x * 16.0) as i64 as u64) << 32
+                ^ ((hi.y * 16.0) as i64 as u64) << 48,
+        );
+    }
+    for m in &markers {
+        let state = match m.state {
+            MarkerState::Pending => 1u64,
+            MarkerState::Accepted => 2,
+            MarkerState::Rejected(_) => 3,
+        };
+        // Age in 0.2 s steps: markers fade, so the mesh rebuilds a few times a second while one is alive.
+        key = mix64(key ^ m.id ^ state << 40 ^ ((m.age_s * 5.0) as u64) << 44 ^ ((m.target.x * 4.0) as i64 as u64) << 8);
+    }
 
     let mesh_handle = state.mesh.get_or_insert_with(|| meshes.add(Geo::default().into_mesh())).clone();
     let material = state.material.get_or_insert_with(|| materials.add(ColorMaterial::from_color(Color::WHITE))).clone();
@@ -540,15 +590,21 @@ pub(crate) fn sync_world_map_front_overlay(
         }
         if settings.formations {
             for (e, f) in &fs {
-                build_formation_symbol(&mut geo, f, f.faction_slot == PLAYER_SLOT, selected == Some(*e), px);
+                build_formation_symbol(&mut geo, f, f.faction_slot == PLAYER_SLOT, selected.contains(e), px);
             }
+        }
+        if let Some((lo, hi)) = drag_rect {
+            build_drag_box(&mut geo, lo, hi, px);
+        }
+        for m in &markers {
+            build_order_marker(&mut geo, m, px);
         }
         meshes.insert(&mesh_handle, geo.into_mesh());
 
         for e in &labels {
             commands.entity(e).despawn();
         }
-        if settings.labels && px >= 1.5 {
+        if px >= 1.5 && (settings.labels || markers.iter().any(|m| matches!(m.state, MarkerState::Rejected(_)))) {
             let scale = px_to_tiles(13.0, px) / 32.0;
             let mut spawn_label = |text: String, at: Vec2, color: Color| {
                 commands.spawn((
@@ -561,7 +617,16 @@ pub(crate) fn sync_world_map_front_overlay(
                     Pickable::IGNORE,
                 ));
             };
-            if settings.theaters {
+            for m in &markers {
+                if let MarkerState::Rejected(why) = m.state {
+                    spawn_label(
+                        format!("refused: {}", reject_text(why)),
+                        m.from + Vec2::new(0.0, px_to_tiles(26.0, px)),
+                        Color::srgba(1.0, 0.35, 0.3, 1.0),
+                    );
+                }
+            }
+            if settings.labels && settings.theaters {
                 if let Some(t) = theaters.as_deref() {
                     for th in &t.theaters {
                         spawn_label(
@@ -572,7 +637,7 @@ pub(crate) fn sync_world_map_front_overlay(
                     }
                 }
             }
-            if settings.pressure {
+            if settings.labels && settings.pressure {
                 if let Some(p) = pressure.as_deref() {
                     let unit = px_to_tiles(14.0, px).clamp(0.7, 8.0);
                     for (rank, pt) in pressure_ranks(p) {
@@ -604,141 +669,12 @@ pub(crate) fn sync_world_map_front_overlay(
     }
 }
 
-// ---------------------------------------------------------------------------------------------
-// Selection and orders
-// ---------------------------------------------------------------------------------------------
-
-/// Publish the map-plane cursor (after the pointer gate has decided who owns the pointer).
-#[allow(clippy::too_many_arguments)]
-pub(crate) fn update_front_map_cursor_system(
-    window: Query<&Window, With<PrimaryWindow>>,
-    authority: Option<Res<ViewProjectionAuthority>>,
-    desired: Option<Res<MapCameraDesiredRes>>,
-    map_vp: Option<Res<SimulationMapViewport>>,
-    params: Option<Res<WorldGenParams>>,
-    gate: Option<Res<SimulationMapPointerGate>>,
-    trace: Option<Res<MainWorldCameraOrthoTrace>>,
-    mode: Option<Res<WorldPresentationMode>>,
-    mut cursor: ResMut<FrontMapCursor>,
-) {
-    let mut next = FrontMapCursor::default();
-    let tactical = mode.as_deref().is_none_or(|m| m.is_tactical());
-    if tactical {
-        next.px_per_tile = trace.as_deref().map_or(1.0, px_per_tile);
-        next.free = gate.as_deref().is_some_and(|g| g.in_play_area)
-            && simulation_tool_pointer(gate.as_deref()) == SimulationToolPointer::Free;
-        if let (Ok(w), Some(desired), Some(map_vp), Some(params)) = (window.single(), desired, map_vp, params) {
-            next.xy = cursor_world_on_map(w, authority.as_deref(), desired.as_ref(), map_vp.as_ref(), params.as_ref())
-                .map(|v| Vec2::new(v.x, v.z));
-        }
-    }
-    cursor.set_if_neq(next);
-}
-
-/// What a right click on `target` means for a formation of `slot`.
-#[must_use]
-pub fn order_kind_for_target(
-    slot: u8,
-    target: IVec2,
-    theaters: &TheaterBook,
-    pressure: Option<&PressurePointBook>,
-    hostile_formation_tiles: &[IVec2],
-) -> DeploymentKind {
-    let near = |a: IVec2, b: IVec2| (a - b).as_vec2().length() <= 1.5;
-    if hostile_formation_tiles.iter().any(|t| near(*t, target)) {
-        return DeploymentKind::Attack(target);
-    }
-    let enemy_front = theaters.theaters.iter().flat_map(|t| t.cells.iter()).any(|c| c.tile == target && c.owner != slot);
-    if enemy_front {
-        return DeploymentKind::Attack(target);
-    }
-    if let Some(p) = pressure.and_then(|b| {
-        b.points
-            .iter()
-            .filter(|p| p.side == slot && p.kind == PressureKind::Threatened && near(p.tile, target))
-            .min_by(|a, b| {
-                (a.tile - target).as_vec2().length().total_cmp(&(b.tile - target).as_vec2().length())
-            })
-    }) {
-        return DeploymentKind::Reinforce { theater: p.theater, tile: p.tile };
-    }
-    DeploymentKind::Move(target)
-}
-
-/// Left click selects the player's formation under the cursor (empty ground deselects); right click
-/// orders the selection through [`DeploymentOrderQueue::enqueue`].
-#[allow(clippy::too_many_arguments)]
-pub fn select_and_order_formations_system(
-    buttons: Res<ButtonInput<MouseButton>>,
-    cursor: Res<FrontMapCursor>,
-    tool: Option<Res<ActiveBuildTool>>,
-    theaters: Option<Res<TheaterBook>>,
-    pressure: Option<Res<PressurePointBook>>,
-    formations: Query<(Entity, &Formation)>,
-    mut selected: ResMut<SelectedFormation>,
-    mut queue: ResMut<DeploymentOrderQueue>,
-) {
-    // A formation that died or changed hands is no longer selected.
-    if let Some(e) = selected.0 {
-        if formations.get(e).map_or(true, |(_, f)| f.faction_slot != PLAYER_SLOT) {
-            selected.0 = None;
-        }
-    }
-    if !cursor.free || tool.as_deref().is_some_and(|t| t.tool != BuildTool::None) {
-        return;
-    }
-    let Some(at) = cursor.xy else { return };
-    let tile = IVec2::new(at.x.floor() as i32, at.y.floor() as i32);
-
-    if buttons.just_pressed(MouseButton::Left) {
-        let reach = (symbol_size_tiles(cursor.px_per_tile.max(0.05)) * 0.7).max(0.8);
-        let hit = formations
-            .iter()
-            .filter(|(_, f)| f.faction_slot == PLAYER_SLOT)
-            .map(|(e, f)| (e, (f.tile.as_vec2() + Vec2::splat(0.5) - at).length()))
-            .filter(|(_, d)| *d <= reach)
-            .min_by(|a, b| a.1.total_cmp(&b.1).then(a.0.to_bits().cmp(&b.0.to_bits())));
-        let next = hit.map(|(e, _)| e);
-        if selected.0 != next {
-            selected.0 = next;
-        }
-        return;
-    }
-    if buttons.just_pressed(MouseButton::Right) {
-        let Some(sel) = selected.0 else { return };
-        let Ok((_, own)) = formations.get(sel) else { return };
-        let hostile: Vec<IVec2> =
-            formations.iter().filter(|(_, f)| f.faction_slot != own.faction_slot).map(|(_, f)| f.tile).collect();
-        let empty = TheaterBook::default();
-        let kind = order_kind_for_target(
-            own.faction_slot,
-            tile,
-            theaters.as_deref().unwrap_or(&empty),
-            pressure.as_deref(),
-            &hostile,
-        );
-        // A refused enqueue (full queue) just drops the click; the player can repeat it.
-        let _ = queue.enqueue(DeploymentOrder { formation: sel, kind, issued_by: own.faction_slot });
-    }
-}
-
 pub struct WorldMapFrontMeshPlugin;
 
 impl Plugin for WorldMapFrontMeshPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<FrontOverlaySettings>()
-            .init_resource::<SelectedFormation>()
-            .init_resource::<FrontMapCursor>()
-            .add_systems(
-                Update,
-                (
-                    update_front_map_cursor_system,
-                    select_and_order_formations_system,
-                    sync_world_map_front_overlay,
-                )
-                    .chain()
-                    .after(PointerGateSet::Publish),
-            );
+        // Drawing only; the controls (`gui::front_controls`) own selection, orders and feedback.
+        app.add_systems(Update, sync_world_map_front_overlay.after(FrontControlsSet));
     }
 }
 
@@ -801,53 +737,25 @@ mod tests {
         }
     }
 
-    fn app_with_formation() -> (App, Entity) {
-        let mut app = App::new();
-        app.init_resource::<ButtonInput<MouseButton>>()
-            .init_resource::<DeploymentOrderQueue>()
-            .init_resource::<SelectedFormation>()
-            .init_resource::<FrontMapCursor>()
-            .add_systems(Update, select_and_order_formations_system);
-        let e = app.world_mut().spawn(Formation::new(0, UnitKind::Infantry, IVec2::new(10, 10))).id();
-        app.world_mut().spawn(Formation::new(1, UnitKind::Armor, IVec2::new(30, 10)));
-        (app, e)
-    }
-
-    fn click(app: &mut App, button: MouseButton, at: Vec2) {
-        *app.world_mut().resource_mut::<FrontMapCursor>() = FrontMapCursor { xy: Some(at), free: true, px_per_tile: 20.0 };
-        app.world_mut().resource_mut::<ButtonInput<MouseButton>>().press(button);
-        app.update();
-        let mut input = app.world_mut().resource_mut::<ButtonInput<MouseButton>>();
-        input.release(button);
-        input.clear();
-    }
-
     #[test]
-    fn select_then_right_click_enqueues_move_and_attack_orders() {
-        let (mut app, e) = app_with_formation();
-        click(&mut app, MouseButton::Left, Vec2::new(10.5, 10.5));
-        assert_eq!(app.world().resource::<SelectedFormation>().0, Some(e));
-        click(&mut app, MouseButton::Right, Vec2::new(18.5, 12.5));
-        click(&mut app, MouseButton::Right, Vec2::new(30.5, 10.5));
-        let orders: Vec<_> = app.world().resource::<DeploymentOrderQueue>().iter().map(|(_, o)| *o).collect();
-        assert_eq!(orders.len(), 2);
-        assert!(orders.iter().all(|o| o.formation == e && o.issued_by == 0));
-        assert_eq!(orders[0].kind, DeploymentKind::Move(IVec2::new(18, 12)));
-        assert_eq!(orders[1].kind, DeploymentKind::Attack(IVec2::new(30, 10)), "enemy formation = attack");
-        // Click on empty ground deselects; the gate being closed ignores clicks.
-        click(&mut app, MouseButton::Left, Vec2::new(50.5, 50.5));
-        assert_eq!(app.world().resource::<SelectedFormation>().0, None);
-        click(&mut app, MouseButton::Left, Vec2::new(10.5, 10.5));
-        app.world_mut().resource_mut::<FrontMapCursor>().free = false;
-        app.world_mut().resource_mut::<ButtonInput<MouseButton>>().press(MouseButton::Right);
-        app.update();
-        assert_eq!(app.world().resource::<DeploymentOrderQueue>().len(), 2, "no order while chrome owns the pointer");
-    }
-
-    #[test]
-    fn enemy_only_formations_are_not_selectable() {
-        let (mut app, _) = app_with_formation();
-        click(&mut app, MouseButton::Left, Vec2::new(30.5, 10.5));
-        assert_eq!(app.world().resource::<SelectedFormation>().0, None);
+    fn order_markers_and_drag_box_draw_and_refusals_are_red_x() {
+        use crate::combat::DeploymentReject;
+        let mk = |state| OrderMarker {
+            id: 1,
+            kind: DeploymentKind::Attack(IVec2::new(8, 8)),
+            target: Vec2::new(8.5, 8.5),
+            from: Vec2::new(2.5, 2.5),
+            state,
+            age_s: 0.5,
+        };
+        let (mut ok, mut bad, mut boxg) = (Geo::default(), Geo::default(), Geo::default());
+        build_order_marker(&mut ok, &mk(MarkerState::Accepted), 20.0);
+        build_order_marker(&mut bad, &mk(MarkerState::Rejected(DeploymentReject::Broken)), 20.0);
+        build_drag_box(&mut boxg, Vec2::new(1.0, 1.0), Vec2::new(5.0, 4.0), 20.0);
+        assert!(!ok.positions.is_empty() && !bad.positions.is_empty() && !boxg.positions.is_empty());
+        // The refusal sits on the formation, the order marker on the target.
+        let near = |g: &Geo, p: Vec2| g.positions.iter().any(|v| (Vec2::new(v[0], v[1]) - p).length() < 1.5);
+        assert!(near(&bad, Vec2::new(2.5, 2.5)) && !near(&bad, Vec2::new(8.5, 8.5)));
+        assert!(near(&ok, Vec2::new(8.5, 8.5)));
     }
 }

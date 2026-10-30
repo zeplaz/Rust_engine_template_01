@@ -52,6 +52,15 @@ pub enum BindingSlot {
     MapResetZoom,
     MapFrameWorld,
     MapCycleCameraMode,
+    FrontHold,
+    FrontFortify,
+    FrontCycleSelection,
+    FrontToggleOverlay,
+    FrontToggleFronts,
+    FrontToggleTheaters,
+    FrontTogglePressure,
+    FrontToggleFormations,
+    FrontToggleLabels,
 }
 
 #[derive(Component)]
@@ -170,6 +179,15 @@ fn assign_binding(bindings: &mut InputBindings, slot: BindingSlot, k: KeyCode) {
         BindingSlot::MapResetZoom => bindings.map_reset_zoom = k,
         BindingSlot::MapFrameWorld => bindings.map_frame_world = k,
         BindingSlot::MapCycleCameraMode => bindings.map_cycle_camera_mode = k,
+        BindingSlot::FrontHold => bindings.front_hold = k,
+        BindingSlot::FrontFortify => bindings.front_fortify = k,
+        BindingSlot::FrontCycleSelection => bindings.front_cycle_selection = k,
+        BindingSlot::FrontToggleOverlay => bindings.front_toggle_overlay = k,
+        BindingSlot::FrontToggleFronts => bindings.front_toggle_fronts = k,
+        BindingSlot::FrontToggleTheaters => bindings.front_toggle_theaters = k,
+        BindingSlot::FrontTogglePressure => bindings.front_toggle_pressure = k,
+        BindingSlot::FrontToggleFormations => bindings.front_toggle_formations = k,
+        BindingSlot::FrontToggleLabels => bindings.front_toggle_labels = k,
     }
 }
 
@@ -211,6 +229,15 @@ fn slot_label(slot: BindingSlot) -> &'static str {
         BindingSlot::MapResetZoom => "Map reset zoom",
         BindingSlot::MapFrameWorld => "Map frame world",
         BindingSlot::MapCycleCameraMode => "Map camera mode",
+        BindingSlot::FrontHold => "Front: hold",
+        BindingSlot::FrontFortify => "Front: fortify",
+        BindingSlot::FrontCycleSelection => "Front: cycle selection",
+        BindingSlot::FrontToggleOverlay => "Front overlay (all)",
+        BindingSlot::FrontToggleFronts => "Front layer: lines",
+        BindingSlot::FrontToggleTheaters => "Front layer: theaters",
+        BindingSlot::FrontTogglePressure => "Front layer: pressure",
+        BindingSlot::FrontToggleFormations => "Front layer: formations",
+        BindingSlot::FrontToggleLabels => "Front layer: labels",
     }
 }
 
@@ -254,6 +281,15 @@ fn slot_key(bindings: &InputBindings, slot: BindingSlot) -> KeyCode {
         BindingSlot::MapResetZoom => bindings.map_reset_zoom,
         BindingSlot::MapFrameWorld => bindings.map_frame_world,
         BindingSlot::MapCycleCameraMode => bindings.map_cycle_camera_mode,
+        BindingSlot::FrontHold => bindings.front_hold,
+        BindingSlot::FrontFortify => bindings.front_fortify,
+        BindingSlot::FrontCycleSelection => bindings.front_cycle_selection,
+        BindingSlot::FrontToggleOverlay => bindings.front_toggle_overlay,
+        BindingSlot::FrontToggleFronts => bindings.front_toggle_fronts,
+        BindingSlot::FrontToggleTheaters => bindings.front_toggle_theaters,
+        BindingSlot::FrontTogglePressure => bindings.front_toggle_pressure,
+        BindingSlot::FrontToggleFormations => bindings.front_toggle_formations,
+        BindingSlot::FrontToggleLabels => bindings.front_toggle_labels,
     }
 }
 
@@ -274,6 +310,15 @@ const BINDING_SLOTS: &[BindingSlot] = &[
     BindingSlot::MapPanEast,
     BindingSlot::MapZoomIn,
     BindingSlot::MapZoomOut,
+    BindingSlot::FrontHold,
+    BindingSlot::FrontFortify,
+    BindingSlot::FrontCycleSelection,
+    BindingSlot::FrontToggleOverlay,
+    BindingSlot::FrontToggleFronts,
+    BindingSlot::FrontToggleTheaters,
+    BindingSlot::FrontTogglePressure,
+    BindingSlot::FrontToggleFormations,
+    BindingSlot::FrontToggleLabels,
     BindingSlot::CancelCapture,
 ];
 

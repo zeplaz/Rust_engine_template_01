@@ -157,6 +157,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::render::InfrastructureOverlayPlugin)
             .add_plugins(crate::render::WorldMapNetworkMeshPlugin)
             .add_plugins(crate::render::WorldMapVegetationMeshPlugin)
+            .add_plugins(crate::gui::FrontControlsPlugin)
             .add_plugins(crate::render::WorldMapFrontMeshPlugin)
             .add_plugins(TransportSimulationPlugin)
             .add_plugins(crate::engine::PlayScenarioPlugin)

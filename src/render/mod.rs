@@ -16,7 +16,7 @@ mod mig_a_static;
 pub mod minimap_compositor;
 mod world_map_front_mesh;
 pub use world_map_front_mesh::{
-    faction_color, order_kind_for_target, FrontMapCursor, FrontOverlaySettings, SelectedFormation, WorldMapFrontMeshPlugin,
+    faction_color, WorldMapFrontMeshPlugin,
 };
 mod world_map_network_mesh;
 pub use world_map_network_mesh::WorldMapNetworkMeshPlugin;
