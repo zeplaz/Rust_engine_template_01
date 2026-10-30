@@ -12,7 +12,6 @@
 //!   [`hybrid_resolve_and_feedback_system`] in **PostUpdate** (after overlay coupling in **Update**).
 
 use bevy::prelude::*;
-use rand::Rng;
 
 use super::hybrid_fields::{smooth, WorldFields};
 
@@ -402,8 +401,14 @@ pub fn hybrid_resolve_and_feedback_system(
     mut fields: ResMut<WorldFields>,
     mut last: ResMut<HybridSimLastResolved>,
     mut scratch: ResMut<HybridSimScratch>,
+    tick: Option<Res<crate::systems::sim_control::SimTick>>,
+    seed: Option<Res<crate::ai::faction::rng::AiSeed>>,
+    world: Option<Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>>,
 ) {
-    let roll: f32 = rand::thread_rng().gen();
+    // FAI-2: seeded from session seed + sim tick (frame counter before a clock exists) - no `thread_rng`.
+    let session = crate::ai::faction::rng::session_seed(seed.as_deref(), world.as_deref());
+    let at = tick.map_or(scratch.frame_counter, |t| t.0);
+    let roll: f32 = crate::ai::faction::rng::hybrid_roll(session, at);
     let masses = resolution_masses(&intent, &fields);
     let ev = resolve_world_state_from_masses(&masses, roll);
     last.telemetry = Some(HybridResolutionTelemetry {

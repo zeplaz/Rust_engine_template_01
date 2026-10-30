@@ -1,10 +1,13 @@
 //! **Faction AI orders** — what a faction asks for, and what the player-facing API answered.
 //!
 //! An [`AiOrder`] is API-agnostic intent. Adapters in [`super`] translate it into the same enqueue
-//! call the player UI makes (`StrategicCommandQueue` today; `DeploymentOrderQueue` / front FC-6 and
-//! `LogisticsOrderCommand` / logistics LO-3 when they land). Validation belongs to the API.
+//! call the player UI makes: `DeploymentOrderQueue::enqueue` (front), `LogisticsOrderRequest`
+//! (logistics) and `CommitConstructionSiteEvent` (construction funnel). The first four variants are
+//! the interim strategic-queue orders used only when the real API is not in the app.
+//! Validation belongs to the API.
 
-use bevy::prelude::IVec2;
+use bevy::prelude::{Entity, IVec2};
+use serde::{Serialize, Serializer};
 
 use super::decide::StrategicGoal;
 use super::perception::FactionPerception;
@@ -12,8 +15,67 @@ use super::perception::FactionPerception;
 /// Upper bound on orders a faction issues in one decision.
 pub const MAX_ORDERS_PER_DECISION: usize = 3;
 
-#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+/// A formation entity, serialized as its bit pattern.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct FormationRef(pub Entity);
+
+impl Serialize for FormationRef {
+    fn serialize<S: Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
+        s.serialize_u64(self.0.to_bits())
+    }
+}
+
+/// How a deployment engages its point.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize)]
+pub enum DeployKind {
+    /// Move to a threatened point of our own (`DeploymentKind::Reinforce`).
+    Reinforce,
+    /// Push through an opportunity point (`DeploymentKind::Attack`).
+    Attack,
+}
+
+/// Why the economy brain asks for a building.
+#[derive(Clone, Debug, PartialEq, Serialize)]
+pub enum BuildReason {
+    /// Nothing of ours holds `cargo` that a consumer is short of; build a producer.
+    InputShort { cargo: String },
+    /// First productive building for a faction with none.
+    Bootstrap,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize)]
 pub enum AiOrder {
+    /// Send one formation to a pressure point (`DeploymentOrderQueue`).
+    Deploy {
+        formation: FormationRef,
+        kind: DeployKind,
+        theater: u32,
+        tile: IVec2,
+    },
+    /// Place a catalog building through the construction commit funnel.
+    Build {
+        catalog_id: String,
+        origin: IVec2,
+        footprint: (u32, u32),
+        reason: BuildReason,
+    },
+    /// Keep a sink's demand supplied from a source (`CreateStandingLine`).
+    StandingLine {
+        source: u32,
+        sink: u32,
+        cargo: String,
+        priority: &'static str,
+    },
+    /// Urgent one-off haul for a starving sink (`CreateOneOffRun`).
+    SupplyRun {
+        source: u32,
+        sink: u32,
+        cargo: String,
+        quantity: u32,
+        priority: &'static str,
+    },
+    /// Register the faction's first depot (a logistics endpoint, like a front supply point).
+    FoundDepot { tile: IVec2 },
     /// Reinforce a threatened front cell against `enemy`.
     Reinforce { sector: IVec2, tile: IVec2, enemy: u8 },
     /// Push into a front cell where this faction leads.
@@ -28,6 +90,32 @@ impl AiOrder {
     #[must_use]
     pub fn describe(&self) -> String {
         match self {
+            Self::Deploy { formation, kind, tile, .. } => format!(
+                "{} formation {} to ({}, {})",
+                match kind {
+                    DeployKind::Reinforce => "reinforce with",
+                    DeployKind::Attack => "attack with",
+                },
+                formation.0.index(),
+                tile.x,
+                tile.y
+            ),
+            Self::Build { catalog_id, origin, reason, .. } => format!(
+                "build {catalog_id} at ({}, {}) [{}]",
+                origin.x,
+                origin.y,
+                match reason {
+                    BuildReason::InputShort { cargo } => format!("short of {cargo}"),
+                    BuildReason::Bootstrap => "bootstrap".to_string(),
+                }
+            ),
+            Self::StandingLine { source, sink, cargo, priority } => {
+                format!("standing line {cargo} site {source} -> site {sink} ({priority})")
+            }
+            Self::SupplyRun { source, sink, cargo, quantity, priority } => {
+                format!("run {quantity} {cargo} site {source} -> site {sink} ({priority})")
+            }
+            Self::FoundDepot { tile } => format!("found depot at ({}, {})", tile.x, tile.y),
             Self::Reinforce { tile, enemy, .. } => {
                 format!("reinforce ({}, {}) vs faction {enemy}", tile.x, tile.y)
             }
@@ -48,9 +136,7 @@ impl AiOrder {
             Self::Reinforce { .. } | Self::SupplyLine { .. } => {
                 crate::strategic::MissionKind::SecureCorridor.as_wire_str()
             }
-            Self::Attack { .. } | Self::Develop { .. } => {
-                crate::strategic::MissionKind::MoveCorridor.as_wire_str()
-            }
+            _ => crate::strategic::MissionKind::MoveCorridor.as_wire_str(),
         }
     }
 }
@@ -60,6 +146,8 @@ impl AiOrder {
 pub enum OrderOutcome {
     /// Accepted by the order's own API.
     Issued { api: &'static str, id: u64 },
+    /// Handed to an event / message API that returns no id (construction commit, logistics request).
+    Submitted { api: &'static str },
     /// The order's own API is not in this app; sent through an interim queue the player also uses.
     Fallback { api: &'static str, id: u64 },
     /// The API rejected it (reason from the API).
@@ -73,6 +161,7 @@ impl OrderOutcome {
     pub fn describe(&self) -> String {
         match self {
             Self::Issued { api, id } => format!("issued via {api} #{id}"),
+            Self::Submitted { api } => format!("submitted via {api}"),
             Self::Fallback { api, id } => format!("queued via {api} #{id} (interim)"),
             Self::Refused { reason } => format!("refused: {reason}"),
             Self::Deferred { reason } => format!("deferred: {reason}"),
@@ -81,7 +170,7 @@ impl OrderOutcome {
 
     #[must_use]
     pub fn reached_api(&self) -> bool {
-        matches!(self, Self::Issued { .. } | Self::Fallback { .. })
+        matches!(self, Self::Issued { .. } | Self::Submitted { .. } | Self::Fallback { .. })
     }
 }
 

@@ -6,7 +6,7 @@
 
 use bevy::prelude::*;
 
-use super::decide::{GoalChoice, StrategicGoal};
+use super::decide::{GoalChoice, ScoreTerm, StrategicGoal};
 use super::orders::{AiOrder, OrderOutcome};
 
 /// Records kept per faction slot.
@@ -23,6 +23,31 @@ pub struct PerceptionDigest {
     pub mean_logistics_held: f32,
 }
 
+/// Why one brain picked one thing: its scoring terms, in the order they were summed.
+///
+/// `brain` is `"economy"`, `"military"` or `"logistics"`; `subject` says what was scored
+/// (`"reinforce (12, 40)"`, `"build concrete_mixer_plant"`). `order` indexes into
+/// [`FactionAiDecisionRecord::orders`] when the choice became an order.
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+pub struct DecisionTrace {
+    pub brain: &'static str,
+    pub subject: String,
+    pub total: f32,
+    pub terms: Vec<ScoreTerm>,
+    pub order: Option<usize>,
+}
+
+impl DecisionTrace {
+    /// The `n` strongest terms by magnitude.
+    #[must_use]
+    pub fn top_terms(&self, n: usize) -> Vec<&ScoreTerm> {
+        let mut terms: Vec<&ScoreTerm> = self.terms.iter().filter(|t| t.value().abs() > 1e-4).collect();
+        terms.sort_by(|a, b| b.value().abs().total_cmp(&a.value().abs()));
+        terms.truncate(n);
+        terms
+    }
+}
+
 #[derive(Clone, Debug, PartialEq, serde::Serialize)]
 pub struct FactionAiDecisionRecord {
     pub sim_tick: u64,
@@ -33,6 +58,8 @@ pub struct FactionAiDecisionRecord {
     pub digest: PerceptionDigest,
     /// Orders issued this decision and what the player-facing API said about each.
     pub orders: Vec<(AiOrder, OrderOutcome)>,
+    /// What each brain scored this decision, strongest reasons first within a trace.
+    pub traces: Vec<DecisionTrace>,
 }
 
 impl FactionAiDecisionRecord {
@@ -74,6 +101,12 @@ impl FactionAiDecisionRecord {
         }
         for (order, outcome) in &self.orders {
             lines.push(format!("  order: {} → {}", order.describe(), outcome.describe()));
+        }
+        for trace in &self.traces {
+            lines.push(format!("  [{}] {} — {:.2}", trace.brain, trace.subject, trace.total));
+            for t in trace.top_terms(3) {
+                lines.push(format!("    {:+.2} {} ({:.2} × {:.2})", t.value(), t.label, t.input, t.weight));
+            }
         }
         lines
     }
