@@ -13,13 +13,13 @@
 //! [`VegLod`] bands. A band change, a visible-chunk-window change, or an extract content
 //! change rebuilds the mesh. Nothing else does.
 //!
-//! Water: no symbol is placed where the footprint touches an open-water tile. The mask is the sim's
-//! per-cell water class ([`ChunkCellMatrix::water`], decided once by world generation) at tile resolution,
-//! and each symbol is tested at its own sub-cell position so shorelines stay dry on the land side.
+//! Per cell: every extract row carries the sim's per-cell stand state ([`ChunkCellStand::render`]): live
+//! stage, burning, burnt snags, regrowth, open water (the water class decided once by world generation).
+//! A symbol is drawn from the cell it sits on, so water and bare ground draw nothing, shorelines stay dry
+//! on the land side (the footprint is tested at its own sub-cell position), and a burn shows as burning
+//! cells, then charred snags, then regrowth, exactly where the sim says. No flag of its own.
 //!
 //! PixelWorld3D keeps its own per-chunk LG-5 atlas stamps, so this layer is hidden there.
-
-use std::collections::HashSet;
 
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
@@ -28,8 +28,11 @@ use bevy::prelude::*;
 use crate::engine::states::BaseState;
 use crate::gui::{MainWorldCameraOrthoTrace, WorldPresentationMode};
 use crate::render::extraction::{VegExtractRow, VegetationExtractFrame, VegetationExtractFrameSet};
-use crate::systems::ecology::SuccessionTopologyStage;
-use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::systems::ecology::{
+    SuccessionTopologyStage, CELL_BURNING, CELL_BURNT, CELL_GRASS, CELL_OLD, CELL_REGROWTH, CELL_SHRUB,
+    CELL_WATER, CELL_YOUNG,
+};
+use crate::terrain::generation::ChunkCellMatrix;
 use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
 
 /// Above terrain (0), below `world_map_tile_center` (1) and the network ribbons (1.04).
@@ -209,44 +212,62 @@ fn base_probability(cover: Cover, density: f32) -> f32 {
     }
 }
 
-/// Water tiles in world tile coordinates.
-#[derive(Default, Clone, Debug)]
-pub(crate) struct WaterMask {
-    tiles: HashSet<(i32, i32)>,
+/// One chunk row's per-cell stand codes ([`ChunkCellStand::render`], carried by the extract row), indexed
+/// by chunk-local tile. This is the sim's state: live stage, burning, burnt snags, regrowth, open water.
+struct CellView<'a> {
+    codes: &'a [u8],
+    size: UVec2,
 }
 
-impl WaterMask {
-    fn tile_wet(&self, p: Vec2) -> bool {
-        self.tiles.contains(&(p.x.floor() as i32, p.y.floor() as i32))
+impl<'a> CellView<'a> {
+    fn of(row: &'a VegExtractRow, chunk: UVec2) -> Option<Self> {
+        row.cells
+            .as_deref()
+            .filter(|c| c.len() == (chunk.x * chunk.y) as usize)
+            .map(|codes| Self { codes, size: chunk })
     }
 
-    /// True when the symbol center or any of four points at `reach` tiles falls on water.
+    /// Code at chunk-local tile position `p` (tile units). `None` outside the chunk.
+    fn code_at(&self, p: Vec2) -> Option<u8> {
+        let (x, y) = (p.x.floor(), p.y.floor());
+        if x < 0.0 || y < 0.0 || x >= self.size.x as f32 || y >= self.size.y as f32 {
+            return None;
+        }
+        self.codes.get(y as usize * self.size.x as usize + x as usize).copied()
+    }
+
+    /// True when the symbol centre or any of four points at `reach` tiles falls on open water, so
+    /// shorelines stay dry on the land side. Outside the chunk counts as dry.
     fn footprint_wet(&self, center: Vec2, reach: f32) -> bool {
-        if self.tiles.is_empty() {
-            return false;
-        }
-        self.tile_wet(center)
-            || [Vec2::X, Vec2::NEG_X, Vec2::Y, Vec2::NEG_Y]
-                .iter()
-                .any(|d| self.tile_wet(center + *d * reach))
+        let wet = |p: Vec2| self.code_at(p) == Some(CELL_WATER);
+        wet(center) || [Vec2::X, Vec2::NEG_X, Vec2::Y, Vec2::NEG_Y].iter().any(|d| wet(center + *d * reach))
     }
 }
 
-/// Open-water tiles read from the sim's per-cell water class.
-fn build_water_mask<'a>(chunks: impl Iterator<Item = (&'a Chunk, &'a ChunkCellMatrix)>) -> WaterMask {
-    let mut tiles = HashSet::new();
-    for (chunk, m) in chunks {
-        let ox = chunk.coord.x * m.size.x as i32;
-        let oy = chunk.coord.y * m.size.y as i32;
-        for y in 0..m.size.y {
-            for x in 0..m.size.x {
-                if m.water.get(m.idx(x, y)).is_some_and(|c| c.is_open_water()) {
-                    tiles.insert((ox + x as i32, oy + y as i32));
-                }
-            }
-        }
+/// What a per-cell code draws as. Bare ground and open water draw nothing.
+#[must_use]
+fn cover_for_code(code: u8) -> Option<Cover> {
+    match code {
+        CELL_GRASS => Some(Cover::Grass),
+        CELL_SHRUB => Some(Cover::Shrub),
+        CELL_YOUNG => Some(Cover::YoungForest),
+        CELL_OLD => Some(Cover::OldGrowth),
+        CELL_BURNING => Some(Cover::Burning),
+        CELL_BURNT => Some(Cover::Burnt),
+        CELL_REGROWTH => Some(Cover::Regrowth),
+        _ => None,
     }
-    WaterMask { tiles }
+}
+
+/// Chance a site on a cell of this cover holds a symbol. Fire states are literal: a burning cell is
+/// drawn burning, snags stand thick, regrowth is a thin seedling carpet.
+fn cell_probability(cover: Cover, density: f32) -> f32 {
+    match cover {
+        Cover::Burning => 0.85,
+        Cover::Burnt => 0.55,
+        Cover::Regrowth => 0.5,
+        live => base_probability(live, density),
+    }
 }
 
 /// Merged vertex-colored triangle soup in tile space.
@@ -444,14 +465,48 @@ fn estimate_symbols(rows: &[&VegExtractRow], chunk: UVec2, lod: VegLod) -> usize
         .sum()
 }
 
+/// Wash colour for a block of cells: fire states win, then the commonest live stage. `None` when most of
+/// the block is water or bare ground.
+fn wash_cover(view: &CellView, x0: u32, y0: u32, x1: u32, y1: u32) -> Option<Cover> {
+    let mut counts = [0u32; 9];
+    let mut total = 0u32;
+    for y in y0..y1.min(view.size.y) {
+        for x in x0..x1.min(view.size.x) {
+            counts[view.codes[(y * view.size.x + x) as usize].min(8) as usize] += 1;
+            total += 1;
+        }
+    }
+    if total == 0 {
+        return None;
+    }
+    let veg: u32 = (CELL_GRASS..=CELL_REGROWTH).map(|c| counts[c as usize]).sum();
+    if veg * 4 < total {
+        return None;
+    }
+    if counts[CELL_BURNING as usize] > 0 {
+        return Some(Cover::Burning);
+    }
+    for (code, cover) in [(CELL_BURNT, Cover::Burnt), (CELL_REGROWTH, Cover::Regrowth)] {
+        if counts[code as usize] * 5 >= veg * 2 {
+            return Some(cover);
+        }
+    }
+    let live = [CELL_GRASS, CELL_SHRUB, CELL_YOUNG, CELL_OLD]
+        .into_iter()
+        .max_by_key(|c| counts[*c as usize])?;
+    cover_for_code(live)
+}
+
 /// Expand extract rows into symbols. `window` is an inclusive chunk range, `None` for all rows.
 /// Returns the geometry and the band actually used (coarser than asked past the budget).
+///
+/// Rows that carry per-cell stand codes are drawn cell by cell (water and bare ground draw nothing, fire
+/// states are the sim's). A row without them falls back to its chunk-level cover.
 pub(crate) fn build_vegetation_geometry(
     rows: &[VegExtractRow],
     chunk: UVec2,
     lod: VegLod,
     window: Option<(IVec2, IVec2)>,
-    water: &WaterMask,
 ) -> (VegGeometry, VegLod) {
     let mut visible: Vec<&VegExtractRow> = rows
         .iter()
@@ -476,6 +531,7 @@ pub(crate) fn build_vegetation_geometry(
     let step = lod.step_tiles() as f32;
     for row in visible {
         let (cover, layout) = classify_row(row);
+        let view = CellView::of(row, chunk);
         let density = row.modifiers.mean_density;
         let origin = Vec2::new(
             row.coord.x as f32 * chunk.x as f32,
@@ -483,30 +539,38 @@ pub(crate) fn build_vegetation_geometry(
         );
         let base = base_probability(cover, density);
         if lod == VegLod::Wash {
-            if base < 0.03 {
+            if view.is_none() && base < 0.03 {
                 continue;
             }
-            let color = wash_color(cover, density);
             let blk = WASH_BLOCK_TILES as f32;
             for by in 0..chunk.y.div_ceil(WASH_BLOCK_TILES) {
                 for bx in 0..chunk.x.div_ceil(WASH_BLOCK_TILES) {
+                    let block_cover = match &view {
+                        Some(v) => wash_cover(
+                            v,
+                            bx * WASH_BLOCK_TILES,
+                            by * WASH_BLOCK_TILES,
+                            (bx + 1) * WASH_BLOCK_TILES,
+                            (by + 1) * WASH_BLOCK_TILES,
+                        ),
+                        None => Some(cover),
+                    };
+                    let Some(block_cover) = block_cover else {
+                        continue;
+                    };
                     let x0 = origin.x + bx as f32 * blk;
                     let y0 = origin.y + by as f32 * blk;
                     let x1 = (x0 + blk).min(origin.x + chunk.x as f32);
                     let y1 = (y0 + blk).min(origin.y + chunk.y as f32);
-                    if water.footprint_wet(Vec2::new((x0 + x1) * 0.5, (y0 + y1) * 0.5), blk * 0.4) {
-                        continue;
-                    }
-                    g.rect(x0 + 0.3, y0 + 0.3, x1 - 0.3, y1 - 0.3, color);
+                    g.rect(x0 + 0.3, y0 + 0.3, x1 - 0.3, y1 - 0.3, wash_color(block_cover, density));
                     g.symbols += 1;
                 }
             }
             continue;
         }
-        if base < 0.02 {
+        if view.is_none() && base < 0.02 {
             continue;
         }
-        let riparian = layout == Layout::Corridor;
         let (nx, ny) = sites_per_axis(chunk, lod);
         for iy in (0..ny).rev() {
             for ix in 0..nx {
@@ -517,23 +581,39 @@ pub(crate) fn build_vegetation_geometry(
                 if lx >= chunk.x as f32 || ly >= chunk.y as f32 {
                     continue;
                 }
-                let (w, mean) =
-                    layout_weight(layout, row.coord, lx / chunk.x as f32, ly / chunk.y as f32);
-                let p = (base * w / mean).min(0.97);
+                let local = Vec2::new(lx, ly);
+                let (site_cover, p_base, structured) = match &view {
+                    Some(v) => {
+                        let Some(c) = v.code_at(local).and_then(cover_for_code) else {
+                            continue;
+                        };
+                        if v.footprint_wet(local, step * 0.4) {
+                            continue;
+                        }
+                        let live = matches!(
+                            c,
+                            Cover::Grass | Cover::Shrub | Cover::YoungForest | Cover::OldGrowth
+                        );
+                        (c, cell_probability(c, density), live)
+                    }
+                    None => (cover, base, true),
+                };
+                let (w, mean) = if structured {
+                    layout_weight(layout, row.coord, lx / chunk.x as f32, ly / chunk.y as f32)
+                } else {
+                    (1.0, 1.0)
+                };
+                let p = (p_base * w / mean).min(0.97);
                 if site_rand(row.coord, ix, iy, 1) >= p {
-                    continue;
-                }
-                let pos = origin + Vec2::new(lx, ly);
-                if water.footprint_wet(pos, step * 0.4) {
                     continue;
                 }
                 push_symbol(
                     &mut g,
                     &Site {
                         lod,
-                        cover,
-                        riparian,
-                        pos,
+                        cover: site_cover,
+                        riparian: layout == Layout::Corridor && structured,
+                        pos: origin + local,
                         step,
                         rand: site_rand(row.coord, ix, iy, 4),
                         burn_phase: row.frame_index / 3,
@@ -567,7 +647,8 @@ fn extract_content_hash(rows: &[VegExtractRow], chunk: UVec2) -> u64 {
                 ^ ((cover as u64) << 8)
                 ^ ((layout as u64) << 16)
                 ^ (q << 24)
-                ^ (burn << 40),
+                ^ (burn << 40)
+                ^ (u64::from(r.cells_rev) << 44),
         );
     }
     h
@@ -580,8 +661,6 @@ struct LayerState {
     mesh: Option<Handle<Mesh>>,
     material: Option<Handle<ColorMaterial>>,
     last_empty: bool,
-    water: WaterMask,
-    water_rev: u64,
 }
 
 /// Visible chunk range plus a margin, or `None` when no camera fit exists yet.
@@ -615,8 +694,7 @@ pub(crate) fn sync_world_map_vegetation(
     mode: Option<Res<WorldPresentationMode>>,
     frame: Option<Res<VegetationExtractFrame>>,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
-    matrices: Query<(&Chunk, &ChunkCellMatrix)>,
-    matrices_changed: Query<(), Changed<ChunkCellMatrix>>,
+    matrices: Query<&ChunkCellMatrix>,
     mut layer: Query<(Entity, &mut Visibility), With<WorldMapVegetationLayer>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -642,16 +720,11 @@ pub(crate) fn sync_world_map_vegetation(
     let chunk = matrices
         .iter()
         .next()
-        .map(|(_, m)| m.size)
+        .map(|m| m.size)
         .filter(|s| s.x > 0 && s.y > 0)
         .unwrap_or(UVec2::splat(CHUNK_TILES_SIM));
     if frame.is_changed() || state.built_key.is_none() {
         state.content_hash = extract_content_hash(&frame.rows, chunk);
-    }
-    // Water changes with a world regen (chunk matrices restamped), not per tick.
-    if state.water_rev == 0 || !matrices_changed.is_empty() {
-        state.water = build_water_mask(matrices.iter());
-        state.water_rev = state.water_rev.wrapping_add(1);
     }
     let default_trace = MainWorldCameraOrthoTrace::default();
     let trace = trace.as_deref().unwrap_or(&default_trace);
@@ -665,7 +738,7 @@ pub(crate) fn sync_world_map_vegetation(
                 ^ ((hi.y as u32 as u64) << 48),
         )
     });
-    let key = mix64(state.content_hash ^ (lod as u64) ^ window_key ^ mix64(state.water_rev));
+    let key = mix64(state.content_hash ^ (lod as u64) ^ window_key);
 
     let mesh_handle = state
         .mesh
@@ -677,7 +750,7 @@ pub(crate) fn sync_world_map_vegetation(
         .clone();
 
     if state.built_key != Some(key) {
-        let (geo, _) = build_vegetation_geometry(&frame.rows, chunk, lod, window, &state.water);
+        let (geo, _) = build_vegetation_geometry(&frame.rows, chunk, lod, window);
         state.last_empty = geo.symbols == 0;
         meshes.insert(&mesh_handle, geometry_to_mesh(geo));
         state.built_key = Some(key);
@@ -736,7 +809,17 @@ mod tests {
             succession_stage: stage,
             burn_active: burn,
             frame_index: 0,
+            cells: None,
+            cells_rev: 0,
         }
+    }
+
+    /// Same row carrying sim per-cell codes: `f(x, y)` per chunk-local tile.
+    fn with_cells(mut r: VegExtractRow, chunk: u32, f: impl Fn(u32, u32) -> u8) -> VegExtractRow {
+        let codes: Vec<u8> = (0..chunk * chunk).map(|i| f(i % chunk, i / chunk)).collect();
+        r.cells = Some(codes.into());
+        r.cells_rev = 1;
+        r
     }
 
     fn known_rows() -> Vec<VegExtractRow> {
@@ -755,10 +838,9 @@ mod tests {
     fn rows_build_symbols_inside_their_chunks_and_zoom_changes_density() {
         let chunk = UVec2::splat(32);
         let rows = known_rows();
-        let dry = WaterMask::default();
-        let (fine, fine_lod) = build_vegetation_geometry(&rows, chunk, VegLod::Fine, None, &dry);
-        let (blob, _) = build_vegetation_geometry(&rows, chunk, VegLod::Blob, None, &dry);
-        let (wash, _) = build_vegetation_geometry(&rows, chunk, VegLod::Wash, None, &dry);
+        let (fine, fine_lod) = build_vegetation_geometry(&rows, chunk, VegLod::Fine, None);
+        let (blob, _) = build_vegetation_geometry(&rows, chunk, VegLod::Blob, None);
+        let (wash, _) = build_vegetation_geometry(&rows, chunk, VegLod::Wash, None);
         assert_eq!(fine_lod, VegLod::Fine);
         assert!(fine.symbols > blob.symbols, "{} vs {}", fine.symbols, blob.symbols);
         assert_eq!(wash.symbols, 3 * 16, "8-tile wash blocks per chunk");
@@ -769,29 +851,21 @@ mod tests {
         }
         // The burning chunk draws ember, and only that chunk does.
         assert!(fine.colors.iter().any(is_ember));
-        let (calm, _) = build_vegetation_geometry(&rows[..2], chunk, VegLod::Fine, None, &dry);
+        let (calm, _) = build_vegetation_geometry(&rows[..2], chunk, VegLod::Fine, None);
         assert!(!calm.colors.iter().any(is_ember));
     }
 
     #[test]
-    fn no_symbols_on_water_tiles() {
+    fn no_symbols_on_water_cells() {
         let chunk = UVec2::splat(32);
-        let rows = known_rows();
-        // The whole left half of chunk (0,0) is water.
-        let mut water = WaterMask::default();
-        for x in 0..16 {
-            for y in 0..32 {
-                water.tiles.insert((x, y));
-            }
-        }
+        // The whole left half of chunk (0,0) is water in the sim's per-cell state.
+        let rows = vec![with_cells(
+            row(IVec2::new(0, 0), SuccessionTopologyStage::OldGrowth, "veg_topo_patch", 0.9, false),
+            32,
+            |x, _| if x < 16 { CELL_WATER } else { CELL_OLD },
+        )];
         for lod in [VegLod::Fine, VegLod::Tree, VegLod::Blob, VegLod::Wash] {
-            let (g, _) = build_vegetation_geometry(
-                &rows[..1],
-                chunk,
-                lod,
-                None,
-                &water,
-            );
+            let (g, _) = build_vegetation_geometry(&rows, chunk, lod, None);
             assert!(g.symbols > 0, "{lod:?}");
             // Symbol centers are not inspectable after merge; vertices stay out of the wet half
             // by at most one crown radius.
@@ -799,6 +873,47 @@ mod tests {
                 assert!(p[0] > 16.0 - 2.5, "{lod:?} {p:?}");
             }
         }
+    }
+
+    #[test]
+    fn per_cell_fire_states_draw_where_the_sim_says() {
+        use crate::systems::ecology::{CELL_BURNING, CELL_BURNT, CELL_REGROWTH, CELL_YOUNG};
+        let chunk = UVec2::splat(32);
+        // Left third burning, middle third charred snags, right third regrowing, a live strip on top.
+        let rows = vec![with_cells(
+            row(IVec2::new(0, 0), SuccessionTopologyStage::YoungForest, "veg_topo_patch", 0.8, false),
+            32,
+            |x, y| {
+                if y >= 28 {
+                    CELL_YOUNG
+                } else if x < 10 {
+                    CELL_BURNING
+                } else if x < 21 {
+                    CELL_BURNT
+                } else {
+                    CELL_REGROWTH
+                }
+            },
+        )];
+        let (g, _) = build_vegetation_geometry(&rows, chunk, VegLod::Fine, None);
+        // Vertex colours are linear: the charred grey is near black in all channels, live greens are not.
+        let charred = |c: &[f32; 4]| c[0] < 0.015 && c[1] < 0.015 && c[2] < 0.015 && c[3] > 0.8;
+        let ember_x: Vec<f32> =
+            g.positions.iter().zip(&g.colors).filter(|(_, c)| is_ember(c)).map(|(p, _)| p[0]).collect();
+        let char_x: Vec<f32> =
+            g.positions.iter().zip(&g.colors).filter(|(_, c)| charred(c)).map(|(p, _)| p[0]).collect();
+        assert!(!ember_x.is_empty() && !char_x.is_empty());
+        // Flames only over the burning third, snags only over the middle third (crown radius slack).
+        assert!(ember_x.iter().all(|x| *x < 11.5), "ember outside the burning cells");
+        assert!(char_x.iter().all(|x| *x > 8.5 && *x < 22.5), "snags outside the burnt cells");
+        // A chunk with no fire states carries neither.
+        let calm = vec![with_cells(
+            row(IVec2::new(0, 0), SuccessionTopologyStage::YoungForest, "veg_topo_patch", 0.8, false),
+            32,
+            |_, _| CELL_YOUNG,
+        )];
+        let (c, _) = build_vegetation_geometry(&calm, chunk, VegLod::Fine, None);
+        assert!(!c.colors.iter().any(|col| is_ember(col) || charred(col)));
     }
 
     #[test]
@@ -810,7 +925,6 @@ mod tests {
             chunk,
             VegLod::Tree,
             Some((IVec2::new(1, 0), IVec2::new(1, 0))),
-            &WaterMask::default(),
         );
         assert!(g.symbols > 0);
         for p in &g.positions {

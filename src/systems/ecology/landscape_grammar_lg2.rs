@@ -13,6 +13,7 @@ use super::landscape_grammar::{
     LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID,
 };
 use super::vegetation_suitability::{clamp_stage_to_cap, update_chunk_vegetation_suitability};
+use super::cell_stand::{ChunkCellStand, SCAR_FRACTION};
 use super::vegetation_field::{CanopyDrivers, VegetationCanopySet, CANOPY_CLEARED_DENSITY};
 use super::{ChunkEcology, VegetationField};
 use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
@@ -180,15 +181,23 @@ pub fn tick_succession_age_on_ecology(
         &DisturbanceHistory,
         Option<&ChunkSurfaceFire>,
         Option<&CanopyDrivers>,
+        Option<&ChunkCellStand>,
     )>,
     mut witness: ResMut<LandscapeGrammarLg2Witness>,
 ) {
-    for (mut state, history, fire, drivers) in &mut q {
+    for (mut state, history, fire, drivers, stand) in &mut q {
         let heat = fire.map(|f| f.heat).unwrap_or(0.0);
-        let burned_recently = heat > 0.35
-            || history
-                .last_fire_tick()
-                .is_some_and(|t| tick.0.saturating_sub(t) < 120);
+        // With per-cell stands the chunk is a burn scar when most of its stand burnt out (and stays one
+        // while that holds); without them the chunk heat decides, as before.
+        let burned_recently = match stand {
+            Some(stand) => stand.burnt_fraction >= SCAR_FRACTION,
+            None => {
+                heat > 0.35
+                    || history
+                        .last_fire_tick()
+                        .is_some_and(|t| tick.0.saturating_sub(t) < 120)
+            }
+        };
         if !burned_recently {
             state.age_ticks = state.age_ticks.saturating_add(1);
             if state.stage == SuccessionTopologyStage::BurnScar && state.age_ticks > 30 {
@@ -206,7 +215,7 @@ pub fn tick_succession_age_on_ecology(
 pub fn apply_fire_disturbance_on_heat(
     tick: Res<crate::systems::sim_control::SimTick>,
     fire_q: Query<
-        (Entity, &ChunkSurfaceFire),
+        (Entity, &ChunkSurfaceFire, Option<&ChunkCellStand>),
         Or<(Added<ChunkSurfaceFire>, Changed<ChunkSurfaceFire>)>,
     >,
     mut history_q: Query<&mut DisturbanceHistory>,
@@ -214,8 +223,13 @@ pub fn apply_fire_disturbance_on_heat(
     program_q: Query<&LandscapeProgramOnChunk>,
     mut witness: ResMut<LandscapeGrammarLg2Witness>,
 ) {
-    for (entity, fire) in &fire_q {
-        if fire.heat <= 0.35 {
+    for (entity, fire, stand) in &fire_q {
+        // A chunk with per-cell stands scars when most of the stand burnt out; otherwise chunk heat.
+        let burnt_out = match stand {
+            Some(stand) => stand.burnt_fraction >= SCAR_FRACTION,
+            None => fire.heat > 0.35,
+        };
+        if !burnt_out {
             continue;
         }
         let Ok(mut history) = history_q.get_mut(entity) else {
@@ -230,7 +244,7 @@ pub fn apply_fire_disturbance_on_heat(
             .get(entity)
             .map(|s| s.stage)
             .unwrap_or(SuccessionTopologyStage::OldGrowth);
-        if stage_before == SuccessionTopologyStage::OldGrowth {
+        if stage_before != SuccessionTopologyStage::BurnScar {
             history.push(DisturbanceEvent {
                 tick: tick.0,
                 kind: DisturbanceKind::Fire,

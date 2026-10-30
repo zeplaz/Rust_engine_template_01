@@ -1,5 +1,7 @@
 //! VEG-BURN-EXTRACT-004..005 — read-only vegetation extract frame from sim burn overlay.
 
+use std::sync::Arc;
+
 use bevy::prelude::*;
 use serde_json::json;
 
@@ -8,7 +10,7 @@ use crate::gui::ViewAuthoritySystemSet;
 use crate::render::extraction::FireVisualFrameSet;
 use crate::systems::ecology::{
     extract_glyph_for_burn, planning_glyph_for_burn, variant_key_for_burn_row, ActiveBurn,
-    ChunkVegetationSuitability, LandscapeProgramOnChunk, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
+    ChunkCellStand, ChunkVegetationSuitability, LandscapeProgramOnChunk, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
     ACTIVE_BURN_HEAT_EPS,
 };
 use crate::systems::sim_control::SimStepStamp;
@@ -33,6 +35,11 @@ pub struct VegExtractRow {
     pub succession_stage: SuccessionTopologyStage,
     pub burn_active: bool,
     pub frame_index: u8,
+    /// Per-cell stand state straight from the sim ([`ChunkCellStand::render`]): live stage, burning, burnt
+    /// snags, regrowth, water. `None` for a chunk without per-cell stands.
+    pub cells: Option<Arc<[u8]>>,
+    /// Changes whenever `cells` does.
+    pub cells_rev: u32,
 }
 
 #[derive(Resource, Default, Debug, Clone)]
@@ -144,6 +151,7 @@ pub fn build_vegetation_extract_frame(
         Option<&LandscapeProgramOnChunk>,
         Option<&crate::terrain::generation::ChunkCellMatrix>,
         Option<&ChunkVegetationSuitability>,
+        Option<&ChunkCellStand>,
     )>,
 ) {
     // PERF-INSTR-VFX-001: name this per-chunk veg scan inside the Update wall window (STALL/PERF only).
@@ -155,7 +163,7 @@ pub fn build_vegetation_extract_frame(
     frame.revision = frame.revision.saturating_add(1);
     frame.stamp = stamp;
     frame.rows.clear();
-    for (chunk, succ, burn, pop, program, matrix, suitability) in &q {
+    for (chunk, succ, burn, pop, program, matrix, suitability, stand) in &q {
         let burn_active = burn.is_some_and(|b| b.heat > crate::systems::ecology::ACTIVE_BURN_HEAT_EPS);
         let planning_glyph = planning_glyph_for_burn(burn, succ.stage);
         let extract_glyph = extract_glyph_for_burn(burn, succ.stage);
@@ -182,6 +190,8 @@ pub fn build_vegetation_extract_frame(
             succession_stage: succ.stage,
             burn_active,
             frame_index: burn.map(|b| b.frame_index).unwrap_or(0),
+            cells: stand.map(|s| s.render.clone()),
+            cells_rev: stand.map_or(0, |s| s.render_rev),
         });
     }
 }
@@ -297,6 +307,8 @@ pub fn build_harness_topo_extract_frame(world: &mut World) -> VegetationExtractF
             succession_stage: stage,
             burn_active: false,
             frame_index: 0,
+            cells: None,
+            cells_rev: 0,
         });
     }
     VegetationExtractFrame {

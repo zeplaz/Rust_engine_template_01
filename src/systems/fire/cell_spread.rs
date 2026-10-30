@@ -108,6 +108,34 @@ pub fn fuel_step_in_wind(
     }
 }
 
+/// Fuel consumption of one cell for a stand with its own burn character.
+///
+/// `rate` scales the consumption (grass burns out fast, timber slow). `floor` is fuel a ground fire
+/// leaves standing: the cell does not drop below it (a crown fire passes `0.0`). Rain still does not
+/// refill, and a cell already under the floor is left as it is.
+#[must_use]
+pub fn burn_fuel_step(
+    fuel: f32,
+    heat: f32,
+    dt: f32,
+    rain_intensity: f32,
+    wind_speed: f32,
+    rate: f32,
+    floor: f32,
+) -> FuelStep {
+    let still = step_cell_fuel(fuel, heat, dt, rain_intensity);
+    let extra = wind_fuel_delta(heat, dt, wind_speed);
+    let burnt = (fuel - still.fuel + extra) * rate.max(0.0);
+    let spared = floor.max(0.0).min(fuel);
+    let next = (fuel - burnt).max(spared).max(0.0);
+    let crossed = fuel >= MIN_CELL_FUEL_FOR_SPREAD && next < MIN_CELL_FUEL_FOR_SPREAD;
+    FuelStep {
+        fuel: next,
+        crossed_below_spread: crossed,
+        arm_hold: crossed && heat >= SPREAD_HEAT_MIN,
+    }
+}
+
 /// One tick of the burned window. Forces residual heat and decrements. Does not restore fuel.
 pub fn step_burn_hold(cell: &mut FireCell) {
     if cell.burned_hold == 0 {
@@ -294,6 +322,26 @@ mod tests {
         step_burn_hold(&mut cell);
         assert_eq!(cell.heat, 0.0);
         assert!(cell.fuel < MIN_CELL_FUEL_FOR_SPREAD);
+    }
+
+    #[test]
+    fn burn_rate_sets_how_fast_a_stand_burns_and_the_floor_spares_the_crown() {
+        let grass = burn_fuel_step(0.5, 0.8, 1.0, 0.0, 0.0, 2.9, 0.0);
+        let timber = burn_fuel_step(0.5, 0.8, 1.0, 0.0, 0.0, 0.29, 0.0);
+        assert!(grass.fuel < timber.fuel, "grass {} timber {}", grass.fuel, timber.fuel);
+        let unit = burn_fuel_step(0.5, 0.8, 1.0, 0.0, 0.0, 1.0, 0.0);
+        assert!((unit.fuel - fuel_step_in_wind(0.5, 0.8, 1.0, 0.0, 0.0).fuel).abs() < 1e-6);
+        // Ground fire: surface burns down to the crown share and stops there.
+        let mut f = 0.5;
+        for _ in 0..2000 {
+            f = burn_fuel_step(f, 0.4, 1.0, 0.0, 0.0, 1.0, 0.25).fuel;
+        }
+        assert!((f - 0.25).abs() < 1e-6, "{f}");
+        // Crown fire takes the rest.
+        for _ in 0..2000 {
+            f = burn_fuel_step(f, 0.9, 1.0, 0.0, 0.0, 1.0, 0.0).fuel;
+        }
+        assert_eq!(f, 0.0);
     }
 
     #[test]
