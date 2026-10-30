@@ -366,11 +366,10 @@ fn spawn_simulation_command_shell(
         .unwrap_or_default();
 
     let tools = format!(
-        "Tools — Options/keys {} · Diagnostics {} · Pressure {} · Faction {} · Logistics list {} · Cycle focus {} · World gen {} · Collapse left stack {}.",
+        "Tools — Options/keys {} · Diagnostics {} · Pressure {} · Logistics list {} · Cycle focus {} · World gen {} · Collapse left stack {}.",
         InputBindings::format_key(bindings.toggle_keybindings_options),
         InputBindings::format_key(bindings.toggle_diagnostics),
         InputBindings::format_key(bindings.toggle_pressure_composer),
-        InputBindings::format_key(bindings.toggle_faction_tools),
         InputBindings::format_key(bindings.toggle_logistics_targets_panel),
         InputBindings::format_key(bindings.cycle_logistics_focus),
         InputBindings::format_key(bindings.toggle_world_generator),

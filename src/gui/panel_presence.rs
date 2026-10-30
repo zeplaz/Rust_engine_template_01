@@ -18,7 +18,6 @@ pub struct PanelPresence {
     pub map_editor_shell_root: bool,
     pub road_popup_root: bool,
     pub staged_placements_root: bool,
-    pub faction_tools_root: bool,
     pub ai_explainability_root: bool,
     pub pressure_composer_root: bool,
     pub assembly_snapshot_qc_root: bool,

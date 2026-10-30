@@ -69,7 +69,6 @@ mod gui_sets;
 mod ui_windows;
 mod ai_explainability_ui;
 mod diagnostics_ui;
-mod faction_tools_ui;
 mod camera_focus_debug;
 mod tile_debug_types;
 mod gpu_tile_debug;
@@ -320,7 +319,6 @@ pub use in_game_ui::*;
 pub use ui_windows::*;
 pub use ai_explainability_ui::AiExplainabilityPlugin;
 pub use diagnostics_ui::*;
-pub use faction_tools_ui::*;
 pub use pressure_tooling::{
     PressureBevyOverlayRoot, PressureComposerPlugin, PressureComposerState, PressureComposerTab,
     PressureOverlayBevyPlugin, StrategicToolingPlugin,

@@ -4,7 +4,7 @@
 //!
 //! **Inventory** (search `KeyCode::` outside this file — should only be defaults, presets, tests,
 //! and fallbacks tied to `InputBindings`):
-//! - Diagnostics, AI explainability (L7), faction tools, logistics cycle / list, world gen
+//! - Diagnostics, AI explainability (L7), logistics cycle / list, world gen
 //! - Options window, simulation pause toggle (`SimControlState` via `sim_control`), capture cancel
 //! - Gameplay capture: window screenshots → PNG sequence + GIF (`gameplay_capture`)
 //! - Map camera: WASD / edge scroll / wheel+keys zoom / grip pan / rotate (`map_camera`)
@@ -27,7 +27,6 @@ pub struct InputBindings {
     pub toggle_pressure_composer: KeyCode,
     /// Toggle AI / pipeline **explainability** egui panel (L7 dev tooling; default Insert).
     pub toggle_ai_explainability: KeyCode,
-    pub toggle_faction_tools: KeyCode,
     pub cycle_logistics_focus: KeyCode,
     pub toggle_logistics_targets_panel: KeyCode,
     /// Scenario script runner (`scenario_script_panel`, Editor). Default **F10**; logistics targets panel uses **F6** to avoid clash.
@@ -123,7 +122,6 @@ impl Default for InputBindings {
             toggle_diagnostics: KeyCode::F3,
             toggle_pressure_composer: KeyCode::F2,
             toggle_ai_explainability: KeyCode::Insert,
-            toggle_faction_tools: KeyCode::F4,
             cycle_logistics_focus: KeyCode::F9,
             toggle_logistics_targets_panel: KeyCode::F6,
             toggle_scenario_script_panel: KeyCode::F10,
