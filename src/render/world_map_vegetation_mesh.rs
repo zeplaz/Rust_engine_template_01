@@ -529,9 +529,15 @@ pub(crate) fn build_vegetation_geometry(
 
     let mut g = VegGeometry::default();
     let step = lod.step_tiles() as f32;
+    // Once the sim publishes per-cell state, a chunk that has none yet (just spawned) draws nothing
+    // rather than a chunk-wide guess that could cover water for a frame or two.
+    let per_cell_world = visible.iter().any(|r| r.cells.is_some());
     for row in visible {
         let (cover, layout) = classify_row(row);
         let view = CellView::of(row, chunk);
+        if per_cell_world && view.is_none() {
+            continue;
+        }
         let density = row.modifiers.mean_density;
         let origin = Vec2::new(
             row.coord.x as f32 * chunk.x as f32,
