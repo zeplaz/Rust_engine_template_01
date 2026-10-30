@@ -20,6 +20,9 @@ use crate::combat::pressure::{PressureKind, PressurePoint};
 use super::decide::{FactionDoctrine, ScoreTerm, StrategicGoal};
 use super::orders::DeployKind;
 
+/// A formation this close to a threatened point counts as holding it.
+const HOLD_RADIUS_TILES: f32 = 2.5;
+
 /// Sizing and eligibility knobs of the military brain.
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct MilitaryParams {
@@ -66,6 +69,9 @@ pub struct FormationView {
     pub tile: IVec2,
     pub target: Option<IVec2>,
     pub engaged: bool,
+    /// Already ordered to dig in.
+    pub fortify: bool,
+    pub dug_in: f32,
 }
 
 impl FormationView {
@@ -80,6 +86,8 @@ impl FormationView {
             tile: f.tile,
             target: f.target,
             engaged: f.engaged,
+            fortify: f.fortify,
+            dug_in: f.dug_in,
         }
     }
 
@@ -249,6 +257,38 @@ pub fn plan_deployments(
             need -= 1;
         }
     }
+
+    // A threatened point that is held (a formation idle on it) digs in rather than just standing there.
+    for (total, terms, p) in &cands {
+        if out.len() >= params.max_orders {
+            break;
+        }
+        if p.kind != PressureKind::Threatened {
+            continue;
+        }
+        let holder = formations
+            .iter()
+            .filter(|f| !taken.contains(&f.entity) && f.idle() && !f.fortify && f.dug_in < 1.0)
+            .filter(|f| f.strength >= params.min_reinforce_strength && dist(f.tile, p.tile) <= HOLD_RADIUS_TILES)
+            .min_by(|a, b| {
+                dist(a.tile, p.tile)
+                    .total_cmp(&dist(b.tile, p.tile))
+                    .then(a.entity.to_bits().cmp(&b.entity.to_bits()))
+            });
+        let Some(f) = holder else { continue };
+        taken.push(f.entity);
+        let mut all = terms.clone();
+        all.push(ScoreTerm { label: "held, not dug in", input: 1.0 - f.dug_in, weight: 0.2 });
+        out.push(DeployDecision {
+            formation: f.entity,
+            kind: DeployKind::Fortify,
+            theater: p.theater.0,
+            tile: f.tile,
+            subject: format!("dig in ({}, {})", f.tile.x, f.tile.y),
+            total: *total + 0.2 * (1.0 - f.dug_in),
+            terms: all,
+        });
+    }
     out
 }
 
@@ -280,6 +320,8 @@ mod tests {
             tile: IVec2::new(x, y),
             target: None,
             engaged: false,
+            fortify: false,
+            dug_in: 0.0,
         }
     }
 
@@ -365,7 +407,20 @@ mod tests {
         en_route.posture = Posture::Move;
         en_route.target = Some(IVec2::new(10, 10));
         let out = plan(&pts, &[en_route, fv(2, 9, 10)], 1.0);
-        assert!(out.is_empty(), "already covered: {out:?}");
+        // The holder digs in; nobody else is sent.
+        assert!(out.iter().all(|d| d.kind == DeployKind::Fortify), "already covered: {out:?}");
+        assert!(!plan(&pts, &[fv(2, 9, 10)], 1.0).is_empty());
+    }
+
+    #[test]
+    fn a_held_threatened_point_gets_a_fortify_order_once() {
+        let pts = [point(1, PressureKind::Threatened, 10, 10, 0.3)];
+        let out = plan(&pts, &[fv(2, 10, 10)], 1.0);
+        let dig = out.iter().find(|d| d.kind == DeployKind::Fortify).expect("dig in");
+        assert_eq!(dig.formation, fv(2, 10, 10).entity);
+        let mut dug = fv(2, 10, 10);
+        dug.fortify = true;
+        assert!(plan(&pts, &[dug], 1.0).iter().all(|d| d.kind != DeployKind::Fortify));
     }
 
     #[test]
