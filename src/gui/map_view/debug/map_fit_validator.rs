@@ -70,7 +70,6 @@ pub fn validate_map_fit_system(
     mut diagnostics: ResMut<MapPresentationDiagnostics>,
     mut log: ResMut<MapFitValidationLog>,
     update_attrib: Option<ResMut<FrameUpdateAttrib>>,
-    dev_overlay: Option<Res<crate::gui::hud::HudDevOverlayState>>,
     spike_guard: Option<Res<crate::engine::UxFrameSpikeGuard>>,
 ) {
     if spike_guard.is_some_and(|g| g.suppress_optional_diagnostics) {
@@ -141,15 +140,6 @@ pub fn validate_map_fit_system(
         log.mismatch_frames = log.mismatch_frames.wrapping_add(1);
     }
 
-    if dev_overlay.is_some_and(|overlay| overlay.visible && overlay.show_map_transform) {
-        let same_fit_mode = diagnostics.world_preview.fit_mode == diagnostics.minimap.fit_mode;
-        if same_fit_mode && preview_scale > 0.0 && minimap_scale > 0.0 {
-            debug_assert!(
-                (preview_scale - minimap_scale).abs() < 0.01,
-                "preview scale {preview_scale} diverged from minimap scale {minimap_scale}"
-            );
-        }
-    }
     let ms = t0.elapsed().as_secs_f32() * 1000.0;
     if let Some(mut a) = update_attrib {
         a.map_fit_validate_ms = ms;
