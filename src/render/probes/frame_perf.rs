@@ -588,7 +588,32 @@ fn bucket_ms(budget: &crate::gui::hud::FrameBudgetDiagnostics, bucket: crate::gu
     budget.buckets[bucket.index()].last_ms
 }
 
+/// `PERF_FRAME_CSV=<path>`: append one real (wall) frame delta per line, flushed every 120 frames.
+/// Lightweight honest frame pacing for before/after runs — unlike the sim-spectrum JSONL it does not
+/// perturb the frames it measures.
+fn record_frame_csv(real_delta_secs: f32, frame_index: u64) {
+    use std::io::Write;
+    use std::sync::{Mutex, OnceLock};
+    static SINK: OnceLock<Option<Mutex<std::io::BufWriter<std::fs::File>>>> = OnceLock::new();
+    let sink = SINK.get_or_init(|| {
+        let path = std::env::var("PERF_FRAME_CSV").ok()?;
+        std::fs::File::create(path)
+            .ok()
+            .map(|f| Mutex::new(std::io::BufWriter::new(f)))
+    });
+    let Some(sink) = sink else {
+        return;
+    };
+    if let Ok(mut w) = sink.lock() {
+        let _ = writeln!(w, "{frame_index},{:.3}", real_delta_secs * 1000.0);
+        if frame_index % 120 == 0 {
+            let _ = w.flush();
+        }
+    }
+}
+
 pub fn emit_frame_perf_summary(
+    real_time: Res<Time<Real>>,
     mut perf: ResMut<FramePerf>,
     mut wall: ResMut<FrameWallClock>,
     update_attrib: Option<Res<FrameUpdateAttrib>>,
@@ -599,6 +624,7 @@ pub fn emit_frame_perf_summary(
     raster_policy: Option<Res<crate::render::TileFallbackRasterPolicy>>,
 ) {
     perf.frame_index = perf.frame_index.wrapping_add(1);
+    record_frame_csv(real_time.delta_secs(), perf.frame_index);
     let shell_wall_ms = shell
         .as_deref()
         .map(|d| d.last_frame_delta_secs.max(0.0) * 1000.0)
