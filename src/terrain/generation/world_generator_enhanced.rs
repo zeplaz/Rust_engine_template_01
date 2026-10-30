@@ -745,10 +745,22 @@ fn world_gen_pipeline_tick(
                     let chunk_authoritative = job.run_params.field_storage
                         == TerrainFieldStorage::ChunkCellMatrixAuthoritative;
 
+                    // The one water decision for this world: sim chunks, the dense cache and the render
+                    // catalog all read it.
+                    let water_grid = super::water_class::WorldWaterGrid::from_hydrology(
+                        &hydro,
+                        job.run_params.width,
+                        job.run_params.height,
+                        job.run_params.seed ^ 0xA7E2_0001,
+                    );
                     if chunk_authoritative {
                         if let Some(cache) = dense_cache.as_mut() {
-                            cache.apply_hydrology(&job.run_params, &hydro);
+                            cache.apply_water_grid(&job.run_params, &water_grid);
                         }
+                        // Chunks that already hydrated from the uncarved cache copy it again.
+                        commands.insert_resource(
+                            super::world_gen_dense_cache::DenseTerrainHydrationGate::default(),
+                        );
                         spawn_hydrology_markers_only(&mut commands, &hydro);
                     } else {
                         if job.run_params.river_count > 0 {
@@ -770,7 +782,12 @@ fn world_gen_pipeline_tick(
                             );
                         }
                     }
-                    let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &job.run_params);
+                    let catalog = WaterSurfaceVisualCatalog::from_water_grid(
+                        &water_grid,
+                        &hydro,
+                        &job.run_params,
+                    );
+                    commands.insert_resource(water_grid);
                     if let (Some(towns), Some(districts), Some(snap)) =
                         (towns.as_mut(), districts.as_mut(), town_snap.as_mut())
                     {

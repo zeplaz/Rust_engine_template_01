@@ -5,19 +5,23 @@ use bevy::prelude::{Component, UVec2};
 use crate::terrain::biome::BiomeWeights;
 use crate::terrain::material::TagSet;
 use crate::terrain::family::{TerrainFamilyId, DEFAULT_TERRAIN_FAMILY_ID};
+use super::water_class::WaterClass;
 
 /// SoA storage for one chunk’s worth of terrain fields + tags + biome outputs (pass pipeline fills these).
 #[derive(Component, Debug, Clone)]
 pub struct ChunkCellMatrix {
     pub size: UVec2,
     pub elevation: Vec<f32>,
-    /// Atmospheric humidity / rainfall dryness proxy — **not** standing surface water (see `flooded` tag + elevation).
+    /// Atmospheric humidity / rainfall dryness proxy — **not** standing surface water (see [`Self::water`]).
     pub moisture: Vec<f32>,
     pub temperature: Vec<f32>,
     pub tags: Vec<TagSet>,
     /// Classified terrain **family** id — from [`TerrainFamilyRegistry`](crate::terrain::family::TerrainFamilyRegistry).
     pub family: Vec<TerrainFamilyId>,
     pub weights: Vec<BiomeWeights>,
+    /// Water class per cell — the single sim authority for water (see [`super::water_class`]).
+    /// Written only by pass 4 from the world water grid; everything else reads it.
+    pub water: Vec<WaterClass>,
 }
 
 impl ChunkCellMatrix {
@@ -31,6 +35,7 @@ impl ChunkCellMatrix {
             tags: vec![TagSet::default(); n],
             family: vec![DEFAULT_TERRAIN_FAMILY_ID; n],
             weights: vec![BiomeWeights::default(); n],
+            water: vec![WaterClass::Dry; n],
         }
     }
 
@@ -56,6 +61,7 @@ mod tests {
         assert_eq!(m.tags.len(), n);
         assert_eq!(m.family.len(), n);
         assert_eq!(m.weights.len(), n);
+        assert_eq!(m.water.len(), n);
         assert_eq!(m.idx(3, 4), (4 * size.x + 3) as usize);
     }
 }

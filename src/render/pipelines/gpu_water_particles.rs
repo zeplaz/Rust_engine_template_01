@@ -826,12 +826,19 @@ mod tests {
         let w = 8u32;
         let h = 8u32;
         let n = (w * h) as usize;
+        // Sea on the left five columns (edge-connected standing water), land on the right.
+        let mut lake_mask = vec![false; n];
+        for y in 0..h as usize {
+            for x in 0..5usize {
+                lake_mask[y * w as usize + x] = true;
+            }
+        }
         let hydro = HydrologyResult {
             rivers: Vec::new(),
             lakes: Vec::new(),
             accumulation: vec![0.0; n],
             river_mask: vec![false; n],
-            lake_mask: vec![false; n],
+            lake_mask,
             filled_dem: vec![0.05; n],
         };
         let mut params = WorldGenParams::default();

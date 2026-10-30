@@ -1,9 +1,9 @@
 //! Per-biome vegetation suitability — what may grow where.
 //!
-//! The terrain classification is the authority: each cell carries a terrain family
-//! ([`ChunkCellMatrix::family`], names from `terrain_family_registry`), and standing water comes from
-//! the same gate fire uses ([`SurfaceWaterFireGate`]: shallow water line + P4 `flooded` tag, which
-//! covers lakes and river channels). A table maps family name to a canopy ceiling and a growth rate.
+//! Two sim authorities decide a cell: the water class ([`ChunkCellMatrix::water`], decided once by world
+//! generation) and the terrain family ([`ChunkCellMatrix::family`], names from `terrain_family_registry`).
+//! River / lake / ocean cells allow nothing. Wetland-class cells are limited to the table's `wetland` row
+//! (reeds and riparian cover). Everything else takes its family row: a canopy ceiling and a growth rate.
 //! The table is data (`assets/configs/landscape/_vegetation_suitability.ron`) with code defaults.
 //!
 //! This module only produces inputs. The canopy writer ([`super::vegetation_field`]) applies the cap,
@@ -19,10 +19,8 @@ use serde::Deserialize;
 use super::landscape_grammar_lg2::SuccessionTopologyStage;
 use super::landscape_grammar_map::repo_asset_path;
 use super::vegetation_field::CanopyDrivers;
-use crate::systems::fire::SurfaceWaterFireGate;
 use crate::systems::terrain::TerrainRegistriesHandles;
-use crate::terrain::biome::BiomeId;
-use crate::terrain::generation::ChunkCellMatrix;
+use crate::terrain::generation::{ChunkCellMatrix, WaterClass};
 use crate::terrain::{default_terrain_families, TerrainFamilyRegistry};
 
 pub const VEGETATION_SUITABILITY_RON: &str = "assets/configs/landscape/_vegetation_suitability.ron";
@@ -54,15 +52,30 @@ struct SuitabilityFile {
     /// Ceiling for a family the table does not list.
     #[serde(default = "one")]
     default_max_canopy: f32,
+    /// Ceiling and growth for wetland-class ground.
+    #[serde(default = "default_wetland")]
+    wetland: SuitabilityEntry,
     entries: Vec<SuitabilityEntryFile>,
+}
+
+fn default_wetland() -> SuitabilityEntry {
+    SuitabilityEntry {
+        max_canopy: DEFAULT_WETLAND.0,
+        growth: DEFAULT_WETLAND.1,
+    }
 }
 
 /// Terrain family name → suitability. Families missing from the table use `default_max_canopy`.
 #[derive(Resource, Debug, Clone)]
 pub struct VegetationSuitabilityTable {
     pub default_max_canopy: f32,
+    /// Limit for wetland-class ground (reeds, riparian cover).
+    pub wetland: SuitabilityEntry,
     pub by_family: HashMap<String, SuitabilityEntry>,
 }
+
+/// Wetland ceiling / growth when the RON does not set them: grass-stage cover only.
+const DEFAULT_WETLAND: (f32, f32) = (0.15, 0.8);
 
 /// Code defaults (also what the RON ships): water none, wetland low cover, desert/rock/ice/beach
 /// sparse or none, tundra/alpine low scrub, grassland scattered, forests full.
@@ -89,6 +102,7 @@ impl Default for VegetationSuitabilityTable {
     fn default() -> Self {
         Self {
             default_max_canopy: 1.0,
+            wetland: default_wetland(),
             by_family: DEFAULT_ROWS
                 .iter()
                 .map(|(name, cap, growth)| {
@@ -117,6 +131,10 @@ impl VegetationSuitabilityTable {
         };
         Self {
             default_max_canopy: file.default_max_canopy.clamp(0.0, 1.0),
+            wetland: SuitabilityEntry {
+                max_canopy: file.wetland.max_canopy.clamp(0.0, 1.0),
+                growth: file.wetland.growth.clamp(0.0, 1.0),
+            },
             by_family: file
                 .entries
                 .into_iter()
@@ -182,7 +200,6 @@ impl ChunkVegetationSuitability {
 #[derive(SystemParam)]
 pub struct SuitabilityParams<'w> {
     table: Option<Res<'w, VegetationSuitabilityTable>>,
-    gate: Option<Res<'w, SurfaceWaterFireGate>>,
     handles: Option<Res<'w, TerrainRegistriesHandles>>,
     family_assets: Option<Res<'w, Assets<TerrainFamilyRegistry>>>,
 }
@@ -192,45 +209,38 @@ impl SuitabilityParams<'_> {
     pub fn rate(&self, matrix: &ChunkCellMatrix) -> ChunkVegetationSuitability {
         let default_table = VegetationSuitabilityTable::default();
         let table = self.table.as_deref().unwrap_or(&default_table);
-        let default_gate = SurfaceWaterFireGate::default();
-        let gate = self.gate.as_deref().unwrap_or(&default_gate);
         let families = self
             .handles
             .as_ref()
             .zip(self.family_assets.as_ref())
             .and_then(|(h, a)| a.get(&h.terrain_families))
             .unwrap_or_else(|| default_terrain_families());
-        rate_chunk_vegetation_suitability(matrix, families, table, gate)
+        rate_chunk_vegetation_suitability(matrix, families, table)
     }
 
     fn changed(&self) -> bool {
         self.table.as_ref().is_some_and(|t| t.is_changed())
-            || self.gate.as_ref().is_some_and(|g| g.is_changed())
     }
 }
 
-/// Pure rating: standing water and marine cells get 0, otherwise the family row decides.
+/// Pure rating: open-water cells get 0, wetland cells the wetland row, otherwise the family row decides.
 #[must_use]
 pub fn rate_chunk_vegetation_suitability(
     matrix: &ChunkCellMatrix,
     families: &TerrainFamilyRegistry,
     table: &VegetationSuitabilityTable,
-    gate: &SurfaceWaterFireGate,
 ) -> ChunkVegetationSuitability {
     let n = matrix.elevation.len();
     let mut cell_caps = Vec::with_capacity(n);
     let mut growth_sum = 0.0f32;
     let mut growth_cells = 0u32;
     for i in 0..n {
-        let marine = matrix
-            .weights
-            .get(i)
-            .is_some_and(|w| w.primary() == BiomeId::Marine);
-        if marine || gate.cell_has_standing_water(matrix, i) {
+        let class = matrix.water.get(i).copied().unwrap_or_default();
+        if class.is_open_water() {
             cell_caps.push(0.0);
             continue;
         }
-        let entry = matrix
+        let mut entry = matrix
             .family
             .get(i)
             .and_then(|id| families.def(*id))
@@ -239,6 +249,10 @@ pub fn rate_chunk_vegetation_suitability(
                 max_canopy: table.default_max_canopy,
                 growth: 1.0,
             });
+        if class == WaterClass::Wetland {
+            entry.max_canopy = entry.max_canopy.min(table.wetland.max_canopy);
+            entry.growth = entry.growth.min(table.wetland.growth);
+        }
         if entry.max_canopy > 0.0 {
             growth_sum += entry.growth;
             growth_cells += 1;
@@ -349,11 +363,12 @@ mod tests {
             .unwrap_or_else(|| panic!("family {name}"))
     }
 
-    fn matrix_of(name: &str, elevation: f32) -> ChunkCellMatrix {
+    fn matrix_of(name: &str, class: WaterClass) -> ChunkCellMatrix {
         let mut m = ChunkCellMatrix::new(UVec2::new(4, 4));
         for i in 0..16 {
-            m.elevation[i] = elevation;
+            m.elevation[i] = 0.6;
             m.family[i] = family(name);
+            m.water[i] = class;
         }
         m
     }
@@ -369,20 +384,24 @@ mod tests {
     }
 
     #[test]
-    fn water_and_flooded_cells_allow_nothing_and_forest_allows_full() {
+    fn open_water_class_allows_nothing_wetland_only_reeds_and_forest_allows_full() {
         let table = VegetationSuitabilityTable::default();
-        let gate = SurfaceWaterFireGate::default();
         let families = default_terrain_families();
-        for name in ["DeepWater", "ShallowWater"] {
-            let r = rate_chunk_vegetation_suitability(&matrix_of(name, 0.1), families, &table, &gate);
-            assert_eq!(r.max_canopy, 0.0, "{name}");
+        // Open water is decided by the class, whatever the terrain family says.
+        for class in [WaterClass::River, WaterClass::Lake, WaterClass::Ocean] {
+            let r = rate_chunk_vegetation_suitability(&matrix_of("DenseForest", class), families, &table);
+            assert_eq!(r.max_canopy, 0.0, "{class:?}");
+            assert_eq!(r.land_fraction, 0.0);
         }
-        // A forest-labelled cell below the water line is still water.
-        let drowned = rate_chunk_vegetation_suitability(&matrix_of("Forest", 0.05), families, &table, &gate);
-        assert_eq!(drowned.max_canopy, 0.0);
-        let forest = rate_chunk_vegetation_suitability(&matrix_of("DenseForest", 0.6), families, &table, &gate);
+        let forest =
+            rate_chunk_vegetation_suitability(&matrix_of("DenseForest", WaterClass::Dry), families, &table);
         assert_eq!(forest.max_canopy, 1.0);
-        let swamp = rate_chunk_vegetation_suitability(&matrix_of("Swamp", 0.6), families, &table, &gate);
+        // Wetland ground is limited to the wetland row (grass stage), even under a forest family.
+        let marsh =
+            rate_chunk_vegetation_suitability(&matrix_of("DenseForest", WaterClass::Wetland), families, &table);
+        assert!(marsh.max_canopy > 0.0 && marsh.max_canopy <= table.wetland.max_canopy);
+        assert_eq!(max_stage_for_canopy_cap(marsh.max_canopy), SuccessionTopologyStage::Grass);
+        let swamp = rate_chunk_vegetation_suitability(&matrix_of("Swamp", WaterClass::Dry), families, &table);
         assert!(swamp.max_canopy > 0.0 && swamp.max_canopy < 0.5);
     }
 
@@ -419,7 +438,7 @@ mod tests {
         let lake = app
             .world_mut()
             .spawn((
-                matrix_of("DeepWater", 0.1),
+                matrix_of("DenseForest", WaterClass::Lake),
                 VegetationField {
                     canopy_density: 0.9,
                     understory_density: 0.5,
@@ -430,7 +449,7 @@ mod tests {
         let forest = app
             .world_mut()
             .spawn((
-                matrix_of("DenseForest", 0.6),
+                matrix_of("DenseForest", WaterClass::Dry),
                 VegetationField {
                     canopy_density: 0.1,
                     ..VegetationField::default()
@@ -478,14 +497,12 @@ mod tests {
     #[test]
     fn coastal_chunk_density_reflects_land_cells_only() {
         let table = VegetationSuitabilityTable::default();
-        let gate = SurfaceWaterFireGate::default();
         let families = default_terrain_families();
-        let mut m = matrix_of("DenseForest", 0.6);
+        let mut m = matrix_of("DenseForest", WaterClass::Dry);
         for i in 0..8 {
-            m.family[i] = family("DeepWater");
-            m.elevation[i] = 0.1;
+            m.water[i] = WaterClass::Ocean;
         }
-        let r = rate_chunk_vegetation_suitability(&m, families, &table, &gate);
+        let r = rate_chunk_vegetation_suitability(&m, families, &table);
         assert_eq!(r.land_fraction, 0.5);
         assert_eq!(r.max_canopy, 0.5);
         assert_eq!(r.cell_density(0.4, 0), 0.0);

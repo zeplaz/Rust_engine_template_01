@@ -41,7 +41,7 @@ pub use play_fire_visibility::{
     sync_sim_map_fire_overlay_when_sim_has_heat, triage_fire_play_vis_001_green,
     triage_fire_play_vis_001_witness_json, TriageFirePlayVis001Inputs,
 };
-pub use surface_water::{init_surface_water_fire_gate, SurfaceWaterFireGate};
+pub use surface_water::SurfaceWaterFireGate;
 pub use types::ChunkFireOverlay;
 pub use witness_collectors::{
     finalize_fire_ecology_witness_frame, write_fire_ecology_live_proof_system,
@@ -70,7 +70,6 @@ impl Plugin for FirePlugin {
         app.init_resource::<surface_water::SurfaceWaterFireGate>()
             .init_resource::<witness_collectors::FireEcologyWitness>()
             .init_resource::<witness_collectors::FireEcologyLiveProofState>()
-            .add_systems(Startup, surface_water::init_surface_water_fire_gate)
             .add_message::<ember_spot_ignition::EmberSpotIgnitionEvent>()
             .add_systems(
                 Update,

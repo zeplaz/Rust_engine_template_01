@@ -13,10 +13,9 @@
 //! [`VegLod`] bands. A band change, a visible-chunk-window change, or an extract content
 //! change rebuilds the mesh. Nothing else does.
 //!
-//! Water: no symbol is placed where the footprint touches a water tile. The mask is the
-//! union of the terrain family (DeepWater / ShallowWater) per cell and the hydrology
-//! [`WaterSurfaceVisualCatalog`] (rivers, lakes, ocean), both at tile resolution, and each
-//! symbol is tested at its own sub-cell position so shorelines stay dry on the land side.
+//! Water: no symbol is placed where the footprint touches an open-water tile. The mask is the sim's
+//! per-cell water class ([`ChunkCellMatrix::water`], decided once by world generation) at tile resolution,
+//! and each symbol is tested at its own sub-cell position so shorelines stay dry on the land side.
 //!
 //! PixelWorld3D keeps its own per-chunk LG-5 atlas stamps, so this layer is hidden there.
 
@@ -30,7 +29,6 @@ use crate::engine::states::BaseState;
 use crate::gui::{MainWorldCameraOrthoTrace, WorldPresentationMode};
 use crate::render::extraction::{VegExtractRow, VegetationExtractFrame, VegetationExtractFrameSet};
 use crate::systems::ecology::SuccessionTopologyStage;
-use crate::render::WaterSurfaceVisualCatalog;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
 
@@ -234,32 +232,18 @@ impl WaterMask {
     }
 }
 
-/// Union of per-cell water families and the hydrology catalog.
-fn build_water_mask<'a>(
-    chunks: impl Iterator<Item = (&'a Chunk, &'a ChunkCellMatrix)>,
-    catalog: Option<&WaterSurfaceVisualCatalog>,
-) -> WaterMask {
+/// Open-water tiles read from the sim's per-cell water class.
+fn build_water_mask<'a>(chunks: impl Iterator<Item = (&'a Chunk, &'a ChunkCellMatrix)>) -> WaterMask {
     let mut tiles = HashSet::new();
-    let families = crate::terrain::default_terrain_families();
-    let water_ids = [
-        families.require_id("DeepWater").ok(),
-        families.require_id("ShallowWater").ok(),
-    ];
     for (chunk, m) in chunks {
         let ox = chunk.coord.x * m.size.x as i32;
         let oy = chunk.coord.y * m.size.y as i32;
         for y in 0..m.size.y {
             for x in 0..m.size.x {
-                let f = m.family[m.idx(x, y)];
-                if water_ids.iter().flatten().any(|id| *id == f) {
+                if m.water.get(m.idx(x, y)).is_some_and(|c| c.is_open_water()) {
                     tiles.insert((ox + x as i32, oy + y as i32));
                 }
             }
-        }
-    }
-    if let Some(c) = catalog {
-        for set in [&c.river_tiles, &c.lake_tiles, &c.ocean_tiles] {
-            tiles.extend(set.iter().map(|&(x, y)| (x as i32, y as i32)));
         }
     }
     WaterMask { tiles }
@@ -597,7 +581,6 @@ struct LayerState {
     material: Option<Handle<ColorMaterial>>,
     last_empty: bool,
     water: WaterMask,
-    water_stamp: Option<u64>,
     water_rev: u64,
 }
 
@@ -632,7 +615,6 @@ pub(crate) fn sync_world_map_vegetation(
     mode: Option<Res<WorldPresentationMode>>,
     frame: Option<Res<VegetationExtractFrame>>,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
-    catalog: Option<Res<WaterSurfaceVisualCatalog>>,
     matrices: Query<(&Chunk, &ChunkCellMatrix)>,
     matrices_changed: Query<(), Changed<ChunkCellMatrix>>,
     mut layer: Query<(Entity, &mut Visibility), With<WorldMapVegetationLayer>>,
@@ -666,11 +648,9 @@ pub(crate) fn sync_world_map_vegetation(
     if frame.is_changed() || state.built_key.is_none() {
         state.content_hash = extract_content_hash(&frame.rows, chunk);
     }
-    // Water changes with a world regen or a new hydrology catalog, not per tick.
-    let water_stamp = catalog.as_deref().map_or(0, |c| c.stamp);
-    if state.water_stamp != Some(water_stamp) || !matrices_changed.is_empty() {
-        state.water = build_water_mask(matrices.iter(), catalog.as_deref());
-        state.water_stamp = Some(water_stamp);
+    // Water changes with a world regen (chunk matrices restamped), not per tick.
+    if state.water_rev == 0 || !matrices_changed.is_empty() {
+        state.water = build_water_mask(matrices.iter());
         state.water_rev = state.water_rev.wrapping_add(1);
     }
     let default_trace = MainWorldCameraOrthoTrace::default();

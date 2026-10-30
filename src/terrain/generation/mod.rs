@@ -10,6 +10,7 @@ mod world_generator;
 mod bevy_terrain_gen;
 pub mod passes;
 pub mod hydrology;
+pub mod water_class;
 pub mod terrain_noise;
 pub mod tuning_io;
 pub mod polygon_world_semantics;
@@ -22,6 +23,7 @@ pub use passes::{materialize, MaterializedChunkData};
 
 // Public exports
 pub use cell_matrix::ChunkCellMatrix;
+pub use water_class::{classify_world_water, WaterClass, WorldWaterGrid};
 pub use chunk_worldgen_scheduler::{
     dispatch_chunk_jobs, generate_chunk_cpu_height_moisture_temp, queue_mission_hint_jobs, queue_visible_chunks,
     ChunkGenCameraWindow, ChunkGenConfig, ChunkGenJob, ChunkGenMissionChunkHints, ChunkGenQueue, ChunkGenReason,

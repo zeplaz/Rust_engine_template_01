@@ -10,6 +10,7 @@ use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
 use crate::terrain::generation::hydrology::HydrologyResult;
+use crate::terrain::generation::water_class::{WaterClass, WorldWaterGrid};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 /// Presentation-only water classification (D-W01…D-W04).
@@ -61,197 +62,49 @@ pub struct WaterSurfaceVisualCatalog {
     pub ocean_tiles: HashSet<(u32, u32)>,
 }
 
-#[inline]
-fn lake_region_touches_map_border(cells: &[(u32, u32)], width: u32, height: u32) -> bool {
-    let max_x = width.saturating_sub(1);
-    let max_y = height.saturating_sub(1);
-    cells.iter().any(|&(x, y)| x == 0 || y == 0 || x >= max_x || y >= max_y)
-}
-
-#[inline]
-fn cell_on_map_border(tx: u32, ty: u32, width: u32, height: u32) -> bool {
-    let max_x = width.saturating_sub(1);
-    let max_y = height.saturating_sub(1);
-    tx == 0 || ty == 0 || tx >= max_x || ty >= max_y
-}
-
-#[inline]
-fn dem_elev_at(hydro: &HydrologyResult, grid_len: usize, w: usize, tx: u32, ty: u32) -> Option<f32> {
-    if hydro.filled_dem.len() != grid_len {
-        return None;
-    }
-    let idx = ty as usize * w + tx as usize;
-    hydro.filled_dem.get(idx).copied()
-}
-
-/// Standing-water cell with dry land or map edge on a 4-neighbor (D-W04 coast / swell).
-#[inline]
-fn standing_water_shore_cell(
-    hydro: &HydrologyResult,
-    grid_len: usize,
-    w: usize,
-    h: usize,
-    tx: u32,
-    ty: u32,
-) -> bool {
-    if hydro.lake_mask.len() != grid_len || !hydro.lake_mask[ty as usize * w + tx as usize] {
-        return false;
-    }
-    for (dx, dy) in [(-1i32, 0), (1, 0), (0, -1), (0, 1)] {
-        let nx = tx as i32 + dx;
-        let ny = ty as i32 + dy;
-        if nx < 0 || ny < 0 || nx >= w as i32 || ny >= h as i32 {
-            return true;
-        }
-        let idx = ny as usize * w + nx as usize;
-        let river = hydro.river_mask.len() == grid_len && hydro.river_mask[idx];
-        if !hydro.lake_mask[idx] && !river {
-            return true;
-        }
-    }
-    false
-}
-
 impl WaterSurfaceVisualCatalog {
+    /// Build straight from a hydrology solve (classifies it with the sim authority first).
     #[must_use]
     pub fn from_hydrology(hydro: &HydrologyResult, params: &WorldGenParams) -> Self {
-        let w = params.width.max(1) as usize;
-        let h = params.height.max(1) as usize;
-        let n = w * h;
+        let grid = WorldWaterGrid::from_hydrology(
+            hydro,
+            params.width,
+            params.height,
+            params.seed ^ 0xA7E2_0001,
+        );
+        Self::from_water_grid(&grid, hydro, params)
+    }
+
+    /// Presentation projection of the sim water authority ([`WorldWaterGrid`]): river / lake / ocean tiles are
+    /// the classes, nothing here decides what is water. River polylines and motion anchors come from the
+    /// hydrology paths and regions.
+    #[must_use]
+    pub fn from_water_grid(
+        grid: &WorldWaterGrid,
+        hydro: &HydrologyResult,
+        params: &WorldGenParams,
+    ) -> Self {
+        let w = grid.width as usize;
         let mut river_tiles = HashSet::new();
         let mut lake_tiles = HashSet::new();
         let mut ocean_tiles = HashSet::new();
-
-        if hydro.river_mask.len() == n {
-            for y in 0..h {
-                for x in 0..w {
-                    if hydro.river_mask[y * w + x] {
-                        river_tiles.insert((x as u32, y as u32));
+        let mut ocean_anchor_tiles: Vec<(u32, u32)> = Vec::new();
+        for (i, class) in grid.classes.iter().enumerate() {
+            let tile = ((i % w.max(1)) as u32, (i / w.max(1)) as u32);
+            match class {
+                WaterClass::River => {
+                    river_tiles.insert(tile);
+                }
+                WaterClass::Lake => {
+                    lake_tiles.insert(tile);
+                }
+                WaterClass::Ocean => {
+                    ocean_tiles.insert(tile);
+                    if ocean_anchor_tiles.len() < 512 {
+                        ocean_anchor_tiles.push(tile);
                     }
                 }
-            }
-        }
-
-        // D-W04 / WATER-W1-OCEAN-001: coast + deep basins → ocean; shallow inland → lakes.
-        let shallow = params.biome_tuning.shallow_water_height_max;
-        let deep = params.biome_tuning.deep_water_height_max;
-        for lake in &hydro.lakes {
-            let region_border =
-                lake_region_touches_map_border(&lake.cells, params.width, params.height);
-            for &(tx, ty) in &lake.cells {
-                if river_tiles.contains(&(tx, ty)) {
-                    continue;
-                }
-                let coastal = region_border
-                    || cell_on_map_border(tx, ty, params.width, params.height);
-                let deep_basin = dem_elev_at(hydro, n, w, tx, ty)
-                    .is_some_and(|elev| elev <= deep);
-                if coastal || deep_basin {
-                    ocean_tiles.insert((tx, ty));
-                } else {
-                    lake_tiles.insert((tx, ty));
-                }
-            }
-        }
-
-        // Standing water from lake_mask not covered by region cells (sparse hydro lakes).
-        if hydro.lake_mask.len() == n {
-            for y in 0..h {
-                for x in 0..w {
-                    let tx = x as u32;
-                    let ty = y as u32;
-                    if !hydro.lake_mask[y * w + x]
-                        || river_tiles.contains(&(tx, ty))
-                        || lake_tiles.contains(&(tx, ty))
-                        || ocean_tiles.contains(&(tx, ty))
-                    {
-                        continue;
-                    }
-                    let coastal = cell_on_map_border(tx, ty, params.width, params.height);
-                    let deep_basin = dem_elev_at(hydro, n, w, tx, ty)
-                        .is_some_and(|elev| elev <= deep);
-                    if coastal || deep_basin {
-                        ocean_tiles.insert((tx, ty));
-                    } else {
-                        lake_tiles.insert((tx, ty));
-                    }
-                }
-            }
-        }
-
-        // WATER-W1-OCEAN-001 / D-W04: deep + sparse shallow DEM band on dry land, after lakes/rivers.
-        if hydro.filled_dem.len() == n {
-            for y in 0..h {
-                for x in 0..w {
-                    let tx = x as u32;
-                    let ty = y as u32;
-                    if hydro.lake_mask.len() == n && hydro.lake_mask[y * w + x] {
-                        continue;
-                    }
-                    if hydro.river_mask.len() == n && hydro.river_mask[y * w + x] {
-                        continue;
-                    }
-                    if river_tiles.contains(&(tx, ty))
-                        || lake_tiles.contains(&(tx, ty))
-                        || ocean_tiles.contains(&(tx, ty))
-                    {
-                        continue;
-                    }
-                    let elev = hydro.filled_dem[y * w + x];
-                    if elev <= deep {
-                        ocean_tiles.insert((tx, ty));
-                    } else if elev <= shallow && (x + y) % 4 == 0 {
-                        ocean_tiles.insert((tx, ty));
-                    }
-                }
-            }
-
-            // Map perimeter shallow water → open ocean (sea-level boundary; D-W04 swell/haze).
-            let max_x = params.width.saturating_sub(1);
-            let max_y = params.height.saturating_sub(1);
-            for y in 0..h {
-                for x in 0..w {
-                    let tx = x as u32;
-                    let ty = y as u32;
-                    let perimeter = tx == 0 || ty == 0 || tx >= max_x || ty >= max_y;
-                    if !perimeter {
-                        continue;
-                    }
-                    let elev = hydro.filled_dem[y * w + x];
-                    if elev <= shallow {
-                        lake_tiles.remove(&(tx, ty));
-                        ocean_tiles.insert((tx, ty));
-                    }
-                }
-            }
-        }
-
-        // Coast-adjacent standing water within margin of map edge (inland seas still lakes).
-        const COAST_MARGIN: u32 = 4;
-        for &(tx, ty) in lake_tiles.clone().iter().collect::<Vec<_>>() {
-            if cell_on_map_border(tx, ty, params.width, params.height)
-                || tx < COAST_MARGIN
-                || ty < COAST_MARGIN
-                || tx + COAST_MARGIN >= params.width
-                || ty + COAST_MARGIN >= params.height
-            {
-                lake_tiles.remove(&(tx, ty));
-                ocean_tiles.insert((tx, ty));
-            }
-        }
-
-        // Lake/land shores → open-ocean presentation (maps with no sub-threshold DEM still get D-W04).
-        if hydro.lake_mask.len() == n {
-            for y in 0..h {
-                for x in 0..w {
-                    let tx = x as u32;
-                    let ty = y as u32;
-                    if !standing_water_shore_cell(hydro, n, w, h, tx, ty) {
-                        continue;
-                    }
-                    lake_tiles.remove(&(tx, ty));
-                    ocean_tiles.insert((tx, ty));
-                }
+                WaterClass::Wetland | WaterClass::Dry => {}
             }
         }
 
@@ -280,10 +133,11 @@ impl WaterSurfaceVisualCatalog {
 
         let mut motion_anchors = Vec::new();
         for lake in &hydro.lakes {
-            if lake.cells.is_empty() {
+            let Some(&(fx, fy)) = lake.cells.first() else {
                 continue;
-            }
-            if lake_region_touches_map_border(&lake.cells, params.width, params.height) {
+            };
+            // Ocean regions get ocean anchors below; only inland lakes ripple as lakes.
+            if grid.class_at(fx as i32, fy as i32) != Some(WaterClass::Lake) {
                 continue;
             }
             let (sx, sy) = lake.cells.iter().fold((0u64, 0u64), |acc, &(x, y)| {
@@ -296,7 +150,7 @@ impl WaterSurfaceVisualCatalog {
                 extent: 1.25,
             });
         }
-        for &(tx, ty) in ocean_tiles.iter().take(512) {
+        for &(tx, ty) in &ocean_anchor_tiles {
             motion_anchors.push(WaterMotionAnchor {
                 kind: WaterSurfaceKind::Ocean,
                 world: Vec2::new(tx as f32, ty as f32),
@@ -305,7 +159,7 @@ impl WaterSurfaceVisualCatalog {
         }
 
         Self {
-            stamp: params.seed as u64 ^ 0xA7E2_0001,
+            stamp: grid.stamp,
             grid_width: params.width,
             grid_height: params.height,
             river_segments,
@@ -794,12 +648,14 @@ mod tests {
             filled_dem[(y * w) as usize] = 0.18;
             filled_dem[(y * w + (w - 1)) as usize] = 0.18;
         }
+        // Water is decided by the hydrology solve, not by the catalog: the sea-level ring is standing water.
+        let lake_mask: Vec<bool> = filled_dem.iter().map(|e| *e <= 0.2).collect();
         let hydro = HydrologyResult {
             rivers: Vec::new(),
             lakes: Vec::new(),
             accumulation: vec![0.0; n],
             river_mask: vec![false; n],
-            lake_mask: vec![false; n],
+            lake_mask,
             filled_dem,
         };
         let mut params = WorldGenParams::default();
@@ -808,9 +664,9 @@ mod tests {
         let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
         assert!(
             catalog.w1_ocean_green(),
-            "perimeter shallow DEM should produce ocean_tiles"
+            "edge-connected sea-level water should produce ocean_tiles"
         );
-        assert!(catalog.ocean_tiles.len() >= 2 * (w + h) as usize - 4);
+        assert!(catalog.ocean_tiles.len() > (w + h) as usize);
     }
 
     #[test]
@@ -835,12 +691,19 @@ mod tests {
         let w = 8u32;
         let h = 8u32;
         let n = (w * h) as usize;
+        // Sea on the left five columns (edge-connected standing water), land on the right.
+        let mut lake_mask = vec![false; n];
+        for y in 0..h as usize {
+            for x in 0..5usize {
+                lake_mask[y * w as usize + x] = true;
+            }
+        }
         let hydro = HydrologyResult {
             rivers: Vec::new(),
             lakes: Vec::new(),
             accumulation: vec![0.0; n],
             river_mask: vec![false; n],
-            lake_mask: vec![false; n],
+            lake_mask,
             filled_dem: vec![0.05; n],
         };
         let mut params = WorldGenParams::default();
@@ -849,7 +712,7 @@ mod tests {
         let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
         assert!(
             catalog.w1_ocean_green(),
-            "WATER-W1-OCEAN-001: expected ocean_tiles from DEM deep band"
+            "WATER-W1-OCEAN-001: expected ocean_tiles from an all-sea-level map"
         );
         assert!(!catalog.ocean_tiles.is_empty());
     }
@@ -866,6 +729,13 @@ mod tests {
         for &(x, y) in &[(8u32, 8), (9, 8), (8, 9), (9, 9)] {
             filled_dem[y as usize * w as usize + x as usize] = 0.28;
         }
+        let mut lake_mask = vec![false; n];
+        for x in 0..w {
+            lake_mask[x as usize] = true;
+        }
+        for &(x, y) in &[(8u32, 8), (9, 8), (8, 9), (9, 9)] {
+            lake_mask[y as usize * w as usize + x as usize] = true;
+        }
         let hydro = HydrologyResult {
             rivers: Vec::new(),
             lakes: vec![
@@ -878,7 +748,7 @@ mod tests {
             ],
             accumulation: vec![0.0; n],
             river_mask: vec![false; n],
-            lake_mask: vec![false; n],
+            lake_mask,
             filled_dem,
         };
         let mut params = WorldGenParams::default();

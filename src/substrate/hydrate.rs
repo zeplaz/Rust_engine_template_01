@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
-use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::terrain::generation::{Chunk, ChunkCellMatrix, WaterClass};
 
 use super::registry::{WorldSubstrateRegistry, WssSubstrateWitness};
 use super::slab::ChunkKey;
@@ -29,15 +29,20 @@ pub fn hydrate_chunk_into_substrate(
             state.terrain.porosity[i] = matrix.moisture[i];
             state.terrain.hardness[i] = matrix.temperature[i];
             // HY-002: hydrate local hydrology masks/scalars from worldgen matrix fields.
-            let elev = matrix.elevation[i];
+            let class = matrix.water.get(i).copied().unwrap_or_default();
             let moisture = matrix.moisture[i].clamp(0.0, 1.0);
             state.hydrology.water_depth[i] = (moisture * 0.8).max(0.01);
             state.hydrology.saturation[i] = moisture;
-            state.hydrology.salinity[i] = if elev < 0.16 { 0.6 } else { 0.05 };
-            if moisture > 0.72 {
+            // Water masks are the sim water class (decided once by world generation), not a moisture or
+            // elevation guess.
+            state.hydrology.salinity[i] = if class == WaterClass::Ocean { 0.6 } else { 0.05 };
+            if class == WaterClass::River {
                 state.hydrology.river_mask[i] = 1;
             }
-            if elev < 0.16 {
+            if class == WaterClass::Lake {
+                state.hydrology.lake_mask[i] = 1;
+            }
+            if class == WaterClass::Ocean {
                 state.hydrology.ocean_mask[i] = 1;
             }
             state.atmosphere.local.soil_moisture = state.atmosphere.local.soil_moisture.max(moisture);
@@ -88,7 +93,7 @@ mod tests {
     use bevy::math::IVec2;
 
     #[test]
-    fn river_mask_nonzero_on_fixture() {
+    fn hydrology_masks_follow_the_water_class() {
         let mut registry = WorldSubstrateRegistry::default();
         let chunk = Chunk {
             coord: IVec2::new(4, 4),
@@ -97,12 +102,15 @@ mod tests {
         for cell in matrix.moisture.iter_mut() {
             *cell = 0.85;
         }
+        matrix.water[0] = WaterClass::River;
+        matrix.water[1] = WaterClass::Ocean;
+        matrix.water[2] = WaterClass::Lake;
         hydrate_chunk_into_substrate(&mut registry, &chunk, &matrix);
         let key = ChunkKey::from(chunk.coord);
         let state = registry.chunks.get(key).expect("hydrated chunk");
-        assert!(
-            state.hydrology.river_mask.iter().any(|m| *m > 0),
-            "high moisture fixture should produce river_mask cells"
-        );
+        assert_eq!(state.hydrology.river_mask.iter().filter(|m| **m > 0).count(), 1);
+        assert_eq!(state.hydrology.ocean_mask.iter().filter(|m| **m > 0).count(), 1);
+        assert_eq!(state.hydrology.lake_mask.iter().filter(|m| **m > 0).count(), 1);
+        assert_eq!(state.hydrology.river_mask[0], 1, "wet ground alone is not a river");
     }
 }

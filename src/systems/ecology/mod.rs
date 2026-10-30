@@ -9,6 +9,8 @@ mod landscape_atlas_registry;
 mod vegetation_field;
 mod vegetation_suitability;
 mod vegetation_variant_catalog;
+#[cfg(test)]
+mod water_vegetation_tests;
 
 pub use chunk_ecology::{chunk_ecology_tick, ChunkEcology};
 pub use landscape_grammar::{
