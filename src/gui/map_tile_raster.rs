@@ -165,10 +165,9 @@ pub fn raster_sim_minimap_layered_to_subregion(
     let samples: Vec<_> = tiles.collect();
     let elev = ElevGrid::from_samples(samples.iter().map(|(x, y, _, height, _, _)| (*x, *y, *height)));
 
-    // Drainage / basin solve is O(grid) and a pure function of the sample heights; repaints of an
-    // unchanged region (animated water, overlay repaint) reuse the cached field.
-    let hydro = cached_play_hydro_field((x0, y0, x1, y1), &elev);
-    let hydro = hydro.as_deref();
+    // Water is not derived here: the raster paints terrain colour only, and the water surface catalog
+    // (projected from the world `WaterClass` grid) paints rivers / lakes / ocean on top. A drainage or
+    // basin solve over the sampled heights would be a second hydrology that disagrees with the sim.
     let base = layers.base_bits();
     for (x, y, family, height, moisture, temperature) in samples {
         if x < x0 || x >= x1 || y < y0 || y >= y1 {
@@ -206,9 +205,6 @@ pub fn raster_sim_minimap_layered_to_subregion(
             color[2] = ((color[2] as f32) * (1.0 - steep * 0.45))
                 .round()
                 .clamp(0.0, 255.0) as u8;
-        }
-        if let Some(field) = hydro {
-            color = tint_play_hydro(color, field, x, y, slope, curve);
         }
         if layers.contains(PreviewLayers::DERIVED_SLOPE_OVERLAY) {
             color = blend_overlay(color, slope_grade_to_color(slope), 0.72);
@@ -416,115 +412,6 @@ impl ElevGrid {
     fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
-}
-
-struct PlayHydroField {
-    w: usize,
-    drainage: Vec<f32>,
-    basins: Vec<u32>,
-    max_drain: f32,
-}
-
-type PlayHydroCacheKey = (usize, usize, usize, usize);
-
-/// Small region-keyed cache of [`PlayHydroField`] (validated by a hash of the sample heights).
-fn cached_play_hydro_field(
-    key: PlayHydroCacheKey,
-    elev: &ElevGrid,
-) -> Option<std::sync::Arc<PlayHydroField>> {
-    use std::sync::{Arc, Mutex, OnceLock};
-    static CACHE: OnceLock<Mutex<HashMap<PlayHydroCacheKey, (u64, Arc<PlayHydroField>)>>> =
-        OnceLock::new();
-    const CAP: usize = 256;
-    if elev.is_empty() {
-        return None;
-    }
-    let cache = CACHE.get_or_init(|| Mutex::new(HashMap::new()));
-    if let Ok(guard) = cache.lock() {
-        if let Some((hash, field)) = guard.get(&key) {
-            if *hash == elev.hash {
-                return Some(Arc::clone(field));
-            }
-        }
-    }
-    let field = Arc::new(play_hydro_field(elev)?);
-    if let Ok(mut guard) = cache.lock() {
-        if guard.len() >= CAP {
-            guard.clear();
-        }
-        guard.insert(key, (elev.hash, Arc::clone(&field)));
-    }
-    Some(field)
-}
-
-fn play_hydro_field(elev: &ElevGrid) -> Option<PlayHydroField> {
-    if elev.is_empty() {
-        return None;
-    }
-    let w = elev.max_x + 1;
-    let h = elev.max_y + 1;
-    let mut grid = vec![0.5f32; w * h];
-    for ly in 0..elev.h {
-        for lx in 0..elev.w {
-            let z = elev.data[ly * elev.w + lx];
-            if !z.is_nan() {
-                grid[(ly + elev.y_min) * w + (lx + elev.x_min)] = z;
-            }
-        }
-    }
-    let drainage =
-        crate::terrain::generation::drainage_accumulation(&grid, w as u32, h as u32);
-    let basins = crate::terrain::generation::flood_basin_ids(&grid);
-    let max_drain = drainage.iter().copied().fold(1.0f32, f32::max);
-    Some(PlayHydroField {
-        w,
-        drainage,
-        basins,
-        max_drain,
-    })
-}
-
-fn tint_play_hydro(
-    color: [u8; 4],
-    field: &PlayHydroField,
-    x: usize,
-    y: usize,
-    slope: f32,
-    curve: f32,
-) -> [u8; 4] {
-    if color[3] == 0 {
-        return color;
-    }
-    let i = y * field.w + x;
-    let Some(&drain) = field.drainage.get(i) else {
-        return color;
-    };
-    let basin = field.basins.get(i).copied().unwrap_or(0) == 1;
-    let wet = if field.max_drain > 1.01 {
-        ((drain - 1.0) / (field.max_drain - 1.0)).clamp(0.0, 1.0)
-    } else {
-        0.0
-    };
-    let support = crate::terrain::generation::support_from_slope(slope);
-    let hide = crate::terrain::generation::concealment_from_landform(slope, curve);
-    let mut r = color[0] as f32;
-    let mut g = color[1] as f32;
-    let mut b = color[2] as f32;
-    if basin {
-        r *= 0.55;
-        g *= 0.55;
-    }
-    r *= 0.45 + 0.55 * support;
-    g *= 1.0 - hide * 0.22;
-    let erode = crate::terrain::generation::erosion_from_slope_drainage(slope, drain);
-    g *= 1.0 - erode * 0.4;
-    b = b * (1.0 - wet * 0.2) + wet * 220.0;
-    [
-        r.round().clamp(0.0, 255.0) as u8,
-        g.round().clamp(0.0, 255.0) as u8,
-        b.round().clamp(0.0, 255.0) as u8,
-        color[3],
-    ]
 }
 
 /// Paint tracer cells on the play raster. Callers pass cells from `shot_trace_tile`.
@@ -855,27 +742,6 @@ mod tests {
         assert_eq!(&data[0..4], &TOWN_STAMP_RGBA);
         assert_eq!(&data[4..8], &FOOTPRINT_STAMP_RGBA);
         assert_ne!(&data[4..8], &HAUL_STAMP_RGBA);
-    }
-
-    #[test]
-    fn fold_play_clear_pixel_stays_zero() {
-        let elev = ElevGrid::from_samples([(0usize, 0usize, 0.1_f32), (1, 0, 0.9)].into_iter());
-        let field = play_hydro_field(&elev).expect("hydro");
-        let clear = [40, 80, 20, 0];
-        assert_eq!(tint_play_hydro(clear, &field, 0, 0, 0.4, 0.2), clear);
-    }
-
-    #[test]
-    fn fold_dry_non_basin_skips_darken() {
-        let elev = ElevGrid::from_samples([(0usize, 0usize, 0.1_f32), (1, 0, 0.9)].into_iter());
-        let field = play_hydro_field(&elev).expect("hydro");
-        assert_eq!(field.basins[0], 1);
-        assert_eq!(field.basins[1], 0);
-        let base = [200, 200, 200, 255];
-        let floor = tint_play_hydro(base, &field, 0, 0, 0.0, 0.0);
-        let dry = tint_play_hydro(base, &field, 1, 0, 0.0, 0.0);
-        assert_eq!(dry[0], 200);
-        assert!(floor[0] < dry[0], "basin red {} dry red {}", floor[0], dry[0]);
     }
 
     fn paint_one(mode: PlayMapPixelMode, into: &mut Vec<u8>) {

@@ -385,13 +385,13 @@ fn push_symbol(g: &mut VegGeometry, s: &Site) {
                     rgba(0.30, 0.20, 0.12, 1.0, shade),
                 );
             }
-            g.hex(pos.x, pos.y, r, riparian_tint(rgba(0.07, 0.27, 0.13, 0.95, shade), s.riparian));
+            g.hex(pos.x, pos.y, r, riparian_tint(rgba(0.03, 0.18, 0.08, 0.97, shade), s.riparian));
             if detailed {
                 g.hex(
                     pos.x - r * 0.15,
                     pos.y + r * 0.15,
                     r * 0.5,
-                    riparian_tint(rgba(0.12, 0.38, 0.18, 0.9, shade), s.riparian),
+                    riparian_tint(rgba(0.09, 0.31, 0.14, 0.9, shade), s.riparian),
                 );
             }
         }
@@ -406,7 +406,7 @@ fn push_symbol(g: &mut VegGeometry, s: &Site) {
                     rgba(0.32, 0.22, 0.13, 1.0, shade),
                 );
             }
-            g.hex(pos.x, pos.y, r, riparian_tint(rgba(0.15, 0.42, 0.18, 0.92, shade), s.riparian));
+            g.hex(pos.x, pos.y, r, riparian_tint(rgba(0.06, 0.28, 0.10, 0.95, shade), s.riparian));
         }
         Cover::Shrub => {
             g.diamond(
