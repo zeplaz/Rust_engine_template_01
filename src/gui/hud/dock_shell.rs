@@ -158,7 +158,7 @@ impl Plugin for HudDockShellPlugin {
             .init_resource::<super::widget_presentation::HudShellInteractionRouter>()
             .init_resource::<super::hud_shell_stress_harness::HudShellStressHarness>()
             .init_resource::<super::player_intent_panel::PlayerIntentPanelState>()
-            .add_plugins(super::hud_dev_overlay::HudDevOverlayPlugin)
+            .add_plugins(super::hud_ui_scale::HudUiScalePlugin)
             .add_plugins(super::hud_root_tick::HudRootTickPlugin)
             .add_systems(
                 Update,

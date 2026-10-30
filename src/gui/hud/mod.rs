@@ -12,7 +12,7 @@ pub mod interaction_latency;
 pub mod hud_shell_stress_harness;
 pub mod cached_egui_texture;
 pub mod hud_async_task_queue;
-pub mod hud_dev_overlay;
+pub mod hud_ui_scale;
 pub mod hud_root_tick;
 pub mod hud_chrome;
 pub mod hud_side_status_panel;
@@ -123,7 +123,6 @@ pub use ui_shell_migration::*;
 pub use simulation_session::{
     apply_simulation_hud_defaults, suppress_simulation_visual_debug_chrome, SimulationSessionPlugin,
 };
-pub use hud_dev_overlay::{HudDevOverlayPlugin, HudDevOverlayState};
 pub use explainability_viewer::{
     draw_explainability_viewer, mock_explainability_events, ExplainabilityFeedEvent,
     ExplainabilityViewerState,
