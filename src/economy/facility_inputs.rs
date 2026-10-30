@@ -30,11 +30,28 @@ pub const COMMUTE_RANGE_TILES: f32 = 64.0;
 pub const INDUSTRIAL_LABOUR_SHARE: f32 = 0.3;
 const METRES_PER_TILE: f32 = 16.0;
 
+/// Where a facility's power stands, for the info panel.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum PowerState {
+    /// No power graph or no utility connection is modelled: not a constraint.
+    #[default]
+    Unmodelled,
+    /// Not reachable from any power plant.
+    Disconnected,
+    Connected,
+    /// On a grid whose load exceeds its capacity.
+    Overloaded,
+}
+
 /// Per-facility labour and power supply, each `0..=1` (1 = fully supplied / not modelled).
-#[derive(Component, Clone, Copy, Debug, PartialEq)]
+#[derive(Component, Clone, Debug, PartialEq)]
 pub struct FacilityInputs {
     pub workforce: f32,
     pub power: f32,
+    /// The town the workers commute from and its distance in metres (`None`: unmodelled or no
+    /// town within commute range).
+    pub town: Option<(String, f32)>,
+    pub power_state: PowerState,
 }
 
 impl Default for FacilityInputs {
@@ -42,6 +59,8 @@ impl Default for FacilityInputs {
         Self {
             workforce: 1.0,
             power: 1.0,
+            town: None,
+            power_state: PowerState::Unmodelled,
         }
     }
 }
@@ -121,6 +140,10 @@ pub fn update_facility_inputs_system(
 
     for (entity, node, t, conn, current) in &mut nodes {
         let workers = workers_of(&node.catalog_id);
+        let town = towns.and_then(|book| nearest_town(book, t)).map(|town| {
+            let at = t.map_or(Vec2::ZERO, |t| Vec2::new(t.translation.x, t.translation.z));
+            (town.name.clone(), (town.center_tile.as_vec2() * METRES_PER_TILE).distance(at))
+        });
         let workforce = match towns {
             None => 1.0,
             Some(_) if workers <= 0.0 => 1.0,
@@ -133,20 +156,23 @@ pub fn update_facility_inputs_system(
                 (town_labour_pool(town.population, town.jobs) / demand).clamp(0.0, 1.0)
             }),
         };
-        let power = if !power_modelled {
-            1.0
+        let (power, power_state) = if !power_modelled {
+            (1.0, PowerState::Unmodelled)
         } else {
             match conn.filter(|c| c.kind == UtilityNetworkKind::Power) {
-                None => 1.0,
-                Some(c) if !c.connected => 0.0,
-                Some(_) => grids
-                    .iter()
-                    .filter(|g| g.members.contains(&entity) && g.total_load > f32::EPSILON)
-                    .map(|g| (g.total_capacity / g.total_load).clamp(0.0, 1.0))
-                    .fold(1.0, f32::min),
+                None => (1.0, PowerState::Unmodelled),
+                Some(c) if !c.connected => (0.0, PowerState::Disconnected),
+                Some(_) => {
+                    let ratio = grids
+                        .iter()
+                        .filter(|g| g.members.contains(&entity) && g.total_load > f32::EPSILON)
+                        .map(|g| (g.total_capacity / g.total_load).clamp(0.0, 1.0))
+                        .fold(1.0, f32::min);
+                    (ratio, if ratio < 1.0 { PowerState::Overloaded } else { PowerState::Connected })
+                }
             }
         };
-        let next = FacilityInputs { workforce, power };
+        let next = FacilityInputs { workforce, power, town, power_state };
         match current {
             Some(mut c) => {
                 if *c != next {

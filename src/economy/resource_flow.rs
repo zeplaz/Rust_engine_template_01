@@ -33,7 +33,15 @@ pub struct ResourceRate {
 pub struct FacilityFlowState {
     pub starved: bool,
     pub output_scale: f32,
+    /// Every output buffer is at [`OUTPUT_BUFFER_CAP`]: production and input draw are paused until
+    /// logistics (or a downstream edge) moves product out.
+    pub output_full: bool,
 }
+
+/// Output buffer capacity per produced tag (t, or m3 for liquids).
+pub const OUTPUT_BUFFER_CAP: f32 = 200.0;
+/// Input buffer a plant asks logistics to keep per consumed tag (its draw demand `buffer_target`).
+pub const INPUT_BUFFER_TARGET: f32 = 50.0;
 
 /// Per-facility economic node (attached as ECS component at activation).
 #[derive(Component, Clone, Debug)]
@@ -204,6 +212,7 @@ pub fn register_resource_flow_nodes_system(
             FacilityFlowState {
                 starved: false,
                 output_scale: 1.0,
+                output_full: false,
             },
         ));
     }
@@ -292,21 +301,38 @@ pub fn link_supply_chain_edges_system(
     }
 }
 
-fn add_production(node: &mut ResourceFlowNode, scale: f32) {
+/// Produce up to the throughput cap, never past [`OUTPUT_BUFFER_CAP`] per tag.
+/// Returns `true` when every output buffer is full (backpressure: the plant is idle).
+fn add_production(node: &mut ResourceFlowNode, scale: f32) -> bool {
     let cap = node.throughput_limit * scale;
     let mut produced = 0.0f32;
-    for rate in &node.production {
-        if produced >= cap {
-            break;
+    let mut full = 0usize;
+    for i in 0..node.production.len() {
+        let (tag, resource, rate) = {
+            let r = &node.production[i];
+            (r.tag.clone(), r.resource, r.rate_per_tick)
+        };
+        let have = match resource {
+            Some(rt) => node.inventory.get(&rt).copied().unwrap_or(0.0),
+            None => node.buffer_by_tag.get(&tag).copied().unwrap_or(0.0),
+        };
+        let room = (OUTPUT_BUFFER_CAP - have).max(0.0);
+        if room <= f32::EPSILON {
+            full += 1;
+            continue;
         }
-        let amount = rate.rate_per_tick.min(cap - produced);
+        if produced >= cap {
+            continue;
+        }
+        let amount = rate.min(cap - produced).min(room);
         produced += amount;
-        if let Some(rt) = rate.resource {
+        if let Some(rt) = resource {
             *node.inventory.entry(rt).or_insert(0.0) += amount;
         } else {
-            *node.buffer_by_tag.entry(rate.tag.clone()).or_insert(0.0) += amount;
+            *node.buffer_by_tag.entry(tag).or_insert(0.0) += amount;
         }
     }
+    !node.production.is_empty() && full == node.production.len()
 }
 
 fn try_consume(node: &mut ResourceFlowNode, scale: f32) -> bool {
@@ -376,8 +402,9 @@ pub fn propagate_resource_flow_system(
     for (_, mut node, mut state, inputs) in &mut nodes {
         // Workforce and power cap output; material starvation decays `output_scale` on top.
         let supply = inputs.map_or(1.0, crate::economy::facility_inputs::FacilityInputs::factor);
-        add_production(&mut node, state.output_scale * supply);
-        let fed = try_consume(&mut node, state.output_scale);
+        state.output_full = add_production(&mut node, state.output_scale * supply);
+        // A plant with nowhere to put product stands idle: it draws no inputs and does not starve.
+        let fed = state.output_full || try_consume(&mut node, state.output_scale);
         state.starved = !fed;
         if !fed {
             state.output_scale = (state.output_scale * 0.85).max(0.1);

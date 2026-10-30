@@ -24,7 +24,7 @@ use crate::economy::logistics::orders::{
     LogisticsOrderSite, LogisticsOrderSiteId, LogisticsOrdersPlugin, LogisticsOrdersSnapshotRes,
     LogisticsSiteRegistry, OwnerId, SiteRole,
 };
-use crate::economy::facility_inputs::FacilityInputs;
+use crate::economy::facility_inputs::{FacilityInputs, PowerState};
 use crate::economy::resource_flow::{ResourceFlowNode, ResourceFlowPlugin};
 use crate::strategic::{
     BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
@@ -61,6 +61,12 @@ fn loop_app() -> App {
             ),
         );
     seed_town_and_grid(&mut app);
+    // The player's start comes from the shipped config (HQ moved onto a fixed tile: no territory here).
+    let mut start = crate::ai::faction::FactionStartConfig::load_default().expect("shipped start config");
+    start.factions.retain(|f| f.slot == 0);
+    start.factions[0].hq = crate::ai::faction::start::HqPlacement::Tile { x: 0, z: 0 };
+    app.insert_resource(start);
+    app.add_plugins(crate::ai::faction::FactionStartPlugin);
     app
 }
 
@@ -85,7 +91,7 @@ fn seed_town_and_grid(app: &mut App) {
             required_clearance: 0,
         },
     );
-    let keys = ["power_plant_main", "pwr_160_0", "pwr_0_160", "pwr_160_160"];
+    let keys = ["power_plant_main", "pwr_160_0", "pwr_0_160", "pwr_160_160", "pwr_320_160", "pwr_0_320"];
     let nodes = keys
         .iter()
         .enumerate()
@@ -95,7 +101,7 @@ fn seed_town_and_grid(app: &mut App) {
             position: Vec2::new(i as f32, 0.0),
         })
         .collect();
-    let power_edges = [2_u64, 3, 4]
+    let power_edges = [2_u64, 3, 4, 5, 6]
         .iter()
         .map(|&to| UtilityGraphEdge {
             from: 1,
@@ -171,19 +177,33 @@ fn depot_stock(app: &mut App, depot: Entity, cargo: &str, n: u32) {
 #[test]
 fn building_logistics_construction_production_logistics_loop_closes() {
     let mut app = loop_app();
-    let depot = app
-        .world_mut()
-        .spawn((
-            LogisticsOrderSite {
-                name: "Depot".into(),
-                owner: OwnerId::PLAYER,
-                role: SiteRole::Depot,
-                position_m: None,
-            },
-            Transform::from_xyz(0.0, 0.0, 0.0),
-        ))
-        .id();
     frames(&mut app, 3);
+    let depot = {
+        let world = app.world_mut();
+        world
+            .query::<(Entity, &crate::ai::faction::FactionHq)>()
+            .iter(world)
+            .find(|(_, h)| h.slot == 0)
+            .map(|(e, _)| e)
+            .expect("player HQ depot spawned from the start config")
+    };
+    {
+        // The HQ starts with the configured stockpile and fleet.
+        let sid = app.world().get::<LogisticsOrderSiteId>(depot).expect("HQ registered").0;
+        let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
+        let steel = snap.site(sid).and_then(|s| s.stock.iter().find(|r| r.cargo == "Steel")).map_or(0, |r| r.on_hand);
+        assert!(steel >= 400, "starter stockpile: {steel} t steel");
+        assert_eq!(snap.fleet(OwnerId::PLAYER).total, 13, "fleet from the start config");
+    }
+    // A depot with nothing in it, to see a starved site; the starter stockpile is restored below.
+    let starter: Vec<(String, u32)> = CONSTRUCTION_MATERIALS
+        .iter()
+        .map(|t| (t.to_string(), stock_of(&app, depot, t)))
+        .collect();
+    for tag in CONSTRUCTION_MATERIALS {
+        depot_stock(&mut app, depot, tag, 0);
+    }
+    frames(&mut app, 2);
 
     // 1. Player places a materials import terminal through the commit funnel.
     place(&mut app, "materials_import_terminal", 10, 0);
@@ -213,8 +233,8 @@ fn building_logistics_construction_production_logistics_loop_closes() {
 
     // 4. Starting stockpile arrives at the depot; logistics delivers; the site builds out, using
     // material progressively (steel is consumed while the stage is still running).
-    for tag in CONSTRUCTION_MATERIALS {
-        depot_stock(&mut app, depot, tag, 500);
+    for (tag, amount) in &starter {
+        depot_stock(&mut app, depot, tag, *amount);
     }
     let mut saw_partial_consumption = false;
     let mut guard = 0;
@@ -252,48 +272,59 @@ fn building_logistics_construction_production_logistics_loop_closes() {
         );
     }
     // Labour and power come from the town and the grid, not from a buffer.
-    let inputs = *app.world().get::<FacilityInputs>(terminal).expect("facility inputs");
-    assert_eq!(inputs, FacilityInputs { workforce: 1.0, power: 1.0 }, "{inputs:?}");
+    let inputs = app.world().get::<FacilityInputs>(terminal).expect("facility inputs").clone();
+    assert_eq!((inputs.workforce, inputs.power), (1.0, 1.0), "{inputs:?}");
+    assert!(inputs.town.is_some(), "workers commute from a town: {inputs:?}");
+    assert_eq!(inputs.power_state, PowerState::Connected);
 
     // 6. Production lands in order stock: the terminal makes the materials nothing else does.
     frames(&mut app, 30);
     assert!(stock_of(&app, terminal, "Steel") > 0, "plant output is visible to logistics as stock");
 
-    // 7. The starting stockpile of steel/machinery/fuel is gone; the next building (a concrete
-    // mixer) has to be built from the terminal's output.
-    for tag in ["Steel", "Fuel", "Machinery"] {
+    // 7. Everything except concrete is now gone from the HQ: the concrete chain (aggregate mine,
+    // cement kiln, concrete mixer) has to be built from the terminal's output and then feed
+    // itself: gravel and limestone from the mine, cement from the kiln, water / chemicals / coal /
+    // fuel from the terminal, with no top-ups.
+    for tag in ["Steel", "Fuel", "Machinery", "Cement", "Gravel", "Limestone", "Coal", "Water", "Chemicals"] {
         depot_stock(&mut app, depot, tag, 0);
     }
     frames(&mut app, 2);
-    place(&mut app, "concrete_mixer_plant", 0, 10);
+    place(&mut app, "concrete_aggregate_mine", 0, 10);
+    place(&mut app, "concrete_cement_kiln", 10, 10);
+    place(&mut app, "concrete_mixer_plant", 20, 10);
     frames(&mut app, 4);
-    let mixer = site_entity(&mut app, "concrete_mixer_plant").expect("second site");
+    let chain = [
+        site_entity(&mut app, "concrete_aggregate_mine").expect("mine site"),
+        site_entity(&mut app, "concrete_cement_kiln").expect("kiln site"),
+        site_entity(&mut app, "concrete_mixer_plant").expect("mixer site"),
+    ];
     let mut guard = 0;
-    while phase(&app, mixer) != SiteConstructionPhase::Operational && guard < 1500 {
+    while chain.iter().any(|e| phase(&app, *e) != SiteConstructionPhase::Operational) && guard < 2500 {
         frame(&mut app);
         guard += 1;
     }
-    assert_eq!(
-        phase(&app, mixer),
-        SiteConstructionPhase::Operational,
-        "mixer built from terminal output (frames={guard}, manifest={:?})",
-        app.world().get::<SiteResourceManifest>(mixer)
-    );
+    for e in chain {
+        assert_eq!(
+            phase(&app, e),
+            SiteConstructionPhase::Operational,
+            "chain building finished from terminal output (frames={guard}, manifest={:?})",
+            app.world().get::<SiteResourceManifest>(e)
+        );
+    }
     let terminal_id = app.world().get::<LogisticsOrderSiteId>(terminal).unwrap().0;
     {
         let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
         assert!(
             snap.orders.iter().any(|o| o.source == terminal_id && o.cargo == "Steel" && o.delivered > 0),
-            "steel for the mixer was hauled from the terminal: {:?}",
+            "steel for the chain was hauled from the terminal: {:?}",
             snap.orders
         );
     }
 
-    // 8. The mixer's own inputs publish demands, the depot (starting stock) feeds them, and its
-    // concrete output builds the next building: the loop closes.
-    frames(&mut app, 4);
+    // 8. The chain sustains: the mixer's inputs publish demands and are served by the mine, the
+    // kiln and the terminal; concrete comes out and builds another building.
     {
-        let sid = app.world().get::<LogisticsOrderSiteId>(mixer).unwrap().0;
+        let sid = app.world().get::<LogisticsOrderSiteId>(chain[2]).unwrap().0;
         let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
         assert!(
             snap.demands.iter().any(|d| d.site == sid && d.consumer == ConsumerKind::Plant),
@@ -302,41 +333,54 @@ fn building_logistics_construction_production_logistics_loop_closes() {
         );
     }
     depot_stock(&mut app, depot, "Concrete", 0);
-    // A bigger fleet: the mixer eats four hauled inputs per unit of concrete.
-    let depot_site = app.world().resource::<LogisticsSiteRegistry>().site_of(depot).unwrap();
-    for _ in 0..16 {
-        app.world_mut().write_message(LogisticsOrderRequest(LogisticsOrderCommand::AddVehicle {
-            owner: OwnerId::PLAYER,
-            home: depot_site,
-            class_mask: CargoClassMask::FREIGHT,
-            capacity_units: 10,
-            speed_mps: 12.0,
-        }));
-    }
-    for tag in ["Cement", "Gravel"] {
-        depot_stock(&mut app, depot, tag, 2000);
-    }
     frames(&mut app, 2);
-    place(&mut app, "concrete_cement_kiln", 10, 10);
+    place(&mut app, "industrial_oil_well", 0, 20);
     frames(&mut app, 4);
-    let kiln = site_entity(&mut app, "concrete_cement_kiln").expect("third site");
+    let well = site_entity(&mut app, "industrial_oil_well").expect("fifth site");
     let mut guard = 0;
-    while phase(&app, kiln) != SiteConstructionPhase::Operational && guard < 2500 {
+    while phase(&app, well) != SiteConstructionPhase::Operational && guard < 4000 {
         frame(&mut app);
         guard += 1;
     }
     assert_eq!(
-        phase(&app, kiln),
+        phase(&app, well),
         SiteConstructionPhase::Operational,
-        "kiln built from plant concrete (frames={guard}, manifest={:?})",
-        app.world().get::<SiteResourceManifest>(kiln)
+        "oil well built from plant concrete (frames={guard}, manifest={:?})",
+        app.world().get::<SiteResourceManifest>(well)
     );
-    let mixer_id = app.world().get::<LogisticsOrderSiteId>(mixer).unwrap().0;
+    let [mine_id, kiln_id, mixer_id] = chain.map(|e| app.world().get::<LogisticsOrderSiteId>(e).unwrap().0);
     let snap = &app.world().resource::<LogisticsOrdersSnapshotRes>().0;
-    assert!(
-        snap.orders.iter().any(|o| o.source == mixer_id && o.cargo == "Concrete" && o.delivered > 0),
-        "concrete for the kiln was hauled from the mixer: {:?}",
-        snap.orders
-    );
-    assert!(app.world().get::<SiteMaterialStarved>(kiln).is_none(), "no stall flag once built");
+    let hauled = |from: crate::economy::logistics::orders::SiteId, cargo: &str| snap.orders.iter().any(|o| o.source == from && o.cargo == cargo && o.delivered > 0);
+    assert!(hauled(mixer_id, "Concrete"), "concrete for the well came from the mixer: {:?}", snap.orders);
+    assert!(hauled(kiln_id, "Cement"), "the kiln fed the mixer cement: {:?}", snap.orders);
+    assert!(hauled(mine_id, "Gravel"), "the mine fed the mixer gravel: {:?}", snap.orders);
+    assert!(hauled(mine_id, "Limestone"), "the mine fed the kiln limestone: {:?}", snap.orders);
+    assert!(app.world().get::<SiteMaterialStarved>(well).is_none(), "no stall flag once built");
+
+    // 9. Storage: nothing grows past its cap, and a plant whose product nobody takes idles with a
+    // clear "output full" state in the info panel.
+    let node = app.world().get::<ResourceFlowNode>(terminal).unwrap();
+    for r in &node.production {
+        assert!(
+            crate::economy::facility_report::node_amount(node, &r.tag) <= crate::economy::resource_flow::OUTPUT_BUFFER_CAP,
+            "{} within the output cap",
+            r.tag
+        );
+    }
+    let state = app.world().get::<crate::economy::resource_flow::FacilityFlowState>(terminal).unwrap();
+    assert!(state.output_full, "the terminal's unclaimed output fills its buffers and pauses it");
+    let report = crate::economy::facility_report::facility_report_lines(
+        "materials_import_terminal",
+        app.world().get::<ConstructionSite>(terminal).unwrap(),
+        None,
+        None,
+        None,
+        Some(node),
+        Some(state),
+        app.world().get::<FacilityInputs>(terminal),
+    )
+    .join("
+");
+    assert!(report.contains("FULL") && report.contains("output full"), "{report}");
+    assert!(report.contains("Workforce") && report.contains("Power"), "{report}");
 }

@@ -9,8 +9,9 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
-use super::advisor::suggest_lines_for_unserved;
-use super::model::OwnerId;
+use super::advisor::{best_source_for, suggest_lines_for_unserved};
+use super::model::{OrderId, OrderStatus, OwnerId, WaitReason};
+use super::sim::LogisticsOrderCommand;
 use super::plugin::{LogisticsOrderRequest, LogisticsOrdersSnapshotRes};
 
 /// Which factions get standing lines created for their unserved demands automatically.
@@ -49,18 +50,43 @@ impl AutoSupplyPolicy {
     }
 }
 
-/// Send the advisor's lines for every enabled faction that has unserved demands.
+/// A standing line whose source has been empty this long is re-sourced when another site holds
+/// the cargo (the source may have been a plant that sold out, or leftover stock that moved on).
+pub const RESOURCE_AFTER_TICKS: u64 = 30;
+
+/// Send the advisor's lines for every enabled faction that has unserved demands, and re-source
+/// lines stuck on an empty source.
 pub fn auto_supply_unserved_system(
     policy: Res<AutoSupplyPolicy>,
     snapshot: Res<LogisticsOrdersSnapshotRes>,
     mut requests: MessageWriter<LogisticsOrderRequest>,
     mut last_pass: Local<u64>,
+    mut empty_since: Local<std::collections::BTreeMap<OrderId, u64>>,
 ) {
     let snap = &snapshot.0;
     if snap.tick < *last_pass + policy.interval_ticks.max(1) {
         return;
     }
     *last_pass = snap.tick;
+    empty_since.retain(|id, _| snap.orders.iter().any(|o| o.id == *id));
+    for o in snap.standing_lines().filter(|o| policy.enabled(o.owner)) {
+        if o.status != OrderStatus::Waiting(WaitReason::SourceEmpty) {
+            empty_since.remove(&o.id);
+            continue;
+        }
+        let since = *empty_since.entry(o.id).or_insert(snap.tick);
+        if snap.tick < since + RESOURCE_AFTER_TICKS {
+            continue;
+        }
+        let Some(demand) = snap.demands.iter().find(|d| d.site == o.sink && d.cargo == o.cargo) else {
+            continue;
+        };
+        if best_source_for(snap, demand).is_some_and(|better| better != o.source) {
+            // The replacement line is created by the pass below once this one is gone.
+            requests.write(LogisticsOrderRequest(LogisticsOrderCommand::Cancel { order: o.id }));
+            empty_since.remove(&o.id);
+        }
+    }
     let mut owners: Vec<OwnerId> = snap.demands.iter().map(|d| d.owner).collect();
     owners.sort();
     owners.dedup();
