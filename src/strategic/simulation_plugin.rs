@@ -5,7 +5,7 @@
 use bevy::prelude::*;
 
 use crate::ai::construction::ConstructionAiPlugin;
-use crate::ai::faction::FactionAiPlugin;
+use crate::ai::faction::{FactionAiPlugin, FactionStartPlugin};
 
 use super::agent_batch_scoring::AgentBatchScoringPlugin;
 use super::behavior_brain_plugin::BehaviorPlugin;
@@ -36,6 +36,7 @@ impl Plugin for SimulationPlugin {
             FactionPlugin,
             ConstructionAiPlugin,
             FactionAiPlugin,
+            FactionStartPlugin,
         ));
     }
 }

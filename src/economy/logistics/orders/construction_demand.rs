@@ -95,6 +95,7 @@ pub fn tag_construction_sites_as_order_sites(
         (Entity, &ConstructionSite, &SiteResourceManifest),
         (With<Transform>, Without<LogisticsOrderSite>),
     >,
+    slots: Query<&super::plugin::FactionSlot>,
 ) {
     for (entity, site, manifest) in &sites {
         if !site_accepts_materials(site.phase) || construction_demand_targets(manifest).is_empty() {
@@ -102,8 +103,8 @@ pub fn tag_construction_sites_as_order_sites(
         }
         commands.entity(entity).insert(LogisticsOrderSite {
             name: format!("Site {}", site.site_id),
-            // Faction mapping for AI-owned sites lands with the `ai` lane (board ask).
-            owner: OwnerId::PLAYER,
+            // The site's owner entity carries its faction slot; no slot means the player.
+            owner: slots.get(site.owner).map_or(OwnerId::PLAYER, |s| OwnerId(s.0)),
             role: SiteRole::Construction,
             position_m: None,
         });

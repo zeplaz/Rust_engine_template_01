@@ -25,7 +25,7 @@ pub use model::*;
 pub use persistence::{LogisticsOrdersSave, SavedSite};
 pub use plugin::{
     capture_logistics_orders_save, install_logistics_orders_save, LogisticsOrdersHydrateState,
-    DepotFleetSeed, LogisticsOrderRequest, LogisticsOrderSimRes, LogisticsOrderSite,
+    DepotFleetSeed, DepotStartingFleet, DepotStartingStock, FactionSlot, LogisticsOrderRequest, LogisticsOrderSimRes, LogisticsOrderSite,
     LogisticsOrderSiteId, LogisticsOrdersPlugin, LogisticsOrdersSet, LogisticsOrdersSnapshotRes,
     LogisticsSiteRegistry,
 };
