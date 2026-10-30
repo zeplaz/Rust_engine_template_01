@@ -965,7 +965,10 @@ mod tests {
             .collect();
         assert_eq!(roofs.len(), 1);
         assert_eq!(roofs[0].roof_mode.as_deref(), Some("full_footprint"));
-        assert!(roofs[0].scale.is_none()); // 4×2 matches authored 8×16
+        // Authored roof is 8×16 m (2×4 cells); a 4×3 footprint stretches the short axis 3/2.
+        assert_eq!(roofs[0].scale, Some([1.5, 1.0, 1.0]));
+        assert_eq!(full_footprint_roof_scale(4, 2), [1.0, 1.0, 1.0]);
+        assert!(scale_if_non_unit(full_footprint_roof_scale(4, 2)).is_none());
         let first = &snapshot.module_placements[0];
         // SW corner south face — wall/opening (not L-kit corner_outer)
         assert!(

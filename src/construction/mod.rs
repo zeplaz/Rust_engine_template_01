@@ -273,16 +273,13 @@ pub use zones::{
 pub use history::ConstructionHistory;
 pub use path_feedback::ConstructionPathFeedback;
 pub use place_feedback::{
-    place_feedback_anim_impl_witness_green, place_feedback_complete_count,
-    place_feedback_start_count, refresh_des_place_feedback_anim_witness, PlaceFeedbackPulse,
-    TwoClickCommitParams,
+    place_feedback_complete_count, place_feedback_start_count,
+    refresh_des_place_feedback_anim_witness, PlaceFeedbackPulse, TwoClickCommitParams,
 };
 pub use rail::RailJunctionAuthority;
 pub use witness_collectors::build_construction_stage_proof_payload;
 #[cfg(test)]
-pub use witness_collectors::{
-    refresh_bq128_apply_live_witnesses, refresh_construction_mv_001_live_witness,
-};
+pub use witness_collectors::refresh_construction_mv_001_live_witness;
 
 use bevy::prelude::*;
 use crate::gui::{in_simulation_or_editor, InputBindings};

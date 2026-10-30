@@ -665,9 +665,11 @@ mod tests {
         assert_eq!(wall.palette_family, "palette_industrial_west");
         assert!(wall.glb_asset.starts_with("models/modules/"));
         assert_eq!(
-            reg.module_id_for_job("wall_concrete_2u_lod0_run001"),
+            reg.module_id_for_job("wall_concrete_2u_production_run001"),
             Some("wall_concrete_2u")
         );
+        // BQ-LOD0-TWIN-PRUNE-001: lod0 twins were archived (kit_lod0_twins_retired_2026-09).
+        assert_eq!(reg.module_id_for_job("wall_concrete_2u_lod0_run001"), None);
     }
 
     #[test]
@@ -686,7 +688,9 @@ mod tests {
     }
 
     #[test]
-    fn lod0_included_in_stylepack_iterator() {
+    fn production_modules_in_stylepack_iterator() {
+        // lod0 twins (incl. `win_single_1u`) were retired by BQ-LOD0-TWIN-PRUNE-001; the
+        // stylepack iterator now surfaces the production rows that replaced them.
         let reg = load_procedural_module_registry();
         assert!(reg.load_errors.is_empty(), "{:?}", reg.load_errors);
         let stylepack_ids: HashSet<_> = reg
@@ -695,7 +699,16 @@ mod tests {
             .collect();
         assert!(stylepack_ids.contains("wall_brick_1u"));
         assert!(stylepack_ids.contains("door_residential"));
-        assert!(stylepack_ids.contains("win_single_1u"));
+        assert!(stylepack_ids.contains("win_brick_1u"));
+        assert!(!stylepack_ids.contains("win_single_1u"));
+        for entry in reg.modules_for_stylepack() {
+            assert_ne!(
+                entry.development_tier,
+                DevelopmentTier::Lod0,
+                "lod0 twin still indexed: {}",
+                entry.job_id
+            );
+        }
     }
 
     #[test]
@@ -726,20 +739,50 @@ mod tests {
 
     #[test]
     fn resolve_canonical_follows_replaced_by_alias() {
-        let reg = load_procedural_module_registry();
-        assert!(reg.load_errors.is_empty(), "{:?}", reg.load_errors);
+        // The committed index no longer carries legacy alias rows (lod0 twins retired), so
+        // exercise the `replaced_by` chain on synthetic rows instead of shipped data.
+        let alias = |module_id: &str, replaced_by: Option<&str>| {
+            let mut e = stylepack_fixture(
+                &format!("{module_id}_production_run001"),
+                "production",
+                "style_test",
+            );
+            e.module_id = module_id.into();
+            e.replaced_by = replaced_by.map(str::to_owned);
+            e
+        };
+        let mut reg = ProceduralModuleRegistry::default();
+        ingest_entries(
+            &mut reg,
+            [
+                alias("door_residential_1u", Some("door_residential")),
+                alias("door_residential", Some("door_residential_v2")),
+                alias("door_residential_v2", None),
+                alias("loop_a", Some("loop_b")),
+                alias("loop_b", Some("loop_a")),
+            ]
+            .into_iter(),
+        );
         assert_eq!(
             reg.resolve_canonical_module_id("door_residential_1u"),
+            "door_residential_v2"
+        );
+        assert_eq!(reg.resolve_canonical_module_id("door_residential_v2"), "door_residential_v2");
+        assert_eq!(reg.resolve_canonical_module_id("unknown_id"), "unknown_id");
+        // Cycles terminate rather than spin.
+        let _ = reg.resolve_canonical_module_id("loop_a");
+
+        // Shipped index: canonical ids resolve to themselves.
+        let shipped = load_procedural_module_registry();
+        assert!(shipped.load_errors.is_empty(), "{:?}", shipped.load_errors);
+        assert_eq!(
+            shipped.resolve_canonical_module_id("door_residential"),
             "door_residential"
         );
-        assert_eq!(
-            reg.resolve_canonical_module_id("window_single_1u"),
-            "win_single_1u"
-        );
-        let asset = reg
-            .stylepack_glb_asset("door_residential_1u")
-            .expect("lod0 via alias");
-        assert!(asset.contains("door_residential_lod0_run001"));
+        let asset = shipped
+            .stylepack_glb_asset("door_residential")
+            .expect("production glb");
+        assert!(asset.contains("door_residential_production_run001"));
     }
 
     #[test]
@@ -751,13 +794,15 @@ mod tests {
     }
 
     #[test]
-    fn resolve_module_id_alias_for_lod0() {
+    fn resolve_module_id_resolves_production_after_lod0_prune() {
+        // lod0 twins were retired (BQ-LOD0-TWIN-PRUNE-001): the legacy tier-only resolve
+        // now lands on the production row.
         let reg = load_procedural_module_registry();
         assert!(reg.load_errors.is_empty(), "{:?}", reg.load_errors);
         let entry = reg
             .resolve_module_id("wall_brick_1u")
-            .expect("resolve_module_id lod0");
-        assert_eq!(entry.development_tier, DevelopmentTier::Lod0);
+            .expect("resolve_module_id production");
+        assert_eq!(entry.development_tier, DevelopmentTier::Production);
     }
 
     fn stylepack_fixture(job_id: &str, tier: &str, style_pack: &str) -> ProceduralModuleEntry {
@@ -836,11 +881,16 @@ mod tests {
         assert_eq!(entry.style_pack, "style_victorian");
         assert!(!meta.cross_style_fallback);
         assert_eq!(entry.development_tier, DevelopmentTier::Production);
+        // No industrial lod0 twin remains to be picked (retired); ungated resolve lands on
+        // the sole shipped production row, and no lod0 row exists for the module.
         let (ungated, _) = reg.stylepack_entry_for("wall_brick_1u", None);
-        assert_eq!(
-            ungated.map(|e| e.style_pack.as_str()),
-            Some("style_industrial_west")
-        );
+        let ungated = ungated.expect("ungated wall_brick");
+        assert_eq!(ungated.development_tier, DevelopmentTier::Production);
+        assert!(reg
+            .entries
+            .iter()
+            .filter(|e| e.module_id == "wall_brick_1u")
+            .all(|e| e.development_tier != DevelopmentTier::Lod0));
     }
 
     #[test]
