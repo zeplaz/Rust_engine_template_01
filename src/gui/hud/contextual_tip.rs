@@ -196,7 +196,7 @@ pub fn update_developmental_context_strip_system(
         )
     };
     for mut t in &mut q {
-        *t = Text::new(line.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut t, line.clone());
     }
 }
 

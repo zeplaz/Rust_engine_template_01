@@ -280,7 +280,7 @@ fn sync_play_map_height_slope_label(
     }
     let label = if mode.height_slope { "HEIGHT ON" } else { "HEIGHT" };
     for mut line in &mut text {
-        *line = Text::new(label);
+        crate::gui::style::widgets::set_text_if_changed(&mut line, label);
     }
 }
 
@@ -1397,7 +1397,7 @@ fn update_simulation_narrative_feed_system(
     }
     *last_line = line_display.clone();
     for mut t in &mut q {
-        *t = Text::new(line_display.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut t, line_display.clone());
     }
 }
 
@@ -1427,7 +1427,7 @@ fn update_objectives_hud_line(
         theater.active_faction_slots,
     );
     for mut t in &mut q {
-        *t = Text::new(line.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut t, line.clone());
     }
 }
 
@@ -1639,7 +1639,7 @@ fn update_strategic_ops_hud(
         )
     };
     for mut text in text_q.iter_mut() {
-        *text = Text::new(line.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut text, line.clone());
     }
 }
 
@@ -1705,7 +1705,7 @@ fn update_site_logistics_hud(
     };
 
     for mut text in text_q.iter_mut() {
-        *text = Text::new(summary.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut text, summary.clone());
     }
 }
 

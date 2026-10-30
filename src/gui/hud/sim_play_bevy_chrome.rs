@@ -107,7 +107,7 @@ pub(crate) fn sync_sim_play_plant_card(
         card.core_heat * 100.0,
     );
     for mut t in &mut text {
-        *t = Text::new(line.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut t, line.clone());
     }
 
     // Spawn gauge icon row once under the plant card (ImageNodes filled by sync_power_hud_drawn_icons).
@@ -197,7 +197,7 @@ pub(crate) fn sync_sim_play_power_hover(
         card.feeds_line,
     );
     for mut t in &mut text {
-        *t = Text::new(line.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut t, line.clone());
     }
 }
 

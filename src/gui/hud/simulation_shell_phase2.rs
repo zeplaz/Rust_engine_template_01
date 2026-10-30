@@ -1037,7 +1037,7 @@ fn update_ops_strip_zone_lines_system(
         cache.time_fp = Some(time_fp);
         cache.time_line = format_sim_tick_line(tick.0, ctrl.paused, ctrl.speed);
         for mut t in qs.p0().iter_mut() {
-            *t = Text::new(cache.time_line.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut t, cache.time_line.clone());
         }
     }
 
@@ -1060,7 +1060,7 @@ fn update_ops_strip_zone_lines_system(
             player_log.as_deref().unwrap_or(&crate::sim::effects::PlayerEventLog::default()),
         );
         for mut t in qs.p1().iter_mut() {
-            *t = Text::new(cache.alerts_line.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut t, cache.alerts_line.clone());
         }
     }
 
@@ -1080,7 +1080,7 @@ fn update_ops_strip_zone_lines_system(
             log.map(|l| l.congestion_proxy).unwrap_or(0.0),
         );
         for mut t in qs.p2().iter_mut() {
-            *t = Text::new(cache.intel_line.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut t, cache.intel_line.clone());
         }
     }
 
@@ -1111,7 +1111,7 @@ fn update_ops_strip_zone_lines_system(
             )
         };
         for mut t in qs.p3().iter_mut() {
-            *t = Text::new(cache.weather_line.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut t, cache.weather_line.clone());
         }
     }
 
@@ -1122,7 +1122,7 @@ fn update_ops_strip_zone_lines_system(
         cache.power_fp = Some(power_fp);
         cache.power_line = format!("PWR  {:.0}%", power_proxy * 100.0);
         for mut t in qs.p4().iter_mut() {
-            *t = Text::new(cache.power_line.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut t, cache.power_line.clone());
         }
     }
 
@@ -1134,7 +1134,7 @@ fn update_ops_strip_zone_lines_system(
     if cache.tray_line != tray_label {
         cache.tray_line = tray_label.to_string();
         for mut t in qs.p5().iter_mut() {
-            *t = Text::new(cache.tray_line.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut t, cache.tray_line.clone());
         }
     }
 }
@@ -1159,7 +1159,7 @@ fn sync_zone_shade_toggle_label(
     }
     let label = if shade.visible { "SHADE ON" } else { "SHADE" };
     for mut line in &mut text {
-        *line = Text::new(label);
+        crate::gui::style::widgets::set_text_if_changed(&mut line, label);
     }
 }
 
@@ -1323,7 +1323,7 @@ fn sync_ops_strip_alert_badge_system(
     witness.last_mission_count = count;
     let label = format_ops_strip_alert_badge(count);
     for mut text in &mut count_q {
-        *text = Text::new(label.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut text, label.clone());
     }
 }
 
@@ -1450,14 +1450,14 @@ fn sync_context_tray_visibility_system(
             ),
         };
         for mut text in &mut body_q {
-            *text = Text::new(body.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut text, body.clone());
         }
     } else if tray.active_tab == ContextTrayTab::Events {
         let body = crate::sim::effects::format_player_event_tray_body(
             player_log.as_deref().unwrap_or(&crate::sim::effects::PlayerEventLog::default()),
         );
         for mut text in &mut body_q {
-            *text = Text::new(body.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut text, body.clone());
         }
     }
 }
@@ -1601,7 +1601,7 @@ fn sync_build_rail_from_strip_system(
             }
             if let Ok((mut text, mut color, mut vis)) = labels.get_mut(child) {
                 if text.as_str() != word {
-                    *text = Text::new(word);
+                    crate::gui::style::widgets::set_text_if_changed(&mut text, word);
                 }
                 if *color != next_color {
                     *color = next_color;

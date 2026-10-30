@@ -205,7 +205,7 @@ pub fn sync_stage7_orders_pending_hud(
     witness.orders_pending_ui_hook = hud.orders_pending_ui_hook;
 
     for mut text in &mut text_q {
-        *text = Text::new(hud.orders_pending_label.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut text, hud.orders_pending_label.clone());
     }
 }
 

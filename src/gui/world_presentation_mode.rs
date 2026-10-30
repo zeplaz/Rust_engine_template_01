@@ -218,7 +218,7 @@ pub fn world_presentation_toggle_system(
         WorldPresentationKind::PixelWorld3D => "View: Voxel world (V)",
     };
     for mut text in &mut labels {
-        *text = Text::new(label);
+        crate::gui::style::widgets::set_text_if_changed(&mut text, label);
     }
 }
 

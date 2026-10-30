@@ -706,7 +706,7 @@ fn sync_tooltip(
         (Some(tip), Some(cursor)) => {
             if let Ok(mut t) = text.single_mut() {
                 if t.as_str() != tip {
-                    *t = Text::new(tip);
+                    crate::gui::style::widgets::set_text_if_changed(&mut t, tip);
                 }
             }
             node.left = Val::Px(cursor.x + 14.0);
@@ -789,5 +789,15 @@ mod tests {
         assert_ne!(idle.0, sel.0);
         let dis = button_colors(&pal, &b.disabled(true), Interaction::None);
         assert_ne!(idle.2, dis.2);
+    }
+}
+
+/// Assign UI text only when it differs. A plain `*text = Text::new(..)` flags `Changed<Text>` every
+/// frame even for identical content, which makes `bevy_ui`'s `text_system` re-shape and re-measure the
+/// node (about 0.3 ms per node) — HUD strips that refresh every frame must go through this.
+pub fn set_text_if_changed(text: &mut Mut<Text>, next: impl AsRef<str>) {
+    let next = next.as_ref();
+    if (**text).0 != next {
+        text.0 = next.to_string();
     }
 }

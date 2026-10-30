@@ -244,7 +244,7 @@ fn sync_pressure_bevy_overlay_text(
         if tail.is_empty() { "—".into() } else { tail }
     );
     for mut t in &mut text_q {
-        *t = Text::new(block.clone());
+        crate::gui::style::widgets::set_text_if_changed(&mut t, block.clone());
     }
 }
 
@@ -363,7 +363,7 @@ fn sync_pressure_composer_bevy(
 
     if stamp.key != key {
         for mut t in &mut body {
-            *t = Text::new(text.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut t, text.clone());
         }
         stamp.key = key;
     }

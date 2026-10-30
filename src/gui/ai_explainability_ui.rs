@@ -146,7 +146,7 @@ fn sync_ai_explainability_bevy(
 
     if stamp.key != key {
         for mut t in &mut body {
-            *t = Text::new(text.clone());
+            crate::gui::style::widgets::set_text_if_changed(&mut t, text.clone());
         }
         stamp.key = key;
     }
