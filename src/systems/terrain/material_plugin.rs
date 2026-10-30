@@ -1,6 +1,6 @@
 //! Terrain material registries + chunk materialization (material unification U5 / U7).
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::path::PathBuf;
 
 use bevy::asset::{AssetEvent, AssetEventSystems};
@@ -273,27 +273,54 @@ fn run_passes_from(
 }
 
 /// Cross-chunk slope stitching: chunk boundaries are partitions only; edge cells sample neighbor elevations.
+///
+/// Only chunks whose own matrix changed (or that are new), plus their four cardinal neighbours — the only
+/// chunks whose edge cells read that elevation — are recomputed. The previous version cloned every chunk's
+/// elevation and re-derived slope/drainage/erosion for the whole map every frame (~8 ms on the PostUpdate
+/// critical path at idle).
 fn stitch_chunk_derived_slopes(
     mut q: Query<
-        (&Chunk, &ChunkCellMatrix, &mut ChunkDerivedMetrics),
+        (&Chunk, Ref<ChunkCellMatrix>, &mut ChunkDerivedMetrics),
         With<MaterializedChunk>,
     >,
+    mut last_chunk_count: Local<usize>,
 ) {
+    let count = q.iter().count();
+    let population_changed = count != *last_chunk_count;
+    *last_chunk_count = count;
+
+    let mut dirty: HashSet<IVec2> = HashSet::new();
+    for (chunk, matrix, derived) in q.iter_mut() {
+        if population_changed || matrix.is_changed() || derived.is_added() {
+            dirty.insert(chunk.coord);
+            for d in [IVec2::X, IVec2::NEG_X, IVec2::Y, IVec2::NEG_Y] {
+                dirty.insert(chunk.coord + d);
+            }
+        }
+    }
+    if dirty.is_empty() {
+        return;
+    }
+
     let map: HashMap<IVec2, (UVec2, Vec<f32>)> = q
         .iter()
-        .map(|(c, m, _)| (c.coord, (m.size, m.elevation.clone())))
+        .filter(|(c, ..)| dirty.contains(&c.coord))
+        .map(|(c, m, ..)| (c.coord, (m.size, m.elevation.clone())))
         .collect();
     if map.is_empty() {
         return;
     }
     for (chunk, matrix, mut derived) in q.iter_mut() {
+        if !dirty.contains(&chunk.coord) {
+            continue;
+        }
         derived.size = matrix.size;
-        let (slope, curve) = stitch_chunk_landform(chunk.coord, matrix, &map);
+        let (slope, curve) = stitch_chunk_landform(chunk.coord, &matrix, &map);
         derived.slope_grade = slope;
         derived.sync_stub_layers_to_slope_len();
         derived.profile_curvature = curve;
-        fill_landform_layers(&mut derived, matrix);
-        derived.drainage = drainage_with_neighbor_inflow(chunk.coord, matrix, &map);
+        fill_landform_layers(&mut derived, &matrix);
+        derived.drainage = drainage_with_neighbor_inflow(chunk.coord, &matrix, &map);
         let n = derived.slope_grade.len().min(derived.drainage.len());
         derived.erosion_risk = (0..n)
             .map(|i| erosion_from_slope_drainage(derived.slope_grade[i], derived.drainage[i]))
