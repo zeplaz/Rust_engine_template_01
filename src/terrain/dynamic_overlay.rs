@@ -33,7 +33,9 @@ impl ChunkCellKey {
 /// pass touches every cell of every resident chunk (hash-map churn + slab mirror) — tens of ms.
 /// Each frame now processes one chunk slice (`1 / DYNAMIC_OVERLAY_SLICES` of the map) with the
 /// `dt` accumulated since that slice was last visited, so the cost is flat instead of spiking.
-pub const DYNAMIC_OVERLAY_SLICES: usize = 8;
+/// 32 slices (was 8): at 8 the three passes still cost ~7 ms/frame combined on a 320x320 world;
+/// a slice is revisited about once per second, which is far below the field's own timescale.
+pub const DYNAMIC_OVERLAY_SLICES: usize = 32;
 
 /// Chunk -> slice index (interleaved so neighbouring chunks land on different frames).
 #[inline]
@@ -76,7 +78,7 @@ impl DynamicTerrainOverlay {
     /// Advance writer pass `slot` by `dt`; returns `(slice, batched_dt)` to process this frame.
     fn begin_slice_pass(&mut self, slot: usize, dt: f32) -> (usize, f32) {
         for a in self.slice_acc[slot].iter_mut() {
-            *a = (*a + dt).min(2.0);
+            *a = (*a + dt).min(4.0);
         }
         let slice = self.slice_cursor[slot];
         self.slice_cursor[slot] = (slice + 1) % DYNAMIC_OVERLAY_SLICES;
@@ -268,7 +270,7 @@ pub fn apply_chunk_weather_to_dynamic_overlay(
         let boost_mud = 1.0 + 0.55 * w.rain_intensity + 0.2 * w.snow_depth.min(1.0);
         let boost_snow = 1.0 + 0.45 * w.snow_depth + 0.12 * w.rain_intensity;
         // Boosts were tuned as per-60 Hz-step multipliers; compound them over the batched step.
-        let steps = (dt * 60.0).clamp(1.0, 15.0);
+        let steps = (dt * 60.0).clamp(1.0, 120.0);
         let boost_mud_step = boost_mud.powf(steps);
         let boost_snow_step = boost_snow.powf(steps);
         let rain_mud = w.rain_intensity * 0.014 * dt;
