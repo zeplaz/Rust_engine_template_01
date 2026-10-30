@@ -91,7 +91,7 @@ pub struct TestWorldHarness {
 }
 
 /// Min frames between [`preserve_test_scene_fire_after_sim_tick`] full rearms.
-const FIRE_REARM_COOLDOWN_FRAMES: u32 = 120;
+const FIRE_REARM_COOLDOWN_FRAMES: u32 = 2400;
 
 impl Default for TestWorldHarness {
     fn default() -> Self {
@@ -1974,6 +1974,11 @@ fn apply_visual_aidv2_macro_zoom_camera(
     if !launch.is_some_and(|l| l.full_capture_active()) || !va2.macro_icon_probe {
         return;
     }
+    // `VFX_CAPTURE_NO_MACRO_ZOOM=1`: keep the tactical proof camera (the macro zoom races the world-gen focus and
+    // can leave the capture showing the whole map as a 14 px speck).
+    if std::env::var_os("VFX_CAPTURE_NO_MACRO_ZOOM").is_some() {
+        return;
+    }
     if params.width == 0 || params.height == 0 {
         return;
     }
@@ -2038,7 +2043,8 @@ fn preserve_test_scene_fire_after_sim_tick(
         .iter()
         .filter(|(_, _, _, fire, _, _)| fire.heat >= crate::render::CHUNK_FIRE_OVERLAY_DISPLAY_MIN)
         .count();
-    if burning * 2 >= want {
+    // Re-ignite only once the fire is entirely out (the stands then have the regrowth clock to show).
+    if burning > 0 {
         return;
     }
     let last = harness.last_fire_rearm_frame;
@@ -2103,18 +2109,6 @@ fn chunk_land_burnable_fraction(matrix: &ChunkCellMatrix, water_line: f32) -> f3
     land as f32 / n as f32
 }
 
-fn prepare_chunk_matrix_for_test_fire(matrix: &mut ChunkCellMatrix, water_line: f32) {
-    let n = matrix.elevation.len().min(matrix.moisture.len()).min(matrix.temperature.len());
-    for i in 0..n {
-        // Never convert open water into burnable land — that painted fire on lakes/ocean.
-        if matrix.elevation[i] <= water_line {
-            continue;
-        }
-        matrix.moisture[i] = matrix.moisture[i].min(0.06);
-        matrix.temperature[i] = matrix.temperature[i].max(0.24);
-    }
-}
-
 /// Prefer land near world center — ocean chunks extinguish heat and leave an empty gizmo over water.
 fn seed_test_fire_near_world_center(
     params: &WorldGenParams,
@@ -2153,31 +2147,41 @@ fn seed_test_fire_near_world_center(
     let mut max = Vec2::splat(f32::NEG_INFINITY);
     let mut seeded = 0u32;
     for (_, entity) in ranked.into_iter().take(count as usize) {
-        if let Ok((_, chunk, mut matrix, mut f, ovl, mut smoke)) = fire_q.get_mut(entity) {
-            prepare_chunk_matrix_for_test_fire(&mut matrix, water_line);
-            // Scalar heat alone is wiped next tick: paint land cells only.
+        if let Ok((_, chunk, matrix, mut f, ovl, mut smoke)) = fire_q.get_mut(entity) {
+            // One ignition patch (a few cells) on live fuel near the chunk centre. The chunk itself is left as
+            // world generation made it: the fire spreads through the forest by the sim, not by a seeded slab.
             let mut land_heat_sum = 0.0_f32;
             let mut land_cells = 0u32;
             if let Some(mut ovl) = ovl {
+                let (sx, sy) = (matrix.size.x as i32, matrix.size.y as i32);
                 let n = ovl.heat.len().min(matrix.elevation.len());
-                if ovl.fuel.len() < n {
-                    ovl.fuel.resize(n, fuel);
-                }
-                for i in 0..n {
-                    if matrix.elevation[i] <= water_line {
-                        continue;
+                if ovl.fuel.len() >= n {
+                    for dy in -1..=1 {
+                        for dx in -1..=1 {
+                            let (x, y) = (sx / 2 + dx, sy / 2 + dy);
+                            if x < 0 || y < 0 || x >= sx || y >= sy {
+                                continue;
+                            }
+                            let i = (y * sx + x) as usize;
+                            if i >= n
+                                || matrix.elevation[i] <= water_line
+                                || matrix.water.get(i).is_some_and(|c| c.is_open_water())
+                                || ovl.fuel[i] < crate::systems::fire::combustion::MIN_CELL_FUEL_FOR_SPREAD
+                            {
+                                continue;
+                            }
+                            ovl.heat[i] = ovl.heat[i].max(heat);
+                            land_heat_sum += ovl.heat[i];
+                            land_cells = land_cells.saturating_add(1);
+                        }
                     }
-                    ovl.heat[i] = ovl.heat[i].max(heat);
-                    ovl.fuel[i] = ovl.fuel[i].max(fuel);
-                    land_heat_sum += ovl.heat[i];
-                    land_cells = land_cells.saturating_add(1);
                 }
             }
             if land_cells == 0 {
                 continue;
             }
             f.heat = f.heat.max(land_heat_sum / land_cells as f32);
-            f.fuel = f.fuel.max(fuel);
+            let _ = fuel;
             // VFX sandbox: visible smoke column on burn chunks (Layer-B extract → gray puffs).
             smoke.density = smoke.density.max(0.78);
             smoke.toxicity = smoke.toxicity.max(0.22);

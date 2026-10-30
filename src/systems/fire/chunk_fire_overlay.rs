@@ -3,12 +3,14 @@
 //! `flooded` tag) suppresses burn and blocks spread — see [`super::surface_water::SurfaceWaterFireGate`].
 //! Scalar [`ChunkSurfaceFire`] tracks chunk means for GPU uniforms.
 
+use std::collections::{HashMap, HashSet};
+
 use bevy::prelude::*;
 
 use super::cell_spread::{
     admit_spark, apply_snow_to_hold, burn_fuel_step, lightning_spark, rain_blocks_neighbor_spread,
     scaled_neighbor_heat_gain, should_arm_burn_hold, spread_allowed, step_burn_hold,
-    take_neighbor_deposit, FireCell, BURNED_HOLD_TICKS,
+    take_neighbor_deposit, FireCell, BURNED_HOLD_TICKS, NEIGHBOR_FUEL_DRAW, SPREAD_HEAT_MIN,
 };
 use super::chunk_fuel_profile::ChunkFuelProfile;
 use super::chunk_surface_fire::ChunkSurfaceFire;
@@ -52,6 +54,37 @@ pub(crate) fn spawn_chunk_fire_overlay_on_matrix(
     }
 }
 
+/// Cardinal deposits are rated per second, not per tick: a hot neighbour heats a facing cell by
+/// `NEIGHBOR_HEAT_GAIN * dt * DEPOSIT_RATE` (and draws `NEIGHBOR_FUEL_DRAW * dt * DEPOSIT_RATE` of its fuel). At a
+/// per-tick gain the front crossed a chunk in about a second and drained cells to Burnt before they burned.
+pub const DEPOSIT_RATE: f32 = 5.0;
+/// Fuel a deposit pre-dries from the neighbour, per second (same scale as [`DEPOSIT_RATE`], kept milder).
+const DEPOSIT_FUEL_RATE: f32 = 2.5;
+
+/// Chance per second, per unit of spark strength, that a cell ignites on its own (spark is at most ~0.08).
+const AMBIENT_IGNITION_PER_SPARK: f32 = 4.0e-6;
+/// Heat an ambient ignition gives the cell (above the spread threshold so the burn takes hold).
+const AMBIENT_IGNITION_HEAT: f32 = 0.3;
+
+/// Deterministic roll in `[0, 1)` for one cell at one clock step.
+#[inline]
+fn ambient_roll(chunk_bits: u64, cell: u64, clock: u64) -> f32 {
+    let mut x = chunk_bits
+        .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+        ^ cell.wrapping_mul(0xBF58_476D_1CE4_E5B9)
+        ^ clock.wrapping_mul(0x94D0_49BB_1331_11EB);
+    x = (x ^ (x >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    x = (x ^ (x >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    x ^= x >> 31;
+    (x >> 40) as f32 / (1u64 << 24) as f32
+}
+
+/// Heat a lit cell burns at while it has fuel (before the moisture discount). A lit cell holds this steady
+/// until its fuel is gone, so a front is a band of burning cells that advances, not a flash that decays.
+const BURN_TARGET_HEAT: f32 = 0.78;
+/// How fast a lit cell's heat climbs to its burn target (per second).
+const BURN_HEAT_RISE: f32 = 1.2;
+
 #[inline]
 fn wet_diffusion_barrier(moisture: f32) -> f32 {
     let over = (moisture - 0.72).max(0.0) / 0.28;
@@ -88,6 +121,7 @@ pub fn chunk_fire_overlay_tick(
         return;
     }
 
+    let ember_clock = (time.elapsed_secs() * 60.0) as u64;
     let mut scratch: Vec<f32> = Vec::new();
     let default_cfg = StandBurnConfig::default();
     let stand_cfg = stand_cfg.as_deref().unwrap_or(&default_cfg);
@@ -212,20 +246,45 @@ pub fn chunk_fire_overlay_tick(
                 let rain_damp = wx.rain_intensity * 0.28 * dt_e;
 
                 let h = ovl.heat[i];
+                // What a steady burn here can consume: a ground fire (target under crown heat) leaves the canopy
+                // share standing, a crown fire takes it all. A cell down to that floor has nothing left to burn.
+                let target = BURN_TARGET_HEAT * (1.0 - m * 0.6).clamp(0.3, 1.0) * rain_suppress;
+                let burn_floor = match stand {
+                    Some(s) if target < stand_cfg.crown_heat => stand_cfg.crown(s.kind[i]) * s.fuel_cap[i],
+                    _ => 0.0,
+                };
+                let exhausted = ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD || ovl.fuel[i] <= burn_floor + 0.005;
                 // A stand with nothing left to burn goes out quickly (a stand without per-cell fuel
                 // keeps the old slow cooling).
-                let cooling = if stand.is_some() && ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD {
-                    0.9
+                let cooling = if stand.is_some() && exhausted { 0.9 } else { 0.14 };
+                // An ambient spark is a rare ignition event, not a heat source: the spark rate is a chance per
+                // second that sets a cell alight (the burn then sustains itself). Injecting spark*8 heat per
+                // second lit every dry warm cell of the map within seconds.
+                let ignite = if spark > 0.0 && h < SPREAD_HEAT_MIN {
+                    let chance = spark * AMBIENT_IGNITION_PER_SPARK * dt_e;
+                    if ambient_roll(entity.to_bits(), i as u64, ember_clock) < chance {
+                        AMBIENT_IGNITION_HEAT
+                    } else {
+                        0.0
+                    }
                 } else {
-                    0.14
+                    0.0
                 };
-                let mut nh = (h + spark * dt_e * 8.0
+                let mut nh = (h + ignite
                     - h * cooling * dt_e
                     - wet_line
                     - rain_damp * h
                     - h * wx.snow_depth * 0.08 * dt_e)
                     .clamp(0.0, 1.0);
-                if nh < 0.02 {
+                // Combustion: a cell that is lit (past the spread threshold) with fuel left holds a steady burn.
+                if nh >= SPREAD_HEAT_MIN && !exhausted {
+                    if nh < target {
+                        nh = (nh + (target - nh) * BURN_HEAT_RISE * dt_e).min(target);
+                    }
+                }
+                // Dust floor only: deposits and diffusion are per-second rates, so a cell being heated gains a few
+                // thousandths per tick and must be allowed to accumulate toward the spread threshold.
+                if nh < 0.001 {
                     nh = 0.0;
                 }
                 ovl.heat[i] = nh;
@@ -356,6 +415,8 @@ pub fn chunk_fire_overlay_tick(
                     fuel: fuel_src[i],
                     burned_hold: hold_src[i],
                 };
+                let deposit_k = dt_e * DEPOSIT_RATE;
+                let deposit_fuel_k = dt_e * DEPOSIT_FUEL_RATE;
                 let mut deposit = |j: usize| {
                     if water_gate.cell_has_standing_water(matrix, j) {
                         return;
@@ -363,6 +424,7 @@ pub fn chunk_fire_overlay_tick(
                     if !spread_allowed(wx.snow_depth, matrix.moisture[j]) {
                         return;
                     }
+                    let fuel_before = ovl.fuel[j];
                     let mut dst = FireCell {
                         heat: if heat_open[j] >= 1.0 {
                             heat_open[j]
@@ -376,11 +438,11 @@ pub fn chunk_fire_overlay_tick(
                         taken[j],
                         &src,
                         &mut dst,
-                        scaled_neighbor_heat_gain(wx.fog_density),
+                        scaled_neighbor_heat_gain(wx.fog_density) * deposit_k,
                     ) {
                         taken[j] = true;
                         ovl.heat[j] = dst.heat;
-                        ovl.fuel[j] = dst.fuel;
+                        ovl.fuel[j] = (fuel_before - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).max(0.0);
                         witness.neighbor_spread_cells =
                             witness.neighbor_spread_cells.saturating_add(1);
                     }
@@ -427,6 +489,88 @@ pub fn chunk_fire_overlay_tick(
             }
         } else if mean_h < 0.008 {
             dirty.fire_field = false;
+        }
+    }
+}
+
+/// Fire crosses chunk borders: a hot cell on a chunk edge deposits heat on the facing cell of the neighbouring
+/// chunk under the same rules as the in-chunk cardinal deposit ([`take_neighbor_deposit`]). Without this each chunk
+/// burns as an island: the front stalls at the seam, and a whole chunk lights at once when a spark lands across it.
+///
+/// Reads every chunk's edge cells as they stand after [`chunk_fire_overlay_tick`], then applies the deposits, so
+/// the exchange is symmetric and order independent. Writes only `heat` / `fuel` of the receiving cell.
+pub fn chunk_fire_edge_spread(
+    ctrl: Res<SimControlState>,
+    time: Res<Time>,
+    water_gate: Res<SurfaceWaterFireGate>,
+    mut q: Query<(
+        Entity,
+        &Chunk,
+        &ChunkCellMatrix,
+        &ChunkWeather,
+        &mut ChunkFireOverlay,
+    )>,
+) {
+    if !ctrl.should_tick() {
+        return;
+    }
+    let deposit_k = time.delta_secs() * ctrl.dt_scale() * DEPOSIT_RATE;
+    let deposit_fuel_k = time.delta_secs() * ctrl.dt_scale() * DEPOSIT_FUEL_RATE;
+    if deposit_k <= 0.0 {
+        return;
+    }
+    let by_coord: HashMap<IVec2, Entity> = q.iter().map(|(e, c, ..)| (c.coord, e)).collect();
+    let mut deposits: Vec<(Entity, usize, f32)> = Vec::new();
+    let mut taken: HashSet<(Entity, usize)> = HashSet::new();
+    for (_, chunk, matrix, wx, ovl) in q.iter() {
+        let (sx, sy) = (matrix.size.x as usize, matrix.size.y as usize);
+        let n = sx * sy;
+        if n == 0 || ovl.heat.len() != n || ovl.fuel.len() != n || ovl.burn_hold.len() != n {
+            continue;
+        }
+        if ovl.heat.iter().all(|h| *h < SPREAD_HEAT_MIN) || rain_blocks_neighbor_spread(wx.rain_intensity) {
+            continue;
+        }
+        for (dx, dy) in [(1i32, 0i32), (-1, 0), (0, 1), (0, -1)] {
+            let Some(&ne) = by_coord.get(&(chunk.coord + IVec2::new(dx, dy))) else {
+                continue;
+            };
+            let Ok((_, _, nm, nwx, novl)) = q.get(ne) else {
+                continue;
+            };
+            let (nsx, nsy) = (nm.size.x as usize, nm.size.y as usize);
+            if nsx != sx || nsy != sy || novl.heat.len() != n || novl.fuel.len() != n || novl.burn_hold.len() != n {
+                continue;
+            }
+            let gain = scaled_neighbor_heat_gain(nwx.fog_density) * deposit_k;
+            let along = if dx != 0 { sy } else { sx };
+            for k in 0..along {
+                let (si, di) = match (dx, dy) {
+                    (1, 0) => (k * sx + (sx - 1), k * sx),
+                    (-1, 0) => (k * sx, k * sx + (sx - 1)),
+                    (0, 1) => ((sy - 1) * sx + k, k),
+                    _ => (k, (sy - 1) * sx + k),
+                };
+                if water_gate.cell_has_standing_water(matrix, si)
+                    || water_gate.cell_has_standing_water(nm, di)
+                    || !spread_allowed(nwx.snow_depth, nm.moisture[di])
+                {
+                    continue;
+                }
+                let src = FireCell { heat: ovl.heat[si], fuel: ovl.fuel[si], burned_hold: ovl.burn_hold[si] };
+                let mut dst = FireCell { heat: novl.heat[di], fuel: novl.fuel[di], burned_hold: novl.burn_hold[di] };
+                if taken.contains(&(ne, di)) || !take_neighbor_deposit(false, &src, &mut dst, gain) {
+                    continue;
+                }
+                taken.insert((ne, di));
+                deposits.push((ne, di, gain));
+            }
+        }
+    }
+    for (e, di, gain) in deposits {
+        if let Ok((_, _, _, _, mut ovl)) = q.get_mut(e) {
+            ovl.heat[di] = (ovl.heat[di] + gain).min(1.0);
+            ovl.fuel[di] = (ovl.fuel[di] - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).max(0.0);
         }
     }
 }
@@ -507,9 +651,11 @@ mod link_tests {
             assert_eq!(out.heat[diagonal], 0.0, "diagonal {diagonal}");
         }
         let drawn = before_west - out.fuel[west];
+        // One deposit, rated per second: one 16 ms tick draws NEIGHBOR_FUEL_DRAW * dt * DEPOSIT_FUEL_RATE.
+        let one_tick = NEIGHBOR_FUEL_DRAW * 0.016 * DEPOSIT_FUEL_RATE;
         assert!(
-            (drawn - NEIGHBOR_FUEL_DRAW).abs() < 0.005,
-            "west fuel draw {drawn} is not one deposit"
+            (drawn - one_tick).abs() < one_tick * 0.5,
+            "west fuel draw {drawn} is not one deposit ({one_tick})"
         );
     }
 

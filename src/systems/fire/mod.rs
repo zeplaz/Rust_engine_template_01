@@ -24,7 +24,7 @@ pub mod witness_collectors;
 pub(crate) use fire_fuel::{fire_fuel_field_tick, spawn_fire_fuel_field_on_new_chunk};
 
 pub use crate::terrain::fire::FuelLayer;
-pub use chunk_fire_overlay::chunk_fire_overlay_tick;
+pub use chunk_fire_overlay::{chunk_fire_edge_spread, chunk_fire_overlay_tick};
 pub use chunk_fuel_profile::{chunk_fuel_profile_from_vegetation, ChunkFuelProfile};
 pub use chunk_smoke_field::{
     chunk_smoke_field_pull_from_advected_atmosphere, chunk_smoke_field_tick, ChunkSmokeField,
@@ -78,6 +78,9 @@ impl Plugin for FirePlugin {
                     spawn_chunk_smoke_field_on_new_chunk.in_set(ChunkEnvironmentSet::Fire),
                     spawn_chunk_fire_overlay_on_matrix.in_set(ChunkEnvironmentSet::Fire),
                     chunk_fire_overlay_tick.in_set(ChunkEnvironmentSet::Fire),
+                    chunk_fire_edge_spread
+                        .after(chunk_fire_overlay_tick)
+                        .in_set(ChunkEnvironmentSet::Fire),
                     witness_collectors::finalize_fire_ecology_witness_frame
                         .after(chunk_fire_overlay_tick)
                         .in_set(ChunkEnvironmentSet::Fire),
