@@ -591,19 +591,75 @@ impl Plugin for WaterSurfaceVisualPlugin {
     }
 }
 
-/// Water ripple repaint cadence (seconds). Animated water re-rasterizes every chunk that
-/// contains water; doing so every frame starves the raster queue and pins the frame budget.
+/// Water ripple repaint cadence (seconds). Animated water re-rasterizes chunks that contain water;
+/// doing so for every chunk every tick starves the raster queue and pins the frame budget.
 const WATER_MOTION_REPAINT_SECS: f32 = 0.2;
+
+/// Upper bound on water chunks re-dirtied per motion tick (round-robin over the visible ones).
+/// A 128x128 chunk repaint costs a few ms on the CPU, so this caps the ripple at a flat, small
+/// share of the frame budget however far the camera is zoomed out.
+const WATER_MOTION_CHUNKS_PER_TICK: usize = 3;
+
+/// Cached water-chunk list (rebuilt only when the catalog changes) plus the chunks whose ripple
+/// phase went stale while they were off-screen.
+#[derive(Default)]
+struct WaterMotionChunks {
+    stamp: Option<u64>,
+    chunks: Vec<(u32, u32)>,
+    stale: HashSet<(u32, u32)>,
+    cursor: usize,
+}
+
+/// Raster chunks (inclusive min/max) intersecting the main camera's view, rotation-safe and padded.
+/// `None` = camera trace not valid yet, so treat everything as visible.
+fn visible_raster_chunk_rect(
+    trace: Option<&crate::gui::MainWorldCameraOrthoTrace>,
+) -> Option<(u32, u32, u32, u32)> {
+    const CHUNK: f32 = crate::render::tile_world_fallback::RASTER_CHUNK_TILES as f32;
+    let t = trace?;
+    if t.fixed_width <= 0.0 || t.fixed_height <= 0.0 || !t.camera_center.is_finite() {
+        return None;
+    }
+    // Circumscribed half-extent so a rotated camera is still covered, plus a small pad.
+    let half = t.fixed_width.hypot(t.fixed_height) * 0.5 + 8.0;
+    let lo = (t.camera_center - Vec2::splat(half)).max(Vec2::ZERO) / CHUNK;
+    let hi = (t.camera_center + Vec2::splat(half)).max(Vec2::ZERO) / CHUNK;
+    Some((lo.x as u32, lo.y as u32, hi.x as u32, hi.y as u32))
+}
+
+#[inline]
+fn chunk_in_rect(c: (u32, u32), rect: Option<(u32, u32, u32, u32)>) -> bool {
+    rect.is_none_or(|(x0, z0, x1, z1)| c.0 >= x0 && c.0 <= x1 && c.1 >= z0 && c.1 <= z1)
+}
 
 fn mark_water_surface_motion_dirty(
     catalog: Res<WaterSurfaceVisualCatalog>,
     mut last: ResMut<LastWaterCatalogRevision>,
     mut raster_ctrl: ResMut<crate::render::TileWorldFallbackRasterCtrl>,
+    trace: Option<Res<crate::gui::MainWorldCameraOrthoTrace>>,
     time: Res<Time>,
     mut acc: Local<f32>,
+    mut cache: Local<WaterMotionChunks>,
 ) {
     if !catalog.has_motion() {
         return;
+    }
+    const CHUNK: u32 = crate::render::tile_world_fallback::RASTER_CHUNK_TILES;
+    if cache.stamp != Some(catalog.stamp) {
+        let mut set: HashSet<(u32, u32)> = HashSet::new();
+        for &(tx, ty) in catalog
+            .river_tiles
+            .iter()
+            .chain(catalog.lake_tiles.iter())
+            .chain(catalog.ocean_tiles.iter())
+        {
+            set.insert((tx / CHUNK, ty / CHUNK));
+        }
+        let mut chunks: Vec<(u32, u32)> = set.into_iter().collect();
+        chunks.sort_unstable();
+        cache.chunks = chunks;
+        cache.stale.clear();
+        cache.stamp = Some(catalog.stamp);
     }
     if last.0 != catalog.stamp {
         last.0 = catalog.stamp;
@@ -611,20 +667,52 @@ fn mark_water_surface_motion_dirty(
         raster_ctrl.chunk_grid.mark_all_dirty();
         return;
     }
+    let visible = visible_raster_chunk_rect(trace.as_deref());
+
+    // Chunks that rippled off-screen catch up as soon as they scroll into view.
+    if !cache.stale.is_empty() {
+        let back: Vec<(u32, u32)> = cache
+            .stale
+            .iter()
+            .copied()
+            .filter(|c| chunk_in_rect(*c, visible))
+            .collect();
+        for c in back {
+            raster_ctrl.chunk_grid.mark_chunk(c.0, c.1);
+            cache.stale.remove(&c);
+        }
+    }
+
     *acc += time.delta_secs();
     if *acc < WATER_MOTION_REPAINT_SECS {
         return;
     }
     *acc = 0.0;
-    const CHUNK: u32 = crate::render::tile_world_fallback::RASTER_CHUNK_TILES;
-    for &(tx, ty) in catalog
-        .river_tiles
-        .iter()
-        .chain(catalog.lake_tiles.iter())
-        .chain(catalog.ocean_tiles.iter())
-    {
-        raster_ctrl.chunk_grid.mark_chunk(tx / CHUNK, ty / CHUNK);
+
+    let n = cache.chunks.len();
+    if n == 0 {
+        return;
     }
+    let mut marked = 0;
+    let start = cache.cursor % n;
+    let mut next_cursor = start;
+    for step in 0..n {
+        let i = (start + step) % n;
+        let c = cache.chunks[i];
+        if !chunk_in_rect(c, visible) {
+            cache.stale.insert(c);
+            continue;
+        }
+        if marked < WATER_MOTION_CHUNKS_PER_TICK {
+            raster_ctrl.chunk_grid.mark_chunk(c.0, c.1);
+            cache.stale.remove(&c);
+            marked += 1;
+            next_cursor = i + 1;
+        } else {
+            // Visible but over this tick's cap: it ripples on a later tick, not stale.
+        }
+    }
+    cache.cursor = next_cursor;
 }
 
 #[cfg(test)]
