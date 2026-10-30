@@ -15,7 +15,6 @@ pub mod hud_async_task_queue;
 pub mod hud_ui_scale;
 pub mod hud_root_tick;
 pub mod hud_chrome;
-pub mod hud_side_status_panel;
 pub mod layout_store;
 pub mod pending_hud_layout_commit;
 pub mod overlay_framework;
@@ -77,9 +76,8 @@ pub use cause_chain::{
 };
 pub use contextual_tip::{update_developmental_context_strip_system, DevelopmentalContextStripLine};
 pub use dock_shell::{
-    EditorDockBevyRoot, HudCommandShellLayout, HudDockShellPlugin, HudOverlayTrayState,
+    HudCommandShellLayout, HudDockShellPlugin, HudOverlayTrayState,
 };
-pub use hud_side_status_panel::hud_status_side_panel_toggle_system;
 pub use panel_state::{HudPanel, HudPanelState, HudPanelStatePlugin, HudPanelStateWitness};
 pub use icon_atlas::{
     tool_context_uses_icon_atlas, IconAtlasManifest, IconAtlasPlugin, IconAtlasUi, IconId,

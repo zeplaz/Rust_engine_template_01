@@ -47,7 +47,6 @@ pub fn collapse_simulation_floating_shell_layout(
     transmission: &mut TransmissionShellState,
 ) {
     layout.overlay_tray_state = HudPanelState::Collapsed;
-    layout.status_side_panel_state = HudPanelState::Collapsed;
     layout.command_tray_state = HudPanelState::Collapsed;
     layout.intel_timeline_state = HudPanelState::Collapsed;
     layout.command_table_state = HudPanelState::Collapsed;
@@ -92,7 +91,7 @@ pub fn apply_simulation_hud_defaults(
     // Minimap dock slot stays visible for Bevy chrome; egui texture dock is editor-only (Phase 2B).
     dock.slot_mut(ProductShellWidgetId::Minimap).visible = true;
     dock.slot_mut(ProductShellWidgetId::Minimap).minimized = false;
-    sync_simulation_egui_shell_gate_witness(&dock, &layout, &mut witness);
+    sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
 }
 
 /// VISUAL-JANK-LOD-001 / CHROME-001 — kill sticky debug overlays on Simulation enter.
@@ -297,20 +296,17 @@ pub fn enforce_simulation_product_egui_gates(
     }
     suppress_simulation_floating_shell_slots(&mut dock);
     collapse_simulation_floating_shell_layout(&mut layout, &mut tray, &mut transmission);
-    sync_simulation_egui_shell_gate_witness(&dock, &layout, &mut witness);
+    sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
 }
 
 /// **UI-P2B-001 / UI-P2B-CODER-B** — sync gate flags for live proof (`phase2b_closed`).
 pub(crate) fn sync_simulation_egui_shell_gate_witness(
     dock: &HudDockRegistry,
-    layout: &HudCommandShellLayout,
     witness: &mut UiShellMigrationWitness,
 ) {
     let build = dock.slot(ProductShellWidgetId::BuildToolbox);
     witness.build_toolbox_egui_gated =
         !build.visible && build.minimized && !build.detached;
-    witness.side_status_rail_egui_gated =
-        layout.status_side_panel_state == HudPanelState::Collapsed;
     witness.floating_egui_shells_gated = simulation_floating_shells_gated(dock);
 }
 
@@ -499,19 +495,14 @@ mod tests {
         let mut dock = HudDockRegistry::default();
         dock.slot_mut(ProductShellWidgetId::BuildToolbox).visible = true;
         dock.slot_mut(ProductShellWidgetId::OverlaysPanel).visible = true;
-        let mut layout = HudCommandShellLayout::default();
-        layout.status_side_panel_state = HudPanelState::Expanded;
         let mut witness = UiShellMigrationWitness::default();
-        sync_simulation_egui_shell_gate_witness(&dock, &layout, &mut witness);
+        sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
         assert!(!witness.build_toolbox_egui_gated);
-        assert!(!witness.side_status_rail_egui_gated);
         assert!(!witness.floating_egui_shells_gated);
 
         suppress_simulation_floating_shell_slots(&mut dock);
-        layout.status_side_panel_state = HudPanelState::Collapsed;
-        sync_simulation_egui_shell_gate_witness(&dock, &layout, &mut witness);
+        sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
         assert!(witness.build_toolbox_egui_gated);
-        assert!(witness.side_status_rail_egui_gated);
         assert!(witness.floating_egui_shells_gated);
     }
 

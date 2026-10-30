@@ -128,17 +128,14 @@ pub fn hud_panel_escape_collapse_system(
     );
     let before_tray = tray.tray_panel_state;
     let before_cmd = layout.command_tray_state;
-    let before_side = layout.status_side_panel_state;
     tray.tray_panel_state.collapse_unpinned();
     layout.overlay_tray_state.collapse_unpinned();
-    layout.status_side_panel_state.collapse_unpinned();
     layout.command_tray_state.collapse_unpinned();
     layout.intel_timeline_state.collapse_unpinned();
     layout.command_table_state.collapse_unpinned();
     transmission.panel_state.collapse_unpinned();
     witness.last_esc_collapsed = before_tray != HudPanelState::Collapsed
         || before_cmd != HudPanelState::Collapsed
-        || before_side != HudPanelState::Collapsed
         || transmission.panel_state != HudPanelState::Collapsed;
     witness.cycle_ok = true;
 }
@@ -164,7 +161,6 @@ fn collapse_unpinned_shells(
 ) {
     tray.tray_panel_state.collapse_unpinned();
     layout.overlay_tray_state.collapse_unpinned();
-    layout.status_side_panel_state.collapse_unpinned();
     layout.command_tray_state.collapse_unpinned();
     transmission.panel_state.collapse_unpinned();
     context_tray.panel_state.collapse_unpinned();
@@ -206,8 +202,6 @@ impl Plugin for HudPanelStatePlugin {
                 hud_panel_click_outside_collapse_system
                     .after(hud_panel_escape_collapse_system)
                     .after(super::simulation_pointer_gate::PointerGateSet::Publish),
-                super::hud_side_status_panel::hud_status_side_panel_toggle_system
-                    .run_if(crate::gui::ui_gates::side_status_rail_egui_active),
             )
                 .run_if(crate::gui::ui_gates::in_simulation_or_editor),
         );

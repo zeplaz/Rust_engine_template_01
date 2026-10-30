@@ -28,7 +28,6 @@ pub fn sim_hud_trays_expanded(
         || tray.tray_panel_state.shows_content()
         || layout.overlay_tray_state.shows_content()
         || layout.command_tray_state.shows_content()
-        || layout.status_side_panel_state.shows_content()
         || layout.intel_timeline_state.shows_content()
         || layout.command_table_state.shows_content()
         || transmission.panel_state.shows_content()

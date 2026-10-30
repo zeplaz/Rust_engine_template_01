@@ -1,16 +1,12 @@
 //! Detachable HUD docking + overlay tray scaffolding (**BQ-123**).
 //!
-//! Editor dock MVP: [`EditorDockBevyRoot`] hosts Command shell + Overlay tray +
-//! minimized strip + side status rail (visibility from [`HudDockRegistry`] /
-//! [`HudCommandShellLayout`]).
+//! Overlay-tray / command-shell layout state and the dock registry mirror. (The text-dump editor
+//! dock panel was dropped: it showed layout flags only and nothing acted on it.)
 
 use bevy::prelude::*;
-use bevy::ui::FocusPolicy;
 
 use crate::engine::states::BaseState;
-use crate::gui::input_bindings::InputBindings;
-use crate::gui::style::{CmdUiMonoFont, UiPalette};
-use crate::gui::{in_simulation_or_editor, product_shell_active, PanelPresence};
+use crate::gui::in_simulation_or_editor;
 use crate::gui::map_view::MapViewInstances;
 use crate::gui::{simulation_minimap_overlay_defaults, MinimapOverlayMask, MinimapShellState, TransmissionShellState};
 use crate::strategic::StrategicOverlayDisplayPolicy;
@@ -93,8 +89,6 @@ pub fn minimap_eco_fire_tray_defaults_green() -> bool {
 #[derive(Resource, Clone, Debug)]
 pub struct HudCommandShellLayout {
     pub overlay_tray_state: HudPanelState,
-    /// Docked left **status rail** (egui `SidePanel`) — not the floating command window.
-    pub status_side_panel_state: HudPanelState,
     /// Floating **Command shell** window (telemetry / layout tools).
     pub command_tray_state: HudPanelState,
     pub intel_timeline_state: HudPanelState,
@@ -105,7 +99,6 @@ impl Default for HudCommandShellLayout {
     fn default() -> Self {
         Self {
             overlay_tray_state: HudPanelState::Collapsed,
-            status_side_panel_state: HudPanelState::Collapsed,
             command_tray_state: HudPanelState::Collapsed,
             intel_timeline_state: HudPanelState::Collapsed,
             command_table_state: HudPanelState::Collapsed,
@@ -118,18 +111,6 @@ impl HudCommandShellLayout {
     fn panel_open(state: HudPanelState) -> bool {
         state.shows_content()
     }
-}
-
-/// Editor product-shell dock root (Bevy UI — replaces retired egui dock bodies).
-#[derive(Component)]
-pub struct EditorDockBevyRoot;
-
-#[derive(Component)]
-pub struct EditorDockBodyText;
-
-#[derive(Default)]
-pub struct EditorDockStamp {
-    key: u64,
 }
 
 pub struct HudDockShellPlugin;
@@ -168,9 +149,6 @@ impl Plugin for HudDockShellPlugin {
                     sync_minimap_overlays_to_hud_tray,
                     mirror_hud_dock_registry_from_widgets,
                     sync_hud_shell_interaction_router,
-                    hud_dock_shell_keyboard_toggle.run_if(product_shell_active),
-                    sync_editor_dock_bevy_shell.run_if(product_shell_active),
-                    despawn_editor_dock_bevy_when_inactive.run_if(not(product_shell_active)),
                     super::shell_diagnostics::product_shell_diagnostics_tick,
                     super::shell_update_budget::sync_product_shell_update_budget,
                     super::shell_update_budget::advance_product_shell_update_budget,
@@ -307,157 +285,6 @@ fn mirror_hud_dock_registry_from_widgets(
         dock.slot_mut(HudWidgetId::CommandShell).visible = next_command.visible;
     }
 }
-
-fn hud_dock_shell_keyboard_toggle(
-    keys: Res<ButtonInput<KeyCode>>,
-    bindings: Res<InputBindings>,
-    mut layout: ResMut<HudCommandShellLayout>,
-    mut dock: ResMut<HudDockRegistry>,
-) {
-    if keys.just_pressed(bindings.toggle_command_left_stack) {
-        layout.command_tray_state = if layout.command_tray_state.shows_content() {
-            HudPanelState::Collapsed
-        } else {
-            HudPanelState::Expanded
-        };
-        dock.slot_mut(HudWidgetId::CommandShell).visible =
-            HudCommandShellLayout::panel_open(layout.command_tray_state);
-    }
-}
-
-fn editor_dock_body_text(
-    dock: &HudDockRegistry,
-    layout: &HudCommandShellLayout,
-    tray: &HudOverlayTrayState,
-) -> String {
-    let mut lines = Vec::new();
-    lines.push("Editor dock".into());
-    lines.push(format!(
-        "Command shell: {}",
-        if dock.slot(HudWidgetId::CommandShell).visible {
-            "open"
-        } else {
-            "closed"
-        }
-    ));
-    lines.push(format!(
-        "  tray={:?}  status_rail={:?}  intel={:?}  table={:?}",
-        layout.command_tray_state,
-        layout.status_side_panel_state,
-        layout.intel_timeline_state,
-        layout.command_table_state
-    ));
-    lines.push(format!(
-        "Overlay tray: {}  fire={} logistics={} construction={} ecology={}",
-        if dock.slot(HudWidgetId::OverlayTray).visible {
-            "open"
-        } else {
-            "closed"
-        },
-        tray.fire_heat,
-        tray.logistics_heat,
-        tray.construction_heat,
-        tray.ecology_heat
-    ));
-    lines.push("── Minimized strip ──".into());
-    let mut any_min = false;
-    for id in HudWidgetId::ALL {
-        let slot = dock.slot(id);
-        if slot.minimized && slot.visible {
-            any_min = true;
-            lines.push(format!("  · {}", id.label()));
-        }
-    }
-    if !any_min {
-        lines.push("  (none)".into());
-    }
-    lines.push("── Side status rail ──".into());
-    if HudCommandShellLayout::panel_open(layout.status_side_panel_state) {
-        lines.push("  status rail expanded (Bevy MVP)".into());
-    } else {
-        lines.push("  status rail collapsed".into());
-    }
-    lines.join("\n")
-}
-
-fn despawn_editor_dock_bevy_when_inactive(
-    mut commands: Commands,
-    mut presence: ResMut<PanelPresence>,
-    roots: Query<Entity, With<EditorDockBevyRoot>>,
-) {
-    for e in &roots {
-        commands.entity(e).despawn();
-    }
-    presence.editor_dock_root = false;
-}
-
-/// Bevy sync for editor dock chrome (Command shell + Overlay tray + strip + status rail).
-pub fn sync_editor_dock_bevy_shell(
-    mut commands: Commands,
-    dock: Res<HudDockRegistry>,
-    layout: Res<HudCommandShellLayout>,
-    tray: Res<HudOverlayTrayState>,
-    palette: Res<UiPalette>,
-    mono: Res<CmdUiMonoFont>,
-    mut presence: ResMut<PanelPresence>,
-    roots: Query<Entity, With<EditorDockBevyRoot>>,
-    mut body: Query<&mut Text, With<EditorDockBodyText>>,
-    mut stamp: Local<EditorDockStamp>,
-) {
-    presence.editor_dock_root = !roots.is_empty();
-    // Product-shell gate already scopes this system to Editor (¬WorldGen).
-    // Always host the dock MVP summary; child slot lines follow HudDockRegistry.
-    let text = editor_dock_body_text(dock.as_ref(), layout.as_ref(), tray.as_ref());
-    let mut key = text.len() as u64;
-    for b in text.bytes() {
-        key = key.wrapping_mul(0x9E37_79B9).wrapping_add(b as u64);
-    }
-
-    if roots.is_empty() {
-        let tf = TextFont::from_font_size(12.0).with_font(mono.0.clone());
-        commands
-            .spawn((
-                EditorDockBevyRoot,
-                Node {
-                    position_type: PositionType::Absolute,
-                    top: Val::Px(40.0),
-                    left: Val::Px(8.0),
-                    width: Val::Px(280.0),
-                    max_height: Val::Px(360.0),
-                    padding: UiRect::all(Val::Px(10.0)),
-                    flex_direction: FlexDirection::Column,
-                    border: UiRect::all(Val::Px(1.0)),
-                    border_radius: BorderRadius::ZERO,
-                    overflow: Overflow::scroll_y(),
-                    ..default()
-                },
-                BackgroundColor(palette.bevy_hud_panel_fill()),
-                BorderColor::all(palette.bevy_wire_magenta()),
-                FocusPolicy::Block,
-                ZIndex(930),
-            ))
-            .with_children(|p| {
-                p.spawn((
-                    EditorDockBodyText,
-                    Text::new(text.clone()),
-                    tf,
-                    TextColor(palette.bevy_primary_text()),
-                ));
-            });
-        stamp.key = key;
-        presence.editor_dock_root = true;
-        return;
-    }
-
-    if stamp.key != key {
-        for mut t in &mut body {
-            crate::gui::style::widgets::set_text_if_changed(&mut t, text.clone());
-        }
-        stamp.key = key;
-    }
-}
-
-
 
 #[cfg(test)]
 mod tests {
