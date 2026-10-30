@@ -1522,7 +1522,11 @@ pub(crate) fn register_world_gen_panel(app: &mut App) {
     app.init_resource::<WorldGenPanelState>().add_systems(
         Update,
         (
-            adopt_world_gen_shell,
+            // Adoption rebuilds the old shell's toolbar/sheet subtrees; it must flush before the
+            // legacy shell sync touches those entities, or the sync's queued commands target
+            // despawned children (panicked on world-gen re-arm).
+            adopt_world_gen_shell
+                .before(super::world_gen_bevy_shell::sync_world_gen_bevy_shell),
             sync_world_gen_panel,
             world_gen_panel_flow_actions,
             world_gen_panel_view_actions,
