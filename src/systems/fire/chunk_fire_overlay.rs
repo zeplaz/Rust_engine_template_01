@@ -6,9 +6,9 @@
 use bevy::prelude::*;
 
 use super::cell_spread::{
-    admit_spark, apply_snow_to_hold, lightning_spark, rain_blocks_neighbor_spread,
+    admit_spark, apply_snow_to_hold, burn_fuel_step, lightning_spark, rain_blocks_neighbor_spread,
     scaled_neighbor_heat_gain, should_arm_burn_hold, spread_allowed, step_burn_hold,
-    fuel_step_in_wind, take_neighbor_deposit, FireCell, BURNED_HOLD_TICKS,
+    take_neighbor_deposit, FireCell, BURNED_HOLD_TICKS,
 };
 use super::chunk_fuel_profile::ChunkFuelProfile;
 use super::chunk_surface_fire::ChunkSurfaceFire;
@@ -25,7 +25,7 @@ use crate::systems::chunk_environment_persist::{
     ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks,
 };
 use crate::systems::chunk_sim_lod::ChunkSimLod;
-use crate::systems::ecology::{ChunkEcology, VegetationField};
+use crate::systems::ecology::{ChunkCellStand, ChunkEcology, StandBurnConfig, VegetationField};
 use crate::systems::sim_control::SimControlState;
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
@@ -62,6 +62,7 @@ pub fn chunk_fire_overlay_tick(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
     water_gate: Res<SurfaceWaterFireGate>,
+    stand_cfg: Option<Res<StandBurnConfig>>,
     mut hooks: ResMut<ChunkEnvironmentPersistHooks>,
     mut witness: ResMut<FireEcologyWitness>,
     mut q: Query<(
@@ -73,6 +74,7 @@ pub fn chunk_fire_overlay_tick(
         Option<&VegetationField>,
         Option<&ChunkFuelProfile>,
         Option<&FireFuelField>,
+        Option<&ChunkCellStand>,
         &mut ChunkFireOverlay,
         &mut ChunkSurfaceFire,
         &mut ChunkEnvironmentDirty,
@@ -87,6 +89,8 @@ pub fn chunk_fire_overlay_tick(
     }
 
     let mut scratch: Vec<f32> = Vec::new();
+    let default_cfg = StandBurnConfig::default();
+    let stand_cfg = stand_cfg.as_deref().unwrap_or(&default_cfg);
 
     for (
         entity,
@@ -97,6 +101,7 @@ pub fn chunk_fire_overlay_tick(
         veg_opt,
         prof_opt,
         fuel_opt,
+        stand_opt,
         mut ovl,
         mut surf,
         mut dirty,
@@ -142,11 +147,22 @@ pub fn chunk_fire_overlay_tick(
             .map(profile_weighted_smoke_toxic_explosion)
             .unwrap_or((0.5, 0.12, 0.0));
 
-        if let Some(prof) = prof_opt {
-            let seed = profile_cell_fuel_seed(prof);
-            for f in &mut ovl.fuel {
-                *f = (*f).clamp(0.0, seed);
+        // The vegetation sets what each cell can carry: per cell from its standing stand when that is rated,
+        // else the chunk profile's single ceiling.
+        let stand = stand_opt.filter(|s| s.is_seeded() && s.fuel_cap.len() == n && s.kind.len() == n);
+        match (stand, prof_opt) {
+            (Some(s), _) => {
+                for (f, cap) in ovl.fuel.iter_mut().zip(&s.fuel_cap) {
+                    *f = (*f).clamp(0.0, *cap);
+                }
             }
+            (None, Some(prof)) => {
+                let seed = profile_cell_fuel_seed(prof);
+                for f in &mut ovl.fuel {
+                    *f = (*f).clamp(0.0, seed);
+                }
+            }
+            (None, None) => {}
         }
 
         witness.chunks_sampled = witness.chunks_sampled.saturating_add(1);
@@ -196,8 +212,15 @@ pub fn chunk_fire_overlay_tick(
                 let rain_damp = wx.rain_intensity * 0.28 * dt_e;
 
                 let h = ovl.heat[i];
+                // A stand with nothing left to burn goes out quickly (a stand without per-cell fuel
+                // keeps the old slow cooling).
+                let cooling = if stand.is_some() && ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD {
+                    0.9
+                } else {
+                    0.14
+                };
                 let mut nh = (h + spark * dt_e * 8.0
-                    - h * 0.14 * dt_e
+                    - h * cooling * dt_e
                     - wet_line
                     - rain_damp * h
                     - h * wx.snow_depth * 0.08 * dt_e)
@@ -207,7 +230,35 @@ pub fn chunk_fire_overlay_tick(
                 }
                 ovl.heat[i] = nh;
 
-                let stepped = fuel_step_in_wind(ovl.fuel[i], nh, dt_e, wx.rain_intensity, wx.wind_speed);
+                // Burning consumes this cell's fuel at its fuel kind's rate. A ground fire (cool cell)
+                // stops at the canopy share; a hot cell burns the crown too. A cool cell refills toward
+                // what the stand can carry (litter back, regrowth ramping up).
+                let (rate, floor) = match stand {
+                    Some(s) => {
+                        let kind = s.kind[i];
+                        if nh < 0.02 && ovl.fuel[i] < s.fuel_cap[i] {
+                            ovl.fuel[i] = (ovl.fuel[i]
+                                + s.fuel_cap[i] / stand_cfg.litter(kind).max(1.0) * dt_e)
+                                .min(s.fuel_cap[i]);
+                        }
+                        let floor = if nh < stand_cfg.crown_heat {
+                            stand_cfg.crown(kind) * s.fuel_cap[i]
+                        } else {
+                            0.0
+                        };
+                        (stand_cfg.rate(kind), floor)
+                    }
+                    None => (1.0, 0.0),
+                };
+                let stepped = burn_fuel_step(
+                    ovl.fuel[i],
+                    nh,
+                    dt_e,
+                    wx.rain_intensity,
+                    wx.wind_speed,
+                    rate,
+                    floor,
+                );
                 ovl.fuel[i] = stepped.fuel;
                 if stepped.crossed_below_spread {
                     witness.fuel_depleted_cells = witness.fuel_depleted_cells.saturating_add(1);

@@ -67,6 +67,13 @@ pub struct CanopyDrivers {
     pub suitability_cap: f32,
     /// Biome growth rate multiplier on the canopy and understory smoothing step.
     pub growth_scale: f32,
+    /// Share of the chunk's canopy fuel that fire consumed (cells burnt out, regrowing). Fire's only way
+    /// to remove canopy: it lowers the ceiling, and the canopy follows it down and, as the stand
+    /// regrows, back up. Set by the per-cell stand tick.
+    pub burn_canopy_loss: f32,
+    /// Share of the chunk's surface fuel (understory, litter) fire consumed. A ground fire sets this
+    /// without touching `burn_canopy_loss`.
+    pub burn_ground_loss: f32,
 }
 
 impl Default for CanopyDrivers {
@@ -78,6 +85,8 @@ impl Default for CanopyDrivers {
             clear_to: None,
             suitability_cap: 1.0,
             growth_scale: 1.0,
+            burn_canopy_loss: 0.0,
+            burn_ground_loss: 0.0,
         }
     }
 }
@@ -299,11 +308,18 @@ pub fn integrate_vegetation_field_step_with_drivers(
     veg: &mut VegetationField,
 ) {
     let biome_cap = drivers.suitability_cap.clamp(0.0, 1.0);
+    // Fire takes canopy through ceilings: a burnt share of the stand is not there to stand.
+    let canopy_room = (1.0 - drivers.burn_canopy_loss).clamp(0.0, 1.0);
+    let floor_room = (1.0 - drivers.burn_canopy_loss.max(drivers.burn_ground_loss)).clamp(0.0, 1.0);
+    let canopy_cap = biome_cap * canopy_room;
     if let Some(cap) = drivers.clear_to {
         veg.canopy_density = veg.canopy_density.min(cap.clamp(0.0, 1.0));
     }
     // Existing cover on unsuitable ground clears on the first tick, even while paused.
     clamp_to_biome(veg, biome_cap);
+    veg.canopy_density = veg.canopy_density.min(canopy_cap);
+    veg.understory_density = veg.understory_density.min(biome_cap * floor_room);
+    veg.old_growth = veg.old_growth.min(canopy_cap);
     if dt_e <= 0.0 {
         return;
     }
@@ -337,20 +353,22 @@ pub fn integrate_vegetation_field_step_with_drivers(
         None => (eco.biomass * 0.92 + eco.shade_factor * 0.35) * landform,
     }
     .max(drivers.succession_floor)
-    .clamp(0.0, biome_cap);
+    .clamp(0.0, canopy_cap);
     let ck = (0.16 * dt_e * drivers.growth_scale.clamp(0.0, 1.0)).min(0.28);
     veg.canopy_density = veg.canopy_density * (1.0 - ck) + canopy_target * ck;
-    veg.canopy_density = (veg.canopy_density - veg.burn_severity * 0.04 * dt_e * 18.0).clamp(0.0, 1.0);
     veg.canopy_density = canopy_after_snow(veg.canopy_density, wx.snow_depth);
-    veg.canopy_density = veg.canopy_density.min(biome_cap);
+    veg.canopy_density = veg.canopy_density.min(canopy_cap);
 
     let understory_target = (veg.canopy_density * 0.65 * (1.0 - veg.burn_severity * 0.85) + eco.biomass * 0.15).clamp(0.0, 1.0);
     veg.understory_density = veg.understory_density * (1.0 - ck) + understory_target * ck;
-    veg.understory_density = understory_after_snow(veg.understory_density, wx.snow_depth).min(biome_cap);
+    veg.understory_density =
+        understory_after_snow(veg.understory_density, wx.snow_depth).min(biome_cap * floor_room);
 
     veg.ground_fuel = ((veg.understory_density * 0.5 + veg.dryness * 0.45) * (1.0 + wetland_w * 0.35))
         .clamp(0.0, 1.0);
     veg.ground_fuel = ground_fuel_after_heat(veg.ground_fuel, heat_c);
+    // Litter the fire already consumed is not there to burn again.
+    veg.ground_fuel *= 1.0 - drivers.burn_ground_loss.clamp(0.0, 1.0);
 
     if biome_cap <= 0.0 {
         // No vegetation, no fuel (open water, bare rock, ice).
@@ -373,8 +391,7 @@ pub fn integrate_vegetation_field_step_with_drivers(
             veg.old_growth = veg.old_growth * (1.0 - ok) + og_target * ok;
         }
     }
-    veg.old_growth *= (1.0 - veg.burn_severity * 0.06 * dt_e * 10.0).clamp(0.65, 1.0);
-    veg.old_growth = veg.old_growth.min(biome_cap);
+    veg.old_growth = veg.old_growth.min(canopy_cap);
 
     veg.fragmentation =
         fragmentation_after_heat(eco.root_strength, veg.burn_severity, heat_c, wx.snow_depth);
@@ -582,7 +599,7 @@ mod tests {
     }
 
     #[test]
-    fn high_heat_raises_burn_and_drops_canopy() {
+    fn heat_raises_burn_severity_and_consumed_stand_lowers_the_canopy_ceiling() {
         let eco = ChunkEcology {
             biomass: 0.65,
             fire_risk: 0.2,
@@ -610,7 +627,30 @@ mod tests {
             integrate_vegetation_field_step(0.05, None, &eco, &wx, 0.9, &mut veg);
         }
         assert!(veg.burn_severity > 0.2, "burn {}", veg.burn_severity);
-        assert!(veg.canopy_density < 0.65);
+        // Heat alone does not remove canopy; consumed stand does, through the drivers.
+        assert!(veg.canopy_density > 0.4, "heat alone drained canopy to {}", veg.canopy_density);
+        let burnt = CanopyDrivers {
+            burn_canopy_loss: 0.6,
+            ..CanopyDrivers::default()
+        };
+        let mut hit = veg;
+        for _ in 0..120 {
+            integrate_vegetation_field_step_with_drivers(0.05, None, &eco, &wx, 0.0, &burnt, &mut hit);
+        }
+        assert!(hit.canopy_density <= 0.4 + 1e-6, "ceiling {}", hit.canopy_density);
+        // The stand grows back up to the ceiling once the loss is gone.
+        for _ in 0..400 {
+            integrate_vegetation_field_step_with_drivers(
+                0.2,
+                None,
+                &eco,
+                &wx,
+                0.0,
+                &CanopyDrivers::default(),
+                &mut hit,
+            );
+        }
+        assert!(hit.canopy_density > 0.4, "regrowth {}", hit.canopy_density);
     }
 
     #[test]

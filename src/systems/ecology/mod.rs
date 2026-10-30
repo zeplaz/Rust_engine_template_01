@@ -1,5 +1,6 @@
 //! Ecology: macro [`ChunkEcology`](chunk_ecology::ChunkEcology) + meso [`vegetation_field::VegetationField`] (CPU authority).
 
+mod cell_stand;
 mod chunk_ecology;
 mod landscape_grammar;
 mod landscape_grammar_burn;
@@ -12,6 +13,10 @@ mod vegetation_variant_catalog;
 #[cfg(test)]
 mod water_vegetation_tests;
 
+pub use cell_stand::{
+    ChunkCellStand, StandBurnConfig, StandKind, StandPhase, CELL_BURN_HEAT, CELL_BURNING, CELL_BURNT,
+    CELL_GRASS, CELL_NONE, CELL_OLD, CELL_REGROWTH, CELL_SHRUB, CELL_WATER, CELL_YOUNG, SCAR_FRACTION,
+};
 pub use chunk_ecology::{chunk_ecology_tick, ChunkEcology};
 pub use landscape_grammar::{
     evaluate_landscape_program, evaluate_landscape_program_with_inputs,
@@ -135,6 +140,20 @@ impl Plugin for EcologyPlugin {
                 init_landscape_atlas_registry,
                 vegetation_suitability::init_vegetation_suitability_table,
             ),
+        );
+        // Per-cell standing vegetation: fuel capacity, burn-out, regrowth. Its losses reach the canopy only
+        // through `CanopyDrivers` (inputs), so `vegetation_field_tick` stays the one canopy writer.
+        app.init_resource::<StandBurnConfig>().add_systems(
+            Update,
+            (
+                cell_stand::spawn_chunk_cell_stand,
+                cell_stand::cell_stand_tick
+                    .after(vegetation_suitability::update_chunk_vegetation_suitability)
+                    .after(landscape_grammar_lg2::derive_vegetation_population_from_graph),
+            )
+                .chain()
+                .in_set(ChunkEnvironmentSet::Ecology)
+                .in_set(VegetationCanopySet::Inputs),
         );
         app.add_systems(
             Update,
