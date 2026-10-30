@@ -225,8 +225,11 @@ pub use crate::dev::runtime_witness::economy::{
 
 pub fn sync_industrial_proof_witness_flags(
     proof: Res<IndustrialActivationLiveProofState>,
-    mut witness: ResMut<IndustrialActivationWitness>,
+    witness: Option<ResMut<IndustrialActivationWitness>>,
 ) {
+    let Some(mut witness) = witness else {
+        return;
+    };
     if proof.written() {
         witness.proof_json = true;
     }

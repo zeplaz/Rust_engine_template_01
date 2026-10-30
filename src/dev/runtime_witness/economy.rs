@@ -98,7 +98,7 @@ pub fn write_industrial_activation_live_proof_system(
     base: Option<Res<State<BaseState>>>,
     mut state: ResMut<IndustrialActivationLiveProofState>,
     board: Option<Res<IndustrialActivationTodoBoard>>,
-    witness: Res<IndustrialActivationWitness>,
+    witness: Option<Res<IndustrialActivationWitness>>,
     chain: Res<ConcreteChainE2eWitness>,
     buildings: Option<Res<crate::construction::BuildingDefinitionRegistry>>,
     district: Option<Res<crate::economy::spatial_district::IndustrialDistrictSnapshot>>,
@@ -108,6 +108,9 @@ pub fn write_industrial_activation_live_proof_system(
     if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
         return;
     }
+    let Some(witness) = witness else {
+        return;
+    };
 
     let gov_count = buildings
         .as_deref()
@@ -202,4 +205,4 @@ pub fn write_logistics_throughput_live_proof_system(
     ) {
         state.cadence.written = true;
     }
-}
+}
