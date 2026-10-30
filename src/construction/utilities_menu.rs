@@ -27,11 +27,7 @@ pub fn draw_utilities_submenu(registry: &BuildingDefinitionRegistry) -> Vec<Menu
         ("Power line - medium voltage", VoltageClass::Medium),
         ("Power line - high voltage", VoltageClass::High),
     ] {
-        rows.push(MenuRow::Item(MenuItem {
-            label: label.into(),
-            detail: String::new(),
-            pick: MenuPick::PowerLine(v),
-        }));
+        rows.push(MenuRow::Item(MenuItem::plain(label, MenuPick::PowerLine(v))));
     }
     rows.push(MenuRow::Section("Nodes".into()));
     for archetype in [BuildingArchetypeId::PowerPlant, BuildingArchetypeId::WaterPlant] {

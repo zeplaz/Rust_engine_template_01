@@ -626,7 +626,10 @@ pub mod menu_rows {
         ActiveBuildTool, BuildTool, BuildingArchetypeId, ZoneTool,
     };
     use super::super::building_catalog::BuildingIntentPreview;
+    use crate::economy::logistics::orders::{LogisticsOrdersSnapshot, OwnerId, SiteRole};
     use crate::infrastructure::VoltageClass;
+    use crate::strategic::SiteResourceManifest;
+    use std::collections::BTreeMap;
 
     pub use super::super::industrial_menu::draw_industrial_submenu as industrial_rows;
 
@@ -637,12 +640,82 @@ pub mod menu_rows {
         PowerLine(VoltageClass),
     }
 
+    /// Construction materials (cargo tag, whole units) a catalog building needs on site.
+    pub type Bill = Vec<(&'static str, u32)>;
+
     #[derive(Clone, Debug)]
     pub struct MenuItem {
         pub label: String,
         /// One-line cost / footprint / power summary (empty when not applicable).
         pub detail: String,
+        /// Material bill the faction's depots must be able to cover (empty: no gate).
+        pub bill: Bill,
         pub pick: MenuPick,
+    }
+
+    /// Whether the player's depots hold the bill, and the line to show for it.
+    #[derive(Clone, Debug, Default, PartialEq, Eq)]
+    pub struct Affordability {
+        pub affordable: bool,
+        pub text: String,
+    }
+
+    /// Bill for one catalog entry, same formula the site spawner uses.
+    #[must_use]
+    pub fn bill_for_intent(p: &BuildingIntentPreview) -> Bill {
+        if p.catalog_id.is_none() {
+            return Vec::new();
+        }
+        let m = SiteResourceManifest::bill_for_construction_cost(p.construction_cost);
+        [
+            ("Concrete", m.concrete_required),
+            ("Steel", m.steel_required),
+            ("Fuel", m.fuel_required),
+            ("Machinery", m.machinery_required),
+        ]
+        .into_iter()
+        .filter(|(_, n)| *n > 0.0)
+        .map(|(tag, n)| (tag, n.ceil() as u32))
+        .collect()
+    }
+
+    /// Stock of the player's depots (HQ included) summed per cargo. `None` when the player has
+    /// no depot yet (editor, or before the HQ registers): nothing can be judged, nothing is gated.
+    #[must_use]
+    pub fn player_depot_stock(snap: &LogisticsOrdersSnapshot) -> Option<BTreeMap<String, u32>> {
+        let mut any = false;
+        let mut stock: BTreeMap<String, u32> = BTreeMap::new();
+        for site in snap.sites_of(OwnerId::PLAYER, SiteRole::Depot) {
+            any = true;
+            for row in &site.stock {
+                *stock.entry(row.cargo.clone()).or_insert(0) += row.on_hand;
+            }
+        }
+        any.then_some(stock)
+    }
+
+    /// Judge `bill` against `stock`. Short materials are listed as `have/need`.
+    #[must_use]
+    pub fn affordability(bill: &Bill, stock: Option<&BTreeMap<String, u32>>) -> Affordability {
+        if bill.is_empty() {
+            return Affordability { affordable: true, text: String::new() };
+        }
+        let Some(stock) = stock else {
+            let text = bill.iter().map(|(t, n)| format!("{t} {n}")).collect::<Vec<_>>().join(" · ");
+            return Affordability { affordable: true, text: format!("needs {text}") };
+        };
+        let have = |tag: &str| stock.get(tag).copied().unwrap_or(0);
+        let short: Vec<String> = bill
+            .iter()
+            .filter(|(t, n)| have(t) < *n)
+            .map(|(t, n)| format!("{t} {}/{n}", have(t)))
+            .collect();
+        if short.is_empty() {
+            let text = bill.iter().map(|(t, n)| format!("{t} {n}")).collect::<Vec<_>>().join(" · ");
+            Affordability { affordable: true, text: format!("needs {text}") }
+        } else {
+            Affordability { affordable: false, text: format!("short: {}", short.join(" · ")) }
+        }
     }
 
     #[derive(Clone, Debug)]
@@ -662,8 +735,15 @@ pub mod menu_rows {
             Self {
                 label: label.unwrap_or_else(|| preview.label.clone()),
                 detail: item_detail(&preview),
+                bill: bill_for_intent(&preview),
                 pick: MenuPick::Building(archetype, Box::new(preview)),
             }
+        }
+
+        /// Zone / power-line pick: no detail, no material bill.
+        #[must_use]
+        pub fn plain(label: &str, pick: MenuPick) -> Self {
+            Self { label: label.to_string(), detail: String::new(), bill: Vec::new(), pick }
         }
 
         /// Tool intent only — never places anything.
