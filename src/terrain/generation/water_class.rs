@@ -68,6 +68,26 @@ impl WorldWaterGrid {
         }
     }
 
+    /// Like [`Self::from_hydrology`], then reconciled with the terrain the raster draws: a cell whose height is
+    /// at or under `water_line` is drawn as water, so it is never `Dry` / `Wetland` here (see
+    /// [`classify_world_water_on_terrain`]).
+    #[must_use]
+    pub fn from_hydrology_on_terrain(
+        hydro: &HydrologyResult,
+        width: u32,
+        height: u32,
+        stamp: u64,
+        dem: &[f32],
+        water_line: f32,
+    ) -> Self {
+        Self {
+            width,
+            height,
+            classes: classify_world_water_on_terrain(hydro, width, height, dem, water_line),
+            stamp,
+        }
+    }
+
     #[inline]
     #[must_use]
     pub fn class_at(&self, x: i32, y: i32) -> Option<WaterClass> {
@@ -163,6 +183,29 @@ pub fn classify_world_water(hydro: &HydrologyResult, width: u32, height: u32) ->
         for i in 0..n {
             if hydro.river_mask[i] && out[i] != WaterClass::Ocean {
                 out[i] = WaterClass::River;
+            }
+        }
+    }
+    out
+}
+
+/// [`classify_world_water`] plus the terrain rule that keeps the sim and the drawn map on one truth: a land
+/// or wetland cell that sits under the water line is standing water (the terrain family there is water), so
+/// it is a `Lake`. Inland low ground the hydrology did not list as a designed lake would otherwise draw as
+/// water while vegetation and fire treated it as ground.
+#[must_use]
+pub fn classify_world_water_on_terrain(
+    hydro: &HydrologyResult,
+    width: u32,
+    height: u32,
+    dem: &[f32],
+    water_line: f32,
+) -> Vec<WaterClass> {
+    let mut out = classify_world_water(hydro, width, height);
+    if dem.len() == out.len() {
+        for (class, &h) in out.iter_mut().zip(dem) {
+            if matches!(*class, WaterClass::Dry | WaterClass::Wetland) && h <= water_line {
+                *class = WaterClass::Lake;
             }
         }
     }
