@@ -878,6 +878,9 @@ fn tile_world_fallback_sync_spawner(
         let image = images.add(make_rgba_image(w, h, "tile_world_fallback_sim"));
         let minimap_image = images.add(make_rgba_image(w, h, "tile_world_fallback_minimap"));
         let world_size = Vec2::new(w as f32, h as f32);
+        // Image row 0 is tile row 0 (`y * tex_w + x`), but world y runs up: every sim layer (trees, networks,
+        // fronts, construction, picking) places tile `(x, y)` at world `(x + .5, y + .5)`. The sprite is flipped
+        // so row 0 sits at world y = 0 and the raster lines up with them; unflipped it was a vertical mirror.
         let center = Transform::from_xyz(world_size.x * 0.5, world_size.y * 0.5, 0.0);
         let e = if use_mesh {
             let mesh = meshes.add(Rectangle::new(world_size.x, world_size.y));
@@ -892,7 +895,7 @@ fn tile_world_fallback_sync_spawner(
                     Visibility::Visible,
                     Mesh2d(mesh),
                     MeshMaterial2d(material),
-                    center,
+                    center.with_scale(Vec3::new(1.0, -1.0, 1.0)),
                 ))
                 .id()
         } else {
@@ -904,6 +907,7 @@ fn tile_world_fallback_sync_spawner(
                     Sprite {
                         image: image.clone(),
                         custom_size: Some(world_size),
+                        flip_y: true,
                         ..default()
                     },
                     center,
@@ -1296,31 +1300,19 @@ fn raster_tile_fallback_subregion(
         reg_opt,
         fam_opt,
     );
-    if fire_heat_overlay {
-        if !cell_fire_heat.is_empty() {
-            crate::gui::map_tile_raster::apply_cell_fire_heat_to_rgba_subregion(
-                data.as_mut_slice(),
-                tex_w,
-                x0,
-                y0,
-                x1,
-                y1,
-                cell_fire_heat,
-                fire_heat_visibility_boost,
-            );
-        } else {
-            crate::gui::map_tile_raster::apply_shared_fire_heat_to_rgba_subregion(
-                data.as_mut_slice(),
-                tex_w,
-                x0,
-                y0,
-                x1,
-                y1,
-                chunk_geom,
-                &overlay.chunk_fire_heat,
-                fire_heat_visibility_boost,
-            );
-        }
+    // Fire tint is per cell only. A chunk-mean tint (the old fallback while per-cell heat was missing) painted
+    // whole chunk-sized rectangles over the map for every chunk with any heat.
+    if fire_heat_overlay && !cell_fire_heat.is_empty() {
+        crate::gui::map_tile_raster::apply_cell_fire_heat_to_rgba_subregion(
+            data.as_mut_slice(),
+            tex_w,
+            x0,
+            y0,
+            x1,
+            y1,
+            cell_fire_heat,
+            fire_heat_visibility_boost,
+        );
     }
     if let Some(catalog) = water_catalog {
         crate::render::apply_water_surface_overlay_subregion(
