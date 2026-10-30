@@ -553,6 +553,15 @@ mod tests {
     use crate::gui::style::widgets::test_support::init_ok;
 
     #[test]
+    fn sheets_spawn_cleanly() {
+        use bevy::ecs::system::RunSystemOnce;
+        let mut world = World::new();
+        world.insert_resource(crate::gui::UiPalette::default());
+        world.insert_resource(crate::gui::style::CmdUiMonoFont(Handle::default()));
+        world.run_system_once(spawn_sim_road_power_sheets_bevy).expect("spawn");
+    }
+
+    #[test]
     fn sheet_systems_have_disjoint_queries() {
         init_ok(sync_sim_road_sheet_bevy);
         init_ok(sync_sim_power_sheet_bevy);

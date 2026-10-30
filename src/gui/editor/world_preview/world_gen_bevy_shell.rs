@@ -194,9 +194,9 @@ pub(crate) fn spawn_world_gen_bevy_shell(
                         ..default()
                     },
                 ),
-                BorderColor::all(palette.bevy_accent_gold()),
                 ZIndex(20),
             ))
+            .insert(BorderColor::all(palette.bevy_accent_gold()))
             .with_children(|confirm| {
                 spawn_note(
                     confirm,

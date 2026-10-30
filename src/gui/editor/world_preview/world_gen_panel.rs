@@ -1586,6 +1586,29 @@ mod tests {
         init_ok(world_gen_panel_param_actions);
     }
 
+    /// Spawn the real shell + panel into a bare world: catches duplicate-component bundles and
+    /// bad hierarchy at test time instead of at first launch.
+    #[test]
+    fn shell_and_panel_spawn_cleanly() {
+        use bevy::ecs::system::RunSystemOnce;
+        let mut world = World::new();
+        world.insert_resource(UiPalette::default());
+        world.insert_resource(CmdUiMonoFont(Handle::default()));
+        world.insert_resource(WorldGenParams::default());
+        world.init_resource::<WorldGenPanelState>();
+        world
+            .run_system_once(super::super::world_gen_bevy_shell::spawn_world_gen_bevy_shell)
+            .expect("shell spawn");
+        world.run_system_once(fill_world_gen_panel).expect("panel fill");
+        let buttons = world.query::<&WgAct>().iter(&world).count();
+        let knobs = world.query::<&WgKnobBtn>().iter(&world).count();
+        assert!(buttons >= 25, "toolbar + sheet buttons: {buttons}");
+        assert!(knobs >= 80, "every knob has - and +: {knobs}");
+        // Filling twice must not duplicate the panel.
+        world.run_system_once(fill_world_gen_panel).expect("second fill");
+        assert_eq!(world.query::<&WgAct>().iter(&world).count(), buttons);
+    }
+
     #[test]
     fn width_step_stays_inside_slider_range() {
         let mut params = WorldGenParams::default();

@@ -491,6 +491,15 @@ pub fn sim_build_picker_panel_actions(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn picker_panel_spawns_cleanly() {
+        use bevy::ecs::system::RunSystemOnce;
+        let mut world = World::new();
+        world.insert_resource(crate::gui::UiPalette::default());
+        world.insert_resource(crate::gui::style::CmdUiMonoFont(Handle::default()));
+        world.run_system_once(spawn_sim_build_picker_panel).expect("spawn");
+    }
     use crate::gui::style::widgets::test_support::init_ok;
 
     #[test]
