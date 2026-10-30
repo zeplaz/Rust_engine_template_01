@@ -226,6 +226,11 @@ impl Plugin for InGameHudPlugin {
             )
             .add_systems(
                 Update,
+                crate::gui::hud::plant_info_card::sync_facility_info_card_system
+                    .run_if(in_simulation_or_editor),
+            )
+            .add_systems(
+                Update,
                 update_objectives_hud_line.run_if(in_simulation_or_editor),
             )
             .add_systems(

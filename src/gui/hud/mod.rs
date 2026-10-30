@@ -36,6 +36,7 @@ pub mod transmission_media;
 pub mod widget_presentation;
 pub mod world_interaction_diagnostics;
 pub mod cause_chain;
+pub mod plant_info_card;
 pub mod contextual_tip;
 pub mod grammar_read_hud;
 pub mod sim_hud_esc_cascade;

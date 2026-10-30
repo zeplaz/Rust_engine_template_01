@@ -19,7 +19,7 @@ use super::sim::LogisticsOrderCommand;
 use super::snapshot::SiteRole;
 
 /// Units of each input a plant asks logistics to keep on hand.
-pub const PLANT_INPUT_BUFFER_UNITS: u32 = 50;
+pub const PLANT_INPUT_BUFFER_UNITS: u32 = crate::economy::resource_flow::INPUT_BUFFER_TARGET as u32;
 /// Reorder at a quarter of the buffer.
 pub const PLANT_INPUT_REORDER_UNITS: u32 = 12;
 
