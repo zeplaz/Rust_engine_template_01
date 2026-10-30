@@ -23,11 +23,7 @@ pub fn draw_residential_submenu(registry: &BuildingDefinitionRegistry) -> Vec<Me
         ("Apartments (zone)", ZoneTool::Apartments),
         ("Mixed use", ZoneTool::MixedUse),
     ] {
-        rows.push(MenuRow::Item(MenuItem {
-            label: label.into(),
-            detail: String::new(),
-            pick: MenuPick::Zone(zone),
-        }));
+        rows.push(MenuRow::Item(MenuItem::plain(label, MenuPick::Zone(zone))));
     }
     rows.push(MenuRow::Section("Structures (placed buildings)".into()));
     for form in [

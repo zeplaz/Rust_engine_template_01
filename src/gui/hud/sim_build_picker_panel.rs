@@ -7,7 +7,10 @@
 
 use bevy::prelude::*;
 
-use crate::construction::building_definitions::menu_rows::{MenuItem, MenuRow};
+use crate::construction::building_definitions::menu_rows::{
+    affordability, player_depot_stock, MenuItem, MenuRow,
+};
+use crate::economy::logistics::orders::LogisticsOrdersSnapshotRes;
 use crate::construction::{
     ActiveBuildTool, BuildStripState, BuildTool, BuildingDefinitionRegistry, BuildingFamily,
     DefenseKind, PendingConstructionQueue, RailType, RoadType, ToolContext,
@@ -50,6 +53,10 @@ pub struct PickerClose;
 
 #[derive(Component, Clone, Copy)]
 pub struct PickerItem(pub usize);
+
+/// Material requirement / shortfall line of a row (updated from depot stock).
+#[derive(Component, Clone, Copy)]
+pub struct PickerReq(pub usize);
 
 /// What a picker row arms. Intent only — placement stays in the construction funnel.
 #[derive(Clone, Debug)]
@@ -359,16 +366,29 @@ pub fn rebuild_sim_build_picker_panel_list(
                         border: UiRect::all(Val::Px(1.0)),
                         ..default()
                     });
-                    if !detail.is_empty() {
-                        ec.with_children(|b| {
+                    let bill = match &action {
+                        PickerAction::Menu(m) => m.bill.clone(),
+                        _ => Vec::new(),
+                    };
+                    ec.with_children(|b| {
+                        if !detail.is_empty() {
                             b.spawn((
                                 UiButtonLabel,
                                 Text::new(detail.clone()),
                                 kit.text_font(FONT_SMALL),
                                 TextColor(palette.bevy_text_muted()),
                             ));
-                        });
-                    }
+                        }
+                        if !bill.is_empty() {
+                            b.spawn((
+                                UiButtonLabel,
+                                PickerReq(idx),
+                                Text::new(affordability(&bill, None).text),
+                                kit.text_font(FONT_SMALL),
+                                TextColor(palette.bevy_text_muted()),
+                            ));
+                        }
+                    });
                     actions.push(action);
                 }
             }
@@ -377,16 +397,34 @@ pub fn rebuild_sim_build_picker_panel_list(
     cache.actions = actions;
 }
 
-/// Highlight the armed tool's row in place.
+/// Highlight the armed tool's row, and gate rows on the player's depot stock — in place.
 pub fn sync_sim_build_picker_panel_selection(
     tool: Res<ActiveBuildTool>,
     cache: Res<SimBuildPickerCache>,
+    snapshot: Option<Res<LogisticsOrdersSnapshotRes>>,
     mut items: Query<(&PickerItem, &mut UiButton)>,
+    mut reqs: Query<(&PickerReq, &mut Text)>,
 ) {
+    let stock = snapshot.as_deref().and_then(|s| player_depot_stock(&s.0));
+    let bill_of = |idx: usize| -> Vec<(&'static str, u32)> {
+        match cache.actions.get(idx) {
+            Some(PickerAction::Menu(m)) => m.bill.clone(),
+            _ => Vec::new(),
+        }
+    };
     for (item, mut btn) in &mut items {
-        let sel = cache.actions.get(item.0).is_some_and(|a| a.is_selected(&tool));
-        if btn.selected != sel {
+        let Some(action) = cache.actions.get(item.0) else { continue };
+        let sel = action.is_selected(&tool);
+        let disabled = !affordability(&bill_of(item.0), stock.as_ref()).affordable;
+        if btn.selected != sel || btn.disabled != disabled {
             btn.selected = sel;
+            btn.disabled = disabled;
+        }
+    }
+    for (req, mut text) in &mut reqs {
+        let next = affordability(&bill_of(req.0), stock.as_ref()).text;
+        if text.0 != next {
+            text.0 = next;
         }
     }
 }

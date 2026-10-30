@@ -107,6 +107,7 @@ pub fn human_chain_label(chain_id: &str) -> String {
         "concrete_portland" => "Concrete (Portland)".to_string(),
         "concrete_geopolymer" => "Concrete (Geopolymer)".to_string(),
         "aluminum_primary" => "Aluminum primary".to_string(),
+        "construction_materials" => "Construction materials".to_string(),
         other => other.replace('_', " "),
     }
 }

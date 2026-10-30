@@ -69,3 +69,40 @@ pub fn draw_industrial_submenu(registry: &BuildingDefinitionRegistry) -> Vec<Men
     }
     rows
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::construction::building_definitions::{
+        default_buildings_dir, load_building_definitions_from_dir,
+    };
+
+    /// Game-loop buildings must be placeable from the Industrial list.
+    #[test]
+    fn game_loop_industry_buildings_are_listed() {
+        let reg = load_building_definitions_from_dir(default_buildings_dir());
+        let rows = draw_industrial_submenu(&reg);
+        let labels: Vec<String> = rows
+            .iter()
+            .filter_map(|r| match r {
+                MenuRow::Item(i) => Some(i.label.to_lowercase()),
+                _ => None,
+            })
+            .collect();
+        for expect in [
+            "materials import terminal",
+            "oil well",
+            "fuel refinery",
+            "metal ore mine",
+            "steel mill",
+            "machinery works",
+            "cement kiln",
+            "aggregate",
+        ] {
+            assert!(
+                labels.iter().any(|l| l.contains(expect)),
+                "industrial list missing {expect}: {labels:?}"
+            );
+        }
+    }
+}

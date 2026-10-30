@@ -13,12 +13,15 @@ use crate::gui::style::widgets::{
     UiTooltip, FONT_BODY, FONT_SMALL, FONT_TITLE, GAP, ROW_H, SECTION_GAP,
 };
 use crate::gui::style::{CmdUiMonoFont, UiPalette};
+use crate::economy::logistics::orders::LogisticsOrdersSnapshotRes;
 use crate::gui::{product_shell_active, PanelPresence};
 
 use super::build_tool_authority::{
     ActiveBuildTool, BuildTool, DefenseKind, RailType, RoadType,
 };
-use super::building_definitions::menu_rows::{intent_detail_lines, MenuItem, MenuRow};
+use super::building_definitions::menu_rows::{
+    affordability, intent_detail_lines, player_depot_stock, MenuItem, MenuRow,
+};
 use super::building_definitions::BuildingDefinitionRegistry;
 use super::commercial_menu::draw_commercial_submenu;
 use super::industrial_menu::draw_industrial_submenu;
@@ -50,6 +53,10 @@ struct ToolboxIntentText;
 
 #[derive(Component)]
 struct ToolboxTitle;
+
+/// Material requirement / shortfall line of an item (updated from depot stock).
+#[derive(Component, Clone, Copy)]
+struct ToolboxReq(usize);
 
 /// Index into [`ToolboxMenuCache`].
 #[derive(Component, Clone, Copy)]
@@ -363,7 +370,7 @@ fn rebuild_toolbox_menu_list(
                         UiButton::default(),
                         ToolboxMenuItem(idx),
                     );
-                    if !detail.is_empty() {
+                    if !detail.is_empty() || !item.bill.is_empty() {
                         ec.insert(Node {
                             width: Val::Percent(100.0),
                             flex_direction: FlexDirection::Column,
@@ -373,12 +380,23 @@ fn rebuild_toolbox_menu_list(
                             ..default()
                         });
                         ec.with_children(|b| {
-                            b.spawn((
-                                UiButtonLabel,
-                                Text::new(detail),
-                                kit.text_font(FONT_SMALL),
-                                TextColor(palette.bevy_text_muted()),
-                            ));
+                            if !detail.is_empty() {
+                                b.spawn((
+                                    UiButtonLabel,
+                                    Text::new(detail),
+                                    kit.text_font(FONT_SMALL),
+                                    TextColor(palette.bevy_text_muted()),
+                                ));
+                            }
+                            if !item.bill.is_empty() {
+                                b.spawn((
+                                    UiButtonLabel,
+                                    ToolboxReq(idx),
+                                    Text::new(affordability(&item.bill, None).text),
+                                    kit.text_font(FONT_SMALL),
+                                    TextColor(palette.bevy_text_muted()),
+                                ));
+                            }
                         });
                     }
                     items.push(item);
@@ -397,6 +415,8 @@ fn sync_toolbox_state(
     cache: Res<ToolboxMenuCache>,
     mut actions: Query<(&BuildToolboxAction, &mut UiButton), Without<ToolboxMenuItem>>,
     mut items: Query<(&ToolboxMenuItem, &mut UiButton), Without<BuildToolboxAction>>,
+    mut reqs: Query<(&ToolboxReq, &mut Text), With<UiButtonLabel>>,
+    snapshot: Option<Res<LogisticsOrdersSnapshotRes>>,
     mut active: Query<&mut Text, (With<ToolboxActiveText>, Without<ToolboxCatalogText>, Without<ToolboxIntentText>, Without<UiButtonLabel>)>,
     mut catalog: Query<&mut Text, (With<ToolboxCatalogText>, Without<ToolboxActiveText>, Without<ToolboxIntentText>, Without<UiButtonLabel>)>,
     mut intent: Query<(&mut Text, &mut Node), (With<ToolboxIntentText>, Without<ToolboxActiveText>, Without<ToolboxCatalogText>, Without<UiButtonLabel>, Without<ToolboxBody>)>,
@@ -408,13 +428,21 @@ fn sync_toolbox_state(
             btn.selected = sel;
         }
     }
+    let stock = snapshot.as_deref().and_then(|s| player_depot_stock(&s.0));
     for (item, mut btn) in &mut items {
-        let sel = cache
-            .items
-            .get(item.0)
-            .is_some_and(|i| i.is_selected(&tool));
-        if btn.selected != sel {
+        let Some(entry) = cache.items.get(item.0) else { continue };
+        let sel = entry.is_selected(&tool);
+        let disabled = !affordability(&entry.bill, stock.as_ref()).affordable;
+        if btn.selected != sel || btn.disabled != disabled {
             btn.selected = sel;
+            btn.disabled = disabled;
+        }
+    }
+    for (req, mut text) in &mut reqs {
+        let Some(entry) = cache.items.get(req.0) else { continue };
+        let next = affordability(&entry.bill, stock.as_ref()).text;
+        if text.0 != next {
+            text.0 = next;
         }
     }
     let summary = format!("Active: {}", tool_summary(&tool));
@@ -603,6 +631,21 @@ mod tests {
                 "{cat:?} must offer at least one entry"
             );
         }
+    }
+
+    #[test]
+    fn short_depot_stock_disables_and_names_the_shortfall() {
+        use std::collections::BTreeMap;
+        let bill: Vec<(&'static str, u32)> = vec![("Steel", 48), ("Fuel", 24)];
+        let rich: BTreeMap<String, u32> =
+            [("Steel".to_string(), 100), ("Fuel".to_string(), 30)].into_iter().collect();
+        let poor: BTreeMap<String, u32> = [("Steel".to_string(), 12)].into_iter().collect();
+        assert!(affordability(&bill, Some(&rich)).affordable);
+        let a = affordability(&bill, Some(&poor));
+        assert!(!a.affordable);
+        assert!(a.text.contains("Steel 12/48") && a.text.contains("Fuel 0/24"), "{}", a.text);
+        // No depot yet (editor / before HQ): never gated.
+        assert!(affordability(&bill, None).affordable);
     }
 
     #[test]
