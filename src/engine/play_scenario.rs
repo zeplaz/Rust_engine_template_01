@@ -343,6 +343,11 @@ pub fn write_play_scenario_live_proof_from_sim(
     let Some(chain) = chain else {
         return;
     };
+    // Building the payload runs lib-contract witnesses (tens of ms); skip it entirely when no live
+    // witness would be written (normal release play).
+    if !crate::dev::debug_run_envelope::witness_live_refresh_enabled() {
+        return;
+    }
     proof.frames_since_write = proof.frames_since_write.saturating_add(1);
     // The payload runs lib-contract witnesses and writes JSON synchronously (tens of ms): a
     // visible hitch. Keep the tight cadence for `--test` / instrumented runs, stretch it in play.

@@ -36,7 +36,10 @@ pub fn tick_live_proof_cadence(state: &mut LiveProofCadence) -> bool {
 
 /// Arm global [`LiveProofCadence`] (MIG-A7).
 pub fn arm_live_proof_cadence(state: &mut LiveProofCadence) {
-    state.write_due = tick_live_proof_cadence(state);
+    // Witness payloads are built before they are written (tens of ms for some), so when live witness
+    // refresh is off — normal release play — never raise the due flag at all.
+    state.write_due =
+        tick_live_proof_cadence(state) && crate::dev::debug_run_envelope::witness_live_refresh_enabled();
 }
 
 /// Run condition for wave_c / wave_s / stage6 writers sharing [`LiveProofCadence`].
@@ -50,7 +53,7 @@ pub fn arm_witness_write_cadence(state: &mut WitnessWriteCadence) {
     state.frames_since_write = state.frames_since_write.saturating_add(1);
     state.write_due = if state.frames_since_write >= state.write_interval {
         state.frames_since_write = 0;
-        true
+        crate::dev::debug_run_envelope::witness_live_refresh_enabled()
     } else {
         false
     };

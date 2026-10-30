@@ -343,6 +343,10 @@ pub fn witness_live_refresh_enabled() -> bool {
     if cfg!(test) {
         return true;
     }
+    // Explicit force-off wins over every other source (matches `witness_writes_enabled`).
+    if env_flag(crate::dev::runtime_witness::ENV_RUNTIME_WITNESS_WRITES_FORCE_OFF) {
+        return false;
+    }
     if crate::dev::test_run_instrumentation::instrumentation_active() {
         return true;
     }
