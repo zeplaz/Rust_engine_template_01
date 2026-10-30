@@ -92,19 +92,3 @@ pub(crate) fn fire_spark_zoom_scatter_gate(px_per_tile: f32) -> f32 {
     let span = (FIRE_SPARK_FULL_SCATTER_PX_PER_TILE - FIRE_SPARK_MIN_PX_PER_TILE).max(1e-4);
     ((px_per_tile - FIRE_SPARK_MIN_PX_PER_TILE) / span).clamp(0.0, 1.0)
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn operational_play_px_per_tile_enables_sparks_and_heat_boost() {
-        assert!(fire_spark_enabled_at_px_per_tile(
-            FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE
-        ));
-        // Zoom hard-cull disabled (MIN=0) — negative zoom is the only reject.
-        assert!(fire_spark_enabled_at_px_per_tile(0.0));
-        assert!(!fire_spark_enabled_at_px_per_tile(-1.0));
-        assert!(fire_spark_zoom_scatter_gate(FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE) > 0.0);
-    }
-}

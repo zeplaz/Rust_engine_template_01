@@ -45,7 +45,6 @@ mod app_shell;
 mod main_menu;
 mod splash;
 mod ui_gates;
-mod world_gen_chrome_contract;
 mod input_bindings;
 mod input_frame;
 pub mod input_pick;

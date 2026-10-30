@@ -89,7 +89,8 @@ pub fn mark_sim_hud_esc_cascade_witness(witness: &mut SimHudEscCascadeWitness) {
 /// Truncate build-read lines per DES-BUILD-READ-HUD-002.
 #[must_use]
 pub fn truncate_build_read_line(line: &str) -> String {
-    if line.len() <= MAX_BUILD_READ_LINE {
+    // The limit is in displayed characters, not UTF-8 bytes (lines contain `·`, `✗`, `…`).
+    if line.chars().count() <= MAX_BUILD_READ_LINE {
         return line.to_string();
     }
     let mut s = line.chars().take(MAX_BUILD_READ_LINE.saturating_sub(1)).collect::<String>();
@@ -126,7 +127,7 @@ mod tests {
     fn truncate_build_read_line_at_48() {
         let long = "BUILD  ·  Blocked ✗ · reason that is way too long for one strip line";
         let t = truncate_build_read_line(long);
-        assert!(t.len() <= MAX_BUILD_READ_LINE);
+        assert!(t.chars().count() <= MAX_BUILD_READ_LINE);
         assert!(t.ends_with('…'));
     }
 }

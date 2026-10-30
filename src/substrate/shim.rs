@@ -289,9 +289,14 @@ pub fn dual_write_shim_green(shim: &DualWriteShimState) -> bool {
     shim.enabled && shim.drift_max < DUAL_WRITE_DRIFT_EPSILON
 }
 
+/// Serializes tests that set/clear `RUST_ENGINE_SUBSTRATE_DUAL_WRITE` (process-global env var).
+#[cfg(test)]
+pub(crate) static DUAL_WRITE_ENV_TEST_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
+
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::DUAL_WRITE_ENV_TEST_LOCK;
     use bevy::state::app::StatesPlugin;
     use crate::engine::states::BaseState;
     use crate::substrate::WorldChunkState;
@@ -299,6 +304,7 @@ mod tests {
 
     #[test]
     fn dual_write_weather_fire_drift_under_epsilon() {
+        let _env = DUAL_WRITE_ENV_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         std::env::set_var("RUST_ENGINE_SUBSTRATE_DUAL_WRITE", "1");
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, StatesPlugin))
@@ -348,11 +354,13 @@ mod tests {
         let slab = reg.chunks.get(key).expect("slab");
         assert!((slab.atmosphere.local.rain_intensity - 0.42).abs() < DUAL_WRITE_DRIFT_EPSILON);
         assert!((slab.thermal.surface_heat[0] - 0.55).abs() < DUAL_WRITE_DRIFT_EPSILON);
+        std::env::remove_var("RUST_ENGINE_SUBSTRATE_DUAL_WRITE");
     }
 
     /// **DEHACK-WSS-001** — slab authoritative; mirror only when env opt-in.
     #[test]
     fn dehack_wss_001_compare_only_by_default() {
+        let _env = DUAL_WRITE_ENV_TEST_LOCK.lock().unwrap_or_else(|e| e.into_inner());
         let _ = std::env::remove_var("RUST_ENGINE_SUBSTRATE_DUAL_WRITE");
         assert!(!substrate_dual_write_mirror_enabled());
 

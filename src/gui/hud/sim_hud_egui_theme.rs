@@ -29,14 +29,6 @@ pub fn sim_hud_egui_theme_enforcement_wired() -> bool {
 }
 
 #[must_use]
-pub fn hud_nat_009_single_themed_satellite_wired() -> bool {
-    include_str!("plant_focus_card.rs").contains("map_attached_chip_frame")
-        && include_str!("plant_focus_card.rs").contains("clamp_satellite_to_map_hole")
-        && include_str!("sim_play_bevy_chrome.rs").contains("pub struct SimPlayPowerHover")
-        && include_str!("sim_play_bevy_chrome.rs").contains("fn sync_sim_play_power_hover")
-}
-
-#[must_use]
 pub fn sim_hud_a11y_invalid_label(reason: &str) -> String {
     format!("Blocked ✗ · {reason}")
 }

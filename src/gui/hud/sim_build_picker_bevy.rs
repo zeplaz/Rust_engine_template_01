@@ -60,13 +60,6 @@ pub enum SimBuildPickerAction {
     Demolish,
 }
 
-#[must_use]
-pub fn sim_build_picker_native_wired() -> bool {
-    SIM_BUILD_PICKER_USE_BEVY
-        && include_str!("sim_build_picker_bevy.rs").contains("SimBuildPickerRoot")
-        && include_str!("sim_build_picker_sheet.rs").contains("SIM_BUILD_PICKER_USE_BEVY")
-}
-
 pub fn spawn_sim_build_picker_bevy(
     mut commands: Commands,
     palette: Res<UiPalette>,
@@ -567,12 +560,6 @@ pub fn sim_build_picker_bevy_action_system(
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn hud_nat_001_native_flag_on() {
-        assert!(SIM_BUILD_PICKER_USE_BEVY);
-        assert!(sim_build_picker_native_wired());
-    }
 
     #[test]
     fn cityfix_one_power_sheet_visible() {

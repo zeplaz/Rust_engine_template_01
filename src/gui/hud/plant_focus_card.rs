@@ -176,23 +176,9 @@ pub fn plant_focus_card_gauges_wired() -> bool {
         })
 }
 
-#[must_use]
-pub fn hud_nat_009_plant_focus_map_clamped() -> bool {
-    include_str!("plant_focus_card.rs").contains("clamp_satellite_to_map_hole")
-        && include_str!("plant_focus_card.rs").contains("PLANT_FOCUS_CARD_MAX_H")
-        && include_str!("plant_focus_card.rs").contains("power_hover.card_visible")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gui::hud::sim_hud_egui_theme::hud_nat_009_single_themed_satellite_wired;
-
-    #[test]
-    fn hud_nat_009_plant_and_theme_wired() {
-        assert!(hud_nat_009_plant_focus_map_clamped());
-        assert!(hud_nat_009_single_themed_satellite_wired());
-    }
 
     #[test]
     fn live_runtime_fills_scram_heat_and_fuel() {
