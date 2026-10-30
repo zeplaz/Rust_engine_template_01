@@ -95,6 +95,26 @@ pub struct InputBindings {
     pub map_cycle_camera_mode: KeyCode,
     /// Toggle world presentation: Tactical (top-down) ↔ World (PixelWorld3D / voxel massing) (default V).
     pub toggle_world_presentation: KeyCode,
+
+    // --- Front controls (`gui::front_controls`): fronts, formations, orders ---
+    /// Hold the selected formation(s) in place (front controls).
+    pub front_hold: KeyCode,
+    /// Order the selection to dig in on its theater (Fortify).
+    pub front_fortify: KeyCode,
+    /// Cycle the selection through your own formations.
+    pub front_cycle_selection: KeyCode,
+    /// Show / hide every front overlay layer.
+    pub front_toggle_overlay: KeyCode,
+    /// Toggle the front-line layer.
+    pub front_toggle_fronts: KeyCode,
+    /// Toggle the theater-outline layer.
+    pub front_toggle_theaters: KeyCode,
+    /// Toggle the pressure-point layer.
+    pub front_toggle_pressure: KeyCode,
+    /// Toggle the formation-symbol layer.
+    pub front_toggle_formations: KeyCode,
+    /// Toggle front overlay labels.
+    pub front_toggle_labels: KeyCode,
 }
 
 impl Default for InputBindings {
@@ -144,6 +164,15 @@ impl Default for InputBindings {
             map_frame_world: KeyCode::KeyB,
             map_cycle_camera_mode: KeyCode::KeyM,
             toggle_world_presentation: KeyCode::KeyV,
+            front_hold: KeyCode::KeyH,
+            front_fortify: KeyCode::KeyF,
+            front_cycle_selection: KeyCode::Tab,
+            front_toggle_overlay: KeyCode::KeyK,
+            front_toggle_fronts: KeyCode::Digit1,
+            front_toggle_theaters: KeyCode::Digit2,
+            front_toggle_pressure: KeyCode::Digit3,
+            front_toggle_formations: KeyCode::Digit4,
+            front_toggle_labels: KeyCode::Digit5,
         }
     }
 }
@@ -194,6 +223,7 @@ impl InputBindings {
 pub fn binding_preset_keys() -> &'static [KeyCode] {
     &[
         KeyCode::Escape,
+        KeyCode::Tab,
         KeyCode::F1,
         KeyCode::F2,
         KeyCode::F3,
@@ -271,5 +301,33 @@ mod tests {
             ron::ser::to_string_pretty(&original, ron::ser::PrettyConfig::new()).unwrap();
         let decoded: InputBindings = ron::from_str(&s).unwrap();
         assert_eq!(original, decoded);
+    }
+
+    /// Old saved files without the front-control keys still load, with the defaults.
+    #[test]
+    fn missing_front_keys_fall_back_to_defaults() {
+        let decoded: InputBindings = ron::from_str("(toggle_diagnostics: F9)").unwrap();
+        assert_eq!(decoded.toggle_diagnostics, KeyCode::F9);
+        assert_eq!(decoded.front_fortify, InputBindings::default().front_fortify);
+    }
+
+    /// The front-control defaults must not shadow any other default binding.
+    #[test]
+    fn front_defaults_do_not_collide_with_other_bindings() {
+        let text = ron::ser::to_string_pretty(&InputBindings::default(), ron::ser::PrettyConfig::new()).unwrap();
+        let pairs: Vec<(String, String)> = text
+            .lines()
+            .filter_map(|l| l.trim().trim_end_matches(',').split_once(": "))
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect();
+        let front: Vec<&(String, String)> = pairs.iter().filter(|(k, _)| k.starts_with("front_")).collect();
+        assert_eq!(front.len(), 9);
+        for (k, v) in &front {
+            for (k2, v2) in &pairs {
+                if k != k2 {
+                    assert_ne!(v, v2, "{k} collides with {k2}");
+                }
+            }
+        }
     }
 }
