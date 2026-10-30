@@ -106,7 +106,9 @@ pub struct StandBurnConfig {
 
 impl Default for StandBurnConfig {
     fn default() -> Self {
-        let rate = |k| (35.0 / fuel_material_def(k).burn_duration.max(1.0)).clamp(0.2, 4.0);
+        // Game-time compression on the material's burn duration: a cell burns for seconds (grass) to tens of
+        // seconds (timber), so a front is a band that moves, not a field that all burns at once.
+        let rate = |k| (35.0 * 12.0 / fuel_material_def(k).burn_duration.max(1.0)).clamp(0.2, 24.0);
         Self {
             burn_rate: [
                 rate(FuelMaterialKind::Grass),
@@ -171,6 +173,9 @@ pub struct ChunkCellStand {
     pub burnt_fraction: f32,
     /// One code per cell: [`CELL_NONE`]..[`CELL_WATER`].
     pub render: Arc<[u8]>,
+    /// Cells drawn as burning. Lit at [`CELL_BURN_HEAT`], held until heat falls under half of it (hysteresis), so
+    /// a cell on the threshold does not blink between burning and standing.
+    lit: Vec<bool>,
     /// Changes whenever `render` does.
     pub render_rev: u32,
     seeded: bool,
@@ -190,6 +195,7 @@ impl ChunkCellStand {
             burnt_count: 0,
             burnt_fraction: 0.0,
             render: vec![CELL_NONE; n].into(),
+            lit: vec![false; n],
             render_rev: 0,
             seeded: false,
             last_refresh: 0,
@@ -402,7 +408,9 @@ pub(crate) fn cell_stand_tick(
             drivers.burn_ground_loss = ground_loss;
         }
 
-        if reseed || tick.0.wrapping_sub(stand.last_snapshot) >= cfg.snapshot_period_ticks {
+        // A chunk with live fire is re-drawn often enough that the front advances steadily.
+        let period = if hot { (cfg.snapshot_period_ticks / 4).max(3) } else { cfg.snapshot_period_ticks };
+        if reseed || tick.0.wrapping_sub(stand.last_snapshot) >= period {
             stand.last_snapshot = tick.0;
             snapshot(&mut stand, &matrix, veg, suit, &ovl, now, cfg);
         }
@@ -472,7 +480,9 @@ fn snapshot(
             continue;
         }
         // Burning means heat with fuel left to burn. An exhausted cell is charred even while its heat cools.
-        let burning = ovl.heat[i] >= CELL_BURN_HEAT && ovl.fuel[i] >= MIN_CELL_FUEL_FOR_SPREAD;
+        let threshold = if stand.lit[i] { CELL_BURN_HEAT * 0.5 } else { CELL_BURN_HEAT };
+        let burning = ovl.heat[i] >= threshold && ovl.fuel[i] >= MIN_CELL_FUEL_FOR_SPREAD;
+        stand.lit[i] = burning;
         codes[i] = if burning {
             CELL_BURNING
         } else {
