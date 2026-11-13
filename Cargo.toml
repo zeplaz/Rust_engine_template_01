@@ -108,12 +108,20 @@ linfa-kernel = { version = "0.8.1", optional = true, default-features = false }
 [profile.dev.package."*"]
 opt-level = 3
 
+# Our own crate at opt-level 1 in dev: ~10x faster debug frames (193 -> 20 ms avg),
+# rebuild after a small edit ~90 s vs ~39 s. Use `--profile dev-deep-debug` for opt 0 stepping.
+[profile.dev.package.proc_A_dine01]
+opt-level = 1
+
 [profile.dev-deep-debug]
 inherits = "dev"
 opt-level = 0
 debug = 2
 overflow-checks = true
 incremental = true
+
+[profile.dev-deep-debug.package.proc_A_dine01]
+opt-level = 0
 
 [lints.clippy]
 too_many_arguments = "allow"
