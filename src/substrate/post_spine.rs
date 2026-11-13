@@ -7,7 +7,6 @@ use crate::render::LogisticsVisualSnapshot;
 use crate::substrate::atmosphere::{AtmosphereClipmapStack, AtmosphereClipmapStats};
 use crate::substrate::registry::WorldSubstrateRegistry;
 use crate::systems::transport::{TransportEdgeDirectory, TransportFieldStore};
-use crate::systems::weather::GlobalRenewableWeatherFactors;
 
 pub const WSS_POST_SPINE_GATE: &str = "WSS-POST-SPINE-001";
 
@@ -142,31 +141,6 @@ pub fn sync_regional_weather_from_clipmap_system(
         local.visibility_factor =
             (1.0 - local.fog_density * 0.35 - local.rain_intensity * 0.15).clamp(0.05, 1.0);
     }
-}
-
-/// Clipmap L2 cloud proxy → renewables (runbook: wire `GlobalRenewableWeatherFactors` to L2).
-pub fn update_global_renewable_weather_from_clipmap_system(
-    clipmap: Option<Res<AtmosphereClipmapStack>>,
-    out: Option<ResMut<GlobalRenewableWeatherFactors>>,
-) {
-    let (Some(clipmap), Some(mut out)) = (clipmap, out) else {
-        return;
-    };
-    let cloud = clipmap_l2_mean_scalar(&clipmap).clamp(0.0, 1.0);
-    let wind_proxy = clipmap
-        .levels
-        .first()
-        .map(|l0| {
-            if l0.smoke_density.is_empty() {
-                0.0
-            } else {
-                l0.smoke_density.iter().copied().fold(0.0_f32, f32::max)
-            }
-        })
-        .unwrap_or(0.0)
-        .clamp(0.0, 1.0);
-    out.wind_capacity_factor = (0.12 + wind_proxy * 0.98).clamp(0.05, 1.2);
-    out.solar_capacity_factor = (1.0 - cloud * 0.88).clamp(0.05, 1.0);
 }
 
 pub fn sync_post_spine_witness_system(

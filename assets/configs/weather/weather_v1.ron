@@ -1,0 +1,111 @@
+// Weather field tuning (plan `src/dev/plan_weather_wind_v1.md`, phase W1).
+// Loaded by `src/systems/weather/tuning.rs`; the compiled-in copy is the default, this file
+// overrides it at runtime. Metric units: metres, seconds, m/s, hPa, °C, mm/h.
+(
+    schema_version: 1,
+    // Edge of one weather cell. The grid is ceil(map extent / cell) per axis (8 km map -> 8x8).
+    cell_size_m: 1000.0,
+    // Game seconds between field solves (1 sim step = 1 s). Consumers interpolate between solves.
+    weather_step_secs: 60,
+    // Climate (season, base temperature, prevailing veer) advances on this cadence.
+    climate_step_secs: 3600,
+    // One full season cycle in game seconds (30 game days).
+    season_length_secs: 2592000.0,
+    // Mean and seasonal swing of the sea-level base temperature.
+    base_temp_mean_c: 13.0,
+    base_temp_amplitude_c: 9.0,
+    // Normalised terrain elevation 0..1 spans this many metres (lapse rate below uses it).
+    elevation_range_m: 1200.0,
+    lapse_rate_c_per_km: 6.5,
+    // Prevailing wind speed range picked from the world seed.
+    prevailing_speed_mps: (3.0, 8.0),
+    // Slow random veer of the prevailing direction per climate step (radians, +/-).
+    prevailing_veer_rad: 0.25,
+    // Pressure systems: count range (scaled by map area, then clamped), strength, radius
+    // as a fraction of the map extent (clamped to radius_m), lifetime and drift.
+    systems_count: (2, 8),
+    // Map area in km^2 that adds one system above the minimum.
+    systems_km2_per_extra: 24.0,
+    system_strength_hpa: (6.0, 18.0),
+    system_radius_frac: (0.35, 0.8),
+    system_radius_m: (6000.0, 40000.0),
+    system_lifetime_secs: (5400.0, 18000.0),
+    // Systems drift with the prevailing (steering) wind at this fraction, plus a seeded cross drift.
+    system_steering_frac: 0.8,
+    system_cross_drift_mps: 1.5,
+    // Share of systems that are lows (the rest are highs).
+    low_fraction: 0.55,
+    // Surface wind from the pressure gradient: m/s per hPa/km, turned toward low pressure.
+    gradient_mps_per_hpa_km: 3.0,
+    friction_turn_deg: 20.0,
+    max_wind_mps: 40.0,
+    // Terrain factors (baked once per terrain revision per weather cell).
+    ridge_factor: 1.3,
+    valley_factor: 0.7,
+    // Elevation above/below the 3x3 neighbourhood mean (normalised) that maps to full ridge/valley.
+    exposure_span: 0.08,
+    rough_factor: 0.6,
+    channel_max: 0.6,
+    // Humidity (0..1 relative) per weather step.
+    humidity_base: 0.6,
+    humidity_relax: 0.05,
+    water_evaporation: 0.008,
+    low_humidity_load: 0.012,
+    high_drying: 0.01,
+    rain_sink_per_mm_h: 0.004,
+    // Cloud: humidity above `cloud_humidity_min` + low-pressure lift + orographic lift.
+    cloud_humidity_min: 0.55,
+    cloud_humidity_span: 0.35,
+    low_lift_per_hpa: 0.035,
+    orographic_lift: 2.5,
+    // Rain starts above this cloud cover and reaches `rain_max_mm_h` at full cover and humidity.
+    rain_cloud_min: 0.65,
+    rain_max_mm_h: 10.0,
+    // Visibility: clear-air limit and attenuation per unit fog / per mm/h rain.
+    visibility_clear_m: 20000.0,
+    visibility_fog_k: 80.0,
+    visibility_rain_k: 0.35,
+    // Gusts: 5 s buckets, peak ratio over the mean wind (smooth terrain .. rough terrain).
+    gust_bucket_secs: 5,
+    gust_ratio: (0.25, 0.6),
+    // Scenario / test override (None = the seeded climate). One of the presets below by id.
+    weather_preset: None,
+    presets: [
+        (
+            id: Calm,
+            prevailing_mps: 1.5,
+            base_temp_offset_c: 0.0,
+            humidity: 0.5,
+            systems: 2,
+            low_fraction: 0.0,
+            strength_hpa: (3.0, 6.0),
+        ),
+        (
+            id: Windy,
+            prevailing_mps: 11.0,
+            base_temp_offset_c: -2.0,
+            humidity: 0.55,
+            systems: 4,
+            low_fraction: 0.5,
+            strength_hpa: (14.0, 22.0),
+        ),
+        (
+            id: StormFront,
+            prevailing_mps: 8.0,
+            base_temp_offset_c: 4.0,
+            humidity: 0.9,
+            systems: 3,
+            low_fraction: 1.0,
+            strength_hpa: (18.0, 26.0),
+        ),
+        (
+            id: FireWeather,
+            prevailing_mps: 9.0,
+            base_temp_offset_c: 18.0,
+            humidity: 0.15,
+            systems: 3,
+            low_fraction: 0.0,
+            strength_hpa: (10.0, 16.0),
+        ),
+    ],
+)

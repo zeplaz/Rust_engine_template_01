@@ -1,13 +1,17 @@
-//! Weather simulation (scaffold).
+//! Weather simulation.
 //!
-//! Design: [`prompts/guides/weather_simulation_runbook_v1.md`](../../../prompts/guides/weather_simulation_runbook_v1.md).
-//! Step pack: [`prompts/matrix/simulation_expansion/runbook/s2_steps_v1.md`](../../../prompts/matrix/simulation_expansion/runbook/s2_steps_v1.md).
+//! Plan: [`src/dev/plan_weather_wind_v1.md`](../../dev/plan_weather_wind_v1.md).
 //!
-//! **Precipitation visuals** (overlay tint; GPU streaks via `render::weather_vfx`): [`WeatherVisualPlugin`](weather_visual::WeatherVisualPlugin), [`WeatherVisualSettings`](weather_visual::WeatherVisualSettings).
-//! GPU frontend stub (ES-5): [`crate::render::WeatherVfxPlugin`] — domain WeatherPrecip inactive until streaks.
+//! - [`WeatherField`] — the one authority: coarse 1 km grid, seeded climate + moving pressure
+//!   systems, solved every `weather_step_secs` of game time; [`WeatherField::sample`] for consumers.
+//! - [`ChunkWeather`] — per-chunk projection of the field for existing readers.
+//! - **Precipitation visuals** (overlay tint; GPU streaks via `render::weather_vfx`): [`WeatherVisualPlugin`](weather_visual::WeatherVisualPlugin), [`WeatherVisualSettings`](weather_visual::WeatherVisualSettings).
 
 mod chunk_weather;
+mod field;
 mod player_read_hud;
+mod systems;
+mod tuning;
 mod weather_visual;
 
 pub use player_read_hud::{
@@ -15,7 +19,17 @@ pub use player_read_hud::{
     };
 
 pub use chunk_weather::{
-    ChunkWeather, GlobalRenewableWeatherFactors, WeatherSimDiagnostics,
+    project_chunk_weather, ChunkWeather, CHUNK_RAIN_FULL_SCALE_MM_H, CHUNK_VISIBILITY_FULL_SCALE_M,
+    CHUNK_WIND_FULL_SCALE_MPS,
+};
+pub use field::{
+    PressureKind, PressureSystem, WeatherClimate, WeatherField, WeatherFieldSave, WeatherRng,
+    WeatherSample, WeatherSnapshot, BASELINE_PRESSURE_HPA, WEATHER_FIELD_SAVE_SCHEMA,
+};
+pub use systems::{weather_field_step, PendingWeatherRestore, WeatherPresetRequest};
+pub use tuning::{
+    load_weather_tuning, parse_weather_tuning, WeatherPreset, WeatherPresetId, WeatherTuning,
+    WEATHER_TUNING_RON,
 };
 pub use weather_visual::{
     weather_precip_show_background, weather_precip_show_tactical, weather_precip_tactical_band,
@@ -27,31 +41,33 @@ pub use weather_visual::{
 use bevy::prelude::*;
 
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
-use chunk_weather::{
-    spawn_chunk_weather_on_new_chunk, update_global_renewable_weather_factors,
-    weather_chunk_tick,
-};
+use chunk_weather::spawn_chunk_weather_on_new_chunk;
 
-/// Chunk weather tick + spawn + renewables (no mesh/UI). Pairs with [`WeatherVisualPlugin`] for precipitation VFX.
+/// Weather field step + chunk projection (no mesh/UI). Pairs with [`WeatherVisualPlugin`] for precipitation VFX.
 pub struct WeatherSimulationPlugin;
 
 impl Plugin for WeatherSimulationPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<WeatherSimDiagnostics>()
-            .init_resource::<GlobalRenewableWeatherFactors>()
+        crate::systems::sim_control::ensure_sim_step_clock(app);
+        app.init_resource::<WeatherTuning>()
+            .init_resource::<WeatherField>()
+            .init_resource::<WeatherPresetRequest>()
+            .init_resource::<PendingWeatherRestore>()
+            .add_systems(Startup, systems::load_weather_tuning_on_startup)
             .add_systems(
                 Update,
                 (
-                    spawn_chunk_weather_on_new_chunk.in_set(ChunkEnvironmentSet::Weather),
-                    weather_chunk_tick.in_set(ChunkEnvironmentSet::Weather),
-                    update_global_renewable_weather_factors.in_set(ChunkEnvironmentSet::Weather),
+                    spawn_chunk_weather_on_new_chunk,
+                    weather_field_step,
+                    project_chunk_weather,
                 )
-                    .chain(),
+                    .chain()
+                    .in_set(ChunkEnvironmentSet::Weather),
             );
     }
 }
 
-/// Owns climate → regional → chunk weather systems (simulation + diagnostics + precipitation visuals).
+/// Owns the weather field, chunk projection and precipitation visuals.
 pub struct WeatherPlugin;
 
 impl Plugin for WeatherPlugin {

@@ -44,7 +44,7 @@ pub use persist::{
 pub use post_spine::{
     apply_logistics_pressure_mirror, compute_post_spine_witness,
     mirror_logistics_pressure_to_slab_system, sync_post_spine_witness_system,
-    sync_regional_weather_from_clipmap_system, update_global_renewable_weather_from_clipmap_system,
+    sync_regional_weather_from_clipmap_system,
     PostSpineStats, WSS_POST_SPINE_GATE,
 };
 pub use registry::{
@@ -152,7 +152,6 @@ impl Plugin for SubstratePlugin {
                     sync_atmos_clipmap_witness_system,
                     mirror_logistics_pressure_to_slab_system,
                     sync_regional_weather_from_clipmap_system,
-                    update_global_renewable_weather_from_clipmap_system,
                 )
                     .after(SimControlSystemSet::AdvanceSimTick)
                     .run_if(in_state(BaseState::Simulation)),

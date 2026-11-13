@@ -27,7 +27,6 @@ use crate::entities::production::power::plant_registry::PlantDefinitionRegistry;
 use crate::entities::types::OperationalStatus;
 use crate::strategic::PlannedSite;
 use crate::systems::sim_control::SimControlState;
-use crate::systems::weather::GlobalRenewableWeatherFactors;
 
 pub struct PowerRuntimePlugin;
 
@@ -35,7 +34,6 @@ impl Plugin for PowerRuntimePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GridConnectionRadiusSq>()
             .init_resource::<PlantDefinitionRegistry>()
-            .init_resource::<GlobalRenewableWeatherFactors>()
             .add_message::<GridOverloadEvent>()
             .add_message::<NuclearScramEvent>()
             .add_message::<NuclearCoolingDegradedEvent>()

@@ -246,6 +246,41 @@
       "note": "Control of some cells changed hands."
     },
     {
+      "id": "weather.solved",
+      "path": "weather.solves",
+      "op": "gte",
+      "expect": 2,
+      "note": "Weather field solved at least twice (60 s game-time steps)."
+    },
+    {
+      "id": "weather.systems",
+      "path": "weather.systems.min",
+      "op": "gte",
+      "expect": 2,
+      "note": "At least two pressure systems at every solve."
+    },
+    {
+      "id": "weather.wind_varies_across_cells",
+      "path": "weather.wind_speed_stddev_mps.max",
+      "op": "gt",
+      "expect": 0.3,
+      "note": "Wind speed differs between weather cells (spatial stddev, m/s)."
+    },
+    {
+      "id": "weather.wind_changes_over_time",
+      "path": "weather.wind_change_mps.max",
+      "op": "gt",
+      "expect": 0.05,
+      "note": "Mean per-cell wind vector change between consecutive solves (m/s)."
+    },
+    {
+      "id": "weather.wind_plausible",
+      "path": "weather.max_wind_mps.max",
+      "op": "lte",
+      "expect": 40,
+      "note": "No cell above the 40 m/s cap."
+    },
+    {
       "id": "perf.sampled",
       "path": "perf.samples",
       "op": "gt",

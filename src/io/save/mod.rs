@@ -15,6 +15,7 @@ mod fire_overlay;
 mod atmosphere_clipmap_overlay;
 mod transport_overlay;
 mod utility_overlay;
+mod weather_overlay;
 mod wave_s_artifacts;
 mod wire_format;
 
@@ -75,6 +76,12 @@ pub use transport_overlay::{
     try_hydrate_transport_overlay_on_bundle_dir, write_transport_overlay_on_save_flush,
     write_transport_overlay_to_bundle, write_transport_snapshot_ron,
     TransportOverlayHydrateState, TRANSPORT_OVERLAY_NAME, TRANSPORT_OVERLAY_REL_PATH,
+};
+pub use weather_overlay::{
+    build_weather_overlay_refs, default_weather_overlay_ref, read_weather_field_ron,
+    read_weather_overlay_from_manifest, try_hydrate_weather_overlay_on_bundle_dir,
+    write_weather_field_ron, write_weather_overlay_on_save_flush, WeatherOverlayHydrateState,
+    WEATHER_OVERLAY_NAME, WEATHER_OVERLAY_REL_PATH,
 };
 pub use utility_overlay::{
     build_utility_overlay_refs, default_utility_overlay_ref, read_utility_network_ron,
