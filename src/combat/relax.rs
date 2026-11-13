@@ -187,6 +187,7 @@ pub fn control_relaxation_system(
     zones: Query<&Zone>,
     mut overlays: Query<&mut ChunkStrategicOverlay>,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_control_relax");
     let Some(time) = time else { return };
     let now = time.0;
     let dt = match state.last_micros {

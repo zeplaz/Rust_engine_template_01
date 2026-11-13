@@ -26,6 +26,8 @@ use crate::economy::resource_flow::{
 use crate::engine::states::BaseState;
 use crate::engine::EngineLaunchArgs;
 use crate::render::extraction::RenderProjectionGraph;
+use crate::render::probes::frame_hitch::STALL_MS;
+use crate::render::{FrameHitchLog, HitchRecord};
 use crate::render::WorldFireParticleFrame;
 use crate::strategic::{
     ChunkStrategicOverlay, ConstructionSite, FrontlineState, SiteConstructionPhase,
@@ -43,9 +45,15 @@ pub const SIM_RUN_DUMP_JSON: &str = "debug_runs/sim_run_dump.json";
 pub const SIM_RUN_DUMP_SCHEMA: &str = "sim_run_dump_v2";
 
 const DUMP_STRIDE_TICKS: u64 = 30;
-/// Frames skipped before frame-time sampling starts (world gen / shader warm-up).
+/// Frames skipped before frame-time sampling starts (world gen / shader warm-up) ...
 const PERF_WARMUP_FRAMES: u64 = 120;
+/// ... and at least this much wall time, so a fast release build is not sampled while still loading.
+const PERF_WARMUP_SECS: f32 = 10.0;
 const PERF_SAMPLE_CAP: usize = 50_000;
+/// Worst hitch frames kept for the dump (by frame time).
+const PERF_WORST_HITCHES: usize = 12;
+/// Points in the downsampled frame-time series the dashboard draws.
+const PERF_SERIES_POINTS: usize = 240;
 const HISTORY_CAP: usize = 400;
 /// A cell counts as held by the slot with the highest control when it exceeds this.
 const TERRITORY_CONTROL_MIN: f32 = 0.5;
@@ -97,6 +105,10 @@ struct SimRunDumpState {
     ai: BTreeMap<u8, AiTally>,
     frame_ms: Vec<f32>,
     frames_seen: u64,
+    first_frame_at: Option<std::time::Instant>,
+    hitches: u64,
+    stalls: u64,
+    worst_hitches: Vec<HitchRecord>,
     history: Vec<Value>,
 }
 
@@ -111,6 +123,10 @@ impl Default for SimRunDumpState {
             ai: BTreeMap::new(),
             frame_ms: Vec::new(),
             frames_seen: 0,
+            first_frame_at: None,
+            hitches: 0,
+            stalls: 0,
+            worst_hitches: Vec::new(),
             history: Vec::new(),
         }
     }
@@ -125,23 +141,69 @@ impl SimRunDumpState {
         self.series.get(key).map_or_else(|| Series::default().json(), Series::json)
     }
 
-    fn perf_json(&self) -> Value {
+    /// Frame-time stats after warm-up, hitch counts (threshold from [`FrameHitchLog`]), the worst
+    /// hitch frames with their top `PerfScope`s, and a downsampled series for the dashboard.
+    fn perf_json(&self, hitch: Option<&FrameHitchLog>) -> Value {
+        let build = if cfg!(debug_assertions) { "debug" } else { "release" };
+        let threshold = hitch.map_or(0.0, |h| h.threshold_ms);
         if self.frame_ms.is_empty() {
-            return json!({ "samples": 0, "avg_ms": 0.0, "p95_ms": 0.0, "max_ms": 0.0 });
+            return json!({ "build": build, "samples": 0, "avg_ms": 0.0, "p50_ms": 0.0, "p95_ms": 0.0,
+                "p99_ms": 0.0, "max_ms": 0.0, "hitch_threshold_ms": threshold, "hitches": 0, "stalls": 0,
+                "hitches_per_min": 0.0, "worst_hitches": [], "series_avg_ms": [], "series_max_ms": [] });
         }
         let mut s = self.frame_ms.clone();
         s.sort_by(f32::total_cmp);
-        let avg = s.iter().sum::<f32>() / s.len() as f32;
-        let p95 = s[((s.len() - 1) as f32 * 0.95) as usize];
-        json!({ "samples": s.len(), "avg_ms": avg, "p95_ms": p95, "max_ms": s[s.len() - 1] })
+        let total_ms = s.iter().sum::<f32>();
+        let avg = total_ms / s.len() as f32;
+        let q = |f: f32| s[((s.len() - 1) as f32 * f) as usize];
+        let bin = self.frame_ms.len().div_ceil(PERF_SERIES_POINTS).max(1);
+        let (series_avg, series_max): (Vec<f32>, Vec<f32>) = self
+            .frame_ms
+            .chunks(bin)
+            .map(|c| (c.iter().sum::<f32>() / c.len() as f32, c.iter().copied().fold(0.0, f32::max)))
+            .unzip();
+        let worst: Vec<Value> = self
+            .worst_hitches
+            .iter()
+            .map(|h| {
+                json!({
+                    "frame": h.frame,
+                    "dt_ms": h.dt_ms,
+                    "main_ms": h.main_ms,
+                    "outside_main_ms": h.outside_main_ms,
+                    "tick": h.sim_tick,
+                    "scopes": h.scopes.iter().filter(|(l, _)| !l.is_empty())
+                        .map(|(l, ms)| json!({ "label": l, "ms": ms })).collect::<Vec<_>>(),
+                })
+            })
+            .collect();
+        json!({
+            "build": build,
+            "samples": s.len(),
+            "avg_ms": avg,
+            "p50_ms": q(0.50),
+            "p95_ms": q(0.95),
+            "p99_ms": q(0.99),
+            "max_ms": s[s.len() - 1],
+            "hitch_threshold_ms": threshold,
+            "hitches": self.hitches,
+            "stalls": self.stalls,
+            "hitches_per_min": self.hitches as f32 / (total_ms / 60_000.0).max(1e-3),
+            "worst_hitches": worst,
+            "series_avg_ms": series_avg,
+            "series_max_ms": series_max,
+        })
     }
 }
 
-/// Dump writes **only** in debug builds when `RUST_ENGINE_SIM_DUMP=1`.
-/// Release / production binaries never collect or write a dump.
+/// Dump writes **only** in debug builds (or release built with the non-default `sim_dump` feature,
+/// for `playcheck.py --release`) when `RUST_ENGINE_SIM_DUMP=1`. Shipped release binaries never
+/// collect or write a dump. The env var is read once.
 #[must_use]
 pub fn sim_dump_enabled(_launch: Option<&EngineLaunchArgs>) -> bool {
-    cfg!(debug_assertions) && env_on("RUST_ENGINE_SIM_DUMP")
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    (cfg!(debug_assertions) || cfg!(feature = "sim_dump"))
+        && *ON.get_or_init(|| env_on("RUST_ENGINE_SIM_DUMP"))
 }
 
 fn env_on(key: &str) -> bool {
@@ -224,9 +286,12 @@ fn write_dump_files(body: &Value) -> bool {
     if fs::write(&latest, &text).is_err() {
         return false;
     }
+    // One archive file per run (overwritten each dump), not one per 30-tick write.
+    static RUN_START: std::sync::OnceLock<u64> = std::sync::OnceLock::new();
+    let start = *RUN_START.get_or_init(|| epoch);
     let archive_dir = root.join("debug_runs").join("sim_runs");
     let _ = fs::create_dir_all(&archive_dir);
-    let _ = fs::write(archive_dir.join(format!("{run_id}.json")), text);
+    let _ = fs::write(archive_dir.join(format!("{start}-s{seed}.json")), text);
     true
 }
 
@@ -243,6 +308,7 @@ struct WorldParams<'w, 's> {
     ecology: Option<Res<'w, FireEcologyStats>>,
     graph: Option<Res<'w, RenderProjectionGraph>>,
     particles: Option<Res<'w, WorldFireParticleFrame>>,
+    hitch: Option<Res<'w, FrameHitchLog>>,
     weather: Option<Res<'w, super::sim_run_dump_weather::WeatherDumpSeries>>,
 }
 
@@ -692,6 +758,7 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
         "tick": tick,
         "seed": w.params.as_ref().map_or(0, |p| p.seed),
         "debug": cfg!(debug_assertions),
+        "build": if cfg!(debug_assertions) { "debug" } else { "release" },
         "launch": { "test_scene": scene },
         "world": {
             "width": w.params.as_ref().map_or(0, |p| p.width),
@@ -730,21 +797,45 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
         "fire": fire,
         "fire_chain": fire_chain_json(w, f),
         "weather": super::sim_run_dump_weather::weather_json(w.weather.as_deref()),
-        "perf": state.perf_json(),
+        "perf": state.perf_json(w.hitch.as_deref()),
         "history": state.history,
     })
 }
 
-/// Frame wall time from the real clock; counted after warm-up. Sampled every frame, not per dump.
-fn sample_frame_time(time: Res<Time<Real>>, mut state: ResMut<SimRunDumpState>) {
+/// Frame wall time from the hitch detector (end of `Last` to end of `Last`, uncapped); counted after
+/// warm-up. Sampled every frame, not per dump. Hitch frames after warm-up are counted and the
+/// worst ones kept with their top `PerfScope`s.
+fn sample_frame_time(hitch: Option<Res<FrameHitchLog>>, mut state: ResMut<SimRunDumpState>) {
     if !sim_dump_enabled(None) {
         return;
     }
+    let Some(hitch) = hitch else {
+        return;
+    };
     state.frames_seen += 1;
-    if state.frames_seen <= PERF_WARMUP_FRAMES || state.frame_ms.len() >= PERF_SAMPLE_CAP {
+    let first = *state.first_frame_at.get_or_insert_with(std::time::Instant::now);
+    if state.frames_seen <= PERF_WARMUP_FRAMES || first.elapsed().as_secs_f32() < PERF_WARMUP_SECS {
         return;
     }
-    state.frame_ms.push(time.delta_secs() * 1000.0);
+    if state.frame_ms.len() < PERF_SAMPLE_CAP {
+        state.frame_ms.push(hitch.last_frame_ms);
+    }
+    let Some(rec) = hitch.this_frame else {
+        return;
+    };
+    state.hitches += 1;
+    if rec.dt_ms >= STALL_MS {
+        state.stalls += 1;
+    }
+    let worst = &mut state.worst_hitches;
+    if worst.len() < PERF_WORST_HITCHES {
+        worst.push(rec);
+    } else if let Some(min) = worst.iter_mut().min_by(|a, b| a.dt_ms.total_cmp(&b.dt_ms)) {
+        if rec.dt_ms > min.dt_ms {
+            *min = rec;
+        }
+    }
+    worst.sort_by(|a, b| b.dt_ms.total_cmp(&a.dt_ms));
 }
 
 fn flush_sim_run_dump(
@@ -775,11 +866,15 @@ pub struct SimRunDumpPlugin;
 
 impl Plugin for SimRunDumpPlugin {
     fn build(&self, app: &mut App) {
-        if !cfg!(debug_assertions) {
+        if !cfg!(debug_assertions) && !cfg!(feature = "sim_dump") {
             return;
         }
         app.add_plugins(super::sim_run_dump_weather::WeatherDumpPlugin);
-        app.init_resource::<SimRunDumpState>()
-            .add_systems(Last, (sample_frame_time, flush_sim_run_dump).chain());
+        app.init_resource::<SimRunDumpState>().add_systems(
+            Last,
+            (sample_frame_time, flush_sim_run_dump)
+                .chain()
+                .after(crate::render::probes::frame_hitch::detect_frame_hitches),
+        );
     }
 }

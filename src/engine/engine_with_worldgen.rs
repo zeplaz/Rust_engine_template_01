@@ -130,7 +130,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::sim::SimEffectsPlugin)
             .add_plugins(ScenarioScriptingPlugin);
         configure_chunk_environment_sets(app);
-        #[cfg(debug_assertions)]
+        #[cfg(any(debug_assertions, feature = "sim_dump"))]
         app.add_plugins(crate::dev::SimRunDumpPlugin);
         app.add_plugins(crate::substrate::SubstratePlugin)
             .add_plugins(ChunkEnvironmentPersistPlugin)
@@ -284,9 +284,9 @@ impl Plugin for EnginePlugin {
                 .chain(),
         );
 
-        // SCH-W1-E1-001: ambiguity warnings in debug builds or with .
-        let sch_ambiguity_warn = cfg!(debug_assertions)
-            || std::env::var("SCH_AMBIGUITY_WARN")
+        // SCH-W1-E1-001: ambiguity warnings on request (`SCH_AMBIGUITY_WARN=1`). Not on by default in
+        // debug: the report is ~14k lines per launch and buries the run log.
+        let sch_ambiguity_warn = std::env::var("SCH_AMBIGUITY_WARN")
                 .ok()
                 .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"));
         if sch_ambiguity_warn {

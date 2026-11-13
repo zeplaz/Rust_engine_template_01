@@ -294,18 +294,68 @@
       "expect": 0
     },
     {
-      "id": "perf.avg_ms",
+      "id": "perf.release.avg_ms",
       "path": "perf.avg_ms",
       "op": "lte",
-      "expect": 33.4,
-      "note": "Average frame <= 33.4 ms (30 fps)."
+      "expect": 33,
+      "when_build": ["release"],
+      "note": "Release average frame <= 33 ms (30 fps)."
     },
     {
-      "id": "perf.p95_ms",
+      "id": "perf.release.p95_ms",
       "path": "perf.p95_ms",
       "op": "lte",
       "expect": 50,
-      "note": "p95 frame <= 50 ms."
+      "when_build": ["release"],
+      "note": "Release p95 frame <= 50 ms."
+    },
+    {
+      "id": "perf.release.hitches",
+      "path": "perf.hitches",
+      "op": "lte",
+      "expect": 10,
+      "when_build": ["release"],
+      "note": "Release frames over the 50 ms hitch bar after warm-up (whole run)."
+    },
+    {
+      "id": "perf.release.stalls",
+      "path": "perf.stalls",
+      "op": "lte",
+      "expect": 0,
+      "when_build": ["release"],
+      "note": "Release frames over 1 s after warm-up."
+    },
+    {
+      "id": "perf.debug.avg_ms",
+      "path": "perf.avg_ms",
+      "op": "lte",
+      "expect": 250,
+      "when_build": ["debug"],
+      "note": "Debug average frame <= 250 ms (unoptimized crate; release is the real target)."
+    },
+    {
+      "id": "perf.debug.p95_ms",
+      "path": "perf.p95_ms",
+      "op": "lte",
+      "expect": 450,
+      "when_build": ["debug"],
+      "note": "Debug p95 frame <= 450 ms."
+    },
+    {
+      "id": "perf.debug.hitches_per_min",
+      "path": "perf.hitches_per_min",
+      "op": "lte",
+      "expect": 6,
+      "when_build": ["debug"],
+      "note": "Debug frames over the 500 ms hitch bar, per minute of frames."
+    },
+    {
+      "id": "perf.debug.stalls",
+      "path": "perf.stalls",
+      "op": "lte",
+      "expect": 1,
+      "when_build": ["debug"],
+      "note": "Debug frames over 1 s after warm-up."
     }
   ]
 }

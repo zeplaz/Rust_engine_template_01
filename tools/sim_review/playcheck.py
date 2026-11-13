@@ -6,6 +6,10 @@ debug_runs/sim_review/playcheck_summary.md. The game process is always killed.
 
     python tools/sim_review/playcheck.py                 # build debug, seed 14046650793090929382
     python tools/sim_review/playcheck.py --no-build --frame 1800 --secs 300
+    python tools/sim_review/playcheck.py --release        # release + `sim_dump` feature: real frame times
+
+Frame time is always tracked: the dump's perf section (avg/p50/p95/p99/max, hitches, worst hitch
+frames with their top PerfScopes) is scored with build-specific thresholds and drawn on the dashboard.
 """
 
 from __future__ import annotations
@@ -23,7 +27,8 @@ _REPO = Path(__file__).resolve().parents[2]
 _OUT = _REPO / "debug_runs" / "sim_review"
 _CAPTURES = _REPO / "debug_runs" / "captures"
 _DUMP = _REPO / "debug_runs" / "sim_run_dump.json"
-_EXE = _REPO / "target" / "debug" / "proc_A_dine01.exe"
+_EXE_DEBUG = _REPO / "target" / "debug" / "proc_A_dine01.exe"
+_EXE_RELEASE = _REPO / "target" / "release" / "proc_A_dine01.exe"
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 _LEVEL = re.compile(r"\s(ERROR|WARN)\s+([\w:]+):\s*(.*)")
 
@@ -32,12 +37,13 @@ def say(msg: str) -> None:
     print(f"[playcheck {time.strftime('%H:%M:%S')}] {msg}", flush=True)
 
 
-def build() -> None:
-    say("cargo build (debug) ... first build can take several minutes")
-    r = subprocess.run(
-        ["cargo", "build", "--bin", "proc_A_dine01", "--message-format=short"],
-        cwd=_REPO, capture_output=True, text=True,
-    )
+def build(release: bool) -> None:
+    say(f"cargo build ({'release, sim_dump' if release else 'debug'}) ... first build can take several minutes")
+    cmd = ["cargo", "build", "--bin", "proc_A_dine01", "--message-format=short"]
+    if release:
+        # Shipped release builds have no dump; the non-default `sim_dump` feature adds it back.
+        cmd += ["--release", "--features", "sim_dump"]
+    r = subprocess.run(cmd, cwd=_REPO, capture_output=True, text=True)
     errors = [l for l in r.stderr.splitlines() if l.startswith("error")]
     if r.returncode != 0:
         print("BUILD FAILED")
@@ -55,7 +61,7 @@ def dump_tick(since: float) -> int:
         return 0
 
 
-def run_game(seed: str, frame: int, secs: int, scene: str, ticks: int) -> list[str]:
+def run_game(exe: Path, seed: str, frame: int, secs: int, scene: str, ticks: int, min_secs: int) -> list[str]:
     env = dict(os.environ)
     env.update({
         "RUST_ENGINE_SIM_DUMP": "1",
@@ -71,7 +77,7 @@ def run_game(seed: str, frame: int, secs: int, scene: str, ticks: int) -> list[s
     _OUT.mkdir(parents=True, exist_ok=True)
     with open(log_path, "w", encoding="utf-8", errors="replace") as log:
         proc = subprocess.Popen(
-            [str(_EXE), "--test", scene], cwd=_REPO, env=env,
+            [str(exe), "--test", scene], cwd=_REPO, env=env,
             stdout=log, stderr=subprocess.STDOUT,
         )
         say(f"game started pid={proc.pid}; waiting for capture (limit {secs}s), log {log_path}")
@@ -84,7 +90,8 @@ def run_game(seed: str, frame: int, secs: int, scene: str, ticks: int) -> list[s
                 if proc.poll() is not None:
                     break
                 # Captured this run AND the dump reached the requested sim tick: done.
-                if capture.exists() and capture.stat().st_mtime > started + 1 and dump_tick(started) >= ticks:
+                if (capture.exists() and capture.stat().st_mtime > started + 1 and dump_tick(started) >= ticks
+                        and time.time() - started >= min_secs):
                     time.sleep(3)
                     break
                 time.sleep(2)
@@ -111,6 +118,22 @@ def summarise_log(lines: list[str]) -> dict:
 
 
 
+def perf_lines(perf: dict) -> list[str]:
+    if not perf:
+        return ["perf: no dump"]
+    f = lambda k: float(perf.get(k) or 0)
+    out = [
+        f"perf [{perf.get('build')}] frames={perf.get('samples')} avg={f('avg_ms'):.1f} p50={f('p50_ms'):.1f} "
+        f"p95={f('p95_ms'):.1f} p99={f('p99_ms'):.1f} max={f('max_ms'):.1f} ms | hitches(>{f('hitch_threshold_ms'):.0f}ms)="
+        f"{perf.get('hitches')} ({f('hitches_per_min'):.1f}/min) stalls(>1s)={perf.get('stalls')}"
+    ]
+    for h in (perf.get("worst_hitches") or [])[:5]:
+        scopes = ", ".join(f"{s['label']} {s['ms']:.1f}" for s in h.get("scopes") or [])
+        out.append(f"  hitch frame={h.get('frame')} tick={h.get('tick')} dt={h.get('dt_ms', 0):.1f} "
+                   f"main={h.get('main_ms', 0):.1f} outside_main={h.get('outside_main_ms', 0):.1f} [{scopes}]")
+    return out
+
+
 def score() -> list[str]:
     if not _DUMP.exists():
         return ["no sim_run_dump.json written (did the game reach the simulation?)"]
@@ -130,16 +153,24 @@ def main() -> None:
     ap.add_argument("--secs", type=int, default=420, help="hard time limit")
     ap.add_argument("--ticks", type=int, default=3000, help="sim tick the dump must reach before stopping")
     ap.add_argument("--scene", default="visual")
+    ap.add_argument("--release", action="store_true", help="build/run release with the sim_dump feature")
+    ap.add_argument("--exe", help="run this binary instead (implies --no-build)")
+    ap.add_argument("--min-secs", type=int, default=None,
+                    help="run at least this long (default 0 debug, 360 release: release reaches --ticks in ~1 min, "
+                         "before game-time loops such as weather solves and production have run)")
     a = ap.parse_args()
+    min_secs = a.min_secs if a.min_secs is not None else (360 if a.release else 0)
 
-    if not a.no_build:
-        build()
+    exe = Path(a.exe) if a.exe else (_EXE_RELEASE if a.release else _EXE_DEBUG)
+    if not a.no_build and not a.exe:
+        build(a.release)
     t0 = time.time()
-    lines = run_game(a.seed, a.frame, a.secs, a.scene, a.ticks)
+    lines = run_game(exe, a.seed, a.frame, a.secs, a.scene, a.ticks, min_secs)
     s = summarise_log(lines)
     scored = score()
 
-    md = [f"# playcheck  seed={a.seed} frame={a.frame} scene={a.scene} ran={time.time() - t0:.0f}s", ""]
+    md = [f"# playcheck  {'release' if a.release else 'debug'} exe={exe.name} seed={a.seed} frame={a.frame} "
+          f"scene={a.scene} ran={time.time() - t0:.0f}s", ""]
     md.append(f"panics: {len(s['panics'])}")
     md += [f"  {p[:200]}" for p in s["panics"][:5]]
     perf = {}
@@ -147,7 +178,7 @@ def main() -> None:
         perf = json.loads(_DUMP.read_text(encoding="utf-8")).get("perf") or {}
     except (OSError, ValueError):
         pass
-    md.append(f"perf (ms/frame, from dump): {perf or 'no dump'}")
+    md += perf_lines(perf)
     for lvl in ("ERROR", "WARN"):
         items = sorted(s["levels"][lvl].items(), key=lambda kv: -kv[1])
         md.append(f"{lvl}: {sum(s['levels'][lvl].values())} total, {len(items)} distinct")

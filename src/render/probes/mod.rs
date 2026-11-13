@@ -6,6 +6,7 @@
 //! perf *policy/feedback* module (`TileRasterSpikeFeedback` zoom-dirty deferral), not a thin
 //! timing probe; it stays at `render/visual_perf_budget.rs` (RGR-P5-001 skip, reported).
 
+pub mod frame_hitch;
 pub mod frame_perf;
 pub mod stall_watch;
 
