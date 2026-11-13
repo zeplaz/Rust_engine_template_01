@@ -7,6 +7,8 @@
     cell_size_m: 1000.0,
     // Game seconds between field solves (1 sim step = 1 s). Consumers interpolate between solves.
     weather_step_secs: 60,
+    // Solves run once when the field is created (humidity / cloud / rain spin-up, ~1 game hour).
+    spinup_steps: 60,
     // Climate (season, base temperature, prevailing veer) advances on this cadence.
     climate_step_secs: 3600,
     // One full season cycle in game seconds (30 game days).
@@ -18,7 +20,7 @@
     elevation_range_m: 1200.0,
     lapse_rate_c_per_km: 6.5,
     // Prevailing wind speed range picked from the world seed.
-    prevailing_speed_mps: (3.0, 8.0),
+    prevailing_speed_mps: (2.5, 6.5),
     // Slow random veer of the prevailing direction per climate step (radians, +/-).
     prevailing_veer_rad: 0.25,
     // Pressure systems: count range (scaled by map area, then clamped), strength, radius
@@ -26,7 +28,7 @@
     systems_count: (2, 8),
     // Map area in km^2 that adds one system above the minimum.
     systems_km2_per_extra: 24.0,
-    system_strength_hpa: (6.0, 18.0),
+    system_strength_hpa: (5.0, 14.0),
     system_radius_frac: (0.35, 0.8),
     system_radius_m: (6000.0, 40000.0),
     system_lifetime_secs: (5400.0, 18000.0),
@@ -36,7 +38,7 @@
     // Share of systems that are lows (the rest are highs).
     low_fraction: 0.55,
     // Surface wind from the pressure gradient: m/s per hPa/km, turned toward low pressure.
-    gradient_mps_per_hpa_km: 3.0,
+    gradient_mps_per_hpa_km: 2.0,
     friction_turn_deg: 20.0,
     max_wind_mps: 40.0,
     // Terrain factors (baked once per terrain revision per weather cell).
@@ -50,16 +52,16 @@
     humidity_base: 0.6,
     humidity_relax: 0.05,
     water_evaporation: 0.008,
-    low_humidity_load: 0.012,
-    high_drying: 0.01,
+    low_humidity_load: 0.02,
+    high_drying: 0.006,
     rain_sink_per_mm_h: 0.004,
-    // Cloud: humidity above `cloud_humidity_min` + low-pressure lift + orographic lift.
+    // Cloud: humidity above `cloud_humidity_min` + lift from the lows' depth (hPa) + orographic lift.
     cloud_humidity_min: 0.55,
     cloud_humidity_span: 0.35,
     low_lift_per_hpa: 0.035,
     orographic_lift: 2.5,
     // Rain starts above this cloud cover and reaches `rain_max_mm_h` at full cover and humidity.
-    rain_cloud_min: 0.65,
+    rain_cloud_min: 0.7,
     rain_max_mm_h: 10.0,
     // Visibility: clear-air limit and attenuation per unit fog / per mm/h rain.
     visibility_clear_m: 20000.0,
