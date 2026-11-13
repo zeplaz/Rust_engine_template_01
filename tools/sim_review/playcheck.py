@@ -156,10 +156,10 @@ def main() -> None:
     ap.add_argument("--release", action="store_true", help="build/run release with the sim_dump feature")
     ap.add_argument("--exe", help="run this binary instead (implies --no-build)")
     ap.add_argument("--min-secs", type=int, default=None,
-                    help="run at least this long (default 0 debug, 360 release: release reaches --ticks in ~1 min, "
+                    help="run at least this long (default 360 s: with opt-level 1 both builds reach --ticks in ~1 min, "
                          "before game-time loops such as weather solves and production have run)")
     a = ap.parse_args()
-    min_secs = a.min_secs if a.min_secs is not None else (360 if a.release else 0)
+    min_secs = a.min_secs if a.min_secs is not None else 360
 
     exe = Path(a.exe) if a.exe else (_EXE_RELEASE if a.release else _EXE_DEBUG)
     if not a.no_build and not a.exe:
