@@ -97,11 +97,18 @@
       "note": "Burn-out leaves burnt cells."
     },
     {
-      "id": "fire.regrowth",
-      "path": "fire.regrowth_cells.max",
-      "op": "gt",
-      "expect": 0,
-      "note": "Burnt ground starts regrowing."
+      "id": "fire.scar_holds",
+      "path": "fire.burnt_fraction.last",
+      "op": "gte",
+      "expect_path": "fire.burnt_fraction.first",
+      "note": "W2: burnt fraction must not drop within a playcheck (no instant regrow)."
+    },
+    {
+      "id": "fire.wind_elongation",
+      "path": "fire.length_breadth.max",
+      "op": "gte",
+      "expect": 1.0,
+      "note": "W2: heat bbox length:breadth tracked (elongation under wind when fire+wind present)."
     },
     {
       "id": "construction.sites_exist",

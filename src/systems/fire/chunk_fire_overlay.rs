@@ -8,9 +8,11 @@ use std::collections::{HashMap, HashSet};
 use bevy::prelude::*;
 
 use super::cell_spread::{
-    admit_spark, apply_snow_to_hold, burn_fuel_step, lightning_spark, rain_blocks_neighbor_spread,
-    scaled_neighbor_heat_gain, should_arm_burn_hold, spread_allowed, step_burn_hold,
-    take_neighbor_deposit, FireCell, BURNED_HOLD_TICKS, NEIGHBOR_FUEL_DRAW, SPREAD_HEAT_MIN,
+    admit_spark, apply_snow_to_hold, burn_fuel_step, directional_heat_gain, fire_cell_hash01,
+    lightning_spark, neighbor_step_dist, rain_mm_h_blocks_neighbor_spread,
+    scaled_neighbor_heat_gain, should_arm_burn_hold, slope_rise, spread_allowed, step_burn_hold,
+    take_neighbor_deposit, FireCell, BURNED_HOLD_TICKS, NEIGHBOR8, NEIGHBOR_FUEL_DRAW,
+    SPREAD_HEAT_MIN,
 };
 use super::chunk_fuel_profile::ChunkFuelProfile;
 use super::chunk_surface_fire::ChunkSurfaceFire;
@@ -31,6 +33,7 @@ use crate::systems::ecology::{ChunkCellStand, ChunkEcology, StandBurnConfig, Veg
 use crate::systems::sim_control::SimControlState;
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 pub(crate) fn spawn_chunk_fire_overlay_on_matrix(
     mut commands: Commands,
@@ -393,37 +396,33 @@ pub fn chunk_fire_overlay_tick(
                     - wx.rain_intensity * 0.12 * dt_e)
                     .clamp(0.0, 1.0);
 
+                // Mild isotropic diffusion residual (anisotropic advance is the deposit pass).
                 let mut sum = 0f32;
-                let mut cnt = 0u32;
-                let mut add = |ni: usize| {
-                    if water[ni] {
-                        return;
+                let mut wsum = 0f32;
+                for &(dx, dy) in &NEIGHBOR8 {
+                    let nx = x as i32 + dx;
+                    let ny = y as i32 + dy;
+                    if nx < 0 || ny < 0 || nx as usize >= sx || ny as usize >= sy {
+                        continue;
                     }
-                    sum += ovl.heat[ni];
-                    cnt += 1;
-                };
-                if x > 0 {
-                    add(i - 1);
+                    let ni = ny as usize * sx + nx as usize;
+                    if water[ni] {
+                        continue;
+                    }
+                    let w = 1.0 / neighbor_step_dist(dx, dy);
+                    sum += ovl.heat[ni] * w;
+                    wsum += w;
                 }
-                if x + 1 < sx {
-                    add(i + 1);
-                }
-                if y > 0 {
-                    add(i - sx);
-                }
-                if y + 1 < sy {
-                    add(i + sx);
-                }
-                if cnt == 0 {
+                if wsum <= 0.0 {
                     continue;
                 }
-                let neigh_mean = sum / cnt as f32;
+                let neigh_mean = sum / wsum;
                 let lap = neigh_mean - nh;
                 let b_here = wet_diffusion_barrier(m);
                 scratch[i] = if ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD || fuel_gate <= 0.0 {
                     0.0
                 } else {
-                    let spread = lap * 0.65 * b_here * rain_suppress * dt_e * wind_spread;
+                    let spread = lap * 0.45 * b_here * rain_suppress * dt_e * wind_spread;
                     if spread.abs() > 1e-8 {
                         neighbor_spread += 1;
                     }
@@ -465,7 +464,7 @@ pub fn chunk_fire_overlay_tick(
             }
         }
 
-        let rain_closed = rain_blocks_neighbor_spread(wx.rain_intensity);
+        let rain_closed = rain_mm_h_blocks_neighbor_spread(wx.rain_mm_h);
         if !rain_closed && any_source {
             // Deposits read the sources as they stood after the hold step, while writing in place.
             heat_src.clear();
@@ -476,6 +475,13 @@ pub fn chunk_fire_overlay_tick(
             hold_src.extend_from_slice(&ovl.burn_hold);
             taken.clear();
             taken.resize(n, false);
+            let elev = &matrix.elevation;
+            let wind = wx.wind_mps;
+            let gust = wx.gust_mps;
+            let base_gain = scaled_neighbor_heat_gain(wx.fog_density);
+            let deposit_k = dt_e * DEPOSIT_RATE;
+            let deposit_fuel_k = dt_e * DEPOSIT_FUEL_RATE;
+            let cell_m = TILE_METRES_GAMEPLAY;
             for y in 0..sy {
                 for x in 0..sx {
                     let i = y * sx + x;
@@ -490,14 +496,41 @@ pub fn chunk_fire_overlay_tick(
                     if !can_spread(&src) {
                         continue;
                     }
-                    let deposit_k = dt_e * DEPOSIT_RATE;
-                    let deposit_fuel_k = dt_e * DEPOSIT_FUEL_RATE;
-                    let mut deposit = |j: usize| {
-                        if water[j] {
-                            return;
+                    // Perimeter jitter: weak downwind fingers skip a fraction of deposits.
+                    let jitter = fire_cell_hash01(entity.to_bits(), i as u32, ember_clock / 5);
+                    for &(dx, dy) in &NEIGHBOR8 {
+                        let nx = x as i32 + dx;
+                        let ny = y as i32 + dy;
+                        if nx < 0 || ny < 0 || nx as usize >= sx || ny as usize >= sy {
+                            continue;
                         }
-                        if !spread_allowed(wx.snow_depth, matrix.moisture[j]) {
-                            return;
+                        let j = ny as usize * sx + nx as usize;
+                        if water[j] || !spread_allowed(wx.snow_depth, matrix.moisture[j]) {
+                            continue;
+                        }
+                        let rise = if elev.len() == n {
+                            slope_rise(elev[i], elev[j], cell_m * neighbor_step_dist(dx, dy))
+                        } else {
+                            0.0
+                        };
+                        let gain = directional_heat_gain(base_gain, dx, dy, wind, gust, rise) * deposit_k;
+                        if gain <= 1e-8 {
+                            continue;
+                        }
+                        // Stochastic skip stronger on flanks/back so the perimeter fingers.
+                        let align = {
+                            let sp = wind.length();
+                            if sp > 1e-4 {
+                                Vec2::new(dx as f32, dy as f32)
+                                    .normalize()
+                                    .dot(wind / sp)
+                            } else {
+                                0.0
+                            }
+                        };
+                        let skip_p = (0.22 - align * 0.18).clamp(0.02, 0.35);
+                        if jitter < skip_p && align < 0.85 {
+                            continue;
                         }
                         let fuel_before = ovl.fuel[j];
                         let mut dst = FireCell {
@@ -509,29 +542,12 @@ pub fn chunk_fire_overlay_tick(
                             fuel: ovl.fuel[j],
                             burned_hold: ovl.burn_hold[j],
                         };
-                        if take_neighbor_deposit(
-                            taken[j],
-                            &src,
-                            &mut dst,
-                            scaled_neighbor_heat_gain(wx.fog_density) * deposit_k,
-                        ) {
+                        if take_neighbor_deposit(taken[j], &src, &mut dst, gain) {
                             taken[j] = true;
                             ovl.heat[j] = dst.heat;
                             ovl.fuel[j] = (fuel_before - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).max(0.0);
                             neighbor_spread += 1;
                         }
-                    };
-                    if x > 0 {
-                        deposit(i - 1);
-                    }
-                    if x + 1 < sx {
-                        deposit(i + 1);
-                    }
-                    if y > 0 {
-                        deposit(i - sx);
-                    }
-                    if y + 1 < sy {
-                        deposit(i + sx);
                     }
                 }
             }
@@ -576,8 +592,13 @@ pub fn chunk_fire_overlay_tick(
 }
 
 /// Litter fall / regrowth of one cool cell toward what its stand can carry.
+/// Cap is already phase-gated by [`ChunkCellStand`] (0 while snags, ramping in regrowth) — never
+/// refill toward a live canopy while the stand is still scarred.
 #[inline]
 fn regrow_fuel(fuel: f32, cap: f32, litter_secs: f32, dt: f32) -> f32 {
+    if cap <= 1e-6 || litter_secs <= 0.0 {
+        return fuel.min(cap.max(0.0));
+    }
     (fuel + cap / litter_secs.max(1.0) * dt).min(cap)
 }
 
@@ -589,8 +610,8 @@ fn can_spread(cell: &FireCell) -> bool {
 }
 
 /// Fire crosses chunk borders: a hot cell on a chunk edge deposits heat on the facing cell of the neighbouring
-/// chunk under the same rules as the in-chunk cardinal deposit ([`take_neighbor_deposit`]). Without this each chunk
-/// burns as an island: the front stalls at the seam, and a whole chunk lights at once when a spark lands across it.
+/// chunk under the same rules as the in-chunk 8-neighbour deposit ([`take_neighbor_deposit`] +
+/// [`directional_heat_gain`]). Without this each chunk burns as an island.
 ///
 /// Reads every chunk's edge cells as they stand after [`chunk_fire_overlay_tick`], then applies the deposits, so
 /// the exchange is symmetric and order independent. Writes only `heat` / `fuel` of the receiving cell.
@@ -617,16 +638,29 @@ pub fn chunk_fire_edge_spread(
     let by_coord: HashMap<IVec2, Entity> = q.iter().map(|(e, c, ..)| (c.coord, e)).collect();
     let mut deposits: Vec<(Entity, usize, f32)> = Vec::new();
     let mut taken: HashSet<(Entity, usize)> = HashSet::new();
+    let cell_m = TILE_METRES_GAMEPLAY;
     for (_, chunk, matrix, wx, ovl) in q.iter() {
         let (sx, sy) = (matrix.size.x as usize, matrix.size.y as usize);
         let n = sx * sy;
         if n == 0 || ovl.heat.len() != n || ovl.fuel.len() != n || ovl.burn_hold.len() != n {
             continue;
         }
-        if ovl.heat.iter().all(|h| *h < SPREAD_HEAT_MIN) || rain_blocks_neighbor_spread(wx.rain_intensity) {
+        if ovl.heat.iter().all(|h| *h < SPREAD_HEAT_MIN) || rain_mm_h_blocks_neighbor_spread(wx.rain_mm_h) {
             continue;
         }
-        for (dx, dy) in [(1i32, 0i32), (-1, 0), (0, 1), (0, -1)] {
+        let wind = wx.wind_mps;
+        let gust = wx.gust_mps;
+        // Cardinal seams (full edge) plus diagonal corner hops so 45° wind does not stall at chunk corners.
+        for (dx, dy) in [
+            (1i32, 0i32),
+            (-1, 0),
+            (0, 1),
+            (0, -1),
+            (1, 1),
+            (1, -1),
+            (-1, 1),
+            (-1, -1),
+        ] {
             let Some(&ne) = by_coord.get(&(chunk.coord + IVec2::new(dx, dy))) else {
                 continue;
             };
@@ -637,7 +671,53 @@ pub fn chunk_fire_edge_spread(
             if nsx != sx || nsy != sy || novl.heat.len() != n || novl.fuel.len() != n || novl.burn_hold.len() != n {
                 continue;
             }
-            let gain = scaled_neighbor_heat_gain(nwx.fog_density) * deposit_k;
+            let base = scaled_neighbor_heat_gain(nwx.fog_density);
+            let diagonal = dx != 0 && dy != 0;
+            if diagonal {
+                // One corner cell → opposite corner of the diagonal neighbour chunk.
+                let (sx_i, sy_i) = (sx as i32, sy as i32);
+                let (si_x, si_y) = match (dx, dy) {
+                    (1, 1) => (sx_i - 1, sy_i - 1),
+                    (1, -1) => (sx_i - 1, 0),
+                    (-1, 1) => (0, sy_i - 1),
+                    _ => (0, 0),
+                };
+                let (di_x, di_y) = (si_x - dx * (sx_i - 1), si_y - dy * (sy_i - 1));
+                let si = (si_y * sx_i + si_x) as usize;
+                let di = (di_y * sx_i + di_x) as usize;
+                if water_gate.cell_has_standing_water(matrix, si)
+                    || water_gate.cell_has_standing_water(nm, di)
+                    || !spread_allowed(nwx.snow_depth, nm.moisture[di])
+                {
+                    continue;
+                }
+                let rise = if matrix.elevation.len() == n && nm.elevation.len() == n {
+                    slope_rise(
+                        matrix.elevation[si],
+                        nm.elevation[di],
+                        cell_m * neighbor_step_dist(dx, dy),
+                    )
+                } else {
+                    0.0
+                };
+                let gain = directional_heat_gain(base, dx, dy, wind, gust, rise) * deposit_k;
+                let src = FireCell {
+                    heat: ovl.heat[si],
+                    fuel: ovl.fuel[si],
+                    burned_hold: ovl.burn_hold[si],
+                };
+                let mut dst = FireCell {
+                    heat: novl.heat[di],
+                    fuel: novl.fuel[di],
+                    burned_hold: novl.burn_hold[di],
+                };
+                if taken.contains(&(ne, di)) || !take_neighbor_deposit(false, &src, &mut dst, gain) {
+                    continue;
+                }
+                taken.insert((ne, di));
+                deposits.push((ne, di, gain));
+                continue;
+            }
             let along = if dx != 0 { sy } else { sx };
             for k in 0..along {
                 let (si, di) = match (dx, dy) {
@@ -652,8 +732,22 @@ pub fn chunk_fire_edge_spread(
                 {
                     continue;
                 }
-                let src = FireCell { heat: ovl.heat[si], fuel: ovl.fuel[si], burned_hold: ovl.burn_hold[si] };
-                let mut dst = FireCell { heat: novl.heat[di], fuel: novl.fuel[di], burned_hold: novl.burn_hold[di] };
+                let rise = if matrix.elevation.len() == n && nm.elevation.len() == n {
+                    slope_rise(matrix.elevation[si], nm.elevation[di], cell_m)
+                } else {
+                    0.0
+                };
+                let gain = directional_heat_gain(base, dx, dy, wind, gust, rise) * deposit_k;
+                let src = FireCell {
+                    heat: ovl.heat[si],
+                    fuel: ovl.fuel[si],
+                    burned_hold: ovl.burn_hold[si],
+                };
+                let mut dst = FireCell {
+                    heat: novl.heat[di],
+                    fuel: novl.fuel[di],
+                    burned_hold: novl.burn_hold[di],
+                };
                 if taken.contains(&(ne, di)) || !take_neighbor_deposit(false, &src, &mut dst, gain) {
                     continue;
                 }

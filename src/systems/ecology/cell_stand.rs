@@ -17,10 +17,15 @@
 //!
 //! The tactical tree layer reads [`ChunkCellStand::render`] (live stage / burning / burnt / regrowth per
 //! cell) through the vegetation extract frame; it keeps no flag of its own.
+//!
+//! W2: snag / regrow / litter clocks are authored in **game days** (`assets/configs/ecology/stand_burn_v1.ron`)
+//! and converted to sim seconds via [`GAME_DAY_SECS`].
 
+use std::path::{Path, PathBuf};
 use std::sync::Arc;
 
 use bevy::prelude::*;
+use serde::Deserialize;
 
 use super::vegetation_field::{CanopyDrivers, VegetationField};
 use super::vegetation_suitability::{max_stage_for_canopy_cap, ChunkVegetationSuitability};
@@ -28,8 +33,13 @@ use super::landscape_grammar_lg2::SuccessionTopologyStage;
 use crate::systems::fire::combustion::{profile_cell_fuel_seed, MIN_CELL_FUEL_FOR_SPREAD};
 use crate::systems::fire::{chunk_fuel_profile_from_vegetation, ChunkFireOverlay, ChunkSurfaceFire};
 use crate::systems::sim_control::{SimControlState, SimTick, SimTimeMicros};
-use crate::terrain::fire::{fuel_material_def, FuelMaterialKind};
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+
+/// One game day in sim seconds (authoring unit for [`StandBurnConfig`] RON).
+pub const GAME_DAY_SECS: f32 = 86_400.0;
+
+pub const STAND_BURN_RON: &str = "assets/configs/ecology/stand_burn_v1.ron";
+const EMBEDDED_STAND_BURN: &str = include_str!("../../../assets/configs/ecology/stand_burn_v1.ron");
 
 /// Per-cell render codes (see [`ChunkCellStand::render`]).
 pub const CELL_NONE: u8 = 0;
@@ -84,19 +94,31 @@ impl StandKind {
     }
 }
 
-/// Burn and regrowth timings per fuel kind (grass, brush, timber). Defaults come from the fuel material
-/// table (`burn_duration`); the rest is tuning.
+/// RON authoring table (game days). Converted to [`StandBurnConfig`] seconds at load.
+#[derive(Clone, Debug, Deserialize)]
+struct StandBurnRon {
+    burn_rate: (f32, f32, f32),
+    snag_days: (f32, f32, f32),
+    regrow_days: (f32, f32, f32),
+    crown_share: (f32, f32, f32),
+    litter_days: (f32, f32, f32),
+    crown_heat: f32,
+    snapshot_period_ticks: u64,
+}
+
+/// Burn and regrowth timings per fuel kind (grass, brush, timber).
+/// Authored in game days via [`STAND_BURN_RON`]; runtime fields are sim seconds.
 #[derive(Resource, Clone, Debug)]
 pub struct StandBurnConfig {
     /// Multiplier on the fuel consumption rate: grass burns out fast, timber slow.
     pub burn_rate: [f32; 3],
-    /// Seconds a burnt stand stays charred standing dead (snags) before anything comes back.
+    /// Sim seconds a burnt stand stays charred standing dead (snags) before anything comes back.
     pub snag_secs: [f32; 3],
-    /// Seconds of regrowth after the snag phase until the stand is live again.
+    /// Sim seconds of regrowth after the snag phase until the stand is live again.
     pub regrow_secs: [f32; 3],
     /// Share of a cell's fuel that is canopy (spared by a ground fire).
     pub crown_share: [f32; 3],
-    /// Seconds for surface fuel (litter) to come back after a ground fire.
+    /// Sim seconds for surface fuel (litter) to come back while Live / Regrowth.
     pub litter_secs: [f32; 3],
     /// Cell heat at or above which the canopy share burns too.
     pub crown_heat: f32,
@@ -104,25 +126,60 @@ pub struct StandBurnConfig {
     pub snapshot_period_ticks: u64,
 }
 
-impl Default for StandBurnConfig {
-    fn default() -> Self {
-        // Game-time compression on the material's burn duration: a cell burns for seconds (grass) to tens of
-        // seconds (timber), so a front is a band that moves, not a field that all burns at once.
-        let rate = |k| (35.0 * 12.0 / fuel_material_def(k).burn_duration.max(1.0)).clamp(0.2, 24.0);
-        Self {
-            burn_rate: [
-                rate(FuelMaterialKind::Grass),
-                rate(FuelMaterialKind::Brush),
-                rate(FuelMaterialKind::Timber),
-            ],
-            snag_secs: [6.0, 25.0, 90.0],
-            regrow_secs: [25.0, 120.0, 600.0],
-            crown_share: [0.0, 0.2, 0.5],
-            litter_secs: [8.0, 30.0, 60.0],
-            crown_heat: 0.55,
-            snapshot_period_ticks: 20,
+fn days_to_secs(days: (f32, f32, f32)) -> [f32; 3] {
+    [
+        days.0.max(0.0) * GAME_DAY_SECS,
+        days.1.max(0.0) * GAME_DAY_SECS,
+        days.2.max(0.0) * GAME_DAY_SECS,
+    ]
+}
+
+fn triple(t: (f32, f32, f32)) -> [f32; 3] {
+    [t.0, t.1, t.2]
+}
+
+impl StandBurnRon {
+    fn into_config(self) -> StandBurnConfig {
+        StandBurnConfig {
+            burn_rate: triple(self.burn_rate),
+            snag_secs: days_to_secs(self.snag_days),
+            regrow_secs: days_to_secs(self.regrow_days),
+            crown_share: triple(self.crown_share),
+            litter_secs: days_to_secs(self.litter_days),
+            crown_heat: self.crown_heat,
+            snapshot_period_ticks: self.snapshot_period_ticks.max(1),
         }
     }
+}
+
+impl Default for StandBurnConfig {
+    fn default() -> Self {
+        parse_stand_burn_ron(EMBEDDED_STAND_BURN).expect("embedded stand_burn_v1.ron must parse")
+    }
+}
+
+pub fn parse_stand_burn_ron(text: &str) -> Result<StandBurnConfig, String> {
+    let ron: StandBurnRon =
+        ron::from_str(text).map_err(|e| format!("stand burn RON parse: {e}"))?;
+    Ok(ron.into_config())
+}
+
+fn repo_asset_path(rel: &str) -> PathBuf {
+    std::env::var_os("CARGO_MANIFEST_DIR")
+        .map(PathBuf::from)
+        .map(|root| root.join(rel))
+        .unwrap_or_else(|| PathBuf::from(rel))
+}
+
+pub fn load_stand_burn_from_path(path: &Path) -> Result<StandBurnConfig, String> {
+    let text = std::fs::read_to_string(path).map_err(|e| format!("{}: {e}", path.display()))?;
+    parse_stand_burn_ron(&text)
+}
+
+/// Disk table when present, else the compiled-in default.
+#[must_use]
+pub fn load_stand_burn_config() -> StandBurnConfig {
+    load_stand_burn_from_path(&repo_asset_path(STAND_BURN_RON)).unwrap_or_else(|_| StandBurnConfig::default())
 }
 
 impl StandBurnConfig {
@@ -178,7 +235,8 @@ pub struct ChunkCellStand {
     lit: Vec<bool>,
     /// Changes whenever `render` does.
     pub render_rev: u32,
-    seeded: bool,
+    /// Whether capacities have been rated at least once (persisted with the stand).
+    pub seeded: bool,
     last_refresh: u64,
     last_snapshot: u64,
     last_pass: u64,
@@ -549,8 +607,22 @@ mod tests {
             burn_rate: [d.burn_rate[0] * 10.0, d.burn_rate[1] * 10.0, d.burn_rate[2] * 10.0],
             snag_secs: [1.0, 2.0, 3.0],
             regrow_secs: [3.0, 6.0, 12.0],
+            litter_secs: [2.0, 4.0, 8.0],
             ..d
         }
+    }
+
+    #[test]
+    fn w2_default_timber_scar_spans_game_years() {
+        let cfg = StandBurnConfig::default();
+        let timber = 2usize;
+        let cycle = cfg.snag_secs[timber] + cfg.regrow_secs[timber];
+        assert!(
+            cycle >= GAME_DAY_SECS * 365.0,
+            "timber scar must last ≥1 game year, got {} days",
+            cycle / GAME_DAY_SECS
+        );
+        assert!(cfg.snag_secs[0] + cfg.regrow_secs[0] < cfg.snag_secs[timber]);
     }
 
     /// Fire + ecology slice of the sim: vegetation -> fuel -> fire -> burnt stand -> canopy drivers.

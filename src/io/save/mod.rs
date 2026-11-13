@@ -12,6 +12,7 @@ mod registry_snapshot;
 mod snapshot_builder;
 mod settlement_overlay;
 mod fire_overlay;
+mod stand_overlay;
 mod atmosphere_clipmap_overlay;
 mod transport_overlay;
 mod utility_overlay;
@@ -61,6 +62,13 @@ pub use fire_overlay::{
     write_chunk_fire_state_ron, ChunkFireStateSnapshot,
     SavedFireChunkRow, FIRE_OVERLAY_NAME, FIRE_SAVE_ROUNDTRIP_JSON, FIRE_STATE_REL_PATH,
     FIRE_STATE_SCHEMA_VERSION,
+};
+pub use stand_overlay::{
+    apply_chunk_cell_stand, capture_chunk_cell_stand, default_stand_overlay_ref,
+    read_chunk_cell_stand_ron, try_hydrate_stand_overlay_on_bundle_dir,
+    write_chunk_cell_stand_ron, write_stand_overlay_on_save_flush, ChunkCellStandSnapshot,
+    SavedCellStandRow, StandOverlayHydrateState, STAND_OVERLAY_NAME, STAND_STATE_REL_PATH,
+    STAND_STATE_SCHEMA_VERSION,
 };
 pub use atmosphere_clipmap_overlay::{
     build_atmos_clipmap_overlay_refs, capture_atmosphere_clipmap_snapshot,

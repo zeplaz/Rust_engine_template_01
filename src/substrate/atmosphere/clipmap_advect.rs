@@ -34,20 +34,22 @@ pub fn advect_l0_preserving_mass(level: &mut AtmosphereClipLevel) {
     level.smoke_density = next;
 }
 
+/// Convert map-plane wind (m/s) into L0 texel drift. One L0 texel = one chunk
+/// (`CHUNK_TILES_SIM * TILE_METRES_GAMEPLAY` metres); scale matches the legacy `* 2` kernel.
+const L0_ADVECT_TEXEL_PER_MPS: f32 = 2.0 / (32.0 * 16.0);
+
 #[inline]
-fn advect_channel_with_wind(
+fn advect_channel_with_wind_field<F>(
     channel: &[f32],
     resolution: bevy::math::UVec2,
-    direction: Vec2,
-    speed: f32,
     dt: f32,
     decay: f32,
-) -> Option<Vec<f32>> {
-    if dt <= 0.0 || speed <= 1e-6 {
-        return None;
-    }
-    let dir = direction.normalize_or_zero();
-    if dir.length_squared() <= 1e-8 {
+    mut wind_at: F,
+) -> Option<Vec<f32>>
+where
+    F: FnMut(u32, u32) -> Vec2,
+{
+    if dt <= 0.0 {
         return None;
     }
     let sx = resolution.x as i32;
@@ -56,13 +58,22 @@ fn advect_channel_with_wind(
         return None;
     }
     let mut next = vec![0.0_f32; channel.len()];
+    let mut any = false;
     for y in 0..resolution.y {
         for x in 0..resolution.x {
-            let fx = x as f32 - dir.x * speed * dt * 2.0;
-            let fy = y as f32 - dir.y * speed * dt * 2.0;
+            let wind = wind_at(x, y);
+            let speed = wind.length();
+            let dst = (y * resolution.x + x) as usize;
+            if speed <= 1e-6 {
+                next[dst] = (channel[dst] * decay).clamp(0.0, 1.0);
+                continue;
+            }
+            any = true;
+            let drift = wind * (dt * L0_ADVECT_TEXEL_PER_MPS);
+            let fx = x as f32 - drift.x;
+            let fy = y as f32 - drift.y;
             let sx_i = fx.floor() as i32;
             let sy_i = fy.floor() as i32;
-            let dst = (y * resolution.x + x) as usize;
             if sx_i < 0 || sy_i < 0 || sx_i >= sx || sy_i >= sy {
                 next[dst] = 0.0;
                 continue;
@@ -71,37 +82,48 @@ fn advect_channel_with_wind(
             next[dst] = (channel[src_i] * decay).clamp(0.0, 1.0);
         }
     }
-    Some(next)
+    any.then_some(next)
 }
 
-/// DEBT-010 / 010b / 010c — wind-driven drift on L0 smoke/fog/toxicity/ash/ember/heat.
+/// Uniform wind (legacy tests / harness). Prefer [`advect_l0_with_wind_field`].
 pub fn advect_l0_with_wind(level: &mut AtmosphereClipLevel, direction: Vec2, speed: f32, dt: f32) {
+    let wind = direction.normalize_or_zero() * speed;
+    advect_l0_with_wind_field(level, dt, |_, _| wind);
+}
+
+/// Per-texel wind (m/s) from `WeatherField::sample` — W2 smoke/ash/ember advection authority.
+pub fn advect_l0_with_wind_field(
+    level: &mut AtmosphereClipLevel,
+    dt: f32,
+    mut wind_at: impl FnMut(u32, u32) -> Vec2,
+) {
     let res = level.resolution;
-    if let Some(next) = advect_channel_with_wind(&level.smoke_density, res, direction, speed, dt, 0.985)
+    if let Some(next) =
+        advect_channel_with_wind_field(&level.smoke_density, res, dt, 0.985, &mut wind_at)
     {
         level.smoke_density = next;
     }
-    if let Some(next) = advect_channel_with_wind(&level.fog_density, res, direction, speed, dt, 0.99)
+    if let Some(next) =
+        advect_channel_with_wind_field(&level.fog_density, res, dt, 0.99, &mut wind_at)
     {
         level.fog_density = next;
     }
-    if let Some(next) =
-        advect_channel_with_wind(&level.toxicity, res, direction, speed, dt, 0.992)
+    if let Some(next) = advect_channel_with_wind_field(&level.toxicity, res, dt, 0.992, &mut wind_at)
     {
         level.toxicity = next;
     }
     if let Some(next) =
-        advect_channel_with_wind(&level.ash_density, res, direction, speed, dt, 0.98)
+        advect_channel_with_wind_field(&level.ash_density, res, dt, 0.98, &mut wind_at)
     {
         level.ash_density = next;
     }
     if let Some(next) =
-        advect_channel_with_wind(&level.ember_density, res, direction, speed, dt, 0.97)
+        advect_channel_with_wind_field(&level.ember_density, res, dt, 0.97, &mut wind_at)
     {
         level.ember_density = next;
     }
     if let Some(next) =
-        advect_channel_with_wind(&level.heat_distortion, res, direction, speed, dt, 0.96)
+        advect_channel_with_wind_field(&level.heat_distortion, res, dt, 0.96, &mut wind_at)
     {
         level.heat_distortion = next;
     }

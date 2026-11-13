@@ -32,6 +32,7 @@ pub(crate) fn publish_climate_visual_aggregate(
     let mut s = 0f32;
     let mut fg = 0f32;
     let mut wind = 0f32;
+    let mut wind_mps = Vec2::ZERO;
     let mut li = 0f32;
     for w in &wx {
         nw += 1;
@@ -39,6 +40,7 @@ pub(crate) fn publish_climate_visual_aggregate(
         s += w.snow_depth;
         fg += w.fog_density;
         wind += w.wind_speed;
+        wind_mps += w.wind_mps;
         li += w.lightning_risk;
     }
 
@@ -59,6 +61,7 @@ pub(crate) fn publish_climate_visual_aggregate(
         mean_snow: s / nf_w,
         mean_fog_density: fg / nf_w,
         mean_wind_speed: wind / nf_w,
+        mean_wind_mps: wind_mps / nf_w,
         mean_lightning_risk: li / nf_w,
         mean_biomass: bio / nf_e,
         mean_fire_risk: frisk / nf_e,

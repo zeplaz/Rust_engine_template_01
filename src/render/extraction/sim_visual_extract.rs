@@ -178,6 +178,8 @@ pub struct ClimateVisualAggregate {
     pub mean_snow: f32,
     pub mean_fog_density: f32,
     pub mean_wind_speed: f32,
+    /// Mean map-plane wind (m/s) from chunk weather projections (W2 local VFX).
+    pub mean_wind_mps: Vec2,
     pub mean_lightning_risk: f32,
     pub mean_biomass: f32,
     pub mean_fire_risk: f32,

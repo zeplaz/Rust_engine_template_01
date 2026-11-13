@@ -165,7 +165,7 @@ pub fn emit_ember_spot_ignition_events(
             let size01 = 0.25 + 0.75 * hash01(tick.0, chunk.coord, i as u32, SALT_SIZE);
             let Some(off) = spot_landing_offset_tiles(
                 h,
-                wx.wind_speed,
+                wx.wind_mps,
                 size01,
                 hash01(tick.0, chunk.coord, i as u32, SALT_ANG),
                 hash01(tick.0, chunk.coord, i as u32, SALT_D),

@@ -26,6 +26,8 @@ pub const CHUNK_VISIBILITY_FULL_SCALE_M: f32 = 10_000.0;
 pub struct ChunkWeather {
     /// 0..1 (`rain mm/h / 10`), liquid precipitation only.
     pub rain_intensity: f32,
+    /// Liquid precipitation rate at the chunk centre (mm/h). Zero when snowing.
+    pub rain_mm_h: f32,
     pub fog_density: f32,
     /// 0..1 accumulated snow cover.
     pub snow_depth: f32,
@@ -33,6 +35,8 @@ pub struct ChunkWeather {
     pub wind_speed: f32,
     /// Wind vector at the chunk centre, m/s (x = east, y = tile row axis).
     pub wind_mps: Vec2,
+    /// Gust magnitude (m/s) from the field sample (5 s hash bucket).
+    pub gust_mps: f32,
     pub lightning_risk: f32,
     /// 1.0 = clear horizon (>= 10 km); lower = worse.
     pub visibility_factor: f32,
@@ -44,10 +48,12 @@ impl Default for ChunkWeather {
     fn default() -> Self {
         Self {
             rain_intensity: 0.0,
+            rain_mm_h: 0.0,
             fog_density: 0.0,
             snow_depth: 0.0,
             wind_speed: 0.0,
             wind_mps: Vec2::ZERO,
+            gust_mps: 0.0,
             lightning_risk: 0.0,
             visibility_factor: 1.0,
             soil_moisture: 0.45,
@@ -95,8 +101,10 @@ pub fn project_chunk_weather(
         let s = field.sample(pos, t);
         let rain01 = (s.rain_mm_h / CHUNK_RAIN_FULL_SCALE_MM_H).clamp(0.0, 1.0);
         w.rain_intensity = if s.snow { 0.0 } else { rain01 };
+        w.rain_mm_h = if s.snow { 0.0 } else { s.rain_mm_h.max(0.0) };
         w.fog_density = s.fog.clamp(0.0, 1.0);
         w.wind_mps = s.wind_mps;
+        w.gust_mps = s.gust_mps.max(0.0);
         w.wind_speed = (s.wind_mps.length() / CHUNK_WIND_FULL_SCALE_MPS).clamp(0.0, 1.0);
         w.lightning_risk = s.lightning.clamp(0.0, 1.0);
         w.visibility_factor = (s.visibility_m / CHUNK_VISIBILITY_FULL_SCALE_M).clamp(0.05, 1.0);

@@ -37,6 +37,8 @@ use crate::systems::ecology::{
     CELL_WATER, CELL_YOUNG,
 };
 use crate::systems::fire::{ChunkFireOverlay, FireEcologyStats};
+use crate::systems::weather::ChunkWeather;
+use crate::terrain::generation::Chunk;
 use crate::systems::sim_control::SimTick;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{ChunkCellMatrix, WaterClass};
@@ -304,7 +306,7 @@ struct WorldParams<'w, 's> {
     base: Option<Res<'w, State<BaseState>>>,
     matrices: Query<'w, 's, &'static ChunkCellMatrix>,
     stands: Query<'w, 's, &'static ChunkCellStand>,
-    overlays: Query<'w, 's, &'static ChunkFireOverlay>,
+    overlays: Query<'w, 's, (&'static Chunk, &'static ChunkFireOverlay, Option<&'static ChunkWeather>)>,
     ecology: Option<Res<'w, FireEcologyStats>>,
     graph: Option<Res<'w, RenderProjectionGraph>>,
     particles: Option<Res<'w, WorldFireParticleFrame>>,
@@ -342,7 +344,7 @@ fn fire_chain_json(w: &WorldParams, f: &FireChainParams) -> Value {
     use crate::render::FIRE_VISUAL_ACTIVE_HEAT_EPS;
     // Cells the extractor should turn into instances: heat above the visual floor with fuel or burn-hold.
     let mut emitting_cells = 0u32;
-    for o in &w.overlays {
+    for (_chunk, o, _wx) in &w.overlays {
         for (i, h) in o.heat.iter().enumerate() {
             let fuel = o.fuel.get(i).copied().unwrap_or(0.0);
             let hold = o.burn_hold.get(i).copied().unwrap_or(0);
@@ -671,6 +673,55 @@ fn combat_json(g: &GameParams, state: &mut SimRunDumpState) -> Value {
     })
 }
 
+/// Axis-aligned heat footprint vs mean wind: downwind span / upwind span (W2 anisotropy).
+fn fire_wind_spread_ratio(w: &WorldParams) -> (f64, f64, f64) {
+    let mut wind = Vec2::ZERO;
+    let mut wn = 0u32;
+    let mut min_x = i32::MAX;
+    let mut max_x = i32::MIN;
+    let mut min_y = i32::MAX;
+    let mut max_y = i32::MIN;
+    let mut hot = 0u32;
+    for (chunk, ovl, wx) in &w.overlays {
+        if let Some(wx) = wx {
+            wind += wx.wind_mps;
+            wn += 1;
+        }
+        let sx = (ovl.heat.len() as f32).sqrt() as i32;
+        if sx <= 0 {
+            continue;
+        }
+        for (i, h) in ovl.heat.iter().enumerate() {
+            if *h < 0.08 {
+                continue;
+            }
+            hot = hot.saturating_add(1);
+            let lx = (i as i32) % sx;
+            let ly = (i as i32) / sx;
+            let x = chunk.coord.x.wrapping_mul(sx).wrapping_add(lx);
+            let y = chunk.coord.y.wrapping_mul(sx).wrapping_add(ly);
+            min_x = min_x.min(x);
+            max_x = max_x.max(x);
+            min_y = min_y.min(y);
+            max_y = max_y.max(y);
+        }
+    }
+    if hot == 0 || wn == 0 {
+        return (0.0, 0.0, 0.0);
+    }
+    let wind = wind / wn as f32;
+    let speed = wind.length();
+    let (dx, dy) = ((max_x - min_x).max(0) as f64, (max_y - min_y).max(0) as f64);
+    let along = if speed < 0.5 {
+        1.0
+    } else if wind.x.abs() >= wind.y.abs() {
+        (dx + 1.0) / (dy + 1.0)
+    } else {
+        (dy + 1.0) / (dx + 1.0)
+    };
+    (along, speed as f64, f64::from(hot))
+}
+
 fn fire_json(w: &WorldParams, veg: (u32, u32, u32, u32), regrowth: u32, heat_cells: u32, state: &mut SimRunDumpState) -> Value {
     let ever = u64::from(veg.1) + u64::from(veg.2);
     state.ignited_cells_cum += ever.saturating_sub(state.prev_ever_burning);
@@ -680,6 +731,14 @@ fn fire_json(w: &WorldParams, veg: (u32, u32, u32, u32), regrowth: u32, heat_cel
     state.track("regrowth_cells", f64::from(regrowth));
     state.track("heat_cells", f64::from(heat_cells));
     state.track("veg_live_cells", f64::from(veg.0));
+    let burnt_frac = {
+        let land = veg.0.saturating_add(veg.1).saturating_add(veg.2).max(1);
+        f64::from(veg.2) / f64::from(land)
+    };
+    state.track("burnt_fraction", burnt_frac);
+    let (lb_ratio, mean_wind, hot_n) = fire_wind_spread_ratio(w);
+    state.track("fire_length_breadth", lb_ratio);
+    state.track("fire_mean_wind_mps", mean_wind);
     json!({
         "ignited_cells_cum": state.ignited_cells_cum,
         "burning_cells": state.series_json("burning_cells"),
@@ -687,6 +746,10 @@ fn fire_json(w: &WorldParams, veg: (u32, u32, u32, u32), regrowth: u32, heat_cel
         "regrowth_cells": state.series_json("regrowth_cells"),
         "heat_cells": state.series_json("heat_cells"),
         "veg_live_cells": state.series_json("veg_live_cells"),
+        "burnt_fraction": state.series_json("burnt_fraction"),
+        "length_breadth": state.series_json("fire_length_breadth"),
+        "mean_wind_mps": state.series_json("fire_mean_wind_mps"),
+        "hot_cells_bbox": hot_n,
         "max_heat": w.ecology.as_ref().map_or(0.0, |e| e.max_heat),
     })
 }
@@ -712,7 +775,7 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
         .map(|s| s.render.iter().filter(|c| **c == CELL_REGROWTH).count() as u32)
         .sum::<u32>();
     let mut fire_heat_cells = 0u32;
-    for overlay in &w.overlays {
+    for (_chunk, overlay, _wx) in &w.overlays {
         for h in &overlay.heat {
             if *h > 0.04 {
                 fire_heat_cells = fire_heat_cells.saturating_add(1);

@@ -1,6 +1,6 @@
 # Plan: weather and wind field v1
 
-Status: W1 SHIPPED (2026-11-13: `src/systems/weather/{field,systems,tuning}.rs`, `assets/configs/weather/weather_v1.ron`, save overlay `src/io/save/weather_overlay.rs`, dump `src/dev/sim_run_dump_weather.rs`); W2–W5 PLANNED. Owner: `coder` (sim), `designer` (overlay/HUD/clouds).
+Status: W1 SHIPPED; **W2 SHIPPED** (2026-11-13: anisotropic 8-neigh fire + continuous wind, L0 WeatherField advect, long-lived stand scars RON+save, firebreak/road fuel clear, dump length:breadth / burnt_fraction); W3–W5 PLANNED. Owner: `coder` (sim), `designer` (overlay/HUD/clouds).
 Units: metric throughout (m/s, mm/h, °C, m visibility).
 
 ## 1. What exists today (and why wind looks fake)
@@ -154,8 +154,26 @@ The user saw three problems in play. W2 is not done until all three are fixed an
 
 Budget: one step costs well under 1 ms even at 64×64 cells. `sample()` is O(1). Nothing weather-related runs every frame except interpolated sampling by the consumers that need it.
 
+### Post-W2 fire fidelity (do **not** expand the stencil to 16+)
+
+W2 locks an **8-neighbour square stencil** weighted by a **continuous** wind vector (`WeatherField::sample` → `ChunkWeather.wind_mps`) and slope. Agents must not “upgrade” to 16/32 discrete headings on this grid — that is the wrong lever.
+
+| Layer | W2 | Higher fidelity (later) |
+|---|---|---|
+| Wind input | Continuous `Vec2` m/s + gust hash | Same; never quantize wind to N buckets |
+| Deposit topology | 8-neigh (diagonals ×1/√2) | Keep 8 on the square surface grid |
+| Rate of spread | Anisotropic gain on deposits (head/flank/back) | Full **elliptical ROS / Huygens**: compute head–flank–back rates from Rothermel-like wind+slope+fuel, then weight the same 8 deposits (or integrate along the front) |
+| Front geometry | Irregular via fuel jitter + gust + ignition hash | Optional **level-set / distance-field** perimeter for smooth firelines and break contact |
+| Smoke / ash flow | Per-texel L0 advection from `sample()` | Same continuous field; flows are not neighbour-count problems |
+| Firebreaks | Fuel mask + spotting jump | Continuous front vs strip width; crown needs a wider clear |
+| Voxel / 3D | Out of W2 | Separate **vertical plume + buoyancy** on voxels; surface fire can stay 2D 8-neigh with continuous wind. Do not invent a 16-dir 2D stencil “for voxels.” |
+
+**Rejected:** 16+ direction stencils on square cells (knight/long-range offsets, uneven distance weights, diminishing return vs elliptical ROS).
+
+**Next fidelity step after W2 ships:** elliptical ROS kernel driving the existing 8-neigh path in `cell_spread` / `chunk_fire_overlay`, then level-set if fireline tools need sub-cell contact tests.
+
 ## 5. Decisions
 
 1. **Weather cell size:** 1 km (recommended; zones are visibly distinct and cheap) or 512 m (= 1 sim chunk, a direct 1:1 with `ChunkWeather`).
-2. **Fire spread:** add diagonal neighbours (recommended; wind at 45° otherwise makes staircase fronts) or keep 4 cardinal neighbours.
+2. **Fire spread (locked for W2):** **8 neighbours** + continuous wind/slope weighting. Not 4-only. Not 16+. See post-W2 fidelity above.
 3. **Day/night and seasons:** keep the season phase only, or add a diurnal cycle (fog at dawn, convective storms in the afternoon). The recommendation is to defer diurnal to after W4.

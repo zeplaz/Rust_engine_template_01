@@ -2,6 +2,12 @@
 //!
 //! Sole callers: [`super::chunk_fire_overlay::chunk_fire_overlay_tick`] writes the overlay.
 //! Deterministic: no RNG. Rain does not refill fuel.
+//!
+//! W2: heat deposits are **anisotropic** — continuous wind (`Vec2` m/s) and slope weight an
+//! 8-neighbour stencil. Wind is not quantized to 8 headings; neighbours are only the lattice
+//! deposit targets (see `plan_weather_wind_v1.md` §4a / post-W2 fidelity).
+
+use bevy::math::Vec2;
 
 use super::combustion::{fuel_ignition_gate, MIN_CELL_FUEL_FOR_SPREAD};
 
@@ -26,8 +32,34 @@ pub const SNOW_BLOCKS_SPREAD: f32 = 0.35;
 /// Cell moisture at or above this refuses a neighbor deposit.
 pub const MOISTURE_BLOCKS_SPREAD: f32 = 0.72;
 
-/// Chunk rain at or above this stops cardinal deposits. It does not refill fuel.
+/// Chunk rain at or above this stops neighbor deposits. It does not refill fuel.
+/// Legacy 0..1 intensity; prefer [`rain_mm_h_blocks_neighbor_spread`] when mm/h is available.
 pub const RAIN_BLOCKS_SPREAD: f32 = 0.85;
+
+/// Rain rate (mm/h) at or above which surface deposits stop.
+pub const RAIN_BLOCKS_SPREAD_MM_H: f32 = 8.5;
+
+/// Downwind boost scale: `1 + K_WIND * max(0, d̂·ŵ) * |w| / 10`.
+pub const K_WIND_DOWNWIND: f32 = 1.15;
+/// Upwind attenuation: multiply by `1 - U_WIND * max(0, -d̂·ŵ)` (clamped ≥ 0.05).
+pub const U_WIND_UPWIND: f32 = 0.72;
+/// Slope: ROS roughly doubles every this many degrees of upslope.
+pub const SLOPE_DOUBLE_DEG: f32 = 10.0;
+/// Cap on the upslope multiplier.
+pub const SLOPE_GAIN_MAX: f32 = 4.0;
+/// Cap on the downslope attenuation (still allows some downhill creep).
+pub const SLOPE_GAIN_MIN: f32 = 0.25;
+/// Eight lattice offsets (dx, dy) including diagonals. Wind is continuous; these are deposit targets only.
+pub const NEIGHBOR8: [(i32, i32); 8] = [
+    (-1, -1),
+    (0, -1),
+    (1, -1),
+    (-1, 0),
+    (1, 0),
+    (-1, 1),
+    (0, 1),
+    (1, 1),
+];
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct FireCell {
@@ -168,6 +200,68 @@ pub fn scaled_neighbor_heat_gain(fog_density: f32) -> f32 {
     NEIGHBOR_HEAT_GAIN * (1.0 - fog_density.clamp(0.0, 1.0) * 0.5)
 }
 
+/// Lattice step length: 1 for cardinal, √2 for diagonal (then inverted as a gain scale).
+#[inline]
+#[must_use]
+pub fn neighbor_step_dist(dx: i32, dy: i32) -> f32 {
+    if dx != 0 && dy != 0 {
+        std::f32::consts::SQRT_2
+    } else {
+        1.0
+    }
+}
+
+/// Slope rise from source to neighbour: Δelevation / horizontal metres (positive = uphill).
+#[inline]
+#[must_use]
+pub fn slope_rise(elev_src: f32, elev_dst: f32, step_m: f32) -> f32 {
+    let horiz = step_m.max(1e-3);
+    (elev_dst - elev_src) / horiz
+}
+
+/// Multiplier from slope angle: ~2× per [`SLOPE_DOUBLE_DEG`] of upslope; downhill attenuated.
+#[must_use]
+pub fn slope_spread_factor(rise: f32) -> f32 {
+    let deg = rise.atan().to_degrees();
+    let factor = 2f32.powf(deg / SLOPE_DOUBLE_DEG);
+    factor.clamp(SLOPE_GAIN_MIN, SLOPE_GAIN_MAX)
+}
+
+/// Anisotropic heat gain toward neighbour offset `(dx, dy)`.
+///
+/// `wind_mps` is continuous map-plane wind (not an 8-way heading). `gust_mps` scales intensity
+/// when above the mean speed. `slope_rise` is Δh/horizontal_m toward the neighbour.
+#[must_use]
+pub fn directional_heat_gain(
+    base: f32,
+    dx: i32,
+    dy: i32,
+    wind_mps: Vec2,
+    gust_mps: f32,
+    slope_rise: f32,
+) -> f32 {
+    if base <= 0.0 {
+        return 0.0;
+    }
+    let dist = neighbor_step_dist(dx, dy);
+    let dir = Vec2::new(dx as f32, dy as f32) / dist;
+    let speed = wind_mps.length();
+    let align = if speed > 1e-4 {
+        dir.dot(wind_mps / speed)
+    } else {
+        0.0
+    };
+    let down = 1.0 + K_WIND_DOWNWIND * align.max(0.0) * (speed / 10.0);
+    let up = (1.0 - U_WIND_UPWIND * (-align).max(0.0)).max(0.05);
+    let gust = if speed > 1e-4 {
+        (1.0 + (gust_mps.max(speed) / speed - 1.0).clamp(0.0, 1.5) * 0.35).max(1.0)
+    } else {
+        1.0
+    };
+    let slope = slope_spread_factor(slope_rise);
+    base * down * up * slope * gust / dist
+}
+
 /// Same gates as [`spread_onto_neighbor`], with an explicit heat gain.
 #[must_use]
 pub fn spread_with_gain(src: &FireCell, dst: &mut FireCell, heat_gain: f32) -> bool {
@@ -207,10 +301,30 @@ pub fn spread_allowed(snow_depth: f32, dest_moisture: f32) -> bool {
     snow_depth < SNOW_BLOCKS_SPREAD && dest_moisture < MOISTURE_BLOCKS_SPREAD
 }
 
-/// Heavy rain stops cardinal spread. Light rain does not. Fuel is untouched.
+/// Heavy rain stops neighbor spread (legacy 0..1 intensity). Light rain does not. Fuel is untouched.
 #[must_use]
 pub fn rain_blocks_neighbor_spread(rain_intensity: f32) -> bool {
     rain_intensity >= RAIN_BLOCKS_SPREAD
+}
+
+/// Heavy rain in mm/h stops neighbor spread. Prefer this when the weather projection carries rates.
+#[must_use]
+pub fn rain_mm_h_blocks_neighbor_spread(rain_mm_h: f32) -> bool {
+    rain_mm_h >= RAIN_BLOCKS_SPREAD_MM_H
+}
+
+/// Deterministic ignition / perimeter jitter in `[0, 1)` from cell identity and a time bucket.
+#[inline]
+#[must_use]
+pub fn fire_cell_hash01(chunk_bits: u64, cell: u32, bucket: u64) -> f32 {
+    let mut x = chunk_bits
+        .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+        ^ (cell as u64).wrapping_mul(0xBF58_476D_1CE4_E5B9)
+        ^ bucket.wrapping_mul(0x94D0_49BB_1331_11EB);
+    x = (x ^ (x >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
+    x = (x ^ (x >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
+    x ^= x >> 31;
+    (x >> 40) as f32 / (1u64 << 24) as f32
 }
 
 /// Spark below this does not ignite a cell sitting on the fuel floor.
@@ -616,5 +730,37 @@ mod tests {
         assert!(delta > 0.0);
         assert_eq!(wind_fuel_delta(0.6, 2.0, 0.0), 0.0);
         assert!(blown.fuel >= 0.0);
+    }
+
+    #[test]
+    fn w2_head_outpaces_flank_and_back_at_fixed_wind() {
+        let base = NEIGHBOR_HEAT_GAIN;
+        let wind = Vec2::new(8.0, 0.0);
+        let head = directional_heat_gain(base, 1, 0, wind, 8.0, 0.0);
+        let flank = directional_heat_gain(base, 0, 1, wind, 8.0, 0.0);
+        let back = directional_heat_gain(base, -1, 0, wind, 8.0, 0.0);
+        let diag = directional_heat_gain(base, 1, 1, wind, 8.0, 0.0);
+        assert!(head > flank * 1.5, "head {head} flank {flank}");
+        assert!(flank > back, "flank {flank} back {back}");
+        assert!(head > diag, "cardinal head should beat diagonal at same wind");
+        assert!(diag > back);
+    }
+
+    #[test]
+    fn w2_upslope_beats_downslope() {
+        let base = NEIGHBOR_HEAT_GAIN;
+        let calm = Vec2::ZERO;
+        let up = directional_heat_gain(base, 0, 1, calm, 0.0, 0.2); // ~11°
+        let flat = directional_heat_gain(base, 0, 1, calm, 0.0, 0.0);
+        let down = directional_heat_gain(base, 0, 1, calm, 0.0, -0.2);
+        assert!(up > flat * 1.5, "up {up} flat {flat}");
+        assert!(flat > down, "flat {flat} down {down}");
+    }
+
+    #[test]
+    fn w2_rain_mm_h_gate() {
+        assert!(!rain_mm_h_blocks_neighbor_spread(0.0));
+        assert!(!rain_mm_h_blocks_neighbor_spread(4.0));
+        assert!(rain_mm_h_blocks_neighbor_spread(RAIN_BLOCKS_SPREAD_MM_H));
     }
 }

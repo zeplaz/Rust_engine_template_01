@@ -34,7 +34,7 @@ pub use atmosphere::{
     AtmosphereParticleBudget, AtmosphereParticleKind, AtmospherePerfThresholds,
     AtmospherePipelineSet, AtmospherePlugin, AtmosphereRenderLayers,
     AtmosphereValidationRegion, ChunkSmokeGpu, FireEmitter, FireEmitterGpu,
-    GlobalWind, OverlayMode, SimChunkSmokeVisualExtract, SimFireEmitterVisualExtract,
+    OverlayMode, SimChunkSmokeVisualExtract, SimFireEmitterVisualExtract,
     fire_emitter_from_heat_fuel,
     tile_in_any_validation_region,
 };

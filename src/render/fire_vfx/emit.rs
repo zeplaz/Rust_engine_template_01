@@ -196,6 +196,7 @@ pub fn emit_world_fire_particles_from_projection(
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
     registry: Option<Res<crate::render::fire_vfx::EffectConsumableRegistry>>,
     climate: Option<Res<ClimateVisualAggregate>>,
+    wx: Query<(&crate::terrain::generation::Chunk, &crate::systems::weather::ChunkWeather)>,
     consumables: Query<&crate::render::fire_vfx::EffectConsumable>,
     mut frame: ResMut<WorldFireParticleFrame>,
     mut memory: Local<FireEmitterMemory>,
@@ -205,8 +206,9 @@ pub fn emit_world_fire_particles_from_projection(
     // the projection graph itself was not re-evaluated (coherence skip).
     let anim = FireAnim {
         time_s: time.elapsed_secs(),
-        wind01: climate.as_deref().map_or(0.0, |c| c.mean_wind_speed),
+        wind_mps: climate.as_deref().map_or(Vec2::ZERO, |c| c.mean_wind_mps),
     };
+    let wind_by_chunk: HashMap<IVec2, Vec2> = wx.iter().map(|(c, w)| (c.coord, w.wind_mps)).collect();
     update_world_fire_particles_animated(
         graph.as_ref(),
         frame.as_mut(),
@@ -215,6 +217,7 @@ pub fn emit_world_fire_particles_from_projection(
         view_manager.as_deref(),
         anim,
         &mut memory,
+        Some(&wind_by_chunk),
     );
     if let Some(smoke) = smoke_extract.as_deref() {
         append_smoke_atmosphere_particles_from_extract(smoke, frame.as_mut(), anim);
@@ -261,7 +264,7 @@ pub fn update_world_fire_particles_from_projection(
 ) {
     let anim = FireAnim {
         time_s: frame.anim_time_secs,
-        wind01: 0.25,
+        wind_mps: Vec2::new(5.0, 0.0),
     };
     update_world_fire_particles_animated(
         graph,
@@ -271,6 +274,7 @@ pub fn update_world_fire_particles_from_projection(
         view_manager,
         anim,
         &mut FireEmitterMemory::default(),
+        None,
     );
 }
 
@@ -282,6 +286,7 @@ pub fn update_world_fire_particles_animated(
     view_manager: Option<&crate::gui::ViewManager>,
     anim: FireAnim,
     memory: &mut FireEmitterMemory,
+    wind_by_chunk: Option<&HashMap<IVec2, Vec2>>,
 ) {
     frame.snapshot_stamp = graph.fire.snapshot_stamp;
     frame.active_band = crate::gui::representation_band_from_world_lod(graph.fire.lod);
@@ -377,6 +382,9 @@ pub fn update_world_fire_particles_animated(
             } else {
                 ParticleClass::Ember
             },
+            wind_mps: wind_by_chunk
+                .and_then(|m| m.get(&chunk).copied())
+                .unwrap_or(anim.wind_mps),
         };
         anim_rows.clear();
         animate_emitter(&emitter, &anim, &mut anim_rows);

@@ -134,6 +134,8 @@ pub enum BuildTool {
     Road(RoadType),
     Rail(RailType),
     PowerLine(VoltageClass),
+    /// Bulldozed fuel strip (W2 firebreak) — path paint like road, execute clears fuel only.
+    Firebreak,
     Demolish,
 }
 
@@ -148,6 +150,7 @@ impl BuildTool {
             Self::Road(_) => "road",
             Self::Rail(_) => "rail",
             Self::PowerLine(_) => "power_line",
+            Self::Firebreak => "firebreak",
             Self::Demolish => "demolish",
         }
     }
@@ -175,6 +178,7 @@ impl BuildTool {
             Self::Road(_) => ToolContext::Roads,
             Self::Rail(_) => ToolContext::Rail,
             Self::PowerLine(_) => ToolContext::Utilities,
+            Self::Firebreak => ToolContext::Ecology,
         }
     }
 
@@ -188,7 +192,7 @@ impl BuildTool {
             // Military opens Defense picker — do not auto-arm Demolish.
             ToolContext::Military => Self::None,
             ToolContext::Industry => Self::Building(BuildingArchetypeId::Factory),
-            ToolContext::Ecology => Self::Zone(ZoneTool::MixedUse),
+            ToolContext::Ecology => Self::Firebreak,
             ToolContext::Civil => Self::Zone(ZoneTool::ResidentialLow),
         }
     }

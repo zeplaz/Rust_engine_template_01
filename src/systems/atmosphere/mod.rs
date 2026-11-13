@@ -26,8 +26,7 @@ pub use diagnostics::AtmosphereDiagnostics;
 pub use emitter_sync::{fire_emitter_from_heat_fuel, FireEmitter};
 pub(crate) use emitter_sync::update_fire_emitters_from_heat;
 pub use field::{
-    atmos_chunk_to_tile, atmos_chunk_to_tile_in, AtmosphereCell, GlobalWind, ATMO_GRID_ORIGIN,
-    ATMO_GRID_SIZE,
+    atmos_chunk_to_tile, atmos_chunk_to_tile_in, AtmosphereCell, ATMO_GRID_ORIGIN, ATMO_GRID_SIZE,
 };
 pub use field_l0_shim::{
     atmosphere_field_l0_shim_system, DEBT_010_WRITERS_ON_L0, FIELD_L0_SHIM_RETIRED,
@@ -85,7 +84,6 @@ impl Plugin for AtmospherePlugin {
         // DEBT-011: AtmosphereField deleted; AtmospherePlugin owns clipmap stack when
         // SubstratePlugin is absent (lib proofs / headless). Substrate re-init is idempotent.
         app.init_resource::<crate::substrate::atmosphere::AtmosphereClipmapStack>()
-            .init_resource::<GlobalWind>()
             .add_systems(
                 Update,
                 (

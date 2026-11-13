@@ -15,7 +15,7 @@ use bevy::math::{Vec2, Vec4};
 
 use crate::systems::fire::ember_physics::{
     ember_alpha, ember_kinematics, ember_lifetime_s, ember_temperature_k, flame_flicker, glow_u,
-    hash01, wind_vector_mps, EmberLaunch, FIRE_TILE_METERS, HEIGHT_TO_SCREEN, PREVAILING_WIND_DIR,
+    hash01, wind_vector_from_field, EmberLaunch, FIRE_TILE_METERS, HEIGHT_TO_SCREEN,
 };
 
 use super::pack::{GpuParticleInstance, ParticleClass};
@@ -46,14 +46,16 @@ pub struct FireEmitter {
     pub ember_slots: usize,
     /// Class used for flame/ember rows (`Spark` full detail, `Ember` low flame).
     pub class: ParticleClass,
+    /// Local map-plane wind at the emitter (m/s); falls back to [`FireAnim::wind_mps`].
+    pub wind_mps: Vec2,
 }
 
 /// Frame-global animation inputs.
 #[derive(Clone, Copy, Debug)]
 pub struct FireAnim {
     pub time_s: f32,
-    /// Sim wind, `ChunkWeather::wind_speed` mean in `[0, 1]`.
-    pub wind01: f32,
+    /// Fallback / mean wind (m/s) when an emitter has no local sample.
+    pub wind_mps: Vec2,
 }
 
 #[inline]
@@ -111,7 +113,12 @@ pub fn animate_emitter(e: &FireEmitter, anim: &FireAnim, out: &mut Vec<GpuPartic
             let kk = (k as i64 as u32).wrapping_mul(2_654_435_761) ^ s;
             let r = |n: u32| hash01(seed ^ kk, n);
             let launch = EmberLaunch::from_randoms(heat, size01, r(1), r(2), r(3));
-            let wind = wind_vector_mps(anim.wind01, r(4) * 2.0 - 1.0);
+            let base = if e.wind_mps.length_squared() > 1e-8 {
+                e.wind_mps
+            } else {
+                anim.wind_mps
+            };
+            let wind = wind_vector_from_field(base, r(4) * 2.0 - 1.0);
             let (p, v) = ember_kinematics(&launch, wind, age);
             if p.z <= 0.0 {
                 continue;
@@ -135,8 +142,20 @@ pub fn animate_emitter(e: &FireEmitter, anim: &FireAnim, out: &mut Vec<GpuPartic
 
     // Smoke plume: 0-2 puffs per cell, long staggered cycles, wind-sheared drift.
     let smoke_n = ((e.smoke * e.smoke_amp * 2.4).ceil() as u32).min(2);
+    let mut smoke_anim = *anim;
+    if e.wind_mps.length_squared() > 1e-8 {
+        smoke_anim.wind_mps = e.wind_mps;
+    }
     for s in 0..smoke_n {
-        out.extend(smoke_puff(e.xy, 1.0 + 4.0 * heat, e.smoke * e.smoke_amp, anim, seed ^ 0x5A5A, s, 1.0));
+        out.extend(smoke_puff(
+            e.xy,
+            1.0 + 4.0 * heat,
+            e.smoke * e.smoke_amp,
+            &smoke_anim,
+            seed ^ 0x5A5A,
+            s,
+            1.0,
+        ));
     }
 }
 
@@ -162,10 +181,14 @@ pub fn smoke_puff(
     }
     // Rise speed saturates as the plume cools (tau 3 s); drift approaches 70 % of the wind.
     let rise_m = SMOKE_RISE_MPS * 1.6 * (age - 3.0 * (1.0 - (-age / 3.0).exp()));
-    let wind = wind_vector_mps(anim.wind01, 0.0);
+    let wind = wind_vector_from_field(anim.wind_mps, 0.0);
     let drift_scale = 0.7 * (1.0 - (-age / 2.5).exp());
     let lateral = (hash01(seed, 600 + slot) - 0.5) * 0.4 * FIRE_TILE_METERS * f;
-    let perp = Vec2::new(-PREVAILING_WIND_DIR.y, PREVAILING_WIND_DIR.x);
+    let perp = if wind.length_squared() > 1e-8 {
+        Vec2::new(-wind.y, wind.x).normalize_or_zero()
+    } else {
+        Vec2::Y
+    };
     let off = wind * age * drift_scale + perp * lateral;
     let pos = project(origin, off, start_height_m + rise_m);
     let radius_m = (0.6 + 2.4 * (age / cyc)) * size_scale;
@@ -193,13 +216,21 @@ mod tests {
             smoke_amp: 1.0,
             ember_slots: 8,
             class: ParticleClass::Spark,
+            wind_mps: Vec2::new(8.0, 0.0),
         }
     }
 
     #[test]
     fn no_fire_emits_no_particles() {
         let mut out = Vec::new();
-        animate_emitter(&emitter(0.0, 0.0, 0.0), &FireAnim { time_s: 3.0, wind01: 0.5 }, &mut out);
+        animate_emitter(
+            &emitter(0.0, 0.0, 0.0),
+            &FireAnim {
+                time_s: 3.0,
+                wind_mps: Vec2::new(8.0, 0.0),
+            },
+            &mut out,
+        );
         assert!(out.is_empty());
     }
 
@@ -208,7 +239,14 @@ mod tests {
         let mut counts = Vec::new();
         for i in 0..40 {
             let mut out = Vec::new();
-            animate_emitter(&emitter(0.9, 1.0, 0.8), &FireAnim { time_s: i as f32 * 0.17, wind01: 0.4 }, &mut out);
+            animate_emitter(
+                &emitter(0.9, 1.0, 0.8),
+                &FireAnim {
+                    time_s: i as f32 * 0.17,
+                    wind_mps: Vec2::new(6.0, 0.0),
+                },
+                &mut out,
+            );
             assert!(out.iter().all(|r| r.world_xyz_heat.is_finite() && r.ember_class_radius_smoke.is_finite()));
             counts.push(out.len());
         }
