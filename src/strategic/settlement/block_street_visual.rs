@@ -11,13 +11,16 @@ use super::ids::BlockId;
 
 const METRES_PER_TILE: f32 = 16.0;
 
+/// Promoted street-prop module jobs under `assets/models/modules/` (the `*_lod0_run001` twins were
+/// retired to `assets/archive/kit_lod0_twins_retired_2026-09/`; there is no promoted lamp module yet,
+/// so `lamp` / `lamp_row` recipe props spawn nothing until one is promoted).
+const STREET_PROP_JOBS: [&str; 2] = ["prop_fence_production_run001", "prop_vent_production_run001"];
+
 /// Recipe `edge()` / `scatter()` asset id → promoted module job id (presentation-only).
 fn street_asset_to_job_id(asset: &str) -> Option<&'static str> {
     match asset {
-        "hedge" | "fence" => Some("prop_fence_lod0_run001"),
-        "lamp_row" | "lamp" => Some("prop_light_lod0_run001"),
-        "bench" => Some("prop_fence_lod0_run001"),
-        "tree" | "scatter_tree" => Some("prop_vent_lod0_run001"),
+        "hedge" | "fence" | "bench" => Some(STREET_PROP_JOBS[0]),
+        "tree" | "scatter_tree" => Some(STREET_PROP_JOBS[1]),
         _ => None,
     }
 }
@@ -130,12 +133,7 @@ pub fn load_block_street_furniture_scenes(
     let (Some(asset_server), Some(_)) = (asset_server, world_assets) else {
         return;
     };
-    let jobs = [
-        "prop_fence_lod0_run001",
-        "prop_light_lod0_run001",
-        "prop_vent_lod0_run001",
-    ];
-    for job in jobs {
+    for job in STREET_PROP_JOBS {
         // AssetServer roots at `assets/` — do not prefix `assets/` again (else `assets/assets/...`).
         let label = format!("models/modules/{job}/model.glb#Scene0");
         catalog

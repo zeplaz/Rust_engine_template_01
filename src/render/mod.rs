@@ -13,6 +13,8 @@ mod viewport_pipeline;
 pub mod view_runtime;
 mod mig_a_static;
 pub mod minimap_compositor;
+mod layer_mesh;
+pub(crate) use layer_mesh::upload_layer_mesh;
 mod world_map_front_mesh;
 pub use world_map_front_mesh::{
     faction_color, WorldMapFrontMeshPlugin,

@@ -307,10 +307,6 @@ pub struct BuildRailRoot;
 #[derive(Component, Clone, Copy)]
 pub struct BuildRailToolSlot(pub ToolContext);
 
-/// Phase 4.1 — atlas icon child under [`BuildRailToolSlot`] (row-0 tools only).
-#[derive(Component)]
-pub struct BuildRailToolIcon;
-
 /// Petroleum industry panel tab (Phase 4.2 — `IconId::P5Br` + label).
 #[derive(Component)]
 pub struct PetroleumPanelTabRoot;
@@ -997,14 +993,7 @@ fn sync_build_rail_from_strip_system(
         ),
         With<Button>,
     >,
-    mut icons: Query<
-        &mut Visibility,
-        (With<BuildRailToolIcon>, Without<BuildRailToolLabel>),
-    >,
-    mut labels: Query<
-        (&mut Text, &mut TextColor, &mut Visibility),
-        (With<BuildRailToolLabel>, Without<BuildRailToolIcon>),
-    >,
+    mut labels: Query<(&mut Text, &mut TextColor, &mut Visibility), With<BuildRailToolLabel>>,
 ) {
     for (slot, interaction, children, mut bg, mut border) in &mut slots {
         let selected = if picker.open {
@@ -1032,11 +1021,6 @@ fn sync_build_rail_from_strip_system(
         let word = crate::gui::hud::sim_hud_copy::rail_player_label(slot.0);
         let next_color = TextColor(icon_tint);
         for child in children.iter() {
-            if let Ok(mut vis) = icons.get_mut(child) {
-                if *vis != Visibility::Hidden {
-                    *vis = Visibility::Hidden;
-                }
-            }
             if let Ok((mut text, mut color, mut vis)) = labels.get_mut(child) {
                 if text.as_str() != word {
                     crate::gui::style::widgets::set_text_if_changed(&mut text, word);

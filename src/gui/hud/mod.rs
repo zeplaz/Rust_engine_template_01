@@ -58,7 +58,7 @@ pub use sim_build_picker_sheet::{
 pub use sim_road_tool_sheet::SimRoadToolSheetState;
 pub use sim_power_tool_sheet::{sim_power_tool_sheet_icons_wired, SimPowerToolSheetState};
 pub use simulation_shell_phase2::{
-    collapse_context_tray_on_escape, format_sim_tick_line, BuildRailRoot, BuildRailToolIcon,
+    collapse_context_tray_on_escape, format_sim_tick_line, BuildRailRoot,
     BuildRailToolLabel, BuildRailToolSlot, ContextTrayBodyLine, ContextTrayBodyRoot,
     ContextTrayRoot, ContextTrayState,
     ContextTrayTab, ContextTrayTabButton, ContextTrayTabLabel, MapViewportFrameInset,
