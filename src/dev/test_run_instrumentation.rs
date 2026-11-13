@@ -65,6 +65,17 @@ impl Default for TestRunInstrumentation {
     }
 }
 
+/// Boolean env flag read **once** per process. Diagnostics flags are fixed at launch, and the
+/// helpers below run per frame / per `PerfScope` drop, so they must not hit the OS environment
+/// (lock + `String` allocation) on every call.
+macro_rules! env_flag_once {
+    ($key:literal) => {{
+        static CELL: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+        *CELL.get_or_init(|| $crate::dev::test_run_instrumentation::env_flag($key))
+    }};
+}
+pub(crate) use env_flag_once;
+
 #[must_use]
 pub fn env_flag(key: &str) -> bool {
     std::env::var(key)
@@ -74,19 +85,19 @@ pub fn env_flag(key: &str) -> bool {
 
 #[must_use]
 pub fn instrumentation_active() -> bool {
-    env_flag("SIM_ANALYTICS") || env_flag("PERF_DISK") || ACTIVE.load(Ordering::Relaxed)
+    env_flag_once!("SIM_ANALYTICS") || env_flag_once!("PERF_DISK") || ACTIVE.load(Ordering::Relaxed)
 }
 
 #[must_use]
 pub fn instrumentation_quiet_terminal() -> bool {
     instrumentation_active()
-        && (env_flag("SIM_ANALYTICS_QUIET") || QUIET_TERMINAL.load(Ordering::Relaxed))
+        && (env_flag_once!("SIM_ANALYTICS_QUIET") || QUIET_TERMINAL.load(Ordering::Relaxed))
 }
 
 #[must_use]
 pub fn instrumentation_frame_jsonl() -> bool {
     instrumentation_active()
-        && (env_flag("SIM_ANALYTICS_FRAMES") || FRAME_JSONL.load(Ordering::Relaxed))
+        && (env_flag_once!("SIM_ANALYTICS_FRAMES") || FRAME_JSONL.load(Ordering::Relaxed))
 }
 
 #[must_use]
@@ -97,13 +108,13 @@ pub fn instrumentation_stall_spans() -> bool {
 /// Explicit operator request for per-frame viewport / sim-view trace (not implied by `--test` quiet mode).
 #[must_use]
 pub fn instrumentation_explicit_verbose_trace() -> bool {
-    env_flag("STAGE5_VERBOSE")
-        || env_flag("VISUAL_DIAG")
-        || env_flag("SIM_VIEW_SYNC_DEBUG")
-        || env_flag("VIEWPORT_AUTHORITY_DEBUG")
-        || env_flag("WORLDGEN_CHROME_DEBUG")
-        || env_flag("STALL")
-        || env_flag("PERF")
+    env_flag_once!("STAGE5_VERBOSE")
+        || env_flag_once!("VISUAL_DIAG")
+        || env_flag_once!("SIM_VIEW_SYNC_DEBUG")
+        || env_flag_once!("VIEWPORT_AUTHORITY_DEBUG")
+        || env_flag_once!("WORLDGEN_CHROME_DEBUG")
+        || env_flag_once!("STALL")
+        || env_flag_once!("PERF")
 }
 
 /// Operator-facing trace (env / CLI) gated by `--test` quiet terminal unless explicitly requested.
@@ -118,7 +129,7 @@ pub fn diagnostics_operator_trace_enabled(cfg_cli: bool, env_keys: &[&str]) -> b
 /// STALL lines go to disk witness via sim-spectrum stall spans; terminal only when explicitly requested.
 #[must_use]
 pub fn stall_terminal_logging_enabled() -> bool {
-    if env_flag("STALL") || env_flag("STALL_SPAN_DEBUG") {
+    if env_flag_once!("STALL") || env_flag_once!("STALL_SPAN_DEBUG") {
         return true;
     }
     if instrumentation_explicit_verbose_trace() {

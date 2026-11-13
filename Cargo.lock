@@ -5048,6 +5048,7 @@ dependencies = [
  "linfa-ica",
  "linfa-kernel",
  "linfa-nn",
+ "log",
  "nalgebra",
  "noise",
  "rand 0.8.6",
@@ -5060,6 +5061,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "smallvec",
+ "tracing",
 ]
 
 [[package]]

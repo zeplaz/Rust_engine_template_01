@@ -49,6 +49,9 @@ engine_deep_debug = []
 tracy = ["bevy/trace_tracy"]
 # Per-system span timing to a Chrome trace JSON (`TRACE_CHROME=<path>`); measurement builds only.
 trace_chrome = ["bevy/trace_chrome"]
+# Lets a release build write the sim review dump (`RUST_ENGINE_SIM_DUMP=1`); used by
+# `playcheck.py --release`. Never in shipped builds: debug builds always have the dump.
+sim_dump = []
 # `legacy_io_templates` removed 2026-04-26: src/io/templates.rs retired.
 
 [package.metadata.'cargo-features']
@@ -57,6 +60,9 @@ glob = ["*"]
 [dependencies]
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
+# Release builds compile out `debug!` / `trace!` (tracing + log macros, every crate); debug keeps all levels.
+tracing = { version = "0.1", default-features = false, features = ["release_max_level_info"] }
+log = { version = "0.4", default-features = false, features = ["release_max_level_info"] }
 crossbeam-channel = "0.5"
 ron = "0.8"
 reqwest = { version = "0.11", features = ["json"] }

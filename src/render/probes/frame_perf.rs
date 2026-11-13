@@ -9,6 +9,8 @@ use std::time::Instant;
 
 use bevy::prelude::*;
 
+use crate::dev::test_run_instrumentation::env_flag_once;
+
 const PERF_SLOW_MS: f32 = 16.0;
 
 /// Wall-clock phase stamps for the current frame (see module docs).
@@ -92,7 +94,8 @@ pub struct FrameUpdateAttrib {
     pub fire_particles_ms: f32,
 }
 
-/// RAII scope — logs `perf_scope` when elapsed ≥ [`PERF_SLOW_MS`] (see operational perf playbook).
+/// RAII scope — always adds its time to the per-frame table the hitch detector reads
+/// ([`crate::dev::perf_scope_frame_log`]); logs a `perf_scope` line only with `PERF=1`.
 pub struct PerfScope {
     label: &'static str,
     start: Instant,
@@ -117,11 +120,9 @@ impl Drop for PerfScope {
     fn drop(&mut self) {
         let ms = self.elapsed_ms();
         crate::dev::perf_scope_frame_log::record_perf_scope(self.label, ms);
-        let suppressed = perf_terminal_suppressed() && !frame_perf_verbose();
-        if !suppressed && (frame_perf_verbose() || ms >= PERF_SLOW_MS) {
+        // Slow scopes are reported once per hitch frame by `frame_hitch`, not one line per scope.
+        if frame_perf_verbose() {
             info!(target: "perf_scope", "{} {ms:.2}ms", self.label);
-        }
-        if !suppressed {
             intra_update_stall_log(self.label, ms);
         }
     }
@@ -147,11 +148,7 @@ pub fn intra_update_stall_log(label: &'static str, ms: f32) {
     if !crate::dev::test_run_instrumentation::stall_terminal_logging_enabled() {
         return;
     }
-    if !(frame_perf_verbose()
-        || std::env::var("STALL")
-            .ok()
-            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true")))
-    {
+    if !(frame_perf_verbose() || env_flag_once!("STALL")) {
         return;
     }
     info!(target: "stall", "STALL {label}: {ms:.2}ms");
@@ -412,12 +409,7 @@ impl FramePerf {
 
 #[must_use]
 pub fn frame_perf_verbose() -> bool {
-    std::env::var("PERF")
-        .ok()
-        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-        || std::env::var("STAGE5_VERBOSE")
-            .ok()
-            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    env_flag_once!("PERF") || env_flag_once!("STAGE5_VERBOSE")
 }
 
 /// When sim-spectrum quiet mode is on, structured capture goes to disk only.
@@ -434,10 +426,7 @@ fn perf_terminal_suppressed() -> bool {
 /// Off by default so normal runs are not spammed.
 #[must_use]
 pub fn minimap_size_trace_enabled() -> bool {
-    frame_perf_verbose()
-        || std::env::var("MINIMAP_TRACE")
-            .ok()
-            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    frame_perf_verbose() || env_flag_once!("MINIMAP_TRACE")
 }
 
 thread_local! {
@@ -493,6 +482,16 @@ pub fn record_frame_perf_ms(perf: &mut FramePerf, ms: f32, slot: FramePerfSlot) 
         FramePerfSlot::Readiness => perf.readiness_ms = v,
         FramePerfSlot::TileRaster => perf.tile_raster_ms = v,
     }
+    // Slots join the per-frame scope table so hitch lines can name them (WorldRepr already has a PerfScope).
+    let label = match slot {
+        FramePerfSlot::WorldRepr => return,
+        FramePerfSlot::ProjectionGraph => "slot_projection_graph",
+        FramePerfSlot::DomainMerge => "slot_domain_merge",
+        FramePerfSlot::AtmosphereExtract => "slot_atmosphere_extract",
+        FramePerfSlot::Readiness => "slot_readiness",
+        FramePerfSlot::TileRaster => "slot_tile_raster",
+    };
+    crate::dev::perf_scope_frame_log::record_perf_scope(label, v);
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -545,7 +544,7 @@ where
 }
 
 pub fn log_perf_phase(label: &str, ms: f32) {
-    if frame_perf_verbose() || ms >= PERF_SLOW_MS {
+    if frame_perf_verbose() {
         info!(target: "perf", "{label} {ms:.2}ms");
     }
 }
@@ -639,17 +638,9 @@ pub fn emit_frame_perf_summary(
     let budget_sum = budget.as_deref().map(budget_accounted_ms).unwrap_or(0.0);
     let gap_ms = (effective_wall_ms - instrumented).max(0.0);
 
-    if !frame_perf_verbose()
-        && wall_ms < PERF_SLOW_MS
-        && instrumented < PERF_SLOW_MS
-        && wall.gpu_gap_ms < PERF_SLOW_MS
-        && wall.cpu_egui_ms < PERF_SLOW_MS
-        && attrib_sum < PERF_SLOW_MS
-    {
-        return;
-    }
-
-    if perf_terminal_suppressed() {
+    // The per-frame PERF breakdown is opt-in (`PERF=1`). Without it, slow frames are reported by
+    // the rate-limited hitch detector (`frame_hitch`), so a slow build never logs every frame.
+    if !frame_perf_verbose() || perf_terminal_suppressed() {
         return;
     }
 
@@ -905,8 +896,20 @@ pub struct FramePerfPlugin;
 
 impl Plugin for FramePerfPlugin {
     fn build(&self, app: &mut App) {
+        // `GPU_PASS_DIAG=1`: per-render-pass GPU/CPU time (timestamp queries) logged once a second.
+        // Measurement only — answers "is a GPU pass the real cost behind the present wait?".
+        if env_flag_once!("GPU_PASS_DIAG") {
+            app.add_plugins((
+                bevy::render::diagnostic::RenderDiagnosticsPlugin,
+                bevy::diagnostic::LogDiagnosticsPlugin::default(),
+            ));
+            if !app.is_plugin_added::<bevy::diagnostic::FrameTimeDiagnosticsPlugin>() {
+                app.add_plugins(bevy::diagnostic::FrameTimeDiagnosticsPlugin::default());
+            }
+        }
         app.init_resource::<FramePerf>()
             .init_resource::<FrameWallClock>()
+            .init_resource::<super::frame_hitch::FrameHitchLog>()
             .init_resource::<FrameUpdateAttrib>()
             .init_resource::<FrameAttribScratch>()
             .add_systems(First, reset_frame_perf_counters)
@@ -925,6 +928,7 @@ impl Plugin for FramePerfPlugin {
                     stamp_frame_wall_last,
                     crate::gui::hud::finalize_frame_budget_diagnostics,
                     emit_frame_perf_summary,
+                    super::frame_hitch::detect_frame_hitches,
                 )
                     .chain(),
             );

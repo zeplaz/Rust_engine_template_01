@@ -31,7 +31,14 @@ def _num(v) -> float:
     raise TypeError(v)
 
 
+def _build(dump: dict) -> str:
+    return str(dump.get("build") or ("debug" if dump.get("debug", True) else "release"))
+
+
 def _scene_ok(row: dict, dump: dict) -> bool:
+    want_build = row.get("when_build")
+    if want_build and _build(dump) not in want_build:
+        return False
     want = row.get("when_scene")
     if not want:
         return True
@@ -117,7 +124,7 @@ def score(dump: dict, matrix: dict) -> dict:
         note = row.get("note", "")
         if not _scene_ok(row, dump):
             skipped += 1
-            rows_out.append({"id": rid, "status": "skip", "note": "scene filter"})
+            rows_out.append({"id": rid, "status": "skip", "note": "scene / build filter"})
             continue
         try:
             if "rule" in row:
@@ -160,6 +167,7 @@ def score(dump: dict, matrix: dict) -> dict:
         "fail": failed,
         "skip": skipped,
         "run_id": dump.get("run_id"),
+        "build": _build(dump),
         "tick": dump.get("tick"),
         "seed": dump.get("seed"),
         "rows": rows_out,
@@ -193,6 +201,57 @@ def _spark(vals: list[float], w: int = 260, h: int = 44) -> str:
     )
 
 
+def _frame_spark(avg: list[float], mx: list[float], threshold: float, w: int = 720, h: int = 90) -> str:
+    """Frame-time sparkline: per-bin average (line) and max (faint), hitch threshold dashed."""
+    if len(avg) < 2:
+        return "<em>no frame series</em>"
+    top = max(max(mx or avg), threshold or 0.0) * 1.05 or 1.0
+
+    def pts(vals: list[float]) -> str:
+        return " ".join(f"{i * w / (len(vals) - 1):.1f},{h - 2 - v / top * (h - 4):.1f}" for i, v in enumerate(vals))
+
+    ty = h - 2 - (threshold / top) * (h - 4) if threshold else None
+    thr = (f"<line x1='0' x2='{w}' y1='{ty:.1f}' y2='{ty:.1f}' stroke='#f88' stroke-dasharray='4 3'/>"
+           if ty is not None else "")
+    return (
+        f"<svg width='{w}' height='{h}' style='background:#1b1b1b'>{thr}"
+        f"<polyline fill='none' stroke='#456' stroke-width='1' points='{pts(mx)}'/>"
+        f"<polyline fill='none' stroke='#7cf' stroke-width='1.5' points='{pts(avg)}'/></svg>"
+        f"<br><small>blue = avg per bin, grey = max per bin, red dashed = hitch threshold {threshold:.0f} ms; "
+        f"y max {top:.0f} ms</small>"
+    )
+
+
+def _perf_section(perf: dict) -> str:
+    if not perf:
+        return "<h2>frame time</h2><p><em>no perf section</em></p>"
+    keys = ("build", "samples", "avg_ms", "p50_ms", "p95_ms", "p99_ms", "max_ms",
+            "hitch_threshold_ms", "hitches", "stalls", "hitches_per_min")
+    stats = "".join(
+        f"<td>{k}</td>" for k in keys
+    )
+    vals = "".join(
+        f"<td>{perf.get(k):.1f}</td>" if isinstance(perf.get(k), float) else f"<td>{perf.get(k)}</td>"
+        for k in keys
+    )
+    hitch_rows = "".join(
+        f"<tr><td>{h.get('frame')}</td><td>{h.get('tick')}</td><td>{h.get('dt_ms', 0):.1f}</td>"
+        f"<td>{h.get('main_ms', 0):.1f}</td><td>{h.get('outside_main_ms', 0):.1f}</td><td>"
+        + ", ".join(f"{s.get('label')} {s.get('ms', 0):.1f}" for s in h.get("scopes") or [])
+        + "</td></tr>"
+        for h in perf.get("worst_hitches") or []
+    ) or "<tr><td colspan='6'><em>no hitches after warm-up</em></td></tr>"
+    return (
+        "<h2>frame time</h2><table><tr>" + stats + "</tr><tr>" + vals + "</tr></table>"
+        + _frame_spark(perf.get("series_avg_ms") or [], perf.get("series_max_ms") or [],
+                       float(perf.get("hitch_threshold_ms") or 0))
+        + "<h3>worst hitches</h3><table><tr><th>frame</th><th>tick</th><th>dt ms</th><th>main ms</th>"
+        "<th>outside main ms</th><th>top PerfScopes (ms)</th></tr>" + hitch_rows + "</table>"
+        "<p><small>outside main = render sync, present / swapchain wait, OS. "
+        "Grep <code>hitch</code> in the run log for the same frames.</small></p>"
+    )
+
+
 def _kv(title: str, d: dict | None) -> str:
     if not isinstance(d, dict):
         return ""
@@ -213,7 +272,6 @@ def _sections(dump: dict | None) -> str:
         ("logistics", "Logistics"),
         ("combat", "Fronts / combat"),
         ("fire", "Fire / ecology (first/last/min/max)"),
-        ("perf", "Perf (frame ms)"),
     ):
         out.append(_kv(title, dump.get(key)))
     ai = dump.get("ai") or {}
@@ -226,7 +284,9 @@ def _sections(dump: dict | None) -> str:
         "<div class='sec'><h3>AI factions</h3><table><tr><th>slot</th><th>decisions</th><th>logistics</th>"
         f"<th>deployment</th><th>build</th><th>last goal</th></tr>{ai_rows}</table></div>"
     )
-    out.append("</div><h2>time series</h2><table>")
+    out.append("</div>")
+    out.append(_perf_section(dump.get("perf") or {}))
+    out.append("<h2>time series</h2><table>")
     hist = dump.get("history") or []
     for key, title in _SPARKS:
         out.append(f"<tr><td>{title}</td><td>{_spark([float(h.get(key) or 0) for h in hist])}</td></tr>")
@@ -264,7 +324,7 @@ h3 {{ margin: 8px 0 4px; font-size: 15px; }}
 pre {{ background: #1b1b1b; padding: 12px; overflow: auto; }}
 </style></head><body>
 <h1>Sim review — {result.get('status')} · {result.get('summary')}</h1>
-<p>run {result.get('run_id')} · tick {result.get('tick')} · seed {result.get('seed')}</p>
+<p>run {result.get('run_id')} · build {result.get('build')} · tick {result.get('tick')} · seed {result.get('seed')}</p>
 <p>Dump is counts only. This table is the verdict. Fixture <code>*_live.json</code> files are not a run.</p>
 <table><thead><tr><th>id</th><th>status</th><th>actual</th><th>expect</th><th>note</th></tr></thead>
 <tbody>
@@ -284,7 +344,8 @@ def main(argv: list[str] | None = None) -> int:
     args = p.parse_args(argv)
     dump_path = Path(args.dump)
     if not dump_path.is_file():
-        print(f"no dump at {dump_path} — run the sim in debug (RUST_ENGINE_SIM_DUMP=1)", file=sys.stderr)
+        print(f"no dump at {dump_path} — run the sim in debug, or release with --features sim_dump "
+              "(RUST_ENGINE_SIM_DUMP=1)", file=sys.stderr)
         return 2
     dump = json.loads(dump_path.read_text(encoding="utf-8"))
     matrix = json.loads(Path(args.matrix).read_text(encoding="utf-8"))

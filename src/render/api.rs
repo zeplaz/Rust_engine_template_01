@@ -247,6 +247,7 @@ pub use super::extraction::domain_projection_frame::{
     publish_domain_projection_frame, DomainProjectionFrame, DomainProjectionFramePlugin,
     DomainProjectionId, DomainProjectionSlice,
 };
+pub use super::probes::frame_hitch::{FrameHitchLog, HitchRecord, HITCH_TOP_SCOPES};
 pub use super::probes::frame_perf::{
     attrib_fire_build_view_after, attrib_fire_build_view_before, attrib_fire_particles_after,
     attrib_fire_particles_before, attrib_fire_pipeline_after, attrib_fire_pipeline_before,

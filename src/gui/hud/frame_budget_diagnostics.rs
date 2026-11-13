@@ -15,7 +15,6 @@ use super::shell_framework::ProductShellWidgetId;
 use super::viewport_rect_sanity::ViewportRectSanity;
 
 pub const FRAME_HISTORY_LEN: usize = 120;
-const FRAME_SPIKE_MS: f32 = 33.0;
 const UPLOAD_STORM_BYTES: u64 = 256 * 1024;
 const VIEWPORT_CHURN_EVENTS: u64 = 4;
 const LAYOUT_INVALIDATION_EVENTS: u64 = 3;
@@ -446,26 +445,8 @@ pub fn finalize_frame_budget_diagnostics(
                 .unwrap_or(0),
         );
 
-    let avg_frame_ms = budget.avg_frame_ms;
-    if frame_ms >= FRAME_SPIKE_MS {
-        let top = budget.top_buckets_this_frame(2);
-        let bucket_hint = if top.is_empty() {
-            "buckets=n/a".to_string()
-        } else {
-            top.iter()
-                .map(|(b, ms)| format!("{}={:.1}ms", b.label(), ms))
-                .collect::<Vec<_>>()
-                .join(" ")
-        };
-        budget.note_anomaly(
-            FrameBudgetAnomalyKind::FrameSpike,
-            format!(
-                "frame {:.1} ms (avg {:.1} ms) {}",
-                frame_ms, avg_frame_ms, bucket_hint
-            ),
-            now,
-        );
-    }
+    // Slow frames are flagged by the hitch detector (`render::probes::frame_hitch`): one
+    // rate-limited line with sim tick and top PerfScopes, scaled for debug builds.
     let viewport_delta = viewport_rect.issues_total.saturating_sub(scratch.last_viewport_issues);
     scratch.last_viewport_issues = viewport_rect.issues_total;
     budget.viewport_mutations_frame = viewport_delta.min(u32::MAX as u64) as u32;

@@ -477,7 +477,8 @@ fn ux_frame_spike_watchdog(
         guard.suppress_preview_this_frame = true;
         guard.suppress_optional_diagnostics = true;
         if !was_spike {
-            warn!(
+            // State change only; the slow frames themselves are reported by `frame_hitch`.
+            debug!(
                 target: "ux::perf",
                 "CPU spike {:.1}ms > {:.1}ms for {} frames — suppress_preview",
                 cpu_frame_ms,

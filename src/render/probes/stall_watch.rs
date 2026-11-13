@@ -107,10 +107,7 @@ pub struct FrameStallWatch {
 }
 
 pub fn stall_watch_enabled() -> bool {
-    if std::env::var("STALL")
-        .ok()
-        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-    {
+    if crate::dev::test_run_instrumentation::env_flag_once!("STALL") {
         return true;
     }
     if stall_span_debug_enabled() || frame_perf_verbose() {
@@ -129,9 +126,7 @@ pub fn stall_watch_plugin_latch() -> bool {
 /// Extra Update checkpoints + 1ms stall lines (`STALL_SPAN_DEBUG=1`). Pair with `PERF=1` + `STALL=1`.
 #[must_use]
 pub fn stall_span_debug_enabled() -> bool {
-    std::env::var("STALL_SPAN_DEBUG")
-        .ok()
-        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    crate::dev::test_run_instrumentation::env_flag_once!("STALL_SPAN_DEBUG")
 }
 
 #[must_use]
