@@ -537,21 +537,7 @@ pub fn build_procedural_tiles_runtime_witness_body() -> serde_json::Value {
     })
 }
 
-/// Refresh `debug_runs/procedural_tiles_runtime_live.json` (PT-4 witness).
-#[must_use]
-pub fn refresh_procedural_tiles_runtime_live_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_procedural_tiles_runtime_witness_body();
-    let wrapped = wrap_debug_run(
-        "construction",
-        "refresh_procedural_tiles_runtime_live_witness",
-        PROCEDURAL_TILES_RUNTIME_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(PROCEDURAL_TILES_RUNTIME_LIVE_JSON, wrapped)
-        && procedural_tiles_runtime_witness_green()
-}
 
 /// APS-E5 — atlas domain for landscape LG-5 stamps (distinct from building [`VariantCatalog`]).
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -754,10 +740,7 @@ mod tests {
         assert!(super::procedural_tiles_runtime_witness_green());
     }
 
-    #[test]
-    fn refresh_procedural_tiles_runtime_live_witness_writes_json() {
-        assert!(super::refresh_procedural_tiles_runtime_live_witness());
-    }
+
 
     #[test]
     fn production_atlas_covers_keyframe_pack_entry() {

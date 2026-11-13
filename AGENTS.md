@@ -29,15 +29,14 @@ Visual / world representation work follows **convergent growth**, not a feature 
 
 **Stage 5 operational gate: CLOSED** (2026-05-23). See [`docs/archive/2026-06-src-dev/plans/stage5_operational_signoff.md`](docs/archive/2026-06-src-dev/plans/stage5_operational_signoff.md). **Stage 5.5 tracks:** **DONE** — [`docs/archive/2026-06-src-dev/plans/stage5_5_active_todos.md`](docs/archive/2026-06-src-dev/plans/stage5_5_active_todos.md). **Stage 6 operational gate: CLOSED** (2026-05-23). See [`docs/archive/2026-06-src-dev/plans/stage6_operational_signoff.md`](docs/archive/2026-06-src-dev/plans/stage6_operational_signoff.md). **Wave S save spine:** [`src/dev/wave_s_open.md`](src/dev/wave_s_open.md) (S6-S1/S6-S3). **Active lane:** [`src/dev/post_stage6_active_todos.md`](src/dev/post_stage6_active_todos.md) · plan [`src/dev/post_stage6_design_plan.md`](src/dev/post_stage6_design_plan.md). **Stage tracks (7 lanes):** [`src/dev/stage_tracks_execution_index_v1.md`](src/dev/stage_tracks_execution_index_v1.md). **Closed:** Stage 6 [`docs/archive/2026-06-src-dev/plans/stage6_operational_signoff.md`](docs/archive/2026-06-src-dev/plans/stage6_operational_signoff.md). **Deferred:** [`src/dev/stage5_triage_backlog.md`](src/dev/stage5_triage_backlog.md). **Mission-critical checklist (historical):** [`docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md`](docs/archive/2026-06-src-dev/plans/stage5_close_checklist.md).
 
-**Regression (post-close):** `cargo test -p proc_A_dine01 --lib stage5` — if FULL_APP fails, fix spine only; defer infra to triage / Stage 5.5. Full rules: [`prompts/guides/stage5_convergence_directive_v1.md`](prompts/guides/stage5_convergence_directive_v1.md).
+**Regression (post-close):** `cargo test -p proc_A_dine01 --lib`. Full rules: [`prompts/guides/stage5_convergence_directive_v1.md`](prompts/guides/stage5_convergence_directive_v1.md).
 
-**Live todo board:** `STAGE5_TODOS` rows move to `Done` via per-row predicates (`sync_stage5_todo_board_predicates` in `src/dev/stage5_live_todos.rs`) plus closure witnesses — not on readiness green alone. Visual `--test visual` proof JSON (`debug_runs/stage5_full_app_live.json`) includes `readiness.live_todo_board` when the board resource is present.
 
-**Agent debug JSON:** Live proofs under `debug_runs/` include `_agent_meta` (env flags, commands, cross-links). **OPS Witness Spine (Track D):** program registry [`tools/orchestrator/queues/OPS_LANE_REGISTRY.json`](tools/orchestrator/queues/OPS_LANE_REGISTRY.json) covers **stage5, fire/VFX, construction, infrastructure, economy, waves, stage7, UI, MCP art A/B/C** — not MCP-only. Rollup: `unified_witness_index.json` · `agent_ops/ops_report_latest.json` via `ops_intelligence_scan.ps1`. Envelope: `src/dev/debug_run_envelope.rs`; guide: `debug_runs/README.md`; contract: [`OPS_WITNESS_SPINE.md`](tools/orchestrator/queues/OPS_WITNESS_SPINE.md).
+**Review path (only):** debug-only `src/dev/sim_run_dump.rs` → `debug_runs/sim_run_dump.json` → `tools/sim_review/score_dump.py` → `debug_runs/sim_review/dashboard.html` (`tools/sim_review/playcheck.py` runs build/game/capture/score). The old witness/proof/gate/readiness JSON system is deleted — do not add `*_live.json` writers; guide: `debug_runs/README.md`.
 
 **Visual run blockers (`--test visual`):** Active terminal failures (shader panic, VT-5 flicker, compile drift) — [`src/dev/visual_run_blockers.md`](src/dev/visual_run_blockers.md); deferred depth in [`src/dev/stage5_triage_backlog.md`](src/dev/stage5_triage_backlog.md) T0/T2/T3.
 
-**Fire ecology F1 (sim, not Stage 5 gate):** Fuel + old-growth ignition gate — [`src/dev/fire_ecology_f1_todos.md`](src/dev/fire_ecology_f1_todos.md); live witness `debug_runs/fire_ecology_live.json`.
+**Fire ecology F1 (sim, not Stage 5 gate):** Fuel + old-growth ignition gate — [`src/dev/fire_ecology_f1_todos.md`](src/dev/fire_ecology_f1_todos.md).
 
 **Development planning loop:** [`src/dev/development_plan_index.md`](src/dev/development_plan_index.md) · `cargo orchestrate --plan-slice --skip-cargo` · `tools/orchestrator/scripts/invoke_slice.ps1`
 
@@ -62,9 +61,9 @@ FULL_APP green means the **spine is authoritative and measurable** in the runnin
 
 - **Not** part of `STAGE5_TODOS` / FULL_APP exit.
 - **Invariants (hard rules):** [`src/dev/construction_invariants.md`](src/dev/construction_invariants.md) — preview never mutates gameplay; single execute funnel; no logic outside `src/construction/`.
-- **Boards:** `BUILD-P*` + `FINISH-BUILD-*` + **Phase 2** `PHASE2-BUILD-*` + **Round 2/3** + **Operational** `CONSTRUCTION-OP-*` **done** (witness: `debug_runs/construction_stage_live.json`). Further construction work: product boards / Round 4 — not Stage 5.
+- **Boards:** `BUILD-P*` + `FINISH-BUILD-*` + **Phase 2** `PHASE2-BUILD-*` + **Round 2/3** + **Operational** `CONSTRUCTION-OP-*` **done**. Further construction work: product boards / Round 4 — not Stage 5.
 - Implementation: [`src/construction/`](src/construction/). Spec: [`recovery_construction.md`](src/dev/recovery_construction.md) (Round 3 § line 1280+). Checklist: [`construction_recovery_todos.md`](docs/archive/2026-06-src-dev/plans/construction_recovery_todos.md). Ownership: [`construction_ownership.md`](docs/archive/2026-06-src-dev/plans/construction_ownership.md).
-- Proof: `debug_runs/construction_stage_live.json` in sim. Do not fold construction closure into Stage 5 readiness.
+- Review via the sim run dump. Do not fold construction closure into Stage 5 readiness.
 - **Phase 4 (industrial activation):** after construction operational green — [`src/dev/industrial_activation_pipeline.md`](src/dev/industrial_activation_pipeline.md), bridge in `src/economy/activation/`. Not Stage 5.
 
 ## Transport R8 + construction
@@ -177,7 +176,7 @@ Authoring tree: `.claude/skills/` · Cursor base: `.cursor/skills/` · Ritual: [
 - **agent-lang** ([`.cursor/skills/agent-lang/`](.cursor/skills/agent-lang/SKILL.md)) — **attach every session** (all agents); BLANG loop, `$ref`, validators, **WIT-HON** before Q✓; stacks on domain skills
 - **validation-first** (project skill, [`.cursor/skills/validation-first/`](.cursor/skills/validation-first/SKILL.md)) — structured `validate-report` after builds; **@coder** / **@sim-steward** consumers; not raw cargo walls
 - **bevy-simulation-grade** ([`.cursor/skills/bevy-simulation-grade/`](.cursor/skills/bevy-simulation-grade/SKILL.md) in repo; also `~/.cursor/skills/`) — **start at `07-repo-authority-map.md`** for `src/` scheduling; Bevy **0.18**
-- **debug-intelligence** (project skill, [`.cursor/skills/debug-intelligence/`](.cursor/skills/debug-intelligence/SKILL.md)) — witness JSON, viewport/render drift, VM-* migration debt; compresses evidence and routes to `@planner` / `@coder` / `@designer` (does not implement fixes).
+- **debug-intelligence** (project skill, [`.cursor/skills/debug-intelligence/`](.cursor/skills/debug-intelligence/SKILL.md)) — sim run dump, viewport/render drift, VM-* migration debt; compresses evidence and routes to `@planner` / `@coder` / `@designer` (does not implement fixes).
 - **cleanup-completion-intelligence** (project skill, [`.cursor/skills/cleanup-completion-intelligence/`](.cursor/skills/cleanup-completion-intelligence/SKILL.md)) — before deleting or consolidating modules; classifies obsolete / transitional / dormant / incomplete and prefers completion plans over destructive cleanup.
 - **AGENTS.md** + [`prompts/guides/stage5_convergence_directive_v1.md`](prompts/guides/stage5_convergence_directive_v1.md) — Stage 5 vs construction vs infrastructure.
 
@@ -196,7 +195,7 @@ Index: [`.cursor/skills/README.md`](.cursor/skills/README.md).
 | `designer-mcp` | MCP art exec plan | All four MCP skills |
 | `sim-steward` | `stage5_readiness_agent`, `viewport_cleanup_agent`, `render_pipeline_agent` | All three skills (personal **bevy-simulation-grade** + project **debug-intelligence** + **cleanup-completion-intelligence**); [`subagent_continuity_playbook_v1.md`](prompts/guides/subagent_continuity_playbook_v1.md) |
 | `main-thread-orchestrator` | Same as sim-steward + orchestrator continuity §10 | Fail-cycle ledger in `HANDOFF.md`; [`main-thread-orchestrator.md`](.cursor/agents/main-thread-orchestrator.md) |
-| `operations-intelligence` | [`plan_agent_operations_intelligence_v1.md`](src/dev/plan_agent_operations_intelligence_v1.md), [`OPS_WITNESS_SPINE.md`](tools/orchestrator/queues/OPS_WITNESS_SPINE.md), `debug_runs/unified_witness_index.json`, `debug_runs/agent_ops/ops_report_latest.json` | Skill: [`.cursor/skills/operations-intelligence/`](.cursor/skills/operations-intelligence/SKILL.md); **debug-intelligence** for viewport/ECS only |
+| `operations-intelligence` | [`plan_agent_operations_intelligence_v1.md`](src/dev/plan_agent_operations_intelligence_v1.md) | Skill: [`.cursor/skills/operations-intelligence/`](.cursor/skills/operations-intelligence/SKILL.md); **debug-intelligence** for viewport/ECS only |
 | `flow-controller` | `_fragments/model_tier_routing_v1.md` | MCP `agent_flow_route` / `agent_flow_policy`; rule `agent-flow-tiers.mdc` |
 
 **Cycles:** Stage 5 regression → `stage5_readiness_agent`; infrastructure → `viewport_cleanup_agent` + `render_pipeline_agent`; after edits → `cargo orchestrate`. See [`tools/orchestrator/NEXT.md`](tools/orchestrator/NEXT.md).

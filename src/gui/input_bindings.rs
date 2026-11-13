@@ -25,7 +25,7 @@ pub struct InputBindings {
     pub toggle_diagnostics: KeyCode,
     /// Pressure composition tooling (egui + Bevy strip) — climate/mission packages, not quest scripting.
     pub toggle_pressure_composer: KeyCode,
-    /// Toggle AI / pipeline **explainability** egui panel (L7 dev tooling; default Insert).
+    /// Toggle the AI explainability panel (faction AI decisions + macro pipeline; default Insert).
     pub toggle_ai_explainability: KeyCode,
     pub cycle_logistics_focus: KeyCode,
     pub toggle_logistics_targets_panel: KeyCode,
@@ -91,6 +91,10 @@ pub struct InputBindings {
     pub map_cycle_camera_mode: KeyCode,
     /// Toggle world presentation: Tactical (top-down) ↔ World (PixelWorld3D / voxel massing) (default V).
     pub toggle_world_presentation: KeyCode,
+    /// Voxel world view: turn the camera a quarter left (default Q). PixelWorld3D only.
+    pub pixel_world_rotate_left: KeyCode,
+    /// Voxel world view: turn the camera a quarter right (default E). PixelWorld3D only.
+    pub pixel_world_rotate_right: KeyCode,
 
     // --- Front controls (`gui::front_controls`): fronts, formations, orders ---
     /// Hold the selected formation(s) in place (front controls).
@@ -157,6 +161,8 @@ impl Default for InputBindings {
             map_frame_world: KeyCode::KeyB,
             map_cycle_camera_mode: KeyCode::KeyM,
             toggle_world_presentation: KeyCode::KeyV,
+            pixel_world_rotate_left: KeyCode::KeyQ,
+            pixel_world_rotate_right: KeyCode::KeyE,
             front_hold: KeyCode::KeyH,
             front_fortify: KeyCode::KeyF,
             front_cycle_selection: KeyCode::Tab,

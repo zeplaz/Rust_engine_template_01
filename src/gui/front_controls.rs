@@ -5,8 +5,7 @@
 //! here writes sim state. Drawing lives in `render::world_map_front_mesh`, which reads the resources
 //! below ([`SelectedFormation`], [`FrontDragBox`], [`FrontOrderFeedback`], [`FrontOverlaySettings`]).
 //!
-//! Mouse (TacticalFlat2D only; the map plane does not exist in PixelWorld3D, so the pointer is never
-//! `free` there): left click selects one of the player's formations, shift-click toggles, left-drag draws
+//! Mouse (both presentations; PixelWorld3D picks through the voxel ray the pointer gate resolves): left click selects one of the player's formations, shift-click toggles, left-drag draws
 //! a box that selects every formation inside (shift extends), clicking empty ground clears; right click
 //! orders the whole selection (enemy formation / enemy-held front cell = Attack, Threatened pressure
 //! point of ours = Reinforce, else Move with the group spread around the target).
@@ -334,16 +333,22 @@ pub fn update_front_map_cursor_system(
     gate: Option<Res<SimulationMapPointerGate>>,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
     mode: Option<Res<WorldPresentationMode>>,
+    pixel_frame: Option<Res<crate::render::pixel_world::PixelWorldCameraFrame>>,
     mut cursor: ResMut<FrontMapCursor>,
 ) {
     let mut next = FrontMapCursor::default();
-    // PixelWorld3D has no flat map plane for tile picks: the pointer is never free there.
-    if mode.as_deref().is_none_or(|m| m.is_tactical()) {
-        next.px_per_tile = trace.as_deref().map_or(1.0, px_per_tile);
+    // Both presentations pick through the gate: PixelWorld3D's voxel ray hit, top-down's ortho.
+    {
+        let pixel = mode.as_deref().is_some_and(|m| m.is_pixel_world());
+        next.px_per_tile = if pixel {
+            pixel_frame.as_deref().map_or(1.0, |f| f.px_per_tile.max(0.05))
+        } else {
+            trace.as_deref().map_or(1.0, px_per_tile)
+        };
         next.free = gate.as_deref().is_some_and(|g| g.in_play_area)
             && simulation_tool_pointer(gate.as_deref()) == SimulationToolPointer::Free;
         if let (Ok(w), Some(desired), Some(map_vp), Some(params)) = (window.single(), desired, map_vp, params) {
-            next.xy = cursor_world_on_map(w, authority.as_deref(), desired.as_ref(), map_vp.as_ref(), params.as_ref())
+            next.xy = cursor_world_on_map(w, gate.as_deref(), authority.as_deref(), desired.as_ref(), map_vp.as_ref(), params.as_ref())
                 .map(|v| Vec2::new(v.x, v.z));
         }
     }
@@ -661,7 +666,6 @@ fn readout_texts(
 pub fn sync_front_selection_panel(
     mut commands: Commands,
     base: Option<Res<State<BaseState>>>,
-    mode: Option<Res<WorldPresentationMode>>,
     selected: Res<SelectedFormation>,
     fb: Res<FrontOrderFeedback>,
     formations: Query<(Entity, &Formation)>,
@@ -670,9 +674,9 @@ pub fn sync_front_selection_panel(
     roots: Query<Entity, With<FrontSelectionPanelRoot>>,
     mut values: Query<(&ReadoutValue, &mut Text)>,
 ) {
-    let tactical_sim = base.as_deref().is_none_or(|b| matches!(b.get(), BaseState::Simulation))
-        && mode.as_deref().is_none_or(|m| m.is_tactical());
-    let texts = tactical_sim
+    // Both presentations: PixelWorld3D drapes the same front layer and picks through the gate.
+    let in_sim = base.as_deref().is_none_or(|b| matches!(b.get(), BaseState::Simulation));
+    let texts = in_sim
         .then(|| readout_texts(&selected, &formations, fb.notice.as_ref().map(|(t, _)| t.as_str())))
         .flatten();
     let Some(texts) = texts else {

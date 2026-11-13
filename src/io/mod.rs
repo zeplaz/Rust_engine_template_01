@@ -16,10 +16,8 @@ pub use save::{
 };
 pub use snapshot::{read_hybrid_world_snapshot_dev_v0, write_hybrid_world_snapshot_dev_v0, WorldSnapshotHeaderDevV0};
 pub use streaming::{
-    chunk_window_coords, gather_wave_c_prerequisites, gather_wave_c_readiness, ghost_band_seed_coords,
+    chunk_window_coords, ghost_band_seed_coords,
     hydrate_all_manifest_chunks, hydrate_stream_chunks_from_manifest, load_manifest_for_streaming,
-    preview_coords_with_ghost_bands, wave_c_prerequisites_passes, wave_c_readiness_passes,
-    ChunkCache, ChunkResidencyTable, ChunkStreamingPriority, ChunkStreamingScheduler,
-    PendingStreamApplyQueue, StreamingSpinePlugin, WaveCPrerequisitesReport, WaveCReadinessReport,
-    WAVE_C_OPEN_BACKLOG_ITEMS, TILE_STORAGE_DIFF_CONTRACT_BQ,
+    preview_coords_with_ghost_bands, ChunkCache, ChunkResidencyTable, ChunkStreamingPriority, ChunkStreamingScheduler,
+    PendingStreamApplyQueue, StreamingSpinePlugin, TILE_STORAGE_DIFF_CONTRACT_BQ,
 };

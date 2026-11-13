@@ -214,15 +214,15 @@ fn spawn_main_menu(
             for (label, action) in [
                 ("New World", MainMenuButtonAction::NewWorld),
                 (
-                    "Debug ① — Frame layout test",
+                    "Debug 1: Frame layout test",
                     MainMenuButtonAction::DebugFrameLayout,
                 ),
                 (
-                    "Debug ③ — Demo world (stay open)",
+                    "Debug 3: Demo world (stay open)",
                     MainMenuButtonAction::DebugDemoOpen,
                 ),
                 (
-                    "Debug — Fire + weather + atmosphere (stay open)",
+                    "Debug: Fire + weather + atmosphere (stay open)",
                     MainMenuButtonAction::DebugVfxSandbox,
                 ),
                 ("Load World", MainMenuButtonAction::OpenLoad),

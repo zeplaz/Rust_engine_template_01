@@ -17,7 +17,7 @@ pub use connection::infra_e4_003_utility_connection_witness_green;
 pub use authoring::infra_e4_004_authoring_witness_green;
 pub use graph::{
     fixture_utility_network_snapshot, hydrate_utility_graph_from_snapshot,
-    refresh_utility_network_live_witness_payload, UtilityGraph, UtilityGraphEdge,
+    UtilityGraph, UtilityGraphEdge,
     UtilityGraphNode, UtilityGraphPlugin,
 };
 

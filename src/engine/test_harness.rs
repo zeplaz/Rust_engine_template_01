@@ -182,25 +182,7 @@ pub struct TestHarnessPlugin;
 
 impl Plugin for TestHarnessPlugin {
     fn build(&self, app: &mut App) {
-        // Closed-program live todo boards + FULL_APP readiness + VT proof spine — not product.
-        app.add_plugins(crate::dev::LiveTodoBoardsPlugin);
-        app.init_resource::<crate::render::VisualAgreementFrame>()
-            .init_resource::<crate::render::OverlayAgreementDebug>();
-        app.add_plugins(crate::render::VtCiMatrixPlugin);
-        app.add_plugins(crate::render::PhaseFLodProofPlugin);
-        app.add_plugins(crate::render::FullRenderDiagnosticPlugin);
-        app.add_plugins(crate::render::Stage5ReadinessPlugin);
-        app.add_systems(
-            Update,
-            crate::render::record_visual_agreement_frame
-                .after(crate::gui::ViewRepresentationSystemSet::SyncOverlayField)
-                .after(crate::render::extraction::sync_shared_overlay_from_simulation)
-                .after(crate::render::extraction::FireVisualFrameSet::ProjectGpu)
-                .after(crate::gui::editor::world_preview::capture_world_preview_vt4_probe),
-        );
-        app.add_plugins(crate::dev::diagnostics::VisualReadinessWitnessPlugin);
         app.add_plugins(crate::dev::TestRunInstrumentationPlugin);
-        app.add_plugins(crate::dev::tactical_map_debug::TacticalMapDebugPlugin);
         app.add_systems(
                 Startup,
                 (
@@ -262,15 +244,6 @@ impl Plugin for TestHarnessPlugin {
             )
             .add_systems(
                 Update,
-                (
-                    seed_s7p_logistics_throughput_proof,
-                    finalize_s7p_logistics_throughput_witness,
-                )
-                    .chain()
-                    .after(crate::economy::logistics::LogisticsSimulationSet::Witness),
-            )
-            .add_systems(
-                Update,
                 publish_vfx_fire_test_region_after_defaults
                     .after(apply_test_scene_defaults)
                     .run_if(in_state(BaseState::Simulation)),
@@ -288,26 +261,6 @@ impl Plugin for TestHarnessPlugin {
                 preserve_test_scene_fire_after_sim_tick
                     .after(ChunkEnvironmentSet::Fire)
                     .before(crate::render::extraction::FireVisualFrameSet::BuildProfiles)
-                    .run_if(in_state(BaseState::Simulation)),
-            )
-            .add_systems(
-                Update,
-                (
-                    drive_visual_aidv2_proof_harness,
-                    drive_visual_aidv2_esc_injection
-                        .after(drive_visual_aidv2_proof_harness),
-                )
-                    .chain()
-                    .before(crate::gui::hud::panel_state::hud_panel_escape_collapse_system)
-                    .run_if(in_state(BaseState::Simulation))
-                    .run_if(post_enter_sim_frame_at_least(1)),
-            )
-            .add_systems(
-                PostUpdate,
-                (
-                    apply_visual_aidv2_macro_zoom_camera,
-                    arm_visual_test_exit_on_va2_live_proof,
-                )
                     .run_if(in_state(BaseState::Simulation)),
             );
     }
@@ -1331,262 +1284,11 @@ fn seed_visual_test_logistics_proof(
     );
 }
 
-fn spawn_s7p_aluminum_chain_site(
-    commands: &mut Commands,
-    catalog_id: &str,
-    site_id: u64,
-    origin: crate::strategic::BuildSiteTile,
-) {
-    use crate::economy::activation::{BuildingDefinitionRef, IndustrialFacilityActivated};
-    use crate::strategic::{
-        ConstructionSite, FootprintTiles, LayerType, PlannedSite, SiteArchetype,
-        SiteConstructionPhase, SiteId,
-    };
 
-    commands.spawn((
-        ConstructionSite {
-            site_id,
-            owner: Entity::PLACEHOLDER,
-            archetype: SiteArchetype::Factory,
-            phase: SiteConstructionPhase::Operational,
-            operational_readiness: 1.0,
-        },
-        PlannedSite {
-            site_id: SiteId(site_id),
-            origin,
-            footprint: FootprintTiles {
-                width: 3,
-                depth: 2,
-            },
-            archetype: SiteArchetype::Factory,
-            layer: LayerType::Surface,
-            catalog_id: Some(catalog_id.into()),
-            placement: None,
-        },
-        BuildingDefinitionRef {
-            catalog_id: catalog_id.into(),
-        },
-        IndustrialFacilityActivated,
-        Transform::from_translation(crate::economy::site_placement::site_world_position(
-            origin,
-        )),
-        GlobalTransform::default(),
-    ));
-}
 
-/// **S7P-LOG-001**: aluminum chain on road tiles + throughput witness green in sim / `--test visual`.
-fn seed_s7p_logistics_throughput_proof(
-    launch: Option<Res<EngineLaunchArgs>>,
-    base: Option<Res<State<BaseState>>>,
-    mut harness: ResMut<TestWorldHarness>,
-    mut commands: Commands,
-    directory: Option<Res<TransportEdgeDirectory>>,
-    flow: Option<Res<crate::economy::resource_flow::ResourceFlowRegistry>>,
-    diagnostics: Option<Res<crate::economy::logistics::LogisticsDiagnostics>>,
-    sites: Query<
-        &crate::economy::activation::BuildingDefinitionRef,
-        With<crate::strategic::ConstructionSite>,
-    >,
-    mut flow_nodes: Query<
-        (
-            &crate::economy::activation::BuildingDefinitionRef,
-            &mut crate::economy::resource_flow::ResourceFlowNode,
-        ),
-    >,
-) {
-    let Some(launch) = launch.as_ref() else {
-        return;
-    };
-    if !launch.full_capture_active() {
-        return;
-    }
-    if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
-        return;
-    }
-    if harness.s7p_logistics_throughput_seeded {
-        return;
-    }
-    if directory.as_ref().is_none_or(|d| d.by_edge.is_empty()) {
-        return;
-    }
 
-    harness.s7p_logistics_seed_ticks = harness.s7p_logistics_seed_ticks.saturating_add(1);
 
-    let aluminum_on_chain = |id: &str| -> bool {
-        matches!(
-            id,
-            "aluminum_bauxite_mine" | "aluminum_alumina_refinery" | "aluminum_smelter1"
-        )
-    };
 
-    match harness.s7p_logistics_seed_phase {
-        0 => {
-            let chain_count = sites
-                .iter()
-                .filter(|r| aluminum_on_chain(r.catalog_id.as_str()))
-                .count();
-            if chain_count < 3 {
-                spawn_s7p_aluminum_chain_site(
-                    &mut commands,
-                    "aluminum_bauxite_mine",
-                    901,
-                    crate::strategic::BuildSiteTile {
-                        x: S7P_LOGISTICS_CHAIN_TILES[0].0,
-                        z: S7P_LOGISTICS_CHAIN_TILES[0].1,
-                    },
-                );
-                spawn_s7p_aluminum_chain_site(
-                    &mut commands,
-                    "aluminum_alumina_refinery",
-                    902,
-                    crate::strategic::BuildSiteTile {
-                        x: S7P_LOGISTICS_CHAIN_TILES[1].0,
-                        z: S7P_LOGISTICS_CHAIN_TILES[1].1,
-                    },
-                );
-                spawn_s7p_aluminum_chain_site(
-                    &mut commands,
-                    "aluminum_smelter1",
-                    903,
-                    crate::strategic::BuildSiteTile {
-                        x: S7P_LOGISTICS_CHAIN_TILES[2].0,
-                        z: S7P_LOGISTICS_CHAIN_TILES[2].1,
-                    },
-                );
-                info!(
-                    target: "test_harness::logistics",
-                    "S7P-LOG-001: spawned aluminum chain on road tiles {:?}",
-                    S7P_LOGISTICS_CHAIN_TILES
-                );
-            }
-            harness.s7p_logistics_seed_phase = 1;
-        }
-        1 => {
-            let chain_count = sites
-                .iter()
-                .filter(|r| aluminum_on_chain(r.catalog_id.as_str()))
-                .count();
-            if chain_count < 3 {
-                return;
-            }
-            let flow_ready = flow.as_ref().is_some_and(|f| !f.edges.is_empty());
-            if !flow_ready && harness.s7p_logistics_seed_ticks < 48 {
-                return;
-            }
-            harness.s7p_logistics_seed_phase = 2;
-        }
-        2 => {
-            for (def, mut node) in flow_nodes.iter_mut() {
-                if def.catalog_id == "aluminum_bauxite_mine" {
-                    node.buffer_by_tag.insert("Bauxite".into(), 48.0);
-                }
-            }
-            harness.s7p_logistics_seed_phase = 3;
-        }
-        _ => {
-            let routes_open = diagnostics
-                .as_ref()
-                .map(|d| d.routes_open)
-                .unwrap_or(0);
-            if routes_open == 0 && harness.s7p_logistics_seed_ticks < 96 {
-                return;
-            }
-            harness.s7p_logistics_finalize_pending = true;
-        }
-    }
-}
-
-/// **S7P-LOG-001** — patch LOG-* witness + refresh `logistics_throughput_live.json` after scenario seed.
-fn finalize_s7p_logistics_throughput_witness(
-    launch: Option<Res<EngineLaunchArgs>>,
-    base: Option<Res<State<BaseState>>>,
-    mut harness: ResMut<TestWorldHarness>,
-    graph: Option<Res<crate::strategic::LogisticsGraph>>,
-    portals: Option<Res<crate::economy::logistics::PortalAttachmentMap>>,
-    flow: Option<Res<crate::economy::resource_flow::ResourceFlowRegistry>>,
-    diagnostics: Option<Res<crate::economy::logistics::LogisticsDiagnostics>>,
-    route_cache: Option<Res<crate::economy::logistics::RouteCache>>,
-    solver: Option<Res<crate::economy::logistics::ThroughputSolverState>>,
-    mut witness: Option<ResMut<crate::dev::logistics_throughput_todos::LogisticsThroughputWitness>>,
-    mut runtime: Option<ResMut<crate::economy::logistics::LogisticsThroughputRuntimeWitness>>,
-    board: Option<ResMut<crate::dev::logistics_throughput_todos::LogisticsThroughputTodoBoard>>,
-    mut proof_state: Option<ResMut<crate::economy::logistics::LogisticsThroughputLiveProofState>>,
-) {
-    let Some(launch) = launch.as_ref() else {
-        return;
-    };
-    if !launch.full_capture_active() {
-        return;
-    }
-    if !matches!(base.as_deref().map(|s| s.get()), Some(BaseState::Simulation)) {
-        return;
-    }
-    if !harness.s7p_logistics_finalize_pending || harness.s7p_logistics_throughput_seeded {
-        return;
-    }
-
-    let (
-        Some(graph),
-        Some(portals),
-        Some(flow),
-        Some(diagnostics),
-        Some(route_cache),
-        Some(solver),
-        Some(witness),
-        Some(runtime),
-        Some(mut board),
-    ) = (
-        graph.as_deref(),
-        portals.as_deref(),
-        flow.as_deref(),
-        diagnostics.as_deref(),
-        route_cache.as_deref(),
-        solver.as_deref(),
-        witness.as_deref_mut(),
-        runtime.as_deref_mut(),
-        board,
-    )
-    else {
-        return;
-    };
-
-    crate::economy::logistics::align_logistics_throughput_witness_from_live_sim(
-        witness,
-        runtime,
-        graph,
-        portals,
-        flow,
-        diagnostics,
-        route_cache,
-        solver,
-    );
-    crate::dev::logistics_throughput_todos::sync_logistics_throughput_board_from_witness(
-        witness,
-        board.as_mut(),
-    );
-    let board_open = board.open_count();
-    if diagnostics.routes_open == 0 && harness.s7p_logistics_seed_ticks < 160 {
-        return;
-    }
-    if board_open > 0 && harness.s7p_logistics_seed_ticks < 160 {
-        return;
-    }
-    if diagnostics.routes_open == 0 {
-        return;
-    }
-    if let Some(proof_state) = proof_state.as_mut() {
-        crate::economy::logistics::witness_collectors::request_logistics_throughput_live_proof_refresh(
-            proof_state,
-        );
-    }
-    harness.s7p_logistics_finalize_pending = false;
-    harness.s7p_logistics_throughput_seeded = true;
-    let routes_open = diagnostics.routes_open;
-    info!(
-        target: "test_harness::logistics",
-        "S7P-LOG-001: logistics throughput witness finalized routes_open={routes_open} board_open={board_open}"
-    );
-}
 
 /// IND-E01/E02: Portland chain via construction commit → operational (visual / capture proof).
 fn seed_visual_concrete_chain_e2e(
@@ -1884,131 +1586,14 @@ fn apply_test_scene_defaults(
 }
 
 /// Normalized zoom for VA2 macro icon probe (`--test visual` only).
-const VA2_PROOF_MACRO_ZOOM_ALPHA: f32 = 0.0;
 
-/// VA2-HARNESS-01/02/03 — seed build ghost + arm ESC/macro probes after sim entry.
-fn drive_visual_aidv2_proof_harness(
-    launch: Option<Res<EngineLaunchArgs>>,
-    harness: Res<TestWorldHarness>,
-    mut va2: ResMut<crate::dev::VisualAidV2HarnessState>,
-    mut picker: ResMut<crate::gui::hud::SimBuildPickerState>,
-    mut strip: ResMut<crate::construction::BuildStripState>,
-    mut tool: ResMut<crate::construction::ActiveBuildTool>,
-    mut ghost: ResMut<crate::construction::BuildGhostState>,
-    mut preview: ResMut<crate::construction::BuildPlacementPreview>,
-) {
-    if !launch.is_some_and(|l| l.full_capture_active()) {
-        return;
-    }
-    const ESC_ARM_FRAME: u32 = 8;
-    const BUILD_FRAME: u32 = 10;
-    const MACRO_PROBE_FRAME: u32 = 12;
-    let frame = harness.post_enter_sim_frame;
 
-    if frame == ESC_ARM_FRAME && !va2.esc_injected {
-        picker.open_for_slot(crate::construction::ToolContext::Civil);
-        va2.esc_armed = true;
-    }
 
-    if frame >= BUILD_FRAME {
-        strip.active = crate::construction::ToolContext::Industry;
-        tool.tool = crate::construction::BuildTool::Building(
-            crate::construction::BuildingArchetypeId::Factory,
-        );
-        ghost.origin = Some(crate::strategic::BuildSiteTile { x: 8, z: 8 });
-        preview.report.valid = true;
-        preview.report.allows_commit = true;
-        va2.build_seeded = true;
-    }
 
-    if frame >= MACRO_PROBE_FRAME {
-        va2.macro_icon_probe = true;
-    }
-}
 
-/// VA2-HARNESS-01 — inject Escape after build picker opens (same frame as arm+1).
-fn drive_visual_aidv2_esc_injection(
-    launch: Option<Res<EngineLaunchArgs>>,
-    harness: Res<TestWorldHarness>,
-    mut va2: ResMut<crate::dev::VisualAidV2HarnessState>,
-    mut keys: ResMut<ButtonInput<KeyCode>>,
-) {
-    if !launch.is_some_and(|l| l.full_capture_active()) {
-        return;
-    }
-    const ESC_INJECT_FRAME: u32 = 9;
-    if harness.post_enter_sim_frame != ESC_INJECT_FRAME || va2.esc_injected || !va2.esc_armed {
-        return;
-    }
-    keys.press(KeyCode::Escape);
-    va2.esc_injected = true;
-}
 
-/// After VA2 live proof commits, request graceful `--test visual` exit (not gated on FINISH-UX-06).
-fn arm_visual_test_exit_on_va2_live_proof(
-    va2: Res<crate::dev::VisualAidV2HarnessState>,
-    mut visual_exit: ResMut<crate::render::VisualTestGracefulExit>,
-) {
-    if !va2.request_visual_exit || visual_exit.armed {
-        return;
-    }
-    visual_exit.armed = true;
-    visual_exit.frames_remaining = crate::render::VisualTestGracefulExit::FRAMES_AFTER_PROOF;
-}
 
-/// VA2-HARNESS-03 — one-shot macro zoom for icon scaffold witness (not a per-frame lock).
-fn apply_visual_aidv2_macro_zoom_camera(
-    launch: Option<Res<EngineLaunchArgs>>,
-    va2: Res<crate::dev::VisualAidV2HarnessState>,
-    params: Res<WorldGenParams>,
-    windows: Query<&Window, With<bevy::window::PrimaryWindow>>,
-    sim_viewport: Res<crate::gui::SimulationMapViewport>,
-    mut authority: ResMut<crate::render::view_runtime::ViewProjectionAuthority>,
-    mut trace: ResMut<crate::render::view_runtime::ViewRuntimeTrace>,
-    mut cam: Query<&mut Transform, With<crate::gui::MainWorldCamera>>,
-    mut applied: Local<bool>,
-) {
-    if *applied {
-        return;
-    }
-    if !launch.is_some_and(|l| l.full_capture_active()) || !va2.macro_icon_probe {
-        return;
-    }
-    // `VFX_CAPTURE_NO_MACRO_ZOOM=1`: keep the tactical proof camera (the macro zoom races the world-gen focus and
-    // can leave the capture showing the whole map as a 14 px speck).
-    if std::env::var_os("VFX_CAPTURE_NO_MACRO_ZOOM").is_some() {
-        return;
-    }
-    if params.width == 0 || params.height == 0 {
-        return;
-    }
-    let world_w = params.width as f32;
-    let world_h = params.height as f32;
-    let window_px = windows
-        .single()
-        .ok()
-        .map(|w| Vec2::new(w.width().max(1.0), w.height().max(1.0)))
-        .unwrap_or(Vec2::new(1280.0, 720.0));
-    let viewport = crate::gui::map_camera_viewport_pixels(window_px, Some(sim_viewport.as_ref()));
-    let (zoom_lo, zoom_hi) = crate::gui::map_zoom_limits_for_world(world_w, world_h, viewport);
-    let zoom = crate::gui::map_scale_for_zoom_alpha(VA2_PROOF_MACRO_ZOOM_ALPHA, zoom_lo, zoom_hi);
-    let cx = world_w * 0.5;
-    let cy = world_h * 0.5;
-    let mut pose = crate::gui::map_camera_desired_from_view_authority(authority.as_ref());
-    pose.translation = Vec3::new(cx, cy, 0.0);
-    pose.scale = Vec3::splat(zoom);
-    crate::gui::commit_map_camera_pose_to_view_authority(
-        authority.as_mut(),
-        trace.as_mut(),
-        &pose,
-    );
-    for mut t in cam.iter_mut() {
-        t.translation.x = cx;
-        t.translation.y = cy;
-        t.scale = Vec3::splat(zoom);
-    }
-    *applied = true;
-}
+
 
 /// Re-arm harness fire after rain/fuel sim so extract always sees [`FireLightEmission`].
 /// Only rewrites when burning chunk count drops — and at most every [`FIRE_REARM_COOLDOWN_FRAMES`].

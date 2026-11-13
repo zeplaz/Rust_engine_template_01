@@ -253,44 +253,9 @@ fn fire_save_roundtrip_self_check() -> Result<(), &'static str> {
     Ok(())
 }
 
-#[must_use]
-pub fn build_fire_save_roundtrip_witness_body() -> serde_json::Value {
-    let green = fire_save_roundtrip_lib_green();
-    let dirty_green = crate::dev::spectator_parity_live_proof::save_fire_dirty_queue_lib_green();
-    let snapshot = capture_chunk_fire_state_from_rows(vec![SavedFireChunkRow {
-        chunk: [1, 1],
-        heat: 0.5,
-        fuel: 0.5,
-        smoke: 0.0,
-        toxic: 0.0,
-        has_overlay: false,
-    }]);
-    serde_json::json!({
-        "schema": "fire_save_roundtrip_witness_v1",
-        "slice_id": "VSS-T3-003",
-        "status": if green && dirty_green { "green" } else { "pending" },
-        "green": green && dirty_green,
-        "exit_predicates": {
-            "fire_save_roundtrip_hash": green,
-            "save_fire_dirty_queue": dirty_green
-        },
-        "hash_sample": hash_saved_fire_state(&snapshot),
-        "overlay": FIRE_OVERLAY_NAME,
-        "artifact": FIRE_STATE_REL_PATH,
-        "authority": "ChunkSurfaceFire (+ overlay smoke/toxic max when present)",
-        "forbidden_as_sole_proof": ["SharedOverlayFieldBuffers", "harness apply_test_scene_fire_seeds"]
-    })
-}
 
-#[must_use]
-pub fn refresh_fire_save_roundtrip_live_witness() -> bool {
-    crate::dev::runtime_witness::write_enveloped_witness_unchecked(
-        "VSS-T3-003-FIRE-SAVE-RT",
-        "coder_fire_save_roundtrip",
-        FIRE_SAVE_ROUNDTRIP_JSON,
-        build_fire_save_roundtrip_witness_body(),
-    )
-}
+
+
 
 #[cfg(test)]
 mod tests {

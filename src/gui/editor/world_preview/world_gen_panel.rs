@@ -145,17 +145,12 @@ struct WgToolbarFilled;
 enum LayerSel {
     Base(u32),
     Overlay(u32),
-    Fire,
-    Logistics,
-    Construction,
-    Ecology,
 }
 
 /// Every plain button of the panel.
 #[derive(Component, Clone, Copy, PartialEq, Eq, Debug)]
 enum WgAct {
     Layer(LayerSel),
-    Follow,
     Gpu,
     ZoomOut,
     ZoomIn,
@@ -169,6 +164,7 @@ enum WgAct {
     Discard,
     CancelGen,
     Close,
+    MainMenu,
     RandomSeed,
     PresetMedium,
     PresetStandard,
@@ -289,10 +285,6 @@ fn layer_on(view: &crate::gui::map_view::MapViewState, sel: LayerSel) -> bool {
     match sel {
         LayerSel::Base(i) => view.layers.base_bits() == base_bits(i),
         LayerSel::Overlay(i) => view.layers.contains(overlay_bit(i)),
-        LayerSel::Fire => view.overlays.fire_heat,
-        LayerSel::Logistics => view.overlays.logistics_heat,
-        LayerSel::Construction => view.overlays.construction_heat,
-        LayerSel::Ecology => view.overlays.ecology_heat,
     }
 }
 
@@ -671,18 +663,7 @@ fn build_toolbar(bar: &mut ChildSpawnerCommands<'_>, kit: &UiKit) {
         }
     });
     bar.spawn(row(100.0)).with_children(|r| {
-        group_label(r, kit, "HEAT");
-        for (label, sel) in [
-            ("Fire", LayerSel::Fire),
-            ("Logistics", LayerSel::Logistics),
-            ("Construction", LayerSel::Construction),
-            ("Ecology", LayerSel::Ecology),
-        ] {
-            spawn_button(r, kit, label, UiButton::new(UiButtonVariant::Tab), WgAct::Layer(sel))
-                .insert(UiTooltip(format!("Toggle the {label} heat overlay")));
-        }
         group_label(r, kit, "VIEW");
-        act_button(r, kit, "Follow: free", UiButtonVariant::Normal, WgAct::Follow, "Cycle camera follow mode");
         act_button(r, kit, "GPU target", UiButtonVariant::Normal, WgAct::Gpu, "Render the preview on the GPU (off = CPU raster)");
         act_button(r, kit, "-", UiButtonVariant::Normal, WgAct::ZoomOut, "Zoom out");
         act_button(r, kit, "+", UiButtonVariant::Normal, WgAct::ZoomIn, "Zoom in");
@@ -761,7 +742,10 @@ fn build_sheet(
                 kit.text_font(FONT_TITLE),
                 TextColor(kit.palette.bevy_primary_text()),
             ));
-            act_button(r, kit, "X", UiButtonVariant::Normal, WgAct::Close, "Hide the parameter sheet (Esc)");
+            r.spawn(Node { column_gap: Val::Px(GAP), ..default() }).with_children(|b| {
+                act_button(b, kit, "Main menu", UiButtonVariant::Normal, WgAct::MainMenu, "Leave the world generator and return to the main menu (asks to confirm while generating)");
+                act_button(b, kit, "Hide", UiButtonVariant::Normal, WgAct::Close, "Hide the parameter sheet (Esc). The Parameters button in the toolbar brings it back.");
+            });
         });
     // Stage + progress.
     sheet.spawn((
@@ -823,7 +807,7 @@ fn build_sheet(
     });
     sheet.spawn(row(100.0)).with_children(|r| {
         grow(act_button(r, kit, "Discard", UiButtonVariant::Danger, WgAct::Discard, "Throw away the generated preview / world"));
-        grow(act_button(r, kit, "Cancel generation", UiButtonVariant::Danger, WgAct::CancelGen, "Stop the running generation (asks to confirm)"));
+        grow(act_button(r, kit, "Cancel generation", UiButtonVariant::Danger, WgAct::CancelGen, "Stop the running generation and keep the parameters"));
     });
     sheet.spawn((
         WgText::Report,
@@ -907,7 +891,7 @@ fn build_sheet(
                 for k in [WgKnob::Rivers, WgKnob::Lakes, WgKnob::Settlements] {
                     knob_stepper(s, kit, k, p);
                 }
-                act_button(s, kit, "Sync land features", UiButtonVariant::Normal, WgAct::SyncLand, "Recompute rivers / lakes / mountains symbolic features from the current parameters");
+                act_button(s, kit, "Sync land features", UiButtonVariant::Normal, WgAct::SyncLand, "Reset region count, noise scale, river count and lake count to the values derived from the map size");
             });
             section(body, kit, 3, c[3], |s| {
                 for k in [
@@ -1167,18 +1151,6 @@ fn sync_world_gen_panel(
     for (act, mut btn, kids) in &mut buttons {
         let (selected, disabled, label): (bool, bool, Option<String>) = match *act {
             WgAct::Layer(sel) => (layer_on(view, sel), false, None),
-            WgAct::Follow => (
-                view.follow_mode != crate::gui::MinimapFollowMode::Free,
-                false,
-                Some(
-                    match view.follow_mode {
-                        crate::gui::MinimapFollowMode::Free => "Follow: free",
-                        crate::gui::MinimapFollowMode::FollowCamera => "Follow: camera",
-                        crate::gui::MinimapFollowMode::FollowBookmark => "Follow: bookmark",
-                    }
-                    .to_string(),
-                ),
-            ),
             WgAct::Gpu => (gpu, false, None),
             WgAct::ParamsToggle => (res.ui_state.generator_sheet_open, false, None),
             WgAct::GeneratePreview => (
@@ -1291,6 +1263,7 @@ struct FlowActRes<'w> {
     latch: ResMut<'w, crate::engine::WorldGenChromeLatch>,
     lifecycle: ResMut<'w, WorldPreviewLifecycle>,
     generate: MessageWriter<'w, GenerateWorldEvent>,
+    cancel: MessageWriter<'w, crate::gui::editor::world_gen_ui::CancelActiveWorldGenEvent>,
 }
 
 /// Generate / enter / discard / close.
@@ -1351,14 +1324,10 @@ fn world_gen_panel_flow_actions(
                 // Back to parameter setup with the sheet still open (no blank screen).
                 NextState::set_if_neq(&mut res.next_flow, WorldGenFlowState::NewWorldSetup);
             }
-            WgAct::CancelGen if is_busy => res.ui_state.confirm_close_pending = true,
-            WgAct::Close => {
-                if is_busy {
-                    res.ui_state.confirm_close_pending = true;
-                } else {
-                    res.ui_state.generator_sheet_open = false;
-                }
+            WgAct::CancelGen if is_busy => {
+                res.cancel.write(crate::gui::editor::world_gen_ui::CancelActiveWorldGenEvent);
             }
+            WgAct::Close => res.ui_state.generator_sheet_open = false,
             _ => {}
         }
     }
@@ -1384,24 +1353,9 @@ fn world_gen_panel_view_actions(
                 match sel {
                     LayerSel::Base(i) => view.layers.replace_base(base_bits(i)),
                     LayerSel::Overlay(i) => view.layers.toggle(overlay_bit(i)),
-                    LayerSel::Fire => view.overlays.fire_heat = !view.overlays.fire_heat,
-                    LayerSel::Logistics => view.overlays.logistics_heat = !view.overlays.logistics_heat,
-                    LayerSel::Construction => {
-                        view.overlays.construction_heat = !view.overlays.construction_heat;
-                    }
-                    LayerSel::Ecology => view.overlays.ecology_heat = !view.overlays.ecology_heat,
                 }
                 view.bump_revision();
                 ui_state.preview_layers = view.layers;
-            }
-            WgAct::Follow => {
-                use crate::gui::MinimapFollowMode as M;
-                view.follow_mode = match view.follow_mode {
-                    M::Free => M::FollowCamera,
-                    M::FollowCamera => M::FollowBookmark,
-                    M::FollowBookmark => M::Free,
-                };
-                view.bump_revision();
             }
             WgAct::Gpu => {
                 cam.mode = if cam.mode == PreviewRenderMode::GpuRenderTarget {
@@ -1430,6 +1384,24 @@ fn world_gen_panel_view_actions(
             }
             WgAct::ParamsToggle => ui_state.generator_sheet_open = !ui_state.generator_sheet_open,
             _ => {}
+        }
+    }
+}
+
+/// "Main menu": leave the generator (confirm first while a job is running).
+fn world_gen_panel_exit_action(
+    q: Query<(&Interaction, &UiButton, &WgAct), Changed<Interaction>>,
+    mut ui_state: ResMut<WorldGenUiState>,
+    mut exit: super::world_gen_bevy_shell::MainMenuExit,
+) {
+    for (interaction, btn, act) in &q {
+        if *act != WgAct::MainMenu || !ui_button_fired(interaction, btn) {
+            continue;
+        }
+        if exit.busy() {
+            ui_state.confirm_close_pending = true;
+        } else {
+            exit.run();
         }
     }
 }
@@ -1565,6 +1537,7 @@ pub(crate) fn register_world_gen_panel(app: &mut App) {
             world_gen_panel_flow_actions,
             world_gen_panel_view_actions,
             world_gen_panel_param_actions,
+            world_gen_panel_exit_action,
         )
             .chain()
             .run_if(in_state(AppState::WorldGen))
@@ -1584,6 +1557,7 @@ mod tests {
         init_ok(world_gen_panel_flow_actions);
         init_ok(world_gen_panel_view_actions);
         init_ok(world_gen_panel_param_actions);
+        init_ok(world_gen_panel_exit_action);
     }
 
     /// Spawn the real shell + panel into a bare world: catches duplicate-component bundles and

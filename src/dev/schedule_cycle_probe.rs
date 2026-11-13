@@ -3,8 +3,11 @@
 use bevy::prelude::*;
 
 /// Initialize `Update` and return a human-readable error (includes cycle details when available).
+///
+/// An app with no `Update` systems has no `Update` schedule (Bevy creates it on first
+/// `add_systems`); there is nothing to order, so that is `Ok`, not an error.
 pub fn probe_update_schedule(world: &mut World) -> Result<(), String> {
-    world
+    let Ok(result) = world
         .try_schedule_scope(Update, |world, schedule| {
             schedule
                 .initialize(world)
@@ -17,7 +20,10 @@ pub fn probe_update_schedule(world: &mut World) -> Result<(), String> {
                 })
                 .map(|_| ())
         })
-        .map_err(|_| "Update schedule missing".to_string())?
+    else {
+        return Ok(());
+    };
+    result
 }
 
 #[cfg(test)]

@@ -10,9 +10,7 @@ use bevy::prelude::*;
 
 use super::build_strip::{BuildStripState, ToolContext};
 use super::build_tool_authority::{ActiveBuildTool, BuildTool};
-use super::ghost_visual::{
-    footprint_place_settle_color, footprint_valid_color, place_feedback_duration_secs,
-};
+use super::ghost_visual::place_feedback_duration_secs;
 use super::visual_authority::{
     ConstructionVisualRequests, FootprintTileColorKind, FootprintTileRequest,
 };
@@ -207,127 +205,13 @@ pub fn sync_place_feedback_visual_requests(
     }
 }
 
-/// Refresh design+impl witness after COD-P3-PLACE-ANIM-001.
-#[must_use]
-pub fn refresh_des_place_feedback_anim_witness() -> bool {
-    let starts = place_feedback_start_count();
-    let completes = place_feedback_complete_count();
-    let tokens_ok = footprint_place_settle_color()
-        == crate::gui::UiRgba::from_rgba_unmultiplied(100, 144, 220, 200)
-        && (place_feedback_duration_secs() - 0.28).abs() < 1e-4
-        && (ease_out_cubic(0.0) - 0.0).abs() < 1e-5
-        && (ease_out_cubic(1.0) - 1.0).abs() < 1e-5;
-    let start_is_valid_family = place_feedback_fill_at(0.0) == footprint_valid_color();
-    let end_is_settle_family = place_feedback_fill_at(1.0) == footprint_place_settle_color();
-    let impl_wired = tokens_ok && start_is_valid_family && end_is_settle_family;
-    let green = impl_wired;
-    let body = serde_json::json!({
-        "gate": "DES-P3-PLACE-ANIM",
-        "id": "DES-P3-PLACE-ANIM",
-        "verdict": if green { "PASS" } else { "FAIL" },
-        "green": green,
-        "charter_on_disk": true,
-        "charter_path": "src/dev/design_place_feedback_anim_v1.md",
-        "coder_needed": false,
-        "coder_row": "COD-P3-PLACE-ANIM-001",
-        "impl_wired": impl_wired,
-        "motion": {
-            "duration_ms": 280,
-            "curve": "ease_out_cubic_on_settle_tail",
-            "lock_hold_until_raw_t": 0.62,
-            "alpha_punch_peak": 1.0,
-            "settle_hue_family": "phase_planned",
-            "feel_charter": "src/dev/design_build_place_feel_v1.md",
-            "forbidden": ["white_flash", "alpha_punch", "camera_nudge", "parallel_extract", "second_ghost_entity"]
-        },
-        "tokens": {
-            "start": "ghost_visual::footprint_valid_color",
-            "settle": "ghost_visual::footprint_place_settle_color",
-            "reuse_pipeline": "ConstructionVisualRequests.footprint_tiles"
-        },
-        "scope": {
-            "paths": ["Building", "Defense"],
-            "trigger": "after_successful_CommitConstructionSiteEvent_queue",
-            "fsm_unchanged": true,
-            "pointer_gate_unchanged": true,
-            "commit_funnel": "CommitConstructionSiteEvent"
-        },
-        "place_feedback_starts": starts,
-        "place_feedback_completes": completes,
-        "place_feedback_counters_honest": true,
-        "note_counters": "AtomicU32 PLACE_FEEDBACK_STARTS/COMPLETES — starts on arm, completes on 280ms finish; abort on tool exit does not complete",
-        "invariants_cited": [
-            "preview_never_mutates",
-            "single_commit_funnel",
-            "allows_commit_gate",
-            "ghost_disposable",
-            "no_parallel_extract"
-        ],
-        "scope_out": [
-            "WALL-ARCHETYPE",
-            "phase9_military_industry",
-            "logistics",
-            "building_look",
-            "g_play",
-            "aps",
-            "allows_commit_bypass",
-            "two_click_fsm_fork"
-        ],
-        "residuals": [
-            {
-                "id": "WALL-ARCHETYPE",
-                "owner": "planner",
-                "scope": "replace MilitaryBase stub for defensive wall — do not expand here"
-            }
-        ],
-        "delta_wf": "@coder COD-P3-PLACE-ANIM-001 done · residual WALL-ARCHETYPE → @planner"
-    });
-    let path = "debug_runs/des_place_feedback_anim_live.json";
-    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "COD-P3-PLACE-ANIM",
-        "refresh_des_place_feedback_anim_witness",
-        path,
-        body,
-    );
-    green && crate::dev::debug_run_envelope::write_debug_run_json(path, wrapped)
-}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn settle_tokens_and_ease() {
-        assert!((place_feedback_duration_secs() - 0.28).abs() < 1e-4);
-        assert!((ease_out_cubic(0.0)).abs() < 1e-5);
-        assert!((ease_out_cubic(1.0) - 1.0).abs() < 1e-5);
-        assert!(ease_out_cubic(0.5) > 0.5);
-        let v = footprint_valid_color();
-        let s = footprint_place_settle_color();
-        assert_eq!(place_feedback_fill_at(0.0), v);
-        assert_eq!(place_feedback_fill_at(1.0), s);
-        assert_eq!(place_feedback_fill_at(PLACE_FEEDBACK_LOCK_HOLD_T), v);
-        let cap = v.a.max(s.a);
-        for i in 0..=16 {
-            assert!(place_feedback_fill_at(i as f32 / 16.0).a <= cap);
-        }
-        assert_eq!(
-            super::super::ghost_visual::footprint_lock_ring_stroke_px(),
-            2.0
-        );
-        assert_eq!(
-            super::super::ghost_visual::footprint_lock_ring_color().a,
-            230
-        );
-        let locked = super::super::ghost_visual::footprint_lock_ring_stroke(true)
-            .expect("lock-ring token selectable without a window");
-        assert!((locked.width - 2.0).abs() < 1e-5);
-        assert_eq!(
-            locked.color,
-            super::super::ghost_visual::footprint_lock_ring_color()
-        );
-        assert!(super::super::ghost_visual::footprint_lock_ring_stroke(false).is_none());
-    }
+
 
     #[test]
     fn arm_replace_and_complete_counters() {
@@ -414,4 +298,6 @@ mod tests {
             .iter()
             .all(|t| t.fill_override.is_some()));
     }
+
+
 }

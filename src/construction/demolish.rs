@@ -45,6 +45,7 @@ pub fn demolish_pick_queue_system(
     };
     let Some(world) = cursor_world_on_map(
         &window,
+        pointer_gate.as_deref(),
         authority.as_deref(),
         desired.as_ref(),
         map_vp.as_ref(),

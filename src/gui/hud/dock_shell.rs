@@ -131,14 +131,11 @@ impl Plugin for HudDockShellPlugin {
             .init_resource::<super::widget_presentation::WidgetPresentationPolicy>()
             .init_resource::<super::hud_async_task_queue::HudAsyncTaskQueue>()
             .init_resource::<super::pending_hud_layout_commit::PendingHudLayoutCommit>()
-            .init_resource::<super::world_interaction_diagnostics::WorldInteractionDiagnostics>()
             .init_resource::<super::retained_widget_cache::RetainedWidgetCache>()
             .init_resource::<super::hud_interaction_budget::HudFrameBudget>()
             .init_resource::<super::interaction_latency::InteractionLatencyMetrics>()
             .init_resource::<super::shell_surface::ShellSurfacePolicy>()
             .init_resource::<super::widget_presentation::HudShellInteractionRouter>()
-            .init_resource::<super::hud_shell_stress_harness::HudShellStressHarness>()
-            .init_resource::<super::player_intent_panel::PlayerIntentPanelState>()
             .add_plugins(super::hud_ui_scale::HudUiScalePlugin)
             .add_plugins(super::hud_root_tick::HudRootTickPlugin)
             .add_systems(
@@ -153,7 +150,6 @@ impl Plugin for HudDockShellPlugin {
                     super::shell_update_budget::sync_product_shell_update_budget,
                     super::shell_update_budget::advance_product_shell_update_budget,
                     super::hud_async_task_queue::drain_hud_async_task_queue,
-                    super::world_interaction_diagnostics::refresh_world_interaction_diagnostics,
                     super::interaction_latency::refresh_interaction_latency_metrics,
                 )
                     .run_if(in_simulation_or_editor),

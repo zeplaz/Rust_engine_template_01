@@ -181,33 +181,9 @@ pub fn import_preset_collection_into_pending_queue(
     count
 }
 
-/// Lib witness rollup for **BQ-128-APPLY-001** (picker → ghost, no queue commit).
-#[must_use]
-pub fn bq128_apply_ghost_witness_green() -> bool {
-    let panel_src = std::fs::read_to_string("src/construction/pending_construction_panel.rs")
-        .unwrap_or_default();
-    let intent_src = std::fs::read_to_string("src/construction/construction_queue_intent.rs")
-        .unwrap_or_default();
-    panel_src.contains("ApplyImportedPreset")
-        && panel_src.contains("Apply ghost")
-        && intent_src.contains("ApplyImportedPreset")
-        && intent_src.contains("apply_blueprint_preset_to_build_ghost")
-}
 
-/// Lib witness rollup for **BQ-128-APPLY-002** (merge vs replace on import).
-#[must_use]
-pub fn bq128_apply_merge_replace_witness_green() -> bool {
-    let panel_src = std::fs::read_to_string("src/construction/pending_construction_panel.rs")
-        .unwrap_or_default();
-    let intent_src = std::fs::read_to_string("src/construction/construction_queue_intent.rs")
-        .unwrap_or_default();
-    panel_src.contains("BlueprintImportQueueMode::Append")
-        && panel_src.contains("BlueprintImportQueueMode::Replace")
-        && panel_src.contains("replace_confirm")
-        && panel_src.contains("ImportWaveSPresets")
-        && intent_src.contains("ImportWaveSPresets")
-        && intent_src.contains("import_preset_collection_into_pending_queue")
-}
+
+
 
 /// **BQ-128-APPLY-001** — load preset onto ghost only (no queue commit).
 pub fn apply_blueprint_preset_to_build_ghost(

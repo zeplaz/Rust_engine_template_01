@@ -36,13 +36,7 @@ pub fn push_footprint_tile_instances(
     witness.egui_path_active = true;
 }
 
-pub fn sync_visual_aidv2_footprint_witness(
-    footprint: Res<FootprintTileWitness>,
-    mut board: ResMut<crate::dev::VisualAidV2Witness>,
-) {
-    board.footprint_tile_overlay_ok = footprint.gpu_path_active;
-    board.footprint_tile_count = footprint.instance_count;
-}
+
 
 #[cfg(test)]
 mod tests {

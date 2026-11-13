@@ -421,21 +421,7 @@ pub fn bq_h_openings_witness_green() -> bool {
         .unwrap_or(false)
 }
 
-#[must_use]
-pub fn refresh_bq_h2_openings_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    const JSON: &str = "debug_runs/bq_h2_openings_001_live.json";
-    let body = build_bq_h2_openings_witness_body();
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "BQ-H2-OPENINGS-001",
-        "refresh_bq_h2_openings_witness",
-        JSON,
-        body,
-    );
-    write_debug_run_json(JSON, wrapped) && green
-}
 
 #[cfg(test)]
 mod tests {
@@ -537,10 +523,5 @@ mod tests {
         assert!(bq_h_openings_witness_green());
     }
 
-    #[test]
-    fn bq_h2_refresh_witness_when_green() {
-        if bq_h_openings_witness_green() {
-            assert!(refresh_bq_h2_openings_witness());
-        }
-    }
+
 }

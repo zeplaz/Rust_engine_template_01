@@ -80,14 +80,14 @@ fn export_orchestrator_health_when_requested(
         return;
     }
     let rel = "debug_runs/orchestrator_thread_health.json";
-    let body = serde_json::to_value(export.as_ref()).unwrap_or(serde_json::json!({}));
-    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "ORCHESTRATOR_THREAD_HEALTH",
-        "orchestrator_health",
-        rel,
-        body,
-    );
-    if crate::dev::debug_run_envelope::write_debug_run_json(rel, wrapped) {
+    let Ok(body) = serde_json::to_string_pretty(export.as_ref()) else {
+        return;
+    };
+    let path = PathBuf::from(rel);
+    if let Some(parent) = path.parent() {
+        let _ = std::fs::create_dir_all(parent);
+    }
+    if std::fs::write(&path, body).is_ok() {
         *wrote = true;
     }
 }

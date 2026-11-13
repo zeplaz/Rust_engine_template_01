@@ -565,19 +565,7 @@ pub fn pg_quality_002_pg2_hook_green() -> bool {
         .unwrap_or(false)
 }
 
-#[must_use]
-pub fn refresh_pg_quality_001_grammar_diversity_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_pg_quality_001_witness_body();
-    let wrapped = wrap_debug_run(
-        "construction",
-        "refresh_pg_quality_001_grammar_diversity_witness",
-        GRAMMAR_DIVERSITY_WITNESS_JSON,
-        body,
-    );
-    write_debug_run_json(GRAMMAR_DIVERSITY_WITNESS_JSON, wrapped) && pg_quality_001_witness_green()
-}
 
 /// **CITY-G0-S11-001** lib witness — typed ids + deserialize validation.
 #[must_use]
@@ -674,18 +662,7 @@ mod tests {
         assert!(pg_quality_001_witness_green());
     }
 
-    #[test]
-    fn refresh_pg_quality_001_writes_grammar_diversity_witness() {
-        assert!(refresh_pg_quality_001_grammar_diversity_witness());
-        let path = repo_asset_path(GRAMMAR_DIVERSITY_WITNESS_JSON);
-        let text = std::fs::read_to_string(path).expect("witness file");
-        let body: serde_json::Value = serde_json::from_str(&text).expect("json");
-        let green = body
-            .get("green")
-            .or_else(|| body.get("payload").and_then(|p| p.get("green")))
-            .and_then(|v| v.as_bool());
-        assert_eq!(green, Some(true));
-    }
+
 
     #[test]
     fn city_g0_s11_typed_ids_witness_green_lib() {

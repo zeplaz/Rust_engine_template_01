@@ -3,9 +3,8 @@
 use std::sync::Arc;
 
 use bevy::prelude::*;
-use serde_json::json;
 
-use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+
 use crate::gui::ViewAuthoritySystemSet;
 use crate::render::extraction::FireVisualFrameSet;
 use crate::systems::ecology::{
@@ -211,29 +210,7 @@ pub fn extract_glyph_deterministic(rows: &[VegExtractRow]) -> bool {
     !rows.is_empty() && rows.iter().all(|r| r.extract_glyph.is_ascii())
 }
 
-#[must_use]
-pub fn refresh_vegetation_extract_witness(frame: &VegetationExtractFrame) -> bool {
-    let green = vegetation_extract_witness_green(frame) && extract_glyph_deterministic(&frame.rows);
-    let burn_rows = frame.rows.iter().filter(|r| r.burn_active).count();
-    let body = json!({
-        "gate": "VEG-BURN-EXTRACT-004",
-        "green": green,
-        "revision": frame.revision,
-        "row_count": frame.rows.len(),
-        "burn_active_rows": burn_rows,
-        "extract_glyph_deterministic": extract_glyph_deterministic(&frame.rows),
-        "sprite_variant_from_program": frame.rows.iter().any(|r| r.variant_key.starts_with("veg_topo_")),
-        "sample_variant_keys": frame.rows.iter().take(4).map(|r| r.variant_key.clone()).collect::<Vec<_>>(),
-    });
-    let wrapped = wrap_debug_run(
-        "VEG-BURN-EXTRACT-004",
-        "refresh_vegetation_extract_witness",
-        LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON, wrapped);
-    green
-}
+
 
 /// CDR-A-EXTRACT-SPRITE-001 — program topology variant keys (non-burn rows).
 #[must_use]
@@ -318,36 +295,7 @@ pub fn build_harness_topo_extract_frame(world: &mut World) -> VegetationExtractF
     }
 }
 
-/// Refresh extract witness from sim harness program rows (topology sprite keys).
-#[must_use]
-pub fn refresh_landscape_extract_sprite_witness(frame: &VegetationExtractFrame) -> bool {
-    let green = harness_topo_extract_witness_green(frame);
-    let topo_rows = frame
-        .rows
-        .iter()
-        .filter(|r| r.variant_key.starts_with("veg_topo_"))
-        .count();
-    let body = json!({
-        "gate": "CDR-A-EXTRACT-SPRITE-001",
-        "gate_id": "VEG-BURN-EXTRACT-004",
-        "slice_id": "CDR-A-EXTRACT-SPRITE-001",
-        "green": green,
-        "revision": frame.revision,
-        "row_count": frame.rows.len(),
-        "topo_sprite_rows": topo_rows,
-        "burn_active_rows": 0,
-        "extract_glyph_deterministic": extract_glyph_deterministic(&frame.rows),
-        "sprite_variant_from_program": topo_rows >= 1,
-        "sample_variant_keys": frame.rows.iter().take(8).map(|r| r.variant_key.clone()).collect::<Vec<_>>(),
-    });
-    let wrapped = wrap_debug_run(
-        "CDR-A-EXTRACT-SPRITE-001",
-        "refresh_landscape_extract_sprite_witness",
-        LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON, wrapped) && green
-}
+
 
 pub struct VegetationVisualExtractPlugin;
 

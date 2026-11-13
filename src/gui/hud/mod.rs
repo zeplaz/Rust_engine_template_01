@@ -9,7 +9,6 @@ pub mod hud_interaction_budget;
 pub mod virtualized_list;
 pub mod shell_surface;
 pub mod interaction_latency;
-pub mod hud_shell_stress_harness;
 pub mod cached_egui_texture;
 pub mod hud_async_task_queue;
 pub mod hud_ui_scale;
@@ -18,8 +17,6 @@ pub mod hud_chrome;
 pub mod layout_store;
 pub mod pending_hud_layout_commit;
 pub mod overlay_framework;
-pub mod player_intent_panel;
-pub mod shell_cohesion;
 pub mod shell_diagnostics;
 pub mod sim_play_bevy_chrome;
 pub mod shell_framework;
@@ -33,9 +30,8 @@ pub mod stage6_telemetry;
 pub mod stage7_ui_shell;
 pub mod transmission_media;
 pub mod widget_presentation;
-pub mod world_interaction_diagnostics;
-pub mod cause_chain;
 pub mod plant_info_card;
+pub mod cause_chain;
 pub mod contextual_tip;
 pub mod grammar_read_hud;
 pub mod sim_hud_esc_cascade;
@@ -49,7 +45,6 @@ pub mod sim_view_sync_debug;
 pub mod simulation_session;
 pub mod simulation_pointer_gate;
 pub mod minimap_bevy_interaction;
-pub mod layout_debug;
 pub mod viewport_authority_debug;
 pub mod icon_atlas;
 pub mod power_hud_icon_atlas;
@@ -57,7 +52,6 @@ pub mod plant_focus_card;
 pub mod simulation_shell_phase2;
 pub mod sim_hud_l5_polish;
 pub mod sim_hud_copy;
-pub mod sim_hud_egui_theme;
 pub mod sim_build_picker_sheet;
 pub mod sim_build_picker_panel;
 pub mod sim_road_power_sheets_bevy;
@@ -65,9 +59,7 @@ pub mod sim_road_tool_sheet;
 pub mod sim_power_tool_sheet;
 pub mod power_grid_copy;
 pub mod power_node_hover;
-pub mod power_node_hover_egui;
 pub mod context_tray_build_egui;
-pub mod context_tray_power_repair_egui;
 pub mod ui_stress_state;
 pub mod ui_shell_migration;
 
@@ -164,16 +156,12 @@ pub use hud_interaction_budget::{
 pub use virtualized_list::draw_virtualized_rows;
 pub use shell_surface::{ShellSurfaceMode, ShellSurfacePolicy};
 pub use interaction_latency::{refresh_interaction_latency_metrics, InteractionLatencyMetrics};
-pub use hud_shell_stress_harness::{HudShellStressHarness, HudShellStressReport};
 pub use cached_egui_texture::{
     reset_hud_egui_texture_frame, CachedEguiTextureBinding, HudEguiTextureCache,
 };
 pub use pending_hud_layout_commit::{
     finalize_pending_hud_layout_commits, flush_pending_hud_layout_commits,
     flush_pending_hud_layout_on_pointer_release, PendingHudLayoutCommit,
-};
-pub use world_interaction_diagnostics::{
-    refresh_world_interaction_diagnostics, WorldInteractionDiagnostics,
 };
 pub use frame_budget_diagnostics::{
     finalize_frame_budget_diagnostics, FrameBudgetAnomalyKind, FrameBudgetAnomalyReport,
@@ -182,11 +170,8 @@ pub use frame_budget_diagnostics::{
     RESIDENCY_CHURN_CELL_DELTA, RESIDENCY_CHURN_HYSTERESIS_FRAMES,
 };
 pub use sim_view_sync_debug::{sim_view_sync_debug_enabled, SimViewSyncDebugPlugin};
-pub use layout_debug::{
-    ui_layout_debug_enabled, DebugLayoutTag, HudLayoutDebugPlugin, UI_LAYOUT_DEBUG_TARGET,
-};
 pub use crate::gui::debug::{
-    ui_layout_tree_debug_enabled, UiLayoutTreeDebugPlugin, UI_LAYOUT_TREE_TARGET,
+    ui_layout_tree_debug_enabled, DebugLayoutTag, UiLayoutTreeDebugPlugin, UI_LAYOUT_TREE_TARGET,
 };
 pub use viewport_authority_debug::{
     assert_viewport_integrity, stroke_viewport_debug_rect, trace_viewport_authority,
@@ -212,7 +197,6 @@ pub use stage6_telemetry::{
     gpu_shell_resource_stats_from, refresh_stage6_hud_telemetry, residency_overlay_consumer_from_frame,
     GpuShellResourceStats, Stage6HudTelemetry,
 };
-pub use player_intent_panel::{PlayerIntentDraft, PlayerIntentPanelState};
 pub use layout_store::{
     HudLayoutCollectionR8, HudLayoutStore, HudWidgetFrame, HudWidgetLayoutEntryR8, HudWidgetRectR8,
 };

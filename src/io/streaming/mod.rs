@@ -13,10 +13,8 @@ mod residency;
 mod task_pool;
 mod tile_storage_apply;
 mod tile_storage_contract;
-mod wave_c_prerequisites;
 
-use crate::dev::runtime_witness::wave_c;
-mod wave_c_readiness;
+
 
 use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
@@ -62,13 +60,7 @@ pub use tile_storage_contract::{
     tile_storage_diff_for_chunk, PendingTileStorageDiffQueue, TileStorageApplyTiming,
     TileStorageDiffBatch, TileStorageDiffChunk, TILE_STORAGE_DIFF_CONTRACT_BQ,
 };
-pub use wave_c_prerequisites::{
-    gather_wave_c_prerequisites, wave_c_prerequisites_passes, WaveCPrerequisitesReport,
-    WAVE_C_OPEN_BACKLOG_ITEMS,
-};
-pub use wave_c_readiness::{
-    gather_wave_c_readiness, wave_c_readiness_passes, WaveCReadinessReport,
-};
+
 pub use diagnostics::{
     log_pending_chunks_changed, refresh_streaming_spine_warm_gate, stream_spine_diag_enabled,
     StreamingSpineDiagState, StreamingSpineWarmGate, StreamSpineWorkKind,
@@ -609,7 +601,6 @@ impl Plugin for StreamingSpinePlugin {
             .init_resource::<PendingTileStorageDiffQueue>()
             .init_resource::<TileStorageSmoothTransitionState>()
             .init_resource::<TileStorageApplyReport>()
-            .init_resource::<wave_c::WaveCLiveProofState>()
             .init_resource::<StreamingSpineWarmGate>()
             .init_resource::<StreamingSpineDiagState>()
             .init_resource::<StreamingSpineBudget>()
@@ -662,13 +653,10 @@ impl Plugin for StreamingSpinePlugin {
     }
 }
 
-pub use crate::dev::runtime_witness::wave_c::{
-    commit_wave_c_live_proof, wc_depth_001_green, WAVE_C_LIVE_JSON, WaveCLiveProofState,
-};
+
 pub use entity_reserve::{
     mig_a5_stream_entity_reserve_enabled, StreamingEntityReserveSpine,
 };
-pub use wave_c_prerequisites::WAVE_C_DEPTH_001_CLOSED_ITEM;
 
 /// Main-thread ECS apply order (S6-22); must match `StreamingSpinePlugin` reconstruct chain.
 pub const STREAM_ECS_APPLY_CHAIN: [&str; 3] = [

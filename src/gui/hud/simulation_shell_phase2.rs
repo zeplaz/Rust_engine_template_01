@@ -7,7 +7,6 @@ use bevy::window::PrimaryWindow;
 
 use crate::construction::{BuildStripState, ToolContext};
 use crate::engine::states::BaseState;
-use crate::engine::EngineLaunchArgs;
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::gui::view_authority::commit_world_main_map_focus;
 use crate::gui::{
@@ -25,7 +24,6 @@ use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use super::info_tabs::HudInfoLiveData;
 use super::panel_state::HudPanelState;
 use super::shell_diagnostics::ProductShellDiagnostics;
-use super::shell_framework::EGUI_SIM_SHELL_WIDGETS;
 use super::icon_atlas::{IconAtlasManifest, IconAtlasUi, IconId};
 use super::ui_stress_state::{
     apply_minimap_stress_chrome_system, sync_ui_stress_from_sim_system, UiStressState,
@@ -377,28 +375,10 @@ pub struct UiShellMigrationWitness {
     pub last_minimap_rect_delta_px: f32,
 }
 
-#[derive(Resource, Default, Debug)]
-#[allow(dead_code)] // egui-retired; kept for Bevy port / export
-pub(crate) struct UiShellMigrationWitnessReplay {
-    sim_frames: u32,
-    done: bool,
-    needs_proof_flush: bool,
-}
 
-/// Minimum sim frames before capture harness replays P1/P2 interaction witnesses (task 1.6).
-#[allow(dead_code)] // egui-retired; kept for Bevy port / export
-const WITNESS_REPLAY_MIN_SIM_FRAMES: u32 = 30;
 
-#[must_use]
-#[allow(dead_code)] // egui-retired; kept for Bevy port / export
-fn witness_capture_replay_active(launch: &EngineLaunchArgs) -> bool {
-    launch.maneuver.writes_full_capture_proof() && launch.test_scene == crate::engine::TestScene::Visual
-}
 
-#[allow(dead_code)] // egui-retired; kept for Bevy port / export
-fn reset_ui_shell_witness_replay(mut replay: ResMut<UiShellMigrationWitnessReplay>) {
-    *replay = UiShellMigrationWitnessReplay::default();
-}
+
 
 pub fn witness_ops_strip_alerts_pressed(
     tray: &mut ContextTrayState,
@@ -510,57 +490,9 @@ pub fn replay_ui_oh_2a_001_witness() -> UiShellMigrationWitness {
     witness
 }
 
-/// Writes `debug_runs/ui_shell_migration_live.json` with **UI-OH-2A-001** rollup green.
-pub fn refresh_ui_oh_2a_001_live_witness() -> bool {
-    let witness = replay_ui_oh_2a_001_witness();
-    assert!(ui_oh_2a_001_green(&witness), "UI-OH-2A-001 witness predicate");
-    commit_ui_shell_migration_live_proof(
-        &witness,
-        &ContextTrayState::default(),
-        &ProductShellDiagnostics::default(),
-    )
-}
 
-/// **UI-P2A-WITNESS-TAIL** — five-lane shell + ops hover + build-rail authority tails.
-pub fn refresh_ui_p2a_001_live_witness() -> bool {
-    use crate::engine::states::BaseState;
-    use crate::gui::ui_gates::product_shell_base_active;
 
-    assert!(
-        !product_shell_base_active(BaseState::Simulation),
-        "UI-P2A-001: egui product shell off in Simulation"
-    );
-    let mut dock = crate::gui::hud::HudDockRegistry::default();
-    crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
 
-    let mut witness = replay_coder_b_ui_five_lane_witness();
-    witness_ops_strip_zone_hover_replay(&mut witness);
-    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
-    let shell_diag = ProductShellDiagnostics::default();
-    assert!(ui_p2a_f03_green(&witness), "UI-P2A-F03");
-    assert!(ui_p2a_p4_auth_green(&witness), "UI-P2A-P4-AUTH");
-    assert!(
-        ui_w3_2b_001_green(&witness, &shell_diag),
-        "2B: UI-W3-2B-001"
-    );
-    assert!(ui_w3_2c_001_green(&witness), "2C: UI-W3-2C-001");
-    assert!(ui_p5_pause_001_green(&witness), "P5: UI-P5-PAUSE-001");
-    assert!(
-        ui_w3_p5_001_green(&witness, &shell_diag),
-        "P5: UI-W3-P5-001"
-    );
-    assert!(
-        ui_witness_interaction_block_green(&witness),
-        "witness interaction block"
-    );
-    assert!(ui_w3_p4_001_green(&witness), "P4: UI-W3-P4-001");
-    commit_ui_shell_migration_live_proof_with_gates(
-        &witness,
-        &ContextTrayState::default(),
-        &shell_diag,
-        Some(&dock),
-    )
-}
 
 /// **UI-W3-2A-001** — P1 ops-strip zones + P2 context tray + `phase2_zones_live`.
 #[must_use]
@@ -590,16 +522,7 @@ pub fn replay_ui_w3_2a_001_witness() -> UiShellMigrationWitness {
     witness
 }
 
-/// Writes `debug_runs/ui_shell_migration_live.json` with **UI-W3-2A-001** rollup green.
-pub fn refresh_ui_w3_2a_001_live_witness() -> bool {
-    let witness = replay_ui_w3_2a_001_witness();
-    assert!(ui_w3_2a_001_green(&witness), "UI-W3-2A-001 witness predicate");
-    commit_ui_shell_migration_live_proof(
-        &witness,
-        &ContextTrayState::default(),
-        &ProductShellDiagnostics::default(),
-    )
-}
+
 
 /// **UI-W3-2A-001** — mark P1/P2 live once Bevy ops strip + context tray exist in Simulation.
 pub fn prime_phase2a_ops_zones_witness_when_strip_live(
@@ -632,15 +555,7 @@ pub fn ui_oh_p5_001_green(witness: &UiShellMigrationWitness) -> bool {
     ui_p5_pause_001_green(witness)
 }
 
-/// Read **UI-P3-001** acceptance from compositor witness (`debug_runs/minimap_compositor_live.json`).
-#[must_use]
-pub fn minimap_compositor_ui_p3_001_green_from_disk() -> bool {
-    use crate::dev::runtime_witness::MINIMAP_COMPOSITOR_JSON;
 
-    let raw = std::fs::read_to_string(MINIMAP_COMPOSITOR_JSON).unwrap_or_default();
-    let v: serde_json::Value = serde_json::from_str(&raw).unwrap_or(serde_json::Value::Null);
-    v["ui_p3_001_green"].as_bool().unwrap_or(false)
-}
 
 /// **UI-P3-SHELL-ROLLUP-001** — shell `ui_p3_001.closed` when compositor authority or GPU path green.
 #[must_use]
@@ -650,9 +565,6 @@ pub fn ui_p3_001_shell_closed(
 ) -> bool {
     let shell_aligned = witness.minimap_chrome_aligned
         && shell_diag.egui_pass_count_sim_session == 0;
-    if minimap_compositor_ui_p3_001_green_from_disk() {
-        return shell_aligned;
-    }
     minimap_gpu_compositor_env_enabled() && witness.minimap_gpu_path && shell_aligned
 }
 
@@ -721,32 +633,7 @@ pub fn ui_w3_p6_shell_perf_green(
         && witness.pause_menu_bevy
 }
 
-/// Writes `debug_runs/ui_shell_migration_live.json` with **UI-W3-P5-001** rollup green.
-pub fn refresh_ui_w3_p5_001_live_witness() -> bool {
-    use crate::engine::states::BaseState;
-    use crate::gui::ui_gates::product_shell_base_active;
 
-    assert!(
-        !product_shell_base_active(BaseState::Simulation),
-        "UI-W3-P5-001: no egui product shell in Simulation"
-    );
-    let mut dock = crate::gui::hud::HudDockRegistry::default();
-    crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
-
-    let mut witness = replay_ui_w3_p5_001_witness();
-    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
-    let shell_diag = ProductShellDiagnostics::default();
-    assert!(
-        ui_w3_p5_001_green(&witness, &shell_diag),
-        "UI-W3-P5-001 witness predicate"
-    );
-    commit_ui_shell_migration_live_proof_with_gates(
-        &witness,
-        &ContextTrayState::default(),
-        &shell_diag,
-        Some(&dock),
-    )
-}
 
 /// `witness` JSON block — §1.6 interaction + 2B egui gate honesty.
 #[must_use]
@@ -767,59 +654,7 @@ pub fn ui_witness_interaction_block_green(witness: &UiShellMigrationWitness) -> 
             < f32::EPSILON
 }
 
-/// Full-capture harness: replay ALERTS / INTEL / Escape once so live JSON witnesses §1.6 without manual clicks.
-#[allow(dead_code)] // egui-retired; kept for Bevy port / export
-fn replay_ui_shell_witness_interactions_system(
-    launch: Option<Res<EngineLaunchArgs>>,
-    base: Res<State<BaseState>>,
-    mut tray: ResMut<ContextTrayState>,
-    mut intel_req: ResMut<OpsStripIntelFocusRequest>,
-    mut witness: ResMut<UiShellMigrationWitness>,
-    world: Option<Res<WorldRepresentationFrame>>,
-    missions: Option<Res<ActiveMissions>>,
-    mut strip: ResMut<crate::construction::BuildStripState>,
-    mut build_tool: ResMut<crate::construction::ActiveBuildTool>,
-    mut replay: ResMut<UiShellMigrationWitnessReplay>,
-    shell_diag: Res<ProductShellDiagnostics>,
-) {
-    if replay.done || *base.get() != BaseState::Simulation {
-        return;
-    }
-    replay.sim_frames = replay.sim_frames.saturating_add(1);
-    let Some(launch) = launch.as_ref() else {
-        return;
-    };
-    if !witness_capture_replay_active(launch) {
-        return;
-    }
-    if replay.sim_frames < WITNESS_REPLAY_MIN_SIM_FRAMES {
-        return;
-    }
-    replay.done = true;
-    let mission_count = missions.as_deref().map(|m| m.missions.len()).unwrap_or(0);
-    witness_ops_strip_alerts_pressed(tray.as_mut(), witness.as_mut(), mission_count);
-    if let Some(w) = world.as_deref() {
-        witness_ops_strip_intel_pressed(tray.as_mut(), witness.as_mut(), w, intel_req.as_mut());
-    } else {
-        witness.phase2_zones_live = true;
-        witness.ops_zones_wired = true;
-        witness.intel_map_camera_request = true;
-    }
-    collapse_context_tray_on_escape(tray.as_mut(), witness.as_mut());
-    witness.mock_zone_parity = crate::construction::mock_shapes_parity_green();
-    witness_ops_strip_zone_hover_replay(witness.as_mut());
-    witness_build_rail_tool_authoritative_replay(
-        strip.as_mut(),
-        build_tool.as_mut(),
-        witness.as_mut(),
-        crate::construction::ToolContext::Industry,
-    );
-    crate::gui::witness_pause_menu_bevy_replay(witness.as_mut());
-    replay.needs_proof_flush = true;
-    if commit_ui_shell_migration_live_proof(&witness, &tray, &shell_diag) {
-        replay.needs_proof_flush = false;
-    }
-}
+
 
 #[derive(Resource, Debug)]
 pub struct UiShellMigrationLiveProofState {
@@ -871,7 +706,6 @@ impl Plugin for SimulationShellPhase2Plugin {
             .init_resource::<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>()
             .init_resource::<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>()
             .init_resource::<crate::gui::hud::plant_focus_card::PlantFocusCardSnapshot>()
-            .init_resource::<UiShellMigrationWitnessReplay>()
             .init_resource::<UiShellMigrationLiveProofState>()
             .init_resource::<UiStressState>()
             .init_resource::<ProductShellDiagnostics>()
@@ -1993,17 +1827,7 @@ pub fn replay_ui_w3_p4_001_witness() -> UiShellMigrationWitness {
     witness
 }
 
-/// Writes `debug_runs/ui_shell_migration_live.json` with **UI-W3-P4-001** rollup green.
-#[must_use]
-pub fn refresh_ui_w3_p4_001_live_witness() -> bool {
-    let witness = replay_ui_w3_p4_001_witness();
-    assert!(ui_w3_p4_001_green(&witness), "UI-W3-P4-001 witness predicate");
-    commit_ui_shell_migration_live_proof(
-        &witness,
-        &ContextTrayState::default(),
-        &ProductShellDiagnostics::default(),
-    )
-}
+
 
 /// Lib witness refresh — replays P4 build-rail authority for 2C mode rail gate.
 #[must_use]
@@ -2052,506 +1876,33 @@ pub fn replay_coder_b_ui_five_lane_witness() -> UiShellMigrationWitness {
     witness
 }
 
-/// Single writer: **2B** + **2C** + **P5** + **witness** + **P4** → `ui_shell_migration_live.json`.
-pub fn refresh_coder_b_ui_five_lane_witness() -> bool {
-    use crate::engine::states::BaseState;
-    use crate::gui::ui_gates::product_shell_base_active;
 
-    assert!(
-        !product_shell_base_active(BaseState::Simulation),
-        "coder B five-lane: egui product shell off in Simulation"
-    );
-    let mut dock = crate::gui::hud::HudDockRegistry::default();
-    crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
 
-    let mut witness = replay_coder_b_ui_five_lane_witness();
-    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
-    let shell_diag = ProductShellDiagnostics::default();
-    assert!(
-        ui_w3_2b_001_green(&witness, &shell_diag),
-        "2B: UI-W3-2B-001"
-    );
-    assert!(ui_w3_2c_001_green(&witness), "2C: UI-W3-2C-001");
-    assert!(ui_p5_pause_001_green(&witness), "P5: UI-P5-PAUSE-001");
-    assert!(
-        ui_w3_p5_001_green(&witness, &shell_diag),
-        "P5: UI-W3-P5-001"
-    );
-    assert!(
-        ui_witness_interaction_block_green(&witness),
-        "witness interaction block"
-    );
-    assert!(ui_w3_p4_001_green(&witness), "P4: UI-W3-P4-001");
-    commit_ui_shell_migration_live_proof_with_gates(
-        &witness,
-        &ContextTrayState::default(),
-        &shell_diag,
-        Some(&dock),
-    )
-}
 
-/// Writes `debug_runs/ui_shell_migration_live.json` with **UI-W3-2C-001** rollup green.
-pub fn refresh_ui_w3_2c_001_live_witness() -> bool {
-    let witness = replay_ui_w3_2c_001_witness();
-    assert!(ui_w3_2c_001_green(&witness), "UI-W3-2C-001 witness predicate");
-    commit_ui_shell_migration_live_proof(
-        &witness,
-        &ContextTrayState::default(),
-        &ProductShellDiagnostics::default(),
-    )
-}
 
-/// Writes `debug_runs/ui_shell_migration_live.json` with **UI-OH-2B-001** rollup green.
-pub fn refresh_ui_oh_2b_001_live_witness() -> bool {
-    use crate::engine::states::BaseState;
-    use crate::gui::ui_gates::product_shell_base_active;
 
-    assert!(
-        !product_shell_base_active(BaseState::Simulation),
-        "UI-OH-2B-001: hud_product_shell_egui_root must not run in Simulation"
-    );
-    let mut dock = crate::gui::hud::HudDockRegistry::default();
-    crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots(&mut dock);
-    // Preserve Phase 2A ops/tray witnesses — do not commit from empty default witness.
-    let mut witness = replay_ui_w3_2a_001_witness();
-    witness.minimap_chrome_aligned = true;
-    witness.last_minimap_rect_delta_px = MINIMAP_CHROME_STROKE_PAD_PX;
-    witness.mock_zone_parity = crate::construction::mock_shapes_parity_green();
-    crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
-    let shell_diag = ProductShellDiagnostics::default();
-    assert!(
-        ui_oh_2b_001_green(&witness, &shell_diag),
-        "UI-OH-2B-001 witness predicate"
-    );
-    commit_ui_shell_migration_live_proof_with_gates(
-        &witness,
-        &ContextTrayState::default(),
-        &shell_diag,
-        Some(&dock),
-    )
-}
 
-/// **UI-W3-2B-001** — same witness refresh as [`refresh_ui_oh_2b_001_live_witness`].
-pub fn refresh_ui_w3_2b_001_live_witness() -> bool {
-    refresh_ui_oh_2b_001_live_witness()
-}
 
-pub fn build_proof_payload(
-    witness: &UiShellMigrationWitness,
-    tray: &ContextTrayState,
-    shell_diag: &ProductShellDiagnostics,
-) -> serde_json::Value {
-    let egui_pass_count_in_sim = shell_diag.egui_pass_count_sim_session;
-    let gpu_minimap = minimap_gpu_compositor_env_enabled();
-    let minimap_texture_backend = if gpu_minimap {
-        "bevy_ui_gpu"
-    } else {
-        "egui_editor_only"
-    };
-    serde_json::json!({
-        "profile": "UI_SHELL_MIGRATION_2B",
-        "gpu_minimap_compositor_env": gpu_minimap,
-        "ui_p3_001": {
-            "gate": "UI-P3-SHELL-ROLLUP-001",
-            "closed": ui_p3_001_shell_closed(witness, shell_diag),
-            "compositor_authoritative": minimap_compositor_ui_p3_001_green_from_disk(),
-            "compositor_ui_p3_001_green": minimap_compositor_ui_p3_001_green_from_disk(),
-            "minimap_gpu_path": witness.minimap_gpu_path,
-            "minimap_chrome_aligned": witness.minimap_chrome_aligned,
-        },
-        "phase2a_closed": witness.phase2_zones_live
-            && witness.flat_v2_tab_chrome
-            && witness.minimap_chrome_aligned,
-        "phase2b_closed": ui_p2b_coder_b_green(witness, shell_diag),
-        "ui_p2b_coder_b": {
-            "green": ui_p2b_coder_b_green(witness, shell_diag),
-            "egui_pass_count_in_sim": egui_pass_count_in_sim,
-            "build_toolbox_egui_gated": witness.build_toolbox_egui_gated,
-            "floating_egui_shells_gated": witness.floating_egui_shells_gated,
-        },
-        "ui_p2b_coder_b_green": ui_p2b_coder_b_green(witness, shell_diag),
-        "ui_oh_2b_001": {
-            "gate": "UI-OH-2B-001",
-            "green": ui_oh_2b_001_green(witness, shell_diag),
-            "product_shell_in_simulation": false,
-            "egui_pass_count_in_sim": egui_pass_count_in_sim,
-        },
-        "ui_w3_2b_001": {
-            "gate": "UI-W3-2B-001",
-            "green": ui_w3_2b_001_green(witness, shell_diag),
-            "egui_pass_count_in_sim": egui_pass_count_in_sim,
-            "product_shell_in_simulation": false,
-        },
-        "ui_w3_2c_001": {
-            "gate": "UI-W3-2C-001",
-            "green": ui_w3_2c_001_green(witness),
-            "layout_option": PHASE_2C_LAYOUT_OPTION,
-            "context_rail_width_px": CONTEXT_RAIL_W_PX,
-            "build_rail_width_px": BUILD_RAIL_W_PX,
-            "left_chrome_width_px_collapsed": command_left_stack_footprint_px(true),
-            "build_rail_authoritative": witness.build_rail_authoritative,
-        },
-        "ui_w3_p4_001": {
-            "gate": "UI-W3-P4-001",
-            "green": ui_w3_p4_001_green(witness),
-            "icon_atlas_loaded": witness.icon_atlas_loaded,
-            "p4_auth_green": ui_p2a_p4_auth_green(witness),
-            "petroleum_panel_tab_wired": witness.petroleum_panel_tab_wired,
-            "p5_br_tab_wired": witness.petroleum_panel_tab_wired,
-        },
-        "ui_oh_p4_001": {
-            "gate": "UI-OH-P4-001",
-            "green": ui_oh_p4_001_green(witness),
-            "p4_1_green": ui_oh_p4_001_p4_1_green(witness),
-            "p5_br_green": ui_oh_p4_001_p5_br_green(witness),
-            "icon_atlas_loaded": witness.icon_atlas_loaded,
-        },
-        "ui_w3_theme_001": {
-            "gate": "PLAN-UI-THEME-MERGE-001",
-            "green": crate::gui::style::ui_w3_theme_001_green(),
-        },
-        "egui_sim_shell_widgets": EGUI_SIM_SHELL_WIDGETS,
-        "egui_pass_count_in_sim": egui_pass_count_in_sim,
-        "sim_egui_context_acquires": shell_diag.sim_egui_context_acquires,
-        "egui_pass_count_lifetime": shell_diag.egui_pass_count,
-        "phase2_zones_live": witness.phase2_zones_live,
-        "ui_oh_2a_001": {
-            "gate": "UI-OH-2A-001",
-            "green": ui_oh_2a_001_green(witness),
-            "phase2_zones_live": witness.phase2_zones_live,
-        },
-        "ui_w3_2a_001": {
-            "gate": "UI-W3-2A-001",
-            "green": ui_w3_2a_001_green(witness),
-            "phase2_zones_live": witness.phase2_zones_live,
-            "ops_zones_wired": witness.ops_zones_wired,
-            "context_tray_wired": witness.flat_v2_tab_chrome
-                && witness.alert_click_expanded_tray
-                && witness.escape_collapsed_tray,
-        },
-        "ui_p2a_coder_b": {
-            "green": ui_p2a_coder_b_green(witness),
-            "mock_zone_parity": witness.mock_zone_parity,
-            "phase2_zones_live": witness.phase2_zones_live,
-        },
-        "ui_p2a_tail": {
-            "f03_green": ui_p2a_f03_green(witness),
-            "p4_auth_green": ui_p2a_p4_auth_green(witness),
-            "ops_zone_hover_token": witness.ops_zone_hover_token,
-            "build_rail_authoritative": witness.build_rail_authoritative,
-        },
-        "phase5": {
-            "pause_menu_bevy": witness.pause_menu_bevy,
-        },
-        "ui_p5_pause_001_green": ui_p5_pause_001_green(witness),
-        "ui_oh_p5_001": {
-            "gate": "UI-OH-P5-001",
-            "green": ui_oh_p5_001_green(witness),
-            "pause_menu_bevy": witness.pause_menu_bevy,
-        },
-        "ui_w3_p5_001": {
-            "gate": "UI-W3-P5-001",
-            "green": ui_w3_p5_001_green(witness, shell_diag),
-            "pause_menu_bevy": witness.pause_menu_bevy,
-            "egui_pass_count_in_sim": shell_diag.egui_pass_count_sim_session,
-        },
-        "ui_w3_witness_001": {
-            "gate": "UI-W3-WITNESS-001",
-            "green": ui_w3_witness_001_shell_green(witness, shell_diag),
-            "visual_operator": "cargo run -p proc_A_dine01 --release -- --test visual",
-            "lib_bundle": "coder_b_ui_w3_witness_001_lib_bundle",
-        },
-        "ui_w3_p6_001": {
-            "gate": "UI-W3-P6-001",
-            "green": ui_w3_p6_shell_perf_green(witness, shell_diag),
-            "shell_perf_green": ui_w3_p6_shell_perf_green(witness, shell_diag),
-            "egui_pass_count_in_sim": shell_diag.egui_pass_count_sim_session,
-            "phase2b_closed": ui_p2b_coder_b_green(witness, shell_diag),
-            "pause_menu_bevy": witness.pause_menu_bevy,
-            "plan": "PLAN-UI-PHASE6-001",
-        },
-        "witness": {
-            "ops_zones_wired": witness.ops_zones_wired,
-            "phase2_zones_live": witness.phase2_zones_live,
-            "alert_click_expanded_tray": witness.alert_click_expanded_tray,
-            "intel_map_camera_request": witness.intel_map_camera_request,
-            "minimap_chrome_aligned": witness.minimap_chrome_aligned,
-            "escape_collapsed_tray": witness.escape_collapsed_tray,
-            "flat_v2_tab_chrome": witness.flat_v2_tab_chrome,
-            "build_rail_synced": witness.build_rail_synced,
-            "build_rail_authoritative": witness.build_rail_authoritative,
-            "build_toolbox_egui_gated": witness.build_toolbox_egui_gated,
-            "floating_egui_shells_gated": witness.floating_egui_shells_gated,
-            "ops_zone_hover_token": witness.ops_zone_hover_token,
-            "last_mission_count": witness.last_mission_count,
-            "last_minimap_rect_delta_px": witness.last_minimap_rect_delta_px,
-            "interaction_block_green": ui_witness_interaction_block_green(witness),
-        },
-        "phase2": {
-            "zones_live": witness.phase2_zones_live,
-            "ops_strip_top_offset_px": OPS_STRIP_TOP_OFFSET_PX,
-            "context_tray_gold_bar_px": CONTEXT_TRAY_TAB_GOLD_BAR_PX,
-            "minimap_chrome_pad_px": MINIMAP_CHROME_STROKE_PAD_PX,
-            "minimap_gpu_path": witness.minimap_gpu_path,
-            "follow_ups_closed": ["F-01", "F-02", "F-03", "F-04", "F-06", "F-07", "F-08", "F-09", "F-11"],
-        },
-        "phase4": {
-            "icon_atlas_loaded": witness.icon_atlas_loaded,
-            "atlas_texture": crate::gui::hud::icon_atlas::ICON_ATLAS_TEXTURE_PATH,
-            "manifest_ron": crate::gui::hud::icon_atlas::ICON_ATLAS_MANIFEST_PATH,
-            "rail_icons": [
-                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Roads),
-                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Rail),
-                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Utilities),
-                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Industry),
-                crate::gui::hud::sim_hud_copy::rail_player_label(ToolContext::Civil),
-            ],
-            "p5_br_tab_wired": witness.petroleum_panel_tab_wired,
-            "p4_veh_chips_wired": witness.logistics_vehicle_chips_wired,
-        },
-        "p4_veh_01": {
-            "gate": "P4-VEH-01",
-            "green": ui_p4_veh_01_green(witness),
-            "logistics_vehicle_chips_wired": witness.logistics_vehicle_chips_wired,
-        },
-        "ux_e03_coder_a": {
-            "gate": "UX-E03-CODER-A",
-            "green": ui_ux_e03_coder_a_green(witness),
-            "media_registry_wired": witness.ux_e03_media_registry_wired,
-            "strategic_enqueue_from_transmission_ui": false,
-        },
-        "backends": {
-            "P1_ops_strip": "bevy_ui",
-            "P2_context_tray": "bevy_ui",
-            "P3_map_frame_inset": "bevy_ui",
-            "P3_minimap_chrome": "bevy_ui",
-            "P3_minimap_texture": minimap_texture_backend,
-            "P4_build_rail": "bevy_ui",
-            "P4_left_context_rail": "bevy_ui",
-            "legacy_egui_phase2b": {
-                "sim_allowed": EGUI_SIM_SHELL_WIDGETS,
-                "editor_product_shell": true,
-                "build_toolbox_egui": "editor_only",
-                "overlays_panel_egui": "editor_only",
-                "overlay_tray_egui": "editor_only",
-                "command_shell_egui": "editor_only",
-            },
-            "floating_shells_sim_audit": {
-                "OverlaysPanel": witness.floating_egui_shells_gated,
-                "OverlayTray": witness.floating_egui_shells_gated,
-                "CommandShell": witness.floating_egui_shells_gated,
-                "BuildToolbox": witness.build_toolbox_egui_gated,
-            },
-        },
-        "follow_ups": {
-            "F-01_diamond_badge": true,
-            "F-02_strip_top_offset_px": OPS_STRIP_TOP_OFFSET_PX,
-            "F-04_rail_icon_grid": true,
-            "F-07_gold_vellum_tabs": witness.flat_v2_tab_chrome,
-            "F-09_minimap_delta_px": witness.last_minimap_rect_delta_px,
-        },
-        "context_tray": {
-            "panel_state": format!("{:?}", tray.panel_state),
-            "active_tab": tray.active_tab.label(),
-            "rail_width_px": CONTEXT_RAIL_W_PX,
-            "build_rail_width_px": BUILD_RAIL_W_PX,
-            "map_frame_inset_px": MAP_FRAME_INSET_PX,
-        },
-        "phase2c": {
-            "layout_option": PHASE_2C_LAYOUT_OPTION,
-            "phase2c_closed": ui_phase2c_green(witness),
-            "left_chrome_width_px_collapsed": command_left_stack_footprint_px(true),
-            "left_chrome_width_px_expanded": command_left_stack_footprint_px(false),
-            "context_rail_width_px": CONTEXT_RAIL_W_PX,
-            "build_rail_width_px": BUILD_RAIL_W_PX,
-            "stack_body_width_px": LEFT_CONTEXT_STACK_BODY_W_PX,
-            "column_gap_px": COMMAND_LEFT_STACK_COLUMN_GAP_PX,
-            "overlay_absolute": true,
-            "map_hole_inset": false,
-        },
-        "panels": {
-            "P1": "ops_strip_zones_time_alerts_intel_weather_power_tray",
-            "P2": "context_tray_tabs_peek_cycle",
-            "P3": "map_frame_inset + minimap_chrome",
-            "P4": "dual_column_left_context_rail_48px + build_rail_52px",
-        },
-    })
-}
 
-const UI_SHELL_MIGRATION_LIVE_PROOF_PATH: &str = "debug_runs/ui_shell_migration_live.json";
 
-/// **UI-P3-SHELL-ROLLUP-001** — compositor authority + five-lane shell tails → `ui_p3_001.closed`.
-pub fn refresh_ui_p3_shell_rollup_001_live_witness() -> bool {
-    assert!(
-        refresh_coder_b_ui_five_lane_witness(),
-        "UI-P3-SHELL-ROLLUP-001: five-lane shell refresh"
-    );
-    let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).unwrap_or_default();
-    let body: serde_json::Value = serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
-    assert!(
-        body["ui_p3_001"]["closed"].as_bool().unwrap_or(false),
-        "ui_p3_001.closed"
-    );
-    assert!(
-        body["ui_p3_001"]["compositor_authoritative"]
-            .as_bool()
-            .unwrap_or(false),
-        "ui_p3_001.compositor_authoritative"
-    );
-    true
-}
 
-/// **UI-OH-P4-001** — phase4 rollup + optional `ui_oh_p4_001` block (preserves five-lane fields).
-pub fn refresh_ui_oh_p4_001_live_witness() -> bool {
-    assert!(
-        refresh_coder_b_ui_five_lane_witness(),
-        "UI-OH-P4-001: five-lane shell refresh"
-    );
-    let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).unwrap_or_default();
-    let body: serde_json::Value = serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
-    assert!(
-        body["ui_oh_p4_001"]["green"].as_bool().unwrap_or(false),
-        "ui_oh_p4_001.green"
-    );
-    assert!(
-        body["phase4"]["icon_atlas_loaded"].as_bool().unwrap_or(false),
-        "phase4.icon_atlas_loaded"
-    );
-    true
-}
 
-/// **UI-OH-P5-001** — Bevy pause menu OH rollup (alias of five-lane P5 refresh).
-pub fn refresh_ui_oh_p5_001_live_witness() -> bool {
-    assert!(
-        refresh_coder_b_ui_five_lane_witness(),
-        "UI-OH-P5-001: five-lane shell refresh"
-    );
-    let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).unwrap_or_default();
-    let body: serde_json::Value = serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
-    assert!(
-        body["ui_oh_p5_001"]["green"].as_bool().unwrap_or(false),
-        "ui_oh_p5_001.green"
-    );
-    assert!(
-        body["phase5"]["pause_menu_bevy"].as_bool().unwrap_or(false),
-        "phase5.pause_menu_bevy"
-    );
-    true
-}
 
-/// **@coder B** — P3 shell rollup + OH P4/P5 tails in one lib witness pass.
-pub fn refresh_coder_b_ui_shell_tail_closure_witness() -> bool {
-    assert!(
-        refresh_coder_b_ui_five_lane_witness(),
-        "coder B shell tail: five-lane refresh"
-    );
-    let text = std::fs::read_to_string(UI_SHELL_MIGRATION_LIVE_PROOF_PATH).unwrap_or_default();
-    let body: serde_json::Value = serde_json::from_str(&text).unwrap_or(serde_json::Value::Null);
-    assert!(
-        body["ui_p3_001"]["closed"].as_bool().unwrap_or(false),
-        "ui_p3_001.closed"
-    );
-    assert!(
-        body["ui_p3_001"]["compositor_authoritative"]
-            .as_bool()
-            .unwrap_or(false),
-        "ui_p3_001.compositor_authoritative"
-    );
-    assert!(
-        body["ui_oh_p4_001"]["green"].as_bool().unwrap_or(false),
-        "ui_oh_p4_001.green"
-    );
-    assert!(
-        body["ui_oh_p5_001"]["green"].as_bool().unwrap_or(false),
-        "ui_oh_p5_001.green"
-    );
-    assert!(
-        body["phase5"]["pause_menu_bevy"].as_bool().unwrap_or(false),
-        "phase5.pause_menu_bevy"
-    );
-    true
-}
 
-#[cfg(test)]
-static UI_SHELL_MIGRATION_PROOF_FILE_LOCK: std::sync::Mutex<()> = std::sync::Mutex::new(());
 
-#[cfg(test)]
-fn ui_shell_migration_proof_file_lock() -> std::sync::MutexGuard<'static, ()> {
-    UI_SHELL_MIGRATION_PROOF_FILE_LOCK
-        .lock()
-        .unwrap_or_else(|e| e.into_inner())
-}
 
-#[must_use]
-pub fn commit_ui_shell_migration_live_proof(
-    witness: &UiShellMigrationWitness,
-    tray: &ContextTrayState,
-    shell_diag: &ProductShellDiagnostics,
-) -> bool {
-    commit_ui_shell_migration_live_proof_with_gates(witness, tray, shell_diag, None)
-}
 
-/// **UI-P2B-CODER-B** — optional dock refresh so `witness.*_egui_gated` matches sim suppression.
-#[must_use]
-pub fn commit_ui_shell_migration_live_proof_with_gates(
-    witness: &UiShellMigrationWitness,
-    tray: &ContextTrayState,
-    shell_diag: &ProductShellDiagnostics,
-    dock: Option<&crate::gui::hud::HudDockRegistry>,
-) -> bool {
-    #[cfg(test)]
-    let _proof_file_guard = ui_shell_migration_proof_file_lock();
-    let mut snap = witness.clone();
-    if let Some(dock) = dock {
-        crate::gui::hud::simulation_session::sync_simulation_egui_shell_gate_witness(dock, &mut snap);
-    }
-    // UI-P2A-CODER-B — parity is lib-checkable; refresh at commit so early writes stay green.
-    snap.mock_zone_parity = crate::construction::mock_shapes_parity_green();
-    let body = build_proof_payload(&snap, tray, shell_diag);
-    let payload = crate::dev::debug_run_envelope::wrap_debug_run(
-        "UI_SHELL_MIGRATION_2B",
-        "simulation_shell_phase2_live_proof",
-        UI_SHELL_MIGRATION_LIVE_PROOF_PATH,
-        body,
-    );
-    crate::dev::debug_run_envelope::write_debug_run_json(UI_SHELL_MIGRATION_LIVE_PROOF_PATH, payload)
-}
 
-#[allow(dead_code)] // egui-retired; kept for Bevy port / export
-pub(crate) fn write_ui_shell_migration_live_proof_system(
-    mut state: ResMut<UiShellMigrationLiveProofState>,
-    witness: Res<UiShellMigrationWitness>,
-    tray: Res<ContextTrayState>,
-    shell_diag: Res<ProductShellDiagnostics>,
-    dock: Res<crate::gui::hud::HudDockRegistry>,
-    mut replay: ResMut<UiShellMigrationWitnessReplay>,
-) {
-    state.frames_since_write = state.frames_since_write.saturating_add(1);
-    let interactions_complete = witness.alert_click_expanded_tray
-        && witness.intel_map_camera_request
-        && witness.escape_collapsed_tray;
-    let replay_flush = replay.needs_proof_flush;
-    let due = replay_flush
-        || (!state.written && witness.phase2_zones_live)
-        || (interactions_complete && !state.interactions_written)
-        || state.frames_since_write >= state.write_interval;
-    if !due {
-        return;
-    }
-    state.frames_since_write = 0;
-    if commit_ui_shell_migration_live_proof_with_gates(
-        &witness,
-        &tray,
-        &shell_diag,
-        Some(dock.as_ref()),
-    ) {
-        state.written = true;
-        if interactions_complete {
-            state.interactions_written = true;
-        }
-        replay.needs_proof_flush = false;
-    }
-}
+
+
+
+
+
+
+
+
+
+
 
 pub fn collapse_context_tray_on_escape(
     tray: &mut ContextTrayState,
@@ -2627,30 +1978,7 @@ mod tests {
         assert!(ui_p2a_f03_green(&witness));
     }
 
-    #[test]
-    fn ui_p2a_p4_auth_rail_replay_writes_strip_and_tool() {
-        use crate::construction::{ActiveBuildTool, BuildStripState, ToolContext};
 
-        let mut strip = BuildStripState::default();
-        let mut tool = ActiveBuildTool::default();
-        let mut witness = UiShellMigrationWitness::default();
-        witness_build_rail_tool_authoritative_replay(
-            &mut strip,
-            &mut tool,
-            &mut witness,
-            ToolContext::Industry,
-        );
-        assert_eq!(strip.active, ToolContext::Industry);
-        assert!(witness.build_rail_authoritative);
-        assert!(ui_p2a_p4_auth_green(&witness));
-        let body = build_proof_payload(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        );
-        assert_eq!(body["ui_p2a_tail"]["f03_green"], serde_json::json!(false));
-        assert_eq!(body["ui_p2a_tail"]["p4_auth_green"], serde_json::json!(true));
-    }
 
 
     #[test]
@@ -2672,26 +2000,7 @@ mod tests {
         assert!(witness.escape_collapsed_tray);
     }
 
-    #[test]
-    fn ui_p2a_coder_b_lib_bundle_green() {
-        assert!(crate::construction::mock_shapes_parity_green());
-        let witness = UiShellMigrationWitness {
-            phase2_zones_live: true,
-            ops_zones_wired: true,
-            mock_zone_parity: true,
-            build_rail_synced: true,
-            build_rail_authoritative: true,
-            ops_zone_hover_token: true,
-            ..Default::default()
-        };
-        assert!(ui_p2a_coder_b_green(&witness));
-        let body = build_proof_payload(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        );
-        assert_eq!(body["ui_p2a_coder_b"]["green"], serde_json::json!(true));
-    }
+
 
 
     #[test]
@@ -2705,37 +2014,7 @@ mod tests {
 
 
 
-    #[test]
-    fn ui_p3_001_shell_witness_fields_when_gpu_path_active() {
-        let witness = UiShellMigrationWitness {
-            minimap_gpu_path: true,
-            minimap_chrome_aligned: true,
-            phase2_zones_live: true,
-            flat_v2_tab_chrome: true,
-            build_toolbox_egui_gated: true,
-            floating_egui_shells_gated: true,
-            ..Default::default()
-        };
-        let shell_diag = ProductShellDiagnostics::default();
-        let payload = build_proof_payload(
-            &witness,
-            &ContextTrayState::default(),
-            &shell_diag,
-        );
-        let compositor_green = super::minimap_compositor_ui_p3_001_green_from_disk();
-        assert_eq!(
-            payload["ui_p3_001"]["closed"],
-            serde_json::json!(super::ui_p3_001_shell_closed(&witness, &shell_diag))
-        );
-        assert_eq!(
-            payload["ui_p3_001"]["compositor_authoritative"],
-            serde_json::json!(compositor_green)
-        );
-        assert_eq!(
-            payload["backends"]["P3_minimap_texture"],
-            serde_json::json!("bevy_ui_gpu")
-        );
-    }
+
 
 
 
@@ -2753,81 +2032,11 @@ mod tests {
 
 
 
-    #[test]
-    fn ui_p2b_coder_b_green_false_when_sim_session_egui_passes() {
-        let witness = UiShellMigrationWitness {
-            build_toolbox_egui_gated: true,
-            floating_egui_shells_gated: true,
-            ..Default::default()
-        };
-        let mut shell_diag = ProductShellDiagnostics::default();
-        shell_diag.record_egui_pass_in_simulation();
-        assert!(!ui_p2b_coder_b_green(&witness, &shell_diag));
-        let body = build_proof_payload(&witness, &ContextTrayState::default(), &shell_diag);
-        assert_eq!(body["phase2b_closed"], serde_json::json!(false));
-    }
 
-    #[test]
-    fn stage5_ui_shell_migration_phase2b_witness() {
-        let witness = UiShellMigrationWitness {
-            phase2_zones_live: true,
-            flat_v2_tab_chrome: true,
-            minimap_chrome_aligned: true,
-            build_toolbox_egui_gated: true,
-            floating_egui_shells_gated: true,
-            ..Default::default()
-        };
-        let shell_diag = ProductShellDiagnostics::default();
-        let payload = build_proof_payload(&witness, &ContextTrayState::default(), &shell_diag);
-        assert_eq!(payload["profile"], serde_json::json!("UI_SHELL_MIGRATION_2B"));
-        assert_eq!(payload["egui_pass_count_in_sim"], serde_json::json!(0));
-        assert_eq!(payload["phase2b_closed"], serde_json::json!(true));
-        assert_eq!(
-            payload["egui_sim_shell_widgets"],
-            serde_json::json!(["Diagnostics_F3", "Editor_tools"])
-        );
-        assert_eq!(
-            payload["witness"]["build_toolbox_egui_gated"],
-            serde_json::json!(true)
-        );
-        assert!(payload.get("phase2").is_some());
-        assert!(payload.get("backends").is_some());
-        assert_eq!(
-            payload["phase4"]["icon_atlas_loaded"],
-            serde_json::json!(false)
-        );
-    }
 
-    #[test]
-    fn phase2c_2c_b_footprint_and_witness() {
-        assert_eq!(command_left_stack_footprint_px(true), 106.0);
-        assert_eq!(command_left_stack_footprint_px(false), 458.0);
-        let witness = UiShellMigrationWitness {
-            phase2_zones_live: true,
-            build_rail_authoritative: true,
-            build_rail_synced: true,
-            ..Default::default()
-        };
-        let payload = build_proof_payload(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        );
-        assert_eq!(payload["phase2c"]["layout_option"], serde_json::json!("2C-B"));
-        assert_eq!(
-            payload["phase2c"]["left_chrome_width_px_collapsed"],
-            serde_json::json!(106.0)
-        );
-        assert_eq!(
-            payload["phase2c"]["left_chrome_width_px_expanded"],
-            serde_json::json!(458.0)
-        );
-        assert!(commit_ui_shell_migration_live_proof(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        ));
-    }
+
+
+
 
     #[test]
     fn p4_p5_01_petroleum_panel_tab_visible_when_industry_and_tray_open() {
@@ -2848,36 +2057,7 @@ mod tests {
         assert!(!petroleum_panel_tab_visible(&strip_roads, &tray));
     }
 
-    #[test]
-    fn stage5_ui_shell_migration_phase4_witness_fields() {
-        let witness = replay_ui_w3_p4_001_witness();
-        let payload = build_proof_payload(&witness, &ContextTrayState::default(), &ProductShellDiagnostics::default());
-        assert_eq!(payload["phase4"]["icon_atlas_loaded"], serde_json::json!(true));
-        assert_eq!(
-            payload["phase4"]["atlas_texture"],
-            serde_json::json!(crate::gui::hud::icon_atlas::ICON_ATLAS_TEXTURE_PATH)
-        );
-        assert_eq!(payload["phase4"]["p5_br_tab_wired"], serde_json::json!(true));
-        assert_eq!(
-            payload["phase4"]["rail_icons"],
-            serde_json::json!(["Roads", "Rail", "Power", "Industry", "Zones"])
-        );
-        assert_eq!(payload["ui_w3_p4_001"]["green"], serde_json::json!(true));
-    }
 
-    #[test]
-    fn stage5_ui_shell_migration_phase2a_witness() {
-        assert!(refresh_ui_oh_2a_001_live_witness());
-        let witness = replay_ui_oh_2a_001_witness();
-        let shell_diag = ProductShellDiagnostics::default();
-        let payload = build_proof_payload(&witness, &ContextTrayState::default(), &shell_diag);
-        assert_eq!(payload["phase2_zones_live"], serde_json::json!(true));
-        assert_eq!(payload["ui_oh_2a_001"]["green"], serde_json::json!(true));
-        assert!(payload.get("phase2").is_some());
-        assert!(payload.get("backends").is_some());
-        assert_eq!(
-            payload["panels"]["P1"],
-            serde_json::json!("ops_strip_zones_time_alerts_intel_weather_power_tray")
-        );
-    }
+
+
 }

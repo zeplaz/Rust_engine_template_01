@@ -55,11 +55,7 @@ pub fn footprint_rim_color(valid_family: bool) -> UiRgba {
     }
 }
 
-/// Ebbtide-style edge discipline — ~1 logical px outline weight (structure, not hue).
-#[must_use]
-pub fn footprint_outline_stroke_px() -> f32 {
-    1.0
-}
+
 
 /// Massing stack rim — slightly lighter than base rim so stacked floors read as edges.
 #[must_use]
@@ -137,6 +133,8 @@ pub fn corridor_phase_tokens_wired_green() -> bool {
 mod tests {
     use super::*;
 
+
+
     #[test]
     fn valid_invalid_ghost_tokens_differ_in_hue_and_alpha() {
         let v = footprint_valid_color();
@@ -155,7 +153,6 @@ mod tests {
         let rim_ok = footprint_rim_color(true);
         let rim_bad = footprint_rim_color(false);
         assert_ne!((rim_ok.r, rim_ok.g, rim_ok.b), (rim_bad.r, rim_bad.g, rim_bad.b));
-        assert!((footprint_outline_stroke_px() - 1.0).abs() < f32::EPSILON);
         let stack_ok = massing_stack_rim_color(true);
         assert_ne!((stack_ok.r, stack_ok.g, stack_ok.b), (rim_ok.r, rim_ok.g, rim_ok.b));
         assert!(massing_floor_offset_world() > 0.0);

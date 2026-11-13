@@ -3,9 +3,7 @@
 use bevy::prelude::*;
 
 use crate::construction::BuildingDefinitionRegistry;
-use crate::dev::industrial_activation_todos::{
-    sync_industrial_activation_board_from_witness, IndustrialActivationTodoBoard,
-};
+
 use crate::economy::supply_chain::insert_supply_chain_runtime_for_catalog;
 use crate::entities::production::core::manufacturing_node_for_catalog;
 use crate::infrastructure::{
@@ -35,12 +33,7 @@ impl Plugin for IndustrialActivationPlugin {
             super::grid_overload_ux::GridOverloadUxPlugin,
             super::power_island_ux::PowerIslandUxPlugin,
         ));
-        // Witness / todo-board resources are harness-only (`LiveTodoBoardsPlugin`); the witness
-        // systems below take them as `Option` and no-op in product runs.
-        app.init_resource::<super::witness_collectors::IndustrialActivationLiveProofState>()
-            .init_resource::<crate::dev::Stage7PlayLiveProofState>()
-            .init_resource::<crate::dev::Stage7BehavioralLiveProofState>()
-            .init_resource::<crate::strategic::StrategicCommandQueue>()
+        app.init_resource::<crate::strategic::StrategicCommandQueue>()
             .add_plugins(crate::strategic::Stage7BehavioralPlugin)
             .init_resource::<super::concrete_chain_e2e::ConcreteChainE2eWitness>()
             .init_resource::<super::concrete_chain_e2e::Stage7PlayChainSeedState>()
@@ -73,12 +66,9 @@ impl Plugin for IndustrialActivationPlugin {
                     .after(crate::strategic::site_provisioning_system),
                 crate::economy::logistics::register_facility_portals_system,
                 crate::economy::concrete_batch::register_concrete_batch_on_activation_system,
-                sync_industrial_activation_board_system,
                 sync_utility_connection_power_system,
-                super::witness_collectors::sync_industrial_proof_witness_flags,
             ),
         );
-        // Retired: industrial / stage7 live-JSON writers. Review via sim_run_dump.
         app.add_systems(
             Update,
             crate::economy::concrete_batch::tick_concrete_batch_cure_system
@@ -92,15 +82,7 @@ impl Plugin for IndustrialActivationPlugin {
     }
 }
 
-pub fn sync_industrial_activation_board_system(
-    witness: Option<Res<crate::dev::IndustrialActivationWitness>>,
-    board: Option<ResMut<IndustrialActivationTodoBoard>>,
-) {
-    let (Some(witness), Some(mut board)) = (witness, board) else {
-        return;
-    };
-    sync_industrial_activation_board_from_witness(witness.as_ref(), board.as_mut());
-}
+
 
 /// When a site reaches **Operational**, attach production/runtime components from its catalog def.
 pub fn activate_industrial_facilities_system(
@@ -148,106 +130,9 @@ pub fn activate_industrial_facilities_system(
     }
 }
 
-fn path_exists(p: &str) -> bool {
-    std::path::Path::new(p).exists()
-}
 
-pub fn refresh_industrial_activation_witness_system(
-    w: Option<ResMut<crate::dev::IndustrialActivationWitness>>,
-    buildings: Option<Res<BuildingDefinitionRegistry>>,
-    flow: Option<Res<crate::economy::resource_flow::ResourceFlowSimWitness>>,
-    mut frames: Local<u32>,
-) {
-    // Harness-only witness: product runs never insert it, so skip the repo-file stat sweep.
-    let Some(mut w) = w else {
-        return;
-    };
-    // Dozens of `stat` syscalls per run; the answers (file presence, registry violations) move on
-    // human timescales, so refresh on the first frame and then every ~5 s of frames.
-    // Unit tests drive a handful of frames and expect every frame to refresh.
-    let due = cfg!(test) || *frames % 300 == 0;
-    *frames = frames.wrapping_add(1);
-    if !due {
-        return;
-    }
-    w.catalog_id_on_commit = path_exists("src/strategic/site/events.rs")
-        && path_exists("src/economy/activation/bridge.rs");
-    w.activation_system = true;
-    w.electrical_load_from_def = true;
-    w.activation_test = path_exists("src/economy/supply_chain.rs");
 
-    w.supply_chain_index = path_exists("assets/configs/industrial_supply_chains.json");
-    w.supply_chain_catalog_complete = [
-        "concrete_aggregate_mine",
-        "concrete_cement_kiln",
-        "concrete_mixer_plant",
-        "aluminum_bauxite_mine",
-        "aluminum_alumina_refinery",
-        "aluminum_smelter1",
-        "aluminum_fabrication_plant",
-    ]
-    .iter()
-    .all(|id| path_exists(&format!("assets/configs/buildings/{id}.json")));
-    w.role_based_activation = path_exists("src/economy/supply_chain.rs");
-    w.chain_grouped_menu = path_exists("src/construction/industrial_menu.rs");
-    w.geopolymer_path = path_exists("assets/configs/buildings/concrete_mixer_geopolymer.json")
-        && path_exists("assets/configs/buildings/concrete_cement_kiln_geopolymer.json");
-    w.aluminum_four_steps = [
-        "aluminum_bauxite_mine",
-        "aluminum_alumina_refinery",
-        "aluminum_smelter1",
-        "aluminum_fabrication_plant",
-    ]
-    .iter()
-    .all(|id| path_exists(&format!("assets/configs/buildings/{id}.json")));
-    w.supply_chain_membership = path_exists("src/economy/supply_chain.rs");
-    w.power_asymmetry_test = true;
 
-    w.resource_flow_node = path_exists("src/economy/resource_flow.rs");
-    w.resource_flow_edge = w.resource_flow_node;
-    // I2-03 — register-on-activate wired + exit-predicate witness (Alumina/Aluminum rates).
-    w.register_node_on_activate = w.resource_flow_node
-        && path_exists("src/economy/activation/bridge.rs")
-        && path_exists("debug_runs/industrial_i2_03_register_node_live.json");
-    w.resource_type_mapping = w.resource_flow_node;
-    let flow_w = std::path::Path::new("src/economy/resource_flow.rs").exists();
-    // TRADE-SC-RUNTIME — geopolymer + aluminum inventory-on-tick (not path-only).
-    w.facility_inventory = flow_w && path_exists("debug_runs/trade_sc_runtime_live.json");
-    w.throughput_propagation = flow_w && path_exists("debug_runs/trade_sc_runtime_live.json");
-    // TRADE-FLOW-GEOGRAPHY / I2-07 — live mine→refinery→smelter cut witness (not path-only).
-    w.starvation_cascade = flow_w
-        && path_exists("debug_runs/trade_flow_geography_live.json");
-
-    w.transformer_catalog = path_exists("assets/configs/buildings/grid_distribution_transformer.json")
-        && path_exists("assets/configs/buildings/grid_substation.json");
-    w.transformer_activation = w.transformer_catalog && w.role_based_activation;
-    w.power_plant_activation = path_exists("assets/configs/buildings/utilities_coal_plant.json")
-        && w.transformer_activation;
-
-    w.grid_membership = path_exists("src/entities/production/power/grid_topology.rs");
-    w.grid_overload_hook = w.grid_membership
-        && flow
-            .as_deref()
-            .is_some_and(|f| f.overload_events_total > 0);
-    w.capacity_bottleneck = path_exists("src/economy/resource_flow.rs");
-
-    w.logistics_node = path_exists("src/economy/logistics_bridge.rs");
-    w.concrete_batch_stub = path_exists("src/economy/concrete_batch.rs");
-    w.logistics_path_required = flow_w;
-    w.spatial_industrial_district = path_exists("src/economy/spatial_district.rs");
-
-    w.no_mega_factory_collapse = buildings
-        .as_deref()
-        .is_none_or(|r| r.governance_violations.is_empty())
-        && path_exists("src/construction/building_definitions.rs");
-
-    // INDUSTRIAL-MFG-01 / MFG-03 — live activate→ManufacturingNode + tick (not path-only).
-    w.manufacturing_core_tick = path_exists("src/entities/production/core/manufacturing_plugin.rs")
-        && path_exists("src/entities/production/core/manufacturing.rs")
-        && path_exists("debug_runs/mfg_03_domain_wire_live.json");
-
-    w.proof_json = path_exists("debug_runs/industrial_activation_live.json");
-}
 
 #[cfg(test)]
 mod tests {

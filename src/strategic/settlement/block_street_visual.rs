@@ -10,7 +10,6 @@ use super::block_rollout::{BlockRecipeEvaluationBook, BlockRolloutStagingBook};
 use super::ids::BlockId;
 
 pub const CITY_C6_BSN_LIVE_JSON: &str = "debug_runs/city_c6_bsn_001_live.json";
-pub const MIG_A9_BSN_HANDOFF_JSON: &str = "debug_runs/mig_bevy_019/mig_a_a9_bsn_scene_handoff.json";
 
 const METRES_PER_TILE: f32 = 16.0;
 
@@ -314,35 +313,7 @@ pub fn city_c6_bsn_witness_green() -> bool {
         .unwrap_or(false)
 }
 
-#[must_use]
-pub fn refresh_city_c6_bsn_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_city_c6_bsn_witness_body();
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "CITY-C6-BSN-001",
-        "refresh_city_c6_bsn_witness",
-        CITY_C6_BSN_LIVE_JSON,
-        body.clone(),
-    );
-    let a9 = serde_json::json!({
-        "gate": "MIG-A9",
-        "green": green,
-        "status": if green { "adopted_settlement_lane" } else { "deferred" },
-        "handoff": "plan_city_grammar_upgrade_v1 CITY-C6 BSN scenes",
-        "city_c6_witness": CITY_C6_BSN_LIVE_JSON,
-    });
-    let a9_wrapped = wrap_debug_run(
-        "MIG-A9",
-        "refresh_city_c6_bsn_mig_a9_handoff",
-        MIG_A9_BSN_HANDOFF_JSON,
-        a9,
-    );
-    write_debug_run_json(CITY_C6_BSN_LIVE_JSON, wrapped)
-        && write_debug_run_json(MIG_A9_BSN_HANDOFF_JSON, a9_wrapped)
-        && green
-}
 
 #[cfg(test)]
 mod tests {

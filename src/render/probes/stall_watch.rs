@@ -14,7 +14,7 @@ use std::time::Instant;
 
 use bevy::prelude::*;
 
-use crate::render::evaluate_app_stage5_readiness;
+
 use crate::render::probes::frame_perf::{
     frame_perf_verbose, reset_frame_perf_counters, stamp_frame_wall_last,
 };
@@ -292,19 +292,9 @@ pub fn stall_postupdate_begin(mut watch: ResMut<FrameStallWatch>) {
     watch.checkpoint("postupdate_begin");
 }
 
-pub fn stall_before_readiness(mut watch: ResMut<FrameStallWatch>) {
-    let now = Instant::now();
-    if let Some(t0) = watch.postupdate_started {
-        let ms = now.duration_since(t0).as_secs_f32() * 1000.0;
-        watch.spans.postupdate_main_ms = ms;
-        watch.spans.postupdate_domain_merge_ms = ms;
-    }
-    watch.checkpoint_at("before_readiness", now);
-}
 
-pub fn stall_after_readiness(mut watch: ResMut<FrameStallWatch>) {
-    watch.checkpoint("after_readiness");
-}
+
+
 
 pub fn stall_pre_egui(mut watch: ResMut<FrameStallWatch>) {
     watch.checkpoint("pre_egui");
@@ -323,9 +313,7 @@ pub fn stall_last(mut watch: ResMut<FrameStallWatch>) {
     watch.checkpoint("last");
 }
 
-pub fn stall_after_vt_ci(mut watch: ResMut<FrameStallWatch>) {
-    watch.checkpoint("after_vt_ci");
-}
+
 
 /// Early PostUpdate span (not domain merge — see [`crate::render::extraction::domain_projection_frame::stall_checkpoint_after_domain_merge`]).
 pub fn stall_postupdate_head(mut watch: ResMut<FrameStallWatch>) {
@@ -411,18 +399,6 @@ impl Plugin for StallWatchPlugin {
             .add_systems(PreUpdate, stall_preupdate_end)
             .add_systems(PostUpdate, stall_postupdate_begin)
             .add_systems(PostUpdate, stall_postupdate_head.after(stall_postupdate_begin))
-            .add_systems(
-                PostUpdate,
-                stall_after_vt_ci.after(crate::render::witness::vt_ci_matrix::record_vt_ci_matrix_live),
-            )
-            .add_systems(
-                PostUpdate,
-                stall_before_readiness.before(evaluate_app_stage5_readiness),
-            )
-            .add_systems(
-                PostUpdate,
-                stall_after_readiness.after(evaluate_app_stage5_readiness),
-            )
             .add_systems(
                 PostUpdate,
                 (

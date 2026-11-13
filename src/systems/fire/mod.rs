@@ -19,7 +19,7 @@ mod fire_light_emission;
 mod play_fire_visibility;
 mod surface_water;
 pub mod types;
-pub mod witness_collectors;
+pub mod ecology_metrics;
 
 pub(crate) use fire_fuel::{fire_fuel_field_tick, spawn_fire_fuel_field_on_new_chunk};
 
@@ -43,10 +43,7 @@ pub use play_fire_visibility::{
 };
 pub use surface_water::SurfaceWaterFireGate;
 pub use types::ChunkFireOverlay;
-pub use witness_collectors::{
-    finalize_fire_ecology_witness_frame, write_fire_ecology_live_proof_system,
-    FireEcologyLiveProofState, FireEcologyWitness,
-};
+pub use ecology_metrics::{finalize_fire_ecology_witness_frame, FireEcologyWitness};
 
 pub(crate) use chunk_fuel_profile::{
     chunk_fuel_profile_tick, spawn_chunk_fuel_profile_on_new_chunk,
@@ -68,8 +65,7 @@ pub struct FirePlugin;
 impl Plugin for FirePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<surface_water::SurfaceWaterFireGate>()
-            .init_resource::<witness_collectors::FireEcologyWitness>()
-            .init_resource::<witness_collectors::FireEcologyLiveProofState>()
+            .init_resource::<ecology_metrics::FireEcologyWitness>()
             .add_message::<ember_spot_ignition::EmberSpotIgnitionEvent>()
             .add_systems(
                 Update,
@@ -81,7 +77,7 @@ impl Plugin for FirePlugin {
                     chunk_fire_edge_spread
                         .after(chunk_fire_overlay_tick)
                         .in_set(ChunkEnvironmentSet::Fire),
-                    witness_collectors::finalize_fire_ecology_witness_frame
+                    ecology_metrics::finalize_fire_ecology_witness_frame
                         .after(chunk_fire_overlay_tick)
                         .in_set(ChunkEnvironmentSet::Fire),
                     // VSS-T3-001: emit → SimEffect drain → apply (sole EmberSpot MessageWriter = drain).

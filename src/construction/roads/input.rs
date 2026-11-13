@@ -30,14 +30,22 @@ fn path_tool_active(tool: BuildTool) -> bool {
     matches!(tool, BuildTool::Road(_))
 }
 
+/// Cursor → map point `Vec3(x, 0, row)` in the presentation on screen.
+///
+/// PixelWorld3D: the gate's voxel ray hit ([`SimulationMapPointerGate::pixel_world_pick`]) — never the
+/// top-down ortho. Top-down: the tactical ortho via [`ConstructionMapProjection`].
 #[must_use]
 pub fn cursor_world_on_map(
     window: &Window,
+    gate: Option<&SimulationMapPointerGate>,
     authority: Option<&ViewProjectionAuthority>,
     desired: &MapCameraDesired,
     map_vp: &SimulationMapViewport,
     params: &WorldGenParams,
 ) -> Option<Vec3> {
+    if let Some(hit) = gate.and_then(SimulationMapPointerGate::pixel_world_pick) {
+        return hit.map(|xy| Vec3::new(xy.x, 0.0, xy.y));
+    }
     let cursor_px = window.cursor_position()?;
     let proj = ConstructionMapProjection::resolve(authority, desired, map_vp, params);
     let xy = proj.cursor_world_xy(cursor_px)?;

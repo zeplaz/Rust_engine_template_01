@@ -240,6 +240,7 @@ pub fn road_tool_popup_bevy_action_system(
     authority: Option<Res<ViewProjectionAuthority>>,
     desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
+    pointer_gate: Option<Res<crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate>>,
 ) {
     for (interaction, button, action) in &q {
         if !ui_button_fired(interaction, button) {
@@ -264,6 +265,7 @@ pub fn road_tool_popup_bevy_action_system(
                 if let Some(world) = win.single().ok().and_then(|window| {
                     cursor_world_on_map(
                         window,
+                        pointer_gate.as_deref(),
                         authority.as_deref(),
                         desired.as_ref(),
                         map_vp.as_ref(),

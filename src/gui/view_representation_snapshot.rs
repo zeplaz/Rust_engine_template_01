@@ -1,4 +1,4 @@
-//! Frame-stable view snapshot consumed by GPU preview, minimap, and Stage 5 harness.
+//! Frame-stable view snapshot consumed by GPU preview and minimap.
 
 use bevy::math::{Rect, UVec2, Vec2};
 use bevy::prelude::*;
@@ -7,8 +7,7 @@ use crate::gui::editor::world_preview::{PreviewCameraState, WorldPreviewRenderTa
 use crate::gui::tactical::map_camera::{MapCameraDesiredRes};
 use crate::gui::{ViewId, ViewManager};
 use crate::render::{
-    AppStage5ReadinessReport, GpuParticleInstance, ResolvedViewports, Stage5ReadinessProfile,
-    WorldFireParticleFrame,
+    GpuParticleInstance, ResolvedViewports, WorldFireParticleFrame,
 };
 
 /// World-space bounds for particle routing consumers.
@@ -126,25 +125,14 @@ pub fn build_view_representation_snapshot(
         || resolved.primary_window.valid;
 }
 
-pub fn validate_view_representation_snapshot(
-    profile: Res<Stage5ReadinessProfile>,
-    snapshot: Res<ViewRepresentationSnapshot>,
-    report: Option<ResMut<AppStage5ReadinessReport>>,
-) {
-    if *profile != Stage5ReadinessProfile::FULL_APP || !snapshot.committed {
+pub fn validate_view_representation_snapshot(snapshot: Res<ViewRepresentationSnapshot>) {
+    if !snapshot.committed {
         return;
     }
-    let Some(mut report) = report else {
-        return;
-    };
     if snapshot.gpu_target_size.x == 0 || snapshot.gpu_target_size.y == 0 {
-        report
-            .violations
-            .push("ViewRepresentationSnapshot gpu_target_size is zero".into());
+        warn_once!("ViewRepresentationSnapshot gpu_target_size is zero");
     }
     if snapshot.viewport.width() <= 0.0 || snapshot.viewport.height() <= 0.0 {
-        report
-            .violations
-            .push("ViewRepresentationSnapshot viewport is empty".into());
+        warn_once!("ViewRepresentationSnapshot viewport is empty");
     }
 }

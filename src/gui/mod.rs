@@ -4,7 +4,6 @@
 //   editor/* → Bevy shell / retired egui panels
 //   pressure_tooling.rs             → F2 pressure Bevy strip
 //   ai_explainability_ui.rs         → L7 pipeline + macro explain (default Insert)
-//   agent_permissions_ui.rs         → Bevy/dev tooling
 
 pub mod debug;
 pub mod hud;
@@ -39,8 +38,6 @@ pub mod map_tile_raster;
 pub mod map_tile_atlas_stamp;
 pub mod landscape_chunk_atlas_stamp;
 pub mod construction_growth_inspector;
-pub mod egui_root;
-mod egui_window;
 mod app_shell;
 mod main_menu;
 mod splash;

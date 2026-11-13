@@ -158,6 +158,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::render::InfrastructureOverlayPlugin)
             .add_plugins(crate::render::WorldMapNetworkMeshPlugin)
             .add_plugins(crate::render::WorldMapVegetationMeshPlugin)
+            .add_plugins(crate::render::PixelWorldViewPlugin)
             .add_plugins(crate::gui::FrontControlsPlugin)
             .add_plugins(crate::render::WorldMapFrontMeshPlugin)
             .add_plugins(TransportSimulationPlugin)
@@ -169,8 +170,11 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::editor::editor_world_commit_bridge::EditorWorldCommitBridgePlugin)
             .add_plugins(crate::strategic::StrategicFieldsAndAiPlugin)
             .add_plugins(crate::strategic::GpuBridgePlugin);
-        if crate::render::witness::hanabi_witness::hanabi_l3_plugin_wired() {
-            #[cfg(feature = "hanabi_l3")]
+        // Hanabi L3 double gate: cargo feature +  env.
+        #[cfg(feature = "hanabi_l3")]
+        if std::env::var_os("RUST_ENGINE_HANABI_L3")
+            .is_some_and(|v| v != "0" && !v.eq_ignore_ascii_case("false"))
+        {
             app.add_plugins(crate::render::fx_spine::hanabi_embellishment::HanabiEmbellishmentPlugin);
         }
         // Fire visual extract: one sim pass → buffer; then pooled local lights collect messages.
@@ -207,7 +211,6 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::gui::StrategicIconInstancesPlugin)
             .add_plugins(ViewRepresentationPlugin)
             .add_plugins(StallWatchPlugin)
-            .add_plugins(crate::dev::SimSpectrumAnalyticsPlugin)
             .add_plugins(ComputeDispatchPlugin);
         app.add_plugins((TestHarnessStatePlugin, TestHarnessMenuPlugin));
         let test_mode = app
@@ -293,7 +296,12 @@ impl Plugin for EnginePlugin {
                 .chain(),
         );
 
-        if crate::dev::schedule_sync_witness::sch_ambiguity_warn_enabled() {
+        // SCH-W1-E1-001: ambiguity warnings in debug builds or with .
+        let sch_ambiguity_warn = cfg!(debug_assertions)
+            || std::env::var("SCH_AMBIGUITY_WARN")
+                .ok()
+                .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"));
+        if sch_ambiguity_warn {
             use bevy::ecs::schedule::{LogLevel, ScheduleBuildSettings};
             app.configure_schedules(ScheduleBuildSettings {
                 ambiguity_detection: LogLevel::Warn,

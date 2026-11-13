@@ -6,7 +6,6 @@ use std::collections::VecDeque;
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 use super::landscape_grammar::{
     evaluate_landscape_program, LandscapeGrammarCatalog, LandscapeProgramEvaluation,
@@ -16,7 +15,7 @@ use super::vegetation_suitability::{clamp_stage_to_cap, update_chunk_vegetation_
 use super::cell_stand::{ChunkCellStand, SCAR_FRACTION};
 use super::vegetation_field::{CanopyDrivers, VegetationCanopySet, CANOPY_CLEARED_DENSITY};
 use super::{ChunkEcology, VegetationField};
-use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+
 use crate::strategic::{
     footprint_affected_chunk_coords, CommitConstructionSiteEvent, StrategicRasterConfig,
 };
@@ -689,10 +688,7 @@ pub fn lg2_witness_green(
         && witness.construction_disturbances >= 1
 }
 
-#[must_use]
-pub fn lg2_lib_witness_green(eval: &LandscapeProgramEvaluation) -> bool {
-    eval.topology_kind_count >= 3 && eval.nested_depth_max >= 2
-}
+
 
 #[must_use]
 pub fn lg4_preview_witness_green(eval: &LandscapeProgramEvaluation) -> bool {
@@ -705,55 +701,9 @@ pub fn lg4_preview_operator_visible(tint_visible_chunks: u32, eval: &LandscapePr
     lg4_preview_witness_green(eval) && tint_visible_chunks >= 1
 }
 
-#[must_use]
-pub fn refresh_lg2_witness(
-    eval: &LandscapeProgramEvaluation,
-    witness: &LandscapeGrammarLg2Witness,
-) -> bool {
-    let body = json!({
-        "gate": "LG-2-SUCCESSION-001",
-        "green": lg2_witness_green(eval, witness),
-        "lib_green": lg2_lib_witness_green(eval),
-        "succession_age_ticks": true,
-        "disturbance_history_linked": true,
-        "topology_kind_count": eval.topology_kind_count,
-        "nested_depth_max": eval.nested_depth_max,
-        "fire_disturbances": witness.fire_disturbances,
-        "construction_disturbances": witness.construction_disturbances,
-        "harvest_disturbances": witness.harvest_disturbances,
-        "recovery_ticks": witness.recovery_ticks,
-    });
-    let wrapped = wrap_debug_run(
-        "LG-2-SUCCESSION-001",
-        "refresh_lg2_witness",
-        LANDSCAPE_GRAMMAR_LG2_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_LG2_LIVE_JSON, wrapped)
-}
 
-/// CDR-A-DISTURBANCE-LOG-001 — aggregate disturbance counters for audit witness.
-#[must_use]
-pub fn refresh_disturbance_log_witness(witness: &LandscapeGrammarLg2Witness) -> bool {
-    let green = witness.fire_disturbances >= 1
-        && witness.construction_disturbances >= 1
-        && witness.harvest_disturbances >= 1;
-    let body = json!({
-        "gate": "VEG-DISTURBANCE-LOG-001",
-        "green": green,
-        "fire_disturbances": witness.fire_disturbances,
-        "construction_disturbances": witness.construction_disturbances,
-        "harvest_disturbances": witness.harvest_disturbances,
-        "recovery_ticks": witness.recovery_ticks,
-    });
-    let wrapped = wrap_debug_run(
-        "VEG-DISTURBANCE-LOG-001",
-        "refresh_disturbance_log_witness",
-        LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON, wrapped) && green
-}
+
+
 
 /// Merge harness-wide max topology stats into pilot eval for witness refresh.
 #[must_use]
@@ -769,54 +719,11 @@ pub fn merge_harness_eval_summary(
     eval
 }
 
-#[must_use]
-pub fn refresh_lg4_preview_witness(eval: &LandscapeProgramEvaluation) -> bool {
-    refresh_lg4_preview_witness_with_tint(eval, 0)
-}
 
-#[must_use]
-pub fn refresh_lg4_preview_witness_with_tint(
-    eval: &LandscapeProgramEvaluation,
-    tint_visible_chunks: u32,
-) -> bool {
-    refresh_lg4_preview_witness_with_tint_and_pixel_count(eval, tint_visible_chunks, None)
-}
 
-#[must_use]
-pub fn refresh_lg4_preview_witness_with_tint_and_pixel_count(
-    eval: &LandscapeProgramEvaluation,
-    tint_visible_chunks: u32,
-    topology_kind_count_visible: Option<u32>,
-) -> bool {
-    let pixel_visible = topology_kind_count_visible
-        .unwrap_or_else(|| eval.topology_kind_count as u32);
-    // WIT-RUST-001 / WIT-GREEN-TINT-ZERO — never green when tint count is zero.
-    let operator_visible = if tint_visible_chunks == 0 {
-        false
-    } else {
-        lg4_preview_operator_visible(tint_visible_chunks, eval) && pixel_visible >= 3
-    };
-    let body = json!({
-        "gate": "LG-4-PREVIEW-001",
-        "slice_id": "CDR-A-LG4-PIXEL-REOPEN-001",
-        "green": operator_visible,
-        "operator_visible": operator_visible,
-        "proof_grade": crate::dev::proof_grade::ProofGrade::HeadlessSim.as_str(),
-        "topology_tint_wired": true,
-        "topology_tint_visible_chunks": tint_visible_chunks,
-        "topology_kinds_visible_min": 3,
-        "topology_kind_count": eval.topology_kind_count,
-        "topology_kind_count_visible": pixel_visible,
-        "pixel_heterogeneity_wired": topology_kind_count_visible.is_some(),
-    });
-    let wrapped = wrap_debug_run(
-        "LG-4-PREVIEW-001",
-        "refresh_lg4_preview_witness",
-        LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON, wrapped) && operator_visible
-}
+
+
+
 
 pub fn landscape_grammar_lg2_plugin(app: &mut App) {
     app.init_resource::<LandscapeGrammarLg2Witness>()
@@ -843,7 +750,7 @@ pub fn landscape_grammar_lg2_plugin(app: &mut App) {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::fs;
+    
     use super::super::landscape_grammar::{
         load_landscape_preset_from_path, LANDSCAPE_PRESETS_DIR,
     };
@@ -854,37 +761,11 @@ mod tests {
     };
     use crate::systems::sim_control::SimTick;
 
-    fn pilot_eval() -> LandscapeProgramEvaluation {
-        let path = repo_asset_path(&format!("{LANDSCAPE_PRESETS_DIR}/{LG1_PILOT_PRESET_ID}.json"));
-        let preset = load_landscape_preset_from_path(&path).expect("preset");
-        let ecology = ChunkEcology::default();
-        let veg = VegetationField::default();
-        let weather = ChunkWeather::default();
-        evaluate_landscape_program(&preset, LG1_PILOT_CHUNK, &ecology, &veg, &weather)
-    }
 
-    #[test]
-    fn lg2_lib_witness_writes_json() {
-        let eval = pilot_eval();
-        let witness = LandscapeGrammarLg2Witness::default();
-        assert!(lg2_lib_witness_green(&eval));
-        assert!(refresh_lg2_witness(&eval, &witness));
-        let raw = fs::read_to_string(repo_asset_path(LANDSCAPE_GRAMMAR_LG2_LIVE_JSON)).unwrap();
-        assert!(raw.contains("lib_green"));
-    }
 
-    #[test]
-    fn lg4_preview_witness_writes_green_json() {
-        let eval = pilot_eval();
-        assert!(lg4_preview_witness_green(&eval));
-        assert!(
-            !refresh_lg4_preview_witness(&eval),
-            "WIT-GREEN-TINT-ZERO: tint=0 must not green"
-        );
-        assert!(refresh_lg4_preview_witness_with_tint(&eval, 2));
-        let raw = fs::read_to_string(repo_asset_path(LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON)).unwrap();
-        assert!(raw.contains("topology_tint_visible_chunks"));
-    }
+
+
+
 
     #[test]
     fn live_fire_disturbance_old_growth_to_burn_scar() {

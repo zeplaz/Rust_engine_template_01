@@ -270,6 +270,7 @@ pub fn building_visual_simplified_for_band(band: WorldLodBand) -> bool {
     matches!(band, WorldLodBand::Strategic | WorldLodBand::Macro)
 }
 
+#[cfg(test)]
 #[must_use]
 pub fn building_visual_simplified_differs_across_bands() -> bool {
     building_visual_simplified_for_band(WorldLodBand::LocalTactical)
@@ -601,15 +602,7 @@ fn refresh_representation_result_from_lod_band(result: &mut RepresentationResult
     result.particle_policy = particle_policy_from(&result.gpu_budget, result.active_band);
 }
 
-pub fn sync_visual_aidv2_representation_witness(
-    rep: Res<RepresentationResult>,
-    zoom_bias: Res<crate::gui::tile_readability::ZoomVisualBias>,
-    mut witness: ResMut<crate::dev::VisualAidV2Witness>,
-) {
-    witness.lod_building_policy_differs_across_bands = building_visual_simplified_differs_across_bands();
-    witness.zoom_visual_bias_active = zoom_bias.enabled;
-    let _ = rep.building_visual_simplified;
-}
+
 
 #[cfg(test)]
 mod tests {

@@ -9,7 +9,6 @@
 pub mod draw;
 pub mod extract;
 pub mod frame;
-pub mod witness;
 
 pub use draw::WeatherPrecipDrawStatus;
 pub use extract::{
@@ -18,12 +17,7 @@ pub use extract::{
     WEATHER_PRECIP_STREAK_CAP,
 };
 pub use frame::WeatherPrecipFrame;
-pub use witness::{
-    cpu_weather_mesh_precip_enabled, cpu_weather_precip_retired,
-    cpu_weather_precip_retired_with_gate, weather_precip_mesh_spawn_present,
-    weather_vfx_witness_json, weather_vfx_witness_json_with_gate,
-    weather_vfx_witness_json_with_status,
-};
+
 
 use bevy::prelude::*;
 
@@ -40,20 +34,5 @@ impl Plugin for WeatherVfxPlugin {
         app.init_resource::<ParticleDomainRegistry>();
         extract::register_weather_precip_extract(app);
         draw::register_weather_precip_draw(app);
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    use crate::render::particle_domains::ParticleDomainRegistry;
-
-    #[test]
-    fn default_frame_not_retired_until_authority() {
-        let frame = WeatherPrecipFrame::default();
-        let reg = ParticleDomainRegistry::default();
-        assert!(!cpu_weather_precip_retired(&frame, Some(&reg)));
-        assert!(!weather_precip_mesh_spawn_present());
-        assert!(!cpu_weather_mesh_precip_enabled());
     }
 }

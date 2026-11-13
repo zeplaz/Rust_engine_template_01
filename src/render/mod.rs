@@ -8,8 +8,8 @@ mod visual_perf_budget;
 mod fire_vfx;
 mod weather_vfx;
 mod particle_domains;
+mod stage5_profile;
 mod stage6_virtualization;
-pub(crate) mod stage5_full_app_harness;
 mod viewport_pipeline;
 pub mod view_runtime;
 mod mig_a_static;
@@ -22,6 +22,8 @@ mod world_map_network_mesh;
 pub use world_map_network_mesh::WorldMapNetworkMeshPlugin;
 mod world_map_vegetation_mesh;
 pub use world_map_vegetation_mesh::WorldMapVegetationMeshPlugin;
+pub mod pixel_world;
+pub use pixel_world::PixelWorldViewPlugin;
 
 #[cfg(feature = "bevy_tilemap_adapter")]
 pub mod tilemap_adapter;
@@ -35,7 +37,6 @@ pub(crate) mod core;
 // "fire_vfx" to "fx_spine" to avoid collision with the pre-existing render::fire_vfx frontend).
 pub(crate) mod fx_spine;
 // RENDER-DIR-RESTRUCTURE-v1 — mechanical move: proof/witness/CI-matrix surfaces.
-pub(crate) mod witness;
 
 // Path-preserving root shims removed (ES-8-3 / CLN-SHIM-API-BATCH):
 // Callers + api.rs retargeted to pipelines:: / core:: / fx_spine:: / probes:: / witness:: / extraction::.

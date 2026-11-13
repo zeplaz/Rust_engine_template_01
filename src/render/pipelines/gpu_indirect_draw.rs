@@ -9,7 +9,6 @@ use crate::gui::RepresentationResult;
 use crate::render::pipelines::gpu_particle_draw::{WorldFireParticleDrawDispatch, PARTICLE_WORKGROUP};
 use crate::render::pipelines::gpu_particles::WorldFireParticleFrame;
 use crate::render::core::gpu_representation_metrics::GpuRepresentationMetrics;
-use crate::render::Stage5ReadinessProfile;
 
 /// Workgroup size for particle indirect dispatch (shared with compute raster prepass).
 pub const GPU_INDIRECT_DISPATCH_WORKGROUP: u32 = PARTICLE_WORKGROUP;
@@ -67,23 +66,9 @@ pub fn sync_world_fire_indirect_draw(
     policy: Res<RepresentationResult>,
     particles: Res<WorldFireParticleFrame>,
     draw: Res<WorldFireParticleDrawDispatch>,
-    profile: Res<Stage5ReadinessProfile>,
     mut spine: ResMut<GpuIndirectDrawSpine>,
 ) {
     *spine = compact_world_fire_indirect_draw(policy.as_ref(), particles.as_ref(), draw.as_ref());
-    if *profile == Stage5ReadinessProfile::FULL_APP
-        && policy.particle_policy.instanced_draw
-        && (spine.world_fire.instance_count != draw.instance_count
-            || (spine.world_fire.instance_count > 0 && spine.dispatch_count == 0))
-    {
-        warn!(
-            target: "stage5_gpu_indirect::live",
-            "STAGE5_GPU_INDIRECT_MISMATCH indirect_instances={} draw_instances={} dispatch_count={}",
-            spine.world_fire.instance_count,
-            draw.instance_count,
-            spine.dispatch_count,
-        );
-    }
 }
 
 /// MIG-A10 — particle compute `dispatch_count` follows [`GpuIndirectDrawSpine`] when instances align.
@@ -133,7 +118,6 @@ mod tests {
         app.init_resource::<WorldFireParticleFrame>();
         app.init_resource::<GpuIndirectDrawSpine>();
         app.init_resource::<RepresentationResult>();
-        app.init_resource::<Stage5ReadinessProfile>();
         let mut particles = WorldFireParticleFrame::default();
         particles.instances.resize(8, Default::default());
         app.insert_resource(particles);

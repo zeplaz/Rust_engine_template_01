@@ -381,13 +381,17 @@ pub fn sync_power_node_hover_pick(
         return;
     }
 
-    let proj = crate::construction::ConstructionMapProjection::resolve(
-        authority.as_deref(),
-        desired.as_ref(),
-        map_vp.as_ref(),
-        params.as_ref(),
-    );
-    let Some(world) = proj.cursor_world_xy(gate.cursor) else {
+    // Voxel view: the gate's ray hit; top-down: the tactical ortho.
+    let world = gate.pixel_world_pick().unwrap_or_else(|| {
+        crate::construction::ConstructionMapProjection::resolve(
+            authority.as_deref(),
+            desired.as_ref(),
+            map_vp.as_ref(),
+            params.as_ref(),
+        )
+        .cursor_world_xy(gate.cursor)
+    });
+    let Some(world) = world else {
         hover.targeted_entity = None;
         hover.dwell_secs = 0.0;
         return;

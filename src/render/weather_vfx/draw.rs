@@ -40,7 +40,7 @@ use crate::render::pipelines::core2d_overlay_order::{
 use crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadInstance;
 
 use super::frame::WeatherPrecipFrame;
-use super::witness::cpu_weather_mesh_precip_enabled;
+
 
 pub const WEATHER_PRECIP_DRAW_WGSL: &str = "shaders/weather/weather_precip_draw.wgsl";
 
@@ -150,11 +150,10 @@ fn sync_weather_precip_draw_globals(
     mut globals: ResMut<WeatherPrecipDrawGlobals>,
     mut status: ResMut<WeatherPrecipDrawStatus>,
 ) {
-    let cpu_on = cpu_weather_mesh_precip_enabled();
     let domain_active = domains.weather_precip_active();
     let count = frame.instance_count as u32;
     // Mesh path retired — upload whenever domain has prepared streaks.
-    let upload = !cpu_on && domain_active && count > 0;
+    let upload = domain_active && count > 0;
 
     status.upload_active = upload;
     status.draw_instances = if upload { count } else { 0 };

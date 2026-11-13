@@ -426,19 +426,9 @@ fn perf_terminal_suppressed() -> bool {
     crate::dev::test_run_instrumentation::instrumentation_quiet_terminal()
 }
 
-/// **PERF-PLAY-001** — default play logging: avoid `STAGE5_VERBOSE` / `STAGE5_READINESS_VERBOSE` in `--release`.
-#[must_use]
-pub fn perf_play_quiet_defaults_recommended() -> bool {
-    !frame_perf_verbose() && !stage5_readiness_live_verbose()
-}
 
-/// Per-frame readiness/projection trace (`READINESS_*` at info). Off by default — success path is throttled.
-#[must_use]
-pub fn stage5_readiness_live_verbose() -> bool {
-    std::env::var("STAGE5_READINESS_VERBOSE")
-        .ok()
-        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-}
+
+
 
 /// PERF-INSTR-VFX-001: gate for the minimap-panel-size writer trace (`MINIMAP_TRACE=1` or `PERF=1`).
 /// Off by default so normal runs are not spammed.
@@ -618,7 +608,6 @@ pub fn emit_frame_perf_summary(
     mut wall: ResMut<FrameWallClock>,
     update_attrib: Option<Res<FrameUpdateAttrib>>,
     stall: Option<Res<crate::render::FrameStallWatch>>,
-    render_schedule: Option<Res<crate::dev::diagnostics::RenderScheduleWitness>>,
     shell: Option<Res<crate::gui::hud::ProductShellDiagnostics>>,
     budget: Option<Res<crate::gui::hud::FrameBudgetDiagnostics>>,
     raster_policy: Option<Res<crate::render::TileFallbackRasterPolicy>>,
@@ -783,24 +772,6 @@ pub fn emit_frame_perf_summary(
         }
     }
 
-    if let Some(rs) = render_schedule.as_deref() {
-        let r = &rs.spans;
-        if r.total_render_app_ms > 0.05 || rs.main_thread_handoff_total_ms > 0.05 {
-            line.push_str(&format!(
-                " | render_thread total={:.2} extract={:.2} prepare={:.2} queue={:.2} draw+present={:.2} cleanup={:.2} handoff={:.2}",
-                r.total_render_app_ms,
-                r.extract_schedule_ms + r.extract_commands_ms,
-                r.prepare_assets_ms
-                    + r.prepare_meshes_ms
-                    + r.manage_views_ms
-                    + r.prepare_ms,
-                r.queue_ms + r.phase_sort_ms,
-                r.render_and_present_ms,
-                r.cleanup_ms + r.post_cleanup_ms,
-                rs.main_thread_handoff_total_ms,
-            ));
-        }
-    }
 
     info!(target: "perf", "{line}");
 

@@ -21,7 +21,6 @@ mod preview_lifecycle;
 mod preview_readiness;
 mod preview_render_contract;
 mod preview_render_state;
-mod preview_vt4;
 mod registry_interchange;
 mod registry_inspector;
 mod render_raster;
@@ -29,12 +28,9 @@ mod render_target_barrier;
 mod texture_cache;
 mod tile_sampling;
 pub mod tilemap_bridge;
-mod ui_wp_coder_a_witness;
 mod viewport;
 mod viewport_authority;
 mod viewport_suggestion;
-mod wave_p_readiness;
-mod wave_p_witness;
 pub(crate) mod world_gen_bevy_shell;
 pub(crate) mod world_gen_panel;
 mod window;
@@ -96,7 +92,6 @@ pub use preview_render_contract::{
     PreviewRenderMode, PreviewRenderTarget,
 };
 pub use preview_render_state::PreviewRenderState;
-pub use preview_vt4::capture_world_preview_vt4_probe;
 pub use registry_interchange::{
     material_registry_interchange_path, open_registry_interchange_in_desktop_shell,
     tag_registry_interchange_path,
@@ -116,16 +111,12 @@ pub use tile_sampling::{
     profile_curvature_from_world_elevation_neighbors,
 };
 pub use tilemap_bridge::tilemap_overlay_index_for_layers;
-pub use ui_wp_coder_a_witness::refresh_coder_a_ui_wp_wave_p_witness;
+
 pub use viewport::EditorViewport;
 pub use viewport_authority::WorldPreviewViewportAuthority;
 pub use viewport_suggestion::write_world_preview_viewport_request;
-pub use wave_p_readiness::{gather_wave_p_readiness, wave_p_readiness_passes, WavePReadinessReport};
-pub use wave_p_witness::{
-    build_d02_layout_witness, build_d04_layout_witness, build_d07_layout_witness,
-    build_ui_phase4_wp_tail_witness, build_wave_p_witness_payload, WavePLiveProofState,
-    WAVE_P_LIVE_JSON,
-};
+
+
 
 #[cfg(test)]
 mod tests {

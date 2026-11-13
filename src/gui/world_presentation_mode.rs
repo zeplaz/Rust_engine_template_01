@@ -3,6 +3,12 @@
 //! Charter: `src/dev/plan_dual_view_pixel_world_v1.md`.
 //! Sole `ResMut<WorldPresentationMode>` writer = HUD toggle (+ OnEnter reset).
 //! Never writes [`crate::gui::representation_policy::RepresentationResult`].
+//!
+//! **Default view at game start:** [`DEFAULT_WORLD_PRESENTATION`] (one-line switch). Captures can
+//! override it with `VFX_CAPTURE_VIEW=voxel` / `VFX_CAPTURE_VIEW=topdown`.
+//!
+//! PixelWorld3D is rendered by `render::pixel_world` (voxel terrain, water, trees, sites, fronts)
+//! through its own camera into the same map RTT; the top-down camera is inactive meanwhile.
 
 use bevy::camera::ClearColorConfig;
 use bevy::prelude::*;
@@ -37,6 +43,10 @@ pub enum PixelWorldConsumerSystemSet {
     ApplyVisualCues,
 }
 
+/// View the simulation opens in. Switch to [`WorldPresentationKind::PixelWorld3D`] to start in the
+/// voxel world view.
+pub const DEFAULT_WORLD_PRESENTATION: WorldPresentationKind = WorldPresentationKind::TacticalFlat2D;
+
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
 pub enum WorldPresentationKind {
     /// Flat command map — icons / symbols / occupation tokens.
@@ -55,12 +65,27 @@ pub struct WorldPresentationMode {
 impl Default for WorldPresentationMode {
     fn default() -> Self {
         Self {
-            kind: WorldPresentationKind::TacticalFlat2D,
+            kind: DEFAULT_WORLD_PRESENTATION,
         }
     }
 }
 
 impl WorldPresentationMode {
+    /// Mode on entering the simulation: [`DEFAULT_WORLD_PRESENTATION`], or the capture override
+    /// `VFX_CAPTURE_VIEW` (`voxel` / `pixel` / `3d` → PixelWorld3D, `topdown` / `tactical` → top-down).
+    #[must_use]
+    pub fn at_simulation_start() -> Self {
+        let kind = match std::env::var("VFX_CAPTURE_VIEW")
+            .map(|v| v.trim().to_ascii_lowercase())
+            .as_deref()
+        {
+            Ok("voxel" | "pixel" | "3d" | "world") => WorldPresentationKind::PixelWorld3D,
+            Ok("topdown" | "tactical" | "2d") => WorldPresentationKind::TacticalFlat2D,
+            _ => DEFAULT_WORLD_PRESENTATION,
+        };
+        Self { kind }
+    }
+
     #[must_use]
     pub fn is_tactical(self) -> bool {
         matches!(self.kind, WorldPresentationKind::TacticalFlat2D)
@@ -93,6 +118,9 @@ pub struct PixelWorldLandscapeIntent {
     pub art_home_pixel_world: bool,
     /// Offline grammar presets validated (`landscape_grammar_presets_witness` green).
     pub landscape_grammar_presets_green: bool,
+    /// Blit flat LG-5 chunk art into the terrain raster. Off: the voxel view draws relief, trees and
+    /// cover as geometry over that raster, and flat art under it would draw them twice.
+    pub flat_landscape_stamps: bool,
 }
 
 impl Default for PixelWorldLandscapeIntent {
@@ -103,6 +131,7 @@ impl Default for PixelWorldLandscapeIntent {
             art_home_pixel_world: true,
             // Seeded true when MCP batch witness is green; runtime does not re-bake.
             landscape_grammar_presets_green: true,
+            flat_landscape_stamps: false,
         }
     }
 }
@@ -124,17 +153,17 @@ pub struct WorldPresentationToggleButton;
 pub struct WorldPresentationToggleLabel;
 
 pub fn reset_world_presentation_on_simulation_enter(mut mode: ResMut<WorldPresentationMode>) {
-    *mode = WorldPresentationMode::default();
+    *mode = WorldPresentationMode::at_simulation_start();
 }
 
-pub fn sync_pixel_world_landscape_intent(
-    mode: Res<WorldPresentationMode>,
-    mut intent: ResMut<PixelWorldLandscapeIntent>,
-) {
+/// Raster intent for both views. The voxel view lights real terrain geometry, so the raster under it
+/// keeps biome colours: no baked height/slope base (that turns the ground texture into an elevation
+/// ramp) and no flat LG-5 chunk art. The top-down view never used either.
+pub fn sync_pixel_world_landscape_intent(mut intent: ResMut<PixelWorldLandscapeIntent>) {
     intent.art_home_pixel_world = true;
-    let pixel = mode.is_pixel_world();
-    intent.relief_emphasis = if pixel { 1.0 } else { 0.0 };
-    intent.landform_height_slope = pixel;
+    intent.relief_emphasis = 0.0;
+    intent.landform_height_slope = false;
+    intent.flat_landscape_stamps = false;
     // Grammar readiness stays sticky from default / ops refresh — not cleared on toggle.
 }
 

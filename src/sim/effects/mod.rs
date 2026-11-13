@@ -7,7 +7,6 @@ mod player_event_log;
 mod producers;
 mod queue;
 mod telemetry;
-mod witness;
 
 pub use drain::{drain_sim_effect_queue_system, SimEffectSystemSet};
 pub use producers::{
@@ -17,10 +16,7 @@ pub use event::{SimEffectEvent, SimEffectKind, SimEffectSource};
 pub use queue::SimEffectQueue;
 pub use telemetry::{SimEffectTelemetryLedger, SimEffectTelemetryRecord, SIM_EFFECTS_JSONL};
 pub use player_event_log::{
-    clear_player_event_crit_unread, event_log_ui_001_witness_green, event_log_ui_001_witness_json,
-    event_log_ui_format_witness_green, event_log_ui_impl_witness_green,
-    event_log_ui_ops_strip_witness_green, event_log_ui_projection_witness_green,
-    format_ops_strip_alert_badge_v2, format_ops_strip_alerts_line, ops_strip_alert_tier_counts, format_ops_strip_event_crit_line,
+    clear_player_event_crit_unread, format_ops_strip_alert_badge_v2, format_ops_strip_alerts_line, ops_strip_alert_tier_counts, format_ops_strip_event_crit_line,
     format_player_event_row_line, format_player_event_tray_body, format_player_event_tray_row_line,
     project_player_event_log_from_drain, push_player_event_row, PlayerEventCategory,
     PlayerEventLog, PlayerEventRow, PlayerEventSeverity, PLAYER_EVENT_DEDUPE_TICKS,
@@ -31,10 +27,7 @@ pub use faction_react::{
     FactionStressHook, FactionStressTelemetryClass, SimEffectFactionReactWitness,
     STRUCTURE_HEAT_KIND_TAG,
 };
-pub use witness::{
-    build_sim_effect_spine_proof_payload, sim_effect_spine_lib_witness_green,
-    SimEffectSpineWitness,
-};
+
 
 use bevy::prelude::*;
 
@@ -46,7 +39,6 @@ impl Plugin for SimEffectsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SimEffectQueue>()
             .init_resource::<SimEffectTelemetryLedger>()
-            .init_resource::<SimEffectSpineWitness>()
             .init_resource::<SimEffectFactionReactWitness>()
             .init_resource::<PlayerEventLog>()
             .init_resource::<LightningRiskLatch>()

@@ -8,7 +8,6 @@ mod bridge;
 mod commit;
 mod ids;
 mod input_routing;
-mod witness_state;
 mod layers;
 mod passes;
 mod per_view_policy;
@@ -43,16 +42,56 @@ pub use commit::{
     resolved_viewport_from_render_contract, resolved_viewport_from_surface,
     sync_resolved_viewports_from_authority,
 };
-pub use witness_state::{
-    clear_minimap_map_camera_write_flag, pose_writers_json, refresh_view_runtime_witness,
-    triage_vm09_v2_green, ViewRuntimeWitness,
-};
-pub use crate::dev::runtime_witness::view_runtime::{
-    write_view_runtime_live_proof_system,
-    ViewRuntimeLiveProofState, INFRASTRUCTURE_VIEW_ISOLATION_JSON,
-};
+
+
 pub use plugin::ViewRuntimePlugin;
 pub use surface::ViewSurface;
 pub use trace::{
     advance_view_runtime_trace_frame, ViewRuntimeTrace, ViewRuntimeTraceEntry, ViewViolationKind,
 };
+
+#[cfg(test)]
+mod authority_pose_tests {
+    
+    use bevy::prelude::*;
+    use crate::render::view_runtime::ViewProjectionAuthority;
+    use crate::gui::{
+        commit_map_camera_pose_to_view_authority, map_camera_desired_from_view_authority,
+        MapCameraDesired,
+    };
+    use crate::render::view_runtime::ViewRuntimeTrace;
+
+    /// **TRIAGE-VM-09-v2** — derive round-trip from authority WorldMain pose.
+    #[test]
+    fn triage_vm09_v2_derive_map_camera_desired_from_authority() {
+        let mut authority = ViewProjectionAuthority::default();
+        let mut trace = ViewRuntimeTrace::default();
+        let pose = MapCameraDesired {
+            translation: Vec3::new(42.0, 84.0, 999.0),
+            scale: Vec3::splat(1.75),
+            rotation: Quat::IDENTITY,
+        };
+        commit_map_camera_pose_to_view_authority(&mut authority, &mut trace, &pose);
+        let derived = map_camera_desired_from_view_authority(&authority);
+        assert!((derived.translation.x - 42.0).abs() < 1e-3);
+        assert!((derived.translation.y - 84.0).abs() < 1e-3);
+        assert!((derived.scale.x - 1.75).abs() < 1e-3);
+    }
+
+    /// **DEHACK-VIEW-001** — sim session commits pose via view authority (not raw MapCameraDesired).
+    #[test]
+    fn dehack_view_001_sim_default_uses_authority_commit() {
+        let mut authority = ViewProjectionAuthority::default();
+        let mut trace = ViewRuntimeTrace::default();
+        let pose = MapCameraDesired {
+            translation: Vec3::new(42.0, 84.0, 999.0),
+            scale: Vec3::splat(1.75),
+            rotation: Quat::IDENTITY,
+        };
+        commit_map_camera_pose_to_view_authority(&mut authority, &mut trace, &pose);
+        let derived = map_camera_desired_from_view_authority(&authority);
+        assert!((derived.translation.x - 42.0).abs() < 1e-3);
+        assert!((derived.translation.y - 84.0).abs() < 1e-3);
+        assert!((derived.scale.x - 1.75).abs() < 1e-3);
+    }
+}

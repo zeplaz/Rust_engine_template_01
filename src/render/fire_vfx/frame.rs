@@ -6,7 +6,8 @@ use bevy::render::extract_resource::ExtractResource;
 use crate::gui::RepresentationBand;
 
 use super::pack::GpuParticleInstance;
-use super::witness::FireSparkWitness;
+use super::spark_tuning::FireSparkStats;
+
 
 /// CPU-side particle snapshot for one committed sim step (LOD-shaped).
 #[derive(Resource, Debug, Clone, ExtractResource)]
@@ -17,7 +18,7 @@ pub struct WorldFireParticleFrame {
     pub active_band: RepresentationBand,
     pub gpu_capacity: usize,
     pub instances: Vec<GpuParticleInstance>,
-    pub spark_witness: FireSparkWitness,
+    pub spark_witness: FireSparkStats,
 }
 
 impl Default for WorldFireParticleFrame {
@@ -28,7 +29,7 @@ impl Default for WorldFireParticleFrame {
             active_band: RepresentationBand::Full,
             gpu_capacity: usize::MAX,
             instances: Vec::new(),
-            spark_witness: FireSparkWitness::default(),
+            spark_witness: FireSparkStats::default(),
         }
     }
 }

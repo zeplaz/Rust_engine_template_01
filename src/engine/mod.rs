@@ -39,7 +39,7 @@ pub use play_scenario::{
     active_play_truth_env_seeds, default_play_blocked_by_env_seeds, ActivePlayScenario,
     DefaultIndustrialPlayState, PlayScenarioId, PlayScenarioPlugin,
     DEFAULT_INDUSTRIAL_LOGISTICS_CHAIN_TILES, DEFAULT_INDUSTRIAL_MIN_WORLD_TILES,
-    DEFAULT_INDUSTRIAL_PORTLAND_ORIGIN, PLAY_SCENARIO_LIVE_JSON, PLAY_TRUTH_FORBIDDEN_ENV_SEEDS,
+    DEFAULT_INDUSTRIAL_PORTLAND_ORIGIN, PLAY_TRUTH_FORBIDDEN_ENV_SEEDS,
 };
 /// Active only while a CLI `--test` world is in sim (zoom/fire defaults). Not harness control state.
 pub use test_harness::ActiveTestScene;

@@ -2,12 +2,11 @@
 
 use bevy::prelude::*;
 
-use crate::dev::runtime_witness::stage6::Stage6VirtualizationWitness;
+
 use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 
-use crate::gui::editor::world_preview::PreviewPathAuthority;
 use crate::gui::{ViewManager, WorldRepresentationFrame};
-use crate::io::streaming::{gather_wave_c_readiness, wave_c_readiness_passes, ChunkResidencyTable};
+use crate::io::streaming::{ChunkResidencyTable};
 use crate::render::core::gpu_representation_metrics::GpuRepresentationMetrics;
 use crate::render::core::per_view_residency::{residency_coords_for_view_instance, PerViewResidencyConsumerWindow};
 use crate::render::view_runtime::ViewSurfaceId;
@@ -45,28 +44,6 @@ pub struct Stage6VirtualizationFrame {
 #[derive(Resource, Debug, Default, Clone)]
 pub struct ResidencyDrivenConsumerWindow {
     pub coords: Vec<IVec2>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Default)]
-pub struct Stage6ReadinessReport {
-    pub wave_c_ok: bool,
-    pub residency_populated: bool,
-    pub projection_window_populated: bool,
-    pub atlas_slots_active: bool,
-}
-
-#[must_use]
-pub fn gather_stage6_readiness(
-    authority: &PreviewPathAuthority,
-    frame: &Stage6VirtualizationFrame,
-) -> Stage6ReadinessReport {
-    let wave_c = gather_wave_c_readiness(authority);
-    Stage6ReadinessReport {
-        wave_c_ok: wave_c_readiness_passes(&wave_c),
-        residency_populated: frame.residency_chunk_count > 0,
-        projection_window_populated: !frame.consumer_window_coords.is_empty(),
-        atlas_slots_active: frame.gpu_upload_bytes_frame > 0,
-    }
 }
 
 /// Map GPU metrics + overlay state to [`PagedAtlasResidency`] slots (S6-20).
@@ -134,13 +111,7 @@ pub fn intersect_visible_chunks_with_residency_window(
         .collect()
 }
 
-#[must_use]
-pub fn stage6_readiness_passes(report: &Stage6ReadinessReport) -> bool {
-    report.wave_c_ok
-        && report.residency_populated
-        && report.projection_window_populated
-        && report.atlas_slots_active
-}
+
 
 pub fn publish_stage6_virtualization_frame(
     world: Res<WorldRepresentationFrame>,
@@ -223,7 +194,6 @@ impl Plugin for Stage6VirtualizationPlugin {
             .init_resource::<Stage6VirtualizationFrame>()
             .init_resource::<ResidencyDrivenConsumerWindow>()
             .init_resource::<PerViewResidencyConsumerWindow>()
-            .init_resource::<Stage6VirtualizationWitness>()
             .add_plugins(ExtractResourcePlugin::<Stage6VirtualizationFrame>::default())
             .add_systems(
                 Update,
@@ -268,55 +238,9 @@ mod tests {
         assert_eq!(filtered, visible);
     }
 
-    #[test]
-    fn stage6_readiness_passes_with_populated_residency_table() {
-        use crate::gui::WorldRepresentationFrame;
-        use crate::io::streaming::{
-            build_residency_table, chunk_window_coords, primary_interest_orb,
-        };
-        let world = WorldRepresentationFrame {
-            focus_chunk: IVec2::ZERO,
-            interest_radius_chunks: 1,
-            ..Default::default()
-        };
-        let orbs = vec![primary_interest_orb(&world)];
-        let core = chunk_window_coords(world.focus_chunk, 1);
-        let table = build_residency_table(&orbs, &core);
-        let coords: Vec<IVec2> = table.entries.keys().copied().collect();
-        let frame = Stage6VirtualizationFrame {
-            residency_chunk_count: table.entries.len(),
-            core_chunk_count: table
-                .entries
-                .values()
-                .filter(|e| e.role == crate::io::streaming::ChunkResidencyRole::Core)
-                .count(),
-            ghost_chunk_count: table
-                .entries
-                .values()
-                .filter(|e| e.role == crate::io::streaming::ChunkResidencyRole::GhostBand)
-                .count(),
-            consumer_window_coords: coords,
-            active_atlas_slots: 1,
-            gpu_upload_bytes_frame: 1,
-            ..Default::default()
-        };
-        let report = gather_stage6_readiness(&PreviewPathAuthority::default(), &frame);
-        assert!(stage6_readiness_passes(&report));
-    }
 
-    #[test]
-    fn stage6_readiness_requires_gpu_upload_bytes() {
-        let report = gather_stage6_readiness(
-            &PreviewPathAuthority::default(),
-            &Stage6VirtualizationFrame {
-                residency_chunk_count: 1,
-                consumer_window_coords: vec![IVec2::ZERO],
-                gpu_upload_bytes_frame: 0,
-                ..Default::default()
-            },
-        );
-        assert!(!report.atlas_slots_active);
-    }
+
+
 
     #[test]
     fn atlas_slots_from_gpu_path_when_upload_present() {
@@ -339,17 +263,5 @@ mod tests {
         assert!(queue.pending_labels.is_empty());
     }
 
-    #[test]
-    fn stage6_readiness_requires_wave_c_and_residency() {
-        let report = gather_stage6_readiness(
-            &PreviewPathAuthority::default(),
-            &Stage6VirtualizationFrame {
-                residency_chunk_count: 1,
-                consumer_window_coords: vec![IVec2::ZERO],
-                gpu_upload_bytes_frame: 4096,
-                ..Default::default()
-            },
-        );
-        assert!(stage6_readiness_passes(&report));
-    }
+
 }

@@ -3,15 +3,14 @@
 use bevy::prelude::*;
 
 use crate::gui::construction_growth_inspector::{
-    sync_ecology_growth_hint, EcologyGrowthHint, GrowthInspectorUiState,
+    sync_ecology_growth_hint, EcologyGrowthHint,
 };
 
 pub struct HudRootTickPlugin;
 
 impl Plugin for HudRootTickPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<GrowthInspectorUiState>()
-            .init_resource::<EcologyGrowthHint>()
+        app.init_resource::<EcologyGrowthHint>()
             .add_systems(Update, sync_ecology_growth_hint);
     }
 }

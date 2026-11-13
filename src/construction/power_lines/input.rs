@@ -125,6 +125,7 @@ pub fn update_power_line_path_preview_system(
     let cursor = if ctrl_preview {
         cursor_world_on_map(
             &window,
+            pointer_gate.as_deref(),
             authority.as_deref(),
             desired.as_ref(),
             map_vp.as_ref(),
@@ -229,6 +230,7 @@ pub fn power_line_path_input_system(
     };
     let Some(raw) = cursor_world_on_map(
         &window,
+        pointer_gate.as_deref(),
         authority.as_deref(),
         desired.as_ref(),
         map_vp.as_ref(),

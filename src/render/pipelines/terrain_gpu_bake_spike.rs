@@ -641,50 +641,7 @@ pub fn build_terrain_gpu_bake_spike_witness_body(
     })
 }
 
-#[must_use]
-pub fn refresh_terrain_gpu_bake_spike_witness(
-    state: &TerrainGpuBakeSpikeState,
-    map: &TerrainGpuBakeIndexMap,
-) -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body_a1 = build_terrain_gpu_bake_spike_witness_body(state, map);
-    let a0 = body_a1
-        .get("a0_green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
-    let a1 = body_a1
-        .get("a1_green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
-
-    let mut body_a0 = body_a1.clone();
-    if let Some(obj) = body_a0.as_object_mut() {
-        obj.insert("gate".into(), serde_json::json!("RPC-1-004"));
-        obj.insert("fleet".into(), serde_json::json!("FLEET-RPC1-004"));
-        obj.insert("green".into(), serde_json::json!(a0));
-        obj.insert(
-            "next".into(),
-            serde_json::json!("RPC-1-005 closed — see terrain_gpu_bake_spike_rpc1_005_live.json"),
-        );
-    }
-    let wrapped_a0 = wrap_debug_run(
-        "RPC-1-004",
-        "refresh_terrain_gpu_bake_spike_witness",
-        TERRAIN_GPU_BAKE_SPIKE_LIVE_JSON,
-        body_a0,
-    );
-    let ok004 = write_debug_run_json(TERRAIN_GPU_BAKE_SPIKE_LIVE_JSON, wrapped_a0) && a0;
-
-    let wrapped_a1 = wrap_debug_run(
-        "RPC-1-005",
-        "refresh_terrain_gpu_bake_spike_a1_witness",
-        TERRAIN_GPU_BAKE_SPIKE_A1_LIVE_JSON,
-        body_a1,
-    );
-    let ok005 = write_debug_run_json(TERRAIN_GPU_BAKE_SPIKE_A1_LIVE_JSON, wrapped_a1) && a1;
-    ok004 && ok005
-}
 
 #[cfg(test)]
 mod tests {
@@ -899,11 +856,5 @@ mod tests {
         assert!(out.is_empty());
     }
 
-    #[test]
-    fn refresh_witness_flag_off_green() {
-        std::env::remove_var(TERRAIN_GPU_BAKE_SPIKE_ENV);
-        let state = TerrainGpuBakeSpikeState::default();
-        let map = TerrainGpuBakeIndexMap::default();
-        assert!(refresh_terrain_gpu_bake_spike_witness(&state, &map));
-    }
+
 }

@@ -19,7 +19,8 @@
 //! on the land side (the footprint is tested at its own sub-cell position), and a burn shows as burning
 //! cells, then charred snags, then regrowth, exactly where the sim says. No flag of its own.
 //!
-//! PixelWorld3D keeps its own per-chunk LG-5 atlas stamps, so this layer is hidden there.
+//! PixelWorld3D builds voxel trees from the same extract rows and helpers (`render::pixel_world`), so this
+//! flat layer is hidden there.
 
 use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
@@ -74,7 +75,7 @@ impl VegLod {
         }
     }
 
-    fn step_tiles(self) -> u32 {
+    pub(crate) fn step_tiles(self) -> u32 {
         match self {
             Self::Wash => 0,
             Self::Blob => 4,
@@ -154,7 +155,7 @@ fn mix64(mut x: u64) -> u64 {
 }
 
 /// Deterministic value in `[0, 1)` for a chunk site.
-fn site_rand(coord: IVec2, a: u32, b: u32, salt: u64) -> f32 {
+pub(crate) fn site_rand(coord: IVec2, a: u32, b: u32, salt: u64) -> f32 {
     let h = mix64(
         (coord.x as u32 as u64)
             ^ ((coord.y as u32 as u64) << 32)
@@ -246,7 +247,7 @@ impl<'a> CellView<'a> {
 
 /// What a per-cell code draws as. Bare ground and open water draw nothing.
 #[must_use]
-fn cover_for_code(code: u8) -> Option<Cover> {
+pub(crate) fn cover_for_code(code: u8) -> Option<Cover> {
     match code {
         CELL_GRASS => Some(Cover::Grass),
         CELL_SHRUB => Some(Cover::Shrub),
@@ -261,7 +262,7 @@ fn cover_for_code(code: u8) -> Option<Cover> {
 
 /// Chance a site on a cell of this cover holds a symbol. Fire states are literal: a burning cell is
 /// drawn burning, snags stand thick, regrowth is a thin seedling carpet.
-fn cell_probability(cover: Cover, density: f32) -> f32 {
+pub(crate) fn cell_probability(cover: Cover, density: f32) -> f32 {
     match cover {
         Cover::Burning => 0.85,
         Cover::Burnt => 0.55,

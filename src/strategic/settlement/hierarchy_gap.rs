@@ -68,41 +68,11 @@ pub fn set_p5_hierarchy_gap_lib_green() -> (bool, bool, bool, bool, usize) {
     )
 }
 
-#[must_use]
-pub fn refresh_set_p5_hierarchy_gap_live_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let (books_seeded, commit_wired, placement_to_block, overlay_hydrate, tile_to_block_count) =
-        set_p5_hierarchy_gap_lib_green();
-    let green = books_seeded && commit_wired && placement_to_block && overlay_hydrate;
-    let body = serde_json::json!({
-        "gate_id": "SET-P5-HIERARCHY-GAP",
-        "slices": ["SET-P5-001", "SET-P5-002", "SET-P5-003", "SET-P5-HIERARCHY-GAP"],
-        "books_seeded": books_seeded,
-        "commit_block_assignment_wired": commit_wired,
-        "placement_to_block": placement_to_block,
-        "tile_to_block_count": tile_to_block_count,
-        "settlement_overlay_hydrate": overlay_hydrate,
-        "runtime_hydrate_system": "try_hydrate_settlement_books_on_bundle_dir",
-        "runtime_write_system": "write_settlement_overlay_on_save_flush",
-        "exit_predicate": "settlement overlay hydrate + tile_to_block live",
-        "green": green,
-    });
-    let wrapped = wrap_debug_run(
-        "SET_P5_HIERARCHY_GAP",
-        "refresh_set_p5_hierarchy_gap_live_witness",
-        SET_P5_HIERARCHY_GAP_LIVE_JSON,
-        body,
-    );
-    green && write_debug_run_json(SET_P5_HIERARCHY_GAP_LIVE_JSON, wrapped)
-}
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn set_p5_hierarchy_gap_witness_green() {
-        assert!(refresh_set_p5_hierarchy_gap_live_witness());
-    }
+
 }

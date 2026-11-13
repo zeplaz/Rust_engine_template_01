@@ -9,11 +9,9 @@ pub mod propagation;
 pub mod routes;
 pub mod solver;
 pub mod types;
-pub mod witness;
-pub mod witness_collectors;
-#[cfg(test)]
-pub mod witness_fixture;
+pub mod diagnostics_panel;
 
+pub use diagnostics_panel::collect_logistics_diagnostics_panel_system;
 pub use portals::{rebuild_portal_attachment_map_system, register_facility_portals_system};
 pub use propagation::{
     apply_pending_site_staging_debits_system, commit_freight_arrivals_system,
@@ -38,22 +36,8 @@ pub use types::{
     PortalAttachmentMap, RouteCache, RouteHandle, RoutePath, RoutePathStore, RouteProof,
     SaturatedEdgeSample, SiteStagingStock, ThroughputSolverState, TransportNodeAnchor,
 };
-pub use witness::{
-    align_logistics_throughput_witness_from_live_sim, collect_logistics_diagnostics_panel_system,
-    refresh_logistics_throughput_witness_system, sync_logistics_throughput_board_system,
-    INFRA_E5_002_GRAPH_ONLY_LATCH, LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED,
-    LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED, LOG_B_04_ARRIVALS_ONLY_TEST_PASSED,
-    LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED, LOG_C_01_SOA_TEST_PASSED,
-    LOG_C_02_RESERVATION_TEST_PASSED, LOG_C_03_CONGESTION_TEST_PASSED,
-    LOG_C_04_PRESSURE_TEST_PASSED, LOG_C_06_OVERLAY_TEST_PASSED,
-    LOG_D_01_CORRIDOR_CLASS_TEST_PASSED, LOG_D_02_DISTRICT_SCOPED_TEST_PASSED,
-    LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED, LOG_D_04_ASYNC_DISTRICT_TEST_PASSED,
-    LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED, LOG_GEOGRAPHIC_CASCADE_TEST_PASSED,
-};
-pub use witness_collectors::{
-    build_logistics_throughput_proof_payload, InfraE502ProofExtension,
-    LogisticsThroughputLiveProofState, LOGISTICS_THROUGHPUT_JSON,
-};
+
+
 
 use bevy::prelude::*;
 
@@ -92,8 +76,6 @@ impl Plugin for LogisticsThroughputPlugin {
             .init_resource::<LogisticsThroughputRuntimeWitness>()
             .init_resource::<DistrictSolveScope>()
             .init_resource::<async_district::AsyncDistrictSolveQueue>()
-            .init_resource::<witness_collectors::LogisticsThroughputLiveProofState>()
-            .init_resource::<crate::dev::logistics_throughput_todos::LogisticsThroughputWitness>()
             .init_resource::<intent_draw::AiConstructionIntent>()
             .init_resource::<intent_draw::LogisticsIntentDrawFrameRes>()
             .configure_sets(

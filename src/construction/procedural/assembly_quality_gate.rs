@@ -298,20 +298,7 @@ pub fn bq_a2_gate_001_witness_green() -> bool {
         .unwrap_or(false)
 }
 
-#[must_use]
-pub fn refresh_building_quality_live_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_bq_a2_gate_001_witness_body();
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "BQ-A2-GATE-001",
-        "refresh_building_quality_live_witness",
-        BUILDING_QUALITY_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(BUILDING_QUALITY_LIVE_JSON, wrapped) && green
-}
 
 #[cfg(test)]
 mod tests {
@@ -395,14 +382,7 @@ mod tests {
         );
     }
 
-    #[test]
-    fn bq_a2_gate_001_witness_writes_when_green() {
-        if !bq_a2_gate_001_witness_green() {
-            eprintln!("BQ-A2 witness not green — module registry or style pack state");
-            return;
-        }
-        assert!(refresh_building_quality_live_witness());
-    }
+
 
     #[test]
     fn bq_silh_honest_001_witness_coverage() {

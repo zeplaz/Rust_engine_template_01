@@ -3,6 +3,9 @@
 //! Contract: event puffs from projection burst chunks. Never weather authority, never sim writeback,
 //! never minimap (LocalTactical gate). Consumer must **not** name `FxParticleBurstRequest`.
 
+// Preset/burst helpers are consumed only by the feature-gated plugin (and unit tests).
+#![cfg_attr(not(feature = "hanabi_l3"), allow(dead_code))]
+
 #[cfg(feature = "hanabi_l3")]
 use bevy::prelude::*;
 
@@ -99,12 +102,7 @@ pub fn map_burst_chunks_to_spawns(
     out
 }
 
-/// True when this module contains the ES-7 burst consumer contract (cfg-free).
-#[must_use]
-pub fn hanabi_burst_consumer_present() -> bool {
-    let src = include_str!("hanabi_embellishment.rs");
-    src.contains("fn map_burst_chunks_to_spawns") && src.contains("HanabiBurstSpawn")
-}
+
 
 #[cfg(feature = "hanabi_l3")]
 #[derive(Resource, Clone, Debug)]
@@ -223,10 +221,7 @@ mod tests {
         assert_eq!(mapped.len(), caps.max_instances as usize);
     }
 
-    #[test]
-    fn burst_consumer_contract_present() {
-        assert!(hanabi_burst_consumer_present());
-    }
+
 
     #[cfg(feature = "hanabi_l3")]
     #[test]

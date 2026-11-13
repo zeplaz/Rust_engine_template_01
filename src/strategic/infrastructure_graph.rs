@@ -233,9 +233,9 @@ mod tests {
             .collect();
         assert!(linked.contains(&(2.0, Some(te_a))));
         assert!(linked.contains(&(1.0, Some(te_b))));
-        crate::dev::logistics_throughput_todos::LOG_A_07_INFRA_PAIRING_TEST_PASSED
-            .store(true, std::sync::atomic::Ordering::Relaxed);
     }
+
+
 }
 
 pub struct InfrastructureGraphBridgePlugin;
@@ -247,4 +247,5 @@ impl Plugin for InfrastructureGraphBridgePlugin {
             sync_infrastructure_graph_from_logistics.after(super::logistics_net::logistics_net_inject_into_overlays),
         );
     }
+
 }

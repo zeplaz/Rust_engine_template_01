@@ -778,21 +778,7 @@ pub fn city_g0_wit_001_determinism_witness_green() -> bool {
         .unwrap_or(false)
 }
 
-/// Write `debug_runs/city_g0_wit_001_live.json`.
-#[must_use]
-pub fn refresh_city_g0_wit_001_grammar_determinism_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_city_g0_wit_001_witness_body();
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "CITY-G0-WIT-001",
-        "refresh_city_g0_wit_001_grammar_determinism_witness",
-        CITY_G0_WIT_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(CITY_G0_WIT_LIVE_JSON, wrapped) && green
-}
 
 /// Required AUTO-001 keys present and placements non-empty.
 #[must_use]
@@ -894,20 +880,7 @@ pub fn bq_f3_slot_001_witness_green() -> bool {
         .unwrap_or(false)
 }
 
-#[must_use]
-pub fn refresh_bq_f3_slot_001_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_bq_f3_slot_001_witness_body();
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "BQ-F3-SLOT-001",
-        "refresh_bq_f3_slot_001_witness",
-        BQ_F3_SLOT_001_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(BQ_F3_SLOT_001_LIVE_JSON, wrapped) && green
-}
 
 #[cfg(test)]
 mod tests {
@@ -1142,8 +1115,5 @@ mod tests {
         assert!(super::bq_f3_slot_001_witness_green());
     }
 
-    #[test]
-    fn bq_f3_slot_001_live_witness_refresh_green() {
-        assert!(super::refresh_bq_f3_slot_001_witness());
-    }
+
 }

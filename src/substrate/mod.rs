@@ -90,16 +90,9 @@ pub fn sync_substrate_paging_system(
     }
 }
 
-pub mod witness_collectors;
 
-pub use witness_collectors::{
-    build_wss_substrate_payload, refresh_wss_substrate_live_witness, wss_chunk_slab_001_green,
-    WSS_CHUNK_SLAB_GATE,
-};
-pub use crate::dev::runtime_witness::wss_substrate::{
-    commit_wss_substrate_live_proof, commit_wss_substrate_live_proof_body,
-    write_wss_substrate_live_proof_system, WssSubstrateLiveProofState, WSS_SUBSTRATE_LIVE_JSON,
-};
+
+
 
 pub struct SubstratePlugin;
 
@@ -112,7 +105,6 @@ impl Plugin for SubstratePlugin {
             .init_resource::<ChunkPagingState>()
             .init_resource::<SubstratePersistBook>()
             .init_resource::<WssSubstrateWitness>()
-            .init_resource::<WssSubstrateLiveProofState>()
             .init_resource::<SubstratePr4Witness>()
             .init_resource::<DualWriteShimState>()
             .init_resource::<ActiveRuntimeState>()

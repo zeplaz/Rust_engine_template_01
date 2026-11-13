@@ -1,131 +1,13 @@
-//! PG-1 StylePack + PG-2 assembly integration tests and live witness.
+//! PG-1 StylePack + PG-2 assembly integration tests.
 
 use super::{
-    build_assembly_snapshot, load_procedural_module_registry, load_style_pack_registry,
-    pg_quality_002_pg2_hook_body, pg_quality_002_pg2_hook_green,
-    refresh_pg_quality_001_grammar_diversity_witness, snapshot_passes_auto_001_contract,
-    staging_relative_path, write_assembly_snapshot, FootprintGrid, ProceduralBuildingRequest,
-    StylePackId,
-};
-use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
-use crate::render::extraction::{
-    assemble_procedural_build_instances, ProceduralModuleSceneCatalog,
+    load_procedural_module_registry, load_style_pack_registry,
 };
 
-pub const PROCEDURAL_ASSEMBLY_LIVE_JSON: &str = "debug_runs/procedural_assembly_live.json";
 
-#[must_use]
-pub fn build_procedural_assembly_witness_body() -> serde_json::Value {
-    let modules = load_procedural_module_registry();
-    let packs = load_style_pack_registry();
-    let style_pack_id = "style_victorian";
-    let request = ProceduralBuildingRequest {
-        archetype_id: "rect_perimeter".into(),
-        width: 4,
-        depth: 2,
-        floors: 2,
-        style: StylePackId(style_pack_id.into()),
-        seed: 1,
-        arch_dna_preset_id: None,
-    };
-    let pack = packs.get(style_pack_id);
-    let grid = FootprintGrid::from_request(&request);
-    let extract = pack.map(|p| {
-        assemble_procedural_build_instances(
-            &request,
-            p,
-            &grid,
-            &modules,
-            &ProceduralModuleSceneCatalog::default(),
-        )
-    });
 
-    let packs_loaded = packs.load_errors.is_empty() && packs.len() == 7;
-    let slots_resolve = packs.iter().all(|pack| {
-        pack.module_ids().all(|module_id| {
-            modules
-                .resolve_module_id(module_id)
-                .is_some_and(|e| !e.development_tier.is_smoke())
-        })
-    });
 
-    let pg2_wired = extract.as_ref().is_some_and(|e| e.pg2_wired);
-    let smoke_fallback_used = extract.as_ref().is_some_and(|e| e.smoke_fallback_used);
-    let footprint_cells = extract.as_ref().map(|e| e.footprint_cells).unwrap_or(0);
-    let module_ids_used = extract
-        .as_ref()
-        .map(|e| e.module_ids_used.clone())
-        .unwrap_or_default();
-    let no_greybox_jobs = module_ids_used.iter().all(|id| {
-        modules
-            .resolve_module_id(id)
-            .is_none_or(|e| !e.batch_id.starts_with("kit_greybox"))
-    });
 
-    let (assembly_id, assembly_snapshot_path, module_placements_count, auto_001_contract) =
-        match (pack, extract.as_ref()) {
-            (Some(p), Some(_)) => {
-                let snapshot = build_assembly_snapshot(&request, p, &grid, &modules);
-                let contract_ok = snapshot_passes_auto_001_contract(&snapshot);
-                let _ = write_assembly_snapshot(&snapshot);
-                (
-                    snapshot.assembly_id.clone(),
-                    staging_relative_path(&snapshot),
-                    snapshot.module_placements.len(),
-                    contract_ok,
-                )
-            }
-            _ => (String::new(), String::new(), 0, false),
-        };
-
-    let green = packs_loaded
-        && slots_resolve
-        && pg2_wired
-        && !smoke_fallback_used
-        && footprint_cells > 0
-        && !module_ids_used.is_empty()
-        && no_greybox_jobs
-        && auto_001_contract
-        && !assembly_id.is_empty();
-
-    let grammar_diversity = pg_quality_002_pg2_hook_body();
-
-    serde_json::json!({
-        "pg2_wired": pg2_wired,
-        "style_pack_id": style_pack_id,
-        "module_ids_used": module_ids_used,
-        "smoke_fallback_used": smoke_fallback_used,
-        "footprint_cells": footprint_cells,
-        "style_packs_loaded": packs_loaded,
-        "style_pack_count": packs.len(),
-        "slots_resolve_lod0": slots_resolve,
-        "assembly_id": assembly_id,
-        "assembly_snapshot_path": assembly_snapshot_path,
-        "module_placements_count": module_placements_count,
-        "auto_001_contract": auto_001_contract,
-        "grammar_diversity": grammar_diversity,
-        "grammar_diversity_green": grammar_diversity
-            .get("green")
-            .and_then(|v| v.as_bool())
-            .unwrap_or(false),
-        "green": green,
-    })
-}
-
-/// MCP-PG-2-WIT — write `debug_runs/procedural_assembly_live.json`.
-#[must_use]
-pub fn refresh_procedural_assembly_live_witness() -> bool {
-    let _ = refresh_pg_quality_001_grammar_diversity_witness();
-    let body = build_procedural_assembly_witness_body();
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "procedural_assembly",
-        "refresh_procedural_assembly_live_witness",
-        PROCEDURAL_ASSEMBLY_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(PROCEDURAL_ASSEMBLY_LIVE_JSON, wrapped) && green
-}
 
 #[test]
 fn style_pack_ron_loads_victorian_slots() {
@@ -196,36 +78,9 @@ fn style_pack_slots_resolve_via_module_registry() {
     }
 }
 
-#[test]
-fn procedural_assembly_live_witness_green() {
-    assert!(
-        refresh_procedural_assembly_live_witness(),
-        "procedural_assembly_live.json must be green"
-    );
-}
 
-#[test]
-fn pg_quality_002_links_grammar_diversity_to_pg2_witness() {
-    assert!(
-        pg_quality_002_pg2_hook_green(),
-        "grammar massing diversity must pass thresholds for PG-2 hook"
-    );
-    assert!(refresh_procedural_assembly_live_witness());
-    let text = std::fs::read_to_string(PROCEDURAL_ASSEMBLY_LIVE_JSON).expect("witness");
-    let body: serde_json::Value = serde_json::from_str(&text).expect("json");
-    let hook = body
-        .get("grammar_diversity")
-        .or_else(|| body.get("payload").and_then(|p| p.get("grammar_diversity")))
-        .expect("grammar_diversity hook");
-    assert_eq!(
-        hook.get("gate_id").and_then(|v| v.as_str()),
-        Some("PG-QUALITY-002")
-    );
-    assert_eq!(
-        hook.get("grammar_gate_id").and_then(|v| v.as_str()),
-        Some("PG-QUALITY-001")
-    );
-}
+
+
 
 // --- module index + building registry integration (MCP-E0) ---
 

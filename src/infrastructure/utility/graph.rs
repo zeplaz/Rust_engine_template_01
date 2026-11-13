@@ -225,23 +225,7 @@ pub fn infra_e4_002_power_edges_from_graph_green(
         && infra.edges.len() >= utility.power_edges.len()
 }
 
-#[must_use]
-pub fn refresh_utility_network_live_witness_payload() -> serde_json::Value {
-    let snap = fixture_utility_network_snapshot();
-    let utility = hydrate_utility_graph_from_snapshot(&snap);
-    let mut infra = InfrastructureGraph::default();
-    apply_utility_power_to_infrastructure(&utility, &mut infra);
-    let green = infra_e4_002_power_edges_from_graph_green(&utility, &infra);
-    serde_json::json!({
-        "gate_id": "INFRA-E4-002",
-        "green": green,
-        "power_edges_from_graph": green,
-        "utility_power_edges": utility.power_edges.len(),
-        "infra_power_nodes": infra.nodes.iter().filter(|n| {
-            n.network == InfrastructureNetworkType::Power
-        }).count(),
-    })
-}
+
 
 #[cfg(test)]
 mod tests {
@@ -263,8 +247,6 @@ mod tests {
         let mut infra = InfrastructureGraph::default();
         apply_utility_power_to_infrastructure(&utility, &mut infra);
         assert!(infra_e4_002_power_edges_from_graph_green(&utility, &infra));
-        let body = refresh_utility_network_live_witness_payload();
-        assert_eq!(body["power_edges_from_graph"].as_bool(), Some(true));
     }
 
     #[test]

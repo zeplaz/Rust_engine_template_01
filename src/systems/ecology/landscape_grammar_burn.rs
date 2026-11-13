@@ -4,12 +4,11 @@
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 use super::landscape_grammar_lg2::{
     DisturbanceHistory, LandscapeGrammarLg2Witness, SuccessionState, SuccessionTopologyStage,
 };
-use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::fire::ChunkSurfaceFire;
 use crate::systems::sim_control::SimTick;
@@ -258,29 +257,7 @@ pub fn burn_succession_witness_green(
     lg2.fire_disturbances >= 1 && burn.regrowth_macro_advances >= 1
 }
 
-#[must_use]
-pub fn refresh_burn_overlay_witness(
-    lg2: &LandscapeGrammarLg2Witness,
-    burn: &LandscapeBurnWitness,
-) -> bool {
-    let body = json!({
-        "gate": "VEG-BURN-OVERLAY-001",
-        "green": burn_overlay_witness_green(burn),
-        "active_burn_chunks": burn.active_burn_chunks,
-        "regrowth_macro_advances": burn.regrowth_macro_advances,
-        "overlay_removals": burn.overlay_removals,
-        "fire_disturbances": lg2.fire_disturbances,
-        "succession_003_green": burn_succession_witness_green(lg2, burn),
-    });
-    let wrapped = wrap_debug_run(
-        "VEG-BURN-OVERLAY-001",
-        "refresh_burn_overlay_witness",
-        LANDSCAPE_GRAMMAR_BURN_OVERLAY_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_BURN_OVERLAY_LIVE_JSON, wrapped);
-    burn_overlay_witness_green(burn)
-}
+
 
 #[must_use]
 pub fn burn_sm_self_check_green() -> bool {

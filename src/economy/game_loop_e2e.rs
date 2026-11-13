@@ -20,8 +20,7 @@ use crate::economy::activation::{
 };
 use crate::economy::logistics::orders::construction_demand::CONSTRUCTION_MATERIALS;
 use crate::economy::logistics::orders::{
-    CargoKind, ConsumerKind, CargoClassMask, LogisticsOrderCommand, LogisticsOrderRequest,
-    LogisticsOrderSite, LogisticsOrderSiteId, LogisticsOrdersPlugin, LogisticsOrdersSnapshotRes,
+    CargoKind, ConsumerKind, LogisticsOrderCommand, LogisticsOrderRequest, LogisticsOrderSiteId, LogisticsOrdersPlugin, LogisticsOrdersSnapshotRes,
     LogisticsSiteRegistry, OwnerId, SiteRole,
 };
 use crate::economy::facility_inputs::{FacilityInputs, PowerState};

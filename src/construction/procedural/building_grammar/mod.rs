@@ -14,8 +14,7 @@ pub use grammar_evaluation::{
     city_g0_s1c_split_witness_green, facility_binding_read_witness_body,
     facility_binding_read_witness_green, generate, generate_with_arch_dna_preset,
     grammar_reference_tags, pg_quality_001_witness_green, pg_quality_002_pg2_hook_body,
-    pg_quality_002_pg2_hook_green, refresh_pg_quality_001_grammar_diversity_witness,
-};
+    pg_quality_002_pg2_hook_green, };
 pub use grammar_types::{
     default_door_rhythm_for_massing, BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1,
     FacilityPowerTier, FacilityProgramAxes, GrammarGenerateResult, GrammarRuleStep, MassingId,

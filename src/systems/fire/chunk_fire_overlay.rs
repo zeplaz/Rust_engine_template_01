@@ -22,7 +22,7 @@ use super::combustion::{
 use super::fire_fuel::FireFuelField;
 use super::surface_water::SurfaceWaterFireGate;
 use super::types::ChunkFireOverlay;
-use super::witness_collectors::FireEcologyWitness;
+use super::ecology_metrics::FireEcologyWitness;
 use crate::systems::chunk_environment_persist::{
     ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks,
 };

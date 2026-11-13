@@ -630,21 +630,7 @@ pub fn build_eng_pt_4_warehouse_map_stamp_witness_body() -> serde_json::Value {
     })
 }
 
-/// Refresh Phase D map-stamp witness (`debug_runs/art_pipeline/eng_pt_4_warehouse_map_stamp_live.json`).
-#[must_use]
-pub fn refresh_eng_pt_4_warehouse_map_stamp_live_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_eng_pt_4_warehouse_map_stamp_witness_body();
-    let wrapped = wrap_debug_run(
-        "gui",
-        "refresh_eng_pt_4_warehouse_map_stamp_live_witness",
-        ENG_PT4_WAREHOUSE_MAP_STAMP_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(ENG_PT4_WAREHOUSE_MAP_STAMP_LIVE_JSON, wrapped)
-        && eng_pt_4_warehouse_map_stamp_witness_green()
-}
 
 pub fn preload_tile_atlas_gpu_cache(
     registry: Option<&TileAtlasRegistry>,
@@ -847,13 +833,7 @@ mod tests {
         );
     }
 
-    #[test]
-    fn refresh_eng_pt_4_warehouse_map_stamp_live_witness_writes_json() {
-        if !super::tile_fix_10_warehouse_witness_green() {
-            return;
-        }
-        assert!(super::refresh_eng_pt_4_warehouse_map_stamp_live_witness());
-    }
+
 
     #[test]
     fn stamp_blit_writes_opaque_pixel() {

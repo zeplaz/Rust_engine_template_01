@@ -64,6 +64,10 @@ pub use start::{FactionHq, FactionStartConfig, FactionStartPlugin};
 /// Default sim ticks between two decisions of one faction.
 pub const DEFAULT_DECISION_INTERVAL_TICKS: u64 = 60;
 
+/// A faction rescans the strategic overlay only every this many decisions; in between it reuses
+/// its cached [`FactionPerception`] (the scan visits every overlay cell).
+pub const PERCEPTION_REFRESH_DECISIONS: u64 = 3;
+
 /// Interim front/logistics surface for apps without the real order APIs.
 pub const API_STRATEGIC_COMMAND_QUEUE: &str = "StrategicCommandQueue";
 /// The front's order queue (`DeploymentOrderQueue::enqueue`).
@@ -522,6 +526,7 @@ pub fn faction_ai_tick_system(
     mut log: ResMut<FactionAiDecisionLog>,
     mut sinks: AiOrderSinks,
     world: AiWorld,
+    mut perception_cache: Local<std::collections::HashMap<u8, (u64, FactionPerception)>>,
 ) {
     if ctrl.as_deref().is_some_and(|c| !c.should_tick()) {
         return;
@@ -545,7 +550,17 @@ pub fn faction_ai_tick_system(
 
     for (entity, mut c) in due {
         let slot = c.slot;
-        let perception = perceive_faction(slot, world.overlays.iter());
+        // The full-overlay scan runs once per `PERCEPTION_REFRESH_DECISIONS` decisions per faction;
+        // decisions in between reuse the cached summary (deterministic: keyed by sim tick).
+        let refresh_after = c.decision_interval_ticks.max(1).saturating_mul(PERCEPTION_REFRESH_DECISIONS);
+        let perception = match perception_cache.get(&slot) {
+            Some((at, p)) if now >= *at && now - *at < refresh_after => p.clone(),
+            _ => {
+                let fresh = perceive_faction(slot, world.overlays.iter());
+                perception_cache.insert(slot, (now, fresh.clone()));
+                fresh
+            }
+        };
         let previous = c.goal;
         let choice = choose_goal(&perception, &c.doctrine, previous);
         let goal = choice.chosen;
