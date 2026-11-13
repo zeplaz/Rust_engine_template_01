@@ -6,6 +6,7 @@
 //! ES-5-001 fill · ES-5-002 upload/draw · ES-5-3 mesh retired · ES-5-4 provisional zoom.
 //! Reject: Hanabi as world-scale rain (ES-7 event puffs remain parallel-OK).
 
+pub mod cloud_sheets;
 pub mod draw;
 pub mod extract;
 pub mod frame;
@@ -34,5 +35,6 @@ impl Plugin for WeatherVfxPlugin {
         app.init_resource::<ParticleDomainRegistry>();
         extract::register_weather_precip_extract(app);
         draw::register_weather_precip_draw(app);
+        cloud_sheets::register_cloud_sheets(app);
     }
 }

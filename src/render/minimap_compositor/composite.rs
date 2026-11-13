@@ -413,6 +413,54 @@ fn fill_heat_layer(
     }
 }
 
+/// Stretch W3 weather overlay (cloud→G, rain→B) into the ecology heat buffer for compositor wash.
+fn fill_weather_wash_from_overlay_frame(
+    out: &mut [u8],
+    w: u32,
+    h: u32,
+    images: &Assets<Image>,
+    frame: Option<&crate::gui::OverlayFieldFrame>,
+) -> u32 {
+    let Some(frame) = frame else {
+        return 0;
+    };
+    let Some(handle) = frame.fields.get(&crate::gui::OverlayChannel::Wind) else {
+        return 0;
+    };
+    let Some(img) = images.get(handle) else {
+        return 0;
+    };
+    let Some(src) = img.data.as_ref() else {
+        return 0;
+    };
+    let sw = img.width().max(1);
+    let sh = img.height().max(1);
+    let mut rows = 0u32;
+    for y in 0..h {
+        for x in 0..w {
+            let sx = (x * sw / w.max(1)).min(sw - 1);
+            let sy = (y * sh / h.max(1)).min(sh - 1);
+            let si = ((sy * sw + sx) * 4) as usize;
+            if si + 3 >= src.len() {
+                continue;
+            }
+            let cloud = src[si] as f32 / 255.0;
+            let rain = src[si + 1] as f32 / 255.0;
+            if cloud + rain < 0.04 {
+                continue;
+            }
+            rows += 1;
+            let i = ((y * w + x) * 4) as usize;
+            if i + 2 < out.len() {
+                // Cool wash: boost G/B (ecology compositor already tints from those).
+                out[i + 1] = out[i + 1].max((cloud * 180.0) as u8);
+                out[i + 2] = out[i + 2].max((rain * 200.0) as u8);
+            }
+        }
+    }
+    rows
+}
+
 /// Upload fire + logistics heat R8 into storage textures (no terrain composite on CPU).
 pub fn upload_minimap_heat_textures(
     images: &mut Assets<Image>,
@@ -425,6 +473,7 @@ pub fn upload_minimap_heat_textures(
     construction_channel: Option<&ConstructionPhaseGpuChannel>,
     replay: Option<&CommittedSimReplayRing>,
     veg_extract: Option<&VegetationExtractFrame>,
+    weather_frame: Option<&crate::gui::OverlayFieldFrame>,
     map_views: &MapViewInstances,
     fallback: &TileWorldFallbackState,
     extent: UVec2,
@@ -506,6 +555,11 @@ pub fn upload_minimap_heat_textures(
             true,
             chunk_count,
         );
+    }
+    if map_views.minimap.overlays.weather {
+        let wx_rows =
+            fill_weather_wash_from_overlay_frame(&mut ecology_buf, w, h, images, weather_frame);
+        ecology_rows = ecology_rows.max(wx_rows);
     }
 
     if let Some(mut img) = images.get_mut(&heat.fire) {
@@ -658,6 +712,7 @@ mod tests {
             None,
             None,
             None,
+            None,
             &map_views,
             &fallback,
             UVec2::new(32, 32),
@@ -793,6 +848,7 @@ mod tests {
                 Some(&book),
                 Some(&ecology),
                 Some(&operational),
+                None,
                 None,
                 None,
                 None,

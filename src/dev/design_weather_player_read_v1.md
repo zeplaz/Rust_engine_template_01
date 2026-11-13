@@ -39,10 +39,11 @@ Players name **rain vs snow vs fog vs clear** at tactical/strategic zoom and dis
 
 | Surface | Format |
 |:---|:---|
-| WX ops | `WX  r {rain:.2}  s {snow:.2}  f {fog:.2}` |
-| VIS suffix | append `VIS low` when visibility `< 0.85` |
+| WX ops (compact / pre-W3) | `WX  r {rain:.2}  s {snow:.2}  f {fog:.2}` |
+| WX ops (W3 expanded) | `WX  {speed} m/s {dir}, gusts {g}, rain|snow … mm/h, vis … km` from `WeatherField::sample` — **supersedes** 0..1-only line on wide windows |
+| VIS suffix | append `VIS low` when visibility `< 0.85` (compact path) |
 | PWR derate | `PWR  {pct}%  (wind)` or `(solar)` when factor out of band |
-| Minimap legend | `Wx wash = mean precip` when wash active |
+| Minimap legend | `Wx wash = cloud/rain` when weather overlay active |
 
 Full band tables, hue separation (fog cool / smoke warm / contamination patterned), and widget tree: see **canonical archive** above.
 

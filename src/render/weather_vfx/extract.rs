@@ -1,8 +1,7 @@
-//! Climate → [`WeatherPrecipFrame`] frontend extract (EFFECTS-SYSTEM ES-5).
+//! Climate / camera-local → [`WeatherPrecipFrame`] frontend extract (EFFECTS-SYSTEM ES-5).
 //!
-//! Preserves single climate scan ([`ClimateVisualAggregate`]).
-//! ES-5-3: CPU mesh retired — domain always eligible when climate feeds.
-//! ES-5-4 provisional: density/spread from zoom_alpha (tactical vs background).
+//! **W3:** density and per-streak rain/snow from [`WeatherField::sample`] at camera / streak XY
+//! when the field is ready; [`ClimateVisualAggregate`] remains the fallback for tests / dry boot.
 
 use bevy::math::Vec4;
 use bevy::prelude::*;
@@ -15,7 +14,12 @@ use crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadInstance;
 use crate::render::particle_domains::ParticleDomainRegistry;
 use crate::render::ClimateVisualAggregate;
 use crate::systems::atmosphere::pipeline::AtmospherePipelineSet;
-use crate::systems::weather::WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA;
+use crate::systems::sim_control::SimTimeMicros;
+use crate::systems::weather::{
+    rain_snow01_from_sample, CameraLocalWeatherSample, WeatherField,
+    WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA,
+};
+use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 use super::frame::WeatherPrecipFrame;
 
@@ -79,7 +83,7 @@ fn mix(a: f32, b: f32, t: f32) -> f32 {
     a + (b - a) * t
 }
 
-/// Pure apply — used by scheduled system and unit/live proofs.
+/// Pure apply — used by scheduled system and unit/live proofs (climate means fallback).
 pub fn apply_weather_precip_frame_from_climate(
     climate: &ClimateVisualAggregate,
     frame: &mut WeatherPrecipFrame,
@@ -93,6 +97,9 @@ pub fn apply_weather_precip_frame_from_climate(
         false,
         None,
         WeatherPrecipZoomBand::from_zoom_alpha(0.5),
+        None,
+        None,
+        SimTimeMicros(0),
     );
 }
 
@@ -104,20 +111,57 @@ pub fn apply_weather_precip_frame_from_climate_at(
     _cpu_mesh_enabled: bool,
     camera: Option<&ExtractedCameraMetrics>,
     zoom: WeatherPrecipZoomBand,
+    local: Option<&CameraLocalWeatherSample>,
+    field: Option<&WeatherField>,
+    sim_time: SimTimeMicros,
 ) {
-    frame.mean_rain = climate.mean_rain;
-    frame.mean_snow = climate.mean_snow;
-    frame.mean_fog = climate.mean_fog_density;
-    frame.mean_wind = climate.mean_wind_speed;
-    frame.weather_chunk_count = climate.weather_chunk_count;
+    let (rain, snow, fog, wind_speed, wind_mps, local_ok) = if let Some(loc) = local.filter(|l| l.ready)
+    {
+        (
+            loc.rain01,
+            loc.snow01,
+            loc.fog,
+            loc.sample.wind_mps.length() / 20.0,
+            loc.sample.wind_mps,
+            true,
+        )
+    } else {
+        (
+            climate.mean_rain,
+            climate.mean_snow,
+            climate.mean_fog_density,
+            climate.mean_wind_speed,
+            climate.mean_wind_mps,
+            false,
+        )
+    };
+
+    frame.mean_rain = rain;
+    frame.mean_snow = snow;
+    frame.mean_fog = fog;
+    frame.mean_wind = wind_speed;
+    frame.wind_mps = wind_mps;
+    frame.weather_chunk_count = climate.weather_chunk_count.max(if local_ok { 1 } else { 0 });
     frame.climate_fed = true;
+    frame.local_sample = local_ok;
     frame.gpu_authority = false;
     frame.zoom_alpha = zoom.zoom_alpha;
     frame.tactical_band = zoom.tactical;
 
     domains.set_weather_precip_active(true);
     let origin = camera.map(|c| c.translation).unwrap_or(bevy::math::Vec2::ZERO);
-    frame.streaks = build_precip_streak_instances_at(climate, origin, zoom);
+    frame.streaks = build_precip_streak_instances_at(
+        rain,
+        snow,
+        fog,
+        wind_speed,
+        wind_mps,
+        climate.weather_chunk_count.max(if local_ok { 1 } else { 0 }),
+        origin,
+        zoom,
+        field.filter(|f| f.is_ready()),
+        sim_time,
+    );
     frame.instance_count = frame.streaks.len();
     frame.camera_centered = camera.is_some();
 }
@@ -125,40 +169,64 @@ pub fn apply_weather_precip_frame_from_climate_at(
 #[must_use]
 pub fn build_precip_streak_instances(climate: &ClimateVisualAggregate) -> Vec<GpuInstancedQuadInstance> {
     build_precip_streak_instances_at(
-        climate,
+        climate.mean_rain,
+        climate.mean_snow,
+        climate.mean_fog_density,
+        climate.mean_wind_speed,
+        climate.mean_wind_mps,
+        climate.weather_chunk_count,
         bevy::math::Vec2::ZERO,
         WeatherPrecipZoomBand::from_zoom_alpha(0.5),
+        None,
+        SimTimeMicros(0),
     )
 }
 
 #[must_use]
 pub fn build_precip_streak_instances_at(
-    climate: &ClimateVisualAggregate,
+    rain: f32,
+    snow: f32,
+    fog: f32,
+    wind_speed: f32,
+    wind_mps: Vec2,
+    weather_chunk_count: u32,
     origin: bevy::math::Vec2,
     zoom: WeatherPrecipZoomBand,
+    field: Option<&WeatherField>,
+    sim_time: SimTimeMicros,
 ) -> Vec<GpuInstancedQuadInstance> {
-    let precip = (climate.mean_rain * 0.85 + climate.mean_snow * 0.65).clamp(0.0, 1.0);
-    if precip < PRECIP_STREAK_THRESHOLD || climate.weather_chunk_count == 0 {
+    let precip = (rain * 0.85 + snow * 0.65).clamp(0.0, 1.0);
+    if precip < PRECIP_STREAK_THRESHOLD || weather_chunk_count == 0 {
         return Vec::new();
     }
     let raw = ((precip * WEATHER_PRECIP_STREAK_CAP as f32 * zoom.density_scale) as usize)
         .clamp(1, WEATHER_PRECIP_STREAK_CAP);
     let n = raw;
-    let wind = climate.mean_wind_speed;
+    let wind = wind_speed.max(wind_mps.length() / 20.0);
     let half = (0.35 + precip * 0.45) * zoom.half_scale;
     let radius = zoom.scatter_radius;
+    let drift = wind_mps * 0.35;
     let mut out = Vec::with_capacity(n);
     for i in 0..n {
         let fi = i as f32;
-        let x = origin.x + (fi * 17.13 + wind * 3.1).sin() * radius;
-        let y = origin.y + (fi * 9.71 + wind * 1.7).cos() * radius;
+        let x = origin.x + (fi * 17.13 + wind * 3.1).sin() * radius + drift.x;
+        let y = origin.y + (fi * 9.71 + wind * 1.7).cos() * radius + drift.y;
+        let (streak_rain, streak_snow) = if let Some(f) = field {
+            let s = f.sample(Vec2::new(x, y) * TILE_METRES_GAMEPLAY, sim_time);
+            rain_snow01_from_sample(&s)
+        } else {
+            (rain, snow)
+        };
+        if streak_rain + streak_snow < PRECIP_STREAK_THRESHOLD * 0.5 {
+            continue;
+        }
         out.push(GpuInstancedQuadInstance {
-            position_xyz_custom0: Vec4::new(x, y, PRECIP_Z, climate.mean_rain),
+            position_xyz_custom0: Vec4::new(x, y, PRECIP_Z, streak_rain),
             custom1_custom2_custom3_custom4: Vec4::new(
-                climate.mean_snow,
+                streak_snow,
                 PRECIP_CLASS_ID,
                 half,
-                climate.mean_fog_density,
+                fog,
             ),
         });
     }
@@ -169,6 +237,9 @@ pub(crate) fn fill_weather_precip_frame_from_climate(
     climate: Res<ClimateVisualAggregate>,
     cam: Res<ExtractedCameraMetrics>,
     zoom_frame: Option<Res<ZoomFrame>>,
+    local: Option<Res<CameraLocalWeatherSample>>,
+    field: Option<Res<WeatherField>>,
+    sim_time: Option<Res<SimTimeMicros>>,
     mut frame: ResMut<WeatherPrecipFrame>,
     mut domains: ResMut<ParticleDomainRegistry>,
 ) {
@@ -180,6 +251,15 @@ pub(crate) fn fill_weather_precip_frame_from_climate(
     let half_w = cam.view_pixels.x.max(1.0) * 0.5 / zoom;
     let half_h = cam.view_pixels.y.max(1.0) * 0.5 / zoom;
     let half_diag = (half_w * half_w + half_h * half_h).sqrt();
+    let t = sim_time
+        .as_deref()
+        .copied()
+        .unwrap_or_else(|| {
+            field
+                .as_ref()
+                .map(|f| SimTimeMicros(f.prev_micros))
+                .unwrap_or(SimTimeMicros(0))
+        });
     apply_weather_precip_frame_from_climate_at(
         &climate,
         &mut frame,
@@ -187,6 +267,9 @@ pub(crate) fn fill_weather_precip_frame_from_climate(
         false,
         Some(&cam),
         WeatherPrecipZoomBand::from_zoom_and_view(zoom_alpha, half_diag),
+        local.as_deref(),
+        field.as_deref(),
+        t,
     );
 }
 
@@ -198,7 +281,8 @@ pub(super) fn register_weather_precip_extract(app: &mut App) {
         Update,
         fill_weather_precip_frame_from_climate
             .after(AtmospherePipelineSet::VisualExtract)
-            .after(ExtractedCameraMetricsSet::Sync),
+            .after(ExtractedCameraMetricsSet::Sync)
+            .after(crate::systems::weather::publish_camera_local_weather_sample),
     );
 }
 
@@ -233,14 +317,28 @@ mod tests {
     fn background_band_fewer_streaks_than_tactical() {
         let climate = rainy_climate();
         let tac = build_precip_streak_instances_at(
-            &climate,
+            climate.mean_rain,
+            climate.mean_snow,
+            climate.mean_fog_density,
+            climate.mean_wind_speed,
+            climate.mean_wind_mps,
+            climate.weather_chunk_count,
             bevy::math::Vec2::ZERO,
             WeatherPrecipZoomBand::from_zoom_alpha(0.8),
+            None,
+            SimTimeMicros(0),
         );
         let bg = build_precip_streak_instances_at(
-            &climate,
+            climate.mean_rain,
+            climate.mean_snow,
+            climate.mean_fog_density,
+            climate.mean_wind_speed,
+            climate.mean_wind_mps,
+            climate.weather_chunk_count,
             bevy::math::Vec2::ZERO,
             WeatherPrecipZoomBand::from_zoom_alpha(0.2),
+            None,
+            SimTimeMicros(0),
         );
         assert!(tac.len() > bg.len());
         assert!(WeatherPrecipZoomBand::from_zoom_alpha(0.8).tactical);
@@ -263,11 +361,14 @@ mod tests {
             false,
             Some(&cam),
             WeatherPrecipZoomBand::from_zoom_alpha(0.7),
+            None,
+            None,
+            SimTimeMicros(0),
         );
         assert!(frame.camera_centered);
         assert!(frame.tactical_band);
         let first = frame.streaks[0].position_xyz_custom0;
-        assert!((first.x - 100.0).abs() < 50.0);
+        assert!((first.x - 100.0).abs() < 80.0);
     }
 
     #[test]

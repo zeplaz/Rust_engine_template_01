@@ -15,8 +15,12 @@ pub struct WeatherPrecipFrame {
     pub mean_snow: f32,
     pub mean_fog: f32,
     pub mean_wind: f32,
+    /// W3 camera-local wind (m/s) for streak lean.
+    pub wind_mps: Vec2,
     pub weather_chunk_count: u32,
     pub climate_fed: bool,
+    /// True when streaks used [`crate::systems::weather::CameraLocalWeatherSample`].
+    pub local_sample: bool,
     pub streaks: Vec<GpuInstancedQuadInstance>,
     pub instance_count: usize,
     pub gpu_authority: bool,

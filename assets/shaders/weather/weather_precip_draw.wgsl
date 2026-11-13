@@ -10,6 +10,11 @@ struct Globals {
     view_half_y: f32,
     /// px-per-tile — streak size scales as 1/camera_zoom (screen-stable).
     camera_zoom: f32,
+    /// W3 sim wind (m/s).
+    wind_mps_x: f32,
+    wind_mps_y: f32,
+    _pad0: f32,
+    _pad1: f32,
 }
 
 @group(0) @binding(0)
@@ -60,7 +65,7 @@ fn vs_main(
     let half_x = half * mix(0.28, 0.85, clamp(snow, 0.0, 1.0));
     let half_y = half * mix(3.6, 1.15, clamp(snow, 0.0, 1.0));
 
-    // Fast vertical fall + light wind drift; wrap inside view band so rain fills the frame.
+    // Fast vertical fall + sim-wind lean; wrap inside view band so rain fills the frame.
     let half_view = max(globals.view_half_y, 40.0);
     let fall_speed = mix(95.0, 280.0, clamp(rain, 0.0, 1.0));
     let phase = fract(
@@ -69,12 +74,16 @@ fn vs_main(
             + row.position_xyz_custom0.x * 0.0011
     );
     let fall_y = (0.5 - phase) * half_view * 2.0;
-    let wind_x = globals.time_secs * (12.0 + rain * 28.0 + snow * 6.0)
-        + f32(safe_id) * 0.37;
+    let wind_vec = vec2<f32>(globals.wind_mps_x, globals.wind_mps_y);
+    let wind_len = length(wind_vec);
+    let wind_dir = select(vec2<f32>(1.0, 0.0), wind_vec / max(wind_len, 1e-3), wind_len > 0.15);
+    let lean = min(wind_len * 0.45, 12.0);
+    let drift = wind_dir * (lean * (0.35 + rain * 0.65) + globals.time_secs * (0.8 + rain * 1.2));
 
     let world = vec3<f32>(
-        row.position_xyz_custom0.x + corner.x * half_x * 2.0 + sin(wind_x) * 2.5,
-        row.position_xyz_custom0.y + corner.y * half_y * 2.0 + fall_y,
+        row.position_xyz_custom0.x + corner.x * half_x * 2.0 + drift.x
+            + corner.y * half_y * 2.0 * wind_dir.x * 0.12,
+        row.position_xyz_custom0.y + corner.y * half_y * 2.0 + fall_y + drift.y * 0.15,
         row.position_xyz_custom0.z,
     );
 

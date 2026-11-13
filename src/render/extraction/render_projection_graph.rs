@@ -351,6 +351,30 @@ impl ProjectionNodeTrait for SmokeProjectionNode {
     }
 }
 
+/// W3 weather overlay projection (bake revision + dims; no parallel weather scan).
+#[derive(Debug, Clone, Default)]
+pub struct WeatherProjectionNode {
+    pub snapshot_stamp: u64,
+    pub bake_revision: u64,
+    pub dims: UVec2,
+    pub published: bool,
+    pub mean_cloud: f32,
+}
+
+impl WeatherProjectionNode {
+    pub fn sync_from_bake(
+        &mut self,
+        bake: &crate::systems::weather::WeatherOverlayBakeState,
+        committed_tick: u64,
+    ) {
+        self.snapshot_stamp = committed_tick;
+        self.bake_revision = bake.revision;
+        self.dims = bake.dims;
+        self.published = bake.published;
+        self.mean_cloud = bake.mean_cloud;
+    }
+}
+
 /// Root graph resource: orchestrates all projection nodes.
 #[derive(Resource, Debug, Clone, ExtractResource)]
 pub struct RenderProjectionGraph {
@@ -358,6 +382,7 @@ pub struct RenderProjectionGraph {
     pub smoke: SmokeProjectionNode,
     pub logistics: LogisticsProjectionNode,
     pub ecology: EcologyProjectionNode,
+    pub weather: WeatherProjectionNode,
 }
 
 impl Default for RenderProjectionGraph {
@@ -367,6 +392,7 @@ impl Default for RenderProjectionGraph {
             smoke: SmokeProjectionNode::default(),
             logistics: LogisticsProjectionNode::default(),
             ecology: EcologyProjectionNode::default(),
+            weather: WeatherProjectionNode::default(),
         }
     }
 }
@@ -449,6 +475,7 @@ fn advance_projection_graph_snapshot_stamps(
     graph.smoke.snapshot_stamp = tick;
     graph.logistics.snapshot_stamp = tick;
     graph.ecology.snapshot_stamp = tick;
+    graph.weather.snapshot_stamp = tick;
 }
 
 /// Single-line snapshot for live readiness: confirms **fire → smoke → logistics → ecology** slots

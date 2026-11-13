@@ -8,7 +8,7 @@ use std::collections::BTreeMap;
 use bevy::prelude::*;
 use serde_json::{json, Value};
 
-use crate::systems::weather::WeatherField;
+use crate::systems::weather::{CameraLocalWeatherSample, WeatherField, WeatherOverlayBakeState};
 
 /// Rain rate (mm/h) at which a cell counts as raining.
 const RAIN_COVERAGE_MM_H: f32 = 0.1;
@@ -54,7 +54,12 @@ fn track(s: &mut WeatherDumpSeries, key: &'static str, v: f64) {
     s.series.entry(key).or_default().push(v);
 }
 
-fn sample_weather_series(field: Option<Res<WeatherField>>, mut s: ResMut<WeatherDumpSeries>) {
+fn sample_weather_series(
+    field: Option<Res<WeatherField>>,
+    local: Option<Res<CameraLocalWeatherSample>>,
+    bake: Option<Res<WeatherOverlayBakeState>>,
+    mut s: ResMut<WeatherDumpSeries>,
+) {
     if !super::sim_run_dump::sim_dump_enabled(None) {
         return;
     }
@@ -112,12 +117,40 @@ fn sample_weather_series(field: Option<Res<WeatherField>>, mut s: ResMut<Weather
     track(&mut s, "max_rain_mm_h", f64::from(max_rain));
     track(&mut s, "max_lightning", f64::from(max_lightning));
     track(&mut s, "pressure_span_hpa", f64::from(p_max - p_min));
+    // W3: camera-local rain vs world mean (absolute delta in rain01 units).
+    let local_rain = local
+        .as_ref()
+        .filter(|l| l.ready)
+        .map(|l| f64::from(l.rain01))
+        .unwrap_or(0.0);
+    let mean_rain01 = snap
+        .rain_mm_h
+        .iter()
+        .map(|r| f64::from((*r / 10.0).clamp(0.0, 1.0)))
+        .sum::<f64>()
+        / n;
+    track(
+        &mut s,
+        "local_rain_vs_mean_abs",
+        (local_rain - mean_rain01).abs(),
+    );
+    track(
+        &mut s,
+        "overlay_wind_published",
+        if bake.as_ref().is_some_and(|b| b.published) {
+            1.0
+        } else {
+            0.0
+        },
+    );
     s.last = json!({
         "prevailing_dir_deg": field.climate.prevailing_dir_rad.to_degrees(),
         "prevailing_mps": field.climate.prevailing_speed_mps,
         "base_temp_c": field.climate.base_temp_c,
         "preset": field.climate.preset.map(|p| format!("{p:?}")),
         "lows": field.systems.iter().filter(|s| s.kind == crate::systems::weather::PressureKind::Low).count(),
+        "local_rain01": local_rain,
+        "overlay_bake_revision": bake.as_ref().map(|b| b.revision).unwrap_or(0),
     });
 }
 

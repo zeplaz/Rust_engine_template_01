@@ -54,6 +54,8 @@ pub struct MinimapOverlayMask {
     pub construction_heat: bool,
     /// Ecology macro band — design **M2** (coder slice **UI-P3-M3-001**; fog/EW = **UI-P3-M4-001**).
     pub ecology_heat: bool,
+    /// W3 weather wash (cloud/rain from [`crate::systems::weather::WeatherOverlayBakeState`]).
+    pub weather: bool,
     /// Fog-of-war veil — design **M3** (**UI-P3-M4-001**).
     pub fow: bool,
     /// EW / denial stress — design **M3** (**UI-P3-M4-001**).
@@ -72,6 +74,7 @@ impl MinimapOverlayMask {
             || self.logistics_heat
             || self.construction_heat
             || self.ecology_heat
+            || self.weather
             || self.fow
             || self.ew
             || self.units
@@ -90,6 +93,7 @@ pub const fn simulation_minimap_overlay_defaults() -> MinimapOverlayMask {
         logistics_heat: true,
         construction_heat: false,
         ecology_heat: false,
+        weather: false,
         fow: false,
         ew: false,
         units: false,
@@ -105,6 +109,7 @@ pub const fn minimap_overlay_witness_harness() -> MinimapOverlayMask {
         logistics_heat: true,
         construction_heat: true,
         ecology_heat: true,
+        weather: true,
         fow: true,
         ew: true,
         units: true,

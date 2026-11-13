@@ -29,6 +29,8 @@ pub struct HudOverlayTrayState {
     pub logistics_heat: bool,
     pub construction_heat: bool,
     pub ecology_heat: bool,
+    /// W3 weather wash (cloud/rain).
+    pub weather: bool,
     pub tray_panel_state: HudPanelState,
 }
 
@@ -41,6 +43,7 @@ impl HudOverlayTrayState {
             logistics_heat: self.logistics_heat,
             construction_heat: self.construction_heat,
             ecology_heat: self.ecology_heat,
+            weather: self.weather,
             fow: self.fow_visible,
             ew: self.ew_visible,
             units: base.units,
@@ -53,6 +56,7 @@ impl HudOverlayTrayState {
         self.logistics_heat = mask.logistics_heat;
         self.construction_heat = mask.construction_heat;
         self.ecology_heat = mask.ecology_heat;
+        self.weather = mask.weather;
         self.fow_visible = mask.fow;
         self.ew_visible = mask.ew;
     }
@@ -71,6 +75,7 @@ impl Default for HudOverlayTrayState {
             logistics_heat: mask.logistics_heat,
             construction_heat: mask.construction_heat,
             ecology_heat: mask.ecology_heat,
+            weather: mask.weather,
             tray_panel_state: HudPanelState::Collapsed,
         }
     }

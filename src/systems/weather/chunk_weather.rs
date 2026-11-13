@@ -37,6 +37,8 @@ pub struct ChunkWeather {
     pub wind_mps: Vec2,
     /// Gust magnitude (m/s) from the field sample (5 s hash bucket).
     pub gust_mps: f32,
+    /// Cloud cover 0..1 at chunk centre (W3).
+    pub cloud: f32,
     pub lightning_risk: f32,
     /// 1.0 = clear horizon (>= 10 km); lower = worse.
     pub visibility_factor: f32,
@@ -54,6 +56,7 @@ impl Default for ChunkWeather {
             wind_speed: 0.0,
             wind_mps: Vec2::ZERO,
             gust_mps: 0.0,
+            cloud: 0.0,
             lightning_risk: 0.0,
             visibility_factor: 1.0,
             soil_moisture: 0.45,
@@ -105,6 +108,7 @@ pub fn project_chunk_weather(
         w.fog_density = s.fog.clamp(0.0, 1.0);
         w.wind_mps = s.wind_mps;
         w.gust_mps = s.gust_mps.max(0.0);
+        w.cloud = s.cloud.clamp(0.0, 1.0);
         w.wind_speed = (s.wind_mps.length() / CHUNK_WIND_FULL_SCALE_MPS).clamp(0.0, 1.0);
         w.lightning_risk = s.lightning.clamp(0.0, 1.0);
         w.visibility_factor = (s.visibility_m / CHUNK_VISIBILITY_FULL_SCALE_M).clamp(0.05, 1.0);

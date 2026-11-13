@@ -1,6 +1,6 @@
 # Plan: weather and wind field v1
 
-Status: W1 SHIPPED; **W2 SHIPPED** (2026-11-13: anisotropic 8-neigh fire + continuous wind, L0 WeatherField advect, long-lived stand scars RON+save, firebreak/road fuel clear, dump length:breadth / burnt_fraction); W3–W5 PLANNED. Owner: `coder` (sim), `designer` (overlay/HUD/clouds).
+Status: W1 SHIPPED; W2 SHIPPED; **W3 SHIPPED** (2026-11-13: camera-local precip + wind lean, OverlayChannel::Wind bake, minimap weather wash, cloud sheets, tactical HUD readout); W4–W5 PLANNED. Owner: `coder` (sim), `designer` (overlay/HUD/clouds).
 Units: metric throughout (m/s, mm/h, °C, m visibility).
 
 ## 1. What exists today (and why wind looks fake)
@@ -96,8 +96,7 @@ WeatherField::sample(pos_m: Vec2, sim_time: SimTimeMicros) -> WeatherSample {
    - anisotropic spread and slope, embers and spot fires from the sampled wind, L0 advection per cell
    - fire VFX use local wind
    - delete `GlobalWind` and `PREVAILING_WIND_DIR`
-3. **W3 Visuals + player read:**
-   - local precip, the cloud cover layer (map and voxel), the weather map mode, the HUD readout
+3. **W3 Visuals + player read:** see §4b.
 4. **W4 Combat / logistics / power:**
    - artillery drift and dispersion, visibility ranges, mud mobility, truck weather speed, per-plant renewables
 5. **W5 Air / missile hooks:**
@@ -171,6 +170,35 @@ W2 locks an **8-neighbour square stencil** weighted by a **continuous** wind vec
 **Rejected:** 16+ direction stencils on square cells (knight/long-range offsets, uneven distance weights, diminishing return vs elliptical ROS).
 
 **Next fidelity step after W2 ships:** elliptical ROS kernel driving the existing 8-neigh path in `cell_spread` / `chunk_fire_overlay`, then level-set if fireline tools need sub-cell contact tests.
+
+## 4b. W3 scope: visuals + player read (2026-11-13)
+
+W3 makes the field **readable** without inventing a second weather extract.
+
+| Deliverable | Attach point | Done when |
+|---|---|---|
+| Local precip | `CameraLocalWeatherSample` ← `WeatherField::sample(camera)`; `weather_vfx` streaks + shader lean from `wind_mps` | Rain density follows camera cell; lean matches sim wind |
+| Cloud / wind bake | `bake_weather_overlay_from_field` → `OverlayFieldFrame.fields[Wind]` (R=cloud G=rain B/A=wind dir) | `WeatherOverlayBakeState.published` |
+| Weather map mode | `MinimapOverlayMask.weather` + tray; wash via ecology compositor slot from Wind bake | Toggle shows cool cloud/rain wash |
+| Voxel cloud sheets | Procedural quads under weather VFX root; opacity from `sample().cloud` | Sheets appear when cloud high; drift with wind |
+| HUD readout | `WeatherPlayerReadFrame` + `format_tactical_wx_line` → ops strip | `12 m/s NW, gusts …, rain … mm/h, vis … km` (compact strip keeps `r/s/f`) |
+| Projection | `WeatherProjectionNode` on `RenderProjectionGraph` | Bake revision mirrored; no parallel scan |
+| Dump / matrix | `overlay_wind_published`, `local_rain_vs_mean_abs`, `mean_cloud` | Matrix rows green under rainy/storm runs |
+
+**Authority:** `WeatherField::sample` only. `ClimateVisualAggregate` stays world means for legacy GPU fire paths.
+
+**Plan wording note:** older text said `ViewRepresentation::Wind` — the live enum is `OverlayChannel::Wind`.
+
+### Post-W3 fidelity (do not invent parallel clouds)
+
+| Layer | W3 | Higher fidelity (later) |
+|---|---|---|
+| Precip | Camera + per-streak `sample` | Full screen-space rain from field texture |
+| Cloud sheets | Few drifting quads | Soft volumetric / sky dome; map shadows from cloud texture |
+| Map mode | Wash + encoded wind in bake | Sparse chevron glyphs at weather-cell centres |
+| HUD | Camera + voxel cursor pick | Top-down cursor via `ConstructionMapProjection` |
+
+**Rejected:** second ECS weather scan for VFX; AI-generated cloud art; volumetric voxels as a W3 requirement.
 
 ## 5. Decisions
 

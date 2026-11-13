@@ -84,6 +84,13 @@ pub(crate) fn sync_weather_precip_sample_from_climate_aggregate(
         snow: climate.mean_snow,
         fog: climate.mean_fog_density,
         chunk_count: n,
+        visibility_factor: 1.0,
+        wind_mps: climate.mean_wind_mps,
+        gust_mps: 0.0,
+        cloud: 0.0,
+        rain_mm_h: climate.mean_rain * crate::systems::weather::CHUNK_RAIN_FULL_SCALE_MM_H,
+        visibility_m: 10_000.0,
+        local_ready: false,
     };
 }
 
