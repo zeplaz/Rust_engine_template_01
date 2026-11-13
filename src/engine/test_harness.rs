@@ -21,7 +21,6 @@ use crate::engine::{
     ux_enter_world_from_world_gen, AppState, PauseState, WorldGenChromeLatch, WorldGenState,
 };
 use crate::render::WeatherFireFieldDebugOverlay;
-use crate::systems::atmosphere::GlobalWind;
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::fire::{
     ChunkFireOverlay, ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission,
@@ -1361,13 +1360,6 @@ fn seed_visual_concrete_chain_e2e(
     }
 }
 
-fn write_global_wind(global_wind: &mut Option<ResMut<GlobalWind>>, direction: Vec2, speed: f32) {
-    if let Some(gw) = global_wind.as_mut() {
-        gw.direction = direction;
-        gw.speed = speed;
-    }
-}
-
 /// Weather scenes ask the weather field for a RON preset; the field stays the only weather writer.
 fn request_weather_preset(req: &mut WeatherPresetRequest, preset: WeatherPresetId) {
     if req.0.is_none() {
@@ -1380,12 +1372,7 @@ fn seed_weather_scene(req: &mut WeatherPresetRequest, gpu: &mut WeatherFireField
     request_weather_preset(req, WeatherPresetId::StormFront);
 }
 
-fn seed_atmosphere_wind(global_wind: &mut Option<ResMut<GlobalWind>>, req: &mut WeatherPresetRequest) {
-    write_global_wind(
-        global_wind,
-        Vec2::new(1.0, 0.2).normalize_or_zero(),
-        6.0,
-    );
+fn seed_atmosphere_wind(req: &mut WeatherPresetRequest) {
     request_weather_preset(req, WeatherPresetId::Windy);
 }
 
@@ -1410,7 +1397,6 @@ fn apply_test_scene_defaults(
         &mut ChunkSmokeField,
     )>,
     mut fuel_q: Query<&mut ChunkFuelProfile>,
-    mut global_wind: Option<ResMut<GlobalWind>>,
     mut vfx_region: Option<ResMut<VfxFireTestRegion>>,
 ) {
     let Some(kind) = scene.as_ref().map(|r| r.0) else {
@@ -1443,10 +1429,9 @@ fn apply_test_scene_defaults(
         }
         TestScene::Vfx => {
             tile_debug.use_batched_mesh_overlay = true;
-            write_global_wind(&mut global_wind, Vec2::X, 0.0);
         }
         TestScene::Atmosphere => {
-            seed_atmosphere_wind(&mut global_wind, &mut weather_preset);
+            seed_atmosphere_wind(&mut weather_preset);
             let mut fi = 0u32;
             for mut prof in &mut fuel_q {
                 if fi >= 3 {
@@ -1458,7 +1443,7 @@ fn apply_test_scene_defaults(
         }
         TestScene::SubFx => {
             seed_weather_scene(&mut weather_preset, &mut gpu);
-            seed_atmosphere_wind(&mut global_wind, &mut weather_preset);
+            seed_atmosphere_wind(&mut weather_preset);
             sim.overlays.fire_heat = false;
             sim.bump_revision();
         }
@@ -1471,12 +1456,9 @@ fn apply_test_scene_defaults(
             // Batched overlay may stay on for non-LOD instance channels (footprint/site) —
             // LOD FOCUS/TERRAIN emission is independently gated by lod_paint_active.
             tile_debug.use_batched_mesh_overlay = true;
-            if let Some(gw) = global_wind.as_mut() {
-                gw.direction = Vec2::new(1.0, 0.22).normalize_or_zero();
-                gw.speed = 5.8;
-            }
+            request_weather_preset(&mut weather_preset, WeatherPresetId::Windy);
             gpu.show = false;
-            // Weather: the seeded field (no preset), so the play check reads real weather.
+            // Weather: windy preset so smoke/embers drift in play checks.
             let mut fi = 0u32;
             for mut prof in &mut fuel_q {
                 if fi >= 4 {
@@ -1491,10 +1473,6 @@ fn apply_test_scene_defaults(
             wx.background_aesthetic = true;
             focus_debug.enabled = false;
             tile_debug.use_batched_mesh_overlay = false;
-            if let Some(gw) = global_wind.as_mut() {
-                gw.direction = Vec2::new(1.0, 0.2).normalize_or_zero();
-                gw.speed = 6.0;
-            }
             gpu.show = false;
             // Visible GPU precip streaks: a storm front from the weather presets.
             request_weather_preset(&mut weather_preset, WeatherPresetId::StormFront);
@@ -1515,7 +1493,6 @@ fn apply_test_scene_defaults(
             wx.overlay = false;
             wx.particles = false;
             gpu.show = false;
-            write_global_wind(&mut global_wind, Vec2::X, 0.0);
             sim.overlays.fire_heat = false;
             sim.bump_revision();
         }

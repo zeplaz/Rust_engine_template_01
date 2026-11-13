@@ -215,6 +215,7 @@ pub fn active_place_subject(tool: &ActiveBuildTool) -> Option<String> {
         BuildTool::Road(RoadType::Highway) => Some("Highway".to_string()),
         BuildTool::Rail(_) => Some("Rail".to_string()),
         BuildTool::PowerLine(_) => Some("Power line".to_string()),
+        BuildTool::Firebreak => Some("Firebreak".to_string()),
         BuildTool::Demolish => Some("Demolish".to_string()),
         BuildTool::Zone(_) => Some("Zone".to_string()),
         BuildTool::Building(_) | BuildTool::None => None,

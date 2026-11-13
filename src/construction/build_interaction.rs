@@ -165,6 +165,7 @@ pub fn build_pick_ghost_tile_system(
             | BuildTool::Road(_)
             | BuildTool::Rail(_)
             | BuildTool::PowerLine(_)
+            | BuildTool::Firebreak
     ) {
         ghost.unlock_to_preview();
         return;
@@ -821,7 +822,7 @@ pub fn build_confirm_site_system(
 
     if matches!(
         commit.tool.tool,
-        BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::PowerLine(_)
+        BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::PowerLine(_) | BuildTool::Firebreak
     ) {
         return;
     }

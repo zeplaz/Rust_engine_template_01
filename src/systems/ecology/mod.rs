@@ -1,6 +1,7 @@
 //! Ecology: macro [`ChunkEcology`](chunk_ecology::ChunkEcology) + meso [`vegetation_field::VegetationField`] (CPU authority).
 
 mod cell_stand;
+mod fuel_break;
 mod chunk_ecology;
 mod landscape_grammar;
 mod landscape_grammar_burn;
@@ -15,7 +16,11 @@ mod water_vegetation_tests;
 
 pub use cell_stand::{
     ChunkCellStand, StandBurnConfig, StandKind, StandPhase, CELL_BURN_HEAT, CELL_BURNING, CELL_BURNT,
+    GAME_DAY_SECS, STAND_BURN_RON, load_stand_burn_config, parse_stand_burn_ron,
     CELL_GRASS, CELL_NONE, CELL_OLD, CELL_REGROWTH, CELL_SHRUB, CELL_WATER, CELL_YOUNG, SCAR_FRACTION,
+};
+pub use fuel_break::{
+    apply_fuel_break_commits, FuelBreakCommitEvent, PendingFuelBreaks,
 };
 pub use chunk_ecology::{chunk_ecology_tick, ChunkEcology};
 pub use landscape_grammar::{
@@ -126,13 +131,17 @@ impl Plugin for EcologyPlugin {
         );
         // Per-cell standing vegetation: fuel capacity, burn-out, regrowth. Its losses reach the canopy only
         // through `CanopyDrivers` (inputs), so `vegetation_field_tick` stays the one canopy writer.
-        app.init_resource::<StandBurnConfig>().add_systems(
+        app.insert_resource(load_stand_burn_config())
+            .init_resource::<PendingFuelBreaks>()
+            .add_systems(
             Update,
             (
                 cell_stand::spawn_chunk_cell_stand,
+                fuel_break::apply_fuel_break_commits,
                 cell_stand::cell_stand_tick
                     .after(vegetation_suitability::update_chunk_vegetation_suitability)
-                    .after(landscape_grammar_lg2::derive_vegetation_population_from_graph),
+                    .after(landscape_grammar_lg2::derive_vegetation_population_from_graph)
+                    .after(fuel_break::apply_fuel_break_commits),
             )
                 .chain()
                 .in_set(ChunkEnvironmentSet::Ecology)

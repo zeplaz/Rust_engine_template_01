@@ -3,6 +3,7 @@
 //! UI / preview enqueue [`ConstructionPlan`] rows; only [`execute_construction_plans_system`] mutates
 //! transport topology and sim road markers.
 
+use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 use crate::strategic::{
@@ -34,6 +35,11 @@ pub enum ConstructionType {
         tail: BuildSiteTile,
     },
     RailSegment {
+        head: BuildSiteTile,
+        tail: BuildSiteTile,
+    },
+    /// Fuel-only clear strip (W2 firebreak) — no transport topology.
+    FirebreakSegment {
         head: BuildSiteTile,
         tail: BuildSiteTile,
     },
@@ -148,7 +154,8 @@ pub fn validate_construction_plans_system(
             continue;
         }
         let validation = match plan.intent.entity_type {
-            ConstructionType::RoadSegment { head, tail } => {
+            ConstructionType::RoadSegment { head, tail }
+            | ConstructionType::FirebreakSegment { head, tail } => {
                 validate_road_segment(head, tail, &params)
             }
             ConstructionType::RailSegment { head, tail } => {
@@ -170,6 +177,12 @@ struct SegmentApplyResult {
     construction_record: Option<crate::systems::transport::TransportConstructionRecord>,
 }
 
+#[derive(SystemParam)]
+pub(crate) struct ExecuteHydroOpt<'w> {
+    queue: Option<ResMut<'w, crate::substrate::hydrology::HydrologyEventQueue>>,
+    coupling: Option<ResMut<'w, crate::substrate::hydrology::HydrologyConstructionCouplingStats>>,
+}
+
 pub fn execute_construction_plans_system(
     mut commands: Commands,
     mut queue: ResMut<ConstructionPlanQueue>,
@@ -185,10 +198,8 @@ pub fn execute_construction_plans_system(
     terrain: ConstructionTerrainConform,
     rail: Res<super::rail::ActiveRailPlacement>,
     raster_cfg: Option<Res<crate::strategic::StrategicRasterConfig>>,
-    mut hydro_queue: Option<ResMut<crate::substrate::hydrology::HydrologyEventQueue>>,
-    mut hydro_coupling: Option<
-        ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingStats>,
-    >,
+    mut hydro: ExecuteHydroOpt,
+    mut fuel_breaks: ResMut<crate::systems::ecology::PendingFuelBreaks>,
 ) {
     let mut executed = false;
     let cells_per_chunk = raster_cfg
@@ -202,7 +213,8 @@ pub fn execute_construction_plans_system(
         plan.status = ConstructionStatus::Building;
         let endpoints = match plan.intent.entity_type {
             ConstructionType::RoadSegment { head, tail }
-            | ConstructionType::RailSegment { head, tail } => (head, tail),
+            | ConstructionType::RailSegment { head, tail }
+            | ConstructionType::FirebreakSegment { head, tail } => (head, tail),
         };
         let result = match plan.intent.entity_type {
             ConstructionType::RoadSegment { head, tail } => apply_road_segment_to_world(
@@ -255,6 +267,19 @@ pub fn execute_construction_plans_system(
                     )
                 }
             }
+            ConstructionType::FirebreakSegment { head, tail } => {
+                let tiles = super::tile_visual::build_site_tiles_between(head, tail);
+                if tiles.is_empty() {
+                    None
+                } else {
+                    Some(SegmentApplyResult {
+                        tiles_added: tiles,
+                        marker_entities: Vec::new(),
+                        edge_id: None,
+                        construction_record: None,
+                    })
+                }
+            }
         };
         if let Some(apply) = result {
             plan.status = ConstructionStatus::Completed;
@@ -267,21 +292,30 @@ pub fn execute_construction_plans_system(
                     intersections.register_or_extend(tail, entity);
                 }
             }
-            super::history::record_road_execution(
-                history.as_mut(),
-                apply.tiles_added.clone(),
-                apply.marker_entities,
-                apply.edge_id,
-                apply.construction_record,
-            );
-            if let (Some(hydro), Some(coupling)) = (hydro_queue.as_mut(), hydro_coupling.as_mut()) {
-                super::hydro_coupling::emit_road_execute_hydro_dirty(
-                    hydro,
-                    coupling,
-                    plan.id,
-                    &apply.tiles_added,
-                    cells_per_chunk,
+            if !apply.marker_entities.is_empty() || apply.edge_id.is_some() {
+                super::history::record_road_execution(
+                    history.as_mut(),
+                    apply.tiles_added.clone(),
+                    apply.marker_entities,
+                    apply.edge_id,
+                    apply.construction_record,
                 );
+            }
+            // Natural breaks (road/rail) and player firebreaks clear fuel along the strip.
+            fuel_breaks.push(crate::systems::ecology::FuelBreakCommitEvent {
+                tiles: apply.tiles_added.clone(),
+                cells_per_chunk,
+            });
+            if let (Some(hydro), Some(coupling)) = (hydro.queue.as_mut(), hydro.coupling.as_mut()) {
+                if !matches!(plan.intent.entity_type, ConstructionType::FirebreakSegment { .. }) {
+                    super::hydro_coupling::emit_road_execute_hydro_dirty(
+                        hydro,
+                        coupling,
+                        plan.id,
+                        &apply.tiles_added,
+                        cells_per_chunk,
+                    );
+                }
             }
         } else {
             plan.status = ConstructionStatus::Failed;

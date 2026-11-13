@@ -48,11 +48,13 @@ pub fn sync_build_mode_state(
         match tool.tool {
             BuildTool::Zone(_) if !zone.painted.is_empty() => BuildMode::ZonePaint,
             BuildTool::None if strip.active == ToolContext::None => BuildMode::None,
-            BuildTool::Road(_) | BuildTool::Rail(_) if !path.control_points.is_empty() => {
+            BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::Firebreak
+                if !path.control_points.is_empty() =>
+            {
                 BuildMode::GhostPreview
             }
             BuildTool::PowerLine(_) if !power.control_points.is_empty() => BuildMode::GhostPreview,
-            BuildTool::Road(_) => BuildMode::RoadPlacement,
+            BuildTool::Road(_) | BuildTool::Firebreak => BuildMode::RoadPlacement,
             BuildTool::Rail(_) => BuildMode::RailPlacement,
             BuildTool::PowerLine(_) => BuildMode::RoadPlacement,
             BuildTool::Building(_) | BuildTool::Defense(_) => {

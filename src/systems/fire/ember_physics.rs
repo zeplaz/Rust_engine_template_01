@@ -12,19 +12,17 @@
 //! * gravity always acts; once the plume updraft has decayed the ember falls at `v_terminal`;
 //! * temperature cools exponentially and reaches the just-visible 700 K at the ember lifetime.
 //!
-//! Wind: the sim only carries a **scalar** `ChunkWeather::wind_speed` in `[0, 1]`; direction is the
-//! shared [`PREVAILING_WIND_DIR`] plus a per-ember angular scatter. A real wind-direction field
-//! would replace [`wind_vector_mps`] only.
+//! Wind: callers pass a continuous map-plane `Vec2` (m/s) from `ChunkWeather::wind_mps` /
+//! `WeatherField::sample`. Optional angular scatter models turbulence; there is no hard-coded
+//! prevailing heading.
 
 use bevy::math::{Vec2, Vec3};
 
 /// Metres per sim tile for fire / ember physics.
 pub const FIRE_TILE_METERS: f32 = 4.0;
-/// `ChunkWeather::wind_speed == 1.0` in m/s.
-pub const WIND_FULL_SCALE_MPS: f32 = 15.0;
+/// Legacy scalar scale (`ChunkWeather::wind_speed == 1.0`); prefer `wind_mps` directly.
+pub const WIND_FULL_SCALE_MPS: f32 = 20.0;
 pub const GRAVITY_MPS2: f32 = 9.81;
-/// Prevailing wind heading in the map plane (unit vector), 30 degrees off +x.
-pub const PREVAILING_WIND_DIR: Vec2 = Vec2::new(0.866_025_4, 0.5);
 /// Time constant (s) with which the plume updraft decays as an ember leaves the column.
 pub const TAU_BUOYANCY_S: f32 = 0.9;
 /// Ember lifetime bounds (s): glow lifetime grows with ember size.
@@ -56,24 +54,35 @@ pub fn hash01(a: u32, b: u32) -> f32 {
     (h >> 8) as f32 / (1u32 << 24) as f32
 }
 
-/// `ChunkWeather::wind_speed` (normalised) → m/s.
+/// `ChunkWeather::wind_speed` (normalised) → m/s (legacy). Prefer [`wind_vector_from_field`].
 #[inline]
 #[must_use]
 pub fn wind_speed_mps(wind01: f32) -> f32 {
     wind01.clamp(0.0, 1.0) * WIND_FULL_SCALE_MPS
 }
 
-/// Wind vector (m/s) in the map plane. `scatter` in `[-1, 1]` rotates the heading: up to ±40° in
-/// calm air (turbulent), ±10° in strong wind (steady).
+/// Apply angular scatter to a continuous field wind. `scatter` in `[-1, 1]` rotates the heading:
+/// up to ±40° in calm air, ±10° in strong wind.
+#[inline]
+#[must_use]
+pub fn wind_vector_from_field(wind_mps: Vec2, scatter: f32) -> Vec2 {
+    let speed = wind_mps.length();
+    if speed <= 1e-6 {
+        return Vec2::ZERO;
+    }
+    let w01 = (speed / WIND_FULL_SCALE_MPS).clamp(0.0, 1.0);
+    let max_angle = (40.0 - 30.0 * w01).to_radians();
+    let a = scatter.clamp(-1.0, 1.0) * max_angle;
+    let (s, c) = a.sin_cos();
+    let d = wind_mps / speed;
+    Vec2::new(d.x * c - d.y * s, d.x * s + d.y * c) * speed
+}
+
+/// Legacy: scalar wind01 along +X (tests / transitional callers). Prefer [`wind_vector_from_field`].
 #[inline]
 #[must_use]
 pub fn wind_vector_mps(wind01: f32, scatter: f32) -> Vec2 {
-    let w = wind01.clamp(0.0, 1.0);
-    let max_angle = (40.0 - 30.0 * w).to_radians();
-    let a = scatter.clamp(-1.0, 1.0) * max_angle;
-    let (s, c) = a.sin_cos();
-    let d = PREVAILING_WIND_DIR;
-    Vec2::new(d.x * c - d.y * s, d.x * s + d.y * c) * wind_speed_mps(w)
+    wind_vector_from_field(Vec2::new(wind_speed_mps(wind01), 0.0), scatter)
 }
 
 /// Ember launch descriptor. `size01`: 0 = fine spark, 1 = large glowing brand.
@@ -227,14 +236,14 @@ pub fn ember_landing(l: &EmberLaunch, wind_mps: Vec2) -> Option<(f32, Vec2)> {
 #[must_use]
 pub fn spot_landing_offset_tiles(
     intensity: f32,
-    wind01: f32,
+    wind_mps: Vec2,
     size01: f32,
     r_angle: f32,
     r_speed: f32,
     r_up: f32,
     r_wind_scatter: f32,
 ) -> Option<Vec2> {
-    let wind = wind_vector_mps(wind01, r_wind_scatter * 2.0 - 1.0);
+    let wind = wind_vector_from_field(wind_mps, r_wind_scatter * 2.0 - 1.0);
     let launch = EmberLaunch::from_randoms(intensity, size01, r_angle, r_speed, r_up);
     let (t_land, off) = ember_landing(&launch, wind)?;
     (t_land <= ember_lifetime_s(size01)).then_some(off / FIRE_TILE_METERS)
@@ -322,7 +331,7 @@ mod tests {
 
     #[test]
     fn embers_rise_then_fall_and_drift_downwind() {
-        let wind = wind_vector_mps(0.5, 0.0);
+        let wind = wind_vector_from_field(Vec2::new(10.0, 0.0), 0.0);
         let l = EmberLaunch::from_randoms(0.9, 0.5, 0.0, 0.5, 0.5);
         let (p_early, v_early) = ember_kinematics(&l, wind, 0.3);
         assert!(p_early.z > 0.0 && v_early.z > 0.0, "buoyant rise first");
@@ -330,7 +339,7 @@ mod tests {
         assert!(v_late.z < 0.0, "falls once the updraft decays");
         let (t_land, off) = ember_landing(&l, wind).expect("lands");
         assert!(t_land > 0.5 && t_land < 12.0);
-        assert!(off.normalize().dot(PREVAILING_WIND_DIR) > 0.9, "drift follows the wind");
+        assert!(off.normalize().dot(Vec2::X) > 0.9, "drift follows the wind");
         let calm = ember_landing(&l, Vec2::ZERO).expect("lands").1.length();
         assert!(off.length() > 2.0 * calm.max(1.0), "wind carries it further than calm air");
     }

@@ -22,7 +22,7 @@ use crate::gui::{
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::commit::commit_road_path_to_queue;
+use super::commit::{commit_firebreak_path_to_queue, commit_road_path_to_queue};
 use super::input::cursor_world_on_map;
 use super::placement::ActiveRoadPlacement;
 
@@ -59,7 +59,10 @@ pub(crate) enum RoadPopupAction {
 }
 
 fn road_tool_active(tool: &ActiveBuildTool) -> bool {
-    matches!(tool.tool, BuildTool::Road(_) | BuildTool::Rail(_))
+    matches!(
+        tool.tool,
+        BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::Firebreak
+    )
 }
 
 fn popup_title(tool: &ActiveBuildTool) -> &'static str {
@@ -67,6 +70,7 @@ fn popup_title(tool: &ActiveBuildTool) -> &'static str {
         BuildTool::Road(RoadType::Street) => "Road - Street",
         BuildTool::Road(RoadType::Highway) => "Road - Highway",
         BuildTool::Rail(RailType::Standard) => "Rail - Standard",
+        BuildTool::Firebreak => "Firebreak",
         _ => "Road",
     }
 }
@@ -236,6 +240,7 @@ pub fn road_tool_popup_bevy_action_system(
     mut snap: ResMut<RoadSnapSettings>,
     roads: Res<ExecutedRoadNetwork>,
     params: Res<WorldGenParams>,
+    tool: Res<ActiveBuildTool>,
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<ViewProjectionAuthority>>,
     desired: Res<MapCameraDesiredRes>,
@@ -248,12 +253,21 @@ pub fn road_tool_popup_bevy_action_system(
         }
         match *action {
             RoadPopupAction::Build => {
-                commit_road_path_to_queue(
-                    placement.as_mut(),
-                    queue.as_mut(),
-                    params.as_ref(),
-                    session.continuous_path,
-                );
+                if matches!(tool.tool, BuildTool::Firebreak) {
+                    commit_firebreak_path_to_queue(
+                        placement.as_mut(),
+                        queue.as_mut(),
+                        params.as_ref(),
+                        session.continuous_path,
+                    );
+                } else {
+                    commit_road_path_to_queue(
+                        placement.as_mut(),
+                        queue.as_mut(),
+                        params.as_ref(),
+                        session.continuous_path,
+                    );
+                }
                 session.record_commit();
             }
             RoadPopupAction::Cancel => {

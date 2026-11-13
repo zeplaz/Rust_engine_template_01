@@ -666,12 +666,10 @@ mod tests {
         let wx = ChunkWeather {
             rain_intensity: 0.05,
             fog_density: 0.02,
-            snow_depth: 0.0,
             wind_speed: 0.35,
-            wind_mps: bevy::math::Vec2::ZERO,
-            lightning_risk: 0.0,
             visibility_factor: 0.95,
             soil_moisture: 0.35,
+            ..Default::default()
         };
         let mut veg = VegetationField {
             canopy_density: 0.7,
@@ -722,12 +720,10 @@ mod tests {
         let wx = ChunkWeather {
             rain_intensity: 0.05,
             fog_density: 0.02,
-            snow_depth: 0.0,
             wind_speed: 0.1,
-            wind_mps: bevy::math::Vec2::ZERO,
-            lightning_risk: 0.0,
             visibility_factor: 0.95,
             soil_moisture: 0.5,
+            ..Default::default()
         };
         let size = bevy::math::UVec2::new(8, 8);
         let mut flat = ChunkCellMatrix::new(size);

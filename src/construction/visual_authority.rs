@@ -294,7 +294,7 @@ pub fn sync_road_visual_requests(
 
     sync_executed_road_paths(&roads, &mut requests);
 
-    if !matches!(tool.tool, BuildTool::Road(_)) {
+    if !matches!(tool.tool, BuildTool::Road(_) | BuildTool::Firebreak) {
         return;
     }
     use crate::construction::tile_visual::build_site_tiles_between;

@@ -8,8 +8,8 @@ pub mod clipmap_advect;
 mod contamination_tick;
 
 pub use clipmap_advect::{
-    advect_l0_with_wind, max_blend_l0_ash_at, max_blend_l0_ember_at, max_blend_l0_fog_at,
-    max_blend_l0_heat_at, max_blend_l0_smoke_at, max_blend_l0_toxicity_at,
+    advect_l0_with_wind, advect_l0_with_wind_field, max_blend_l0_ash_at, max_blend_l0_ember_at,
+    max_blend_l0_fog_at, max_blend_l0_heat_at, max_blend_l0_smoke_at, max_blend_l0_toxicity_at,
     sample_tactical_ash_from_l0, sample_tactical_ember_from_l0, sample_tactical_fog_from_l0,
     sample_tactical_heat_from_l0, sample_tactical_smoke_from_l0, sample_tactical_toxicity_from_l0,
 };

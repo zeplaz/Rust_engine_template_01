@@ -143,6 +143,7 @@ fn tool_summary(tool: &ActiveBuildTool) -> String {
         BuildTool::Road(r) => format!("Road - {r:?}"),
         BuildTool::Rail(r) => format!("Rail - {r:?}"),
         BuildTool::PowerLine(v) => format!("Power line - {v:?}"),
+        BuildTool::Firebreak => "Firebreak".to_string(),
         BuildTool::Demolish => "Demolish".to_string(),
     }
 }

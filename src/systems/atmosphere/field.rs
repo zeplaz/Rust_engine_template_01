@@ -1,4 +1,5 @@
-//! [`AtmosphereCell`] + [`GlobalWind`] + tactical grid index (`base_fire2_smoke.md` §1, §3).
+//! [`AtmosphereCell`] + tactical grid index (`base_fire2_smoke.md` §1, §3).
+//! Wind authority is [`crate::systems::weather::WeatherField`] (W2 deleted `GlobalWind`).
 //!
 //! **DEBT-011:** Fixed 128² [`AtmosphereField`] resource **deleted**. Clipmap L0 is channel
 //! authority; chunk→tile indexing is the free [`atmos_chunk_to_tile`] helper (matches
@@ -56,22 +57,6 @@ pub fn atmos_chunk_to_tile_in(origin: IVec2, size: UVec2, chunk: IVec2) -> Optio
         return None;
     }
     Some((ux, uy))
-}
-
-/// World wind for semi-Lagrangian advection on clipmap L0.
-#[derive(Resource, Debug, Clone, Copy)]
-pub struct GlobalWind {
-    pub direction: Vec2,
-    pub speed: f32,
-}
-
-impl Default for GlobalWind {
-    fn default() -> Self {
-        Self {
-            direction: Vec2::X,
-            speed: 0.0,
-        }
-    }
 }
 
 #[cfg(test)]

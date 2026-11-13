@@ -21,13 +21,13 @@ use crate::construction::sessions::ActiveToolSession;
 use crate::construction::snap::{snap_placement, RoadSnapSettings, SnapTarget};
 use crate::construction::terrain_conform::conform_vec3;
 
-use super::commit::commit_road_path_to_queue;
+use super::commit::{commit_firebreak_path_to_queue, commit_road_path_to_queue};
 use super::pathing::regenerate_road_segments;
 use super::placement::ActiveRoadPlacement;
 
 #[inline]
 fn path_tool_active(tool: BuildTool) -> bool {
-    matches!(tool, BuildTool::Road(_))
+    matches!(tool, BuildTool::Road(_) | BuildTool::Firebreak)
 }
 
 /// Cursor → map point `Vec3(x, 0, row)` in the presentation on screen.
@@ -73,6 +73,7 @@ pub fn sync_road_placement_width_from_tool(
         BuildTool::Road(RoadType::Street) => 8.0,
         BuildTool::Road(RoadType::Highway) => 14.0,
         BuildTool::Rail(RailType::Standard) => 6.0,
+        BuildTool::Firebreak => 4.0,
         _ => return,
     };
 }
@@ -217,12 +218,21 @@ pub fn road_path_input_system(
             ) {
                 return;
             }
-            commit_road_path_to_queue(
-                placement.as_mut(),
-                queue.as_mut(),
-                pick.params.as_ref(),
-                session.continuous_path,
-            );
+            if matches!(tool.tool, BuildTool::Firebreak) {
+                commit_firebreak_path_to_queue(
+                    placement.as_mut(),
+                    queue.as_mut(),
+                    pick.params.as_ref(),
+                    session.continuous_path,
+                );
+            } else {
+                commit_road_path_to_queue(
+                    placement.as_mut(),
+                    queue.as_mut(),
+                    pick.params.as_ref(),
+                    session.continuous_path,
+                );
+            }
             session.record_commit();
         } else {
             placement.control_points.push(world);

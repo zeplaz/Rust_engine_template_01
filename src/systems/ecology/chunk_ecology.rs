@@ -220,10 +220,8 @@ mod tests {
             fog_density: 0.1,
             snow_depth: 0.0,
             wind_speed: 0.1,
-            wind_mps: bevy::math::Vec2::ZERO,
-            lightning_risk: 0.0,
-            visibility_factor: 1.0,
             soil_moisture: 0.5,
+            ..Default::default()
         };
         let lod_s = ChunkSimLod::Normal.dt_scale();
 
@@ -270,13 +268,9 @@ mod tests {
 
         let wx = ChunkWeather {
             rain_intensity: 0.15,
-            fog_density: 0.0,
-            snow_depth: 0.0,
             wind_speed: 0.2,
-            wind_mps: bevy::math::Vec2::ZERO,
-            lightning_risk: 0.0,
-            visibility_factor: 1.0,
             soil_moisture: 0.45,
+            ..Default::default()
         };
         let lod_s = ChunkSimLod::Normal.dt_scale();
         let dt = 1.0 / 60.0_f32;

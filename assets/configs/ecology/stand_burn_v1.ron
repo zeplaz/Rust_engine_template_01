@@ -1,0 +1,17 @@
+// Stand burn / scar / regrowth timings (W2). Durations are **game days**
+// (1 day = 86400 sim seconds). Timber stays scarred for years so a match never
+// greening-pops a burnt forest without a replant action.
+(
+    // Fuel consumption rate multipliers (grass / brush / timber).
+    burn_rate: (12.0, 4.0, 1.0),
+    // Standing dead snags before any green returns.
+    snag_days: (0.5, 30.0, 180.0),
+    // Regrowth after snag until live again (grass weeks, brush ~1y, timber ~10y).
+    regrow_days: (14.0, 365.0, 3650.0),
+    // Canopy share spared by a ground fire.
+    crown_share: (0.0, 0.2, 0.5),
+    // Litter refill toward cap while Live / Regrowth only (days to refill).
+    litter_days: (7.0, 60.0, 180.0),
+    crown_heat: 0.55,
+    snapshot_period_ticks: 20,
+)

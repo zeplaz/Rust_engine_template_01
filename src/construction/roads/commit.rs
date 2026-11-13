@@ -19,6 +19,26 @@ pub fn commit_road_path_to_queue(
     params: &WorldGenParams,
     continuous: bool,
 ) {
+    commit_path_to_queue(placement, queue, params, continuous, false);
+}
+
+/// Same path commit as roads, but plans are [`ConstructionType::FirebreakSegment`].
+pub fn commit_firebreak_path_to_queue(
+    placement: &mut ActiveRoadPlacement,
+    queue: &mut ConstructionPlanQueue,
+    params: &WorldGenParams,
+    continuous: bool,
+) {
+    commit_path_to_queue(placement, queue, params, continuous, true);
+}
+
+fn commit_path_to_queue(
+    placement: &mut ActiveRoadPlacement,
+    queue: &mut ConstructionPlanQueue,
+    params: &WorldGenParams,
+    continuous: bool,
+    firebreak: bool,
+) {
     let segments: Vec<_> = placement
         .generated_segments
         .iter()
@@ -38,8 +58,13 @@ pub fn commit_road_path_to_queue(
             (seg.start.x + seg.end.x) * 0.5,
             (seg.start.z + seg.end.z) * 0.5,
         );
+        let entity_type = if firebreak {
+            ConstructionType::FirebreakSegment { head, tail }
+        } else {
+            ConstructionType::RoadSegment { head, tail }
+        };
         queue.enqueue(ConstructionIntent {
-            entity_type: ConstructionType::RoadSegment { head, tail },
+            entity_type,
             world_position: center,
             rotation: 0.0,
         });
