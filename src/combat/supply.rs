@@ -77,7 +77,8 @@ pub fn front_demand_targets(theater: &Theater, balance: &FrontBalance, draw: Opt
             engineering: i.engineering * units,
         }
     });
-    [("ammo", d.ammunition), ("fuel", d.fuel), ("rations", d.rations), ("engineering", d.engineering)]
+    // `Fuel` in the catalog spelling, so depot fuel serves fronts (`fuel` is the pre-catalog tag).
+    [("ammo", d.ammunition), ("Fuel", d.fuel), ("rations", d.rations), ("engineering", d.engineering)]
         .into_iter()
         .filter_map(|(tag, kg_s)| {
             let target = (kg_s * p.buffer_s).ceil();

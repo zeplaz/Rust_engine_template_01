@@ -5,11 +5,18 @@
 //! hand at the site *are* the delivered amount: [`sync_construction_site_demands_system`] is the
 //! sole production writer of `SiteResourceManifest::delivered_*`. When the site leaves
 //! `UnderConstruction` its demands are retracted and the materials are consumed into the building.
+//!
+//! Each demand carries the site's scheduled draw: the material bill spread over the catalog's
+//! `construction_time_ticks` (one tick per simulated second, the order sim's convention), so
+//! standing lines are sized for steady flow. The stage tick still builds material in as it
+//! arrives; the order sim does not draw the rate itself (`ConsumerKind::drawn_by_order_sim`).
 
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
+use crate::construction::BuildingDefinitionRegistry;
+use crate::economy::activation::BuildingDefinitionRef;
 use crate::strategic::{ConstructionSite, SiteConstructionPhase, SiteResourceManifest};
 
 use super::model::{CargoKind, ConsumerKind, OwnerId, Priority, SiteId};
@@ -87,6 +94,18 @@ fn on_hand(snap: &LogisticsOrdersSnapshot, site: SiteId, tag: &str) -> u32 {
         .map_or(0, |r| r.on_hand)
 }
 
+/// Scheduled draw of `required` units over a build of `build_ticks` sim ticks, per simulated
+/// minute. `None` when the site has no catalog build time (unknown schedule: target level only).
+#[must_use]
+pub fn construction_draw_per_min(required: u32, build_ticks: Option<u32>, ticks_per_minute: u32) -> u32 {
+    match build_ticks {
+        Some(t) if t > 0 && required > 0 => {
+            (u64::from(required) * u64::from(ticks_per_minute)).div_ceil(u64::from(t)).min(u64::from(u32::MAX)) as u32
+        }
+        _ => 0,
+    }
+}
+
 /// Make sites that still need materials logistics endpoints.
 #[allow(clippy::type_complexity)]
 pub fn tag_construction_sites_as_order_sites(
@@ -123,12 +142,20 @@ pub struct ConstructionDemandBook {
 pub fn sync_construction_site_demands_system(
     snapshot: Res<LogisticsOrdersSnapshotRes>,
     mut book: ResMut<ConstructionDemandBook>,
-    mut sites: Query<(&LogisticsOrderSiteId, &ConstructionSite, &mut SiteResourceManifest)>,
+    catalog: Option<Res<BuildingDefinitionRegistry>>,
+    sim: Option<Res<super::plugin::LogisticsOrderSimRes>>,
+    mut sites: Query<(
+        &LogisticsOrderSiteId,
+        &ConstructionSite,
+        &mut SiteResourceManifest,
+        Option<&BuildingDefinitionRef>,
+    )>,
     mut requests: MessageWriter<LogisticsOrderRequest>,
 ) {
     let snap = &snapshot.0;
+    let ticks_per_minute = sim.as_ref().map_or(60, |s| s.sim.config.ticks_per_minute.max(1));
     let mut live: Vec<SiteId> = Vec::new();
-    for (sid, site, mut manifest) in &mut sites {
+    for (sid, site, mut manifest, def_ref) in &mut sites {
         let id = sid.0;
         if !site_accepts_materials(site.phase) {
             continue;
@@ -156,6 +183,10 @@ pub fn sync_construction_site_demands_system(
             }
         }
         if book.published.get(&id) != Some(&targets) {
+            let build_ticks = def_ref
+                .zip(catalog.as_deref())
+                .and_then(|(d, reg)| reg.get(d.catalog_id.as_str()))
+                .map(|def| def.construction_time_ticks);
             for &(tag, required) in &targets {
                 requests.write(LogisticsOrderRequest(LogisticsOrderCommand::PublishDemand {
                     site: id,
@@ -163,7 +194,7 @@ pub fn sync_construction_site_demands_system(
                     consumer: ConsumerKind::Construction,
                     buffer_target: required,
                     reorder_point: required,
-                    draw_rate_per_min: 0,
+                    draw_rate_per_min: construction_draw_per_min(required, build_ticks, ticks_per_minute),
                     priority: Priority::Normal,
                 }));
             }

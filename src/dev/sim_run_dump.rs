@@ -245,13 +245,106 @@ struct WorldParams<'w, 's> {
     particles: Option<Res<'w, WorldFireParticleFrame>>,
 }
 
+/// Fire visual chain, stage by stage: sim heat -> snapshot -> active/visible chunks -> per-view
+/// frame -> projection graph. Lets a dump say where burning cells stop producing instances.
+#[derive(SystemParam)]
+struct FireChainParams<'w, 's> {
+    index: Option<Res<'w, crate::render::ChunkFireEntityIndex>>,
+    residency: Option<Res<'w, crate::io::streaming::ChunkResidencyTable>>,
+    fire_chunks: Query<
+        'w,
+        's,
+        Entity,
+        (
+            With<crate::terrain::generation::Chunk>,
+            With<ChunkCellMatrix>,
+            With<crate::systems::fire::ChunkSurfaceFire>,
+        ),
+    >,
+    snapshot: Option<Res<'w, crate::render::FireSimulationSnapshot>>,
+    extract: Option<Res<'w, crate::render::FireExtractDiagnostics>>,
+    active: Option<Res<'w, crate::render::ActiveFireChunkSet>>,
+    visible: Option<Res<'w, crate::render::VisibleFireChunkSet>>,
+    by_view: Option<Res<'w, crate::render::FireVisualFramesByView>>,
+    fence: Option<Res<'w, crate::render::CommittedVisualSnapshotFence>>,
+    policy: Option<Res<'w, crate::gui::RepresentationResult>>,
+}
+
+fn fire_chain_json(w: &WorldParams, f: &FireChainParams) -> Value {
+    use crate::gui::ViewId;
+    use crate::render::FIRE_VISUAL_ACTIVE_HEAT_EPS;
+    // Cells the extractor should turn into instances: heat above the visual floor with fuel or burn-hold.
+    let mut emitting_cells = 0u32;
+    for o in &w.overlays {
+        for (i, h) in o.heat.iter().enumerate() {
+            let fuel = o.fuel.get(i).copied().unwrap_or(0.0);
+            let hold = o.burn_hold.get(i).copied().unwrap_or(0);
+            if *h >= FIRE_VISUAL_ACTIVE_HEAT_EPS && (fuel > 0.0 || hold > 0) {
+                emitting_cells += 1;
+            }
+        }
+    }
+    let view_rows = |id: ViewId| f.by_view.as_ref().and_then(|b| b.by_id.get(&id)).map_or(0, |fr| fr.instances.len());
+    let visible = |id: ViewId| f.visible.as_ref().and_then(|v| v.per_view.get(&id)).map_or(-1, |s| s.len() as i64);
+    let r = f.extract.as_ref().map(|d| d.last.clone()).unwrap_or_default();
+    // Index entries that resolve to an entity the extract query can read.
+    let index_resolving = f.index.as_ref().map_or(0, |ix| {
+        ix.by_coord.values().filter(|e| f.fire_chunks.contains(**e)).count()
+    });
+    let residency_bounds = f.residency.as_ref().and_then(|t| {
+        let mut it = t.entries.keys();
+        let first = *it.next()?;
+        Some(t.entries.keys().fold((first, first), |(lo, hi), c| (lo.min(*c), hi.max(*c))))
+    });
+    json!({
+        "index_len": f.index.as_ref().map_or(0, |ix| ix.by_coord.len()),
+        "index_resolving": index_resolving,
+        "fire_chunk_entities": f.fire_chunks.iter().count(),
+        "residency_bounds": residency_bounds.map(|(lo, hi)| [lo.x, lo.y, hi.x, hi.y]),
+        "emitting_cells": emitting_cells,
+        "snapshot_instances": f.snapshot.as_ref().map_or(0, |s| s.instances.len()),
+        "snapshot_chunk_heat": f.snapshot.as_ref().map_or(0, |s| s.chunk_heat.len()),
+        "snapshot_tick": f.snapshot.as_ref().map_or(0, |s| s.stamp.tick),
+        "fence_tick": f.fence.as_ref().map_or(0, |s| s.fire.tick),
+        "graph_snapshot_tick": w.graph.as_ref().map_or(0, |g| g.fire.snapshot_stamp),
+        "active_chunks": f.active.as_ref().map_or(0, |a| a.chunks.len()),
+        "visible_world_main": visible(ViewId::WorldMain),
+        "visible_sim_map": visible(ViewId::SimulationMap),
+        "view_rows_world_main": view_rows(ViewId::WorldMain),
+        "view_rows_sim_map": view_rows(ViewId::SimulationMap),
+        "graph_rows": w.graph.as_ref().map_or(0, |g| g.fire.instance_buffer.len()),
+        "policy_fire_instances": f.policy.as_ref().is_some_and(|p| p.extract_plan.fire_instances),
+        "policy_fire_cap": f.policy.as_ref().map_or(0, |p| p.extract_plan.fire_instance_cap.min(1 << 30)),
+        "extract": {
+            "ran_full_scan": r.ran_full_scan,
+            "full_reconcile": r.full_reconcile,
+            "cadence_skipped": r.cadence_skipped,
+            "fingerprint_skipped": r.fingerprint_skipped,
+            "scan_set_len": r.scan_set_len,
+            "residency_len": r.residency_len,
+            "chunks_iterated": r.chunks_iterated,
+            "chunks_profiled": r.chunks_profiled,
+            "instances_written": r.instances_written,
+            "extract_ms": r.extract_ms,
+        },
+    })
+}
+
 #[derive(SystemParam)]
 struct GameParams<'w, 's> {
     sites: Query<'w, 's, &'static ConstructionSite>,
     hqs: Query<'w, 's, &'static FactionHq>,
     start: Option<Res<'w, FactionStartConfig>>,
     roster: Option<Res<'w, FactionAiRoster>>,
-    plants: Query<'w, 's, (&'static ResourceFlowNode, &'static FacilityFlowState)>,
+    plants: Query<
+        'w,
+        's,
+        (
+            &'static ResourceFlowNode,
+            &'static FacilityFlowState,
+            Option<&'static crate::economy::facility_inputs::FacilityInputs>,
+        ),
+    >,
     flow_stats: Option<Res<'w, ResourceFlowSimStats>>,
     logistics: Option<Res<'w, LogisticsOrdersSnapshotRes>>,
     ai_log: Option<Res<'w, FactionAiDecisionLog>>,
@@ -291,10 +384,23 @@ fn construction_json(g: &GameParams) -> (Value, u32) {
 fn economy_json(g: &GameParams) -> (Value, f64) {
     let (mut operational, mut idle, mut starved) = (0u32, 0u32, 0u32);
     let (mut buf_units, mut buf_cap) = (0.0f64, 0.0f64);
-    for (node, state) in &g.plants {
+    let mut rows: Vec<Value> = Vec::new();
+    for (node, state, inputs) in &g.plants {
+        // Workforce / power cap output: a plant with neither makes nothing, so it is not "operational".
+        let supply = inputs.map_or(1.0, |i| i.factor());
+        rows.push(json!({
+            "catalog_id": node.catalog_id,
+            "produces": node.production.iter().map(|r| r.tag.clone()).collect::<Vec<_>>(),
+            "starved": state.starved,
+            "output_full": state.output_full,
+            "output_scale": state.output_scale,
+            "workforce": inputs.map(|i| i.workforce),
+            "power": inputs.map(|i| i.power),
+            "power_state": inputs.map(|i| format!("{:?}", i.power_state)),
+        }));
         if state.starved {
             starved += 1;
-        } else if state.output_full {
+        } else if state.output_full || supply <= 0.0 {
             idle += 1;
         } else {
             operational += 1;
@@ -334,6 +440,7 @@ fn economy_json(g: &GameParams) -> (Value, f64) {
             "storage_capacity": buf_cap,
             "storage_fill": if buf_cap > 0.0 { buf_units / buf_cap } else { 0.0 },
             "depot_stock_units": depot_stock_units,
+            "plants": rows,
         }),
         produced_total,
     )
@@ -376,6 +483,15 @@ fn logistics_json(g: &GameParams) -> (Value, u64) {
             "delivered_units": delivered_units,
             "draw_demands": draw_total,
             "unserved_draw_demands": unserved,
+            "draw_demand_rows": snap
+                .demands
+                .iter()
+                .filter(|d| d.draw_rate_per_min > 0)
+                .map(|d| format!(
+                    "owner {} {} site {} {} draw {}/min on_hand {} served_by {}",
+                    d.owner.0, d.consumer.label(), d.site.0, d.cargo, d.draw_rate_per_min, d.on_hand, d.served_by
+                ))
+                .collect::<Vec<_>>(),
             "starving_demands": starving,
             "vehicles_total": vehicles_total,
             "vehicles_busy": vehicles_busy,
@@ -520,7 +636,7 @@ fn push_history(state: &mut SimRunDumpState, entry: Value) {
     }
 }
 
-fn collect_dump(w: &WorldParams, g: &GameParams, state: &mut SimRunDumpState) -> Value {
+fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mut SimRunDumpState) -> Value {
     let water = count_water(&w.matrices);
     let veg = count_veg(&w.stands);
     let regrowth = w
@@ -561,6 +677,7 @@ fn collect_dump(w: &WorldParams, g: &GameParams, state: &mut SimRunDumpState) ->
             "burnt": veg.2,
             "regrowth": regrowth,
             "heat_cells": fire_heat_cells,
+            "fire_inst": w.graph.as_ref().map_or(0, |g| g.fire.instance_buffer.len()),
             "sites_operational": sites_operational,
             "deliveries": deliveries,
             "produced": produced_total,
@@ -610,6 +727,7 @@ fn collect_dump(w: &WorldParams, g: &GameParams, state: &mut SimRunDumpState) ->
         "ai": ai,
         "combat": combat,
         "fire": fire,
+        "fire_chain": fire_chain_json(w, f),
         "perf": state.perf_json(),
         "history": state.history,
     })
@@ -630,6 +748,7 @@ fn sample_frame_time(time: Res<Time<Real>>, mut state: ResMut<SimRunDumpState>) 
 fn flush_sim_run_dump(
     w: WorldParams,
     g: GameParams,
+    f: FireChainParams,
     mut state: ResMut<SimRunDumpState>,
     exit: MessageReader<AppExit>,
 ) {
@@ -644,7 +763,7 @@ fn flush_sim_run_dump(
     if !due {
         return;
     }
-    let body = collect_dump(&w, &g, &mut state);
+    let body = collect_dump(&w, &g, &f, &mut state);
     if write_dump_files(&body) {
         state.last_tick = tick;
     }

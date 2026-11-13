@@ -200,9 +200,19 @@ impl Plugin for UtilityGraphPlugin {
 #[derive(Resource, Clone, Debug)]
 pub struct UtilityNetworkSnapshotResource(pub UtilityNetworkSnapshot);
 
+/// A new world has no power network until lines are built (or a save restores one). An empty
+/// graph leaves power unmodelled (`FacilityInputs::power` = 1); the old default hydrated the
+/// three-node test fixture, whose keys match no facility tile, so every plant read Disconnected
+/// and produced nothing.
 impl Default for UtilityNetworkSnapshotResource {
     fn default() -> Self {
-        Self(fixture_utility_network_snapshot())
+        Self(UtilityNetworkSnapshot {
+            schema_version: super::UTILITY_NETWORK_SCHEMA_V1,
+            nodes: Vec::new(),
+            edges: Vec::new(),
+            power_lines: Vec::new(),
+            water_pipes: Vec::new(),
+        })
     }
 }
 

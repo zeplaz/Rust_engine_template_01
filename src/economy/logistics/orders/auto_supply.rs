@@ -50,6 +50,24 @@ impl AutoSupplyPolicy {
     }
 }
 
+/// An unattended full-capture run (`--test visual`: auto world-gen, proof capture, auto exit) has
+/// nobody at the orders panel, so the player's slot is supplied like a headless run. Applied once,
+/// and only when nothing (panel toggle, scenario script) has chosen for the player explicitly.
+pub fn unattended_player_auto_supply_system(
+    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
+    mut policy: ResMut<AutoSupplyPolicy>,
+    mut done: Local<bool>,
+) {
+    if *done {
+        return;
+    }
+    let Some(launch) = launch else { return };
+    *done = true;
+    if launch.full_capture_active() && !policy.per_owner.contains_key(&OwnerId::PLAYER) {
+        policy.set(OwnerId::PLAYER, true);
+    }
+}
+
 /// A standing line whose source has been empty this long is re-sourced when another site holds
 /// the cargo (the source may have been a plant that sold out, or leftover stock that moved on).
 pub const RESOURCE_AFTER_TICKS: u64 = 30;
