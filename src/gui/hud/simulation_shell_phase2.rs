@@ -18,7 +18,9 @@ use crate::strategic::{
     ActiveMissions, NarrativeObservationBus, StrategicOverlayDisplayPolicy, WorldFields,
 };
 use crate::systems::sim_control::{SimControlState, SimTick};
-use crate::systems::weather::WeatherPrecipVisualSample;
+use crate::systems::weather::{
+    format_tactical_wx_line, WeatherPlayerReadFrame, WeatherPrecipVisualSample,
+};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::live_data::HudInfoLiveData;
@@ -492,6 +494,7 @@ fn update_ops_strip_zone_lines_system(
     narrative: Option<Res<NarrativeObservationBus>>,
     player_log: Option<Res<crate::sim::effects::PlayerEventLog>>,
     weather: Option<Res<WeatherPrecipVisualSample>>,
+    wx_read: Option<Res<WeatherPlayerReadFrame>>,
     world_fields: Option<Res<WorldFields>>,
     tray: Res<ContextTrayState>,
     window: Query<&Window, With<bevy::window::PrimaryWindow>>,
@@ -560,11 +563,20 @@ fn update_ops_strip_zone_lines_system(
     }
 
     let w = weather.as_deref();
-    let weather_fp = (
-        (w.map(|s| s.rain).unwrap_or(0.0) * 100.0).round() as i32,
-        (w.map(|s| s.snow).unwrap_or(0.0) * 100.0).round() as i32,
-        (w.map(|s| s.fog).unwrap_or(0.0) * 100.0).round() as i32,
-    );
+    let read = wx_read.as_deref();
+    let weather_fp = if let Some(r) = read.filter(|r| r.ready) {
+        (
+            (r.display.wind_mps.length() * 10.0).round() as i32,
+            (r.display.rain_mm_h * 10.0).round() as i32,
+            (r.display.visibility_m / 100.0).round() as i32,
+        )
+    } else {
+        (
+            (w.map(|s| s.rain).unwrap_or(0.0) * 100.0).round() as i32,
+            (w.map(|s| s.snow).unwrap_or(0.0) * 100.0).round() as i32,
+            (w.map(|s| s.fog).unwrap_or(0.0) * 100.0).round() as i32,
+        )
+    };
     if cache.weather_fp != Some(weather_fp) {
         cache.weather_fp = Some(weather_fp);
         let compact = window
@@ -577,6 +589,8 @@ fn update_ops_strip_zone_lines_system(
                 w.map(|s| s.rain).unwrap_or(0.0),
                 w.map(|s| s.snow).unwrap_or(0.0),
             )
+        } else if let Some(r) = read.filter(|r| r.ready) {
+            format!("WX  {}", format_tactical_wx_line(&r.display))
         } else {
             format!(
                 "WX  r {:.2}  s {:.2}  f {:.2}",

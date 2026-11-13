@@ -48,6 +48,7 @@ pub struct MinimapCompositorHeatSources<'w> {
     pub construction_channel: Option<Res<'w, ConstructionPhaseGpuChannel>>,
     pub replay: Option<Res<'w, crate::systems::sim_frame_delta::CommittedSimReplayRing>>,
     pub veg_extract: Option<Res<'w, crate::render::extraction::VegetationExtractFrame>>,
+    pub weather_frame: Option<Res<'w, crate::gui::OverlayFieldFrame>>,
 }
 
 /// World-terrain feed for the compositor (CPU raster + optional bake spike) — keeps system param count ≤16.
@@ -328,7 +329,7 @@ pub fn run_minimap_compositor_pass(
         overlays.fire_heat,
         overlays.logistics_heat,
         overlays.construction_heat,
-        overlays.ecology_heat,
+        overlays.ecology_heat || overlays.weather,
     );
 
     let dispatch_reason = if diagnostics.last_fingerprint == 0 {
@@ -346,7 +347,7 @@ pub fn run_minimap_compositor_pass(
         } else if overlays.fire_heat != compositor.fire_heat_enabled
             || overlays.logistics_heat != compositor.logistics_heat_enabled
             || overlays.construction_heat != compositor.construction_heat_enabled
-            || overlays.ecology_heat != compositor.ecology_heat_enabled
+            || (overlays.ecology_heat || overlays.weather) != compositor.ecology_heat_enabled
         {
             MinimapGpuDispatchReason::ToggleChanged
         } else {
@@ -411,6 +412,7 @@ pub fn run_minimap_compositor_pass(
         heat_sources.construction_channel.as_deref(),
         heat_sources.replay.as_deref(),
         heat_sources.veg_extract.as_deref(),
+        heat_sources.weather_frame.as_deref(),
         &map_views,
         &terrain_feed.fallback,
         extent,
@@ -428,7 +430,7 @@ pub fn run_minimap_compositor_pass(
         fire_heat_enabled: overlays.fire_heat as u32,
         logistics_heat_enabled: overlays.logistics_heat as u32,
         construction_heat_enabled: overlays.construction_heat as u32,
-        ecology_heat_enabled: overlays.ecology_heat as u32,
+        ecology_heat_enabled: (overlays.ecology_heat || overlays.weather) as u32,
         fow_heat_enabled: overlays.fow as u32,
         ew_heat_enabled: overlays.ew as u32,
         overlay_revision,
@@ -464,7 +466,7 @@ pub fn run_minimap_compositor_pass(
     compositor.fire_heat_enabled = overlays.fire_heat;
     compositor.logistics_heat_enabled = overlays.logistics_heat;
     compositor.construction_heat_enabled = overlays.construction_heat;
-    compositor.ecology_heat_enabled = overlays.ecology_heat;
+    compositor.ecology_heat_enabled = overlays.ecology_heat || overlays.weather;
     compositor.fow_heat_enabled = overlays.fow;
     compositor.ew_heat_enabled = overlays.ew;
     compositor.units_heat_enabled = overlays.units;

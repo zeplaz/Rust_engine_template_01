@@ -79,6 +79,7 @@ mod tests {
                         logistics_heat: false,
                         construction_heat: false,
                         ecology_heat: false,
+                        weather: false,
                         fow: false,
                         ew: false,
                         units: false,

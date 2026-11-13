@@ -76,6 +76,11 @@ pub struct WeatherPrecipDrawGlobals {
     pub view_half_y: f32,
     /// px-per-tile — streak world size scales as `1/camera_zoom` for screen-stable rain.
     pub camera_zoom: f32,
+    /// W3 sim wind (m/s) for streak lean.
+    pub wind_mps_x: f32,
+    pub wind_mps_y: f32,
+    pub _pad0: f32,
+    pub _pad1: f32,
 }
 
 #[derive(Resource)]
@@ -177,6 +182,10 @@ fn sync_weather_precip_draw_globals(
             cam.view_pixels.y.max(1.0) * 0.5 / z
         },
         camera_zoom: cam.zoom_level.max(0.08),
+        wind_mps_x: frame.wind_mps.x,
+        wind_mps_y: frame.wind_mps.y,
+        _pad0: 0.0,
+        _pad1: 0.0,
     };
 }
 

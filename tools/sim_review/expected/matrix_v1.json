@@ -295,6 +295,20 @@
       "note": "Some weather cell rained (>= 0.1 mm/h) at some point in the run."
     },
     {
+      "id": "weather.overlay_wind_published",
+      "path": "weather.overlay_wind_published.max",
+      "op": "gte",
+      "expect": 1,
+      "note": "W3: OverlayChannel::Wind bake published at least once."
+    },
+    {
+      "id": "weather.mean_cloud_tracked",
+      "path": "weather.mean_cloud.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "W3: cloud cover series present (may be clear)."
+    },
+    {
       "id": "perf.sampled",
       "path": "perf.samples",
       "op": "gt",

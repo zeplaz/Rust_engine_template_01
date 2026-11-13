@@ -10,11 +10,8 @@
 
 use bevy::prelude::*;
 
-use crate::render::ExtractedCameraMetrics;
 use crate::systems::atmosphere::pipeline::AtmospherePipelineSet;
 use crate::render::ClimateVisualAggregate;
-use crate::systems::weather::ChunkWeather;
-use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::engine::states::BaseState;
 
 /// Enable / cap weather visuals (designer can toggle from diagnostics later).
@@ -90,13 +87,22 @@ impl Default for WeatherVisualSettings {
     }
 }
 
-/// Running mean of chunk weather used by overlay (updated from [`ClimateVisualAggregate`] each frame).
+/// Precip / overlay sample — W3: filled from [`super::camera_local::CameraLocalWeatherSample`]
+/// (camera `WeatherField::sample`); climate means are only a fallback when the field is not ready.
 #[derive(Resource, Debug, Clone, Copy, Default)]
 pub struct WeatherPrecipVisualSample {
     pub rain: f32,
     pub snow: f32,
     pub fog: f32,
     pub chunk_count: u32,
+    /// W3 metric readout fields (0 when not local-ready).
+    pub visibility_factor: f32,
+    pub wind_mps: Vec2,
+    pub gust_mps: f32,
+    pub cloud: f32,
+    pub rain_mm_h: f32,
+    pub visibility_m: f32,
+    pub local_ready: bool,
 }
 
 /// Z above tile fallback sprite (z=0) so overlay reads on top of the world in RTT.
@@ -191,44 +197,27 @@ fn update_overlay_from_weather(
     }
 }
 
-fn sync_precip_sample_at_camera_focus(
+/// Fallback when [`WeatherField`] is not ready — world means only (W3 prefers camera-local).
+fn sync_precip_sample_climate_fallback(
     climate: Res<ClimateVisualAggregate>,
-    metrics: Res<ExtractedCameraMetrics>,
-    weather: Query<(&Chunk, &ChunkCellMatrix, &ChunkWeather)>,
+    local: Res<super::camera_local::CameraLocalWeatherSample>,
     mut sample: ResMut<WeatherPrecipVisualSample>,
 ) {
-    let focus = metrics.translation;
-    let mut local_rain = 0.0_f32;
-    let mut local_snow = 0.0_f32;
-    let mut local_fog = 0.0_f32;
-    let mut local_n = 0u32;
-    for (chunk, matrix, wx) in &weather {
-        let center = crate::terrain::generation::chunk_world_center(chunk.coord, matrix.size);
-        if focus.distance(center) > matrix.size.x.max(matrix.size.y) as f32 * 2.5 {
-            continue;
-        }
-        local_n += 1;
-        local_rain += wx.rain_intensity;
-        local_snow += wx.snow_depth;
-        local_fog += wx.fog_density;
-    }
-
-    let background = 0.35_f32;
-    if local_n == 0 || climate.weather_chunk_count == 0 {
-        *sample = WeatherPrecipVisualSample {
-            rain: climate.mean_rain,
-            snow: climate.mean_snow,
-            fog: climate.mean_fog_density,
-            chunk_count: climate.weather_chunk_count,
-        };
+    if local.ready {
         return;
     }
-    let local = local_n.max(1) as f32;
     *sample = WeatherPrecipVisualSample {
-        rain: climate.mean_rain * background + (local_rain / local) * (1.0 - background),
-        snow: climate.mean_snow * background + (local_snow / local) * (1.0 - background),
-        fog: climate.mean_fog_density * background + (local_fog / local) * (1.0 - background),
+        rain: climate.mean_rain,
+        snow: climate.mean_snow,
+        fog: climate.mean_fog_density,
         chunk_count: climate.weather_chunk_count,
+        visibility_factor: 1.0,
+        wind_mps: climate.mean_wind_mps,
+        gust_mps: 0.0,
+        cloud: 0.0,
+        rain_mm_h: climate.mean_rain * super::CHUNK_RAIN_FULL_SCALE_MM_H,
+        visibility_m: 10_000.0,
+        local_ready: false,
     };
 }
 
@@ -243,6 +232,7 @@ mod tests {
             snow: 0.2,
             fog: 0.1,
             chunk_count: 12,
+            ..Default::default()
         }
     }
 
@@ -318,10 +308,15 @@ impl Plugin for WeatherVisualPlugin {
             .add_systems(
                 Update,
                 (
-                    sync_precip_sample_at_camera_focus
+                    super::publish_camera_local_weather_sample
                         .after(AtmospherePipelineSet::VisualExtract)
-                        .after(crate::gui::ViewAuthoritySystemSet::SyncViewManager),
-                    update_overlay_from_weather.after(AtmospherePipelineSet::VisualExtract),
+                        .after(crate::gui::ViewAuthoritySystemSet::SyncViewManager)
+                        .after(crate::render::extraction::extracted_camera_metrics::ExtractedCameraMetricsSet::Sync),
+                    sync_precip_sample_climate_fallback
+                        .after(super::publish_camera_local_weather_sample),
+                    update_overlay_from_weather
+                        .after(super::publish_camera_local_weather_sample)
+                        .after(sync_precip_sample_climate_fallback),
                 ),
             );
     }

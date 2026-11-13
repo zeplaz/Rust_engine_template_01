@@ -7,16 +7,25 @@
 //! - [`ChunkWeather`] — per-chunk projection of the field for existing readers.
 //! - **Precipitation visuals** (overlay tint; GPU streaks via `render::weather_vfx`): [`WeatherVisualPlugin`](weather_visual::WeatherVisualPlugin), [`WeatherVisualSettings`](weather_visual::WeatherVisualSettings).
 
+mod camera_local;
 mod chunk_weather;
 mod field;
+mod overlay_bake;
 mod player_read_hud;
 mod systems;
 mod tuning;
 mod weather_visual;
 
+pub use camera_local::{
+    publish_camera_local_weather_sample, rain_snow01_from_sample, CameraLocalWeatherSample,
+};
+pub use overlay_bake::{
+    bake_weather_overlay_from_field, sync_weather_projection_node, WeatherOverlayBakeState,
+};
 pub use player_read_hud::{
     format_ops_power_derate_line, format_ops_wx_line, format_ops_wx_line_with_vis,
-    };
+    format_tactical_wx_line, WeatherPlayerReadFrame,
+};
 
 pub use chunk_weather::{
     project_chunk_weather, ChunkWeather, CHUNK_RAIN_FULL_SCALE_MM_H, CHUNK_VISIBILITY_FULL_SCALE_M,
@@ -51,6 +60,8 @@ impl Plugin for WeatherSimulationPlugin {
         crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<WeatherTuning>()
             .init_resource::<WeatherField>()
+            .init_resource::<CameraLocalWeatherSample>()
+            .init_resource::<WeatherOverlayBakeState>()
             .init_resource::<WeatherPresetRequest>()
             .init_resource::<PendingWeatherRestore>()
             .add_systems(Startup, systems::load_weather_tuning_on_startup)
@@ -60,9 +71,14 @@ impl Plugin for WeatherSimulationPlugin {
                     spawn_chunk_weather_on_new_chunk,
                     weather_field_step,
                     project_chunk_weather,
+                    bake_weather_overlay_from_field,
                 )
                     .chain()
                     .in_set(ChunkEnvironmentSet::Weather),
+            )
+            .add_systems(
+                Update,
+                sync_weather_projection_node.after(bake_weather_overlay_from_field),
             );
     }
 }
@@ -77,5 +93,6 @@ impl Plugin for WeatherPlugin {
             WeatherVisualPlugin,
             crate::render::WeatherVfxPlugin,
         ));
+        player_read_hud::register_weather_player_read(app);
     }
 }
