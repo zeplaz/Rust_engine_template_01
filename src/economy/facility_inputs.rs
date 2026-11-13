@@ -28,7 +28,7 @@ use crate::strategic::{TownBook, TownRecord};
 pub const COMMUTE_RANGE_TILES: f32 = 64.0;
 /// Share of a town's population available to industry before existing jobs are subtracted.
 pub const INDUSTRIAL_LABOUR_SHARE: f32 = 0.3;
-const METRES_PER_TILE: f32 = 16.0;
+const METRES_PER_TILE: f32 = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 /// Where a facility's power stands, for the info panel.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]

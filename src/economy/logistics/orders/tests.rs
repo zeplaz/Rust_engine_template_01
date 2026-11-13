@@ -412,11 +412,12 @@ fn finished_orders_are_pruned_after_keep_window() {
 
 // ── LO-2: draw demands + standing lines ─────────────────────────────────────────
 
+/// A consumer the order sim draws itself (`ConsumerKind::drawn_by_order_sim`).
 fn demand(sim: &mut LogisticsOrderSim, site: SiteId, cargo: CargoKind, target: u32, reorder: u32, rate: u32, p: Priority) {
     ok(sim.apply(LogisticsOrderCommand::PublishDemand {
         site,
         cargo,
-        consumer: ConsumerKind::Front,
+        consumer: ConsumerKind::Unit,
         buffer_target: target,
         reorder_point: reorder,
         draw_rate_per_min: rate,
@@ -710,7 +711,7 @@ fn plant_reconcile_applies_order_deltas_to_the_node_buffer() {
 
 #[test]
 fn due_steps_counts_whole_seconds_and_caps_backlog() {
-    use super::plugin::due_steps;
+    use crate::systems::sim_control::due_steps;
     assert_eq!(due_steps(None, 5_000_000, 1_000_000, 30), (0, 5_000_000));
     assert_eq!(due_steps(Some(0), 2_500_000, 1_000_000, 30), (2, 2_000_000));
     assert_eq!(due_steps(Some(2_000_000), 2_400_000, 1_000_000, 30), (0, 2_000_000));
@@ -911,12 +912,13 @@ mod app {
     use bevy::prelude::*;
 
     use super::super::*;
-    use crate::systems::sim_control::SimTimeMicros;
+    use crate::systems::sim_control::{SimStepClockPlugin, SimTimeMicros};
 
     fn app() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.init_resource::<SimTimeMicros>();
+        app.add_plugins(SimStepClockPlugin);
         app.add_plugins(LogisticsOrdersPlugin);
         app
     }

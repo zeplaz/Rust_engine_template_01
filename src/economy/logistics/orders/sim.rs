@@ -67,6 +67,16 @@ pub enum LogisticsOrderCommand {
         capacity_units: u32,
         speed_mps: f32,
     },
+    /// A depot builds a vehicle from its own stock: `cost` is debited atomically (all or nothing)
+    /// and the vehicle joins the owner's fleet at `home`.
+    BuildVehicle {
+        owner: OwnerId,
+        home: SiteId,
+        class_mask: CargoClassMask,
+        capacity_units: u32,
+        speed_mps: f32,
+        cost: Vec<(CargoKind, u32)>,
+    },
     SetStock {
         site: SiteId,
         cargo: CargoKind,
@@ -212,6 +222,41 @@ impl LogisticsOrderSim {
                 self.stock.entries.retain(|(s, _), _| *s != site);
                 CommandOutcome::Ok
             }
+            C::BuildVehicle {
+                owner,
+                home,
+                class_mask,
+                capacity_units,
+                speed_mps,
+                cost,
+            } => {
+                if !self.sites.contains_key(&home) {
+                    return CommandOutcome::Rejected(format!("vehicle home {} unknown", home.0));
+                }
+                if capacity_units == 0 || !(speed_mps > 0.0) {
+                    return CommandOutcome::Rejected("vehicle needs capacity and speed".into());
+                }
+                if let Some((cargo, need)) = cost
+                    .iter()
+                    .find(|(cargo, need)| self.stock.get(home, cargo).available() < *need)
+                {
+                    return CommandOutcome::Rejected(format!(
+                        "site {} lacks {} {} to build a vehicle",
+                        home.0, need, cargo.0
+                    ));
+                }
+                for (cargo, need) in &cost {
+                    let e = self.stock.entry_mut(home, cargo);
+                    e.on_hand -= *need;
+                }
+                self.apply_inner(C::AddVehicle {
+                    owner,
+                    home,
+                    class_mask,
+                    capacity_units,
+                    speed_mps,
+                })
+            }
             C::AddVehicle {
                 owner,
                 home,
@@ -275,7 +320,13 @@ impl LogisticsOrderSim {
                     return CommandOutcome::Rejected(format!("unknown site {}", site.0));
                 }
                 let e = self.stock.entry_mut(site, &cargo);
-                e.on_hand = e.on_hand.saturating_sub(amount);
+                let take = amount.min(e.on_hand);
+                e.on_hand -= take;
+                // Self-metered consumers (plants, sites, fronts) report draw through here.
+                if let Some(d) = self.demands.get_mut(&(site, cargo)) {
+                    d.consumed_total += u64::from(take);
+                    d.shortfall_total += u64::from(amount - take);
+                }
                 CommandOutcome::Ok
             }
             C::CreateStandingLine {
@@ -746,6 +797,41 @@ impl LogisticsOrderSim {
         }
     }
 
+    /// Batching: a truck leaves with less than its capacity only when that is worth a trip.
+    ///
+    /// - Deficit smaller than a truck (`need < capacity`): a one-off run's last trip goes; a
+    ///   standing line tops up only once the sink is short (projected below its reorder point, or
+    ///   starving). Otherwise the line waits until a full truck's worth is missing, instead of
+    ///   sending a truck per unit of draw.
+    /// - Source holds less than the load (`available < min(capacity, need)`): wait for the source to
+    ///   fill the truck, unless the sink is short and drawing (or the order is a one-off run) and no
+    ///   other truck of this order is already on the way. At most one part-load per order is in
+    ///   flight, so a trickling source never ties up the fleet one unit at a time.
+    fn load_worth_a_trip(&self, id: OrderId, capacity: u32, need: u32, available: u32, held: u32) -> bool {
+        let full = capacity.min(need);
+        let need_limited = need < capacity;
+        let source_limited = available < full;
+        if !need_limited && !source_limited {
+            return true;
+        }
+        let o = &self.orders[&id];
+        match o.kind {
+            OrderKind::OneOffRun { .. } => !source_limited || held == 0,
+            OrderKind::StandingLine => {
+                let Some(d) = self.demands.get(&(o.sink, o.cargo.clone())) else {
+                    return false;
+                };
+                let projected = self.stock.get(o.sink, &o.cargo).projected();
+                let short = d.health == DemandHealth::Starving || projected < d.reorder_point;
+                if source_limited {
+                    short && d.draw_rate_per_min > 0 && held == 0
+                } else {
+                    short
+                }
+            }
+        }
+    }
+
     fn effective_weight(&self, o: &Order) -> u32 {
         let aging = (o.waiting_ticks / self.config.aging_interval_ticks.max(1))
             .min(self.config.aging_cap);
@@ -878,6 +964,12 @@ impl LogisticsOrderSim {
                     );
                     continue;
                 };
+                let capacity = self.vehicles[&vid].capacity_units;
+                let held_now = held.get(&id).copied().unwrap_or(0);
+                if !self.load_worth_a_trip(id, capacity, need, available, held_now) {
+                    reason.insert(id, Some(WaitReason::FillingLoad));
+                    continue;
+                }
                 if let Some(sites) = pool.get_mut(&owner) {
                     if let Some(ids) = sites.get_mut(&at) {
                         ids.retain(|v| *v != vid);
@@ -948,8 +1040,6 @@ impl LogisticsOrderSim {
 
     // ── queries ─────────────────────────────────────────────────────────────────
 
-    /// Display estimate of total trips for a one-off run (done + in flight + still needed).
-    #[must_use]
     /// Rewrite legacy lowercase construction cargo tags (stock, demands, orders, trips) to the
     /// catalog spelling. Idempotent; merges stock if both spellings exist.
     pub fn migrate_legacy_cargo_tags(&mut self) {
@@ -979,6 +1069,8 @@ impl LogisticsOrderSim {
         }
     }
 
+    /// Display estimate of total trips for a one-off run (done + in flight + still needed).
+    #[must_use]
     pub fn planned_trips(&self, o: &Order) -> u32 {
         let base = o.stats.trips_done + o.stats.trips_in_flight;
         let remaining = o.run_remaining();

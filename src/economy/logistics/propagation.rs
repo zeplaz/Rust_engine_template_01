@@ -62,9 +62,21 @@ fn advance_lot_progress(lot: &mut FreightLot) {
 /// Commit arrivals: deployable tags → [`SiteStagingStock`] (sole credit writer);
 /// all other tags → destination [`ResourceFlowNode`] buffers.
 pub fn commit_freight_arrivals_system(
+    clock: Res<crate::systems::sim_control::SimStepClock>,
     mut ledger: ResMut<InTransitLedger>,
     mut staging: ResMut<SiteStagingStock>,
     mut nodes: Query<&mut ResourceFlowNode>,
+) {
+    // Transit ticks are gameplay steps: lots advance once per step that elapsed.
+    for _ in 0..clock.due {
+        commit_freight_arrivals_step(&mut ledger, &mut staging, &mut nodes);
+    }
+}
+
+fn commit_freight_arrivals_step(
+    ledger: &mut InTransitLedger,
+    staging: &mut SiteStagingStock,
+    nodes: &mut Query<&mut ResourceFlowNode>,
 ) {
     let mut i = 0;
     while i < ledger.lots.len() {
@@ -143,6 +155,7 @@ pub fn dispatch_deployable_from_manufacturing_system(
 }
 
 pub fn dispatch_freight_from_solver_system(
+    clock: Res<crate::systems::sim_control::SimStepClock>,
     flow: Res<ResourceFlowRegistry>,
     route_cache: Res<RouteCache>,
     path_store: Res<RoutePathStore>,
@@ -161,7 +174,9 @@ pub fn dispatch_freight_from_solver_system(
             .rev()
             .find(|p| p.requested == edge.max_rate)
             .map(|p| p.delivered)
-            .unwrap_or(edge.max_rate);
+            .unwrap_or(edge.max_rate)
+            // Edge rates are per step.
+            * clock.due as f32;
         if delivered <= 0.0 {
             continue;
         }

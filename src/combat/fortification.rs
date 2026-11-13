@@ -144,7 +144,7 @@ pub fn plan_fortification_rows(theater: &Theater, side: u8, points: &[PressurePo
     // Forward = toward the enemy.
     let forward = if enemy.is_empty() { IVec2::new(1, 0) } else { snap_axis(mean(&enemy) - mean(&own)) };
     let back = -forward;
-    let setback = (balance.combat.fortify_setback_m / balance.tile_size_m.max(f32::EPSILON)).round().max(1.0) as i32;
+    let setback = (balance.combat.fortify_setback_m / balance.tile_size_m().max(f32::EPSILON)).round().max(1.0) as i32;
     let max = balance.combat.fortify_max_rows;
     let mut rows: Vec<FortifyRow> = Vec::new();
     let mut taken: Vec<(IVec2, IVec2)> = Vec::new();
@@ -240,7 +240,7 @@ mod tests {
         let seg = FrontSegment { pair: (0, 1), cells, polylines: vec![], contested_cells: 0, length_m: 0.0 };
         let b = FrontBalance::default();
         let mut book = TheaterBook::default();
-        book.update(&[seg], &b.theater, b.tile_size_m, 1);
+        book.update(&[seg], &b.theater, b.tile_size_m(), 1);
         let rows = plan_fortification_rows(&book.theaters[0], 0, &[], &b);
         assert!(!rows.is_empty() && rows.len() <= b.combat.fortify_max_rows);
         assert!(rows.iter().all(|r| r.origin.x < 30), "behind our line (we are west of the enemy)");

@@ -62,6 +62,7 @@ pub struct LogisticsThroughputPlugin;
 
 impl Plugin for LogisticsThroughputPlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         app.add_plugins(orders::LogisticsOrdersPlugin);
         app.init_resource::<PortalAttachmentMap>()
             .init_resource::<RouteCache>()
@@ -86,7 +87,8 @@ impl Plugin for LogisticsThroughputPlugin {
                         .after(LogisticsSimulationSet::PortalAttach),
                     LogisticsSimulationSet::SolverSync.after(LogisticsSimulationSet::RouteRefresh),
                     LogisticsSimulationSet::ThroughputSolve
-                        .after(LogisticsSimulationSet::SolverSync),
+                        .after(LogisticsSimulationSet::SolverSync)
+                        .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick),
                     LogisticsSimulationSet::FreightDispatch
                         .after(LogisticsSimulationSet::ThroughputSolve),
                     LogisticsSimulationSet::FieldFeedback
@@ -119,7 +121,7 @@ impl Plugin for LogisticsThroughputPlugin {
                 )
                     .chain()
                     .in_set(LogisticsSimulationSet::ThroughputSolve)
-                    .run_if(crate::economy::resource_flow::economy_sim_running),
+                    .run_if(crate::systems::sim_control::sim_step_due),
             )
             .add_systems(
                 Update,
@@ -133,7 +135,7 @@ impl Plugin for LogisticsThroughputPlugin {
                     .in_set(LogisticsSimulationSet::FreightDispatch)
                     // After plant credit so haul sees ManufacturingOutputBuffers same tick.
                     .after(crate::entities::production::core::tick_manufacturing_nodes)
-                    .run_if(crate::economy::resource_flow::economy_sim_running),
+                    .run_if(crate::systems::sim_control::sim_step_due),
             )
             .add_systems(
                 Update,
@@ -143,7 +145,7 @@ impl Plugin for LogisticsThroughputPlugin {
                 )
                     .chain()
                     .in_set(LogisticsSimulationSet::FieldFeedback)
-                    .run_if(crate::economy::resource_flow::economy_sim_running),
+                    .run_if(crate::systems::sim_control::sim_step_due),
             )
             .add_systems(
                 Update,

@@ -108,7 +108,7 @@ pub fn derive_frontline_from_control_system(
         &hostility,
         balance.front.own_min,
         balance.front.contest_band,
-        balance.tile_size_m,
+        balance.tile_size_m(),
     );
     if derived.segments != front.segments {
         front.segments = derived.segments;
@@ -163,7 +163,7 @@ mod tests {
         // Chunk (1,0) of width 4 ⇒ world x 4..8; boundary at x = 6.
         let p = &f.segments[0].polylines[0];
         assert_eq!(p.points, vec![IVec2::new(6, 0), IVec2::new(6, 2)]);
-        assert!((f.total_length_m() - 2.0 * 25.0).abs() < 1e-4);
+        assert!((f.total_length_m() - 2.0 * crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY).abs() < 1e-4);
         // Same input → revision stays.
         app.update();
         assert_eq!(app.world().resource::<FrontlineState>().revision, 1);

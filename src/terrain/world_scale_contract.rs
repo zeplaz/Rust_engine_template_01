@@ -12,6 +12,11 @@ pub const TILE_SIM_UNIT: f32 = 1.0;
 /// Symbolic metres per tile (lore / WG rhythm — not survey-grade).
 pub const TILE_METERS_SYMBOLIC: f32 = 100.0;
 
+/// Gameplay metres per world tile: the one scale every sim distance uses (site placement and
+/// logistics travel, workforce reach, combat ranges / speeds / front lengths). A subsystem that
+/// stores metres converts tile coordinates with this constant at its boundary.
+pub const TILE_METRES_GAMEPLAY: f32 = 16.0;
+
 /// Sim substrate chunk slab — WSS, fire tick, weather, dense cache.
 pub const CHUNK_TILES_SIM: u32 = 32;
 

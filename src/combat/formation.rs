@@ -205,7 +205,7 @@ pub fn advance_formations_system(
             continue;
         }
         let mobility = idx.cell(f.tile).map_or(0.0, |(ov, i)| ov.mobility_cost[i]);
-        let tiles_per_s = balance.unit(f.kind).speed_mps / balance.tile_size_m.max(f32::EPSILON);
+        let tiles_per_s = balance.unit(f.kind).speed_mps / balance.tile_size_m().max(f32::EPSILON);
         f.move_progress += tiles_per_s * clock.dt_s / (1.0 + balance.combat.mobility_slow_k * mobility);
         while f.move_progress >= 1.0 && f.tile != target {
             f.move_progress -= 1.0;

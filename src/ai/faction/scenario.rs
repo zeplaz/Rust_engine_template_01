@@ -25,6 +25,7 @@ use crate::economy::logistics::orders::{
 use crate::economy::resource_flow::{ResourceFlowNode, ResourceFlowPlugin};
 use crate::strategic::{SiteConstructionBook, SiteIdIssuer, StrategicFieldsPlugin};
 use crate::systems::terrain::MaterialUnificationPlugin;
+use crate::systems::sim_control::SimTick;
 
 const SLOT: u8 = 1;
 const INTERVAL: u64 = 10;
@@ -70,7 +71,7 @@ fn theater_book() -> TheaterBook {
         .collect();
     let seg = FrontSegment { pair: (0, 1), cells, polylines: vec![], contested_cells: 0, length_m: 0.0 };
     let mut book = TheaterBook::default();
-    book.update(&[seg], &FrontBalance::default().theater, 25.0, 1);
+    book.update(&[seg], &FrontBalance::default().theater, FrontBalance::default().tile_size_m(), 1);
     book
 }
 

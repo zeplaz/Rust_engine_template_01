@@ -11,7 +11,7 @@ use crate::strategic::{
     PlannedSite, SiteConstructionBook, SiteConstructionPhase, SiteId,
     SiteMaterialStarved, SiteResourceManifest,
 };
-use crate::systems::sim_control::{SimControlState, SimControlSystemSet, SimTick};
+use crate::systems::sim_control::{sim_step_due, SimControlSystemSet, SimStepClock};
 
 /// Legacy backfill only — **CON-P2-001** attaches on commit; this covers pre-P2 spawns missing progress.
 pub fn init_site_stage_progress_for_planned_sites(
@@ -30,7 +30,8 @@ pub fn init_site_stage_progress_for_planned_sites(
     }
 }
 
-/// Advance `SiteStageProgress` and sync `ConstructionSite` + book (one phase step per sim tick).
+/// Advance `SiteStageProgress` and sync `ConstructionSite` + book: one phase step per
+/// [`SimStepClock`] step (one simulated second), `due` steps per frame.
 ///
 /// `UnderConstruction` is material-gated: progress never runs ahead of the manifest's delivered
 /// ratio (`SiteResourceManifest::delivered_ratio`, filled by logistics), so a starved site stalls
@@ -38,9 +39,7 @@ pub fn init_site_stage_progress_for_planned_sites(
 /// (ratio 1) build on the clock alone.
 pub fn advance_site_construction_tick_system(
     mut commands: Commands,
-    tick: Res<SimTick>,
-    ctrl: Res<SimControlState>,
-    mut last_tick: Local<Option<u64>>,
+    clock: Res<SimStepClock>,
     mut q: Query<(
         Entity,
         &mut ConstructionSite,
@@ -51,55 +50,13 @@ pub fn advance_site_construction_tick_system(
     )>,
     mut book: ResMut<SiteConstructionBook>,
 ) {
-    if !ctrl.should_tick() {
-        return;
-    }
-    let current = tick.0;
-    if last_tick.is_some_and(|prev| prev == current) {
-        return;
-    }
-    *last_tick = Some(current);
-
     for (entity, mut site, planned, mut stage, mut manifest, was_starved) in &mut q {
-        if matches!(
-            site.phase,
-            SiteConstructionPhase::Operational
-                | SiteConstructionPhase::Provisioning
-                | SiteConstructionPhase::Damaged
-                | SiteConstructionPhase::Offline
-                | SiteConstructionPhase::Abandoned
-        ) {
-            continue;
+        // Steps run per site in order; a site that changes phase keeps stepping in its new phase.
+        let mut held_last: Option<SiteMaterialStarved> = None;
+        for _ in 0..clock.due {
+            held_last = advance_site_one_step(&mut site, planned, &mut stage, manifest.as_deref_mut(), &mut book);
         }
-
-        let dt = phase_progress_step(site.phase);
-        if dt <= 0.0 {
-            continue;
-        }
-        let wanted = saturating_phase_progress(stage.progress, dt);
-        let mut held_by: Option<SiteMaterialStarved> = None;
-        stage.progress = if site.phase == SiteConstructionPhase::UnderConstruction {
-            match manifest.as_deref_mut() {
-                Some(m) => {
-                    // Never regress, never run ahead of the scarcest delivered material.
-                    let ratio = m.min_delivered_ratio();
-                    let capped = wanted.min(ratio).max(stage.progress);
-                    if capped < wanted {
-                        held_by = Some(SiteMaterialStarved {
-                            delivered_ratio: ratio,
-                            missing: m.short_materials(),
-                        });
-                    }
-                    // Built-in material leaves the site's stock as the stage advances.
-                    m.consume_to_progress(capped);
-                    capped
-                }
-                None => wanted,
-            }
-        } else {
-            wanted
-        };
-        match (held_by, was_starved) {
+        match (held_last, was_starved) {
             (Some(starved), _) => {
                 commands.entity(entity).insert(starved);
             }
@@ -108,41 +65,79 @@ pub fn advance_site_construction_tick_system(
             }
             (None, false) => {}
         }
-        if stage.progress < 1.0 {
-            let sid = SiteId(site.site_id);
-            if let Some(st) = book.by_site.get_mut(&sid) {
-                st.progress = stage.progress;
-                st.phase = site.phase;
-            }
-            continue;
-        }
-
-        let Some((next_phase, next_sub)) = next_site_stage(site.phase, stage.substep) else {
-            continue;
-        };
-
-        site.phase = next_phase;
-        stage.progress = 0.0;
-        stage.substep = next_sub;
-
-        match next_phase {
-            SiteConstructionPhase::Operational => {
-                site.operational_readiness = 1.0;
-            }
-            SiteConstructionPhase::UnderConstruction => {
-                site.operational_readiness = 0.0;
-            }
-            _ => {
-                site.operational_readiness = 0.0;
-            }
-        }
-
-        let sid = planned.site_id;
-        if let Some(st) = book.by_site.get_mut(&sid) {
-            st.phase = next_phase;
-            st.progress = 0.0;
-        }
     }
+}
+
+/// One step of one site; returns the starvation hold when material capped this step's progress.
+fn advance_site_one_step(
+    site: &mut ConstructionSite,
+    planned: &PlannedSite,
+    stage: &mut SiteStageProgress,
+    manifest: Option<&mut SiteResourceManifest>,
+    book: &mut SiteConstructionBook,
+) -> Option<SiteMaterialStarved> {
+    if matches!(
+        site.phase,
+        SiteConstructionPhase::Operational
+            | SiteConstructionPhase::Provisioning
+            | SiteConstructionPhase::Damaged
+            | SiteConstructionPhase::Offline
+            | SiteConstructionPhase::Abandoned
+    ) {
+        return None;
+    }
+
+    let dt = phase_progress_step(site.phase);
+    if dt <= 0.0 {
+        return None;
+    }
+    let wanted = saturating_phase_progress(stage.progress, dt);
+    let mut held_by: Option<SiteMaterialStarved> = None;
+    stage.progress = if site.phase == SiteConstructionPhase::UnderConstruction {
+        match manifest {
+            Some(m) => {
+                // Never regress, never run ahead of the scarcest delivered material.
+                let ratio = m.min_delivered_ratio();
+                let capped = wanted.min(ratio).max(stage.progress);
+                if capped < wanted {
+                    held_by = Some(SiteMaterialStarved {
+                        delivered_ratio: ratio,
+                        missing: m.short_materials(),
+                    });
+                }
+                // Built-in material leaves the site's stock as the stage advances.
+                m.consume_to_progress(capped);
+                capped
+            }
+            None => wanted,
+        }
+    } else {
+        wanted
+    };
+    if stage.progress < 1.0 {
+        let sid = SiteId(site.site_id);
+        if let Some(st) = book.by_site.get_mut(&sid) {
+            st.progress = stage.progress;
+            st.phase = site.phase;
+        }
+        return held_by;
+    }
+
+    let Some((next_phase, next_sub)) = next_site_stage(site.phase, stage.substep) else {
+        return held_by;
+    };
+
+    site.phase = next_phase;
+    stage.progress = 0.0;
+    stage.substep = next_sub;
+    site.operational_readiness = if next_phase == SiteConstructionPhase::Operational { 1.0 } else { 0.0 };
+
+    let sid = planned.site_id;
+    if let Some(st) = book.by_site.get_mut(&sid) {
+        st.phase = next_phase;
+        st.progress = 0.0;
+    }
+    held_by
 }
 
 
@@ -153,12 +148,13 @@ pub struct SiteStageTickPlugin;
 
 impl Plugin for SiteStageTickPlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         app.add_systems(
             Update,
             (
                 init_site_stage_progress_for_planned_sites,
                 ApplyDeferred,
-                advance_site_construction_tick_system,
+                advance_site_construction_tick_system.run_if(sim_step_due),
             )
                 .chain()
                 .after(SimControlSystemSet::AdvanceSimTick),
@@ -174,15 +170,13 @@ mod tests {
         BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles, LayerType, SiteArchetype,
         SiteConstructionBook, SiteConstructionPhase, SiteIdIssuer,
     };
-    use crate::systems::sim_control::{SimControlState, SimTick};
+    use crate::systems::sim_control::{SimTimeMicros, SIM_STEP_MICROS};
 
     fn assemble_stage_tick_test_app() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.init_resource::<SiteConstructionBook>()
             .init_resource::<SiteIdIssuer>()
-            .init_resource::<SimControlState>()
-            .init_resource::<SimTick>()
             .add_message::<CommitConstructionSiteEvent>()
             .add_plugins(SiteStageTickPlugin)
             .add_systems(Update, crate::strategic::commit_construction_site_system);
@@ -240,7 +234,7 @@ mod tests {
         let mut saw_clearing_stumps = false;
         let max_frames = 16;
         for _ in 0..max_frames {
-            app.world_mut().resource_mut::<SimTick>().0 += 1;
+            app.world_mut().resource_mut::<SimTimeMicros>().0 += SIM_STEP_MICROS;
             app.update();
             let world = app.world_mut();
             let site = world

@@ -268,7 +268,7 @@ pub fn derive_theaters_system(front: Res<FrontlineState>, balance: Res<FrontBala
     if front.revision == book.source_revision && book.depth_tiles > 0.0 {
         return;
     }
-    book.update(&front.segments, &balance.theater, balance.tile_size_m, front.revision);
+    book.update(&front.segments, &balance.theater, balance.tile_size_m(), front.revision);
 }
 
 #[cfg(test)]

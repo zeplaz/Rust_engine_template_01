@@ -2,8 +2,14 @@
 //! supply-point entity registered as a `SiteRole::Front` logistics site, and publishes its sustainment
 //! need through `LogisticsOrderCommand::PublishDemand` (upsert; re-sent only when the targets change).
 //!
-//! Demand is sized from the notional garrison the front length implies (`supply.garrison_per_km`) times
-//! the infantry draw profile; formation-accurate draw replaces it with FC-5/FC-6 proper.
+//! Demand is sized from the standing formations' draw, or the notional garrison the front length
+//! implies (`supply.garrison_per_km` times the infantry draw profile) when none stand there.
+//!
+//! **Units.** The balance table's draw is kg/s; logistics cargo is whole tonnes. Conversion happens
+//! here, at the boundary: buffer targets are tonnes (rounded up), and the front meters its own
+//! consumption ([`draw_front_supply_system`]) in kg, removing stock in whole tonnes as it accrues.
+//! A front's draw is far below one tonne a minute (the order sim's integer per-minute draw), so the
+//! order sim does not draw front demands itself (`ConsumerKind::drawn_by_order_sim`).
 
 use std::collections::BTreeMap;
 
@@ -12,6 +18,7 @@ use bevy::prelude::*;
 use super::balance::{DrawRates, FrontBalance};
 use super::formation::{Formation, Posture};
 use super::theater::{Theater, TheaterBook, TheaterId};
+use crate::systems::sim_control::SimStepClock;
 use crate::economy::logistics::orders::{
     CargoKind, ConsumerKind, LogisticsOrderCommand, LogisticsOrderRequest, LogisticsOrderSite, LogisticsOrderSiteId,
     LogisticsOrdersSnapshotRes, OwnerId, Priority, SiteRole,
@@ -29,6 +36,16 @@ pub struct FrontSupplyPoint {
 pub struct FrontSupplyPoints {
     pub entities: BTreeMap<(TheaterId, u8), Entity>,
     pub published: BTreeMap<(TheaterId, u8), Vec<(&'static str, u32)>>,
+}
+
+/// Kilograms per tonne: balance draw (kg) to logistics cargo (t).
+pub const KG_PER_TONNE: f32 = 1000.0;
+
+/// Kilograms each front supply point has drawn but not yet removed from its stock (a tonne is
+/// removed once it accrues). Sole writer: [`draw_front_supply_system`].
+#[derive(Resource, Debug, Default)]
+pub struct FrontSupplyDraw {
+    pub pending_kg: BTreeMap<((TheaterId, u8), &'static str), f32>,
 }
 
 /// Delivered-stock coverage (0..1) of each front supply point, from the logistics snapshot.
@@ -62,13 +79,12 @@ pub fn formation_draw<'a>(
     any.then_some(total)
 }
 
-/// `(cargo tag, buffer target)` for a front held by `side` in `theater`; zero-draw classes are skipped.
-/// `draw` is the standing formations' draw when any; otherwise a notional garrison sized from front length.
+/// The front's draw in kg/s: the standing formations' `draw` when any, otherwise the notional
+/// garrison sized from front length.
 #[must_use]
-pub fn front_demand_targets(theater: &Theater, balance: &FrontBalance, draw: Option<DrawRates>) -> Vec<(&'static str, u32)> {
-    let p = &balance.supply;
-    let d = draw.unwrap_or_else(|| {
-        let units = (theater.length_m / 1000.0 * p.garrison_per_km).ceil().max(1.0);
+pub fn front_draw_kg_per_s(theater: &Theater, balance: &FrontBalance, draw: Option<DrawRates>) -> DrawRates {
+    draw.unwrap_or_else(|| {
+        let units = (theater.length_m / 1000.0 * balance.supply.garrison_per_km).ceil().max(1.0);
         let i = balance.unit(super::balance::UnitKind::Infantry).draw_kg_per_s;
         DrawRates {
             ammunition: i.ammunition * units,
@@ -76,15 +92,33 @@ pub fn front_demand_targets(theater: &Theater, balance: &FrontBalance, draw: Opt
             rations: i.rations * units,
             engineering: i.engineering * units,
         }
-    });
-    // `Fuel` in the catalog spelling, so depot fuel serves fronts (`fuel` is the pre-catalog tag).
+    })
+}
+
+/// `(cargo tag, kg/s)` per supply class; `Fuel` in the catalog spelling, so depot fuel serves
+/// fronts (`fuel` is the pre-catalog tag).
+fn draw_by_tag(d: &DrawRates) -> [(&'static str, f32); 4] {
     [("ammo", d.ammunition), ("Fuel", d.fuel), ("rations", d.rations), ("engineering", d.engineering)]
+}
+
+/// `(cargo tag, buffer target in tonnes)` for a front held by `side` in `theater`: `buffer_s` of the
+/// front's draw ([`front_draw_kg_per_s`]), rounded up to whole tonnes. Zero-draw classes are skipped.
+#[must_use]
+pub fn front_demand_targets(theater: &Theater, balance: &FrontBalance, draw: Option<DrawRates>) -> Vec<(&'static str, u32)> {
+    let d = front_draw_kg_per_s(theater, balance, draw);
+    draw_by_tag(&d)
         .into_iter()
-        .filter_map(|(tag, kg_s)| {
-            let target = (kg_s * p.buffer_s).ceil();
-            (target >= 1.0).then_some((tag, target as u32))
-        })
+        .filter(|(_, kg_s)| *kg_s > 0.0)
+        .map(|(tag, kg_s)| (tag, (kg_s * balance.supply.buffer_s / KG_PER_TONNE).ceil().max(1.0) as u32))
         .collect()
+}
+
+/// Published draw in whole tonnes per minute, rounded up so a drawing front reads as drawing. It
+/// drives demand health and truck sizing only; the tonnes actually leave the front's stock through
+/// [`draw_front_supply_system`].
+#[must_use]
+pub fn front_draw_t_per_min(kg_s: f32) -> u32 {
+    (kg_s * 60.0 / KG_PER_TONNE).ceil().max(0.0) as u32
 }
 
 /// Mean fill (on hand / buffer target) of each registered front supply point.
@@ -138,7 +172,7 @@ pub fn publish_front_supply_demands_system(
         for side in [t.pair.0, t.pair.1] {
             let key = (t.id, side);
             live.push(key);
-            let pos = side_position_m(t, side, balance.tile_size_m);
+            let pos = side_position_m(t, side, balance.tile_size_m());
             match points.entities.get(&key).copied() {
                 None => {
                     let e = commands
@@ -169,14 +203,16 @@ pub fn publish_front_supply_demands_system(
             if points.published.get(&key) == Some(&targets) {
                 continue;
             }
+            let kg_s = draw_by_tag(&front_draw_kg_per_s(t, &balance, draw));
             for &(tag, target) in &targets {
+                let rate = kg_s.iter().find(|(c, _)| *c == tag).map_or(0.0, |(_, r)| *r);
                 requests.write(LogisticsOrderRequest(LogisticsOrderCommand::PublishDemand {
                     site,
                     cargo: CargoKind::new(tag),
                     consumer: ConsumerKind::Front,
                     buffer_target: target,
                     reorder_point: ((target as f32) * balance.supply.reorder_fraction).ceil() as u32,
-                    draw_rate_per_min: ((target as f32) / balance.supply.buffer_s * 60.0).ceil() as u32,
+                    draw_rate_per_min: front_draw_t_per_min(rate),
                     priority: Priority::Normal,
                 }));
             }
@@ -201,6 +237,55 @@ pub fn publish_front_supply_demands_system(
     }
 }
 
+/// Fronts consume their stock: each [`SimStepClock`] step, the draw of every published front supply
+/// point (standing formations, or the notional garrison) accrues in kg, and whole tonnes are removed
+/// from the point's logistics stock (`ConsumeStock`, saturating: a dry front draws nothing and its
+/// coverage, and so its formations' supply, falls).
+#[allow(clippy::too_many_arguments)]
+pub fn draw_front_supply_system(
+    clock: Res<SimStepClock>,
+    theaters: Res<TheaterBook>,
+    balance: Res<FrontBalance>,
+    points: Res<FrontSupplyPoints>,
+    sites: Query<&LogisticsOrderSiteId>,
+    formations: Query<&Formation>,
+    mut pending: ResMut<FrontSupplyDraw>,
+    requests: Option<ResMut<Messages<LogisticsOrderRequest>>>,
+) {
+    let Some(mut requests) = requests else { return };
+    pending.pending_kg.retain(|(key, _), _| points.published.contains_key(key));
+    if clock.due == 0 {
+        return;
+    }
+    let secs = clock.due as f32 * clock.step_secs();
+    for t in &theaters.theaters {
+        for side in [t.pair.0, t.pair.1] {
+            let key = (t.id, side);
+            let Some(targets) = points.published.get(&key) else { continue };
+            let Some(site) = points.entities.get(&key).and_then(|e| sites.get(*e).ok()).map(|s| s.0) else {
+                continue;
+            };
+            let draw = formation_draw(t, side, theaters.depth_tiles, &balance, formations.iter());
+            for (tag, kg_s) in draw_by_tag(&front_draw_kg_per_s(t, &balance, draw)) {
+                if kg_s <= 0.0 || !targets.iter().any(|(c, _)| *c == tag) {
+                    continue;
+                }
+                let acc = pending.pending_kg.entry((key, tag)).or_insert(0.0);
+                *acc += kg_s * secs;
+                let tonnes = (*acc / KG_PER_TONNE).floor();
+                if tonnes >= 1.0 {
+                    *acc -= tonnes * KG_PER_TONNE;
+                    requests.write(LogisticsOrderRequest(LogisticsOrderCommand::ConsumeStock {
+                        site,
+                        cargo: CargoKind::new(tag),
+                        amount: tonnes as u32,
+                    }));
+                }
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -212,7 +297,7 @@ mod tests {
             .collect();
         let seg = FrontSegment { pair: (0, 1), cells, polylines: vec![], contested_cells: 0, length_m: 0.0 };
         let mut book = TheaterBook::default();
-        book.update(&[seg], &FrontBalance::default().theater, 25.0, 1);
+        book.update(&[seg], &FrontBalance::default().theater, FrontBalance::default().tile_size_m(), 1);
         book.theaters.remove(0)
     }
 
@@ -236,7 +321,7 @@ mod tests {
         let seg_cells = theater(20).cells;
         let seg = FrontSegment { pair: (0, 1), cells: seg_cells, polylines: vec![], contested_cells: 0, length_m: 0.0 };
         let mut book = TheaterBook::default();
-        book.update(&[seg], &b.theater, b.tile_size_m, 1);
+        book.update(&[seg], &b.theater, b.tile_size_m(), 1);
         app.insert_resource(book);
         app.update();
         let entities: Vec<Entity> = app.world().resource::<FrontSupplyPoints>().entities.values().copied().collect();

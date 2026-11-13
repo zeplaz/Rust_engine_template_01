@@ -17,7 +17,7 @@ use crate::entities::production::core::manufacturing::{
     BUFFER_TAG_DRAGON_TEETH_UNIT, BUFFER_TAG_MINE_UNIT, MFG_DRAGON_TEETH_V1, MFG_MINE_UNIT_V1,
 };
 use crate::systems::production::default_production_manifest;
-use crate::systems::sim_control::SimControlState;
+use crate::systems::sim_control::{SimControlState, SimControlSystemSet, SimStepClock};
 
 /// In-memory blueprints keyed by id (**INDUSTRIAL-MFG-01** + **COD-DEPLOYABLE-RECIPE-001**).
 #[derive(Resource, Debug, Clone)]
@@ -118,28 +118,30 @@ pub struct ManufacturingCorePlugin;
 
 impl Plugin for ManufacturingCorePlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         app.insert_resource(default_production_manifest())
             .init_resource::<ManufacturingBlueprintRegistry>()
             .add_systems(
                 Update,
-                (tick_manufacturing_nodes, operational_maintenance_timer_tick),
+                (
+                    tick_manufacturing_nodes.after(SimControlSystemSet::AdvanceSimTick),
+                    operational_maintenance_timer_tick,
+                ),
             );
     }
 }
 
-/// Drive node throughput toward blueprint target; honour `SimControlState` for determinism.
+/// Drive node throughput toward blueprint target, once per [`SimStepClock`] step (fixed rate:
+/// pause and sim speed act through the clock, frame rate does not).
 ///
 /// When the blueprint has `output_buffer_tag` and the entity has [`ManufacturingOutputBuffers`],
-/// credits that tag by `current_throughput × dt_scale` (plant-local stock for COD-P3 haul).
+/// credits that tag by `current_throughput` per step (plant-local stock for COD-P3 haul).
 pub fn tick_manufacturing_nodes(
-    ctrl: Res<SimControlState>,
+    clock: Res<SimStepClock>,
     blueprints: Res<ManufacturingBlueprintRegistry>,
     mut nodes: Query<(&mut ManufacturingNode, Option<&mut ManufacturingOutputBuffers>)>,
 ) {
-    if !ctrl.should_tick() {
-        return;
-    }
-    let scale = ctrl.dt_scale().max(0.0);
+    let scale = clock.due as f32;
     if scale <= 0.0 {
         return;
     }
@@ -209,13 +211,31 @@ fn operational_maintenance_timer_tick(
 mod tests {
     use super::*;
 
-    #[test]
-    fn manufacturing_tick_mutates_throughput() {
+    /// Headless app on the fixed step clock; [`step`] advances one sim second.
+    fn step_app() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
-            .init_resource::<SimControlState>()
+            .init_resource::<crate::systems::sim_control::SimTimeMicros>()
+            .add_plugins(crate::systems::sim_control::SimStepClockPlugin)
             .init_resource::<ManufacturingBlueprintRegistry>()
-            .add_systems(Update, tick_manufacturing_nodes);
+            .add_systems(
+                Update,
+                tick_manufacturing_nodes.after(SimControlSystemSet::AdvanceSimTick),
+            );
+        app.update();
+        app
+    }
+
+    fn step(app: &mut App) {
+        app.world_mut()
+            .resource_mut::<crate::systems::sim_control::SimTimeMicros>()
+            .0 += crate::systems::sim_control::SIM_STEP_MICROS;
+        app.update();
+    }
+
+    #[test]
+    fn manufacturing_tick_mutates_throughput() {
+        let mut app = step_app();
 
         let e = app
             .world_mut()
@@ -226,7 +246,7 @@ mod tests {
             })
             .id();
 
-        app.update();
+        step(&mut app);
         let node = app.world().get::<ManufacturingNode>(e).unwrap();
         assert!(node.current_throughput > 0.0);
         assert!(node.local_efficiency > 0.5);
@@ -266,18 +286,14 @@ mod tests {
 
     #[test]
     fn deployable_tick_credits_tagged_buffers() {
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins)
-            .init_resource::<SimControlState>()
-            .init_resource::<ManufacturingBlueprintRegistry>()
-            .add_systems(Update, tick_manufacturing_nodes);
+        let mut app = step_app();
 
         let (node, buffers) = manufacturing_deployable_bundle(MFG_DRAGON_TEETH_V1).unwrap();
         let e = app.world_mut().spawn((node, buffers)).id();
         let (node_m, buffers_m) = manufacturing_deployable_bundle(MFG_MINE_UNIT_V1).unwrap();
         let e_m = app.world_mut().spawn((node_m, buffers_m)).id();
 
-        app.update();
+        step(&mut app);
 
         let teeth = app.world().get::<ManufacturingOutputBuffers>(e).unwrap();
         let mines = app.world().get::<ManufacturingOutputBuffers>(e_m).unwrap();

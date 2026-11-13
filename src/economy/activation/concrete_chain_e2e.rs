@@ -665,6 +665,14 @@ mod tests {
         app
     }
 
+    /// One gameplay step: the economy runs on the fixed step clock.
+    fn sim_step(app: &mut App) {
+        app.world_mut()
+            .resource_mut::<crate::systems::sim_control::SimTimeMicros>()
+            .0 += crate::systems::sim_control::SIM_STEP_MICROS;
+        app.update();
+    }
+
     #[test]
     fn concrete_portland_chain_e2e_operational_production_tick() {
         let mut app = assemble_chain_app();
@@ -673,7 +681,7 @@ mod tests {
             BuildSiteTile { x: 16, z: 16 },
         );
         for _ in 0..24 {
-            app.update();
+            sim_step(&mut app);
         }
 
         let world = app.world_mut();
@@ -748,7 +756,7 @@ mod tests {
             .expect("commit portland chain");
 
         for _ in 0..32 {
-            app.update();
+            sim_step(&mut app);
         }
 
         let w = app.world().resource::<ConcreteChainE2eStats>();
