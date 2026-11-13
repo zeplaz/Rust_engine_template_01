@@ -286,7 +286,7 @@ pub struct LogisticsDiagnostics {
 }
 
 #[derive(Resource, Default)]
-pub struct LogisticsThroughputRuntimeWitness {
+pub struct LogisticsThroughputStats {
     pub routes_open: u32,
     pub routes_blocked: u32,
     pub topology_revision: u32,

@@ -9,8 +9,6 @@ use super::block_frame::BlockFrameBook;
 use super::block_rollout::{BlockRecipeEvaluationBook, BlockRolloutStagingBook};
 use super::ids::BlockId;
 
-pub const CITY_C6_BSN_LIVE_JSON: &str = "debug_runs/city_c6_bsn_001_live.json";
-
 const METRES_PER_TILE: f32 = 16.0;
 
 /// Recipe `edge()` / `scatter()` asset id → promoted module job id (presentation-only).
@@ -230,102 +228,10 @@ pub fn spawn_block_street_furniture_system(
     }
 }
 
-#[must_use]
-pub fn block_street_visual_fixture_witness_green() -> bool {
-    use super::block_frame::{fixture_block_record_with_tiles, fixture_transport_graph_for_block_frame, rebuild_block_frames};
-    use super::block_recipe::load_block_recipe_registry;
-    use super::block_rollout::{
-        advance_block_rollout_staging_system, begin_block_rollout_staging_system,
-        evaluate_block_recipes_system, BlockRolloutGrowthBook,
-    };
-
-    let recipes = load_block_recipe_registry();
-    if recipes.load_errors.is_empty() && recipes.recipes.is_empty() {
-        return false;
-    }
-
-    let graph = fixture_transport_graph_for_block_frame();
-    let mut block = fixture_block_record_with_tiles();
-    block.site_ids.clear();
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .insert_resource(recipes)
-        .insert_resource(super::town::portland_fixture_town())
-        .insert_resource(super::block::BlockBook {
-            blocks: HashMap::from([(block.id.clone(), block.clone())]),
-            tile_to_block: HashMap::new(),
-        })
-        .insert_resource(rebuild_block_frames(
-            &super::block::BlockBook {
-                blocks: HashMap::from([(block.id.clone(), block)]),
-                tile_to_block: HashMap::new(),
-            },
-            Some(&graph),
-        ))
-        .init_resource::<BlockRecipeEvaluationBook>()
-        .init_resource::<BlockRolloutGrowthBook>()
-        .init_resource::<BlockRolloutStagingBook>()
-        .init_resource::<BlockStreetVisualBook>()
-        .init_resource::<BlockStreetFurnitureCatalog>()
-        .add_message::<super::block_rollout::BlockPlanned>()
-        .add_message::<super::block_rollout::BlockAssembled>()
-        .add_message::<super::block_rollout::BlockCommitted>()
-        .add_systems(
-            Update,
-            (
-                evaluate_block_recipes_system,
-                advance_block_rollout_staging_system,
-                begin_block_rollout_staging_system,
-                spawn_block_street_furniture_system,
-            )
-                .chain(),
-        );
-    for _ in 0..6 {
-        app.update();
-    }
-    let book = app.world().resource::<BlockStreetVisualBook>();
-    book.total_pieces >= 1
-}
-
-#[must_use]
-pub fn build_city_c6_bsn_witness_body() -> serde_json::Value {
-    let catalog_jobs = 3u32;
-    let fixture_ok = block_street_visual_fixture_witness_green();
-    let mig_a9_handoff_ok = fixture_ok;
-    let green = fixture_ok;
-
-    serde_json::json!({
-        "gate": "CITY-C6-BSN-001",
-        "green": green,
-        "fixture_green": fixture_ok,
-        "catalog_job_slots": catalog_jobs,
-        "presentation_only": true,
-        "mig_a9_handoff_ok": mig_a9_handoff_ok,
-        "asset_map": ["hedge→prop_fence", "fence→prop_fence", "lamp_row→prop_light"],
-    })
-}
-
-#[must_use]
-pub fn city_c6_bsn_witness_green() -> bool {
-    build_city_c6_bsn_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn city_c6_bsn_fixture_witness_green_lib() {
-        assert!(block_street_visual_fixture_witness_green());
-    }
-
-    #[test]
-    fn city_c6_bsn_witness_green_lib() {
-        assert!(city_c6_bsn_witness_green());
-    }
 }

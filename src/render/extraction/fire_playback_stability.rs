@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 /// PLAY-06e: overlay heat persistence in sim / `--test visual`.
 #[derive(Resource, Debug, Clone, Copy)]
-pub struct FirePlaybackStabilityWitness {
+pub struct FirePlaybackStabilityStats {
     pub active_fire_chunks: u32,
     pub consecutive_frames_with_heat: u32,
     pub held_empty_snapshot_frames: u32,
@@ -15,7 +15,7 @@ pub struct FirePlaybackStabilityWitness {
     pub stable: bool,
 }
 
-impl Default for FirePlaybackStabilityWitness {
+impl Default for FirePlaybackStabilityStats {
     fn default() -> Self {
         Self {
             active_fire_chunks: 0,
@@ -28,7 +28,7 @@ impl Default for FirePlaybackStabilityWitness {
     }
 }
 
-impl FirePlaybackStabilityWitness {
+impl FirePlaybackStabilityStats {
     pub const STABLE_FRAME_THRESHOLD: u32 = 10;
     /// MAP-BLINK-001: frames to blend overlay heat in after cold start.
     pub const OVERLAY_WARMUP_BLEND_FRAMES: u32 = 8;

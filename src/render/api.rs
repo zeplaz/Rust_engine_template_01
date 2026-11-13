@@ -3,19 +3,16 @@
 
 pub use super::pipelines::infrastructure_overlay::{
     collect_infrastructure_overlay_edges_system, collect_transport_overlay_edges_system,
-    compute_island_partition, infra_overlay_polish_green, infrastructure_overlay_hud_legend_wired,
-    infrastructure_overlay_legend_rows, infrastructure_overlay_polish_witness_fields,
-    stroke_for_layer, InfrastructureEdgeOverlay, InfrastructureNetworkLayer,
+    compute_island_partition, infrastructure_overlay_hud_legend_wired,
+    infrastructure_overlay_legend_rows, stroke_for_layer, InfrastructureEdgeOverlay, InfrastructureNetworkLayer,
     InfrastructureOverlayDrawRequests, InfrastructureOverlayLegendRow,
     InfrastructureOverlayPlugin, InfrastructureOverlaySettings, InfrastructureOverlayStroke,
-    PowerLineOverlayState, PowerMapOverlayPresentation, power_map_overlay_green,
-    power_map_overlay_witness_fields, power_overlay_extended_legend_rows,
+    PowerLineOverlayState, PowerMapOverlayPresentation, power_overlay_extended_legend_rows,
     stroke_for_power_line_state, stroke_for_voltage_class, voltage_for_link,
     sync_power_overlay_auto_on_system, refresh_power_island_from_damage_system,
 };
 pub use super::pipelines::power_map_overlay_draw::{
-    paint_stroke_line, power_map_overlay_draw_witness_green,
-};
+    paint_stroke_line, };
 pub use super::core::terrain_render_authority::{
     resolve_sim_default_authority, terrain_cpu_fallback_env_forced, TerrainRenderAuthority,
     TerrainRenderAuthorityPlugin,
@@ -29,16 +26,13 @@ pub use super::pipelines::terrain_instanced_draw::{
     TerrainInstancedRenderHost, TerrainInstanceMap, TerrainTileInstance, TERRAIN_INSTANCED_WGSL,
 };
 pub use super::pipelines::terrain_gpu_bake_spike::{
-    build_bake_spike_probe, build_terrain_gpu_bake_spike_witness_body,
-    collect_material_bake_instances, pack_gpu_bake_scissors, peek_dirty_chunk_coords,
+    build_bake_spike_probe, collect_material_bake_instances, pack_gpu_bake_scissors, peek_dirty_chunk_coords,
     sample_atlas_material_rgba,
-    spike_bake_ready_for_consumers, terrain_gpu_bake_spike_a0_green,
-    terrain_gpu_bake_spike_a1_green, terrain_gpu_bake_spike_env_enabled,
+    spike_bake_ready_for_consumers, terrain_gpu_bake_spike_env_enabled,
     write_atlas_to_world_bake, TerrainGpuBakeIndexMap, TerrainGpuBakeScissor,
     TerrainGpuBakeSpikePlugin, TerrainGpuBakeSpikeProbe, TerrainGpuBakeSpikeState,
-    TERRAIN_GPU_BAKE_SPIKE_A1_LIVE_JSON, TERRAIN_GPU_BAKE_SPIKE_ENV,
-    TERRAIN_GPU_BAKE_SPIKE_LIVE_JSON,
-};
+    TERRAIN_GPU_BAKE_SPIKE_ENV,
+    };
 pub use super::tile_world_fallback::{
     simulation_minimap_egui_texture, SimMinimapUiState,
     tile_raster_dirty_on_zoom_band_change_enabled, TileFallbackRasterPolicy,
@@ -47,8 +41,7 @@ pub use super::tile_world_fallback::{
     TileWorldFallbackState, RASTER_CHUNK_TILES,
 };
 pub use super::pipelines::tactical_vector_overlay::{
-    sync_tactical_vector_overlay_from_projection, tactical_vector_overlay_witness_json,
-    TacticalVectorOverlayPlugin, TacticalVectorOverlayState,
+    sync_tactical_vector_overlay_from_projection, TacticalVectorOverlayPlugin, TacticalVectorOverlayState,
 };
 pub use super::visual_perf_budget::{
     sync_tile_raster_spike_feedback_system, fire_extract_cadence_due, FireExtractCadence,
@@ -57,8 +50,7 @@ pub use super::visual_perf_budget::{
     FireExtractDiagnostics, FireExtractFrameReport,
     TileRasterBudget, TileRasterSpikeFeedback, RASTER_SPIKE_EMA_MS, RASTER_SPIKE_FRAME_MS,
 };
-pub use super::stage5_profile::Stage5ReadinessProfile;
-pub use super::extraction::fire_playback_stability::FirePlaybackStabilityWitness;
+pub use super::extraction::fire_playback_stability::FirePlaybackStabilityStats;
 pub use super::fx_spine::fire_chunk_entity_index::{
     bootstrap_chunk_fire_entity_index_if_empty, sync_chunk_fire_entity_index_added,
     sync_chunk_fire_entity_index_removed, ChunkFireEntityIndex,
@@ -85,20 +77,15 @@ pub use super::pipelines::gpu_water_particle_draw::{
 };
 pub use super::pipelines::gpu_water_particle_raster::{register_world_water_particle_raster, WaterParticleDrawGlobals};
 pub use super::pipelines::gpu_water_particles::{
-    emit_world_water_particles_from_catalog, evaluate_water_vfx_witness_bands,
-    update_world_water_particles_from_catalog, water_strategic_001_green,
-    water_vfx_witness_json, water_w2_foam_001_green, water_witness_001_green,
-    water_witness_foam_or_ocean_green, catalog_has_coast_ocean, catalog_has_river_bend,
+    emit_world_water_particles_from_catalog, update_world_water_particles_from_catalog, catalog_has_coast_ocean, catalog_has_river_bend,
     GpuWaterParticleInstance, GpuWaterParticleQuadVertex, GpuWaterParticlesPlugin,
-    WaterParticleDensityScale, WaterParticleProfile, WaterParticleWitness,
-    WaterVfxWitnessBands, WorldWaterParticleFrame, WATER_LAKE_GLINTS_PER_CHUNK,
+    WaterParticleDensityScale, WaterParticleProfile, WaterParticleStats,
+    WaterVfxBands, WorldWaterParticleFrame, WATER_LAKE_GLINTS_PER_CHUNK,
     WATER_OCEAN_FOAM_PER_CHUNK, WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA,
     WATER_RIVER_FOAM_PER_CHUNK, WATER_RIVER_STREAKS_PER_CHUNK,
-    WATER_TACTICAL_WITNESS_ZOOM_ALPHA,
-};
+    };
 pub use super::fx_spine::water_surface_visual::{
     apply_water_surface_overlay_subregion, sync_water_overlay_draw_frame, RiverPolylineSegment,
-    water_strategic_001_shader_motion_green, water_strategic_witness_zoom_alpha,
     WaterMotionAnchor, WaterOverlayDrawFrame, WaterSurfaceKind, WaterSurfaceVisualCatalog,
     WaterSurfaceVisualPlugin, WaterSurfaceVisualSet, WATER_SURFACE_OVERLAY_WGSL,
     WATER_STRATEGIC_ZOOM_ALPHA,
@@ -172,7 +159,6 @@ pub use super::extraction::visual_domain_snapshots::{
     publish_ecology_visual_snapshot, publish_logistics_visual_snapshot,
     publish_minimap_operational_unit_markers_system, seed_minimap_m2_logistics_construction_witness,
     seed_minimap_m2_overlay_witness, seed_minimap_m3_fow_ew_witness,
-    seed_minimap_m3_units_replay_witness, unit_markers_real_reader_witness_green,
     MinimapOperationalSnapshot, MINIMAP_UNIT_MARKER_SNAPSHOT_CAP,
 };
 
@@ -210,15 +196,6 @@ pub use super::viewport_pipeline::{
     PRIMARY_WINDOW_MIN_LOGICAL_PX,
 };
 pub use super::view_runtime::ViewRuntimePlugin;
-pub use super::probes::full_render_diagnostic::{
-    arm_full_render_diagnostic_for_full_app,
-    full_render_diagnostic_has_critical_anomaly, full_render_diagnostic_plugin_latch,
-    note_full_render_camera_drove_ui_follow,
-    note_full_render_ui_wrote_map_camera, record_full_render_diagnostic_ui_rect,
-    FullRenderDiagnosticFeedback, FullRenderDiagnosticGate, FullRenderDiagnosticPlugin,
-    FullRenderDiagnosticSet, FullRenderDiagnosticSummary, FullRenderDiagnosticUiHook, FullRenderUiLayoutProbe,
-    FullRenderUiSlot,
-};
 pub use super::pipelines::gpu_weather_fire_field::{
     FireVisualGpuInstanceStorage, GpuWeatherFireFieldPlugin, WeatherFireFieldDebugOverlay,
     WeatherFireFieldUniforms,
@@ -229,15 +206,14 @@ pub use super::fx_spine::fire_chunk_runtime::{
     FireChunkRuntime, FireLodBand, FireSimulationSnapshot, VisibleFireChunkSet, FIRE_SIM_CHUNK_ACTIVE_EPS,
 };
 pub use super::fx_spine::fire7_f7_a_exit::{
-    fire7_f7_a_exit_001_criteria, fire7_f7_a_exit_001_green, minimap_compositor_queries_fire_ecs,
+    fire7_f7_a_exit_001_criteria, minimap_compositor_queries_fire_ecs,
     Fire7F7AExitCriteria,
 };
 pub use super::fx_spine::fire_streaming::{
-    FireStreamingPlugin, FireStreamingWitness, FIRE_STREAMING_SLEEP_RADIUS,
+    FireStreamingPlugin, FireStreamingStats, FIRE_STREAMING_SLEEP_RADIUS,
 };
 pub use super::extraction::fire_view_extract::{
-    build_fire_visual_frames_by_view, clamp_fire_lod_for_world_band, fire7_f7_c_001_green,
-    fire_cap_for_world_band, fire_lod_designer_table_wired, sync_visible_fire_chunks_from_views,
+    build_fire_visual_frames_by_view, clamp_fire_lod_for_world_band, fire_cap_for_world_band, fire_lod_designer_table_wired, sync_visible_fire_chunks_from_views,
     tactical_fire_visual, FireVisualFramesByView, FIRE_LOD_CAP_STRATEGIC, FIRE_LOD_CAP_TACTICAL,
     FIRE_VIEW_CHUNK_SPACING_WORLD,
 };

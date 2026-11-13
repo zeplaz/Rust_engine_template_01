@@ -22,7 +22,7 @@ use super::combustion::{
 use super::fire_fuel::FireFuelField;
 use super::surface_water::SurfaceWaterFireGate;
 use super::types::ChunkFireOverlay;
-use super::ecology_metrics::FireEcologyWitness;
+use super::ecology_metrics::FireEcologyStats;
 use crate::systems::chunk_environment_persist::{
     ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks,
 };
@@ -97,7 +97,7 @@ pub fn chunk_fire_overlay_tick(
     water_gate: Res<SurfaceWaterFireGate>,
     stand_cfg: Option<Res<StandBurnConfig>>,
     mut hooks: ResMut<ChunkEnvironmentPersistHooks>,
-    mut witness: ResMut<FireEcologyWitness>,
+    mut witness: ResMut<FireEcologyStats>,
     mut q: Query<(
         Entity,
         &ChunkCellMatrix,
@@ -584,7 +584,7 @@ mod link_tests {
         ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks,
     };
     use crate::systems::fire::{
-        ChunkFireOverlay, ChunkSurfaceFire, FireEcologyWitness, SurfaceWaterFireGate,
+        ChunkFireOverlay, ChunkSurfaceFire, FireEcologyStats, SurfaceWaterFireGate,
     };
     use crate::systems::sim_control::SimControlState;
     use crate::systems::weather::ChunkWeather;
@@ -619,7 +619,7 @@ mod link_tests {
             })
             .init_resource::<SurfaceWaterFireGate>()
             .init_resource::<ChunkEnvironmentPersistHooks>()
-            .init_resource::<FireEcologyWitness>()
+            .init_resource::<FireEcologyStats>()
             .add_systems(Update, chunk_fire_overlay_tick);
         app.world_mut().spawn((
             matrix,

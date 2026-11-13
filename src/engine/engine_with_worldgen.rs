@@ -5,14 +5,13 @@ use crate::gui::{
     editor::world_preview::{
         init_preview_render_contract_resources, WorldPreviewGpuRuntime,
     },
-    AppShellPlugin, BaseMenuPlugin, BuildPlanningPlugin, DiagnosticsUiPlugin,
+    AppShellPlugin, BaseMenuPlugin, BuildPlanningPlugin,
     GameplayCapturePlugin, InGameHudPlugin, InGamePauseMenuPlugin, KeybindingsOptionsPlugin,
     LogisticsTargetsPanelPlugin,
-    hud::TransmissionShellPlugin,
     hud::HudDockShellPlugin,
     MapCameraPlugin, CameraFocusDebugPlugin, SplashPlugin,
     ViewAuthorityPlugin,
-    ViewRepresentationPlugin, StrategicToolingPlugin,
+    ViewRepresentationPlugin,
     UiThemePlugin,
 };
 #[cfg(feature = "bevy_tilemap_adapter")]
@@ -45,8 +44,6 @@ use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
 use super::ux_orchestration::UxOrchestrationPlugin;
 use super::worldgen_chrome_debug::WorldGenChromeDebugPlugin;
-use crate::gui::debug::UiLayoutTreeDebugPlugin;
-use crate::gui::hud::SimViewSyncDebugPlugin;
 use crate::render::{DebugViewportOverlayPlugin, VisualDiagnosticsPlugin};
 use super::test_harness::{TestHarnessMenuPlugin, TestHarnessPlugin, TestHarnessStatePlugin};
 use super::DebugManeuverPlugin;
@@ -122,8 +119,6 @@ impl Plugin for EnginePlugin {
             .add_plugins(UxOrchestrationPlugin)
             .add_plugins((
                 WorldGenChromeDebugPlugin,
-                UiLayoutTreeDebugPlugin,
-                SimViewSyncDebugPlugin,
                 DebugViewportOverlayPlugin,
                 VisualDiagnosticsPlugin,
                 crate::render::GpuSurfaceTeardownPlugin,
@@ -247,9 +242,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(ViewRuntimePlugin)
             .add_plugins(ViewAuthorityPlugin)
             .add_plugins(SharedOverlayFieldBuffersPlugin)
-            .add_plugins(DiagnosticsUiPlugin)
             .add_plugins(crate::gui::AiExplainabilityPlugin)
-            .add_plugins(StrategicToolingPlugin)
             .add_plugins(InGameHudPlugin)
             .add_plugins(crate::gui::hud::SimulationSessionPlugin)
             .add_plugins(crate::gui::WorldPresentationModePlugin)
@@ -257,13 +250,8 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::render::VfxCaptureHookPlugin)
             .add_plugins(MapCameraPlugin)
             .add_plugins(InGamePauseMenuPlugin)
-            .add_plugins(TransmissionShellPlugin)
             .add_plugins(HudDockShellPlugin)
-            .add_plugins(crate::gui::hud::OverlayShellPlugin)
-            .add_plugins(crate::gui::hud::Stage7UiShellPlugin)
             .add_plugins(BuildPlanningPlugin)
-            .add_plugins(crate::gui::AssemblySnapshotQcUiPlugin)
-            .add_plugins(crate::gui::SettlementBlockFrameDebugPlugin)
             .add_plugins(LogisticsTargetsPanelPlugin)
             // World generation editor + runtime.
             .add_plugins(WorldGenToolsPlugin)

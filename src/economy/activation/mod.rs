@@ -8,12 +8,12 @@ pub mod scale;
 
 pub use grid_overload_ux::{
     apply_grid_overload_ops_strip_toast_system, ingest_grid_overload_toast_system,
-    s7p_grid_ux_001_green, s7p_grid_ux_toast_ui_wired, GridOverloadToastState,
+    s7p_grid_ux_toast_ui_wired, GridOverloadToastState,
     GridOverloadUxPlugin, GRID_OVERLOAD_TOAST_MESSAGE, GRID_OVERLOAD_TOAST_TICKS,
 };
 pub use power_island_ux::{
     apply_power_island_ops_strip_toast_system, ingest_power_island_toast_system,
-    power_island_toast_message, power_island_ux_001_green, power_island_ux_toast_ui_wired,
+    power_island_toast_message, power_island_ux_toast_ui_wired,
     PowerIslandToastState, PowerIslandUxPlugin, POWER_ISLAND_TOAST_TICKS,
 };
 pub use concrete_chain_e2e::{
@@ -23,7 +23,7 @@ pub use concrete_chain_e2e::{
     reset_stage7_play_chain_seed_on_enter_simulation, seed_ind_e02_default_play_once,
     seed_ind_e03_grid_overload_witness_once, seed_stage7_play_concrete_chain_once,
     spawn_concrete_portland_chain_operational,
-    spawn_ind_e03_grid_overload_cluster, ConcreteChainE2eSet, ConcreteChainE2eWitness,
+    spawn_ind_e03_grid_overload_cluster, ConcreteChainE2eSet, ConcreteChainE2eStats,
     IndE02DefaultPlaySeedState, IndE03GridOverloadSeedState, Stage7PlayChainSeedState,
     CONCRETE_PORTLAND_CHAIN, CONCRETE_PORTLAND_STEPS,
 };
@@ -36,6 +36,5 @@ pub use bridge::IndustrialActivationPlugin;
 
 
 pub use scale::{
-    apply_placement_scale_to_facility, economy_scales_at_activation_witness_green,
-    production_multiplier, DEFAULT_K_PROD,
+    apply_placement_scale_to_facility, production_multiplier, DEFAULT_K_PROD,
 };

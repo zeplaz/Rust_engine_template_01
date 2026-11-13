@@ -11,7 +11,6 @@ use bevy::prelude::*;
 use super::texture_cache::WorldPreviewTexture;
 use super::viewport::EditorViewport;
 use crate::gui::map_view::MapViewInstances;
-use crate::render::Stage5ReadinessProfile;
 use crate::render::{trace_camera_sync, trace_render_target, DebugRenderTraceConfig};
 
 /// How the world preview is produced (`GpuRenderTarget` reserved for Bevy camera → `RenderTarget` → egui).
@@ -45,7 +44,6 @@ pub struct PreviewPathAuthority {
 pub fn sync_preview_path_authority(
     cam: Res<PreviewCameraState>,
     gpu_rt: Res<crate::gui::editor::world_preview::WorldPreviewGpuRuntime>,
-    profile: Res<Stage5ReadinessProfile>,
     mut authority: ResMut<PreviewPathAuthority>,
     mut debug: ResMut<PreviewPresentationDebug>,
 ) {
@@ -56,16 +54,6 @@ pub fn sync_preview_path_authority(
         PreviewAuthoritativeSurface::CpuSwap
     );
     debug.authoritative_surface = authority.authoritative_surface;
-    if *profile == Stage5ReadinessProfile::FULL_APP
-        && cam.mode == PreviewRenderMode::GpuRenderTarget
-        && authority.authoritative_surface == PreviewAuthoritativeSurface::CpuSwap
-    {
-        warn!(
-            target: "stage5_preview::live",
-            "STAGE5_PREVIEW_CPU_FALLBACK gpu_requested but surface=CpuSwap offscreen_ready={}",
-            gpu_rt.offscreen_renderer_ready,
-        );
-    }
 }
 
 /// Bevy schedule `run_if` — GPU preview owns the render target + swap presentation path.

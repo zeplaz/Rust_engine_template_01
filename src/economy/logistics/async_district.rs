@@ -7,7 +7,7 @@
 use bevy::prelude::*;
 use std::collections::VecDeque;
 
-use super::types::{DistrictSolveScope, LogisticsThroughputRuntimeWitness, ThroughputSolverState};
+use super::types::{DistrictSolveScope, LogisticsThroughputStats, ThroughputSolverState};
 
 /// Posted solve result — applied on the main thread (never mutated off-thread).
 #[derive(Clone, Debug)]
@@ -102,7 +102,7 @@ pub fn enqueue_async_district_solve_system(
 pub fn apply_async_district_solve_results_system(
     mut queue: ResMut<AsyncDistrictSolveQueue>,
     mut solver: ResMut<ThroughputSolverState>,
-    mut runtime: ResMut<LogisticsThroughputRuntimeWitness>,
+    mut runtime: ResMut<LogisticsThroughputStats>,
 ) {
     let before = queue.applied_total;
     queue.drain_apply(|result| {

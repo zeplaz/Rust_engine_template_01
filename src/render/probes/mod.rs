@@ -13,7 +13,6 @@ pub mod stall_watch;
 pub mod debug_render_trace;
 pub mod debug_viewport_overlay;
 pub mod visual_diagnostics;
-pub mod full_render_diagnostic;
 pub mod vfx_capture_hook;
 
 // RTT-SPRITE-TRACE — temporary render-world probe (env-gated `RTT_SPRITE_TRACE`).

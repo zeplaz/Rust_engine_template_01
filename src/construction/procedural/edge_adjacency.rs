@@ -3,8 +3,6 @@
 use super::footprint_grid::{is_corner, is_perimeter, FootprintGrid, FootprintToken};
 use super::FootprintCell;
 
-pub const BQ_A1_LIVE_JSON: &str = "debug_runs/bq_a1_adjacency_001_live.json";
-
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct AdjacencyViolation {
     pub rule_id: &'static str,
@@ -199,50 +197,6 @@ fn edge_door_match(cell: &FootprintCell, edge: &str, width: u32, depth: u32) -> 
     }
 }
 
-#[must_use]
-pub fn bq_a1_adjacency_witness_green() -> bool {
-    use super::types::{ProceduralBuildingRequest, StylePackId};
-
-    let grid = FootprintGrid::from_request(&ProceduralBuildingRequest {
-        archetype_id: "rect_perimeter".into(),
-        width: 4,
-        depth: 2,
-        floors: 2,
-        style: StylePackId("style_victorian".into()),
-        seed: 1,
-        arch_dna_preset_id: None,
-    });
-    check_footprint_adjacency(&grid).is_empty()
-}
-
-#[must_use]
-pub fn build_bq_a1_adjacency_witness_body() -> serde_json::Value {
-    use super::types::{ProceduralBuildingRequest, StylePackId};
-
-    let grid = FootprintGrid::from_request(&ProceduralBuildingRequest {
-        archetype_id: "rect_perimeter".into(),
-        width: 4,
-        depth: 2,
-        floors: 2,
-        style: StylePackId("style_victorian".into()),
-        seed: 1,
-        arch_dna_preset_id: None,
-    });
-    let violations = check_footprint_adjacency(&grid);
-    let green = violations.is_empty();
-    serde_json::json!({
-        "gate": "BQ-A1-ADJ-001",
-        "green": green,
-        "violation_count": violations.len(),
-        "rules": ["corner_two_neighbors", "door_not_corner", "one_door_per_edge", "roof_full_footprint_single|roof_perimeter_continuous", "vertical_door_rhythm"],
-        "violations": violations.iter().map(|v| serde_json::json!({
-            "rule_id": v.rule_id,
-            "message": v.message,
-        })).collect::<Vec<_>>(),
-        "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-A1",
-    })
-}
-
 
 
 #[cfg(test)]
@@ -266,11 +220,6 @@ mod tests {
             "{:?}",
             check_footprint_adjacency(&grid)
         );
-    }
-
-    #[test]
-    fn bq_a1_witness_green_lib() {
-        assert!(bq_a1_adjacency_witness_green());
     }
 
 

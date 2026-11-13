@@ -307,7 +307,6 @@ pub struct StylePackResolveMeta {
     pub cross_style_fallback: bool,
 }
 
-pub const BQ_F2_STYLE_001_LIVE_JSON: &str = "debug_runs/bq_f2_style_001_live.json";
 fn style_pack_matches(entry: &ProceduralModuleEntry, style_pack_id: &str) -> bool {
     entry.style_pack == style_pack_id
 }
@@ -571,70 +570,6 @@ pub fn init_procedural_module_registry(mut commands: Commands) {
     commands.insert_resource(registry);
 }
 
-#[must_use]
-pub fn build_bq_f2_style_001_witness_body() -> serde_json::Value {
-    use crate::render::extraction::{
-        assemble_procedural_build_instances, ProceduralModuleSceneCatalog,
-    };
-
-    let reg = load_procedural_module_registry();
-    let packs = super::load::load_style_pack_registry();
-    let table_ok = reg.load_errors.is_empty() && packs.load_errors.is_empty();
-
-    let (victorian_entry, victorian_meta) =
-        reg.stylepack_entry_for("wall_brick_1u", Some("style_victorian"));
-    let (ungated_entry, _) = reg.stylepack_entry_for("wall_brick_1u", None);
-    let victorian_style_ok = victorian_entry
-        .is_some_and(|e| e.style_pack == "style_victorian" && !victorian_meta.cross_style_fallback);
-    let tier_only_differs = match (victorian_entry, ungated_entry) {
-        (Some(v), Some(u)) => v.job_id != u.job_id,
-        _ => false,
-    };
-
-    let mut cross_style_fallback_count = 0u32;
-    if let Some(pack) = packs.get("style_victorian") {
-        let request = crate::construction::procedural::ProceduralBuildingRequest {
-            archetype_id: "rect_perimeter".into(),
-            width: 4,
-            depth: 2,
-            floors: 2,
-            style: crate::construction::procedural::StylePackId("style_victorian".into()),
-            seed: 1,
-            arch_dna_preset_id: None,
-        };
-        let grid = crate::construction::procedural::FootprintGrid::from_request(&request);
-        let extract = assemble_procedural_build_instances(
-            &request,
-            pack,
-            &grid,
-            &reg,
-            &ProceduralModuleSceneCatalog::default(),
-        );
-        cross_style_fallback_count = extract.cross_style_fallback_count;
-    }
-
-    let green = table_ok && victorian_style_ok && cross_style_fallback_count == 0;
-
-    serde_json::json!({
-        "gate": "BQ-F2-STYLE-001",
-        "green": green,
-        "table_ok": table_ok,
-        "victorian_wall_brick_style_ok": victorian_style_ok,
-        "tier_only_picks_different_job": tier_only_differs,
-        "cross_style_fallback_count": cross_style_fallback_count,
-        "victorian_wall_job_id": victorian_entry.map(|e| e.job_id.clone()),
-        "ungated_wall_job_id": ungated_entry.map(|e| e.job_id.clone()),
-    })
-}
-
-#[must_use]
-pub fn bq_f2_style_001_witness_green() -> bool {
-    build_bq_f2_style_001_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 
 
 #[cfg(test)]
@@ -878,11 +813,6 @@ mod tests {
             .iter()
             .filter(|e| e.module_id == "wall_brick_1u")
             .all(|e| e.development_tier != DevelopmentTier::Lod0));
-    }
-
-    #[test]
-    fn bq_f2_style_001_witness_green_lib() {
-        assert!(super::bq_f2_style_001_witness_green());
     }
 
 

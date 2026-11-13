@@ -12,7 +12,6 @@ use super::layout_store::HudLayoutStore;
 use super::pending_hud_layout_commit::PendingHudLayoutCommit;
 use super::shell_diagnostics::ProductShellDiagnostics;
 use super::shell_framework::ProductShellWidgetId;
-use super::stage6_telemetry::Stage6HudTelemetry;
 use super::viewport_rect_sanity::ViewportRectSanity;
 
 pub const FRAME_HISTORY_LEN: usize = 120;
@@ -329,7 +328,6 @@ pub fn finalize_frame_budget_diagnostics(
     viewport_rect: Res<ViewportRectSanity>,
     pending_layout: Res<PendingHudLayoutCommit>,
     texture_cache: Res<crate::gui::MapViewTextureCache>,
-    stage6: Option<Res<Stage6HudTelemetry>>,
     stage6_frame: Option<Res<Stage6VirtualizationFrame>>,
     residency: Option<Res<ChunkResidencyTable>>,
     overlay_revision: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
@@ -422,9 +420,6 @@ pub fn finalize_frame_budget_diagnostics(
     }
     if let Some(residency) = residency.as_deref() {
         budget.stage6.active_residency_cells = residency.entries.len().min(u32::MAX as usize) as u32;
-    }
-    if let Some(stage6) = stage6.as_deref() {
-        budget.stage6.overlay_update_count = stage6.frame_revision.min(u32::MAX as u64) as u32;
     }
     budget.stage6.dirty_region_count = raster_revision
         .as_deref()

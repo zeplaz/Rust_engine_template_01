@@ -6,16 +6,12 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::landscape_grammar_lg2::{
-    DisturbanceHistory, LandscapeGrammarLg2Witness, SuccessionState, SuccessionTopologyStage,
+    DisturbanceHistory, SuccessionTopologyStage,
 };
 
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::fire::ChunkSurfaceFire;
 use crate::systems::sim_control::SimTick;
-use crate::terrain::generation::Chunk;
-
-pub const LANDSCAPE_GRAMMAR_BURN_OVERLAY_LIVE_JSON: &str =
-    "debug_runs/landscape_grammar_burn_overlay_live.json";
 
 pub const VEG_BURN_FRAME_COUNT: u8 = 8;
 pub const VEG_BURN_FRAME_PERIOD_MS: u32 = 250;
@@ -59,7 +55,7 @@ impl Default for ActiveBurn {
 }
 
 #[derive(Resource, Debug, Default, Clone)]
-pub struct LandscapeBurnWitness {
+pub struct LandscapeBurnStats {
     pub active_burn_chunks: u32,
     pub regrowth_macro_advances: u32,
     pub overlay_removals: u32,
@@ -170,7 +166,7 @@ fn macro_phase_after_ticks(ticks_since_cool: u64) -> RegrowthMacroPhase {
 pub fn apply_active_burn_from_surface_fire(
     tick: Res<SimTick>,
     mut commands: Commands,
-    mut witness: ResMut<LandscapeBurnWitness>,
+    mut witness: ResMut<LandscapeBurnStats>,
     mut burning: Query<(Entity, Option<&ChunkSurfaceFire>, &mut ActiveBurn)>,
     ignite: Query<(Entity, &ChunkSurfaceFire), (With<DisturbanceHistory>, Without<ActiveBurn>)>,
 ) {
@@ -211,7 +207,7 @@ pub fn apply_active_burn_from_surface_fire(
 pub fn advance_regrowth_macro_chain(
     tick: Res<SimTick>,
     mut q: Query<&mut ActiveBurn>,
-    mut witness: ResMut<LandscapeBurnWitness>,
+    mut witness: ResMut<LandscapeBurnStats>,
 ) {
     for mut burn in &mut q {
         if burn.heat > ACTIVE_BURN_HEAT_EPS {
@@ -231,7 +227,7 @@ pub fn advance_regrowth_macro_chain(
 
 pub fn remove_mature_active_burn_overlays(
     mut commands: Commands,
-    mut witness: ResMut<LandscapeBurnWitness>,
+    mut witness: ResMut<LandscapeBurnStats>,
     q: Query<(Entity, &ActiveBurn)>,
 ) {
     for (entity, burn) in &q {
@@ -244,69 +240,10 @@ pub fn remove_mature_active_burn_overlays(
     }
 }
 
-#[must_use]
-pub fn burn_overlay_witness_green(witness: &LandscapeBurnWitness) -> bool {
-    witness.active_burn_chunks >= 1
-}
 
-#[must_use]
-pub fn burn_succession_witness_green(
-    lg2: &LandscapeGrammarLg2Witness,
-    burn: &LandscapeBurnWitness,
-) -> bool {
-    lg2.fire_disturbances >= 1 && burn.regrowth_macro_advances >= 1
-}
-
-
-
-#[must_use]
-pub fn burn_sm_self_check_green() -> bool {
-    use crate::systems::sim_control::SimTick;
-    use std::collections::VecDeque;
-
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .init_resource::<SimTick>()
-        .init_resource::<LandscapeGrammarLg2Witness>()
-        .init_resource::<LandscapeBurnWitness>()
-        .add_systems(
-            Update,
-            (
-                super::landscape_grammar_lg2::apply_fire_disturbance_on_heat,
-                apply_active_burn_from_surface_fire,
-                advance_regrowth_macro_chain,
-            )
-                .chain(),
-        );
-
-    let entity = app
-        .world_mut()
-        .spawn((
-            Chunk {
-                coord: super::landscape_grammar::LG1_PILOT_CHUNK,
-            },
-            ChunkSurfaceFire {
-                heat: 0.9,
-                fuel: 0.5,
-            },
-            SuccessionState {
-                age_ticks: 500,
-                stage: SuccessionTopologyStage::OldGrowth,
-                last_disturbance_tick: None,
-            },
-            DisturbanceHistory {
-                events: VecDeque::new(),
-                capacity: 8,
-            },
-        ))
-        .id();
-
-    app.update();
-    app.world().get::<ActiveBurn>(entity).is_some()
-}
 
 pub fn landscape_grammar_burn_plugin(app: &mut App) {
-    app.init_resource::<LandscapeBurnWitness>()
+    app.init_resource::<LandscapeBurnStats>()
         .configure_sets(
             Update,
             (
@@ -331,15 +268,12 @@ pub fn landscape_grammar_burn_plugin(app: &mut App) {
 mod tests {
     use super::*;
     use super::super::landscape_grammar::LG1_PILOT_CHUNK;
-    use super::super::landscape_grammar_lg2::apply_fire_disturbance_on_heat;
+    use super::super::landscape_grammar_lg2::{
+        apply_fire_disturbance_on_heat, LandscapeGrammarLg2Stats, SuccessionState,
+    };
     use crate::systems::fire::ChunkSurfaceFire;
     use crate::terrain::generation::Chunk;
     use std::collections::VecDeque;
-
-    #[test]
-    fn burn_sm_self_check_green() {
-        assert!(super::burn_sm_self_check_green());
-    }
 
     #[test]
     fn burn_frame_determinism() {
@@ -355,8 +289,8 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .init_resource::<SimTick>()
-            .init_resource::<LandscapeGrammarLg2Witness>()
-            .init_resource::<LandscapeBurnWitness>()
+            .init_resource::<LandscapeGrammarLg2Stats>()
+            .init_resource::<LandscapeBurnStats>()
             .add_systems(
                 Update,
                 (

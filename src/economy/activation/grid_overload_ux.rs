@@ -1,10 +1,10 @@
-//! S7P-GRID-UX-001 — grid overload player feedback (ops-strip toast + witness).
+//! S7P-GRID-UX-001 — grid overload player feedback (ops-strip toast).
 
 use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
 use crate::entities::production::power::GridOverloadEvent;
-use crate::gui::hud::{OpsStripPower, OpsStripZoneLinesSet, UiShellMigrationWitness};
+use crate::gui::hud::{OpsStripPower, OpsStripZoneLinesSet};
 use crate::systems::sim_control::SimTick;
 
 /// Tray/toast copy when [`GridOverloadEvent`] fires ([`s7p_grid_overload_ux_note_v1.md`](../../dev/s7p_grid_overload_ux_note_v1.md)).
@@ -35,11 +35,6 @@ pub fn s7p_grid_ux_toast_ui_wired() -> bool {
         && include_str!("grid_overload_ux.rs").contains("GridOverloadToastState")
 }
 
-#[must_use]
-pub fn s7p_grid_ux_001_green(toast: &GridOverloadToastState, overload_events: u64) -> bool {
-    s7p_grid_ux_toast_ui_wired() && (overload_events > 0 || toast.show_count > 0)
-}
-
 pub fn ingest_grid_overload_toast_system(
     mut reader: MessageReader<GridOverloadEvent>,
     mut toast: ResMut<GridOverloadToastState>,
@@ -61,7 +56,6 @@ pub fn apply_grid_overload_ops_strip_toast_system(
     tick: Option<Res<SimTick>>,
     toast: Res<GridOverloadToastState>,
     mut power: Query<&mut Text, With<OpsStripPower>>,
-    shell_witness: Option<ResMut<UiShellMigrationWitness>>,
 ) {
     if *base.get() != BaseState::Simulation {
         return;
@@ -71,10 +65,6 @@ pub fn apply_grid_overload_ops_strip_toast_system(
     };
     if !toast.active_at(tick.0) {
         return;
-    }
-    if let Some(mut shell_witness) = shell_witness {
-        shell_witness.ops_zones_wired = true;
-        shell_witness.phase2_zones_live = true;
     }
     let line = format!("PWR  ⚠ {}", toast.last_message);
     for mut t in power.iter_mut() {

@@ -37,11 +37,6 @@ pub fn ui_theme_merge_contract_ok() -> bool {
     palette.fg_primary != palette.bg_app && palette.bevy_hud_panel_fill() != Color::NONE
 }
 
-#[must_use]
-pub fn ui_w3_theme_001_green() -> bool {
-    ui_theme_merge_contract_ok()
-}
-
 #[derive(Debug, Clone, Resource)]
 pub struct UiSpacing {
     pub xs: f32,

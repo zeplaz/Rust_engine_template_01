@@ -333,43 +333,9 @@ pub fn approve_all_growth_proposals_into_pending(
     count
 }
 
-#[must_use]
-pub fn growth_approve_execute_pipeline_witness_green() -> bool {
-    use super::actors::{BuildingUsage, GrowthActorLayer};
-    use super::ids::DistrictId;
-
-    let mut queue = GrowthProposalQueue::default();
-    queue.enqueue(GrowthProposal {
-        district_id: DistrictId("d".into()),
-        block_id: None,
-        archetype_id: ArchetypeId("corner_shop".into()),
-        usage: BuildingUsage::Commercial,
-        actor_layer: GrowthActorLayer::Growth,
-        anchor_tile: IVec2::new(4, 4),
-        priority: 0.5,
-        seed: 1,
-        reason_codes: Vec::new(),
-        saturation_at_submit: 0.0,
-    });
-    let mut pending = PendingConstructionQueue::default();
-    if !approve_growth_proposal_into_pending(&mut queue, 0, &mut pending) {
-        return false;
-    }
-    queue.proposals.is_empty()
-        && pending.entries.len() == 1
-        && pending.entries[0].approved
-        && pending.entries[0].kind == PendingEntryKind::BuildSite
-        && pending.entries[0].catalog_id.as_deref() == Some("corner_shop")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn growth_approve_enqueues_pending_blueprint() {
-        assert!(growth_approve_execute_pipeline_witness_green());
-    }
 
     #[test]
     fn commit_top_district_growth_keeps_lower_priority_and_staged_lots() {

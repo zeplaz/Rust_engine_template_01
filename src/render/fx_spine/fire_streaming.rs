@@ -15,7 +15,7 @@ pub struct FireStreamingSleepWakeSet;
 pub const FIRE_STREAMING_SLEEP_RADIUS: i32 = 6;
 
 #[derive(Resource, Debug, Clone, Default)]
-pub struct FireStreamingWitness {
+pub struct FireStreamingStats {
     pub sleep_transitions: u64,
     pub wake_transitions: u64,
     pub focus_chunk: ChunkCoord,
@@ -47,7 +47,7 @@ pub fn apply_fire_streaming_sleep_wake_system(
     world_frame: Option<Res<WorldRepresentationFrame>>,
     test_scene: Option<Res<crate::engine::ActiveTestScene>>,
     mut runtime: ResMut<FireChunkRuntime>,
-    mut witness: ResMut<FireStreamingWitness>,
+    mut witness: ResMut<FireStreamingStats>,
 ) {
     if test_scene
         .as_ref()
@@ -136,7 +136,7 @@ pub struct FireStreamingPlugin;
 
 impl Plugin for FireStreamingPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<FireStreamingWitness>();
+        app.init_resource::<FireStreamingStats>();
     }
 }
 
@@ -192,7 +192,7 @@ mod tests {
                 ..Default::default()
             },
         );
-        let mut w = FireStreamingWitness::default();
+        let mut w = FireStreamingStats::default();
         let _focus = CameraFocusDebug {
             focus_chunk: hot,
             enabled: true,

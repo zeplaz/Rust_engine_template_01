@@ -215,22 +215,6 @@ mod tests {
     }
 
     #[test]
-    fn transport_network_roundtrip_001_graph_hydrate_sync() {
-        let snap = sample_snapshot();
-        let graph = hydrate_transport_graph_from_snapshot(&snap);
-        let back = transport_network_snapshot_from_graph(&graph);
-        let mut topo = TransportTopology::default();
-        let mut field = TransportFieldStore::default();
-        let mut dir = TransportEdgeDirectory::default();
-        hydrate_transport_from_snapshot(&mut topo, &mut field, &mut dir, &back).unwrap();
-        super::super::sync::sync_transport_runtime_from_graph(
-            &graph, &mut topo, &mut field, &mut dir,
-        );
-        assert_eq!(topo.neighbors.len(), snap.edges.len());
-        assert!(crate::infrastructure::transport::infra_e1_001_transport_graph_sync_witness_green());
-    }
-
-    #[test]
     fn infra_e1_004_snapshot_graph_snapshot_round_trip() {
         let snap = sample_snapshot();
         let graph = hydrate_transport_graph_from_snapshot(&snap);

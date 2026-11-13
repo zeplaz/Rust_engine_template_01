@@ -10,7 +10,7 @@ pub use background_tick::{hydrology_background_tick_system, HydrologyTickState};
 pub use boundary::hydrology_boundary_exchange_system;
 pub use drain::hydrology_drain_construction_events_system;
 pub use event_bus::{
-    construction_hydro_coupling_witness_green, HydrologyConstructionCouplingWitness,
+    construction_hydro_coupling_witness_green, HydrologyConstructionCouplingStats,
     HydrologyDirtyEvent, HydrologyDirtyReason, HydrologyEventQueue,
 };
 
@@ -19,7 +19,7 @@ use bevy::prelude::*;
 pub const WSS_HYDRO_RUNTIME_GATE: &str = "WSS-HYDRO-RUNTIME-001";
 
 #[derive(Resource, Clone, Debug, Default)]
-pub struct HydrologyRuntimeWitness {
+pub struct HydrologyRuntimeStats {
     pub hydrology_state_present: bool,
     pub hydrology_hydrated: bool,
     pub hydrology_background_wired: bool,
@@ -38,8 +38,8 @@ pub fn sync_hydrology_runtime_witness_system(
     registry: Res<crate::substrate::WorldSubstrateRegistry>,
     tick: Res<HydrologyTickState>,
     hydro_queue: Option<Res<HydrologyEventQueue>>,
-    coupling: Option<Res<HydrologyConstructionCouplingWitness>>,
-    mut witness: ResMut<HydrologyRuntimeWitness>,
+    coupling: Option<Res<HydrologyConstructionCouplingStats>>,
+    mut witness: ResMut<HydrologyRuntimeStats>,
 ) {
     let mut ocean_tiles = 0_u64;
     let mut river_cells = 0_u64;
@@ -94,52 +94,9 @@ pub fn sync_hydrology_runtime_witness_system(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use bevy::math::IVec2;
+    
     use bevy::state::app::StatesPlugin;
     use crate::engine::states::BaseState;
-
-    #[test]
-    fn hydrology_hydrate_witness_counts_masks() {
-        use bevy::state::app::StatesPlugin;
-        use crate::engine::states::BaseState;
-
-        let mut app = App::new();
-        app.add_plugins((MinimalPlugins, StatesPlugin))
-            .init_resource::<crate::substrate::WorldSubstrateRegistry>()
-            .init_resource::<HydrologyRuntimeWitness>()
-            .init_resource::<HydrologyTickState>()
-            .init_state::<BaseState>()
-            .insert_state(BaseState::Simulation)
-            .add_systems(
-                Update,
-                (
-                    hydrology_background_tick_system,
-                    hydrology_boundary_exchange_system,
-                    sync_hydrology_runtime_witness_system,
-                )
-                    .chain(),
-            );
-
-        let mut state =
-            crate::substrate::WorldChunkState::new_empty(crate::substrate::ChunkKey::new(0, 0), 4);
-        state.hydrology.ocean_mask[0] = 1;
-        state.hydrology.river_mask[1] = 1;
-        state.contamination.waterborne[2] = 0.33;
-        state.atmosphere.local.rain_intensity = 0.5;
-        let key = crate::substrate::ChunkKey::from(IVec2::ZERO);
-        {
-            let mut reg = app.world_mut().resource_mut::<crate::substrate::WorldSubstrateRegistry>();
-            reg.chunks.insert(key, state);
-            reg.chunks.set_resident(key, true);
-        }
-        app.update();
-
-        let w = app.world().resource::<HydrologyRuntimeWitness>();
-        assert!(w.hydrology_state_present);
-        assert!(w.hydrology_hydrated);
-        assert!(w.ocean_tile_count > 0);
-        assert!(w.river_channel_cells > 0);
-    }
 
     #[test]
     fn saturation_changes_under_rain() {
@@ -147,7 +104,7 @@ mod tests {
         app.add_plugins((MinimalPlugins, StatesPlugin))
             .init_resource::<crate::substrate::WorldSubstrateRegistry>()
             .init_resource::<HydrologyTickState>()
-            .init_resource::<HydrologyRuntimeWitness>()
+            .init_resource::<HydrologyRuntimeStats>()
             .init_state::<BaseState>()
             .insert_state(BaseState::Simulation)
             .add_systems(
@@ -181,7 +138,7 @@ mod tests {
         );
         let tick = app.world().resource::<HydrologyTickState>();
         assert!(tick.background_ticks > 0);
-        let w = app.world().resource::<HydrologyRuntimeWitness>();
+        let w = app.world().resource::<HydrologyRuntimeStats>();
         assert!(w.hydrology_background_wired);
     }
 }

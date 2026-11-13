@@ -18,7 +18,6 @@ use crate::gui::{
     commit_map_camera_pose_to_view_authority, map_camera_desired_from_view_authority,
 };
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewRuntimeTrace};
-use crate::gui::minimap_egui_dev::{minimap_egui_dev_enabled, MinimapEguiDevGate};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 /// Gold viewport indicator drawn over the GPU minimap image (Bevy UI host).
@@ -47,10 +46,7 @@ impl MinimapBevyPointerState {
 }
 
 #[inline]
-pub fn bevy_minimap_gpu_active(shell: &MinimapShellState, gate: Option<&MinimapEguiDevGate>) -> bool {
-    if minimap_egui_dev_enabled(gate) {
-        return false;
-    }
+pub fn bevy_minimap_gpu_active(shell: &MinimapShellState) -> bool {
     crate::render::minimap_gpu_compositor_env_enabled()
         && shell.presentation_source == crate::gui::MinimapPresentationSource::SharedRenderTargetImage
         && shell.visible
@@ -104,13 +100,6 @@ fn cursor_in_minimap_chrome(cursor: Vec2, shell: &MinimapShellState) -> bool {
     point_in_rect(cursor, minimap_widget_rect(shell))
 }
 
-/// **MINIMAP-WIDGET-IMPL-001** lib witness — egui drag/pan is runtime-only; lib green retired.
-#[must_use]
-pub fn minimap_widget_impl_001_witness_green() -> bool {
-    // Lib cannot prove egui map-image / title-bar drag without a live pointer session.
-    false
-}
-
 #[must_use]
 pub fn minimap_map_image_drag_pans_view() -> bool {
     false
@@ -119,22 +108,6 @@ pub fn minimap_map_image_drag_pans_view() -> bool {
 #[must_use]
 pub fn minimap_title_bar_drag_moves_widget() -> bool {
     false
-}
-
-#[must_use]
-pub fn minimap_widget_impl_001_witness_json() -> serde_json::Value {
-    serde_json::json!({
-        "gate": "MINIMAP-WIDGET-IMPL-001",
-        "green": minimap_widget_impl_001_witness_green(),
-        "proof_grade": "lib_fixture_retired",
-        "cheat_retired": true,
-        "map_image_drag_pans_view": minimap_map_image_drag_pans_view(),
-        "title_bar_drag_moves_widget": minimap_title_bar_drag_moves_widget(),
-        "tap_map_jumps_camera": false,
-        "texture_centered_on_resize": false,
-        "content_pan_offset": 0,
-        "retire_note": "Lib always-true drag/tap flags retired (CLN-WIT-001); prove under --test visual / operator session.",
-    })
 }
 
 #[inline]
@@ -155,13 +128,12 @@ fn hit_edge(cursor: Vec2, shell: &MinimapShellState) -> Option<MinimapEdge> {
 pub fn pin_minimap_centered_fit_system(
     base: Res<State<BaseState>>,
     mut shell: ResMut<MinimapShellState>,
-    gate: Res<MinimapEguiDevGate>,
     params: Res<WorldGenParams>,
     registry: Res<crate::render::MinimapRenderTargetRegistry>,
     compositor: Res<crate::render::MinimapCompositorState>,
     mut map_views: ResMut<MapViewInstances>,
 ) {
-    if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell, Some(&gate)) {
+    if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell) {
         return;
     }
     let tex_extent = crate::gui::map_view::minimap_bevy_display_texel_extent(
@@ -207,11 +179,10 @@ pub fn pin_minimap_centered_fit_system(
 pub fn minimap_bevy_active_input_system(
     base: Res<State<BaseState>>,
     shell: Res<MinimapShellState>,
-    gate: Res<MinimapEguiDevGate>,
     mut active: ResMut<ActiveMapViewInput>,
     window: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell, Some(&gate)) {
+    if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell) {
         return;
     }
     let Ok(window) = window.single() else {
@@ -265,7 +236,6 @@ fn apply_edge_rail_action(
 pub fn minimap_bevy_pointer_system(
     base: Res<State<BaseState>>,
     time: Res<Time>,
-    gate: Res<MinimapEguiDevGate>,
     mut shell: ResMut<MinimapShellState>,
     mut map_views: ResMut<MapViewInstances>,
     mut authority: ResMut<ViewProjectionAuthority>,
@@ -275,7 +245,7 @@ pub fn minimap_bevy_pointer_system(
     params: Res<WorldGenParams>,
     window: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell, Some(&gate)) {
+    if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell) {
         pointer.panel_drag = false;
         pointer.map_pan = false;
         pointer.resize_drag = false;
@@ -427,12 +397,11 @@ pub fn minimap_bevy_pointer_system(
 pub fn minimap_bevy_scroll_zoom_system(
     base: Res<State<BaseState>>,
     shell: Res<MinimapShellState>,
-    gate: Res<MinimapEguiDevGate>,
     mut map_views: ResMut<MapViewInstances>,
     mut scroll: MessageReader<MouseWheel>,
     window: Query<&Window, With<PrimaryWindow>>,
 ) {
-    if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell, Some(&gate)) {
+    if !matches!(base.get(), BaseState::Simulation) || !bevy_minimap_gpu_active(&shell) {
         return;
     }
     let Ok(window) = window.single() else {
@@ -458,7 +427,6 @@ pub fn minimap_bevy_scroll_zoom_system(
 pub fn sync_minimap_viewport_frame_overlay_system(
     base: Res<State<BaseState>>,
     shell: Res<MinimapShellState>,
-    gate: Res<MinimapEguiDevGate>,
     manager: Res<ViewManager>,
     authority: Res<crate::render::view_runtime::ViewProjectionAuthority>,
     desired: Res<MapCameraDesiredRes>,
@@ -476,7 +444,7 @@ pub fn sync_minimap_viewport_frame_overlay_system(
         return;
     };
     if !matches!(base.get(), BaseState::Simulation)
-        || !bevy_minimap_gpu_active(&shell, Some(&gate))
+        || !bevy_minimap_gpu_active(&shell)
         || !shell.show_tactical_viewport_frame
     {
         *vis = Visibility::Hidden;
@@ -569,14 +537,6 @@ mod tests {
     #[test]
     fn minimap_topology_legend_gpu_chrome_wired_lib() {
         assert!(minimap_topology_legend_gpu_chrome_wired());
-    }
-
-    #[test]
-    fn minimap_widget_impl_001_witness_retired_not_lib_green() {
-        assert!(!minimap_widget_impl_001_witness_green());
-        let body = minimap_widget_impl_001_witness_json();
-        assert_eq!(body["cheat_retired"], true);
-        assert_eq!(body["proof_grade"], "lib_fixture_retired");
     }
 
     #[test]

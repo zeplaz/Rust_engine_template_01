@@ -146,30 +146,6 @@ impl fmt::Display for UsageId {
     }
 }
 
-/// Corridor classification — replaces ad-hoc `profile.contains("rail")` in grammar consumers.
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Deserialize)]
-#[serde(rename_all = "snake_case")]
-pub enum CorridorType {
-    Rail,
-    Road,
-    Yard,
-    None,
-}
-
-#[must_use]
-pub fn corridor_type_for_profile(profile: &str) -> CorridorType {
-    let p = profile.to_ascii_lowercase();
-    if p.contains("rail") {
-        CorridorType::Rail
-    } else if p.contains("road") || p.contains("street") || p.contains("highway") {
-        CorridorType::Road
-    } else if p.contains("yard") {
-        CorridorType::Yard
-    } else {
-        CorridorType::None
-    }
-}
-
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum FootprintMode {
@@ -527,18 +503,6 @@ mod tests {
     fn usage_id_rejects_unknown_tag() {
         assert!(UsageId::try_new("not_a_real_usage").is_err());
         assert!(UsageId::try_new("warehouse").is_ok());
-    }
-
-    #[test]
-    fn corridor_type_for_profile_rail() {
-        assert_eq!(
-            corridor_type_for_profile("default_rail"),
-            CorridorType::Rail
-        );
-        assert_eq!(
-            corridor_type_for_profile("highway_2lane"),
-            CorridorType::Road
-        );
     }
 
     #[test]

@@ -22,18 +22,11 @@ use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix, ChunkDerivedMetrics};
 
-pub const LANDSCAPE_GRAMMAR_MAP_ROLLOUT_LIVE_JSON: &str =
-    "debug_runs/landscape_grammar_map_rollout_live.json";
-pub const LANDSCAPE_GRAMMAR_LG3_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg3_live.json";
-pub const LANDSCAPE_GRAMMAR_LG5_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg5_live.json";
 pub const LANDSCAPE_ATLAS_INDEX_RON: &str = "assets/configs/landscape/_landscape_atlas_index.ron";
 pub const LG5_ATLAS_EXPAND_ROLLUP_JSON: &str =
     "debug_runs/art_pipeline/tile_landscape_expanded_live.json";
 pub const LG5_ATLAS_ID: &str = "landscape_lg5_expanded_v1";
 pub const LG5_PILOT_ATLAS_ID: &str = "landscape_lg5_pilot_v1";
-pub const VEGETATION_PROGRAM_CLOSE_LIVE_JSON: &str =
-    "debug_runs/vegetation_program_close_live.json";
-
 const PRESET_INDEX_RON: &str = "assets/configs/landscape/_preset_index.ron";
 
 #[derive(Debug, Clone, Deserialize)]
@@ -62,7 +55,7 @@ impl LandscapePresetIndex {
 }
 
 #[derive(Resource, Debug, Default, Clone)]
-pub struct LandscapeMapRolloutWitness {
+pub struct LandscapeMapRolloutStats {
     pub chunks_with_program: u32,
     pub mean_topology_kind_count: f32,
     pub presets_used: u32,
@@ -260,7 +253,7 @@ pub fn rollout_landscape_program_on_chunks(
     index: Res<LandscapePresetIndex>,
     raster: Option<Res<StrategicRasterConfig>>,
     mut commands: Commands,
-    mut witness: ResMut<LandscapeMapRolloutWitness>,
+    mut witness: ResMut<LandscapeMapRolloutStats>,
     q: Query<
         (
             Entity,
@@ -336,10 +329,6 @@ pub fn rollout_landscape_program_on_chunks(
 
 
 
-#[must_use]
-pub fn map_rollout_witness_green(witness: &LandscapeMapRolloutWitness) -> bool {
-    witness.chunks_with_program >= 16 && witness.mean_topology_kind_count >= 3.0
-}
 
 
 
@@ -347,23 +336,6 @@ pub fn map_rollout_witness_green(witness: &LandscapeMapRolloutWitness) -> bool {
 
 
 
-
-
-#[must_use]
-pub fn landscape_lg5_expand_rollup_green() -> bool {
-    let path = repo_asset_path(LG5_ATLAS_EXPAND_ROLLUP_JSON);
-    let Ok(raw) = fs::read_to_string(path) else {
-        return false;
-    };
-    let Ok(body) = serde_json::from_str::<serde_json::Value>(&raw) else {
-        return false;
-    };
-    body.get("green").and_then(|v| v.as_bool()).unwrap_or(false)
-        && body
-            .get("atlas_id")
-            .and_then(|v| v.as_str())
-            .is_some_and(|id| id == LG5_ATLAS_ID)
-}
 
 #[must_use]
 pub fn landscape_lg5_registry_stamped() -> bool {
@@ -392,7 +364,7 @@ pub struct VegetationProgramCloseBody {
 
 
 pub fn landscape_grammar_map_plugin(app: &mut App) {
-    app.init_resource::<LandscapeMapRolloutWitness>()
+    app.init_resource::<LandscapeMapRolloutStats>()
         .add_systems(Startup, startup_load_preset_index)
         .add_systems(
             Update,
@@ -545,16 +517,6 @@ mod tests {
             None,
         );
         assert!((inputs.hydrology_bias - 0.42).abs() < 1e-6);
-    }
-
-    #[test]
-    fn map_rollout_green_threshold() {
-        let w = LandscapeMapRolloutWitness {
-            chunks_with_program: 16,
-            mean_topology_kind_count: 3.5,
-            presets_used: 5,
-        };
-        assert!(map_rollout_witness_green(&w));
     }
 
 

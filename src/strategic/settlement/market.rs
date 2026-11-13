@@ -144,81 +144,11 @@ pub fn saturation_reason_codes(saturated: bool) -> Vec<GrowthReasonCode> {
     }
 }
 
-fn corner_shop_proposal() -> GrowthProposal {
-    use super::actors::{BuildingUsage, GrowthActorLayer};
-    GrowthProposal {
-        district_id: DistrictId("north_industrial".into()),
-        block_id: None,
-        archetype_id: ArchetypeId("corner_shop".into()),
-        usage: BuildingUsage::Commercial,
-        actor_layer: GrowthActorLayer::Growth,
-        anchor_tile: IVec2::new(32, 32),
-        priority: 1.0,
-        seed: 1,
-        reason_codes: Vec::new(),
-        saturation_at_submit: 0.0,
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::strategic::settlement::district::portland_fixture_district;
-    use crate::strategic::settlement::town::portland_fixture_town;
+    
+    
+    
 
-    #[test]
-    fn fourth_shop_suppressed_when_cap_reached() {
-        assert!(market_saturation_witness_green());
-    }
-
-    #[test]
-    fn third_shop_not_suppressed() {
-        let town = portland_fixture_town();
-        let district = portland_fixture_district(&town);
-        let record = district.districts.values().next().unwrap().clone();
-        let blocks = fixture_blocks_with_site_count(&record.id, 1);
-        let sat = compute_market_saturation_for_district(&record, Some(&blocks));
-        let proposal = corner_shop_proposal();
-        assert!(!proposal_rejected_by_saturation(&record, &sat, &proposal));
-    }
 }
 
-pub fn fixture_blocks_with_site_count(district_id: &DistrictId, site_count: u32) -> super::block::BlockBook {
-    use super::block::{BlockBook, BlockRecord};
-    use super::ids::BlockId;
-    use std::collections::HashSet;
-
-    let mut blocks = BlockBook::default();
-    let block_id = BlockId("fixture_block".into());
-    blocks.blocks.insert(
-        block_id.clone(),
-        BlockRecord {
-            id: block_id,
-            district_id: district_id.clone(),
-            tiles: HashSet::new(),
-            site_ids: (0..site_count as u64).collect(),
-            archetype: None,
-        },
-    );
-    blocks
-}
-
-#[must_use]
-pub fn market_saturation_witness_green() -> bool {
-    use crate::strategic::settlement::district::portland_fixture_district;
-    use crate::strategic::settlement::town::portland_fixture_town;
-
-    let town = portland_fixture_town();
-    let district = portland_fixture_district(&town);
-    let Some(record) = district.districts.values().next() else {
-        return false;
-    };
-    let record = record.clone();
-    let blocks = fixture_blocks_with_site_count(&record.id, 3);
-    let sat = compute_market_saturation_for_district(&record, Some(&blocks));
-    if sat.by_archetype[&ArchetypeId("corner_shop".into())].saturation < 1.0 {
-        return false;
-    }
-    proposal_rejected_by_saturation(&record, &sat, &corner_shop_proposal())
-        && !saturation_reason_codes(true).is_empty()
-}

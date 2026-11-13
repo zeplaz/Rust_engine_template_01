@@ -88,13 +88,6 @@ impl Default for HudPanel {
     }
 }
 
-/// Witness for VISUAL-AID-V2-01 predicates.
-#[derive(Resource, Clone, Debug, Default)]
-pub struct HudPanelStateWitness {
-    pub cycle_ok: bool,
-    pub last_esc_collapsed: bool,
-}
-
 /// Global HUD panel collapse on Escape (unpinned panels only).
 pub fn hud_panel_escape_collapse_system(
     keys: Res<ButtonInput<KeyCode>>,
@@ -102,42 +95,25 @@ pub fn hud_panel_escape_collapse_system(
     mut road_sheet: ResMut<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
     mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
     mut layout: ResMut<crate::gui::hud::HudCommandShellLayout>,
-    mut transmission: ResMut<crate::gui::hud::TransmissionShellState>,
     mut context_tray: ResMut<super::simulation_shell_phase2::ContextTrayState>,
-    mut ui_shell_witness: ResMut<super::simulation_shell_phase2::UiShellMigrationWitness>,
-    mut witness: ResMut<HudPanelStateWitness>,
 ) {
     if !keys.just_pressed(KeyCode::Escape) {
         return;
     }
     if picker.open {
         picker.close();
-        witness.last_esc_collapsed = true;
-        witness.cycle_ok = true;
         return;
     }
     if road_sheet.open {
         road_sheet.close();
-        witness.last_esc_collapsed = true;
-        witness.cycle_ok = true;
         return;
     }
-    super::simulation_shell_phase2::collapse_context_tray_on_escape(
-        &mut context_tray,
-        &mut ui_shell_witness,
-    );
-    let before_tray = tray.tray_panel_state;
-    let before_cmd = layout.command_tray_state;
+    super::simulation_shell_phase2::collapse_context_tray_on_escape(&mut context_tray);
     tray.tray_panel_state.collapse_unpinned();
     layout.overlay_tray_state.collapse_unpinned();
     layout.command_tray_state.collapse_unpinned();
     layout.intel_timeline_state.collapse_unpinned();
     layout.command_table_state.collapse_unpinned();
-    transmission.panel_state.collapse_unpinned();
-    witness.last_esc_collapsed = before_tray != HudPanelState::Collapsed
-        || before_cmd != HudPanelState::Collapsed
-        || transmission.panel_state != HudPanelState::Collapsed;
-    witness.cycle_ok = true;
 }
 
 fn click_is_inside_map_hole(
@@ -156,13 +132,11 @@ fn click_is_inside_map_hole(
 fn collapse_unpinned_shells(
     tray: &mut crate::gui::hud::HudOverlayTrayState,
     layout: &mut crate::gui::hud::HudCommandShellLayout,
-    transmission: &mut crate::gui::hud::TransmissionShellState,
     context_tray: &mut crate::gui::hud::ContextTrayState,
 ) {
     tray.tray_panel_state.collapse_unpinned();
     layout.overlay_tray_state.collapse_unpinned();
     layout.command_tray_state.collapse_unpinned();
-    transmission.panel_state.collapse_unpinned();
     context_tray.panel_state.collapse_unpinned();
 }
 
@@ -174,7 +148,6 @@ pub fn hud_panel_click_outside_collapse_system(
     gate: Option<Res<SimulationMapPointerGate>>,
     mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
     mut layout: ResMut<crate::gui::hud::HudCommandShellLayout>,
-    mut transmission: ResMut<crate::gui::hud::TransmissionShellState>,
     mut context_tray: ResMut<crate::gui::hud::ContextTrayState>,
 ) {
     if !mouse.just_pressed(MouseButton::Left) || click_is_inside_map_hole(map_vp.as_ref(), &win) {
@@ -186,7 +159,6 @@ pub fn hud_panel_click_outside_collapse_system(
     collapse_unpinned_shells(
         tray.as_mut(),
         layout.as_mut(),
-        transmission.as_mut(),
         context_tray.as_mut(),
     );
 }
@@ -195,7 +167,7 @@ pub struct HudPanelStatePlugin;
 
 impl Plugin for HudPanelStatePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<HudPanelStateWitness>().add_systems(
+        app.add_systems(
             Update,
             (
                 hud_panel_escape_collapse_system,

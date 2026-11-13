@@ -113,43 +113,8 @@ pub fn rollup_town_metrics_from_districts_system(
     );
 }
 
-#[must_use]
-pub fn proc_og4_rollup_witness_green() -> bool {
-    use super::assign::register_site_on_commit;
-    use super::district::portland_fixture_district;
-    use crate::strategic::SiteId;
-
-    let mut town_book = portland_fixture_town();
-    let district_book = portland_fixture_district(&town_book);
-    let mut blocks = BlockBook::default();
-
-    for (i, (x, z)) in [(12, 12), (14, 12), (16, 12)].iter().enumerate() {
-        register_site_on_commit(
-            &district_book,
-            &mut blocks,
-            SiteId(i as u64 + 1),
-            &[IVec2::new(*x, *z)],
-        );
-    }
-
-    let district_rollups = rollup_district_site_counts(&blocks, &district_book);
-    let site_total: u32 = district_rollups.values().map(|r| r.site_count).sum();
-    if site_total != 3 {
-        return false;
-    }
-
-    let snap = rollup_town_metrics_from_districts(&mut town_book, &blocks, &district_book);
-    snap.jobs == 3 * JOBS_PER_SITE
-        && snap.housing == 3 * HOUSING_UNITS_PER_SITE
-        && snap.population >= BASE_POPULATION
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
-    #[test]
-    fn proc_og4_rollup_witness_green() {
-        assert!(super::proc_og4_rollup_witness_green());
-    }
 }

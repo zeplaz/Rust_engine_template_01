@@ -16,11 +16,6 @@ pub struct WeatherPrecipAuthority {
 }
 
 impl WeatherPrecipAuthority {
-    #[inline]
-    #[must_use]
-    pub fn witness_green(&self) -> bool {
-        self.gpu_precip_authority && self.mesh_precip_demoted
-    }
 }
 
 /// Sync witness fields from [`super::weather_visual::WeatherVisualSettings`].
@@ -70,56 +65,9 @@ pub fn weather_effects_tick(
     sample.traction_stub_active = n > 0 || congestion > 1e-6;
 }
 
-#[must_use]
-pub fn gather_weather_witness_inputs(
-    diagnostics: &WeatherSimDiagnostics,
-    climate: &ClimateState,
-    regional: &RegionalWeatherField,
-    effects: &WeatherEffectsSample,
-    precip: &WeatherPrecipAuthority,
-) -> WeatherWitnessInputs {
-    WeatherWitnessInputs {
-        climate_seed_present: climate.seed_present(),
-        climate_state_wired: diagnostics.climate_slow_tick_runs > 0,
-        regional_weather_wired: regional.wired_from_clipmap && diagnostics.regional_weather_tick_runs > 0,
-        chunk_weather_from_regional: diagnostics.chunk_weather_regional_lerp_runs > 0,
-        weather_effects_traction_stub: diagnostics.weather_effects_tick_runs > 0
-            && effects.traction_stub_active,
-        weather_precip_gpu_authority: precip.witness_green(),
-        renewables_from_clipmap: regional.wired_from_clipmap && regional.sample > 1e-5,
-        regional_weather_sample: regional.sample,
-        ..WeatherWitnessInputs::default()
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use bevy::app::App;
 
-    #[test]
-    fn weather_effects_tick_publishes_traction_stub() {
-        let mut app = App::new();
-        app.init_resource::<WeatherEffectsSample>()
-            .init_resource::<WeatherPrecipAuthority>()
-            .init_resource::<WeatherSimDiagnostics>()
-            .insert_resource(SimControlState::default())
-            .add_systems(Update, weather_effects_tick);
-        app.world_mut().spawn(ChunkWeather {
-            visibility_factor: 0.6,
-            ..ChunkWeather::default()
-        });
-        app.update();
-        let sample = app.world().resource::<WeatherEffectsSample>();
-        assert!(sample.traction_stub_active);
-        assert!(sample.visibility_sample < 1.0);
-        let inputs = gather_weather_witness_inputs(
-            app.world().resource::<WeatherSimDiagnostics>(),
-            &ClimateState::default(),
-            &RegionalWeatherField::default(),
-            sample,
-            app.world().resource::<WeatherPrecipAuthority>(),
-        );
-        assert!(inputs.weather_effects_traction_stub);
-    }
 }

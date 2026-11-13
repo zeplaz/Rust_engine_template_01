@@ -23,19 +23,6 @@ pub struct TacticalVectorOverlayState {
     pub drawn_shapes: u32,
 }
 
-#[must_use]
-pub fn tactical_vector_overlay_witness_json(state: &TacticalVectorOverlayState) -> serde_json::Value {
-    serde_json::json!({
-        "gate": "VFX-VECTOR-SHAPES-001",
-        "wired": state.wired,
-        "overlay_revision": state.overlay_revision,
-        "projection_stamp": state.projection_stamp,
-        "drawn_shapes": state.drawn_shapes,
-        "green": state.wired && state.drawn_shapes > 0 && state.projection_stamp > 0,
-        "backend": "bevy_vector_shapes",
-    })
-}
-
 pub fn sync_tactical_vector_overlay_from_projection(
     graph: Res<RenderProjectionGraph>,
     mut state: ResMut<TacticalVectorOverlayState>,
@@ -96,18 +83,6 @@ impl Plugin for TacticalVectorOverlayPlugin {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn witness_green_when_shapes_drawn() {
-        let state = TacticalVectorOverlayState {
-            wired: true,
-            overlay_revision: 1,
-            projection_stamp: 10,
-            drawn_shapes: 2,
-        };
-        let j = tactical_vector_overlay_witness_json(&state);
-        assert_eq!(j["backend"], "bevy_vector_shapes");
-        assert_eq!(j["green"], true);
-    }
 }

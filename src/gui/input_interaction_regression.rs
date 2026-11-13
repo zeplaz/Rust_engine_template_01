@@ -320,7 +320,7 @@ fn panel_open_cursor_outside_rect_reaches_placement() {
     let (mut h, at) = gated_factory(BaseState::Simulation);
     // Panel on the far right; the cursor is nowhere near it.
     h.spawn_panel(
-        crate::gui::diagnostics_ui::DiagnosticsBevyRoot,
+        crate::gui::logistics_orders_panel::LogisticsOrdersBevyRoot,
         Vec2::new(980.0, 60.0),
         Vec2::new(1260.0, 400.0),
     );
@@ -337,7 +337,7 @@ fn panel_open_cursor_outside_rect_reaches_placement() {
 fn panel_open_cursor_over_rect_blocks_placement() {
     let (mut h, at) = gated_factory(BaseState::Simulation);
     let (min, max) = physical_rect_around(at, 40.0);
-    h.spawn_panel(crate::gui::diagnostics_ui::DiagnosticsBevyRoot, min, max);
+    h.spawn_panel(crate::gui::logistics_orders_panel::LogisticsOrdersBevyRoot, min, max);
     h.step();
     h.click(MouseButton::Left);
     assert_eq!(h.res::<BuildGhostState>().placement_mode, BuildPlacementMode::Place);
@@ -366,7 +366,7 @@ fn panel_spawned_this_frame_blocks_first_click() {
     // Spawned, not laid out yet (`ComputedNode` empty): the first click must not pass through.
     h.app
         .world_mut()
-        .spawn((crate::gui::diagnostics_ui::DiagnosticsBevyRoot, Node::default()));
+        .spawn((crate::gui::logistics_orders_panel::LogisticsOrdersBevyRoot, Node::default()));
     h.press_mouse(MouseButton::Left);
     h.step();
     assert_eq!(h.res::<BuildGhostState>().placement_mode, BuildPlacementMode::Place);

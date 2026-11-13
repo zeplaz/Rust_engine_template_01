@@ -1297,7 +1297,7 @@ fn seed_visual_concrete_chain_e2e(
     mut harness: ResMut<TestWorldHarness>,
     mut commands: Commands,
     mut commit: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
-    mut chain_witness: ResMut<crate::economy::activation::ConcreteChainE2eWitness>,
+    mut chain_witness: ResMut<crate::economy::activation::ConcreteChainE2eStats>,
     portland_sites: Query<&crate::economy::activation::BuildingDefinitionRef, With<crate::strategic::ConstructionSite>>,
 ) {
     let Some(launch) = launch.as_ref() else {

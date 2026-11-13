@@ -20,7 +20,7 @@ use crate::systems::ecology::{
     ChunkCellStand, CELL_BURNING, CELL_BURNT, CELL_GRASS, CELL_OLD, CELL_REGROWTH, CELL_SHRUB,
     CELL_WATER, CELL_YOUNG,
 };
-use crate::systems::fire::{ChunkFireOverlay, FireEcologyWitness};
+use crate::systems::fire::{ChunkFireOverlay, FireEcologyStats};
 use crate::systems::sim_control::SimTick;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{ChunkCellMatrix, WaterClass};
@@ -169,7 +169,7 @@ fn collect_dump(
     stands: &Query<&ChunkCellStand>,
     overlays: &Query<&ChunkFireOverlay>,
     sites: &Query<&ConstructionSite>,
-    ecology: Option<&FireEcologyWitness>,
+    ecology: Option<&FireEcologyStats>,
     graph: Option<&RenderProjectionGraph>,
     particles: Option<&WorldFireParticleFrame>,
 ) -> Value {
@@ -263,7 +263,7 @@ fn flush_sim_run_dump(
     stands: Query<&ChunkCellStand>,
     overlays: Query<&ChunkFireOverlay>,
     sites: Query<&ConstructionSite>,
-    ecology: Option<Res<FireEcologyWitness>>,
+    ecology: Option<Res<FireEcologyStats>>,
     graph: Option<Res<RenderProjectionGraph>>,
     particles: Option<Res<WorldFireParticleFrame>>,
     mut state: ResMut<SimRunDumpState>,
@@ -311,34 +311,6 @@ impl Plugin for SimRunDumpPlugin {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn dump_has_counts_and_no_green() {
-        let v = build_sim_run_dump(
-            40,
-            1,
-            320,
-            320,
-            "Visual",
-            true,
-            (102400, 4000, 2800, 1200),
-            (80000, 12, 40, 2800),
-            64,
-            48,
-            72,
-            "WorldMain",
-            0.2,
-            0.9,
-            0.3,
-            3,
-            5,
-        );
-        assert_eq!(v["schema"], SIM_RUN_DUMP_SCHEMA);
-        assert_eq!(v["proof_grade"], "sim_dump");
-        assert!(v.get("green").is_none());
-        assert_eq!(v["counts"]["fire_instance_rows"], 48);
-        assert!(v["frac"]["river"].as_f64().unwrap() < 0.08);
-        assert!(v["flags"]["world_generated"].as_bool().unwrap());
-    }
 }

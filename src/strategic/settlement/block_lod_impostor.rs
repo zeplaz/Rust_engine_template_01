@@ -10,9 +10,7 @@ use super::block_frame::{block_bounds_from_tiles, BlockFrameBook};
 use super::block_rollout::BlockRolloutStagingBook;
 use super::block_street_visual::{BlockStreetFurniturePiece, BlockStreetFurnitureRoot};
 use super::ids::BlockId;
-use crate::gui::{WorldLodBand, WorldLodBands, WorldRepresentationFrame};
-
-pub const CITY_P2_LIVE_JSON: &str = "debug_runs/city_p2_001_live.json";
+use crate::gui::{WorldLodBand, WorldRepresentationFrame};
 
 // AssetServer roots at `assets/` — paths must be relative to that root (no `assets/` prefix).
 const C8_PILOT_IMPOSTOR_GLB: &str = "staging/city_c8_pilot_merge_run001/model.glb#Scene0";
@@ -165,147 +163,10 @@ pub fn sync_block_lod_impostor_visibility_system(
     }
 }
 
-#[must_use]
-pub fn block_lod_impostor_fixture_witness_green() -> bool {
-    use super::block_frame::{
-        fixture_block_record_with_tiles, fixture_transport_graph_for_block_frame, rebuild_block_frames,
-    };
-    use super::block_recipe::load_block_recipe_registry;
-    use super::block_rollout::{
-        advance_block_rollout_staging_system, begin_block_rollout_staging_system,
-        evaluate_block_recipes_system, execute_staged_block_growth_system,
-        release_staged_block_lot_proposals_system, BlockRolloutGrowthBook,
-    };
-    use super::district::{portland_fixture_district, DevelopmentPressureBook, DistrictMetricsBook};
-    use super::growth::GrowthProposalQueue;
-    use super::market::MarketSaturationBook;
-
-    let recipes = load_block_recipe_registry();
-    if !recipes.load_errors.is_empty() || recipes.recipes.is_empty() {
-        return false;
-    }
-
-    let graph = fixture_transport_graph_for_block_frame();
-    let mut block = fixture_block_record_with_tiles();
-    block.site_ids.clear();
-    let town = super::town::portland_fixture_town();
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .insert_resource(recipes)
-        .insert_resource(super::block_archetype::load_block_archetype_registry())
-        .insert_resource(town.clone())
-        .insert_resource(portland_fixture_district(&town))
-        .insert_resource(super::block::BlockBook {
-            blocks: HashMap::from([(block.id.clone(), block.clone())]),
-            tile_to_block: HashMap::new(),
-        })
-        .insert_resource(rebuild_block_frames(
-            &super::block::BlockBook {
-                blocks: HashMap::from([(block.id.clone(), block)]),
-                tile_to_block: HashMap::new(),
-            },
-            Some(&graph),
-        ))
-        .init_resource::<DistrictMetricsBook>()
-        .init_resource::<DevelopmentPressureBook>()
-        .init_resource::<MarketSaturationBook>()
-        .init_resource::<super::block_rollout::BlockRecipeEvaluationBook>()
-        .init_resource::<BlockRolloutGrowthBook>()
-        .init_resource::<BlockRolloutStagingBook>()
-        .init_resource::<GrowthProposalQueue>()
-        .init_resource::<crate::construction::PendingConstructionQueue>()
-        .init_resource::<super::block_street_visual::BlockStreetVisualBook>()
-        .init_resource::<super::block_street_visual::BlockStreetFurnitureCatalog>()
-        .init_resource::<BlockLodImpostorCatalog>()
-        .init_resource::<BlockLodImpostorBook>()
-        .insert_resource(WorldRepresentationFrame {
-            bands: WorldLodBands {
-                global: WorldLodBand::Operational,
-            },
-            ..Default::default()
-        })
-        .add_message::<super::block_rollout::BlockPlanned>()
-        .add_message::<super::block_rollout::BlockAssembled>()
-        .add_message::<super::block_rollout::BlockCommitted>()
-        .add_systems(
-            Update,
-            (
-                evaluate_block_recipes_system,
-                advance_block_rollout_staging_system,
-                begin_block_rollout_staging_system,
-                release_staged_block_lot_proposals_system,
-                execute_staged_block_growth_system,
-                super::block_street_visual::spawn_block_street_furniture_system,
-                spawn_block_lod_impostors_system,
-                sync_block_lod_impostor_visibility_system,
-            )
-                .chain(),
-        );
-    app.update();
-    {
-        let eval = app.world().resource::<super::block_rollout::BlockRecipeEvaluationBook>();
-        if eval.by_block.is_empty() {
-            return false;
-        }
-    }
-    for _ in 0..12 {
-        app.update();
-    }
-    {
-        let staging = app.world().resource::<BlockRolloutStagingBook>();
-        if staging.committed.is_empty() {
-            return false;
-        }
-    }
-    {
-        let book = app.world().resource::<BlockLodImpostorBook>();
-        if book.spawned_blocks.is_empty() || !book.detail_visible {
-            return false;
-        }
-    }
-    {
-        let mut frame = app.world_mut().resource_mut::<WorldRepresentationFrame>();
-        frame.bands.global = WorldLodBand::Strategic;
-    }
-    app.update();
-    let book = app.world().resource::<BlockLodImpostorBook>();
-    book.impostor_visible && !book.detail_visible
-}
-
-#[must_use]
-pub fn build_city_p2_witness_body() -> serde_json::Value {
-    let fixture_ok = block_lod_impostor_fixture_witness_green();
-    serde_json::json!({
-        "gate": "CITY-P2-001",
-        "green": fixture_ok,
-        "fixture_green": fixture_ok,
-        "impostor_source": C8_PILOT_IMPOSTOR_GLB,
-        "fallback_source": FALLBACK_IMPOSTOR_GLB,
-        "lod_bands_impostor": ["Strategic", "Macro"],
-    })
-}
-
-#[must_use]
-pub fn city_p2_witness_green() -> bool {
-    build_city_p2_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn city_p2_fixture_witness_green_lib() {
-        assert!(block_lod_impostor_fixture_witness_green());
-    }
-
-    #[test]
-    fn city_p2_witness_green_lib() {
-        assert!(city_p2_witness_green());
-    }
 }

@@ -20,8 +20,6 @@ use crate::terrain::generation::Chunk;
 pub const LANDSCAPE_PRESETS_DIR: &str = "assets/configs/landscape/presets";
 pub const LG1_PILOT_PRESET_ID: &str = "agri_riparian_v0";
 pub const LG1_PILOT_CHUNK: IVec2 = IVec2::new(12, 0);
-pub const LANDSCAPE_GRAMMAR_LG1_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg1_live.json";
-
 #[derive(Debug, Clone, Deserialize, Serialize, PartialEq)]
 pub struct LandDnaV0 {
     pub H: String,

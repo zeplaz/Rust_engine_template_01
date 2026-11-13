@@ -65,15 +65,6 @@ pub fn fire7_f7_a_exit_001_criteria(
     }
 }
 
-#[must_use]
-pub fn fire7_f7_a_exit_001_green(
-    by_view: &FireVisualFramesByView,
-    vis: &VisibleFireChunkSet,
-    active: &ActiveFireChunkSet,
-) -> bool {
-    fire7_f7_a_exit_001_criteria(by_view, vis, active).green()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

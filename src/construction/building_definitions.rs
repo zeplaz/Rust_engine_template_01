@@ -577,21 +577,6 @@ pub fn default_buildings_dir() -> PathBuf {
     repo_asset_path(BUILDINGS_DIR)
 }
 
-/// UI-P2A-CODER-B — `_mock_shapes.ron` roundtrip matches registry footprint.
-#[must_use]
-pub fn mock_shapes_parity_green() -> bool {
-    let reg = load_building_definitions_from_dir(default_buildings_dir());
-    let Some(def) = reg.get("mock:shape_t_3x3") else {
-        return false;
-    };
-    def.footprint.width == 3
-        && def.footprint.depth == 3
-        && def.footprint.cells.len() == 9
-        && def.footprint.cells[0] == 1
-        && def.footprint.cells[4] == 1
-        && def.footprint.cells[3] == 0
-}
-
 pub fn attach_procedural_glb_paths(
     buildings: &mut BuildingDefinitionRegistry,
     modules: &super::procedural::ProceduralModuleRegistry,

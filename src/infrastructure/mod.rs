@@ -19,22 +19,9 @@ pub use settlement::{
     SettlementKind, SettlementNode,
 };
 pub use utility::{
-    infra_e4_003_utility_connection_witness_green, infra_e4_004_authoring_witness_green,
     initial_utility_power_connected, sync_utility_connection_power_system,
-    utility_activation_link_witness_green, PowerLine, UtilityAuthoringMode, UtilityAuthoringTool,
+    PowerLine, UtilityAuthoringMode, UtilityAuthoringTool,
     UtilityConnection, UtilityLink, UtilityNetworkKind, UtilityNetworkSnapshot,
     UTILITY_NETWORK_SCHEMA_V1, VoltageClass, WaterPipe,
 };
 
-/// **INFRA-E0-003** — legacy `entities::structure::Road` / `Rrails` stubs gated off default build.
-#[must_use]
-pub fn infra_e0_003_legacy_transport_stubs_gated_witness_green() -> bool {
-    !cfg!(feature = "legacy_transport_ecs_stubs")
-}
-
-/// Rollup for INFRA-E1 spine (lib tests + sim witness fields).
-#[must_use]
-pub fn infra_e1_transport_spine_witness_green() -> bool {
-    transport::infra_e1_001_transport_graph_sync_witness_green()
-        && transport::infra_e1_002_spline_subdivide_witness_green()
-}

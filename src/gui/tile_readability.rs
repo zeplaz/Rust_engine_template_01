@@ -36,7 +36,7 @@ pub struct TileReadabilityInputs<'w> {
 
 /// Witness for VISUAL-AID-V2-03.
 #[derive(Resource, Clone, Debug, Default)]
-pub struct TileReadabilityWitness {
+pub struct TileReadabilityState {
     pub clamp_active: bool,
     pub screen_pixels_per_tile: f32,
     pub zoom_floor_applied: f32,
@@ -114,11 +114,11 @@ pub fn apply_readability_to_lod_inputs(
     }
 }
 
-pub fn sync_tile_readability_witness(
+pub fn sync_tile_readability_state(
     inputs: TileReadabilityInputs,
     desired: Res<MapCameraDesiredRes>,
     mut global: ResMut<GlobalLodState>,
-    mut witness: ResMut<TileReadabilityWitness>,
+    mut witness: ResMut<TileReadabilityState>,
 ) {
     let px = screen_pixels_per_tile(inputs.ortho.as_ref(), inputs.map_vp.as_ref(), desired.as_ref());
     witness.screen_pixels_per_tile = px;
@@ -145,12 +145,12 @@ pub struct TileReadabilityPlugin;
 impl Plugin for TileReadabilityPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<TileReadabilityConfig>()
-            .init_resource::<TileReadabilityWitness>()
+            .init_resource::<TileReadabilityState>()
             .init_resource::<ZoomVisualBias>()
             .add_systems(
                 Update,
                 (
-                    sync_tile_readability_witness,
+                    sync_tile_readability_state,
                 )
                     .run_if(crate::gui::ui_gates::in_simulation_or_editor),
             );

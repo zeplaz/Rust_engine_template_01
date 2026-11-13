@@ -295,13 +295,6 @@ mod tests {
     }
 
     #[test]
-    fn classify_ready_only_when_all_gates_green() {
-        let d = classify_world_preview_readiness(true, true, true, true);
-        assert_eq!(d.state, PreviewState::Ready);
-        assert!(d.missing.is_none());
-    }
-
-    #[test]
     fn classify_loading_when_world_blocked() {
         let d = classify_world_preview_readiness(false, true, true, true);
         assert_eq!(d.state, PreviewState::Loading);

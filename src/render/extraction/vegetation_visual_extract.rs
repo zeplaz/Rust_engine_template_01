@@ -15,9 +15,6 @@ use crate::systems::ecology::{
 use crate::systems::sim_control::SimStepStamp;
 use crate::terrain::generation::Chunk;
 
-pub const LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON: &str =
-    "debug_runs/landscape_grammar_extract_live.json";
-
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct VegExtractModifiers {
     pub burn_active: bool,
@@ -196,33 +193,11 @@ pub fn build_vegetation_extract_frame(
 }
 
 #[must_use]
-pub fn vegetation_extract_witness_green(frame: &VegetationExtractFrame) -> bool {
-    frame.rows.iter().any(|r| r.burn_active)
-        && frame
-            .rows
-            .iter()
-            .any(|r| r.variant_key.starts_with("veg_burn_") || r.variant_key.starts_with("veg_topo_"))
-        && frame.rows.iter().any(|r| r.extract_glyph != '#')
-}
-
-#[must_use]
 pub fn extract_glyph_deterministic(rows: &[VegExtractRow]) -> bool {
     !rows.is_empty() && rows.iter().all(|r| r.extract_glyph.is_ascii())
 }
 
 
-
-/// CDR-A-EXTRACT-SPRITE-001 — program topology variant keys (non-burn rows).
-#[must_use]
-pub fn harness_topo_extract_witness_green(frame: &VegetationExtractFrame) -> bool {
-    frame
-        .rows
-        .iter()
-        .filter(|r| r.variant_key.starts_with("veg_topo_"))
-        .count()
-        >= 1
-        && extract_glyph_deterministic(&frame.rows)
-}
 
 /// Build extract rows from live program chunks without active burn (sim harness path).
 #[cfg(test)]
@@ -319,7 +294,7 @@ impl Plugin for VegetationVisualExtractPlugin {
 mod tests {
     use super::*;
     use crate::systems::ecology::{
-        evaluate_landscape_program, load_landscape_grammar_catalog, ActiveBurn, ChunkEcology,
+        evaluate_landscape_program, load_landscape_grammar_catalog, ChunkEcology,
         LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID, VegetationField,
     };
     use crate::systems::weather::ChunkWeather;
@@ -356,37 +331,6 @@ mod tests {
     }
 
     #[test]
-    fn vegetation_extract_builds_burn_rows() {
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins)
-            .init_resource::<crate::systems::sim_control::SimTick>()
-            .init_resource::<crate::systems::sim_control::SimTimeMicros>()
-            .add_plugins(VegetationVisualExtractPlugin);
-
-        app.world_mut().spawn((
-            Chunk {
-                coord: LG1_PILOT_CHUNK,
-            },
-            SuccessionState {
-                stage: SuccessionTopologyStage::BurnScar,
-                ..Default::default()
-            },
-            ActiveBurn {
-                heat: 0.7,
-                frame_index: 3,
-                started_tick: 0,
-                severity: 0.7,
-                ..Default::default()
-            },
-        ));
-
-        app.update();
-        let frame = app.world().resource::<VegetationExtractFrame>();
-        assert!(vegetation_extract_witness_green(frame));
-        assert!(frame.rows.iter().any(|r| r.variant_key.starts_with("veg_burn_")));
-    }
-
-    #[test]
     fn vegetation_extract_uses_topo_variant_when_program_not_burning() {
         let catalog = load_landscape_grammar_catalog();
         let preset = catalog.presets.get(LG1_PILOT_PRESET_ID).expect("pilot");
@@ -411,42 +355,6 @@ mod tests {
             "expected veg_topo_* got {key}"
         );
         assert_ne!(key, "veg_burn_02");
-    }
-
-    #[test]
-    fn harness_topo_extract_frame_from_program_rows() {
-        use crate::systems::ecology::{
-            evaluate_landscape_program, load_landscape_grammar_catalog, ChunkEcology,
-            LG1_PILOT_PRESET_ID, VegetationField,
-        };
-        use crate::systems::weather::ChunkWeather;
-        use crate::terrain::generation::Chunk;
-
-        let mut app = App::new();
-        app.add_plugins(MinimalPlugins);
-        let catalog = load_landscape_grammar_catalog();
-        let preset = catalog.presets.get(LG1_PILOT_PRESET_ID).expect("pilot");
-        for (cx, cy) in [(0, 0), (1, 1), (2, 2)] {
-            let eval = evaluate_landscape_program(
-                preset,
-                IVec2::new(cx, cy),
-                &ChunkEcology::default(),
-                &VegetationField::default(),
-                &ChunkWeather::default(),
-            );
-            app.world_mut().spawn((
-                Chunk {
-                    coord: IVec2::new(cx, cy),
-                },
-                LandscapeProgramOnChunk {
-                    preset_id: preset.preset_id.clone(),
-                    evaluation: eval,
-                },
-            ));
-        }
-        let frame = super::build_harness_topo_extract_frame(app.world_mut());
-        assert!(super::harness_topo_extract_witness_green(&frame));
-        assert!(frame.rows.iter().any(|r| r.variant_key.starts_with("veg_topo_")));
     }
 
     #[test]

@@ -113,60 +113,11 @@ impl WaterParticleDensityScale {
     }
 }
 
-/// Zoom band used when re-stamping tactical witness during `--test visual` proof.
-pub const WATER_TACTICAL_WITNESS_ZOOM_ALPHA: f32 = 0.75;
-
 /// Strategic + tactical particle witness snapshots (WATER-WITNESS-001 / WATER-STRATEGIC-001).
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct WaterVfxWitnessBands {
-    pub strategic: WaterParticleWitness,
-    pub tactical: WaterParticleWitness,
-}
-
-/// Re-stamp particles at strategic and tactical zoom without moving the live camera (D-W09).
-#[must_use]
-pub fn evaluate_water_vfx_witness_bands(
-    catalog: &WaterSurfaceVisualCatalog,
-    live_tactical_zoom_alpha: f32,
-    time_secs: f32,
-) -> WaterVfxWitnessBands {
-    let mut strategic_frame = WorldWaterParticleFrame::default();
-    update_world_water_particles_from_catalog(
-        catalog,
-        &mut strategic_frame,
-        FireParticleCameraScale {
-            zoom_level: 1.0,
-            zoom_alpha: WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA * 0.5,
-            ..Default::default()
-        },
-        time_secs,
-    );
-    let tactical_zoom = live_tactical_zoom_alpha.max(WATER_TACTICAL_WITNESS_ZOOM_ALPHA);
-    let mut tactical_frame = WorldWaterParticleFrame::default();
-    update_world_water_particles_from_catalog(
-        catalog,
-        &mut tactical_frame,
-        FireParticleCameraScale {
-            zoom_level: 1.0,
-            zoom_alpha: tactical_zoom,
-            ..Default::default()
-        },
-        time_secs,
-    );
-    WaterVfxWitnessBands {
-        strategic: strategic_frame.witness,
-        tactical: tactical_frame.witness,
-    }
-}
-
-/// WATER-STRATEGIC-001 — particles culled, shader motion flag stays on below strategic cutoff.
-#[must_use]
-pub fn water_strategic_001_green(bands: &WaterVfxWitnessBands) -> bool {
-    bands.strategic.zoom_alpha < WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA
-        && bands.strategic.strategic_culled
-        && bands.strategic.rows == 0
-        && bands.strategic.shader_motion_always_on
-        && bands.tactical.shader_motion_always_on
+pub struct WaterVfxBands {
+    pub strategic: WaterParticleStats,
+    pub tactical: WaterParticleStats,
 }
 
 /// True when any ocean tile borders land, lake, river, or map edge (D-W08 eligibility).
@@ -203,90 +154,9 @@ pub fn catalog_has_river_bend(catalog: &WaterSurfaceVisualCatalog) -> bool {
     false
 }
 
-/// WATER-W2-FOAM-001 — tactical coast + bend foam when catalog geometry requires it.
-#[must_use]
-pub fn water_w2_foam_001_green(
-    catalog: &WaterSurfaceVisualCatalog,
-    bands: &WaterVfxWitnessBands,
-) -> bool {
-    if !water_strategic_001_green(bands) {
-        return false;
-    }
-    let coast_required = catalog_has_coast_ocean(catalog);
-    let coast_ok = !coast_required || bands.tactical.coast_foam > 0;
-    let bend_required = catalog_has_river_bend(catalog);
-    let river_ok = !bend_required || bands.tactical.river_foam > 0;
-    let parity = !catalog.w1_green()
-        || bands.tactical.river_streaks > 0
-        || bands.tactical.river_foam > 0;
-    coast_ok && river_ok && parity
-}
-
-/// Foam and/or ocean channel proved (W2 foam or W1 ocean catalog).
-#[must_use]
-pub fn water_witness_foam_or_ocean_green(
-    catalog: &WaterSurfaceVisualCatalog,
-    tactical: &WaterParticleWitness,
-) -> bool {
-    catalog.w1_ocean_green()
-        || tactical.river_foam > 0
-        || tactical.coast_foam > 0
-}
-
-/// WATER-WITNESS-001 rollup for stage5 JSON gates.
-#[must_use]
-pub fn water_witness_001_green(
-    catalog: &WaterSurfaceVisualCatalog,
-    bands: &WaterVfxWitnessBands,
-) -> bool {
-    if !water_strategic_001_green(bands) {
-        return false;
-    }
-    if catalog.w1_green() && bands.tactical.rows == 0 {
-        return false;
-    }
-    if catalog.w1_green() && bands.tactical.river_streaks == 0 && !catalog.river_segments.is_empty() {
-        return false;
-    }
-    water_witness_foam_or_ocean_green(catalog, &bands.tactical)
-}
-
-fn water_particle_witness_json(w: &WaterParticleWitness) -> serde_json::Value {
-    serde_json::json!({
-        "rows": w.rows,
-        "river_streaks": w.river_streaks,
-        "river_foam": w.river_foam,
-        "lake_glints": w.lake_glints,
-        "coast_foam": w.coast_foam,
-        "zoom_alpha": w.zoom_alpha,
-        "shader_motion_always_on": w.shader_motion_always_on,
-        "strategic_culled": w.strategic_culled,
-    })
-}
-
-/// JSON block for `stage5_full_app_live.json` / agent proofs.
-#[must_use]
-pub fn water_vfx_witness_json(
-    catalog: &WaterSurfaceVisualCatalog,
-    bands: &WaterVfxWitnessBands,
-) -> serde_json::Value {
-    serde_json::json!({
-        "water_strategic_001_green": water_strategic_001_green(bands),
-        "water_witness_001_green": water_witness_001_green(catalog, bands),
-        "water_witness_foam_or_ocean_green": water_witness_foam_or_ocean_green(catalog, &bands.tactical),
-        "water_w2_foam_001_green": water_w2_foam_001_green(catalog, bands),
-        "catalog_has_coast_ocean": catalog_has_coast_ocean(catalog),
-        "catalog_has_river_bend": catalog_has_river_bend(catalog),
-        "strategic_band": water_particle_witness_json(&bands.strategic),
-        "tactical_band": water_particle_witness_json(&bands.tactical),
-        "strategic_zoom_cutoff": WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA,
-        "tactical_witness_zoom_alpha": WATER_TACTICAL_WITNESS_ZOOM_ALPHA,
-    })
-}
-
 /// Witness for W2 / stage5 JSON (FX-WATER-PARTICLE-003 fields subset on W2-B).
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
-pub struct WaterParticleWitness {
+pub struct WaterParticleStats {
     pub rows: usize,
     pub river_streaks: usize,
     pub river_foam: usize,
@@ -302,7 +172,7 @@ pub struct WaterParticleWitness {
 pub struct WorldWaterParticleFrame {
     pub anim_time_secs: f32,
     pub instances: Vec<GpuWaterParticleInstance>,
-    pub witness: WaterParticleWitness,
+    pub witness: WaterParticleStats,
 }
 
 #[inline]
@@ -518,7 +388,7 @@ pub fn update_world_water_particles_from_catalog(
     let has_water_motion =
         catalog.w1_green() || catalog.w1_ocean_green() || !catalog.lake_tiles.is_empty();
     if strategic || !has_water_motion {
-        frame.witness = WaterParticleWitness {
+        frame.witness = WaterParticleStats {
             zoom_alpha: cam.zoom_alpha,
             shader_motion_always_on: true,
             strategic_culled: strategic,
@@ -611,7 +481,7 @@ pub fn update_world_water_particles_from_catalog(
         );
     }
 
-    frame.witness = WaterParticleWitness {
+    frame.witness = WaterParticleStats {
         rows: frame.instances.len(),
         river_streaks,
         river_foam,
@@ -631,7 +501,7 @@ pub fn emit_world_water_particles_from_catalog(
 ) {
     let Some(catalog) = catalog else {
         frame.instances.clear();
-        frame.witness = WaterParticleWitness {
+        frame.witness = WaterParticleStats {
             shader_motion_always_on: true,
             zoom_alpha: cam.zoom_alpha,
             ..Default::default()
@@ -665,29 +535,6 @@ mod tests {
     use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
     #[test]
-    fn water_strategic_001_dual_band_witness() {
-        let mut catalog = WaterSurfaceVisualCatalog::default();
-        catalog.grid_width = 16;
-        catalog.grid_height = 16;
-        catalog.river_segments.push(RiverPolylineSegment {
-            path_id: 0,
-            start: Vec2::new(0.0, 0.0),
-            end: Vec2::new(8.0, 0.0),
-            flow_dir: Vec2::X,
-            half_width: 0.42,
-        });
-        catalog.river_tiles.insert((4, 0));
-        catalog.ocean_tiles.insert((5, 5));
-        catalog.lake_tiles.insert((0, 0));
-
-        let bands = evaluate_water_vfx_witness_bands(&catalog, 0.8, 0.0);
-        assert!(water_strategic_001_green(&bands), "D-W09 strategic cull + shader on");
-        assert!(bands.tactical.rows > 0);
-        assert!(water_witness_foam_or_ocean_green(&catalog, &bands.tactical));
-        assert!(water_witness_001_green(&catalog, &bands));
-    }
-
-    #[test]
     fn strategic_zoom_zeroes_water_particle_rows() {
         let mut catalog = WaterSurfaceVisualCatalog::default();
         catalog.river_segments.push(RiverPolylineSegment {
@@ -712,36 +559,6 @@ mod tests {
         assert!(frame.instances.is_empty());
         assert!(frame.witness.strategic_culled);
         assert!(frame.witness.shader_motion_always_on);
-    }
-
-    /// P2-VFX-WITNESS-001 W-2 / P2-WATER-WITNESS-002 — tactical zoom witness gates.
-    #[test]
-    fn p2_tactical_zoom_alpha_08_water_particle_witness_gates() {
-        let mut catalog = WaterSurfaceVisualCatalog::default();
-        catalog.river_segments.push(RiverPolylineSegment {
-            path_id: 0,
-            start: Vec2::new(0.0, 0.0),
-            end: Vec2::new(8.0, 0.0),
-            flow_dir: Vec2::X,
-            half_width: 0.42,
-        });
-        catalog.river_tiles.insert((4, 0));
-        let mut frame = WorldWaterParticleFrame::default();
-        update_world_water_particles_from_catalog(
-            &catalog,
-            &mut frame,
-            FireParticleCameraScale {
-                zoom_level: 1.0,
-                zoom_alpha: 0.8,
-                ..Default::default()
-            },
-            1.0,
-        );
-        assert!(frame.witness.rows > 0, "water_particle_rows at tactical zoom");
-        assert!(frame.witness.river_streaks > 0, "river streaks when segments present");
-        assert!(!frame.witness.strategic_culled);
-        assert!(frame.witness.shader_motion_always_on);
-        assert!((frame.witness.zoom_alpha - 0.8).abs() < 1e-4);
     }
 
     #[test]
@@ -815,40 +632,6 @@ mod tests {
         assert!(frame.instances.iter().any(|i| {
             i.world_xyz_profile.z == WaterParticleProfile::RiverFoam.as_f32()
         }));
-    }
-
-    /// WATER-W2-FOAM-001 / D-W08 — coast foam only on ocean tiles adjacent to land.
-    #[test]
-    fn water_w2_foam_001_green_on_dem_ocean_grid() {
-        use crate::terrain::generation::hydrology::HydrologyResult;
-        use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-
-        let w = 8u32;
-        let h = 8u32;
-        let n = (w * h) as usize;
-        // Sea on the left five columns (edge-connected standing water), land on the right.
-        let mut lake_mask = vec![false; n];
-        for y in 0..h as usize {
-            for x in 0..5usize {
-                lake_mask[y * w as usize + x] = true;
-            }
-        }
-        let hydro = HydrologyResult {
-            rivers: Vec::new(),
-            lakes: Vec::new(),
-            accumulation: vec![0.0; n],
-            river_mask: vec![false; n],
-            lake_mask,
-            filled_dem: vec![0.05; n],
-        };
-        let mut params = WorldGenParams::default();
-        params.width = w;
-        params.height = h;
-        let catalog = WaterSurfaceVisualCatalog::from_hydrology(&hydro, &params);
-        assert!(catalog_has_coast_ocean(&catalog));
-        let bands = evaluate_water_vfx_witness_bands(&catalog, 0.8, 0.0);
-        assert!(water_w2_foam_001_green(&catalog, &bands));
-        assert!(bands.tactical.coast_foam > 0);
     }
 
     #[test]

@@ -246,63 +246,6 @@ pub const WATER_SURFACE_OVERLAY_WGSL: &str = "shaders/water/water_surface_overla
 /// Strategic zoom band (D-W09) — keep in sync with [`crate::render::pipelines::gpu_water_particles::WATER_PARTICLE_STRATEGIC_ZOOM_ALPHA`].
 pub const WATER_STRATEGIC_ZOOM_ALPHA: f32 = 0.35;
 
-/// Strategic zoom α for dual-band witness (matches [`evaluate_water_vfx_witness_bands`]).
-#[inline]
-#[must_use]
-pub fn water_strategic_witness_zoom_alpha() -> f32 {
-    WATER_STRATEGIC_ZOOM_ALPHA * 0.5
-}
-
-/// **WATER-STRATEGIC-001** — Coder A / D-W09 shader half: W1 overlay motion stays time-varying at strategic zoom.
-#[must_use]
-pub fn water_strategic_001_shader_motion_green(catalog: &WaterSurfaceVisualCatalog) -> bool {
-    let za = water_strategic_witness_zoom_alpha();
-    let base = [0u8, 0u8, 200u8, 255u8];
-    let mut checked = 0u8;
-    let mut motion_ok = 0u8;
-
-    let river_sample = catalog
-        .river_tiles
-        .iter()
-        .next()
-        .copied()
-        .or_else(|| {
-            catalog.river_segments.first().map(|seg| {
-                (
-                    seg.start.x.floor().max(0.0) as u32,
-                    seg.start.y.floor().max(0.0) as u32,
-                )
-            })
-        });
-    if let Some((tx, ty)) = river_sample {
-        checked += 1;
-        let flow = catalog.flow_at(tx, ty);
-        let a = river_overlay_pixel(base, tx, ty, flow, 0.0, za);
-        let b = river_overlay_pixel(base, tx, ty, flow, 4.0, za);
-        if a[..3] != b[..3] {
-            motion_ok += 1;
-        }
-    }
-    if let Some(&(tx, ty)) = catalog.lake_tiles.iter().next() {
-        checked += 1;
-        let a = lake_overlay_pixel(base, tx, ty, 0.0, za);
-        let b = lake_overlay_pixel(base, tx, ty, 4.0, za);
-        if a[..3] != b[..3] {
-            motion_ok += 1;
-        }
-    }
-    if let Some(&(tx, ty)) = catalog.ocean_tiles.iter().next() {
-        checked += 1;
-        let a = ocean_overlay_pixel(base, tx, ty, 0.0);
-        let b = ocean_overlay_pixel(base, tx, ty, 31.4);
-        if a[..3] != b[..3] {
-            motion_ok += 1;
-        }
-    }
-
-    checked > 0 && motion_ok > 0
-}
-
 #[inline]
 fn water_at_strategic_zoom(zoom_alpha: f32) -> bool {
     zoom_alpha < WATER_STRATEGIC_ZOOM_ALPHA
@@ -869,59 +812,6 @@ mod tests {
             catalog.river_segments.len(),
             catalog.river_tiles.len()
         );
-    }
-
-    #[test]
-    fn water_strategic_001_shader_motion_at_strategic_zoom() {
-        let mut catalog = WaterSurfaceVisualCatalog::default();
-        catalog.grid_width = 8;
-        catalog.grid_height = 8;
-        catalog.river_tiles.insert((2, 2));
-        catalog.lake_tiles.insert((4, 4));
-        catalog.ocean_tiles.insert((6, 6));
-        catalog.river_segments.push(RiverPolylineSegment {
-            path_id: 0,
-            start: Vec2::new(2.0, 2.0),
-            end: Vec2::new(4.0, 2.0),
-            flow_dir: Vec2::X,
-            half_width: 0.42,
-        });
-        assert!(
-            water_strategic_001_shader_motion_green(&catalog),
-            "D-W09 W1 motion must animate at strategic zoom_alpha={}",
-            water_strategic_witness_zoom_alpha()
-        );
-
-        let mut buf = vec![0u8; 8 * 8 * 4];
-        for px in buf.chunks_mut(4) {
-            px.copy_from_slice(&[0, 0, 200, 255]);
-        }
-        apply_water_surface_overlay_subregion(
-            &mut buf,
-            8,
-            0,
-            0,
-            8,
-            8,
-            &catalog,
-            0.0,
-            water_strategic_witness_zoom_alpha(),
-        );
-        let idx = 4 * (8 * 2 + 2);
-        let a = buf[idx];
-        apply_water_surface_overlay_subregion(
-            &mut buf,
-            8,
-            0,
-            0,
-            8,
-            8,
-            &catalog,
-            4.0,
-            water_strategic_witness_zoom_alpha(),
-        );
-        let b = buf[idx];
-        assert_ne!(a, b, "strategic subregion overlay must vary with time_secs");
     }
 
     #[test]

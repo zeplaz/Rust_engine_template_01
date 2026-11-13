@@ -15,9 +15,9 @@ pub use snapshot_bridge::{
     transport_network_snapshot_from_graph,
 };
 pub use spline::{
-    infra_e1_002_spline_subdivide_witness_green, subdivide_edge, subdivide_edge_for_profile,
+    subdivide_edge, subdivide_edge_for_profile,
     subdivide_edge_with_radius, SplineError, SubEdgeSample,
 };
 pub use sync::{
-    infra_e1_001_transport_graph_sync_witness_green, sync_transport_runtime_from_graph,
+    sync_transport_runtime_from_graph,
 };

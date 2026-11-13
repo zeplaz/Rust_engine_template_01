@@ -8,7 +8,6 @@ mod visual_perf_budget;
 mod fire_vfx;
 mod weather_vfx;
 mod particle_domains;
-mod stage5_profile;
 mod stage6_virtualization;
 mod viewport_pipeline;
 pub mod view_runtime;

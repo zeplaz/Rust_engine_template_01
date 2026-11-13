@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use crate::construction::procedural::{ProceduralBuildingRequest, StylePackId};
 use crate::construction::queue_commit_construction_site;
 use crate::economy::activation::{BuildingDefinitionRef, IndustrialFacilityActivated};
-use crate::economy::resource_flow::{ResourceFlowNode, ResourceFlowRegistry, ResourceFlowSimWitness};
+use crate::economy::resource_flow::{ResourceFlowNode, ResourceFlowRegistry, ResourceFlowSimStats};
 use crate::strategic::{
     BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
     PlannedSite, ProceduralBuildingSpec, SiteArchetype, SiteConstructionBook,
@@ -43,7 +43,7 @@ pub const CONCRETE_PORTLAND_STEPS: &[&str] = &[
 
 /// Live counters for `debug_runs/industrial_activation_live.json` (`concrete_chain_e2e` block).
 #[derive(Resource, Debug, Default, Clone)]
-pub struct ConcreteChainE2eWitness {
+pub struct ConcreteChainE2eStats {
     pub operational_mine: u32,
     pub operational_kiln: u32,
     pub operational_mixer: u32,
@@ -57,7 +57,7 @@ pub struct ConcreteChainE2eWitness {
     pub sites_committed: u32,
 }
 
-impl ConcreteChainE2eWitness {
+impl ConcreteChainE2eStats {
     #[must_use]
     pub fn chain_operational(&self) -> bool {
         self.operational_mine >= 1
@@ -130,9 +130,9 @@ fn count_portland_flow_edges(
 }
 
 pub fn refresh_concrete_chain_e2e_witness_system(
-    mut witness: ResMut<ConcreteChainE2eWitness>,
+    mut witness: ResMut<ConcreteChainE2eStats>,
     flow: Res<ResourceFlowRegistry>,
-    flow_witness: Res<ResourceFlowSimWitness>,
+    flow_witness: Res<ResourceFlowSimStats>,
     sites: Query<(&ConstructionSite, &BuildingDefinitionRef)>,
     activated: Query<&BuildingDefinitionRef, With<IndustrialFacilityActivated>>,
     nodes: Query<(Entity, &ResourceFlowNode)>,
@@ -156,7 +156,7 @@ pub fn refresh_concrete_chain_e2e_witness_system(
 /// IND-E02: enqueue mine → kiln → mixer through the construction commit funnel.
 pub fn commit_concrete_portland_chain_in_play(
     writer: &mut MessageWriter<CommitConstructionSiteEvent>,
-    witness: &mut ConcreteChainE2eWitness,
+    witness: &mut ConcreteChainE2eStats,
     owner: Entity,
     origin: BuildSiteTile,
 ) {
@@ -370,7 +370,7 @@ pub fn seed_stage7_play_concrete_chain_once(
     base: Res<State<crate::engine::states::BaseState>>,
     scenario: Option<Res<crate::engine::ActivePlayScenario>>,
     mut seed: ResMut<Stage7PlayChainSeedState>,
-    mut witness: ResMut<ConcreteChainE2eWitness>,
+    mut witness: ResMut<ConcreteChainE2eStats>,
     mut commands: Commands,
     def_ref: Query<&BuildingDefinitionRef>,
 ) {
@@ -417,7 +417,7 @@ pub fn seed_ind_e02_default_play_once(
     scenario: Option<Res<crate::engine::ActivePlayScenario>>,
     test_scene: Option<Res<crate::engine::ActiveTestScene>>,
     mut seed: ResMut<IndE02DefaultPlaySeedState>,
-    mut witness: ResMut<ConcreteChainE2eWitness>,
+    mut witness: ResMut<ConcreteChainE2eStats>,
     sites: Query<&BuildingDefinitionRef, With<ConstructionSite>>,
     mut writer: MessageWriter<CommitConstructionSiteEvent>,
 ) {
@@ -591,10 +591,10 @@ pub fn reset_ind_e03_grid_overload_seed_on_enter_simulation(
 pub fn seed_ind_e03_grid_overload_witness_once(
     launch: Option<Res<crate::engine::launch_args::EngineLaunchArgs>>,
     base: Res<State<crate::engine::states::BaseState>>,
-    chain: Res<ConcreteChainE2eWitness>,
+    chain: Res<ConcreteChainE2eStats>,
     mut seed: ResMut<IndE03GridOverloadSeedState>,
     mut commands: Commands,
-    flow: Option<Res<ResourceFlowSimWitness>>,
+    flow: Option<Res<ResourceFlowSimStats>>,
 ) {
     if !matches!(base.get(), crate::engine::states::BaseState::Simulation) {
         return;
@@ -650,7 +650,7 @@ mod tests {
             steps_remaining: 0,
             speed: 1.0,
         });
-        app.init_resource::<ConcreteChainE2eWitness>();
+        app.init_resource::<ConcreteChainE2eStats>();
         app.add_plugins(ResourceFlowPlugin);
         app.add_systems(
             Update,
@@ -702,7 +702,7 @@ mod tests {
             flow.edges.len()
         );
 
-        let w = world.resource::<ConcreteChainE2eWitness>();
+        let w = world.resource::<ConcreteChainE2eStats>();
         assert!(w.chain_operational(), "witness: {w:?}");
         assert!(
             w.production_green(),
@@ -736,7 +736,7 @@ mod tests {
         app.world_mut()
             .run_system_once(
                 move |mut writer: MessageWriter<CommitConstructionSiteEvent>,
-                      mut witness: ResMut<ConcreteChainE2eWitness>| {
+                      mut witness: ResMut<ConcreteChainE2eStats>| {
                     commit_concrete_portland_chain_in_play(
                         &mut writer,
                         witness.as_mut(),
@@ -751,7 +751,7 @@ mod tests {
             app.update();
         }
 
-        let w = app.world().resource::<ConcreteChainE2eWitness>();
+        let w = app.world().resource::<ConcreteChainE2eStats>();
         assert!(w.placed_via_construction);
         assert!(w.in_play_green(), "witness: {w:?}");
 

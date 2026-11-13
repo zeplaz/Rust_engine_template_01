@@ -528,7 +528,7 @@ mod tests {
     use crate::systems::ecology::vegetation_suitability::update_chunk_vegetation_suitability;
     use crate::systems::ecology::ChunkEcology;
     use crate::systems::fire::{
-        chunk_fire_overlay_tick, chunk_fuel_profile_tick, ChunkFuelProfile, FireEcologyWitness,
+        chunk_fire_overlay_tick, chunk_fuel_profile_tick, ChunkFuelProfile, FireEcologyStats,
         SurfaceWaterFireGate,
     };
     use crate::systems::weather::ChunkWeather;
@@ -564,7 +564,7 @@ mod tests {
             .insert_resource(test_cfg())
             .init_resource::<SurfaceWaterFireGate>()
             .init_resource::<ChunkEnvironmentPersistHooks>()
-            .init_resource::<FireEcologyWitness>()
+            .init_resource::<FireEcologyStats>()
             .add_systems(
                 Update,
                 (

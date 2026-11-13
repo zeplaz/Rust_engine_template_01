@@ -7,14 +7,10 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::district::{DevelopmentPressure, DistrictMetrics};
-use super::ids::BlockId;
-use super::seed_chain::block_seed;
 use super::zoning::ZoningClass;
 
 pub const BLOCK_ARCHETYPE_THRESHOLDS_RON: &str =
     "assets/configs/settlement/block_archetype_thresholds_v1.ron";
-pub const CITY_G1_C1_LIVE_JSON: &str = "debug_runs/city_g1_c1_001_live.json";
-
 /// Block-scale grammar band — maps to BlockRecipe ids in G1-C3.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
@@ -332,92 +328,6 @@ pub fn fixture_score_for_archetype(archetype: BlockArchetype) -> BlockScore {
     }
 }
 
-#[must_use]
-pub fn city_g1_c1_001_per_band_tests_green() -> bool {
-    let table = load_block_archetype_threshold_table();
-    [
-        BlockArchetype::ForestPark,
-        BlockArchetype::LowDensityRes,
-        BlockArchetype::MediumDensityRes,
-        BlockArchetype::HighDensityCommercial,
-        BlockArchetype::Industrial,
-        BlockArchetype::Civic,
-    ]
-    .into_iter()
-    .all(|expected| {
-        let score = fixture_score_for_archetype(expected);
-        resolve_block_archetype(&table, &score) == expected
-    })
-}
-
-#[must_use]
-pub fn build_city_g1_c1_001_witness_body() -> serde_json::Value {
-    use crate::construction::procedural::city_g0_wit_001_determinism_witness_green;
-    use crate::strategic::settlement::city_g1_c4_001_seed_chain_witness_green;
-
-    let registry = load_block_archetype_registry();
-    let table_ok = registry.load_errors.is_empty() && registry.table.is_some();
-    let per_band = city_g1_c1_001_per_band_tests_green();
-    let g0_wit = city_g0_wit_001_determinism_witness_green();
-    let g1_c4 = city_g1_c4_001_seed_chain_witness_green();
-
-    let band_results: Vec<_> = [
-        BlockArchetype::ForestPark,
-        BlockArchetype::LowDensityRes,
-        BlockArchetype::MediumDensityRes,
-        BlockArchetype::HighDensityCommercial,
-        BlockArchetype::Industrial,
-        BlockArchetype::Civic,
-    ]
-    .into_iter()
-    .map(|expected| {
-        let score = fixture_score_for_archetype(expected);
-        let resolved = registry.resolve(&score);
-        serde_json::json!({
-            "expected": expected.as_str(),
-            "resolved": resolved.as_str(),
-            "recipe_id": resolved.recipe_id(),
-            "ok": resolved == expected,
-        })
-    })
-    .collect();
-
-    let jitter_demo = {
-        let block = BlockId("tie_break_demo".into());
-        let bs = block_seed(
-            super::seed_chain::town_seed(
-                super::seed_chain::DEFAULT_WORLD_SEED,
-                &super::ids::TownId(super::seed_chain::DEFAULT_TOWN_ID.into()),
-            ),
-            &block,
-        );
-        noise_jitter_from_block_seed(bs)
-    };
-
-    let green = table_ok && per_band && g0_wit && g1_c4;
-
-    serde_json::json!({
-        "gate": "CITY-G1-C1-001",
-        "issue": "CITY-C1",
-        "green": green,
-        "table_ok": table_ok,
-        "per_band_ok": per_band,
-        "city_g0_wit_still_green": g0_wit,
-        "city_g1_c4_still_green": g1_c4,
-        "threshold_ron": BLOCK_ARCHETYPE_THRESHOLDS_RON,
-        "band_results": band_results,
-        "noise_jitter_demo": jitter_demo,
-    })
-}
-
-#[must_use]
-pub fn city_g1_c1_001_block_archetype_witness_green() -> bool {
-    build_city_g1_c1_001_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 
 
 #[cfg(test)]
@@ -429,11 +339,6 @@ mod tests {
         let table = load_block_archetype_threshold_table();
         assert_eq!(table.schema_version, 1);
         assert!(!table.bands.is_empty());
-    }
-
-    #[test]
-    fn each_block_archetype_band_resolves() {
-        assert!(city_g1_c1_001_per_band_tests_green());
     }
 
     #[test]

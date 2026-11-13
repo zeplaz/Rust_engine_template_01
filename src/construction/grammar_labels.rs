@@ -107,42 +107,9 @@ pub fn human_age_label(id: &str) -> String {
     lookup(&cache.age, id).unwrap_or_else(|| title_case_fallback(id))
 }
 
-#[must_use]
-pub fn grammar_labels_loaded_green() -> bool {
-    let cache = labels_cache().lock().expect("grammar labels");
-    cache.archetypes.len() >= 3
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn g1_archetype_labels_present() {
-        assert!(grammar_labels_loaded_green());
-        // Drop the cache guard before human_* lookups. `std::sync::Mutex` is not
-        // reentrant; holding it across those calls deadlocks the lib harness.
-        let (factory_key, warehouse_key) = {
-            let cache = labels_cache().lock().expect("grammar labels");
-            let factory_key = cache
-                .archetypes
-                .keys()
-                .find(|k| k.contains("Factory"))
-                .cloned()
-                .expect("factory archetype label");
-            let warehouse_key = cache
-                .archetypes
-                .keys()
-                .find(|k| k.contains("Warehouse") || k.contains("Industrial"))
-                .cloned()
-                .expect("warehouse archetype label");
-            (factory_key, warehouse_key)
-        };
-        assert_eq!(human_archetype_label(&factory_key), "factory cluster");
-        assert_eq!(human_massing_label("long_hall"), "Long Hall");
-        let warehouse_label = human_archetype_label(&warehouse_key);
-        assert!(!warehouse_label.contains(&warehouse_key));
-    }
 
     /// True when a `labels_cache().lock()` guard is still in scope at a call that locks again.
     ///

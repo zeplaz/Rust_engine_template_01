@@ -66,7 +66,7 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
     };
     use crate::strategic::CorridorConstructionBook;
     use crate::substrate::hydrology::{
-        HydrologyConstructionCouplingWitness, HydrologyDirtyReason, HydrologyEventQueue,
+        HydrologyConstructionCouplingStats, HydrologyDirtyReason, HydrologyEventQueue,
     };
     use crate::systems::transport::{
         TransportCostCache, TransportCostWeights, TransportEdgeDirectory, TransportFieldStore,
@@ -105,7 +105,7 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
         .init_resource::<super::roads::IntersectionRegistry>()
         .init_resource::<super::history::ConstructionHistory>()
         .init_resource::<HydrologyEventQueue>()
-        .init_resource::<HydrologyConstructionCouplingWitness>()
+        .init_resource::<HydrologyConstructionCouplingStats>()
         .insert_resource(params)
         .insert_resource(queue)
         .add_systems(Update, validate_construction_plans_system);
@@ -113,7 +113,7 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
     {
         let mut coupling = app
             .world_mut()
-            .resource_mut::<HydrologyConstructionCouplingWitness>();
+            .resource_mut::<HydrologyConstructionCouplingStats>();
         coupling.bridge_registered = true;
     }
 
@@ -139,7 +139,7 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
         .all(|e| matches!(e.reason, HydrologyDirtyReason::ConstructionComplete { .. })));
     let coupling = app
         .world()
-        .resource::<HydrologyConstructionCouplingWitness>();
+        .resource::<HydrologyConstructionCouplingStats>();
     assert_eq!(coupling.preview_emit_count, 0);
     assert!(coupling.execute_emit_count > 0);
 }

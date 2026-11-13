@@ -10,7 +10,7 @@ use super::build_strip::{BuildStripState, ToolContext};
 use super::visual_authority::ConstructionVisualRequests;
 
 #[derive(Resource, Clone, Debug, Default)]
-pub struct FootprintTileWitness {
+pub struct FootprintTileStats {
     pub gpu_path_active: bool,
     pub egui_path_active: bool,
     pub instance_count: u32,
@@ -22,7 +22,7 @@ pub fn push_footprint_tile_instances(
     strip: Res<BuildStripState>,
     ghost: Res<BuildGhostState>,
     requests: Res<ConstructionVisualRequests>,
-    mut witness: ResMut<FootprintTileWitness>,
+    mut witness: ResMut<FootprintTileStats>,
 ) {
     witness.gpu_path_active = false;
     witness.egui_path_active = false;
@@ -91,11 +91,11 @@ mod tests {
             }],
         );
         app.insert_resource(map);
-        app.init_resource::<super::FootprintTileWitness>();
+        app.init_resource::<super::FootprintTileStats>();
         app.add_systems(Update, push_footprint_tile_instances);
         app.update();
 
-        let witness = app.world().resource::<super::FootprintTileWitness>();
+        let witness = app.world().resource::<super::FootprintTileStats>();
         assert!(!witness.gpu_path_active);
         assert!(witness.egui_path_active);
         assert_eq!(witness.instance_count, 0);

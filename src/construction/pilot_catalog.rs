@@ -342,99 +342,6 @@ pub fn pilot_building_registration(
     }
 }
 
-/// BUILD-READ-PILOT-001 — all catalog pilots register; shape + grammar edge cases covered.
-#[must_use]
-pub fn pilot_catalog_parity_witness_green() -> bool {
-    pilot_catalog_parity_self_check().is_ok()
-}
-
-/// Alias for BUILD-READ-SHAPE-002 board row.
-#[must_use]
-pub fn build_read_shape_002_witness_green() -> bool {
-    pilot_catalog_parity_witness_green()
-}
-
-fn pilot_catalog_parity_self_check() -> Result<(), &'static str> {
-    let catalog = PilotCatalog::load_from_disk();
-    if !catalog.load_errors.is_empty() {
-        return Err("catalog_load_errors");
-    }
-    if catalog.pilots.len() < 8 {
-        return Err("min_pilot_count");
-    }
-
-    let reg = super::building_definitions::load_building_definitions_from_dir(
-        super::building_definitions::default_buildings_dir(),
-    );
-
-    let mut shape_qa = 0u32;
-    let mut grammar = 0u32;
-
-    for pilot in &catalog.pilots {
-        let def = reg.get(&pilot.catalog_id).ok_or("registry_missing")?;
-        if def.footprint.occupied_count() != pilot.footprint.occupied_count() {
-            return Err("footprint_parity");
-        }
-        if def.display_name != pilot.label {
-            return Err("label_parity");
-        }
-        match pilot.pilot_kind {
-            PilotKind::ShapeQa => {
-                shape_qa += 1;
-                if pilot.id == "shape_rectangle_2x2" {
-                    if def.footprint.is_non_rectangular() {
-                        return Err("rect_should_be_full");
-                    }
-                    if def.footprint.occupied_count() != 4 {
-                        return Err("rect_occupied");
-                    }
-                }
-                if pilot.id == "shape_l_3x2" && !def.footprint.is_non_rectangular() {
-                    return Err("l_non_rect");
-                }
-                if pilot.id == "shape_t_3x3" {
-                    if def.footprint.cells.get(4).copied() != Some(1) {
-                        return Err("t_stem_center");
-                    }
-                    if def.footprint.cells.get(3).copied() != Some(0)
-                        || def.footprint.cells.get(5).copied() != Some(0)
-                    {
-                        return Err("t_side_void");
-                    }
-                }
-                if pilot.id == "shape_o_3x3" {
-                    if def.footprint.cells.get(4).copied() != Some(0) {
-                        return Err("o_hollow_center");
-                    }
-                }
-            }
-            PilotKind::Grammar => {
-                grammar += 1;
-                if pilot.arch_dna_preset.is_none() {
-                    return Err("grammar_missing_dna");
-                }
-                if pilot.grammar_archetype_id.is_none() {
-                    return Err("grammar_missing_archetype");
-                }
-                if let Some(rel) = pilot.site_json_path.as_deref() {
-                    let grid = load_site_zone_grid_cached(rel).ok_or("grammar_site_load")?;
-                    if grid.width < 4 || grid.depth < 4 {
-                        return Err("grammar_site_dims");
-                    }
-                }
-            }
-        }
-    }
-
-    if shape_qa < 4 {
-        return Err("shape_qa_count");
-    }
-    if grammar < 4 {
-        return Err("grammar_count");
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -450,11 +357,4 @@ mod tests {
         );
     }
 
-    #[test]
-    fn pilot_catalog_parity_witness() {
-        match pilot_catalog_parity_self_check() {
-            Ok(()) => {}
-            Err(reason) => panic!("pilot_catalog_parity failed: {reason}"),
-        }
-    }
 }

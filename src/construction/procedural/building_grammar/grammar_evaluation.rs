@@ -3,11 +3,10 @@
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 
-use super::grammar_deserialize::{load_building_grammar_registry, repo_asset_path};
+use super::grammar_deserialize::load_building_grammar_registry;
 use super::grammar_types::{
-    BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1, FacilityPowerTier, FootprintMode,
-    GrammarGenerateResult, GrammarRuleStep, MassingId, MassingStrategy, PgQuality001Metrics,
-    FACILITY_BINDING_G1_MIN, FACILITY_BINDING_SCHEMA, GRAMMAR_DIVERSITY_WITNESS_JSON,
+    BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1, FootprintMode,
+    GrammarGenerateResult, GrammarRuleStep, MassingId, MassingStrategy, PgQuality001Metrics, GRAMMAR_DIVERSITY_WITNESS_JSON,
     GRAMMAR_RULES_VERSION, PG_QUALITY_001_SEED_SWEEP,
 };
 use crate::construction::procedural::arch_build_grammar_v0::{
@@ -37,59 +36,6 @@ impl BuildingGrammarRegistry {
             .get(archetype_id)
             .and_then(|g| g.facility_binding())
     }
-}
-
-#[must_use]
-pub fn facility_binding_read_witness_green() -> bool {
-    facility_binding_read_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        == Some(true)
-}
-
-#[must_use]
-pub fn facility_binding_read_witness_body() -> serde_json::Value {
-    let registry = load_building_grammar_registry();
-    let load_ok = registry.load_errors.is_empty();
-    let bindings = registry.facility_bindings();
-    let bound_count = bindings.len();
-    let g1_min_ok = bound_count >= FACILITY_BINDING_G1_MIN;
-
-    let factory = registry.by_grammar_id("factory_cluster_v1");
-    let rail = registry.by_grammar_id("rail_edge_v1");
-    let warehouse = registry.by_grammar_id("industrial_warehouse_v1");
-
-    let factory_binding_ok = factory.and_then(|g| g.facility_binding()).is_some_and(|b| {
-        b.catalog_id == "concrete_mixer_plant"
-            && b.chain_id == "concrete_portland"
-            && b.supply_chain_role == "concrete_mixer"
-            && b.power_tier == FacilityPowerTier::Light
-    });
-    let rail_binding_ok = rail.and_then(|g| g.facility_binding()).is_some_and(|b| {
-        b.catalog_id == "logistics_rail_warehouse" && b.chain_id == "logistics_storage"
-    });
-    let warehouse_binding_ok = warehouse
-        .and_then(|g| g.facility_binding())
-        .is_some_and(|b| b.catalog_id == "logistics_storage_warehouse");
-
-    let green =
-        load_ok && g1_min_ok && factory_binding_ok && rail_binding_ok && warehouse_binding_ok;
-
-    serde_json::json!({
-        "gate": "COD-FACILITY-BINDING-READ-001",
-        "green": green,
-        "binding_schema": FACILITY_BINDING_SCHEMA,
-        "load_errors_empty": load_ok,
-        "bound_grammar_count": bound_count,
-        "g1_min_ok": g1_min_ok,
-        "factory_cluster_v1": factory_binding_ok,
-        "rail_edge_v1": rail_binding_ok,
-        "industrial_warehouse_v1": warehouse_binding_ok,
-        "bound_grammar_ids": bindings
-            .iter()
-            .map(|(g, _)| g.grammar_id.as_str())
-            .collect::<Vec<_>>(),
-    })
 }
 
 fn mix_seed(seed: u64, salt: &str) -> u64 {
@@ -480,58 +426,6 @@ pub fn pg_quality_001_collect_metrics(
 }
 
 #[must_use]
-pub fn pg_quality_001_witness_green() -> bool {
-    pg_quality_001_collect_metrics(
-        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
-        "industrial_west",
-        PG_QUALITY_001_SEED_SWEEP,
-    )
-    .ok()
-    .is_some_and(|m| {
-        m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2
-    }) && crate::construction::procedural::arch_dna_massing_diversity_witness_green()
-}
-
-#[must_use]
-pub fn build_pg_quality_001_witness_body() -> serde_json::Value {
-    let metrics = pg_quality_001_collect_metrics(
-        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
-        "industrial_west",
-        PG_QUALITY_001_SEED_SWEEP,
-    );
-    let dna_families = crate::construction::procedural::build_arch_dna_massing_diversity_rows();
-    let dna_depth_green = dna_families
-        .iter()
-        .all(|row| row.get("green").and_then(|v| v.as_bool()).unwrap_or(false));
-    let green = metrics.as_ref().ok().is_some_and(|m| {
-        m.massing_strategy_count >= 3 && m.roof_slot_count >= 2 && m.footprint_silhouette_count >= 2
-    }) && dna_depth_green;
-    let (metrics_ok, metrics_err) = match metrics {
-        Ok(m) => (Some(m), None),
-        Err(e) => (None, Some(e)),
-    };
-    serde_json::json!({
-        "gate_id": "PG-QUALITY-001",
-        "program_id": "PLAN-BUILDING-GRAMMAR-001",
-        "slice_id": "CDR-B-CONSTRUCTION-GRAMMAR-DEPTH-001",
-        "green": green,
-        "archetype_id": PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
-        "district_style": "industrial_west",
-        "seed_sweep": PG_QUALITY_001_SEED_SWEEP,
-        "thresholds": {
-            "massing_strategy_count_min": 3,
-            "roof_slot_count_min": 2,
-            "footprint_silhouette_count_min": 2,
-            "dna_family_massing_pick_min": 3,
-        },
-        "dna_families": dna_families,
-        "dna_family_depth_green": dna_depth_green,
-        "metrics": metrics_ok,
-        "error": metrics_err,
-    })
-}
-
-#[must_use]
 pub fn pg_quality_002_pg2_hook_body() -> serde_json::Value {
     let metrics = pg_quality_001_collect_metrics(
         PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
@@ -557,62 +451,12 @@ pub fn pg_quality_002_pg2_hook_body() -> serde_json::Value {
     })
 }
 
-#[must_use]
-pub fn pg_quality_002_pg2_hook_green() -> bool {
-    pg_quality_002_pg2_hook_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
 
-
-
-/// **CITY-G0-S11-001** lib witness — typed ids + deserialize validation.
-#[must_use]
-pub fn city_g0_s11_typed_ids_witness_green() -> bool {
-    use super::grammar_types::{corridor_type_for_profile, CorridorType, MassingId, UsageId};
-
-    let registry = load_building_grammar_registry();
-    if !registry.load_errors.is_empty() {
-        return false;
-    }
-    let all_usage_ok = registry.grammars.values().all(|g| {
-        UsageId::try_new(g.archetype.usage.as_str()).is_ok()
-            && g.massing
-                .strategies
-                .iter()
-                .all(|s| MassingId::try_new(s.id.as_str()).is_ok())
-    });
-    all_usage_ok
-        && corridor_type_for_profile("default_rail") == CorridorType::Rail
-        && UsageId::try_new("bogus_usage").is_err()
-}
-
-/// **CITY-G0-S1C-001** lib witness — 3-way module split + behavior unchanged.
-#[must_use]
-pub fn city_g0_s1c_split_witness_green() -> bool {
-    let root = repo_asset_path("src/construction/procedural/building_grammar");
-    let types = root.join("grammar_types.rs");
-    let deserialize = root.join("grammar_deserialize.rs");
-    let evaluation = root.join("grammar_evaluation.rs");
-    types.is_file()
-        && deserialize.is_file()
-        && evaluation.is_file()
-        && generate(PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE, "industrial_west", 43).is_ok()
-}
 
 #[cfg(test)]
 mod tests {
     use super::super::grammar_types::ProgramAxisLevel;
     use super::*;
-
-    #[test]
-    fn facility_binding_read_witness_is_green() {
-        assert!(facility_binding_read_witness_green());
-        let body = facility_binding_read_witness_body();
-        assert!(body["g1_min_ok"].as_bool().unwrap_or(false));
-        assert!(body["factory_cluster_v1"].as_bool().unwrap_or(false));
-    }
 
     #[test]
     fn facility_binding_deserializes_program_axes() {
@@ -657,20 +501,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn pg_quality_001_witness_metrics_green() {
-        assert!(pg_quality_001_witness_green());
-    }
 
 
-
-    #[test]
-    fn city_g0_s11_typed_ids_witness_green_lib() {
-        assert!(city_g0_s11_typed_ids_witness_green());
-    }
-
-    #[test]
-    fn city_g0_s1c_split_witness_green_lib() {
-        assert!(city_g0_s1c_split_witness_green());
-    }
 }

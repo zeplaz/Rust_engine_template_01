@@ -135,26 +135,12 @@ pub fn sync_utility_connection_power_system(
     }
 }
 
-#[must_use]
-pub fn utility_activation_link_witness_green() -> bool {
-    use super::graph::{fixture_utility_network_snapshot, hydrate_utility_graph_from_snapshot};
-
-    let graph = hydrate_utility_graph_from_snapshot(&fixture_utility_network_snapshot());
-    let powered = powered_utility_node_ids(&graph, &HashSet::new());
-    !powered.is_empty()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::infrastructure::utility::graph::{
         fixture_utility_network_snapshot, hydrate_utility_graph_from_snapshot,
     };
-
-    #[test]
-    fn utility_activation_link_witness_green_lib() {
-        assert!(utility_activation_link_witness_green());
-    }
 
     #[test]
     fn cut_link_isolates_downstream_node() {

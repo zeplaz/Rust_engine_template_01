@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
 use crate::gui::hud::{
-    HudOverlayTrayState, OpsStripOrdersPendingText, UiShellMigrationWitness,
+    HudOverlayTrayState, OpsStripOrdersPendingText,
 };
 use crate::gui::MapViewInstances;
 use crate::render::{
@@ -27,7 +27,7 @@ pub const STALE_INTEL_CONFIDENCE_THRESHOLD: f32 = 0.5;
 
 /// Telemetry + rollup inputs for `stage7_behavioral_live.json`.
 #[derive(Resource, Clone, Debug, Default)]
-pub struct Stage7BehavioralWitnessState {
+pub struct Stage7BehavioralState {
     pub stale_intel_surface: bool,
     pub orders_pending_ui_hook: bool,
     pub recon_overlay_enabled: bool,
@@ -57,7 +57,7 @@ pub struct Stage7BehavioralPlugin;
 
 impl Plugin for Stage7BehavioralPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<Stage7BehavioralWitnessState>()
+        app.init_resource::<Stage7BehavioralState>()
             .init_resource::<Stage7BehavioralHud>()
             .init_resource::<Stage7BeliefState>()
             .add_systems(
@@ -93,7 +93,7 @@ impl Plugin for Stage7BehavioralPlugin {
 pub fn seed_stage7_behavioral_sim_session(
     mut queue: ResMut<StrategicCommandQueue>,
     mut beliefs: ResMut<Stage7BeliefState>,
-    mut witness: ResMut<Stage7BehavioralWitnessState>,
+    mut witness: ResMut<Stage7BehavioralState>,
     tick: Option<Res<SimTick>>,
     sim_time: Option<Res<SimTimeMicros>>,
 ) {
@@ -136,7 +136,7 @@ pub fn seed_stage7_behavioral_sim_session(
 /// Witness-only M4 play rollup — sync wired flag when strategic queue has pending dispatches.
 pub fn ensure_stage7_m4_play_witness_fields(
     queue: &StrategicCommandQueue,
-    witness: &mut Stage7BehavioralWitnessState,
+    witness: &mut Stage7BehavioralState,
 ) {
     if queue.pending_count() >= 1 {
         witness.s7b_m4_play_enqueue_wired = true;
@@ -147,7 +147,7 @@ pub fn tick_strategic_command_queue_system(
     tick: Option<Res<SimTick>>,
     sim_time: Option<Res<SimTimeMicros>>,
     mut queue: ResMut<StrategicCommandQueue>,
-    mut witness: ResMut<Stage7BehavioralWitnessState>,
+    mut witness: ResMut<Stage7BehavioralState>,
 ) {
     let (Some(tick), Some(sim_time)) = (tick, sim_time) else {
         return;
@@ -167,8 +167,7 @@ pub fn decay_stage7_belief_confidence_system(
     tick: Option<Res<SimTick>>,
     queue: Res<StrategicCommandQueue>,
     mut beliefs: ResMut<Stage7BeliefState>,
-    mut witness: ResMut<Stage7BehavioralWitnessState>,
-    shell_witness: Option<ResMut<UiShellMigrationWitness>>,
+    mut witness: ResMut<Stage7BehavioralState>,
 ) {
     let Some(tick) = tick else {
         return;
@@ -187,16 +186,13 @@ pub fn decay_stage7_belief_confidence_system(
         .fold(1.0_f32, f32::min);
     if queue.pending_count() > 0 && min_conf < STALE_INTEL_CONFIDENCE_THRESHOLD {
         witness.stale_intel_surface = true;
-        if let Some(mut shell_witness) = shell_witness {
-            shell_witness.intel_map_camera_request = true;
-        }
     }
 }
 
 pub fn sync_stage7_orders_pending_hud(
     queue: Res<StrategicCommandQueue>,
     mut hud: ResMut<Stage7BehavioralHud>,
-    mut witness: ResMut<Stage7BehavioralWitnessState>,
+    mut witness: ResMut<Stage7BehavioralState>,
     mut text_q: Query<&mut Text, With<OpsStripOrdersPendingText>>,
 ) {
     hud.pending_orders = queue.pending_count();
@@ -283,7 +279,7 @@ pub fn resolve_stage7_m3_overlay_sample_counts(
 
 /// Witness-only M3 fields — safe after M2-only lib refresh or before live proof write.
 pub fn ensure_stage7_behavioral_m3_witness_fields(
-    witness: &mut Stage7BehavioralWitnessState,
+    witness: &mut Stage7BehavioralState,
     beliefs: &Stage7BeliefState,
     logistics: Option<&LogisticsVisualSnapshot>,
     ecology: Option<&EcologyVisualSnapshot>,
@@ -302,7 +298,7 @@ pub fn ensure_stage7_behavioral_m3_witness_fields(
 }
 
 pub fn sync_stage7_overlay_witness_from_reader_samples(
-    witness: &mut Stage7BehavioralWitnessState,
+    witness: &mut Stage7BehavioralState,
     map_views: &mut MapViewInstances,
     tray: &mut HudOverlayTrayState,
     logistics_samples: u32,
@@ -340,7 +336,7 @@ pub fn seed_stage7_behavioral_overlay_resources(
 }
 
 fn apply_stage7_overlay_witness_sync(
-    witness: &mut Stage7BehavioralWitnessState,
+    witness: &mut Stage7BehavioralState,
     logistics_samples: u32,
     recon_samples: u32,
     map_views: &mut Option<ResMut<MapViewInstances>>,
@@ -374,7 +370,7 @@ fn seed_stage7_behavioral_overlay_resources_on_simulation_enter(
     beliefs: Res<Stage7BeliefState>,
     mut map_views: Option<ResMut<MapViewInstances>>,
     mut tray: Option<ResMut<HudOverlayTrayState>>,
-    mut witness: ResMut<Stage7BehavioralWitnessState>,
+    mut witness: ResMut<Stage7BehavioralState>,
 ) {
     let (
         Some(fire),
@@ -431,7 +427,7 @@ pub fn publish_stage7_behavioral_overlay_samples(
     beliefs: Res<Stage7BeliefState>,
     mut map_views: Option<ResMut<MapViewInstances>>,
     mut tray: Option<ResMut<HudOverlayTrayState>>,
-    mut witness: ResMut<Stage7BehavioralWitnessState>,
+    mut witness: ResMut<Stage7BehavioralState>,
 ) {
     let recon_from_chunks = count_recon_overlay_samples(&overlays);
     let (logistics_samples, recon_samples) = resolve_stage7_m3_overlay_sample_counts(
@@ -452,7 +448,7 @@ pub fn publish_stage7_behavioral_overlay_samples(
 /// Lib witness — M2 dispatch delay + stale intel only (no overlay reader samples).
 pub fn seed_stage7_behavioral_m2_lib_proof(
     queue: &mut StrategicCommandQueue,
-    witness: &mut Stage7BehavioralWitnessState,
+    witness: &mut Stage7BehavioralState,
     beliefs: &mut Stage7BeliefState,
 ) {
     let issued = SimStepStamp::new(1, 0);
@@ -494,55 +490,10 @@ pub fn seed_stage7_behavioral_m2_lib_proof(
     );
 }
 
-/// Lib / steward witness — queue + overlay readers (M2/M3), not hard-coded flags.
-pub fn seed_stage7_behavioral_witness_for_lib_proof(
-    queue: &mut StrategicCommandQueue,
-    witness: &mut Stage7BehavioralWitnessState,
-    beliefs: &mut Stage7BeliefState,
-) {
-    let issued = SimStepStamp::new(1, 0);
-    enqueue_strategic_command(queue, issued, "lib proof");
-    if beliefs.beliefs.is_empty() {
-        beliefs.beliefs = vec![BeliefRecord {
-            entity: Entity::PLACEHOLDER,
-            confidence: IntelConfidence {
-                scalar: 0.55,
-                half_life_ticks: 120,
-            },
-            last_refresh: issued,
-            summary: "lib proof recon".into(),
-        }];
-    }
-    witness.stale_intel_surface = true;
-    witness.orders_pending_ui_hook = true;
-    let fire = FireSimulationSnapshot {
-        stamp: issued,
-        ..Default::default()
-    };
-    let mut book = CorridorConstructionBook::default();
-    let mut climate = ClimateVisualAggregate::default();
-    let mut ecology = EcologyVisualSnapshot::default();
-    let mut logistics = LogisticsVisualSnapshot::default();
-    seed_stage7_behavioral_overlay_resources(
-        &fire,
-        &mut book,
-        &mut climate,
-        &mut ecology,
-        &mut logistics,
-    );
-    ensure_stage7_behavioral_m3_witness_fields(
-        witness,
-        beliefs,
-        Some(&logistics),
-        Some(&ecology),
-        0,
-    );
-}
-
 /// **S7B-M4-PLAY-001** — lib / playtest hook: enqueue corridor missions (StrategicCommand only).
 pub fn seed_stage7_m4_playtest_enqueue(
     queue: &mut StrategicCommandQueue,
-    witness: &mut Stage7BehavioralWitnessState,
+    witness: &mut Stage7BehavioralState,
 ) {
     let issued = SimStepStamp::new(10, 0);
     enqueue_strategic_command(queue, issued, "S7B-M4-001 MoveCorridor playtest");
@@ -592,14 +543,4 @@ mod overlay_reader_tests {
         assert!(recon_n > 0);
     }
 
-    #[test]
-    fn ensure_stage7_m4_play_witness_fields_syncs_from_pending_queue() {
-        let mut queue = StrategicCommandQueue::default();
-        let mut witness = Stage7BehavioralWitnessState::default();
-        seed_stage7_m4_playtest_enqueue(&mut queue, &mut witness);
-        witness.s7b_m4_play_enqueue_wired = false;
-        ensure_stage7_m4_play_witness_fields(&queue, &mut witness);
-        assert!(queue.pending_count() >= 1);
-        assert!(witness.s7b_m4_play_enqueue_wired);
-    }
 }

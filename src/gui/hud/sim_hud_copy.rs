@@ -1,6 +1,6 @@
 //! Locked sim HUD copy — [`src/dev/sim_hud_copy_registry_v1.md`].
 
-use crate::construction::ToolContext;
+use crate::construction::{ActiveBuildTool, BuildTool, RoadType, ToolContext};
 
 pub const PICKER_TITLE_ZONE: &str = "Zones";
 pub const PICKER_TITLE_ROADS: &str = "Roads";
@@ -197,5 +197,26 @@ mod place_feel_tests {
         assert_eq!(rail_player_label(ToolContext::Military), "Defense");
         assert_eq!(rail_player_label(ToolContext::Ecology), "Ecology");
         assert!(!rail_player_label(ToolContext::Roads).chars().all(|c| c.is_ascii_uppercase()));
+    }
+}
+
+/// Catalog or defense name for tray and strip. Generic "building" is not a subject.
+#[must_use]
+pub fn active_place_subject(tool: &ActiveBuildTool) -> Option<String> {
+    if let Some(intent) = tool.building_intent.as_ref() {
+        let name = intent.label.trim();
+        if !name.is_empty() {
+            return Some(name.to_string());
+        }
+    }
+    match tool.tool {
+        BuildTool::Defense(kind) => Some(kind.player_label().to_string()),
+        BuildTool::Road(RoadType::Street) => Some("Street".to_string()),
+        BuildTool::Road(RoadType::Highway) => Some("Highway".to_string()),
+        BuildTool::Rail(_) => Some("Rail".to_string()),
+        BuildTool::PowerLine(_) => Some("Power line".to_string()),
+        BuildTool::Demolish => Some("Demolish".to_string()),
+        BuildTool::Zone(_) => Some("Zone".to_string()),
+        BuildTool::Building(_) | BuildTool::None => None,
     }
 }

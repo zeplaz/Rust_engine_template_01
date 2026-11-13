@@ -24,7 +24,7 @@ use crate::gui::style::UiPalette;
 use crate::gui::{InputBindings, InputFrame, SimulationMapViewport, SimulationViewportSyncSet};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::gui::representation_governance::ScaffoldContract;
-use crate::render::{trace_camera_sync, DebugRenderTraceConfig, Stage5ReadinessProfile};
+use crate::render::{trace_camera_sync, DebugRenderTraceConfig};
 
 /// Hybrid orthographic tilt tuning (VA5 scaffold — visual-only).
 #[allow(dead_code)]
@@ -128,30 +128,6 @@ impl Default for MapCameraDesired {
 struct MapCameraInputLocals {
     middle_tap: Option<f32>,
     before_apply: Option<MapCameraDesired>,
-}
-
-/// Live Stage 5 audit (TODO-04): log **mutations** to [`MapCameraDesired`] when profile is [`Stage5ReadinessProfile::FULL_APP`].
-/// Enable: `RUST_LOG=map_camera_desired::write=debug`.
-pub fn trace_map_camera_desired_write_if_full_app(
-    profile: &Stage5ReadinessProfile,
-    source: &'static str,
-    before: &MapCameraDesired,
-    after: &MapCameraDesired,
-) {
-    if *profile != Stage5ReadinessProfile::FULL_APP {
-        return;
-    }
-    if before == after {
-        return;
-    }
-    debug!(
-        target: "map_camera_desired::write",
-        "MAP_CAMERA_DESIRED_WRITE source={source} translation=({:.2},{:.2},{:.2}) scale.x={:.4}",
-        after.translation.x,
-        after.translation.y,
-        after.translation.z,
-        after.scale.x,
-    );
 }
 
 /// RTS-style map camera mode (diagnostic label; future behavior hooks).
@@ -1004,7 +980,6 @@ pub fn apply_derived_map_camera_desired(
     authority: &ViewProjectionAuthority,
     desired_res: &mut MapCameraDesiredRes,
     cam_desired: Option<&mut MapCameraDesired>,
-    profile: &Stage5ReadinessProfile,
 ) -> bool {
     use crate::render::view_runtime::ViewSurfaceId;
     let Some(cam) = authority
@@ -1013,7 +988,6 @@ pub fn apply_derived_map_camera_desired(
     else {
         return false;
     };
-    let before = desired_res.0.clone();
     let next = MapCameraDesired {
         translation: Vec3::new(cam.translation.x, cam.translation.y, MAIN_WORLD_CAMERA_Z),
         scale: Vec3::splat(cam.zoom.max(1e-4)),
@@ -1026,12 +1000,6 @@ pub fn apply_derived_map_camera_desired(
     if let Some(d) = cam_desired {
         *d = next;
     }
-    trace_map_camera_desired_write_if_full_app(
-        profile,
-        "derive_map_camera_desired_from_view_authority",
-        &before,
-        &desired_res.0,
-    );
     true
 }
 
@@ -1040,7 +1008,6 @@ pub fn derive_map_camera_desired_from_view_authority(
     authority: Res<ViewProjectionAuthority>,
     mut desired_res: ResMut<MapCameraDesiredRes>,
     mut q_cam: Query<&mut MapCameraDesired, With<MainWorldCamera>>,
-    profile: Res<Stage5ReadinessProfile>,
 ) {
     // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
     let _perf = crate::render::PerfScope::new("upd_map_camera_derive");
@@ -1049,7 +1016,6 @@ pub fn derive_map_camera_desired_from_view_authority(
         authority.as_ref(),
         desired_res.as_mut(),
         cam.as_deref_mut(),
-        profile.as_ref(),
     );
 }
 

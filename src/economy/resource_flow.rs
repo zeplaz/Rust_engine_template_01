@@ -90,7 +90,7 @@ impl ResourceFlowRegistry {
 
 /// Runtime counters for industrial witness / proof JSON.
 #[derive(Resource, Debug, Default)]
-pub struct ResourceFlowSimWitness {
+pub struct ResourceFlowSimStats {
     pub ticks_propagated: u32,
     pub starvation_events: u32,
     pub overload_events_this_frame: u32,
@@ -390,7 +390,7 @@ pub fn transfer_along_edge(
 
 pub fn propagate_resource_flow_system(
     _flow: Res<ResourceFlowRegistry>,
-    mut witness: ResMut<ResourceFlowSimWitness>,
+    mut witness: ResMut<ResourceFlowSimStats>,
     mut nodes: Query<(
         Entity,
         &mut ResourceFlowNode,
@@ -429,7 +429,7 @@ pub fn apply_starvation_to_smelter_system(
 
 pub fn collect_grid_overload_witness_system(
     mut reader: MessageReader<crate::entities::production::power::GridOverloadEvent>,
-    mut witness: ResMut<ResourceFlowSimWitness>,
+    mut witness: ResMut<ResourceFlowSimStats>,
 ) {
     witness.overload_events_this_frame = 0;
     for _ in reader.read() {
@@ -467,7 +467,7 @@ pub struct ResourceFlowPlugin;
 impl Plugin for ResourceFlowPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<ResourceFlowRegistry>()
-            .init_resource::<ResourceFlowSimWitness>()
+            .init_resource::<ResourceFlowSimStats>()
             .add_message::<crate::entities::production::power::GridOverloadEvent>()
             .add_systems(
                 Update,
@@ -551,7 +551,7 @@ mod tests {
         app.insert_resource(crate::systems::transport::TransportEdgeDirectory::default());
         app.insert_resource(crate::systems::transport::TransportFieldStore::default());
         app.init_resource::<ResourceFlowRegistry>();
-        app.init_resource::<ResourceFlowSimWitness>();
+        app.init_resource::<ResourceFlowSimStats>();
         app.add_systems(
             Update,
             (

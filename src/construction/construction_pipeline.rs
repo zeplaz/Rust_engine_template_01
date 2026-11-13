@@ -187,7 +187,7 @@ pub fn execute_construction_plans_system(
     raster_cfg: Option<Res<crate::strategic::StrategicRasterConfig>>,
     mut hydro_queue: Option<ResMut<crate::substrate::hydrology::HydrologyEventQueue>>,
     mut hydro_coupling: Option<
-        ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingWitness>,
+        ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingStats>,
     >,
 ) {
     let mut executed = false;

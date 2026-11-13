@@ -7,15 +7,12 @@ use super::build_tool_authority::ActiveBuildTool;
 use super::building_definitions::BuildingDefinitionRegistry;
 use super::pilot_catalog::site_zone_grid_for_arch_dna_preset;
 use super::site_zone_grid::{
-    cell_at, cell_fill, primary_loading_cell_count, zone_label_for, SiteZoneCell,
+    cell_at, cell_fill, zone_label_for,
 };
 use super::visual_authority::{
     ConstructionVisualRequests, SiteStubBoxRequest, SiteZoneLabelRequest, ZoneTileRequest,
 };
 use crate::strategic::BuildSiteTile;
-
-pub const SITE_STUB_WIDTH: u32 = 10;
-pub const SITE_STUB_DEPTH: u32 = 8;
 
 /// Per-zone label for placement debug overlay.
 #[derive(Resource, Clone, Debug, Default)]
@@ -122,54 +119,6 @@ pub fn sync_site_stub_overlay_requests(
     let _ = registry;
 }
 
-#[must_use]
-pub fn primary_pct_of_site_stub(occupied_primary_loading: u32, site_cells: u32) -> f32 {
-    let denom = site_cells.max(1) as f32;
-    occupied_primary_loading as f32 / denom
-}
-
-/// BUILD-READ-SITE-v0-002 witness — JSON-backed 10×8 stub + zone labels for pilot.
-#[must_use]
-pub fn build_read_site_v0_002_witness_green() -> bool {
-    build_read_site_v0_002_self_check().is_ok()
-}
-
-fn build_read_site_v0_002_self_check() -> Result<(), &'static str> {
-    use super::pilot_catalog::PilotCatalog;
-
-    let catalog = PilotCatalog::load_from_disk();
-    let grammar_with_site: Vec<_> = catalog
-        .grammar_pilots()
-        .filter(|p| p.site_json_path.is_some())
-        .collect();
-    if grammar_with_site.len() < 2 {
-        return Err("min_grammar_site_pilots");
-    }
-    for pilot in grammar_with_site {
-        let preset = pilot.arch_dna_preset.as_deref().ok_or("preset")?;
-        let grid = site_zone_grid_for_arch_dna_preset(preset).ok_or("site_load")?;
-        if grid.width < SITE_STUB_WIDTH / 2 || grid.depth < SITE_STUB_DEPTH / 2 {
-            return Err("site_dims");
-        }
-        let primary = primary_loading_cell_count(&grid);
-        let pct = primary_pct_of_site_stub(primary, grid.width * grid.depth);
-        if !(0.10..=0.55).contains(&pct) {
-            return Err("primary_pct");
-        }
-        if primary_loading_cell_count(&grid) == 0 {
-            return Err("primary_zone");
-        }
-        if !grid.cells.iter().any(|c| *c == SiteZoneCell::Utility) {
-            return Err("utility_yard");
-        }
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn site_v0_002_witness_green() {
-        assert!(super::build_read_site_v0_002_witness_green());
-    }
 }

@@ -30,7 +30,6 @@ use crate::render::core::terrain_material_atlas::TerrainMaterialAtlasGpu;
 const BAKE_ATLAS_TILE_PX: u32 = 8;
 use crate::render::tile_world_fallback::{
     TileWorldFallbackChunkGrid, TileWorldFallbackRasterCtrl, TileWorldFallbackState,
-    RASTER_CHUNK_TILES,
 };
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -39,14 +38,6 @@ use crate::terrain::material::{family_default_material_def, MaterialId, Material
 
 /// Env flag — opt-in A0/A1 bake spike. Default OFF.
 pub const TERRAIN_GPU_BAKE_SPIKE_ENV: &str = "TERRAIN_GPU_BAKE_SPIKE";
-
-/// Live witness path for RPC-1-004 A0 probe (kept for regression).
-pub const TERRAIN_GPU_BAKE_SPIKE_LIVE_JSON: &str =
-    "debug_runs/terrain_gpu_bake_spike_rpc1_004_live.json";
-
-/// Live witness path for RPC-1-005 A1 consumers probe.
-pub const TERRAIN_GPU_BAKE_SPIKE_A1_LIVE_JSON: &str =
-    "debug_runs/terrain_gpu_bake_spike_rpc1_005_live.json";
 
 #[must_use]
 pub fn terrain_gpu_bake_spike_env_enabled() -> bool {
@@ -346,38 +337,6 @@ pub fn build_bake_spike_probe(state: &TerrainGpuBakeSpikeState, index_count: u32
     }
 }
 
-/// A0 exit predicate — spike green when flag-gated path is proven without flipping defaults.
-/// After A1, flag-off still uses this; flag-on A0 green no longer requires `!rtt_pass_wired`.
-#[must_use]
-pub fn terrain_gpu_bake_spike_a0_green(probe: &TerrainGpuBakeSpikeProbe) -> bool {
-    probe.fire_excluded_from_bake
-        && probe.cpu_display_still_authority
-        && probe.minimap_default_off_is_world_raster
-        && probe.path.starts_with("scissor_atlas_to_world")
-        && {
-            if !probe.flag_enabled {
-                probe.flag_default_off && probe.index_count == 0 && !probe.rtt_pass_wired
-            } else {
-                probe.world_bake_target_allocated
-                    && (probe.region_count > 0 || probe.index_count > 0)
-            }
-        }
-}
-
-/// A1 exit — consumers can honestly bind `gpu_bake` when flag on; default-off unchanged.
-#[must_use]
-pub fn terrain_gpu_bake_spike_a1_green(probe: &TerrainGpuBakeSpikeProbe) -> bool {
-    terrain_gpu_bake_spike_a0_green(probe)
-        && probe.minimap_gpu_bake_label_available
-        && {
-            if !probe.flag_enabled {
-                !probe.consumers_ready
-            } else {
-                probe.rtt_pass_wired && probe.consumers_ready && probe.write_pixel_count > 0
-            }
-        }
-}
-
 fn make_world_bake_image(w: u32, h: u32) -> Image {
     let width = w.max(1);
     let height = h.max(1);
@@ -596,51 +555,6 @@ impl Plugin for TerrainGpuBakeSpikePlugin {
     }
 }
 
-#[must_use]
-pub fn build_terrain_gpu_bake_spike_witness_body(
-    state: &TerrainGpuBakeSpikeState,
-    map: &TerrainGpuBakeIndexMap,
-) -> serde_json::Value {
-    let probe = build_bake_spike_probe(state, map.instances.len() as u32);
-    let a0 = terrain_gpu_bake_spike_a0_green(&probe);
-    let a1 = terrain_gpu_bake_spike_a1_green(&probe);
-    let terrain_source = if spike_bake_ready_for_consumers(state) {
-        "gpu_bake"
-    } else {
-        "world_raster"
-    };
-    serde_json::json!({
-        "gate": "RPC-1-005",
-        "fleet": "FLEET-RPC1-005",
-        "green": a1,
-        "a0_green": a0,
-        "a1_green": a1,
-        "flag_env": TERRAIN_GPU_BAKE_SPIKE_ENV,
-        "flag_enabled": probe.flag_enabled,
-        "flag_default_off": !terrain_gpu_bake_spike_env_enabled(),
-        "index_count": probe.index_count,
-        "region_count": probe.region_count,
-        "bake_revision": state.bake_revision,
-        "fire_excluded_from_bake": probe.fire_excluded_from_bake,
-        "cpu_display_still_authority": probe.cpu_display_still_authority,
-        "world_bake_target_allocated": probe.world_bake_target_allocated,
-        "world_bake_w": state.world_bake_w,
-        "world_bake_h": state.world_bake_h,
-        "rtt_pass_wired": probe.rtt_pass_wired,
-        "rtt_pass_kind": "host_atlas_to_world_scissor",
-        "consumers_ready": probe.consumers_ready,
-        "write_pixel_count": probe.write_pixel_count,
-        "minimap_terrain_source": terrain_source,
-        "minimap_default_off_is_world_raster": probe.minimap_default_off_is_world_raster,
-        "minimap_gpu_bake_label_available": probe.minimap_gpu_bake_label_available,
-        "path": probe.path,
-        "chunk_tiles": RASTER_CHUNK_TILES,
-        "operator_pixel_proof": false,
-        "next": "RPC-1-006 — operator pixel prove + optional default flip (do not claim here)",
-        "plan_ref": "src/dev/plan_rpc1_gpu_terrain_ab_v1.md",
-    })
-}
-
 
 
 #[cfg(test)]
@@ -700,80 +614,6 @@ mod tests {
             ..Default::default()
         };
         assert!(state.fire_excluded_from_bake);
-    }
-
-    #[test]
-    fn a0_probe_green_when_flag_off() {
-        std::env::remove_var(TERRAIN_GPU_BAKE_SPIKE_ENV);
-        let state = TerrainGpuBakeSpikeState::default();
-        let probe = build_bake_spike_probe(&state, 0);
-        assert!(terrain_gpu_bake_spike_a0_green(&probe));
-        assert!(terrain_gpu_bake_spike_a1_green(&probe));
-        assert!(probe.minimap_default_off_is_world_raster);
-    }
-
-    #[test]
-    fn a0_probe_requires_target_when_flag_on() {
-        let state = TerrainGpuBakeSpikeState {
-            enabled: true,
-            regions: vec![TerrainGpuBakeScissor {
-                x0: 0,
-                y0: 0,
-                x1: 16,
-                y1: 16,
-            }],
-            world_bake_image: Handle::default(),
-            world_bake_w: 0,
-            world_bake_h: 0,
-            ..Default::default()
-        };
-        let probe = build_bake_spike_probe(&state, 4);
-        assert!(!terrain_gpu_bake_spike_a0_green(&probe));
-
-        let ok_state = TerrainGpuBakeSpikeState {
-            enabled: true,
-            regions: vec![TerrainGpuBakeScissor {
-                x0: 0,
-                y0: 0,
-                x1: 16,
-                y1: 16,
-            }],
-            world_bake_w: 16,
-            world_bake_h: 16,
-            ..Default::default()
-        };
-        let probe_ok = build_bake_spike_probe(&ok_state, 4);
-        assert!(probe_ok.world_bake_target_allocated);
-        assert!(terrain_gpu_bake_spike_a0_green(&probe_ok));
-        // A1 needs write + consumers_ready.
-        assert!(!terrain_gpu_bake_spike_a1_green(&probe_ok));
-    }
-
-    #[test]
-    fn a1_probe_green_when_consumers_ready() {
-        let mut images = Assets::<Image>::default();
-        let handle = images.add(Image::default());
-        let mut state = TerrainGpuBakeSpikeState {
-            enabled: true,
-            regions: vec![TerrainGpuBakeScissor {
-                x0: 0,
-                y0: 0,
-                x1: 4,
-                y1: 4,
-            }],
-            world_bake_w: 4,
-            world_bake_h: 4,
-            rtt_pass_wired: true,
-            last_write_pixel_count: 4,
-            world_bake_image: handle,
-            ..Default::default()
-        };
-        assert!(spike_bake_ready_for_consumers(&state));
-        let probe = build_bake_spike_probe(&state, 4);
-        assert!(terrain_gpu_bake_spike_a1_green(&probe));
-
-        state.last_write_pixel_count = 0;
-        assert!(!spike_bake_ready_for_consumers(&state));
     }
 
     #[test]

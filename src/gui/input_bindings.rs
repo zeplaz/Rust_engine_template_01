@@ -22,23 +22,14 @@ use serde::{Deserialize, Serialize};
 #[serde(default)]
 pub struct InputBindings {
     pub toggle_keybindings_options: KeyCode,
-    pub toggle_diagnostics: KeyCode,
-    /// Pressure composition tooling (egui + Bevy strip) — climate/mission packages, not quest scripting.
-    pub toggle_pressure_composer: KeyCode,
     /// Toggle the AI explainability panel (faction AI decisions + macro pipeline; default Insert).
     pub toggle_ai_explainability: KeyCode,
     pub cycle_logistics_focus: KeyCode,
     pub toggle_logistics_targets_panel: KeyCode,
     /// Scenario script runner (`scenario_script_panel`, Editor). Default **F10**; logistics targets panel uses **F6** to avoid clash.
     pub toggle_scenario_script_panel: KeyCode,
-    /// Compact one-line strategic summary in the in-game HUD (`InGameHudPlugin`).
-    pub toggle_strategic_hud_strip_compact: KeyCode,
     /// Collapse / expand the left command context stack (Bevy HUD panel under the operations strip).
     pub toggle_command_left_stack: KeyCode,
-    /// Toggle painting **routing congestion** transport splats into [`ChunkStrategicOverlay`](crate::strategic::ChunkStrategicOverlay).
-    pub toggle_strategic_overlay_routing_congestion: KeyCode,
-    /// Toggle painting **EW / denial** proxy splats from transport fields.
-    pub toggle_strategic_overlay_ew_denial: KeyCode,
     /// Cycle operational **build / planning** tool context (`construction::BuildStripState`; Bevy HUD shows active mode).
     pub cycle_build_planning_tool: KeyCode,
     /// Toggle construction site / ghost **info labels** on the tactical map (tile outlines stay on).
@@ -47,8 +38,6 @@ pub struct InputBindings {
     pub confirm_build_placement: KeyCode,
     /// Toggle simulation minimap egui shell.
     pub toggle_sim_minimap: KeyCode,
-    /// Toggle transmission / briefing HUD widget.
-    pub toggle_transmission_widget: KeyCode,
     /// Rotate build ghost footprint (quarter turns).
     pub rotate_build_ghost: KeyCode,
     /// Mirror build ghost on X axis.
@@ -56,8 +45,6 @@ pub struct InputBindings {
     /// Clear pending blueprint queue while planning.
     pub clear_pending_blueprints: KeyCode,
     pub toggle_world_generator: KeyCode,
-    /// Toggles egui scale compensation (`ui_windows::update_ui_scale_factor_system`).
-    pub toggle_egui_ui_scale: KeyCode,
     /// Toggle `SimControlState.paused` (`systems::sim_control::keyboard_toggle_pause`).
     pub toggle_simulation_pause: KeyCode,
     /// While capturing a binding in the options UI, this key aborts capture (not written into RON as a game action).
@@ -121,26 +108,19 @@ impl Default for InputBindings {
     fn default() -> Self {
         Self {
             toggle_keybindings_options: KeyCode::F1,
-            toggle_diagnostics: KeyCode::F3,
-            toggle_pressure_composer: KeyCode::F2,
             toggle_ai_explainability: KeyCode::Insert,
             cycle_logistics_focus: KeyCode::F9,
             toggle_logistics_targets_panel: KeyCode::F6,
             toggle_scenario_script_panel: KeyCode::F10,
-            toggle_strategic_hud_strip_compact: KeyCode::F5,
             toggle_command_left_stack: KeyCode::Backquote,
-            toggle_strategic_overlay_routing_congestion: KeyCode::Digit7,
-            toggle_strategic_overlay_ew_denial: KeyCode::Digit8,
             cycle_build_planning_tool: KeyCode::Semicolon,
             toggle_construction_tile_labels: KeyCode::F7,
             confirm_build_placement: KeyCode::Enter,
             toggle_sim_minimap: KeyCode::KeyN,
-            toggle_transmission_widget: KeyCode::KeyJ,
             rotate_build_ghost: KeyCode::KeyR,
             mirror_build_ghost: KeyCode::KeyX,
             clear_pending_blueprints: KeyCode::Backspace,
             toggle_world_generator: KeyCode::F8,
-            toggle_egui_ui_scale: KeyCode::Slash,
             toggle_simulation_pause: KeyCode::KeyP,
             cancel_keybinding_capture: KeyCode::Escape,
             start_gameplay_recording: KeyCode::F11,
@@ -305,8 +285,8 @@ mod tests {
     /// Old saved files without the front-control keys still load, with the defaults.
     #[test]
     fn missing_front_keys_fall_back_to_defaults() {
-        let decoded: InputBindings = ron::from_str("(toggle_diagnostics: F9)").unwrap();
-        assert_eq!(decoded.toggle_diagnostics, KeyCode::F9);
+        let decoded: InputBindings = ron::from_str("(toggle_world_generator: F9)").unwrap();
+        assert_eq!(decoded.toggle_world_generator, KeyCode::F9);
         assert_eq!(decoded.front_fortify, InputBindings::default().front_fortify);
     }
 

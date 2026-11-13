@@ -155,27 +155,9 @@ pub fn tick_power_repair_queue_system(
     advance_power_repair_queue(&mut queue, &mut book, &committed, sim_advancing);
 }
 
-#[must_use]
-pub fn power_repair_queue_witness_green() -> bool {
-    let mut book = PowerLineDamageBook::default();
-    let mut seg = PowerLineSegmentHealth::new(7);
-    seg.hp = 40.0;
-    book.segments.insert(7, seg);
-    let mut queue = PowerRepairQueue::default();
-    let id = queue.enqueue_damaged_segment(book.segments.get(&7).unwrap(), 2);
-    id.is_some()
-        && queue.jobs[0].priority <= 100
-        && queue.jobs[0].parts_need == POWER_REPAIR_PARTS_PER_SEGMENT
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn power_repair_witness_green_lib() {
-        assert!(power_repair_queue_witness_green());
-    }
 
     fn ready_job(link_id: u64, ticks: u32) -> PowerRepairQueue {
         let mut book = PowerLineDamageBook::default();

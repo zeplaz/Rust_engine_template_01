@@ -1,4 +1,4 @@
-//! Tabbed **Info** panel body (layers / economy / logistics / alerts / diagnostics).
+//! Per-frame snapshot of sim readouts shown in the context tray (alerts / intel / logistics / build tabs).
 
 use bevy::prelude::*;
 
@@ -14,23 +14,7 @@ use crate::strategic::{
 };
 use crate::systems::sim_control::{SimControlState, SimTick};
 
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum HudInfoTab {
-    #[default]
-    Layers,
-    Economy,
-    Logistics,
-    Alerts,
-    Diagnostics,
-}
-
-#[derive(Resource, Clone, Copy, Debug, Default)]
-pub struct HudInfoTabState {
-    pub active: HudInfoTab,
-    pub request_layout_reset: bool,
-}
-
-/// Snapshot for Info panel tabs — refreshed each frame from ops-strip sources.
+/// Snapshot for the context tray — refreshed each frame from ops-strip sources.
 #[derive(Resource, Clone, Debug, Default)]
 pub struct HudInfoLiveData {
     pub sim_tick: u64,
@@ -151,21 +135,13 @@ pub fn sync_hud_info_live_data(
     }
 }
 
-#[allow(dead_code)] // egui-retired; kept for Bevy port / export
-pub fn draw_info_tab_bar() {}
+pub struct HudLiveDataPlugin;
 
-#[allow(dead_code)] // egui-retired; kept for Bevy port / export
-pub fn draw_info_tab_body() {}
-
-pub struct HudInfoTabPlugin;
-
-impl Plugin for HudInfoTabPlugin {
+impl Plugin for HudLiveDataPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<HudInfoTabState>()
-            .init_resource::<HudInfoLiveData>()
-            .add_systems(
-                PreUpdate,
-                sync_hud_info_live_data.run_if(in_simulation_or_editor),
-            );
+        app.init_resource::<HudInfoLiveData>().add_systems(
+            PreUpdate,
+            sync_hud_info_live_data.run_if(in_simulation_or_editor),
+        );
     }
 }

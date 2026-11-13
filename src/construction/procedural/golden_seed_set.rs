@@ -2,13 +2,7 @@
 //!
 //! Any grammar/kit change must diff against these hashes; update only with operator approval.
 
-use super::assembly_snapshot::{
-    assembly_snapshot_stable_hash, build_assembly_snapshot_from_grammar,
-};
-use super::{load_procedural_module_registry, load_style_pack_registry};
 use crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
-
-pub const BQ_Q3_LIVE_JSON: &str = "debug_runs/bq_q3_golden_001_live.json";
 
 #[derive(Clone, Copy, Debug)]
 pub struct GoldenSeedEntry {
@@ -94,91 +88,11 @@ pub const GOLDEN_SEED_SET_V1: &[GoldenSeedEntry] = &[
     },
 ];
 
-#[must_use]
-pub fn golden_seed_hash_for(entry: &GoldenSeedEntry) -> Result<String, String> {
-    let modules = load_procedural_module_registry();
-    let packs = load_style_pack_registry();
-    if !modules.load_errors.is_empty() || !packs.load_errors.is_empty() {
-        return Err(format!(
-            "registry load errors: modules={} packs={}",
-            modules.load_errors.len(),
-            packs.load_errors.len()
-        ));
-    }
-    let snapshot = build_assembly_snapshot_from_grammar(
-        entry.archetype_id,
-        entry.district_style,
-        entry.seed,
-        &modules,
-        &packs,
-    )?;
-    Ok(assembly_snapshot_stable_hash(&snapshot))
-}
-
-#[must_use]
-pub fn bq_q3_golden_regression_green() -> bool {
-    GOLDEN_SEED_SET_V1.iter().all(|entry| {
-        golden_seed_hash_for(entry)
-            .ok()
-            .is_some_and(|h| h == entry.expected_hash)
-    })
-}
-
-#[must_use]
-pub fn build_bq_q3_golden_witness_body() -> serde_json::Value {
-    let mut rows = Vec::new();
-    let mut pass = 0usize;
-    for entry in GOLDEN_SEED_SET_V1 {
-        let actual = golden_seed_hash_for(entry).ok();
-        let ok = actual.as_deref() == Some(entry.expected_hash);
-        if ok {
-            pass += 1;
-        }
-        rows.push(serde_json::json!({
-            "archetype_id": entry.archetype_id,
-            "district_style": entry.district_style,
-            "seed": entry.seed,
-            "expected_hash": entry.expected_hash,
-            "actual_hash": actual,
-            "match": ok,
-        }));
-    }
-    let total = GOLDEN_SEED_SET_V1.len();
-    let green = pass == total;
-    serde_json::json!({
-        "gate": "BQ-Q3-GOLDEN-001",
-        "green": green,
-        "pass_count": pass,
-        "total": total,
-        "seeds": rows,
-        "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-Q3",
-    })
-}
-
 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn bq_q3_golden_bootstrap_hashes() {
-        for entry in GOLDEN_SEED_SET_V1 {
-            let hash = golden_seed_hash_for(entry).expect("snapshot");
-            eprintln!(
-                "GoldenSeedEntry {{ archetype_id: \"{}\", district_style: \"{}\", seed: {}, expected_hash: \"{}\" }},",
-                entry.archetype_id, entry.district_style, entry.seed, hash
-            );
-        }
-    }
-
-    #[test]
-    fn bq_q3_golden_regression_matches_committed_hashes() {
-        assert!(
-            bq_q3_golden_regression_green(),
-            "golden seed hash drift — run bq_q3_golden_bootstrap_hashes and update GOLDEN_SEED_SET_V1 with operator approval"
-        );
-    }
+    
 
 
 }

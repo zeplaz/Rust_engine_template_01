@@ -49,23 +49,19 @@ pub use registry_snapshot::{
     build_default_registry_snapshot_refs, write_registry_snapshot_artifacts,
 };
 pub use settlement_overlay::{
-    build_settlement_overlay_refs, econ_og_save_001_witness_green,
-    settlement_books_manifest_roundtrip_witness_green,
-    settlement_books_save_roundtrip_witness_green, try_hydrate_settlement_books_from_manifest,
+    build_settlement_overlay_refs, try_hydrate_settlement_books_from_manifest,
     try_hydrate_settlement_books_on_bundle_dir, write_settlement_overlay_on_save_flush,
     write_settlement_overlay_to_bundle, SettlementBooksHydrateState, SETTLEMENT_BOOKS_REL_PATH,
     SETTLEMENT_OVERLAY_NAME,
 };
 pub use fire_overlay::{
     apply_chunk_fire_state, capture_chunk_fire_state, capture_chunk_fire_state_from_rows,
-    default_fire_overlay_ref, fire_overlay_ref, fire_save_roundtrip_lib_green,
-    hash_saved_fire_state, hash_surface_fire_rows, read_chunk_fire_state_ron,
+    default_fire_overlay_ref, fire_overlay_ref, hash_saved_fire_state, hash_surface_fire_rows, read_chunk_fire_state_ron,
     write_chunk_fire_state_ron, ChunkFireStateSnapshot,
     SavedFireChunkRow, FIRE_OVERLAY_NAME, FIRE_SAVE_ROUNDTRIP_JSON, FIRE_STATE_REL_PATH,
     FIRE_STATE_SCHEMA_VERSION,
 };
 pub use atmosphere_clipmap_overlay::{
-    atmosphere_clipmap_manifest_roundtrip_green, atmosphere_clipmap_save_roundtrip_green,
     build_atmos_clipmap_overlay_refs, capture_atmosphere_clipmap_snapshot,
     default_atmos_clipmap_overlay_ref, hydrate_atmosphere_clipmap_snapshot,
     read_atmosphere_clipmap_snapshot, try_hydrate_atmosphere_clipmap_from_manifest, write_atmosphere_clipmap_overlay_to_bundle,
@@ -92,7 +88,7 @@ pub use wave_s_artifacts::{
     hydrate_wave_s_artifacts_from_bundle, product_shell_bundle_exists, read_blueprint_presets,
     read_product_shell_bundle, try_autoload_wave_s_on_bundle_dir, wave_s_autoload_shell_enabled,
     write_blueprint_presets, write_product_shell_bundle, WaveSImportedBlueprints,
-    WaveSShellCapturePending, WaveSShellHydrateState, WaveSShellHydrateWitness,
+    WaveSShellCapturePending, WaveSShellHydrateState, WaveSShellHydrateStats,
     WaveSShellRestorePending, WAVE_S_BLUEPRINT_PRESETS_REL_PATH, WAVE_S_PRODUCT_SHELL_REL_PATH,
 };
 

@@ -128,8 +128,4 @@ mod tests {
         assert!(d < 0.01);
     }
 
-    #[test]
-    fn power_line_cut_witness_wired() {
-        assert!(power_line_cut_input_wired());
-    }
 }

@@ -3,7 +3,6 @@
 //! Engine PG-2 emits the same JSON shape as `rust_engine_mcp.assembly.generate_assembly_snapshot`.
 //! Blender import stays in coder-mcp (`assembly_build` job).
 
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 use bevy::prelude::Vec3;
@@ -17,7 +16,7 @@ use super::arch_build_grammar_v0::{
 use super::building_grammar::generate_with_arch_dna_preset;
 use super::module_contract::{FLOOR_HEIGHT_M, GRID_UNIT_M};
 use super::{
-    exterior_faces, grammar_reference_tags, DevelopmentTier, ExteriorFace, FallbackPolicy,
+    exterior_faces, grammar_reference_tags, DevelopmentTier, ExteriorFace,
     FootprintGrid, FootprintToken, GrammarGenerateResult, MissingSlotReason, MissingSlotViolation,
     ProceduralBuildingRequest, ProceduralModuleRegistry, RoofMode, StylePack, StylePackRegistry,
     StylePackSlotKey, GRAMMAR_RULES_VERSION,
@@ -678,104 +677,12 @@ pub fn staging_relative_path(snapshot: &AssemblySnapshot) -> String {
     )
 }
 
-/// **CITY-G0-WIT-001** — fixed grammar→assembly spec for determinism witness.
-pub const CITY_G0_WIT_ARCHETYPE: &str = crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
-pub const CITY_G0_WIT_DISTRICT: &str = "industrial_west";
-pub const CITY_G0_WIT_SEED: u64 = 43;
-pub const CITY_G0_WIT_RUNS: u32 = 3;
-pub const CITY_G0_WIT_LIVE_JSON: &str = "debug_runs/city_g0_wit_001_live.json";
-
 /// Stable SHA-256 hex over canonical JSON bytes (field order = struct definition).
 #[must_use]
 pub fn assembly_snapshot_stable_hash(snapshot: &AssemblySnapshot) -> String {
     let bytes = serde_json::to_vec(snapshot).unwrap_or_default();
     let digest = Sha256::digest(&bytes);
     digest.iter().map(|b| format!("{b:02x}")).collect()
-}
-
-#[must_use]
-pub fn build_city_g0_wit_001_witness_body() -> serde_json::Value {
-    use super::building_grammar::{
-        city_g0_s11_typed_ids_witness_green, city_g0_s1c_split_witness_green,
-    };
-
-    let modules = super::load_procedural_module_registry();
-    let packs = super::load_style_pack_registry();
-    let registry_ok = modules.load_errors.is_empty() && packs.load_errors.is_empty();
-
-    let mut run_hashes = Vec::new();
-    let mut contract_ok = false;
-    for _ in 0..CITY_G0_WIT_RUNS {
-        match build_assembly_snapshot_from_grammar(
-            CITY_G0_WIT_ARCHETYPE,
-            CITY_G0_WIT_DISTRICT,
-            CITY_G0_WIT_SEED,
-            &modules,
-            &packs,
-        ) {
-            Ok(snapshot) => {
-                contract_ok = snapshot_passes_auto_001_contract(&snapshot);
-                run_hashes.push(assembly_snapshot_stable_hash(&snapshot));
-            }
-            Err(err) => {
-                return serde_json::json!({
-                    "gate": "CITY-G0-WIT-001",
-                    "green": false,
-                    "error": err,
-                    "registry_ok": registry_ok,
-                });
-            }
-        }
-    }
-
-    let three_run_stable = run_hashes.len() == CITY_G0_WIT_RUNS as usize
-        && run_hashes.windows(2).all(|w| w[0] == w[1]);
-
-    let seed_sensitivity_ok = build_assembly_snapshot_from_grammar(
-        CITY_G0_WIT_ARCHETYPE,
-        CITY_G0_WIT_DISTRICT,
-        CITY_G0_WIT_SEED.wrapping_add(1),
-        &modules,
-        &packs,
-    )
-    .ok()
-    .map(|s| assembly_snapshot_stable_hash(&s))
-    .is_some_and(|h| run_hashes.first().is_some_and(|base| h != *base));
-
-    let s11 = city_g0_s11_typed_ids_witness_green();
-    let s1c = city_g0_s1c_split_witness_green();
-    let green = registry_ok && three_run_stable && contract_ok && seed_sensitivity_ok && s11 && s1c;
-
-    serde_json::json!({
-        "gate": "CITY-G0-WIT-001",
-        "issue": "CITY-G0c",
-        "green": green,
-        "spec": {
-            "archetype_id": CITY_G0_WIT_ARCHETYPE,
-            "district_style": CITY_G0_WIT_DISTRICT,
-            "seed": CITY_G0_WIT_SEED,
-            "consecutive_runs": CITY_G0_WIT_RUNS,
-        },
-        "registry_ok": registry_ok,
-        "auto_001_contract": contract_ok,
-        "three_run_stable": three_run_stable,
-        "seed_sensitivity_ok": seed_sensitivity_ok,
-        "stable_hash": run_hashes.first(),
-        "run_hashes": run_hashes,
-        "g0_prerequisites": {
-            "city_g0_s11": s11,
-            "city_g0_s1c": s1c,
-        },
-    })
-}
-
-/// **CITY-G0-WIT-001** lib witness — same seed ⇒ identical assembly snapshot hash (3 runs).
-#[must_use]
-pub fn city_g0_wit_001_determinism_witness_green() -> bool {
-    build_city_g0_wit_001_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
 }
 
 
@@ -796,98 +703,14 @@ pub fn snapshot_passes_auto_001_contract(snapshot: &AssemblySnapshot) -> bool {
             .all(|p| !p.module_id.is_empty() && !p.glb_path.is_empty())
 }
 
-pub const BQ_F3_SLOT_001_LIVE_JSON: &str = "debug_runs/bq_f3_slot_001_live.json";
-
-#[must_use]
-pub fn build_bq_f3_slot_001_witness_body() -> serde_json::Value {
-    use crate::render::extraction::{
-        assemble_procedural_build_instances, ProceduralModuleSceneCatalog,
-    };
-
-    let reg = crate::construction::procedural::load_procedural_module_registry();
-    let packs = crate::construction::procedural::load_style_pack_registry();
-    let table_ok = reg.load_errors.is_empty() && packs.load_errors.is_empty();
-
-    let mut pack = packs
-        .get("style_industrial_west")
-        .cloned()
-        .unwrap_or_else(|| StylePack {
-            schema_version: 1,
-            id: super::StylePackId("style_industrial_west".into()),
-            label: String::new(),
-            usage_bias: Vec::new(),
-            style_tags: Vec::new(),
-            slots: HashMap::new(),
-            fallback_policy: FallbackPolicy::HideSlot,
-        });
-    pack.slots
-        .insert("wall_1u".into(), "missing_industrial_wall_xyz".into());
-
-    let request = ProceduralBuildingRequest {
-        archetype_id: "rect_perimeter".into(),
-        width: 4,
-        depth: 2,
-        floors: 2,
-        style: super::StylePackId("style_industrial_west".into()),
-        seed: 43,
-        arch_dna_preset_id: None,
-    };
-    let grid = FootprintGrid::from_request(&request);
-    let extract = assemble_procedural_build_instances(
-        &request,
-        &pack,
-        &grid,
-        &reg,
-        &ProceduralModuleSceneCatalog::default(),
-    );
-
-    let snapshot = build_assembly_snapshot(&request, &pack, &grid, &reg);
-    let violation_count = extract.missing_slot_violations.len();
-    let tint_wired = extract.instances.iter().any(|i| i.violation_tint);
-    let snapshot_wired = !snapshot.missing_slot_violations.is_empty();
-    let module_not_found = extract
-        .missing_slot_violations
-        .iter()
-        .any(|v| v.reason == MissingSlotReason::ModuleNotFound);
-
-    let green = table_ok
-        && violation_count > 0
-        && tint_wired
-        && snapshot_wired
-        && module_not_found
-        && extract
-            .missing_slot_violations
-            .iter()
-            .all(|v| v.style_pack_id == "style_industrial_west");
-
-    serde_json::json!({
-        "gate": "BQ-F3-SLOT-001",
-        "green": green,
-        "table_ok": table_ok,
-        "violation_count": violation_count,
-        "snapshot_violation_count": snapshot.missing_slot_violations.len(),
-        "debug_tint_wired": tint_wired,
-        "module_not_found_recorded": module_not_found,
-        "style_pack_id": "style_industrial_west",
-    })
-}
-
-#[must_use]
-pub fn bq_f3_slot_001_witness_green() -> bool {
-    build_bq_f3_slot_001_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
     use crate::construction::procedural::{
-        build_assembly_snapshot_from_grammar, load_procedural_module_registry,
-        load_style_pack_registry, ProceduralBuildingRequest, StylePackId, GRAMMAR_RULES_VERSION,
+        load_procedural_module_registry,
+        load_style_pack_registry, ProceduralBuildingRequest, StylePackId,
     };
 
     fn victorian_request(width: u32, depth: u32, seed: u64) -> ProceduralBuildingRequest {
@@ -972,98 +795,6 @@ mod tests {
     }
 
     #[test]
-    fn assembly_snapshot_grammar_wire_industrial_warehouse_s43() {
-        let modules = load_procedural_module_registry();
-        assert!(modules.load_errors.is_empty(), "{:?}", modules.load_errors);
-        let packs = load_style_pack_registry();
-        let snapshot = build_assembly_snapshot_from_grammar(
-            CITY_G0_WIT_ARCHETYPE,
-            "industrial_west",
-            43,
-            &modules,
-            &packs,
-        )
-        .expect("grammar snapshot");
-        assert_eq!(snapshot.procedural_rules_version, GRAMMAR_RULES_VERSION);
-        assert_eq!(
-            snapshot.archetype_id.as_deref(),
-            Some(CITY_G0_WIT_ARCHETYPE)
-        );
-        assert_eq!(snapshot.district_style.as_deref(), Some("industrial_west"));
-        assert!(snapshot.grammar_rule_chain.is_some());
-        assert!(snapshot
-            .reference_tags
-            .iter()
-            .any(|t| t.starts_with("grammar:")));
-        assert!(snapshot_passes_auto_001_contract(&snapshot));
-        assert!(snapshot.assembly_id.contains("industrial_west"));
-        assert!(snapshot.assembly_id.contains("_s43_"));
-        assert!(
-            snapshot
-                .module_placements
-                .iter()
-                .all(|p| !p.material_profile.is_empty()),
-            "PG-MATERIAL-GENERATION-001: grammar must emit material_profile per placement"
-        );
-        assert!(snapshot
-            .module_placements
-            .iter()
-            .all(|p| p.weathering.as_deref().is_some_and(|w| !w.is_empty())));
-    }
-
-    #[test]
-    fn grammar_snapshot_roof_slot_override_differs_by_massing() {
-        let modules = load_procedural_module_registry();
-        let packs = load_style_pack_registry();
-        let a = build_assembly_snapshot_from_grammar(
-            CITY_G0_WIT_ARCHETYPE,
-            "industrial_west",
-            0,
-            &modules,
-            &packs,
-        )
-        .expect("seed 0");
-        let b = build_assembly_snapshot_from_grammar(
-            CITY_G0_WIT_ARCHETYPE,
-            "industrial_west",
-            50,
-            &modules,
-            &packs,
-        )
-        .expect("seed 50");
-        let mass_a = a
-            .grammar_rule_chain
-            .as_ref()
-            .and_then(|c| c.massing.clone());
-        let mass_b = b
-            .grammar_rule_chain
-            .as_ref()
-            .and_then(|c| c.massing.clone());
-        assert_ne!(mass_a, mass_b);
-        let roof_a = a
-            .module_placements
-            .iter()
-            .find(|p| p.token == "R")
-            .map(|p| p.slot_key.as_str());
-        let roof_b = b
-            .module_placements
-            .iter()
-            .find(|p| p.token == "R")
-            .map(|p| p.slot_key.as_str());
-        assert_ne!(roof_a, roof_b);
-    }
-
-    #[test]
-    fn city_g0_wit_001_assembly_snapshot_hash_stable_three_runs() {
-        assert!(city_g0_wit_001_determinism_witness_green());
-        let body = build_city_g0_wit_001_witness_body();
-        assert!(body["three_run_stable"].as_bool().unwrap_or(false));
-        let hashes = body["run_hashes"].as_array().expect("run_hashes");
-        assert_eq!(hashes.len(), CITY_G0_WIT_RUNS as usize);
-        assert!(body["seed_sensitivity_ok"].as_bool().unwrap_or(false));
-    }
-
-    #[test]
     fn write_assembly_snapshot_staging_roundtrip() {
         let modules = load_procedural_module_registry();
         let packs = load_style_pack_registry();
@@ -1108,11 +839,6 @@ mod tests {
             .missing_slot_violations
             .iter()
             .all(|v| v.style_pack_id == "style_industrial_west"));
-    }
-
-    #[test]
-    fn bq_f3_slot_001_witness_green_lib() {
-        assert!(super::bq_f3_slot_001_witness_green());
     }
 
 

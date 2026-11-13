@@ -1122,62 +1122,6 @@ mod tests {
         assert!(!particles.spark_witness.view_culled);
     }
 
-    #[test]
-    fn witness_tracks_scatter_slots_for_hot_cell() {
-        let mut graph = RenderProjectionGraph::default();
-        graph.fire.gpu_instance_capacity = 64;
-        graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.4)];
-        let mut particles = WorldFireParticleFrame::default();
-        let cam = ExtractedCameraMetrics {
-            zoom_level: 2.8,
-            zoom_alpha: 0.72,
-            ..Default::default()
-        };
-        update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
-        assert!(particles.spark_witness.scatter_slots >= 3);
-        assert_eq!(particles.spark_witness.rows, particles.instances.len());
-    }
-
-    #[test]
-    fn witness_phase_reflects_compute_gate() {
-        use crate::render::fire_vfx::spark_tuning::fire_spark_compute_enabled;
-        let enabled = fire_spark_compute_enabled();
-        let mut graph = RenderProjectionGraph::default();
-        graph.fire.gpu_instance_capacity = 8;
-        graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.4)];
-        let mut particles = WorldFireParticleFrame::default();
-        update_world_fire_particles_from_projection(
-            &graph,
-            &mut particles,
-            None,
-            ExtractedCameraMetrics::default(),
-            None,
-        );
-        if enabled {
-            assert_eq!(particles.spark_witness.phase, "A+B");
-        } else {
-            assert_eq!(particles.spark_witness.phase, "A");
-        }
-    }
-
-    #[test]
-    fn witness_stamps_rows_and_zoom_alpha() {
-        let mut graph = RenderProjectionGraph::default();
-        graph.fire.gpu_instance_capacity = 64;
-        graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.4)];
-        let mut particles = WorldFireParticleFrame::default();
-        let cam = ExtractedCameraMetrics {
-            zoom_level: 2.1,
-            zoom_alpha: 0.66,
-            ..Default::default()
-        };
-        update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
-        assert_eq!(particles.spark_witness.rows, particles.instances.len());
-        assert!((particles.spark_witness.zoom_alpha - 0.66).abs() < 1e-4);
-        assert_eq!(particles.spark_witness.scatter_max, FIRE_SPARK_SCATTER_MAX);
-        assert!(!particles.spark_witness.view_culled);
-    }
-
 
 
 

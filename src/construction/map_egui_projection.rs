@@ -191,84 +191,6 @@ pub fn map_zoom_screen_scale(
     zoom_screen_scale_for_camera(simulation_map_camera_from_authority(authority, desired))
 }
 
-/// Screen size of one world tile edge (for Syx-style occupation quads).
-#[must_use]
-pub fn tile_screen_extent(
-    authority: Option<&ViewProjectionAuthority>,
-    desired: &MapCameraDesired,
-    map_vp: &SimulationMapViewport,
-    params: &WorldGenParams,
-) -> f32 {
-    tile_screen_extent_rendered(None, authority, desired, map_vp, params)
-}
-
-#[must_use]
-pub fn tile_screen_extent_rendered(
-    ortho: Option<&MainWorldCameraOrthoTrace>,
-    authority: Option<&ViewProjectionAuthority>,
-    desired: &MapCameraDesired,
-    map_vp: &SimulationMapViewport,
-    params: &WorldGenParams,
-) -> f32 {
-    let proj = ConstructionMapProjection::resolve(authority, desired, map_vp, params);
-    let a = proj.world_to_screen_rendered(Vec3::new(0.5, 0.0, 0.5), ortho);
-    let b = proj.world_to_screen_rendered(Vec3::new(1.5, 0.0, 0.5), ortho);
-    match (a, b) {
-        // One map cell. A floor of `4 * zoom` drew quads larger than the cell and
-        // kept that extra size when the camera zoomed.
-        (Some(p0), Some(p1)) => (p1 - p0).length().max(1e-3),
-        _ => proj.zoom_screen_scale().max(1e-3),
-    }
-}
-
-/// VM-09 hotfix A — egui footprint projection path when GPU instancing is off.
-#[must_use]
-pub fn egui_footprint_hotfix_a_witness_green() -> bool {
-    use crate::gui::{MapCameraDesired, SimulationMapViewport};
-    use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-
-    let map_vp = SimulationMapViewport {
-        valid: true,
-        min: Vec2::new(80.0, 60.0),
-        max: Vec2::new(880.0, 540.0),
-        window_logical: Vec2::new(960.0, 600.0),
-        ..Default::default()
-    };
-    let params = WorldGenParams::default();
-    let desired = MapCameraDesired {
-        translation: Vec3::new(64.0, 64.0, 999.0),
-        scale: Vec3::splat(2.0),
-        ..Default::default()
-    };
-    let ext = tile_screen_extent(None, &desired, &map_vp, &params);
-    let zoomed = MapCameraDesired {
-        translation: Vec3::new(64.0, 64.0, 999.0),
-        scale: Vec3::splat(4.0),
-        ..Default::default()
-    };
-    let ext_zoom = tile_screen_extent(None, &zoomed, &map_vp, &params);
-    ext > 0.5
-        && (ext_zoom / ext - 2.0).abs() < 0.08
-        && world_to_sim_map_screen(Vec3::new(64.5, 0.0, 64.5), None, &desired, &map_vp, &params)
-            .is_some()
-}
-
-/// Map camera desired ↔ view camera roundtrip (MAP-PICK closure helper).
-#[must_use]
-pub fn map_camera_desired_view_camera_roundtrip_witness_green() -> bool {
-    use crate::gui::{view_camera_state_from_map_camera_desired, MapCameraDesired};
-
-    let desired = MapCameraDesired {
-        translation: Vec3::new(100.0, 200.0, 999.0),
-        scale: Vec3::splat(2.5),
-        ..Default::default()
-    };
-    let cam = view_camera_state_from_map_camera_desired(&desired);
-    let back = map_camera_desired_from_view_camera(cam);
-    (back.translation.truncate() - desired.translation.truncate()).length() < 1e-3
-        && (back.scale.x - desired.scale.x).abs() < 1e-3
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -296,53 +218,6 @@ mod tests {
         assert!((cam.zoom - 4.0).abs() < 1e-4);
     }
 
-    /// PLAY-BUILD-06: zoom changes tile screen extent; same world tile maps at both zoom levels.
-    #[test]
-    fn tile_projection_stable_under_zoom() {
-        use crate::gui::{MapCameraDesired, SimulationMapViewport};
-        use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-
-        let map_vp = SimulationMapViewport {
-            valid: true,
-            min: Vec2::new(80.0, 60.0),
-            max: Vec2::new(880.0, 540.0),
-            window_logical: Vec2::new(960.0, 600.0),
-            ..Default::default()
-        };
-        let params = WorldGenParams::default();
-        let world = Vec3::new(64.5, 0.0, 64.5);
-
-        let zoom_low = MapCameraDesired {
-            translation: Vec3::new(64.0, 64.0, 0.0),
-            scale: Vec3::splat(0.35),
-            ..Default::default()
-        };
-        let zoom_high = MapCameraDesired {
-            translation: Vec3::new(64.0, 64.0, 0.0),
-            scale: Vec3::splat(6.0),
-            ..Default::default()
-        };
-
-        let ext_low = tile_screen_extent(None, &zoom_low, &map_vp, &params);
-        let ext_high = tile_screen_extent(None, &zoom_high, &map_vp, &params);
-        assert!(
-            ext_low != ext_high,
-            "tile screen extent should change with zoom: low={ext_low} high={ext_high}"
-        );
-
-        let proj_low = ConstructionMapProjection::resolve(None, &zoom_low, &map_vp, &params);
-        let proj_high = ConstructionMapProjection::resolve(None, &zoom_high, &map_vp, &params);
-        let screen_low = proj_low.world_to_screen(world).expect("low");
-        let screen_high = proj_high.world_to_screen(world).expect("high");
-        assert!((screen_low - screen_high).length() > 1.0);
-
-        let center = map_vp.min + (map_vp.max - map_vp.min) * 0.5;
-        let back_low = proj_low.cursor_world_xy(center).expect("roundtrip low");
-        let back_high = proj_high.cursor_world_xy(center).expect("roundtrip high");
-        let world_xy = Vec2::new(world.x, world.z);
-        assert!(back_low.distance(world_xy) < 80.0);
-        assert!(back_high.distance(world_xy) < 80.0);
-    }
 }
 
 pub use world_to_sim_map_screen as world_to_sim_map_egui;

@@ -5,7 +5,7 @@ use bevy::prelude::*;
 use crate::engine::states::BaseState;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix, WaterClass};
 
-use super::registry::{WorldSubstrateRegistry, WssSubstrateWitness};
+use super::registry::{WorldSubstrateRegistry, WssSubstrateStats};
 use super::slab::ChunkKey;
 use super::types::{hydrate_skeleton_chunk, substrate_cell_count, WorldChunkState};
 
@@ -57,7 +57,7 @@ pub fn hydrate_chunk_into_substrate(
 /// Simulation: hydrate from live chunk entities; skeleton fallback when none spawned yet.
 pub fn sync_substrate_hydrate_system(
     base: Res<State<BaseState>>,
-    mut witness: ResMut<WssSubstrateWitness>,
+    mut witness: ResMut<WssSubstrateStats>,
     mut registry: ResMut<WorldSubstrateRegistry>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     mut skeleton_bootstrapped: Local<bool>,

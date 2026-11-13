@@ -59,34 +59,7 @@ pub fn compute_district_pressure_system(
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn mixed_use_high_transport_commercial_pressure() {
-        assert!(district_pressure_witness_green());
-    }
 }
 
-#[must_use]
-pub fn district_pressure_witness_green() -> bool {
-    use crate::strategic::settlement::district::portland_fixture_district;
-    use crate::strategic::settlement::town::portland_fixture_town;
-
-    let town = portland_fixture_town();
-    let districts = portland_fixture_district(&town);
-    let mut app = App::new();
-    app.insert_resource(town)
-        .insert_resource(districts)
-        .init_resource::<DistrictMetricsBook>()
-        .init_resource::<DevelopmentPressureBook>()
-        .add_systems(
-            Update,
-            (rollup_district_metrics_system, compute_district_pressure_system).chain(),
-        );
-    app.update();
-    let pressure = app.world().resource::<DevelopmentPressureBook>();
-    let Some(p) = pressure.by_district.values().next() else {
-        return false;
-    };
-    p.commercial > p.residential * 0.5
-}

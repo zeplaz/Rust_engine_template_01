@@ -30,9 +30,7 @@ pub use view_state::{MapViewInstances, MapViewState};
 pub use widgets::{map_toolbar, map_toolbar_minimap_zoom, map_toolbar_preview_zoom, MapToolbarConfig};
 pub use projection::ResolvedMapViewFrames;
 pub use resolved::ResolvedMapViewFrame;
-pub use texture_cache::{
-    reset_map_view_texture_frame, MapViewTextureBinding, MapViewTextureCache,
-};
+pub use texture_cache::MapViewTextureCache;
 
 #[cfg(test)]
 mod tests {

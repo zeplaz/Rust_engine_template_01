@@ -150,15 +150,6 @@ pub fn sync_voxel_massing_visual_requests(
     requests.massing_columns = columns_from_footprint_tiles(&ghost_tiles, floors);
 }
 
-/// Witness helper — presentation path is wired when requests carry the field.
-#[must_use]
-pub fn voxel_massing_presentation_witness_green() -> bool {
-    include_str!("visual_authority.rs").contains("massing_columns")
-        && include_str!("voxel_massing.rs").contains("sync_voxel_massing_visual_requests")
-        && include_str!("voxel_massing.rs").contains("is_pixel_world")
-        && include_str!("world_map_frame.rs").contains("massing_columns")
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -201,8 +192,4 @@ mod tests {
         assert_eq!(cols[0].tile, IVec2::new(1, 2));
     }
 
-    #[test]
-    fn presentation_witness_strings_present() {
-        assert!(voxel_massing_presentation_witness_green());
-    }
 }

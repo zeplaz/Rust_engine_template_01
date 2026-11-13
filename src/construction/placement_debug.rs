@@ -16,7 +16,7 @@ use crate::construction::build_interaction::placement_snapshot_for_building;
 use crate::construction::build_state::BuildGhostState;
 use crate::construction::build_tool_authority::ActiveBuildTool;
 use crate::construction::building_definitions::BuildingDefinitionRegistry;
-use crate::construction::footprint_tile_instances::FootprintTileWitness;
+use crate::construction::footprint_tile_instances::FootprintTileStats;
 use crate::construction::map_egui_projection::ConstructionMapProjection;
 use crate::engine::launch_args::EngineLaunchArgs;
 use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
@@ -96,189 +96,6 @@ pub struct ConstructionPlacementDebugProbe {
     pub projection_visible_wh: Option<Vec2>,
 }
 
-/// Green threshold for cam vs manual pick (world units).
-pub const MAP_PICK_DELTA_WORLD_MAX: f32 = 1.0;
-/// Green threshold for ghost draw vs camera project (logical px).
-pub const MAP_PICK_GHOST_SCREEN_DELTA_PX_MAX: f32 = 4.0;
-
-impl ConstructionPlacementDebugProbe {
-    /// Runtime overlay metrics — requires active ghost + pointer in play area.
-    #[must_use]
-    #[allow(dead_code)] // egui-retired; kept for Bevy port / export
-    pub fn runtime_map_pick_closure_green(&self) -> bool {
-        self.pointer_in_play_area
-            && !self.egui_blocks
-            && self.ghost_tile.is_some()
-            && self
-                .pick_delta_world
-                .is_some_and(|d| d < MAP_PICK_DELTA_WORLD_MAX)
-            && self
-                .ghost_delta_camera_vs_egui_px
-                .is_some_and(|d| d < MAP_PICK_GHOST_SCREEN_DELTA_PX_MAX)
-            && self
-                .cursor_reproject_delta_px
-                .is_some_and(|d| d < MAP_PICK_GHOST_SCREEN_DELTA_PX_MAX)
-    }
-}
-
-/// ⟨TRIAGE-MAP-PICK-CLOSURE-001⟩ — lib math witness (no sim required).
-#[must_use]
-pub fn map_pick_closure_lib_witness_green() -> bool {
-    crate::gui::map_pick_closure_math_witness_green()
-        && crate::construction::map_egui_projection::map_camera_desired_view_camera_roundtrip_witness_green()
-        && crate::construction::map_egui_projection::egui_footprint_hotfix_a_witness_green()
-}
-
-#[derive(Clone, Copy, Debug)]
-struct ConstructionPlacementWitnessSample {
-    pick_tile: (u32, u32),
-    pick_delta_world: f32,
-    cursor_reproject_delta_px: f32,
-}
-
-fn construction_placement_001_self_check(
-) -> Result<ConstructionPlacementWitnessSample, &'static str> {
-    if !map_pick_closure_lib_witness_green() {
-        return Err("map_pick_lib");
-    }
-
-    use crate::gui::{
-        sim_map_screen_to_world_xy, sim_map_world_xy_to_screen, MapCameraDesired,
-        SimulationMapViewport,
-    };
-
-    let mut vp = SimulationMapViewport::default();
-    vp.valid = true;
-    vp.min = Vec2::new(100.0, 50.0);
-    vp.max = Vec2::new(900.0, 550.0);
-    let world_w = 4096.0;
-    let world_h = 4096.0;
-    let desired = MapCameraDesired {
-        translation: Vec3::new(2048.0, 2048.0, 999.0),
-        scale: Vec3::splat(2.0),
-        ..Default::default()
-    };
-    let world = Vec2::new(12.5, 8.5);
-    let screen = sim_map_world_xy_to_screen(world, &desired, &vp, world_w, world_h)
-        .ok_or("world_to_screen")?;
-    let back = sim_map_screen_to_world_xy(
-        Vec2::new(screen.x, screen.y),
-        &desired,
-        &vp,
-        world_w,
-        world_h,
-    )
-    .ok_or("screen_to_world")?;
-    let pick_delta_world = (back - world).length();
-    if pick_delta_world > MAP_PICK_DELTA_WORLD_MAX {
-        return Err("pick_delta_world");
-    }
-    let screen2 =
-        sim_map_world_xy_to_screen(back, &desired, &vp, world_w, world_h).ok_or("reproject")?;
-    let cursor_reproject_delta_px = Vec2::new(screen.x - screen2.x, screen.y - screen2.y).length();
-    if cursor_reproject_delta_px > MAP_PICK_GHOST_SCREEN_DELTA_PX_MAX {
-        return Err("cursor_reproject_delta");
-    }
-
-    Ok(ConstructionPlacementWitnessSample {
-        pick_tile: (world.x.floor() as u32, world.y.floor() as u32),
-        pick_delta_world,
-        cursor_reproject_delta_px,
-    })
-}
-
-/// **CONSTRUCTION-PLACEMENT-001** — lib placement / MAP-PICK closure witness (MCP validate-report).
-#[must_use]
-pub fn construction_placement_001_witness_green() -> bool {
-    construction_placement_001_self_check().is_ok()
-}
-
-/// Witness body for `debug_runs/construction_placement_live.json`.
-#[must_use]
-pub fn construction_placement_001_witness_json() -> serde_json::Value {
-    let sample = construction_placement_001_self_check().ok();
-    let lib_green = sample.is_some();
-    let footprint_projection_ok =
-        crate::construction::map_egui_projection::egui_footprint_hotfix_a_witness_green()
-            && crate::gui::map_pick_closure_math_witness_green();
-    let map_pick_green = lib_green && footprint_projection_ok;
-    let (pick_tile, ghost_tile, cursor_delta_px, cursor_reproject_delta_px) =
-        if let Some(s) = sample {
-            (
-                [s.pick_tile.0, s.pick_tile.1],
-                [s.pick_tile.0, s.pick_tile.1],
-                s.pick_delta_world,
-                s.cursor_reproject_delta_px,
-            )
-        } else {
-            ([0, 0], [0, 0], f32::NAN, f32::NAN)
-        };
-
-    serde_json::json!({
-        "gate": "TRIAGE-MAP-PICK-CLOSURE-001",
-        "green": map_pick_green,
-        "lib_green": lib_green,
-        "footprint_projection_ok": footprint_projection_ok,
-        "cursor_delta_px": cursor_delta_px,
-        "cursor_reproject_delta_px": cursor_reproject_delta_px,
-        "gpu_path_active": false,
-        "gpu_footprint_active": false,
-        "authority_drift": false,
-        "pick_tile": pick_tile,
-        "ghost_origin": pick_tile,
-        "ghost_tile": ghost_tile,
-        "map_pick_closure_001": {
-            "green": map_pick_green,
-            "footprint_projection_ok": footprint_projection_ok,
-            "pick_delta_world_max": MAP_PICK_DELTA_WORLD_MAX,
-        },
-        "placement_debug_wired": build_read_debug_001_witness_green(),
-        "source_module": "src/construction/placement_debug.rs",
-    })
-}
-
-/// **BUILD-READ-DEBUG-001** — placement debug triage fields wired for Adjust mode.
-#[must_use]
-pub fn build_read_debug_001_witness_green() -> bool {
-    build_read_debug_001_self_check().is_ok()
-}
-
-#[must_use]
-pub fn build_verify_debug_001_witness_json() -> serde_json::Value {
-    serde_json::json!({
-        "gate": "BUILD-VERIFY-DEBUG-001",
-        "green": build_read_debug_001_witness_green(),
-        "cursor_visible": true,
-        "pick_world_wired": true,
-        "click_screen_wired": true,
-        "action_tile_wired": true,
-        "scale_factor_wired": true,
-        "weight_tile_count_wired": true,
-    })
-}
-
-fn build_read_debug_001_self_check() -> Result<(), &'static str> {
-    let probe = ConstructionPlacementDebugProbe {
-        cursor_visible: true,
-        pick_world: Some(Vec2::ZERO),
-        click_screen: Some(Vec2::ONE),
-        action_tile: Some((1, 2)),
-        scale_factor: 1.24,
-        weight_tile_count: 11,
-        ..Default::default()
-    };
-    if !probe.cursor_visible {
-        return Err("cursor_visible");
-    }
-    if probe.pick_world.is_none() || probe.click_screen.is_none() || probe.action_tile.is_none() {
-        return Err("triage_fields");
-    }
-    if (probe.scale_factor - 1.24).abs() > f32::EPSILON || probe.weight_tile_count != 11 {
-        return Err("scale_weight");
-    }
-    Ok(())
-}
-
 pub fn sync_construction_placement_debug_probe(
     win: Query<&Window, With<PrimaryWindow>>,
     authority: Option<Res<ViewProjectionAuthority>>,
@@ -289,7 +106,7 @@ pub fn sync_construction_placement_debug_probe(
     ghost: Res<BuildGhostState>,
     ortho: Res<MainWorldCameraOrthoTrace>,
     globals: Option<Res<TileDebugDrawGlobals>>,
-    footprint: Option<Res<FootprintTileWitness>>,
+    footprint: Option<Res<FootprintTileStats>>,
     site_stub: Option<Res<super::site_stub_overlay::SiteStubOverlayState>>,
     tool: Res<ActiveBuildTool>,
     registry: Res<BuildingDefinitionRegistry>,

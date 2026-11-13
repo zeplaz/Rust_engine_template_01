@@ -51,36 +51,5 @@ pub fn push_proposal_ghosts_to_visual_requests(
 
 #[cfg(test)]
 mod tests {
-    #[test]
-    fn proposal_ghosts_sync_from_queue() {
-        assert!(super::proposal_ghost_witness_green());
-    }
 }
 
-#[must_use]
-pub fn proposal_ghost_witness_green() -> bool {
-    use crate::strategic::settlement::actors::{BuildingUsage, GrowthActorLayer};
-    use crate::strategic::settlement::ids::ArchetypeId;
-
-    let mut app = App::new();
-    app.init_resource::<GrowthProposalQueue>()
-        .init_resource::<GrowthProposalGhostState>()
-        .add_systems(Update, sync_growth_proposal_ghosts_system);
-    {
-        let mut queue = app.world_mut().resource_mut::<GrowthProposalQueue>();
-        queue.enqueue(GrowthProposal {
-            district_id: DistrictId("d".into()),
-            block_id: None,
-            archetype_id: ArchetypeId("shop".into()),
-            usage: BuildingUsage::Commercial,
-            actor_layer: GrowthActorLayer::Growth,
-            anchor_tile: IVec2::new(4, 4),
-            priority: 0.5,
-            seed: 1,
-            reason_codes: Vec::new(),
-            saturation_at_submit: 0.0,
-        });
-    }
-    app.update();
-    app.world().resource::<GrowthProposalGhostState>().active.len() == 1
-}

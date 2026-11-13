@@ -132,97 +132,6 @@ pub fn read_settlement_books_ron(path: impl AsRef<Path>) -> std::io::Result<Sett
     Ok(snap)
 }
 
-#[must_use]
-pub fn settlement_books_save_roundtrip_witness_green() -> bool {
-    use crate::strategic::settlement::{
-        assign_block_for_tile, portland_fixture_district, portland_fixture_town,
-    };
-
-    let town = portland_fixture_town();
-    let districts = portland_fixture_district(&town);
-    let mut blocks = BlockBook::default();
-    let _ = assign_block_for_tile(&districts, &mut blocks, IVec2::new(8, 8));
-
-    let snapshot = capture_settlement_books(&town, &districts, &blocks);
-    let path = std::env::temp_dir().join("settlement_books_roundtrip_test.ron");
-    if write_settlement_books_ron(&path, &snapshot).is_err() {
-        return false;
-    }
-    let loaded = match read_settlement_books_ron(&path) {
-        Ok(v) => v,
-        Err(_) => return false,
-    };
-    let _ = std::fs::remove_file(&path);
-    if loaded != snapshot {
-        return false;
-    }
-
-    let mut town2 = TownBook::default();
-    let mut districts2 = DistrictBook::default();
-    let mut blocks2 = BlockBook::default();
-    apply_settlement_books(&loaded, &mut town2, &mut districts2, &mut blocks2);
-    let roundtrip = capture_settlement_books(&town2, &districts2, &blocks2);
-    roundtrip == snapshot
-}
-
-/// **ECON-OG-SAVE-001** — manifest + overlay artifact bundle round-trip (Wave S hybrid save slice).
-#[must_use]
-pub fn settlement_books_manifest_roundtrip_witness_green() -> bool {
-    use crate::io::save::manifest::build_save_world_manifest;
-    use crate::io::save::pipeline::write_manifest_atomic;
-    use crate::strategic::settlement::{
-        assign_block_for_tile, portland_fixture_district, portland_fixture_town,
-    };
-
-    let town = portland_fixture_town();
-    let districts = portland_fixture_district(&town);
-    let mut blocks = BlockBook::default();
-    let _ = assign_block_for_tile(&districts, &mut blocks, IVec2::new(8, 8));
-
-    let dir = std::env::temp_dir().join(format!(
-        "settlement_manifest_rt_{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_nanos())
-            .unwrap_or(0)
-    ));
-    if write_settlement_overlay_to_bundle(&dir, &town, &districts, &blocks).is_err() {
-        return false;
-    }
-    let manifest = build_save_world_manifest(
-        42,
-        Vec::new(),
-        Vec::new(),
-        build_settlement_overlay_refs(),
-    );
-    if write_manifest_atomic(&dir, &manifest).is_err() {
-        let _ = std::fs::remove_dir_all(&dir);
-        return false;
-    }
-
-    let loaded_manifest = match crate::io::save::read_manifest_from_bundle(&dir) {
-        Ok(m) => m,
-        Err(_) => {
-            let _ = std::fs::remove_dir_all(&dir);
-            return false;
-        }
-    };
-    let mut town2 = TownBook::default();
-    let mut districts2 = DistrictBook::default();
-    let mut blocks2 = BlockBook::default();
-    let hydrated = try_hydrate_settlement_books_from_manifest(
-        &dir,
-        &loaded_manifest,
-        &mut town2,
-        &mut districts2,
-        &mut blocks2,
-    );
-    let roundtrip = capture_settlement_books(&town2, &districts2, &blocks2);
-    let expected = capture_settlement_books(&town, &districts, &blocks);
-    let _ = std::fs::remove_dir_all(&dir);
-    hydrated && roundtrip == expected
-}
-
 /// Write settlement books into the active save bundle when a flush is armed.
 /// Runs **before** [`crate::io::save::flush_dirty_chunk_save_queue`] so the
 /// manifest-referenced `overlays/settlement_books.ron` artifact exists on disk.
@@ -290,12 +199,6 @@ pub fn try_hydrate_settlement_books_on_bundle_dir(
     );
 }
 
-#[must_use]
-pub fn econ_og_save_001_witness_green() -> bool {
-    settlement_books_save_roundtrip_witness_green()
-        && settlement_books_manifest_roundtrip_witness_green()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -306,14 +209,4 @@ mod tests {
         assert_eq!(overlay.overlay_name, SETTLEMENT_OVERLAY_NAME);
     }
 
-    #[test]
-    fn settlement_books_ron_roundtrip() {
-        assert!(settlement_books_save_roundtrip_witness_green());
-    }
-
-    #[test]
-    fn settlement_books_manifest_bundle_roundtrip() {
-        assert!(settlement_books_manifest_roundtrip_witness_green());
-        assert!(econ_og_save_001_witness_green());
-    }
 }

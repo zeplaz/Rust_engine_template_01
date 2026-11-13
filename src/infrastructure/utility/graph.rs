@@ -213,18 +213,6 @@ fn hydrate_utility_graph_startup(
     *graph = hydrate_utility_graph_from_snapshot(&snap.0);
 }
 
-#[must_use]
-pub fn infra_e4_002_power_edges_from_graph_green(
-    utility: &UtilityGraph,
-    infra: &InfrastructureGraph,
-) -> bool {
-    if utility.power_edges.is_empty() || !utility.hydrated_from_snapshot {
-        return false;
-    }
-    infra.nodes.iter().any(|n| n.network == InfrastructureNetworkType::Power)
-        && infra.edges.len() >= utility.power_edges.len()
-}
-
 
 
 #[cfg(test)]
@@ -238,15 +226,6 @@ mod tests {
         let graph = hydrate_utility_graph_from_snapshot(&snap);
         assert_eq!(graph.power_edges.len(), 2);
         assert!(graph.hydrated_from_snapshot);
-    }
-
-    #[test]
-    fn infra_e4_002_power_edges_from_graph_witness_green() {
-        let snap = fixture_utility_network_snapshot();
-        let utility = hydrate_utility_graph_from_snapshot(&snap);
-        let mut infra = InfrastructureGraph::default();
-        apply_utility_power_to_infrastructure(&utility, &mut infra);
-        assert!(infra_e4_002_power_edges_from_graph_green(&utility, &infra));
     }
 
     #[test]

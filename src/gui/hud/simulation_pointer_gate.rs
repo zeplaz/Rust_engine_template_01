@@ -241,9 +241,6 @@ type PointerBlockingPanelRoots = Or<(
     With<crate::gui::editor::map_editor::MapEditorBevyShell>,
     With<crate::construction::RoadToolPopupBevyRoot>,
     With<crate::gui::ai_explainability_ui::AiExplainabilityBevyRoot>,
-    With<crate::gui::pressure_tooling::PressureComposerBevyRoot>,
-    With<crate::gui::assembly_snapshot_qc_ui::AssemblySnapshotQcBevyRoot>,
-    With<crate::gui::diagnostics_ui::DiagnosticsBevyRoot>,
     With<crate::gui::options_keybindings_ui::KeybindingsBevyRoot>,
     With<crate::gui::logistics_orders_panel::LogisticsOrdersBevyRoot>,
     With<crate::gui::logistics_targets_panel::LogisticsTargetsBevyRoot>,
@@ -406,30 +403,6 @@ pub fn map_wheel_play_area_allowed(
     }
 }
 
-#[inline]
-fn sim_build_rail_submenu_blocks_pointer(
-    strip: &BuildStripState,
-    tool: &ActiveBuildTool,
-    picker: &crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState,
-    left_stack: &CommandLeftStackState,
-    cursor: Vec2,
-) -> bool {
-    if strip.active == ToolContext::None {
-        return false;
-    }
-    if !picker.open
-        && !tool.residential_menu_open
-        && !tool.commercial_menu_open
-        && !tool.industrial_menu_open
-        && !tool.utilities_menu_open
-        && !tool.mock_shapes_menu_open
-    {
-        return false;
-    }
-    sim_build_rail_submenu_block_rect(picker, left_stack.collapsed)
-        .contains(bevy::prelude::Vec2::new(cursor.x, cursor.y))
-}
-
 /// **TRIAGE-CURSOR-UNIFY-001** / design_build_ux §5 — placement active when strip or tool selected.
 #[inline]
 #[must_use]
@@ -492,68 +465,6 @@ pub fn armed_play_area_hides_os_cursor(
     matches!(base, BaseState::Simulation) && build_placement_active && in_play_area
 }
 
-/// **TRIAGE-CURSOR-UNIFY-001** — build-scoped hide + rail continuity + idle show.
-#[must_use]
-pub fn triage_cursor_unify_001_witness_green() -> bool {
-    triage_cursor_unify_001_self_check().is_ok()
-}
-
-fn triage_cursor_unify_001_self_check() -> Result<(), &'static str> {
-    let strip_idle = BuildStripState {
-        active: ToolContext::None,
-        ..Default::default()
-    };
-    let strip_roads = BuildStripState {
-        active: ToolContext::Roads,
-        ..Default::default()
-    };
-    let left = CommandLeftStackState { collapsed: true };
-    let play = Vec2::new(640.0, 400.0);
-    let rail = Vec2::new(20.0, 200.0);
-    let ops = Vec2::new(640.0, 10.0);
-
-    if !simulation_build_placement_active(&strip_roads, None) {
-        return Err("strip_active_is_placement");
-    }
-    if simulation_build_placement_active(&strip_idle, None) {
-        return Err("idle_strip_not_placement");
-    }
-    // Idle sim: never hide (fixes always-on play-area hide glitch).
-    if simulation_unified_cursor_hide_os(BaseState::Simulation, false, true) {
-        return Err("idle_show_play");
-    }
-    // Build + play → hide.
-    if !simulation_unified_cursor_hide_os(BaseState::Simulation, true, true) {
-        return Err("hide_build_play");
-    }
-    // Build + left rail → hide (continuous with play — no OS pop-in).
-    if !simulation_unified_cursor_hide_region(rail, &left, false) {
-        return Err("rail_is_hide_region");
-    }
-    if !simulation_unified_cursor_hide_os(
-        BaseState::Simulation,
-        true,
-        simulation_unified_cursor_hide_region(rail, &left, false),
-    ) {
-        return Err("hide_build_rail");
-    }
-    // Build + ops strip → show OS (not a hide region).
-    if simulation_unified_cursor_hide_region(ops, &left, false) {
-        return Err("ops_not_hide_region");
-    }
-    if simulation_unified_cursor_hide_os(BaseState::Simulation, true, false) {
-        return Err("show_build_non_hide");
-    }
-    if simulation_unified_cursor_hide_os(BaseState::MainMenu, true, true) {
-        return Err("show_menu");
-    }
-    // Sanity: play sample is hide-region when in_play_area.
-    if !simulation_unified_cursor_hide_region(play, &left, true) {
-        return Err("play_hide_region");
-    }
-    Ok(())
-}
-
 pub fn apply_simulation_unified_cursor_system(
     base: Res<State<BaseState>>,
     mut gate: ResMut<SimulationMapPointerGate>,
@@ -562,7 +473,6 @@ pub fn apply_simulation_unified_cursor_system(
     strip: Option<Res<BuildStripState>>,
     picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
     tool: Option<Res<ActiveBuildTool>>,
-    diagnostics: Option<Res<crate::gui::DiagnosticsUiState>>,
     keybindings: Option<Res<crate::gui::KeybindingsUiState>>,
     logistics_orders: Option<Res<crate::gui::LogisticsOrdersPanelState>>,
     logistics_targets: Option<Res<crate::gui::LogisticsTargetsPanelState>>,
@@ -578,11 +488,10 @@ pub fn apply_simulation_unified_cursor_system(
             || t.utilities_menu_open
             || t.mock_shapes_menu_open
     });
-    let diag_open = diagnostics.as_ref().is_some_and(|d| d.visible);
     let keys_open = keybindings.as_ref().is_some_and(|k| k.visible);
     let logi_open = logistics_orders.as_ref().is_some_and(|p| p.visible)
         || logistics_targets.as_ref().is_some_and(|p| p.visible);
-    let menu_open = picker_open || tool_menus || diag_open || keys_open || logi_open || gate.egui_blocks;
+    let menu_open = picker_open || tool_menus || keys_open || logi_open || gate.egui_blocks;
 
     let build_active = strip
         .as_ref()
@@ -682,38 +591,6 @@ pub fn cursor_in_simulation_map_play_area(
         return false;
     }
     !simulation_chrome_blocks_map_pointer(cursor, window_logical, left_stack, minimap, context_tray)
-}
-
-/// **BUILD-VERIFY-POINTER-001** — lib witness: build rail submenu blocks map picks.
-#[must_use]
-pub fn build_verify_pointer_001_witness_green() -> bool {
-    let strip = BuildStripState {
-        active: ToolContext::Industry,
-        ..Default::default()
-    };
-    let tool = ActiveBuildTool {
-        industrial_menu_open: true,
-        ..Default::default()
-    };
-    let picker = crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState {
-        open: true,
-        category: crate::gui::hud::sim_build_picker_sheet::BuildPickerCategory::Industry,
-        anchor_slot: ToolContext::Industry,
-    };
-    let left_stack = CommandLeftStackState { collapsed: true };
-    let rect = sim_build_rail_submenu_block_rect(&picker, left_stack.collapsed);
-    let cursor = Vec2::new(rect.center().x, rect.center().y);
-    sim_build_rail_submenu_blocks_pointer(&strip, &tool, &picker, &left_stack, cursor)
-}
-
-#[must_use]
-pub fn build_verify_pointer_001_witness_json() -> serde_json::Value {
-    serde_json::json!({
-        "gate": "BUILD-VERIFY-POINTER-001",
-        "green": build_verify_pointer_001_witness_green(),
-        "pick_blocked_under_toolbox": build_verify_pointer_001_witness_green(),
-        "build_toolbox_submenu_rect_wired": true,
-    })
 }
 
 #[cfg(test)]

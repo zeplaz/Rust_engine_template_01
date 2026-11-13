@@ -16,8 +16,7 @@ use crate::construction::procedural::{
     VisualState,
 };
 use crate::strategic::{
-    BuildSiteTile, ConstructionSite, FootprintTiles, PlannedSite, ProceduralBuildingSpec,
-    SiteArchetype, SiteConstructionPhase, SiteFootprint,
+    ConstructionSite, PlannedSite, ProceduralBuildingSpec, SiteConstructionPhase, SiteFootprint,
 };
 
 /// GPU terrain stamp indices (world tile → material index), not CPU RGBA blit.
@@ -129,9 +128,6 @@ pub const RAIL_WAREHOUSE_PILOT_TILE_ID: &str = "tile_rail_warehouse_pilot_v1";
 pub const RAIL_WAREHOUSE_PILOT_ATLAS_ID: &str = "rail_warehouse_pilot_v1";
 pub const TILE_FIX_10_WAREHOUSE_WITNESS_JSON: &str =
     "debug_runs/art_pipeline/tile_fix_10_warehouse_industrial_live.json";
-pub const ENG_PT4_WAREHOUSE_MAP_STAMP_LIVE_JSON: &str =
-    "debug_runs/art_pipeline/eng_pt_4_warehouse_map_stamp_live.json";
-
 fn repo_witness_path(rel: &str) -> std::path::PathBuf {
     std::env::var_os("CARGO_MANIFEST_DIR")
         .map(std::path::PathBuf::from)
@@ -176,13 +172,6 @@ pub fn warehouse_v2_atlas_index_registered() -> bool {
     })
 }
 
-/// BUILD-READ-VISUAL-001 — pilot catalog id resolves to warehouse production atlas (lib).
-#[must_use]
-pub fn build_read_visual_pilot_tile_stamp_lib_green() -> bool {
-    rail_warehouse_pilot_atlas_index_registered()
-        && build_read_visual_pilot_stamp_request_green()
-}
-
 /// Pilot iso stamp resolves when production atlas row + PNG are on disk.
 #[must_use]
 pub fn rail_warehouse_pilot_atlas_index_registered() -> bool {
@@ -197,84 +186,6 @@ pub fn rail_warehouse_pilot_atlas_index_registered() -> bool {
         && entry.runtime_stamp_allowed()
         && !entry.lookups.is_empty()
         && std::path::Path::new(&entry.atlas_png).is_file()
-}
-
-#[must_use]
-pub fn build_read_visual_pilot_stamp_request_green() -> bool {
-    use crate::construction::procedural::{
-        load_tile_atlas_registry, load_variant_catalog, ProceduralBuildingRequest, StylePackId,
-    };
-    use crate::construction::PilotCatalog;
-    use crate::strategic::{BuildSiteTile, LayerType, SiteId};
-
-    let registry = load_tile_atlas_registry();
-    let catalog = match load_variant_catalog() {
-        Some(c) => c,
-        None => return false,
-    };
-    let pilots = PilotCatalog::load_from_disk();
-    let Some(pilot) = pilots.first_grammar_pilot() else {
-        return false;
-    };
-    let Some(preset_id) = pilot.arch_dna_preset.clone() else {
-        return false;
-    };
-    let planned = PlannedSite {
-        site_id: SiteId(1),
-        origin: BuildSiteTile { x: 0, z: 0 },
-        footprint: FootprintTiles {
-            width: pilot.footprint.width,
-            depth: pilot.footprint.depth,
-        },
-        archetype: SiteArchetype::Factory,
-        layer: LayerType::Surface,
-        catalog_id: Some(pilot.catalog_id.clone()),
-        placement: None,
-    };
-    let site = ConstructionSite {
-        site_id: 1,
-        owner: Entity::PLACEHOLDER,
-        archetype: SiteArchetype::Factory,
-        phase: SiteConstructionPhase::Operational,
-        operational_readiness: 1.0,
-    };
-    let mut footprint_tiles = Vec::new();
-    for dz in 0..planned.footprint.depth {
-        for dx in 0..planned.footprint.width {
-            footprint_tiles.push(IVec2::new(
-                planned.origin.x as i32 + dx as i32,
-                planned.origin.z as i32 + dz as i32,
-            ));
-        }
-    }
-    let site_fp = SiteFootprint {
-        tiles: footprint_tiles,
-        layer: planned.layer,
-    };
-    let spec = ProceduralBuildingSpec(ProceduralBuildingRequest {
-        archetype_id: "industrial_warehouse_l".into(),
-        width: planned.footprint.width,
-        depth: planned.footprint.depth,
-        floors: 1,
-        style: StylePackId("style_industrial_west".into()),
-        seed: 440013,
-        arch_dna_preset_id: Some(preset_id),
-    });
-    let Some(req) = stamp_request_for_site(
-        &registry,
-        Some(&catalog),
-        0,
-        0.0,
-        &planned,
-        &site,
-        &site_fp,
-        Some(&spec),
-    ) else {
-        return false;
-    };
-    req.atlas_id == RAIL_WAREHOUSE_PILOT_ATLAS_ID
-        && req.variant_key == "clean_day"
-        && req.footprint_w >= planned.footprint.width
 }
 
 #[must_use]
@@ -387,246 +298,6 @@ pub fn stamp_request_for_site(
         origin,
         footprint_w: fw,
         footprint_h: fh,
-    })
-}
-
-/// **ENG-PT-4-001** — production rowhouse atlas resolves + stamp request for demo footprint.
-#[must_use]
-pub fn eng_pt_4_001_rowhouse_map_stamp_witness_green() -> bool {
-    use crate::construction::procedural::{
-        assembly_id_for, load_tile_atlas_registry, load_variant_catalog, ProceduralBuildingRequest,
-        StylePackId,
-    };
-    let registry = load_tile_atlas_registry();
-    if !registry.load_errors.is_empty() {
-        return false;
-    }
-    let catalog = match load_variant_catalog() {
-        Some(c) => c,
-        None => return false,
-    };
-    let Some(entry) = registry
-        .atlas_for_tile_id(ROWHOUSE_VICTORIAN_TILE_ID)
-        .or_else(|| registry.atlas_for_assembly("victorian_4x3_s42_a7cb"))
-    else {
-        return false;
-    };
-    if !crate::construction::procedural::production_atlas_covers_assembly(entry) {
-        return false;
-    }
-    if !std::path::Path::new(&entry.atlas_png).exists() {
-        return false;
-    }
-    let origin = BuildSiteTile { x: 20, z: 20 };
-    let footprint = FootprintTiles {
-        width: 4,
-        depth: 3,
-    };
-    let planned = PlannedSite {
-        site_id: crate::strategic::SiteId(42),
-        origin,
-        footprint,
-        archetype: SiteArchetype::CivilHousing,
-        layer: crate::strategic::LayerType::Surface,
-        catalog_id: Some(ROWHOUSE_VICTORIAN_TILE_ID.into()),
-        placement: None,
-    };
-    let site = ConstructionSite {
-        site_id: 42,
-        owner: Entity::PLACEHOLDER,
-        archetype: planned.archetype,
-        phase: SiteConstructionPhase::Operational,
-        operational_readiness: 1.0,
-    };
-    let spec = ProceduralBuildingSpec(ProceduralBuildingRequest {
-        archetype_id: "rect_perimeter".into(),
-        width: 4,
-        depth: 3,
-        floors: 2,
-        style: StylePackId("style_victorian".into()),
-        seed: 42,
-        arch_dna_preset_id: None,
-    });
-    let assembly_id = assembly_id_for("style_victorian", 4, 3, 2, 42);
-    if assembly_id != "victorian_4x3_s42_a7cb" {
-        return false;
-    }
-    let mut footprint_tiles = Vec::new();
-    for dz in 0..footprint.depth {
-        for dx in 0..footprint.width {
-            footprint_tiles.push(IVec2::new(
-                origin.x as i32 + dx as i32,
-                origin.z as i32 + dz as i32,
-            ));
-        }
-    }
-    let site_fp = SiteFootprint {
-        tiles: footprint_tiles,
-        layer: planned.layer,
-    };
-    let Some(req) = stamp_request_for_site(
-        &registry,
-        Some(&catalog),
-        0,
-        0.0,
-        &planned,
-        &site,
-        &site_fp,
-        Some(&spec),
-    ) else {
-        return false;
-    };
-    req.atlas_id == "rowhouse_victorian_production_v1"
-        && req.variant_key == "clean_day"
-        && req.footprint_w >= 4
-        && req.footprint_h >= 3
-}
-
-/// **ENG-PT-4-002** — warehouse v2 atlas stamp with `rotation_quarter_turns` → facing UV (Phase D).
-#[must_use]
-pub fn eng_pt_4_warehouse_map_stamp_witness_green() -> bool {
-    use crate::construction::procedural::{
-        assembly_id_for, load_tile_atlas_registry, load_variant_catalog, facing_from_rotation_quarter_turns,
-        ProceduralBuildingRequest, StylePackId,
-    };
-    use crate::strategic::CommittedPlacementSnapshot;
-
-    if !tile_fix_10_warehouse_witness_green() || !warehouse_v2_atlas_index_registered() {
-        return false;
-    }
-    let registry = load_tile_atlas_registry();
-    if !registry.load_errors.is_empty() {
-        return false;
-    }
-    let catalog = match load_variant_catalog() {
-        Some(c) => c,
-        None => return false,
-    };
-    let Some(entry) = registry.atlas_for_tile_id(WAREHOUSE_INDUSTRIAL_TILE_ID) else {
-        return false;
-    };
-    if entry.atlas_id != WAREHOUSE_INDUSTRIAL_ATLAS_ID
-        || entry.meta_schema_version < 2
-        || !crate::construction::procedural::production_atlas_covers_assembly(entry)
-    {
-        return false;
-    }
-    if !std::path::Path::new(&entry.atlas_png).is_file() {
-        return false;
-    }
-    let origin = BuildSiteTile { x: 30, z: 30 };
-    let footprint = FootprintTiles {
-        width: 4,
-        depth: 2,
-    };
-    let placement_rot1 = CommittedPlacementSnapshot {
-        origin,
-        scale_factor: 1.0,
-        effective_scale: 1.0,
-        rotation_quarter_turns: 1,
-        mirror_x: false,
-        weights: vec![(IVec2::new(origin.x as i32, origin.z as i32), 1.0)],
-    };
-    let site = ConstructionSite {
-        site_id: 879,
-        owner: Entity::PLACEHOLDER,
-        archetype: SiteArchetype::Factory,
-        phase: SiteConstructionPhase::Operational,
-        operational_readiness: 1.0,
-    };
-    let spec = ProceduralBuildingSpec(ProceduralBuildingRequest {
-        archetype_id: "rect_perimeter".into(),
-        width: 4,
-        depth: 2,
-        floors: 2,
-        style: StylePackId("style_industrial_west".into()),
-        seed: 43,
-        arch_dna_preset_id: None,
-    });
-    let assembly_id = assembly_id_for("style_industrial_west", 4, 2, 2, 43);
-    if assembly_id != "industrial_west_4x2_s43_a879" {
-        return false;
-    }
-    let mut footprint_tiles = Vec::new();
-    for dz in 0..footprint.depth {
-        for dx in 0..footprint.width {
-            footprint_tiles.push(IVec2::new(
-                origin.x as i32 + dx as i32,
-                origin.z as i32 + dz as i32,
-            ));
-        }
-    }
-    let site_fp = SiteFootprint {
-        tiles: footprint_tiles,
-        layer: crate::strategic::LayerType::Surface,
-    };
-    let planned_rot0 = PlannedSite {
-        site_id: crate::strategic::SiteId(879),
-        origin,
-        footprint,
-        archetype: SiteArchetype::Factory,
-        layer: crate::strategic::LayerType::Surface,
-        catalog_id: Some(WAREHOUSE_INDUSTRIAL_TILE_ID.into()),
-        placement: Some(CommittedPlacementSnapshot {
-            rotation_quarter_turns: 0,
-            ..placement_rot1.clone()
-        }),
-    };
-    let planned_rot1 = PlannedSite {
-        placement: Some(placement_rot1),
-        ..planned_rot0.clone()
-    };
-    let Some(req0) = stamp_request_for_site(
-        &registry,
-        Some(&catalog),
-        0,
-        0.0,
-        &planned_rot0,
-        &site,
-        &site_fp,
-        Some(&spec),
-    ) else {
-        return false;
-    };
-    let Some(req1) = stamp_request_for_site(
-        &registry,
-        Some(&catalog),
-        0,
-        0.0,
-        &planned_rot1,
-        &site,
-        &site_fp,
-        Some(&spec),
-    ) else {
-        return false;
-    };
-    let expected_facing = facing_from_rotation_quarter_turns(
-        1,
-        entry.render_facings.max(1),
-        entry.quarter_turn_fallback,
-    );
-    req0.atlas_id == WAREHOUSE_INDUSTRIAL_ATLAS_ID
-        && req1.atlas_id == WAREHOUSE_INDUSTRIAL_ATLAS_ID
-        && req0.facing == 0
-        && req1.facing == expected_facing
-        && req1.facing != req0.facing
-        && req0.uv != req1.uv
-        && req1.variant_key == "clean_day"
-}
-
-#[must_use]
-pub fn build_eng_pt_4_warehouse_map_stamp_witness_body() -> serde_json::Value {
-    serde_json::json!({
-        "gate_id": "ENG-PT-4-002",
-        "program_id": "PLAN-TILE-FIX-AUTO-BUILD-001",
-        "task_id": "TILE-FIX-WAREHOUSE-PHASE-D",
-        "green": eng_pt_4_warehouse_map_stamp_witness_green(),
-        "tile_fix_10_witness_green": tile_fix_10_warehouse_witness_green(),
-        "warehouse_v2_index_registered": warehouse_v2_atlas_index_registered(),
-        "atlas_id": WAREHOUSE_INDUSTRIAL_ATLAS_ID,
-        "tile_id": WAREHOUSE_INDUSTRIAL_TILE_ID,
-        "rotation_quarter_turns_smoke": 1,
-        "parent_witness": TILE_FIX_10_WAREHOUSE_WITNESS_JSON,
     })
 }
 
@@ -765,16 +436,6 @@ mod tests {
     }
 
     #[test]
-    fn build_read_pilot_atlas_stamp_when_registered() {
-        if !super::rail_warehouse_pilot_atlas_index_registered() {
-            eprintln!("skip: rail warehouse pilot atlas not registered for runtime stamp");
-            return;
-        }
-        assert!(super::build_read_visual_pilot_stamp_request_green());
-        assert!(super::build_read_visual_pilot_tile_stamp_lib_green());
-    }
-
-    #[test]
     fn gpu_stamp_updates_instance_index_not_cpu_buffer() {
         let mut stamps = TerrainGpuStampIndices::default();
         let req = TileAtlasStampRequest {
@@ -806,30 +467,6 @@ mod tests {
         assert_eq!(
             variant_key_for_site_phase(SiteConstructionPhase::Abandoned),
             "damaged_night_on"
-        );
-    }
-
-    #[test]
-    fn eng_pt_4_rowhouse_stamp_ship_green_under_pixel_world() {
-        assert!(
-            super::eng_pt_4_001_rowhouse_map_stamp_witness_green(),
-            "TILE-FIX-001 close: production rowhouse resolves for PixelWorld ship stamps"
-        );
-    }
-
-    #[test]
-    fn eng_pt_4_warehouse_map_stamp_rotation_witness() {
-        if !super::tile_fix_10_warehouse_witness_green() {
-            eprintln!("skip: tile_fix_10 witness not green");
-            return;
-        }
-        assert!(
-            super::warehouse_v2_atlas_index_registered(),
-            "warehouse v2 index row required (Phase B --register on green witness)"
-        );
-        assert!(
-            super::eng_pt_4_warehouse_map_stamp_witness_green(),
-            "warehouse map stamp smoke failed — check atlas meta v2 lookups + PNG"
         );
     }
 

@@ -11,7 +11,7 @@ use crate::substrate::types::{DynamicOverlaySlice, WorldChunkState};
 use crate::terrain::{ChunkCellKey, DynamicTerrainOverlay};
 
 #[derive(Resource, Clone, Debug, Default)]
-pub struct SubstratePr4Witness {
+pub struct SubstratePersistStats {
     pub substrate_persist_roundtrip_ok: bool,
     pub dynamic_overlay_migrated: bool,
 }
@@ -236,7 +236,7 @@ pub fn persist_roundtrip_ok(registry: &mut WorldSubstrateRegistry) -> bool {
 
 pub fn sync_substrate_persist_witness_system(
     mut registry: ResMut<WorldSubstrateRegistry>,
-    mut pr4: ResMut<SubstratePr4Witness>,
+    mut pr4: ResMut<SubstratePersistStats>,
     mut checked: Local<bool>,
 ) {
     if *checked {
@@ -251,7 +251,7 @@ pub fn sync_dynamic_overlay_migrate_system(
     overlay: Option<Res<DynamicTerrainOverlay>>,
     dual: Res<crate::substrate::shim::DualWriteShimState>,
     mut registry: ResMut<WorldSubstrateRegistry>,
-    mut pr4: ResMut<SubstratePr4Witness>,
+    mut pr4: ResMut<SubstratePersistStats>,
     time: Res<Time>,
     mut last_generation: Local<Option<u64>>,
     mut since_migrate_secs: Local<f32>,
@@ -277,16 +277,6 @@ pub fn sync_dynamic_overlay_migrate_system(
     let _ = migrate_dynamic_overlay_to_slab(&mut registry, overlay.as_ref());
     pr4.dynamic_overlay_migrated = crate::substrate::shim::dual_write_shim_green(&dual)
         && dynamic_overlay_matches_slab(registry.as_ref(), overlay.as_ref());
-}
-
-#[must_use]
-pub fn dynamic_overlay_migrated_green(
-    pr4: &SubstratePr4Witness,
-    dual: &crate::substrate::shim::DualWriteShimState,
-) -> bool {
-    pr4.substrate_persist_roundtrip_ok
-        && pr4.dynamic_overlay_migrated
-        && crate::substrate::shim::dual_write_shim_green(dual)
 }
 
 #[cfg(test)]

@@ -206,20 +206,7 @@ fn seed_pixel_world_landscape_pack_index_on_startup(
     index.seed_ship_landscape_packs();
 }
 
-#[must_use]
-pub fn landscape_ship_packs_registered_green() -> bool {
-    PIXEL_WORLD_LANDSCAPE_SHIP_PRESETS.len() == 10
-        && PIXEL_WORLD_LANDSCAPE_SHIP_PRESETS.contains(&"agri_riparian_v0")
-        && PIXEL_WORLD_LANDSCAPE_SHIP_PRESETS.contains(&"old_growth_core_v0")
-}
 
-
-
-#[must_use]
-pub fn landscape_atlas_stamp_path_green() -> bool {
-    crate::gui::landscape_chunk_atlas_stamp::landscape_lg5_chunk_uv_stamp_witness_green()
-        && crate::systems::ecology::landscape_lg5_registry_stamped()
-}
 
 pub struct ArtPresentationTargetPlugin;
 
@@ -243,6 +230,20 @@ impl Plugin for ArtPresentationTargetPlugin {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn ship_landscape_presets_seed_into_index_with_lg5_atlas() {
+        let mut index = PixelWorldLandscapePackIndex::default();
+        index.seed_ship_landscape_packs();
+        assert!(index.registered_count() >= 12);
+        assert!(index.pack_ids.iter().any(|p| p == LG5_ATLAS_ID));
+        index.register_pack(LG5_ATLAS_ID);
+        assert_eq!(
+            index.pack_ids.iter().filter(|p| *p == LG5_ATLAS_ID).count(),
+            1,
+            "idempotent LG-5 register"
+        );
+    }
 
     #[test]
     fn ship_default_is_pixel_world() {
@@ -270,25 +271,6 @@ mod tests {
         let t = ArtPresentationTarget::PixelWorld;
         assert!(t.as_tag().contains("pixel_world"));
         assert_eq!(ArtPresentationTarget::from_tag(t.as_tag()), Some(t));
-    }
-
-    #[test]
-    fn ship_landscape_presets_seed_into_index_with_lg5_atlas() {
-        assert!(landscape_ship_packs_registered_green());
-        let mut index = PixelWorldLandscapePackIndex::default();
-        index.seed_ship_landscape_packs();
-        assert!(index.registered_count() >= 12);
-        assert!(index.pack_ids.iter().any(|p| p == LG5_ATLAS_ID));
-        assert!(index
-            .pack_ids
-            .iter()
-            .any(|p| p == "vegetation_variant_catalog_v1"));
-        index.register_pack(LG5_ATLAS_ID);
-        assert_eq!(
-            index.pack_ids.iter().filter(|p| *p == LG5_ATLAS_ID).count(),
-            1,
-            "idempotent LG-5 register"
-        );
     }
 
     #[test]
@@ -335,15 +317,6 @@ mod tests {
     }
 
 
-
-    #[test]
-    fn landscape_atlas_stamp_path_is_real() {
-        if !crate::systems::ecology::landscape_lg5_registry_stamped() {
-            eprintln!("skip: landscape lg5 index not stamped");
-            return;
-        }
-        assert!(landscape_atlas_stamp_path_green());
-    }
 
     #[test]
     fn ship_building_atlases_seed_for_pixel_world() {

@@ -49,7 +49,7 @@ impl WorldLodBand {
 #[derive(Resource, Clone, Copy, Debug)]
 pub struct GlobalLodState {
     pub default_band: WorldLodBand,
-    /// VA3: written by [`crate::gui::sync_tile_readability_witness`], read in LOD evaluate.
+    /// VA3: written by [`crate::gui::sync_tile_readability_state`], read in LOD evaluate.
     pub readability_zoom_floor: f32,
     pub readability_screen_density: f32,
 }

@@ -393,79 +393,9 @@ pub fn commit_approved_staged_rows(
     committed
 }
 
-#[must_use]
-pub fn staging_toggle_wired_witness_green() -> bool {
-    staging_toggle_self_check().is_ok()
-}
-
-fn staging_toggle_self_check() -> Result<(), &'static str> {
-    let mut mode = StagedPlacementMode::default();
-    mode.enabled = true;
-    if !mode.enabled {
-        return Err("toggle");
-    }
-    mode.enabled = false;
-    if mode.enabled {
-        return Err("toggle_off");
-    }
-    Ok(())
-}
-
-#[must_use]
-pub fn build_approved_drains_staged_witness_green() -> bool {
-    build_approved_drains_staged_self_check().is_ok()
-}
-
-fn build_approved_drains_staged_self_check() -> Result<(), &'static str> {
-    use crate::construction::building_catalog::{BuildingFamily, FootprintMatrix};
-
-    let mut book = StagedPlacementBook::default();
-    let ghost = BuildGhostState {
-        origin: Some(BuildSiteTile { x: 8, z: 8 }),
-        ..Default::default()
-    };
-    let placement = parametric_placement_snapshot(
-        &FootprintMatrix::from_size(1, 1, true),
-        BuildingFamily::Industry,
-        BuildSiteTile { x: 8, z: 8 },
-        0,
-        false,
-        None,
-    );
-    book.push_from_ghost(
-        "test_factory".into(),
-        SiteArchetype::Factory,
-        FootprintTiles { width: 1, depth: 1 },
-        LayerType::Surface,
-        &ghost,
-        placement,
-        true,
-        StagedValidity::Ok,
-    );
-    book.rows[0].approved = true;
-    let drained = book.drain_approved_committable();
-    if drained.len() != 1 {
-        return Err("drain_count");
-    }
-    if !book.rows.is_empty() {
-        return Err("book_not_drained");
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn staging_toggle_wired() {
-        assert!(staging_toggle_wired_witness_green());
-    }
-
-    #[test]
-    fn build_approved_drains_staged() {
-        assert!(build_approved_drains_staged_witness_green());
-    }
 
     #[test]
     fn build_approved_skips_unapproved() {

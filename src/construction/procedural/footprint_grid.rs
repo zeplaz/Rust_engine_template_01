@@ -373,54 +373,6 @@ pub fn street_facing_door_column(
     base.clamp(min_x, max_x)
 }
 
-#[must_use]
-pub fn bq_h2_street_facing_witness_green() -> bool {
-    let col = street_facing_door_column(
-        6,
-        4,
-        &["street_facing".into(), "commercial".into()],
-        42,
-        "row_infill",
-        "linear_center",
-    );
-    col >= 1 && col <= 4 && col != 0 && col != 5
-}
-
-#[must_use]
-pub fn build_bq_h2_openings_witness_body() -> serde_json::Value {
-    let grid = FootprintGrid::from_grammar(
-        &super::building_grammar::generate(
-            crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
-            "industrial_west",
-            43,
-        )
-        .expect("grammar"),
-    );
-    let door = grid
-        .cells
-        .iter()
-        .find(|c| c.token == FootprintToken::Door && c.floor == 0)
-        .map(|c| (c.x, c.y));
-    let green = bq_h2_street_facing_witness_green()
-        && door.is_some_and(|(_, y)| y == 0)
-        && door.is_some_and(|(x, _)| x >= 1);
-    serde_json::json!({
-        "gate": "BQ-H2-OPENINGS-001",
-        "green": green,
-        "door_cell_floor0": door.map(|(x, y)| serde_json::json!({"x": x, "y": y})),
-        "uses_street_facing_heuristic": true,
-        "plan_ref": "src/dev/plan_building_quality_v1.md#BQ-H2",
-    })
-}
-
-#[must_use]
-pub fn bq_h_openings_witness_green() -> bool {
-    build_bq_h2_openings_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 
 
 #[cfg(test)]
@@ -516,11 +468,6 @@ mod tests {
             .unwrap();
         assert_ne!(door.x, 0);
         assert_ne!(door.x + 1, grid.width);
-    }
-
-    #[test]
-    fn bq_h2_openings_witness_green_lib() {
-        assert!(bq_h_openings_witness_green());
     }
 
 

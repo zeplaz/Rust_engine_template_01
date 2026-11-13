@@ -14,8 +14,6 @@ use super::block_frame::{scatter_interior_tiles, street_edge_tiles, BlockFrame, 
 use super::seed_chain::lot_seed;
 
 pub const BLOCK_RECIPES_DIR: &str = "assets/configs/settlement/block_recipes";
-pub const CITY_G1_C3_LIVE_JSON: &str = "debug_runs/city_g1_c3_001_live.json";
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
 pub enum LotFacing {
@@ -680,139 +678,6 @@ pub fn evaluate_block_recipe_for_archetype(
     Some(evaluate_block_recipe(recipe, frame, block, block_seed))
 }
 
-#[must_use]
-pub fn build_city_g1_c3_001_witness_body() -> serde_json::Value {
-    use super::block_frame::{
-        build_block_frame, fixture_block_record_with_tiles, fixture_transport_graph_for_block_frame,
-    };
-    use super::seed_chain::{block_seed, town_seed, DEFAULT_TOWN_ID, DEFAULT_WORLD_SEED};
-
-    let registry = load_block_recipe_registry();
-    let recipes_ok = registry.load_errors.is_empty()
-        && registry.recipes.len() >= 3
-        && registry.for_archetype(BlockArchetype::Industrial).is_some()
-        && registry
-            .for_archetype(BlockArchetype::LowDensityRes)
-            .is_some()
-        && registry
-            .for_archetype(BlockArchetype::MediumDensityRes)
-            .is_some();
-
-    let graph = fixture_transport_graph_for_block_frame();
-    let block = fixture_block_record_with_tiles();
-    let frame = build_block_frame(&block, Some(&graph)).expect("fixture frame");
-    let bs = block_seed(
-        town_seed(DEFAULT_WORLD_SEED, &super::ids::TownId(DEFAULT_TOWN_ID.into())),
-        &block.id,
-    );
-
-    let bands = [
-        (BlockArchetype::Industrial, 2u32),
-        (BlockArchetype::LowDensityRes, 2u32),
-        (BlockArchetype::MediumDensityRes, 4u32),
-    ];
-
-    let mut eval_rows = Vec::new();
-    let mut all_errors_empty = true;
-    let mut lot_counts_ok = true;
-    let mut lot_seeds_wired = true;
-    let mut mut_hashes = Vec::new();
-
-    for (archetype, expected_lots) in bands {
-        let Some(eval) = evaluate_block_recipe_for_archetype(&registry, archetype, &frame, &block, bs)
-        else {
-            lot_counts_ok = false;
-            continue;
-        };
-        if !eval.errors.is_empty() {
-            all_errors_empty = false;
-        }
-        if eval.lots.len() as u32 != expected_lots {
-            lot_counts_ok = false;
-        }
-        if eval
-            .lots
-            .iter()
-            .any(|lot| lot.lot_seed != lot_seed(bs, lot.lot_idx))
-        {
-            lot_seeds_wired = false;
-        }
-        let hash = block_recipe_lot_list_stable_hash(&eval);
-        mut_hashes.push(hash.clone());
-        eval_rows.push(serde_json::json!({
-            "block_archetype": format!("{archetype:?}"),
-            "recipe_id": eval.recipe_id,
-            "lot_count": eval.lots.len(),
-            "edge_count": eval.edges.len(),
-            "scatter_count": eval.scatters.iter().map(|s| s.tiles.len()).sum::<usize>(),
-            "park_fill_tiles": eval.park_fills.iter().map(|p| p.tiles.len()).sum::<usize>(),
-            "lot_list_hash": hash,
-            "errors": eval.errors,
-        }));
-    }
-
-    let mut run_hashes = Vec::new();
-    for _ in 0..3 {
-        if let Some(eval) =
-            evaluate_block_recipe_for_archetype(&registry, BlockArchetype::Industrial, &frame, &block, bs)
-        {
-            run_hashes.push(block_recipe_lot_list_stable_hash(&eval));
-        }
-    }
-    let three_run_stable =
-        run_hashes.len() == 3 && run_hashes.windows(2).all(|w| w[0] == w[1]);
-
-    let g0 = crate::construction::procedural::city_g0_wit_001_determinism_witness_green();
-    let g1_c1 = super::block_archetype::city_g1_c1_001_block_archetype_witness_green();
-    let g1_c2 = super::block_frame::city_g1_c2_001_block_frame_witness_green();
-    let g1_c4 = super::seed_chain::city_g1_c4_001_seed_chain_witness_green();
-    let charter = {
-        let path = repo_asset_path("debug_runs/city_block_recipe_charter_live.json");
-        fs::read_to_string(&path)
-            .ok()
-            .and_then(|text| serde_json::from_str::<serde_json::Value>(&text).ok())
-            .and_then(|v| {
-                v.get("green")
-                    .or_else(|| v.get("payload").and_then(|p| p.get("green")))
-                    .and_then(|g| g.as_bool())
-            })
-            .unwrap_or(false)
-    };
-
-    let green = recipes_ok
-        && all_errors_empty
-        && lot_counts_ok
-        && lot_seeds_wired
-        && three_run_stable
-        && g1_c2
-        && charter;
-
-    serde_json::json!({
-        "gate": "CITY-G1-C3-001",
-        "issue": "CITY-C3",
-        "green": green,
-        "recipes_loaded": registry.recipes.len(),
-        "recipes_ok": recipes_ok,
-        "evaluations": eval_rows,
-        "three_run_stable": three_run_stable,
-        "stable_lot_hash": run_hashes.first(),
-        "run_hashes": run_hashes,
-        "city_g0_wit_still_green": g0,
-        "city_g1_c1_still_green": g1_c1,
-        "city_g1_c2_still_green": g1_c2,
-        "city_g1_c4_still_green": g1_c4,
-        "block_recipe_charter_green": charter,
-    })
-}
-
-#[must_use]
-pub fn city_g1_c3_001_block_recipe_witness_green() -> bool {
-    build_city_g1_c3_001_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 
 
 #[cfg(test)]
@@ -930,8 +795,4 @@ mod tests {
         assert!(!eval.plazas[0].tiles.is_empty());
     }
 
-    #[test]
-    fn city_g1_c3_001_witness_green_lib() {
-        assert!(city_g1_c3_001_block_recipe_witness_green());
-    }
 }

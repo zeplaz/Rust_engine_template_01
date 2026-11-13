@@ -17,20 +17,14 @@ pub struct KeybindingsUiState {
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum BindingSlot {
     ToggleOptions,
-    Diagnostics,
     AiExplainability,
-    PressureComposer,
     CycleLogistics,
     LogisticsTargets,
     ScenarioScriptPanel,
-    StrategicStripCompact,
     CommandLeftStack,
-    StrategicOverlayCongestion,
-    StrategicOverlayEw,
     CycleBuildPlanningTool,
     ConfirmBuildPlacement,
     WorldGenerator,
-    EguiUiScale,
     SimulationPause,
     StartGameplayRecording,
     StopGameplayRecording,
@@ -142,22 +136,14 @@ fn apply_binding_capture(
 fn assign_binding(bindings: &mut InputBindings, slot: BindingSlot, k: KeyCode) {
     match slot {
         BindingSlot::ToggleOptions => bindings.toggle_keybindings_options = k,
-        BindingSlot::Diagnostics => bindings.toggle_diagnostics = k,
         BindingSlot::AiExplainability => bindings.toggle_ai_explainability = k,
-        BindingSlot::PressureComposer => bindings.toggle_pressure_composer = k,
         BindingSlot::CycleLogistics => bindings.cycle_logistics_focus = k,
         BindingSlot::LogisticsTargets => bindings.toggle_logistics_targets_panel = k,
         BindingSlot::ScenarioScriptPanel => bindings.toggle_scenario_script_panel = k,
-        BindingSlot::StrategicStripCompact => bindings.toggle_strategic_hud_strip_compact = k,
         BindingSlot::CommandLeftStack => bindings.toggle_command_left_stack = k,
-        BindingSlot::StrategicOverlayCongestion => {
-            bindings.toggle_strategic_overlay_routing_congestion = k
-        }
-        BindingSlot::StrategicOverlayEw => bindings.toggle_strategic_overlay_ew_denial = k,
         BindingSlot::CycleBuildPlanningTool => bindings.cycle_build_planning_tool = k,
         BindingSlot::ConfirmBuildPlacement => bindings.confirm_build_placement = k,
         BindingSlot::WorldGenerator => bindings.toggle_world_generator = k,
-        BindingSlot::EguiUiScale => bindings.toggle_egui_ui_scale = k,
         BindingSlot::SimulationPause => bindings.toggle_simulation_pause = k,
         BindingSlot::StartGameplayRecording => bindings.start_gameplay_recording = k,
         BindingSlot::StopGameplayRecording => bindings.stop_gameplay_recording = k,
@@ -194,20 +180,14 @@ fn assign_binding(bindings: &mut InputBindings, slot: BindingSlot, k: KeyCode) {
 fn slot_label(slot: BindingSlot) -> &'static str {
     match slot {
         BindingSlot::ToggleOptions => "Options / keybindings",
-        BindingSlot::Diagnostics => "Diagnostics (F3)",
         BindingSlot::AiExplainability => "AI explainability",
-        BindingSlot::PressureComposer => "Pressure composer",
         BindingSlot::CycleLogistics => "Cycle logistics focus",
         BindingSlot::LogisticsTargets => "Logistics targets",
         BindingSlot::ScenarioScriptPanel => "Scenario script",
-        BindingSlot::StrategicStripCompact => "Strategic strip compact",
         BindingSlot::CommandLeftStack => "Command left stack",
-        BindingSlot::StrategicOverlayCongestion => "Overlay congestion",
-        BindingSlot::StrategicOverlayEw => "Overlay EW",
         BindingSlot::CycleBuildPlanningTool => "Cycle build tool",
         BindingSlot::ConfirmBuildPlacement => "Confirm placement",
         BindingSlot::WorldGenerator => "World generator",
-        BindingSlot::EguiUiScale => "UI scale",
         BindingSlot::SimulationPause => "Simulation pause",
         BindingSlot::StartGameplayRecording => "Start capture",
         BindingSlot::StopGameplayRecording => "Stop capture",
@@ -244,22 +224,14 @@ fn slot_label(slot: BindingSlot) -> &'static str {
 fn slot_key(bindings: &InputBindings, slot: BindingSlot) -> KeyCode {
     match slot {
         BindingSlot::ToggleOptions => bindings.toggle_keybindings_options,
-        BindingSlot::Diagnostics => bindings.toggle_diagnostics,
         BindingSlot::AiExplainability => bindings.toggle_ai_explainability,
-        BindingSlot::PressureComposer => bindings.toggle_pressure_composer,
         BindingSlot::CycleLogistics => bindings.cycle_logistics_focus,
         BindingSlot::LogisticsTargets => bindings.toggle_logistics_targets_panel,
         BindingSlot::ScenarioScriptPanel => bindings.toggle_scenario_script_panel,
-        BindingSlot::StrategicStripCompact => bindings.toggle_strategic_hud_strip_compact,
         BindingSlot::CommandLeftStack => bindings.toggle_command_left_stack,
-        BindingSlot::StrategicOverlayCongestion => {
-            bindings.toggle_strategic_overlay_routing_congestion
-        }
-        BindingSlot::StrategicOverlayEw => bindings.toggle_strategic_overlay_ew_denial,
         BindingSlot::CycleBuildPlanningTool => bindings.cycle_build_planning_tool,
         BindingSlot::ConfirmBuildPlacement => bindings.confirm_build_placement,
         BindingSlot::WorldGenerator => bindings.toggle_world_generator,
-        BindingSlot::EguiUiScale => bindings.toggle_egui_ui_scale,
         BindingSlot::SimulationPause => bindings.toggle_simulation_pause,
         BindingSlot::StartGameplayRecording => bindings.start_gameplay_recording,
         BindingSlot::StopGameplayRecording => bindings.stop_gameplay_recording,
@@ -295,8 +267,6 @@ fn slot_key(bindings: &InputBindings, slot: BindingSlot) -> KeyCode {
 
 const BINDING_SLOTS: &[BindingSlot] = &[
     BindingSlot::ToggleOptions,
-    BindingSlot::Diagnostics,
-    BindingSlot::PressureComposer,
     BindingSlot::LogisticsTargets,
     BindingSlot::CycleLogistics,
     BindingSlot::SimulationPause,

@@ -20,8 +20,7 @@ pub use propagation::{
 };
 pub use routes::{
     collect_portal_entity_tiles, collect_portal_entity_tiles_from_world,
-    flow_paths_match_nav_export, infra_e5_002_graph_only_paths_green,
-    nav_agent_routing_witness_payload, refresh_resource_flow_routes_system, tile_node_key,
+    flow_paths_match_nav_export, refresh_resource_flow_routes_system, tile_node_key,
     topology_revision_u32,
 };
 pub use solver::{
@@ -32,7 +31,7 @@ pub use solver::{
 pub use types::{
     DistrictSolveScope, FacilityPortal, FacilityPortalRegistered, FreightLot, FreightMovementModel,
     FreightReservation, FreightReservationBook, InTransitLedger, LogisticsDiagnostics,
-    LogisticsThroughputRuntimeWitness, PendingSiteStagingDebits, PendingStagingDebit,
+    LogisticsThroughputStats, PendingSiteStagingDebits, PendingStagingDebit,
     PortalAttachmentMap, RouteCache, RouteHandle, RoutePath, RoutePathStore, RouteProof,
     SaturatedEdgeSample, SiteStagingStock, ThroughputSolverState, TransportNodeAnchor,
 };
@@ -73,7 +72,7 @@ impl Plugin for LogisticsThroughputPlugin {
             .init_resource::<ThroughputSolverState>()
             .init_resource::<FreightReservationBook>()
             .init_resource::<LogisticsDiagnostics>()
-            .init_resource::<LogisticsThroughputRuntimeWitness>()
+            .init_resource::<LogisticsThroughputStats>()
             .init_resource::<DistrictSolveScope>()
             .init_resource::<async_district::AsyncDistrictSolveQueue>()
             .init_resource::<intent_draw::AiConstructionIntent>()
