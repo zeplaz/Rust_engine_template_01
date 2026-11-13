@@ -91,7 +91,24 @@ fn wet_diffusion_barrier(moisture: f32) -> f32 {
     (1.0 - over * 0.88).clamp(0.08, 1.0)
 }
 
+/// Working buffers of [`chunk_fire_overlay_tick`], kept between frames so the tick reuses its
+/// allocations instead of cloning every chunk's heat / fuel / hold each frame.
+#[derive(Default)]
+pub struct FireTickScratch {
+    spread: Vec<f32>,
+    /// Heat at the start of the tick; only filled for chunks that hold a saturated cell.
+    heat_open: Vec<f32>,
+    heat_src: Vec<f32>,
+    fuel_src: Vec<f32>,
+    hold_src: Vec<u16>,
+    taken: Vec<bool>,
+    /// Standing-water mask of the chunk being ticked.
+    water: Vec<bool>,
+}
+
+#[allow(clippy::too_many_arguments)]
 pub fn chunk_fire_overlay_tick(
+    mut bufs: Local<FireTickScratch>,
     ctrl: Res<SimControlState>,
     time: Res<Time>,
     water_gate: Res<SurfaceWaterFireGate>,
@@ -120,9 +137,18 @@ pub fn chunk_fire_overlay_tick(
     if dt <= 0.0 {
         return;
     }
+    let _perf = crate::render::PerfScope::new("upd_fire_overlay_tick");
 
     let ember_clock = (time.elapsed_secs() * 60.0) as u64;
-    let mut scratch: Vec<f32> = Vec::new();
+    let FireTickScratch {
+        spread: scratch,
+        heat_open,
+        heat_src,
+        fuel_src,
+        hold_src,
+        taken,
+        water,
+    } = &mut *bufs;
     let default_cfg = StandBurnConfig::default();
     let stand_cfg = stand_cfg.as_deref().unwrap_or(&default_cfg);
 
@@ -141,6 +167,8 @@ pub fn chunk_fire_overlay_tick(
         mut dirty,
     ) in &mut q
     {
+        // One change-detection write per chunk instead of one per cell access.
+        let ovl: &mut ChunkFireOverlay = &mut ovl;
         let lod_s = lod.map(|l| l.dt_scale()).unwrap_or(1.0);
         let dt_e = dt * lod_s;
 
@@ -163,7 +191,16 @@ pub fn chunk_fire_overlay_tick(
         if ovl.burn_hold.len() != n {
             ovl.burn_hold.resize(n, 0);
         }
-        let heat_open = ovl.heat.clone();
+        // A deposit treats a cell that started the tick saturated as saturated; copy only when one is.
+        let saturated = ovl.heat.iter().any(|h| *h >= 1.0);
+        if saturated {
+            heat_open.clear();
+            heat_open.extend_from_slice(&ovl.heat);
+        }
+        let mut fuel_gated_sparks = 0u64;
+        let mut ungated_sparks = 0u64;
+        let mut neighbor_spread = 0u64;
+        let mut fuel_depleted = 0u64;
 
         let fire_risk = eco_opt.map(|e| e.fire_risk).unwrap_or(0.0);
         let eco_boost = ecology_fire_risk_spark_factor(fire_risk);
@@ -206,14 +243,29 @@ pub fn chunk_fire_overlay_tick(
 
         let rain_suppress = (1.0 - wx.rain_intensity * 0.78).max(0.0);
         let wind_boost = 1.0 + wx.wind_speed * 0.6;
+        let wind_spread = wind_boost.powf(0.35);
 
         scratch.clear();
         scratch.resize(n, 0.0);
+        water.clear();
+        water.extend((0..n).map(|i| water_gate.cell_has_standing_water(matrix, i)));
+
+        // Most chunks are not burning: no heat, smoke, toxic or burned window anywhere. While a
+        // chunk stays like that (no cell has lit yet this tick), a cell that does not ignite ends
+        // the tick as it started apart from regrowth, and no cell receives diffusion or deposits,
+        // so those cells take the short path below and the chunk skips the spread passes.
+        let mut quiet = ovl.heat.iter().all(|v| *v == 0.0)
+            && ovl.smoke.iter().all(|v| *v == 0.0)
+            && ovl.toxic.iter().all(|v| *v == 0.0)
+            && ovl.burn_hold.iter().all(|v| *v == 0);
 
         for y in 0..sy {
             for x in 0..sx {
                 let i = y * sx + x;
-                if water_gate.cell_has_standing_water(matrix, i) {
+                if water[i] {
+                    if quiet {
+                        continue;
+                    }
                     ovl.heat[i] = 0.0;
                     ovl.smoke[i] = (ovl.smoke[i] * (1.0 - dt_e * 2.5)).max(0.0);
                     ovl.toxic[i] = (ovl.toxic[i] * (1.0 - dt_e * 2.0)).max(0.0);
@@ -232,12 +284,11 @@ pub fn chunk_fire_overlay_tick(
                     + lightning_spark(wildland_mass, ovl.fuel[i], wx.lightning_risk);
                 let admitted = admit_spark(wildland_mass, ovl.fuel[i], raw_spark);
                 let spark = if admitted <= 0.0 || profile_mult <= 0.0 {
-                    witness.fuel_gated_spark_cells =
-                        witness.fuel_gated_spark_cells.saturating_add(1);
+                    fuel_gated_sparks += 1;
                     0.0
                 } else {
                     if raw_spark > 0.001 {
-                        witness.ungated_spark_cells = witness.ungated_spark_cells.saturating_add(1);
+                        ungated_sparks += 1;
                     }
                     admitted * profile_mult * crown
                 };
@@ -246,17 +297,6 @@ pub fn chunk_fire_overlay_tick(
                 let rain_damp = wx.rain_intensity * 0.28 * dt_e;
 
                 let h = ovl.heat[i];
-                // What a steady burn here can consume: a ground fire (target under crown heat) leaves the canopy
-                // share standing, a crown fire takes it all. A cell down to that floor has nothing left to burn.
-                let target = BURN_TARGET_HEAT * (1.0 - m * 0.6).clamp(0.3, 1.0) * rain_suppress;
-                let burn_floor = match stand {
-                    Some(s) if target < stand_cfg.crown_heat => stand_cfg.crown(s.kind[i]) * s.fuel_cap[i],
-                    _ => 0.0,
-                };
-                let exhausted = ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD || ovl.fuel[i] <= burn_floor + 0.005;
-                // A stand with nothing left to burn goes out quickly (a stand without per-cell fuel
-                // keeps the old slow cooling).
-                let cooling = if stand.is_some() && exhausted { 0.9 } else { 0.14 };
                 // An ambient spark is a rare ignition event, not a heat source: the spark rate is a chance per
                 // second that sets a cell alight (the burn then sustains itself). Injecting spark*8 heat per
                 // second lit every dry warm cell of the map within seconds.
@@ -270,6 +310,28 @@ pub fn chunk_fire_overlay_tick(
                 } else {
                     0.0
                 };
+                // Quiet chunk, cold cell, no ignition: heat, smoke and toxic stay zero and burning
+                // consumes nothing, so only regrowth applies.
+                if quiet && ignite == 0.0 && wet_line >= 0.0 {
+                    if let Some(s) = stand {
+                        if ovl.fuel[i] < s.fuel_cap[i] {
+                            ovl.fuel[i] = regrow_fuel(ovl.fuel[i], s.fuel_cap[i], stand_cfg.litter(s.kind[i]), dt_e);
+                        }
+                    }
+                    continue;
+                }
+                quiet = false;
+                // What a steady burn here can consume: a ground fire (target under crown heat) leaves the canopy
+                // share standing, a crown fire takes it all. A cell down to that floor has nothing left to burn.
+                let target = BURN_TARGET_HEAT * (1.0 - m * 0.6).clamp(0.3, 1.0) * rain_suppress;
+                let burn_floor = match stand {
+                    Some(s) if target < stand_cfg.crown_heat => stand_cfg.crown(s.kind[i]) * s.fuel_cap[i],
+                    _ => 0.0,
+                };
+                let exhausted = ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD || ovl.fuel[i] <= burn_floor + 0.005;
+                // A stand with nothing left to burn goes out quickly (a stand without per-cell fuel
+                // keeps the old slow cooling).
+                let cooling = if stand.is_some() && exhausted { 0.9 } else { 0.14 };
                 let mut nh = (h + ignite
                     - h * cooling * dt_e
                     - wet_line
@@ -296,9 +358,7 @@ pub fn chunk_fire_overlay_tick(
                     Some(s) => {
                         let kind = s.kind[i];
                         if nh < 0.02 && ovl.fuel[i] < s.fuel_cap[i] {
-                            ovl.fuel[i] = (ovl.fuel[i]
-                                + s.fuel_cap[i] / stand_cfg.litter(kind).max(1.0) * dt_e)
-                                .min(s.fuel_cap[i]);
+                            ovl.fuel[i] = regrow_fuel(ovl.fuel[i], s.fuel_cap[i], stand_cfg.litter(kind), dt_e);
                         }
                         let floor = if nh < stand_cfg.crown_heat {
                             stand_cfg.crown(kind) * s.fuel_cap[i]
@@ -320,7 +380,7 @@ pub fn chunk_fire_overlay_tick(
                 );
                 ovl.fuel[i] = stepped.fuel;
                 if stepped.crossed_below_spread {
-                    witness.fuel_depleted_cells = witness.fuel_depleted_cells.saturating_add(1);
+                    fuel_depleted += 1;
                 }
                 if should_arm_burn_hold(stepped.arm_hold, wx.snow_depth) {
                     ovl.burn_hold[i] = BURNED_HOLD_TICKS;
@@ -336,7 +396,7 @@ pub fn chunk_fire_overlay_tick(
                 let mut sum = 0f32;
                 let mut cnt = 0u32;
                 let mut add = |ni: usize| {
-                    if water_gate.cell_has_standing_water(matrix, ni) {
+                    if water[ni] {
                         return;
                     }
                     sum += ovl.heat[ni];
@@ -363,113 +423,135 @@ pub fn chunk_fire_overlay_tick(
                 scratch[i] = if ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD || fuel_gate <= 0.0 {
                     0.0
                 } else {
-                    let spread = lap * 0.65 * b_here * rain_suppress * dt_e * wind_boost.powf(0.35);
+                    let spread = lap * 0.65 * b_here * rain_suppress * dt_e * wind_spread;
                     if spread.abs() > 1e-8 {
-                        witness.neighbor_spread_cells =
-                            witness.neighbor_spread_cells.saturating_add(1);
+                        neighbor_spread += 1;
                     }
                     spread
                 };
             }
         }
 
-        for i in 0..n {
-            if water_gate.cell_has_standing_water(matrix, i) {
-                ovl.heat[i] = 0.0;
-                ovl.burn_hold[i] = 0;
-                continue;
-            }
-            ovl.heat[i] = (ovl.heat[i] + scratch[i]).clamp(0.0, 1.0);
-        }
-
-        for i in 0..n {
-            if water_gate.cell_has_standing_water(matrix, i) {
-                ovl.burn_hold[i] = 0;
-                continue;
-            }
-            let mut cell = FireCell {
-                heat: ovl.heat[i],
-                fuel: ovl.fuel[i],
-                burned_hold: ovl.burn_hold[i],
-            };
-            step_burn_hold(&mut cell);
-            apply_snow_to_hold(&mut cell, wx.snow_depth);
-            ovl.heat[i] = cell.heat;
-            ovl.fuel[i] = cell.fuel;
-            ovl.burn_hold[i] = cell.burned_hold;
-        }
-
-        let heat_src = ovl.heat.clone();
-        let fuel_src = ovl.fuel.clone();
-        let hold_src = ovl.burn_hold.clone();
-        let rain_closed = rain_blocks_neighbor_spread(wx.rain_intensity);
-        let mut taken = vec![false; n];
-        for y in 0..sy {
-            for x in 0..sx {
-                let i = y * sx + x;
-                if rain_closed || water_gate.cell_has_standing_water(matrix, i) {
+        // Whether any cell can spread this tick (the same gate `take_neighbor_deposit` applies to
+        // its source). A chunk without one makes no cardinal deposit, so it skips the pass.
+        let mut any_source = false;
+        // A chunk still quiet after the cell pass has no heat to diffuse and no burned window.
+        if !quiet {
+            for i in 0..n {
+                if water[i] {
+                    ovl.heat[i] = 0.0;
+                    ovl.burn_hold[i] = 0;
                     continue;
                 }
-                let src = FireCell {
-                    heat: heat_src[i],
-                    fuel: fuel_src[i],
-                    burned_hold: hold_src[i],
+                ovl.heat[i] = (ovl.heat[i] + scratch[i]).clamp(0.0, 1.0);
+            }
+
+            for i in 0..n {
+                if water[i] {
+                    ovl.burn_hold[i] = 0;
+                    continue;
+                }
+                let mut cell = FireCell {
+                    heat: ovl.heat[i],
+                    fuel: ovl.fuel[i],
+                    burned_hold: ovl.burn_hold[i],
                 };
-                let deposit_k = dt_e * DEPOSIT_RATE;
-                let deposit_fuel_k = dt_e * DEPOSIT_FUEL_RATE;
-                let mut deposit = |j: usize| {
-                    if water_gate.cell_has_standing_water(matrix, j) {
-                        return;
+                step_burn_hold(&mut cell);
+                apply_snow_to_hold(&mut cell, wx.snow_depth);
+                ovl.heat[i] = cell.heat;
+                ovl.fuel[i] = cell.fuel;
+                ovl.burn_hold[i] = cell.burned_hold;
+                any_source |= can_spread(&cell);
+            }
+        }
+
+        let rain_closed = rain_blocks_neighbor_spread(wx.rain_intensity);
+        if !rain_closed && any_source {
+            // Deposits read the sources as they stood after the hold step, while writing in place.
+            heat_src.clear();
+            heat_src.extend_from_slice(&ovl.heat);
+            fuel_src.clear();
+            fuel_src.extend_from_slice(&ovl.fuel);
+            hold_src.clear();
+            hold_src.extend_from_slice(&ovl.burn_hold);
+            taken.clear();
+            taken.resize(n, false);
+            for y in 0..sy {
+                for x in 0..sx {
+                    let i = y * sx + x;
+                    if water[i] {
+                        continue;
                     }
-                    if !spread_allowed(wx.snow_depth, matrix.moisture[j]) {
-                        return;
-                    }
-                    let fuel_before = ovl.fuel[j];
-                    let mut dst = FireCell {
-                        heat: if heat_open[j] >= 1.0 {
-                            heat_open[j]
-                        } else {
-                            ovl.heat[j]
-                        },
-                        fuel: ovl.fuel[j],
-                        burned_hold: ovl.burn_hold[j],
+                    let src = FireCell {
+                        heat: heat_src[i],
+                        fuel: fuel_src[i],
+                        burned_hold: hold_src[i],
                     };
-                    if take_neighbor_deposit(
-                        taken[j],
-                        &src,
-                        &mut dst,
-                        scaled_neighbor_heat_gain(wx.fog_density) * deposit_k,
-                    ) {
-                        taken[j] = true;
-                        ovl.heat[j] = dst.heat;
-                        ovl.fuel[j] = (fuel_before - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).max(0.0);
-                        witness.neighbor_spread_cells =
-                            witness.neighbor_spread_cells.saturating_add(1);
+                    if !can_spread(&src) {
+                        continue;
                     }
-                };
-                if x > 0 {
-                    deposit(i - 1);
-                }
-                if x + 1 < sx {
-                    deposit(i + 1);
-                }
-                if y > 0 {
-                    deposit(i - sx);
-                }
-                if y + 1 < sy {
-                    deposit(i + sx);
+                    let deposit_k = dt_e * DEPOSIT_RATE;
+                    let deposit_fuel_k = dt_e * DEPOSIT_FUEL_RATE;
+                    let mut deposit = |j: usize| {
+                        if water[j] {
+                            return;
+                        }
+                        if !spread_allowed(wx.snow_depth, matrix.moisture[j]) {
+                            return;
+                        }
+                        let fuel_before = ovl.fuel[j];
+                        let mut dst = FireCell {
+                            heat: if saturated && heat_open[j] >= 1.0 {
+                                heat_open[j]
+                            } else {
+                                ovl.heat[j]
+                            },
+                            fuel: ovl.fuel[j],
+                            burned_hold: ovl.burn_hold[j],
+                        };
+                        if take_neighbor_deposit(
+                            taken[j],
+                            &src,
+                            &mut dst,
+                            scaled_neighbor_heat_gain(wx.fog_density) * deposit_k,
+                        ) {
+                            taken[j] = true;
+                            ovl.heat[j] = dst.heat;
+                            ovl.fuel[j] = (fuel_before - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).max(0.0);
+                            neighbor_spread += 1;
+                        }
+                    };
+                    if x > 0 {
+                        deposit(i - 1);
+                    }
+                    if x + 1 < sx {
+                        deposit(i + 1);
+                    }
+                    if y > 0 {
+                        deposit(i - sx);
+                    }
+                    if y + 1 < sy {
+                        deposit(i + sx);
+                    }
                 }
             }
         }
+
+        witness.fuel_gated_spark_cells = witness.fuel_gated_spark_cells.saturating_add(fuel_gated_sparks);
+        witness.ungated_spark_cells = witness.ungated_spark_cells.saturating_add(ungated_sparks);
+        witness.neighbor_spread_cells = witness.neighbor_spread_cells.saturating_add(neighbor_spread);
+        witness.fuel_depleted_cells = witness.fuel_depleted_cells.saturating_add(fuel_depleted);
 
         let mut sum_h = 0f32;
         let mut burnable = 0u32;
-        for i in 0..n {
-            if water_gate.cell_has_standing_water(matrix, i) {
-                continue;
+        if !quiet {
+            for i in 0..n {
+                if water[i] {
+                    continue;
+                }
+                sum_h += ovl.heat[i];
+                burnable += 1;
             }
-            sum_h += ovl.heat[i];
-            burnable += 1;
         }
         let mean_h = if burnable > 0 {
             sum_h / burnable as f32
@@ -487,10 +569,23 @@ pub fn chunk_fire_overlay_tick(
                 dirty.fire_field = true;
                 hooks.notify_fire_field_dirty(entity);
             }
-        } else if mean_h < 0.008 {
+        } else if mean_h < 0.008 && dirty.fire_field {
             dirty.fire_field = false;
         }
     }
+}
+
+/// Litter fall / regrowth of one cool cell toward what its stand can carry.
+#[inline]
+fn regrow_fuel(fuel: f32, cap: f32, litter_secs: f32, dt: f32) -> f32 {
+    (fuel + cap / litter_secs.max(1.0) * dt).min(cap)
+}
+
+/// A cell that may deposit on its neighbours: lit, fuelled, and out of its burned window
+/// (the source gate of [`take_neighbor_deposit`]).
+#[inline]
+fn can_spread(cell: &FireCell) -> bool {
+    cell.burned_hold == 0 && cell.fuel >= MIN_CELL_FUEL_FOR_SPREAD && cell.heat >= SPREAD_HEAT_MIN
 }
 
 /// Fire crosses chunk borders: a hot cell on a chunk edge deposits heat on the facing cell of the neighbouring

@@ -329,17 +329,17 @@
       "id": "perf.debug.avg_ms",
       "path": "perf.avg_ms",
       "op": "lte",
-      "expect": 250,
+      "expect": 22,
       "when_build": ["debug"],
-      "note": "Debug average frame <= 250 ms (unoptimized crate; release is the real target)."
+      "note": "Debug average frame <= 22 ms (crate at opt-level 1; ~1.5x the measured 14 ms)."
     },
     {
       "id": "perf.debug.p95_ms",
       "path": "perf.p95_ms",
       "op": "lte",
-      "expect": 450,
+      "expect": 32,
       "when_build": ["debug"],
-      "note": "Debug p95 frame <= 450 ms."
+      "note": "Debug p95 frame <= 32 ms (~1.5x the measured 20 ms)."
     },
     {
       "id": "perf.debug.hitches_per_min",
