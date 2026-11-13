@@ -117,13 +117,5 @@ pub fn refresh_replay_editor_parity_live_witness() -> bool {
 }
 
 pub fn register_replay_editor_parity_hooks(app: &mut App) {
-    app.init_resource::<ReplayEditorParityWitness>()
-        .add_systems(
-            Update,
-            (
-                refresh_replay_editor_parity_witness_system,
-                write_replay_editor_parity_live_proof_system.after(refresh_replay_editor_parity_witness_system),
-            )
-                .run_if(|base: Res<State<BaseState>>| matches!(base.get(), BaseState::Simulation)),
-        );
+    app.init_resource::<ReplayEditorParityWitness>();
 }

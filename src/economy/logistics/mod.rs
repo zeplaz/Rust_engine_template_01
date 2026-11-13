@@ -169,10 +169,6 @@ impl Plugin for LogisticsThroughputPlugin {
                 (
                     async_district::apply_async_district_solve_results_system,
                     collect_logistics_diagnostics_panel_system,
-                    refresh_logistics_throughput_witness_system,
-                    sync_logistics_throughput_board_system,
-                    witness_collectors::write_logistics_throughput_live_proof_system
-                        .run_if(crate::dev::runtime_witness::logistics_throughput_live_proof_due),
                     async_district::promote_async_district_staging_system,
                 )
                     .chain()

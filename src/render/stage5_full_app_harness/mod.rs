@@ -251,109 +251,13 @@ mod tests {
             Some(&graph),
         );
         assert!(gates_opt_in.fire_degraded_overlay_bootstrap);
-    }
-
-    #[test]
-    fn perf_witness_disk_refresh_001_writes_visual_witness_and_perf_attribution() {
-        assert!(super::refresh_stage5_visual_perf_witness_on_disk());
-        let text = std::fs::read_to_string(super::STAGE5_FULL_APP_LIVE_JSON).expect("witness");
-        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert!(
-            v.pointer("/readiness/visual_witness/soft_healthy")
-                .and_then(|x| x.as_bool())
-                .unwrap_or(false),
-            "PERF-WITNESS-DISK-REFRESH-001: expected readiness.visual_witness"
-        );
-        assert!(
-            v.pointer("/readiness/visual_witness/perf_attribution_60s/p95_frame_ms")
-                .and_then(|x| x.as_f64())
-                .unwrap_or(0.0)
-                > 0.0,
-            "expected nested perf_attribution_60s under visual_witness"
-        );
-        assert!(
-            v.pointer("/readiness/perf_attribution_60s/p95_frame_ms")
-                .and_then(|x| x.as_f64())
-                .unwrap_or(0.0)
-                > 0.0,
-            "expected readiness.perf_attribution_60s rollup"
-        );
-    }
-
-    #[test]
-    fn log_e01_fullapp_upgrade_001_witness_refresh_green() {
-        assert!(super::refresh_log_e01_fullapp_upgrade_001_live_witness());
-        let text = std::fs::read_to_string(super::STAGE5_FULL_APP_LIVE_JSON).expect("witness");
-        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(
-            v["log_e01_fullapp_upgrade_001"]["green"],
-            serde_json::json!(false)
-        );
-        assert_eq!(
-            v["log_e01_visual_confirm_001"]["full_visual_confirm"],
-            serde_json::json!(false)
-        );
-        assert_eq!(
-            v["log_e01_visual_confirm_001"]["capture_lane"],
-            serde_json::json!("lib_fixture")
-        );
-        assert_eq!(
-            v["log_e01_visual_confirm_001"]["log_e01_fixture_green"],
-            serde_json::json!(true)
-        );
-        assert!(
-            v["projection_graph"]["logistics_active_rows"]
-                .as_u64()
-                .unwrap_or(0)
-                > 0
-        );
-        assert!(
-            v["f2_extract_witness"]["fire_instance_buffer_rows"]
-                .as_u64()
-                .unwrap_or(0)
-                > 0,
-            "FIRE-F2-EXTRACT-TAIL-001: expected hot-cell fire rows on disk"
-        );
-        assert_eq!(
-            v["f2_extract_witness"]["green"],
-            serde_json::json!(true)
-        );
-    }
-
-
-    #[test]
-    fn p2_fire_spark_011_stage5_witness_refresh() {
-        use crate::render::pipelines::gpu_particles::FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA;
-
-        assert!(super::refresh_p2_fire_spark_011_stage5_live_witness());
-
-        let text = std::fs::read_to_string(STAGE5_FULL_APP_LIVE_JSON).expect("witness");
-        let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
-        assert_eq!(
-            v["tactical_vfx_witness"]["fire_spark_011_green"],
-            serde_json::json!(true)
-        );
-        assert_eq!(
-            v["tactical_vfx_witness"]["fire_spark_tactical_proof_zoom_alpha"],
-            serde_json::json!(FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA)
-        );
-        assert_eq!(
-            v["particle_routing"]["fire_spark_011_green"],
-            serde_json::json!(true)
-        );
-        let zoom = v["particle_routing"]["fire_spark_zoom_alpha"]
-            .as_f64()
-            .expect("fire_spark_zoom_alpha");
-        assert!(
-            (zoom - f64::from(FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA)).abs() < 1e-4,
-            "expected tactical proof zoom 0.85, got {zoom}"
-        );
-        assert!(
-            v["particle_routing"]["fire_spark_rows"]
-                .as_u64()
-                .unwrap_or(0)
-                > 0
-        );
+        let _ = std::env::remove_var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY");
+        assert!(!super::witness_gates::should_overlay_bootstrap_fire_sparks(0, 0, false));
+        std::env::set_var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY", "1");
+        assert!(super::witness_gates::should_overlay_bootstrap_fire_sparks(0, 0, false));
+        assert!(!super::witness_gates::should_overlay_bootstrap_fire_sparks(4, 0, false));
+        assert!(!super::witness_gates::should_overlay_bootstrap_fire_sparks(0, 3, false));
+        let _ = std::env::remove_var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY");
     }
 
     #[test]

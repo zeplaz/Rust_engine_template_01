@@ -136,6 +136,7 @@ pub fn log_e01_visual_confirm_witness_json(
         crate::dev::proof_grade::ProofGrade::VisualCapture => full_visual_confirm,
         crate::dev::proof_grade::ProofGrade::LibFixture => log_e01_fixture_green,
         crate::dev::proof_grade::ProofGrade::HeadlessSim => false,
+        crate::dev::proof_grade::ProofGrade::SimDump => false,
     };
     serde_json::json!({
         "gate": "LOG-E01-VISUAL-CONFIRM-001",
@@ -340,6 +341,14 @@ pub fn refresh_stage5_visual_perf_witness_on_disk() -> bool {
 pub fn merge_log_e01_stage5_witness(root: &mut serde_json::Value, graph: &RenderProjectionGraph) {
     let signature = crate::render::extraction::projection_graph_build_signature(graph);
     let fire_rows = graph.fire.instance_buffer.len();
+    let heat_chunks = graph
+        .fire
+        .chunk_heat
+        .iter()
+        .filter(|h| h.heat > 0.04)
+        .count();
+    let fire_inst_tracks_sim_heat =
+        (heat_chunks == 0 && fire_rows == 0) || (heat_chunks > 0 && fire_rows > 0);
     let ecology_rows = graph.ecology.active_rows;
     let ecology_source = if ecology_rows > 0 {
         "live_landscape_program_on_chunk"
@@ -377,6 +386,8 @@ pub fn merge_log_e01_stage5_witness(root: &mut serde_json::Value, graph: &Render
             serde_json::json!({
                 "gate": "FIRE-F2-EXTRACT-001",
                 "fire_instance_buffer_rows": fire_rows,
+                "fire_inst": fire_rows,
+                "fire_inst_tracks_sim_heat": fire_inst_tracks_sim_heat,
                 "green": fire_rows > 0,
             }),
         );

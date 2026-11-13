@@ -12,6 +12,8 @@ pub enum ProofGrade {
     HeadlessSim,
     /// Live `--test visual` proof commit (`full_capture_active`).
     VisualCapture,
+    /// `debug_runs/sim_run_dump.json` — raw counts, scored in Python.
+    SimDump,
 }
 
 impl ProofGrade {
@@ -21,6 +23,7 @@ impl ProofGrade {
             Self::LibFixture => "lib_fixture",
             Self::HeadlessSim => "headless_sim",
             Self::VisualCapture => "visual_capture",
+            Self::SimDump => "sim_dump",
         }
     }
 

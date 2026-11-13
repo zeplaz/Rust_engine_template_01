@@ -73,27 +73,12 @@ impl Plugin for IndustrialActivationPlugin {
                     .after(crate::strategic::site_provisioning_system),
                 crate::economy::logistics::register_facility_portals_system,
                 crate::economy::concrete_batch::register_concrete_batch_on_activation_system,
-                super::concrete_chain_e2e::refresh_concrete_chain_e2e_witness_system,
-                refresh_industrial_activation_witness_system,
                 sync_industrial_activation_board_system,
                 sync_utility_connection_power_system,
                 super::witness_collectors::sync_industrial_proof_witness_flags,
             ),
         );
-        app.add_systems(
-            Update,
-            (
-                super::witness_collectors::write_industrial_activation_live_proof_system
-                    .run_if(crate::dev::runtime_witness::industrial_activation_live_proof_due),
-                crate::dev::write_stage7_play_witness_system
-                    .run_if(crate::dev::runtime_witness::stage7_play_live_proof_due),
-                crate::dev::write_stage7_behavioral_witness_system
-                    .run_if(crate::dev::runtime_witness::stage7_behavioral_live_proof_due)
-                    .after(crate::strategic::publish_stage7_behavioral_overlay_samples)
-                    .after(crate::strategic::tick_strategic_command_queue_system),
-            )
-                .after(super::witness_collectors::sync_industrial_proof_witness_flags),
-        );
+        // Retired: industrial / stage7 live-JSON writers. Review via sim_run_dump.
         app.add_systems(
             Update,
             crate::economy::concrete_batch::tick_concrete_batch_cure_system

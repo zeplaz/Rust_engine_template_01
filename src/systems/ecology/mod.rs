@@ -47,6 +47,7 @@ pub use landscape_grammar_lg2::{
     lg4_preview_witness_green, LandUseDistrictKind,
     LandUseInfluence, LandscapeDisturbanceQueue, LandscapeGrammarLg2Witness,
     SubcellPopulationGrid, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
+    VegetationStandInstances,
     LANDSCAPE_GRAMMAR_LG2_LIVE_JSON, LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
     LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON,
 };

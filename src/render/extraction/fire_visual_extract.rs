@@ -213,13 +213,6 @@ impl Plugin for FireVisualFramePlugin {
             )
             .add_systems(
                 Update,
-                crate::render::fx_spine::fire_streaming::write_fire_streaming_live_proof_system
-                    .run_if(crate::dev::runtime_witness::fire_streaming_live_proof_due)
-                    .after(FireVisualFrameSet::BuildProfiles)
-                    .run_if(in_state(crate::engine::states::BaseState::Simulation)),
-            )
-            .add_systems(
-                Update,
                 build_fire_clusters_into_scratch.in_set(FireVisualFrameSet::BuildClusters),
             )
             .add_systems(

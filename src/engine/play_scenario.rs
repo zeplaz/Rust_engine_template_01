@@ -731,12 +731,6 @@ impl Plugin for PlayScenarioPlugin {
                 Update,
                 seed_default_industrial_logistics_once
                     .after(crate::systems::transport::TransportSchedule::Topology),
-            )
-            .add_systems(
-                Update,
-                write_play_scenario_live_proof_from_sim.after(
-                    crate::economy::activation::refresh_concrete_chain_e2e_witness_system,
-                ),
             );
     }
 }

@@ -59,6 +59,29 @@ pub fn tactical_vfx_hard_lock_enabled() -> bool {
     false
 }
 
+/// F2-PR-3 — overlay-heat spark bootstrap is env opt-in, not the tactical default.
+#[inline]
+#[must_use]
+pub fn degraded_fire_spark_fallback_enabled() -> bool {
+    std::env::var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY")
+        .ok()
+        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+}
+
+/// Harness may seed sparks from overlay heat only when the graph is empty **and** degraded mode is on.
+#[inline]
+#[must_use]
+pub(crate) fn should_overlay_bootstrap_fire_sparks(
+    spark_rows: usize,
+    instance_buffer_len: usize,
+    overlay_heat_empty: bool,
+) -> bool {
+    spark_rows == 0
+        && instance_buffer_len == 0
+        && !overlay_heat_empty
+        && degraded_fire_spark_fallback_enabled()
+}
+
 /// P2-VFX-WITNESS-001 / P2-WATER-WITNESS-002 JSON gate evaluation.
 #[derive(Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub(crate) struct TacticalVfxWitnessGates {
@@ -171,10 +194,8 @@ impl TacticalVfxWitnessGates {
         let proj_view = particles
             .map(|p| p.spark_witness.projection_view)
             .unwrap_or("");
-        let fire_degraded_overlay_bootstrap = proj_view == "overlay_bootstrap"
-            && std::env::var("RUST_ENGINE_FIRE_DEGRADED_OVERLAY")
-                .ok()
-                .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"));
+        let fire_degraded_overlay_bootstrap =
+            proj_view == "overlay_bootstrap" && degraded_fire_spark_fallback_enabled();
         let fire_projection_graph_native = buffer_rows > 0
             && !fire_degraded_overlay_bootstrap
             && proj_view != "chunk_heat_fallback";
@@ -302,15 +323,11 @@ pub(crate) fn refresh_visual_proof_fire_particles(
         *cam,
         view_manager.as_deref(),
     );
-    if particles.spark_witness.rows > 0 {
-        return;
-    }
-    // F2-PR-3: do not overlay-bootstrap when graph already projected instance rows.
-    if !graph.fire.instance_buffer.is_empty() {
-        return;
-    }
-    // Projection graph empty (view cull / stamp) but overlay has seeded fire — witness bootstrap.
-    if overlay.chunk_fire_heat.is_empty() {
+    if !should_overlay_bootstrap_fire_sparks(
+        particles.spark_witness.rows,
+        graph.fire.instance_buffer.len(),
+        overlay.chunk_fire_heat.is_empty(),
+    ) {
         return;
     }
     crate::render::pipelines::gpu_particles::seed_world_fire_particles_from_overlay_heat(

@@ -135,8 +135,9 @@ impl Plugin for EnginePlugin {
             .add_plugins(crate::sim::SimEffectsPlugin)
             .add_plugins(ScenarioScriptingPlugin);
         configure_chunk_environment_sets(app);
-        app.add_plugins(crate::dev::runtime_witness::LiveProofCadencePlugin)
-            .add_plugins(crate::substrate::SubstratePlugin)
+        #[cfg(debug_assertions)]
+        app.add_plugins(crate::dev::SimRunDumpPlugin);
+        app.add_plugins(crate::substrate::SubstratePlugin)
             .add_plugins(ChunkEnvironmentPersistPlugin)
             .add_plugins(crate::io::save::WorldSaveSpinePlugin)
             .add_plugins(crate::render::Stage6VirtualizationPlugin)

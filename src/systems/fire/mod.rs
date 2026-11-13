@@ -84,11 +84,6 @@ impl Plugin for FirePlugin {
                     witness_collectors::finalize_fire_ecology_witness_frame
                         .after(chunk_fire_overlay_tick)
                         .in_set(ChunkEnvironmentSet::Fire),
-                    // Sole ecology JSON writer — after drain finalize so nested sim_effect_spine is honest.
-                    witness_collectors::write_fire_ecology_live_proof_system
-                        .after(witness_collectors::finalize_fire_ecology_witness_frame)
-                        .after(SimEffectSystemSet::Drain)
-                        .run_if(crate::dev::runtime_witness::fire_ecology_live_proof_due),
                     // VSS-T3-001: emit → SimEffect drain → apply (sole EmberSpot MessageWriter = drain).
                     emit_ember_spot_ignition_events
                         .after(chunk_fire_overlay_tick)

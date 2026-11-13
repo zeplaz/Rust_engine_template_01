@@ -337,23 +337,10 @@ fn witness_system_run_gate() -> &'static Mutex<HashMap<String, u32>> {
     GATE.get_or_init(|| Mutex::new(HashMap::new()))
 }
 
-/// Whether live-witness refresh systems may run this process (release play defaults off).
+/// Retired. Live `*_live.json` refresh is off in every profile.
 #[must_use]
 pub fn witness_live_refresh_enabled() -> bool {
-    if cfg!(test) {
-        return true;
-    }
-    // Explicit force-off wins over every other source (matches `witness_writes_enabled`).
-    if env_flag(crate::dev::runtime_witness::ENV_RUNTIME_WITNESS_WRITES_FORCE_OFF) {
-        return false;
-    }
-    if crate::dev::test_run_instrumentation::instrumentation_active() {
-        return true;
-    }
-    if cfg!(debug_assertions) {
-        return true;
-    }
-    crate::dev::runtime_witness::gate::witness_writes_enabled()
+    false
 }
 
 /// Returns `true` when a live-witness refresh system may run heavy work (ECS query + JSON).
@@ -427,7 +414,31 @@ fn payload_content_hash(payload: &Value) -> u64 {
 /// Witness systems call this from the frame loop, so redundant writes are elided:
 /// unchanged content is never rewritten, and changed content is rewritten at most
 /// once per second per path (callers re-emit every frame, so the final state lands).
-pub fn write_debug_run_json(relative_path: &str, payload: Value) -> bool {
+fn stamp_fixture_untrusted(payload: &mut Value) {
+    let grade = payload.get("proof_grade").and_then(Value::as_str).unwrap_or("");
+    let src = payload
+        .pointer("/_agent_meta/source_system")
+        .and_then(Value::as_str)
+        .unwrap_or("");
+    let lane = payload.get("capture_lane").and_then(Value::as_str).unwrap_or("");
+    if grade == "lib_fixture" || lane == "lib_fixture" || src.contains("refresh_") {
+        if let Some(obj) = payload.as_object_mut() {
+            obj.insert("_untrusted".into(), Value::Bool(true));
+            obj.insert(
+                "_untrusted_reason".into(),
+                Value::String("lib_fixture_or_refresh_writer — not a sim dump".into()),
+            );
+        }
+    }
+}
+
+pub fn write_debug_run_json(_relative_path: &str, _payload: Value) -> bool {
+    false
+}
+
+#[allow(dead_code)]
+fn write_debug_run_json_retired(relative_path: &str, mut payload: Value) -> bool {
+    stamp_fixture_untrusted(&mut payload);
     const MIN_REWRITE_INTERVAL: Duration = Duration::from_secs(1);
     let hash = payload_content_hash(&payload);
     if let Ok(gate) = write_gate().lock() {

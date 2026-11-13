@@ -23,7 +23,9 @@ use crate::strategic::{
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::fire::{ChunkFuelProfile, ChunkSurfaceFire};
 use crate::systems::weather::ChunkWeather;
-use crate::terrain::generation::Chunk;
+use crate::terrain::generation::{
+    cell_canopy_scales, Chunk, ChunkCellMatrix, ChunkDerivedMetrics,
+};
 
 pub const LANDSCAPE_GRAMMAR_LG2_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg2_live.json";
 pub const LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON: &str =
@@ -126,6 +128,12 @@ impl Default for SubcellPopulationGrid {
     }
 }
 
+/// VEG-E02 — deterministic stand placements inside `instance_budget` (local cell indices).
+#[derive(Component, Clone, Debug, Default)]
+pub struct VegetationStandInstances {
+    pub cells: Vec<u16>,
+}
+
 /// Pending harvest / sim-effect vegetation disturbances drained into history.
 #[derive(Resource, Debug, Default)]
 pub struct LandscapeDisturbanceQueue {
@@ -171,6 +179,7 @@ pub fn attach_lg2_bundle_on_chunk(commands: &mut Commands, entity: Entity, pilot
         },
         VegetationPopulation::default(),
         SubcellPopulationGrid::default(),
+        VegetationStandInstances::default(),
     ));
 }
 
@@ -425,11 +434,10 @@ pub fn derive_vegetation_population_from_graph(
         &LandscapeProgramOnChunk,
         &SuccessionState,
         &mut VegetationPopulation,
-        &mut SubcellPopulationGrid,
         &mut CanopyDrivers,
     )>,
 ) {
-    for (program, succ, mut pop, mut subcell, mut drivers) in &mut q {
+    for (program, succ, mut pop, mut drivers) in &mut q {
         let eval = &program.evaluation;
         let cap = drivers.suitability_cap.clamp(0.0, 1.0);
         let stage_factor = match succ.stage {
@@ -446,10 +454,163 @@ pub fn derive_vegetation_population_from_graph(
         pop.instance_budget =
             (pop.topology_kind_count.saturating_mul(8) as f32 * stage_factor * cap) as u32;
         drivers.population_density = Some(pop.mean_density);
-        let base = pop.mean_density;
-        for (i, cell) in subcell.cells.iter_mut().enumerate() {
-            let bias = ((i % 4) as f32 * 0.04 + (i / 4) as f32 * 0.03).clamp(0.0, 0.12);
-            *cell = (base + bias).clamp(0.05, 1.0).min(cap);
+        // VEG-E02: SubcellPopulationGrid is filled from terrain in sync_stand_instances_from_terrain.
+    }
+}
+
+#[must_use]
+pub fn subcell_mean_density(grid: &SubcellPopulationGrid) -> f32 {
+    grid.cells.iter().copied().sum::<f32>() / grid.cells.len() as f32
+}
+
+fn instance_cell_hash(chunk: IVec2, idx: u16) -> u32 {
+    let mut x = (chunk.x as u32)
+        .wrapping_mul(0x9E37_79B9)
+        ^ (chunk.y as u32).wrapping_mul(0x85EB_CA6B)
+        ^ u32::from(idx).wrapping_mul(0xC2B2_AE35);
+    x ^= x >> 16;
+    x = x.wrapping_mul(0x7FEB_352D);
+    x ^ (x >> 15)
+}
+
+#[must_use]
+fn cell_cover_score(
+    idx: usize,
+    scales: &[f32],
+    matrix: &ChunkCellMatrix,
+    derived: Option<&ChunkDerivedMetrics>,
+) -> f32 {
+    if matrix
+        .water
+        .get(idx)
+        .copied()
+        .unwrap_or_default()
+        .is_open_water()
+    {
+        return 0.0;
+    }
+    let scale = scales.get(idx).copied().unwrap_or(0.0);
+    if scale < 0.02 {
+        return 0.0;
+    }
+    let drain = derived
+        .and_then(|d| d.drainage.get(idx).copied())
+        .unwrap_or(0.5)
+        .clamp(0.0, 1.0);
+    scale * (0.5 + 0.5 * drain)
+}
+
+/// VEG-E02 — 4×4 subcell means from canopy scale × drainage (open water = 0).
+pub fn fill_subcell_from_terrain(
+    subcell: &mut SubcellPopulationGrid,
+    matrix: &ChunkCellMatrix,
+    derived: Option<&ChunkDerivedMetrics>,
+    mean_density: f32,
+    cap: f32,
+) {
+    let scales = cell_canopy_scales(matrix);
+    let w = matrix.size.x.max(1);
+    let h = matrix.size.y.max(1);
+    for i in 0..16 {
+        let sx = (i % 4) as u32;
+        let sy = (i / 4) as u32;
+        let x0 = sx * w / 4;
+        let x1 = ((sx + 1) * w / 4).max(x0 + 1);
+        let y0 = sy * h / 4;
+        let y1 = ((sy + 1) * h / 4).max(y0 + 1);
+        let mut acc = 0.0f32;
+        let mut n = 0u32;
+        for y in y0..y1 {
+            for x in x0..x1 {
+                let idx = matrix.idx(x, y);
+                let score = cell_cover_score(idx, &scales, matrix, derived);
+                if score <= 0.0 {
+                    continue;
+                }
+                acc += score;
+                n += 1;
+            }
+        }
+        let v = if n == 0 {
+            0.0
+        } else {
+            (acc / n as f32) * mean_density
+        };
+        subcell.cells[i] = v.clamp(0.0, 1.0).min(cap);
+    }
+}
+
+/// VEG-E02 — highest-scoring land cells, bounded by `budget`, order-stable for the same inputs.
+#[must_use]
+pub fn pick_stand_instance_cells(
+    matrix: &ChunkCellMatrix,
+    derived: Option<&ChunkDerivedMetrics>,
+    budget: u32,
+    chunk_coord: IVec2,
+) -> Vec<u16> {
+    if budget == 0 {
+        return Vec::new();
+    }
+    let scales = cell_canopy_scales(matrix);
+    let n = (matrix.size.x as usize).saturating_mul(matrix.size.y as usize);
+    let mut scored: Vec<(u32, u16)> = Vec::new();
+    for idx in 0..n {
+        let score = cell_cover_score(idx, &scales, matrix, derived);
+        if score <= 0.0 {
+            continue;
+        }
+        let bits = (score * 1_000_000.0) as u32;
+        let mix = bits.saturating_add(instance_cell_hash(chunk_coord, idx as u16) % 17);
+        scored.push((mix, idx as u16));
+    }
+    scored.sort_by(|a, b| b.0.cmp(&a.0).then(a.1.cmp(&b.1)));
+    scored.truncate(budget as usize);
+    scored.sort_by_key(|(_, idx)| *idx);
+    scored.into_iter().map(|(_, i)| i).collect()
+}
+
+/// After graph population — overwrite the 4×4 bias grid with terrain and spawn stand instances.
+pub fn sync_stand_instances_from_terrain(
+    mut commands: Commands,
+    mut q: Query<(
+        Entity,
+        &Chunk,
+        &ChunkCellMatrix,
+        &VegetationPopulation,
+        Option<&ChunkDerivedMetrics>,
+        Option<&mut CanopyDrivers>,
+        &mut SubcellPopulationGrid,
+        Option<&mut VegetationStandInstances>,
+    )>,
+) {
+    for (entity, chunk, matrix, pop, derived, mut drivers, mut subcell, instances) in &mut q {
+        let cap = drivers
+            .as_ref()
+            .map(|d| d.suitability_cap.clamp(0.0, 1.0))
+            .unwrap_or(1.0);
+        fill_subcell_from_terrain(
+            subcell.as_mut(),
+            matrix,
+            derived,
+            pop.mean_density,
+            cap,
+        );
+        // Terrain grid is the population read: canopy tick consumes this density, not the index bias.
+        if let Some(d) = drivers.as_mut() {
+            d.population_density = Some(subcell_mean_density(&subcell));
+        }
+        let cells = pick_stand_instance_cells(
+            matrix,
+            derived,
+            pop.instance_budget,
+            chunk.coord,
+        );
+        if let Some(mut inst) = instances {
+            inst.cells = cells;
+        } else {
+            commands
+                .entity(entity)
+                .insert(VegetationStandInstances { cells });
         }
     }
 }
@@ -671,6 +832,7 @@ pub fn landscape_grammar_lg2_plugin(app: &mut App) {
                 drain_landscape_disturbance_queue,
                 sync_fuel_bridge_from_succession,
                 derive_vegetation_population_from_graph,
+                sync_stand_instances_from_terrain,
             )
                 .chain()
                 .in_set(ChunkEnvironmentSet::Ecology)
@@ -940,5 +1102,35 @@ mod tests {
             app.world().get::<CanopyDrivers>(entity).unwrap().clear_to,
             Some(CANOPY_CLEARED_DENSITY)
         );
+    }
+
+    #[test]
+    fn veg_e02_instances_are_deterministic_bounded_and_skip_water() {
+        use crate::terrain::generation::WaterClass;
+        use bevy::math::UVec2;
+
+        let mut matrix = ChunkCellMatrix::new(UVec2::new(8, 8));
+        for elev in &mut matrix.elevation {
+            *elev = 0.4;
+        }
+        matrix.water[0] = WaterClass::Lake;
+        matrix.water[1] = WaterClass::River;
+        let mut derived = ChunkDerivedMetrics::from_chunk_matrix(&matrix);
+        for (i, d) in derived.drainage.iter_mut().enumerate() {
+            *d = if i == 63 { 1.0 } else { 0.1 };
+        }
+        let a = pick_stand_instance_cells(&matrix, Some(&derived), 4, IVec2::new(2, 3));
+        let b = pick_stand_instance_cells(&matrix, Some(&derived), 4, IVec2::new(2, 3));
+        assert_eq!(a, b);
+        assert!(a.len() <= 4);
+        assert!(!a.contains(&0), "open water must not spawn");
+        assert!(!a.contains(&1), "open water must not spawn");
+        let mut sub = SubcellPopulationGrid::default();
+        fill_subcell_from_terrain(&mut sub, &matrix, Some(&derived), 0.8, 1.0);
+        assert!(sub.cells.iter().any(|c| *c > 0.0));
+        assert!(subcell_mean_density(&sub) > 0.0);
+        let mut capped = SubcellPopulationGrid::default();
+        fill_subcell_from_terrain(&mut capped, &matrix, Some(&derived), 0.8, 0.1);
+        assert!(capped.cells.iter().all(|c| *c <= 0.1001));
     }
 }

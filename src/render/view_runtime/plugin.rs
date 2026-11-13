@@ -1,19 +1,11 @@
 use bevy::prelude::*;
 
-use crate::engine::states::BaseState;
-use crate::gui::ViewAuthoritySystemSet;
-
 use super::authority::ViewProjectionAuthority;
 use super::witness_state::{
-    clear_minimap_map_camera_write_flag, refresh_view_runtime_witness, ViewRuntimeWitness,
+    clear_minimap_map_camera_write_flag, ViewRuntimeWitness,
 };
-use crate::dev::runtime_witness::view_runtime::{
-    write_view_runtime_live_proof_system, ViewRuntimeLiveProofState,
-};
-use crate::dev::runtime_witness::view_runtime_live_proof_due;
-use super::view_fire_isolation::{
-    refresh_view_fire_isolation_witness, ViewFireIsolationWitness,
-};
+use crate::dev::runtime_witness::view_runtime::ViewRuntimeLiveProofState;
+use super::view_fire_isolation::ViewFireIsolationWitness;
 use super::per_view_policy::PerViewRepresentationPolicy;
 use super::input_routing::{sync_view_input_routing_from_active_map, ViewInputRoutingState};
 use super::trace::{advance_view_runtime_trace_frame, ViewRuntimeTrace};
@@ -43,18 +35,6 @@ impl Plugin for ViewRuntimePlugin {
                     sync_view_input_routing_from_active_map,
                 ),
             )
-            .add_systems(
-                Update,
-                (
-                    refresh_view_fire_isolation_witness,
-                    refresh_view_runtime_witness,
-                    write_view_runtime_live_proof_system
-                        .run_if(view_runtime_live_proof_due),
-                )
-                    .chain()
-                    .after(crate::render::FireVisualFrameSet::BuildProfiles)
-                    .after(ViewAuthoritySystemSet::SyncViewManager)
-                    .run_if(in_state(BaseState::Simulation)),
-            );
+            ;
     }
 }

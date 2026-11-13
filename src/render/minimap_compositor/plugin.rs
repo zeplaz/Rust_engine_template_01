@@ -20,9 +20,7 @@ use super::render_target::{
 };
 use super::diagnostics::MinimapGpuCompositorDiagnostics;
 use super::state::MinimapCompositorState;
-use crate::dev::runtime_witness::minimap::{
-    write_minimap_compositor_live_proof_system, MinimapCompositorLiveProofState,
-};
+use crate::dev::runtime_witness::minimap::MinimapCompositorLiveProofState;
 
 pub struct MinimapCompositorPlugin;
 
@@ -76,9 +74,6 @@ impl Plugin for MinimapCompositorPlugin {
                 .in_set(ViewRepresentationSystemSet::WorldRender)
                 .run_if(on_visual_cadence_minimap),
         )
-        .add_systems(
-            PostUpdate,
-            write_minimap_compositor_live_proof_system.run_if(in_state(BaseState::Simulation)),
-        );
+        ;
     }
 }

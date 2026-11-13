@@ -17,6 +17,7 @@ pub mod sim_spectrum_analytics;
 pub mod schedule_sync_witness;
 pub mod triage_perf_vfx_fix_live_proof;
 pub mod test_run_instrumentation;
+pub mod sim_run_dump;
 pub mod construction_live_todos;
 pub mod construction_finish_todos;
 pub mod construction_phase2_todos;
@@ -137,6 +138,7 @@ pub use test_run_instrumentation::{
     instrumentation_quiet_terminal, instrumentation_stall_spans, TestRunInstrumentation,
     TestRunInstrumentationPlugin,
 };
+pub use sim_run_dump::{SimRunDumpPlugin, SIM_RUN_DUMP_JSON, SIM_RUN_DUMP_SCHEMA};
 pub use mig_a_adoption::{
     build_mig_a_rollup_json, mig_a_static_scene_enabled, mig_a4_render_recovery_enabled,
     MigAAdoptionPlugin, MigAAdoptionState, MigAStaticScenePlugin, MIG_A1_A2_A16_JSON,

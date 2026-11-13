@@ -170,6 +170,7 @@ pub fn build_fire_f2_readiness_align_block(witness: &FireEcologyWitness) -> serd
         "green": aligned && witness.frames_sampled >= 30,
         "policy": "f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded",
         "fire_inst_excluded_from_f1_green": true,
+        "fire_inst": fire_inst_proxy,
         "fire_inst_proxy": fire_inst_proxy,
         "sim_mean_heat": witness.mean_heat,
         "mean_fuel": witness.mean_fuel,
@@ -275,6 +276,7 @@ mod tests {
             serde_json::json!("f1_green uses sim mean_heat/mean_fuel — render fire_inst excluded")
         );
         assert_eq!(block["fire_inst_proxy"], serde_json::json!(2));
+        assert_eq!(block["fire_inst"], serde_json::json!(2));
     }
 
     #[test]
