@@ -92,7 +92,7 @@ WeatherField::sample(pos_m: Vec2, sim_time: SimTimeMicros) -> WeatherSample {
    - `ChunkWeather` becomes a projection
    - dump series
    - delete the orphans `climate.rs` and `regional_sample.rs`
-2. **W2 Fire + smoke:**
+2. **W2 Fire + smoke:** see §4a for the full scope, including the user-reported bugs.
    - anisotropic spread and slope, embers and spot fires from the sampled wind, L0 advection per cell
    - fire VFX use local wind
    - delete `GlobalWind` and `PREVAILING_WIND_DIR`
@@ -102,6 +102,55 @@ WeatherField::sample(pos_m: Vec2, sim_time: SimTimeMicros) -> WeatherSample {
    - artillery drift and dispersion, visibility ranges, mud mobility, truck weather speed, per-plant renewables
 5. **W5 Air / missile hooks:**
    - grounding thresholds and the headwind model, landing with those units
+
+## 4a. W2 scope: fire behaviour (user-reported, 2026-11-13)
+
+The user saw three problems in play. W2 is not done until all three are fixed and visible in the dump.
+
+**Bug 1: fire spreads as a circle.**
+- **Cause:** `src/systems/fire/cell_spread.rs` deposits the same heat on every cardinal neighbour (`spread_onto_neighbor`). Wind only burns fuel faster (`wind_fuel_delta`), and nothing depends on direction. On uniform fuel this gives a diamond or circle that grows evenly.
+- **Target:** spread follows real fire behaviour, a simplified Rothermel / Huygens model:
+  - **Wind:** the rate of spread goes up sharply downwind. The burnt area becomes an elongated ellipse or teardrop; the length:breadth ratio is about 1 + 0.25·U (U in m/s), so roughly 3:1 at 8 m/s.
+    - The head fire runs fast, the flanks are slow and the back creeps upwind.
+    - Use 8 neighbours (diagonals at ×1/√2 distance) so 45° wind doesn't give staircase fronts.
+  - **Slope:** spread is faster uphill and slower downhill. Rate of spread roughly doubles every ~10° of upslope.
+  - **Fuel:** rate and intensity depend on fuel kind and load.
+    - Grass: fast, low intensity, short residence.
+    - Brush: medium.
+    - Timber: slow surface fire with a crown-fire transition when hot and windy.
+    - Fuel moisture comes from humidity, rain accumulation and soil moisture.
+  - **Uneven, not uniform:** per-cell fuel variation (seeded, from the stand), gusts from `WeatherField::sample` (5 s buckets) and a small stochastic ignition probability instead of a deterministic threshold. This gives fingers, unburnt islands and an irregular perimeter.
+  - **Spotting:** embers are lofted by fire intensity and carried downwind by `sample()` wind, then ignite new spot fires ahead of the front. At high wind they jump roads and rivers.
+  - **Fire weather:** rain and high humidity slow or stop spread; dry, hot, windy conditions accelerate it.
+- **Dump/matrix:**
+  - perimeter length:breadth ratio
+  - downwind:upwind spread distance (expect > 2 when wind > 5 m/s)
+  - unburnt islands count
+  - spot fires count
+  - burnt-area growth per minute
+
+**Bug 2: trees "regrow" right after burning.**
+- **Cause:** `ChunkCellStand` timings in `src/systems/ecology/cell_stand.rs` (`StandCfg::default`) are compressed to minutes. Snags stand for 6 / 25 / 90 s and regrow takes 25 / 120 / 600 s (grass / brush / timber), so a burnt forest is back to a full live stand in about **11.5 game minutes**.
+  - The fire tick also refills the fuel reservoir up to `fuel_cap` ("clamp down, refill up").
+  - `ChunkCellStand` is **not saved** (an open item), so a reload can also resurrect burnt stands.
+- **Target:** burns are long-lived landscape changes.
+  - **Burn scar (ground):** stays charred/ash for game days, then grass and herbs green up over weeks.
+  - **Brush:** returns over months to a few game years.
+  - **Timber:** snags stand for months to years. A young forest takes many game years and a mature one decades. Within a normal match a burnt forest stays burnt; it can only be replanted by a player or AI action, which W2 doesn't add.
+  - Put the timings in RON in **game days**, tied to the sim clock and its time scale, not raw seconds.
+  - Fuel refill is limited by the regrowth stage, never instant.
+- **Save/load:** persist `ChunkCellStand` (phase, age and burnt flags) in the save snapshot.
+- **Visuals:** the tree layer shows charred ground → snags → sparse regrowth by stage, and never pops back to full canopy.
+- **Dump:** a burnt-cell series. The burnt fraction must not decrease within a playcheck run without a replant action.
+
+**Feature 3: firelines, firebreaks and suppression.**
+- **Natural breaks:** roads, rails, rivers/water, bare rock, built-up cells and previously burnt cells have no or little fuel and stop surface spread. Spotting can still jump them at high wind.
+- **Player/AI firebreaks:** a construction tool clears a line of fuel (bulldozed break) through the existing construction funnel (`src/construction/`, single execute path).
+  - It takes time and workers.
+  - A wider break is needed against crown fire.
+- **Backburn (later):** a controlled burn set ahead of the front to consume fuel. This depends on the W2 spread model and comes after it.
+- **Suppression hooks (later):** rain, and later units or aircraft (W5), that reduce heat or add moisture along a line.
+- **Dump/matrix:** a spread-blocked-at-break count. A fire against a road or river with wind under a threshold must not cross.
 
 Budget: one step costs well under 1 ms even at 64×64 cells. `sample()` is O(1). Nothing weather-related runs every frame except interpolated sampling by the consumers that need it.
 
