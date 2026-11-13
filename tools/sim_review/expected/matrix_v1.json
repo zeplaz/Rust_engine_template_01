@@ -1,12 +1,12 @@
 {
   "schema": "sim_review_matrix_v1",
-  "dump_schema": "sim_run_dump_v1",
+  "dump_schema": "sim_run_dump_v2",
   "rows": [
     {
       "id": "dump.schema",
       "path": "schema",
       "op": "eq",
-      "expect": "sim_run_dump_v1",
+      "expect": "sim_run_dump_v2",
       "note": "Must be a sim dump, not a witness envelope."
     },
     {
@@ -52,14 +52,6 @@
       "note": "Live veg cells exist and are not only the water class."
     },
     {
-      "id": "fire.heat_when_seeded",
-      "path": "counts.fire_heat_cells",
-      "op": "gte",
-      "expect": 0,
-      "when_scene": ["Visual", "Vfx", "VfxSandbox", "Fire"],
-      "note": "Heat may burn out; tracked, not a hard fail if zero after fuel gone."
-    },
-    {
       "id": "fire.inst_tracks_heat",
       "rule": "inst_tracks_heat",
       "note": "If heat cells > 0, instance rows must be > 0. If heat is 0, inst may be 0."
@@ -68,6 +60,210 @@
       "id": "fire.sparks_not_bootstrap",
       "rule": "sparks_not_bootstrap",
       "note": "If sparks exist they must not come from overlay_bootstrap."
+    },
+    {
+      "id": "fire.heat_seen",
+      "path": "fire.heat_cells.max",
+      "op": "gt",
+      "expect": 0,
+      "note": "Seeded fire produced heat at some point in the run."
+    },
+    {
+      "id": "fire.ignited",
+      "path": "fire.ignited_cells_cum",
+      "op": "gt",
+      "expect": 0,
+      "note": "Cells actually burned (burning or burnt), not just heat."
+    },
+    {
+      "id": "fire.spreads",
+      "path": "fire.burning_cells.max",
+      "op": "gt",
+      "expect_path": "fire.burning_cells.first",
+      "note": "Peak burning exceeds the first burning sample: fire spread beyond the seed."
+    },
+    {
+      "id": "fire.burns_out",
+      "path": "fire.burning_cells.last",
+      "op": "lt",
+      "expect_path": "fire.burning_cells.max",
+      "note": "Burning ends below its peak: fire burns out."
+    },
+    {
+      "id": "fire.leaves_burnt",
+      "path": "fire.burnt_cells.max",
+      "op": "gt",
+      "expect": 0,
+      "note": "Burn-out leaves burnt cells."
+    },
+    {
+      "id": "fire.regrowth",
+      "path": "fire.regrowth_cells.max",
+      "op": "gt",
+      "expect": 0,
+      "note": "Burnt ground starts regrowing."
+    },
+    {
+      "id": "construction.sites_exist",
+      "path": "construction.sites_total",
+      "op": "gte",
+      "expect": 1
+    },
+    {
+      "id": "construction.operational",
+      "path": "construction.sites_operational",
+      "op": "gte",
+      "expect": 1,
+      "note": "At least one site reached Operational."
+    },
+    {
+      "id": "construction.starter_hq",
+      "path": "construction.hq_present",
+      "op": "gte",
+      "expect": 1,
+      "note": "Starter HQ spawned."
+    },
+    {
+      "id": "construction.all_hq",
+      "path": "construction.hq_present",
+      "op": "gte",
+      "expect_path": "construction.hq_configured",
+      "note": "Every configured faction has its HQ."
+    },
+    {
+      "id": "economy.plants_exist",
+      "path": "economy.plants_total",
+      "op": "gte",
+      "expect": 1
+    },
+    {
+      "id": "economy.plant_operational",
+      "path": "economy.plants_operational",
+      "op": "gte",
+      "expect": 1,
+      "note": "At least one plant is producing (not idle, not starved)."
+    },
+    {
+      "id": "economy.produced",
+      "path": "economy.produced_total",
+      "op": "gt",
+      "expect": 0,
+      "note": "Units actually produced."
+    },
+    {
+      "id": "economy.not_all_starved",
+      "path": "economy.plants_starved",
+      "op": "lt",
+      "expect_path": "economy.plants_total",
+      "note": "Not every plant is starved."
+    },
+    {
+      "id": "economy.storage_used",
+      "path": "economy.storage_fill",
+      "op": "gt",
+      "expect": 0,
+      "note": "Some output buffer holds product."
+    },
+    {
+      "id": "logistics.orders",
+      "path": "logistics.orders_total",
+      "op": "gte",
+      "expect": 1,
+      "note": "Standing lines + one-off orders exist."
+    },
+    {
+      "id": "logistics.standing_lines",
+      "path": "logistics.standing_lines",
+      "op": "gte",
+      "expect": 1
+    },
+    {
+      "id": "logistics.deliveries",
+      "path": "logistics.deliveries_completed",
+      "op": "gt",
+      "expect": 0,
+      "note": "Trucks completed deliveries."
+    },
+    {
+      "id": "logistics.delivered_units",
+      "path": "logistics.delivered_units",
+      "op": "gt",
+      "expect": 0
+    },
+    {
+      "id": "logistics.unserved_draw",
+      "path": "logistics.unserved_draw_demands",
+      "op": "lte",
+      "note": "No draw demand left without a serving line.",
+      "expect": 0
+    },
+    {
+      "id": "ai.roster",
+      "rule": "ai_roster",
+      "note": "At least one AI faction slot exists."
+    },
+    {
+      "id": "ai.each_decided",
+      "rule": "ai_each_decided",
+      "note": "Every AI slot made >=1 decision."
+    },
+    {
+      "id": "ai.each_issued_order",
+      "rule": "ai_each_issued_order",
+      "note": "Every AI slot issued >=1 order."
+    },
+    {
+      "id": "combat.fronts",
+      "path": "combat.front_segments",
+      "op": "gte",
+      "expect": 1
+    },
+    {
+      "id": "combat.formations",
+      "path": "combat.formations",
+      "op": "gte",
+      "expect": 1
+    },
+    {
+      "id": "combat.engaged",
+      "path": "combat.engaged_formations_series.max",
+      "op": "gte",
+      "expect": 1,
+      "note": "A formation was engaged at some point."
+    },
+    {
+      "id": "combat.orders_resolved",
+      "path": "combat.deployment_orders_resolved_ok",
+      "op": "gte",
+      "expect": 1,
+      "note": "A deployment order was executed."
+    },
+    {
+      "id": "combat.territory_changed",
+      "path": "combat.territory_change_cells",
+      "op": "gt",
+      "expect": 0,
+      "note": "Control of some cells changed hands."
+    },
+    {
+      "id": "perf.sampled",
+      "path": "perf.samples",
+      "op": "gt",
+      "expect": 0
+    },
+    {
+      "id": "perf.avg_ms",
+      "path": "perf.avg_ms",
+      "op": "lte",
+      "expect": 33.4,
+      "note": "Average frame <= 33.4 ms (30 fps)."
+    },
+    {
+      "id": "perf.p95_ms",
+      "path": "perf.p95_ms",
+      "op": "lte",
+      "expect": 50,
+      "note": "p95 frame <= 50 ms."
     }
   ]
 }

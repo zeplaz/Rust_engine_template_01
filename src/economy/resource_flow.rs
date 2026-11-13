@@ -96,6 +96,8 @@ pub struct ResourceFlowSimStats {
     pub overload_events_this_frame: u32,
     /// IND-E03 — cumulative `GridOverloadEvent` count for live proof JSON.
     pub overload_events_total: u64,
+    /// Cumulative units produced per output tag (t, or m3 for liquids) since the run started.
+    pub produced_by_tag: std::collections::BTreeMap<String, f32>,
 }
 
 /// Map designer JSON resource strings to sim `ResourceType` where names align.
@@ -303,7 +305,11 @@ pub fn link_supply_chain_edges_system(
 
 /// Produce up to the throughput cap, never past [`OUTPUT_BUFFER_CAP`] per tag.
 /// Returns `true` when every output buffer is full (backpressure: the plant is idle).
-fn add_production(node: &mut ResourceFlowNode, scale: f32) -> bool {
+fn add_production(
+    node: &mut ResourceFlowNode,
+    scale: f32,
+    produced_by_tag: &mut std::collections::BTreeMap<String, f32>,
+) -> bool {
     let cap = node.throughput_limit * scale;
     let mut produced = 0.0f32;
     let mut full = 0usize;
@@ -326,6 +332,9 @@ fn add_production(node: &mut ResourceFlowNode, scale: f32) -> bool {
         }
         let amount = rate.min(cap - produced).min(room);
         produced += amount;
+        if amount > 0.0 {
+            *produced_by_tag.entry(tag.clone()).or_insert(0.0) += amount;
+        }
         if let Some(rt) = resource {
             *node.inventory.entry(rt).or_insert(0.0) += amount;
         } else {
@@ -402,7 +411,11 @@ pub fn propagate_resource_flow_system(
     for (_, mut node, mut state, inputs) in &mut nodes {
         // Workforce and power cap output; material starvation decays `output_scale` on top.
         let supply = inputs.map_or(1.0, crate::economy::facility_inputs::FacilityInputs::factor);
-        state.output_full = add_production(&mut node, state.output_scale * supply);
+        state.output_full = add_production(
+            &mut node,
+            state.output_scale * supply,
+            &mut witness.produced_by_tag,
+        );
         // A plant with nowhere to put product stands idle: it draws no inputs and does not starve.
         let fed = state.output_full || try_consume(&mut node, state.output_scale);
         state.starved = !fed;

@@ -13,7 +13,7 @@ from __future__ import annotations
 import argparse
 import os
 import re
-import statistics
+import json
 import subprocess
 import sys
 import time
@@ -25,7 +25,6 @@ _CAPTURES = _REPO / "debug_runs" / "captures"
 _DUMP = _REPO / "debug_runs" / "sim_run_dump.json"
 _EXE = _REPO / "target" / "debug" / "proc_A_dine01.exe"
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
-_PERF = re.compile(r"PERF wall=([\d.]+)")
 _LEVEL = re.compile(r"\s(ERROR|WARN)\s+([\w:]+):\s*(.*)")
 
 
@@ -47,7 +46,16 @@ def build() -> None:
     say("build ok")
 
 
-def run_game(seed: str, frame: int, secs: int, scene: str) -> list[str]:
+def dump_tick(since: float) -> int:
+    try:
+        if _DUMP.stat().st_mtime < since:
+            return 0
+        return int(json.loads(_DUMP.read_text(encoding="utf-8")).get("tick") or 0)
+    except (OSError, ValueError):
+        return 0
+
+
+def run_game(seed: str, frame: int, secs: int, scene: str, ticks: int) -> list[str]:
     env = dict(os.environ)
     env.update({
         "RUST_ENGINE_SIM_DUMP": "1",
@@ -75,9 +83,9 @@ def run_game(seed: str, frame: int, secs: int, scene: str) -> list[str]:
                     say(f"  {int(time.time() - started)}s, log {log_path.stat().st_size // 1024} KiB")
                 if proc.poll() is not None:
                     break
-                # Captured this run and the dump has had a few strides to settle: done.
-                if capture.exists() and capture.stat().st_mtime > started + 1:
-                    time.sleep(8)
+                # Captured this run AND the dump reached the requested sim tick: done.
+                if capture.exists() and capture.stat().st_mtime > started + 1 and dump_tick(started) >= ticks:
+                    time.sleep(3)
                     break
                 time.sleep(2)
         finally:
@@ -99,18 +107,8 @@ def summarise_log(lines: list[str]) -> dict:
         lvl, target, msg = m.groups()
         key = f"{target}: {re.sub(r'[0-9]+(\.[0-9]+)?', '#', msg)[:140]}"
         levels[lvl][key] = levels[lvl].get(key, 0) + 1
-    walls = [float(m.group(1)) for l in lines if (m := _PERF.search(l))]
-    walls = walls[5:] if len(walls) > 10 else walls  # drop warmup
-    perf = {}
-    if walls:
-        s = sorted(walls)
-        perf = {
-            "samples": len(s),
-            "avg_ms": round(statistics.mean(s), 1),
-            "p95_ms": round(s[int(0.95 * (len(s) - 1))], 1),
-            "max_ms": round(s[-1], 1),
-        }
-    return {"panics": panics, "levels": levels, "perf": perf}
+    return {"panics": panics, "levels": levels}
+
 
 
 def score() -> list[str]:
@@ -121,7 +119,7 @@ def score() -> list[str]:
         cwd=_REPO, capture_output=True, text=True,
     )
     out = (r.stdout + r.stderr).strip().splitlines()
-    return out[-25:]
+    return out[-70:]
 
 
 def main() -> None:
@@ -130,20 +128,26 @@ def main() -> None:
     ap.add_argument("--seed", default="14046650793090929382")
     ap.add_argument("--frame", type=int, default=1200, help="capture frame")
     ap.add_argument("--secs", type=int, default=420, help="hard time limit")
+    ap.add_argument("--ticks", type=int, default=3000, help="sim tick the dump must reach before stopping")
     ap.add_argument("--scene", default="visual")
     a = ap.parse_args()
 
     if not a.no_build:
         build()
     t0 = time.time()
-    lines = run_game(a.seed, a.frame, a.secs, a.scene)
+    lines = run_game(a.seed, a.frame, a.secs, a.scene, a.ticks)
     s = summarise_log(lines)
     scored = score()
 
     md = [f"# playcheck  seed={a.seed} frame={a.frame} scene={a.scene} ran={time.time() - t0:.0f}s", ""]
     md.append(f"panics: {len(s['panics'])}")
     md += [f"  {p[:200]}" for p in s["panics"][:5]]
-    md.append(f"perf (ms/frame): {s['perf'] or 'no PERF lines'}")
+    perf = {}
+    try:
+        perf = json.loads(_DUMP.read_text(encoding="utf-8")).get("perf") or {}
+    except (OSError, ValueError):
+        pass
+    md.append(f"perf (ms/frame, from dump): {perf or 'no dump'}")
     for lvl in ("ERROR", "WARN"):
         items = sorted(s["levels"][lvl].items(), key=lambda kv: -kv[1])
         md.append(f"{lvl}: {sum(s['levels'][lvl].values())} total, {len(items)} distinct")
@@ -156,5 +160,22 @@ def main() -> None:
     print(text)
 
 
+_LOCK = _OUT / "playcheck.lock"
+
+
+def locked_main() -> None:
+    """One playcheck at a time: runs share the exe, dump, captures and summary."""
+    _OUT.mkdir(parents=True, exist_ok=True)
+    if _LOCK.exists() and time.time() - _LOCK.stat().st_mtime < 3600:
+        print(f"another playcheck is running ({_LOCK.read_text().strip()}); "
+              f"wait for it, or delete {_LOCK} if it is stale")
+        sys.exit(2)
+    _LOCK.write_text(f"pid={os.getpid()} started={time.strftime('%H:%M:%S')}")
+    try:
+        main()
+    finally:
+        _LOCK.unlink(missing_ok=True)
+
+
 if __name__ == "__main__":
-    main()
+    locked_main()
