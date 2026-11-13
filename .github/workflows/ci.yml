@@ -31,63 +31,23 @@ jobs:
             libudev-dev \
             libasound2-dev
 
-      - name: live_proof containment scan (HardFail — DEV-CONTAIN-HARDFAIL-CI-001)
-        shell: pwsh
-        run: ./tools/orchestrator/scripts/check_live_proof_containment.ps1 -HardFail
-
-      - name: visual runbook — no RASTER_* in clean recipe (P1-C)
-        shell: pwsh
-        run: ./tools/orchestrator/scripts/check_visual_runbook_no_raster_env.ps1
-
       - name: cargo check (default features)
         run: cargo check -p proc_A_dine01
-        env:
-          RUNTIME_WITNESS_WRITES_FORCE_OFF: "1"
 
       - name: cargo rustc lib (-D warnings) (STAB-CI-001)
         run: cargo rustc -p proc_A_dine01 --lib -- -D warnings
-        env:
-          RUNTIME_WITNESS_WRITES_FORCE_OFF: "1"
 
       - name: cargo check (bevy_tilemap_adapter)
         run: cargo check -p proc_A_dine01 --features bevy_tilemap_adapter
 
-      # PCI-03: fast unit tests stay in this step. Visual/app harnesses
-      # (vt_ci_matrix, vt_app_integration, stage5_full_app_harness) are the
-      # next step, so a windowed or non-exiting test cannot consume this one.
-      # 60-minute timeout is the hang backstop from 6597f049.
       - name: cargo test (lib)
         timeout-minutes: 60
-        run: cargo test -p proc_A_dine01 --lib -- --skip vt_ci_matrix --skip vt_app_integration --skip stage5_full_app_harness
-
-      # PCI-03: visual/app lib tests only. Short timeout so this step cannot
-      # ride the 60-minute lib backstop or the 120-minute job cap.
-      - name: cargo test (visual/app lib)
-        timeout-minutes: 10
-        run: cargo test -p proc_A_dine01 --lib vt_ci_matrix vt_app_integration stage5_full_app_harness
-
-      - name: cargo test (stage5 spine governance)
-        run: cargo test -p proc_A_dine01 --lib stage5_spine_governance_matrix_passes
-
-      - name: cargo test (Stage 5 readiness)
-        run: cargo test -p proc_A_dine01 --lib stage5_readiness
-
-      - name: cargo test (Wave S save spine)
-        run: cargo test -p proc_A_dine01 --lib io::save
+        run: cargo test -p proc_A_dine01 --lib
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-
-      # PCI-06: repo-wide *_live.json scan. Fail closed on inflated green
-      # (WIT-ART-DISHONEST, WIT-PIXELS-DISHONEST). Step budget is two minutes.
-      - name: witness honesty scan — inflated green (PCI-06)
-        timeout-minutes: 2
-        env:
-          PYTHONUTF8: "1"
-          PYTHONPATH: tools/mcp/python
-        run: python tools/orchestrator/scripts/check_witness_honesty_inflated_green.py
 
       # PCI-14: pixel_conclude regression. Ubuntu has no pytest/Pillow, so the
       # step installs those two pins then runs the gate. Budget is two minutes.

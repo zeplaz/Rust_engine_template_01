@@ -13,13 +13,7 @@
 //      Python (3.13 on this machine), NOT necessarily the default `python`.
 //      We probe candidates and pick the first that can `import mcp`.
 //
-// Usage:
-//   node driver.mjs boot <agent>     # session ritual: preflight + bootstrap + handoff
-//   node driver.mjs demo             # headless multi-agent BLANG demo -> witness JSON
-//   node driver.mjs guide            # token-savings-guide (BLANG token map)
-//   node driver.mjs doc <path> [intent]   # agent-doc-touch (telemetry-tracked read)
-//   node driver.mjs <anything...>    # passthrough to `rust_engine_mcp.cli <anything>`
-//   node driver.mjs --help
+// Usage: node driver.mjs --help
 
 import { spawnSync } from "node:child_process";
 import { existsSync } from "node:fs";
@@ -107,31 +101,21 @@ function cli(args, { capture = false } = {}) {
   });
 }
 
-function step(label, args) {
-  process.stdout.write(`\n======== ${label} ========\n`);
-  const r = cli(args);
-  if (r.status !== 0) process.stdout.write(`[exit ${r.status}]\n`);
-  return r.status ?? 1;
-}
+const USAGE = `agent-lang driver — run the Rust_engine_template_01 MCP CLI with the right Python.
 
-const USAGE = `agent-lang driver — drive the Rust_engine_template_01 BLANG/agent-lang system.
-
-  node driver.mjs get-que <agent> [--demand] [--minutes 60]
-                                      Multi-parallel Q+ (alias: get que <agent>). Hour session: --demand.
-  node driver.mjs boot <agent>        Session ritual (BLANG:PRE -> BOOT -> HO):
-                                      pipeline-preflight + (read brief+SYMLANG) + handoff-brief.
-                                      <agent> = coder | planner | designer | sim-steward |
-                                                coder-mcp | designer-mcp | orchestrator | ...
-  node driver.mjs demo                Health smoke (preflight + handoff). [agent-lang-demo removed in CLI refactor]
-  node driver.mjs guide               token-savings-guide (BLANG token -> MCP/CLI map)
-  node driver.mjs doc <path>          file-digest <path> (compressed read; agent-doc-touch ledger removed in refactor)
-  node driver.mjs <args...>           Passthrough to: python -m rust_engine_mcp.cli <args>
-  node driver.mjs cli --help          Full CLI command catalog (~90 commands)
+  node driver.mjs boot <agent>        Orientation: where things are + the run-review path.
   node driver.mjs where               Show resolved repo + Python (portability check)
+  node driver.mjs cli --help          CLI command catalog
+  node driver.mjs <args...>           Passthrough to: python -m rust_engine_mcp.cli <args>
 
 Repo is found via $RUST_ENGINE_REPO, else by walking up from cwd / this file to the
-MCP package. Driver auto-sets PYTHONUTF8=1 and runs from <repo>/tools/mcp/python.
-Verified on win32 with Node 18 + Python 3.13.7.`;
+MCP package. Driver auto-sets PYTHONUTF8=1 and runs from <repo>/tools/mcp/python.`;
+
+const ORIENT = `Read AGENTS.md first. Review a real run (no witness/queue system any more):
+  RUST_ENGINE_SIM_DUMP=1 cargo run -p proc_A_dine01        (debug build only)
+  python tools/sim_review/score_dump.py                   -> debug_runs/sim_review/dashboard.html
+  python tools/sim_review/playcheck.py                    (build + run + capture + score in one go)
+Art tools: python -m rust_engine_mcp.cli --help (via this driver), APS: tools/mcp/art_pipeline_suite.`;
 
 function main() {
   const argv = process.argv.slice(2);
@@ -142,54 +126,9 @@ function main() {
     process.exit(0);
   }
 
-  if (sub === "get-que" || (sub === "get" && argv[1] === "que")) {
-    const agentIdx = sub === "get-que" ? 1 : 2;
-    const agent = argv[agentIdx];
-    if (!agent) {
-      console.error("get-que needs an agent, e.g. `node driver.mjs get-que designer --demand`");
-      process.exit(1);
-    }
-    const extra = argv.slice(agentIdx + 1);
-    process.exit(step(`get-que ${agent}`, ["get-que", agent, ...extra]).status ?? 1);
-  }
-
   if (sub === "boot") {
-    const agent = argv[1];
-    if (!agent) {
-      console.error("boot needs an agent, e.g. `node driver.mjs boot coder`");
-      process.exit(1);
-    }
-    step("BLANG:PRE  pipeline-preflight", ["pipeline-preflight"]);
-    // BLANG:BOOT — `agent-session-bootstrap` was removed in the CLI refactor; orient by
-    // reading the brief + SYMLANG spec directly (no doc-ledger command remains).
-    process.stdout.write(
-      `\n======== BLANG:BOOT (read directly) ========\n` +
-        `orient ${agent}: read prompts/llm_agent_brief.md (§FIELD◈) + prompts/SYMBOLIC_LANGUAGE.meta.md\n`
-    );
-    step("BLANG:HO   handoff-brief", ["handoff-brief"]);
+    console.log(`orient ${argv[1] ?? "agent"}:\n${ORIENT}`);
     process.exit(0);
-  }
-
-  if (sub === "demo") {
-    // `agent-lang-demo` was removed in the CLI refactor; run a health smoke on the live system.
-    process.stdout.write("[agent-lang-demo removed in CLI refactor — health smoke: preflight + handoff]\n");
-    step("pipeline-preflight", ["pipeline-preflight"]);
-    process.exit(step("handoff-brief", ["handoff-brief"]));
-  }
-
-  if (sub === "guide") {
-    process.exit(step("token-savings-guide", ["token-savings-guide"]));
-  }
-
-  if (sub === "doc") {
-    const path = argv[1];
-    if (!path) {
-      console.error("doc needs a repo-relative path, e.g. `node driver.mjs doc prompts/llm_agent_brief.md`");
-      process.exit(1);
-    }
-    // `agent-doc-touch` (telemetry ledger read) was removed in the CLI refactor;
-    // `file-digest` is the working compressed-read replacement.
-    process.exit(step(`file-digest ${path}`, ["file-digest", path]));
   }
 
   if (sub === "where") {
@@ -211,7 +150,6 @@ function main() {
   }
 
   if (sub === "cli") {
-    // explicit passthrough: `cli <args>` -> CLI <args>
     process.exit(cli(argv.slice(1)).status ?? 1);
   }
 
