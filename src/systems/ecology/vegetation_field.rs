@@ -296,11 +296,50 @@ fn clamp_to_biome(veg: &mut VegetationField, cap: f32) {
     veg.old_growth = veg.old_growth.min(cap);
 }
 
+/// Chunk-wide terrain reads of the vegetation step. Pure functions of the [`ChunkCellMatrix`]: callers
+/// that tick every frame cache them per chunk and recompute only when the matrix changes.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct VegMatrixAggregates {
+    pub mean_moisture: f32,
+    pub wetland: f32,
+    pub landform_scale: f32,
+}
+
+impl VegMatrixAggregates {
+    #[must_use]
+    pub fn from_matrix(matrix: &ChunkCellMatrix) -> Self {
+        let n = (matrix.size.x * matrix.size.y) as usize;
+        Self {
+            mean_moisture: mean_field(n, &matrix.moisture).unwrap_or(0.35),
+            wetland: mean_biome_weights(matrix).map(|b| b.wetland).unwrap_or(0.0),
+            landform_scale: landform_cover_scale(matrix),
+        }
+    }
+}
+
 /// Same step as [`integrate_vegetation_field_step`], with the canopy inputs applied in a fixed order:
 /// clear cap, then target (population or biomass) with the succession floor, then smoothing, burn, snow.
 pub fn integrate_vegetation_field_step_with_drivers(
     dt_e: f32,
     matrix_opt: Option<&ChunkCellMatrix>,
+    eco: &ChunkEcology,
+    wx: &ChunkWeather,
+    heat: f32,
+    drivers: &CanopyDrivers,
+    veg: &mut VegetationField,
+) {
+    let terrain = if dt_e > 0.0 {
+        matrix_opt.map(VegMatrixAggregates::from_matrix)
+    } else {
+        None
+    };
+    integrate_vegetation_field_step_from_aggregates(dt_e, terrain, eco, wx, heat, drivers, veg);
+}
+
+/// [`integrate_vegetation_field_step_with_drivers`] with the matrix reads precomputed.
+pub fn integrate_vegetation_field_step_from_aggregates(
+    dt_e: f32,
+    terrain: Option<VegMatrixAggregates>,
     eco: &ChunkEcology,
     wx: &ChunkWeather,
     heat: f32,
@@ -325,15 +364,7 @@ pub fn integrate_vegetation_field_step_with_drivers(
     }
 
     let heat_c = heat.clamp(0.0, 1.0);
-    let (mean_m, wetland_w) = match matrix_opt {
-        Some(matrix) => {
-            let n = (matrix.size.x * matrix.size.y) as usize;
-            let m = mean_field(n, &matrix.moisture).unwrap_or(0.35);
-            let w = mean_biome_weights(matrix).map(|b| b.wetland).unwrap_or(0.0);
-            (m, w)
-        }
-        None => (0.35, 0.0),
-    };
+    let (mean_m, wetland_w) = terrain.map_or((0.35, 0.0), |t| (t.mean_moisture, t.wetland));
 
     let moisture_signal = mean_m * 0.55 + wx.soil_moisture * 0.45;
     let dryness_target = (0.62 - moisture_signal).max(0.0).min(1.0)
@@ -345,9 +376,7 @@ pub fn integrate_vegetation_field_step_with_drivers(
     veg.burn_severity = (veg.burn_severity * (1.0 - 0.35 * dt_e) + heat_c * (0.55 + veg.dryness * 0.35) * dt_e * 1.25)
         .clamp(0.0, 1.0);
 
-    let landform = matrix_opt
-        .map(landform_cover_scale)
-        .unwrap_or(1.0);
+    let landform = terrain.map_or(1.0, |t| t.landform_scale);
     let canopy_target = match drivers.population_density {
         Some(p) => p * landform,
         None => (eco.biomass * 0.92 + eco.shade_factor * 0.35) * landform,
@@ -485,7 +514,8 @@ pub(crate) fn vegetation_field_tick(
     ctrl: Res<crate::systems::sim_control::SimControlState>,
     time: Res<Time>,
     mut q: Query<(
-        Option<&ChunkCellMatrix>,
+        Entity,
+        Option<Ref<ChunkCellMatrix>>,
         &ChunkEcology,
         &ChunkWeather,
         &ChunkSimLod,
@@ -493,6 +523,9 @@ pub(crate) fn vegetation_field_tick(
         &mut CanopyDrivers,
         &mut VegetationField,
     )>,
+    mut terrain_cache: Local<
+        bevy::platform::collections::HashMap<Entity, (bevy::ecs::change_detection::Tick, VegMatrixAggregates)>,
+    >,
 ) {
     if !ctrl.should_tick() {
         return;
@@ -502,13 +535,30 @@ pub(crate) fn vegetation_field_tick(
         return;
     }
 
-    for (matrix_opt, eco, wx, lod, fire_opt, mut drivers, mut veg) in &mut q {
+    let mut seen = 0usize;
+    for (entity, matrix_opt, eco, wx, lod, fire_opt, mut drivers, mut veg) in &mut q {
+        seen += 1;
         let lod_s = lod.dt_scale();
         let dt_e = dt * lod_s;
         let heat = fire_opt.map(|f| f.heat).unwrap_or(0.0);
-        integrate_vegetation_field_step_with_drivers(
+        // Terrain reads are full-chunk passes (moisture mean, biome weights, curvature); the matrix
+        // only changes on (re)materialize, so reuse the cached values until it does.
+        // Keyed on the matrix change tick (not `is_changed`): this system returns early while paused,
+        // and a change made during a paused frame must still invalidate the cache.
+        let terrain = matrix_opt.map(|m| {
+            let changed_at = m.last_changed();
+            match terrain_cache.get(&entity) {
+                Some((tick, agg)) if *tick == changed_at => *agg,
+                _ => {
+                    let fresh = VegMatrixAggregates::from_matrix(&m);
+                    terrain_cache.insert(entity, (changed_at, fresh));
+                    fresh
+                }
+            }
+        });
+        integrate_vegetation_field_step_from_aggregates(
             dt_e,
-            matrix_opt,
+            terrain,
             eco,
             wx,
             heat,
@@ -519,6 +569,9 @@ pub(crate) fn vegetation_field_tick(
         if drivers.clear_to.is_some() {
             drivers.clear_to = None;
         }
+    }
+    if terrain_cache.len() > seen {
+        terrain_cache.retain(|e, _| q.contains(*e));
     }
 }
 

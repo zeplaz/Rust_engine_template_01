@@ -204,12 +204,15 @@ pub struct FireExtractDirtyQueue {
 }
 
 /// Cheap digest of sim fire inputs — skip full ECS scan when cadence due but state unchanged.
-/// **Excludes sim tick** — tick advances every frame; runtime/residency digest captures real fire churn.
+/// **Excludes sim tick** — tick advances every frame. `runtime_len` / `active_digest` describe the
+/// previous extract's *output*; `sim_heat_fuel` is the sim-side input (per-frame mean cell heat and
+/// fuel from [`crate::systems::fire::FireEcologyStats`]) so a new ignition in a cold world is seen.
 #[derive(Resource, Debug, Clone, Copy, Default, PartialEq, Eq)]
 pub struct FireExtractInputFingerprint {
     pub runtime_len: u32,
     pub active_digest: u64,
     pub residency_cells: u32,
+    pub sim_heat_fuel: u64,
 }
 
 /// Per-frame fire ECS extract report — flushed into sim-spectrum disk witness on `--test` runs.
@@ -288,11 +291,13 @@ mod tests {
             runtime_len: 4,
             active_digest: 0xabc,
             residency_cells: 2,
+            sim_heat_fuel: 7,
         };
         let b = FireExtractInputFingerprint {
             runtime_len: 4,
             active_digest: 0xabc,
             residency_cells: 2,
+            sim_heat_fuel: 7,
         };
         assert_eq!(a, b);
     }

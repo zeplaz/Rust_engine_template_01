@@ -47,6 +47,8 @@ hud_native_minimap_window = []
 engine_deep_debug = []
 # PLAN-GPU-TERRAIN-P3: optional Tracy (not required for ship gate).
 tracy = ["bevy/trace_tracy"]
+# Per-system span timing to a Chrome trace JSON (`TRACE_CHROME=<path>`); measurement builds only.
+trace_chrome = ["bevy/trace_chrome"]
 # `legacy_io_templates` removed 2026-04-26: src/io/templates.rs retired.
 
 [package.metadata.'cargo-features']

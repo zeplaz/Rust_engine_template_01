@@ -562,49 +562,75 @@ pub fn pick_stand_instance_cells(
     scored.into_iter().map(|(_, i)| i).collect()
 }
 
+/// Scalar inputs of [`sync_stand_instances_from_terrain`] besides the terrain itself, as bits so an
+/// unchanged chunk compares equal without float tolerance.
+#[derive(Clone, Copy, PartialEq, Eq)]
+pub(crate) struct StandSyncKey {
+    mean_density: u32,
+    instance_budget: u32,
+    cap: u32,
+}
+
 /// After graph population — overwrite the 4×4 bias grid with terrain and spawn stand instances.
+///
+/// The grid and the stand placements are pure functions of the chunk's terrain (matrix + derived
+/// metrics) and three population scalars. They are recomputed only when one of those moved; an
+/// unchanged chunk keeps its grid and placements (the per-cell canopy scales cost two full-chunk
+/// slope/curvature passes per call, which ran for every chunk every frame).
 pub fn sync_stand_instances_from_terrain(
     mut commands: Commands,
     mut q: Query<(
         Entity,
         &Chunk,
-        &ChunkCellMatrix,
+        Ref<ChunkCellMatrix>,
         &VegetationPopulation,
-        Option<&ChunkDerivedMetrics>,
+        Option<Ref<ChunkDerivedMetrics>>,
         Option<&mut CanopyDrivers>,
         &mut SubcellPopulationGrid,
         Option<&mut VegetationStandInstances>,
     )>,
+    mut last_inputs: Local<bevy::platform::collections::HashMap<Entity, StandSyncKey>>,
 ) {
+    let mut seen = 0usize;
     for (entity, chunk, matrix, pop, derived, mut drivers, mut subcell, instances) in &mut q {
+        seen += 1;
         let cap = drivers
             .as_ref()
             .map(|d| d.suitability_cap.clamp(0.0, 1.0))
             .unwrap_or(1.0);
-        fill_subcell_from_terrain(
-            subcell.as_mut(),
-            matrix,
-            derived,
-            pop.mean_density,
-            cap,
-        );
+        let key = StandSyncKey {
+            mean_density: pop.mean_density.to_bits(),
+            instance_budget: pop.instance_budget,
+            cap: cap.to_bits(),
+        };
+        let terrain_changed = matrix.is_changed()
+            || derived.as_ref().is_some_and(|d| d.is_changed());
+        let stale = terrain_changed
+            || subcell.is_added()
+            || instances.is_none()
+            || last_inputs.get(&entity) != Some(&key);
+        if stale {
+            let derived = derived.as_deref();
+            fill_subcell_from_terrain(subcell.as_mut(), &matrix, derived, pop.mean_density, cap);
+            let cells = pick_stand_instance_cells(&matrix, derived, pop.instance_budget, chunk.coord);
+            if let Some(mut inst) = instances {
+                inst.cells = cells;
+            } else {
+                commands
+                    .entity(entity)
+                    .insert(VegetationStandInstances { cells });
+            }
+            last_inputs.insert(entity, key);
+        }
         // Terrain grid is the population read: canopy tick consumes this density, not the index bias.
+        // `derive_vegetation_population_from_graph` rewrites it every frame, so restore it every frame.
         if let Some(d) = drivers.as_mut() {
             d.population_density = Some(subcell_mean_density(&subcell));
         }
-        let cells = pick_stand_instance_cells(
-            matrix,
-            derived,
-            pop.instance_budget,
-            chunk.coord,
-        );
-        if let Some(mut inst) = instances {
-            inst.cells = cells;
-        } else {
-            commands
-                .entity(entity)
-                .insert(VegetationStandInstances { cells });
-        }
+    }
+    // Drop keys of despawned chunks (count only shrinks on despawn / world regen).
+    if last_inputs.len() > seen {
+        last_inputs.retain(|e, _| q.contains(*e));
     }
 }
 

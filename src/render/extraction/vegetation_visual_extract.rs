@@ -140,15 +140,19 @@ pub fn build_vegetation_extract_frame(
     shots: Option<Res<crate::strategic::ShotPulseBook>>,
     mut frame: ResMut<VegetationExtractFrame>,
     q: Query<(
+        Entity,
         &Chunk,
         &SuccessionState,
         Option<&ActiveBurn>,
         Option<&VegetationPopulation>,
         Option<&LandscapeProgramOnChunk>,
-        Option<&crate::terrain::generation::ChunkCellMatrix>,
+        Option<Ref<crate::terrain::generation::ChunkCellMatrix>>,
         Option<&ChunkVegetationSuitability>,
         Option<&ChunkCellStand>,
     )>,
+    mut centre_scale_cache: Local<
+        bevy::platform::collections::HashMap<Entity, (bevy::ecs::change_detection::Tick, f32)>,
+    >,
 ) {
     // PERF-INSTR-VFX-001: name this per-chunk veg scan inside the Update wall window (STALL/PERF only).
     let _perf = crate::render::PerfScope::new("upd_veg_extract_frame");
@@ -159,16 +163,28 @@ pub fn build_vegetation_extract_frame(
     frame.revision = frame.revision.saturating_add(1);
     frame.stamp = stamp;
     frame.rows.clear();
-    for (chunk, succ, burn, pop, program, matrix, suitability, stand) in &q {
+    for (entity, chunk, succ, burn, pop, program, matrix, suitability, stand) in &q {
+        let matrix_ref = matrix.as_ref();
+        let matrix = matrix_ref.map(|m| &**m);
         let burn_active = burn.is_some_and(|b| b.heat > crate::systems::ecology::ACTIVE_BURN_HEAT_EPS);
         let planning_glyph = planning_glyph_for_burn(burn, succ.stage);
         let extract_glyph = extract_glyph_for_burn(burn, succ.stage);
         let variant_key = variant_key_for_extract_row(program, burn, succ.stage);
         let base_density = pop.map(|p| p.mean_density).unwrap_or(0.0);
         let base_density = vegetation_density_on_centre_cell(base_density, matrix, suitability);
-        let cell_scale = matrix
-            .map(center_cell_cover_scale)
-            .unwrap_or(1.0);
+        // The centre-cell cover scale needs full-chunk slope + curvature passes; the matrix only
+        // changes on (re)materialize, so cache it per chunk keyed on the matrix change tick.
+        let cell_scale = matrix_ref.map_or(1.0, |m| {
+            let changed_at = m.last_changed();
+            match centre_scale_cache.get(&entity) {
+                Some((tick, scale)) if *tick == changed_at => *scale,
+                _ => {
+                    let scale = center_cell_cover_scale(m);
+                    centre_scale_cache.insert(entity, (changed_at, scale));
+                    scale
+                }
+            }
+        });
         let impact = shot_impact_in_chunk(shots.as_deref(), tick.0, chunk, matrix);
         frame.rows.push(VegExtractRow {
             coord: chunk.coord,
@@ -189,6 +205,9 @@ pub fn build_vegetation_extract_frame(
             cells: stand.map(|s| s.render.clone()),
             cells_rev: stand.map_or(0, |s| s.render_rev),
         });
+    }
+    if centre_scale_cache.len() > frame.rows.len() {
+        centre_scale_cache.retain(|e, _| q.contains(*e));
     }
 }
 

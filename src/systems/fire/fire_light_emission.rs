@@ -27,6 +27,22 @@ pub struct FireLightEmission {
     pub extract_priority: f32,
 }
 
+/// Light a chunk burning at `heat` emits — the one formula for both the sim component (scalar surface
+/// fire) and fire visuals of chunks whose burning cells have not lifted the scalar to [`HEAT_MIN`].
+#[must_use]
+pub fn fire_light_emission_for_heat(coord: IVec2, heat: f32, biomass: f32) -> FireLightEmission {
+    let base_intensity = (heat * (0.6 + biomass * 0.9)).clamp(0.0, 2.5);
+    FireLightEmission {
+        radius: 120.0 + heat * 180.0,
+        base_intensity,
+        // `update_fire_light_emission_flicker` runs later the same tick and applies phase.
+        current_intensity: base_intensity,
+        flicker_strength: 0.12,
+        flicker_phase: (coord.x as f32 * 0.37 + coord.y as f32 * 0.91).fract() * std::f32::consts::TAU,
+        extract_priority: 0.5 + heat * 2.0,
+    }
+}
+
 pub(crate) fn maintain_fire_light_emission_from_surface_fire(
     ctrl: Res<SimControlState>,
     mut commands: Commands,
@@ -49,22 +65,9 @@ pub(crate) fn maintain_fire_light_emission_from_surface_fire(
             continue;
         }
         let bio = eco.map(|e| e.biomass).unwrap_or(0.35);
-        let base_intensity = (fire.heat * (0.6 + bio * 0.9)).clamp(0.0, 2.5);
-        let radius = 120.0 + fire.heat * 180.0;
-        let flicker_phase = (chunk.coord.x as f32 * 0.37 + chunk.coord.y as f32 * 0.91).fract()
-            * std::f32::consts::TAU;
-        let flicker_strength = 0.12;
-        let extract_priority = 0.5 + fire.heat * 2.0;
-
-        commands.entity(e).insert(FireLightEmission {
-            radius,
-            base_intensity,
-            // `update_fire_light_emission_flicker` runs later the same tick and applies phase.
-            current_intensity: base_intensity,
-            flicker_strength,
-            flicker_phase,
-            extract_priority,
-        });
+        commands
+            .entity(e)
+            .insert(fire_light_emission_for_heat(chunk.coord, fire.heat, bio));
     }
 }
 

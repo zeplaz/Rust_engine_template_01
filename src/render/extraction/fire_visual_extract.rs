@@ -370,6 +370,7 @@ fn sync_atmosphere_diag_fire_instance_count(
 fn fire_extract_input_fingerprint(
     runtime: &FireChunkRuntime,
     residency_cells: u32,
+    ecology: Option<&crate::systems::fire::FireEcologyStats>,
 ) -> crate::render::FireExtractInputFingerprint {
     let mut active_digest = 0u64;
     for c in runtime.chunks.values() {
@@ -382,10 +383,15 @@ fn fire_extract_input_fingerprint(
                 ^ (c.max_heat.to_bits() as u64).rotate_left(23);
         }
     }
+    // Sim side: a cell igniting, burning or cooling anywhere moves the frame means.
+    let sim_heat_fuel = ecology.map_or(0, |e| {
+        (u64::from(e.mean_heat.to_bits()) << 32) | u64::from(e.mean_fuel.to_bits())
+    });
     crate::render::FireExtractInputFingerprint {
         runtime_len: runtime.chunks.len() as u32,
         active_digest,
         residency_cells,
+        sim_heat_fuel,
     }
 }
 
@@ -423,7 +429,7 @@ fn ingest_fire_chunk_row(
     matrix: &ChunkCellMatrix,
     overlay: Option<&ChunkFireOverlay>,
     fire: &ChunkSurfaceFire,
-    em: &SimFireLightEmission,
+    em: Option<&SimFireLightEmission>,
     smoke: Option<&ChunkSmokeField>,
     prof: Option<&ChunkFuelProfile>,
     eco: Option<&ChunkEcology>,
@@ -665,6 +671,7 @@ fn apply_fire_neighbor_glow_and_rim_decay(
 /// Bundles overlay + dirty queue for fire extract cadence (Bevy param limit).
 #[derive(SystemParam)]
 pub struct FireExtractOverlayInputs<'w> {
+    ecology: Option<Res<'w, crate::systems::fire::FireEcologyStats>>,
     overlay: Option<Res<'w, crate::render::SharedOverlayFieldBuffers>>,
     dirty_queue: Res<'w, crate::render::FireExtractDirtyQueue>,
     test_scene: Option<Res<'w, crate::engine::ActiveTestScene>>,
@@ -691,7 +698,9 @@ pub fn extract_fire_simulation_snapshot(
         &ChunkCellMatrix,
         Option<&ChunkFireOverlay>,
         &ChunkSurfaceFire,
-        &SimFireLightEmission,
+        // Optional: present only while the chunk's scalar surface fire is hot. Burning cells
+        // (`ChunkFireOverlay`) must reach the visual frame without it.
+        Option<&SimFireLightEmission>,
         Option<&ChunkSmokeField>,
         Option<&ChunkFuelProfile>,
         Option<&ChunkEcology>,
@@ -762,7 +771,8 @@ pub fn extract_fire_simulation_snapshot(
         .as_ref()
         .map(|t| t.entries.len() as u32)
         .unwrap_or(0);
-    let input_fingerprint = fire_extract_input_fingerprint(&runtime, residency_cells);
+    let input_fingerprint =
+        fire_extract_input_fingerprint(&runtime, residency_cells, overlay_inputs.ecology.as_deref());
 
     // Fingerprint skip is safe even during UX spike — spike throttling above already caps cadence;
     // blocking skip here caused a death spiral (~250ms frames → spike latch → full ECS scan every
