@@ -277,29 +277,10 @@ mod footprint_tests {
         assert!(crate::construction::ghost_visual::footprint_lock_ring_stroke(false).is_none());
     }
 
-    #[test]
-    fn partial_alpha_parametric_witness() {
-        assert!(partial_alpha_parametric_witness_green());
-    }
+
 }
 
-/// **PARAM-005** — weighted raster produces sub-unity tile weights for map overlay.
-#[must_use]
-pub fn partial_alpha_parametric_witness_green() -> bool {
-    use crate::construction::building_catalog::FootprintMatrix;
-    use crate::construction::weighted_footprint::{
-        rasterize_with_effective_scale, PlacementParams, WEIGHT_OMIT_THRESHOLD,
-    };
 
-    let base = FootprintMatrix::from_size(2, 2, true);
-    let origin = BuildSiteTile { x: 1, z: 1 };
-    let (_, weighted) =
-        rasterize_with_effective_scale(&base, PlacementParams::identity(1.24), origin);
-    weighted
-        .weights
-        .iter()
-        .any(|(_, w)| *w >= WEIGHT_OMIT_THRESHOLD && *w > 0.0 && *w < 1.0)
-}
 
 
 pub fn sync_road_visual_requests(

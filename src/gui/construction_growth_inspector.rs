@@ -1,10 +1,8 @@
-//! Organic growth proposal approve/reject HUD (PROC-OG-UX-WIRE-001).
+//! Ecology program summary read by the info tabs. (The growth approve/reject inspector had no UI and
+//! was removed in the dev-panel cull; growth proposals are approved through `strategic::settlement`.)
 
 use bevy::prelude::*;
 
-use crate::strategic::settlement::{
-    ArchetypeId, GrowthProposal, GrowthProposalQueue,
-};
 use crate::systems::ecology::LandscapeProgramOnChunk;
 
 /// Ecology program summary for growth HUD hints (CDR-B-GROWTH-HUD-VEG-001).
@@ -32,32 +30,6 @@ pub fn sync_ecology_growth_hint(
     hint.program_chunks = count;
     hint.unique_presets = presets.len() as u32;
     hint.topology_kind_count = kinds.len() as u32;
-}
-
-#[derive(Resource, Debug, Default, Clone)]
-pub struct GrowthInspectorUiState {
-    pub visible: bool,
-}
-
-
-#[must_use]
-pub fn growth_inspector_wired_witness_green() -> bool {
-    use crate::strategic::settlement::{BuildingUsage, GrowthActorLayer};
-
-    let mut queue = GrowthProposalQueue::default();
-    queue.enqueue(GrowthProposal {
-        district_id: crate::strategic::DistrictId("d".into()),
-        block_id: None,
-        archetype_id: ArchetypeId("shop".into()),
-        usage: BuildingUsage::Commercial,
-        actor_layer: GrowthActorLayer::Growth,
-        anchor_tile: IVec2::new(2, 2),
-        priority: 0.5,
-        seed: 1,
-        reason_codes: Vec::new(),
-        saturation_at_submit: 0.0,
-    });
-    approve_growth_proposal(&mut queue, 0).is_some() && queue.proposals.is_empty()
 }
 
 #[must_use]
@@ -99,22 +71,5 @@ mod growth_hud_tests {
     #[test]
     fn growth_hud_ecology_hint_wired_witness_green_lib() {
         assert!(super::growth_hud_ecology_hint_wired_witness_green());
-    }
-}
-
-pub fn approve_growth_proposal(
-    queue: &mut GrowthProposalQueue,
-    index: usize,
-) -> Option<GrowthProposal> {
-    if index < queue.proposals.len() {
-        Some(queue.proposals.remove(index))
-    } else {
-        None
-    }
-}
-
-pub fn reject_growth_proposal(queue: &mut GrowthProposalQueue, index: usize) {
-    if index < queue.proposals.len() {
-        queue.proposals.remove(index);
     }
 }

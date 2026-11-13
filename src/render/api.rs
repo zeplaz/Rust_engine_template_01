@@ -31,7 +31,7 @@ pub use super::pipelines::terrain_instanced_draw::{
 pub use super::pipelines::terrain_gpu_bake_spike::{
     build_bake_spike_probe, build_terrain_gpu_bake_spike_witness_body,
     collect_material_bake_instances, pack_gpu_bake_scissors, peek_dirty_chunk_coords,
-    refresh_terrain_gpu_bake_spike_witness, sample_atlas_material_rgba,
+    sample_atlas_material_rgba,
     spike_bake_ready_for_consumers, terrain_gpu_bake_spike_a0_green,
     terrain_gpu_bake_spike_a1_green, terrain_gpu_bake_spike_env_enabled,
     write_atlas_to_world_bake, TerrainGpuBakeIndexMap, TerrainGpuBakeScissor,
@@ -57,6 +57,8 @@ pub use super::visual_perf_budget::{
     FireExtractDiagnostics, FireExtractFrameReport,
     TileRasterBudget, TileRasterSpikeFeedback, RASTER_SPIKE_EMA_MS, RASTER_SPIKE_FRAME_MS,
 };
+pub use super::stage5_profile::Stage5ReadinessProfile;
+pub use super::extraction::fire_playback_stability::FirePlaybackStabilityWitness;
 pub use super::fx_spine::fire_chunk_entity_index::{
     bootstrap_chunk_fire_entity_index_if_empty, sync_chunk_fire_entity_index_added,
     sync_chunk_fire_entity_index_removed, ChunkFireEntityIndex,
@@ -111,10 +113,10 @@ pub use super::extraction::extracted_camera_metrics::{
     ExtractedCameraMetricsSet, FireParticleCameraScale,
 };
 pub use super::fire_vfx::{
-    effect_spawn_hook_resolver_wired, fire_spark_011_green, fire_spark_compute_enabled,
+    effect_spawn_hook_resolver_wired, fire_spark_compute_enabled,
     resolve_effect_spawn, spawn_effect_consumable, EffectConsumable, EffectConsumableDef,
     EffectConsumableRegistry, EffectConsumableRegistryPlugin, EffectFieldId, EffectLane,
-    EffectResolvedSpawn, EffectSpawnResolveContext, FireSparkWitness, SpawnHookKind,
+    EffectResolvedSpawn, EffectSpawnResolveContext, FireSparkStats, SpawnHookKind,
     EFFECT_REGISTRY_ROOT, FIRE_SPARK_FULL_SCATTER_PX_PER_TILE, FIRE_SPARK_MIN_PX_PER_TILE,
     FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE, FIRE_SPARK_SCATTER_MAX,
     FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
@@ -125,10 +127,7 @@ pub use super::particle_domains::{
 pub use super::weather_vfx::{
     apply_weather_precip_frame_from_climate, apply_weather_precip_frame_from_climate_at,
     build_precip_streak_instances, build_precip_streak_instances_at,
-    cpu_weather_mesh_precip_enabled, cpu_weather_precip_retired,
-    cpu_weather_precip_retired_with_gate, weather_precip_mesh_spawn_present,
-    weather_vfx_witness_json, weather_vfx_witness_json_with_gate,
-    weather_vfx_witness_json_with_status, WeatherPrecipDrawStatus, WeatherPrecipFrame,
+    WeatherPrecipDrawStatus, WeatherPrecipFrame,
     WeatherPrecipZoomBand, WeatherVfxPlugin, WEATHER_PRECIP_STREAK_CAP,
 };
 pub use super::pipelines::gpu_instanced_quad::{
@@ -140,9 +139,7 @@ pub use super::pipelines::gpu_particles::{
     view_aware_particle_cull_wired, GpuParticleInstance,
     GpuParticleQuadVertex, ParticleClass, WorldFireParticleFrame, WorldFireParticleGpuStorage,
 };
-pub use super::stage5_full_app_harness::{
-    LogE01CaptureLane, STAGE5_FULL_APP_LIVE_JSON,
-};
+
 pub use super::core::gpu_packed_formats::{
     ecology_overlay_row_format, fire_particle_expanded_vertex_format, fire_visual_instance_format,
     fire_particle_instance_format, heat_diffusion_cell_format, logistics_overlay_row_format,
@@ -167,11 +164,7 @@ pub use super::fx_spine::fire_smoke_shader_handles::{
 };
 pub use super::fx_spine::fx_burst_request::{collect_burst_hints_from_fire_visual, FxParticleBurstRequest};
 pub use super::extraction::visual_snapshot_commit::{commit_fire_visual_snapshot, CommittedVisualSnapshotFence};
-pub use super::witness::vt_spatial_invariants::{
-    passes_vt5_spatial_invariants, sample_fire_row, vt5_spatial_eval_deferred,
-    VT5_MIN_EVAL_FIRE_INSTANCES, VT5_MIN_MEAN_DISTANCE, VT5_MIN_OCCUPIED_CHUNKS,
-    VT5_MIN_VARIANCE,
-};
+
 pub use super::extraction::logistics_visual_snapshot::LogisticsVisualSnapshot;
 pub use super::extraction::ecology_visual_snapshot::EcologyVisualSnapshot;
 pub use super::extraction::visual_domain_snapshots::{
@@ -182,38 +175,27 @@ pub use super::extraction::visual_domain_snapshots::{
     seed_minimap_m3_units_replay_witness, unit_markers_real_reader_witness_green,
     MinimapOperationalSnapshot, MINIMAP_UNIT_MARKER_SNAPSHOT_CAP,
 };
-pub use super::witness::phase_f_lod_proof::{PhaseFLodProofPlugin, PhaseFLodProofReport};
+
 pub use super::core::gpu_surface_teardown::{GpuSurfaceTeardownPlugin, VisualTestGracefulExit};
 pub use super::core::per_view_residency::{
     per_view_residency_contains, residency_coords_for_view_instance, PerViewResidencyConsumerWindow,
     RESIDENCY_VIEW_CHUNK_SPACING_WORLD,
 };
-pub use crate::dev::runtime_witness::stage6::{
-    build_stage6_proof_payload, write_ops_f01_perf_attribution_section,
-    Stage6LiveProofState, Stage6VirtualizationWitness, STAGE6_VIRTUALIZATION_JSON,
-};
+
 pub use super::fx_spine::view_fire_projection::{
     fire_frame_for_projection_graph, projection_fire_source_view,
 };
 pub use super::stage6_virtualization::{
     atlas_slots_from_gpu_path, chunk_in_residency_consumer_window, chunk_in_residency_table,
-    clear_async_domain_apply_labels_after_stream_apply, gather_stage6_readiness,
+    clear_async_domain_apply_labels_after_stream_apply,
     intersect_visible_chunks_with_residency_window, publish_stage6_virtualization_frame,
-    stage6_readiness_passes, AsyncDomainApplyQueue, PagedAtlasResidency,
-    ResidencyDrivenConsumerWindow, RuntimeAtlasSlot, Stage6ReadinessReport,
+    AsyncDomainApplyQueue, PagedAtlasResidency,
+    ResidencyDrivenConsumerWindow, RuntimeAtlasSlot,
     Stage6VirtualizationFrame, Stage6VirtualizationPlugin,
 };
-pub use super::stage5_full_app_harness::probe_full_app_stage5_readiness;
-pub use super::witness::stage5_closure_witnesses::{
-    FirePlaybackStabilityWitness, Stage5FireViewChunkWitness, Stage5LodBandLogWitness,
-    Stage5MapCameraBridgeWitness,
-};
-pub use super::witness::stage5_readiness::{
-    evaluate_app_stage5_readiness, evaluate_stage5_spine_checklist, stage5_full_app_env_requested,
-    stage5_full_app_profile_requested, stage5_readiness_passes, AppStage5ReadinessReport,
-    Stage5ReadinessEvalInvocation, Stage5ReadinessPlugin, Stage5ReadinessProfile,
-    Stage5SpineChecklist, PERF_PLAY_READINESS_GREEN_LOG_INTERVAL,
-};
+
+
+
 pub use super::probes::debug_render_trace::{
     trace_camera_sync, trace_particle_routing, trace_render_target, trace_viewport,
     DebugRenderTraceConfig, TRACE_CAMERA, TRACE_PARTICLES, TRACE_RENDER_TARGET, TRACE_VIEWPORT,
@@ -251,8 +233,7 @@ pub use super::fx_spine::fire7_f7_a_exit::{
     Fire7F7AExitCriteria,
 };
 pub use super::fx_spine::fire_streaming::{
-    fire_streaming_b_green, FireStreamingLiveProofState,
-    FireStreamingPlugin, FireStreamingWitness, FIRE_STREAMING_LIVE_JSON, FIRE_STREAMING_SLEEP_RADIUS,
+    FireStreamingPlugin, FireStreamingWitness, FIRE_STREAMING_SLEEP_RADIUS,
 };
 pub use super::extraction::fire_view_extract::{
     build_fire_visual_frames_by_view, clamp_fire_lod_for_world_band, fire7_f7_c_001_green,
@@ -283,18 +264,8 @@ pub use super::pipelines::overlay_field_buffers::{
     CHUNK_FIRE_OVERLAY_DISPLAY_MIN, SharedOverlayFieldBuffers, SharedOverlayFieldBuffersPlugin,
 };
 pub use super::extraction::build_chunk_fire_heat_overlay_map;
-pub use super::witness::visual_agreement::{
-    hash_chunk_fire_heat, hash_shared_overlay_heat, hash_simulation_chunk_heat_for_overlay,
-    record_visual_agreement_frame,
-    assert_snapshot_stamp, OverlayAgreementDebug, VisualAgreementError, VisualAgreementFrame,
-    WorldPreviewVt4Probe,
-};
-pub use super::witness::vt_ci_matrix::{
-    apply_vt4_ci_report_to_overlay_debug, apply_vt4_ci_surface_checks, build_deterministic_ci_scenario,
-    build_live_vt4_scenario, record_vt_ci_matrix_live, run_vt4_ci_matrix, run_vt5_ci_spatial_matrix,
-    Vt4CiReport, Vt4CiScenario, Vt4SurfaceId, VtCiMatrixLiveReport, VtCiMatrixPlugin,
-    full_app_vt_ci_fixture_passes, stage5_vt_deep_001_green, stage5_vt_flicker_visual_001_witness,
-};
+
+
 pub use super::extraction::domain_projection_frame::{
     build_domain_projection_frame, merge_domain_projection_into_representation,
     publish_domain_projection_frame, DomainProjectionFrame, DomainProjectionFramePlugin,
@@ -329,15 +300,7 @@ pub use super::probes::stall_watch::{
     stall_substage_repr_proc_extract, stall_substage_repr_refresh_lod, stall_substage_view_sync,
     stall_pre_egui,
 };
-pub use crate::dev::diagnostics::{
-    perf_attribution_witness_json, perf_attribution_witness_lib_fixture,
-    percentile_from_slice, reset_perf_attribution_witness_on_enter_simulation,
-    sync_perf_attribution_witness_system, PerfAttributionWitness, PERF_ATTRIBUTION_WINDOW,
-    reset_visual_readiness_witness_on_enter_simulation, sync_visual_readiness_witness_system,
-    visual_readiness_witness_json, visual_readiness_witness_lib_fixture, VisualReadinessWitness,
-    VisualReadinessWitnessPlugin, RenderScheduleHandoffMs, RenderScheduleSpans,
-    RenderScheduleWitness,
-};
+
 pub use super::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlayOrderPlugin, CORE2D_OVERLAY_SDR_FORMAT,
 };
@@ -349,9 +312,7 @@ pub use super::pipelines::gpu_indirect_draw::{
     GPU_INDIRECT_DISPATCH_WORKGROUP, WorldFireIndirectDrawArgs, WORLD_FIRE_VERTICES_PER_INSTANCE,
 };
 pub use super::minimap_compositor::{
-    build_minimap_compositor_proof_payload, build_minimap_compositor_proof_payload_with_tray,
-    minimap_gpu_compositor_env_enabled, ui_p3_m2_minimap_acceptance_green,
-    ui_p3_m3_minimap_acceptance_green, MinimapGpuCompositorDiagnostics, MinimapCompositorPlugin,
+    minimap_gpu_compositor_env_enabled, MinimapGpuCompositorDiagnostics, MinimapCompositorPlugin,
     MinimapCompositorState, MinimapRenderTargetRegistry,
 };
 pub use super::pipelines::light::*;

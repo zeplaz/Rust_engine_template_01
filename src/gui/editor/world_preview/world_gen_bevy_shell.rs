@@ -12,7 +12,12 @@ use bevy::ui::widget::ImageNode;
 use bevy::ui::{ComputedNode, UiGlobalTransform};
 use bevy::window::PrimaryWindow;
 
+use crate::engine::states::{BaseState, MainMenuState, WorldGenFlowState};
+use crate::engine::{AppState, PauseState, WorldGenChromeLatch, WorldGenState};
 use crate::gui::editor::world_gen_ui::{CancelActiveWorldGenEvent, WorldGenUiState};
+use crate::terrain::generation::world_generator_enhanced::{
+    WorldGenJobSlot, WorldGenProgress, WorldMarker,
+};
 use crate::gui::map_presentation_fit::{
     compute_map_fit_strict, fit_viewport_to_map, MAP_PANEL_INSET_PX,
 };
@@ -70,7 +75,49 @@ struct WorldGenConfirmRoot;
 #[derive(Component, Clone, Copy)]
 pub(crate) enum WorldGenAction {
     KeepOpen,
-    CloseAndCancel,
+    /// Cancel the running generation and return to the main menu.
+    CancelToMainMenu,
+}
+
+/// Everything needed to leave the world generator for the main menu (cancels a running job and
+/// discards generated entities). Shared by the sheet's "Main menu" button and the confirm dialog.
+#[derive(SystemParam)]
+pub(crate) struct MainMenuExit<'w, 's> {
+    commands: Commands<'w, 's>,
+    roots: Query<'w, 's, Entity, With<WorldMarker>>,
+    latch: ResMut<'w, WorldGenChromeLatch>,
+    next_base: ResMut<'w, NextState<BaseState>>,
+    next_flow: ResMut<'w, NextState<WorldGenFlowState>>,
+    next_main_menu: ResMut<'w, NextState<MainMenuState>>,
+    next_app: ResMut<'w, NextState<AppState>>,
+    next_wg: ResMut<'w, NextState<WorldGenState>>,
+    next_pause: ResMut<'w, NextState<PauseState>>,
+    cancel: MessageWriter<'w, CancelActiveWorldGenEvent>,
+    job: Res<'w, WorldGenJobSlot>,
+    progress: Res<'w, WorldGenProgress>,
+}
+
+impl MainMenuExit<'_, '_> {
+    pub(crate) fn busy(&self) -> bool {
+        crate::gui::pause_menu_confirm::world_gen_work_active(&self.job, &self.progress)
+    }
+
+    pub(crate) fn run(&mut self) {
+        crate::gui::pause_menu_confirm::execute_pause_exit_to_main_menu(
+            &mut self.commands,
+            &self.roots,
+            &mut self.latch,
+            &mut self.next_base,
+            &mut self.next_flow,
+            &mut self.next_main_menu,
+            &mut self.next_app,
+            &mut self.next_wg,
+            &mut self.next_pause,
+            &mut self.cancel,
+            &self.job,
+            &self.progress,
+        );
+    }
 }
 
 /// Spawn the session shell: toolbar + sheet containers (filled by
@@ -201,7 +248,7 @@ pub(crate) fn spawn_world_gen_bevy_shell(
                 spawn_note(
                     confirm,
                     &kit,
-                    "Generation is still running. Close anyway and discard partial work?",
+                    "Generation is still running. Cancel it, discard partial work and return to the main menu?",
                     false,
                     (),
                 );
@@ -222,9 +269,9 @@ pub(crate) fn spawn_world_gen_bevy_shell(
                         spawn_button(
                             row,
                             &kit,
-                            "Close and cancel",
+                            "Cancel and go to main menu",
                             UiButton::new(UiButtonVariant::Danger),
-                            WorldGenAction::CloseAndCancel,
+                            WorldGenAction::CancelToMainMenu,
                         );
                     });
             });
@@ -283,7 +330,7 @@ pub(crate) struct ShellSyncB<'w, 's> {
     sheet: Query<
         'w,
         's,
-        &'static mut Visibility,
+        (&'static mut Visibility, &'static mut Node),
         (
             With<WorldGenSheetRoot>,
             Without<WorldGenShellRoot>,
@@ -432,8 +479,13 @@ pub(crate) fn sync_world_gen_bevy_shell(
     }
     let sheet_open = ui_state.visible && ui_state.generator_sheet_open;
     let vis_sheet = if sheet_open { Visibility::Visible } else { Visibility::Hidden };
-    for mut vis in &mut sheet {
+    // Display::None (not just Hidden): a hidden sheet must not keep its 380 px column or block clicks.
+    let sheet_display = if sheet_open { Display::Flex } else { Display::None };
+    for (mut vis, mut node) in &mut sheet {
         *vis = vis_sheet;
+        if node.display != sheet_display {
+            node.display = sheet_display;
+        }
     }
     let confirm_vis = if ui_state.confirm_close_pending {
         Visibility::Visible
@@ -623,13 +675,12 @@ fn node_logical_rect(node: &ComputedNode, xf: &UiGlobalTransform, scale: f32) ->
     bevy::prelude::Rect::from_corners(bevy::prelude::Vec2::new(pmin.x, pmin.y), bevy::prelude::Vec2::new(pmax.x, pmax.y))
 }
 
-/// Esc closes the sheet; the close-while-running dialog buttons.
+/// Esc closes the sheet; the leave-while-running dialog buttons.
 pub(crate) fn world_gen_bevy_shell_actions(
     buttons: Query<(&Interaction, &UiButton, &WorldGenAction), Changed<Interaction>>,
     keys: Res<ButtonInput<KeyCode>>,
     mut ui_state: ResMut<WorldGenUiState>,
-    mut preview_ui: ResMut<WorldPreviewUiState>,
-    mut cancel: MessageWriter<CancelActiveWorldGenEvent>,
+    mut exit: MainMenuExit,
 ) {
     if keys.just_pressed(KeyCode::Escape) {
         if ui_state.confirm_close_pending {
@@ -644,12 +695,9 @@ pub(crate) fn world_gen_bevy_shell_actions(
         }
         match action {
             WorldGenAction::KeepOpen => ui_state.confirm_close_pending = false,
-            WorldGenAction::CloseAndCancel => {
-                cancel.write(CancelActiveWorldGenEvent);
-                preview_ui.window_open = false;
-                ui_state.visible = false;
-                ui_state.generator_sheet_open = false;
+            WorldGenAction::CancelToMainMenu => {
                 ui_state.confirm_close_pending = false;
+                exit.run();
             }
         }
     }

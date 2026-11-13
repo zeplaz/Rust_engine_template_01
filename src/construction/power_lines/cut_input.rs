@@ -51,6 +51,7 @@ pub fn power_line_demolish_cut_system(
     };
     let Some(cursor) = cursor_world_on_map(
         &window,
+        pointer_gate.as_deref(),
         authority.as_deref(),
         desired.as_ref(),
         map_vp.as_ref(),

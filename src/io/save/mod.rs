@@ -60,7 +60,7 @@ pub use fire_overlay::{
     apply_chunk_fire_state, capture_chunk_fire_state, capture_chunk_fire_state_from_rows,
     default_fire_overlay_ref, fire_overlay_ref, fire_save_roundtrip_lib_green,
     hash_saved_fire_state, hash_surface_fire_rows, read_chunk_fire_state_ron,
-    refresh_fire_save_roundtrip_live_witness, write_chunk_fire_state_ron, ChunkFireStateSnapshot,
+    write_chunk_fire_state_ron, ChunkFireStateSnapshot,
     SavedFireChunkRow, FIRE_OVERLAY_NAME, FIRE_SAVE_ROUNDTRIP_JSON, FIRE_STATE_REL_PATH,
     FIRE_STATE_SCHEMA_VERSION,
 };
@@ -68,8 +68,7 @@ pub use atmosphere_clipmap_overlay::{
     atmosphere_clipmap_manifest_roundtrip_green, atmosphere_clipmap_save_roundtrip_green,
     build_atmos_clipmap_overlay_refs, capture_atmosphere_clipmap_snapshot,
     default_atmos_clipmap_overlay_ref, hydrate_atmosphere_clipmap_snapshot,
-    read_atmosphere_clipmap_snapshot, refresh_atmosphere_clipmap_save_roundtrip_witness,
-    try_hydrate_atmosphere_clipmap_from_manifest, write_atmosphere_clipmap_overlay_to_bundle,
+    read_atmosphere_clipmap_snapshot, try_hydrate_atmosphere_clipmap_from_manifest, write_atmosphere_clipmap_overlay_to_bundle,
     write_atmosphere_clipmap_snapshot, AtmosphereClipmapSnapshot, ATMOS_CLIPMAP_OVERLAY_NAME,
     ATMOS_CLIPMAP_SAVE_ROUNDTRIP_JSON, ATMOS_CLIPMAP_SCHEMA_VERSION, ATMOS_CLIPMAP_STATE_REL_PATH,
 };
@@ -96,10 +95,7 @@ pub use wave_s_artifacts::{
     WaveSShellCapturePending, WaveSShellHydrateState, WaveSShellHydrateWitness,
     WaveSShellRestorePending, WAVE_S_BLUEPRINT_PRESETS_REL_PATH, WAVE_S_PRODUCT_SHELL_REL_PATH,
 };
-pub use crate::dev::runtime_witness::wave_s::{
-    build_wave_s_hydrate_proof_payload, write_wave_s_hydrate_live_proof_system, WaveSLiveProofState,
-    WAVE_S_HYDRATE_JSON,
-};
+
 pub use wire_format::{
     active_chunk_artifact_body_kind, active_save_payload_compression, active_save_wire_format,
     compress_payload, decompress_payload, unwrap_chunk_artifact_body, wrap_chunk_artifact_body,

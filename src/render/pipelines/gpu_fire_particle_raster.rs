@@ -276,8 +276,6 @@ fn init_fire_particle_raster_pipeline(
     });
 }
 
-/// P2-FIRE-SPARK-010: Core2d transparent chain ends at fire sparks (after water + optional tile debug).
-pub const FIRE_SPARKS_ABOVE_SMOKE_OVERLAY: bool = true;
 
 fn prepare_fire_particle_raster_bind_groups(
     globals: Res<FireParticleDrawGlobals>,
@@ -404,10 +402,7 @@ fn fire_particle_raster_pass(
 mod draw_order_tests {
     use super::*;
 
-    #[test]
-    fn transparent_overlay_order_chains_fire_after_water() {
-        assert!(FIRE_SPARKS_ABOVE_SMOKE_OVERLAY);
-    }
+
 
     #[test]
     fn zero_vertex_count_skips_raster_pass() {

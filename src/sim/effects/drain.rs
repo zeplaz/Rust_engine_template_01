@@ -13,7 +13,7 @@ use crate::terrain::ChunkCellKey;
 use super::event::{SimEffectEvent, SimEffectKind};
 use super::queue::SimEffectQueue;
 use super::telemetry::SimEffectTelemetryLedger;
-use super::witness::SimEffectSpineWitness;
+
 
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
 pub enum SimEffectSystemSet {
@@ -26,13 +26,11 @@ pub fn drain_sim_effect_queue_system(
     mut hydro: ResMut<HydrologyEventQueue>,
     mut ember_writer: MessageWriter<EmberSpotIgnitionEvent>,
     mut ledger: ResMut<SimEffectTelemetryLedger>,
-    mut witness: ResMut<SimEffectSpineWitness>,
     mut player_log: ResMut<super::player_event_log::PlayerEventLog>,
     mut landscape_disturbances: Option<ResMut<LandscapeDisturbanceQueue>>,
 ) {
     let start = Instant::now();
     queue.last_drain_count = 0;
-    witness.last_drain_telemetry_rows = 0;
 
     let events: Vec<SimEffectEvent> = queue.pending.drain(..).collect();
     let mut drained: Vec<(SimEffectEvent, u64, bool)> = Vec::with_capacity(events.len());
@@ -44,7 +42,6 @@ pub fn drain_sim_effect_queue_system(
             landscape_disturbances.as_deref_mut(),
         );
         let effect_id = ledger.record_drain(tick.0, &event, ok);
-        witness.record_dispatch(&event, ok, effect_id);
         drained.push((event, effect_id, ok));
         queue.last_drain_count = queue.last_drain_count.saturating_add(1);
         queue.drained_total = queue.drained_total.saturating_add(1);
@@ -59,8 +56,6 @@ pub fn drain_sim_effect_queue_system(
     );
 
     queue.last_drain_us = start.elapsed().as_micros() as u64;
-    witness.last_drain_telemetry_rows = queue.last_drain_count;
-    witness.finalize_after_drain(&queue, &ledger);
     queue.clear_tick_dedupe();
 }
 
@@ -139,7 +134,6 @@ mod tests {
     use crate::sim::effects::event::{SimEffectKind, SimEffectSource};
     use crate::sim::effects::queue::SimEffectQueue;
     use crate::sim::effects::telemetry::SimEffectTelemetryLedger;
-    use crate::sim::effects::witness::SimEffectSpineWitness;
     use crate::substrate::hydrology::HydrologyEventQueue;
     use crate::systems::sim_control::SimTick;
     use bevy::ecs::message::Messages;
@@ -152,7 +146,6 @@ mod tests {
             .init_resource::<SimEffectQueue>()
             .init_resource::<HydrologyEventQueue>()
             .init_resource::<SimEffectTelemetryLedger>()
-            .init_resource::<SimEffectSpineWitness>()
             .init_resource::<crate::sim::effects::player_event_log::PlayerEventLog>()
             .init_resource::<SimTick>()
             .add_message::<EmberSpotIgnitionEvent>()
@@ -211,9 +204,6 @@ mod tests {
         let ledger = app.world().resource::<SimEffectTelemetryLedger>();
         assert!(ledger.causal_chain_depth_max() >= 1);
 
-        let witness = app.world().resource::<SimEffectSpineWitness>();
-        assert!(witness.queue_drain_ok);
-        assert!(witness.dedupe_ok);
 
         app.update();
         let embers2 = app.world().resource::<Messages<EmberSpotIgnitionEvent>>();

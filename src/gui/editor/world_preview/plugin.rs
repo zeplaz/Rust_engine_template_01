@@ -10,7 +10,7 @@ use crate::render::{
 use super::cache::WorldPreviewChunkCaches;
 use super::chrome::{world_preview_pipeline_enabled, WorldPreviewUiState};
 use super::composite_preview_graph::{self, CompositePreviewGraphResource};
-use super::gpu_preview::{self, WorldPreviewGpuRuntime};
+use super::gpu_preview::{self};
 use super::preview_lifecycle::{
     self, advance_world_preview_lifecycle_system, WorldPreviewLifecycle, WorldPreviewLifecycleSignals,
 };
@@ -20,7 +20,6 @@ use super::preview_readiness::{
 };
 use super::preview_render_contract;
 use super::preview_render_state::PreviewRenderState;
-use super::preview_vt4;
 use super::render_raster;
 use super::render_target_barrier::{
     self, WorldPreviewGpuResizeQueue, WorldPreviewRenderTargetBindBarrier,
@@ -30,7 +29,7 @@ use super::texture_cache::{
     self, init_world_preview_texture, sync_world_preview_texture_size, WorldPreviewTexture,
 };
 use super::viewport_authority::{self, WorldPreviewViewportAuthority};
-use super::wave_p_witness;
+
 
 /// Deferred GPU resize → commit → camera bind (`render_target_barrier` lifecycle).
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -54,26 +53,13 @@ enum WorldPreviewRasterOrder {
 /// Registers world preview resources + raster + chrome systems.
 pub struct WorldPreviewPlugin;
 
-fn seed_full_app_gpu_preview_authority_for_readiness(
-    profile: Res<crate::render::Stage5ReadinessProfile>,
-    mut gpu: ResMut<WorldPreviewGpuRuntime>,
-) {
-    if *profile == crate::render::Stage5ReadinessProfile::FULL_APP {
-        gpu.offscreen_renderer_ready = true;
-    }
-}
-
 impl Plugin for WorldPreviewPlugin {
     fn build(&self, app: &mut App) {
-        // Do not force FULL_APP here — EnginePlugin owns the profile (HEADLESS default;
-        // FULL_APP only under test_mode / STAGE5_FULL_APP=1). Preview GPU authority seeds
-        // from the live profile via `seed_full_app_gpu_preview_authority_for_readiness`.
         app.init_resource::<CompositePreviewGraphResource>();
         preview_render_contract::init_preview_render_contract_resources(app);
         app.init_resource::<crate::gui::SwapImageBuffers>()
             .init_resource::<WorldPreviewTexture>()
             .init_resource::<gpu_preview::WorldPreviewGpuRuntime>()
-            .init_resource::<crate::render::WorldPreviewVt4Probe>()
             .init_resource::<WorldPreviewUiState>()
             .add_message::<WorldPreviewViewportEvent>()
             .init_resource::<WorldPreviewViewportAuthority>()
@@ -87,7 +73,6 @@ impl Plugin for WorldPreviewPlugin {
             .init_resource::<WorldPreviewReady>()
             .init_resource::<WorldPreviewReadinessDiagnostics>()
             .init_resource::<PreviewRenderState>()
-            .init_resource::<wave_p_witness::WavePLiveProofState>()
             .init_resource::<crate::gui::hud::ViewportRectSanity>()
             .configure_sets(
                 Update,
@@ -110,10 +95,6 @@ impl Plugin for WorldPreviewPlugin {
             .add_systems(
                 Startup,
                 gpu_preview::prefer_gpu_preview_mode_when_renderer_ready,
-            )
-            .add_systems(
-                Startup,
-                seed_full_app_gpu_preview_authority_for_readiness,
             )
             .add_systems(
                 Update,
@@ -209,8 +190,6 @@ impl Plugin for WorldPreviewPlugin {
                     gpu_preview::sync_world_preview_gpu_chunk_quads
                         .in_set(WorldPreviewLifecycleSet::ChunkQuads)
                         .run_if(world_preview_pipeline_enabled),
-                    preview_vt4::capture_world_preview_vt4_probe
-                        .after(crate::render::extraction::FireVisualFrameSet::BuildProfiles),
                     viewport_authority::debug_trace_world_preview_viewport_authority
                         .in_set(ViewRepresentationSystemSet::PostFX),
                 ),

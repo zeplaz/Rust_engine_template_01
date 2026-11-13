@@ -121,7 +121,7 @@ fn q(v: f32) -> u64 {
 }
 
 /// Pixel stroke weights (8, 64) are egui. A ribbon on the tile grid is a fraction of a cell.
-fn world_ribbon_width(request_width: f32) -> f32 {
+pub(crate) fn world_ribbon_width(request_width: f32) -> f32 {
     if request_width > 2.0 {
         0.22
     } else {
@@ -168,7 +168,7 @@ fn despawn_query<T: Component>(commands: &mut Commands, query: &Query<Entity, Wi
     }
 }
 
-fn path_color(kind: VisualPathKind, valid: bool, slope_ok: bool, committed: bool) -> Color {
+pub(crate) fn path_color(kind: VisualPathKind, valid: bool, slope_ok: bool, committed: bool) -> Color {
     let token = match (kind, valid, slope_ok, committed) {
         (VisualPathKind::Road, true, _, true) => crate::construction::road_committed_color(),
         (VisualPathKind::Road, true, _, false) => crate::construction::road_segment_color(true),

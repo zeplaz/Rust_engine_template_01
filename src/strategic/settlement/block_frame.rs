@@ -379,23 +379,7 @@ pub fn build_city_g1_c2_001_witness_body() -> serde_json::Value {
     })
 }
 
-#[must_use]
-pub fn refresh_city_g1_c2_001_block_frame_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_city_g1_c2_001_witness_body();
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "CITY-G1-C2-001",
-        "refresh_city_g1_c2_001_block_frame_witness",
-        CITY_G1_C2_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(CITY_G1_C2_LIVE_JSON, wrapped) && green
-}
 
 #[cfg(test)]
 mod tests {

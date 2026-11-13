@@ -213,13 +213,7 @@ pub fn landscape_ship_packs_registered_green() -> bool {
         && PIXEL_WORLD_LANDSCAPE_SHIP_PRESETS.contains(&"old_growth_core_v0")
 }
 
-#[must_use]
-pub fn building_ship_atlases_registered_green() -> bool {
-    PIXEL_WORLD_BUILDING_SHIP_ATLASES.len() == 3
-        && PIXEL_WORLD_BUILDING_SHIP_ATLASES.contains(&"rowhouse_victorian_production_v1")
-        && PIXEL_WORLD_BUILDING_SHIP_ATLASES.contains(&"warehouse_industrial_west_v2")
-        && PIXEL_WORLD_BUILDING_SHIP_ATLASES.contains(&"rail_warehouse_pilot_v1")
-}
+
 
 #[must_use]
 pub fn landscape_atlas_stamp_path_green() -> bool {
@@ -340,9 +334,19 @@ mod tests {
         assert!(index.registered_count() >= 12);
     }
 
+
+
+    #[test]
+    fn landscape_atlas_stamp_path_is_real() {
+        if !crate::systems::ecology::landscape_lg5_registry_stamped() {
+            eprintln!("skip: landscape lg5 index not stamped");
+            return;
+        }
+        assert!(landscape_atlas_stamp_path_green());
+    }
+
     #[test]
     fn ship_building_atlases_seed_for_pixel_world() {
-        assert!(building_ship_atlases_registered_green());
         let mut index = PixelWorldLandscapePackIndex::default();
         index.seed_ship_landscape_packs();
         for id in PIXEL_WORLD_BUILDING_SHIP_ATLASES {
@@ -362,14 +366,5 @@ mod tests {
             1,
             "idempotent building register"
         );
-    }
-
-    #[test]
-    fn landscape_atlas_stamp_path_is_real() {
-        if !crate::systems::ecology::landscape_lg5_registry_stamped() {
-            eprintln!("skip: landscape lg5 index not stamped");
-            return;
-        }
-        assert!(landscape_atlas_stamp_path_green());
     }
 }

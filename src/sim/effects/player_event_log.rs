@@ -3,7 +3,6 @@
 use std::collections::{HashMap, VecDeque};
 
 use bevy::prelude::*;
-use serde_json::{json, Value};
 
 use super::event::{SimEffectEvent, SimEffectKind, SimEffectSource};
 
@@ -311,109 +310,14 @@ pub fn project_player_event_log_from_drain(
     }
 }
 
-#[must_use]
-pub fn event_log_ui_001_witness_json() -> Value {
-    json!({
-        "gate": "EVENT-LOG-UI-001",
-        "green": event_log_ui_001_witness_green(),
-        "player_event_log_cap": PLAYER_EVENT_LOG_CAP,
-        "dedupe_window_ticks": PLAYER_EVENT_DEDUPE_TICKS,
-        "projection_wired": event_log_ui_projection_witness_green(),
-        "impl_wired": event_log_ui_impl_witness_green(),
-        "context_tray_events_tab_wired": event_log_ui_impl_witness_green(),
-        "ops_strip_crit_hook_wired": event_log_ui_ops_strip_witness_green(),
-    })
-}
 
-#[must_use]
-pub fn event_log_ui_001_witness_green() -> bool {
-    event_log_ui_projection_witness_green() && event_log_ui_impl_witness_green()
-}
 
-#[must_use]
-pub fn event_log_ui_projection_witness_green() -> bool {
-    use super::drain::drain_sim_effect_queue_system;
-    use super::event::SimEffectKind;
-    use super::queue::SimEffectQueue;
-    use super::telemetry::SimEffectTelemetryLedger;
-    use super::witness::SimEffectSpineWitness;
-    use crate::substrate::hydrology::HydrologyEventQueue;
-    use crate::systems::fire::EmberSpotIgnitionEvent;
-    use crate::systems::sim_control::SimTick;
 
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .init_resource::<SimEffectQueue>()
-        .init_resource::<HydrologyEventQueue>()
-        .init_resource::<SimEffectTelemetryLedger>()
-        .init_resource::<SimEffectSpineWitness>()
-        .init_resource::<SimTick>()
-        .init_resource::<PlayerEventLog>()
-        .add_message::<EmberSpotIgnitionEvent>()
-        .add_systems(Update, drain_sim_effect_queue_system);
 
-    {
-        let mut q = app.world_mut().resource_mut::<SimEffectQueue>();
-        q.push(SimEffectEvent {
-            source: SimEffectSource::Lightning,
-            cause_id: "CAUSE-lightning-ui-22".into(),
-            parent_effect_id: None,
-            kind: SimEffectKind::LightningStrike {
-                chunk: IVec2::new(2, 2),
-                cell_indices: vec![0, 1],
-                spark: 0.4,
-            },
-        });
-    }
-    app.update();
 
-    let log = app.world().resource::<PlayerEventLog>();
-    log.rows.iter().any(|r| r.category == PlayerEventCategory::Weather)
-}
 
-#[must_use]
-pub fn event_log_ui_format_witness_green() -> bool {
-    let row = PlayerEventRow {
-        tick: 1240,
-        category: PlayerEventCategory::Weather,
-        severity: PlayerEventSeverity::Crit,
-        target_ref: "ch(12,34)".into(),
-        label: "Lightning strike · 3 cells".into(),
-        effect_id: 22,
-        parent_id: Some(21),
-        dispatch_ok: true,
-    };
-    let tray = format_player_event_tray_row_line(&row);
-    let log = PlayerEventLog {
-        unread_crit: 1,
-        rows: std::collections::VecDeque::from([row]),
-        ..Default::default()
-    };
-    let empty_tray = format_player_event_tray_body(&PlayerEventLog::default());
-    tray.contains("[WEATHER]")
-        && tray.contains("ch(12,34)")
-        && format_ops_strip_alerts_line(4, &log).starts_with("◆")
-        && empty_tray.contains("No events yet")
-}
 
-#[must_use]
-pub fn event_log_ui_impl_witness_green() -> bool {
-    event_log_ui_format_witness_green()
-}
 
-#[must_use]
-pub fn event_log_ui_ops_strip_witness_green() -> bool {
-    let mut log = PlayerEventLog::default();
-    log.unread_crit = 1;
-    log.rows.push_back(PlayerEventRow {
-        tick: 99,
-        category: PlayerEventCategory::Grid,
-        severity: PlayerEventSeverity::Crit,
-        target_ref: "ch(1,2)".into(),
-        label: "Structure overload · CAUSE-x".into(),
-        effect_id: 1,
-        parent_id: None,
-        dispatch_ok: true,
-    });
-    format_ops_strip_alerts_line(0, &log).contains("Structure overload")
-}
+
+
+

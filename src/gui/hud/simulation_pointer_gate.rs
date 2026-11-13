@@ -39,6 +39,33 @@ pub struct SimulationMapPointerGate {
     pub os_cursor_visible: bool,
     /// `Window::cursor_position()` was `Some` this frame. A missing cursor is not `(0, 0)`.
     pub cursor_known: bool,
+    /// How a map pick resolves this frame (written in [`PointerGateSet::WorldPick`]).
+    pub world_pick: MapWorldPick,
+}
+
+/// Which projection owns cursor → world this frame.
+#[derive(Clone, Copy, Debug, Default, PartialEq)]
+pub enum MapWorldPick {
+    /// Top-down: callers resolve the cursor through the tactical ortho
+    /// ([`crate::gui::input_pick::TacticalMapPickFrame`] / `ConstructionMapProjection`).
+    #[default]
+    TopDown,
+    /// PixelWorld3D: the voxel camera ray already hit the surface at this tactical XY (tile units,
+    /// x = column, y = row). `None` = the ray misses (or the voxel view is not up yet): no pick.
+    PixelWorld(Option<Vec2>),
+}
+
+impl SimulationMapPointerGate {
+    /// `Some(hit)` when the voxel view owns picks this frame. Callers must use it as is — never
+    /// fall back to the top-down ortho, which does not describe what is on screen.
+    #[inline]
+    #[must_use]
+    pub fn pixel_world_pick(&self) -> Option<Option<Vec2>> {
+        match self.world_pick {
+            MapWorldPick::PixelWorld(hit) => Some(hit),
+            MapWorldPick::TopDown => None,
+        }
+    }
 }
 
 impl Default for SimulationMapPointerGate {
@@ -53,6 +80,7 @@ impl Default for SimulationMapPointerGate {
             egui_blocks: false,
             os_cursor_visible: false,
             cursor_known: true,
+            world_pick: MapWorldPick::TopDown,
         }
     }
 }
@@ -146,6 +174,8 @@ pub enum PointerGateSet {
     Sync,
     /// Bevy panel root rect hit-test ([`apply_bevy_panel_pointer_blocks_system`]).
     Block,
+    /// Cursor → world for the active presentation ([`resolve_map_world_pick_system`]).
+    WorldPick,
     /// Final gate state published (OS cursor policy). Consumers run after this set.
     Publish,
 }
@@ -154,7 +184,13 @@ pub enum PointerGateSet {
 pub fn configure_pointer_gate_sets(app: &mut App) {
     app.configure_sets(
         Update,
-        (PointerGateSet::Sync, PointerGateSet::Block, PointerGateSet::Publish).chain(),
+        (
+            PointerGateSet::Sync,
+            PointerGateSet::Block,
+            PointerGateSet::WorldPick,
+            PointerGateSet::Publish,
+        )
+            .chain(),
     );
 }
 
@@ -167,9 +203,34 @@ pub fn add_pointer_gate_systems(app: &mut App) {
         (
             sync_simulation_map_pointer_gate_system.in_set(PointerGateSet::Sync),
             apply_bevy_panel_pointer_blocks_system.in_set(PointerGateSet::Block),
+            resolve_map_world_pick_system.in_set(PointerGateSet::WorldPick),
             apply_simulation_unified_cursor_system.in_set(PointerGateSet::Publish),
         ),
     );
+}
+
+/// Resolve cursor → world for the voxel view: the ray of the frame on screen
+/// ([`crate::render::pixel_world::PixelWorldCameraFrame`], published in PostUpdate) against the voxel
+/// surface. Top-down leaves picks to the tactical ortho path. Sole writer of
+/// [`SimulationMapPointerGate::world_pick`].
+pub fn resolve_map_world_pick_system(
+    mode: Option<Res<crate::gui::WorldPresentationMode>>,
+    camera: Option<Res<crate::render::pixel_world::PixelWorldCameraFrame>>,
+    field: Option<Res<crate::render::pixel_world::PixelWorldTerrainField>>,
+    mut gate: ResMut<SimulationMapPointerGate>,
+) {
+    let pick = if mode.as_deref().is_some_and(|m| m.is_pixel_world()) {
+        let hit = match (camera.as_deref(), field.as_deref()) {
+            (Some(cam), Some(field)) if gate.cursor_known => cam.pick(field, gate.cursor),
+            _ => None,
+        };
+        MapWorldPick::PixelWorld(hit)
+    } else {
+        MapWorldPick::TopDown
+    };
+    if gate.world_pick != pick {
+        gate.world_pick = pick;
+    }
 }
 
 /// Bevy UI panel roots that block map picks while the cursor is **over their on-screen rect**
@@ -188,6 +249,7 @@ type PointerBlockingPanelRoots = Or<(
     With<crate::gui::logistics_targets_panel::LogisticsTargetsBevyRoot>,
     With<crate::gui::world_presentation_mode::WorldPresentationToggleRoot>,
     With<crate::gui::front_controls::FrontSelectionPanelRoot>,
+    With<crate::gui::hud::sim_build_picker_panel::SimBuildPickerPanelRoot>,
 )>;
 
 /// True when `physical_cursor` (window physical px — the space `ComputedNode` /

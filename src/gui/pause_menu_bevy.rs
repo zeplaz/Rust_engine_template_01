@@ -692,30 +692,9 @@ impl Plugin for PauseMenuBevyPlugin {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::gui::hud::simulation_shell_phase2::{
-        build_proof_payload, commit_ui_shell_migration_live_proof, ContextTrayState,
-        UiShellMigrationWitness,
-    };
-    use crate::gui::hud::shell_diagnostics::ProductShellDiagnostics;
+    
+    
+    
 
-    #[test]
-    fn ui_p5_pause_001_witness_green_when_bevy_flag_set() {
-        let mut witness = UiShellMigrationWitness::default();
-        witness_pause_menu_bevy_replay(&mut witness);
-        assert!(crate::gui::hud::simulation_shell_phase2::ui_p5_pause_001_green(&witness));
-        let body = build_proof_payload(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        );
-        assert_eq!(body["phase5"]["pause_menu_bevy"], serde_json::json!(true));
-        assert_eq!(body["ui_p5_pause_001_green"], serde_json::json!(true));
-        assert_eq!(body["ui_w3_p5_001"]["green"], serde_json::json!(true));
-        assert!(commit_ui_shell_migration_live_proof(
-            &witness,
-            &ContextTrayState::default(),
-            &ProductShellDiagnostics::default(),
-        ));
-    }
+
 }

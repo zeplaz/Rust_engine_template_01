@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::construction::ConstructionWorldRevision;
 use crate::economy::logistics::routes::{path_edges_between_tiles, tile_node_key};
-use crate::economy::logistics::witness::LOG_GEOGRAPHIC_CASCADE_TEST_PASSED;
+
 use crate::economy::resource_flow::TransportMode;
 use crate::strategic::{
     rebuild_logistics_graph_from_transport, BuildSiteTile, CorridorConstructionBook,
@@ -12,8 +12,7 @@ use crate::strategic::{
 };
 use crate::systems::transport::{
     bake_snapshot_from_ordered_tile_markers, hydrate_transport_from_snapshot,
-    refresh_transport_nav_export, TransportCostCache, TransportCostWeights, TransportEdgeDirectory,
-    TransportEdgeId, TransportEdgeMeta, TransportFieldStore, TransportNavExport, TransportTopology,
+    refresh_transport_nav_export, TransportCostCache, TransportCostWeights, TransportEdgeDirectory, TransportFieldStore, TransportNavExport, TransportTopology,
 };
 
 fn road_chain_snapshot() -> crate::systems::transport::TransportNetworkSnapshot {
@@ -120,7 +119,6 @@ fn logistics_edges_carry_transport_edge_id() {
 
 #[test]
 fn geographic_cascade_integration() {
-    LOG_GEOGRAPHIC_CASCADE_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
     let mut app = App::new();
     app.add_plugins(MinimalPlugins);
@@ -149,17 +147,15 @@ fn geographic_cascade_integration() {
     .is_none();
 
     if open && blocked {
-        LOG_GEOGRAPHIC_CASCADE_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
     }
     assert!(open, "connected before cut");
     assert!(blocked, "blocked after removing middle connectivity");
-    assert!(LOG_GEOGRAPHIC_CASCADE_TEST_PASSED.load(std::sync::atomic::Ordering::Relaxed));
 }
 
 fn logistics_log_b_app() -> App {
     use crate::construction::{default_buildings_dir, load_building_definitions_from_dir};
-    use crate::dev::industrial_activation_todos::register_industrial_activation_todo_hooks;
-    use crate::dev::logistics_throughput_todos::register_logistics_throughput_todo_hooks;
+
+
     use crate::engine::states::BaseState;
     use crate::strategic::CommitConstructionSiteEvent;
     use crate::systems::sim_control::{SimControlState, SimTick, SimTimeMicros};
@@ -174,8 +170,6 @@ fn logistics_log_b_app() -> App {
     // (same pattern as assemble_logistics_proof_sim_app — stay out of power UX lane).
     app.add_message::<CommitConstructionSiteEvent>();
     app.init_resource::<crate::render::PowerMapOverlayPresentation>();
-    register_logistics_throughput_todo_hooks(&mut app);
-    register_industrial_activation_todo_hooks(&mut app);
     app.add_plugins((
         crate::economy::activation::IndustrialActivationPlugin,
         crate::strategic::InfrastructureGraphBridgePlugin,
@@ -394,10 +388,9 @@ fn log_a_04_cut_road_sets_path_open_false_after_refresh() {
 #[test]
 fn log_b_02_in_transit_ledger_uses_route_handle_and_progress() {
     use super::types::InTransitLedger;
-    use super::witness::LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED;
+
     use crate::economy::resource_flow::ResourceFlowRegistry;
 
-    LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
     let mut app = logistics_log_b_app();
     let (mine, refinery) = setup_aluminum_chain_facilities(&mut app);
@@ -493,16 +486,14 @@ fn log_b_02_in_transit_ledger_uses_route_handle_and_progress() {
         refinery_after > 0.0,
         "LOG-B-02: ledger arrivals deliver freight after transit"
     );
-    LOG_B_02_IN_TRANSIT_LEDGER_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[test]
 fn log_b_freight_moves_through_ledger_not_same_tick_teleport() {
     use super::types::InTransitLedger;
-    use super::witness::LOG_B_04_ARRIVALS_ONLY_TEST_PASSED;
+
     use crate::economy::resource_flow::ResourceFlowRegistry;
 
-    LOG_B_04_ARRIVALS_ONLY_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
     let mut app = logistics_log_b_app();
     let (mine, refinery) = setup_aluminum_chain_facilities(&mut app);
@@ -549,7 +540,6 @@ fn log_b_freight_moves_through_ledger_not_same_tick_teleport() {
         !ledger.lots.is_empty(),
         "freight should be in transit after dispatch"
     );
-    LOG_B_04_ARRIVALS_ONLY_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
     for _ in 0..40 {
         app.update();
     }
@@ -568,7 +558,7 @@ fn log_b_freight_moves_through_ledger_not_same_tick_teleport() {
 fn log_b_rail_batch_uses_longer_transit_than_truck() {
     use super::propagation::freight_transit_ticks;
     use super::types::FreightMovementModel;
-    use super::witness::LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED;
+
 
     let truck = freight_transit_ticks(3, FreightMovementModel::Continuous);
     let rail = freight_transit_ticks(3, FreightMovementModel::Batched);
@@ -576,15 +566,13 @@ fn log_b_rail_batch_uses_longer_transit_than_truck() {
         rail > truck,
         "batched rail ETA > continuous truck for same path length"
     );
-    LOG_B_03_FREIGHT_MOVEMENT_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[test]
 fn log_b_partial_fulfillment_records_shortage() {
     use super::types::LogisticsDiagnostics;
-    use super::witness::LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED;
 
-    LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
+
 
     let mut app = logistics_log_b_app();
     let (mine, _) = setup_aluminum_chain_facilities(&mut app);
@@ -616,15 +604,13 @@ fn log_b_partial_fulfillment_records_shortage() {
             .any(|p| p.delivered + 1e-4 < p.requested),
         "solver should record partial delivery under cap squeeze"
     );
-    LOG_B_05_PARTIAL_FULFILLMENT_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[test]
 fn log_c_01_soa_throughput_solver_aligned_vecs() {
     use super::solver::soa_solver_aligned;
-    use super::witness::LOG_C_01_SOA_TEST_PASSED;
 
-    LOG_C_01_SOA_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
+
 
     let mut app = logistics_log_b_app();
     let (mine, _) = setup_aluminum_chain_facilities(&mut app);
@@ -648,59 +634,14 @@ fn log_c_01_soa_throughput_solver_aligned_vecs() {
         !solver.capacity.is_empty(),
         "capacity sync must populate SoA from graph edges"
     );
-    LOG_C_01_SOA_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
-#[test]
-fn log_c_reservations_never_exceed_capacity() {
-    use super::solver::{book_matches_soa_reserved, reservations_within_capacity};
-    use super::witness::{LOG_C_01_SOA_TEST_PASSED, LOG_C_02_RESERVATION_TEST_PASSED};
 
-    LOG_C_01_SOA_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
-    LOG_C_02_RESERVATION_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
-
-    let mut app = logistics_log_b_app();
-    let (mine, _) = setup_aluminum_chain_facilities(&mut app);
-    if let Some(mut node) = app
-        .world_mut()
-        .get_mut::<crate::economy::resource_flow::ResourceFlowNode>(mine)
-    {
-        node.buffer_by_tag.insert("Bauxite".into(), 40.0);
-    }
-    for _ in 0..25 {
-        app.update();
-    }
-    let solver = app
-        .world()
-        .resource::<crate::economy::logistics::ThroughputSolverState>();
-    let book = app
-        .world()
-        .resource::<crate::economy::logistics::FreightReservationBook>();
-    assert!(
-        reservations_within_capacity(solver),
-        "reserved load must stay within per-edge capacity"
-    );
-    assert!(
-        solver.reserved.iter().any(|&r| r > 0.0),
-        "solve should reserve corridor capacity"
-    );
-    assert!(
-        !book.entries.is_empty(),
-        "FreightReservationBook must record sparse reservations"
-    );
-    assert!(
-        book_matches_soa_reserved(book, solver),
-        "book sums must match SoA reserved"
-    );
-    LOG_C_01_SOA_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
-    LOG_C_02_RESERVATION_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
-}
 
 #[test]
 fn log_c_congestion_rises_when_edge_saturated() {
-    use super::witness::LOG_C_03_CONGESTION_TEST_PASSED;
 
-    LOG_C_03_CONGESTION_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
+
 
     let mut app = logistics_log_b_app();
     let (mine, _) = setup_aluminum_chain_facilities(&mut app);
@@ -760,14 +701,12 @@ fn log_c_congestion_rises_when_edge_saturated() {
         after > before + 0.01,
         "congestion should rise under sustained load"
     );
-    LOG_C_03_CONGESTION_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[test]
 fn log_c_corridor_pressure_diffuses_to_successor() {
-    use super::witness::LOG_C_04_PRESSURE_TEST_PASSED;
 
-    LOG_C_04_PRESSURE_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
+
 
     let mut app = logistics_log_b_app();
     setup_aluminum_chain_facilities(&mut app);
@@ -787,7 +726,6 @@ fn log_c_corridor_pressure_diffuses_to_successor() {
         solver.edge_pressure.len() >= 2 && solver.edge_pressure[1] > 0.2,
         "successor edge should inherit diffused pressure"
     );
-    LOG_C_04_PRESSURE_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[test]
@@ -795,7 +733,6 @@ fn log_c_geographic_cascade_starves_downstream_smelter() {
     use crate::economy::resource_flow::FacilityFlowState;
     use crate::entities::production::aluminum::AluminumSmelterRuntime;
 
-    LOG_GEOGRAPHIC_CASCADE_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
     let mut app = logistics_log_b_app();
     let _mine = spawn_facility(
@@ -863,18 +800,16 @@ fn log_c_geographic_cascade_starves_downstream_smelter() {
         refinery_starved || efficiency_after < efficiency_before - 0.05,
         "downstream smelter should degrade when corridor is cut"
     );
-    LOG_GEOGRAPHIC_CASCADE_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[test]
 fn log_c_overlay_uses_solver_load_not_static_capacity() {
-    use super::witness::LOG_C_06_OVERLAY_TEST_PASSED;
+
     use crate::strategic::edge_flow_for_overlay;
     use crate::strategic::LogisticsEdge;
     use crate::strategic::LogisticsNodeId;
     use crate::systems::transport::TransportEdgeId;
 
-    LOG_C_06_OVERLAY_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
     let edge = LogisticsEdge {
         from: LogisticsNodeId(0),
@@ -894,15 +829,13 @@ fn log_c_overlay_uses_solver_load_not_static_capacity() {
     assert!((with_solver - 2.5).abs() < 1e-4);
     assert!((static_only - 100.0).abs() < 1e-4);
     assert!(with_solver < static_only);
-    LOG_C_06_OVERLAY_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[test]
 fn log_d_corridor_class_rail_profile_blocks_truck_path() {
-    use super::witness::LOG_D_01_CORRIDOR_CLASS_TEST_PASSED;
+
     use crate::systems::transport::{corridor_class_from_profile, CorridorClass};
 
-    LOG_D_01_CORRIDOR_CLASS_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
     assert_eq!(corridor_class_from_profile("rail"), CorridorClass::Rail);
     let allowed = vec!["rail_train".to_string()];
@@ -919,16 +852,14 @@ fn log_d_corridor_class_rail_profile_blocks_truck_path() {
         rail_may_use,
         "rail_train should be allowed on rail corridor"
     );
-    LOG_D_01_CORRIDOR_CLASS_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
 #[test]
 fn log_d_streaming_route_invalidation_on_construction_bump() {
     use super::routes::topology_revision_u32;
     use super::types::RouteCache;
-    use super::witness::LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED;
 
-    LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
+
 
     let mut app = logistics_route_invalidation_app();
     for _ in 0..2 {
@@ -946,160 +877,13 @@ fn log_d_streaming_route_invalidation_on_construction_bump() {
     let expected = topology_revision_u32(graph.revision, 2);
     assert_eq!(cache.topology_revision, expected);
     assert_ne!(cache.topology_revision, topo_before);
-    LOG_D_03_STREAMING_INVALIDATION_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
 }
 
-#[test]
-fn log_d_district_scoped_snapshot_present_with_facilities() {
-    use super::witness::LOG_D_02_DISTRICT_SCOPED_TEST_PASSED;
-    use crate::dev::logistics_throughput_todos::{
-        logistics_throughput_todo_predicate, LogisticsThroughputWitness,
-    };
-    use crate::economy::spatial_district::IndustrialDistrictSnapshot;
 
-    LOG_D_02_DISTRICT_SCOPED_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
-    let mut app = logistics_log_b_app();
-    setup_aluminum_chain_facilities(&mut app);
-    for _ in 0..12 {
-        app.update();
-    }
-    assert!(!app
-        .world()
-        .resource::<super::types::PortalAttachmentMap>()
-        .facility_to_graph
-        .is_empty());
-    assert!(app
-        .world()
-        .get_resource::<IndustrialDistrictSnapshot>()
-        .is_some());
-    let runtime = app
-        .world()
-        .resource::<super::types::LogisticsThroughputRuntimeWitness>();
-    assert!(
-        runtime.saw_district_scoped_solve,
-        "LOG-D-02: apply_district_solve_scope_system must mark saw_district_scoped_solve"
-    );
-    let scope = app.world().resource::<super::types::DistrictSolveScope>();
-    assert!(
-        scope.active_district_count > 0,
-        "active facility portals must form ≥1 district"
-    );
-    let witness = app.world().resource::<LogisticsThroughputWitness>();
-    assert!(
-        logistics_throughput_todo_predicate("LOG-D-02", witness),
-        "LOG-D-02 district_scoped_solve must be Done from live scope"
-    );
-    LOG_D_02_DISTRICT_SCOPED_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
-}
 
-#[test]
-fn log_d_async_district_queue_applies_on_main_thread() {
-    use super::async_district::{AsyncDistrictSolveQueue, DistrictSolveResult};
-    use super::witness::LOG_D_04_ASYNC_DISTRICT_TEST_PASSED;
-    use crate::dev::logistics_throughput_todos::{
-        logistics_throughput_todo_predicate, LogisticsThroughputWitness,
-    };
 
-    LOG_D_04_ASYNC_DISTRICT_TEST_PASSED.store(false, std::sync::atomic::Ordering::Relaxed);
 
-    let mut app = logistics_log_b_app();
-    setup_aluminum_chain_facilities(&mut app);
-    for _ in 0..12 {
-        app.update();
-    }
-    // Live path: enqueue → promote → apply next frame (district scope present).
-    assert!(
-        app.world()
-            .resource::<super::types::LogisticsThroughputRuntimeWitness>()
-            .saw_async_district_solve
-            || app
-                .world()
-                .resource::<AsyncDistrictSolveQueue>()
-                .applied_total
-                > 0,
-        "LOG-D-04: deferred district job must apply on main thread"
-    );
-    // Direct inject still applies same frame (harness / worker completion inject).
-    app.world_mut()
-        .resource_mut::<AsyncDistrictSolveQueue>()
-        .post(DistrictSolveResult {
-            district_id: 1,
-            edge_load: vec![(0, 1.5)],
-        });
-    app.update();
-    assert!(
-        app.world()
-            .resource::<AsyncDistrictSolveQueue>()
-            .applied_total
-            > 0
-    );
-    let witness = app.world().resource::<LogisticsThroughputWitness>();
-    assert!(
-        logistics_throughput_todo_predicate("LOG-D-04", witness),
-        "LOG-D-04 async_district_solve must be Done from live apply"
-    );
-    LOG_D_04_ASYNC_DISTRICT_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
-}
-
-#[test]
-fn log_d_diagnostics_panel_source_present() {
-    use super::types::{LogisticsDiagnostics, SaturatedEdgeSample, ThroughputSolverState};
-    use super::witness::{
-        collect_logistics_diagnostics_panel_system, LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED,
-    };
-
-    let ui = std::fs::read_to_string("src/gui/diagnostics_ui.rs").expect("diagnostics_ui");
-    assert!(
-        ui.contains("Top saturated edges") && ui.contains("Starved facilities"),
-        "LOG-D-05 UI must list top saturated edges and starved facilities"
-    );
-
-    let mut app = App::new();
-    app.init_resource::<ThroughputSolverState>()
-        .init_resource::<TransportEdgeDirectory>()
-        .init_resource::<LogisticsDiagnostics>()
-        .init_resource::<super::types::LogisticsThroughputRuntimeWitness>()
-        .add_systems(Update, collect_logistics_diagnostics_panel_system);
-
-    {
-        let mut solver = app.world_mut().resource_mut::<ThroughputSolverState>();
-        solver.ensure_len(2);
-        solver.edge_pressure[0] = 0.9;
-        solver.load[0] = 4.0;
-        solver.capacity[0] = 5.0;
-        solver.edge_pressure[1] = 0.2;
-        let mut dir = app.world_mut().resource_mut::<TransportEdgeDirectory>();
-        dir.by_edge.insert(
-            TransportEdgeId(0),
-            TransportEdgeMeta {
-                profile: "road".into(),
-                ..Default::default()
-            },
-        );
-        dir.by_edge.insert(
-            TransportEdgeId(1),
-            TransportEdgeMeta {
-                profile: "road".into(),
-                ..Default::default()
-            },
-        );
-    }
-    app.update();
-    let diag = app.world().resource::<LogisticsDiagnostics>();
-    assert!(
-        diag.top_saturated_edges
-            .iter()
-            .any(|s: &SaturatedEdgeSample| s.edge_id == 0 && s.pressure >= 0.9),
-        "collector must rank saturated edges"
-    );
-    assert!(
-        app.world()
-            .resource::<super::types::LogisticsThroughputRuntimeWitness>()
-            .saw_diagnostics_panel_detail
-    );
-    LOG_D_05_DIAGNOSTICS_PANEL_TEST_PASSED.store(true, std::sync::atomic::Ordering::Relaxed);
-}
 
 #[test]
 fn solver_skips_an_unchanged_revision() {

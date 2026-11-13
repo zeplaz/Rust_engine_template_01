@@ -4,6 +4,7 @@ use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
 
+use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
 use crate::gui::{MainWorldCameraOrthoTrace, MapCameraDesiredRes, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -20,6 +21,8 @@ pub struct ConstructionMapPick<'w, 's> {
     pub params: Res<'w, WorldGenParams>,
     pub height_grid: Option<Res<'w, WorldGenDenseTerrainCache>>,
     pub ortho: Res<'w, MainWorldCameraOrthoTrace>,
+    /// Voxel-view pick of this frame ([`SimulationMapPointerGate::pixel_world_pick`]).
+    pub gate: Option<Res<'w, SimulationMapPointerGate>>,
 }
 
 impl ConstructionMapPick<'_, '_> {
@@ -28,6 +31,7 @@ impl ConstructionMapPick<'_, '_> {
         let window = self.win.single().ok()?;
         cursor_world_on_map(
             window,
+            self.gate.as_deref(),
             self.authority.as_deref(),
             self.desired.as_ref(),
             self.map_vp.as_ref(),

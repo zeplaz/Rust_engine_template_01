@@ -131,7 +131,6 @@ mod tests {
     use super::*;
     use crate::substrate::hydrology::HydrologyEventQueue;
     use crate::sim::effects::drain::drain_sim_effect_queue_system;
-    use crate::sim::effects::SimEffectSpineWitness;
     use crate::sim::effects::SimEffectTelemetryLedger;
     use crate::systems::fire::EmberSpotIgnitionEvent;
     use bevy::ecs::message::Messages;
@@ -147,7 +146,6 @@ mod tests {
             .init_resource::<SimTick>()
             .init_resource::<LightningRiskLatch>()
             .init_resource::<SimEffectTelemetryLedger>()
-            .init_resource::<SimEffectSpineWitness>()
             .add_message::<GridOverloadEvent>()
             .add_message::<EmberSpotIgnitionEvent>()
             .add_systems(

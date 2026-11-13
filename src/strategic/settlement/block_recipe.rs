@@ -813,23 +813,7 @@ pub fn city_g1_c3_001_block_recipe_witness_green() -> bool {
         .unwrap_or(false)
 }
 
-#[must_use]
-pub fn refresh_city_g1_c3_001_block_recipe_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_city_g1_c3_001_witness_body();
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "CITY-G1-C3-001",
-        "refresh_city_g1_c3_001_block_recipe_witness",
-        CITY_G1_C3_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(CITY_G1_C3_LIVE_JSON, wrapped) && green
-}
 
 #[cfg(test)]
 mod tests {

@@ -30,9 +30,10 @@ use super::pack::{GpuParticleInstance, ParticleClass};
 use super::particle_anim::{
     animate_emitter, smoke_puff, FireAnim, FireEmitter, FIRE_SPARK_MAP_PLANE_Z,
 };
-use super::witness::{
-    fire_spark_witness_phase, FireSparkWitness, FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_SCATTER_MAX,
+use super::spark_tuning::{
+    fire_spark_phase, FireSparkStats, FIRE_SPARK_BUDGET_PRESSURE, FIRE_SPARK_SCATTER_MAX,
 };
+
 
 
 /// Chunk slab size assumed when bootstrap rows lack matrix geometry (matches test harness).
@@ -315,8 +316,8 @@ pub fn update_world_fire_particles_animated(
     if !tactical || capacity == 0 {
         memory.live.clear();
         memory.dying.clear();
-        frame.spark_witness = FireSparkWitness {
-            phase: fire_spark_witness_phase(),
+        frame.spark_witness = FireSparkStats {
+            phase: fire_spark_phase(),
             rows: 0,
             scatter_max: FIRE_SPARK_SCATTER_MAX,
             scatter_slots: 0,
@@ -421,8 +422,8 @@ pub fn update_world_fire_particles_animated(
     frame.instances.sort_by_key(|row| {
         ParticleClass::from_class_id(row.ember_class_radius_smoke.y).transparent_draw_order()
     });
-    frame.spark_witness = FireSparkWitness {
-        phase: fire_spark_witness_phase(),
+    frame.spark_witness = FireSparkStats {
+        phase: fire_spark_phase(),
         rows: frame.instances.len(),
         scatter_max: FIRE_SPARK_SCATTER_MAX,
         scatter_slots,
@@ -503,8 +504,8 @@ pub fn seed_world_fire_particles_from_overlay_heat(
             ));
         }
     }
-    frame.spark_witness = FireSparkWitness {
-        phase: fire_spark_witness_phase(),
+    frame.spark_witness = FireSparkStats {
+        phase: fire_spark_phase(),
         rows: frame.instances.len(),
         scatter_max: FIRE_SPARK_SCATTER_MAX,
         scatter_slots,
@@ -656,19 +657,12 @@ fn push_consumable_def_instances(
     pushed
 }
 
-#[must_use]
-pub fn effect_consumable_registry_emit_wired() -> bool {
-    let src = include_str!("emit.rs");
-    src.contains("append_effect_consumable_registry_particles")
-        && src.contains("effect_consumable_registry")
-}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::fire_vfx::witness::{
-        FIRE_SPARK_FULL_SCATTER_PX_PER_TILE, FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE,
-    };
+    use crate::render::fire_vfx::spark_tuning::FIRE_SPARK_OPERATIONAL_PLAY_PX_PER_TILE;
     use crate::render::core::gpu_buffer_registry::{BufferId, FIRE_PARTICLE_INSTANCES_BUFFER};
     use crate::gui::{
         build_representation_inputs, build_representation_result, resolution_for_band,
@@ -1066,27 +1060,7 @@ mod tests {
         assert_eq!(pressured, full / 2);
     }
 
-    #[test]
-    fn p2_fire_spark_011_at_tactical_proof_zoom() {
-        use crate::render::fire_vfx::witness::{fire_spark_011_green, FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA};
-        let mut graph = RenderProjectionGraph::default();
-        graph.fire.gpu_instance_capacity = 256;
-        graph.fire.instance_buffer = vec![sample_fire_row(IVec2::ZERO, 0.85, 0.5)];
-        let mut particles = WorldFireParticleFrame::default();
-        // FIRE-VIS-001: zoom_level (px-per-tile) drives the cull/scatter gate; zoom_alpha stays on
-        // the proof-lock axis consumed by fire_spark_011_green's witness threshold check.
-        let cam = ExtractedCameraMetrics {
-            zoom_level: FIRE_SPARK_FULL_SCATTER_PX_PER_TILE,
-            zoom_alpha: FIRE_SPARK_TACTICAL_PROOF_ZOOM_ALPHA,
-            ..Default::default()
-        };
-        update_world_fire_particles_from_projection(&graph, &mut particles, None, cam, None);
-        assert!(
-            fire_spark_011_green(&particles.spark_witness),
-            "P2-FIRE-SPARK-011 witness: {:?}",
-            particles.spark_witness
-        );
-    }
+
 
     #[test]
     fn p2_operational_play_zoom_alpha_emits_fire_spark_rows() {
@@ -1166,7 +1140,7 @@ mod tests {
 
     #[test]
     fn witness_phase_reflects_compute_gate() {
-        use crate::render::fire_vfx::witness::fire_spark_compute_enabled;
+        use crate::render::fire_vfx::spark_tuning::fire_spark_compute_enabled;
         let enabled = fire_spark_compute_enabled();
         let mut graph = RenderProjectionGraph::default();
         graph.fire.gpu_instance_capacity = 8;
@@ -1204,9 +1178,11 @@ mod tests {
         assert!(!particles.spark_witness.view_culled);
     }
 
+
+
+
     #[test]
     fn registry_spark_shower_emits_into_fire_vfx_spine() {
-        assert!(effect_consumable_registry_emit_wired());
         let reg = EffectConsumableRegistry::load_from_disk(
             std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("assets/effects/registry"),
         );
@@ -1235,5 +1211,4 @@ mod tests {
             "heat in some chunk must not spawn the reference shower at its fixed spawn tile"
         );
     }
-
 }

@@ -20,7 +20,7 @@ use super::render_target::{
 };
 use super::diagnostics::MinimapGpuCompositorDiagnostics;
 use super::state::MinimapCompositorState;
-use crate::dev::runtime_witness::minimap::MinimapCompositorLiveProofState;
+
 
 pub struct MinimapCompositorPlugin;
 
@@ -31,7 +31,6 @@ impl Plugin for MinimapCompositorPlugin {
             .init_resource::<MinimapRenderTargetBindBarrier>()
             .init_resource::<MinimapCompositorState>()
             .init_resource::<MinimapGpuCompositorDiagnostics>()
-            .init_resource::<MinimapCompositorLiveProofState>()
             .init_resource::<MinimapCompositeHeatTextures>()
             .init_resource::<MinimapCompositeDispatch>()
             .init_resource::<crate::render::MinimapOperationalSnapshot>();

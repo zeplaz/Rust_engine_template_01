@@ -125,9 +125,7 @@ impl Plugin for FireVisualFramePlugin {
             .init_resource::<WorldFireParticleFrame>()
             .init_resource::<crate::render::DomainOverlayGpuFrame>()
             .init_resource::<ActiveFireChunkSet>()
-            .init_resource::<crate::render::Stage5FireViewChunkWitness>()
             .init_resource::<crate::render::FirePlaybackStabilityWitness>()
-            .init_resource::<crate::render::Stage5ReadinessProfile>()
             .init_resource::<crate::render::view_runtime::PerViewRepresentationPolicy>()
             .init_resource::<SmokeVisualBridgeWitness>()
             .init_resource::<crate::render::FireExtractCadence>()
@@ -299,7 +297,6 @@ pub fn sync_shared_overlay_from_simulation(
     residency: Option<Res<crate::io::streaming::ChunkResidencyTable>>,
     coherence: Option<Res<crate::render::FireExtractDiagnostics>>,
     mut shared: ResMut<SharedOverlayFieldBuffers>,
-    profile: Res<crate::render::Stage5ReadinessProfile>,
     mut fire_playback: ResMut<crate::render::FirePlaybackStabilityWitness>,
 ) {
     let _perf = crate::render::PerfScope::new("upd_fire_sync_overlay");
@@ -343,17 +340,6 @@ pub fn sync_shared_overlay_from_simulation(
     if chunk_fire_heat_maps_differ(&shared.chunk_fire_heat, &next) {
             shared.chunk_fire_heat = next;
             shared.bump();
-            if *profile == crate::render::Stage5ReadinessProfile::FULL_APP
-                && crate::render::frame_perf_verbose()
-            {
-                info!(
-                target: "stage5_overlay::live",
-                "STAGE5_OVERLAY_SHARED_BUFFERS revision={} chunk_cells={} sim_tick={}",
-                shared.revision,
-                shared.chunk_fire_heat.len(),
-                sim.stamp.tick,
-            );
-        }
     }
 }
 

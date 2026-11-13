@@ -119,7 +119,6 @@ pub fn sync_tile_readability_witness(
     desired: Res<MapCameraDesiredRes>,
     mut global: ResMut<GlobalLodState>,
     mut witness: ResMut<TileReadabilityWitness>,
-    mut va_witness: ResMut<crate::dev::VisualAidV2Witness>,
 ) {
     let px = screen_pixels_per_tile(inputs.ortho.as_ref(), inputs.map_vp.as_ref(), desired.as_ref());
     witness.screen_pixels_per_tile = px;
@@ -131,8 +130,6 @@ pub fn sync_tile_readability_witness(
     } else {
         1.0
     };
-    va_witness.tile_readability_clamp_active = witness.clamp_active;
-    va_witness.screen_pixels_per_tile = px;
 }
 
 /// Apply precomputed bias from [`GlobalLodState`] onto LOD inputs.
@@ -154,7 +151,6 @@ impl Plugin for TileReadabilityPlugin {
                 Update,
                 (
                     sync_tile_readability_witness,
-                    crate::gui::representation_policy::sync_visual_aidv2_representation_witness,
                 )
                     .run_if(crate::gui::ui_gates::in_simulation_or_editor),
             );

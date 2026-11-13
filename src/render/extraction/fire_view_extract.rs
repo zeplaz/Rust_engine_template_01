@@ -24,7 +24,6 @@ use crate::render::fx_spine::fire_chunk_runtime::{
 use crate::io::streaming::ChunkResidencyTable;
 use crate::render::{
     chunk_in_residency_table, per_view_residency_contains, PerViewResidencyConsumerWindow,
-    Stage5FireViewChunkWitness, Stage5ReadinessProfile,
 };
 use crate::render::view_runtime::ViewSurfaceId;
 use crate::render::extraction::sim_visual_extract::{FireVisualFrame, FireVisualGpuInstance};
@@ -397,8 +396,6 @@ pub fn build_fire_visual_frames_by_view(
     active: Res<ActiveFireChunkSet>,
     manager: Option<Res<ViewManager>>,
     per_view_policy: Option<Res<crate::render::view_runtime::PerViewRepresentationPolicy>>,
-    profile: Res<Stage5ReadinessProfile>,
-    mut fire_chunk_witness: ResMut<Stage5FireViewChunkWitness>,
     mut out: ResMut<FireVisualFramesByView>,
     mut last_fingerprint: Local<Option<FireViewExtractFingerprint>>,
 ) {
@@ -503,25 +500,7 @@ pub fn build_fire_visual_frames_by_view(
         }
         out.by_id.insert(id, frame);
     }
-    let mut orphans: u32 = 0;
-    if let Some(wm_vis) = vis.per_view.get(&ViewId::WorldMain) {
-        let outside: usize = wm_vis
-            .iter()
-            .filter(|c| !active.chunks.contains(*c))
-            .count();
-        orphans = outside as u32;
-        if *profile == Stage5ReadinessProfile::FULL_APP && outside > 0 {
-            warn!(
-                target: "stage5_fire_view::live",
-                "STAGE5_FIRE_VIEW_CROSSCHECK view=WorldMain visible_chunks_not_in_active={outside} active_total={} visible_wm={}",
-                active.chunks.len(),
-                wm_vis.len(),
-            );
-        }
-    }
-    fire_chunk_witness.world_main_visible_orphan_chunks = orphans;
-    fire_chunk_witness.f7_a_per_view_extract_bounded =
-        per_view_fire_extract_bounded(&out, &vis, &active);
+
 }
 
 #[cfg(test)]

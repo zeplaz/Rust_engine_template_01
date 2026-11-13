@@ -1068,6 +1068,7 @@ fn sync_tile_fallback_raster_policy(
 /// PixelWorld only — stamp real LG-5 landscape atlas tiles into the same RTT hole.
 fn queue_pixel_world_landscape_atlas_stamps(
     mode: Option<Res<crate::gui::WorldPresentationMode>>,
+    intent: Option<Res<crate::gui::PixelWorldLandscapeIntent>>,
     landscape: Option<Res<crate::systems::ecology::LandscapeAtlasRegistry>>,
     asset_server: Res<AssetServer>,
     mut atlas_cache: ResMut<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
@@ -1084,7 +1085,9 @@ fn queue_pixel_world_landscape_atlas_stamps(
     )>,
     mut last_stamp_count: Local<usize>,
 ) {
-    let pixel = mode.as_ref().is_some_and(|m| m.is_pixel_world());
+    // Flat LG-5 chunk art only when the intent asks for it; the voxel view draws cover as geometry.
+    let pixel = mode.as_ref().is_some_and(|m| m.is_pixel_world())
+        && intent.as_deref().is_some_and(|i| i.flat_landscape_stamps);
     if !pixel {
         if !raster_ctrl.landscape_atlas_stamps.is_empty() {
             raster_ctrl.landscape_atlas_stamps.clear();

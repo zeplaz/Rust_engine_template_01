@@ -144,24 +144,7 @@ pub fn perf_vis_p1b_gpu_default_001_green(
         && compositor.composite_path == MinimapCompositePath::GpuCompute
 }
 
-#[must_use]
-pub(crate) fn perf_vis_p1b_witness_json(
-    shell: &MinimapShellState,
-    registry: &MinimapRenderTargetRegistry,
-    compositor: &MinimapCompositorState,
-) -> serde_json::Value {
-    serde_json::json!({
-        "gate": "PERF-VIS-P1B-GPU-DEFAULT-001",
-        "green": perf_vis_p1b_gpu_default_001_green(shell, registry, compositor),
-        "gpu_compositor_default_on": minimap_gpu_compositor_default_on_unset(),
-        "gpu_compositor_env": minimap_gpu_compositor_env_enabled(),
-        "presentation_source": match shell.presentation_source {
-            MinimapPresentationSource::SharedCpuRaster => "SharedCpuRaster",
-            MinimapPresentationSource::SharedRenderTargetImage => "SharedRenderTargetImage",
-        },
-        "raster_env_required": false,
-    })
-}
+
 
 /// GPU compositor env on and shader pipeline healthy (no runtime fallback).
 #[must_use]

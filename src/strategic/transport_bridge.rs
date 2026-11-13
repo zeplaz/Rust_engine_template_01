@@ -374,10 +374,9 @@ mod tests {
     /// LOG-A-01 / LOG-A-AUTHORITY: rebuild assigns a fresh graph (replace), never appends.
     #[test]
     fn log_a_01_rebuild_replaces_graph_not_append() {
-        use crate::dev::logistics_throughput_todos::LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED;
-        use std::sync::atomic::Ordering;
 
-        LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED.store(false, Ordering::Relaxed);
+        
+
 
         let mut dir = TransportEdgeDirectory::default();
         dir.by_edge.insert(
@@ -445,8 +444,6 @@ mod tests {
         assert!(empty.edges.is_empty());
         assert_eq!(empty.revision, 33);
 
-        LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED.store(true, Ordering::Relaxed);
-        assert!(LOG_A_01_DERIVED_GRAPH_SOLE_WRITER_TEST_PASSED.load(Ordering::Relaxed));
     }
 
     #[test]

@@ -21,9 +21,9 @@
 //! selected by the cursor-tile test in [`select_and_order_formations_system`], which runs
 //! `.after(PointerGateSet::Publish)` and honours the pointer gate.
 //!
-//! **Presentation modes:** TacticalFlat2D only. PixelWorld3D has no flat map plane for these tile-space
-//! primitives (its projection is the LG-5 atlas path), so the layer is hidden there and selection /
-//! ordering is disabled; a billboard/decal path for the same primitives is the graphics lane's ask.
+//! **Presentation modes:** this flat layer draws under TacticalFlat2D. PixelWorld3D drapes the same
+//! geometry ([`FrontOverlaySources::build_geometry`]) over its voxel surface (`render::pixel_world`);
+//! selection and ordering pick through the pointer gate in both.
 //!
 //! Selection, orders, hotkeys, feedback and the readout panel live in `gui::front_controls`; this file
 //! only draws their state (selection rings, the drag box, order markers and refusal flashes).
@@ -482,18 +482,135 @@ pub(crate) struct FrontControlsView<'w> {
     settings: Option<Res<'w, FrontOverlaySettings>>,
 }
 
+/// Everything the front overlay draws, read once per frame. Shared by this top-down layer and the
+/// PixelWorld3D drape (`render::pixel_world`), so both views draw the same books the same way.
+#[derive(SystemParam)]
+pub(crate) struct FrontOverlaySources<'w, 's> {
+    ctl: FrontControlsView<'w>,
+    front: Option<Res<'w, FrontlineState>>,
+    theaters: Option<Res<'w, TheaterBook>>,
+    pressure: Option<Res<'w, PressurePointBook>>,
+    balance: Option<Res<'w, FrontBalance>>,
+    formations: Query<'w, 's, (Entity, &'static Formation)>,
+}
+
+impl FrontOverlaySources<'_, '_> {
+    pub(crate) fn settings(&self) -> FrontOverlaySettings {
+        self.ctl.settings.as_deref().copied().unwrap_or_default()
+    }
+
+    fn selected(&self) -> Vec<Entity> {
+        self.ctl.selected.as_deref().map(|s| s.0.clone()).unwrap_or_default()
+    }
+
+    fn drag_rect(&self) -> Option<(Vec2, Vec2)> {
+        self.ctl.drag.as_deref().and_then(FrontDragBox::rect)
+    }
+
+    fn markers(&self) -> Vec<OrderMarker> {
+        self.ctl.feedback.as_deref().map(|f| f.markers.clone()).unwrap_or_default()
+    }
+
+    fn sorted_formations(&self) -> Vec<(Entity, &Formation)> {
+        let mut fs: Vec<(Entity, &Formation)> = self.formations.iter().collect();
+        fs.sort_by_key(|(e, _)| e.to_bits());
+        fs
+    }
+
+    /// Content key: books, formations, selection, drag box, markers and the zoom band at `px`.
+    pub(crate) fn content_key(&self, px: f32) -> u64 {
+        let settings = self.settings();
+        let mut key = mix64(zoom_band(px) as u64 ^ (u64::from(settings.fronts) | u64::from(settings.theaters) << 1 | u64::from(settings.pressure) << 2 | u64::from(settings.formations) << 3 | u64::from(settings.labels) << 4) << 40);
+        if let Some(f) = self.front.as_deref() {
+            key = mix64(key ^ f.revision);
+        }
+        if let Some(t) = self.theaters.as_deref() {
+            key = mix64(key ^ t.source_revision ^ (t.theaters.len() as u64) << 32);
+        }
+        if let Some(p) = self.pressure.as_deref() {
+            key = mix64(key ^ p.source_tick ^ (p.source_theater_revision << 20) ^ p.points.len() as u64);
+            for pt in &p.points {
+                key = mix64(key ^ (pt.tile.x as u32 as u64) ^ (pt.tile.y as u32 as u64) << 32 ^ (pt.score * 64.0) as u64);
+            }
+        }
+        for (e, f) in &self.sorted_formations() {
+            key = mix64(
+                key ^ e.to_bits()
+                    ^ (f.tile.x as u32 as u64) << 8
+                    ^ (f.tile.y as u32 as u64) << 24
+                    ^ ((f.strength * 32.0) as u64) << 40
+                    ^ ((f.morale * 32.0) as u64) << 46
+                    ^ (f.posture as u64) << 52
+                    ^ ((f.dug_in * 8.0) as u64) << 56
+                    ^ f.target.map_or(0, |t| (t.x as u32 as u64) ^ (t.y as u32 as u64) << 16),
+            );
+        }
+        for e in &self.selected() {
+            key = mix64(key ^ e.to_bits());
+        }
+        if let Some((lo, hi)) = self.drag_rect() {
+            key = mix64(
+                key ^ ((lo.x * 16.0) as i64 as u64)
+                    ^ ((lo.y * 16.0) as i64 as u64) << 16
+                    ^ ((hi.x * 16.0) as i64 as u64) << 32
+                    ^ ((hi.y * 16.0) as i64 as u64) << 48,
+            );
+        }
+        for m in &self.markers() {
+            let state = match m.state {
+                MarkerState::Pending => 1u64,
+                MarkerState::Accepted => 2,
+                MarkerState::Rejected(_) => 3,
+            };
+            // Age in 0.2 s steps: markers fade, so the mesh rebuilds a few times a second while one is alive.
+            key = mix64(key ^ m.id ^ state << 40 ^ ((m.age_s * 5.0) as u64) << 44 ^ ((m.target.x * 4.0) as i64 as u64) << 8);
+        }
+        key
+    }
+
+    /// Tile-space geometry of every enabled layer at `px` screen pixels per tile.
+    pub(crate) fn build_geometry(&self, px: f32) -> Geo {
+        let settings = self.settings();
+        let contest_band = self.balance.as_deref().map_or(0.3, |b| b.front.contest_band);
+        let selected = self.selected();
+        let mut geo = Geo::default();
+        if settings.theaters {
+            if let Some(t) = self.theaters.as_deref() {
+                build_theater_outlines(&mut geo, t, px);
+            }
+        }
+        if settings.fronts {
+            if let Some(f) = self.front.as_deref() {
+                build_front_lines(&mut geo, f, px, contest_band);
+            }
+        }
+        if settings.pressure {
+            if let Some(p) = self.pressure.as_deref() {
+                build_pressure_markers(&mut geo, p, px);
+            }
+        }
+        if settings.formations {
+            for (e, f) in &self.sorted_formations() {
+                build_formation_symbol(&mut geo, f, f.faction_slot == PLAYER_SLOT, selected.contains(e), px);
+            }
+        }
+        if let Some((lo, hi)) = self.drag_rect() {
+            build_drag_box(&mut geo, lo, hi, px);
+        }
+        for m in &self.markers() {
+            build_order_marker(&mut geo, m, px);
+        }
+        geo
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn sync_world_map_front_overlay(
     mut commands: Commands,
     base: Res<State<BaseState>>,
     mode: Option<Res<WorldPresentationMode>>,
-    ctl: FrontControlsView,
-    front: Option<Res<FrontlineState>>,
-    theaters: Option<Res<TheaterBook>>,
-    pressure: Option<Res<PressurePointBook>>,
-    balance: Option<Res<FrontBalance>>,
+    src: FrontOverlaySources,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
-    formations: Query<(Entity, &Formation)>,
     mut layer: Query<(Entity, &mut Visibility), With<WorldMapFrontLayer>>,
     labels: Query<Entity, With<WorldMapFrontLabel>>,
     mut meshes: ResMut<Assets<Mesh>>,
@@ -503,6 +620,7 @@ pub(crate) fn sync_world_map_front_overlay(
     let tactical = mode.as_deref().is_none_or(|m| m.is_tactical());
     if !matches!(base.get(), BaseState::Simulation) || !tactical {
         // PixelWorld3D (or leaving the sim): hide the layer and drop labels; the mesh is kept for the way back.
+        // PixelWorld3D drapes the same geometry over its voxel terrain (`render::pixel_world`).
         for (_, mut v) in &mut layer {
             v.set_if_neq(Visibility::Hidden);
         }
@@ -512,93 +630,19 @@ pub(crate) fn sync_world_map_front_overlay(
         state.built_key = None;
         return;
     }
-    let settings = ctl.settings.as_deref().copied().unwrap_or_default();
+    let settings = src.settings();
     let default_trace = MainWorldCameraOrthoTrace::default();
     let px = px_per_tile(trace.as_deref().unwrap_or(&default_trace));
-    let selected: Vec<Entity> = ctl.selected.as_deref().map(|s| s.0.clone()).unwrap_or_default();
-    let drag_rect = ctl.drag.as_deref().and_then(FrontDragBox::rect);
-    let markers: Vec<OrderMarker> = ctl.feedback.as_deref().map(|f| f.markers.clone()).unwrap_or_default();
-    let contest_band = balance.as_deref().map_or(0.3, |b| b.front.contest_band);
-
-    let mut key = mix64(zoom_band(px) as u64 ^ (u64::from(settings.fronts) | u64::from(settings.theaters) << 1 | u64::from(settings.pressure) << 2 | u64::from(settings.formations) << 3 | u64::from(settings.labels) << 4) << 40);
-    if let Some(f) = front.as_deref() {
-        key = mix64(key ^ f.revision);
-    }
-    if let Some(t) = theaters.as_deref() {
-        key = mix64(key ^ t.source_revision ^ (t.theaters.len() as u64) << 32);
-    }
-    if let Some(p) = pressure.as_deref() {
-        key = mix64(key ^ p.source_tick ^ (p.source_theater_revision << 20) ^ p.points.len() as u64);
-        for pt in &p.points {
-            key = mix64(key ^ (pt.tile.x as u32 as u64) ^ (pt.tile.y as u32 as u64) << 32 ^ (pt.score * 64.0) as u64);
-        }
-    }
-    let mut fs: Vec<(Entity, &Formation)> = formations.iter().collect();
-    fs.sort_by_key(|(e, _)| e.to_bits());
-    for (e, f) in &fs {
-        key = mix64(
-            key ^ e.to_bits()
-                ^ (f.tile.x as u32 as u64) << 8
-                ^ (f.tile.y as u32 as u64) << 24
-                ^ ((f.strength * 32.0) as u64) << 40
-                ^ ((f.morale * 32.0) as u64) << 46
-                ^ (f.posture as u64) << 52
-                ^ ((f.dug_in * 8.0) as u64) << 56
-                ^ f.target.map_or(0, |t| (t.x as u32 as u64) ^ (t.y as u32 as u64) << 16),
-        );
-    }
-    for e in &selected {
-        key = mix64(key ^ e.to_bits());
-    }
-    if let Some((lo, hi)) = drag_rect {
-        key = mix64(
-            key ^ ((lo.x * 16.0) as i64 as u64)
-                ^ ((lo.y * 16.0) as i64 as u64) << 16
-                ^ ((hi.x * 16.0) as i64 as u64) << 32
-                ^ ((hi.y * 16.0) as i64 as u64) << 48,
-        );
-    }
-    for m in &markers {
-        let state = match m.state {
-            MarkerState::Pending => 1u64,
-            MarkerState::Accepted => 2,
-            MarkerState::Rejected(_) => 3,
-        };
-        // Age in 0.2 s steps: markers fade, so the mesh rebuilds a few times a second while one is alive.
-        key = mix64(key ^ m.id ^ state << 40 ^ ((m.age_s * 5.0) as u64) << 44 ^ ((m.target.x * 4.0) as i64 as u64) << 8);
-    }
+    let markers = src.markers();
+    let key = src.content_key(px);
+    let theaters = src.theaters.as_ref();
+    let pressure = src.pressure.as_ref();
 
     let mesh_handle = state.mesh.get_or_insert_with(|| meshes.add(Geo::default().into_mesh())).clone();
     let material = state.material.get_or_insert_with(|| materials.add(ColorMaterial::from_color(Color::WHITE))).clone();
 
     if state.built_key != Some(key) {
-        let mut geo = Geo::default();
-        if settings.theaters {
-            if let Some(t) = theaters.as_deref() {
-                build_theater_outlines(&mut geo, t, px);
-            }
-        }
-        if settings.fronts {
-            if let Some(f) = front.as_deref() {
-                build_front_lines(&mut geo, f, px, contest_band);
-            }
-        }
-        if settings.pressure {
-            if let Some(p) = pressure.as_deref() {
-                build_pressure_markers(&mut geo, p, px);
-            }
-        }
-        if settings.formations {
-            for (e, f) in &fs {
-                build_formation_symbol(&mut geo, f, f.faction_slot == PLAYER_SLOT, selected.contains(e), px);
-            }
-        }
-        if let Some((lo, hi)) = drag_rect {
-            build_drag_box(&mut geo, lo, hi, px);
-        }
-        for m in &markers {
-            build_order_marker(&mut geo, m, px);
-        }
+        let geo = src.build_geometry(px);
         meshes.insert(&mesh_handle, geo.into_mesh());
 
         for e in &labels {

@@ -123,20 +123,7 @@ pub fn build_bq_h3_v0_shim_witness_body() -> serde_json::Value {
     })
 }
 
-#[must_use]
-pub fn refresh_bq_h3_v0_shim_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_bq_h3_v0_shim_witness_body();
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "BQ-H3-V0-RETIRE-001",
-        "refresh_bq_h3_v0_shim_witness",
-        BQ_H3_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(BQ_H3_LIVE_JSON, wrapped) && green
-}
 
 #[cfg(test)]
 mod tests {
@@ -147,10 +134,5 @@ mod tests {
         assert!(bq_h3_v0_shim_witness_green());
     }
 
-    #[test]
-    fn bq_h3_refresh_witness_when_green() {
-        if bq_h3_v0_shim_witness_green() {
-            assert!(refresh_bq_h3_v0_shim_witness());
-        }
-    }
+
 }

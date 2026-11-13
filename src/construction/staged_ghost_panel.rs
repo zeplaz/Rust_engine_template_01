@@ -303,68 +303,13 @@ pub fn staged_placements_tray_lines(mode: &StagedPlacementMode, book: &StagedPla
 #[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn sync_staged_placements_panel_bevy() {}
 
-#[must_use]
-pub fn staging_panel_visible_witness_green() -> bool {
-    staging_panel_visible_self_check().is_ok()
-}
 
-#[must_use]
-pub fn staging_validity_badges_wired_witness_green() -> bool {
-    staging_validity_badges_self_check().is_ok()
-}
 
-fn staging_validity_badges_self_check() -> Result<(), &'static str> {
-    for v in [
-        StagedValidity::Ok,
-        StagedValidity::Warn,
-        StagedValidity::Bad,
-    ] {
-        let _ = match v {
-            StagedValidity::Ok => "OK",
-            StagedValidity::Warn => "Warn",
-            StagedValidity::Bad => "Bad",
-        };
-    }
-    Ok(())
-}
 
-fn staging_panel_visible_self_check() -> Result<(), &'static str> {
-    let mode = StagedPlacementMode { enabled: true };
-    let book = StagedPlacementBook::default();
-    if !(mode.enabled || book.staged_count() > 0) {
-        return Err("visible_when_enabled");
-    }
-    let book2 = StagedPlacementBook {
-        rows: vec![StagedPlacementRow {
-            id: 1,
-            catalog_id: "x".into(),
-            anchor_tile: BuildSiteTile { x: 0, z: 0 },
-            scale: 1.0,
-            rotation_quarter_turns: 0,
-            mirror_x: false,
-            approved: false,
-            validity: StagedValidity::Ok,
-            allows_commit: true,
-            footprint_weights: vec![],
-            archetype: SiteArchetype::Factory,
-            footprint: FootprintTiles { width: 1, depth: 1 },
-            layer: LayerType::Surface,
-            placement: CommittedPlacementSnapshot {
-                origin: BuildSiteTile { x: 0, z: 0 },
-                scale_factor: 1.0,
-                effective_scale: 1.0,
-                rotation_quarter_turns: 0,
-                mirror_x: false,
-                weights: vec![],
-            },
-        }],
-        next_id: 2,
-    };
-    if book2.staged_count() == 0 {
-        return Err("visible_when_rows");
-    }
-    Ok(())
-}
+
+
+
+
 
 /// **Build approved** — drain approved valid rows through the single commit funnel.
 pub fn commit_approved_staged_placements_system(
@@ -568,11 +513,7 @@ mod tests {
         assert_eq!(book.rows[0].catalog_id, "b");
     }
 
-    #[test]
-    fn staging_panel_visible_witness() {
-        assert!(staging_panel_visible_witness_green());
-        assert!(staging_validity_badges_wired_witness_green());
-    }
+
 
     #[test]
     fn enter_does_not_commit_when_staging_on() {

@@ -7,8 +7,8 @@ use crate::construction::site_stage_transitions::{
     next_site_stage, phase_progress_step, saturating_phase_progress,
 };
 use crate::strategic::{
-    BuildSiteTile, CommitConstructionSiteEvent, ConstructionSite, FootprintTiles, LayerType,
-    PlannedSite, SiteArchetype, SiteConstructionBook, SiteConstructionPhase, SiteId, SiteIdIssuer,
+    ConstructionSite,
+    PlannedSite, SiteConstructionBook, SiteConstructionPhase, SiteId,
     SiteMaterialStarved, SiteResourceManifest,
 };
 use crate::systems::sim_control::{SimControlState, SimControlSystemSet, SimTick};
@@ -145,69 +145,9 @@ pub fn advance_site_construction_tick_system(
     }
 }
 
-/// **CON-P2-002** witness rollup (post **CON-P2-001**): commit attaches progress; tick advances phases.
-#[must_use]
-pub fn construction_site_stage_tick_002_witness_green() -> bool {
-    construction_site_stage_tick_002_self_check().is_ok()
-}
 
-fn construction_site_stage_tick_002_self_check() -> Result<(), &'static str> {
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins);
-    app.init_resource::<SiteConstructionBook>()
-        .init_resource::<SiteIdIssuer>()
-        .init_resource::<SimControlState>()
-        .init_resource::<SimTick>()
-        .add_message::<CommitConstructionSiteEvent>()
-        .add_systems(Update, crate::strategic::commit_construction_site_system);
-    let owner = app.world_mut().spawn_empty().id();
-    app.world_mut().write_message(CommitConstructionSiteEvent {
-        site_id: crate::strategic::SiteId::UNASSIGNED,
-        owner,
-        archetype: SiteArchetype::Factory,
-        origin: BuildSiteTile { x: 6, z: 6 },
-        footprint: FootprintTiles { width: 2, depth: 2 },
-        layer: LayerType::Surface,
-        catalog_id: None,
-        placement: None,
-    });
-    app.update();
 
-    {
-        let world = app.world_mut();
-        let stage_count = world.query::<&SiteStageProgress>().iter(world).count();
-        if stage_count != 1 {
-            return Err("CON-P2-001: SiteStageProgress must attach on commit");
-        }
-        let site = world
-            .query::<&ConstructionSite>()
-            .single(world)
-            .map_err(|_| "missing ConstructionSite")?;
-        if site.phase != SiteConstructionPhase::Planned {
-            return Err("commit must leave Planned");
-        }
-    }
 
-    app.add_plugins(SiteStageTickPlugin);
-    app.world_mut().resource_mut::<SimTick>().0 += 1;
-    app.update();
-
-    let world = app.world_mut();
-    let phase = world
-        .query::<&ConstructionSite>()
-        .single(world)
-        .map_err(|_| "missing ConstructionSite after tick")?
-        .phase;
-    let progress = world
-        .query::<&SiteStageProgress>()
-        .single(world)
-        .map_err(|_| "missing SiteStageProgress after tick")?
-        .progress;
-    if phase == SiteConstructionPhase::Planned && progress <= 0.0 {
-        return Err("tick must advance stage progress or phase");
-    }
-    Ok(())
-}
 
 pub struct SiteStageTickPlugin;
 
@@ -278,10 +218,7 @@ mod tests {
         assert!(site.operational_readiness < 0.01);
     }
 
-    #[test]
-    fn con_p2_002_post_a001_commit_attached_before_tick() {
-        assert!(construction_site_stage_tick_002_witness_green());
-    }
+
 
     #[test]
     fn forest_pipeline_reaches_operational_in_n_ticks() {

@@ -296,6 +296,12 @@ pub fn sync_sim_build_picker_panel_layout(
     if *vis != want {
         *vis = want;
     }
+    // A closed picker must not keep a laid-out rect: the rect-based pointer gate would otherwise
+    // keep blocking the map under it.
+    let want_display = if show { Display::Flex } else { Display::None };
+    if node.display != want_display {
+        node.display = want_display;
+    }
     if !show {
         return;
     }

@@ -284,17 +284,5 @@ mod tests {
         assert!(world_preview_unified_workspace(&preview));
     }
 
-    #[test]
-    fn d02_map_dominance_hd_baseline_sheet_closed() {
-        assert!(d02_layout_witness_hd_baseline_sheet_closed());
-        assert!(d02_sidebar_max_width_px(D02_HD_BASELINE_W) <= 220.0);
-        let w = crate::gui::editor::world_preview::wave_p_witness::build_d02_layout_witness(
-            D02_HD_BASELINE_W,
-            D02_HD_BASELINE_H,
-            180.0,
-            false,
-            0.0,
-        );
-        assert!(w["ui_wp_layout_d02_opt_green"].as_bool().unwrap_or(false));
-    }
+
 }

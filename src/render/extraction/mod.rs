@@ -14,6 +14,7 @@ mod vegetation_visual_extract;
 // RENDER-DIR-RESTRUCTURE-v1 — mechanical move: extract-side snapshots/metrics.
 pub mod sim_visual_extract;
 pub mod fire_view_extract;
+pub mod fire_playback_stability;
 pub mod extracted_camera_metrics;
 pub mod ecology_visual_snapshot;
 pub mod logistics_visual_snapshot;
@@ -24,7 +25,6 @@ pub mod domain_projection_frame;
 pub use vegetation_visual_extract::{
     build_vegetation_extract_frame, build_harness_topo_extract_frame,
     extract_glyph_deterministic, harness_topo_extract_witness_green,
-    refresh_landscape_extract_sprite_witness, refresh_vegetation_extract_witness,
     vegetation_extract_witness_green, VegetationExtractFrame, VegetationExtractFrameSet,
     VegetationVisualExtractPlugin, VegExtractRow, VegExtractModifiers, LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON,
 };

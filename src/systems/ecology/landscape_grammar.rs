@@ -9,10 +9,10 @@ use std::path::{Path, PathBuf};
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::{json, Value};
+use serde_json::Value;
 
 use super::{ChunkEcology, VegetationField};
-use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
+
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::Chunk;
@@ -439,83 +439,14 @@ pub fn load_landscape_grammar_catalog() -> LandscapeGrammarCatalog {
     load_landscape_grammar_catalog_from_dir(&repo_asset_path(LANDSCAPE_PRESETS_DIR))
 }
 
-#[must_use]
-pub fn lg1_evaluation_green(eval: &LandscapeProgramEvaluation) -> bool {
-    eval.preset_id == LG1_PILOT_PRESET_ID
-        && eval.topology_kind_count >= 4
-        && eval.nested_depth_max >= 2
-        && eval.required_topologies_met
-        && eval.planning_glyph_overlays.len() >= 4
-        && eval.lambda_blended
-}
 
-#[must_use]
-pub fn build_lg1_witness_body(eval: &LandscapeProgramEvaluation) -> Value {
-    let green = lg1_evaluation_green(eval);
-    json!({
-        "lane": "LG-1",
-        "pilot_preset_id": LG1_PILOT_PRESET_ID,
-        "pilot_chunk": LG1_PILOT_CHUNK,
-        "chart_id": eval.chart_id,
-        "topology_kind_count": eval.topology_kind_count,
-        "topology_kinds": eval.topology_kinds,
-        "nested_depth_max": eval.nested_depth_max,
-        "flat_node_count": eval.flat_node_count,
-        "required_topologies_met": eval.required_topologies_met,
-        "missing_required_topologies": eval.missing_required_topologies,
-        "lambda_blended": eval.lambda_blended,
-        "preset_lambda": eval.preset_lambda,
-        "effective_lambda": eval.effective_lambda,
-        "planning_glyph_overlays": eval.planning_glyph_overlays,
-        "green": green,
-    })
-}
 
-/// LG-1 witness — `debug_runs/landscape_grammar_lg1_live.json`.
-#[must_use]
-pub fn refresh_lg1_witness(eval: &LandscapeProgramEvaluation) -> bool {
-    let body = build_lg1_witness_body(eval);
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "landscape_grammar_lg1",
-        "refresh_lg1_witness",
-        LANDSCAPE_GRAMMAR_LG1_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_LG1_LIVE_JSON, wrapped) && green
-}
 
-pub const LANDSCAPE_GRAMMAR_COMPOSITE_LIVE_JSON: &str =
-    "debug_runs/landscape_grammar_composite_live.json";
 
-/// VEG-COMPOSITE-EVAL-001 — MACRO-* registry expands to topology subgraph before flatten.
-#[must_use]
-pub fn refresh_composite_eval_witness(preset: &LandscapeGrammarPreset) -> bool {
-    let expanded = effective_topology_graph(preset);
-    let macro_nodes: u32 = preset
-        .composition_macros
-        .iter()
-        .map(|m| macro_topology_subgraph(m).len() as u32)
-        .sum();
-    let green = !preset.composition_macros.is_empty()
-        && macro_nodes >= preset.composition_macros.len() as u32
-        && expanded.len() >= preset.topology_graph.len();
-    let body = json!({
-        "gate": "VEG-COMPOSITE-EVAL-001",
-        "green": green,
-        "composition_macros": preset.composition_macros,
-        "macro_subgraph_nodes": macro_nodes,
-        "effective_graph_nodes": expanded.len(),
-        "base_graph_nodes": preset.topology_graph.len(),
-    });
-    let wrapped = wrap_debug_run(
-        "VEG-COMPOSITE-EVAL-001",
-        "refresh_composite_eval_witness",
-        LANDSCAPE_GRAMMAR_COMPOSITE_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_COMPOSITE_LIVE_JSON, wrapped) && green
-}
+
+
+
+
 
 fn startup_load_landscape_catalog(mut commands: Commands) {
     commands.insert_resource(load_landscape_grammar_catalog());
@@ -645,17 +576,5 @@ mod tests {
         assert!(lambda_differs(base, shifted, 1e-4));
     }
 
-    #[test]
-    fn lg1_witness_writes_green_json() {
-        let eval = sample_eval();
-        assert!(lg1_evaluation_green(&eval), "{:?}", eval);
-        assert!(refresh_lg1_witness(&eval));
-        let path = repo_asset_path(LANDSCAPE_GRAMMAR_LG1_LIVE_JSON);
-        let raw = fs::read_to_string(&path).expect("witness file");
-        let doc: Value = serde_json::from_str(&raw).expect("witness json");
-        assert_eq!(
-            doc.get("green").and_then(|v| v.as_bool()),
-            Some(true)
-        );
-    }
+
 }

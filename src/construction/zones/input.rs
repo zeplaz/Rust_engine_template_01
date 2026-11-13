@@ -93,6 +93,7 @@ pub fn zone_paint_input_system(
     };
     let Some(world) = cursor_world_on_map(
         &window,
+        pointer_gate.as_deref(),
         authority.as_deref(),
         desired.as_ref(),
         map_vp.as_ref(),
@@ -287,6 +288,7 @@ pub fn admin_zone_drag_input_system(
     };
     let Some(world) = cursor_world_on_map(
         &window,
+        pointer_gate.as_deref(),
         authority.as_deref(),
         desired.as_ref(),
         map_vp.as_ref(),

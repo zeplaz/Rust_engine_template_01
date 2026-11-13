@@ -87,6 +87,7 @@ pub fn wind_fuel_delta(heat: f32, dt: f32, wind_speed: f32) -> f32 {
 
 /// Wind speeds fuel use. Still air matches [`step_cell_fuel`]. Rain still does not refill.
 #[must_use]
+#[cfg_attr(not(test), allow(dead_code))] // tuning helper kept for the fold/burn unit tests
 pub fn fuel_step_in_wind(
     fuel: f32,
     heat: f32,

@@ -544,7 +544,6 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.add_plugins(crate::economy::logistics::LogisticsThroughputPlugin);
-        crate::dev::logistics_throughput_todos::register_logistics_throughput_todo_hooks(&mut app);
         app.insert_resource(load_building_definitions_from_dir(default_buildings_dir()));
         app.insert_resource(SimControlState::default());
         app.insert_resource(crate::strategic::LogisticsGraph::default());

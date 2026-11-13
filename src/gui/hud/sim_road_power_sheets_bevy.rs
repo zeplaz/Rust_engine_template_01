@@ -452,7 +452,10 @@ pub fn sim_road_sheet_actions(
     roads: Res<ExecutedRoadNetwork>,
     params: Res<WorldGenParams>,
     win: Query<&Window, With<PrimaryWindow>>,
-    authority: Option<Res<ViewProjectionAuthority>>,
+    (authority, pointer_gate): (
+        Option<Res<ViewProjectionAuthority>>,
+        Option<Res<crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate>>,
+    ),
     desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
 ) {
@@ -479,6 +482,7 @@ pub fn sim_road_sheet_actions(
             if let Some(world) = win.single().ok().and_then(|window| {
                 cursor_world_on_map(
                     window,
+                    pointer_gate.as_deref(),
                     authority.as_deref(),
                     desired.as_ref(),
                     map_vp.as_ref(),

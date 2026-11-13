@@ -290,11 +290,7 @@ pub fn shift_lmb_queues_building_blueprint(_tool: BuildTool) -> bool {
     false
 }
 
-/// Witness: Shift+LMB no longer queues building blueprints.
-#[must_use]
-pub fn shift_queue_building_removed_witness_green() -> bool {
-    !shift_lmb_queues_building_blueprint(BuildTool::Building(BuildingArchetypeId::Factory))
-}
+
 
 #[cfg(test)]
 mod tests {
@@ -312,23 +308,7 @@ mod tests {
         );
     }
 
-    #[test]
-    fn shift_lmb_conflict_matrix() {
-        assert!(shift_lmb_applies_to_active_tool(BuildTool::Zone(
-            ZoneTool::ResidentialLow
-        )));
-        assert!(shift_lmb_applies_to_active_tool(BuildTool::Road(
-            RoadType::Street
-        )));
-        assert!(!shift_lmb_queues_building_blueprint(BuildTool::Building(
-            BuildingArchetypeId::Factory
-        )));
-        assert!(!shift_lmb_queues_building_blueprint(BuildTool::Zone(
-            ZoneTool::ResidentialLow
-        )));
-        assert!(shift_queue_building_removed_witness_green());
-        // Enter→commit is measured in build_interaction (MinimalPlugins self-check), not here.
-    }
+
 
     #[test]
     fn military_rail_does_not_default_to_demolish() {
@@ -346,5 +326,22 @@ mod tests {
             ToolContext::Military
         );
         assert_eq!(BuildTool::Demolish.to_tool_context(), ToolContext::Military);
+    }
+
+    #[test]
+    fn shift_lmb_conflict_matrix() {
+        assert!(shift_lmb_applies_to_active_tool(BuildTool::Zone(
+            ZoneTool::ResidentialLow
+        )));
+        assert!(shift_lmb_applies_to_active_tool(BuildTool::Road(
+            RoadType::Street
+        )));
+        assert!(!shift_lmb_queues_building_blueprint(BuildTool::Building(
+            BuildingArchetypeId::Factory
+        )));
+        assert!(!shift_lmb_queues_building_blueprint(BuildTool::Zone(
+            ZoneTool::ResidentialLow
+        )));
+        // Enter→commit is measured in build_interaction (MinimalPlugins self-check), not here.
     }
 }

@@ -1,7 +1,7 @@
 //! Bevy 0.19 post-migration adoption — Phase 4 **MIG-A** slices.
 //!
 //! Runtime adoption plugin (static bulk tags, spine metrics) — **CB-MIG-001** runtime half.
-//! Audit JSON writers live in [`super::mig_a_audit`]; spawn markers in [`crate::render::mig_a_static`].
+//! Spawn markers in [`crate::render::mig_a_static`].
 
 use bevy::camera::visibility::VisibilityRange;
 use bevy::prelude::*;
@@ -9,20 +9,12 @@ use bevy::transform::StaticTransformOptimizations;
 
 use crate::construction::ProceduralBuildModuleChild;
 use crate::render::{
-    frame_perf_verbose, mig_a1_static_transform_optimizations_enabled,
+    mig_a1_static_transform_optimizations_enabled,
     mig_a10_spine_dispatch_authority, mig_a_static_bulk_bundle, mig_a_tactical_visibility_range,
     MigAStaticBulk, TerrainInstancedDrawGlobals, TerrainInstanceMap, TerrainTileInstance,
     TileWorldFallbackSprite,
 };
 
-pub const MIG_A1_A2_A16_JSON: &str = "debug_runs/mig_bevy_019/mig_a1_a2_a16_enabled.json";
-pub const MIG_A_ROLLUP_JSON: &str = "debug_runs/mig_bevy_019/mig_a_rollup.json";
-pub const MIG_A_FRAME_PERF_JSON: &str = "debug_runs/mig_bevy_019/mig_a_frame_perf.json";
-pub const MIG_A_A11_AUDIT_JSON: &str = "debug_runs/mig_bevy_019/mig_a_a11_depth_prepass_audit.json";
-pub const MIG_A_A17_AUDIT_JSON: &str = "debug_runs/mig_bevy_019/mig_a_a17_mesh_collection_audit.json";
-pub const MIG_A_A8_AUDIT_JSON: &str = "debug_runs/mig_bevy_019/mig_a_a8_settings_coexistence_audit.json";
-pub const MIG_A_A9_HANDOFF_JSON: &str = "debug_runs/mig_bevy_019/mig_a_a9_bsn_scene_handoff.json";
-pub const MIG_A_PROGRAM_CLOSE_JSON: &str = "debug_runs/mig_bevy_019/mig_a_program_close.json";
 
 #[derive(Resource, Clone, Debug, Default)]
 pub struct MigAAdoptionState {
@@ -67,13 +59,7 @@ pub fn mig_a14_visibility_range_enabled() -> bool {
         .is_none_or(|v| v != "0" && !v.eq_ignore_ascii_case("false"))
 }
 
-#[must_use]
-pub fn mig_a18_frame_perf_witness_enabled() -> bool {
-    std::env::var("MIG_A18")
-        .ok()
-        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-        || frame_perf_verbose()
-}
+
 
 /// Register Bevy 0.19 [`RenderErrorHandler`] with recover-on-device-lost (MIG-A4).
 pub fn register_mig_a_render_error_handler(app: &mut App) {
@@ -120,7 +106,6 @@ impl Plugin for MigAAdoptionPlugin {
                 collect_mig_a_runtime_metrics.after(tag_mig_a_static_bulk_entities),
             ),
         );
-        app.add_plugins(super::mig_a_audit::MigAAuditPlugin);
     }
 }
 
@@ -225,173 +210,10 @@ fn collect_mig_a_runtime_metrics(
     }
 }
 
-#[must_use]
-pub fn build_mig_a_rollup_json(state: &MigAAdoptionState) -> serde_json::Value {
-    let rollup = serde_json::json!({
-        "program": "PLAN-BEVY-019-MIG-v1",
-        "phase": "MIG-A",
-        "program_closed": true,
-        "program_closed_note": "All non-blocked MIG-A slices shipped or closed. A11/A13/A17 deep perf = POST-MIG (PERF-GPU), not migration.",
-        "green": true,
-        "blocked_slices": ["A15"],
-        "closed_handoff_slices": ["A9"],
-        "closed_wont_adopt_slices": ["A8", "A11"],
-        "slices": {
-            "A1": { "status": "shipped", "enabled": state.a1_enabled, "note": "StaticTransformOptimizations" },
-            "A2": { "status": "retired", "tagged": state.tagged_no_cpu_culling, "note": "NoCpuCulling removed 2026-07-06 — Bevy 0.19 excludes tagged entities from check_visibility, making CPU-queued sprites/mesh2d invisible; MigAStaticBulk marker retained" },
-            "A16": { "status": "shipped", "note": "MigAStaticBulk marker + A1 dirty-tree skip" },
-            "A10": {
-                "status": "shipped",
-                "enabled": state.a10_spine_authority,
-                "note": "GpuIndirectDrawSpine dispatch_count authority via apply_gpu_indirect_spine_dispatch_authority",
-                "workgroup": crate::render::GPU_INDIRECT_DISPATCH_WORKGROUP,
-            },
-            "A12": {
-                "status": "shipped",
-                "terrain_upload_bytes_last": state.terrain_upload_bytes_last,
-                "note": "Sparse mesh uniforms — terrain_instanced storage upload_bytes tracked via MigAUploadMetrics",
-            },
-            "A13": {
-                "status": "shipped",
-                "cpu_light_clusters_last": state.cpu_light_clusters_last,
-                "cpu_light_requests_last": state.cpu_light_requests_last,
-                "note": "CPU fire_visual_extract clustering metrics wired for 0.19. GPU Bevy cluster replace = POST-MIG perf (plan_gpu_terrain / fire perf).",
-            },
-            "A14": {
-                "status": "shipped",
-                "enabled": state.a14_visibility_range,
-                "tagged": state.tagged_visibility_range,
-                "note": "VisibilityRange on static bulk (plugin from DefaultPlugins; MIG_A14=0 disables tagging)"
-            },
-            "A11": {
-                "status": "closed_wont_adopt",
-                "witness": MIG_A_A11_AUDIT_JSON,
-                "note": "Migration scope = pass inventory audit (done). Stock depth-prepass merge = POST-MIG perf, not migration.",
-                "custom_passes": [
-                    "gpu_tile_debug_draw",
-                    "terrain_instanced_draw",
-                    "gpu_fire_particle_raster",
-                    "gpu_water_particle_raster",
-                    "gpu_water_surface_draw"
-                ],
-            },
-            "A17": {
-                "status": "shipped",
-                "witness": MIG_A_A17_AUDIT_JSON,
-                "terrain_instance_count_last": state.terrain_instance_count_last,
-                "note": "terrain_instanced_draw + RN-* batch metrics — migration shipped on 0.19",
-                "files": ["terrain_instanced_draw.rs", "gpu_tile_debug_draw.rs", "gpu_particle_draw.rs"]
-            },
-            "A18": {
-                "status": "shipped",
-                "witness": MIG_A_FRAME_PERF_JSON,
-                "capture": if mig_a18_frame_perf_witness_enabled() { "captured" } else { "opt_in_env" },
-                "note": "Frame perf witness path — MIG_A18=1 or PERF=1 after frame 120",
-            },
-            "A3": {
-                "status": "shipped",
-                "note": "DiagnosticsOverlayPlugin behind feature dev_tools + MIG_A3!=0 — optional dev overlay, not migration gate",
-                "requires": "cargo build --features dev_tools"
-            },
-            "A4": {
-                "status": "shipped",
-                "enabled": state.a4_render_recovery,
-                "note": "RenderErrorHandler Recover — opt-in via MIG_A4=1; hook registered when enabled",
-            },
-            "A5": {
-                "status": "shipped",
-                "last_batch_preallocated": state.a5_last_batch_preallocated,
-                "note": "RemoteAllocator pre-reserve before stream apply — MIG_A5=0 disables",
-            },
-            "A6": {
-                "status": "shipped",
-                "note": "contiguous_iter atmosphere fill + ember heat/fuel slice scan",
-            },
-            "A7": {
-                "status": "shipped",
-                "writers_armed": [
-                    "wave_c",
-                    "wave_s",
-                    "stage6_virtualization",
-                    "fire_ecology",
-                    "wss_substrate",
-                    "construction_stage",
-                    "view_runtime",
-                    "industrial_activation",
-                    "logistics_throughput",
-                    "fire_streaming",
-                    "wave_p",
-                    "stage7_play",
-                    "stage7_behavioral",
-                ],
-                "note": "LiveProofCadencePlugin First arm + run_if write_due on all live-proof writers",
-            },
-            "A8": {
-                "status": "closed_wont_adopt",
-                "witness": MIG_A_A8_AUDIT_JSON,
-                "note": "SettingsPlugin deferred permanently — shell_persistence owns HUD layout RON",
-                "coexistence": "src/gui/hud/shell_persistence.rs",
-            },
-            "A9": {
-                "status": "handoff_complete",
-                "witness": MIG_A_A9_HANDOFF_JSON,
-                "product_owner": "plan_city_grammar_upgrade_v1.md § BSN ASSEMBLY CHARTER",
-                "note": "Migration pilot done — BSN expansion is product-owned (DR-CITY-C6-VIS / DR-CITY-C6-BSN)",
-            },
-            "A15": {
-                "status": "product_blocked",
-                "note": "No MorphWeights in src/ — defer until procedural skinning product need (DR-MIG-A15)",
-            },
-        },
-        "measurement": {
-            "baseline_pre": "debug_runs/mig_bevy_019/baseline_stage5_pre019.json",
-            "baseline_post": "debug_runs/mig_bevy_019/baseline_stage5_post019.json",
-            "perf_env": "PERF_NO_VSYNC=1 cargo run --release -- --test visual",
-        },
-    });
-    rollup
-}
 
-/// True when every non-blocked MIG-A slice is shipped or explicitly closed/handoff.
-#[must_use]
-pub fn mig_a_program_closed(state: &MigAAdoptionState) -> bool {
-    let rollup = build_mig_a_rollup_json(state);
-    rollup
-        .get("program_closed")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
 
-#[must_use]
-pub fn build_mig_program_close_witness_body(state: &MigAAdoptionState) -> serde_json::Value {
-    let closed = mig_a_program_closed(state);
-    serde_json::json!({
-        "gate": "MIG-PROGRAM-CLOSE",
-        "green": closed,
-        "program_closed": closed,
-        "bevy_version": "0.19",
-        "mig_v1_gate": "debug_runs/mig_bevy_019/mig_v1_gate.json",
-        "rollup": MIG_A_ROLLUP_JSON,
-        "blocked_not_migration": ["A15", "bevy_ecs_tilemap adapter (DR-MIG-TILEMAP)"],
-        "post_mig_perf_not_blockers": ["A11 depth prepass deep merge", "A13 GPU light cluster replace", "A17 stock mesh collection deep"],
-        "note": "PLAN-BEVY-019-MIG-v1 is CLOSED on master. Do not pick MIG-* slices — use cross_front_pick_queue for product lanes.",
-    })
-}
 
-#[must_use]
-pub fn refresh_mig_program_close_witness(state: &MigAAdoptionState) -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_mig_program_close_witness_body(state);
-    let green = body
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "MIG-PROGRAM-CLOSE",
-        "refresh_mig_program_close_witness",
-        MIG_A_PROGRAM_CLOSE_JSON,
-        body,
-    );
-    write_debug_run_json(MIG_A_PROGRAM_CLOSE_JSON, wrapped) && green
-}
+
+
+

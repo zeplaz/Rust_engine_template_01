@@ -26,10 +26,7 @@ impl VisualTestGracefulExit {
     pub const FRAMES_AFTER_PROOF: u32 = GRACEFUL_EXIT_FRAMES_AFTER_PROOF;
 }
 
-pub fn arm_visual_test_graceful_exit(mut gate: ResMut<VisualTestGracefulExit>) {
-    gate.armed = true;
-    gate.frames_remaining = VisualTestGracefulExit::FRAMES_AFTER_PROOF;
-}
+
 
 fn deactivate_all_cameras(mut cameras: Query<&mut Camera>) {
     for mut camera in &mut cameras {

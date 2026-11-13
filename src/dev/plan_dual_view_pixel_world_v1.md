@@ -71,3 +71,22 @@ PIXEL_WORLD_VIEW_SCAFFOLD {
 - [x] VoxelMassing collapses to floors=1 below 24 px/tile
 - [x] `terrain_honesty_lint` run on GPU terrain path (art-home checklist #7)
 - [ ] Extra building module-kit content waves (product / operator G4)
+
+## v2 — voxel world view (`render::pixel_world`)
+
+PixelWorld3D now renders real geometry through `PixelWorldCamera` (Camera3d) into the **same** map RTT;
+`MainWorldCamera` is inactive while it presents (one camera per frame). Default view stays top-down:
+`DEFAULT_WORLD_PRESENTATION` in `gui/world_presentation_mode.rs` (capture override `VFX_CAPTURE_VIEW=voxel`).
+
+| Piece | Reads (sole source) |
+|:---|:---|
+| Camera pan / zoom | `ViewProjectionAuthority` WorldMain via `MapCameraDesiredRes` (same input writer as top-down); Q/E quarter-turn yaw = `PixelWorldCameraRig`; zoom clamp `PIXEL_WORLD_ZOOM_RANGE` |
+| Ground + water | `WorldGenDenseTerrainCache.elevation` + `WorldWaterGrid` → `PixelWorldTerrainField` (terraced ground, lake/ocean/river surfaces) |
+| Ground colour | `TileWorldFallbackState.image` (the top-down raster, one texel per cell) |
+| Trees | `VegetationExtractFrame` per-cell `ChunkCellStand` codes, `VegLod` ladder of the flat layer |
+| Sites / ghost | site components; `ConstructionVisualRequests` footprint + massing |
+| Fronts | `FrontOverlaySources` (top-down front builders) draped on the surface |
+| Picking | `SimulationMapPointerGate::world_pick` (`PointerGateSet::WorldPick`): voxel ray vs field; `cursor_world_on_map` / build ghost / hover / front cursor use it |
+
+Raster intent: no baked height/slope base and no flat LG-5 chunk stamps (`PixelWorldLandscapeIntent::flat_landscape_stamps`) —
+lighting and geometry carry relief and cover. Not yet in 3D: road/rail network ribbons, strategic icons, town labels, VFX particles.

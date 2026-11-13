@@ -276,7 +276,7 @@ pub fn sync_formation_zones_system(
 mod tests {
     use super::*;
     use crate::combat::{
-        derive_theaters_system, CombatPlugin, DeploymentKind, DeploymentOrder, DeploymentOrderQueue,
+        CombatPlugin, DeploymentKind, DeploymentOrder, DeploymentOrderQueue,
     };
     use crate::strategic::{derive_frontline_from_control_system, FrontlineState, StrategicFieldPipeline};
 

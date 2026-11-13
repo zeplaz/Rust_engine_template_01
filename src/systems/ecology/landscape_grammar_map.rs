@@ -5,10 +5,8 @@
 use std::fs;
 use std::path::PathBuf;
 
-use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
-use serde_json::json;
 
 use super::landscape_grammar::{
     evaluate_landscape_program_with_inputs,
@@ -18,7 +16,7 @@ use super::landscape_grammar::{
 use super::landscape_grammar_lg2::{attach_lg2_bundle_on_chunk, LandUseDistrictKind, LandUseInfluence};
 use super::vegetation_suitability::SuitabilityParams;
 use super::{ChunkEcology, VegetationField};
-use crate::dev::debug_run_envelope::{witness_refresh_due, wrap_debug_run, write_debug_run_json};
+
 use crate::strategic::StrategicRasterConfig;
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::weather::ChunkWeather;
@@ -29,8 +27,6 @@ pub const LANDSCAPE_GRAMMAR_MAP_ROLLOUT_LIVE_JSON: &str =
 pub const LANDSCAPE_GRAMMAR_LG3_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg3_live.json";
 pub const LANDSCAPE_GRAMMAR_LG5_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg5_live.json";
 pub const LANDSCAPE_ATLAS_INDEX_RON: &str = "assets/configs/landscape/_landscape_atlas_index.ron";
-pub const LG5_ATLAS_BATCH_WITNESS_JSON: &str =
-    "debug_runs/art_pipeline/tile_tile_landscape_expanded_v1_live.json";
 pub const LG5_ATLAS_EXPAND_ROLLUP_JSON: &str =
     "debug_runs/art_pipeline/tile_landscape_expanded_live.json";
 pub const LG5_ATLAS_ID: &str = "landscape_lg5_expanded_v1";
@@ -338,114 +334,20 @@ pub fn rollout_landscape_program_on_chunks(
     }
 }
 
-pub fn refresh_map_rollout_witness_system(
-    frame: Res<FrameCount>,
-    program_q: Query<&LandscapeProgramOnChunk>,
-    mut witness: ResMut<LandscapeMapRolloutWitness>,
-) {
-    if !witness_refresh_due(LANDSCAPE_GRAMMAR_MAP_ROLLOUT_LIVE_JSON, frame.0) {
-        return;
-    }
-    let n = program_q.iter().count() as u32;
-    if n > witness.chunks_with_program {
-        witness.chunks_with_program = n;
-    }
-    if n > 0 {
-        let sum: u32 = program_q
-            .iter()
-            .map(|p| p.evaluation.topology_kind_count as u32)
-            .sum();
-        witness.mean_topology_kind_count = sum as f32 / n as f32;
-        let presets_seen: std::collections::HashSet<String> = program_q
-            .iter()
-            .map(|p| p.preset_id.clone())
-            .collect();
-        witness.presets_used = presets_seen.len() as u32;
-    }
-    let green = map_rollout_witness_green(&witness);
-    let body = json!({
-        "gate": "VEG-MAP-ROLLOUT-001",
-        "green": green,
-        "chunks_with_program": witness.chunks_with_program,
-        "mean_topology_kind_count": witness.mean_topology_kind_count,
-        "presets_used": witness.presets_used,
-    });
-    let wrapped = wrap_debug_run(
-        "VEG-MAP-ROLLOUT-001",
-        "refresh_map_rollout_witness",
-        LANDSCAPE_GRAMMAR_MAP_ROLLOUT_LIVE_JSON,
-        body,
-    );
-    let _ = write_debug_run_json(LANDSCAPE_GRAMMAR_MAP_ROLLOUT_LIVE_JSON, wrapped);
-}
+
 
 #[must_use]
 pub fn map_rollout_witness_green(witness: &LandscapeMapRolloutWitness) -> bool {
     witness.chunks_with_program >= 16 && witness.mean_topology_kind_count >= 3.0
 }
 
-#[must_use]
-pub fn refresh_lg3_witness_from_districts(district_kind_count: usize) -> bool {
-    refresh_lg3_witness_from_districts_with_anchors(district_kind_count, false, false)
-}
 
-#[must_use]
-pub fn refresh_lg3_witness_from_districts_with_anchors(
-    district_kind_count: usize,
-    industrial_anchored: bool,
-    military_anchored: bool,
-) -> bool {
-    let green = district_kind_count >= 2 && industrial_anchored && military_anchored;
-    let body = json!({
-        "gate": "VEG-LG3-WITNESS-001",
-        "green": green,
-        "district_kind_count": district_kind_count,
-        "industrial_preset_anchored": industrial_anchored,
-        "military_preset_anchored": military_anchored,
-        "anchor_source": "live_transport_settlement",
-    });
-    let wrapped = wrap_debug_run(
-        "VEG-LG3-WITNESS-001",
-        "refresh_lg3_witness_from_districts",
-        LANDSCAPE_GRAMMAR_LG3_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_LG3_LIVE_JSON, wrapped) && green
-}
 
-#[must_use]
-pub fn refresh_lg3_witness(program_q: Query<&LandUseInfluence>) -> bool {
-    let mut districts = std::collections::HashSet::new();
-    for inf in &program_q {
-        districts.insert(format!("{:?}", inf.district));
-    }
-    let green = districts.len() >= 2;
-    let body = json!({
-        "gate": "VEG-LG3-WITNESS-001",
-        "green": green,
-        "district_kind_count": districts.len(),
-        "districts": districts.iter().collect::<Vec<_>>(),
-    });
-    let wrapped = wrap_debug_run(
-        "VEG-LG3-WITNESS-001",
-        "refresh_lg3_witness",
-        LANDSCAPE_GRAMMAR_LG3_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_LG3_LIVE_JSON, wrapped) && green
-}
 
-#[must_use]
-pub fn landscape_lg5_atlas_batch_green() -> bool {
-    let path = repo_asset_path(LG5_ATLAS_BATCH_WITNESS_JSON);
-    let Ok(raw) = fs::read_to_string(path) else {
-        return false;
-    };
-    let Ok(body) = serde_json::from_str::<serde_json::Value>(&raw) else {
-        return false;
-    };
-    body.get("green").and_then(|v| v.as_bool()).unwrap_or(false)
-}
+
+
+
+
 
 #[must_use]
 pub fn landscape_lg5_expand_rollup_green() -> bool {
@@ -472,48 +374,7 @@ pub fn landscape_lg5_registry_stamped() -> bool {
     text.contains(LG5_ATLAS_ID)
 }
 
-#[must_use]
-pub fn refresh_lg5_witness() -> bool {
-    let atlas_ok = landscape_lg5_atlas_batch_green();
-    let expand_ok = landscape_lg5_expand_rollup_green();
-    let stamp_ok = landscape_lg5_registry_stamped();
-    let bevy_uv = crate::gui::landscape_chunk_atlas_stamp::landscape_lg5_chunk_uv_stamp_witness_green();
-    let green = atlas_ok && expand_ok && stamp_ok && bevy_uv;
-    let atlas_lane = if green {
-        "mcp_atlas_pack_expanded"
-    } else if atlas_ok && stamp_ok {
-        "bevy_chunk_uv_pending"
-    } else if atlas_ok {
-        "registry_stamp_pending"
-    } else {
-        "atlas_batch_pending"
-    };
-    let body = json!({
-        "gate": "VEG-LG5-WITNESS-001",
-        "slice_id": "CDR-A-LG5-REAL-STAMP-001",
-        "green": green,
-        "real_atlas_uv": green,
-        "atlas_lane": atlas_lane,
-        "atlas_batch_green": atlas_ok,
-        "atlas_expand_rollup_green": expand_ok,
-        "registry_stamp": stamp_ok,
-        "bevy_chunk_uv_stamp": bevy_uv,
-        "VEG-F03-REGISTRY-STAMP-001": bevy_uv,
-        "atlas_id": LG5_ATLAS_ID,
-        "pilot_atlas_id": LG5_PILOT_ATLAS_ID,
-        "atlas_batch_witness": LG5_ATLAS_BATCH_WITNESS_JSON,
-        "atlas_expand_witness": LG5_ATLAS_EXPAND_ROLLUP_JSON,
-        "landscape_index": LANDSCAPE_ATLAS_INDEX_RON,
-        "charter": "src/dev/design_landscape_lg5_expansion_matrix_v1.md",
-    });
-    let wrapped = wrap_debug_run(
-        "VEG-LG5-WITNESS-001",
-        "refresh_lg5_witness",
-        LANDSCAPE_GRAMMAR_LG5_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(LANDSCAPE_GRAMMAR_LG5_LIVE_JSON, wrapped) && green
-}
+
 
 #[derive(Serialize, Deserialize, Debug, Default)]
 pub struct VegetationProgramCloseBody {
@@ -526,39 +387,9 @@ pub struct VegetationProgramCloseBody {
     pub all_green: bool,
 }
 
-#[must_use]
-pub fn vegetation_program_close_honest(body: &VegetationProgramCloseBody) -> bool {
-    body.all_green
-        && crate::dev::veg_runtime_proof_live::veg_runtime_child_sub_rules_ok()
-        && crate::dev::veg_runtime_proof_live::lg4_preview_child_sub_rules_ok()
-}
 
-#[must_use]
-pub fn refresh_vegetation_program_close(body: &VegetationProgramCloseBody) -> bool {
-    let child_veg_runtime = crate::dev::veg_runtime_proof_live::veg_runtime_child_sub_rules_ok();
-    let child_lg4 = crate::dev::veg_runtime_proof_live::lg4_preview_child_sub_rules_ok();
-    let honest_all_green = vegetation_program_close_honest(body);
-    let wrapped = wrap_debug_run(
-        "VEG-PROGRAM-CLOSE-001",
-        "refresh_vegetation_program_close",
-        VEGETATION_PROGRAM_CLOSE_LIVE_JSON,
-        json!({
-            "phase_a_green": body.phase_a_green,
-            "phase_b_green": body.phase_b_green,
-            "phase_c_green": body.phase_c_green,
-            "phase_d_green": body.phase_d_green,
-            "phase_e_green": body.phase_e_green,
-            "phase_f_green": body.phase_f_green,
-            "all_green": honest_all_green,
-            "child_rollup": {
-                "veg_runtime_proof_sub_rules": child_veg_runtime,
-                "lg4_preview_sub_rules": child_lg4,
-            },
-            "sub_rules_evaluated": true,
-        }),
-    );
-    write_debug_run_json(VEGETATION_PROGRAM_CLOSE_LIVE_JSON, wrapped) && honest_all_green
-}
+
+
 
 pub fn landscape_grammar_map_plugin(app: &mut App) {
     app.init_resource::<LandscapeMapRolloutWitness>()
@@ -567,7 +398,6 @@ pub fn landscape_grammar_map_plugin(app: &mut App) {
             Update,
             (
                 rollout_landscape_program_on_chunks,
-                refresh_map_rollout_witness_system,
             )
                 .chain()
                 .in_set(ChunkEnvironmentSet::Ecology),
@@ -727,11 +557,5 @@ mod tests {
         assert!(map_rollout_witness_green(&w));
     }
 
-    #[test]
-    fn lg5_witness_green_when_atlas_and_registry_on_disk() {
-        if !landscape_lg5_atlas_batch_green() || !landscape_lg5_registry_stamped() {
-            return;
-        }
-        assert!(refresh_lg5_witness());
-    }
+
 }

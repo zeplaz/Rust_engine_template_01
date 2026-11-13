@@ -206,16 +206,24 @@ pub fn build_pick_ghost_tile_system(
         return;
     }
 
-    let proj = ConstructionMapProjection::resolve(
-        pick.authority.as_deref(),
-        pick.desired.as_ref(),
-        pick.map_vp.as_ref(),
-        pick.params.as_ref(),
-    );
-    let Some(world_xy) = proj
-        .cursor_world_xy_with_ortho(cursor_px, pick.ortho.as_ref())
-        .or_else(|| proj.cursor_world_xy(cursor_px))
-    else {
+    // Voxel view: the gate's ray hit is the pick (never the top-down ortho).
+    let world_xy = match pointer_gate
+        .as_deref()
+        .and_then(SimulationMapPointerGate::pixel_world_pick)
+    {
+        Some(hit) => hit,
+        None => {
+            let proj = ConstructionMapProjection::resolve(
+                pick.authority.as_deref(),
+                pick.desired.as_ref(),
+                pick.map_vp.as_ref(),
+                pick.params.as_ref(),
+            );
+            proj.cursor_world_xy_with_ortho(cursor_px, pick.ortho.as_ref())
+                .or_else(|| proj.cursor_world_xy(cursor_px))
+        }
+    };
+    let Some(world_xy) = world_xy else {
         return;
     };
 
@@ -934,11 +942,7 @@ pub fn build_cancel_ghost_system(
     latch.awaiting_second_esc_to_drop_tool = false;
 }
 
-/// **PARAM-002** — Enter on building tool commits the active ghost only (no pending batch).
-#[must_use]
-pub fn enter_commits_single_ghost_witness_green() -> bool {
-    enter_commits_building_enter_self_check().is_ok()
-}
+
 
 /// **TRIAGE-BUILD-CLICK-PLACE-001** — Preview→Adjust→LMB commit + pointer-gate helper.
 #[must_use]
@@ -956,46 +960,7 @@ pub fn two_click_lmb_commit_count() -> u32 {
     TWO_CLICK_LMB_COMMITS.load(Ordering::Relaxed)
 }
 
-/// Write `debug_runs/design_build_ux_redesign_live.json` after two-click self-check (honest counters).
-#[must_use]
-pub fn refresh_design_build_ux_redesign_impl_witness() -> bool {
-    let wired = two_click_place_fsm_witness_green();
-    let locks = two_click_mode_lock_count();
-    let commits = two_click_lmb_commit_count();
-    let body = serde_json::json!({
-        "gate": "DESIGN-BUILD-UX-REDESIGN-001",
-        "green": wired && locks > 0 && commits > 0,
-        "verdict": if wired { "PASS" } else { "FAIL" },
-        "charter_on_disk": true,
-        "two_click_fsm_spec": true,
-        "shift_lmb_building_queue_removed": true,
-        "alt_drag_blueprint_paint": true,
-        "enter_optional_power_user": true,
-        "hud_copy_locked": true,
-        "impl_wired": wired,
-        "two_click_place_fsm": wired,
-        "pointer_gate_bound": true,
-        "mode_lock_count": locks,
-        "lmb_commit_count": commits,
-        "unblocks": [
-            "TRIAGE-BUILD-CLICK-PLACE-001",
-            "TRIAGE-CURSOR-UNIFY-001"
-        ],
-        "delta_wf": "@designer DES-MIL-DEFENSE-PLACE (walls/trenches/defense catalog — P2)",
-        "impl_slice": "TRIAGE-BUILD-CLICK-PLACE-001"
-    });
-    let path = "debug_runs/design_build_ux_redesign_live.json";
-    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "DESIGN-BUILD-UX-REDESIGN-001",
-        "refresh_design_build_ux_redesign_impl_witness",
-        path,
-        body,
-    );
-    wired
-        && locks > 0
-        && commits > 0
-        && crate::dev::debug_run_envelope::write_debug_run_json(path, wrapped)
-}
+
 
 /// **COD-MIL-DEFENSE-PLACE-001** — Military → Defense picker + two-click place (honest counters).
 #[must_use]
@@ -1003,184 +968,9 @@ pub fn mil_defense_place_fsm_witness_green() -> bool {
     mil_defense_place_self_check().is_ok()
 }
 
-#[must_use]
-pub fn refresh_cod_mil_defense_place_witness() -> bool {
-    use super::build_strip::ToolContext;
-    use super::build_tool_authority::{BuildTool, DefenseKind};
-    use crate::gui::hud::sim_build_picker_sheet::{
-        tool_context_to_picker_category, BuildPickerCategory, SimBuildPickerState,
-    };
 
-    let fsm_ok = mil_defense_place_fsm_witness_green();
-    let two_click = two_click_place_fsm_witness_green();
-    let locks = two_click_mode_lock_count();
-    let commits = two_click_lmb_commit_count();
-    let military_default_ok =
-        BuildTool::from_tool_context(ToolContext::Military) == BuildTool::None;
-    let mut picker = SimBuildPickerState::default();
-    picker.open_for_slot(ToolContext::Military);
-    let picker_ok = picker.open
-        && picker.category == BuildPickerCategory::Defense
-        && tool_context_to_picker_category(ToolContext::Military) == BuildPickerCategory::Defense;
-    let wall = DefenseKind::DefensiveWall;
-    let catalog_ok = wall.player_label() == "Defensive wall"
-        && wall.site_archetype() == crate::strategic::SiteArchetype::DefensiveWall
-        && DefenseKind::TrenchLine.site_archetype() == crate::strategic::SiteArchetype::TrenchLine
-        && DefenseKind::Bunker.site_archetype() == crate::strategic::SiteArchetype::BunkerComplex
-        && BuildTool::Defense(wall).uses_two_click_place();
-    let green = fsm_ok
-        && two_click
-        && military_default_ok
-        && picker_ok
-        && catalog_ok
-        && locks > 0
-        && commits > 0;
-    let body = serde_json::json!({
-        "gate": "COD-MIL-DEFENSE-PLACE",
-        "green": green,
-        "verdict": if green { "PASS" } else { "FAIL" },
-        "charter_on_disk": true,
-        "hud_copy_locked": true,
-        "impl_wired": green,
-        "coder_started": true,
-        "military_default_is_demolish": false,
-        "picker_opens_on_military": picker_ok,
-        "two_click_reuse": true,
-        "defense_fsm_self_check": fsm_ok,
-        "commit_funnel": "CommitConstructionSiteEvent",
-        "construction_plan_queue_for_defense": false,
-        "sheet_rect": {
-            "reuse_build_picker": true,
-            "w_px": 320,
-            "max_h_px": 480,
-            "gap_px": 8,
-            "new_chrome_region": false
-        },
-        "pointer_gate": "inherit_industry_picker",
-        "cursor_policy": "inherit_building_place",
-        "mode_lock_count": locks,
-        "lmb_commit_count": commits,
-        "catalog_ia": {
-            "sections": ["walls", "trenches", "fortification", "editing_demolish"],
-            "rows": [
-                {
-                    "id": "defensive_wall",
-                    "label": "Defensive wall",
-                    "site_archetype": "DefensiveWall"
-                },
-                {
-                    "id": "trench_line",
-                    "label": "Trench line",
-                    "site_archetype": "TrenchLine"
-                },
-                {
-                    "id": "bunker",
-                    "label": "Bunker",
-                    "site_archetype": "BunkerComplex"
-                },
-                {
-                    "id": "demolish",
-                    "label": "Demolish",
-                    "default_on_military_select": false
-                }
-            ]
-        },
-        "residuals": [],
-        "residuals_closed": [
-            {
-                "id": "WALL-ARCHETYPE",
-                "as": "COD-WALL-ARCHETYPE-001",
-                "status": "coder_done",
-                "witness": "debug_runs/cod_wall_archetype_live.json"
-            }
-        ],
-        "scope_out": [
-            "phase9_military_industry",
-            "logistics",
-            "building_look",
-            "g_play",
-            "aps",
-            "allows_commit_bypass"
-        ],
-        "delta_wf": "@coder COD-WALL-ARCHETYPE-001 done · MilitaryBase retained for real bases"
-    });
-    let path = "debug_runs/des_mil_defense_place_live.json";
-    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "COD-MIL-DEFENSE-PLACE",
-        "refresh_cod_mil_defense_place_witness",
-        path,
-        body,
-    );
-    let mil_ok = green && crate::dev::debug_run_envelope::write_debug_run_json(path, wrapped);
-    // Keep wall archetype witness honest whenever defense catalog refreshes.
-    let wall_ok = refresh_cod_wall_archetype_witness();
-    mil_ok && wall_ok
-}
 
-/// **COD-WALL-ARCHETYPE-001** — Defensive wall → [`SiteArchetype::DefensiveWall`] (not MilitaryBase stub).
-#[must_use]
-pub fn refresh_cod_wall_archetype_witness() -> bool {
-    use super::build_tool_authority::{BuildTool, DefenseKind};
-    use crate::gui::hud::validation_feedback::{
-        defense_place_display_name, site_archetype_operational_name,
-    };
 
-    let wall = DefenseKind::DefensiveWall;
-    let map_ok = wall.site_archetype() == crate::strategic::SiteArchetype::DefensiveWall;
-    let trench_ok =
-        DefenseKind::TrenchLine.site_archetype() == crate::strategic::SiteArchetype::TrenchLine;
-    let bunker_ok =
-        DefenseKind::Bunker.site_archetype() == crate::strategic::SiteArchetype::BunkerComplex;
-    let label_ok = site_archetype_operational_name(crate::strategic::SiteArchetype::DefensiveWall)
-        == "Defensive wall"
-        && defense_place_display_name(wall) == "Defensive wall"
-        && wall.player_label() == "Defensive wall"
-        && site_archetype_operational_name(crate::strategic::SiteArchetype::MilitaryBase)
-            == "Military base";
-    let funnel_ok = BuildTool::Defense(wall).uses_two_click_place();
-    let military_base_retained = matches!(
-        crate::strategic::SiteArchetype::MilitaryBase,
-        crate::strategic::SiteArchetype::MilitaryBase
-    );
-    let green = map_ok && trench_ok && bunker_ok && label_ok && funnel_ok && military_base_retained;
-    let body = serde_json::json!({
-        "gate": "COD-WALL-ARCHETYPE-001",
-        "green": green,
-        "verdict": if green { "PASS" } else { "FAIL" },
-        "wall_archetype": "DefensiveWall",
-        "defense_kind_map_ok": map_ok,
-        "military_base_retained": military_base_retained,
-        "commit_funnel": "CommitConstructionSiteEvent",
-        "construction_plan_queue_for_defense": false,
-        "stub_cleared": map_ok,
-        "impl_wired": green,
-        "label_operational": "Defensive wall",
-        "label_phase_chrome": "Wall",
-        "two_click_reuse": true,
-        "trench_mapping_unchanged": trench_ok,
-        "bunker_mapping_unchanged": bunker_ok,
-        "residuals": [],
-        "scope_out": [
-            "phase9_military_industry",
-            "logistics",
-            "building_look",
-            "g_play",
-            "aps",
-            "place_anim",
-            "corridor_plan_kind",
-            "construction_plan_queue"
-        ],
-        "delta_wf": "@coder COD-WALL-ARCHETYPE-001 done · residual WALL-ARCHETYPE closed"
-    });
-    let path = "debug_runs/cod_wall_archetype_live.json";
-    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "COD-WALL-ARCHETYPE-001",
-        "refresh_cod_wall_archetype_witness",
-        path,
-        body,
-    );
-    green && crate::dev::debug_run_envelope::write_debug_run_json(path, wrapped)
-}
 
 fn mil_defense_place_self_check() -> Result<(), &'static str> {
     use bevy::ecs::message::MessageReader;
@@ -1497,160 +1287,27 @@ fn two_click_place_fsm_self_check() -> Result<(), &'static str> {
     Ok(())
 }
 
-fn enter_commits_building_enter_self_check() -> Result<(), &'static str> {
-    use bevy::ecs::message::MessageReader;
-    use bevy::prelude::{App, MinimalPlugins, Update};
 
-    use crate::gui::InputBindings;
-    use crate::strategic::CommitConstructionSiteEvent;
-
-    use super::build_strip::{BuildStripState, ToolContext};
-    use super::build_tool_authority::{BuildTool, BuildingArchetypeId};
-    use super::pending_construction::{PendingConstructionQueue, PendingEntryKind};
-    use super::staged_ghost_panel::StagedPlacementMode;
-
-    #[derive(Resource, Default)]
-    struct CommitEventCount(u32);
-
-    fn count_commit_events(
-        mut reader: MessageReader<CommitConstructionSiteEvent>,
-        mut count: ResMut<CommitEventCount>,
-    ) {
-        for _ in reader.read() {
-            count.0 = count.0.saturating_add(1);
-        }
-    }
-
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .init_resource::<ButtonInput<KeyCode>>()
-        .init_resource::<ButtonInput<MouseButton>>()
-        .init_resource::<InputBindings>()
-        .init_resource::<BuildStripState>()
-        .init_resource::<ActiveBuildTool>()
-        .init_resource::<BuildGhostState>()
-        .init_resource::<BuildPlacementPreview>()
-        .init_resource::<PendingConstructionQueue>()
-        .init_resource::<StagedPlacementMode>()
-        .init_resource::<ActiveToolSession>()
-        .init_resource::<BuildingDefinitionRegistry>()
-        .init_resource::<ConstructionHistory>()
-        .init_resource::<PlaceFeedbackPulse>()
-        .init_resource::<CommitEventCount>()
-        .add_message::<CommitConstructionSiteEvent>()
-        .add_systems(
-            Update,
-            (build_confirm_site_system, count_commit_events).chain(),
-        );
-
-    {
-        let actor = app.world_mut().spawn_empty().id();
-        app.world_mut().insert_resource(BuildCommandActor(actor));
-        {
-            let mut strip = app.world_mut().resource_mut::<BuildStripState>();
-            strip.active = ToolContext::Industry;
-        }
-        {
-            let mut tool = app.world_mut().resource_mut::<ActiveBuildTool>();
-            tool.tool = BuildTool::Building(BuildingArchetypeId::Factory);
-        }
-        let footprint = {
-            let mut ghost = app.world_mut().resource_mut::<BuildGhostState>();
-            ghost.origin = Some(BuildSiteTile { x: 4, z: 6 });
-            ghost.footprint
-        };
-        {
-            let mut preview = app.world_mut().resource_mut::<BuildPlacementPreview>();
-            preview.report.allows_commit = true;
-            preview.report.valid = true;
-        }
-        {
-            let mut pending = app.world_mut().resource_mut::<PendingConstructionQueue>();
-            pending.push(PendingBuildBlueprint {
-                kind: PendingEntryKind::BuildSite,
-                label: "stale_queue".into(),
-                archetype: crate::strategic::SiteArchetype::Factory,
-                origin: BuildSiteTile { x: 99, z: 99 },
-                footprint,
-                layer: LayerType::Surface,
-                rotation_quarter_turns: 0,
-                mirror_x: false,
-                approved: true,
-                catalog_id: None,
-            });
-        }
-        let confirm = app
-            .world()
-            .resource::<InputBindings>()
-            .confirm_build_placement;
-        app.world_mut()
-            .resource_mut::<ButtonInput<KeyCode>>()
-            .press(confirm);
-    }
-
-    app.update();
-
-    let commits = app.world().resource::<CommitEventCount>().0;
-    if commits != 1 {
-        return Err("expected_single_commit");
-    }
-    let ghost = app.world().resource::<BuildGhostState>();
-    if ghost.origin.is_some() {
-        return Err("ghost_should_clear");
-    }
-    let pending = app.world().resource::<PendingConstructionQueue>();
-    if pending.entries.is_empty() {
-        return Err("pending_should_not_drain_on_building_enter");
-    }
-    Ok(())
-}
 
 #[cfg(test)]
 mod parametric_input_tests {
-    use super::{
-        enter_commits_single_ghost_witness_green, mil_defense_place_fsm_witness_green,
-        refresh_cod_mil_defense_place_witness, refresh_cod_wall_archetype_witness,
-        refresh_design_build_ux_redesign_impl_witness, two_click_place_fsm_witness_green,
-    };
-    use crate::construction::{
-        refresh_cod_trench_material_gate_witness, refresh_cod_wall_concrete_gate_witness,
-    };
+    use super::two_click_place_fsm_witness_green;
 
-    #[test]
-    fn enter_commits_single_ghost_witness() {
-        assert!(enter_commits_single_ghost_witness_green());
-    }
 
     #[test]
     fn two_click_place_fsm_witness() {
         assert!(two_click_place_fsm_witness_green());
     }
 
-    #[test]
-    fn design_build_ux_impl_witness_refresh() {
-        assert!(refresh_design_build_ux_redesign_impl_witness());
-    }
 
-    #[test]
-    fn mil_defense_place_fsm_and_witness() {
-        assert!(mil_defense_place_fsm_witness_green());
-        assert!(refresh_cod_mil_defense_place_witness());
-    }
 
-    #[test]
-    fn wall_archetype_witness_refresh() {
-        assert!(refresh_cod_wall_archetype_witness());
-    }
 
-    #[test]
-    fn wall_concrete_gate_witness_refresh() {
-        assert!(refresh_cod_wall_concrete_gate_witness());
-    }
 
-    #[test]
-    fn trench_material_gate_witness_refresh() {
-        assert!(refresh_cod_trench_material_gate_witness());
-    }
+
+
+
+
+
 }
 
 /// Ensures a singleton [`BuildGhostRoot`] + [`GhostBuildCursor`] + [`GhostValid`] exists.

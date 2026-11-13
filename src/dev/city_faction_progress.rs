@@ -1,8 +1,4 @@
-//! City faction progress — lib launch beside [`super::product_fire_vfx_live_proof`].
-//!
-//! That VFX proof is a structured body that stays pending or red until the draw
-//! counters are real, plus `debug_runs/product_fire_vfx_live.json`. This launch
-//! steps a seeded settlement for [`CITY_FACTION_PROGRESS_TICKS`] and returns an
+//! City faction progress — lib launch. Steps a seeded settlement for [`CITY_FACTION_PROGRESS_TICKS`] and returns an
 //! issue list that is empty only when power, haul, growth, and both factions hold.
 //!
 //! ```text
@@ -39,7 +35,6 @@ use crate::systems::transport::TransportEdgeId;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::ChunkCellKey;
 
-pub const CITY_FACTION_PROGRESS_LIVE_JSON: &str = "debug_runs/city_faction_progress_live.json";
 
 /// Same bound as the shot book cap in `shot_pulse` (32 retained shots).
 pub const CITY_FACTION_PROGRESS_TICKS: u64 = 32;
@@ -317,41 +312,9 @@ pub fn city_faction_progress(fixture: &CityFactionFixture) -> CityFactionProgres
     }
 }
 
-#[must_use]
-pub fn city_faction_progress_body(report: &CityFactionProgressReport) -> serde_json::Value {
-    let green = report.issues.is_empty();
-    serde_json::json!({
-        "launch": report.launch,
-        "gate": "CITY-FACTION-PROGRESS",
-        "seed": report.seed,
-        "ticks": report.ticks,
-        "green": green,
-        "issues": report.issues.iter().map(|issue| serde_json::json!({
-            "id": issue.id,
-            "system": issue.system,
-            "reason": issue.reason,
-        })).collect::<Vec<_>>(),
-        "faction_progress": report.faction_progress,
-        "player_rows": report.player_rows,
-        "town_ids": report.town_ids,
-        "factions": report.factions,
-        "haul_moved": report.haul_moved,
-        "verify_cmd": "cargo test -p proc_A_dine01 --lib city_faction_progress -- --test-threads=8",
-    })
-}
 
-/// Writes the live file from a real report. `green` follows `issues`.
-#[must_use]
-pub fn write_city_faction_progress_live(report: &CityFactionProgressReport) -> bool {
-    let body = city_faction_progress_body(report);
-    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "CITY-FACTION-PROGRESS",
-        LAUNCH,
-        CITY_FACTION_PROGRESS_LIVE_JSON,
-        body,
-    );
-    crate::dev::debug_run_envelope::write_debug_run_json(CITY_FACTION_PROGRESS_LIVE_JSON, wrapped)
-}
+
+
 
 fn settle_books(fixture: &CityFactionFixture) -> (TownBook, DistrictBook) {
     let towns = if fixture.saved_towns.towns.is_empty() {
@@ -512,16 +475,6 @@ mod tests {
             report.issues
         );
         assert!(!report.issues.is_empty());
-        let body = city_faction_progress_body(&report);
-        assert_eq!(body["green"], false);
-        assert!(write_city_faction_progress_live(&report));
-        let path = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"))
-            .join(CITY_FACTION_PROGRESS_LIVE_JSON);
-        let text = std::fs::read_to_string(&path).expect("live json");
-        let value: serde_json::Value = serde_json::from_str(&text).expect("json");
-        let issues = value["issues"].as_array().expect("issues");
-        assert!(issues.iter().any(|issue| issue["system"] == "power"));
-        assert_eq!(value["green"], false);
     }
 
     #[test]

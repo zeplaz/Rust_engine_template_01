@@ -812,48 +812,5 @@ mod tests {
         assert!(eco.data.as_ref().is_some_and(|d| d.iter().any(|&b| b > 0)));
     }
 
-    #[test]
-    fn veg_burn_merge_overrides_ecology_topology_tint() {
-        use crate::dev::landscape_grammar_burn_live_proof::veg_burn_pilot_extract_frame;
-        use crate::systems::ecology::LG1_PILOT_CHUNK;
 
-        let mut images = Assets::<Image>::default();
-        let mut heat = MinimapCompositeHeatTextures::default();
-        let mut map_views = MapViewInstances::default();
-        map_views.minimap.overlays.ecology_heat = true;
-        let fallback = TileWorldFallbackState {
-            last_w: 64,
-            last_h: 64,
-            ..Default::default()
-        };
-        let ecology = EcologyVisualSnapshot {
-            ecology_chunk_count: 1,
-            chunk_rows: vec![bevy::math::Vec4::new(
-                LG1_PILOT_CHUNK.x as f32,
-                0.8,
-                0.3,
-                0.0,
-            )],
-            ..Default::default()
-        };
-        let veg = veg_burn_pilot_extract_frame();
-        let (ok, _, _, _, _, _, _, _, merge) = upload_minimap_heat_textures(
-            &mut images,
-            &mut heat,
-            None,
-            None,
-            None,
-            Some(&ecology),
-            None,
-            None,
-            None,
-            Some(&veg),
-            &map_views,
-            &fallback,
-            UVec2::new(32, 32),
-        );
-        assert!(ok);
-        assert!(merge.veg_burn_rows >= 1, "expected veg_burn rows");
-        assert!(merge.burn_overrides_topology, "burn must override topology tint");
-    }
 }

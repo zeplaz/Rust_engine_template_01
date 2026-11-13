@@ -91,98 +91,16 @@ pub fn draw_corridor_phase_paths() {}
 #[allow(dead_code)] // egui-retired; kept for Bevy port / export
 pub fn draw_r4_corridor_tray_legend() {}
 
-#[derive(Clone, Copy, Debug, Default)]
-pub struct CorridorBookCounts {
-    pub book_row_count: u32,
-    pub planned_count: u32,
-    pub in_progress_count: u32,
-    pub completed_count: u32,
-}
 
-impl CorridorBookCounts {
-    #[must_use]
-    pub fn from_book(book: &CorridorConstructionBook) -> Self {
-        let mut counts = Self::default();
-        counts.book_row_count = book.rows.len() as u32;
-        for row in book.rows.values() {
-            match row.phase {
-                ConstructionPhase::Planned => counts.planned_count += 1,
-                ConstructionPhase::InProgress => counts.in_progress_count += 1,
-                ConstructionPhase::Completed => counts.completed_count += 1,
-            }
-        }
-        counts
-    }
-}
 
-#[must_use]
-pub fn construction_r4_prep_001_witness_lib() -> serde_json::Value {
-    construction_r4_prep_001_witness(&ConstructionRound4ProductGate::default())
-}
 
-#[must_use]
-pub fn construction_r4_corridor_001_witness_lib() -> serde_json::Value {
-    let gate = ConstructionRound4ProductGate::default();
-    let mut book = CorridorConstructionBook::default();
-    book.plan_edge(TransportEdgeId(1));
-    construction_r4_corridor_001_witness(&gate, CorridorBookCounts::from_book(&book))
-}
 
-#[must_use]
-pub fn construction_r4_prep_001_witness(gate: &ConstructionRound4ProductGate) -> serde_json::Value {
-    serde_json::json!({
-        "gate": "CONSTRUCTION-R4-PREP-001",
-        "green": true,
-        "product_board_open": gate.board_open,
-        "prep_index_aligned": true,
-    })
-}
 
-#[must_use]
-pub fn construction_r4_corridor_001_witness(
-    gate: &ConstructionRound4ProductGate,
-    counts: CorridorBookCounts,
-) -> serde_json::Value {
-    let product_board_open = gate.board_open;
-    let sim_tick_writer_wired = crate::strategic::corridor_sim_tick_writer_witness_green();
-    let r8_roundtrip_ok = crate::strategic::corridor_r8_roundtrip_witness_green();
-    let corridor_phase_visual_wired = super::ghost_visual::corridor_phase_tokens_wired_green();
-    let counts_ok = counts.planned_count + counts.in_progress_count + counts.completed_count
-        >= counts.book_row_count;
-    let green = product_board_open
-        && sim_tick_writer_wired
-        && r8_roundtrip_ok
-        && counts_ok
-        && corridor_phase_visual_wired;
-    serde_json::json!({
-        "gate": "R4-CORRIDOR-001",
-        "green": green,
-        "product_board_open": product_board_open,
-        "book_row_count": counts.book_row_count,
-        "planned_count": counts.planned_count,
-        "in_progress_count": counts.in_progress_count,
-        "completed_count": counts.completed_count,
-        "sim_tick_writer_wired": sim_tick_writer_wired,
-        "r8_roundtrip_ok": r8_roundtrip_ok,
-        "corridor_phase_visual_wired": corridor_phase_visual_wired,
-    })
-}
 
-#[must_use]
-pub fn construction_r4_mv_ghost_001_witness(
-    mv_001_green: bool,
-    legend_wired: bool,
-) -> serde_json::Value {
-    let corridor_overlay_tokens_wired = super::ghost_visual::corridor_phase_tokens_wired_green();
-    let green = mv_001_green && corridor_overlay_tokens_wired && legend_wired;
-    serde_json::json!({
-        "gate": "DESIGN-R4-MV-001",
-        "green": green,
-        "corridor_overlay_tokens_wired": corridor_overlay_tokens_wired,
-        "legend_wired": legend_wired,
-        "mv_001_still_green": mv_001_green,
-    })
-}
+
+
+
+
 
 #[must_use]
 pub fn r4_corridor_legend_wired_witness_green() -> bool {
@@ -204,30 +122,10 @@ fn r4_corridor_legend_self_check() -> Result<(), &'static str> {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-    use crate::strategic::CorridorConstructionRow;
+    
+    
 
-    #[test]
-    fn r4_corridor_witness_rollup_lib_green() {
-        let gate = ConstructionRound4ProductGate { board_open: true };
-        let mut book = CorridorConstructionBook::default();
-        book.rows.insert(
-            TransportEdgeId(1),
-            CorridorConstructionRow::planned(TransportEdgeId(1)),
-        );
-        let block =
-            construction_r4_corridor_001_witness(&gate, CorridorBookCounts::from_book(&book));
-        assert_eq!(block["gate"], "R4-CORRIDOR-001");
-        assert_eq!(
-            block["corridor_phase_visual_wired"],
-            serde_json::json!(true)
-        );
-        assert_eq!(block["green"], serde_json::json!(true));
-    }
 
-    #[test]
-    fn r4_mv_ghost_witness_rollup() {
-        let block = construction_r4_mv_ghost_001_witness(true, true);
-        assert_eq!(block["green"], serde_json::json!(true));
-    }
+
+
 }

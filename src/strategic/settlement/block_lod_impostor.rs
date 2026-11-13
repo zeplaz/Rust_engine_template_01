@@ -293,20 +293,7 @@ pub fn city_p2_witness_green() -> bool {
         .unwrap_or(false)
 }
 
-#[must_use]
-pub fn refresh_city_p2_witness() -> bool {
-    use crate::dev::debug_run_envelope::{wrap_debug_run, write_debug_run_json};
 
-    let body = build_city_p2_witness_body();
-    let green = body.get("green").and_then(|v| v.as_bool()).unwrap_or(false);
-    let wrapped = wrap_debug_run(
-        "CITY-P2-001",
-        "refresh_city_p2_witness",
-        CITY_P2_LIVE_JSON,
-        body,
-    );
-    write_debug_run_json(CITY_P2_LIVE_JSON, wrapped) && green
-}
 
 #[cfg(test)]
 mod tests {

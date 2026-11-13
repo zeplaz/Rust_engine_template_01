@@ -44,7 +44,6 @@ pub mod building_set;
 mod commercial_menu;
 mod construction_pipeline;
 mod construction_queue_intent;
-mod construction_stage_witness;
 mod corridor_transport;
 mod defense_concrete_stock;
 mod defense_staging_stock;
@@ -77,7 +76,6 @@ mod site_stub_overlay;
 pub mod site_zone_grid;
 mod tile_visual;
 mod tool_hints;
-mod witness_collectors;
 pub use round4_corridor::{
     construction_r4_corridor_legend_wired_witness_green, draw_r4_corridor_tray_legend,
     ConstructionRound4ProductGate,
@@ -118,7 +116,6 @@ mod power_lines;
 mod rail;
 mod residential_menu;
 mod roads;
-mod scaling_audit;
 mod site_stage;
 mod site_stage_tick;
 mod site_stage_transitions;
@@ -147,7 +144,6 @@ pub use build_interaction::{
     build_queue_blueprint_on_shift_click_system, build_refresh_placement_validation_system,
     build_rotate_mirror_ghost_system, build_sync_ghost_cursor_entity_system,
     construction_map_pick_allowed, mil_defense_place_fsm_witness_green,
-    refresh_cod_mil_defense_place_witness, refresh_design_build_ux_redesign_impl_witness,
     two_click_lmb_commit_count, two_click_mode_lock_count, two_click_place_fsm_witness_green,
 };
 pub use build_mode::{BuildEscCancelLatch, BuildMode, BuildModeState};
@@ -183,11 +179,8 @@ pub use construction_queue_intent::{
     ConstructionBlueprintImportUi, ConstructionQueueIntent, ConstructionQueuePanelEntryView,
     ConstructionQueuePanelView,
 };
-pub use construction_stage_witness::{
-    refresh_construction_stage_witness, ConstructionStageWitness, CONSTRUCTION_TODO_COUNT,
-};
+
 pub use defense_concrete_stock::{
-    refresh_cod_trench_material_gate_witness, refresh_cod_wall_concrete_gate_witness,
     INSUFFICIENT_CONCRETE_ERROR,
 };
 pub use defense_staging_stock::{
@@ -274,12 +267,11 @@ pub use history::ConstructionHistory;
 pub use path_feedback::ConstructionPathFeedback;
 pub use place_feedback::{
     place_feedback_complete_count, place_feedback_start_count,
-    refresh_des_place_feedback_anim_witness, PlaceFeedbackPulse, TwoClickCommitParams,
+    PlaceFeedbackPulse, TwoClickCommitParams,
 };
 pub use rail::RailJunctionAuthority;
-pub use witness_collectors::build_construction_stage_proof_payload;
-#[cfg(test)]
-pub use witness_collectors::refresh_construction_mv_001_live_witness;
+
+
 
 use bevy::prelude::*;
 use crate::gui::{in_simulation_or_editor, InputBindings};
@@ -337,7 +329,6 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<footprint_tile_instances::FootprintTileWitness>()
             .init_resource::<site_phase_tile_instances::ConstructionPhaseGpuChannel>()
             .init_resource::<rail::RailJunctionAuthority>()
-            .init_resource::<witness_collectors::ConstructionLiveProofState>()
             .add_systems(
                 Startup,
                 (
@@ -426,7 +417,6 @@ impl Plugin for BuildPlanningPlugin {
                         .after(crate::gui::build_tile_debug_instances),
                     site_phase_tile_instances::push_site_phase_tile_instances
                         .after(footprint_tile_instances::push_footprint_tile_instances),
-                    footprint_tile_instances::sync_visual_aidv2_footprint_witness,
                 )
                     .chain()
                     .after(crate::gui::hud::simulation_pointer_gate::PointerGateSet::Publish)

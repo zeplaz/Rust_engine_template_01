@@ -16,7 +16,7 @@ use crate::render::core::gpu_buffer_registry::{
     BufferId, ECOLOGY_OVERLAY_BUFFER, FIRE_VISUAL_INSTANCES_BUFFER, LOGISTICS_OVERLAY_BUFFER,
 };
 use crate::render::fx_spine::fx_burst_request::{collect_burst_hints_from_fire_visual, FxParticleBurstRequest};
-use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot, Stage5ReadinessProfile};
+use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot};
 use crate::gui::ViewManager;
 use crate::render::fx_spine::view_fire_projection::fire_frame_for_projection_graph;
 use crate::render::view_runtime::PerViewRepresentationPolicy;
@@ -544,12 +544,10 @@ pub fn run_render_projection_graph(
     logistics: Res<LogisticsVisualSnapshot>,
     ecology: Res<EcologyVisualSnapshot>,
     fence: Res<crate::render::CommittedVisualSnapshotFence>,
-    profile: Res<Stage5ReadinessProfile>,
     mut graph: ResMut<RenderProjectionGraph>,
     mut coherence: ResMut<ProjectionGraphFrameCoherence>,
     mut perf: Option<ResMut<crate::render::FramePerf>>,
     mut last_fingerprint: Local<Option<ProjectionGraphInputFingerprint>>,
-    mut last_build_log: Local<Option<String>>,
 ) {
     coherence.evaluate_skipped = false;
     let per_view = per_view_policy.as_ref();
@@ -598,21 +596,6 @@ pub fn run_render_projection_graph(
             t0.elapsed().as_secs_f32() * 1000.0,
             crate::render::FramePerfSlot::ProjectionGraph,
         );
-    }
-    if *profile == Stage5ReadinessProfile::FULL_APP
-        && (crate::render::frame_perf_verbose()
-            || crate::render::probes::frame_perf::stage5_readiness_live_verbose())
-    {
-        let signature = projection_graph_build_signature(&graph);
-        if last_build_log.as_deref() != Some(signature.as_str()) {
-            info!(
-                target: "stage5_readiness::live",
-                "READINESS_PROJECTION_GRAPH_BUILD dom=3 tick={} {}",
-                fence.fire.tick,
-                projection_graph_runtime_order_snapshot(&graph)
-            );
-            *last_build_log = Some(signature);
-        }
     }
 }
 

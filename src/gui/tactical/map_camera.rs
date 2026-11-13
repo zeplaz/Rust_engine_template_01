@@ -513,11 +513,15 @@ fn map_camera_apply_input(
     images: Res<Assets<Image>>,
     map_fill_interaction: Query<&Interaction, With<SimulationMapViewportFill>>,
     params: Res<WorldGenParams>,
-    active_map_surface: Res<ActiveMapViewInput>,
     mut settings: ResMut<MapCameraSettings>,
     mut authority: ResMut<ViewProjectionAuthority>,
     mut q_cam: Query<&mut Transform, With<MainWorldCamera>>,
     mut locals: Local<MapCameraInputLocals>,
+    (active_map_surface, world_mode, pixel_rig): (
+        Res<ActiveMapViewInput>,
+        Option<Res<crate::gui::WorldPresentationMode>>,
+        Option<Res<crate::render::pixel_world::PixelWorldCameraRig>>,
+    ),
 ) {
     // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
     let _perf = crate::render::PerfScope::new("upd_map_camera_apply_input");
@@ -608,6 +612,17 @@ fn map_camera_apply_input(
         pose.scale = Vec3::splat(sanitize_map_zoom_input(s));
     }
 
+    // Voxel view: screen right / up turn with the camera's quarter-turn yaw; zoom has its own range.
+    let pixel_world = world_mode.as_deref().is_some_and(|m| m.is_pixel_world());
+    let (axis_right, axis_up) = if pixel_world {
+        crate::render::pixel_world::pixel_world_pan_axes(
+            pixel_rig.as_deref().copied().unwrap_or_default().yaw_radians(),
+        )
+    } else {
+        (Vec2::X, Vec2::Y)
+    };
+    let screen_to_world = |v: Vec2| axis_right * v.x + axis_up * v.y;
+
     let fast = keys.pressed(bindings.map_pan_fast_modifier);
     // Zoom-scaled pan: zoomed-in (high scale) → slower world travel; zoomed-out → faster.
     // Screen-feel stays closer to constant — not a fixed world-unit step.
@@ -629,7 +644,7 @@ fn map_camera_apply_input(
         pan.y -= 1.0;
     }
     if pan != Vec2::ZERO {
-        pose.translation += (pan.normalize() * key_speed).extend(0.0);
+        pose.translation += screen_to_world(pan.normalize() * key_speed).extend(0.0);
     }
 
     // Traditional RTS/city pan: right-drag (primary), middle-drag / Space (legacy).
@@ -639,7 +654,8 @@ fn map_camera_apply_input(
     if grip && !pointer_blocks_mouse {
         let sum = input_frame.pointer_delta;
         // Pixel → world: divide by zoom so super-zoomed pans stay smooth/slow.
-        pose.translation += Vec3::new(-sum.x, sum.y, 0.0) * (GRIP_PAN * 0.0022 / zoom)
+        pose.translation += screen_to_world(Vec2::new(-sum.x, sum.y)).extend(0.0)
+            * (GRIP_PAN * 0.0022 / zoom)
             * if fast { 1.35 } else { 1.0 };
     }
 
@@ -661,7 +677,8 @@ fn map_camera_apply_input(
                     edge.y -= 1.0;
                 }
                 if edge != Vec2::ZERO {
-                    pose.translation += (edge.normalize() * EDGE_PAN * dt * zoom_pan).extend(0.0)
+                    pose.translation += screen_to_world(edge.normalize() * EDGE_PAN * dt * zoom_pan)
+                        .extend(0.0)
                         * if fast { 1.4 } else { 1.0 };
                 }
             }
@@ -685,7 +702,10 @@ fn map_camera_apply_input(
         pose.rotation *= Quat::from_rotation_z(-ROTATE_STEP);
     }
 
-    let scale = sanitize_map_zoom_input(pose.scale.x);
+    let mut scale = sanitize_map_zoom_input(pose.scale.x);
+    if pixel_world {
+        scale = crate::render::pixel_world::clamp_pixel_world_zoom(scale);
+    }
     pose.scale = Vec3::splat(scale);
     let clamped = clamp_map_camera_translation_xy(
         Vec2::new(pose.translation.x, pose.translation.y),
@@ -803,6 +823,7 @@ fn map_camera_wheel_zoom_system(
     mut q_cam: Query<&mut Transform, With<MainWorldCamera>>,
     keys: Res<ButtonInput<KeyCode>>,
     ghost: Option<Res<crate::construction::BuildGhostState>>,
+    world_mode: Option<Res<crate::gui::WorldPresentationMode>>,
 ) {
     let _perf = crate::render::PerfScope::new("map_camera_wheel");
     if !matches!(state.get(), BaseState::Simulation | BaseState::Editor) {
@@ -846,6 +867,14 @@ fn map_camera_wheel_zoom_system(
         tex_extent,
         &mut pose,
     ) {
+        if world_mode.as_deref().is_some_and(|m| m.is_pixel_world()) {
+            // Voxel view zoom range (px per tile at the focus).
+            let s = crate::render::pixel_world::clamp_pixel_world_zoom(pose.scale.x);
+            if (s - before).abs() < 1e-6 {
+                return;
+            }
+            pose.scale = Vec3::splat(s);
+        }
         commit_map_camera_pose_to_view_authority_simple(authority.as_mut(), &pose);
         tf.translation = pose.translation;
         bevy::log::info!(
@@ -919,6 +948,7 @@ fn apply_main_world_camera_ortho_immediate(
     mut ortho_trace: ResMut<MainWorldCameraOrthoTrace>,
     mut zoom_audit: ResMut<MapCameraZoomAudit>,
     mut q: Query<(&mut Camera, &mut Transform, &mut Projection), With<MainWorldCamera>>,
+    world_mode: Option<Res<crate::gui::WorldPresentationMode>>,
 ) {
     let Ok((mut camera, mut tf, mut proj)) = q.single_mut() else {
         return;
@@ -931,7 +961,8 @@ fn apply_main_world_camera_ortho_immediate(
         camera.is_active = false;
         return;
     }
-    camera.is_active = true;
+    // PixelWorld3D renders the same RTT through `PixelWorldCamera`; one camera per frame.
+    camera.is_active = !world_mode.as_deref().is_some_and(|m| m.is_pixel_world());
     let tex_extent = simulation_map_texture_extent(tex.as_ref(), images.as_ref());
     apply_main_world_camera_ortho_core(
         &mut camera,
@@ -1035,6 +1066,7 @@ pub fn sync_main_world_camera_projection(
     mut zoom_audit: ResMut<MapCameraZoomAudit>,
     cfg: Option<Res<DebugRenderTraceConfig>>,
     mut q: Query<(&mut Camera, &mut Transform, &mut Projection), With<MainWorldCamera>>,
+    world_mode: Option<Res<crate::gui::WorldPresentationMode>>,
 ) {
     let Ok((mut camera, mut tf, mut proj)) = q.single_mut() else {
         return;
@@ -1049,7 +1081,8 @@ pub fn sync_main_world_camera_projection(
         camera.is_active = false;
         return;
     }
-    camera.is_active = true;
+    // PixelWorld3D renders the same RTT through `PixelWorldCamera`; one camera per frame.
+    camera.is_active = !world_mode.as_deref().is_some_and(|m| m.is_pixel_world());
     let tex_extent = simulation_map_texture_extent(tex.as_ref(), images.as_ref());
     apply_main_world_camera_ortho_core(
         &mut camera,

@@ -54,75 +54,13 @@ fn minimap_and_preview_handles_differ_when_both_allocated() {
     assert_ne!(preview_src.handle(), minimap_src.handle());
 }
 
-#[test]
-fn minimap_compositor_proof_payload_fields() {
-    use super::diagnostics::MinimapGpuCompositorDiagnostics;
-    use super::witness_collectors::build_minimap_compositor_proof_payload;
-    use super::state::MinimapCompositorState;
-
-    let compositor = MinimapCompositorState {
-        stamp: 3,
-        compositor_revision: 2,
-        dual_minimap_present: false,
-        extent_match_px: 0.0,
-        ..Default::default()
-    };
-    let mut registry = MinimapRenderTargetRegistry::default();
-    registry.committed_size = UVec2::new(128, 128);
-    registry.revision = 2;
-    registry.committed_image = Handle::default();
-    let shell = MinimapShellState {
-        presentation_source: MinimapPresentationSource::SharedRenderTargetImage,
-        ..Default::default()
-    };
-    let diagnostics = MinimapGpuCompositorDiagnostics::default();
-    let payload =
-        build_minimap_compositor_proof_payload(&compositor, &registry, &shell, 7, false, &diagnostics);
-    assert_eq!(payload["stamp"], serde_json::json!(3));
-    assert_eq!(payload["compositor_revision"], serde_json::json!(2));
-    assert_eq!(payload["dual_minimap_present"], serde_json::json!(false));
-    assert_eq!(payload["overlay_revision"], serde_json::json!(7));
-}
-
-#[test]
-fn ui_w3_m2_001_live_witness_refresh() {
-    use super::{refresh_ui_w3_m2_001_live_witness, ui_w3_m2_001_green};
-
-    assert!(refresh_ui_w3_m2_001_live_witness());
-    let text = std::fs::read_to_string("debug_runs/minimap_compositor_live.json")
-        .expect("witness json");
-    let v: serde_json::Value = serde_json::from_str(&text).expect("parse");
-    assert_eq!(v["ui_w3_m2_001"]["green"], serde_json::json!(true));
-    assert_eq!(v["logistics_rows"], serde_json::json!(2));
-    assert_eq!(v["construction_rows"], serde_json::json!(18));
-    assert_eq!(v["logistics_heat_enabled"], serde_json::json!(true));
-    assert_eq!(v["construction_heat_enabled"], serde_json::json!(true));
-    let tray = super::witness_collectors::witness_harness_tray();
-    let compositor = super::witness_collectors::fixture_ui_oh_m2_001_compositor(&tray);
-    assert!(ui_w3_m2_001_green(&compositor));
-}
 
 
 
-#[test]
-fn ui_p3_m2_tray_opt_green_when_tray_matches_compositor() {
-    use super::witness_collectors::ui_p3_m2_tray_opt_green;
-    use super::state::MinimapCompositorState;
 
-    let compositor = MinimapCompositorState {
-        fire_heat_enabled: true,
-        logistics_heat_enabled: true,
-        construction_heat_enabled: true,
-        ecology_heat_enabled: false,
-        ..Default::default()
-    };
-    let mut tray = super::witness_collectors::witness_harness_tray();
-    tray.fire_heat = true;
-    tray.ecology_heat = false;
-    assert!(ui_p3_m2_tray_opt_green(&compositor, &tray));
-    tray.logistics_heat = false;
-    assert!(!ui_p3_m2_tray_opt_green(&compositor, &tray));
-}
+
+
+
 
 #[test]
 fn composite_fingerprint_skips_identical_inputs() {
@@ -150,33 +88,7 @@ fn dispatch_has_commit_tracks_stamp() {
     assert!(dispatch.has_commit());
 }
 
-#[test]
-fn ui_p3_m2_acceptance_green_when_m2_channels_populated() {
-    use super::witness_collectors::ui_p3_m2_minimap_acceptance_green;
-    use super::state::{MinimapCompositePath, MinimapCompositorState};
 
-    let compositor = MinimapCompositorState {
-        stamp: 2,
-        logistics_rows: 2,
-        construction_rows: 18,
-        ecology_rows: 100,
-        construction_heat_enabled: true,
-        ecology_heat_enabled: true,
-        logistics_heat_enabled: true,
-        composite_path: MinimapCompositePath::GpuCompute,
-        ..Default::default()
-    };
-    let mut registry = MinimapRenderTargetRegistry::default();
-    let mut images = Assets::<Image>::default();
-    registry.committed_image = images.add(super::render_target::minimap_rgba_image(64, 64));
-    let shell = MinimapShellState {
-        presentation_source: MinimapPresentationSource::SharedRenderTargetImage,
-        ..Default::default()
-    };
-    assert!(ui_p3_m2_minimap_acceptance_green(
-        &compositor, &registry, &shell, None
-    ));
-}
 
 #[test]
 fn fow_ew_heat_upload_when_operational_snapshot_seeded() {
@@ -223,106 +135,13 @@ fn fow_ew_heat_upload_when_operational_snapshot_seeded() {
     assert!(replay_on);
 }
 
-#[test]
-fn ui_p3_m4_001_fow_ew_green_when_enabled_and_rows() {
-    use super::witness_collectors::ui_p3_m4_minimap_acceptance_green;
-    use super::state::MinimapCompositorState;
 
-    let off = MinimapCompositorState {
-        fow_heat_enabled: true,
-        ew_heat_enabled: true,
-        fow_rows: 0,
-        ew_rows: 0,
-        ..Default::default()
-    };
-    assert!(!ui_p3_m4_minimap_acceptance_green(&off));
 
-    let on = MinimapCompositorState {
-        fow_heat_enabled: true,
-        ew_heat_enabled: true,
-        fow_rows: 16,
-        ew_rows: 12,
-        ..Default::default()
-    };
-    assert!(ui_p3_m4_minimap_acceptance_green(&on));
-}
 
-/// **UI-P3-M3-001** — ecology (and construction) heat enabled with snapshot rows.
-#[test]
-fn ui_p3_m3_001_ecology_heat_green_when_enabled_and_rows() {
-    use super::witness_collectors::ui_p3_m3_minimap_acceptance_green;
-    use super::state::MinimapCompositorState;
 
-    let ecology_only = MinimapCompositorState {
-        construction_heat_enabled: false,
-        ecology_heat_enabled: true,
-        ecology_rows: 42,
-        ..Default::default()
-    };
-    assert!(!ui_p3_m3_minimap_acceptance_green(&ecology_only));
 
-    let ecology_on = MinimapCompositorState {
-        construction_heat_enabled: true,
-        ecology_heat_enabled: true,
-        ecology_rows: 100,
-        construction_rows: 0,
-        ..Default::default()
-    };
-    assert!(ui_p3_m3_minimap_acceptance_green(&ecology_on));
-}
 
-#[test]
-fn ui_p3_m3_acceptance_green_when_construction_or_ecology_rows() {
-    use super::witness_collectors::ui_p3_m3_minimap_acceptance_green;
-    use super::state::MinimapCompositorState;
 
-    let compositor = MinimapCompositorState {
-        construction_heat_enabled: true,
-        ecology_heat_enabled: true,
-        construction_rows: 1,
-        ecology_rows: 0,
-        ..Default::default()
-    };
-    assert!(ui_p3_m3_minimap_acceptance_green(&compositor));
-
-    let ecology_only = MinimapCompositorState {
-        construction_rows: 0,
-        ecology_rows: 3,
-        ..compositor
-    };
-    assert!(ui_p3_m3_minimap_acceptance_green(&ecology_only));
-
-    let off = MinimapCompositorState {
-        construction_heat_enabled: false,
-        ..compositor
-    };
-    assert!(!ui_p3_m3_minimap_acceptance_green(&off));
-}
-
-#[test]
-fn ui_p3_001_acceptance_green_when_gpu_composite_stable() {
-    use super::witness_collectors::ui_p3_001_minimap_acceptance_green;
-    use super::state::{MinimapCompositePath, MinimapCompositorState};
-
-    let compositor = MinimapCompositorState {
-        stamp: 4,
-        dual_minimap_present: false,
-        extent_match_px: 0.0,
-        composite_path: MinimapCompositePath::GpuCompute,
-        logistics_rows: 2,
-        ..Default::default()
-    };
-    let mut registry = MinimapRenderTargetRegistry::default();
-    let mut images = Assets::<Image>::default();
-    registry.committed_image = images.add(super::render_target::minimap_rgba_image(64, 64));
-    let shell = MinimapShellState {
-        presentation_source: MinimapPresentationSource::SharedRenderTargetImage,
-        ..Default::default()
-    };
-    assert!(ui_p3_001_minimap_acceptance_green(
-        &compositor, &registry, &shell
-    ));
-}
 
 #[test]
 fn gpu_compositor_env_default_on_when_unset() {

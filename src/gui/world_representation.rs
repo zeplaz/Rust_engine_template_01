@@ -14,7 +14,7 @@ use crate::gui::lod_zone_authoring::refresh_lod_zone_registry;
 use crate::gui::tactical::map_camera::{
     in_simulation_or_editor_map, map_zoom_alpha, MapCameraDesiredRes, MapCameraSystemSet,
 };
-use crate::render::{ChunkFireHeat, FireSimulationSnapshot, Stage5LodBandLogWitness};
+use crate::render::{ChunkFireHeat, FireSimulationSnapshot};
 use crate::systems::sim_control::{SimControlSystemSet, SimStepStamp, SimTick, SimTimeMicros};
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
@@ -960,12 +960,11 @@ pub fn compute_world_representation_frame(
     }
 }
 
-/// LOD band transition log + [`Stage5LodBandLogWitness`] (separate system: keeps `compute_world_representation_frame`
+/// LOD band transition log (separate system: keeps `compute_world_representation_frame`
 /// within Bevy’s `.chain()` system-param limit).
 pub fn witness_stage5_lod_band_log_after_world_representation(
     frame: Res<WorldRepresentationFrame>,
     mut last_logged_band: Local<Option<WorldLodBand>>,
-    mut lod_band_witness: ResMut<Stage5LodBandLogWitness>,
 ) {
     let band = frame.global_band();
     if last_logged_band.map(|b| b != band).unwrap_or(true) {
@@ -980,7 +979,6 @@ pub fn witness_stage5_lod_band_log_after_world_representation(
                 band.short_label()
             );
         }
-        lod_band_witness.lod_band_log_emissions = lod_band_witness.lod_band_log_emissions.saturating_add(1);
         *last_logged_band = Some(band);
     }
 }
@@ -1073,7 +1071,6 @@ pub(crate) fn register_world_representation_frame(app: &mut App) {
         .init_resource::<WorldLodMap>()
         .init_resource::<WorldRepresentationFrame>()
         .init_resource::<ZoomFrame>()
-        .init_resource::<Stage5LodBandLogWitness>()
         .init_resource::<RepresentationResult>()
         .init_resource::<crate::render::extraction::ProceduralModuleSceneCatalog>()
         .init_resource::<crate::render::extraction::ProceduralModuleVisualPolicy>()

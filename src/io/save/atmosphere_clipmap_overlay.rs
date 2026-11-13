@@ -305,42 +305,17 @@ pub fn atmosphere_clipmap_manifest_roundtrip_green() -> bool {
     hydrated && expected == got
 }
 
-#[must_use]
-pub fn refresh_atmosphere_clipmap_save_roundtrip_witness() -> bool {
-    let ron_green = atmosphere_clipmap_save_roundtrip_green();
-    let manifest_green = atmosphere_clipmap_manifest_roundtrip_green();
-    let green = ron_green && manifest_green;
-    let body = serde_json::json!({
-        "gate_id": "ES-6-4",
-        "program_id": "EFFECTS-SYSTEM-UNIFY-001",
-        "phase": "ES-6",
-        "slice": "ES-6-4",
-        "clipmap_snapshot_contract": true,
-        "overlay_name": ATMOS_CLIPMAP_OVERLAY_NAME,
-        "schema_version": ATMOS_CLIPMAP_SCHEMA_VERSION,
-        "overlay_export_wired": true,
-        "ron_roundtrip_green": ron_green,
-        "manifest_roundtrip_green": manifest_green,
-        "roundtrip_green": green,
-        "green": green,
-    });
-    let wrapped = crate::dev::debug_run_envelope::wrap_debug_run(
-        "ES-6-4",
-        "refresh_atmosphere_clipmap_save_roundtrip_witness",
-        ATMOS_CLIPMAP_SAVE_ROUNDTRIP_JSON,
-        body,
-    );
-    green && crate::dev::debug_run_envelope::write_debug_run_json(ATMOS_CLIPMAP_SAVE_ROUNDTRIP_JSON, wrapped)
-}
+
 
 #[cfg(test)]
 mod tests {
     use super::*;
 
+
+
     #[test]
     fn atmos_clipmap_ron_roundtrip_preserves_l0() {
         assert!(atmosphere_clipmap_save_roundtrip_green());
         assert!(atmosphere_clipmap_manifest_roundtrip_green());
-        assert!(refresh_atmosphere_clipmap_save_roundtrip_witness());
     }
 }
