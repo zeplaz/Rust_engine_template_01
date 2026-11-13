@@ -7,7 +7,7 @@ use crate::strategic::{BuildSiteTile, PlannedSite};
 /// Designer tile → world XZ (metres); Y flat until terrain conform lands on sites.
 #[must_use]
 pub fn site_world_position(origin: BuildSiteTile) -> Vec3 {
-    const METRES_PER_TILE: f32 = 16.0;
+    const METRES_PER_TILE: f32 = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
     Vec3::new(
         origin.x as f32 * METRES_PER_TILE,
         0.0,

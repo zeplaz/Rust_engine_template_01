@@ -104,7 +104,7 @@ pub fn resolve_step(
             if j == i || t.strength <= 0.0 || !hostility.hostile(a.slot, t.slot) {
                 continue;
             }
-            let d = (a.tile - t.tile).as_vec2().length() * b.tile_size_m;
+            let d = (a.tile - t.tile).as_vec2().length() * b.tile_size_m();
             if d > range_m {
                 continue;
             }

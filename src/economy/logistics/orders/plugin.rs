@@ -15,7 +15,7 @@ use bevy::prelude::*;
 use crate::economy::resource_flow::{resource_type_from_tag, ResourceFlowNode};
 use crate::entities::types::p_enumz::ResourceType;
 use crate::entities::production::core::LogisticsSiteRoot;
-use crate::systems::sim_control::{SimControlSystemSet, SimTimeMicros};
+use crate::systems::sim_control::{SimControlSystemSet, SimStepClock};
 
 use super::model::{CargoClassMask, CargoKind, OwnerId, SiteId};
 use super::sim::{CommandOutcome, LogisticsOrderCommand, LogisticsOrderSim, SimConfig};
@@ -48,14 +48,11 @@ pub struct LogisticsOrderSiteId(pub SiteId);
 pub struct LogisticsOrderRequest(pub LogisticsOrderCommand);
 
 /// Owner of the sim state. Read it only for tests/diagnostics — UI reads the snapshot.
+///
+/// One order-sim tick per [`SimStepClock`] step (one simulated second).
 #[derive(Resource, Debug)]
 pub struct LogisticsOrderSimRes {
     pub sim: LogisticsOrderSim,
-    /// Simulated microseconds per order-sim tick (1 s).
-    pub step_micros: u64,
-    /// Max ticks per frame (catch-up cap at high sim speed).
-    pub max_steps_per_frame: u32,
-    pub last_sim_micros: Option<u64>,
     /// Outcomes of the last applied requests (most recent last, capped).
     pub last_outcomes: Vec<CommandOutcome>,
 }
@@ -64,9 +61,6 @@ impl Default for LogisticsOrderSimRes {
     fn default() -> Self {
         Self {
             sim: LogisticsOrderSim::new(SimConfig::default()),
-            step_micros: 1_000_000,
-            max_steps_per_frame: 30,
-            last_sim_micros: None,
             last_outcomes: Vec::new(),
         }
     }
@@ -297,7 +291,6 @@ pub fn install_logistics_orders_save(
 ) {
     res.sim = save.sim;
     res.sim.migrate_legacy_cargo_tags();
-    res.last_sim_micros = None;
     registry.by_entity.clear();
     registry.entity_of.clear();
     registry.meta.clear();
@@ -330,6 +323,7 @@ pub struct LogisticsOrdersPlugin;
 
 impl Plugin for LogisticsOrdersPlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<LogisticsOrderSimRes>()
             .init_resource::<LogisticsSiteRegistry>()
             .init_resource::<DepotFleetSeed>()
@@ -340,6 +334,7 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<super::plant_demand::PlantDemandBook>()
             .init_resource::<super::plant_demand::DepotStockDemandBook>()
             .init_resource::<super::auto_supply::AutoSupplyPolicy>()
+            .init_resource::<super::fleet_growth::FleetGrowthPolicy>()
             .add_message::<LogisticsOrderRequest>()
             .configure_sets(
                 Update,
@@ -383,6 +378,7 @@ impl Plugin for LogisticsOrdersPlugin {
                     super::plant_demand::sync_depot_stock_demands_system,
                     super::auto_supply::unattended_player_auto_supply_system,
                     super::auto_supply::auto_supply_unserved_system,
+                    super::fleet_growth::grow_depot_fleets_system,
                 )
                     .chain()
                     .in_set(LogisticsOrdersSet::Snapshot),
@@ -459,30 +455,13 @@ fn site_xz(
     Some([p.x, p.z])
 }
 
-/// Number of whole order-sim ticks elapsed between two sim-time readings.
-#[must_use]
-pub fn due_steps(last: Option<u64>, now: u64, step_micros: u64, cap: u32) -> (u32, u64) {
-    let step = step_micros.max(1);
-    let Some(last) = last else {
-        return (0, now);
-    };
-    if now <= last {
-        return (0, now.min(last));
-    }
-    let n = (now - last) / step;
-    let steps = n.min(u64::from(cap)) as u32;
-    // Drop the backlog beyond the cap rather than spiralling.
-    let new_last = if n > u64::from(cap) { now } else { last + n * step };
-    (steps, new_last)
-}
-
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
 pub fn step_logistics_orders_system(
     mut commands: Commands,
     mut res: ResMut<LogisticsOrderSimRes>,
     mut registry: ResMut<LogisticsSiteRegistry>,
     seed: Res<DepotFleetSeed>,
-    sim_time: Option<Res<SimTimeMicros>>,
+    clock: Res<SimStepClock>,
     mut requests: MessageReader<LogisticsOrderRequest>,
     new_sites: Query<
         (
@@ -616,16 +595,8 @@ pub fn step_logistics_orders_system(
 
     bridge_plant_stock(&mut res.sim, registry, &mut mirror, &mut flow_nodes);
 
-    let now = sim_time.map_or(0, |t| t.0);
-    let (steps, new_last) = due_steps(
-        res.last_sim_micros,
-        now,
-        res.step_micros,
-        res.max_steps_per_frame,
-    );
-    res.last_sim_micros = Some(new_last);
-    registry.travel.seconds_per_tick = res.step_micros as f32 / 1_000_000.0;
-    for _ in 0..steps {
+    registry.travel.seconds_per_tick = clock.step_secs();
+    for _ in 0..clock.due {
         res.sim.tick(&registry.travel);
     }
 }

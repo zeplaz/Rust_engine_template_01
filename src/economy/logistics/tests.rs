@@ -24,6 +24,14 @@ fn road_chain_snapshot() -> crate::systems::transport::TransportNetworkSnapshot 
     )
 }
 
+/// One gameplay step: advance the sim clock by one step, then run a frame (the economy and freight
+/// systems run on [`crate::systems::sim_control::SimStepClock`]).
+fn sim_frame(app: &mut App) {
+    use crate::systems::sim_control::{SimTimeMicros, SIM_STEP_MICROS};
+    app.world_mut().resource_mut::<SimTimeMicros>().0 += SIM_STEP_MICROS;
+    app.update();
+}
+
 fn hydrate_chain(app: &mut App) {
     let snap = road_chain_snapshot();
     let mut top = TransportTopology::default();
@@ -252,7 +260,7 @@ fn setup_aluminum_chain_facilities(app: &mut App) -> (Entity, Entity) {
         BuildSiteTile { x: 2, z: 0 },
     );
     for _ in 0..12 {
-        app.update();
+        sim_frame(app);
     }
     (mine, refinery)
 }
@@ -335,7 +343,7 @@ fn log_a_04_cut_road_sets_path_open_false_after_refresh() {
         });
 
     for _ in 0..4 {
-        app.update();
+        sim_frame(&mut app);
     }
     assert!(
         app.world()
@@ -375,7 +383,7 @@ fn log_a_04_cut_road_sets_path_open_false_after_refresh() {
         app.insert_resource(graph);
     }
     for _ in 0..6 {
-        app.update();
+        sim_frame(&mut app);
     }
 
     let flow = app.world().resource::<ResourceFlowRegistry>();
@@ -418,7 +426,7 @@ fn log_b_02_in_transit_ledger_uses_route_handle_and_progress() {
         node.buffer_by_tag.insert("Bauxite".into(), 20.0);
     }
 
-    app.update();
+    sim_frame(&mut app);
     let (route_id, topo, progress_after_dispatch, remaining_after_dispatch) = {
         let ledger = app.world().resource::<InTransitLedger>();
         assert!(
@@ -455,7 +463,7 @@ fn log_b_02_in_transit_ledger_uses_route_handle_and_progress() {
         "LOG-B-02: no same-tick credit — arrivals only via ledger"
     );
 
-    app.update();
+    sim_frame(&mut app);
     {
         let ledger = app.world().resource::<InTransitLedger>();
         if let Some(lot) = ledger.lots.first() {
@@ -475,7 +483,7 @@ fn log_b_02_in_transit_ledger_uses_route_handle_and_progress() {
     }
 
     for _ in 0..40 {
-        app.update();
+        sim_frame(&mut app);
     }
     let refinery_after = app
         .world()
@@ -525,7 +533,7 @@ fn log_b_freight_moves_through_ledger_not_same_tick_teleport() {
         .get::<crate::economy::resource_flow::ResourceFlowNode>(refinery)
         .and_then(|n| n.buffer_by_tag.get("Bauxite").copied())
         .unwrap_or(0.0);
-    app.update();
+    sim_frame(&mut app);
     let refinery_after_one_tick = app
         .world()
         .get::<crate::economy::resource_flow::ResourceFlowNode>(refinery)
@@ -541,7 +549,7 @@ fn log_b_freight_moves_through_ledger_not_same_tick_teleport() {
         "freight should be in transit after dispatch"
     );
     for _ in 0..40 {
-        app.update();
+        sim_frame(&mut app);
     }
     let refinery_after = app
         .world()
@@ -583,7 +591,7 @@ fn log_b_partial_fulfillment_records_shortage() {
         node.buffer_by_tag.insert("Bauxite".into(), 50.0);
     }
     for _ in 0..15 {
-        app.update();
+        sim_frame(&mut app);
     }
     {
         let mut graph = app
@@ -594,7 +602,7 @@ fn log_b_partial_fulfillment_records_shortage() {
         }
     }
     for _ in 0..40 {
-        app.update();
+        sim_frame(&mut app);
     }
     let diagnostics = app.world().resource::<LogisticsDiagnostics>();
     assert!(
@@ -621,7 +629,7 @@ fn log_c_01_soa_throughput_solver_aligned_vecs() {
         node.buffer_by_tag.insert("Bauxite".into(), 40.0);
     }
     for _ in 0..25 {
-        app.update();
+        sim_frame(&mut app);
     }
     let solver = app
         .world()
@@ -681,7 +689,7 @@ fn log_c_congestion_rises_when_edge_saturated() {
         .map(|st| st.congestion)
         .unwrap_or(0.0);
     for _ in 0..50 {
-        app.update();
+        sim_frame(&mut app);
     }
     let after = app
         .world()
@@ -718,7 +726,7 @@ fn log_c_corridor_pressure_diffuses_to_successor() {
             solver.edge_pressure[0] = 1.0;
         }
     }
-    app.update();
+    sim_frame(&mut app);
     let solver = app
         .world()
         .resource::<crate::economy::logistics::ThroughputSolverState>();
@@ -754,7 +762,7 @@ fn log_c_geographic_cascade_starves_downstream_smelter() {
         BuildSiteTile { x: 2, z: 1 },
     );
     for _ in 0..20 {
-        app.update();
+        sim_frame(&mut app);
     }
     let efficiency_before = app
         .world()
@@ -771,7 +779,7 @@ fn log_c_geographic_cascade_starves_downstream_smelter() {
     refresh_nav_from_world(&mut app);
 
     for _ in 0..35 {
-        app.update();
+        sim_frame(&mut app);
     }
 
     let flow = app
@@ -863,14 +871,14 @@ fn log_d_streaming_route_invalidation_on_construction_bump() {
 
     let mut app = logistics_route_invalidation_app();
     for _ in 0..2 {
-        app.update();
+        sim_frame(&mut app);
     }
     let topo_before = app.world().resource::<RouteCache>().topology_revision;
     app.world_mut()
         .resource_mut::<ConstructionWorldRevision>()
         .revision += 1;
     for _ in 0..5 {
-        app.update();
+        sim_frame(&mut app);
     }
     let cache = app.world().resource::<RouteCache>();
     let graph = app.world().resource::<LogisticsGraph>();

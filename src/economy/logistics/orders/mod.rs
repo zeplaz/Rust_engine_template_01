@@ -8,6 +8,7 @@
 pub mod advisor;
 pub mod auto_supply;
 pub mod construction_demand;
+pub mod fleet_growth;
 pub mod model;
 pub mod persistence;
 pub mod plant_demand;
@@ -20,6 +21,7 @@ pub mod travel;
 mod tests;
 
 pub use auto_supply::{auto_supply_unserved_system, AutoSupplyPolicy};
+pub use fleet_growth::{grow_depot_fleets_system, FleetGrowthPolicy, VehicleRecipe};
 pub use advisor::{best_source_for, suggest_lines_for_unserved, AdvisorGap, SupplyAdvice};
 pub use model::*;
 pub use persistence::{LogisticsOrdersSave, SavedSite};

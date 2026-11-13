@@ -9,7 +9,7 @@ use crate::economy::supply_chain::IndustrialSupplyChainMembership;
 use crate::entities::production::aluminum::AluminumSmelterRuntime;
 use crate::entities::types::p_enumz::ResourceType;
 use crate::economy::logistics::RouteHandle;
-use crate::systems::sim_control::SimControlState;
+use crate::systems::sim_control::{sim_step_due, SimControlState, SimControlSystemSet, SimStepClock};
 
 /// How material moves between facilities (I4 enforces `path_open`).
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -397,8 +397,9 @@ pub fn transfer_along_edge(
     moved
 }
 
+/// One production / consumption step per [`SimStepClock`] step (`rate_per_tick` is per sim second).
 pub fn propagate_resource_flow_system(
-    _flow: Res<ResourceFlowRegistry>,
+    clock: Res<SimStepClock>,
     mut witness: ResMut<ResourceFlowSimStats>,
     mut nodes: Query<(
         Entity,
@@ -407,8 +408,22 @@ pub fn propagate_resource_flow_system(
         Option<&crate::economy::facility_inputs::FacilityInputs>,
     )>,
 ) {
+    for _ in 0..clock.due {
+        propagate_resource_flow_step(&mut witness, &mut nodes);
+    }
+}
+
+fn propagate_resource_flow_step(
+    witness: &mut ResourceFlowSimStats,
+    nodes: &mut Query<(
+        Entity,
+        &mut ResourceFlowNode,
+        &mut FacilityFlowState,
+        Option<&crate::economy::facility_inputs::FacilityInputs>,
+    )>,
+) {
     // Freight moves via [`InTransitLedger`](crate::economy::logistics::InTransitLedger) — no teleport.
-    for (_, mut node, mut state, inputs) in &mut nodes {
+    for (_, mut node, mut state, inputs) in nodes.iter_mut() {
         // Workforce and power cap output; material starvation decays `output_scale` on top.
         let supply = inputs.map_or(1.0, crate::economy::facility_inputs::FacilityInputs::factor);
         state.output_full = add_production(
@@ -433,11 +448,13 @@ pub fn propagate_resource_flow_system(
 }
 
 pub fn apply_starvation_to_smelter_system(
+    clock: Res<SimStepClock>,
     mut q: Query<(&FacilityFlowState, &mut AluminumSmelterRuntime)>,
 ) {
+    let decay = 0.55f32.powi(clock.due as i32);
     for (flow, mut smelter) in &mut q {
         if flow.starved {
-            smelter.current_efficiency = (smelter.current_efficiency * 0.55).max(0.05);
+            smelter.current_efficiency = (smelter.current_efficiency * decay).max(0.05);
         }
     }
 }
@@ -454,6 +471,7 @@ pub fn collect_grid_overload_witness_system(
 }
 
 pub fn transformer_thermal_stress_system(
+    clock: Res<SimStepClock>,
     mut q: Query<
         (
             &crate::entities::production::power::ElectricalGrid,
@@ -462,13 +480,14 @@ pub fn transformer_thermal_stress_system(
         With<crate::entities::production::power::TransformerComponent>,
     >,
 ) {
+    let steps = clock.due as f32;
     for (grid, mut thermal) in &mut q {
         let ratio = grid.total_load / grid.total_capacity.max(f32::EPSILON);
         if ratio > 1.0 {
-            thermal.current_temperature = (thermal.current_temperature + (ratio - 1.0) * 2.5)
+            thermal.current_temperature = (thermal.current_temperature + (ratio - 1.0) * 2.5 * steps)
                 .min(thermal.max_temperature);
         } else {
-            thermal.current_temperature = (thermal.current_temperature - 0.05).max(25.0);
+            thermal.current_temperature = (thermal.current_temperature - 0.05 * steps).max(25.0);
         }
     }
 }
@@ -481,6 +500,7 @@ pub struct ResourceFlowPlugin;
 
 impl Plugin for ResourceFlowPlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<ResourceFlowRegistry>()
             .init_resource::<ResourceFlowSimStats>()
             .add_message::<crate::entities::production::power::GridOverloadEvent>()
@@ -503,7 +523,8 @@ impl Plugin for ResourceFlowPlugin {
                 )
                     .chain()
                     .after(crate::economy::logistics::LogisticsSimulationSet::FreightDispatch)
-                    .run_if(economy_sim_running),
+                    .after(SimControlSystemSet::AdvanceSimTick)
+                    .run_if(sim_step_due),
             )
             .add_systems(
                 Update,
@@ -576,9 +597,18 @@ mod tests {
                 propagate_resource_flow_system,
                 apply_starvation_to_smelter_system,
             )
-                .chain(),
+                .chain()
+                .after(SimControlSystemSet::AdvanceSimTick),
         );
         app
+    }
+
+    /// One gameplay step: advance the sim clock one step, then run a frame.
+    fn step(app: &mut App) {
+        app.world_mut()
+            .resource_mut::<crate::systems::sim_control::SimTimeMicros>()
+            .0 += crate::systems::sim_control::SIM_STEP_MICROS;
+        app.update();
     }
 
     #[test]
@@ -611,7 +641,7 @@ mod tests {
             BuildSiteTile { x: 1, z: 0 },
         );
         spawn_operational(&mut app, "aluminum_smelter1", 3, BuildSiteTile { x: 2, z: 0 });
-        app.update();
+        step(&mut app);
         assert!(
             app.world().resource::<ResourceFlowRegistry>().edges.len() >= 2,
             "expected mine→refinery→smelter edges"
@@ -639,7 +669,7 @@ mod tests {
             23,
             BuildSiteTile { x: 2, z: 0 },
         );
-        app.update();
+        step(&mut app);
         assert!(
             app.world().resource::<ResourceFlowRegistry>().edges.len() >= 2,
             "expected geopolymer mine→kiln→mixer edges"
@@ -650,9 +680,9 @@ mod tests {
     fn starved_smelter_drops_efficiency_when_upstream_empty() {
         let mut app = flow_test_app();
         spawn_operational(&mut app, "aluminum_smelter1", 10, BuildSiteTile { x: 0, z: 0 });
-        app.update();
+        step(&mut app);
         for _ in 0..8 {
-            app.update();
+            step(&mut app);
         }
         let mut smelter_e = None;
         let mut q = app

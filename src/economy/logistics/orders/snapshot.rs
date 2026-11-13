@@ -43,8 +43,8 @@ pub struct SiteMeta {
     pub world_xz: [f32; 2],
 }
 
-/// World metres per designer tile (matches `economy::site_placement`).
-pub const METRES_PER_TILE: f32 = 16.0;
+/// World metres per tile ([`crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY`]).
+pub const METRES_PER_TILE: f32 = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct StockRow {

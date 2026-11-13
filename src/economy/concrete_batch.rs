@@ -45,10 +45,12 @@ pub fn register_concrete_batch_on_activation_system(
     }
 }
 
-pub fn tick_concrete_batch_cure_system(mut q: Query<&mut ConcreteBatchState>) {
+/// Cure ticks are gameplay steps ([`SimStepClock`]).
+pub fn tick_concrete_batch_cure_system(
+    clock: Res<crate::systems::sim_control::SimStepClock>,
+    mut q: Query<&mut ConcreteBatchState>,
+) {
     for mut batch in &mut q {
-        if batch.cure_ticks_remaining > 0 {
-            batch.cure_ticks_remaining -= 1;
-        }
+        batch.cure_ticks_remaining = batch.cure_ticks_remaining.saturating_sub(clock.due);
     }
 }

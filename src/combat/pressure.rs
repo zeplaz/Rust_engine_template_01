@@ -213,7 +213,7 @@ pub fn score_pressure_points_system(
     let cover = |tile: IVec2, owner: u8| forts.as_ref().map_or(0.0, |f| f.cover_at(tile, owner, &balance));
     let mut points = Vec::new();
     for t in &theaters.theaters {
-        points.extend(score_theater(t, &fields, &cover, &balance.pressure, balance.tile_size_m));
+        points.extend(score_theater(t, &fields, &cover, &balance.pressure, balance.tile_size_m()));
     }
     book.points = points;
 }
@@ -230,7 +230,7 @@ mod tests {
     fn theater_with_cells(cells: Vec<FrontCell>) -> Theater {
         let seg = FrontSegment { pair: (0, 1), cells, polylines: vec![], contested_cells: 0, length_m: 0.0 };
         let mut book = TheaterBook::default();
-        book.update(&[seg], &FrontBalance::default().theater, 25.0, 1);
+        book.update(&[seg], &FrontBalance::default().theater, FrontBalance::default().tile_size_m(), 1);
         book.theaters.remove(0)
     }
 

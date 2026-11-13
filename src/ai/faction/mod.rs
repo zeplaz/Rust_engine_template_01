@@ -9,7 +9,8 @@
 //!   or occupation.
 //! - Every decision lands in [`FactionAiDecisionLog`] with its goal scores, each brain's top scoring
 //!   terms, and the API outcome of each order.
-//! - Cadence is the sim tick (`SimTick`, `SimControlState::should_tick`) — no camera, no LOD gate —
+//! - Cadence is the fixed gameplay step (`SimStepClock::steps`, one simulated second; pause and
+//!   speed act through it, frame rate does not) — no camera, no LOD gate —
 //!   and each faction decides once per `decision_interval_ticks`, staggered by slot.
 //! - Randomness is [`rng::DetRng`] seeded from session seed + slot + tick (FAI-2).
 
@@ -48,7 +49,7 @@ use crate::strategic::{
     SiteId, StrategicCommandQueue, StrategicFieldPipeline, StrategicRasterConfig,
 };
 use crate::systems::sim_control::{
-    SimControlState, SimControlSystemSet, SimStepStamp, SimTick, SimTimeMicros,
+    SimControlState, SimControlSystemSet, SimStepClock, SimStepStamp, SimTimeMicros,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
@@ -61,7 +62,8 @@ pub use perception::{perceive_faction, FactionPerception, FrontCell};
 pub use rng::{AiSeed, DetRng};
 pub use start::{FactionHq, FactionStartConfig, FactionStartPlugin};
 
-/// Default sim ticks between two decisions of one faction.
+/// Default sim ticks ([`SimStepClock`] steps, one simulated second each) between two decisions of
+/// one faction.
 pub const DEFAULT_DECISION_INTERVAL_TICKS: u64 = 60;
 
 /// A faction rescans the strategic overlay only every this many decisions; in between it reuses
@@ -519,7 +521,7 @@ fn run_economy_brain(
 #[allow(clippy::too_many_arguments)]
 pub fn faction_ai_tick_system(
     mut commands: Commands,
-    tick: Option<Res<SimTick>>,
+    clock: Res<SimStepClock>,
     time: Option<Res<SimTimeMicros>>,
     ctrl: Option<Res<SimControlState>>,
     mut controllers: Query<(Entity, &mut FactionAiController)>,
@@ -531,7 +533,8 @@ pub fn faction_ai_tick_system(
     if ctrl.as_deref().is_some_and(|c| !c.should_tick()) {
         return;
     }
-    let now = tick.map_or(0, |t| t.0);
+    // AI time is the fixed gameplay step count: intervals and cooldowns are sim seconds at any fps.
+    let now = clock.steps;
     let stamp = SimStepStamp::new(now, time.map_or(0, |t| t.0));
 
     let mut due: Vec<(Entity, Mut<FactionAiController>)> = controllers
@@ -623,6 +626,7 @@ pub struct FactionAiPlugin;
 
 impl Plugin for FactionAiPlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<FactionAiDecisionLog>()
             .init_resource::<AiSeed>()
             .init_resource::<FactionAiRoster>()
@@ -653,7 +657,6 @@ mod tests {
     fn app() -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
-            .init_resource::<SimTick>()
             .init_resource::<SimTimeMicros>()
             .init_resource::<SimControlState>()
             .init_resource::<StrategicCommandQueue>()
@@ -669,7 +672,7 @@ mod tests {
         c.decision_interval_ticks = 10;
         app.world_mut().spawn(c);
         for t in 0..25u64 {
-            app.world_mut().resource_mut::<SimTick>().0 = t;
+            app.world_mut().resource_mut::<SimTimeMicros>().0 = t * crate::systems::sim_control::SIM_STEP_MICROS;
             app.update();
         }
         let log = app.world().resource::<FactionAiDecisionLog>();

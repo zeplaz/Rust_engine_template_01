@@ -153,7 +153,7 @@ pub struct FrontSupplyParams {
 
 impl Default for FrontSupplyParams {
     fn default() -> Self {
-        Self { garrison_per_km: 2.0, buffer_s: 900.0, reorder_fraction: 0.5 }
+        Self { garrison_per_km: 2.0, buffer_s: 259_200.0, reorder_fraction: 0.5 }
     }
 }
 
@@ -297,7 +297,6 @@ pub struct FortificationProfile {
 pub struct FrontBalance {
     pub schema_version: u32,
     pub table_id: String,
-    pub tile_size_m: f32,
     pub front: FrontThresholds,
     pub control: ControlParams,
     pub theater: TheaterParams,
@@ -342,10 +341,18 @@ impl FrontBalance {
         self.fortifications.iter().find(|f| f.kind == kind)
     }
 
-    /// Metres → whole tiles (at least one).
+    /// Metres per tile: the world's gameplay tile scale (one authority shared with logistics and
+    /// placement, [`crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY`]). The table's
+    /// distances are metres; they become tiles only through this.
+    #[must_use]
+    pub const fn tile_size_m(&self) -> f32 {
+        crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY
+    }
+
+    /// Metres → tiles (fractional, never negative).
     #[must_use]
     pub fn metres_to_tiles(&self, metres: f32) -> f32 {
-        (metres / self.tile_size_m.max(f32::EPSILON)).max(0.0)
+        (metres / self.tile_size_m().max(f32::EPSILON)).max(0.0)
     }
 
     /// Per-second exponential decay rate from the control half-life.
@@ -379,7 +386,6 @@ impl FrontBalance {
         if self.schema_version != 1 {
             issues.push(format!("schema_version {} unsupported (want 1)", self.schema_version));
         }
-        positive("tile_size_m", self.tile_size_m, &mut issues);
         unit01("front.own_min", self.front.own_min, &mut issues);
         unit01("front.contest_band", self.front.contest_band, &mut issues);
         if self.front.derive_every_ticks == 0 {

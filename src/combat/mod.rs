@@ -47,8 +47,9 @@ pub use orders::{
 };
 pub use resolve::{combat_resolve_system, resolve_step, Combatant, Outcome};
 pub use supply::{
-    formation_draw, front_demand_targets, publish_front_supply_demands_system, update_front_supply_coverage_system,
-    FrontSupplyCoverage, FrontSupplyPoint, FrontSupplyPoints,
+    draw_front_supply_system, formation_draw, front_demand_targets, front_draw_kg_per_s, front_draw_t_per_min,
+    publish_front_supply_demands_system, update_front_supply_coverage_system, FrontSupplyCoverage, FrontSupplyDraw,
+    FrontSupplyPoint, FrontSupplyPoints, KG_PER_TONNE,
 };
 
 /// Load outcome of [`FrontBalance`] (disk error keeps the compiled-in default).
@@ -62,6 +63,7 @@ pub struct CombatPlugin;
 
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         if !app.world().contains_resource::<FrontBalance>() {
             let (balance, error) = load_front_balance();
             if let Some(err) = &error {
@@ -99,11 +101,15 @@ impl Plugin for CombatPlugin {
             .init_resource::<FortifyPlans>()
             .init_resource::<FrontSupplyPoints>()
             .init_resource::<FrontSupplyCoverage>()
+            .init_resource::<FrontSupplyDraw>()
             .add_systems(
                 Update,
                 (
                     publish_front_supply_demands_system.after(derive_theaters_system),
                     update_front_supply_coverage_system.after(publish_front_supply_demands_system),
+                    draw_front_supply_system
+                        .after(publish_front_supply_demands_system)
+                        .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick),
                 )
                     .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
             );

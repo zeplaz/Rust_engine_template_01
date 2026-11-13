@@ -26,6 +26,7 @@ pub struct IndustrialActivationPlugin;
 
 impl Plugin for IndustrialActivationPlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         app.add_plugins((
             crate::economy::resource_flow::ResourceFlowPlugin,
             crate::economy::spatial_district::SpatialDistrictPlugin,
@@ -72,7 +73,8 @@ impl Plugin for IndustrialActivationPlugin {
         app.add_systems(
             Update,
             crate::economy::concrete_batch::tick_concrete_batch_cure_system
-                .run_if(crate::economy::resource_flow::economy_sim_running),
+                .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick)
+                .run_if(crate::systems::sim_control::sim_step_due),
         );
         app.add_systems(
             Update,
