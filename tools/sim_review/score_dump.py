@@ -62,6 +62,17 @@ def _eval_rule(rule: str, dump: dict) -> tuple[bool, str]:
             return True, "no sparks this dump"
         ok = view != "overlay_bootstrap"
         return ok, f"spark_rows={sparks} view={view or '(empty)'}"
+    ai = dump.get("ai") or {}
+    factions = ai.get("factions") or {}
+    roster = [str(x) for x in (ai.get("roster_slots") or [])]
+    if rule == "ai_roster":
+        return len(roster) > 0, f"roster slots={roster}"
+    if rule in ("ai_each_decided", "ai_each_issued_order"):
+        key = "decisions" if rule == "ai_each_decided" else "orders_total"
+        if not roster:
+            return False, "no AI roster"
+        per = {s: int((factions.get(s) or {}).get(key) or 0) for s in roster}
+        return all(v >= 1 for v in per.values()), f"{key} per slot={per}"
     return False, f"unknown rule {rule}"
 
 
@@ -116,8 +127,11 @@ def score(dump: dict, matrix: dict) -> dict:
             else:
                 actual = _get(dump, str(row["path"]))
                 expect = row.get("expect")
+                if "expect_path" in row:
+                    expect = _get(dump, str(row["expect_path"]))
                 ok = _eval_op(str(row.get("op", "eq")), actual, expect)
-                detail = f"{actual} {row.get('op')} {expect}"
+                ref = f" ({row['expect_path']})" if "expect_path" in row else ""
+                detail = f"{actual} {row.get('op')} {expect}{ref}"
         except Exception as exc:  # noqa: BLE001 — surface to the matrix
             ok = False
             actual = str(exc)
@@ -152,7 +166,75 @@ def score(dump: dict, matrix: dict) -> dict:
     }
 
 
-def _html(result: dict) -> str:
+_SPARKS = [
+    ("burning", "fire: burning cells"),
+    ("burnt", "fire: burnt cells"),
+    ("regrowth", "fire: regrowth cells"),
+    ("heat_cells", "fire: heat cells"),
+    ("sites_operational", "sites operational"),
+    ("produced", "units produced (cum)"),
+    ("deliveries", "deliveries (cum)"),
+    ("engaged", "formations engaged"),
+    ("frame_ms", "frame ms"),
+]
+
+
+def _spark(vals: list[float], w: int = 260, h: int = 44) -> str:
+    if len(vals) < 2:
+        return "<em>no series</em>"
+    lo, hi = min(vals), max(vals)
+    span = (hi - lo) or 1.0
+    pts = " ".join(
+        f"{i * w / (len(vals) - 1):.1f},{h - 3 - (v - lo) / span * (h - 6):.1f}" for i, v in enumerate(vals)
+    )
+    return (
+        f"<svg width='{w}' height='{h}' style='background:#1b1b1b'><polyline fill='none' stroke='#7cf' "
+        f"stroke-width='1.5' points='{pts}'/></svg> <small>min {lo:.4g} max {hi:.4g} last {vals[-1]:.4g}</small>"
+    )
+
+
+def _kv(title: str, d: dict | None) -> str:
+    if not isinstance(d, dict):
+        return ""
+    rows = "".join(
+        f"<tr><td>{k}</td><td>{json.dumps(v) if isinstance(v, (dict, list)) else v}</td></tr>"
+        for k, v in d.items()
+    )
+    return f"<div class='sec'><h3>{title}</h3><table>{rows}</table></div>"
+
+
+def _sections(dump: dict | None) -> str:
+    if not dump:
+        return ""
+    out = ["<h2>sections</h2><div class='grid'>"]
+    for key, title in (
+        ("construction", "Construction"),
+        ("economy", "Production / economy"),
+        ("logistics", "Logistics"),
+        ("combat", "Fronts / combat"),
+        ("fire", "Fire / ecology (first/last/min/max)"),
+        ("perf", "Perf (frame ms)"),
+    ):
+        out.append(_kv(title, dump.get(key)))
+    ai = dump.get("ai") or {}
+    ai_rows = "".join(
+        f"<tr><td>slot {slot}</td><td>{f.get('decisions')}</td><td>{f.get('orders_logistics')}</td>"
+        f"<td>{f.get('orders_deployment')}</td><td>{f.get('orders_build')}</td><td>{f.get('last_goal')}</td></tr>"
+        for slot, f in (ai.get("factions") or {}).items()
+    )
+    out.append(
+        "<div class='sec'><h3>AI factions</h3><table><tr><th>slot</th><th>decisions</th><th>logistics</th>"
+        f"<th>deployment</th><th>build</th><th>last goal</th></tr>{ai_rows}</table></div>"
+    )
+    out.append("</div><h2>time series</h2><table>")
+    hist = dump.get("history") or []
+    for key, title in _SPARKS:
+        out.append(f"<tr><td>{title}</td><td>{_spark([float(h.get(key) or 0) for h in hist])}</td></tr>")
+    out.append("</table>")
+    return "".join(out)
+
+
+def _html(result: dict, dump: dict | None = None) -> str:
     rows = []
     for r in result.get("rows") or []:
         cls = r.get("status", "")
@@ -167,6 +249,7 @@ def _html(result: dict) -> str:
             )
         )
     payload = json.dumps(result, indent=2)
+    sections = _sections(dump)
     return f"""<!DOCTYPE html>
 <html><head><meta charset="utf-8"><title>sim review {result.get('run_id') or ''}</title>
 <style>
@@ -176,6 +259,8 @@ h1 {{ font-size: 20px; }}
 table {{ border-collapse: collapse; width: 100%; }}
 td, th {{ border-bottom: 1px solid #333; padding: 6px 8px; text-align: left; vertical-align: top; }}
 tr.fail {{ background: #2a1111; }} tr.pass {{ background: #112211; }}
+.grid {{ display: flex; flex-wrap: wrap; gap: 16px; }} .sec {{ min-width: 320px; }} .sec table {{ width: auto; }}
+h3 {{ margin: 8px 0 4px; font-size: 15px; }}
 pre {{ background: #1b1b1b; padding: 12px; overflow: auto; }}
 </style></head><body>
 <h1>Sim review — {result.get('status')} · {result.get('summary')}</h1>
@@ -185,6 +270,7 @@ pre {{ background: #1b1b1b; padding: 12px; overflow: auto; }}
 <tbody>
 {''.join(rows)}
 </tbody></table>
+{sections}
 <h2>raw</h2><pre>{payload}</pre>
 </body></html>
 """
@@ -206,7 +292,7 @@ def main(argv: list[str] | None = None) -> int:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     (out / "matrix.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
-    (out / "dashboard.html").write_text(_html(result), encoding="utf-8")
+    (out / "dashboard.html").write_text(_html(result, dump), encoding="utf-8")
     print(result["summary"])
     for row in result["rows"]:
         print(f"  {row['status']:4}  {row['id']:28}  {row.get('actual')}")
