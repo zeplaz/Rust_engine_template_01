@@ -42,7 +42,7 @@ fn use_impostor_for_band(band: WorldLodBand) -> bool {
 
 #[must_use]
 fn block_center_world(block_id: &BlockId, blocks: &BlockBook, frames: &BlockFrameBook) -> Vec3 {
-    const METRES_PER_TILE: f32 = 16.0;
+    const METRES_PER_TILE: f32 = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
     if let Some(frame) = frames.frames.get(block_id) {
         return Vec3::new(
             frame.anchor.x as f32 * METRES_PER_TILE + frame.extent.x as f32 * METRES_PER_TILE * 0.5,

@@ -162,7 +162,7 @@ pub fn infer_fire_emission_profile(
     chunk: &Chunk,
     fire: &ChunkSurfaceFire,
     overlay: Option<&ChunkFireOverlay>,
-    em: &FireLightEmission,
+    em: Option<&FireLightEmission>,
     smoke: Option<&ChunkSmokeField>,
     eco: Option<&ChunkEcology>,
     prof: Option<&ChunkFuelProfile>,
@@ -206,6 +206,16 @@ pub fn infer_fire_emission_profile(
     }
     let heat = heat.clamp(0.0, 1.0);
     let bio = eco.map(|e| e.biomass).unwrap_or(0.35);
+    // The sim attaches `FireLightEmission` only once the chunk's scalar surface fire is hot; burning
+    // cells in a chunk below that still emit, from the same formula at their peak heat.
+    let derived_em;
+    let em = match em {
+        Some(em) => em,
+        None => {
+            derived_em = crate::systems::fire::fire_light_emission_for_heat(chunk.coord, heat, bio);
+            &derived_em
+        }
+    };
 
     let smoke_field = smoke.map(|s| s.density).unwrap_or(0.0);
     let toxic = smoke
@@ -307,7 +317,7 @@ mod tests {
         };
         let m = minimal_matrix();
         let p = infer_fire_emission_profile(
-            &chunk, &fire, None, &em, None, None, None, None, &m, None, None,
+            &chunk, &fire, None, Some(&em), None, None, None, None, &m, None, None,
         );
         assert_eq!(p.combustion_class, CombustionClass::Vegetation);
         assert_eq!(p.chunk_coord, IVec2::ZERO);
@@ -345,7 +355,7 @@ mod tests {
             &chunk,
             &fire,
             Some(&overlay),
-            &em,
+            Some(&em),
             None,
             None,
             None,

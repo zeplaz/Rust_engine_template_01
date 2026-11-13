@@ -9,7 +9,7 @@ use super::block_frame::BlockFrameBook;
 use super::block_rollout::{BlockRecipeEvaluationBook, BlockRolloutStagingBook};
 use super::ids::BlockId;
 
-const METRES_PER_TILE: f32 = 16.0;
+const METRES_PER_TILE: f32 = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 /// Promoted street-prop module jobs under `assets/models/modules/` (the `*_lod0_run001` twins were
 /// retired to `assets/archive/kit_lod0_twins_retired_2026-09/`; there is no promoted lamp module yet,

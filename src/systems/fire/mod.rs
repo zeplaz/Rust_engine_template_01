@@ -36,7 +36,7 @@ pub use ember_spot_ignition::{
     EmberSpotIgnitionEvent,
 };
 pub use fire_fuel::{derive_fire_fuel_from_vegetation, FireFuelField};
-pub use fire_light_emission::FireLightEmission;
+pub use fire_light_emission::{fire_light_emission_for_heat, FireLightEmission};
 pub use play_fire_visibility::{
     sync_sim_map_fire_overlay_when_sim_has_heat, TriageFirePlayVis001Inputs,
 };
