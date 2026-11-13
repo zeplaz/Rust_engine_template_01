@@ -1,3 +1,0 @@
-[console_scripts]
-module-viewer = rust_engine_mcp.module_viewer_launcher:main
-rust-engine-art-mcp = rust_engine_mcp.server:main

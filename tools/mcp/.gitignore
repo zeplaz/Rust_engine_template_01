@@ -1,1 +1,7 @@
-tools/mcp/config.local.json
+config.local.json
+cache/
+jobs/
+*.egg-info/
+_skip_log.txt
+__pycache__/
+.pytest_cache/

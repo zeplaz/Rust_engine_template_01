@@ -7,7 +7,7 @@ Design rule: MCP tools delegate to CLI/functions; the LLM chooses tools, not mes
 from __future__ import annotations
 
 import json
-import re
+
 from pathlib import Path
 
 try:
@@ -17,7 +17,7 @@ except ImportError as exc:  # pragma: no cover
         "Install: pip install -r tools/mcp/requirements.txt && pip install -e tools/mcp/python"
     ) from exc
 
-from rust_engine_mcp import blender_runner, library, paths, promote, schemas, validate_glb, witness
+from rust_engine_mcp import blender_runner, library, paths, promote, schemas, validate_glb
 from rust_engine_mcp.tile_pipeline import (
     assembly_build_run,
     lod0_batch_run,
@@ -30,15 +30,6 @@ from rust_engine_mcp import assembly
 from rust_engine_mcp import variant_set
 from rust_engine_mcp.tile_index import register_tile_atlas_from_batch
 from rust_engine_mcp.validators import run_validator
-from rust_engine_mcp import agent_flow
-from rust_engine_mcp import agent_queue
-from rust_engine_mcp import mcp_productivity_p0
-from rust_engine_mcp import ops_intelligence
-from rust_engine_mcp.pilot_hardcode_lint import (
-    pilot_hardcode_lint,
-    validate_pilot_hardcode_lint,
-    write_pilot_hardcode_lint_witness,
-)
 from rust_engine_mcp import grammar_build_set
 
 mcp = FastMCP("rust-engine-art")
@@ -187,12 +178,6 @@ def library_search(
 
 
 @mcp.tool()
-def write_witness(batch_id: str) -> str:
-    """Rebuild debug_runs/art_pipeline/<batch_id>_live.json from disk + index."""
-    return json.dumps(witness.write_batch_witness(batch_id))
-
-
-@mcp.tool()
 def validate_report(
     validator: str,
     target: str = "",
@@ -209,132 +194,6 @@ def validate_report(
         use_cached=use_cached,
     )
     return json.dumps(report.to_dict())
-
-
-@mcp.tool()
-def validate_pilot_hardcode_lint_report(compress: int = 3) -> str:
-    """MCP-GUARD-001 — scan for warehouse-shaped hardcode outside allowlists."""
-    report = validate_pilot_hardcode_lint()
-    report.compression_level = max(1, min(4, compress))
-    return json.dumps(report.to_dict())
-
-
-@mcp.tool()
-def write_pilot_hardcode_lint_witness_tool() -> str:
-    """Write debug_runs/pilot_hardcode_lint_live.json."""
-    return json.dumps(write_pilot_hardcode_lint_witness())
-
-
-@mcp.tool()
-def bq_smoke_tier_audit_tool() -> str:
-    """BQ-SMOKE-AUDIT-001 — module-index tier inventory + promote/block list for production rebake."""
-    from rust_engine_mcp import bq_smoke_tier_audit
-
-    return json.dumps(bq_smoke_tier_audit.write_bq_smoke_tier_audit_witness())
-
-
-@mcp.tool()
-def bq_q2_screen_tool(no_bevy: bool = False) -> str:
-    """BQ-Q2-SCREEN-001 — bevy/trimesh preview PNGs for SILH assemblies + rubric rows."""
-    from rust_engine_mcp import bq_q2_screen
-
-    return json.dumps(bq_q2_screen.write_bq_q2_screen_witness(try_bevy=not no_bevy))
-
-
-@mcp.tool()
-def aps_golden_rubric_scaffold_tool() -> str:
-    """Scaffold APS-GOLDEN/BQ-Q3 rubric sheet as pending_operator — never auto-approve."""
-    from rust_engine_mcp.golden_seed_review import write_aps_golden_rubric_scaffold_witness
-
-    return json.dumps(write_aps_golden_rubric_scaffold_witness())
-
-
-@mcp.tool()
-def bq_prod_promote_batch_tool(no_rebake: bool = False, no_register: bool = False) -> str:
-    """BQ-PROD-PROMOTE-BATCH-001 — rebake+promote focus-pack lod0 slots; write promote witness."""
-    from rust_engine_mcp import bq_prod_promote_batch
-
-    return json.dumps(
-        bq_prod_promote_batch.write_bq_prod_promote_batch_witness(
-            try_rebake=not no_rebake,
-            register=not no_register,
-        )
-    )
-
-
-@mcp.tool()
-def bq_prod_defer_packs_tool(
-    no_rebake: bool = False,
-    no_register: bool = False,
-    no_retire_smoke: bool = False,
-) -> str:
-    """BQ-PROD-DEFER-PACKS-001 — promote deferred CORE lod0 + retire smoke orphans; write witness."""
-    from rust_engine_mcp import bq_prod_defer_packs
-
-    return json.dumps(
-        bq_prod_defer_packs.write_bq_prod_defer_packs_witness(
-            try_rebake=not no_rebake,
-            register=not no_register,
-            retire_smoke=not no_retire_smoke,
-        )
-    )
-
-
-@mcp.tool()
-def bq_prod_noncore_promote_tool(no_rebake: bool = False, no_register: bool = False) -> str:
-    """BQ-PROD-NONCORE-PROMOTE-001 — promote deferred-pack non-core lod0; write witness (operator_pass=false)."""
-    from rust_engine_mcp import bq_prod_noncore_promote
-
-    return json.dumps(
-        bq_prod_noncore_promote.write_bq_prod_noncore_promote_witness(
-            try_rebake=not no_rebake,
-            register=not no_register,
-        )
-    )
-
-
-@mcp.tool()
-def bq_lod0_twin_prune_tool(no_register: bool = False, no_retire: bool = False) -> str:
-    """BQ-LOD0-TWIN-PRUNE-001 — archive unused lod0 index twins; rebuild module index (no Q3)."""
-    from rust_engine_mcp import bq_lod0_twin_prune
-
-    return json.dumps(
-        bq_lod0_twin_prune.write_bq_lod0_twin_prune_witness(
-            register=not no_register,
-            retire=not no_retire,
-        )
-    )
-
-
-@mcp.tool()
-def spine_render_001_tool() -> str:
-    """SPINE-RENDER-001 — headless blender-worker render_variant contract witness."""
-    from rust_engine_mcp import spine_render_contract
-
-    return json.dumps(spine_render_contract.write_spine_render_001_witness())
-
-
-@mcp.tool()
-def spine_build_001_tool() -> str:
-    """SPINE-BUILD-001 — build dependency graph + per-node witness."""
-    from rust_engine_mcp import spine_build_graph
-
-    return json.dumps(spine_build_graph.write_spine_build_001_witness())
-
-
-@mcp.tool()
-def apsr_mutation_regress_001_tool() -> str:
-    """APSR-MUTATION-REGRESS-001 — SuiteState mutation ceiling + lane-roundtrip wiring witness."""
-    from rust_engine_mcp import apsr_mutation_regress
-
-    return json.dumps(apsr_mutation_regress.write_apsr_mutation_regress_001_witness())
-
-
-@mcp.tool()
-def grammar_set_brief(set_id: str = "") -> str:
-    """MCP-GRAMMAR-SET-001 — pilot/grammar/preset inventory + F-axis gaps (≤50 lines)."""
-    body = grammar_build_set.grammar_set_brief(set_id=set_id or None)
-    return json.dumps(body)
 
 
 @mcp.tool()
@@ -364,47 +223,10 @@ def grammar_eval_sweep_tool(
 
 
 @mcp.tool()
-def grammar_pilot_parity_tool() -> str:
-    """MCP-GRAMMAR-SET-004 — catalog parity (≥4 grammar pilots, ≥8 total)."""
-    return json.dumps(grammar_build_set.grammar_pilot_parity())
-
-
-@mcp.tool()
 def building_set_coverage_report_tool(set_id: str = "") -> str:
     """MCP-BUILD-SET-002 — F-axis coverage + hardcode lint rollup."""
     body = grammar_build_set.building_set_coverage_report(set_id=set_id or None)
     return json.dumps(body)
-
-
-@mcp.tool()
-def building_set_health_brief_tool() -> str:
-    """MCP-BUILD-SET-003 — OPS/APS rollup: brief + coverage + parity + hardcode."""
-    return json.dumps(grammar_build_set.building_set_health_brief())
-
-
-@mcp.tool()
-def write_grammar_set_brief_witness_tool() -> str:
-    """Write debug_runs/grammar_set_brief_live.json."""
-    return json.dumps(grammar_build_set.write_grammar_set_brief_witness())
-
-
-@mcp.tool()
-def grammar_set_tier_tool(write_witness: bool = False) -> str:
-    """APS-GRAM-TIER-001 — G0–G4 maturity from registry + coverage guards."""
-    if write_witness:
-        return json.dumps(grammar_build_set.write_grammar_set_tier_witness())
-    return json.dumps(grammar_build_set.grammar_set_tier())
-
-
-@mcp.tool()
-def designer_grammar_quality_loop_tool(mode: str = "fast", write_witness: bool = False) -> str:
-    """Designer iteration loop — tier + brief + coverage + optional sweeps (compressed JSON)."""
-    from rust_engine_mcp.designer_grammar_quality_loop import run_designer_grammar_quality_loop
-
-    m = "full" if str(mode).strip().lower() == "full" else "fast"
-    return json.dumps(
-        run_designer_grammar_quality_loop(mode=m, write_witness=write_witness)
-    )
 
 
 @mcp.tool()
@@ -417,68 +239,6 @@ def validate_cargo_report(package: str = "", compress: int = 3, use_cached: bool
         use_cached=use_cached,
     )
     return json.dumps(report.to_dict())
-
-
-@mcp.tool()
-def symbolic_build_digest_tool(
-    package: str = "",
-    compress: int = 3,
-    use_cached: bool = False,
-    extra_touched: str = "",
-    program_id: str = "VSS-001",
-) -> str:
-    """VSS-T5-001 — cargo check → SYMLANG symcodes + trip hits + ValidationReport (agents consume this, not raw logs)."""
-    from .symbolic_build_encoder import symbolic_build_digest
-
-    touched = [t.strip() for t in extra_touched.split(",") if t.strip()]
-    digest = symbolic_build_digest(
-        package=package or None,
-        compression_level=max(1, min(4, compress)),
-        use_cached=use_cached,
-        extra_touched=touched or None,
-        program_id=program_id,
-    )
-    return json.dumps(digest.to_dict())
-
-
-@mcp.tool()
-def tribunal_on_touch(touched_paths: str, agent: str = "auto", verdict: str = "revise") -> str:
-    """VSS-T5-002 — emit tribunal packet YAML for touched paths; dissent[] slot always present."""
-    from datetime import datetime, timezone
-
-    root = paths.repo_root()
-    paths = [p.strip().replace("\\", "/") for p in touched_paths.split(",") if p.strip()]
-    from .symbolic_build_encoder import trip_hits_for_files
-
-    hits = trip_hits_for_files(root, paths)
-    now = datetime.now(timezone.utc).strftime("%Y%m%d")
-    trip_id = hits[0] if hits else "TRIP-VSS-GENERIC"
-    out_dir = root / "debug_runs/tribunals"
-    out_dir.mkdir(parents=True, exist_ok=True)
-    safe_agent = re.sub(r"[^a-zA-Z0-9_-]", "_", agent or "auto")
-    packet = {
-        "schema": "tribunal_packet_v1",
-        "program_id": "VSS-001",
-        "trip_id": trip_id,
-        "trip_hits": hits,
-        "touched_paths": paths,
-        "agent": agent,
-        "verdict": verdict if verdict in ("ship", "revise", "dissent") else "revise",
-        "majority": {"agent": agent, "rationale": "auto-generated stub — replace with critique"},
-        "dissent": [],
-        "dissent_policy": "minority rows always allowed; majority cannot delete",
-        "routing": "@orchestrator",
-        "generated_at": datetime.now(timezone.utc).isoformat(),
-    }
-    out_path = out_dir / f"{trip_id}_{now}_{safe_agent}.json"
-    out_path.write_text(json.dumps(packet, indent=2), encoding="utf-8")
-    return json.dumps(
-        {
-            "ok": True,
-            "path": str(out_path.relative_to(root)).replace("\\", "/"),
-            "packet": packet,
-        }
-    )
 
 
 @mcp.tool()
@@ -512,23 +272,6 @@ def tile_batch_validate(tile_batch_path: str) -> str:
     """Validate tile_batch_v1 JSON — returns ValidationReport JSON."""
     report = run_validator("tile_batch", tile_batch_path)
     return json.dumps(report.to_dict())
-
-
-@mcp.tool()
-def write_tile_fix_designer_g4_witness(
-    building_definition: str = "tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json",
-    allow_headless: bool = False,
-) -> str:
-    """TILE-FIX Phase C — validate-report chain + designer G4 witness (same as CLI)."""
-    from rust_engine_mcp.tile_compile_loop import run_designer_warehouse_phase_c
-
-    return json.dumps(
-        run_designer_warehouse_phase_c(
-            building_definition,
-            require_manual_art=not allow_headless,
-        ),
-        indent=2,
-    )
 
 
 @mcp.tool()
@@ -645,151 +388,6 @@ def variant_matrix_expand(
 
 
 @mcp.tool()
-def agent_queue_next(
-    agent: str,
-    queue: str = "auto",
-    mark_in_progress: bool = False,
-) -> str:
-    """Next drainable slice for @planner/@coder/@designer — work or drain fallback, never wait-only idle."""
-    return json.dumps(
-        agent_queue.agent_queue_next(
-            agent, queue=queue, mark_in_progress=mark_in_progress
-        )
-    )
-
-
-@mcp.tool()
-def get_que(
-    agent: str,
-    track: str = "",
-    demand: bool = False,
-    minutes: int = 60,
-    mark_in_progress: bool = False,
-) -> str:
-    """BLANG:Q+ — multi-parallel next slice + drain board. Say 'get que' at session start. Use demand=true for ~1h todo list."""
-    return json.dumps(
-        agent_queue.agent_get_que(
-            agent,
-            track=track,
-            build_list=demand,
-            minutes=minutes,
-            mark_in_progress=mark_in_progress,
-        )
-    )
-
-
-@mcp.tool()
-def agent_queue_demand(
-    agent: str,
-    minutes: int = 60,
-    max_slices: int = 8,
-    track: str = "",
-) -> str:
-    """Ordered session todo list from ready rows across open tracks (~hour-scale)."""
-    return json.dumps(
-        agent_queue.agent_queue_demand(
-            agent, minutes=minutes, max_slices=max_slices, track=track
-        )
-    )
-
-
-@mcp.tool()
-def agent_queue_update(
-    slice_id: str,
-    status: str,
-    note: str = "",
-    queue: str = "auto",
-    enforce: bool = False,
-) -> str:
-    """Checkpoint a queue slice (ready|blocked|in_progress|done|deferred)."""
-    return json.dumps(
-        agent_queue.agent_queue_update(slice_id, status, note=note, queue=queue, enforce=enforce)
-    )
-
-
-@mcp.tool()
-def validate_queue_integrity_report(queue_filter: str = "", compress: int = 3) -> str:
-    """BLANG:WIT-HON — cross-queue contradiction + exit_predicate report."""
-    from rust_engine_mcp.validators.queue_integrity import validate_queue_integrity
-
-    report = validate_queue_integrity(
-        queue_filter=queue_filter or None,
-        compression_level=max(1, min(4, compress)),
-    )
-    return json.dumps(report.to_dict())
-
-
-@mcp.tool()
-def intel_officer_sweep(queue_filter: str = "", include_witness_scan: bool = True, compress: int = 3) -> str:
-    """Intel officer surveillance — false-positive done/green cull candidates (report-only)."""
-    from rust_engine_mcp import intel_officer
-
-    return json.dumps(
-        intel_officer.intel_officer_sweep(
-            queue_filter=queue_filter,
-            include_witness_scan=include_witness_scan,
-            compression_level=max(1, min(4, compress)),
-        )
-    )
-
-
-@mcp.tool()
-def intel_officer_apply(
-    ids: str,
-    apply: bool = False,
-    action: str = "reopen",
-    note: str = "",
-) -> str:
-    """Supervised cull — reopen queue rows / demote dishonest witnesses (dry_run unless apply=true)."""
-    from rust_engine_mcp import intel_officer
-
-    id_list = [x.strip() for x in ids.split(",") if x.strip()]
-    return json.dumps(
-        intel_officer.intel_officer_apply(
-            ids=id_list,
-            dry_run=not apply,
-            action=action,
-            note=note,
-        )
-    )
-
-
-@mcp.tool()
-def agent_queue_board(agent: str = "", queue: str = "grammar") -> str:
-    """Compressed queue board (tab-separated lines) — optional agent filter."""
-    return json.dumps(agent_queue.agent_queue_board(queue=queue, agent=agent))
-
-
-@mcp.tool()
-def witness_brief(path: str, profile: str = "") -> str:
-    """Witness JSON summary — profile=construction|map_pick|fire_product|honesty (failed rule ids only)."""
-    prof = profile.strip() or None
-    return json.dumps(agent_queue.witness_brief(path, profile=prof))
-
-
-@mcp.tool()
-def review_order_brief() -> str:
-    """BLANG:REVIEW — REVIEW-ORDER P0 rows + phase4 status + VR compressed."""
-    return json.dumps(ops_intelligence.review_order_brief())
-
-
-@mcp.tool()
-def slice_exec_brief(slice_id: str, queue: str = "") -> str:
-    """BLANG:SLICE — one queue row: exit, witness, exec docs."""
-    q = queue.strip() or None
-    return json.dumps(agent_queue.slice_exec_brief(slice_id, queue=q))
-
-
-@mcp.tool()
-def validate_construction_report(path: str, compress: int = 3) -> str:
-    """BLANG:PLACE — ValidationReport for construction/placement witness JSON."""
-    from rust_engine_mcp.validators.construction_witness import validate_construction_witness_path
-
-    report = validate_construction_witness_path(path, compression_level=max(1, min(4, compress)))
-    return json.dumps(report.to_dict())
-
-
-@mcp.tool()
 def validate_effect_spec_report(path: str, compress: int = 3) -> str:
     """VSS-T4-003 — ValidationReport for effect_spec_v1 JSON (Draft 2020-12 spawn_hook allOf)."""
     from rust_engine_mcp.validators.effect_spec import validate_effect_spec
@@ -808,7 +406,7 @@ def effect_promote(
     batch_id: str = "",
     phase: str = "full",
     force: bool = False,
-    write_witness: bool = True,
+    write_witness: bool = False,
 ) -> str:
     """VSS-T4-003 — pack wgsl_pack shaders to staging and/or promote to assets/effects/registry/.
 
@@ -833,7 +431,7 @@ def effect_preview_capture(
     batch_id: str = "",
     pack_first: bool = True,
     force: bool = False,
-    write_witness: bool = True,
+    write_witness: bool = False,
 ) -> str:
     """VSS-T4 residual — deterministic staging_pack_digest frames → honest_gate=honest (Assign unlock)."""
     from rust_engine_mcp import effect_preview_capture as epc
@@ -849,233 +447,11 @@ def effect_preview_capture(
 
 
 @mcp.tool()
-def validate_witness_honesty_report(path: str, compress: int = 3, scan: bool = False) -> str:
-    """BLANG:WIT-HON — ValidationReport for witness honesty (single path or scan dir when scan=True)."""
-    from rust_engine_mcp.validators.witness_honesty import validate_witness_honesty_path, validate_witness_honesty_scan
-
-    level = max(1, min(4, compress))
-    if scan:
-        report = validate_witness_honesty_scan(path or "debug_runs", compression_level=level)
-    else:
-        report = validate_witness_honesty_path(path, compression_level=level)
-    return json.dumps(report.to_dict())
-
-
-@mcp.tool()
-def handoff_brief() -> str:
-    """HANDOFF.md Goal/Blockers/Next only — not full handoff file."""
-    return json.dumps(agent_queue.handoff_brief())
-
-
-@mcp.tool()
-def arch_dna_consumer_contract() -> str:
-    """BUILD-READ-CONSUMER-MCP-001 — @coder snapshot field contract for DNA+β."""
-    from rust_engine_mcp import arch_build_grammar
-
-    return json.dumps(arch_build_grammar.consumer_contract())
-
-
-@mcp.tool()
 def arch_dna_snapshot_brief(path: str) -> str:
     """Compressed ARCH-DNA + β from assembly snapshot JSON."""
     from rust_engine_mcp import arch_build_grammar
 
     return json.dumps(arch_build_grammar.arch_dna_snapshot_brief(path))
-
-
-@mcp.tool()
-def ops_get_project_brief() -> str:
-    """BLANG:OPS — ~20-token project orientation (ops_project_brief_v1); not HANDOFF + 80 witnesses."""
-    return json.dumps(ops_intelligence.ops_get_project_brief())
-
-
-@mcp.tool()
-def ops_get_retry_guidance(task_id: str) -> str:
-    """BLANG:OPS retry — phase3/phase4 row + exec_doc + hotfix_steps."""
-    return json.dumps(ops_intelligence.ops_get_retry_guidance(task_id))
-
-
-@mcp.tool()
-def ops_get_active_blockers() -> str:
-    """BLANG:OPS blockers — open gates from master_chain_tensor_v1.json."""
-    return json.dumps(ops_intelligence.ops_get_active_blockers())
-
-
-@mcp.tool()
-def ops_dashboard_snapshot(window_hours: int = 168, write_witness: bool = False) -> str:
-    """OPS oversight dashboard — processes, drift, run_events slip-ups (compressed JSON)."""
-    from rust_engine_mcp.ops_telemetry import build_ops_dashboard, write_ops_dashboard_witness
-
-    if write_witness:
-        return json.dumps(write_ops_dashboard_witness(window_hours=max(1, min(720, window_hours))))
-    return json.dumps(build_ops_dashboard(window_hours=max(1, min(720, window_hours))))
-
-
-@mcp.tool()
-def ops_process_scan_tool() -> str:
-    """Scan OS for engine-related processes (python, blender, cargo, bevy)."""
-    from rust_engine_mcp.ops_telemetry import scan_processes
-
-    return json.dumps(scan_processes())
-
-
-@mcp.tool()
-def ops_drift_scan_tool() -> str:
-    """Drift / dishonesty instances from witnesses and unified index."""
-    from rust_engine_mcp.ops_telemetry import scan_drift_instances
-
-    return json.dumps(scan_drift_instances())
-
-
-@mcp.tool()
-def ops_run_events_rollup_tool(window_hours: int = 168) -> str:
-    """Roll up run_events.jsonl — FTR/RTR proxies and repeat-slice slip-ups."""
-    from rust_engine_mcp.ops_telemetry import scan_run_events
-
-    return json.dumps(scan_run_events(window_hours=max(1, min(720, window_hours))))
-
-
-@mcp.tool()
-def ops_crash_scan_tool(record_events: bool = True) -> str:
-    """DCC/process crash scan + preview job failures + data-drop detection."""
-    from rust_engine_mcp.ops_crash_exporter import run_crash_scan, write_prometheus_metrics
-
-    body = run_crash_scan(record_events=record_events)
-    body["prometheus_written"] = write_prometheus_metrics(body)
-    return json.dumps(body)
-
-
-@mcp.tool()
-def ops_triage_refresh_tool(window_hours: int = 168) -> str:
-    """Triage dashboard witness — blockers + crash + ops slip-ups + Prometheus export."""
-    from rust_engine_mcp.ops_crash_exporter import write_triage_witness
-
-    return json.dumps(write_triage_witness(window_hours=max(1, min(720, window_hours))))
-
-
-@mcp.tool()
-def ops_intelligence_scan_tool(window_hours: int = 168, enforce_integrity: bool = False) -> str:
-    """MCP-OPS-REPORT-001 — full OPS spine scan (parity with ops_intelligence_scan.ps1 / CLI)."""
-    from rust_engine_mcp import ops_intelligence
-
-    return json.dumps(
-        ops_intelligence.run_ops_intelligence_scan(
-            window_hours=max(1, min(720, window_hours)),
-            enforce_integrity=True if enforce_integrity else None,
-        )
-    )
-
-
-@mcp.tool()
-def bq_assemble_prefer_prod_tool() -> str:
-    """BQ-ASSEMBLE-PREF-PROD-001 — assert assemble defaults to production tier."""
-    from rust_engine_mcp.bq_assemble_prefer_prod import write_bq_assemble_prefer_prod_witness
-
-    return json.dumps(write_bq_assemble_prefer_prod_witness())
-
-
-@mcp.tool()
-def landscape_grammar_presets_witness() -> str:
-    """MCP-LG-VALID-PRESET-001 — batch validate ship presets + refresh witnesses."""
-    from rust_engine_mcp import landscape_grammar_presets
-
-    batch = landscape_grammar_presets.write_landscape_grammar_presets_witness()
-    sign = landscape_grammar_presets.refresh_mcp_landscape_grammar_sign_witness()
-    return json.dumps(
-        {
-            "green": bool(batch.get("green")) and bool(sign.get("green")),
-            "batch_witness": batch.get("written"),
-            "sign_witness": sign.get("written"),
-        }
-    )
-
-
-@mcp.tool()
-def coder_drain_brief(coder: str = "c") -> str:
-    """MCP-CODER-DRAIN-001 — @coder A/B/C open vs stale slices before dispatch paste."""
-    return json.dumps(agent_queue.coder_drain_brief(coder))
-
-
-@mcp.tool()
-def simulation_queue_brief() -> str:
-    """MCP-SIM-QUEUE-001 — weather simulation train open/done rows."""
-    return json.dumps(agent_queue.simulation_queue_brief())
-
-
-@mcp.tool()
-def coder_mcp_drain_brief() -> str:
-    """MCP-CODER-MCP-DRAIN-001 — all open @coder-mcp slices + recommended drain order."""
-    return json.dumps(agent_queue.coder_mcp_drain_brief())
-
-
-@mcp.tool()
-def file_digest(path: str, max_lines: int = 40) -> str:
-    """File head + line count — avoid reading huge sources into context."""
-    return json.dumps(agent_queue.file_digest(path, max_lines=max_lines))
-
-
-@mcp.tool()
-def orchestrator_brief(use_cached: bool = True) -> str:
-    """Last orchestrator last_run.json summary — pair with validate_cargo_report(cached)."""
-    return json.dumps(agent_queue.orchestrator_brief(use_cached=use_cached))
-
-
-@mcp.tool()
-def token_savings_guide() -> str:
-    """Which MCP tools to use instead of raw logs / full-file reads (token policy)."""
-    return json.dumps(agent_queue.token_savings_guide())
-
-
-@mcp.tool()
-def agent_flow_route(goal: str, domain: str = "auto", force_hard: bool = False, skip_hard: bool = False) -> str:
-    """BLANG:FLOW — cheap→hard→exec dispatch packet before spawning Tasks (deterministic)."""
-    return json.dumps(
-        agent_flow.agent_flow_route(
-            goal,
-            domain=domain,
-            force_hard=force_hard,
-            skip_hard=skip_hard,
-        )
-    )
-
-
-@mcp.tool()
-def agent_flow_policy() -> str:
-    """Static L0/L1/L2 model-tier policy — pair with agent_flow_route."""
-    return json.dumps(agent_flow.agent_flow_policy())
-
-
-@mcp.tool()
-def terrain_honesty_lint_tool(write_witness: bool = True, compress: int = 3) -> str:
-    """RPC-1 deterministic TerrainRenderAuthority / gpu_atlas honesty scan (no LLM)."""
-    from rust_engine_mcp import terrain_honesty_lint
-
-    return json.dumps(
-        terrain_honesty_lint.validate_terrain_honesty_report(
-            write_witness=write_witness,
-            compress=compress,
-        )
-    )
-
-
-@mcp.tool()
-def auto_fleet_brief() -> str:
-    """No-operator auto fleet drain wave status (auto_fleet_drain_queue_v1)."""
-    from rust_engine_mcp import auto_fleet
-
-    return json.dumps(auto_fleet.auto_fleet_brief())
-
-
-@mcp.tool()
-def pipeline_preflight(queue: str = "grammar") -> str:
-    """MCP-PREFLIGHT-001 — Blender, schemas, repo paths, queue stale rows (one call)."""
-    return json.dumps(mcp_productivity_p0.pipeline_preflight(queue=queue))
-
-
-@mcp.tool()
-def snapshot_digest(path: str) -> str:
-    """MCP-SNAPSHOT-DIGEST-001 — placements, materials, grammar one-liner (no full JSON)."""
-    return json.dumps(mcp_productivity_p0.snapshot_digest(path))
 
 
 @mcp.tool()
@@ -1094,127 +470,6 @@ def material_catalog_brief(max_rows: int = 12) -> str:
     return json.dumps(material_brief.material_catalog_brief(max_rows=max_rows))
 
 
-@mcp.tool()
-def validate_p0_gate_plain(path: str, ship: bool = True, compression_level: int = 4) -> str:
-    """MCP-P0-PLAIN-001 — P0 gate with artist sentences + fix hints."""
-    return json.dumps(
-        mcp_productivity_p0.validate_p0_gate_plain(
-            path, ship=ship, compression_level=compression_level
-        )
-    )
-
-
-@mcp.tool()
-def agent_doc_touch(
-    path: str,
-    agent: str = "coder-mcp",
-    intent: str = "ref",
-    max_lines: int = 40,
-    session_hint: str = "",
-) -> str:
-    """MCP-DOC-READ-001 — ledger doc read + file digest (BLANG ref/orient/implement)."""
-    from . import agent_doc_read
-
-    return json.dumps(
-        agent_doc_read.agent_doc_touch(
-            path,
-            agent=agent,
-            intent=intent,
-            max_lines=max_lines,
-            session_hint=session_hint,
-        )
-    )
-
-
-@mcp.tool()
-def agent_doc_reads_brief(min_reads: int = 2, tail_rows: int = 500) -> str:
-    """MCP-DOC-READ-003 — aggregate doc_reads.jsonl: hot paths + repeat-in-session."""
-    from . import agent_doc_read
-
-    return json.dumps(
-        agent_doc_read.agent_doc_reads_brief(min_reads=min_reads, tail_rows=tail_rows)
-    )
-
-
-@mcp.tool()
-def agent_doc_promote_hot_reads(min_reads: int = 3, max_promote: int = 8) -> str:
-    """MCP-DOC-READ-004 — promote hot ledger paths to tools/mcp/cache/agent_doc_digests/."""
-    from . import agent_doc_read
-
-    return json.dumps(
-        agent_doc_read.agent_doc_promote_hot_reads(min_reads=min_reads, max_promote=max_promote)
-    )
-
-
-@mcp.tool()
-def agent_doc_digest_cached(path: str, max_lines: int = 120) -> str:
-    """Return MCP digest cache for path when source mtime unchanged."""
-    from . import agent_doc_read
-
-    return json.dumps(agent_doc_read.agent_doc_digest_cached(path, max_lines=max_lines))
-
-
-@mcp.tool()
-def agent_session_bootstrap(
-    agent: str,
-    session_hint: str = "SESSION-START",
-    max_lines: int = 60,
-    touch_role_reads: bool = False,
-) -> str:
-    """MCP-DOC-READ-005 — session start: brief stack + ledger + hot-read stats."""
-    from . import agent_doc_read
-
-    return json.dumps(
-        agent_doc_read.agent_session_bootstrap(
-            agent,
-            session_hint=session_hint,
-            max_lines=max_lines,
-            touch_role_reads=touch_role_reads,
-        )
-    )
-
-
-@mcp.tool()
-def agent_run_append(event_json: str, agent: str = "") -> str:
-    """MCP-DOC-READ-002 — append session telemetry to debug_runs/agent_ops/run_events.jsonl."""
-    from . import agent_doc_read
-
-    event = json.loads(event_json)
-    return json.dumps(agent_doc_read.agent_run_append(event, agent=agent or None))
-
-
-@mcp.tool()
-def snapshot_diff_brief(before_path: str, after_path: str) -> str:
-    """MCP-SNAPSHOT-DIFF-001 — compact diff between two assembly snapshots."""
-    from . import agent_doc_read
-
-    return json.dumps(agent_doc_read.snapshot_diff_brief(before_path, after_path))
-
-
-@mcp.tool()
-def grammar_iterate(
-    request_path: str,
-    write_snapshot: bool = False,
-    write_witness: str = "",
-) -> str:
-    """MCP-GRAMMAR-ITER-TOOL — grammar iterate (CLI parity with grammar-iterate)."""
-    from . import agent_doc_read
-
-    return json.dumps(
-        agent_doc_read.grammar_iterate_mcp(
-            request_path,
-            write_snapshot=write_snapshot,
-            write_witness=write_witness or None,
-        )
-    )
-
-
-@mcp.tool()
-def tile_spine_run_tool(request_path: str) -> str:
-    """MCP-SPINE-CHAIN-001 — WRK→ATL chain with per-step witness (CLI parity)."""
-    from . import tile_spine_run
-
-    return json.dumps(tile_spine_run.tile_spine_run(request_path))
 
 
 @mcp.tool()
@@ -1225,24 +480,6 @@ def atlas_meta_brief_tool(atlas_folder: str, batch_id: str = "") -> str:
     return json.dumps(
         atlas_meta_brief.atlas_meta_brief(atlas_folder, batch_id=batch_id or None)
     )
-
-
-@mcp.tool()
-def rt_registry_tool(batch_id: str = "") -> str:
-    """RT-REG-001 — register rowhouse production batch + lookup stamp."""
-    from . import rt_registry
-
-    return json.dumps(
-        rt_registry.rt_registry_register_rowhouse_production(batch_id=batch_id or None)
-    )
-
-
-@mcp.tool()
-def runtime_lookup_brief_tool(atlas_id: str = "rowhouse_victorian_production_v1") -> str:
-    """RT-BRIEF-001 — runtime lookup brief from index row + atlas meta."""
-    from . import runtime_lookup_brief
-
-    return json.dumps(runtime_lookup_brief.runtime_lookup_brief(atlas_id))
 
 
 @mcp.tool()

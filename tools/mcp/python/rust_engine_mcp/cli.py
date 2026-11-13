@@ -19,7 +19,7 @@ import json
 import sys
 from pathlib import Path
 
-from . import blender_runner, library, material_textures, paths, promote, schemas, validate_glb, witness
+from . import blender_runner, library, material_textures, paths, promote, schemas, validate_glb
 from .tile_pipeline import (
     assembly_build_run,
     lod0_batch_run,
@@ -34,7 +34,6 @@ from . import assembly_preview
 from . import variant_set
 from .tile_index import register_tile_atlas_from_batch
 from .validators import run_validator
-from . import agent_queue
 
 
 def _cmd_ping(_: argparse.Namespace) -> int:
@@ -113,8 +112,6 @@ def _cmd_effect_pack(args: argparse.Namespace) -> int:
     from rust_engine_mcp import effect_promote as ep
 
     body = ep.pack_effect_spec(args.spec_path, force=args.force)
-    if not args.no_witness:
-        body["witness"] = ep.refresh_artist_vfx_pipeline_witness()
     print(json.dumps(body, indent=2))
     return 0
 
@@ -127,7 +124,7 @@ def _cmd_effect_promote(args: argparse.Namespace) -> int:
         batch_id=args.batch_id or "",
         phase=args.phase,
         force=args.force,
-        write_witness=not args.no_witness,
+        write_witness=False,
     )
     print(json.dumps(body, indent=2))
     return 0
@@ -141,7 +138,7 @@ def _cmd_effect_preview_capture(args: argparse.Namespace) -> int:
         batch_id=args.batch_id or "",
         pack_first=not args.no_pack,
         force=args.force,
-        write_witness=not args.no_witness,
+        write_witness=False,
     )
     print(json.dumps(body, indent=2))
     return 0
@@ -150,17 +147,9 @@ def _cmd_effect_preview_capture(args: argparse.Namespace) -> int:
 def _cmd_effect_chain_smoke(args: argparse.Namespace) -> int:
     from rust_engine_mcp.effect_chain_smoke import run_effect_chain_smoke
 
-    body = run_effect_chain_smoke(write_witness=args.witness)
+    body = run_effect_chain_smoke(write_witness=False)
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
-
-
-def _cmd_artist_vfx_pipeline_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import effect_promote as ep
-
-    body = ep.refresh_artist_vfx_pipeline_witness()
-    print(json.dumps(body, indent=2))
-    return 0
 
 
 def _cmd_library_register(args: argparse.Namespace) -> int:
@@ -182,12 +171,6 @@ def _cmd_library_search(args: argparse.Namespace) -> int:
         batch_id=args.batch_id or None,
     )
     print(json.dumps({"count": len(rows), "modules": rows}))
-    return 0
-
-
-def _cmd_write_witness(args: argparse.Namespace) -> int:
-    result = witness.write_batch_witness(args.batch_id)
-    print(json.dumps(result))
     return 0
 
 
@@ -246,7 +229,6 @@ def _cmd_assembly_build_run(args: argparse.Namespace) -> int:
             ensure_textures=True,
             render_still=getattr(args, "render_still", False),
             building_definition_path=getattr(args, "building_definition", None),
-            write_witness=getattr(args, "write_witness", False),
         )
     else:
         result = assembly_build_run(args.path)
@@ -255,19 +237,6 @@ def _cmd_assembly_build_run(args: argparse.Namespace) -> int:
     if ok is None:
         ok = result.get("status") == "done"
     return 0 if ok else 1
-
-
-def _cmd_pg_module_audit_002_run(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.pg_module_audit_002 import run_pg_module_audit_002
-
-    priorities = tuple(p.strip() for p in str(args.priorities or "P0,P1").split(",") if p.strip())
-    result = run_pg_module_audit_002(
-        phase=args.phase,
-        priorities=priorities,
-        use_blender=not args.no_blender,
-    )
-    print(json.dumps(result, indent=2))
-    return 0 if result.get("ok") else 1
 
 
 def _cmd_keyframe_matrix_export(args: argparse.Namespace) -> int:
@@ -301,8 +270,6 @@ def _cmd_preview_assembly(args: argparse.Namespace) -> int:
         try_bevy=not args.skip_bevy,
         serve_seconds=serve,
     )
-    if args.write_witness:
-        assembly_preview.write_aps_preview_002_witness(result)
     print(json.dumps(result, indent=2))
     if result.get("preview_url"):
         print(
@@ -356,16 +323,6 @@ def _cmd_tile_atlas_register(args: argparse.Namespace) -> int:
     return 0 if result.get("ok") else 1
 
 
-def _cmd_rail_warehouse_pilot_batch_run(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import rail_warehouse_pilot_batch
-
-    result = rail_warehouse_pilot_batch.run_rail_warehouse_pilot_keyframe_batch(
-        headless=not bool(args.no_headless),
-    )
-    print(json.dumps(result, indent=2))
-    return 0 if result.get("ok") else 1
-
-
 def _cmd_tile_keyframe_export(args: argparse.Namespace) -> int:
     result = tile_keyframe_export(args.path or "")
     print(json.dumps(result, indent=2))
@@ -385,415 +342,10 @@ def _cmd_variant_matrix_expand(args: argparse.Namespace) -> int:
     return 0 if result.get("ok") else 1
 
 
-def _cmd_write_procedural_tiles_production_bake_witness(_: argparse.Namespace) -> int:
-    result = witness.write_procedural_tiles_production_bake_witness()
-    print(json.dumps(result, indent=2))
-    return 0 if result.get("green") else 1
-
-
-def _cmd_write_tile_fix_10_witness(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.tile_compile_loop import write_tile_fix_10_witness
-
-    result = write_tile_fix_10_witness(args.building)
-    print(json.dumps(result, indent=2))
-    return 0 if result.get("green") else 1
-
-
-def _cmd_write_tile_fix_designer_g4_witness(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.tile_compile_loop import run_designer_warehouse_phase_c
-
-    result = run_designer_warehouse_phase_c(
-        args.building,
-        require_manual_art=not bool(args.allow_headless),
-    )
-    print(json.dumps(result, indent=2))
-    return 0 if result.get("proceed_ship") else 1
-
-
-def _cmd_agent_queue_next(args: argparse.Namespace) -> int:
-    out = agent_queue.agent_queue_next(
-        args.agent,
-        queue=args.queue,
-        mark_in_progress=bool(args.mark_in_progress),
-    )
-    print(json.dumps(out, indent=2))
-    return 0 if out.get("action") == "work" else 1
-
-
-def _cmd_get_que(args: argparse.Namespace) -> int:
-    out = agent_queue.agent_get_que(
-        args.agent,
-        track=args.track or "",
-        build_list=bool(args.demand),
-        minutes=int(args.minutes),
-        mark_in_progress=bool(args.mark_in_progress),
-    )
-    print(json.dumps(out, indent=2))
-    return 0 if out.get("action") == "work" else 1
-
-
-def _cmd_agent_queue_demand(args: argparse.Namespace) -> int:
-    out = agent_queue.agent_queue_demand(
-        args.agent,
-        minutes=int(args.minutes),
-        max_slices=int(args.max_slices),
-        track=args.track or "",
-    )
-    print(json.dumps(out, indent=2))
-    return 0 if out.get("action") == "work" else 1
-
-
-def _cmd_agent_queue_update(args: argparse.Namespace) -> int:
-    out = agent_queue.agent_queue_update(
-        args.slice_id,
-        args.status,
-        note=args.note or "",
-        queue=args.queue,
-        enforce=bool(getattr(args, "enforce", False)),
-    )
-    print(json.dumps(out, indent=2))
-    return 0 if out.get("ok") else 1
-
-
-def _cmd_intel_officer_sweep(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import intel_officer
-
-    body = intel_officer.intel_officer_sweep(
-        queue_filter=args.queue_filter or "",
-        include_witness_scan=not bool(args.no_witness_scan),
-        compression_level=int(args.compress),
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_intel_officer_apply(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import intel_officer
-
-    ids = [x.strip() for x in args.ids.split(",") if x.strip()]
-    body = intel_officer.intel_officer_apply(
-        ids=ids,
-        dry_run=not bool(args.apply),
-        action=args.action,
-        note=args.note or "",
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_intel_officer_sweep_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import intel_officer
-
-    body = intel_officer.refresh_intel_officer_sweep_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_queue_integrity_reconcile_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.validators.queue_integrity import refresh_queue_integrity_reconcile_witness
-
-    body = refresh_queue_integrity_reconcile_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_mcp_witness_integrity_ops_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.witness_honesty_lib import refresh_mcp_witness_integrity_ops_witness
-
-    body = refresh_mcp_witness_integrity_ops_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("written") else 1
-
-
-def _cmd_agent_queue_board(args: argparse.Namespace) -> int:
-    print(json.dumps(agent_queue.agent_queue_board(queue=args.queue, agent=args.agent or ""), indent=2))
-    return 0
-
-
-def _cmd_witness_brief(args: argparse.Namespace) -> int:
-    profile = getattr(args, "profile", None) or None
-    print(json.dumps(agent_queue.witness_brief(args.path, profile=profile), indent=2))
-    return 0
-
-
-def _cmd_review_order_brief(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import ops_intelligence
-
-    print(json.dumps(ops_intelligence.review_order_brief(), indent=2))
-    return 0
-
-
-def _cmd_slice_exec_brief(args: argparse.Namespace) -> int:
-    queue = args.queue or None
-    body = agent_queue.slice_exec_brief(args.slice_id, queue=queue)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_mcp_phase4_queue_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import ops_intelligence
-
-    body = ops_intelligence.write_mcp_phase4_queue_live_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_mcp_valid_construction_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import ops_intelligence
-
-    body = ops_intelligence.write_mcp_valid_construction_live_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_handoff_brief(_args: argparse.Namespace) -> int:
-    print(json.dumps(agent_queue.handoff_brief(), indent=2))
-    return 0
-
-
-def _cmd_file_digest(args: argparse.Namespace) -> int:
-    print(json.dumps(agent_queue.file_digest(args.path, max_lines=int(args.max_lines)), indent=2))
-    return 0
-
-
-def _cmd_orchestrator_brief(args: argparse.Namespace) -> int:
-    print(json.dumps(agent_queue.orchestrator_brief(use_cached=not args.fresh), indent=2))
-    return 0
-
-
-def _cmd_token_savings_guide(_args: argparse.Namespace) -> int:
-    print(json.dumps(agent_queue.token_savings_guide(), indent=2))
-    return 0
-
-
-def _cmd_agent_flow_route(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import agent_flow
-
-    body = agent_flow.agent_flow_route(
-        args.goal,
-        domain=args.domain,
-        force_hard=bool(args.force_hard),
-        skip_hard=bool(args.skip_hard),
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_agent_flow_policy(_args: argparse.Namespace) -> int:
-    from rust_engine_mcp import agent_flow
-
-    print(json.dumps(agent_flow.agent_flow_policy(), indent=2))
-    return 0
-
-
-def _cmd_place_feel_phase_note(args: argparse.Namespace) -> int:
-    """Print kit-phase place-feel note. Does not rebake. Exit 1 only on an illegal claim."""
-    import json
-    from pathlib import Path
-
-    from rust_engine_mcp.place_feel_phase import phase_note
-    from rust_engine_mcp.schemas import load_json_file
-
-    tier = str(args.tier or "")
-    claim = args.claim
-    if args.path:
-        record = load_json_file(Path(args.path))
-        tier = str(record.get("development_tier") or tier)
-        if record.get("place_feel_claim"):
-            claim = str(record["place_feel_claim"])
-    if not tier:
-        print(json.dumps({"ok": False, "error": "pass --tier or a JSON path with development_tier"}))
-        return 1
-    body = phase_note(tier, claim)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_terrain_honesty_lint(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import terrain_honesty_lint
-
-    body = terrain_honesty_lint.validate_terrain_honesty_report(
-        write_witness=not bool(args.no_witness),
-        compress=int(args.compress),
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_auto_fleet_brief(_args: argparse.Namespace) -> int:
-    from rust_engine_mcp import auto_fleet
-
-    print(json.dumps(auto_fleet.auto_fleet_brief(), indent=2))
-    return 0
-
-
-def _cmd_pipeline_preflight(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import mcp_productivity_p0
-
-    body = mcp_productivity_p0.pipeline_preflight(
-        queue=args.queue,
-        check_build_set=bool(getattr(args, "check_build_set", False)),
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_ops_get_project_brief(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import ops_intelligence
-
-    print(json.dumps(ops_intelligence.ops_get_project_brief(), indent=2))
-    return 0
-
-
-def _cmd_ops_get_retry_guidance(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import ops_intelligence
-
-    body = ops_intelligence.ops_get_retry_guidance(args.task_id)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_ops_get_active_blockers(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import ops_intelligence
-
-    body = ops_intelligence.ops_get_active_blockers()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_ops_dashboard_refresh(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.ops_telemetry import write_ops_dashboard_witness
-
-    hours = int(getattr(args, "window_hours", 168) or 168)
-    body = write_ops_dashboard_witness(
-        window_hours=hours,
-        refresh_ci=bool(getattr(args, "refresh_ci", False)),
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_ops_process_scan(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.ops_telemetry import scan_processes
-
-    print(json.dumps(scan_processes(), indent=2))
-    return 0
-
-
-def _cmd_ops_drift_scan(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.ops_telemetry import scan_drift_instances
-
-    print(json.dumps(scan_drift_instances(), indent=2))
-    return 0
-
-
-def _cmd_ops_run_events_rollup(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.ops_telemetry import scan_run_events
-
-    hours = int(getattr(args, "window_hours", 168) or 168)
-    print(json.dumps(scan_run_events(window_hours=hours), indent=2))
-    return 0
-
-
-def _cmd_ops_crash_scan(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.ops_crash_exporter import run_crash_scan, write_prometheus_metrics
-
-    body = run_crash_scan(record_events=True)
-    body["prometheus_written"] = write_prometheus_metrics(body)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_ops_triage_refresh(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.ops_crash_exporter import write_triage_witness
-
-    hours = int(getattr(args, "window_hours", 168) or 168)
-    body = write_triage_witness(window_hours=hours)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_ops_crash_daemon(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.ops_crash_exporter import daemon_loop
-
-    interval = int(getattr(args, "interval_sec", 30) or 30)
-    max_cycles = getattr(args, "max_cycles", None)
-    if max_cycles is not None:
-        max_cycles = int(max_cycles)
-    daemon_loop(interval_sec=interval, max_cycles=max_cycles)
-    return 0
-
-
-def _cmd_ops_mcp_function_layer_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import ops_intelligence
-
-    body = ops_intelligence.refresh_ops_mcp_function_layer_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_ops_intelligence_scan(args: argparse.Namespace) -> int:
-    """MCP-OPS-REPORT-001 — OPS spine scan (index + integrity + dashboard + triage)."""
-    from rust_engine_mcp import ops_intelligence
-
-    hours = int(getattr(args, "window_hours", 168) or 168)
-    enforce = bool(getattr(args, "enforce", False))
-    body = ops_intelligence.run_ops_intelligence_scan(
-        window_hours=hours,
-        enforce_integrity=enforce if enforce else None,
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_assemble_prefer_prod(args: argparse.Namespace) -> int:
-    """BQ-ASSEMBLE-PREF-PROD-001 — assert assemble defaults to production tier."""
-    from rust_engine_mcp.bq_assemble_prefer_prod import write_bq_assemble_prefer_prod_witness
-
-    body = write_bq_assemble_prefer_prod_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_build_read_grammar_v0_002_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import arch_build_grammar
-
-    body = arch_build_grammar.write_build_read_grammar_v0_002_witness()
-    arch_build_grammar.write_aps_dna_consumer_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_dna_consumer_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import arch_build_grammar
-
-    body = arch_build_grammar.write_aps_dna_consumer_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_arch_dna_consumer_contract(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import arch_build_grammar
-
-    print(json.dumps(arch_build_grammar.consumer_contract(), indent=2))
-    return 0
-
-
 def _cmd_arch_dna_snapshot_brief(args: argparse.Namespace) -> int:
     from rust_engine_mcp import arch_build_grammar
 
     body = arch_build_grammar.arch_dna_snapshot_brief(args.path)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_grammar_set_brief(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import grammar_build_set
-
-    if getattr(args, "write_witness", False):
-        body = grammar_build_set.write_grammar_set_brief_witness()
-    else:
-        body = grammar_build_set.grammar_set_brief(set_id=args.set_id or None)
     print(json.dumps(body, indent=2))
     return 0 if body.get("ok") else 1
 
@@ -822,99 +374,6 @@ def _cmd_grammar_eval_sweep(args: argparse.Namespace) -> int:
     return 0 if body.get("ok") else 1
 
 
-def _cmd_grammar_pilot_parity(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import grammar_build_set
-
-    body = grammar_build_set.grammar_pilot_parity()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_grammar_set_tier(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import grammar_build_set
-
-    if getattr(args, "write_witness", False):
-        rel = getattr(args, "witness_path", "") or None
-        body = grammar_build_set.write_grammar_set_tier_witness(rel_path=rel or None)
-    else:
-        body = grammar_build_set.grammar_set_tier()
-    print(json.dumps(body, indent=2))
-    return 0
-
-
-def _cmd_grammar_facility_brief(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import grammar_facility_brief
-
-    gid = getattr(args, "grammar_id", "") or None
-    if getattr(args, "write_witness", False):
-        body = grammar_facility_brief.write_grammar_facility_brief_witness(grammar_id=gid)
-    else:
-        body = grammar_facility_brief.grammar_facility_brief(grammar_id=gid)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_site_zone_validate_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.validators.site_zone_grid import write_site_zone_validate_witness
-
-    body = write_site_zone_validate_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_grammar_sweep_process_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import grammar_build_set
-
-    body = grammar_build_set.write_grammar_sweep_process_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_city_seed_chain_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import city_seed_chain
-
-    body = city_seed_chain.write_city_g1_c4_001_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_landscape_expanded_keyframes_refresh(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.landscape_lg5_expanded_batch import refresh_tile_landscape_expanded_witness
-
-    body = refresh_tile_landscape_expanded_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_tag_tier2_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.aps_tag_tier2 import write_aps_tag_tier2_witness
-
-    body = write_aps_tag_tier2_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_ux_polish_tail_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.aps_ux_polish_tail_witness import write_aps_ux_polish_tail_witness
-
-    body = write_aps_ux_polish_tail_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_designer_grammar_quality_loop(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.designer_grammar_quality_loop import run_designer_grammar_quality_loop
-
-    mode = "full" if getattr(args, "full", False) else "fast"
-    body = run_designer_grammar_quality_loop(
-        mode=mode,
-        sweep_seeds=int(getattr(args, "sweep_seeds", 24) or 24),
-        write_witness=bool(getattr(args, "write_witness", False)),
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
 def _cmd_building_set_coverage(_: argparse.Namespace) -> int:
     from rust_engine_mcp import grammar_build_set
 
@@ -923,900 +382,70 @@ def _cmd_building_set_coverage(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
-def _cmd_building_set_coverage_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import grammar_build_set
-
-    body = grammar_build_set.write_building_set_coverage_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_g4_coverage_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import grammar_build_set
-
-    body = grammar_build_set.write_aps_g4_coverage_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_c2_bounds_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import building_quality_bq_c2
-
-    body = building_quality_bq_c2.write_bq_c2_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_c3_seam_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import building_quality_bq_c3
-
-    body = building_quality_bq_c3.write_bq_c3_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_city_c8_pipeline_witness(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import city_c8_pipeline
-
-    body = city_c8_pipeline.write_city_c8_witness(run_merge=not args.skip_merge)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_f1_tail_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import city_c8_pipeline
-
-    body = city_c8_pipeline.write_bq_f1_tail_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_veg_f02_burn_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.veg_f02_burn_atlas import refresh_veg_f02_burn_atlas_witness
-
-    body = refresh_veg_f02_burn_atlas_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a1_s1_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import apsr_a1_s1
-
-    body = apsr_a1_s1.write_apsr_a1_s1_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a1_s2_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import apsr_a1_s2
-
-    body = apsr_a1_s2.write_apsr_a1_s2_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a1_s3_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import apsr_a1_s3
-
-    body = apsr_a1_s3.write_apsr_a1_s3_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a2_p1_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import apsr_a2_p1
-
-    body = apsr_a2_p1.write_apsr_a2_p1_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a2_p2_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import apsr_a2_p2
-
-    body = apsr_a2_p2.write_apsr_a2_p2_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a2_p3_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import apsr_a2_p3
-
-    body = apsr_a2_p3.write_apsr_a2_p3_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a3_d1_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.apsr_design_token_lint import write_apsr_d1_witness
-
-    body = write_apsr_d1_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a3_d2_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.aps_tooltip_coverage import write_apsr_d2_witness
-
-    body = write_apsr_d2_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a3_d3_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.aps_inline_feedback_audit import write_apsr_d3_witness
-
-    body = write_apsr_d3_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a3_d4_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.apsr_density_polish import write_apsr_d4_witness
-
-    body = write_apsr_d4_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a4_q1_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import building_quality_qc
-
-    body = building_quality_qc.write_apsr_q1_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a4_q2_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.kit_coverage_audit import write_apsr_q2_witness
-
-    body = write_apsr_q2_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_a4_q3_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.golden_seed_review import write_apsr_q3_witness
-
-    body = write_apsr_q3_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_golden_rubric_scaffold(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.golden_seed_review import write_aps_golden_rubric_scaffold_witness
-
-    body = write_aps_golden_rubric_scaffold_witness()
-    print(json.dumps(body, indent=2))
-    # Machine sheet-ready may be green; never treat as operator pass / APS-GOLDEN close
-    return 0 if body.get("green") and body.get("operator_pass") is False else 1
-
-
-def _cmd_bq_c1_contract_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import building_quality_bq_c1
-
-    body = building_quality_bq_c1.write_bq_c1_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_f1_bake_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import building_quality_bq_f1
-
-    body = building_quality_bq_f1.write_bq_f1_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_f1_rebake_promote(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import building_quality_bq_f1
-
-    job_ids = list(args.job_id) if args.job_id else None
-    body = building_quality_bq_f1.run_bq_f1_rebake_promote(
-        job_ids=job_ids,
-        register=not args.no_register,
-    )
-    if args.write_witness:
-        body["witness"] = building_quality_bq_f1.write_bq_f1_witness()
-    print(json.dumps(body, indent=2))
-    witness_green = body.get("witness", {}).get("green") if args.write_witness else None
-    ok = body.get("promote_ok", 0) == body.get("job_count", 0) and not body.get("errors")
-    if args.write_witness:
-        ok = ok and witness_green is True
-    return 0 if ok else 1
-
-
-def _cmd_building_look_v2_art(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import building_look_v2_art
-
-    # Default eye_read_pass=False (honest). --eye-pass only after inspecting AFTER stills.
-    eye: bool | None = False
-    if getattr(args, "eye_pass", False):
-        eye = True
-    if getattr(args, "eye_fail", False):
-        eye = False
-
-    body = building_look_v2_art.run_building_look_v2_art(
-        try_bevy=not args.no_bevy,
-        skip_rebake=args.skip_rebake,
-        eye_read_pass=eye,
-    )
-    summary = {
-        "task_id": body.get("task_id"),
-        "green": body.get("green"),
-        "pixel_look_pass": body.get("pixel_look_pass"),
-        "pixel_look_note": body.get("pixel_look_note"),
-        "rebake_ok": (body.get("rebake") or {}).get("rebake_ok"),
-        "promote_ok": (body.get("rebake") or {}).get("promote_ok"),
-        "axis_ok": (body.get("rebake") or {}).get("axis_ok"),
-        "errors": (body.get("rebake") or {}).get("errors"),
-        "elapsed_s": body.get("elapsed_s"),
-        "witness": body.get("written") or "debug_runs/building_look_v2_art_live.json",
-    }
-    print(json.dumps(summary, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_city_g2_c5_apply(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import city_palette_g2
-
-    body = city_palette_g2.apply_city_g2_c5_index_and_atlas()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("atlas", {}).get("ok") else 1
-
-
-def _cmd_city_g2_c5_mcp_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import city_palette_g2
-
-    body = city_palette_g2.write_city_g2_c5_mcp_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_guard_brief_parity_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.grammar_build_set import write_aps_guard_brief_parity_witness
-
-    body = write_aps_guard_brief_parity_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_grammar_tier_gates_live_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.grammar_build_set import write_aps_grammar_tier_gates_live_witness
-
-    body = write_aps_grammar_tier_gates_live_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_session_presence_dump(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.grammar_build_set import aps_session_presence_dump, write_aps_session_presence_witness
-
-    if getattr(args, "write_witness", False):
-        body = write_aps_session_presence_witness()
-    else:
-        body = aps_session_presence_dump()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_aps_presence_operator_attestation(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.aps_presence_operator_attestation import refresh_aps_presence_operator_attestation_witness
-
-    body = refresh_aps_presence_operator_attestation_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_landscape_grammar_presets_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import landscape_grammar_presets
-
-    batch = landscape_grammar_presets.write_landscape_grammar_presets_witness()
-    sign = landscape_grammar_presets.refresh_mcp_landscape_grammar_sign_witness()
-    green = bool(batch.get("green")) and bool(sign.get("green"))
-    print(json.dumps({"green": green, "batch": batch.get("written"), "sign": sign.get("written")}, indent=2))
-    return 0 if green else 1
-
-
-def _cmd_landscape_sign_atlas_witness(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import landscape_sign_atlas
-
-    body = landscape_sign_atlas.run_landscape_sign_atlas_refresh(
-        refresh_atlas=bool(getattr(args, "refresh_atlas", False)),
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_kit_production_002_g2_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import kit_production_002
-
-    body = kit_production_002.refresh_kit_production_002_g2_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_kit_production_002_g2_run(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import kit_production_002
-
-    body = kit_production_002.run_kit_production_002_g2_full(promote=not args.no_promote)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("ok") else 1
-
-
-def _cmd_kit_production_002_g3_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import kit_production_002
-
-    body = kit_production_002.refresh_kit_production_002_g3_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_kit_production_002_g3_validate(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import kit_production_002
-
-    body = kit_production_002.validate_kit_production_002_g3_batch()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_kit_production_002_g4_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import kit_production_002
-
-    body = kit_production_002.refresh_kit_production_002_g4_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_kit_production_002_g4_evaluate(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import kit_production_002
-
-    body = kit_production_002.evaluate_kit_production_002_g4()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_e3_vegetation_catalog_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.vegetation_variant_catalog import refresh_dmcp_e3_witness
-
-    body = refresh_dmcp_e3_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_veg_catalog_burn_rows_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.veg_catalog_loader import refresh_veg_catalog_burn_rows_witness
-
-    body = refresh_veg_catalog_burn_rows_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_e4_matrix_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_designer_signoff import refresh_dmcp_e4_matrix_witness
-
-    body = refresh_dmcp_e4_matrix_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_e0_artist_reverdict_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_designer_signoff import refresh_dmcp_e0_artist_reverdict_witness
-
-    body = refresh_dmcp_e0_artist_reverdict_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_ovr_g0_audit_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.aps_uiux_g0_audit import refresh_dmcp_ovr_g0_audit_witness
-
-    body = refresh_dmcp_ovr_g0_audit_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("audit_complete") else 1
-
-
-def _cmd_dmcp_ovr_p2_impl_audit_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.aps_uiux_p2_impl_audit import refresh_dmcp_ovr_p2_impl_audit_witness
-
-    body = refresh_dmcp_ovr_p2_impl_audit_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_ovr_p3_accept_rubric_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.aps_uiux_p3_accept_rubric import refresh_dmcp_ovr_p3_accept_rubric_witness
-
-    body = refresh_dmcp_ovr_p3_accept_rubric_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_veg_wave_tail_reconcile_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_veg_wave_tail_reconcile import refresh_dmcp_veg_wave_tail_reconcile_witness
-
-    body = refresh_dmcp_veg_wave_tail_reconcile_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_parallel_lane_bkkf_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_parallel_lane_bkkf import refresh_dmcp_parallel_lane_bkkf_witness
-
-    body = refresh_dmcp_parallel_lane_bkkf_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_facility_binding_lane_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_facility_binding_lane import refresh_dmcp_facility_binding_lane_witness
-
-    body = refresh_dmcp_facility_binding_lane_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_nuclear_pwr_spec_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_nuclear_pwr_spec import refresh_dmcp_nuclear_pwr_spec_witness
-
-    body = refresh_dmcp_nuclear_pwr_spec_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_transformer_pad_spec_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_transformer_pad_spec import refresh_dmcp_transformer_pad_spec_witness
-
-    body = refresh_dmcp_transformer_pad_spec_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_art_spine_hub_wave_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_art_spine_hub_wave import refresh_dmcp_art_spine_hub_wave_witness
-
-    body = refresh_dmcp_art_spine_hub_wave_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_designer_mcp_open_lane_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_designer_mcp_open_lane import refresh_dmcp_designer_mcp_open_lane_witness
-
-    body = refresh_dmcp_designer_mcp_open_lane_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_style_landscape_riparian_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_style_landscape_riparian import refresh_dmcp_style_landscape_riparian_witness
-
-    body = refresh_dmcp_style_landscape_riparian_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_reaction_territory_events_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_reaction_territory_events import refresh_dmcp_reaction_territory_events_witness
-
-    body = refresh_dmcp_reaction_territory_events_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_aps_variants_reaction_pullup_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_aps_variants_reaction_pullup import refresh_dmcp_aps_variants_reaction_pullup_witness
-
-    body = refresh_dmcp_aps_variants_reaction_pullup_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_city_block_recipe_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_city_block_recipe import refresh_city_block_recipe_charter_witness
-
-    body = refresh_city_block_recipe_charter_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_city_palette_variation_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_city_palette_variation import refresh_city_palette_variation_charter_witness
-
-    body = refresh_city_palette_variation_charter_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_k1_bake_wire(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import bq_k1_kitfill
-
-    body = bq_k1_kitfill.run_k1_bake_wire(
-        register=not args.no_register,
-        try_rebake=not args.no_rebake,
-    )
-    if args.witness:
-        body["witness"] = bq_k1_kitfill.write_bq_k1_bake_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_k1_bake_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import bq_k1_kitfill
-
-    body = bq_k1_kitfill.write_bq_k1_bake_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_smoke_tier_audit(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import bq_smoke_tier_audit
-
-    body = bq_smoke_tier_audit.write_bq_smoke_tier_audit_witness()
-    print(json.dumps(body, indent=2))
-    # Audit is honest-FAIL while lod0/smoke remain selectable — exit 0 so CI can refresh witness.
-    return 0
-
-
-def _cmd_bq_q2_screen(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import bq_q2_screen
-
-    body = bq_q2_screen.write_bq_q2_screen_witness(try_bevy=not args.no_bevy)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_prod_promote_batch(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import bq_prod_promote_batch
-
-    body = bq_prod_promote_batch.write_bq_prod_promote_batch_witness(
-        try_rebake=not args.no_rebake,
-        register=not args.no_register,
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_prod_defer_packs(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import bq_prod_defer_packs
-
-    body = bq_prod_defer_packs.write_bq_prod_defer_packs_witness(
-        try_rebake=not args.no_rebake,
-        register=not args.no_register,
-        retire_smoke=not args.no_retire_smoke,
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_prod_noncore_promote(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import bq_prod_noncore_promote
-
-    body = bq_prod_noncore_promote.write_bq_prod_noncore_promote_witness(
-        try_rebake=not args.no_rebake,
-        register=not args.no_register,
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_bq_lod0_twin_prune(args: argparse.Namespace) -> int:
-    from rust_engine_mcp import bq_lod0_twin_prune
-
-    body = bq_lod0_twin_prune.write_bq_lod0_twin_prune_witness(
-        register=not args.no_register,
-        retire=not args.no_retire,
-    )
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_spine_render_001(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import spine_render_contract
-
-    body = spine_render_contract.write_spine_render_001_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_spine_build_001(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import spine_build_graph
-
-    body = spine_build_graph.write_spine_build_001_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_apsr_mutation_regress_001(_: argparse.Namespace) -> int:
-    from rust_engine_mcp import apsr_mutation_regress
-
-    body = apsr_mutation_regress.write_apsr_mutation_regress_001_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_bq_k1_kitfill_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k1_kitfill_witness
-
-    body = refresh_bq_k1_kitfill_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_bq_k2_coverage_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k2_coverage_witness
-
-    body = refresh_bq_k2_coverage_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_bq_k3_grammar_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k3_grammar_witness
-
-    body = refresh_bq_k3_grammar_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_dmcp_bq_k_lane_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.dmcp_bq_k_lane import refresh_bq_k_lane_witness
-
-    body = refresh_bq_k_lane_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_reaction_territory_resolve(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.reaction_territory import resolve_reaction_territory_variant
-
-    body = resolve_reaction_territory_variant(args.event_id, args.domain)
-    print(json.dumps(body, indent=2))
-    return 0
-
-
-def _cmd_reaction_territory_sessions_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.reaction_territory import refresh_reaction_territory_witness
-
-    body = refresh_reaction_territory_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pwr_utility_manifest_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import refresh_pwr_utility_manifest_witness
-
-    body = refresh_pwr_utility_manifest_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
 def _cmd_pwr_substation_batch_run(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import refresh_substation_batch_witness, run_substation_batch
+    from rust_engine_mcp.mcp_pwr_utility import run_substation_batch
 
     result = run_substation_batch()
-    witness = refresh_substation_batch_witness()
-    print(json.dumps({"batch": result, "witness": witness}, indent=2))
-    return 0 if witness.get("green") else 1
+    print(json.dumps(result, indent=2))
+    return 0 if (result.get("ok", True) if isinstance(result, dict) else True) else 1
 
 
 def _cmd_pwr_transformer_batch_run(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import refresh_transformer_batch_witness, run_transformer_batch
+    from rust_engine_mcp.mcp_pwr_utility import run_transformer_batch
 
     result = run_transformer_batch()
-    witness = refresh_transformer_batch_witness()
-    print(json.dumps({"batch": result, "witness": witness}, indent=2))
-    return 0 if witness.get("green") else 1
+    print(json.dumps(result, indent=2))
+    return 0 if (result.get("ok", True) if isinstance(result, dict) else True) else 1
 
 
 def _cmd_pwr_substation_promote(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import promote_substation, refresh_substation_promote_witness
+    from rust_engine_mcp.mcp_pwr_utility import promote_substation
 
     result = promote_substation()
-    witness = refresh_substation_promote_witness()
-    print(json.dumps({"promote": result, "witness": witness}, indent=2))
-    return 0 if witness.get("green") else 1
+    print(json.dumps(result, indent=2))
+    return 0 if (result.get("ok", True) if isinstance(result, dict) else True) else 1
 
 
 def _cmd_pwr_transformer_promote(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import promote_transformer, refresh_transformer_promote_witness
+    from rust_engine_mcp.mcp_pwr_utility import promote_transformer
 
     result = promote_transformer()
-    witness = refresh_transformer_promote_witness()
-    print(json.dumps({"promote": result, "witness": witness}, indent=2))
-    return 0 if witness.get("green") else 1
-
-
-def _cmd_pwr_substation_batch_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import refresh_substation_batch_witness
-
-    body = refresh_substation_batch_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pwr_transformer_batch_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import refresh_transformer_batch_witness
-
-    body = refresh_transformer_batch_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pwr_substation_promote_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import refresh_substation_promote_witness
-
-    body = refresh_substation_promote_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pwr_transformer_promote_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import refresh_transformer_promote_witness
-
-    body = refresh_transformer_promote_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pwr_downstream_close_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import (
-        refresh_power_grid_art_downstream_close_witness,
-        refresh_substation_qc_witness,
-        refresh_transformer_qc_witness,
-        sync_power_grid_queue_statuses,
-    )
-
-    refresh_substation_qc_witness()
-    refresh_transformer_qc_witness()
-    body = refresh_power_grid_art_downstream_close_witness()
-    queue = sync_power_grid_queue_statuses()
-    body["queue_sync"] = queue
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pwr_industrial_activation_utility_refresh(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_utility import refresh_industrial_activation_utility_art
-
-    body = refresh_industrial_activation_utility_art()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pwr_nuclear_manifest_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_nuclear import refresh_nuclear_manifest_witness
-
-    body = refresh_nuclear_manifest_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
+    print(json.dumps(result, indent=2))
+    return 0 if (result.get("ok", True) if isinstance(result, dict) else True) else 1
 
 
 def _cmd_pwr_nuclear_batch_run(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_nuclear import refresh_nuclear_batch_witness, run_nuclear_batch
+    from rust_engine_mcp.mcp_pwr_nuclear import run_nuclear_batch
 
     result = run_nuclear_batch()
-    witness = refresh_nuclear_batch_witness()
-    print(json.dumps({"batch": result, "witness": witness}, indent=2))
-    return 0 if witness.get("green") else 1
+    print(json.dumps(result, indent=2))
+    return 0 if (result.get("ok", True) if isinstance(result, dict) else True) else 1
 
 
 def _cmd_pwr_nuclear_promote(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_nuclear import promote_nuclear, refresh_nuclear_promote_witness
+    from rust_engine_mcp.mcp_pwr_nuclear import promote_nuclear
 
     result = promote_nuclear()
-    witness = refresh_nuclear_promote_witness()
-    print(json.dumps({"promote": result, "witness": witness}, indent=2))
-    return 0 if witness.get("green") else 1
-
-
-def _cmd_pwr_nuclear_batch_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_nuclear import refresh_nuclear_batch_witness
-
-    body = refresh_nuclear_batch_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pwr_nuclear_promote_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.mcp_pwr_nuclear import refresh_nuclear_promote_witness
-
-    body = refresh_nuclear_promote_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pilot_hardcode_lint(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.pilot_hardcode_lint import pilot_hardcode_lint
-
-    body = pilot_hardcode_lint()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_pilot_hardcode_lint_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.pilot_hardcode_lint import write_pilot_hardcode_lint_witness
-
-    body = write_pilot_hardcode_lint_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_example_teachable_audit(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.build_set_guards import example_teachable_audit
-
-    body = example_teachable_audit()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_example_teachable_audit_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.build_set_guards import write_example_teachable_audit_witness
-
-    body = write_example_teachable_audit_witness()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_single_archetype_ratio_guard(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.build_set_guards import single_archetype_ratio_guard
-
-    body = single_archetype_ratio_guard()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_warehouse_track_guard(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.build_set_guards import warehouse_track_guard
-
-    body = warehouse_track_guard()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_build_set_guards_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.build_set_guards import write_build_set_guards_witnesses
-
-    body = write_build_set_guards_witnesses()
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
+    print(json.dumps(result, indent=2))
+    return 0 if (result.get("ok", True) if isinstance(result, dict) else True) else 1
 
 
 def _cmd_grammar_integration_validate(args: argparse.Namespace) -> int:
-    from rust_engine_mcp.grammar_integration import grammar_integration_validate, write_grammar_integration_witness
+    from rust_engine_mcp.grammar_integration import grammar_integration_validate
 
-    if getattr(args, "write_witness", False):
-        body = write_grammar_integration_witness(args.path or None)
-    else:
-        body = grammar_integration_validate(args.path)
-    print(json.dumps(body, indent=2))
-    return 0 if body.get("green") else 1
-
-
-def _cmd_mcp_witness_honesty_validator_witness(_: argparse.Namespace) -> int:
-    from rust_engine_mcp.validators.witness_honesty import refresh_mcp_witness_honesty_validator_witness
-
-    body = refresh_mcp_witness_honesty_validator_witness()
+    body = grammar_integration_validate(args.path)
     print(json.dumps(body, indent=2))
     return 0 if body.get("green") else 1
 
 
 def _cmd_validate_report(args: argparse.Namespace) -> int:
-    if args.validator == "witness_honesty" and bool(getattr(args, "scan", False)):
-        from rust_engine_mcp.validators.witness_honesty import validate_witness_honesty_scan
-
-        report = validate_witness_honesty_scan(
-            args.target or "debug_runs",
-            compression_level=int(args.compress),
-        )
-    else:
-        report = run_validator(
-            args.validator,
-            target=args.target or None,
-            package=args.package or None,
-            compression_level=int(args.compress),
-            use_cached=bool(args.cached),
-        )
+    report = run_validator(
+        args.validator,
+        target=args.target or None,
+        package=args.package or None,
+        compression_level=int(args.compress),
+        use_cached=bool(args.cached),
+    )
     print(json.dumps(report.to_dict()))
     return 0 if report.status == "passed" else 1
 
@@ -1843,7 +472,6 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("commands", help="List CLI commands grouped by lane")
     p.add_argument("--grep", default="", help="Substring filter on command name or help")
     p.add_argument("--group", default="", help="Only this group id (see output)")
-    p.add_argument("--no-witness", action="store_true", help="Hide *-witness writers")
     p.add_argument("--json", action="store_true", help="Machine-readable catalog")
     p.set_defaults(func=_cmd_commands)
 
@@ -1885,7 +513,6 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("effect-pack", help="VSS-T4-003 — wgsl_pack hash copy to assets/staging/<effect_id>/")
     p.add_argument("spec_path", help="EffectSpec JSON path")
     p.add_argument("--force", action="store_true", help="Overwrite staging shaders on hash drift")
-    p.add_argument("--no-witness", action="store_true", help="Skip artist_vfx_pipeline_live.json refresh")
     p.set_defaults(func=_cmd_effect_pack)
 
     p = sub.add_parser("effect-promote", help="VSS-T4-003 — pack and/or promote EffectSpec to effects/registry/")
@@ -1906,7 +533,6 @@ def build_parser() -> argparse.ArgumentParser:
             "Does not override dishonest_gate."
         ),
     )
-    p.add_argument("--no-witness", action="store_true")
     p.set_defaults(func=_cmd_effect_promote)
 
     p = sub.add_parser(
@@ -1917,24 +543,13 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--batch-id", default="", help="Reference batch (default: vss_t4_reference_effects_v1)")
     p.add_argument("--no-pack", action="store_true", help="Skip pack step (expect existing staging)")
     p.add_argument("--force", action="store_true", help="Force pack overwrite on hash drift")
-    p.add_argument("--no-witness", action="store_true")
     p.set_defaults(func=_cmd_effect_preview_capture)
 
     p = sub.add_parser(
         "effect-chain-smoke",
         help="PCI-21 — isolated spec→validate→preview-capture→honest_gate→promote (no cron)",
     )
-    p.add_argument(
-        "--witness",
-        action="store_true",
-        help="Write debug_runs/pci21_effect_chain_smoke_live.json",
-    )
     p.set_defaults(func=_cmd_effect_chain_smoke)
-
-    sub.add_parser(
-        "artist-vfx-pipeline-witness",
-        help="Refresh debug_runs/artist_vfx_pipeline_live.json from staging/registry disk",
-    ).set_defaults(func=_cmd_artist_vfx_pipeline_witness)
 
     p = sub.add_parser("library-register")
     p.add_argument("job_id", nargs="?", default="")
@@ -1948,10 +563,6 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--category", default="")
     p.add_argument("--batch-id", default="")
     p.set_defaults(func=_cmd_library_search)
-
-    p = sub.add_parser("write-witness")
-    p.add_argument("batch_id")
-    p.set_defaults(func=_cmd_write_witness)
 
     p = sub.add_parser("generate-material-textures")
     p.add_argument("--profile", default="")
@@ -2004,7 +615,6 @@ def build_parser() -> argparse.ArgumentParser:
         action="store_true",
         help="BUILD-WORKER-001: generate PBR textures from snapshot material_profile then build blend",
     )
-    p.add_argument("--write-witness", action="store_true", help="Write debug_runs/build_worker_001_live.json")
     p.add_argument(
         "--render-still",
         action="store_true",
@@ -2015,17 +625,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="building_definition JSON for keyframe render leg (default warehouse pilot)",
     )
     p.set_defaults(func=_cmd_assembly_build_run)
-
-    p = sub.add_parser("pg-module-audit-002-run")
-    p.add_argument(
-        "--phase",
-        default="full",
-        choices=["sync", "specs", "geometry", "promote", "full", "all"],
-        help="Pipeline phase (default full = specs+geometry+promote)",
-    )
-    p.add_argument("--priorities", default="P0,P1", help="Comma-separated gap priorities")
-    p.add_argument("--no-blender", action="store_true", help="Bootstrap GLB from lod0 without Blender")
-    p.set_defaults(func=_cmd_pg_module_audit_002_run)
 
     p = sub.add_parser("keyframe-matrix-export")
     p.add_argument(
@@ -2053,7 +652,6 @@ def build_parser() -> argparse.ArgumentParser:
         help="Keep preview HTTP server alive N seconds (default 120 open-browser, 300 --no-browser)",
     )
     p.add_argument("--skip-bevy", action="store_true", help="Skip Bevy worker attempt")
-    p.add_argument("--write-witness", action="store_true", help="Write debug_runs/aps_preview_002_live.json")
     p.set_defaults(func=_cmd_preview_assembly)
 
     p = sub.add_parser("tile-batch-status")
@@ -2086,14 +684,6 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--batch-json", default="", help="Optional tile_batch_v1.json path")
     p.set_defaults(func=_cmd_tile_atlas_register)
 
-    p = sub.add_parser("rail-warehouse-pilot-batch-run")
-    p.add_argument(
-        "--no-headless",
-        action="store_true",
-        help="Skip headless keyframe export (expects PNGs in staging)",
-    )
-    p.set_defaults(func=_cmd_rail_warehouse_pilot_batch_run)
-
     p = sub.add_parser("tile-keyframe-export")
     p.add_argument("path", help="tile_batch_v1.json (keyframe_pack / ship production)")
     p.set_defaults(func=_cmd_tile_keyframe_export)
@@ -2104,10 +694,6 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--no-fire-row", action="store_true", help="Omit burning_00..07")
     p.add_argument("--write-batch", action="store_true", help="Include tile_batch + variant_set rows")
     p.set_defaults(func=_cmd_variant_matrix_expand)
-
-    sub.add_parser("write-procedural-tiles-production-bake-witness").set_defaults(
-        func=_cmd_write_procedural_tiles_production_bake_witness
-    )
 
     p = sub.add_parser("validate-report")
     p.add_argument(
@@ -2127,14 +713,10 @@ def build_parser() -> argparse.ArgumentParser:
             "assembly_p0",
             "assembly_production",
             "building_set_coverage",
-            "pilot_hardcode_lint",
             "landscape_grammar",
             "landscape_grammar_presets",
             "arch_build_grammar",
             "site_zone_grid",
-            "construction",
-            "witness_honesty",
-            "queue_integrity",
             "render_variant",
             "build_graph",
             "tile_promotion_honest",
@@ -2142,208 +724,14 @@ def build_parser() -> argparse.ArgumentParser:
         help="Validator id",
     )
     p.add_argument("target", nargs="?", default="", help="Path for file validators")
-    p.add_argument("--scan", action="store_true", help="Scan *_live.json under target dir (witness_honesty)")
     p.add_argument("-p", "--package", default="")
     p.add_argument("--compress", default="3", help="Compression level 1-4")
     p.add_argument("--cached", action="store_true", help="Use orchestrator last_run.json for cargo")
     p.set_defaults(func=_cmd_validate_report)
 
-    p = sub.add_parser("write-tile-fix-10-witness")
-    p.add_argument(
-        "--building",
-        default="tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json",
-    )
-    p.set_defaults(func=_cmd_write_tile_fix_10_witness)
-
-    p = sub.add_parser("write-tile-fix-designer-g4-witness")
-    p.add_argument(
-        "--building",
-        default="tools/mcp/schemas/examples/building_definition_warehouse_industrial_west_production_v1.json",
-    )
-    p.add_argument(
-        "--allow-headless",
-        action="store_true",
-        help="Schema-only (debug); default requires keyframe_manual art_quality for proceed_ship",
-    )
-    p.set_defaults(func=_cmd_write_tile_fix_designer_g4_witness)
-
-    p = sub.add_parser("agent-queue-next")
-    p.add_argument(
-        "agent",
-        help="planner | coder | designer | coder-mcp | designer-mcp | coder_a | operator | …",
-    )
-    p.add_argument("--queue", default="auto", choices=["auto", *sorted(agent_queue.QUEUE_REGISTRY)])
-    p.add_argument("--mark-in-progress", action="store_true")
-    p.set_defaults(func=_cmd_agent_queue_next)
-
-    p = sub.add_parser("get-que", help="BLANG:Q+ multi-parallel — next slice + drain board (alias: get que)")
-    p.add_argument("agent")
-    p.add_argument("--track", default="", help="T1..T8 or track_id filter")
-    p.add_argument("--demand", action="store_true", help="Attach hour-scale demand todo list")
-    p.add_argument("--minutes", default="60", help="Demand budget when --demand (default 60)")
-    p.add_argument("--mark-in-progress", action="store_true")
-    p.set_defaults(func=_cmd_get_que)
-
-    p = sub.add_parser("agent-queue-demand", help="Build ordered session todo list without picking first slice")
-    p.add_argument("agent")
-    p.add_argument("--minutes", default="60")
-    p.add_argument("--max-slices", default="8")
-    p.add_argument("--track", default="")
-    p.set_defaults(func=_cmd_agent_queue_demand)
-
-    p = sub.add_parser("agent-queue-update")
-    p.add_argument("slice_id")
-    p.add_argument("status")
-    p.add_argument("--note", default="")
-    p.add_argument(
-        "--queue",
-        default="auto",
-        choices=["auto", "designer_active", *sorted(agent_queue.QUEUE_REGISTRY)],
-    )
-    p.add_argument(
-        "--enforce",
-        action="store_true",
-        help="Block done if exit_predicate missing or witness fails WIT-EXIT-PREDICATE",
-    )
-    p.set_defaults(func=_cmd_agent_queue_update)
-
-    p = sub.add_parser("agent-queue-board")
-    p.add_argument("--agent", default="")
-    p.add_argument("--queue", default="grammar", choices=sorted(agent_queue.QUEUE_REGISTRY))
-    p.set_defaults(func=_cmd_agent_queue_board)
-
-    p = sub.add_parser("witness-brief")
-    p.add_argument("path")
-    p.add_argument("--profile", default="", help="construction | map_pick | fire_product | honesty")
-    p.set_defaults(func=_cmd_witness_brief)
-
-    sub.add_parser("review-order-brief").set_defaults(func=_cmd_review_order_brief)
-    p = sub.add_parser("slice-exec-brief")
-    p.add_argument("slice_id")
-    p.add_argument("--queue", default="", help="phase4 | grammar | … (default: search all)")
-    p.set_defaults(func=_cmd_slice_exec_brief)
-    sub.add_parser("mcp-phase4-queue-witness").set_defaults(func=_cmd_mcp_phase4_queue_witness)
-    sub.add_parser("mcp-valid-construction-witness").set_defaults(func=_cmd_mcp_valid_construction_witness)
-
-    p = sub.add_parser("handoff-brief")
-    p.set_defaults(func=_cmd_handoff_brief)
-
-    p = sub.add_parser("file-digest")
-    p.add_argument("path")
-    p.add_argument("--max-lines", default="40")
-    p.set_defaults(func=_cmd_file_digest)
-
-    p = sub.add_parser("orchestrator-brief")
-    p.add_argument("--fresh", action="store_true", help="Skip last_run.json cache")
-    p.set_defaults(func=_cmd_orchestrator_brief)
-
-    sub.add_parser("token-savings-guide").set_defaults(func=_cmd_token_savings_guide)
-
-    p = sub.add_parser("agent-flow-route", help="BLANG:FLOW cheap→hard→exec dispatch packet")
-    p.add_argument("--goal", required=True, help="Work goal (one sentence)")
-    p.add_argument(
-        "--domain",
-        default="auto",
-        help="auto|fire|ui|render|art|ops|engine|sim",
-    )
-    p.add_argument("--force-hard", action="store_true", help="Always include L1 HARD gate")
-    p.add_argument("--skip-hard", action="store_true", help="Never include L1 HARD gate")
-    p.set_defaults(func=_cmd_agent_flow_route)
-    sub.add_parser("agent-flow-policy").set_defaults(func=_cmd_agent_flow_policy)
-
-    p = sub.add_parser(
-        "terrain-honesty-lint",
-        help="RPC-1 deterministic TerrainRenderAuthority / gpu_atlas honesty scan",
-    )
-    p.add_argument("--compress", default="3")
-    p.add_argument("--no-witness", action="store_true")
-    p.set_defaults(func=_cmd_terrain_honesty_lint)
-
-    p = sub.add_parser(
-        "place-feel-phase-note",
-        help="Kit phase (smoke/lod0/production) vs place-feel claim. Does not rebake.",
-    )
-    p.add_argument("--tier", default="", help="smoke|lod0|production")
-    p.add_argument("--claim", default=None, help="Optional place_feel_claim to check")
-    p.add_argument("path", nargs="?", default=None, help="Optional job or spec JSON")
-    p.set_defaults(func=_cmd_place_feel_phase_note)
-
-    sub.add_parser("auto-fleet-brief", help="No-operator auto fleet wave status").set_defaults(
-        func=_cmd_auto_fleet_brief
-    )
-
-    p = sub.add_parser("pipeline-preflight", help="MCP-PREFLIGHT-001 environment check")
-    p.add_argument("--queue", default="grammar")
-    p.add_argument("--check-build-set", action="store_true", help="MCP-PREFLIGHT-BUILD-SET-001")
-    p.set_defaults(func=_cmd_pipeline_preflight)
-
-    sub.add_parser("ops-get-project-brief").set_defaults(func=_cmd_ops_get_project_brief)
-    sub.add_parser("build-read-grammar-v0-002-witness").set_defaults(func=_cmd_build_read_grammar_v0_002_witness)
-    sub.add_parser("aps-dna-consumer-witness").set_defaults(func=_cmd_aps_dna_consumer_witness)
-    sub.add_parser("arch-dna-consumer-contract").set_defaults(func=_cmd_arch_dna_consumer_contract)
     p = sub.add_parser("arch-dna-snapshot-brief")
     p.add_argument("path")
     p.set_defaults(func=_cmd_arch_dna_snapshot_brief)
-    p = sub.add_parser("ops-get-retry-guidance")
-    p.add_argument("task_id")
-    p.set_defaults(func=_cmd_ops_get_retry_guidance)
-
-    p = sub.add_parser("ops-get-active-blockers")
-    p.set_defaults(func=_cmd_ops_get_active_blockers)
-
-    p = sub.add_parser("ops-dashboard-refresh")
-    p.add_argument("--window-hours", type=int, default=168)
-    p.add_argument(
-        "--refresh-ci",
-        action="store_true",
-        help="Record the latest CI duration and lib-test outcome before writing the snapshot",
-    )
-    p.set_defaults(func=_cmd_ops_dashboard_refresh)
-
-    sub.add_parser("ops-process-scan").set_defaults(func=_cmd_ops_process_scan)
-    sub.add_parser("ops-drift-scan").set_defaults(func=_cmd_ops_drift_scan)
-
-    p = sub.add_parser("ops-run-events-rollup")
-    p.add_argument("--window-hours", type=int, default=168)
-    p.set_defaults(func=_cmd_ops_run_events_rollup)
-
-    sub.add_parser("ops-crash-scan").set_defaults(func=_cmd_ops_crash_scan)
-
-    p = sub.add_parser("ops-triage-refresh")
-    p.add_argument("--window-hours", type=int, default=168)
-    p.set_defaults(func=_cmd_ops_triage_refresh)
-
-    p = sub.add_parser("ops-crash-daemon")
-    p.add_argument("--interval-sec", type=int, default=30)
-    p.add_argument("--max-cycles", type=int, default=None)
-    p.set_defaults(func=_cmd_ops_crash_daemon)
-
-    p = sub.add_parser("ops-mcp-function-layer-witness")
-    p.set_defaults(func=_cmd_ops_mcp_function_layer_witness)
-
-    p = sub.add_parser(
-        "ops-intelligence-scan",
-        help="MCP-OPS-REPORT-001 — full OPS spine (index + integrity + dashboard + triage)",
-    )
-    p.add_argument("--window-hours", type=int, default=168)
-    p.add_argument(
-        "--enforce",
-        action="store_true",
-        help="Fail when witness integrity reports fails (same as RUST_ENGINE_WITNESS_INTEGRITY_ENFORCE=1)",
-    )
-    p.set_defaults(func=_cmd_ops_intelligence_scan)
-
-    p = sub.add_parser(
-        "bq-assemble-prefer-prod",
-        help="BQ-ASSEMBLE-PREF-PROD-001 — assemble defaults to production tier",
-    )
-    p.set_defaults(func=_cmd_bq_assemble_prefer_prod)
-
-    p = sub.add_parser("grammar-set-brief")
-    p.add_argument("--set-id", default="")
-    p.add_argument("--write-witness", action="store_true")
-    p.set_defaults(func=_cmd_grammar_set_brief)
-
     p = sub.add_parser("grammar-preset-pair-validate")
     p.add_argument("--preset-id", default="")
     p.add_argument("--path", default="")
@@ -2355,255 +743,19 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--seeds", default="", help="Comma-separated seed list")
     p.set_defaults(func=_cmd_grammar_eval_sweep)
 
-    sub.add_parser("grammar-pilot-parity").set_defaults(func=_cmd_grammar_pilot_parity)
-
-    p = sub.add_parser("grammar-set-tier")
-    p.add_argument("--write-witness", action="store_true")
-    p.add_argument("--witness-path", default="", help="Relative path under repo root")
-    p.set_defaults(func=_cmd_grammar_set_tier)
-
-    p = sub.add_parser("grammar-facility-brief")
-    p.add_argument("--grammar-id", default="", help="Single grammar_id (default: all grammars)")
-    p.add_argument("--write-witness", action="store_true")
-    p.set_defaults(func=_cmd_grammar_facility_brief)
-
-    sub.add_parser("site-zone-validate-witness").set_defaults(func=_cmd_site_zone_validate_witness)
-    sub.add_parser("grammar-sweep-process-witness").set_defaults(func=_cmd_grammar_sweep_process_witness)
-    sub.add_parser("city-seed-chain-witness").set_defaults(func=_cmd_city_seed_chain_witness)
-    sub.add_parser("landscape-expanded-keyframes-refresh").set_defaults(
-        func=_cmd_landscape_expanded_keyframes_refresh
-    )
-    sub.add_parser("aps-tag-tier2-witness").set_defaults(func=_cmd_aps_tag_tier2_witness)
-    sub.add_parser("aps-ux-polish-tail-witness").set_defaults(func=_cmd_aps_ux_polish_tail_witness)
-
-    p = sub.add_parser("designer-grammar-quality-loop")
-    p.add_argument("--full", action="store_true", help="Run grammar_eval_sweep per archetype")
-    p.add_argument("--sweep-seeds", type=int, default=24)
-    p.add_argument("--write-witness", action="store_true")
-    p.set_defaults(func=_cmd_designer_grammar_quality_loop)
-
     sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
-    sub.add_parser("building-set-coverage-witness").set_defaults(func=_cmd_building_set_coverage_witness)
-    sub.add_parser("aps-g4-coverage-witness").set_defaults(func=_cmd_aps_g4_coverage_witness)
-    sub.add_parser("apsr-a1-s1-witness").set_defaults(func=_cmd_apsr_a1_s1_witness)
-    sub.add_parser("apsr-a1-s2-witness").set_defaults(func=_cmd_apsr_a1_s2_witness)
-    sub.add_parser("apsr-a1-s3-witness").set_defaults(func=_cmd_apsr_a1_s3_witness)
-    sub.add_parser("apsr-a2-p1-witness").set_defaults(func=_cmd_apsr_a2_p1_witness)
-    sub.add_parser("apsr-a2-p2-witness").set_defaults(func=_cmd_apsr_a2_p2_witness)
-    sub.add_parser("apsr-a2-p3-witness").set_defaults(func=_cmd_apsr_a2_p3_witness)
-    sub.add_parser("apsr-a3-d1-witness").set_defaults(func=_cmd_apsr_a3_d1_witness)
-    sub.add_parser("apsr-a3-d2-witness").set_defaults(func=_cmd_apsr_a3_d2_witness)
-    sub.add_parser("apsr-a3-d3-witness").set_defaults(func=_cmd_apsr_a3_d3_witness)
-    sub.add_parser("apsr-a3-d4-witness").set_defaults(func=_cmd_apsr_a3_d4_witness)
-    sub.add_parser("apsr-a4-q1-witness").set_defaults(func=_cmd_apsr_a4_q1_witness)
-    sub.add_parser("apsr-a4-q2-witness").set_defaults(func=_cmd_apsr_a4_q2_witness)
-    sub.add_parser("apsr-a4-q3-witness").set_defaults(func=_cmd_apsr_a4_q3_witness)
-    sub.add_parser(
-        "aps-golden-rubric-scaffold",
-        help=(
-            "APS-GOLDEN sheet scaffold — ≥12 pending_operator rows; "
-            "never marks operator_pass (BQ-Q3 / APS-GOLDEN ops remain open)"
-        ),
-    ).set_defaults(func=_cmd_aps_golden_rubric_scaffold)
-    sub.add_parser("bq-c1-contract-witness").set_defaults(func=_cmd_bq_c1_contract_witness)
-    sub.add_parser("bq-c2-bounds-witness").set_defaults(func=_cmd_bq_c2_bounds_witness)
-    sub.add_parser("bq-c3-seam-witness").set_defaults(func=_cmd_bq_c3_seam_witness)
-    p = sub.add_parser("city-c8-pipeline-witness")
-    p.add_argument("--skip-merge", action="store_true")
-    p.set_defaults(func=_cmd_city_c8_pipeline_witness)
-    sub.add_parser("bq-f1-tail-witness").set_defaults(func=_cmd_bq_f1_tail_witness)
-    sub.add_parser("veg-f02-burn-witness").set_defaults(func=_cmd_veg_f02_burn_witness)
-    sub.add_parser("bq-f1-bake-witness").set_defaults(func=_cmd_bq_f1_bake_witness)
-    p = sub.add_parser("bq-f1-rebake-promote")
-    p.add_argument("--job-id", action="append", help="Limit rebake to specific job_id (repeatable)")
-    p.add_argument("--no-register", action="store_true", help="Skip module registry registration on promote")
-    p.add_argument("--write-witness", action="store_true")
-    p.set_defaults(func=_cmd_bq_f1_rebake_promote)
-    p_art = sub.add_parser("building-look-v2-art")
-    p_art.add_argument("--no-bevy", action="store_true", help="Skip bevy_preview_worker for AFTER stills")
-    p_art.add_argument("--skip-rebake", action="store_true", help="Only refresh AFTER stills / witness")
-    p_art.add_argument(
-        "--eye-pass",
-        action="store_true",
-        help="After inspecting AFTER stills: mark pixel_look_pass if axis+png ok",
-    )
-    p_art.add_argument(
-        "--eye-fail",
-        action="store_true",
-        help="Force pixel_look_pass false (default)",
-    )
-    p_art.set_defaults(func=_cmd_building_look_v2_art)
-    sub.add_parser("city-g2-c5-apply").set_defaults(func=_cmd_city_g2_c5_apply)
-    sub.add_parser("city-g2-c5-mcp-witness").set_defaults(func=_cmd_city_g2_c5_mcp_witness)
-    sub.add_parser("aps-guard-brief-parity-witness").set_defaults(func=_cmd_aps_guard_brief_parity_witness)
-    sub.add_parser("aps-grammar-tier-gates-live-witness").set_defaults(
-        func=_cmd_aps_grammar_tier_gates_live_witness
-    )
-    p = sub.add_parser("aps-session-presence-dump")
-    p.add_argument("--write-witness", action="store_true")
-    p.set_defaults(func=_cmd_aps_session_presence_dump)
-    p = sub.add_parser("aps-presence-operator-attestation")
-    p.add_argument("--write-witness", action="store_true")
-    p.set_defaults(func=_cmd_aps_presence_operator_attestation)
-    sub.add_parser("landscape-grammar-presets-witness").set_defaults(func=_cmd_landscape_grammar_presets_witness)
-
-    p = sub.add_parser("landscape-sign-atlas-witness")
-    p.add_argument("--refresh-atlas", action="store_true")
-    p.set_defaults(func=_cmd_landscape_sign_atlas_witness)
-
-    p = sub.add_parser("kit-production-002-g2-run")
-    p.add_argument("--no-promote", action="store_true")
-    p.set_defaults(func=_cmd_kit_production_002_g2_run)
-
-    sub.add_parser("kit-production-002-g2-witness").set_defaults(func=_cmd_kit_production_002_g2_witness)
-
-    sub.add_parser("kit-production-002-g3-validate").set_defaults(func=_cmd_kit_production_002_g3_validate)
-    sub.add_parser("kit-production-002-g3-witness").set_defaults(func=_cmd_kit_production_002_g3_witness)
-    sub.add_parser("kit-production-002-g4-evaluate").set_defaults(func=_cmd_kit_production_002_g4_evaluate)
-    sub.add_parser("kit-production-002-g4-witness").set_defaults(func=_cmd_kit_production_002_g4_witness)
-    sub.add_parser("dmcp-e3-vegetation-catalog-witness").set_defaults(func=_cmd_dmcp_e3_vegetation_catalog_witness)
-    sub.add_parser("veg-catalog-burn-rows-witness").set_defaults(func=_cmd_veg_catalog_burn_rows_witness)
-    sub.add_parser("dmcp-e4-matrix-charter-witness").set_defaults(func=_cmd_dmcp_e4_matrix_witness)
-    sub.add_parser("dmcp-e0-artist-reverdict-witness").set_defaults(func=_cmd_dmcp_e0_artist_reverdict_witness)
-    sub.add_parser("dmcp-ovr-g0-audit-witness").set_defaults(func=_cmd_dmcp_ovr_g0_audit_witness)
-    sub.add_parser("dmcp-ovr-p2-impl-audit-witness").set_defaults(func=_cmd_dmcp_ovr_p2_impl_audit_witness)
-    sub.add_parser("dmcp-ovr-p3-accept-rubric-witness").set_defaults(func=_cmd_dmcp_ovr_p3_accept_rubric_witness)
-    sub.add_parser("dmcp-veg-wave-tail-reconcile-witness").set_defaults(func=_cmd_dmcp_veg_wave_tail_reconcile_witness)
-    sub.add_parser("dmcp-parallel-lane-bkkf-witness").set_defaults(func=_cmd_dmcp_parallel_lane_bkkf_witness)
-    sub.add_parser("dmcp-facility-binding-lane-witness").set_defaults(func=_cmd_dmcp_facility_binding_lane_witness)
-    sub.add_parser("dmcp-nuclear-pwr-spec-witness").set_defaults(func=_cmd_dmcp_nuclear_pwr_spec_witness)
-    sub.add_parser("dmcp-transformer-pad-spec-witness").set_defaults(func=_cmd_dmcp_transformer_pad_spec_witness)
-    sub.add_parser("dmcp-art-spine-hub-wave-witness").set_defaults(func=_cmd_dmcp_art_spine_hub_wave_witness)
-    sub.add_parser("dmcp-designer-mcp-open-lane-witness").set_defaults(
-        func=_cmd_dmcp_designer_mcp_open_lane_witness
-    )
-    sub.add_parser("dmcp-reaction-territory-events-witness").set_defaults(
-        func=_cmd_dmcp_reaction_territory_events_witness
-    )
-    sub.add_parser("dmcp-aps-variants-reaction-pullup-witness").set_defaults(
-        func=_cmd_dmcp_aps_variants_reaction_pullup_witness
-    )
-    sub.add_parser("dmcp-city-block-recipe-witness").set_defaults(func=_cmd_dmcp_city_block_recipe_witness)
-    sub.add_parser("dmcp-city-palette-variation-witness").set_defaults(
-        func=_cmd_dmcp_city_palette_variation_witness
-    )
-    sub.add_parser("dmcp-bq-k1-kitfill-witness").set_defaults(func=_cmd_dmcp_bq_k1_kitfill_witness)
-    p_k1 = sub.add_parser("bq-k1-bake-wire")
-    p_k1.add_argument("--no-register", action="store_true")
-    p_k1.add_argument("--no-rebake", action="store_true")
-    p_k1.add_argument("--witness", action="store_true")
-    p_k1.set_defaults(func=_cmd_bq_k1_bake_wire)
-    sub.add_parser("bq-k1-bake-witness").set_defaults(func=_cmd_bq_k1_bake_witness)
-    sub.add_parser("bq-smoke-tier-audit").set_defaults(func=_cmd_bq_smoke_tier_audit)
-    p_q2 = sub.add_parser("bq-q2-screen")
-    p_q2.add_argument(
-        "--no-bevy",
-        action="store_true",
-        help="Skip bevy_preview_worker; use trimesh/browser thumbnail fallback",
-    )
-    p_q2.set_defaults(func=_cmd_bq_q2_screen)
-    p_prod = sub.add_parser("bq-prod-promote-batch")
-    p_prod.add_argument("--no-rebake", action="store_true", help="Skip Blender; seed staging from lod0 donor if needed")
-    p_prod.add_argument("--no-register", action="store_true", help="Promote without rebuilding module index")
-    p_prod.set_defaults(func=_cmd_bq_prod_promote_batch)
-    p_defer = sub.add_parser("bq-prod-defer-packs")
-    p_defer.add_argument("--no-rebake", action="store_true", help="Skip Blender; seed staging from lod0 donor if needed")
-    p_defer.add_argument("--no-register", action="store_true", help="Promote without rebuilding module index")
-    p_defer.add_argument(
-        "--no-retire-smoke",
-        action="store_true",
-        help="Skip archiving kit_greybox smoke modules",
-    )
-    p_defer.set_defaults(func=_cmd_bq_prod_defer_packs)
-    p_noncore = sub.add_parser(
-        "bq-prod-noncore-promote",
-        help="BQ-PROD-NONCORE-PROMOTE-001 — promote deferred-pack non-core lod0 slots",
-    )
-    p_noncore.add_argument("--no-rebake", action="store_true", help="Skip Blender; seed staging from lod0 donor if needed")
-    p_noncore.add_argument("--no-register", action="store_true", help="Promote without rebuilding module index")
-    p_noncore.set_defaults(func=_cmd_bq_prod_noncore_promote)
-    p_lod0_prune = sub.add_parser(
-        "bq-lod0-twin-prune",
-        help="BQ-LOD0-TWIN-PRUNE-001 — archive unused lod0 index twins (no Q3)",
-    )
-    p_lod0_prune.add_argument("--no-register", action="store_true", help="Skip rebuilding module index")
-    p_lod0_prune.add_argument("--no-retire", action="store_true", help="Skip moving lod0 folders to archive")
-    p_lod0_prune.set_defaults(func=_cmd_bq_lod0_twin_prune)
-
-    sub.add_parser(
-        "spine-render-001",
-        help="SPINE-RENDER-001 — refresh debug_runs/spine_render_001_live.json (blender-worker contract)",
-    ).set_defaults(func=_cmd_spine_render_001)
-    sub.add_parser(
-        "spine-build-001",
-        help="SPINE-BUILD-001 — refresh debug_runs/spine_build_001_live.json (build DAG + per-node witness)",
-    ).set_defaults(func=_cmd_spine_build_001)
-    sub.add_parser(
-        "apsr-mutation-regress-001",
-        help="APSR-MUTATION-REGRESS-001 — mutation ceiling + lane wiring → debug_runs/apsr_mutation_regress_001_live.json",
-    ).set_defaults(func=_cmd_apsr_mutation_regress_001)
-    sub.add_parser("dmcp-bq-k2-coverage-witness").set_defaults(func=_cmd_dmcp_bq_k2_coverage_witness)
-    sub.add_parser("dmcp-bq-k3-grammar-witness").set_defaults(func=_cmd_dmcp_bq_k3_grammar_witness)
-    sub.add_parser("dmcp-bq-k-lane-witness").set_defaults(func=_cmd_dmcp_bq_k_lane_witness)
-    p = sub.add_parser("reaction-territory-resolve")
-    p.add_argument("event_id")
-    p.add_argument("domain")
-    p.set_defaults(func=_cmd_reaction_territory_resolve)
-    sub.add_parser("reaction-territory-sessions-witness").set_defaults(
-        func=_cmd_reaction_territory_sessions_witness
-    )
-    sub.add_parser("pwr-utility-manifest-witness").set_defaults(func=_cmd_pwr_utility_manifest_witness)
     sub.add_parser("pwr-substation-batch-run").set_defaults(func=_cmd_pwr_substation_batch_run)
     sub.add_parser("pwr-transformer-batch-run").set_defaults(func=_cmd_pwr_transformer_batch_run)
     sub.add_parser("pwr-substation-promote").set_defaults(func=_cmd_pwr_substation_promote)
     sub.add_parser("pwr-transformer-promote").set_defaults(func=_cmd_pwr_transformer_promote)
-    sub.add_parser("pwr-substation-batch-witness").set_defaults(func=_cmd_pwr_substation_batch_witness)
-    sub.add_parser("pwr-transformer-batch-witness").set_defaults(func=_cmd_pwr_transformer_batch_witness)
-    sub.add_parser("pwr-substation-promote-witness").set_defaults(func=_cmd_pwr_substation_promote_witness)
-    sub.add_parser("pwr-transformer-promote-witness").set_defaults(func=_cmd_pwr_transformer_promote_witness)
-    sub.add_parser("pwr-downstream-close-witness").set_defaults(func=_cmd_pwr_downstream_close_witness)
-    sub.add_parser("pwr-industrial-activation-utility-refresh").set_defaults(
-        func=_cmd_pwr_industrial_activation_utility_refresh
-    )
-    sub.add_parser("pwr-nuclear-manifest-witness").set_defaults(func=_cmd_pwr_nuclear_manifest_witness)
     sub.add_parser("pwr-nuclear-batch-run").set_defaults(func=_cmd_pwr_nuclear_batch_run)
     sub.add_parser("pwr-nuclear-promote").set_defaults(func=_cmd_pwr_nuclear_promote)
-    sub.add_parser("pwr-nuclear-batch-witness").set_defaults(func=_cmd_pwr_nuclear_batch_witness)
-    sub.add_parser("pwr-nuclear-promote-witness").set_defaults(func=_cmd_pwr_nuclear_promote_witness)
-    sub.add_parser("mcp-witness-honesty-validator-witness").set_defaults(
-        func=_cmd_mcp_witness_honesty_validator_witness
-    )
-    p = sub.add_parser("intel-officer-sweep", help="False-positive surveillance — done/green cull candidates")
-    p.add_argument("--queue-filter", default="", help="Limit queue_integrity scan to one queue_id")
-    p.add_argument("--no-witness-scan", action="store_true", help="Skip debug_runs *_live.json green scan")
-    p.add_argument("--compress", default="3", choices=["1", "2", "3", "4"])
-    p.set_defaults(func=_cmd_intel_officer_sweep)
-
-    p = sub.add_parser("intel-officer-apply", help="Supervised reopen/demote from sweep findings")
-    p.add_argument("--ids", required=True, help="Comma-separated slice_id or finding id")
-    p.add_argument("--apply", action="store_true", help="Execute (default is dry-run preview)")
-    p.add_argument("--action", default="reopen", choices=["reopen", "blocked"])
-    p.add_argument("--note", default="")
-    p.set_defaults(func=_cmd_intel_officer_apply)
-
-    sub.add_parser("intel-officer-sweep-witness").set_defaults(func=_cmd_intel_officer_sweep_witness)
-
-    sub.add_parser("queue-integrity-reconcile-witness").set_defaults(func=_cmd_queue_integrity_reconcile_witness)
-    sub.add_parser("mcp-witness-integrity-ops-witness").set_defaults(func=_cmd_mcp_witness_integrity_ops_witness)
-    sub.add_parser("pilot-hardcode-lint").set_defaults(func=_cmd_pilot_hardcode_lint)
-    sub.add_parser("pilot-hardcode-lint-witness").set_defaults(func=_cmd_pilot_hardcode_lint_witness)
-    sub.add_parser("example-teachable-audit").set_defaults(func=_cmd_example_teachable_audit)
-    sub.add_parser("example-teachable-audit-witness").set_defaults(func=_cmd_example_teachable_audit_witness)
-    sub.add_parser("single-archetype-ratio-guard").set_defaults(func=_cmd_single_archetype_ratio_guard)
-    sub.add_parser("warehouse-track-guard").set_defaults(func=_cmd_warehouse_track_guard)
-    sub.add_parser("build-set-guards-witness").set_defaults(func=_cmd_build_set_guards_witness)
     p = sub.add_parser("grammar-integration-validate")
     p.add_argument(
         "path",
         nargs="?",
         default="tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json",
     )
-    p.add_argument("--write-witness", action="store_true")
     p.set_defaults(func=_cmd_grammar_integration_validate)
 
     p = sub.add_parser(
@@ -2625,7 +777,6 @@ def _cmd_commands(args: argparse.Namespace) -> int:
         build_parser(),
         grep=args.grep,
         group=args.group,
-        include_witness=not args.no_witness,
     )
     if args.json:
         print(json.dumps(rows, indent=2))

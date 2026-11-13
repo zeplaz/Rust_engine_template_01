@@ -1,2 +1,0 @@
-# promote fixture
-line two

@@ -123,6 +123,7 @@ class AssemblyGrammarSectionMixin:
 
         self._empty_state.configure(text=assembly_empty_state_text(self._grammar_set_tier))
 
+    @staticmethod
     def _apply_tier_section(
         section: CollapsibleSection,
         mode: str,
@@ -143,6 +144,7 @@ class AssemblyGrammarSectionMixin:
             section._head_btn.configure(text=section._header_text())
             section._sync_body()
 
+    @staticmethod
     def _widget_packed(widget: tk.Misc) -> bool:
         try:
             return bool(widget.winfo_manager())

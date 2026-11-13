@@ -380,14 +380,14 @@ class VariantsPanel(ttk.Frame):
         self._tag_context_var.set(compose_mandate_tag_context(active, focus=self._tag_focus))
 
     def _wire_layer_live_preview(self) -> None:
-        focus_map = {
-            self.lighting_var: "lighting",
-            self.power_var: "power",
-            self.damage_state_var: "damage_state",
-            self.fill_var: "fill",
-            self.material_var: "material",
-        }
-        for var, focus in focus_map.items():
+        focus_pairs = (
+            (self.lighting_var, "lighting"),
+            (self.power_var, "power"),
+            (self.damage_state_var, "damage_state"),
+            (self.fill_var, "fill"),
+            (self.material_var, "material"),
+        )
+        for var, focus in focus_pairs:
             var.trace_add("write", lambda *_a, f=focus: self._on_layer_draft(f))
         self.damage_val_var.trace_add("write", lambda *_a: self._on_layer_draft("damage"))
         self.night_lights_var.trace_add("write", lambda *_a: self._on_layer_draft("night_lights"))

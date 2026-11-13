@@ -209,19 +209,7 @@ def test_mcp_prod_b2_witness_refresh_green():
     assert refresh_mcp_prod_b2_witness()
 
 
-def test_mcp_prod_c_pilot_witness_refresh_green():
-    from rust_engine_mcp import prod_c_pilot
-
-    assert prod_c_pilot.refresh_mcp_prod_c_pilot_witness()
 
 
-def test_mcp_prod_tile_val_witness_refresh_green():
-    from rust_engine_mcp import prod_tile_val
-
-    assert prod_tile_val.refresh_mcp_prod_tile_val_witness()
 
 
-def test_mcp_prod_index_witness_refresh_green():
-    from rust_engine_mcp import prod_index
-
-    assert prod_index.refresh_mcp_prod_index_witness()

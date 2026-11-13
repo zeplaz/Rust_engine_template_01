@@ -18,10 +18,12 @@ pytestmark = pytest.mark.aps_gui
 
 def test_long_hall_rule_highlights_footprint_cells(gui_panel_host) -> None:
     from art_pipeline_suite.assembly_panel import AssemblyPanel
+    from conftest import assembly_service_for
     from art_pipeline_suite.state import SuiteState
     from rust_engine_mcp import assembly
 
-    panel = AssemblyPanel(gui_panel_host, SuiteState(), on_log=lambda _m: None, start_job=None)
+    _st = SuiteState()
+    panel = AssemblyPanel(gui_panel_host, _st, on_log=lambda _m: None, start_job=None, assembly_service=assembly_service_for(_st))
     panel.pack(fill="both", expand=True)
     gui_panel_host.winfo_toplevel().update_idletasks()
 
@@ -43,11 +45,13 @@ def test_long_hall_rule_highlights_footprint_cells(gui_panel_host) -> None:
 
 def test_write_aps_grammar_p3_witness(gui_panel_host) -> None:
     from art_pipeline_suite.assembly_panel import AssemblyPanel
+    from conftest import assembly_service_for
     from art_pipeline_suite.state import SuiteState
     from rust_engine_mcp import assembly
     from rust_engine_mcp.paths import repo_root
 
-    panel = AssemblyPanel(gui_panel_host, SuiteState(), on_log=lambda _m: None, start_job=None)
+    _st = SuiteState()
+    panel = AssemblyPanel(gui_panel_host, _st, on_log=lambda _m: None, start_job=None, assembly_service=assembly_service_for(_st))
     panel.pack(fill="both", expand=True)
     gui_panel_host.winfo_toplevel().update_idletasks()
 

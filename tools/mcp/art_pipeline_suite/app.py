@@ -280,11 +280,7 @@ class ArtPipelineSuiteApp(tk.Tk):
             self._authority_lbl.configure(wraplength=wrap_for_widget(parent, minimum=240))
         parent.bind("<Configure>", _wrap)
     def _build_buildings_tabs(self) -> None:
-        job_kw = {
-            "start_job": self._start_job,
-            "atlas_service": self.atlas_service,
-            "assembly_service": self.assembly_service,
-        }
+        job_kw = {"start_job": self._start_job}
         nb = self._notebook_buildings
         self.catalog = self._add_scrollable_tab(
             nb, CatalogPanel, "Catalog", state=self.state, on_select=self._on_catalog_select
@@ -315,6 +311,7 @@ class ArtPipelineSuiteApp(tk.Tk):
             state=self.state,
             on_log=self._log,
             on_open_in_materials=self._open_material_in_materials_tab,
+            assembly_service=self.assembly_service,
             **job_kw,
         )
         bind_aps_tooltip(self.assembly, "tab_assembly")
@@ -325,10 +322,13 @@ class ArtPipelineSuiteApp(tk.Tk):
             state=self.state,
             on_log=self._log,
             on_go_assembly=self._focus_assembly_tab,
+            atlas_service=self.atlas_service,
             **job_kw,
         )
         bind_aps_tooltip(self.variants, "tab_variants")
-        self.atlas = self._add_scrollable_tab(nb, AtlasPanel, "Atlas", state=self.state, on_log=self._log, **job_kw)
+        self.atlas = self._add_scrollable_tab(
+            nb, AtlasPanel, "Atlas", state=self.state, on_log=self._log, atlas_service=self.atlas_service, **job_kw
+        )
         bind_aps_tooltip(self.atlas, "tab_atlas")
         self.atlas.set_domain(ArtDomain.BUILDINGS.value)
     def _build_landscape_tabs(self) -> None:

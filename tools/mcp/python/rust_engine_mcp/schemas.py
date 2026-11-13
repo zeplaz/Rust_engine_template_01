@@ -114,9 +114,5 @@ def validate_witness_integrity_catalog(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("witness_integrity_rules_v1.schema.json"))
 
 
-def validate_queue_registry_doc(data: dict[str, Any]) -> None:
-    jsonschema.validate(instance=data, schema=_load_schema("queue_registry_v1.schema.json"))
-
-
 def load_json_file(path: Path) -> dict[str, Any]:
     return json.loads(path.read_text(encoding="utf-8"))

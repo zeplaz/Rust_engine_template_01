@@ -17,8 +17,7 @@ def test_mcp_help_payload_matches_live_parser() -> None:
     grouped_names = {sig.split()[0] for sig in grouped}
     assert payload["command_count"] == len(live)
     assert grouped_names == live
-    assert "file-digest" in live
-    assert "token-savings-guide" in live
+    assert "validate-glb" in live
     assert "hint" in payload
 
 

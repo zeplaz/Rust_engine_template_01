@@ -56,6 +56,7 @@ class AssemblyValidationSectionMixin:
         self._assembly.set_p0_passed(rep.status == "passed")
         return rep
 
+    @staticmethod
     def _format_validation_hints(rep) -> str:
         return format_p0_display(rep, limit=20)[:1200]
 
