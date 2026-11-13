@@ -358,6 +358,13 @@ fn building_logistics_construction_production_logistics_loop_closes() {
 
     // 9. Storage: nothing grows past its cap, and a plant whose product nobody takes idles with a
     // clear "output full" state in the info panel.
+    // Outputs the chain still draws (coal, water) dip by a truckload and refill within a step or two;
+    // wait (bounded) for the step where every buffer stands at its cap.
+    let mut guard = 0;
+    while !app.world().get::<crate::economy::resource_flow::FacilityFlowState>(terminal).unwrap().output_full && guard < 30 {
+        frame(&mut app);
+        guard += 1;
+    }
     let node = app.world().get::<ResourceFlowNode>(terminal).unwrap();
     for r in &node.production {
         assert!(
