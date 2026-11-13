@@ -133,11 +133,10 @@ pub use strategic_command_queue::{
 pub use stage7_behavioral::{
     ensure_stage7_behavioral_m3_witness_fields, ensure_stage7_m4_play_witness_fields,
     publish_stage7_behavioral_overlay_samples, resolve_stage7_m3_overlay_sample_counts, seed_stage7_behavioral_overlay_resources,
-    seed_stage7_behavioral_m2_lib_proof, seed_stage7_behavioral_witness_for_lib_proof,
-    seed_stage7_m4_playtest_enqueue, stage7_overlay_reader_sample_counts,
+    seed_stage7_behavioral_m2_lib_proof, seed_stage7_m4_playtest_enqueue, stage7_overlay_reader_sample_counts,
     sync_stage7_overlay_witness_from_reader_samples, tick_strategic_command_queue_system,
     Stage7BehavioralHud,
-    Stage7BehavioralPlugin, Stage7BehavioralWitnessState, Stage7BeliefState,
+    Stage7BehavioralPlugin, Stage7BehavioralState, Stage7BeliefState,
 };
 pub use behavior_pipeline::{
     compose_decision_score, decision_pipeline_composition_system, sample_decision_components,
@@ -181,8 +180,7 @@ pub use strategic_behavior_schedule::{StrategicBehaviorSchedule, StrategicBehavi
 pub use construction_book::{
     advance_corridor_construction_book_on_sim_tick, advance_corridor_construction_row,
     align_corridor_book_with_transport_directory, apply_corridor_book_from_transport_snapshot,
-    corridor_phase_from_wire, corridor_phase_to_wire, corridor_r8_roundtrip_witness_green,
-    corridor_sim_tick_writer_witness_green, transport_construction_records_from_book,
+    corridor_phase_from_wire, corridor_phase_to_wire, transport_construction_records_from_book,
     transport_directory_edge_signature, ConstructionPhase, CorridorConstructionBook,
     CorridorConstructionPhase, CorridorConstructionRow, CorridorConstructionStatus,
     CorridorConstructionTickConfig, CorridorEdgeId,
@@ -206,8 +204,6 @@ pub use site::{
     BuildingScaleParams,
     CommitConstructionSiteEvent,
     CommittedPlacementSnapshot,
-    commit_carries_scale_and_weights_witness_green,
-    overlap_blocks_commit_witness_green,
     ConstructionSite,
     FootprintTiles,
     ProceduralBuildingSpec,
@@ -232,13 +228,8 @@ pub use site::{
     ZoneEmitter,
 };
 pub use settlement::{
-    build_city_g1_c1_001_witness_body, build_city_g1_c2_001_witness_body,
-    build_city_g1_c4_001_witness_body, building_grammar_seed_for_site,
-    city_g1_c1_001_block_archetype_witness_green, city_g1_c2_001_block_frame_witness_green,
-    city_g1_c4_001_seed_chain_witness_green, construction_organic_growth_001_witness_green,
-    seed_settlement_books_if_empty, set_p5_002_block_assignment_witness_green,
-    set_p5_hierarchy_books_seeded_witness_green, set_p5_hierarchy_gap_lib_green,
-    assign_block_for_tile, register_site_on_commit, AutoBuildPolicy, AutoBuildPolicyBook,
+    building_grammar_seed_for_site,
+    seed_settlement_books_if_empty, assign_block_for_tile, register_site_on_commit, AutoBuildPolicy, AutoBuildPolicyBook,
     BlockArchetype, BlockBook, BlockFrame, BlockFrameBook, BlockId, BlockRecord, BlockScore,
     BuildingUsage, DEFAULT_WORLD_SEED, DevelopmentPressure, DevelopmentPressureBook, DistrictBook,
     DistrictId, DistrictMetrics, DistrictMetricsBook, DistrictRecord, GrowthActorLayer,
@@ -254,7 +245,7 @@ pub use hybrid_brain::{
     resolve_world_state_from_masses, ActionWeights, HybridActionKind, HybridAgentEmotions,
     HybridAgentTraits, HybridBeliefBias, HybridBrainSample, HybridResolutionMasses,
     HybridResolutionTelemetry, HybridSimLastResolved, HybridSimPhaseClock, HybridSimScratch,
-    Perception, resolve_world_state, sch_w1_t1_hybrid_pause_witness_green, StateControlModel,
+    Perception, resolve_world_state, StateControlModel,
     WorldEvent, WorldIntentField,
 };
 pub use hybrid_fields::{
@@ -277,8 +268,7 @@ pub use schedule::{StrategicOverlayCouplingScratch, StrategicOverlayDisplayPolic
 pub use sim::{
     CityPlanningHints, HybridSimPipeline, InfrastructureCorridor, LogisticsAiRuntime,
     OperationalTheaterSummary, SettlementSite, SimDebugView, StrategicSimulationPlugin,
-    StrategicTransportCorridor, sch_w1_t1_settlement_pause_witness_green,
-};
+    StrategicTransportCorridor, };
 
 pub use runbook_rounds::city_planning::{
     site_score, utility_redundancy_weight, SettlementArchetype,

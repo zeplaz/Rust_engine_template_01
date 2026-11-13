@@ -60,19 +60,6 @@ pub fn trigger_effect_to_emit_step(effect_id: &str) -> Result<ScenarioStep, Trig
     spec.to_emit_step().ok_or(TriggerLoadError::UnsupportedSource)
 }
 
-#[must_use]
-pub fn scenario_trigger_registry_witness_green() -> bool {
-    scenario_trigger_registry_self_check().is_ok()
-}
-
-fn scenario_trigger_registry_self_check() -> Result<(), &'static str> {
-    let step = trigger_effect_to_emit_step("demo_ignite_v0").map_err(|_| "resolve")?;
-    if !step.routes_fire_via_sim_effect() {
-        return Err("route");
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

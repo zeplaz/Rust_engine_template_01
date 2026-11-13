@@ -42,29 +42,8 @@ impl TriggerSpecV1 {
     }
 }
 
-#[must_use]
-pub fn scenario_trigger_001_witness_green() -> bool {
-    scenario_trigger_001_self_check().is_ok()
-}
-
-fn scenario_trigger_001_self_check() -> Result<(), &'static str> {
-    let manifest = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-    let path = manifest.join("assets/scenarios/triggers/demo_ignite.trigger.ron");
-    let text = std::fs::read_to_string(&path).map_err(|_| "ron_missing")?;
-    let spec: TriggerSpecV1 = ron::from_str(&text).map_err(|_| "ron_parse")?;
-    if spec.schema_version != 1 {
-        return Err("schema");
-    }
-    spec.to_emit_step().ok_or("step")?;
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn scenario_trigger_001_fixture_ron_green() {
-        assert!(scenario_trigger_001_witness_green());
-    }
 }

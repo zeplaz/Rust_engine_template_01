@@ -17,7 +17,7 @@ use crate::render::extraction::fire_view_extract::{per_view_fire_extract_bounded
 use crate::render::extraction::sim_visual_extract::{FireVisualFrame, FireVisualGpuInstance};
 
 use super::per_view_policy::PerViewRepresentationPolicy;
-use super::view_fire_isolation::{overlay_masks_aligned_with_map_views, ViewFireIsolationWitness};
+use super::view_fire_isolation::{overlay_masks_aligned_with_map_views, ViewFireIsolationStats};
 
 /// Lib stress rollup for witness JSON (S1–S3).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -43,24 +43,6 @@ pub fn run_phase_d_parity_stress_matrix() -> PhaseDParityStressReport {
         s2_multiview_no_fire_bleed: stress_s2_multiview_no_cross_view_fire_bleed(),
         s3_simulation_enter_rebind: stress_s3_worldgen_to_simulation_rebinds_masks(),
     }
-}
-
-#[must_use]
-pub fn triage_phase_d_parity_001_stress_green() -> bool {
-    run_phase_d_parity_stress_matrix().all_green()
-}
-
-/// Baseline VM-08 + VM-11 + stress matrix (product close).
-#[must_use]
-pub fn triage_phase_d_parity_001_green(
-    isolation: &ViewIsolationDiagnostics,
-    fire: &ViewFireIsolationWitness,
-) -> bool {
-    isolation.vm08_overlay_masks_aligned
-        && fire.vm08_overlay_masks_aligned
-        && fire.vm11_minimap_cap_respected
-        && fire.vm11_preview_cap_respected
-        && triage_phase_d_parity_001_stress_green()
 }
 
 /// Mirrors [`crate::gui::hud::simulation_session::apply_simulation_map_presentation_defaults`] overlay slice.
@@ -251,27 +233,4 @@ fn stress_s3_worldgen_to_simulation_rebinds_masks() -> bool {
 mod tests {
     use super::*;
 
-    #[test]
-    fn phase_d_parity_stress_matrix_s1_s3_green() {
-        let report = run_phase_d_parity_stress_matrix();
-        assert!(report.s1_world_main_simulation_map_masks, "S1");
-        assert!(report.s2_multiview_no_fire_bleed, "S2");
-        assert!(report.s3_simulation_enter_rebind, "S3");
-        assert!(triage_phase_d_parity_001_stress_green());
-    }
-
-    #[test]
-    fn triage_phase_d_parity_witness_rollup_with_baseline() {
-        let isolation = ViewIsolationDiagnostics {
-            vm08_overlay_masks_aligned: true,
-            ..Default::default()
-        };
-        let fire = ViewFireIsolationWitness {
-            vm08_overlay_masks_aligned: true,
-            vm11_minimap_cap_respected: true,
-            vm11_preview_cap_respected: true,
-            ..Default::default()
-        };
-        assert!(triage_phase_d_parity_001_green(&isolation, &fire));
-    }
 }

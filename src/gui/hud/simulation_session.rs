@@ -5,20 +5,15 @@ use bevy::prelude::*;
 use crate::engine::states::BaseState;
 use crate::engine::AppState;
 use crate::engine::WorldGenChromeLatch;
-use crate::gui::diagnostics_ui::DiagnosticsUiState;
 use crate::gui::editor::scenario_script_panel::ScenarioScriptPanelState;
 use crate::gui::editor::world_gen_ui::WorldGenUiState;
 use crate::gui::editor::world_preview::{
     dismiss_world_gen_preview_chrome, WorldPreviewLifecycle, WorldPreviewUiState,
 };
-use crate::gui::hud::shell_framework::{
-    simulation_floating_shells_gated, suppress_simulation_floating_shell_slots,
-};
-use crate::gui::hud::simulation_shell_phase2::UiShellMigrationWitness;
+use crate::gui::hud::shell_framework::suppress_simulation_floating_shell_slots;
 use crate::gui::hud::{
-    seed_ux_e03_transmission_media_registry, ContextTrayState, HudCommandShellLayout,
-    HudDockRegistry, HudOverlayTrayState, HudPanelState, ProductShellUpdateBudget,
-    ProductShellWidgetId, TransmissionMediaProviderRegistry, TransmissionShellState,
+    ContextTrayState, HudCommandShellLayout, HudDockRegistry, HudOverlayTrayState, HudPanelState,
+    ProductShellWidgetId,
 };
 use crate::gui::{MinimapFollowMode, MinimapPresentationSource, MinimapShellState};
 use crate::engine::launch_args::EngineLaunchArgs;
@@ -44,14 +39,12 @@ use bevy::window::PrimaryWindow;
 pub fn collapse_simulation_floating_shell_layout(
     layout: &mut HudCommandShellLayout,
     tray: &mut HudOverlayTrayState,
-    transmission: &mut TransmissionShellState,
 ) {
     layout.overlay_tray_state = HudPanelState::Collapsed;
     layout.command_tray_state = HudPanelState::Collapsed;
     layout.intel_timeline_state = HudPanelState::Collapsed;
     layout.command_table_state = HudPanelState::Collapsed;
     tray.tray_panel_state = HudPanelState::Collapsed;
-    transmission.panel_state = HudPanelState::Collapsed;
 }
 
 /// PLAY-01: collapse editor chrome; keep sim HUD shells available but not expanded by default.
@@ -64,16 +57,8 @@ pub fn apply_simulation_hud_defaults(
     mut dock: ResMut<HudDockRegistry>,
     mut layout: ResMut<HudCommandShellLayout>,
     mut tray: ResMut<HudOverlayTrayState>,
-    mut transmission: ResMut<TransmissionShellState>,
     mut context_tray: ResMut<ContextTrayState>,
-    mut shell_budget: ResMut<ProductShellUpdateBudget>,
-    mut diagnostics: ResMut<DiagnosticsUiState>,
-    mut witness: ResMut<UiShellMigrationWitness>,
-    mut shell_diag: ResMut<crate::gui::hud::ProductShellDiagnostics>,
 ) {
-    shell_diag.reset_egui_pass_count_for_simulation_session();
-    shell_budget.set_bypass_throttle(false);
-    diagnostics.sections_default_open = false;
     dismiss_world_gen_preview_chrome(
         &mut world_gen,
         &mut preview_ui,
@@ -84,37 +69,20 @@ pub fn apply_simulation_hud_defaults(
     script_panel.window_open = false;
     script_panel.tools_entry_visible = false;
 
-    collapse_simulation_floating_shell_layout(&mut layout, &mut tray, &mut transmission);
+    collapse_simulation_floating_shell_layout(&mut layout, &mut tray);
     context_tray.panel_state = HudPanelState::Collapsed;
 
     suppress_simulation_floating_shell_slots(&mut dock);
     // Minimap dock slot stays visible for Bevy chrome; egui texture dock is editor-only (Phase 2B).
     dock.slot_mut(ProductShellWidgetId::Minimap).visible = true;
     dock.slot_mut(ProductShellWidgetId::Minimap).minimized = false;
-    sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
 }
 
-/// VISUAL-JANK-LOD-001 / CHROME-001 — kill sticky debug overlays on Simulation enter.
-pub fn suppress_simulation_visual_debug_chrome(
-    mut focus_debug: ResMut<crate::gui::CameraFocusDebug>,
-    mut block_frame_dbg: ResMut<crate::gui::BlockFrameDebugUiState>,
-    mut pressure: ResMut<crate::gui::PressureComposerState>,
-) {
+/// VISUAL-JANK-LOD-001 / CHROME-001 — kill the sticky camera-focus debug overlay on Simulation enter.
+pub fn suppress_simulation_visual_debug_chrome(mut focus_debug: ResMut<crate::gui::CameraFocusDebug>) {
     if !crate::gui::camera_focus_debug_env_armed() {
         focus_debug.enabled = false;
     }
-    block_frame_dbg.visible = false;
-    pressure.show_bevy_strip = false;
-}
-
-/// UX-E03-CODER-A — seed transmission media registry on Simulation enter (read-only narrative lane).
-pub fn seed_ux_e03_transmission_on_simulation_enter(
-    mut registry: ResMut<TransmissionMediaProviderRegistry>,
-    mut witness: ResMut<UiShellMigrationWitness>,
-) {
-    seed_ux_e03_transmission_media_registry(&mut registry);
-    witness.ux_e03_media_registry_wired =
-        crate::gui::hud::transmission_media::ux_e03_coder_a_green(&registry);
 }
 
 /// Minimap + sim map presentation defaults on enter (keeps [`apply_simulation_hud_defaults`] under Bevy param cap).
@@ -282,34 +250,6 @@ pub fn refit_simulation_map_camera_on_enter(
     }
 }
 
-/// PLAY-01 Phase 2B: keep egui product shells closed in sim (Bevy rail is authoritative).
-pub fn enforce_simulation_product_egui_gates(
-    base: Res<State<BaseState>>,
-    mut dock: ResMut<HudDockRegistry>,
-    mut layout: ResMut<HudCommandShellLayout>,
-    mut tray: ResMut<HudOverlayTrayState>,
-    mut transmission: ResMut<TransmissionShellState>,
-    mut witness: ResMut<UiShellMigrationWitness>,
-) {
-    if !matches!(*base.get(), BaseState::Simulation) {
-        return;
-    }
-    suppress_simulation_floating_shell_slots(&mut dock);
-    collapse_simulation_floating_shell_layout(&mut layout, &mut tray, &mut transmission);
-    sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
-}
-
-/// **UI-P2B-001 / UI-P2B-CODER-B** — sync gate flags for live proof (`phase2b_closed`).
-pub(crate) fn sync_simulation_egui_shell_gate_witness(
-    dock: &HudDockRegistry,
-    witness: &mut UiShellMigrationWitness,
-) {
-    let build = dock.slot(ProductShellWidgetId::BuildToolbox);
-    witness.build_toolbox_egui_gated =
-        !build.visible && build.minimized && !build.detached;
-    witness.floating_egui_shells_gated = simulation_floating_shells_gated(dock);
-}
-
 /// Re-close generator + preview if something reopens them while in gameplay (stops panel flicker).
 pub fn enforce_world_gen_chrome_closed_in_simulation(
     base: Res<State<BaseState>>,
@@ -431,11 +371,7 @@ impl Plugin for SimulationSessionPlugin {
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),
-                seed_ux_e03_transmission_on_simulation_enter.after(apply_simulation_play_visual_budget),
-            )
-            .add_systems(
-                OnEnter(BaseState::Simulation),
-                apply_simulation_map_presentation_defaults.after(seed_ux_e03_transmission_on_simulation_enter),
+                apply_simulation_map_presentation_defaults.after(apply_simulation_play_visual_budget),
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),
@@ -456,7 +392,6 @@ impl Plugin for SimulationSessionPlugin {
                 Update,
                 (
                     enforce_world_gen_chrome_closed_in_simulation,
-                    enforce_simulation_product_egui_gates,
                     maintain_simulation_minimap_shell,
                     maintain_minimap_gpu_bootstrap_fallback,
                 )
@@ -480,43 +415,13 @@ mod tests {
     }
 
     #[test]
-    fn ui_p2b_coder_b_resets_egui_pass_count_on_sim_enter() {
-        let mut diag = crate::gui::hud::ProductShellDiagnostics::default();
-        diag.record_egui_pass();
-        diag.record_egui_pass();
-        assert_eq!(diag.egui_pass_count, 2);
-        diag.reset_egui_pass_count_for_simulation_session();
-        assert_eq!(diag.egui_pass_count, 0);
-        assert_eq!(diag.egui_pass_count_sim_session, 0);
-    }
-
-    #[test]
-    fn simulation_egui_gate_witness_sync() {
-        let mut dock = HudDockRegistry::default();
-        dock.slot_mut(ProductShellWidgetId::BuildToolbox).visible = true;
-        dock.slot_mut(ProductShellWidgetId::OverlaysPanel).visible = true;
-        let mut witness = UiShellMigrationWitness::default();
-        sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
-        assert!(!witness.build_toolbox_egui_gated);
-        assert!(!witness.floating_egui_shells_gated);
-
-        suppress_simulation_floating_shell_slots(&mut dock);
-        sync_simulation_egui_shell_gate_witness(&dock, &mut witness);
-        assert!(witness.build_toolbox_egui_gated);
-        assert!(witness.floating_egui_shells_gated);
-    }
-
-    #[test]
     fn collapse_floating_shell_layout_resets_tray_panel_state() {
         let mut layout = HudCommandShellLayout::default();
         layout.command_tray_state = HudPanelState::Expanded;
         let mut tray = HudOverlayTrayState::default();
         tray.tray_panel_state = HudPanelState::Expanded;
-        let mut transmission = TransmissionShellState::default();
-        transmission.panel_state = HudPanelState::Expanded;
-        collapse_simulation_floating_shell_layout(&mut layout, &mut tray, &mut transmission);
+        collapse_simulation_floating_shell_layout(&mut layout, &mut tray);
         assert_eq!(tray.tray_panel_state, HudPanelState::Collapsed);
         assert_eq!(layout.command_tray_state, HudPanelState::Collapsed);
-        assert_eq!(transmission.panel_state, HudPanelState::Collapsed);
     }
 }

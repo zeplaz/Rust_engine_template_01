@@ -26,12 +26,6 @@ use crate::terrain::generation::{
     cell_canopy_scales, Chunk, ChunkCellMatrix, ChunkDerivedMetrics,
 };
 
-pub const LANDSCAPE_GRAMMAR_LG2_LIVE_JSON: &str = "debug_runs/landscape_grammar_lg2_live.json";
-pub const LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON: &str =
-    "debug_runs/landscape_grammar_lg4_preview_live.json";
-pub const LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON: &str =
-    "debug_runs/landscape_grammar_disturbance_log_live.json";
-
 /// Topology succession stage on the landscape program graph (LG-2-001).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum SuccessionTopologyStage {
@@ -140,7 +134,7 @@ pub struct LandscapeDisturbanceQueue {
 }
 
 #[derive(Resource, Debug, Default, Clone)]
-pub struct LandscapeGrammarLg2Witness {
+pub struct LandscapeGrammarLg2Stats {
     pub succession_ticks: u64,
     pub fire_disturbances: u32,
     pub construction_disturbances: u32,
@@ -191,7 +185,7 @@ pub fn tick_succession_age_on_ecology(
         Option<&CanopyDrivers>,
         Option<&ChunkCellStand>,
     )>,
-    mut witness: ResMut<LandscapeGrammarLg2Witness>,
+    mut witness: ResMut<LandscapeGrammarLg2Stats>,
 ) {
     for (mut state, history, fire, drivers, stand) in &mut q {
         let heat = fire.map(|f| f.heat).unwrap_or(0.0);
@@ -229,7 +223,7 @@ pub fn apply_fire_disturbance_on_heat(
     mut history_q: Query<&mut DisturbanceHistory>,
     mut succession_q: Query<&mut SuccessionState>,
     program_q: Query<&LandscapeProgramOnChunk>,
-    mut witness: ResMut<LandscapeGrammarLg2Witness>,
+    mut witness: ResMut<LandscapeGrammarLg2Stats>,
 ) {
     for (entity, fire, stand) in &fire_q {
         // A chunk with per-cell stands scars when most of the stand burnt out; otherwise chunk heat.
@@ -294,7 +288,7 @@ pub fn apply_construction_clear_disturbance(
         Option<&mut SuccessionState>,
         Option<&mut CanopyDrivers>,
     )>,
-    mut witness: ResMut<LandscapeGrammarLg2Witness>,
+    mut witness: ResMut<LandscapeGrammarLg2Stats>,
 ) {
     let Some(mut events) = events else {
         return;
@@ -352,7 +346,7 @@ pub fn drain_landscape_disturbance_queue(
         Option<&mut SuccessionState>,
         Option<&mut CanopyDrivers>,
     )>,
-    mut witness: ResMut<LandscapeGrammarLg2Witness>,
+    mut witness: ResMut<LandscapeGrammarLg2Stats>,
 ) {
     let pending = std::mem::take(&mut queue.pending);
     for (coord, kind) in pending {
@@ -614,80 +608,6 @@ pub fn sync_stand_instances_from_terrain(
     }
 }
 
-/// VEG-FIRE-CORRIDOR-FULLAPP-001 — population subcell grid feeds fuel bridge (read-only extract path).
-#[must_use]
-pub fn fire_corridor_population_fuel_witness_green() -> bool {
-    use bevy::prelude::{App, MinimalPlugins};
-    use crate::systems::ecology::{
-        evaluate_landscape_program, load_landscape_grammar_catalog, ChunkEcology,
-        LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID, VegetationField,
-    };
-    use crate::systems::fire::ChunkFuelProfile;
-    use crate::systems::weather::ChunkWeather;
-    use crate::terrain::generation::Chunk;
-
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins);
-    let catalog = load_landscape_grammar_catalog();
-    let Some(preset) = catalog.presets.get(LG1_PILOT_PRESET_ID) else {
-        return false;
-    };
-    let eval = evaluate_landscape_program(
-        preset,
-        LG1_PILOT_CHUNK,
-        &ChunkEcology::default(),
-        &VegetationField::default(),
-        &ChunkWeather::default(),
-    );
-    let entity = app
-        .world_mut()
-        .spawn((
-            Chunk {
-                coord: LG1_PILOT_CHUNK,
-            },
-            ChunkEcology::default(),
-            VegetationField::default(),
-            ChunkWeather::default(),
-            LandscapeProgramOnChunk {
-                preset_id: LG1_PILOT_PRESET_ID.to_string(),
-                evaluation: eval,
-            },
-            SuccessionState {
-                stage: SuccessionTopologyStage::OldGrowth,
-                ..Default::default()
-            },
-            ChunkFuelProfile::default(),
-        ))
-        .id();
-    attach_lg2_bundle_on_chunk(&mut app.world_mut().commands(), entity, true);
-    app.add_systems(
-        Update,
-        (
-            sync_fuel_bridge_from_succession,
-            derive_vegetation_population_from_graph,
-        )
-            .chain(),
-    );
-    app.update();
-    let world = app.world_mut();
-    let Ok((pop, fuel)) = world.query::<(&VegetationPopulation, &ChunkFuelProfile)>().single(world)
-    else {
-        return false;
-    };
-    pop.mean_density > 0.0 && fuel.old_growth > 0.0
-}
-
-#[must_use]
-pub fn lg2_witness_green(
-    eval: &LandscapeProgramEvaluation,
-    witness: &LandscapeGrammarLg2Witness,
-) -> bool {
-    eval.topology_kind_count >= 3
-        && eval.nested_depth_max >= 2
-        && witness.fire_disturbances >= 1
-        && witness.construction_disturbances >= 1
-}
-
 
 
 #[must_use]
@@ -726,7 +646,7 @@ pub fn merge_harness_eval_summary(
 
 
 pub fn landscape_grammar_lg2_plugin(app: &mut App) {
-    app.init_resource::<LandscapeGrammarLg2Witness>()
+    app.init_resource::<LandscapeGrammarLg2Stats>()
         .init_resource::<LandscapeDisturbanceQueue>()
         .add_systems(
             Update,
@@ -751,10 +671,8 @@ pub fn landscape_grammar_lg2_plugin(app: &mut App) {
 mod tests {
     use super::*;
     
-    use super::super::landscape_grammar::{
-        load_landscape_preset_from_path, LANDSCAPE_PRESETS_DIR,
-    };
-    use super::super::landscape_grammar_map::repo_asset_path;
+    
+    
     use crate::strategic::{
         BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles, LayerType, SiteArchetype,
         SiteId, StrategicRasterConfig,
@@ -772,7 +690,7 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .init_resource::<SimTick>()
-            .init_resource::<LandscapeGrammarLg2Witness>()
+            .init_resource::<LandscapeGrammarLg2Stats>()
             .add_systems(Update, apply_fire_disturbance_on_heat);
 
         let entity = app
@@ -799,7 +717,7 @@ mod tests {
 
         app.update();
 
-        let witness = app.world().resource::<LandscapeGrammarLg2Witness>();
+        let witness = app.world().resource::<LandscapeGrammarLg2Stats>();
         assert!(
             witness.fire_disturbances >= 1,
             "fire_disturbances={}",
@@ -817,7 +735,7 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .init_resource::<SimTick>()
-            .init_resource::<LandscapeGrammarLg2Witness>()
+            .init_resource::<LandscapeGrammarLg2Stats>()
             .init_resource::<StrategicRasterConfig>()
             .add_message::<CommitConstructionSiteEvent>()
             .add_systems(Update, apply_construction_clear_disturbance);
@@ -847,7 +765,7 @@ mod tests {
 
         app.update();
 
-        let witness = app.world().resource::<LandscapeGrammarLg2Witness>();
+        let witness = app.world().resource::<LandscapeGrammarLg2Stats>();
         assert!(
             witness.construction_disturbances >= 1,
             "construction_disturbances={}",
@@ -875,7 +793,7 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .init_resource::<SimTick>()
-            .init_resource::<LandscapeGrammarLg2Witness>()
+            .init_resource::<LandscapeGrammarLg2Stats>()
             .init_resource::<LandscapeDisturbanceQueue>()
             .add_systems(Update, drain_landscape_disturbance_queue);
 
@@ -895,7 +813,7 @@ mod tests {
 
         app.update();
 
-        let witness = app.world().resource::<LandscapeGrammarLg2Witness>();
+        let witness = app.world().resource::<LandscapeGrammarLg2Stats>();
         assert_eq!(witness.harvest_disturbances, 1);
     }
 
@@ -904,7 +822,7 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .init_resource::<SimTick>()
-            .init_resource::<LandscapeGrammarLg2Witness>()
+            .init_resource::<LandscapeGrammarLg2Stats>()
             .init_resource::<LandscapeDisturbanceQueue>()
             .add_systems(Update, drain_landscape_disturbance_queue);
         let entity = app
@@ -940,7 +858,7 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins)
             .init_resource::<SimTick>()
-            .init_resource::<LandscapeGrammarLg2Witness>()
+            .init_resource::<LandscapeGrammarLg2Stats>()
             .init_resource::<StrategicRasterConfig>()
             .add_message::<CommitConstructionSiteEvent>()
             .add_systems(Update, apply_construction_clear_disturbance);

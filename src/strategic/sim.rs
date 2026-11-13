@@ -567,38 +567,6 @@ fn settlement_and_corridor_tick(
     }
 }
 
-/// **SCH-W1-T1-001** lib witness — settlement growth frozen while sim paused.
-#[must_use]
-pub fn sch_w1_t1_settlement_pause_witness_green() -> bool {
-    use crate::systems::sim_control::SimControlState;
-    use bevy::time::TimeUpdateStrategy;
-    use std::time::Duration;
-
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .init_resource::<SimControlState>()
-        .init_resource::<CityPlanningHints>()
-        .init_resource::<TransportFieldStore>()
-        .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_secs_f32(0.5)))
-        .add_systems(Update, settlement_and_corridor_tick);
-
-    app.world_mut().spawn(SettlementSite::new(100, IVec2::ZERO, 1.0));
-    {
-        let mut ctrl = app.world_mut().resource_mut::<SimControlState>();
-        ctrl.paused = true;
-    }
-
-    for _ in 0..12 {
-        app.update();
-    }
-
-    let pop = {
-        let mut q = app.world_mut().query::<&SettlementSite>();
-        q.iter(app.world()).next().expect("settlement").population
-    };
-    pop == 100
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

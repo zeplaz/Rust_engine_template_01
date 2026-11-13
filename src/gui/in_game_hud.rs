@@ -11,24 +11,20 @@ use bevy::ui::Display;
 
 use crate::engine::BaseState;
 use crate::strategic::{
-    ActiveMissions, CityPlanningHints, LogisticsAiRuntime, NarrativeObservationBus,
-    OperationalTheaterSummary, StrategicOverlayDisplayPolicy, MAX_STRATEGIC_FACTION_SLOTS,
+    ActiveMissions, NarrativeObservationBus, OperationalTheaterSummary,
 };
 use crate::construction::ToolContext;
 use crate::gui::hud::{
-    update_developmental_cause_strip_system, update_developmental_context_strip_system,
     tool_context_uses_icon_atlas, BuildRailRoot, BuildRailToolIcon, BuildRailToolLabel,
     BuildRailToolSlot, ContextTrayBodyLine, ContextTrayBodyRoot,
     ContextTrayRoot, ContextTrayTab, ContextTrayTabButton, ContextTrayTabLabel, IconId,
     LogisticsVehicleChip, LogisticsVehicleChipIcon, LogisticsVehicleChipLabel,
     LogisticsVehicleChipRow, PetroleumPanelTabIcon, PetroleumPanelTabLabel, PetroleumPanelTabRoot,
-    DevelopmentalCauseStripLine,
-    DevelopmentalCauseStripRoot, DevelopmentalContextStripLine, MapViewportFrameInset,
+    MapViewportFrameInset,
     MinimapChromeRoot, MinimapChromeOverlayHint, MinimapChromeResizeGrip, MinimapChromeTitleBar,
     MinimapChromeTitleText, MinimapGpuImageNode, OpsStripAlertBadge, OpsStripAlertBadgeText,
     OpsStripAlerts, OpsStripIntel, OpsStripPower, OpsStripTime, OpsStripTrayAffordance,
     OpsStripWeather, OpsStripZone, SimulationShellPhase2Plugin, BUILD_RAIL_W_PX,
-    OPS_STRIP_FONT_MIN_PX,
     COMMAND_LEFT_STACK_COLUMN_GAP_PX, CONTEXT_RAIL_W_PX, LEFT_CONTEXT_STACK_BODY_W_PX,
     CONTEXT_TRAY_BODY_H_PX, CONTEXT_TRAY_TAB_H_PX, OPS_STRIP_TOP_OFFSET_PX, MAP_FRAME_INSET_PX,
 };
@@ -53,9 +49,6 @@ pub struct ResourceDisplay;
 
 #[derive(Component)]
 struct LogisticsPickHookAttached;
-
-#[derive(Component)]
-struct StrategicOpsHudLine;
 
 /// Top bar — `base_ui_direction_principls.md` “operational command table”.
 #[derive(Component)]
@@ -109,18 +102,11 @@ impl Default for CommandLeftStackState {
 }
 const OPS_STRIP_H_PX: f32 = 30.0; // HUD-A-001 — 28–32 px ops strip row
 const OPS_STRIP_MONO_PT: f32 = 13.0;
-/// L0 developmental context strip — always on in simulation shell (`developmental_ux_runbook_v1.md`).
-const DEV_CONTEXT_STRIP_H_PX: f32 = 26.0;
-const DEV_CONTEXT_MONO_PT: f32 = 11.5;
-/// L2 cause chain hint row (`developmental_ux_runbook_v1.md` § UX-2).
-const DEV_CAUSE_STRIP_H_PX: f32 = 22.0;
+const TRAY_BODY_MONO_PT: f32 = 11.5;
 const HUD_MONO_PT: f32 = 13.5;
 
 /// Fixed chrome above the simulation map fill node (logical px).
-pub const SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX: f32 = OPS_STRIP_TOP_OFFSET_PX
-    + OPS_STRIP_H_PX
-    + DEV_CONTEXT_STRIP_H_PX
-    + DEV_CAUSE_STRIP_H_PX;
+pub const SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX: f32 = OPS_STRIP_TOP_OFFSET_PX + OPS_STRIP_H_PX;
 /// `center_row` padding (must match spawn — used for rescue-floor math).
 pub(crate) const CENTER_ROW_EDGE_PAD_PX: f32 = 8.0;
 #[inline]
@@ -161,12 +147,6 @@ pub struct SimulationMapViewportDebug {
     pub pending_wh: Vec2,
 }
 
-/// When **compact**, the strategic HUD shows a one-line summary; full line includes city-planning hints.
-#[derive(Resource, Clone, Copy, Debug, Default)]
-pub struct StrategicHudStripState {
-    pub compact: bool,
-}
-
 /// PostUpdate ordering: measure Bevy UI map fill before camera ortho fit.
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum SimulationViewportSyncSet {
@@ -189,7 +169,6 @@ impl Plugin for InGameHudPlugin {
         app.init_resource::<HudLogisticsFocus>()
             .init_resource::<HudAggregateSettings>()
             .init_resource::<crate::gui::map_tile_raster::PlayMapPixelMode>()
-            .init_resource::<StrategicHudStripState>()
             .init_resource::<CommandLeftStackState>()
             .init_resource::<SimulationMapViewportTrace>()
             .init_resource::<SimulationMapViewportDebug>()
@@ -207,7 +186,7 @@ impl Plugin for InGameHudPlugin {
             .add_systems(
                 Update,
                 (
-                    strategic_hud_chrome_input,
+                    command_left_stack_toggle_input,
                     sync_command_left_stack_visibility,
                     command_left_stack_rail_interaction,
                     left_context_stack_collapse_interaction,
@@ -215,14 +194,6 @@ impl Plugin for InGameHudPlugin {
                     cycle_logistics_focus_dev,
                 )
                     .run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                Update,
-                update_developmental_context_strip_system.run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                Update,
-                update_developmental_cause_strip_system.run_if(in_simulation_or_editor),
             )
             .add_systems(
                 Update,
@@ -240,10 +211,6 @@ impl Plugin for InGameHudPlugin {
             .add_systems(
                 Update,
                 update_site_logistics_hud.run_if(in_simulation_or_editor),
-            )
-            .add_systems(
-                Update,
-                update_strategic_ops_hud.run_if(in_simulation_or_editor),
             )
             .add_systems(
                 Update,
@@ -366,10 +333,8 @@ fn spawn_simulation_command_shell(
         .unwrap_or_default();
 
     let tools = format!(
-        "Tools — Options/keys {} · Diagnostics {} · Pressure {} · Logistics list {} · Cycle focus {} · World gen {} · Collapse left stack {}.",
+        "Tools — Options/keys {} · Logistics list {} · Cycle focus {} · World gen {} · Collapse left stack {}.",
         InputBindings::format_key(bindings.toggle_keybindings_options),
-        InputBindings::format_key(bindings.toggle_diagnostics),
-        InputBindings::format_key(bindings.toggle_pressure_composer),
         InputBindings::format_key(bindings.toggle_logistics_targets_panel),
         InputBindings::format_key(bindings.cycle_logistics_focus),
         InputBindings::format_key(bindings.toggle_world_generator),
@@ -377,12 +342,8 @@ fn spawn_simulation_command_shell(
     );
 
     let hint = format!(
-        "Logistics — select storage ({}) · pressure ({}) · Strategic compact ({}) · overlays ({}/{}) · build cycle ({}) · left context toggle ({})",
+        "Logistics — select storage ({}) · build cycle ({}) · left context toggle ({})",
         InputBindings::format_key(bindings.cycle_logistics_focus),
-        InputBindings::format_key(bindings.toggle_pressure_composer),
-        InputBindings::format_key(bindings.toggle_strategic_hud_strip_compact),
-        InputBindings::format_key(bindings.toggle_strategic_overlay_routing_congestion),
-        InputBindings::format_key(bindings.toggle_strategic_overlay_ew_denial),
         InputBindings::format_key(bindings.cycle_build_planning_tool),
         InputBindings::format_key(bindings.toggle_command_left_stack),
     );
@@ -413,7 +374,6 @@ fn spawn_simulation_command_shell(
             Pickable::IGNORE,
             ZIndex(750),
             SimulationCommandShellRoot,
-            crate::gui::hud::DebugLayoutTag("hud_root"),
             Name::new("hud_root"),
         ))
         .with_children(|shell| {
@@ -496,7 +456,7 @@ fn spawn_simulation_command_shell(
                             .with_children(|b| {
                                 b.spawn((
                                     Text::new("◆0"),
-                                    TextFont::from_font_size(OPS_STRIP_FONT_MIN_PX).with_font(font.clone()),
+                                    TextFont::from_font_size(11.0).with_font(font.clone()),
                                     TextColor(palette.bevy_fg_data()),
                                     OpsStripAlertBadgeText,
                                 ));
@@ -625,75 +585,7 @@ fn spawn_simulation_command_shell(
                         });
                 });
 
-            shell
-                .spawn((
-                    Node {
-                        position_type: PositionType::Absolute,
-                        left: Val::Px(0.0),
-                        top: Val::Px(OPS_STRIP_TOP_OFFSET_PX + OPS_STRIP_H_PX),
-                        width: Val::Percent(100.0),
-                        height: Val::Px(DEV_CONTEXT_STRIP_H_PX),
-                        min_height: Val::Px(DEV_CONTEXT_STRIP_H_PX),
-                        max_height: Val::Px(DEV_CONTEXT_STRIP_H_PX),
-                        padding: UiRect::axes(Val::Px(10.0), Val::Px(4.0)),
-                        flex_direction: FlexDirection::Row,
-                        align_items: AlignItems::Center,
-                        border: UiRect::bottom(Val::Px(1.0)),
-                        border_radius: BorderRadius::ZERO,
-                        overflow: Overflow::clip(),
-                        ..default()
-                    },
-                    BackgroundColor(palette.bevy_hud_panel_fill()),
-                    strip_border,
-                    ZIndex(1150),
-                    FocusPolicy::Block,
-                    Interaction::default(),
-                ))
-                .with_children(|ctx_row| {
-                    ctx_row.spawn((
-                        Text::new("CONTEXT — …"),
-                        TextFont::from_font_size(DEV_CONTEXT_MONO_PT).with_font(font.clone()),
-                        TextColor(palette.bevy_secondary_text()),
-                        DevelopmentalContextStripLine,
-                    ));
-                });
-
-            shell
-                .spawn((
-                    Node {
-                        position_type: PositionType::Absolute,
-                        left: Val::Px(0.0),
-                        top: Val::Px(OPS_STRIP_TOP_OFFSET_PX + OPS_STRIP_H_PX + DEV_CONTEXT_STRIP_H_PX),
-                        width: Val::Percent(100.0),
-                        height: Val::Px(DEV_CAUSE_STRIP_H_PX),
-                        min_height: Val::Px(DEV_CAUSE_STRIP_H_PX),
-                        max_height: Val::Px(DEV_CAUSE_STRIP_H_PX),
-                        padding: UiRect::axes(Val::Px(10.0), Val::Px(3.0)),
-                        flex_direction: FlexDirection::Row,
-                        align_items: AlignItems::Center,
-                        border: UiRect::bottom(Val::Px(1.0)),
-                        border_radius: BorderRadius::ZERO,
-                        overflow: Overflow::clip(),
-                        ..default()
-                    },
-                    BackgroundColor(palette.bevy_hud_panel_fill()),
-                    strip_border,
-                    ZIndex(1140),
-                    FocusPolicy::Block,
-                    Interaction::default(),
-                    Visibility::Visible,
-                    DevelopmentalCauseStripRoot,
-                ))
-                .with_children(|cause_row| {
-                    cause_row.spawn((
-                        Text::new("CAUSE — …"),
-                        TextFont::from_font_size(DEV_CONTEXT_MONO_PT).with_font(font.clone()),
-                        TextColor(palette.bevy_text_muted()),
-                        DevelopmentalCauseStripLine,
-                    ));
-                });
-
-            // Full-window map hole; ops/context/cause strips and left stack draw above (higher Z).
+            // Full-window map hole; ops strip and left stack draw above (higher Z).
             shell
                 .spawn((
                     Node {
@@ -708,7 +600,6 @@ fn spawn_simulation_command_shell(
                     Pickable::IGNORE,
                     FocusPolicy::Pass,
                     ZIndex(100),
-                    crate::gui::hud::DebugLayoutTag("center_row"),
                     Name::new("center_row"),
                 ))
                 .with_children(|row| {
@@ -726,7 +617,6 @@ fn spawn_simulation_command_shell(
                         SimulationMapViewportFill,
                         map_image,
                         BackgroundColor(palette.bevy_hud_panel_fill()),
-                        crate::gui::hud::DebugLayoutTag("sim_map_fill"),
                         Name::new("sim_map_fill"),
                     ))
                     .with_children(|inset| {
@@ -767,7 +657,6 @@ fn spawn_simulation_command_shell(
                     Interaction::default(),
                     ZIndex(900),
                     CommandLeftStackOverlay,
-                    crate::gui::hud::DebugLayoutTag("left_stack_overlay"),
                     Name::new("left_stack_overlay"),
                 ))
                 .with_children(|left_pack| {
@@ -910,12 +799,6 @@ fn spawn_simulation_command_shell(
                                 tf_hud(HUD_MONO_PT),
                                 TextColor(palette.bevy_accent_terminal()),
                                 ObjectivesHudLine,
-                            ));
-                            parent.spawn((
-                                Text::new("Strategic — theater / logistics AI (initializing…)"),
-                                tf_hud(HUD_MONO_PT),
-                                TextColor(palette.bevy_secondary_text()),
-                                StrategicOpsHudLine,
                             ));
                             parent.spawn((
                                 Text::new("STORY — …"),
@@ -1255,7 +1138,7 @@ fn spawn_simulation_command_shell(
                         });
                         body.spawn((
                             Text::new("CONTEXT — select a tab or click ALERTS on ops strip"),
-                            TextFont::from_font_size(DEV_CONTEXT_MONO_PT).with_font(font.clone()),
+                            TextFont::from_font_size(TRAY_BODY_MONO_PT).with_font(font.clone()),
                             TextColor(palette.bevy_secondary_text()),
                             ContextTrayBodyLine,
                         ));
@@ -1485,24 +1368,13 @@ fn left_context_stack_collapse_interaction(
     }
 }
 
-fn strategic_hud_chrome_input(
+fn command_left_stack_toggle_input(
     keys: Res<ButtonInput<KeyCode>>,
     bindings: Res<InputBindings>,
-    mut policy: ResMut<StrategicOverlayDisplayPolicy>,
-    mut strip: ResMut<StrategicHudStripState>,
     mut left_stack: ResMut<CommandLeftStackState>,
 ) {
     if keys.just_pressed(bindings.toggle_command_left_stack) {
         left_stack.collapsed = !left_stack.collapsed;
-    }
-    if keys.just_pressed(bindings.toggle_strategic_hud_strip_compact) {
-        strip.compact = !strip.compact;
-    }
-    if keys.just_pressed(bindings.toggle_strategic_overlay_routing_congestion) {
-        policy.apply_routing_congestion = !policy.apply_routing_congestion;
-    }
-    if keys.just_pressed(bindings.toggle_strategic_overlay_ew_denial) {
-        policy.apply_ew_denial = !policy.apply_ew_denial;
     }
 }
 
@@ -1585,60 +1457,6 @@ fn merge_amounts_and_caps(
         }
     }
     (amounts, caps)
-}
-
-fn update_strategic_ops_hud(
-    theater: Res<OperationalTheaterSummary>,
-    logistics: Res<LogisticsAiRuntime>,
-    city: Res<CityPlanningHints>,
-    policy: Res<StrategicOverlayDisplayPolicy>,
-    strip: Res<StrategicHudStripState>,
-    mut text_q: Query<&mut Text, With<StrategicOpsHudLine>>,
-) {
-    let mut t_alt = 0.0f32;
-    let mut n_alt = 0.0f32;
-    for i in 1..MAX_STRATEGIC_FACTION_SLOTS {
-        let a = theater.mean_threat_by_slot[i];
-        if a > 1e-4 || theater.mean_logistics_strength_by_slot[i] > 1e-4 {
-            t_alt += a;
-            n_alt += 1.0;
-        }
-    }
-    let alt_t = if n_alt > 0.0 { t_alt / n_alt } else { 0.0 };
-    let layers = format!(
-        "layers C:{} E:{}",
-        if policy.apply_routing_congestion { "on" } else { "off" },
-        if policy.apply_ew_denial { "on" } else { "off" },
-    );
-    let line = if strip.compact {
-        format!(
-            "Strategic — compact | T {:.2} L {:.2} | congest {:.2} dmg {:.2} | {}",
-            theater.mean_threat_by_slot[0],
-            theater.mean_logistics_strength_by_slot[0],
-            logistics.congestion_proxy,
-            logistics.mean_edge_damage,
-            layers,
-        )
-    } else {
-        format!(
-            "Strategic — threat {:.2} / logi {:.2} (alt μT {:.2}) | congest {:.2} edge dmg {:.2} stock {:.2} industry {:.2} manifest {:.2} | site {:.2} util {:.2} rebuild {:.2} | {}",
-            theater.mean_threat_by_slot[0],
-            theater.mean_logistics_strength_by_slot[0],
-            alt_t,
-            logistics.congestion_proxy,
-            logistics.mean_edge_damage,
-            logistics.stockpile_fill_ratio,
-            logistics.industrial_output_proxy,
-            logistics.production_domain_proxy,
-            city.last_best_site_score,
-            city.utility_redundancy_hint,
-            city.adaptive_rebuild_pressure,
-            layers,
-        )
-    };
-    for mut text in text_q.iter_mut() {
-        crate::gui::style::widgets::set_text_if_changed(&mut text, line.clone());
-    }
 }
 
 fn update_site_logistics_hud(

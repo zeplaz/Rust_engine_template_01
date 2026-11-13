@@ -20,7 +20,7 @@ pub use logistics_bridge::{FacilityPortal, FacilityPortalRegistered, PortalAttac
 pub use resource_flow::{
     flow_node_from_definition, register_resource_flow_nodes_system, resource_type_from_tag,
     FacilityFlowState, ResourceFlowNode, ResourceFlowNodeRegistered, ResourceFlowPlugin,
-    ResourceFlowRegistry, ResourceFlowSimWitness, ResourceRate, TransportMode,
+    ResourceFlowRegistry, ResourceFlowSimStats, ResourceRate, TransportMode,
 };
 pub use site_placement::{ensure_site_world_transform_system, site_world_position};
 pub use spatial_district::{

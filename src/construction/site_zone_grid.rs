@@ -125,12 +125,6 @@ pub fn site_occupancy_pct(grid: &SiteZoneGrid) -> f32 {
     occupied / total
 }
 
-#[must_use]
-pub fn site_zone_occupancy_witness_green(grid: &SiteZoneGrid) -> bool {
-    let pct = site_occupancy_pct(grid);
-    (0.15..=0.40).contains(&pct)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

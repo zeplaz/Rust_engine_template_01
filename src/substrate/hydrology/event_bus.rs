@@ -49,7 +49,7 @@ pub struct HydrologyDirtyEvent {
 
 /// B-H2 bridge telemetry — updated by `crate::construction::hydro_coupling` only.
 #[derive(Resource, Clone, Debug, Default)]
-pub struct HydrologyConstructionCouplingWitness {
+pub struct HydrologyConstructionCouplingStats {
     pub bridge_registered: bool,
     pub execute_emit_count: u32,
     pub preview_emit_count: u32,
@@ -57,7 +57,7 @@ pub struct HydrologyConstructionCouplingWitness {
 
 #[must_use]
 pub fn construction_hydro_coupling_witness_green(
-    coupling: &HydrologyConstructionCouplingWitness,
+    coupling: &HydrologyConstructionCouplingStats,
     queue: &HydrologyEventQueue,
 ) -> bool {
     coupling.bridge_registered

@@ -9,37 +9,16 @@ use bevy::prelude::*;
 
 use crate::strategic::{footprint_affected_chunk_coords, BuildSiteTile, FootprintTiles};
 use crate::substrate::hydrology::{
-    HydrologyConstructionCouplingWitness, HydrologyDirtyEvent, HydrologyDirtyReason,
+    HydrologyConstructionCouplingStats, HydrologyDirtyEvent, HydrologyDirtyReason,
     HydrologyEventQueue,
 };
 use crate::substrate::ChunkKey;
 
 pub use crate::substrate::hydrology::construction_hydro_coupling_witness_green;
 
-/// Lib witness refresh: one execute emit + drain cycle (no preview emits).
-pub fn seed_hydro_coupling_lib_witness(
-    queue: &mut HydrologyEventQueue,
-    coupling: &mut HydrologyConstructionCouplingWitness,
-    registry: &mut crate::substrate::WorldSubstrateRegistry,
-    key: ChunkKey,
-) {
-    use crate::substrate::hydrology::drain::drain_construction_hydro_events;
-
-    coupling.bridge_registered = true;
-    emit_construction_hydro_dirty(
-        queue,
-        coupling,
-        key,
-        HydrologyDirtyReason::ConstructionComplete { structure_id: 1 },
-        1,
-        [0_u32],
-    );
-    drain_construction_hydro_events(queue, registry);
-}
-
 /// Marks B-H2 bridge registered when substrate plugin is enabled.
 pub fn register_construction_hydro_coupling_bridge(
-    mut coupling: Option<ResMut<HydrologyConstructionCouplingWitness>>,
+    mut coupling: Option<ResMut<HydrologyConstructionCouplingStats>>,
 ) {
     if let Some(c) = coupling.as_mut() {
         c.bridge_registered = true;
@@ -49,7 +28,7 @@ pub fn register_construction_hydro_coupling_bridge(
 /// Construction-facing enqueue — never touches slab hydrology fields.
 pub fn emit_construction_hydro_dirty(
     queue: &mut HydrologyEventQueue,
-    coupling: &mut HydrologyConstructionCouplingWitness,
+    coupling: &mut HydrologyConstructionCouplingStats,
     key: ChunkKey,
     reason: HydrologyDirtyReason,
     structure_id: u64,
@@ -67,7 +46,7 @@ pub fn emit_construction_hydro_dirty(
 /// Site / building execute commit ([`crate::strategic::commit_construction_site_system`]).
 pub fn emit_site_execute_hydro_dirty(
     queue: &mut HydrologyEventQueue,
-    coupling: &mut HydrologyConstructionCouplingWitness,
+    coupling: &mut HydrologyConstructionCouplingStats,
     structure_id: u64,
     origin: BuildSiteTile,
     footprint: FootprintTiles,
@@ -96,7 +75,7 @@ pub fn emit_site_execute_hydro_dirty(
 /// Road / rail segment execute ([`super::construction_pipeline::execute_construction_plans_system`]).
 pub fn emit_road_execute_hydro_dirty(
     queue: &mut HydrologyEventQueue,
-    coupling: &mut HydrologyConstructionCouplingWitness,
+    coupling: &mut HydrologyConstructionCouplingStats,
     structure_id: u64,
     tiles: &[BuildSiteTile],
     cells_per_chunk: UVec2,
@@ -160,7 +139,7 @@ mod tests {
     #[test]
     fn execute_emit_enqueued_preview_emits_zero() {
         let mut queue = HydrologyEventQueue::default();
-        let mut coupling = HydrologyConstructionCouplingWitness {
+        let mut coupling = HydrologyConstructionCouplingStats {
             bridge_registered: true,
             ..Default::default()
         };
@@ -180,7 +159,7 @@ mod tests {
     #[test]
     fn site_execute_emits_construction_complete_per_chunk() {
         let mut queue = HydrologyEventQueue::default();
-        let mut coupling = HydrologyConstructionCouplingWitness::default();
+        let mut coupling = HydrologyConstructionCouplingStats::default();
         emit_site_execute_hydro_dirty(
             &mut queue,
             &mut coupling,
@@ -202,7 +181,7 @@ mod tests {
 
         let mut app = App::new();
         app.add_plugins((MinimalPlugins, StatesPlugin, SubstratePlugin))
-            .init_resource::<HydrologyConstructionCouplingWitness>()
+            .init_resource::<HydrologyConstructionCouplingStats>()
             .init_state::<BaseState>()
             .insert_state(BaseState::Simulation)
             .add_systems(Update, hydrology_drain_construction_events_system);
@@ -215,7 +194,7 @@ mod tests {
         }
         {
             app.world_mut()
-                .resource_mut::<HydrologyConstructionCouplingWitness>()
+                .resource_mut::<HydrologyConstructionCouplingStats>()
                 .bridge_registered = true;
             let pushed =
                 app.world_mut()
@@ -228,7 +207,7 @@ mod tests {
                     });
             assert!(pushed);
             app.world_mut()
-                .resource_mut::<HydrologyConstructionCouplingWitness>()
+                .resource_mut::<HydrologyConstructionCouplingStats>()
                 .execute_emit_count = 1;
         }
 
@@ -254,7 +233,7 @@ mod tests {
         assert_eq!(queue.construction_events_drained, 1);
         let coupling = app
             .world()
-            .resource::<HydrologyConstructionCouplingWitness>();
+            .resource::<HydrologyConstructionCouplingStats>();
         assert!(construction_hydro_coupling_witness_green(coupling, queue));
     }
 }

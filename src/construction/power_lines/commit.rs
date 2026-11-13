@@ -93,23 +93,6 @@ pub fn commit_power_line_to_utility_graph(
     placement.clear_path();
 }
 
-#[must_use]
-pub fn power_line_commit_witness_green() -> bool {
-    let mut placement = ActivePowerLinePlacement::default();
-    placement
-        .generated_segments
-        .push(super::placement::PowerLineSegmentPreview {
-            start: Vec3::new(0.5, 0.0, 0.5),
-            end: Vec3::new(3.5, 0.0, 0.5),
-            valid: true,
-        });
-    let mut snap = crate::infrastructure::utility::fixture_utility_network_snapshot();
-    let mut graph = hydrate_utility_graph_from_snapshot(&snap);
-    let edges_before = snap.edges.len();
-    commit_power_line_to_utility_graph(&mut placement, &mut snap, &mut graph, VoltageClass::Medium);
-    edges_before < snap.edges.len() && graph.power_edges.len() >= 3
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

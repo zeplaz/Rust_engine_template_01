@@ -26,7 +26,7 @@ pub use pass::{
 pub use state::{
     minimap_gpu_compositor_default_on_unset, minimap_gpu_compositor_env_enabled,
     minimap_gpu_compositor_runtime_enabled, minimap_terrain_source_bind,
-    minimap_terrain_source_label, perf_vis_p1b_gpu_default_001_green, MinimapCompositePath,
+    minimap_terrain_source_label, MinimapCompositePath,
     MinimapCompositorState, MinimapTerrainSourceBind,
 };
 pub use render_target::{

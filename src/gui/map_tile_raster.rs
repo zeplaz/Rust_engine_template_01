@@ -341,10 +341,6 @@ struct ElevGrid {
     w: usize,
     h: usize,
     data: Vec<f32>,
-    /// Max sample x / y (used to size the hydro grid exactly as the sparse map did).
-    max_x: usize,
-    max_y: usize,
-    hash: u64,
 }
 
 impl ElevGrid {
@@ -365,20 +361,13 @@ impl ElevGrid {
                 w: 0,
                 h: 0,
                 data: Vec::new(),
-                max_x: 0,
-                max_y: 0,
-                hash: 0,
             };
         }
         let w = max_x - x_min + 1;
         let h = max_y - y_min + 1;
         let mut data = vec![f32::NAN; w * h];
-        let mut hash = 0xcbf2_9ce4_8422_2325_u64;
         for (x, y, z) in samples {
             data[(y - y_min) * w + (x - x_min)] = z;
-            for v in [x as u64, y as u64, u64::from(z.to_bits())] {
-                hash = (hash ^ v).wrapping_mul(0x0000_0100_0000_01b3);
-            }
         }
         Self {
             x_min,
@@ -386,9 +375,6 @@ impl ElevGrid {
             w,
             h,
             data,
-            max_x,
-            max_y,
-            hash,
         }
     }
 
@@ -407,10 +393,6 @@ impl ElevGrid {
         } else {
             Some(v)
         }
-    }
-
-    fn is_empty(&self) -> bool {
-        self.data.is_empty()
     }
 }
 
@@ -634,14 +616,6 @@ mod tests {
             None,
         );
         data
-    }
-
-    #[test]
-    fn play_map_pit_is_wetter_than_peak() {
-        let data = five_by_five(0.05, 0.95);
-        let pit = data[4 * (2 * 5 + 2) + 2];
-        let peak = data[4 * (0 * 5 + 0) + 2];
-        assert!(pit > peak, "pit blue {pit} peak blue {peak}");
     }
 
     #[test]

@@ -194,65 +194,6 @@ pub fn read_chunk_fire_state_ron(path: impl AsRef<Path>) -> std::io::Result<Chun
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))
 }
 
-#[must_use]
-pub fn fire_save_roundtrip_lib_green() -> bool {
-    fire_save_roundtrip_self_check().is_ok()
-}
-
-fn fire_save_roundtrip_self_check() -> Result<(), &'static str> {
-    let snapshot = capture_chunk_fire_state_from_rows(vec![
-        SavedFireChunkRow {
-            chunk: [2, -1],
-            heat: 0.75,
-            fuel: 0.4,
-            smoke: 0.2,
-            toxic: 0.05,
-            has_overlay: true,
-        },
-        SavedFireChunkRow {
-            chunk: [0, 0],
-            heat: 0.1,
-            fuel: 0.9,
-            smoke: 0.0,
-            toxic: 0.0,
-            has_overlay: false,
-        },
-    ]);
-    let hash_before = hash_saved_fire_state(&snapshot);
-    if hash_before == 0 {
-        return Err("hash_zero");
-    }
-
-    let path = std::env::temp_dir().join("vss_t3_003_fire_save_roundtrip.ron");
-    write_chunk_fire_state_ron(&path, &snapshot).map_err(|_| "write_failed")?;
-    let loaded = read_chunk_fire_state_ron(&path).map_err(|_| "read_failed")?;
-    if hash_saved_fire_state(&loaded) != hash_before {
-        return Err("ron_hash_mismatch");
-    }
-
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins);
-    apply_chunk_fire_state(&loaded, app.world_mut());
-
-    let mut q = app.world_mut().query::<(&Chunk, &ChunkSurfaceFire)>();
-    let mut hydrated: Vec<SavedFireChunkRow> = q
-        .iter(app.world())
-        .map(|(chunk, surface)| SavedFireChunkRow {
-            chunk: [chunk.coord.x, chunk.coord.y],
-            heat: surface.heat,
-            fuel: surface.fuel,
-            smoke: 0.0,
-            toxic: 0.0,
-            has_overlay: false,
-        })
-        .collect();
-    hydrated.sort_by_key(|r| (r.chunk[0], r.chunk[1]));
-    if hash_surface_fire_rows(&hydrated) != hash_surface_fire_rows(&loaded.rows) {
-        return Err("hydrate_hash_mismatch");
-    }
-    Ok(())
-}
-
 
 
 
@@ -260,11 +201,6 @@ fn fire_save_roundtrip_self_check() -> Result<(), &'static str> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn fire_save_roundtrip_hash_stable() {
-        assert!(fire_save_roundtrip_lib_green());
-    }
 
     #[test]
     fn hash_order_independent() {

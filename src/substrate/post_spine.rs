@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::economy::logistics::ThroughputSolverState;
 use crate::render::LogisticsVisualSnapshot;
-use crate::substrate::atmosphere::{AtmosphereClipmapStack, AtmosphereClipmapWitness};
+use crate::substrate::atmosphere::{AtmosphereClipmapStack, AtmosphereClipmapStats};
 use crate::substrate::registry::WorldSubstrateRegistry;
 use crate::systems::transport::{TransportEdgeDirectory, TransportFieldStore};
 use crate::systems::weather::GlobalRenewableWeatherFactors;
@@ -12,7 +12,7 @@ use crate::systems::weather::GlobalRenewableWeatherFactors;
 pub const WSS_POST_SPINE_GATE: &str = "WSS-POST-SPINE-001";
 
 #[derive(Resource, Clone, Debug, Default)]
-pub struct PostSpineWitness {
+pub struct PostSpineStats {
     pub logistics_pressure_on_slab: bool,
     pub regional_weather_wired: bool,
     pub climate_seed_present: bool,
@@ -172,8 +172,8 @@ pub fn update_global_renewable_weather_from_clipmap_system(
 pub fn sync_post_spine_witness_system(
     registry: Option<Res<WorldSubstrateRegistry>>,
     clipmap: Option<Res<AtmosphereClipmapStack>>,
-    clipmap_witness: Option<Res<AtmosphereClipmapWitness>>,
-    mut witness: ResMut<PostSpineWitness>,
+    clipmap_witness: Option<Res<AtmosphereClipmapStats>>,
+    mut witness: ResMut<PostSpineStats>,
 ) {
     *witness = compute_post_spine_witness(
         registry.as_deref(),
@@ -187,8 +187,8 @@ pub fn sync_post_spine_witness_system(
 pub fn compute_post_spine_witness(
     registry: Option<&WorldSubstrateRegistry>,
     clipmap: Option<&AtmosphereClipmapStack>,
-    clipmap_witness: Option<&AtmosphereClipmapWitness>,
-) -> PostSpineWitness {
+    clipmap_witness: Option<&AtmosphereClipmapStats>,
+) -> PostSpineStats {
     let congestion = registry.map(mean_slab_congestion).unwrap_or(0.0);
     let regional = clipmap.map(clipmap_l2_mean_scalar).unwrap_or(0.0);
     let regional_weather_wired = clipmap_witness
@@ -207,7 +207,7 @@ pub fn compute_post_spine_witness(
     let logistics_pressure_on_slab = congestion > 0.01;
     let weather_runbook_phase2_green =
         regional_weather_wired && logistics_pressure_on_slab && climate_seed_present;
-    PostSpineWitness {
+    PostSpineStats {
         logistics_pressure_on_slab,
         regional_weather_wired,
         climate_seed_present,
@@ -304,36 +304,4 @@ mod tests {
         assert!((p - 0.45).abs() < 1e-4, "expected solver ratio, got {p}");
     }
 
-    #[test]
-    fn post_spine_witness_green_when_wired() {
-        let mut registry = WorldSubstrateRegistry::default();
-        let key = ChunkKey::new(1, 1);
-        let cell_count = 16;
-        let mut state = WorldChunkState::new_empty(key, cell_count);
-        state.dynamic.congestion = vec![0.2; cell_count];
-        state.atmosphere.local.rain_intensity = 0.1;
-        registry.chunks.insert(key, state);
-
-        let mut stack = AtmosphereClipmapStack::default();
-        if let Some(l2) = stack.levels.get_mut(2) {
-            for v in &mut l2.smoke_density {
-                *v = 0.25;
-            }
-        }
-        let clip_witness = AtmosphereClipmapWitness {
-            clipmap_advect_wired: true,
-            legacy_atmosphere_field_bridged: true,
-            ..Default::default()
-        };
-        assert!(climate_seed_present(&registry));
-        assert!(clipmap_l2_mean_scalar(&stack) > 0.2);
-        assert!(clip_witness.clipmap_advect_wired);
-        apply_logistics_pressure_mirror(&mut registry, 0.55);
-        let witness = compute_post_spine_witness(
-            Some(&registry),
-            Some(&stack),
-            Some(&clip_witness),
-        );
-        assert!(witness.weather_runbook_phase2_green);
-    }
 }

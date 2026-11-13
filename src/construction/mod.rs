@@ -32,7 +32,7 @@ pub use ghost_visual::{
 };
 pub use phase_visual::{phase_map_word, phase_stack_band, phase_stack_band_word, PhaseStackBand};
 pub use voxel_massing::{
-    derive_massing_floors, voxel_massing_presentation_witness_green, VoxelColumnRequest,
+    derive_massing_floors, VoxelColumnRequest,
     MASSING_FLOORS_MAX,
 };
 pub use map_egui_projection::{world_to_sim_map_egui, world_to_sim_map_screen, ConstructionMapProjection};
@@ -77,38 +77,32 @@ pub mod site_zone_grid;
 mod tile_visual;
 mod tool_hints;
 pub use round4_corridor::{
-    construction_r4_corridor_legend_wired_witness_green, draw_r4_corridor_tray_legend,
+    draw_r4_corridor_tray_legend,
     ConstructionRound4ProductGate,
 };
 mod parametric_commit;
 mod procedural_build_spawn;
 pub use build_confidence::{confidence_from_validation, BuildConfidence};
 pub use iso_draw_scale::{
-    build_read_world_002_witness_body, build_read_world_002_witness_green,
     ConstructionIsoDrawScale, DEFAULT_ISO_DRAW_SCALE_MULTIPLIER,
 };
 pub use parametric_commit::{
-    build_read_visual_001_witness_body, build_read_visual_001_witness_green,
-    construction_procedural_build_001_witness_green, parametric_placement_snapshot,
+    parametric_placement_snapshot,
     procedural_building_request_from_commit, style_pack_for_site_archetype,
     sync_procedural_assembly_request_from_sites,
 };
 pub use pilot_catalog::{
-    build_read_shape_002_witness_green, pilot_catalog_parity_witness_green, PilotCatalog,
+    PilotCatalog,
     PilotKind, PILOT_ARCH_DNA_PRESET_WAREHOUSE, PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
 };
-pub use placement_debug::{
-    build_read_debug_001_witness_green, build_verify_debug_001_witness_json,
-    construction_placement_001_witness_green, construction_placement_001_witness_json,
-    map_pick_closure_lib_witness_green,
-};
+
 pub use procedural::ProceduralTilePrimaryActive;
 pub use procedural_build_spawn::{
-    procedural_pg2_spawn_witness_green, spawn_procedural_build_on_site_operational,
+    spawn_procedural_build_on_site_operational,
     ProceduralBuildModuleChild, ProceduralBuildSpawned,
 };
 pub use site_stub_overlay::{
-    build_read_site_v0_002_witness_green, sync_site_stub_overlay_requests, SiteStubOverlayState,
+    sync_site_stub_overlay_requests, SiteStubOverlayState,
 };
 pub mod placement_scaling;
 pub use placement_scaling::DEFAULT_SCALE_MAX;
@@ -130,7 +124,7 @@ mod zones;
 #[cfg(test)]
 mod integration_tests;
 
-pub use crate::substrate::hydrology::HydrologyConstructionCouplingWitness;
+pub use crate::substrate::hydrology::HydrologyConstructionCouplingStats;
 pub use blueprint_preset::{
     blueprint_collection_from_pending, blueprint_preset_entry_from_pending,
     BlueprintImportQueueMode, BlueprintPresetCollectionR8, BlueprintPresetEntryR8,
@@ -143,9 +137,7 @@ pub use build_interaction::{
     build_pick_ghost_tile_system, build_place_on_second_lmb_system,
     build_queue_blueprint_on_shift_click_system, build_refresh_placement_validation_system,
     build_rotate_mirror_ghost_system, build_sync_ghost_cursor_entity_system,
-    construction_map_pick_allowed, mil_defense_place_fsm_witness_green,
-    two_click_lmb_commit_count, two_click_mode_lock_count, two_click_place_fsm_witness_green,
-};
+    construction_map_pick_allowed, two_click_lmb_commit_count, two_click_mode_lock_count, };
 pub use build_mode::{BuildEscCancelLatch, BuildMode, BuildModeState};
 pub use build_overlays::BuildOverlayVisibility;
 pub use build_state::{
@@ -166,8 +158,7 @@ pub use building_catalog::{
 };
 pub use building_definitions::{
     default_buildings_dir, init_building_definition_registry, intent_from_archetype,
-    intent_from_definition, load_building_definitions_from_dir, mock_shapes_parity_green,
-    BuildingDefinition, BuildingDefinitionRegistry,
+    intent_from_definition, load_building_definitions_from_dir, BuildingDefinition, BuildingDefinitionRegistry,
 };
 pub use commercial_menu::draw_commercial_submenu;
 pub use construction_pipeline::{
@@ -189,24 +180,22 @@ pub use defense_staging_stock::{
     note_ai_commit_gated, place_blocked_no_stock_count, place_ok_debit_count,
     INSUFFICIENT_STAGED_ERROR, STOCK_IN_TRANSIT_ERROR,
 };
-pub use footprint_tile_instances::FootprintTileWitness;
+pub use footprint_tile_instances::FootprintTileStats;
 pub use grammar_labels::{
-    grammar_labels_loaded_green, human_age_label, human_archetype_label, human_district_label,
+    human_age_label, human_archetype_label, human_district_label,
     human_massing_label,
 };
 pub use hydro_coupling::{
     construction_hydro_coupling_witness_green, emit_construction_hydro_dirty,
-    emit_road_execute_hydro_dirty, emit_site_execute_hydro_dirty, seed_hydro_coupling_lib_witness,
-};
+    emit_road_execute_hydro_dirty, emit_site_execute_hydro_dirty, };
 pub use mock_shapes_menu::draw_mock_shapes_submenu;
 pub use pending_construction::{PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind};
 pub use power_lines::{
     commit_power_line_to_utility_graph, cut_power_line_segment, damage_power_line_segment,
-    node_key_for_world, power_damage_segment_witness_green, power_line_cut_input_wired,
-    power_line_demolish_cut_system, power_line_draw_witness_green,
-    power_line_ghost_preview_dashed_witness_green, power_line_load_fraction,
+    node_key_for_world, power_line_cut_input_wired,
+    power_line_demolish_cut_system, power_line_load_fraction,
     power_line_path_input_system, power_line_routing_mode_hotkey_system,
-    power_repair_queue_witness_green, preview_island_offline_from_cut,
+    preview_island_offline_from_cut,
     register_power_segments_from_graph_system, sync_power_damage_to_presentation_system,
     sync_power_line_build_preview, sync_power_line_from_build_tool,
     sync_power_line_preview_overlay_system, tick_power_repair_queue_system,
@@ -239,9 +228,9 @@ pub use site_stage_tick::{
 };
 pub use snap::RoadSnapSettings;
 pub use staged_ghost_panel::{
-    build_approved_drains_staged_witness_green, commit_approved_staged_rows,
+    commit_approved_staged_rows,
     parametric_active_ghost_hud_line, staged_placements_tray_lines,
-    staging_toggle_wired_witness_green, StagedPlacementBook, StagedPlacementMode,
+    StagedPlacementBook, StagedPlacementMode,
     StagedPlacementRow, StagedValidity, STAGED_PANEL_FLOATING_SIM,
 };
 pub use supply_chain_role::IndustrialSupplyChainRole;
@@ -326,7 +315,7 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<roads::IntersectionRegistry>()
             .init_resource::<visual_authority::ConstructionVisualRequests>()
             .init_resource::<round4_corridor::ConstructionRound4ProductGate>()
-            .init_resource::<footprint_tile_instances::FootprintTileWitness>()
+            .init_resource::<footprint_tile_instances::FootprintTileStats>()
             .init_resource::<site_phase_tile_instances::ConstructionPhaseGpuChannel>()
             .init_resource::<rail::RailJunctionAuthority>()
             .add_systems(

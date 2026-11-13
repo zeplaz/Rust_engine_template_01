@@ -27,9 +27,9 @@ pub use systems::{
     site_advance_planned_to_under_construction_system, validate_committed_site_terrain_system,
 };
 pub use parametric::{
-    commit_carries_scale_and_weights_witness_green, CommittedPlacementSnapshot,
+    CommittedPlacementSnapshot,
 };
-pub use tile_occupation::{overlap_blocks_commit_witness_green, TileOccupationBook};
+pub use tile_occupation::{TileOccupationBook};
 pub use validation::{
     evaluate_site_placement_at_world_tile,
     evaluate_site_placement_stubs, validate_network_access_for_site, validate_site_placement_stubs,

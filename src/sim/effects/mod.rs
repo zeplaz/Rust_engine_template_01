@@ -24,7 +24,7 @@ pub use player_event_log::{
 };
 pub use faction_react::{
     classify_faction_stress_row, scan_faction_stress_rows, stress_severity,
-    FactionStressHook, FactionStressTelemetryClass, SimEffectFactionReactWitness,
+    FactionStressHook, FactionStressTelemetryClass, SimEffectFactionReactStats,
     STRUCTURE_HEAT_KIND_TAG,
 };
 
@@ -39,7 +39,7 @@ impl Plugin for SimEffectsPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<SimEffectQueue>()
             .init_resource::<SimEffectTelemetryLedger>()
-            .init_resource::<SimEffectFactionReactWitness>()
+            .init_resource::<SimEffectFactionReactStats>()
             .init_resource::<PlayerEventLog>()
             .init_resource::<LightningRiskLatch>()
             .register_type::<SimEffectSource>()

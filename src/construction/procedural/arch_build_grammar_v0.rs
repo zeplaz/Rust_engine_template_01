@@ -8,9 +8,7 @@ use std::path::{Path, PathBuf};
 use serde::{Deserialize, Serialize};
 
 use super::building_grammar::MassingStrategy;
-use crate::construction::pilot_catalog::{
-    PILOT_ARCH_DNA_PRESET_WAREHOUSE, PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
-};
+use crate::construction::pilot_catalog::PILOT_ARCH_DNA_PRESET_WAREHOUSE;
 
 pub const ARCH_GRAMMAR_V0_PRESET_JSON: &str =
     "tools/mcp/schemas/examples/arch_dna_logistics_rail_warehouse_v0.json";
@@ -164,12 +162,6 @@ pub fn floors_from_beta_vert(beta_vert: f32, min_floors: u32, max_floors: u32) -
     raw.round().clamp(min_floors as f32, max_floors as f32) as u32
 }
 
-/// Shift+scale expansion link — βexp biases effective scale multiplier.
-#[must_use]
-pub fn expansion_scale_multiplier(beta_exp: f32) -> f32 {
-    0.6 + 0.5 * beta_exp.clamp(0.0, 1.0)
-}
-
 #[must_use]
 fn repo_path(rel: &str) -> std::path::PathBuf {
     std::env::var_os("CARGO_MANIFEST_DIR")
@@ -280,76 +272,6 @@ pub fn arch_dna_consumer_wired(fields: &ArchDnaConsumerFields) -> bool {
         && fields.pressure_field.beta_yard > 0.0
 }
 
-/// BUILD-READ-CONSUMER-MCP-001 — Rust consumer wired on commit + snapshot roundtrip.
-#[must_use]
-pub fn build_read_consumer_mcp_001_witness_green() -> bool {
-    build_read_consumer_mcp_001_self_check().is_ok()
-}
-
-fn build_read_consumer_mcp_001_self_check() -> Result<(), &'static str> {
-    use super::assembly_snapshot::build_assembly_snapshot_from_grammar_with_preset;
-    use super::load_procedural_module_registry;
-    use super::load_style_pack_registry;
-
-    let example_path = repo_path(ARCH_GRAMMAR_V0_PRESET_JSON);
-    load_preset_from_path(&example_path).map_err(|_| "example_preset_path")?;
-    let preset_ids = list_arch_dna_preset_ids();
-    if !preset_ids
-        .iter()
-        .any(|id| id == PILOT_ARCH_DNA_PRESET_WAREHOUSE)
-    {
-        return Err("preset_ids");
-    }
-    if site_zones_for_preset(PILOT_ARCH_DNA_PRESET_WAREHOUSE).is_empty() {
-        return Err("site_zones");
-    }
-
-    let consumer = arch_dna_consumer_from_preset_id(PILOT_ARCH_DNA_PRESET_WAREHOUSE)
-        .map_err(|_| "consumer_load")?;
-    if !arch_dna_consumer_wired(&consumer) {
-        return Err("consumer_wired");
-    }
-
-    let modules = load_procedural_module_registry();
-    if !modules.load_errors.is_empty() {
-        return Err("modules");
-    }
-    let packs = load_style_pack_registry();
-    if !packs.load_errors.is_empty() {
-        return Err("packs");
-    }
-
-    let snapshot = build_assembly_snapshot_from_grammar_with_preset(
-        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
-        "industrial_west",
-        440013,
-        Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE),
-        &modules,
-        &packs,
-    )
-    .map_err(|_| "snapshot")?;
-
-    if snapshot.arch_build_grammar_preset_id.as_deref() != Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE) {
-        return Err("preset_on_snapshot");
-    }
-    if !snapshot.arch_dna_consumer_wired() {
-        return Err("snapshot_consumer");
-    }
-
-    let grammar = super::building_grammar::generate_with_arch_dna_preset(
-        PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE,
-        "industrial_west",
-        440013,
-        Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE),
-    )
-    .map_err(|_| "grammar")?;
-    if grammar.arch_dna_preset_id.as_deref() != Some(PILOT_ARCH_DNA_PRESET_WAREHOUSE) {
-        return Err("preset_on_grammar");
-    }
-
-    Ok(())
-}
-
 /// BUILD-GRAMMAR-PROGRAM-001 — read-only ProgramGraph v1 stub from ARCH-DNA + β.
 #[derive(Debug, Clone)]
 pub struct ProgramGraphStubV1 {
@@ -398,13 +320,6 @@ pub fn build_arch_dna_massing_diversity_rows() -> Vec<serde_json::Value> {
         .collect()
 }
 
-#[must_use]
-pub fn arch_dna_massing_diversity_witness_green() -> bool {
-    build_arch_dna_massing_diversity_rows()
-        .iter()
-        .all(|row| row.get("green").and_then(|v| v.as_bool()).unwrap_or(false))
-}
-
 /// BUILD-GRAMMAR-β-WORLD-001 — blend preset β with live transport edge density (read-only).
 #[must_use]
 pub fn beta_with_world_transport_bias(
@@ -419,54 +334,10 @@ pub fn beta_with_world_transport_bias(
     }
 }
 
-/// BUILD-READ-GRAMMAR-v0-003 — preset row for grammar diversity witness.
-#[must_use]
-pub fn build_read_grammar_v0_003_witness_body() -> serde_json::Value {
-    let preset = load_canonical_arch_dna_pilot_preset();
-    let (ok, _preset_id, weights, pick_l_shape) = match preset {
-        Ok(p) => {
-            let registry = super::load_building_grammar_registry();
-            let grammar = registry
-                .grammars
-                .values()
-                .find(|g| g.grammar_id == p.grammar_id);
-            let weights = grammar
-                .map(|g| reweight_massing_strategies(&g.massing.strategies, &p.pressure_field));
-            let top = weights
-                .as_ref()
-                .and_then(|w| w.iter().max_by_key(|(_, wt)| *wt).map(|(id, _)| id.clone()));
-            let pick_l = top.as_deref() == Some("l_shape")
-                || weights
-                    .as_ref()
-                    .and_then(|w| w.iter().find(|(id, _)| id == "l_shape"))
-                    .map(|(_, wt)| *wt >= 26)
-                    .unwrap_or(false);
-            (true, p.preset_id, weights, pick_l)
-        }
-        Err(_e) => (false, String::new(), None, false),
-    };
-    serde_json::json!({
-        "gate_id": "BUILD-READ-GRAMMAR-v0-003",
-        "preset_id": PILOT_ARCH_DNA_PRESET_WAREHOUSE,
-        "green": ok && pick_l_shape,
-        "massing_weights_v0": weights,
-        "rail_edge_picks_l_shape_or_yard": pick_l_shape,
-        "beta_exp_multiplier": expansion_scale_multiplier(0.84),
-        "load_ok": ok,
-    })
-}
-
-#[must_use]
-pub fn build_read_grammar_v0_003_witness_green() -> bool {
-    build_read_grammar_v0_003_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::construction::pilot_catalog::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 
     #[test]
     fn canonical_arch_dna_pilot_reweights_massing() {
@@ -490,14 +361,4 @@ mod tests {
         assert_eq!(sum, 100);
     }
 
-    #[test]
-    fn build_read_grammar_v0_003_witness_green() {
-        assert!(super::build_read_grammar_v0_003_witness_green());
-    }
-
-    #[test]
-    fn beta_exp_expansion_multiplier_in_range() {
-        let m = expansion_scale_multiplier(0.84);
-        assert!((m - 1.02).abs() < 0.05);
-    }
 }

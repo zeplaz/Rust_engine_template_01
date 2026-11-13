@@ -38,12 +38,11 @@ pub use ember_spot_ignition::{
 pub use fire_fuel::{derive_fire_fuel_from_vegetation, FireFuelField};
 pub use fire_light_emission::FireLightEmission;
 pub use play_fire_visibility::{
-    sync_sim_map_fire_overlay_when_sim_has_heat, triage_fire_play_vis_001_green,
-    triage_fire_play_vis_001_witness_json, TriageFirePlayVis001Inputs,
+    sync_sim_map_fire_overlay_when_sim_has_heat, TriageFirePlayVis001Inputs,
 };
 pub use surface_water::SurfaceWaterFireGate;
 pub use types::ChunkFireOverlay;
-pub use ecology_metrics::{finalize_fire_ecology_witness_frame, FireEcologyWitness};
+pub use ecology_metrics::{finalize_fire_ecology_witness_frame, FireEcologyStats};
 
 pub(crate) use chunk_fuel_profile::{
     chunk_fuel_profile_tick, spawn_chunk_fuel_profile_on_new_chunk,
@@ -65,7 +64,7 @@ pub struct FirePlugin;
 impl Plugin for FirePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<surface_water::SurfaceWaterFireGate>()
-            .init_resource::<ecology_metrics::FireEcologyWitness>()
+            .init_resource::<ecology_metrics::FireEcologyStats>()
             .add_message::<ember_spot_ignition::EmberSpotIgnitionEvent>()
             .add_systems(
                 Update,

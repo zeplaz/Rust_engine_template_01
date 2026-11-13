@@ -13,7 +13,6 @@ use crate::strategic::{
 use crate::strategic::StrategicRasterConfig;
 use crate::systems::transport::TransportEdgeDirectory;
 use crate::systems::TransportEdgeId;
-use crate::terrain::ChunkCellKey;
 
 /// Snapshot cap (compositor paints at [`crate::render::minimap_compositor::composite::M3_UNIT_MARKER_CAP`]).
 pub const MINIMAP_UNIT_MARKER_SNAPSHOT_CAP: usize = 32;
@@ -156,17 +155,6 @@ pub fn seed_minimap_m3_fow_ew_witness(snapshot: &mut MinimapOperationalSnapshot)
     }
 }
 
-/// **UI-P3-M3-UNITS-001** — legacy witness seed (tests only; sim uses [`fill_minimap_unit_markers_from_logistics`]).
-pub fn seed_minimap_m3_units_replay_witness(snapshot: &mut MinimapOperationalSnapshot) {
-    if snapshot.unit_markers.len() >= 4 {
-        return;
-    }
-    snapshot.unit_markers.clear();
-    for i in 0..6u32 {
-        snapshot.unit_markers.push((i % 8, (i * 2) % 8));
-    }
-}
-
 fn parse_transport_tile_key(key: &str) -> Option<(u32, u32)> {
     let rest = key.strip_prefix('t')?;
     let (xs, zs) = rest.split_once('_')?;
@@ -283,75 +271,6 @@ pub fn publish_minimap_operational_unit_markers_system(
     );
 }
 
-/// Witness: unit markers are sourced from logistics/transport/sites, not the legacy seed lattice.
-#[must_use]
-pub fn unit_markers_real_reader_witness_green() -> bool {
-    unit_markers_real_reader_self_check().is_ok()
-}
-
-fn unit_markers_real_reader_self_check() -> Result<(), &'static str> {
-    use crate::strategic::{
-        BuildSiteTile, FootprintTiles, LayerType, LogisticsNode, SiteArchetype,
-    };
-
-    let mut graph = LogisticsGraph::default();
-    graph.nodes = vec![
-        LogisticsNode {
-            id: LogisticsNodeId(0),
-            throughput: 1.0,
-            stockpile: 0.0,
-            anchor: Some(ChunkCellKey::new(IVec2::new(2, 3), 0)),
-        },
-        LogisticsNode {
-            id: LogisticsNodeId(1),
-            throughput: 1.0,
-            stockpile: 0.0,
-            anchor: Some(ChunkCellKey::new(IVec2::new(4, 3), 0)),
-        },
-    ];
-    graph.edges.push(crate::strategic::LogisticsEdge {
-        from: LogisticsNodeId(0),
-        to: LogisticsNodeId(1),
-        transport_edge: Some(TransportEdgeId(1)),
-        capacity: 4.0,
-        disruption: 0.0,
-        traversal_cost: 1.0,
-    });
-
-    let site = PlannedSite {
-        site_id: crate::strategic::SiteId(1),
-        origin: BuildSiteTile { x: 40, z: 12 },
-        footprint: FootprintTiles {
-            width: 2,
-            depth: 2,
-        },
-        archetype: SiteArchetype::Factory,
-        layer: LayerType::Surface,
-        catalog_id: None,
-        placement: None,
-    };
-
-    let mut markers = Vec::new();
-    let source = fill_minimap_unit_markers_from_logistics(
-        Some(&graph),
-        None,
-        None,
-        None,
-        std::iter::once(&site),
-        &mut markers,
-    );
-    if markers.is_empty() {
-        return Err("no_markers");
-    }
-    if source == "none" {
-        return Err("unexpected_source");
-    }
-    if markers.iter().any(|&(x, y)| y == (x * 2) % 8 && x < 8) {
-        return Err("seed_lattice_pattern");
-    }
-    Ok(())
-}
-
 /// **UI-W3-M2-001** / **UI-P3-M2-001** — logistics overlay rows + construction book for minimap M2 channels.
 pub fn seed_minimap_m2_logistics_construction_witness(
     fire: &FireSimulationSnapshot,
@@ -464,88 +383,6 @@ mod tests {
         assert_eq!(snapshot.active_overlay_rows, 1);
         assert_eq!(snapshot.edge_rows.len(), 1);
         assert!((snapshot.edge_rows[0].1 - 1.0).abs() < 1e-5);
-    }
-
-    #[test]
-    fn seed_minimap_m3_fow_ew_witness_populates_operational_samples() {
-        let mut op = MinimapOperationalSnapshot::default();
-        seed_minimap_m3_fow_ew_witness(&mut op);
-        assert_eq!(op.chunk_samples.len(), 64);
-        assert!(op.chunk_samples.iter().any(|(_, _, f, _)| *f > 0.0));
-        assert!(op.chunk_samples.iter().any(|(_, _, _, e)| *e > 0.0));
-        assert!(op.unit_markers.is_empty());
-    }
-
-    #[test]
-    fn ui_p3_m3_units_real_reader_from_logistics_not_seed_lattice() {
-        use crate::strategic::{LogisticsEdge, LogisticsGraph, LogisticsNode, LogisticsNodeId};
-        use crate::terrain::ChunkCellKey;
-
-        let mut graph = LogisticsGraph::default();
-        graph.nodes = vec![
-            LogisticsNode {
-                id: LogisticsNodeId(0),
-                throughput: 1.0,
-                stockpile: 0.0,
-                anchor: Some(ChunkCellKey::new(IVec2::new(5, 7), 0)),
-            },
-            LogisticsNode {
-                id: LogisticsNodeId(1),
-                throughput: 1.0,
-                stockpile: 0.0,
-                anchor: Some(ChunkCellKey::new(IVec2::new(9, 7), 0)),
-            },
-        ];
-        graph.edges.push(LogisticsEdge {
-            from: LogisticsNodeId(0),
-            to: LogisticsNodeId(1),
-            transport_edge: Some(TransportEdgeId(3)),
-            capacity: 2.0,
-            disruption: 0.0,
-            traversal_cost: 1.0,
-        });
-        let mut markers = Vec::new();
-        let source = fill_minimap_unit_markers_from_logistics(
-            Some(&graph),
-            None,
-            None,
-            None,
-            [].into_iter(),
-            &mut markers,
-        );
-        assert_eq!(source, "logistics_graph");
-        assert!(!markers.is_empty());
-        assert!(!markers.iter().all(|&(x, y)| y == (x * 2) % 8));
-        assert!(unit_markers_real_reader_witness_green());
-    }
-
-    #[test]
-    fn seed_minimap_m2_logistics_construction_witness_populates_both_channels() {
-        let fire = FireSimulationSnapshot {
-            stamp: SimStepStamp::new(2, 0),
-            ..Default::default()
-        };
-        let mut book = CorridorConstructionBook::default();
-        let mut logistics = LogisticsVisualSnapshot::default();
-        seed_minimap_m2_logistics_construction_witness(&fire, &mut book, &mut logistics);
-        assert_eq!(book.rows.len(), 18);
-        assert!(logistics.active_overlay_rows > 0);
-        assert!(!logistics.edge_rows.is_empty());
-    }
-
-    #[test]
-    fn seed_minimap_m2_overlay_witness_populates_construction_and_ecology() {
-        let fire = FireSimulationSnapshot {
-            stamp: SimStepStamp::new(1, 0),
-            ..Default::default()
-        };
-        let mut book = CorridorConstructionBook::default();
-        let mut climate = ClimateVisualAggregate::default();
-        let mut ecology = EcologyVisualSnapshot::default();
-        seed_minimap_m2_overlay_witness(&fire, &mut book, &mut climate, &mut ecology);
-        assert_eq!(book.rows.len(), 18);
-        assert_eq!(climate.ecology_chunk_count, 100);
-        assert_eq!(ecology.chunk_rows.len(), 100);
     }
 
     #[test]

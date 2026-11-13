@@ -4,7 +4,7 @@ use bevy::math::IVec2;
 use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
-use crate::substrate::persist::SubstratePr4Witness;
+use crate::substrate::persist::SubstratePersistStats;
 use crate::substrate::registry::WorldSubstrateRegistry;
 use crate::substrate::shim::{
     dual_write_shim_green, ecs_hybrid_field_drift_max, sync_chunk_smoke_to_slab, DualWriteShimState,
@@ -15,7 +15,7 @@ use crate::substrate::types::ChunkWeatherLocal;
 use crate::systems::fire::ChunkSurfaceFire;
 use crate::systems::weather::ChunkWeather;
 use crate::substrate::atmosphere::{clipmap_l0_smoke_max, AtmosphereClipmapStack};
-use crate::render::extraction::SmokeVisualBridgeWitness;
+use crate::render::extraction::SmokeVisualBridgeStats;
 use crate::systems::fire::ChunkSmokeField;
 use crate::terrain::generation::Chunk;
 
@@ -60,7 +60,7 @@ impl EcsRetireState {
 }
 
 #[derive(Resource, Clone, Debug, Default)]
-pub struct SubstrateEcsRetireWitness {
+pub struct SubstrateEcsRetireStats {
     pub ecs_retire_fixture_green: bool,
 }
 
@@ -140,7 +140,7 @@ pub fn slab_weather_extract_matches_ecs(
 
 #[must_use]
 pub fn ecs_retire_fixture_green(
-    pr4: &SubstratePr4Witness,
+    pr4: &SubstratePersistStats,
     retire: &EcsRetireState,
     dual: &DualWriteShimState,
     slab_gate_green: bool,
@@ -155,23 +155,6 @@ pub fn ecs_retire_fixture_green(
         && retire.weather_extract_reads_slab
         && retire.fire_extract_reads_slab
         && retire.stable_drift_ticks >= ECS_RETIRE_DRIFT_WINDOW_TICKS
-}
-
-/// Live / lib rollup for **WSS-PR5-SMOKE-PROD-001** (fixture green does not require this).
-#[must_use]
-pub fn ecs_retire_smoke_prod_green(
-    retire: &EcsRetireState,
-    smoke_extract_wired: bool,
-    smoke_density_sum: f32,
-    ecs_fixture_green: bool,
-) -> bool {
-    ecs_fixture_green
-        && retire.cutover_complete
-        && !retire.hybrid_smoke_authoritative
-        && retire.smoke_extract_reads_slab
-        && retire.smoke_cutover_complete
-        && smoke_extract_wired
-        && smoke_density_sum > SMOKE_EXTRACT_EPS
 }
 
 fn tick_ecs_retire_drift_window(
@@ -237,12 +220,12 @@ fn apply_ecs_retire_cutover(
 
 /// Synthetic bridge when render witness resource is absent but clipmap has smoke (live sim).
 #[must_use]
-pub fn smoke_bridge_from_clipmap(clipmap: &AtmosphereClipmapStack) -> Option<SmokeVisualBridgeWitness> {
+pub fn smoke_bridge_from_clipmap(clipmap: &AtmosphereClipmapStack) -> Option<SmokeVisualBridgeStats> {
     let max = clipmap_l0_smoke_max(clipmap);
     if max <= SMOKE_EXTRACT_EPS {
         return None;
     }
-    Some(SmokeVisualBridgeWitness {
+    Some(SmokeVisualBridgeStats {
         smoke_density_sum: max,
         smoke_row_count: 1,
         smoke_extract_wired: true,
@@ -255,7 +238,7 @@ pub fn smoke_bridge_from_clipmap(clipmap: &AtmosphereClipmapStack) -> Option<Smo
 pub fn apply_ecs_smoke_prod_cutover(
     registry: &mut WorldSubstrateRegistry,
     clipmap: &AtmosphereClipmapStack,
-    smoke_bridge: Option<&SmokeVisualBridgeWitness>,
+    smoke_bridge: Option<&SmokeVisualBridgeStats>,
     smoke_q: &Query<(&Chunk, &ChunkSmokeField)>,
     retire: &mut EcsRetireState,
 ) -> bool {
@@ -296,12 +279,12 @@ pub fn apply_ecs_smoke_prod_cutover(
 }
 
 fn sync_ecs_retire_witness_inner(
-    pr4: &SubstratePr4Witness,
+    pr4: &SubstratePersistStats,
     dual: &DualWriteShimState,
     retire: &EcsRetireState,
-    witness: &crate::substrate::registry::WssSubstrateWitness,
+    witness: &crate::substrate::registry::WssSubstrateStats,
     registry: &WorldSubstrateRegistry,
-    out: &mut SubstrateEcsRetireWitness,
+    out: &mut SubstrateEcsRetireStats,
 ) {
     let plugin_on = crate::substrate::substrate_plugin_enabled();
     let cell_ok = registry
@@ -332,11 +315,11 @@ pub fn ecs_retire_pass_system(
     )>,
     smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
     clipmap: Option<Res<AtmosphereClipmapStack>>,
-    smoke_bridge: Option<Res<SmokeVisualBridgeWitness>>,
-    pr4: Res<SubstratePr4Witness>,
-    witness: Res<crate::substrate::registry::WssSubstrateWitness>,
+    smoke_bridge: Option<Res<SmokeVisualBridgeStats>>,
+    pr4: Res<SubstratePersistStats>,
+    witness: Res<crate::substrate::registry::WssSubstrateStats>,
     mut retire: ResMut<EcsRetireState>,
-    mut out: ResMut<SubstrateEcsRetireWitness>,
+    mut out: ResMut<SubstrateEcsRetireStats>,
 ) {
     if !matches!(base.get(), BaseState::Simulation) {
         return;
@@ -365,7 +348,7 @@ pub fn ecs_retire_pass_system(
 pub fn finish_ecs_smoke_prod_cutover_lib(
     registry: &mut WorldSubstrateRegistry,
     clipmap: &AtmosphereClipmapStack,
-    smoke_bridge: Option<&SmokeVisualBridgeWitness>,
+    smoke_bridge: Option<&SmokeVisualBridgeStats>,
     coord: IVec2,
     smoke: &ChunkSmokeField,
     retire: &mut EcsRetireState,
@@ -394,7 +377,7 @@ pub fn finish_ecs_smoke_prod_cutover_lib(
 #[must_use]
 pub fn run_ecs_retire_lib_fixture(
     registry: &WorldSubstrateRegistry,
-    pr4: &SubstratePr4Witness,
+    pr4: &SubstratePersistStats,
     dual: &DualWriteShimState,
     coord: IVec2,
     wx: &ChunkWeather,
@@ -431,7 +414,7 @@ mod tests {
     use crate::substrate::hydrate_skeleton_chunk;
     use crate::substrate::persist::{dynamic_overlay_matches_slab, migrate_dynamic_overlay_to_slab, persist_roundtrip_ok};
     use crate::substrate::shim::{sync_chunk_weather_to_slab, sync_surface_fire_to_thermal};
-    use crate::substrate::SubstratePr4Witness;
+    use crate::substrate::SubstratePersistStats;
     use crate::terrain::{ChunkCellKey, DynamicTerrainOverlay};
 
     #[test]
@@ -455,7 +438,7 @@ mod tests {
             sync_surface_fire_to_thermal(&mut state.thermal, &fire);
         }
 
-        let mut pr4 = SubstratePr4Witness::default();
+        let mut pr4 = SubstratePersistStats::default();
         pr4.substrate_persist_roundtrip_ok = persist_roundtrip_ok(&mut registry);
         let cell = ChunkCellKey::new(IVec2::ZERO, 0);
         let mut overlay = DynamicTerrainOverlay::default();

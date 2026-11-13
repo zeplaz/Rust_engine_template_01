@@ -76,7 +76,7 @@ impl HudLayoutStore {
         self.frames.insert(id, frame);
     }
 
-    /// Drop persisted rects so the next open uses [`super::shell_framework::shell_default_window_pos`].
+    /// Drop persisted rects so the next open uses the default window position.
     pub fn reset_all_frames(&mut self) {
         self.frames.clear();
     }

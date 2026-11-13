@@ -200,7 +200,6 @@ impl Plugin for Stage6VirtualizationPlugin {
                 (
                     publish_stage6_virtualization_frame,
                     enqueue_stream_domain_apply_label,
-                    crate::gui::hud::refresh_stage6_hud_telemetry,
                 )
                     .chain()
                     .after(crate::gui::WorldRepresentationSystemSet::ComputeFrame)

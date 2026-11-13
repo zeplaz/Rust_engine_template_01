@@ -269,25 +269,6 @@ pub fn apply_pixel_world_camera_clear_cue(
     }
 }
 
-#[must_use]
-pub fn dual_view_scaffold_witness_green() -> bool {
-    PIXEL_WORLD_VIEW_SCAFFOLD.is_declared()
-        && TACTICAL_ICONS_PRESENTATION.is_declared()
-        && include_str!("world_presentation_mode.rs").contains("WorldPresentationMode")
-        && include_str!("world_presentation_mode.rs").contains("art_home_pixel_world")
-        && include_str!("world_presentation_mode.rs").contains("PixelWorldConsumerSystemSet")
-}
-
-#[must_use]
-pub fn tactical_icons_only_policy_green() -> bool {
-    TACTICAL_ICONS_PRESENTATION
-        .intended_replacement
-        .contains("strategic_icon")
-        && !TACTICAL_ICONS_PRESENTATION
-            .intended_replacement
-            .contains("module kit")
-}
-
 /// Static authority check — this module must never mutate RepresentationResult.
 #[must_use]
 pub fn mode_does_not_write_representation_result() -> bool {
@@ -368,14 +349,6 @@ mod tests {
         assert!(m.is_pixel_world());
         m.toggle();
         assert!(m.is_tactical());
-    }
-
-    #[test]
-    fn scaffolds_and_art_home_policy_declared() {
-        assert!(dual_view_scaffold_witness_green());
-        assert!(tactical_icons_only_policy_green());
-        assert!(PixelWorldLandscapeIntent::default().art_home_pixel_world);
-        assert!(PixelWorldLandscapeIntent::default().landscape_grammar_presets_green);
     }
 
     #[test]

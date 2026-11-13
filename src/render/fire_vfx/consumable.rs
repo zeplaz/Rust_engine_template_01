@@ -399,25 +399,6 @@ impl EffectConsumableRegistry {
         self.entries.is_empty()
     }
 
-    #[must_use]
-    pub fn witness_json(&self) -> serde_json::Value {
-        serde_json::json!({
-            "effect_consumable_registry": true,
-            "registry_root": self.registry_root.to_string_lossy(),
-            "loaded_count": self.len(),
-            "load_errors": self.load_errors,
-            "effect_ids": self.entries.keys().collect::<Vec<_>>(),
-            "lanes": self.entries.values().map(|d| {
-                serde_json::json!({
-                    "effect_id": d.effect_id,
-                    "lane": format!("{:?}", d.lane),
-                    "spawn_hook": format!("{:?}", d.spawn_hook),
-                    "particle_domain": d.particle_domain().map(|p| p.label()),
-                    "fire_vfx_spine": d.routes_through_fire_vfx_spine(),
-                })
-            }).collect::<Vec<_>>(),
-        })
-    }
 }
 
 fn load_effect_spec_file(path: &Path, registry_dir: &Path) -> Result<EffectConsumableDef, String> {

@@ -2,16 +2,11 @@
 
 use bevy::prelude::*;
 
-use crate::gui::{MapViewInstances, ViewId, ViewIsolationDiagnostics, ViewManager};
-use crate::render::fx_spine::fire_chunk_runtime::{ActiveFireChunkSet, VisibleFireChunkSet};
-use crate::render::extraction::fire_view_extract::{per_view_fire_extract_bounded, FireVisualFramesByView};
-use crate::render::fx_spine::view_fire_projection::projection_fire_source_view;
+use crate::gui::{MapViewInstances, ViewId, ViewManager};
 
-use super::ids::ViewSurfaceId;
-use super::per_view_policy::PerViewRepresentationPolicy;
 
 #[derive(Resource, Clone, Debug)]
-pub struct ViewFireIsolationWitness {
+pub struct ViewFireIsolationStats {
     pub projection_source: ViewId,
     pub per_view_fire_instances: Vec<(ViewId, usize)>,
     pub per_view_chunk_heat: Vec<(ViewId, usize)>,
@@ -24,7 +19,7 @@ pub struct ViewFireIsolationWitness {
     pub f7_a_per_view_extract_bounded: bool,
 }
 
-impl Default for ViewFireIsolationWitness {
+impl Default for ViewFireIsolationStats {
     fn default() -> Self {
         Self {
             projection_source: ViewId::WorldMain,
@@ -54,49 +49,6 @@ pub fn overlay_masks_aligned_with_map_views(
             .view(*id)
             .is_none_or(|v| v.render_policy.overlays.bits == *mask)
     })
-}
-
-pub fn refresh_view_fire_isolation_witness(
-    by_view: Res<FireVisualFramesByView>,
-    visible: Res<VisibleFireChunkSet>,
-    active: Res<ActiveFireChunkSet>,
-    manager: Res<ViewManager>,
-    map_views: Res<MapViewInstances>,
-    isolation: Res<ViewIsolationDiagnostics>,
-    policy: Res<PerViewRepresentationPolicy>,
-    mut witness: ResMut<ViewFireIsolationWitness>,
-) {
-    witness.projection_source = projection_fire_source_view(Some(manager.as_ref()));
-    witness.per_view_fire_instances = by_view
-        .by_id
-        .iter()
-        .map(|(id, frame)| (*id, frame.instances.len()))
-        .collect();
-    witness.per_view_chunk_heat = by_view
-        .by_id
-        .iter()
-        .map(|(id, frame)| (*id, frame.chunk_heat.len()))
-        .collect();
-    witness.vm08_overlay_masks_aligned =
-        overlay_masks_aligned_with_map_views(manager.as_ref(), map_views.as_ref());
-    witness.vm10_minimap_lockstep = isolation.minimap_main_lockstep_suspect;
-    witness.vm10_preview_lockstep = isolation.preview_main_lockstep_suspect;
-    let minimap_inst = by_view
-        .by_id
-        .get(&ViewId::Minimap)
-        .map(|f| f.instances.len())
-        .unwrap_or(0);
-    let preview_inst = by_view
-        .by_id
-        .get(&ViewId::WorldPreview)
-        .map(|f| f.instances.len())
-        .unwrap_or(0);
-    witness.vm11_minimap_cap_respected =
-        minimap_inst <= policy.fire_cap(ViewSurfaceId::Minimap);
-    witness.vm11_preview_cap_respected =
-        preview_inst <= policy.fire_cap(ViewSurfaceId::WorldPreview);
-    witness.f7_a_per_view_extract_bounded =
-        per_view_fire_extract_bounded(by_view.as_ref(), visible.as_ref(), active.as_ref());
 }
 
 #[cfg(test)]

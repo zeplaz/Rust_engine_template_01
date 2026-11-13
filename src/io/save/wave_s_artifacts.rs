@@ -38,7 +38,7 @@ pub struct WaveSShellHydrateState {
 }
 
 #[derive(Resource, Default, Debug, Clone)]
-pub struct WaveSShellHydrateWitness {
+pub struct WaveSShellHydrateStats {
     pub shell_loaded: bool,
     pub blueprint_count: u32,
     pub layout_widget_count: u32,
@@ -74,7 +74,7 @@ pub fn hydrate_wave_s_artifacts_from_bundle(
     bundle_dir: &Path,
     layout_store: &mut crate::gui::hud::HudLayoutStore,
     dock: &mut crate::gui::hud::HudDockRegistry,
-    witness: &mut WaveSShellHydrateWitness,
+    witness: &mut WaveSShellHydrateStats,
     imported: &mut WaveSImportedBlueprints,
 ) -> bool {
     witness.shell_loaded = false;
@@ -199,7 +199,7 @@ pub fn try_autoload_wave_s_on_bundle_dir(
     mut state: ResMut<WaveSShellHydrateState>,
     mut layout_store: ResMut<crate::gui::hud::HudLayoutStore>,
     mut dock: ResMut<crate::gui::hud::HudDockRegistry>,
-    mut witness: ResMut<WaveSShellHydrateWitness>,
+    mut witness: ResMut<WaveSShellHydrateStats>,
     mut imported: ResMut<WaveSImportedBlueprints>,
 ) {
     witness.autoload_enabled = wave_s_autoload_shell_enabled();
@@ -239,7 +239,7 @@ pub fn apply_wave_s_shell_restore_requests(
     settings: Option<Res<crate::io::save::WorldSaveBundleSettings>>,
     mut layout_store: ResMut<crate::gui::hud::HudLayoutStore>,
     mut dock: ResMut<crate::gui::hud::HudDockRegistry>,
-    mut witness: ResMut<WaveSShellHydrateWitness>,
+    mut witness: ResMut<WaveSShellHydrateStats>,
     mut imported: ResMut<WaveSImportedBlueprints>,
 ) {
     if !pending.requested {
@@ -451,7 +451,7 @@ mod tests {
 
         let mut layout_store = crate::gui::hud::HudLayoutStore::default();
         let mut dock = crate::gui::hud::HudDockRegistry::default();
-        let mut witness = WaveSShellHydrateWitness::default();
+        let mut witness = WaveSShellHydrateStats::default();
         let mut imported = WaveSImportedBlueprints::default();
         assert!(hydrate_wave_s_artifacts_from_bundle(
             &dir,

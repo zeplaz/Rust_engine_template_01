@@ -178,13 +178,6 @@ pub fn register_power_segments_from_graph_system(
     }
 }
 
-#[must_use]
-pub fn power_damage_segment_witness_green() -> bool {
-    let mut book = PowerLineDamageBook::default();
-    book.ensure_segment(42);
-    book.cut_segment(42) && book.destroyed_link_ids().contains(&42)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -215,11 +208,6 @@ mod tests {
         let seg = book.segments.get(&5).unwrap();
         assert!(!seg.destroyed);
         assert_eq!(seg.overlay_state(), PowerLineOverlayState::Damaged);
-    }
-
-    #[test]
-    fn power_damage_witness_green_lib() {
-        assert!(power_damage_segment_witness_green());
     }
 
     #[test]

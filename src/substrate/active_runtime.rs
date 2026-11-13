@@ -241,11 +241,6 @@ pub fn sync_active_runtime_witness_flags_system(
     }
 }
 
-#[must_use]
-pub fn active_runtime_policy_green(state: &ActiveRuntimeState) -> bool {
-    state.policy_wired && state.cap_respected
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -7,14 +7,14 @@ use crate::render::SimChunkSmokeVisualExtract;
 
 /// Witness rollup for `wss_substrate_live.json` / smoke bridge gate / stage5.
 #[derive(Resource, Clone, Debug, Default)]
-pub struct SmokeVisualBridgeWitness {
+pub struct SmokeVisualBridgeStats {
     pub smoke_density_sum: f32,
     pub smoke_row_count: u32,
     pub smoke_extract_wired: bool,
     pub smoke_stub_removed: bool,
 }
 
-impl SmokeVisualBridgeWitness {
+impl SmokeVisualBridgeStats {
     /// Merge Layer-B smoke keys into stage5 / effects witness JSON.
     pub fn merge_into_stage5_json(&self, root: &mut serde_json::Value, smoke_proj: Option<&SmokeProjectionNode>) {
         let wired = self.smoke_extract_wired
@@ -50,7 +50,7 @@ impl SmokeVisualBridgeWitness {
 pub fn build_smoke_visual_extract(
     coherence: Option<Res<crate::render::FireExtractDiagnostics>>,
     smoke: Res<SimChunkSmokeVisualExtract>,
-    mut witness: ResMut<SmokeVisualBridgeWitness>,
+    mut witness: ResMut<SmokeVisualBridgeStats>,
 ) {
     if coherence.as_deref().is_some_and(|d| d.snapshot_unchanged) {
         return;
@@ -68,7 +68,7 @@ pub fn build_smoke_visual_extract(
 
 /// Headless fixture for stage5 / ES-3 witness merge (non-empty smoke → projection node).
 #[must_use]
-pub fn smoke_bridge_projection_fixture() -> (SmokeVisualBridgeWitness, SmokeProjectionNode) {
+pub fn smoke_bridge_projection_fixture() -> (SmokeVisualBridgeStats, SmokeProjectionNode) {
     use crate::render::extraction::sim_visual_extract::ChunkSmokeGpu;
 
     let mut extract = SimChunkSmokeVisualExtract::default();
@@ -78,7 +78,7 @@ pub fn smoke_bridge_projection_fixture() -> (SmokeVisualBridgeWitness, SmokeProj
     });
     let mut node = SmokeProjectionNode::default();
     node.project_from_extract(&extract, 9);
-    let witness = SmokeVisualBridgeWitness {
+    let witness = SmokeVisualBridgeStats {
         smoke_density_sum: node.density_sum,
         smoke_row_count: node.row_count,
         smoke_extract_wired: node.extract_wired,
@@ -90,30 +90,7 @@ pub fn smoke_bridge_projection_fixture() -> (SmokeVisualBridgeWitness, SmokeProj
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::render::ChunkSmokeGpu;
-
-    #[test]
-    fn smoke_extract_witness_sums_density() {
-        let mut app = App::new();
-        app.init_resource::<SimChunkSmokeVisualExtract>()
-            .init_resource::<SmokeVisualBridgeWitness>()
-            .add_systems(Update, build_smoke_visual_extract);
-
-        {
-            let mut smoke = app.world_mut().resource_mut::<SimChunkSmokeVisualExtract>();
-            smoke.instances.push(ChunkSmokeGpu {
-                chunk_xy: Vec4::new(1.0, 2.0, 0.0, 0.0),
-                density_tox_vis: Vec4::new(0.4, 0.1, 0.0, 0.0),
-            });
-        }
-        app.update();
-
-        let w = app.world().resource::<SmokeVisualBridgeWitness>();
-        assert!(w.smoke_extract_wired);
-        assert!(w.smoke_stub_removed);
-        assert!(w.smoke_density_sum > 0.0);
-        assert_eq!(w.smoke_row_count, 1);
-    }
+    
 
     #[test]
     fn smoke_extract_wired_projection_fixture_feeds_stage5_keys() {

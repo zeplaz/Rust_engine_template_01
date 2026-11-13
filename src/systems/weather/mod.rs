@@ -12,8 +12,7 @@ mod weather_visual;
 
 pub use player_read_hud::{
     format_ops_power_derate_line, format_ops_wx_line, format_ops_wx_line_with_vis,
-    weather_hud_player_read_witness_green,
-};
+    };
 
 pub use chunk_weather::{
     ChunkWeather, GlobalRenewableWeatherFactors, WeatherSimDiagnostics,
@@ -23,7 +22,7 @@ pub use weather_visual::{
     WeatherPrecipVisualSample, WeatherVisualSettings, WeatherVisualPlugin, WeatherVfxCameraChild,
     WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA,
 };
-pub use player_read_hud::weather_hud_player_read_witness_payload;
+
 
 use bevy::prelude::*;
 

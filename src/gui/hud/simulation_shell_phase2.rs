@@ -21,15 +21,11 @@ use crate::systems::sim_control::{SimControlState, SimTick};
 use crate::systems::weather::WeatherPrecipVisualSample;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::info_tabs::HudInfoLiveData;
+use super::live_data::HudInfoLiveData;
 use super::panel_state::HudPanelState;
-use super::shell_diagnostics::ProductShellDiagnostics;
 use super::icon_atlas::{IconAtlasManifest, IconAtlasUi, IconId};
-use super::ui_stress_state::{
-    apply_minimap_stress_chrome_system, sync_ui_stress_from_sim_system, UiStressState,
-};
 use crate::render::{
-    minimap_gpu_compositor_env_enabled, MinimapCompositorState, MinimapRenderTargetRegistry,
+    MinimapCompositorState, MinimapRenderTargetRegistry,
 };
 
 const INTEL_FOCUS_CHUNK_TILE_PX: f32 = 32.0;
@@ -346,57 +342,13 @@ pub struct OpsStripIntelFocusRequest {
     pub pending_world: Option<Vec2>,
 }
 
-#[derive(Resource, Clone, Debug, Default)]
-pub struct UiShellMigrationWitness {
-    pub ops_zones_wired: bool,
-    pub phase2_zones_live: bool,
-    pub alert_click_expanded_tray: bool,
-    pub intel_map_camera_request: bool,
-    pub minimap_chrome_aligned: bool,
-    pub escape_collapsed_tray: bool,
-    pub flat_v2_tab_chrome: bool,
-    pub build_rail_synced: bool,
-    pub build_rail_authoritative: bool,
-    pub build_toolbox_egui_gated: bool,
-    pub floating_egui_shells_gated: bool,
-    pub minimap_gpu_path: bool,
-    pub icon_atlas_loaded: bool,
-    /// P4-P5-01 — petroleum tab visible + atlas icon wired (Industry + expanded tray).
-    pub petroleum_panel_tab_wired: bool,
-    /// P4-VEH-01 — logistics vehicle chips (TRUCK / URAL / BUS) when Logistics tray active.
-    pub logistics_vehicle_chips_wired: bool,
-    /// UX-E03-CODER-A — transmission media registry seeded (read-only narrative lane).
-    pub ux_e03_media_registry_wired: bool,
-    pub ops_zone_hover_token: bool,
-    /// **UI-P5-PAUSE-001** — Bevy pause overlay spawned in Simulation (not egui).
-    pub pause_menu_bevy: bool,
-    pub mock_zone_parity: bool,
-    pub last_mission_count: usize,
-    pub last_minimap_rect_delta_px: f32,
-}
-
-
-
-
-
-
-pub fn witness_ops_strip_alerts_pressed(
-    tray: &mut ContextTrayState,
-    witness: &mut UiShellMigrationWitness,
-    mission_count: usize,
-) {
+fn open_alerts_tray(tray: &mut ContextTrayState) {
     tray.panel_state = HudPanelState::Expanded;
     tray.active_tab = ContextTrayTab::Alerts;
-    witness.ops_zones_wired = true;
-    witness.phase2_zones_live = true;
-    witness.alert_click_expanded_tray = true;
-    witness.flat_v2_tab_chrome = true;
-    witness.last_mission_count = mission_count;
 }
 
-pub fn witness_ops_strip_intel_pressed(
+fn request_intel_focus(
     tray: &mut ContextTrayState,
-    witness: &mut UiShellMigrationWitness,
     world: &WorldRepresentationFrame,
     intel_req: &mut OpsStripIntelFocusRequest,
 ) {
@@ -407,272 +359,6 @@ pub fn witness_ops_strip_intel_pressed(
         fc.x as f32 * tile + tile * 0.5,
         fc.y as f32 * tile + tile * 0.5,
     ));
-    witness.ops_zones_wired = true;
-    witness.phase2_zones_live = true;
-    witness.intel_map_camera_request = true;
-}
-
-/// UI-P2A-F03 — ops-strip zone hover accent witnessed (same flags as [`sync_ops_strip_zone_hover_system`]).
-pub fn witness_ops_strip_zone_hover_replay(witness: &mut UiShellMigrationWitness) {
-    witness.ops_zones_wired = true;
-    witness.phase2_zones_live = true;
-    witness.ops_zone_hover_token = true;
-}
-
-/// UI-P2A-P4-AUTH — build-rail tool press via [`apply_build_rail_tool_selection`] (authoritative strip + tool).
-pub fn witness_build_rail_tool_authoritative_replay(
-    strip: &mut crate::construction::BuildStripState,
-    tool: &mut crate::construction::ActiveBuildTool,
-    witness: &mut UiShellMigrationWitness,
-    slot: crate::construction::ToolContext,
-) {
-    strip.active = slot;
-    crate::construction::apply_build_rail_tool_selection(tool, slot, false);
-    witness.ops_zones_wired = true;
-    witness.phase2_zones_live = true;
-    witness.build_rail_synced = true;
-    witness.build_rail_authoritative = true;
-}
-
-#[must_use]
-pub fn ui_p2a_f03_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.ops_zone_hover_token && witness.ops_zones_wired
-}
-
-#[must_use]
-pub fn ui_p2a_p4_auth_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.build_rail_authoritative && witness.build_rail_synced
-}
-
-/// **UI-OH-2A-001** / **UI-P2A-001** — P1 zones + §1.6 tray interactions + P3 minimap chrome align.
-#[must_use]
-pub fn ui_oh_2a_001_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.phase2_zones_live
-        && witness.ops_zones_wired
-        && witness.alert_click_expanded_tray
-        && witness.intel_map_camera_request
-        && witness.escape_collapsed_tray
-        && witness.minimap_chrome_aligned
-        && witness.flat_v2_tab_chrome
-}
-
-/// Lib witness refresh — replays P1/P2 interactions without sim clicks.
-#[must_use]
-pub fn replay_ui_oh_2a_001_witness() -> UiShellMigrationWitness {
-    use crate::construction::{ActiveBuildTool, BuildStripState, ToolContext};
-
-    let mut tray = ContextTrayState::default();
-    let mut witness = UiShellMigrationWitness::default();
-    let mut intel = OpsStripIntelFocusRequest::default();
-    let world = WorldRepresentationFrame {
-        focus_chunk: IVec2::new(2, 3),
-        ..Default::default()
-    };
-    witness_ops_strip_alerts_pressed(&mut tray, &mut witness, 4);
-    witness_ops_strip_intel_pressed(&mut tray, &mut witness, &world, &mut intel);
-    collapse_context_tray_on_escape(&mut tray, &mut witness);
-    witness_ops_strip_zone_hover_replay(&mut witness);
-    witness.mock_zone_parity = crate::construction::mock_shapes_parity_green();
-    witness.minimap_chrome_aligned = true;
-    witness.last_minimap_rect_delta_px = MINIMAP_CHROME_STROKE_PAD_PX;
-    witness.flat_v2_tab_chrome = true;
-    witness.build_toolbox_egui_gated = true;
-    witness.floating_egui_shells_gated = true;
-    let mut strip = BuildStripState::default();
-    let mut tool = ActiveBuildTool::default();
-    witness_build_rail_tool_authoritative_replay(
-        &mut strip,
-        &mut tool,
-        &mut witness,
-        ToolContext::Utilities,
-    );
-    witness.build_rail_synced = true;
-    witness
-}
-
-
-
-
-
-/// **UI-W3-2A-001** — P1 ops-strip zones + P2 context tray + `phase2_zones_live`.
-#[must_use]
-pub fn ui_w3_2a_001_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.phase2_zones_live
-        && witness.ops_zones_wired
-        && witness.alert_click_expanded_tray
-        && witness.intel_map_camera_request
-        && witness.escape_collapsed_tray
-        && witness.flat_v2_tab_chrome
-}
-
-/// Lib witness refresh — replays P1 zones + §1.6 tray without minimap/P4 tails.
-#[must_use]
-pub fn replay_ui_w3_2a_001_witness() -> UiShellMigrationWitness {
-    let mut tray = ContextTrayState::default();
-    let mut witness = UiShellMigrationWitness::default();
-    let mut intel = OpsStripIntelFocusRequest::default();
-    let world = WorldRepresentationFrame {
-        focus_chunk: IVec2::new(2, 3),
-        ..Default::default()
-    };
-    witness_ops_strip_alerts_pressed(&mut tray, &mut witness, 4);
-    witness_ops_strip_intel_pressed(&mut tray, &mut witness, &world, &mut intel);
-    collapse_context_tray_on_escape(&mut tray, &mut witness);
-    witness_ops_strip_zone_hover_replay(&mut witness);
-    witness
-}
-
-
-
-/// **UI-W3-2A-001** — mark P1/P2 live once Bevy ops strip + context tray exist in Simulation.
-pub fn prime_phase2a_ops_zones_witness_when_strip_live(
-    base: Res<State<BaseState>>,
-    mut witness: ResMut<UiShellMigrationWitness>,
-    ops: Query<(), With<OpsStripTime>>,
-    tray: Query<(), With<ContextTrayRoot>>,
-) {
-    if !matches!(*base.get(), BaseState::Simulation) {
-        return;
-    }
-    if ops.iter().next().is_some() {
-        witness.ops_zones_wired = true;
-        witness.phase2_zones_live = true;
-    }
-    if tray.iter().next().is_some() {
-        witness.flat_v2_tab_chrome = true;
-    }
-}
-
-/// **UI-P5-PAUSE-001** — Bevy pause menu in Simulation (no egui pause window).
-#[must_use]
-pub fn ui_p5_pause_001_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.pause_menu_bevy
-}
-
-/// **UI-OH-P5-001** — OH rollup alias for Phase 5 pause (same predicate as [`ui_p5_pause_001_green`]).
-#[must_use]
-pub fn ui_oh_p5_001_green(witness: &UiShellMigrationWitness) -> bool {
-    ui_p5_pause_001_green(witness)
-}
-
-
-
-/// **UI-P3-SHELL-ROLLUP-001** — shell `ui_p3_001.closed` when compositor authority or GPU path green.
-#[must_use]
-pub fn ui_p3_001_shell_closed(
-    witness: &UiShellMigrationWitness,
-    shell_diag: &ProductShellDiagnostics,
-) -> bool {
-    let shell_aligned = witness.minimap_chrome_aligned
-        && shell_diag.egui_pass_count_sim_session == 0;
-    minimap_gpu_compositor_env_enabled() && witness.minimap_gpu_path && shell_aligned
-}
-
-/// **UI-OH-P4-001** — P4.1 rail + build-rail authority (atlas paths are compile-time constants).
-#[must_use]
-pub fn ui_oh_p4_001_p4_1_green(witness: &UiShellMigrationWitness) -> bool {
-    ui_p2a_p4_auth_green(witness)
-}
-
-/// **UI-OH-P4-001** — P4-P5-01 petroleum tab wiring.
-#[must_use]
-pub fn ui_oh_p4_001_p5_br_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.petroleum_panel_tab_wired
-}
-
-/// **UI-OH-P4-001** — OH rollup for icon atlas + build rail + petroleum tab.
-#[must_use]
-pub fn ui_oh_p4_001_green(witness: &UiShellMigrationWitness) -> bool {
-    ui_oh_p4_001_p4_1_green(witness)
-        && ui_oh_p4_001_p5_br_green(witness)
-        && witness.icon_atlas_loaded
-}
-
-/// **UI-W3-P5-001** — Wave 3 Bevy pause menu (no egui pause overlay in Simulation).
-#[must_use]
-pub fn ui_w3_p5_001_green(
-    witness: &UiShellMigrationWitness,
-    shell_diag: &ProductShellDiagnostics,
-) -> bool {
-    ui_p5_pause_001_green(witness) && shell_diag.egui_pass_count_sim_session == 0
-}
-
-/// Lib replay — 2A interaction fields + Bevy pause flag for **UI-W3-P5-001**.
-#[must_use]
-pub fn replay_ui_w3_p5_001_witness() -> UiShellMigrationWitness {
-    let mut witness = replay_ui_w3_2a_001_witness();
-    witness.minimap_chrome_aligned = true;
-    witness.last_minimap_rect_delta_px = MINIMAP_CHROME_STROKE_PAD_PX;
-    witness.mock_zone_parity = crate::construction::mock_shapes_parity_green();
-    crate::gui::witness_pause_menu_bevy_replay(&mut witness);
-    witness
-}
-
-/// **UI-W3-WITNESS-001** — Wave 3 shell witness rollup (2A/2B/2C/P4/P5 + interaction block).
-#[must_use]
-pub fn ui_w3_witness_001_shell_green(
-    witness: &UiShellMigrationWitness,
-    shell_diag: &ProductShellDiagnostics,
-) -> bool {
-    ui_w3_2a_001_green(witness)
-        && ui_w3_2b_001_green(witness, shell_diag)
-        && ui_w3_2c_001_green(witness)
-        && ui_w3_p4_001_green(witness)
-        && ui_w3_p5_001_green(witness, shell_diag)
-        && ui_witness_interaction_block_green(witness)
-}
-
-/// **UI-W3-P6-001** — shell perf slice (Phase 6 P6-1…P6-3 on shell JSON).
-#[must_use]
-pub fn ui_w3_p6_shell_perf_green(
-    witness: &UiShellMigrationWitness,
-    shell_diag: &ProductShellDiagnostics,
-) -> bool {
-    ui_p2b_coder_b_green(witness, shell_diag)
-        && ui_p5_pause_001_green(witness)
-        && witness.pause_menu_bevy
-}
-
-
-
-/// `witness` JSON block — §1.6 interaction + 2B egui gate honesty.
-#[must_use]
-pub fn ui_witness_interaction_block_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.phase2_zones_live
-        && witness.ops_zones_wired
-        && witness.alert_click_expanded_tray
-        && witness.intel_map_camera_request
-        && witness.escape_collapsed_tray
-        && witness.flat_v2_tab_chrome
-        && witness.minimap_chrome_aligned
-        && witness.build_rail_synced
-        && witness.build_rail_authoritative
-        && witness.build_toolbox_egui_gated
-        && witness.floating_egui_shells_gated
-        && witness.ops_zone_hover_token
-        && (witness.last_minimap_rect_delta_px - MINIMAP_CHROME_STROKE_PAD_PX).abs()
-            < f32::EPSILON
-}
-
-
-
-#[derive(Resource, Debug)]
-pub struct UiShellMigrationLiveProofState {
-    pub frames_since_write: u32,
-    pub write_interval: u32,
-    pub written: bool,
-    pub interactions_written: bool,
-}
-
-impl Default for UiShellMigrationLiveProofState {
-    fn default() -> Self {
-        Self {
-            frames_since_write: 0,
-            write_interval: 90,
-            written: false,
-            interactions_written: false,
-        }
-    }
 }
 
 pub struct SimulationShellPhase2Plugin;
@@ -698,17 +384,12 @@ impl Plugin for SimulationShellPhase2Plugin {
         app.init_resource::<ContextTrayState>()
             .init_resource::<ZoneShadeToggle>()
             .init_resource::<super::simulation_pointer_gate::SimulationMapPointerGate>()
-            .init_resource::<crate::gui::MinimapEguiDevGate>()
             .init_resource::<super::minimap_bevy_interaction::MinimapBevyPointerState>()
             .init_resource::<OpsStripIntelFocusRequest>()
-            .init_resource::<UiShellMigrationWitness>()
             .init_resource::<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>()
             .init_resource::<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>()
             .init_resource::<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>()
             .init_resource::<crate::gui::hud::plant_focus_card::PlantFocusCardSnapshot>()
-            .init_resource::<UiShellMigrationLiveProofState>()
-            .init_resource::<UiStressState>()
-            .init_resource::<ProductShellDiagnostics>()
             .configure_sets(Update, OpsStripZoneLinesSet)
             .add_systems(
                 Update,
@@ -718,7 +399,6 @@ impl Plugin for SimulationShellPhase2Plugin {
                     super::minimap_bevy_interaction::minimap_bevy_scroll_zoom_system
                         .after(crate::gui::tactical::map_camera::MapCameraSystemSet::ApplyInput),
                     super::minimap_bevy_interaction::pin_minimap_centered_fit_system,
-                    prime_phase2a_ops_zones_witness_when_strip_live,
                     ops_strip_zone_click_system,
                     context_tray_tab_click_system,
                     build_rail_tool_click_system,
@@ -732,7 +412,6 @@ impl Plugin for SimulationShellPhase2Plugin {
                     sync_build_rail_from_strip_system,
                     sync_petroleum_panel_tab_system,
                     sync_logistics_vehicle_chips_system,
-                    sync_ui_stress_from_sim_system,
                 )
                     .run_if(in_simulation_or_editor),
             )
@@ -783,14 +462,7 @@ impl Plugin for SimulationShellPhase2Plugin {
                 )
                     .run_if(in_simulation_or_editor),
             )
-            .add_systems(
-                Update,
-                (
-                    apply_minimap_stress_chrome_system,
-                )
-                    .after(super::hud_root_tick::hud_product_shell_egui_root)
-                    .run_if(in_simulation_or_editor),
-            );
+            ;
     }
 }
 
@@ -813,9 +485,6 @@ struct OpsStripZoneCache {
     power_fp: Option<i32>,
     power_line: String,
     tray_line: String,
-    /// `mock_shapes_parity_green()` re-reads the building-definition directory from disk; the
-    /// answer is static for the session, so compute it once.
-    mock_parity: Option<bool>,
 }
 
 fn update_ops_strip_zone_lines_system(
@@ -839,14 +508,7 @@ fn update_ops_strip_zone_lines_system(
         Query<&mut Text, With<OpsStripTrayAffordance>>,
     )>,
     mut cache: Local<OpsStripZoneCache>,
-    mut witness: ResMut<UiShellMigrationWitness>,
 ) {
-    witness.ops_zones_wired = true;
-    witness.phase2_zones_live = true;
-    witness.mock_zone_parity = *cache
-        .mock_parity
-        .get_or_insert_with(crate::construction::mock_shapes_parity_green);
-
     // The tick readout only needs ~15 Hz: re-shaping the text every sim tick costs more than
     // everything else on the strip (bevy_ui text layout).
     let time_fp = (tick.0 / 4, ctrl.paused, (ctrl.speed * 100.0).round() as i32);
@@ -984,37 +646,23 @@ fn ops_strip_zone_click_system(
     q: Query<(&Interaction, &OpsStripZone), Changed<Interaction>>,
     mut tray: ResMut<ContextTrayState>,
     mut intel_req: ResMut<OpsStripIntelFocusRequest>,
-    mut witness: ResMut<UiShellMigrationWitness>,
     world: Option<Res<WorldRepresentationFrame>>,
-    missions: Option<Res<ActiveMissions>>,
 ) {
     for (interaction, zone) in &q {
         if *interaction != Interaction::Pressed {
             continue;
         }
-        witness.ops_zones_wired = true;
-        witness.phase2_zones_live = true;
         match zone {
             OpsStripZone::Alerts => {
-                witness_ops_strip_alerts_pressed(
-                    tray.as_mut(),
-                    witness.as_mut(),
-                    missions.as_deref().map(|m| m.missions.len()).unwrap_or(0),
-                );
+                open_alerts_tray(tray.as_mut());
             }
             OpsStripZone::Intel => {
                 if let Some(w) = world.as_deref() {
-                    witness_ops_strip_intel_pressed(
-                        tray.as_mut(),
-                        witness.as_mut(),
-                        w,
-                        intel_req.as_mut(),
-                    );
+                    request_intel_focus(tray.as_mut(), w, intel_req.as_mut());
                 }
             }
             OpsStripZone::TrayAffordance => {
                 tray.cycle_tray_affordance();
-                witness.flat_v2_tab_chrome = true;
             }
             OpsStripZone::Time | OpsStripZone::Weather | OpsStripZone::Power => {}
         }
@@ -1036,7 +684,6 @@ fn context_tray_tab_click_system(
     q: Query<(&Interaction, &ContextTrayTabButton), Changed<Interaction>>,
     mut tray: ResMut<ContextTrayState>,
     mut player_log: Option<ResMut<crate::sim::effects::PlayerEventLog>>,
-    mut witness: ResMut<UiShellMigrationWitness>,
 ) {
     for (interaction, tab) in &q {
         if *interaction == Interaction::Pressed {
@@ -1046,9 +693,6 @@ fn context_tray_tab_click_system(
                     crate::sim::effects::clear_player_event_crit_unread(log.as_mut());
                 }
             }
-            witness.ops_zones_wired = true;
-            witness.phase2_zones_live = true;
-            witness.flat_v2_tab_chrome = true;
         }
     }
 }
@@ -1060,7 +704,6 @@ fn build_rail_tool_click_system(
     mut picker: ResMut<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
     mut road_sheet: ResMut<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
     mut power_sheet: ResMut<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>,
-    mut witness: ResMut<UiShellMigrationWitness>,
 ) {
     for (interaction, slot) in &q {
         if *interaction != Interaction::Pressed {
@@ -1073,15 +716,9 @@ fn build_rail_tool_click_system(
             picker.close();
             road_sheet.close();
             power_sheet.close();
-            witness.build_rail_synced = true;
-            witness.build_rail_authoritative = true;
         } else {
-            witness_build_rail_tool_authoritative_replay(
-                strip.as_mut(),
-                tool.as_mut(),
-                witness.as_mut(),
-                slot.0,
-            );
+            strip.active = slot.0;
+            crate::construction::apply_build_rail_tool_selection(&mut tool, slot.0, false);
             picker.open_for_slot(slot.0);
             if matches!(slot.0, ToolContext::Roads | ToolContext::Rail) {
                 road_sheet.open = true;
@@ -1104,7 +741,6 @@ fn sync_ops_strip_zone_hover_system(
         (&Interaction, &mut BorderColor, &mut Node),
         (With<Button>, With<OpsStripZone>),
     >,
-    mut witness: ResMut<UiShellMigrationWitness>,
 ) {
     let hot = palette.bevy_accent_hot();
     let idle = palette.bevy_border_subtle();
@@ -1116,9 +752,6 @@ fn sync_ops_strip_zone_hover_system(
             BorderColor::all(idle)
         };
         node.border = UiRect::all(Val::Px(1.0));
-        if emphasized {
-            witness_ops_strip_zone_hover_replay(witness.as_mut());
-        }
     }
 }
 
@@ -1134,10 +767,8 @@ pub fn format_ops_strip_alert_badge(count: usize) -> String {
 fn sync_ops_strip_alert_badge_system(
     missions: Option<Res<ActiveMissions>>,
     mut count_q: Query<&mut Text, With<OpsStripAlertBadgeText>>,
-    mut witness: ResMut<UiShellMigrationWitness>,
 ) {
     let count = missions.as_deref().map(|m| m.missions.len()).unwrap_or(0);
-    witness.last_mission_count = count;
     let label = format_ops_strip_alert_badge(count);
     for mut text in &mut count_q {
         crate::gui::style::widgets::set_text_if_changed(&mut text, label.clone());
@@ -1220,7 +851,7 @@ fn sync_context_tray_visibility_system(
                 let unapproved = d.pending_unapproved;
                 let subject = tool
                     .as_deref()
-                    .and_then(super::contextual_tip::active_place_subject);
+                    .and_then(super::sim_hud_copy::active_place_subject);
                 let locked = ghost.as_deref().is_some_and(|g| {
                     g.placement_mode == crate::construction::BuildPlacementMode::Adjust
                         && g.origin.is_some()
@@ -1293,9 +924,7 @@ fn sync_context_tray_tab_chrome_system(
         (With<Button>, With<ContextTrayTabButton>),
     >,
     mut labels: Query<&mut TextColor, With<ContextTrayTabLabel>>,
-    mut witness: ResMut<UiShellMigrationWitness>,
 ) {
-    witness.flat_v2_tab_chrome = true;
     for (btn, mut bg, mut border, mut node, children) in &mut tabs {
         let selected = btn.0 == tray.active_tab;
         if selected {
@@ -1358,9 +987,6 @@ fn sync_build_rail_from_strip_system(
     strip: Res<BuildStripState>,
     picker: Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
     palette: Res<UiPalette>,
-    atlas_ui: Option<Res<IconAtlasUi>>,
-    manifests: Res<Assets<IconAtlasManifest>>,
-    images: Res<Assets<Image>>,
     mut slots: Query<
         (
             &BuildRailToolSlot,
@@ -1379,12 +1005,7 @@ fn sync_build_rail_from_strip_system(
         (&mut Text, &mut TextColor, &mut Visibility),
         (With<BuildRailToolLabel>, Without<BuildRailToolIcon>),
     >,
-    mut witness: ResMut<UiShellMigrationWitness>,
 ) {
-    witness.build_rail_synced = true;
-    witness.icon_atlas_loaded = atlas_ui.as_ref().is_some_and(|atlas| {
-        atlas.manifest_loaded(&manifests) && images.get(&atlas.atlas).is_some()
-    });
     for (slot, interaction, children, mut bg, mut border) in &mut slots {
         let selected = if picker.open {
             slot.0 == picker.anchor_slot
@@ -1488,7 +1109,6 @@ fn sync_petroleum_panel_tab_system(
     palette: Res<UiPalette>,
     atlas_ui: Option<Res<IconAtlasUi>>,
     manifests: Res<Assets<IconAtlasManifest>>,
-    mut witness: ResMut<UiShellMigrationWitness>,
     mut roots: Query<(&Interaction, &mut Visibility), With<PetroleumPanelTabRoot>>,
     mut icons: Query<
         &mut bevy::ui::widget::ImageNode,
@@ -1496,8 +1116,6 @@ fn sync_petroleum_panel_tab_system(
     >,
 ) {
     let show = petroleum_panel_tab_visible(&strip, &tray);
-    witness.petroleum_panel_tab_wired =
-        show && atlas_ui.as_ref().is_some_and(|a| a.image_node_for_id(&manifests, IconId::P5Br).is_some());
     let mut icon_tint = palette.bevy_text_muted().with_alpha(0.72);
     for (interaction, mut vis) in &mut roots {
         *vis = if show {
@@ -1528,7 +1146,6 @@ fn sync_minimap_gpu_image_node_system(
     fallback: Res<crate::render::TileWorldFallbackState>,
     mut shell: ResMut<MinimapShellState>,
     mut compositor: ResMut<MinimapCompositorState>,
-    mut witness: ResMut<UiShellMigrationWitness>,
     map_views: Res<crate::gui::MapViewInstances>,
     params: Res<WorldGenParams>,
     chrome_q: Query<&Node, (With<MinimapChromeRoot>, Without<MinimapGpuImageNode>)>,
@@ -1549,12 +1166,10 @@ fn sync_minimap_gpu_image_node_system(
     if display == Handle::default() {
         *vis = Visibility::Hidden;
         compositor.dual_minimap_present = false;
-        witness.minimap_gpu_path = false;
         return;
     }
     let using_gpu_rt =
         display == registry.committed_image && compositor.stamp > 0;
-    witness.minimap_gpu_path = using_gpu_rt;
     *vis = Visibility::Visible;
     let mm = &map_views.minimap;
     let panel = shell
@@ -1615,7 +1230,6 @@ fn sync_minimap_chrome_root_system(
     mut minimap: ResMut<MinimapShellState>,
     win: Query<&Window, With<PrimaryWindow>>,
     mut q: Query<(&mut Node, &mut Visibility), With<MinimapChromeRoot>>,
-    mut witness: ResMut<UiShellMigrationWitness>,
 ) {
     let Ok((mut node, mut vis)) = q.single_mut() else {
         return;
@@ -1668,8 +1282,6 @@ fn sync_minimap_chrome_root_system(
     node.width = Val::Px(w_px);
     node.height = Val::Px(h_px);
     minimap.sync_panel_viewport_suggestion_from_layout();
-    witness.last_minimap_rect_delta_px = pad;
-    witness.minimap_chrome_aligned = pad <= 2.0 && w_px > 10.0;
 }
 
 /// MINIMAP-WIDGET-IMPL-001 — position the title bar + resize grip chrome children inside the chrome
@@ -1718,205 +1330,10 @@ fn sync_minimap_chrome_layout_system(
     }
 }
 
-#[must_use]
-pub fn ui_p2a_coder_b_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.phase2_zones_live
-        && witness.ops_zones_wired
-        && witness.mock_zone_parity
-        && witness.build_rail_synced
-}
-
-/// **UI-P2B-CODER-B** — sim-session egui gate + zero in-session egui passes.
-#[must_use]
-pub fn ui_p2b_coder_b_green(
-    witness: &UiShellMigrationWitness,
-    shell_diag: &ProductShellDiagnostics,
-) -> bool {
-    shell_diag.egui_pass_count_sim_session == 0
-        && witness.build_toolbox_egui_gated
-        && witness.floating_egui_shells_gated
-}
-
-/// **UI-OH-2B-001** / **UI-P2B-001** — product-shell egui off in Simulation; sim-session pass count 0.
-#[must_use]
-pub fn ui_oh_2b_001_green(
-    witness: &UiShellMigrationWitness,
-    shell_diag: &ProductShellDiagnostics,
-) -> bool {
-    ui_p2b_coder_b_green(witness, shell_diag)
-}
-
-/// **UI-W3-2B-001** — Wave 3 overhaul alias for Phase 2B egui gate (`egui_pass_count_in_sim: 0`).
-#[must_use]
-pub fn ui_w3_2b_001_green(
-    witness: &UiShellMigrationWitness,
-    shell_diag: &ProductShellDiagnostics,
-) -> bool {
-    ui_oh_2b_001_green(witness, shell_diag)
-}
-
-/// **PLAN-UI-2C-001** / mock § P4 — signed **2C-B** dual column (48px mode rail + 52px build rail).
-#[must_use]
-pub fn phase2c_layout_contract_ok() -> bool {
-    PHASE_2C_LAYOUT_OPTION == "2C-B"
-        && CONTEXT_RAIL_W_PX == 48.0
-        && BUILD_RAIL_W_PX == 52.0
-        && command_left_stack_footprint_px(true) == 106.0
-        && command_left_stack_footprint_px(false) == 458.0
-}
-
-/// Phase 2C closure — layout contract + authoritative build rail (`LeftContextRail` + `BuildRailRoot`).
-#[must_use]
-pub fn ui_phase2c_green(witness: &UiShellMigrationWitness) -> bool {
-    phase2c_layout_contract_ok() && ui_p2a_p4_auth_green(witness)
-}
-
-/// **UI-W3-2C-001** — left command-table mode rail (Wave 3 alias for **2C-B**).
-#[must_use]
-pub fn ui_w3_2c_001_green(witness: &UiShellMigrationWitness) -> bool {
-    ui_phase2c_green(witness)
-}
-
-/// **UI-W3-P4-001** — petroleum panel tab predicate (Industry build context + expanded tray).
-#[must_use]
-pub fn ui_w3_p4_001_petroleum_panel_green(strip: &BuildStripState, tray: &ContextTrayState) -> bool {
-    petroleum_panel_tab_visible(strip, tray)
-}
-
-/// **UI-W3-P4-001** — Phase 4 icon atlas + build rail + petroleum tab (post art sign-off).
-#[must_use]
-pub fn ui_w3_p4_001_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.icon_atlas_loaded
-        && ui_p2a_p4_auth_green(witness)
-        && witness.petroleum_panel_tab_wired
-}
-
-/// **P4-VEH-01** — vehicle icon row consumers wired (atlas + logistics tray).
-#[must_use]
-pub fn ui_p4_veh_01_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.icon_atlas_loaded && witness.logistics_vehicle_chips_wired
-}
-
-/// **UX-E03-CODER-A** — media registry active; shell does not enqueue strategic orders.
-#[must_use]
-pub fn ui_ux_e03_coder_a_green(witness: &UiShellMigrationWitness) -> bool {
-    witness.ux_e03_media_registry_wired
-}
-
-/// Lib replay — P4 atlas + rail authority + petroleum tab wiring flags.
-#[must_use]
-pub fn replay_ui_w3_p4_001_witness() -> UiShellMigrationWitness {
-    use crate::construction::{ActiveBuildTool, BuildStripState, ToolContext};
-
-    let mut witness = replay_ui_w3_2a_001_witness();
-    let mut strip = BuildStripState::default();
-    let mut tool = ActiveBuildTool::default();
-    witness_build_rail_tool_authoritative_replay(
-        &mut strip,
-        &mut tool,
-        &mut witness,
-        ToolContext::Industry,
-    );
-    witness.icon_atlas_loaded = true;
-    let mut tray = ContextTrayState::default();
-    tray.panel_state = HudPanelState::Expanded;
-    tray.active_tab = ContextTrayTab::Logistics;
-    witness.petroleum_panel_tab_wired = ui_w3_p4_001_petroleum_panel_green(&strip, &tray);
-    witness.logistics_vehicle_chips_wired = true;
-    witness.ux_e03_media_registry_wired = true;
-    witness
-}
-
-
-
-/// Lib witness refresh — replays P4 build-rail authority for 2C mode rail gate.
-#[must_use]
-pub fn replay_ui_w3_2c_001_witness() -> UiShellMigrationWitness {
-    use crate::construction::{ActiveBuildTool, BuildStripState, ToolContext};
-
-    let mut witness = UiShellMigrationWitness::default();
-    let mut strip = BuildStripState::default();
-    let mut tool = ActiveBuildTool::default();
-    witness_build_rail_tool_authoritative_replay(
-        &mut strip,
-        &mut tool,
-        &mut witness,
-        ToolContext::Utilities,
-    );
-    witness
-}
-
-/// Lib replay for **@coder B (5)** — **2B** + **2C** + **P5** + **witness** + **P4** (no 2A-only wipe).
-#[must_use]
-pub fn replay_coder_b_ui_five_lane_witness() -> UiShellMigrationWitness {
-    use crate::construction::{ActiveBuildTool, BuildStripState, ToolContext};
-
-    let mut witness = replay_ui_w3_2a_001_witness();
-    let mut strip = BuildStripState::default();
-    let mut tool = ActiveBuildTool::default();
-    witness_build_rail_tool_authoritative_replay(
-        &mut strip,
-        &mut tool,
-        &mut witness,
-        ToolContext::Utilities,
-    );
-    witness.icon_atlas_loaded = true;
-    let mut tray = ContextTrayState::default();
-    tray.panel_state = HudPanelState::Expanded;
-    let strip = BuildStripState {
-        active: ToolContext::Industry,
-        ..Default::default()
-    };
-    witness.petroleum_panel_tab_wired = ui_w3_p4_001_petroleum_panel_green(&strip, &tray);
-    witness.minimap_chrome_aligned = true;
-    witness.minimap_gpu_path = true;
-    witness.last_minimap_rect_delta_px = MINIMAP_CHROME_STROKE_PAD_PX;
-    witness.mock_zone_parity = crate::construction::mock_shapes_parity_green();
-    crate::gui::witness_pause_menu_bevy_replay(&mut witness);
-    witness
-}
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-pub fn collapse_context_tray_on_escape(
-    tray: &mut ContextTrayState,
-    witness: &mut UiShellMigrationWitness,
-) {
-    let before = tray.panel_state;
+pub fn collapse_context_tray_on_escape(tray: &mut ContextTrayState) {
     tray.panel_state.collapse_unpinned();
-    if before != HudPanelState::Collapsed && tray.panel_state == HudPanelState::Collapsed {
-        witness.escape_collapsed_tray = true;
-    }
 }
 
-/// Alias for Phase 2A plugin registration (legacy name).
-pub type UiShellMigrationPlugin = SimulationShellPhase2Plugin;
 
 #[cfg(test)]
 mod tests {
@@ -1969,48 +1386,6 @@ mod tests {
         assert_eq!(tray.panel_state, HudPanelState::Expanded);
     }
 
-    #[test]
-    fn ui_p2a_f03_hover_replay_green() {
-        let mut witness = UiShellMigrationWitness::default();
-        assert!(!ui_p2a_f03_green(&witness));
-        witness_ops_strip_zone_hover_replay(&mut witness);
-        assert!(witness.ops_zone_hover_token);
-        assert!(ui_p2a_f03_green(&witness));
-    }
-
-
-
-
-    #[test]
-    fn witness_interaction_replay_sets_flags() {
-        let mut tray = ContextTrayState::default();
-        let mut witness = UiShellMigrationWitness::default();
-        let mut intel = OpsStripIntelFocusRequest::default();
-        let world = WorldRepresentationFrame {
-            focus_chunk: IVec2::new(2, 3),
-            ..Default::default()
-        };
-        witness_ops_strip_alerts_pressed(&mut tray, &mut witness, 4);
-        assert!(witness.alert_click_expanded_tray);
-        assert_eq!(tray.panel_state, HudPanelState::Expanded);
-        witness_ops_strip_intel_pressed(&mut tray, &mut witness, &world, &mut intel);
-        assert!(witness.intel_map_camera_request);
-        assert!(intel.pending_world.is_some());
-        collapse_context_tray_on_escape(&mut tray, &mut witness);
-        assert!(witness.escape_collapsed_tray);
-    }
-
-
-
-
-    #[test]
-    fn ui_w3_2a_001_green_requires_ops_zones_and_tray_interactions() {
-        let good = replay_ui_w3_2a_001_witness();
-        assert!(ui_w3_2a_001_green(&good));
-        let mut bad = good.clone();
-        bad.phase2_zones_live = false;
-        assert!(!ui_w3_2a_001_green(&bad));
-    }
 
 
 
@@ -2020,14 +1395,14 @@ mod tests {
 
 
 
-    #[test]
-    fn ui_w3_2c_001_green_requires_layout_contract_and_p4_auth() {
-        let good = replay_ui_w3_2c_001_witness();
-        assert!(ui_w3_2c_001_green(&good));
-        let mut bad = good.clone();
-        bad.build_rail_authoritative = false;
-        assert!(!ui_w3_2c_001_green(&bad));
-    }
+
+
+
+
+
+
+
+
 
 
 

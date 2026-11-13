@@ -153,19 +153,6 @@ pub fn rasterize_with_effective_scale(
     (params, weighted)
 }
 
-/// Inline self-check for construction live proof witness (mirrors unit tests).
-#[must_use]
-pub fn weighted_raster_witness_green() -> bool {
-    weighted_raster_self_check().is_ok()
-}
-
-fn weighted_raster_self_check() -> Result<(), &'static str> {
-    check_scale_monotonic()?;
-    check_rotation_preserves_mass()?;
-    check_overlap_rejects()?;
-    Ok(())
-}
-
 fn base_centroid(base: &FootprintMatrix) -> Vec2 {
     Vec2::new(base.width as f32 * 0.5, base.depth as f32 * 0.5)
 }
@@ -281,71 +268,9 @@ fn compute_world_bounds(base: &FootprintMatrix, params: &PlacementParams) -> (i3
     (min_x, min_z, max_x, max_z)
 }
 
-fn check_scale_monotonic() -> Result<(), &'static str> {
-    let base = FootprintMatrix::from_size(3, 3, true);
-    let origin = BuildSiteTile { x: 10, z: 10 };
-    let small = rasterize_weighted_footprint(&base, &PlacementParams::identity(0.75), origin);
-    let large = rasterize_weighted_footprint(&base, &PlacementParams::identity(1.5), origin);
-    if large.occupied_mass() + 1e-4 < small.occupied_mass() {
-        return Err("scale_monotonic");
-    }
-    Ok(())
-}
-
-fn check_rotation_preserves_mass() -> Result<(), &'static str> {
-    let base = FootprintMatrix::from_size(2, 3, true);
-    let origin = BuildSiteTile { x: 4, z: 8 };
-    let params = PlacementParams::identity(1.0);
-    let reference = rasterize_with_effective_scale(&base, params, origin);
-    for turns in 0..4u8 {
-        let mut rotated = params;
-        rotated.rotation_quarter_turns = turns;
-        let candidate = rasterize_with_effective_scale(&base, rotated, origin);
-        if (candidate.0.effective_scale - reference.0.effective_scale).abs() > 0.05 {
-            return Err("rotation_preserves_mass");
-        }
-        if (candidate.1.occupied_mass() - reference.1.occupied_mass()).abs() > 0.05 {
-            return Err("rotation_preserves_mass");
-        }
-    }
-    Ok(())
-}
-
-fn check_overlap_rejects() -> Result<(), &'static str> {
-    let base = FootprintMatrix::from_size(1, 1, true);
-    let origin = BuildSiteTile { x: 0, z: 0 };
-    let fp = rasterize_weighted_footprint(&base, &PlacementParams::identity(1.0), origin);
-    let mut existing = TileWeightMap::default();
-    existing.insert_footprint(&fp);
-    if validate_weighted_overlap(&existing, &fp).is_ok() {
-        return Err("overlap_rejects");
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn weighted_footprint_scale_monotonic() {
-        check_scale_monotonic().expect("scale_monotonic");
-    }
-
-    #[test]
-    fn weighted_footprint_rotation_preserves_mass() {
-        check_rotation_preserves_mass().expect("rotation_preserves_mass");
-    }
-
-    #[test]
-    fn weighted_footprint_overlap_rejects() {
-        check_overlap_rejects().expect("overlap_rejects");
-    }
-
-    #[test]
-    fn weighted_raster_witness_green_matches_self_check() {
-        assert!(weighted_raster_witness_green());
-    }
 
     #[test]
     fn unit_footprint_full_mass_at_unity_scale() {

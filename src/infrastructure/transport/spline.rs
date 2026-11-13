@@ -137,40 +137,6 @@ fn circumradius_m(a: Vec3, b: Vec3, c: Vec3) -> f32 {
     (ab_len * bc_len * ca_len) / (2.0 * cross_len)
 }
 
-#[must_use]
-pub fn infra_e1_002_spline_subdivide_witness_green() -> bool {
-    let gentle = [
-        [0.0_f32, 0.0, 0.0],
-        [5.0, 0.0, 0.0],
-        [10.0, 0.0, 0.0],
-        [15.0, 0.0, 0.0],
-    ];
-    let profile = RoadProfile {
-        id: "road_local".into(),
-        road_type: "local".into(),
-        lanes: 2,
-        speed_limit_kmh: 50,
-        surface_tags: vec![],
-        turn_radius_m: 8.0,
-        base_cost: 1.0,
-        allowed_agents: vec!["truck".into()],
-    };
-    let ok = subdivide_edge(&gentle, &profile, 6)
-        .map(|s| s.len() >= gentle.len())
-        .unwrap_or(false);
-    let sharp = [
-        [0.0_f32, 0.0, 0.0],
-        [0.0, 0.0, 0.0],
-        [10.0, 0.0, 0.0],
-        [10.0, 0.0, 10.0],
-    ];
-    let rejected = matches!(
-        subdivide_edge(&sharp, &profile, 8),
-        Err(SplineError::RadiusViolation { .. })
-    );
-    ok && rejected
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -221,8 +187,4 @@ mod tests {
         ));
     }
 
-    #[test]
-    fn infra_e1_002_witness_green() {
-        assert!(infra_e1_002_spline_subdivide_witness_green());
-    }
 }

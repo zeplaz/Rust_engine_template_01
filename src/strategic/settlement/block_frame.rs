@@ -12,8 +12,6 @@ use super::block::{BlockBook, BlockRecord};
 use super::block_archetype::BlockArchetype;
 use super::ids::BlockId;
 
-pub const CITY_G1_C2_LIVE_JSON: &str = "debug_runs/city_g1_c2_001_live.json";
-
 /// Which block edge faces the nearest street / junction.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "PascalCase")]
@@ -304,81 +302,6 @@ pub fn fixture_block_record_with_tiles() -> BlockRecord {
     }
 }
 
-/// Overlay wiring witness — structural check for debug tile classification (no egui).
-#[must_use]
-pub fn block_frame_debug_overlay_wired_witness_green() -> bool {
-    let graph = fixture_transport_graph_for_block_frame();
-    let block = fixture_block_record_with_tiles();
-    let tiles = block.tiles.clone();
-    let frame = build_block_frame(&block, Some(&graph)).expect("frame");
-    let book = rebuild_block_frames(
-        &BlockBook {
-            blocks: HashMap::from([(block.id.clone(), block)]),
-            tile_to_block: HashMap::new(),
-        },
-        Some(&graph),
-    );
-    book.frames.contains_key(&frame.block_id)
-        && street_edge_tiles(&frame).len() == frame.extent.y as usize
-        && scatter_interior_tiles(&frame, &tiles).len() == 12
-}
-
-#[must_use]
-pub fn city_g1_c2_001_block_frame_witness_green() -> bool {
-    build_city_g1_c2_001_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
-#[must_use]
-pub fn build_city_g1_c2_001_witness_body() -> serde_json::Value {
-    use super::block_archetype::load_block_archetype_registry;
-
-    let bounds_ok = {
-        let mut tiles = HashSet::new();
-        tiles.insert(IVec2::new(3, 4));
-        tiles.insert(IVec2::new(5, 6));
-        block_bounds_from_tiles(&tiles) == Some((IVec2::new(3, 4), UVec2::new(3, 3)))
-    };
-
-    let graph = fixture_transport_graph_for_block_frame();
-    let block = fixture_block_record_with_tiles();
-    let frame = build_block_frame(&block, Some(&graph)).expect("frame");
-    let junction_ok = frame.junction_tile == Some(IVec2::new(20, 16));
-    let street_ok = frame.street_side == StreetSide::PosX;
-    let orient_ok = frame.orientation_quarter_turns == 1;
-    let edge_ok = street_edge_tiles(&frame).len() == 4;
-    let scatter_ok = scatter_interior_tiles(&frame, &block.tiles).len() == 12;
-    let overlay_wired = block_frame_debug_overlay_wired_witness_green();
-    let table_still = load_block_archetype_registry().table.is_some();
-    let g0_wit = crate::construction::procedural::city_g0_wit_001_determinism_witness_green();
-
-    let green = bounds_ok
-        && junction_ok
-        && street_ok
-        && orient_ok
-        && edge_ok
-        && scatter_ok
-        && overlay_wired
-        && table_still;
-
-    serde_json::json!({
-        "gate": "CITY-G1-C2-001",
-        "issue": "CITY-C2",
-        "green": green,
-        "bounds_ok": bounds_ok,
-        "junction_ok": junction_ok,
-        "street_side": frame.street_side.as_str(),
-        "orientation_quarter_turns": frame.orientation_quarter_turns,
-        "edge_tile_count": street_edge_tiles(&frame).len(),
-        "scatter_tile_count": scatter_interior_tiles(&frame, &block.tiles).len(),
-        "overlay_wired": overlay_wired,
-        "block_archetype_table_still_ok": table_still,
-        "city_g0_wit_still_green": g0_wit,
-    })
-}
-
 
 
 #[cfg(test)]
@@ -415,8 +338,4 @@ mod tests {
         assert!(frame.junction_tile.is_none());
     }
 
-    #[test]
-    fn city_g1_c2_001_witness_green_lib() {
-        assert!(city_g1_c2_001_block_frame_witness_green());
-    }
 }

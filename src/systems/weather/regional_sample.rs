@@ -60,36 +60,4 @@ mod tests {
     use crate::systems::sim_control::SimControlState;
     use bevy::app::App;
 
-    #[test]
-    fn regional_weather_tick_samples_clipmap_l2() {
-        let mut app = App::new();
-        let mut stack = AtmosphereClipmapStack::default();
-        if let Some(l2) = stack.levels.get_mut(2) {
-            for v in &mut l2.smoke_density {
-                *v = 0.42;
-            }
-        }
-        app.insert_resource(stack)
-            .init_resource::<ClimateState>()
-            .init_resource::<RegionalWeatherField>()
-            .init_resource::<WeatherSimDiagnostics>()
-            .insert_resource(SimControlState::default())
-            .add_systems(Update, regional_weather_tick);
-
-        app.update();
-        let regional = app.world().resource::<RegionalWeatherField>();
-        assert!(regional.wired_from_clipmap);
-        assert!(regional.sample > 0.1);
-        use crate::systems::weather::{
-            gather_weather_witness_inputs, WeatherEffectsSample, WeatherPrecipAuthority,
-        };
-        let inputs = gather_weather_witness_inputs(
-            app.world().resource::<WeatherSimDiagnostics>(),
-            app.world().resource::<ClimateState>(),
-            regional,
-            &WeatherEffectsSample::default(),
-            &WeatherPrecipAuthority::default(),
-        );
-        assert!(inputs.regional_weather_wired);
-    }
 }

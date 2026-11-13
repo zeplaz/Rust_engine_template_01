@@ -2,22 +2,16 @@
 // Boundary: see prompts/guides/ui_boundary_guide_v1.md
 //   splash, app_shell, in_game_hud → Bevy shell / simulation HUD
 //   editor/* → Bevy shell / retired egui panels
-//   pressure_tooling.rs             → F2 pressure Bevy strip
 //   ai_explainability_ui.rs         → L7 pipeline + macro explain (default Insert)
 
-pub mod debug;
 pub mod hud;
 mod minimap_shell;
-mod minimap_egui_dev;
 mod minimap_viewport_frame;
 pub mod tactical;
 mod map_zoom_coherence;
 mod sim_map_projection;
 mod vfx_fire_test_focus;
-mod settlement_block_frame_debug;
-mod assembly_snapshot_qc_ui;
 mod map_view;
-mod map_presentation_controls;
 mod map_presentation_diagnostics;
 mod map_presentation_fit;
 mod map_view_projection;
@@ -51,7 +45,6 @@ mod input_interaction_regression;
 mod gameplay_capture;
 mod options_keybindings_ui;
 mod panel_presence;
-mod pressure_tooling;
 mod logistics_focus;
 mod authoritative_viewport;
 mod in_game_hud;
@@ -65,7 +58,6 @@ mod gui_assets;
 mod gui_sets;
 mod ui_windows;
 mod ai_explainability_ui;
-mod diagnostics_ui;
 mod camera_focus_debug;
 mod tile_debug_types;
 mod gpu_tile_debug;
@@ -79,18 +71,8 @@ pub mod editor;
 // Public exports
 pub use app_shell::{AppShellPlugin, LoadStubPath};
 pub use crate::construction::BuildPlanningPlugin;
-pub use assembly_snapshot_qc_ui::{
-    aps_bevy_qc_hud_001_witness_green, aps_bevy_qc_hud_001_witness_json,
-    aps_bevy_qc_hud_v2_witness_green, load_qc_snapshot, evaluate_p0_readonly,
-    placement_grid_coords, AssemblySnapshotQcUiPlugin, AssemblySnapshotQcUiState,
-    APS_BEVY_QC_HUD_DEFAULT_SNAPSHOT,
-};
 pub use vfx_fire_test_focus::{
     publish_vfx_fire_test_region, VfxFireTestFocusPlugin, VfxFireTestRegion,
-};
-pub use settlement_block_frame_debug::{
-    draw_block_frame_debug_overlay, settlement_block_frame_debug_overlay_wired_witness_green,
-    BlockFrameDebugUiState, SettlementBlockFrameDebugPlugin,
 };
 pub use front_controls::{
     FrontControlsPlugin, FrontControlsSet, FrontDragBox, FrontMapCursor, FrontOrderFeedback, FrontOverlaySettings,
@@ -104,12 +86,10 @@ pub use minimap_shell::{
     MinimapOverlayMask, MinimapPresentationMode, MinimapPresentationSource, MinimapShellState,
     MINIMAP_EDGE_RAIL_PX, MINIMAP_RESIZE_GRIP_PX, MINIMAP_TITLE_BAR_H_PX,
 };
-pub use minimap_egui_dev::{minimap_egui_dev_enabled, MinimapEguiDevGate};
 pub use minimap_viewport_frame::{
     clamp_tactical_viewport_frame_rect, paint_tactical_viewport_frame_on_minimap,
     tactical_visible_world_rect, world_tile_to_minimap_screen,
 };
-pub use map_presentation_controls::map_overlay_controls_ui;
 pub use map_presentation_diagnostics::{
     sync_map_fit_transform_components, MapPresentationConsumerDiagnostics, MapPresentationDiagnostics,
 };
@@ -133,9 +113,8 @@ pub use map_view_projection::{
     ensure_viewport_camera_initialized, map_display_rect, map_presentation_image_rect,
     map_surface_screen_to_world, map_surface_world_to_screen, map_texture_uv_rect,
 };
-pub use hud::{HudPanelStateWitness, HudPanelState, HudPanelStatePlugin,
+pub use hud::{HudPanelState, HudPanelStatePlugin,
     HudCommandShellLayout, HudDockRegistry, HudDockShellPlugin, HudOverlayTrayState,
-    TransmissionShellPlugin, TransmissionShellState,
 };
 pub use ui_types::{UiPos2, UiRect, UiRgba, UiStroke, ui_pos2};
 pub use style::{
@@ -191,11 +170,10 @@ pub use tactical::map_camera::{
     sim_map_cursor_world_xy, sim_map_image_rect,
     sim_map_screen_to_world_xy, sim_map_screen_to_world_xy_with_ortho, sim_map_visible_world_span, sim_map_world_vec3_to_screen,
     sim_map_world_xy_to_screen, sim_map_world_xy_to_screen_with_ortho, sim_map_world_xy_to_egui, sim_map_world_xy_to_egui_with_ortho, TACTICAL_VFX_PROOF_ZOOM_ALPHA,
-    trace_map_camera_desired_write_if_full_app, MAP_ZOOM_CLAMP, MAP_ZOOM_AXIS_SNAP_EPS,
+    MAP_ZOOM_CLAMP, MAP_ZOOM_AXIS_SNAP_EPS,
 };
 pub use map_zoom_coherence::{
-    map_pick_closure_math_witness_green, map_zoom_coherence_001_witness_green,
-    map_zoom_coherence_001_witness_json, map_zoom_axis_snap_applies,
+    map_zoom_axis_snap_applies,
     MAP_ZOOM_DOUBLE_WORLD_FRAMES_MAX, MAP_ZOOM_GHOST_SCREEN_DELTA_PX_MAX,
     MAP_ZOOM_PICK_DELTA_WORLD_MAX,
 };
@@ -211,12 +189,12 @@ pub use camera_focus_debug::{
     CameraFocusDebug, CameraFocusDebugPlugin, DEBUG_CHUNK_SPACING_WORLD,
 };
 pub use gpu_tile_debug::{
-    build_tile_debug_instances, triage_gpu_tile_wgsl_001_green, GpuTileDebugPlugin,
+    build_tile_debug_instances, GpuTileDebugPlugin,
 };
 pub use tile_readability::{
     apply_readability_to_lod_inputs, apply_tile_readability_lod_bias, readability_zoom_floor,
     screen_pixels_per_tile, TileReadabilityConfig, TileReadabilityPlugin,
-    TileReadabilityWitness, ZoomVisualBias,
+    TileReadabilityState, ZoomVisualBias,
 };
 pub use strategic_icon_instances::{
     StrategicIconInstanceBuffer, StrategicIconInstancesPlugin, STRATEGIC_ICON_SCAFFOLD,
@@ -267,8 +245,7 @@ pub use view_authority::{
     DebugFlags, OverlayMask, PerViewLodHints, ViewAuthorityPlugin, ViewAuthoritySystemSet,
     ViewCameraState, ViewCameraTag, ViewFilterMask, ViewId, ViewInstance, ViewInteractionState,
     ViewIsolationDiagnostics, ViewManager, ViewProjection, ViewRenderPolicy, ViewRenderTarget,
-    VIEW_NO_ENTITY, vm10_minimap_lockstep_diagnostics_green,
-};
+    VIEW_NO_ENTITY, };
 pub use view_projection_authority::{
     camera_translation, camera_zoom, view_instance, view_surface_screen_to_world,
     view_surface_world_to_screen, view_visible_world_rect,
@@ -287,13 +264,13 @@ pub use view_representation::{
     VisualCadence, WorldFireFx,
 };
 pub use art_presentation_target::{
-    landscape_atlas_stamp_path_green, landscape_ship_packs_registered_green, ArtPresentationTarget,
+    ArtPresentationTarget,
     ArtPresentationTargetPlugin, PixelWorldLandscapeBand, PixelWorldLandscapeConsume,
     PixelWorldLandscapePackIndex, PIXEL_WORLD_LANDSCAPE_SHIP_PRESETS,
 };
 pub use world_presentation_mode::{
-    dual_view_scaffold_witness_green, mode_does_not_write_representation_result,
-    tactical_icons_only_policy_green, PixelWorldConsumerSystemSet, PixelWorldLandscapeIntent,
+    mode_does_not_write_representation_result,
+    PixelWorldConsumerSystemSet, PixelWorldLandscapeIntent,
     WorldPresentationKind, WorldPresentationMode, WorldPresentationModePlugin,
     PIXEL_WORLD_VIEW_SCAFFOLD, TACTICAL_ICONS_PRESENTATION,
 };
@@ -308,16 +285,11 @@ pub use ui_gates::*;
 pub use logistics_focus::*;
 pub use in_game_hud::*;
 pub use in_game_pause_menu::{toggle_pause_menu_on_escape, InGamePauseMenuPlugin};
-pub use pause_menu_bevy::{witness_pause_menu_bevy_replay, PauseMenuBevyPlugin};
+pub use pause_menu_bevy::PauseMenuBevyPlugin;
 pub use pause_menu_confirm::PauseMenuPendingAction;
 pub use logistics_targets_panel::*;
 #[cfg(feature = "legacy_engine")]
 pub use in_game_ui::*;
 pub use ui_windows::*;
 pub use ai_explainability_ui::AiExplainabilityPlugin;
-pub use diagnostics_ui::*;
-pub use pressure_tooling::{
-    PressureBevyOverlayRoot, PressureComposerPlugin, PressureComposerState, PressureComposerTab,
-    PressureOverlayBevyPlugin, StrategicToolingPlugin,
-};
 pub use editor::*;

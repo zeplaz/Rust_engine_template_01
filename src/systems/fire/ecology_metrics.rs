@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 /// Rolling sim metrics for fuel-gated ignition and heat stability (not render instance count).
 #[derive(Resource, Clone, Debug, Default)]
-pub struct FireEcologyWitness {
+pub struct FireEcologyStats {
     pub frames_sampled: u64,
     pub chunks_sampled: u32,
     pub chunks_with_heat: u32,
@@ -27,7 +27,7 @@ pub struct FireEcologyWitness {
     chunk_samples: u64,
 }
 
-impl FireEcologyWitness {
+impl FireEcologyStats {
     pub fn accumulate_chunk(
         &mut self,
         mean_heat: f32,
@@ -98,6 +98,6 @@ impl FireEcologyWitness {
     }
 }
 
-pub fn finalize_fire_ecology_witness_frame(mut witness: ResMut<FireEcologyWitness>) {
+pub fn finalize_fire_ecology_witness_frame(mut witness: ResMut<FireEcologyStats>) {
     witness.finalize_frame_means();
 }

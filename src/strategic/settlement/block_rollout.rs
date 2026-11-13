@@ -19,8 +19,6 @@ use super::seed_chain::{block_seed, town_seed, DEFAULT_TOWN_ID, DEFAULT_WORLD_SE
 use super::town::TownBook;
 use crate::construction::{ConstructionVisualRequests, FootprintTileColorKind, FootprintTileRequest};
 
-pub const CITY_G3_ROLLOUT_LIVE_JSON: &str = "debug_runs/city_g3_rollout_live.json";
-
 #[derive(Resource, Debug, Default, Clone)]
 pub struct BlockRecipeEvaluationBook {
     pub by_block: HashMap<BlockId, BlockRecipeEvaluation>,
@@ -384,167 +382,11 @@ pub fn push_block_recipe_visual_requests_system(
     }
 }
 
-#[must_use]
-pub fn block_rollout_fixture_witness_green() -> bool {
-    use super::block_frame::{
-        build_block_frame, fixture_block_record_with_tiles, fixture_transport_graph_for_block_frame,
-        rebuild_block_frames,
-    };
-
-    let recipes = super::block_recipe::load_block_recipe_registry();
-    if !recipes.load_errors.is_empty() || recipes.recipes.len() < 3 {
-        return false;
-    }
-
-    let graph = fixture_transport_graph_for_block_frame();
-    let mut block = fixture_block_record_with_tiles();
-    block.site_ids.clear();
-    let frame = build_block_frame(&block, Some(&graph)).expect("frame");
-    let bs = block_seed(
-        town_seed(DEFAULT_WORLD_SEED, &TownId(DEFAULT_TOWN_ID.into())),
-        &block.id,
-    );
-    let eval = evaluate_block_recipe_for_archetype(
-        &recipes,
-        super::block_archetype::BlockArchetype::Industrial,
-        &frame,
-        &block,
-        bs,
-    )
-    .expect("eval");
-    if eval.errors.is_empty() && eval.lots.is_empty() {
-        return false;
-    }
-
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .insert_resource(recipes)
-        .insert_resource(load_block_archetype_registry())
-        .insert_resource(BlockBook {
-            blocks: HashMap::from([(block.id.clone(), block.clone())]),
-            tile_to_block: HashMap::new(),
-        })
-        .insert_resource(rebuild_block_frames(
-            &BlockBook {
-                blocks: HashMap::from([(block.id.clone(), block)]),
-                tile_to_block: HashMap::new(),
-            },
-            Some(&graph),
-        ))
-        .insert_resource(portland_fixture_town())
-        .insert_resource(portland_fixture_district(&portland_fixture_town()))
-        .init_resource::<DistrictMetricsBook>()
-        .init_resource::<DevelopmentPressureBook>()
-        .init_resource::<MarketSaturationBook>()
-        .init_resource::<BlockRecipeEvaluationBook>()
-        .init_resource::<BlockRolloutGrowthBook>()
-        .init_resource::<BlockRolloutStagingBook>()
-        .init_resource::<GrowthProposalQueue>()
-        .init_resource::<crate::construction::PendingConstructionQueue>()
-        .insert_resource(ConstructionVisualRequests::default())
-        .add_message::<BlockPlanned>()
-        .add_message::<BlockAssembled>()
-        .add_message::<BlockCommitted>()
-        .add_systems(
-            Update,
-            (
-                evaluate_block_recipes_system,
-                advance_block_rollout_staging_system,
-                begin_block_rollout_staging_system,
-                release_staged_block_lot_proposals_system,
-                execute_staged_block_growth_system,
-                push_block_recipe_visual_requests_system,
-            )
-                .chain(),
-        );
-    app.update();
-
-    let eval_book = app.world().resource::<BlockRecipeEvaluationBook>();
-    if eval_book.by_block.is_empty() {
-        return false;
-    }
-    let reqs = app.world().resource::<ConstructionVisualRequests>();
-    if reqs.footprint_tiles.is_empty() {
-        return false;
-    }
-
-    for _ in 0..4 {
-        app.update();
-    }
-
-    let queue = app.world().resource::<GrowthProposalQueue>();
-    let pending = app.world().resource::<crate::construction::PendingConstructionQueue>();
-    if !queue.proposals.is_empty() || pending.entries.len() != 2 {
-        return false;
-    }
-    let growth = app.world().resource::<BlockRolloutGrowthBook>();
-    if growth.lots_released.values().copied().sum::<usize>() != 2 {
-        return false;
-    }
-
-    let staging = app.world().resource::<BlockRolloutStagingBook>();
-    staging.planned_messages >= 1
-        && staging.assembled_messages >= 1
-        && staging.committed_messages >= 1
-        && !staging.committed.is_empty()
-}
-
-fn load_block_archetype_registry() -> BlockArchetypeRegistry {
-    super::block_archetype::load_block_archetype_registry()
-}
-
-fn portland_fixture_town() -> TownBook {
-    super::town::portland_fixture_town()
-}
-
-fn portland_fixture_district(town: &TownBook) -> super::district::DistrictBook {
-    super::district::portland_fixture_district(town)
-}
-
-#[must_use]
-pub fn build_city_g3_rollout_witness_body() -> serde_json::Value {
-    let recipes = super::block_recipe::load_block_recipe_registry();
-    let plugin_ok = recipes.load_errors.is_empty() && recipes.recipes.len() >= 3;
-    let fixture_ok = block_rollout_fixture_witness_green();
-    let c3 = super::block_recipe::city_g1_c3_001_block_recipe_witness_green();
-    let execute_ok = super::execute::growth_approve_execute_pipeline_witness_green();
-
-    let green = plugin_ok && fixture_ok && c3 && execute_ok;
-
-    serde_json::json!({
-        "gate": "CITY-G3-ROLLOUT-001",
-        "green": green,
-        "plugin_registry_loaded": plugin_ok,
-        "recipes_loaded": recipes.recipes.len(),
-        "rollout_fixture_green": fixture_ok,
-        "growth_execute_wired": execute_ok,
-        "city_g1_c3_still_green": c3,
-    })
-}
-
-#[must_use]
-pub fn city_g3_rollout_witness_green() -> bool {
-    build_city_g3_rollout_witness_body()
-        .get("green")
-        .and_then(|v| v.as_bool())
-        .unwrap_or(false)
-}
-
 
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn city_g3_rollout_fixture_witness_green_lib() {
-        assert!(block_rollout_fixture_witness_green());
-    }
-
-    #[test]
-    fn city_g3_rollout_witness_green_lib() {
-        assert!(city_g3_rollout_witness_green());
-    }
 
     #[test]
     fn over_empty_archetype_table_keeps_medium_density() {

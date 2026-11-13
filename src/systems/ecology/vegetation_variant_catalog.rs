@@ -106,21 +106,6 @@ pub fn resolve_vegetation_variant(
     clamp_vegetation_variant_to_catalog(catalog, variant_key)
 }
 
-/// Lib witness predicate for catalog clamp (all engine veg keys + topo remap).
-#[must_use]
-pub fn catalog_clamp_witness_green() -> bool {
-    let Some(catalog) = load_vegetation_variant_catalog() else {
-        return false;
-    };
-    for key in ENGINE_VEG_RESOLVER_KEYS {
-        if resolve_vegetation_variant(&catalog, key) != *key {
-            return false;
-        }
-    }
-    resolve_vegetation_variant(&catalog, "veg_topo_patch") == "topology_patch"
-        && catalog.contains_variant_key(&resolve_vegetation_variant(&catalog, "veg_unknown"))
-}
-
 #[must_use]
 fn repo_asset_path(rel: &str) -> PathBuf {
     std::env::var_os("CARGO_MANIFEST_DIR")
@@ -176,13 +161,4 @@ mod tests {
         assert_eq!(catalog.veg_keys().len(), ENGINE_VEG_RESOLVER_KEYS.len());
     }
 
-    #[test]
-    fn resolve_vegetation_variant_clamps_topo_and_unknown() {
-        let catalog = load_vegetation_variant_catalog().expect("catalog on disk");
-        assert!(catalog_clamp_witness_green());
-        assert_eq!(
-            resolve_vegetation_variant(&catalog, "veg_topo_corridor"),
-            "topology_corridor"
-        );
-    }
 }

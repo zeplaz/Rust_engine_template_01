@@ -35,7 +35,7 @@ impl Plugin for IndustrialActivationPlugin {
         ));
         app.init_resource::<crate::strategic::StrategicCommandQueue>()
             .add_plugins(crate::strategic::Stage7BehavioralPlugin)
-            .init_resource::<super::concrete_chain_e2e::ConcreteChainE2eWitness>()
+            .init_resource::<super::concrete_chain_e2e::ConcreteChainE2eStats>()
             .init_resource::<super::concrete_chain_e2e::Stage7PlayChainSeedState>()
             .init_resource::<super::concrete_chain_e2e::IndE02DefaultPlaySeedState>()
             .init_resource::<super::concrete_chain_e2e::IndE03GridOverloadSeedState>()

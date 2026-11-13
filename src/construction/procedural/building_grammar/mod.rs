@@ -10,15 +10,13 @@ mod grammar_types;
 
 pub use grammar_deserialize::load_building_grammar_registry;
 pub use grammar_evaluation::{
-    build_pg_quality_001_witness_body, city_g0_s11_typed_ids_witness_green,
-    city_g0_s1c_split_witness_green, facility_binding_read_witness_body,
-    facility_binding_read_witness_green, generate, generate_with_arch_dna_preset,
-    grammar_reference_tags, pg_quality_001_witness_green, pg_quality_002_pg2_hook_body,
-    pg_quality_002_pg2_hook_green, };
+    generate, generate_with_arch_dna_preset,
+    grammar_reference_tags, pg_quality_002_pg2_hook_body,
+    };
 pub use grammar_types::{
-    default_door_rhythm_for_massing, BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1,
-    FacilityPowerTier, FacilityProgramAxes, GrammarGenerateResult, GrammarRuleStep, MassingId,
-    MassingStrategy, PgQuality001Metrics, ProgramAxisLevel, ResolvedFacade,
+    BuildingGrammar, BuildingGrammarRegistry, FacilityBindingV1,
+    FacilityPowerTier, FacilityProgramAxes, GrammarGenerateResult, GrammarRuleStep,
+    MassingStrategy, PgQuality001Metrics, ProgramAxisLevel,
     FACILITY_BINDING_G1_MIN, FACILITY_BINDING_SCHEMA, GRAMMARS_DIR, GRAMMAR_DIVERSITY_WITNESS_JSON,
     GRAMMAR_RULES_VERSION, PG_QUALITY_001_SEED_SWEEP,
 };

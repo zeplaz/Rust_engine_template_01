@@ -4,11 +4,11 @@ use bevy::prelude::*;
 
 use crate::substrate::registry::WorldSubstrateRegistry;
 
-use super::{AtmosphereClipmapStack, AtmosphereClipmapWitness};
+use super::{AtmosphereClipmapStack, AtmosphereClipmapStats};
 
 pub fn contamination_tick_system(
     mut stack: ResMut<AtmosphereClipmapStack>,
-    mut witness: ResMut<AtmosphereClipmapWitness>,
+    mut witness: ResMut<AtmosphereClipmapStats>,
     registry: Option<Res<WorldSubstrateRegistry>>,
 ) {
     if let Some(registry) = registry.as_deref() {

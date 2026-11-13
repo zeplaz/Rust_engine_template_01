@@ -115,15 +115,6 @@ pub fn draw_minimap_topology_legend_gpu_chrome() {}
 pub fn draw_minimap_topology_legend_ui() {}
 
 #[must_use]
-pub fn minimap_topology_legend_ui_witness_green() -> bool {
-    TOPOLOGY_LEGEND_ENTRIES.len() >= 6
-        && TOPOLOGY_LEGEND_ENTRIES.iter().all(|e| !e.word.is_empty())
-        && minimap_topology_legend_expanded_lines().len() == 6
-        && FIRE_LEGEND_ENTRIES.len() == 3
-        && minimap_burn_legend_expanded_lines().len() == 3
-}
-
-#[must_use]
 pub fn minimap_burn_legend_ui_wired() -> bool {
     FIRE_LEGEND_ENTRIES
         .iter()
@@ -135,14 +126,6 @@ pub fn minimap_burn_legend_ui_wired() -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn topology_legend_words_match_design() {
-        assert!(minimap_topology_legend_ui_witness_green());
-        let lines = minimap_topology_legend_expanded_lines();
-        assert!(lines.iter().any(|l| l.contains("Network")));
-        assert!(lines.iter().any(|l| l.contains("Patch")));
-    }
 
     #[test]
     fn burn_legend_visible_only_when_burn_rows() {

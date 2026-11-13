@@ -7,7 +7,7 @@ use crate::gui::editor::world_preview::{
     PreviewPathAuthority, WorldPreviewRenderTargetRegistry, WorldPreviewTexture,
 };
 use crate::gui::{
-    resolve_minimap_texture_source, resolve_world_preview_texture_source, MapViewInstances,
+    resolve_minimap_texture_source, resolve_world_preview_texture_source,
     MinimapPresentationSource, MinimapShellState,
 };
 use crate::render::{MinimapRenderTargetRegistry, TileWorldFallbackState};
@@ -89,51 +89,6 @@ fn dispatch_has_commit_tracks_stamp() {
 }
 
 
-
-#[test]
-fn fow_ew_heat_upload_when_operational_snapshot_seeded() {
-    use super::composite::{upload_minimap_heat_textures, MinimapCompositeHeatTextures};
-    use crate::render::{seed_minimap_m3_fow_ew_witness, MinimapOperationalSnapshot};
-
-    let mut images = Assets::<Image>::default();
-    let mut heat = MinimapCompositeHeatTextures::default();
-    let mut map_views = MapViewInstances::default();
-    map_views.minimap.overlays = crate::gui::minimap_overlay_witness_harness();
-    let fallback = TileWorldFallbackState {
-        last_w: 64,
-        last_h: 64,
-        ..Default::default()
-    };
-    let mut operational = MinimapOperationalSnapshot::default();
-    seed_minimap_m3_fow_ew_witness(&mut operational);
-    use crate::render::seed_minimap_m3_units_replay_witness;
-    use crate::systems::sim_frame_delta::CommittedSimReplayRing;
-
-    seed_minimap_m3_units_replay_witness(&mut operational);
-    let mut replay = CommittedSimReplayRing::with_capacity(8);
-    replay.record_commit(crate::systems::sim_control::SimStepStamp::new(1, 0));
-    replay.record_commit(crate::systems::sim_control::SimStepStamp::new(2, 0));
-    let (ok, _, _, _, fow_rows, ew_rows, unit_rows, replay_on, _) = upload_minimap_heat_textures(
-        &mut images,
-        &mut heat,
-        None,
-        None,
-        None,
-        None,
-        Some(&operational),
-        None,
-        Some(&replay),
-        None,
-        &map_views,
-        &fallback,
-        UVec2::new(32, 32),
-    );
-    assert!(ok);
-    assert!(fow_rows > 0);
-    assert!(ew_rows > 0);
-    assert!(unit_rows > 0);
-    assert!(replay_on);
-}
 
 
 

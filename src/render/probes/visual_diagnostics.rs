@@ -24,7 +24,7 @@ use crate::render::extraction::RenderProjectionGraph;
 use crate::render::probes::frame_perf::{FramePerf, FrameWallClock};
 use crate::render::{
     DebugRenderTraceConfig, GpuRepresentationMetrics, ResolvedViewports, SharedOverlayFieldBuffers,
-    Stage5ReadinessProfile, TileWorldFallbackRasterDirty, ViewportPresentationMismatch,
+    TileWorldFallbackRasterDirty, ViewportPresentationMismatch,
     WorldFireParticleFrame,
 };
 
@@ -146,7 +146,6 @@ pub(crate) struct VisualDiagCtx<'w, 's> {
     mismatch: Res<'w, ViewportPresentationMismatch>,
     raster: Res<'w, TileWorldFallbackRasterDirty>,
     world: Res<'w, crate::terrain::generation::world_generator_enhanced::WorldGenParams>,
-    profile: Res<'w, Stage5ReadinessProfile>,
     app: Res<'w, State<AppState>>,
     base: Res<'w, State<BaseState>>,
     flow: Res<'w, State<WorldGenFlowState>>,
@@ -184,7 +183,6 @@ fn log_visual_diag_snapshot(frame: u64, periodic: bool, ctx: &VisualDiagCtx) {
     let desired = ctx.desired.as_ref();
     let resolved = ctx.resolved.as_ref();
     let mismatch = ctx.mismatch.as_ref();
-    let profile = ctx.profile.as_ref();
     let dock = ctx.dock.as_ref();
     let app = *ctx.app.get();
     let base = *ctx.base.get();
@@ -206,7 +204,6 @@ fn log_visual_diag_snapshot(frame: u64, periodic: bool, ctx: &VisualDiagCtx) {
         base = tag_base(base),
         flow = tag_flow(flow),
         worldgen = tag_wg(wg),
-        readiness_profile = ?profile,
         "VISUAL_DIAG window"
     );
 
@@ -407,7 +404,6 @@ fn log_visual_diag_snapshot(frame: u64, periodic: bool, ctx: &VisualDiagCtx) {
         frame,
         cmd_shell = dock.slot(HudWidgetId::CommandShell).visible,
         overlay_tray = dock.slot(HudWidgetId::OverlayTray).visible,
-        transmission = dock.slot(HudWidgetId::Transmission).visible,
         "VISUAL_DIAG hud_shell"
     );
 }

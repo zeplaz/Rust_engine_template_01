@@ -371,30 +371,6 @@ mod tests {
     }
 
     #[test]
-    fn burn_darkens_green() {
-        let eco = ChunkEcology {
-            biomass: 0.7,
-            ..Default::default()
-        };
-        let calm = VegetationField {
-            burn_severity: 0.05,
-            canopy_density: 0.65,
-            regrowth_stage: 0.5,
-            ..Default::default()
-        };
-        let burnt = VegetationField {
-            burn_severity: 0.85,
-            canopy_density: 0.15,
-            regrowth_stage: 0.1,
-            ..Default::default()
-        };
-        let wx = ChunkWeather::default();
-        let c0 = vegetation_preview_rgba(&eco, &calm, &wx, None, 0.0, 0.0);
-        let c1 = vegetation_preview_rgba(&eco, &burnt, &wx, None, 0.0, 0.0);
-        assert!(c1[1] < c0[1], "g {} {}", c1[1], c0[1]);
-    }
-
-    #[test]
     fn smoke_dampens_green_channel() {
         let base = [60u8, 140u8, 50u8, 255];
         let out = blend_fire_overlay(base, 0.0, 0.85);

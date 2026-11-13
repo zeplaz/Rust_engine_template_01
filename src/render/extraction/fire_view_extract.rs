@@ -43,12 +43,6 @@ pub fn fire_lod_designer_table_wired() -> bool {
         && FIRE_LOD_CAP_OPERATIONAL < FIRE_LOD_CAP_TACTICAL
 }
 
-/// **FIRE7-F7-C-001** — designer LOD caps enforced in extract path.
-#[must_use]
-pub fn fire7_f7_c_001_green() -> bool {
-    fire_lod_designer_table_wired()
-}
-
 #[must_use]
 pub fn fire_cap_for_world_band(world: WorldLodBand) -> usize {
     match world {

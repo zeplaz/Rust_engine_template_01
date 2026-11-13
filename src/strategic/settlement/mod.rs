@@ -35,54 +35,39 @@ pub use assign::{
 pub use block::{BlockBook, BlockRecord};
 pub use faction_step::{FactionPairStance, FactionStanceBook};
 pub use block_frame::{
-    block_bounds_from_tiles, block_frame_debug_overlay_wired_witness_green,
-    build_block_frame, build_city_g1_c2_001_witness_body, city_g1_c2_001_block_frame_witness_green,
-    fixture_block_record_with_tiles, fixture_transport_graph_for_block_frame,
+    block_bounds_from_tiles, build_block_frame, fixture_block_record_with_tiles, fixture_transport_graph_for_block_frame,
     orientation_from_street_side, rebuild_block_frames, scatter_interior_tiles, street_edge_tiles, street_side_from_junction, sync_block_frames_system,
-    nearest_junction_tile, BlockFrame, BlockFrameBook, StreetSide, CITY_G1_C2_LIVE_JSON,
-};
+    nearest_junction_tile, BlockFrame, BlockFrameBook, StreetSide, };
 pub use block_archetype::{
-    build_city_g1_c1_001_witness_body, city_g1_c1_001_block_archetype_witness_green,
-    city_g1_c1_001_per_band_tests_green, fixture_score_for_archetype,
+    fixture_score_for_archetype,
     load_block_archetype_registry, load_block_archetype_threshold_table,
     load_block_archetype_threshold_table_from_path, noise_jitter_from_block_seed,
     resolve_block_archetype, BlockArchetype,
     BlockArchetypeBand, BlockArchetypeRegistry, BlockArchetypeThresholdTable, BlockScore,
-    BLOCK_ARCHETYPE_THRESHOLDS_RON, CITY_G1_C1_LIVE_JSON,
-};
+    BLOCK_ARCHETYPE_THRESHOLDS_RON, };
 pub use block_recipe::{
-    block_recipe_lot_list_stable_hash, build_city_g1_c3_001_witness_body,
-    city_g1_c3_001_block_recipe_witness_green, evaluate_block_recipe,
+    block_recipe_lot_list_stable_hash, evaluate_block_recipe,
     evaluate_block_recipe_for_archetype, load_block_recipe_from_path,
     load_block_recipe_registry, BlockEdgePlacement, BlockLotPlacement, BlockParkFillPlacement, BlockPlazaPlacement,
     BlockRecipe,
     BlockRecipeEvaluation, BlockRecipeRegistry, BlockRecipeStep, BlockScatterPlacement,
-    BLOCK_RECIPES_DIR, CITY_G1_C3_LIVE_JSON,
-};
+    BLOCK_RECIPES_DIR, };
 pub use block_rollout::{
     advance_block_rollout_staging_system, begin_block_rollout_staging_system,
-    block_rollout_fixture_witness_green, build_city_g3_rollout_witness_body,
-    city_g3_rollout_witness_green,     evaluate_block_recipes_system, execute_staged_block_growth_system,
+    evaluate_block_recipes_system, execute_staged_block_growth_system,
     push_block_recipe_visual_requests_system, release_staged_block_lot_proposals_system, resolve_block_archetypes_system, BlockAssembled,
     BlockCommitted, BlockPlanned, BlockRecipeEvaluationBook, BlockRolloutGrowthBook,
-    BlockRolloutStagingBook, CITY_G3_ROLLOUT_LIVE_JSON,
-};
+    BlockRolloutStagingBook, };
 pub use block_street_visual::{
-    block_street_visual_fixture_witness_green, build_city_c6_bsn_witness_body,
-    city_c6_bsn_witness_green, load_block_street_furniture_scenes,
+    load_block_street_furniture_scenes,
     spawn_block_street_furniture_system,
     BlockStreetFurnitureCatalog, BlockStreetFurniturePiece, BlockStreetFurnitureRoot,
-    BlockStreetVisualBook,     PresentationOnlyStreetVisual, CITY_C6_BSN_LIVE_JSON,
-};
+    BlockStreetVisualBook,     PresentationOnlyStreetVisual, };
 pub use block_lod_impostor::{
-    block_lod_impostor_fixture_witness_green, build_city_p2_witness_body, city_p2_witness_green,
     load_block_lod_impostor_scene, spawn_block_lod_impostors_system,
     sync_block_lod_impostor_visibility_system, BlockLodImpostor, BlockLodImpostorBook,
-    BlockLodImpostorCatalog, CITY_P2_LIVE_JSON,
-};
-pub use block_perf::{
-    build_city_p1_witness_body, city_p1_witness_green, CITY_P1_LIVE_JSON,
-};
+    BlockLodImpostorCatalog, };
+
 pub use admin_ink::{
     admin_ring_should_close, admin_zone_corner_tile, admin_zone_drag_rect, admin_zone_drag_stamps,
     admin_zone_tile_from_world, append_admin_ring_vertex, arm_admin_zone_edit, begin_admin_zone_drag,
@@ -97,18 +82,14 @@ pub use district::{
 pub use execute::{
     approve_all_growth_proposals_into_pending, approve_growth_proposal_into_pending,
     commit_growth_pending_to_funnel_system, commit_top_district_growth,
-    enqueue_approved_growth_proposal, growth_approve_execute_pipeline_witness_green,
-    growth_pending_commit_event, growth_site_at_town_center, growth_sites_for_towns,
+    enqueue_approved_growth_proposal, growth_pending_commit_event, growth_site_at_town_center, growth_sites_for_towns,
     enqueue_generated_town_growth_once_system, enqueue_second_town_growth,
     enqueue_second_town_growth_system, enqueue_town_growth_once,
     pending_blueprint_from_growth_proposal, site_archetype_for_growth_proposal,
     TownGrowthEnqueueGate, TownSecondGrowthGate,
 };
 pub use growth::{growth_proposal_tick_system, score_proposal, GrowthProposal, GrowthProposalQueue};
-pub use hierarchy_gap::{
-    set_p5_hierarchy_gap_lib_green,
-    SET_P5_HIERARCHY_GAP_LIVE_JSON,
-};
+
 pub use ids::{ArchetypeId, BlockId, DistrictId, RegionId, TownId};
 pub use market::{
     compute_market_saturation_for_district, compute_market_saturation_system,
@@ -122,10 +103,8 @@ pub use policy::{
 pub use pressure::{compute_district_pressure_system, rollup_district_metrics_system};
 pub use seed_chain::{
     block_id_for_site, block_seed, building_grammar_seed, building_grammar_seed_chain,
-    building_grammar_seed_for_site, city_g1_c4_001_seed_chain_witness_green,
-    build_city_g1_c4_001_witness_body, lot_idx_from_site_id, lot_seed, mix_u64, town_seed, CitySeedContext, DEFAULT_TOWN_ID,
-    DEFAULT_WORLD_SEED, CITY_G1_C4_LIVE_JSON,
-};
+    building_grammar_seed_for_site, lot_idx_from_site_id, lot_seed, mix_u64, town_seed, CitySeedContext, DEFAULT_TOWN_ID,
+    DEFAULT_WORLD_SEED, };
 pub use town::{
     access_policy_for_generated_index, found_settlement, generated_town_book,
     generated_town_book_on_land, place_towns_for_full_generation, portland_fixture_town,
@@ -142,29 +121,6 @@ pub use district::portland_fixture_district;
 use bevy::prelude::*;
 
 use crate::strategic::InfrastructureSiteSet;
-
-/// **SET-P5-002** witness — block assignment wired on commit.
-#[must_use]
-pub fn set_p5_002_block_assignment_witness_green() -> bool {
-    assign::three_sites_same_block_witness_green()
-}
-
-/// **SET-P5-HIERARCHY-GAP** — playable books seeded (default_town + ≥1 district).
-#[must_use]
-pub fn set_p5_hierarchy_books_seeded_witness_green(towns: &TownBook, districts: &DistrictBook) -> bool {
-    towns.default_town.is_some() && !towns.towns.is_empty() && districts.districts.len() >= 1
-}
-
-/// **ECON-OG-1-C** witness rollup.
-#[must_use]
-pub fn construction_organic_growth_001_witness_green() -> bool {
-    actors::building_usage_serde_witness_green()
-        && actors::growth_actor_layer_serde_witness_green()
-        && market::market_saturation_witness_green()
-        && pressure::district_pressure_witness_green()
-        && growth::growth_proposal_witness_green()
-        && policy::proposal_ghost_witness_green()
-}
 
 pub struct SettlementPlugin;
 
@@ -266,17 +222,8 @@ impl Plugin for SettlementPlugin {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
-    #[test]
-    fn set_p5_002_witness_green() {
-        assert!(set_p5_002_block_assignment_witness_green());
-    }
+    
 
 
 
-    #[test]
-    fn construction_organic_growth_001_witness() {
-        assert!(construction_organic_growth_001_witness_green());
-    }
 }

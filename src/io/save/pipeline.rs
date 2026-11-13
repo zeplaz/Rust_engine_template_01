@@ -474,7 +474,7 @@ impl Plugin for WorldSaveSpinePlugin {
             .init_resource::<crate::io::save::WaveSShellCapturePending>()
             .init_resource::<crate::io::save::WaveSShellRestorePending>()
             .init_resource::<crate::io::save::WaveSShellHydrateState>()
-            .init_resource::<crate::io::save::WaveSShellHydrateWitness>()
+            .init_resource::<crate::io::save::WaveSShellHydrateStats>()
             .init_resource::<crate::io::save::WaveSImportedBlueprints>()
             .init_resource::<crate::io::save::SettlementBooksHydrateState>()
             .init_resource::<crate::io::save::TransportOverlayHydrateState>()

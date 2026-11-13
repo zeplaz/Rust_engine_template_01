@@ -8,7 +8,7 @@ use bevy::prelude::*;
 use crate::engine::states::BaseState;
 use crate::gui::in_simulation_or_editor;
 use crate::gui::map_view::MapViewInstances;
-use crate::gui::{simulation_minimap_overlay_defaults, MinimapOverlayMask, MinimapShellState, TransmissionShellState};
+use crate::gui::{simulation_minimap_overlay_defaults, MinimapOverlayMask, MinimapShellState};
 use crate::strategic::StrategicOverlayDisplayPolicy;
 
 use super::layout_store::HudLayoutStore;
@@ -76,15 +76,6 @@ impl Default for HudOverlayTrayState {
     }
 }
 
-/// **MINIMAP-ECO-FIRE-TRAY-001** — tray defaults match simulation minimap overlay policy.
-#[must_use]
-pub fn minimap_eco_fire_tray_defaults_green() -> bool {
-    let tray = HudOverlayTrayState::default();
-    let mask = tray.minimap_overlay_mask();
-    let defaults = simulation_minimap_overlay_defaults();
-    !mask.fire_heat && mask.ecology_heat == defaults.ecology_heat
-}
-
 /// Command shell layout flags (overlay tray → command tray → intel timeline → command table).
 #[derive(Resource, Clone, Debug)]
 pub struct HudCommandShellLayout {
@@ -118,26 +109,16 @@ pub struct HudDockShellPlugin;
 impl Plugin for HudDockShellPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(super::panel_state::HudPanelStatePlugin)
+            .add_plugins(super::live_data::HudLiveDataPlugin)
             .init_resource::<HudDockRegistry>()
             .init_resource::<HudOverlayTrayState>()
             .init_resource::<HudCommandShellLayout>()
             .init_resource::<HudLayoutStore>()
             .init_resource::<ProductShellDiagnostics>()
             .init_resource::<super::viewport_rect_sanity::ViewportRectSanity>()
-            .init_resource::<super::stage6_telemetry::Stage6HudTelemetry>()
             .init_resource::<super::frame_budget_diagnostics::FrameBudgetDiagnostics>()
-            .init_resource::<super::shell_update_budget::ProductShellUpdateBudget>()
-            .init_resource::<super::shell_widget_timing::ShellWidgetDiagnostics>()
-            .init_resource::<super::widget_presentation::WidgetPresentationPolicy>()
-            .init_resource::<super::hud_async_task_queue::HudAsyncTaskQueue>()
             .init_resource::<super::pending_hud_layout_commit::PendingHudLayoutCommit>()
-            .init_resource::<super::retained_widget_cache::RetainedWidgetCache>()
-            .init_resource::<super::hud_interaction_budget::HudFrameBudget>()
-            .init_resource::<super::interaction_latency::InteractionLatencyMetrics>()
-            .init_resource::<super::shell_surface::ShellSurfacePolicy>()
-            .init_resource::<super::widget_presentation::HudShellInteractionRouter>()
             .add_plugins(super::hud_ui_scale::HudUiScalePlugin)
-            .add_plugins(super::hud_root_tick::HudRootTickPlugin)
             .add_systems(
                 Update,
                 (
@@ -145,19 +126,13 @@ impl Plugin for HudDockShellPlugin {
                     sync_hud_overlay_tray_to_minimap_overlays,
                     sync_minimap_overlays_to_hud_tray,
                     mirror_hud_dock_registry_from_widgets,
-                    sync_hud_shell_interaction_router,
                     super::shell_diagnostics::product_shell_diagnostics_tick,
-                    super::shell_update_budget::sync_product_shell_update_budget,
-                    super::shell_update_budget::advance_product_shell_update_budget,
-                    super::hud_async_task_queue::drain_hud_async_task_queue,
-                    super::interaction_latency::refresh_interaction_latency_metrics,
                 )
                     .run_if(in_simulation_or_editor),
             )
             .add_systems(
                 PostUpdate,
                 (
-                    super::hud_interaction_budget::apply_hud_interaction_frame_budget,
                     super::pending_hud_layout_commit::finalize_pending_hud_layout_commits,
                     super::pending_hud_layout_commit::flush_pending_hud_layout_on_pointer_release,
                 )
@@ -210,25 +185,14 @@ fn sync_minimap_overlays_to_hud_tray(
     tray.set_minimap_overlay_mask(mask);
 }
 
-fn sync_hud_shell_interaction_router(
-    dock: Res<HudDockRegistry>,
-    mut router: ResMut<super::widget_presentation::HudShellInteractionRouter>,
-) {
-    if dock.is_changed() {
-        router.sync_from_dock(&dock);
-    }
-}
-
 fn mirror_hud_dock_registry_from_widgets(
     base: Res<State<BaseState>>,
     minimap: Res<MinimapShellState>,
-    transmission: Res<TransmissionShellState>,
     layout: Res<HudCommandShellLayout>,
     tray: Res<HudOverlayTrayState>,
     mut dock: ResMut<HudDockRegistry>,
 ) {
     if !minimap.is_changed()
-        && !transmission.is_changed()
         && !layout.is_changed()
         && !tray.is_changed()
         && !base.is_changed()
@@ -241,12 +205,6 @@ fn mirror_hud_dock_registry_from_widgets(
         minimized: minimap.minimized,
         detached: minimap.detached,
         z_order: dock.slot(HudWidgetId::Minimap).z_order,
-    };
-    let next_transmission = HudWidgetDockState {
-        visible: transmission.active,
-        minimized: transmission.minimized,
-        detached: false,
-        z_order: dock.slot(HudWidgetId::Transmission).z_order,
     };
     let next_overlay = HudWidgetDockState {
         visible: if sim {
@@ -270,9 +228,6 @@ fn mirror_hud_dock_registry_from_widgets(
     };
     if dock.slot(HudWidgetId::Minimap) != next_minimap {
         dock.set_state(HudWidgetId::Minimap, next_minimap);
-    }
-    if dock.slot(HudWidgetId::Transmission) != next_transmission {
-        dock.set_state(HudWidgetId::Transmission, next_transmission);
     }
     if dock.slot(HudWidgetId::OverlayTray).visible != next_overlay.visible {
         dock.slot_mut(HudWidgetId::OverlayTray).visible = next_overlay.visible;
@@ -313,8 +268,4 @@ mod tests {
         assert!(!tray.ecology_heat);
     }
 
-    #[test]
-    fn minimap_eco_fire_tray_defaults_match_sim_policy() {
-        assert!(super::minimap_eco_fire_tray_defaults_green());
-    }
 }

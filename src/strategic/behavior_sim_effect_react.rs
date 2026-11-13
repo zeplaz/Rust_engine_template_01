@@ -5,7 +5,7 @@
 use bevy::prelude::*;
 
 use crate::sim::effects::{
-    scan_faction_stress_rows, FactionStressTelemetryClass, SimEffectFactionReactWitness,
+    scan_faction_stress_rows, FactionStressTelemetryClass, SimEffectFactionReactStats,
     SimEffectTelemetryLedger,
 };
 
@@ -18,7 +18,7 @@ pub fn apply_sim_effect_telemetry_faction_stress_system(
     ledger: Option<Res<SimEffectTelemetryLedger>>,
     mut pressure: ResMut<PressureField>,
     mut fracture_bus: ResMut<FractureEventBus>,
-    witness: Option<ResMut<SimEffectFactionReactWitness>>,
+    witness: Option<ResMut<SimEffectFactionReactStats>>,
     factions: Query<Entity, With<Faction>>,
 ) {
     // `SimEffectsPlugin` owns the ledger + witness; strategic-only apps (no sim effects) have nothing to scan.

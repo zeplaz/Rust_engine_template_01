@@ -22,45 +22,37 @@ pub use landscape_grammar::{
     evaluate_landscape_program, evaluate_landscape_program_with_inputs,
     load_landscape_grammar_catalog, load_landscape_preset_from_path, blend_lambda_with_inputs, effective_topology_graph, macro_topology_subgraph, LandscapeGrammarCatalog, LandscapeProgramEvaluation,
     LandscapeProgramOnChunk, LambdaExternalInputs, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID,
-    LANDSCAPE_GRAMMAR_LG1_LIVE_JSON, LANDSCAPE_PRESETS_DIR,
+    LANDSCAPE_PRESETS_DIR,
 };
 pub use landscape_grammar_burn::{
     apply_active_burn_from_surface_fire, advance_regrowth_macro_chain,
-    burn_overlay_witness_green, burn_succession_witness_green,
     extract_glyph_for_burn, planning_glyph_for_burn, remove_mature_active_burn_overlays, variant_key_for_burn_row, veg_burn_frame_index,
-    burn_sm_self_check_green, ActiveBurn, LandscapeBurnSet, LandscapeBurnWitness, RegrowthMacroPhase,
-    ACTIVE_BURN_HEAT_EPS, ACTIVE_BURN_IGNITE_HEAT, LANDSCAPE_GRAMMAR_BURN_OVERLAY_LIVE_JSON,
-    VEG_BURN_FRAME_COUNT, VEG_BURN_FRAME_PERIOD_MS,
+    ActiveBurn, LandscapeBurnSet, LandscapeBurnStats, RegrowthMacroPhase,
+    ACTIVE_BURN_HEAT_EPS, ACTIVE_BURN_IGNITE_HEAT, VEG_BURN_FRAME_COUNT, VEG_BURN_FRAME_PERIOD_MS,
 };
 pub use landscape_grammar_lg2::{
     apply_construction_clear_disturbance, apply_fire_disturbance_on_heat,
     attach_lg2_components_on_pilot, merge_harness_eval_summary,
     drain_landscape_disturbance_queue, push_post_fire_harvest_sim_effect, tick_succession_age_on_ecology,
-    fire_corridor_population_fuel_witness_green,
-    DisturbanceHistory, DisturbanceKind, lg2_witness_green, lg4_preview_operator_visible,
+    DisturbanceHistory, DisturbanceKind, lg4_preview_operator_visible,
     lg4_preview_witness_green, LandUseDistrictKind,
-    LandUseInfluence, LandscapeDisturbanceQueue, LandscapeGrammarLg2Witness,
+    LandUseInfluence, LandscapeDisturbanceQueue, LandscapeGrammarLg2Stats,
     SubcellPopulationGrid, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
     VegetationStandInstances,
-    LANDSCAPE_GRAMMAR_LG2_LIVE_JSON, LANDSCAPE_GRAMMAR_LG4_PREVIEW_LIVE_JSON,
-    LANDSCAPE_GRAMMAR_DISTURBANCE_LOG_LIVE_JSON,
-};
+    };
 pub use landscape_grammar::attach_landscape_program_pilot;
 pub use landscape_atlas_registry::{
     init_landscape_atlas_registry, load_landscape_atlas_registry, topology_kind_to_variant_key,
     LandscapeAtlasEntry, LandscapeAtlasRegistry,
 };
 pub use landscape_grammar_map::{
-    map_rollout_witness_green,     pick_preset_id_for_chunk, hydrology_bias_from_terrain, lambda_inputs_from_live_fields,
+    pick_preset_id_for_chunk, hydrology_bias_from_terrain, lambda_inputs_from_live_fields,
     lambda_inputs_from_live_fields_with_terrain, pick_preset_id_for_chunk_with_inputs,
     rollout_landscape_program_on_chunks,
     landscape_lg5_registry_stamped,
-    landscape_lg5_expand_rollup_green,
     LG5_ATLAS_EXPAND_ROLLUP_JSON,
     LG5_PILOT_ATLAS_ID,
-    LandscapeMapRolloutWitness, LandscapePresetIndex, VegetationProgramCloseBody,
-    LANDSCAPE_GRAMMAR_LG3_LIVE_JSON, LANDSCAPE_GRAMMAR_LG5_LIVE_JSON,
-    LANDSCAPE_GRAMMAR_MAP_ROLLOUT_LIVE_JSON, VEGETATION_PROGRAM_CLOSE_LIVE_JSON,
+    LandscapeMapRolloutStats, LandscapePresetIndex, VegetationProgramCloseBody,
     LG5_ATLAS_ID,
 };
 pub use vegetation_field::{
@@ -76,7 +68,7 @@ pub use vegetation_suitability::{
     VEGETATION_SUITABILITY_RON,
 };
 pub use vegetation_variant_catalog::{
-    catalog_clamp_witness_green, catalog_variant_key_set, clamp_vegetation_variant_to_catalog,
+    catalog_variant_key_set, clamp_vegetation_variant_to_catalog,
     init_vegetation_variant_catalog, load_vegetation_variant_catalog, resolve_vegetation_variant,
     ENGINE_VEG_RESOLVER_KEYS, VegetationVariantCatalog, VegetationVariantCatalogEntry,
     VEGETATION_VARIANT_CATALOG_RON,

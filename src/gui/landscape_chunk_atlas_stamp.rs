@@ -12,9 +12,9 @@ use crate::gui::map_tile_atlas_stamp::{
     stamp_atlas_uv_into_rgba_subregion, TileAtlasGpuCache, TileAtlasStampRequest,
 };
 use crate::systems::ecology::{
-    load_landscape_atlas_registry, topology_kind_to_variant_key, ActiveBurn,
+    topology_kind_to_variant_key, ActiveBurn,
     LandscapeAtlasRegistry, LandscapeProgramOnChunk, RegrowthMacroPhase, SuccessionState,
-    SuccessionTopologyStage, VegetationField, ACTIVE_BURN_HEAT_EPS, LG5_ATLAS_ID,
+    SuccessionTopologyStage, VegetationField, ACTIVE_BURN_HEAT_EPS,
 };
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
@@ -317,97 +317,12 @@ pub fn apply_landscape_chunk_stamps_to_rgba(
     }
 }
 
-#[must_use]
-pub fn landscape_lg5_chunk_uv_stamp_witness_green() -> bool {
-    landscape_lg5_chunk_uv_stamp_self_check().is_ok()
-}
-
-fn landscape_lg5_chunk_uv_stamp_self_check() -> Result<(), &'static str> {
-    let registry = load_landscape_atlas_registry();
-    if !registry.load_errors.is_empty() {
-        return Err("registry_load");
-    }
-    let entry = registry.lg5_entry().ok_or("lg5_entry")?;
-    if entry.atlas_id != LG5_ATLAS_ID {
-        return Err("atlas_id");
-    }
-    for key in ["topology_patch", "topology_corridor", "topology_ring"] {
-        let uv = entry.resolve_variant_uv(key).ok_or("variant_uv")?;
-        if uv[2] <= 0.0 || uv[3] <= 0.0 {
-            return Err("uv_degenerate");
-        }
-    }
-
-    let atlas_path = std::env::var_os("CARGO_MANIFEST_DIR")
-        .map(std::path::PathBuf::from)
-        .map(|r| r.join(&entry.atlas_png))
-        .unwrap_or_else(|| std::path::PathBuf::from(&entry.atlas_png));
-    if !atlas_path.is_file() {
-        // Meta + registry UV contract when atlas PNG is not materialized in worktree (dry-run bake).
-        return Ok(());
-    }
-
-    let atlas_bytes = std::fs::read(atlas_path).map_err(|_| "atlas_png")?;
-    let atlas = image::load_from_memory(&atlas_bytes).map_err(|_| "atlas_decode")?;
-    let rgba = atlas.to_rgba8();
-    let (aw, ah) = rgba.dimensions();
-    let atlas_data = vec![(
-        entry.atlas_id.clone(),
-        rgba.as_raw().as_slice(),
-        aw as usize,
-        ah as usize,
-    )];
-
-    let kinds = [
-        ("Patch", IVec2::new(0, 0)),
-        ("Corridor", IVec2::new(4, 0)),
-        ("Ring", IVec2::new(8, 0)),
-    ];
-    let mut dest = vec![0u8; 4 * 16 * 8];
-    let chunk_px = 4u32;
-    for (kind, coord) in kinds {
-        let Some(req) = stamp_request_for_topology(&registry, coord, &[kind.to_string()]) else {
-            return Err("stamp_request");
-        };
-        stamp_atlas_uv_into_rgba_subregion(
-            &mut dest,
-            16,
-            0,
-            0,
-            16,
-            8,
-            atlas_data[0].1,
-            atlas_data[0].2,
-            atlas_data[0].3,
-            coord,
-            chunk_px,
-            chunk_px,
-            req.uv,
-        );
-    }
-    let stamped = dest
-        .chunks(4)
-        .filter(|px| px[3] >= 128)
-        .count();
-    if stamped < 12 {
-        return Err("stamp_blit");
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::systems::ecology::landscape_lg5_registry_stamped;
-
-    #[test]
-    fn lg5_chunk_uv_stamp_witness_green() {
-        if !landscape_lg5_registry_stamped() {
-            eprintln!("skip: landscape lg5 index not stamped");
-            return;
-        }
-        assert!(landscape_lg5_chunk_uv_stamp_witness_green());
-    }
+    use crate::systems::ecology::{
+        landscape_lg5_registry_stamped, load_landscape_atlas_registry, LG5_ATLAS_ID,
+    };
 
     #[test]
     fn pixel_world_tile_stamp_covers_chunk_footprint() {

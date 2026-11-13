@@ -12,7 +12,7 @@ use crate::strategic::LogisticsGraph;
 use crate::terrain::ChunkCellKey;
 
 use super::types::{
-    DistrictSolveScope, FacilityPortal, LogisticsThroughputRuntimeWitness, ThroughputSolverState,
+    DistrictSolveScope, FacilityPortal, LogisticsThroughputStats, ThroughputSolverState,
 };
 
 /// Rebuild active district edge mask after capacity sync, before greedy solve.
@@ -21,7 +21,7 @@ pub fn apply_district_solve_scope_system(
     portals: Query<&FacilityPortal>,
     mut scope: ResMut<DistrictSolveScope>,
     mut solver: ResMut<ThroughputSolverState>,
-    mut runtime: ResMut<LogisticsThroughputRuntimeWitness>,
+    mut runtime: ResMut<LogisticsThroughputStats>,
 ) {
     let Some(graph) = graph else {
         return;
@@ -98,7 +98,7 @@ mod tests {
         app.add_plugins(MinimalPlugins);
         app.init_resource::<DistrictSolveScope>();
         app.init_resource::<ThroughputSolverState>();
-        app.init_resource::<LogisticsThroughputRuntimeWitness>();
+        app.init_resource::<LogisticsThroughputStats>();
         let mut graph = LogisticsGraph::default();
         graph.revision = 1;
         graph.nodes.push(LogisticsNode {
@@ -129,7 +129,7 @@ mod tests {
         assert_eq!(scope.empty_districts_skipped, 1);
         assert!(
             app.world()
-                .resource::<LogisticsThroughputRuntimeWitness>()
+                .resource::<LogisticsThroughputStats>()
                 .saw_district_scoped_solve
         );
     }
@@ -140,7 +140,7 @@ mod tests {
         app.add_plugins(MinimalPlugins);
         app.init_resource::<DistrictSolveScope>();
         app.init_resource::<ThroughputSolverState>();
-        app.init_resource::<LogisticsThroughputRuntimeWitness>();
+        app.init_resource::<LogisticsThroughputStats>();
         let anchor = ChunkCellKey::new(bevy::math::IVec2::ZERO, 0);
         let mut graph = LogisticsGraph::default();
         graph.revision = 1;
@@ -180,7 +180,7 @@ mod tests {
         assert!((solver.capacity[0] - 5.0).abs() < 1e-4);
         assert!(
             app.world()
-                .resource::<LogisticsThroughputRuntimeWitness>()
+                .resource::<LogisticsThroughputStats>()
                 .saw_district_scoped_solve
         );
         assert_eq!(

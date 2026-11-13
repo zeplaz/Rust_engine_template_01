@@ -16,13 +16,6 @@ pub const BUILD_PICKER_RAIL_GAP_PX: f32 =
 pub const BUILD_PICKER_MAX_H_PX: f32 = 480.0;
 pub const AD_HOC_SUBMENU_WINDOWS: u32 = 0;
 
-#[must_use]
-pub fn sim_build_picker_constants_green() -> bool {
-    BUILD_PICKER_RAIL_GAP_PX == 8.0
-        && BUILD_PICKER_SHEET_W_PX == 320.0
-        && AD_HOC_SUBMENU_WINDOWS == 0
-}
-
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum BuildPickerCategory {
     #[default]
@@ -115,11 +108,6 @@ pub fn sim_build_picker_sheet_rect(
         left_stack_collapsed,
     );
     bevy::prelude::Rect::from_corners(anchor, anchor + bevy::prelude::Vec2::new(BUILD_PICKER_SHEET_W_PX, BUILD_PICKER_MAX_H_PX),)
-}
-
-#[must_use]
-pub fn sim_build_picker_witness_green(state: &SimBuildPickerState) -> bool {
-    !state.open || state.anchor_slot != ToolContext::None
 }
 
 

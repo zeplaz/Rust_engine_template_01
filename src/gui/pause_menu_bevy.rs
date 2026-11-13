@@ -80,13 +80,6 @@ pub(crate) struct PauseMenuWorldGenParams<'w> {
     progress: Res<'w, WorldGenProgress>,
 }
 
-/// Harness replay: mark pause menu Bevy path for live JSON (shell spawns when menu = Pause).
-pub fn witness_pause_menu_bevy_replay(
-    witness: &mut crate::gui::hud::simulation_shell_phase2::UiShellMigrationWitness,
-) {
-    witness.pause_menu_bevy = true;
-}
-
 fn despawn_pause_shells(commands: &mut Commands, roots: impl Iterator<Item = Entity>) {
     for e in roots {
         commands.entity(e).despawn();
@@ -526,7 +519,6 @@ fn sync_pause_menu_bevy_shell(
     confirm_q: Query<Entity, With<PauseMenuConfirmShellRoot>>,
     palette: Res<UiPalette>,
     cmd_mono: Res<CmdUiMonoFont>,
-    mut witness: Option<ResMut<crate::gui::hud::simulation_shell_phase2::UiShellMigrationWitness>>,
 ) {
     if *base.get() != BaseState::Simulation || *menu.get() != InGameMenuState::Pause {
         despawn_pause_shells(&mut commands, shell_q.iter().chain(confirm_q.iter()));
@@ -547,12 +539,6 @@ fn sync_pause_menu_bevy_shell(
         despawn_pause_shells(&mut commands, confirm_q.iter());
         if shell_q.is_empty() {
             spawn_pause_menu_shell(&mut commands, palette.as_ref(), cmd_mono.as_ref());
-        }
-    }
-
-    if shell_q.iter().next().is_some() || confirm_q.iter().next().is_some() {
-        if let Some(w) = witness.as_mut() {
-            w.pause_menu_bevy = true;
         }
     }
 }

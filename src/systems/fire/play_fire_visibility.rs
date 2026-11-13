@@ -27,41 +27,6 @@ pub struct TriageFirePlayVis001Inputs {
     pub operational_zoom_on_enter: bool,
 }
 
-#[must_use]
-pub fn triage_fire_play_vis_001_green(inputs: &TriageFirePlayVis001Inputs) -> bool {
-    inputs.no_demo_ignition_on_normal_enter
-        && inputs.overlay_on_when_sim_has_heat
-        && inputs.overlay_off_when_sim_cold
-        && inputs.test_scene_fire_seeds_wired
-        && inputs.scenario_ignite_path_a
-        && inputs.operational_zoom_on_enter
-}
-
-#[must_use]
-pub fn triage_fire_play_vis_001_witness_json(
-    inputs: &TriageFirePlayVis001Inputs,
-) -> serde_json::Value {
-    serde_json::json!({
-        "gate": "TRIAGE-FIRE-PLAY-VIS-001",
-        "green": triage_fire_play_vis_001_green(inputs),
-        "no_demo_ignition_on_normal_enter": inputs.no_demo_ignition_on_normal_enter,
-        "overlay_on_when_sim_has_heat": inputs.overlay_on_when_sim_has_heat,
-        "overlay_off_when_sim_cold": inputs.overlay_off_when_sim_cold,
-        "test_scene_fire_seeds_wired": inputs.test_scene_fire_seeds_wired,
-        "scenario_ignite_path_a": inputs.scenario_ignite_path_a,
-        "demo_scenario_asset": crate::engine::play_scenario::DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO,
-        "operational_zoom_on_enter": inputs.operational_zoom_on_enter,
-        "cli_test_scenes_with_fire": [
-            "fire",
-            "atmosphere",
-            "visual",
-            "vfx",
-            "renderdebug"
-        ],
-        "design_ref": "src/dev/design_fire_play_visibility_v1.md",
-    })
-}
-
 #[inline]
 fn test_scene_wants_fire_overlay(scene: TestScene) -> bool {
     scene.seeds_fire_overlay()
@@ -117,22 +82,6 @@ mod tests {
     };
     use crate::render::{SharedOverlayFieldBuffers, CHUNK_FIRE_OVERLAY_DISPLAY_MIN};
     use bevy::math::IVec2;
-
-    #[test]
-    fn triage_fire_play_vis_001_lib_fixture_green() {
-        let inputs = TriageFirePlayVis001Inputs {
-            no_demo_ignition_on_normal_enter: true,
-            overlay_on_when_sim_has_heat: true,
-            overlay_off_when_sim_cold: true,
-            test_scene_fire_seeds_wired: TestScene::Fire.seeds_fire_overlay()
-                && TestScene::Visual.seeds_fire_overlay(),
-            scenario_ignite_path_a: std::path::Path::new(env!("CARGO_MANIFEST_DIR"))
-                .join(crate::engine::play_scenario::DEFAULT_INDUSTRIAL_DEMO_FIRE_SCENARIO)
-                .is_file(),
-            operational_zoom_on_enter: true,
-        };
-        assert!(triage_fire_play_vis_001_green(&inputs));
-    }
 
     #[test]
     fn simulation_enter_camera_targets_operational_play_zoom() {

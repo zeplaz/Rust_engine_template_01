@@ -123,12 +123,6 @@ pub fn corridor_in_progress_color() -> UiRgba {
     UiRgba::from_rgba_unmultiplied(80, 160, 232, 200)
 }
 
-#[must_use]
-pub fn corridor_phase_tokens_wired_green() -> bool {
-    corridor_planned_color() == UiRgba::from_rgba_unmultiplied(232, 176, 64, 180)
-        && corridor_in_progress_color() == UiRgba::from_rgba_unmultiplied(80, 160, 232, 200)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

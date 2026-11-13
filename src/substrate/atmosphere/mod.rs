@@ -101,7 +101,7 @@ impl Default for AtmosphereClipmapStack {
 }
 
 #[derive(Resource, Clone, Debug, Default)]
-pub struct AtmosphereClipmapWitness {
+pub struct AtmosphereClipmapStats {
     pub legacy_atmosphere_field_bridged: bool,
     pub clipmap_advect_wired: bool,
     /// ES-6-2 — field→L0 tactical shim ran (scheduled fold after WindAdvect).
@@ -113,9 +113,9 @@ pub struct AtmosphereClipmapWitness {
 
 pub fn sync_atmos_clipmap_witness_system(
     mut stack: ResMut<AtmosphereClipmapStack>,
-    mut witness: ResMut<AtmosphereClipmapWitness>,
+    mut witness: ResMut<AtmosphereClipmapStats>,
     registry: Option<Res<crate::substrate::WorldSubstrateRegistry>>,
-    smoke_extract: Option<Res<crate::render::extraction::SmokeVisualBridgeWitness>>,
+    smoke_extract: Option<Res<crate::render::extraction::SmokeVisualBridgeStats>>,
 ) {
     let mut smoke_seed = 0.0_f32;
     if let Some(smoke) = smoke_extract.as_deref() {

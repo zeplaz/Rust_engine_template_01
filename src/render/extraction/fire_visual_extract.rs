@@ -54,7 +54,7 @@ use crate::terrain::material::MaterializedChunk;
 use super::fire_emission_profile::infer_fire_emission_profile;
 use super::fire_extract_scan::{build_fire_extract_scan_set, fire_extract_glow_domain};
 use super::render_projection_graph::{run_render_projection_graph, RenderProjectionGraph};
-use super::smoke_visual_extract::{build_smoke_visual_extract, SmokeVisualBridgeWitness};
+use super::smoke_visual_extract::{build_smoke_visual_extract, SmokeVisualBridgeStats};
 use crate::render::extraction::visual_snapshot_commit::{commit_fire_visual_snapshot, CommittedVisualSnapshotFence};
 use crate::render::extraction::extracted_camera_metrics::ExtractedCameraMetricsSet;
 use crate::render::fire_vfx::{
@@ -125,9 +125,9 @@ impl Plugin for FireVisualFramePlugin {
             .init_resource::<WorldFireParticleFrame>()
             .init_resource::<crate::render::DomainOverlayGpuFrame>()
             .init_resource::<ActiveFireChunkSet>()
-            .init_resource::<crate::render::FirePlaybackStabilityWitness>()
+            .init_resource::<crate::render::FirePlaybackStabilityStats>()
             .init_resource::<crate::render::view_runtime::PerViewRepresentationPolicy>()
-            .init_resource::<SmokeVisualBridgeWitness>()
+            .init_resource::<SmokeVisualBridgeStats>()
             .init_resource::<crate::render::FireExtractCadence>()
             .init_resource::<crate::render::FireExtractClock>()
             .init_resource::<crate::render::FireExtractDiagnostics>()
@@ -297,7 +297,7 @@ pub fn sync_shared_overlay_from_simulation(
     residency: Option<Res<crate::io::streaming::ChunkResidencyTable>>,
     coherence: Option<Res<crate::render::FireExtractDiagnostics>>,
     mut shared: ResMut<SharedOverlayFieldBuffers>,
-    mut fire_playback: ResMut<crate::render::FirePlaybackStabilityWitness>,
+    mut fire_playback: ResMut<crate::render::FirePlaybackStabilityStats>,
 ) {
     let _perf = crate::render::PerfScope::new("upd_fire_sync_overlay");
     if coherence.as_deref().is_some_and(|d| d.snapshot_unchanged) {
@@ -334,7 +334,7 @@ pub fn sync_shared_overlay_from_simulation(
         }
     } else if !next.is_empty() {
         fire_playback.overlay_warmup_frames =
-            crate::render::FirePlaybackStabilityWitness::OVERLAY_WARMUP_BLEND_FRAMES;
+            crate::render::FirePlaybackStabilityStats::OVERLAY_WARMUP_BLEND_FRAMES;
     }
     fire_playback.note_overlay_frame(next.len());
     if chunk_fire_heat_maps_differ(&shared.chunk_fire_heat, &next) {

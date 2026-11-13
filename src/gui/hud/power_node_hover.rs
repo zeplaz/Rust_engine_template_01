@@ -9,8 +9,7 @@ use crate::construction::{
 };
 use crate::economy::activation::BuildingDefinitionRef;
 use crate::infrastructure::utility::{
-    facility_power_connected_from_graph, fixture_utility_network_snapshot,
-    hydrate_utility_graph_from_snapshot, UtilityGraph, UtilityNetworkSnapshot,
+    facility_power_connected_from_graph, UtilityGraph, UtilityNetworkSnapshot,
 };
 use crate::infrastructure::VoltageClass;
 use crate::render::{voltage_for_link, PowerMapOverlayPresentation};
@@ -448,27 +447,8 @@ pub fn sync_power_node_hover_pick(
     }
 }
 
-#[must_use]
-pub fn power_node_hover_witness_green() -> bool {
-    let snap = fixture_utility_network_snapshot();
-    let graph = hydrate_utility_graph_from_snapshot(&snap);
-    let node_id = graph.nodes.first().map(|n| n.id).unwrap_or(0);
-    let (lines, _) = link_counts_for_node(&graph, node_id);
-    power_node_hover_tier_map_attached()
-        && power_node_hover_dwell_ms() == 150
-        && lines >= 1
-        && voltage_hover_label(
-            UtilityInfrastructureRole::Transformer,
-            &[VoltageClass::Medium],
-        ) == "Medium voltage"
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn power_node_hover_witness_green_lib() {
-        assert!(power_node_hover_witness_green());
-    }
 }

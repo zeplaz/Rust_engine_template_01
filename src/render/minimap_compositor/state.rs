@@ -2,9 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::gui::{MinimapPresentationSource, MinimapShellState};
 
-use super::render_target::MinimapRenderTargetRegistry;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum MinimapCompositePath {
@@ -128,20 +126,6 @@ pub fn minimap_gpu_compositor_env_enabled() -> bool {
 #[must_use]
 pub fn minimap_gpu_compositor_default_on_unset() -> bool {
     std::env::var("MINIMAP_GPU_COMPOSITOR").is_err()
-}
-
-/// **PERF-VIS-P1B-GPU-DEFAULT-001** — Simulation GPU minimap path without `RASTER_*` / explicit env.
-#[must_use]
-pub fn perf_vis_p1b_gpu_default_001_green(
-    shell: &MinimapShellState,
-    registry: &MinimapRenderTargetRegistry,
-    compositor: &MinimapCompositorState,
-) -> bool {
-    minimap_gpu_compositor_env_enabled()
-        && shell.presentation_source == MinimapPresentationSource::SharedRenderTargetImage
-        && registry.committed_image != Handle::default()
-        && compositor.stamp > 0
-        && compositor.composite_path == MinimapCompositePath::GpuCompute
 }
 
 

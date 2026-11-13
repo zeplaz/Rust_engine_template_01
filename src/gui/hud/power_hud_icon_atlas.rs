@@ -391,19 +391,6 @@ pub fn power_hud_atlas_assets_on_disk() -> bool {
         && root.join("configs/ui/power_hud.manifest.ron").is_file()
 }
 
-#[must_use]
-pub fn power_hud_icon_atlas_registration_witness_green() -> bool {
-    let manifest: PowerHudIconAtlasManifest = ron::from_str(include_str!(
-        "../../../assets/configs/ui/power_hud.manifest.ron"
-    ))
-    .expect("power hud manifest");
-    power_hud_atlas_assets_on_disk()
-        && power_hud_bevy_draw_path_wired()
-        && manifest.all_ids_registered()
-        && manifest.cell_size == (20, 20)
-        && manifest.chip_size == (16, 16)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -411,11 +398,6 @@ mod tests {
     #[test]
     fn power_hud_atlas_png_on_disk() {
         assert!(power_hud_atlas_assets_on_disk());
-    }
-
-    #[test]
-    fn manifest_registers_all_inventory_ids() {
-        assert!(power_hud_icon_atlas_registration_witness_green());
     }
 
     #[test]

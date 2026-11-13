@@ -110,38 +110,8 @@ pub fn d02_map_area_fraction(
 }
 
 #[must_use]
-pub fn d02_layout_witness(
-    workspace_w: f32,
-    workspace_h: f32,
-    sidebar_w: f32,
-    sheet_open: bool,
-    sheet_w: f32,
-) -> bool {
-    let sheet = if sheet_open { sheet_w } else { 0.0 };
-    d02_map_area_fraction(workspace_w, workspace_h, sidebar_w, sheet) >= D02_MAP_MIN_AREA_FRAC
-}
-
-#[must_use]
-pub fn d02_layout_witness_hd_baseline_sheet_closed() -> bool {
-    d02_layout_witness(D02_HD_BASELINE_W, D02_HD_BASELINE_H, 180.0, false, 0.0)
-}
-
-#[must_use]
 pub fn d04_sheet_width_px(workspace_width: f32) -> f32 {
     (workspace_width * D04_SHEET_WIDTH_FRAC).clamp(D04_SHEET_WIDTH_MIN, D04_SHEET_WIDTH_MAX)
-}
-
-#[must_use]
-pub fn d04_layout_witness(
-    unified_workspace: bool,
-    generator_sheet_open: bool,
-    sheet_width_px: f32,
-) -> bool {
-    unified_workspace
-        && sheet_width_px >= D04_SHEET_WIDTH_MIN
-        && sheet_width_px <= D04_SHEET_WIDTH_MAX
-        && (!generator_sheet_open
-            || (sheet_width_px >= D04_SHEET_WIDTH_MIN && D04_MAP_DIM_ALPHA == 102))
 }
 
 /// D-07 A: corner overview inset 120–160px (not sidebar thumb).
@@ -154,18 +124,6 @@ pub const D07_INSET_SIDE_DEFAULT: f32 = 140.0;
 #[must_use]
 pub fn d07_inset_side_px() -> f32 {
     D07_INSET_SIDE_DEFAULT
-}
-
-#[must_use]
-pub fn d07_layout_witness(
-    corner_inset_on_map: bool,
-    inset_side_px: f32,
-    sidebar_minimap_removed: bool,
-) -> bool {
-    sidebar_minimap_removed
-        && corner_inset_on_map
-        && inset_side_px >= D07_INSET_SIDE_MIN
-        && inset_side_px <= D07_INSET_SIDE_MAX
 }
 
 /// Open the unified world-gen workspace (F8 / NewWorldSetup latch).

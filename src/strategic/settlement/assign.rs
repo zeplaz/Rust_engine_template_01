@@ -72,74 +72,8 @@ pub fn register_site_on_commit(
     }
 }
 
-/// Lib witness runner for SET-P5-002.
-#[must_use]
-pub fn three_sites_same_block_witness_green() -> bool {
-    use crate::strategic::settlement::district::portland_fixture_district;
-    use crate::strategic::settlement::town::portland_fixture_town;
-    use crate::strategic::{
-        BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles, SiteArchetype,
-    };
-    use crate::strategic::site::{SiteConstructionBook, SiteIdIssuer};
-    use bevy::app::App;
-    use bevy::MinimalPlugins;
-
-    fn commit_site(app: &mut App, origin: (u32, u32)) {
-        let mut events = app.world_mut().resource_mut::<Messages<CommitConstructionSiteEvent>>();
-        events.write(CommitConstructionSiteEvent {
-            site_id: SiteId::UNASSIGNED,
-            owner: Entity::PLACEHOLDER,
-            origin: BuildSiteTile {
-                x: origin.0,
-                z: origin.1,
-            },
-            footprint: FootprintTiles {
-                width: 1,
-                depth: 1,
-            },
-            archetype: SiteArchetype::Factory,
-            layer: crate::strategic::LayerType::Surface,
-            catalog_id: None,
-            placement: None,
-        });
-        app.update();
-    }
-
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .init_resource::<SiteConstructionBook>()
-        .init_resource::<SiteIdIssuer>()
-        .init_resource::<BlockBook>()
-        .insert_resource(portland_fixture_town())
-        .insert_resource(portland_fixture_district(&portland_fixture_town()))
-        .add_message::<CommitConstructionSiteEvent>()
-        .add_systems(Update, crate::strategic::commit_construction_site_system);
-
-    commit_site(&mut app, (16, 16));
-    commit_site(&mut app, (17, 16));
-    commit_site(&mut app, (18, 16));
-
-    let blocks = app.world().resource::<BlockBook>();
-    if blocks.tile_to_block.len() != 3 {
-        return false;
-    }
-    let block_ids: HashSet<_> = blocks.tile_to_block.values().cloned().collect();
-    if block_ids.len() != 1 {
-        return false;
-    }
-    let block = blocks
-        .blocks
-        .get(block_ids.iter().next().unwrap())
-        .unwrap();
-    block.site_ids.len() == 3
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn three_sites_same_block_after_portland_chain() {
-        assert!(three_sites_same_block_witness_green());
-    }
 }

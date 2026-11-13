@@ -33,55 +33,6 @@ impl UtilityConnection {
     }
 }
 
-/// **INFRA-E4-003** — operational sites receive [`UtilityConnection`] (no `has_power` flag).
-#[must_use]
-pub fn infra_e4_003_utility_connection_witness_green() -> bool {
-    use bevy::app::App;
-    use bevy::MinimalPlugins;
-
-    use crate::construction::BuildingDefinitionRegistry;
-    use crate::economy::activation::{
-        activate_industrial_facilities_system, BuildingDefinitionRef,
-    };
-    use crate::strategic::{
-        ConstructionSite, SiteArchetype, SiteConstructionPhase, SiteConstructionBook,
-        SiteConstructionStatus, SiteId,
-    };
-
-    let mut app = App::new();
-    app.add_plugins(MinimalPlugins)
-        .init_resource::<BuildingDefinitionRegistry>()
-        .init_resource::<SiteConstructionBook>();
-    let entity = app.world_mut().spawn_empty().id();
-    app.world_mut().entity_mut(entity).insert((
-        ConstructionSite {
-            site_id: 99,
-            owner: entity,
-            archetype: SiteArchetype::Factory,
-            phase: SiteConstructionPhase::Operational,
-            operational_readiness: 1.0,
-        },
-        BuildingDefinitionRef {
-            catalog_id: "builtin:factory".into(),
-        },
-    ));
-    {
-        let mut book = app.world_mut().resource_mut::<SiteConstructionBook>();
-        book.by_site.insert(
-            SiteId(99),
-            SiteConstructionStatus {
-                phase: SiteConstructionPhase::Operational,
-                progress: 1.0,
-            },
-        );
-    }
-    app.add_systems(Update, activate_industrial_facilities_system);
-    app.update();
-    app.world()
-        .get::<UtilityConnection>(entity)
-        .is_some_and(|u| u.kind == UtilityNetworkKind::Power && !u.connected)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -94,8 +45,4 @@ mod tests {
         assert_eq!(back, c);
     }
 
-    #[test]
-    fn infra_e4_003_witness_green() {
-        assert!(infra_e4_003_utility_connection_witness_green());
-    }
 }

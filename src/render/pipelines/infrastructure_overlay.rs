@@ -616,55 +616,6 @@ pub fn collect_transport_overlay_edges_system(
     );
 }
 
-#[must_use]
-pub fn power_map_overlay_witness_fields(
-    settings: &InfrastructureOverlaySettings,
-    presentation: &PowerMapOverlayPresentation,
-    authoring: &UtilityAuthoringTool,
-) -> serde_json::Value {
-    let live = stroke_for_power_line_state(VoltageClass::Medium, PowerLineOverlayState::Live);
-    let preview = stroke_for_power_line_state(VoltageClass::Medium, PowerLineOverlayState::Preview);
-    serde_json::json!({
-        "slice_id": "COD-POWER-OVERLAY-RENDER-001",
-        "design_ref": "src/dev/design_power_map_overlay_v1.md",
-        "power_overlay_auto_on_tool": PowerMapOverlayPresentation::power_tool_auto_on(settings, authoring)
-            || authoring.mode == UtilityAuthoringMode::PlacePower,
-        "line_state_live": !live.dashed && live.alpha > 0.99,
-        "line_state_preview_dashed": preview.dashed && preview.alpha <= 0.61,
-        "line_state_damaged_dash": stroke_for_power_line_state(
-            VoltageClass::Medium,
-            PowerLineOverlayState::Damaged,
-        ).dashed,
-        "line_state_destroyed_gap": stroke_for_power_line_state(
-            VoltageClass::Medium,
-            PowerLineOverlayState::Destroyed,
-        ).gap_mode,
-        "island_highlight_active": presentation.island_highlight_active,
-        "island_offline_buildings": presentation.island_offline_buildings,
-        "minimap_power_strokes": minimap_power_strokes_wired(),
-        "load_heat_enabled": false,
-        "map_draw_wired": true,
-    })
-}
-
-#[must_use]
-pub fn infrastructure_overlay_polish_witness_fields(
-    settings: &InfrastructureOverlaySettings,
-) -> serde_json::Value {
-    let power_stroke = stroke_for_layer(InfrastructureNetworkLayer::Power);
-    serde_json::json!({
-        "slice_id": "CDR-B-INFRA-OVERLAY-POLISH-001",
-        "overlay_readability_polish": true,
-        "design_ref": "src/dev/design_infra_network_overlay_v1.md",
-        "utility_layers_default_off": !(settings.power || settings.water || settings.sewer),
-        "road_rail_default_on_when_enabled": settings.road && settings.rail,
-        "legend_row_count": infrastructure_overlay_legend_rows().len(),
-        "hud_legend_wired": infrastructure_overlay_hud_legend_wired(),
-        "power_stroke_rgb": power_stroke.color_rgb,
-        "power_stroke_weight_px": power_stroke.weight_px,
-    })
-}
-
 /// Bevy plugin: overlay settings + edge collection each frame.
 pub struct InfrastructureOverlayPlugin;
 
@@ -688,51 +639,8 @@ impl Plugin for InfrastructureOverlayPlugin {
 }
 
 #[must_use]
-pub fn minimap_power_strokes_wired() -> bool {
-    // Structural: stroke draw helper present (not always-true).
-    include_str!("power_map_overlay_draw.rs").contains("pub fn draw_power_strokes_on_minimap")
-}
-
-#[must_use]
-pub fn island_offline_badges_wired() -> bool {
-    include_str!("power_map_overlay_draw.rs").contains("island_offline_world_positions")
-}
-
-#[must_use]
 pub fn infrastructure_overlay_hud_legend_wired() -> bool {
     infrastructure_overlay_legend_rows().len() >= 7
-}
-
-#[must_use]
-pub fn infra_overlay_polish_green() -> bool {
-    let settings = InfrastructureOverlaySettings::default();
-    let fields = infrastructure_overlay_polish_witness_fields(&settings);
-    fields.get("overlay_readability_polish").and_then(|v| v.as_bool()) == Some(true)
-        && fields
-            .get("legend_row_count")
-            .and_then(|v| v.as_u64())
-            .unwrap_or(0)
-            >= 7
-        && fields
-            .get("utility_layers_default_off")
-            .and_then(|v| v.as_bool())
-            == Some(true)
-}
-
-#[must_use]
-pub fn power_map_overlay_green(
-    settings: &InfrastructureOverlaySettings,
-    presentation: &PowerMapOverlayPresentation,
-    authoring: &UtilityAuthoringTool,
-) -> bool {
-    let fields = power_map_overlay_witness_fields(settings, presentation, authoring);
-    fields.get("line_state_live").and_then(|v| v.as_bool()) == Some(true)
-        && fields
-            .get("line_state_preview_dashed")
-            .and_then(|v| v.as_bool())
-            == Some(true)
-        && fields.get("minimap_power_strokes").and_then(|v| v.as_bool()) == Some(true)
-        && island_offline_badges_wired()
 }
 
 #[cfg(test)]
@@ -875,11 +783,6 @@ mod tests {
         let unpowered =
             stroke_for_power_line_state(VoltageClass::Medium, PowerLineOverlayState::IslandUnpowered);
         assert!((unpowered.alpha - 0.4).abs() < f32::EPSILON);
-    }
-
-    #[test]
-    fn infra_overlay_polish_witness_fields_green() {
-        assert!(infra_overlay_polish_green());
     }
 
 }

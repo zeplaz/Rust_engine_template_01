@@ -64,7 +64,7 @@ pub fn commit_construction_site_system(
     mut overlays: Query<(&ChunkStrategicOverlay, &mut NetworkDirtyMask)>,
     mut preview_state: Option<ResMut<WorldPreviewState>>,
     mut hydro_queue: Option<ResMut<crate::substrate::hydrology::HydrologyEventQueue>>,
-    mut hydro_coupling: Option<ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingWitness>>,
+    mut hydro_coupling: Option<ResMut<crate::substrate::hydrology::HydrologyConstructionCouplingStats>>,
     district_book: Option<Res<super::super::settlement::DistrictBook>>,
     mut block_book: Option<ResMut<super::super::settlement::BlockBook>>,
     buildings: Option<Res<crate::construction::building_definitions::BuildingDefinitionRegistry>>,

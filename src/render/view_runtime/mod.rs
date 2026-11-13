@@ -32,8 +32,7 @@ pub use layers::{
 pub use passes::{InteractionPass, OverlayPass, ViewCameraCommitPass};
 pub use per_view_policy::PerViewRepresentationPolicy;
 pub use view_fire_isolation::{
-    overlay_masks_aligned_with_map_views, refresh_view_fire_isolation_witness,
-    ViewFireIsolationWitness,
+    overlay_masks_aligned_with_map_views, ViewFireIsolationStats,
 };
 pub use bridge::{publish_view_surfaces_to_authority, sync_view_authority_bridge};
 pub use commit::{

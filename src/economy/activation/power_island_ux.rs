@@ -3,7 +3,7 @@
 use bevy::prelude::*;
 
 use crate::engine::states::BaseState;
-use crate::gui::hud::{OpsStripPower, OpsStripZoneLinesSet, UiShellMigrationWitness};
+use crate::gui::hud::{OpsStripPower, OpsStripZoneLinesSet};
 use crate::render::PowerMapOverlayPresentation;
 use crate::systems::sim_control::SimTick;
 
@@ -36,11 +36,6 @@ pub fn power_island_ux_toast_ui_wired() -> bool {
         && include_str!("power_island_ux.rs").contains("power_island_toast_message")
 }
 
-#[must_use]
-pub fn power_island_ux_001_green(toast: &PowerIslandToastState, island_events: u32) -> bool {
-    power_island_ux_toast_ui_wired() && (island_events > 0 || toast.show_count > 0)
-}
-
 pub fn ingest_power_island_toast_system(
     presentation: Res<PowerMapOverlayPresentation>,
     mut toast: ResMut<PowerIslandToastState>,
@@ -65,7 +60,6 @@ pub fn apply_power_island_ops_strip_toast_system(
     tick: Option<Res<SimTick>>,
     toast: Res<PowerIslandToastState>,
     mut power: Query<&mut Text, With<OpsStripPower>>,
-    shell_witness: Option<ResMut<UiShellMigrationWitness>>,
 ) {
     if *base.get() != BaseState::Simulation {
         return;
@@ -75,10 +69,6 @@ pub fn apply_power_island_ops_strip_toast_system(
     };
     if !toast.active_at(tick.0) {
         return;
-    }
-    if let Some(mut shell_witness) = shell_witness {
-        shell_witness.ops_zones_wired = true;
-        shell_witness.phase2_zones_live = true;
     }
     let line = format!("PWR  ○ Island — {} offline", toast.offline_buildings);
     for mut t in power.iter_mut() {

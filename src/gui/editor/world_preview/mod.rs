@@ -36,9 +36,9 @@ pub(crate) mod world_gen_panel;
 mod window;
 
 pub use chrome::{
-    d02_layout_witness, d02_layout_witness_hd_baseline_sheet_closed, d02_map_area_fraction,
-    d02_sidebar_max_width_px, d04_layout_witness, d04_sheet_width_px, d07_inset_side_px,
-    d07_layout_witness, dismiss_world_gen_preview_chrome, open_world_gen_chrome_on_new_world_setup,
+    d02_map_area_fraction,
+    d02_sidebar_max_width_px, d04_sheet_width_px, d07_inset_side_px,
+    dismiss_world_gen_preview_chrome, open_world_gen_chrome_on_new_world_setup,
     open_world_gen_workspace, world_gen_chrome_may_render, world_gen_editor_chrome_allowed,
     world_gen_flow_expects_chrome, world_gen_ux_app_active, world_preview_chrome_active,
     world_preview_pipeline_enabled, world_preview_unified_workspace, WorldPreviewUiState,

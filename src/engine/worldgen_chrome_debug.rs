@@ -291,7 +291,6 @@ pub fn trace_hud_shell_state(
         minimap_visible = minimap.visible,
         overlay_tray = dock.slot(HudWidgetId::OverlayTray).visible,
         command_shell = dock.slot(HudWidgetId::CommandShell).visible,
-        transmission = dock.slot(HudWidgetId::Transmission).visible,
         "HUD_SHELL_STATE (Editor/Simulation = HUD egui may run; MainMenu = player shell off)"
     );
 }

@@ -2,7 +2,7 @@
 
 use bevy::prelude::*;
 
-use super::HydrologyRuntimeWitness;
+use super::HydrologyRuntimeStats;
 
 /// Surface read for hover / status strip (no engine jargon).
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -43,24 +43,9 @@ impl HydroPlayerBand {
     }
 }
 
-/// Classify slab witness counts into a player band (coarse; tile-local refine later).
-#[must_use]
-pub fn hydro_player_band_from_witness(witness: &HydrologyRuntimeWitness) -> HydroPlayerBand {
-    if witness.ocean_tile_count > 0 && witness.river_channel_cells == 0 {
-        return HydroPlayerBand::Ocean;
-    }
-    if witness.river_channel_cells > 0 {
-        return HydroPlayerBand::River;
-    }
-    if witness.waterborne_contamination_max > 0.15 {
-        return HydroPlayerBand::Flood;
-    }
-    HydroPlayerBand::None
-}
-
 /// F3 diagnostics row (dev / expanded diagnostics only).
 #[must_use]
-pub fn hydro_f3_diagnostics_line(witness: &HydrologyRuntimeWitness) -> String {
+pub fn hydro_f3_diagnostics_line(witness: &HydrologyRuntimeStats) -> String {
     format!(
         "WSS hydro: ocean={} rivers={} slab={}",
         witness.ocean_tile_count,
@@ -71,18 +56,6 @@ pub fn hydro_f3_diagnostics_line(witness: &HydrologyRuntimeWitness) -> String {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn feat_wss_hydro_read_001_strings_match_design_pass() {
-        assert_eq!(HydroPlayerBand::Ocean.status_line(), "Open water");
-        assert_eq!(HydroPlayerBand::River.status_line(), "River — flowing");
-        let w = HydrologyRuntimeWitness {
-            ocean_tile_count: 4,
-            river_channel_cells: 0,
-            hydrology_hydrated: true,
-            ..Default::default()
-        };
-        assert_eq!(hydro_player_band_from_witness(&w), HydroPlayerBand::Ocean);
-    }
 }

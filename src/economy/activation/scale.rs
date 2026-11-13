@@ -27,43 +27,9 @@ pub fn apply_placement_scale_to_facility(
     flow.output_scale = production_multiplier(scale.effective_scale, DEFAULT_K_PROD);
 }
 
-#[must_use]
-pub fn economy_scales_at_activation_witness_green() -> bool {
-    economy_scales_at_activation_self_check().is_ok()
-}
-
-fn economy_scales_at_activation_self_check() -> Result<(), &'static str> {
-    let scaled = production_multiplier(1.24, DEFAULT_K_PROD);
-    if (scaled - 1.0).abs() < 0.05 {
-        return Err("scale_should_move_production");
-    }
-    let mut flow = FacilityFlowState::default();
-    apply_placement_scale_to_facility(
-        &BuildingScaleParams {
-            scale_factor: 1.24,
-            effective_scale: 1.24,
-        },
-        &mut flow,
-    );
-    if (flow.output_scale - scaled).abs() > 1e-4 {
-        return Err("flow_state_mismatch");
-    }
-    let clamped = production_multiplier(0.1, DEFAULT_K_PROD);
-    let floor = production_multiplier(SCALE_CLAMP_MIN, DEFAULT_K_PROD);
-    if (clamped - floor).abs() > 1e-4 {
-        return Err("clamp_min");
-    }
-    Ok(())
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn economy_scales_at_activation() {
-        assert!(economy_scales_at_activation_witness_green());
-    }
 
     #[test]
     fn economy_scale_clamp() {

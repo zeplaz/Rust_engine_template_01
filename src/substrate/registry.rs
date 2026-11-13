@@ -54,14 +54,14 @@ impl Default for WorldSubstrateRegistry {
 }
 
 #[derive(Resource, Debug)]
-pub struct WssSubstrateWitness {
+pub struct WssSubstrateStats {
     pub hydrate_wired: bool,
     pub paging_wired: bool,
     /// SubstratePlugin does not reorder `ChunkEnvironmentSet` in PR-1.
     pub chunk_environment_order_preserved: bool,
 }
 
-impl Default for WssSubstrateWitness {
+impl Default for WssSubstrateStats {
     fn default() -> Self {
         Self {
             hydrate_wired: false,

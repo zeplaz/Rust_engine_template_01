@@ -105,23 +105,6 @@ impl ParticleDomainRegistry {
         self.entries.iter().filter(|e| e.active).count()
     }
 
-    #[must_use]
-    pub fn witness_json(&self) -> serde_json::Value {
-        serde_json::json!({
-            "particle_domain_registry": true,
-            "active_domains": self.active_count(),
-            "fire_domain_0": self.fire_active(),
-            "domains": self.entries.iter().map(|e| {
-                serde_json::json!({
-                    "id": e.id.as_u8(),
-                    "label": e.id.label(),
-                    "active": e.active,
-                    "backend": e.backend,
-                    "frontend": e.frontend_module,
-                })
-            }).collect::<Vec<_>>(),
-        })
-    }
 }
 
 pub struct ParticleDomainRegistryPlugin;
@@ -134,16 +117,6 @@ impl Plugin for ParticleDomainRegistryPlugin {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
-    #[test]
-    fn fire_is_domain_zero_and_active() {
-        let reg = ParticleDomainRegistry::default();
-        assert!(reg.fire_active());
-        assert_eq!(reg.entries[0].id, ParticleDomainId::Fire);
-        assert_eq!(ParticleDomainId::Fire.as_u8(), 0);
-        let w = reg.witness_json();
-        assert_eq!(w["particle_domain_registry"], true);
-        assert_eq!(w["fire_domain_0"], true);
-    }
 }

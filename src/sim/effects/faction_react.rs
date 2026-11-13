@@ -32,13 +32,13 @@ pub struct FactionStressHook {
 
 /// Witness for lib + live proof — updated by strategic read-only consumer only.
 #[derive(Resource, Debug, Default, Clone)]
-pub struct SimEffectFactionReactWitness {
+pub struct SimEffectFactionReactStats {
     pub wired: bool,
     pub hook_rows: u64,
     scan_cursor: u64,
 }
 
-impl SimEffectFactionReactWitness {
+impl SimEffectFactionReactStats {
     pub fn scan_cursor(&self) -> u64 {
         self.scan_cursor
     }

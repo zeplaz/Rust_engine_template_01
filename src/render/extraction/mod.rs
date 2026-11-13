@@ -24,10 +24,8 @@ pub mod domain_projection_frame;
 
 pub use vegetation_visual_extract::{
     build_vegetation_extract_frame, build_harness_topo_extract_frame,
-    extract_glyph_deterministic, harness_topo_extract_witness_green,
-    vegetation_extract_witness_green, VegetationExtractFrame, VegetationExtractFrameSet,
-    VegetationVisualExtractPlugin, VegExtractRow, VegExtractModifiers, LANDSCAPE_GRAMMAR_EXTRACT_LIVE_JSON,
-};
+    extract_glyph_deterministic, VegetationExtractFrame, VegetationExtractFrameSet,
+    VegetationVisualExtractPlugin, VegExtractRow, VegExtractModifiers, };
 pub use frame_snapshot::ExtractFrameSnapshot;
 pub use fire_emission_profile::{
     infer_combustion_class, infer_fire_emission_profile, material_id_at_chunk_center,
@@ -43,7 +41,7 @@ pub use fire_extract_scan::{
     build_fire_extract_scan_set, expand_moore_rim_one, fire_extract_glow_domain,
 };
 pub use smoke_visual_extract::{
-    build_smoke_visual_extract, smoke_bridge_projection_fixture, SmokeVisualBridgeWitness,
+    build_smoke_visual_extract, smoke_bridge_projection_fixture, SmokeVisualBridgeStats,
 };
 pub use crate::render::extraction::sim_visual_extract::FireVisualFrame;
 pub use procedural_build_extract::{

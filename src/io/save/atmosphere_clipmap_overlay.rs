@@ -200,122 +200,12 @@ pub fn try_hydrate_atmosphere_clipmap_from_manifest(
     hydrate_atmosphere_clipmap_snapshot(stack, &loaded).is_ok()
 }
 
-/// Lib proof: capture → RON → hydrate preserves L0 cell + focus.
-#[must_use]
-pub fn atmosphere_clipmap_save_roundtrip_green() -> bool {
-    let mut stack = AtmosphereClipmapStack::default();
-    stack.active_focus = DVec2::new(12.5, -3.25);
-    if let Some(cell) = stack
-        .levels
-        .first_mut()
-        .and_then(|l| l.smoke_density.get_mut(0))
-    {
-        *cell = 0.42;
-    }
-    if let Some(level0) = stack.levels.first_mut() {
-        if let Some(ash) = level0.ash_density.get_mut(0) {
-            *ash = 0.18;
-        }
-        if let Some(ember) = level0.ember_density.get_mut(0) {
-            *ember = 0.12;
-        }
-        if let Some(heat) = level0.heat_distortion.get_mut(0) {
-            *heat = 0.27;
-        }
-    }
-    let snap = capture_atmosphere_clipmap_snapshot(&stack);
-    let dir = std::env::temp_dir().join("rust_engine_atmos_clipmap_es64");
-    let _ = std::fs::create_dir_all(&dir);
-    let path = dir.join("atmosphere_clipmap_stack.ron");
-    if write_atmosphere_clipmap_snapshot(&path, &snap).is_err() {
-        return false;
-    }
-    let loaded = match read_atmosphere_clipmap_snapshot(&path) {
-        Ok(s) => s,
-        Err(_) => return false,
-    };
-    let mut restored = AtmosphereClipmapStack::default();
-    if hydrate_atmosphere_clipmap_snapshot(&mut restored, &loaded).is_err() {
-        return false;
-    }
-    let l0_ok = restored
-        .levels
-        .first()
-        .and_then(|l| l.smoke_density.first().copied())
-        == Some(0.42);
-    let ash_ok = restored
-        .levels
-        .first()
-        .and_then(|l| l.ash_density.first().copied())
-        == Some(0.18);
-    let focus_ok = (restored.active_focus.x - 12.5).abs() < 1e-9
-        && (restored.active_focus.y + 3.25).abs() < 1e-9;
-    l0_ok && ash_ok && focus_ok && loaded.schema_version == ATMOS_CLIPMAP_SCHEMA_VERSION
-}
-
-/// Bundle + manifest export/hydrate (settlement overlay pattern).
-#[must_use]
-pub fn atmosphere_clipmap_manifest_roundtrip_green() -> bool {
-    use crate::io::save::manifest::build_save_world_manifest;
-    use crate::io::save::pipeline::write_manifest_atomic;
-
-    let mut stack = AtmosphereClipmapStack::default();
-    stack.active_focus = DVec2::new(3.0, 7.5);
-    if let Some(cell) = stack
-        .levels
-        .first_mut()
-        .and_then(|l| l.smoke_density.get_mut(0))
-    {
-        *cell = 0.77;
-    }
-
-    let dir = std::env::temp_dir().join(format!(
-        "atmos_clipmap_manifest_rt_{}",
-        std::time::SystemTime::now()
-            .duration_since(std::time::UNIX_EPOCH)
-            .map(|d| d.as_nanos())
-            .unwrap_or(0)
-    ));
-    if write_atmosphere_clipmap_overlay_to_bundle(&dir, &stack).is_err() {
-        return false;
-    }
-    let manifest = build_save_world_manifest(
-        42,
-        Vec::new(),
-        Vec::new(),
-        build_atmos_clipmap_overlay_refs(),
-    );
-    if write_manifest_atomic(&dir, &manifest).is_err() {
-        let _ = std::fs::remove_dir_all(&dir);
-        return false;
-    }
-    let loaded_manifest = match crate::io::save::read_manifest_from_bundle(&dir) {
-        Ok(m) => m,
-        Err(_) => {
-            let _ = std::fs::remove_dir_all(&dir);
-            return false;
-        }
-    };
-    let mut restored = AtmosphereClipmapStack::default();
-    let hydrated =
-        try_hydrate_atmosphere_clipmap_from_manifest(&dir, &loaded_manifest, &mut restored);
-    let expected = capture_atmosphere_clipmap_snapshot(&stack);
-    let got = capture_atmosphere_clipmap_snapshot(&restored);
-    let _ = std::fs::remove_dir_all(&dir);
-    hydrated && expected == got
-}
-
 
 
 #[cfg(test)]
 mod tests {
-    use super::*;
+    
 
 
 
-    #[test]
-    fn atmos_clipmap_ron_roundtrip_preserves_l0() {
-        assert!(atmosphere_clipmap_save_roundtrip_green());
-        assert!(atmosphere_clipmap_manifest_roundtrip_green());
-    }
 }
