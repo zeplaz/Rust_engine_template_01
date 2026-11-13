@@ -274,11 +274,18 @@
       "note": "Mean per-cell wind vector change between consecutive solves (m/s)."
     },
     {
-      "id": "weather.wind_plausible",
+      "id": "weather.wind_peak_plausible",
       "path": "weather.max_wind_mps.max",
-      "op": "lte",
-      "expect": 40,
-      "note": "No cell above the 40 m/s cap."
+      "op": "lt",
+      "expect": 30,
+      "note": "Peak cell wind below 30 m/s (default seeded weather, no storm preset)."
+    },
+    {
+      "id": "weather.rain_seen",
+      "path": "weather.rain_coverage_pct.max",
+      "op": "gt",
+      "expect": 0,
+      "note": "Some weather cell rained (>= 0.1 mm/h) at some point in the run."
     },
     {
       "id": "perf.sampled",

@@ -421,15 +421,31 @@ impl WeatherField {
             rough_factor: tuning.rough_factor,
         };
         let count = field.target_system_count(tuning, preset_row.as_ref());
-        for _ in 0..count {
+        let lows_allowed = preset_row.as_ref().map_or(tuning.low_fraction, |p| p.low_fraction) > 0.0;
+        for k in 0..count {
             let mut s = field.spawn_system(tuning, preset_row.as_ref(), false);
             // Stagger lifetimes so systems do not all fade together.
-            s.age_secs = s.lifetime_secs * field.rng.range((0.15, 0.6));
+            s.age_secs = s.lifetime_secs * field.rng.range((0.25, 0.5));
+            if k == 0 && lows_allowed {
+                // The opening system is a low over the upwind half of the map, so a seeded world
+                // starts with a rain band that the steering wind carries across and off the map.
+                let dir = Vec2::from_angle(field.climate.prevailing_dir_rad);
+                let jitter = Vec2::new(field.rng.unit() - 0.5, field.rng.unit() - 0.5) * 0.3;
+                let c = field.extent_m * (Vec2::splat(0.5) - dir * 0.25 + jitter);
+                s.kind = PressureKind::Low;
+                s.centre_m = c.into();
+                s.humidity_load = field.rng.range((0.7, 1.0));
+            }
             field.systems.push(s);
         }
-        let mut seed_snap = WeatherSnapshot::with_len(n);
-        seed_snap.humidity.fill(field.climate.humidity_base);
-        let first = field.solve(&seed_snap, tuning, 0.0);
+        // Spin-up: iterate the solve on the opening systems so humidity, cloud and rain start
+        // developed instead of flat (deterministic; systems do not move during spin-up).
+        let mut snap = WeatherSnapshot::with_len(n);
+        snap.humidity.fill(field.climate.humidity_base);
+        for _ in 0..tuning.spinup_steps {
+            snap = field.solve(&snap, tuning, field.step_secs as f32);
+        }
+        let first = snap;
         field.prev = first.clone();
         field.next = first;
         field.next_micros = now_micros + u64::from(field.step_secs) * 1_000_000;
@@ -554,6 +570,9 @@ impl WeatherField {
             let mut grad = Vec2::ZERO;
             let mut low_w = 0.0f32;
             let mut high_w = 0.0f32;
+            // Depth of the lows alone at this cell (hPa): convergence / lift that a neighbouring
+            // high does not cancel.
+            let mut low_depth = 0.0f32;
             for s in &self.systems {
                 let a = s.anomaly_hpa();
                 let g = s.weight_at(p);
@@ -561,7 +580,10 @@ impl WeatherField {
                 let r2 = (s.radius_m * s.radius_m).max(1.0);
                 grad += a * g * (-2.0) * (p - Vec2::from(s.centre_m)) / r2 * 1000.0;
                 match s.kind {
-                    PressureKind::Low => low_w += g * s.envelope() * s.humidity_load,
+                    PressureKind::Low => {
+                        low_w += g * s.envelope() * s.humidity_load;
+                        low_depth -= a * g;
+                    }
                     PressureKind::High => high_w += g * s.envelope(),
                 }
             }
@@ -600,7 +622,7 @@ impl WeatherField {
             let moist = ((h - 0.35) / 0.3).clamp(0.0, 1.0);
             let oro = (wind / 10.0).dot(self.terrain.elev_grad_per_km[i]) * t.orographic_lift;
             let mut cloud = (h - t.cloud_humidity_min) / t.cloud_humidity_span.max(1e-3);
-            cloud += t.low_lift_per_hpa * (BASELINE_PRESSURE_HPA - pressure).max(0.0) * moist;
+            cloud += t.low_lift_per_hpa * low_depth * moist;
             cloud += if oro > 0.0 { oro * moist } else { oro * 0.5 };
             let cloud = cloud.clamp(0.0, 1.0);
             // 5. Rain / fog / lightning.
@@ -614,7 +636,7 @@ impl WeatherField {
                 * ((15.0 - temp) / 10.0).clamp(0.0, 1.0);
             let lightning = ((temp - 12.0) / 10.0).clamp(0.0, 1.0)
                 * ((h - 0.7) / 0.3).clamp(0.0, 1.0)
-                * ((BASELINE_PRESSURE_HPA - pressure) / 10.0).clamp(0.0, 1.0)
+                * (low_depth / 10.0).clamp(0.0, 1.0)
                 * cloud;
             // 6. Visibility (fog, rain; smoke joins in W2).
             let vis = t.visibility_clear_m / (1.0 + fog * t.visibility_fog_k) / (1.0 + rain * t.visibility_rain_k);

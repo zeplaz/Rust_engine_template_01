@@ -39,6 +39,9 @@ pub struct WeatherTuning {
     pub schema_version: u32,
     pub cell_size_m: f32,
     pub weather_step_secs: u32,
+    /// Solves run at field creation so humidity / cloud / rain start developed.
+    #[serde(default)]
+    pub spinup_steps: u32,
     pub climate_step_secs: u32,
     pub season_length_secs: f32,
     pub base_temp_mean_c: f32,
