@@ -119,3 +119,12 @@ def gui_panel_host(aps_app):
     finally:
         host.place_forget()
         host.destroy()
+
+
+def assembly_service_for(state):
+    """AssemblyService wired like the app does, for panel-level tests."""
+    from art_pipeline_suite.aps_event_bus import EventBus
+    from art_pipeline_suite.aps_services.assembly_service import AssemblyService
+    from art_pipeline_suite.aps_state_writer import SuiteStateWriter
+
+    return AssemblyService(state, SuiteStateWriter(EventBus(scheduler=lambda fn: fn())))

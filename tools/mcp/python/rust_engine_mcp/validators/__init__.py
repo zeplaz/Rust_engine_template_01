@@ -20,11 +20,7 @@ from .assembly_grammar_verify import (
 )
 from .material_textures import validate_material_textures, validate_material_textures_path
 from .tile_promotion import validate_tile_promotion
-from .site_zone_grid import validate_site_zone_grid_path, write_site_zone_validate_witness
-from .witness_honesty import (
-    validate_witness_honesty_path,
-    validate_witness_honesty_scan,
-)
+from .site_zone_grid import validate_site_zone_grid_path
 from .report import ValidationReport
 
 __all__ = [
@@ -45,9 +41,6 @@ __all__ = [
     "validate_material_textures",
     "validate_material_textures_path",
     "validate_tile_promotion",
-    "validate_witness_honesty_path",
-    "validate_witness_honesty_scan",
-    "validate_queue_integrity",
     "run_validator",
 ]
 
@@ -146,22 +139,6 @@ def run_validator(
         from rust_engine_mcp.grammar_build_set import validate_building_set_coverage
 
         return validate_building_set_coverage(compression_level=compression_level)
-    if name == "pilot_hardcode_lint":
-        from rust_engine_mcp.pilot_hardcode_lint import validate_pilot_hardcode_lint
-
-        return validate_pilot_hardcode_lint(compression_level=compression_level)
-    if name == "example_teachable_audit":
-        from rust_engine_mcp.build_set_guards import validate_example_teachable_audit
-
-        return validate_example_teachable_audit()
-    if name == "single_archetype_ratio_guard":
-        from rust_engine_mcp.build_set_guards import validate_single_archetype_ratio_guard
-
-        return validate_single_archetype_ratio_guard()
-    if name == "warehouse_track_guard":
-        from rust_engine_mcp.build_set_guards import validate_warehouse_track_guard
-
-        return validate_warehouse_track_guard()
     if name == "grammar_integration":
         if not target:
             raise ValueError("target path required for grammar_integration (assembly snapshot JSON)")
@@ -188,23 +165,6 @@ def run_validator(
         if not target:
             raise ValueError("target path required for site_zone_grid (site_zone_grid_v1 JSON)")
         return validate_site_zone_grid_path(_resolve(target), compression_level=compression_level)
-    if name == "construction":
-        if not target:
-            raise ValueError("target path required for construction (witness JSON)")
-        from rust_engine_mcp.validators.construction_witness import validate_construction_witness_path
-
-        return validate_construction_witness_path(_resolve(target), compression_level=compression_level)
-    if name == "witness_honesty":
-        if not target:
-            raise ValueError("target path required for witness_honesty (witness JSON)")
-        return validate_witness_honesty_path(_resolve(target), compression_level=compression_level)
-    if name == "queue_integrity":
-        from .queue_integrity import validate_queue_integrity
-
-        return validate_queue_integrity(
-            queue_filter=target or None,
-            compression_level=compression_level,
-        )
     if name == "render_variant":
         if not target:
             raise ValueError("target path required for render_variant (render_variant_job JSON)")

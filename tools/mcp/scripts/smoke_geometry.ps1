@@ -1,4 +1,4 @@
-# Mini geometry smoke: example wall job -> validate (no promote) -> witness stub
+# Mini geometry smoke: example wall job -> validate (no promote)
 $ErrorActionPreference = "Stop"
 $RepoRoot = (Resolve-Path (Join-Path $PSScriptRoot "..\..\..")).Path
 $Python = if ($env:RUST_ENGINE_PYTHON) { $env:RUST_ENGINE_PYTHON } elseif ($env:MCP_PYTHON) { $env:MCP_PYTHON } else { "python" }
@@ -20,15 +20,5 @@ Write-Host "validate-glb $Glb"
 & $Python @Cli validate-glb $Glb
 if ($LASTEXITCODE -ne 0) { throw "validate-glb failed" }
 
-$WitnessDir = Join-Path $RepoRoot "debug_runs\art_pipeline"
-New-Item -ItemType Directory -Force -Path $WitnessDir | Out-Null
-$Mini = @{
-    batch_id = "smoke_geometry"
-    status   = "pass"
-    job_id   = "wall_brick_1u_example"
-    valid    = $true
-    glb      = "assets/staging/wall_brick_1u_example/model.glb"
-} | ConvertTo-Json -Depth 4
-$Mini | Set-Content -Encoding utf8 (Join-Path $WitnessDir "smoke_geometry_live.json")
-Write-Host "OK smoke_geometry -> debug_runs/art_pipeline/smoke_geometry_live.json"
+Write-Host "OK smoke_geometry"
 Pop-Location

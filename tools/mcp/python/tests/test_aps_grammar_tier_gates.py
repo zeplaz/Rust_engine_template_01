@@ -18,9 +18,11 @@ pytestmark = pytest.mark.aps_gui
 
 def _make_panel(gui_panel_host):
     from art_pipeline_suite.assembly_panel import AssemblyPanel
+    from conftest import assembly_service_for
     from art_pipeline_suite.state import SuiteState
 
-    panel = AssemblyPanel(gui_panel_host, SuiteState(), on_log=lambda _m: None, start_job=None)
+    _st = SuiteState()
+    panel = AssemblyPanel(gui_panel_host, _st, on_log=lambda _m: None, start_job=None, assembly_service=assembly_service_for(_st))
     panel.pack(fill="both", expand=True)
     gui_panel_host.winfo_toplevel().update_idletasks()
     return panel

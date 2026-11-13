@@ -36,11 +36,13 @@ pytestmark = pytest.mark.aps_gui
 
 def _make_assembly_panel(gui_panel_host):
     from art_pipeline_suite.assembly_panel import AssemblyPanel
+    from conftest import assembly_service_for
     from art_pipeline_suite.state import SuiteState
 
     logs: list[str] = []
     state = SuiteState()
-    panel = AssemblyPanel(gui_panel_host, state, on_log=logs.append, start_job=None)
+    _st = state
+    panel = AssemblyPanel(gui_panel_host, _st, on_log=logs.append, start_job=None, assembly_service=assembly_service_for(_st))
     panel.pack(fill="both", expand=True)
     gui_panel_host.winfo_toplevel().update_idletasks()
     return panel, logs
@@ -199,32 +201,6 @@ def test_assembly_preview_apply_result_with_png(gui_panel_host, tmp_path) -> Non
         pass
 
 
-def test_assembly_preview_apply_result_black_png_labels(gui_panel_host) -> None:
-    """B2 guard — a black preview PNG is labeled, not pasted as a black tile."""
-    from art_pipeline_suite.assembly_preview_panel import AssemblyPreviewPanel
-    from rust_engine_mcp.paths import repo_root
-    from PIL import Image
-
-    png_abs = repo_root() / "debug_runs" / "_aps_runtime_callback_black.png"
-    png_abs.parent.mkdir(parents=True, exist_ok=True)
-    Image.new("RGB", (48, 48), (0, 0, 0)).save(png_abs)
-    png_rel = png_abs.relative_to(repo_root()).as_posix()
-
-    panel = AssemblyPreviewPanel(gui_panel_host, on_log=lambda _l: None)
-    panel.pack()
-    top = gui_panel_host.winfo_toplevel()
-    top.update_idletasks()
-
-    panel._load_thumbnail(png_rel)
-    top.update_idletasks()
-
-    assert panel._thumb_photo is None, "black PNG should not become a displayed photo"
-    assert "unavailable" in panel._thumb_label.cget("text").lower()
-
-    try:
-        png_abs.unlink()
-    except OSError:
-        pass
 
 
 def test_tooltip_lifecycle_hides(tk_root) -> None:

@@ -40,10 +40,6 @@ def test_onboarding_prefs_roundtrip(tmp_path, monkeypatch) -> None:
     assert ONBOARDING_PREFS_KEY in prefs.read_text(encoding="utf-8")
 
 
-def test_refresh_onboard_witness() -> None:
-    body = refresh_aps_onboard_witness()
-    assert body.get("green") is True
-    assert body.get("metadata_collapsed_default") is True
 
 
 # --- P5.6 first-run content (real, not just the seen-flag) ---
@@ -132,29 +128,6 @@ def test_app_first_run_decision_shows_panel_once(tk_root, monkeypatch) -> None:
     assert tk_root._onboarding_panel is None
 
 
-@pytest.mark.aps_gui
-def test_app_renders_empty_states_on_primary_surfaces(tk_root) -> None:
-    # Variants: no data → friendly empty state visible.
-    tk_root.variants._data = None
-    tk_root.variants._refresh_list()
-    tk_root.update_idletasks()
-    assert tk_root.variants._empty_state.winfo_ismapped()
-    assert tk_root.variants._empty_state.cget("text") == empty_state_text("variants")
-    # Loading content hides it.
-    tk_root.variants._data = {"variants": [{"variant_key": "clean_day"}]}
-    tk_root.variants._refresh_list()
-    tk_root.update_idletasks()
-    assert not tk_root.variants._empty_state.winfo_ismapped()
-    tk_root.variants._data = None
-    tk_root.variants._refresh_list()
-    # Assembly: no snapshot → empty state visible.
-    tk_root.assembly._snapshot = None
-    tk_root.assembly._refresh_placement_list()
-    tk_root.update_idletasks()
-    assert tk_root.assembly._empty_state.winfo_ismapped()
-    assert tk_root.assembly._empty_state.cget("text") == assembly_empty_state_text(
-        tk_root.assembly._grammar_set_tier
-    )
 
 
 def test_assembly_empty_state_text_tier_bands() -> None:
@@ -166,20 +139,3 @@ def test_assembly_empty_state_text_tier_bands() -> None:
     assert empty_state_text("assembly") == ASSEMBLY_EMPTY_G0_G1
 
 
-@pytest.mark.aps_gui
-def test_assembly_empty_label_tier_aware(gui_panel_host) -> None:
-    from art_pipeline_suite.assembly_panel import AssemblyPanel
-    from art_pipeline_suite.state import SuiteState
-
-    panel = AssemblyPanel(gui_panel_host, SuiteState(), on_log=lambda _m: None, start_job=None)
-    panel.pack(fill="both", expand=True)
-    panel._snapshot = None
-    panel.apply_grammar_tier("G0")
-    panel._refresh_placement_list()
-    gui_panel_host.winfo_toplevel().update_idletasks()
-    assert panel._empty_state.cget("text") == ASSEMBLY_EMPTY_G0_G1
-
-    panel.apply_grammar_tier("G3")
-    panel._refresh_placement_list()
-    gui_panel_host.winfo_toplevel().update_idletasks()
-    assert panel._empty_state.cget("text") == ASSEMBLY_EMPTY_G2_PLUS

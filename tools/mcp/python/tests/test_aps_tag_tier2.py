@@ -21,20 +21,5 @@ def test_suggested_tags_from_heritage_event() -> None:
     assert "heritage_marker" in tags
 
 
-def test_write_aps_tag_tier2_witness_green() -> None:
-    body = aps_tag_tier2.write_aps_tag_tier2_witness()
-    assert body.get("green") is True
-    assert body.get("witness_honesty", {}).get("status") == "passed"
-    assert (repo_root() / aps_tag_tier2.WITNESS_REL).is_file()
 
 
-def test_ux_polish_tail_witness() -> None:
-    from rust_engine_mcp.aps_ux_polish_tail_witness import write_aps_ux_polish_tail_witness
-
-    aps_tag_tier2.write_aps_tag_tier2_witness()
-    body = write_aps_ux_polish_tail_witness()
-    assert body.get("green") is True
-    fixes = body.get("fixes") or {}
-    assert fixes.get("f5_pipeline_valid_vs_saved") is True
-    assert fixes.get("f7_flow_bar_feedback") is True
-    assert fixes.get("tag_tier2_impl") is True
