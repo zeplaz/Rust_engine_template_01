@@ -1,5 +1,9 @@
 # HOT witnesses — read these only (default)
 
+**Trusted run:** debug + `RUST_ENGINE_SIM_DUMP=1` → `debug_runs/sim_run_dump.json` → `python tools/sim_review/score_dump.py` → `debug_runs/sim_review/dashboard.html`. Counts only. No `green` in the dump. Release never writes this file.
+
+`*_live.json` writers are **off**. Do not close work on them.
+
 Agents: **do not** glob `debug_runs/**` or open historical `*_live.json` unless the active slice names one. Archive lives outside this tree: `_local_archive/debug_runs/2026-10/` (gitignored).
 
 **Git:** only this file + `README.md` are tracked. All `*_live.json`, PNG, logs, `art_pipeline/`, etc. are **local-only** (`.gitignore` `/debug_runs/**`).

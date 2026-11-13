@@ -650,8 +650,6 @@ impl Plugin for StreamingSpinePlugin {
                     tick_tile_storage_smooth_transitions,
                     attrib_streaming_reconstruct_after,
                     diagnostics::log_streaming_spine_frame_summary_system,
-                    wave_c::write_wave_c_live_proof_system
-                        .run_if(crate::dev::runtime_witness::live_proof_cadence_due),
                 )
                     .chain()
                     .after(crate::gui::WorldRepresentationSystemSet::ComputeFrame),
@@ -659,7 +657,7 @@ impl Plugin for StreamingSpinePlugin {
             .add_systems(
                 Update,
                 crate::render::stall_checkpoint_post_streaming_spine
-                    .after(wave_c::write_wave_c_live_proof_system),
+                    .after(diagnostics::log_streaming_spine_frame_summary_system),
             );
     }
 }

@@ -1,0 +1,73 @@
+{
+  "schema": "sim_review_matrix_v1",
+  "dump_schema": "sim_run_dump_v1",
+  "rows": [
+    {
+      "id": "dump.schema",
+      "path": "schema",
+      "op": "eq",
+      "expect": "sim_run_dump_v1",
+      "note": "Must be a sim dump, not a witness envelope."
+    },
+    {
+      "id": "dump.grade",
+      "path": "proof_grade",
+      "op": "eq",
+      "expect": "sim_dump"
+    },
+    {
+      "id": "dump.not_green_field",
+      "rule": "green_absent",
+      "note": "Dump must not carry a green verdict. Scoring is this matrix."
+    },
+    {
+      "id": "world.generated",
+      "path": "flags.world_generated",
+      "op": "eq",
+      "expect": true
+    },
+    {
+      "id": "world.tick",
+      "path": "tick",
+      "op": "gte",
+      "expect": 8,
+      "note": "World must have ticked past bootstrap."
+    },
+    {
+      "id": "water.has_open",
+      "path": "counts.water_open_cells",
+      "op": "gt",
+      "expect": 0
+    },
+    {
+      "id": "rivers.not_web",
+      "path": "frac.river",
+      "op": "lt",
+      "expect": 0.08,
+      "note": "Rivers should be channels (~few percent), not a cell web."
+    },
+    {
+      "id": "trees.on_land",
+      "rule": "veg_not_only_water",
+      "note": "Live veg cells exist and are not only the water class."
+    },
+    {
+      "id": "fire.heat_when_seeded",
+      "path": "counts.fire_heat_cells",
+      "op": "gte",
+      "expect": 0,
+      "when_scene": ["Visual", "Vfx", "VfxSandbox", "Fire"],
+      "note": "Heat may burn out; tracked, not a hard fail if zero after fuel gone."
+    },
+    {
+      "id": "fire.inst_tracks_heat",
+      "rule": "inst_tracks_heat",
+      "note": "If heat cells > 0, instance rows must be > 0. If heat is 0, inst may be 0."
+    },
+    {
+      "id": "fire.sparks_not_bootstrap",
+      "rule": "sparks_not_bootstrap",
+      "note": "If sparks exist they must not come from overlay_bootstrap."
+    }
+  ]
+}

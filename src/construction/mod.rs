@@ -381,26 +381,10 @@ impl Plugin for BuildPlanningPlugin {
                         build_mode::sync_build_mode_state,
                         build_mode::build_escape_cancel_system,
                         sync_active_zone_from_tool,
-                        refresh_construction_stage_witness,
-                        construction_stage_witness::refresh_construction_finish_witness_system,
-                        construction_stage_witness::refresh_construction_phase2_witness_system,
-                        construction_stage_witness::refresh_construction_round2_witness_system,
-                        construction_stage_witness::refresh_construction_round3_witness_system,
-                        construction_stage_witness::refresh_construction_operational_witness_system,
                     )
                         .chain(),
                     (
                         sessions::tick_tool_session_time,
-                        witness_collectors::sync_construction_proof_witness_flags,
-                        construction_stage_witness::sync_construction_live_todo_board_system,
-                        construction_stage_witness::sync_construction_finish_board_system,
-                        construction_stage_witness::sync_construction_phase2_board_system,
-                        construction_stage_witness::sync_construction_p9_board_system,
-                        construction_stage_witness::sync_construction_round2_board_system,
-                        construction_stage_witness::sync_construction_round3_board_system,
-                        construction_stage_witness::sync_construction_operational_board_system,
-                        witness_collectors::write_construction_live_proof_system
-                            .run_if(crate::dev::runtime_witness::construction_live_proof_due),
                     )
                         .chain(),
                 )

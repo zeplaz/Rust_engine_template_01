@@ -1,8 +1,5 @@
-//! Always-on tactical map / minimap diagnostic for CLI `--test` runs.
-//!
-//! Writes `debug_runs/tactical_map_debug_live.json` at sim frames 30, 60, 90, 120, 180
-//! and every 60 frames thereafter. Run `cargo run --release -- --test vfx`, reproduce,
-//! then open the JSON — no `--deep-debug` required.
+//! Tactical map debug JSON — retired from the schedule (SIM-REVIEW dump only).
+#![allow(dead_code)]
 //!
 //! **`rtt_render_trace`** block explains void tactical map: RTT bind barrier, camera
 //! render target vs UI ImageNode, terrain sprite visibility/layers, ortho + view_proj.
@@ -30,13 +27,7 @@ struct TacticalMapDebugState {
 pub struct TacticalMapDebugPlugin;
 
 impl Plugin for TacticalMapDebugPlugin {
-    fn build(&self, app: &mut App) {
-        app.init_resource::<TacticalMapDebugState>().add_systems(
-            PostUpdate,
-            write_tactical_map_debug_witness
-                .run_if(in_state(crate::engine::states::BaseState::Simulation)),
-        );
-    }
+    fn build(&self, _app: &mut App) {}
 }
 
 #[derive(SystemParam)]

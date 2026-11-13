@@ -2,10 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::dev::runtime_witness::stage6::{
-    refresh_stage6_virtualization_witness, write_stage6_virtualization_live_proof_system,
-    Stage6VirtualizationWitness,
-};
+use crate::dev::runtime_witness::stage6::Stage6VirtualizationWitness;
 use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 
 use crate::gui::editor::world_preview::PreviewPathAuthority;
@@ -234,9 +231,6 @@ impl Plugin for Stage6VirtualizationPlugin {
                     publish_stage6_virtualization_frame,
                     enqueue_stream_domain_apply_label,
                     crate::gui::hud::refresh_stage6_hud_telemetry,
-                    refresh_stage6_virtualization_witness,
-                    write_stage6_virtualization_live_proof_system
-                        .run_if(crate::dev::runtime_witness::live_proof_cadence_due),
                 )
                     .chain()
                     .after(crate::gui::WorldRepresentationSystemSet::ComputeFrame)

@@ -138,6 +138,18 @@ pub(super) fn build_stage5_full_app_live_proof_payload(
         .as_ref()
         .map(|b| b.status.iter().all(|s| *s == crate::dev::stage5_live_todos::TodoStatus::Done))
         .unwrap_or(false);
+    let f2_fire_inst = projection.map(|g| g.fire.instance_buffer.len()).unwrap_or(0);
+    let f2_heat_chunks = projection
+        .map(|g| {
+            g.fire
+                .chunk_heat
+                .iter()
+                .filter(|h| h.heat > 0.04)
+                .count()
+        })
+        .unwrap_or(0);
+    let fire_inst_tracks_sim_heat =
+        (f2_heat_chunks == 0 && f2_fire_inst == 0) || (f2_heat_chunks > 0 && f2_fire_inst > 0);
 
     let mut body = serde_json::json!({
         "profile": "FULL_APP",
@@ -314,8 +326,10 @@ pub(super) fn build_stage5_full_app_live_proof_payload(
         }),
         "f2_extract_witness": {
             "gate": "FIRE-F2-EXTRACT-001",
-            "fire_instance_buffer_rows": projection.map(|g| g.fire.instance_buffer.len()).unwrap_or(0),
-            "green": projection.map(|g| !g.fire.instance_buffer.is_empty()).unwrap_or(false),
+            "fire_instance_buffer_rows": f2_fire_inst,
+            "fire_inst": f2_fire_inst,
+            "fire_inst_tracks_sim_heat": fire_inst_tracks_sim_heat,
+            "green": f2_fire_inst > 0,
         },
         "readiness_eval_invocation": reads.eval_inv.0,
         "committed_visual_fence": {

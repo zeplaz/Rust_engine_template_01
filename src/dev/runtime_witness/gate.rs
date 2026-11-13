@@ -8,23 +8,10 @@ pub const ENV_RUNTIME_WITNESS_WRITES: &str = "RUNTIME_WITNESS_WRITES";
 /// Environment variable: set `1` to force skip writes even in debug/test (parity / release smoke).
 pub const ENV_RUNTIME_WITNESS_WRITES_FORCE_OFF: &str = "RUNTIME_WITNESS_WRITES_FORCE_OFF";
 
-/// Whether operational witness files may be written this process.
-///
-/// - **Tests:** always enabled (lib witness refresh + parity).
-/// - **Release:** only when [`ENV_RUNTIME_WITNESS_WRITES`] is set.
-/// - **Debug:** enabled unless [`ENV_RUNTIME_WITNESS_WRITES_FORCE_OFF`] is set.
+/// Retired. `*_live.json` writers do not run. Use `RUST_ENGINE_SIM_DUMP=1` (debug only).
 #[must_use]
 pub fn witness_writes_enabled() -> bool {
-    if cfg!(test) {
-        return !env_flag(ENV_RUNTIME_WITNESS_WRITES_FORCE_OFF);
-    }
-    if env_flag(ENV_RUNTIME_WITNESS_WRITES_FORCE_OFF) {
-        return false;
-    }
-    if env_flag(ENV_RUNTIME_WITNESS_WRITES) {
-        return true;
-    }
-    cfg!(debug_assertions)
+    false
 }
 
 /// Human-readable gate state for witness payloads / diagnostics.

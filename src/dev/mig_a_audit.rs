@@ -1,7 +1,7 @@
-//! MIG-A audit JSON writers — **CB-MIG-001** / RGR-T0-004.
+//! MIG-A audit JSON writers — retired from the schedule (SIM-REVIEW dump only).
 //!
 //! Runtime adoption (static bulk tags, spine metrics) stays in [`super::mig_a_adoption`].
-//! This plugin only schedules disk witnesses under `debug_runs/mig_bevy_019/`.
+#![allow(dead_code)]
 
 use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
@@ -15,18 +15,7 @@ use super::mig_a_adoption::{
 pub struct MigAAuditPlugin;
 
 impl Plugin for MigAAuditPlugin {
-    fn build(&self, app: &mut App) {
-        app.add_systems(
-            PostUpdate,
-            (
-                write_mig_a_a11_depth_prepass_audit,
-                write_mig_a_a17_mesh_collection_audit.after(write_mig_a_a11_depth_prepass_audit),
-                write_mig_a_a8_a9_audit_witnesses.after(write_mig_a_a17_mesh_collection_audit),
-                capture_mig_a_frame_perf_witness.after(write_mig_a_a8_a9_audit_witnesses),
-                write_mig_a_slice_witnesses.after(capture_mig_a_frame_perf_witness),
-            ),
-        );
-    }
+    fn build(&self, _app: &mut App) {}
 }
 
 fn write_mig_a_a11_depth_prepass_audit(frame: Res<FrameCount>, mut wrote: Local<bool>) {

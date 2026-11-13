@@ -214,12 +214,6 @@ impl Plugin for WorldPreviewPlugin {
                     viewport_authority::debug_trace_world_preview_viewport_authority
                         .in_set(ViewRepresentationSystemSet::PostFX),
                 ),
-            )
-            .add_systems(
-                Update,
-                wave_p_witness::write_wave_p_witness_system
-                    .run_if(crate::dev::runtime_witness::wave_p_live_proof_due)
-                    .run_if(in_state(crate::engine::states::BaseState::Simulation)),
             );
     }
 }
