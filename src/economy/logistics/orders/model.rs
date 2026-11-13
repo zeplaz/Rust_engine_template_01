@@ -463,6 +463,17 @@ impl ConsumerKind {
             Self::Plant => "plant",
         }
     }
+
+    /// Whether the order sim itself draws `draw_rate_per_min` out of the site's stock.
+    ///
+    /// Plants and construction sites meter their own consumption (the plant's flow-node buffer,
+    /// reconciled by the plant stock bridge; the construction manifest's `ConsumeStock`). For them
+    /// the published rate drives health, time-to-empty and truck sizing only: drawing it here as
+    /// well would consume the same units twice.
+    #[must_use]
+    pub const fn drawn_by_order_sim(self) -> bool {
+        !matches!(self, Self::Plant | Self::Construction)
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default, Serialize, Deserialize)]

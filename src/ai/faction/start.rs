@@ -2,7 +2,8 @@
 //!
 //! `assets/configs/scenario/faction_start_v1.ron` lists, per faction slot: an HQ depot (placed on the
 //! faction's best-supplied held cell, or on a fallback tile when the faction holds no territory yet),
-//! its starter stockpile and its truck fleet. Units are metric: cargo in the cargo's own unit
+//! its starter stockpile, its truck fleet and its starting formations (spawned through
+//! [`spawn_formation`], so their `Zone{Control}` is what gives the faction territory and fronts). Units are metric: cargo in the cargo's own unit
 //! (tonnes for bulk goods, m3 for liquids), capacity in tonnes (m3 for tankers), speed in m/s, and
 //! positions in tiles (16 m).
 //!
@@ -19,6 +20,8 @@ use serde::{Deserialize, Serialize};
 use crate::economy::logistics::orders::{
     CargoClassMask, DepotStartingFleet, DepotStartingStock, FactionSlot, LogisticsOrderSite, OwnerId, SiteRole,
 };
+use crate::combat::balance::{FrontBalance, UnitKind};
+use crate::combat::formation::{spawn_formation, Formation};
 use crate::strategic::ChunkStrategicOverlay;
 
 use super::decide::FactionDoctrine;
@@ -67,6 +70,13 @@ pub struct FleetLine {
     pub speed_mps: f32,
 }
 
+/// One starting formation on a world tile.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct FormationLine {
+    pub kind: UnitKind,
+    pub tile: (i32, i32),
+}
+
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub enum HqPlacement {
     /// The faction's best-supplied held cell; `fallback_tile` when it holds none yet.
@@ -84,6 +94,9 @@ pub struct FactionStart {
     pub hq: HqPlacement,
     pub stockpile: Vec<StockLine>,
     pub fleet: Vec<FleetLine>,
+    /// Formations the faction starts the game with.
+    #[serde(default)]
+    pub formations: Vec<FormationLine>,
 }
 
 #[derive(Resource, Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -183,6 +196,36 @@ pub fn apply_faction_start_system(
     }
 }
 
+/// Spawn every configured faction's starting formations once per slot, after the strategic overlay
+/// exists (formations project control onto it). A slot that already has formations (a loaded game,
+/// a test) is left alone; formations lost in play are not respawned.
+pub fn apply_faction_start_formations_system(
+    mut commands: Commands,
+    config: Option<Res<FactionStartConfig>>,
+    balance: Option<Res<FrontBalance>>,
+    formations: Query<&Formation>,
+    overlays: Query<(), With<ChunkStrategicOverlay>>,
+    mut seeded: Local<std::collections::BTreeSet<u8>>,
+) {
+    let (Some(config), Some(balance)) = (config, balance) else { return };
+    if overlays.is_empty() {
+        return;
+    }
+    for f in &config.factions {
+        if seeded.contains(&f.slot) {
+            continue;
+        }
+        seeded.insert(f.slot);
+        if formations.iter().any(|x| x.faction_slot == f.slot) {
+            continue;
+        }
+        for line in &f.formations {
+            let tile = IVec2::new(line.tile.0, line.tile.1);
+            spawn_formation(&mut commands, Formation::new(f.slot, line.kind, tile), &balance);
+        }
+    }
+}
+
 /// AI slots of the start config join the roster once; existing roster entries win.
 pub fn seed_ai_roster_from_start_config_system(
     config: Option<Res<FactionStartConfig>>,
@@ -215,7 +258,11 @@ impl Plugin for FactionStartPlugin {
         }
         app.init_resource::<FactionAiRoster>().add_systems(
             Update,
-            (apply_faction_start_system, seed_ai_roster_from_start_config_system)
+            (
+                apply_faction_start_system,
+                apply_faction_start_formations_system,
+                seed_ai_roster_from_start_config_system,
+            )
                 .before(seed_faction_ai_controllers_system),
         );
     }

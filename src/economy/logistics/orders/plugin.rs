@@ -338,6 +338,7 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<LogisticsOrdersHydrateState>()
             .init_resource::<super::construction_demand::ConstructionDemandBook>()
             .init_resource::<super::plant_demand::PlantDemandBook>()
+            .init_resource::<super::plant_demand::DepotStockDemandBook>()
             .init_resource::<super::auto_supply::AutoSupplyPolicy>()
             .add_message::<LogisticsOrderRequest>()
             .configure_sets(
@@ -379,6 +380,8 @@ impl Plugin for LogisticsOrdersPlugin {
                     publish_logistics_orders_snapshot_system,
                     super::construction_demand::sync_construction_site_demands_system,
                     super::plant_demand::sync_plant_input_demands_system,
+                    super::plant_demand::sync_depot_stock_demands_system,
+                    super::auto_supply::unattended_player_auto_supply_system,
                     super::auto_supply::auto_supply_unserved_system,
                 )
                     .chain()

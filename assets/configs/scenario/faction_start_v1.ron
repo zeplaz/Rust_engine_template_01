@@ -1,6 +1,10 @@
 // Game start per faction slot (src/ai/faction/start.rs).
 // Units: cargo in its own unit (t for bulk goods, m3 for liquids); capacity in t (m3 tanker, seats
 // troop); speed in m/s; tiles are 16 m.
+// HQs sit on fixed tiles in each faction's rear. Formations start on a shared contact line around
+// tile (64, 64): the front pairs are ~11 tiles apart (inside infantry range, overlapping control
+// radius) so control is contested and a front forms; reserves stand back for the AI to deploy.
+// Front supply points draw `ammo` / `Fuel` / `rations` / `engineering` from the HQ depot.
 (
     schema_version: 1,
     territory_wait_frames: 300,
@@ -9,7 +13,7 @@
             slot: 0,
             name: "Player HQ",
             ai: None,
-            hq: Territory(fallback_tile: (24, 24)),
+            hq: Tile(x: 24, z: 24),
             stockpile: [
                 (cargo: "Concrete", amount: 1000),
                 (cargo: "Steel", amount: 400),
@@ -21,11 +25,19 @@
                 (cargo: "Coal", amount: 300),
                 (cargo: "Water", amount: 400),
                 (cargo: "Chemicals", amount: 150),
+                (cargo: "ammo", amount: 300),
+                (cargo: "rations", amount: 300),
+                (cargo: "engineering", amount: 150),
             ],
             fleet: [
                 (class: Freight, count: 10, capacity: 10, speed_mps: 12.0),
                 (class: Tanker, count: 2, capacity: 20, speed_mps: 11.0),
                 (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
+            ],
+            formations: [
+                (kind: Infantry, tile: (60, 58)),
+                (kind: Infantry, tile: (58, 60)),
+                (kind: Mechanized, tile: (44, 44)),
             ],
         ),
         (
@@ -38,7 +50,7 @@
                 development_focus: 0.5,
                 commitment: 0.1,
             )),
-            hq: Territory(fallback_tile: (104, 104)),
+            hq: Tile(x: 104, z: 104),
             stockpile: [
                 (cargo: "Concrete", amount: 1000),
                 (cargo: "Steel", amount: 400),
@@ -50,11 +62,20 @@
                 (cargo: "Coal", amount: 300),
                 (cargo: "Water", amount: 400),
                 (cargo: "Chemicals", amount: 150),
+                (cargo: "ammo", amount: 300),
+                (cargo: "rations", amount: 300),
+                (cargo: "engineering", amount: 150),
             ],
             fleet: [
                 (class: Freight, count: 10, capacity: 10, speed_mps: 12.0),
                 (class: Tanker, count: 2, capacity: 20, speed_mps: 11.0),
                 (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
+            ],
+            formations: [
+                (kind: Infantry, tile: (68, 66)),
+                (kind: Infantry, tile: (66, 68)),
+                (kind: Infantry, tile: (84, 84)),
+                (kind: Mechanized, tile: (86, 82)),
             ],
         ),
     ],

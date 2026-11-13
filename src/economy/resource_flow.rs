@@ -417,7 +417,9 @@ pub fn propagate_resource_flow_system(
             &mut witness.produced_by_tag,
         );
         // A plant with nowhere to put product stands idle: it draws no inputs and does not starve.
-        let fed = state.output_full || try_consume(&mut node, state.output_scale);
+        // Inputs are drawn at the rate output runs: an unstaffed / unpowered plant (supply 0)
+        // makes nothing and must not burn its buffer either.
+        let fed = state.output_full || try_consume(&mut node, state.output_scale * supply);
         state.starved = !fed;
         if !fed {
             state.output_scale = (state.output_scale * 0.85).max(0.1);

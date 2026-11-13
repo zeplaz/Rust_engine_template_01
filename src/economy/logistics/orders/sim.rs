@@ -661,7 +661,8 @@ impl LogisticsOrderSim {
         let mut newly_starving = Vec::new();
         for d in self.demands.values_mut() {
             let e = self.stock.entries.entry((d.site, d.cargo.clone())).or_default();
-            if d.draw_rate_per_min > 0 {
+            // Plants / construction sites draw their own stock (see `ConsumerKind::drawn_by_order_sim`).
+            if d.draw_rate_per_min > 0 && d.consumer.drawn_by_order_sim() {
                 d.draw_accum += u64::from(d.draw_rate_per_min);
                 let want = d.draw_accum / tpm;
                 d.draw_accum %= tpm;
