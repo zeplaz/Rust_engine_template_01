@@ -27,7 +27,7 @@ use crate::systems::fire::{
     ChunkFireOverlay, ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission,
 };
 use crate::systems::terrain::materialize_chunks;
-use crate::systems::weather::{ChunkWeather, WeatherVisualSettings};
+use crate::systems::weather::{WeatherPresetId, WeatherPresetRequest, WeatherVisualSettings};
 use crate::terrain::fire::fuel_depot_profile;
 use crate::terrain::world_map_scale::TileExtentPreset;
 use crate::terrain::world_map_scale::TerrainFieldStorage;
@@ -1368,48 +1368,25 @@ fn write_global_wind(global_wind: &mut Option<ResMut<GlobalWind>>, direction: Ve
     }
 }
 
-/// Same chunk weather writes as the `--test weather` arm. Callers choose the cap and which fields rise.
-fn raise_chunk_weather(
-    wx_q: &mut Query<&mut ChunkWeather>,
-    limit: u32,
-    rain: Option<f32>,
-    fog: Option<f32>,
-    wind: Option<f32>,
-    soil: Option<f32>,
-) {
-    let mut n = 0u32;
-    for mut w in wx_q.iter_mut() {
-        if n >= limit {
-            break;
-        }
-        if let Some(v) = rain {
-            w.rain_intensity = w.rain_intensity.max(v);
-        }
-        if let Some(v) = fog {
-            w.fog_density = w.fog_density.max(v);
-        }
-        if let Some(v) = wind {
-            w.wind_speed = w.wind_speed.max(v);
-        }
-        if let Some(v) = soil {
-            w.soil_moisture = w.soil_moisture.max(v);
-        }
-        n += 1;
+/// Weather scenes ask the weather field for a RON preset; the field stays the only weather writer.
+fn request_weather_preset(req: &mut WeatherPresetRequest, preset: WeatherPresetId) {
+    if req.0.is_none() {
+        req.0 = Some(preset);
     }
 }
 
-fn seed_weather_scene(wx_q: &mut Query<&mut ChunkWeather>, gpu: &mut WeatherFireFieldDebugOverlay) {
+fn seed_weather_scene(req: &mut WeatherPresetRequest, gpu: &mut WeatherFireFieldDebugOverlay) {
     gpu.show = true;
-    raise_chunk_weather(wx_q, 12, Some(0.82), Some(0.18), Some(0.35), Some(0.55));
+    request_weather_preset(req, WeatherPresetId::StormFront);
 }
 
-fn seed_atmosphere_wind(global_wind: &mut Option<ResMut<GlobalWind>>, wx_q: &mut Query<&mut ChunkWeather>) {
+fn seed_atmosphere_wind(global_wind: &mut Option<ResMut<GlobalWind>>, req: &mut WeatherPresetRequest) {
     write_global_wind(
         global_wind,
         Vec2::new(1.0, 0.2).normalize_or_zero(),
         6.0,
     );
-    raise_chunk_weather(wx_q, 16, None, Some(0.08), Some(0.65), None);
+    request_weather_preset(req, WeatherPresetId::Windy);
 }
 
 fn apply_test_scene_defaults(
@@ -1422,7 +1399,7 @@ fn apply_test_scene_defaults(
     mut tile_debug: ResMut<crate::gui::TileGpuDebugSettings>,
     mut presentation: ResMut<crate::gui::MapViewPresentationStates>,
     mut raster_dirty: ResMut<crate::render::TileWorldFallbackRasterDirty>,
-    mut wx_q: Query<&mut ChunkWeather>,
+    mut weather_preset: ResMut<WeatherPresetRequest>,
     mut commands: Commands,
     mut fire_q: Query<(
         Entity,
@@ -1459,7 +1436,7 @@ fn apply_test_scene_defaults(
 
     match kind {
         TestScene::Weather => {
-            seed_weather_scene(&mut wx_q, &mut gpu);
+            seed_weather_scene(&mut weather_preset, &mut gpu);
         }
         TestScene::Fire => {
             tile_debug.use_batched_mesh_overlay = true;
@@ -1469,7 +1446,7 @@ fn apply_test_scene_defaults(
             write_global_wind(&mut global_wind, Vec2::X, 0.0);
         }
         TestScene::Atmosphere => {
-            seed_atmosphere_wind(&mut global_wind, &mut wx_q);
+            seed_atmosphere_wind(&mut global_wind, &mut weather_preset);
             let mut fi = 0u32;
             for mut prof in &mut fuel_q {
                 if fi >= 3 {
@@ -1480,8 +1457,8 @@ fn apply_test_scene_defaults(
             }
         }
         TestScene::SubFx => {
-            seed_weather_scene(&mut wx_q, &mut gpu);
-            seed_atmosphere_wind(&mut global_wind, &mut wx_q);
+            seed_weather_scene(&mut weather_preset, &mut gpu);
+            seed_atmosphere_wind(&mut global_wind, &mut weather_preset);
             sim.overlays.fire_heat = false;
             sim.bump_revision();
         }
@@ -1499,17 +1476,7 @@ fn apply_test_scene_defaults(
                 gw.speed = 5.8;
             }
             gpu.show = false;
-            let mut wn = 0u32;
-            for mut w in &mut wx_q {
-                if wn >= 24 {
-                    break;
-                }
-                w.wind_speed = w.wind_speed.max(0.5);
-                w.fog_density = w.fog_density.max(0.12);
-                // Keep rain light so harness fire is not extinguished during visual proof.
-                w.rain_intensity = w.rain_intensity.min(0.12);
-                wn += 1;
-            }
+            // Weather: the seeded field (no preset), so the play check reads real weather.
             let mut fi = 0u32;
             for mut prof in &mut fuel_q {
                 if fi >= 4 {
@@ -1529,18 +1496,8 @@ fn apply_test_scene_defaults(
                 gw.speed = 6.0;
             }
             gpu.show = false;
-            let mut wn = 0u32;
-            for mut w in &mut wx_q {
-                if wn >= 24 {
-                    break;
-                }
-                w.wind_speed = w.wind_speed.max(0.65);
-                w.fog_density = w.fog_density.max(0.28);
-                // Visible GPU precip streaks without drowning surface fire (was 0.12 — invisible).
-                w.rain_intensity = w.rain_intensity.max(0.32).min(0.42);
-                w.soil_moisture = w.soil_moisture.max(0.35);
-                wn += 1;
-            }
+            // Visible GPU precip streaks: a storm front from the weather presets.
+            request_weather_preset(&mut weather_preset, WeatherPresetId::StormFront);
             let mut fi = 0u32;
             for mut prof in &mut fuel_q {
                 if fi >= 4 {

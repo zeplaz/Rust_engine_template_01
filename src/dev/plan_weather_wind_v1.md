@@ -1,6 +1,6 @@
 # Plan: weather and wind field v1
 
-Status: PLANNED (2026-11-13). Owner: `coder` (sim), `designer` (overlay/HUD/clouds).
+Status: W1 SHIPPED (2026-11-13: `src/systems/weather/{field,systems,tuning}.rs`, `assets/configs/weather/weather_v1.ron`, save overlay `src/io/save/weather_overlay.rs`, dump `src/dev/sim_run_dump_weather.rs`); W2–W5 PLANNED. Owner: `coder` (sim), `designer` (overlay/HUD/clouds).
 Units: metric throughout (m/s, mm/h, °C, m visibility).
 
 ## 1. What exists today (and why wind looks fake)

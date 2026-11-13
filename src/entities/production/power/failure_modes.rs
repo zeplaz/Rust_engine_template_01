@@ -19,7 +19,8 @@ use crate::entities::production::power::plant_registry::PlantDefinitionRegistry;
 use crate::entities::production::power::power_states::PowerPlantType;
 use crate::entities::types::{EmergencyType, OperationalStatus};
 use crate::infrastructure::{UtilityConnection, UtilityNetworkKind};
-use crate::systems::weather::GlobalRenewableWeatherFactors;
+use crate::systems::sim_control::SimTimeMicros;
+use crate::systems::weather::WeatherField;
 
 /// Placeholder: steam leak, condenser vacuum, feedwater chemistry — adjust `efficiency` or `status` later.
 pub fn steam_system_placeholder(_query: Query<&PowerPlant, With<SteamCycle>>) {}
@@ -471,18 +472,47 @@ fn status_requires_offsite(status: OperationalStatus, profile: &NuclearFailurePr
     }
 }
 
-/// Cloud / wind coupling via world-averaged chunk weather (see `GlobalRenewableWeatherFactors`).
+/// Wind turbine cut-in / rated / cut-out speeds (m/s).
+const WIND_CUT_IN_MPS: f32 = 3.0;
+const WIND_RATED_MPS: f32 = 12.0;
+const WIND_CUT_OUT_MPS: f32 = 25.0;
+
+/// Wind farm capacity factor: cubic between cut-in and rated, zero above cut-out.
+#[must_use]
+pub fn wind_capacity_factor(speed_mps: f32) -> f32 {
+    if speed_mps < WIND_CUT_IN_MPS || speed_mps > WIND_CUT_OUT_MPS {
+        return 0.0;
+    }
+    let c3 = WIND_CUT_IN_MPS.powi(3);
+    ((speed_mps.powi(3) - c3) / (WIND_RATED_MPS.powi(3) - c3)).clamp(0.0, 1.0)
+}
+
+/// Solar capacity factor from cloud cover (0..1).
+#[must_use]
+pub fn solar_capacity_factor(cloud: f32) -> f32 {
+    (1.0 - cloud.clamp(0.0, 1.0) * 0.8).clamp(0.05, 1.0)
+}
+
+/// Wind / solar plants sample the weather field at their own position.
 pub fn variable_renewable_placeholder(
-    factors: Res<GlobalRenewableWeatherFactors>,
-    mut query: Query<&mut PowerPlant, With<VariableRenewable>>,
+    field: Option<Res<WeatherField>>,
+    sim_time: Option<Res<SimTimeMicros>>,
+    mut query: Query<(&mut PowerPlant, Option<&Transform>), With<VariableRenewable>>,
 ) {
-    for mut plant in &mut query {
+    let Some(field) = field.filter(|f| f.is_ready()) else {
+        return;
+    };
+    let now = sim_time.map_or(SimTimeMicros(field.prev_micros), |t| *t);
+    for (mut plant, transform) in &mut query {
+        // Site transforms are in metres on XZ (`site_world_position`); no transform -> map centre.
+        let pos = transform.map_or(field.extent_m * 0.5, |t| Vec2::new(t.translation.x, t.translation.z));
+        let s = field.sample(pos, now);
         let m = match plant.plant_type {
-            PowerPlantType::Wind => factors.wind_capacity_factor,
-            PowerPlantType::Solar => factors.solar_capacity_factor,
+            PowerPlantType::Wind => wind_capacity_factor(s.wind_mps.length()),
+            PowerPlantType::Solar => solar_capacity_factor(s.cloud),
             _ => 1.0,
         };
-        plant.current_output *= m.clamp(0.05, 1.2);
+        plant.current_output *= m;
     }
 }
 

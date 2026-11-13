@@ -243,6 +243,7 @@ struct WorldParams<'w, 's> {
     ecology: Option<Res<'w, FireEcologyStats>>,
     graph: Option<Res<'w, RenderProjectionGraph>>,
     particles: Option<Res<'w, WorldFireParticleFrame>>,
+    weather: Option<Res<'w, super::sim_run_dump_weather::WeatherDumpSeries>>,
 }
 
 /// Fire visual chain, stage by stage: sim heat -> snapshot -> active/visible chunks -> per-view
@@ -728,6 +729,7 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
         "combat": combat,
         "fire": fire,
         "fire_chain": fire_chain_json(w, f),
+        "weather": super::sim_run_dump_weather::weather_json(w.weather.as_deref()),
         "perf": state.perf_json(),
         "history": state.history,
     })
@@ -776,6 +778,7 @@ impl Plugin for SimRunDumpPlugin {
         if !cfg!(debug_assertions) {
             return;
         }
+        app.add_plugins(super::sim_run_dump_weather::WeatherDumpPlugin);
         app.init_resource::<SimRunDumpState>()
             .add_systems(Last, (sample_frame_time, flush_sim_run_dump).chain());
     }
