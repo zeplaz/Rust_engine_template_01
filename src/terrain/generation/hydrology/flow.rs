@@ -335,16 +335,23 @@ pub fn compute_hydrology_rect(
     let mx = max_slice(&acc).max(1.0);
     let acc_th_by_max = params.river_acc_quantile * mx;
     let q = params.river_acc_quantile.clamp(0.0, 1.0);
-    let acc_th_by_rank = if n <= 1 {
-        acc[0]
+    let (acc_th_by_rank, acc_floor) = if n <= 1 {
+        (acc[0], acc[0])
     } else {
         let mut sorted = acc.clone();
         sorted.sort_by(|a, b| a.total_cmp(b));
         let idx = ((1.0 - q) * (n - 1) as f32).round() as usize;
-        sorted[idx.min(n - 1)]
+        (sorted[idx.min(n - 1)], sorted[0])
     };
-    // More permissive of the two: avoids “one huge sink” making 0.12×max untouchable for typical cells.
-    let acc_th = acc_th_by_max.min(acc_th_by_rank);
+    // Rank threshold: the channel mask is the top `river_acc_quantile` of cells by drainage, i.e. the
+    // trunks of the largest basins. (Taking the *lower* of this and `quantile × max` doubled the mask
+    // into a web of 1-cell creeks over the land.) Fall back to the max-relative threshold only when
+    // the rank threshold sits on the baseline (flat / tiny grids where most cells tie).
+    let acc_th = if acc_th_by_rank > acc_floor {
+        acc_th_by_rank
+    } else {
+        acc_th_by_max.max(acc_floor + f32::EPSILON)
+    };
 
     let mut river_mask = vec![false; n];
     for i in 0..n {

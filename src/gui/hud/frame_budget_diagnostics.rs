@@ -96,6 +96,9 @@ pub struct FrameBudgetBucketStats {
     pub avg_ms: f32,
     pub max_ms: f32,
     pub events_last_frame: u32,
+    /// Recorded during the frame being finalized. `last_ms` persists across idle frames (HUD / PERF
+    /// read it), so spike attribution must only blame buckets that actually ran this frame.
+    pub recorded_this_frame: bool,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -186,6 +189,7 @@ impl Default for FrameBudgetDiagnostics {
 impl FrameBudgetDiagnostics {
     pub fn record_bucket_ms(&mut self, bucket: FrameBudgetBucket, ms: f32) {
         let stats = &mut self.buckets[bucket.index()];
+        stats.recorded_this_frame = true;
         stats.last_ms = ms.max(0.0);
         stats.avg_ms = if stats.avg_ms <= 0.0 {
             stats.last_ms
@@ -231,9 +235,19 @@ impl FrameBudgetDiagnostics {
             .collect()
     }
 
+    /// Buckets that ran during the frame being finalized, ranked by cost (spike attribution).
+    #[must_use]
+    pub fn top_buckets_this_frame(&self, limit: usize) -> Vec<(FrameBudgetBucket, f32)> {
+        let mut ranked = self.top_buckets_by_last_ms(FrameBudgetBucket::ALL.len());
+        ranked.retain(|(bucket, _)| self.buckets[bucket.index()].recorded_this_frame);
+        ranked.truncate(limit);
+        ranked
+    }
+
     fn reset_bucket_events(&mut self) {
         for stats in &mut self.buckets {
             stats.events_last_frame = 0;
+            stats.recorded_this_frame = false;
         }
     }
 
@@ -434,7 +448,7 @@ pub fn finalize_frame_budget_diagnostics(
 
     let avg_frame_ms = budget.avg_frame_ms;
     if frame_ms >= FRAME_SPIKE_MS {
-        let top = budget.top_buckets_by_last_ms(2);
+        let top = budget.top_buckets_this_frame(2);
         let bucket_hint = if top.is_empty() {
             "buckets=n/a".to_string()
         } else {

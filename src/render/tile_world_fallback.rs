@@ -1771,13 +1771,19 @@ fn tile_world_fallback_rasterize_perf(
     mut budget: Option<ResMut<FrameBudgetDiagnostics>>,
     mut perf: Option<ResMut<crate::render::FramePerf>>,
 ) {
-    let Some(raster_ms) = raster_ctrl.last_ms.take() else {
-        return;
-    };
     // GPU sprite bakes are dirty-gated; §10 gate counts only CPU fallback raster.
     if !authority.uses_cpu_fallback_raster() {
+        raster_ctrl.last_ms = None;
         return;
     }
+    let Some(raster_ms) = raster_ctrl.last_ms.take() else {
+        // Idle frame: the raster cost 0 ms. Recording it lets the EMA decay, so one full repaint
+        // (sim enter) no longer latches `TileRasterSpikeFeedback` / spike attribution for the session.
+        if let Some(budget) = budget.as_mut() {
+            budget.record_bucket_ms(FrameBudgetBucket::MinimapRaster, 0.0);
+        }
+        return;
+    };
     if let Some(budget) = budget.as_mut() {
         budget.record_bucket_ms(FrameBudgetBucket::MinimapRaster, raster_ms);
     }

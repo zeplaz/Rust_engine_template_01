@@ -548,16 +548,22 @@ pub(crate) fn sync_pixel_world_ghost(
             })
         })
         .clone();
-    let mesh = state.mesh.get_or_insert_with(|| meshes.add(MeshBuf::default().into_mesh())).clone();
-    let empty = buf.is_empty();
-    if meshes.insert(&mesh, buf.into_mesh()).is_err() {
-        // Stale handle (asset storage reset): allocate a fresh one next rebuild.
-        state.mesh = None;
-    }
-    let vis = if empty { Visibility::Hidden } else { Visibility::Inherited };
+    // Empty builds never reach `Assets<Mesh>` (zero-vertex meshes trip the render slab allocator):
+    // keep the last asset and hide the layer instead.
+    let before = state.mesh.as_ref().map(Handle::id);
+    let drawable = !buf.is_empty()
+        && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, buf.into_mesh());
+    let vis = if drawable { Visibility::Inherited } else { Visibility::Hidden };
+    let Some(mesh) = state.mesh.clone() else {
+        return;
+    };
     match state.entity {
         Some(e) => {
-            commands.entity(e).try_insert(vis);
+            if before != Some(mesh.id()) {
+                commands.entity(e).try_insert((Mesh3d(mesh), vis));
+            } else {
+                commands.entity(e).try_insert(vis);
+            }
         }
         None => {
             state.entity = Some(
@@ -679,17 +685,22 @@ pub(crate) fn sync_pixel_world_fronts(
             })
         })
         .clone();
-    let mesh = state.mesh.get_or_insert_with(|| meshes.add(MeshBuf::default().into_mesh())).clone();
-    let empty = buf.is_empty();
-    if meshes.insert(&mesh, buf.into_mesh()).is_err() {
-        // Stale handle (asset storage reset): allocate a fresh one next rebuild.
-        state.mesh = None;
-        state.key = None;
-    }
-    let vis = if empty { Visibility::Hidden } else { Visibility::Inherited };
+    // Empty builds never reach `Assets<Mesh>` (zero-vertex meshes trip the render slab allocator):
+    // keep the last asset and hide the layer instead.
+    let before = state.mesh.as_ref().map(Handle::id);
+    let drawable = !buf.is_empty()
+        && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, buf.into_mesh());
+    let vis = if drawable { Visibility::Inherited } else { Visibility::Hidden };
+    let Some(mesh) = state.mesh.clone() else {
+        return;
+    };
     match state.entity {
         Some(e) => {
-            commands.entity(e).try_insert(vis);
+            if before != Some(mesh.id()) {
+                commands.entity(e).try_insert((Mesh3d(mesh), vis));
+            } else {
+                commands.entity(e).try_insert(vis);
+            }
         }
         None => {
             state.entity = Some(
@@ -776,17 +787,22 @@ pub(crate) fn sync_pixel_world_paths(
             })
         })
         .clone();
-    let mesh = state.mesh.get_or_insert_with(|| meshes.add(MeshBuf::default().into_mesh())).clone();
-    let empty = buf.is_empty();
-    if meshes.insert(&mesh, buf.into_mesh()).is_err() {
-        // Stale handle (asset storage reset): allocate a fresh one next rebuild.
-        state.mesh = None;
-        state.key = None;
-    }
-    let vis = if empty { Visibility::Hidden } else { Visibility::Inherited };
+    // Empty builds never reach `Assets<Mesh>` (zero-vertex meshes trip the render slab allocator):
+    // keep the last asset and hide the layer instead.
+    let before = state.mesh.as_ref().map(Handle::id);
+    let drawable = !buf.is_empty()
+        && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, buf.into_mesh());
+    let vis = if drawable { Visibility::Inherited } else { Visibility::Hidden };
+    let Some(mesh) = state.mesh.clone() else {
+        return;
+    };
     match state.entity {
         Some(e) => {
-            commands.entity(e).try_insert(vis);
+            if before != Some(mesh.id()) {
+                commands.entity(e).try_insert((Mesh3d(mesh), vis));
+            } else {
+                commands.entity(e).try_insert(vis);
+            }
         }
         None => {
             state.entity = Some(

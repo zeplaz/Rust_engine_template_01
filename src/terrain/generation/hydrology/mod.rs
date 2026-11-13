@@ -15,8 +15,8 @@ use crate::terrain::biome::BiomeTuning;
 pub struct HydrologyParams {
     /// Normalized height below which tiles are treated as open water.
     pub water_line: f32,
-    /// River channel sensitivity: blended against **max** accumulation and a **rank** threshold so
-    /// a single mega–catchment cell does not starve smaller maps of visible channels.
+    /// Fraction of cells (by flow-accumulation rank) that form the river channel mask — the major
+    /// drainage trunks. Channel width is derived from flow in [`crate::terrain::generation::water_class`].
     pub river_acc_quantile: f32,
     /// Min absolute slope (neighbour height delta) to tag erosion on river cells.
     pub erosion_slope_threshold: f32,
@@ -34,8 +34,9 @@ impl HydrologyParams {
     pub fn from_biome_tuning(t: &BiomeTuning) -> Self {
         Self {
             water_line: t.shallow_water_height_max,
-            // Major drainage channels only: ~1.5% of cells (0.10 flooded the map with a web of tributaries).
-            river_acc_quantile: 0.015,
+            // Major drainage trunks only: ~0.5% of cells as channel centrelines (1.5% plus the old
+            // max-relative blend drew ~3% of the map as a web of creeks; 0.10 flooded it).
+            river_acc_quantile: 0.005,
             erosion_slope_threshold: 0.08,
             silt_moisture_threshold: (t.wetland_moist_threshold * 0.85).min(1.0),
         }

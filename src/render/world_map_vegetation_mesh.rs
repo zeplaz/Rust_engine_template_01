@@ -702,13 +702,13 @@ pub(crate) fn sync_world_map_vegetation(
     frame: Option<Res<VegetationExtractFrame>>,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
     matrices: Query<&ChunkCellMatrix>,
-    mut layer: Query<(Entity, &mut Visibility), With<WorldMapVegetationLayer>>,
+    mut layer: Query<(Entity, &mut Visibility, &Mesh2d), With<WorldMapVegetationLayer>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
     mut state: Local<LayerState>,
 ) {
     if !matches!(base.get(), BaseState::Simulation) {
-        for (e, _) in &layer {
+        for (e, _, _) in &layer {
             commands.entity(e).despawn();
         }
         state.built_key = None;
@@ -716,7 +716,7 @@ pub(crate) fn sync_world_map_vegetation(
     }
     // PixelWorld3D has its own LG-5 atlas stamps. Hide, keep the built mesh for the way back.
     if mode.as_deref().is_some_and(|m| !m.is_tactical()) {
-        for (_, mut vis) in &mut layer {
+        for (_, mut vis, _) in &mut layer {
             vis.set_if_neq(Visibility::Hidden);
         }
         return;
@@ -747,10 +747,6 @@ pub(crate) fn sync_world_map_vegetation(
     });
     let key = mix64(state.content_hash ^ (lod as u64) ^ window_key);
 
-    let mesh_handle = state
-        .mesh
-        .get_or_insert_with(|| meshes.add(geometry_to_mesh(VegGeometry::default())))
-        .clone();
     let material = state
         .material
         .get_or_insert_with(|| materials.add(ColorMaterial::from_color(Color::WHITE)))
@@ -758,11 +754,16 @@ pub(crate) fn sync_world_map_vegetation(
 
     if state.built_key != Some(key) {
         let (geo, _) = build_vegetation_geometry(&frame.rows, chunk, lod, window);
-        state.last_empty = geo.symbols == 0;
-        meshes.insert(&mesh_handle, geometry_to_mesh(geo));
+        // Empty builds never reach `Assets<Mesh>` (zero-vertex meshes trip the render slab allocator).
+        let drawable = geo.symbols > 0
+            && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, geometry_to_mesh(geo));
+        state.last_empty = !drawable;
         state.built_key = Some(key);
     }
     let want = if state.last_empty { Visibility::Hidden } else { Visibility::Visible };
+    let Some(mesh_handle) = state.mesh.clone() else {
+        return;
+    };
 
     if layer.is_empty() {
         commands.spawn((
@@ -774,8 +775,11 @@ pub(crate) fn sync_world_map_vegetation(
             Pickable::IGNORE,
         ));
     } else {
-        for (_, mut vis) in &mut layer {
+        for (e, mut vis, drawn) in &mut layer {
             vis.set_if_neq(want);
+            if drawn.0 != mesh_handle {
+                commands.entity(e).try_insert(Mesh2d(mesh_handle.clone()));
+            }
         }
     }
 }

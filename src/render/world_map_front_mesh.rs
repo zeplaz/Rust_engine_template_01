@@ -471,6 +471,8 @@ struct LayerState {
     built_key: Option<u64>,
     mesh: Option<Handle<Mesh>>,
     material: Option<Handle<ColorMaterial>>,
+    /// Last build produced geometry (empty builds never reach `Assets<Mesh>`; see `upload_layer_mesh`).
+    has_geometry: bool,
 }
 
 /// The controls' state this layer draws (bundled to stay under the system parameter limit).
@@ -611,7 +613,7 @@ pub(crate) fn sync_world_map_front_overlay(
     mode: Option<Res<WorldPresentationMode>>,
     src: FrontOverlaySources,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
-    mut layer: Query<(Entity, &mut Visibility), With<WorldMapFrontLayer>>,
+    mut layer: Query<(Entity, &mut Visibility, &Mesh2d), With<WorldMapFrontLayer>>,
     labels: Query<Entity, With<WorldMapFrontLabel>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
@@ -621,7 +623,7 @@ pub(crate) fn sync_world_map_front_overlay(
     if !matches!(base.get(), BaseState::Simulation) || !tactical {
         // PixelWorld3D (or leaving the sim): hide the layer and drop labels; the mesh is kept for the way back.
         // PixelWorld3D drapes the same geometry over its voxel terrain (`render::pixel_world`).
-        for (_, mut v) in &mut layer {
+        for (_, mut v, _) in &mut layer {
             v.set_if_neq(Visibility::Hidden);
         }
         for e in &labels {
@@ -638,12 +640,11 @@ pub(crate) fn sync_world_map_front_overlay(
     let theaters = src.theaters.as_ref();
     let pressure = src.pressure.as_ref();
 
-    let mesh_handle = state.mesh.get_or_insert_with(|| meshes.add(Geo::default().into_mesh())).clone();
     let material = state.material.get_or_insert_with(|| materials.add(ColorMaterial::from_color(Color::WHITE))).clone();
 
     if state.built_key != Some(key) {
         let geo = src.build_geometry(px);
-        meshes.insert(&mesh_handle, geo.into_mesh());
+        state.has_geometry = crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, geo.into_mesh());
 
         for e in &labels {
             commands.entity(e).despawn();
@@ -697,18 +698,26 @@ pub(crate) fn sync_world_map_front_overlay(
         state.built_key = Some(key);
     }
 
+    let want = if state.has_geometry { Visibility::Visible } else { Visibility::Hidden };
+    let Some(mesh_handle) = state.mesh.clone() else {
+        return;
+    };
     if layer.is_empty() {
         commands.spawn((
             WorldMapFrontLayer,
             Mesh2d(mesh_handle),
             MeshMaterial2d(material),
             Transform::default(),
-            Visibility::Visible,
+            want,
             Pickable::IGNORE,
         ));
     } else {
-        for (_, mut v) in &mut layer {
-            v.set_if_neq(Visibility::Visible);
+        for (e, mut v, drawn) in &mut layer {
+            v.set_if_neq(want);
+            if drawn.0 != mesh_handle {
+                // Re-point after a stale-handle reallocation.
+                commands.entity(e).try_insert(Mesh2d(mesh_handle.clone()));
+            }
         }
     }
 }

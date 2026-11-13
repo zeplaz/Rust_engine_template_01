@@ -185,8 +185,69 @@ pub fn classify_world_water(hydro: &HydrologyResult, width: u32, height: u32) ->
                 out[i] = WaterClass::River;
             }
         }
+        widen_rivers_by_flow(hydro, w, h, &mut out);
     }
     out
+}
+
+/// Widest river half-width in cells beyond the centreline (a trunk is at most `2 * R + 1` cells wide).
+const RIVER_MAX_HALF_WIDTH: i32 = 2;
+/// A bank cell may sit at most this far above its channel cell (filled DEM) — rivers do not climb hills.
+const RIVER_BANK_RISE_MAX: f32 = 0.02;
+
+/// Channel width from flow: half-width grows with `sqrt(accumulation / channel threshold)` (hydraulic
+/// geometry, width ∝ discharge^0.5), so the head of a channel stays one cell wide and trunks near the
+/// mouth widen to `2 * RIVER_MAX_HALF_WIDTH + 1` cells. Banks only take dry / wetland cells that are not
+/// above the channel.
+fn widen_rivers_by_flow(hydro: &HydrologyResult, w: usize, h: usize, out: &mut [WaterClass]) {
+    let n = w * h;
+    if hydro.accumulation.len() != n {
+        return;
+    }
+    let base = hydro
+        .river_mask
+        .iter()
+        .zip(&hydro.accumulation)
+        .filter_map(|(m, a)| m.then_some(*a))
+        .fold(f32::INFINITY, f32::min);
+    if !base.is_finite() || base <= 0.0 {
+        return;
+    }
+    let filled = (hydro.filled_dem.len() == n).then_some(hydro.filled_dem.as_slice());
+    let mut banks: Vec<usize> = Vec::new();
+    for i in 0..n {
+        if !hydro.river_mask[i] {
+            continue;
+        }
+        let r = (((hydro.accumulation[i] / base).sqrt() - 1.0) * 0.5).floor() as i32;
+        let r = r.clamp(0, RIVER_MAX_HALF_WIDTH);
+        if r == 0 {
+            continue;
+        }
+        let (x, y) = ((i % w) as i32, (i / w) as i32);
+        for dy in -r..=r {
+            for dx in -r..=r {
+                if dx * dx + dy * dy > r * r {
+                    continue;
+                }
+                let (nx, ny) = (x + dx, y + dy);
+                if nx < 0 || ny < 0 || nx >= w as i32 || ny >= h as i32 {
+                    continue;
+                }
+                let j = ny as usize * w + nx as usize;
+                if !matches!(out[j], WaterClass::Dry | WaterClass::Wetland) {
+                    continue;
+                }
+                if filled.is_some_and(|f| f[j] > f[i] + RIVER_BANK_RISE_MAX) {
+                    continue;
+                }
+                banks.push(j);
+            }
+        }
+    }
+    for j in banks {
+        out[j] = WaterClass::River;
+    }
 }
 
 /// [`classify_world_water`] plus the terrain rule that keeps the sim and the drawn map on one truth: a land

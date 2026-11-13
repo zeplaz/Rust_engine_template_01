@@ -91,6 +91,9 @@ pub fn spawn_procedural_build_on_site_operational(
                 crate::economy::site_placement::SiteWorldTransformApplied,
             ));
         }
+        // Module children carry `Visibility` (WorldAssetRoot scenes); the site parent must too or
+        // visibility propagation breaks (Bevy B0004). `insert_if_new` keeps any existing state.
+        commands.entity(site_entity).insert_if_new(Visibility::default());
 
         let instances = instances_for_operational_site(
             spec,

@@ -15,7 +15,7 @@ use crate::strategic::{
 };
 use crate::construction::ToolContext;
 use crate::gui::hud::{
-    tool_context_uses_icon_atlas, BuildRailRoot, BuildRailToolIcon, BuildRailToolLabel,
+    BuildRailRoot, BuildRailToolLabel,
     BuildRailToolSlot, ContextTrayBodyLine, ContextTrayBodyRoot,
     ContextTrayRoot, ContextTrayTab, ContextTrayTabButton, ContextTrayTabLabel, IconId,
     LogisticsVehicleChip, LogisticsVehicleChipIcon, LogisticsVehicleChipLabel,
@@ -731,18 +731,8 @@ fn spawn_simulation_command_shell(
                                     BuildRailToolSlot(tool),
                                 ))
                                 .with_children(|b| {
-                                    if tool_context_uses_icon_atlas(tool) {
-                                        b.spawn((
-                                            Node {
-                                                width: Val::Px(32.0),
-                                                height: Val::Px(32.0),
-                                                ..default()
-                                            },
-                                            BuildRailToolIcon,
-                                            bevy::ui::widget::ImageNode::default(),
-                                            Visibility::Hidden,
-                                        ));
-                                    }
+                                    // Text-only rail: an always-hidden 32px icon slot still took
+                                    // layout space and left an empty box above the word.
                                     b.spawn((
                                         Text::new(tool.label()),
                                         TextFont::from_font_size(10.0).with_font(font.clone()),
