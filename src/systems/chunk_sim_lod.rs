@@ -7,6 +7,7 @@ use bevy::prelude::*;
 
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use crate::systems::fire::ChunkSurfaceFire;
+use crate::systems::sim_attention::SimAttentionFrame;
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 
@@ -47,15 +48,18 @@ pub(crate) fn spawn_chunk_sim_lod_on_new_chunk(
 }
 
 /// Uses **current** [`ChunkWeather`] + [`ChunkSurfaceFire`] (end of last tick) to pick tier for *this* tick’s scaled dt.
+/// Reads [`SimAttentionFrame`] RO — player-focus chunks are never left `Dormant`.
 pub fn chunk_sim_lod_refresh(
+    attention: Option<Res<SimAttentionFrame>>,
     mut q: Query<(
+        &Chunk,
         Option<&ChunkCellMatrix>,
         Option<&ChunkSurfaceFire>,
         Option<&ChunkWeather>,
         &mut ChunkSimLod,
     )>,
 ) {
-    for (matrix_opt, fire_opt, wx_opt, mut lod) in &mut q {
+    for (chunk, matrix_opt, fire_opt, wx_opt, mut lod) in &mut q {
         let fire = fire_opt.copied().unwrap_or_default();
         let wx = wx_opt.cloned().unwrap_or_default();
 
@@ -85,6 +89,15 @@ pub fn chunk_sim_lod_refresh(
         } else {
             ChunkSimLod::Normal
         };
+
+        // Player theater hint: do not starve focused chunks to Dormant.
+        if matches!(*lod, ChunkSimLod::Dormant) {
+            if let Some(att) = attention.as_ref() {
+                if att.in_player_focus_chunks(chunk.coord) {
+                    *lod = ChunkSimLod::Normal;
+                }
+            }
+        }
     }
 }
 

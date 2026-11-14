@@ -1,0 +1,19 @@
+{
+    "asset_name": "UAS battery plant",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Produces drone battery packs for UAS assembly.",
+    "supply_chain": "uas_assembly",
+    "supply_chain_role": "uas_battery",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 2,
+    "building_height": 1,
+    "construction_cost": 1400,
+    "power_generation": 0,
+    "power_consumption": 28,
+    "produces_resources": ["drone_battery"],
+    "consumes_resources": ["Aluminum", "Chemicals", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

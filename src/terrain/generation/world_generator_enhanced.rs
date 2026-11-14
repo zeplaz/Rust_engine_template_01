@@ -1354,10 +1354,10 @@ fn world_gen_apply_completion(
     for WorldGenCompletedEvent(phase) in events.read() {
         match phase {
             WorldGenPhase::Preview => {
-                NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::PreviewReady);
+                NextState::set_if_different(&mut *next_flow, WorldGenFlowState::PreviewReady);
             }
             WorldGenPhase::Full => {
-                NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::FullReady);
+                NextState::set_if_different(&mut *next_flow, WorldGenFlowState::FullReady);
             }
         }
     }
@@ -1430,7 +1430,7 @@ fn cancel_active_world_gen_on_request(
     progress.fraction = 0.0;
     progress.label.clear();
     despawn_generated_world_entities(&mut commands, &world_roots);
-    NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::Idle);
+    NextState::set_if_different(&mut *next_flow, WorldGenFlowState::Idle);
     lifecycle.park_uninitialized();
 }
 
@@ -1487,7 +1487,7 @@ fn apply_generate_world_request(
             continue;
         }
         if promote_idle_to_setup {
-            NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::NewWorldSetup);
+            NextState::set_if_different(&mut *next_flow, WorldGenFlowState::NewWorldSetup);
         }
         params.clone_from(&ev.params);
         pending.0 = Some(ev.phase);

@@ -3,6 +3,8 @@
 use std::collections::HashSet;
 
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 use bevy::render::{
     extract_resource::ExtractResource,
     render_asset::RenderAssets,
@@ -21,6 +23,7 @@ use crate::systems::sim_control::SimStepStamp;
 
 /// Main-world extract payload mirrored into the render world each frame.
 #[derive(Resource, Clone, Default, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct AtmospherePartialGpuExtract {
     pub uploads: Vec<GpuPreparedPartialUpload>,
     pub partial_dispatch_origin: UVec2,

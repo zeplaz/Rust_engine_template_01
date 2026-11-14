@@ -179,6 +179,21 @@ pub struct LogisticsOrderSim {
     /// Bumped by every [`Self::apply`] — with `tick` it fingerprints state for snapshot rebuilds.
     #[serde(default)]
     pub command_seq: u64,
+    /// W4: haul speed scale from weather (1.0 = dry). Not persisted — reset each session.
+    #[serde(skip)]
+    pub weather_haul_mul: f32,
+    /// FIRE-ENTITY-1: cumulative heat×suscept per vehicle (fleet loss ladder).
+    #[serde(skip)]
+    pub vehicle_fire_accum: BTreeMap<VehicleId, f32>,
+    #[serde(skip)]
+    pub fire_delayed_trips: u64,
+    #[serde(skip)]
+    pub vehicles_lost_to_fire: u64,
+    #[serde(skip)]
+    pub cargo_lost_to_fire: u64,
+    /// HAUL-AMPLIFY-1: per-owner capacity scale from formations (1.0 default). Not persisted.
+    #[serde(skip)]
+    pub haul_capacity_mul_by_owner: BTreeMap<OwnerId, f32>,
     next_order: u32,
     next_vehicle: u32,
 }
@@ -188,8 +203,109 @@ impl LogisticsOrderSim {
     pub fn new(config: SimConfig) -> Self {
         Self {
             config,
+            weather_haul_mul: 1.0,
             ..Default::default()
         }
+    }
+
+    /// Effective trip capacity after HAUL-AMPLIFY-1 owner mul.
+    #[must_use]
+    pub fn effective_capacity_units(&self, owner: OwnerId, base: u32) -> u32 {
+        let mul = self
+            .haul_capacity_mul_by_owner
+            .get(&owner)
+            .copied()
+            .unwrap_or(1.0)
+            .clamp(1.0, 1.5);
+        ((base as f32) * mul).round().max(1.0) as u32
+    }
+
+    /// Apply mid-leg fire hits: delay → cargo dump → fleet remove (deterministic thresholds).
+    /// `hits` are `(vehicle, heat01)` sampled at interpolated trip xz.
+    pub fn apply_vehicle_fire_hits(&mut self, hits: &[(VehicleId, f32)], suscept: f32) {
+        let suscept = suscept.clamp(0.05, 1.0);
+        let mut lost: Vec<VehicleId> = Vec::new();
+        for &(vid, heat) in hits {
+            let exposure = (heat * suscept).clamp(0.0, 1.0);
+            if exposure < 0.08 {
+                continue;
+            }
+            let Some(v) = self.vehicles.get_mut(&vid) else {
+                continue;
+            };
+            let hauling = matches!(v.phase, VehiclePhase::Hauling(_));
+            let travel = matches!(
+                v.phase,
+                VehiclePhase::ToPickup(_) | VehiclePhase::Hauling(_)
+            );
+            if !travel {
+                continue;
+            }
+            if let VehiclePhase::ToPickup(leg) | VehiclePhase::Hauling(leg) = &mut v.phase {
+                let add = 1u32.saturating_add((exposure * 3.0) as u32);
+                leg.remaining = leg.remaining.saturating_add(add);
+                self.fire_delayed_trips = self.fire_delayed_trips.saturating_add(1);
+            }
+            let dump_asg = if exposure >= 0.28 && hauling {
+                v.assignment.clone()
+            } else {
+                None
+            };
+            if let Some(a) = dump_asg {
+                let dump = a.load;
+                if dump > 0 {
+                    if let Some(asg) = self.vehicles.get_mut(&vid).and_then(|v| v.assignment.as_mut())
+                    {
+                        asg.load = 0;
+                    }
+                    let dst = self.stock.entry_mut(a.sink, &a.cargo);
+                    dst.inbound = dst.inbound.saturating_sub(dump);
+                    if let Some(o) = self.orders.get_mut(&a.order) {
+                        o.stats.in_flight = o.stats.in_flight.saturating_sub(dump);
+                        o.stats.lost = o.stats.lost.saturating_add(dump);
+                    }
+                    self.cargo_lost_to_fire =
+                        self.cargo_lost_to_fire.saturating_add(u64::from(dump));
+                }
+            }
+            let accum = self.vehicle_fire_accum.entry(vid).or_insert(0.0);
+            *accum = (*accum + exposure * 0.35).min(2.0);
+            if *accum >= 0.9 {
+                lost.push(vid);
+            }
+        }
+        for vid in lost {
+            self.destroy_vehicle_to_fire(vid);
+        }
+    }
+
+    fn destroy_vehicle_to_fire(&mut self, vid: VehicleId) {
+        let Some(v) = self.vehicles.remove(&vid) else {
+            return;
+        };
+        self.vehicle_fire_accum.remove(&vid);
+        if let Some(a) = v.assignment {
+            if v.phase.is_loaded() {
+                let dst = self.stock.entry_mut(a.sink, &a.cargo);
+                dst.inbound = dst.inbound.saturating_sub(a.load);
+                if let Some(o) = self.orders.get_mut(&a.order) {
+                    o.stats.in_flight = o.stats.in_flight.saturating_sub(a.load);
+                    o.stats.lost = o.stats.lost.saturating_add(a.load);
+                    o.stats.trips_in_flight = o.stats.trips_in_flight.saturating_sub(1);
+                }
+                self.cargo_lost_to_fire = self.cargo_lost_to_fire.saturating_add(u64::from(a.load));
+            } else {
+                let src = self.stock.entry_mut(a.source, &a.cargo);
+                src.reserved_out = src.reserved_out.saturating_sub(a.load);
+                let dst = self.stock.entry_mut(a.sink, &a.cargo);
+                dst.inbound = dst.inbound.saturating_sub(a.load);
+                if let Some(o) = self.orders.get_mut(&a.order) {
+                    o.stats.in_flight = o.stats.in_flight.saturating_sub(a.load);
+                    o.stats.trips_in_flight = o.stats.trips_in_flight.saturating_sub(1);
+                }
+            }
+        }
+        self.vehicles_lost_to_fire = self.vehicles_lost_to_fire.saturating_add(1);
     }
 
     // ── commands ────────────────────────────────────────────────────────────────
@@ -656,7 +772,12 @@ impl LogisticsOrderSim {
                 v.phase = VehiclePhase::Loading(Leg::new(load_ticks));
             }
             VehiclePhase::Loading(_) => {
-                let speed = v.speed_mps;
+                let mul = if self.weather_haul_mul <= 0.0 {
+                    1.0
+                } else {
+                    self.weather_haul_mul.clamp(0.25, 1.0)
+                };
+                let speed = v.speed_mps * mul;
                 let src = self.stock.entry_mut(a.source, &a.cargo);
                 let actual = a.load.min(src.on_hand);
                 src.on_hand -= actual;
@@ -964,7 +1085,8 @@ impl LogisticsOrderSim {
                     );
                     continue;
                 };
-                let capacity = self.vehicles[&vid].capacity_units;
+                let base_cap = self.vehicles[&vid].capacity_units;
+                let capacity = self.effective_capacity_units(owner, base_cap);
                 let held_now = held.get(&id).copied().unwrap_or(0);
                 if !self.load_worth_a_trip(id, capacity, need, available, held_now) {
                     reason.insert(id, Some(WaitReason::FillingLoad));
@@ -978,7 +1100,7 @@ impl LogisticsOrderSim {
                         }
                     }
                 }
-                let load = self.vehicles[&vid].capacity_units.min(need).min(available);
+                let load = capacity.min(need).min(available);
                 self.stock.entry_mut(source, &cargo).reserved_out += load;
                 self.stock.entry_mut(sink, &cargo).inbound += load;
                 let v = self.vehicles.get_mut(&vid).expect("picked");

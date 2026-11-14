@@ -7,6 +7,7 @@
 
 use bevy::math::IVec2;
 use bevy::prelude::*;
+use bevy::render::RenderApp;
 use bevy::render::extract_resource::ExtractResource;
 use std::collections::HashMap;
 
@@ -377,6 +378,7 @@ impl WeatherProjectionNode {
 
 /// Root graph resource: orchestrates all projection nodes.
 #[derive(Resource, Debug, Clone, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct RenderProjectionGraph {
     pub fire: FireProjectionNode,
     pub smoke: SmokeProjectionNode,

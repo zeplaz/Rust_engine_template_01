@@ -1,0 +1,19 @@
+{
+    "asset_name": "Missile body plant",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Assembles missile bodies from seekers, warheads, and airframe kits.",
+    "supply_chain": "missile_assembly",
+    "supply_chain_role": "missile_body",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 4,
+    "building_size_y": 3,
+    "building_height": 1,
+    "construction_cost": 2400,
+    "power_generation": 0,
+    "power_consumption": 40,
+    "produces_resources": ["missile_body"],
+    "consumes_resources": ["Aluminum", "missile_seeker", "missile_warhead", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

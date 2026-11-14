@@ -1,6 +1,8 @@
 //! Weather precip GPU frame — climate-fed + zoom-banded streaks.
 
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 use bevy::render::extract_resource::ExtractResource;
 
 use crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadInstance;
@@ -10,6 +12,7 @@ use crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadInstance;
 /// **Single writer:** [`super::extract::fill_weather_precip_frame_from_climate`].
 /// `gpu_authority` is set by [`super::draw::sync_weather_precip_draw_globals`].
 #[derive(Resource, Clone, Debug, Default, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct WeatherPrecipFrame {
     pub mean_rain: f32,
     pub mean_snow: f32,

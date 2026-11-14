@@ -2,6 +2,8 @@
 
 use bevy::math::Vec4;
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
@@ -27,6 +29,7 @@ pub struct EcologyOverlayGpuRow {
 
 /// CPU-side domain overlay upload payload (projection → registry).
 #[derive(Resource, Debug, Clone, ExtractResource, Default)]
+#[extract_app(RenderApp)]
 pub struct DomainOverlayGpuFrame {
     pub stamp: SimStepStamp,
     pub logistics_rows: Vec<LogisticsOverlayGpuRow>,

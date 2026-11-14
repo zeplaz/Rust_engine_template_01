@@ -10,6 +10,7 @@
 //! consumers; only [`crate::systems::atmosphere::visual_extract::publish_climate_visual_aggregate`] scans those components.
 use bevy::math::IVec2;
 use bevy::prelude::*;
+use bevy::render::RenderApp;
 use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
@@ -164,6 +165,7 @@ pub struct SimFireEmitterVisualExtract {
 
 /// Non-empty chunk smoke cells for fog / volume sampling.
 #[derive(Resource, Default, Clone, Debug, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct SimChunkSmokeVisualExtract {
     pub instances: Vec<ChunkSmokeGpu>,
 }

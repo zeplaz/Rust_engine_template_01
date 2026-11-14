@@ -16,6 +16,7 @@ use std::borrow::Cow;
 use bevy::asset::AssetServer;
 use bevy::core_pipeline::{Core2d, core_2d::CORE_2D_DEPTH_FORMAT};
 use bevy::prelude::*;
+
 use bevy::render::{
     camera::ExtractedCamera,
     render_resource::{
@@ -29,7 +30,7 @@ use bevy::render::{
         StencilState, StoreOp, TextureFormat, TextureSampleType, UniformBuffer, VertexState,
     },
     renderer::{RenderContext, RenderDevice, RenderQueue, ViewQuery},
-    view::{ExtractedView, Msaa, ViewDepthTexture, ViewTarget},
+    view::{ExtractedView, Msaa, ViewDepthStencilTexture, ViewTarget},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 use bevy::render::{
@@ -71,6 +72,7 @@ fn msaa_index(samples: u32) -> usize {
 
 /// Core2d host marker — terrain instanced pass runs on views with this component.
 #[derive(Component, Clone, Copy, Default, Reflect, ExtractComponent)]
+#[extract_app(RenderApp)]
 #[reflect(Component)]
 pub struct TerrainInstancedRenderHost;
 
@@ -83,6 +85,7 @@ pub struct TerrainTileInstance {
 }
 
 #[derive(Resource, Clone, Copy, Default, ExtractResource, bevy::render::render_resource::ShaderType)]
+#[extract_app(RenderApp)]
 pub struct TerrainInstancedDrawGlobals {
     pub view_proj: Mat4,
     pub instance_count: u32,
@@ -93,6 +96,7 @@ pub struct TerrainInstancedDrawGlobals {
 }
 
 #[derive(Resource, Default, Debug, Clone, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct TerrainInstanceMap {
     pub instances: Vec<TerrainTileInstance>,
     pub revision: u64,
@@ -326,12 +330,14 @@ fn init_terrain_instanced_pipeline(
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("vs_main")),
                     shader_defs: vec![],
+                    constants: vec![],
                     buffers: vec![],
                 },
                 fragment: Some(FragmentState {
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("fs_main")),
                     shader_defs: vec![],
+                    constants: vec![],
                     targets: vec![Some(ColorTargetState {
                         format: fmt,
                         blend: None,
@@ -463,7 +469,7 @@ fn terrain_instanced_pass(
         &ExtractedCamera,
         &ExtractedView,
         &ViewTarget,
-        &ViewDepthTexture,
+        &ViewDepthStencilTexture,
         &Msaa,
         Has<TerrainInstancedRenderHost>,
     )>,

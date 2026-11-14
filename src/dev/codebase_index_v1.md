@@ -1,6 +1,8 @@
 # CODEBASE INDEX v1 — Rust files only (src/, ~991 files, ~196k LOC)
 # Generated 2026-07-03 by full-sweep. Companion files: plan_cleanup_v1.md (R#/S#/P#/T#/D#) ·
-# plan_schedule_sync_v1.md (SCH-E#/A#/T#/P#/D# schedule ordering).
+# plan_schedule_sync_v1.md (SCH-E#/A#/T#/P#/D# schedule ordering) ·
+# ref-book matrix hub: $REF_BOOKS_DIR\lookup\INDEX_MATRIX.md ·
+# plan_ref_books_upgrade_use_v1.md (book→engine-wide Sim→View→Render→UI; next: Slice A)
 #
 # ── CODE SYSTEM ──────────────────────────────────────────────────────────────
 # Entry code  = DOMAIN-SUB[-nn]     e.g. RN-PRT = render particles, SIM-FIR = fire sim

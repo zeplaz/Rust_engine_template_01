@@ -8,7 +8,7 @@ description: >-
   Bevy, ECS, SystemSet, schedule, ViewManager, viewport, render extraction, authority,
   par_iter, dual writer, fire overlay, projection graph.
 metadata:
-  bevy_version: "0.18"
+  bevy_version: "0.20"
 ---
 
 `⟦SYM⟧ lang⊳ $ref:prompts/SYMBOLIC_LANGUAGE.meta.md`

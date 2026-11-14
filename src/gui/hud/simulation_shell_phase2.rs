@@ -3,6 +3,7 @@
 //! Spec: `prompts/guides/ui/ui_phase0_panel_mocks_v1.md` § P1/P2/P3/P4.
 
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::{BuildStripState, ToolContext};
@@ -18,8 +19,10 @@ use crate::strategic::{
     ActiveMissions, NarrativeObservationBus, StrategicOverlayDisplayPolicy, WorldFields,
 };
 use crate::systems::sim_control::{SimControlState, SimTick};
+use crate::entities::production::power::failure_modes::RenewableWeatherFactors;
 use crate::systems::weather::{
-    format_tactical_wx_line, WeatherPlayerReadFrame, WeatherPrecipVisualSample,
+    format_ops_power_derate_line, format_tactical_wx_line, WeatherPlayerReadFrame,
+    WeatherPrecipVisualSample,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
@@ -495,6 +498,7 @@ fn update_ops_strip_zone_lines_system(
     player_log: Option<Res<crate::sim::effects::PlayerEventLog>>,
     weather: Option<Res<WeatherPrecipVisualSample>>,
     wx_read: Option<Res<WeatherPlayerReadFrame>>,
+    renewables: Option<Res<RenewableWeatherFactors>>,
     world_fields: Option<Res<WorldFields>>,
     tray: Res<ContextTrayState>,
     window: Query<&Window, With<bevy::window::PrimaryWindow>>,
@@ -606,10 +610,22 @@ fn update_ops_strip_zone_lines_system(
 
     let scarcity = world_fields.as_deref().map(|f| f.resource_scarcity).unwrap_or(0.5);
     let power_proxy = (1.0 - scarcity).clamp(0.0, 1.0);
-    let power_fp = (power_proxy * 100.0).round() as i32;
+    let wind_f = renewables
+        .as_ref()
+        .filter(|r| r.wind_n > 0)
+        .map(|r| r.wind_mean)
+        .unwrap_or(1.0);
+    let solar_f = renewables
+        .as_ref()
+        .filter(|r| r.solar_n > 0)
+        .map(|r| r.solar_mean)
+        .unwrap_or(1.0);
+    let power_fp = (power_proxy * 100.0).round() as i32
+        + (wind_f * 100.0).round() as i32 * 1_000
+        + (solar_f * 100.0).round() as i32 * 1_000_000;
     if cache.power_fp != Some(power_fp) {
         cache.power_fp = Some(power_fp);
-        cache.power_line = format!("PWR  {:.0}%", power_proxy * 100.0);
+        cache.power_line = format_ops_power_derate_line(power_proxy * 100.0, wind_f, solar_f);
         for mut t in qs.p4().iter_mut() {
             crate::gui::style::widgets::set_text_if_changed(&mut t, cache.power_line.clone());
         }

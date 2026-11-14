@@ -65,6 +65,50 @@ impl Default for ManufacturingBlueprintRegistry {
                 throughput_target: 3.0,
                 output_buffer_tag: Some(BUFFER_TAG_MINE_UNIT.into()),
             },
+            // D4b — UAS assembly line (drone subsystem fit).
+            ManufacturingBlueprint {
+                id: "mfg_uas_final_assembly_v1".into(),
+                domain: ManufacturingDomain::Custom,
+                process_tags: vec!["uas".into(), "assembly".into()],
+                throughput_target: 2.0,
+                output_buffer_tag: Some("drone_airframe".into()),
+            },
+            ManufacturingBlueprint {
+                id: "mfg_uas_battery_line_v1".into(),
+                domain: ManufacturingDomain::Custom,
+                process_tags: vec!["uas".into(), "battery".into()],
+                throughput_target: 6.0,
+                output_buffer_tag: Some("drone_battery".into()),
+            },
+            ManufacturingBlueprint {
+                id: "mfg_fiber_draw_v1".into(),
+                domain: ManufacturingDomain::Custom,
+                process_tags: vec!["uas".into(), "fiber".into()],
+                throughput_target: 4.0,
+                output_buffer_tag: Some("fiber_spool_km".into()),
+            },
+            // MISSILE-CATALOG-1 — seeker / warhead / body discrete lines.
+            ManufacturingBlueprint {
+                id: "mfg_missile_seeker_v1".into(),
+                domain: ManufacturingDomain::Custom,
+                process_tags: vec!["missile".into(), "seeker".into()],
+                throughput_target: 3.0,
+                output_buffer_tag: Some("missile_seeker".into()),
+            },
+            ManufacturingBlueprint {
+                id: "mfg_missile_warhead_v1".into(),
+                domain: ManufacturingDomain::Custom,
+                process_tags: vec!["missile".into(), "warhead".into()],
+                throughput_target: 2.5,
+                output_buffer_tag: Some("missile_warhead".into()),
+            },
+            ManufacturingBlueprint {
+                id: "mfg_missile_body_v1".into(),
+                domain: ManufacturingDomain::Custom,
+                process_tags: vec!["missile".into(), "body".into()],
+                throughput_target: 1.5,
+                output_buffer_tag: Some("missile_body".into()),
+            },
         ] {
             by_id.insert(bp.id.clone(), bp);
         }
@@ -100,6 +144,12 @@ pub fn manufacturing_blueprint_id_for_catalog(catalog_id: &str) -> Option<&'stat
         "utilities_coal_plant"
         | "grid_substation"
         | "grid_distribution_transformer" => Some("mfg_power_aux_v1"),
+        "uas_final_assembly" | "uas_assembly_plant" => Some("mfg_uas_final_assembly_v1"),
+        "battery_cell_line" | "uas_battery_plant" => Some("mfg_uas_battery_line_v1"),
+        "fiber_draw" | "uas_fiber_plant" => Some("mfg_fiber_draw_v1"),
+        "missile_seeker_plant" => Some("mfg_missile_seeker_v1"),
+        "missile_warhead_plant" => Some("mfg_missile_warhead_v1"),
+        "missile_body_plant" | "missile_assembly" => Some("mfg_missile_body_v1"),
         _ => None,
     }
 }
@@ -112,6 +162,44 @@ pub fn manufacturing_node_for_catalog(catalog_id: &str) -> Option<ManufacturingN
         local_efficiency: 1.0,
         current_throughput: 0.0,
     })
+}
+
+/// Catalog activation bundle: node + output buffers when the blueprint has an `output_buffer_tag`.
+#[must_use]
+pub fn manufacturing_bundle_for_catalog(
+    catalog_id: &str,
+    blueprints: &ManufacturingBlueprintRegistry,
+) -> Option<(ManufacturingNode, Option<ManufacturingOutputBuffers>)> {
+    let node = manufacturing_node_for_catalog(catalog_id)?;
+    let buffers = blueprints
+        .get(node.blueprint_id.as_str())
+        .and_then(|bp| bp.output_buffer_tag.as_ref())
+        .map(|_| ManufacturingOutputBuffers::default());
+    Some((node, buffers))
+}
+
+/// Discrete UAS / missile / fiber plants — ManufacturingNode is authority (no ResourceFlow double-count).
+#[must_use]
+pub fn catalog_is_discrete_mfg_plant(catalog_id: &str) -> bool {
+    matches!(
+        manufacturing_blueprint_id_for_catalog(catalog_id),
+        Some(
+            "mfg_uas_final_assembly_v1"
+                | "mfg_uas_battery_line_v1"
+                | "mfg_fiber_draw_v1"
+                | "mfg_missile_seeker_v1"
+                | "mfg_missile_warhead_v1"
+                | "mfg_missile_body_v1",
+        )
+    )
+}
+
+/// P7: ManufacturingNode may only attach through a real catalog id (never empty / builtin).
+#[must_use]
+pub fn catalog_id_allows_manufacturing_node(catalog_id: &str) -> bool {
+    !catalog_id.is_empty()
+        && !catalog_id.starts_with("builtin:")
+        && manufacturing_blueprint_id_for_catalog(catalog_id).is_some()
 }
 
 pub struct ManufacturingCorePlugin;
@@ -139,11 +227,21 @@ impl Plugin for ManufacturingCorePlugin {
 pub fn tick_manufacturing_nodes(
     clock: Res<SimStepClock>,
     blueprints: Res<ManufacturingBlueprintRegistry>,
+    attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
     mut nodes: Query<(&mut ManufacturingNode, Option<&mut ManufacturingOutputBuffers>)>,
 ) {
-    let scale = clock.due as f32;
+    let mut scale = clock.due as f32;
     if scale <= 0.0 {
         return;
+    }
+    // FIDELITY-1: throttle MFG when player theater inactive.
+    if let Some(a) = attention.as_ref() {
+        let tier = if a.player_theater_active {
+            crate::systems::sim_attention::AttentionTier::Full
+        } else {
+            crate::systems::sim_attention::AttentionTier::Aggregate
+        };
+        scale *= tier.work_scale().max(0.25);
     }
     for (mut node, buffers) in nodes.iter_mut() {
         let bp = blueprints.get(node.blueprint_id.as_str());
@@ -263,6 +361,48 @@ mod tests {
             Some("mfg_concrete_batch_v1")
         );
         assert!(manufacturing_blueprint_id_for_catalog("builtin:road").is_none());
+    }
+
+    #[test]
+    fn missile_catalog_maps_to_discrete_blueprints() {
+        assert_eq!(
+            manufacturing_blueprint_id_for_catalog("missile_seeker_plant"),
+            Some("mfg_missile_seeker_v1")
+        );
+        assert_eq!(
+            manufacturing_blueprint_id_for_catalog("missile_warhead_plant"),
+            Some("mfg_missile_warhead_v1")
+        );
+        assert_eq!(
+            manufacturing_blueprint_id_for_catalog("missile_body_plant"),
+            Some("mfg_missile_body_v1")
+        );
+        assert_eq!(
+            manufacturing_blueprint_id_for_catalog("missile_assembly"),
+            Some("mfg_missile_body_v1")
+        );
+        assert!(catalog_is_discrete_mfg_plant("missile_body_plant"));
+        assert!(!catalog_id_allows_manufacturing_node(""));
+        assert!(!catalog_id_allows_manufacturing_node("builtin:road"));
+        assert!(catalog_id_allows_manufacturing_node("missile_body_plant"));
+    }
+
+    #[test]
+    fn missile_body_tick_credits_missile_body_buffer() {
+        let mut app = step_app();
+        let (node, buffers) =
+            manufacturing_bundle_for_catalog("missile_body_plant", &ManufacturingBlueprintRegistry::default())
+                .expect("missile body bundle");
+        let e = app.world_mut().spawn((node, buffers.expect("buffers"))).id();
+        step(&mut app);
+        let buf = app
+            .world()
+            .get::<ManufacturingOutputBuffers>(e)
+            .expect("buffers");
+        assert!(
+            buf.get("missile_body") > 0.0,
+            "body plant must credit missile_body"
+        );
     }
 
     #[test]

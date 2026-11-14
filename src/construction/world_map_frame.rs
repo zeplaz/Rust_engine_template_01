@@ -181,6 +181,18 @@ fn collect_footprint_tiles(
             },
         );
     }
+    // BUILD-UX-1: facing/nose chevron overwrites fill so rotation reads at a glance.
+    let facing = color32_bevy(super::ghost_visual::footprint_facing_color());
+    for &tile in &requests.footprint_facing_tiles {
+        tiles.insert(
+            tile,
+            FootprintDraw {
+                tile,
+                fill: facing,
+                kind: FootprintTileColorKind::Valid,
+            },
+        );
+    }
     let mut ordered: Vec<_> = tiles.into_values().collect();
     ordered.sort_by(|a, b| a.tile.y.cmp(&b.tile.y).then(a.tile.x.cmp(&b.tile.x)));
     ordered

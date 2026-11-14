@@ -177,6 +177,7 @@ pub fn score_pressure_points_system(
     theaters: Res<TheaterBook>,
     balance: Res<FrontBalance>,
     forts: Option<Res<FortificationIndex>>,
+    attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
     overlays: Query<&ChunkStrategicOverlay>,
     mut book: ResMut<PressurePointBook>,
 ) {
@@ -213,9 +214,36 @@ pub fn score_pressure_points_system(
     let cover = |tile: IVec2, owner: u8| forts.as_ref().map_or(0.0, |f| f.cover_at(tile, owner, &balance));
     let mut points = Vec::new();
     for t in &theaters.theaters {
+        // FIDELITY-1: skip if both pair slots are Dormant; Aggregate rescores every other tick.
+        let tier = attention.as_ref().map_or(
+            crate::systems::sim_attention::AttentionTier::Full,
+            |a| {
+                let a0 = a.tier_for_faction_slot(t.pair.0);
+                let a1 = a.tier_for_faction_slot(t.pair.1);
+                match (a0, a1) {
+                    (
+                        crate::systems::sim_attention::AttentionTier::Dormant,
+                        crate::systems::sim_attention::AttentionTier::Dormant,
+                    ) => crate::systems::sim_attention::AttentionTier::Dormant,
+                    (crate::systems::sim_attention::AttentionTier::Full, _)
+                    | (_, crate::systems::sim_attention::AttentionTier::Full) => {
+                        crate::systems::sim_attention::AttentionTier::Full
+                    }
+                    _ => crate::systems::sim_attention::AttentionTier::Aggregate,
+                }
+            },
+        );
+        if !tier.allows_sortie_pulse() {
+            continue;
+        }
+        if !tier.allows_full_ai() && (book.source_tick % 2 == 1) {
+            continue;
+        }
         points.extend(score_theater(t, &fields, &cover, &balance.pressure, balance.tile_size_m()));
     }
-    book.points = points;
+    if !points.is_empty() || book.points.is_empty() {
+        book.points = points;
+    }
 }
 
 #[cfg(test)]

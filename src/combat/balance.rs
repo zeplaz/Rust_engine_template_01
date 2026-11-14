@@ -273,6 +273,16 @@ pub struct UnitProfile {
     pub speed_mps: f32,
     pub toe_personnel: u32,
     pub draw_kg_per_s: DrawRates,
+    /// W4: metres of impact drift per (m/s wind × s flight). Zero = no weather stamp offset.
+    #[serde(default)]
+    pub wind_drift_coef: f32,
+    /// Cap on wind speed used for artillery drift (m/s).
+    #[serde(default = "default_unit_max_wind_mps")]
+    pub max_wind_mps: f32,
+}
+
+fn default_unit_max_wind_mps() -> f32 {
+    40.0
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

@@ -1283,7 +1283,7 @@ fn world_gen_panel_flow_actions(
         match *act {
             WgAct::GeneratePreview if !is_busy && flow != WorldGenFlowState::FullReady => {
                 if matches!(flow, WorldGenFlowState::Idle) {
-                    NextState::set_if_neq(&mut res.next_flow, WorldGenFlowState::NewWorldSetup);
+                    NextState::set_if_different(&mut res.next_flow, WorldGenFlowState::NewWorldSetup);
                 }
                 res.preview_ui.window_open = true;
                 res.generate.write(GenerateWorldEvent {
@@ -1312,8 +1312,8 @@ fn world_gen_panel_flow_actions(
                 );
             }
             WgAct::EditMap if !is_busy && flow == WorldGenFlowState::FullReady => {
-                NextState::set_if_neq(&mut res.next_base, crate::engine::BaseState::Editor);
-                NextState::set_if_neq(&mut res.next_flow, WorldGenFlowState::Idle);
+                NextState::set_if_different(&mut res.next_base, crate::engine::BaseState::Editor);
+                NextState::set_if_different(&mut res.next_flow, WorldGenFlowState::Idle);
                 res.ui_state.visible = false;
             }
             WgAct::Discard
@@ -1322,7 +1322,7 @@ fn world_gen_panel_flow_actions(
             {
                 despawn_generated_world_entities(&mut commands, &roots);
                 // Back to parameter setup with the sheet still open (no blank screen).
-                NextState::set_if_neq(&mut res.next_flow, WorldGenFlowState::NewWorldSetup);
+                NextState::set_if_different(&mut res.next_flow, WorldGenFlowState::NewWorldSetup);
             }
             WgAct::CancelGen if is_busy => {
                 res.cancel.write(crate::gui::editor::world_gen_ui::CancelActiveWorldGenEvent);

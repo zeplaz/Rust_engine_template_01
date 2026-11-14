@@ -26,7 +26,7 @@ pub fn toggle_pause_menu_on_escape(
         return;
     }
     if *menu.get() == InGameMenuState::Pause {
-        NextState::set_if_neq(&mut *next_menu, InGameMenuState::Normal);
+        NextState::set_if_different(&mut *next_menu, InGameMenuState::Normal);
         pending.clear();
         return;
     }
@@ -42,7 +42,7 @@ pub fn toggle_pause_menu_on_escape(
     ) {
         return;
     }
-    NextState::set_if_neq(&mut *next_menu, InGameMenuState::Pause);
+    NextState::set_if_different(&mut *next_menu, InGameMenuState::Pause);
 }
 
 pub struct InGamePauseMenuPlugin;

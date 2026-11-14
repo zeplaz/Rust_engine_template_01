@@ -153,13 +153,25 @@ pub fn extract_glyph_for_burn(
     }
 }
 
+/// Sim ticks ≈ sim seconds ([`crate::systems::sim_control::SIM_STEP_MICROS`]).
+/// Old 30-tick (~30 s) steps made chunk veg flip scar→green in the same footprint as the fire.
+/// W2: scar holds for game days; pioneer green is seasonal, not minute-scale.
+const MACRO_SCAR_TICKS: u64 = 14 * 86_400; // 14 game days ash/snag
+const MACRO_NUCLEI_TICKS: u64 = 45 * 86_400;
+const MACRO_FRONT_TICKS: u64 = 120 * 86_400;
+const MACRO_CLOSING_TICKS: u64 = 240 * 86_400;
+
 fn macro_phase_after_ticks(ticks_since_cool: u64) -> RegrowthMacroPhase {
-    match ticks_since_cool {
-        0..=29 => RegrowthMacroPhase::Scar,
-        30..=59 => RegrowthMacroPhase::Nuclei,
-        60..=89 => RegrowthMacroPhase::Front,
-        90..=119 => RegrowthMacroPhase::Closing,
-        _ => RegrowthMacroPhase::Mature,
+    if ticks_since_cool < MACRO_SCAR_TICKS {
+        RegrowthMacroPhase::Scar
+    } else if ticks_since_cool < MACRO_NUCLEI_TICKS {
+        RegrowthMacroPhase::Nuclei
+    } else if ticks_since_cool < MACRO_FRONT_TICKS {
+        RegrowthMacroPhase::Front
+    } else if ticks_since_cool < MACRO_CLOSING_TICKS {
+        RegrowthMacroPhase::Closing
+    } else {
+        RegrowthMacroPhase::Mature
     }
 }
 
@@ -338,7 +350,13 @@ mod tests {
         assert!(burn.heat <= ACTIVE_BURN_HEAT_EPS);
         assert_eq!(burn.regrowth_macro_phase, RegrowthMacroPhase::Scar);
 
-        app.world_mut().resource_mut::<SimTick>().0 = 90;
+        // Still inside the multi-day scar window — must not pioneer-green in minutes.
+        app.world_mut().resource_mut::<SimTick>().0 = 50 + 3_600;
+        app.update();
+        let burn = app.world().get::<ActiveBurn>(entity).unwrap();
+        assert_eq!(burn.regrowth_macro_phase, RegrowthMacroPhase::Scar);
+
+        app.world_mut().resource_mut::<SimTick>().0 = 50 + MACRO_SCAR_TICKS;
         app.update();
         let burn = app.world().get::<ActiveBurn>(entity).unwrap();
         assert_eq!(burn.regrowth_macro_phase, RegrowthMacroPhase::Nuclei);

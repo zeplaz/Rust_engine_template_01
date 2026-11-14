@@ -11,6 +11,8 @@ pub use fuel::{fuel_material_def, FuelMaterialDef, FuelMaterialKind};
 pub use fuel_layer::FuelLayer;
 pub use scenario_hazard::ScenarioHazardLayer;
 pub use structure_fire::{
-    ammo_dump_profile, fuel_depot_profile, lithium_battery_warehouse, StructureFireProfile,
+    ammo_dump_profile, concrete_structure_profile, fuel_depot_profile, lithium_battery_warehouse,
+    profile_for_site_archetype, steel_structure_profile, unit_fire_susceptibility,
+    wood_structure_profile, StructureFireProfile, TRUCK_FIRE_SUSCEPTIBILITY,
 };
 pub use vegetation_fuel::{layer_fuel_mass, VegetationFuelLayer};

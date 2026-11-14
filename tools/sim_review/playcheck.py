@@ -27,10 +27,21 @@ _REPO = Path(__file__).resolve().parents[2]
 _OUT = _REPO / "debug_runs" / "sim_review"
 _CAPTURES = _REPO / "debug_runs" / "captures"
 _DUMP = _REPO / "debug_runs" / "sim_run_dump.json"
-_EXE_DEBUG = _REPO / "target" / "debug" / "proc_A_dine01.exe"
-_EXE_RELEASE = _REPO / "target" / "release" / "proc_A_dine01.exe"
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 _LEVEL = re.compile(r"\s(ERROR|WARN)\s+([\w:]+):\s*(.*)")
+
+
+def _cargo_target_dir() -> Path:
+    """Honor CARGO_TARGET_DIR (sandbox / CI) before the repo-local target/."""
+    env = os.environ.get("CARGO_TARGET_DIR")
+    if env:
+        return Path(env)
+    return _REPO / "target"
+
+
+def _exe_path(release: bool) -> Path:
+    root = _cargo_target_dir()
+    return root / ("release" if release else "debug") / "proc_A_dine01.exe"
 
 
 def say(msg: str) -> None:
@@ -76,8 +87,9 @@ def run_game(exe: Path, seed: str, frame: int, secs: int, scene: str, ticks: int
     log_path = _OUT / "playcheck_run.log"
     _OUT.mkdir(parents=True, exist_ok=True)
     with open(log_path, "w", encoding="utf-8", errors="replace") as log:
+        # --stay-open: FullCapture must not AppExit before dump ticks / playcheck kill.
         proc = subprocess.Popen(
-            [str(exe), "--test", scene], cwd=_REPO, env=env,
+            [str(exe), "--test", scene, "--stay-open"], cwd=_REPO, env=env,
             stdout=log, stderr=subprocess.STDOUT,
         )
         say(f"game started pid={proc.pid}; waiting for capture (limit {secs}s), log {log_path}")
@@ -134,9 +146,17 @@ def perf_lines(perf: dict) -> list[str]:
     return out
 
 
-def score() -> list[str]:
+def score(since: float) -> list[str]:
     if not _DUMP.exists():
         return ["no sim_run_dump.json written (did the game reach the simulation?)"]
+    try:
+        if _DUMP.stat().st_mtime < since:
+            return [
+                f"stale sim_run_dump.json (mtime before this run); "
+                f"game exited without a fresh dump — not scoring"
+            ]
+    except OSError:
+        return ["could not stat sim_run_dump.json"]
     r = subprocess.run(
         [sys.executable, str(Path(__file__).parent / "score_dump.py")],
         cwd=_REPO, capture_output=True, text=True,
@@ -161,13 +181,23 @@ def main() -> None:
     a = ap.parse_args()
     min_secs = a.min_secs if a.min_secs is not None else 360
 
-    exe = Path(a.exe) if a.exe else (_EXE_RELEASE if a.release else _EXE_DEBUG)
+    exe = Path(a.exe) if a.exe else _exe_path(a.release)
     if not a.no_build and not a.exe:
         build(a.release)
+    if not exe.is_file():
+        print(f"missing exe: {exe} (CARGO_TARGET_DIR={os.environ.get('CARGO_TARGET_DIR')!r})")
+        sys.exit(1)
+    say(f"using exe {exe}")
     t0 = time.time()
+    # Drop stale dump so an early capture / crash cannot score a previous run.
+    if _DUMP.exists():
+        try:
+            _DUMP.unlink()
+        except OSError:
+            pass
     lines = run_game(exe, a.seed, a.frame, a.secs, a.scene, a.ticks, min_secs)
     s = summarise_log(lines)
-    scored = score()
+    scored = score(t0)
 
     md = [f"# playcheck  {'release' if a.release else 'debug'} exe={exe.name} seed={a.seed} frame={a.frame} "
           f"scene={a.scene} ran={time.time() - t0:.0f}s", ""]

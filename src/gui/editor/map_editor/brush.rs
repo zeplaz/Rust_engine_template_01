@@ -161,7 +161,7 @@ impl Default for MapEditorTool {
 }
 
 pub(crate) fn sync_tool_to_substate(tool: &MapEditorTool, next_sub: &mut NextState<InGameEditorState>) {
-    NextState::set_if_neq(next_sub, tool.kind.to_in_game());
+    NextState::set_if_different(next_sub, tool.kind.to_in_game());
 }
 
 #[inline]

@@ -5,6 +5,7 @@ use std::borrow::Cow;
 use bevy::asset::AssetServer;
 use bevy::core_pipeline::{Core2d, core_2d::CORE_2D_DEPTH_FORMAT};
 use bevy::prelude::*;
+
 use bevy::render::render_resource::ShaderType;
 use bevy::render::{
     camera::ExtractedCamera,
@@ -22,7 +23,7 @@ use bevy::render::{
         TextureFormat, UniformBuffer, VertexState,
     },
     renderer::{RenderContext, RenderDevice, RenderQueue, ViewQuery},
-    view::{ExtractedView, Msaa, ViewDepthTexture, ViewTarget},
+    view::{ExtractedView, Msaa, ViewDepthStencilTexture, ViewTarget},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
@@ -51,6 +52,7 @@ fn msaa_index(samples: u32) -> usize {
 
 /// Main-world globals for the fire particle raster pass (extracted each frame).
 #[derive(Resource, Clone, Copy, Default, ExtractResource, ShaderType)]
+#[extract_app(RenderApp)]
 pub struct FireParticleDrawGlobals {
     pub view_proj: Mat4,
     pub vertex_count: u32,
@@ -208,12 +210,14 @@ fn init_fire_particle_raster_pipeline(
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("vs_main")),
                     shader_defs: vec![],
+                    constants: vec![],
                     buffers: vec![],
                 },
                 fragment: Some(FragmentState {
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("fs_main")),
                     shader_defs: vec![],
+                    constants: vec![],
                     targets: vec![Some(ColorTargetState {
                         format: fmt,
                         // D-F08 A: additive-leaning hot cores + alpha embers.
@@ -340,7 +344,7 @@ fn fire_particle_raster_pass(
         &ExtractedCamera,
         &ExtractedView,
         &ViewTarget,
-        &ViewDepthTexture,
+        &ViewDepthStencilTexture,
         &Msaa,
         Has<TileDebugRenderHost>,
     )>,

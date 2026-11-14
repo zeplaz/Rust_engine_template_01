@@ -1,0 +1,19 @@
+{
+    "asset_name": "UAS final assembly",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Assembles drone airframes from batteries and airframe kits.",
+    "supply_chain": "uas_assembly",
+    "supply_chain_role": "uas_final_assembly",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 4,
+    "building_size_y": 3,
+    "building_height": 1,
+    "construction_cost": 2200,
+    "power_generation": 0,
+    "power_consumption": 35,
+    "produces_resources": ["drone_airframe"],
+    "consumes_resources": ["Aluminum", "drone_battery", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

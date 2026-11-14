@@ -61,8 +61,8 @@ pub fn execute_pause_exit_to_world_gen(
     }
     despawn_generated_world_entities(commands, world_roots);
     chrome_latch.reset_for_new_flow();
-    NextState::set_if_neq(next_base, BaseState::Editor);
-    NextState::set_if_neq(next_flow, WorldGenFlowState::NewWorldSetup);
+    NextState::set_if_different(next_base, BaseState::Editor);
+    NextState::set_if_different(next_flow, WorldGenFlowState::NewWorldSetup);
     next_app.set(AppState::WorldGen);
     next_wg.set(WorldGenState::Preview);
     next_pause.set(PauseState::Off);
@@ -89,7 +89,7 @@ pub fn execute_pause_exit_to_main_menu(
     }
     despawn_generated_world_entities(commands, world_roots);
     ux_return_to_main_menu(next_app, next_wg, next_pause, chrome_latch);
-    NextState::set_if_neq(next_base, BaseState::MainMenu);
-    NextState::set_if_neq(next_flow, WorldGenFlowState::Idle);
-    NextState::set_if_neq(next_main_menu, MainMenuState::MainMenu);
+    NextState::set_if_different(next_base, BaseState::MainMenu);
+    NextState::set_if_different(next_flow, WorldGenFlowState::Idle);
+    NextState::set_if_different(next_main_menu, MainMenuState::MainMenu);
 }

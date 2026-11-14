@@ -98,6 +98,12 @@ mod tests {
             "machinery works",
             "cement kiln",
             "aggregate",
+            "uas battery",
+            "uas fiber",
+            "uas final assembly",
+            "missile seeker",
+            "missile warhead",
+            "missile body",
         ] {
             assert!(
                 labels.iter().any(|l| l.contains(expect)),

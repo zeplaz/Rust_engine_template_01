@@ -65,7 +65,15 @@ impl CargoKind {
             CargoClass::Personnel
         } else if matches!(t.as_str(), "fuel" | "water" | "oil" | "diesel") {
             CargoClass::Liquid
-        } else if matches!(t.as_str(), "ammo" | "munitions" | "shells" | "explosives") {
+        } else if matches!(t.as_str(), "ammo" | "munitions" | "shells" | "explosives")
+            || t.starts_with("drone_airframe")
+            || t.starts_with("drone_warhead_")
+            || t.starts_with("drone_seeker_")
+            || t.starts_with("missile_")
+            || t == "drone_battery"
+            || t == "fiber_spool_km"
+            || t == "uas_spare_kit"
+        {
             CargoClass::Munitions
         } else if t.ends_with("_unit") {
             CargoClass::Deployable

@@ -7,6 +7,9 @@
 //! - [`ChunkWeather`] — per-chunk projection of the field for existing readers.
 //! - **Precipitation visuals** (overlay tint; GPU streaks via `render::weather_vfx`): [`WeatherVisualPlugin`](weather_visual::WeatherVisualPlugin), [`WeatherVisualSettings`](weather_visual::WeatherVisualSettings).
 
+mod air_ops;
+mod air_presentation_frame;
+mod air_presentation_policy;
 mod camera_local;
 mod chunk_weather;
 mod field;
@@ -15,6 +18,22 @@ mod player_read_hud;
 mod systems;
 mod tuning;
 mod weather_visual;
+
+pub use air_ops::{
+    air_fuel_mul, air_ground_speed_mul, airlift_hold, collect_chunk_smoke_density,
+    crosswind_component, evaluate_grounding, headwind_component, link_quality, load_air_ops_tuning,
+    missile_weather_drift, parse_air_ops_tuning, sensor_range_mul, smoke01_at_tile, smoke01_resolve,
+    sortie_envelopes_ok, sync_air_ops_weather_status, tile_to_smoke_chunk, AirOpsProfile,
+    AirOpsProfileId, AirOpsTuning, AirOpsWeatherStatus, GroundingReason, GroundingVerdict,
+    LinkModality, SensorKind, AIR_OPS_TUNING_RON, SMOKE_SAMPLE_CELLS_PER_CHUNK,
+};
+pub use air_presentation_policy::{
+    AirGeometryTier, AirPresentationBand, AirPresentationPolicy, AirPresentationSortieHint,
+    FlightPathFidelity,
+};
+pub use air_presentation_frame::{
+    sync_air_presentation_frame, AirPresentationFrame, AirPresentationMark, AirPresentationZoom,
+};
 
 pub use camera_local::{
     publish_camera_local_weather_sample, rain_snow01_from_sample, CameraLocalWeatherSample,
@@ -59,12 +78,23 @@ impl Plugin for WeatherSimulationPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<WeatherTuning>()
+            .init_resource::<AirOpsTuning>()
+            .init_resource::<AirOpsWeatherStatus>()
+            .init_resource::<AirPresentationPolicy>()
+            .init_resource::<AirPresentationFrame>()
+            .init_resource::<AirPresentationZoom>()
             .init_resource::<WeatherField>()
             .init_resource::<CameraLocalWeatherSample>()
             .init_resource::<WeatherOverlayBakeState>()
             .init_resource::<WeatherPresetRequest>()
             .init_resource::<PendingWeatherRestore>()
-            .add_systems(Startup, systems::load_weather_tuning_on_startup)
+            .add_systems(
+                Startup,
+                (
+                    systems::load_weather_tuning_on_startup,
+                    air_ops::load_air_ops_tuning_on_startup,
+                ),
+            )
             .add_systems(
                 Update,
                 (
@@ -72,6 +102,7 @@ impl Plugin for WeatherSimulationPlugin {
                     weather_field_step,
                     project_chunk_weather,
                     bake_weather_overlay_from_field,
+                    sync_air_ops_weather_status,
                 )
                     .chain()
                     .in_set(ChunkEnvironmentSet::Weather),
@@ -79,6 +110,10 @@ impl Plugin for WeatherSimulationPlugin {
             .add_systems(
                 Update,
                 sync_weather_projection_node.after(bake_weather_overlay_from_field),
+            )
+            .add_systems(
+                Update,
+                sync_air_presentation_frame.after(sync_air_ops_weather_status),
             );
     }
 }

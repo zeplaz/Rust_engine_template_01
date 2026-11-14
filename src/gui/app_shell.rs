@@ -23,6 +23,7 @@ use crate::terrain::generation::world_generator_enhanced::{
 use bevy::app::AppExit;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 
 /// Root entity for the Bevy main-menu layout (despawned when leaving front-end menu).
 #[derive(Component)]
@@ -361,7 +362,7 @@ fn begin_menu_debug_world_gen(
     }
     despawn_generated_world_entities(commands, world_roots);
     bootstrap.harness.logistics_visual_seeded = false;
-    NextState::set_if_neq(
+    NextState::set_if_different(
         &mut *bootstrap.next_world_flow,
         WorldGenFlowState::Idle,
     );
@@ -426,15 +427,15 @@ fn handle_main_menu_buttons(
                 );
             }
             MainMenuButtonAction::OpenLoad => {
-                NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::LoadingSave);
-                NextState::set_if_neq(&mut *next_menu, MainMenuState::Load);
+                NextState::set_if_different(&mut *next_world_flow, WorldGenFlowState::LoadingSave);
+                NextState::set_if_different(&mut *next_menu, MainMenuState::Load);
                 info!(
                     "Load World: procedural generation is disabled in this flow; deserialize when saves are wired."
                 );
             }
             MainMenuButtonAction::NewMapEditor => {
-                NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
-                NextState::set_if_neq(&mut *next_base, BaseState::Editor);
+                NextState::set_if_different(&mut *next_world_flow, WorldGenFlowState::Idle);
+                NextState::set_if_different(&mut *next_base, BaseState::Editor);
             }
             MainMenuButtonAction::Quit => {
                 app_exit.write(AppExit::Success);
@@ -513,8 +514,8 @@ fn handle_load_menu_buttons(
         }
         match *action {
             LoadMenuButtonAction::Cancel => {
-                NextState::set_if_neq(&mut *next_menu, MainMenuState::MainMenu);
-                NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
+                NextState::set_if_different(&mut *next_menu, MainMenuState::MainMenu);
+                NextState::set_if_different(&mut *next_world_flow, WorldGenFlowState::Idle);
             }
             LoadMenuButtonAction::EditorStub => {
                 info!(
@@ -522,9 +523,9 @@ fn handle_load_menu_buttons(
                     path.0.as_str()
                 );
                 despawn_generated_world_entities(&mut commands, &world_roots);
-                NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
-                NextState::set_if_neq(&mut *next_base, BaseState::Editor);
-                NextState::set_if_neq(&mut *next_menu, MainMenuState::MainMenu);
+                NextState::set_if_different(&mut *next_world_flow, WorldGenFlowState::Idle);
+                NextState::set_if_different(&mut *next_base, BaseState::Editor);
+                NextState::set_if_different(&mut *next_menu, MainMenuState::MainMenu);
             }
             LoadMenuButtonAction::SimStub => {
                 info!(
@@ -532,9 +533,9 @@ fn handle_load_menu_buttons(
                     path.0.as_str()
                 );
                 despawn_generated_world_entities(&mut commands, &world_roots);
-                NextState::set_if_neq(&mut *next_world_flow, WorldGenFlowState::Idle);
-                NextState::set_if_neq(&mut *next_base, BaseState::Simulation);
-                NextState::set_if_neq(&mut *next_menu, MainMenuState::MainMenu);
+                NextState::set_if_different(&mut *next_world_flow, WorldGenFlowState::Idle);
+                NextState::set_if_different(&mut *next_base, BaseState::Simulation);
+                NextState::set_if_different(&mut *next_menu, MainMenuState::MainMenu);
             }
         }
     }

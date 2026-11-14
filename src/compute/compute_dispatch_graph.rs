@@ -34,6 +34,8 @@ pub struct ComputeContext<'a> {
     pub agents: &'a AgentFrame,
     pub navigation: &'a NavFieldFrame,
     pub fire: &'a FireSimulationSnapshot,
+    /// FIDELITY-1 B6: soft cap from [`crate::systems::sim_attention::SimAttentionFrame::budget_path_units`].
+    pub path_budget: u32,
 }
 
 pub trait ComputeNodeTrait {
@@ -120,6 +122,7 @@ pub fn run_compute_dispatch_graph(
     lod: Res<WorldRepresentationFrame>,
     lod_map: Res<WorldLodMap>,
     fire: Res<FireSimulationSnapshot>,
+    attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
     mut agents: ResMut<AgentFrame>,
     mut navigation: ResMut<NavFieldFrame>,
     mut cadence: ResMut<ComputeDispatchCadence>,
@@ -136,6 +139,10 @@ pub fn run_compute_dispatch_graph(
     agents.stamp = fire.stamp;
     navigation.stamp = fire.stamp;
 
+    let path_budget = attention
+        .as_ref()
+        .map(|a| a.budget_path_units)
+        .unwrap_or(64);
     let ctx = ComputeContext {
         policy: &policy,
         lod: &lod,
@@ -143,6 +150,7 @@ pub fn run_compute_dispatch_graph(
         agents: &agents,
         navigation: &navigation,
         fire: &fire,
+        path_budget,
     };
     graph.dispatch(&ctx);
     advance_heat_diffusion_field(
@@ -220,6 +228,7 @@ mod tests {
             agents: &AgentFrame::default(),
             navigation: &NavFieldFrame::default(),
             fire: &fire,
+            path_budget: 64,
         };
         graph.dispatch(&ctx);
         assert!(!graph.fire_influence.dispatch_active);
@@ -240,6 +249,7 @@ mod tests {
             agents: &AgentFrame::default(),
             navigation: &NavFieldFrame::default(),
             fire: &fire,
+            path_budget: 64,
         };
         graph.dispatch(&ctx);
         assert!(graph.fire_influence.dispatch_active);
@@ -286,6 +296,7 @@ mod tests {
             agents: &AgentFrame::default(),
             navigation: &NavFieldFrame::default(),
             fire: &fire,
+            path_budget: 64,
         };
         graph.dispatch(&ctx);
         assert_eq!(graph.fire_influence.influence_chunk_count, 1);

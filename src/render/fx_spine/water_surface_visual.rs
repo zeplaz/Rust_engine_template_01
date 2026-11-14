@@ -6,6 +6,7 @@ use std::collections::HashSet;
 
 use bevy::math::Vec4;
 use bevy::prelude::*;
+use bevy::render::RenderApp;
 use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
@@ -474,6 +475,7 @@ impl WaterOverlayGpuInstance {
 
 /// Extracted draw payload for the water overlay pass.
 #[derive(Resource, Clone, Debug, Default, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct WaterOverlayDrawFrame {
     pub anim_time_secs: f32,
     pub zoom_alpha: f32,

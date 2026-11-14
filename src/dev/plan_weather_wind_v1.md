@@ -1,6 +1,6 @@
 # Plan: weather and wind field v1
 
-Status: W1 SHIPPED; W2 SHIPPED; **W3 SHIPPED** (2026-11-13: camera-local precip + wind lean, OverlayChannel::Wind bake, minimap weather wash, cloud sheets, tactical HUD readout); W4–W5 PLANNED. Owner: `coder` (sim), `designer` (overlay/HUD/clouds).
+Status: W1–W5 SHIPPED; **§4e D0 OPEN** (2026-11-13: drone Link/Sensor/Flight envelopes on air_ops — see [`plan_drone_subsystem_fit_v1.md`](plan_drone_subsystem_fit_v1.md)). Owner: `coder` (sim), `designer` (overlay/HUD/clouds).
 Units: metric throughout (m/s, mm/h, °C, m visibility).
 
 ## 1. What exists today (and why wind looks fake)
@@ -97,10 +97,8 @@ WeatherField::sample(pos_m: Vec2, sim_time: SimTimeMicros) -> WeatherSample {
    - fire VFX use local wind
    - delete `GlobalWind` and `PREVAILING_WIND_DIR`
 3. **W3 Visuals + player read:** see §4b.
-4. **W4 Combat / logistics / power:**
-   - artillery drift and dispersion, visibility ranges, mud mobility, truck weather speed, per-plant renewables
-5. **W5 Air / missile hooks:**
-   - grounding thresholds and the headwind model, landing with those units
+4. **W4 Combat / logistics / power:** see §4c.
+5. **W5 Air / missile hooks:** see §4d.
 
 ## 4a. W2 scope: fire behaviour (user-reported, 2026-11-13)
 
@@ -199,6 +197,60 @@ W3 makes the field **readable** without inventing a second weather extract.
 | HUD | Camera + voxel cursor pick | Top-down cursor via `ConstructionMapProjection` |
 
 **Rejected:** second ECS weather scan for VFX; AI-generated cloud art; volumetric voxels as a W3 requirement.
+
+## 4c. W4 scope: combat / logistics / power (2026-11-13)
+
+| Deliverable | Attach point | Notes |
+|---|---|---|
+| Artillery drift | `artillery_weather_stamp` → `sync_formation_zones_system` | Offset `Zone{Fire}` centre downwind; widen radius with fog/rain/gust. RON: `UnitProfile.wind_drift_coef` / `max_wind_mps` |
+| Engagement visibility | `Combatant.visibility_scale` in `resolve_step` | `0.35 + 0.65·vis·fog`; sampled from `WeatherField` at formation tile |
+| Mud mobility | `strategic_fields_coupling_tick` | `mobility_cost += 0.35·soil_moisture + 0.20·snow` (same writer as throughput) |
+| Truck haul speed | `LogisticsOrderSim.weather_haul_mul` | `weather_haul_speed_mul(sample)` before `travel_ticks` |
+| Renewables | `variable_renewable_placeholder` (already per-plant) | `RenewableWeatherFactors` + ops PWR derate; **no** `GlobalRenewableWeatherFactors` in Rust |
+| Dump / matrix | `artillery_drift_tiles`, `haul_weather_speed_mul`, `wind_cf_*` / `solar_cf_*` | Soft thresholds (calm maps may show zero arty drift) |
+
+**Authority:** `WeatherField::sample` / `ChunkWeather` projection only. Keep single `Zone{Fire}` writer.
+
+### Post-W4 fidelity
+
+| Layer | W4 | Later (W5+) |
+|---|---|---|
+| Artillery | Stamp drift (no shell flight entity) | True ballistic flight + impact events |
+| Haul | World-centre mul | Per-leg midpoint / road vs off-road graph |
+| Air | — | Grounding thresholds RON + headwind model (see §4d) |
+
+## 4d. W5 scope: air / missile hooks (2026-11-13)
+
+| Deliverable | Attach point | Notes |
+|---|---|---|
+| RON profiles | `assets/configs/weather/air_ops_v1.ron` → `AirOpsTuning` | FixedWing / Rotor / Missile / Airlift: wind, crosswind, visibility, lightning, cruise, drift |
+| Grounding | `evaluate_grounding(sample, profile, runway_dir?)` | Reasons: Wind, Crosswind, Visibility, Lightning |
+| Headwind model | `air_ground_speed_mul` / `air_fuel_mul` | Ground speed `0.35..=1.25`; fuel `1 + k·headwind` |
+| Missile drift | `missile_weather_drift` | Pure metres offset; no Zone stamp (no missile entities yet) |
+| Airlift hold | `airlift_hold` → `AirOpsWeatherStatus.airlift_hold` | High wind/vis/lightning hold for future airlift |
+| Status | `sync_air_ops_weather_status` | Sole writer; centre-sample projection for dump/AI |
+| Dump / matrix | `air_ops_grounded`, `airlift_hold`, `air_ground_speed_mul`, `missile_drift_m` | Soft on calm maps (grounded/hold often 0) |
+
+**Authority:** `WeatherField::sample` only. **No** aircraft / missile / drone ECS entities in W5 — API landing pad for later units.
+
+**Out of W5:** AI forecast consumer, true ballistic artillery, fire-suppression aircraft lines, elliptical ROS.
+
+## 4e. Drone envelopes (D0 — primary air_ops consumer)
+
+Full program: [`plan_drone_subsystem_fit_v1.md`](plan_drone_subsystem_fit_v1.md). Weather owns the envelopes; combat/logistics/mission UX consume them.
+
+| Deliverable | Attach point | Notes |
+|---|---|---|
+| Drone* RON profiles | `air_ops_v1.ron` → `AirOpsTuning` | DroneFpv / DroneRecon / DroneCruise / DroneInterceptor |
+| Link envelope | `link_quality(sample, smoke01, modality, resist)` | Radio fragile to smoke+lightning; Fiber resists RF; Sat partial; Autonomy resists C2 loss |
+| Sensor envelope | `sensor_range_mul(sample, smoke01, sensor, resist)` | EO hard vs fog/smoke; IR partial; Radar softer on smoke |
+| Flight | reuse grounding / `air_ground_speed_mul` | Launch/recover abort under wind/vis |
+| Status probes | `AirOpsWeatherStatus` | `link_quality_radio`, `link_quality_fiber`, `sensor_range_mul_eo`, `drone_cruise_grounded` |
+| Dump / matrix | those keys | Soft on calm maps |
+
+**Authority:** one `WeatherField::sample` + `smoke01` from [`ChunkSmokeField`](../systems/fire/chunk_smoke_field.rs) (L0-pulled) with L0 clipmap fallback. No drone ECS entities in D0.
+
+**Out of §4e / D0:** MissionBook, formation packages, production plants, presentation LOD (D1–D8).
 
 ## 5. Decisions
 

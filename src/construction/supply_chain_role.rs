@@ -13,6 +13,22 @@ pub enum IndustrialSupplyChainRole {
     AluminumFabrication,
     /// Construction-material producers and the import terminal (`construction_materials` chain).
     MaterialsProducer,
+    /// Petroleum crude extraction (`petroleum` chain).
+    OilWell,
+    /// Petroleum refining (`petroleum` chain).
+    FuelRefinery,
+    /// UAS battery cells (`uas_assembly` chain).
+    UasBattery,
+    /// Fiber optic draw for FPV (`uas_assembly` chain).
+    UasFiber,
+    /// UAS final assembly (`uas_assembly` chain).
+    UasFinalAssembly,
+    /// Missile seeker kits (`missile_assembly` chain).
+    MissileSeeker,
+    /// Missile warheads (`missile_assembly` chain).
+    MissileWarhead,
+    /// Missile body / final assembly (`missile_assembly` chain).
+    MissileBodyPlant,
 }
 
 impl IndustrialSupplyChainRole {
@@ -28,6 +44,14 @@ impl IndustrialSupplyChainRole {
             "aluminum_alumina_refinery" => Some(Self::AluminaRefinery),
             "aluminum_smelter1" => Some(Self::AluminumSmelter),
             "aluminum_fabrication_plant" => Some(Self::AluminumFabrication),
+            "industrial_oil_well" => Some(Self::OilWell),
+            "industrial_fuel_refinery" => Some(Self::FuelRefinery),
+            "uas_battery_plant" | "battery_cell_line" => Some(Self::UasBattery),
+            "uas_fiber_plant" | "fiber_draw" => Some(Self::UasFiber),
+            "uas_final_assembly" | "uas_assembly_plant" => Some(Self::UasFinalAssembly),
+            "missile_seeker_plant" => Some(Self::MissileSeeker),
+            "missile_warhead_plant" => Some(Self::MissileWarhead),
+            "missile_body_plant" | "missile_assembly" => Some(Self::MissileBodyPlant),
             _ => None,
         }
     }
@@ -43,6 +67,14 @@ impl IndustrialSupplyChainRole {
             "aluminum_smelter" => Some(Self::AluminumSmelter),
             "aluminum_fabrication" => Some(Self::AluminumFabrication),
             "materials_producer" => Some(Self::MaterialsProducer),
+            "oil_well" => Some(Self::OilWell),
+            "fuel_refinery" => Some(Self::FuelRefinery),
+            "uas_battery" => Some(Self::UasBattery),
+            "uas_fiber" => Some(Self::UasFiber),
+            "uas_final_assembly" => Some(Self::UasFinalAssembly),
+            "missile_seeker" => Some(Self::MissileSeeker),
+            "missile_warhead" => Some(Self::MissileWarhead),
+            "missile_body" => Some(Self::MissileBodyPlant),
             _ => None,
         }
     }

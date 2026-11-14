@@ -19,7 +19,8 @@
 //! cell) through the vegetation extract frame; it keeps no flag of its own.
 //!
 //! W2: snag / regrow / litter clocks are authored in **game days** (`assets/configs/ecology/stand_burn_v1.ron`)
-//! and converted to sim seconds via [`GAME_DAY_SECS`].
+//! and converted to sim seconds via [`GAME_DAY_SECS`]. Per-cell **value noise** (chunk + cell + burn salt)
+//! staggers snag hold and regrowth progress so green does not advance as a front locked to `burnt_at`.
 
 use std::path::{Path, PathBuf};
 use std::sync::Arc;
@@ -212,6 +213,82 @@ pub enum StandPhase {
     Regrowth(f32),
 }
 
+#[inline]
+fn hash_u32(x: u32) -> u32 {
+    let mut n = x.wrapping_mul(0x9E37_79B9);
+    n ^= n >> 16;
+    n = n.wrapping_mul(0x85EB_CA6B);
+    n ^= n >> 13;
+    n
+}
+
+/// Deterministic white sample in `[0, 1)` at integer lattice point.
+#[inline]
+fn lattice_noise01(ix: i32, iy: i32, salt: u32) -> f32 {
+    let h = hash_u32(
+        (ix as u32)
+            .wrapping_mul(374_761_393)
+            .wrapping_add((iy as u32).wrapping_mul(668_265_263))
+            .wrapping_add(salt),
+    );
+    (h >> 8) as f32 / (1u32 << 24) as f32
+}
+
+/// Bilinear value noise in `[0, 1)` — low-freq patches for pioneer islands.
+#[inline]
+fn value_noise01(x: f32, y: f32, salt: u32) -> f32 {
+    let x0 = x.floor() as i32;
+    let y0 = y.floor() as i32;
+    let fx = x - x0 as f32;
+    let fy = y - y0 as f32;
+    let sx = fx * fx * (3.0 - 2.0 * fx);
+    let sy = fy * fy * (3.0 - 2.0 * fy);
+    let n00 = lattice_noise01(x0, y0, salt);
+    let n10 = lattice_noise01(x0 + 1, y0, salt);
+    let n01 = lattice_noise01(x0, y0 + 1, salt);
+    let n11 = lattice_noise01(x0 + 1, y0 + 1, salt);
+    let a = n00 + (n10 - n00) * sx;
+    let b = n01 + (n11 - n01) * sx;
+    a + (b - a) * sy
+}
+
+/// Per-cell snag hold, regrowth duration, and progress exponent from spatial noise + moisture.
+///
+/// Returns `(snag_secs, regrow_secs, progress_pow)` — `progress_pow` > 1 delays mid-fill.
+#[must_use]
+pub fn regrowth_noise_scales(
+    chunk_bits: u64,
+    grid_w: u32,
+    cell: usize,
+    burnt_at: f32,
+    moisture: f32,
+    cfg: &StandBurnConfig,
+    kind: StandKind,
+) -> (f32, f32, f32) {
+    let w = grid_w.max(1);
+    let cx = (cell as u32 % w) as f32;
+    let cy = (cell as u32 / w) as f32;
+    let salt = (chunk_bits as u32)
+        .wrapping_mul(0xA24B_AED5)
+        .wrapping_add(burnt_at.to_bits().wrapping_mul(0x9E37_79B9));
+    // Coarse patches (~6–8 cells) + finer breakup so islands appear inside scars.
+    let patch = value_noise01(cx * 0.16 + 0.37, cy * 0.16 + 0.11, salt);
+    let fine = value_noise01(cx * 0.55 + 1.7, cy * 0.55 + 2.3, salt ^ 0x51DE_ADE1);
+    let n = (patch * 0.65 + fine * 0.35).clamp(0.0, 1.0);
+    // Wetter cells pioneer a bit earlier; dry ash holds longer.
+    let wet = (1.0 - moisture.clamp(0.0, 1.0) * 0.22).clamp(0.78, 1.0);
+    let snag_base = cfg.snag_secs[kind.slot()];
+    let regrow_base = cfg.regrow_secs[kind.slot()].max(0.001);
+    // Snag: 0.55× … 1.70× authored — early nuclei vs late holdouts.
+    let snag = snag_base * (0.55 + n * 1.15) * wet;
+    // Regrowth length: independent octave so fill rate ≠ snag order.
+    let n2 = value_noise01(cx * 0.22 + 4.1, cy * 0.22 + 0.9, salt ^ 0xC0FF_EE00);
+    let regrow = regrow_base * (0.65 + n2 * 1.05);
+    // Exponent 0.75..1.85 — high values linger in early regrowth visually.
+    let progress_pow = 0.75 + (1.0 - n2) * 1.1;
+    (snag.max(0.05), regrow, progress_pow)
+}
+
 /// Per-cell standing vegetation state for one chunk, aligned with [`ChunkCellMatrix`].
 ///
 /// Written only by [`cell_stand_tick`]. The fire overlay tick reads `fuel_cap` / `kind`; the tactical tree
@@ -263,20 +340,34 @@ impl ChunkCellStand {
     }
 
     /// Phase of cell `i` at sim time `now` (seconds).
+    ///
+    /// `chunk_bits` + `grid_w` feed spatial value noise so neighbours that burned together do not
+    /// leave snag / enter regrowth on the same clock. `moisture` (0..1) slightly favours wetter cells.
     #[must_use]
-    pub fn phase(&self, i: usize, now: f32, cfg: &StandBurnConfig) -> StandPhase {
+    pub fn phase(
+        &self,
+        i: usize,
+        now: f32,
+        cfg: &StandBurnConfig,
+        chunk_bits: u64,
+        grid_w: u32,
+        moisture: f32,
+    ) -> StandPhase {
         let t = self.burnt_at.get(i).copied().unwrap_or(-1.0);
         if t < 0.0 {
             return StandPhase::Live;
         }
         let k = self.kind[i];
         let age = now - t;
-        let snag = cfg.snag_secs[k.slot()];
-        let regrow = cfg.regrow_secs[k.slot()].max(0.001);
+        let (snag, regrow, progress_warp) =
+            regrowth_noise_scales(chunk_bits, grid_w, i, t, moisture, cfg, k);
         if age < snag {
             StandPhase::Burnt
         } else if age < snag + regrow {
-            StandPhase::Regrowth(((age - snag) / regrow).clamp(0.0, 1.0))
+            let raw = ((age - snag) / regrow).clamp(0.0, 1.0);
+            // Warp progress so patch interiors fill unevenly (not a linear ring).
+            let p = (raw.powf(progress_warp)).clamp(0.0, 1.0);
+            StandPhase::Regrowth(p)
         } else {
             StandPhase::Live
         }
@@ -376,30 +467,37 @@ pub(crate) fn cell_stand_tick(
             stand.last_refresh = tick.0.wrapping_add(stagger);
         }
 
-        // Burn-out: fuel exhausted while the cell burns.
+        // Burn-out: surface (or full) fuel exhausted while the cell burns.
+        // Ground fires stop at the crown floor and never cross MIN_CELL_FUEL — still a scar.
         for i in 0..n {
             if stand.is_burnt(i) || stand.kind[i] == StandKind::Bare {
                 continue;
             }
             let hot = ovl.heat[i] >= CELL_BURN_HEAT || ovl.burn_hold[i] > 0;
-            if hot
-                && ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD
-                && stand.full_cap[i] >= MIN_CELL_FUEL_FOR_SPREAD
-            {
+            if !hot || stand.full_cap[i] < MIN_CELL_FUEL_FOR_SPREAD {
+                continue;
+            }
+            let floor = cfg.crown(stand.kind[i]) * stand.full_cap[i];
+            let surface_gone =
+                ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD || ovl.fuel[i] <= floor + 0.01;
+            if surface_gone {
                 stand.burnt_at[i] = now;
                 stand.burnt_count += 1;
             }
         }
 
-        // Phases: current carrying capacity per cell.
+        // Phases: current carrying capacity per cell (noise-staggered clocks).
         let mut sum_w = 0.0f32;
         let mut lost_w = 0.0f32;
         let mut surface_w = 0.0f32;
         let mut scar_cells = 0u32;
         let mut land_cells = 0u32;
+        let chunk_bits = entity.to_bits();
+        let grid_w = matrix.size.x;
         for i in 0..n {
             let full = stand.full_cap[i];
-            let (level, lost) = match stand.phase(i, now, cfg) {
+            let m = matrix.moisture.get(i).copied().unwrap_or(0.4);
+            let (level, lost) = match stand.phase(i, now, cfg, chunk_bits, grid_w, m) {
                 StandPhase::Live => {
                     if stand.burnt_at[i] >= 0.0 {
                         stand.burnt_at[i] = -1.0;
@@ -470,7 +568,7 @@ pub(crate) fn cell_stand_tick(
         let period = if hot { (cfg.snapshot_period_ticks / 4).max(3) } else { cfg.snapshot_period_ticks };
         if reseed || tick.0.wrapping_sub(stand.last_snapshot) >= period {
             stand.last_snapshot = tick.0;
-            snapshot(&mut stand, &matrix, veg, suit, &ovl, now, cfg);
+            snapshot(&mut stand, &matrix, veg, suit, &ovl, now, cfg, chunk_bits);
         }
     }
 }
@@ -526,8 +624,10 @@ fn snapshot(
     ovl: &ChunkFireOverlay,
     now: f32,
     cfg: &StandBurnConfig,
+    chunk_bits: u64,
 ) {
     let n = matrix.water.len();
+    let grid_w = matrix.size.x;
     let mut codes = vec![CELL_NONE; n];
     for i in 0..n {
         if matrix.water[i].is_open_water() {
@@ -544,7 +644,8 @@ fn snapshot(
         codes[i] = if burning {
             CELL_BURNING
         } else {
-            match stand.phase(i, now, cfg) {
+            let m = matrix.moisture.get(i).copied().unwrap_or(0.4);
+            match stand.phase(i, now, cfg, chunk_bits, grid_w, m) {
                 StandPhase::Burnt => CELL_BURNT,
                 StandPhase::Regrowth(_) => CELL_REGROWTH,
                 StandPhase::Live => {
@@ -623,6 +724,44 @@ mod tests {
             cycle / GAME_DAY_SECS
         );
         assert!(cfg.snag_secs[0] + cfg.regrow_secs[0] < cfg.snag_secs[timber]);
+    }
+
+    #[test]
+    fn regrowth_noise_staggers_neighbours_with_same_burnt_at() {
+        let cfg = test_cfg();
+        let mut stand = ChunkCellStand::new(64);
+        let grid_w = 8u32;
+        for i in 0..64 {
+            stand.kind[i] = StandKind::Grass;
+            stand.full_cap[i] = 0.5;
+            stand.burnt_at[i] = 0.0;
+        }
+        stand.burnt_count = 64;
+        // Just past authored snag (1s): some cells still Burnt, some already Regrowth.
+        let now = cfg.snag_secs[0] * 1.05;
+        let mut burnt = 0u32;
+        let mut regrowing = 0u32;
+        let mut progresses = Vec::new();
+        for i in 0..64 {
+            match stand.phase(i, now, &cfg, 0xDEAD_BEEF, grid_w, 0.4) {
+                StandPhase::Burnt => burnt += 1,
+                StandPhase::Regrowth(p) => {
+                    regrowing += 1;
+                    progresses.push(p);
+                }
+                StandPhase::Live => {}
+            }
+        }
+        assert!(burnt > 0, "noise should leave some cells in snag");
+        assert!(regrowing > 0, "noise should let pioneer cells leave snag");
+        if progresses.len() >= 2 {
+            let min_p = progresses.iter().copied().fold(f32::INFINITY, f32::min);
+            let max_p = progresses.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+            assert!(
+                max_p - min_p > 1e-4,
+                "regrowth progress should differ across cells ({min_p}..{max_p})"
+            );
+        }
     }
 
     /// Fire + ecology slice of the sim: vegetation -> fuel -> fire -> burnt stand -> canopy drivers.
@@ -812,7 +951,11 @@ mod tests {
             let slot = if k == 0 { 2 } else { 0 };
             let min_secs = cfg.snag_secs[slot] + cfg.regrow_secs[slot];
             let took = (live - burnt) as f32 * 0.016;
-            assert!(took >= min_secs - 0.1, "{name}: regrown after {took} s, configured {min_secs} s");
+            // Noise can shorten snag to ~0.55×; still must not instant-green.
+            assert!(
+                took >= min_secs * 0.5 - 0.1,
+                "{name}: regrown after {took} s, configured {min_secs} s"
+            );
         }
         // The forest canopy dropped with the burn (through the drivers) and came back.
         assert!(tr[0].canopy_min < canopy_before * 0.5, "canopy never fell: {}", tr[0].canopy_min);

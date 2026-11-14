@@ -12,6 +12,7 @@
 
 use bevy::camera::ClearColorConfig;
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 
 use crate::engine::states::BaseState;
 use crate::gui::representation_governance::ScaffoldContract;
@@ -303,7 +304,7 @@ impl Plugin for WorldPresentationModePlugin {
                     .chain()
                     .after(ViewRepresentationSystemSet::UiCollect)
                     .before(ViewRepresentationSystemSet::ResolveViewport)
-                    .run_if(in_state(BaseState::Simulation).or(in_state(BaseState::Editor))),
+                    .run_if(in_state(BaseState::Simulation).or_else(in_state(BaseState::Editor))),
             )
             .add_systems(
                 OnEnter(BaseState::Simulation),
@@ -316,7 +317,7 @@ impl Plugin for WorldPresentationModePlugin {
                     world_presentation_toggle_system
                         .in_set(ViewRepresentationSystemSet::UiCollect),
                 )
-                    .run_if(in_state(BaseState::Simulation).or(in_state(BaseState::Editor))),
+                    .run_if(in_state(BaseState::Simulation).or_else(in_state(BaseState::Editor))),
             )
             .add_systems(
                 Update,

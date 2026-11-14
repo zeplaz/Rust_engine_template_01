@@ -1,6 +1,31 @@
 # Repo Authority Map — `Rust_engine_template_01`
 
-**Authoritative for scheduling and writers.** Bevy **0.18**. Update this file when spine ownership changes.
+**Authoritative for scheduling and writers.** Bevy **0.20** (migrated from 0.19 — PLAN-BEVY-020-MIG-v1). Update this file when spine ownership changes.
+
+**0.20 note:** several built-in schedules order SystemSets **weakly**. Prefer ECS-visible `Res`/`ResMut` edges; where systems communicate via interior mutability / channels / atomics, restore **strict** `.before` / `.after` on named sets (see migration guide “weakly ordered sets”).
+
+## Four-layer graph (Slice A — 2026-11-14)
+
+```text
+⊚Sim ═▶ ⊚View ═▶ ⊚Render ═▶ ⊚UI
+  AdvanceSimTick → AttentionSet::Build → ChunkEnvironment (Lod→Weather→Ecology→Fire)
+    → Transport / Strategic / Logistics / Combat / MFG
+  ViewRepresentation / MapCamera / ViewAuthority → sole ViewManager
+  FireVisualFrame / atmos extract / world representation (read snaps)
+  HUD / picker / overlays (read snaps · intent ingress only)
+  AudioMixSet::Build (after SyncViewManager — presentation; never writes sim)
+```
+
+### Dual-writer risk list (watch)
+
+| Surface | Risk | Mitigation |
+|:---|:---|:---|
+| `SimAttentionFrame` | Everyone pushes interest | **Sole** `build_sim_attention_frame` |
+| `AudioMixFrame` | Sim systems play SFX directly | Enqueue `AudioOneShotQueue` only; mix drains |
+| `ViewManager` | Parallel rebuilds | `sync_view_manager_bridge` only |
+| `MissionBook` | UI / AI dual apply | `MissionIntentQueue` → drone step sole apply |
+| `LogisticsOrderSim` | Panel mutates sim | `LogisticsOrderRequest` ingress only |
+| `ChunkSimLod` | Attention overwrites fire Active | Attention may **upgrade** Dormant→Normal only |
 
 ## Update frame order (simplified)
 
@@ -34,7 +59,11 @@ Update (fire / extraction — order relative to SyncViewManager)
   tile / minimap consumers                   (.after BuildProfiles typical)
 
 Simulation / logistics
-  (domain SystemSets — chain via planner; avoid orphan .after global camera)
+  SimControlSystemSet::AdvanceSimTick
+    → AttentionSet::Build → ResMut<SimAttentionFrame>
+    → ChunkEnvironmentSet::Lod (reads attention RO) → Weather → Ecology → Fire
+    → Transport / Strategic / Logistics / Combat / MFG
+  (avoid orphan .after global camera)
 
 PostUpdate (construction — after camera scissor applied)
   SimulationViewportSyncSet::ApplyCameraScissor
@@ -46,8 +75,9 @@ PostUpdate (construction — after camera scissor applied)
 
 ```text
 Update (simulation — runs beside the view spine above)
-  SimControlSystemSet::ApplyOperatorInput → AdvanceSimTick        (sim_control.rs:99; pause gate = should_tick()/dt_scale())
-    ├─ ChunkEnvironmentSet: Lod → Weather → Ecology(⊃LandscapeBurnSet) → Fire   (chunk_environment_set.rs:26)
+  SimControlSystemSet::ApplyOperatorInput → AdvanceSimTick        (sim_control.rs; pause gate = should_tick()/dt_scale())
+    ├─ AttentionSet::Build → SimAttentionFrame (sim_attention.rs; sole writer)
+    ├─ ChunkEnvironmentSet: Lod → Weather → Ecology(⊃LandscapeBurnSet) → Fire   (chunk_environment_set.rs)
     │    └─ Fire → AtmospherePipelineSet::FieldFill → … → VisualExtract → Diagnostics (atmosphere/pipeline.rs:35-49)
     │                                    Diagnostics → TransportSchedule::Topology   (engine_with_worldgen.rs:196-200)
     ├─ SimEffectSystemSet::Drain (after AdvanceSimTick ONLY — ⚠ unordered vs fire tick, SCH-E2)
@@ -73,11 +103,35 @@ No FixedUpdate anywhere: sim is dt-scaled Update (frame-rate consistent, not ind
 | `MapCameraSystemSet` | `src/gui/map_camera.rs` | Input → derive desired → smooth; **before** `SyncViewManager` |
 | `ViewAuthoritySystemSet` | `src/gui/view_authority.rs` | `RegisterViewCameras` → **`SyncViewManager`** |
 | `FireVisualFrameSet` | `src/render/extraction/fire_visual_extract.rs` | Sim scan → clusters → GPU project; **after** view bridge |
+| `AttentionSet` | `src/systems/sim_attention.rs` | Build `SimAttentionFrame` after AdvanceSimTick; before Lod |
+| `AudioMixSet` | `src/audio/mix_frame.rs` | Build `AudioMixFrame` after `SyncViewManager` |
 
 ## Single writers (production)
 
 | Resource / surface | Sole writer (production) | Notes |
 |--------------------|--------------------------|-------|
+| `SimAttentionFrame` | `build_sim_attention_frame` | Slice A3 — RO consumers only after Build |
+| `AudioMixFrame` | `build_audio_mix_frame` | Slice C1 — presentation; never writes sim |
+| `AudioOneShotQueue` | UI / combat emitters enqueue; mix drains | Never play audio from sim systems directly |
+| `BallisticFlightBook` | `step_ballistic_flights` (+ launches from `apply_missile_sortie_launches_system`) | Combat; impacts enqueue `BlastIntent` |
+| `MissileSortieLaunchQueue` | `step_drone_missions_system` enqueues; `apply_missile_sortie_launches_system` drains | Keeps mission step under Bevy 0.20 SystemParam arity |
+| `BlastIntentQueue` / `BlastCraterBook` | `execute_blast_intents_system` | Construction sole demolish/crater |
+| `BlastCraterDump` | `publish_blast_crater_dump` | Presentation/score RO mirror |
+| `TruckPresentation` entities | `sync_truck_presentation` | Presentation; reads order-sim RO |
+| Missile catalog plants (`missile_*`) | building JSON + `activate_industrial_facilities_system` → MFG | Discrete MFG; no ResourceFlow; picker via `industrial_menu` |
+
+### FIDELITY-1 attention consumers (RO `SimAttentionFrame`)
+
+| Consumer | Gate |
+|:---|:---|
+| `step_drone_missions_system` / missile pulse | Skip sortie pulse for `AttentionTier::Dormant` factions |
+| `faction_ai_tick_system` | Dormant defer; Aggregate stretches `decision_interval` |
+| `score_pressure_points_system` | Cheap / skip when faction slot Dormant |
+| `step_logistics_orders_system` | Cadence: Full every step; Aggregate every 2nd; Dormant skip tick (requests still apply) |
+| `auto_supply_unserved_system` | Interval ×2 when player theater inactive |
+| `tick_manufacturing_nodes` | Throughput scale from player-theater attention |
+| `run_compute_dispatch_graph` / heat | Truncate eligible rows to `budget_path_units` |
+| `build_audio_mix_frame` | Spatial from trucks when zoomed + player theater |
 | `ViewManager` | `sync_view_manager_bridge` | `src/gui/view_authority.rs` — rebuild read model from authority |
 | `MapCameraDesired` | `derive_map_camera_desired_from_view_authority` | Compatibility mirror; input commits **`ViewProjectionAuthority`** first |
 | `ViewProjectionAuthority` poses | `commit_pose` / `commit_pose_traced` | Map camera input, minimap shell, session hooks |

@@ -19,6 +19,7 @@ use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::ChunkCellKey;
 
 use super::chunk_surface_fire::ChunkSurfaceFire;
+use super::ecology_metrics::FireEcologyStats;
 use super::ember_physics::spot_landing_offset_tiles;
 use super::fire_fuel::FireFuelField;
 use super::surface_water::SurfaceWaterFireGate;
@@ -96,6 +97,7 @@ pub fn emit_ember_spot_ignition_events(
     tick: Res<SimTick>,
     water_gate: Res<SurfaceWaterFireGate>,
     mut queue: ResMut<SimEffectQueue>,
+    mut witness: Option<ResMut<FireEcologyStats>>,
     q: Query<(
         &Chunk,
         &ChunkCellMatrix,
@@ -112,8 +114,10 @@ pub fn emit_ember_spot_ignition_events(
         return;
     }
 
-    const HEAT_MIN: f32 = 0.24;
-    const MAX_EMBERS_PER_CHUNK: usize = 64;
+    const HEAT_MIN: f32 = 0.22;
+    const MAX_EMBERS_PER_CHUNK: usize = 96;
+    /// Per-second scale — was 0.55 and almost never landed spots under typical dt.
+    const EMIT_RATE: f32 = 1.85;
     const SALT_PROB: u32 = 0xE0BE_5700;
     const SALT_D: u32 = 0xE0BE_5701;
     const SALT_ANG: u32 = 0xE0BE_5702;
@@ -132,7 +136,8 @@ pub fn emit_ember_spot_ignition_events(
         }
         let ember = fuel_opt.map(|f| f.ember_spread_factor).unwrap_or(0.25);
         let rain = (1.0_f32 - wx.rain_intensity * 0.85).max(0.0);
-        let wind = 1.0 + wx.wind_speed * 0.75;
+        // Prefer continuous wind m/s so spotting tracks WeatherField, not only the 0..1 proxy.
+        let wind = 1.0 + wx.wind_mps.length() * 0.08 + wx.wind_speed * 0.35;
 
         let heat = ovl.heat.as_slice();
         let fuel = ovl.fuel.as_slice();
@@ -149,12 +154,12 @@ pub fn emit_ember_spot_ignition_events(
                 continue;
             }
             let f = fuel[i];
-            let base_p = h * h * f * ember * rain * wind * dt * 0.55;
+            let base_p = h * h * f * ember * rain * wind * dt * EMIT_RATE;
             if base_p <= 0.0 {
                 continue;
             }
             let r = hash01(tick.0, chunk.coord, i as u32, SALT_PROB);
-            if r > base_p {
+            if r > base_p.clamp(0.0, 0.85) {
                 continue;
             }
 
@@ -203,6 +208,11 @@ pub fn emit_ember_spot_ignition_events(
     if cells.is_empty() {
         return;
     }
+    if let Some(ref mut w) = witness {
+        w.ember_spots_emitted = w
+            .ember_spots_emitted
+            .saturating_add(cells.len() as u64);
+    }
     let _ = queue.push(SimEffectEvent {
         source: SimEffectSource::Ecology,
         cause_id: format!("CAUSE-ember-spot-{}", tick.0),
@@ -215,6 +225,7 @@ pub fn apply_ember_spot_ignitions(
     mut reader: MessageReader<EmberSpotIgnitionEvent>,
     water_gate: Res<SurfaceWaterFireGate>,
     mut hooks: ResMut<ChunkEnvironmentPersistHooks>,
+    mut witness: Option<ResMut<FireEcologyStats>>,
     chunks: Query<(Entity, &Chunk), With<ChunkFireOverlay>>,
     mut q: Query<(
         &ChunkCellMatrix,
@@ -256,6 +267,7 @@ pub fn apply_ember_spot_ignitions(
         }
 
         let mut any = false;
+        let mut applied = 0u64;
         for (idx_u32, spark) in cells {
             let i = idx_u32 as usize;
             if i >= n {
@@ -279,7 +291,12 @@ pub fn apply_ember_spot_ignitions(
             if nh > ovl.heat[i] + 1e-6 {
                 ovl.heat[i] = nh;
                 any = true;
+                applied = applied.saturating_add(1);
             }
+        }
+
+        if let Some(ref mut w) = witness {
+            w.ember_spots_applied = w.ember_spots_applied.saturating_add(applied);
         }
 
         if any {

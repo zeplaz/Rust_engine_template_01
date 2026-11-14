@@ -84,6 +84,12 @@ pub fn footprint_place_settle_color() -> UiRgba {
     UiRgba::from_rgba_unmultiplied(100, 144, 220, 200)
 }
 
+/// BUILD-UX-1 — facing / door nose on Adjust ghost (rotation readability).
+#[must_use]
+pub fn footprint_facing_color() -> UiRgba {
+    UiRgba::from_rgba_unmultiplied(255, 220, 64, 255)
+}
+
 #[must_use]
 pub fn place_feedback_duration_secs() -> f32 {
     0.28

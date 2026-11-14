@@ -3,6 +3,7 @@
 
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 
 use crate::engine::states::{BaseState, InGameMenuState, MainMenuState, WorldGenFlowState};
@@ -557,15 +558,15 @@ fn handle_pause_menu_buttons(
         }
         match *action {
             PauseMenuButtonAction::Resume => {
-                NextState::set_if_neq(&mut *nav.next_menu, InGameMenuState::Normal);
+                NextState::set_if_different(&mut *nav.next_menu, InGameMenuState::Normal);
             }
             PauseMenuButtonAction::Save => {
                 info!("Pause menu: Save — wire to WorldSaveSpine when ready.");
             }
             PauseMenuButtonAction::Load => {
-                NextState::set_if_neq(&mut *nav.next_flow, WorldGenFlowState::LoadingSave);
-                NextState::set_if_neq(&mut *nav.next_main_menu, MainMenuState::Load);
-                NextState::set_if_neq(&mut *nav.next_menu, InGameMenuState::Normal);
+                NextState::set_if_different(&mut *nav.next_flow, WorldGenFlowState::LoadingSave);
+                NextState::set_if_different(&mut *nav.next_main_menu, MainMenuState::Load);
+                NextState::set_if_different(&mut *nav.next_menu, InGameMenuState::Normal);
             }
             PauseMenuButtonAction::WorldGenerator => {
                 nav.pending.confirm = PauseMenuConfirm::ExitToWorldGen;
@@ -588,7 +589,7 @@ fn handle_pause_menu_buttons(
                         &wg.job_slot,
                         &wg.progress,
                     );
-                    NextState::set_if_neq(&mut *nav.next_menu, InGameMenuState::Normal);
+                    NextState::set_if_different(&mut *nav.next_menu, InGameMenuState::Normal);
                 }
             }
             PauseMenuButtonAction::Quit => {
@@ -633,7 +634,7 @@ fn handle_pause_confirm_buttons(
                         &wg.progress,
                     );
                     nav.pending.clear();
-                    NextState::set_if_neq(&mut *nav.next_menu, InGameMenuState::Normal);
+                    NextState::set_if_different(&mut *nav.next_menu, InGameMenuState::Normal);
                 }
                 PauseMenuConfirm::ExitToMainMenu => {
                     execute_pause_exit_to_main_menu(
@@ -651,7 +652,7 @@ fn handle_pause_confirm_buttons(
                         &wg.progress,
                     );
                     nav.pending.clear();
-                    NextState::set_if_neq(&mut *nav.next_menu, InGameMenuState::Normal);
+                    NextState::set_if_different(&mut *nav.next_menu, InGameMenuState::Normal);
                 }
                 PauseMenuConfirm::None => {}
             },

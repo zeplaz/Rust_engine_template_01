@@ -13,8 +13,8 @@ struct Globals {
     /// W3 sim wind (m/s).
     wind_mps_x: f32,
     wind_mps_y: f32,
+    /// Pad to 16-byte uniform stride (struct size 96 — matches Rust `ShaderType`).
     _pad0: f32,
-    _pad1: f32,
 }
 
 @group(0) @binding(0)

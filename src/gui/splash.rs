@@ -74,11 +74,11 @@ fn countdown(
     mut timer: ResMut<SplashTimer>,
 ) {
     if launch.is_some_and(|l| l.test_mode()) {
-        NextState::set_if_neq(&mut *next_state, AppStartState::Menu);
+        NextState::set_if_different(&mut *next_state, AppStartState::Menu);
         return;
     }
     if timer.tick(time.delta()).is_finished() {
-        NextState::set_if_neq(&mut *next_state, AppStartState::Menu);
+        NextState::set_if_different(&mut *next_state, AppStartState::Menu);
     }
 }
 

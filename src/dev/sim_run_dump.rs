@@ -19,7 +19,9 @@ use crate::ai::faction::{
     AiOrder, FactionAiDecisionLog, FactionAiRoster, FactionHq, FactionStartConfig,
 };
 use crate::combat::{DeploymentOutcomes, Formation, TheaterBook};
-use crate::economy::logistics::orders::{LogisticsOrdersSnapshotRes, OrderStatus};
+use crate::economy::logistics::orders::{
+    LogisticsOrderSimRes, LogisticsOrdersSnapshotRes, OrderStatus,
+};
 use crate::economy::resource_flow::{
     FacilityFlowState, ResourceFlowNode, ResourceFlowSimStats, OUTPUT_BUFFER_CAP,
 };
@@ -36,7 +38,7 @@ use crate::systems::ecology::{
     ChunkCellStand, CELL_BURNING, CELL_BURNT, CELL_GRASS, CELL_OLD, CELL_REGROWTH, CELL_SHRUB,
     CELL_WATER, CELL_YOUNG,
 };
-use crate::systems::fire::{ChunkFireOverlay, FireEcologyStats};
+use crate::systems::fire::{ChunkFireOverlay, FireEcologyStats, FireEntityExposureStats};
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::Chunk;
 use crate::systems::sim_control::SimTick;
@@ -308,10 +310,12 @@ struct WorldParams<'w, 's> {
     stands: Query<'w, 's, &'static ChunkCellStand>,
     overlays: Query<'w, 's, (&'static Chunk, &'static ChunkFireOverlay, Option<&'static ChunkWeather>)>,
     ecology: Option<Res<'w, FireEcologyStats>>,
+    fire_entities: Option<Res<'w, FireEntityExposureStats>>,
     graph: Option<Res<'w, RenderProjectionGraph>>,
     particles: Option<Res<'w, WorldFireParticleFrame>>,
     hitch: Option<Res<'w, FrameHitchLog>>,
     weather: Option<Res<'w, super::sim_run_dump_weather::WeatherDumpSeries>>,
+    fidelity: Option<Res<'w, super::sim_run_dump_fidelity::FidelityDumpSeries>>,
 }
 
 /// Fire visual chain, stage by stage: sim heat -> snapshot -> active/visible chunks -> per-view
@@ -416,6 +420,8 @@ struct GameParams<'w, 's> {
     >,
     flow_stats: Option<Res<'w, ResourceFlowSimStats>>,
     logistics: Option<Res<'w, LogisticsOrdersSnapshotRes>>,
+    logistics_sim: Option<Res<'w, LogisticsOrderSimRes>>,
+    fire_entities: Option<Res<'w, FireEntityExposureStats>>,
     ai_log: Option<Res<'w, FactionAiDecisionLog>>,
     frontline: Option<Res<'w, FrontlineState>>,
     theaters: Option<Res<'w, TheaterBook>>,
@@ -540,6 +546,13 @@ fn logistics_json(g: &GameParams) -> (Value, u64) {
         .count();
     let vehicles_busy = snap.fleets.iter().map(|f| u64::from(f.busy)).sum::<u64>();
     let vehicles_total = snap.fleets.iter().map(|f| u64::from(f.total)).sum::<u64>();
+    let (fire_delayed, vehicles_lost, cargo_lost) = g.logistics_sim.as_ref().map_or((0, 0, 0), |s| {
+        (
+            s.sim.fire_delayed_trips,
+            s.sim.vehicles_lost_to_fire,
+            s.sim.cargo_lost_to_fire,
+        )
+    });
     (
         json!({
             "available": true,
@@ -565,6 +578,9 @@ fn logistics_json(g: &GameParams) -> (Value, u64) {
             "vehicles_total": vehicles_total,
             "vehicles_busy": vehicles_busy,
             "rejected_requests": snap.rejected.len(),
+            "fire_delayed_trips": fire_delayed,
+            "vehicles_lost_to_fire": vehicles_lost,
+            "cargo_lost_to_fire": cargo_lost,
         }),
         trips_done,
     )
@@ -657,6 +673,15 @@ fn combat_json(g: &GameParams, state: &mut SimRunDumpState) -> Value {
         let ok = o.recent.iter().filter(|r| r.result.is_ok()).count();
         (ok, o.recent.len() - ok)
     });
+    let fire_exposed = g.fire_entities.as_ref().map_or(0u32, |e| e.formations_exposed);
+    let fire_heat_mean = g.fire_entities.as_ref().map_or(0.0f32, |e| {
+        if e.formations_exposed == 0 {
+            0.0
+        } else {
+            e.formation_heat_sum / e.formations_exposed as f32
+        }
+    });
+    state.track("fire_exposed_formations", f64::from(fire_exposed));
     json!({
         "front_segments": g.frontline.as_ref().map_or(0, |f| f.segments.len()),
         "front_cells": g.frontline.as_ref().map_or(0, |f| f.segments.iter().map(|s| s.cells.len()).sum::<usize>()),
@@ -665,6 +690,9 @@ fn combat_json(g: &GameParams, state: &mut SimRunDumpState) -> Value {
         "formations": g.formations.iter().count(),
         "engaged_formations": engaged,
         "engaged_formations_series": state.series_json("engaged_formations"),
+        "fire_exposed_formations": fire_exposed,
+        "fire_exposed_formations_series": state.series_json("fire_exposed_formations"),
+        "fire_exposed_mean_heat": fire_heat_mean,
         "deployment_orders_resolved_ok": ok,
         "deployment_orders_resolved_rejected": rejected,
         "territory_cells_by_slot": held,
@@ -739,6 +767,24 @@ fn fire_json(w: &WorldParams, veg: (u32, u32, u32, u32), regrowth: u32, heat_cel
     let (lb_ratio, mean_wind, hot_n) = fire_wind_spread_ratio(w);
     state.track("fire_length_breadth", lb_ratio);
     state.track("fire_mean_wind_mps", mean_wind);
+    let ember_emitted = w.ecology.as_ref().map_or(0u64, |e| e.ember_spots_emitted);
+    let ember_applied = w.ecology.as_ref().map_or(0u64, |e| e.ember_spots_applied);
+    state.track("ember_spots_emitted", ember_emitted as f64);
+    state.track("ember_spots_applied", ember_applied as f64);
+    let collapsed = w
+        .fire_entities
+        .as_ref()
+        .map_or(0u64, |e| e.sites_collapsed_to_fire);
+    let threatened = w.fire_entities.as_ref().map_or(0u32, |e| e.sites_threatened);
+    let disrupted = w.fire_entities.as_ref().map_or(0u32, |e| e.sites_disrupted);
+    let deteriorating = w
+        .fire_entities
+        .as_ref()
+        .map_or(0u32, |e| e.sites_deteriorating);
+    state.track("sites_collapsed_to_fire", collapsed as f64);
+    state.track("sites_threatened", f64::from(threatened));
+    state.track("sites_disrupted", f64::from(disrupted));
+    state.track("sites_deteriorating", f64::from(deteriorating));
     json!({
         "ignited_cells_cum": state.ignited_cells_cum,
         "burning_cells": state.series_json("burning_cells"),
@@ -749,6 +795,12 @@ fn fire_json(w: &WorldParams, veg: (u32, u32, u32, u32), regrowth: u32, heat_cel
         "burnt_fraction": state.series_json("burnt_fraction"),
         "length_breadth": state.series_json("fire_length_breadth"),
         "mean_wind_mps": state.series_json("fire_mean_wind_mps"),
+        "ember_spots_emitted": state.series_json("ember_spots_emitted"),
+        "ember_spots_applied": state.series_json("ember_spots_applied"),
+        "sites_collapsed_to_fire": state.series_json("sites_collapsed_to_fire"),
+        "sites_threatened": state.series_json("sites_threatened"),
+        "sites_disrupted": state.series_json("sites_disrupted"),
+        "sites_deteriorating": state.series_json("sites_deteriorating"),
         "hot_cells_bbox": hot_n,
         "max_heat": w.ecology.as_ref().map_or(0.0, |e| e.max_heat),
     })
@@ -860,6 +912,7 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
         "fire": fire,
         "fire_chain": fire_chain_json(w, f),
         "weather": super::sim_run_dump_weather::weather_json(w.weather.as_deref()),
+        "fidelity": super::sim_run_dump_fidelity::fidelity_json(w.fidelity.as_deref()),
         "perf": state.perf_json(w.hitch.as_deref()),
         "history": state.history,
     })
@@ -933,6 +986,7 @@ impl Plugin for SimRunDumpPlugin {
             return;
         }
         app.add_plugins(super::sim_run_dump_weather::WeatherDumpPlugin);
+        app.add_plugins(super::sim_run_dump_fidelity::FidelityDumpPlugin);
         app.init_resource::<SimRunDumpState>().add_systems(
             Last,
             (sample_frame_time, flush_sim_run_dump)

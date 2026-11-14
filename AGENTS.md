@@ -7,8 +7,8 @@ Policy: [`src/dev/single_worktree_policy_v1.md`](src/dev/single_worktree_policy_
 
 ## Project
 
-Rust + Bevy 0.19 city / logistics / ecology sim, crate `proc_A_dine01`. UI is Bevy UI (egui is gone).
-The Bevy 0.19 migration is closed; do not pick `MIG-*` work. Open work: [`src/dev/coder_todos_v1.md`](src/dev/coder_todos_v1.md).
+Rust + Bevy **0.20** on master (PLAN-BEVY-020-MIG-v1 **PROGRAM CLOSE** — gate [`debug_runs/mig_bevy_020/mig_v2_gate.json`](debug_runs/mig_bevy_020/mig_v2_gate.json)). UI is Bevy UI (egui is gone). Guide: https://bevy.org/learn/migration-guides/0-19-to-0-20/
+Closed **0.19** `MIG-*` rows stay closed. Residual lib-test `If`/harness polish: [`src/dev/mig_bevy_020_m0_test_defer.md`](src/dev/mig_bevy_020_m0_test_defer.md). Book/ECS follow-on: [`src/dev/plan_ref_books_upgrade_use_v1.md`](src/dev/plan_ref_books_upgrade_use_v1.md). Other open work: [`src/dev/coder_todos_v1.md`](src/dev/coder_todos_v1.md).
 
 ## Review path (how to check a run)
 

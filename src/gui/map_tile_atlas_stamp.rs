@@ -87,13 +87,19 @@ pub fn tile_variant_context_for_site(
     sim_tick: u64,
     fire_heat: f32,
 ) -> TileVariantContext {
+    // FIRE-ENTITY / PT-5: heat drives damaged_* until burning_* atlases exist.
+    let damage = if site.operational_readiness < 0.5 {
+        0.5
+    } else if fire_heat >= 0.72 {
+        0.8
+    } else if fire_heat >= 0.4 {
+        0.45
+    } else {
+        0.0
+    };
     TileVariantContext {
         phase: site.phase,
-        damage: if site.operational_readiness < 0.5 {
-            0.5
-        } else {
-            0.0
-        },
+        damage,
         power_on: matches!(
             site.phase,
             SiteConstructionPhase::Operational | SiteConstructionPhase::Provisioning

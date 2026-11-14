@@ -1,4 +1,4 @@
-# Bevy 0.18 + this repo: use stable (beta rustc can mis-compile registry crates).
+# Bevy 0.20 requires rustc >= 1.97.1; pin channel stable (1.100+ OK).
 [toolchain]
 channel = "stable"
 profile = "default"

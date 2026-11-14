@@ -9,10 +9,10 @@ use bevy::prelude::*;
 
 use super::cell_spread::{
     admit_spark, apply_snow_to_hold, burn_fuel_step, directional_heat_gain, fire_cell_hash01,
-    lightning_spark, neighbor_step_dist, rain_mm_h_blocks_neighbor_spread,
-    scaled_neighbor_heat_gain, should_arm_burn_hold, slope_rise, spread_allowed, step_burn_hold,
-    take_neighbor_deposit, FireCell, BURNED_HOLD_TICKS, NEIGHBOR8, NEIGHBOR_FUEL_DRAW,
-    SPREAD_HEAT_MIN,
+    fire_front_deposit_jitter, lightning_spark, neighbor_step_dist,
+    rain_mm_h_blocks_neighbor_spread, scaled_neighbor_heat_gain, should_arm_burn_hold, slope_rise,
+    spread_allowed, step_burn_hold, take_neighbor_deposit, FireCell, BURNED_HOLD_TICKS, NEIGHBOR8,
+    NEIGHBOR_FUEL_DRAW, SPREAD_HEAT_MIN,
 };
 use super::chunk_fuel_profile::ChunkFuelProfile;
 use super::chunk_surface_fire::ChunkSurfaceFire;
@@ -246,7 +246,6 @@ pub fn chunk_fire_overlay_tick(
 
         let rain_suppress = (1.0 - wx.rain_intensity * 0.78).max(0.0);
         let wind_boost = 1.0 + wx.wind_speed * 0.6;
-        let wind_spread = wind_boost.powf(0.35);
 
         scratch.clear();
         scratch.resize(n, 0.0);
@@ -396,7 +395,12 @@ pub fn chunk_fire_overlay_tick(
                     - wx.rain_intensity * 0.12 * dt_e)
                     .clamp(0.0, 1.0);
 
-                // Mild isotropic diffusion residual (anisotropic advance is the deposit pass).
+                // Residual heat bleed must stay wind-aware. Isotropic laplacian (old 0.45 *
+                // wind_spread) re-circularized fronts and fought the 8-neigh deposit pass.
+                let wind = wx.wind_mps;
+                let gust = wx.gust_mps;
+                let elev = &matrix.elevation;
+                let cell_m = TILE_METRES_GAMEPLAY;
                 let mut sum = 0f32;
                 let mut wsum = 0f32;
                 for &(dx, dy) in &NEIGHBOR8 {
@@ -409,7 +413,13 @@ pub fn chunk_fire_overlay_tick(
                     if water[ni] {
                         continue;
                     }
-                    let w = 1.0 / neighbor_step_dist(dx, dy);
+                    let rise = if elev.len() == n {
+                        slope_rise(elev[i], elev[ni], cell_m * neighbor_step_dist(dx, dy))
+                    } else {
+                        0.0
+                    };
+                    // Weight by the same anisotropic kernel as deposits (incoming from neighbour).
+                    let w = directional_heat_gain(1.0, -dx, -dy, wind, gust, rise).max(0.05);
                     sum += ovl.heat[ni] * w;
                     wsum += w;
                 }
@@ -419,10 +429,12 @@ pub fn chunk_fire_overlay_tick(
                 let neigh_mean = sum / wsum;
                 let lap = neigh_mean - nh;
                 let b_here = wet_diffusion_barrier(m);
+                // Calm air only: a tiny bleed. Under wind the deposit pass owns advance.
+                let calm_bleed = if wind.length() < 1.25 { 0.08 } else { 0.02 };
                 scratch[i] = if ovl.fuel[i] < MIN_CELL_FUEL_FOR_SPREAD || fuel_gate <= 0.0 {
                     0.0
                 } else {
-                    let spread = lap * 0.45 * b_here * rain_suppress * dt_e * wind_spread;
+                    let spread = lap * calm_bleed * b_here * rain_suppress * dt_e;
                     if spread.abs() > 1e-8 {
                         neighbor_spread += 1;
                     }
@@ -496,9 +508,10 @@ pub fn chunk_fire_overlay_tick(
                     if !can_spread(&src) {
                         continue;
                     }
-                    // Perimeter jitter: weak downwind fingers skip a fraction of deposits.
-                    let jitter = fire_cell_hash01(entity.to_bits(), i as u32, ember_clock / 5);
-                    for &(dx, dy) in &NEIGHBOR8 {
+                    // Spatial front noise + per-direction roll → fingers / unburnt islands (W2).
+                    let chunk_bits = entity.to_bits();
+                    let bucket = ember_clock / 5;
+                    for (dir_i, &(dx, dy)) in NEIGHBOR8.iter().enumerate() {
                         let nx = x as i32 + dx;
                         let ny = y as i32 + dy;
                         if nx < 0 || ny < 0 || nx as usize >= sx || ny as usize >= sy {
@@ -513,11 +526,6 @@ pub fn chunk_fire_overlay_tick(
                         } else {
                             0.0
                         };
-                        let gain = directional_heat_gain(base_gain, dx, dy, wind, gust, rise) * deposit_k;
-                        if gain <= 1e-8 {
-                            continue;
-                        }
-                        // Stochastic skip stronger on flanks/back so the perimeter fingers.
                         let align = {
                             let sp = wind.length();
                             if sp > 1e-4 {
@@ -528,8 +536,26 @@ pub fn chunk_fire_overlay_tick(
                                 0.0
                             }
                         };
-                        let skip_p = (0.22 - align * 0.18).clamp(0.02, 0.35);
-                        if jitter < skip_p && align < 0.85 {
+                        let (gain_mul, skip_p) = fire_front_deposit_jitter(
+                            chunk_bits,
+                            sx as u32,
+                            j as u32,
+                            bucket,
+                            align,
+                        );
+                        let roll = fire_cell_hash01(
+                            chunk_bits,
+                            (j as u32).wrapping_mul(8).wrapping_add(dir_i as u32),
+                            bucket,
+                        );
+                        // Always allow strong head fire; noise skips flanks/back and weak pockets.
+                        if roll < skip_p && align < 0.92 {
+                            continue;
+                        }
+                        let gain = directional_heat_gain(base_gain, dx, dy, wind, gust, rise)
+                            * deposit_k
+                            * gain_mul;
+                        if gain <= 1e-8 {
                             continue;
                         }
                         let fuel_before = ovl.fuel[j];

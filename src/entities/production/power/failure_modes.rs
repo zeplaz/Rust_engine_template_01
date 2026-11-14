@@ -493,16 +493,37 @@ pub fn solar_capacity_factor(cloud: f32) -> f32 {
     (1.0 - cloud.clamp(0.0, 1.0) * 0.8).clamp(0.05, 1.0)
 }
 
+/// Aggregate renewable capacity factors for HUD / dump (W4).
+#[derive(Resource, Debug, Clone, Default)]
+pub struct RenewableWeatherFactors {
+    pub wind_min: f32,
+    pub wind_max: f32,
+    pub wind_mean: f32,
+    pub wind_n: u32,
+    pub solar_min: f32,
+    pub solar_max: f32,
+    pub solar_mean: f32,
+    pub solar_n: u32,
+}
+
 /// Wind / solar plants sample the weather field at their own position.
 pub fn variable_renewable_placeholder(
     field: Option<Res<WeatherField>>,
     sim_time: Option<Res<SimTimeMicros>>,
+    mut factors: ResMut<RenewableWeatherFactors>,
     mut query: Query<(&mut PowerPlant, Option<&Transform>), With<VariableRenewable>>,
 ) {
+    *factors = RenewableWeatherFactors {
+        wind_min: 1.0,
+        solar_min: 1.0,
+        ..Default::default()
+    };
     let Some(field) = field.filter(|f| f.is_ready()) else {
         return;
     };
     let now = sim_time.map_or(SimTimeMicros(field.prev_micros), |t| *t);
+    let mut wind_sum = 0.0f32;
+    let mut solar_sum = 0.0f32;
     for (mut plant, transform) in &mut query {
         // Site transforms are in metres on XZ (`site_world_position`); no transform -> map centre.
         let pos = transform.map_or(field.extent_m * 0.5, |t| Vec2::new(t.translation.x, t.translation.z));
@@ -512,7 +533,32 @@ pub fn variable_renewable_placeholder(
             PowerPlantType::Solar => solar_capacity_factor(s.cloud),
             _ => 1.0,
         };
+        match plant.plant_type {
+            PowerPlantType::Wind => {
+                factors.wind_n += 1;
+                factors.wind_min = factors.wind_min.min(m);
+                factors.wind_max = factors.wind_max.max(m);
+                wind_sum += m;
+            }
+            PowerPlantType::Solar => {
+                factors.solar_n += 1;
+                factors.solar_min = factors.solar_min.min(m);
+                factors.solar_max = factors.solar_max.max(m);
+                solar_sum += m;
+            }
+            _ => {}
+        }
         plant.current_output *= m;
+    }
+    if factors.wind_n > 0 {
+        factors.wind_mean = wind_sum / factors.wind_n as f32;
+    } else {
+        factors.wind_min = 0.0;
+    }
+    if factors.solar_n > 0 {
+        factors.solar_mean = solar_sum / factors.solar_n as f32;
+    } else {
+        factors.solar_min = 0.0;
     }
 }
 
@@ -630,6 +676,21 @@ pub fn project_containment_breach_to_player_event_log(
 mod tests {
     use super::*;
     use crate::entities::production::power::capabilities::attach_power_plant_capabilities;
+
+    #[test]
+    fn wind_cubic_between_cut_in_and_rated() {
+        assert_eq!(wind_capacity_factor(2.0), 0.0);
+        assert_eq!(wind_capacity_factor(30.0), 0.0);
+        assert!((wind_capacity_factor(12.0) - 1.0).abs() < 1e-4);
+        let mid = wind_capacity_factor(8.0);
+        assert!(mid > 0.2 && mid < 0.9);
+    }
+
+    #[test]
+    fn solar_cloud_derates() {
+        assert!((solar_capacity_factor(0.0) - 1.0).abs() < 1e-4);
+        assert!(solar_capacity_factor(1.0) < 0.3);
+    }
     use crate::entities::production::power::plant_definition::{
         CapabilityFlags, NuclearFailureProfile, PlantDefinition,
     };

@@ -195,7 +195,7 @@ const NOTICE_LIFETIME_S: f32 = 4.0;
 const MAX_MARKERS: usize = 64;
 
 impl FrontOrderFeedback {
-    fn notify(&mut self, text: impl Into<String>) {
+    pub fn notify(&mut self, text: impl Into<String>) {
         self.notice = Some((text.into(), 0.0));
     }
 }
@@ -355,8 +355,14 @@ pub fn update_front_map_cursor_system(
     cursor.set_if_neq(next);
 }
 
+/// CLICK-UX-1 — build-armed (or Adjust ghost) owns LMB/RMB; formation select/order yields.
+#[must_use]
+pub fn build_tool_blocks_front_orders(tool: Option<&ActiveBuildTool>) -> bool {
+    tool.is_some_and(|t| t.tool != BuildTool::None)
+}
+
 fn tool_blocks(tool: &Option<Res<ActiveBuildTool>>) -> bool {
-    tool.as_deref().is_some_and(|t| t.tool != BuildTool::None)
+    build_tool_blocks_front_orders(tool.as_deref())
 }
 
 fn shift_down(keys: &ButtonInput<KeyCode>) -> bool {
@@ -370,6 +376,7 @@ pub fn front_mouse_system(
     keys: Res<ButtonInput<KeyCode>>,
     cursor: Res<FrontMapCursor>,
     tool: Option<Res<ActiveBuildTool>>,
+    drone_tool: Option<Res<crate::gui::drone_mission_chrome::DroneAoTool>>,
     theaters: Res<TheaterBook>,
     pressure: Res<PressurePointBook>,
     formations: Query<(Entity, &Formation)>,
@@ -389,47 +396,59 @@ pub fn front_mouse_system(
 
     let blocked = tool_blocks(&tool);
     let shift = shift_down(&keys);
+    let drone_draw =
+        crate::gui::drone_mission_chrome::drone_ao_tool_blocks_select(drone_tool.as_deref());
+    if drone_draw {
+        *drag = FrontDragBox::default();
+    }
 
-    // --- left: click / box ---
-    if drag.start.is_none() {
-        if buttons.just_pressed(MouseButton::Left) && cursor.free && !blocked {
+    // --- left: click / box (yields while D7 drone AO draw tool is armed) ---
+    if !drone_draw {
+        if drag.start.is_none() {
+            if buttons.just_pressed(MouseButton::Left) && cursor.free && !blocked {
+                if let Some(at) = cursor.xy {
+                    *drag = FrontDragBox {
+                        start: Some(at),
+                        end: Some(at),
+                        px_per_tile: cursor.px_per_tile,
+                    };
+                }
+            }
+        } else {
             if let Some(at) = cursor.xy {
-                *drag = FrontDragBox { start: Some(at), end: Some(at), px_per_tile: cursor.px_per_tile };
+                drag.end = Some(at);
             }
-        }
-    } else {
-        if let Some(at) = cursor.xy {
-            drag.end = Some(at);
-        }
-        drag.px_per_tile = cursor.px_per_tile;
-        if buttons.just_released(MouseButton::Left) || !buttons.pressed(MouseButton::Left) {
-            let d = *drag;
-            *drag = FrontDragBox::default();
-            let Some(start) = d.start else { return };
-            let all: Vec<(Entity, Formation)> = formations.iter().map(|(e, f)| (e, f.clone())).collect();
-            if let Some((lo, hi)) = d.rect() {
-                let mut v = formations_in_box(&all, lo, hi);
-                if shift {
-                    v.extend(selected.0.iter().copied());
-                }
-                selected.set(v);
-            } else {
-                let reach = (symbol_reach_tiles(d.px_per_tile)).max(0.8);
-                let hit = all
-                    .iter()
-                    .filter(|(_, f)| f.faction_slot == PLAYER_SLOT)
-                    .map(|(e, f)| (*e, (tile_center(f.tile) - start).length()))
-                    .filter(|(_, dist)| *dist <= reach)
-                    .min_by(|a, b| a.1.total_cmp(&b.1).then(a.0.to_bits().cmp(&b.0.to_bits())));
-                match (hit, shift) {
-                    (Some((e, _)), true) => selected.toggle(e),
-                    (Some((e, _)), false) => selected.set(vec![e]),
-                    (None, true) => {}
-                    (None, false) => selected.set(Vec::new()),
+            drag.px_per_tile = cursor.px_per_tile;
+            if buttons.just_released(MouseButton::Left) || !buttons.pressed(MouseButton::Left) {
+                let d = *drag;
+                *drag = FrontDragBox::default();
+                let Some(start) = d.start else { return };
+                let all: Vec<(Entity, Formation)> =
+                    formations.iter().map(|(e, f)| (e, f.clone())).collect();
+                if let Some((lo, hi)) = d.rect() {
+                    let mut v = formations_in_box(&all, lo, hi);
+                    if shift {
+                        v.extend(selected.0.iter().copied());
+                    }
+                    selected.set(v);
+                } else {
+                    let reach = (symbol_reach_tiles(d.px_per_tile)).max(0.8);
+                    let hit = all
+                        .iter()
+                        .filter(|(_, f)| f.faction_slot == PLAYER_SLOT)
+                        .map(|(e, f)| (*e, (tile_center(f.tile) - start).length()))
+                        .filter(|(_, dist)| *dist <= reach)
+                        .min_by(|a, b| a.1.total_cmp(&b.1).then(a.0.to_bits().cmp(&b.0.to_bits())));
+                    match (hit, shift) {
+                        (Some((e, _)), true) => selected.toggle(e),
+                        (Some((e, _)), false) => selected.set(vec![e]),
+                        (None, true) => {}
+                        (None, false) => selected.set(Vec::new()),
+                    }
                 }
             }
+            return;
         }
-        return;
     }
 
     // --- right: order the selection ---
@@ -764,12 +783,19 @@ impl Plugin for FrontControlsPlugin {
             .init_resource::<DeploymentOrderQueue>()
             .init_resource::<TheaterBook>()
             .init_resource::<PressurePointBook>()
-            .add_systems(
+            .init_resource::<ActiveBuildTool>()
+            .init_resource::<crate::gui::logistics_focus::HudLogisticsFocus>();
+        crate::gui::drone_mission_chrome::register_drone_mission_chrome(app);
+        app.add_systems(
                 Update,
                 (
                     update_front_map_cursor_system,
+                    crate::gui::drone_mission_chrome::drone_ao_draw_system,
                     front_mouse_system,
+                    crate::gui::hud::site_map_pick::clear_formation_selection_when_build_armed,
+                    crate::gui::hud::site_map_pick::map_pick_site_focus_system,
                     front_key_commands_system,
+                    crate::gui::drone_mission_chrome::drone_mission_hotkey_system,
                     front_panel_buttons_system,
                     update_order_feedback_system,
                 )
@@ -836,6 +862,41 @@ mod tests {
 
     fn queued(app: &App) -> Vec<DeploymentOrder> {
         app.world().resource::<DeploymentOrderQueue>().iter().map(|(_, o)| *o).collect()
+    }
+
+    #[test]
+    fn build_tool_armed_blocks_front_orders_helper() {
+        use crate::construction::{ActiveBuildTool, BuildTool, BuildingArchetypeId};
+        assert!(!build_tool_blocks_front_orders(None));
+        let idle = ActiveBuildTool {
+            tool: BuildTool::None,
+            ..Default::default()
+        };
+        assert!(!build_tool_blocks_front_orders(Some(&idle)));
+        let armed = ActiveBuildTool {
+            tool: BuildTool::Building(BuildingArchetypeId::Factory),
+            ..Default::default()
+        };
+        assert!(build_tool_blocks_front_orders(Some(&armed)));
+    }
+
+    #[test]
+    fn armed_build_tool_blocks_selection_and_orders() {
+        use crate::construction::{ActiveBuildTool, BuildTool, BuildingArchetypeId};
+        let mut app = app();
+        let a = spawn(&mut app, 0, 10, 10);
+        *app.world_mut().resource_mut::<ActiveBuildTool>() = ActiveBuildTool {
+            tool: BuildTool::Building(BuildingArchetypeId::Factory),
+            ..Default::default()
+        };
+        click(&mut app, MouseButton::Left, Vec2::new(10.5, 10.5));
+        assert!(
+            app.world().resource::<SelectedFormation>().0.is_empty(),
+            "build-armed must not select formations"
+        );
+        click(&mut app, MouseButton::Right, Vec2::new(20.5, 20.5));
+        assert!(queued(&app).is_empty(), "build-armed must not enqueue orders");
+        let _ = a;
     }
 
     #[test]

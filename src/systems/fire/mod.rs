@@ -12,14 +12,15 @@ mod chunk_fuel_profile;
 mod chunk_smoke_field;
 mod chunk_surface_fire;
 pub mod combustion;
+pub mod ecology_metrics;
 pub mod ember_physics;
 mod ember_spot_ignition;
+pub mod entity_exposure;
 mod fire_fuel;
 mod fire_light_emission;
 mod play_fire_visibility;
 mod surface_water;
 pub mod types;
-pub mod ecology_metrics;
 
 pub(crate) use fire_fuel::{fire_fuel_field_tick, spawn_fire_fuel_field_on_new_chunk};
 
@@ -43,6 +44,10 @@ pub use play_fire_visibility::{
 pub use surface_water::SurfaceWaterFireGate;
 pub use types::ChunkFireOverlay;
 pub use ecology_metrics::{finalize_fire_ecology_witness_frame, FireEcologyStats};
+pub use entity_exposure::{
+    FormationFireExposure, FireCollapseQueue, FireEntityExposureStats, SiteBurnWashFrame,
+    SiteFireStage, SiteFireState,
+};
 
 pub(crate) use chunk_fuel_profile::{
     chunk_fuel_profile_tick, spawn_chunk_fuel_profile_on_new_chunk,
@@ -65,6 +70,9 @@ impl Plugin for FirePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<surface_water::SurfaceWaterFireGate>()
             .init_resource::<ecology_metrics::FireEcologyStats>()
+            .init_resource::<entity_exposure::FireCollapseQueue>()
+            .init_resource::<entity_exposure::FireEntityExposureStats>()
+            .init_resource::<entity_exposure::SiteBurnWashFrame>()
             .add_message::<ember_spot_ignition::EmberSpotIgnitionEvent>()
             .add_systems(
                 Update,
@@ -103,6 +111,27 @@ impl Plugin for FirePlugin {
                     sync_sim_map_fire_overlay_when_sim_has_heat
                         .after(chunk_fire_overlay_tick)
                         .run_if(in_state(crate::engine::states::BaseState::Simulation)),
+                    // FIRE-ENTITY-1: site / formation exposure after overlay tick.
+                    entity_exposure::ensure_site_fire_state
+                        .after(chunk_fire_overlay_tick)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    entity_exposure::ensure_formation_fire_exposure
+                        .after(chunk_fire_overlay_tick)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    entity_exposure::site_fire_exposure_tick
+                        .after(entity_exposure::ensure_site_fire_state)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    entity_exposure::stamp_formation_fire_exposure
+                        .after(entity_exposure::ensure_formation_fire_exposure)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    entity_exposure::apply_fire_collapse_demolish
+                        .after(entity_exposure::site_fire_exposure_tick)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    entity_exposure::sync_site_burn_wash_frame
+                        .after(entity_exposure::site_fire_exposure_tick)
+                        .in_set(ChunkEnvironmentSet::Fire),
+                    entity_exposure::apply_site_fire_ops_derate
+                        .after(crate::entities::production::core::tick_manufacturing_nodes),
                 ),
             );
     }

@@ -41,7 +41,16 @@
 
 ## DR-* rows (cross-program)
 
-### Migration / Bevy 0.19
+### Migration / Bevy 0.20 (ACTIVE P0)
+
+| ID | Item | Class | unblock_when | Owner plan |
+|:---|:---|:---|:---|:---|
+| **DR-MIG-020-M0** | Bevy 0.19 → 0.20 engine compile-green | — | **DONE** 2026-11-13 — M0 SIGN-OFF; see `plan_bevy_020_migration_v1.md` | `plan_bevy_020_migration_v1.md` |
+| **DR-MIG-020-ECO** | hanabi / tilemap / vector_shapes on 0.20 | — | **DONE** 2026-11-13 — bumped to 0.20 / shapes 0.14; still **opt-in** features (not default) | `plan_bevy_020_migration_v1.md` M5 |
+| **DR-MIG-020-WESL** | Full owned-shader WESL port | post_m0 | After M0; may lag M2 if WGSL still accepted | `plan_bevy_020_migration_v1.md` M2 |
+| **DR-MIG-020-LEGACY** | Opportunistic pre-0.20 leftover purge | never_blocks | Same-PR only when touching a path; **0.20 precedence** | `plan_bevy_020_migration_v1.md` § Legacy |
+
+### Migration / Bevy 0.19 (CLOSED — do not reopen)
 
 | ID | Item | Class | unblock_when | Owner plan |
 |:---|:---|:---|:---|:---|

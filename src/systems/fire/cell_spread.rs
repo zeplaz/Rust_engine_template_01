@@ -40,9 +40,10 @@ pub const RAIN_BLOCKS_SPREAD: f32 = 0.85;
 pub const RAIN_BLOCKS_SPREAD_MM_H: f32 = 8.5;
 
 /// Downwind boost scale: `1 + K_WIND * max(0, d̂·ŵ) * |w| / 10`.
-pub const K_WIND_DOWNWIND: f32 = 1.15;
+/// Tuned so head:back is strong enough for teardrop fronts (~3:1 L:B near 8 m/s with deposits).
+pub const K_WIND_DOWNWIND: f32 = 1.85;
 /// Upwind attenuation: multiply by `1 - U_WIND * max(0, -d̂·ŵ)` (clamped ≥ 0.05).
-pub const U_WIND_UPWIND: f32 = 0.72;
+pub const U_WIND_UPWIND: f32 = 0.88;
 /// Slope: ROS roughly doubles every this many degrees of upslope.
 pub const SLOPE_DOUBLE_DEG: f32 = 10.0;
 /// Cap on the upslope multiplier.
@@ -325,6 +326,65 @@ pub fn fire_cell_hash01(chunk_bits: u64, cell: u32, bucket: u64) -> f32 {
     x = (x ^ (x >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
     x ^= x >> 31;
     (x >> 40) as f32 / (1u64 << 24) as f32
+}
+
+#[inline]
+fn fire_lattice01(ix: i32, iy: i32, salt: u32) -> f32 {
+    let mut n = (ix as u32)
+        .wrapping_mul(374_761_393)
+        .wrapping_add((iy as u32).wrapping_mul(668_265_263))
+        .wrapping_add(salt);
+    n = n.wrapping_mul(0x9E37_79B9);
+    n ^= n >> 16;
+    (n >> 8) as f32 / (1u32 << 24) as f32
+}
+
+/// Spatial value noise in `[0, 1)` for fire-front fingering (chunk-local cell coords).
+#[inline]
+#[must_use]
+pub fn fire_front_noise01(x: f32, y: f32, salt: u32) -> f32 {
+    let x0 = x.floor() as i32;
+    let y0 = y.floor() as i32;
+    let fx = x - x0 as f32;
+    let fy = y - y0 as f32;
+    let sx = fx * fx * (3.0 - 2.0 * fx);
+    let sy = fy * fy * (3.0 - 2.0 * fy);
+    let n00 = fire_lattice01(x0, y0, salt);
+    let n10 = fire_lattice01(x0 + 1, y0, salt);
+    let n01 = fire_lattice01(x0, y0 + 1, salt);
+    let n11 = fire_lattice01(x0 + 1, y0 + 1, salt);
+    let a = n00 + (n10 - n00) * sx;
+    let b = n01 + (n11 - n01) * sx;
+    a + (b - a) * sy
+}
+
+/// Deposit gain multiplier + skip probability from destination-cell front noise.
+///
+/// Returns `(gain_mul, skip_p)` — higher `skip_p` on flanks/back and in low-noise pockets
+/// so the perimeter fingers instead of a smooth ellipse. Caller rolls `fire_cell_hash01` vs `skip_p`.
+#[must_use]
+pub fn fire_front_deposit_jitter(
+    chunk_bits: u64,
+    grid_w: u32,
+    dst_cell: u32,
+    bucket: u64,
+    wind_align: f32,
+) -> (f32, f32) {
+    let w = grid_w.max(1);
+    let cx = (dst_cell % w) as f32;
+    let cy = (dst_cell / w) as f32;
+    let salt = (chunk_bits as u32)
+        .wrapping_mul(0xA24B_AED5)
+        .wrapping_add((bucket as u32).wrapping_mul(0x9E37_79B9));
+    let patch = fire_front_noise01(cx * 0.22 + 0.4, cy * 0.22 + 0.15, salt);
+    let fine = fire_front_noise01(cx * 0.7 + 2.1, cy * 0.7 + 1.3, salt ^ 0x51DE_F1A6);
+    let n = (patch * 0.55 + fine * 0.45).clamp(0.0, 1.0);
+    // Gain 0.45..1.55 — fingers push hard, pockets lag.
+    let gain_mul = 0.45 + n * 1.1;
+    // Skip rises on flanks/back; noise opens unburnt islands inside the front.
+    let align = wind_align.clamp(-1.0, 1.0);
+    let skip_p = (0.38 - align * 0.30 + (1.0 - n) * 0.28).clamp(0.06, 0.62);
+    (gain_mul, skip_p)
 }
 
 /// Spark below this does not ignite a cell sitting on the fuel floor.
@@ -744,6 +804,20 @@ mod tests {
         assert!(flank > back, "flank {flank} back {back}");
         assert!(head > diag, "cardinal head should beat diagonal at same wind");
         assert!(diag > back);
+    }
+
+    #[test]
+    fn w2_front_noise_varies_gain_across_cells() {
+        let mut gains = Vec::new();
+        for cell in 0..64u32 {
+            let (g, skip) = fire_front_deposit_jitter(0xABCDu64, 8, cell, 10, 0.0);
+            assert!((0.4..=1.6).contains(&g), "gain {g}");
+            assert!((0.05..=0.65).contains(&skip), "skip {skip}");
+            gains.push(g);
+        }
+        let min_g = gains.iter().copied().fold(f32::INFINITY, f32::min);
+        let max_g = gains.iter().copied().fold(f32::NEG_INFINITY, f32::max);
+        assert!(max_g - min_g > 0.15, "front noise too flat ({min_g}..{max_g})");
     }
 
     #[test]

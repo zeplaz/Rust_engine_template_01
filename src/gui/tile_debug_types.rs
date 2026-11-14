@@ -3,6 +3,8 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 use bevy::render::extract_resource::ExtractResource;
 use bevy::render::render_resource::ShaderType;
 use bytemuck::{Pod, Zeroable};
@@ -20,10 +22,12 @@ pub enum TileDebugViewId {
 /// Gates Core2d overlay raster (fire particles, water particles, optional tile-debug).
 /// Name is historical — production fire/water draw requires this host on the RTT camera.
 #[derive(Component, Clone, Copy, Default, Reflect, bevy::render::extract_component::ExtractComponent)]
+#[extract_app(RenderApp)]
 #[reflect(Component)]
 pub struct TileDebugRenderHost;
 
 #[derive(Resource, Clone, Copy, Default, ExtractResource, ShaderType)]
+#[extract_app(RenderApp)]
 pub struct TileDebugDrawGlobals {
     pub view_proj: Mat4,
     pub instance_count: u32,
@@ -56,6 +60,7 @@ pub struct TileDebugInstance {
 }
 
 #[derive(Resource, Default, Debug, Clone, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct TileDebugInstanceMap {
     pub per_view: HashMap<TileDebugViewId, Vec<TileDebugInstance>>,
 }

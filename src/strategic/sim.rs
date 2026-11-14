@@ -373,7 +373,15 @@ fn strategic_fields_coupling_tick(
             let rc = o.routing_congestion.get(i).copied().unwrap_or(0.0);
             let ew = o.ew_denial.get(i).copied().unwrap_or(0.0);
             if !skip_cell_writes {
-                o.mobility_cost[i] = (1.0 - t.clamp(0.0, 1.0) + 0.28 * rc).clamp(0.0, 1.0);
+                // W4: mud/snow from chunk weather raises off-road cost (same coupling writer).
+                let mud = weather
+                    .map(|w| w.soil_moisture.clamp(0.0, 1.0))
+                    .unwrap_or(0.0);
+                let snow = weather
+                    .map(|w| w.snow_depth.clamp(0.0, 1.0))
+                    .unwrap_or(0.0);
+                o.mobility_cost[i] =
+                    (1.0 - t.clamp(0.0, 1.0) + 0.28 * rc + 0.35 * mud + 0.20 * snow).clamp(0.0, 1.0);
                 if i < o.civilian_stability.len() {
                     let th0 = o.threat[i][0].clamp(0.0, 1.0);
                     o.civilian_stability[i] =

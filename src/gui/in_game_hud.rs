@@ -6,6 +6,9 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use bevy::picking::events::PointerClick;
+use bevy::picking::pointer::PointerButton;
+use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 use bevy::ui::Display;
 
@@ -1381,15 +1384,15 @@ fn attach_storage_picking_hooks(
 }
 
 fn on_logistics_storage_clicked(
-    mut click: On<Pointer<Click>>,
+    mut click: On<PointerClick>,
     mut focus: ResMut<HudLogisticsFocus>,
     roots: Query<(), With<LogisticsSiteRoot>>,
     members: Query<&LogisticsSiteMember>,
 ) {
-    if click.event().event.button != PointerButton::Primary {
+    if click.button != PointerButton::Primary {
         return;
     }
-    let entity = click.event().entity;
+    let entity = click.entity;
     let is_hub = roots.get(entity).is_ok();
     let member_of = members.get(entity).ok();
     let resolved = resolve_logistics_focus_entity(entity, member_of, is_hub);

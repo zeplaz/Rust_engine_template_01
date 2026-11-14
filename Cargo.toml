@@ -17,7 +17,7 @@ name = "bevy_preview_worker"
 path = "src/bin/bevy_preview_worker.rs"
 
 [features]
-# `bevy_tilemap_adapter` is NOT default: opt-in `bevy_ecs_tilemap` 0.19 (render off).
+# `bevy_tilemap_adapter` is NOT default: opt-in `bevy_ecs_tilemap` 0.20 (render off).
 # Keep OFF of `default` until adapter + runtime witness green; see src/dev/coder_remaining_post_019_v1.md.
 default = []
 # Extra Bevy entity/frame diagnostics plugins during `--test` runs (runtime latch still works without this).
@@ -68,8 +68,8 @@ ron = "0.8"
 reqwest = { version = "0.11", features = ["json"] }
 sha2 = "0.10"
 
-# --- Bevy and UI (Bevy 0.19 line) ---
-bevy = { version = "0.19", features = ["serialize", "bevy_gizmos", "bevy_gizmos_render", "multi_threaded"] }
+# --- Bevy and UI (Bevy 0.20 line — PLAN-BEVY-020-MIG-v1) ---
+bevy = { version = "0.20", features = ["serialize", "bevy_gizmos", "bevy_gizmos_render", "multi_threaded", "debug", "wav"] }
 # PNG + GIF for gameplay capture.
 image = { version = "0.25", default-features = false, features = ["png", "gif"] }
 bitflags = "2"
@@ -86,9 +86,9 @@ rayon = "1.10"
 rand = "0.8.5"
 rand_chacha = "0.3.1"
 nalgebra = "0.32.2"
-bevy_ecs_tilemap = { version = "0.19", optional = true, default-features = false }
-bevy_hanabi = { version = "0.19", optional = true, default-features = false, features = ["3d"] }
-bevy_vector_shapes = "0.13.0"
+bevy_ecs_tilemap = { version = "0.20", optional = true, default-features = false }
+bevy_hanabi = { version = "0.20", optional = true, default-features = false, features = ["3d"] }
+bevy_vector_shapes = "0.14.0"
 
 # Optional linfa stack for `research_lmodels` — **not integrated** in `engine::lmodels` yet (stub module).
 linfa = { version = "0.8.1", optional = true, default-features = false }

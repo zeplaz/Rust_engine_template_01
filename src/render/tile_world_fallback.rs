@@ -572,6 +572,7 @@ impl Plugin for TileWorldFallbackPlugin {
             .init_resource::<crate::gui::ZoomFrame>()
             .init_resource::<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>()
             .init_resource::<crate::gui::map_tile_atlas_stamp::TerrainGpuStampIndices>()
+            .init_resource::<crate::systems::fire::SiteBurnWashFrame>()
             .configure_sets(
                 Update,
                 TileWorldFallbackAfterFireExtract.after(FireVisualFrameSet::BuildProfiles),
@@ -982,6 +983,7 @@ fn sync_tile_fallback_raster_policy(
         &crate::strategic::ConstructionSite,
         &crate::strategic::SiteFootprint,
         Option<&crate::strategic::ProceduralBuildingSpec>,
+        Option<&crate::systems::fire::SiteFireState>,
     )>,
     sim_tick: Option<Res<crate::systems::sim_control::SimTick>>,
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
@@ -1035,12 +1037,16 @@ fn sync_tile_fallback_raster_policy(
                         .fold(0.0f32, f32::max)
                 })
                 .unwrap_or(0.0);
-            for (planned, site, footprint, spec) in &sites {
+            for (planned, site, footprint, spec, fire) in &sites {
+                // PT-5 Option B: prefer SiteFireState wash; fall back to chunk overlay max.
+                let fire_heat = fire
+                    .map(|f| f.stage.burn_wash01().max(f.heat_mean))
+                    .unwrap_or(overlay_heat);
                 if let Some(stamp) = crate::gui::map_tile_atlas_stamp::stamp_request_for_site(
                     registry,
                     catalog.as_deref(),
                     tick,
-                    overlay_heat,
+                    fire_heat,
                     planned,
                     site,
                     footprint,
@@ -1382,6 +1388,7 @@ struct TileFallbackRasterExtras<'w> {
     pending: Option<Res<'w, crate::construction::PendingConstructionQueue>>,
     play_map: Res<'w, crate::gui::map_tile_raster::PlayMapPixelMode>,
     pixel_world: Option<Res<'w, crate::gui::PixelWorldLandscapeIntent>>,
+    site_burn_wash: Res<'w, crate::systems::fire::SiteBurnWashFrame>,
 }
 
 fn tile_world_fallback_rasterize(
@@ -1422,6 +1429,7 @@ fn tile_world_fallback_rasterize(
         pending,
         play_map,
         pixel_world,
+        site_burn_wash,
     } = extras;
     let mut tracer_cells: Vec<(i32, i32)> = Vec::new();
     let mut impact_cells: Vec<(i32, i32)> = Vec::new();
@@ -1581,7 +1589,7 @@ fn tile_world_fallback_rasterize(
         .iter()
         .map(|(c, m, _)| (c.coord, m.size))
         .collect();
-    let cell_fire_owned: Vec<(bevy::math::IVec2, bevy::math::UVec2, Vec<f32>)> = queries
+    let mut cell_fire_owned: Vec<(bevy::math::IVec2, bevy::math::UVec2, Vec<f32>)> = queries
         .p2()
         .iter()
         .filter_map(|(c, m, ovl)| {
@@ -1592,6 +1600,29 @@ fn tile_world_fallback_rasterize(
             Some((c.coord, m.size, ovl.heat.clone()))
         })
         .collect();
+    // FIRE-ENTITY-1 / PT-5 Option B: footprint-masked burn wash from SiteBurnWashFrame.
+    for (tile, &strength) in &site_burn_wash.tiles {
+        if strength <= 0.0 || tile.x < 0 || tile.y < 0 {
+            continue;
+        }
+        let tx = tile.x as u32;
+        let tz = tile.y as u32;
+        for (coord, size, heat) in &mut cell_fire_owned {
+            let cw = size.x.max(1);
+            let ch = size.y.max(1);
+            let c = crate::terrain::generation::tile_to_chunk_coord(tx, tz, *size);
+            if c != *coord {
+                continue;
+            }
+            let lx = tx % cw;
+            let lz = tz % ch;
+            let i = (lz * cw + lx) as usize;
+            if let Some(h) = heat.get_mut(i) {
+                *h = (*h).max(strength);
+            }
+            break;
+        }
+    }
     let cell_fire_heat: Vec<(bevy::math::IVec2, bevy::math::UVec2, &[f32])> = cell_fire_owned
         .iter()
         .map(|(c, s, h)| (*c, *s, h.as_slice()))

@@ -114,6 +114,79 @@
           "consumes": ["Labour", "Electricity"]
         }
       ]
+    },
+    "petroleum": {
+      "display_name": "Petroleum (crude → fuel)",
+      "steps": [
+        {
+          "role": "oil_well",
+          "catalog_id": "industrial_oil_well",
+          "power_consumption": 12,
+          "produces": ["Oil"],
+          "consumes": ["Labour", "Electricity"]
+        },
+        {
+          "role": "fuel_refinery",
+          "catalog_id": "industrial_fuel_refinery",
+          "power_consumption": 40,
+          "produces": ["Fuel"],
+          "consumes": ["Oil", "Labour", "Electricity"]
+        }
+      ]
+    },
+    "uas_assembly": {
+      "display_name": "UAS assembly (battery / fiber / airframe)",
+      "note": "Discrete ManufacturingNode outputs; haul via LogisticsOrderSim plant bridge (P2/P3).",
+      "steps": [
+        {
+          "role": "uas_battery",
+          "catalog_id": "uas_battery_plant",
+          "power_consumption": 28,
+          "produces": ["drone_battery"],
+          "consumes": ["Aluminum", "Chemicals", "Labour", "Electricity"]
+        },
+        {
+          "role": "uas_fiber",
+          "catalog_id": "uas_fiber_plant",
+          "power_consumption": 22,
+          "produces": ["fiber_spool_km"],
+          "consumes": ["Chemicals", "Labour", "Electricity"]
+        },
+        {
+          "role": "uas_final_assembly",
+          "catalog_id": "uas_final_assembly",
+          "power_consumption": 35,
+          "produces": ["drone_airframe"],
+          "consumes": ["Aluminum", "drone_battery", "Labour", "Electricity"]
+        }
+      ]
+    },
+    "missile_assembly": {
+      "display_name": "Missile assembly (seeker / warhead / body)",
+      "note": "Discrete ManufacturingNode outputs; haul via LogisticsOrderSim plant bridge → MissilePackage refill (P6/MISSILE-CATALOG-1).",
+      "steps": [
+        {
+          "role": "missile_seeker",
+          "catalog_id": "missile_seeker_plant",
+          "power_consumption": 30,
+          "produces": ["missile_seeker"],
+          "consumes": ["Aluminum", "Chemicals", "Labour", "Electricity"]
+        },
+        {
+          "role": "missile_warhead",
+          "catalog_id": "missile_warhead_plant",
+          "power_consumption": 32,
+          "produces": ["missile_warhead"],
+          "consumes": ["Chemicals", "Steel", "Labour", "Electricity"]
+        },
+        {
+          "role": "missile_body",
+          "catalog_id": "missile_body_plant",
+          "power_consumption": 40,
+          "produces": ["missile_body"],
+          "consumes": ["Aluminum", "missile_seeker", "missile_warhead", "Labour", "Electricity"]
+        }
+      ]
     }
   }
 }

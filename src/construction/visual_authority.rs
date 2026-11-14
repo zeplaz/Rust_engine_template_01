@@ -66,6 +66,8 @@ pub struct ConstructionVisualRequests {
     pub footprint_tiles: Vec<FootprintTileRequest>,
     /// Tiles of the live ghost that take the gold lock ring (`BuildPlacementMode::Adjust` only).
     pub footprint_lock_tiles: Vec<IVec2>,
+    /// BUILD-UX-1 — facing/nose tiles (rotation chevron) for the live ghost.
+    pub footprint_facing_tiles: Vec<IVec2>,
     /// Ebbtide-style column stacks — presentation only ([`super::voxel_massing`]).
     pub massing_columns: Vec<super::voxel_massing::VoxelColumnRequest>,
     pub corridor_paths: Vec<super::round4_corridor::CorridorPhasePathRequest>,
@@ -80,6 +82,7 @@ impl ConstructionVisualRequests {
         self.control_points.clear();
         self.footprint_tiles.clear();
         self.footprint_lock_tiles.clear();
+        self.footprint_facing_tiles.clear();
         self.massing_columns.clear();
         self.corridor_paths.clear();
         self.site_stub_boxes.clear();
@@ -114,6 +117,43 @@ fn push_weighted_footprint_tiles(
             });
         }
     }
+}
+
+/// Quarter-turn facing unit on the map plane (0=+Z, 1=+X, 2=−Z, 3=−X).
+#[must_use]
+pub fn facing_delta(rotation_quarter_turns: u8) -> IVec2 {
+    match rotation_quarter_turns % 4 {
+        1 => IVec2::new(1, 0),
+        2 => IVec2::new(0, -1),
+        3 => IVec2::new(-1, 0),
+        _ => IVec2::new(0, 1),
+    }
+}
+
+/// Nose tiles: footprint cells farthest along facing, plus one step beyond for the chevron.
+#[must_use]
+pub fn facing_nose_tiles(weights: &[(IVec2, f32)], rotation_quarter_turns: u8) -> Vec<IVec2> {
+    let dir = facing_delta(rotation_quarter_turns);
+    let occupied: Vec<IVec2> = weights
+        .iter()
+        .filter(|(_, w)| *w > 0.001)
+        .map(|(t, _)| *t)
+        .collect();
+    if occupied.is_empty() {
+        return Vec::new();
+    }
+    let score = |t: IVec2| t.x * dir.x + t.y * dir.y;
+    let best = occupied.iter().copied().map(score).max().unwrap_or(0);
+    let mut nose: Vec<IVec2> = occupied.into_iter().filter(|t| score(*t) == best).collect();
+    nose.sort_by_key(|t| (t.x, t.y));
+    // Chevron tip just past the footprint edge.
+    if let Some(&edge) = nose.first() {
+        let tip = edge + dir;
+        if !nose.contains(&tip) {
+            nose.push(tip);
+        }
+    }
+    nose
 }
 
 /// Fill per-tile footprint requests from active ghost + staged book (view-only, partial-alpha).
@@ -182,6 +222,14 @@ pub fn sync_footprint_visual_requests(
                 .collect();
             requests.footprint_lock_tiles.extend(locked);
         }
+        // BUILD-UX-1: facing chevron always when ghost has tiles (rotation readable).
+        let weights: Vec<(IVec2, f32)> = requests.footprint_tiles[before..]
+            .iter()
+            .map(|t| (t.tile, t.weight))
+            .collect();
+        requests
+            .footprint_facing_tiles
+            .extend(facing_nose_tiles(&weights, ghost.rotation_quarter_turns));
     }
     for row in &staged.rows {
         let kind = color_kind_for_staged_validity(row.validity);
@@ -236,6 +284,22 @@ mod footprint_tests {
             .iter()
             .all(|t| (t.weight - 1.0).abs() < 1e-5));
         assert!(reqs.footprint_lock_tiles.is_empty());
+    }
+
+    #[test]
+    fn facing_nose_moves_with_rotation() {
+        let weights = vec![
+            (IVec2::new(0, 0), 1.0),
+            (IVec2::new(1, 0), 1.0),
+            (IVec2::new(0, 1), 1.0),
+            (IVec2::new(1, 1), 1.0),
+        ];
+        let n0 = facing_nose_tiles(&weights, 0);
+        let n1 = facing_nose_tiles(&weights, 1);
+        assert!(n0.contains(&IVec2::new(0, 1)) || n0.contains(&IVec2::new(1, 1)));
+        assert!(n0.iter().any(|t| *t == IVec2::new(0, 2) || *t == IVec2::new(1, 2)));
+        assert!(n1.contains(&IVec2::new(1, 0)) || n1.contains(&IVec2::new(1, 1)));
+        assert_ne!(n0, n1);
     }
 
     #[test]

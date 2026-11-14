@@ -1,17 +1,22 @@
 //! Fleets grow with the economy: a faction's depot builds a vehicle when that faction's fleet of a
-//! cargo class cannot keep up (plan LO-5, vehicle production feeds the pool).
+//! cargo class cannot keep up (plan LO-5 / spine P4, vehicle production feeds the pool).
 //!
 //! Reads only the snapshot; writes only [`LogisticsOrderCommand::BuildVehicle`] requests, which the
 //! order sim applies atomically (materials debited from the depot's stock, or rejected). Runs for
 //! factions whose logistics are automated ([`AutoSupplyPolicy::enabled`]); a player who runs
 //! logistics by hand adds vehicles from the orders panel.
+//!
+//! **P4:** class of waiting orders resolves through [`CargoKindRegistry`] when present (Steel /
+//! Machinery / munitions / personnel), so growth tracks registry classes — not a second vehicle ECS.
+//! Logistics **formations** that amplify haul capacity remain DEFER (see plan charter).
 
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
 use super::auto_supply::AutoSupplyPolicy;
-use super::model::{CargoClassMask, CargoKind, OrderStatus, OwnerId, WaitReason};
+use super::cargo_registry::CargoKindRegistry;
+use super::model::{CargoClass, CargoClassMask, CargoKind, OrderStatus, OwnerId, WaitReason};
 use super::plugin::{LogisticsOrderRequest, LogisticsOrdersSnapshotRes};
 use super::sim::LogisticsOrderCommand;
 use super::snapshot::{LogisticsOrdersSnapshot, SiteRole};
@@ -61,9 +66,32 @@ impl Default for FleetGrowthPolicy {
                     speed_mps: 11.0,
                     cost: vec![("Steel", 8), ("Machinery", 2)],
                 },
+                // Troop carrier (personnel class) — same Steel/Machinery spine.
+                VehicleRecipe {
+                    class_mask: CargoClassMask::TROOP,
+                    capacity_units: 12,
+                    speed_mps: 15.0,
+                    cost: vec![("Steel", 5), ("Machinery", 2)],
+                },
             ],
         }
     }
+}
+
+/// True when every recipe cost tag is present in the cargo registry (P4 gate).
+#[must_use]
+pub fn recipe_costs_in_registry(policy: &FleetGrowthPolicy, reg: &CargoKindRegistry) -> bool {
+    policy
+        .recipes
+        .iter()
+        .all(|r| r.cost.iter().all(|(tag, _)| reg.contains(tag)))
+}
+
+fn cargo_class_bit(reg: Option<&CargoKindRegistry>, tag: &str) -> u8 {
+    let class = reg
+        .map(|r| r.class_of(&CargoKind::new(tag)))
+        .unwrap_or_else(|| CargoKind::new(tag).class());
+    CargoClassMask::of(class).0
 }
 
 /// The recipe to build for `owner`, if one of its classes is saturated: the class with the most
@@ -73,11 +101,14 @@ pub fn saturated_recipe<'a>(
     policy: &'a FleetGrowthPolicy,
     snap: &LogisticsOrdersSnapshot,
     owner: OwnerId,
+    registry: Option<&CargoKindRegistry>,
 ) -> Option<&'a VehicleRecipe> {
     let mut waiting: BTreeMap<u8, u32> = BTreeMap::new();
     for o in snap.orders.iter().filter(|o| o.owner == owner) {
         if o.status == OrderStatus::Waiting(WaitReason::NoVehicles) {
-            *waiting.entry(CargoClassMask::of(CargoKind::new(o.cargo.clone()).class()).0).or_default() += 1;
+            *waiting
+                .entry(cargo_class_bit(registry, o.cargo.as_str()))
+                .or_default() += 1;
         }
     }
     policy
@@ -109,22 +140,37 @@ pub fn saturated_recipe<'a>(
 pub fn grow_depot_fleets_system(
     policy: Res<FleetGrowthPolicy>,
     auto: Res<AutoSupplyPolicy>,
+    registry: Res<CargoKindRegistry>,
     snapshot: Res<LogisticsOrdersSnapshotRes>,
     mut requests: MessageWriter<LogisticsOrderRequest>,
     mut last_build: Local<BTreeMap<OwnerId, u64>>,
 ) {
     let snap = &snapshot.0;
-    let mut owners: Vec<OwnerId> = snap.sites.iter().filter(|s| s.role == SiteRole::Depot).map(|s| s.owner).collect();
+    let mut owners: Vec<OwnerId> = snap
+        .sites
+        .iter()
+        .filter(|s| s.role == SiteRole::Depot)
+        .map(|s| s.owner)
+        .collect();
     owners.sort();
     owners.dedup();
     for owner in owners.into_iter().filter(|o| auto.enabled(*o)) {
-        if last_build.get(&owner).is_some_and(|t| snap.tick < t + policy.interval_ticks) {
+        if last_build
+            .get(&owner)
+            .is_some_and(|t| snap.tick < t + policy.interval_ticks)
+        {
             continue;
         }
         if snap.fleet(owner).total >= policy.max_fleet {
             continue;
         }
-        let Some(recipe) = saturated_recipe(&policy, snap, owner) else { continue };
+        let Some(recipe) = saturated_recipe(&policy, snap, owner, Some(&registry)) else {
+            continue;
+        };
+        // Refuse builds whose materials are not registry cargo (P4).
+        if recipe.cost.iter().any(|(tag, _)| !registry.contains(tag)) {
+            continue;
+        }
         let depot = snap.sites_of(owner, SiteRole::Depot).find(|d| {
             recipe.cost.iter().all(|(tag, n)| {
                 d.stock
@@ -140,8 +186,39 @@ pub fn grow_depot_fleets_system(
             class_mask: recipe.class_mask,
             capacity_units: recipe.capacity_units,
             speed_mps: recipe.speed_mps,
-            cost: recipe.cost.iter().map(|(tag, n)| (CargoKind::new(*tag), *n)).collect(),
+            cost: recipe
+                .cost
+                .iter()
+                .map(|(tag, n)| (CargoKind::new(*tag), *n))
+                .collect(),
         }));
         last_build.insert(owner, snap.tick);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::economy::logistics::orders::cargo_registry::load_cargo_kind_registry;
+
+    #[test]
+    fn default_recipes_cover_freight_tanker_troop_and_registry_steel_machinery() {
+        let policy = FleetGrowthPolicy::default();
+        let (reg, _) = load_cargo_kind_registry();
+        assert!(recipe_costs_in_registry(&policy, &reg));
+        assert!(policy
+            .recipes
+            .iter()
+            .any(|r| r.class_mask == CargoClassMask::FREIGHT));
+        assert!(policy
+            .recipes
+            .iter()
+            .any(|r| r.class_mask == CargoClassMask::TANKER));
+        assert!(policy
+            .recipes
+            .iter()
+            .any(|r| r.class_mask == CargoClassMask::TROOP));
+        assert_eq!(reg.get("Steel").unwrap().class, CargoClass::Bulk);
+        assert_eq!(reg.get("Machinery").unwrap().class, CargoClass::Bulk);
     }
 }

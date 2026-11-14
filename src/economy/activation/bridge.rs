@@ -5,7 +5,9 @@ use bevy::prelude::*;
 use crate::construction::BuildingDefinitionRegistry;
 
 use crate::economy::supply_chain::insert_supply_chain_runtime_for_catalog;
-use crate::entities::production::core::manufacturing_node_for_catalog;
+use crate::entities::production::core::{
+    manufacturing_bundle_for_catalog, ManufacturingBlueprintRegistry,
+};
 use crate::infrastructure::{
     initial_utility_power_connected, sync_utility_connection_power_system, UtilityConnection,
     UtilityNetworkKind,
@@ -89,7 +91,9 @@ impl Plugin for IndustrialActivationPlugin {
 /// When a site reaches **Operational**, attach production/runtime components from its catalog def.
 pub fn activate_industrial_facilities_system(
     mut commands: Commands,
-    registry: Res<BuildingDefinitionRegistry>,
+    // Bevy 0.20: skip when registries absent (minimal test worlds).
+    If(registry): If<Res<BuildingDefinitionRegistry>>,
+    If(mfg_blueprints): If<Res<ManufacturingBlueprintRegistry>>,
     q: Query<
         (Entity, &ConstructionSite, &BuildingDefinitionRef),
         (
@@ -112,6 +116,7 @@ pub fn activate_industrial_facilities_system(
             connected,
         };
         if def_ref.catalog_id.is_empty() || def_ref.catalog_id.starts_with("builtin:") {
+            // P7: never attach ManufacturingNode without a real catalog_id.
             commands
                 .entity(entity)
                 .insert((IndustrialFacilityActivated, utility));
@@ -123,11 +128,20 @@ pub fn activate_industrial_facilities_system(
             def_ref.catalog_id.as_str(),
             registry.as_ref(),
         );
-        // MFG-03 — attach ManufacturingNode so ManufacturingCorePlugin has live entities.
+        // MFG-03 / P2 — node + output buffers when blueprint has a discrete tag.
         let mut entity_cmds = commands.entity(entity);
         entity_cmds.insert((IndustrialFacilityActivated, utility));
-        if let Some(mfg) = manufacturing_node_for_catalog(def_ref.catalog_id.as_str()) {
-            entity_cmds.insert(mfg);
+        if crate::entities::production::core::catalog_id_allows_manufacturing_node(
+            def_ref.catalog_id.as_str(),
+        ) {
+            if let Some((mfg, buffers)) =
+                manufacturing_bundle_for_catalog(def_ref.catalog_id.as_str(), mfg_blueprints.as_ref())
+            {
+                entity_cmds.insert(mfg);
+                if let Some(buf) = buffers {
+                    entity_cmds.insert(buf);
+                }
+            }
         }
     }
 }
@@ -186,6 +200,7 @@ mod tests {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.insert_resource(load_building_definitions_from_dir(default_buildings_dir()));
+        app.init_resource::<ManufacturingBlueprintRegistry>();
         app.add_systems(
             Update,
             (
@@ -206,6 +221,34 @@ mod tests {
             .get::<crate::entities::production::core::ManufacturingNode>(e)
             .expect("ManufacturingNode on activate (MFG-03)");
         assert_eq!(node.blueprint_id, "mfg_aluminum_cast_v1");
+    }
+
+    #[test]
+    fn operational_missile_body_plant_gets_mfg_and_buffers_no_flow() {
+        let mut app = app_with_registry();
+        let e = run_activation(&mut app, "missile_body_plant");
+        let node = app
+            .world()
+            .get::<crate::entities::production::core::ManufacturingNode>(e)
+            .expect("ManufacturingNode on missile body plant");
+        assert_eq!(node.blueprint_id, "mfg_missile_body_v1");
+        assert!(app
+            .world()
+            .get::<crate::entities::production::core::ManufacturingOutputBuffers>(e)
+            .is_some());
+        // Discrete MFG plant — no ResourceFlow double-count.
+        assert!(app.world().get::<ResourceFlowNode>(e).is_none());
+    }
+
+    #[test]
+    fn p7_empty_catalog_skips_manufacturing_node() {
+        let mut app = app_with_registry();
+        let e = run_activation(&mut app, "");
+        assert!(app.world().get::<IndustrialFacilityActivated>(e).is_some());
+        assert!(app
+            .world()
+            .get::<crate::entities::production::core::ManufacturingNode>(e)
+            .is_none());
     }
 
     #[test]

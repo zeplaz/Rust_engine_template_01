@@ -7,6 +7,8 @@
 
 use bevy::math::Vec2;
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 
 use crate::gui::{
@@ -19,6 +21,7 @@ use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 /// Shader/emitter-facing camera metrics — one writer: [`sync_extracted_camera_metrics`].
 #[derive(Resource, Clone, Copy, Debug, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct ExtractedCameraMetrics {
     pub translation: Vec2,
     pub zoom_level: f32,

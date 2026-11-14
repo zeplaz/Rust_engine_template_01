@@ -244,6 +244,8 @@ Document in [`construction_procedural_growth_index_v1.md`](construction_procedur
 
 ### PT-5 — Fire frame animation `@coder` + `@coder-mcp`
 
+**Option B wash SHIPPED** (FIRE-ENTITY-1). Atlas bake follow-on: [`plan_pt5_burning_atlas_followon_v1.md`](plan_pt5_burning_atlas_followon_v1.md).
+
 | ID | Deliverable | Acceptance |
 |:---|:---|:---|
 | PT-5-001 | Bake `burning_00`…`07` for 4 production atlases | UVs in meta |

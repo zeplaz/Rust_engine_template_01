@@ -17,10 +17,17 @@
 use bevy::prelude::*;
 
 use super::balance::{FortificationProfile, FrontBalance, UnitKind};
+use super::drone_missions::{DroneCombatModifiers, DronePackage, DroneRole};
 use super::formation::{CombatClock, Formation, Posture};
 use super::fortification::FortificationIndex;
 use super::front::{hostility_from_stances, Hostility};
+use super::personnel_supply::{
+    formation_personnel_deficit, strength_from_replacements, take_personnel_credit,
+    PersonnelRestockBook,
+};
+use super::weather::engagement_visibility_scale;
 use crate::strategic::settlement::FactionStanceBook;
+use crate::systems::weather::WeatherField;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Combatant {
@@ -35,6 +42,12 @@ pub struct Combatant {
     pub posture: Posture,
     /// Field works finished (0..1), from a Fortify order.
     pub dug_in: f32,
+    /// W4: local engagement visibility scale (0.35..1.0). Default 1.0 = clear.
+    pub visibility_scale: f32,
+    /// D1: firepower scale from drone mission mods / FPV package (default 1.0).
+    pub firepower_mul: f32,
+    /// FIRE-ENTITY-1: heat × unit susceptibility (0 = none). Applied as env attrition in resolve.
+    pub fire_exposure: f32,
 }
 
 #[derive(Clone, Copy, Debug, Default, PartialEq)]
@@ -98,7 +111,7 @@ pub fn resolve_step(
         if a.strength <= 0.0 {
             continue;
         }
-        let range_m = b.unit(a.kind).range_m;
+        let range_m = b.unit(a.kind).range_m * a.visibility_scale.clamp(0.35, 1.0);
         let mut best: Option<(usize, f32)> = None;
         for (j, t) in units.iter().enumerate() {
             if j == i || t.strength <= 0.0 || !hostility.hostile(a.slot, t.slot) {
@@ -125,6 +138,7 @@ pub fn resolve_step(
         let l = c.k_attrition
             * a.strength
             * b.unit(a.kind).firepower
+            * a.firepower_mul.clamp(0.5, 2.0)
             * b.effectiveness(a.kind, t.kind)
             * posture_mult
             * lerp(c.min_supply_factor, 1.0, a.supply)
@@ -147,6 +161,13 @@ pub fn resolve_step(
                 + c.morale_loss_unsupplied_per_s * (1.0 - u.supply.clamp(0.0, 1.0)) * dt;
         } else {
             u.morale += c.morale_recovery_per_s * dt;
+        }
+        // FIRE-ENTITY-1: environmental fire attrition / morale shock (sole strength writer).
+        if u.fire_exposure > 0.05 {
+            let burn = u.fire_exposure * 0.045 * dt;
+            let shock = u.fire_exposure * 0.035 * dt;
+            u.strength = (u.strength - burn).max(0.0);
+            u.morale = (u.morale - shock).clamp(0.0, 1.0);
         }
         u.morale = u.morale.clamp(0.0, 1.0);
         if u.strength <= c.destroyed_strength {
@@ -175,12 +196,31 @@ fn retreat_target(from: IVec2, threat: Option<IVec2>, slot: u8, tiles: f32) -> I
     from + step * tiles.round().max(1.0) as i32
 }
 
+fn visibility_scale_at_tile(
+    tile: IVec2,
+    field: Option<&WeatherField>,
+    sim_time: crate::systems::sim_control::SimTimeMicros,
+    tile_size_m: f32,
+) -> f32 {
+    let Some(field) = field.filter(|f| f.is_ready()) else {
+        return 1.0;
+    };
+    let s = field.sample(tile.as_vec2() * tile_size_m, sim_time);
+    engagement_visibility_scale((s.visibility_m / 10_000.0).clamp(0.05, 1.0), s.fog)
+}
+
 pub fn combat_resolve_system(
     mut commands: Commands,
     mut clock: ResMut<CombatClock>,
     balance: Res<FrontBalance>,
     stances: Option<Res<FactionStanceBook>>,
     forts: Option<Res<FortificationIndex>>,
+    field: Option<Res<WeatherField>>,
+    sim_time: Option<Res<crate::systems::sim_control::SimTimeMicros>>,
+    drone_mods: Option<Res<DroneCombatModifiers>>,
+    mut personnel: Option<ResMut<PersonnelRestockBook>>,
+    packages: Query<&DronePackage>,
+    fire_exp: Query<&crate::systems::fire::FormationFireExposure>,
     mut formations: Query<(Entity, &mut Formation)>,
 ) {
     if clock.resolve_acc_s < balance.combat.step_s {
@@ -189,19 +229,71 @@ pub fn combat_resolve_system(
     let dt = std::mem::take(&mut clock.resolve_acc_s);
     let mut order: Vec<Entity> = formations.iter().map(|(e, _)| e).collect();
     order.sort();
+    // P5: apply personnel credits before the exchange (sole strength writer stays here).
+    if let Some(ref mut book) = personnel {
+        for &e in &order {
+            let Ok((_, mut f)) = formations.get_mut(e) else {
+                continue;
+            };
+            let need = formation_personnel_deficit(&f, &balance);
+            if need == 0 {
+                continue;
+            }
+            let got = take_personnel_credit(book, f.faction_slot, need);
+            if got == 0 {
+                continue;
+            }
+            f.strength = (f.strength + strength_from_replacements(f.kind, &balance, got)).min(1.0);
+        }
+    }
+    let t = sim_time.as_deref().copied().unwrap_or_else(|| {
+        field
+            .as_ref()
+            .map(|f| crate::systems::sim_control::SimTimeMicros(f.prev_micros))
+            .unwrap_or_default()
+    });
+    let recon_mul = drone_mods
+        .as_ref()
+        .map(|m| m.recon_detect_mul)
+        .unwrap_or(1.0);
+    let fpv_mul = drone_mods
+        .as_ref()
+        .map(|m| m.fpv_firepower_mul)
+        .unwrap_or(1.0);
     let mut units: Vec<Combatant> = order
         .iter()
         .filter_map(|e| formations.get(*e).ok().map(|(e, f)| (e, f)))
-        .map(|(e, f)| Combatant {
-            key: e.to_bits(),
-            slot: f.faction_slot,
-            kind: f.kind,
-            tile: f.tile,
-            strength: f.strength,
-            morale: f.morale,
-            supply: f.supply,
-            posture: f.posture,
-            dug_in: f.dug_in,
+        .map(|(e, f)| {
+            let mut vis = visibility_scale_at_tile(
+                f.tile,
+                field.as_deref(),
+                t,
+                balance.tile_size_m(),
+            );
+            vis = (vis * recon_mul).clamp(0.35, 1.35);
+            let has_fpv = packages
+                .get(e)
+                .ok()
+                .is_some_and(|p| p.count(DroneRole::FpvStrike) + p.count(DroneRole::SwarmMember) > 0);
+            let firepower_mul = if has_fpv { fpv_mul } else { 1.0 };
+            let fire_exposure = fire_exp
+                .get(e)
+                .map(|x| x.exposure())
+                .unwrap_or(0.0);
+            Combatant {
+                key: e.to_bits(),
+                slot: f.faction_slot,
+                kind: f.kind,
+                tile: f.tile,
+                strength: f.strength,
+                morale: f.morale,
+                supply: f.supply,
+                posture: f.posture,
+                dug_in: f.dug_in,
+                visibility_scale: vis,
+                firepower_mul,
+                fire_exposure,
+            }
         })
         .collect();
     let hostility = hostility_from_stances(stances.as_deref());
@@ -240,6 +332,7 @@ mod tests {
 
     fn unit(key: u64, slot: u8, kind: UnitKind, x: i32) -> Combatant {
         Combatant {
+            fire_exposure: 0.0,
             key,
             slot,
             kind,
@@ -249,7 +342,26 @@ mod tests {
             supply: 1.0,
             posture: Posture::Hold,
             dug_in: 0.0,
+            visibility_scale: 1.0,
+            firepower_mul: 1.0,
         }
+    }
+
+    #[test]
+    fn low_visibility_prevents_long_range_engage() {
+        let b = FrontBalance::default();
+        // Artillery range 6000 m; place enemy at 2500 m (within clear, outside fog-scaled).
+        let tile_span = (2500.0 / b.tile_size_m()).round() as i32;
+        let mut clear = vec![
+            unit(1, 0, UnitKind::Artillery, 0),
+            unit(2, 1, UnitKind::Infantry, tile_span),
+        ];
+        let mut foggy = clear.clone();
+        foggy[0].visibility_scale = 0.35;
+        let o_clear = resolve_step(&mut clear, &Hostility::legacy_pair(), &b, &no_fort, 1.0);
+        let o_fog = resolve_step(&mut foggy, &Hostility::legacy_pair(), &b, &no_fort, 1.0);
+        assert!(o_clear[0].fired_at.is_some());
+        assert!(o_fog[0].fired_at.is_none());
     }
 
     fn no_fort(_: IVec2, _: u8) -> Option<FortificationProfile> {
@@ -343,5 +455,17 @@ mod tests {
             1.0 - u[1].strength
         };
         assert!(take(1.0) < take(0.0) * 0.7);
+    }
+
+    #[test]
+    fn fire_exposure_attrits_strength_and_morale() {
+        let b = FrontBalance::default();
+        let mut alone = vec![unit(1, 0, UnitKind::Infantry, 0)];
+        alone[0].fire_exposure = 0.8;
+        let before_s = alone[0].strength;
+        let before_m = alone[0].morale;
+        resolve_step(&mut alone, &Hostility::legacy_pair(), &b, &no_fort, 5.0);
+        assert!(alone[0].strength < before_s);
+        assert!(alone[0].morale < before_m);
     }
 }

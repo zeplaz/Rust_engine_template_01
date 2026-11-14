@@ -1,6 +1,8 @@
 //! Stage-6 virtualization contracts — residency-driven representation host.
 
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 
 
 use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
@@ -30,6 +32,7 @@ pub struct AsyncDomainApplyQueue {
 }
 
 #[derive(Resource, Default, Clone, Debug, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct Stage6VirtualizationFrame {
     pub focus_chunk: IVec2,
     pub residency_chunk_count: usize,
