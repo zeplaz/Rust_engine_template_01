@@ -4,6 +4,8 @@ Built from the **tables of contents** (PDF outlines plus numbered x.y.z headings
 `C:\dev\ref books\`. No book text is stored here. This replaces nothing; the older
 `C:\dev\ref books\lookup\` folder is separate and was not used to build this one.
 
+Work queue built on this index: [`../plan_ref_books_upgrade_v2.md`](../plan_ref_books_upgrade_v2.md) (slice cards, ledger of adopted rows).
+
 ## Files
 
 | File | What | Size |
