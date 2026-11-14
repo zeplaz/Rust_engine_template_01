@@ -1,0 +1,784 @@
+sec	depth	start	end	title
+11	1	18	153	Rendering
+11.1	2	19	24	The Rendering Problem
+11.1.1	3	19	22	Conceptualizing the Rendering Problem
+11.1.1.1	4	20	20	Rendering as Data Conversion
+11.1.1.2	4	20	20	Rendering as a Geometric Problem
+11.1.1.3	4	20	21	Rendering as Visibility Determination and Shading
+11.1.1.4	4	21	22	Rendering as a Camera Simulator
+11.1.2	3	22	24	Types of 3D Rendering Engines
+11.2	2	24	39	Lights, Camera, Action!
+11.2.1	3	24	25	What Is Light?
+11.2.2	3	25	29	Eyes and Cameras
+11.2.2.1	4	26	26	Radiance
+11.2.2.2	4	26	27	Lenses and Pinholes
+11.2.2.3	4	27	29	Field of View and Focal Length
+11.2.3	3	29	39	Color Theory
+11.2.3.1	4	29	30	Light Energy and Power
+11.2.3.2	4	30	31	Spectral Power Distributions
+11.2.3.3	4	31	32	Tristimulus Response Curves
+11.2.3.4	4	32	32	Luminous Power
+11.2.3.5	4	32	33	Color Encoding Systems
+11.2.3.6	4	33	34	The CIE RGB Color Encoding System
+11.2.3.7	4	34	35	The CIE XYZ Color Encoding System
+11.2.3.8	4	35	36	The CIE xy Chromaticity Diagram
+11.2.3.9	4	36	37	The Standard RGB Color Space
+11.2.3.10	4	37	38	Other RGB Color Spaces
+11.2.3.11	4	38	38	The RGB Color Cube
+11.2.3.12	4	38	39	The HSL, HSV, and HSI Color Spaces
+11.3	2	39	98	Foundations of 3D Rendering
+11.2.3.13	4	39	40	The LUV Color Space
+11.3.1	3	40	43	The Graphics Stack
+11.3.1.1	4	40	41	Hardware
+11.3.1.2	4	41	41	Operating System and Drivers
+11.3.1.3	4	41	42	The Rendering Engine
+11.3.1.4	4	42	43	The 3D Graphics Pipeline
+11.3.2	3	43	46	The Virtual Camera
+11.3.1.5	4	43	44	Blurring the Line Between Application and Pipeline
+11.3.2.1	4	44	45	The Imaging Surface
+11.3.2.2	4	45	46	The Camera's Local Coordinate System
+11.3.3	3	46	50	Bitmapped Images
+11.3.2.3	4	46	47	The Frustum
+11.3.3.1	4	47	48	Resolution and Aspect Ratio
+11.3.3.2	4	48	50	Color Formats for Bitmapped Images
+11.3.4	3	50	54	The Frame Buffer
+11.3.4.1	4	50	51	Double and Triple Buffering
+11.3.4.2	4	51	52	Gamma Correction
+11.3.4.3	4	52	54	Frame Buffer Image Planes
+11.3.5	3	54	57	Scene Geometry
+11.3.5.1	4	55	55	Analytic Surfaces
+11.3.5.2	4	55	56	Parametric Surfaces
+11.3.5.3	4	56	57	Triangle Meshes
+11.3.6	3	57	65	Anatomy of a Triangle Mesh
+11.3.6.1	4	57	58	Vertices, Edges, and Winding Order
+11.3.6.2	4	58	59	Vertex Attributes
+11.3.6.3	4	59	60	Triangle Lists
+11.3.6.4	4	60	61	Indexed Triangle Lists
+11.3.6.5	4	61	61	Triangle Strips and Fans
+11.3.6.6	4	61	63	Vertex Formats
+11.3.6.7	4	63	63	Vertex Cache Optimization
+11.3.6.8	4	63	65	Level of Detail (LOD)
+11.3.7	3	65	65	Light Sources
+11.3.8	3	65	69	Coordinate Transformations
+11.3.8.1	4	66	66	Model Space
+11.3.8.2	4	66	67	World Space and Mesh Instancing
+11.3.8.3	4	67	69	View Space
+11.3.9	3	69	74	Projection
+11.3.8.4	4	69	70	Light Space
+11.3.9.1	4	70	70	The View Volume and the Frustum
+11.3.9.2	4	70	74	Projection and Homogeneous Clip Space
+11.3.10	3	74	81	Rasterization
+11.3.9.3	4	74	74	Screen Space
+11.3.9.4	4	74	75	Viewports
+11.3.10.1	4	75	75	Rasterizing a Single Triangle
+11.3.10.2	4	75	77	Rasterization Rules
+11.3.10.4	4	77	78	Fragments
+11.3.10.5	4	78	78	Depth-Buffered Rasterization
+11.3.10.6	4	78	81	Rasterization with Barycentric Coordinates
+11.3.11	3	81	82	Depth Test and Depth Write
+11.3.10.8	4	81	82	Quad-Based Rasterization
+11.3.12	3	82	86	Transparency and Alpha Blending
+11.3.11.1	4	82	85	Scissor Rectangles
+11.3.12.1	4	85	86	Order-Independent Transparency (OIT)
+11.3.13	3	86	90	Antialiasing
+11.3.13.1	4	86	87	Full-Screen Antialiasing (FSAA)
+11.3.13.2	4	87	89	Multisampled Antialiasing (MSAA)
+11.3.13.3	4	89	89	Coverage Sample Antialiasing (CSAA)
+11.3.13.4	4	89	89	Morphological Antialiasing (MLAA)
+11.3.13.5	4	89	89	Subpixel Morphological Antialiasing (SMAA)
+11.3.13.6	4	89	90	Temporal Antialiasing (TAA)
+11.3.14	3	90	98	Textures
+11.3.13.7	4	90	90	Machine Learning Based Antialiasing (DLSS, PSSR)
+11.3.14.1	4	90	92	Uses of Texture Maps
+11.3.14.2	4	92	92	Texture Coordinates
+11.3.14.3	4	92	93	Texture Addressing Modes
+11.3.14.4	4	93	94	Texture Formats
+11.3.14.5	4	94	95	Texel Density and Mipmapping
+11.3.14.6	4	95	96	World-Space Texel Density
+11.3.14.7	4	96	96	Texture Filtering
+11.3.14.8	4	96	98	Texture Streaming and Virtual Textures
+11.4	2	98	133	Programming the 3D Graphics Pipeline
+11.4.1	3	98	99	The Rasterization-Based Rendering Algorithm
+11.4.2	3	99	101	From Algorithm to Pipeline
+11.4.3	3	101	102	Logical and Physical Graphics Pipelines
+11.4.4	3	102	103	High-Level and Low-Level Graphics APIs
+11.4.5	3	103	108	Feature Levels and Shader Models
+11.4.5.1	4	104	105	Shader Models
+11.4.5.2	4	105	105	Caps Bits
+11.4.5.3	4	105	108	DirectX Feature Levels
+11.4.6	3	108	120	GPU Pipeline Architectures
+11.4.6.1	4	108	115	The Traditional Raster Graphics Pipeline
+11.4.6.2	4	115	116	The Compute Pipeline
+11.4.6.3	4	116	118	The Ray Tracing Pipeline
+11.4.6.4	4	118	120	The Mesh Shader Pipeline
+11.4.7	3	120	121	Devices
+11.4.8	3	121	124	Pipeline State and Device Contexts
+11.4.8.1	4	122	122	Global Pipeline State and Device Contexts
+11.4.8.2	4	122	123	Deferred Contexts
+11.4.8.3	4	123	123	Command List Centric APIs
+11.4.8.4	4	123	123	Expensive Pipeline State Changes
+11.4.8.5	4	123	124	Pipeline State Objects
+11.4.9	3	124	128	Resources
+11.4.9.1	4	125	126	Types of Resources
+11.4.9.2	4	126	128	Resource Views
+11.4.10	3	128	133	A Brief Introduction to Shader Programming
+11.4.9.3	4	128	128	Bindless Programming with the Root Signature
+11.4.10.1	4	128	129	Shader Types
+11.4.10.2	4	129	130	Data Types
+11.4.10.3	4	130	131	Uniform Data Versus Dynamic Data
+11.4.10.4	4	131	131	Semantics
+11.4.10.5	4	131	133	Example: Vertex and Pixel Shaders
+11.5	2	133	141	Pipeline Management: The Application Layer
+11.5.1	3	133	137	Culling and Visibility Determination
+11.5.1.1	4	134	134	Backface Culling
+11.5.1.2	4	134	135	Frustum Culling
+11.5.1.3	4	135	135	Occlusion and Potentially Visible Sets
+11.5.1.4	4	135	136	Portals
+11.5.1.5	4	136	137	Occlusion Volumes (Antiportals)
+11.5.2	3	137	138	Geometry Sorting
+11.5.3	3	138	141	Scene Graphs
+11.5.3.1	4	138	140	Quadtrees and Octrees
+11.5.3.2	4	140	141	BSP Trees
+11.6	2	141	153	Geometry Processing and Other Visual Effects
+11.6.1	3	141	142	Skinning
+11.5.3.3	4	141	142	Bounding Volume Hierarchies
+11.6.2	3	142	143	Heightmaps: Bump, Parallax, and Displacement Mapping
+11.6.3	3	143	144	Terrain
+11.6.4	3	144	145	Card-Based Effects
+11.6.5	3	145	146	Particle Effects
+11.6.6	3	146	146	Decals
+11.6.7	3	146	147	Water Surfaces
+11.6.8	3	147	153	Virtualized Geometry and Nanite
+11.6.8.1	4	148	148	Managing Budgets with LODs
+11.6.8.2	4	148	149	From Virtual Textures to Virtualized Geometry
+11.6.8.3	4	149	150	LOD Chains and LOD Trees
+11.6.8.4	4	150	150	Cracks in the LOD Tree
+11.6.8.5	4	150	151	Nanite's Solution: LOD Graphs
+11.6.8.6	4	151	153	Other Aspects of Nanite Rendering
+12	1	153	253	Lighting and Post-Processing
+12.1	2	153	158	The Lighting Problem
+12.1.1	3	154	154	Physically-Based Lighting
+12.1.2	3	154	156	Light's Interactions with Matter
+12.1.2.1	4	155	155	Interactions with Surfaces
+12.1.2.2	4	155	156	Interactions with Participating Media
+12.1.3	3	156	157	Direct and Indirect Illumination
+12.1.2.3	4	156	157	Negligible Interactions
+12.1.4	3	157	158	Local and Global Illumination
+12.2	2	158	174	Radiometry and the Theory of Light Transport
+12.2.1	3	159	161	Overview of the Light Transport Model
+12.2.1.1	4	160	161	Labeling Light Paths with Regular Expressions
+12.2.2	3	161	161	Surface Point Model for Lighting
+12.2.3	3	161	163	Light Rays
+12.2.2.1	4	161	162	Tangent Space and the Unit Hemisphere
+12.2.3.1	4	162	163	Representations of Ray Directions
+12.2.4	3	163	168	Radiant Flux Density and the Poynting Vector
+12.2.4.1	4	165	165	Calculating Radiant Power from Flux Density
+12.2.4.2	4	165	166	The Radiant Flux Density Vector Field
+12.2.4.3	4	166	167	Radiant Flux Density At Grazing Angles
+12.2.4.4	4	167	167	Irradiance, Radiant Exitance, and Radiosity
+12.2.4.5	4	167	168	Falloff of Radiant Flux Density with Distance
+12.2.5	3	168	174	Radiance
+12.2.5.1	4	168	170	Solid Angles
+12.2.5.2	4	170	171	Definition of Radiance
+12.2.5.3	4	171	172	Infinitesimal Solid Angles
+12.2.5.4	4	172	173	Computing Other Radiometric Quantities from Radiance
+12.2.5.5	4	173	174	Properties of Radiance
+12.3	2	174	185	The Rendering Equation
+12.2.6	3	174	174	Radiant Intensity
+12.2.7	3	174	175	Further Reading
+12.3.1	3	175	176	Derivation of the Rendering Equation
+12.3.2	3	176	178	The Bidirectional Reflectance Distribution Function (BRDF)
+12.3.2.1	4	177	178	Generalized Bidirectional Distribution Functions (BxDF)
+12.3.3	3	178	182	Other Forms of the Rendering Equation
+12.3.3.1	4	179	180	Vector Form of the Rendering Equation
+12.3.3.2	4	180	181	The Rendering Equation in the Literature
+12.3.3.3	4	181	182	Area Formulation of the Rendering Equation
+12.3.4	3	182	185	The Photometric Rendering Equation
+12.3.4.1	4	184	185	Manipulating Color Vectors
+12.4	2	185	198	The Shading Equation
+12.4.1	3	186	188	Derivation of the Shading Equation
+12.4.1.1	4	187	188	The Ambient Term
+12.4.2	3	188	190	Modeling an Idealized Light Source
+12.4.2.1	4	189	189	Directional Light Model
+12.4.2.2	4	189	190	Point Light Model
+12.4.3	3	190	196	BRDFs for Shading
+12.4.2.3	4	190	190	Spot Light Model
+12.4.2.4	4	190	190	Illuminance of an Idealized Light Source
+12.4.3.1	4	190	191	Diffuse Lambertian Reflection
+12.4.3.2	4	191	193	Diffuse Material Colors and Albedo
+12.4.3.3	4	193	194	Specular Reflection
+12.4.3.4	4	194	194	The Phong BRDF
+12.4.3.5	4	194	195	The Blinn-Phong BRDF
+12.4.3.6	4	195	196	BRDF Plots
+12.4.4	3	196	198	Fresnel Reflectance: Transmission and Refraction
+12.4.4.1	4	197	198	Total Internal Reflection
+12.5	2	198	219	Lighting with Triangle Rasterization
+12.4.4.2	4	198	198	Subsurface Scattering
+12.4.4.3	4	198	199	BTDFs and BSSRDFs
+12.5.1	3	199	204	Simple Local Illumination
+12.5.1.1	4	200	201	How the Shading Equation Produces Pixel Colors
+12.5.1.2	4	201	202	Practical Concerns When Applying the Shading Equation
+12.5.1.3	4	202	204	Example Pixel Shader for Blinn-Phong Lighting
+12.5.2	3	204	205	Image-Based Lighting
+12.5.2.1	4	204	205	Environment Mapping
+12.5.3	3	205	206	Static Lighting and Baking
+12.5.4	3	206	206	Dynamic Lighting and Light Probes
+12.5.5	3	206	207	Reflections
+12.5.6	3	207	209	Shadows
+12.5.7	3	209	211	Ambient Occlusion
+12.5.8	3	211	211	Caustics
+12.5.9	3	211	212	Subsurface Scattering
+12.5.10	3	212	212	Emissive Objects
+12.5.11	3	212	213	Precomputed Radiance Transfer
+12.5.12	3	213	216	Deferred Rendering
+12.5.12.1	4	214	214	The G-Buffer
+12.5.12.2	4	214	215	The Visibility Buffer
+12.5.12.3	4	215	215	Light Pre-Pass
+12.5.12.4	4	215	216	Forward+
+12.5.13	3	216	219	Skies, Clouds, and Volumetrics
+12.5.13.1	4	217	217	Volumetric Lighting and Ray Marching
+12.5.13.2	4	217	218	Volumetric Atmospheres
+12.5.13.3	4	218	219	Volumetric Clouds
+12.6	2	219	244	Lighting with Stochastic Ray Tracing
+12.6.1	3	220	223	Radiosity Methods
+12.6.1.1	4	221	223	Overview of the Radiosity Algorithm
+12.6.2	3	223	228	Monte Carlo Integration
+12.6.1.2	4	223	223	Further Reading on Radiosity
+12.6.2.1	4	223	223	Intuitive Example: Estimating the Area of a Circle
+12.6.2.2	4	223	224	The Monte Carlo Estimator
+12.6.2.3	4	224	226	A Brief Review of Probability Theory
+12.6.2.4	4	226	226	Generalized Monte Carlo Estimator
+12.6.2.5	4	226	227	Expected Value of the Monte Carlo Estimator
+12.6.2.6	4	227	227	Monte Carlo Estimator in Higher Dimensions
+12.6.2.7	4	227	228	Monte Carlo Variance and Error
+12.6.3	3	228	236	Ray Tracing
+12.6.3.1	4	228	229	Solving the Visibility Problem by Casting Rays
+12.6.3.2	4	229	229	Backwards and Forwards Ray Tracing
+12.6.3.3	4	229	230	Simple Direct Illumination with Eye Rays
+12.6.3.4	4	230	231	Simple Fresnel Reflectance
+12.6.3.5	4	231	233	Direct Illumination with Stochastic Ray Tracing
+12.6.3.6	4	233	234	Choosing Random Rays
+12.6.3.7	4	234	236	Indirect Lighting: Recursive Ray Tracing
+12.6.4	3	236	240	Reducing Variance
+12.6.4.1	4	237	237	Importance Sampling
+12.6.4.2	4	237	238	Multiple Importance Sampling
+12.6.4.3	4	238	239	Path Tracing
+12.6.4.4	4	239	240	Bidirectional Path Tracing
+12.6.5	3	240	244	Practical Concerns in Ray Tracing
+12.6.4.5	4	240	240	Metropolis Light Transport
+12.6.5.1	4	240	241	Denoising
+12.6.5.2	4	241	244	Ray-Casting Efficiency
+12.7	2	244	245	Post-Processing
+12.7.1	3	244	245	Tone Mapping for High Dynamic Range Rendering
+12.6.5.3	4	244	245	Further Reading on Ray Tracing
+12.8	2	245	248	Overlays and User Interfaces
+12.7.2	3	245	248	Full-Screen Post Effects
+12.8.0.1	4	246	248	Text and Fonts
+12.9	2	248	252	Tools for Development and Debugging
+12.9.1	3	248	249	Digital Content Creation Tools
+12.9.2	3	249	250	Material Editors
+12.9.3	3	250	251	The Asset Conditioning Pipeline
+12.9.4	3	251	252	GPU Capture, Inspection, and Playback (Razor GPU, PIX)
+12.10	2	252	253	Further Reading
+13	1	253	352	Animation Systems
+13.1	2	253	258	Types of Character Animation
+13.1.1	3	254	255	Cel Animation
+13.1.3	3	255	256	Per-Vertex Animation and Morph Targets
+13.1.4	3	256	257	Skinned Animation
+13.1.5	3	257	258	Animation Methods as Data Compression Techniques
+13.2	2	258	260	Skeletons
+13.2.1	3	258	259	The Skeletal Hierarchy
+13.2.2	3	259	260	Representing a Skeleton in Memory
+13.3	2	260	265	Poses
+13.3.1	3	261	261	Bind Pose
+13.3.2	3	261	264	Local Poses
+13.3.2.1	4	262	263	Joint Scale
+13.3.2.2	4	263	263	Representing a Joint Pose in Memory
+13.3.2.3	4	263	264	The Joint Pose as a Change of Basis
+13.3.3	3	264	265	Global Poses
+13.4	2	265	280	Clips
+13.3.3.1	4	265	266	Representing a Global Pose in Memory
+13.4.1	3	266	270	The Local Timeline
+13.4.1.1	4	267	268	Pose Interpolation and Continuous Time
+13.4.1.2	4	268	268	Time Units
+13.4.1.3	4	268	268	Frame versus Sample
+13.4.1.4	4	268	269	Frames, Samples, and Looping Clips
+13.4.1.5	4	269	270	Normalized Time (Phase)
+13.4.2	3	270	272	The Global Timeline
+13.4.3	3	272	274	Comparison of Local and Global Clocks
+13.4.3.1	4	273	274	Synchronizing Animations with a Local Clock
+13.4.4	3	274	276	A Simple Animation Data Format
+13.4.3.2	4	274	276	Synchronizing Animations with a Global Clock
+13.4.5	3	276	277	Continuous Channel Functions
+13.4.6	3	277	278	Metachannels
+13.4.7	3	278	280	Relationship between Meshes, Skeletons, and Clips
+13.4.7.1	4	279	280	Animation Retargeting
+13.5	2	280	285	Skinning and Matrix Palette Generation
+13.5.1	3	280	281	Per-Vertex Skinning Information
+13.5.2	3	281	285	The Mathematics of Skinning
+13.5.2.1	4	281	283	Simple Example: One-Jointed Skeleton
+13.5.2.2	4	283	284	Extension to Multijointed Skeletons
+13.5.2.3	4	284	284	Incorporating the Model-to-World Transform
+13.5.2.4	4	284	285	Skinning a Vertex to Multiple Joints
+13.6	2	285	303	Animation Blending
+13.6.1	3	285	287	Lerp Blending
+13.6.2	3	287	292	Applications of Lerp Blending
+13.6.2.1	4	287	287	Temporal Interpolation
+13.6.2.2	4	287	290	Motion Continuity: Cross-Fading
+13.6.2.3	4	290	292	Directional Locomotion
+13.6.3	3	292	296	Complex Lerp Blends
+13.6.3.1	4	292	293	Generalized One-Dimensional Lerp Blending
+13.6.3.2	4	293	294	Simple Two-Dimensional Lerp Blending
+13.6.3.3	4	294	296	Triangular Two-Dimensional Lerp Blending
+13.6.4	3	296	298	Partial-Skeleton Blending
+13.6.3.4	4	296	298	Generalized Two-Dimensional Lerp Blending
+13.6.5	3	298	301	Additive Blending
+13.6.5.1	4	298	300	Mathematical Formulation
+13.6.5.2	4	300	300	Additive Blending versus Partial Blending
+13.6.5.3	4	300	301	Limitations of Additive Blending
+13.6.6	3	301	303	Applications of Additive Blending
+13.6.6.1	4	301	301	Stance Variation
+13.6.6.2	4	301	302	Locomotion Noise
+13.6.6.3	4	302	302	Aim and Look-At
+13.6.6.4	4	302	303	Overloading the Time Axis
+13.7	2	303	306	Post-Processing
+13.7.1	3	303	304	Procedural Animations
+13.7.2	3	304	306	Inverse Kinematics
+13.8	2	306	313	Compression Techniques
+13.7.3	3	306	306	Rag Dolls
+13.8.1	3	306	307	Channel Omission
+13.8.2	3	307	311	Quantization
+13.8.3	3	311	311	Sampling Frequency and Key Omission
+13.8.4	3	311	312	Curve-Based Compression
+13.8.5	3	312	312	Wavelet Compression
+13.8.6	3	312	313	Selective Loading and Streaming
+13.9	2	313	314	The Animation Pipeline
+13.10	2	314	333	Action State Machines
+13.10.1	3	316	320	The Flat Weighted Average Approach
+13.10.1.1	4	317	318	Example: OGRE
+13.10.1.2	4	318	318	Example: Granny
+13.10.1.3	4	318	320	Cross-Fades with a Flat Weighted Average
+13.10.2	3	320	323	Blend Trees
+13.10.2.1	4	320	320	Binary Lerp Blend Trees
+13.10.2.2	4	320	321	Generalized One-Dimensional Blend Trees
+13.10.2.3	4	321	321	Two-Dimensional Lerp Blend Trees
+13.10.2.4	4	321	322	Additive Blend Trees
+13.10.2.5	4	322	322	Layered Blend Trees
+13.10.2.6	4	322	323	Cross-Fades with Blend Trees
+13.10.3	3	323	328	State and Blend Tree Specifications
+13.10.3.1	4	325	327	Example: The Naughty Dog Engine
+13.10.3.2	4	327	328	Example: Unreal Engine 5
+13.10.4	3	328	332	Transitions
+13.10.4.1	4	328	329	Kinds of Transitions
+13.10.4.2	4	329	329	Transition Parameters
+13.10.4.3	4	329	330	The Transition Matrix
+13.10.4.4	4	330	332	Implementing a Transition Matrix
+13.10.5	3	332	333	Control Parameters
+13.11	2	333	343	Constraints
+13.11.1	3	334	335	Attachments
+13.11.2	3	335	338	Interobject Registration
+13.11.2.1	4	336	336	Reference Locators
+13.11.2.2	4	336	338	Finding the World-Space Reference Location
+13.11.3	3	338	339	Grabbing and Hand IK
+13.11.4	3	339	342	Motion Extraction and Foot IK
+13.11.4.1	4	339	342	Motion Extraction
+13.11.5	3	342	343	Other Kinds of Constraints
+13.11.4.2	4	342	343	Foot IK
+13.12	2	343	352	Motion Matching
+13.12.1	3	343	345	Problems with Action State Machines
+13.12.1.1	4	343	344	Achieving Biomechanically Plausible Motion
+13.12.1.2	4	344	345	Logical Versus Physical ASMs
+13.12.2	3	345	347	Precursors to Motion Matching
+13.12.2.1	4	346	346	Motion Graphs
+13.12.2.2	4	346	347	Motion Fields
+13.12.3	3	347	348	Enter Motion Matching
+13.12.4	3	348	350	Motion Matching In Detail
+13.12.5	3	350	352	Motion Matching In Practice
+14	1	352	442	Collision and Rigid Body Dynamics
+14.1	2	353	358	Do You Want Physics in Your Game?
+14.1.1	3	353	354	Things You Can Do with a Physics System
+14.1.2	3	354	355	Is Physics Fun?
+14.1.2.1	4	354	354	Simulations (Sims)
+14.1.2.2	4	354	355	Physics Puzzle Games
+14.1.3	3	355	358	Impact of Physics on a Game
+14.1.2.3	4	355	355	Sandbox Games
+14.1.2.4	4	355	356	Goal-Based and Story-Driven Games
+14.1.3.1	4	356	356	Design Impacts
+14.1.3.2	4	356	357	Engineering Impacts
+14.1.3.3	4	357	357	Art Impacts
+14.1.3.4	4	357	358	Other Impacts
+14.2	2	358	359	Collision/Physics Middleware
+14.2.1	3	358	358	ODE
+14.2.2	3	358	358	Bullet
+14.2.3	3	358	359	PhysX
+14.3	2	359	387	The Collision Detection System
+14.2.4	3	359	359	Havok
+14.2.5	3	359	359	Physics Abstraction Layer (PAL)
+14.2.6	3	359	360	Digital Molecular Matter (DMM)
+14.3.1	3	360	362	Collidable Entities
+14.3.2	3	362	363	The Collision/Physics World
+14.3.2.1	4	362	363	The Physics World
+14.3.3	3	363	364	Shape Concepts
+14.3.4	3	364	369	Collision Primitives
+14.3.3.1	4	364	364	Intersection
+14.3.3.2	4	364	364	Contact
+14.3.3.3	4	364	365	Convexity
+14.3.4.1	4	365	365	Spheres
+14.3.4.2	4	365	365	Capsules
+14.3.4.3	4	365	366	Axis-Aligned Bounding Boxes
+14.3.4.4	4	366	366	Oriented Bounding Boxes
+14.3.4.5	4	366	367	Discrete Oriented Polytopes (DOP)
+14.3.4.6	4	367	368	Arbitrary Convex Volumes
+14.3.4.7	4	368	369	Poly Soup
+14.3.5	3	369	379	Collision Testing and Analytical Geometry
+14.3.4.8	4	369	370	Compound Shapes
+14.3.5.1	4	370	370	Point versus Sphere
+14.3.5.2	4	370	371	Sphere versus Sphere
+14.3.5.3	4	371	372	The Separating Axis Theorem
+14.3.5.4	4	372	373	AABB versus AABB
+14.3.5.5	4	373	375	Detecting Convex Collisions: The GJK Algorithm
+14.3.5.6	4	375	376	Other Shape-Shape Combinations
+14.3.5.7	4	376	379	Detecting Collisions between Moving Bodies
+14.3.6	3	379	380	Performance Optimizations
+14.3.6.1	4	379	379	Temporal Coherency
+14.3.6.2	4	379	380	Spatial Partitioning
+14.3.7	3	380	386	Collision Queries
+14.3.6.3	4	380	381	Broad Phase, Midphase, and Narrow Phase
+14.3.7.1	4	381	382	Ray Casting
+14.3.7.2	4	382	385	Shape Casting
+14.3.7.3	4	385	385	Phantoms
+14.3.7.4	4	385	386	Other Types of Queries
+14.3.8	3	386	387	Collision Filtering
+14.3.8.1	4	386	386	Collision Masking and Layers
+14.3.8.2	4	386	386	Collision Callbacks
+14.3.8.3	4	386	387	Game-Specific Collision Materials
+14.4	2	387	423	Rigid Body Dynamics
+14.4.1	3	388	390	Some Foundations
+14.4.1.1	4	389	389	Units
+14.4.1.2	4	389	390	Separability of Linear and Angular Dynamics
+14.4.2	3	390	392	Linear Dynamics
+14.4.1.3	4	390	391	Center of Mass
+14.4.2.1	4	391	391	Linear Velocity and Acceleration
+14.4.2.2	4	391	392	Force and Momentum
+14.4.3	3	392	394	Solving the Equations of Motion
+14.4.3.1	4	392	393	Force as a Function
+14.4.3.2	4	393	393	Ordinary Differential Equations
+14.4.3.3	4	393	394	Analytical Solutions
+14.4.4	3	394	398	Numerical Integration
+14.4.4.1	4	394	396	Explicit Euler
+14.4.4.2	4	396	397	Properties of Numerical Methods
+14.4.4.3	4	397	397	Alternatives to Explicit Euler
+14.4.4.4	4	397	398	Verlet Integration
+14.4.5	3	398	402	Angular Dynamics in Two Dimensions
+14.4.4.5	4	398	399	Velocity Verlet
+14.4.5.1	4	399	399	Orientation and Angular Speed
+14.4.5.2	4	399	399	Angular Speed and Acceleration
+14.4.5.3	4	399	400	Moment of Inertia
+14.4.5.4	4	400	401	Torque
+14.4.5.5	4	401	402	Solving the Angular Equations of Motion in Two Dimensions
+14.4.6	3	402	407	Angular Dynamics in Three Dimensions
+14.4.6.1	4	402	403	The Inertia Tensor
+14.4.6.2	4	403	403	Orientation in Three Dimensions
+14.4.6.3	4	403	405	Angular Velocity and Momentum in Three Dimensions
+14.4.6.4	4	405	405	Torque in Three Dimensions
+14.4.6.5	4	405	407	Solving the Equations of Angular Motion in Three Dimensions
+14.4.7	3	407	415	Collision Response
+14.4.7.1	4	407	408	Energy
+14.4.7.2	4	408	410	Impulsive Collision Response
+14.4.7.3	4	410	411	Penalty Forces
+14.4.7.4	4	411	411	Using Constraints to Resolve Collisions
+14.4.7.5	4	411	413	Friction
+14.4.7.6	4	413	413	Welding
+14.4.7.7	4	413	415	Coming to Rest, Islands and Sleeping
+14.4.8	3	415	419	Constraints
+14.4.8.1	4	415	416	Point-to-Point Constraints
+14.4.8.2	4	416	416	Stiff Springs
+14.4.8.3	4	416	416	Hinge Constraints
+14.4.8.4	4	416	417	Prismatic Constraints
+14.4.8.5	4	417	417	Other Common Constraint Types
+14.4.8.6	4	417	417	Constraint Chains
+14.4.8.7	4	417	418	Rag Dolls
+14.4.8.8	4	418	419	Powered Constraints
+14.4.9	3	419	421	Controlling the Motions of Rigid Bodies
+14.4.9.1	4	420	420	Gravity
+14.4.9.2	4	420	420	Applying Forces
+14.4.9.3	4	420	420	Applying Torques
+14.4.9.4	4	420	421	Applying Impulses
+14.4.10	3	421	423	The Collision/Physics Step
+14.4.10.1	4	422	422	The Constraint Solver
+14.4.10.2	4	422	423	Variations between Engines
+14.5	2	423	440	Integrating a Physics Engine into Your Game
+14.5.1	3	423	428	Linking Game Objects and Rigid Bodies
+14.5.1.1	4	425	426	Physics-Driven Bodies
+14.5.1.2	4	426	427	Game-Driven Bodies
+14.5.1.3	4	427	427	Fixed Bodies
+14.5.1.4	4	427	428	Havok's Motion Type
+14.5.2	3	428	431	Updating the Simulation
+14.5.2.1	4	429	431	Timing Collision Queries
+14.5.3	3	431	440	Example Uses of Collision and Physics in a Game
+14.5.3.1	4	431	431	Simple Rigid Body Game Objects
+14.5.3.2	4	431	433	Bullet Traces
+14.5.3.3	4	433	433	Grenades
+14.5.3.4	4	433	434	Explosions
+14.5.3.5	4	434	435	Destructible Objects
+14.5.3.6	4	435	437	Character Mechanics
+14.5.3.7	4	437	438	Camera Collision
+14.5.3.8	4	438	440	Rag Doll Integration
+14.6	2	440	442	Advanced Physics Features
+15	1	442	539	Audio
+15.1	2	443	454	The Physics of Sound
+15.1.1	3	443	445	Properties of Sound Waves
+15.1.2	3	445	448	Perceived Loudness and the Decibel
+15.1.2.1	4	446	447	Equal-Loudness Contours
+15.1.2.2	4	447	448	The Audible Frequency Band
+15.1.3	3	448	453	Sound Wave Propagation
+15.1.3.1	4	448	449	Fall-Off with Distance
+15.1.3.2	4	449	449	Atmospheric Absorption
+15.1.3.3	4	449	450	Phase Shift and Interference
+15.1.3.4	4	450	453	Reverb and Echo
+15.1.4	3	453	454	Perception of Position
+15.1.3.5	4	453	454	Sound in Motion: The Doppler Effect
+15.2	2	454	471	The Mathematics of Sound
+15.2.1	3	454	456	Signals
+15.2.1.1	4	455	456	Be Discrete, Continuously
+15.2.2	3	456	457	Manipulating Signals
+15.2.3	3	457	458	Linear Time-Invariant (LTI) Systems
+15.2.4	3	458	463	Impulse Response of an LTI System
+15.2.4.1	4	458	460	The Unit Impulse
+15.2.4.2	4	460	460	Using an Impulse Train to Represent a Signal
+15.2.4.3	4	460	462	Convolution
+15.2.4.4	4	462	463	Visualizing Convolution
+15.2.5	3	463	471	The Frequency Domain and the Fourier Transform
+15.2.4.5	4	463	463	Some Properties of Convolution
+15.2.5.1	4	463	463	The Sinusoidal Signal
+15.2.5.2	4	463	467	The Complex Exponential Signal
+15.2.5.3	4	467	468	The Fourier Series
+15.2.5.4	4	468	468	The Fourier Transform
+15.2.5.5	4	468	470	Bode Plots
+15.2.5.8	4	470	471	Filtering
+15.3	2	471	484	The Technology of Sound
+15.3.1	3	472	477	Analog Audio Technology
+15.3.1.1	4	472	472	Microphones
+15.3.1.2	4	472	472	Speakers
+15.3.1.3	4	472	474	Speaker Layouts: Stereo
+15.3.1.4	4	474	475	Speaker Layouts: Surround Sound
+15.3.1.5	4	475	475	Analog Signal Levels
+15.3.1.6	4	475	476	Amplifiers
+15.3.1.7	4	476	476	Volume/Gain Controls
+15.3.1.8	4	476	477	Analog Wiring and Connectors
+15.3.2	3	477	484	Digital Audio Technology
+15.3.2.1	4	477	479	Analog-to-Digital Conversion: Pulse-Code Modulation
+15.3.2.2	4	479	480	Digital-to-Analog Conversion: Demodulation
+15.3.2.3	4	480	482	Digital Audio Formats and Codecs
+15.3.2.4	4	482	483	Parallel and Interleaved Audio Data
+15.3.2.5	4	483	484	Digital Wiring and Connectors
+15.4	2	484	502	Rendering Audio in 3D
+15.4.2	3	485	486	Modeling the Audio World
+15.4.3	3	486	487	Distance-Based Attenuation
+15.4.3.1	4	486	486	Fall-Off Min and Max
+15.4.3.2	4	486	487	Blending to Zero
+15.4.4	3	487	494	Pan
+15.4.3.3	4	487	487	Bending the Rules
+15.4.3.4	4	487	489	Atmospheric Attenuation
+15.4.4.1	4	489	490	Constant Gain Panning
+15.4.4.2	4	490	490	The Constant Power Pan Law
+15.4.4.3	4	490	491	Headroom
+15.4.4.4	4	491	491	To Center or Not to Center?
+15.4.4.5	4	491	493	Focus
+15.4.4.6	4	493	493	Dealing with Verticality
+15.4.4.7	4	493	494	Further Reading on Pan
+15.4.5	3	494	501	Propagation, Reverb, and Acoustics
+15.4.5.1	4	494	495	Modeling Propagation Effects with an LTI System
+15.4.5.2	4	495	496	Reverb Regions
+15.4.5.3	4	496	500	Obstruction, Occlusion and Exclusion
+15.4.5.4	4	500	501	Sound Portals in The Last of Us
+15.4.6	3	501	502	Doppler Shift
+15.4.5.5	4	501	502	Further Reading on Environmental Acoustics
+15.5	2	502	522	Audio Engine Architecture
+15.5.1	3	504	505	The Audio Processing Pipeline
+15.5.2	3	505	506	Concepts and Terminology
+15.5.2.1	4	505	505	Voices
+15.5.2.2	4	505	506	Buses
+15.5.3	3	506	508	The Voice Bus
+15.5.3.1	4	506	507	Sound Synthesis: Codecs
+15.5.3.2	4	507	507	Gain Control
+15.5.3.3	4	507	507	Aux Sends
+15.5.3.4	4	507	507	Reverb
+15.5.3.5	4	507	508	Pre-Send Filter
+15.5.4	3	508	510	Master Mixer
+15.5.3.6	4	508	508	Post-Send Filter
+15.5.3.7	4	508	508	Pan Pots
+15.5.4.1	4	508	509	Analog Mixing
+15.5.4.2	4	509	509	Digital Mixing
+15.5.4.3	4	509	509	Sample Depth Conversion
+15.5.4.4	4	509	510	Sample Rate Conversion
+15.5.5	3	510	511	The Master Output Bus
+15.5.6	3	511	513	Implementing a Bus
+15.5.6.1	4	511	511	Analog Buses
+15.5.6.2	4	511	512	Digital Buses
+15.5.6.3	4	512	513	Bus Latency
+15.5.7	3	513	515	Asset Management
+15.5.7.1	4	513	513	Audio Clips
+15.5.7.2	4	513	515	Sound Cues
+15.5.8	3	515	520	Mixing Your Game
+15.5.7.3	4	515	515	Sound Banks
+15.5.7.4	4	515	516	Streaming Sounds
+15.5.8.1	4	516	517	Groups
+15.5.8.2	4	517	518	Ducking
+15.5.8.3	4	518	518	Bus Presets and Mix Snapshots
+15.5.8.4	4	518	519	Instance Limiting
+15.5.8.5	4	519	520	Mixing In-Game Cinematics
+15.5.9	3	520	522	Audio Engine Survey
+15.5.9.1	4	520	521	Windows: The Universal Audio Architecture
+15.5.9.2	4	521	521	XAudio2
+15.5.9.3	4	521	522	Scream
+15.6	2	522	539	Game-Specific Audio Features
+15.5.9.4	4	522	524	Multiplatform 3D Audio Engines
+15.6.1	3	524	524	Supporting Split-Screen
+15.6.2	3	524	537	Character Dialog
+15.6.2.1	4	525	525	Giving a Character a Voice
+15.6.2.2	4	525	527	Defining a Line of Dialog
+15.6.2.3	4	527	528	Playing a Line of Dialog
+15.6.2.4	4	528	528	Priority and Interruption
+15.6.2.5	4	528	529	Conversations
+15.6.2.6	4	529	531	Interrupting Conversations
+15.6.2.7	4	531	531	Exclusivity
+15.6.2.8	4	531	535	Choices and Branching Conversations
+15.6.2.9	4	535	536	Context-Sensitive Dialog
+15.6.2.10	4	536	537	Dialog Actions
+15.6.3	3	537	539	Music
+16	1	539	560	Introduction to Gameplay Systems
+16.1	2	540	544	Anatomy of a Game World
+16.1.1	3	540	542	World Elements
+16.1.2	3	542	543	World Chunks
+16.1.1.1	4	542	543	Static Geometry
+16.1.3	3	543	544	High-Level Game Flow
+16.2	2	544	547	Implementing Dynamic Elements: Game Objects
+16.2.1	3	546	546	Game Object Models
+16.2.2	3	546	547	Tool-Side Design versus Runtime Design
+16.3	2	547	549	Data-Driven Game Engines
+16.4	2	549	560	The Game World Editor
+16.4.1	3	550	558	Typical Features of a Game World Editor
+16.4.1.1	4	550	552	World Chunk Creation and Management
+16.4.1.2	4	552	552	Game World Visualization
+16.4.1.3	4	552	553	Navigation
+16.4.1.4	4	553	553	Selection
+16.4.1.5	4	553	553	Layers
+16.4.1.6	4	553	555	Property Grid
+16.4.1.7	4	555	556	Object Placement and Alignment Aids
+16.4.1.8	4	556	557	Special Object Types
+16.4.1.9	4	557	557	Saving and Loading World Chunks
+16.4.1.10	4	557	558	Rapid Iteration
+16.4.2	3	558	560	Integrated Asset Management Tools
+16.4.2.1	4	559	560	Data Processing Costs
+17	1	560	675	Runtime Gameplay Systems
+17.1	2	560	563	Components of the Gameplay Foundation System
+17.2	2	563	582	Runtime Object Model Architectures
+17.2.1	3	564	578	Object-Centric Architectures
+17.2.1.1	4	565	566	A Simple Object-Based Model in C: Hydro Thunder
+17.2.1.2	4	566	567	Monolithic Class Hierarchies
+17.2.1.3	4	567	571	Problems with Deep, Wide Hierarchies
+17.2.1.4	4	571	575	Using Composition to Simplify the Hierarchy
+17.2.1.5	4	575	576	Generic Components
+17.2.1.6	4	576	578	Pure Component Models
+17.2.2	3	578	582	Property-Centric Architectures
+17.2.2.1	4	579	579	Implementing Behavior via Property Classes
+17.2.2.2	4	579	580	Implementing Behavior via Script
+17.2.2.3	4	580	580	Properties versus Components
+17.2.2.4	4	580	582	Pros and Cons of Property-Centric Designs
+17.3	2	582	589	World Chunk Data Formats
+17.2.2.5	4	582	583	Further Reading
+17.3.1	3	583	583	Binary Object Images
+17.3.2	3	583	585	Serialized Game Object Descriptions
+17.3.3	3	585	589	Spawners and Type Schemas
+17.3.3.1	4	586	588	Object Type Schemas
+17.3.3.2	4	588	588	Default Attribute Values
+17.3.3.3	4	588	589	Some Benefits of Spawners and Type Schemas
+17.4	2	589	598	Loading and Streaming Game Worlds
+17.4.1	3	590	590	Simple Level Loading
+17.4.2	3	590	592	Toward Seamless Loading: Air Locks
+17.4.3	3	592	594	Game World Streaming
+17.4.3.1	4	593	593	Determining Which Resources to Load
+17.4.3.2	4	593	594	PlayGo on the PlayStation
+17.4.4	3	594	597	Memory Management for Object Spawning
+17.4.4.1	4	594	595	OffLine Memory Allocation for Object Spawning
+17.4.4.2	4	595	597	Dynamic Memory Management for Object Spawning
+17.4.5	3	597	598	Saved Games
+17.4.5.1	4	597	598	Checkpoints
+17.5	2	598	606	Object References and World Queries
+17.4.5.2	4	598	599	Save Anywhere
+17.5.1	3	599	600	Pointers
+17.5.2	3	600	601	Smart Pointers
+17.5.3	3	601	604	Handles
+17.5.4	3	604	606	Game Object Queries
+17.6	2	606	620	Updating Game Objects in Real Time
+17.6.1	3	607	609	A Simple Approach (That Doesn't Work)
+17.6.1.1	4	608	608	Maintaining a Collection of Active Game Objects
+17.6.1.2	4	608	609	Responsibilities of the Update Function
+17.6.2	3	609	612	Performance Constraints and Batched Updates
+17.6.3	3	612	620	Object and Subsystem Interdependencies
+17.6.3.1	4	612	614	Phased Updates
+17.6.3.2	4	614	617	Bucketed Updates
+17.6.3.3	4	617	618	Object State Inconsistencies and One-Frame-Off Lag
+17.6.3.4	4	618	619	Object State Caching
+17.6.3.5	4	619	620	Time-Stamping
+17.7	2	620	632	Concurrent Game Object Updates
+17.7.1	3	620	621	Concurrent Engine Subsystems
+17.7.2	3	621	624	Asynchronous Program Design
+17.7.2.1	4	623	624	When to Make Asynchronous Requests
+17.7.3	3	624	625	Job Dependencies and Degree of Parallelism
+17.7.4	3	625	632	Parallelizing the Game Object Model Itself
+17.7.4.1	4	626	628	Game Object Updates as Jobs
+17.7.4.2	4	628	629	Asynchronous Game Object Updates
+17.7.4.3	4	629	630	Locking During Game Object Updates
+17.7.4.4	4	630	631	Object Snapshots
+17.7.4.5	4	631	631	Handling Inter-Object Mutation
+17.7.4.6	4	631	632	Future Improvements
+17.8	2	632	651	Events and Message-Passing
+17.8.1	3	632	633	The Problem with Statically Typed Function Binding
+17.8.2	3	633	635	Encapsulating an Event in an Object
+17.8.3	3	635	636	Event Types
+17.8.4	3	636	637	Event Arguments
+17.8.5	3	637	639	Event Handlers
+17.8.4.1	4	637	639	Event Arguments as Key-Value Pairs
+17.8.6	3	639	639	Unpacking an Event's Arguments
+17.8.7	3	639	641	Chains of Responsibility
+17.8.8	3	641	642	Registering Interest in Events
+17.8.9	3	642	647	To Queue or Not to Queue
+17.8.9.1	4	642	644	Some Benefits of Event Queuing
+17.8.9.2	4	644	647	Some Problems with Event Queuing
+17.8.10	3	647	648	Some Problems with Immediate Event Sending
+17.8.11	3	648	651	Data-Driven Event/Message-Passing Systems
+17.8.11.1	4	649	651	Data Pathway Communication Systems
+17.9	2	651	673	Scripting
+17.8.11.2	4	651	652	Some Pros and Cons of GUI-Based Programming
+17.9.1	3	652	652	Runtime versus Data Definition
+17.9.2	3	652	654	Programming Language Characteristics
+17.9.2.1	4	653	654	Typical Characteristics of Game Scripting Languages
+17.9.3	3	654	658	Some Common Game Scripting Languages
+17.9.3.1	4	655	655	QuakeC
+17.9.3.2	4	655	655	UnrealScript
+17.9.3.3	4	655	657	Lua
+17.9.3.4	4	657	658	Python
+17.9.4	3	658	660	Architectures for Scripting
+17.9.3.5	4	658	660	Pawn (Small-C)
+17.9.5	3	660	673	Features of a Runtime Game Scripting Language
+17.9.5.1	4	660	666	Interface with the Native Programming Language
+17.9.5.2	4	666	667	Game Object References
+17.9.5.3	4	667	668	Receiving and Handling Events in Script
+17.9.5.4	4	668	668	Sending Events
+17.9.5.5	4	668	670	Object-Oriented Scripting Languages
+17.9.5.6	4	670	670	Scripted Finite State Machines
+17.9.5.7	4	670	673	Multithreaded Scripts
+17.10	2	673	675	High-Level Game Flow
+18	1	675	680	You Mean There’s More?
+18.1	2	675	676	Some Engine Systems We Didn’t Cover
+18.1.1	3	675	676	Movie Player
+18.2	2	676	680	Gameplay Systems
+18.1.2	3	676	676	Multiplayer Networking
+18.2.1	3	676	677	Player Mechanics
+18.2.2	3	677	677	Cameras
+18.2.3	3	677	678	Artificial Intelligence
+18.2.4	3	678	680	Other Gameplay Systems
+Xbibliography	1	680	696	Bibliography
+Xindex_volume_ii_	1	696	716	Index (Volume II)

@@ -53,3 +53,4 @@ Default: work directly (`@coder`, `@planner`, `@designer` in chat), then validat
 - Transport R8 snapshots may carry a `construction` slice; load hydrates `CorridorConstructionBook`.
 - HUD: simulation session chrome in [`src/gui/hud/simulation_session.rs`](src/gui/hud/simulation_session.rs); UI boundary guide [`prompts/guides/ui_boundary_guide_v1.md`](prompts/guides/ui_boundary_guide_v1.md).
 - Index of modules/concepts: [`src/dev/codebase_index_v1.md`](src/dev/codebase_index_v1.md).
+- Reference books (GEA 4e I/II, AI for Games 3e): [`src/dev/ref_books_index/systems.md`](src/dev/ref_books_index/systems.md) → `python src/dev/ref_books_index/lookup.py <words> | --code <path>` gives book section + PDF pages + matching code.

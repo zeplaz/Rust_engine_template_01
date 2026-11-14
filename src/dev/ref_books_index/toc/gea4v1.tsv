@@ -1,0 +1,598 @@
+sec	depth	start	end	title
+1	1	18	76	Introduction
+1.1	2	20	22	What Is a Game?
+1.1.1	3	20	22	Video Games as Soft Real-Time Simulations
+1.2	2	22	24	What Is a Game Engine?
+1.3	2	24	41	Engine Differences Across Genres
+1.3.1	3	25	26	First-Person Shooters (FPS)
+1.3.2	3	26	28	Platformers and Other Third-Person Games
+1.3.3	3	28	30	Fighting Games
+1.3.4	3	30	31	Racing Games
+1.3.5	3	31	33	Strategy Games
+1.3.6	3	33	35	Massively Multiplayer Online Games
+1.3.7	3	35	36	Player-Authored Content
+1.3.8	3	36	40	Virtual, Augmented and Mixed Reality
+1.3.8.1	4	37	37	Virtual Reality
+1.3.8.2	4	37	38	Augmented and Mixed Reality
+1.3.8.3	4	38	38	VR/AR/MR Games
+1.3.8.4	4	38	40	VR Game Engines
+1.3.9	3	40	41	Other Genres
+1.3.8.5	4	40	41	Location-Based Entertainment
+1.4	2	41	47	Game Engine Survey
+1.4.1	3	41	42	The Quake Family of Engines
+1.4.2	3	42	42	Unreal Engine
+1.4.3	3	42	43	The Half-Life Source and Source 2 Engines
+1.4.4	3	43	43	DICE's Frostbite
+1.4.5	3	43	43	Rockstar Advanced Game Engine (RAGE)
+1.4.6	3	43	43	CRYENGINE
+1.4.7	3	43	44	Sony's PhyreEngine
+1.4.8	3	44	44	Microsoft's XNA Game Studio
+1.4.9	3	44	45	Unity
+1.4.10	3	45	45	Other Commercial Game Engines
+1.4.11	3	45	45	Proprietary In-House Engines
+1.4.12	3	45	47	Open Source Engines
+1.5	2	47	68	Runtime Engine Architecture
+1.5.1	3	49	49	Target Hardware
+1.5.2	3	49	49	Device Drivers
+1.5.3	3	49	50	Operating System
+1.5.4	3	50	53	Third-Party SDKs and Middleware
+1.5.4.1	4	50	51	Data Structures and Algorithms
+1.5.4.2	4	51	51	Graphics
+1.5.4.3	4	51	52	Collision and Physics
+1.5.4.4	4	52	52	Character Animation
+1.5.4.5	4	52	53	Other Third Party Libraries
+1.5.5	3	53	54	Platform Independence Layer
+1.5.6	3	54	54	Core Systems
+1.5.7	3	54	55	Resource Manager
+1.5.8	3	55	58	Rendering Engine
+1.5.8.1	4	55	56	Low-Level Renderer
+1.5.8.2	4	56	57	Scene Graph/Culling Optimizations
+1.5.8.3	4	57	57	Visual Effects
+1.5.8.4	4	57	58	Front End
+1.5.9	3	58	60	Profiling and Debugging Tools
+1.5.10	3	60	61	Collision and Physics
+1.5.11	3	61	62	Animation
+1.5.12	3	62	63	Human Interface Devices (HID)
+1.5.13	3	63	63	Audio
+1.5.14	3	63	64	Online Multiplayer/Networking
+1.5.15	3	64	67	Gameplay Foundation Systems
+1.5.15.1	4	64	66	Game Worlds and Object Models
+1.5.15.2	4	66	66	Event System
+1.5.15.3	4	66	66	Scripting System
+1.5.15.4	4	66	67	Artificial Intelligence Foundations
+1.5.16	3	67	68	Game-Specific Subsystems
+1.6	2	68	76	Tools and the Asset Pipeline
+1.6.1	3	69	69	Digital Content Creation Tools
+1.6.2	3	69	72	The Asset Conditioning Pipeline
+1.6.2.2	4	71	71	Skeletal Animation Data
+1.6.2.3	4	71	72	Audio Data
+1.6.3	3	72	72	The World Editor
+1.6.4	3	72	73	The Resource Database
+1.6.2.4	4	72	73	Particle Systems Data
+1.6.5	3	73	76	Some Approaches to Tool Architecture
+1.6.5.1	4	75	76	Web-Based User Interfaces
+2	1	76	110	Tools of the Trade
+2.1	2	76	85	Version Control
+2.1.1	3	77	77	Why Use Version Control?
+2.1.2	3	77	78	Common Version Control Systems
+2.1.3	3	78	79	Overview of Subversion and TortoiseSVN
+2.1.4	3	79	79	Setting up a Code Repository
+2.1.5	3	79	81	Installing TortoiseSVN
+2.1.6	3	81	83	File Versions, Updating and Committing
+2.1.7	3	83	85	Multiple Check-Out, Branching and Merging
+2.2	2	85	106	Compilers, Linkers, and IDEs
+2.1.8	3	85	85	Deleting Files
+2.2.1	3	85	86	Source Files, Headers and Translation Units
+2.2.2	3	86	87	Libraries, Executables and Dynamic Link Libraries
+2.2.3	3	87	88	Projects and Solutions
+2.2.4	3	88	98	Build Configurations
+2.2.4.1	4	89	91	Common Build Options
+2.2.4.2	4	91	93	Local and Global Optimizations
+2.2.4.3	4	93	94	Typical Build Configurations
+2.2.4.4	4	94	98	Project Configuration Tutorial
+2.2.5	3	98	106	Debugging Your Code
+2.2.5.1	4	98	99	The Start-Up Project
+2.2.5.2	4	99	100	Breakpoints
+2.2.5.4	4	100	100	The Call Stack
+2.2.5.5	4	100	102	The Watch Window
+2.2.5.6	4	102	104	Data Breakpoints
+2.2.5.8	4	104	106	Debugging Optimized Builds
+2.3	2	106	108	Profiling Tools
+2.3.1	3	107	108	List of Profilers
+2.4	2	108	108	Memory Leak and Corruption Detection
+2.5	2	108	110	Other Tools
+3	1	110	203	Fundamentals of Software Engineering for Games
+3.1	2	110	124	C++ Review and Best Practices
+3.1.1	3	111	118	Brief Review of Object-Oriented Programming
+3.1.1.1	4	111	111	Classes and Objects
+3.1.1.2	4	111	111	Encapsulation
+3.1.1.3	4	111	112	Inheritance
+3.1.1.4	4	112	115	Polymorphism
+3.1.1.5	4	115	116	Composition and Aggregation
+3.1.1.6	4	116	118	Design Patterns
+3.1.2	3	118	123	C++ Language Standardization
+3.1.2.1	4	121	121	Further Reading
+3.1.2.2	4	121	123	Which Language Features to Use?
+3.1.3	3	123	124	Coding Standards: Why and How Much?
+3.2	2	124	135	Catching and Handling Errors
+3.2.1	3	124	125	Types of Errors
+3.2.2	3	125	127	Handling Errors
+3.2.2.1	4	125	125	Handling Player Errors
+3.2.2.2	4	125	127	Handling Developer Errors
+3.2.3	3	127	135	Implementation of Error Detection and Handling
+3.2.2.3	4	127	127	Handling Programmer Errors
+3.2.3.1	4	127	127	Error Return Codes
+3.2.3.2	4	127	130	Exceptions
+3.2.3.3	4	130	135	Assertions
+3.3	2	135	168	Data, Code and Memory Layout
+3.3.1	3	135	142	Numeric Representations
+3.3.1.1	4	136	136	Numeric Bases
+3.3.1.2	4	136	137	Signed and Unsigned Integers
+3.3.1.3	4	137	138	Fixed-Point Notation
+3.3.1.4	4	138	142	Floating-Point Notation
+3.3.2	3	142	147	Primitive Data Types
+3.3.2.1	4	143	147	Multibyte Values and Endianness
+3.3.3	3	147	148	Kilobytes versus Kibibytes
+3.3.4	3	148	154	Declarations, Definitions and Linkage
+3.3.4.1	4	148	150	Translation Units Revisited
+3.3.4.2	4	150	152	Declaration versus Definition
+3.3.4.3	4	152	154	Linkage
+3.3.5	3	154	159	Memory Layout of a C/C++ Program
+3.3.5.1	4	154	156	Executable Image
+3.3.5.2	4	156	159	Program Stack
+3.3.6	3	159	161	Member Variables
+3.3.7	3	161	168	Object Layout in Memory
+3.3.7.1	4	162	164	Alignment and Packing
+3.3.7.2	4	164	168	Memory Layout of C++ Classes
+3.4	2	168	183	Computer Hardware Fundamentals
+3.4.1	3	168	169	Learning from the Simpler Computers of Yesteryear
+3.4.2	3	169	169	Anatomy of a Computer
+3.4.3	3	169	174	CPU
+3.4.3.1	4	170	170	ALU
+3.4.3.2	4	170	171	VPU
+3.4.3.3	4	171	173	Registers
+3.4.3.4	4	173	174	Control Unit
+3.4.4	3	174	175	Clock
+3.4.5	3	175	176	Memory
+3.4.4.1	4	175	176	Clock Speed versus Processing Power
+3.4.6	3	176	178	Buses
+3.4.6.1	4	177	177	Bus Widths
+3.4.6.2	4	177	178	Words
+3.4.7	3	178	183	Machine and Assembly Language
+3.4.7.1	4	178	180	Instruction Set Architecture (ISA)
+3.4.7.2	4	180	181	Machine Language
+3.4.7.3	4	181	182	Assembly Language
+3.4.7.4	4	182	183	Addressing Modes
+3.5	2	183	203	Memory Architectures
+3.4.7.5	4	183	184	Further Reading on Assembly Language
+3.5.1	3	184	186	Memory Mapping
+3.5.1.1	4	184	185	Memory-Mapped I/O
+3.5.1.2	4	185	185	Video RAM
+3.5.1.3	4	185	186	Case Study: The Apple II Memory Map
+3.5.2	3	186	189	Virtual Memory
+3.5.2.1	4	186	187	Virtual Memory Pages
+3.5.2.2	4	187	188	Virtual to Physical Address Translation
+3.5.2.3	4	188	189	Handling Page Faults
+3.5.3	3	189	192	Memory Architectures for Latency Reduction
+3.5.2.4	4	189	189	The Translation Lookaside Buffer (TLB)
+3.5.2.5	4	189	190	Further Reading on Virtual Memory
+3.5.3.1	4	190	192	The Memory Gap
+3.5.4	3	192	199	Memory Cache Hierarchies
+3.5.3.2	4	192	193	Register Files
+3.5.4.1	4	193	193	Cache Lines
+3.5.4.2	4	193	194	Mapping Cache Lines to Main RAM Addresses
+3.5.4.3	4	194	196	Addressing the Cache
+3.5.4.4	4	196	197	Set Associativity and Replacement Policy
+3.5.4.5	4	197	197	Multilevel Caches
+3.5.4.6	4	197	197	Instruction Cache and Data Cache
+3.5.4.7	4	197	198	Write Policy
+3.5.4.8	4	198	199	Cache Coherency: MESI, MOESI and MESIF
+3.5.5	3	199	203	Nonuniform Memory Access (NUMA)
+3.5.4.9	4	199	200	Avoiding Cache Misses
+3.5.5.1	4	200	200	SPU Local Stores on the PS3
+3.5.5.2	4	200	203	PS2 Scratchpad (SPR)
+4	1	203	350	Parallelism and Concurrent Programming
+4.1	2	204	211	Defining Concurrency and Parallelism
+4.1.1	3	204	205	Concurrency
+4.1.2	3	205	207	Parallelism
+4.1.2.1	4	206	207	Implicit versus Explicit Parallelism
+4.1.3	3	207	207	Task versus Data Parallelism
+4.1.4	3	207	210	Flynn's Taxonomy
+4.1.4.1	4	208	210	Single versus Multiple Data
+4.1.5	3	210	211	Orthogonality of Concurrency and Parallelism
+4.2	2	211	224	Implicit Parallelism
+4.1.6	3	211	211	Roadmap of the Chapter
+4.2.1	3	211	213	Pipelining
+4.2.2	3	213	214	Latency versus Throughput
+4.2.3	3	214	214	Pipeline Depths
+4.2.4	3	214	215	Stalls
+4.2.5	3	215	217	Data Dependencies
+4.2.5.1	4	215	216	Instruction Reordering
+4.2.5.2	4	216	217	Out-of-Order Execution
+4.2.6	3	217	221	Branch Dependencies
+4.2.6.1	4	218	218	Speculative Execution
+4.2.6.2	4	218	221	Predication
+4.2.7	3	221	223	Superscalar CPUs
+4.2.7.1	4	221	223	Complexity of Superscalar Designs
+4.2.8	3	223	224	Very Long Instruction Word (VLIW)
+4.2.7.2	4	223	224	Superscalar and RISC
+4.3	2	224	229	Explicit Parallelism
+4.3.1	3	225	226	Hyperthreading
+4.3.2	3	226	227	Multicore CPUs
+4.3.3	3	227	228	Symmetric versus Asymmetric Multiprocessing
+4.3.4	3	228	229	Distributed Computing
+4.4	2	229	254	Operating System Fundamentals
+4.4.1	3	229	231	The Kernel
+4.4.1.1	4	229	230	Kernel Mode versus User Mode
+4.4.1.2	4	230	231	Kernel Mode Privileges
+4.4.2	3	231	231	Interrupts
+4.4.3	3	231	232	Kernel Calls
+4.4.4	3	232	234	Preemptive Multitasking
+4.4.5	3	234	239	Processes
+4.4.5.1	4	234	235	Anatomy of a Process
+4.4.5.2	4	235	239	Virtual Memory Map of a Process
+4.4.6	3	239	248	Threads
+4.4.6.1	4	240	241	Threading Libraries
+4.4.6.2	4	241	242	Thread Creation and Termination
+4.4.6.3	4	242	243	Joining Threads
+4.4.6.4	4	243	245	Polling, Blocking and Yielding
+4.4.6.5	4	245	247	Context Switching
+4.4.6.6	4	247	247	Thread Priorities and Affinity
+4.4.6.7	4	247	248	Thread Local Storage
+4.4.7	3	248	250	Fibers
+4.4.6.8	4	248	249	Thread Debugging
+4.4.7.1	4	249	249	Fiber Creation and Destruction
+4.4.7.2	4	249	250	Fiber States
+4.4.8	3	250	253	User-Level Threads and Coroutines
+4.4.7.3	4	250	250	Fiber Migration
+4.4.7.4	4	250	250	Debugging with Fibers
+4.4.7.5	4	250	251	Further Reading on Fibers
+4.4.8.1	4	251	253	Coroutines
+4.4.9	3	253	254	Further Reading on Processes and Threads
+4.4.8.2	4	253	254	Kernel Threads versus User Threads
+4.5	2	254	264	Introduction to Concurrent Programming
+4.5.1	3	254	254	Why Write Concurrent Software?
+4.5.2	3	254	256	Concurrent Programming Models
+4.5.3	3	256	259	Race Conditions
+4.5.3.1	4	256	256	Critical Races
+4.5.3.2	4	256	259	Data Races
+4.5.4	3	259	264	Critical Operations and Atomicity
+4.5.4.1	4	259	260	Invocation and Response
+4.5.4.2	4	260	262	Atomicity Defined
+4.5.4.3	4	262	262	Making an Operation Atomic
+4.5.4.4	4	262	263	Atomicity as Serialization
+4.5.4.5	4	263	264	Data-Centric Consistency Models
+4.6	2	264	277	Thread Synchronization Primitives
+4.6.1	3	264	267	Mutexes
+4.6.1.1	4	265	266	POSIX
+4.6.1.2	4	266	266	C++ Standard Library
+4.6.1.3	4	266	267	Windows
+4.6.2	3	267	268	Critical Sections
+4.6.3	3	268	271	Condition Variables
+4.6.4	3	271	275	Semaphores
+4.6.4.1	4	272	274	Mutex versus Binary Semaphore
+4.6.4.2	4	274	275	Implementing a Semaphore
+4.6.5	3	275	277	Windows Events
+4.7	2	277	282	Problems with Lock-Based Concurrency
+4.7.1	3	277	279	Deadlock
+4.7.2	3	279	279	Livelock
+4.7.3	3	279	280	Starvation
+4.7.4	3	280	281	Priority Inversion
+4.7.5	3	281	282	The Dining Philosophers
+4.8	2	282	285	Some Rules of Thumb for Concurrency
+4.8.1	3	282	283	Global Ordering Rules
+4.8.2	3	283	283	Transaction-Based Algorithms
+4.8.3	3	283	284	Minimizing Contention
+4.8.4	3	284	285	Thread Safety
+4.9	2	285	324	Lock-Free Concurrency
+4.9.1	3	286	287	Causes of Data Race Bugs
+4.9.2	3	287	295	Implementing Atomicity
+4.9.2.1	4	288	288	Atomicity by Disabling Interrupts
+4.9.2.2	4	288	288	Atomic Instructions
+4.9.2.3	4	288	289	Atomic Reads and Writes
+4.9.2.4	4	289	289	Atomic Read-Modify-Write
+4.9.2.5	4	289	290	Test and Set
+4.9.2.6	4	290	291	Exchange
+4.9.2.7	4	291	292	Compare and Swap
+4.9.2.8	4	292	293	ABA Problem
+4.9.2.9	4	293	294	Load Linked/Store Conditional
+4.9.2.10	4	294	294	Advantages of LL/SC over CAS
+4.9.2.11	4	294	295	Strong and Weak Compare-Exchange
+4.9.3	3	295	299	Barriers
+4.9.2.12	4	295	295	Relative Strength of Atomic RMW Instructions
+4.9.3.1	4	295	297	How Instruction Reordering Causes Concurrency Bugs
+4.9.3.2	4	297	297	Volatile in C/C++ (and Why It Doesn't Help Us)
+4.9.3.3	4	297	299	Compiler Barriers
+4.9.4	3	299	308	Memory Ordering Semantics
+4.9.4.1	4	299	300	Memory Caching Revisited
+4.9.4.2	4	300	302	Multicore Cache Coherency Protocols
+4.9.4.3	4	302	303	The MESI Protocol
+4.9.4.4	4	303	304	How MESI Can Go Wrong
+4.9.4.5	4	304	305	Memory Fences
+4.9.4.6	4	305	306	Acquire and Release Semantics
+4.9.4.7	4	306	307	When to Use Acquire and Release Semantics
+4.9.4.8	4	307	307	CPU Memory Models
+4.9.4.9	4	307	308	Fence Instructions on Real CPUs
+4.9.5	3	308	311	Atomic Variables
+4.9.5.1	4	309	311	C++ Memory Order
+4.9.6	3	311	312	Concurrency in Interpreted Programming Languages
+4.9.7	3	312	321	Spin Locks
+4.9.7.1	4	312	314	Basic Spin Lock
+4.9.7.2	4	314	315	Scoped Locks
+4.9.7.3	4	315	317	Reentrant Locks
+4.9.7.4	4	317	318	Readers-Writer Locks
+4.9.7.5	4	318	321	Lock-Not-Needed Assertions
+4.9.8	3	321	321	Lock-Free Transactions
+4.9.9	3	321	323	A Lock-Free Linked List
+4.9.10	3	323	324	Further Reading on Concurrent and Lock-Free Programming
+4.10	2	324	340	SIMD/Vector Processing
+4.10.1	3	324	329	The SSE Instruction Set and Its Registers
+4.10.1.1	4	325	326	The __m128 Data Type
+4.10.1.2	4	326	326	Alignment of SSE Data
+4.10.1.3	4	326	327	SSE Compiler Intrinsics
+4.10.1.4	4	327	328	Some Useful SSE Intrinsics
+4.10.1.5	4	328	329	AltiVec vector Types
+4.10.2	3	329	330	Using SSE to Vectorize a Loop
+4.10.3	3	330	334	Vectorized Dot Products
+4.10.3.1	4	330	331	A First Attempt (That's Slow)
+4.10.3.2	4	331	332	A Better Approach
+4.10.3.3	4	332	333	Transpose as We Go
+4.10.3.4	4	333	334	Shuffle and Transpose
+4.10.4	3	334	335	Vector-Matrix Multiplication with SSE
+4.10.5	3	335	335	Matrix-Matrix Multiplication with SSE
+4.10.6	3	335	336	Generalized Vectorization
+4.10.7	3	336	340	Vector Predication
+4.11	2	340	350	Introduction to GPGPU Programming
+4.11.1	3	340	342	Data-Parallel Computations
+4.11.2	3	342	344	Compute Kernels
+4.11.3	3	344	345	Executing a Kernel
+4.11.4	3	345	348	GPU Threads and Thread Groups
+4.11.4.1	4	347	348	From SIMD to SIMT
+4.11.5	3	348	350	Machine Learning and Tensor Cores
+5	1	350	404	3D Math for Games
+5.1	2	350	351	Solving 3D Problems in 2D
+5.2	2	351	366	Points and Vectors
+5.2.1	3	351	352	Points and Cartesian Coordinates
+5.2.2	3	352	353	Left-Handed versus Right-Handed Coordinate Systems
+5.2.3	3	353	354	Vectors
+5.2.4	3	354	364	Vector Operations
+5.2.3.1	4	354	354	Cartesian Basis Vectors
+5.2.4.1	4	354	356	Multiplication by a Scalar
+5.2.4.3	4	356	356	Magnitude
+5.2.4.4	4	356	357	Vector Operations in Action
+5.2.4.5	4	357	358	Normalization and Unit Vectors
+5.2.4.6	4	358	358	Normal Vectors
+5.2.4.7	4	358	363	Dot Product and Projection
+5.2.4.9	4	363	364	Pseudovectors and Exterior Algebra
+5.2.5	3	364	366	Linear Interpolation of Points and Vectors
+5.3	2	366	384	Matrices
+5.3.1	3	366	366	Determinant of a Matrix
+5.3.2	3	366	367	Kinds of Matrices
+5.3.3	3	367	368	Matrix Multiplication
+5.3.4	3	368	369	Representing Points and Vectors as Matrices
+5.3.5	3	369	369	The Identity Matrix
+5.3.6	3	369	369	Matrix Inversion
+5.3.7	3	369	370	Transposition
+5.3.8	3	370	372	Homogeneous Coordinates
+5.3.8.1	4	371	372	Transforming Direction Vectors
+5.3.9	3	372	374	Primitive Transformation Matrices
+5.3.9.1	4	372	373	Translation
+5.3.9.2	4	373	374	Rotation All 4 � 4 pure rotation matrices have the form
+5.3.11	3	374	378	Coordinate Spaces
+5.3.9.3	4	374	375	Scale
+5.3.11.1	4	375	376	Model Space
+5.3.11.2	4	376	377	World Space
+5.3.11.3	4	377	378	View Space
+5.3.12	3	378	382	Change of Basis
+5.3.12.1	4	378	378	Coordinate Space Hierarchies
+5.3.12.2	4	378	380	Building a Change of Basis Matrix
+5.3.12.3	4	380	380	Extracting Unit Basis Vectors from a Matrix
+5.3.12.4	4	380	382	Transforming Coordinate Systems versus Vectors
+5.3.13	3	382	382	Transforming Normal Vectors
+5.3.14	3	382	384	Storing Matrices in Memory
+5.4	2	384	392	Quaternions
+5.4.1	3	385	385	Unit Quaternions as 3D Rotations
+5.4.2	3	385	387	Quaternion Operations
+5.4.2.1	4	386	386	Quaternion Multiplication
+5.4.2.2	4	386	387	Conjugate and Inverse
+5.4.3	3	387	388	Rotating Vectors with Quaternions
+5.4.4	3	388	390	Quaternion-Matrix Equivalence
+5.4.3.1	4	388	390	Quaternion Concatenation
+5.4.5	3	390	392	Rotational Linear Interpolation
+5.4.5.1	4	391	392	Spherical Linear Interpolation
+5.5	2	392	397	Comparison of Rotational Representations
+5.5.1	3	392	393	Euler Angles
+5.4.5.2	4	392	393	To Slerp or Not to Slerp (That's Still the Question)
+5.5.3	3	393	394	Axis + Angle
+5.5.4	3	394	394	Quaternions
+5.5.5	3	394	395	SRT Transformations
+5.5.6	3	395	395	Spinors
+5.5.7	3	395	396	Dual Quaternions
+5.5.8	3	396	397	Rotations and Degrees of Freedom
+5.6	2	397	401	Other Useful Mathematical Objects
+5.6.1	3	397	398	Lines, Rays and Line Segments
+5.6.2	3	398	399	Spheres
+5.6.3	3	399	400	Planes
+5.6.4	3	400	400	Axis-Aligned Bounding Boxes (AABB)
+5.6.5	3	400	401	Oriented Bounding Boxes (OBB)
+5.7	2	401	404	Random Number Generation
+5.6.6	3	401	401	Frusta
+5.6.7	3	401	402	Convex Polyhedral Regions
+5.7.1	3	402	402	Linear Congruential Generators
+5.7.2	3	402	403	Mersenne Twister
+5.7.3	3	403	403	Mother-of-All, Xorshift and KISS99
+5.7.4	3	403	404	PCG
+6	1	404	463	Engine Support Systems
+6.1	2	404	412	Subsystem Start-Up and Shut-Down
+6.1.1	3	404	407	C++ Static Initialization Order (or Lack Thereof)
+6.1.1.1	4	405	407	Construct On Demand
+6.1.2	3	407	409	A Simple Approach That Works
+6.1.3	3	409	412	Some Examples from Real Engines
+6.1.3.1	4	409	411	OGRE
+6.1.3.2	4	411	412	Naughty Dog's Uncharted and The Last of Us Series
+6.2	2	412	427	Memory Management
+6.2.1	3	413	422	Optimizing Dynamic Memory Allocation
+6.2.1.1	4	413	416	Stack-Based Allocators
+6.2.1.2	4	416	417	Pool Allocators
+6.2.1.3	4	417	422	Aligned Allocations
+6.2.2	3	422	427	Memory Fragmentation
+6.2.2.1	4	424	424	Avoiding Fragmentation with Stack and Pool Allocators
+6.2.2.2	4	424	427	Defragmentation and Relocation
+6.3	2	427	440	Containers
+6.3.1	3	428	429	Container Operations
+6.3.2	3	429	430	Iterators
+6.3.3	3	430	432	Algorithmic Complexity
+6.3.2.1	4	430	432	Preincrement versus Postincrement
+6.3.4	3	432	436	Building Custom Container Classes
+6.3.4.1	4	432	436	To Build or Not to Build
+6.3.5	3	436	436	Dynamic Arrays and Chunky Allocation
+6.3.6	3	436	440	Dictionaries and Hash Tables
+6.3.6.1	4	437	438	Collisions: Open and Closed Hashing
+6.3.6.2	4	438	440	Hashing
+6.4	2	440	454	Strings
+6.3.6.3	4	440	440	Implementing a Closed Hash Table
+6.3.6.4	4	440	441	Robin Hood Hashing
+6.4.1	3	441	442	The Problem with Strings
+6.4.2	3	442	443	String Classes
+6.4.3	3	443	446	Unique Identifiers
+6.4.3.1	4	443	444	Hashed String Ids
+6.4.3.2	4	444	446	Some Implementation Ideas
+6.4.4	3	446	454	Localization
+6.4.4.1	4	446	449	Unicode
+6.4.4.3	4	449	450	Unicode under Windows
+6.4.4.4	4	450	451	Unicode on Consoles
+6.4.4.5	4	451	453	Other Localization Concerns
+6.4.4.6	4	453	454	Case Study: Naughty Dog's Localization Tool
+6.5	2	454	463	Engine Configuration
+6.5.1	3	455	457	Loading and Saving Options
+6.5.2	3	457	458	Per-User Options
+6.5.3	3	458	463	Configuration Management in Some Real Engines
+6.5.3.1	4	458	458	Example: Quake's Cvars
+6.5.3.2	4	458	459	Example: OGRE
+6.5.3.3	4	459	463	Example: The Uncharted and The Last of Us Series
+7	1	463	505	Resources and the File System
+7.1	2	464	474	File System
+7.1.1	3	464	468	File Names and Paths
+7.1.1.1	4	464	466	Differences across Operating Systems
+7.1.1.2	4	466	467	Absolute and Relative Paths
+7.1.1.3	4	467	467	Search Paths
+7.1.1.4	4	467	468	Path APIs
+7.1.2	3	468	470	Basic File I/O
+7.1.2.1	4	469	469	To Wrap or Not to Wrap
+7.1.2.2	4	469	470	Synchronous File I/O
+7.1.3	3	470	474	Asynchronous File I/O
+7.1.3.1	4	473	473	Priorities
+7.1.3.2	4	473	474	How Asynchronous File I/O Works
+7.2	2	474	505	The Resource Manager
+7.1.4	3	474	475	PlayStation 5's AMPR
+7.2.1	3	475	485	Offline Resource Management and the Tool Chain
+7.2.1.1	4	475	476	Revision Control for Assets
+7.2.1.2	4	476	478	The Resource Database
+7.2.1.3	4	478	483	Some Successful Resource Database Designs
+7.2.1.4	4	483	485	The Asset Conditioning Pipeline
+7.2.2	3	485	505	Runtime Resource Management
+7.2.2.1	4	485	486	Responsibilities of the Runtime Resource Manager
+7.2.2.2	4	486	488	Resource File and Directory Organization
+7.2.2.3	4	488	489	Resource File Formats
+7.2.2.4	4	489	489	Resource GUIDs
+7.2.2.5	4	489	490	The Resource Registry
+7.2.2.6	4	490	492	Resource Lifetime
+7.2.2.7	4	492	497	Memory Management for Resources
+7.2.2.8	4	497	498	Composite Resources and Referential Integrity
+7.2.2.9	4	498	503	Handling Cross-References between Resources
+7.2.2.10	4	503	505	Post-Load Initialization
+8	1	505	538	The Game Loop and Real-Time Simulation
+8.1	2	505	506	The Rendering Loop
+8.2	2	506	508	The Game Loop
+8.2.1	3	507	508	A Simple Example: Pong
+8.3	2	508	511	Game Loop Architectural Styles
+8.3.1	3	509	509	Windows Message Pumps
+8.3.2	3	509	511	Callback-Driven Frameworks
+8.4	2	511	514	Abstract Timelines
+8.3.3	3	511	512	Event-Based Updating
+8.4.1	3	512	512	Real Time
+8.4.2	3	512	512	Game Time
+8.4.3	3	512	514	Local and Global Timelines
+8.5	2	514	524	Measuring and Dealing with Time
+8.5.1	3	514	515	Frame Rate and Time Deltas
+8.5.2	3	515	519	From Frame Rate to Speed
+8.5.2.1	4	515	516	Old-School CPU-Dependent Games
+8.5.2.2	4	516	516	Updating Based on Elapsed Time
+8.5.2.3	4	516	517	Using a Running Average
+8.5.2.4	4	517	518	Governing the Frame Rate
+8.5.2.5	4	518	519	Screen Tearing and V-Sync
+8.5.3	3	519	520	Measuring Real Time with a High-Resolution Timer
+8.5.4	3	520	522	Time Units and Clock Variables
+8.5.3.1	4	520	522	High-Resolution Clock Drift
+8.5.5	3	522	524	Dealing with Breakpoints
+8.5.4.4	4	522	522	Limitations of Floating-Point Clocks
+8.5.4.5	4	522	524	Other Time Units
+8.6	2	524	538	Multiprocessor Game Loops
+8.6.1	3	524	525	Task Decomposition
+8.6.2	3	525	526	One Thread per Subsystem
+8.6.3	3	526	528	Scatter/Gather
+8.6.3.1	4	526	527	Scatter/Gather in the Game Loop
+8.6.3.2	4	527	528	SIMD for Scatter/Gather
+8.6.4	3	528	538	Job Systems
+8.6.3.3	4	528	529	Making Scatter/Gather More Efficient
+8.6.4.1	4	529	531	Typical Job System Interface
+8.6.4.2	4	531	533	A Simple Job System Based on a Thread Pool
+8.6.4.4	4	533	533	Jobs as Coroutines
+8.6.4.5	4	533	534	Jobs as Fibers
+8.6.4.6	4	534	534	Job Counters
+8.6.4.7	4	534	535	Job Synchronization Primitives
+8.6.4.8	4	535	536	Job Visualization and Profiling Tools
+8.6.4.9	4	536	538	The Naughty Dog Job System
+9	1	538	566	Human Interface Devices
+9.1	2	538	540	Types of Human Interface Devices
+9.2	2	540	541	Interfacing with a HID
+9.2.1	3	540	541	Polling
+9.3	2	541	548	Types of Inputs
+9.2.2	3	541	541	Interrupts
+9.2.3	3	541	542	Wireless Devices
+9.3.1	3	542	543	Digital Buttons
+9.3.2	3	543	544	Analog Axes and Buttons
+9.3.3	3	544	545	Relative Axes
+9.3.4	3	545	546	Accelerometers
+9.3.6	3	546	548	Cameras
+9.4	2	548	549	Types of Outputs
+9.4.1	3	548	548	Rumble
+9.4.2	3	548	548	Force-Feedback
+9.4.3	3	548	549	Haptics
+9.5	2	549	565	Game Engine HID Systems
+9.4.4	3	549	549	Audio
+9.4.5	3	549	549	Other Inputs and Outputs
+9.5.1	3	549	550	Typical Requirements
+9.5.2	3	550	550	Dead Zone
+9.5.3	3	550	552	Analog Signal Filtering
+9.5.4	3	552	559	Detecting Input Events
+9.5.4.1	4	552	554	Button Up and Button Down
+9.5.4.2	4	554	555	Chords
+9.5.4.3	4	555	559	Sequences and Gesture Detection
+9.5.5	3	559	560	Managing Multiple HIDs for Multiple Players
+9.5.6	3	560	562	Cross-Platform HID Systems
+9.5.7	3	562	564	Input Remapping
+9.5.8	3	564	564	Context-Sensitive Controls
+9.5.9	3	564	565	Disabling Inputs
+9.6	2	565	566	Human Interface Devices in Practice
+10	1	566	596	Tools for Debugging and Development
+10.1	2	566	571	Logging and Tracing
+10.1.1	3	567	568	Formatted Output with OutputDebugString()
+10.1.2	3	568	569	Verbosity
+10.1.3	3	569	570	Channels
+10.1.4	3	570	570	Mirroring Output to a File
+10.1.5	3	570	571	Crash Reports
+10.1.3.1	4	570	571	Using Redis to Manage TTY Channels
+10.2	2	571	578	Debug Drawing Facilities
+10.3	2	578	581	In-Game Menus
+10.4	2	581	582	In-Game Console
+10.5	2	582	582	Debug Cameras and Pausing the Game
+10.6	2	582	583	Cheats
+10.7	2	583	584	Screenshots and Movie Capture
+10.8	2	584	591	In-Game Profiling
+10.8.1	3	585	591	Hierarchical Profiling
+10.8.1.1	4	587	591	Measuring Execution Times Hierarchically
+10.9	2	591	596	In-Game Memory Stats and Leak Detection
+10.8.2	3	591	596	Exporting to Excel
+Xbibliography	1	596	612	Bibliography
+Xindex_volume_i_	1	612	628	Index (Volume I)
