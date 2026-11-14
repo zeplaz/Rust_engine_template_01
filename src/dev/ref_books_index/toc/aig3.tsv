@@ -1,0 +1,493 @@
+sec	depth	start	end	title
+PI	0	22	60	Ai And Games
+1	1	24	42	Introduction
+1.1	2	25	31	What Is AI?
+1.1.1	3	26	29	Academic AI
+1.1.2	3	29	31	Game AI
+1.2	2	31	35	Model of Game AI
+1.2.1	3	32	32	Movement
+1.2.2	3	32	33	Decision Making
+1.2.3	3	33	33	Strategy
+1.2.4	3	33	34	Infrastructure
+1.2.5	3	34	34	Agent-Based AI
+1.2.6	3	34	35	In the Book
+1.3	2	35	39	Algorithms and Data Structures
+1.3.1	3	35	38	Algorithms
+1.3.2	3	38	39	Representations
+1.4	2	39	42	Layout of the Book
+1.3.3	3	39	42	Implementation
+2	1	42	60	Game Ai
+2.1	2	42	45	The Complexity Fallacy
+2.1.1	3	42	43	When Simple Things Look Good
+2.1.2	3	43	44	When Complex Things Look Bad
+2.1.3	3	44	45	The Perception Window
+2.2	2	45	49	The Kind of AI in Games
+2.1.4	3	45	46	Changes of Behavior
+2.2.1	3	46	47	Hacks
+2.2.2	3	47	48	Heuristics
+2.2.3	3	48	49	Algorithms
+2.3	2	49	56	Speed and Memory Constraints
+2.3.1	3	49	51	Processor Issues
+2.3.2	3	51	53	Memory Concerns
+2.3.3	3	53	56	Platforms
+2.4	2	56	60	The AI Engine
+2.4.1	3	56	58	Structure of an AI Engine
+2.4.2	3	58	58	Tool Concerns
+2.4.3	3	58	60	Putting It All Together
+PII	0	60	822	Techniques
+3	1	62	216	Movement
+3.1	2	63	72	The Basics of Movement Algorithms
+3.1.1	3	64	65	Two-Dimensional Movement
+3.1.2	3	65	68	Statics
+3.1.3	3	68	72	Kinematics
+3.2	2	72	77	Kinematic Movement Algorithms
+3.2.1	3	72	75	Seek
+3.2.2	3	75	77	Wandering
+3.3	2	77	116	Steering Behaviors
+3.3.1	3	77	78	Steering Basics
+3.3.2	3	78	79	Variable Matching
+3.3.3	3	79	81	Seek and Flee
+3.3.4	3	81	84	Arrive
+3.3.5	3	84	88	Align
+3.3.6	3	88	89	Velocity Matching
+3.3.7	3	89	89	Delegated Behaviors
+3.3.8	3	89	93	Pursue and Evade
+3.3.9	3	93	93	Face
+3.3.10	3	93	94	Looking Where You’re Going
+3.3.11	3	94	97	Wander
+3.3.12	3	97	103	Path Following
+3.3.13	3	103	106	Separation
+3.3.14	3	106	111	Collision Avoidance
+3.3.15	3	111	116	Obstacle and Wall Avoidance
+3.4	2	116	141	Combining Steering Behaviors
+3.3.16	3	116	117	Summary
+3.4.1	3	117	117	Blending and Arbitration
+3.4.2	3	117	124	Weighted Blending
+3.4.3	3	124	127	Priorities
+3.4.4	3	127	129	Cooperative Arbitration
+3.4.5	3	129	141	Steering Pipeline
+3.5	2	141	154	Predicting Physics
+3.5.1	3	141	142	Aiming and Shooting
+3.5.2	3	142	144	Projectile Trajectory
+3.5.3	3	144	147	The Firing Solution
+3.5.4	3	147	149	Projectiles with Drag
+3.5.5	3	149	154	Iterative Targeting
+3.6	2	154	164	Jumping
+3.6.1	3	155	159	Jump Points
+3.6.2	3	159	163	Landing Pads
+3.6.3	3	163	164	Hole Fillers
+3.7	2	164	191	Coordinated Movement
+3.7.1	3	165	166	Fixed Formations
+3.7.2	3	166	167	Scalable Formations
+3.7.3	3	167	168	Emergent Formations
+3.7.4	3	168	172	Two-Level Formation Steering
+3.7.5	3	172	177	Implementation
+3.7.6	3	177	179	Extending to More Than Two Levels
+3.7.7	3	179	181	Slot Roles and Better Assignment
+3.7.8	3	181	185	Slot Assignment
+3.7.9	3	185	187	Dynamic Slots and Plays
+3.7.10	3	187	191	Tactical Movement
+3.8	2	191	198	Motor Control
+3.8.1	3	192	194	Output Filtering
+3.8.2	3	194	195	Capability-Sensitive Steering
+3.8.3	3	195	198	Common Actuation Properties
+3.9	2	198	216	Movement in the Third Dimension
+3.9.1	3	199	200	Rotation in Three Dimensions
+3.9.2	3	200	201	Converting Steering Behaviors to Three Dimensions
+3.9.3	3	201	202	Align
+3.9.4	3	202	203	Align to Vector
+3.9.5	3	203	206	Face
+3.9.6	3	206	206	Look Where You’re Going
+3.9.7	3	206	208	Wander
+3.9.8	3	208	216	Faking Rotation Axes
+4	1	216	318	Pathfinding
+4.1	2	217	224	The Pathfinding Graph
+4.1.1	3	218	219	Graphs
+4.1.2	3	219	221	Weighted Graphs
+4.1.3	3	221	223	Directed Weighted Graphs
+4.1.4	3	223	223	Terminology
+4.1.5	3	223	224	Representation
+4.2	2	224	236	Dijkstra
+4.2.1	3	224	225	The Problem
+4.2.2	3	225	230	The Algorithm
+4.2.3	3	230	232	Pseudo-Code
+4.2.4	3	232	234	Data Structures and Interfaces
+4.2.5	3	234	234	Performance of Dijkstra
+4.2.6	3	234	236	Weaknesses
+4.3	2	236	258	A*
+4.3.1	3	236	236	The Problem
+4.3.2	3	236	240	The Algorithm
+4.3.3	3	240	243	Pseudo-Code
+4.3.4	3	243	248	Data Structures and Interfaces
+4.3.5	3	248	248	Implementation Notes
+4.3.6	3	248	249	Algorithm Performance
+4.3.7	3	249	251	Node Array A*
+4.3.8	3	251	258	Choosing a Heuristic
+4.4	2	258	278	World Representations
+4.4.1	3	260	263	Tile Graphs
+4.4.2	3	263	265	Dirichlet Domains
+4.4.3	3	265	268	Points of Visibility
+4.4.4	3	268	273	Navigation Meshes
+4.4.5	3	273	273	Non-Translational Problems
+4.4.6	3	273	274	Cost Functions
+4.4.7	3	274	278	Path Smoothing
+4.5	2	278	278	Improving on A*
+4.6	2	278	295	Hierarchical Pathfinding
+4.6.1	3	279	282	The Hierarchical Pathfinding Graph
+4.6.2	3	282	285	Pathfinding on the Hierarchical Graph
+4.6.3	3	285	286	Hierarchical Pathfinding on Exclusions
+4.6.4	3	286	288	Strange Effects of Hierarchies on Pathfinding
+4.6.5	3	288	295	Instanced Geometry
+4.7	2	295	299	Other Ideas in Pathfinding
+4.7.1	3	295	295	Open Goal Pathfinding
+4.7.2	3	295	296	Dynamic Pathfinding
+4.7.3	3	296	296	Other Kinds of Information Reuse
+4.7.4	3	296	298	Low Memory Algorithms
+4.7.5	3	298	298	Interruptible Pathfinding
+4.7.6	3	298	299	Pooling Planners
+4.8	2	299	306	Continuous Time Pathfinding
+4.8.1	3	300	301	The Problem
+4.8.2	3	301	305	The Algorithm
+4.8.3	3	305	305	Implementation Notes
+4.8.4	3	305	306	Performance
+4.9	2	306	318	Movement Planning
+4.8.5	3	306	306	Weaknesses
+4.9.1	3	306	308	Animations
+4.9.2	3	308	310	Movement Planning
+4.9.3	3	310	312	Example
+4.9.4	3	312	318	Footfalls
+5	1	318	506	Decision Making
+5.1	2	319	320	Overview of Decision Making
+5.2	2	320	335	Decision Trees
+5.2.1	3	321	321	The Problem
+5.2.2	3	321	326	The Algorithm
+5.2.3	3	326	328	Pseudo-Code
+5.2.4	3	328	329	Knowledge Representation
+5.2.5	3	329	329	Implementation Notes
+5.2.6	3	329	330	Performance of Decision Trees
+5.2.7	3	330	331	Balancing the Tree
+5.2.8	3	331	332	Beyond the Tree
+5.2.9	3	332	335	Random Decision Trees
+5.3	2	335	359	State Machines
+5.3.1	3	337	337	The Problem
+5.3.2	3	337	337	The Algorithm
+5.3.3	3	337	338	Pseudo-Code
+5.3.4	3	338	341	Data Structures and Interfaces
+5.3.5	3	341	341	Performance
+5.3.6	3	341	341	Implementation Notes
+5.3.7	3	341	344	Hard-Coded FSM
+5.3.8	3	344	356	Hierarchical State Machines
+5.3.9	3	356	359	Combining Decision Trees and State Machines
+5.4	2	359	395	Behavior Trees
+5.4.1	3	366	366	Implementing Behavior Trees
+5.4.2	3	366	370	Pseudo-Code
+5.4.3	3	370	376	Decorators
+5.4.4	3	376	385	Concurrency and Timing
+5.4.5	3	385	390	Adding Data to Behavior Trees
+5.4.6	3	390	394	Reusing Trees
+5.4.7	3	394	395	Limitations of Behavior Trees
+5.5	2	395	420	Fuzzy Logic
+5.5.1	3	396	396	A Warning
+5.5.2	3	396	406	Introduction to Fuzzy Logic
+5.5.3	3	406	415	Fuzzy Logic Decision Making
+5.5.4	3	415	420	Fuzzy State Machines
+5.6	2	420	426	Markov Systems
+5.6.1	3	421	423	Markov Processes
+5.6.2	3	423	426	Markov State Machine
+5.7	2	426	452	Goal-Oriented Behavior
+5.7.1	3	427	429	Goal-Oriented Behavior
+5.7.2	3	429	431	Simple Selection
+5.7.3	3	431	433	Overall Utility
+5.7.4	3	433	437	Timing
+5.7.5	3	437	443	Overall Utility GOAP
+5.7.6	3	443	450	GOAP with IDA*
+5.7.7	3	450	452	Smelly GOB
+5.8	2	452	482	Rule-Based Systems
+5.8.1	3	452	457	The Problem
+5.8.2	3	457	458	The Algorithm
+5.8.3	3	458	459	Pseudo-Code
+5.8.4	3	459	465	Data Structures and Interfaces
+5.8.5	3	465	467	Rule Arbitration
+5.8.6	3	467	469	Unification
+5.8.7	3	469	478	Rete
+5.8.8	3	478	482	Extensions
+5.9	2	482	490	Blackboard Architectures
+5.8.9	3	482	483	Where Next
+5.9.1	3	483	483	The Problem
+5.9.2	3	483	485	The Algorithm
+5.9.3	3	485	485	Pseudo-Code
+5.9.4	3	485	488	Data Structures and Interfaces
+5.9.5	3	488	488	Performance
+5.9.6	3	488	490	Other Things Are Blackboard Systems
+5.10	2	490	506	Action Execution
+5.10.1	3	490	495	Types of Action
+5.10.2	3	495	496	The Algorithm
+5.10.3	3	496	497	Pseudo-Code
+5.10.4	3	497	499	Data Structures and Interfaces
+5.10.5	3	499	500	Implementation Notes
+5.10.6	3	500	500	Performance
+5.10.7	3	500	506	Putting It All Together
+6	1	506	596	Tactical And Strategic Ai
+6.1	2	507	532	Waypoint Tactics
+6.1.1	3	507	517	Tactical Locations
+6.1.2	3	517	521	Using Tactical Locations
+6.1.3	3	521	527	Generating the Tactical Properties of a Waypoint
+6.1.4	3	527	528	Automatically Generating the Waypoints
+6.1.5	3	528	532	The Condensation Algorithm
+6.2	2	532	569	Tactical Analyses
+6.2.1	3	533	533	Representing the Game Level
+6.2.2	3	533	540	Simple Influence Maps
+6.2.3	3	540	542	Terrain Analysis
+6.2.4	3	542	544	Learning with Tactical Analyses
+6.2.5	3	544	549	A Structure for Tactical Analyses
+6.2.6	3	549	553	Map Flooding
+6.2.7	3	553	563	Convolution Filters
+6.2.8	3	563	569	Cellular Automata
+6.3	2	569	575	Tactical Pathfinding
+6.3.1	3	569	570	The Cost Function
+6.3.2	3	570	572	Tactic Weights and Concern Blending
+6.3.3	3	572	573	Modifying the Pathfinding Heuristic
+6.3.4	3	573	574	Tactical Graphs for Pathfinding
+6.3.5	3	574	575	Using Tactical Waypoints
+6.4	2	575	596	Coordinated Action
+6.4.1	3	575	582	Multi-Tier AI
+6.4.2	3	582	585	Emergent Cooperation
+6.4.3	3	585	589	Scripting Group Actions
+6.4.4	3	589	596	Military Tactics
+7	1	596	690	Learning
+7.1	2	597	600	Learning Basics
+7.1.1	3	597	598	Online or Offline Learning
+7.1.2	3	598	598	Intra-Behavior Learning
+7.1.3	3	598	598	Inter-Behavior Learning
+7.1.4	3	598	599	A Warning
+7.1.5	3	599	600	Over-Learning
+7.2	2	600	613	Parameter Modification
+7.1.6	3	600	600	The Zoo of Learning Algorithms
+7.1.7	3	600	601	The Balance of Effort
+7.2.1	3	601	602	The Parameter Landscape
+7.2.2	3	602	605	Hill Climbing
+7.2.3	3	605	609	Extensions to Basic Hill Climbing
+7.2.4	3	609	613	Annealing
+7.3	2	613	623	Action Prediction
+7.3.1	3	613	614	Left or Right
+7.3.2	3	614	614	Raw Probability
+7.3.3	3	614	614	String Matching
+7.3.4	3	614	618	N-Grams
+7.3.5	3	618	620	Window Size
+7.3.6	3	620	623	Hierarchical N-Grams
+7.4	2	623	625	Decision Learning
+7.3.7	3	623	623	Application in Combat
+7.4.1	3	623	624	The Structure of Decision Learning
+7.4.2	3	624	625	What Should You Learn?
+7.5	2	625	630	Naive Bayes Classifiers
+7.4.3	3	625	628	Four Techniques
+7.5.1	3	628	630	Pseudo-Code
+7.6	2	630	648	Decision Tree Learning
+7.5.2	3	630	631	Implementation Notes
+7.6.1	3	631	639	ID3
+7.6.2	3	639	643	ID3 with Continuous Attributes
+7.6.3	3	643	648	Incremental Decision Tree Learning
+7.7	2	648	663	Reinforcement Learning
+7.7.1	3	648	649	The Problem
+7.7.2	3	649	652	The Algorithm
+7.7.3	3	652	653	Pseudo-Code
+7.7.4	3	653	654	Data Structures and Interfaces
+7.7.5	3	654	654	Implementation Notes
+7.7.6	3	654	654	Performance
+7.7.7	3	654	658	Tailoring Parameters
+7.7.8	3	658	661	Weaknesses and Realistic Applications
+7.7.9	3	661	663	Other Ideas in Reinforcement Learning
+7.8	2	663	681	Artificial Neural Networks
+7.8.1	3	664	667	Overview
+7.8.2	3	667	668	The Problem
+7.8.3	3	668	672	The Algorithm
+7.8.4	3	672	674	Pseudo-Code
+7.8.5	3	674	676	Data Structures and Interfaces
+7.8.6	3	676	676	Implementation Caveats
+7.8.7	3	676	676	Performance
+7.8.8	3	676	681	Other Approaches
+7.9	2	681	690	Deep Learning
+7.9.1	3	681	682	What is Deep Learning?
+7.9.2	3	682	690	Data
+8	1	690	762	Procedural Content Generation
+8.1	2	691	701	Pseudorandom Numbers
+8.1.1	3	692	693	Numeric Mixing and Game Seeds
+8.1.2	3	693	696	Halton Sequence
+8.1.3	3	696	697	Phyllotaxic Angles
+8.1.4	3	697	701	Poisson Disk
+8.2	2	701	708	Lindenmayer Systems
+8.2.1	3	701	705	Simple L-systems
+8.2.2	3	705	707	Adding Randomness to L-systems
+8.2.3	3	707	708	Stage-Specific Rules
+8.3	2	708	726	Landscape Generation
+8.3.1	3	709	710	Modifiers and Height-Maps
+8.3.2	3	710	710	Noise
+8.3.3	3	710	713	Perlin Noise
+8.3.4	3	713	715	Faults
+8.3.5	3	715	717	Thermal Erosion
+8.3.6	3	717	722	Hydraulic Erosion
+8.3.7	3	722	726	Altitude Filtering
+8.4	2	726	748	Dungeons and Maze Generation
+8.4.1	3	726	737	Mazes by Depth First Backtracking
+8.4.2	3	737	742	Minimum Spanning Tree Algorithms
+8.4.3	3	742	748	Recursive Subdivision
+8.5	2	748	762	Shape Grammars
+8.4.4	3	748	751	Generate and Test
+8.5.1	3	751	754	Running the Grammar
+8.5.2	3	754	762	Planning
+9	1	762	822	Board Games
+9.1	2	763	768	Game Theory
+9.1.1	3	763	765	Types of Games
+9.1.2	3	765	768	The Game Tree
+9.2	2	768	785	Minimaxing
+9.2.1	3	768	770	The Static Evaluation Function
+9.2.2	3	770	771	Minimaxing
+9.2.3	3	771	774	The Minimaxing Algorithm
+9.2.4	3	774	776	Negamaxing
+9.2.5	3	776	780	AB Pruning
+9.2.6	3	780	782	The AB Search Window
+9.2.7	3	782	785	Negascout
+9.3	2	785	793	Transposition Tables and Memory
+9.3.1	3	785	788	Hashing Game States
+9.3.2	3	788	789	What to Store in the Table
+9.3.3	3	789	790	Hash Table Implementation
+9.3.4	3	790	791	Replacement Strategies
+9.3.5	3	791	792	A Complete Transposition Table
+9.3.6	3	792	792	Transposition Table Issues
+9.3.7	3	792	793	Using Opponent’s Thinking Time
+9.4	2	793	797	Memory-Enhanced Test Algorithms
+9.4.1	3	793	795	Implementing Test
+9.4.2	3	795	796	The MTD Algorithm
+9.4.3	3	796	797	Pseudo-Code
+9.5	2	797	804	Monte Carlo Tree Search (MCTS)
+9.5.1	3	797	803	Pure Monte Carlo Tree Search
+9.5.2	3	803	804	Adding Knowledge
+9.6	2	804	806	Opening Books and Other Set Plays
+9.6.1	3	804	805	Implementing an Opening Book
+9.6.2	3	805	806	Learning for Opening Books
+9.7	2	806	809	Further Optimizations
+9.6.3	3	806	807	Set Play Books
+9.7.1	3	807	808	Iterative Deepening
+9.7.2	3	808	809	Variable Depth Approaches
+9.8	2	809	818	Game Knowledge
+9.8.1	3	812	815	Creating a Static Evaluation Function
+9.8.2	3	815	818	Learning the Static Evaluation Function
+9.9	2	818	822	Turn-Based Strategy Games
+9.9.1	3	819	820	Impossible Tree Size
+9.9.2	3	820	822	Real-Time AI in a Turn-Based Game
+PIII	0	822	948	Supporting Technologies
+10	1	824	856	Execution Management
+10.1	2	825	841	Scheduling
+10.1.1	3	825	832	The Scheduler
+10.1.2	3	832	835	Interruptible Processes
+10.1.3	3	835	837	Load-Balancing Scheduler
+10.1.4	3	837	839	Hierarchical Scheduling
+10.1.5	3	839	841	Priority Scheduling
+10.2	2	841	842	Anytime Algorithms
+10.3	2	842	856	Level of Detail
+10.3.1	3	842	843	Graphics Level of Detail
+10.3.2	3	843	844	AI LOD
+10.3.3	3	844	845	Scheduling LOD
+10.3.4	3	845	850	Behavioral LOD
+10.3.5	3	850	854	Group LOD
+10.3.6	3	854	856	In Summary
+11	1	856	896	World Interfacing
+11.1	2	857	859	Communication
+11.1.1	3	857	858	Polling
+11.1.2	3	858	859	Events
+11.2	2	859	867	Event Managers
+11.1.3	3	859	862	Determining Which Approach to Use
+11.2.1	3	862	864	Implementation
+11.2.2	3	864	867	Event Casting
+11.3	2	867	870	Polling Stations
+11.2.3	3	867	868	Inter-Agent Communication
+11.3.1	3	868	869	Pseudo-Code
+11.3.2	3	869	869	Performance
+11.3.3	3	869	869	Implementation Notes
+11.3.4	3	869	870	Abstract Polling
+11.4	2	870	896	Sense Management
+11.4.1	3	871	872	Faking It
+11.4.2	3	872	873	What Do We Know?
+11.4.3	3	873	878	Sensory Modalities
+11.4.4	3	878	886	Region Sense Manager
+11.4.5	3	886	896	Finite Element Model Sense Manager
+12	1	896	922	Tools And Content Creation
+12.0.1	3	897	897	Toolchains Limit AI
+12.0.2	3	897	898	Where AI Knowledge Comes From
+12.1	2	898	907	Knowledge for Pathfinding and Waypoints
+12.1.1	3	898	901	Manually Creating Region Data
+12.1.2	3	901	901	Automatic Graph Creation
+12.1.3	3	901	905	Geometric Analysis
+12.1.4	3	905	907	Data Mining
+12.2	2	907	910	Knowledge for Movement
+12.2.1	3	907	909	Obstacles
+12.2.2	3	909	910	High-Level Staging
+12.3	2	910	911	Knowledge for Decision Making
+12.3.1	3	910	910	Object Types
+12.3.2	3	910	911	Concrete Actions
+12.4	2	911	922	The Toolchain
+12.4.1	3	911	914	Integrated Game Engines
+12.4.2	3	914	915	Custom Data-Driven Editors
+12.4.3	3	915	916	AI Design Tools
+12.4.4	3	916	917	Remote Debugging
+12.4.5	3	917	922	Plug-Ins
+13	1	922	948	Programming Game Ai
+13.1	2	923	930	Implementation Language
+13.1.1	3	924	925	C++
+13.1.2	3	925	926	C#
+13.1.3	3	926	927	Swift
+13.1.4	3	927	929	Java
+13.1.5	3	929	930	JavaScript
+13.2	2	930	940	Scripted AI
+13.2.1	3	931	932	What Is Scripted AI?
+13.2.2	3	932	934	What Makes a Good Scripting Language?
+13.2.3	3	934	934	Embedding
+13.2.4	3	934	935	Choosing an Open Source Language
+13.2.5	3	935	940	A Language Selection
+13.3	2	940	948	Creating a Language
+13.3.1	3	942	948	Rolling Your Own
+PIV	0	948	1031	Designing Game Ai
+14	1	950	980	Designing Game Ai
+14.1	2	950	958	The Design
+14.1.1	3	952	952	Example
+14.1.2	3	952	955	Evaluating the Behaviors
+14.1.3	3	955	957	Selecting Techniques
+14.1.4	3	957	958	The Scope of One Game
+14.2	2	958	967	Shooters
+14.2.1	3	958	960	Movement and Firing
+14.2.2	3	960	961	Decision Making
+14.2.3	3	961	962	Perception
+14.2.4	3	962	963	Pathfinding and Tactical AI
+14.2.5	3	963	964	Shooter-Like Games
+14.2.6	3	964	967	Melee Combat
+14.3	2	967	971	Driving
+14.3.1	3	967	970	Movement
+14.3.2	3	970	971	Pathfinding and Tactical AI
+14.4	2	971	976	Real-Time Strategy
+14.3.3	3	971	971	Driving-Like Games
+14.4.1	3	971	972	Pathfinding
+14.4.2	3	972	973	Group Movement
+14.4.3	3	973	974	Tactical and Strategic AI
+14.4.4	3	974	975	Decision Making
+14.4.5	3	975	976	MOBAs
+14.5	2	976	977	Sports
+14.6	2	977	980	Turn-Based Strategy Games
+14.5.1	3	977	977	Physics Prediction
+14.5.2	3	977	978	Playbooks and Content Creation
+14.6.1	3	978	979	Timing
+14.6.2	3	979	980	Helping the Player
+15	1	980	992	Ai-Based Game Genres
+15.1	2	981	986	Teaching Characters
+15.1.1	3	981	982	Representing Actions
+15.1.2	3	982	982	Representing the World
+15.1.3	3	982	984	Learning Mechanism
+15.1.4	3	984	986	Predictable Mental Models
+15.2	2	986	992	Flocking and Herding Games
+15.2.1	3	986	986	Making the Creatures
+15.2.2	3	986	988	Tuning Steering for Interactivity
+15.2.3	3	988	988	Steering Behavior Stability
+15.2.4	3	988	992	Ecosystem Design
+Xreferences	1	992	992	REFERENCES
+Xbooks_periodicals_papers	1	992	997	Books, Periodicals, Papers and Websites
+Xgames	1	997	1004	Games
+Xindex	1	1004	1031	INDEX
