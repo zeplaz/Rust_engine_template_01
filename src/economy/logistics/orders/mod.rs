@@ -6,6 +6,7 @@
 //! UI, overlay and AI read only [`snapshot::LogisticsOrdersSnapshot`].
 
 pub mod advisor;
+pub mod demand_advert;
 pub mod auto_supply;
 pub mod cargo_registry;
 pub mod construction_demand;
@@ -39,6 +40,10 @@ pub use fleet_growth::{
     VehicleRecipe,
 };
 pub use advisor::{best_source_for, suggest_lines_for_unserved, AdvisorGap, SupplyAdvice};
+pub use demand_advert::{
+    cmp_demands_by_advert, demand_advert_score, demand_advert_score_from_snapshot,
+    travel_ticks_to_best_source, DemandAdvertTuning,
+};
 pub use model::*;
 pub use persistence::{LogisticsOrdersSave, SavedSite};
 pub use plugin::{

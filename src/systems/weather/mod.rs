@@ -15,6 +15,7 @@ mod chunk_weather;
 mod field;
 mod overlay_bake;
 mod player_read_hud;
+mod polling_stations;
 mod systems;
 mod tuning;
 mod weather_visual;
@@ -50,6 +51,10 @@ pub use chunk_weather::{
     project_chunk_weather, ChunkWeather, CHUNK_RAIN_FULL_SCALE_MM_H, CHUNK_VISIBILITY_FULL_SCALE_M,
     CHUNK_WIND_FULL_SCALE_MPS,
 };
+pub use polling_stations::{
+    sync_weather_polling_stations, tile_to_weather_chunk, WeatherPollSiteBook,
+    WeatherPollingStations,
+};
 pub use field::{
     PressureKind, PressureSystem, WeatherClimate, WeatherField, WeatherFieldSave, WeatherRng,
     WeatherSample, WeatherSnapshot, BASELINE_PRESSURE_HPA, WEATHER_FIELD_SAVE_SCHEMA,
@@ -84,6 +89,8 @@ impl Plugin for WeatherSimulationPlugin {
             .init_resource::<AirPresentationFrame>()
             .init_resource::<AirPresentationZoom>()
             .init_resource::<WeatherField>()
+            .init_resource::<WeatherPollSiteBook>()
+            .init_resource::<WeatherPollingStations>()
             .init_resource::<CameraLocalWeatherSample>()
             .init_resource::<WeatherOverlayBakeState>()
             .init_resource::<WeatherPresetRequest>()
@@ -101,6 +108,7 @@ impl Plugin for WeatherSimulationPlugin {
                     spawn_chunk_weather_on_new_chunk,
                     weather_field_step,
                     project_chunk_weather,
+                    sync_weather_polling_stations,
                     bake_weather_overlay_from_field,
                     sync_air_ops_weather_status,
                 )

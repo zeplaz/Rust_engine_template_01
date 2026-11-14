@@ -204,7 +204,9 @@ impl Plugin for StrategicFieldsPlugin {
                     StrategicFieldPipeline::LogisticsNetInject
                         .after(StrategicFieldPipeline::InjectTransportScalars),
                     StrategicFieldPipeline::NetworkFlow.after(StrategicFieldPipeline::LogisticsNetInject),
-                    StrategicFieldPipeline::ZoneAndReadModel.after(StrategicFieldPipeline::NetworkFlow),
+                    StrategicFieldPipeline::ZoneAndReadModel
+                        .after(StrategicFieldPipeline::NetworkFlow)
+                        .after(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Weather),
                     InfrastructureSiteSet::Planning.after(StrategicFieldPipeline::ZoneAndReadModel),
                     InfrastructureSiteSet::Validation.after(InfrastructureSiteSet::Planning),
                     InfrastructureSiteSet::NetworkSolve.after(InfrastructureSiteSet::Validation),

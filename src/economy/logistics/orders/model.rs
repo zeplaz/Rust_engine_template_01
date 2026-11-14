@@ -525,6 +525,8 @@ pub struct DrawDemand {
     pub priority: Priority,
     pub health: DemandHealth,
     pub starved_ticks: u64,
+    /// Ticks without a standing line serving this `(site, cargo)` (DEC-10 advert urgency).
+    pub unmet_ticks: u64,
     pub consumed_total: u64,
     /// Units drawn but not satisfied by on-hand stock.
     pub shortfall_total: u64,

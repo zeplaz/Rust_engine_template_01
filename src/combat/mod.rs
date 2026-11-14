@@ -25,6 +25,7 @@ pub mod relax;
 pub mod resolve;
 pub mod theater;
 pub mod weather;
+pub mod weather_poll_sites;
 
 pub use balance::{
     load_front_balance, load_front_balance_from_path, parse_front_balance, FortKind,
@@ -58,6 +59,7 @@ pub use resolve::{combat_resolve_system, resolve_step, Combatant, Outcome};
 pub use weather::{
     artillery_weather_stamp, engagement_visibility_scale, ArtilleryWeatherDump,
 };
+pub use weather_poll_sites::gather_weather_poll_sites;
 pub use drone_missions::{
     apply_missile_sortie_launches_system, pulse_drone_sorties, step_drone_missions_system,
     AirOpZone, DroneAo, DroneCombatModifiers, DroneMissionDump, DroneMissionKind, DronePackage,
@@ -151,6 +153,12 @@ impl Plugin for CombatPlugin {
             );
         // FC-5: formations. Orders -> supply -> combat -> movement -> zones, all before the relaxation
         // that reads those zones, so a formation's presence this frame is what moves control.
+        app.add_systems(
+            Update,
+            gather_weather_poll_sites
+                .before(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Weather)
+                .in_set(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Lod),
+        );
         app.add_systems(
             Update,
             rebuild_fortification_index_system

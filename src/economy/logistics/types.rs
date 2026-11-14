@@ -238,6 +238,14 @@ pub struct ThroughputSolverState {
     pub(super) solved_path_open: Vec<bool>,
     /// `max_rate` of each flow edge at that solve, registry order.
     pub(super) solved_max_rate: Vec<f32>,
+    /// Next flow-registry edge index for an in-progress greedy pass (EXEC-04).
+    pub(super) solve_flow_cursor: usize,
+    /// Topology revision the current pass targets.
+    pub(super) solve_target_topology: u32,
+    /// `path_open` snapshot at pass start (registry order).
+    pub(super) solve_target_path_open: Vec<bool>,
+    /// `max_rate` snapshot at pass start (registry order).
+    pub(super) solve_target_max_rate: Vec<f32>,
 }
 
 impl ThroughputSolverState {

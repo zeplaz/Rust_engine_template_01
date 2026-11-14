@@ -47,6 +47,96 @@ pub struct FireLightCluster {
 /// World-space merge distance (tile-ish scale; tune with map cell size).
 pub const CLUSTER_MERGE_RADIUS: f32 = 180.0;
 
+/// Screen/world tile size for forward+-style light bins (LGT-02).
+pub const FIRE_LIGHT_SCREEN_TILE_SIZE: f32 = 64.0;
+/// Max pooled lights kept per screen tile before merge (LGT-02).
+pub const FIRE_LIGHT_PER_SCREEN_TILE_CAP: usize = 4;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub struct FireLightScreenTile {
+    pub tx: i32,
+    pub ty: i32,
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+pub struct FireLightTileCapStats {
+    pub input_count: usize,
+    pub output_count: usize,
+    pub max_per_tile: usize,
+}
+
+#[must_use]
+pub fn screen_tile_for_emission(position: Vec3, tile_size: f32) -> FireLightScreenTile {
+    let tile_size = tile_size.max(1.0);
+    FireLightScreenTile {
+        tx: (position.x / tile_size).floor() as i32,
+        ty: (position.z / tile_size).floor() as i32,
+    }
+}
+
+/// Bin a flat emission list into screen tiles and keep the top `cap` per tile by priority then luminosity.
+#[must_use]
+pub fn cap_fire_light_emissions_per_screen_tile(
+    emissions: &[FireLightEmission],
+    tile_size: f32,
+    cap: usize,
+) -> (Vec<FireLightEmission>, FireLightTileCapStats) {
+    if cap == 0 || emissions.is_empty() {
+        return (
+            Vec::new(),
+            FireLightTileCapStats {
+                input_count: emissions.len(),
+                output_count: 0,
+                max_per_tile: 0,
+            },
+        );
+    }
+    use std::collections::HashMap;
+    let mut bins: HashMap<FireLightScreenTile, Vec<FireLightEmission>> = HashMap::new();
+    for e in emissions {
+        bins.entry(screen_tile_for_emission(e.position, tile_size))
+            .or_default()
+            .push(*e);
+    }
+    let mut out = Vec::with_capacity(emissions.len().min(bins.len() * cap));
+    let mut max_per_tile = 0_usize;
+    for mut rows in bins.into_values() {
+        rows.sort_by(|a, b| {
+            b.priority
+                .partial_cmp(&a.priority)
+                .unwrap_or(std::cmp::Ordering::Equal)
+                .then_with(|| {
+                    b.luminosity
+                        .partial_cmp(&a.luminosity)
+                        .unwrap_or(std::cmp::Ordering::Equal)
+                })
+        });
+        rows.truncate(cap);
+        max_per_tile = max_per_tile.max(rows.len());
+        out.extend(rows);
+    }
+    let output_count = out.len();
+    (
+        out,
+        FireLightTileCapStats {
+            input_count: emissions.len(),
+            output_count,
+            max_per_tile,
+        },
+    )
+}
+
+/// LGT-02 — tile cap then world merge (consumer replaces bare [`build_fire_light_clusters`] when hot).
+#[must_use]
+pub fn build_fire_light_clusters_screen_capped(
+    emissions: &[FireLightEmission],
+    tile_size: f32,
+    per_tile_cap: usize,
+) -> (Vec<FireLightCluster>, FireLightTileCapStats) {
+    let (capped, stats) = cap_fire_light_emissions_per_screen_tile(emissions, tile_size, per_tile_cap);
+    (build_fire_light_clusters(&capped), stats)
+}
+
 pub fn build_fire_light_clusters(emissions: &[FireLightEmission]) -> Vec<FireLightCluster> {
     let mut clusters: Vec<FireLightCluster> = Vec::new();
     let r2 = CLUSTER_MERGE_RADIUS * CLUSTER_MERGE_RADIUS;
@@ -111,6 +201,54 @@ mod tests {
         assert_eq!(c.len(), 1);
         assert_eq!(c[0].member_count, 2);
         assert!((c[0].total_heat - 1.0).abs() < 1e-5);
+    }
+
+    fn sample_at(x: f32, z: f32, priority: f32) -> FireLightEmission {
+        FireLightEmission {
+            position: Vec3::new(x, 0.0, z),
+            heat: 0.5,
+            luminosity: 1.0,
+            smoke_density: 0.0,
+            radius: 40.0,
+            priority,
+            fire_type: FireLightType::Forest,
+        }
+    }
+
+    #[test]
+    fn screen_tile_cap_limits_lights_per_bin() {
+        let emissions: Vec<_> = (0..12)
+            .map(|i| sample_at(i as f32 * 2.0, 0.0, i as f32))
+            .collect();
+        let (capped, stats) = cap_fire_light_emissions_per_screen_tile(
+            &emissions,
+            FIRE_LIGHT_SCREEN_TILE_SIZE,
+            FIRE_LIGHT_PER_SCREEN_TILE_CAP,
+        );
+        assert!(stats.max_per_tile <= FIRE_LIGHT_PER_SCREEN_TILE_CAP);
+        let mut per_tile: std::collections::HashMap<FireLightScreenTile, usize> =
+            std::collections::HashMap::new();
+        for e in &capped {
+            *per_tile
+                .entry(screen_tile_for_emission(
+                    e.position,
+                    FIRE_LIGHT_SCREEN_TILE_SIZE,
+                ))
+                .or_default() += 1;
+        }
+        assert!(per_tile.values().all(|&n| n <= FIRE_LIGHT_PER_SCREEN_TILE_CAP));
+    }
+
+    #[test]
+    fn capped_cluster_path_preserves_tile_stats() {
+        let emissions: Vec<_> = (0..8).map(|i| sample_at(10.0, i as f32 * 3.0, i as f32)).collect();
+        let (clusters, stats) = build_fire_light_clusters_screen_capped(
+            &emissions,
+            FIRE_LIGHT_SCREEN_TILE_SIZE,
+            FIRE_LIGHT_PER_SCREEN_TILE_CAP,
+        );
+        assert!(stats.max_per_tile <= FIRE_LIGHT_PER_SCREEN_TILE_CAP);
+        assert!(!clusters.is_empty() || emissions.is_empty());
     }
 
     #[test]

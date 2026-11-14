@@ -40,7 +40,8 @@ use crate::render::extraction::sim_visual_extract::{
 use crate::render::SharedOverlayFieldBuffers;
 use crate::render::pipelines::light::{LightCategory, RequestLocalLight};
 use crate::render::lighting::{
-    build_fire_light_clusters, FireLightCluster, FireLightEmission as VisFireLightSample, FireLightType,
+    build_fire_light_clusters_screen_capped, FIRE_LIGHT_PER_SCREEN_TILE_CAP, FIRE_LIGHT_SCREEN_TILE_SIZE,
+    FireLightCluster, FireLightEmission as VisFireLightSample, FireLightType,
 };
 use crate::systems::atmosphere::AtmosphereDiagnostics;
 use crate::systems::ecology::ChunkEcology;
@@ -974,7 +975,12 @@ fn build_fire_clusters_into_scratch(
         .iter()
         .map(FireVisualGpuInstance::cluster_emission)
         .collect();
-    scratch.clusters = build_fire_light_clusters(&samples);
+    let (clusters, _cap_stats) = build_fire_light_clusters_screen_capped(
+        &samples,
+        FIRE_LIGHT_SCREEN_TILE_SIZE,
+        FIRE_LIGHT_PER_SCREEN_TILE_CAP,
+    );
+    scratch.clusters = clusters;
     scratch.cpu_light_instances_sampled = samples.len() as u32;
     scratch.cpu_light_clusters = scratch.clusters.len() as u32;
 }

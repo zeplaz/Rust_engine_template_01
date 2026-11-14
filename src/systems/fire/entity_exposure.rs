@@ -1,5 +1,9 @@
 //! FIRE-ENTITY-1 — site fire stages from [`ChunkFireOverlay`] heat.
 //!
+//! **LGT-09** (gea4v2 12.2.4.5): entity radiant exposure uses inverse-square falloff from
+//! burning cells (not tile-local heat alone). Prior path sampled overlay heat at the receiver
+//! tile only — no distance attenuation.
+//!
 //! Sole writer of [`SiteFireState`] / [`FormationFireExposure`] (stamp). Collapse enqueues
 //! [`FireCollapseQueue`] for the construction demolish funnel (no parallel despawn).
 
@@ -24,6 +28,78 @@ use crate::terrain::generation::{tile_to_chunk_coord, Chunk, ChunkCellMatrix};
 
 use super::cell_spread::RAIN_BLOCKS_SPREAD_MM_H;
 use super::types::ChunkFireOverlay;
+use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
+
+/// Irradiance at **1 m** from a cell with `heat == 1` (kW/m²).
+pub const RADIANT_IRRADIANCE_AT_1M_KW_M2: f32 = 80.0;
+/// Minimum standoff (m) — clamps singularity at the source (`gea4v2` 12.2.4.5).
+pub const RADIANT_NEAR_CLAMP_M: f32 = 1.0;
+/// Radiant flux that maps to normalized `heat == 1` for gameplay gates (kW/m²).
+pub const RADIANT_HEAT_NORM_KW_M2: f32 = 20.0;
+/// Ignore contributors beyond this radius (m).
+const RADIANT_CONTRIBUTOR_MAX_M: f32 = 160.0;
+/// Overlay heat below this is not a radiant source.
+const RADIANT_SOURCE_HEAT_MIN: f32 = 0.02;
+
+/// Inverse-square radiant flux density (irradiance) at `distance_m` from a cell at `source_heat`.
+#[must_use]
+pub fn radiant_irradiance_kw_m2(source_heat: f32, distance_m: f32) -> f32 {
+    if source_heat <= 0.0 || !distance_m.is_finite() {
+        return 0.0;
+    }
+    let r = distance_m.max(RADIANT_NEAR_CLAMP_M);
+    let i_ref = source_heat * RADIANT_IRRADIANCE_AT_1M_KW_M2;
+    i_ref / (r * r)
+}
+
+#[must_use]
+pub fn tile_center_world_m(tile: IVec2) -> Vec2 {
+    let m = TILE_METRES_GAMEPLAY;
+    Vec2::new((tile.x as f32 + 0.5) * m, (tile.y as f32 + 0.5) * m)
+}
+
+/// Peak radiant flux (kW/m²) at `receiver_tile` from all overlay heat in `index`.
+#[must_use]
+pub fn sample_radiant_flux_kw_m2(
+    index: &HashMap<IVec2, (UVec2, &[f32], f32)>,
+    receiver_tile: IVec2,
+) -> f32 {
+    if receiver_tile.x < 0 || receiver_tile.y < 0 {
+        return 0.0;
+    }
+    let recv = tile_center_world_m(receiver_tile);
+    let mut peak = 0.0f32;
+    for (&chunk_coord, &(size, heat_slice, _rain)) in index {
+        let cw = size.x.max(1) as usize;
+        let ch = size.y.max(1) as usize;
+        if heat_slice.len() < cw * ch {
+            continue;
+        }
+        let base_tx = chunk_coord.x * size.x as i32;
+        let base_tz = chunk_coord.y * size.y as i32;
+        for lz in 0..ch {
+            for lx in 0..cw {
+                let h = heat_slice[lz * cw + lx];
+                if h < RADIANT_SOURCE_HEAT_MIN {
+                    continue;
+                }
+                let tx = base_tx + lx as i32;
+                let tz = base_tz + lz as i32;
+                let d = recv.distance(tile_center_world_m(IVec2::new(tx, tz)));
+                if d > RADIANT_CONTRIBUTOR_MAX_M {
+                    continue;
+                }
+                peak = peak.max(radiant_irradiance_kw_m2(h, d));
+            }
+        }
+    }
+    peak
+}
+
+#[must_use]
+pub fn normalized_heat_from_flux_kw_m2(flux_kw_m2: f32) -> f32 {
+    (flux_kw_m2 / RADIANT_HEAT_NORM_KW_M2).clamp(0.0, 1.0)
+}
 
 /// Burn / exposure stage for one construction site.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -67,6 +143,8 @@ pub struct SiteFireState {
     /// 1 = intact, 0 = ready to collapse.
     pub integrity: f32,
     pub heat_mean: f32,
+    /// LGT-09 mean radiant flux across the footprint (kW/m²).
+    pub flux_kw_m2: f32,
     pub suppression: bool,
     pub profile: StructureFireProfile,
 }
@@ -77,6 +155,7 @@ impl Default for SiteFireState {
             stage: SiteFireStage::Clear,
             integrity: 1.0,
             heat_mean: 0.0,
+            flux_kw_m2: 0.0,
             suppression: false,
             profile: profile_for_site_archetype(crate::strategic::SiteArchetype::CivilHousing),
         }
@@ -86,14 +165,20 @@ impl Default for SiteFireState {
 /// Heat stamp on a formation — resolve is the sole strength/morale writer.
 #[derive(Component, Clone, Copy, Debug, Default)]
 pub struct FormationFireExposure {
+    /// Normalized 0..1 heat for legacy gates (derived from [`Self::flux_kw_m2`] when stamped).
     pub heat: f32,
     pub suscept: f32,
+    /// LGT-09 radiant flux at the formation tile (kW/m²).
+    pub flux_kw_m2: f32,
 }
 
 impl FormationFireExposure {
     #[must_use]
     pub fn exposure(self) -> f32 {
-        (self.heat * self.suscept).clamp(0.0, 1.0)
+        let h = self
+            .heat
+            .max(normalized_heat_from_flux_kw_m2(self.flux_kw_m2));
+        (h * self.suscept).clamp(0.0, 1.0)
     }
 }
 
@@ -201,6 +286,7 @@ pub fn ensure_formation_fire_exposure(
         commands.entity(e).insert(FormationFireExposure {
             heat: 0.0,
             suscept: unit_fire_susceptibility(f.kind),
+            flux_kw_m2: 0.0,
         });
     }
 }
@@ -233,20 +319,22 @@ pub fn site_fire_exposure_tick(
 
     for (footprint, planned, mut state) in &mut sites {
         state.profile = profile_for_site_archetype(planned.archetype);
-        let mut heat_sum = 0.0f32;
+        let mut flux_sum = 0.0f32;
         let mut rain_max = 0.0f32;
         let mut n = 0u32;
         for &tile in &footprint.tiles {
-            let (h, rain) = sample_heat_at_tile(&index, tile);
-            heat_sum += h;
+            let (_h, rain) = sample_heat_at_tile(&index, tile);
+            flux_sum += sample_radiant_flux_kw_m2(&index, tile);
             rain_max = rain_max.max(rain);
             n += 1;
         }
-        let heat = if n > 0 {
-            heat_sum / n as f32
+        let flux = if n > 0 {
+            flux_sum / n as f32
         } else {
             0.0
         };
+        state.flux_kw_m2 = flux;
+        let heat = normalized_heat_from_flux_kw_m2(flux);
         state.heat_mean = heat;
         state.suppression = rain_max >= RAIN_BLOCKS_SPREAD_MM_H;
 
@@ -325,7 +413,9 @@ pub fn stamp_formation_fire_exposure(
     stats.formations_exposed = 0;
     stats.formation_heat_sum = 0.0;
     for (f, mut exp) in &mut q {
-        let (heat, _) = sample_heat_at_tile(&index, f.tile);
+        let flux = sample_radiant_flux_kw_m2(&index, f.tile);
+        let heat = normalized_heat_from_flux_kw_m2(flux);
+        exp.flux_kw_m2 = flux;
         exp.heat = heat;
         exp.suscept = unit_fire_susceptibility(f.kind);
         if heat >= 0.08 {
@@ -436,11 +526,34 @@ mod tests {
         let inf = FormationFireExposure {
             heat: 0.5,
             suscept: unit_fire_susceptibility(UnitKind::Infantry),
+            flux_kw_m2: 0.0,
         };
         let armor = FormationFireExposure {
             heat: 0.5,
             suscept: unit_fire_susceptibility(UnitKind::Armor),
+            flux_kw_m2: 0.0,
         };
         assert!(inf.exposure() > armor.exposure());
+    }
+
+    #[test]
+    fn radiant_flux_quarter_at_double_distance_outside_near_clamp() {
+        let source_heat = 1.0;
+        let d = 12.0_f32;
+        let i_near = radiant_irradiance_kw_m2(source_heat, d);
+        let i_far = radiant_irradiance_kw_m2(source_heat, 2.0 * d);
+        let ratio = i_far / i_near;
+        assert!(
+            (ratio - 0.25).abs() < 1e-5,
+            "expected 1/4 at 2d, got ratio {ratio} (near={i_near} far={i_far})"
+        );
+    }
+
+    #[test]
+    fn radiant_flux_clamped_inside_near_radius() {
+        let source_heat = 0.8;
+        let at_clamp = radiant_irradiance_kw_m2(source_heat, RADIANT_NEAR_CLAMP_M);
+        let inside = radiant_irradiance_kw_m2(source_heat, RADIANT_NEAR_CLAMP_M * 0.25);
+        assert!((at_clamp - inside).abs() < 1e-6, "inside clamp must match clamp distance");
     }
 }

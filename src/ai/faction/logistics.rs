@@ -294,6 +294,7 @@ mod tests {
             health,
             served_by: 0,
             starved_ticks: starved,
+            unmet_ticks: 0,
             shortfall_total: 0,
             time_to_empty_ticks: None,
             round_trip_ticks: None,

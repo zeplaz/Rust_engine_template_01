@@ -524,6 +524,7 @@ impl LogisticsOrderSim {
                         priority,
                         health: DemandHealth::Satisfied,
                         starved_ticks: 0,
+                        unmet_ticks: 0,
                         consumed_total: 0,
                         shortfall_total: 0,
                         draw_accum: 0,
@@ -719,6 +720,7 @@ impl LogisticsOrderSim {
         self.advance_vehicles(travel);
         self.consume_demands();
         self.close_finished_orders();
+        self.advance_demand_adverts();
         self.allocate(travel);
         self.prune_finished();
         self.tick += 1;
@@ -825,6 +827,33 @@ impl LogisticsOrderSim {
                 }
             }
             VehiclePhase::Idle => {}
+        }
+    }
+
+    fn advance_demand_adverts(&mut self) {
+        let keys: Vec<(SiteId, CargoKind)> = self
+            .demands
+            .values()
+            .map(|d| (d.site, d.cargo.clone()))
+            .collect();
+        for (site, cargo) in keys {
+            let served = self
+                .orders
+                .values()
+                .filter(|o| {
+                    o.kind.is_standing()
+                        && o.sink == site
+                        && o.cargo == cargo
+                        && o.status.accepts_trips()
+                })
+                .count() as u32;
+            if let Some(d) = self.demands.get_mut(&(site, cargo)) {
+                if served == 0 {
+                    d.unmet_ticks = d.unmet_ticks.saturating_add(1);
+                } else {
+                    d.unmet_ticks = 0;
+                }
+            }
         }
     }
 

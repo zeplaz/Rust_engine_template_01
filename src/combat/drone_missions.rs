@@ -19,11 +19,10 @@ use super::formation::{CombatClock, Formation};
 use super::missile_supply::{pulse_missile_sorties, MissilePackage, MissileSortieDump};
 use crate::substrate::atmosphere::AtmosphereClipmapStack;
 use crate::systems::fire::ChunkSmokeField;
-use crate::systems::sim_control::SimTimeMicros;
 use crate::systems::weather::{
     collect_chunk_smoke_density, evaluate_grounding, smoke01_at_tile, sortie_envelopes_ok,
     AirOpsProfileId, AirOpsTuning, AirPresentationSortieHint, LinkModality, SensorKind,
-    WeatherField, WeatherSample, SMOKE_SAMPLE_CELLS_PER_CHUNK,
+    WeatherPollingStations, WeatherSample, SMOKE_SAMPLE_CELLS_PER_CHUNK,
 };
 use crate::terrain::generation::Chunk;
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
@@ -360,8 +359,7 @@ pub fn pulse_drone_sorties(
     mods: &mut DroneCombatModifiers,
     packages: &mut [(Entity, &Formation, &mut DronePackage)],
     tuning: &AirOpsTuning,
-    field: Option<&WeatherField>,
-    sim_time: SimTimeMicros,
+    stations: Option<&WeatherPollingStations>,
     research: &DroneResearchState,
     doctrine: &FactionDroneDoctrine,
     smoke_by_chunk: Option<&HashMap<IVec2, f32>>,
@@ -414,11 +412,10 @@ pub fn pulse_drone_sorties(
         let modality = effective_modality(pkg, ao.role, research);
         let sensor = effective_sensor(pkg, research);
         let profile = tuning.profile_or_default(ao.role.air_ops_profile());
-        let sample = if let Some(field) = field.filter(|f| f.is_ready()) {
-            field.sample(c.as_vec2() * TILE_METRES_GAMEPLAY, sim_time)
-        } else {
-            WeatherSample::default()
-        };
+        let sample = stations
+            .filter(|s| s.ready)
+            .map(|s| s.sample_at_tile(c))
+            .unwrap_or_default();
         let smoke01 = smoke01_at_tile(c, cells, smoke_map, atmos);
         // D2: research resist into envelope floors (implemented via higher effective resist in checks).
         let link_r = research.link_resist(profile.link_resist);
@@ -537,8 +534,7 @@ pub struct MissionStepWriters<'w> {
 pub struct MissionStepReads<'w> {
     pub clock: Res<'w, CombatClock>,
     pub tuning: Res<'w, AirOpsTuning>,
-    pub field: Option<Res<'w, WeatherField>>,
-    pub sim_time: Option<Res<'w, SimTimeMicros>>,
+    pub stations: Option<Res<'w, WeatherPollingStations>>,
     pub research: Res<'w, DroneResearchState>,
     pub doctrine: Res<'w, FactionDroneDoctrine>,
     pub attention: Option<Res<'w, crate::systems::sim_attention::SimAttentionFrame>>,
@@ -580,12 +576,6 @@ pub fn step_drone_missions_system(
             .unwrap_or(true)
     };
 
-    let t = r.sim_time.as_deref().copied().unwrap_or_else(|| {
-        r.field
-            .as_ref()
-            .map(|f| SimTimeMicros(f.prev_micros))
-            .unwrap_or_default()
-    });
     let smoke_by_chunk = collect_chunk_smoke_density(&q.smoke_q);
 
     let mut rows: Vec<(Entity, Formation, DronePackage)> = q
@@ -605,8 +595,7 @@ pub fn step_drone_missions_system(
             &mut w.mods,
             &mut refs,
             &r.tuning,
-            r.field.as_deref(),
-            t,
+            r.stations.as_deref(),
             &r.research,
             &r.doctrine,
             Some(&smoke_by_chunk),
@@ -640,8 +629,7 @@ pub fn step_drone_missions_system(
             &mut w.missile_dump,
             &mut refs,
             &r.tuning,
-            r.field.as_deref(),
-            t,
+            r.stations.as_deref(),
             MissileClass::SamShort,
             &allow,
         ));
@@ -650,8 +638,7 @@ pub fn step_drone_missions_system(
             &mut w.missile_dump,
             &mut refs,
             &r.tuning,
-            r.field.as_deref(),
-            t,
+            r.stations.as_deref(),
             MissileClass::GenericCruise,
             &allow,
         ));
@@ -748,7 +735,6 @@ mod tests {
             &mut rows,
             &AirOpsTuning::default(),
             None,
-            SimTimeMicros(0),
             &DroneResearchState::default(),
             &FactionDroneDoctrine::default(),
             None,
@@ -799,7 +785,6 @@ mod tests {
             &mut rows,
             &AirOpsTuning::default(),
             None,
-            SimTimeMicros(0),
             &DroneResearchState::default(),
             &FactionDroneDoctrine::default(),
             None,
@@ -856,7 +841,6 @@ mod tests {
             &mut rows,
             &AirOpsTuning::default(),
             None,
-            SimTimeMicros(0),
             &research,
             &FactionDroneDoctrine::default(),
             None,
@@ -886,7 +870,6 @@ mod tests {
             &mut rows,
             &AirOpsTuning::default(),
             None,
-            SimTimeMicros(0),
             &DroneResearchState::default(),
             &FactionDroneDoctrine::default(),
             Some(&smoke),
@@ -950,7 +933,6 @@ mod tests {
             &mut rows,
             &AirOpsTuning::default(),
             None,
-            SimTimeMicros(0),
             MissileClass::SamShort,
             &|_| false,
         );

@@ -23,6 +23,13 @@ use crate::economy::logistics::orders::{
     CargoKind, ConsumerKind, LogisticsOrderCommand, LogisticsOrderRequest, LogisticsOrderSite, LogisticsOrderSiteId,
     LogisticsOrdersSnapshotRes, OwnerId, Priority, SiteRole,
 };
+use crate::systems::navigation::{LogisticsPathConcern, LogisticsPathConcernRegistry};
+
+/// NAV-14 — concern weights for tactical grid paths that feed a front (from RON `by_consumer.front`).
+#[must_use]
+pub fn front_haul_path_concern(reg: &LogisticsPathConcernRegistry) -> LogisticsPathConcern {
+    reg.get_consumer(ConsumerKind::Front.label())
+}
 
 /// Marks the logistics endpoint of one side of one theater.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]

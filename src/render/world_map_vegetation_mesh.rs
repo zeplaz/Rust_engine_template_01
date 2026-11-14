@@ -154,6 +154,52 @@ fn mix64(mut x: u64) -> u64 {
     x ^ (x >> 31)
 }
 
+/// Per-chunk salt for Halton scatter (MATH-03). Same coord → same seed.
+#[must_use]
+pub(crate) fn chunk_halton_seed(coord: IVec2) -> u32 {
+    mix64(
+        (coord.x as i32 as u64).wrapping_add((coord.y as i32 as u64) << 32) ^ 0x4A98_9B4C_D3E2_F107,
+    ) as u32
+}
+
+/// Radical inverse in base `b` for Halton sequences; digit work is integer-only.
+#[must_use]
+pub(crate) fn halton_radical_inverse(mut index: u32, base: u32) -> f32 {
+    debug_assert!(base >= 2);
+    let mut acc = 0u64;
+    let mut denom = 1u64;
+    let b = u64::from(base);
+    while index > 0 {
+        denom = denom.saturating_mul(b);
+        acc = acc
+            .saturating_mul(b)
+            .saturating_add(u64::from(index % base));
+        index /= base;
+    }
+    if denom <= 1 {
+        0.0
+    } else {
+        acc as f32 / denom as f32
+    }
+}
+
+/// Halton `(2, 3)` pair for one site inside a chunk (`site_index` in `0..`).
+#[must_use]
+pub(crate) fn halton_scatter_uv(seed: u32, site_index: u32) -> (f32, f32) {
+    let n = seed.wrapping_add(site_index);
+    (halton_radical_inverse(n, 2), halton_radical_inverse(n, 3))
+}
+
+/// Jitter in `[0.2, 0.8]` tile fractions inside a placement cell.
+#[must_use]
+pub(crate) fn scatter_jitter_in_cell(coord: IVec2, site_ix: u32, site_iy: u32) -> (f32, f32) {
+    let (u, v) = halton_scatter_uv(
+        chunk_halton_seed(coord),
+        site_ix.wrapping_mul(0x9E37_79B1).wrapping_add(site_iy),
+    );
+    (0.2 + 0.6 * u, 0.2 + 0.6 * v)
+}
+
 /// Deterministic value in `[0, 1)` for a chunk site.
 pub(crate) fn site_rand(coord: IVec2, a: u32, b: u32, salt: u64) -> f32 {
     let h = mix64(
@@ -581,8 +627,7 @@ pub(crate) fn build_vegetation_geometry(
         let (nx, ny) = sites_per_axis(chunk, lod);
         for iy in (0..ny).rev() {
             for ix in 0..nx {
-                let jx = 0.2 + 0.6 * site_rand(row.coord, ix, iy, 2);
-                let jy = 0.2 + 0.6 * site_rand(row.coord, ix, iy, 3);
+                let (jx, jy) = scatter_jitter_in_cell(row.coord, ix, iy);
                 let lx = (ix as f32 + jx) * step;
                 let ly = (iy as f32 + jy) * step;
                 if lx >= chunk.x as f32 || ly >= chunk.y as f32 {
@@ -946,6 +991,43 @@ mod tests {
         assert_eq!(classify_row(&rows[2]).0, Cover::Burning);
         let scar = row(IVec2::ZERO, SuccessionTopologyStage::BurnScar, "veg_damaged", 0.1, false);
         assert_eq!(classify_row(&scar).0, Cover::Burnt);
+    }
+
+    #[test]
+    fn halton_jitter_identical_for_same_chunk_and_site() {
+        let c = IVec2::new(3, 5);
+        let a = scatter_jitter_in_cell(c, 2, 4);
+        let b = scatter_jitter_in_cell(c, 2, 4);
+        assert_eq!(a, b);
+        assert!((0.2..=0.8).contains(&a.0) && (0.2..=0.8).contains(&a.1));
+        assert_ne!(scatter_jitter_in_cell(c, 2, 4), scatter_jitter_in_cell(c, 3, 4));
+    }
+
+    #[test]
+    fn halton_seed_one_first_sixteen_uv_pairs() {
+        const GOLDEN: [(f32, f32); 16] = [
+            (0.5, 0.333_333_34),
+            (0.25, 0.666_666_7),
+            (0.75, 0.111_111_11),
+            (0.125, 0.444_444_45),
+            (0.625, 0.777_777_8),
+            (0.375, 0.222_222_22),
+            (0.875, 0.555_555_56),
+            (0.0625, 0.888_888_9),
+            (0.5625, 0.037_037_037),
+            (0.3125, 0.370_370_37),
+            (0.8125, 0.703_703_7),
+            (0.1875, 0.148_148_15),
+            (0.6875, 0.481_481_48),
+            (0.4375, 0.814_814_8),
+            (0.9375, 0.259_259_25),
+            (0.03125, 0.592_592_6),
+        ];
+        for (i, &(u, v)) in GOLDEN.iter().enumerate() {
+            let (hu, hv) = halton_scatter_uv(1, i as u32);
+            assert!((hu - u).abs() < 1e-5, "i={i} hu={hu} expected {u}");
+            assert!((hv - v).abs() < 1e-5, "i={i} hv={hv} expected {v}");
+        }
     }
 
     #[test]

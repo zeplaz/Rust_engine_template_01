@@ -436,7 +436,8 @@ impl Plugin for LogisticsOrdersPlugin {
             .add_systems(
                 Update,
                 (
-                    super::weather_haul::sync_haul_weather_mul_system,
+                    super::weather_haul::sync_haul_weather_mul_system
+                        .after(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Weather),
                     super::haul_amplify::sync_haul_amplify_mul_system,
                     super::vehicle_fire::apply_order_sim_vehicle_fire_system
                         .after(super::weather_haul::sync_haul_weather_mul_system),

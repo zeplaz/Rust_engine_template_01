@@ -62,7 +62,8 @@ impl Plugin for PowerRuntimePlugin {
                     project_nuclear_cooling_degraded_to_player_event_log,
                     project_meltdown_to_player_event_log,
                     project_containment_breach_to_player_event_log,
-                    variable_renewable_placeholder,
+                    variable_renewable_placeholder
+                        .after(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Weather),
                 )
                     .chain()
                     .run_if(power_simulation_running),

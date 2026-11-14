@@ -3,6 +3,7 @@
 
 mod density;
 mod color_guard;
+pub mod heatmap_ramp;
 mod fonts;
 mod palette;
 mod scroll;
@@ -20,6 +21,10 @@ pub use density::{
     DEFAULT_UI_GLOBAL_SCALE, UI_GLOBAL_SCALE_STEP,
 };
 pub use color_guard::forbid_raw_colors;
+pub use heatmap_ramp::{
+    blend_heatmap_linear, default_heatmap_ramp_linear, linear_rgb_to_lightness,
+    sample_heatmap_ramp_linear, HEATMAP_RAMP_STOPS,
+};
 pub use fonts::CmdUiMonoFont;
 pub use palette::UiPalette;
 pub use scroll::{

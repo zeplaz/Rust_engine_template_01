@@ -245,8 +245,7 @@ pub fn dig_in_system(clock: Res<CombatClock>, balance: Res<FrontBalance>, mut fo
 pub fn sync_formation_zones_system(
     mut commands: Commands,
     balance: Res<FrontBalance>,
-    field: Option<Res<crate::systems::weather::WeatherField>>,
-    sim_time: Option<Res<crate::systems::sim_control::SimTimeMicros>>,
+    stations: Res<crate::systems::weather::WeatherPollingStations>,
     mut arty_dump: Option<ResMut<super::weather::ArtilleryWeatherDump>>,
     mut controls: Query<(&Formation, &mut Zone)>,
     mut fires: Query<(Entity, &FormationFireZone, &mut Zone), Without<Formation>>,
@@ -270,13 +269,8 @@ pub fn sync_formation_zones_system(
         let mut range_tiles =
             balance.metres_to_tiles(profile.range_m) * balance.combat.fire_zone_range_fraction;
         let mut center = f.tile;
-        if let Some(field) = field.as_ref().filter(|f| f.is_ready()) {
-            let t = sim_time
-                .as_deref()
-                .copied()
-                .unwrap_or(crate::systems::sim_control::SimTimeMicros(field.prev_micros));
-            let pos_m = f.tile.as_vec2() * balance.tile_size_m();
-            let sample = field.sample(pos_m, t);
+        if stations.ready {
+            let sample = stations.sample_at_tile(f.tile);
             let facing = f
                 .target
                 .map(|tgt| (tgt - f.tile).as_vec2())

@@ -6,7 +6,7 @@ use crate::gui::ViewAuthoritySystemSet;
 use crate::presentation::TruckPresentation;
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewSurfaceId};
 use crate::systems::sim_attention::SimAttentionFrame;
-use crate::systems::weather::ChunkWeather;
+use crate::systems::weather::{CameraLocalWeatherSample, ChunkWeather};
 
 /// SystemSet for the sole [`AudioMixFrame`] writer.
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -78,6 +78,12 @@ pub struct AudioMixFrame {
     pub spatial_enabled: bool,
     /// Smoothed linear gain applied to ambient bus requests this frame.
     pub ambience_duck_gain: f32,
+    /// AUD-05 — low-pass corner for ambience / spatial bed (Hz); rain+fog pull this down.
+    pub weather_lowpass_cutoff_hz: f32,
+    /// AUD-05 — extra linear attenuation from wet air (1.0 = none).
+    pub weather_attenuation_gain: f32,
+    /// Camera-local fog density [0,1] used for this frame’s mix.
+    pub ambient_fog: f32,
 }
 
 /// Drain UI / combat one-shot intents without touching sim resources.
@@ -195,6 +201,33 @@ fn apply_ambience_duck(requests: &mut [AudioMixRequest], duck_gain: f32) {
     }
 }
 
+/// Dry air → full bandwidth; heavier rain and fog reduce cutoff and add attenuation (AUD-05).
+#[must_use]
+pub fn weather_audio_lowpass_hz(rain01: f32, fog: f32) -> f32 {
+    const HI: f32 = 12_000.0;
+    const LO: f32 = 650.0;
+    let wet = (rain01 * 0.82 + fog * 0.58).clamp(0.0, 1.0);
+    HI + (LO - HI) * wet
+}
+
+#[must_use]
+pub fn weather_audio_attenuation_gain(rain01: f32, fog: f32) -> f32 {
+    let wet_db = (rain01 * 5.0 + fog * 3.5).clamp(0.0, 14.0);
+    10f32.powf(-wet_db / 20.0)
+}
+
+fn apply_weather_absorption(requests: &mut [AudioMixRequest], atten: f32) {
+    let g = atten.clamp(0.05, 1.0);
+    for req in requests.iter_mut() {
+        match req.class {
+            AudioEventClass::Ambient | AudioEventClass::SpatialContinuum => {
+                req.gain = (req.gain * g).clamp(0.0, 1.0);
+            }
+            _ => {}
+        }
+    }
+}
+
 pub fn build_audio_mix_frame(
     mut mix: ResMut<AudioMixFrame>,
     mut oneshots: ResMut<AudioOneShotQueue>,
@@ -202,6 +235,7 @@ pub fn build_audio_mix_frame(
     time: Res<Time>,
     attention: Option<Res<SimAttentionFrame>>,
     view_auth: Option<Res<ViewProjectionAuthority>>,
+    camera_wx: Option<Res<CameraLocalWeatherSample>>,
     weather: Query<&ChunkWeather>,
     trucks: Query<&Transform, With<TruckPresentation>>,
 ) {
@@ -210,6 +244,9 @@ pub fn build_audio_mix_frame(
     mix.listener_zoom = 1.0;
     mix.ambient_rain = 0.0;
     mix.ambient_wind = 0.0;
+    mix.ambient_fog = 0.0;
+    mix.weather_lowpass_cutoff_hz = weather_audio_lowpass_hz(0.0, 0.0);
+    mix.weather_attenuation_gain = 1.0;
     mix.ambience_duck_gain = duck.ambience_bus_gain;
     mix.spatial_enabled = attention
         .as_ref()
@@ -223,20 +260,36 @@ pub fn build_audio_mix_frame(
         }
     }
 
-    // Ambient bed from mean weather (cheap aggregate — no per-chunk spatial yet).
-    let mut rain = 0.0_f32;
-    let mut wind = 0.0_f32;
-    let mut n = 0_u32;
-    for wx in &weather {
-        rain += wx.rain_intensity;
-        wind += wx.wind_speed;
-        n += 1;
-    }
-    if n > 0 {
-        let ambient_rain = rain / n as f32;
-        let ambient_wind = wind / n as f32;
-        mix.ambient_rain = ambient_rain;
-        mix.ambient_wind = ambient_wind;
+    let (rain01, fog01) = if let Some(local) = camera_wx.as_ref().filter(|w| w.ready) {
+        mix.ambient_rain = local.rain01;
+        mix.ambient_fog = local.fog;
+        mix.ambient_wind = local.sample.wind_mps.length();
+        (local.rain01, local.fog)
+    } else {
+        let mut rain = 0.0_f32;
+        let mut wind = 0.0_f32;
+        let mut fog = 0.0_f32;
+        let mut n = 0_u32;
+        for wx in &weather {
+            rain += wx.rain_intensity;
+            wind += wx.wind_speed;
+            fog += wx.fog_density;
+            n += 1;
+        }
+        if n > 0 {
+            mix.ambient_rain = rain / n as f32;
+            mix.ambient_wind = wind / n as f32;
+            mix.ambient_fog = fog / n as f32;
+        }
+        (mix.ambient_rain, mix.ambient_fog)
+    };
+    mix.weather_lowpass_cutoff_hz = weather_audio_lowpass_hz(rain01, fog01);
+    mix.weather_attenuation_gain = weather_audio_attenuation_gain(rain01, fog01);
+
+    // Ambient bed (intensity from camera-local sample when ready, else chunk mean).
+    let ambient_rain = mix.ambient_rain;
+    let ambient_wind = mix.ambient_wind;
+    if ambient_rain > 0.0 || ambient_wind > 0.2 {
         if ambient_rain > 0.05 {
             mix.requests.push(AudioMixRequest {
                 class: AudioEventClass::Ambient,
@@ -294,6 +347,9 @@ pub fn build_audio_mix_frame(
             }
         }
     }
+
+    let weather_gain = mix.weather_attenuation_gain;
+    apply_weather_absorption(&mut mix.requests, weather_gain);
 
     cap_combat_oneshots_in_place(&mut oneshots.pending, mix.listener_xz, COMBAT_ONESHOT_CAP);
 
@@ -396,6 +452,15 @@ mod tests {
             "g={g} target={}",
             AMBIENCE_DUCK_TARGET_GAIN
         );
+    }
+
+    #[test]
+    fn heavier_rain_lowers_weather_lowpass_cutoff() {
+        let dry = weather_audio_lowpass_hz(0.0, 0.0);
+        let wet = weather_audio_lowpass_hz(1.0, 0.0);
+        assert!(wet < dry, "dry={dry} wet={wet}");
+        let foggy = weather_audio_lowpass_hz(0.2, 1.0);
+        assert!(foggy < dry);
     }
 
     #[test]

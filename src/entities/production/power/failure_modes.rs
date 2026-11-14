@@ -20,7 +20,7 @@ use crate::entities::production::power::power_states::PowerPlantType;
 use crate::entities::types::{EmergencyType, OperationalStatus};
 use crate::infrastructure::{UtilityConnection, UtilityNetworkKind};
 use crate::systems::sim_control::SimTimeMicros;
-use crate::systems::weather::WeatherField;
+use crate::systems::weather::WeatherPollingStations;
 
 /// Placeholder: steam leak, condenser vacuum, feedwater chemistry — adjust `efficiency` or `status` later.
 pub fn steam_system_placeholder(_query: Query<&PowerPlant, With<SteamCycle>>) {}
@@ -508,8 +508,7 @@ pub struct RenewableWeatherFactors {
 
 /// Wind / solar plants sample the weather field at their own position.
 pub fn variable_renewable_placeholder(
-    field: Option<Res<WeatherField>>,
-    sim_time: Option<Res<SimTimeMicros>>,
+    stations: Res<WeatherPollingStations>,
     mut factors: ResMut<RenewableWeatherFactors>,
     mut query: Query<(&mut PowerPlant, Option<&Transform>), With<VariableRenewable>>,
 ) {
@@ -518,16 +517,16 @@ pub fn variable_renewable_placeholder(
         solar_min: 1.0,
         ..Default::default()
     };
-    let Some(field) = field.filter(|f| f.is_ready()) else {
+    if !stations.ready {
         return;
-    };
-    let now = sim_time.map_or(SimTimeMicros(field.prev_micros), |t| *t);
+    }
     let mut wind_sum = 0.0f32;
     let mut solar_sum = 0.0f32;
     for (mut plant, transform) in &mut query {
         // Site transforms are in metres on XZ (`site_world_position`); no transform -> map centre.
-        let pos = transform.map_or(field.extent_m * 0.5, |t| Vec2::new(t.translation.x, t.translation.z));
-        let s = field.sample(pos, now);
+        let s = transform.map_or(stations.centre, |t| {
+            stations.sample_at_pos_m(Vec2::new(t.translation.x, t.translation.z))
+        });
         let m = match plant.plant_type {
             PowerPlantType::Wind => wind_capacity_factor(s.wind_mps.length()),
             PowerPlantType::Solar => solar_capacity_factor(s.cloud),

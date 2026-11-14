@@ -1009,3 +1009,99 @@ fn solver_skips_an_unchanged_revision() {
         .entries
         .is_empty());
 }
+
+#[test]
+fn solver_anytime_partial_steps_hold_invariants() {
+    use super::solver::{
+        book_matches_soa_reserved, reservations_within_capacity, solve_throughput_greedy_system,
+        soa_solver_aligned,
+    };
+    use super::types::{
+        CachedRoute, FreightReservationBook, LogisticsDiagnostics, RouteCache, RouteHandle,
+        RoutePathStore, ThroughputSolverState,
+    };
+    use crate::economy::resource_flow::{ResourceFlowEdge, ResourceFlowRegistry, TransportMode};
+    use crate::systems::sim_attention::SimAttentionFrame;
+    use crate::systems::transport::TransportEdgeId;
+    use bevy::ecs::system::RunSystemOnce;
+
+    const EDGE_COUNT: usize = 6;
+    let mut app = App::new();
+    let from = app.world_mut().spawn_empty().id();
+    let to = app.world_mut().spawn_empty().id();
+    let handle = RouteHandle {
+        id: 1,
+        topology_revision: 3,
+    };
+    let mut paths = RoutePathStore::default();
+    let path = paths.insert_path(&[TransportEdgeId(0)]);
+    let mut cache = RouteCache::default();
+    cache.routes.insert(
+        (from, to),
+        CachedRoute {
+            handle,
+            path,
+            reachable: true,
+            bottleneck_capacity: 8.0,
+        },
+    );
+    let mut solver = ThroughputSolverState::default();
+    solver.topology_revision = 3;
+    solver.ensure_len(1);
+    solver.capacity[0] = 100.0;
+    let edges: Vec<ResourceFlowEdge> = (0..EDGE_COUNT)
+        .map(|_| ResourceFlowEdge {
+            from,
+            to,
+            transport_mode: TransportMode::Truck,
+            max_rate: 1.0,
+            latency_ticks: 1.0,
+            path_open: true,
+            route_handle: Some(handle),
+            buffer_tag: None,
+        })
+        .collect();
+    let mut attention = SimAttentionFrame::default();
+    attention.budget_path_units = 4;
+    attention.player_theater_active = false;
+    app.insert_resource(paths)
+        .insert_resource(cache)
+        .insert_resource(solver)
+        .insert_resource(FreightReservationBook::default())
+        .insert_resource(LogisticsDiagnostics::default())
+        .insert_resource(attention)
+        .insert_resource(ResourceFlowRegistry { edges });
+
+    for tick in 0..5 {
+        app.world_mut()
+            .run_system_once(solve_throughput_greedy_system)
+            .unwrap();
+        let solver = app.world().resource::<ThroughputSolverState>();
+        let book = app.world().resource::<FreightReservationBook>();
+        assert!(
+            soa_solver_aligned(solver),
+            "tick {tick}: SoA misaligned"
+        );
+        assert!(
+            reservations_within_capacity(solver),
+            "tick {tick}: reservation over capacity"
+        );
+        assert!(
+            book_matches_soa_reserved(book, solver),
+            "tick {tick}: book diverged from SoA"
+        );
+        if solver.solved_revision == Some(3) {
+            assert_eq!(
+                solver.solve_flow_cursor,
+                EDGE_COUNT,
+                "tick {tick}: complete pass cursor"
+            );
+            assert_eq!(book.entries.len(), EDGE_COUNT);
+            break;
+        }
+        assert!(
+            tick < 4,
+            "expected full solve within budgeted ticks"
+        );
+    }
+}

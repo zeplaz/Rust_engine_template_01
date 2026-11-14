@@ -7,6 +7,10 @@ use bevy::render::RenderApp;
 use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
+use crate::gui::style::{
+    blend_heatmap_linear, default_heatmap_ramp_linear, sample_heatmap_ramp_linear,
+    HEATMAP_RAMP_STOPS,
+};
 use crate::render::extraction::ecology_visual_snapshot::EcologyVisualSnapshot;
 use crate::render::extraction::RenderProjectionGraph;
 use crate::render::extraction::logistics_visual_snapshot::LogisticsVisualSnapshot;
@@ -75,6 +79,30 @@ pub fn project_ecology_overlay_rows(
         .collect()
 }
 
+/// Map a scalar field pair (base / overlay) through the shared heat ramp; blend in **linear** space (RND-20).
+#[must_use]
+pub fn blend_domain_overlay_scalar_linear(
+    base_scalar: f32,
+    overlay_scalar: f32,
+    overlay_alpha: f32,
+) -> Color {
+    let ramp = default_heatmap_ramp_linear();
+    blend_heatmap_linear(
+        &ramp,
+        base_scalar.clamp(0.0, 1.0),
+        overlay_scalar.clamp(0.0, 1.0),
+        overlay_alpha,
+    )
+}
+
+/// Pack a scalar into the RGB leg of a domain row (alpha holds overlay strength).
+#[must_use]
+pub fn scalar_to_domain_overlay_rgb(scalar: f32) -> Vec3 {
+    let ramp = default_heatmap_ramp_linear();
+    let rgb = sample_heatmap_ramp_linear(&ramp, scalar.clamp(0.0, 1.0));
+    Vec3::new(rgb[0], rgb[1], rgb[2])
+}
+
 pub fn emit_domain_overlay_frame_from_projection(
     graph: Res<RenderProjectionGraph>,
     logistics: Res<LogisticsVisualSnapshot>,
@@ -120,6 +148,14 @@ mod tests {
         assert_eq!(rows[0].corridor_xy_revision.x, 7.0);
         assert!((rows[0].corridor_xy_revision.y - 0.5).abs() < 1e-5);
         assert!((rows[0].corridor_xy_revision.z - 0.25).abs() < 1e-5);
+    }
+
+    #[test]
+    fn domain_overlay_scalar_blend_uses_full_ramp() {
+        assert_eq!(HEATMAP_RAMP_STOPS, 16);
+        let cold = blend_domain_overlay_scalar_linear(0.0, 1.0, 0.0);
+        let hot = blend_domain_overlay_scalar_linear(0.0, 1.0, 1.0);
+        assert!(cold.to_srgba().red < hot.to_srgba().red);
     }
 
     #[test]

@@ -16,7 +16,8 @@ use super::types::{
 };
 use super::types::{RouteCache, RoutePathStore};
 use crate::construction::ConstructionWorldRevision;
-use crate::economy::resource_flow::ResourceFlowRegistry;
+use crate::economy::resource_flow::{ResourceFlowEdge, ResourceFlowRegistry};
+use crate::systems::sim_attention::{AttentionTier, SimAttentionFrame};
 
 /// LOG-C-01: SoA vectors share one edge-index space (no HashMap on the hot path).
 #[must_use]
@@ -45,6 +46,133 @@ pub fn book_matches_soa_reserved(
     sums.iter()
         .zip(solver.reserved.iter())
         .all(|(a, b)| (a - b).abs() <= 1e-3)
+}
+
+/// Default per-tick edge budget before [`AttentionTier::work_scale`].
+pub const THROUGHPUT_SOLVE_BASE_EDGE_BUDGET: u32 = 64;
+
+#[must_use]
+pub fn throughput_solve_max_edges(work_scale: f32, base_budget: u32) -> usize {
+    if work_scale <= 0.0 {
+        return 0;
+    }
+    ((base_budget as f32 * work_scale).ceil() as u32)
+        .max(1)
+        .min(u32::MAX) as usize
+}
+
+#[must_use]
+fn solve_target_matches_flow(solver: &ThroughputSolverState, flow: &ResourceFlowRegistry) -> bool {
+    if solver.solve_target_topology != solver.topology_revision {
+        return false;
+    }
+    if solver.solve_target_path_open.len() != flow.edges.len()
+        || solver.solve_target_max_rate.len() != flow.edges.len()
+    {
+        return false;
+    }
+    flow.edges.iter().enumerate().all(|(i, edge)| {
+        solver.solve_target_path_open[i] == edge.path_open
+            && solver.solve_target_max_rate[i] == edge.max_rate
+    })
+}
+
+#[must_use]
+fn solve_pass_in_progress(solver: &ThroughputSolverState, flow: &ResourceFlowRegistry) -> bool {
+    solver.solve_flow_cursor < flow.edges.len() && solve_target_matches_flow(solver, flow)
+}
+
+fn begin_solve_pass(
+    solver: &mut ThroughputSolverState,
+    flow: &ResourceFlowRegistry,
+    book: &mut FreightReservationBook,
+    diagnostics: &mut LogisticsDiagnostics,
+) {
+    solver.clear_tick();
+    book.clear();
+    diagnostics.proofs.clear();
+    solver.solve_flow_cursor = 0;
+    solver.solve_target_topology = solver.topology_revision;
+    solver.solve_target_path_open.clear();
+    solver.solve_target_max_rate.clear();
+    solver
+        .solve_target_path_open
+        .extend(flow.edges.iter().map(|e| e.path_open));
+    solver
+        .solve_target_max_rate
+        .extend(flow.edges.iter().map(|e| e.max_rate));
+}
+
+fn solve_greedy_one_flow_edge(
+    edge: &ResourceFlowEdge,
+    solver: &mut ThroughputSolverState,
+    book: &mut FreightReservationBook,
+    diagnostics: &mut LogisticsDiagnostics,
+    route_cache: &RouteCache,
+    path_store: &RoutePathStore,
+) {
+    if !edge.path_open {
+        return;
+    }
+    let Some(handle) = edge.route_handle else {
+        return;
+    };
+    if handle.topology_revision != solver.topology_revision {
+        return;
+    }
+    let Some(cached) = route_cache.routes.get(&(edge.from, edge.to)) else {
+        return;
+    };
+    let path_edges = path_store.edge_slice(cached.path);
+    let mut amount = edge.max_rate;
+    let mut blocked: Option<crate::systems::transport::TransportEdgeId> = None;
+    for &tid in path_edges {
+        let idx = tid.0 as usize;
+        if idx >= solver.capacity.len() {
+            amount = 0.0;
+            blocked = Some(tid);
+            break;
+        }
+        let cap = solver.capacity[idx];
+        let used = solver.load[idx] + solver.reserved[idx];
+        let avail = (cap - used).max(0.0);
+        if avail < amount {
+            amount = avail;
+            if amount <= 0.0 {
+                blocked = Some(tid);
+            }
+        }
+    }
+    let req_id = diagnostics.request_id_seq.saturating_add(1);
+    diagnostics.request_id_seq = req_id;
+    if amount > 0.0 {
+        for &tid in path_edges {
+            let idx = tid.0 as usize;
+            if idx < solver.reserved.len() {
+                solver.reserved[idx] += amount;
+                solver.load[idx] += amount;
+                let cap = solver.capacity[idx].max(1e-6);
+                solver.edge_pressure[idx] = (solver.load[idx] / cap).clamp(0.0, 2.0);
+                book.push(FreightReservation {
+                    edge_index: idx,
+                    amount,
+                    request_id: req_id,
+                });
+            }
+        }
+    }
+    diagnostics.proofs.push(RouteProof {
+        request_id: req_id,
+        from_catalog: String::new(),
+        to_catalog: String::new(),
+        requested: edge.max_rate,
+        delivered: amount,
+        blocked_at: blocked,
+        bottleneck_capacity: cached.bottleneck_capacity,
+    });
+    if diagnostics.proofs.len() > 64 {
+        diagnostics.proofs.drain(0..32);
+    }
 }
 
 pub fn sync_solver_capacity_from_graph_system(
@@ -95,6 +223,7 @@ pub fn solve_throughput_greedy_system(
     flow: Res<ResourceFlowRegistry>,
     route_cache: Res<RouteCache>,
     path_store: Res<RoutePathStore>,
+    attention: Option<Res<SimAttentionFrame>>,
     mut solver: ResMut<ThroughputSolverState>,
     mut book: ResMut<FreightReservationBook>,
     mut diagnostics: ResMut<LogisticsDiagnostics>,
@@ -102,81 +231,55 @@ pub fn solve_throughput_greedy_system(
     if flow_snapshot_unchanged(&solver, &flow) {
         return;
     }
-    solver.clear_tick();
-    book.clear();
-    for edge in flow.edges.iter() {
-        if !edge.path_open {
-            continue;
+    let tier = attention.as_ref().map_or(AttentionTier::Full, |a| {
+        if a.player_theater_active {
+            AttentionTier::Full
+        } else if a.foci.is_empty() {
+            AttentionTier::Aggregate
+        } else {
+            AttentionTier::Aggregate
         }
-        let Some(handle) = edge.route_handle else {
-            continue;
-        };
-        if handle.topology_revision != solver.topology_revision {
-            continue;
-        }
-        let Some(cached) = route_cache.routes.get(&(edge.from, edge.to)) else {
-            continue;
-        };
-        let path_edges = path_store.edge_slice(cached.path);
-        let mut amount = edge.max_rate;
-        let mut blocked: Option<crate::systems::transport::TransportEdgeId> = None;
-        for &tid in path_edges {
-            let idx = tid.0 as usize;
-            if idx >= solver.capacity.len() {
-                amount = 0.0;
-                blocked = Some(tid);
-                break;
-            }
-            let cap = solver.capacity[idx];
-            let used = solver.load[idx] + solver.reserved[idx];
-            let avail = (cap - used).max(0.0);
-            if avail < amount {
-                amount = avail;
-                if amount <= 0.0 {
-                    blocked = Some(tid);
-                }
-            }
-        }
-        let req_id = diagnostics.request_id_seq.saturating_add(1);
-        diagnostics.request_id_seq = req_id;
-        if amount > 0.0 {
-            for &tid in path_edges {
-                let idx = tid.0 as usize;
-                if idx < solver.reserved.len() {
-                    solver.reserved[idx] += amount;
-                    solver.load[idx] += amount;
-                    let cap = solver.capacity[idx].max(1e-6);
-                    solver.edge_pressure[idx] = (solver.load[idx] / cap).clamp(0.0, 2.0);
-                    book.push(FreightReservation {
-                        edge_index: idx,
-                        amount,
-                        request_id: req_id,
-                    });
-                }
-            }
-        }
-        diagnostics.proofs.push(RouteProof {
-            request_id: req_id,
-            from_catalog: String::new(),
-            to_catalog: String::new(),
-            requested: edge.max_rate,
-            delivered: amount,
-            blocked_at: blocked,
-            bottleneck_capacity: cached.bottleneck_capacity,
-        });
-        if diagnostics.proofs.len() > 64 {
-            diagnostics.proofs.drain(0..32);
-        }
+    });
+    let base = attention
+        .as_ref()
+        .map(|a| a.budget_path_units)
+        .unwrap_or(THROUGHPUT_SOLVE_BASE_EDGE_BUDGET);
+    let max_iter = throughput_solve_max_edges(tier.work_scale(), base);
+    let in_progress = solve_pass_in_progress(&solver, &flow);
+    if max_iter == 0 {
+        return;
     }
-    solver.solved_revision = Some(solver.topology_revision);
-    solver.solved_path_open.clear();
-    solver.solved_max_rate.clear();
-    solver
-        .solved_path_open
-        .extend(flow.edges.iter().map(|edge| edge.path_open));
-    solver
-        .solved_max_rate
-        .extend(flow.edges.iter().map(|edge| edge.max_rate));
+    if !in_progress {
+        begin_solve_pass(&mut solver, &flow, &mut book, &mut diagnostics);
+    }
+    let mut processed = 0usize;
+    while solver.solve_flow_cursor < flow.edges.len() && processed < max_iter {
+        let edge = &flow.edges[solver.solve_flow_cursor];
+        solve_greedy_one_flow_edge(
+            edge,
+            &mut solver,
+            &mut book,
+            &mut diagnostics,
+            &route_cache,
+            &path_store,
+        );
+        debug_assert!(soa_solver_aligned(&solver));
+        debug_assert!(reservations_within_capacity(&solver));
+        debug_assert!(book_matches_soa_reserved(&book, &solver));
+        solver.solve_flow_cursor += 1;
+        processed += 1;
+    }
+    if solver.solve_flow_cursor >= flow.edges.len() {
+        solver.solved_revision = Some(solver.topology_revision);
+        solver.solved_path_open.clear();
+        solver.solved_max_rate.clear();
+        solver
+            .solved_path_open
+            .extend(flow.edges.iter().map(|edge| edge.path_open));
+        solver
+            .solved_max_rate
+            .extend(flow.edges.iter().map(|edge| edge.max_rate));
+    }
 }
 
 fn flow_snapshot_unchanged(solver: &ThroughputSolverState, flow: &ResourceFlowRegistry) -> bool {
@@ -255,5 +358,18 @@ pub fn propagate_corridor_pressure_system(
         if np > solver.edge_pressure[i] {
             solver.edge_pressure[i] = np;
         }
+    }
+}
+
+#[cfg(test)]
+mod anytime_tests {
+    use super::*;
+
+    #[test]
+    fn throughput_solve_max_edges_scales_with_attention() {
+        assert_eq!(throughput_solve_max_edges(1.0, 64), 64);
+        assert_eq!(throughput_solve_max_edges(0.5, 64), 32);
+        assert_eq!(throughput_solve_max_edges(0.0, 64), 0);
+        assert_eq!(throughput_solve_max_edges(0.1, 10), 1);
     }
 }
