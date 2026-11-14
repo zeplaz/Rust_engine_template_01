@@ -2,6 +2,10 @@
 
 use bevy::prelude::*;
 
+/// Extra chunk radius beyond [`load`](super::residency::chunk_within_load_radius) before a chunk may drop
+/// from the streaming interest set (IO-02 air lock; stops edge thrash).
+pub const STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS: i32 = 1;
+
 /// Frame budgets for the async chunk streaming spine. Full interest may be large; work is spread by priority.
 #[derive(Resource, Clone, Debug)]
 pub struct StreamingSpineBudget {

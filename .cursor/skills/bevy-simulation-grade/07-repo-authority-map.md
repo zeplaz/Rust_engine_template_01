@@ -219,6 +219,18 @@ Simulation terrain display authority lives in `src/render/terrain_render_authori
 
 **Anti-pattern:** ad-hoc CPU terrain blit in Simulation when `GpuBake` is active — route stamps through `TerrainGpuStampIndices` (`map_tile_atlas_stamp.rs`).
 
+## Staleness (LOOP-07 · E2)
+
+Documented one-tick / cadence boundaries for visual and strategic **read models** (writers in other modules; types in `sim_visual_extract.rs`, `world_read_snapshot.rs`).
+
+| Reader (snapshot) | Source | Lag | Reason |
+|-------------------|--------|-----|--------|
+| `FireVisualFrame` | `FireSimulationSnapshot` / `extract_fire_simulation_snapshot` | This sim tick, or **previous** when extract cadence skips | Visual-only; `fire_projection_stamp_aligned` permits ≤1 tick vs `CommittedVisualSnapshotFence` |
+| `SimFireEmitterVisualExtract` | Tactical `FireVisualFrame` in `FireVisualFramesByView` | Same as parent fire frame | Legacy CPU/debug mirror; GPU uses `RenderProjectionGraph` |
+| `SimChunkSmokeVisualExtract` | `ChunkSmokeField` / substrate contamination | **This sim tick** after `ChunkEnvironmentSet::Fire` | Fog/volume presentation; render extract ≤1 render frame, not an extra sim step |
+| `ClimateVisualAggregate` | `ChunkWeather`, `ChunkEcology`, `LandscapeProgramOnChunk` | **This sim tick** after environment weather/ecology | World-mean uniforms; no gameplay write-back |
+| `WorldReadSnapshot` | `ChunkStrategicOverlay`, `FrontlineState`, `TransportEdgeDirectory` | **This frame** on refresh; else **up to 11 display frames**; transport topology may be **1 frame** behind network flow | Planner/HUD digest only; chained after frontline derive in `ZoneAndReadModel` |
+
 ## Escalation
 
 | Change touches | Read also |

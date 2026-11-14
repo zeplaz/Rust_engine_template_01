@@ -32,7 +32,9 @@ pub use chunk_cache::{
 pub use hydrate::{
     hydrate_all_manifest_chunks, hydrate_stream_chunks_from_manifest, load_manifest_for_streaming,
 };
-pub use budget::{stream_sync_hydrate_enabled, StreamingSpineBudget};
+pub use budget::{
+    stream_sync_hydrate_enabled, StreamingSpineBudget, STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS,
+};
 pub use interest::{
     cap_chunk_coords_by_focus, highest_priority_orb, interest_chunk_set_signature, interest_orbs_from_lod_zones,
     merge_interest_chunk_coords, merge_interest_chunk_coords_with_ghost_bands,
@@ -44,8 +46,8 @@ pub use preview_ghost::{
     ghost_band_neighbor_coords_for_preview, preview_coords_with_ghost_bands,
 };
 pub use residency::{
-    chunk_window_coords, ghost_band_seed_coords, ChunkResidencyEntry, ChunkResidencyRole,
-    ChunkResidencyTable,
+    chunk_window_coords, ghost_band_seed_coords, merge_load_coords_with_residency_hysteresis,
+    streaming_interest_coords_step, ChunkResidencyEntry, ChunkResidencyRole, ChunkResidencyTable,
 };
 pub use task_pool::{
     poll_stream_hydrate_completions, submit_stream_hydrate_work, ChunkStreamIoDispatcher,
@@ -385,6 +387,14 @@ pub fn schedule_chunk_streaming_from_interest(
     orbs.extend(interest_orbs_from_lod_zones(&zones.zones, CHUNK_TILES));
     let orbs = merge_interest_orbs_deduped(&orbs);
     let merged_coords = merge_interest_chunk_coords(&orbs);
+    let load_radius = world.interest_radius_chunks.max(1);
+    let merged_coords = merge_load_coords_with_residency_hysteresis(
+        &scheduler.pending_chunks,
+        &merged_coords,
+        world.focus_chunk,
+        load_radius,
+        STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS,
+    );
     let coords = cap_chunk_coords_by_focus(
         merged_coords,
         world.focus_chunk,

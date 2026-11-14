@@ -6,7 +6,7 @@ use crate::gui::ViewAuthoritySystemSet;
 
 use super::load_sfx::load_sfx_catalog;
 use super::mix_frame::{
-    build_audio_mix_frame, AudioMixFrame, AudioMixSet, AudioOneShotQueue,
+    build_audio_mix_frame, AudioMixDuckState, AudioMixFrame, AudioMixSet, AudioOneShotQueue,
 };
 use super::playback::configure_playback;
 use super::sfx_catalog::SfxCatalog;
@@ -17,6 +17,7 @@ pub struct AudioMixPlugin;
 impl Plugin for AudioMixPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<AudioMixFrame>()
+            .init_resource::<AudioMixDuckState>()
             .init_resource::<AudioOneShotQueue>()
             .init_resource::<SfxCatalog>()
             .add_systems(Startup, load_sfx_catalog)

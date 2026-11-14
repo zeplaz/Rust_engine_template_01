@@ -140,11 +140,40 @@ Wave S and Wave 0 can run in parallel with anything. Within Waves 1–2, two age
 - **Don't**: "fix" violations in this slice. Record the baseline count; each fix is its own slice routed to the owner.
 - **Accept**: script runs in < 10 s and prints `N resources, M violations`; the M list is pasted under this card.
 
+Baseline (2026-11-14): `5 resources, 4 violations`
+
+```text
+src/render/view_runtime/bridge.rs:217  ResMut/&mut ViewManager outside src/gui/view_authority.rs
+src/render/view_runtime/bridge.rs:255  ResMut/&mut ViewManager outside src/gui/view_authority.rs
+src/render/view_runtime/phase_d_parity_stress.rs:51  ResMut/&mut ViewManager outside src/gui/view_authority.rs
+src/render/view_runtime/phase_d_parity_stress.rs:66  ResMut/&mut ViewManager outside src/gui/view_authority.rs
+```
+
 ### E4 ⚙ Determinism lint (report-only) — `MEM-08` `LOOP-02` `MATH-02` · gea4v1:3.3.1.4, gea4v1:8.4 · V4 C2 R1
 - **Files**: new `tools/validators/determinism_lint.py`, `tools/validators/README.md`
 - **Do**: in the sim dirs from §1 flag: `thread_rng|rand::random`, `Instant::now|SystemTime`, `Res<Time>` / `Time<Real>` / `delta_secs` (sim must step on the sim clock, e.g. `SimTimeMicros`), and `for … in` / `.iter()` / `.values()` / `.keys()` over a binding declared as `HashMap`/`HashSet` in the same file. Output `rule file:line` sorted, plus counts per rule. Skip `#[cfg(test)]`.
 - **Don't**: edit `src/`. Report only. `combat/relax.rs` uses `BTreeMap` and is the model to copy in later fixes.
 - **Accept**: prints counts per rule; paste the top 15 under this card as the fix backlog.
+
+Baseline (2026-11-14): `rng: 3` · `wall_clock: 2` · `real_time: 42` · `hash_iter: 41`
+
+```text
+hash_iter src/combat/formation.rs:146
+hash_iter src/combat/fortification.rs:100
+hash_iter src/combat/front.rs:193
+hash_iter src/combat/front.rs:304
+hash_iter src/combat/front.rs:346
+hash_iter src/construction/procedural/types.rs:181
+hash_iter src/construction/procedural/types.rs:204
+hash_iter src/construction/procedural/types.rs:209
+hash_iter src/construction/weighted_footprint.rs:47
+hash_iter src/economy/logistics/district_scope.rs:31
+hash_iter src/economy/resource_flow.rs:274
+hash_iter src/strategic/construction_book.rs:164
+hash_iter src/strategic/settlement/block_rollout.rs:351
+hash_iter src/strategic/settlement/district.rs:274
+hash_iter src/strategic/settlement/town.rs:223
+```
 
 ### E6 ⚙ Streaming hysteresis band — `IO-02` · gea4v2:17.4.2 · V4 C2 R2
 - **Why**: a focus sitting on a chunk edge loads and unloads the same chunks every few frames.
