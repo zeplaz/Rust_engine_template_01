@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v2** |
-| **Status** | **ACTIVE** — Waves 0–2 executed (F1 PARTIAL; Wave S studio still OPEN) |
+| **Status** | **WAVES 0–2 CLOSED** — exit criteria met (F1/E7 PARTIAL with written reasons; Wave S studio still OPEN) |
 | **Date** | 2026-11-14 |
 | **Supersedes** | [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**, built on the old `$REF_BOOKS_DIR\lookup\` CSVs — do not use those) |
 | **Tool** | [`ref_books_index/`](ref_books_index/README.md): `systems.md` → `lookup.py` → `--read` |
@@ -206,6 +206,7 @@ hash_iter src/strategic/settlement/town.rs:223
 - **Do**: for every **derived** field found in a DTO: stop saving it and rebuild in the apply/hydrate pass. For every `Entity` stored in a DTO: replace with the stable id and remap once in `apply.rs`.
 - **Don't**: break existing saves without a version bump and a loader branch (⚠ needs user sign-off if a save format changes).
 - **Accept**: round-trip test: save → load → K ticks equals no-save K ticks on the compared counters · `cargo test -p proc_A_dine01 --lib io::save`.
+- **Close (2026-11-14)**: **IO-07 ADOPTED** (no `Entity` on wire; chunk coords + string keys). **IO-08 PARTIAL** — new saves omit derived stand `heat`/`fuel`/`burn_hold` and fire aggregates; transport `nodes` rebuilt on hydrate (`post_load_rebuild.rs`). Legacy stand RON may still carry inlined heat vectors (still deserializes); stripping `successors` would need a save-format version bump + user sign-off. `io::save` lib tests green (30).
 
 ---
 
@@ -358,48 +359,48 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 |:---|:---|:---|:---|
 | ANIM-02 | — | ADOPTED | `construction/site_stage_transitions.rs` pure transition table (CON-P2-002) |
 | TAC-04 | — | ADOPTED | `systems/fire/cell_spread.rs` 8-neighbour CA in snapshot order |
-| MATH-02 | — | PARTIAL | `ai/faction/rng.rs` `mix64` over (seed, slot, tick, salt); other domains unchecked → E4 |
-| LOOP-09 | E5 | PARTIAL | `WorldFieldLayerEpoch` is one global epoch |
+| MATH-02 | — | PARTIAL | `ai/faction/rng.rs` mix64; determinism_lint backlog remains (E4 report-only) |
+| LOOP-09 | E5 | ADOPTED | `WorldFieldLayerEpoch` static/slow/dynamic epochs |
 | INPUT-05 | — | ADOPTED | `gui/tactical/map_camera.rs` ApplyInput → DeriveDesired → Smooth |
 | ECS-07 | — | ADOPTED | v1 Order 3: `MissionIntentQueue` → `MissionBook` |
-| EXEC-05 | — | PARTIAL | v1 Order 2: `SimAttentionFrame` scaffold |
+| EXEC-05 | — | PARTIAL | v1 Order 2: `SimAttentionFrame` scaffold (not a Wave 1/2 gap) |
 | LOOP-08 | — | ADOPTED | `WeatherField` prev/next |
-| CONC-03 | E1 | OPEN | no enforcement of sole writers |
-| MEM-08 | E4 | OPEN | lint not written |
-| LOOP-02 | E4 | OPEN | clock use in sim dirs unchecked |
-| IO-02 | E6 | OPEN | `chunk_window_coords` has one radius |
-| LOOP-07 | E2 | OPEN | |
-| EXEC-01 | E3 | OPEN | |
-| TAC-06 | E5 | OPEN | |
-| IO-08 | E7 | SHIPPED | derived stand/fire/transport nodes rebuilt on hydrate; `post_load_rebuild.rs` |
-| IO-07 | E7 | SHIPPED | chunk coord + string keys on wire; no `Entity` in save DTOs |
-| PHYS-02 | C1 | OPEN | no swept test in `combat/ballistics.rs` |
-| MOVE-09 | C2 | OPEN | no drag or aim iteration in `combat/ballistics.rs` |
-| PHYS-06 | F2 | OPEN | wake rule unverified |
-| NAV-09 | L1 | OPEN | |
-| AUD-02 | U1 | OPEN | |
-| TAC-03 | F1 | PARTIAL | sparse 4-nbr Jacobi + decay/source blend; no `heat_diffusion` WGSL; not separable box on dense buffers (`heat_diffusion.rs:155–250`) |
-| DEC-08 | A1 | OPEN | |
-| DEC-15 | A2 | OPEN | |
-| NAV-10 | L3 | OPEN | |
-| SENSE-02 | W1 | OPEN | |
-| EXEC-04 | L6 | OPEN | |
-| LGT-09 | F3 | OPEN | |
-| NAV-14 | L5 | OPEN | |
-| DEC-10 | L2 | PARTIAL | adverts exist; urgency/distance scoring unchecked |
-| MATH-03 | G2, S5 | OPEN | |
-| ANIM-01 | F4 | OPEN | |
-| AUD-05 | W3 | OPEN | |
-| AUD-03 | U2, S6 | OPEN | |
-| AUD-08 | U3 | OPEN | |
-| RND-20 | R2, S2 | OPEN | |
-| INPUT-02 | K2 | OPEN | |
-| LGT-02 | R3 | OPEN | |
-| LGT-08 | T6 | OPEN | playcheck has a single `--seed` |
-| LEARN-01 | T7 | OPEN | |
-| RND-08 | S1 | OPEN | |
-| PCG-08 | S3 | OPEN | |
-| PCG-06 | S4 | OPEN | |
+| CONC-03 | E1 | ADOPTED | `sole_writer_check.py` baseline 5 resources, 4 violations |
+| MEM-08 | E4 | ADOPTED | `determinism_lint.py` report-only |
+| LOOP-02 | E4 | ADOPTED | `determinism_lint` real_time rule |
+| IO-02 | E6 | ADOPTED | unload hysteresis + oscillation test |
+| LOOP-07 | E2 | ADOPTED | Staleness docs on extract + world_read_snapshot |
+| EXEC-01 | E3 | ADOPTED | `heavy_periodic` phase offsets + LCM test |
+| TAC-06 | E5 | ADOPTED | `FieldLayerUpdateClass` epochs |
+| IO-08 | E7 | PARTIAL | omit/rebuild derived on hydrate; legacy stand heat may still deserialize |
+| IO-07 | E7 | ADOPTED | chunk coords + string keys; no `Entity` in save DTOs |
+| PHYS-02 | C1 | ADOPTED | swept DDA + `swept_impact` test |
+| MOVE-09 | C2 | ADOPTED | `refine_missile_aim` 6-iter + wind tests |
+| PHYS-06 | F2 | ADOPTED | `sleeping_neighbor_west_edge_ignites_within_two_ticks` |
+| NAV-09 | L1 | ADOPTED | `best_source_open_goal` + nav09 fixture |
+| AUD-02 | U1 | ADOPTED | combat oneshot cap + ambience duck |
+| TAC-03 | F1 | PARTIAL | sparse Jacobi + no WGSL twin — not separable (see F1 card) |
+| DEC-08 | A1 | ADOPTED | duration `ScoreTerm` in `decide.rs` |
+| DEC-15 | A2 | ADOPTED | behaviour-change log + snapshot panel |
+| NAV-10 | L3 | ADOPTED | `LogisticsRouteDirtyTiles` selective invalidation |
+| SENSE-02 | W1 | ADOPTED | `WeatherPollingStations` + migrated readers |
+| EXEC-04 | L6 | ADOPTED | anytime throughput solve + invariant test |
+| LGT-09 | F3 | ADOPTED | radiant `flux_kw_m2` inverse-square |
+| NAV-14 | L5 | ADOPTED | `logistics_path_concerns_v1.ron` + risk_averse test |
+| DEC-10 | L2 | ADOPTED | demand advert unmet_ticks + distance discount |
+| MATH-03 | G2 | ADOPTED | Halton `scatter_jitter_in_cell` (S5 still OPEN) |
+| ANIM-01 | F4 | ADOPTED | `flame_loop_phase` in `particle_anim.rs` |
+| AUD-05 | W3 | ADOPTED | weather low-pass + attenuation in mix |
+| AUD-03 | U2 | ADOPTED | cue variants + `AudioLocalRng` (S6 still OPEN) |
+| AUD-08 | U3 | ADOPTED | alert bark priority exclusivity |
+| RND-20 | R2 | ADOPTED | heatmap ramp linear lightness (S2 still OPEN) |
+| INPUT-02 | K2 | ADOPTED | `BUILD_POINTER_DRAG` thresholds |
+| LGT-02 | R3 | ADOPTED | screen-tile fire light cap in extract |
+| LGT-08 | T6 | ADOPTED | playcheck `--seeds` + `score_dump --multi` |
+| LEARN-01 | T7 | ADOPTED | `tune.py --dry-run` whitelist |
+| RND-08 | S1 | OPEN | Wave S |
+| PCG-08 | S3 | OPEN | Wave S |
+| PCG-06 | S4 | OPEN | Wave S |
 | MOVE-05 | §8 | DEFER | needs unit-member model |
 | MOVE-06 | §8 | DEFER | needs unit-member model |
 | MOVE-07 | §8 | DEFER | needs unit-member model |
@@ -416,5 +417,6 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 
 ## 10. Plan exit
 
-The plan closes when Waves 0–1 are `ADOPTED`, every Wave 2 and Wave S row is `ADOPTED`, `PARTIAL` with a written reason, or `REJECTED`,
-and `python -I src/dev/ref_books_index/lookup.py --check` reports `0 problems`. Wave 3 items move to their own plans.
+**Waves 0–2:** closed 2026-11-14 (Accept spot-checks green; F1 + E7/IO-08 locked **PARTIAL** with written reasons).  
+**Remaining for full plan close:** Wave S (`RND-08`/`PCG-08`/`PCG-06` and S2/S5/S6 companions) → `@coder-mcp`.  
+Then: every Wave S row `ADOPTED`/`PARTIAL`/`REJECTED` and `python -I src/dev/ref_books_index/lookup.py --check` → `0 problems`. Wave 3 items stay in their own plans.
