@@ -8,7 +8,7 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Cross-front pick queue (2026-07-03):** [`cross_front_pick_queue_v1.md`](cross_front_pick_queue_v1.md) — parallel lanes · pick-one-primary per session
 
-**Bevy 0.20 migration (2026-11-13) — PROGRAM CLOSE:** [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) · gate [`../debug_runs/mig_bevy_020/mig_v2_gate.json`](../debug_runs/mig_bevy_020/mig_v2_gate.json) · residual lib-test defer [`mig_bevy_020_m0_test_defer.md`](mig_bevy_020_m0_test_defer.md) · book/ECS [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md)
+**Bevy 0.20 migration (2026-11-13) — PROGRAM CLOSE:** [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) · gate [`../debug_runs/mig_bevy_020/mig_v2_gate.json`](../debug_runs/mig_bevy_020/mig_v2_gate.json) · residual lib-test defer [`mig_bevy_020_m0_test_defer.md`](mig_bevy_020_m0_test_defer.md) · book/ECS [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (SHIPPED) → **OPEN** [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md)
 
 **Bevy 0.19 migration (CLOSED):** [`plan_bevy_019_migration_v1.md`](plan_bevy_019_migration_v1.md) — do **not** reopen `MIG-*` 0.19 rows · deferrals [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md)
 
