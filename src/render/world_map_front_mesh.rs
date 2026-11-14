@@ -32,9 +32,11 @@ use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
 use crate::combat::{
-    DeploymentKind, Formation, FrontBalance, Posture, PressureKind, PressurePointBook, TheaterBook, UnitKind,
+    DeploymentKind, DroneAo, Formation, FrontBalance, MissionBook, Posture, PressureKind,
+    PressurePointBook, TheaterBook, UnitKind,
 };
 use crate::engine::states::BaseState;
+use crate::gui::drone_mission_chrome::{drone_ao_preview_rect, DroneAoTool};
 use crate::gui::front_controls::{
     reject_text, FrontControlsSet, FrontDragBox, FrontOrderFeedback, FrontOverlaySettings, MarkerState, OrderMarker,
     SelectedFormation, PLAYER_SLOT,
@@ -46,6 +48,7 @@ use bevy::ecs::system::SystemParam;
 /// Above the network ribbons (1.04); below nothing the player needs to click.
 pub const FRONT_Z: f32 = 1.10;
 const THEATER_Z: f32 = 1.08;
+const DRONE_AO_Z: f32 = 1.09;
 const PRESSURE_Z: f32 = 1.12;
 const SYMBOL_Z: f32 = 1.15;
 const LABEL_Z: f32 = 1.2;
@@ -230,6 +233,28 @@ pub(crate) fn build_theater_outlines(geo: &mut Geo, book: &TheaterBook, px_per_t
         let col = lerp_col(faction_color(t.pair.0), faction_color(t.pair.1), 0.5);
         let ring = [lo, Vec2::new(hi.x, lo.y), hi, Vec2::new(lo.x, hi.y)];
         geo.polyline(&ring, true, w, THEATER_Z, with_alpha(col, 0.55));
+    }
+}
+
+/// D7 — player drone AO rectangles (+ in-progress draw preview).
+pub(crate) fn build_drone_ao_outlines(
+    geo: &mut Geo,
+    aos: &[DroneAo],
+    preview: Option<(Vec2, Vec2)>,
+    px_per_tile: f32,
+) {
+    let w = px_to_tiles(1.75, px_per_tile).max(0.07);
+    let col = [0.35, 0.85, 1.0, 0.65];
+    let paused = [0.55, 0.55, 0.6, 0.45];
+    for ao in aos {
+        let lo = ao.min.as_vec2();
+        let hi = ao.max.as_vec2() + Vec2::ONE;
+        let ring = [lo, Vec2::new(hi.x, lo.y), hi, Vec2::new(lo.x, hi.y)];
+        geo.polyline(&ring, true, w, DRONE_AO_Z, if ao.paused { paused } else { col });
+    }
+    if let Some((lo, hi)) = preview {
+        let ring = [lo, Vec2::new(hi.x, lo.y), hi, Vec2::new(lo.x, hi.y)];
+        geo.polyline(&ring, true, w, DRONE_AO_Z, [0.55, 0.95, 1.0, 0.85]);
     }
 }
 
@@ -493,6 +518,8 @@ pub(crate) struct FrontOverlaySources<'w, 's> {
     theaters: Option<Res<'w, TheaterBook>>,
     pressure: Option<Res<'w, PressurePointBook>>,
     balance: Option<Res<'w, FrontBalance>>,
+    missions: Option<Res<'w, MissionBook>>,
+    drone_tool: Option<Res<'w, DroneAoTool>>,
     formations: Query<'w, 's, (Entity, &'static Formation)>,
 }
 
@@ -567,6 +594,26 @@ impl FrontOverlaySources<'_, '_> {
             // Age in 0.2 s steps: markers fade, so the mesh rebuilds a few times a second while one is alive.
             key = mix64(key ^ m.id ^ state << 40 ^ ((m.age_s * 5.0) as u64) << 44 ^ ((m.target.x * 4.0) as i64 as u64) << 8);
         }
+        if let Some(book) = self.missions.as_deref() {
+            key = mix64(key ^ book.drone_aos.len() as u64 ^ book.sorties_ok as u64);
+            for ao in book.drone_aos.values() {
+                key = mix64(
+                    key ^ ao.id
+                        ^ (ao.min.x as u32 as u64) << 8
+                        ^ (ao.max.y as u32 as u64) << 24
+                        ^ u64::from(ao.paused),
+                );
+            }
+        }
+        if let Some(t) = self.drone_tool.as_deref() {
+            key = mix64(key ^ u64::from(t.armed) ^ t.next_ao_id);
+            if let Some((lo, hi)) = drone_ao_preview_rect(t, px) {
+                key = mix64(
+                    key ^ ((lo.x * 16.0) as i64 as u64)
+                        ^ ((hi.y * 16.0) as i64 as u64) << 32,
+                );
+            }
+        }
         key
     }
 
@@ -589,6 +636,26 @@ impl FrontOverlaySources<'_, '_> {
         if settings.pressure {
             if let Some(p) = self.pressure.as_deref() {
                 build_pressure_markers(&mut geo, p, px);
+            }
+        }
+        {
+            let aos: Vec<DroneAo> = self
+                .missions
+                .as_deref()
+                .map(|b| {
+                    b.drone_aos
+                        .values()
+                        .filter(|a| a.faction_slot == PLAYER_SLOT)
+                        .cloned()
+                        .collect()
+                })
+                .unwrap_or_default();
+            let preview = self
+                .drone_tool
+                .as_deref()
+                .and_then(|t| drone_ao_preview_rect(t, px));
+            if !aos.is_empty() || preview.is_some() {
+                build_drone_ao_outlines(&mut geo, &aos, preview, px);
             }
         }
         if settings.formations {

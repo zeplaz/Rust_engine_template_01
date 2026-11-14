@@ -7,15 +7,24 @@
 use bevy::prelude::*;
 
 pub mod balance;
+pub mod ballistics;
+pub mod capability_toe;
+pub mod drone_doctrine;
+pub mod drone_missions;
+pub mod drone_research;
+pub mod drone_supply;
 pub mod formation;
 pub mod fortification;
 pub mod front;
+pub mod missile_supply;
 pub mod orders;
+pub mod personnel_supply;
 pub mod pressure;
 pub mod supply;
 pub mod relax;
 pub mod resolve;
 pub mod theater;
+pub mod weather;
 
 pub use balance::{
     load_front_balance, load_front_balance_from_path, parse_front_balance, FortKind,
@@ -46,6 +55,32 @@ pub use orders::{
     FortifyPlans, OrderEffect, OutcomeRecord,
 };
 pub use resolve::{combat_resolve_system, resolve_step, Combatant, Outcome};
+pub use weather::{
+    artillery_weather_stamp, engagement_visibility_scale, ArtilleryWeatherDump,
+};
+pub use drone_missions::{
+    apply_missile_sortie_launches_system, pulse_drone_sorties, step_drone_missions_system,
+    AirOpZone, DroneAo, DroneCombatModifiers, DroneMissionDump, DroneMissionKind, DronePackage,
+    DroneRole, MissionBook, MissionIntent, MissionIntentQueue,
+};
+pub use drone_research::DroneResearchState;
+pub use drone_doctrine::{doctrine_preferred_role, FactionDroneDoctrine};
+pub use capability_toe::{
+    load_capability_toe_registry, CapabilityToeRegistry, MissileClass, CAPABILITY_TOE_RON,
+};
+pub use drone_supply::{
+    publish_drone_cargo_demands_system, refill_drone_packages_from_front_system, DroneCargoDemandBook,
+};
+pub use ballistics::{BallisticFlightBook, BallisticKind, BallisticsPlugin};
+pub use missile_supply::{
+    publish_missile_cargo_demands_system, pulse_missile_sorties, MissileSortieLaunch,
+    MissileSortieLaunchQueue, refill_missile_packages_from_front_system, MissileCargoDemandBook,
+    MissilePackage, MissileSortieDump,
+};
+pub use personnel_supply::{
+    publish_personnel_demands_system, refill_personnel_credits_from_front_system,
+    PersonnelRestockBook,
+};
 pub use supply::{
     draw_front_supply_system, formation_draw, front_demand_targets, front_draw_kg_per_s, front_draw_t_per_min,
     publish_front_supply_demands_system, update_front_supply_coverage_system, FrontSupplyCoverage, FrontSupplyDraw,
@@ -64,6 +99,7 @@ pub struct CombatPlugin;
 impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::sim_control::ensure_sim_step_clock(app);
+        app.add_plugins(ballistics::BallisticsPlugin);
         if !app.world().contains_resource::<FrontBalance>() {
             let (balance, error) = load_front_balance();
             if let Some(err) = &error {
@@ -121,19 +157,68 @@ impl Plugin for CombatPlugin {
                 .before(combat_resolve_system)
                 .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
         );
-        app.init_resource::<CombatClock>().add_systems(
+        app.init_resource::<CombatClock>()
+            .init_resource::<ArtilleryWeatherDump>()
+            .init_resource::<MissionIntentQueue>()
+            .init_resource::<MissionBook>()
+            .init_resource::<DroneCombatModifiers>()
+            .init_resource::<DroneMissionDump>()
+            .init_resource::<DroneResearchState>()
+            .init_resource::<FactionDroneDoctrine>()
+            .init_resource::<DroneCargoDemandBook>()
+            .init_resource::<MissileCargoDemandBook>()
+            .init_resource::<MissileSortieDump>()
+            .init_resource::<MissileSortieLaunchQueue>()
+            .init_resource::<PersonnelRestockBook>()
+            .init_resource::<CapabilityToeRegistry>()
+            .add_systems(
+                Startup,
+                capability_toe::load_capability_toe_on_startup,
+            )
+            .add_systems(
             Update,
             (
                 advance_combat_clock_system,
                 execute_deployment_orders_system,
+                // D1–D6 / P6: mission intents + weather-gated drone/missile sorties before resolve.
+                step_drone_missions_system,
+                refill_drone_packages_from_front_system,
+                refill_missile_packages_from_front_system,
+                refill_personnel_credits_from_front_system,
                 formation_supply_system,
+            )
+                .chain()
+                .before(combat_resolve_system)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        )
+        .add_systems(
+            Update,
+            apply_missile_sortie_launches_system
+                .after(step_drone_missions_system)
+                .before(combat_resolve_system)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        )
+        .add_systems(
+            Update,
+            (
                 combat_resolve_system,
                 advance_formations_system,
                 dig_in_system,
                 sync_formation_zones_system,
             )
                 .chain()
+                .after(formation_supply_system)
                 .before(control_relaxation_system)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        );
+        app.add_systems(
+            Update,
+            (
+                publish_drone_cargo_demands_system,
+                publish_missile_cargo_demands_system,
+                publish_personnel_demands_system,
+            )
+                .after(publish_front_supply_demands_system)
                 .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
         );
     }

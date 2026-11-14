@@ -111,6 +111,55 @@
       "note": "W2: heat bbox length:breadth tracked (elongation under wind when fire+wind present)."
     },
     {
+      "id": "fire.ember_spots_tracked",
+      "path": "fire.ember_spots_emitted.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "W2: ember emit→SimEffect→apply path counters hooked (0 OK on calm/short runs)."
+    },
+    {
+      "id": "fire.ember_spots_applied_tracked",
+      "path": "fire.ember_spots_applied.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "W2: applied spot heat counter (drain→EmberSpotIgnitionEvent→overlay)."
+    },
+    {
+      "id": "fire.sites_collapsed_tracked",
+      "path": "fire.sites_collapsed_to_fire.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "FIRE-ENTITY-1: sites collapsed via demolish funnel (0 OK if no sustained heat on footprint)."
+    },
+    {
+      "id": "fire.sites_threatened_tracked",
+      "path": "fire.sites_threatened.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "FIRE-ENTITY-1: threatened site stage counter."
+    },
+    {
+      "id": "combat.fire_exposed_tracked",
+      "path": "combat.fire_exposed_formations_series.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "FIRE-ENTITY-1: formations under overlay heat (0 OK on calm runs)."
+    },
+    {
+      "id": "logistics.fire_delayed_tracked",
+      "path": "logistics.fire_delayed_trips",
+      "op": "gte",
+      "expect": 0,
+      "note": "FIRE-ENTITY-1: order-sim trip delays from heat."
+    },
+    {
+      "id": "logistics.vehicles_lost_to_fire_tracked",
+      "path": "logistics.vehicles_lost_to_fire",
+      "op": "gte",
+      "expect": 0,
+      "note": "FIRE-ENTITY-1: fleet removals from sustained vehicle heat."
+    },
+    {
       "id": "construction.sites_exist",
       "path": "construction.sites_total",
       "op": "gte",
@@ -307,6 +356,83 @@
       "op": "gte",
       "expect": 0,
       "note": "W3: cloud cover series present (may be clear)."
+    },
+    {
+      "id": "weather.haul_mul_tracked",
+      "path": "weather.haul_weather_speed_mul.max",
+      "op": "gte",
+      "expect": 0.25,
+      "note": "W4: haul weather speed multiplier sampled (dry≈1, rain lower)."
+    },
+    {
+      "id": "weather.air_ground_speed_mul_tracked",
+      "path": "weather.air_ground_speed_mul.max",
+      "op": "gte",
+      "expect": 0.35,
+      "note": "W5: air ground-speed mul from centre sample (calm≈1; storm may ground)."
+    },
+    {
+      "id": "weather.link_quality_radio_tracked",
+      "path": "weather.link_quality_radio.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "D0: radio link quality probe present (calm≈1; storm/smoke lower)."
+    },
+    {
+      "id": "weather.sensor_range_mul_eo_tracked",
+      "path": "weather.sensor_range_mul_eo.max",
+      "op": "gte",
+      "expect": 0.15,
+      "note": "D0: EO sensor range mul probe (floored at 0.15)."
+    },
+    {
+      "id": "weather.ao_count_tracked",
+      "path": "weather.ao_count.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "D1: drone AO count series present (0 until missions enqueued)."
+    },
+    {
+      "id": "fidelity.samples",
+      "path": "fidelity.samples",
+      "op": "gt",
+      "expect": 0,
+      "note": "PLAYCHECK-1: fidelity series collector ran."
+    },
+    {
+      "id": "fidelity.missile_dump_present",
+      "path": "fidelity.missile_dump_present.max",
+      "op": "gte",
+      "expect": 1,
+      "note": "PLAYCHECK-1: MissileSortieDump resource hooked."
+    },
+    {
+      "id": "fidelity.ballistic_flights_tracked",
+      "path": "fidelity.ballistic_flights.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "PLAYCHECK-1: BallisticFlightBook series present."
+    },
+    {
+      "id": "fidelity.blast_craters_tracked",
+      "path": "fidelity.blast_crater_tiles.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "PLAYCHECK-1: BlastCraterDump series present."
+    },
+    {
+      "id": "fidelity.audio_mix_requests_tracked",
+      "path": "fidelity.audio_mix_requests.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "PLAYCHECK-1: AudioMixFrame series present."
+    },
+    {
+      "id": "fidelity.truck_proxies_tracked",
+      "path": "fidelity.truck_proxies.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "PLAYCHECK-1: TruckPresentationIndex series present."
     },
     {
       "id": "perf.sampled",

@@ -18,7 +18,8 @@ pub fn advect_atmosphere_field(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
     sim_time: Res<SimTimeMicros>,
-    field: Res<WeatherField>,
+    // Bevy 0.20: missing Res panics — `If` skips this system when weather field absent (minimal test apps).
+    If(field): If<Res<WeatherField>>,
     mut stack: ResMut<AtmosphereClipmapStack>,
     mut diag: ResMut<AtmosphereDiagnostics>,
 ) {

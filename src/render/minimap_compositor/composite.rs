@@ -3,6 +3,7 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::math::{IVec2, UVec2};
 use bevy::prelude::*;
+use bevy::render::RenderApp;
 use bevy::render::extract_resource::ExtractResource;
 use bevy::render::render_resource::{
     Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
@@ -52,6 +53,7 @@ pub fn minimap_storage_rgba_image(width: u32, height: u32, label: &'static str) 
 }
 
 #[derive(Resource, Debug, Default, ExtractResource, Clone)]
+#[extract_app(RenderApp)]
 pub struct MinimapCompositeHeatTextures {
     pub terrain: Handle<Image>,
     pub fire: Handle<Image>,
@@ -80,6 +82,7 @@ pub struct MinimapCompositeParamsGpu {
 }
 
 #[derive(Resource, Debug, Default, ExtractResource, Clone)]
+#[extract_app(RenderApp)]
 pub struct MinimapCompositeDispatch {
     /// Monotonic stamp for render-world dedup (0 = idle). Replaces sticky `pending=true` overflow.
     pub commit_stamp: u64,

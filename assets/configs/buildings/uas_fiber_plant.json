@@ -1,0 +1,19 @@
+{
+    "asset_name": "UAS fiber plant",
+    "asset_type": "Building",
+    "segment": "Industrial",
+    "description": "Draws fiber optic spools for FPV / fiber-linked drones.",
+    "supply_chain": "uas_assembly",
+    "supply_chain_role": "uas_fiber",
+    "is_building": true,
+    "is_productive": true,
+    "building_size_x": 3,
+    "building_size_y": 2,
+    "building_height": 1,
+    "construction_cost": 1200,
+    "power_generation": 0,
+    "power_consumption": 22,
+    "produces_resources": ["fiber_spool_km"],
+    "consumes_resources": ["Chemicals", "Labour", "Electricity"],
+    "version": "1.0.0"
+}

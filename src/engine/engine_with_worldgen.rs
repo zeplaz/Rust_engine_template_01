@@ -38,6 +38,7 @@ use crate::render::{
 use crate::systems::{
     configure_chunk_environment_sets,
     AtmospherePlugin, ChunkEnvironmentPersistPlugin, ChunkSimLodPlugin, EcologyPlugin, FirePlugin,
+    SimAttentionPlugin,
     WeatherPlugin,
 };
 use crate::systems::terrain::MaterialUnificationPlugin;
@@ -126,6 +127,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(MapEditorPlugin)
             // Sim loop control (pause / step / speed / monotonic tick).
             .add_plugins(SimControlPlugin)
+            .add_plugins(SimAttentionPlugin)
             // Scenario script host (Wave 1): drains one step per frame before sim tick.
             .add_plugins(crate::sim::SimEffectsPlugin)
             .add_plugins(ScenarioScriptingPlugin);
@@ -241,6 +243,8 @@ impl Plugin for EnginePlugin {
         app.add_plugins(ViewportPipelinePlugin)
             .add_plugins(ViewRuntimePlugin)
             .add_plugins(ViewAuthorityPlugin)
+            .add_plugins(crate::audio::AudioMixPlugin)
+            .add_plugins(crate::presentation::PresentationAsmPlugin)
             .add_plugins(SharedOverlayFieldBuffersPlugin)
             .add_plugins(crate::gui::AiExplainabilityPlugin)
             .add_plugins(InGameHudPlugin)

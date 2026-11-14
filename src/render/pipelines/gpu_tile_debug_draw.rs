@@ -19,7 +19,7 @@ use bevy::render::{
         StencilState, StoreOp, TextureFormat, UniformBuffer, VertexState,
     },
     renderer::{RenderContext, RenderDevice, RenderQueue, ViewQuery},
-    view::{ExtractedView, Msaa, ViewDepthTexture, ViewTarget},
+    view::{ExtractedView, Msaa, ViewDepthStencilTexture, ViewTarget},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
@@ -125,12 +125,14 @@ fn init_tile_debug_instanced_pipeline(
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("vs_main")),
                     shader_defs: vec![],
+                    constants: vec![],
                     buffers: vec![],
                 },
                 fragment: Some(FragmentState {
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("fs_main")),
                     shader_defs: vec![],
+                    constants: vec![],
                     targets: vec![Some(ColorTargetState {
                         format: fmt,
                         blend: Some(BlendState::ALPHA_BLENDING),
@@ -233,7 +235,7 @@ fn tile_debug_instanced_pass(
         &ExtractedCamera,
         &ExtractedView,
         &ViewTarget,
-        &ViewDepthTexture,
+        &ViewDepthStencilTexture,
         &Msaa,
         Has<TileDebugRenderHost>,
     )>,

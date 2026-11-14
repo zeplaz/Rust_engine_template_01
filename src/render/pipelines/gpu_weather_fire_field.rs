@@ -18,6 +18,7 @@
 //!
 //! This is **not** gameplay state; do not sample into sim without explicit readback.
 
+
 use std::borrow::Cow;
 
 use bevy::{
@@ -77,6 +78,7 @@ impl Default for WeatherFireFieldDebugOverlay {
 }
 
 #[derive(Resource, Clone, ExtractResource, ShaderType)]
+#[extract_app(RenderApp)]
 pub struct WeatherFireFieldUniforms {
     /// rain, snow, fire_heat_mean, fog
     pub means: Vec4,
@@ -115,6 +117,7 @@ impl Default for WeatherFireFieldUniforms {
 }
 
 #[derive(Resource, Clone, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct WeatherFireFieldTextures {
     pub texture_a: Handle<Image>,
     pub texture_b: Handle<Image>,

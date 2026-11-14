@@ -8,6 +8,7 @@ use std::borrow::Cow;
 use bevy::asset::AssetServer;
 use bevy::core_pipeline::{core_2d::CORE_2D_DEPTH_FORMAT, Core2d};
 use bevy::prelude::*;
+
 use bevy::render::{
     camera::ExtractedCamera,
     extract_resource::{ExtractResource, ExtractResourcePlugin},
@@ -22,7 +23,7 @@ use bevy::render::{
         StencilFaceState, StencilState, StoreOp, TextureFormat, UniformBuffer, VertexState,
     },
     renderer::{RenderContext, RenderDevice, RenderQueue, ViewQuery},
-    view::{ExtractedView, Msaa, ViewDepthTexture, ViewTarget},
+    view::{ExtractedView, Msaa, ViewDepthStencilTexture, ViewTarget},
     Render, RenderApp, RenderStartup, RenderSystems,
 };
 
@@ -59,6 +60,7 @@ fn msaa_index(samples: u32) -> usize {
 
 /// Main-world draw intent / evidence for witnesses (single Update writer).
 #[derive(Resource, Clone, Copy, Debug, Default, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct WeatherPrecipDrawStatus {
     pub upload_active: bool,
     pub draw_instances: u32,
@@ -67,6 +69,7 @@ pub struct WeatherPrecipDrawStatus {
 
 /// Extracted globals for the precip raster pass.
 #[derive(Resource, Clone, Copy, Debug, Default, ExtractResource, ShaderType)]
+#[extract_app(RenderApp)]
 pub struct WeatherPrecipDrawGlobals {
     pub view_proj: Mat4,
     pub instance_count: u32,
@@ -79,8 +82,8 @@ pub struct WeatherPrecipDrawGlobals {
     /// W3 sim wind (m/s) for streak lean.
     pub wind_mps_x: f32,
     pub wind_mps_y: f32,
+    /// Pad to 16-byte uniform stride (96 bytes total with `view_proj`).
     pub _pad0: f32,
-    pub _pad1: f32,
 }
 
 #[derive(Resource)]
@@ -185,7 +188,6 @@ fn sync_weather_precip_draw_globals(
         wind_mps_x: frame.wind_mps.x,
         wind_mps_y: frame.wind_mps.y,
         _pad0: 0.0,
-        _pad1: 0.0,
     };
 }
 
@@ -278,12 +280,14 @@ fn init_weather_precip_pipeline(
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("vs_main")),
                     shader_defs: vec![],
+                    constants: vec![],
                     buffers: vec![],
                 },
                 fragment: Some(FragmentState {
                     shader: shader.clone(),
                     entry_point: Some(Cow::Borrowed("fs_main")),
                     shader_defs: vec![],
+                    constants: vec![],
                     targets: vec![Some(ColorTargetState {
                         format: fmt,
                         blend: Some(BlendState {
@@ -401,7 +405,7 @@ fn weather_precip_pass(
         &ExtractedCamera,
         &ExtractedView,
         &ViewTarget,
-        &ViewDepthTexture,
+        &ViewDepthStencilTexture,
         &Msaa,
         Has<TileDebugRenderHost>,
     )>,

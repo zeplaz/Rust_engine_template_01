@@ -77,12 +77,21 @@ pub const RESOURCE_AFTER_TICKS: u64 = 30;
 pub fn auto_supply_unserved_system(
     policy: Res<AutoSupplyPolicy>,
     snapshot: Res<LogisticsOrdersSnapshotRes>,
+    attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
     mut requests: MessageWriter<LogisticsOrderRequest>,
     mut last_pass: Local<u64>,
     mut empty_since: Local<std::collections::BTreeMap<OrderId, u64>>,
 ) {
     let snap = &snapshot.0;
-    if snap.tick < *last_pass + policy.interval_ticks.max(1) {
+    // FIDELITY-1 B6: stretch auto-supply cadence when player theater is Aggregate.
+    let interval_mul: u64 = attention.as_ref().map_or(1, |a| {
+        if a.player_theater_active {
+            1
+        } else {
+            2
+        }
+    });
+    if snap.tick < *last_pass + policy.interval_ticks.max(1).saturating_mul(interval_mul) {
         return;
     }
     *last_pass = snap.tick;

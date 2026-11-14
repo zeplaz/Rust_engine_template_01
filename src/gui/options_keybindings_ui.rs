@@ -1,6 +1,7 @@
 //! **Options → Key bindings** Bevy window (`InputBindings` defaults: F1 opens this panel).
 
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 
 use super::input_bindings::InputBindings;

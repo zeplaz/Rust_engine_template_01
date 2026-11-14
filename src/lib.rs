@@ -7,11 +7,13 @@
 
 // Core modules
 pub mod ai;
-pub mod core;
-pub mod events;
-pub mod engine;
-pub mod entities;
-pub mod gui;
+    pub mod audio;
+    pub mod core;
+    pub mod events;
+    pub mod engine;
+    pub mod entities;
+    pub mod gui;
+    pub mod presentation;
 pub mod io;
 pub mod compute;
 pub mod render;

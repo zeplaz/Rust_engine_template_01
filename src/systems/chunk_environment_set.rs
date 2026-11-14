@@ -6,6 +6,7 @@
 
 use bevy::prelude::*;
 
+use crate::systems::sim_attention::AttentionSet;
 use crate::systems::sim_control::SimControlSystemSet;
 
 /// Fixed ordering after [`SimControlSystemSet::AdvanceSimTick`] for chunk fields that feed each other.
@@ -19,11 +20,15 @@ pub enum ChunkEnvironmentSet {
 }
 
 /// Call from the root engine plugin after `SimControlPlugin`.
+/// Lod runs **after** [`AttentionSet::Build`] when attention is configured (Slice A3).
 pub fn configure_chunk_environment_sets(app: &mut App) {
     app.configure_sets(
         Update,
         (
-            ChunkEnvironmentSet::Lod.after(SimControlSystemSet::AdvanceSimTick),
+            AttentionSet::Build.after(SimControlSystemSet::AdvanceSimTick),
+            ChunkEnvironmentSet::Lod
+                .after(SimControlSystemSet::AdvanceSimTick)
+                .after(AttentionSet::Build),
             ChunkEnvironmentSet::Weather.after(ChunkEnvironmentSet::Lod),
             ChunkEnvironmentSet::Ecology.after(ChunkEnvironmentSet::Weather),
             ChunkEnvironmentSet::Fire.after(ChunkEnvironmentSet::Ecology),

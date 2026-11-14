@@ -35,6 +35,7 @@ pub use transport_io::{
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
 use bevy::math::IVec2;
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::render::render_resource::{
     Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsages,
 };
@@ -87,7 +88,7 @@ fn on_enter_editor(
     *ghost = RoadAuthoringGhostPreview::default();
     *road_drag = MapEditorRoadDragState::default();
     minimap_dirty.bump();
-    NextState::set_if_neq(&mut *next_sub, InGameEditorState::Select);
+    NextState::set_if_different(&mut *next_sub, InGameEditorState::Select);
 }
 
 /// Last-hovered tile from the minimap (`None` = off-map or not over minimap).

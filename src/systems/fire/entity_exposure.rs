@@ -1,0 +1,446 @@
+//! FIRE-ENTITY-1 — site fire stages from [`ChunkFireOverlay`] heat.
+//!
+//! Sole writer of [`SiteFireState`] / [`FormationFireExposure`] (stamp). Collapse enqueues
+//! [`FireCollapseQueue`] for the construction demolish funnel (no parallel despawn).
+
+use std::collections::{HashMap, HashSet};
+
+use bevy::prelude::*;
+
+use crate::combat::balance::UnitKind;
+use crate::combat::formation::Formation;
+use crate::construction::execute_demolish_at_tile;
+use crate::economy::activation::BuildingDefinitionRef;
+use crate::entities::production::core::ManufacturingNode;
+use crate::strategic::{
+    BuildSiteTile, ConstructionSite, PlannedSite, SiteFootprint, TileOccupationBook,
+};
+use crate::systems::sim_control::SimControlState;
+use crate::systems::weather::ChunkWeather;
+use crate::terrain::fire::{
+    profile_for_site_archetype, unit_fire_susceptibility, StructureFireProfile,
+};
+use crate::terrain::generation::{tile_to_chunk_coord, Chunk, ChunkCellMatrix};
+
+use super::cell_spread::RAIN_BLOCKS_SPREAD_MM_H;
+use super::types::ChunkFireOverlay;
+
+/// Burn / exposure stage for one construction site.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub enum SiteFireStage {
+    #[default]
+    Clear,
+    Threatened,
+    Disrupted,
+    Deteriorating,
+    Collapsing,
+}
+
+impl SiteFireStage {
+    #[must_use]
+    pub const fn ops_mul(self) -> f32 {
+        match self {
+            Self::Clear | Self::Threatened => 1.0,
+            Self::Disrupted => 0.65,
+            Self::Deteriorating => 0.35,
+            Self::Collapsing => 0.0,
+        }
+    }
+
+    /// 0..1 wash strength for presentation burn overlay.
+    #[must_use]
+    pub const fn burn_wash01(self) -> f32 {
+        match self {
+            Self::Clear => 0.0,
+            Self::Threatened => 0.18,
+            Self::Disrupted => 0.4,
+            Self::Deteriorating => 0.72,
+            Self::Collapsing => 1.0,
+        }
+    }
+}
+
+/// Per-site fire exposure (component on the construction site entity).
+#[derive(Component, Clone, Debug)]
+pub struct SiteFireState {
+    pub stage: SiteFireStage,
+    /// 1 = intact, 0 = ready to collapse.
+    pub integrity: f32,
+    pub heat_mean: f32,
+    pub suppression: bool,
+    pub profile: StructureFireProfile,
+}
+
+impl Default for SiteFireState {
+    fn default() -> Self {
+        Self {
+            stage: SiteFireStage::Clear,
+            integrity: 1.0,
+            heat_mean: 0.0,
+            suppression: false,
+            profile: profile_for_site_archetype(crate::strategic::SiteArchetype::CivilHousing),
+        }
+    }
+}
+
+/// Heat stamp on a formation — resolve is the sole strength/morale writer.
+#[derive(Component, Clone, Copy, Debug, Default)]
+pub struct FormationFireExposure {
+    pub heat: f32,
+    pub suscept: f32,
+}
+
+impl FormationFireExposure {
+    #[must_use]
+    pub fn exposure(self) -> f32 {
+        (self.heat * self.suscept).clamp(0.0, 1.0)
+    }
+}
+
+/// Sites that reached collapse this tick — processed by [`apply_fire_collapse_demolish`].
+#[derive(Resource, Default, Debug)]
+pub struct FireCollapseQueue {
+    pub tiles: Vec<BuildSiteTile>,
+    pub collapsed: u64,
+}
+
+/// Dump / matrix counters.
+#[derive(Resource, Default, Debug, Clone)]
+pub struct FireEntityExposureStats {
+    pub sites_threatened: u32,
+    pub sites_disrupted: u32,
+    pub sites_deteriorating: u32,
+    pub sites_collapsed_to_fire: u64,
+    pub formations_exposed: u32,
+    pub formation_heat_sum: f32,
+    pub vehicles_delayed: u64,
+    pub vehicles_lost_to_fire: u64,
+    pub cargo_lost_to_fire: u64,
+}
+
+/// Presentation-only footprint wash (tile → 0..1). Written from [`SiteFireState`]; never writes sim.
+#[derive(Resource, Default, Debug, Clone)]
+pub struct SiteBurnWashFrame {
+    pub tiles: HashMap<IVec2, f32>,
+}
+
+/// Sample overlay heat (+ rain mm/h) at a world tile.
+#[must_use]
+pub fn sample_heat_at_tile(
+    by_chunk: &HashMap<IVec2, (UVec2, &[f32], f32)>,
+    tile: IVec2,
+) -> (f32, f32) {
+    if tile.x < 0 || tile.y < 0 {
+        return (0.0, 0.0);
+    }
+    let tx = tile.x as u32;
+    let tz = tile.y as u32;
+    for (&coord, &(size, heat, rain)) in by_chunk {
+        let cw = size.x.max(1);
+        let ch = size.y.max(1);
+        let c = tile_to_chunk_coord(tx, tz, size);
+        if c != coord {
+            continue;
+        }
+        let lx = tx % cw;
+        let lz = tz % ch;
+        let i = (lz * cw + lx) as usize;
+        let h = heat.get(i).copied().unwrap_or(0.0);
+        return (h, rain);
+    }
+    (0.0, 0.0)
+}
+
+/// Build heat index from chunk overlays (borrowed heat slices).
+pub fn build_heat_index<'a>(
+    q: impl Iterator<
+        Item = (
+            &'a Chunk,
+            &'a ChunkCellMatrix,
+            &'a ChunkFireOverlay,
+            Option<&'a ChunkWeather>,
+        ),
+    >,
+) -> HashMap<IVec2, (UVec2, &'a [f32], f32)> {
+    let mut map = HashMap::new();
+    for (chunk, matrix, ovl, wx) in q {
+        let n = (matrix.size.x * matrix.size.y) as usize;
+        if ovl.heat.len() != n {
+            continue;
+        }
+        let rain = wx.map(|w| w.rain_mm_h).unwrap_or(0.0);
+        map.insert(chunk.coord, (matrix.size, ovl.heat.as_slice(), rain));
+    }
+    map
+}
+
+/// World xz (gameplay metres) → approximate world tile for heat sample.
+#[must_use]
+pub fn xz_to_world_tile(xz: Vec2) -> IVec2 {
+    let m = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
+    IVec2::new((xz.x / m).floor() as i32, (xz.y / m).floor() as i32)
+}
+
+pub fn ensure_site_fire_state(
+    mut commands: Commands,
+    q: Query<(Entity, &PlannedSite), (With<ConstructionSite>, Without<SiteFireState>)>,
+) {
+    for (e, planned) in &q {
+        commands.entity(e).insert(SiteFireState {
+            profile: profile_for_site_archetype(planned.archetype),
+            ..Default::default()
+        });
+    }
+}
+
+pub fn ensure_formation_fire_exposure(
+    mut commands: Commands,
+    q: Query<(Entity, &Formation), Without<FormationFireExposure>>,
+) {
+    for (e, f) in &q {
+        commands.entity(e).insert(FormationFireExposure {
+            heat: 0.0,
+            suscept: unit_fire_susceptibility(f.kind),
+        });
+    }
+}
+
+/// Sole writer of [`SiteFireState`] (except despawn on collapse).
+pub fn site_fire_exposure_tick(
+    ctrl: Res<SimControlState>,
+    time: Res<Time>,
+    mut stats: ResMut<FireEntityExposureStats>,
+    mut collapse: ResMut<FireCollapseQueue>,
+    chunks: Query<(
+        &Chunk,
+        &ChunkCellMatrix,
+        &ChunkFireOverlay,
+        Option<&ChunkWeather>,
+    )>,
+    mut sites: Query<(&SiteFootprint, &PlannedSite, &mut SiteFireState)>,
+) {
+    if !ctrl.should_tick() {
+        return;
+    }
+    let dt = time.delta_secs() * ctrl.dt_scale();
+    if dt <= 0.0 {
+        return;
+    }
+    let index = build_heat_index(chunks.iter());
+    stats.sites_threatened = 0;
+    stats.sites_disrupted = 0;
+    stats.sites_deteriorating = 0;
+
+    for (footprint, planned, mut state) in &mut sites {
+        state.profile = profile_for_site_archetype(planned.archetype);
+        let mut heat_sum = 0.0f32;
+        let mut rain_max = 0.0f32;
+        let mut n = 0u32;
+        for &tile in &footprint.tiles {
+            let (h, rain) = sample_heat_at_tile(&index, tile);
+            heat_sum += h;
+            rain_max = rain_max.max(rain);
+            n += 1;
+        }
+        let heat = if n > 0 {
+            heat_sum / n as f32
+        } else {
+            0.0
+        };
+        state.heat_mean = heat;
+        state.suppression = rain_max >= RAIN_BLOCKS_SPREAD_MM_H;
+
+        let ignite = (1.0 - state.profile.ignition_resistance).clamp(0.05, 1.0);
+        let threat_gate = 0.06 * (0.4 + ignite);
+        let disrupt_gate = 0.14 * (0.5 + ignite * 0.5);
+
+        if heat >= disrupt_gate && !state.suppression {
+            let rate = state.profile.fuel_load.max(0.2)
+                * ignite
+                * (heat - disrupt_gate * 0.5).max(0.0)
+                * 0.08;
+            state.integrity = (state.integrity - rate * dt).clamp(0.0, 1.0);
+        } else if heat < threat_gate && state.suppression {
+            state.integrity = (state.integrity + 0.02 * dt).min(1.0);
+        } else if heat < threat_gate * 0.5 {
+            state.integrity = (state.integrity + 0.01 * dt).min(1.0);
+        }
+
+        let collapse_bar = state.profile.collapse_threshold.clamp(0.05, 0.5);
+        state.stage = if state.integrity <= collapse_bar && heat >= disrupt_gate && !state.suppression
+        {
+            SiteFireStage::Collapsing
+        } else if state.integrity < 0.85 && heat >= disrupt_gate {
+            SiteFireStage::Deteriorating
+        } else if heat >= disrupt_gate {
+            SiteFireStage::Disrupted
+        } else if heat >= threat_gate {
+            SiteFireStage::Threatened
+        } else if state.integrity >= 0.98 {
+            SiteFireStage::Clear
+        } else {
+            SiteFireStage::Disrupted
+        };
+
+        match state.stage {
+            SiteFireStage::Threatened => {
+                stats.sites_threatened = stats.sites_threatened.saturating_add(1);
+            }
+            SiteFireStage::Disrupted => {
+                stats.sites_disrupted = stats.sites_disrupted.saturating_add(1);
+            }
+            SiteFireStage::Deteriorating | SiteFireStage::Collapsing => {
+                stats.sites_deteriorating = stats.sites_deteriorating.saturating_add(1);
+            }
+            _ => {}
+        }
+
+        if state.stage == SiteFireStage::Collapsing {
+            if let Some(&tile) = footprint.tiles.first() {
+                collapse.tiles.push(BuildSiteTile {
+                    x: tile.x.max(0) as u32,
+                    z: tile.y.max(0) as u32,
+                });
+            }
+        }
+    }
+}
+
+/// Stamp [`FormationFireExposure`] from overlay heat (resolve reads; does not write strength).
+pub fn stamp_formation_fire_exposure(
+    ctrl: Res<SimControlState>,
+    mut stats: ResMut<FireEntityExposureStats>,
+    chunks: Query<(
+        &Chunk,
+        &ChunkCellMatrix,
+        &ChunkFireOverlay,
+        Option<&ChunkWeather>,
+    )>,
+    mut q: Query<(&Formation, &mut FormationFireExposure)>,
+) {
+    if !ctrl.should_tick() {
+        return;
+    }
+    let index = build_heat_index(chunks.iter());
+    stats.formations_exposed = 0;
+    stats.formation_heat_sum = 0.0;
+    for (f, mut exp) in &mut q {
+        let (heat, _) = sample_heat_at_tile(&index, f.tile);
+        exp.heat = heat;
+        exp.suscept = unit_fire_susceptibility(f.kind);
+        if heat >= 0.08 {
+            stats.formations_exposed = stats.formations_exposed.saturating_add(1);
+            stats.formation_heat_sum += heat;
+        }
+    }
+}
+
+/// Drain [`FireCollapseQueue`] through the existing demolish execute funnel.
+pub fn apply_fire_collapse_demolish(
+    mut commands: Commands,
+    mut queue: ResMut<FireCollapseQueue>,
+    mut stats: ResMut<FireEntityExposureStats>,
+    mut occupation: Option<ResMut<TileOccupationBook>>,
+    sites: Query<(
+        Entity,
+        &ConstructionSite,
+        &PlannedSite,
+        &SiteFootprint,
+        Option<&BuildingDefinitionRef>,
+    )>,
+) {
+    if queue.tiles.is_empty() {
+        return;
+    }
+    let tiles = std::mem::take(&mut queue.tiles);
+    let mut seen = HashSet::new();
+    for tile in tiles {
+        let key = (tile.x, tile.z);
+        if !seen.insert(key) {
+            continue;
+        }
+        let (n, _) = execute_demolish_at_tile(
+            &mut commands,
+            tile,
+            &sites,
+            occupation.as_deref_mut(),
+        );
+        if n > 0 {
+            queue.collapsed = queue.collapsed.saturating_add(u64::from(n));
+            stats.sites_collapsed_to_fire =
+                stats.sites_collapsed_to_fire.saturating_add(u64::from(n));
+        }
+    }
+}
+
+/// Derate plant throughput from [`SiteFireState`] (after MFG tick).
+pub fn apply_site_fire_ops_derate(
+    mut q: Query<(&SiteFireState, &mut ManufacturingNode)>,
+) {
+    for (fire, mut node) in &mut q {
+        let mul = fire.stage.ops_mul();
+        if mul < 1.0 {
+            node.current_throughput *= mul;
+        }
+    }
+}
+
+/// Presentation: copy footprint wash strengths for raster / stamps.
+pub fn sync_site_burn_wash_frame(
+    mut frame: ResMut<SiteBurnWashFrame>,
+    sites: Query<(&SiteFootprint, &SiteFireState)>,
+) {
+    frame.tiles.clear();
+    for (fp, state) in &sites {
+        let wash = state.stage.burn_wash01();
+        if wash <= 0.0 {
+            continue;
+        }
+        for &tile in &fp.tiles {
+            let e = frame.tiles.entry(tile).or_insert(0.0);
+            *e = (*e).max(wash);
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::strategic::SiteArchetype;
+    use crate::terrain::fire::profile_for_site_archetype;
+
+    #[test]
+    fn wood_loses_integrity_faster_than_concrete_under_same_heat() {
+        let wood = profile_for_site_archetype(SiteArchetype::CivilHousing);
+        let concrete = profile_for_site_archetype(SiteArchetype::MilitaryBase);
+        let heat = 0.5f32;
+        let wood_ign = 1.0 - wood.ignition_resistance;
+        let conc_ign = 1.0 - concrete.ignition_resistance;
+        let wood_rate = wood.fuel_load * wood_ign * heat * 0.08;
+        let conc_rate = concrete.fuel_load * conc_ign * heat * 0.08;
+        assert!(
+            wood_rate > conc_rate * 1.5,
+            "wood {wood_rate} concrete {conc_rate}"
+        );
+    }
+
+    #[test]
+    fn stage_ops_mul_monotone() {
+        assert!(SiteFireStage::Clear.ops_mul() > SiteFireStage::Disrupted.ops_mul());
+        assert!(SiteFireStage::Disrupted.ops_mul() > SiteFireStage::Deteriorating.ops_mul());
+        assert_eq!(SiteFireStage::Collapsing.ops_mul(), 0.0);
+    }
+
+    #[test]
+    fn infantry_exposure_higher_than_armor() {
+        let inf = FormationFireExposure {
+            heat: 0.5,
+            suscept: unit_fire_susceptibility(UnitKind::Infantry),
+        };
+        let armor = FormationFireExposure {
+            heat: 0.5,
+            suscept: unit_fire_susceptibility(UnitKind::Armor),
+        };
+        assert!(inf.exposure() > armor.exposure());
+    }
+}

@@ -17,7 +17,9 @@ pub use manufacturing::{
     BUFFER_TAG_MINE_UNIT, MFG_DRAGON_TEETH_V1, MFG_MINE_UNIT_V1,
 };
 pub use manufacturing_plugin::{
-    manufacturing_blueprint_id_for_catalog, manufacturing_deployable_bundle,
+    catalog_id_allows_manufacturing_node, catalog_is_discrete_mfg_plant,
+    manufacturing_blueprint_id_for_catalog, manufacturing_bundle_for_catalog,
+    manufacturing_deployable_bundle,
     manufacturing_node_for_catalog, tick_manufacturing_nodes, ManufacturingBlueprintRegistry,
     ManufacturingCorePlugin,
 };

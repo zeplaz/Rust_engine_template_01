@@ -6,9 +6,11 @@ use std::collections::HashMap;
 
 use bevy::math::IVec2;
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 use bevy::render::render_resource::BufferUsages;
-use bevy::render::{Render, RenderApp, RenderSystems};
+use bevy::render::{Render, RenderSystems};
 use bevy::render::renderer::{RenderDevice, RenderQueue};
 use bytemuck::{Pod, Zeroable};
 
@@ -58,6 +60,7 @@ impl From<HeatDiffusionCell> for HeatDiffusionGpuCell {
 
 /// Compute-owned ping-pong field; render world reads via extract + registry upload.
 #[derive(Resource, Clone, Debug, Default, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct HeatDiffusionFieldBuffers {
     pub stamp: SimStepStamp,
     pub source_stamp: SimStepStamp,
@@ -257,7 +260,12 @@ pub fn advance_heat_diffusion_field(
         return;
     }
     let fallback = ctx.lod.global_band();
-    let eligible = eligible_fire_rows(ctx.fire, ctx.lod_map, fallback, ctx.policy);
+    let mut eligible = eligible_fire_rows(ctx.fire, ctx.lod_map, fallback, ctx.policy);
+    // FIDELITY-1 B6: soft path/nav budget from SimAttentionFrame.
+    let budget = ctx.path_budget.max(1) as usize;
+    if eligible.len() > budget {
+        eligible.truncate(budget);
+    }
     if eligible.is_empty() && field.read_cells().is_empty() {
         field.active_cell_count = 0;
         field.source_stamp = ctx.fire.stamp;
@@ -411,6 +419,7 @@ mod tests {
             agents: &crate::compute::AgentFrame::default(),
             navigation: &crate::compute::NavFieldFrame::default(),
             fire: &fire,
+            path_budget: 64,
         };
         advance_heat_diffusion_field(&mut field, &ctx, true);
         assert_eq!(field.generation, 1);

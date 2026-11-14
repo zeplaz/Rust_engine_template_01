@@ -7,6 +7,7 @@
 
 pub mod advisor;
 pub mod auto_supply;
+pub mod cargo_registry;
 pub mod construction_demand;
 pub mod fleet_growth;
 pub mod model;
@@ -16,12 +17,26 @@ pub mod plugin;
 pub mod sim;
 pub mod snapshot;
 pub mod travel;
+pub mod haul_amplify;
+pub mod vehicle_fire;
+pub mod weather_haul;
 
 #[cfg(test)]
 mod tests;
 
+pub use haul_amplify::{
+    haul_capacity_mul_by_owner, unit_kind_haul_capacity_mul, sync_haul_amplify_mul_system,
+};
+pub use weather_haul::{weather_haul_speed_mul, HaulWeatherDump};
+
 pub use auto_supply::{auto_supply_unserved_system, AutoSupplyPolicy};
-pub use fleet_growth::{grow_depot_fleets_system, FleetGrowthPolicy, VehicleRecipe};
+pub use cargo_registry::{
+    cargo_tag_known, load_cargo_kind_registry, CargoKindRegistry, RegisteredCargoKind, CARGO_KINDS_RON,
+};
+pub use fleet_growth::{
+    grow_depot_fleets_system, recipe_costs_in_registry, saturated_recipe, FleetGrowthPolicy,
+    VehicleRecipe,
+};
 pub use advisor::{best_source_for, suggest_lines_for_unserved, AdvisorGap, SupplyAdvice};
 pub use model::*;
 pub use persistence::{LogisticsOrdersSave, SavedSite};

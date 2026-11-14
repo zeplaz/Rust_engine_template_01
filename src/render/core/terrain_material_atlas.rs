@@ -3,6 +3,8 @@
 use bevy::asset::RenderAssetUsages;
 use bevy::image::{ImageFilterMode, ImageSampler, ImageSamplerDescriptor};
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 use bevy::render::extract_resource::{ExtractResource, ExtractResourcePlugin};
 use bevy::render::render_resource::{Extent3d, TextureDimension, TextureFormat, TextureUsages};
 
@@ -13,6 +15,7 @@ const ATLAS_TILE_PX: u32 = 8;
 
 /// GPU terrain material atlas — one cell per material id (stable sort by id).
 #[derive(Resource, Clone, Debug, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct TerrainMaterialAtlasGpu {
     pub image: Handle<Image>,
     pub revision: u64,

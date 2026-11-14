@@ -245,6 +245,9 @@ pub fn dig_in_system(clock: Res<CombatClock>, balance: Res<FrontBalance>, mut fo
 pub fn sync_formation_zones_system(
     mut commands: Commands,
     balance: Res<FrontBalance>,
+    field: Option<Res<crate::systems::weather::WeatherField>>,
+    sim_time: Option<Res<crate::systems::sim_control::SimTimeMicros>>,
+    mut arty_dump: Option<ResMut<super::weather::ArtilleryWeatherDump>>,
     mut controls: Query<(&Formation, &mut Zone)>,
     mut fires: Query<(Entity, &FormationFireZone, &mut Zone), Without<Formation>>,
     formations: Query<&Formation>,
@@ -263,8 +266,38 @@ pub fn sync_formation_zones_system(
             }
             continue;
         };
-        let range_tiles = balance.metres_to_tiles(balance.unit(f.kind).range_m) * balance.combat.fire_zone_range_fraction;
-        z.center_tile = f.tile;
+        let profile = balance.unit(f.kind);
+        let mut range_tiles =
+            balance.metres_to_tiles(profile.range_m) * balance.combat.fire_zone_range_fraction;
+        let mut center = f.tile;
+        if let Some(field) = field.as_ref().filter(|f| f.is_ready()) {
+            let t = sim_time
+                .as_deref()
+                .copied()
+                .unwrap_or(crate::systems::sim_control::SimTimeMicros(field.prev_micros));
+            let pos_m = f.tile.as_vec2() * balance.tile_size_m();
+            let sample = field.sample(pos_m, t);
+            let facing = f
+                .target
+                .map(|tgt| (tgt - f.tile).as_vec2())
+                .unwrap_or(Vec2::X);
+            // Flight time proxy: range / muzzle-ish speed (~400 m/s shell).
+            let flight_s = (profile.range_m / 400.0).clamp(2.0, 30.0);
+            let (offset, radius_mul) = super::weather::artillery_weather_stamp(
+                &sample,
+                facing,
+                profile.wind_drift_coef,
+                profile.max_wind_mps,
+                balance.tile_size_m(),
+                flight_s,
+            );
+            center += offset;
+            range_tiles *= radius_mul;
+            if let Some(dump) = arty_dump.as_mut() {
+                dump.record(offset, radius_mul);
+            }
+        }
+        z.center_tile = center;
         z.faction_slot = f.faction_slot;
         z.radius_tiles = range_tiles.max(1.0);
         // No ammunition, no fire.

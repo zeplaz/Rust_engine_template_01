@@ -38,6 +38,32 @@ impl ConstructionIsoDrawScale {
 
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
 
+    #[test]
+    fn default_in_designer_band() {
+        let s = ConstructionIsoDrawScale::default();
+        assert!(s.multiplier >= ISO_DRAW_SCALE_MIN);
+        assert!(s.multiplier <= ISO_DRAW_SCALE_MAX);
+    }
+
+    #[test]
+    fn clamp_holds_band() {
+        assert_eq!(
+            ConstructionIsoDrawScale::clamped(0.1).multiplier,
+            ISO_DRAW_SCALE_MIN
+        );
+        assert_eq!(
+            ConstructionIsoDrawScale::clamped(9.0).multiplier,
+            ISO_DRAW_SCALE_MAX
+        );
+    }
+
+    #[test]
+    fn visual_scale_is_xz_only() {
+        let v = ConstructionIsoDrawScale::default().visual_scale_vec3();
+        assert!((v.y - 1.0).abs() < 1e-5);
+        assert!((v.x - v.z).abs() < 1e-5);
+        assert!(v.x > 1.0);
+    }
 }

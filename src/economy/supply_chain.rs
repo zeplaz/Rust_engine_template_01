@@ -262,8 +262,16 @@ pub fn insert_supply_chain_runtime(commands: &mut Commands, entity: Entity, def:
                 electrical,
             ));
         }
-        IndustrialSupplyChainRole::MaterialsProducer => {
-            // No dedicated runtime: output comes from the flow node built from the catalog row.
+        IndustrialSupplyChainRole::MaterialsProducer
+        | IndustrialSupplyChainRole::OilWell
+        | IndustrialSupplyChainRole::FuelRefinery
+        | IndustrialSupplyChainRole::UasBattery
+        | IndustrialSupplyChainRole::UasFiber
+        | IndustrialSupplyChainRole::UasFinalAssembly
+        | IndustrialSupplyChainRole::MissileSeeker
+        | IndustrialSupplyChainRole::MissileWarhead
+        | IndustrialSupplyChainRole::MissileBodyPlant => {
+            // Flow and/or ManufacturingNode drive output; no dedicated role runtime.
             commands.entity(entity).insert((building, electrical));
         }
         IndustrialSupplyChainRole::AluminumFabrication => {
@@ -317,6 +325,24 @@ mod tests {
                 "{id} should resolve a role"
             );
             assert!(d.power_consumption > 0.0, "{id} needs power_consumption");
+        }
+    }
+
+    #[test]
+    fn missile_assembly_catalog_resolves_roles() {
+        let reg = load_building_definitions_from_dir(default_buildings_dir());
+        for (id, role) in [
+            ("missile_seeker_plant", IndustrialSupplyChainRole::MissileSeeker),
+            ("missile_warhead_plant", IndustrialSupplyChainRole::MissileWarhead),
+            ("missile_body_plant", IndustrialSupplyChainRole::MissileBodyPlant),
+        ] {
+            let d = reg.get(id).expect(id);
+            assert_eq!(
+                IndustrialSupplyChainRole::resolve(d.id.as_str(), d.supply_chain_role),
+                Some(role)
+            );
+            assert_eq!(d.supply_chain.as_deref(), Some("missile_assembly"));
+            assert!(d.power_consumption > 0.0, "{id} needs power");
         }
     }
 

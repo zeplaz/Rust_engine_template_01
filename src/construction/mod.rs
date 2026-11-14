@@ -47,7 +47,10 @@ mod construction_queue_intent;
 mod corridor_transport;
 mod defense_concrete_stock;
 mod defense_staging_stock;
+mod blast;
+mod blast_present;
 mod demolish;
+pub use demolish::execute_demolish_at_tile;
 pub(crate) mod ghost_visual;
 mod grammar_labels;
 mod history;
@@ -185,6 +188,10 @@ pub use grammar_labels::{
     human_age_label, human_archetype_label, human_district_label,
     human_massing_label,
 };
+pub use blast::{
+    BlastCraterBook, BlastIntent, BlastIntentQueue, ConstructionBlastPlugin,
+};
+pub use blast_present::BlastCraterDump;
 pub use hydro_coupling::{
     construction_hydro_coupling_witness_green, emit_construction_hydro_dirty,
     emit_road_execute_hydro_dirty, emit_site_execute_hydro_dirty, };
@@ -297,6 +304,7 @@ impl Plugin for BuildPlanningPlugin {
 
         app.insert_resource(BuildCommandActor(owner))
             .add_plugins(SiteStageTickPlugin)
+            .add_plugins(ConstructionBlastPlugin)
             .init_resource::<BuildStripState>()
             .init_resource::<ActiveBuildTool>()
             .init_resource::<BuildModeState>()

@@ -7,6 +7,7 @@ use std::collections::HashMap;
 
 use bevy::math::Vec4;
 use bevy::prelude::*;
+use bevy::render::RenderApp;
 use bevy::render::extract_resource::ExtractResource;
 use bytemuck::{Pod, Zeroable};
 
@@ -169,6 +170,7 @@ pub struct WaterParticleStats {
 
 /// CPU-side water particle snapshot (single upload spine — D-W10 A policy half).
 #[derive(Resource, Clone, Debug, Default, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct WorldWaterParticleFrame {
     pub anim_time_secs: f32,
     pub instances: Vec<GpuWaterParticleInstance>,

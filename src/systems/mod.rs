@@ -10,6 +10,7 @@ pub mod ecology;
 pub mod fire;
 pub mod navigation;
 pub mod production;
+pub mod sim_attention;
 pub mod sim_frame_delta;
 pub mod sim_control;
 pub mod terrain;
@@ -44,6 +45,9 @@ pub use chunk_environment_persist::{
 };
 pub use chunk_environment_set::configure_chunk_environment_sets;
 pub use chunk_sim_lod::{ChunkSimLod, ChunkSimLodPlugin};
+pub use sim_attention::{
+    AttentionSet, AttentionTier, SimAttentionFocus, SimAttentionFrame, SimAttentionPlugin,
+};
 pub use ecology::{
     chunk_ecology_tick, derive_vegetation_structure, integrate_vegetation_field_step,
     succession_stage_from_vegetation, ChunkEcology, EcologicalSuccessionStage, EcologyPlugin,

@@ -1,0 +1,96 @@
+// PLAN-PRODUCTION-RESTOCK-SPINE-v1 — TOE / restock lines per capability.
+// Runtime: `src/combat/capability_toe.rs`. UnitKind aggregate draws still live in front_balance_v1.ron.
+(
+    schema_version: 1,
+    table_id: "capability_toe_v1",
+    drone_roles: [
+        (
+            role: "FpvStrike",
+            toe_count: 4,
+            lines: [
+                (tag: "drone_airframe", qty: 1),
+                (tag: "drone_battery", qty: 1),
+            ],
+        ),
+        (
+            role: "ReconLoiter",
+            toe_count: 4,
+            lines: [
+                (tag: "drone_airframe", qty: 1),
+                (tag: "drone_battery", qty: 1),
+            ],
+        ),
+        (
+            role: "AttritCruise",
+            toe_count: 4,
+            lines: [
+                (tag: "drone_airframe", qty: 1),
+                (tag: "drone_battery", qty: 1),
+            ],
+        ),
+        (
+            role: "MedAttack",
+            toe_count: 4,
+            lines: [
+                (tag: "drone_airframe", qty: 1),
+                (tag: "drone_battery", qty: 1),
+            ],
+        ),
+        (
+            role: "Interceptor",
+            toe_count: 4,
+            lines: [
+                (tag: "drone_airframe", qty: 1),
+                (tag: "drone_battery", qty: 1),
+            ],
+        ),
+        (
+            role: "SwarmMember",
+            toe_count: 4,
+            lines: [
+                (tag: "drone_airframe", qty: 1),
+                (tag: "drone_battery", qty: 1),
+            ],
+        ),
+    ],
+    // Draw authority for ammo/Fuel/rations/engineering remains front_balance_v1.
+    // Personnel restock (P5) uses toe_personnel from that table via personnel_supply.
+    unit_kinds: [
+        (kind: "Infantry", notes: "front_balance draw_kg_per_s; personnel via toe_personnel"),
+        (kind: "Mechanized", notes: "front_balance draw_kg_per_s; personnel via toe_personnel"),
+        (kind: "Armor", notes: "front_balance draw_kg_per_s; personnel via toe_personnel"),
+        (kind: "Artillery", notes: "front_balance draw_kg_per_s; personnel via toe_personnel"),
+        (kind: "Recon", notes: "front_balance draw_kg_per_s; personnel via toe_personnel"),
+        (kind: "Engineer", notes: "front_balance draw_kg_per_s; personnel via toe_personnel"),
+        (kind: "AirDefense", notes: "front_balance draw; missile magazines P6 MissilePackage"),
+    ],
+    // P6 usable magazine rows (counts on MissilePackage / AirOpZone sorties).
+    missiles: [
+        (
+            class: "GenericCruise",
+            toe_count: 4,
+            lines: [
+                (tag: "missile_body", qty: 1),
+                (tag: "missile_warhead", qty: 1),
+                (tag: "missile_seeker", qty: 1),
+            ],
+        ),
+        (
+            class: "SamShort",
+            toe_count: 8,
+            lines: [
+                (tag: "missile_body", qty: 1),
+                (tag: "missile_seeker", qty: 1),
+            ],
+        ),
+        (
+            class: "SamMedium",
+            toe_count: 6,
+            lines: [
+                (tag: "missile_body", qty: 1),
+                (tag: "missile_warhead", qty: 1),
+                (tag: "missile_seeker", qty: 1),
+            ],
+        ),
+    ],
+)

@@ -238,7 +238,7 @@ fn bridge_ux_to_legacy(
         AppState::InGame | AppState::Paused => BaseState::Simulation,
         AppState::Shutdown => BaseState::Shutdown,
     };
-    NextState::set_if_neq(&mut *next_base, base);
+    NextState::set_if_different(&mut *next_base, base);
 
     let current_flow = *flow.get();
     let in_game_after_dismiss = latch.full_ready_dismissed
@@ -264,22 +264,22 @@ fn bridge_ux_to_legacy(
             next_flow.set(WorldGenFlowState::FullReady);
         }
     } else {
-        NextState::set_if_neq(&mut *next_flow, flow);
+        NextState::set_if_different(&mut *next_flow, flow);
     }
 
     match pause.get() {
         PauseState::Off => {
             pending.clear();
             if *app.get() != AppState::Paused {
-                NextState::set_if_neq(&mut *next_menu, InGameMenuState::Normal);
+                NextState::set_if_different(&mut *next_menu, InGameMenuState::Normal);
             }
         }
         PauseState::Menu => {
             pending.clear();
-            NextState::set_if_neq(&mut *next_menu, InGameMenuState::Pause);
+            NextState::set_if_different(&mut *next_menu, InGameMenuState::Pause);
         }
         PauseState::ConfirmExit => {
-            NextState::set_if_neq(&mut *next_menu, InGameMenuState::Pause);
+            NextState::set_if_different(&mut *next_menu, InGameMenuState::Pause);
         }
     }
 }
@@ -332,7 +332,7 @@ fn ux_on_enter_in_game(
     mut latch: ResMut<WorldGenChromeLatch>,
 ) {
     next_pause.set(PauseState::Off);
-    NextState::set_if_neq(&mut *next_base, BaseState::Simulation);
+    NextState::set_if_different(&mut *next_base, BaseState::Simulation);
     if matches!(*worldgen.get(), WorldGenState::FullReady) {
         next_wg.set(WorldGenState::Dismissed);
     }
@@ -374,7 +374,7 @@ pub fn ux_enter_world_from_world_gen(
     next_pause.set(PauseState::Off);
     next_app.set(AppState::InGame);
     next_wg.set(WorldGenState::Dismissed);
-    NextState::set_if_neq(next_base, BaseState::Simulation);
+    NextState::set_if_different(next_base, BaseState::Simulation);
 }
 
 /// FINISH-UX-03: FullReady → enter game + dismiss chrome (via Dismissed + existing OnEnter handlers).
@@ -534,7 +534,7 @@ pub fn ux_begin_world_gen_from_menu(
     latch.reset_for_new_flow();
     next_app.set(AppState::WorldGen);
     next_wg.set(WorldGenState::Preview);
-    NextState::set_if_neq(next_base, BaseState::Editor);
+    NextState::set_if_different(next_base, BaseState::Editor);
     next_flow.set(WorldGenFlowState::NewWorldSetup);
     world_gen_ui.visible = true;
     preview_ui.window_open = true;

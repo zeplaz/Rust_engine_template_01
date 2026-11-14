@@ -54,7 +54,7 @@ pub fn toggle_world_gen_ui_system(
     for _ in events.read() {
         let will_show = !(world_gen_ui_state.visible && preview_ui.window_open);
         if will_show && matches!(*flow.get(), WorldGenFlowState::Idle) {
-            NextState::set_if_neq(&mut *next_flow, WorldGenFlowState::NewWorldSetup);
+            NextState::set_if_different(&mut *next_flow, WorldGenFlowState::NewWorldSetup);
         }
         if will_show {
             open_world_gen_workspace(&mut world_gen_ui_state, &mut preview_ui);

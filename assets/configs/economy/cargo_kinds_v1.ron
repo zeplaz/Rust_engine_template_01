@@ -1,0 +1,52 @@
+// PLAN-PRODUCTION-RESTOCK-SPINE-v1 — authoritative CargoKind tag registry.
+// Runtime: `src/economy/logistics/orders/cargo_registry.rs`.
+// Unknown tags still classify via CargoKind::class() heuristics; debug tests prefer registry hits.
+(
+    schema_version: 1,
+    table_id: "cargo_kinds_v1",
+    kinds: [
+        // --- Civilian continuous (ResourceFlow) ---
+        (tag: "Concrete", class: "Bulk", consumers: ["Construction", "Depot"], notes: "Civ construction"),
+        (tag: "Cement", class: "Bulk", consumers: ["Plant", "Depot"], notes: "Concrete chain"),
+        (tag: "Gravel", class: "Bulk", consumers: ["Plant"], notes: "Aggregate"),
+        (tag: "Limestone", class: "Bulk", consumers: ["Plant"], notes: "Kiln feed"),
+        (tag: "Bauxite", class: "Bulk", consumers: ["Plant"], notes: "Aluminum chain"),
+        (tag: "Alumina", class: "Bulk", consumers: ["Plant"], notes: "Aluminum chain"),
+        (tag: "Aluminum", class: "Bulk", consumers: ["Plant", "Depot"], notes: "Smelter / fab"),
+        (tag: "Metal", class: "Bulk", consumers: ["Plant", "Depot"], notes: "Generic metal"),
+        (tag: "Steel", class: "Bulk", consumers: ["Construction", "Depot", "Fleet"], notes: "Construction + truck build"),
+        (tag: "Machinery", class: "Bulk", consumers: ["Construction", "Depot", "Fleet"], notes: "Construction + truck build"),
+        (tag: "Coal", class: "Bulk", consumers: ["Plant", "Depot"], notes: "Fuel / kiln"),
+        (tag: "Chemicals", class: "Bulk", consumers: ["Plant"], notes: "Process inputs"),
+        (tag: "Water", class: "Liquid", consumers: ["Plant"], notes: "Process"),
+        (tag: "Oil", class: "Liquid", consumers: ["Plant", "Depot"], notes: "Petroleum chain crude"),
+        (tag: "Fuel", class: "Liquid", consumers: ["Front", "Formation", "Depot", "Construction"], notes: "Catalog spelling; front draw"),
+        (tag: "Labour", class: "Personnel", consumers: ["Plant"], notes: "FacilityInputs synonym; not order-sim draw"),
+        (tag: "Electricity", class: "Bulk", consumers: ["Plant"], notes: "Semantic only — FacilityInputs power, not cargo loop"),
+
+        // --- Front sustainment aggregates ---
+        (tag: "ammo", class: "Munitions", consumers: ["Front", "Formation"], notes: "UnitKind draw"),
+        (tag: "rations", class: "Bulk", consumers: ["Front", "Formation"], notes: "UnitKind draw"),
+        (tag: "engineering", class: "Bulk", consumers: ["Front", "Formation"], notes: "UnitKind draw"),
+        (tag: "personnel", class: "Personnel", consumers: ["Front", "Formation"], notes: "P5 — toe_personnel deficit → FrontSupplyPoints"),
+
+        // --- UAS (P3: collapsed airframe tag) ---
+        (tag: "drone_airframe", class: "Munitions", consumers: ["Front", "DronePackage"], notes: "P3 aligned; all DroneRole restock"),
+        (tag: "drone_battery", class: "Munitions", consumers: ["Front", "DronePackage"], notes: "UAS battery plant"),
+        (tag: "fiber_spool_km", class: "Munitions", consumers: ["Front", "DronePackage"], notes: "Fiber draw plant"),
+        (tag: "uas_spare_kit", class: "Munitions", consumers: ["Front", "DronePackage"], notes: "PLANNED spares"),
+        (tag: "drone_airframe_fpv", class: "Munitions", consumers: ["Front"], notes: "Legacy alias → prefer drone_airframe"),
+        (tag: "drone_airframe_recon", class: "Munitions", consumers: ["Front"], notes: "Legacy; P6 specialization"),
+        (tag: "drone_airframe_cruise", class: "Munitions", consumers: ["Front"], notes: "Legacy; P6 specialization"),
+        (tag: "drone_airframe_interceptor", class: "Munitions", consumers: ["Front"], notes: "Legacy; P6 specialization"),
+
+        // --- Deployables ---
+        (tag: "dragon_teeth_unit", class: "Deployable", consumers: ["SiteStaging"], notes: "MFG → ledger → place"),
+        (tag: "mine_unit", class: "Deployable", consumers: ["SiteStaging"], notes: "MFG → ledger → place"),
+
+        // --- Missiles / air (P6 magazine BOM) ---
+        (tag: "missile_body", class: "Munitions", consumers: ["Front", "AirMagazine", "MissilePackage"], notes: "P6 magazine body"),
+        (tag: "missile_warhead", class: "Munitions", consumers: ["Front", "AirMagazine", "MissilePackage"], notes: "P6 warhead"),
+        (tag: "missile_seeker", class: "Munitions", consumers: ["Front", "AirMagazine", "MissilePackage"], notes: "P6 seeker"),
+    ],
+)

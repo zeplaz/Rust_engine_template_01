@@ -11,9 +11,10 @@ pub mod systems;
 pub use capabilities::{attach_power_plant_capabilities, ContainmentBuilding, SteamCycle, VariableRenewable};
 pub use components::*;
 pub use failure_modes::{
-    apply_containment_breach_radiation_hook_system, ContainmentBreachEvent,
-    MeltdownEvent, NuclearContainmentRuntime, NuclearCoolingDegradedEvent, NuclearDieselState,
-    NuclearScramEvent, NuclearScramReason, CONTAINMENT_BREACH_RADIATION_SEED,
+    apply_containment_breach_radiation_hook_system, solar_capacity_factor, wind_capacity_factor,
+    ContainmentBreachEvent, MeltdownEvent, NuclearContainmentRuntime, NuclearCoolingDegradedEvent,
+    NuclearDieselState, NuclearScramEvent, NuclearScramReason, RenewableWeatherFactors,
+    CONTAINMENT_BREACH_RADIATION_SEED,
 };
 pub use grid_topology::{emit_grid_overload_signals, GridConnectionRadiusSq, GridOverloadEvent};
 pub use plant_definition::{NuclearFailureProfile, PlantDefinition};

@@ -42,7 +42,15 @@
     "aluminum_bauxite_mine",
     "aluminum_alumina_refinery",
     "aluminum_smelter1",
-    "aluminum_fabrication_plant"
+    "aluminum_fabrication_plant",
+    "industrial_oil_well",
+    "industrial_fuel_refinery",
+    "uas_battery_plant",
+    "uas_fiber_plant",
+    "uas_final_assembly",
+    "missile_seeker_plant",
+    "missile_warhead_plant",
+    "missile_body_plant"
   ],
   "example_asset_files": [
     "assets/configs/buildings/new_building.json",

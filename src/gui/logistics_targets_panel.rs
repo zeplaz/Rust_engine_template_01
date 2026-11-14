@@ -1,6 +1,7 @@
 //! Pick logistics HUD focus from a list (hotkey, **Options** keybindings, this Bevy panel).
 
 use bevy::prelude::*;
+use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 
 // Declared here (not in `gui/mod.rs`) so the logistics lane owns registration; resolves to

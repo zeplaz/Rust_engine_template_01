@@ -36,6 +36,7 @@ mod app_shell;
 mod main_menu;
 mod splash;
 mod ui_gates;
+pub mod drone_mission_chrome;
 pub mod front_controls;
 mod input_bindings;
 mod input_frame;

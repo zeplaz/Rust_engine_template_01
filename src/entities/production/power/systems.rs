@@ -34,6 +34,7 @@ impl Plugin for PowerRuntimePlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<GridConnectionRadiusSq>()
             .init_resource::<PlantDefinitionRegistry>()
+            .init_resource::<crate::entities::production::power::failure_modes::RenewableWeatherFactors>()
             .add_message::<GridOverloadEvent>()
             .add_message::<NuclearScramEvent>()
             .add_message::<NuclearCoolingDegradedEvent>()
@@ -115,7 +116,15 @@ fn overload_shed_rank(
             IndustrialSupplyChainRole::BauxiteMine => Some(5),
             IndustrialSupplyChainRole::AluminaRefinery
             | IndustrialSupplyChainRole::IntegratedPlant
-            | IndustrialSupplyChainRole::MaterialsProducer => None,
+            | IndustrialSupplyChainRole::MaterialsProducer
+            | IndustrialSupplyChainRole::OilWell
+            | IndustrialSupplyChainRole::FuelRefinery
+            | IndustrialSupplyChainRole::UasBattery
+            | IndustrialSupplyChainRole::UasFiber
+            | IndustrialSupplyChainRole::UasFinalAssembly
+            | IndustrialSupplyChainRole::MissileSeeker
+            | IndustrialSupplyChainRole::MissileWarhead
+            | IndustrialSupplyChainRole::MissileBodyPlant => None,
         };
     }
     match utility {

@@ -13,8 +13,10 @@ use std::collections::{BTreeMap, HashMap};
 use bevy::prelude::*;
 
 use crate::economy::resource_flow::{resource_type_from_tag, ResourceFlowNode};
+use crate::entities::production::core::{
+    LogisticsSiteRoot, ManufacturingNode, ManufacturingOutputBuffers,
+};
 use crate::entities::types::p_enumz::ResourceType;
-use crate::entities::production::core::LogisticsSiteRoot;
 use crate::systems::sim_control::{SimControlSystemSet, SimStepClock};
 
 use super::model::{CargoClassMask, CargoKind, OwnerId, SiteId};
@@ -260,6 +262,64 @@ pub fn bridge_plant_stock(
     }
 }
 
+/// P2 — push [`ManufacturingOutputBuffers`] into order-sim plant stock (discrete UAS / munitions).
+pub fn bridge_mfg_output_stock(
+    sim: &mut LogisticsOrderSim,
+    registry: &LogisticsSiteRegistry,
+    mirror: &mut PlantStockMirror,
+    buffers: &mut Query<&mut ManufacturingOutputBuffers>,
+) {
+    for (&site, meta) in &registry.meta {
+        if meta.role != SiteRole::Plant {
+            continue;
+        }
+        let Some(&entity) = registry.entity_of.get(&site) else {
+            continue;
+        };
+        let Ok(mut buf) = buffers.get_mut(entity) else {
+            continue;
+        };
+        let mut tags: Vec<String> = buf.amounts.keys().cloned().collect();
+        for (s, c) in sim.stock.entries.keys() {
+            if *s == site {
+                tags.push(c.0.clone());
+            }
+        }
+        tags.sort();
+        tags.dedup();
+        for tag in tags {
+            if crate::entities::production::core::is_deployable_staging_buffer_tag(&tag) {
+                continue; // deployables stay on ledger haul
+            }
+            let cargo = CargoKind::new(tag.clone());
+            let key = (site, cargo.clone());
+            let node_amount = buf.get(&tag);
+            let sim_on_hand = sim.stock.get(site, &cargo).on_hand;
+            let last = mirror.0.get(&key).copied();
+            if last == Some(sim_on_hand) && node_amount.floor() as u32 == sim_on_hand {
+                continue;
+            }
+            let (node_new, sim_new, mirror_new) = reconcile_plant_stock(node_amount, sim_on_hand, last);
+            if (node_new - node_amount).abs() > f32::EPSILON {
+                let cur = buf.get(&tag);
+                if node_new > cur {
+                    buf.credit(&tag, node_new - cur);
+                } else if node_new < cur {
+                    buf.debit(&tag, cur - node_new);
+                }
+            }
+            if sim_new != sim_on_hand {
+                sim.apply(LogisticsOrderCommand::SetStock {
+                    site,
+                    cargo,
+                    on_hand: sim_new,
+                });
+            }
+            mirror.0.insert(key, mirror_new);
+        }
+    }
+}
+
 /// Snapshot the live order state for a save.
 #[must_use]
 pub fn capture_logistics_orders_save(
@@ -330,12 +390,15 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<LogisticsOrdersSnapshotRes>()
             .init_resource::<PlantStockMirror>()
             .init_resource::<LogisticsOrdersHydrateState>()
+            .init_resource::<super::cargo_registry::CargoKindRegistry>()
             .init_resource::<super::construction_demand::ConstructionDemandBook>()
             .init_resource::<super::plant_demand::PlantDemandBook>()
             .init_resource::<super::plant_demand::DepotStockDemandBook>()
             .init_resource::<super::auto_supply::AutoSupplyPolicy>()
             .init_resource::<super::fleet_growth::FleetGrowthPolicy>()
+            .init_resource::<super::weather_haul::HaulWeatherDump>()
             .add_message::<LogisticsOrderRequest>()
+            .add_systems(Startup, super::cargo_registry::load_cargo_kind_registry_on_startup)
             .configure_sets(
                 Update,
                 (
@@ -353,6 +416,7 @@ impl Plugin for LogisticsOrdersPlugin {
                     (
                         tag_logistics_hubs_as_order_sites,
                         tag_flow_facilities_as_order_sites,
+                        tag_mfg_facilities_as_order_sites,
                         super::construction_demand::tag_construction_sites_as_order_sites,
                     ),
                 )
@@ -367,7 +431,17 @@ impl Plugin for LogisticsOrdersPlugin {
             )
             .add_systems(
                 Update,
-                step_logistics_orders_system.in_set(LogisticsOrdersSet::Step),
+                (
+                    super::weather_haul::sync_haul_weather_mul_system,
+                    super::haul_amplify::sync_haul_amplify_mul_system,
+                    super::vehicle_fire::apply_order_sim_vehicle_fire_system
+                        .after(super::weather_haul::sync_haul_weather_mul_system),
+                    step_logistics_orders_system
+                        .after(super::weather_haul::sync_haul_weather_mul_system)
+                        .after(super::haul_amplify::sync_haul_amplify_mul_system)
+                        .after(super::vehicle_fire::apply_order_sim_vehicle_fire_system),
+                )
+                    .in_set(LogisticsOrdersSet::Step),
             )
             .add_systems(
                 Update,
@@ -441,6 +515,44 @@ pub fn tag_flow_facilities_as_order_sites(
     }
 }
 
+/// Discrete MFG plants (UAS) without ResourceFlowNode still become Plant order sites.
+pub fn tag_mfg_facilities_as_order_sites(
+    mut commands: Commands,
+    nodes: Query<
+        (
+            Entity,
+            &ManufacturingNode,
+            Option<&mut LogisticsOrderSite>,
+            Option<&crate::strategic::ConstructionSite>,
+        ),
+        (
+            With<ManufacturingOutputBuffers>,
+            Without<ResourceFlowNode>,
+            Without<LogisticsSiteRoot>,
+        ),
+    >,
+    slots: Query<&FactionSlot>,
+) {
+    for (entity, node, existing, built) in nodes {
+        let name = format!("{} #{}", node.blueprint_id, entity.index());
+        match existing {
+            None => {
+                commands.entity(entity).insert(LogisticsOrderSite {
+                    name,
+                    owner: built.map_or(OwnerId::PLAYER, |b| owner_of(&slots, b.owner)),
+                    role: SiteRole::Plant,
+                    position_m: None,
+                });
+            }
+            Some(mut site) if site.role == SiteRole::Construction => {
+                site.role = SiteRole::Plant;
+                site.name = name;
+            }
+            Some(_) => {}
+        }
+    }
+}
+
 fn site_xz(
     site: &LogisticsOrderSite,
     transform: Option<&Transform>,
@@ -462,6 +574,7 @@ pub fn step_logistics_orders_system(
     mut registry: ResMut<LogisticsSiteRegistry>,
     seed: Res<DepotFleetSeed>,
     clock: Res<SimStepClock>,
+    attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
     mut requests: MessageReader<LogisticsOrderRequest>,
     new_sites: Query<
         (
@@ -481,6 +594,7 @@ pub fn step_logistics_orders_system(
     mut removed: RemovedComponents<LogisticsOrderSiteId>,
     mut mirror: ResMut<PlantStockMirror>,
     mut flow_nodes: Query<&mut ResourceFlowNode>,
+    mut mfg_buffers: Query<&mut ManufacturingOutputBuffers>,
 ) {
     let res = &mut *res;
     let registry = &mut *registry;
@@ -594,9 +708,30 @@ pub fn step_logistics_orders_system(
     }
 
     bridge_plant_stock(&mut res.sim, registry, &mut mirror, &mut flow_nodes);
+    bridge_mfg_output_stock(&mut res.sim, registry, &mut mirror, &mut mfg_buffers);
 
     registry.travel.seconds_per_tick = clock.step_secs();
-    for _ in 0..clock.due {
+    // FIDELITY-1: player theater Full → every due step; Aggregate → every 2nd; no theater → Aggregate.
+    let tier = attention.as_ref().map_or(
+        crate::systems::sim_attention::AttentionTier::Full,
+        |a| {
+            if a.player_theater_active {
+                crate::systems::sim_attention::AttentionTier::Full
+            } else if a.foci.is_empty() {
+                crate::systems::sim_attention::AttentionTier::Aggregate
+            } else {
+                crate::systems::sim_attention::AttentionTier::Aggregate
+            }
+        },
+    );
+    let scale = tier.work_scale();
+    for i in 0..clock.due {
+        if scale <= 0.0 {
+            break;
+        }
+        if scale < 1.0 && ((clock.steps + u64::from(i)) % 2 == 1) {
+            continue;
+        }
         res.sim.tick(&registry.travel);
     }
 }

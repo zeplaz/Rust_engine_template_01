@@ -1,6 +1,8 @@
 //! CPU-side fire particle frame extracted to render world.
 
 use bevy::prelude::*;
+use bevy::render::RenderApp;
+
 use bevy::render::extract_resource::ExtractResource;
 
 use crate::gui::RepresentationBand;
@@ -11,6 +13,7 @@ use super::spark_tuning::FireSparkStats;
 
 /// CPU-side particle snapshot for one committed sim step (LOD-shaped).
 #[derive(Resource, Debug, Clone, ExtractResource)]
+#[extract_app(RenderApp)]
 pub struct WorldFireParticleFrame {
     pub snapshot_stamp: u64,
     /// Wall clock for shader pulse (avoid using `snapshot_stamp` — it advances with sim, not frames).

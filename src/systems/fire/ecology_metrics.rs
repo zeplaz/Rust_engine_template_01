@@ -21,6 +21,10 @@ pub struct FireEcologyStats {
     pub fuel_depleted_cells: u64,
     /// F2 neighbor heat diffusion applications (intra-chunk laplacian spread).
     pub neighbor_spread_cells: u64,
+    /// W2 ember spotting: cells queued this frame (emit → SimEffectQueue).
+    pub ember_spots_emitted: u64,
+    /// W2 ember spotting: cells that actually received heat (apply after drain).
+    pub ember_spots_applied: u64,
     sum_fuel: f64,
     sum_old_growth: f64,
     sum_heat: f64,

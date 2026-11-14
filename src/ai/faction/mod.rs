@@ -217,6 +217,8 @@ pub struct AiWorld<'w, 's> {
     pub raster: Option<Res<'w, StrategicRasterConfig>>,
     pub ai_seed: Option<Res<'w, AiSeed>>,
     pub world_gen: Option<Res<'w, WorldGenParams>>,
+    /// FIDELITY-1 B2: theater LOD for faction slots (RO only).
+    pub attention: Option<Res<'w, crate::systems::sim_attention::SimAttentionFrame>>,
     pub hqs: Query<'w, 's, &'static FactionHq>,
     pub start: Option<Res<'w, FactionStartConfig>>,
 }
@@ -553,9 +555,26 @@ pub fn faction_ai_tick_system(
 
     for (entity, mut c) in due {
         let slot = c.slot;
+        // FIDELITY-1 B2: Dormant slots skip full decide; Aggregate stretches cadence.
+        let tier = world
+            .attention
+            .as_ref()
+            .map(|a| a.tier_for_faction_slot(slot))
+            .unwrap_or(crate::systems::sim_attention::AttentionTier::Full);
+        if !tier.allows_sortie_pulse() {
+            // Dormant: defer cheaply (no perceive/decide this turn).
+            c.next_decision_tick = now.saturating_add(c.decision_interval_ticks.max(1).saturating_mul(4));
+            continue;
+        }
+        let interval_mul: u64 = if tier.allows_full_ai() { 1 } else { 2 };
+
         // The full-overlay scan runs once per `PERCEPTION_REFRESH_DECISIONS` decisions per faction;
         // decisions in between reuse the cached summary (deterministic: keyed by sim tick).
-        let refresh_after = c.decision_interval_ticks.max(1).saturating_mul(PERCEPTION_REFRESH_DECISIONS);
+        let refresh_after = c
+            .decision_interval_ticks
+            .max(1)
+            .saturating_mul(PERCEPTION_REFRESH_DECISIONS)
+            .saturating_mul(interval_mul);
         let perception = match perception_cache.get(&slot) {
             Some((at, p)) if now >= *at && now - *at < refresh_after => p.clone(),
             _ => {
@@ -590,7 +609,11 @@ pub fn faction_ai_tick_system(
         run_military_brain(&c, goal, &perception, snap, &world, stamp.sim_time_micros, &mut sinks, &mut out);
 
         c.goal = Some(goal);
-        c.next_decision_tick = now.saturating_add(c.decision_interval_ticks.max(1));
+        c.next_decision_tick = now.saturating_add(
+            c.decision_interval_ticks
+                .max(1)
+                .saturating_mul(interval_mul),
+        );
         log.push(FactionAiDecisionRecord {
             sim_tick: now,
             slot,

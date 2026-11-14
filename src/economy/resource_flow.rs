@@ -175,6 +175,9 @@ fn chain_catalog_order(chain_id: &str) -> &'static [&'static str] {
             "concrete_cement_kiln_geopolymer",
             "concrete_mixer_geopolymer",
         ],
+        "petroleum" => &["industrial_oil_well", "industrial_fuel_refinery"],
+        // UAS discrete plants use ManufacturingNode + order-sim bridge (no ResourceFlow edges).
+        "uas_assembly" => &[],
         _ => &[],
     }
 }
@@ -204,6 +207,11 @@ pub fn register_resource_flow_nodes_system(
     >,
 ) {
     for (entity, def_ref) in &q {
+        // P2/P3: discrete UAS plants use ManufacturingOutputBuffers — skip flow double-count.
+        if crate::entities::production::core::catalog_is_discrete_mfg_plant(def_ref.catalog_id.as_str())
+        {
+            continue;
+        }
         let Some(def) = registry_buildings.get(def_ref.catalog_id.as_str()) else {
             continue;
         };
