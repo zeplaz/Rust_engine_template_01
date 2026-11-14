@@ -1,0 +1,33 @@
+{
+  "schema": "sim_run_dump_v1",
+  "proof_grade": "sim_dump",
+  "run_id": "fixture-not-a-run-seed2",
+  "tick": 44,
+  "seed": 2,
+  "launch": {
+    "test_scene": "Visual"
+  },
+  "flags": {
+    "world_generated": true,
+    "simulation_entered": true
+  },
+  "counts": {
+    "terrain_cells": 102400,
+    "water_open_cells": 4000,
+    "river_cells": 2800,
+    "lake_or_ocean_cells": 1200,
+    "veg_live_cells": 80000,
+    "veg_burning_cells": 18,
+    "veg_burnt_cells": 40,
+    "veg_water_cells": 2800,
+    "fire_heat_cells": 70,
+    "fire_instance_rows": 52,
+    "spark_rows": 72,
+    "sites_operational": 3,
+    "sites_total": 5
+  },
+  "frac": {
+    "river": 0.027
+  },
+  "spark_projection_view": "WorldMain"
+}

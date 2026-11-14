@@ -12,7 +12,13 @@ python tools/sim_review/score_dump.py
 
 python tools/sim_review/playcheck.py            # debug: build + run + capture + score
 python tools/sim_review/playcheck.py --release  # release built with `--features sim_dump`
+python tools/sim_review/playcheck.py --seeds 3  # T6: build once, N seeds → dump_<seed>.json (prefer N=3)
+python tools/sim_review/score_dump.py --multi tools/sim_review/fixtures
+# → matrix_multi.json (mean/stdev/min/max/n/stderr) + dashboard_multi.html
+python tools/sim_review/tune.py --dry-run       # T7: FrontBalance whitelist + planned perturbations
 ```
+
+Multi-seed verdict: a change is real only if `|mean_after − mean_before| > 2 × max(stderr_before, stderr_after)`.
 
 Frame time is always tracked. `perf` in the dump: avg / p50 / p95 / p99 / max (after warm-up),
 `hitches` (frames over 50 ms release / 500 ms debug, `HITCH_MS` overrides), `stalls` (> 1 s),

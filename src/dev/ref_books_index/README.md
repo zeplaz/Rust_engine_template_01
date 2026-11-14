@@ -14,6 +14,7 @@ Work queue built on this index: [`../plan_ref_books_upgrade_v2.md`](../plan_ref_
 | [`matrix.md`](matrix.md) | Concept → book sections → our code paths → one-line takeaway (`★` niche, `●` core, `○` low) | 217 rows, 129 `★` |
 | `toc/<book>.tsv` | Full-depth TOC per book: `sec depth start end title` (PDF page indices) | ~3k rows |
 | [`lookup.py`](lookup.py) | Query tool (stdlib only) | — |
+| [`adoption.tsv`](adoption.tsv) | Row id → OPEN/ADOPTED/PARTIAL/DEFER/REJECTED + evidence | seed from plan §9 |
 | [`build_toc.py`](build_toc.py) | Rebuilds `toc/` from the PDFs (pypdf + pdftotext) | — |
 
 ## Books
@@ -71,9 +72,28 @@ python src/dev/ref_books_index/lookup.py --row PHYS-02
 python src/dev/ref_books_index/lookup.py --brief combat/ballistics.rs
 ```
 
-`--json` also works with `--niche`. Each JSON object is
-`{id,tier,concept,refs:[{book,sec,start,end,title}],code,take}`.
+`--json` also works with `--niche` / `--open` / `--row`. Each JSON object is
+`{id,tier,concept,refs:[{book,sec,start,end,title}],code,take}` (+ `status` when in `adoption.tsv`).
 `--brief` prints at most 12 lines: row id, best ref, and the exact `--read` command.
+Row ids in text output show `[STATUS]` when present in `adoption.tsv`.
+
+```bash
+python src/dev/ref_books_index/lookup.py --open NAV
+```
+
+```bash
+python src/dev/ref_books_index/lookup.py --read aig3:6.2.8 --pages
+```
+
+```bash
+python src/dev/ref_books_index/lookup.py --grep "influence" aig3:6.2
+```
+
+```bash
+python src/dev/ref_books_index/lookup.py --gaps
+```
+
+`--read` caches section text under `debug_runs/ref_books_cache/` (git-ignored). Second read prints `cached` on stderr.
 
 Plain `grep` works too: every matrix row is one line (`grep -i "influence" src/dev/ref_books_index/matrix.md`),
 and every TOC entry is one line (`grep -i "erosion" src/dev/ref_books_index/toc/*.tsv`).

@@ -15,9 +15,11 @@ frames with their top PerfScopes) is scored with build-specific thresholds and d
 from __future__ import annotations
 
 import argparse
+import hashlib
 import os
 import re
 import json
+import shutil
 import subprocess
 import sys
 import time
@@ -165,10 +167,37 @@ def score(since: float) -> list[str]:
     return out[-70:]
 
 
+def derive_seeds(base: str, n: int) -> list[str]:
+    """Reproducible seed set: base, then sha256(base, i) truncated to u64 decimal."""
+    out = [base]
+    for i in range(1, n):
+        digest = hashlib.sha256(f"{base}:{i}".encode("utf-8")).digest()
+        out.append(str(int.from_bytes(digest[:8], "little")))
+    return out[:n]
+
+
+def run_one(exe: Path, seed: str, frame: int, secs: int, scene: str, ticks: int, min_secs: int) -> tuple[list[str], list[str]]:
+    t0 = time.time()
+    if _DUMP.exists():
+        try:
+            _DUMP.unlink()
+        except OSError:
+            pass
+    lines = run_game(exe, seed, frame, secs, scene, ticks, min_secs)
+    scored = score(t0)
+    return lines, scored
+
+
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-build", action="store_true")
     ap.add_argument("--seed", default="14046650793090929382")
+    ap.add_argument(
+        "--seeds",
+        type=int,
+        default=1,
+        help="run N seeds (default 1). Seed i>0 = sha256(base:i)→u64. Docs recommend N=3.",
+    )
     ap.add_argument("--frame", type=int, default=1200, help="capture frame")
     ap.add_argument("--secs", type=int, default=420, help="hard time limit")
     ap.add_argument("--ticks", type=int, default=3000, help="sim tick the dump must reach before stopping")
@@ -180,6 +209,7 @@ def main() -> None:
                          "before game-time loops such as weather solves and production have run)")
     a = ap.parse_args()
     min_secs = a.min_secs if a.min_secs is not None else 360
+    n_seeds = max(1, int(a.seeds))
 
     exe = Path(a.exe) if a.exe else _exe_path(a.release)
     if not a.no_build and not a.exe:
@@ -188,35 +218,69 @@ def main() -> None:
         print(f"missing exe: {exe} (CARGO_TARGET_DIR={os.environ.get('CARGO_TARGET_DIR')!r})")
         sys.exit(1)
     say(f"using exe {exe}")
-    t0 = time.time()
-    # Drop stale dump so an early capture / crash cannot score a previous run.
-    if _DUMP.exists():
-        try:
-            _DUMP.unlink()
-        except OSError:
-            pass
-    lines = run_game(exe, a.seed, a.frame, a.secs, a.scene, a.ticks, min_secs)
-    s = summarise_log(lines)
-    scored = score(t0)
+    seeds = derive_seeds(a.seed, n_seeds)
+    _OUT.mkdir(parents=True, exist_ok=True)
 
-    md = [f"# playcheck  {'release' if a.release else 'debug'} exe={exe.name} seed={a.seed} frame={a.frame} "
-          f"scene={a.scene} ran={time.time() - t0:.0f}s", ""]
-    md.append(f"panics: {len(s['panics'])}")
-    md += [f"  {p[:200]}" for p in s["panics"][:5]]
-    perf = {}
-    try:
-        perf = json.loads(_DUMP.read_text(encoding="utf-8")).get("perf") or {}
-    except (OSError, ValueError):
-        pass
-    md += perf_lines(perf)
-    for lvl in ("ERROR", "WARN"):
-        items = sorted(s["levels"][lvl].items(), key=lambda kv: -kv[1])
-        md.append(f"{lvl}: {sum(s['levels'][lvl].values())} total, {len(items)} distinct")
-        md += [f"  {n:>5}x {k}" for k, n in items[:8]]
-    md.append("score:")
-    md += [f"  {l}" for l in scored]
-    md.append(f"captures: {_CAPTURES / 'tactical_rtt_live.png'} | {_CAPTURES / 'window_live.png'}")
-    text = "\n".join(md)
+    if n_seeds == 1:
+        t0 = time.time()
+        # Drop stale dump so an early capture / crash cannot score a previous run.
+        if _DUMP.exists():
+            try:
+                _DUMP.unlink()
+            except OSError:
+                pass
+        lines = run_game(exe, seeds[0], a.frame, a.secs, a.scene, a.ticks, min_secs)
+        s = summarise_log(lines)
+        scored = score(t0)
+
+        md = [f"# playcheck  {'release' if a.release else 'debug'} exe={exe.name} seed={seeds[0]} frame={a.frame} "
+              f"scene={a.scene} ran={time.time() - t0:.0f}s", ""]
+        md.append(f"panics: {len(s['panics'])}")
+        md += [f"  {p[:200]}" for p in s["panics"][:5]]
+        perf = {}
+        try:
+            perf = json.loads(_DUMP.read_text(encoding="utf-8")).get("perf") or {}
+        except (OSError, ValueError):
+            pass
+        md += perf_lines(perf)
+        for lvl in ("ERROR", "WARN"):
+            items = sorted(s["levels"][lvl].items(), key=lambda kv: -kv[1])
+            md.append(f"{lvl}: {sum(s['levels'][lvl].values())} total, {len(items)} distinct")
+            md += [f"  {n:>5}x {k}" for k, n in items[:8]]
+        md.append("score:")
+        md += [f"  {l}" for l in scored]
+        md.append(f"captures: {_CAPTURES / 'tactical_rtt_live.png'} | {_CAPTURES / 'window_live.png'}")
+        text = "\n".join(md)
+        (_OUT / "playcheck_summary.md").write_text(text, encoding="utf-8")
+        print(text)
+        return
+
+    # Multi-seed: build once above; each run uses --no-build semantics and keeps dump_<seed>.json.
+    say(f"multi-seed N={n_seeds}: {seeds}")
+    summaries: list[str] = [
+        f"# playcheck multi-seed N={n_seeds} base={a.seed}",
+        "Verdict: a change is real only if |mean_after − mean_before| > 2 × max(stderr_before, stderr_after).",
+        "",
+    ]
+    for seed in seeds:
+        say(f"seed {seed}")
+        lines, scored = run_one(exe, seed, a.frame, a.secs, a.scene, a.ticks, min_secs)
+        s = summarise_log(lines)
+        if _DUMP.exists():
+            dest = _OUT / f"dump_{seed}.json"
+            shutil.copy2(_DUMP, dest)
+            say(f"kept {dest}")
+        summaries.append(f"## seed {seed}")
+        summaries.append(f"panics: {len(s['panics'])}")
+        summaries += [f"  {l}" for l in scored[-20:]]
+        summaries.append("")
+    r = subprocess.run(
+        [sys.executable, str(Path(__file__).parent / "score_dump.py"), "--multi", str(_OUT)],
+        cwd=_REPO, capture_output=True, text=True,
+    )
+    summaries.append("## multi score")
+    summaries += (r.stdout + r.stderr).strip().splitlines()
+    text = "\n".join(summaries)
     (_OUT / "playcheck_summary.md").write_text(text, encoding="utf-8")
     print(text)
 

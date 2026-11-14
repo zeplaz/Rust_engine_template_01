@@ -1,0 +1,17 @@
+---
+description: Before algorithm/layout/schedule design in src or tools, consult the ref-books index.
+globs:
+  - src/**/*.rs
+  - tools/**/*.py
+alwaysApply: false
+---
+
+# Ref-books index (PLAN-REF-BOOKS-UPGRADE-v2)
+
+Before designing an algorithm, data layout, or schedule change:
+
+1. Run `python src/dev/ref_books_index/lookup.py --brief <file>`
+2. Cite the matrix row id in the commit message when you adopt a book idea
+3. Follow `src/dev/plan_ref_books_upgrade_v2.md` §0–§1 (one slice, Recon first, no second authority)
+
+Do not paste matrix content into rules/skills — query `lookup.py` / `matrix.md` live.
