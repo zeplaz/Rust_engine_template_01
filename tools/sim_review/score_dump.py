@@ -5,6 +5,8 @@ from __future__ import annotations
 
 import argparse
 import json
+import math
+import statistics
 import sys
 from pathlib import Path
 
@@ -336,22 +338,143 @@ pre {{ background: #1b1b1b; padding: 12px; overflow: auto; }}
 """
 
 
+def _as_float(v) -> float | None:
+    if isinstance(v, bool):
+        return float(v)
+    if isinstance(v, (int, float)):
+        return float(v)
+    if isinstance(v, str):
+        try:
+            return float(v.split()[0])
+        except (ValueError, IndexError):
+            return None
+    return None
+
+
+def score_multi(dumps: list[dict], matrix: dict) -> dict:
+    """Aggregate per-metric mean/stdev/min/max/n/stderr across dumps (T6)."""
+    per_id: dict[str, list[float]] = {}
+    pass_counts: dict[str, int] = {}
+    n = len(dumps)
+    for dump in dumps:
+        result = score(dump, matrix)
+        for row in result.get("rows") or []:
+            rid = str(row.get("id"))
+            if row.get("status") == "pass":
+                pass_counts[rid] = pass_counts.get(rid, 0) + 1
+            val = _as_float(row.get("actual"))
+            if val is None:
+                continue
+            per_id.setdefault(rid, []).append(val)
+    metrics = {}
+    for rid, vals in sorted(per_id.items()):
+        if not vals:
+            continue
+        mean = statistics.fmean(vals)
+        stdev = statistics.stdev(vals) if len(vals) > 1 else 0.0
+        stderr = stdev / math.sqrt(len(vals)) if len(vals) > 1 else 0.0
+        metrics[rid] = {
+            "mean": mean,
+            "stdev": stdev,
+            "min": min(vals),
+            "max": max(vals),
+            "n": len(vals),
+            "stderr": stderr,
+            "pass_rate": pass_counts.get(rid, 0) / n if n else 0.0,
+        }
+    return {
+        "schema": "sim_review_multi_v1",
+        "n": n,
+        "metrics": metrics,
+        "verdict_rule": (
+            "a change is real only if |mean_after − mean_before| > 2 × max(stderr_before, stderr_after)"
+        ),
+    }
+
+
+def _html_multi(multi: dict) -> str:
+    rows = []
+    for rid, m in (multi.get("metrics") or {}).items():
+        rows.append(
+            "<tr><td>{id}</td><td>{mean:.4g} ± {stderr:.4g}</td>"
+            "<td>{stdev:.4g}</td><td>{mn:.4g}</td><td>{mx:.4g}</td>"
+            "<td>{n}</td><td>{pr:.0%}</td></tr>".format(
+                id=rid,
+                mean=m["mean"],
+                stderr=m["stderr"],
+                stdev=m["stdev"],
+                mn=m["min"],
+                mx=m["max"],
+                n=m["n"],
+                pr=m["pass_rate"],
+            )
+        )
+    return f"""<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>sim review multi</title>
+<style>
+body {{ font: 14px/1.4 sans-serif; margin: 24px; background: #111; color: #eee; }}
+table {{ border-collapse: collapse; width: 100%; }}
+td, th {{ border-bottom: 1px solid #333; padding: 6px 8px; text-align: left; }}
+</style></head><body>
+<h1>Sim review multi — n={multi.get('n')}</h1>
+<p>{multi.get('verdict_rule')}</p>
+<table><thead><tr><th>id</th><th>mean ± stderr</th><th>stdev</th><th>min</th><th>max</th><th>n</th><th>pass_rate</th></tr></thead>
+<tbody>
+{''.join(rows)}
+</tbody></table>
+</body></html>
+"""
+
+
 def main(argv: list[str] | None = None) -> int:
     p = argparse.ArgumentParser(description="Score sim_run_dump.json")
     p.add_argument("dump", nargs="?", default=str(_DEFAULT_DUMP))
     p.add_argument("--matrix", default=str(_DEFAULT_MATRIX))
     p.add_argument("--out", default=str(_OUT_DIR))
+    p.add_argument(
+        "--multi",
+        metavar="DIR",
+        help="score every dump_*.json / *.json dump in DIR → matrix_multi.json",
+    )
     args = p.parse_args(argv)
+    out = Path(args.out)
+    out.mkdir(parents=True, exist_ok=True)
+    matrix = json.loads(Path(args.matrix).read_text(encoding="utf-8"))
+
+    if args.multi:
+        multi_dir = Path(args.multi)
+        paths = sorted(multi_dir.glob("dump_*.json"))
+        if not paths:
+            paths = sorted(
+                p for p in multi_dir.glob("*.json")
+                if p.name not in ("matrix.json", "matrix_multi.json")
+            )
+        dumps = []
+        for path in paths:
+            try:
+                dumps.append(json.loads(path.read_text(encoding="utf-8")))
+            except (OSError, json.JSONDecodeError) as exc:
+                print(f"skip {path}: {exc}", file=sys.stderr)
+        if not dumps:
+            print(f"no dumps in {multi_dir}", file=sys.stderr)
+            return 2
+        multi = score_multi(dumps, matrix)
+        (out / "matrix_multi.json").write_text(json.dumps(multi, indent=2), encoding="utf-8")
+        (out / "dashboard_multi.html").write_text(_html_multi(multi), encoding="utf-8")
+        print(multi["verdict_rule"])
+        print(f"n={multi['n']} metrics={len(multi['metrics'])}")
+        for rid, m in list(multi["metrics"].items())[:30]:
+            print(f"  {rid:28}  mean={m['mean']:.4g} ± {m['stderr']:.4g}")
+        print(f"wrote {out / 'matrix_multi.json'}")
+        return 0
+
     dump_path = Path(args.dump)
     if not dump_path.is_file():
         print(f"no dump at {dump_path} — run the sim in debug, or release with --features sim_dump "
               "(RUST_ENGINE_SIM_DUMP=1)", file=sys.stderr)
         return 2
     dump = json.loads(dump_path.read_text(encoding="utf-8"))
-    matrix = json.loads(Path(args.matrix).read_text(encoding="utf-8"))
     result = score(dump, matrix)
-    out = Path(args.out)
-    out.mkdir(parents=True, exist_ok=True)
     (out / "matrix.json").write_text(json.dumps(result, indent=2), encoding="utf-8")
     (out / "dashboard.html").write_text(_html(result, dump), encoding="utf-8")
     print(result["summary"])

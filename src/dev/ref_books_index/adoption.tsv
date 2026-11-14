@@ -1,0 +1,58 @@
+id	status	evidence	date
+ANIM-02	ADOPTED	construction/site_stage_transitions.rs pure transition table (CON-P2-002)	2026-11-14
+TAC-04	ADOPTED	systems/fire/cell_spread.rs 8-neighbour CA in snapshot order	2026-11-14
+MATH-02	PARTIAL	ai/faction/rng.rs mix64 over (seed, slot, tick, salt); other domains unchecked → E4	2026-11-14
+LOOP-09	PARTIAL	WorldFieldLayerEpoch is one global epoch	2026-11-14
+INPUT-05	ADOPTED	gui/tactical/map_camera.rs ApplyInput → DeriveDesired → Smooth	2026-11-14
+ECS-07	ADOPTED	v1 Order 3: MissionIntentQueue → MissionBook	2026-11-14
+EXEC-05	PARTIAL	v1 Order 2: SimAttentionFrame scaffold	2026-11-14
+LOOP-08	ADOPTED	WeatherField prev/next	2026-11-14
+CONC-03	OPEN	no enforcement of sole writers	2026-11-14
+MEM-08	OPEN	lint not written	2026-11-14
+LOOP-02	OPEN	clock use in sim dirs unchecked	2026-11-14
+IO-02	OPEN	chunk_window_coords has one radius	2026-11-14
+LOOP-07	OPEN		2026-11-14
+EXEC-01	OPEN		2026-11-14
+TAC-06	OPEN		2026-11-14
+IO-08	OPEN		2026-11-14
+IO-07	OPEN		2026-11-14
+PHYS-02	OPEN	no swept test in combat/ballistics.rs	2026-11-14
+MOVE-09	OPEN	no drag or aim iteration in combat/ballistics.rs	2026-11-14
+PHYS-06	OPEN	wake rule unverified	2026-11-14
+NAV-09	OPEN		2026-11-14
+AUD-02	OPEN		2026-11-14
+TAC-03	OPEN	not for cell_spread.rs or relax.rs	2026-11-14
+DEC-08	OPEN		2026-11-14
+DEC-15	OPEN		2026-11-14
+NAV-10	OPEN		2026-11-14
+SENSE-02	OPEN		2026-11-14
+EXEC-04	OPEN		2026-11-14
+LGT-09	OPEN		2026-11-14
+NAV-14	OPEN		2026-11-14
+DEC-10	PARTIAL	adverts exist; urgency/distance scoring unchecked	2026-11-14
+MATH-03	OPEN		2026-11-14
+ANIM-01	OPEN		2026-11-14
+AUD-05	OPEN		2026-11-14
+AUD-03	OPEN		2026-11-14
+AUD-08	OPEN		2026-11-14
+RND-20	OPEN		2026-11-14
+INPUT-02	OPEN		2026-11-14
+LGT-02	OPEN		2026-11-14
+LGT-08	ADOPTED	playcheck --seeds + score_dump --multi (T6)	2026-11-14
+LEARN-01	ADOPTED	tools/sim_review/tune.py --dry-run whitelist (T7)	2026-11-14
+RND-08	OPEN		2026-11-14
+PCG-08	OPEN		2026-11-14
+PCG-06	OPEN		2026-11-14
+MOVE-05	DEFER	needs unit-member model	2026-11-14
+MOVE-06	DEFER	needs unit-member model	2026-11-14
+MOVE-07	DEFER	needs unit-member model	2026-11-14
+PCG-03	DEFER	world-changing	2026-11-14
+TAC-05	DEFER		2026-11-14
+SENSE-04	DEFER		2026-11-14
+NAV-13	DEFER		2026-11-14
+LEARN-02	DEFER		2026-11-14
+TAC-10	DEFER		2026-11-14
+PCG-07	DEFER		2026-11-14
+RND-07	DEFER		2026-11-14
+RND-06	DEFER		2026-11-14
+TAC-14	DEFER		2026-11-14

@@ -16,6 +16,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -459,6 +460,23 @@ def _cmd_pixel_conclude(args: argparse.Namespace) -> int:
     return cli_main(argv)
 
 
+def _cmd_ref_lookup(args: argparse.Namespace) -> int:
+    """Forward argv to src/dev/ref_books_index/lookup.py (PLAN-REF-BOOKS-UPGRADE-v2 T4)."""
+    lookup = paths.repo_root() / "src" / "dev" / "ref_books_index" / "lookup.py"
+    forwarded = list(args.argv or [])
+    if forwarded and forwarded[0] == "--":
+        forwarded = forwarded[1:]
+    cmd = [sys.executable, str(lookup), *forwarded]
+    r = subprocess.run(cmd, cwd=str(paths.repo_root()), capture_output=True, text=True)
+    if r.stdout:
+        sys.stdout.write(r.stdout)
+        if not r.stdout.endswith("\n"):
+            sys.stdout.write("\n")
+    if r.stderr:
+        sys.stderr.write(r.stderr)
+    return int(r.returncode)
+
+
 def build_parser() -> argparse.ArgumentParser:
     """Full CLI parser — single source for ``main``, ``commands`` and MCP ``micro_tool_help``."""
     parser = argparse.ArgumentParser(
@@ -767,6 +785,17 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--out", default=None)
     p.set_defaults(func=_cmd_pixel_conclude)
 
+    p = sub.add_parser(
+        "ref-lookup",
+        help="Forward to src/dev/ref_books_index/lookup.py (book index)",
+    )
+    p.add_argument(
+        "argv",
+        nargs=argparse.REMAINDER,
+        help="Args passed through (e.g. --check, --brief path, --open NAV)",
+    )
+    p.set_defaults(func=_cmd_ref_lookup)
+
     return parser
 
 
@@ -817,6 +846,14 @@ def _ensure_utf8_stdio() -> None:
 
 def main(argv: list[str] | None = None) -> int:
     _ensure_utf8_stdio()
+    # ref-lookup must forward flags like `--check` unchanged; argparse would reject them.
+    raw = list(sys.argv[1:] if argv is None else argv)
+    if raw and raw[0] == "ref-lookup":
+        try:
+            return _cmd_ref_lookup(argparse.Namespace(argv=raw[1:]))
+        except Exception as exc:  # noqa: BLE001 — CLI surface
+            print(json.dumps({"error": str(exc)}), file=sys.stderr)
+            return 2
     args = build_parser().parse_args(argv)
     try:
         return args.func(args)
