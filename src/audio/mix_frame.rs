@@ -47,6 +47,26 @@ pub struct AudioMixRequest {
     pub tag: &'static str,
 }
 
+/// Max concurrent combat one-shots per mix frame (instance limit, AUD-02).
+pub const COMBAT_ONESHOT_CAP: usize = 4;
+
+/// Linear gain when ambience is ducked under warnings (−6 dB ≈ 0.501).
+pub const AMBIENCE_DUCK_TARGET_GAIN: f32 = 0.501_187_2;
+
+/// Smoothed ambience-bus duck state — sole writer: [`build_audio_mix_frame`].
+#[derive(Resource, Clone, Debug)]
+pub struct AudioMixDuckState {
+    pub ambience_bus_gain: f32,
+}
+
+impl Default for AudioMixDuckState {
+    fn default() -> Self {
+        Self {
+            ambience_bus_gain: 1.0,
+        }
+    }
+}
+
 /// Sole-writer mix plan for the frame — consumers (playback) read only.
 #[derive(Resource, Clone, Debug, Default)]
 pub struct AudioMixFrame {
@@ -56,6 +76,8 @@ pub struct AudioMixFrame {
     pub ambient_rain: f32,
     pub ambient_wind: f32,
     pub spatial_enabled: bool,
+    /// Smoothed linear gain applied to ambient bus requests this frame.
+    pub ambience_duck_gain: f32,
 }
 
 /// Drain UI / combat one-shot intents without touching sim resources.
@@ -99,9 +121,85 @@ impl AudioOneShotQueue {
     }
 }
 
+fn combat_listener_distance(listener: Option<Vec2>, world_xz: Option<Vec2>) -> f32 {
+    match (listener, world_xz) {
+        (Some(l), Some(w)) => l.distance(w),
+        _ => f32::MAX,
+    }
+}
+
+/// Keep up to `cap` combat one-shots: nearest to listener, then newest queue index.
+pub fn cap_combat_oneshots_in_place(
+    pending: &mut Vec<AudioMixRequest>,
+    listener_xz: Option<Vec2>,
+    cap: usize,
+) {
+    if cap == 0 {
+        pending.retain(|r| r.class != AudioEventClass::CombatOneShot);
+        return;
+    }
+    let mut combat: Vec<(usize, AudioMixRequest)> = Vec::new();
+    let mut other: Vec<AudioMixRequest> = Vec::with_capacity(pending.len());
+    for (idx, req) in pending.drain(..).enumerate() {
+        if req.class == AudioEventClass::CombatOneShot {
+            combat.push((idx, req));
+        } else {
+            other.push(req);
+        }
+    }
+    if combat.len() <= cap {
+        other.extend(combat.into_iter().map(|(_, r)| r));
+        *pending = other;
+        return;
+    }
+    combat.sort_by(|(ia, a), (ib, b)| {
+        let da = combat_listener_distance(listener_xz, a.world_xz);
+        let db = combat_listener_distance(listener_xz, b.world_xz);
+        da.partial_cmp(&db)
+            .unwrap_or(std::cmp::Ordering::Equal)
+            .then_with(|| ib.cmp(ia))
+    });
+    combat.truncate(cap);
+    other.extend(combat.into_iter().map(|(_, r)| r));
+    *pending = other;
+}
+
+const DUCK_ATTACK_SECS: f32 = 0.08;
+const DUCK_RELEASE_SECS: f32 = 0.45;
+
+/// Advance smoothed ambience duck gain toward target using real-time seconds.
+pub fn step_ambience_duck_gain(current: f32, warnings_active: bool, dt_secs: f32) -> f32 {
+    let target = if warnings_active {
+        AMBIENCE_DUCK_TARGET_GAIN
+    } else {
+        1.0
+    };
+    if dt_secs <= 0.0 {
+        return current;
+    }
+    let tau = if target < current {
+        DUCK_ATTACK_SECS
+    } else {
+        DUCK_RELEASE_SECS
+    };
+    let alpha = 1.0 - (-dt_secs / tau).exp();
+    current + (target - current) * alpha
+}
+
+fn apply_ambience_duck(requests: &mut [AudioMixRequest], duck_gain: f32) {
+    let g = duck_gain.clamp(0.0, 1.0);
+    for req in requests.iter_mut() {
+        if req.class == AudioEventClass::Ambient {
+            req.gain = (req.gain * g).clamp(0.0, 1.0);
+        }
+    }
+}
+
 pub fn build_audio_mix_frame(
     mut mix: ResMut<AudioMixFrame>,
     mut oneshots: ResMut<AudioOneShotQueue>,
+    mut duck: ResMut<AudioMixDuckState>,
+    time: Res<Time>,
     attention: Option<Res<SimAttentionFrame>>,
     view_auth: Option<Res<ViewProjectionAuthority>>,
     weather: Query<&ChunkWeather>,
@@ -112,6 +210,7 @@ pub fn build_audio_mix_frame(
     mix.listener_zoom = 1.0;
     mix.ambient_rain = 0.0;
     mix.ambient_wind = 0.0;
+    mix.ambience_duck_gain = duck.ambience_bus_gain;
     mix.spatial_enabled = attention
         .as_ref()
         .map(|a| a.player_theater_active)
@@ -196,5 +295,115 @@ pub fn build_audio_mix_frame(
         }
     }
 
+    cap_combat_oneshots_in_place(&mut oneshots.pending, mix.listener_xz, COMBAT_ONESHOT_CAP);
+
+    let warnings_active = oneshots
+        .pending
+        .iter()
+        .any(|r| r.class == AudioEventClass::Warning);
+    let dt = time.delta_secs();
+    duck.ambience_bus_gain =
+        step_ambience_duck_gain(duck.ambience_bus_gain, warnings_active, dt);
+    mix.ambience_duck_gain = duck.ambience_bus_gain;
+    apply_ambience_duck(&mut mix.requests, duck.ambience_bus_gain);
+
     mix.requests.append(&mut oneshots.pending);
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn combat_at(x: f32, z: f32) -> AudioMixRequest {
+        AudioMixRequest {
+            class: AudioEventClass::CombatOneShot,
+            kind: Some(AudioOneShotKind::Shot),
+            world_xz: Some(Vec2::new(x, z)),
+            gain: 1.0,
+            tag: "combat.shot",
+        }
+    }
+
+    #[test]
+    fn combat_cap_keeps_nearest_to_listener() {
+        let listener = Vec2::ZERO;
+        let mut pending = vec![
+            combat_at(100.0, 0.0),
+            combat_at(10.0, 0.0),
+            combat_at(50.0, 0.0),
+            combat_at(5.0, 0.0),
+        ];
+        cap_combat_oneshots_in_place(&mut pending, Some(listener), 2);
+        let combat: Vec<_> = pending
+            .iter()
+            .filter(|r| r.class == AudioEventClass::CombatOneShot)
+            .collect();
+        assert_eq!(combat.len(), 2);
+        let mut dists: Vec<f32> = combat
+            .iter()
+            .map(|r| r.world_xz.unwrap().distance(listener))
+            .collect();
+        dists.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        assert!((dists[0] - 5.0).abs() < 1e-3);
+        assert!((dists[1] - 10.0).abs() < 1e-3);
+    }
+
+    #[test]
+    fn combat_cap_prefers_newer_at_equal_distance() {
+        let listener = Vec2::ZERO;
+        let mut pending = vec![
+            AudioMixRequest {
+                class: AudioEventClass::CombatOneShot,
+                kind: Some(AudioOneShotKind::Shot),
+                world_xz: Some(Vec2::new(20.0, 0.0)),
+                gain: 1.0,
+                tag: "combat.old",
+            },
+            AudioMixRequest {
+                class: AudioEventClass::CombatOneShot,
+                kind: Some(AudioOneShotKind::Shot),
+                world_xz: Some(Vec2::new(20.0, 0.0)),
+                gain: 1.0,
+                tag: "combat.mid",
+            },
+            AudioMixRequest {
+                class: AudioEventClass::CombatOneShot,
+                kind: Some(AudioOneShotKind::Shot),
+                world_xz: Some(Vec2::new(20.0, 0.0)),
+                gain: 1.0,
+                tag: "combat.new",
+            },
+        ];
+        cap_combat_oneshots_in_place(&mut pending, Some(listener), 2);
+        let tags: Vec<_> = pending
+            .iter()
+            .filter(|r| r.class == AudioEventClass::CombatOneShot)
+            .map(|r| r.tag)
+            .collect();
+        assert_eq!(tags.len(), 2);
+        assert!(tags.contains(&"combat.mid"));
+        assert!(tags.contains(&"combat.new"));
+    }
+
+    #[test]
+    fn ambience_duck_reaches_target_under_warning() {
+        let mut g = 1.0;
+        for _ in 0..200 {
+            g = step_ambience_duck_gain(g, true, 1.0 / 60.0);
+        }
+        assert!(
+            (g - AMBIENCE_DUCK_TARGET_GAIN).abs() < 0.02,
+            "g={g} target={}",
+            AMBIENCE_DUCK_TARGET_GAIN
+        );
+    }
+
+    #[test]
+    fn ambience_duck_releases_after_warning_clears() {
+        let mut g = AMBIENCE_DUCK_TARGET_GAIN;
+        for _ in 0..400 {
+            g = step_ambience_duck_gain(g, false, 1.0 / 60.0);
+        }
+        assert!((g - 1.0).abs() < 0.02, "g={g}");
+    }
 }

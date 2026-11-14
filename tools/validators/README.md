@@ -25,3 +25,12 @@ python -m rust_engine_mcp.cli validate-report asset_glb ..\..\..\assets\models\m
 ## Plan
 
 `docs/archive/2026-06-src-dev/plans/plan_validation_runtime_v1.md`
+
+## Book-upgrade static checks (PLAN-REF-BOOKS-UPGRADE-v2)
+
+```powershell
+python tools/validators/sole_writer_check.py      # E1 — ResMut outside owner prefix (report-only)
+python tools/validators/determinism_lint.py       # E4 — rng / wall-clock / HashMap iter in sim dirs
+```
+
+Owners: `tools/validators/knowledge/sole_writers.tsv`.

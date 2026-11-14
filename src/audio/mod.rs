@@ -11,7 +11,8 @@ mod ui_hooks;
 
 pub use load_sfx::{enqueue_oneshot, tag_for_oneshot};
 pub use mix_frame::{
-    AudioEventClass, AudioMixFrame, AudioMixRequest, AudioMixSet, AudioOneShotKind, AudioOneShotQueue,
+    AudioEventClass, AudioMixDuckState, AudioMixFrame, AudioMixRequest, AudioMixSet,
+    AudioOneShotKind, AudioOneShotQueue, AMBIENCE_DUCK_TARGET_GAIN, COMBAT_ONESHOT_CAP,
 };
 pub use plugin::AudioMixPlugin;
 pub use sfx_catalog::{tags as sfx_tags, SfxCatalog};

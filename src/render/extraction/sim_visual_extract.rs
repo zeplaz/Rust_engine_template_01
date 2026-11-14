@@ -8,6 +8,9 @@
 //!
 //! [`ClimateVisualAggregate`] is the **single** world mean over chunk weather + ecology for GPU / overlay
 //! consumers; only [`crate::systems::atmosphere::visual_extract::publish_climate_visual_aggregate`] scans those components.
+//!
+//! Extract snapshots below document **Staleness** per [`LOOP-07`](../../dev/plan_ref_books_upgrade_v2.md) (GEA 17.6.3.3):
+//! writers name which sim step they sample and why visual lag is bounded.
 use bevy::math::IVec2;
 use bevy::prelude::*;
 use bevy::render::RenderApp;
@@ -98,6 +101,12 @@ pub const FIRE_VISUAL_ACTIVE_HEAT_EPS: f32 = 0.02;
 /// Canonical **CPU** fire visual snapshot for the frame (full detail). Filled by
 /// [`crate::render::extraction::fire_visual_extract::build_fire_visual_frame_from_simulation`] from
 /// [`crate::render::fx_spine::fire_chunk_runtime::FireSimulationSnapshot`] (simulation is ECS-only in `extract_fire_simulation_snapshot`).
+///
+/// Staleness: **this sim tick** when `stamp` matches [`crate::systems::sim_control::SimTick`] after
+/// [`crate::render::extraction::fire_visual_extract::extract_fire_simulation_snapshot`] runs; else retained
+/// **previous tick** (cadence gate / `snapshot_unchanged`) — acceptable because
+/// [`crate::render::extraction::render_projection_graph::fire_projection_stamp_aligned`] allows ≤1 tick vs
+/// [`crate::render::extraction::visual_snapshot_commit::CommittedVisualSnapshotFence`] and GPU paths never write sim.
 #[derive(Resource, Default, Debug, Clone)]
 pub struct FireVisualFrame {
     pub stamp: SimStepStamp,
@@ -158,12 +167,20 @@ pub struct ChunkSmokeGpu {
 }
 
 /// Latest fire emitter snapshot (cleared + refilled each extract tick on the **main** world only).
+///
+/// Staleness: mirrors tactical [`FireVisualFrame`] from [`crate::render::extraction::fire_view_extract::build_fire_visual_frames_by_view`]
+/// on the same frame (**this tick** when extract ran; **previous tick** when cadence skipped rebuild) — acceptable for
+/// legacy CPU/debug callers only; authoritative GPU path uses [`crate::render::extraction::RenderProjectionGraph`].
 #[derive(Resource, Default, Clone, Debug)]
 pub struct SimFireEmitterVisualExtract {
     pub instances: Vec<FireEmitterGpu>,
 }
 
 /// Non-empty chunk smoke cells for fog / volume sampling.
+///
+/// Staleness: **this sim tick** — [`crate::systems::atmosphere::visual_extract::publish_sim_visual_extract`] reads
+/// `ChunkSmokeField` / substrate contamination after `ChunkEnvironmentSet::Fire` for the current step; render-world
+/// extract may trail main world by one render frame (Bevy extract), not an extra sim step.
 #[derive(Resource, Default, Clone, Debug, ExtractResource)]
 #[extract_app(RenderApp)]
 pub struct SimChunkSmokeVisualExtract {
@@ -174,6 +191,9 @@ pub struct SimChunkSmokeVisualExtract {
 ///
 /// Filled in [`crate::systems::atmosphere::AtmospherePipelineSet::VisualExtract`]; consumers must not query
 /// [`crate::systems::weather::ChunkWeather`] / [`crate::systems::ecology::ChunkEcology`] again for the same means.
+///
+/// Staleness: **this sim tick** — [`crate::systems::atmosphere::visual_extract::publish_climate_visual_aggregate`]
+/// scans live chunk weather/ecology after environment fire/weather for the step; presentation-only means, so no gameplay coupling.
 #[derive(Resource, Default, Debug, Clone, Copy)]
 pub struct ClimateVisualAggregate {
     pub mean_rain: f32,

@@ -1,0 +1,6 @@
+Resource	owner_prefix
+MissionBook	src/combat/
+LogisticsOrderSim	src/economy/logistics/orders/
+SimAttentionFrame	src/systems/sim_attention.rs
+WeatherField	src/systems/weather/
+ViewManager	src/gui/view_authority.rs

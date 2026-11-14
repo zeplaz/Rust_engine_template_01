@@ -7,20 +7,20 @@ INPUT-05	ADOPTED	gui/tactical/map_camera.rs ApplyInput → DeriveDesired → Smo
 ECS-07	ADOPTED	v1 Order 3: MissionIntentQueue → MissionBook	2026-11-14
 EXEC-05	PARTIAL	v1 Order 2: SimAttentionFrame scaffold	2026-11-14
 LOOP-08	ADOPTED	WeatherField prev/next	2026-11-14
-CONC-03	OPEN	no enforcement of sole writers	2026-11-14
-MEM-08	OPEN	lint not written	2026-11-14
-LOOP-02	OPEN	clock use in sim dirs unchecked	2026-11-14
-IO-02	OPEN	chunk_window_coords has one radius	2026-11-14
-LOOP-07	OPEN		2026-11-14
+CONC-03	ADOPTED	sole_writer_check.py baseline 5 resources, 4 violations (ViewManager bridge/stress)	2026-11-14
+MEM-08	ADOPTED	determinism_lint.py report-only; top backlog pasted with E4	2026-11-14
+LOOP-02	ADOPTED	determinism_lint real_time rule (E4)	2026-11-14
+IO-02	ADOPTED	STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS + oscillation test	2026-11-14
+LOOP-07	ADOPTED	Staleness docs E2 on extract + world_read_snapshot + authority map	2026-11-14
 EXEC-01	OPEN		2026-11-14
 TAC-06	OPEN		2026-11-14
 IO-08	OPEN		2026-11-14
 IO-07	OPEN		2026-11-14
-PHYS-02	OPEN	no swept test in combat/ballistics.rs	2026-11-14
-MOVE-09	OPEN	no drag or aim iteration in combat/ballistics.rs	2026-11-14
-PHYS-06	OPEN	wake rule unverified	2026-11-14
+PHYS-02	ADOPTED	swept DDA step_ballistic_flights + swept_impact test	2026-11-14
+MOVE-09	ADOPTED	refine_missile_aim 6-iter + wind tests in ballistics.rs	2026-11-14
+PHYS-06	ADOPTED	sleeping_neighbor_west_edge_ignites_within_two_ticks	2026-11-14
 NAV-09	OPEN		2026-11-14
-AUD-02	OPEN		2026-11-14
+AUD-02	ADOPTED	combat oneshot cap + ambience duck in mix_frame.rs	2026-11-14
 TAC-03	OPEN	not for cell_spread.rs or relax.rs	2026-11-14
 DEC-08	OPEN		2026-11-14
 DEC-15	OPEN		2026-11-14

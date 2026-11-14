@@ -1,4 +1,5 @@
 //! Compressed **read model** for planners (not simulation truth).
+//! Staleness: [`world_read_snapshot_refresh_system`] documents cadence vs strategic writers (`LOOP-07`).
 
 use bevy::prelude::{Local, Query, Res, ResMut, Resource};
 
@@ -6,6 +7,9 @@ use crate::strategic::{ChunkStrategicOverlay, FrontlineState};
 use crate::systems::transport::TransportEdgeDirectory;
 
 /// Planner-facing digest: population runs after zone/frontline passes in the strategic pipeline.
+///
+/// Staleness: refresh runs at most every [`WORLD_READ_REFRESH_EVERY_N_FRAMES`] display frames; between refreshes
+/// consumers read the last digest (**up to 11 frames** behind live overlays). Acceptable for HUD/info means only — not sim truth.
 #[derive(Resource, Clone, Debug, Default)]
 pub struct WorldReadSnapshot {
     pub epoch: u64,
@@ -24,6 +28,10 @@ pub struct WorldReadSnapshot {
 /// Frames between [`world_read_snapshot_refresh_system`] refreshes.
 const WORLD_READ_REFRESH_EVERY_N_FRAMES: u32 = 12;
 
+/// Staleness: on refresh, reads **this frame's** `ChunkStrategicOverlay` and `FrontlineState` (chained after
+/// `derive_frontline_from_control_system` in `ZoneAndReadModel`) and **current** `TransportEdgeDirectory` (topology
+/// may trail `NetworkFlow` by one frame per SCH-W1-P2-001). Skipped frames leave `WorldReadSnapshot` unchanged — acceptable
+/// for planner chrome; agents must not treat `epoch` as a sim tick.
 pub fn world_read_snapshot_refresh_system(
     overlays: Query<&ChunkStrategicOverlay>,
     directory: Res<TransportEdgeDirectory>,

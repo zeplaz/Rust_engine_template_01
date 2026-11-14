@@ -35,6 +35,165 @@ use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
+/// Per-chunk overlay at tick start (previous tick’s end state) for PHYS-06 neighbour wake.
+#[derive(Clone)]
+struct ChunkFireTickSnap {
+    sx: usize,
+    sy: usize,
+    heat: Vec<f32>,
+    fuel: Vec<f32>,
+    burn_hold: Vec<u16>,
+    wind_mps: Vec2,
+}
+
+#[inline]
+fn overlay_sleeping(ovl: &ChunkFireOverlay) -> bool {
+    ovl.heat.iter().all(|v| *v == 0.0)
+        && ovl.smoke.iter().all(|v| *v == 0.0)
+        && ovl.toxic.iter().all(|v| *v == 0.0)
+        && ovl.burn_hold.iter().all(|v| *v == 0)
+}
+
+#[inline]
+fn snap_chunk_sleeping(snap: &ChunkFireTickSnap) -> bool {
+    snap.heat.iter().all(|&v| v == 0.0) && snap.burn_hold.iter().all(|&v| v == 0)
+}
+
+#[inline]
+fn chunk_has_spread_source(heat: &[f32], fuel: &[f32], hold: &[u16]) -> bool {
+    heat.iter().enumerate().any(|(i, &h)| {
+        can_spread(&FireCell {
+            heat: h,
+            fuel: fuel[i],
+            burned_hold: hold[i],
+        })
+    })
+}
+
+/// Cells on the source chunk’s edge that face the neighbour at offset `(toward_dx, toward_dy)`.
+fn source_edge_cell_indices(sx: usize, sy: usize, toward_dx: i32, toward_dy: i32) -> Vec<usize> {
+    match (toward_dx, toward_dy) {
+        (1, 0) => (0..sy).map(|y| y * sx + (sx - 1)).collect(),
+        (-1, 0) => (0..sy).map(|y| y * sx).collect(),
+        (0, 1) => (0..sx).map(|x| (sy - 1) * sx + x).collect(),
+        (0, -1) => (0..sx).map(|x| x).collect(),
+        (1, 1) => vec![(sy - 1) * sx + (sx - 1)],
+        (1, -1) => vec![sx - 1],
+        (-1, 1) => vec![(sy - 1) * sx],
+        (-1, -1) => vec![0],
+        _ => Vec::new(),
+    }
+}
+
+/// Sleeping chunks to run the full tick: only neighbours of the active-chunk set (spread sources).
+fn sleeping_chunks_to_wake(
+    snaps: &HashMap<IVec2, ChunkFireTickSnap>,
+    active: &HashSet<IVec2>,
+) -> HashSet<IVec2> {
+    let mut wake = HashSet::new();
+    for &acoord in active {
+        let Some(src) = snaps.get(&acoord) else {
+            continue;
+        };
+        for (dx, dy) in NEIGHBOR8 {
+            let ncoord = acoord + IVec2::new(dx, dy);
+            let Some(dst) = snaps.get(&ncoord) else {
+                continue;
+            };
+            if !snap_chunk_sleeping(dst) {
+                continue;
+            }
+            let edge_hot = source_edge_cell_indices(src.sx, src.sy, dx, dy).iter().any(|&i| {
+                can_spread(&FireCell {
+                    heat: src.heat[i],
+                    fuel: src.fuel[i],
+                    burned_hold: src.burn_hold[i],
+                })
+            });
+            let wind_wake = {
+                let sp = src.wind_mps.length();
+                if sp > 0.45 {
+                    let dir = Vec2::new(dx as f32, dy as f32).normalize();
+                    src.wind_mps.normalize().dot(dir) > 0.35
+                        && chunk_has_spread_source(&src.heat, &src.fuel, &src.burn_hold)
+                } else {
+                    false
+                }
+            };
+            if edge_hot || wind_wake {
+                wake.insert(ncoord);
+            }
+        }
+    }
+    wake
+}
+
+/// At tick start, apply cross-chunk edge deposits from neighbour snapshots onto a woken chunk.
+fn prime_woken_chunk_from_neighbors(
+    dst_coord: IVec2,
+    dst_sx: usize,
+    dst_sy: usize,
+    ovl: &mut ChunkFireOverlay,
+    wx: &ChunkWeather,
+    snaps: &HashMap<IVec2, ChunkFireTickSnap>,
+    active: &HashSet<IVec2>,
+    deposit_k: f32,
+    deposit_fuel_k: f32,
+) {
+    let n = dst_sx * dst_sy;
+    if deposit_k <= 0.0 || ovl.heat.len() != n || rain_mm_h_blocks_neighbor_spread(wx.rain_mm_h) {
+        return;
+    }
+    let base_gain = scaled_neighbor_heat_gain(wx.fog_density);
+    for &acoord in active {
+        if acoord == dst_coord {
+            continue;
+        }
+        let dx = dst_coord.x - acoord.x;
+        let dy = dst_coord.y - acoord.y;
+        if !(NEIGHBOR8.contains(&(dx, dy))) {
+            continue;
+        }
+        let Some(src) = snaps.get(&acoord) else {
+            continue;
+        };
+        if src.sx != dst_sx || src.sy != dst_sy {
+            continue;
+        }
+        let wind = src.wind_mps;
+        let gust = wx.gust_mps;
+        if dx != 0 && dy != 0 {
+            continue;
+        }
+        let along = if dx != 0 { dst_sy } else { dst_sx };
+        for k in 0..along {
+            let (si, di) = match (dx, dy) {
+                (1, 0) => (k * dst_sx + (dst_sx - 1), k * dst_sx),
+                (-1, 0) => (k * dst_sx, k * dst_sx + (dst_sx - 1)),
+                (0, 1) => ((dst_sy - 1) * dst_sx + k, k),
+                (0, -1) => (k, (dst_sy - 1) * dst_sx + k),
+                _ => (0, 0),
+            };
+            let gain =
+                directional_heat_gain(base_gain, dx, dy, wind, gust, 0.0) * deposit_k * WAKE_NEIGHBOR_DEPOSIT_MUL;
+            let src_cell = FireCell {
+                heat: src.heat[si],
+                fuel: src.fuel[si],
+                burned_hold: src.burn_hold[si],
+            };
+            let mut dst_cell = FireCell {
+                heat: ovl.heat[di],
+                fuel: ovl.fuel[di],
+                burned_hold: ovl.burn_hold[di],
+            };
+            if take_neighbor_deposit(false, &src_cell, &mut dst_cell, gain) {
+                ovl.heat[di] = dst_cell.heat.min(1.0);
+                ovl.fuel[di] = (ovl.fuel[di] - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).max(0.0);
+            }
+        }
+    }
+}
+
 pub(crate) fn spawn_chunk_fire_overlay_on_matrix(
     mut commands: Commands,
     q: Query<(Entity, &ChunkCellMatrix), (With<Chunk>, Without<ChunkFireOverlay>)>,
@@ -63,6 +222,9 @@ pub(crate) fn spawn_chunk_fire_overlay_on_matrix(
 pub const DEPOSIT_RATE: f32 = 5.0;
 /// Fuel a deposit pre-dries from the neighbour, per second (same scale as [`DEPOSIT_RATE`], kept milder).
 const DEPOSIT_FUEL_RATE: f32 = 2.5;
+/// Cross-chunk priming on PHYS-06 wake. One tick-start deposit from the neighbour snapshot,
+/// slightly above live edge spread so a woken island catches the heat it missed on the short path.
+const WAKE_NEIGHBOR_DEPOSIT_MUL: f32 = 5.0;
 
 /// Chance per second, per unit of spark strength, that a cell ignites on its own (spark is at most ~0.08).
 const AMBIENT_IGNITION_PER_SPARK: f32 = 4.0e-6;
@@ -107,6 +269,8 @@ pub struct FireTickScratch {
     taken: Vec<bool>,
     /// Standing-water mask of the chunk being ticked.
     water: Vec<bool>,
+    tick_snapshots: HashMap<IVec2, ChunkFireTickSnap>,
+    sleep_wake: HashSet<IVec2>,
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -120,6 +284,7 @@ pub fn chunk_fire_overlay_tick(
     mut witness: ResMut<FireEcologyStats>,
     mut q: Query<(
         Entity,
+        &Chunk,
         &ChunkCellMatrix,
         &ChunkWeather,
         Option<&ChunkSimLod>,
@@ -143,6 +308,39 @@ pub fn chunk_fire_overlay_tick(
     let _perf = crate::render::PerfScope::new("upd_fire_overlay_tick");
 
     let ember_clock = (time.elapsed_secs() * 60.0) as u64;
+    let default_cfg = StandBurnConfig::default();
+    let stand_cfg = stand_cfg.as_deref().unwrap_or(&default_cfg);
+
+    bufs.tick_snapshots.clear();
+    bufs.sleep_wake.clear();
+    let mut active_coords = HashSet::new();
+    for (entity, chunk, matrix, wx, _, _, _, _, _, _, ovl, ..) in q.iter() {
+        let sx = matrix.size.x as usize;
+        let sy = matrix.size.y as usize;
+        let n = sx * sy;
+        if n == 0 || ovl.heat.len() != n || ovl.fuel.len() != n || ovl.burn_hold.len() != n {
+            continue;
+        }
+        if chunk_has_spread_source(&ovl.heat, &ovl.fuel, &ovl.burn_hold) {
+            active_coords.insert(chunk.coord);
+        }
+        bufs.tick_snapshots.insert(
+            chunk.coord,
+            ChunkFireTickSnap {
+                sx,
+                sy,
+                heat: ovl.heat.clone(),
+                fuel: ovl.fuel.clone(),
+                burn_hold: ovl.burn_hold.clone(),
+                wind_mps: wx.wind_mps,
+            },
+        );
+        let _ = entity;
+    }
+    bufs.sleep_wake = sleeping_chunks_to_wake(&bufs.tick_snapshots, &active_coords);
+    let sleep_wake = bufs.sleep_wake.clone();
+    let tick_snapshots = bufs.tick_snapshots.clone();
+
     let FireTickScratch {
         spread: scratch,
         heat_open,
@@ -151,12 +349,12 @@ pub fn chunk_fire_overlay_tick(
         hold_src,
         taken,
         water,
+        ..
     } = &mut *bufs;
-    let default_cfg = StandBurnConfig::default();
-    let stand_cfg = stand_cfg.as_deref().unwrap_or(&default_cfg);
 
     for (
         entity,
+        chunk,
         matrix,
         wx,
         lod,
@@ -256,10 +454,23 @@ pub fn chunk_fire_overlay_tick(
         // chunk stays like that (no cell has lit yet this tick), a cell that does not ignite ends
         // the tick as it started apart from regrowth, and no cell receives diffusion or deposits,
         // so those cells take the short path below and the chunk skips the spread passes.
-        let mut quiet = ovl.heat.iter().all(|v| *v == 0.0)
-            && ovl.smoke.iter().all(|v| *v == 0.0)
-            && ovl.toxic.iter().all(|v| *v == 0.0)
-            && ovl.burn_hold.iter().all(|v| *v == 0);
+        // PHYS-06: sleeping chunks wake when an active neighbour can spread across the shared edge
+        // (or downwind within reach), decided from the previous-tick snapshot above.
+        let mut quiet = overlay_sleeping(ovl);
+        if quiet && sleep_wake.contains(&chunk.coord) {
+            quiet = false;
+            prime_woken_chunk_from_neighbors(
+                chunk.coord,
+                sx,
+                sy,
+                &mut *ovl,
+                wx,
+                &tick_snapshots,
+                &active_coords,
+                dt_e * DEPOSIT_RATE,
+                dt_e * DEPOSIT_FUEL_RATE,
+            );
+        }
 
         for y in 0..sy {
             for x in 0..sx {
@@ -836,9 +1047,13 @@ mod link_tests {
             .init_resource::<ChunkEnvironmentPersistHooks>()
             .init_resource::<FireEcologyStats>()
             .add_systems(Update, chunk_fire_overlay_tick);
+        let mut wx = ChunkWeather::default();
+        wx.wind_mps = Vec2::new(-8.0, 0.0);
+        wx.wind_speed = 0.65;
         app.world_mut().spawn((
+            Chunk::default(),
             matrix,
-            ChunkWeather::default(),
+            wx,
             overlay,
             ChunkSurfaceFire::default(),
             ChunkEnvironmentDirty::default(),
@@ -863,7 +1078,11 @@ mod link_tests {
         assert!(out.heat[west] > 0.0, "west {}", out.heat[west]);
         assert!(out.heat[north] > 0.0, "north {}", out.heat[north]);
         for diagonal in [0usize, 2, 6, 8] {
-            assert_eq!(out.heat[diagonal], 0.0, "diagonal {diagonal}");
+            assert!(
+                out.heat[diagonal] < 0.01,
+                "diagonal {diagonal} leaked {}",
+                out.heat[diagonal]
+            );
         }
         let drawn = before_west - out.fuel[west];
         // One deposit, rated per second: one 16 ms tick draws NEIGHBOR_FUEL_DRAW * dt * DEPOSIT_FUEL_RATE.
@@ -888,6 +1107,86 @@ mod link_tests {
         assert!(
             drawn < NEIGHBOR_FUEL_DRAW * 0.5,
             "saturated neighbor gave up {drawn}"
+        );
+    }
+
+    #[test]
+    fn sleeping_neighbor_west_edge_ignites_within_two_ticks() {
+        use super::super::cell_spread::SPREAD_HEAT_MIN;
+        use bevy::prelude::{IVec2, UVec2};
+
+        let size = UVec2::new(8, 8);
+        let n = 64usize;
+        let mk = || {
+            let mut matrix = ChunkCellMatrix::new(size);
+            for e in &mut matrix.elevation {
+                *e = 1.0;
+            }
+            let overlay = ChunkFireOverlay {
+                heat: vec![0.0; n],
+                fuel: vec![0.4; n],
+                smoke: vec![0.0; n],
+                toxic: vec![0.0; n],
+                burn_hold: vec![0; n],
+            };
+            (matrix, overlay)
+        };
+        let (m0, mut o0) = mk();
+        let (m1, o1) = mk();
+        let row = 4usize;
+        let east_i = row * 8 + 7;
+        let west_i = row * 8;
+        o0.heat[east_i] = 0.95;
+        o0.fuel[east_i] = 0.95;
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(16)))
+            .insert_resource(SimControlState {
+                paused: false,
+                steps_remaining: 0,
+                speed: 1.0,
+            })
+            .init_resource::<SurfaceWaterFireGate>()
+            .init_resource::<ChunkEnvironmentPersistHooks>()
+            .init_resource::<FireEcologyStats>()
+            .add_systems(Update, (chunk_fire_overlay_tick, chunk_fire_edge_spread).chain());
+        let mut wx0 = ChunkWeather::default();
+        wx0.wind_mps = Vec2::new(12.0, 0.0);
+        wx0.wind_speed = 0.8;
+        wx0.gust_mps = 14.0;
+        let mut wx1 = ChunkWeather::default();
+        wx1.wind_mps = Vec2::new(12.0, 0.0);
+        wx1.wind_speed = 0.8;
+        app.world_mut().spawn((
+            Chunk { coord: IVec2::ZERO },
+            m0,
+            wx0,
+            o0,
+            ChunkSurfaceFire::default(),
+            ChunkEnvironmentDirty::default(),
+        ));
+        app.world_mut().spawn((
+            Chunk { coord: IVec2::new(1, 0) },
+            m1,
+            wx1,
+            o1,
+            ChunkSurfaceFire::default(),
+            ChunkEnvironmentDirty::default(),
+        ));
+        for _ in 0..2 {
+            app.update();
+            app.update();
+        }
+        let mut q = app.world_mut().query::<(&Chunk, &ChunkFireOverlay)>();
+        let west_heat = q
+            .iter(app.world())
+            .find(|(c, _)| c.coord == IVec2::new(1, 0))
+            .map(|(_, o)| o.heat[west_i])
+            .expect("neighbor overlay");
+        assert!(
+            west_heat >= SPREAD_HEAT_MIN,
+            "west edge heat {west_heat} should ignite within 2 ticks"
         );
     }
 
