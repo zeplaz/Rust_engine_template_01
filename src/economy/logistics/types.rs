@@ -70,6 +70,13 @@ pub struct RouteCache {
     pub next_id: u32,
 }
 
+/// Per-tick tile keys (`t{x}_{z}`) where a corridor closed or the directory lost an edge (NAV-10).
+/// Written before [`super::routes::refresh_resource_flow_routes_system`], cleared after consume.
+#[derive(Resource, Default, Clone, Debug)]
+pub struct LogisticsRouteDirtyTiles {
+    pub keys: std::collections::HashSet<String>,
+}
+
 #[derive(Clone, Debug)]
 pub struct CachedRoute {
     pub handle: RouteHandle,

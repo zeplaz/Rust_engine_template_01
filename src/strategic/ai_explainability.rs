@@ -4,7 +4,11 @@
 
 use bevy::prelude::*;
 
+use crate::ai::faction::{FactionBehaviourChangeLog, BEHAVIOUR_CHANGES_CAP};
 use crate::systems::sim_control::SimTick;
+
+/// Player-facing behaviour switches for the Insert explain panel (`DEC-15`).
+pub const BEHAVIOUR_CHANGES_PANEL_LINES: usize = 8;
 
 use super::behavior_entities::{Agent, AgentFactionLink, Faction};
 use super::behavior_pipeline::{
@@ -14,6 +18,13 @@ use super::behavior_pressure::PressureField;
 use super::behavior_script::ScriptInfluence;
 use super::hybrid_brain::{HybridResolutionTelemetry, WorldEvent};
 use super::hybrid_fields::WorldFields;
+
+/// Latest goal switches — UI reads this only, not [`FactionBehaviourChangeLog`].
+#[derive(Resource, Clone, Debug, Default)]
+pub struct BehaviourChangesSnapshot {
+    pub lines: Vec<String>,
+    pub total_switches: u64,
+}
 
 /// Latest **micro** decision sample (per-agent pipeline composition).
 #[derive(Resource, Clone, Debug, Default)]
@@ -115,6 +126,23 @@ fn explain_event_readout(ev: WorldEvent) -> String {
             "Readout: no flagship macro event — slow drift (watch field gradients).".into()
         }
     }
+}
+
+pub fn behaviour_changes_snapshot_system(
+    log: Option<Res<FactionBehaviourChangeLog>>,
+    mut snap: ResMut<BehaviourChangesSnapshot>,
+) {
+    let Some(log) = log else {
+        snap.lines.clear();
+        snap.total_switches = 0;
+        return;
+    };
+    snap.total_switches = log.total;
+    snap.lines = log
+        .recent(BEHAVIOUR_CHANGES_PANEL_LINES.min(BEHAVIOUR_CHANGES_CAP))
+        .into_iter()
+        .map(|r| format!("f{} {}", r.slot, r.line()))
+        .collect();
 }
 
 pub fn decision_explainability_capture_system(

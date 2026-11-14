@@ -17,6 +17,10 @@ use super::front::SlotControl;
 use super::theater::{Theater, TheaterBook, TheaterId};
 use crate::strategic::{ChunkStrategicOverlay, FrontlineState};
 
+/// Aggregate-tier pressure rescore cadence (period 2; EXEC-01 phase 1 — odd ticks vs logistics even).
+pub const PRESSURE_AGGREGATE_RESCORE_PERIOD_TICKS: u64 = 2;
+pub const PRESSURE_AGGREGATE_RESCORE_PHASE_TICKS: u64 = 1;
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum PressureKind {
     Threatened,
@@ -236,7 +240,13 @@ pub fn score_pressure_points_system(
         if !tier.allows_sortie_pulse() {
             continue;
         }
-        if !tier.allows_full_ai() && (book.source_tick % 2 == 1) {
+        if !tier.allows_full_ai()
+            && !crate::systems::heavy_periodic::periodic_step_fires(
+                book.source_tick,
+                PRESSURE_AGGREGATE_RESCORE_PERIOD_TICKS,
+                PRESSURE_AGGREGATE_RESCORE_PHASE_TICKS,
+            )
+        {
             continue;
         }
         points.extend(score_theater(t, &fields, &cover, &balance.pressure, balance.tile_size_m()));

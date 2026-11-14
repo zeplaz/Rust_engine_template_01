@@ -249,7 +249,8 @@ mod tests {
 
     use super::*;
     use crate::economy::logistics::{
-        refresh_resource_flow_routes_system, FacilityPortal, RouteCache, RoutePathStore,
+        accumulate_logistics_route_dirty_tiles_system, refresh_resource_flow_routes_system,
+        FacilityPortal, LogisticsRouteDirtyTiles, RouteCache, RoutePathStore,
         TransportNodeAnchor,
     };
     use crate::economy::resource_flow::{ResourceFlowEdge, ResourceFlowRegistry, TransportMode};
@@ -478,8 +479,12 @@ mod tests {
         });
         app.init_resource::<RouteCache>();
         app.init_resource::<RoutePathStore>();
+        app.init_resource::<LogisticsRouteDirtyTiles>();
         app.init_resource::<crate::economy::logistics::LogisticsDiagnostics>();
 
+        app.world_mut()
+            .run_system_once(accumulate_logistics_route_dirty_tiles_system)
+            .unwrap();
         app.world_mut()
             .run_system_once(refresh_resource_flow_routes_system)
             .unwrap();

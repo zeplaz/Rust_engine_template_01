@@ -16,6 +16,7 @@ pub mod plant_demand;
 pub mod plugin;
 pub mod sim;
 pub mod snapshot;
+pub mod source_pick;
 pub mod travel;
 pub mod haul_amplify;
 pub mod vehicle_fire;

@@ -7,6 +7,7 @@ mod dirty_queue;
 mod dto;
 mod load;
 mod manifest;
+mod post_load_rebuild;
 mod pipeline;
 mod registry_snapshot;
 mod snapshot_builder;
@@ -35,6 +36,11 @@ pub use load::{
     hydrate_chunk_bodies_from_manifest, load_chunk_body_for_coord, load_chunk_body_from_artifact,
     material_ids_from_saved_body, read_manifest_from_bundle, tag_sets_from_saved_body,
     validate_manifest,
+};
+pub use post_load_rebuild::{
+    burnt_count_from_burnt_at, rebuild_saved_cell_stand_row_derived,
+    rebuild_saved_fire_chunk_row_derived, strip_fire_row_derived_for_save,
+    strip_stand_row_derived_for_save,
 };
 pub use manifest::{
     build_save_world_manifest, ChunkSetRef, OverlaySnapshotRef, RegistrySnapshotRef,

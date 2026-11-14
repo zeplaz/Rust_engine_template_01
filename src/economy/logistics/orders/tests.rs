@@ -813,6 +813,44 @@ fn advisor_picks_stocked_nearest_source_and_reports_gaps() {
 }
 
 #[test]
+fn nav09_open_goal_source_pick_matches_brute_force_fixture() {
+    use super::source_pick::{best_source_brute_force, best_source_open_goal};
+
+    let (mut sim, _) = world();
+    ok(sim.apply(LogisticsOrderCommand::RegisterSite {
+        site: SiteId(4),
+        name: "Far".into(),
+    }));
+  // FRONT only links to SITE (50m); DEPOT reaches FRONT via SITE (150m total) or direct (200m).
+    let d = Distances::default()
+        .with(1, 2, 100.0)
+        .with(1, 3, 200.0)
+        .with(2, 3, 50.0)
+        .with(1, 4, 80.0)
+        .with(4, 2, 30.0)
+        .with(4, 3, 500.0);
+    stock(&mut sim, DEPOT, ammo(), 200);
+    stock(&mut sim, SiteId(4), ammo(), 200);
+    stock(&mut sim, SITE, ammo(), 3);
+    demand(&mut sim, FRONT, ammo(), 40, 10, 0, Priority::Normal);
+    let meta = meta_for(
+        &sim,
+        &[
+            (DEPOT, SiteRole::Depot, 0.0),
+            (SITE, SiteRole::Depot, 100.0),
+            (FRONT, SiteRole::Front, 150.0),
+            (SiteId(4), SiteRole::Depot, 50.0),
+        ],
+    );
+    let snap = build_snapshot(&sim, &meta, &d);
+    let demand_row = &snap.demands[0];
+    let open = best_source_open_goal(&snap, demand_row);
+    let brute = best_source_brute_force(&snap, demand_row);
+    assert_eq!(open, brute, "open-goal and brute-force must agree");
+    assert!(open.is_some());
+}
+
+#[test]
 fn advisor_prefers_source_that_covers_the_whole_target() {
     let (mut sim, d) = world();
     stock(&mut sim, SITE, ammo(), 5); // near but nearly empty

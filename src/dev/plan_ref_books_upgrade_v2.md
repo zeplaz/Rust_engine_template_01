@@ -245,6 +245,7 @@ hash_iter src/strategic/settlement/town.rs:223
 - **Do**: only if the stencil is a symmetric box/gaussian: two 1-D passes over the dense buffers. CPU and GPU kernels must stay identical: change both or neither.
 - **Don't**: apply to `systems/fire/cell_spread.rs` (wind makes it anisotropic, not separable) or `combat/relax.rs` (sparse `BTreeMap`, 4-neighbour).
 - **Accept**: test: new output equals old output within 1e-5 on a fixture grid · `cargo test -p proc_A_dine01 --lib compute::`.
+- **Recon findings (2026-11-14, PARTIAL)**: `grep` under `src/` + `assets/**/*.wgsl` for `heat_diffusion` → **no WGSL compute kernel** (only `prepare_heat_diffusion_gpu_buffer` uploads CPU rows). Stencil in `run_heat_diffusion_step` (`heat_diffusion.rs:155–250`) is a **sparse** `HashMap` von-Neumann step: mean of **present** 4-neighbours only (variable divisor), plus per-step `DECAY_RATE`, `DIFFUSION_RATE`, and fire `SOURCE_BLEND` — not a symmetric box/Gaussian convolution on dense buffers; two separable 1-D passes would not match this operator within 1e-5 without a planned dense-grid redesign (and there is no GPU twin to pair with).
 
 ### A1 🧠 Score goals per unit time — `DEC-08` · aig3:5.7.4 · V4 C2 R3
 - **Files**: `src/ai/faction/decide.rs`
@@ -370,14 +371,14 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 | LOOP-07 | E2 | OPEN | |
 | EXEC-01 | E3 | OPEN | |
 | TAC-06 | E5 | OPEN | |
-| IO-08 | E7 | OPEN | |
-| IO-07 | E7 | OPEN | |
+| IO-08 | E7 | SHIPPED | derived stand/fire/transport nodes rebuilt on hydrate; `post_load_rebuild.rs` |
+| IO-07 | E7 | SHIPPED | chunk coord + string keys on wire; no `Entity` in save DTOs |
 | PHYS-02 | C1 | OPEN | no swept test in `combat/ballistics.rs` |
 | MOVE-09 | C2 | OPEN | no drag or aim iteration in `combat/ballistics.rs` |
 | PHYS-06 | F2 | OPEN | wake rule unverified |
 | NAV-09 | L1 | OPEN | |
 | AUD-02 | U1 | OPEN | |
-| TAC-03 | F1 | OPEN | not for `cell_spread.rs` or `relax.rs` |
+| TAC-03 | F1 | PARTIAL | sparse 4-nbr Jacobi + decay/source blend; no `heat_diffusion` WGSL; not separable box on dense buffers (`heat_diffusion.rs:155–250`) |
 | DEC-08 | A1 | OPEN | |
 | DEC-15 | A2 | OPEN | |
 | NAV-10 | L3 | OPEN | |

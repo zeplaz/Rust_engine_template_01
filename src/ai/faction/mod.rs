@@ -54,7 +54,10 @@ use crate::systems::sim_control::{
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 pub use decide::{choose_goal, FactionDoctrine, GoalChoice, GoalScore, ScoreTerm, StrategicGoal};
-pub use log::{DecisionTrace, FactionAiDecisionLog, FactionAiDecisionRecord, PerceptionDigest};
+pub use log::{
+    DecisionTrace, FactionAiDecisionLog, FactionAiDecisionRecord, FactionBehaviourChangeLog,
+    FactionBehaviourChangeRecord, PerceptionDigest, BEHAVIOUR_CHANGES_CAP,
+};
 pub use orders::{
     plan_orders, AiOrder, BuildReason, DeployKind, FormationRef, OrderOutcome, MAX_ORDERS_PER_DECISION,
 };
@@ -528,6 +531,7 @@ pub fn faction_ai_tick_system(
     ctrl: Option<Res<SimControlState>>,
     mut controllers: Query<(Entity, &mut FactionAiController)>,
     mut log: ResMut<FactionAiDecisionLog>,
+    mut behaviour_log: ResMut<FactionBehaviourChangeLog>,
     mut sinks: AiOrderSinks,
     world: AiWorld,
     mut perception_cache: Local<std::collections::HashMap<u8, (u64, FactionPerception)>>,
@@ -614,6 +618,7 @@ pub fn faction_ai_tick_system(
                 .max(1)
                 .saturating_mul(interval_mul),
         );
+        behaviour_log.maybe_push(FactionBehaviourChangeRecord::from_choice(now, slot, previous, &choice));
         log.push(FactionAiDecisionRecord {
             sim_tick: now,
             slot,
@@ -651,6 +656,7 @@ impl Plugin for FactionAiPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<FactionAiDecisionLog>()
+            .init_resource::<FactionBehaviourChangeLog>()
             .init_resource::<AiSeed>()
             .init_resource::<FactionAiRoster>()
             .configure_sets(

@@ -28,6 +28,10 @@ use super::persistence::{
 };
 use super::travel::SiteDistanceTravel;
 
+/// Aggregate-tier order-sim step cadence (period 2; EXEC-01 phase 0 — even ticks vs pressure odd).
+pub const LOGISTICS_ORDER_AGGREGATE_PERIOD: u64 = 2;
+pub const LOGISTICS_ORDER_AGGREGATE_PHASE: u64 = 0;
+
 /// Marks an entity as an order endpoint. Insert from any lane (fronts, construction, depots).
 ///
 /// Position: `position_m` when set, else the entity's `Transform` translation XZ, which must be
@@ -729,7 +733,13 @@ pub fn step_logistics_orders_system(
         if scale <= 0.0 {
             break;
         }
-        if scale < 1.0 && ((clock.steps + u64::from(i)) % 2 == 1) {
+        if scale < 1.0
+            && !crate::systems::heavy_periodic::periodic_step_fires(
+                clock.steps + u64::from(i),
+                LOGISTICS_ORDER_AGGREGATE_PERIOD,
+                LOGISTICS_ORDER_AGGREGATE_PHASE,
+            )
+        {
             continue;
         }
         res.sim.tick(&registry.travel);
