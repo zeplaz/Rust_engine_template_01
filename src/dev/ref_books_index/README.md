@@ -53,6 +53,28 @@ python src/dev/ref_books_index/lookup.py --read aig3:5.7.7
 python src/dev/ref_books_index/lookup.py --niche NAV
 ```
 
+Machine / agent helpers (stdlib JSON; text modes above are unchanged):
+
+```bash
+python src/dev/ref_books_index/lookup.py --json fire spread
+```
+
+```bash
+python src/dev/ref_books_index/lookup.py --json --code combat/ballistics.rs
+```
+
+```bash
+python src/dev/ref_books_index/lookup.py --row PHYS-02
+```
+
+```bash
+python src/dev/ref_books_index/lookup.py --brief combat/ballistics.rs
+```
+
+`--json` also works with `--niche`. Each JSON object is
+`{id,tier,concept,refs:[{book,sec,start,end,title}],code,take}`.
+`--brief` prints at most 12 lines: row id, best ref, and the exact `--read` command.
+
 Plain `grep` works too: every matrix row is one line (`grep -i "influence" src/dev/ref_books_index/matrix.md`),
 and every TOC entry is one line (`grep -i "erosion" src/dev/ref_books_index/toc/*.tsv`).
 
