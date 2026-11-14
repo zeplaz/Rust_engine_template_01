@@ -19,7 +19,7 @@ use crate::economy::logistics::orders::{
 };
 use crate::systems::sim_control::{SimStepClock, SimTimeMicros};
 use crate::systems::weather::{
-    evaluate_grounding, AirOpsProfileId, AirOpsTuning, WeatherField, WeatherSample,
+    evaluate_grounding, AirOpsProfileId, AirOpsTuning, WeatherPollingStations, WeatherSample,
 };
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
@@ -238,8 +238,7 @@ pub fn pulse_missile_sorties(
     dump: &mut MissileSortieDump,
     packages: &mut [(Entity, &Formation, &mut MissilePackage)],
     tuning: &AirOpsTuning,
-    field: Option<&WeatherField>,
-    sim_time: SimTimeMicros,
+    stations: Option<&WeatherPollingStations>,
     preferred: MissileClass,
     faction_allowed: &dyn Fn(u8) -> bool,
 ) -> Vec<MissileSortieLaunch> {
@@ -272,11 +271,10 @@ pub fn pulse_missile_sorties(
             continue;
         };
 
-        let sample = if let Some(field) = field.filter(|f| f.is_ready()) {
-            field.sample(c.as_vec2() * TILE_METRES_GAMEPLAY, sim_time)
-        } else {
-            WeatherSample::default()
-        };
+        let sample = stations
+            .filter(|s| s.ready)
+            .map(|s| s.sample_at_tile(c))
+            .unwrap_or_default();
         if evaluate_grounding(&sample, profile, None).is_grounded() {
             dump.sorties_aborted_wx = dump.sorties_aborted_wx.wrapping_add(1);
             continue;

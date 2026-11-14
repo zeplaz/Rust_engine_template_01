@@ -2,8 +2,7 @@
 
 use bevy::prelude::*;
 
-use crate::systems::sim_control::SimTimeMicros;
-use crate::systems::weather::{WeatherField, WeatherSample};
+use crate::systems::weather::{WeatherPollingStations, WeatherSample};
 
 use super::plugin::LogisticsOrderSimRes;
 
@@ -44,17 +43,12 @@ pub fn weather_haul_speed_mul(sample: &WeatherSample) -> f32 {
 
 /// Sole writer of [`LogisticsOrderSim::weather_haul_mul`] from the field centre sample.
 pub fn sync_haul_weather_mul_system(
-    field: Option<Res<WeatherField>>,
-    sim_time: Option<Res<SimTimeMicros>>,
+    stations: Res<WeatherPollingStations>,
     mut res: ResMut<LogisticsOrderSimRes>,
     mut dump: ResMut<HaulWeatherDump>,
 ) {
-    let mul = if let Some(field) = field.filter(|f| f.is_ready()) {
-        let t = sim_time
-            .as_deref()
-            .copied()
-            .unwrap_or(SimTimeMicros(field.prev_micros));
-        weather_haul_speed_mul(&field.sample(field.extent_m * 0.5, t))
+    let mul = if stations.ready {
+        weather_haul_speed_mul(&stations.centre)
     } else {
         1.0
     };

@@ -5,6 +5,7 @@
 //!
 //! [`LogisticsOrderRequest`]: super::plugin::LogisticsOrderRequest
 
+use super::demand_advert::{cmp_demands_by_advert, DemandAdvertTuning};
 use super::model::{CargoKind, OwnerId, SiteId};
 use super::sim::LogisticsOrderCommand;
 use super::snapshot::{DemandRow, LogisticsOrdersSnapshot};
@@ -34,15 +35,9 @@ pub fn best_source_for(snap: &LogisticsOrdersSnapshot, demand: &DemandRow) -> Op
 #[must_use]
 pub fn suggest_lines_for_unserved(snap: &LogisticsOrdersSnapshot, owner: OwnerId) -> SupplyAdvice {
     let mut demands: Vec<&DemandRow> = snap.unserved_demands(owner).collect();
-    // Starving before low before satisfied; then priority; then site id (deterministic).
-    demands.sort_by(|a, b| {
-        b.health
-            .severity()
-            .cmp(&a.health.severity())
-            .then(b.priority.cmp(&a.priority))
-            .then(a.site.cmp(&b.site))
-            .then(a.cargo.cmp(&b.cargo))
-    });
+    // DEC-10: advert score (unmet time, distance discount), then legacy tie-breaks.
+    let tuning = DemandAdvertTuning::default();
+    demands.sort_by(|a, b| cmp_demands_by_advert(a, b, snap, &tuning));
     let mut advice = SupplyAdvice::default();
     for d in demands {
         match best_source_for(snap, d) {

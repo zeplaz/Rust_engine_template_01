@@ -23,6 +23,18 @@ use super::pack::{GpuParticleInstance, ParticleClass};
 /// Map-plane spark height. Same value as private `PLANE_Z` in `world_map_network_mesh`.
 pub const FIRE_SPARK_MAP_PLANE_Z: f32 = 1.04;
 
+/// Primary flame loop period (s). Phase uses wall-clock time so LOD crossfades never reset it.
+pub const FLAME_LOOP_PERIOD_S: f32 = 2.4;
+
+/// Normalized loop phase in `[0, 1)` — `fract(global_time / period + hash(cell))` (ANIM-01).
+#[inline]
+#[must_use]
+pub fn flame_loop_phase(global_time_s: f32, cell_xy: Vec2, period_s: f32) -> f32 {
+    let period = period_s.max(1e-3);
+    let hash = hash01(emitter_seed(cell_xy), 7);
+    (global_time_s / period + hash).fract()
+}
+
 /// Smoke puff cycle (s) bounds and rise speed (m/s).
 const SMOKE_CYCLE_S: (f32, f32) = (6.0, 10.0);
 const SMOKE_RISE_MPS: f32 = 2.2;
@@ -83,9 +95,11 @@ pub fn animate_emitter(e: &FireEmitter, anim: &FireAnim, out: &mut Vec<GpuPartic
     let seed = emitter_seed(e.xy);
     let heat = e.heat.clamp(0.0, 1.0);
 
-    // Flame core: flickers 2-11 Hz, per-emitter detune and phase; size follows heat.
+    // Flame core: global loop phase (LOD-safe) plus incommensurate flicker.
     if e.flame_amp > 0.01 && heat > 0.0 {
-        let fl = flame_flicker(t, seed);
+        let loop_ph = flame_loop_phase(t, e.xy, FLAME_LOOP_PERIOD_S);
+        let loop_wobble = (loop_ph * std::f32::consts::TAU).sin();
+        let fl = flame_flicker(t, seed) * 0.55 + loop_wobble * 0.45;
         let h = (heat * (1.0 + 0.22 * fl)).clamp(0.0, 1.0);
         let half = (0.10 + 0.22 * heat) * (1.0 + 0.14 * fl);
         let pos = project(e.xy, Vec2::ZERO, 0.8);
@@ -232,6 +246,44 @@ mod tests {
             &mut out,
         );
         assert!(out.is_empty());
+    }
+
+    #[test]
+    fn flame_loop_phase_is_global_and_cell_offset() {
+        let xy = Vec2::new(10.0, 7.0);
+        let t = 3.7;
+        let a = flame_loop_phase(t, xy, FLAME_LOOP_PERIOD_S);
+        let b = flame_loop_phase(t, xy, FLAME_LOOP_PERIOD_S);
+        assert_eq!(a, b);
+        assert!((0.0..1.0).contains(&a));
+        let wrapped = flame_loop_phase(t + FLAME_LOOP_PERIOD_S, xy, FLAME_LOOP_PERIOD_S);
+        assert!((wrapped - a).abs() < 1e-5, "period wraps with fixed cell offset");
+        let other = flame_loop_phase(t, Vec2::new(12.0, 8.0), FLAME_LOOP_PERIOD_S);
+        assert_ne!(a, other);
+    }
+
+    #[test]
+    fn flame_size_unchanged_when_only_flame_amp_crossfades() {
+        let e = emitter(0.9, 0.0, 0.0);
+        let t = 1.25;
+        let anim = FireAnim {
+            time_s: t,
+            wind_mps: Vec2::ZERO,
+        };
+        let mut full = Vec::new();
+        let mut low = Vec::new();
+        let mut e_full = e;
+        e_full.flame_amp = 1.0;
+        let mut e_low = e;
+        e_low.flame_amp = 0.2;
+        animate_emitter(&e_full, &anim, &mut full);
+        animate_emitter(&e_low, &anim, &mut low);
+        assert_eq!(full.len(), 1);
+        assert_eq!(low.len(), 1);
+        assert!(
+            (full[0].ember_class_radius_smoke.z - low[0].ember_class_radius_smoke.z).abs() < 1e-5,
+            "loop phase drives size; LOD only scales alpha"
+        );
     }
 
     #[test]

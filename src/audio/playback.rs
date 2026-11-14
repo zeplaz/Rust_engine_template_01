@@ -4,7 +4,7 @@
 use bevy::prelude::*;
 
 use super::mix_frame::{AudioEventClass, AudioMixFrame, AudioMixSet};
-use super::sfx_catalog::SfxCatalog;
+use super::sfx_catalog::{AudioCuePicker, SfxCatalog};
 
 #[derive(Component)]
 pub struct AudioMixVoice {
@@ -17,6 +17,7 @@ pub fn apply_audio_mix_playback(
     mut commands: Commands,
     mix: Res<AudioMixFrame>,
     catalog: Res<SfxCatalog>,
+    mut cue_picker: ResMut<AudioCuePicker>,
     sources: Res<Assets<AudioSource>>,
     existing: Query<(Entity, &AudioMixVoice)>,
 ) {
@@ -31,14 +32,15 @@ pub fn apply_audio_mix_playback(
     }
 
     for req in &mix.requests {
-        let Some(handle) = catalog.get(req.tag) else {
+        let play_tag = catalog.resolve_play_tag(req.tag, &mut cue_picker);
+        let Some(handle) = catalog.get(play_tag) else {
             continue;
         };
         // Skip until decoded — Bevy 0.20 rodio path panics on empty/invalid sources.
         if sources.get(handle).is_none() {
             continue;
         }
-        let already = existing.iter().any(|(_, v)| v.tag == req.tag);
+        let already = existing.iter().any(|(_, v)| v.tag == play_tag);
         if already && matches!(
             req.class,
             AudioEventClass::Ambient | AudioEventClass::SpatialContinuum
@@ -48,8 +50,8 @@ pub fn apply_audio_mix_playback(
         commands.spawn((
             AudioPlayer::new(handle.clone()),
             PlaybackSettings::DESPAWN.with_volume(bevy::audio::Volume::Linear(req.gain.clamp(0.0, 1.0))),
-            AudioMixVoice { tag: req.tag },
-            Name::new(format!("sfx:{}", req.tag)),
+            AudioMixVoice { tag: play_tag },
+            Name::new(format!("sfx:{}", play_tag)),
         ));
     }
 }

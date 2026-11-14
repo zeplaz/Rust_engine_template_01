@@ -62,6 +62,29 @@ fn cell_is_water(
         != crate::render::fx_spine::water_surface_visual::WaterSurfaceKind::None
 }
 
+/// INPUT-02 — screen distance before a press counts as drag-to-build (not a click).
+pub const BUILD_POINTER_DRAG_MIN_DISTANCE_PX: f32 = 6.0;
+/// INPUT-02 — hold longer than this with any nontrivial move also counts as drag.
+pub const BUILD_POINTER_DRAG_MAX_CLICK_SECS: f32 = 0.28;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BuildPointerGesture {
+    Click,
+    Drag,
+}
+
+/// Classify a pointer release after LMB down (gea4v1 §9.5.4.3).
+#[must_use]
+pub fn classify_build_pointer_gesture(distance_px: f32, hold_secs: f32) -> BuildPointerGesture {
+    if distance_px >= BUILD_POINTER_DRAG_MIN_DISTANCE_PX {
+        return BuildPointerGesture::Drag;
+    }
+    if hold_secs > BUILD_POINTER_DRAG_MAX_CLICK_SECS && distance_px > 1.0 {
+        return BuildPointerGesture::Drag;
+    }
+    BuildPointerGesture::Click
+}
+
 /// Honest witness counters (lib + live) — TRIAGE-BUILD-CLICK-PLACE-001.
 static TWO_CLICK_MODE_LOCKS: AtomicU32 = AtomicU32::new(0);
 static TWO_CLICK_LMB_COMMITS: AtomicU32 = AtomicU32::new(0);
@@ -146,11 +169,13 @@ fn resolve_site_archetype(
 /// Second LMB commits in [`build_place_on_second_lmb_system`] (same funnel as Enter).
 pub fn build_pick_ghost_tile_system(
     buttons: Res<ButtonInput<MouseButton>>,
+    time: Res<Time>,
     pick: ConstructionMapPick,
     strip: Res<BuildStripState>,
     tool: Res<ActiveBuildTool>,
     pointer_gate: Option<Res<SimulationMapPointerGate>>,
     mut ghost: ResMut<BuildGhostState>,
+    mut press: Local<Option<(Vec2, f32)>>,
 ) {
     ghost.locked_this_frame = false;
 
@@ -267,17 +292,32 @@ pub fn build_pick_ghost_tile_system(
 
     // Non-building: legacy click / drag origin (zone/road handled above via early return).
     if buttons.just_released(MouseButton::Left) {
-        ghost.drag_active = false;
+        if let Some((start, t0)) = *press {
+            let hold = time.elapsed_secs() - t0;
+            let dist = cursor_px.distance(start);
+            if classify_build_pointer_gesture(dist, hold) == BuildPointerGesture::Click {
+                ghost.drag_active = false;
+            }
+        }
+        *press = None;
     }
 
     if buttons.just_pressed(MouseButton::Left) {
         ghost.origin = Some(tile);
-        ghost.drag_active = true;
+        ghost.drag_active = false;
+        *press = Some((cursor_px, time.elapsed_secs()));
         return;
     }
 
-    if buttons.pressed(MouseButton::Left) && ghost.drag_active {
-        ghost.origin = Some(tile);
+    if buttons.pressed(MouseButton::Left) {
+        if let Some((start, t0)) = *press {
+            let hold = time.elapsed_secs() - t0;
+            let dist = cursor_px.distance(start);
+            if classify_build_pointer_gesture(dist, hold) == BuildPointerGesture::Drag {
+                ghost.drag_active = true;
+                ghost.origin = Some(tile);
+            }
+        }
     }
 }
 
@@ -962,6 +1002,43 @@ pub fn two_click_lmb_commit_count() -> u32 {
 
 
 
+
+#[cfg(test)]
+mod input_gesture_tests {
+    use super::*;
+
+    #[test]
+    fn sub_threshold_motion_is_click_not_drag() {
+        assert_eq!(
+            classify_build_pointer_gesture(3.0, 0.05),
+            BuildPointerGesture::Click
+        );
+    }
+
+    #[test]
+    fn distance_threshold_promotes_drag() {
+        assert_eq!(
+            classify_build_pointer_gesture(BUILD_POINTER_DRAG_MIN_DISTANCE_PX, 0.02),
+            BuildPointerGesture::Drag
+        );
+    }
+
+    #[test]
+    fn slow_micro_move_stays_click() {
+        assert_eq!(
+            classify_build_pointer_gesture(2.0, BUILD_POINTER_DRAG_MAX_CLICK_SECS),
+            BuildPointerGesture::Click
+        );
+    }
+
+    #[test]
+    fn slow_large_move_becomes_drag() {
+        assert_eq!(
+            classify_build_pointer_gesture(4.0, BUILD_POINTER_DRAG_MAX_CLICK_SECS + 0.05),
+            BuildPointerGesture::Drag
+        );
+    }
+}
 
 #[cfg(test)]
 mod parametric_input_tests {

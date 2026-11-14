@@ -132,6 +132,7 @@ pub struct DemandRow {
     /// Live standing lines feeding this `(site, cargo)`.
     pub served_by: u32,
     pub starved_ticks: u64,
+    pub unmet_ticks: u64,
     pub shortfall_total: u64,
     /// Ticks until on-hand runs out at the draw rate (ignores inbound); `None` when not drawing.
     pub time_to_empty_ticks: Option<u32>,
@@ -485,6 +486,7 @@ pub fn build_snapshot(
                 .copied()
                 .unwrap_or(0),
             starved_ticks: d.starved_ticks,
+            unmet_ticks: d.unmet_ticks,
             shortfall_total: d.shortfall_total,
             time_to_empty_ticks,
             round_trip_ticks,

@@ -124,18 +124,27 @@ fn tile_or_blocked(width: i32, height: i32, x: i32, y: i32, tile_at: &mut impl F
     tile_at(x, y)
 }
 
-fn better_candidate(new_dist: f32, new_risk: f32, old_dist: f32, old_risk: f32) -> bool {
+fn better_candidate(
+    new_dist: f32,
+    new_risk: f32,
+    old_dist: f32,
+    old_risk: f32,
+    concern: super::path_concerns::LogisticsPathConcern,
+) -> bool {
     const EPS: f32 = 1e-4;
-    if new_dist + EPS < old_dist {
+    let nb = concern.blend_cost(new_dist, new_risk);
+    let ob = concern.blend_cost(old_dist, old_risk);
+    if nb + EPS < ob {
         return true;
     }
-    (new_dist - old_dist).abs() <= EPS && new_risk + EPS < old_risk
+    (nb - ob).abs() <= EPS && new_risk + EPS < old_risk
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 struct DijkstraState {
     cost: f32,
     risk: f32,
+    blend: f32,
     x: i32,
     y: i32,
 }
@@ -150,8 +159,8 @@ impl PartialOrd for DijkstraState {
 
 impl Ord for DijkstraState {
     fn cmp(&self, other: &Self) -> Ordering {
-        self.cost
-            .total_cmp(&other.cost)
+        self.blend
+            .total_cmp(&other.blend)
             .then_with(|| self.risk.total_cmp(&other.risk))
             .then_with(|| self.x.cmp(&other.x))
             .then_with(|| self.y.cmp(&other.y))
@@ -168,6 +177,25 @@ pub fn logistics_path_dijkstra(
     start: (i32, i32),
     goal: (i32, i32),
     mut tile_at: impl FnMut(i32, i32) -> LogisticsTile,
+) -> Option<LogisticsPathResult> {
+    logistics_path_dijkstra_concern(
+        width,
+        height,
+        start,
+        goal,
+        tile_at,
+        super::path_concerns::LogisticsPathConcern::DEFAULT,
+    )
+}
+
+/// Same as [`logistics_path_dijkstra`] with NAV-14 concern blending on the priority queue.
+pub fn logistics_path_dijkstra_concern(
+    width: i32,
+    height: i32,
+    start: (i32, i32),
+    goal: (i32, i32),
+    mut tile_at: impl FnMut(i32, i32) -> LogisticsTile,
+    concern: super::path_concerns::LogisticsPathConcern,
 ) -> Option<LogisticsPathResult> {
     if width <= 0 || height <= 0 {
         return None;
@@ -189,9 +217,11 @@ pub fn logistics_path_dijkstra(
     path_risk[si] = start_t.env_risk.clamp(0.0, 1.0);
 
     let mut heap: BinaryHeap<Reverse<DijkstraState>> = BinaryHeap::new();
+    let start_blend = concern.blend_cost(0.0, path_risk[si]);
     heap.push(Reverse(DijkstraState {
         cost: 0.0,
         risk: path_risk[si],
+        blend: start_blend,
         x: start.0,
         y: start.1,
     }));
@@ -200,7 +230,14 @@ pub fn logistics_path_dijkstra(
     static DY: [i32; 4] = [0, 0, 1, -1];
 
     const EPS: f32 = 1e-4;
-    while let Some(Reverse(DijkstraState { cost: d, risk: r, x, y })) = heap.pop() {
+    while let Some(Reverse(DijkstraState {
+        cost: d,
+        risk: r,
+        blend: _,
+        x,
+        y,
+    })) = heap.pop()
+    {
         let i = idx(x, y, width);
         if d > dist[i] + EPS {
             continue;
@@ -225,13 +262,14 @@ pub fn logistics_path_dijkstra(
             let nd = d + edge;
             let nr = r.max(ta.env_risk).max(tb.env_risk).clamp(0.0, 1.0);
             let ni = idx(nx, ny, width);
-            if better_candidate(nd, nr, dist[ni], path_risk[ni]) {
+            if better_candidate(nd, nr, dist[ni], path_risk[ni], concern) {
                 dist[ni] = nd;
                 path_risk[ni] = nr;
                 prev[ni] = Some((x, y));
                 heap.push(Reverse(DijkstraState {
                     cost: nd,
                     risk: nr,
+                    blend: concern.blend_cost(nd, nr),
                     x: nx,
                     y: ny,
                 }));
@@ -361,6 +399,61 @@ mod tests {
             r.total_cost + 0.05 < via_center,
             "expected cheaper than through (1,1); cost {}",
             r.total_cost
+        );
+    }
+
+    #[test]
+    fn risk_averse_order_takes_longer_safe_route() {
+        let w = 7_i32;
+        let h = 3_i32;
+        let mut tiles = [[LogisticsTile::default(); 7]; 3];
+        for x in 1..6 {
+            tiles[1][x as usize] = LogisticsTile {
+                blocked: false,
+                cost_mul: 1.0,
+                env_risk: 0.95,
+            };
+        }
+        let tile_at = |x: i32, y: i32| {
+            if x < 0 || y < 0 || x >= w || y >= h {
+                LogisticsTile {
+                    blocked: true,
+                    ..LogisticsTile::default()
+                }
+            } else {
+                tiles[y as usize][x as usize]
+            }
+        };
+        let direct =
+            logistics_path_dijkstra(w, h, (0, 1), (6, 1), tile_at).expect("direct route");
+        assert!(
+            direct.max_env_risk > 0.9,
+            "baseline should traverse the hot corridor"
+        );
+        let cautious = logistics_path_dijkstra_concern(
+            w,
+            h,
+            (0, 1),
+            (6, 1),
+            tile_at,
+            crate::systems::navigation::LogisticsPathConcern {
+                time_weight: 1.0,
+                risk_weight: 12.0,
+            },
+        )
+        .expect("detour route");
+        assert!(
+            cautious.total_cost > direct.total_cost,
+            "safe route is longer in time"
+        );
+        assert!(
+            cautious.max_env_risk < 0.2,
+            "risk-averse path should avoid the hot corridor"
+        );
+        assert!(
+            !cautious.path.iter().any(|&(x, y)| y == 1 && (1..6).contains(&x)),
+            "path {:?} should detour around y=1 risk strip",
+            cautious.path
         );
     }
 

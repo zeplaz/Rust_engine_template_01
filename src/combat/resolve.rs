@@ -27,7 +27,7 @@ use super::personnel_supply::{
 };
 use super::weather::engagement_visibility_scale;
 use crate::strategic::settlement::FactionStanceBook;
-use crate::systems::weather::WeatherField;
+use crate::systems::weather::WeatherPollingStations;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct Combatant {
@@ -196,16 +196,11 @@ fn retreat_target(from: IVec2, threat: Option<IVec2>, slot: u8, tiles: f32) -> I
     from + step * tiles.round().max(1.0) as i32
 }
 
-fn visibility_scale_at_tile(
-    tile: IVec2,
-    field: Option<&WeatherField>,
-    sim_time: crate::systems::sim_control::SimTimeMicros,
-    tile_size_m: f32,
-) -> f32 {
-    let Some(field) = field.filter(|f| f.is_ready()) else {
+fn visibility_scale_at_tile(tile: IVec2, stations: &WeatherPollingStations) -> f32 {
+    if !stations.ready {
         return 1.0;
-    };
-    let s = field.sample(tile.as_vec2() * tile_size_m, sim_time);
+    }
+    let s = stations.sample_at_tile(tile);
     engagement_visibility_scale((s.visibility_m / 10_000.0).clamp(0.05, 1.0), s.fog)
 }
 
@@ -215,8 +210,7 @@ pub fn combat_resolve_system(
     balance: Res<FrontBalance>,
     stances: Option<Res<FactionStanceBook>>,
     forts: Option<Res<FortificationIndex>>,
-    field: Option<Res<WeatherField>>,
-    sim_time: Option<Res<crate::systems::sim_control::SimTimeMicros>>,
+    stations: Res<WeatherPollingStations>,
     drone_mods: Option<Res<DroneCombatModifiers>>,
     mut personnel: Option<ResMut<PersonnelRestockBook>>,
     packages: Query<&DronePackage>,
@@ -246,12 +240,6 @@ pub fn combat_resolve_system(
             f.strength = (f.strength + strength_from_replacements(f.kind, &balance, got)).min(1.0);
         }
     }
-    let t = sim_time.as_deref().copied().unwrap_or_else(|| {
-        field
-            .as_ref()
-            .map(|f| crate::systems::sim_control::SimTimeMicros(f.prev_micros))
-            .unwrap_or_default()
-    });
     let recon_mul = drone_mods
         .as_ref()
         .map(|m| m.recon_detect_mul)
@@ -264,12 +252,7 @@ pub fn combat_resolve_system(
         .iter()
         .filter_map(|e| formations.get(*e).ok().map(|(e, f)| (e, f)))
         .map(|(e, f)| {
-            let mut vis = visibility_scale_at_tile(
-                f.tile,
-                field.as_deref(),
-                t,
-                balance.tile_size_m(),
-            );
+            let mut vis = visibility_scale_at_tile(f.tile, &stations);
             vis = (vis * recon_mul).clamp(0.35, 1.35);
             let has_fpv = packages
                 .get(e)

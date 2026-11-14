@@ -1,0 +1,25 @@
+// NAV-14 — per order-type time vs fire-risk weights for logistics grid pathfinding.
+// Runtime: `src/systems/navigation/path_concerns.rs`
+(
+    schema_version: 1,
+    table_id: "logistics_path_concerns_v1",
+    default: (
+        time_weight: 1.0,
+        risk_weight: 0.0,
+    ),
+  by_consumer: {
+    "front": (time_weight: 1.0, risk_weight: 2.5),
+    "plant": (time_weight: 1.0, risk_weight: 0.15),
+    "depot": (time_weight: 1.0, risk_weight: 0.1),
+    "construction": (time_weight: 1.0, risk_weight: 0.2),
+    "unit": (time_weight: 1.0, risk_weight: 0.25),
+  },
+  by_order_kind: {
+    "standing_line": (time_weight: 1.0, risk_weight: 0.5),
+    "one_off_run": (time_weight: 0.85, risk_weight: 1.25),
+  },
+  profiles: {
+    "risk_averse": (time_weight: 1.0, risk_weight: 12.0),
+    "urgent": (time_weight: 0.6, risk_weight: 0.05),
+  },
+)

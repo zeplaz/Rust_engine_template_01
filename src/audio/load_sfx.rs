@@ -10,19 +10,35 @@ const SFX_FILES: &[(&str, &str)] = &[
     (tags::AMBIENT_RAIN, "sfx/ambient_rain.wav"),
     (tags::AMBIENT_WIND, "sfx/ambient_wind.wav"),
     (tags::SPATIAL_NEAR, "sfx/spatial_near.wav"),
-    (tags::UI_CLICK, "sfx/ui_click.wav"),
+    (tags::UI_CLICK_V0, "sfx/ui_click.wav"),
+    (tags::UI_CLICK_V1, "sfx/ui_click.wav"),
     (tags::UI_CONFIRM, "sfx/ui_confirm.wav"),
     (tags::UI_DENY, "sfx/ui_deny.wav"),
-    (tags::SHOT, "sfx/combat_shot.wav"),
-    (tags::EXPLOSION, "sfx/combat_explosion.wav"),
+    (tags::SHOT_V0, "sfx/combat_shot.wav"),
+    (tags::SHOT_V1, "sfx/combat_shot.wav"),
+    (tags::SHOT_V2, "sfx/combat_shot.wav"),
+    (tags::EXPLOSION_V0, "sfx/combat_explosion.wav"),
+    (tags::EXPLOSION_V1, "sfx/combat_explosion.wav"),
     (tags::MISSILE_LAUNCH, "sfx/combat_missile_launch.wav"),
     (tags::LAUNCH_WARNING, "sfx/warning_launch.wav"),
     (tags::WEATHER_ALERT, "sfx/warning_weather.wav"),
 ];
 
+const SFX_CUES: &[(&str, &[&str])] = &[
+    (tags::UI_CLICK, &[tags::UI_CLICK_V0, tags::UI_CLICK_V1]),
+    (tags::SHOT, &[tags::SHOT_V0, tags::SHOT_V1, tags::SHOT_V2]),
+    (
+        tags::EXPLOSION,
+        &[tags::EXPLOSION_V0, tags::EXPLOSION_V1],
+    ),
+];
+
 pub fn load_sfx_catalog(mut catalog: ResMut<SfxCatalog>, asset_server: Res<AssetServer>) {
     for &(tag, path) in SFX_FILES {
         catalog.insert(tag, asset_server.load(path));
+    }
+    for &(cue_id, variants) in SFX_CUES {
+        catalog.register_cue(cue_id, variants);
     }
 }
 

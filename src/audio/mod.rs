@@ -15,4 +15,7 @@ pub use mix_frame::{
     AudioOneShotKind, AudioOneShotQueue, AMBIENCE_DUCK_TARGET_GAIN, COMBAT_ONESHOT_CAP,
 };
 pub use plugin::AudioMixPlugin;
-pub use sfx_catalog::{tags as sfx_tags, SfxCatalog};
+pub use sfx_catalog::{tags as sfx_tags, AudioCuePicker, AudioLocalRng, SfxCatalog};
+pub use ui_hooks::{
+    alert_bark_kind_for_oneshot, alert_bark_priority, AdmitAlertBark, AlertBarkKind, AlertBarkLane,
+};
