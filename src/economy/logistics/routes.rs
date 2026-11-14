@@ -9,7 +9,9 @@ use crate::economy::resource_flow::TransportMode;
 use crate::strategic::{BuildSiteTile, LogisticsGraph, PlannedSite};
 use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId, TransportNavExport};
 
-use super::types::{CachedRoute, FacilityPortal, RouteCache, RouteHandle, RoutePathStore};
+use super::types::{
+    CachedRoute, FacilityPortal, LogisticsRouteDirtyTiles, RouteCache, RouteHandle, RoutePathStore,
+};
 
 #[must_use]
 pub fn tile_node_key(tile: BuildSiteTile) -> String {
@@ -217,11 +219,105 @@ fn nav_and_directory_without_closed_edges(
     (nav_open, directory_open)
 }
 
+fn mark_dirty_tiles_for_edge(dirty: &mut LogisticsRouteDirtyTiles, head: &str, tail: &str) {
+    dirty.keys.insert(head.to_string());
+    dirty.keys.insert(tail.to_string());
+}
+
+/// NAV-10 — mark tile keys for newly closed corridors and removed directory edges (per tick).
+pub fn accumulate_logistics_route_dirty_tiles_system(
+    graph: Option<Res<LogisticsGraph>>,
+    directory: Res<TransportEdgeDirectory>,
+    construction_rev: Option<Res<ConstructionWorldRevision>>,
+    mut dirty: ResMut<LogisticsRouteDirtyTiles>,
+    mut prior_disrupted: Local<HashSet<TransportEdgeId>>,
+    mut prior_endpoints: Local<HashMap<TransportEdgeId, (String, String)>>,
+    mut prior_sig: Local<u64>,
+    mut prior_construction: Local<u64>,
+) {
+    let sig = crate::strategic::transport_directory_edge_signature(&directory);
+    let cons = construction_rev.map(|r| r.revision).unwrap_or(0);
+    if sig != *prior_sig || cons != *prior_construction {
+        let live: HashSet<_> = directory.by_edge.keys().copied().collect();
+        for (id, (head, tail)) in prior_endpoints.iter() {
+            if !live.contains(id) {
+                mark_dirty_tiles_for_edge(&mut dirty, head, tail);
+            }
+        }
+        *prior_sig = sig;
+        *prior_construction = cons;
+    }
+
+    let mut now_disrupted = HashSet::new();
+    if let Some(graph) = graph.as_ref() {
+        for edge in &graph.edges {
+            let Some(tid) = edge.transport_edge else {
+                continue;
+            };
+            if edge.disruption >= 1.0 {
+                now_disrupted.insert(tid);
+                if !prior_disrupted.contains(&tid) {
+                    if let Some(meta) = directory.by_edge.get(&tid) {
+                        mark_dirty_tiles_for_edge(&mut dirty, &meta.head_key, &meta.tail_key);
+                    }
+                }
+            }
+        }
+    }
+    *prior_disrupted = now_disrupted;
+
+    prior_endpoints.clear();
+    for (&id, meta) in &directory.by_edge {
+        prior_endpoints.insert(
+            id,
+            (meta.head_key.clone(), meta.tail_key.clone()),
+        );
+    }
+}
+
+#[must_use]
+pub fn cached_route_intersects_dirty_tiles(
+    cached: &CachedRoute,
+    path_store: &RoutePathStore,
+    directory: &TransportEdgeDirectory,
+    dirty: &HashSet<String>,
+) -> bool {
+    if dirty.is_empty() {
+        return false;
+    }
+    for &eid in path_store.edge_slice(cached.path) {
+        let Some(meta) = directory.by_edge.get(&eid) else {
+            return true;
+        };
+        if dirty.contains(&meta.head_key) || dirty.contains(&meta.tail_key) {
+            return true;
+        }
+    }
+    false
+}
+
+pub fn invalidate_routes_touching_dirty_tiles(
+    route_cache: &mut RouteCache,
+    path_store: &RoutePathStore,
+    directory: &TransportEdgeDirectory,
+    dirty: &LogisticsRouteDirtyTiles,
+) -> u32 {
+    if dirty.keys.is_empty() {
+        return 0;
+    }
+    let before = route_cache.routes.len() as u32;
+    route_cache.routes.retain(|_, cached| {
+        !cached_route_intersects_dirty_tiles(cached, path_store, directory, &dirty.keys)
+    });
+    before.saturating_sub(route_cache.routes.len() as u32)
+}
+
 pub fn refresh_resource_flow_routes_system(
     graph: Option<Res<LogisticsGraph>>,
     nav: Res<TransportNavExport>,
     directory: Res<TransportEdgeDirectory>,
     construction_rev: Option<Res<ConstructionWorldRevision>>,
+    mut dirty_tiles: ResMut<LogisticsRouteDirtyTiles>,
     mut route_cache: ResMut<RouteCache>,
     mut path_store: ResMut<RoutePathStore>,
     mut flow: ResMut<crate::economy::resource_flow::ResourceFlowRegistry>,
@@ -231,14 +327,28 @@ pub fn refresh_resource_flow_routes_system(
 ) {
     let graph_rev = graph.as_ref().map(|g| g.revision).unwrap_or(0);
     let topo = topology_revision_u32(graph_rev, construction_rev.map(|r| r.revision).unwrap_or(0));
-    if route_cache.topology_revision != topo {
+    let topo_changed = route_cache.topology_revision != topo;
+    if topo_changed {
+        route_cache.topology_revision = topo;
+    }
+    let path_read = path_store.as_ref();
+    let purged = invalidate_routes_touching_dirty_tiles(
+        &mut route_cache,
+        path_read,
+        &directory,
+        &dirty_tiles,
+    );
+    if purged > 0 || topo_changed {
         if let Some(rt) = runtime.as_mut() {
             rt.saw_route_invalidation = true;
         }
-        route_cache.topology_revision = topo;
-        route_cache.routes.clear();
-        route_cache.next_id = 0;
     }
+    for cached in route_cache.routes.values_mut() {
+        if cached.handle.topology_revision != topo {
+            cached.handle.topology_revision = topo;
+        }
+    }
+    dirty_tiles.keys.clear();
 
     let portal_map: HashMap<Entity, (FacilityPortal, BuildSiteTile)> = portals
         .iter()
@@ -360,5 +470,275 @@ pub fn collect_portal_entity_tiles_from_world(
         .iter(world)
         .map(|(entity, _, site)| (entity, site.origin))
         .collect()
+}
+
+#[cfg(test)]
+mod nav10_tests {
+    use super::*;
+    use crate::construction::ConstructionWorldRevision;
+    use crate::economy::logistics::LogisticsDiagnostics;
+    use crate::economy::resource_flow::{ResourceFlowEdge, ResourceFlowRegistry, TransportMode};
+    use crate::strategic::{
+        rebuild_logistics_graph_from_transport, CorridorConstructionBook, FootprintTiles, LayerType,
+        PlannedSite, SiteArchetype, SiteId, StrategicRasterConfig,
+    };
+    use crate::systems::transport::{
+        refresh_transport_nav_export, EdgeFieldState, TransportCostCache, TransportCostWeights,
+        TransportEdgeDirectory, TransportEdgeMeta, TransportFieldStore, TransportNavExport,
+        TransportTopology,
+    };
+    use super::super::types::TransportNodeAnchor;
+    use crate::terrain::ChunkCellKey;
+    use bevy::ecs::system::RunSystemOnce;
+
+    fn road(head: &str, tail: &str) -> TransportEdgeMeta {
+        TransportEdgeMeta {
+            profile: "default_road".into(),
+            head_key: head.into(),
+            tail_key: tail.into(),
+            ..Default::default()
+        }
+    }
+
+    fn portal(app: &mut World, site_id: u64, tile: BuildSiteTile, key: &str) -> Entity {
+        app.spawn((
+            FacilityPortal {
+                anchor: ChunkCellKey::new(IVec2::ZERO, 0),
+                transport_anchor: TransportNodeAnchor(key.into()),
+            },
+            PlannedSite {
+                site_id: SiteId(site_id),
+                origin: tile,
+                footprint: FootprintTiles {
+                    width: 1,
+                    depth: 1,
+                },
+                archetype: SiteArchetype::Factory,
+                layer: LayerType::Surface,
+                catalog_id: None,
+                placement: None,
+            },
+        ))
+        .id()
+    }
+
+    fn refresh_routes(app: &mut World) {
+        app.run_system_once(accumulate_logistics_route_dirty_tiles_system)
+            .unwrap();
+        app.run_system_once(refresh_resource_flow_routes_system)
+            .unwrap();
+    }
+
+    /// NAV-10 / L3 — one closed edge re-routes only the flow that used it.
+    #[test]
+    fn closure_replans_affected_flow_and_keeps_unrelated_route() {
+        let mut app = App::new();
+        app.init_resource::<TransportCostWeights>()
+            .init_resource::<TransportTopology>()
+            .init_resource::<TransportCostCache>()
+            .init_resource::<TransportNavExport>()
+            .init_resource::<StrategicRasterConfig>()
+            .insert_resource(ConstructionWorldRevision { revision: 1 })
+            .insert_resource(CorridorConstructionBook::default());
+
+        let mut directory = TransportEdgeDirectory::default();
+        directory
+            .by_edge
+            .insert(TransportEdgeId(1), road("t0_0", "t4_0"));
+        directory
+            .by_edge
+            .insert(TransportEdgeId(4), road("t6_0", "t7_0"));
+        app.insert_resource(directory);
+
+        let mut store = TransportFieldStore::default();
+        for id in [TransportEdgeId(1), TransportEdgeId(4)] {
+            store.by_edge.insert(
+                id,
+                EdgeFieldState {
+                    travel_time_base: 1.0,
+                    ..Default::default()
+                },
+            );
+        }
+        app.insert_resource(store);
+
+        let graph_open = rebuild_logistics_graph_from_transport(
+            app.world().resource::<TransportEdgeDirectory>(),
+            app.world().resource::<TransportFieldStore>(),
+            app.world().resource::<TransportCostWeights>(),
+            app.world().resource::<StrategicRasterConfig>(),
+            app.world().resource::<CorridorConstructionBook>(),
+            1,
+        );
+        app.insert_resource(graph_open);
+
+        let topo = TransportTopology::default();
+        app.insert_resource(topo);
+        let mut nav = TransportNavExport::default();
+        let mut cost_cache = TransportCostCache::default();
+        {
+            let directory = app.world().resource::<TransportEdgeDirectory>();
+            let field = app.world().resource::<TransportFieldStore>();
+            let weights = app.world().resource::<TransportCostWeights>();
+            for (id, st) in &field.by_edge {
+                cost_cache.by_edge.insert(
+                    *id,
+                    crate::systems::transport::edge_traversal_cost(st, weights, st.travel_time_base),
+                );
+            }
+            refresh_transport_nav_export(
+                app.world().resource::<TransportTopology>(),
+                &cost_cache,
+                directory,
+                &mut nav,
+            );
+        }
+        app.insert_resource(cost_cache);
+        app.insert_resource(nav);
+
+        let from_a = portal(
+            app.world_mut(),
+            1,
+            BuildSiteTile { x: 0, z: 0 },
+            "t0_0",
+        );
+        let to_a = portal(
+            app.world_mut(),
+            2,
+            BuildSiteTile { x: 4, z: 0 },
+            "t4_0",
+        );
+        let from_b = portal(
+            app.world_mut(),
+            3,
+            BuildSiteTile { x: 6, z: 0 },
+            "t6_0",
+        );
+        let to_b = portal(
+            app.world_mut(),
+            4,
+            BuildSiteTile { x: 7, z: 0 },
+            "t7_0",
+        );
+
+        app.insert_resource(ResourceFlowRegistry {
+            edges: vec![
+                ResourceFlowEdge {
+                    from: from_a,
+                    to: to_a,
+                    transport_mode: TransportMode::Truck,
+                    max_rate: 1.0,
+                    latency_ticks: 1.0,
+                    path_open: false,
+                    route_handle: None,
+                    buffer_tag: Some("a".into()),
+                },
+                ResourceFlowEdge {
+                    from: from_b,
+                    to: to_b,
+                    transport_mode: TransportMode::Truck,
+                    max_rate: 1.0,
+                    latency_ticks: 1.0,
+                    path_open: false,
+                    route_handle: None,
+                    buffer_tag: Some("b".into()),
+                },
+            ],
+        });
+        app.init_resource::<RouteCache>();
+        app.init_resource::<RoutePathStore>();
+        app.init_resource::<LogisticsRouteDirtyTiles>();
+        app.init_resource::<LogisticsDiagnostics>();
+
+        refresh_routes(app.world_mut());
+        let path_store = app.world().resource::<RoutePathStore>().clone();
+        let cache = app.world().resource::<RouteCache>();
+        let path_a_before = cache.routes.get(&(from_a, to_a)).unwrap().path;
+        let path_b_before = cache.routes.get(&(from_b, to_b)).unwrap().path;
+        let slice_a_before: Vec<_> = path_store.edge_slice(path_a_before).to_vec();
+        let slice_b_before: Vec<_> = path_store.edge_slice(path_b_before).to_vec();
+        assert_eq!(slice_a_before, vec![TransportEdgeId(1)]);
+        assert_eq!(slice_b_before, vec![TransportEdgeId(4)]);
+
+        {
+            let mut directory = app.world_mut().resource_mut::<TransportEdgeDirectory>();
+            directory
+                .by_edge
+                .insert(TransportEdgeId(2), road("t0_0", "t4_0"));
+            let mut store = app.world_mut().resource_mut::<TransportFieldStore>();
+            store.by_edge.insert(
+                TransportEdgeId(2),
+                EdgeFieldState {
+                    travel_time_base: 1.0,
+                    ..Default::default()
+                },
+            );
+            let closed = store.by_edge.get_mut(&TransportEdgeId(1)).unwrap();
+            closed.danger = 1.0;
+            closed.congestion = 1.0;
+            closed.damage = 0.2;
+            closed.heat = 1.0;
+        }
+        {
+            let weights = app.world().resource::<TransportCostWeights>().clone();
+            let edge2 = app
+                .world()
+                .resource::<TransportFieldStore>()
+                .by_edge
+                .get(&TransportEdgeId(2))
+                .cloned()
+                .unwrap();
+            app.world_mut()
+                .resource_mut::<TransportCostCache>()
+                .by_edge
+                .insert(
+                    TransportEdgeId(2),
+                    crate::systems::transport::edge_traversal_cost(&edge2, &weights, 1.0),
+                );
+        }
+        let nav = {
+            let mut nav = TransportNavExport::default();
+            refresh_transport_nav_export(
+                app.world().resource::<TransportTopology>(),
+                app.world().resource::<TransportCostCache>(),
+                app.world().resource::<TransportEdgeDirectory>(),
+                &mut nav,
+            );
+            nav
+        };
+        app.insert_resource(nav);
+        let graph_closed = rebuild_logistics_graph_from_transport(
+            app.world().resource::<TransportEdgeDirectory>(),
+            app.world().resource::<TransportFieldStore>(),
+            app.world().resource::<TransportCostWeights>(),
+            app.world().resource::<StrategicRasterConfig>(),
+            app.world().resource::<CorridorConstructionBook>(),
+            2,
+        );
+        assert!(
+            graph_closed
+                .edges
+                .iter()
+                .any(|e| e.transport_edge == Some(TransportEdgeId(1)) && e.disruption >= 1.0)
+        );
+        app.insert_resource(graph_closed);
+        refresh_routes(app.world_mut());
+
+        let cache = app.world().resource::<RouteCache>();
+        let path_store = app.world().resource::<RoutePathStore>();
+        let path_a_after = cache.routes.get(&(from_a, to_a)).unwrap().path;
+        let path_b_after = cache.routes.get(&(from_b, to_b)).unwrap().path;
+        let slice_a_after: Vec<_> = path_store.edge_slice(path_a_after).to_vec();
+        let slice_b_after: Vec<_> = path_store.edge_slice(path_b_after).to_vec();
+
+        assert_eq!(slice_a_after, vec![TransportEdgeId(2)], "affected flow must re-route");
+        assert_ne!(slice_a_before, slice_a_after);
+        assert_eq!(
+            (path_b_before.first_edge, path_b_before.edge_count),
+            (path_b_after.first_edge, path_b_after.edge_count),
+            "unrelated flow keeps cached path"
+        );
+        assert_eq!(slice_b_after, slice_b_before);
+    }
 }
 

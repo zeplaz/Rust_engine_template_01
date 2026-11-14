@@ -10,6 +10,7 @@ pub mod ecology;
 pub mod fire;
 pub mod navigation;
 pub mod production;
+pub mod heavy_periodic;
 pub mod sim_attention;
 pub mod sim_frame_delta;
 pub mod sim_control;
@@ -45,6 +46,10 @@ pub use chunk_environment_persist::{
 };
 pub use chunk_environment_set::configure_chunk_environment_sets;
 pub use chunk_sim_lod::{ChunkSimLod, ChunkSimLodPlugin};
+pub use heavy_periodic::{
+    coincident_heavy_count_at, heavy_periodic_catalog, heavy_periodic_window_ticks,
+    periodic_step_fires, HeavyPeriodicSpec,
+};
 pub use sim_attention::{
     AttentionSet, AttentionTier, SimAttentionFocus, SimAttentionFrame, SimAttentionPlugin,
 };

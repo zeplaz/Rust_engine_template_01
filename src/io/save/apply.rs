@@ -1,4 +1,4 @@
-//! Main-thread ECS apply for Wave S saved chunk bodies.
+//! Main-thread ECS apply for Wave S saved chunk bodies (IO-07 chunk coord remap).
 
 use bevy::prelude::*;
 
@@ -114,7 +114,9 @@ pub fn apply_pending_save_pipeline_jobs(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::io::save::dto::{SavedChunkBody, SavedTerrainCell, SAVED_CHUNK_BODY_SCHEMA_VERSION};
+    use crate::io::save::dto::{
+        encode_chunk_body_ron, SavedChunkBody, SavedTerrainCell, SAVED_CHUNK_BODY_SCHEMA_VERSION,
+    };
     use crate::terrain::family::TerrainFamilyId;
     use crate::terrain::material::{MaterialDef, MaterialId, TagDef, TagId};
 
@@ -160,5 +162,58 @@ mod tests {
             &tag_registry,
         ));
         assert_eq!(mat_chunk.materials, vec![MaterialId(0)]);
+    }
+
+    #[test]
+    fn e7_chunk_body_name_round_trip_matches_runtime_ids() {
+        let mut registry = MaterialRegistry {
+            schema_version: 1,
+            materials: vec![
+                MaterialDef {
+                    name: "grass".into(),
+                    family: TerrainFamilyId(0),
+                    tags: Vec::new(),
+                    properties: serde_json::json!({}),
+                    preview_color: [0, 128, 0, 255],
+                },
+                MaterialDef {
+                    name: "stone".into(),
+                    family: TerrainFamilyId(0),
+                    tags: Vec::new(),
+                    properties: serde_json::json!({}),
+                    preview_color: [128, 128, 128, 255],
+                },
+            ],
+            name_to_id: Default::default(),
+        };
+        registry.name_to_id.insert("grass".into(), MaterialId(0));
+        registry.name_to_id.insert("stone".into(), MaterialId(1));
+        let tag_registry = TagRegistry {
+            schema_version: 1,
+            tags: vec![TagDef {
+                name: "wet".into(),
+                category: "moisture".into(),
+            }],
+            name_to_id: [("wet".into(), TagId(0))].into_iter().collect(),
+        };
+        let body = SavedChunkBody {
+            schema_version: SAVED_CHUNK_BODY_SCHEMA_VERSION,
+            chunk: [3, 2],
+            cells: vec![
+                SavedTerrainCell {
+                    material_name: "grass".into(),
+                    tags: vec!["wet".into()],
+                },
+                SavedTerrainCell {
+                    material_name: "stone".into(),
+                    tags: vec![],
+                },
+            ],
+        };
+        let applied = apply_saved_body_to_chunk_state(&body, &registry, &tag_registry);
+        assert_eq!(applied.materials, vec![MaterialId(0), MaterialId(1)]);
+        let ron = encode_chunk_body_ron(&body).unwrap();
+        let wire = String::from_utf8(ron).unwrap();
+        assert!(!wire.contains("MaterialId"));
     }
 }

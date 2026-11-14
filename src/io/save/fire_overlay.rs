@@ -22,11 +22,11 @@ pub struct SavedFireChunkRow {
     pub chunk: [i32; 2],
     pub heat: f32,
     pub fuel: f32,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     pub smoke: f32,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     pub toxic: f32,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     pub has_overlay: bool,
 }
 
@@ -92,22 +92,17 @@ pub fn capture_chunk_fire_state(
 ) -> ChunkFireStateSnapshot {
     let mut rows: Vec<SavedFireChunkRow> = query
         .iter()
-        .map(|(chunk, surface, overlay)| {
-            let (smoke, toxic, has_overlay) = overlay
-                .map(|o| {
-                    let smoke = o.smoke.iter().copied().fold(0.0_f32, f32::max);
-                    let toxic = o.toxic.iter().copied().fold(0.0_f32, f32::max);
-                    (smoke, toxic, true)
-                })
-                .unwrap_or((0.0, 0.0, false));
-            SavedFireChunkRow {
+        .map(|(chunk, surface, _overlay)| {
+            let mut row = SavedFireChunkRow {
                 chunk: [chunk.coord.x, chunk.coord.y],
                 heat: surface.heat,
                 fuel: surface.fuel,
-                smoke,
-                toxic,
-                has_overlay,
-            }
+                smoke: 0.0,
+                toxic: 0.0,
+                has_overlay: false,
+            };
+            crate::io::save::strip_fire_row_derived_for_save(&mut row);
+            row
         })
         .collect();
     rows.sort_by_key(|r| (r.chunk[0], r.chunk[1]));
@@ -149,8 +144,11 @@ pub fn hash_surface_fire_rows(rows: &[SavedFireChunkRow]) -> u64 {
 }
 
 pub fn apply_chunk_fire_state(snapshot: &ChunkFireStateSnapshot, world: &mut World) {
-    let wanted: HashMap<IVec2, (f32, f32)> = snapshot
-        .rows
+    let mut rows = snapshot.rows.clone();
+    for row in &mut rows {
+        crate::io::save::rebuild_saved_fire_chunk_row_derived(row);
+    }
+    let wanted: HashMap<IVec2, (f32, f32)> = rows
         .iter()
         .map(|r| (IVec2::new(r.chunk[0], r.chunk[1]), (r.heat, r.fuel)))
         .collect();

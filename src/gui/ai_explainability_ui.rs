@@ -3,13 +3,13 @@
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 
-use crate::ai::faction::FactionAiDecisionLog;
 use crate::gui::input_bindings::InputBindings;
 use crate::gui::panel_presence::PanelPresence;
 use crate::gui::style::{CmdUiMonoFont, UiPalette};
 use crate::gui::ui_gates::in_simulation_or_editor;
 use crate::strategic::{
-    format_hybrid_telemetry_explain, DecisionExplainabilitySnapshot, HybridSimLastResolved,
+    format_hybrid_telemetry_explain, BehaviourChangesSnapshot, DecisionExplainabilitySnapshot,
+    HybridSimLastResolved, BEHAVIOUR_CHANGES_PANEL_LINES,
 };
 
 #[derive(Resource, Debug, Clone, Default)]
@@ -53,40 +53,28 @@ fn toggle_explainability_ui(
     }
 }
 
-/// Most recent decisions per faction shown in the panel.
-const FACTION_RECORDS_SHOWN: usize = 2;
-
 fn explainability_body(
     hybrid: Option<&HybridSimLastResolved>,
     decision: Option<&DecisionExplainabilitySnapshot>,
-    factions: Option<&FactionAiDecisionLog>,
+    behaviour: Option<&BehaviourChangesSnapshot>,
 ) -> String {
     let mut lines = vec!["AI explainability".to_string()];
-    match factions {
-        Some(log) if !log.records.is_empty() => {
+    match behaviour {
+        Some(s) if !s.lines.is_empty() => {
             lines.push(format!(
-                "Faction AI: {} decisions, {} goal switches",
-                log.total_decisions, log.total_goal_switches
+                "Behaviour changes ({} total, last {})",
+                s.total_switches,
+                BEHAVIOUR_CHANGES_PANEL_LINES
             ));
-            for slot in log.slots() {
-                let recent: Vec<_> = log
-                    .records
-                    .iter()
-                    .filter(|r| r.slot == slot)
-                    .rev()
-                    .take(FACTION_RECORDS_SHOWN)
-                    .collect();
-                for (i, rec) in recent.into_iter().enumerate() {
-                    lines.push(format!(
-                        "-- tick {}{}",
-                        rec.sim_tick,
-                        if i == 0 { " (latest)" } else { "" }
-                    ));
-                    lines.extend(rec.explain());
-                }
+            for (i, line) in s.lines.iter().take(BEHAVIOUR_CHANGES_PANEL_LINES).enumerate() {
+                lines.push(format!(
+                    "  {}{}",
+                    line,
+                    if i == 0 { " (latest)" } else { "" }
+                ));
             }
         }
-        _ => lines.push("Faction AI: no decisions yet".into()),
+        _ => lines.push("Behaviour changes: none yet".into()),
     }
     match hybrid.and_then(|h| h.telemetry.as_ref()) {
         Some(t) => lines.extend(format_hybrid_telemetry_explain(t)),
@@ -116,7 +104,7 @@ fn sync_ai_explainability_bevy(
     state: Res<ExplainabilityUiState>,
     hybrid: Option<Res<HybridSimLastResolved>>,
     decision: Option<Res<DecisionExplainabilitySnapshot>>,
-    factions: Option<Res<FactionAiDecisionLog>>,
+    behaviour: Option<Res<BehaviourChangesSnapshot>>,
     palette: Res<UiPalette>,
     mono: Res<CmdUiMonoFont>,
     mut presence: ResMut<PanelPresence>,
@@ -134,7 +122,7 @@ fn sync_ai_explainability_bevy(
         return;
     }
 
-    let text = explainability_body(hybrid.as_deref(), decision.as_deref(), factions.as_deref());
+    let text = explainability_body(hybrid.as_deref(), decision.as_deref(), behaviour.as_deref());
     let mut key = text.len() as u64;
     for b in text.bytes() {
         key = key.wrapping_mul(0x9E37_79B9).wrapping_add(b as u64);

@@ -85,6 +85,28 @@ impl FactionDoctrine {
     }
 }
 
+/// Per-tick penalty on the score from [`expected_goal_ticks`]; small enough that urgency does not erase a clear winner.
+const DURATION_DISCOUNT_PER_TICK: f32 = 0.00035;
+
+/// Plain tick estimates for fulfilling each goal (deterministic, no curves).
+#[must_use]
+fn expected_goal_ticks(goal: StrategicGoal, p: &FactionPerception) -> f32 {
+    let front_scale = 1.0 + p.front.len() as f32 * 0.1;
+    match goal {
+        StrategicGoal::Hold => 1.0,
+        StrategicGoal::DefendFront => 35.0 * front_scale,
+        StrategicGoal::Advance => 80.0 * front_scale,
+        StrategicGoal::SecureSupply => 40.0 * (1.0 + 0.5 * p.front_supply_shortfall()),
+        StrategicGoal::Develop => {
+            if p.front.is_empty() {
+                120.0
+            } else {
+                95.0 * front_scale
+            }
+        }
+    }
+}
+
 /// One named contribution: `value = input * weight`.
 #[derive(Clone, Copy, Debug, PartialEq, serde::Serialize)]
 pub struct ScoreTerm {
@@ -174,6 +196,11 @@ pub fn score_goals(p: &FactionPerception, d: &FactionDoctrine, current: Option<S
         if commit(goal) > 0.0 && goal != StrategicGoal::Hold {
             terms.push(ScoreTerm { label: "commitment", input: 1.0, weight: d.commitment });
         }
+        terms.push(ScoreTerm {
+            label: "duration",
+            input: expected_goal_ticks(goal, p),
+            weight: -DURATION_DISCOUNT_PER_TICK,
+        });
         out.push(GoalScore { goal, terms });
     }
     out
@@ -292,6 +319,29 @@ mod tests {
         let sum: f32 = win.terms.iter().map(ScoreTerm::value).sum();
         assert!((sum - win.total()).abs() < 1e-6);
         assert_eq!(c.scores.len(), StrategicGoal::ALL.len());
+    }
+
+    #[test]
+    fn fai_equal_value_shorter_duration_wins() {
+        let base = 0.42_f32;
+        let short_ticks = expected_goal_ticks(StrategicGoal::Hold, &FactionPerception::default());
+        let long_ticks = expected_goal_ticks(StrategicGoal::Develop, &FactionPerception::default());
+        assert!(short_ticks < long_ticks);
+        let short_total = base + short_ticks * -DURATION_DISCOUNT_PER_TICK;
+        let long_total = base + long_ticks * -DURATION_DISCOUNT_PER_TICK;
+        assert!(short_total > long_total);
+
+        let p = FactionPerception::default();
+        let scores = score_goals(&p, &FactionDoctrine::default(), None);
+        for gs in &scores {
+            let term = gs
+                .terms
+                .iter()
+                .find(|t| t.label == "duration")
+                .expect("duration explain term");
+            assert_eq!(term.input, expected_goal_ticks(gs.goal, &p));
+            assert!(term.weight < 0.0);
+        }
     }
 
     #[test]

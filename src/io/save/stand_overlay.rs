@@ -22,13 +22,15 @@ pub struct SavedCellStandRow {
     pub full_cap: Vec<f32>,
     pub fuel_cap: Vec<f32>,
     pub burnt_at: Vec<f32>,
+    #[serde(default, skip_serializing)]
     pub burnt_count: u32,
     pub seeded: bool,
-    #[serde(default)]
+    /// Legacy v1 overlay fire; authority is `chunk_fire_state` overlay (IO-08).
+    #[serde(default, skip_serializing)]
     pub heat: Vec<f32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     pub fuel: Vec<f32>,
-    #[serde(default)]
+    #[serde(default, skip_serializing)]
     pub burn_hold: Vec<u16>,
 }
 
@@ -59,75 +61,91 @@ fn kind_from_u8(v: u8) -> StandKind {
     }
 }
 
-#[must_use]
-pub fn capture_chunk_cell_stand(
-    query: &Query<(&Chunk, &ChunkCellStand, Option<&ChunkFireOverlay>)>,
-) -> ChunkCellStandSnapshot {
-    let mut rows: Vec<SavedCellStandRow> = query
-        .iter()
-        .map(|(chunk, stand, ovl)| {
-            let (heat, fuel, burn_hold) = ovl
-                .map(|o| (o.heat.clone(), o.fuel.clone(), o.burn_hold.clone()))
-                .unwrap_or_default();
-            SavedCellStandRow {
+fn collect_stand_rows<'a, I>(iter: I) -> Vec<SavedCellStandRow>
+where
+    I: Iterator<Item = (&'a Chunk, &'a ChunkCellStand, Option<&'a ChunkFireOverlay>)>,
+{
+    let mut rows: Vec<SavedCellStandRow> = iter
+        .map(|(chunk, stand, _ovl)| {
+            let mut row = SavedCellStandRow {
                 chunk: [chunk.coord.x, chunk.coord.y],
                 kind: stand.kind.iter().copied().map(kind_to_u8).collect(),
                 full_cap: stand.full_cap.clone(),
                 fuel_cap: stand.fuel_cap.clone(),
                 burnt_at: stand.burnt_at.clone(),
-                burnt_count: stand.burnt_count,
+                burnt_count: 0,
                 seeded: stand.seeded,
-                heat,
-                fuel,
-                burn_hold,
-            }
+                heat: Vec::new(),
+                fuel: Vec::new(),
+                burn_hold: Vec::new(),
+            };
+            crate::io::save::strip_stand_row_derived_for_save(&mut row);
+            row
         })
         .collect();
     rows.sort_by_key(|r| (r.chunk[0], r.chunk[1]));
+    rows
+}
+
+#[must_use]
+pub fn capture_chunk_cell_stand(
+    query: &Query<(&Chunk, &ChunkCellStand, Option<&ChunkFireOverlay>)>,
+) -> ChunkCellStandSnapshot {
     ChunkCellStandSnapshot {
         schema_version: STAND_STATE_SCHEMA_VERSION,
-        rows,
+        rows: collect_stand_rows(query.iter()),
+    }
+}
+
+fn apply_stand_row_to_components(
+    row: &SavedCellStandRow,
+    stand: &mut ChunkCellStand,
+    ovl: Option<&mut ChunkFireOverlay>,
+) {
+    let n = row.kind.len();
+    if n == 0 {
+        return;
+    }
+    if stand.kind.len() != n {
+        *stand = ChunkCellStand::new(n);
+    }
+    stand.kind = row.kind.iter().copied().map(kind_from_u8).collect();
+    stand.full_cap = row.full_cap.clone();
+    stand.fuel_cap = row.fuel_cap.clone();
+    stand.burnt_at = row.burnt_at.clone();
+    stand.burnt_count = crate::io::save::burnt_count_from_burnt_at(&row.burnt_at);
+    stand.seeded = row.seeded;
+    if let Some(ovl) = ovl {
+        if row.heat.len() == n {
+            ovl.heat = row.heat.clone();
+        }
+        if row.fuel.len() == n {
+            ovl.fuel = row.fuel.clone();
+        }
+        if row.burn_hold.len() == n {
+            ovl.burn_hold = row.burn_hold.clone();
+        }
     }
 }
 
 pub fn apply_chunk_cell_stand(snapshot: &ChunkCellStandSnapshot, world: &mut World) {
-    let wanted: HashMap<IVec2, &SavedCellStandRow> = snapshot
-        .rows
+    let mut rows: Vec<SavedCellStandRow> = snapshot.rows.clone();
+    for row in &mut rows {
+        crate::io::save::rebuild_saved_cell_stand_row_derived(row);
+    }
+    let wanted: HashMap<IVec2, &SavedCellStandRow> = rows
         .iter()
         .map(|r| (IVec2::new(r.chunk[0], r.chunk[1]), r))
         .collect();
     let mut seen = HashSet::new();
     {
         let mut q = world.query::<(&Chunk, &mut ChunkCellStand, Option<&mut ChunkFireOverlay>)>();
-        for (chunk, mut stand, ovl) in q.iter_mut(world) {
+        for (chunk, mut stand, mut ovl) in q.iter_mut(world) {
             let Some(row) = wanted.get(&chunk.coord) else {
                 continue;
             };
             seen.insert(chunk.coord);
-            let n = row.kind.len();
-            if n == 0 {
-                continue;
-            }
-            if stand.kind.len() != n {
-                *stand = ChunkCellStand::new(n);
-            }
-            stand.kind = row.kind.iter().copied().map(kind_from_u8).collect();
-            stand.full_cap = row.full_cap.clone();
-            stand.fuel_cap = row.fuel_cap.clone();
-            stand.burnt_at = row.burnt_at.clone();
-            stand.burnt_count = row.burnt_count;
-            stand.seeded = row.seeded;
-            if let Some(mut ovl) = ovl {
-                if row.heat.len() == n {
-                    ovl.heat = row.heat.clone();
-                }
-                if row.fuel.len() == n {
-                    ovl.fuel = row.fuel.clone();
-                }
-                if row.burn_hold.len() == n {
-                    ovl.burn_hold = row.burn_hold.clone();
-                }
-            }
+            apply_stand_row_to_components(row, &mut stand, ovl.as_deref_mut());
         }
     }
     for (coord, row) in wanted {
@@ -136,35 +154,15 @@ pub fn apply_chunk_cell_stand(snapshot: &ChunkCellStandSnapshot, world: &mut Wor
         }
         let n = row.kind.len();
         let mut stand = ChunkCellStand::new(n);
-        stand.kind = row.kind.iter().copied().map(kind_from_u8).collect();
-        stand.full_cap = row.full_cap.clone();
-        stand.fuel_cap = row.fuel_cap.clone();
-        stand.burnt_at = row.burnt_at.clone();
-        stand.burnt_count = row.burnt_count;
-        stand.seeded = row.seeded;
-        world.spawn((
-            Chunk { coord },
-            stand,
-            ChunkFireOverlay {
-                heat: if row.heat.len() == n {
-                    row.heat.clone()
-                } else {
-                    vec![0.0; n]
-                },
-                fuel: if row.fuel.len() == n {
-                    row.fuel.clone()
-                } else {
-                    vec![0.0; n]
-                },
-                smoke: vec![0.0; n],
-                toxic: vec![0.0; n],
-                burn_hold: if row.burn_hold.len() == n {
-                    row.burn_hold.clone()
-                } else {
-                    vec![0; n]
-                },
-            },
-        ));
+        let mut ovl = ChunkFireOverlay {
+            heat: vec![0.0; n],
+            fuel: vec![0.0; n],
+            smoke: vec![0.0; n],
+            toxic: vec![0.0; n],
+            burn_hold: vec![0; n],
+        };
+        apply_stand_row_to_components(row, &mut stand, Some(&mut ovl));
+        world.spawn((Chunk { coord }, stand, ovl));
     }
 }
 
@@ -235,44 +233,24 @@ pub fn try_hydrate_stand_overlay_on_bundle_dir(
     state.last_bundle_dir = Some(bundle.clone());
     state.hydrate_attempted = true;
     let path = bundle.join(STAND_STATE_REL_PATH);
-    let Ok(snap) = read_chunk_cell_stand_ron(&path) else {
+    let Ok(mut snap) = read_chunk_cell_stand_ron(&path) else {
         return;
     };
+    for row in &mut snap.rows {
+        crate::io::save::rebuild_saved_cell_stand_row_derived(row);
+    }
     let mut seen = HashSet::new();
     let wanted: HashMap<IVec2, &SavedCellStandRow> = snap
         .rows
         .iter()
         .map(|r| (IVec2::new(r.chunk[0], r.chunk[1]), r))
         .collect();
-    for (_e, chunk, mut stand, ovl) in &mut q {
+    for (_e, chunk, mut stand, mut ovl) in &mut q {
         let Some(row) = wanted.get(&chunk.coord) else {
             continue;
         };
         seen.insert(chunk.coord);
-        let n = row.kind.len();
-        if n == 0 {
-            continue;
-        }
-        if stand.kind.len() != n {
-            *stand = ChunkCellStand::new(n);
-        }
-        stand.kind = row.kind.iter().copied().map(kind_from_u8).collect();
-        stand.full_cap = row.full_cap.clone();
-        stand.fuel_cap = row.fuel_cap.clone();
-        stand.burnt_at = row.burnt_at.clone();
-        stand.burnt_count = row.burnt_count;
-        stand.seeded = row.seeded;
-        if let Some(mut ovl) = ovl {
-            if row.heat.len() == n {
-                ovl.heat = row.heat.clone();
-            }
-            if row.fuel.len() == n {
-                ovl.fuel = row.fuel.clone();
-            }
-            if row.burn_hold.len() == n {
-                ovl.burn_hold = row.burn_hold.clone();
-            }
-        }
+        apply_stand_row_to_components(row, &mut stand, ovl.as_deref_mut());
     }
     for (coord, row) in wanted {
         if seen.contains(&coord) || row.kind.is_empty() {
@@ -280,35 +258,15 @@ pub fn try_hydrate_stand_overlay_on_bundle_dir(
         }
         let n = row.kind.len();
         let mut stand = ChunkCellStand::new(n);
-        stand.kind = row.kind.iter().copied().map(kind_from_u8).collect();
-        stand.full_cap = row.full_cap.clone();
-        stand.fuel_cap = row.fuel_cap.clone();
-        stand.burnt_at = row.burnt_at.clone();
-        stand.burnt_count = row.burnt_count;
-        stand.seeded = row.seeded;
-        commands.spawn((
-            Chunk { coord },
-            stand,
-            ChunkFireOverlay {
-                heat: if row.heat.len() == n {
-                    row.heat.clone()
-                } else {
-                    vec![0.0; n]
-                },
-                fuel: if row.fuel.len() == n {
-                    row.fuel.clone()
-                } else {
-                    vec![0.0; n]
-                },
-                smoke: vec![0.0; n],
-                toxic: vec![0.0; n],
-                burn_hold: if row.burn_hold.len() == n {
-                    row.burn_hold.clone()
-                } else {
-                    vec![0; n]
-                },
-            },
-        ));
+        let mut ovl = ChunkFireOverlay {
+            heat: vec![0.0; n],
+            fuel: vec![0.0; n],
+            smoke: vec![0.0; n],
+            toxic: vec![0.0; n],
+            burn_hold: vec![0; n],
+        };
+        apply_stand_row_to_components(row, &mut stand, Some(&mut ovl));
+        commands.spawn((Chunk { coord }, stand, ovl));
     }
     state.hydrated_from_manifest = true;
 }
@@ -317,6 +275,38 @@ pub fn try_hydrate_stand_overlay_on_bundle_dir(
 mod tests {
     use super::*;
     use crate::systems::ecology::StandKind;
+
+    #[test]
+    fn capture_omits_derived_fire_and_burnt_count_on_wire() {
+        let mut stand = ChunkCellStand::new(2);
+        stand.burnt_at = vec![1.0, -1.0];
+        stand.burnt_count = 1;
+        let mut world = World::new();
+        world.spawn((
+            Chunk {
+                coord: IVec2::ZERO,
+            },
+            stand,
+            ChunkFireOverlay {
+                heat: vec![0.9, 0.0],
+                fuel: vec![0.1, 0.0],
+                smoke: vec![0.5; 2],
+                toxic: vec![0.0; 2],
+                burn_hold: vec![1, 0],
+            },
+        ));
+        let mut q = world.query::<(&Chunk, &ChunkCellStand, Option<&ChunkFireOverlay>)>();
+        let snap = ChunkCellStandSnapshot {
+            schema_version: STAND_STATE_SCHEMA_VERSION,
+            rows: collect_stand_rows(q.iter(&world)),
+        };
+        let row = &snap.rows[0];
+        assert!(row.heat.is_empty());
+        assert!(row.burnt_count == 0);
+        let ron = ron::ser::to_string(&snap).unwrap();
+        assert!(!ron.contains("heat"));
+        assert!(!ron.contains("burnt_count"));
+    }
 
     #[test]
     fn roundtrip_preserves_burnt_clock() {

@@ -96,7 +96,9 @@ pub use shot_pulse::{
 };
 pub use behavior_fracture::{
     faction_cohesion_pressure_system, faction_internal_stage_system,
-    faction_meso_internal_tick_system, fracture_event_emit_system, fracture_probability_overlay_system,
+    faction_meso_internal_tick_system,
+    FACTION_MESO_INTERNAL_PERIOD_TICKS, FACTION_MESO_INTERNAL_PHASE_TICKS,
+    fracture_event_emit_system, fracture_probability_overlay_system,
     sub_faction_stub_hook_system, FractureDriver, FractureEvent, FractureEventBus, FractureOverlaySettings,
     FractureProbabilityOverlay, FractureSignal, FractureSignalBus, FractureSignalScratch, FractureStageScratch,
     FractureType, SubFactionStub,
@@ -107,8 +109,9 @@ pub use agent_batch_scoring::{
     GpuAgentScoringPipeline, WorldPressureSample,
 };
 pub use ai_explainability::{
-    decision_explainability_capture_system, format_hybrid_telemetry_explain,
-    format_pipeline_contributors, DecisionExplainabilitySnapshot,
+    behaviour_changes_snapshot_system, decision_explainability_capture_system,
+    format_hybrid_telemetry_explain, format_pipeline_contributors, BehaviourChangesSnapshot,
+    DecisionExplainabilitySnapshot, BEHAVIOUR_CHANGES_PANEL_LINES,
 };
 pub use behavior_mission::{
     active_missions_advance_elapsed_system, active_missions_expire_system,
@@ -135,6 +138,7 @@ pub use stage7_behavioral::{
     publish_stage7_behavioral_overlay_samples, resolve_stage7_m3_overlay_sample_counts, seed_stage7_behavioral_overlay_resources,
     seed_stage7_behavioral_m2_lib_proof, seed_stage7_m4_playtest_enqueue, stage7_overlay_reader_sample_counts,
     sync_stage7_overlay_witness_from_reader_samples, tick_strategic_command_queue_system,
+    STAGE7_BELIEF_DECAY_PERIOD_TICKS, STAGE7_BELIEF_DECAY_PHASE_TICKS,
     Stage7BehavioralHud,
     Stage7BehavioralPlugin, Stage7BehavioralState, Stage7BeliefState,
 };
@@ -297,7 +301,8 @@ pub use logistics_net::{
 pub use plugin::{InfrastructureSiteSet, StrategicFieldPipeline, StrategicFieldsPlugin};
 pub use transport_bridge::{rebuild_logistics_graph_from_transport, StrategicRasterConfig};
 pub use world_field_layers::{
-    ChunkFieldCell, WorldFieldLayerConfig, WorldFieldLayerEpoch,
+    ChunkFieldCell, FieldLayerConsumerCache, FieldLayerUpdateClass, FieldScalarLayer,
+    WorldFieldLayerConfig, WorldFieldLayerEpoch,
 };
 pub use world_read_snapshot::{world_read_snapshot_refresh_system, WorldReadSnapshot};
 pub use zones::{apply_zones_to_strategic_overlays_system, Zone, ZoneKind};

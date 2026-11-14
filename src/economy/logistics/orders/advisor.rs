@@ -7,7 +7,8 @@
 
 use super::model::{CargoKind, OwnerId, SiteId};
 use super::sim::LogisticsOrderCommand;
-use super::snapshot::{DemandRow, LogisticsOrdersSnapshot, SiteRole, SiteRow};
+use super::snapshot::{DemandRow, LogisticsOrdersSnapshot};
+use super::source_pick::best_source_open_goal;
 
 /// Why a demand got no suggestion.
 #[derive(Clone, Debug, PartialEq, Eq)]
@@ -22,39 +23,11 @@ pub struct SupplyAdvice {
     pub gaps: Vec<AdvisorGap>,
 }
 
-fn dist2(a: &SiteRow, b: &SiteRow) -> f32 {
-    let dx = a.world_xz[0] - b.world_xz[0];
-    let dz = a.world_xz[1] - b.world_xz[1];
-    dx * dx + dz * dz
-}
-
 /// Best source for a demand: an owner depot/plant other than the sink holding the cargo.
-/// Prefers sources that can cover the full buffer target, then the nearest, then the lowest id.
+/// One open-goal search from the sink (NAV-09): full buffer cover, then travel ticks, then id.
 #[must_use]
 pub fn best_source_for(snap: &LogisticsOrdersSnapshot, demand: &DemandRow) -> Option<SiteId> {
-    let sink = snap.site(demand.site)?;
-    snap.sites
-        .iter()
-        .filter(|s| {
-            s.owner == demand.owner
-                && s.id != demand.site
-                && matches!(s.role, SiteRole::Depot | SiteRole::Plant)
-        })
-        .filter_map(|s| {
-            let available = s
-                .stock
-                .iter()
-                .find(|r| r.cargo == demand.cargo)
-                .map(|r| r.on_hand.saturating_sub(r.reserved_out))
-                .unwrap_or(0);
-            (available > 0).then_some((available < demand.buffer_target, dist2(s, sink), s.id))
-        })
-        .min_by(|a, b| {
-            a.0.cmp(&b.0)
-                .then(a.1.total_cmp(&b.1))
-                .then(a.2.cmp(&b.2))
-        })
-        .map(|(_, _, id)| id)
+    best_source_open_goal(snap, demand)
 }
 
 /// Standing lines for every unserved demand of `owner`, most urgent first.

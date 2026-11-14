@@ -1,4 +1,14 @@
-//! Save DTO graph â€” wire payloads use names, not runtime handles.
+//! Save DTO graph — wire payloads use names, not runtime handles (IO-07).
+//!
+//! **E7 audit (`SavedChunkBody` / `SavedTerrainCell`):**
+//! | field | truth / derived | rebuilt where |
+//! |:---|:---|:---|
+//! | `schema_version` | truth | loader gate in `load.rs` |
+//! | `chunk` | truth (stable chunk coord) | — |
+//! | `material_name` | truth | `material_ids_from_saved_body` (`load.rs`) |
+//! | `tags` | truth (names) | `tag_sets_from_saved_body` (`load.rs`) |
+//! | runtime `MaterialId` / `TagSet` | derived (not on wire) | `apply_saved_body_to_chunk_state` (`apply.rs`) |
+//! | Bevy `Entity` | not stored | chunk coord remap in `apply_pending_save_pipeline_jobs` / streaming apply |
 
 use serde::{Deserialize, Serialize};
 

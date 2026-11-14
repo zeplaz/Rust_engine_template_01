@@ -2,7 +2,10 @@
 
 use bevy::prelude::*;
 
-use super::ai_explainability::{decision_explainability_capture_system, DecisionExplainabilitySnapshot};
+use super::ai_explainability::{
+    behaviour_changes_snapshot_system, decision_explainability_capture_system,
+    BehaviourChangesSnapshot, DecisionExplainabilitySnapshot,
+};
 use super::behavior_emergence_log::{
     strategic_emergence_log_hybrid_resolution_system, StrategicEmergenceLog,
 };
@@ -21,6 +24,7 @@ impl Plugin for BehaviorPlugin {
         app.init_resource::<ActiveBehaviorModel>()
             .init_resource::<DecisionPipelineSink>()
             .init_resource::<DecisionExplainabilitySnapshot>()
+            .init_resource::<BehaviourChangesSnapshot>()
             .init_resource::<StrategicEmergenceLog>()
             .add_systems(PreUpdate, behavior_sync_entity_ids_system)
             .add_systems(
@@ -29,6 +33,8 @@ impl Plugin for BehaviorPlugin {
                     behavior_model_evaluation_hook_system,
                     decision_pipeline_composition_system,
                     decision_explainability_capture_system,
+                    behaviour_changes_snapshot_system
+                        .after(crate::ai::faction::FactionAiSet::Tick),
                 )
                     .chain()
                     .in_set(StrategicBehaviorSchedule::AgentBrainPrep),

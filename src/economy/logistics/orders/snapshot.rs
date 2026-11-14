@@ -9,6 +9,7 @@ use serde::{Deserialize, Serialize};
 
 use super::model::*;
 use super::sim::{LogisticsOrderSim, OrderEventKind, TravelModel};
+use super::source_pick::build_site_adjacency;
 
 /// What a site is for — lets the UI group pickers and the AI find depots vs fronts.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -188,6 +189,8 @@ pub struct EventRow {
 pub struct LogisticsOrdersSnapshot {
     pub tick: Tick,
     pub sites: Vec<SiteRow>,
+    /// Symmetric site travel edges (one Dijkstra from sink for source pick, NAV-09).
+    pub site_adjacency: super::source_pick::SiteTravelAdjacency,
     pub orders: Vec<OrderRow>,
     pub demands: Vec<DemandRow>,
     pub vehicles: Vec<VehicleRow>,
@@ -302,6 +305,8 @@ pub fn build_snapshot(
             stock,
         });
     }
+    let site_ids: Vec<SiteId> = snap.sites.iter().map(|s| s.id).collect();
+    snap.site_adjacency = build_site_adjacency(&site_ids, travel);
 
     let mut next_eta: BTreeMap<OrderId, u32> = BTreeMap::new();
     let mut fleets: BTreeMap<OwnerId, FleetRow> = BTreeMap::new();

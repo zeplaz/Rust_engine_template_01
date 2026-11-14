@@ -14,8 +14,8 @@ IO-02	ADOPTED	STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS + oscillation test	20
 LOOP-07	ADOPTED	Staleness docs E2 on extract + world_read_snapshot + authority map	2026-11-14
 EXEC-01	OPEN		2026-11-14
 TAC-06	OPEN		2026-11-14
-IO-08	OPEN		2026-11-14
-IO-07	OPEN		2026-11-14
+IO-08	SHIPPED	E7 post_load_rebuild + stand/fire/transport hydrate	2026-11-14
+IO-07	SHIPPED	chunk coords + string keys on wire; no Entity in save DTOs	2026-11-14
 PHYS-02	ADOPTED	swept DDA step_ballistic_flights + swept_impact test	2026-11-14
 MOVE-09	ADOPTED	refine_missile_aim 6-iter + wind tests in ballistics.rs	2026-11-14
 PHYS-06	ADOPTED	sleeping_neighbor_west_edge_ignites_within_two_ticks	2026-11-14

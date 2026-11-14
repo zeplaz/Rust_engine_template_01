@@ -25,6 +25,10 @@ use super::strategic_command_queue::{enqueue_strategic_command, tick_strategic_c
 /// Stale intel when confidence falls below this while orders are pending.
 pub const STALE_INTEL_CONFIDENCE_THRESHOLD: f32 = 0.5;
 
+/// Belief-confidence decay cadence (gameplay period 4; EXEC-01 phase 1).
+pub const STAGE7_BELIEF_DECAY_PERIOD_TICKS: u64 = 4;
+pub const STAGE7_BELIEF_DECAY_PHASE_TICKS: u64 = 1;
+
 /// Telemetry + rollup inputs for `stage7_behavioral_live.json`.
 #[derive(Resource, Clone, Debug, Default)]
 pub struct Stage7BehavioralState {
@@ -172,7 +176,13 @@ pub fn decay_stage7_belief_confidence_system(
     let Some(tick) = tick else {
         return;
     };
-    if tick.0 == 0 || tick.0 % 4 != 0 {
+    if tick.0 != 0
+        && !crate::systems::heavy_periodic::periodic_step_fires(
+            tick.0,
+            STAGE7_BELIEF_DECAY_PERIOD_TICKS,
+            STAGE7_BELIEF_DECAY_PHASE_TICKS,
+        )
+    {
         return;
     }
     for belief in &mut beliefs.beliefs {

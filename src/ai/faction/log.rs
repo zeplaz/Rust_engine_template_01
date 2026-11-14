@@ -1,5 +1,8 @@
 //! **Faction AI decision log** — the explainability record. Sole writer:
-//! [`super::faction_ai_decide_system`]. Readers: HUD explainability window, witness JSON, tests.
+//! [`super::faction_ai_tick_system`]. Readers: witness JSON, tests.
+//!
+//! **Behaviour changes** ([`FactionBehaviourChangeLog`]): goal switches only — copied into
+//! [`crate::strategic::BehaviourChangesSnapshot`] for the Insert explain panel (`DEC-15`).
 //!
 //! This is an audit trail of decisions already taken, not a blackboard: nothing in the sim reads it
 //! back to decide (`MAI-CUT-BOARD`).
@@ -150,5 +153,143 @@ impl FactionAiDecisionLog {
         s.sort_unstable();
         s.dedup();
         s
+    }
+}
+
+/// Ring capacity for behaviour-change lines (panel shows the last 8).
+pub const BEHAVIOUR_CHANGES_CAP: usize = 32;
+
+/// One perceptible goal switch: `tick · old → new · deciding term`.
+#[derive(Clone, Debug, PartialEq, serde::Serialize)]
+pub struct FactionBehaviourChangeRecord {
+    pub sim_tick: u64,
+    pub slot: u8,
+    pub previous_goal: Option<StrategicGoal>,
+    pub new_goal: StrategicGoal,
+    pub deciding_term: String,
+}
+
+impl FactionBehaviourChangeRecord {
+    #[must_use]
+    pub fn from_choice(
+        sim_tick: u64,
+        slot: u8,
+        previous_goal: Option<StrategicGoal>,
+        choice: &GoalChoice,
+    ) -> Self {
+        Self {
+            sim_tick,
+            slot,
+            previous_goal,
+            new_goal: choice.chosen,
+            deciding_term: deciding_term_label(choice),
+        }
+    }
+
+    /// `tick · old → new · deciding term`
+    #[must_use]
+    pub fn line(&self) -> String {
+        let old = self
+            .previous_goal
+            .map_or("—".to_string(), |g| g.label().to_string());
+        format!(
+            "tick {} · {} → {} · {}",
+            self.sim_tick, old, self.new_goal.label(), self.deciding_term
+        )
+    }
+}
+
+#[must_use]
+fn deciding_term_label(choice: &GoalChoice) -> String {
+    let Some(win) = choice.score_of(choice.chosen) else {
+        return "—".into();
+    };
+    let mut terms: Vec<_> = win
+        .terms
+        .iter()
+        .filter(|t| t.label != "commitment" && t.value().abs() > 1e-4)
+        .collect();
+    terms.sort_by(|a, b| b.value().abs().total_cmp(&a.value().abs()));
+    terms
+        .first()
+        .map(|t| format!("{} ({:+.2})", t.label, t.value()))
+        .unwrap_or_else(|| "—".into())
+}
+
+/// Goal switches only — for player-facing explainability (`DEC-15`).
+#[derive(Resource, Clone, Debug, Default)]
+pub struct FactionBehaviourChangeLog {
+    pub entries: Vec<FactionBehaviourChangeRecord>,
+    pub total: u64,
+}
+
+impl FactionBehaviourChangeLog {
+    /// Records when the chosen goal differs from the previous one.
+    #[must_use]
+    pub fn maybe_push(&mut self, record: FactionBehaviourChangeRecord) -> bool {
+        if record.previous_goal == Some(record.new_goal) {
+            return false;
+        }
+        self.total += 1;
+        self.entries.push(record);
+        if self.entries.len() > BEHAVIOUR_CHANGES_CAP {
+            let drop = self.entries.len() - BEHAVIOUR_CHANGES_CAP;
+            self.entries.drain(0..drop);
+        }
+        true
+    }
+
+    /// Newest-first, capped at `n`.
+    #[must_use]
+    pub fn recent(&self, n: usize) -> Vec<&FactionBehaviourChangeRecord> {
+        self.entries.iter().rev().take(n).collect()
+    }
+}
+
+#[cfg(test)]
+mod behaviour_change_tests {
+    use super::*;
+
+    #[test]
+    fn unchanged_goal_over_ten_ticks_adds_no_entries() {
+        let mut log = FactionBehaviourChangeLog::default();
+        let hold = StrategicGoal::Hold;
+        for tick in 0..10u64 {
+            log.maybe_push(FactionBehaviourChangeRecord {
+                sim_tick: tick,
+                slot: 1,
+                previous_goal: Some(hold),
+                new_goal: hold,
+                deciding_term: "baseline".into(),
+            });
+        }
+        assert!(log.entries.is_empty());
+        assert_eq!(log.total, 0);
+    }
+
+    #[test]
+    fn one_goal_switch_adds_exactly_one() {
+        let mut log = FactionBehaviourChangeLog::default();
+        let hold = StrategicGoal::Hold;
+        let defend = StrategicGoal::DefendFront;
+        for tick in 0..10u64 {
+            log.maybe_push(FactionBehaviourChangeRecord {
+                sim_tick: tick,
+                slot: 1,
+                previous_goal: Some(hold),
+                new_goal: hold,
+                deciding_term: "baseline".into(),
+            });
+        }
+        assert!(log.maybe_push(FactionBehaviourChangeRecord {
+            sim_tick: 10,
+            slot: 1,
+            previous_goal: Some(hold),
+            new_goal: defend,
+            deciding_term: "front threat (+0.42)".into(),
+        }));
+        assert_eq!(log.entries.len(), 1);
+        assert_eq!(log.total, 1);
+        assert_eq!(log.entries[0].new_goal, defend);
     }
 }

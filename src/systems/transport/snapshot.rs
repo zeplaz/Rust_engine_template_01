@@ -99,6 +99,29 @@ impl Default for TransportEdgeRecord {
     }
 }
 
+/// Node positions/keys derived from edge control points (IO-08); safe to omit on wire.
+pub fn rebuild_transport_snapshot_nodes_from_edges(snapshot: &mut TransportNetworkSnapshot) {
+    let mut node_pos: std::collections::HashMap<String, [f32; 3]> = std::collections::HashMap::new();
+    for e in &snapshot.edges {
+        if !e.head.is_empty() {
+            if let Some(p) = e.control_points.first() {
+                node_pos.entry(e.head.clone()).or_insert(*p);
+            }
+        }
+        if !e.tail.is_empty() {
+            if let Some(p) = e.control_points.last() {
+                node_pos.entry(e.tail.clone()).or_insert(*p);
+            }
+        }
+    }
+    let mut nodes: Vec<TransportNodeRecord> = node_pos
+        .into_iter()
+        .map(|(key, position)| TransportNodeRecord { key, position })
+        .collect();
+    nodes.sort_by(|a, b| a.key.cmp(&b.key));
+    snapshot.nodes = nodes;
+}
+
 /// Promote v1 snapshot bodies to v2 in place.
 pub fn migrate_transport_snapshot_to_v2(snapshot: &mut TransportNetworkSnapshot) {
     if snapshot.schema_version >= TRANSPORT_NETWORK_SCHEMA_V2 {
@@ -140,14 +163,17 @@ pub fn hydrate_transport_from_snapshot(
         return Err(HydrateError::WrongSchema(snapshot.schema_version));
     }
 
-    let node_keys: HashSet<&str> = snapshot.nodes.iter().map(|n| n.key.as_str()).collect();
+    let mut snap = snapshot.clone();
+    rebuild_transport_snapshot_nodes_from_edges(&mut snap);
+
+    let node_keys: HashSet<&str> = snap.nodes.iter().map(|n| n.key.as_str()).collect();
     let mut edge_ids: HashSet<u64> = HashSet::new();
 
     topology.neighbors.clear();
     field_store.by_edge.clear();
     edge_directory.by_edge.clear();
 
-    for e in &snapshot.edges {
+    for e in &snap.edges {
         if !edge_ids.insert(e.id) {
             return Err(HydrateError::DuplicateEdgeId(e.id));
         }
@@ -159,15 +185,15 @@ pub fn hydrate_transport_from_snapshot(
         }
     }
 
-    for e in &snapshot.edges {
+    for e in &snap.edges {
         for &suc in &e.successors {
-            if !snapshot.edges.iter().any(|x| x.id == suc) {
+            if !snap.edges.iter().any(|x| x.id == suc) {
                 return Err(HydrateError::UnknownSuccessor { from: e.id, to: suc });
             }
         }
     }
 
-    for e in &snapshot.edges {
+    for e in &snap.edges {
         let tid = TransportEdgeId(e.id);
         let succ: Vec<TransportEdgeId> = e.successors.iter().copied().map(TransportEdgeId).collect();
         topology.neighbors.insert(tid, succ);
@@ -204,7 +230,6 @@ pub fn transport_network_snapshot_from_world(
         return None;
     }
 
-    let mut node_pos: std::collections::HashMap<String, [f32; 3]> = std::collections::HashMap::new();
     let mut ids: Vec<TransportEdgeId> = topology.neighbors.keys().copied().collect();
     ids.sort_by_key(|k| k.0);
 
@@ -216,14 +241,6 @@ pub fn transport_network_snapshot_from_world(
             .get(&id)
             .map(|s| s.iter().map(|x| x.0).collect())
             .unwrap_or_default();
-        if !meta.head_key.is_empty() && !meta.control_points.is_empty() {
-            node_pos.insert(meta.head_key.clone(), meta.control_points[0]);
-        }
-        if !meta.tail_key.is_empty() {
-            if let Some(p) = meta.control_points.last() {
-                node_pos.insert(meta.tail_key.clone(), *p);
-            }
-        }
         edges.push(TransportEdgeRecord {
             id: id.0,
             head: meta.head_key.clone(),
@@ -243,15 +260,9 @@ pub fn transport_network_snapshot_from_world(
         });
     }
 
-    let mut nodes: Vec<TransportNodeRecord> = node_pos
-        .into_iter()
-        .map(|(key, position)| TransportNodeRecord { key, position })
-        .collect();
-    nodes.sort_by(|a, b| a.key.cmp(&b.key));
-
     Some(TransportNetworkSnapshot {
         schema_version: TRANSPORT_NETWORK_SCHEMA_V2,
-        nodes,
+        nodes: Vec::new(),
         edges,
         construction: Vec::new(),
     })
@@ -358,6 +369,19 @@ mod tests {
             ],
             construction: vec![],
         }
+    }
+
+    #[test]
+    fn hydrate_rebuilds_nodes_when_omitted_on_wire() {
+        let mut snap = sample_snapshot();
+        snap.nodes.clear();
+        migrate_transport_snapshot_to_v2(&mut snap);
+        let mut top = TransportTopology::default();
+        let mut field = TransportFieldStore::default();
+        let mut dir = TransportEdgeDirectory::default();
+        hydrate_transport_from_snapshot(&mut top, &mut field, &mut dir, &snap).unwrap();
+        assert_eq!(snap.nodes.len(), 3);
+        assert!(top.neighbors.contains_key(&TransportEdgeId(0)));
     }
 
     #[test]

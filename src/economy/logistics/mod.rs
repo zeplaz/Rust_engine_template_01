@@ -19,9 +19,10 @@ pub use propagation::{
     dispatch_freight_from_solver_system, freight_movement_for_transport, freight_transit_ticks,
 };
 pub use routes::{
+    accumulate_logistics_route_dirty_tiles_system, cached_route_intersects_dirty_tiles,
     collect_portal_entity_tiles, collect_portal_entity_tiles_from_world,
-    flow_paths_match_nav_export, refresh_resource_flow_routes_system, tile_node_key,
-    topology_revision_u32,
+    flow_paths_match_nav_export, invalidate_routes_touching_dirty_tiles,
+    refresh_resource_flow_routes_system, tile_node_key, topology_revision_u32,
 };
 pub use solver::{
     book_matches_soa_reserved, feedback_congestion_from_load_system,
@@ -32,7 +33,8 @@ pub use types::{
     DistrictSolveScope, FacilityPortal, FacilityPortalRegistered, FreightLot, FreightMovementModel,
     FreightReservation, FreightReservationBook, InTransitLedger, LogisticsDiagnostics,
     LogisticsThroughputStats, PendingSiteStagingDebits, PendingStagingDebit,
-    PortalAttachmentMap, RouteCache, RouteHandle, RoutePath, RoutePathStore, RouteProof,
+    LogisticsRouteDirtyTiles, PortalAttachmentMap, RouteCache, RouteHandle, RoutePath,
+    RoutePathStore, RouteProof,
     SaturatedEdgeSample, SiteStagingStock, ThroughputSolverState, TransportNodeAnchor,
 };
 
@@ -66,6 +68,7 @@ impl Plugin for LogisticsThroughputPlugin {
         app.add_plugins(orders::LogisticsOrdersPlugin);
         app.init_resource::<PortalAttachmentMap>()
             .init_resource::<RouteCache>()
+            .init_resource::<LogisticsRouteDirtyTiles>()
             .init_resource::<RoutePathStore>()
             .init_resource::<InTransitLedger>()
             .init_resource::<SiteStagingStock>()
@@ -109,7 +112,12 @@ impl Plugin for LogisticsThroughputPlugin {
             )
             .add_systems(
                 Update,
-                refresh_resource_flow_routes_system.in_set(LogisticsSimulationSet::RouteRefresh),
+                (
+                    accumulate_logistics_route_dirty_tiles_system,
+                    refresh_resource_flow_routes_system,
+                )
+                    .chain()
+                    .in_set(LogisticsSimulationSet::RouteRefresh),
             )
             .add_systems(
                 Update,

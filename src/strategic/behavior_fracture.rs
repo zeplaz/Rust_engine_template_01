@@ -148,12 +148,20 @@ pub struct SubFactionStub {
     pub fracture_type: FractureType,
 }
 
+/// Faction resource/control drift cadence (gameplay period 5; EXEC-01 phase 2).
+pub const FACTION_MESO_INTERNAL_PERIOD_TICKS: u64 = 5;
+pub const FACTION_MESO_INTERNAL_PHASE_TICKS: u64 = 2;
+
 /// **Meso** cadence — slow resource / control drift (not every frame).
 pub fn faction_meso_internal_tick_system(
     clock: Res<HybridSimPhaseClock>,
     mut factions: Query<&mut Faction>,
 ) {
-    if clock.tick % 5 != 0 && clock.tick != 0 {
+    if !crate::systems::heavy_periodic::periodic_step_fires(
+        clock.tick,
+        FACTION_MESO_INTERNAL_PERIOD_TICKS,
+        FACTION_MESO_INTERNAL_PHASE_TICKS,
+    ) {
         return;
     }
     for mut f in factions.iter_mut() {
