@@ -409,6 +409,26 @@ def _cmd_building_set_coverage(_: argparse.Namespace) -> int:
     return 0 if body.get("green") else 1
 
 
+def _cmd_grammar_rule_coverage_report(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import kit_coverage_audit
+
+    if args.write:
+        body = kit_coverage_audit.write_pcg06_grammar_rule_coverage_report()
+    else:
+        body = kit_coverage_audit.run_grammar_rule_coverage_report()
+    if args.markdown:
+        print(body.get("designer_table_markdown") or kit_coverage_audit.format_pcg06_designer_table_markdown(body))
+    elif args.json:
+        print(json.dumps(body, indent=2, sort_keys=True))
+    else:
+        table = body.get("designer_action_table") or []
+        print(f"{kit_coverage_audit.PCG_06_TASK_ID} rows={len(table)} written={body.get('written', '')}")
+        for row in table[:40]:
+            rid = row.get("rule_id") or row.get("slot_key") or ""
+            print(f"  {row.get('category')}: {row.get('grammar_id')} {row.get('layer', '')}:{rid}")
+    return 0
+
+
 def _cmd_pwr_substation_batch_run(_: argparse.Namespace) -> int:
     from rust_engine_mcp.mcp_pwr_utility import run_substation_batch
 
@@ -802,6 +822,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Optional comma-separated seeds for massing iterate sweep (default: golden BQ-Q3 set)",
     )
     p.set_defaults(func=_cmd_generate_and_test_report)
+
+    p = sub.add_parser(
+        "grammar-rule-coverage-report",
+        help="PCG-06 — golden-seed grammar rule coverage (report only, staging JSON)",
+    )
+    p.add_argument("--json", action="store_true", help="Emit full JSON report")
+    p.add_argument("--markdown", action="store_true", help="Emit designer markdown table")
+    p.add_argument(
+        "--write",
+        action="store_true",
+        help="Write assets/staging/reports/pcg_06_grammar_rule_coverage.json",
+    )
+    p.set_defaults(func=_cmd_grammar_rule_coverage_report)
 
     sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
     sub.add_parser("pwr-substation-batch-run").set_defaults(func=_cmd_pwr_substation_batch_run)

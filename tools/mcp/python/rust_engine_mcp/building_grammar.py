@@ -179,6 +179,110 @@ def generate(archetype_id: str, district_style: str, seed: int) -> dict[str, Any
     }
 
 
+def rule_step_key(layer: str, rule_id: str) -> str:
+    return f"{layer}:{rule_id}"
+
+
+def fired_rule_keys_from_result(result: dict[str, Any]) -> list[str]:
+    """Ordered unique rule keys from a generate() result rule_chain."""
+    keys: list[str] = []
+    seen: set[str] = set()
+    for step in result.get("rule_chain") or []:
+        layer = str(step.get("layer") or "")
+        rule_id = str(step.get("rule_id") or "")
+        if not layer or not rule_id:
+            continue
+        key = rule_step_key(layer, rule_id)
+        if key not in seen:
+            seen.add(key)
+            keys.append(key)
+    return keys
+
+
+def declared_rules_from_grammar(grammar: dict[str, Any]) -> list[dict[str, Any]]:
+    """Catalog grammar rules the evaluator may emit (PCG-06 never-fire baseline)."""
+    gid = str(grammar.get("grammar_id") or "")
+    arch = grammar.get("archetype") or {}
+    rules: list[dict[str, Any]] = []
+
+    def add(layer: str, rule_id: str, **extra: Any) -> None:
+        rules.append({"grammar_id": gid, "layer": layer, "rule_id": rule_id, **extra})
+
+    if arch.get("id"):
+        add("archetype", str(arch["id"]))
+
+    for row in grammar.get("district_styles") or []:
+        if row.get("id"):
+            add("district_style", str(row["id"]), style_pack_id=row.get("style_pack_id"))
+
+    strategies = (grammar.get("massing") or {}).get("strategies") or []
+    for strat in strategies:
+        if strat.get("id"):
+            add("massing", str(strat["id"]), weight=int(strat.get("weight") or 0))
+    if any(str(s.get("footprint_mode") or "") == "l_shape" for s in strategies):
+        add("massing", "l_shape_v1", kind="conditional_footprint")
+
+    roof = grammar.get("roof") or {}
+    default_roof = str(roof.get("default_slot") or "roof_default")
+    add("roof", default_roof, kind="default_slot")
+    seen_roof = {default_roof}
+    for row in roof.get("by_massing") or []:
+        slot = str(row.get("slot") or "")
+        if slot and slot not in seen_roof:
+            seen_roof.add(slot)
+            add("roof", slot, kind="by_massing", massing_id=row.get("massing_id"))
+
+    add("facade", "facade_v1", kind="default_facade")
+
+    detail = grammar.get("detail") or {}
+    prop = str(detail.get("prop_slot") or "none")
+    add("detail", prop, kind="prop_slot")
+
+    for band in (grammar.get("age") or {}).get("bands") or []:
+        if band.get("id"):
+            add("age", str(band["id"]), weight=int(band.get("weight") or 0))
+
+    return rules
+
+
+def declared_terminals_from_grammar(grammar: dict[str, Any]) -> list[dict[str, Any]]:
+    """Slot terminals referenced by grammar JSON (shape-grammar terminal symbols)."""
+    from rust_engine_mcp.assembly import SLOT_FOR_TOKEN
+    from rust_engine_mcp.grammar_layers import FOOTPRINT_TERMINAL_TOKENS
+
+    gid = str(grammar.get("grammar_id") or "")
+    slots: set[str] = set()
+    roof = grammar.get("roof") or {}
+    if roof.get("default_slot"):
+        slots.add(str(roof["default_slot"]))
+    for row in roof.get("by_massing") or []:
+        if row.get("slot"):
+            slots.add(str(row["slot"]))
+    facade = grammar.get("facade") or {}
+    for key in ("wall_slot", "door_slot", "window_slot"):
+        val = facade.get(key)
+        if val:
+            slots.add(str(val))
+    detail = grammar.get("detail") or {}
+    if detail.get("prop_slot"):
+        slots.add(str(detail["prop_slot"]))
+
+    token_for_slot = {v: k for k, v in SLOT_FOR_TOKEN.items()}
+    terminals: list[dict[str, Any]] = []
+    for slot_key in sorted(slots):
+        token = token_for_slot.get(slot_key)
+        terminals.append(
+            {
+                "grammar_id": gid,
+                "terminal_kind": "slot",
+                "slot_key": slot_key,
+                "footprint_token": token,
+                "is_footprint_terminal": bool(token and token in FOOTPRINT_TERMINAL_TOKENS),
+            }
+        )
+    return terminals
+
+
 def _resolve_footprint(
     bounds: dict[str, Any], strategy: dict[str, Any], seed: int
 ) -> tuple[int, int, int]:

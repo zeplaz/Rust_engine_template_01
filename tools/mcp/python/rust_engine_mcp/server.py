@@ -230,6 +230,18 @@ def building_set_coverage_report_tool(set_id: str = "") -> str:
 
 
 @mcp.tool()
+def grammar_rule_coverage_report_tool(write_staging: bool = True) -> str:
+    """PCG-06 — golden-seed grammar rule coverage table (report only; optional staging write)."""
+    from rust_engine_mcp import kit_coverage_audit
+
+    if write_staging:
+        body = kit_coverage_audit.write_pcg06_grammar_rule_coverage_report()
+    else:
+        body = kit_coverage_audit.run_grammar_rule_coverage_report()
+    return json.dumps(body)
+
+
+@mcp.tool()
 def validate_cargo_report(package: str = "", compress: int = 3, use_cached: bool = False) -> str:
     """cargo check → classified ValidationReport (JSON diagnostics only)."""
     report = run_validator(

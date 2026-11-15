@@ -231,3 +231,292 @@ def write_apsr_q2_witness(*, repo: Path | None = None) -> dict[str, Any]:
         ritual="BLANG:WIT-HON APSR-A4-Q2-001" if audit["green"] else None,
         repo=repo,
     )
+
+
+PCG_06_STAGING_REL = "assets/staging/reports/pcg_06_grammar_rule_coverage.json"
+PCG_06_TASK_ID = "PCG-06-GRAMMAR-RULE-COVERAGE-001"
+DESIGNER_ACTION_NEVER_FIRE = "Raise weight, add trigger, or retire rule (report only — do not auto-delete)."
+DESIGNER_ACTION_TERMINAL_GAP = "Add kit module to style pack or remove terminal from grammar."
+DESIGNER_ACTION_ALWAYS_FAIL = "Fix kit/QC coupling for this rule — every golden seed with it fails PCG-08 gate."
+
+
+def _terminal_kit_gap(
+    style_pack_id: str,
+    slot_key: str,
+    *,
+    repo: Path | None = None,
+) -> dict[str, Any] | None:
+    from rust_engine_mcp import assembly
+
+    pack = assembly.load_style_pack(style_pack_id)
+    module_id = (pack.get("slots") or {}).get(slot_key)
+    if not module_id:
+        return {
+            "issue": "missing_style_pack_slot",
+            "style_pack_id": style_pack_id,
+            "slot_key": slot_key,
+            "module_id": None,
+        }
+    index = load_index_json()
+    row = assembly._resolve_module_row(
+        module_id,
+        index,
+        style_pack_id=style_pack_id,
+        source_tier="production",
+    )
+    if not row or not assembly._row_glb_ready(row):
+        return {
+            "issue": "no_production_glb",
+            "style_pack_id": style_pack_id,
+            "slot_key": slot_key,
+            "module_id": module_id,
+        }
+    return None
+
+
+def audit_grammar_terminals_missing_kit(
+    grammar: dict[str, Any],
+    *,
+    repo: Path | None = None,
+) -> list[dict[str, Any]]:
+    from rust_engine_mcp import building_grammar
+
+    gaps: list[dict[str, Any]] = []
+    seen: set[tuple[str, str]] = set()
+    for district in grammar.get("district_styles") or []:
+        style_pack = str(district.get("style_pack_id") or "")
+        if not style_pack:
+            continue
+        for term in building_grammar.declared_terminals_from_grammar(grammar):
+            key = (style_pack, str(term["slot_key"]))
+            if key in seen:
+                continue
+            seen.add(key)
+            gap = _terminal_kit_gap(style_pack, term["slot_key"], repo=repo)
+            if gap:
+                gaps.append(
+                    {
+                        **gap,
+                        "grammar_id": term.get("grammar_id"),
+                        "footprint_token": term.get("footprint_token"),
+                        "designer_action": DESIGNER_ACTION_TERMINAL_GAP,
+                    }
+                )
+    return gaps
+
+
+def _build_designer_action_table(
+    *,
+    never_fire: list[dict[str, Any]],
+    terminals_missing_kit: list[dict[str, Any]],
+    always_fail_gate: list[dict[str, Any]],
+) -> list[dict[str, Any]]:
+    rows: list[dict[str, Any]] = []
+    for row in never_fire:
+        rows.append(
+            {
+                "category": "never_fire",
+                "grammar_id": row.get("grammar_id"),
+                "layer": row.get("layer"),
+                "rule_id": row.get("rule_id"),
+                "fires_on_golden_seeds": 0,
+                "designer_action": DESIGNER_ACTION_NEVER_FIRE,
+            }
+        )
+    for row in terminals_missing_kit:
+        rows.append(
+            {
+                "category": "terminal_no_kit",
+                "grammar_id": row.get("grammar_id"),
+                "style_pack_id": row.get("style_pack_id"),
+                "slot_key": row.get("slot_key"),
+                "issue": row.get("issue"),
+                "module_id": row.get("module_id"),
+                "designer_action": row.get("designer_action"),
+            }
+        )
+    for row in always_fail_gate:
+        rows.append(
+            {
+                "category": "always_fail_gate",
+                "grammar_id": row.get("grammar_id"),
+                "rule_key": row.get("rule_key"),
+                "layer": row.get("layer"),
+                "rule_id": row.get("rule_id"),
+                "fire_count": row.get("fire_count"),
+                "pass_with_rule": row.get("pass_with_rule"),
+                "fail_with_rule": row.get("fail_with_rule"),
+                "designer_action": DESIGNER_ACTION_ALWAYS_FAIL,
+            }
+        )
+    rows.sort(
+        key=lambda r: (
+            str(r.get("category")),
+            str(r.get("grammar_id")),
+            str(r.get("layer") or ""),
+            str(r.get("rule_id") or r.get("slot_key") or ""),
+        )
+    )
+    return rows
+
+
+def format_pcg06_designer_table_markdown(report: dict[str, Any]) -> str:
+    lines = [
+        f"# {PCG_06_TASK_ID} designer action table",
+        "",
+        "| category | grammar | layer | id | evidence | designer_action |",
+        "|---|---|---|---|---|---|",
+    ]
+    for row in report.get("designer_action_table") or []:
+        cat = row.get("category")
+        gid = row.get("grammar_id") or ""
+        layer = row.get("layer") or ""
+        rid = row.get("rule_id") or row.get("slot_key") or ""
+        if cat == "never_fire":
+            evidence = "fires=0 on golden seeds"
+        elif cat == "terminal_no_kit":
+            evidence = str(row.get("issue") or "")
+            layer = "terminal"
+        else:
+            evidence = (
+                f"fires={row.get('fire_count')} pass={row.get('pass_with_rule')} "
+                f"fail={row.get('fail_with_rule')}"
+            )
+        action = str(row.get("designer_action") or "").replace("|", "/")
+        lines.append(f"| {cat} | {gid} | {layer} | {rid} | {evidence} | {action} |")
+    return "\n".join(lines)
+
+
+def run_grammar_rule_coverage_report(
+    *,
+    entries: list[dict[str, Any]] | None = None,
+    repo: Path | None = None,
+) -> dict[str, Any]:
+    """PCG-06 — golden-seed rule firing + terminal kit gaps + always-fail rules (report only)."""
+    from rust_engine_mcp import building_grammar, building_quality_qc, golden_seed_review
+
+    root = repo or repo_root()
+    if entries is None:
+        entries = golden_seed_review.load_golden_seeds(repo=root)
+
+    pcg08 = building_quality_qc.run_generate_and_test_report(
+        entries,
+        top_k=3,
+        generate_fn=golden_seed_review.generate_snapshot_for_seed,
+        repo=root,
+    )
+    eval_by_seed = {
+        int(r["seed"]): r for r in pcg08.get("candidates") or [] if isinstance(r, dict)
+    }
+
+    rule_stats: dict[str, dict[str, int]] = {}
+    all_fired: set[str] = set()
+    grammars_by_archetype: dict[str, dict[str, Any]] = {}
+
+    for entry in entries:
+        aid = str(entry.get("archetype_id") or "")
+        ds = str(entry.get("district_style") or "")
+        seed = int(entry.get("seed") or 0)
+        if aid not in grammars_by_archetype:
+            grammars_by_archetype[aid] = building_grammar.load_building_grammar_by_archetype(aid)
+        grammar = grammars_by_archetype[aid]
+        result = building_grammar.generate(aid, ds, seed)
+        fired = building_grammar.fired_rule_keys_from_result(result)
+        all_fired.update(fired)
+        ev = eval_by_seed.get(seed, {})
+        passed = bool(ev.get("passes_gate"))
+        for key in fired:
+            st = rule_stats.setdefault(key, {"fires": 0, "pass": 0, "fail": 0})
+            st["fires"] += 1
+            if passed:
+                st["pass"] += 1
+            else:
+                st["fail"] += 1
+
+    declared: list[dict[str, Any]] = []
+    for aid, grammar in sorted(grammars_by_archetype.items()):
+        for row in building_grammar.declared_rules_from_grammar(grammar):
+            row = dict(row)
+            row["archetype_id"] = aid
+            declared.append(row)
+
+    rule_key_to_grammar: dict[str, str] = {}
+    for row in declared:
+        key = building_grammar.rule_step_key(str(row["layer"]), str(row["rule_id"]))
+        rule_key_to_grammar[key] = str(row.get("grammar_id") or "")
+
+    never_fire: list[dict[str, Any]] = []
+    for row in declared:
+        key = building_grammar.rule_step_key(str(row["layer"]), str(row["rule_id"]))
+        if key not in all_fired:
+            never_fire.append({**row, "rule_key": key, "designer_action": DESIGNER_ACTION_NEVER_FIRE})
+
+    always_fail_gate: list[dict[str, Any]] = []
+    for key, st in sorted(rule_stats.items()):
+        if st["fires"] > 0 and st["pass"] == 0:
+            layer, rule_id = key.split(":", 1)
+            always_fail_gate.append(
+                {
+                    "rule_key": key,
+                    "grammar_id": rule_key_to_grammar.get(key),
+                    "layer": layer,
+                    "rule_id": rule_id,
+                    "fire_count": st["fires"],
+                    "pass_with_rule": st["pass"],
+                    "fail_with_rule": st["fail"],
+                    "designer_action": DESIGNER_ACTION_ALWAYS_FAIL,
+                }
+            )
+
+    terminals_missing_kit: list[dict[str, Any]] = []
+    seen_grammar: set[str] = set()
+    for grammar in grammars_by_archetype.values():
+        gid = str(grammar.get("grammar_id") or "")
+        if gid in seen_grammar:
+            continue
+        seen_grammar.add(gid)
+        terminals_missing_kit.extend(audit_grammar_terminals_missing_kit(grammar, repo=root))
+
+    designer_action_table = _build_designer_action_table(
+        never_fire=never_fire,
+        terminals_missing_kit=terminals_missing_kit,
+        always_fail_gate=always_fail_gate,
+    )
+
+    return {
+        "schema": "pcg_06_grammar_rule_coverage_v1",
+        "task_id": PCG_06_TASK_ID,
+        "ref_books_row": "PCG-06",
+        "plan_ref": "src/dev/plan_ref_books_upgrade_v2.md#S4",
+        "golden_seed_count": len(entries),
+        "pcg08_pass_rate": pcg08.get("pass_rate"),
+        "rules_fired_unique": len(all_fired),
+        "rules_declared_count": len(declared),
+        "never_fire_rules": never_fire,
+        "terminals_missing_kit": terminals_missing_kit,
+        "always_fail_gate_rules": always_fail_gate,
+        "designer_action_table": designer_action_table,
+        "designer_table_markdown": format_pcg06_designer_table_markdown(
+            {"designer_action_table": designer_action_table}
+        ),
+        "report_only": True,
+        "rules_check": {
+            "passed": True,
+            "blocked_by": [],
+            "seed": "golden_set",
+        },
+    }
+
+
+def write_pcg06_grammar_rule_coverage_report(
+    *,
+    entries: list[dict[str, Any]] | None = None,
+    repo: Path | None = None,
+) -> dict[str, Any]:
+    root = repo or repo_root()
+    body = run_grammar_rule_coverage_report(entries=entries, repo=root)
+    out = root / PCG_06_STAGING_REL
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(json.dumps(body, indent=2) + "\n", encoding="utf-8")
+    body["written"] = PCG_06_STAGING_REL
+    return body

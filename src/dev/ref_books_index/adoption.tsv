@@ -42,7 +42,7 @@ LGT-08	ADOPTED	playcheck --seeds + score_dump --multi (T6)	2026-11-14
 LEARN-01	ADOPTED	tools/sim_review/tune.py --dry-run whitelist (T7)	2026-11-14
 RND-08	ADOPTED	test_aps_atlas_bleed_qc.py (gutter+mip+extrusion+density)	2026-11-15
 PCG-08	ADOPTED	test_pcg08_generate_and_test.py golden CLI determinism + APS histogram strip	2026-11-15
-PCG-06	OPEN		2026-11-14
+PCG-06	ADOPTED	test_pcg06_grammar_rule_coverage.py staging PCG-06 report + designer table	2026-11-15
 MOVE-05	DEFER	needs unit-member model	2026-11-14
 MOVE-06	DEFER	needs unit-member model	2026-11-14
 MOVE-07	DEFER	needs unit-member model	2026-11-14
