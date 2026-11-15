@@ -48,8 +48,8 @@ MOVE-06	DEFER	needs unit-member model	2026-11-14
 MOVE-07	DEFER	needs unit-member model	2026-11-14
 PCG-03	DEFER	world-changing	2026-11-14
 TAC-05	DEFER		2026-11-14
-SENSE-04	DEFER		2026-11-14
-NAV-13	DEFER		2026-11-14
+SENSE-04	OPEN	charter plan_ref_books_sense_04_v1.md — first cut S4-P0	2026-11-15
+NAV-13	OPEN	charter plan_ref_books_nav_13_v1.md — first cut N13-P0	2026-11-15
 LEARN-02	DEFER		2026-11-14
 TAC-10	DEFER		2026-11-14
 PCG-07	DEFER		2026-11-14
