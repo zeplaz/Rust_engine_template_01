@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v2** |
-| **Status** | **WAVES 0–2 CLOSED** · PARTIALs LOCKED · Wave S in progress (S1/S2/S3 ADOPTED) · Wave 3 charters OPEN |
+| **Status** | **WAVES 0–S CLOSED** · PARTIALs LOCKED · Wave 3 charters OPEN ([`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md), [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md)) |
 | **Date** | 2026-11-14 |
 | **Supersedes** | [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**, built on the old `C:\dev\ref books\lookup\` CSVs — do not use those) |
 | **Tool** | [`ref_books_index/`](ref_books_index/README.md): `systems.md` → `lookup.py` → `--read` |
@@ -411,8 +411,8 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 | MOVE-07 | §8 | DEFER | needs unit-member model |
 | PCG-03 | §8 | DEFER | ⚠ world-changing |
 | TAC-05 | §8 | DEFER | |
-| SENSE-04 | §8 | DEFER | |
-| NAV-13 | §8 | DEFER | |
+| SENSE-04 | §8 | OPEN | charter [`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md) — first cut S4-P0 |
+| NAV-13 | §8 | OPEN | charter [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md) — first cut N13-P0 |
 | LEARN-02 | §8 | DEFER | |
 | TAC-10 | §8 | DEFER | |
 | PCG-07 | §8 | DEFER | |
@@ -422,6 +422,6 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 
 ## 10. Plan exit
 
-**Waves 0–2:** closed 2026-11-14 (Accept spot-checks green; F1 + E7/IO-08 locked **PARTIAL** with written reasons).  
-**Remaining for full plan close:** Wave S (`PCG-06`) → `@coder-mcp`. **S5 SHIPPED** (`halton_scatter.py` + shared fixture). **S6 SHIPPED** (`validate-sound-cues`).  
-Then: every Wave S row `ADOPTED`/`PARTIAL`/`REJECTED` and `python -I src/dev/ref_books_index/lookup.py --check` → `0 problems`. Wave 3 items stay in their own plans.
+**Waves 0–S:** closed 2026-11-15 (Accept spot-checks green; PARTIALs LOCKED with written reasons; Wave S S1→S6 shipped).  
+`lookup.py --check` → `0 problems`.  
+**Wave 3:** separate plans — cut first slices **S4-P0** / **N13-P0** from the charters above. Remaining §8 DEFER rows stay DEFER until their triggers fire.
