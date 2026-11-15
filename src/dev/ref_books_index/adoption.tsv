@@ -1,11 +1,11 @@
 id	status	evidence	date
 ANIM-02	ADOPTED	construction/site_stage_transitions.rs pure transition table (CON-P2-002)	2026-11-14
 TAC-04	ADOPTED	systems/fire/cell_spread.rs 8-neighbour CA in snapshot order	2026-11-14
-MATH-02	PARTIAL	ai/faction/rng.rs mix64; determinism_lint backlog remains	2026-11-14
+MATH-02	PARTIAL	LOCKED: faction mix64 shipped; other-domain HashMap/rng fixes are separate lint backlog (E4 report-only)	2026-11-15
 LOOP-09	ADOPTED	WorldFieldLayerEpoch static/slow/dynamic epochs (E5)	2026-11-14
 INPUT-05	ADOPTED	gui/tactical/map_camera.rs ApplyInput → DeriveDesired → Smooth	2026-11-14
 ECS-07	ADOPTED	v1 Order 3: MissionIntentQueue → MissionBook	2026-11-14
-EXEC-05	PARTIAL	v1 Order 2: SimAttentionFrame scaffold	2026-11-14
+EXEC-05	PARTIAL	LOCKED: SimAttentionFrame scaffold sufficient; further attention consumers are their own slices	2026-11-15
 LOOP-08	ADOPTED	WeatherField prev/next	2026-11-14
 CONC-03	ADOPTED	sole_writer_check.py baseline 5 resources, 4 violations	2026-11-14
 MEM-08	ADOPTED	determinism_lint.py report-only (E4)	2026-11-14
@@ -14,14 +14,14 @@ IO-02	ADOPTED	STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS + oscillation test	20
 LOOP-07	ADOPTED	Staleness docs E2	2026-11-14
 EXEC-01	ADOPTED	heavy_periodic phase offsets + LCM test (E3)	2026-11-14
 TAC-06	ADOPTED	FieldLayerUpdateClass epochs (E5)	2026-11-14
-IO-08	PARTIAL	E7 omit/rebuild on hydrate; legacy stand heat may still deserialize (needs save version bump to strip)	2026-11-14
+IO-08	PARTIAL	LOCKED: hydrate rebuild shipped; legacy stand heat strip needs save-format bump + user sign-off	2026-11-15
 IO-07	ADOPTED	chunk coords + string keys on wire; no Entity in save DTOs	2026-11-14
 PHYS-02	ADOPTED	swept DDA step_ballistic_flights + swept_impact test	2026-11-14
 MOVE-09	ADOPTED	refine_missile_aim 6-iter + wind tests in ballistics.rs	2026-11-14
 PHYS-06	ADOPTED	sleeping_neighbor_west_edge_ignites_within_two_ticks	2026-11-14
 NAV-09	ADOPTED	best_source_open_goal + nav09 fixture test (L1)	2026-11-14
 AUD-02	ADOPTED	combat oneshot cap + ambience duck in mix_frame.rs	2026-11-14
-TAC-03	PARTIAL	F1: sparse Jacobi + no WGSL twin — not separable box/Gaussian on dense buffers	2026-11-14
+TAC-03	PARTIAL	LOCKED: sparse Jacobi heat not separable; dense+WGSL redesign needs @planner	2026-11-15
 DEC-08	ADOPTED	duration ScoreTerm in decide.rs (A1)	2026-11-14
 DEC-15	ADOPTED	FactionBehaviourChangeLog + BehaviourChangesSnapshot (A2)	2026-11-14
 NAV-10	ADOPTED	LogisticsRouteDirtyTiles selective invalidation (L3)	2026-11-14
@@ -40,7 +40,7 @@ INPUT-02	ADOPTED	BUILD_POINTER_DRAG thresholds (K2)	2026-11-14
 LGT-02	ADOPTED	screen-tile fire light cap wired in fire_visual_extract (R3)	2026-11-14
 LGT-08	ADOPTED	playcheck --seeds + score_dump --multi (T6)	2026-11-14
 LEARN-01	ADOPTED	tools/sim_review/tune.py --dry-run whitelist (T7)	2026-11-14
-RND-08	OPEN		2026-11-14
+RND-08	ADOPTED	test_aps_atlas_bleed_qc.py (gutter+mip+extrusion+density)	2026-11-15
 PCG-08	OPEN		2026-11-14
 PCG-06	OPEN		2026-11-14
 MOVE-05	DEFER	needs unit-member model	2026-11-14
