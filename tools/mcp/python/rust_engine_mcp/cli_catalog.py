@@ -51,6 +51,12 @@ COMMAND_GROUPS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = 
         ("effect-",),
     ),
     (
+        "audio",
+        "Sound cue studio QC (AUD-03)",
+        ("validate-sound-cues",),
+        ("sound-",),
+    ),
+    (
         "agents",
         "Agent queues, briefs, handoff, routing",
         (
@@ -86,7 +92,7 @@ COMMAND_GROUPS: tuple[tuple[str, str, tuple[str, ...], tuple[str, ...]], ...] = 
             "pilot-",
         ),
     ),
-    ("aps", "Art Pipeline Suite (APS) witnesses + attestation", (), ("aps-", "apsr-")),
+    ("aps", "Art Pipeline Suite (APS) witnesses + attestation", (), ("aps-", "apsr-", "heatmap-ramp-")),
     (
         "landscape",
         "Landscape, vegetation, terrain, reaction territory",

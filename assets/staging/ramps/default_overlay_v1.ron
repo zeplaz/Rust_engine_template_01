@@ -1,0 +1,10 @@
+// RND-20 — perceptual heatmap ramp LUT (toolchain-generated; do not hand-edit stops)
+(
+    schema_version: 1,
+    ramp_id: "default_overlay",
+    ref_book_row: "RND-20",
+    stop_count: 16,
+    color_space: "linear_rgb",
+    lut_path: "assets/staging/ramps/default_overlay_v1.lut",
+    monotonic_lightness: true,
+)

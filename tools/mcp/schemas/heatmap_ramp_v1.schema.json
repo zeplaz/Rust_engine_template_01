@@ -1,0 +1,44 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "heatmap_ramp_v1.schema.json",
+  "title": "Heatmap perceptual ramp export spec (RND-20)",
+  "type": "object",
+  "required": ["schema_version", "ramp_id", "preset"],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "type": "integer", "const": 1 },
+    "ramp_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]{1,48}$"
+    },
+    "preset": {
+      "type": "string",
+      "enum": ["engine_default", "linear_stops"]
+    },
+    "stop_count": {
+      "type": "integer",
+      "minimum": 2,
+      "maximum": 256,
+      "default": 16
+    },
+    "linear_stops": {
+      "type": "array",
+      "items": {
+        "type": "array",
+        "minItems": 3,
+        "maxItems": 3,
+        "items": { "type": "number" }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": { "properties": { "preset": { "const": "engine_default" } } },
+      "then": { "properties": { "stop_count": { "const": 16 } } }
+    },
+    {
+      "if": { "properties": { "preset": { "const": "linear_stops" } } },
+      "then": { "required": ["linear_stops", "stop_count"] }
+    }
+  ]
+}

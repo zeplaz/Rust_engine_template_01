@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v2** |
-| **Status** | **WAVES 0–2 CLOSED** · PARTIALs LOCKED · Wave S in progress (S1/S3 ADOPTED) · Wave 3 charters OPEN |
+| **Status** | **WAVES 0–2 CLOSED** · PARTIALs LOCKED · Wave S in progress (S1/S2/S3 ADOPTED) · Wave 3 charters OPEN |
 | **Date** | 2026-11-14 |
 | **Supersedes** | [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**, built on the old `C:\dev\ref books\lookup\` CSVs — do not use those) |
 | **Tool** | [`ref_books_index/`](ref_books_index/README.md): `systems.md` → `lookup.py` → `--read` |
@@ -396,9 +396,9 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 | MATH-03 | G2 | ADOPTED | Halton `scatter_jitter_in_cell` (S5 still OPEN) |
 | ANIM-01 | F4 | ADOPTED | `flame_loop_phase` in `particle_anim.rs` |
 | AUD-05 | W3 | ADOPTED | weather low-pass + attenuation in mix |
-| AUD-03 | U2 | ADOPTED | cue variants + `AudioLocalRng` (S6 still OPEN) |
+| AUD-03 | U2 | ADOPTED | U2: `audio/sfx_catalog.rs` · S6: `validate-sound-cues` + `test_sound_cue_validator.py` |
 | AUD-08 | U3 | ADOPTED | alert bark priority exclusivity |
-| RND-20 | R2 | ADOPTED | heatmap ramp linear lightness (S2 still OPEN) |
+| RND-20 | R2+S2 | ADOPTED | heatmap_ramp.rs (R2) + test_perceptual_ramp.py + heatmap-ramp-export CLI |
 | INPUT-02 | K2 | ADOPTED | `BUILD_POINTER_DRAG` thresholds |
 | LGT-02 | R3 | ADOPTED | screen-tile fire light cap in extract |
 | LGT-08 | T6 | ADOPTED | playcheck `--seeds` + `score_dump --multi` |
@@ -423,5 +423,5 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 ## 10. Plan exit
 
 **Waves 0–2:** closed 2026-11-14 (Accept spot-checks green; F1 + E7/IO-08 locked **PARTIAL** with written reasons).  
-**Remaining for full plan close:** Wave S (`PCG-06` and S2/S5/S6 companions) → `@coder-mcp`.  
+**Remaining for full plan close:** Wave S (`PCG-06` and S2/S5 companions) → `@coder-mcp`. **S6 SHIPPED** (`validate-sound-cues`).  
 Then: every Wave S row `ADOPTED`/`PARTIAL`/`REJECTED` and `python -I src/dev/ref_books_index/lookup.py --check` → `0 problems`. Wave 3 items stay in their own plans.
