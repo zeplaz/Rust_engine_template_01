@@ -393,7 +393,7 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 | LGT-09 | F3 | ADOPTED | radiant `flux_kw_m2` inverse-square |
 | NAV-14 | L5 | ADOPTED | `logistics_path_concerns_v1.ron` + risk_averse test |
 | DEC-10 | L2 | ADOPTED | demand advert unmet_ticks + distance discount |
-| MATH-03 | G2 | ADOPTED | Halton `scatter_jitter_in_cell` (S5 still OPEN) |
+| MATH-03 | G2+S5 | ADOPTED | Halton `scatter_jitter_in_cell` + `math03_halton_seed1_uv16.json` Python/Rust parity |
 | ANIM-01 | F4 | ADOPTED | `flame_loop_phase` in `particle_anim.rs` |
 | AUD-05 | W3 | ADOPTED | weather low-pass + attenuation in mix |
 | AUD-03 | U2 | ADOPTED | U2: `audio/sfx_catalog.rs` · S6: `validate-sound-cues` + `test_sound_cue_validator.py` |
@@ -423,5 +423,5 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 ## 10. Plan exit
 
 **Waves 0–2:** closed 2026-11-14 (Accept spot-checks green; F1 + E7/IO-08 locked **PARTIAL** with written reasons).  
-**Remaining for full plan close:** Wave S (`PCG-06` and S2/S5 companions) → `@coder-mcp`. **S6 SHIPPED** (`validate-sound-cues`).  
+**Remaining for full plan close:** Wave S (`PCG-06`) → `@coder-mcp`. **S5 SHIPPED** (`halton_scatter.py` + shared fixture). **S6 SHIPPED** (`validate-sound-cues`).  
 Then: every Wave S row `ADOPTED`/`PARTIAL`/`REJECTED` and `python -I src/dev/ref_books_index/lookup.py --check` → `0 problems`. Wave 3 items stay in their own plans.

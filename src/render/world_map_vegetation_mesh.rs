@@ -1005,28 +1005,44 @@ mod tests {
 
     #[test]
     fn halton_seed_one_first_sixteen_uv_pairs() {
-        const GOLDEN: [(f32, f32); 16] = [
-            (0.5, 0.333_333_34),
-            (0.25, 0.666_666_7),
-            (0.75, 0.111_111_11),
-            (0.125, 0.444_444_45),
-            (0.625, 0.777_777_8),
-            (0.375, 0.222_222_22),
-            (0.875, 0.555_555_56),
-            (0.0625, 0.888_888_9),
-            (0.5625, 0.037_037_037),
-            (0.3125, 0.370_370_37),
-            (0.8125, 0.703_703_7),
-            (0.1875, 0.148_148_15),
-            (0.6875, 0.481_481_48),
-            (0.4375, 0.814_814_8),
-            (0.9375, 0.259_259_25),
-            (0.03125, 0.592_592_6),
-        ];
-        for (i, &(u, v)) in GOLDEN.iter().enumerate() {
-            let (hu, hv) = halton_scatter_uv(1, i as u32);
-            assert!((hu - u).abs() < 1e-5, "i={i} hu={hu} expected {u}");
-            assert!((hv - v).abs() < 1e-5, "i={i} hv={hv} expected {v}");
+        use serde::Deserialize;
+        use std::fs;
+        use std::path::PathBuf;
+
+        #[derive(Debug, Deserialize)]
+        struct Math03HaltonPoint {
+            site_index: u32,
+            u: f32,
+            v: f32,
+        }
+
+        #[derive(Debug, Deserialize)]
+        struct Math03HaltonFixture {
+            seed: u32,
+            points: Vec<Math03HaltonPoint>,
+        }
+
+        let path = PathBuf::from(env!("CARGO_MANIFEST_DIR"))
+            .join("assets/test_fixtures/math03_halton_seed1_uv16.json");
+        let raw = fs::read_to_string(&path).unwrap_or_else(|e| panic!("read {path:?}: {e}"));
+        let doc: Math03HaltonFixture =
+            serde_json::from_str(&raw).unwrap_or_else(|e| panic!("parse {path:?}: {e}"));
+        assert_eq!(doc.seed, 1);
+        assert_eq!(doc.points.len(), 16);
+        for row in &doc.points {
+            let (hu, hv) = halton_scatter_uv(doc.seed, row.site_index);
+            assert!(
+                (hu - row.u).abs() < 1e-5,
+                "site_index={} hu={hu} expected {}",
+                row.site_index,
+                row.u
+            );
+            assert!(
+                (hv - row.v).abs() < 1e-5,
+                "site_index={} hv={hv} expected {}",
+                row.site_index,
+                row.v
+            );
         }
     }
 
