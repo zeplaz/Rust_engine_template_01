@@ -42,14 +42,14 @@ LGT-08	ADOPTED	playcheck --seeds + score_dump --multi (T6)	2026-11-14
 LEARN-01	ADOPTED	tools/sim_review/tune.py --dry-run whitelist (T7)	2026-11-14
 RND-08	ADOPTED	test_aps_atlas_bleed_qc.py (gutter+mip+extrusion+density)	2026-11-15
 PCG-08	ADOPTED	test_pcg08_generate_and_test.py golden CLI determinism + APS histogram strip	2026-11-15
-PCG-06	ADOPTED	test_pcg06_grammar_rule_coverage.py staging PCG-06 report + designer table	2026-11-15
+PCG-06	ADOPTED	grammar coverage + voxel_massing presentation contract (tool/runtime split ECS-15); sim voxels DR-VOXEL-OCCUPATION	2026-11-15
 MOVE-05	DEFER	needs unit-member model	2026-11-14
 MOVE-06	DEFER	needs unit-member model	2026-11-14
 MOVE-07	DEFER	needs unit-member model	2026-11-14
 PCG-03	DEFER	world-changing	2026-11-14
 TAC-05	DEFER		2026-11-14
-SENSE-04	OPEN	charter plan_ref_books_sense_04_v1.md — first cut S4-P0	2026-11-15
-NAV-13	OPEN	charter plan_ref_books_nav_13_v1.md — first cut N13-P0	2026-11-15
+SENSE-04	ADOPTED	S4-P0–P4 shipped (cell field + strategic + sample audit)	2026-11-15
+NAV-13	ADOPTED	N13-P0–P4 shipped (forecast book + dijkstra + invalidate + source_pick); P5 DEFER	2026-11-15
 LEARN-02	DEFER		2026-11-14
 TAC-10	DEFER		2026-11-14
 PCG-07	DEFER		2026-11-14

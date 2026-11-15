@@ -80,6 +80,62 @@ def _cmd_job_status(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_studio_task_enqueue(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import studio_task
+
+    task = studio_task.enqueue(
+        kind=args.kind,
+        seed=int(args.seed),
+        payload_path=args.payload,
+        task_id=args.task_id,
+    )
+    if args.run and args.kind == "geometry":
+        task = studio_task.run_queued_geometry(task["task_id"])
+    print(json.dumps(task))
+    return 0 if task.get("status") in ("queued", "done") else 1
+
+
+def _cmd_studio_task_status(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import studio_task
+
+    st = studio_task.read_task(args.task_id)
+    if st is None:
+        print(json.dumps({"error": "not found", "task_id": args.task_id}))
+        return 1
+    print(json.dumps(st))
+    return 0
+
+
+def _cmd_studio_task_list(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import studio_task
+
+    print(json.dumps({"tasks": studio_task.list_tasks(limit=int(args.limit))}))
+    return 0
+
+
+def _cmd_studio_task_handoff(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import studio_task
+
+    marker = studio_task.blender_handoff_marker(args.task_id)
+    print(json.dumps({"handoff": str(marker), "task_id": args.task_id}))
+    return 0
+
+
+def _cmd_studio_dash_render(args: argparse.Namespace) -> int:
+    import sys as _sys
+
+    dash = paths.repo_root() / "tools" / "studio_dash"
+    if str(dash.parent) not in _sys.path:
+        _sys.path.insert(0, str(dash.parent))
+    from studio_dash.render_report import write_report
+
+    data = json.loads(Path(args.json_path).read_text(encoding="utf-8"))
+    out = Path(args.out)
+    write_report(data, out, title=args.title)
+    print(json.dumps({"written": str(out)}))
+    return 0
+
+
 def _cmd_validate_glb_cmd(args: argparse.Namespace) -> int:
     report = validate_glb.validate_glb(Path(args.path))
     print(json.dumps(report.to_dict()))
@@ -592,6 +648,37 @@ def build_parser() -> argparse.ArgumentParser:
     p = sub.add_parser("job-status")
     p.add_argument("job_id")
     p.set_defaults(func=_cmd_job_status)
+
+    p = sub.add_parser(
+        "studio-task-enqueue",
+        help="Enqueue a StudioTask on the shared APS/Blender job bus",
+    )
+    p.add_argument("--kind", required=True, choices=[
+        "geometry", "assembly_build", "tile_bake", "report", "massing_export", "open_staging",
+    ])
+    p.add_argument("--seed", type=int, required=True)
+    p.add_argument("--payload", default=None, help="Path to underlying job/spec JSON")
+    p.add_argument("--task-id", default=None)
+    p.add_argument("--run", action="store_true", help="For geometry: run headless immediately")
+    p.set_defaults(func=_cmd_studio_task_enqueue)
+
+    p = sub.add_parser("studio-task-status", help="Read a StudioTask status JSON")
+    p.add_argument("task_id")
+    p.set_defaults(func=_cmd_studio_task_status)
+
+    p = sub.add_parser("studio-task-list", help="List recent StudioTasks")
+    p.add_argument("--limit", type=int, default=50)
+    p.set_defaults(func=_cmd_studio_task_list)
+
+    p = sub.add_parser("studio-task-handoff", help="Write Blender interactive handoff marker")
+    p.add_argument("task_id")
+    p.set_defaults(func=_cmd_studio_task_handoff)
+
+    p = sub.add_parser("studio-dash-render", help="Render studio HTML dashboard from JSON")
+    p.add_argument("json_path")
+    p.add_argument("-o", "--out", required=True)
+    p.add_argument("--title", default=None)
+    p.set_defaults(func=_cmd_studio_dash_render)
 
     p = sub.add_parser("validate-glb")
     p.add_argument("path")

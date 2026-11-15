@@ -7,9 +7,11 @@ use std::collections::BTreeMap;
 
 use serde::{Deserialize, Serialize};
 
+use crate::systems::navigation::LogisticsCostForecastBook;
+
 use super::model::*;
 use super::sim::{LogisticsOrderSim, OrderEventKind, TravelModel};
-use super::source_pick::build_site_adjacency;
+use super::source_pick::{build_site_adjacency, build_site_adjacency_forecast};
 
 /// What a site is for — lets the UI group pickers and the AI find depots vs fronts.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
@@ -269,6 +271,17 @@ pub fn build_snapshot(
     meta: &BTreeMap<SiteId, SiteMeta>,
     travel: &dyn TravelModel,
 ) -> LogisticsOrdersSnapshot {
+    build_snapshot_with_forecast(sim, meta, travel, None)
+}
+
+/// Snapshot with optional NAV-13 forecast-scaled site adjacency.
+#[must_use]
+pub fn build_snapshot_with_forecast(
+    sim: &LogisticsOrderSim,
+    meta: &BTreeMap<SiteId, SiteMeta>,
+    travel: &dyn TravelModel,
+    forecast: Option<&LogisticsCostForecastBook>,
+) -> LogisticsOrdersSnapshot {
     let mut snap = LogisticsOrdersSnapshot {
         tick: sim.tick,
         ..Default::default()
@@ -307,7 +320,11 @@ pub fn build_snapshot(
         });
     }
     let site_ids: Vec<SiteId> = snap.sites.iter().map(|s| s.id).collect();
-    snap.site_adjacency = build_site_adjacency(&site_ids, travel);
+    snap.site_adjacency = if forecast.is_some_and(|f| f.ready) {
+        build_site_adjacency_forecast(&site_ids, travel, forecast, sim.tick)
+    } else {
+        build_site_adjacency(&site_ids, travel)
+    };
 
     let mut next_eta: BTreeMap<OrderId, u32> = BTreeMap::new();
     let mut fleets: BTreeMap<OwnerId, FleetRow> = BTreeMap::new();

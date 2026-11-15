@@ -65,11 +65,11 @@ Save v1: omit forecast book; cached routes without departure tick replay as **st
 
 | Phase | Goal | Status |
 |:---|:---|:---|
-| **N13-P0** | Pure `edge_cost_at(depart_tick, edge, duration_ticks)` using piecewise-constant weather buckets | **PLANNED** |
-| **N13-P1** | `LogisticsCostForecastBook` + `sync_logistics_cost_forecast` (K buckets from `WeatherField` prev/next) | **PLANNED** |
-| **N13-P2** | Wire `logistics_path_dijkstra_concern` optional time-aware edge weight; tests on grid fixture | **PLANNED** |
-| **N13-P3** | Invalidate/rebuild routes when **forecast_revision** changes (not only dirty tiles) | **PLANNED** |
-| **N13-P4** | `source_pick` / site graph: edge ticks = f(forecast) for cross-site legs used by NAV-09 | **PLANNED** |
+| **N13-P0** | Pure `edge_cost_at(depart_tick, edge, duration_ticks)` using piecewise-constant weather buckets | **SHIPPED** |
+| **N13-P1** | `LogisticsCostForecastBook` + `sync_logistics_cost_forecast` (K buckets from `WeatherField` prev/next) | **SHIPPED** |
+| **N13-P2** | Wire `logistics_path_dijkstra_concern` optional time-aware edge weight; tests on grid fixture | **SHIPPED** |
+| **N13-P3** | Invalidate/rebuild routes when **forecast_revision** changes (not only dirty tiles) | **SHIPPED** |
+| **N13-P4** | `source_pick` / site graph: edge ticks = f(forecast) for cross-site legs used by NAV-09 | **SHIPPED** |
 | **N13-P5** | Order advisor explains “window” (read-only snapshot) — **DEFER** to designer slice | **DEFER** |
 
 ★ **First slice to cut:** **N13-P0** (pure time-cost function + tests).
@@ -87,9 +87,9 @@ Save v1: omit forecast book; cached routes without departure tick replay as **st
 
 | Label | Items |
 |:---|:---|
-| **SHIPPED** | L1 `best_source_open_goal`; L3 `LogisticsRouteDirtyTiles`; L5 NAV-14 concern blend; `weather_haul_speed_mul` centre sample; `logistics_path_dijkstra_concern` |
-| **PLANNED** | N13-P0 … N13-P4 |
-| **DEFER** | Full **reservation / schedule-aware** routing (book reservation keywords); fire-front **predictive** cost (advance simulation); LO-5 transport-graph trip model replacement |
+| **SHIPPED** | N13-P0–P4 forecast book + time-aware floodfill + revision invalidate + source_pick edges |
+| **PLANNED** | — |
+| **DEFER** | N13-P5 advisor; full **reservation / schedule-aware** routing; fire-front **predictive** cost; LO-5 transport-graph trip model replacement |
 
 ## Diagnostics
 

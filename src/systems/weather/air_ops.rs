@@ -16,11 +16,12 @@ use serde::{Deserialize, Serialize};
 use crate::substrate::atmosphere::{sample_tactical_smoke_from_l0, AtmosphereClipmapStack};
 use crate::systems::atmosphere::atmos_chunk_to_tile;
 use crate::systems::fire::ChunkSmokeField;
-use crate::systems::sim_control::SimTimeMicros;
 use crate::terrain::generation::Chunk;
-use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
+use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
 
-use super::field::{WeatherField, WeatherSample};
+use super::field::WeatherSample;
+use super::polling_stations::WeatherPollingStations;
+use super::sense_propagation::WeatherSenseCellField;
 
 /// Fallback cells/chunk when raster config is absent (matches common worldgen).
 pub const SMOKE_SAMPLE_CELLS_PER_CHUNK: u32 = 16;
@@ -456,25 +457,20 @@ impl Default for AirOpsWeatherStatus {
     }
 }
 
-/// Sole writer of [`AirOpsWeatherStatus`] from the weather-field centre sample.
+/// Sole writer of [`AirOpsWeatherStatus`] from polling stations (+ sense cell for EO mul).
 pub fn sync_air_ops_weather_status(
-    field: Option<Res<WeatherField>>,
-    sim_time: Option<Res<SimTimeMicros>>,
+    stations: Res<WeatherPollingStations>,
+    sense: Res<WeatherSenseCellField>,
     tuning: Res<AirOpsTuning>,
     stack: Option<Res<AtmosphereClipmapStack>>,
     smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
     mut status: ResMut<AirOpsWeatherStatus>,
 ) {
-    let Some(field) = field.filter(|f| f.is_ready()) else {
+    if !stations.ready {
         *status = AirOpsWeatherStatus::default();
         return;
-    };
-    let t = sim_time
-        .as_deref()
-        .copied()
-        .unwrap_or(SimTimeMicros(field.prev_micros));
-    let centre_m = field.extent_m * 0.5;
-    let sample = field.sample(centre_m, t);
+    }
+    let sample = stations.centre;
     let fw = tuning.profile_or_default(AirOpsProfileId::FixedWing);
     let lift = tuning.profile_or_default(AirOpsProfileId::Airlift);
     let missile = tuning.profile_or_default(AirOpsProfileId::Missile);
@@ -489,10 +485,9 @@ pub fn sync_air_ops_weather_status(
     );
     let by_chunk = collect_chunk_smoke_density(&smoke_q);
     let cells = UVec2::splat(SMOKE_SAMPLE_CELLS_PER_CHUNK);
-    let centre_tile = IVec2::new(
-        (centre_m.x / TILE_METRES_GAMEPLAY).floor() as i32,
-        (centre_m.y / TILE_METRES_GAMEPLAY).floor() as i32,
-    );
+    // Stable centre-tile proxy (chunk 0,0) for smoke / sense lookup at map origin.
+    let ct = CHUNK_TILES_SIM as i32;
+    let centre_tile = IVec2::new(ct / 2, ct / 2);
     let smoke01 = smoke01_at_tile(centre_tile, cells, &by_chunk, stack.as_deref());
     status.ready = true;
     status.grounded_fixed_wing = evaluate_grounding(&sample, fw, Some(heading)).is_grounded();
@@ -503,8 +498,14 @@ pub fn sync_air_ops_weather_status(
     status.smoke01_centre = smoke01;
     status.link_quality_radio = link_quality(&sample, smoke01, LinkModality::Radio, fpv.link_resist);
     status.link_quality_fiber = link_quality(&sample, smoke01, LinkModality::Fiber, fpv.link_resist);
-    status.sensor_range_mul_eo =
-        sensor_range_mul(&sample, smoke01, SensorKind::Eo, fpv.sensor_resist);
+    status.sensor_range_mul_eo = if sense.ready {
+        // Blend resist into cell field the same way as sensor_range_mul.
+        let raw = sense.mul_at_tile(centre_tile);
+        let r = fpv.sensor_resist.clamp(0.0, 1.0);
+        (raw + (1.0 - raw) * r).clamp(0.15, 1.0)
+    } else {
+        sensor_range_mul(&sample, smoke01, SensorKind::Eo, fpv.sensor_resist)
+    };
     status.drone_cruise_grounded = evaluate_grounding(&sample, cruise, None).is_grounded();
     status.samples = status.samples.wrapping_add(1);
 }

@@ -318,6 +318,7 @@ pub fn refresh_resource_flow_routes_system(
     directory: Res<TransportEdgeDirectory>,
     construction_rev: Option<Res<ConstructionWorldRevision>>,
     mut dirty_tiles: ResMut<LogisticsRouteDirtyTiles>,
+    mut forecast: Option<ResMut<crate::systems::navigation::LogisticsCostForecastBook>>,
     mut route_cache: ResMut<RouteCache>,
     mut path_store: ResMut<RoutePathStore>,
     mut flow: ResMut<crate::economy::resource_flow::ResourceFlowRegistry>,
@@ -338,7 +339,18 @@ pub fn refresh_resource_flow_routes_system(
         &directory,
         &dirty_tiles,
     );
-    if purged > 0 || topo_changed {
+    let mut forecast_purged = 0_u32;
+    if let Some(book) = forecast.as_mut() {
+        if book.ready && book.revision != book.consumed_revision {
+            forecast_purged = route_cache.routes.len() as u32;
+            route_cache.routes.clear();
+            book.consumed_revision = book.revision;
+            if let Some(rt) = runtime.as_mut() {
+                rt.saw_forecast_route_invalidation = true;
+            }
+        }
+    }
+    if purged > 0 || topo_changed || forecast_purged > 0 {
         if let Some(rt) = runtime.as_mut() {
             rt.saw_route_invalidation = true;
         }

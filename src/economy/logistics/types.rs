@@ -318,6 +318,8 @@ pub struct LogisticsThroughputStats {
     pub saw_overlay_solver_load: bool,
     /// Sticky: route cache rebuilt after topology revision bump (LOG-D-03).
     pub saw_route_invalidation: bool,
+    /// Sticky: route cache purged because NAV-13 forecast revision changed (time, not space).
+    pub saw_forecast_route_invalidation: bool,
     /// Sticky: district-scoped solve applied (LOG-D-02) — empty skip or active mask.
     pub saw_district_scoped_solve: bool,
     /// Sticky: async district job applied on main thread (LOG-D-04).

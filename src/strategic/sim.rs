@@ -29,11 +29,18 @@ use super::schedule::StrategicOverlayCouplingScratch;
 use crate::entities::production::core::{ResourceProducer, ResourceStorage, ResourceStorageCapacity};
 use crate::systems::chunk_sim_lod::ChunkSimLod;
 use crate::systems::transport::TransportFieldStore;
-use crate::systems::weather::ChunkWeather;
+use crate::systems::weather::{ChunkWeather, WeatherSenseCellField};
 use crate::terrain::generation::Chunk;
 
 #[inline]
-fn chunk_sensor_weather_factor(weather: Option<&ChunkWeather>) -> f32 {
+fn chunk_sensor_weather_factor(
+    weather: Option<&ChunkWeather>,
+    sense: Option<&WeatherSenseCellField>,
+    chunk: IVec2,
+) -> f32 {
+    if let Some(sense) = sense.filter(|s| s.ready) {
+        return sense.mul_at_chunk(chunk).clamp(0.05, 1.0);
+    }
     let Some(w) = weather else {
         return 1.0;
     };
@@ -327,6 +334,7 @@ fn strategic_fields_coupling_tick(
         &mut ChunkStrategicOverlay,
     )>,
     transport_fields: Res<TransportFieldStore>,
+    sense_field: Option<Res<WeatherSenseCellField>>,
     mut scratch: ResMut<StrategicOverlayCouplingScratch>,
     mut logistics_ai: ResMut<LogisticsAiRuntime>,
     mut theater: ResMut<OperationalTheaterSummary>,
@@ -366,7 +374,8 @@ fn strategic_fields_coupling_tick(
         let skip_cell_writes = matches!(lod, ChunkSimLod::Dormant)
             && !dirty_snapshot.contains(&chunk.coord)
             && !global_refresh;
-        let sensor_weather = chunk_sensor_weather_factor(weather);
+        let sensor_weather =
+            chunk_sensor_weather_factor(weather, sense_field.as_deref(), chunk.coord);
 
         for i in 0..o.len_cells() {
             let t = o.logistics_throughput.get(i).copied().unwrap_or(0.0);

@@ -1,4 +1,5 @@
 // Navigation systems
+mod cost_forecast;
 mod logistics_floodfill;
 mod path_concerns;
 mod motion;
@@ -8,6 +9,7 @@ mod road_vehicles_motion;
 mod schedule_plugin;
 
 // Public exports
+pub use cost_forecast::*;
 pub use logistics_floodfill::*;
 pub use path_concerns::*;
 pub use motion::*;

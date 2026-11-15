@@ -53,6 +53,8 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **APS grammar evolution (ACTIVE):** [`plan_aps_grammar_evolution_v1.md`](plan_aps_grammar_evolution_v1.md) — tier-gated UI + preview ladder as grammar set matures · parent [`plan_building_grammar_evolution_v1.md`](plan_building_grammar_evolution_v1.md).
 
+**Artist Studio expansion (ACTIVE — 2026-11-15):** [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) — StudioTask bus · Blender addon · HTML dashboards · presentation massing tab · mission/worldgen adapters.
+
 **APS presence correction (P1 — 2026-06):** [`aps_presence_correction_todos_v1.md`](aps_presence_correction_todos_v1.md) — brief/coverage/parity parity · live tier witnesses · session dump · queue [`aps_presence_correction_queue.json`](../tools/orchestrator/queues/aps_presence_correction_queue.json) · routing [`planner_routing_aps_presence_v1.md`](planner_routing_aps_presence_v1.md).
 
 **Finish backlog (why plans stall):** [`plan_finish_execution_backlog_v1.md`](plan_finish_execution_backlog_v1.md) — Tier 0–3 implementation picks; no new plans until Tier 0 witnesses green.

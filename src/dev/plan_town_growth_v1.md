@@ -188,3 +188,7 @@ No new witness file is required to start. The city launch `city_faction_progress
 ## Handoff
 
 `@coder` implements **TWN-OV1**, then **TWN-OV2**, then **TWN-GEN**, then **TWN-AI**. No slice writes `src/construction/mod.rs`. PLN-3 still owns the play-image stamp.
+
+## Studio dashboards (cross-link)
+
+World-builder HTML reports reuse [`tools/studio_dash/mission_adapter.py`](../../tools/studio_dash/mission_adapter.py) (`emit_worldgen_dashboard`) — same kit as APS Dashboard. Charter: [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) §P4.
