@@ -9,6 +9,8 @@ from . import assembly, building_grammar
 ROOF_TOKENS = frozenset({"R"})
 # O is the window opening. window_slot overrides never landed while it was omitted.
 FACADE_TOKENS = frozenset({"W", "D", "C", "O"})
+# PCG-06 — footprint tokens that resolve to kit slots in assembly.SLOT_FOR_TOKEN.
+FOOTPRINT_TERMINAL_TOKENS = ROOF_TOKENS | FACADE_TOKENS
 
 
 def _layer_seed(seed: int | None, snapshot: dict[str, Any]) -> int:

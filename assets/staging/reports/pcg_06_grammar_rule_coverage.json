@@ -1,0 +1,877 @@
+{
+  "schema": "pcg_06_grammar_rule_coverage_v1",
+  "task_id": "PCG-06-GRAMMAR-RULE-COVERAGE-001",
+  "ref_books_row": "PCG-06",
+  "plan_ref": "src/dev/plan_ref_books_upgrade_v2.md#S4",
+  "golden_seed_count": 12,
+  "pcg08_pass_rate": 0.0,
+  "rules_fired_unique": 23,
+  "rules_declared_count": 59,
+  "never_fire_rules": [
+    {
+      "grammar_id": "civic_block_v1",
+      "layer": "massing",
+      "rule_id": "row_infill",
+      "weight": 15,
+      "archetype_id": "CivicBlock",
+      "rule_key": "massing:row_infill",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "civic_block_v1",
+      "layer": "massing",
+      "rule_id": "plaza_setback",
+      "weight": 5,
+      "archetype_id": "CivicBlock",
+      "rule_key": "massing:plaza_setback",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "civic_block_v1",
+      "layer": "roof",
+      "rule_id": "roof_terrace",
+      "kind": "by_massing",
+      "massing_id": "plaza_setback",
+      "archetype_id": "CivicBlock",
+      "rule_key": "roof:roof_terrace",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "civic_block_v1",
+      "layer": "age",
+      "rule_id": "abandoned",
+      "weight": 10,
+      "archetype_id": "CivicBlock",
+      "rule_key": "age:abandoned",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "factory_cluster_v1",
+      "layer": "massing",
+      "rule_id": "l_shape",
+      "weight": 10,
+      "archetype_id": "FactoryCluster",
+      "rule_key": "massing:l_shape",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "factory_cluster_v1",
+      "layer": "age",
+      "rule_id": "abandoned",
+      "weight": 20,
+      "archetype_id": "FactoryCluster",
+      "rule_key": "age:abandoned",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "industrial_warehouse_v1",
+      "layer": "massing",
+      "rule_id": "l_shape",
+      "weight": 20,
+      "archetype_id": "IndustrialWarehouse",
+      "rule_key": "massing:l_shape",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "industrial_warehouse_v1",
+      "layer": "age",
+      "rule_id": "abandoned",
+      "weight": 15,
+      "archetype_id": "IndustrialWarehouse",
+      "rule_key": "age:abandoned",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "rail_edge_v1",
+      "layer": "massing",
+      "rule_id": "l_shape",
+      "weight": 45,
+      "archetype_id": "RailEdge",
+      "rule_key": "massing:l_shape",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "grammar_id": "rail_edge_v1",
+      "layer": "age",
+      "rule_id": "abandoned",
+      "weight": 20,
+      "archetype_id": "RailEdge",
+      "rule_key": "age:abandoned",
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    }
+  ],
+  "terminals_missing_kit": [
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_colonial",
+      "slot_key": "door_glass_entry",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_colonial",
+      "slot_key": "prop_clutter",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_colonial",
+      "slot_key": "roof_flat_parapet",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_colonial",
+      "slot_key": "roof_terrace",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_colonial",
+      "slot_key": "wall_brick_1u",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_colonial",
+      "slot_key": "window_storefront_2u",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_victorian",
+      "slot_key": "door_glass_entry",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_victorian",
+      "slot_key": "roof_flat_parapet",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_victorian",
+      "slot_key": "roof_terrace",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_victorian",
+      "slot_key": "wall_brick_1u",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "issue": "missing_style_pack_slot",
+      "style_pack_id": "style_victorian",
+      "slot_key": "window_storefront_2u",
+      "module_id": null,
+      "grammar_id": "civic_block_v1",
+      "footprint_token": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    }
+  ],
+  "always_fail_gate_rules": [
+    {
+      "rule_key": "age:new",
+      "grammar_id": "rail_edge_v1",
+      "layer": "age",
+      "rule_id": "new",
+      "fire_count": 6,
+      "pass_with_rule": 0,
+      "fail_with_rule": 6,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "age:weathered",
+      "grammar_id": "rail_edge_v1",
+      "layer": "age",
+      "rule_id": "weathered",
+      "fire_count": 6,
+      "pass_with_rule": 0,
+      "fail_with_rule": 6,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "archetype:CivicBlock",
+      "grammar_id": "civic_block_v1",
+      "layer": "archetype",
+      "rule_id": "CivicBlock",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "archetype:FactoryCluster",
+      "grammar_id": "factory_cluster_v1",
+      "layer": "archetype",
+      "rule_id": "FactoryCluster",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "archetype:IndustrialWarehouse",
+      "grammar_id": "industrial_warehouse_v1",
+      "layer": "archetype",
+      "rule_id": "IndustrialWarehouse",
+      "fire_count": 4,
+      "pass_with_rule": 0,
+      "fail_with_rule": 4,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "archetype:RailEdge",
+      "grammar_id": "rail_edge_v1",
+      "layer": "archetype",
+      "rule_id": "RailEdge",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "detail:prop_clutter",
+      "grammar_id": "rail_edge_v1",
+      "layer": "detail",
+      "rule_id": "prop_clutter",
+      "fire_count": 12,
+      "pass_with_rule": 0,
+      "fail_with_rule": 12,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "district_style:industrial_west",
+      "grammar_id": "industrial_warehouse_v1",
+      "layer": "district_style",
+      "rule_id": "industrial_west",
+      "fire_count": 4,
+      "pass_with_rule": 0,
+      "fail_with_rule": 4,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "district_style:main_street_civic",
+      "grammar_id": "civic_block_v1",
+      "layer": "district_style",
+      "rule_id": "main_street_civic",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "district_style:manufacturing_row",
+      "grammar_id": "factory_cluster_v1",
+      "layer": "district_style",
+      "rule_id": "manufacturing_row",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "district_style:rail_yard_corridor",
+      "grammar_id": "rail_edge_v1",
+      "layer": "district_style",
+      "rule_id": "rail_yard_corridor",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "district_style:town_hall_row",
+      "grammar_id": "civic_block_v1",
+      "layer": "district_style",
+      "rule_id": "town_hall_row",
+      "fire_count": 1,
+      "pass_with_rule": 0,
+      "fail_with_rule": 1,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "facade:facade_v1",
+      "grammar_id": "rail_edge_v1",
+      "layer": "facade",
+      "rule_id": "facade_v1",
+      "fire_count": 12,
+      "pass_with_rule": 0,
+      "fail_with_rule": 12,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "massing:corner_anchored",
+      "grammar_id": "civic_block_v1",
+      "layer": "massing",
+      "rule_id": "corner_anchored",
+      "fire_count": 1,
+      "pass_with_rule": 0,
+      "fail_with_rule": 1,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "massing:double_hall",
+      "grammar_id": "rail_edge_v1",
+      "layer": "massing",
+      "rule_id": "double_hall",
+      "fire_count": 4,
+      "pass_with_rule": 0,
+      "fail_with_rule": 4,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "massing:l_shape_v1",
+      "grammar_id": "rail_edge_v1",
+      "layer": "massing",
+      "rule_id": "l_shape_v1",
+      "fire_count": 1,
+      "pass_with_rule": 0,
+      "fail_with_rule": 1,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "massing:long_hall",
+      "grammar_id": "rail_edge_v1",
+      "layer": "massing",
+      "rule_id": "long_hall",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "massing:stepped_block",
+      "grammar_id": "civic_block_v1",
+      "layer": "massing",
+      "rule_id": "stepped_block",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "massing:yard_complex",
+      "grammar_id": "rail_edge_v1",
+      "layer": "massing",
+      "rule_id": "yard_complex",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "roof:roof_default",
+      "grammar_id": "industrial_warehouse_v1",
+      "layer": "roof",
+      "rule_id": "roof_default",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "roof:roof_flat",
+      "grammar_id": "rail_edge_v1",
+      "layer": "roof",
+      "rule_id": "roof_flat",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "roof:roof_flat_parapet",
+      "grammar_id": "civic_block_v1",
+      "layer": "roof",
+      "rule_id": "roof_flat_parapet",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "rule_key": "roof:roof_industrial",
+      "grammar_id": "rail_edge_v1",
+      "layer": "roof",
+      "rule_id": "roof_industrial",
+      "fire_count": 4,
+      "pass_with_rule": 0,
+      "fail_with_rule": 4,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    }
+  ],
+  "designer_action_table": [
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "civic_block_v1",
+      "rule_key": "archetype:CivicBlock",
+      "layer": "archetype",
+      "rule_id": "CivicBlock",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "civic_block_v1",
+      "rule_key": "district_style:main_street_civic",
+      "layer": "district_style",
+      "rule_id": "main_street_civic",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "civic_block_v1",
+      "rule_key": "district_style:town_hall_row",
+      "layer": "district_style",
+      "rule_id": "town_hall_row",
+      "fire_count": 1,
+      "pass_with_rule": 0,
+      "fail_with_rule": 1,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "civic_block_v1",
+      "rule_key": "massing:corner_anchored",
+      "layer": "massing",
+      "rule_id": "corner_anchored",
+      "fire_count": 1,
+      "pass_with_rule": 0,
+      "fail_with_rule": 1,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "civic_block_v1",
+      "rule_key": "massing:stepped_block",
+      "layer": "massing",
+      "rule_id": "stepped_block",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "civic_block_v1",
+      "rule_key": "roof:roof_flat_parapet",
+      "layer": "roof",
+      "rule_id": "roof_flat_parapet",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "factory_cluster_v1",
+      "rule_key": "archetype:FactoryCluster",
+      "layer": "archetype",
+      "rule_id": "FactoryCluster",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "factory_cluster_v1",
+      "rule_key": "district_style:manufacturing_row",
+      "layer": "district_style",
+      "rule_id": "manufacturing_row",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "industrial_warehouse_v1",
+      "rule_key": "archetype:IndustrialWarehouse",
+      "layer": "archetype",
+      "rule_id": "IndustrialWarehouse",
+      "fire_count": 4,
+      "pass_with_rule": 0,
+      "fail_with_rule": 4,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "industrial_warehouse_v1",
+      "rule_key": "district_style:industrial_west",
+      "layer": "district_style",
+      "rule_id": "industrial_west",
+      "fire_count": 4,
+      "pass_with_rule": 0,
+      "fail_with_rule": 4,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "industrial_warehouse_v1",
+      "rule_key": "roof:roof_default",
+      "layer": "roof",
+      "rule_id": "roof_default",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "age:new",
+      "layer": "age",
+      "rule_id": "new",
+      "fire_count": 6,
+      "pass_with_rule": 0,
+      "fail_with_rule": 6,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "age:weathered",
+      "layer": "age",
+      "rule_id": "weathered",
+      "fire_count": 6,
+      "pass_with_rule": 0,
+      "fail_with_rule": 6,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "archetype:RailEdge",
+      "layer": "archetype",
+      "rule_id": "RailEdge",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "detail:prop_clutter",
+      "layer": "detail",
+      "rule_id": "prop_clutter",
+      "fire_count": 12,
+      "pass_with_rule": 0,
+      "fail_with_rule": 12,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "district_style:rail_yard_corridor",
+      "layer": "district_style",
+      "rule_id": "rail_yard_corridor",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "facade:facade_v1",
+      "layer": "facade",
+      "rule_id": "facade_v1",
+      "fire_count": 12,
+      "pass_with_rule": 0,
+      "fail_with_rule": 12,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "massing:double_hall",
+      "layer": "massing",
+      "rule_id": "double_hall",
+      "fire_count": 4,
+      "pass_with_rule": 0,
+      "fail_with_rule": 4,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "massing:l_shape_v1",
+      "layer": "massing",
+      "rule_id": "l_shape_v1",
+      "fire_count": 1,
+      "pass_with_rule": 0,
+      "fail_with_rule": 1,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "massing:long_hall",
+      "layer": "massing",
+      "rule_id": "long_hall",
+      "fire_count": 3,
+      "pass_with_rule": 0,
+      "fail_with_rule": 3,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "massing:yard_complex",
+      "layer": "massing",
+      "rule_id": "yard_complex",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "roof:roof_flat",
+      "layer": "roof",
+      "rule_id": "roof_flat",
+      "fire_count": 2,
+      "pass_with_rule": 0,
+      "fail_with_rule": 2,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "always_fail_gate",
+      "grammar_id": "rail_edge_v1",
+      "rule_key": "roof:roof_industrial",
+      "layer": "roof",
+      "rule_id": "roof_industrial",
+      "fire_count": 4,
+      "pass_with_rule": 0,
+      "fail_with_rule": 4,
+      "designer_action": "Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "civic_block_v1",
+      "layer": "age",
+      "rule_id": "abandoned",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "civic_block_v1",
+      "layer": "massing",
+      "rule_id": "plaza_setback",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "civic_block_v1",
+      "layer": "massing",
+      "rule_id": "row_infill",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "civic_block_v1",
+      "layer": "roof",
+      "rule_id": "roof_terrace",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "factory_cluster_v1",
+      "layer": "age",
+      "rule_id": "abandoned",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "factory_cluster_v1",
+      "layer": "massing",
+      "rule_id": "l_shape",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "industrial_warehouse_v1",
+      "layer": "age",
+      "rule_id": "abandoned",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "industrial_warehouse_v1",
+      "layer": "massing",
+      "rule_id": "l_shape",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "rail_edge_v1",
+      "layer": "age",
+      "rule_id": "abandoned",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "never_fire",
+      "grammar_id": "rail_edge_v1",
+      "layer": "massing",
+      "rule_id": "l_shape",
+      "fires_on_golden_seeds": 0,
+      "designer_action": "Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete)."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_colonial",
+      "slot_key": "door_glass_entry",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_victorian",
+      "slot_key": "door_glass_entry",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_colonial",
+      "slot_key": "prop_clutter",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_colonial",
+      "slot_key": "roof_flat_parapet",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_victorian",
+      "slot_key": "roof_flat_parapet",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_colonial",
+      "slot_key": "roof_terrace",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_victorian",
+      "slot_key": "roof_terrace",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_colonial",
+      "slot_key": "wall_brick_1u",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_victorian",
+      "slot_key": "wall_brick_1u",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_colonial",
+      "slot_key": "window_storefront_2u",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    },
+    {
+      "category": "terminal_no_kit",
+      "grammar_id": "civic_block_v1",
+      "style_pack_id": "style_victorian",
+      "slot_key": "window_storefront_2u",
+      "issue": "missing_style_pack_slot",
+      "module_id": null,
+      "designer_action": "Add kit module to style pack or remove terminal from grammar."
+    }
+  ],
+  "designer_table_markdown": "# PCG-06-GRAMMAR-RULE-COVERAGE-001 designer action table\n\n| category | grammar | layer | id | evidence | designer_action |\n|---|---|---|---|---|---|\n| always_fail_gate | civic_block_v1 | archetype | CivicBlock | fires=3 pass=0 fail=3 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | civic_block_v1 | district_style | main_street_civic | fires=2 pass=0 fail=2 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | civic_block_v1 | district_style | town_hall_row | fires=1 pass=0 fail=1 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | civic_block_v1 | massing | corner_anchored | fires=1 pass=0 fail=1 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | civic_block_v1 | massing | stepped_block | fires=2 pass=0 fail=2 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | civic_block_v1 | roof | roof_flat_parapet | fires=3 pass=0 fail=3 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | factory_cluster_v1 | archetype | FactoryCluster | fires=3 pass=0 fail=3 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | factory_cluster_v1 | district_style | manufacturing_row | fires=3 pass=0 fail=3 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | industrial_warehouse_v1 | archetype | IndustrialWarehouse | fires=4 pass=0 fail=4 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | industrial_warehouse_v1 | district_style | industrial_west | fires=4 pass=0 fail=4 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | industrial_warehouse_v1 | roof | roof_default | fires=3 pass=0 fail=3 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | age | new | fires=6 pass=0 fail=6 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | age | weathered | fires=6 pass=0 fail=6 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | archetype | RailEdge | fires=2 pass=0 fail=2 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | detail | prop_clutter | fires=12 pass=0 fail=12 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | district_style | rail_yard_corridor | fires=2 pass=0 fail=2 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | facade | facade_v1 | fires=12 pass=0 fail=12 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | massing | double_hall | fires=4 pass=0 fail=4 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | massing | l_shape_v1 | fires=1 pass=0 fail=1 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | massing | long_hall | fires=3 pass=0 fail=3 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | massing | yard_complex | fires=2 pass=0 fail=2 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | roof | roof_flat | fires=2 pass=0 fail=2 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| always_fail_gate | rail_edge_v1 | roof | roof_industrial | fires=4 pass=0 fail=4 | Fix kit/QC coupling for this rule \u2014 every golden seed with it fails PCG-08 gate. |\n| never_fire | civic_block_v1 | age | abandoned | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | civic_block_v1 | massing | plaza_setback | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | civic_block_v1 | massing | row_infill | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | civic_block_v1 | roof | roof_terrace | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | factory_cluster_v1 | age | abandoned | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | factory_cluster_v1 | massing | l_shape | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | industrial_warehouse_v1 | age | abandoned | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | industrial_warehouse_v1 | massing | l_shape | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | rail_edge_v1 | age | abandoned | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| never_fire | rail_edge_v1 | massing | l_shape | fires=0 on golden seeds | Raise weight, add trigger, or retire rule (report only \u2014 do not auto-delete). |\n| terminal_no_kit | civic_block_v1 | terminal | door_glass_entry | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | door_glass_entry | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | prop_clutter | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | roof_flat_parapet | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | roof_flat_parapet | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | roof_terrace | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | roof_terrace | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | wall_brick_1u | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | wall_brick_1u | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | window_storefront_2u | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |\n| terminal_no_kit | civic_block_v1 | terminal | window_storefront_2u | missing_style_pack_slot | Add kit module to style pack or remove terminal from grammar. |",
+  "report_only": true,
+  "rules_check": {
+    "passed": true,
+    "blocked_by": [],
+    "seed": "golden_set"
+  }
+}
