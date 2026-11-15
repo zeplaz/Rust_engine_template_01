@@ -8,6 +8,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
 
+from rust_engine_mcp.halton_scatter import chunk_halton_seed, halton_scatter_uv, scatter_jitter_in_cell
 from rust_engine_mcp.paths import repo_root
 from rust_engine_mcp.validators.landscape_grammar import validate_landscape_grammar_path
 from rust_engine_mcp.validators.report import ValidationIssue, ValidationReport
@@ -41,6 +42,38 @@ def _load_index(root: Path) -> dict[str, Any]:
     except (OSError, json.JSONDecodeError):
         return {}
     return data if isinstance(data, dict) else {}
+
+
+def landscape_preset_scatter_preview(
+    chunk_x: int,
+    chunk_y: int,
+    *,
+    site_count: int = 16,
+    site_ix: int = 0,
+    site_iy: int = 0,
+) -> dict[str, Any]:
+    """Halton scatter preview for a chunk — same core as engine vegetation placement (MATH-03 / S5)."""
+    seed = chunk_halton_seed(chunk_x, chunk_y)
+    count = max(0, site_count)
+    uv_sites = [
+        {"site_index": i, "u": u, "v": v}
+        for i, (u, v) in ((i, halton_scatter_uv(seed, i)) for i in range(count))
+    ]
+    ju, jv = scatter_jitter_in_cell(chunk_x, chunk_y, site_ix, site_iy)
+    return {
+        "schema": "landscape_preset_scatter_preview_v1",
+        "row": "MATH-03",
+        "chunk": [chunk_x, chunk_y],
+        "halton_seed": seed,
+        "site_count": count,
+        "uv_sites": uv_sites,
+        "example_cell_jitter": {
+            "site_ix": site_ix,
+            "site_iy": site_iy,
+            "u": ju,
+            "v": jv,
+        },
+    }
 
 
 def landscape_grammar_presets_batch(*, repo: Path | None = None) -> dict[str, Any]:

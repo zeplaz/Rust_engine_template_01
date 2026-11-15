@@ -30,7 +30,7 @@ EXEC-04	ADOPTED	anytime throughput solve + invariant test (L6)	2026-11-14
 LGT-09	ADOPTED	radiant_irradiance_kw_m2 + flux_kw_m2 (F3)	2026-11-14
 NAV-14	ADOPTED	logistics_path_concerns_v1.ron + risk_averse test (L5)	2026-11-14
 DEC-10	ADOPTED	demand_advert unmet_ticks + distance discount (L2)	2026-11-14
-MATH-03	ADOPTED	Halton scatter_jitter_in_cell vegetation (G2)	2026-11-14
+MATH-03	ADOPTED	Halton scatter_jitter_in_cell vegetation (G2); S5 shared fixture + landscape_preset_scatter_preview	2026-11-15
 ANIM-01	ADOPTED	flame_loop_phase in particle_anim.rs (F4)	2026-11-14
 AUD-05	ADOPTED	weather low-pass + attenuation in mix_frame (W3)	2026-11-14
 AUD-03	ADOPTED	U2 audio/sfx_catalog.rs + S6 validate-sound-cues/test_sound_cue_validator.py	2026-11-15
