@@ -194,8 +194,31 @@ pub fn logistics_path_dijkstra_concern(
     height: i32,
     start: (i32, i32),
     goal: (i32, i32),
+    tile_at: impl FnMut(i32, i32) -> LogisticsTile,
+    concern: super::path_concerns::LogisticsPathConcern,
+) -> Option<LogisticsPathResult> {
+    logistics_path_dijkstra_concern_at(
+        width,
+        height,
+        start,
+        goal,
+        tile_at,
+        concern,
+        None,
+        0,
+    )
+}
+
+/// Optional NAV-13 time-aware edge weights via forecast buckets at `depart_tick`.
+pub fn logistics_path_dijkstra_concern_at(
+    width: i32,
+    height: i32,
+    start: (i32, i32),
+    goal: (i32, i32),
     mut tile_at: impl FnMut(i32, i32) -> LogisticsTile,
     concern: super::path_concerns::LogisticsPathConcern,
+    forecast: Option<&super::cost_forecast::LogisticsCostForecastBook>,
+    depart_tick: u64,
 ) -> Option<LogisticsPathResult> {
     if width <= 0 || height <= 0 {
         return None;
@@ -258,7 +281,12 @@ pub fn logistics_path_dijkstra_concern(
             if tb.blocked {
                 continue;
             }
-            let edge = 0.5 * (ta.cost_mul.max(1e-3) + tb.cost_mul.max(1e-3));
+            let base = 0.5 * (ta.cost_mul.max(1e-3) + tb.cost_mul.max(1e-3));
+            let traverse = base.ceil().max(1.0) as u64;
+            let edge = match forecast {
+                Some(book) if book.ready => book.edge_cost(base, depart_tick, traverse),
+                _ => base,
+            };
             let nd = d + edge;
             let nr = r.max(ta.env_risk).max(tb.env_risk).clamp(0.0, 1.0);
             let ni = idx(nx, ny, width);
@@ -454,6 +482,55 @@ mod tests {
             !cautious.path.iter().any(|&(x, y)| y == 1 && (1..6).contains(&x)),
             "path {:?} should detour around y=1 risk strip",
             cautious.path
+        );
+    }
+
+    #[test]
+    fn time_aware_forecast_raises_path_cost() {
+        let tile = |_x: i32, _y: i32| LogisticsTile {
+            blocked: false,
+            cost_mul: 1.0,
+            env_risk: 0.0,
+        };
+        let concern = crate::systems::navigation::LogisticsPathConcern::DEFAULT;
+        let static_path = logistics_path_dijkstra_concern(3, 1, (0, 0), (2, 0), tile, concern)
+            .expect("static");
+        let mut book = crate::systems::navigation::LogisticsCostForecastBook::default();
+        book.ready = true;
+        book.buckets = [
+            crate::systems::navigation::WeatherCostBucket {
+                start_tick: 0,
+                mul: 1.0,
+            },
+            crate::systems::navigation::WeatherCostBucket {
+                start_tick: 1,
+                mul: 0.25,
+            },
+            crate::systems::navigation::WeatherCostBucket {
+                start_tick: 100,
+                mul: 0.25,
+            },
+            crate::systems::navigation::WeatherCostBucket {
+                start_tick: 200,
+                mul: 0.25,
+            },
+        ];
+        let late = logistics_path_dijkstra_concern_at(
+            3,
+            1,
+            (0, 0),
+            (2, 0),
+            tile,
+            concern,
+            Some(&book),
+            40,
+        )
+        .expect("late");
+        assert!(
+            late.total_cost > static_path.total_cost,
+            "late={} static={}",
+            late.total_cost,
+            static_path.total_cost
         );
     }
 

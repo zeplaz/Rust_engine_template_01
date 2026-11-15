@@ -5,6 +5,8 @@
 use std::cmp::Reverse;
 use std::collections::{BinaryHeap, BTreeMap};
 
+use crate::systems::navigation::LogisticsCostForecastBook;
+
 use super::model::SiteId;
 use super::sim::TravelModel;
 use super::snapshot::{DemandRow, LogisticsOrdersSnapshot, SiteRole, SiteRow};
@@ -14,6 +16,17 @@ pub type SiteTravelAdjacency = BTreeMap<SiteId, Vec<(SiteId, u32)>>;
 
 #[must_use]
 pub fn build_site_adjacency(site_ids: &[SiteId], travel: &dyn TravelModel) -> SiteTravelAdjacency {
+    build_site_adjacency_forecast(site_ids, travel, None, 0)
+}
+
+/// Same as [`build_site_adjacency`], scaling edge ticks by NAV-13 forecast integral when ready.
+#[must_use]
+pub fn build_site_adjacency_forecast(
+    site_ids: &[SiteId],
+    travel: &dyn TravelModel,
+    forecast: Option<&LogisticsCostForecastBook>,
+    depart_tick: u64,
+) -> SiteTravelAdjacency {
     let mut adj = SiteTravelAdjacency::new();
     for &a in site_ids {
         for &b in site_ids {
@@ -26,7 +39,13 @@ pub fn build_site_adjacency(site_ids: &[SiteId], travel: &dyn TravelModel) -> Si
             if t == 0 {
                 continue;
             }
-            adj.entry(a).or_default().push((b, t));
+            let ticks = if let Some(book) = forecast.filter(|f| f.ready) {
+                let cost = book.edge_cost(1.0, depart_tick, u64::from(t));
+                cost.ceil().max(1.0) as u32
+            } else {
+                t
+            };
+            adj.entry(a).or_default().push((b, ticks));
         }
     }
     adj
@@ -172,5 +191,42 @@ mod unit {
         adj.insert(SiteId(3), vec![(SiteId(2), 5)]);
         let dist = dijkstra_from(SiteId(3), &adj);
         assert_eq!(dist.get(&SiteId(1)), Some(&15));
+    }
+
+    struct FixedTravel;
+    impl TravelModel for FixedTravel {
+        fn travel_ticks(&self, _a: SiteId, _b: SiteId, _speed: f32) -> Option<u32> {
+            Some(10)
+        }
+    }
+
+    #[test]
+    fn forecast_scales_adjacency_ticks() {
+        let ids = [SiteId(1), SiteId(2)];
+        let clear = build_site_adjacency(&ids, &FixedTravel);
+        let mut book = LogisticsCostForecastBook::default();
+        book.ready = true;
+        book.buckets = [
+            crate::systems::navigation::WeatherCostBucket {
+                start_tick: 0,
+                mul: 0.25,
+            },
+            crate::systems::navigation::WeatherCostBucket {
+                start_tick: 1,
+                mul: 0.25,
+            },
+            crate::systems::navigation::WeatherCostBucket {
+                start_tick: 2,
+                mul: 0.25,
+            },
+            crate::systems::navigation::WeatherCostBucket {
+                start_tick: 3,
+                mul: 0.25,
+            },
+        ];
+        let scaled = build_site_adjacency_forecast(&ids, &FixedTravel, Some(&book), 0);
+        let clear_t = clear.get(&SiteId(1)).unwrap()[0].1;
+        let scaled_t = scaled.get(&SiteId(1)).unwrap()[0].1;
+        assert!(scaled_t > clear_t, "scaled={scaled_t} clear={clear_t}");
     }
 }

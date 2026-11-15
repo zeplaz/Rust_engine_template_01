@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v2** |
-| **Status** | **WAVES 0–S CLOSED** · PARTIALs LOCKED · Wave 3 charters OPEN ([`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md), [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md)) |
+| **Status** | **WAVES 0–S CLOSED** · Wave 3 SENSE-04 + NAV-13 **ADOPTED** (N13-P5 DEFER) |
 | **Date** | 2026-11-14 |
 | **Supersedes** | [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**, built on the old `$REF_BOOKS_DIR\lookup\` CSVs — do not use those) |
 | **Tool** | [`ref_books_index/`](ref_books_index/README.md): `systems.md` → `lookup.py` → `--read` |
@@ -411,8 +411,8 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 | MOVE-07 | §8 | DEFER | needs unit-member model |
 | PCG-03 | §8 | DEFER | ⚠ world-changing |
 | TAC-05 | §8 | DEFER | |
-| SENSE-04 | §8 | OPEN | charter [`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md) — first cut S4-P0 |
-| NAV-13 | §8 | OPEN | charter [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md) — first cut N13-P0 |
+| SENSE-04 | §8 | ADOPTED | S4-P0–P4 — [`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md) |
+| NAV-13 | §8 | ADOPTED | N13-P0–P4 — [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md); P5 DEFER |
 | LEARN-02 | §8 | DEFER | |
 | TAC-10 | §8 | DEFER | |
 | PCG-07 | §8 | DEFER | |

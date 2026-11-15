@@ -49,6 +49,8 @@ from .aps_headless import apply_headless_root, headless_tests_enabled
 from .aps_scroll import init_aps_scroll
 from .pipeline_status_bar import PipelineStatusBar
 from .status_log_panel import StatusLogPanel
+from .dashboard_panel import DashboardPanel
+from .voxel_massing_panel import VoxelMassingPanel
 # DES-APS-E1-IA-OPTION-D-001 — dual notebook page sets (not label-rename on one 5-tab row).
 OPTION_D_DUAL_NOTEBOOK = True
 class ArtPipelineSuiteApp(tk.Tk):
@@ -331,6 +333,12 @@ class ArtPipelineSuiteApp(tk.Tk):
         )
         bind_aps_tooltip(self.atlas, "tab_atlas")
         self.atlas.set_domain(ArtDomain.BUILDINGS.value)
+        self.voxel_massing = self._add_scrollable_tab(
+            nb, VoxelMassingPanel, "Massing", state=self.state, on_log=self._log
+        )
+        self.dashboard = self._add_scrollable_tab(
+            nb, DashboardPanel, "Dashboard", state=self.state, on_log=self._log
+        )
     def _build_landscape_tabs(self) -> None:
         job_kw = {"start_job": self._start_job, "atlas_service": self.atlas_service}
         nb = self._notebook_landscape

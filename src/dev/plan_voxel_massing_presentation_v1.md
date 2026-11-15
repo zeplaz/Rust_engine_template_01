@@ -82,3 +82,31 @@ floors = clamp(
 
 **Deferrals:** [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md) — **DR-VOXEL-OCCUPATION**.
 **Migration truth:** [`mig_v1_gate.json`](../debug_runs/mig_bevy_019/mig_v1_gate.json)
+
+---
+
+## 8. Book-aligned parallel lanes (maintainability)
+
+Orient: `python src/dev/ref_books_index/lookup.py --brief src/construction/voxel_massing.rs` → **PCG-06**.
+
+Presentation massing is **not** a second sim authority. Books split tool-side vs runtime (**ECS-15**) and asset conditioning (**IO-09**) from the render application stage (**RND-01** / instancing **RND-09**). Use that split so APS, construction derive, and paint can land in parallel on one JSON contract.
+
+| Lane | Book row | Sole owner | Owns | Must not own |
+|:---|:---|:---|:---|:---|
+| **A — Artist / conditioning** | **IO-09** · **ECS-15** (tool-side) · **PCG-06** (grammar height intent) | `@designer-mcp` / `@coder-mcp` APS Massing tab | Seeded `massing_preview.json` (`massing_columns[]`); StudioTask `massing_export`; HTML dash for QC | `FootprintMatrix`, commit payloads, Bevy systems |
+| **B — Engine derive** | **PCG-06** (shape / massing heuristic) | `@coder` [`voxel_massing.rs`](../construction/voxel_massing.rs) | `derive_massing_floors`, `VoxelColumnRequest`, sole writer into `ConstructionVisualRequests.massing_columns` from ghost/footprint | GPU meshes, APS UI, occupation dig/place |
+| **C — View / render paint** | **RND-01** (application stage) · **RND-09** (instanced stacks later) · **RND-18** (viewport / dual-view) | `@coder` world_map_frame / pixel_world layers | Consume `massing_columns` RO; stacked quads / silhouette; zoom collapse | Height heuristics, grammar seeds, occupation |
+
+**Shared wire (parallel-safe):**
+
+```text
+APS massing_preview.json  ≈  VoxelColumnRequest[]
+  tile, floors∈[1,4], color_kind, weight, seed
+→ engine may ingest for ghost override OR keep catalog derive
+→ ConstructionVisualRequests.massing_columns (sole B writer)
+→ C paints only
+```
+
+**Future (blocked until DR-VOXEL-OCCUPATION):** sim voxel occupation plan — serial after presentation lanes are green; do not grow Lane B/C into dig authority.
+
+**Studio charter:** [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) § Book lanes.

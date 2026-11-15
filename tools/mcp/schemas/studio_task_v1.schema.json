@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/studio_task_v1.json",
+  "title": "StudioTask",
+  "description": "Envelope for APS / Blender addon / CLI shared task bus on jobs_root.",
+  "type": "object",
+  "required": ["schema_version", "task_id", "kind", "seed", "status"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "task_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable id; also used as job status folder name stem."
+    },
+    "kind": {
+      "type": "string",
+      "enum": [
+        "geometry",
+        "assembly_build",
+        "tile_bake",
+        "report",
+        "massing_export",
+        "open_staging"
+      ]
+    },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Required on every StudioTask (determinism)."
+    },
+    "payload_path": {
+      "type": "string",
+      "description": "Repo-relative or absolute path to underlying job/spec JSON."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["queued", "running", "done", "failed", "cancelled"]
+    },
+    "report_path": {
+      "type": "string",
+      "description": "Optional HTML or JSON report path after completion."
+    },
+    "error": { "type": "string" },
+    "blender_session": {
+      "type": "string",
+      "description": "Optional marker that interactive Blender owns this task."
+    },
+    "created_at": { "type": "number" },
+    "updated_at": { "type": "number" }
+  },
+  "additionalProperties": false
+}

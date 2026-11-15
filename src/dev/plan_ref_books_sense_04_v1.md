@@ -62,11 +62,11 @@ No save migration for v1. If a future slice persists “installed sensor emitter
 
 | Phase | Goal | Status |
 |:---|:---|:---|
-| **S4-P0** | Pure `relax_sense_degradation` kernel: seeds from station `WeatherSample` + smoke → cell `sense_mul ∈ [0.15,1]` | **PLANNED** |
-| **S4-P1** | `WeatherSenseCellField` resource + sole writer system; unit tests on 3×3 fixture | **PLANNED** |
-| **S4-P2** | Route `sensor_range_mul` call sites at tile positions through cell lookup; keep function signature for tests | **PLANNED** |
-| **S4-P3** | `strategic/network_flow.rs` visibility uses cell field for weather leg (retain bunker/insulation terms) | **PLANNED** |
-| **S4-P4** | Witness: reader audit — zero `WeatherField::sample` outside weather module (grep gate in lib test) | **PLANNED** |
+| **S4-P0** | Pure `relax_sense_degradation` kernel: seeds from station `WeatherSample` + smoke → cell `sense_mul ∈ [0.15,1]` | **SHIPPED** |
+| **S4-P1** | `WeatherSenseCellField` resource + sole writer system; unit tests on 3×3 fixture | **SHIPPED** |
+| **S4-P2** | Route `sensor_range_mul` call sites at tile positions through cell lookup; keep function signature for tests | **SHIPPED** |
+| **S4-P3** | `strategic/network_flow.rs` visibility uses cell field for weather leg (retain bunker/insulation terms) | **SHIPPED** |
+| **S4-P4** | Witness: reader audit — zero `WeatherField::sample` outside weather module (grep gate in lib test) | **SHIPPED** |
 
 ★ **First slice to cut:** **S4-P0** (kernel only, no ECS).
 
@@ -83,8 +83,8 @@ No save migration for v1. If a future slice persists “installed sensor emitter
 
 | Label | Items |
 |:---|:---|
-| **SHIPPED** | W1 `WeatherPollingStations`; `sensor_range_mul` / `link_quality` pure APIs; smoke chunking in `air_ops` |
-| **PLANNED** | S4-P0 … S4-P4 (this plan) |
+| **SHIPPED** | W1 `WeatherPollingStations`; S4-P0–P4 cell field + air_ops/strategic wiring + sample audit |
+| **PLANNED** | — |
 | **DEFER** | Full **Region Sense Manager** (aig3:11.4.4) — irregular regions, emitter graphs, save-backed installations; EW mesh coupling beyond smoke scalar; GPU sense overlay |
 
 ## Diagnostics

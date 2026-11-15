@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "task_id": "studio_task_example_001",
+  "kind": "geometry",
+  "seed": 1,
+  "payload_path": "tools/mcp/schemas/examples/wall_steel_1u_lod0_job.json",
+  "status": "queued"
+}

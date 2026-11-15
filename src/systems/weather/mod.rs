@@ -16,6 +16,7 @@ mod field;
 mod overlay_bake;
 mod player_read_hud;
 mod polling_stations;
+mod sense_propagation;
 mod systems;
 mod tuning;
 mod weather_visual;
@@ -55,6 +56,10 @@ pub use polling_stations::{
     sync_weather_polling_stations, tile_to_weather_chunk, WeatherPollSiteBook,
     WeatherPollingStations,
 };
+pub use sense_propagation::{
+    build_weather_sense_cell_field, relax_sense_degradation, relax_sense_from_samples,
+    sense_seed_mul, WeatherSenseCellField, SENSE_MUL_FLOOR,
+};
 pub use field::{
     PressureKind, PressureSystem, WeatherClimate, WeatherField, WeatherFieldSave, WeatherRng,
     WeatherSample, WeatherSnapshot, BASELINE_PRESSURE_HPA, WEATHER_FIELD_SAVE_SCHEMA,
@@ -91,6 +96,7 @@ impl Plugin for WeatherSimulationPlugin {
             .init_resource::<WeatherField>()
             .init_resource::<WeatherPollSiteBook>()
             .init_resource::<WeatherPollingStations>()
+            .init_resource::<WeatherSenseCellField>()
             .init_resource::<CameraLocalWeatherSample>()
             .init_resource::<WeatherOverlayBakeState>()
             .init_resource::<WeatherPresetRequest>()
@@ -109,6 +115,7 @@ impl Plugin for WeatherSimulationPlugin {
                     weather_field_step,
                     project_chunk_weather,
                     sync_weather_polling_stations,
+                    build_weather_sense_cell_field,
                     bake_weather_overlay_from_field,
                     sync_air_ops_weather_status,
                 )

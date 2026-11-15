@@ -21,7 +21,7 @@ use crate::systems::sim_control::{SimControlSystemSet, SimStepClock};
 
 use super::model::{CargoClassMask, CargoKind, OwnerId, SiteId};
 use super::sim::{CommandOutcome, LogisticsOrderCommand, LogisticsOrderSim, SimConfig};
-use super::snapshot::{build_snapshot, LogisticsOrdersSnapshot, SiteMeta, SiteRole};
+use super::snapshot::{LogisticsOrdersSnapshot, SiteMeta, SiteRole};
 use super::persistence::{
     read_logistics_orders_overlay, saved_site_matches, write_logistics_orders_overlay,
     LogisticsOrdersSave, SavedSite, LOGISTICS_ORDERS_SAVE_SCHEMA,
@@ -401,6 +401,7 @@ impl Plugin for LogisticsOrdersPlugin {
             .init_resource::<super::auto_supply::AutoSupplyPolicy>()
             .init_resource::<super::fleet_growth::FleetGrowthPolicy>()
             .init_resource::<super::weather_haul::HaulWeatherDump>()
+            .init_resource::<crate::systems::navigation::LogisticsCostForecastBook>()
             .add_message::<LogisticsOrderRequest>()
             .add_systems(Startup, super::cargo_registry::load_cargo_kind_registry_on_startup)
             .configure_sets(
@@ -436,8 +437,10 @@ impl Plugin for LogisticsOrdersPlugin {
             .add_systems(
                 Update,
                 (
-                    super::weather_haul::sync_haul_weather_mul_system
+                    crate::systems::navigation::sync_logistics_cost_forecast
                         .after(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Weather),
+                    super::weather_haul::sync_haul_weather_mul_system
+                        .after(crate::systems::navigation::sync_logistics_cost_forecast),
                     super::haul_amplify::sync_haul_amplify_mul_system,
                     super::vehicle_fire::apply_order_sim_vehicle_fire_system
                         .after(super::weather_haul::sync_haul_weather_mul_system),
@@ -751,15 +754,22 @@ pub fn step_logistics_orders_system(
 pub fn publish_logistics_orders_snapshot_system(
     res: Res<LogisticsOrderSimRes>,
     registry: Res<LogisticsSiteRegistry>,
+    forecast: Option<Res<crate::systems::navigation::LogisticsCostForecastBook>>,
     mut snap: ResMut<LogisticsOrdersSnapshotRes>,
-    mut last: Local<Option<(u64, u64, u64)>>,
+    mut last: Local<Option<(u64, u64, u64, u64)>>,
 ) {
-    let fingerprint = (res.sim.tick, res.sim.command_seq, registry.revision);
+    let forecast_rev = forecast.as_ref().map(|f| f.revision).unwrap_or(0);
+    let fingerprint = (res.sim.tick, res.sim.command_seq, registry.revision, forecast_rev);
     if *last == Some(fingerprint) {
         return;
     }
     *last = Some(fingerprint);
-    snap.0 = build_snapshot(&res.sim, &registry.meta, &registry.travel);
+    snap.0 = super::snapshot::build_snapshot_with_forecast(
+        &res.sim,
+        &registry.meta,
+        &registry.travel,
+        forecast.as_deref(),
+    );
 }
 
 /// Write `overlays/logistics_orders.ron` when a save flush is armed (before the manifest flush).
