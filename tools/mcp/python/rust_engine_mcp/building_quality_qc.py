@@ -9,14 +9,19 @@ import json
 from pathlib import Path
 from typing import Any
 
-from rust_engine_mcp.kit_coverage_audit import CORE_SLOTS
+from collections import Counter
+
+from rust_engine_mcp.kit_coverage_audit import CORE_SLOTS, required_slots_for_pack
 from rust_engine_mcp.library import load_index_json
 from rust_engine_mcp.paths import repo_root
 
 WITNESS_REL = "debug_runs/building_quality_live.json"
+PCG_08_WITNESS_REL = "debug_runs/pcg_08_generate_test_live.json"
 PASS_THRESHOLD = 70.0
 TASK_ID = "APSR-A4-Q1-001"
+PCG_08_TASK_ID = "PCG-08-GEN-TEST-001"
 SMOKE_LABEL_TASK = "APS-QC-SMOKE-LABEL-001"
+GENERATE_ERROR_SIGNATURE = "generate_no_resolvable_placements"
 
 # Exact copy from src/dev/design_aps_operator_rubric_v3.md §4.1
 LABEL_SMOKE = "Smoke kit — not ship"
@@ -205,7 +210,313 @@ def format_qc_strip_text(
     ok: bool | None = green if n else None
     if tier["smoke_hit"]:
         ok = False
+    pcg_suffix = format_pcg08_histogram_strip_suffix(repo=repo)
+    if pcg_suffix:
+        text = f"{text}{pcg_suffix}"
     return text, ok
+
+
+def load_pcg08_report(*, repo: Path | None = None) -> dict[str, Any] | None:
+    root = repo or repo_root()
+    path = root / PCG_08_WITNESS_REL
+    if not path.is_file():
+        return None
+    try:
+        body = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return None
+    if isinstance(body.get("payload"), dict):
+        return body["payload"]
+    return body
+
+
+def format_pcg08_histogram_strip_suffix(*, repo: Path | None = None) -> str:
+    """APS assembly QC strip — top rejection reasons from PCG-08 histogram."""
+    report = load_pcg08_report(repo=repo)
+    if not report:
+        return ""
+    hist = report.get("rejection_histogram") or {}
+    if not isinstance(hist, dict) or not hist:
+        return ""
+    sorted_items = sorted(hist.items(), key=lambda kv: (-int(kv[1]), kv[0]))
+    parts = [f"{k}×{v}" for k, v in sorted_items[:4]]
+    rate = report.get("pass_rate")
+    try:
+        rate_f = float(rate) if rate is not None else None
+    except (TypeError, ValueError):
+        rate_f = None
+    head = f"PCG-08 pass {rate_f:.0%}" if rate_f is not None else "PCG-08"
+    return f" · {head} · reject " + " · ".join(parts)
+
+
+def _cross_style_fallback_count(snapshot: dict[str, Any]) -> int:
+    from rust_engine_mcp.library import load_index_json
+
+    style_pack = str(snapshot.get("style_pack_id") or "")
+    if not style_pack:
+        return 0
+    by_job: dict[str, dict[str, Any]] = {}
+    for row in load_index_json():
+        job = str(row.get("job_id") or "")
+        if job:
+            by_job[job] = row
+    drift = 0
+    for placement in snapshot.get("module_placements") or []:
+        if not isinstance(placement, dict):
+            continue
+        job = str(placement.get("job_id") or "")
+        row = by_job.get(job)
+        if not row:
+            continue
+        row_pack = str(row.get("style_pack") or "")
+        if row_pack and row_pack != style_pack:
+            drift += 1
+    return drift
+
+
+def _missing_slot_count(snapshot: dict[str, Any]) -> int:
+    style_pack = str(snapshot.get("style_pack_id") or "")
+    if not style_pack:
+        return 0
+    required = set(required_slots_for_pack(style_pack))
+    present = {
+        str(p.get("slot_key") or "")
+        for p in (snapshot.get("module_placements") or [])
+        if isinstance(p, dict) and p.get("slot_key")
+    }
+    return len(required - present)
+
+
+def compute_snapshot_quality_score(snapshot: dict[str, Any]) -> dict[str, Any]:
+    """Mirror BQ-A2 weights from assembly_quality_gate.rs (studio path; adjacency=0)."""
+    placements = [p for p in (snapshot.get("module_placements") or []) if isinstance(p, dict)]
+    resolved_count = len(placements)
+    visible_count = sum(1 for p in placements if not p.get("hidden"))
+    cross_style = _cross_style_fallback_count(snapshot)
+    missing_slot_count = _missing_slot_count(snapshot)
+    adjacency_violation_count = 0
+
+    style_purity_pct = (
+        100.0
+        if resolved_count == 0
+        else 100.0 * (resolved_count - cross_style) / resolved_count
+    )
+    silhouette_continuity_pct = (
+        100.0
+        if resolved_count == 0
+        else min(100.0, 100.0 * visible_count / resolved_count)
+    )
+    missing_penalty = min(100.0, missing_slot_count * 12.0)
+    adjacency_penalty = min(100.0, adjacency_violation_count * 15.0)
+    overall_score = (
+        style_purity_pct * 0.35
+        + silhouette_continuity_pct * 0.30
+        + (100.0 - missing_penalty) * 0.25
+        + (100.0 - adjacency_penalty) * 0.10
+    )
+    overall_score = max(0.0, min(100.0, overall_score))
+    passes_gate = overall_score >= PASS_THRESHOLD
+    return {
+        "style_purity_pct": style_purity_pct,
+        "silhouette_continuity_pct": silhouette_continuity_pct,
+        "cross_style_fallback_count": cross_style,
+        "missing_slot_count": missing_slot_count,
+        "adjacency_violation_count": adjacency_violation_count,
+        "overall_score": overall_score,
+        "passes_gate": passes_gate,
+    }
+
+
+def _rejection_reason_for_candidate(
+    *,
+    generate_error: str | None,
+    smoke_hit: bool,
+    grammar_signatures: list[str],
+    score_row: dict[str, Any] | None,
+) -> str | None:
+    if generate_error:
+        if "No resolvable" in generate_error or "resolvable" in generate_error.lower():
+            return GENERATE_ERROR_SIGNATURE
+        return "generate_error"
+    if smoke_hit:
+        return "smoke_tier_blocked"
+    for sig in grammar_signatures:
+        if sig:
+            return str(sig)
+    if score_row and not score_row.get("passes_gate"):
+        return "score_below_threshold"
+    return None
+
+
+def evaluate_generate_and_test_candidate(
+    entry: dict[str, Any],
+    snapshot: dict[str, Any] | None,
+    *,
+    generate_error: str | None = None,
+    repo: Path | None = None,
+) -> dict[str, Any]:
+    """Score one seeded candidate; classify rejection reason when not kept."""
+    _ = repo
+    smoke_hit = False
+    grammar_sigs: list[str] = []
+    score_row: dict[str, Any] | None = None
+    assembly_id = ""
+    if snapshot:
+        assembly_id = str(snapshot.get("assembly_id") or "")
+        tier = scan_snapshot_tier_labels(snapshot)
+        smoke_hit = bool(tier.get("smoke_hit"))
+        from rust_engine_mcp.validators.assembly_grammar_verify import (
+            validate_assembly_grammar_verify,
+        )
+
+        report = validate_assembly_grammar_verify(snapshot, ship=False)
+        grammar_sigs = [
+            str(i.signature or i.kind)
+            for i in report.errors
+            if i.severity == "error" and (i.signature or i.kind)
+        ]
+        score_row = compute_snapshot_quality_score(snapshot)
+    reason = _rejection_reason_for_candidate(
+        generate_error=generate_error,
+        smoke_hit=smoke_hit,
+        grammar_signatures=grammar_sigs,
+        score_row=score_row,
+    )
+    passes = reason is None
+    overall = float((score_row or {}).get("overall_score", 0.0))
+    return {
+        "archetype_id": entry.get("archetype_id"),
+        "district_style": entry.get("district_style"),
+        "seed": entry.get("seed"),
+        "assembly_id": assembly_id,
+        "passes_gate": passes,
+        "rejection_reason": reason,
+        "overall_score": overall,
+        "score": score_row,
+    }
+
+
+def run_generate_and_test_report(
+    entries: list[dict[str, Any]],
+    *,
+    top_k: int = 3,
+    generate_fn: Any | None = None,
+    repo: Path | None = None,
+) -> dict[str, Any]:
+    """PCG-08 — generate N seeded candidates, gate, histogram rejections, keep top-k."""
+    from rust_engine_mcp import golden_seed_review
+
+    _ = repo
+    if generate_fn is None:
+        generate_fn = golden_seed_review.generate_snapshot_for_seed
+
+    evaluated: list[dict[str, Any]] = []
+    for entry in entries:
+        snap: dict[str, Any] | None = None
+        gen_err: str | None = None
+        try:
+            snap = generate_fn(entry, write=False)
+        except Exception as exc:  # noqa: BLE001
+            gen_err = str(exc)
+        evaluated.append(
+            evaluate_generate_and_test_candidate(
+                entry,
+                snap,
+                generate_error=gen_err,
+            )
+        )
+
+    passed = [row for row in evaluated if row.get("passes_gate")]
+    pass_count = len(passed)
+    candidate_count = len(evaluated)
+    pass_rate = (pass_count / candidate_count) if candidate_count else 0.0
+    histogram = Counter(
+        str(r["rejection_reason"])
+        for r in evaluated
+        if r.get("rejection_reason")
+    )
+    ranked = sorted(
+        evaluated,
+        key=lambda r: (
+            -float(r.get("overall_score") or 0.0),
+            int(r.get("seed") or 0),
+            str(r.get("assembly_id") or ""),
+        ),
+    )
+    top_kept = [
+        {
+            "seed": r.get("seed"),
+            "assembly_id": r.get("assembly_id"),
+            "overall_score": r.get("overall_score"),
+            "passes_gate": r.get("passes_gate"),
+        }
+        for r in ranked[: max(0, top_k)]
+    ]
+    return {
+        "schema": "pcg_08_generate_test_v1",
+        "task_id": PCG_08_TASK_ID,
+        "candidate_count": candidate_count,
+        "pass_count": pass_count,
+        "pass_rate": pass_rate,
+        "top_k": top_k,
+        "top_k_kept": top_kept,
+        "rejection_histogram": dict(sorted(histogram.items(), key=lambda kv: kv[0])),
+        "candidates": evaluated,
+        "rules_check": {
+            "passed": True,
+            "blocked_by": [],
+            "seed": "golden_set",
+        },
+    }
+
+
+def format_generate_and_test_cli(report: dict[str, Any]) -> str:
+    """Deterministic text for CLI (sorted histogram, stable floats)."""
+    lines = [
+        f"{PCG_08_TASK_ID} generate-and-test n={report.get('candidate_count')}",
+        (
+            f"pass_rate: {float(report.get('pass_rate') or 0.0):.4f} "
+            f"({report.get('pass_count')}/{report.get('candidate_count')})"
+        ),
+        f"top_k: {report.get('top_k')}",
+    ]
+    for row in report.get("top_k_kept") or []:
+        lines.append(
+            f"  kept seed={row.get('seed')} score={float(row.get('overall_score') or 0):.2f} "
+            f"pass={row.get('passes_gate')} id={row.get('assembly_id')}"
+        )
+    lines.append("rejection_histogram:")
+    hist = report.get("rejection_histogram") or {}
+    for reason, count in sorted(hist.items(), key=lambda kv: kv[0]):
+        lines.append(f"  {reason}: {count}")
+    return "\n".join(lines)
+
+
+def refresh_pcg08_golden_report(
+    *,
+    top_k: int = 3,
+    write_witness: bool = True,
+    repo: Path | None = None,
+) -> dict[str, Any]:
+    from rust_engine_mcp import golden_seed_review
+    from rust_engine_mcp.aps_witness_honesty import write_aps_live_witness
+
+    root = repo or repo_root()
+    entries = golden_seed_review.load_golden_seeds(repo=root)
+    report = run_generate_and_test_report(entries, top_k=top_k, repo=root)
+    report["cli_text"] = format_generate_and_test_cli(report)
+    report["golden_seed_count"] = len(entries)
+    if write_witness:
+        write_aps_live_witness(
+            report,
+            PCG_08_WITNESS_REL,
+            schema="pcg_08_generate_test_v1",
+            profile="PCG_08_GEN_TEST",
+            source_system="pcg_08_generate_test",
+            ritual="BLANG:WIT-HON PCG-08-GEN-TEST-001",
+            repo=root,
+        )
+    return report
 
 
 def assembly_qc_allows_approve(

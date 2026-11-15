@@ -519,6 +519,92 @@ def refresh_grammar_iter_e2e_witness() -> bool:
     return bool(payload.get("green"))
 
 
+def massing_iterate_candidate_entries(
+    *,
+    archetype_id: str,
+    district_style: str,
+    base_snapshot_path: str,
+    seeds: list[int],
+    parent_lineage_id: str = "",
+) -> list[dict[str, Any]]:
+    """PCG-08 — candidate specs for massing iterate sweeps (deterministic seeds)."""
+    out: list[dict[str, Any]] = []
+    for seed in seeds:
+        out.append(
+            {
+                "schema": "pcg_08_massing_iterate_v1",
+                "mode": "massing_iterate",
+                "seed": int(seed),
+                "archetype_id": archetype_id,
+                "district_style": district_style,
+                "base_snapshot_path": base_snapshot_path,
+                "parent_lineage_id": parent_lineage_id,
+            }
+        )
+    return out
+
+
+def generate_massing_iterate_candidate(
+    entry: dict[str, Any],
+    *,
+    write: bool = False,
+) -> dict[str, Any]:
+    """Run massing iterate for one PCG-08 candidate; returns snapshot body."""
+    _ = write
+    req = {
+        "schema": "grammar_iterate_request_v1",
+        "mode": "massing",
+        "seed": int(entry["seed"]),
+        "archetype_id": str(entry["archetype_id"]),
+        "district_style": str(entry["district_style"]),
+        "base_snapshot_path": str(entry["base_snapshot_path"]),
+        "parent_lineage_id": str(entry.get("parent_lineage_id") or ""),
+    }
+    result = iterate_grammar(req)
+    if not result.get("ok"):
+        errors = result.get("errors") or [{"message": "iterate failed"}]
+        msg = str(errors[0].get("message") or "iterate failed")
+        raise ValueError(msg)
+    snap = result.get("snapshot")
+    if not isinstance(snap, dict):
+        raise ValueError("iterate missing snapshot")
+    return snap
+
+
+def run_massing_iterate_generate_and_test(
+    *,
+    seeds: list[int],
+    archetype_id: str = "IndustrialWarehouse",
+    district_style: str = "industrial_west",
+    base_snapshot_path: str = (
+        "tools/mcp/schemas/examples/"
+        "assembly_snapshot_warehouse_industrial_west_production_v1.json"
+    ),
+    parent_lineage_id: str = "industrial_west_8x9_s43_f75a",
+    top_k: int = 3,
+) -> dict[str, Any]:
+    """PCG-08 wrapper — massing iterate sweep scored by building_quality_qc."""
+    from rust_engine_mcp import building_quality_qc
+
+    entries = massing_iterate_candidate_entries(
+        archetype_id=archetype_id,
+        district_style=district_style,
+        base_snapshot_path=base_snapshot_path,
+        seeds=seeds,
+        parent_lineage_id=parent_lineage_id,
+    )
+
+    def _gen(entry: dict[str, Any], *, write: bool = False) -> dict[str, Any]:
+        _ = write
+        return generate_massing_iterate_candidate(entry)
+
+    return building_quality_qc.run_generate_and_test_report(
+        entries,
+        top_k=top_k,
+        generate_fn=_gen,
+    )
+
+
 def refresh_grammar_002_roof_facade_witness() -> bool:
     roof_req = {
         "schema": "grammar_iterate_request_v1",
