@@ -375,6 +375,32 @@ def _cmd_grammar_eval_sweep(args: argparse.Namespace) -> int:
     return 0 if body.get("ok") else 1
 
 
+def _cmd_generate_and_test_report(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import building_quality_qc
+
+    if args.massing_seeds:
+        from rust_engine_mcp import grammar_iterate
+
+        seeds = [int(x) for x in args.massing_seeds.split(",")]
+        body = grammar_iterate.run_massing_iterate_generate_and_test(
+            seeds=seeds,
+            archetype_id=args.archetype,
+            district_style=args.district,
+            top_k=int(args.top_k),
+        )
+    else:
+        body = building_quality_qc.refresh_pcg08_golden_report(
+            top_k=int(args.top_k),
+            write_witness=not args.no_witness,
+        )
+    text = building_quality_qc.format_generate_and_test_cli(body)
+    if args.json:
+        print(json.dumps(body, indent=2, sort_keys=True))
+    else:
+        print(text)
+    return 0
+
+
 def _cmd_building_set_coverage(_: argparse.Namespace) -> int:
     from rust_engine_mcp import grammar_build_set
 
@@ -760,6 +786,22 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--district", default="industrial_west")
     p.add_argument("--seeds", default="", help="Comma-separated seed list")
     p.set_defaults(func=_cmd_grammar_eval_sweep)
+
+    p = sub.add_parser(
+        "generate-and-test-report",
+        help="PCG-08 — seeded generate-and-test histogram (golden set default)",
+    )
+    p.add_argument("--top-k", default="3", help="Top-k candidates to list")
+    p.add_argument("--json", action="store_true", help="Emit JSON instead of deterministic CLI text")
+    p.add_argument("--no-witness", action="store_true", help="Skip writing debug_runs/pcg_08_generate_test_live.json")
+    p.add_argument("--archetype", default="IndustrialWarehouse", help="Massing iterate archetype")
+    p.add_argument("--district", default="industrial_west", help="Massing iterate district")
+    p.add_argument(
+        "--massing-seeds",
+        default="",
+        help="Optional comma-separated seeds for massing iterate sweep (default: golden BQ-Q3 set)",
+    )
+    p.set_defaults(func=_cmd_generate_and_test_report)
 
     sub.add_parser("building-set-coverage").set_defaults(func=_cmd_building_set_coverage)
     sub.add_parser("pwr-substation-batch-run").set_defaults(func=_cmd_pwr_substation_batch_run)

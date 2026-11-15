@@ -272,6 +272,24 @@ def generate_snapshot_for_seed(entry: dict[str, Any], *, write: bool = False) ->
     )
 
 
+def run_golden_generate_and_test_report(
+    *,
+    top_k: int = 3,
+    repo: Path | None = None,
+) -> dict[str, Any]:
+    """PCG-08 — golden BQ-Q3 seed set through generate-and-test gate."""
+    from rust_engine_mcp import building_quality_qc
+
+    root = repo or repo_root()
+    entries = load_golden_seeds(repo=root)
+    return building_quality_qc.run_generate_and_test_report(
+        entries,
+        top_k=top_k,
+        generate_fn=generate_snapshot_for_seed,
+        repo=root,
+    )
+
+
 def write_apsr_q3_witness(*, repo: Path | None = None) -> dict[str, Any]:
     from rust_engine_mcp.aps_witness_honesty import write_aps_live_witness
 
