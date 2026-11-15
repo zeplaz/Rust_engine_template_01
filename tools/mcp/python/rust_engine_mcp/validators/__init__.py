@@ -12,6 +12,7 @@ from .atlas_meta import validate_atlas_meta_v2
 from .tile_batch import validate_tile_batch
 from .visual_config import validate_visual_config
 from .effect_spec import validate_effect_spec
+from .sound_cue import validate_sound_cue_path
 from .assembly_production import validate_assembly_snapshot, validate_assembly_snapshot_path
 from .assembly_grammar_verify import (
     validate_assembly_grammar_verify,
@@ -33,6 +34,7 @@ __all__ = [
     "validate_atlas_meta_v2",
     "validate_visual_config",
     "validate_effect_spec",
+    "validate_sound_cue_path",
     "validate_assembly_snapshot",
     "validate_assembly_snapshot_path",
     "validate_assembly_grammar_verify",
@@ -230,4 +232,8 @@ def run_validator(
         return validate_tile_promotion_honest_path(
             _resolve(target), ship=True, honest_bake=True, compression_level=compression_level
         )
+    if name == "sound_cue":
+        if not target:
+            raise ValueError("target path required for sound_cue (sound_cue_groups_v1 JSON)")
+        return validate_sound_cue_path(_resolve(target), compression_level=compression_level)
     raise ValueError(f"unknown validator: {name}")

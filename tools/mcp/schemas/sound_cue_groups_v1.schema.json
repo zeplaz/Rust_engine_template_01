@@ -1,0 +1,62 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "sound_cue_groups_v1.schema.json",
+  "title": "SoundCueGroupsV1",
+  "description": "AUD-03 studio companion — logical cue ids with variant WAV paths for QC before engine registration.",
+  "type": "object",
+  "required": ["schema_version", "cues"],
+  "properties": {
+    "schema_version": { "const": "sound_cue_groups_v1" },
+    "ref_books_row": {
+      "type": "string",
+      "description": "Optional matrix row id (default AUD-03)."
+    },
+    "cues": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "$ref": "#/$defs/cue_group" }
+    }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "cue_group": {
+      "type": "object",
+      "required": ["cue_id", "variants"],
+      "additionalProperties": false,
+      "properties": {
+        "cue_id": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Logical cue id (matches SfxCatalog cue registration)."
+        },
+        "repeated_oneshot": {
+          "type": "boolean",
+          "default": true,
+          "description": "Gameplay one-shots that fire often must have ≥2 variants (AUD-03 no-immediate-repeat)."
+        },
+        "variants": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/$defs/variant_entry" }
+        }
+      }
+    },
+    "variant_entry": {
+      "type": "object",
+      "required": ["tag", "path"],
+      "additionalProperties": false,
+      "properties": {
+        "tag": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Variant tag registered in SfxCatalog::by_tag."
+        },
+        "path": {
+          "type": "string",
+          "minLength": 1,
+          "description": "Repo-relative path to the WAV (e.g. assets/sfx/shot_v0.wav)."
+        }
+      }
+    }
+  }
+}

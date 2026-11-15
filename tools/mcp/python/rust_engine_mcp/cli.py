@@ -375,6 +375,27 @@ def _cmd_grammar_eval_sweep(args: argparse.Namespace) -> int:
     return 0 if body.get("ok") else 1
 
 
+def _cmd_heatmap_ramp_export(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import perceptual_ramp
+
+    out_dir = Path(args.out_dir) if args.out_dir else None
+    body = perceptual_ramp.export_heatmap_ramp_from_path(
+        Path(args.spec),
+        out_dir=out_dir,
+        write_files=not args.dry_run,
+    )
+    print(json.dumps(body, indent=2, sort_keys=True))
+    return 0 if body.get("green") else 1
+
+
+def _cmd_heatmap_ramp_qc(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import perceptual_ramp
+
+    body = perceptual_ramp.qc_lut_file(Path(args.lut))
+    print(json.dumps(body, indent=2, sort_keys=True))
+    return 0 if body.get("green") else 1
+
+
 def _cmd_generate_and_test_report(args: argparse.Namespace) -> int:
     from rust_engine_mcp import building_quality_qc
 
@@ -493,6 +514,15 @@ def _cmd_validate_report(args: argparse.Namespace) -> int:
         compression_level=int(args.compress),
         use_cached=bool(args.cached),
     )
+    print(json.dumps(report.to_dict()))
+    return 0 if report.status == "passed" else 1
+
+
+def _cmd_validate_sound_cues(args: argparse.Namespace) -> int:
+    """AUD-03 S6 — validate sound_cue_groups_v1 manifest (variants, peaks, paths)."""
+    from rust_engine_mcp.validators.sound_cue import validate_sound_cue_path
+
+    report = validate_sound_cue_path(Path(args.path), compression_level=int(args.compress))
     print(json.dumps(report.to_dict()))
     return 0 if report.status == "passed" else 1
 
@@ -759,6 +789,14 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--write-batch", action="store_true", help="Include tile_batch + variant_set rows")
     p.set_defaults(func=_cmd_variant_matrix_expand)
 
+    p = sub.add_parser(
+        "validate-sound-cues",
+        help="AUD-03 — validate sound_cue_groups_v1 (≥2 variants, peak spread ≤1.5 dB, unique paths)",
+    )
+    p.add_argument("path", help="sound_cue_groups_v1 JSON path (repo-relative or absolute)")
+    p.add_argument("--compress", default="3", help="ValidationReport compression level 1-4")
+    p.set_defaults(func=_cmd_validate_sound_cues)
+
     p = sub.add_parser("validate-report")
     p.add_argument(
         "validator",
@@ -772,6 +810,7 @@ def build_parser() -> argparse.ArgumentParser:
             "atlas_meta_v2",
             "visual_config",
             "effect_spec",
+            "sound_cue",
             "tile_promotion",
             "assembly_grammar",
             "assembly_p0",
@@ -806,6 +845,31 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("--district", default="industrial_west")
     p.add_argument("--seeds", default="", help="Comma-separated seed list")
     p.set_defaults(func=_cmd_grammar_eval_sweep)
+
+    p = sub.add_parser(
+        "heatmap-ramp-export",
+        help="RND-20 — export lightness-monotonic heatmap ramp LUT + RON (staging)",
+    )
+    p.add_argument(
+        "spec",
+        nargs="?",
+        default="tools/mcp/schemas/examples/heatmap_ramp_default_overlay_v1.json",
+        help="heatmap_ramp_v1 JSON spec",
+    )
+    p.add_argument(
+        "--out-dir",
+        default="",
+        help="Output directory (default: assets/staging/ramps)",
+    )
+    p.add_argument("--dry-run", action="store_true", help="QC + LUT bytes only; do not write files")
+    p.set_defaults(func=_cmd_heatmap_ramp_export)
+
+    p = sub.add_parser(
+        "heatmap-ramp-qc",
+        help="RND-20 — QC existing .lut for strictly increasing Rec.709 lightness",
+    )
+    p.add_argument("lut", help="Path to RND20LUT binary")
+    p.set_defaults(func=_cmd_heatmap_ramp_qc)
 
     p = sub.add_parser(
         "generate-and-test-report",

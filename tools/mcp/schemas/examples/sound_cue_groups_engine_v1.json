@@ -1,0 +1,41 @@
+{
+  "schema_version": "sound_cue_groups_v1",
+  "ref_books_row": "AUD-03",
+  "cues": [
+    {
+      "cue_id": "ui.click",
+      "repeated_oneshot": true,
+      "variants": [
+        { "tag": "ui.click.v0", "path": "assets/sfx/ui_click.wav" },
+        { "tag": "ui.click.v1", "path": "assets/sfx/ui_confirm.wav" }
+      ]
+    },
+    {
+      "cue_id": "combat.shot",
+      "repeated_oneshot": true,
+      "variants": [
+        { "tag": "combat.shot.v0", "path": "assets/sfx/combat_shot.wav" },
+        { "tag": "combat.shot.v1", "path": "assets/sfx/combat_missile_launch.wav" }
+      ]
+    },
+    {
+      "cue_id": "combat.explosion",
+      "repeated_oneshot": true,
+      "variants": [
+        {
+          "tag": "combat.explosion.v0",
+          "path": "tools/mcp/python/tests/fixtures/sound_cue/v0_peak_2000.wav"
+        },
+        {
+          "tag": "combat.explosion.v1",
+          "path": "tools/mcp/python/tests/fixtures/sound_cue/v1_peak_2250.wav"
+        }
+      ]
+    },
+    {
+      "cue_id": "ui.deny",
+      "repeated_oneshot": false,
+      "variants": [{ "tag": "ui.deny", "path": "assets/sfx/ui_deny.wav" }]
+    }
+  ]
+}

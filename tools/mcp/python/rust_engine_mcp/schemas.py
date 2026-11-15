@@ -102,6 +102,10 @@ def validate_landscape_grammar(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("landscape_grammar_v0.schema.json"))
 
 
+def validate_sound_cue_groups(data: dict[str, Any]) -> None:
+    jsonschema.validate(instance=data, schema=_load_schema("sound_cue_groups_v1.schema.json"))
+
+
 def validate_effect_spec(data: dict[str, Any]) -> None:
     """Draft 2020-12 — required for effect_spec_v1 allOf spawn_hook conditionals (R-SCHEMA-1)."""
     from jsonschema import Draft202012Validator
@@ -112,6 +116,10 @@ def validate_effect_spec(data: dict[str, Any]) -> None:
 
 def validate_witness_integrity_catalog(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("witness_integrity_rules_v1.schema.json"))
+
+
+def validate_heatmap_ramp(data: dict[str, Any]) -> None:
+    jsonschema.validate(instance=data, schema=_load_schema("heatmap_ramp_v1.schema.json"))
 
 
 def load_json_file(path: Path) -> dict[str, Any]:

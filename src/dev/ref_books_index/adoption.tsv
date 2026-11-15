@@ -33,9 +33,9 @@ DEC-10	ADOPTED	demand_advert unmet_ticks + distance discount (L2)	2026-11-14
 MATH-03	ADOPTED	Halton scatter_jitter_in_cell vegetation (G2)	2026-11-14
 ANIM-01	ADOPTED	flame_loop_phase in particle_anim.rs (F4)	2026-11-14
 AUD-05	ADOPTED	weather low-pass + attenuation in mix_frame (W3)	2026-11-14
-AUD-03	ADOPTED	cue variants + AudioLocalRng no immediate repeat (U2)	2026-11-14
+AUD-03	ADOPTED	U2 audio/sfx_catalog.rs + S6 validate-sound-cues/test_sound_cue_validator.py	2026-11-15
 AUD-08	ADOPTED	alert bark priority exclusivity (U3)	2026-11-14
-RND-20	ADOPTED	heatmap_ramp linear lightness + domain overlay blend (R2)	2026-11-14
+RND-20	ADOPTED	heatmap_ramp linear lightness (R2) + test_perceptual_ramp.py LUT export/QC (S2)	2026-11-15
 INPUT-02	ADOPTED	BUILD_POINTER_DRAG thresholds (K2)	2026-11-14
 LGT-02	ADOPTED	screen-tile fire light cap wired in fire_visual_extract (R3)	2026-11-14
 LGT-08	ADOPTED	playcheck --seeds + score_dump --multi (T6)	2026-11-14
