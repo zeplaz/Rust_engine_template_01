@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v2** |
-| **Status** | **WAVES 0–2 CLOSED** — exit criteria met (F1/E7 PARTIAL with written reasons; Wave S studio still OPEN) |
+| **Status** | **WAVES 0–2 CLOSED** · PARTIALs LOCKED · Wave S in progress (S1 ADOPTED) · Wave 3 charters OPEN |
 | **Date** | 2026-11-14 |
 | **Supersedes** | [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**, built on the old `C:\dev\ref books\lookup\` CSVs — do not use those) |
 | **Tool** | [`ref_books_index/`](ref_books_index/README.md): `systems.md` → `lookup.py` → `--read` |
@@ -336,6 +336,11 @@ Tests: `python -m pytest tools/mcp/python/tests -q` must stay green for every ca
 
 Each item needs a short @planner plan (authority, SystemSet, save impact) before any slice is cut.
 Start it with `lookup.py --row <ID>` and one `--read`.
+
+| Row | Plan |
+|:---|:---|
+| SENSE-04 | [`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md) |
+| NAV-13 | [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md) |
 
 | Feature | Rows · ref | Why it is not a slice yet | Trigger to start |
 |:---|:---|:---|:---|
