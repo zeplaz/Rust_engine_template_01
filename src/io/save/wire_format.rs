@@ -16,7 +16,8 @@ pub const SAVE_FLOAT_QUANT_SCALE: f32 = 10_000.0;
 
 /// Quantize a unit-interval float to a stable u32 key (gea4v2 13.8.2).
 #[must_use]
-pub fn quantize_unit_interval_f32(v: f32) -> u32 {
+#[cfg(test)]
+fn quantize_unit_interval_f32(v: f32) -> u32 {
     (v.clamp(0.0, 1.0) * SAVE_FLOAT_QUANT_SCALE).round() as u32
 }
 

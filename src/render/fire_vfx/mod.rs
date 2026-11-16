@@ -20,7 +20,7 @@
 //! NEW: **RND-15** · gea4v2 **11.6.6** *Decals* · LEGACY `geometry_visual_effects`
 //! (gea_v2_e4 p141). Long burn scars are a **decal-like** terrain overlay (projected
 //! tint / z-biased layer), fed by surface-fire residual /
-//! [`crate::systems::fire::surface_fire_scorch_decal01`] and overlay heat below the
+//! [`overlay_heat_scorch_decal01`] (CPU map tint) and overlay heat below the
 //! particle seed floor. Scorchmarks are **not** RND-14 billboard cards and must not
 //! rewrite RND-04 `TRANSPARENT_ORDER_*`. See [`overlay_heat_scorch_decal01`].
 //!

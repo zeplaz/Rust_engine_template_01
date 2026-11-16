@@ -21,7 +21,7 @@ MOVE-09	PARTIAL	refine_missile_aim 6-iter + wind tests in ballistics.rs · REVIE
 PHYS-06	ADOPTED	sleeping_neighbor_west_edge_ignites_within_two_ticks	2026-11-14
 NAV-09	ADOPTED	best_source_open_goal + nav09 fixture test (L1)	2026-11-14
 AUD-02	ADOPTED	combat oneshot cap + ambience duck in mix_frame.rs	2026-11-14
-TAC-03	PARTIAL	DH-01…03b: dense WGSL-parity play + fire/weather/nav/attention RO; sparse gated off; Accept tac03_dense_* / dh03a / dh03b · REVIEW 2026-11-16: GPU dispatch/readback missing (WGSL never loaded); parity test compares CPU with a clone of itself; nav heat cost unread → CQ-50	2026-11-16
+TAC-03	ADOPTED	DenseHeatGpuPlugin: stage inject→WGSL H/V→ReadbackComplete sole DenseHeatPlayField writer (compute/dense_heat_gpu_dispatch.rs); nav sync in observer; CPU fallback RUST_ENGINE_DENSE_HEAT_CPU; CQ-38 emit no main-world blend; Accept tac03_dense_*	2026-11-16
 DEC-08	ADOPTED	duration ScoreTerm in decide.rs (A1)	2026-11-14
 DEC-15	ADOPTED	FactionBehaviourChangeLog + BehaviourChangesSnapshot (A2)	2026-11-14
 NAV-10	ADOPTED	LogisticsRouteDirtyTiles selective invalidation (L3)	2026-11-14
@@ -48,7 +48,7 @@ MOVE-05	PARTIAL	UM-05: FormationMember + steer_members_to_slots_system (anchor s
 MOVE-06	ADOPTED	UM-06: assign_slots_by_cost + assign_member_slots_system hysteresis; Accept --lib move06	2026-11-15
 MOVE-07	ADOPTED	UM-07: OverwatchRole + bounding_overwatch_tick_system; Accept --lib move07	2026-11-15
 PCG-03	ADOPTED	thermal→hydraulic before D8 (user world-look sign-off 2026-11-15); Accept --lib pcg03	2026-11-15
-TAC-05	PARTIAL	TerrainAnalysisBook + fort/decide RO consumers; Accept --lib tac05 · REVIEW 2026-11-16: decide consumer real; fort path plan_fortification_rows passes None; chokepoint_at unused → CQ-58	2026-11-16
+TAC-05	ADOPTED	orders.rs execute_deployment_orders→plan_fortification_rows_with_analysis; prefer_chokepoint_origin; perception mean_front_chokepoint→decide Advance; Accept --lib tac05	2026-11-16
 SENSE-04	ADOPTED	S4-P0–P4 shipped (cell field + strategic + sample audit)	2026-11-15
 NAV-13	PARTIAL	N13-P0–P4 shipped (forecast book + dijkstra + invalidate + source_pick); P5 DEFER · REVIEW 2026-11-16: forecast-aware dijkstra fed None,0; revision bumps every step so route cache clears every step; second writer on consumed_revision → CQ-02/CQ-35/CQ-53	2026-11-16
 LEARN-02	DEFER	no learning stack; decide sim-truth vs derived before adopt	2026-11-14
@@ -130,5 +130,5 @@ SENSE-03	ADOPTED	SensoryModality/SenseMask + perceive_faction_masked; Accept --l
 SENSE-05	ADOPTED	PerceptionFidelity PerfectKnowledge cheat path; Accept --lib sense05 → 1	2026-11-15
 LEARN-03	ADOPTED	ADOPTED-as-gate: over-learning warnings acknowledged (aig3 7.1.4–7.1.5); gates LEARN-02	2026-11-15
 DES-03	UNWIRED	ENGINE_STARTUP_PHASES + phase index; Accept --lib des03 → 1 · REVIEW 2026-11-16: ENGINE_STARTUP_PHASES string list enforces nothing; decision: delete → CQ-57n	2026-11-16
-MOVE-10	UNWIRED	M10 wildlife_flock seed herd + soft path costs (ecology-only; ⛔ Formation.tile); Accept --lib move10 · REVIEW 2026-11-16: herd never seeded in play (from_seed test-only); nav/agent syncs unscheduled; soft cost unread → CQ-51/CQ-52	2026-11-16
+MOVE-10	ADOPTED	wildlife_flock seed_wildlife_herd_from_world_seed + sync_nav/agent scheduled; route_edge_cost reads wildlife_soft_samples; Accept --lib move10	2026-11-16
 DES-06	UNWIRED	ecosystem_logistic_step carrying-capacity feedback; Accept --lib des06 → 1 · REVIEW 2026-11-16: ecosystem_logistic_step test-only; operator choice → CQ-57k	2026-11-16

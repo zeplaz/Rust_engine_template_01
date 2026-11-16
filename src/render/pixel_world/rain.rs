@@ -32,6 +32,31 @@ pub(crate) struct PrecipLayerState {
     material: Option<Handle<StandardMaterial>>,
     mesh: Option<Handle<Mesh>>,
     entity: Option<Entity>,
+    mesh_upload_key: u64,
+}
+
+#[inline]
+fn hash_layer_key(mut h: u64, v: u64) -> u64 {
+    h ^= v.wrapping_mul(0x9e37_79b9_7f4a_7c15);
+    h.rotate_left(17)
+}
+
+fn precip_mesh_upload_key(
+    frame: &WeatherPrecipFrame,
+    cam: &PixelWorldCameraFrame,
+    field: &PixelWorldTerrainField,
+    t_quant: u32,
+) -> u64 {
+    let mut h = frame.frame_revision;
+    h = hash_layer_key(h, frame.streaks.len() as u64);
+    h = hash_layer_key(h, u64::from(t_quant));
+    h = hash_layer_key(h, u64::from(field.width));
+    h = hash_layer_key(h, u64::from(field.height));
+    h = hash_layer_key(h, cam.eye.y.to_bits() as u64);
+    h = hash_layer_key(h, cam.focus_height.to_bits() as u64);
+    h = hash_layer_key(h, frame.wind_mps.x.to_bits() as u64);
+    h = hash_layer_key(h, frame.wind_mps.y.to_bits() as u64);
+    h
 }
 
 /// Stable per-streak phase in `[0, 1)` (SplitMix64 finalizer over the index).
@@ -104,10 +129,25 @@ pub(crate) fn sync_pixel_world_precip(
         if let Some(e) = state.entity {
             commands.entity(e).try_insert(Visibility::Hidden);
         }
+        state.mesh_upload_key = 0;
         return;
     };
-    let buf = build_precip_mesh(frame, &cam, &field, time.elapsed_secs());
+    let t_quant = (time.elapsed_secs() * 30.0) as u32;
+    let upload_key = precip_mesh_upload_key(frame, &cam, &field, t_quant);
+    if upload_key == state.mesh_upload_key && state.mesh.is_some() {
+        if let Some(e) = state.entity {
+            commands.entity(e).try_insert(Visibility::Inherited);
+        }
+        return;
+    }
+    let t_anim = t_quant as f32 / 30.0;
+    let buf = build_precip_mesh(frame, &cam, &field, t_anim);
     let drawable = !buf.is_empty() && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, buf.into_mesh());
+    if drawable {
+        state.mesh_upload_key = upload_key;
+    } else {
+        state.mesh_upload_key = 0;
+    }
     let vis = if drawable { Visibility::Inherited } else { Visibility::Hidden };
     let Some(mesh) = state.mesh.clone() else {
         return;

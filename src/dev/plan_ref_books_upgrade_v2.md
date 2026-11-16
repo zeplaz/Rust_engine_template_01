@@ -1,5 +1,7 @@
 # PLAN-REF-BOOKS-UPGRADE-v2 — book index → engine, subsystems, tooling, studio
 
+> **Ledger superseded by [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv)** — the single adoption ledger (CQ-80). Residual DEFER/PARTIAL unlock roadmap: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md). §9 below is the historical v2 seed; do not update statuses there.
+
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v2** |
@@ -17,13 +19,13 @@ One slice per session. Pick the first `OPEN` slice in §3 order whose **Needs** 
 ```text
 1. ORIENT   python src/dev/ref_books_index/lookup.py --code <first file in the card>
 2. RECON    run the card's Recon command. If the "Done-if" condition is true:
-            set the ledger row (§9) to ADOPTED with the evidence line, commit, STOP.
+            set the `adoption.tsv` row to ADOPTED (production caller) with evidence, commit, STOP.
 3. READ     python src/dev/ref_books_index/lookup.py --sec <ref>     (page range only)
             python src/dev/ref_books_index/lookup.py --read <ref>    (only if the card's Do is not enough)
             Budget: one section, at most ~12 PDF pages. Never read a chapter.
 4. DO       edit only the card's Files. Follow Do. Obey Don't.
 5. ACCEPT   run every Accept command. All must pass.
-6. LEDGER   update §9 status + evidence (file:line or test name). Commit: "[area] <slice id>: <what>".
+6. LEDGER   update `ref_books_index/adoption.tsv` status + evidence (production `file:line` for ADOPTED). Commit: "[area] <slice id>: <what>".
 ```
 
 **Stop and report instead of improvising when:** Recon output does not match what the card expects ·
@@ -38,7 +40,7 @@ Paste-ready prompt for another agent:
 ```text
 Execute slice <ID> of src/dev/plan_ref_books_upgrade_v2.md. Follow §0 exactly and §1 rejects.
 Touch only the card's Files. Run Recon first and stop if Done-if holds. Run all Accept commands
-and paste their final lines. Update the §9 ledger row. Do not start another slice.
+and paste their final lines. Update the `adoption.tsv` row. Do not start another slice.
 ```
 
 ## 1. Global rejects (apply to every slice)
@@ -356,9 +358,11 @@ Start it with `lookup.py --row <ID>` and one `--read`.
 | LOD seam fix | `RND-06` · gea4v2:11.6.8.4 | Only if seams are visible | A capture shows cracks |
 | MCTS for faction decisions | `TAC-14` · aig3:9.5 | **DEFER**: plain weights are explainable and cheap | Plain scoring fails a T6-measured goal twice |
 
-## 9. Ledger (seed for `adoption.tsv`, T2)
+## 9. Ledger (historical seed — read `adoption.tsv`)
 
-Update the row when a slice closes. Evidence = `file:line`, test name, or commit.
+**Live statuses:** [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv) (`id<TAB>status<TAB>evidence<TAB>date`). Query with `python src/dev/ref_books_index/lookup.py --open`. A row is `ADOPTED` only with a production caller `file:line`; otherwise `UNWIRED`, `PARTIAL`, `DEFER`, or `BLOCKED`.
+
+The table below is the v2 Wave 0–S seed (2026-11-14/15). Do not edit it for new work.
 
 | Row | Slice | Status | Evidence / note |
 |:---|:---|:---|:---|

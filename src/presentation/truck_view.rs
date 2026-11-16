@@ -7,7 +7,9 @@ use bevy::prelude::*;
 use crate::economy::logistics::orders::{
     LogisticsOrderSimRes, LogisticsSiteRegistry, SiteId, VehicleId, VehiclePhase,
 };
+use crate::entities::components::Waypoints;
 use crate::presentation::visual_asm::{VisualActionPhase, VisualActionState};
+use crate::systems::navigation::{RoadVehicleKinematics, SpeedModifier, TruckMotionLeg};
 
 /// Marks a presentation proxy for one order-sim vehicle.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -97,10 +99,16 @@ pub fn sync_truck_presentation(
             continue;
         };
         let phase = phase_to_visual(&v.phase);
+        let nav_driven = matches!(
+            v.phase,
+            VehiclePhase::ToPickup(_) | VehiclePhase::Hauling(_)
+        );
         if let Some(&e) = index.by_vehicle.get(id) {
             if let Ok((_, mut tf, mut vis)) = q.get_mut(e) {
-                tf.translation.x = xz.x;
-                tf.translation.y = xz.y;
+                if !nav_driven {
+                    tf.translation.x = xz.x;
+                    tf.translation.y = xz.y;
+                }
                 vis.facing = facing_from_motion(v, &registry);
                 vis.set_phase(phase);
             }
@@ -124,6 +132,13 @@ pub fn sync_truck_presentation(
                         phase,
                         phase_age_secs: 0.0,
                         facing,
+                    },
+                    Waypoints::default(),
+                    SpeedModifier::default(),
+                    RoadVehicleKinematics::default(),
+                    TruckMotionLeg {
+                        vehicle_id: *id,
+                        leg_key: 0,
                     },
                     Name::new(format!("truck:{}", id.0)),
                 ))

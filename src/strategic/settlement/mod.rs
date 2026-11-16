@@ -85,7 +85,8 @@ pub use execute::{
     commit_growth_pending_to_funnel_system, commit_top_district_growth,
     enqueue_approved_growth_proposal, growth_pending_commit_event, growth_site_at_town_center, growth_sites_for_towns,
     enqueue_generated_town_growth_once_system, enqueue_second_town_growth,
-    enqueue_second_town_growth_system, enqueue_town_growth_once,
+    enqueue_second_town_growth_system, enqueue_settlement_roads_once_system,
+    enqueue_town_growth_once, TownRoadSkeletonGate,
     pending_blueprint_from_growth_proposal, site_archetype_for_growth_proposal,
     TownGrowthEnqueueGate, TownSecondGrowthGate,
 };
@@ -176,6 +177,7 @@ impl Plugin for SettlementPlugin {
             .add_message::<crate::strategic::CommitConstructionSiteEvent>()
             .init_resource::<crate::strategic::settlement::TownGrowthEnqueueGate>()
             .init_resource::<crate::strategic::settlement::TownSecondGrowthGate>()
+            .init_resource::<TownRoadSkeletonGate>()
             .configure_sets(
                 Update,
                 SettlementGrowthSet::Decide.before(SettlementGrowthSet::Present),
@@ -204,6 +206,7 @@ impl Plugin for SettlementPlugin {
                     execute_staged_block_growth_system,
                     enqueue_generated_town_growth_once_system,
                     enqueue_second_town_growth_system,
+                    enqueue_settlement_roads_once_system,
                     commit_growth_pending_to_funnel_system,
                 )
                     .chain()

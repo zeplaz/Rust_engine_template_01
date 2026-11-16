@@ -18,7 +18,7 @@ pub struct OccupiedTiles {
     pub tiles: Vec<EntityId>,
 }
 
-#[derive(Component)]
+#[derive(Component, Default)]
 pub struct Waypoints {
     pub points: Vec<Vec2>,
     pub current_waypoint_index: usize,

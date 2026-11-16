@@ -9,18 +9,21 @@ description: >-
 
 # Ref-books — slice protocol + lookup
 
-**Plan:** `src/dev/plan_ref_books_upgrade_v2.md`  
+**Ledger (authoritative):** `src/dev/ref_books_index/adoption.tsv`  
+**Stance / honest exits:** `src/dev/plan_ref_books_upgrade_v3.md` §0.1 — stop and report `BLOCKED:` / `UNWIRED:` when a slice cannot be wired honestly; `ADOPTED` only with a production caller `file:line`.  
+**Slice cards:** `src/dev/plan_ref_books_upgrade_v2.md` (§3 cards; §9 is historical seed only)  
+**DEFER/PARTIAL unlock:** `src/dev/plan_ref_books_defer_unlock_v1.md`  
 **Index:** `src/dev/ref_books_index/` (do not copy matrix rows into this skill)
 
 ## §0 protocol (one slice per session)
 
 ```text
 1. ORIENT   python src/dev/ref_books_index/lookup.py --code <first file>
-2. RECON    card Recon; if Done-if → ledger ADOPTED, commit, STOP
+2. RECON    card Recon; if Done-if → ledger ADOPTED (production caller), commit, STOP
 3. READ     lookup.py --sec / --read (≤ ~12 PDF pages)
 4. DO       edit only the card's Files
 5. ACCEPT   every Accept command must pass
-6. LEDGER   update plan §9 / adoption.tsv; commit "[area] <slice id>: <what>"
+6. LEDGER   update adoption.tsv; commit "[area] <slice id>: <what>"
 ```
 
 ## Lookup commands

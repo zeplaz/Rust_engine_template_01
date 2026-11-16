@@ -152,7 +152,13 @@ pub fn run_dense_heat_step(grid: &mut DenseHeatGrid, fire_rows: &[&ChunkFireHeat
     grid.inject_sources(fire_rows);
 }
 
+/// Hard cap on dense ROI edge length (chunks). Wider fire footprints tile/recenter instead of unbounded grow.
+pub const DENSE_ROI_MAX_EDGE: u32 = 64;
+
 /// Build a padded ROI covering all fire chunks + `pad` cells of border.
+///
+/// CQ-63: edge length is capped at [`DENSE_ROI_MAX_EDGE`]; when the fire AABB exceeds the cap,
+/// the ROI recenters on the fire centroid so heat stays bounded.
 #[must_use]
 pub fn dense_roi_from_fire(fire_rows: &[&ChunkFireHeat], pad: i32) -> Option<DenseHeatGrid> {
     if fire_rows.is_empty() {
@@ -162,16 +168,29 @@ pub fn dense_roi_from_fire(fire_rows: &[&ChunkFireHeat], pad: i32) -> Option<Den
     let mut min_y = i32::MAX;
     let mut max_x = i32::MIN;
     let mut max_y = i32::MIN;
+    let mut sum_x = 0i64;
+    let mut sum_y = 0i64;
     for row in fire_rows {
         min_x = min_x.min(row.chunk.x);
         min_y = min_y.min(row.chunk.y);
         max_x = max_x.max(row.chunk.x);
         max_y = max_y.max(row.chunk.y);
+        sum_x += i64::from(row.chunk.x);
+        sum_y += i64::from(row.chunk.y);
     }
     let pad = pad.max(0);
-    let origin = IVec2::new(min_x - pad, min_y - pad);
-    let width = (max_x - min_x + 1 + 2 * pad) as u32;
-    let height = (max_y - min_y + 1 + 2 * pad) as u32;
+    let mut origin = IVec2::new(min_x - pad, min_y - pad);
+    let mut width = (max_x - min_x + 1 + 2 * pad) as u32;
+    let mut height = (max_y - min_y + 1 + 2 * pad) as u32;
+    if width > DENSE_ROI_MAX_EDGE || height > DENSE_ROI_MAX_EDGE {
+        let n = fire_rows.len() as i64;
+        let cx = (sum_x / n) as i32;
+        let cy = (sum_y / n) as i32;
+        let half = (DENSE_ROI_MAX_EDGE / 2) as i32;
+        origin = IVec2::new(cx - half, cy - half);
+        width = DENSE_ROI_MAX_EDGE;
+        height = DENSE_ROI_MAX_EDGE;
+    }
     Some(DenseHeatGrid::new(origin, width, height))
 }
 

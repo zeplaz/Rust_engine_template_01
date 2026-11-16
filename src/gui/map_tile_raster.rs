@@ -10,7 +10,7 @@ use crate::gui::editor::world_preview::{
     chunk_cell_layer_at_world_tile, landform_relief_rgba, preview_biome_rgba_for_tile,
     slope_grade_to_color, terrain_family_preview_rgba,
 };
-use crate::render::CHUNK_FIRE_OVERLAY_DISPLAY_MIN;
+use crate::render::{overlay_heat_scorch_decal01, CHUNK_FIRE_OVERLAY_DISPLAY_MIN};
 use crate::gui::editor::world_preview::{
     height_to_color, moisture_to_color, temperature_to_color, PreviewLayers,
 };
@@ -285,7 +285,7 @@ pub fn apply_shared_fire_heat_to_rgba_subregion(
                 continue;
             };
             let heat = chunk_fire_heat.get(&key.chunk).copied().unwrap_or(0.0);
-            if heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
+            if heat <= 0.0 {
                 continue;
             }
             let i = 4 * (y * tex_w + x);
@@ -293,7 +293,14 @@ pub fn apply_shared_fire_heat_to_rgba_subregion(
                 continue;
             }
             let base = [data[i], data[i + 1], data[i + 2], data[i + 3]];
-            let tint = (heat * boost * 0.85).min(0.92);
+            let tint = if heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
+                overlay_heat_scorch_decal01(heat) * boost * 0.55
+            } else {
+                (heat * boost * 0.85).min(0.92)
+            };
+            if tint <= 0.0 {
+                continue;
+            }
             let out = blend_fire_overlay(base, tint, 0.0);
             data[i..i + 4].copy_from_slice(&out);
         }

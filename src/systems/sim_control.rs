@@ -12,8 +12,7 @@
 //! sim time past the catch-up budget.
 //!
 //! Ref-books **LOOP-04** · LEGACY `time_measurement` (GEA 4e I §8.5.4.4 / §3.3.1.4, p522 / p138):
-//! [`SimTick`] and [`SimTimeMicros`] (**u64**) are sim-time truth. [`sim_time_secs_display`] is
-//! HUD-only — f32 seconds lose sub-µs (and eventually sub-second) precision after long sessions.
+//! [`SimTick`] and [`SimTimeMicros`] (**u64**) are sim-time truth — never cast to f32 for gameplay.
 //!
 //! **Studio / playcheck stills:** set `RUST_ENGINE_SIM_PAUSE=1` before launch so the sim starts
 //! paused with gameplay dt frozen; the window still paints frames for capture (`tools/sim_review/`).
@@ -92,20 +91,9 @@ pub struct SimTick(pub u64);
 
 /// Authoritative sim time in microseconds (monotonic while the sim advances).
 ///
-/// **LOOP-04:** integer micros stay exact across multi-hour sessions; prefer this over
-/// [`sim_time_secs_display`] for any gameplay / determinism path.
+/// **LOOP-04:** integer micros stay exact across multi-hour sessions; never cast to f32 for gameplay paths.
 #[derive(Resource, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SimTimeMicros(pub u64);
-
-/// HUD / debug only: convert [`SimTimeMicros`] to f32 seconds (GEA 8.5.4.4).
-///
-/// After ~1 hour of continuous play, consecutive µs values can map to the **same** f32 second.
-/// Never use this for tick gates, saves, or replication — keep [`SimTick`] / [`SimTimeMicros`].
-#[inline]
-#[must_use]
-pub fn sim_time_secs_display(sim_time_micros: u64) -> f32 {
-    (sim_time_micros as f64 / 1_000_000.0) as f32
-}
 
 /// Wall-clock frame → sim micros for one Update, after LOOP-03 hitch clamp.
 #[inline]
@@ -277,12 +265,6 @@ impl Plugin for SimControlPlugin {
     }
 }
 
-#[must_use]
-pub fn sim_pause_env_latched() -> bool {
-    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
-    *ON.get_or_init(|| sim_pause_env_on())
-}
-
 fn sim_pause_env_on() -> bool {
     std::env::var(SIM_PAUSE_ENV)
         .ok()
@@ -404,10 +386,8 @@ mod tests {
         // (LOOP-04 / GEA 8.5.4.4 floating-point clock limits).
         let hour_micros = 3_600_000_000u64;
         assert_ne!(hour_micros, hour_micros + 1);
-        assert_eq!(
-            sim_time_secs_display(hour_micros),
-            sim_time_secs_display(hour_micros + 1)
-        );
+        let as_f32 = |µ: u64| (µ as f64 / 1_000_000.0) as f32;
+        assert_eq!(as_f32(hour_micros), as_f32(hour_micros + 1));
         let tick = SimTick(1_000_000);
         assert_eq!(tick.0.wrapping_add(1), 1_000_001);
         assert_eq!(SimTimeMicros(hour_micros).0 + 1, hour_micros + 1);

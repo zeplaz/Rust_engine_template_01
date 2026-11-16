@@ -53,7 +53,10 @@ use crate::systems::sim_control::{
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-pub use decide::{choose_goal, FactionDoctrine, GoalChoice, GoalScore, ScoreTerm, StrategicGoal};
+pub use decide::{
+    choose_goal, choose_goal_with_frag, FactionDoctrine, GoalChoice, GoalScore, ScoreTerm,
+    StrategicGoal,
+};
 pub use log::{
     DecisionTrace, FactionAiDecisionLog, FactionAiDecisionRecord, FactionBehaviourChangeLog,
     TacticalFragMap,
@@ -537,6 +540,7 @@ pub fn faction_ai_tick_system(
     mut controllers: Query<(Entity, &mut FactionAiController)>,
     mut log: ResMut<FactionAiDecisionLog>,
     mut behaviour_log: ResMut<FactionBehaviourChangeLog>,
+    mut frag: ResMut<TacticalFragMap>,
     mut sinks: AiOrderSinks,
     world: AiWorld,
     terrain_analysis: Option<Res<crate::terrain::TerrainAnalysisBook>>,
@@ -598,7 +602,8 @@ pub fn faction_ai_tick_system(
             }
         };
         let previous = c.goal;
-        let choice = choose_goal(&perception, &c.doctrine, previous);
+        frag.decay(0.995);
+        let choice = choose_goal_with_frag(&perception, &c.doctrine, previous, Some(frag.as_ref()));
         let goal = choice.chosen;
         let mut out = Decision::default();
 

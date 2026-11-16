@@ -6,12 +6,40 @@
 //! [`smooth_vehicle_tile_path`] then [`filter_vehicle_steering_output`] so trucks/buses
 //! respect turn rate and accel limits (no jitter spikes).
 
-use bevy::prelude::Vec2;
+use bevy::prelude::*;
 
+use crate::economy::logistics::orders::{
+    LogisticsOrderSimRes, LogisticsSiteRegistry, SiteId, SiteRole, VehicleId, VehiclePhase,
+};
 use crate::entities::vehicles::runtime::{Bus, Truck};
+use crate::entities::components::Waypoints;
+use crate::systems::navigation::motion::SpeedModifier;
+use crate::systems::sim_control::{SimControlState, SimStepClock};
 use crate::traits::LoadBasedSpeedModifier;
 
-use super::logistics_floodfill::{smooth_logistics_tile_path, LogisticsTile};
+use super::logistics_floodfill::{logistics_grid_path, smooth_logistics_tile_path, LogisticsNodeArray, LogisticsTile};
+use super::path_concerns::{front_haul_path_concern, LogisticsPathConcern, LogisticsPathConcernRegistry};
+use super::cost_forecast::LogisticsCostForecastBook;
+
+/// Marks an entity whose waypoint motion is filtered by [`filter_vehicle_steering_output`].
+#[derive(Component, Clone, Copy, Debug, Default)]
+pub struct RoadVehicleKinematics {
+    pub velocity: Vec2,
+    pub heading: Vec2,
+}
+
+/// Tracks which order-sim leg produced the current waypoint polyline (presentation motion only).
+#[derive(Component, Clone, Debug, PartialEq, Eq)]
+pub struct TruckMotionLeg {
+    pub vehicle_id: VehicleId,
+    pub leg_key: u64,
+}
+
+/// Reused NAV-04 node array for truck tile path queries (sole writer: [`sync_truck_motion_waypoints_system`]).
+#[derive(Resource, Default)]
+pub struct LogisticsGridPathScratch {
+    pub nodes: LogisticsNodeArray,
+}
 
 impl LoadBasedSpeedModifier for Truck {
     fn speed_modifier(&self) -> f32 {
@@ -113,6 +141,162 @@ pub fn filter_vehicle_steering_output(
     // Project filtered speed along new heading (no sideways jitter).
     let speed = filtered.length().min(limits.max_speed);
     (new_heading * speed, new_heading)
+}
+
+fn site_xz(registry: &LogisticsSiteRegistry, site: SiteId) -> Option<Vec2> {
+    registry
+        .travel
+        .positions
+        .get(&site)
+        .map(|p| Vec2::new(p[0], p[1]))
+        .or_else(|| registry.meta.get(&site).map(|m| Vec2::new(m.world_xz[0], m.world_xz[1])))
+}
+
+fn xz_to_grid(xz: Vec2) -> (i32, i32) {
+    (xz.x.round() as i32, xz.y.round() as i32)
+}
+
+fn leg_key(v: &crate::economy::logistics::orders::Vehicle) -> u64 {
+    let Some(a) = v.assignment.as_ref() else {
+        return 0;
+    };
+    let phase = match v.phase {
+        VehiclePhase::Idle => 0u64,
+        VehiclePhase::ToPickup(_) => 1,
+        VehiclePhase::Loading(_) => 2,
+        VehiclePhase::Hauling(_) => 3,
+        VehiclePhase::Unloading(_) => 4,
+    };
+    (u64::from(a.order.0) << 16) | (u64::from(a.sink.0) << 8) | phase
+}
+
+fn concern_for_sink(
+    concerns: &LogisticsPathConcernRegistry,
+    registry: &LogisticsSiteRegistry,
+    sink: SiteId,
+) -> LogisticsPathConcern {
+    match registry.meta.get(&sink).map(|m| m.role) {
+        Some(SiteRole::Front) => front_haul_path_concern(concerns),
+        _ => concerns.default,
+    }
+}
+
+/// Build a smoothed world-space waypoint polyline for an active truck leg (presentation motion).
+#[must_use]
+pub fn plan_truck_tile_waypoints(
+    scratch: &mut LogisticsNodeArray,
+    from_xz: Vec2,
+    to_xz: Vec2,
+    concern: LogisticsPathConcern,
+    forecast: Option<&LogisticsCostForecastBook>,
+    depart_tick: u64,
+) -> Vec<Vec2> {
+    let (sx, sy) = xz_to_grid(from_xz);
+    let (gx, gy) = xz_to_grid(to_xz);
+    let min_x = sx.min(gx);
+    let max_x = sx.max(gx);
+    let min_y = sy.min(gy);
+    let max_y = sy.max(gy);
+    let width = max_x - min_x + 1;
+    let height = max_y - min_y + 1;
+    if width <= 0 || height <= 0 {
+        return vec![from_xz, to_xz];
+    }
+    let start = (sx - min_x, sy - min_y);
+    let goal = (gx - min_x, gy - min_y);
+    let mut tile = |_lx: i32, _ly: i32| LogisticsTile::default();
+    let raw_path = logistics_grid_path(
+        width,
+        height,
+        start,
+        goal,
+        &mut tile,
+        concern,
+        forecast,
+        depart_tick,
+        scratch,
+    )
+    .map(|r| r.path)
+    .unwrap_or_else(|| vec![start, goal]);
+    let smooth = smooth_vehicle_tile_path(&raw_path, width, height, &mut tile);
+    smooth
+        .into_iter()
+        .map(|(lx, ly)| Vec2::new((lx + min_x) as f32, (ly + min_y) as f32))
+        .collect()
+}
+
+/// Refresh waypoint polylines for order-sim truck proxies (read sim + site registry only).
+pub fn sync_truck_motion_waypoints_system(
+    sim_ctrl: Res<SimControlState>,
+    sim: Option<Res<LogisticsOrderSimRes>>,
+    registry: Option<Res<LogisticsSiteRegistry>>,
+    concerns: Option<Res<LogisticsPathConcernRegistry>>,
+    forecast: Option<Res<LogisticsCostForecastBook>>,
+    clock: Option<Res<SimStepClock>>,
+    mut scratch: ResMut<LogisticsGridPathScratch>,
+    mut q: Query<(
+        &mut TruckMotionLeg,
+        &mut Waypoints,
+        Option<&mut RoadVehicleKinematics>,
+    )>,
+) {
+    if !sim_ctrl.should_tick() {
+        return;
+    }
+    let (Some(sim), Some(registry), Some(concerns)) = (sim, registry, concerns) else {
+        return;
+    };
+    let depart_tick = clock.as_ref().map(|c| c.steps).unwrap_or(0);
+    for (mut leg, mut wp, kin) in q.iter_mut() {
+        let Some(v) = sim.sim.vehicles.get(&leg.vehicle_id) else {
+            continue;
+        };
+        let key = leg_key(v);
+        if leg.leg_key == key && !wp.points.is_empty() {
+            continue;
+        }
+        leg.leg_key = key;
+        let (from, to) = match &v.phase {
+            VehiclePhase::ToPickup(_) => {
+                let Some(a) = v.assignment.as_ref() else {
+                    continue;
+                };
+                (v.at, a.source)
+            }
+            VehiclePhase::Hauling(_) => {
+                let Some(a) = v.assignment.as_ref() else {
+                    continue;
+                };
+                (a.source, a.sink)
+            }
+            _ => continue,
+        };
+        let (Some(from_xz), Some(to_xz)) = (site_xz(&registry, from), site_xz(&registry, to)) else {
+            continue;
+        };
+        let concern = concern_for_sink(&concerns, &registry, to);
+        let points = plan_truck_tile_waypoints(
+            &mut scratch.nodes,
+            from_xz,
+            to_xz,
+            concern,
+            forecast.as_deref(),
+            depart_tick,
+        );
+        if points.len() < 2 {
+            wp.points = vec![from_xz, to_xz];
+        } else {
+            wp.points = points;
+        }
+        wp.current_waypoint_index = 0;
+        if let Some(mut k) = kin {
+            k.velocity = Vec2::ZERO;
+            if wp.points.len() >= 2 {
+                let d = wp.points[1] - wp.points[0];
+                k.heading = d.normalize_or_zero();
+            }
+        }
+    }
 }
 
 #[cfg(test)]

@@ -7,13 +7,14 @@
 //! parse failure, no cells, unknown source) is a rejected edge and yields **no** step.
 //! The registry only loads and resolves data into an intent step — it never touches sim state.
 //!
-//! **DEC-11** (aig3 5.8 *Rule-Based Systems* / Rete): [`TriggerFactMemory`] is shared alpha
-//! memory; [`arbitrate_trigger_rules`] picks one firing rule by priority when many match.
+//! **DEC-11** (aig3 5.8 *Rule-Based Systems*): [`TriggerFactMemory`] is shared fact memory;
+//! [`arbitrate_trigger_rules`] picks one firing rule by priority when many match (not a full Rete).
 
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 
 use super::scenario_steps::ScenarioStep;
+use std::collections::VecDeque;
 use super::trigger_spec::TriggerSpecV1;
 
 
@@ -27,7 +28,7 @@ pub struct TriggerRule {
     pub requires: &'static [(&'static str, f32)],
 }
 
-/// DEC-11: shared fact memory (Rete alpha) — many rules read one board of facts.
+/// DEC-11: shared fact memory — many rules read one board of facts.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct TriggerFactMemory {
     pub tick: u64,
@@ -152,6 +153,65 @@ pub fn load_trigger_spec(effect_id: &str) -> Result<TriggerSpecV1, TriggerLoadEr
 pub fn trigger_effect_to_emit_step(effect_id: &str) -> Result<ScenarioStep, TriggerLoadError> {
     let spec = load_trigger_spec(effect_id)?;
     spec.to_emit_step().ok_or(TriggerLoadError::UnsupportedSource)
+}
+
+/// Production trigger rules for DEC-11 arbitration (ids name registered assets).
+pub const SCENARIO_TRIGGER_RULES: &[TriggerRule] = &[
+    TriggerRule {
+        id: "demo_ignite_v0",
+        priority: 1,
+        requires: &[("drought", 0.35)],
+    },
+    TriggerRule {
+        id: "demo_ignite_v0",
+        priority: 5,
+        requires: &[("drought", 0.75), ("fuel", 0.2)],
+    },
+];
+
+/// Build fact memory for scenario trigger arbitration from live weather (read-only).
+#[must_use]
+pub fn build_trigger_fact_memory(tick: u64, drought: f32, fuel: f32, rain: f32) -> TriggerFactMemory {
+    let mut mem = TriggerFactMemory::default();
+    mem.tick = tick;
+    mem.set("drought", drought.clamp(0.0, 1.0));
+    mem.set("fuel", fuel.clamp(0.0, 1.0));
+    mem.set("rain", rain.clamp(0.0, 1.0));
+    mem
+}
+
+/// When several `TriggerEffect` steps are queued, run the highest-priority matching rule first.
+pub fn reorder_pending_trigger_effects(
+    pending: &mut VecDeque<ScenarioStep>,
+    memory: &TriggerFactMemory,
+    rules: &[TriggerRule],
+) {
+    let trigger_count = pending
+        .iter()
+        .take_while(|s| matches!(s, ScenarioStep::TriggerEffect { .. }))
+        .count();
+    if trigger_count < 2 {
+        return;
+    }
+    let winner = arbitrate_trigger_rules(memory, rules).map(|r| r.id);
+    let Some(win_id) = winner else {
+        return;
+    };
+    let mut prefix: Vec<ScenarioStep> = pending.drain(..trigger_count).collect();
+    prefix.sort_by(|a, b| {
+        let pri = |s: &ScenarioStep| match s {
+            ScenarioStep::TriggerEffect { effect_id } if effect_id == win_id => 10_000,
+            ScenarioStep::TriggerEffect { effect_id } => rules
+                .iter()
+                .find(|r| r.id == effect_id)
+                .map_or(0, |r| r.priority),
+            _ => 0,
+        };
+        pri(b).cmp(&pri(a))
+    });
+    for step in prefix.into_iter().rev() {
+        pending.push_front(step);
+    }
 }
 
 #[cfg(test)]

@@ -139,8 +139,14 @@ pub fn cap_combat_oneshots_in_place(
     listener_xz: Option<Vec2>,
     cap: usize,
 ) {
+    if pending.is_empty() {
+        return;
+    }
     if cap == 0 {
         pending.retain(|r| r.class != AudioEventClass::CombatOneShot);
+        return;
+    }
+    if !pending.iter().any(|r| r.class == AudioEventClass::CombatOneShot) {
         return;
     }
     let mut combat: Vec<(usize, AudioMixRequest)> = Vec::new();

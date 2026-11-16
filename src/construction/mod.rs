@@ -62,7 +62,7 @@ mod history;
 mod hydro_coupling;
 mod industrial_menu;
 mod iso_draw_scale;
-mod build_readability_harness;
+pub(crate) mod build_readability_harness;
 mod mock_shapes_menu;
 mod path_feedback;
 mod pending_construction;
@@ -347,10 +347,6 @@ impl Plugin for BuildPlanningPlugin {
                     voxel_massing::load_studio_massing_override_from_env_once,
                 )
                     .chain(),
-            )
-            .add_systems(
-                Update,
-                build_readability_harness::seed_build_readability_harness_once,
             )
             .init_resource::<BuildGhostState>()
             .init_resource::<BuildPlacementPreview>()

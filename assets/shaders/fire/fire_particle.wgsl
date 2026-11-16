@@ -15,6 +15,18 @@ struct ParticleDrawUniforms {
     spark_sim_enabled: f32,
 }
 
+/// CQ-50 residual: dense heat GPU lattice meta (chunk ROI) for VFX reinforce.
+struct DenseHeatVfxMeta {
+    origin_x: i32,
+    origin_y: i32,
+    width: u32,
+    height: u32,
+    chunk_spacing: f32,
+    enabled: f32,
+    _pad0: f32,
+    _pad1: f32,
+}
+
 struct SparkSimState {
     pos: vec4<f32>,
     vel: vec4<f32>,
@@ -34,6 +46,24 @@ struct GpuParticleQuadVertex {
 @group(1) @binding(0) var<storage, read> instances: array<GpuParticleInstance>;
 @group(2) @binding(0) var<storage, read_write> expanded: array<GpuParticleQuadVertex>;
 @group(3) @binding(0) var<storage, read> spark_state: array<SparkSimState>;
+@group(4) @binding(0) var<uniform> dense_meta: DenseHeatVfxMeta;
+@group(4) @binding(1) var<storage, read> dense_field: array<f32>;
+
+fn sample_dense_heat(world_xy: vec2<f32>) -> f32 {
+    if dense_meta.enabled < 0.5 || dense_meta.width == 0u || dense_meta.height == 0u {
+        return 0.0;
+    }
+    let spacing = max(dense_meta.chunk_spacing, 1.0);
+    let cx = i32(floor(world_xy.x / spacing));
+    let cy = i32(floor(world_xy.y / spacing));
+    let lx = cx - dense_meta.origin_x;
+    let ly = cy - dense_meta.origin_y;
+    if lx < 0 || ly < 0 || u32(lx) >= dense_meta.width || u32(ly) >= dense_meta.height {
+        return 0.0;
+    }
+    let idx = (u32(ly) * dense_meta.width + u32(lx)) * 2u;
+    return dense_field[idx];
+}
 
 @compute @workgroup_size(64, 1, 1)
 fn expand_instances(@builtin(global_invocation_id) gid: vec3<u32>) {
@@ -42,7 +72,8 @@ fn expand_instances(@builtin(global_invocation_id) gid: vec3<u32>) {
         return;
     }
     let row = instances[i];
-    let heat = row.world_xyz_heat.w;
+    // Projection heat max dense GPU heat (no main-world read / no magic ×0.85).
+    let heat = max(row.world_xyz_heat.w, sample_dense_heat(row.world_xyz_heat.xy));
     let ember = row.ember_class_radius_smoke.x;
     let class_id = row.ember_class_radius_smoke.y;
     let base_half = row.ember_class_radius_smoke.z;

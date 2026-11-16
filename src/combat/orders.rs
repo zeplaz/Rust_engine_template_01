@@ -13,7 +13,7 @@ use bevy::prelude::*;
 
 use super::balance::FrontBalance;
 use super::formation::{Formation, Posture};
-use super::fortification::{plan_fortification_rows, FortifyRow};
+use super::fortification::{plan_fortification_rows_with_analysis, FortifyRow};
 use super::pressure::{PressureKind, PressurePoint, PressurePointBook};
 use super::theater::{TheaterBook, TheaterId};
 use crate::construction::{PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind};
@@ -323,6 +323,7 @@ pub fn execute_deployment_orders_system(
     theaters: Res<TheaterBook>,
     balance: Option<Res<FrontBalance>>,
     pressure: Option<Res<PressurePointBook>>,
+    analysis: Option<Res<crate::terrain::TerrainAnalysisBook>>,
     time: Option<Res<SimTimeMicros>>,
     mut outcomes: ResMut<DeploymentOutcomes>,
     mut plans: Option<ResMut<FortifyPlans>>,
@@ -343,7 +344,13 @@ pub fn execute_deployment_orders_system(
         if let (Ok(OrderEffect::PlanFortify(tid)), Some(balance), Some(plans)) = (result, balance.as_deref(), plans.as_deref_mut()) {
             if let Some(t) = theaters.get(tid) {
                 let points = pressure.as_ref().map_or(&[][..], |p| p.points.as_slice());
-                for row in plan_fortification_rows(t, order.issued_by, points, balance) {
+                for row in plan_fortification_rows_with_analysis(
+                    t,
+                    order.issued_by,
+                    points,
+                    balance,
+                    analysis.as_deref(),
+                ) {
                     if plans.rows.iter().any(|(s, th, r)| *s == order.issued_by && *th == tid && *r == row) {
                         continue;
                     }

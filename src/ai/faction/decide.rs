@@ -4,14 +4,12 @@
 //! of named [`ScoreTerm`]s so the HUD and the witness can say *why* a goal won. Deterministic: ties
 //! break in [`StrategicGoal::ALL`] order; there is no random roll.
 //!
-//! **DEC-09** (aig3 5.7.5–5.7.6 *GOAP*): [`plan_goap`] chains [`StrategicGoal`]s toward
-//! desired world atoms (depth-limited IDA*).
-//!
 //! **TAC-15** (aig3 6.3 *Static Evaluation Functions*): [`static_board_eval`] scores the board
-//! position itself (control / supply / threat), separate from per-goal utility in [`score_goals`].
+//! position itself (control / supply / threat), folded into per-goal utility in [`score_goals`].
 
 use crate::strategic::HybridAgentTraits;
 
+use super::log::TacticalFragMap;
 use super::perception::FactionPerception;
 
 /// Faction-level intent. One is active per faction; it drives the orders the faction issues.
@@ -215,135 +213,14 @@ pub fn static_board_eval(p: &FactionPerception, d: &FactionDoctrine) -> BoardEva
 }
 
 
-/// DEC-09: boolean world atoms for GOAP (faction-scale, not unit micro).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
-pub struct WorldAtoms {
-    pub front_secure: bool,
-    pub supply_ok: bool,
-    pub economy_growing: bool,
-}
-
-#[must_use]
-pub fn atoms_from_perception(p: &FactionPerception) -> WorldAtoms {
-    WorldAtoms {
-        front_secure: p.front.is_empty() || p.mean_front_threat() < 0.35,
-        supply_ok: p.front_supply_shortfall() < 0.25,
-        economy_growing: p.front.is_empty() && p.mean_logistics_held > 0.4,
-    }
-}
-
-#[must_use]
-fn goap_apply(mut atoms: WorldAtoms, goal: StrategicGoal) -> WorldAtoms {
-    match goal {
-        StrategicGoal::DefendFront => {
-            atoms.front_secure = true;
-        }
-        StrategicGoal::SecureSupply => {
-            atoms.supply_ok = true;
-        }
-        StrategicGoal::Advance => {
-            atoms.front_secure = true;
-        }
-        StrategicGoal::Develop => {
-            atoms.economy_growing = true;
-            atoms.supply_ok = atoms.supply_ok || true;
-        }
-        StrategicGoal::Hold => {}
-    }
-    atoms
-}
-
-#[must_use]
-fn goap_satisfies(have: WorldAtoms, want: WorldAtoms) -> bool {
-    (!want.front_secure || have.front_secure)
-        && (!want.supply_ok || have.supply_ok)
-        && (!want.economy_growing || have.economy_growing)
-}
-
-fn goap_heuristic(have: WorldAtoms, want: WorldAtoms) -> usize {
-    (usize::from(want.front_secure && !have.front_secure))
-        + (usize::from(want.supply_ok && !have.supply_ok))
-        + (usize::from(want.economy_growing && !have.economy_growing))
-}
-
-/// DEC-09: depth-limited IDA* over [`StrategicGoal`] actions toward `want`.
-#[must_use]
-pub fn plan_goap(start: WorldAtoms, want: WorldAtoms, max_depth: usize) -> Vec<StrategicGoal> {
-    if goap_satisfies(start, want) {
-        return Vec::new();
-    }
-    let actions = [
-        StrategicGoal::DefendFront,
-        StrategicGoal::SecureSupply,
-        StrategicGoal::Advance,
-        StrategicGoal::Develop,
-    ];
-    let mut bound = goap_heuristic(start, want).max(1);
-    let limit = max_depth.min(6);
-    while bound <= limit {
-        let mut path = Vec::new();
-        match goap_ida(start, want, &actions, 0, bound, &mut path) {
-            GoapSearch::Found => return path,
-            GoapSearch::NextBound(n) => {
-                if n > limit {
-                    break;
-                }
-                bound = n;
-            }
-            GoapSearch::Fail => break,
-        }
-    }
-    Vec::new()
-}
-
-enum GoapSearch {
-    Found,
-    NextBound(usize),
-    Fail,
-}
-
-fn goap_ida(
-    state: WorldAtoms,
-    want: WorldAtoms,
-    actions: &[StrategicGoal],
-    g: usize,
-    bound: usize,
-    path: &mut Vec<StrategicGoal>,
-) -> GoapSearch {
-    let f = g + goap_heuristic(state, want);
-    if f > bound {
-        return GoapSearch::NextBound(f);
-    }
-    if goap_satisfies(state, want) {
-        return GoapSearch::Found;
-    }
-    if g >= bound {
-        return GoapSearch::NextBound(bound + 1);
-    }
-    let mut min_next = usize::MAX;
-    for &act in actions {
-        if path.last() == Some(&act) {
-            continue;
-        }
-        path.push(act);
-        let next = goap_apply(state, act);
-        match goap_ida(next, want, actions, g + 1, bound, path) {
-            GoapSearch::Found => return GoapSearch::Found,
-            GoapSearch::NextBound(n) => min_next = min_next.min(n),
-            GoapSearch::Fail => {}
-        }
-        path.pop();
-    }
-    if min_next == usize::MAX {
-        GoapSearch::Fail
-    } else {
-        GoapSearch::NextBound(min_next)
-    }
-}
-
 /// Score every goal for this perception and doctrine.
 #[must_use]
-pub fn score_goals(p: &FactionPerception, d: &FactionDoctrine, current: Option<StrategicGoal>) -> Vec<GoalScore> {
+pub fn score_goals(
+    p: &FactionPerception,
+    d: &FactionDoctrine,
+    current: Option<StrategicGoal>,
+    frag: Option<&TacticalFragMap>,
+) -> Vec<GoalScore> {
     let has_front = !p.front.is_empty();
     let front = if has_front { 1.0 } else { 0.0 };
     let threat = p.mean_front_threat().max(p.mean_threat_held);
@@ -358,6 +235,18 @@ pub fn score_goals(p: &FactionPerception, d: &FactionDoctrine, current: Option<S
             0.0
         }
     };
+    let board = static_board_eval(p, d);
+    let mean_frag_heat = frag.map_or(0.0, |m| {
+        if p.front.is_empty() {
+            0.0
+        } else {
+            p.front
+                .iter()
+                .map(|c| m.heat_at(c.tile))
+                .sum::<f32>()
+                / p.front.len() as f32
+        }
+    });
 
     let mut out = Vec::with_capacity(StrategicGoal::ALL.len());
     for goal in StrategicGoal::ALL {
@@ -377,6 +266,12 @@ pub fn score_goals(p: &FactionPerception, d: &FactionDoctrine, current: Option<S
                 ScoreTerm { label: "aggression", input: front, weight: 0.3 * d.aggression },
                 ScoreTerm { label: "threat risk", input: threat * front, weight: -0.5 * d.caution },
                 ScoreTerm { label: "supply risk", input: shortfall, weight: -0.3 },
+                // TAC-05 RO: push harder when the front sits on chokepoints.
+                ScoreTerm {
+                    label: "terrain chokepoint",
+                    input: p.mean_front_chokepoint * front,
+                    weight: 0.2 * d.aggression,
+                },
             ],
             StrategicGoal::SecureSupply => vec![
                 ScoreTerm { label: "front supply shortfall", input: shortfall * front, weight: 0.4 + 0.4 * d.logistics_focus },
@@ -391,6 +286,35 @@ pub fn score_goals(p: &FactionPerception, d: &FactionDoctrine, current: Option<S
         if commit(goal) > 0.0 && goal != StrategicGoal::Hold {
             terms.push(ScoreTerm { label: "commitment", input: 1.0, weight: d.commitment });
         }
+        let board_weight = match goal {
+            StrategicGoal::Advance => 0.12 + 0.08 * d.aggression,
+            StrategicGoal::DefendFront | StrategicGoal::SecureSupply => 0.06,
+            StrategicGoal::Develop | StrategicGoal::Hold => 0.04,
+        };
+        terms.push(ScoreTerm {
+            label: "board eval",
+            input: board.total,
+            weight: board_weight,
+        });
+        if mean_frag_heat > 0.0 {
+            match goal {
+                StrategicGoal::DefendFront => {
+                    terms.push(ScoreTerm {
+                        label: "frag heat reinforce",
+                        input: mean_frag_heat,
+                        weight: 0.35 + 0.25 * d.caution,
+                    });
+                }
+                StrategicGoal::Advance => {
+                    terms.push(ScoreTerm {
+                        label: "frag heat avoid",
+                        input: mean_frag_heat,
+                        weight: -(0.25 + 0.2 * d.caution),
+                    });
+                }
+                _ => {}
+            }
+        }
         terms.push(ScoreTerm {
             label: "duration",
             input: expected_goal_ticks(goal, p),
@@ -404,7 +328,18 @@ pub fn score_goals(p: &FactionPerception, d: &FactionDoctrine, current: Option<S
 /// Pick the highest-scoring goal. Ties break in [`StrategicGoal::ALL`] order.
 #[must_use]
 pub fn choose_goal(p: &FactionPerception, d: &FactionDoctrine, current: Option<StrategicGoal>) -> GoalChoice {
-    let scores = score_goals(p, d, current);
+    choose_goal_with_frag(p, d, current, None)
+}
+
+/// Like [`choose_goal`] with optional TAC-07 frag-map read bias.
+#[must_use]
+pub fn choose_goal_with_frag(
+    p: &FactionPerception,
+    d: &FactionDoctrine,
+    current: Option<StrategicGoal>,
+    frag: Option<&TacticalFragMap>,
+) -> GoalChoice {
+    let scores = score_goals(p, d, current, frag);
     let mut best: Option<&GoalScore> = None;
     for s in &scores {
         if best.map_or(true, |b| s.total() > b.total()) {
@@ -465,7 +400,7 @@ mod tests {
     fn tac05_decide_ro_tripwire() {
         let mut p = front(0.8, 0.35, 0.55, 0.6);
         p.mean_front_defensibility = 0.8;
-        let scores = score_goals(&p, &FactionDoctrine::default(), None);
+        let scores = score_goals(&p, &FactionDoctrine::default(), None, None);
         let defend = scores.iter().find(|s| s.goal == StrategicGoal::DefendFront).unwrap();
         assert!(
             defend.terms.iter().any(|t| t.label == "terrain defensibility"),
@@ -541,7 +476,7 @@ mod tests {
         assert!(short_total > long_total);
 
         let p = FactionPerception::default();
-        let scores = score_goals(&p, &FactionDoctrine::default(), None);
+        let scores = score_goals(&p, &FactionDoctrine::default(), None, None);
         for gs in &scores {
             let term = gs
                 .terms
@@ -576,6 +511,7 @@ mod tests {
             rival_slots: vec![1],
             rear_anchor: None,
             mean_front_defensibility: 0.0,
+            mean_front_chokepoint: 0.0,
         };
         let d = FactionDoctrine::default();
         let a = static_board_eval(&p, &d);
@@ -596,26 +532,25 @@ mod tests {
     }
 
     #[test]
-    fn dec09_goap_plans_supply_then_secure() {
-        let start = WorldAtoms {
-            front_secure: false,
-            supply_ok: false,
-            economy_growing: false,
+    fn tac15_board_eval_nudges_goal_scores() {
+        let p = FactionPerception {
+            slot: 0,
+            cells_total: 10,
+            cells_held: 8,
+            mean_own_control: 0.8,
+            mean_threat_held: 0.1,
+            mean_logistics_held: 0.75,
+            ..FactionPerception::default()
         };
-        let want = WorldAtoms {
-            front_secure: true,
-            supply_ok: true,
-            economy_growing: false,
-        };
-        let plan = plan_goap(start, want, 4);
-        assert!(!plan.is_empty());
-        assert!(plan.len() <= 4);
+        let with_board = score_goals(&p, &FactionDoctrine::default(), None, None);
+        let advance = with_board
+            .iter()
+            .find(|s| s.goal == StrategicGoal::Advance)
+            .unwrap();
         assert!(
-            plan.contains(&StrategicGoal::SecureSupply)
-                || plan.contains(&StrategicGoal::DefendFront)
-                || plan.contains(&StrategicGoal::Advance)
+            advance.terms.iter().any(|t| t.label == "board eval"),
+            "TAC-15 must fold static board eval into decide"
         );
-        assert!(plan_goap(want, want, 4).is_empty());
     }
 
 }

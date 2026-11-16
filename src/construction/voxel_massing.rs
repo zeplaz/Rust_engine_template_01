@@ -391,8 +391,6 @@ pub fn sync_voxel_massing_visual_requests(
     mut requests: ResMut<ConstructionVisualRequests>,
 ) {
     use crate::construction::build_strip::ToolContext;
-    requests.massing_columns.clear();
-    requests.massing_instances.clear();
     // Tactical = flat occupation tokens only; PixelWorld owns massing silhouette.
     let pixel_world = world_mode
         .as_ref()
@@ -402,6 +400,8 @@ pub fn sync_voxel_massing_visual_requests(
         return;
     }
     if strip.active == ToolContext::None || !settings.show_occupation_tiles {
+        requests.massing_columns.clear();
+        requests.massing_instances.clear();
         return;
     }
     let px = zoom.map(|z| z.px_per_tile).unwrap_or(MASSING_MIN_PX_PER_TILE);
@@ -416,10 +416,14 @@ pub fn sync_voxel_massing_visual_requests(
     }
 
     if ghost.origin.is_none() {
+        requests.massing_columns.clear();
+        requests.massing_instances.clear();
         return;
     }
     let occupied = requests.footprint_tiles.len() as u32;
     if occupied == 0 {
+        requests.massing_columns.clear();
+        requests.massing_instances.clear();
         return;
     }
     let family = tool.building_intent.as_ref().map(|i| i.family);

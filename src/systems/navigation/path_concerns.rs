@@ -20,6 +20,12 @@ pub struct LogisticsPathConcern {
     pub risk_weight: f32,
 }
 
+impl Default for LogisticsPathConcern {
+    fn default() -> Self {
+        Self::DEFAULT
+    }
+}
+
 impl LogisticsPathConcern {
     pub const DEFAULT: Self = Self {
         time_weight: 1.0,
@@ -84,6 +90,12 @@ impl Default for LogisticsPathConcernRegistry {
     fn default() -> Self {
         load_logistics_path_concerns().0
     }
+}
+
+/// NAV-14 — concern weights for tactical grid paths that feed a front (RON `by_consumer.front`).
+#[must_use]
+pub fn front_haul_path_concern(reg: &LogisticsPathConcernRegistry) -> LogisticsPathConcern {
+    reg.get_consumer("front")
 }
 
 impl LogisticsPathConcernRegistry {

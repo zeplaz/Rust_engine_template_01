@@ -1,8 +1,8 @@
 //! **DH-02 / TAC-03** — WGSL dense heat diffusion contract + play bridge.
 //!
 //! GPU shader: `assets/shaders/compute/heat_diffusion_dense.wgsl` (real H/V kernels).
-//! Play advance (until full RenderApp dispatch is the sole writer) runs the **same** dense
-//! step as the WGSL constants and packs into [`HeatDiffusionFieldBuffers`] for consumers.
+//! Play advance: prefer [`super::dense_heat_gpu_dispatch`] (RenderApp H/V + readback sole writer).
+//! This module keeps the CPU parity helper [`advance_dense_heat_play`] and sample/blend utils.
 //! Sparse Jacobi is gated off by default.
 
 use bevy::math::IVec2;

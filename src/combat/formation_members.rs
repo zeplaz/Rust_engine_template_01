@@ -11,6 +11,15 @@ use bevy::prelude::*;
 use super::balance::{FrontBalance, UnitKind};
 use super::formation::{CombatClock, Formation};
 
+/// Sim seconds between overwatch role flips while a formation is relocating (UM-07).
+pub const OVERWATCH_FLIP_INTERVAL_S: f32 = 2.0;
+
+/// Accumulated phase on the formation anchor; sole writer is [`bounding_overwatch_tick_system`].
+#[derive(Component, Clone, Debug, Default, PartialEq)]
+pub struct FormationOverwatchClock {
+    pub phase_s: f32,
+}
+
 /// Bounding overwatch role for a member (UM-07). Does **not** write [`Formation::posture`].
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
 pub enum OverwatchRole {
@@ -204,6 +213,7 @@ pub fn flip_overwatch_roles(pairs: &[(u8, u8)], roles: &[(u8, OverwatchRole)]) -
 pub fn bounding_overwatch_tick_system(
     clock: Res<CombatClock>,
     formations: Query<&Formation>,
+    mut clocks: Query<&mut FormationOverwatchClock>,
     mut members: Query<(Entity, &mut FormationMember)>,
 ) {
     if clock.dt_s <= 0.0 {
@@ -222,8 +232,19 @@ pub fn bounding_overwatch_tick_system(
         };
         // Only phase-flip while the anchor is relocating (orders set target).
         if f.target.is_none() {
+            if let Ok(mut ow_clock) = clocks.get_mut(form_e) {
+                ow_clock.phase_s = 0.0;
+            }
             continue;
         }
+        let Ok(mut ow_clock) = clocks.get_mut(form_e) else {
+            continue;
+        };
+        ow_clock.phase_s += clock.dt_s;
+        if ow_clock.phase_s < OVERWATCH_FLIP_INTERVAL_S {
+            continue;
+        }
+        ow_clock.phase_s = 0.0;
         let slots: Vec<u8> = rows.iter().map(|(s, _, _)| *s).collect();
         let pairs = bounding_overwatch_pairs(&slots);
         let roles: Vec<(u8, OverwatchRole)> =
@@ -242,6 +263,7 @@ pub fn bounding_overwatch_tick_system(
 }
 
 /// Two-level steer: members chase `formation.tile + slot_offset` (never mutate Formation).
+/// While relocating, [`OverwatchRole::Cover`] holds position so the pair mate can advance (UM-07).
 pub fn steer_members_to_slots_system(
     clock: Res<CombatClock>,
     mut members: Query<&mut FormationMember>,
@@ -254,6 +276,9 @@ pub fn steer_members_to_slots_system(
         let Ok(f) = formations.get(m.formation) else {
             continue;
         };
+        if f.target.is_some() && m.overwatch == OverwatchRole::Cover {
+            continue;
+        }
         let want = f.tile + m.slot_offset;
         if m.tile == want {
             continue;
@@ -287,9 +312,7 @@ pub fn spawn_formation_with_members(
     formation: Formation,
     balance: &FrontBalance,
 ) -> Entity {
-    let e = super::formation::spawn_formation(commands, formation.clone(), balance);
-    spawn_formation_members(commands, e, &formation);
-    e
+    super::formation::spawn_formation(commands, formation, balance)
 }
 
 #[cfg(test)]

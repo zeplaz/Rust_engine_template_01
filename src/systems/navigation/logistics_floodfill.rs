@@ -343,75 +343,12 @@ impl Ord for DijkstraState {
     }
 }
 
-/// Dijkstra shortest path on a dense `width × height` grid, 4-neighbor edges.
+/// NAV-04 / NAV-13 / NAV-14: Dijkstra on a dense `width × height` grid, 4-neighbor edges.
 ///
-/// Edge weight from `a` to `b`: `0.5 * (tile(a).cost_mul + tile(b).cost_mul)` (both ends must be non-blocked).
-/// Path **max_env_risk** is the maximum of `env_risk` on every entered cell (including start and goal).
-pub fn logistics_path_dijkstra(
-    width: i32,
-    height: i32,
-    start: (i32, i32),
-    goal: (i32, i32),
-    mut tile_at: impl FnMut(i32, i32) -> LogisticsTile,
-) -> Option<LogisticsPathResult> {
-    logistics_path_dijkstra_concern(
-        width,
-        height,
-        start,
-        goal,
-        tile_at,
-        super::path_concerns::LogisticsPathConcern::DEFAULT,
-    )
-}
-
-/// Same as [`logistics_path_dijkstra`] with NAV-14 concern blending on the priority queue.
-pub fn logistics_path_dijkstra_concern(
-    width: i32,
-    height: i32,
-    start: (i32, i32),
-    goal: (i32, i32),
-    tile_at: impl FnMut(i32, i32) -> LogisticsTile,
-    concern: super::path_concerns::LogisticsPathConcern,
-) -> Option<LogisticsPathResult> {
-    logistics_path_dijkstra_concern_at(
-        width,
-        height,
-        start,
-        goal,
-        tile_at,
-        concern,
-        None,
-        0,
-    )
-}
-
-/// Optional NAV-13 time-aware edge weights via forecast buckets at `depart_tick`.
-pub fn logistics_path_dijkstra_concern_at(
-    width: i32,
-    height: i32,
-    start: (i32, i32),
-    goal: (i32, i32),
-    tile_at: impl FnMut(i32, i32) -> LogisticsTile,
-    concern: super::path_concerns::LogisticsPathConcern,
-    forecast: Option<&super::cost_forecast::LogisticsCostForecastBook>,
-    depart_tick: u64,
-) -> Option<LogisticsPathResult> {
-    let mut nodes = LogisticsNodeArray::default();
-    logistics_path_dijkstra_concern_at_scratch(
-        width,
-        height,
-        start,
-        goal,
-        tile_at,
-        concern,
-        forecast,
-        depart_tick,
-        &mut nodes,
-    )
-}
-
-/// NAV-04: same search using a caller-owned dense node array (reuse across queries).
-pub fn logistics_path_dijkstra_concern_at_scratch(
+/// Reuse `nodes` across queries via [`LogisticsNodeArray::begin_search`] each call (no per-search HashMap).
+/// Edge weight from `a` to `b`: `0.5 * (tile(a).cost_mul + tile(b).cost_mul)` when both are traversable.
+/// Optional NAV-13 forecast scales edge cost from `depart_tick`; concern blends time vs max env risk.
+pub fn logistics_grid_path(
     width: i32,
     height: i32,
     start: (i32, i32),
@@ -692,10 +629,34 @@ mod tests {
         }
     }
 
+    fn grid_path(
+        width: i32,
+        height: i32,
+        start: (i32, i32),
+        goal: (i32, i32),
+        tile_at: impl FnMut(i32, i32) -> LogisticsTile,
+        concern: super::path_concerns::LogisticsPathConcern,
+        forecast: Option<&super::cost_forecast::LogisticsCostForecastBook>,
+        depart_tick: u64,
+    ) -> Option<LogisticsPathResult> {
+        let mut nodes = LogisticsNodeArray::default();
+        logistics_grid_path(
+            width,
+            height,
+            start,
+            goal,
+            tile_at,
+            concern,
+            forecast,
+            depart_tick,
+            &mut nodes,
+        )
+    }
+
     #[test]
     fn straight_path_open_grid() {
         let mut g = constant_grid(5, 5, LogisticsTile::default());
-        let r = logistics_path_dijkstra(5, 5, (0, 0), (4, 0), |x, y| g(x, y)).unwrap();
+        let r = grid_path(5, 5, (0, 0), (4, 0), |x, y| g(x, y), super::path_concerns::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
         assert_eq!(r.path.len(), 5);
         assert!((r.total_cost - 4.0).abs() < 0.01, "cost {}", r.total_cost);
         assert!(r.max_env_risk < 0.01);
@@ -710,7 +671,7 @@ mod tests {
                 ..LogisticsTile::default()
             };
         }
-        let r = logistics_path_dijkstra(5, 5, (0, 0), (4, 4), |x, y| tiles[y as usize][x as usize]).unwrap();
+        let r = grid_path(5, 5, (0, 0), (4, 4), |x, y| tiles[y as usize][x as usize], super::path_concerns::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
         assert!(r.path.iter().all(|p| p.1 != 2 || p.0 == 4));
     }
 
@@ -723,7 +684,7 @@ mod tests {
             cost_mul: 12.0,
             env_risk: 0.0,
         };
-        let r = logistics_path_dijkstra(3, 3, (0, 1), (2, 1), |x, y| tiles[y as usize][x as usize]).unwrap();
+        let r = grid_path(3, 3, (0, 1), (2, 1), |x, y| tiles[y as usize][x as usize], super::path_concerns::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
         assert!(
             !r.path.contains(&(1, 1)),
             "should avoid expensive center: {:?}",
@@ -759,13 +720,22 @@ mod tests {
                 tiles[y as usize][x as usize]
             }
         };
-        let direct =
-            logistics_path_dijkstra(w, h, (0, 1), (6, 1), tile_at).expect("direct route");
+        let direct = grid_path(
+            w,
+            h,
+            (0, 1),
+            (6, 1),
+            tile_at,
+            super::path_concerns::LogisticsPathConcern::DEFAULT,
+            None,
+            0,
+        )
+        .expect("direct route");
         assert!(
             direct.max_env_risk > 0.9,
             "baseline should traverse the hot corridor"
         );
-        let cautious = logistics_path_dijkstra_concern(
+        let cautious = grid_path(
             w,
             h,
             (0, 1),
@@ -775,6 +745,8 @@ mod tests {
                 time_weight: 1.0,
                 risk_weight: 12.0,
             },
+            None,
+            0,
         )
         .expect("detour route");
         assert!(
@@ -800,8 +772,7 @@ mod tests {
             env_risk: 0.0,
         };
         let concern = crate::systems::navigation::LogisticsPathConcern::DEFAULT;
-        let static_path = logistics_path_dijkstra_concern(3, 1, (0, 0), (2, 0), tile, concern)
-            .expect("static");
+        let static_path = grid_path(3, 1, (0, 0), (2, 0), tile, concern, None, 0).expect("static");
         let mut book = crate::systems::navigation::LogisticsCostForecastBook::default();
         book.ready = true;
         book.buckets = [
@@ -822,17 +793,7 @@ mod tests {
                 mul: 0.25,
             },
         ];
-        let late = logistics_path_dijkstra_concern_at(
-            3,
-            1,
-            (0, 0),
-            (2, 0),
-            tile,
-            concern,
-            Some(&book),
-            40,
-        )
-        .expect("late");
+        let late = grid_path(3, 1, (0, 0), (2, 0), tile, concern, Some(&book), 40).expect("late");
         assert!(
             late.total_cost > static_path.total_cost,
             "late={} static={}",
@@ -876,6 +837,30 @@ mod tests {
 mod nav04_tests {
     use super::*;
 
+    fn grid_path(
+        width: i32,
+        height: i32,
+        start: (i32, i32),
+        goal: (i32, i32),
+        tile_at: impl FnMut(i32, i32) -> LogisticsTile,
+        concern: super::path_concerns::LogisticsPathConcern,
+        forecast: Option<&super::cost_forecast::LogisticsCostForecastBook>,
+        depart_tick: u64,
+    ) -> Option<LogisticsPathResult> {
+        let mut nodes = LogisticsNodeArray::default();
+        logistics_grid_path(
+            width,
+            height,
+            start,
+            goal,
+            tile_at,
+            concern,
+            forecast,
+            depart_tick,
+            &mut nodes,
+        )
+    }
+
     /// NAV-04 tripwire: scratch capacity is dense width×height (no HashMap growth).
     #[test]
     fn nav04_node_array_is_dense_width_times_height() {
@@ -892,13 +877,13 @@ mod nav04_tests {
         let tile = |_x: i32, _y: i32| LogisticsTile::default();
         let concern = crate::systems::navigation::LogisticsPathConcern::DEFAULT;
         let mut nodes = LogisticsNodeArray::default();
-        let a = logistics_path_dijkstra_concern_at_scratch(
+        let a = logistics_grid_path(
             4, 4, (0, 0), (3, 0), tile, concern, None, 0, &mut nodes,
         )
         .expect("first");
         let gen1 = nodes.generation();
         let cap1 = nodes.capacity_cells();
-        let b = logistics_path_dijkstra_concern_at_scratch(
+        let b = logistics_grid_path(
             4, 4, (0, 3), (3, 3), tile, concern, None, 0, &mut nodes,
         )
         .expect("second");
@@ -921,9 +906,19 @@ mod nav04_tests {
             };
         }
         let tile_at = |x: i32, y: i32| tiles[y as usize][x as usize];
-        let fresh = logistics_path_dijkstra(5, 5, (0, 0), (4, 4), tile_at).unwrap();
+        let fresh = grid_path(
+            5,
+            5,
+            (0, 0),
+            (4, 4),
+            tile_at,
+            crate::systems::navigation::LogisticsPathConcern::DEFAULT,
+            None,
+            0,
+        )
+        .unwrap();
         let mut nodes = LogisticsNodeArray::default();
-        let reused = logistics_path_dijkstra_concern_at_scratch(
+        let reused = logistics_grid_path(
             5,
             5,
             (0, 0),
@@ -944,7 +939,7 @@ mod nav04_tests {
     fn nav04_pure_time_marks_goal_closed() {
         let mut nodes = LogisticsNodeArray::default();
         let tile = |_x: i32, _y: i32| LogisticsTile::default();
-        let _ = logistics_path_dijkstra_concern_at_scratch(
+        let _ = logistics_grid_path(
             3,
             1,
             (0, 0),
@@ -989,8 +984,17 @@ mod nav04_tests {
 
     #[test]
     fn nav06_smoothed_for_motion_preserves_search_metrics() {
-        let r = logistics_path_dijkstra(5, 1, (0, 0), (4, 0), |_x, _y| LogisticsTile::default())
-            .unwrap();
+        let r = grid_path(
+            5,
+            1,
+            (0, 0),
+            (4, 0),
+            |_x, _y| LogisticsTile::default(),
+            super::path_concerns::LogisticsPathConcern::DEFAULT,
+            None,
+            0,
+        )
+        .unwrap();
         assert_eq!(r.path.len(), 5);
         let mut tile = |_x: i32, _y: i32| LogisticsTile::default();
         let motion = r.smoothed_for_motion(5, 1, &mut tile);

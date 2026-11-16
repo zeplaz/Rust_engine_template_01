@@ -34,7 +34,7 @@ pub use chunk_smoke_field::{
     project_chunk_smoke_from_atmosphere_frame, ChunkSmokeField, CHUNK_SMOKE_WRITERS,
 };
 pub use chunk_surface_fire::{
-    chunk_surface_fire_tick, surface_fire_scorch_decal01, ChunkSurfaceFire,
+    chunk_surface_fire_tick, ChunkSurfaceFire,
     SURFACE_FIRE_EXTINCTION_HEAT, SURFACE_FIRE_SCORCH_HEAT_MAX,
 };
 pub use ember_spot_ignition::{

@@ -7,7 +7,7 @@
 
 ## 0. Read this first (rules for the agent doing the cleanup)
 
-1. **Stopping is allowed.** Ignore `plan_ref_books_upgrade_v3.md` §0.1 "Anti-stall". If an item is blocked, ambiguous, or bigger than it looks, write `BLOCKED: <reason>` in §9 and move on — or stop and ask. Marking things done that aren't is the failure this plan is cleaning up.
+1. **Stopping is allowed.** Obey `plan_ref_books_upgrade_v3.md` §0.1 honest exits. If an item is blocked, ambiguous, or bigger than it looks, write `BLOCKED: <reason>` in §9 and move on — or stop and ask. Marking things done that aren't is the failure this plan is cleaning up.
 2. **"Done" means a production caller.** An item that adds or keeps a feature is done only when you can cite a non-test caller `file:line` (a system registered with `add_systems`, a resource that something reads in play). A unit test alone does not count.
 3. **Finish, don't remove — and never leave unwired code marked shipped.** The default for unwired features is to **wire** them (operator review 2026-11-16; see §5's decision rule). Delete only true duplicates or bookkeeping that does nothing. Respect the "Product stance (operator …)" table in the owning plan; e.g. dense heat is GPU-primary by operator decision. If wiring is blocked, set the `adoption.tsv` row to `UNWIRED`, write `BLOCKED: <reason>` in §9, and move on.
 4. **Verify each finding before acting.** Findings in §2–§8 came from a code-reading review (five reviewers, 2026-11-16). Items tagged **[V]** were also confirmed by a test run or by direct inspection. The others are high-confidence but check the cited lines first; line numbers may drift.
@@ -214,8 +214,8 @@ Audio low-pass/duck wiring is in CQ-10.
 ### Docs and process (`@plan-orchestrator`)
 | ID | Item |
 |---|---|
-| CQ-80 | **Make `adoption.tsv` the single ledger.** *Re-grade done 2026-11-16:* new status `UNWIRED` (code exists, no production caller). Rows touched by §5 are now `UNWIRED`/`PARTIAL` with `REVIEW 2026-11-16 → CQ-xx` in the evidence column, and RND-07's evidence is retracted. **Rule from now on:** a row moves to `ADOPTED` only with a production caller `file:line`. **Still to do:** remove the duplicated status tables from `plan_ref_books_upgrade_v2.md` §9 and `v3`, link to the TSV, and regenerate the counts (v3 says 117/2/14; the TSV says 128/1/4). |
-| CQ-81 | **Delete `plan_ref_books_upgrade_v3.md` §0.1 "Anti-stall"** and any copy in `.cursor/rules/*.mdc`, `.cursor/skills/`, `.claude/skills/`. Replace it with: "Stop and report `BLOCKED`/`UNWIRED` when a slice can't be wired honestly." |
+| CQ-80 | **DONE** — `adoption.tsv` is the sole ledger; v2 banner + §9 pointer; v3 §2.1/**CLOSE** counts **101 ADOPTED · 18 UNWIRED · 10 PARTIAL · 4 DEFER** (133 total); ref-books skill/rule point at TSV + defer-unlock plan. |
+| CQ-81 | **DONE** — v3 §0.1 honest exits; §11 anti-stall paste blocks removed; no anti-stall copies in `.cursor`/`.claude` skills or `prompts/`. |
 | CQ-82 | Put a "superseded by adoption.tsv" banner on `plan_ref_books_upgrade_v2.md`. Point `.cursor/skills/ref-books/SKILL.md` and `.cursor/rules/ref-books.mdc` (plus the `.claude` copies) at the TSV and the defer-unlock plan. |
 | CQ-83 | Archive the PROGRAM CLOSE plans (14, plus older ones) to `src/dev/archive/`. Fix `AGENTS.md:11`, which lists closed programs as "next product charters", by moving the plan links to `development_plan_index.md`. Fix `plan_ref_books_defer_unlock_v1.md:161` (OCC "default remains off"). Fix `plan_playtest_quadrant_world_v1.md:6` ("plan only") — `engine/playquad.rs` shipped. |
 | CQ-84 | Plans cite evidence JSON under gitignored `debug_runs/`, which nobody else can check. Either cite a test name / matrix row, or stop citing. Retract the "user world-look sign-off" for erosion and terrain analysis unless a record exists. |
@@ -233,7 +233,7 @@ Audio low-pass/duck wiring is in CQ-10.
 
 Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 
-- CQ-80 and CQ-81 are doc-only and can run in parallel at any time. Do them early, so the next agent wave isn't steered by the anti-stall rule.
+- CQ-80 and CQ-81 **DONE** (2026-11-16): adoption TSV ledger + honest-exit routing.
 - CQ-01, CQ-07 and the two transport tests in CQ-20 all touch save/load. Have one agent do them together.
 - P4 dependency chain: **CQ-02 → CQ-53 routing → CQ-51/CQ-52 feed it**. CQ-53 steering and CQ-54 members share movement code: one agent. CQ-50 (GPU heat) also covers CQ-38 and CQ-63; give all three to one agent.
 - Owning plans reopened 2026-11-16 with a "Review 2026-11-16" block: `plan_dense_heat_wgsl_v1.md`, `plan_move10_wildlife_v1.md`, `plan_ref_books_nav_13_v1.md`, `plan_unit_member_v1.md`, `plan_town_growth_v1.md`, `plan_voxel_occupation_v1.md`, `plan_ref_books_defer_unlock_v1.md`, `plan_ref_books_upgrade_v3.md`. Close each one again only when its CQ items are done.
@@ -255,10 +255,36 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-21 | DONE | (pending commit) | APS default archetype → IndustrialWarehouse; material filter passes category string + PhotoImage `master=`; tests retarget production example / style-pack resolve / shared Tk root. Six named pytest cases green. |
 | CQ-57h | DONE | (pending commit) | Real IO-08 rebuild: clear portal map, mark route dirty + clear RouteCache; deleted `POST_LOAD_DERIVED_STEPS` string list; utility (power/water) hydrate joins the same rebuild. |
 | CQ-57d | DONE | (pending commit) | `DestructibleDamage` component; fire integrity + blast peak escalate Intact→Collapsed; burn wash reads ladder; collapse still via demolish funnel. |
+| CQ-57a | DONE | (pending commit) | `combat/resolve.rs` `record_loss` on strength drop; `decide.rs` frag heat in `score_goals` / `faction_ai_tick_system`. |
+| CQ-57b | DONE | (pending commit) | `static_board_eval` folded into `score_goals` board-eval term (`decide.rs:346+`). |
+| CQ-57c | DONE | (pending commit) | `script_host.rs:drain_script_steps` → `reorder_pending_trigger_effects` + weather fact memory; Rete doc corrected. |
+| CQ-57e | DONE | (pending commit) | `io/streaming/budget.rs` `STREAMING_FRAME_ENTITY_BUDGET` + `allocate_nested_domain_budgets` for spawn caps. |
+| CQ-57f | DONE | (pending commit) | `network_flow_chunk_local_solver_system` bumps `WorldFieldLayerEpoch`; `world_read_snapshot_refresh_system` skips on stale slow epoch. |
+| CQ-57g | DONE | (pending commit) | `execute.rs` `enqueue_settlement_roads_once_system` → `enqueue_settlement_road_skeleton` (`ConstructionPlanQueue`). |
+| CQ-57i | DONE | (pending commit) | `map_tile_raster.rs` `overlay_heat_scorch_decal01` tint; deleted `surface_fire_scorch_decal01`. |
+| CQ-57l | DONE | (pending commit) | Removed DEC-09 `plan_goap` / GOAP helpers from `decide.rs`. |
+| CQ-57m | DONE | (pending commit) | Deleted `relax_sense_from_samples`, `classify_storm_with_plume`, default-k `combine_visibility_m` (keep `_k`). |
+| CQ-57n | DONE | (pending commit) | Doc/env deletes + empty `contamination_tick` + unread `saw_forecast_route_invalidation`. Residual: heat `*_pub` aliases still used by play pack path until CQ-50. |
+| CQ-50 | DONE | (pending commit) | `DenseHeatGpuPlugin`: stage inject → RenderApp H/V WGSL → `ReadbackComplete` sole `DenseHeatPlayField` writer; CPU via `RUST_ENGINE_DENSE_HEAT_CPU=1`. CQ-38: removed emit main-world ×0.85 dense blend. VFX residual: `fire_particle.wgsl` group 4 samples dense field A (`max` with projection heat). |
+| CQ-38 | DONE | (pending commit) | Fire VFX no longer reads `DenseHeatPlayField` / magic blend; expand compute binds GPU dense lattice instead. |
 | CQ-60 | DONE | (pending commit) | Fire tick snapshots only active+neighbour ring; `mem::take` instead of HashMap clone; edge cell walk without per-neighbour Vec. |
 | CQ-56 | DONE | (pending commit) | `MissileSortieLaunch.wind` from stations; `apply_missile_sortie_launches_system` → `launch_with_wind`. |
 | CQ-55 | DONE | (pending commit) | Ballistics solid probe via occupation + `probe_hits_solid` on MaterializedChunk; deleted coherent pair pipeline; `CollisionPlugin` minimal. |
-| CQ-53 | DONE | (pending commit) | Production `refresh_resource_flow_routes` uses costed Dijkstra (`route_edge_cost` = cache × NAV-13 forecast); path-concerns load on Startup; potential-field nav scheduled. Residual: fold tile Dijkstra variants + heat/wildlife into same cost (CQ-51/52). |
+| CQ-53 | DONE | (pending commit) | Costed routes + heat/wildlife; single `logistics_grid_path` (NAV-04 scratch); `front_haul_path_concern` in publish + truck path; `sync_truck_motion_waypoints` + MOVE-08 filter in potential-field. |
+| CQ-51 | DONE | (pending commit) | Ecology seeds `WildlifeHerdBook` from world seed; schedules soft syncs; herd soft costs feed route cost via `NavFieldFrame`. |
+| CQ-52 | DONE | (pending commit) | `route_edge_cost` / `path_edges_between_tiles_costed` read heat + wildlife soft samples from `NavFieldFrame`. |
+| CQ-58 | DONE | (pending commit) | `execute_deployment_orders` → `plan_fortification_rows_with_analysis`; dragon teeth use `chokepoint_at`; faction digest folds mean chokepoint into Advance. |
+| CQ-59 | DONE | (pending commit) | `seed_build_readability_harness_once` moved off ConstructionPlugin into `TestHarnessPlugin` (scene-gated). |
+| CQ-80 | DONE | (pending commit) | `adoption.tsv` sole ledger; v3 §2.1 counts **101/18/10/4**; v2 §9 superseded banner; ref-books skill/rule + `.claude` copy. |
+| CQ-81 | DONE | (pending commit) | Honest exits in v3 §0.1/§11; cleanup §0 aligned; no operational anti-stall in agent config trees. |
+| CQ-61 | DONE | (pending commit) | L0 `bump_revision` only on max-blend write; `weather_stale` no longer keys on `sim_micros`; clipmap doc cites frame gate. |
+| CQ-62 | DONE | (pending commit) | `detect_firestorm_plumes` once in `AtmosphereFrame::derive`; coupling reads `firestorm_plume_mask`. |
+| CQ-63 | DONE | (pending commit) | ROI edge capped (`DENSE_ROI_MAX_EDGE=64`) with centroid recenter; `ensure_roi` unions overlap on expand; attention dense foci capped at 32 hottest. |
+| CQ-54 | DONE | (pending commit) | `spawn_formation` → members + `FormationOverwatchClock`; overwatch flips on 2s phase while relocating. No new GPU instance path (members sim-only). |
+| CQ-64 | DONE | (pending commit) | `sync_voxel_massing_visual_requests` clears massing only on intentional empty paths, not every tick. |
+| CQ-65 | DONE | (pending commit) | Combat cap + alert-bark priority return early when pending has no matching class. |
+| CQ-66 | DONE | (pending commit) | Pixel-world rain/cloud layers cache mesh upload key (30/20 Hz quant) + skip redundant CPU upload. |
+| CQ-67 | DONE | (pending commit) | Dropped quantum `reserve_chunks` on insert; optional `reserve_chunk_capacity` uses `HashMap::reserve`. |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking

@@ -52,7 +52,8 @@ pub use theater::{
 };
 pub use fortification::{
     fort_kind_of, plan_fortification_rows, plan_fortification_rows_with_analysis,
-    prefer_defensible_origin, rebuild_fortification_index_system, FortificationIndex, FortifyRow,
+    prefer_chokepoint_origin, prefer_defensible_origin, rebuild_fortification_index_system,
+    FortificationIndex, FortifyRow,
 };
 pub use pressure::{
     score_cell, score_pressure_points_system, score_theater, CellFields, PressureDrivers, PressureKind, PressurePoint,
@@ -66,9 +67,9 @@ pub use formation_members::{
     assign_member_slots_system, assign_slots_by_cost, bounding_overwatch_pairs,
     bounding_overwatch_tick_system, despawn_orphan_members_system, flip_overwatch_roles,
     member_count_for_kind, slot_offset_for, spawn_formation_members, spawn_formation_with_members,
-    steer_members_to_slots_system, FormationMember, OverwatchRole,
+    steer_members_to_slots_system, FormationMember, FormationOverwatchClock, OverwatchRole,
+    OVERWATCH_FLIP_INTERVAL_S,
 };
-pub use tier_handoff::CombatAuthorityTier;
 pub use orders::{
     apply_deployment_order, execute_deployment_orders_system, order_for_pressure_point, DeploymentKind,
     expand_compound_orders, DeploymentOrder, DeploymentOrderId, DeploymentOrderQueue, DeploymentOutcomes, DeploymentReject, EnqueueError,

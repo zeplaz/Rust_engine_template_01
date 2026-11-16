@@ -6,6 +6,7 @@ mod tile_world_fallback;
 pub use tile_world_fallback::play_sprite_fire_heat_boost;
 mod visual_perf_budget;
 mod fire_vfx;
+pub use fire_vfx::overlay_heat_scorch_decal01;
 mod weather_vfx;
 pub use weather_vfx::WeatherPrecipFrame;
 mod particle_domains;

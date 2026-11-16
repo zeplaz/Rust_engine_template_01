@@ -215,24 +215,23 @@ pub fn build_sim_attention_frame(
         }
     }
 
-    // DH-03b: dense heat RO — hot cells add Aggregate foci; active heat bumps path budget.
+    // DH-03b / CQ-63: dense heat RO — capped Aggregate foci (hottest first); active heat bumps path budget.
+    const DENSE_FOCI_CAP: usize = 32;
     let mut dense_hot = 0u32;
+    let mut candidates: Vec<(f32, Vec2)> = Vec::new();
     if let Some(play) = dense_heat.as_deref() {
         if let Some(grid) = play.grid.as_ref() {
             for y in 0..grid.height {
                 for x in 0..grid.width {
                     let i = grid.idx(x, y);
-                    if grid.heat[i] <= 0.12 {
+                    let h = grid.heat[i];
+                    if h <= 0.12 {
                         continue;
                     }
                     dense_hot = dense_hot.saturating_add(1);
                     let chunk = grid.origin + IVec2::new(x as i32, y as i32);
                     let xz = Vec2::new(chunk.x as f32, chunk.y as f32) * CHUNK_SPACING_WORLD;
-                    frame.foci.push(SimAttentionFocus {
-                        world_xz: xz,
-                        radius_world: CHUNK_SPACING_WORLD,
-                        tier: AttentionTier::Aggregate,
-                    });
+                    candidates.push((h, xz));
                 }
             }
         }
@@ -243,12 +242,19 @@ pub fn build_sim_attention_frame(
             }
             dense_hot = dense_hot.saturating_add(1);
             let xz = Vec2::new(cell.chunk.x as f32, cell.chunk.y as f32) * CHUNK_SPACING_WORLD;
-            frame.foci.push(SimAttentionFocus {
-                world_xz: xz,
-                radius_world: CHUNK_SPACING_WORLD,
-                tier: AttentionTier::Aggregate,
-            });
+            candidates.push((cell.heat, xz));
         }
+    }
+    if candidates.len() > DENSE_FOCI_CAP {
+        candidates.sort_by(|a, b| b.0.total_cmp(&a.0));
+        candidates.truncate(DENSE_FOCI_CAP);
+    }
+    for (_, xz) in candidates {
+        frame.foci.push(SimAttentionFocus {
+            world_xz: xz,
+            radius_world: CHUNK_SPACING_WORLD,
+            tier: AttentionTier::Aggregate,
+        });
     }
     if dense_hot > 0 {
         frame.budget_path_units = frame.budget_path_units.saturating_add(16).min(128);

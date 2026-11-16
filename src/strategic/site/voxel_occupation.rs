@@ -48,16 +48,6 @@ impl Default for VoxelOccupationConfig {
     }
 }
 
-impl VoxelOccupationConfig {
-    #[must_use]
-    pub fn from_env_mirror_var() -> Self {
-        Self {
-            derived_mirror_enabled: env_flag_default_off(VOXEL_OCCUPATION_MIRROR_ENV),
-            commit_authority_enabled: env_flag_default_off(VOXEL_OCCUPATION_COMMIT_ENV),
-        }
-    }
-}
-
 /// Default **off**; only `"1"|"true"|"on"|"yes"` enables (CQ-07).
 #[must_use]
 pub fn env_flag_default_off(key: &str) -> bool {

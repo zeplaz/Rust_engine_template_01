@@ -11,6 +11,7 @@ use std::collections::HashMap;
 use bevy::prelude::*;
 
 use super::balance::{FrontBalance, UnitKind};
+use super::formation_members::{spawn_formation_members, FormationOverwatchClock};
 use super::supply::FrontSupplyCoverage;
 use super::theater::TheaterBook;
 use crate::strategic::{ChunkStrategicOverlay, Zone, ZoneKind, MAX_STRATEGIC_FACTION_SLOTS};
@@ -81,7 +82,9 @@ pub fn spawn_formation(commands: &mut Commands, formation: Formation, balance: &
     let fire = formation.kind == UnitKind::Artillery;
     let tile = formation.tile;
     let slot = formation.faction_slot;
-    let e = commands.spawn((formation, zone)).id();
+    let e = commands
+        .spawn((formation.clone(), zone, FormationOverwatchClock::default()))
+        .id();
     if fire {
         commands.spawn(FormationFireZone { owner: e }).insert(Zone {
             kind: ZoneKind::Fire,
@@ -91,6 +94,7 @@ pub fn spawn_formation(commands: &mut Commands, formation: Formation, balance: &
             intensity: 0.0,
         });
     }
+    spawn_formation_members(commands, e, &formation);
     e
 }
 

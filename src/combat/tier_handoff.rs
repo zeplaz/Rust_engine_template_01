@@ -11,44 +11,10 @@
 //! ⊚MissionIntentQueue → MissionBook ═▶ ⊨sortie intents (separate from formation tile)
 //! ```
 
-/// Named tier ids for docs / dumps (not ECS resources).
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum CombatAuthorityTier {
-    FactionDecide,
-    FormationOrders,
-    FormationAnchor,
-    FormationMembers,
-    MissionBook,
-}
-
-impl CombatAuthorityTier {
-    pub const ALL: [CombatAuthorityTier; 5] = [
-        Self::FactionDecide,
-        Self::FormationOrders,
-        Self::FormationAnchor,
-        Self::FormationMembers,
-        Self::MissionBook,
-    ];
-
-    #[must_use]
-    pub const fn as_str(self) -> &'static str {
-        match self {
-            Self::FactionDecide => "faction_decide",
-            Self::FormationOrders => "formation_orders",
-            Self::FormationAnchor => "formation_anchor",
-            Self::FormationMembers => "formation_members",
-            Self::MissionBook => "mission_book",
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[test]
     fn tac10() {
-        assert_eq!(CombatAuthorityTier::ALL.len(), 5);
         // Tripwire: faction AI world must not mutably borrow Formation.
         // `AiWorld` is defined with `(Entity, &'static Formation)` — RO only.
         let faction_mod = include_str!("../ai/faction/mod.rs");

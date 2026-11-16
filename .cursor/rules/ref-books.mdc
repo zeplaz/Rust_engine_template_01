@@ -6,12 +6,15 @@ globs:
 alwaysApply: false
 ---
 
-# Ref-books index (PLAN-REF-BOOKS-UPGRADE-v2)
+# Ref-books index (PLAN-REF-BOOKS-UPGRADE-v2 cards · v3 stance)
 
 Before designing an algorithm, data layout, or schedule change:
 
 1. Run `python src/dev/ref_books_index/lookup.py --brief <file>`
 2. Cite the matrix row id in the commit message when you adopt a book idea
 3. Follow `src/dev/plan_ref_books_upgrade_v2.md` §0–§1 (one slice, Recon first, no second authority)
+4. Ledger: update `src/dev/ref_books_index/adoption.tsv` only (`ADOPTED` requires production `file:line`; else `UNWIRED` / `BLOCKED`)
+5. Honest exits: `src/dev/plan_ref_books_upgrade_v3.md` §0.1 — stop and report when a slice cannot be wired honestly
+6. DEFER/PARTIAL triggers: `src/dev/plan_ref_books_defer_unlock_v1.md`
 
 Do not paste matrix content into rules/skills — query `lookup.py` / `matrix.md` live.

@@ -495,6 +495,7 @@ impl Plugin for GpuWeatherFireFieldPlugin {
             RenderGraph,
             (
                 WeatherFireFieldPassSet,
+                crate::compute::DenseHeatGpuComputePassSet,
                 crate::render::pipelines::gpu_spark_compute::FireSparkComputePassSet,
                 crate::render::pipelines::gpu_particle_draw::WorldFireParticleDrawPassSet,
             )
