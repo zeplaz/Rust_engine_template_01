@@ -58,7 +58,7 @@ fn track(s: &mut PresentationDumpSeries, key: &'static str, v: f64) {
 }
 
 #[derive(SystemParam)]
-struct PresentationSampleReads<'w> {
+pub struct PresentationSampleReads<'w> {
     requests: Option<Res<'w, ConstructionVisualRequests>>,
     studio: Option<Res<'w, StudioMassingOverride>>,
     mode: Option<Res<'w, WorldPresentationMode>>,

@@ -5,6 +5,7 @@
 //! inside `ROAD_TOOL_SHEET_BLOCK_H_PX` / `POWER_TOOL_SHEET_BLOCK_H_PX` (pointer-gate rects).
 
 use bevy::prelude::*;
+use crate::gui::DeprecatedInteraction;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::{
@@ -437,11 +438,11 @@ pub fn sync_sim_power_sheet_bevy(
 }
 
 pub fn sim_road_sheet_actions(
-    build_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetBuild>)>,
-    cancel_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetCancel>)>,
-    upgrade_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetUpgrade>)>,
-    grid_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetToggleGrid>)>,
-    node_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimRoadSheetToggleNode>)>,
+    build_q: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<SimRoadSheetBuild>)>,
+    cancel_q: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<SimRoadSheetCancel>)>,
+    upgrade_q: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<SimRoadSheetUpgrade>)>,
+    grid_q: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<SimRoadSheetToggleGrid>)>,
+    node_q: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<SimRoadSheetToggleNode>)>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut queue: ResMut<ConstructionPlanQueue>,
     mut session: ResMut<ActiveToolSession>,
@@ -510,10 +511,10 @@ pub fn sim_road_sheet_actions(
 }
 
 pub fn sim_power_sheet_actions(
-    build_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimPowerSheetBuild>)>,
-    cancel_q: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<SimPowerSheetCancel>)>,
-    voltage_q: Query<(&Interaction, &UiButton, &SimPowerVoltagePick), Changed<Interaction>>,
-    mode_q: Query<(&Interaction, &UiButton, &SimPowerModePick), Changed<Interaction>>,
+    build_q: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<SimPowerSheetBuild>)>,
+    cancel_q: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<SimPowerSheetCancel>)>,
+    voltage_q: Query<(&DeprecatedInteraction, &UiButton, &SimPowerVoltagePick), Changed<DeprecatedInteraction>>,
+    mode_q: Query<(&DeprecatedInteraction, &UiButton, &SimPowerModePick), Changed<DeprecatedInteraction>>,
     mut tool: ResMut<ActiveBuildTool>,
     mut placement: ResMut<ActivePowerLinePlacement>,
     mut snap_res: ResMut<UtilityNetworkSnapshotResource>,

@@ -8,6 +8,7 @@
 //! through [`assign_binding`] then persist via [`InputBindings::save_to_ron_path`].
 
 use bevy::prelude::*;
+use crate::gui::DeprecatedInteraction;
 use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 
@@ -448,10 +449,10 @@ fn sync_keybindings_bevy_panel(
 
 fn keybindings_row_clicks(
     mut state: ResMut<KeybindingsUiState>,
-    interactions: Query<(&Interaction, &KeybindingsRowButton), Changed<Interaction>>,
+    interactions: Query<(&DeprecatedInteraction, &KeybindingsRowButton), Changed<DeprecatedInteraction>>,
 ) {
     for (interaction, row) in &interactions {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             state.capture_slot = Some(row.0);
             state.last_io_message = None;
         }

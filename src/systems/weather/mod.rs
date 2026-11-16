@@ -3,8 +3,9 @@
 //! Plan: [`src/dev/plan_weather_wind_v1.md`](../../dev/plan_weather_wind_v1.md).
 //!
 //! - [`WeatherField`] — the one authority: coarse 1 km grid, seeded climate + moving pressure
-//!   systems, solved every `weather_step_secs` of game time; [`WeatherField::sample`] for consumers.
-//! - [`ChunkWeather`] — per-chunk projection of the field for existing readers.
+//!   systems, solved every `weather_step_secs` of game time; [`WeatherField::sample`] only in
+//!   [`crate::systems::atmosphere::build_atmosphere_frame`] (CQ-39).
+//! - [`ChunkWeather`] — per-chunk projection of [`AtmosphereFrame`] for existing readers.
 //! - **Precipitation visuals** (overlay tint; GPU streaks via `render::weather_vfx`): [`WeatherVisualPlugin`](weather_visual::WeatherVisualPlugin), [`WeatherVisualSettings`](weather_visual::WeatherVisualSettings).
 
 mod air_ops;
@@ -123,13 +124,21 @@ impl Plugin for WeatherSimulationPlugin {
                 (
                     spawn_chunk_weather_on_new_chunk,
                     weather_field_step,
-                    project_chunk_weather,
-                    sync_weather_polling_stations,
-                    build_weather_sense_cell_field,
                     bake_weather_overlay_from_field,
                 )
                     .chain()
                     .in_set(ChunkEnvironmentSet::Weather),
+            )
+            // CQ-39: chunk projection + polling stations read AtmosphereFrame (built in WindAdvect→Frame).
+            .add_systems(
+                Update,
+                (
+                    project_chunk_weather,
+                    sync_weather_polling_stations,
+                    build_weather_sense_cell_field,
+                )
+                    .chain()
+                    .after(AtmospherePipelineSet::Frame),
             )
             // W2: air-ops reads the derived `AtmosphereFrame`, so it runs after `Frame` (post-fire)
             // instead of inside the Weather chain; stations + sense field are still fresh this tick.

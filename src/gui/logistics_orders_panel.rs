@@ -8,6 +8,7 @@
 use std::hash::{Hash, Hasher};
 
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
+use crate::gui::DeprecatedInteraction;
 use bevy::input::mouse::{MouseScrollUnit, MouseWheel};
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
@@ -1498,12 +1499,12 @@ fn logistics_orders_panel_clicks(
     mut policy: ResMut<crate::economy::logistics::orders::AutoSupplyPolicy>,
     snap: Option<Res<LogisticsOrdersSnapshotRes>>,
     mut requests: MessageWriter<LogisticsOrderRequest>,
-    buttons: Query<(&Interaction, &LogisticsOrdersAction), Changed<Interaction>>,
+    buttons: Query<(&DeprecatedInteraction, &LogisticsOrdersAction), Changed<DeprecatedInteraction>>,
 ) {
     let empty = LogisticsOrdersSnapshot::default();
     let snap = snap.as_deref().map_or(&empty, |s| &s.0);
     for (interaction, action) in &buttons {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         if action.0 == PanelAction::ToggleAutoSupply {

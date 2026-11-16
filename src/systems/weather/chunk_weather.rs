@@ -1,14 +1,16 @@
-//! Per-chunk weather scalars — a **projection** of [`WeatherField`] (plan `plan_weather_wind_v1.md` §3).
+//! Per-chunk weather scalars — a **projection** of [`crate::systems::atmosphere::AtmosphereFrame`]
+//! (plan `plan_weather_wind_v1.md` §3, CQ-39).
 //!
 //! Written once per weather step (and once when a chunk first gets the component) by
-//! [`project_chunk_weather`], sampled at the chunk centre. Existing readers (ecology, fire, LOD,
-//! sensors, VFX means) keep their 0..1 scalars; new readers should sample the field directly.
+//! [`project_chunk_weather`] from the frame's chunk-centre samples (never [`WeatherField::sample`]).
+//! Existing readers (ecology, fire, LOD, sensors, VFX means) keep their 0..1 scalars; new readers
+//! should read [`AtmosphereFrame`] directly.
 //!
 //! Does **not** mutate terrain ontology; consumers read this + [`DynamicTerrainOverlay`](crate::terrain::dynamic_overlay::DynamicTerrainOverlay).
 
 use bevy::prelude::*;
 
-use crate::systems::sim_control::SimTimeMicros;
+use crate::systems::atmosphere::AtmosphereFrame;
 use crate::terrain::generation::{chunk_world_center, Chunk, ChunkCellMatrix};
 use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
 
@@ -81,19 +83,20 @@ fn matrix_mean_moisture(matrix: &ChunkCellMatrix) -> Option<f32> {
     Some(matrix.moisture.iter().sum::<f32>() / n as f32)
 }
 
-/// Project the field onto chunks: every chunk when the field changed, else only new components.
+/// Project frame weather onto chunks: every chunk when the field revision changed, else only new components.
 pub fn project_chunk_weather(
     field: Res<WeatherField>,
+    frame: Res<AtmosphereFrame>,
     mut last_revision: Local<u64>,
     mut query: Query<(&Chunk, Option<&ChunkCellMatrix>, &mut ChunkWeather)>,
 ) {
-    if !field.is_ready() {
+    if !frame.is_weather_ready() || !field.is_ready() {
         return;
     }
-    let changed = *last_revision != field.revision;
-    *last_revision = field.revision;
+    let weather_rev = frame.key().weather_revision;
+    let changed = *last_revision != weather_rev;
+    *last_revision = weather_rev;
     let step_h = field.step_secs as f32 / 3600.0;
-    let t = SimTimeMicros(field.prev_micros);
     for (chunk, matrix, mut w) in &mut query {
         let added = w.is_added();
         if !changed && !added {
@@ -101,7 +104,12 @@ pub fn project_chunk_weather(
         }
         let size = matrix.map_or(UVec2::splat(CHUNK_TILES_SIM), |m| m.size);
         let pos = chunk_world_center(chunk.coord, size) * TILE_METRES_GAMEPLAY;
-        let s = field.sample(pos, t);
+        let Some(s) = frame
+            .weather_at_chunk(chunk.coord)
+            .or_else(|| frame.weather_at_pos_m(pos))
+        else {
+            continue;
+        };
         let rain01 = (s.rain_mm_h / CHUNK_RAIN_FULL_SCALE_MM_H).clamp(0.0, 1.0);
         w.rain_intensity = if s.snow { 0.0 } else { rain01 };
         w.rain_mm_h = if s.snow { 0.0 } else { s.rain_mm_h.max(0.0) };

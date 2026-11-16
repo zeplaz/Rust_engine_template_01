@@ -21,6 +21,7 @@ use crate::terrain::generation::world_generator_enhanced::{
     WorldMarker,
 };
 use bevy::app::AppExit;
+use crate::gui::DeprecatedInteraction;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
@@ -394,8 +395,8 @@ fn begin_menu_debug_world_gen(
 
 fn handle_main_menu_buttons(
     q: Query<
-        (&Interaction, &MainMenuButtonAction),
-        (Changed<Interaction>, With<Button>),
+        (&DeprecatedInteraction, &MainMenuButtonAction),
+        (Changed<DeprecatedInteraction>, With<Button>),
     >,
     mut commands: Commands,
     world_roots: Query<Entity, With<WorldMarker>>,
@@ -410,7 +411,7 @@ fn handle_main_menu_buttons(
     mut world_preview_ui: ResMut<crate::gui::editor::world_preview::WorldPreviewUiState>,
 ) {
     for (interaction, action) in &q {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         match *action {
@@ -449,15 +450,15 @@ fn handle_main_menu_buttons(
 
 fn handle_main_menu_debug_buttons(
     q: Query<
-        (&Interaction, &MainMenuButtonAction),
-        (Changed<Interaction>, With<Button>),
+        (&DeprecatedInteraction, &MainMenuButtonAction),
+        (Changed<DeprecatedInteraction>, With<Button>),
     >,
     mut commands: Commands,
     world_roots: Query<Entity, With<WorldMarker>>,
     mut bootstrap: MenuDebugBootstrap,
 ) {
     for (interaction, action) in &q {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         match *action {
@@ -498,8 +499,8 @@ fn handle_main_menu_debug_buttons(
 
 fn handle_load_menu_buttons(
     q: Query<
-        (&Interaction, &LoadMenuButtonAction),
-        (Changed<Interaction>, With<Button>),
+        (&DeprecatedInteraction, &LoadMenuButtonAction),
+        (Changed<DeprecatedInteraction>, With<Button>),
     >,
     mut commands: Commands,
     world_roots: Query<Entity, With<WorldMarker>>,
@@ -509,7 +510,7 @@ fn handle_load_menu_buttons(
     mut next_world_flow: ResMut<NextState<WorldGenFlowState>>,
 ) {
     for (interaction, action) in &q {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         match *action {

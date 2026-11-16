@@ -53,7 +53,7 @@ fn track(s: &mut FidelityDumpSeries, key: &'static str, v: f64) {
 }
 
 #[derive(SystemParam)]
-struct FidelitySampleReads<'w> {
+pub struct FidelitySampleReads<'w> {
     missile: Option<Res<'w, MissileSortieDump>>,
     ballistics: Option<Res<'w, BallisticFlightBook>>,
     blast: Option<Res<'w, BlastCraterDump>>,

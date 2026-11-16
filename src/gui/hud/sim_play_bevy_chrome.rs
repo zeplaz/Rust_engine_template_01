@@ -5,6 +5,7 @@
 //! crosshair on the pointer. None of them write the placement grid.
 
 use bevy::prelude::*;
+use crate::gui::DeprecatedInteraction;
 use bevy::ui_widgets::Button;
 
 use crate::construction::{
@@ -386,23 +387,23 @@ fn spawn_repair_rows(
 pub(crate) fn context_tray_power_repair_clicks(
     queue: Option<ResMut<PowerRepairQueue>>,
     book: Option<Res<PowerLineDamageBook>>,
-    all: Query<&Interaction, (Changed<Interaction>, With<PowerRepairQueueAllButton>)>,
-    cancel: Query<(&Interaction, &PowerRepairCancel), Changed<Interaction>>,
-    priority: Query<(&Interaction, &PowerRepairPriority), Changed<Interaction>>,
+    all: Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<PowerRepairQueueAllButton>)>,
+    cancel: Query<(&DeprecatedInteraction, &PowerRepairCancel), Changed<DeprecatedInteraction>>,
+    priority: Query<(&DeprecatedInteraction, &PowerRepairPriority), Changed<DeprecatedInteraction>>,
 ) {
     let (Some(mut queue), Some(book)) = (queue, book) else {
         return;
     };
-    if all.iter().any(|i| *i == Interaction::Pressed) {
+    if all.iter().any(|i| *i == DeprecatedInteraction::Pressed) {
         queue.queue_all_damaged(book.as_ref(), POWER_REPAIR_PARTS_PER_SEGMENT);
     }
     for (interaction, row) in &cancel {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             queue.cancel(row.0);
         }
     }
     for (interaction, row) in &priority {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             if let Some(job) = queue.jobs.iter_mut().find(|j| j.id == row.id) {
                 let p = job.priority as i16 + row.delta;
                 job.priority = p.clamp(1, 100) as u8;

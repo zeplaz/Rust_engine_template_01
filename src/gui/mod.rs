@@ -64,6 +64,9 @@ mod tile_debug_types;
 mod gpu_tile_debug;
 mod tile_readability;
 mod strategic_icon_instances;
+mod ui_interaction;
+pub use ui_interaction::DeprecatedInteraction;
+
 pub mod style;
 pub mod ui_types;
 pub mod components;

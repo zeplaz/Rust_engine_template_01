@@ -4,7 +4,7 @@
 //! Sole writer: [`build_weather_source_terms`] (Frame set, after `build_atmosphere_frame`).
 //! `weather_field_step` reads the resource on the next weather solve (one-step lag).
 
-use bevy::math::{IVec2, UVec2, Vec2};
+use bevy::math::{IVec2, UVec2};
 use bevy::prelude::*;
 
 use crate::substrate::atmosphere::AtmosphereClipmapStack;

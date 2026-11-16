@@ -779,7 +779,7 @@ fn extract_content_hash(rows: &[VegExtractRow], chunk: UVec2) -> u64 {
 }
 
 #[derive(Default)]
-struct LayerState {
+pub(crate) struct LayerState {
     built_key: Option<u64>,
     content_hash: u64,
     mesh: Option<Handle<Mesh>>,

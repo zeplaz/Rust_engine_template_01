@@ -15,7 +15,7 @@ pub use path_concerns::{
     front_haul_path_concern, load_logistics_path_concerns, load_logistics_path_concerns_on_startup,
     LogisticsPathConcern, LogisticsPathConcernRegistry, PATH_CONCERNS_RON,
 };
-pub use motion::{SpeedModifier, *};
+pub use motion::*;
 pub use nav::*;
 pub use potental_feild_nav::*;
 pub use road_vehicles_motion::{

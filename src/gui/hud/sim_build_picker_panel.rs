@@ -6,6 +6,7 @@
 //! tool (intent only) and closes the sheet so the next click goes to the map.
 
 use bevy::prelude::*;
+use crate::gui::DeprecatedInteraction;
 
 use crate::construction::building_definitions::menu_rows::{
     affordability, player_depot_stock, MenuItem, MenuRow,
@@ -458,8 +459,8 @@ fn swallow_opening_press(
 }
 
 pub fn sim_build_picker_panel_actions(
-    close: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<PickerClose>)>,
-    items: Query<(&Interaction, &UiButton, &PickerItem), Changed<Interaction>>,
+    close: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<PickerClose>)>,
+    items: Query<(&DeprecatedInteraction, &UiButton, &PickerItem), Changed<DeprecatedInteraction>>,
     cache: Res<SimBuildPickerCache>,
     mut tool: ResMut<ActiveBuildTool>,
     mut picker: ResMut<SimBuildPickerState>,

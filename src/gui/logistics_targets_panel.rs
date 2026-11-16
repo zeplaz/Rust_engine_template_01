@@ -1,6 +1,7 @@
 //! Pick logistics HUD focus from a list (hotkey, **Options** keybindings, this Bevy panel).
 
 use bevy::prelude::*;
+use crate::gui::DeprecatedInteraction;
 use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 
@@ -211,17 +212,17 @@ fn sync_logistics_targets_bevy_panel(
 
 fn logistics_targets_pick_clicks(
     mut focus: ResMut<HudLogisticsFocus>,
-    interactions: Query<(&Interaction, &LogisticsTargetsPickButton), Changed<Interaction>>,
-    open_orders: Query<&Interaction, (Changed<Interaction>, With<LogisticsTargetsOpenOrdersButton>)>,
+    interactions: Query<(&DeprecatedInteraction, &LogisticsTargetsPickButton), Changed<DeprecatedInteraction>>,
+    open_orders: Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<LogisticsTargetsOpenOrdersButton>)>,
     mut orders: ResMut<LogisticsOrdersPanelState>,
 ) {
     for interaction in &open_orders {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             orders.visible = true;
         }
     }
     for (interaction, pick) in &interactions {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             focus.tracked_entity = Some(pick.0);
         }
     }

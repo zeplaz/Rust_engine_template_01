@@ -17,6 +17,7 @@
 use std::collections::BTreeMap;
 
 use bevy::prelude::*;
+use crate::gui::DeprecatedInteraction;
 use bevy::window::PrimaryWindow;
 
 use crate::combat::{
@@ -647,10 +648,10 @@ enum Field {
 }
 
 #[derive(Component)]
-struct ReadoutValue(Field);
+pub struct ReadoutValue(Field);
 
 #[derive(Component, Clone, Copy)]
-enum ReadoutButton {
+pub enum ReadoutButton {
     Hold,
     Fortify,
     Clear,
@@ -752,7 +753,7 @@ pub fn sync_front_selection_panel(
 
 #[allow(clippy::too_many_arguments)]
 pub fn front_panel_buttons_system(
-    interactions: Query<(&Interaction, &UiButton, &ReadoutButton), Changed<Interaction>>,
+    interactions: Query<(&DeprecatedInteraction, &UiButton, &ReadoutButton), Changed<DeprecatedInteraction>>,
     theaters: Res<TheaterBook>,
     formations: Query<(Entity, &Formation)>,
     mut selected: ResMut<SelectedFormation>,

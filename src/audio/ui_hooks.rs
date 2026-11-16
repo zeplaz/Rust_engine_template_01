@@ -2,6 +2,7 @@
 //! Alert bark priority + exclusivity (AUD-08).
 
 use bevy::prelude::*;
+use bevy::ui::DeprecatedInteraction;
 use bevy::ui_widgets::Button;
 
 use super::mix_frame::{AudioEventClass, AudioMixRequest, AudioOneShotKind, AudioOneShotQueue};
@@ -115,10 +116,10 @@ pub fn apply_alert_bark_priority_to_pending(
 /// Any Bevy UI `Button` press enqueues a UI click (play UI only — no sim mut).
 pub fn enqueue_ui_button_clicks(
     mut audio: ResMut<AudioOneShotQueue>,
-    q: Query<&Interaction, (Changed<Interaction>, With<Button>)>,
+    q: Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<Button>)>,
 ) {
     for interaction in &q {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             audio.push_ui(super::mix_frame::AudioOneShotKind::UiClick);
         }
     }

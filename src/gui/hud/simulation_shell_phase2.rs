@@ -3,6 +3,7 @@
 //! Spec: `prompts/guides/ui/ui_phase0_panel_mocks_v1.md` § P1/P2/P3/P4.
 
 use bevy::prelude::*;
+use crate::gui::DeprecatedInteraction;
 use bevy::ui_widgets::Button;
 use bevy::window::PrimaryWindow;
 
@@ -645,11 +646,11 @@ fn update_ops_strip_zone_lines_system(
 }
 
 fn zone_shade_toggle_click_system(
-    q: Query<&Interaction, (Changed<Interaction>, With<ZoneShadeToggleButton>)>,
+    q: Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<ZoneShadeToggleButton>)>,
     mut shade: ResMut<ZoneShadeToggle>,
 ) {
     for interaction in &q {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             shade.visible = !shade.visible;
         }
     }
@@ -669,13 +670,13 @@ fn sync_zone_shade_toggle_label(
 }
 
 fn ops_strip_zone_click_system(
-    q: Query<(&Interaction, &OpsStripZone), Changed<Interaction>>,
+    q: Query<(&DeprecatedInteraction, &OpsStripZone), Changed<DeprecatedInteraction>>,
     mut tray: ResMut<ContextTrayState>,
     mut intel_req: ResMut<OpsStripIntelFocusRequest>,
     world: Option<Res<WorldRepresentationFrame>>,
 ) {
     for (interaction, zone) in &q {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         match zone {
@@ -707,12 +708,12 @@ fn apply_ops_strip_intel_focus_system(
 }
 
 fn context_tray_tab_click_system(
-    q: Query<(&Interaction, &ContextTrayTabButton), Changed<Interaction>>,
+    q: Query<(&DeprecatedInteraction, &ContextTrayTabButton), Changed<DeprecatedInteraction>>,
     mut tray: ResMut<ContextTrayState>,
     mut player_log: Option<ResMut<crate::sim::effects::PlayerEventLog>>,
 ) {
     for (interaction, tab) in &q {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             tray.on_tab_pressed(tab.0);
             if tab.0 == ContextTrayTab::Events {
                 if let Some(log) = player_log.as_mut() {
@@ -724,7 +725,7 @@ fn context_tray_tab_click_system(
 }
 
 fn build_rail_tool_click_system(
-    q: Query<(&Interaction, &BuildRailToolSlot), (Changed<Interaction>, With<Button>)>,
+    q: Query<(&DeprecatedInteraction, &BuildRailToolSlot), (Changed<DeprecatedInteraction>, With<Button>)>,
     mut strip: ResMut<BuildStripState>,
     mut tool: ResMut<crate::construction::ActiveBuildTool>,
     mut picker: ResMut<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>,
@@ -732,7 +733,7 @@ fn build_rail_tool_click_system(
     mut power_sheet: ResMut<crate::gui::hud::sim_power_tool_sheet::SimPowerToolSheetState>,
 ) {
     for (interaction, slot) in &q {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         let already_open = picker.open && picker.anchor_slot == slot.0;
@@ -764,14 +765,14 @@ fn build_rail_tool_click_system(
 fn sync_ops_strip_zone_hover_system(
     palette: Res<UiPalette>,
     mut zones: Query<
-        (&Interaction, &mut BorderColor, &mut Node),
+        (&DeprecatedInteraction, &mut BorderColor, &mut Node),
         (With<Button>, With<OpsStripZone>),
     >,
 ) {
     let hot = palette.bevy_accent_hot();
     let idle = palette.bevy_border_subtle();
     for (interaction, mut border, mut node) in &mut zones {
-        let emphasized = matches!(*interaction, Interaction::Hovered | Interaction::Pressed);
+        let emphasized = matches!(*interaction, DeprecatedInteraction::Hovered | DeprecatedInteraction::Pressed);
         *border = if emphasized {
             BorderColor::all(hot)
         } else {
@@ -984,10 +985,10 @@ fn sync_context_tray_tab_chrome_system(
     }
 }
 
-fn build_rail_icon_tint(palette: &UiPalette, interaction: &Interaction, selected: bool) -> Color {
+fn build_rail_icon_tint(palette: &UiPalette, interaction: &DeprecatedInteraction, selected: bool) -> Color {
     if selected {
         palette.bevy_accent_gold()
-    } else if matches!(*interaction, Interaction::Hovered | Interaction::Pressed) {
+    } else if matches!(*interaction, DeprecatedInteraction::Hovered | DeprecatedInteraction::Pressed) {
         palette.bevy_accent_hot()
     } else {
         palette.bevy_text_muted().with_alpha(0.72)
@@ -997,12 +998,12 @@ fn build_rail_icon_tint(palette: &UiPalette, interaction: &Interaction, selected
 #[must_use]
 fn build_rail_slot_border_color(
     palette: &UiPalette,
-    interaction: &Interaction,
+    interaction: &DeprecatedInteraction,
     selected: bool,
 ) -> Color {
     if selected {
         palette.bevy_accent_gold()
-    } else if matches!(*interaction, Interaction::Hovered | Interaction::Pressed) {
+    } else if matches!(*interaction, DeprecatedInteraction::Hovered | DeprecatedInteraction::Pressed) {
         palette.bevy_accent_hot()
     } else {
         palette.bevy_border_subtle()
@@ -1016,7 +1017,7 @@ fn sync_build_rail_from_strip_system(
     mut slots: Query<
         (
             &BuildRailToolSlot,
-            &Interaction,
+            &DeprecatedInteraction,
             &Children,
             &mut BackgroundColor,
             &mut BorderColor,
@@ -1073,7 +1074,7 @@ fn sync_logistics_vehicle_chips_system(
     atlas_ui: Option<Res<IconAtlasUi>>,
     manifests: Res<Assets<IconAtlasManifest>>,
     mut rows: Query<&mut Visibility, With<LogisticsVehicleChipRow>>,
-    chips: Query<(&LogisticsVehicleChip, &Interaction, &Children)>,
+    chips: Query<(&LogisticsVehicleChip, &DeprecatedInteraction, &Children)>,
     mut icons: Query<
         &mut bevy::ui::widget::ImageNode,
         (With<LogisticsVehicleChipIcon>, Without<LogisticsVehicleChipRow>),
@@ -1123,7 +1124,7 @@ fn sync_petroleum_panel_tab_system(
     palette: Res<UiPalette>,
     atlas_ui: Option<Res<IconAtlasUi>>,
     manifests: Res<Assets<IconAtlasManifest>>,
-    mut roots: Query<(&Interaction, &mut Visibility), With<PetroleumPanelTabRoot>>,
+    mut roots: Query<(&DeprecatedInteraction, &mut Visibility), With<PetroleumPanelTabRoot>>,
     mut icons: Query<
         &mut bevy::ui::widget::ImageNode,
         (With<PetroleumPanelTabIcon>, Without<PetroleumPanelTabRoot>),
@@ -1380,11 +1381,11 @@ mod tests {
     #[test]
     fn build_rail_hover_border_uses_accent_hot() {
         let palette = UiPalette::default();
-        let hot = build_rail_slot_border_color(&palette, &Interaction::Hovered, false);
+        let hot = build_rail_slot_border_color(&palette, &DeprecatedInteraction::Hovered, false);
         assert_eq!(hot, palette.bevy_accent_hot());
-        let gold = build_rail_slot_border_color(&palette, &Interaction::None, true);
+        let gold = build_rail_slot_border_color(&palette, &DeprecatedInteraction::None, true);
         assert_eq!(gold, palette.bevy_accent_gold());
-        let subtle = build_rail_slot_border_color(&palette, &Interaction::None, false);
+        let subtle = build_rail_slot_border_color(&palette, &DeprecatedInteraction::None, false);
         assert_eq!(subtle, palette.bevy_border_subtle());
     }
 

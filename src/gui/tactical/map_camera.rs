@@ -9,6 +9,7 @@
 //! **ApplyInput → DeriveDesired → Smooth**.
 
 use bevy::input::mouse::{AccumulatedMouseScroll, MouseWheel};
+use crate::gui::DeprecatedInteraction;
 use bevy::diagnostic::FrameCount;
 use bevy::prelude::*;
 use bevy::window::PrimaryWindow;
@@ -457,8 +458,8 @@ pub fn default_map_zoom_for_world(test_scene: Option<Res<ActiveTestScene>>) -> f
     test_scene_zoom(test_scene)
 }
 
-fn map_fill_accepts_pointer(interaction: &Interaction) -> bool {
-    matches!(*interaction, Interaction::Hovered | Interaction::Pressed)
+fn map_fill_accepts_pointer(interaction: &DeprecatedInteraction) -> bool {
+    matches!(*interaction, DeprecatedInteraction::Hovered | DeprecatedInteraction::Pressed)
 }
 
 /// Working pose for ApplyInput: authority first; Transform seed if WorldMain unset (pre-focus).
@@ -487,7 +488,7 @@ fn map_camera_apply_input(
     fill: Res<SimulationMapViewport>,
     tex: Res<SimulationMapTexture>,
     images: Res<Assets<Image>>,
-    map_fill_interaction: Query<&Interaction, With<SimulationMapViewportFill>>,
+    map_fill_interaction: Query<&DeprecatedInteraction, With<SimulationMapViewportFill>>,
     params: Res<WorldGenParams>,
     mut settings: ResMut<MapCameraSettings>,
     mut authority: ResMut<ViewProjectionAuthority>,
@@ -795,7 +796,7 @@ fn map_camera_wheel_zoom_system(
     fill: Res<SimulationMapViewport>,
     tex: Res<SimulationMapTexture>,
     images: Res<Assets<Image>>,
-    map_fill_interaction: Query<&Interaction, With<SimulationMapViewportFill>>,
+    map_fill_interaction: Query<&DeprecatedInteraction, With<SimulationMapViewportFill>>,
     scroll_acc: Res<AccumulatedMouseScroll>,
     input_frame: Res<InputFrame>,
     mut wheel_events: MessageReader<MouseWheel>,

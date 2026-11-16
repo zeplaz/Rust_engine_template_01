@@ -492,7 +492,7 @@ fn zoom_band(px: f32) -> i64 {
 }
 
 #[derive(Default)]
-struct LayerState {
+pub(crate) struct LayerState {
     built_key: Option<u64>,
     mesh: Option<Handle<Mesh>>,
     material: Option<Handle<ColorMaterial>>,

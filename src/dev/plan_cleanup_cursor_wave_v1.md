@@ -297,7 +297,7 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-36 | DONE | `90012715`+ | Terms hold proposed moisture; `pyro_moisture_applied` + diag from weather solve only. |
 | CQ-37 | DONE | `90012715`+ | Dense heat weather RO reads `AtmosphereWeatherMeans` (not render climate). |
 | CQ-40 | DONE | `90012715`+ | `TopUpPackage` / `refill_packages_sink` kernel; drone/missile sinks are adapters. |
-| CQ-39 | OPEN | — | Collapse four WeatherField samplers onto AtmosphereFrame. |
+| CQ-39 | DONE | `4761b21a`+ | Chunk weather / polling / L0 advect read AtmosphereFrame; only frame builder samples WeatherField. |
 | CQ-41 | DONE | `143d9ecd`+ | `run(kind,payload)` + `_QUEUED_RUNNERS` dispatch; handoff status files retained for Blender async. |
 | CQ-70 | DONE | `143d9ecd`+ | Citation/doc `include_str` greps removed; authority lints kept (~37). |
 | CQ-71 | DONE | `143d9ecd`+ | toe_demand/front_stock_pool/vfx_capture tautologies fixed. |
@@ -305,7 +305,7 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-82 | DONE | (prior) | v2 superseded banner + adoption.tsv skill/rule pointers. |
 | CQ-83 | PARTIAL | `143d9ecd`+ | AGENTS.md → plan index; playquad SHIPPED. Full archive move of PROGRAM CLOSE plans deferred. |
 | CQ-84 | OPEN | — | Stop citing gitignored debug_runs evidence. |
-| CQ-85 | OPEN | — | `cargo check` ≤ 50 warnings (currently ~165). |
+| CQ-85 | DONE | `4761b21a`+ | Warnings 165→35 via DeprecatedInteraction + dead-code/private-API hygiene (≤50 met). |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking
