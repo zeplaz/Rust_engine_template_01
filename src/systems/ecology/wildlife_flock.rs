@@ -248,10 +248,48 @@ pub fn tick_wildlife_herd_system(mut book: ResMut<WildlifeHerdBook>) {
     tick_wildlife_herd(&mut book);
 }
 
+/// CQ-51: seed once from [`WorldSaveSeed`] when the herd is still empty.
+pub fn seed_wildlife_herd_from_world_seed(
+    mut book: ResMut<WildlifeHerdBook>,
+    seed: Option<Res<crate::io::save::WorldSaveSeed>>,
+) {
+    if !book.agents.is_empty() {
+        return;
+    }
+    let s = seed.map(|w| w.0).unwrap_or(0x4d31_3057);
+    *book = WildlifeHerdBook::from_seed(s, WILDLIFE_DEFAULT_COUNT, Vec2::ZERO);
+}
+
+pub fn sync_nav_wildlife_soft_system(
+    mut nav: Option<ResMut<crate::compute::NavFieldFrame>>,
+    book: Res<WildlifeHerdBook>,
+) {
+    let Some(ref mut nav) = nav else {
+        return;
+    };
+    sync_nav_wildlife_soft(nav, &book);
+}
+
+pub fn sync_agent_frame_from_wildlife_system(
+    mut agents: Option<ResMut<crate::compute::AgentFrame>>,
+    book: Res<WildlifeHerdBook>,
+) {
+    let Some(ref mut agents) = agents else {
+        return;
+    };
+    sync_agent_frame_from_wildlife(agents, &book);
+}
+
 pub fn register_wildlife_flock(app: &mut App) {
     app.init_resource::<WildlifeHerdBook>().add_systems(
         Update,
-        tick_wildlife_herd_system.in_set(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Ecology),
+        (
+            seed_wildlife_herd_from_world_seed,
+            tick_wildlife_herd_system.after(seed_wildlife_herd_from_world_seed),
+            sync_nav_wildlife_soft_system.after(tick_wildlife_herd_system),
+            sync_agent_frame_from_wildlife_system.after(tick_wildlife_herd_system),
+        )
+            .in_set(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Ecology),
     );
 }
 

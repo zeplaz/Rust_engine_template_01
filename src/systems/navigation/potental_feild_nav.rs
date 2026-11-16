@@ -17,6 +17,10 @@ use crate::terrain::Tile;
 
 use super::motion::SpeedModifier;
 use super::nav::find_tile_at_position;
+use super::road_vehicles_motion::{
+    filter_vehicle_steering_output, VehicleMotionLimits, RoadVehicleKinematics,
+};
+use crate::systems::sim_control::{SimControlState, SimStepClock};
 
 /// How close an agent must be before advancing to the next waypoint.
 const REACHED_WAYPOINT_THRESHOLD: f32 = 0.75;
@@ -164,16 +168,31 @@ pub fn combine_steering_for_depot_queue(
 }
 
 pub fn potential_field_navigation_system(
-    mut query: Query<(Entity, &mut Transform, &mut Waypoints, &SpeedModifier)>,
+    sim_ctrl: Res<SimControlState>,
+    clock: Option<Res<SimStepClock>>,
+    mut query: Query<(
+        Entity,
+        &mut Transform,
+        &mut Waypoints,
+        &SpeedModifier,
+        Option<&mut RoadVehicleKinematics>,
+    )>,
     tile_query: Query<&Tile>,
 ) {
+    if !sim_ctrl.should_tick() {
+        return;
+    }
+    let dt = clock
+        .as_ref()
+        .map(|c| c.step_secs() * sim_ctrl.dt_scale())
+        .unwrap_or_else(|| sim_ctrl.dt_scale() * (1.0 / 60.0));
     // Pass 1: snapshot positions for MOVE-03 neighbor forces (no dual mut borrow).
     let positions: Vec<(Entity, Vec2)> = query
         .iter()
-        .map(|(e, t, _, _)| (e, t.translation.truncate()))
+        .map(|(e, t, _, _, _)| (e, t.translation.truncate()))
         .collect();
 
-    for (entity, mut transform, mut wp, speed_modifier) in query.iter_mut() {
+    for (entity, mut transform, mut wp, speed_modifier, mut road_kin) in query.iter_mut() {
         if wp.points.is_empty() {
             continue;
         }
@@ -193,7 +212,21 @@ pub fn potential_field_navigation_system(
             let requester = EntityId::default();
             let seek = calculate_potential_field_influence(position, waypoint, tile, requester);
             let combined = combine_steering_for_depot_queue(position, seek, &neighbors);
-            let movement_vector = combined * speed_modifier.value;
+            let desired = combined * speed_modifier.value;
+            let movement_vector = if let Some(ref mut kin) = road_kin {
+                let (vel, heading) = filter_vehicle_steering_output(
+                    kin.velocity,
+                    desired,
+                    kin.heading,
+                    VehicleMotionLimits::TRUCK,
+                    dt,
+                );
+                kin.velocity = vel;
+                kin.heading = heading;
+                vel
+            } else {
+                desired
+            };
             transform.translation += movement_vector.extend(0.0);
 
             if movement_vector.length_squared() > f32::EPSILON {

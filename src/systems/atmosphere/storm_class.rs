@@ -86,16 +86,6 @@ pub fn classify_storm(weather: &WeatherSample, thresholds: &StormClassThresholds
     classify_storm_with_context(weather, thresholds, false, 0.0)
 }
 
-/// Like [`classify_storm`], with firestorm-plume membership and vortex influence (W4/W5).
-#[must_use]
-pub fn classify_storm_with_plume(
-    weather: &WeatherSample,
-    thresholds: &StormClassThresholds,
-    in_firestorm_plume: bool,
-) -> StormClass {
-    classify_storm_with_context(weather, thresholds, in_firestorm_plume, 0.0)
-}
-
 /// Full classifier with L0 plume bit and pressure-system vortex influence.
 #[must_use]
 pub fn classify_storm_with_context(
@@ -194,10 +184,13 @@ mod tests {
         let t = StormClassThresholds::default();
         let w = WeatherSample::default();
         assert_eq!(
-            classify_storm_with_plume(&w, &t, true),
+            classify_storm_with_context(&w, &t, true, 0.0),
             StormClass::FirestormPlume
         );
-        assert_eq!(classify_storm_with_plume(&w, &t, false), StormClass::Clear);
+        assert_eq!(
+            classify_storm_with_context(&w, &t, false, 0.0),
+            StormClass::Clear
+        );
     }
 
     #[test]

@@ -32,16 +32,17 @@ fn blend_l0_channels_for_chunk(
     ash: f32,
     ember: f32,
     heat: f32,
-) {
+) -> bool {
     let Some((x, y)) = atmos_chunk_to_tile(chunk) else {
-        return;
+        return false;
     };
-    max_blend_l0_smoke_at(stack, x, y, smoke);
+    let mut wrote = max_blend_l0_smoke_at(stack, x, y, smoke);
     // W7: fog lane not written — weather fog is AtmosphereFrame / WeatherField only.
-    max_blend_l0_toxicity_at(stack, x, y, toxicity);
-    max_blend_l0_ash_at(stack, x, y, ash);
-    max_blend_l0_ember_at(stack, x, y, ember);
-    max_blend_l0_heat_at(stack, x, y, heat);
+    wrote |= max_blend_l0_toxicity_at(stack, x, y, toxicity);
+    wrote |= max_blend_l0_ash_at(stack, x, y, ash);
+    wrote |= max_blend_l0_ember_at(stack, x, y, ember);
+    wrote |= max_blend_l0_heat_at(stack, x, y, heat);
+    wrote
 }
 
 #[inline]
@@ -76,6 +77,7 @@ pub fn atmosphere_field_fill_from_chunks(
     diag.field_fill_runs = diag.field_fill_runs.wrapping_add(1);
     // L0 is max-blend only (same as pre–DEBT-011 Field→L0 fold). Decay lives in WindAdvect.
 
+    let mut mutated = false;
     diag.last_fill_contiguous = false;
     if let Ok(batches) = q.contiguous_iter() {
         diag.last_fill_contiguous = true;
@@ -85,7 +87,7 @@ pub fn atmosphere_field_fill_from_chunks(
                 let fire_opt = fires.as_ref().map(|slice| &slice[i]);
                 let (smoke, toxicity, ash, ember, heat) =
                     channels_from_chunk(&weathers[i], &ecos[i], fire_opt);
-                blend_l0_channels_for_chunk(
+                mutated |= blend_l0_channels_for_chunk(
                     &mut stack,
                     chunks[i].coord,
                     smoke,
@@ -99,7 +101,7 @@ pub fn atmosphere_field_fill_from_chunks(
     } else {
         for (chunk, wx, eco, fire_opt) in &q {
             let (smoke, toxicity, ash, ember, heat) = channels_from_chunk(wx, eco, fire_opt);
-            blend_l0_channels_for_chunk(
+            mutated |= blend_l0_channels_for_chunk(
                 &mut stack,
                 chunk.coord,
                 smoke,
@@ -110,7 +112,9 @@ pub fn atmosphere_field_fill_from_chunks(
             );
         }
     }
-    stack.bump_revision();
+    if mutated {
+        stack.bump_revision();
+    }
 }
 
 /// Mean of a per-cell vector (SoA slice). Returns `0` when empty.
@@ -136,6 +140,7 @@ pub fn atmosphere_field_blend_fire_overlay_sources(
         return;
     }
 
+    let mut mutated = false;
     for (chunk, matrix, ovl_opt) in &q {
         let n = (matrix.size.x * matrix.size.y) as usize;
         if n == 0 {
@@ -164,7 +169,7 @@ pub fn atmosphere_field_blend_fire_overlay_sources(
         if smoke <= 0.0 && toxicity <= 0.0 && ash <= 0.0 && ember <= 0.0 && heat <= 0.0 {
             continue;
         }
-        blend_l0_channels_for_chunk(
+        mutated |= blend_l0_channels_for_chunk(
             &mut stack,
             chunk.coord,
             smoke,
@@ -174,7 +179,9 @@ pub fn atmosphere_field_blend_fire_overlay_sources(
             heat,
         );
     }
-    stack.bump_revision();
+    if mutated {
+        stack.bump_revision();
+    }
 }
 
 /// W7 — sole slab→L0 smoke seed (was `contamination_tick_system` + witness fold).

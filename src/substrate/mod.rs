@@ -18,9 +18,8 @@ pub use active_runtime::{
     sync_active_runtime_witness_flags_system, ActiveRuntimeState,
 };
 pub use atmosphere::{
-    clipmap_l0_smoke_max, contamination_tick_system, sync_atmos_clipmap_witness_system,
-    AtmosphereClipmapStack, AtmosphereClipmapStats, CLIPMAP_L0_AUTHORITATIVE, DEBT_010_WRITERS_L0,
-    WSS_ATMOS_CLIPMAP_GATE,
+    clipmap_l0_smoke_max, sync_atmos_clipmap_witness_system, AtmosphereClipmapStack,
+    AtmosphereClipmapStats, CLIPMAP_L0_AUTHORITATIVE, DEBT_010_WRITERS_L0, WSS_ATMOS_CLIPMAP_GATE,
 };
 pub use deformation::{
     apply_deformation_to_chunk, deformation_apply_tick_system, DeformationTickState,

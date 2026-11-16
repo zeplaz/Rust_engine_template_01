@@ -45,6 +45,14 @@ pub fn apply_alert_bark_priority_in_place(
     lane: &mut AlertBarkLane,
     pending: &mut Vec<AudioMixRequest>,
 ) {
+    if pending.is_empty() {
+        lane.active = None;
+        return;
+    }
+    if !pending.iter().any(|r| r.class == AudioEventClass::Warning) {
+        lane.active = None;
+        return;
+    }
     lane.active = None;
     let mut kept: Vec<AudioMixRequest> = Vec::with_capacity(pending.len());
     let mut warnings: Vec<AudioMixRequest> = Vec::new();

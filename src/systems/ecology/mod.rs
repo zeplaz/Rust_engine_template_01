@@ -81,10 +81,11 @@ pub use vegetation_variant_catalog::{
     VEGETATION_VARIANT_CATALOG_RON,
 };
 pub use wildlife_flock::{
-    clamp_speed, flock_step, soft_cost_at, soft_costs_from_agents, spawn_wildlife_agents,
-    sync_agent_frame_from_wildlife, sync_nav_wildlife_soft, tick_wildlife_herd, WildlifeAgent,
-    WildlifeHerdBook, WildlifeSoftCostSample, WILDLIFE_DEFAULT_COUNT, WILDLIFE_MAX_SPEED,
-    WILDLIFE_SOFT_COST_MAX,
+    clamp_speed, flock_step, seed_wildlife_herd_from_world_seed, soft_cost_at,
+    soft_costs_from_agents, spawn_wildlife_agents, sync_agent_frame_from_wildlife,
+    sync_agent_frame_from_wildlife_system, sync_nav_wildlife_soft, sync_nav_wildlife_soft_system,
+    tick_wildlife_herd, WildlifeAgent, WildlifeHerdBook, WildlifeSoftCostSample,
+    WILDLIFE_DEFAULT_COUNT, WILDLIFE_MAX_SPEED, WILDLIFE_SOFT_COST_MAX,
 };
 
 use bevy::prelude::*;

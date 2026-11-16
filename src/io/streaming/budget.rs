@@ -39,10 +39,8 @@ impl Default for StreamingSpineBudget {
             max_hydrate_chunks_per_frame: hydrate_budget_from_env().unwrap_or(24),
             max_reconstruct_chunks_per_frame: reconstruct_budget_from_env().unwrap_or(4),
             max_pending_chunks: pending_chunks_budget_from_env().unwrap_or(1024),
-            max_spawn_entities_per_chunk: spawn_per_chunk_from_env()
-                .unwrap_or(STREAMING_SPAWN_ENTITIES_PER_CHUNK_DEFAULT),
-            max_spawn_entities_per_frame: spawn_per_frame_from_env()
-                .unwrap_or(STREAMING_SPAWN_ENTITIES_PER_FRAME_DEFAULT),
+            max_spawn_entities_per_chunk: Self::exec03_spawn_per_chunk(),
+            max_spawn_entities_per_frame: Self::exec03_spawn_per_frame(),
         }
     }
 }
@@ -121,18 +119,45 @@ fn pending_chunks_budget_from_env() -> Option<usize> {
         .filter(|&n| n > 0)
 }
 
-fn spawn_per_chunk_from_env() -> Option<usize> {
-    std::env::var("STREAMING_SPAWN_ENTITIES_PER_CHUNK")
+fn streaming_frame_entity_budget_from_env() -> usize {
+    std::env::var("STREAMING_FRAME_ENTITY_BUDGET")
         .ok()
         .and_then(|v| v.parse().ok())
         .filter(|&n| n > 0)
+        .unwrap_or(STREAMING_SPAWN_ENTITIES_PER_FRAME_DEFAULT)
 }
 
-fn spawn_per_frame_from_env() -> Option<usize> {
-    std::env::var("STREAMING_SPAWN_ENTITIES_PER_FRAME")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .filter(|&n| n > 0)
+impl StreamingSpineBudget {
+    fn exec03_spawn_grants(parent: usize) -> (usize, usize) {
+        let asks = [
+            DomainBudgetAsk {
+                domain: "spawn_frame",
+                priority: 10,
+                want: parent,
+            },
+            DomainBudgetAsk {
+                domain: "spawn_per_chunk",
+                priority: 5,
+                want: parent.max(1),
+            },
+        ];
+        let grants = allocate_nested_domain_budgets(parent, &asks);
+        let per_frame = grants.first().map_or(parent, |g| g.granted.max(1));
+        let per_chunk = grants
+            .get(1)
+            .map_or(STREAMING_SPAWN_ENTITIES_PER_CHUNK_DEFAULT, |g| {
+                g.granted.max(1)
+            });
+        (per_frame, per_chunk)
+    }
+
+    fn exec03_spawn_per_frame() -> usize {
+        Self::exec03_spawn_grants(streaming_frame_entity_budget_from_env()).0
+    }
+
+    fn exec03_spawn_per_chunk() -> usize {
+        Self::exec03_spawn_grants(streaming_frame_entity_budget_from_env()).1
+    }
 }
 
 #[must_use]

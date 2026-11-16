@@ -7,6 +7,7 @@ mod frame_snapshots;
 mod heat_diffusion;
 mod heat_diffusion_dense;
 mod heat_diffusion_gpu;
+mod dense_heat_gpu_dispatch;
 mod heat_weather;
 mod heat_consumers;
 
@@ -27,6 +28,11 @@ pub use heat_diffusion::{
 pub use heat_diffusion_dense::{
     dense_roi_from_fire, run_dense_heat_step, DenseHeatGrid, HeatDiffusionConfig, DENSE_DECAY,
     DENSE_SOURCE_BLEND, DENSE_W_CENTER, DENSE_W_SIDE,
+};
+pub use dense_heat_gpu_dispatch::{
+    advance_dense_heat_play_gpu_or_cpu, DenseHeatGpuComputePassSet, DenseHeatGpuHandles,
+    DenseHeatGpuJob, DenseHeatGpuPlugin, DenseHeatGpuPrimary, DENSE_HEAT_CPU_ENV,
+    DENSE_HEAT_GPU_MAX_F32,
 };
 pub use heat_diffusion_gpu::{
     advance_dense_heat_play, dense_grid_max_abs_diff, fire_vfx_blend_dense_heat, pack_dense_to_cells,

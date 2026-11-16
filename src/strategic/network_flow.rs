@@ -12,6 +12,7 @@ use bevy::prelude::*;
 use super::spatial_network::{
     ChunkNetworkDigest, NetworkInsulatedNode, NetworkType, SpatialNetworkGraph,
 };
+use super::world_field_layers::{FieldLayerUpdateClass, WorldFieldLayerEpoch};
 use super::{ChunkStrategicOverlay, InfrastructureGraph};
 
 /// When set, chunk-local network flow should be recomputed (or blended from cold start).
@@ -211,9 +212,11 @@ pub fn network_digest_marks_flow_dirty_system(
 pub fn network_flow_chunk_local_solver_system(
     graph: Res<SpatialNetworkGraph>,
     infra: Res<InfrastructureGraph>,
+    mut epochs: ResMut<WorldFieldLayerEpoch>,
     mut q: Query<(&mut ChunkStrategicOverlay, &mut NetworkDirtyMask), With<ChunkStrategicOverlay>>,
 ) {
     let iters = 2u32;
+    let mut any_solved = false;
     for (mut overlay, mut mask) in q.iter_mut() {
         // LOOP-11: skip chunks whose digest/graph revision did not mark flow dirty.
         if !network_flow_chunk_needs_solve(&mask) {
@@ -314,6 +317,10 @@ pub fn network_flow_chunk_local_solver_system(
         }
 
         mask.mask &= !NETWORK_DIRTY_FLOW;
+        any_solved = true;
+    }
+    if any_solved {
+        epochs.bump(FieldLayerUpdateClass::Slow);
     }
 }
 

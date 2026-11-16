@@ -270,19 +270,16 @@ pub fn build_weather_source_terms(
         return;
     };
     let res = level0.resolution;
-    let (mask, plumes, peak_up) = detect_firestorm_plumes(
-        &level0.heat_distortion,
-        &level0.smoke_density,
-        &level0.ember_density,
-        res,
-    );
+    let mask = frame.firestorm_plume_mask();
+    let plumes = frame.firestorm_plume_count();
+    let peak_up = frame.plume_updraft_peak_mps();
     let (cells, moisture_sum) = aggregate_source_terms(
         &field,
         &level0.heat_distortion,
         &level0.smoke_density,
         &level0.ember_density,
         res,
-        &mask,
+        mask,
     );
 
     terms.ensure_dims(field.dims);

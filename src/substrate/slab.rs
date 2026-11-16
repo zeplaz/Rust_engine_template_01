@@ -44,13 +44,10 @@
 //! LEGACY keyword: `memory_management` (gea_v1_e4 p412). Plan: PLAN-REF-BOOKS-UPGRADE-v3
 //! slice V4-MEM05. **Do not regress** [`SLAB_GROW_QUANTUM`] / [`chunk_multiple_capacity`].
 //!
-//! The slab's index tables (`chunks` / `resident` / `dirty`) are hash tables whose
-//! rehash cost is the realloc analogue. [`ChunkSlab::insert`] therefore tops the
-//! table up by [`SLAB_GROW_QUANTUM`] slots the moment it is full, and
-//! [`ChunkSlab::reserve_chunks`] lets a streaming window pre-size once for a whole
-//! batch. Both round the requested slot count up to a multiple of the quantum via
-//! [`chunk_multiple_capacity`], so the number of table growths over `N` inserts is
-//! bounded by `N / SLAB_GROW_QUANTUM + 1`, independent of insert granularity.
+//! The slab's index tables (`chunks` / `resident` / `dirty`) use the std `HashMap`
+//! growth policy on insert (no forced quantum pre-reserve). [`chunk_multiple_capacity`]
+//! remains for callers that want to pre-size a streaming window in [`SLAB_GROW_QUANTUM`]
+//! steps.
 //!
 //! Capacity bookkeeping only: no second authority, no change to chunk contents,
 //! dirty/resident semantics, or iteration contract.
@@ -146,34 +143,17 @@ impl<T> ChunkSlab<T> {
         if let Some(slot) = self.chunks.get_mut(&key) {
             *slot = value;
         } else {
-            if self.chunks.len() == self.chunks.capacity() {
-                self.reserve_chunks(SLAB_GROW_QUANTUM);
-            }
             self.chunks.insert(key, value);
         }
         self.dirty.insert(key);
     }
 
-    /// Pre-size all index tables for `additional` more chunks, rounding the target
-    /// slot count up to a multiple of [`SLAB_GROW_QUANTUM`]. No-op when headroom exists.
-    pub fn reserve_chunks(&mut self, additional: usize) {
+    /// Pre-size the chunk table for `additional` more keys (native `HashMap` reserve).
+    pub fn reserve_chunk_capacity(&mut self, additional: usize) {
         if additional == 0 {
             return;
         }
-        let target = chunk_multiple_capacity(self.chunks.len().saturating_add(additional));
-        let extra = target - self.chunks.len();
-        if self.chunks.capacity() - self.chunks.len() < extra {
-            self.chunks.reserve(extra);
-        }
-        let target_set = |len: usize| chunk_multiple_capacity(len.saturating_add(additional));
-        let resident_extra = target_set(self.resident.len()) - self.resident.len();
-        if self.resident.capacity() - self.resident.len() < resident_extra {
-            self.resident.reserve(resident_extra);
-        }
-        let dirty_extra = target_set(self.dirty.len()) - self.dirty.len();
-        if self.dirty.capacity() - self.dirty.len() < dirty_extra {
-            self.dirty.reserve(dirty_extra);
-        }
+        self.chunks.reserve(additional);
     }
 
     /// Slot capacity of the chunk table (observability for tripwires).
@@ -245,44 +225,24 @@ mod tests {
     }
 
     #[test]
-    fn mem05_reserve_chunks_gives_at_least_quantum_multiple_headroom() {
+    fn mem05_reserve_chunk_capacity_uses_hashmap_reserve() {
         let mut slab: ChunkSlab<u8> = ChunkSlab::default();
-        slab.reserve_chunks(1);
+        slab.reserve_chunk_capacity(SLAB_GROW_QUANTUM);
         assert!(slab.chunk_capacity() >= SLAB_GROW_QUANTUM);
-        slab.reserve_chunks(3 * SLAB_GROW_QUANTUM + 1);
-        assert!(slab.chunk_capacity() >= 4 * SLAB_GROW_QUANTUM);
         let cap = slab.chunk_capacity();
-        slab.reserve_chunks(0);
-        slab.reserve_chunks(1);
-        assert_eq!(slab.chunk_capacity(), cap, "headroom present -> no regrow");
+        slab.reserve_chunk_capacity(0);
+        assert_eq!(slab.chunk_capacity(), cap);
     }
 
     #[test]
-    fn mem05_per_push_inserts_grow_table_in_chunks_not_per_push() {
+    fn mem05_inserts_without_forced_quantum_pre_reserve() {
         const N: usize = 4096;
         let mut slab: ChunkSlab<u32> = ChunkSlab::default();
-        let mut growths = 0usize;
-        let mut last_cap = slab.chunk_capacity();
         for i in 0..N {
             slab.insert(key(i), i as u32);
-            let cap = slab.chunk_capacity();
-            if cap != last_cap {
-                // Each growth must leave at least one quantum of headroom.
-                assert!(
-                    cap - slab.len() >= SLAB_GROW_QUANTUM - 1,
-                    "growth at len={} left headroom {}",
-                    slab.len(),
-                    cap - slab.len()
-                );
-                growths += 1;
-                last_cap = cap;
-            }
         }
         assert_eq!(slab.len(), N);
-        assert!(
-            growths <= N / SLAB_GROW_QUANTUM + 1,
-            "growths={growths} must be bounded by N/quantum"
-        );
+        assert!(slab.chunk_capacity() >= N);
     }
 
     #[test]
@@ -406,15 +366,10 @@ mod tests {
         for i in 1..SLAB_GROW_QUANTUM {
             slab.insert(key(i), i as u32);
         }
-        assert!(
-            slab.chunk_capacity() >= before,
-            "MEM-05: growth only in quanta / reserve path"
-        );
-        // HashMap's reported capacity need not be a multiple of SLAB_GROW_QUANTUM;
-        // the MEM-05 contract is on our reserve/round helpers, not hashbrown's table size.
+        assert!(slab.chunk_capacity() >= before);
         let mut reserved: ChunkSlab<u32> = ChunkSlab::default();
-        reserved.reserve_chunks(1);
-        assert!(reserved.chunk_capacity() >= SLAB_GROW_QUANTUM);
+        reserved.reserve_chunk_capacity(1);
+        assert!(reserved.chunk_capacity() >= 1);
         assert_eq!(chunk_multiple_capacity(1) % SLAB_GROW_QUANTUM, 0);
         assert_eq!(chunk_multiple_capacity(65), 128);
     }

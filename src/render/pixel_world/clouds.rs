@@ -41,6 +41,7 @@ pub(crate) struct CloudLayerState {
     entity: Option<Entity>,
     /// Puff centres in field units (`-1..1` on each axis), advected by wind.
     offsets: Vec<Vec2>,
+    mesh_upload_key: u64,
 }
 
 impl Default for CloudLayerState {
@@ -48,8 +49,37 @@ impl Default for CloudLayerState {
         let offsets = (0..PUFF_COUNT as u32)
             .map(|i| Vec2::new(hash01(i, 5) * 2.0 - 1.0, hash01(i, 6) * 2.0 - 1.0))
             .collect();
-        Self { material: None, mesh: None, entity: None, offsets }
+        Self {
+            material: None,
+            mesh: None,
+            entity: None,
+            offsets,
+            mesh_upload_key: 0,
+        }
     }
+}
+
+#[inline]
+fn hash_layer_key(mut h: u64, v: u64) -> u64 {
+    h ^= v.wrapping_mul(0x9e37_79b9_7f4a_7c15);
+    h.rotate_left(17)
+}
+
+fn cloud_mesh_upload_key(
+    local: &CameraLocalWeatherSample,
+    cam: &PixelWorldCameraFrame,
+    input: &CloudDeckInput,
+    t_quant: u32,
+) -> u64 {
+    let mut h = local.frame_revision;
+    h = hash_layer_key(h, input.cloud.to_bits() as u64);
+    h = hash_layer_key(h, input.wind_mps.x.to_bits() as u64);
+    h = hash_layer_key(h, input.wind_mps.y.to_bits() as u64);
+    h = hash_layer_key(h, u64::from(input.tactical as u8));
+    h = hash_layer_key(h, u64::from(t_quant));
+    h = hash_layer_key(h, cam.ground_min.x.to_bits() as u64);
+    h = hash_layer_key(h, cam.ground_max.x.to_bits() as u64);
+    h
 }
 
 /// Inputs for one frame of the deck (all read from existing resources).
@@ -62,8 +92,38 @@ pub(crate) struct CloudDeckInput {
     pub t: f32,
 }
 
-/// Advect the puffs and build the sheet mesh. Empty when the sky is clear.
-pub(crate) fn build_cloud_mesh(offsets: &mut [Vec2], input: &CloudDeckInput, cam: &PixelWorldCameraFrame) -> MeshBuf {
+/// Advect puff offsets for one simulation step (wind + shear).
+pub(crate) fn advect_cloud_puff_offsets(offsets: &mut [Vec2], input: &CloudDeckInput) {
+    let wind_speed = input.wind_mps.length().max(0.35);
+    let wind_dir = if input.wind_mps.length_squared() > 0.01 {
+        input.wind_mps.normalize()
+    } else {
+        Vec2::new(1.0, 0.15).normalize()
+    };
+    let perp = Vec2::new(-wind_dir.y, wind_dir.x);
+    let gust_boost =
+        1.0 + ((input.gust_mps.max(wind_speed) / wind_speed.max(1.0)) - 1.0).clamp(0.0, 1.2) * 0.45;
+    for (i, off) in offsets.iter_mut().enumerate() {
+        let iu = i as u32;
+        let layer = (i % 3) as u8;
+        let layer_f = f32::from(layer);
+        let phase = hash01(iu, 1) * std::f32::consts::TAU;
+        let speed_mul = 0.55 + hash01(iu, 2) * 0.9;
+        let layer_speed = 0.65 + layer_f * 0.35;
+        let advect = wind_dir * (wind_speed * WIND_FIELD_RATE * layer_speed * speed_mul * gust_boost);
+        let shear = perp * ((input.t * (0.07 + phase * 0.01) + phase).sin() * 0.004 * (1.0 + layer_f * 0.3) * speed_mul);
+        *off += (advect + shear) * input.dt;
+        off.x = (off.x + 1.0).rem_euclid(2.0) - 1.0;
+        off.y = (off.y + 1.0).rem_euclid(2.0) - 1.0;
+    }
+}
+
+/// Build the sheet mesh from current offsets. Empty when the sky is clear.
+pub(crate) fn build_cloud_mesh_from_offsets(
+    offsets: &[Vec2],
+    input: &CloudDeckInput,
+    cam: &PixelWorldCameraFrame,
+) -> MeshBuf {
     let mut buf = MeshBuf::default();
     let cover = cloud_cover_alpha(input.cloud.clamp(0.0, 1.0), input.tactical);
     if cover < 0.01 {
@@ -76,27 +136,16 @@ pub(crate) fn build_cloud_mesh(offsets: &mut [Vec2], input: &CloudDeckInput, cam
     let height = (cam.eye.y - cam.focus_height).max(6.0);
     let wind_speed = input.wind_mps.length().max(0.35);
     let wind_dir = if input.wind_mps.length_squared() > 0.01 { input.wind_mps.normalize() } else { Vec2::new(1.0, 0.15).normalize() };
-    let perp = Vec2::new(-wind_dir.y, wind_dir.x);
-    let gust_boost = 1.0 + ((input.gust_mps.max(wind_speed) / wind_speed.max(1.0)) - 1.0).clamp(0.0, 1.2) * 0.45;
     let yaw = wind_dir.y.atan2(wind_dir.x) * 0.35;
     let (sy, cy) = yaw.sin_cos();
     let stretch = 1.0 + 0.08 * (wind_speed / 12.0).clamp(0.0, 1.0);
-    for (i, off) in offsets.iter_mut().enumerate() {
+    for (i, off) in offsets.iter().enumerate() {
         let iu = i as u32;
         let layer = (i % 3) as u8;
-        let layer_f = f32::from(layer);
         let phase = hash01(iu, 1) * std::f32::consts::TAU;
         let speed_mul = 0.55 + hash01(iu, 2) * 0.9;
         let major = 28.0 + hash01(iu, 3) * 38.0 + if i % 7 == 0 { 18.0 } else { 0.0 };
         let aspect = 0.55 + hash01(iu, 4) * 0.7;
-
-        let layer_speed = 0.65 + layer_f * 0.35;
-        let advect = wind_dir * (wind_speed * WIND_FIELD_RATE * layer_speed * speed_mul * gust_boost);
-        let shear = perp * ((input.t * (0.07 + phase * 0.01) + phase).sin() * 0.004 * (1.0 + layer_f * 0.3) * speed_mul);
-        *off += (advect + shear) * input.dt;
-        // Wrap in field units.
-        off.x = (off.x + 1.0).rem_euclid(2.0) - 1.0;
-        off.y = (off.y + 1.0).rem_euclid(2.0) - 1.0;
 
         let alpha = cloud_puff_alpha(cover, layer, speed_mul, phase, input.t);
         if alpha < 0.02 {
@@ -118,6 +167,12 @@ pub(crate) fn build_cloud_mesh(offsets: &mut [Vec2], input: &CloudDeckInput, cam
         );
     }
     buf
+}
+
+/// Advect the puffs and build the sheet mesh. Empty when the sky is clear.
+pub(crate) fn build_cloud_mesh(offsets: &mut [Vec2], input: &CloudDeckInput, cam: &PixelWorldCameraFrame) -> MeshBuf {
+    advect_cloud_puff_offsets(offsets, input);
+    build_cloud_mesh_from_offsets(offsets, input, cam)
 }
 
 /// Draw the cloud deck in the voxel view; hidden otherwise (top-down keeps its sprites).
@@ -147,16 +202,30 @@ pub(crate) fn sync_pixel_world_clouds(
         hide(&mut commands, state.entity);
         return;
     }
+    let t_quant = (time.elapsed_secs() * 20.0) as u32;
     let input = CloudDeckInput {
         cloud: local.sample.cloud,
         wind_mps: local.sample.wind_mps,
         gust_mps: local.sample.gust_mps,
         tactical: metrics.zoom_alpha > WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA,
         dt: time.delta_secs().clamp(0.0, 0.05),
-        t: time.elapsed_secs(),
+        t: t_quant as f32 / 20.0,
     };
-    let buf = build_cloud_mesh(&mut state.offsets, &input, &cam);
+    advect_cloud_puff_offsets(&mut state.offsets, &input);
+    let upload_key = cloud_mesh_upload_key(&local, &cam, &input, t_quant);
+    if upload_key == state.mesh_upload_key && state.mesh.is_some() {
+        if let Some(e) = state.entity {
+            commands.entity(e).try_insert(Visibility::Inherited);
+        }
+        return;
+    }
+    let buf = build_cloud_mesh_from_offsets(&state.offsets, &input, &cam);
     let drawable = !buf.is_empty() && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, buf.into_mesh());
+    if drawable {
+        state.mesh_upload_key = upload_key;
+    } else {
+        state.mesh_upload_key = 0;
+    }
     if !drawable {
         hide(&mut commands, state.entity);
         return;

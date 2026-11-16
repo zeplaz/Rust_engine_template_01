@@ -65,6 +65,8 @@ pub struct FactionPerception {
     pub rear_anchor: Option<IVec2>,
     /// TAC-05: mean gen-time defensibility along the front (0 when no analysis).
     pub mean_front_defensibility: f32,
+    /// TAC-05: mean gen-time chokepoint along the front (0 when no analysis).
+    pub mean_front_chokepoint: f32,
 }
 
 impl FactionPerception {
@@ -124,6 +126,7 @@ impl FactionPerception {
     pub fn apply_terrain_analysis(&mut self, book: &crate::terrain::TerrainAnalysisBook) {
         self.mean_front_defensibility =
             book.mean_defensibility(self.front.iter().map(|c| &c.tile));
+        self.mean_front_chokepoint = book.mean_chokepoint(self.front.iter().map(|c| &c.tile));
     }
 
     /// Worst-supplied front cell (ties `(y, x)`).

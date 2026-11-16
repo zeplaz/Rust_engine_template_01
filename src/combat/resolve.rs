@@ -26,6 +26,7 @@ use super::personnel_supply::{
     PersonnelRestockBook,
 };
 use super::weather::engagement_visibility_scale;
+use crate::ai::faction::log::TacticalFragMap;
 use crate::strategic::settlement::FactionStanceBook;
 use crate::systems::weather::WeatherPollingStations;
 
@@ -216,6 +217,7 @@ pub fn combat_resolve_system(
     packages: Query<&DronePackage>,
     fire_exp: Query<&crate::systems::fire::FormationFireExposure>,
     mut formations: Query<(Entity, &mut Formation)>,
+    mut frag: Option<ResMut<TacticalFragMap>>,
 ) {
     if clock.resolve_acc_s < balance.combat.step_s {
         return;
@@ -292,8 +294,17 @@ pub fn combat_resolve_system(
             }
             continue;
         }
-        let Ok((_, mut f)) = formations.get_mut(*e) else { continue };
+        let Ok((_, mut f)) = formations.get_mut(*e) else {
+            continue;
+        };
+        let prev_strength = f.strength;
         f.strength = u.strength;
+        if let Some(ref mut map) = frag {
+            let loss = (prev_strength - u.strength).max(0.0);
+            if loss > 0.02 {
+                map.record_loss(f.tile, loss);
+            }
+        }
         f.morale = u.morale;
         f.engaged = o.engaged();
         if u.posture != f.posture {

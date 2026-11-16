@@ -70,30 +70,11 @@ fn spawn_primary_ui_camera(
     crate::gui::spawn_simulation_hud_ui_camera(&mut commands, palette.as_ref());
 }
 
-/// DES-03 (gea4v1 6.1 *Subsystem Start-Up and Shut-Down*): canonical plugin registration phases.
-/// Later phases depend on earlier ones; reverse this list for tear-down mental model.
-pub const ENGINE_STARTUP_PHASES: &[&str] = &[
-    "platform",      // DefaultPlugins / assets / window
-    "shell_ui",       // splash, menus, theme, UX
-    "sim_control",    // tick / pause / scenario host
-    "world_persist",  // substrate, save spine, streaming LOD
-    "sim_domains",    // fire, ecology, atmosphere, weather, collision
-    "render_gpu",     // overlays, GPU fields, world-map meshes
-    "transport_nav",  // transport + navigation + damage
-    "strategic_ai",   // strategic fields / AI
-];
-
-/// DES-03: phase index for docs / Accept (None if unknown).
-#[must_use]
-pub fn engine_startup_phase_index(name: &str) -> Option<usize> {
-    ENGINE_STARTUP_PHASES.iter().position(|p| *p == name)
-}
-
 pub struct EnginePlugin;
 
 impl Plugin for EnginePlugin {
     fn build(&self, app: &mut App) {
-        // DES-03: registration order follows [`ENGINE_STARTUP_PHASES`] (platform → … → strategic_ai).
+        // DES-03: registration order is platform → shell → sim → world → render → transport → strategic.
         app.init_resource::<crate::render::DebugRenderTraceConfig>();
         // Resolve `assets/` from the crate root so running `target/debug/proc_A_dine01.exe` from any CWD still finds files.
         let assets_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets");
@@ -330,22 +311,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn des03_startup_phases_are_ordered_and_complete() {
-        assert_eq!(ENGINE_STARTUP_PHASES.len(), 8);
-        assert_eq!(engine_startup_phase_index("platform"), Some(0));
-        assert_eq!(engine_startup_phase_index("strategic_ai"), Some(7));
-        assert!(
-            engine_startup_phase_index("sim_control").unwrap()
-                < engine_startup_phase_index("sim_domains").unwrap()
-        );
-        assert!(
-            engine_startup_phase_index("world_persist").unwrap()
-                < engine_startup_phase_index("render_gpu").unwrap()
-        );
-        assert_eq!(engine_startup_phase_index("missing"), None);
+    fn des03_plugin_build_cites_registration_order() {
         let src = include_str!("engine_with_worldgen.rs");
         assert!(
-            src.contains("DES-03: registration order follows"),
+            src.contains("DES-03: registration order"),
             "EnginePlugin build must cite DES-03 phase order"
         );
     }

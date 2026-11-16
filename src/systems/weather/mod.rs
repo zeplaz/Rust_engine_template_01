@@ -61,7 +61,7 @@ pub use polling_stations::{
     WeatherPollingStations,
 };
 pub use sense_propagation::{
-    build_weather_sense_cell_field, relax_sense_degradation, relax_sense_from_samples,
+    build_weather_sense_cell_field, relax_sense_degradation,
     sense_seed_mul, WeatherSenseCellField, SENSE_MUL_FLOOR,
 };
 pub use field::{

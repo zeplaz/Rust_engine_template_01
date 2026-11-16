@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v3** |
-| **Status** | **REVIEWED 2026-11-16** — several ★ ADOPTED rows re-graded to PARTIAL/UNWIRED in `adoption.tsv` (cleanup plan §5); §2.1 counts are stale until regenerated (CQ-80). Was: PROGRAM CLOSE — V0–V4 cuttable OPEN ★ ADOPTED; residual DEFER/PARTIAL unlock roadmap: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) |
+| **Status** | **REVIEWED 2026-11-16** — ledger counts in §2.1 track `adoption.tsv` (CQ-80); several rows re-graded UNWIRED/PARTIAL in cleanup §5. V0–V4 cuttable ★ closed; residual unlock: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) |
 | **Date** | 2026-11-15 · closed 2026-11-15 |
 | **Parents** | [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) (**WAVES 0–S CLOSED**) · [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**) · [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md) · [`plan_shared_atmosphere_weather_fire_v1.md`](plan_shared_atmosphere_weather_fire_v1.md) |
 | **Obeys** | `AGENTS.md` · one writer · Sim→View→Render→UI · Studio = DCC (parametric frames) · play UI only · no test-shaped production |
@@ -65,7 +65,7 @@ DO / ACCEPT / LEDGER  same as v2 §0; ledger records BOTH cites
 
 | Bucket | Signal | Upgrade implication |
 |:---|:---|:---|
-| Adoption | **117 ADOPTED · 2 PARTIAL (LOCKED) · 14 DEFER · 0 OPEN** (`adoption.tsv` · `--open` = DEFER/PARTIAL only) | Cuttable ★ closed; leave MOVE/TAC/RND/LEARN/PCG DEFERs until triggers; PARTIAL EXEC-05/TAC-03 stay locked |
+| Adoption | **101 ADOPTED · 18 UNWIRED · 10 PARTIAL · 4 DEFER · 133 total** (`adoption.tsv` · measured 2026-11-16 · `--open` = UNWIRED/DEFER/PARTIAL) | `UNWIRED` = code exists, no production caller; ADOPTED only with `file:line` caller; DEFER/PARTIAL unlock via defer-unlock plan |
 | DBG | DBG-04 / DBG-06 **ADOPTED** | GPU capture + pause/step shipped |
 | Tools / authoring | ECS-15 · IO-09 · DES-04 · PCG-06 **ADOPTED** (V1 S0–S5) | Studio param frames + MCP promote shipped |
 | Voxel / PCG | PCG-02/04/05 · RND-09 · LGT-04 **ADOPTED** (V3); **PCG-07** DEFER (town-growth) · **PCG-03** DEFER ⚠ world | Massing + flora + atmosphere presentation shipped; occupation flag default-off |
@@ -261,7 +261,9 @@ Owner default `@coder-mcp` / `@designer-mcp` unless Files are under `src/`.
 - Test-shaped production (`*_green`, witness resources, play debug panels).
 - New Python deps without user yes; book text committed.
 
-## 10. Ledger (seed)
+## 10. Ledger (2026-11-15 snapshot — read `adoption.tsv`)
+
+**Authoritative ledger:** [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv). Update statuses there only. Live counts: **101 ADOPTED · 18 UNWIRED · 10 PARTIAL · 4 DEFER** (133 rows). This §10 table is the program-close evidence snapshot.
 
 | Id | Wave | Status | Evidence |
 |:---|:---|:---|:---|
@@ -360,7 +362,7 @@ Owner default `@coder-mcp` / `@designer-mcp` unless Files are under `src/`.
 | V4-MOVE10 | V4 | ADOPTED | MOVE-10 · wildlife_flock seed herd + soft costs ([`plan_move10_wildlife_v1.md`](plan_move10_wildlife_v1.md)) |
 | V4-DES06 | V4 | ADOPTED | DES-06 · aig3 ecosystem design; ecosystem_logistic_step; Accept --lib des06 → **1 passed** |
 | V4-LEARN03 | V4 | DEFER | LEARN-03 · over-learning warnings — read-gate; no learning stack |
-| CLOSE | — | **PROGRAM CLOSE** | 0 OPEN ★ · 117 ADOPTED · 2 PARTIAL LOCKED (EXEC-05 · TAC-03) · 14 DEFER keep · `--check` 0 problems · planner `PROGRAM_CLOSE_OK` (no UNDER_DEFERRED) |
+| CLOSE | — | **PROGRAM CLOSE** | 0 OPEN ★ · ledger `adoption.tsv` **101/18/10/4** (ADOPTED/UNWIRED/PARTIAL/DEFER) · `--check` 0 problems · planner `PROGRAM_CLOSE_OK` (no UNDER_DEFERRED) |
 
 
 ## 11. Paste blocks (dispatch / resume)
@@ -371,22 +373,21 @@ Owner default `@coder-mcp` / `@designer-mcp` unless Files are under `src/`.
 Execute slice <ID> of src/dev/plan_ref_books_upgrade_v3.md.
 Obey §0 stance + §0.1 honest exits + §1 dual-matrix + §9 rejects.
 Voxels are IN SCOPE (DR-VOXEL is occupation-authority sequencing only).
-Run dual orient before Do. Paste every Accept final line. Update §10.
-If Accept fails twice: ledger BLOCKED:<reason> and in the SAME turn start the next OPEN slice whose Files do not overlap.
-Do not ask the user whether voxels/matrices are in scope. Do not stop lazy.
+Run dual orient before Do. Paste every Accept final line. Update `adoption.tsv`.
+If Accept fails twice or the slice cannot be wired honestly: stop; ledger `BLOCKED:` or `UNWIRED:` with reason in `adoption.tsv`.
+Do not mark ADOPTED without a production caller `file:line`.
 ```
 
-**Resume after lazy/confused/response-stop exit:**
+**Resume after incomplete exit:**
 
 ```text
-RESUME slice <ID> of src/dev/plan_ref_books_upgrade_v3.md — prior exit was incomplete (§0.1).
-Re-read §0 + §0.1. Finish Accept + §10 or BLOCKED+next slice. No clarifying questions on locks.
-Do not ask the user anything. Keep cutting OPEN upgrade slices until legal stop.
+RESUME slice <ID> of src/dev/plan_ref_books_upgrade_v3.md — prior exit was incomplete.
+Re-read §0 + §0.1. Finish Accept + `adoption.tsv`, or stop with `BLOCKED:` / `UNWIRED:` and report the gap.
 ```
 
-**Wave keep-going (parent):** **PROGRAM CLOSE** — no OPEN §10 rows remain. Do **not** keep-cutting DEFER/PARTIAL. On compaction, do not re-litigate §0; route residual triggers to their owning plans (town-growth · unit-member · dense heat+WGSL · occupation productization).
+**Program continuity (parent):** **PROGRAM CLOSE** — no OPEN §10 rows remain. Do **not** re-cut DEFER/PARTIAL without a charter. On compaction, do not re-litigate §0; route residual triggers to [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) and owning product plans (town-growth · unit-member · dense heat+WGSL · occupation productization).
 
-**V4 keep-cutting order:** exhausted (cuttable ★ ADOPTED). Residual: skip DEFER/LOCKED until triggers fire.
+**V4 cuttable ★:** exhausted. Residual: skip DEFER/UNWIRED/PARTIAL until triggers fire.
 
 ## Changelog
 
@@ -400,3 +401,4 @@ Do not ask the user anything. Keep cutting OPEN upgrade slices until legal stop.
 | 1.1.4 | 2026-11-15 | §0.1 fake-tripwire tax — prefer behavioral Accept; stop parallel re-scan cargo churn. |
 | 1.2.0 | 2026-11-15 | **PROGRAM CLOSE** — §2.1 live counts (117/2/14/0); V4 cuttable ★ closed; §11 keep-going retired; planner DEFER/PARTIAL keep. |
 | 1.3.0 | 2026-11-16 | **REVIEWED** — §0.1 anti-stall replaced by honest exits; ADOPTED rows re-graded (UNWIRED status); counts stale (CQ-80). |
+| 1.4.0 | 2026-11-16 | **CQ-80** — `adoption.tsv` sole ledger; §2.1 + CLOSE counts **101/18/10/4**; §11 paste blocks honest exits (CQ-81). |

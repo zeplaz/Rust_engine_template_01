@@ -224,7 +224,6 @@ pub fn emit_world_fire_particles_from_projection(
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
     registry: Option<Res<crate::render::fire_vfx::EffectConsumableRegistry>>,
     climate: Option<Res<ClimateVisualAggregate>>,
-    dense_heat: Option<Res<crate::compute::DenseHeatPlayField>>,
     wx: Query<(&crate::terrain::generation::Chunk, &crate::systems::weather::ChunkWeather)>,
     consumables: Query<&crate::render::fire_vfx::EffectConsumable>,
     mut frame: ResMut<WorldFireParticleFrame>,
@@ -247,7 +246,6 @@ pub fn emit_world_fire_particles_from_projection(
         anim,
         &mut memory,
         Some(&wind_by_chunk),
-        dense_heat.as_deref(),
     );
     if let Some(smoke) = smoke_extract.as_deref() {
         append_smoke_atmosphere_particles_from_extract(smoke, frame.as_mut(), anim);
@@ -305,7 +303,6 @@ pub fn update_world_fire_particles_from_projection(
         anim,
         &mut FireEmitterMemory::default(),
         None,
-        None,
     );
 }
 
@@ -318,7 +315,6 @@ pub fn update_world_fire_particles_animated(
     anim: FireAnim,
     memory: &mut FireEmitterMemory,
     wind_by_chunk: Option<&HashMap<IVec2, Vec2>>,
-    dense_heat: Option<&crate::compute::DenseHeatPlayField>,
 ) {
     frame.snapshot_stamp = graph.fire.snapshot_stamp;
     frame.active_band = crate::gui::representation_band_from_world_lod(graph.fire.lod);
@@ -380,17 +376,8 @@ pub fn update_world_fire_particles_animated(
         }
         // LOD crossfade: eased level per chunk, so band changes fade instead of popping.
         let chunk = IVec2::new(row.chunk_grid_xy().x as i32, row.chunk_grid_xy().y as i32);
-        // Heat below the display floor is not a fire. DH-03a: dense heat may reinforce (RO).
-        let heat = {
-            let sim_h = row.heat();
-            match dense_heat {
-                Some(play) => {
-                    let (dh, _) = crate::compute::sample_dense_heat_at_chunk(play, chunk);
-                    crate::compute::fire_vfx_blend_dense_heat(sim_h, dh)
-                }
-                None => sim_h,
-            }
-        };
+        // Heat below the display floor is not a fire (CQ-38: no main-world DenseHeatPlayField blend).
+        let heat = row.heat();
         if heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
             continue;
         }

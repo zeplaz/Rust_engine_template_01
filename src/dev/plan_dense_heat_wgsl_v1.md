@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-DENSE-HEAT-WGSL-v1** |
-| **Status** | **REOPENED 2026-11-16** — GPU-primary not delivered: WGSL never loaded or dispatched, play runs on CPU. **TAC-03 → PARTIAL** · cleanup **CQ-50** (+CQ-38, CQ-63) |
+| **Status** | **SHIPPED 2026-11-16** — GPU-primary via `DenseHeatGpuPlugin` (H/V WGSL + `ReadbackComplete` sole writer). CPU = `RUST_ENGINE_DENSE_HEAT_CPU=1` / no RenderApp. CQ-63 ROI/foci + CQ-38 emit blend removal. **VFX residual shipped:** `fire_particle.wgsl` group 4 binds dense field A (max with projection heat; same-frame before expand). |
 | **Date** | 2026-11-16 |
 | **Parents** | [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) §1/W5 · **DR-BOOKS-TAC03-DENSE** |
 | **Unlocks** | **TAC-03** |

@@ -269,6 +269,40 @@ pub struct TownSecondGrowthGate {
     pub placed: bool,
 }
 
+#[derive(Resource, Default)]
+pub struct TownRoadSkeletonGate {
+    pub placed: bool,
+}
+
+/// PCG-07: after initial town growth, enqueue MST/subdivided road skeleton via construction funnel.
+pub fn enqueue_settlement_roads_once_system(
+    towns: Option<Res<super::town::TownBook>>,
+    districts: Option<Res<super::district::DistrictBook>>,
+    queue: Option<ResMut<crate::construction::ConstructionPlanQueue>>,
+    gate: Option<ResMut<TownRoadSkeletonGate>>,
+) {
+    let (Some(towns), Some(districts), Some(mut queue), Some(mut gate)) =
+        (towns, districts, queue, gate)
+    else {
+        return;
+    };
+    if gate.placed || towns.towns.is_empty() {
+        return;
+    }
+    let seed = towns.towns.len() as u64 ^ 0x5054_4737;
+    let segs = super::road_skeleton::settlement_road_skeleton(
+        &towns,
+        &districts,
+        seed,
+        2,
+        4,
+    );
+    let n = super::road_skeleton::enqueue_settlement_road_skeleton(&mut queue, &segs);
+    if n > 0 {
+        gate.placed = true;
+    }
+}
+
 pub fn enqueue_generated_town_growth_once_system(
     towns: Option<Res<super::town::TownBook>>,
     districts: Option<Res<super::district::DistrictBook>>,

@@ -3,6 +3,8 @@
 use std::borrow::Cow;
 
 use bevy::prelude::*;
+use bevy::render::render_asset::RenderAssets;
+use bevy::render::storage::GpuShaderBuffer;
 use bevy::render::{
     render_resource::{
         binding_types::uniform_buffer,
@@ -40,6 +42,34 @@ pub struct WorldFireParticleDrawUniforms {
     pub camera_zoom: f32,
     pub zoom_alpha: f32,
     pub spark_sim_enabled: f32,
+}
+
+/// Matches `DenseHeatVfxMeta` in `fire_particle.wgsl` (group 4).
+#[derive(Resource, Clone, Copy, ShaderType)]
+pub struct DenseHeatVfxMetaGpu {
+    pub origin_x: i32,
+    pub origin_y: i32,
+    pub width: u32,
+    pub height: u32,
+    pub chunk_spacing: f32,
+    pub enabled: f32,
+    pub _pad0: f32,
+    pub _pad1: f32,
+}
+
+impl Default for DenseHeatVfxMetaGpu {
+    fn default() -> Self {
+        Self {
+            origin_x: 0,
+            origin_y: 0,
+            width: 0,
+            height: 0,
+            chunk_spacing: crate::render::extraction::fire_view_extract::FIRE_VIEW_CHUNK_SPACING_WORLD,
+            enabled: 0.0,
+            _pad0: 0.0,
+            _pad1: 0.0,
+        }
+    }
 }
 
 #[cfg(test)]
@@ -113,11 +143,30 @@ struct WorldFireParticleDrawPipeline {
     instance_layout: BindGroupLayoutDescriptor,
     expanded_layout: BindGroupLayoutDescriptor,
     spark_layout: BindGroupLayoutDescriptor,
+    dense_layout: BindGroupLayoutDescriptor,
     pipeline: CachedComputePipelineId,
 }
 
+#[derive(Resource)]
+struct DenseHeatVfxUniformGpu {
+    uniform: UniformBuffer<DenseHeatVfxMetaGpu>,
+}
+
+impl Default for DenseHeatVfxUniformGpu {
+    fn default() -> Self {
+        Self {
+            uniform: UniformBuffer::from(DenseHeatVfxMetaGpu::default()),
+        }
+    }
+}
+
+#[derive(Resource, Default)]
+struct WorldFireParticleDenseBindGroup {
+    bind_group: Option<BindGroup>,
+}
+
 #[derive(SystemSet, Debug, Hash, PartialEq, Eq, Clone)]
-pub(crate) struct WorldFireParticleDrawPassSet;
+pub struct WorldFireParticleDrawPassSet;
 
 #[derive(Resource, Default)]
 struct WorldFireParticleDrawPassReady {
@@ -137,6 +186,8 @@ pub fn register_world_fire_particle_draw(app: &mut App) {
         .init_resource::<GpuRepresentationMetrics>()
         .init_resource::<WorldFireParticleDrawUniforms>()
         .init_resource::<WorldFireParticleDrawUniformGpu>()
+        .init_resource::<DenseHeatVfxUniformGpu>()
+        .init_resource::<WorldFireParticleDenseBindGroup>()
         .init_resource::<WorldFireParticleDrawDispatch>()
         .init_resource::<WorldFireParticleDrawPassReady>()
         .add_systems(RenderStartup, init_world_fire_particle_draw_pipeline)
@@ -215,6 +266,31 @@ fn init_world_fire_particle_draw_pipeline(
             count: None,
         }],
     };
+    let dense_layout = BindGroupLayoutDescriptor {
+        label: Cow::Borrowed("WorldFireParticleDenseHeat"),
+        entries: vec![
+            BindGroupLayoutEntry {
+                binding: 0,
+                visibility: ShaderStages::COMPUTE,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Uniform,
+                    has_dynamic_offset: false,
+                    min_binding_size: Some(DenseHeatVfxMetaGpu::min_size()),
+                },
+                count: None,
+            },
+            BindGroupLayoutEntry {
+                binding: 1,
+                visibility: ShaderStages::COMPUTE,
+                ty: BindingType::Buffer {
+                    ty: BufferBindingType::Storage { read_only: true },
+                    has_dynamic_offset: false,
+                    min_binding_size: None,
+                },
+                count: None,
+            },
+        ],
+    };
     let shader = asset_server.load(FIRE_PARTICLE_WGSL);
     commands.insert_resource(InstancedParticleExpandPipeline {
         expand_shader: shader.clone(),
@@ -227,6 +303,7 @@ fn init_world_fire_particle_draw_pipeline(
             instance_layout.clone(),
             expanded_layout.clone(),
             spark_layout.clone(),
+            dense_layout.clone(),
         ],
         shader,
         entry_point: Some(Cow::from("expand_instances")),
@@ -237,6 +314,7 @@ fn init_world_fire_particle_draw_pipeline(
         instance_layout,
         expanded_layout,
         spark_layout,
+        dense_layout,
         pipeline,
     });
 }
@@ -274,12 +352,17 @@ fn prepare_world_fire_particle_draw_bind_group(
     mut registry: ResMut<GPUBufferRegistry>,
     mut bind_registry: ResMut<GPUBindGroupRegistry>,
     mut uniform_gpu: ResMut<WorldFireParticleDrawUniformGpu>,
+    mut dense_uniform: ResMut<DenseHeatVfxUniformGpu>,
+    mut dense_bg: ResMut<WorldFireParticleDenseBindGroup>,
     mut metrics: ResMut<GpuRepresentationMetrics>,
     render_device: Res<RenderDevice>,
     pipeline_cache: Res<PipelineCache>,
     queue: Res<RenderQueue>,
     uniforms: Res<WorldFireParticleDrawUniforms>,
     storage: Option<Res<WorldFireParticleGpuStorage>>,
+    gpu_shader_buffers: Res<RenderAssets<GpuShaderBuffer>>,
+    dense_handles: Option<Res<crate::compute::DenseHeatGpuHandles>>,
+    dense_job: Option<Res<crate::compute::DenseHeatGpuJob>>,
 ) {
     let Some(storage) = storage else {
         return;
@@ -470,6 +553,68 @@ fn prepare_world_fire_particle_draw_bind_group(
             &BindGroupEntries::single(&uniform_gpu.uniform),
         ));
     }
+
+    // CQ-50 residual: bind dense heat GPU lattice for expand reinforce (group 4).
+    prepare_dense_heat_vfx_bind_group(
+        &pipeline,
+        &mut dense_uniform,
+        &mut dense_bg,
+        &render_device,
+        &queue,
+        &pipeline_cache,
+        &gpu_shader_buffers,
+        dense_handles.as_deref(),
+        dense_job.as_deref(),
+    );
+}
+
+fn prepare_dense_heat_vfx_bind_group(
+    pipeline: &WorldFireParticleDrawPipeline,
+    dense_uniform: &mut DenseHeatVfxUniformGpu,
+    dense_bg: &mut WorldFireParticleDenseBindGroup,
+    render_device: &RenderDevice,
+    queue: &RenderQueue,
+    pipeline_cache: &PipelineCache,
+    gpu_shader_buffers: &RenderAssets<GpuShaderBuffer>,
+    dense_handles: Option<&crate::compute::DenseHeatGpuHandles>,
+    dense_job: Option<&crate::compute::DenseHeatGpuJob>,
+) {
+    let meta = match (dense_handles, dense_job) {
+        (Some(_), Some(job)) if job.active && job.width > 0 && job.height > 0 => DenseHeatVfxMetaGpu {
+            origin_x: job.origin.x,
+            origin_y: job.origin.y,
+            width: job.width,
+            height: job.height,
+            chunk_spacing: crate::render::extraction::fire_view_extract::FIRE_VIEW_CHUNK_SPACING_WORLD,
+            enabled: 1.0,
+            _pad0: 0.0,
+            _pad1: 0.0,
+        },
+        _ => DenseHeatVfxMetaGpu::default(),
+    };
+    dense_uniform.uniform.set(meta);
+    dense_uniform.uniform.write_buffer(render_device, queue);
+    let Some(params_binding) = dense_uniform.uniform.binding() else {
+        dense_bg.bind_group = None;
+        return;
+    };
+    let Some(handles) = dense_handles else {
+        dense_bg.bind_group = None;
+        return;
+    };
+    let Some(gpu_a) = gpu_shader_buffers.get(&handles.field_a) else {
+        dense_bg.bind_group = None;
+        return;
+    };
+    let dense_layout = pipeline_cache.get_bind_group_layout(&pipeline.dense_layout);
+    dense_bg.bind_group = Some(render_device.create_bind_group(
+        Some("world_fire_dense_heat_vfx"),
+        &dense_layout,
+        &BindGroupEntries::sequential((
+            params_binding,
+            gpu_a.buffer.as_entire_buffer_binding(),
+        )),
+    ));
 }
 
 fn record_world_fire_particle_draw_dispatch(
@@ -546,6 +691,12 @@ fn world_fire_particle_draw_pass(
     let Some(spark_entry) = bind_registry.get(WORLD_FIRE_PARTICLE_SPARK_BIND_GROUP) else {
         return;
     };
+    let Some(dense_entry) = world
+        .get_resource::<WorldFireParticleDenseBindGroup>()
+        .and_then(|d| d.bind_group.as_ref())
+    else {
+        return;
+    };
     let pipeline = world.resource::<WorldFireParticleDrawPipeline>();
     let cache = world.resource::<PipelineCache>();
     let pl = cache
@@ -559,6 +710,7 @@ fn world_fire_particle_draw_pass(
     pass.set_bind_group(1, &instance_entry.bind_group, &[]);
     pass.set_bind_group(2, &expanded_entry.bind_group, &[]);
     pass.set_bind_group(3, &spark_entry.bind_group, &[]);
+    pass.set_bind_group(4, dense_entry, &[]);
     pass.dispatch_workgroups(draw.dispatch_count, 1, 1);
 }
 

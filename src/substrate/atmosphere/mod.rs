@@ -5,7 +5,6 @@
 //! [0778f3f4](0778f3f4-fc7d-4ee8-aae3-80e39dede087) · class A_obsolete.
 
 pub mod clipmap_advect;
-mod contamination_tick;
 
 pub use clipmap_advect::{
     advect_l0_with_wind, advect_l0_with_wind_field, apply_l0_rain_washout, fold_registry_smoke_into_l0,
@@ -14,7 +13,6 @@ pub use clipmap_advect::{
     sample_tactical_ember_from_l0, sample_tactical_fog_from_l0, sample_tactical_heat_from_l0,
     sample_tactical_smoke_from_l0, sample_tactical_toxicity_from_l0,
 };
-pub use contamination_tick::contamination_tick_system;
 
 use bevy::math::DVec2;
 use bevy::prelude::*;
@@ -77,8 +75,8 @@ pub const L0_ADVECT_WRITER_WIND_ADVECT: u32 = 1 << 0;
 pub struct AtmosphereClipmapStack {
     pub levels: Vec<AtmosphereClipLevel>,
     pub active_focus: DVec2,
-    /// W1 — monotone change counter, bumped by every L0 writer (key part of the future
-    /// `AtmosphereFrame`). Diagnostic only; never read to gate simulation.
+    /// W1 — monotone change counter, bumped only on real L0 mutation. Keys
+    /// [`crate::systems::atmosphere::frame::AtmosphereFrame`] tracer staleness.
     pub revision: u64,
     /// W1 — bit set of advect writers that have actually run on L0 (observation, not a verdict).
     pub advect_writer_mask: u32,

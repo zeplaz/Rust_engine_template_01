@@ -43,12 +43,12 @@ pub use field_l0_shim::{
     FIELD_L0_SHIM_WIRED,
 };
 pub use frame::{
-    build_atmosphere_frame, combine_visibility_m, combine_visibility_m_k, AtmosphereFrame,
+    build_atmosphere_frame, combine_visibility_m_k, AtmosphereFrame,
     AtmosphereFrameInputs, AtmosphereFrameKey, AtmosphereFrameStats, AtmosphereTile,
     AtmosphereWeatherMeans, VIS_ASH_K, VIS_SMOKE_K,
 };
 pub use storm_class::{
-    classify_storm, classify_storm_with_context, classify_storm_with_plume, low_depth_hpa,
+    classify_storm, classify_storm_with_context, low_depth_hpa,
     StormClass, StormClassThresholds,
 };
 pub use visual_extract::{DEBT_011_SMOKE_UNIFIED, SMOKE_EXTRACT_BRIDGE};

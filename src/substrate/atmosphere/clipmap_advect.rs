@@ -147,68 +147,74 @@ fn max_blend_l0_channel_at(
     x: u32,
     y: u32,
     value: f32,
-) {
+) -> bool {
     if value <= 0.0 || x >= resolution.x || y >= resolution.y {
-        return;
+        return false;
     }
     let idx = (y * resolution.x + x) as usize;
-    if let Some(cell) = channel.get_mut(idx) {
-        *cell = (*cell).max(value.clamp(0.0, 1.0));
+    let Some(cell) = channel.get_mut(idx) else {
+        return false;
+    };
+    let v = value.clamp(0.0, 1.0);
+    if v > *cell {
+        *cell = v;
+        return true;
     }
+    false
 }
 
 /// DEBT-010 — max-blend a smoke sample into L0 at grid `(x, y)`.
-pub fn max_blend_l0_smoke_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, smoke: f32) {
+pub fn max_blend_l0_smoke_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, smoke: f32) -> bool {
     let Some(level0) = stack.levels.first_mut() else {
-        return;
+        return false;
     };
     let res = level0.resolution;
-    max_blend_l0_channel_at(&mut level0.smoke_density, res, x, y, smoke);
+    max_blend_l0_channel_at(&mut level0.smoke_density, res, x, y, smoke)
 }
 
 /// DEBT-010b — max-blend fog into L0.
-pub fn max_blend_l0_fog_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, fog: f32) {
+pub fn max_blend_l0_fog_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, fog: f32) -> bool {
     let Some(level0) = stack.levels.first_mut() else {
-        return;
+        return false;
     };
     let res = level0.resolution;
-    max_blend_l0_channel_at(&mut level0.fog_density, res, x, y, fog);
+    max_blend_l0_channel_at(&mut level0.fog_density, res, x, y, fog)
 }
 
 /// DEBT-010b — max-blend toxicity into L0.
-pub fn max_blend_l0_toxicity_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, toxicity: f32) {
+pub fn max_blend_l0_toxicity_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, toxicity: f32) -> bool {
     let Some(level0) = stack.levels.first_mut() else {
-        return;
+        return false;
     };
     let res = level0.resolution;
-    max_blend_l0_channel_at(&mut level0.toxicity, res, x, y, toxicity);
+    max_blend_l0_channel_at(&mut level0.toxicity, res, x, y, toxicity)
 }
 
 /// DEBT-010c — max-blend ash into L0.
-pub fn max_blend_l0_ash_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, ash: f32) {
+pub fn max_blend_l0_ash_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, ash: f32) -> bool {
     let Some(level0) = stack.levels.first_mut() else {
-        return;
+        return false;
     };
     let res = level0.resolution;
-    max_blend_l0_channel_at(&mut level0.ash_density, res, x, y, ash);
+    max_blend_l0_channel_at(&mut level0.ash_density, res, x, y, ash)
 }
 
 /// DEBT-010c — max-blend ember into L0.
-pub fn max_blend_l0_ember_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, ember: f32) {
+pub fn max_blend_l0_ember_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, ember: f32) -> bool {
     let Some(level0) = stack.levels.first_mut() else {
-        return;
+        return false;
     };
     let res = level0.resolution;
-    max_blend_l0_channel_at(&mut level0.ember_density, res, x, y, ember);
+    max_blend_l0_channel_at(&mut level0.ember_density, res, x, y, ember)
 }
 
 /// DEBT-010c — max-blend heat distortion into L0.
-pub fn max_blend_l0_heat_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, heat: f32) {
+pub fn max_blend_l0_heat_at(stack: &mut AtmosphereClipmapStack, x: u32, y: u32, heat: f32) -> bool {
     let Some(level0) = stack.levels.first_mut() else {
-        return;
+        return false;
     };
     let res = level0.resolution;
-    max_blend_l0_channel_at(&mut level0.heat_distortion, res, x, y, heat);
+    max_blend_l0_channel_at(&mut level0.heat_distortion, res, x, y, heat)
 }
 
 pub fn fold_registry_smoke_into_l0(stack: &mut AtmosphereClipmapStack, smoke_seed: f32) {

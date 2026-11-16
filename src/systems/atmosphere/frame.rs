@@ -9,8 +9,8 @@
 //! - Chunk-indexed like L0 (`atmos_chunk_to_tile`): each tile holds the weather sampled **once** at the
 //!   chunk centre (same position as `project_chunk_weather` / L0 advect) plus the L0 tracers and derived
 //!   scalars ([`AtmosphereTile::visibility_m_combined`], icing risk, storm class).
-//! - Key: `(WeatherField.revision, AtmosphereClipmapStack.revision, SimTimeMicros)`. Rebuild only when a
-//!   key part moves. Tracer revision is the stack's native counter (W1), not ECS change detection.
+//! - Key: `(WeatherField.revision, AtmosphereClipmapStack.revision)` for staleness; `sim_micros` is
+//!   recorded on weather resample only (not a rebuild gate). Tracer revision is the stack counter (W1).
 //! - Not saved: rebuilt from the two saved authorities after load.
 
 use bevy::math::{IVec2, UVec2, Vec2};
@@ -85,13 +85,6 @@ impl Default for AtmosphereTile {
             vortex_influence: 0.0,
         }
     }
-}
-
-/// `weather_visibility / (1 + k_smoke·smoke + k_ash·ash)` with default k weights.
-#[inline]
-#[must_use]
-pub fn combine_visibility_m(weather_visibility_m: f32, smoke: f32, ash: f32) -> f32 {
-    combine_visibility_m_k(weather_visibility_m, smoke, ash, VIS_SMOKE_K, VIS_ASH_K)
 }
 
 /// Combined visibility with explicit smoke/ash weights from weather tuning.
@@ -198,6 +191,10 @@ pub struct AtmosphereFrame {
     centre_chunk: IVec2,
     means: AtmosphereWeatherMeans,
     stats: AtmosphereFrameStats,
+    /// W4 — contiguous firestorm plume mask (one build per frame for coupling terms).
+    plume_mask: Vec<bool>,
+    firestorm_plume_count: u32,
+    plume_updraft_peak_mps: f32,
 }
 
 impl Default for AtmosphereFrame {
@@ -213,6 +210,9 @@ impl Default for AtmosphereFrame {
             centre_chunk: IVec2::ZERO,
             means: AtmosphereWeatherMeans::default(),
             stats: AtmosphereFrameStats::default(),
+            plume_mask: Vec::new(),
+            firestorm_plume_count: 0,
+            plume_updraft_peak_mps: 0.0,
         }
     }
 }
@@ -244,6 +244,21 @@ impl AtmosphereFrame {
     #[must_use]
     pub fn stats(&self) -> &AtmosphereFrameStats {
         &self.stats
+    }
+
+    #[must_use]
+    pub fn firestorm_plume_mask(&self) -> &[bool] {
+        &self.plume_mask
+    }
+
+    #[must_use]
+    pub fn firestorm_plume_count(&self) -> u32 {
+        self.firestorm_plume_count
+    }
+
+    #[must_use]
+    pub fn plume_updraft_peak_mps(&self) -> f32 {
+        self.plume_updraft_peak_mps
     }
 
     #[must_use]
@@ -401,7 +416,7 @@ impl AtmosphereFrame {
 
     fn weather_stale(&self, inputs: &AtmosphereFrameInputs) -> bool {
         match inputs.weather_revision {
-            Some(rev) => rev != self.key.weather_revision || inputs.sim_micros != self.key.sim_micros,
+            Some(rev) => rev != self.key.weather_revision,
             None => false,
         }
     }
@@ -542,7 +557,9 @@ impl AtmosphereFrame {
             smoke[i] = tile.smoke;
             ember[i] = tile.ember;
         }
-        let (plume_mask, _, _) = detect_firestorm_plumes(&heat, &smoke, &ember, self.size);
+        let (plume_mask, plume_count, peak_up) = detect_firestorm_plumes(&heat, &smoke, &ember, self.size);
+        self.firestorm_plume_count = plume_count;
+        self.plume_updraft_peak_mps = peak_up;
 
         for (i, tile) in self.tiles.iter_mut().enumerate() {
             tile.visibility_m_combined = combine_visibility_m_k(
@@ -594,6 +611,7 @@ impl AtmosphereFrame {
                 StormClass::Clear => {}
             }
         }
+        self.plume_mask = plume_mask;
 
         if means.tiles > 0 {
             let inv = 1.0 / means.tiles as f32;
@@ -811,8 +829,11 @@ mod tests {
         assert_eq!(resamples, 1, "tracer-only rebuild must not re-sample weather");
         assert_eq!(frame.key().tracer_revision, stack.revision);
 
-        assert!(frame.rebuild(Some(&f), &stack, 2_000_000, &t), "sim time rebuilds");
-        assert_eq!(frame.stats().weather_resamples, 2);
+        assert!(
+            !frame.rebuild(Some(&f), &stack, 2_000_000, &t),
+            "sim micros alone must not force rebuild"
+        );
+        assert_eq!(frame.stats().weather_resamples, 1);
 
         f.revision = f.revision.wrapping_add(1);
         assert!(frame.rebuild(Some(&f), &stack, 2_000_000, &t), "weather revision rebuilds");

@@ -93,31 +93,6 @@ pub fn relax_sense_degradation(
     grid
 }
 
-/// Build seed buffers from per-cell samples + smoke, then relax.
-#[must_use]
-pub fn relax_sense_from_samples(
-    width: usize,
-    height: usize,
-    samples: &[WeatherSample],
-    smoke01: &[f32],
-    seeded: &[bool],
-    sensor: SensorKind,
-    resist: f32,
-    iterations: u32,
-    alpha: f32,
-) -> Vec<f32> {
-    let n = width.saturating_mul(height);
-    debug_assert_eq!(samples.len(), n);
-    debug_assert_eq!(smoke01.len(), n);
-    let mut seeds = vec![1.0_f32; n];
-    for i in 0..n {
-        if seeded[i] {
-            seeds[i] = sense_seed_mul(&samples[i], smoke01[i], sensor, resist);
-        }
-    }
-    relax_sense_degradation(width, height, &seeds, seeded, iterations, alpha)
-}
-
 /// Coarse sense mul over weather-polling chunks (1:1 with stations). DERIVED — omit from save.
 #[derive(Resource, Debug, Clone)]
 pub struct WeatherSenseCellField {
@@ -276,17 +251,11 @@ mod tests {
         let samples = vec![clear_sample(); n];
         let smoke = vec![0.0_f32; n];
         let seeded = vec![true; n];
-        let out = relax_sense_from_samples(
-            w,
-            h,
-            &samples,
-            &smoke,
-            &seeded,
-            SensorKind::Eo,
-            0.0,
-            4,
-            1.0,
-        );
+        let mut seeds = vec![1.0_f32; n];
+        for i in 0..n {
+            seeds[i] = sense_seed_mul(&samples[i], smoke[i], SensorKind::Eo, 0.0);
+        }
+        let out = relax_sense_degradation(w, h, &seeds, &seeded, 4, 1.0);
         assert_eq!(out.len(), n);
         for v in &out {
             assert!((v - 1.0).abs() < 1e-5, "got {v}");

@@ -3,7 +3,8 @@ use std::collections::VecDeque;
 
 use crate::sim::effects::SimEffectQueue;
 use crate::strategic::StrategicRasterConfig;
-use crate::systems::sim_control::SimControlState;
+use crate::systems::sim_control::{SimControlState, SimStepClock};
+use crate::systems::weather::WeatherPollingStations;
 
 use super::ignite::{
     enqueue_scenario_ignite_sim_effect, ignite_cell_from_world_tile,
@@ -12,7 +13,10 @@ use super::ignite::{
 use super::objectives::ScenarioObjectiveMarker;
 use super::scenario_steps::ScenarioStep;
 use super::scenario_types::ScenarioFileV1;
-use super::trigger_registry::trigger_effect_to_emit_step;
+use super::trigger_registry::{
+    build_trigger_fact_memory, reorder_pending_trigger_effects, trigger_effect_to_emit_step,
+    SCENARIO_TRIGGER_RULES,
+};
 use super::validation::{validate_scenario, ScenarioValidationReport};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Reflect)]
@@ -120,12 +124,31 @@ pub fn drain_script_steps(
     mut host: ResMut<EngineScriptHost>,
     mut sim_control: ResMut<SimControlState>,
     mut sim_effect_queue: ResMut<SimEffectQueue>,
+    clock: Option<Res<SimStepClock>>,
+    stations: Option<Res<WeatherPollingStations>>,
     raster: Option<Res<StrategicRasterConfig>>,
     objective_entities: Query<Entity, With<ScenarioObjectiveMarker>>,
 ) {
     if !host.running {
         return;
     }
+
+    let sample = stations
+        .as_deref()
+        .filter(|s| s.ready)
+        .map(|s| s.sample_at_tile(IVec2::ZERO));
+    let drought = sample.map(|s| (1.0 - s.humidity).clamp(0.0, 1.0)).unwrap_or(0.0);
+    let rain = sample
+        .map(|s| (s.rain_mm_h.max(0.0) / 10.0).clamp(0.0, 1.0))
+        .unwrap_or(0.0);
+    let fuel = 0.25_f32;
+    let tick = clock.map_or(0, |c| c.steps);
+    let mem = build_trigger_fact_memory(tick, drought, fuel, rain);
+    reorder_pending_trigger_effects(
+        &mut host.pending_steps,
+        &mem,
+        SCENARIO_TRIGGER_RULES,
+    );
 
     let Some(step) = host.pending_steps.pop_front() else {
         host.execution_log.push("Scenario complete".into());

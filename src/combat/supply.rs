@@ -23,13 +23,7 @@ use crate::economy::logistics::orders::{
     CargoKind, ConsumerKind, LogisticsOrderCommand, LogisticsOrderRequest, LogisticsOrderSite, LogisticsOrderSiteId,
     LogisticsOrdersSnapshotRes, OwnerId, Priority, SiteRole,
 };
-use crate::systems::navigation::{LogisticsPathConcern, LogisticsPathConcernRegistry};
-
-/// NAV-14 — concern weights for tactical grid paths that feed a front (from RON `by_consumer.front`).
-#[must_use]
-pub fn front_haul_path_concern(reg: &LogisticsPathConcernRegistry) -> LogisticsPathConcern {
-    reg.get_consumer(ConsumerKind::Front.label())
-}
+use crate::systems::navigation::front_haul_path_concern;
 
 /// Marks the logistics endpoint of one side of one theater.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
@@ -39,10 +33,22 @@ pub struct FrontSupplyPoint {
 }
 
 /// Bookkeeping so the system only sends changes.
-#[derive(Resource, Debug, Default)]
+#[derive(Resource, Debug)]
 pub struct FrontSupplyPoints {
     pub entities: BTreeMap<(TheaterId, u8), Entity>,
     pub published: BTreeMap<(TheaterId, u8), Vec<(&'static str, u32)>>,
+    /// NAV-14 concern last applied when front demands were published (from [`front_haul_path_concern`]).
+    pub haul_path_concern: crate::systems::navigation::LogisticsPathConcern,
+}
+
+impl Default for FrontSupplyPoints {
+    fn default() -> Self {
+        Self {
+            entities: BTreeMap::new(),
+            published: BTreeMap::new(),
+            haul_path_concern: crate::systems::navigation::LogisticsPathConcern::DEFAULT,
+        }
+    }
 }
 
 /// Kilograms per tonne: balance draw (kg) to logistics cargo (t).
@@ -171,9 +177,13 @@ pub fn publish_front_supply_demands_system(
     sites: Query<&LogisticsOrderSiteId>,
     formations: Query<&Formation>,
     mut commands: Commands,
+    concerns: Option<Res<crate::systems::navigation::LogisticsPathConcernRegistry>>,
     requests: Option<ResMut<Messages<LogisticsOrderRequest>>>,
 ) {
     let Some(mut requests) = requests else { return };
+    if let Some(reg) = concerns.as_ref() {
+        points.haul_path_concern = front_haul_path_concern(reg);
+    }
     let mut live: Vec<(TheaterId, u8)> = Vec::new();
     for t in &theaters.theaters {
         for side in [t.pair.0, t.pair.1] {

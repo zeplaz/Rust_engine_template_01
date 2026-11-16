@@ -126,7 +126,7 @@ pub use wave_s_artifacts::{
 
 pub use wire_format::{
     active_chunk_artifact_body_kind, active_save_payload_compression, active_save_wire_format,
-    compress_payload, decompress_payload, quantize_unit_interval_f32, unwrap_chunk_artifact_body,
+    compress_payload, decompress_payload, unwrap_chunk_artifact_body,
     wrap_chunk_artifact_body, SaveArtifactBodyKind, SavePayloadCompression, SaveWireFormat,
     SAVE_ARTIFACT_ENVELOPE_VERSION, SAVE_ARTIFACT_MAGIC, SAVE_BINARY_BULK_DEFERRED,
     SAVE_FLOAT_QUANT_SCALE,

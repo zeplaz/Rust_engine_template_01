@@ -10,35 +10,26 @@ pub struct NavigationSchedulePlugin;
 
 impl Plugin for NavigationSchedulePlugin {
     fn build(&self, app: &mut App) {
-        app.configure_sets(
-            Update,
-            (
-                NavSets::DamageSpeedAdjustment.after(TransportSchedule::CostCache),
-                NavSets::MotionCalculation.after(NavSets::DamageSpeedAdjustment),
-            ),
-        )
-        .add_systems(
-            Startup,
-            crate::systems::navigation::load_logistics_path_concerns_on_startup,
-        )
-        .add_systems(
-            Update,
-            (
-                nav_motion_stage_placeholder,
-                crate::systems::navigation::potential_field_navigation_system,
+        app.init_resource::<crate::systems::navigation::LogisticsGridPathScratch>()
+            .configure_sets(
+                Update,
+                (
+                    NavSets::DamageSpeedAdjustment.after(TransportSchedule::CostCache),
+                    NavSets::MotionCalculation.after(NavSets::DamageSpeedAdjustment),
+                ),
             )
-                .in_set(NavSets::MotionCalculation),
-        );
+            .add_systems(
+                Startup,
+                crate::systems::navigation::load_logistics_path_concerns_on_startup,
+            )
+            .add_systems(
+                Update,
+                (
+                    crate::systems::navigation::sync_truck_motion_waypoints_system,
+                    crate::systems::navigation::potential_field_navigation_system
+                        .after(crate::systems::navigation::sync_truck_motion_waypoints_system),
+                )
+                    .in_set(NavSets::MotionCalculation),
+            );
     }
-}
-
-/// Extension point for road-vehicle displacement / path followers (matrix R7).
-/// Runs **after** [`NavSets::DamageSpeedAdjustment`] (e.g. `DamageSystem::apply_road_damage`).
-/// **W3:** [`TransportNavExport`](crate::systems::transport::TransportNavExport) is refreshed in
-/// `TransportSchedule::CostCache` (after cost cache); read that for coarse costs + `allowed_agents`.
-fn nav_motion_stage_placeholder(
-    _sim: Res<crate::systems::sim_control::SimControlState>,
-    nav: Res<crate::systems::transport::TransportNavExport>,
-) {
-    let _ = nav.edges.len();
 }

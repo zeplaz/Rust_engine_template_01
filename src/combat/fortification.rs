@@ -145,6 +145,22 @@ pub fn prefer_defensible_origin(
     }
 }
 
+/// TAC-05 RO: prefer a candidate with higher gen-time chokepoint score (ties keep `preferred`).
+#[must_use]
+pub fn prefer_chokepoint_origin(
+    preferred: IVec2,
+    alternate: IVec2,
+    analysis: &crate::terrain::TerrainAnalysisBook,
+) -> IVec2 {
+    let a = analysis.chokepoint_at(preferred);
+    let b = analysis.chokepoint_at(alternate);
+    if b > a + 1e-5 {
+        alternate
+    } else {
+        preferred
+    }
+}
+
 /// Plan rows for `side` in `theater`: bunkers behind its Threatened pressure points, dragon's teeth on
 /// the enemy's attack axes (the enemy's Opportunity points land on our cells), trench strips along its
 /// front set back from the line. Deterministic, at most `fortify_max_rows`, no overlaps, non-negative
@@ -209,7 +225,12 @@ pub fn plan_fortification_rows_with_analysis(
     }
     for p in ranked(PressureKind::Opportunity, false) {
         if theater.contains_front_tile(p.tile) {
-            try_push(DefenseKind::DragonTeeth, p.tile + forward, &mut rows);
+            let mut origin = p.tile + forward;
+            if let Some(book) = analysis {
+                // Bias teeth onto the higher-chokepoint of forward vs the pressure tile itself.
+                origin = prefer_chokepoint_origin(origin, p.tile, book);
+            }
+            try_push(DefenseKind::DragonTeeth, origin, &mut rows);
         }
     }
     let stride = DefenseKind::TrenchLine.footprint().width.max(1) as i32;

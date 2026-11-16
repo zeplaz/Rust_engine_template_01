@@ -293,6 +293,12 @@ impl Plugin for TestHarnessPlugin {
             )
             .add_systems(
                 Update,
+                crate::construction::build_readability_harness::seed_build_readability_harness_once
+                    .after(apply_test_scene_defaults)
+                    .run_if(in_state(BaseState::Simulation)),
+            )
+            .add_systems(
+                Update,
                 (
                     seed_playquad_ne_build_order_once,
                     request_playquad_wet_phase_once,

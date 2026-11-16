@@ -8,6 +8,7 @@
 
 use bevy::prelude::{Local, Query, Res, ResMut, Resource};
 
+use crate::strategic::world_field_layers::{FieldLayerUpdateClass, WorldFieldLayerEpoch};
 use crate::strategic::{ChunkStrategicOverlay, FrontlineState};
 use crate::systems::transport::TransportEdgeDirectory;
 
@@ -59,9 +60,11 @@ pub fn world_read_snapshot_refresh_system(
     overlays: Query<&ChunkStrategicOverlay>,
     directory: Res<TransportEdgeDirectory>,
     front: Res<FrontlineState>,
+    epochs: Res<WorldFieldLayerEpoch>,
     mut snap: ResMut<WorldReadSnapshot>,
     mut seq: Local<u64>,
     mut frames: Local<u32>,
+    mut seen_slow_epoch: Local<u64>,
 ) {
     // Whole-map means for the info panel: O(all cells), so refresh a few times per second.
     // The first call runs immediately.
@@ -70,6 +73,11 @@ pub fn world_read_snapshot_refresh_system(
     if !due {
         return;
     }
+    let slow_epoch = epochs.get(FieldLayerUpdateClass::Slow);
+    if slow_epoch == *seen_slow_epoch && *seq > 0 {
+        return;
+    }
+    *seen_slow_epoch = slow_epoch;
     let mut n = 0usize;
     let mut ls = 0.0f32;
     let mut mob = 0.0f32;

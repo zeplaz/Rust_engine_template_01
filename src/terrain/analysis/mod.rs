@@ -85,6 +85,19 @@ impl TerrainAnalysisBook {
             sum / n as f32
         }
     }
+
+    /// Mean chokepoint over `tiles` (missing → 0).
+    #[must_use]
+    pub fn mean_chokepoint<'a>(&self, tiles: impl Iterator<Item = &'a IVec2>) -> f32 {
+        let (sum, n) = tiles.fold((0.0f32, 0u32), |(s, n), t| {
+            (s + self.chokepoint_at(*t), n + 1)
+        });
+        if n == 0 {
+            0.0
+        } else {
+            sum / n as f32
+        }
+    }
 }
 
 /// Precompute analysis for a row-major DEM (`len == width * height`).

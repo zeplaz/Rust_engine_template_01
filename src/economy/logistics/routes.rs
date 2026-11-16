@@ -160,7 +160,45 @@ pub fn base_edge_route_cost(cache: Option<&TransportCostCache>, id: TransportEdg
         .unwrap_or(1.0)
 }
 
-/// CQ-53: base × NAV-13 forecast integral for a one-tick traverse proxy.
+/// CQ-51/52 soft penalty from nav field (heat + wildlife) at edge endpoints.
+#[must_use]
+pub fn nav_field_edge_penalty(
+    nav: Option<&crate::compute::NavFieldFrame>,
+    directory: Option<&TransportEdgeDirectory>,
+    id: TransportEdgeId,
+) -> f32 {
+    let Some(nav) = nav else {
+        return 0.0;
+    };
+    let mut penalty = (nav.mean_heat_cost * 0.25).clamp(0.0, 0.5);
+    let Some(meta) = directory.and_then(|d| d.by_edge.get(&id)) else {
+        return penalty;
+    };
+    for key in [&meta.head_key, &meta.tail_key] {
+        let Some(coord) = parse_tile_xy(key) else {
+            continue;
+        };
+        for s in &nav.wildlife_soft_samples {
+            if s.chunk == coord {
+                penalty = penalty.max(s.soft_cost);
+            }
+        }
+        for s in &nav.heat_cost_samples {
+            if s.chunk == coord {
+                penalty = penalty.max(s.heat_cost);
+            }
+        }
+    }
+    penalty.clamp(0.0, 1.0)
+}
+
+fn parse_tile_xy(key: &str) -> Option<bevy::math::IVec2> {
+    let rest = key.strip_prefix('t')?;
+    let (xs, zs) = rest.split_once('_')?;
+    Some(bevy::math::IVec2::new(xs.parse().ok()?, zs.parse().ok()?))
+}
+
+/// CQ-53/51/52: base × NAV-13 forecast × (1 + heat/wildlife soft).
 #[must_use]
 pub fn route_edge_cost(
     cache: Option<&TransportCostCache>,
@@ -168,11 +206,24 @@ pub fn route_edge_cost(
     depart_tick: u64,
     id: TransportEdgeId,
 ) -> f32 {
+    route_edge_cost_with_nav(cache, forecast, None, None, depart_tick, id)
+}
+
+#[must_use]
+pub fn route_edge_cost_with_nav(
+    cache: Option<&TransportCostCache>,
+    forecast: Option<&LogisticsCostForecastBook>,
+    nav: Option<&crate::compute::NavFieldFrame>,
+    directory: Option<&TransportEdgeDirectory>,
+    depart_tick: u64,
+    id: TransportEdgeId,
+) -> f32 {
     let base = base_edge_route_cost(cache, id);
-    match forecast.filter(|f| f.ready) {
+    let timed = match forecast.filter(|f| f.ready) {
         Some(book) => book.edge_cost(base, depart_tick, 1),
         None => base,
-    }
+    };
+    timed * (1.0 + nav_field_edge_penalty(nav, directory, id))
 }
 
 #[must_use]
@@ -183,10 +234,10 @@ pub fn path_edges_between_tiles(
     to: BuildSiteTile,
     mode: TransportMode,
 ) -> Option<Vec<TransportEdgeId>> {
-    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, 0)
+    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, None, 0)
 }
 
-/// Costed production path (CQ-53): Dijkstra with [`route_edge_cost`].
+/// Costed production path (CQ-53): Dijkstra with [`route_edge_cost_with_nav`].
 #[must_use]
 pub fn path_edges_between_tiles_costed(
     nav: &TransportNavExport,
@@ -196,6 +247,7 @@ pub fn path_edges_between_tiles_costed(
     mode: TransportMode,
     cache: Option<&TransportCostCache>,
     forecast: Option<&LogisticsCostForecastBook>,
+    nav_field: Option<&crate::compute::NavFieldFrame>,
     depart_tick: u64,
 ) -> Option<Vec<TransportEdgeId>> {
     if from == to {
@@ -224,7 +276,7 @@ pub fn path_edges_between_tiles_costed(
     };
     let adj = build_edge_adjacency(&filtered_nav, directory);
     let path = dijkstra_path_to_goals(&adj, &starts, &goal_edges, |id| {
-        route_edge_cost(cache, forecast, depart_tick, id)
+        route_edge_cost_with_nav(cache, forecast, nav_field, Some(directory), depart_tick, id)
     })?;
     if path.is_empty() {
         None
@@ -408,6 +460,7 @@ pub fn refresh_resource_flow_routes_system(
     construction_rev: Option<Res<ConstructionWorldRevision>>,
     mut dirty_tiles: ResMut<LogisticsRouteDirtyTiles>,
     forecast: Option<Res<LogisticsCostForecastBook>>,
+    nav_field: Option<Res<crate::compute::NavFieldFrame>>,
     clock: Option<Res<crate::systems::sim_control::SimStepClock>>,
     mut route_cache: ResMut<RouteCache>,
     mut path_store: ResMut<RoutePathStore>,
@@ -435,9 +488,6 @@ pub fn refresh_resource_flow_routes_system(
             forecast_purged = route_cache.routes.len() as u32;
             route_cache.routes.clear();
             route_cache.forecast_consumed_revision = book.revision;
-            if let Some(rt) = runtime.as_mut() {
-                rt.saw_forecast_route_invalidation = true;
-            }
         }
     }
     if purged > 0 || topo_changed || forecast_purged > 0 {
@@ -483,6 +533,7 @@ pub fn refresh_resource_flow_routes_system(
                 edge.transport_mode,
                 cost_cache.as_deref(),
                 forecast.as_deref(),
+                nav_field.as_deref(),
                 depart_tick,
             );
             let reachable = path_edges.is_some();

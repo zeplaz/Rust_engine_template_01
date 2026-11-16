@@ -245,6 +245,8 @@ pub fn run_compute_dispatch_graph(
     mut graph: ResMut<ComputeDispatchGraph>,
     mut heat_field: ResMut<HeatDiffusionFieldBuffers>,
     mut dense_play: ResMut<super::DenseHeatPlayField>,
+    mut dense_job: ResMut<super::DenseHeatGpuJob>,
+    gpu_primary: Res<super::DenseHeatGpuPrimary>,
     heat_cfg: Res<super::HeatDiffusionConfig>,
 ) {
     cadence.accumulator_secs += time.delta_secs();
@@ -280,16 +282,21 @@ pub fn run_compute_dispatch_graph(
             &heat_cfg,
         );
     } else {
-        // DH-02: dense WGSL-parity owns play (sparse gated off).
-        super::heat_diffusion_gpu::advance_dense_heat_play(
+        // CQ-50 / DH-02: GPU-primary dense (ReadbackComplete sole writer) or CPU fallback.
+        super::dense_heat_gpu_dispatch::advance_dense_heat_play_gpu_or_cpu(
             &mut dense_play,
             &mut heat_field,
+            &mut dense_job,
             &ctx,
             graph.fire_influence.dispatch_active,
+            gpu_primary.enabled,
         );
     }
     graph.heat_diffusion.last_generation = heat_field.generation;
-    sync_nav_field_from_heat_diffusion(&mut navigation, &heat_field);
+    // Nav sync for GPU path happens in ReadbackComplete observer (sole DenseHeatPlayField writer).
+    if heat_cfg.use_sparse_play || !gpu_primary.enabled {
+        sync_nav_field_from_heat_diffusion(&mut navigation, &heat_field);
+    }
 }
 
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -312,7 +319,8 @@ impl Plugin for ComputeDispatchPlugin {
             .init_resource::<ComputeDispatchGraph>()
             .init_resource::<HeatDiffusionFieldBuffers>()
             .init_resource::<super::HeatDiffusionConfig>()
-            .init_resource::<super::DenseHeatPlayField>();
+            .init_resource::<super::DenseHeatPlayField>()
+            .add_plugins(super::DenseHeatGpuPlugin);
         super::heat_diffusion::register_heat_diffusion_gpu_sync(app);
         app.configure_sets(Update, ComputeDispatchSystemSet::Dispatch)
             .add_systems(
