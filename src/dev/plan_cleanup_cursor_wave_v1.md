@@ -247,7 +247,8 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-02 | DONE | `b0001258` | Revision bumps on mul change only; tick starts quantised to weather step; sliding ticks no longer clear routes. |
 | CQ-35 | DONE | `b0001258` | `forecast_consumed_revision` moved to `RouteCache`; forecast book is sole-written again. |
 | CQ-03 | DONE | `17566e47` | `rank_demands_by_advert` scores once with Dijkstra cached per sink; advisor uses it; travel ticks share one search. |
-| CQ-04 | DONE (uncommitted) | — | Thermal/hydraulic transfers via delta buffer; thermal conserves mass; hydraulic loss = intentional deposit fraction only. |
+| CQ-04 | DONE | `9a26d6d5` | Thermal/hydraulic transfers via delta buffer; thermal conserves mass; hydraulic loss = intentional deposit fraction only. |
+| CQ-05 | DONE (uncommitted) | — | Chrome gates pointer only; sole `sync_view_input_routing` after Publish / before ApplyInput. |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking

@@ -514,7 +514,10 @@ fn map_camera_apply_input(
         .single()
         .map(map_fill_accepts_pointer)
         .unwrap_or(false);
-    let pointer_blocks_mouse = !pointer_on_map;
+    // CQ-05: UI chrome / play panels block **pointer** camera only (mouse pan, edge scroll).
+    // Keyboard pan / recenter / zoom-reset stay available while the cursor is over HUD.
+    let pointer_blocks_mouse = !pointer_on_map
+        || input_routing.is_some_and(|r| r.world_pointer_input_disabled());
 
     let mut pose = map_camera_pose_seed_from_authority(authority.as_ref(), tf.as_ref());
     locals.before_apply = Some(pose.clone());
@@ -535,10 +538,6 @@ fn map_camera_apply_input(
     }
 
     if active_map_surface.blocks_main_world_map_camera_input() {
-        return;
-    }
-    // INPUT-04: UI chrome / play panels disable world camera (UI → surface → world chain).
-    if input_routing.is_some_and(|r| r.world_gameplay_input_disabled()) {
         return;
     }
 

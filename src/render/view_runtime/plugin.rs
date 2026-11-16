@@ -5,12 +5,10 @@ use super::authority::ViewProjectionAuthority;
 
 use super::view_fire_isolation::ViewFireIsolationStats;
 use super::per_view_policy::PerViewRepresentationPolicy;
-use super::input_routing::{
-    apply_pointer_gate_capture_to_view_input_routing, sync_view_input_routing_from_active_map,
-    ViewInputRoutingState,
-};
+use super::input_routing::{sync_view_input_routing, ViewInputRoutingState};
 use super::trace::{advance_view_runtime_trace_frame, ViewRuntimeTrace};
 use crate::gui::hud::simulation_pointer_gate::PointerGateSet;
+use crate::gui::MapCameraSystemSet;
 
 pub struct ViewRuntimePlugin;
 
@@ -27,17 +25,13 @@ impl Plugin for ViewRuntimePlugin {
                 enabled: audit,
                 ..default()
             })
-            .add_systems(
-                PreUpdate,
-                (
-                    advance_view_runtime_trace_frame,
-                    sync_view_input_routing_from_active_map,
-                ),
-            )
+            .add_systems(PreUpdate, advance_view_runtime_trace_frame)
+            // CQ-05: one writer; after pointer-gate publish, before camera ApplyInput.
             .add_systems(
                 Update,
-                apply_pointer_gate_capture_to_view_input_routing
-                    .after(PointerGateSet::Publish),
+                sync_view_input_routing
+                    .after(PointerGateSet::Publish)
+                    .before(MapCameraSystemSet::ApplyInput),
             );
     }
 }

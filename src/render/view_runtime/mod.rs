@@ -25,8 +25,9 @@ pub use authority::{ViewAuthorityWriter, ViewProjectionAuthority};
 pub use ids::{ViewEntity, ViewIsolationGroup, ViewSurfaceId};
 pub use input_routing::{
     apply_pointer_gate_capture_to_view_input_routing, commit_deferred_map_view_poses_from_instances,
-    commit_deferred_map_view_poses_to_authority, sync_view_input_routing_from_active_map,
-    view_surface_from_map_instance, InputCaptureOwner, ViewInputRoutingState,
+    commit_deferred_map_view_poses_to_authority, sync_view_input_routing,
+    sync_view_input_routing_from_active_map, view_surface_from_map_instance, InputCaptureOwner,
+    ViewInputRoutingState,
 };
 pub use layers::{
     InteractionViewportState, OverlayViewportPolicy, RenderViewportContract, SemanticViewportRect,

@@ -54,11 +54,19 @@ impl Default for InputCaptureOwner {
 }
 
 impl ViewInputRoutingState {
-    /// True when world gameplay pointer / camera-class input must stay off.
+    /// True when **pointer** world gameplay (picks, mouse pan, edge scroll, wheel) must stay off.
+    /// Keyboard camera (WASD / recenter / zoom keys) is not gated by this (CQ-05).
     #[inline]
     #[must_use]
     pub fn world_gameplay_input_disabled(self) -> bool {
         !world_gameplay_pointer_enabled(self.capture_owner)
+    }
+
+    /// Alias for pointer-only disable (CQ-05 naming).
+    #[inline]
+    #[must_use]
+    pub fn world_pointer_input_disabled(self) -> bool {
+        self.world_gameplay_input_disabled()
     }
 }
 
@@ -123,35 +131,44 @@ pub fn view_surface_from_map_instance(id: MapViewInstanceId) -> ViewSurfaceId {
     }
 }
 
-/// Mirror [`ActiveMapViewInput`] into view-runtime routing (map-surface half of the chain).
+/// Sole writer of [`ViewInputRoutingState`] (CQ-05).
 ///
-/// Chrome capture is applied later by [`apply_pointer_gate_capture_to_view_input_routing`] after
-/// [`crate::gui::hud::simulation_pointer_gate::PointerGateSet::Publish`].
-pub fn sync_view_input_routing_from_active_map(
+/// Reads map-surface hover + published pointer-gate chrome and resolves the
+/// UI → surface → world chain in one place. Schedule after
+/// [`crate::gui::hud::simulation_pointer_gate::PointerGateSet::Publish`] and
+/// before [`crate::gui::MapCameraSystemSet::ApplyInput`].
+pub fn sync_view_input_routing(
     active: Res<ActiveMapViewInput>,
-    mut routing: ResMut<ViewInputRoutingState>,
-) {
-    let map_blocks = active.blocks_main_world_map_camera_input();
-    *routing = compose_view_input_routing(
-        active.0.map(view_surface_from_map_instance),
-        map_blocks,
-        routing.ui_chrome_captures,
-    );
-}
-
-/// Fold published pointer-gate chrome into routing (INPUT-04 disable under play UI).
-pub fn apply_pointer_gate_capture_to_view_input_routing(
     gate: Option<Res<SimulationMapPointerGate>>,
     mut routing: ResMut<ViewInputRoutingState>,
 ) {
+    let map_blocks = active.blocks_main_world_map_camera_input();
     let ui_chrome = gate.is_some_and(|g| {
         ui_chrome_captures_world_pointer(g.chrome_blocks, g.egui_blocks)
     });
     *routing = compose_view_input_routing(
-        routing.active_surface,
-        routing.map_surface_blocks,
+        active.0.map(view_surface_from_map_instance),
+        map_blocks,
         ui_chrome,
     );
+}
+
+/// Backward-compatible alias — prefer [`sync_view_input_routing`].
+pub fn sync_view_input_routing_from_active_map(
+    active: Res<ActiveMapViewInput>,
+    gate: Option<Res<SimulationMapPointerGate>>,
+    routing: ResMut<ViewInputRoutingState>,
+) {
+    sync_view_input_routing(active, gate, routing);
+}
+
+/// Backward-compatible alias — prefer [`sync_view_input_routing`].
+pub fn apply_pointer_gate_capture_to_view_input_routing(
+    active: Res<ActiveMapViewInput>,
+    gate: Option<Res<SimulationMapPointerGate>>,
+    routing: ResMut<ViewInputRoutingState>,
+) {
+    sync_view_input_routing(active, gate, routing);
 }
 
 /// After deferred [`MapViewInteractionByView`] applies to [`MapViewInstances`], commit poses to authority.
@@ -213,7 +230,9 @@ pub fn commit_deferred_map_view_poses_to_authority(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::gui::hud::simulation_pointer_gate::simulation_chrome_blocks_map_pointer;
+    use crate::gui::hud::simulation_pointer_gate::{
+        simulation_chrome_blocks_map_pointer, SimulationMapPointerGate,
+    };
     use crate::gui::hud::simulation_shell_phase2::ContextTrayState;
     use crate::gui::hud::panel_state::HudPanelState;
     use crate::gui::{CommandLeftStackState, MinimapShellState};
@@ -277,39 +296,45 @@ mod tests {
     // the world handler, regardless of which half of the chain re-composes routing.
 
     #[test]
-    fn ecs10_chrome_claim_survives_map_surface_resync() {
+    fn ecs10_sole_writer_keeps_chrome_over_map_surface() {
         let mut app = App::new();
-        app.insert_resource(ViewInputRoutingState {
-            ui_chrome_captures: true,
-            capture_owner: InputCaptureOwner::UiChrome,
-            blocks_world_main: true,
-            ..default()
-        })
-        .insert_resource(ActiveMapViewInput(Some(MapViewInstanceId::WorldPreview)));
-        app.add_systems(Update, sync_view_input_routing_from_active_map);
+        app.init_resource::<ViewInputRoutingState>()
+            .insert_resource(ActiveMapViewInput(Some(MapViewInstanceId::WorldPreview)))
+            .insert_resource(SimulationMapPointerGate {
+                chrome_blocks: true,
+                egui_blocks: false,
+                ..default()
+            });
+        app.add_systems(Update, sync_view_input_routing);
         app.update();
         let routing = *app.world().resource::<ViewInputRoutingState>();
-        assert!(routing.ui_chrome_captures, "map-surface half must not drop chrome claim");
+        assert!(routing.ui_chrome_captures);
         assert!(routing.map_surface_blocks);
         assert_eq!(routing.capture_owner, InputCaptureOwner::UiChrome, "UI outranks surface");
-        assert!(routing.world_gameplay_input_disabled());
+        assert!(routing.world_pointer_input_disabled());
     }
 
     #[test]
-    fn ecs10_pointer_gate_fold_keeps_surface_claim_when_chrome_clear() {
+    fn ecs10_sole_writer_keeps_surface_claim_when_chrome_clear() {
         let mut app = App::new();
-        app.insert_resource(ViewInputRoutingState {
-            map_surface_blocks: true,
-            capture_owner: InputCaptureOwner::MapSurface,
-            blocks_world_main: true,
-            ..default()
-        });
-        // No published gate resource → chrome handler declines; surface handler still claims.
-        app.add_systems(Update, apply_pointer_gate_capture_to_view_input_routing);
+        app.init_resource::<ViewInputRoutingState>()
+            .insert_resource(ActiveMapViewInput(Some(MapViewInstanceId::WorldPreview)));
+        // No published gate resource → chrome declines; surface still claims.
+        app.add_systems(Update, sync_view_input_routing);
         app.update();
         let routing = *app.world().resource::<ViewInputRoutingState>();
         assert!(!routing.ui_chrome_captures);
+        assert!(routing.map_surface_blocks);
         assert_eq!(routing.capture_owner, InputCaptureOwner::MapSurface);
+        assert!(routing.world_pointer_input_disabled());
+    }
+
+    #[test]
+    fn cq05_pointer_disabled_does_not_mean_keyboard_must_stop() {
+        // Documented contract: chrome disables pointer path only; map camera must still
+        // accept WASD / recenter when `world_pointer_input_disabled` is true.
+        let routing = compose_view_input_routing(None, false, true);
+        assert!(routing.world_pointer_input_disabled());
         assert!(routing.world_gameplay_input_disabled());
     }
 
