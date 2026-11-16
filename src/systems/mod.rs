@@ -46,11 +46,7 @@ pub use chunk_environment_persist::{
 };
 pub use chunk_environment_set::configure_chunk_environment_sets;
 pub use chunk_sim_lod::{ChunkSimLod, ChunkSimLodPlugin};
-pub use collision::{
-    broad_phase_cell_pairs, mid_phase_filter, narrow_phase_accept, step_coherent_pair_pipeline,
-    warm_revalidate, CoherentPairCache, CollisionBodyId, CollisionBodySample, CollisionPhase,
-    CollisionPairKey, CollisionPlugin, COLLISION_PHASE_ORDER,
-};
+pub use collision::CollisionPlugin;
 pub use heavy_periodic::{
     coincident_heavy_count_at, heavy_periodic_catalog, heavy_periodic_window_ticks,
     periodic_step_fires, HeavyPeriodicSpec,

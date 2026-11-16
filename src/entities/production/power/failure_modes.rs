@@ -507,7 +507,7 @@ pub struct RenewableWeatherFactors {
 
 /// Wind / solar plants sample the weather field at their own position.
 pub fn variable_renewable_placeholder(
-    stations: Res<WeatherPollingStations>,
+    stations: Option<Res<WeatherPollingStations>>,
     mut factors: ResMut<RenewableWeatherFactors>,
     mut query: Query<(&mut PowerPlant, Option<&Transform>), With<VariableRenewable>>,
 ) {
@@ -516,9 +516,9 @@ pub fn variable_renewable_placeholder(
         solar_min: 1.0,
         ..Default::default()
     };
-    if !stations.ready {
+    let Some(stations) = stations.filter(|s| s.ready) else {
         return;
-    }
+    };
     let mut wind_sum = 0.0f32;
     let mut solar_sum = 0.0f32;
     for (mut plant, transform) in &mut query {

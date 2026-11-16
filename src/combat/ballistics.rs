@@ -303,6 +303,57 @@ impl BallisticFlightBook {
     }
 }
 
+/// CQ-55: first solid hit on a metre-space segment (structure occupation or PHYS-04 solid material).
+/// Returns impact position in the same metre space as `prev`/`next`.
+fn first_solid_hit_on_segment(
+    prev: Vec2,
+    next: Vec2,
+    occupation: Option<&crate::strategic::TileOccupationBook>,
+    materials: Option<&crate::terrain::material::MaterialRegistry>,
+    chunks: &Query<(&crate::terrain::generation::Chunk, &crate::terrain::material::MaterializedChunk)>,
+) -> Option<Vec2> {
+    let prev_t = prev / METRES_PER_TILE;
+    let next_t = next / METRES_PER_TILE;
+    let start_x = prev_t.x.floor() as i32;
+    let start_y = prev_t.y.floor() as i32;
+    for (cx, cy) in grid_cells_on_segment(prev_t, next_t) {
+        if cx == start_x && cy == start_y {
+            continue;
+        }
+        let tile = IVec2::new(cx, cy);
+        if occupation.is_some_and(|b| b.weight_at(tile) > 1e-3) {
+            return Some(Vec2::new(cx as f32 + 0.5, cy as f32 + 0.5) * METRES_PER_TILE);
+        }
+        if let (Some(reg), Some(mid)) = (materials, material_id_at_world_tile(chunks, tile)) {
+            if reg.probe_hits_solid(mid) {
+                return Some(Vec2::new(cx as f32 + 0.5, cy as f32 + 0.5) * METRES_PER_TILE);
+            }
+        }
+    }
+    None
+}
+
+fn material_id_at_world_tile(
+    chunks: &Query<(&crate::terrain::generation::Chunk, &crate::terrain::material::MaterializedChunk)>,
+    tile: IVec2,
+) -> Option<crate::terrain::material::MaterialId> {
+    for (chunk, mat) in chunks.iter() {
+        let sx = mat.size.x as i32;
+        let sy = mat.size.y as i32;
+        if sx <= 0 || sy <= 0 {
+            continue;
+        }
+        let origin = IVec2::new(chunk.coord.x * sx, chunk.coord.y * sy);
+        let local = tile - origin;
+        if local.x < 0 || local.y < 0 || local.x >= sx || local.y >= sy {
+            continue;
+        }
+        let i = (local.y * sx + local.x) as usize;
+        return mat.materials.get(i).copied();
+    }
+    None
+}
+
 /// Advance flights; enqueue combat audio on impact. Blast damage apply is DEFER → construction funnel.
 pub fn step_ballistic_flights(
     mut book: ResMut<BallisticFlightBook>,
@@ -310,6 +361,10 @@ pub fn step_ballistic_flights(
     mut blast_queue: Option<ResMut<BlastIntentQueue>>,
     attention: Option<Res<SimAttentionFrame>>,
     clock: Res<SimStepClock>,
+    occupation: Option<Res<crate::strategic::TileOccupationBook>>,
+    handles: Option<Res<crate::systems::terrain::TerrainRegistriesHandles>>,
+    material_assets: Option<Res<Assets<crate::terrain::material::MaterialRegistry>>>,
+    chunks: Query<(&crate::terrain::generation::Chunk, &crate::terrain::material::MaterializedChunk)>,
 ) {
     if clock.due == 0 {
         return;
@@ -320,46 +375,75 @@ pub fn step_ballistic_flights(
         .as_ref()
         .map(|a| a.player_theater_active)
         .unwrap_or(true);
+    let materials = handles.as_ref().and_then(|h| {
+        material_assets
+            .as_ref()
+            .and_then(|a| a.get(&h.material_registry))
+    });
 
     let mut flights = std::mem::take(&mut book.flights);
     let mut remain = Vec::with_capacity(flights.len());
     let mut impacts = 0_u64;
     for mut f in flights.drain(..) {
         let prev = f.pos;
-        match advance_ballistic_toward_aim(prev, f.target, f.speed_tiles_per_step, steps, step_secs) {
+        let advance =
+            advance_ballistic_toward_aim(prev, f.target, f.speed_tiles_per_step, steps, step_secs);
+        let (impact_early, next_pos, seg_time_s) = match advance {
             BallisticAdvance::InFlight { pos, seg_time_s } => {
-                f.pos = pos;
-                f.flight_time_s += seg_time_s;
-                remain.push(f);
-                continue;
+                if let Some(hit) = first_solid_hit_on_segment(
+                    prev,
+                    pos,
+                    occupation.as_deref(),
+                    materials,
+                    &chunks,
+                ) {
+                    (true, hit, seg_time_s * ((hit - prev).length() / (pos - prev).length().max(1e-3)))
+                } else {
+                    (false, pos, seg_time_s)
+                }
             }
             BallisticAdvance::Impact { pos, seg_time_s } => {
-                f.flight_time_s += seg_time_s;
-                let impact_pos =
-                    apply_missile_wind_to_impact(pos, f.flight_time_s, f.wind);
-                impacts += 1;
-                if full_audio {
-                    let kind = match f.kind {
-                        BallisticKind::Missile => AudioOneShotKind::Explosion,
-                        BallisticKind::Shell => AudioOneShotKind::Explosion,
-                        BallisticKind::EmberProxy => AudioOneShotKind::Shot,
-                    };
-                    audio.push_combat(kind, impact_pos);
-                }
-                // Construction owns damage — enqueue blast intent (never mutate sites here).
-                if let Some(q) = blast_queue.as_mut() {
-                    q.enqueue(BlastIntent {
-                        center_xz: impact_pos,
-                        radius_m: f.blast_radius.max(1.0) * METRES_PER_TILE,
-                        damage: match f.kind {
-                            BallisticKind::Missile => 120.0,
-                            BallisticKind::Shell => 80.0,
-                            BallisticKind::EmberProxy => 15.0,
-                        },
-                        source_flight: f.id,
-                    });
+                if let Some(hit) = first_solid_hit_on_segment(
+                    prev,
+                    pos,
+                    occupation.as_deref(),
+                    materials,
+                    &chunks,
+                ) {
+                    (true, hit, seg_time_s * ((hit - prev).length() / (pos - prev).length().max(1e-3)))
+                } else {
+                    (true, pos, seg_time_s)
                 }
             }
+        };
+        f.flight_time_s += seg_time_s;
+        if !impact_early {
+            f.pos = next_pos;
+            remain.push(f);
+            continue;
+        }
+        let impact_pos = apply_missile_wind_to_impact(next_pos, f.flight_time_s, f.wind);
+        impacts += 1;
+        if full_audio {
+            let kind = match f.kind {
+                BallisticKind::Missile => AudioOneShotKind::Explosion,
+                BallisticKind::Shell => AudioOneShotKind::Explosion,
+                BallisticKind::EmberProxy => AudioOneShotKind::Shot,
+            };
+            audio.push_combat(kind, impact_pos);
+        }
+        // Construction owns damage — enqueue blast intent (never mutate sites here).
+        if let Some(q) = blast_queue.as_mut() {
+            q.enqueue(BlastIntent {
+                center_xz: impact_pos,
+                radius_m: f.blast_radius.max(1.0) * METRES_PER_TILE,
+                damage: match f.kind {
+                    BallisticKind::Missile => 120.0,
+                    BallisticKind::Shell => 80.0,
+                    BallisticKind::EmberProxy => 15.0,
+                },
+                source_flight: f.id,
+            });
         }
     }
     book.flights = remain;
@@ -589,10 +673,12 @@ mod tests {
         let prod = include_str!("ballistics.rs")
             .split_once("#[cfg(test)]")
             .map_or(include_str!("ballistics.rs"), |(p, _)| p);
+        // CQ-55 may *read* occupation / material for early solid hits; must not mutate sites.
         for forbidden in [
             "BlastCraterBook",
             "execute_demolish",
-            "TileOccupationBook",
+            "ResMut<crate::strategic::TileOccupationBook>",
+            "ResMut<crate::strategic::VoxelOccupationBook>",
             "VoxelOccupationBook",
             "ConstructionSite",
             ".despawn(",
@@ -602,6 +688,10 @@ mod tests {
                 "ballistics must stay intent-only (found `{forbidden}`)"
             );
         }
+        assert!(
+            prod.contains("probe_hits_solid") || prod.contains("weight_at"),
+            "CQ-55 solid probe must be wired"
+        );
     }
 
     #[test]

@@ -43,15 +43,15 @@ pub fn weather_haul_speed_mul(sample: &WeatherSample) -> f32 {
 
 /// Sole writer of [`LogisticsOrderSim::weather_haul_mul`] from the field centre sample.
 pub fn sync_haul_weather_mul_system(
-    stations: Res<WeatherPollingStations>,
+    stations: Option<Res<WeatherPollingStations>>,
     mut res: ResMut<LogisticsOrderSimRes>,
     mut dump: ResMut<HaulWeatherDump>,
 ) {
-    let mul = if stations.ready {
-        weather_haul_speed_mul(&stations.centre)
-    } else {
-        1.0
-    };
+    let mul = stations
+        .as_ref()
+        .filter(|s| s.ready)
+        .map(|s| weather_haul_speed_mul(&s.centre))
+        .unwrap_or(1.0);
     res.sim.weather_haul_mul = mul;
     dump.record(mul);
 }

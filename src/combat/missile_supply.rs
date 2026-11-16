@@ -13,6 +13,7 @@ use super::capability_toe::{CapabilityToeRegistry, MissileClass};
 use super::drone_missions::{AirOpZone, MissionBook};
 use super::formation::Formation;
 use crate::economy::logistics::orders::LogisticsOrderRequest;
+use crate::combat::ballistics::MissileBallisticWind;
 use crate::systems::weather::{
     evaluate_grounding, AirOpsProfileId, AirOpsTuning, WeatherPollingStations,
 };
@@ -103,6 +104,8 @@ pub struct MissileSortieLaunch {
     pub faction_slot: u8,
     pub origin_xz: Vec2,
     pub target_xz: Vec2,
+    /// Station wind at launch (MOVE-09); `None` when weather stations are not ready.
+    pub wind: Option<MissileBallisticWind>,
 }
 
 /// Drained by [`apply_missile_sortie_launches_system`] (keeps mission step under SystemParam limits).
@@ -175,10 +178,16 @@ pub fn pulse_missile_sorties(
         dump.consumed = dump.consumed.wrapping_add(1);
         let origin_xz = form.tile.as_vec2() * TILE_METRES_GAMEPLAY;
         let target_xz = c.as_vec2() * TILE_METRES_GAMEPLAY;
+        let wind = stations.filter(|s| s.ready).map(|_| MissileBallisticWind {
+            sample,
+            drift_coef: profile.missile_drift_coef,
+            max_wind_mps: profile.max_missile_wind_mps,
+        });
         launches.push(MissileSortieLaunch {
             faction_slot: z.faction_slot,
             origin_xz,
             target_xz,
+            wind,
         });
     }
     launches

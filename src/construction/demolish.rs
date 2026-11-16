@@ -64,6 +64,44 @@ impl DestructibleDamageStage {
     pub const fn is_terminal(self) -> bool {
         matches!(self, Self::Collapsed)
     }
+
+    /// 0..1 presentation wash (scar / compromise / collapse) for burn/damage overlays.
+    #[must_use]
+    pub const fn visual_wash01(self) -> f32 {
+        match self {
+            Self::Intact => 0.0,
+            Self::Scarred => 0.22,
+            Self::Compromised => 0.55,
+            Self::Collapsed => 1.0,
+        }
+    }
+
+    /// Keep the worse of two stages (monotone escalate only).
+    #[must_use]
+    pub const fn escalate(self, other: Self) -> Self {
+        if other.rank() > self.rank() {
+            other
+        } else {
+            self
+        }
+    }
+}
+
+/// Per-site PHYS-08 damage ladder (component on the construction site entity).
+///
+/// Sole writers: fire integrity sync + blast scar/collapse paths. Terminal
+/// [`DestructibleDamageStage::Collapsed`] must still despawn via [`execute_demolish_at_tile`].
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct DestructibleDamage {
+    pub stage: DestructibleDamageStage,
+}
+
+impl Default for DestructibleDamage {
+    fn default() -> Self {
+        Self {
+            stage: DestructibleDamageStage::Intact,
+        }
+    }
 }
 
 /// Default integrity floor at which a site is treated as collapsed (matches fire collapse bar band).

@@ -53,6 +53,16 @@ def test_on_generate_with_building_grammar(gui_panel_host) -> None:
     panel, _logs = _make_assembly_panel(gui_panel_host)
     panel.use_grammar_var.set(True)
     panel._on_grammar_toggle()
+    # Pin the production-ready warehouse pilot (default combo can be CivicBlock).
+    for label, aid in panel._archetype_label_to_id.items():
+        if aid == "IndustrialWarehouse":
+            panel.archetype_var.set(label)
+            break
+    panel._on_archetype_change()
+    for label, did in panel._district_label_to_id.items():
+        if did == "industrial_west":
+            panel.district_var.set(label)
+            break
     gui_panel_host.winfo_toplevel().update_idletasks()
 
     panel.on_generate()

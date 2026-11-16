@@ -18,8 +18,16 @@ impl Plugin for NavigationSchedulePlugin {
             ),
         )
         .add_systems(
+            Startup,
+            crate::systems::navigation::load_logistics_path_concerns_on_startup,
+        )
+        .add_systems(
             Update,
-            nav_motion_stage_placeholder.in_set(NavSets::MotionCalculation),
+            (
+                nav_motion_stage_placeholder,
+                crate::systems::navigation::potential_field_navigation_system,
+            )
+                .in_set(NavSets::MotionCalculation),
         );
     }
 }

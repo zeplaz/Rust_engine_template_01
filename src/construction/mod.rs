@@ -53,7 +53,8 @@ mod blast_present;
 mod demolish;
 pub use demolish::{
     destructible_catastrophic_collapse, destructible_stage_from_integrity,
-    execute_demolish_at_tile, DestructibleDamageStage, DESTRUCTIBLE_COLLAPSE_INTEGRITY,
+    execute_demolish_at_tile, DestructibleDamage, DestructibleDamageStage,
+    DESTRUCTIBLE_COLLAPSE_INTEGRITY,
 };
 pub(crate) mod ghost_visual;
 mod grammar_labels;

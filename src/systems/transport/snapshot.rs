@@ -376,12 +376,16 @@ mod tests {
         let mut snap = sample_snapshot();
         snap.nodes.clear();
         migrate_transport_snapshot_to_v2(&mut snap);
+        let mut rebuilt = snap.clone();
+        rebuild_transport_snapshot_nodes_from_edges(&mut rebuilt);
+        assert_eq!(rebuilt.nodes.len(), 3);
         let mut top = TransportTopology::default();
         let mut field = TransportFieldStore::default();
         let mut dir = TransportEdgeDirectory::default();
+        // Hydrate clones + rebuilds internally; empty on-wire nodes must still load.
         hydrate_transport_from_snapshot(&mut top, &mut field, &mut dir, &snap).unwrap();
-        assert_eq!(snap.nodes.len(), 3);
         assert!(top.neighbors.contains_key(&TransportEdgeId(0)));
+        assert_eq!(top.neighbors.len(), 2);
     }
 
     #[test]

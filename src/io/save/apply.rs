@@ -2,14 +2,17 @@
 //!
 //! **IO-08** (gea4v1 7.2.2.10 *Post-Load Initialization*): after authoritative bodies land,
 //! rebuild **derived** surfaces ([`rebuild_derived_after_chunk_apply`]) — preview invalidation,
-//! etc. Derived caches are never written into the save body.
+//! portal attachment map, logistics route dirty keys. Derived caches are never written into
+//! the save body.
 
 use bevy::prelude::*;
 
+use crate::economy::logistics::types::{LogisticsRouteDirtyTiles, PortalAttachmentMap, RouteCache};
 use crate::io::save::dto::{decode_chunk_body_ron, SavedChunkBody};
 use crate::io::save::load::{material_ids_from_saved_body, tag_sets_from_saved_body};
 use crate::io::save::pipeline::PendingSaveApplyQueue;
 use crate::systems::terrain::TerrainRegistriesHandles;
+use crate::systems::transport::TransportEdgeDirectory;
 use crate::terrain::generation::cell_matrix::ChunkCellMatrix;
 use crate::terrain::generation::Chunk;
 use crate::terrain::material::{
@@ -17,38 +20,84 @@ use crate::terrain::material::{
     WorldPreviewState,
 };
 
-/// IO-08: derived surfaces rebuilt after load/apply (not persisted).
-pub const POST_LOAD_DERIVED_STEPS: &[&str] = &[
-    "materialized_chunk_cells",
-    "preview_invalidation",
-    "portal_attachment_map",
-    "route_dirty_tiles",
-];
-
 /// Counters for post-load derived rebuilds (diagnostics / Accept).
 #[derive(Resource, Clone, Debug, Default)]
 pub struct PostLoadDerivedBook {
     pub rebuild_passes: u64,
     pub chunks_touched: u64,
+    pub portal_maps_cleared: u64,
+    pub route_dirty_keys_marked: u64,
 }
 
-/// Rebuild derived caches after authoritative chunk bodies were applied (IO-08).
-pub fn rebuild_derived_after_chunk_apply(
-    preview: Option<&mut WorldPreviewState>,
-    book: Option<&mut PostLoadDerivedBook>,
-    touched: &[IVec2],
-) {
+/// Optional derived-cache sinks for IO-08 (all Option so minimal harnesses still compile).
+pub struct PostLoadDerivedSinks<'a> {
+    pub preview: Option<&'a mut WorldPreviewState>,
+    pub book: Option<&'a mut PostLoadDerivedBook>,
+    pub portal_map: Option<&'a mut PortalAttachmentMap>,
+    pub route_dirty: Option<&'a mut LogisticsRouteDirtyTiles>,
+    pub route_cache: Option<&'a mut RouteCache>,
+    pub directory: Option<&'a TransportEdgeDirectory>,
+}
+
+/// Rebuild derived caches after authoritative chunk bodies / overlays were applied (IO-08).
+///
+/// - Preview: invalidate touched chunk coords.
+/// - Portals: clear [`PortalAttachmentMap`] so `rebuild_portal_attachment_map_system` rebinds.
+/// - Routes: mark all live directory endpoints dirty and clear [`RouteCache`] (stale paths).
+pub fn rebuild_derived_after_chunk_apply(sinks: PostLoadDerivedSinks<'_>, touched: &[IVec2]) {
     if touched.is_empty() {
         return;
     }
+    let PostLoadDerivedSinks {
+        preview,
+        book,
+        portal_map,
+        route_dirty,
+        route_cache,
+        directory,
+    } = sinks;
+
     if let Some(preview) = preview {
         invalidate_world(InvalidationReason::Registry, preview, touched.iter().copied());
+    }
+
+    let mut portal_cleared = 0_u64;
+    if let Some(map) = portal_map {
+        map.facility_to_graph.clear();
+        map.revision = 0;
+        portal_cleared = 1;
+    }
+
+    let mut marked = 0_u64;
+    if let Some(dirty) = route_dirty {
+        if let Some(directory) = directory {
+            for meta in directory.by_edge.values() {
+                if dirty.keys.insert(meta.head_key.clone()) {
+                    marked = marked.saturating_add(1);
+                }
+                if dirty.keys.insert(meta.tail_key.clone()) {
+                    marked = marked.saturating_add(1);
+                }
+            }
+        }
+        // Chunk apply with no directory still needs a refresh signal.
+        for coord in touched {
+            let key = format!("t{}_{}", coord.x, coord.y);
+            if dirty.keys.insert(key) {
+                marked = marked.saturating_add(1);
+            }
+        }
+    }
+    if let Some(cache) = route_cache {
+        cache.routes.clear();
     }
     if let Some(book) = book {
         book.rebuild_passes = book.rebuild_passes.saturating_add(1);
         book.chunks_touched = book
             .chunks_touched
             .saturating_add(touched.len() as u64);
+        book.portal_maps_cleared = book.portal_maps_cleared.saturating_add(portal_cleared);
+        book.route_dirty_keys_marked = book.route_dirty_keys_marked.saturating_add(marked);
     }
 }
 
@@ -112,6 +161,10 @@ pub fn apply_pending_save_pipeline_jobs(
     mut chunks: Query<(Entity, &Chunk, &mut MaterializedChunk, Option<&mut ChunkCellMatrix>)>,
     mut preview: Option<ResMut<WorldPreviewState>>,
     mut post_load: Option<ResMut<PostLoadDerivedBook>>,
+    mut portal_map: Option<ResMut<PortalAttachmentMap>>,
+    mut route_dirty: Option<ResMut<LogisticsRouteDirtyTiles>>,
+    mut route_cache: Option<ResMut<RouteCache>>,
+    directory: Option<Res<TransportEdgeDirectory>>,
 ) {
     if pending.jobs.is_empty() {
         return;
@@ -145,8 +198,14 @@ pub fn apply_pending_save_pipeline_jobs(
         }
     }
     rebuild_derived_after_chunk_apply(
-        preview.as_deref_mut(),
-        post_load.as_deref_mut(),
+        PostLoadDerivedSinks {
+            preview: preview.as_deref_mut(),
+            book: post_load.as_deref_mut(),
+            portal_map: portal_map.as_deref_mut(),
+            route_dirty: route_dirty.as_deref_mut(),
+            route_cache: route_cache.as_deref_mut(),
+            directory: directory.as_deref(),
+        },
         &touched,
     );
 }
@@ -260,14 +319,50 @@ mod tests {
     }
 
     #[test]
-    fn io08_post_load_rebuild_increments_book_and_lists_derived_steps() {
-        assert!(POST_LOAD_DERIVED_STEPS.contains(&"preview_invalidation"));
-        assert!(POST_LOAD_DERIVED_STEPS.contains(&"portal_attachment_map"));
+    fn io08_post_load_rebuild_clears_portals_and_marks_route_dirty() {
         let mut book = PostLoadDerivedBook::default();
-        rebuild_derived_after_chunk_apply(None, Some(&mut book), &[IVec2::new(1, 2)]);
+        let mut portals = PortalAttachmentMap {
+            revision: 9,
+            facility_to_graph: Default::default(),
+        };
+        // Seed a fake facility mapping so clear is observable.
+        portals
+            .facility_to_graph
+            .insert(Entity::from_bits(1), crate::strategic::LogisticsNodeId(0));
+        let mut dirty = LogisticsRouteDirtyTiles::default();
+        let mut cache = RouteCache::default();
+        cache.next_id = 3;
+
+        rebuild_derived_after_chunk_apply(
+            PostLoadDerivedSinks {
+                preview: None,
+                book: Some(&mut book),
+                portal_map: Some(&mut portals),
+                route_dirty: Some(&mut dirty),
+                route_cache: Some(&mut cache),
+                directory: None,
+            },
+            &[IVec2::new(1, 2)],
+        );
         assert_eq!(book.rebuild_passes, 1);
         assert_eq!(book.chunks_touched, 1);
-        rebuild_derived_after_chunk_apply(None, Some(&mut book), &[]);
+        assert_eq!(book.portal_maps_cleared, 1);
+        assert!(portals.facility_to_graph.is_empty());
+        assert_eq!(portals.revision, 0);
+        assert!(dirty.keys.contains("t1_2"));
+        assert!(cache.routes.is_empty());
+
+        rebuild_derived_after_chunk_apply(
+            PostLoadDerivedSinks {
+                preview: None,
+                book: Some(&mut book),
+                portal_map: None,
+                route_dirty: None,
+                route_cache: None,
+                directory: None,
+            },
+            &[],
+        );
         assert_eq!(book.rebuild_passes, 1, "empty touch must not count");
     }
 }

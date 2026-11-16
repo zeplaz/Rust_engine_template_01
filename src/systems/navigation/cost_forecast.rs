@@ -233,7 +233,7 @@ pub fn quantize_tick_to_bucket_secs(tick: u64, bucket_secs: u32, step_micros: u6
 
 /// Sole writer of [`LogisticsCostForecastBook`].
 pub fn sync_logistics_cost_forecast(
-    stations: Res<WeatherPollingStations>,
+    stations: Option<Res<WeatherPollingStations>>,
     field: Option<Res<WeatherField>>,
     sim_time: Option<Res<SimTimeMicros>>,
     clock: Option<Res<SimStepClock>>,
@@ -242,11 +242,11 @@ pub fn sync_logistics_cost_forecast(
     let step_micros = clock.as_ref().map(|c| c.step_micros).unwrap_or(16_667);
     let steps = clock.as_ref().map(|c| c.steps).unwrap_or(0);
 
-    let centre = if stations.ready {
-        stations.centre
-    } else {
-        WeatherSample::default()
-    };
+    let centre = stations
+        .as_ref()
+        .filter(|s| s.ready)
+        .map(|s| s.centre)
+        .unwrap_or_default();
 
     if let Some(field) = field.filter(|f| f.is_ready()) {
         let centre_m = field.extent_m * 0.5;
@@ -256,7 +256,7 @@ pub fn sync_logistics_cost_forecast(
             .next_micros
             .saturating_add(u64::from(field.step_secs) * 1_000_000);
         let far = field.sample(centre_m, SimTimeMicros(far_t));
-        let now = if stations.ready {
+        let now = if stations.as_ref().is_some_and(|s| s.ready) {
             centre
         } else {
             let t = sim_time

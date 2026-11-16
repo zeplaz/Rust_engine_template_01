@@ -103,16 +103,28 @@ mod tests {
     #[test]
     fn linear_blend_midpoint_between_stops() {
         let ramp = default_heatmap_ramp_linear();
-        let c0 = linear_rgb_to_lightness(sample_heatmap_ramp_linear(&ramp, 0.0));
-        let c1 = linear_rgb_to_lightness(sample_heatmap_ramp_linear(&ramp, 1.0));
-        let mid = linear_rgb_to_lightness(sample_heatmap_ramp_linear(&ramp, 0.5));
-        assert!(mid > c0 && mid < c1);
-        let blended = blend_heatmap_linear(&ramp, 0.0, 1.0, 0.5);
-        let bl = linear_rgb_to_lightness([
-            srgb_channel_to_linear(blended.to_srgba().red),
-            srgb_channel_to_linear(blended.to_srgba().green),
-            srgb_channel_to_linear(blended.to_srgba().blue),
-        ]);
-        assert!((bl - mid).abs() < 0.08);
+        let c0 = sample_heatmap_ramp_linear(&ramp, 0.0);
+        let c1 = sample_heatmap_ramp_linear(&ramp, 1.0);
+        let mid = sample_heatmap_ramp_linear(&ramp, 0.5);
+        let l0 = linear_rgb_to_lightness(c0);
+        let l1 = linear_rgb_to_lightness(c1);
+        let lmid = linear_rgb_to_lightness(mid);
+        // Multi-stop ramp: mid sample sits between ends in lightness.
+        assert!(lmid > l0 && lmid < l1);
+        // blend(0,1,0.5) is lerp of endpoint *samples*, not sample(0.5).
+        let mixed = [
+            c0[0] + (c1[0] - c0[0]) * 0.5,
+            c0[1] + (c1[1] - c0[1]) * 0.5,
+            c0[2] + (c1[2] - c0[2]) * 0.5,
+        ];
+        let blended = blend_heatmap_linear(&ramp, 0.0, 1.0, 0.5).to_srgba();
+        let back = [
+            srgb_channel_to_linear(blended.red),
+            srgb_channel_to_linear(blended.green),
+            srgb_channel_to_linear(blended.blue),
+        ];
+        for i in 0..3 {
+            assert!((back[i] - mixed[i]).abs() < 1e-4, "blend channel {i}");
+        }
     }
 }

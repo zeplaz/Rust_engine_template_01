@@ -118,11 +118,14 @@ impl Plugin for FirePlugin {
                     entity_exposure::ensure_site_fire_state
                         .after(chunk_fire_overlay_tick)
                         .in_set(ChunkEnvironmentSet::Fire),
+                    entity_exposure::ensure_site_destructible_damage
+                        .after(entity_exposure::ensure_site_fire_state)
+                        .in_set(ChunkEnvironmentSet::Fire),
                     entity_exposure::ensure_formation_fire_exposure
                         .after(chunk_fire_overlay_tick)
                         .in_set(ChunkEnvironmentSet::Fire),
                     entity_exposure::site_fire_exposure_tick
-                        .after(entity_exposure::ensure_site_fire_state)
+                        .after(entity_exposure::ensure_site_destructible_damage)
                         .in_set(ChunkEnvironmentSet::Fire),
                     entity_exposure::stamp_formation_fire_exposure
                         .after(entity_exposure::ensure_formation_fire_exposure)

@@ -94,6 +94,10 @@ class AssemblyPanelLayoutMixin:
         self._grammar_tier_strip.pack(anchor=tk.W, pady=(0, 4))
 
         archetypes = building_grammar.list_archetype_ids() or ["IndustrialWarehouse"]
+        # Prefer the production-ready warehouse pilot as the default (CivicBlock kits
+        # often fail production resolve and leave Generate with an empty snapshot).
+        if "IndustrialWarehouse" in archetypes:
+            archetypes = ["IndustrialWarehouse"] + [a for a in archetypes if a != "IndustrialWarehouse"]
         arch_labels, self._archetype_label_to_id = grammar_combo_maps(archetypes)
         districts = building_grammar.list_district_styles(archetypes[0]) or ["industrial_west"]
         dist_labels, self._district_label_to_id = grammar_combo_maps(districts)
