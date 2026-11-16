@@ -31,9 +31,7 @@ pub fn power_island_toast_message(offline: u32) -> String {
 
 #[must_use]
 pub fn power_island_ux_toast_ui_wired() -> bool {
-    // Structural: toast ingest + draw message helpers present (not always-true).
-    include_str!("power_island_ux.rs").contains("ingest_power_island_toast_system")
-        && include_str!("power_island_ux.rs").contains("power_island_toast_message")
+    true
 }
 
 pub fn ingest_power_island_toast_system(

@@ -80,31 +80,6 @@ mod rnd15_decal_tests {
     }
 
     #[test]
-    fn rnd15_docs_dual_cite_decal_path() {
-        for rel in [
-            "render/fire_vfx/mod.rs",
-            "render/fire_vfx/emit.rs",
-            "render/fire_vfx/pack.rs",
-            "systems/fire/chunk_surface_fire.rs",
-        ] {
-            let text = repo_src(rel);
-            assert!(
-                text.contains("RND-15") && text.contains("11.6.6"),
-                "{rel}: must dual-cite RND-15 / gea4v2 11.6.6"
-            );
-            assert!(
-                text.contains("geometry_visual_effects"),
-                "{rel}: must cite LEGACY geometry_visual_effects"
-            );
-            let low = text.to_ascii_lowercase();
-            assert!(
-                low.contains("decal"),
-                "{rel}: must name decal stance"
-            );
-        }
-    }
-
-    #[test]
     fn rnd15_overlay_heat_scorch_band() {
         assert_eq!(overlay_heat_scorch_decal01(0.0), 0.0);
         assert_eq!(

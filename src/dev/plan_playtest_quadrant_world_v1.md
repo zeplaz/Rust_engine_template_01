@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **ID** | **PLAYTEST-QUADRANT-WORLD-001** |
-| **Status** | **SIGNED** — plan only. This stamp edits no production Rust. |
+| **Status** | **SHIPPED** — `engine/playquad.rs` + `TestScene::PlayQuad` landed; plan retained as design record. |
 | **Signed by** | `@planner` · 2026-11-15 |
 | **Executors** | `@coder` (all Rust, `tools/sim_review/`) · `@designer` (read review only) · `@coder-mcp` (**no phase**, see §9) |
 | **Parents** | [`feature_map_from_sim_dump_v1.md`](feature_map_from_sim_dump_v1.md) · [`plan_studio_massing_grammar_bridge_v1.md`](plan_studio_massing_grammar_bridge_v1.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md) · [`plan_operator_build_readability_exec_001_v1.md`](plan_operator_build_readability_exec_001_v1.md) · [`plan_dual_view_pixel_world_v1.md`](plan_dual_view_pixel_world_v1.md) |

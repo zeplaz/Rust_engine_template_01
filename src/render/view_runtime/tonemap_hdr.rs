@@ -95,29 +95,6 @@ mod lgt06_tonemap_hdr_tests {
         std::fs::read_to_string(repo_src(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
     }
 
-    /// LGT-06 / V4-LGT06 tripwire: dual-cite (NEW row + LEGACY keywords) stays in module docs.
-    #[test]
-    fn lgt06_dual_cite_tone_mapping_hdr_in_module_docs() {
-        let src = read("render/view_runtime/tonemap_hdr.rs");
-        assert!(
-            src.contains("LGT-06") && src.contains("gea4v2 12.7.1"),
-            "missing NEW LGT-06 / gea4v2 12.7.1 cite"
-        );
-        assert!(
-            src.contains("lighting_post") && src.contains("post_processing"),
-            "missing LEGACY lighting_post / post_processing cites"
-        );
-        assert!(
-            src.contains("gea_v2_e4"),
-            "missing LEGACY book id gea_v2_e4"
-        );
-        let passes = read("render/view_runtime/passes.rs");
-        assert!(
-            passes.contains("LGT-06") && passes.contains("ToneMapHdrPass"),
-            "passes.rs must dual-cite LGT-06 and expose ToneMapHdrPass"
-        );
-    }
-
     /// LGT-06 tripwire: map RTT stays on the SDR display format (fire-at-night readability).
     #[test]
     fn lgt06_simulation_map_rtt_stays_display_referred_sdr() {
@@ -143,10 +120,6 @@ mod lgt06_tonemap_hdr_tests {
         assert!(
             cam.contains("Tonemapping::None"),
             "PixelWorld camera must keep Tonemapping::None (LGT-06 display-referred)"
-        );
-        assert!(
-            cam.contains("LGT-06") || cam.contains("tonemap_hdr"),
-            "pixel_world/camera.rs must point at LGT-06 / tonemap_hdr contract"
         );
     }
 

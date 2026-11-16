@@ -255,14 +255,4 @@ mod tests {
         assert_eq!(capture_at_frame(), vfx_capture_frame());
     }
 
-    /// DBG-04 / V4-DBG04 tripwire: dual-cite + env deferral stay in this module.
-    #[test]
-    fn dbg04_dual_cite_and_env_deferral_in_probe_docs() {
-        let src = include_str!("visual_capture_probe.rs");
-        assert!(src.contains("DBG-04"));
-        assert!(src.contains("render_debug_tools"));
-        assert!(src.contains("vfx_capture_env"));
-        assert!(src.contains("vfx_capture_enabled"));
-        assert!(src.contains("vfx_capture_frame"));
-    }
 }

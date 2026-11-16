@@ -153,24 +153,6 @@ mod tests {
         assert_eq!(ATMO_GRID_SIZE, CLIPMAP_L0_RES);
     }
 
-    /// LGT-05 / V4-LGT05: dual-cite NEW row + LEGACY keywords stay in module docs.
-    #[test]
-    fn lgt05_dual_cite_participating_media_in_module_docs() {
-        let src = read("systems/atmosphere/field.rs");
-        assert!(
-            src.contains("LGT-05") && src.contains("gea4v2") && src.contains("12.1.2.2"),
-            "missing NEW LGT-05 / gea4v2 12.1.2.2 participating-media cite"
-        );
-        assert!(
-            src.contains("lighting_post") && src.contains("post_processing"),
-            "missing LEGACY lighting_post / post_processing cites"
-        );
-        assert!(
-            src.contains("gea_v2_e4"),
-            "missing LEGACY book id gea_v2_e4"
-        );
-    }
-
     /// LGT-05 tripwire: denser participating media lowers unit visibility.
     #[test]
     fn lgt05_denser_media_lowers_unit_visibility() {

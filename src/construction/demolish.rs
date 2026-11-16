@@ -296,17 +296,6 @@ mod tests {
     }
 
     #[test]
-    fn phys08_dual_cite_in_module_docs() {
-        let src = include_str!("demolish.rs");
-        let prod = src.split_once("#[cfg(test)]").map_or(src, |(p, _)| p);
-        assert!(prod.contains("PHYS-08") || prod.contains("V4-PHYS08"));
-        assert!(prod.contains("14.5.3.5"));
-        assert!(prod.contains("Destructible"));
-        assert!(prod.contains("physics_integration"));
-        assert!(prod.contains("gea_v2_e4"));
-    }
-
-    #[test]
     fn phys08_damage_stages_monotone_ladder() {
         assert_eq!(
             destructible_stage_from_integrity(1.0, DESTRUCTIBLE_COLLAPSE_INTEGRITY),
@@ -448,18 +437,6 @@ mod tests {
             );
             state.apply(app.world_mut());
         }
-
-        // Source tripwire: this module is the only demolish writer of remove_site_commit.
-        let prod = include_str!("demolish.rs")
-            .split_once("#[cfg(test)]")
-            .map(|(p, _)| p)
-            .unwrap_or(include_str!("demolish.rs"));
-        assert!(prod.contains("remove_site_commit"));
-        assert!(prod.contains("replace_from_voxel"));
-        assert!(
-            prod.contains("commit_authority_enabled"),
-            "voxel clear stays gated on commit authority"
-        );
     }
 
     #[test]

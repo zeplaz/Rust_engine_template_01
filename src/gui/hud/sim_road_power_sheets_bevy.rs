@@ -89,8 +89,6 @@ pub struct SimPowerStat(pub SimSheetStat);
 #[must_use]
 pub fn sim_road_power_sheets_native_wired() -> bool {
     SIM_ROAD_POWER_SHEETS_USE_BEVY
-        && include_str!("sim_road_power_sheets_bevy.rs").contains("SimRoadSheetRoot")
-        && include_str!("sim_road_tool_sheet.rs").contains("SIM_ROAD_POWER_SHEETS_USE_BEVY")
 }
 
 /// Icon + label button used by the power sheet (mode / voltage picks).

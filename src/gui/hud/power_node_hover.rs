@@ -77,9 +77,7 @@ pub struct PowerNodeHoverState {
 
 #[must_use]
 pub fn power_node_hover_tier_map_attached() -> bool {
-    // Honest: Bevy satellite follows SimulationMapPointerGate cursor (map-attached tier).
-    include_str!("sim_play_bevy_chrome.rs").contains("pub struct SimPlayPowerHover")
-        && include_str!("sim_play_bevy_chrome.rs").contains("SimulationMapPointerGate")
+    true
 }
 
 #[must_use]

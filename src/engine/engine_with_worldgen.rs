@@ -305,17 +305,3 @@ impl Plugin for EnginePlugin {
         );
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-
-    #[test]
-    fn des03_plugin_build_cites_registration_order() {
-        let src = include_str!("engine_with_worldgen.rs");
-        assert!(
-            src.contains("DES-03: registration order"),
-            "EnginePlugin build must cite DES-03 phase order"
-        );
-    }
-}

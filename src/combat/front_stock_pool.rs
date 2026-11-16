@@ -288,6 +288,12 @@ mod tests {
 
     #[test]
     fn cs1_pool_try_consume_decrements_chosen_site() {
+        use bevy::ecs::system::SystemState;
+        use crate::economy::logistics::orders::LogisticsOrderRequest;
+
+        let mut app = bevy::app::App::new();
+        app.add_message::<LogisticsOrderRequest>();
+
         let mut pool = FrontStockPool::default();
         pool.available.insert(
             (0, "drone_airframe".into()),
@@ -313,11 +319,13 @@ mod tests {
                 qty: 1,
             },
         ];
-        // Pure decrement path (MessageWriter needs a World); mirror try_consume planning.
-        for line in &lines {
-            let rows = pool.available.get_mut(&(0, line.tag.clone())).unwrap();
-            let entry = rows.iter_mut().find(|r| r.on_hand >= line.qty).unwrap();
-            entry.on_hand = entry.on_hand.saturating_sub(line.qty);
+
+        {
+            let mut state: SystemState<bevy::ecs::system::MessageWriter<LogisticsOrderRequest>> =
+                SystemState::new(app.world_mut());
+            let mut requests = state.get_mut(app.world_mut());
+            assert!(pool.try_consume_bom_unit(0, &lines, &mut requests));
+            state.apply(app.world_mut());
         }
         assert_eq!(pool.sites_for(0, "drone_airframe")[0].on_hand, 3);
         assert_eq!(pool.sites_for(0, "battery_pack")[0].on_hand, 3);

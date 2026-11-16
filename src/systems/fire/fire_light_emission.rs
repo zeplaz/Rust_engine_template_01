@@ -146,33 +146,6 @@ mod tests {
         assert!(e.radius > 0.0 && e.base_intensity > 0.0);
     }
 
-    /// LGT-03 / V4-LGT03: dual-cite NEW row + LEGACY keywords stay in module docs.
-    #[test]
-    fn lgt03_dual_cite_emissive_post_in_module_docs() {
-        let src = read("systems/fire/fire_light_emission.rs");
-        assert!(
-            src.contains("LGT-03") && src.contains("gea4v2") && src.contains("12.5.10"),
-            "missing NEW LGT-03 / gea4v2 12.5.10 emissive cite"
-        );
-        assert!(
-            src.contains("12.7.2"),
-            "missing NEW gea4v2 12.7.2 full-screen post cite"
-        );
-        assert!(
-            src.contains("lighting_post") && src.contains("post_processing"),
-            "missing LEGACY lighting_post / post_processing cites"
-        );
-        assert!(
-            src.contains("gea_v2_e4"),
-            "missing LEGACY book id gea_v2_e4"
-        );
-        let vfx = read("render/fire_vfx/mod.rs");
-        assert!(
-            vfx.contains("LGT-03") && vfx.contains("fire_light_emission"),
-            "fire_vfx must point at LGT-03 / fire_light_emission for emissive lights"
-        );
-    }
-
     /// LGT-03 tripwire: heat below HEAT_MIN is not emissive; above scales intensity.
     #[test]
     fn lgt03_heat_gate_and_intensity_scales() {

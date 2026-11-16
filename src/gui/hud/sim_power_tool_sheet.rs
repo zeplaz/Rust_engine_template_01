@@ -62,8 +62,6 @@ pub fn power_tool_sheet_anchor(strip: &BuildStripState, left_stack_collapsed: bo
 pub fn sim_power_tool_sheet_icons_wired() -> bool {
     crate::gui::hud::power_hud_icon_atlas::power_hud_atlas_assets_on_disk()
         && crate::gui::hud::power_hud_icon_atlas::power_hud_bevy_draw_path_wired()
-        && include_str!("sim_road_power_sheets_bevy.rs").contains("spawn_sheet_button_with_icon")
-        && include_str!("sim_road_power_sheets_bevy.rs").contains("PowerHudDrawnIcon")
         && PowerHudIconId::for_voltage(VoltageClass::Medium) == PowerHudIconId::VoltageMedium
         && PowerHudIconId::for_routing_mode(PowerLineRoutingMode::Curved) == PowerHudIconId::RouteCurved
 }

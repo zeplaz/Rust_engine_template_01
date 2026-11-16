@@ -453,20 +453,4 @@ mod tests {
         assert_eq!(app.world().resource::<SimTimeMicros>().0, SIM_STEP_MICROS);
     }
 
-    /// DBG-06 / V4-DBG06 tripwire: dual-cite (NEW row + LEGACY keyword) stays in module docs.
-    #[test]
-    fn dbg06_dual_cite_debug_cameras_pause_in_module_docs() {
-        let src = include_str!("sim_control.rs");
-        assert!(src.contains("DBG-06"), "missing NEW matrix cite DBG-06");
-        assert!(
-            src.contains("debug_cameras_pause"),
-            "missing LEGACY keyword debug_cameras_pause"
-        );
-        assert!(
-            src.contains("render and UI"),
-            "missing DBG-06 render/UI-live contract wording"
-        );
-        assert!(src.contains("should_tick"));
-        assert!(src.contains(SIM_PAUSE_ENV));
-    }
 }

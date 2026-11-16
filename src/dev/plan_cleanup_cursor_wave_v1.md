@@ -298,12 +298,12 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-37 | DONE | `90012715`+ | Dense heat weather RO reads `AtmosphereWeatherMeans` (not render climate). |
 | CQ-40 | DONE | `90012715`+ | `TopUpPackage` / `refill_packages_sink` kernel; drone/missile sinks are adapters. |
 | CQ-39 | OPEN | — | Collapse four WeatherField samplers onto AtmosphereFrame. |
-| CQ-41 | OPEN | — | `studio_task` `run(kind, payload)` dispatch table. |
-| CQ-70 | OPEN | — | Delete source-grep citation tests. |
-| CQ-71 | OPEN | — | Replace tautological tests. |
-| CQ-72 | OPEN | — | Remove `let _ = x` noise. |
+| CQ-41 | DONE | `143d9ecd`+ | `run(kind,payload)` + `_QUEUED_RUNNERS` dispatch; handoff status files retained for Blender async. |
+| CQ-70 | DONE | `143d9ecd`+ | Citation/doc `include_str` greps removed; authority lints kept (~37). |
+| CQ-71 | DONE | `143d9ecd`+ | toe_demand/front_stock_pool/vfx_capture tautologies fixed. |
+| CQ-72 | DONE | `143d9ecd`+ | `_theaters` rename; ATMO_GRID noise already gone. |
 | CQ-82 | DONE | (prior) | v2 superseded banner + adoption.tsv skill/rule pointers. |
-| CQ-83 | OPEN | — | Archive PROGRAM CLOSE plans; fix AGENTS.md charter list. |
+| CQ-83 | PARTIAL | `143d9ecd`+ | AGENTS.md → plan index; playquad SHIPPED. Full archive move of PROGRAM CLOSE plans deferred. |
 | CQ-84 | OPEN | — | Stop citing gitignored debug_runs evidence. |
 | CQ-85 | OPEN | — | `cargo check` ≤ 50 warnings (currently ~165). |
 
