@@ -246,7 +246,8 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-30 | DONE | `efe818b8` | Deleted `VoxelOccupationAuthorityWitness` / stub / `write_authority_witness_json` / live-json tests. Dump counts remain in `sim_run_dump_occupation`. |
 | CQ-02 | DONE | `b0001258` | Revision bumps on mul change only; tick starts quantised to weather step; sliding ticks no longer clear routes. |
 | CQ-35 | DONE | `b0001258` | `forecast_consumed_revision` moved to `RouteCache`; forecast book is sole-written again. |
-| CQ-03 | DONE (uncommitted) | — | `rank_demands_by_advert` scores once with Dijkstra cached per sink; advisor uses it; travel ticks share one search. |
+| CQ-03 | DONE | `17566e47` | `rank_demands_by_advert` scores once with Dijkstra cached per sink; advisor uses it; travel ticks share one search. |
+| CQ-04 | DONE (uncommitted) | — | Thermal/hydraulic transfers via delta buffer; thermal conserves mass; hydraulic loss = intentional deposit fraction only. |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking
