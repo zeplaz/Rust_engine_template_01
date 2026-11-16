@@ -8,6 +8,22 @@
 | **Trigger** | **L1 (`NAV-09`) + L3 (`NAV-10`) ADOPTED** — open-goal source pick + `LogisticsRouteDirtyTiles` |
 | **Book orient** | `python src/dev/ref_books_index/lookup.py --row NAV-13` |
 | **Owner lane** | `@coder` (navigation + logistics orders) |
+| **Status** | **REOPENED 2026-11-16** — forecast sync + route purge wired, but P2 time-aware Dijkstra is never fed a forecast, and the revision bumps every step so the route cache is cleared every step. **NAV-13 → PARTIAL** · cleanup **CQ-02, CQ-35, CQ-53** |
+
+## Review 2026-11-16 — reopened
+
+> Operator code review of the Cursor wave ([`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md)). Routing is the hub for heat (CQ-52) and wildlife (CQ-51) costs, so finish this first.
+
+| Finding | Evidence | Fix |
+|:---|:---|:---|
+| Route cache cleared every sim step | bucket `start_tick` derived from `steps` (`cost_forecast.rs:215,262,271`), so `revision` bumps each step, and `routes.rs:344` calls `routes.clear()` | Bump only when multipliers change; invalidate affected edges only (**CQ-02, do first**) |
+| Second writer | `refresh_resource_flow_routes_system` writes `consumed_revision` into the forecast book (`routes.rs:321,347`) | Move the field into `RouteCache` (CQ-35) |
+| P2 unfed | forecast-aware Dijkstra wrapper passes `None, 0` (`logistics_floodfill.rs:375-385`), no production caller | One route cost = base + path concerns + forecast + heat + wildlife, used by `refresh_resource_flow_routes_system` (CQ-53) |
+| Path concerns never loaded | `load_logistics_path_concerns_on_startup` (`path_concerns.rs:155`) unscheduled; `front_haul_path_concern` (`combat/supply.rs:30`) no caller | Schedule + wire (CQ-53) |
+| Duplicate Dijkstras | NAV-04 scratch, forecast, plain variants: only tests call them | Keep one (NAV-04 scratch-array); delete the rest after folding |
+| Comparator runs Dijkstra | `demand_advert.rs:41-75` runs ~4 Dijkstras per sort comparison | Score once (`sort_by_cached_key`) (CQ-03) |
+
+**Close again only when:** the route cache survives unchanged weather, and the production route cost includes forecast, path concerns, heat and wildlife inputs, with a test per input. Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 
 ## Summary
 

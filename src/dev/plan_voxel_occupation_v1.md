@@ -5,7 +5,7 @@
 | **⟨ID⟩** | **PLAN-VOXEL-OCCUPATION-v1** |
 | **Slice** | **PLAN-REF-BOOKS-UPGRADE-v3** wave V3 **X1** (charter only — **no X2 impl**) |
 | **Owner** | `@planner` (charter) → **X2** `@coder` + `@sim-steward` (EV/Cx gate) |
-| **Status** | **PROGRAM CLOSE** — X2-P0–P3 · **OCC-P4/P5/P6 ADOPTED**; **DR-VOXEL-OCCUPATION** closed |
+| **Status** | **REOPENED 2026-11-16** — commit authority defaults ON but voxel occupation is not saved (overlay is an unwired stub); non-deterministic site pick; OCC-P6 "live witness" is banned test-shaped code; P2 test fails. **DR-VOXEL-OCCUPATION reopened** · cleanup **CQ-07, CQ-20, CQ-30** |
 | **Parents** | [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md) (**VOXEL-MASSING-PRES-001**) · [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) · [`construction_invariants.md`](construction_invariants.md) |
 | **Book rows (dual-cite)** | **NEW:** **PCG-06** (aig3:8.5–8.5.2) · **ECS-15** (gea4v2:16.2.2) · **LEGACY:** `shape_grammars` (aig_e3 p748) · `asset_pipeline` (gea_v1_e4 p68) |
 | **Deferral** | **DR-VOXEL-OCCUPATION** — **CLOSED** 2026-11-15 (`voxel_occupation_authority_live.json`) |
@@ -14,6 +14,21 @@
 **EV/Cx (steward):** Q↑ Ct▮▮▮ Cx▮▮▮▮▮▮ EV/Cx=**MED-HIGH** — bounded authority migration inside existing construction execute funnel; risk = dual occupation during phased cutover, save slice ordering, and `RepresentationResult` accidentally becoming a writer. Complexity budget: **one** new sim resource family + **one** RON hydrate slice; no parallel nav/PHYS/voxel gameplay in X2 scope without separate charter. **Recorded:** PASS unlocks X2-P0 only (flag default off); P1+ retains phased dual-book guards.
 
 ---
+
+## Review 2026-11-16 — reopened
+
+> Operator code review of the Cursor wave ([`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md)). Until the save path is wired, the safe default is commit authority **OFF** (CQ-07).
+
+| Finding | Evidence | Fix |
+|:---|:---|:---|
+| Not persisted | `io/save/voxel_occupation_overlay.rs` is a "P0 stub — not wired"; `VoxelOccupationHydrateState` never `init_resource` | Wire into manifest save/load + round-trip test; until then default flags OFF (CQ-07) |
+| Non-deterministic | `primary_site_at` uses `find_map` over `HashMap by_site` (`voxel_occupation.rs:246`); `apply_site_commit` overwrites on re-commit (`:202`) | `BTreeMap`, lowest-id tie-break, append (CQ-07) |
+| Witness code in production | `VoxelOccupationAuthorityWitness`, `authority_witness_stub`, `write_authority_witness_json`, hardcoded `issued`, always-true `dual_writer_guard_ok` (`:423-470, 541-552, 607-665`) | Delete; counts only in `sim_run_dump` (CQ-30) |
+| Failing test | `voxel_occupation_p2_sole_writer_tile_derived_cache` asserts `"X2-P2"`, code returns `"OCC-P5"` | Fix with CQ-30 (CQ-20) |
+| Docs contradict code | module docs say flags default off; `Default` sets both on (`:1-15` vs `:30-44`) | Align |
+| Evidence untracked | cited `debug_runs/construction/*.json` are gitignored | Cite tests / matrix rows instead (CQ-84) |
+
+**Close again only when:** voxel occupation survives save → load in a test, the site pick is deterministic, no witness code remains, and lib tests are green. Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 
 ## Summary
 
@@ -258,3 +273,4 @@ Cross-link: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1
 | 1.1.1 | 2026-11-15 | **OCC-P4 PASS** — `voxel_occupation_productize_evcx_2026-11-15.json`; OCC-P5 clear. |
 | 1.2.0 | 2026-11-15 | **OCC-P5** — `VoxelOccupationConfig` default on; env `0/false/off` forces debug off; Accept `voxel_occupation` 11 passed. |
 | 1.3.0 | 2026-11-15 | **OCC-P6** — `write_authority_witness_json` → `voxel_occupation_authority_live.json`; Accept `--lib occ_p6`; **DR-VOXEL-OCCUPATION** closed. **PROGRAM CLOSE**. |
+| 1.4.0 | 2026-11-16 | **REOPENED** — review: not persisted while default-on, HashMap nondeterminism, witness code, failing P2 test; DR-VOXEL-OCCUPATION reopened; cleanup CQ-07/20/30. |

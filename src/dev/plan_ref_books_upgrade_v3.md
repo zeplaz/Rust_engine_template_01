@@ -3,12 +3,12 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v3** |
-| **Status** | **PROGRAM CLOSE** — V0–V4 cuttable OPEN ★ ADOPTED; residual DEFER/PARTIAL unlock roadmap: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) |
+| **Status** | **REVIEWED 2026-11-16** — several ★ ADOPTED rows re-graded to PARTIAL/UNWIRED in `adoption.tsv` (cleanup plan §5); §2.1 counts are stale until regenerated (CQ-80). Was: PROGRAM CLOSE — V0–V4 cuttable OPEN ★ ADOPTED; residual DEFER/PARTIAL unlock roadmap: [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) |
 | **Date** | 2026-11-15 · closed 2026-11-15 |
 | **Parents** | [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) (**WAVES 0–S CLOSED**) · [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**) · [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) · [`plan_voxel_massing_presentation_v1.md`](plan_voxel_massing_presentation_v1.md) · [`plan_shared_atmosphere_weather_fire_v1.md`](plan_shared_atmosphere_weather_fire_v1.md) |
 | **Obeys** | `AGENTS.md` · one writer · Sim→View→Render→UI · Studio = DCC (parametric frames) · play UI only · no test-shaped production |
 | **Written for** | Any agent. Dual-matrix orient is mandatory; voxels are **in scope**. |
-| **Continuity** | §0.1 anti-stall — confused/lazy stops are **protocol failures**, not valid exits. |
+| **Continuity** | §0.1 honest exits — `BLOCKED` / `UNWIRED` / asking are valid exits; marking unwired work ADOPTED is the failure. |
 
 ## 0. Stance (locked)
 
@@ -19,39 +19,13 @@
 | **Tools suite first multiplier** | Artist Studio, MCP, `studio_dash`, validators, `sim_review`, `ref_books_index` / legacy lookup — upgrade these so voxel + grammar + debug loops stay parametric and measurable. |
 | **Studio = DCC** | Parametric frames / grammars / modifiers / connection logic in Studio; Blender/audio escalate only when the frame cannot express intent ([`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) § Creative DCC). |
 
-### 0.1 Anti-stall / keep-going (mandatory for every agent on this plan)
+### 0.1 Honest exits (replaces "Anti-stall", removed 2026-11-16)
 
-**Tripwire (parent / Auto / resume / every active agent):** any **response** that ends without (a) Accept paste lines + §10 update, or (b) `BLOCKED:` + next OPEN slice started, or (c) hard-gate citation — is a **stall**. Treat it as a **protocol failure**, not a pause. Do **not** thank, summarize, ask “shall I continue?”, or close the wave. Immediately **RESUME** (§11) or cut the next free OPEN slice **in the same turn**.
+The old anti-stall rule treated stopping, asking, or reporting a gap as a "protocol failure". The 2026-11-16 review found it pushed agents to mark slices ADOPTED with no production caller, and with tests written to pass (see [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md)).
 
-**Active-agent response-stop (hard):** if you are mid-slice and about to emit a turn that is only status / options / “waiting on …” / re-read of §0 — **stop that draft**. Either (1) run the next Accept command and paste the final line, or (2) ledger `BLOCKED:<reason>` and start the next free OPEN slice before the turn ends. A response with neither is incomplete work.
-
-**Illegal exits** (treat as incomplete work — resume or cut next OPEN slice):
-
-| Failure mode | What it looks like | Required recovery |
-|:---|:---|:---|
-| **Lazy stop** | “Looks done”, “probably fine”, summary with no Accept paste | Re-run every Accept command; paste final lines; update §10 |
-| **Confused stop** | Asks which matrix / whether voxels are deferred / waits for user | Re-read §0 locks; run §1 dual orient; continue Do |
-| **Response stop** | Ends turn with status narrative, “next steps?”, plan re-read only, or “I’ll wait” | Tripwire fires → RESUME same slice or dispatch next OPEN; **no user ping** |
-| **Polite handoff stop** | “Ready for next slice when you are” / “standing by” while §10 has OPEN | Same as response stop — cut next free OPEN immediately |
-| **Context / compaction exit** | Session summary or “continue later” without Accept | Parent re-enters with §11 RESUME; prior incomplete = stall |
-| **False voxel lockout** | “DR-VOXEL → skip massing/studio” | Wrong — voxels in scope; only X2 needs X1 charter |
-| **Single-matrix freeze** | Only NEW or only LEGACY, then stalls on missing cite | Run `--dual` (or T0); cite both; proceed |
-| **Compile traffic jam** | Other agent broke lib; this agent stops forever | Fix **in-scope** initializer if ≤15 lines; else note path + cut next slice that doesn’t need that build |
-| **Accept fail ×1** | One test red → abandon slice | Fix once; if fail ×2 → ledger `BLOCKED:<reason>` + **immediately** start next OPEN slice with free Files |
-| **False tripwire abandon** | Source-token test red on docs that only *cite* owner tokens | Tighten check to definition forms (`pub enum` / `pub const` / `struct`); re-Accept; do not abandon the slice |
-| **Fake tripwire tax** | `include_str` / `contains("HashMap")` / middleware-name scans that match docs, debt notes, or the assert string itself; repeated full `cargo test` rebuilds to chase them | Prefer **behavioral** Accept (API/invariants). Source scans: prod-only + strip `//`/`//!`, never put the needle as a contiguous literal in the test. After one false-positive fix, Accept once — do not burn parallel agents on re-scan churn |
-| **Question spiral** | More than one clarifying question to user | Default to §0 locks + first OPEN slice in wave order; do not wait |
-| **Ledger drift stop** | §10 says ADOPTED but `adoption.tsv` / `--open` still lists ★ | Sync TSV in the same turn; then cut next OPEN |
-
-**Legal stop only when:**
-
-1. This slice’s Accept commands all passed **and** §10 row is ADOPTED with evidence, **or**
-2. Ledger `BLOCKED:` with file conflict named **and** the next non-overlapping OPEN slice was started in the same turn, **or**
-3. Hard gate: X2 without signed X1; PCG-03 without user world sign-off.
-
-**Dispatcher rule (parent / Auto):** if a subagent returns without Accept lines or with “need clarification” on §0 topics → **resume** with the paste block in §11; do not close the wave. Prefer cutting the next free OPEN slice over idling. **Never** treat a polite “I’m blocked / need direction / standing by” reply as terminal while §10 still has OPEN rows with free Files. On compaction re-entry: RESUME highest-priority OPEN; never re-litigate §0.
-
-**File ownership:** two agents never edit the same file. On conflict → second agent skips to next OPEN whose Files are free (check `git status` / open PRs briefly), does not wait politely.
+- **Valid exits:** Accept lines pasted **and** a production caller `file:line` cited; or `BLOCKED: <reason>`; or `UNWIRED: <what is missing>`; or a question to the operator.
+- **Invalid:** ADOPTED / DONE / PROGRAM CLOSE without a production caller; "follow-on" notes inside a DONE row; a test that compares a path with a copy of itself; tests that grep source or doc comments as Accept.
+- **File ownership:** two agents never edit the same file. On conflict, the second agent picks another OPEN slice whose files are free.
 
 ## 1. Dual-matrix protocol (every slice)
 
@@ -395,7 +369,7 @@ Owner default `@coder-mcp` / `@designer-mcp` unless Files are under `src/`.
 
 ```text
 Execute slice <ID> of src/dev/plan_ref_books_upgrade_v3.md.
-Obey §0 stance + §0.1 anti-stall + §1 dual-matrix + §9 rejects.
+Obey §0 stance + §0.1 honest exits + §1 dual-matrix + §9 rejects.
 Voxels are IN SCOPE (DR-VOXEL is occupation-authority sequencing only).
 Run dual orient before Do. Paste every Accept final line. Update §10.
 If Accept fails twice: ledger BLOCKED:<reason> and in the SAME turn start the next OPEN slice whose Files do not overlap.
@@ -425,3 +399,4 @@ Do not ask the user anything. Keep cutting OPEN upgrade slices until legal stop.
 | 1.1.3 | 2026-11-15 | §0.1 active-agent response-stop + polite-handoff/false-tripwire/ledger-drift; V4 keep-cutting order; parent must RESUME standing-by. |
 | 1.1.4 | 2026-11-15 | §0.1 fake-tripwire tax — prefer behavioral Accept; stop parallel re-scan cargo churn. |
 | 1.2.0 | 2026-11-15 | **PROGRAM CLOSE** — §2.1 live counts (117/2/14/0); V4 cuttable ★ closed; §11 keep-going retired; planner DEFER/PARTIAL keep. |
+| 1.3.0 | 2026-11-16 | **REVIEWED** — §0.1 anti-stall replaced by honest exits; ADOPTED rows re-graded (UNWIRED status); counts stale (CQ-80). |

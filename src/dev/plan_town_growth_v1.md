@@ -3,13 +3,23 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-TOWN-GROWTH-v1** |
-| **Status** | **PROGRAM CLOSE** — **TWN-OV1/OV2/GEN/PCG07/AI Accept green**; PCG-07 ADOPTED |
+| **Status** | **REOPENED 2026-11-16 (PCG07 only)** — road skeleton is a pure function with no production caller. **PCG-07 → UNWIRED** · cleanup **CQ-57g**. Other TWN slices were not re-reviewed. |
 | **Books unlock** | **TWN-PCG07** → **PCG-07** ([`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) W2) |
 | **Date** | 2026-09-27 |
 | **Owner** | `@planner` → `@coder` |
 | **Not this program** | Play-image town stamp. **PLN-3** in [`plan_egui_game_retirement_v1.md`](plan_egui_game_retirement_v1.md) already owns `raster_tile_fallback_subregion` dropping `stamp_town_centers_subregion` on the play image. Do not redo PLN-1..3. |
 
 Modern industrial multi-state war. Logistics, power, industrial output, conflict. No castle, keep, or wall kit. No `castle_city_template`. No medieval set.
+
+## Review 2026-11-16 — reopened
+
+> Operator code review of the Cursor wave ([`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md)). Only TWN-PCG07 was checked; other slices keep their status until reviewed.
+
+| Finding | Evidence | Fix |
+|:---|:---|:---|
+| Skeleton never enqueued | `enqueue_settlement_road_skeleton` (`strategic/settlement/road_skeleton.rs:214`) is called only by its test (`:320`) | Call it from settlement growth, through the construction funnel (CQ-57g) |
+
+**Close again only when:** a growing settlement enqueues skeleton roads in a normal run, and they are built through `src/construction/`. Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 
 ## Summary
 
@@ -219,3 +229,4 @@ World-builder HTML reports reuse [`tools/studio_dash/mission_adapter.py`](../../
 |:---|:---|:---|
 | 1.0.0 | 2026-09-27 | SIGNED — OV1…AI + TWN-PCG07. |
 | 1.1.0 | 2026-11-15 | **PROGRAM CLOSE** — Accept green across OV1/OV2/GEN/PCG07/AI; PCG-07 ADOPTED. |
+| 1.2.0 | 2026-11-16 | **REOPENED (PCG07)** — review: road skeleton has no production caller; PCG-07 → UNWIRED; cleanup CQ-57g. |
