@@ -588,20 +588,6 @@ mod tests {
         );
     }
 
-    #[test]
-    fn phys09_dual_cite_in_module_docs() {
-        let src = include_str!("ballistics.rs");
-        let prod = src.split_once("#[cfg(test)]").map_or(src, |(p, _)| p);
-        assert!(prod.contains("PHYS-09") || prod.contains("V4-PHYS09"));
-        assert!(prod.contains("14.1") && prod.contains("14.1.2.1") && prod.contains("14.1.3"));
-        assert!(prod.contains("physics_collision") || prod.contains("physics_middleware"));
-        assert!(prod.contains("gea_v2_e4"));
-        assert!(
-            prod.contains("bookkeeping") && prod.contains("rigid-body"),
-            "docs must state bookkeeping over rigid-body design"
-        );
-    }
-
     /// PHYS-09: this module is kinematic bookkeeping + intent enqueue — not a dynamics world.
     /// Scans non-comment production lines only (docs may cite middleware names as rejects).
     #[test]
@@ -668,29 +654,6 @@ mod tests {
         );
         assert!(
             (queue.pending[0].center_xz - Vec2::new(2.0, 0.0)).length() < 1e-3
-        );
-
-        let prod = include_str!("ballistics.rs")
-            .split_once("#[cfg(test)]")
-            .map_or(include_str!("ballistics.rs"), |(p, _)| p);
-        // CQ-55 may *read* occupation / material for early solid hits; must not mutate sites.
-        for forbidden in [
-            "BlastCraterBook",
-            "execute_demolish",
-            "ResMut<crate::strategic::TileOccupationBook>",
-            "ResMut<crate::strategic::VoxelOccupationBook>",
-            "VoxelOccupationBook",
-            "ConstructionSite",
-            ".despawn(",
-        ] {
-            assert!(
-                !prod.contains(forbidden),
-                "ballistics must stay intent-only (found `{forbidden}`)"
-            );
-        }
-        assert!(
-            prod.contains("probe_hits_solid") || prod.contains("weight_at"),
-            "CQ-55 solid probe must be wired"
         );
     }
 

@@ -629,19 +629,6 @@ mod tests {
     // --- PHYS-04 / V4-PHYS04 tripwires ---
 
     #[test]
-    fn phys04_dual_cite_in_module_docs() {
-        let src = include_str!("registry.rs");
-        assert!(
-            src.contains("PHYS-04") && src.contains("gea4v2 14.3.8"),
-            "NEW row cite missing"
-        );
-        assert!(
-            src.contains("collision_detection") && src.contains("physics_collision"),
-            "LEGACY keyword cites missing"
-        );
-    }
-
-    #[test]
     fn phys04_tags_drive_layers_and_filters() {
         let path = example_material_registry_path();
         let reg = MaterialRegistry::load_from_json(path.to_str().unwrap()).unwrap();

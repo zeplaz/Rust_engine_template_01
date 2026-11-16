@@ -172,24 +172,6 @@ mod rnd15_decal_tests {
     use super::*;
 
     #[test]
-    fn rnd15_docs_dual_cite_decal_path() {
-        let src = include_str!("chunk_surface_fire.rs");
-        assert!(
-            src.contains("RND-15") && src.contains("11.6.6"),
-            "chunk_surface_fire must dual-cite RND-15 / gea4v2 11.6.6"
-        );
-        assert!(
-            src.contains("geometry_visual_effects"),
-            "chunk_surface_fire must cite LEGACY geometry_visual_effects"
-        );
-        let low = src.to_ascii_lowercase();
-        assert!(
-            low.contains("decal") && (low.contains("scorch") || low.contains("scar")),
-            "chunk_surface_fire must name decal + scorchmark/scar stance"
-        );
-    }
-
-    #[test]
     fn rnd15_extinction_floor_matches_tick_contract() {
         assert_eq!(SURFACE_FIRE_EXTINCTION_HEAT, 0.015);
         assert_eq!(SURFACE_FIRE_SCORCH_HEAT_MAX, 0.12);

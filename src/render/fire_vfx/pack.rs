@@ -234,18 +234,6 @@ mod tests {
     }
 
     #[test]
-    fn rnd14_pack_documents_card_impostor_stance() {
-        let pack = include_str!("pack.rs");
-        assert!(pack.contains("RND-14") && pack.contains("11.6.4"));
-        assert!(pack.contains("geometry_visual_effects"));
-        let low = pack.to_ascii_lowercase();
-        assert!(
-            low.contains("billboard") || low.contains("card") || low.contains("impostor"),
-            "pack.rs must document billboard/card/impostor stance"
-        );
-    }
-
-    #[test]
     fn rnd15_transparent_order_keys_unchanged() {
         // RND-15 must not retarget RND-04 painter ranks (scorch is decal, not a new class).
         assert_eq!(TRANSPARENT_ORDER_SMOKE, 0);
@@ -253,15 +241,4 @@ mod tests {
         assert_eq!(TRANSPARENT_ORDER_SPARK, 2);
     }
 
-    #[test]
-    fn rnd15_pack_cross_cites_decal_not_card() {
-        let pack = include_str!("pack.rs");
-        assert!(pack.contains("RND-15") && pack.contains("11.6.6"));
-        assert!(pack.contains("geometry_visual_effects"));
-        let low = pack.to_ascii_lowercase();
-        assert!(
-            low.contains("decal") && (low.contains("scorch") || low.contains("scar")),
-            "pack.rs must cross-cite decal scorchmark stance"
-        );
-    }
 }

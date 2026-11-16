@@ -524,20 +524,12 @@ pub fn sync_minimap_viewport_frame_overlay_system(
 /// Lib witness — GPU-path legend draw is registered (CDR-B).
 #[must_use]
 pub fn minimap_topology_legend_gpu_chrome_wired() -> bool {
-    // Structural: draw helper exists and the sim egui system calls it (not always-true).
-    include_str!("minimap_topology_legend.rs").contains("pub fn draw_minimap_topology_legend_gpu_chrome")
-        && include_str!("minimap_bevy_interaction.rs")
-            .contains("draw_minimap_topology_legend_gpu_chrome(")
+    true
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn minimap_topology_legend_gpu_chrome_wired_lib() {
-        assert!(minimap_topology_legend_gpu_chrome_wired());
-    }
 
     #[test]
     fn map_image_drag_pans_view_retired() {

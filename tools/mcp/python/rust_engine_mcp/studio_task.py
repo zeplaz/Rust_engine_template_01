@@ -382,21 +382,31 @@ def run_queued_param_frame(task_id: str) -> dict[str, Any]:
         return mark_status(task_id, "failed", error=str(exc))
 
 
+# CQ-41: kind → runner dispatch (status files kept — Blender addon polls async handoff markers).
+_QUEUED_RUNNERS: dict[str, Any] = {
+    "geometry": lambda tid: run_queued_geometry(tid),
+    "massing_export": lambda tid: run_queued_massing_export(tid),
+    "assembly_build": lambda tid: run_queued_assembly_build(tid),
+    "param_frame": lambda tid: run_queued_param_frame(tid),
+}
+
+
+def run(kind: str, payload: Path, *, task_id: str | None = None, seed: int = 0) -> dict[str, Any]:
+    """Enqueue + run a StudioTask synchronously via the kind dispatch table (CQ-41)."""
+    task = enqueue(kind=kind, seed=seed, payload_path=str(payload), task_id=task_id)
+    return run_queued(str(task["task_id"]))
+
+
 def run_queued(task_id: str) -> dict[str, Any]:
     """Dispatch StudioTask by kind (geometry → Blender; massing_export / param_frame → QC)."""
     task = read_task(task_id)
     if task is None:
         raise FileNotFoundError(f"studio task not found: {task_id}")
-    kind = task.get("kind")
-    if kind == "geometry":
-        return run_queued_geometry(task_id)
-    if kind == "massing_export":
-        return run_queued_massing_export(task_id)
-    if kind == "assembly_build":
-        return run_queued_assembly_build(task_id)
-    if kind == "param_frame":
-        return run_queued_param_frame(task_id)
-    raise ValueError(f"no runner for StudioTask kind={kind!r}")
+    kind = str(task.get("kind") or "")
+    runner = _QUEUED_RUNNERS.get(kind)
+    if runner is None:
+        raise ValueError(f"no runner for StudioTask kind={kind!r}")
+    return runner(task_id)
 
 
 def blender_handoff_marker(task_id: str) -> Path:

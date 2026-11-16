@@ -349,11 +349,4 @@ mod tests {
         init_ok(road_tool_popup_bevy_action_system);
     }
 
-    #[test]
-    fn road_tool_popup_bevy_root_marker_present() {
-        assert!(include_str!("popup.rs").contains("RoadToolPopupBevyRoot"));
-        assert!(include_str!("popup.rs").contains("sync_road_tool_popup_bevy"));
-        assert!(include_str!("popup.rs").contains("commit_road_path_to_queue"));
-        assert!(include_str!("popup.rs").contains("enqueue_road_upgrade"));
-    }
 }

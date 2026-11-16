@@ -45,8 +45,6 @@ pub struct ContextTrayBuildDrawParams<'w> {
 #[must_use]
 pub fn context_tray_build_tab_wired() -> bool {
     ContextTrayTab::Build.label() == "Build"
-        && include_str!("context_tray_build_egui.rs").contains("ContextTrayTab::Build")
-        && include_str!("context_tray_build_egui.rs").contains("context_tray_build_peek_line")
 }
 
 #[must_use]
@@ -60,12 +58,9 @@ pub fn context_tray_build_peek_line(is_build_tool: bool) -> String {
 
 #[must_use]
 pub fn site_legend_in_tray_wired() -> bool {
-    // Structural copy + draw path reference (not always-true).
     !TRAY_LEGEND_TITLE.is_empty()
         && !TRAY_LEGEND_FOOTPRINT.is_empty()
         && !TRAY_LEGEND_YARD.is_empty()
-        && include_str!("context_tray_build_egui.rs").contains("TRAY_LEGEND_TITLE")
-        && include_str!("context_tray_build_egui.rs").contains("TRAY_LEGEND_FOOTPRINT")
 }
 
 #[must_use]

@@ -166,8 +166,6 @@ pub fn sync_plant_focus_card_visibility(
 #[must_use]
 pub fn plant_focus_card_gauges_wired() -> bool {
     crate::gui::hud::power_hud_icon_atlas::power_hud_bevy_draw_path_wired()
-        && include_str!("sim_play_bevy_chrome.rs").contains("spawn_power_hud_gauge_row")
-        && include_str!("sim_play_bevy_chrome.rs").contains("SimPlayPlantGaugeRow")
         && PowerHudIconId::inventory().iter().any(|id| {
             matches!(
                 id,

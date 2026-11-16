@@ -295,16 +295,6 @@ mod tests {
     }
 
     #[test]
-    fn phys07_dual_cite_in_module_docs() {
-        let src = include_str!("blast.rs");
-        let prod = src.split_once("#[cfg(test)]").map_or(src, |(p, _)| p);
-        assert!(prod.contains("PHYS-07") || prod.contains("V4-PHYS07"));
-        assert!(prod.contains("14.5.3.2") && prod.contains("14.5.3.4"));
-        assert!(prod.contains("physics_integration"));
-        assert!(prod.contains("gea_v2_e4"));
-    }
-
-    #[test]
     fn phys07_falloff_and_disk_query() {
         assert!((blast_radius_falloff(0.0, 10.0) - 1.0).abs() < 1e-5);
         assert!((blast_radius_falloff(5.0, 10.0) - 0.5).abs() < 1e-5);

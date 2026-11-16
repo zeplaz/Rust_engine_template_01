@@ -24,7 +24,7 @@ use crate::systems::weather::LinkModality;
 /// Sole publisher for drone/missile/personnel TOE deficits onto the Front PublishDemand bus.
 pub fn publish_toe_cargo_demands_system(
     clock: Res<SimStepClock>,
-    theaters: Res<TheaterBook>,
+    _theaters: Res<TheaterBook>,
     balance: Res<FrontBalance>,
     points: Res<FrontSupplyPoints>,
     toe: Res<CapabilityToeRegistry>,
@@ -123,14 +123,4 @@ pub fn publish_toe_cargo_demands_system(
         &balance.supply,
         &mut requests,
     );
-    let _ = theaters;
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn cs4_toe_publisher_module_links() {
-        // Compile/link tripwire — behavioral cover lives in drone/missile/personnel books.
-        assert!(true);
-    }
 }

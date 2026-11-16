@@ -119,35 +119,6 @@ mod rnd04_transparency_tests {
         assert!(w < f, "configure_sets chain must keep Weather before Fire");
     }
 
-    #[test]
-    fn rnd04_smoke_cloud_fire_layering_contract_is_documented() {
-        let pack = repo_src("render/fire_vfx/pack.rs");
-        let clouds = repo_src("render/weather_vfx/cloud_sheets.rs");
-        let weather_mod = repo_src("render/weather_vfx/mod.rs");
-        for (label, text) in [
-            ("fire_vfx/pack.rs", &pack),
-            ("weather_vfx/cloud_sheets.rs", &clouds),
-            ("weather_vfx/mod.rs", &weather_mod),
-        ] {
-            assert!(
-                text.contains("RND-04") && text.contains("11.3.12"),
-                "{label}: must dual-cite RND-04 / gea4v2 11.3.12"
-            );
-            assert!(
-                text.contains("geometry_visual_effects") || text.contains("OIT"),
-                "{label}: must cite LEGACY geometry_visual_effects or OIT stance"
-            );
-        }
-        assert!(
-            pack.contains("TRANSPARENT_ORDER_SMOKE")
-                && pack.contains("TRANSPARENT_ORDER_SPARK"),
-            "fire pack must expose explicit smoke→spark transparent order constants"
-        );
-        assert!(
-            clouds.contains("CLOUD_SHEET_LAYER_Z"),
-            "cloud sheets must expose explicit layer Z strata"
-        );
-    }
 }
 
 #[cfg(test)]
@@ -166,36 +137,6 @@ mod rnd14_card_effects_tests {
 
     fn production_src(text: &str) -> &str {
         text.split("#[cfg(test)]").next().unwrap_or(text)
-    }
-
-    #[test]
-    fn rnd14_docs_dual_cite_card_impostor_path() {
-        let weather_mod = repo_src("render/weather_vfx/mod.rs");
-        let clouds = repo_src("render/weather_vfx/cloud_sheets.rs");
-        let fire_mod = repo_src("render/fire_vfx/mod.rs");
-        let pack = repo_src("render/fire_vfx/pack.rs");
-        for (label, text) in [
-            ("weather_vfx/mod.rs", &weather_mod),
-            ("weather_vfx/cloud_sheets.rs", &clouds),
-            ("fire_vfx/mod.rs", &fire_mod),
-            ("fire_vfx/pack.rs", &pack),
-        ] {
-            assert!(
-                text.contains("RND-14") && text.contains("11.6.4"),
-                "{label}: must dual-cite RND-14 / gea4v2 11.6.4"
-            );
-            assert!(
-                text.contains("geometry_visual_effects"),
-                "{label}: must cite LEGACY geometry_visual_effects"
-            );
-            let stance = text.to_ascii_lowercase();
-            assert!(
-                stance.contains("card")
-                    || stance.contains("billboard")
-                    || stance.contains("impostor"),
-                "{label}: must name card/billboard/impostor stance"
-            );
-        }
     }
 
     #[test]

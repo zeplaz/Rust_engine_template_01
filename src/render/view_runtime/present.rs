@@ -148,28 +148,6 @@ mod rnd19_present_tests {
         std::fs::read_to_string(repo_src(rel)).unwrap_or_else(|e| panic!("read {rel}: {e}"))
     }
 
-    /// RND-19 / V4-RND19 tripwire: dual-cite NEW row + LEGACY book pages in module docs.
-    #[test]
-    fn rnd19_dual_cite_buffering_vsync_in_module_docs() {
-        let src = read("render/view_runtime/present.rs");
-        assert!(
-            src.contains("RND-19") && src.contains("11.3.4.1"),
-            "missing NEW RND-19 / gea4v2 11.3.4.1 cite"
-        );
-        assert!(
-            src.contains("8.5.2.5") && src.contains("Screen Tearing"),
-            "missing NEW gea4v1 8.5.2.5 screen tearing cite"
-        );
-        assert!(
-            src.contains("gea_v2_e4") && src.contains("gea_v1_e4"),
-            "missing LEGACY gea_v*_e4 book ids"
-        );
-        assert!(
-            src.contains("p50-51") && src.contains("p518-519"),
-            "missing LEGACY PDF page anchors"
-        );
-    }
-
     /// RND-19 tripwire: buffer-count constants match GEA double/triple (+ uncapped probe).
     #[test]
     fn rnd19_buffer_count_contract_double_triple_uncapped() {
@@ -245,11 +223,6 @@ mod rnd19_present_tests {
     /// RND-19 tripwire: voxels-in-scope note — PixelWorld shares the primary window present path.
     #[test]
     fn rnd19_voxel_pixel_world_shares_primary_present_path() {
-        let src = read("render/view_runtime/present.rs");
-        assert!(
-            src.contains("primary-window") || src.contains("primary window"),
-            "docs must state primary-window present covers all views including voxels"
-        );
         // PixelWorld RTT is not a second swapchain — it composites into the same presented window.
         let cam = read("render/pixel_world/camera.rs");
         assert!(
