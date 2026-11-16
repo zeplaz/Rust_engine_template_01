@@ -106,8 +106,9 @@ pub const STUDIO_MASSING_PREVIEW_REL: &str = "debug_runs/studio_dash/massing_pre
 pub const STUDIO_MASSING_CHECKED_IN_FIXTURE_REL: &str =
     "assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json";
 
-/// Env opt-in: when set to a non-empty value other than `0`/`false`/`off`, startup loads
-/// [`STUDIO_MASSING_PREVIEW_REL`] once into [`StudioMassingOverride`]. No per-frame disk poll.
+/// Env opt-in (CQ-09): debug / `sim_dump` builds only — when set to a non-empty value other
+/// than `0`/`false`/`off`, startup loads [`STUDIO_MASSING_PREVIEW_REL`] once into
+/// [`StudioMassingOverride`]. No per-frame disk poll. Release shipping builds ignore the env.
 /// Set to a path to load that file instead; `fixture` loads [`STUDIO_MASSING_CHECKED_IN_FIXTURE_REL`].
 pub const STUDIO_MASSING_ENV: &str = "RUST_ENGINE_STUDIO_MASSING";
 
@@ -345,14 +346,16 @@ fn apply_zoom_to_columns(cols: &[VoxelColumnRequest], px_per_tile: f32) -> Vec<V
         .collect()
 }
 
-/// One-shot Startup: if [`STUDIO_MASSING_ENV`] is truthy, load preview path once.
-/// Never schedules a per-frame disk read.
+/// One-shot Startup (CQ-09): if [`STUDIO_MASSING_ENV`] is truthy, load preview path once.
+/// Compiled only under `debug_assertions` or feature `sim_dump` (same gate as `SimRunDumpPlugin`).
+/// Never schedules a per-frame disk read. Massing apply is already PixelWorld-scoped in sync.
 ///
 /// | Value | Loads |
 /// |---|---|
 /// | `1` / `true` / `on` / `yes` | [`STUDIO_MASSING_PREVIEW_REL`] |
 /// | `fixture` | [`STUDIO_MASSING_CHECKED_IN_FIXTURE_REL`] |
 /// | other path | that path |
+#[cfg(any(debug_assertions, feature = "sim_dump"))]
 pub fn load_studio_massing_override_from_env_once(mut studio: ResMut<StudioMassingOverride>) {
     let Ok(raw) = std::env::var(STUDIO_MASSING_ENV) else {
         return;

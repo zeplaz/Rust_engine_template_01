@@ -498,8 +498,8 @@ def refresh_pcg08_golden_report(
     write_witness: bool = True,
     repo: Path | None = None,
 ) -> dict[str, Any]:
+    """Refresh PCG-08 generate-and-test report (CQ-32: no BLANG witness ritual)."""
     from rust_engine_mcp import golden_seed_review
-    from rust_engine_mcp.aps_witness_honesty import write_aps_live_witness
 
     root = repo or repo_root()
     entries = golden_seed_review.load_golden_seeds(repo=root)
@@ -507,15 +507,11 @@ def refresh_pcg08_golden_report(
     report["cli_text"] = format_generate_and_test_cli(report)
     report["golden_seed_count"] = len(entries)
     if write_witness:
-        write_aps_live_witness(
-            report,
-            PCG_08_WITNESS_REL,
-            schema="pcg_08_generate_test_v1",
-            profile="PCG_08_GEN_TEST",
-            source_system="pcg_08_generate_test",
-            ritual="BLANG:WIT-HON PCG-08-GEN-TEST-001",
-            repo=root,
-        )
+        # Plain JSON under debug_runs — not a gate witness / ritual producer.
+        out = root / PCG_08_WITNESS_REL
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        report["report_path"] = PCG_08_WITNESS_REL
     return report
 
 

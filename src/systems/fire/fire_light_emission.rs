@@ -36,8 +36,7 @@ use crate::terrain::generation::Chunk;
 /// Minimum surface-fire heat before a chunk is treated as an emissive light source.
 pub const HEAT_MIN: f32 = 0.08;
 
-/// Source-token tripwires expect: tonemap/HDR stays LGT-06-owned (do not rewrite here).
-pub const LGT03_TONEMAP_OWNER_TOKEN: &str = "view_runtime::tonemap_hdr";
+// LGT-03: tonemap/HDR stays LGT-06-owned in view_runtime::tonemap_hdr (do not rewrite here).
 
 /// Per-entity **simulation** parameters for how much light fire should contribute this tick.
 ///
@@ -202,7 +201,7 @@ mod tests {
         let src = read("systems/fire/fire_light_emission.rs");
         let prod = src.split("#[cfg(test)]").next().unwrap_or(&src);
         assert!(
-            prod.contains("LGT-06") && prod.contains(LGT03_TONEMAP_OWNER_TOKEN),
+            prod.contains("LGT-06") && prod.contains("view_runtime::tonemap_hdr"),
             "must defer tonemap/HDR to LGT-06 tonemap_hdr"
         );
         assert!(

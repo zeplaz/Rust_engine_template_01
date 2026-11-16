@@ -285,6 +285,27 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-65 | DONE | (pending commit) | Combat cap + alert-bark priority return early when pending has no matching class. |
 | CQ-66 | DONE | (pending commit) | Pixel-world rain/cloud layers cache mesh upload key (30/20 Hz quant) + skip redundant CPU upload. |
 | CQ-67 | DONE | (pending commit) | Dropped quantum `reserve_chunks` on insert; optional `reserve_chunk_capacity` uses `HashMap::reserve`. |
+| CQ-09 | DONE | `90012715`+ | Env massing load cfg-gated (`debug_assertions` / `sim_dump`); PixelWorld-scoped apply. |
+| CQ-10 | DONE | `90012715`+ | Warning duck hold (`WARNING_DUCK_HOLD_SECS`); playback consumes low-pass as ambient/spatial gain. |
+| CQ-11 | DONE | `90012715`+ | `validate_veg_species_path` / `brief_veg_species_table` honor `path`; bad-file pytest. |
+| CQ-12 | DONE | `90012715`+ | Dashboard Blender handoff uses Treeview StudioTask selection. |
+| CQ-13 | DONE | `90012715`+ | Throughput attention tier: Full iff player theater else Aggregate. |
+| CQ-31 | DONE | `90012715`+ | Deleted RND-07 atlas-memory verdict writers / tests. |
+| CQ-32 | DONE | `90012715`+ | PCG-08 no longer blocks param-frame enqueue; refresh writes plain JSON (no BLANG ritual). Golden-seed fail triage deferred. |
+| CQ-33 | DONE | `90012715`+ | Removed marker constants (`GPU_FIELD_UPLOAD_PATHS`, `CHUNK_SMOKE_WRITERS`, DEBT/SMOKE/LGT03/PIXEL tokens). |
+| CQ-34 | DONE | `90012715`+ | Deleted `heat_consumers.rs`. |
+| CQ-36 | DONE | `90012715`+ | Terms hold proposed moisture; `pyro_moisture_applied` + diag from weather solve only. |
+| CQ-37 | DONE | `90012715`+ | Dense heat weather RO reads `AtmosphereWeatherMeans` (not render climate). |
+| CQ-40 | DONE | `90012715`+ | `TopUpPackage` / `refill_packages_sink` kernel; drone/missile sinks are adapters. |
+| CQ-39 | OPEN | — | Collapse four WeatherField samplers onto AtmosphereFrame. |
+| CQ-41 | OPEN | — | `studio_task` `run(kind, payload)` dispatch table. |
+| CQ-70 | OPEN | — | Delete source-grep citation tests. |
+| CQ-71 | OPEN | — | Replace tautological tests. |
+| CQ-72 | OPEN | — | Remove `let _ = x` noise. |
+| CQ-82 | DONE | (prior) | v2 superseded banner + adoption.tsv skill/rule pointers. |
+| CQ-83 | OPEN | — | Archive PROGRAM CLOSE plans; fix AGENTS.md charter list. |
+| CQ-84 | OPEN | — | Stop citing gitignored debug_runs evidence. |
+| CQ-85 | OPEN | — | `cargo check` ≤ 50 warnings (currently ~165). |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking

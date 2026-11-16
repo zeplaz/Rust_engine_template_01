@@ -20,17 +20,27 @@ _TIERS_RE = re.compile(r"\btiers:\s*(\d+)")
 _SEED_RE = re.compile(r"\bseed:\s*(\d+)")
 
 
-def load_veg_species_ron_text(*, repo: Path | None = None) -> str:
+def load_veg_species_ron_text(
+    *, repo: Path | None = None, path: Path | None = None
+) -> str:
+    if path is not None:
+        resolved = Path(path)
+        if not resolved.is_file():
+            raise FileNotFoundError(str(resolved))
+        return resolved.read_text(encoding="utf-8")
     root = repo or repo_root()
-    path = root / VEG_SPECIES_REL
-    if not path.is_file():
+    default = root / VEG_SPECIES_REL
+    if not default.is_file():
         raise FileNotFoundError(VEG_SPECIES_REL)
-    return path.read_text(encoding="utf-8")
+    return default.read_text(encoding="utf-8")
 
 
-def brief_veg_species_table(*, repo: Path | None = None) -> dict[str, Any]:
+def brief_veg_species_table(
+    *, repo: Path | None = None, path: Path | None = None
+) -> dict[str, Any]:
     """Lightweight structural QC — mirrors Rust `VegSpeciesTable::validate` bounds."""
-    text = load_veg_species_ron_text(repo=repo)
+    resolved = Path(path) if path is not None else (repo or repo_root()) / VEG_SPECIES_REL
+    text = load_veg_species_ron_text(repo=repo, path=path)
     ids = _ID_RE.findall(text)
     profiles = _PROFILE_RE.findall(text)
     tiers = [int(x) for x in _TIERS_RE.findall(text)]
@@ -52,9 +62,13 @@ def brief_veg_species_table(*, repo: Path | None = None) -> dict[str, Any]:
     if len(tiers) != len(ids):
         issues.append("tiers count != species count")
     green = not issues
+    try:
+        rel = str(resolved.relative_to(repo or repo_root()))
+    except ValueError:
+        rel = str(resolved)
     return {
         "schema": "veg_species_table_brief_v1",
-        "path": VEG_SPECIES_REL,
+        "path": rel.replace("\\", "/"),
         "seed": int(seed_m.group(1)) if seed_m else None,
         "species_count": len(ids),
         "species_ids": ids,

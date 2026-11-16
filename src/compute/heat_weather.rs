@@ -1,11 +1,11 @@
 //! **DH-03a** — weather RO → dense heat (wind advection + rain damp).
 //!
 //! Weather never writes fire sim; heat field remains the sole dense writer.
-//! Inputs come from [`ClimateVisualAggregate`] (already aggregated — no ChunkWeather scan here).
+//! CQ-37: inputs come from [`AtmosphereWeatherMeans`] (sim authority), not render climate.
 
 use bevy::math::Vec2;
 
-use crate::render::ClimateVisualAggregate;
+use crate::systems::atmosphere::AtmosphereWeatherMeans;
 
 use super::heat_diffusion_dense::DenseHeatGrid;
 
@@ -46,9 +46,9 @@ pub fn apply_weather_to_dense_heat(
     advect_field(&mut grid.smoke, grid.width as usize, grid.height as usize, adx, ady, frac);
 }
 
-/// Convenience: pull means from climate aggregate (RO).
-pub fn apply_climate_to_dense_heat(grid: &mut DenseHeatGrid, climate: &ClimateVisualAggregate) {
-    apply_weather_to_dense_heat(grid, climate.mean_wind_mps, climate.mean_rain);
+/// Convenience: pull means from [`AtmosphereFrame`] weather means (CQ-37).
+pub fn apply_climate_to_dense_heat(grid: &mut DenseHeatGrid, wx: &AtmosphereWeatherMeans) {
+    apply_weather_to_dense_heat(grid, wx.wind_mps, wx.rain01);
 }
 
 /// Upwind-ish lattice advection: `dst = (1-f)*src + f*src[upstream]`.

@@ -51,7 +51,6 @@ pub use storm_class::{
     classify_storm, classify_storm_with_context, low_depth_hpa,
     StormClass, StormClassThresholds,
 };
-pub use visual_extract::{DEBT_011_SMOKE_UNIFIED, SMOKE_EXTRACT_BRIDGE};
 pub use gpu_paths::{
     ATMOSPHERE_ASHFALL_WGSL, ATMOSPHERE_COMPOSITE_WIRED, ATMOSPHERE_FIELD_PAGE_TABLE_WGSL,
     ATMOSPHERE_GROUND_HAZE_WGSL, ATMOSPHERE_HEAT_DISTORTION_WGSL, ATMOSPHERE_PARTICLE_INSTANCING_WGSL,

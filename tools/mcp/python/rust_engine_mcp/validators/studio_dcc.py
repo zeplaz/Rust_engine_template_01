@@ -120,14 +120,14 @@ def validate_massing_preview_path(path: Path, *, compression_level: int = 3) -> 
 
 
 def validate_veg_species_path(path: Path | None = None, *, compression_level: int = 3) -> ValidationReport:
-    """VEG-SHAPE-001 — `assets/configs/ecology/veg_species_v1.ron` structural QC."""
+    """VEG-SHAPE-001 — veg species RON structural QC (CQ-11: honors `path`)."""
     from rust_engine_mcp.paths import repo_root
     from rust_engine_mcp.veg_species_table import VEG_SPECIES_REL, brief_veg_species_table
 
-    resolved = path or (repo_root() / VEG_SPECIES_REL)
+    resolved = Path(path) if path is not None else (repo_root() / VEG_SPECIES_REL)
     issues: list[ValidationIssue] = []
     try:
-        brief = brief_veg_species_table()
+        brief = brief_veg_species_table(path=resolved)
         if not brief.get("green"):
             for msg in brief.get("issues") or []:
                 issues.append(
