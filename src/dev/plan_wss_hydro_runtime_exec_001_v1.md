@@ -10,7 +10,7 @@
 | **Version** | `1.0.0` |
 | **Date** | 2026-05-26 |
 | **Owner** | `@planner` |
-| **Status** | **READY** — blocked on **WSS-CHUNK-SLAB-001** hydrate path |
+| **Status** | **READY** — blocked on **WSS-CHUNK-SLAB-001** hydrate path · **HY-005 / HY-006 superseded 2026-11-16** by [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) DF-2 (surface water solver) / DF-3 (water visuals); witness-era exits (HY-007, `*_green`) no longer apply |
 | **Suggested owner** | `@coder` B (terrain / worldgen boundary) |
 
 **Prereq gates:**

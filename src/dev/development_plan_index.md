@@ -10,6 +10,8 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Bevy 0.20 migration (2026-11-13) — PROGRAM CLOSE:** [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) · gate [`../debug_runs/mig_bevy_020/mig_v2_gate.json`](../debug_runs/mig_bevy_020/mig_v2_gate.json) · residual lib-test defer [`mig_bevy_020_m0_test_defer.md`](mig_bevy_020_m0_test_defer.md) · book/ECS [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (SHIPPED) → v2 [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) (WAVES 0–S CLOSED) → **ACTIVE** [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) (dual matrices parallel · tools suite · voxels **in scope**) · Wave 3 charters: [`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md) (**SENSE-04**) · [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md) (**NAV-13**)
 
+**Cursor-wave cleanup (OPEN — 2026-11-16):** [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) — CQ-01…85 · then **dam-flood benchmark scene (CHARTER draft):** [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) — river → dam → reservoir → strike → breach → flood → recession; DF-0…10; first scored run = baseline v1 for water/structures/damage/ecology/fire/power/perf
+
 **Bevy 0.19 migration (CLOSED):** [`plan_bevy_019_migration_v1.md`](plan_bevy_019_migration_v1.md) — do **not** reopen `MIG-*` 0.19 rows · deferrals [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md)
 
 **Multi-parallel dispatch (2026-06-20):** [`plan_multi_parallel_tracks_v1.md`](plan_multi_parallel_tracks_v1.md) — **8 parallel tracks** · secondary while RTT/VFX verify active · defer rows: [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md)
