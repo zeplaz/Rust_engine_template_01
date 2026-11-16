@@ -120,18 +120,41 @@ fn pick_key(
     Some((partial, cost, source.id))
 }
 
+/// Pick the open-goal source using a precomputed distance map from the sink (CQ-03).
+#[must_use]
+pub fn best_source_with_travel_costs(
+    snap: &LogisticsOrdersSnapshot,
+    demand: &DemandRow,
+    travel_costs: &BTreeMap<SiteId, u32>,
+) -> Option<SiteId> {
+    let sink = snap.site(demand.site)?;
+    snap.sites
+        .iter()
+        .filter(|s| is_eligible_source(s, demand))
+        .filter_map(|s| pick_key(demand, sink, s, travel_costs))
+        .min_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)).then(a.2.cmp(&b.2)))
+        .map(|(_, _, id)| id)
+}
+
 /// One Dijkstra from the sink, then min (partial stock, travel ticks, site id).
 #[must_use]
 pub fn best_source_open_goal(snap: &LogisticsOrdersSnapshot, demand: &DemandRow) -> Option<SiteId> {
     snap.site(demand.site)?;
     let travel_costs = dijkstra_from(demand.site, &snap.site_adjacency);
-    let sink = snap.site(demand.site)?;
-    snap.sites
-        .iter()
-        .filter(|s| is_eligible_source(s, demand))
-        .filter_map(|s| pick_key(demand, sink, s, &travel_costs))
-        .min_by(|a, b| a.0.cmp(&b.0).then(a.1.cmp(&b.1)).then(a.2.cmp(&b.2)))
-        .map(|(_, _, id)| id)
+    best_source_with_travel_costs(snap, demand, &travel_costs)
+}
+
+/// Source + travel ticks from a single Dijkstra (CQ-03 — no second search).
+#[must_use]
+pub fn best_source_and_travel_ticks(
+    snap: &LogisticsOrdersSnapshot,
+    demand: &DemandRow,
+) -> Option<(SiteId, u32)> {
+    snap.site(demand.site)?;
+    let travel_costs = dijkstra_from(demand.site, &snap.site_adjacency);
+    let source = best_source_with_travel_costs(snap, demand, &travel_costs)?;
+    let ticks = travel_costs.get(&source).copied().unwrap_or(u32::MAX);
+    Some((source, ticks))
 }
 
 /// Per-candidate shortest-path expansion — test reference only (N NAV-09 searches).

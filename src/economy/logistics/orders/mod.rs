@@ -42,7 +42,7 @@ pub use fleet_growth::{
 pub use advisor::{best_source_for, suggest_lines_for_unserved, AdvisorGap, SupplyAdvice};
 pub use demand_advert::{
     cmp_demands_by_advert, demand_advert_score, demand_advert_score_from_snapshot,
-    travel_ticks_to_best_source, DemandAdvertTuning,
+    rank_demands_by_advert, travel_ticks_to_best_source, DemandAdvertTuning,
 };
 pub use model::*;
 pub use persistence::{LogisticsOrdersSave, SavedSite};

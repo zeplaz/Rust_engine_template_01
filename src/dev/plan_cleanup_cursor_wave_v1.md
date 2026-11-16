@@ -244,8 +244,9 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-01 | DONE | `c32eaf17` | Fire overlay schema v2: per-cell heat/fuel/burn_hold + chunk smoke/toxic; write/hydrate wired in `WorldSaveSpinePlugin`; v1 still loads means-only; round-trip test green. Production callers: `pipeline.rs` `write_fire_overlay_on_save_flush` / `try_hydrate_fire_overlay_on_bundle_dir`. |
 | CQ-07 | DONE | `efe818b8` | Flags default **off**; `by_site` → `BTreeMap` + lowest-id primary; re-commit appends; overlay write/hydrate wired + round-trip; docs aligned. |
 | CQ-30 | DONE | `efe818b8` | Deleted `VoxelOccupationAuthorityWitness` / stub / `write_authority_witness_json` / live-json tests. Dump counts remain in `sim_run_dump_occupation`. |
-| CQ-02 | DONE (uncommitted) | — | Revision bumps on mul change only; tick starts quantised to weather step; sliding ticks no longer clear routes. |
-| CQ-35 | DONE (uncommitted) | — | `forecast_consumed_revision` moved to `RouteCache`; forecast book is sole-written again. |
+| CQ-02 | DONE | `b0001258` | Revision bumps on mul change only; tick starts quantised to weather step; sliding ticks no longer clear routes. |
+| CQ-35 | DONE | `b0001258` | `forecast_consumed_revision` moved to `RouteCache`; forecast book is sole-written again. |
+| CQ-03 | DONE (uncommitted) | — | `rank_demands_by_advert` scores once with Dijkstra cached per sink; advisor uses it; travel ticks share one search. |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking
