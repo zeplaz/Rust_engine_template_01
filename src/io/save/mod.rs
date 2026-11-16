@@ -97,7 +97,8 @@ pub use transport_overlay::{
 };
 pub use voxel_occupation_overlay::{
     capture_voxel_occupation_overlay, default_voxel_occupation_overlay_ref,
-    try_hydrate_voxel_occupation_from_manifest, voxel_occupation_overlay_ref,
+    try_hydrate_voxel_occupation_from_manifest, try_hydrate_voxel_occupation_on_bundle_dir,
+    voxel_occupation_overlay_ref, write_voxel_occupation_overlay_on_save_flush,
     write_voxel_occupation_overlay_to_bundle, VoxelOccupationHydrateState,
     VOXEL_OCCUPATION_OVERLAY_NAME, VOXEL_OCCUPATION_REL_PATH,
 };

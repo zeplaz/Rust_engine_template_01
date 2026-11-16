@@ -7,7 +7,7 @@ use bevy::prelude::*;
 use crate::strategic::construction_book::CorridorConstructionPhase;
 
 /// Stable id for a construction site row in [`SiteConstructionBook`] and matching ECS entities.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct SiteId(pub u64);
 
 impl SiteId {

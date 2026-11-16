@@ -14,8 +14,11 @@
 //! [`TileOccupationBook::replace_from_voxel`]. Flag off preserves tile-only behavior.
 //! P3: massing derive may **RO-read** this book for column `z_layers` intent when commit or
 //! derived-mirror flags are on; dump emits `occupation.voxel_*` counts only.
+//!
+//! **CQ-07 / Review 2026-11-16:** both flags stay **default off** until the save overlay is
+//! wired and OCC-P4/P5 re-close product default-on. Env `"1"|"true"|"on"|"yes"` opts in.
 
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 
 use bevy::prelude::{IVec2, Resource};
 use serde::{Deserialize, Serialize};
@@ -27,11 +30,11 @@ pub const VOXEL_OCCUPATION_MIRROR_ENV: &str = "RUST_ENGINE_VOXEL_OCCUPATION_MIRR
 pub const VOXEL_OCCUPATION_COMMIT_ENV: &str = "RUST_ENGINE_VOXEL_OCCUPATION_COMMIT";
 pub const VOXEL_OCCUPATION_SNAPSHOT_SCHEMA_V1: u32 = 1;
 
-/// Cutover flags — **OCC-P5** product default **on**; env can force off for debug.
+/// Cutover flags — default **off** until save hydrate is proven (CQ-07); OCC-P4/P5 re-open default-on.
 #[derive(Resource, Clone, Debug, PartialEq, Eq)]
 pub struct VoxelOccupationConfig {
     pub derived_mirror_enabled: bool,
-    /// Commit funnel writes voxel cells (+ corridor reserve). Default **on** (OCC-P5).
+    /// Commit funnel writes voxel cells (+ corridor reserve). Default **off** (CQ-07).
     /// When on, voxel is sole occupation writer; tile book is derived cache.
     pub commit_authority_enabled: bool,
 }
@@ -39,8 +42,8 @@ pub struct VoxelOccupationConfig {
 impl Default for VoxelOccupationConfig {
     fn default() -> Self {
         Self {
-            derived_mirror_enabled: true,
-            commit_authority_enabled: true,
+            derived_mirror_enabled: false,
+            commit_authority_enabled: false,
         }
     }
 }
@@ -49,29 +52,29 @@ impl VoxelOccupationConfig {
     #[must_use]
     pub fn from_env_mirror_var() -> Self {
         Self {
-            derived_mirror_enabled: env_flag_default_on(VOXEL_OCCUPATION_MIRROR_ENV),
-            commit_authority_enabled: env_flag_default_on(VOXEL_OCCUPATION_COMMIT_ENV),
+            derived_mirror_enabled: env_flag_default_off(VOXEL_OCCUPATION_MIRROR_ENV),
+            commit_authority_enabled: env_flag_default_off(VOXEL_OCCUPATION_COMMIT_ENV),
         }
     }
 }
 
-/// Default **on**; only `"0"|"false"|"off"|"no"` forces off (debug override).
+/// Default **off**; only `"1"|"true"|"on"|"yes"` enables (CQ-07).
 #[must_use]
-pub fn env_flag_default_on(key: &str) -> bool {
+pub fn env_flag_default_off(key: &str) -> bool {
     match std::env::var(key) {
-        Ok(v) if matches!(v.as_str(), "0" | "false" | "off" | "no") => false,
-        _ => true,
+        Ok(v) if matches!(v.to_ascii_lowercase().as_str(), "1" | "true" | "on" | "yes") => true,
+        _ => false,
     }
 }
 
 #[must_use]
 pub fn env_mirror_enabled() -> bool {
-    env_flag_default_on(VOXEL_OCCUPATION_MIRROR_ENV)
+    env_flag_default_off(VOXEL_OCCUPATION_MIRROR_ENV)
 }
 
 #[must_use]
 pub fn env_commit_enabled() -> bool {
-    env_flag_default_on(VOXEL_OCCUPATION_COMMIT_ENV)
+    env_flag_default_off(VOXEL_OCCUPATION_COMMIT_ENV)
 }
 
 /// Stacked occupancy at a world XY column (Z layers capped per product rule at P1+).
@@ -104,11 +107,12 @@ pub enum VoxelOccupationProvenance {
 /// Sparse world occupancy — sole writer under `commit_authority_enabled` (P2).
 #[derive(Resource, Clone, Debug, Default, PartialEq)]
 pub struct VoxelOccupationBook {
+    /// Cell lookup by tile (`IVec2` is not `Ord` on this Bevy; capture sorts for save).
     pub cells: HashMap<IVec2, VoxelOccupationCell>,
     pub revision: u64,
     provenance: VoxelOccupationProvenance,
-    /// Per-site weight contributions (commit/demolish delta).
-    by_site: HashMap<SiteId, Vec<(IVec2, f32)>>,
+    /// Per-site weight contributions (commit/demolish delta). `BTreeMap` → lowest-id first.
+    by_site: BTreeMap<SiteId, Vec<(IVec2, f32)>>,
 }
 
 impl VoxelOccupationBook {
@@ -173,6 +177,7 @@ impl VoxelOccupationBook {
     }
 
     /// Construction commit funnel write (P1/P2). Preserves existing corridor_reserve bits.
+    /// Re-commits **append** site contributions (do not replace the prior `by_site` row).
     pub fn apply_site_commit(&mut self, site_id: SiteId, weights: &[(IVec2, f32)]) {
         let mut stored: Vec<(IVec2, f32)> = Vec::with_capacity(weights.len());
         for (tile, w) in weights {
@@ -185,6 +190,10 @@ impl VoxelOccupationBook {
                 .map(|c| c.corridor_reserve)
                 .unwrap_or(false);
             let prev = self.weight_at(*tile);
+            let owner = self
+                .primary_site_at(*tile)
+                .map(|existing| existing.min(site_id))
+                .unwrap_or(site_id);
             self.cells.insert(
                 *tile,
                 VoxelOccupationCell {
@@ -193,14 +202,14 @@ impl VoxelOccupationBook {
                         weight: prev + w,
                         z_layers: 1,
                     },
-                    site_id: Some(site_id),
+                    site_id: Some(owner),
                     corridor_reserve: reserve,
                 },
             );
             stored.push((*tile, *w));
         }
         if !stored.is_empty() {
-            self.by_site.insert(site_id, stored);
+            self.by_site.entry(site_id).or_default().extend(stored);
         }
         self.revision = self.revision.wrapping_add(1);
         self.provenance = VoxelOccupationProvenance::CommitAuthority;
@@ -241,7 +250,7 @@ impl VoxelOccupationBook {
         Some(weights)
     }
 
-    /// First site that still owns nonzero weight on `tile` (post-remove heuristic).
+    /// Lowest-id site that still owns nonzero weight on `tile` (deterministic).
     #[must_use]
     pub fn primary_site_at(&self, tile: IVec2) -> Option<SiteId> {
         self.by_site.iter().find_map(|(site_id, weights)| {
@@ -419,53 +428,6 @@ pub fn capture_voxel_occupation_snapshot(book: &VoxelOccupationBook) -> VoxelOcc
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct VoxelOccupationAuthorityWitness {
-    pub witness_id: &'static str,
-    pub issued: &'static str,
-    pub phase: &'static str,
-    pub revision: u64,
-    pub cell_count: usize,
-    pub derived_mirror_enabled: bool,
-    pub commit_authority_enabled: bool,
-    pub dual_writer_guard_ok: bool,
-    pub dual_cite: VoxelOccupationDualCite,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-pub struct VoxelOccupationDualCite {
-    pub pcg_06: &'static str,
-    pub ecs_15: &'static str,
-}
-
-#[must_use]
-pub fn authority_witness_stub(
-    book: &VoxelOccupationBook,
-    config: &VoxelOccupationConfig,
-) -> VoxelOccupationAuthorityWitness {
-    let phase = if config.commit_authority_enabled {
-        "OCC-P5"
-    } else if config.derived_mirror_enabled {
-        "X2-P0"
-    } else {
-        "flags_off"
-    };
-    VoxelOccupationAuthorityWitness {
-        witness_id: "voxel_occupation_authority_live",
-        issued: "2026-11-15",
-        phase,
-        revision: book.revision,
-        cell_count: book.cell_count(),
-        derived_mirror_enabled: config.derived_mirror_enabled,
-        commit_authority_enabled: config.commit_authority_enabled,
-        dual_writer_guard_ok: book.dual_writer_guard_ok(config),
-        dual_cite: VoxelOccupationDualCite {
-            pcg_06: "aig3:8.5–8.5.2",
-            ecs_15: "gea4v2:16.2.2",
-        },
-    }
-}
-
 pub fn read_voxel_occupation_snapshot_ron(
     path: impl AsRef<std::path::Path>,
 ) -> std::io::Result<VoxelOccupationSnapshot> {
@@ -497,20 +459,6 @@ pub fn write_voxel_occupation_snapshot_ron(
     std::fs::write(path, body)
 }
 
-/// OCC-P6: write authority live witness JSON (counts only — no production verdict predicates).
-pub fn write_authority_witness_json(
-    path: impl AsRef<std::path::Path>,
-    witness: &VoxelOccupationAuthorityWitness,
-) -> std::io::Result<()> {
-    let path = path.as_ref();
-    if let Some(parent) = path.parent() {
-        std::fs::create_dir_all(parent)?;
-    }
-    let body = serde_json::to_string_pretty(witness)
-        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?;
-    std::fs::write(path, body)
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -533,10 +481,10 @@ mod tests {
     }
 
     #[test]
-    fn occ_p5_default_config_is_on() {
+    fn cq07_default_config_is_off_until_save_proven() {
         let config = VoxelOccupationConfig::default();
-        assert!(config.derived_mirror_enabled);
-        assert!(config.commit_authority_enabled);
+        assert!(!config.derived_mirror_enabled);
+        assert!(!config.commit_authority_enabled);
     }
 
     #[test]
@@ -603,45 +551,17 @@ mod tests {
     }
 
     #[test]
-    fn voxel_occupation_authority_witness_stub_fields() {
+    fn apply_site_commit_appends_on_recommit_and_picks_lowest_site_id() {
         let mut voxel = VoxelOccupationBook::default();
-        let config = VoxelOccupationConfig {
-            derived_mirror_enabled: true,
-            commit_authority_enabled: false,
-        };
-        let mut tile = TileOccupationBook::default();
-        tile.apply_site(SiteId(1), &[(IVec2::new(2, 2), 0.3)]);
-        voxel.sync_mirror_if_enabled(&config, &tile);
-
-        let witness = authority_witness_stub(&voxel, &config);
-        assert_eq!(witness.witness_id, "voxel_occupation_authority_live");
-        assert_eq!(witness.cell_count, 1);
-        assert!(witness.dual_writer_guard_ok);
-        assert!(witness.derived_mirror_enabled);
-        let json =
-            serde_json::to_string(&witness).expect("witness serde");
-        assert!(json.contains("voxel_occupation_authority_live"));
-        assert!(json.contains("dual_writer_guard_ok"));
-    }
-
-    #[test]
-    fn occ_p6_writes_authority_live_witness() {
-        let config = VoxelOccupationConfig::default();
-        let mut voxel = VoxelOccupationBook::default();
-        let site_tile = IVec2::new(3, 4);
-        voxel.apply_site_commit(SiteId(7), &[(site_tile, 0.5)]);
-        let witness = authority_witness_stub(&voxel, &config);
-        assert!(witness.commit_authority_enabled);
-        assert!(witness.dual_writer_guard_ok);
-        assert!(witness.cell_count >= 1);
-        assert_eq!(witness.phase, "OCC-P5");
-        let path =
-            std::path::Path::new("debug_runs/construction/voxel_occupation_authority_live.json");
-        write_authority_witness_json(path, &witness).expect("write live witness");
-        let body = std::fs::read_to_string(path).expect("read live witness");
-        assert!(body.contains("voxel_occupation_authority_live"));
-        assert!(body.contains("dual_writer_guard_ok"));
-        assert!(body.contains("OCC-P5"));
+        let tile = IVec2::new(1, 1);
+        voxel.apply_site_commit(SiteId(20), &[(tile, 0.2)]);
+        voxel.apply_site_commit(SiteId(5), &[(tile, 0.3)]);
+        assert!((voxel.weight_at(tile) - 0.5).abs() < 1e-5);
+        assert_eq!(voxel.primary_site_at(tile), Some(SiteId(5)));
+        assert_eq!(voxel.by_site.get(&SiteId(20)).map(|v| v.len()), Some(1));
+        assert_eq!(voxel.by_site.get(&SiteId(5)).map(|v| v.len()), Some(1));
+        voxel.apply_site_commit(SiteId(20), &[(IVec2::new(2, 2), 0.1)]);
+        assert_eq!(voxel.by_site.get(&SiteId(20)).map(|v| v.len()), Some(2));
     }
 
     #[test]
@@ -685,9 +605,6 @@ mod tests {
         assert!(tile.weight_at(tile_xy) < TILE_OCCUPATION_OVERLAP_EPSILON);
         assert!(voxel.cells.get(&tile_xy).is_none());
         assert!(voxel.dual_writer_guard_ok(&config));
-
-        let witness = authority_witness_stub(&voxel, &config);
-        assert_eq!(witness.phase, "X2-P2");
-        assert!(witness.commit_authority_enabled);
+        assert!(config.commit_authority_enabled);
     }
 }
