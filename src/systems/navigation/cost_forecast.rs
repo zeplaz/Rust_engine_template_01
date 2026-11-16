@@ -30,6 +30,9 @@ pub const FORECAST_BUCKET_COUNT: usize = 4;
 pub const FORECAST_MUL_EPS: f32 = 1e-3;
 
 /// DERIVED forecast book — omit from save. Sole writer: [`sync_logistics_cost_forecast`].
+///
+/// Route invalidation tracks `revision` on [`crate::economy::logistics::types::RouteCache`]
+/// (`forecast_consumed_revision`) — this book has one writer only (CQ-35).
 #[derive(Resource, Debug, Clone)]
 pub struct LogisticsCostForecastBook {
     pub ready: bool,
@@ -38,8 +41,6 @@ pub struct LogisticsCostForecastBook {
     pub buckets: [WeatherCostBucket; FORECAST_BUCKET_COUNT],
     pub min_mul: f32,
     pub max_mul: f32,
-    /// Last revision consumed by route invalidation (N13-P3).
-    pub consumed_revision: u64,
 }
 
 impl Default for LogisticsCostForecastBook {
@@ -68,7 +69,6 @@ impl Default for LogisticsCostForecastBook {
             ],
             min_mul: 1.0,
             max_mul: 1.0,
-            consumed_revision: 0,
         }
     }
 }
@@ -212,16 +212,23 @@ pub fn build_forecast_buckets(
     ]
 }
 
-fn buckets_changed(a: &[WeatherCostBucket; 4], b: &[WeatherCostBucket; 4]) -> bool {
+/// Revision bumps on **mul** change only (CQ-02). Tick window slides are applied without
+/// invalidating the route cache — otherwise every sim step cleared all routes.
+fn buckets_mul_changed(a: &[WeatherCostBucket; 4], b: &[WeatherCostBucket; 4]) -> bool {
     for i in 0..4 {
         if (a[i].mul - b[i].mul).abs() > FORECAST_MUL_EPS {
             return true;
         }
-        if a[i].start_tick != b[i].start_tick {
-            return true;
-        }
     }
     false
+}
+
+/// Quantise sim ticks to the weather field step so bucket starts stay stable within a step.
+#[must_use]
+pub fn quantize_tick_to_bucket_secs(tick: u64, bucket_secs: u32, step_micros: u64) -> u64 {
+    let secs = bucket_secs.max(1) as u64;
+    let ticks_per_bucket = ((secs * 1_000_000) / step_micros.max(1)).max(1);
+    (tick / ticks_per_bucket) * ticks_per_bucket
 }
 
 /// Sole writer of [`LogisticsCostForecastBook`].
@@ -258,17 +265,27 @@ pub fn sync_logistics_cost_forecast(
                 .unwrap_or(SimTimeMicros(field.prev_micros));
             field.sample(centre_m, t)
         };
+        let bucket_secs = field.step_secs.max(1);
+        // Rhythm boundaries from the field — not raw `steps` (CQ-02).
         let prev_tick = micros_to_tick(field.prev_micros, step_micros);
-        let now_tick = steps.max(prev_tick);
-        let next_tick = micros_to_tick(field.next_micros, step_micros).max(now_tick);
-        let far_tick = micros_to_tick(far_t, step_micros).max(next_tick);
+        let next_tick = micros_to_tick(field.next_micros, step_micros).max(prev_tick.saturating_add(1));
+        let far_tick = micros_to_tick(far_t, step_micros).max(next_tick.saturating_add(1));
+        let now_tick = {
+            let sim_tick = sim_time
+                .as_ref()
+                .map(|t| micros_to_tick(t.0, step_micros))
+                .unwrap_or(steps);
+            quantize_tick_to_bucket_secs(sim_tick, bucket_secs, step_micros)
+                .clamp(prev_tick, next_tick.saturating_sub(1).max(prev_tick))
+        };
         let buckets =
             build_forecast_buckets(&prev, &now, &next, &far, prev_tick, now_tick, next_tick, far_tick);
-        apply_buckets(&mut book, buckets, field.step_secs.max(1));
+        apply_buckets(&mut book, buckets, bucket_secs);
         return;
     }
 
-    let now_tick = steps;
+    let bucket_secs = 60;
+    let now_tick = quantize_tick_to_bucket_secs(steps, bucket_secs, step_micros);
     let buckets = build_forecast_buckets(
         &centre,
         &centre,
@@ -279,7 +296,7 @@ pub fn sync_logistics_cost_forecast(
         now_tick.saturating_add(1),
         now_tick.saturating_add(2),
     );
-    apply_buckets(&mut book, buckets, 1);
+    apply_buckets(&mut book, buckets, bucket_secs);
 }
 
 fn apply_buckets(
@@ -289,7 +306,7 @@ fn apply_buckets(
 ) {
     let min_mul = buckets.iter().map(|b| b.mul).fold(f32::INFINITY, f32::min);
     let max_mul = buckets.iter().map(|b| b.mul).fold(0.0_f32, f32::max);
-    let changed = !book.ready || buckets_changed(&book.buckets, &buckets);
+    let changed = !book.ready || buckets_mul_changed(&book.buckets, &buckets);
     book.ready = true;
     book.bucket_secs = bucket_secs;
     book.buckets = buckets;
@@ -376,7 +393,7 @@ mod tests {
         let clear = WeatherSample::default();
         let a = build_forecast_buckets(&clear, &clear, &clear, &clear, 0, 10, 20, 30);
         let b = build_forecast_buckets(&clear, &clear, &clear, &clear, 0, 10, 20, 30);
-        assert!(!buckets_changed(&a, &b));
+        assert!(!buckets_mul_changed(&a, &b));
         let mut book = LogisticsCostForecastBook::default();
         apply_buckets(&mut book, a, 60);
         let rev = book.revision;
@@ -391,5 +408,27 @@ mod tests {
         let c = build_forecast_buckets(&clear, &storm, &storm, &storm, 0, 10, 20, 30);
         apply_buckets(&mut book, c, 60);
         assert!(book.revision > rev);
+    }
+
+    #[test]
+    fn no_weather_change_sliding_ticks_does_not_bump_revision() {
+        let clear = WeatherSample::default();
+        let mut book = LogisticsCostForecastBook::default();
+        let a = build_forecast_buckets(&clear, &clear, &clear, &clear, 100, 101, 200, 300);
+        apply_buckets(&mut book, a, 60);
+        let rev = book.revision;
+        // Same muls, later "now" tick (sim stepped forward) — must not thrash routes (CQ-02).
+        let b = build_forecast_buckets(&clear, &clear, &clear, &clear, 100, 150, 200, 300);
+        apply_buckets(&mut book, b, 60);
+        assert_eq!(book.revision, rev);
+        assert_eq!(book.buckets[1].start_tick, 150);
+    }
+
+    #[test]
+    fn quantize_tick_holds_within_bucket() {
+        let step = 16_667_u64;
+        let q0 = quantize_tick_to_bucket_secs(100, 60, step);
+        let q1 = quantize_tick_to_bucket_secs(100 + 10, 60, step);
+        assert_eq!(q0, q1);
     }
 }

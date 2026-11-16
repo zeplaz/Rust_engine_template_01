@@ -25,6 +25,8 @@
 
 **Close again only when:** the route cache survives unchanged weather, and the production route cost includes forecast, path concerns, heat and wildlife inputs, with a test per input. Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 
+**CQ-02/CQ-35 progress 2026-11-16:** revision bumps on mul change only; tick starts quantised to weather step; `forecast_consumed_revision` lives on `RouteCache`. CQ-53 route-cost wiring still open.
+
 ## Summary
 
 Extend logistics pathfinding so **edge weight depends on departure time and traverse duration**, using **forecast weather windows** from `WeatherField` step rhythm and W1 stations — not a second pathfinder. Vehicles “wait for window” only when encoded in order-sim policy; v1 focuses on **cost integration** (book §4.8: time-dependent costs) on the existing Dijkstra/flood grid and site graph hooks.

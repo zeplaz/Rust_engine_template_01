@@ -66,6 +66,9 @@ impl RoutePathStore {
 #[derive(Resource, Default)]
 pub struct RouteCache {
     pub topology_revision: u32,
+    /// Last [`crate::systems::navigation::LogisticsCostForecastBook::revision`] this cache
+    /// invalidated against (CQ-35 — was previously written back into the forecast book).
+    pub forecast_consumed_revision: u64,
     pub routes: HashMap<(Entity, Entity), CachedRoute>,
     pub next_id: u32,
 }
