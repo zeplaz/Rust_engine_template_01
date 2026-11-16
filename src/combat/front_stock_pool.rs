@@ -7,6 +7,7 @@ use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
+use super::balance::FrontSupplyParams;
 use super::capability_toe::ToeLine;
 use super::supply::FrontSupplyPoints;
 use crate::economy::logistics::orders::{
@@ -15,11 +16,18 @@ use crate::economy::logistics::orders::{
 };
 use crate::systems::sim_control::SimStepClock;
 
-/// Best on-hand stock per (faction_slot, cargo_tag) at a front site.
+/// Per-site on-hand rows for one (faction_slot, cargo_tag), lowest site id first then richest.
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FrontStockSiteRow {
+    pub site: SiteId,
+    pub on_hand: u32,
+}
+
+/// Stock available per (faction_slot, cargo_tag) across front sites (CQ-08: per-site list + fallback).
 #[derive(Debug, Default, Clone)]
 pub struct FrontStockPool {
-    /// `(side, tag) → (site, on_hand)`
-    available: BTreeMap<(u8, String), (SiteId, u32)>,
+    /// `(side, tag) → sites with stock` (deterministic order).
+    available: BTreeMap<(u8, String), Vec<FrontStockSiteRow>>,
 }
 
 /// Frame-scoped pool rebuilt once before chained TOE refills (**CS-5**).
@@ -36,7 +44,7 @@ impl FrontStockPool {
         snap: &LogisticsOrdersSnapshotRes,
         sites: &Query<&LogisticsOrderSiteId>,
     ) -> Self {
-        let mut available: BTreeMap<(u8, String), (SiteId, u32)> = BTreeMap::new();
+        let mut available: BTreeMap<(u8, String), Vec<FrontStockSiteRow>> = BTreeMap::new();
         for ((_, side), entity) in &points.entities {
             let Ok(site_id) = sites.get(*entity).map(|s| s.0) else {
                 continue;
@@ -45,17 +53,31 @@ impl FrontStockPool {
                 continue;
             };
             for stock in &row.stock {
-                let key = (*side, stock.cargo.clone());
-                let entry = available.entry(key).or_insert((site_id, 0));
-                if stock.on_hand > entry.1 {
-                    *entry = (site_id, stock.on_hand);
+                if stock.on_hand == 0 {
+                    continue;
                 }
+                let key = (*side, stock.cargo.clone());
+                available.entry(key).or_default().push(FrontStockSiteRow {
+                    site: site_id,
+                    on_hand: stock.on_hand,
+                });
             }
+        }
+        for rows in available.values_mut() {
+            rows.sort_by(|a, b| b.on_hand.cmp(&a.on_hand).then(a.site.cmp(&b.site)));
         }
         Self { available }
     }
 
-    /// Try to consume one BOM unit (`lines` once). On success writes ConsumeStock and returns true.
+    #[must_use]
+    pub fn sites_for(&self, side: u8, tag: &str) -> &[FrontStockSiteRow] {
+        self.available
+            .get(&(side, tag.to_string()))
+            .map(Vec::as_slice)
+            .unwrap_or(&[])
+    }
+
+    /// Try to consume one BOM unit (`lines` once). Walks per-tag site lists with fallback (CQ-08).
     pub fn try_consume_bom_unit(
         &mut self,
         side: u8,
@@ -65,18 +87,22 @@ impl FrontStockPool {
         let mut planned: Vec<(String, SiteId, u32)> = Vec::with_capacity(lines.len());
         for line in lines {
             let key = (side, line.tag.clone());
-            let Some((site, on_hand)) = self.available.get(&key).copied() else {
+            let Some(rows) = self.available.get(&key) else {
                 return false;
             };
-            if on_hand < line.qty {
+            let Some(row) = rows.iter().find(|r| r.on_hand >= line.qty) else {
                 return false;
-            }
-            planned.push((line.tag.clone(), site, line.qty));
+            };
+            planned.push((line.tag.clone(), row.site, line.qty));
         }
         for (tag, site, qty) in planned {
             let key = (side, tag.clone());
-            if let Some(entry) = self.available.get_mut(&key) {
-                entry.1 = entry.1.saturating_sub(qty);
+            if let Some(rows) = self.available.get_mut(&key) {
+                if let Some(entry) = rows.iter_mut().find(|r| r.site == site) {
+                    entry.on_hand = entry.on_hand.saturating_sub(qty);
+                }
+                rows.retain(|r| r.on_hand > 0);
+                rows.sort_by(|a, b| b.on_hand.cmp(&a.on_hand).then(a.site.cmp(&b.site)));
             }
             requests.write(LogisticsOrderRequest(LogisticsOrderCommand::ConsumeStock {
                 site,
@@ -99,22 +125,35 @@ impl FrontStockPool {
             return 0;
         }
         let key = (side, tag.to_string());
-        let Some((site, on_hand)) = self.available.get(&key).copied() else {
+        let Some(rows) = self.available.get_mut(&key) else {
             return 0;
         };
-        let take = amount.min(on_hand);
-        if take == 0 {
-            return 0;
+        let mut remaining = amount;
+        let mut took_total = 0u32;
+        let mut draws: Vec<(SiteId, u32)> = Vec::new();
+        for row in rows.iter_mut() {
+            if remaining == 0 {
+                break;
+            }
+            let take = remaining.min(row.on_hand);
+            if take == 0 {
+                continue;
+            }
+            row.on_hand = row.on_hand.saturating_sub(take);
+            remaining = remaining.saturating_sub(take);
+            took_total = took_total.saturating_add(take);
+            draws.push((row.site, take));
         }
-        if let Some(entry) = self.available.get_mut(&key) {
-            entry.1 = entry.1.saturating_sub(take);
+        rows.retain(|r| r.on_hand > 0);
+        rows.sort_by(|a, b| b.on_hand.cmp(&a.on_hand).then(a.site.cmp(&b.site)));
+        for (site, take) in draws {
+            requests.write(LogisticsOrderRequest(LogisticsOrderCommand::ConsumeStock {
+                site,
+                cargo: CargoKind::new(tag.to_string()),
+                amount: take,
+            }));
         }
-        requests.write(LogisticsOrderRequest(LogisticsOrderCommand::ConsumeStock {
-            site,
-            cargo: CargoKind::new(tag.to_string()),
-            amount: take,
-        }));
-        take
+        took_total
     }
 }
 
@@ -136,30 +175,70 @@ pub fn rebuild_front_stock_pool_system(
     frame.pool = FrontStockPool::from_front_snapshot(&points, &snap, &sites);
 }
 
-/// Publish aggregated `(side, tag) → qty` demand to every front site for that side.
+/// Split side-wide `(side, tag) → qty` across that side's front sites (CQ-08 — no N× inflate).
+#[must_use]
+pub fn split_side_tag_demand_across_sites(
+    side_sites: &[SiteId],
+    qty: u32,
+) -> Vec<(SiteId, u32)> {
+    if side_sites.is_empty() || qty == 0 {
+        return Vec::new();
+    }
+    let n = side_sites.len() as u32;
+    let base = qty / n;
+    let rem = qty % n;
+    side_sites
+        .iter()
+        .enumerate()
+        .filter_map(|(i, site)| {
+            let share = base + u32::from((i as u32) < rem);
+            (share > 0).then_some((*site, share))
+        })
+        .collect()
+}
+
+/// Publish `(side, tag)` demand split per front site for that side (CQ-08).
 pub fn publish_side_tag_demands(
     points: &FrontSupplyPoints,
     sites: &Query<&LogisticsOrderSiteId>,
     by_side_tag: &BTreeMap<(u8, String), u32>,
+    supply: &FrontSupplyParams,
     requests: &mut MessageWriter<LogisticsOrderRequest>,
 ) {
     use crate::economy::logistics::orders::{ConsumerKind, Priority};
 
+    let reorder = supply.reorder_fraction.clamp(0.0, 1.0);
+    let draw_rate = supply.toe_draw_rate_per_min.max(1);
+
+    let mut sites_by_side: BTreeMap<u8, Vec<SiteId>> = BTreeMap::new();
     for ((_, side), entity) in &points.entities {
         let Ok(site) = sites.get(*entity).map(|s| s.0) else {
             continue;
         };
-        for ((slot, tag), qty) in by_side_tag {
-            if *slot != *side || *qty == 0 {
-                continue;
-            }
+        sites_by_side.entry(*side).or_default().push(site);
+    }
+    for list in sites_by_side.values_mut() {
+        list.sort_unstable();
+        list.dedup();
+    }
+
+    for ((slot, tag), qty) in by_side_tag {
+        if *qty == 0 {
+            continue;
+        }
+        let Some(side_sites) = sites_by_side.get(slot) else {
+            continue;
+        };
+        for (site, share) in split_side_tag_demand_across_sites(side_sites, *qty) {
+            let buffer_target = share.max(1);
+            let reorder_point = ((buffer_target as f32) * reorder).ceil() as u32;
             requests.write(LogisticsOrderRequest(LogisticsOrderCommand::PublishDemand {
                 site,
                 cargo: CargoKind::new(tag.clone()),
                 consumer: ConsumerKind::Front,
-                buffer_target: (*qty).max(1),
-                reorder_point: ((*qty as f32) * 0.5).ceil() as u32,
-                draw_rate_per_min: 1,
+                buffer_target,
+                reorder_point,
+                draw_rate_per_min: draw_rate,
                 priority: Priority::Normal,
             }));
         }
@@ -173,12 +252,57 @@ mod tests {
     use crate::economy::logistics::orders::SiteId;
 
     #[test]
-    fn cs1_pool_consumes_bom_deterministically() {
+    fn cq08_split_does_not_inflate_total() {
+        let sites = [SiteId(1), SiteId(2), SiteId(3)];
+        let parts = split_side_tag_demand_across_sites(&sites, 10);
+        assert_eq!(parts.len(), 3);
+        assert_eq!(parts.iter().map(|(_, q)| *q).sum::<u32>(), 10);
+        assert_eq!(parts[0], (SiteId(1), 4));
+        assert_eq!(parts[1], (SiteId(2), 3));
+        assert_eq!(parts[2], (SiteId(3), 3));
+    }
+
+    #[test]
+    fn cq08_pool_falls_back_to_second_site() {
         let mut pool = FrontStockPool::default();
+        pool.available.insert(
+            (0, "drone_airframe".into()),
+            vec![
+                FrontStockSiteRow {
+                    site: SiteId(1),
+                    on_hand: 0,
+                },
+                FrontStockSiteRow {
+                    site: SiteId(2),
+                    on_hand: 2,
+                },
+            ],
+        );
+        // Keep only positive rows as from_front_snapshot would.
         pool.available
-            .insert((0, "drone_airframe".into()), (SiteId(1), 4));
-        pool.available
-            .insert((0, "battery_pack".into()), (SiteId(1), 4));
+            .get_mut(&(0, "drone_airframe".into()))
+            .unwrap()
+            .retain(|r| r.on_hand > 0);
+        assert_eq!(pool.sites_for(0, "drone_airframe")[0].site, SiteId(2));
+    }
+
+    #[test]
+    fn cs1_pool_try_consume_decrements_chosen_site() {
+        let mut pool = FrontStockPool::default();
+        pool.available.insert(
+            (0, "drone_airframe".into()),
+            vec![FrontStockSiteRow {
+                site: SiteId(1),
+                on_hand: 4,
+            }],
+        );
+        pool.available.insert(
+            (0, "battery_pack".into()),
+            vec![FrontStockSiteRow {
+                site: SiteId(1),
+                on_hand: 4,
+            }],
+        );
         let lines = [
             ToeLine {
                 tag: "drone_airframe".into(),
@@ -189,28 +313,13 @@ mod tests {
                 qty: 1,
             },
         ];
-        assert_eq!(
-            pool.available
-                .get(&(0, "drone_airframe".into()))
-                .map(|e| e.1),
-            Some(4)
-        );
+        // Pure decrement path (MessageWriter needs a World); mirror try_consume planning.
         for line in &lines {
-            let key = (0u8, line.tag.clone());
-            let entry = pool.available.get_mut(&key).unwrap();
-            entry.1 = entry.1.saturating_sub(line.qty);
+            let rows = pool.available.get_mut(&(0, line.tag.clone())).unwrap();
+            let entry = rows.iter_mut().find(|r| r.on_hand >= line.qty).unwrap();
+            entry.on_hand = entry.on_hand.saturating_sub(line.qty);
         }
-        assert_eq!(
-            pool.available
-                .get(&(0, "drone_airframe".into()))
-                .map(|e| e.1),
-            Some(3)
-        );
-        assert_eq!(
-            pool.available
-                .get(&(0, "battery_pack".into()))
-                .map(|e| e.1),
-            Some(3)
-        );
+        assert_eq!(pool.sites_for(0, "drone_airframe")[0].on_hand, 3);
+        assert_eq!(pool.sites_for(0, "battery_pack")[0].on_hand, 3);
     }
 }

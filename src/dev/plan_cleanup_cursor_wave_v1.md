@@ -249,7 +249,8 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-03 | DONE | `17566e47` | `rank_demands_by_advert` scores once with Dijkstra cached per sink; advisor uses it; travel ticks share one search. |
 | CQ-04 | DONE | `9a26d6d5` | Thermal/hydraulic transfers via delta buffer; thermal conserves mass; hydraulic loss = intentional deposit fraction only. |
 | CQ-05 | DONE | `0144002c` | Chrome gates pointer only; sole `sync_view_input_routing` after Publish / before ApplyInput. |
-| CQ-06 | DONE (uncommitted) | — | Check `consumed_before_pause` before open/close; Esc cascade uses `cancel_keybinding_capture`. |
+| CQ-06 | DONE | `f8367a42` | Check `consumed_before_pause` before open/close; Esc cascade uses `cancel_keybinding_capture`. |
+| CQ-08 | DONE (uncommitted) | — | Split side demand across front sites; per-site pool fallback; reorder/draw from FrontBalance. |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking

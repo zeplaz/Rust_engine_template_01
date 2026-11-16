@@ -116,7 +116,13 @@ pub fn publish_toe_cargo_demands_system(
     for (k, v) in &personnel_tags {
         *combined.entry(k.clone()).or_insert(0) += *v;
     }
-    publish_side_tag_demands(&points, &sites, &combined, &mut requests);
+    publish_side_tag_demands(
+        &points,
+        &sites,
+        &combined,
+        &balance.supply,
+        &mut requests,
+    );
     let _ = theaters;
 }
 
