@@ -22,6 +22,8 @@
 /debug_runs/**
 !/debug_runs/README.md
 !/debug_runs/HOT.md
+# Same dumps when a tool resolves debug_runs/ relative to tools/ (e.g. studio_dash)
+/tools/debug_runs/
 
 # Local archive of purged debug_runs piles (preview_jobs, validators, thumbs, …)
 /_local_archive/
