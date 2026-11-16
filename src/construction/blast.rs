@@ -19,7 +19,10 @@ use crate::strategic::{
 use crate::substrate::hydrology::{HydrologyConstructionCouplingStats, HydrologyEventQueue};
 use crate::systems::sim_control::SimControlSystemSet;
 
-use super::demolish::execute_demolish_at_tile;
+use super::demolish::{
+    destructible_catastrophic_collapse, destructible_stage_from_integrity, execute_demolish_at_tile,
+    DestructibleDamage, DestructibleDamageStage, DESTRUCTIBLE_COLLAPSE_INTEGRITY,
+};
 use super::hydro_coupling::emit_site_execute_hydro_dirty;
 
 /// Effective damage at epicenter required to demolish overlapping sites (after falloff).
@@ -109,6 +112,7 @@ pub fn execute_blast_intents_system(
         &SiteFootprint,
         Option<&BuildingDefinitionRef>,
     )>,
+    mut damage: Query<&mut DestructibleDamage>,
 ) {
     if queue.pending.is_empty() {
         return;
@@ -135,22 +139,49 @@ pub fn execute_blast_intents_system(
         }
         craters.blasts_applied = craters.blasts_applied.saturating_add(1);
 
-        // Peak below demolish gate ⇒ crater/scar only (grenade/ember bookkeeping).
-        if intent.damage < BLAST_DEMOLISH_DAMAGE {
-            continue;
-        }
-
+        // PHYS-08: map peak blast damage onto the damage ladder (scar / compromise) even
+        // when below the demolish gate; terminal collapse still goes through demolish.
+        let mut peaks: Vec<(Entity, f32)> = Vec::new();
         let mut hit_origins: Vec<BuildSiteTile> = Vec::new();
-        for (_e, _site, planned, footprint, _) in sites.iter() {
-            let demolish = footprint.tiles.iter().any(|t| {
+        for (entity, _site, planned, footprint, _) in sites.iter() {
+            let mut peak = 0.0f32;
+            let mut in_disk = false;
+            for t in &footprint.tiles {
                 let c = tile_center_xz(*t);
-                blast_disk_contains(center, r, c)
-                    && blast_damage_at_distance(intent.damage, c.distance(center), r)
-                        >= BLAST_DEMOLISH_DAMAGE
-            });
-            if demolish {
+                if !blast_disk_contains(center, r, c) {
+                    continue;
+                }
+                in_disk = true;
+                peak = peak.max(blast_damage_at_distance(
+                    intent.damage,
+                    c.distance(center),
+                    r,
+                ));
+            }
+            if !in_disk {
+                continue;
+            }
+            peaks.push((entity, peak));
+            if peak >= BLAST_DEMOLISH_DAMAGE {
                 hit_origins.push(planned.origin);
             }
+        }
+        for (entity, peak) in peaks {
+            let Ok(mut dmg) = damage.get_mut(entity) else {
+                continue;
+            };
+            let integrity_left =
+                (1.0 - (peak / BLAST_DEMOLISH_DAMAGE).clamp(0.0, 1.0)).clamp(0.0, 1.0);
+            let ladder =
+                destructible_stage_from_integrity(integrity_left, DESTRUCTIBLE_COLLAPSE_INTEGRITY);
+            dmg.stage = dmg.stage.escalate(ladder);
+            if destructible_catastrophic_collapse(peak, BLAST_DEMOLISH_DAMAGE) {
+                dmg.stage = DestructibleDamageStage::Collapsed;
+            }
+        }
+
+        if intent.damage < BLAST_DEMOLISH_DAMAGE {
+            continue;
         }
         hit_origins.sort_by_key(|t| (t.x, t.z));
         hit_origins.dedup();

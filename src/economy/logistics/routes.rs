@@ -1,13 +1,20 @@
 //! Transport nav reachability for facility pairs (LOG-A-04 / A-05).
+//!
+//! CQ-53: production paths use a single costed Dijkstra (base traversal × NAV-13 forecast),
+//! not unweighted BFS.
 
-use std::collections::{HashMap, HashSet, VecDeque};
+use std::cmp::Ordering;
+use std::collections::{BinaryHeap, HashMap, HashSet};
 
 use bevy::prelude::*;
 
 use crate::construction::ConstructionWorldRevision;
 use crate::economy::resource_flow::TransportMode;
 use crate::strategic::{BuildSiteTile, LogisticsGraph, PlannedSite};
-use crate::systems::transport::{TransportEdgeDirectory, TransportEdgeId, TransportNavExport};
+use crate::systems::navigation::LogisticsCostForecastBook;
+use crate::systems::transport::{
+    TransportCostCache, TransportEdgeDirectory, TransportEdgeId, TransportNavExport,
+};
 
 use super::types::{
     CachedRoute, FacilityPortal, LogisticsRouteDirtyTiles, RouteCache, RouteHandle, RoutePathStore,
@@ -63,31 +70,71 @@ fn build_edge_adjacency(
     adj
 }
 
-fn bfs_path_to_goals(
+#[derive(Clone, Copy)]
+struct EdgeDijkstraState {
+    cost: f32,
+    edge: TransportEdgeId,
+}
+
+impl PartialEq for EdgeDijkstraState {
+    fn eq(&self, other: &Self) -> bool {
+        self.cost == other.cost && self.edge == other.edge
+    }
+}
+impl Eq for EdgeDijkstraState {}
+impl PartialOrd for EdgeDijkstraState {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        Some(self.cmp(other))
+    }
+}
+impl Ord for EdgeDijkstraState {
+    fn cmp(&self, other: &Self) -> Ordering {
+        // Min-heap via reverse float order.
+        other
+            .cost
+            .partial_cmp(&self.cost)
+            .unwrap_or(Ordering::Equal)
+            .then_with(|| self.edge.0.cmp(&other.edge.0))
+    }
+}
+
+/// CQ-53 single route-cost search on the transport edge graph.
+fn dijkstra_path_to_goals(
     adj: &HashMap<TransportEdgeId, Vec<TransportEdgeId>>,
     starts: &[TransportEdgeId],
     goals: &HashSet<TransportEdgeId>,
+    mut edge_cost: impl FnMut(TransportEdgeId) -> f32,
 ) -> Option<Vec<TransportEdgeId>> {
     if starts.is_empty() || goals.is_empty() {
         return None;
     }
+    let mut best: HashMap<TransportEdgeId, f32> = HashMap::new();
     let mut parent: HashMap<TransportEdgeId, TransportEdgeId> = HashMap::new();
-    let mut queue = VecDeque::new();
-    let mut seen = HashSet::new();
+    let mut heap = BinaryHeap::new();
     for &s in starts {
-        seen.insert(s);
-        queue.push_back(s);
+        let c = edge_cost(s).max(1e-3);
+        best.insert(s, c);
+        heap.push(EdgeDijkstraState { cost: c, edge: s });
     }
     let mut found: Option<TransportEdgeId> = None;
-    while let Some(cur) = queue.pop_front() {
+    while let Some(EdgeDijkstraState { cost, edge: cur }) = heap.pop() {
+        if best.get(&cur).is_some_and(|&b| cost > b + 1e-4) {
+            continue;
+        }
         if goals.contains(&cur) {
             found = Some(cur);
             break;
         }
         for &next in adj.get(&cur).into_iter().flatten() {
-            if seen.insert(next) {
+            let step = edge_cost(next).max(1e-3);
+            let nd = cost + step;
+            if best.get(&next).is_none_or(|&b| nd + 1e-4 < b) {
+                best.insert(next, nd);
                 parent.insert(next, cur);
-                queue.push_back(next);
+                heap.push(EdgeDijkstraState {
+                    cost: nd,
+                    edge: next,
+                });
             }
         }
     }
@@ -104,6 +151,30 @@ fn bfs_path_to_goals(
     Some(path)
 }
 
+/// Base edge cost from the transport cost cache (1.0 when missing).
+#[must_use]
+pub fn base_edge_route_cost(cache: Option<&TransportCostCache>, id: TransportEdgeId) -> f32 {
+    cache
+        .and_then(|c| c.by_edge.get(&id).copied())
+        .filter(|c| c.is_finite() && *c > 0.0)
+        .unwrap_or(1.0)
+}
+
+/// CQ-53: base × NAV-13 forecast integral for a one-tick traverse proxy.
+#[must_use]
+pub fn route_edge_cost(
+    cache: Option<&TransportCostCache>,
+    forecast: Option<&LogisticsCostForecastBook>,
+    depart_tick: u64,
+    id: TransportEdgeId,
+) -> f32 {
+    let base = base_edge_route_cost(cache, id);
+    match forecast.filter(|f| f.ready) {
+        Some(book) => book.edge_cost(base, depart_tick, 1),
+        None => base,
+    }
+}
+
 #[must_use]
 pub fn path_edges_between_tiles(
     nav: &TransportNavExport,
@@ -111,6 +182,21 @@ pub fn path_edges_between_tiles(
     from: BuildSiteTile,
     to: BuildSiteTile,
     mode: TransportMode,
+) -> Option<Vec<TransportEdgeId>> {
+    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, 0)
+}
+
+/// Costed production path (CQ-53): Dijkstra with [`route_edge_cost`].
+#[must_use]
+pub fn path_edges_between_tiles_costed(
+    nav: &TransportNavExport,
+    directory: &TransportEdgeDirectory,
+    from: BuildSiteTile,
+    to: BuildSiteTile,
+    mode: TransportMode,
+    cache: Option<&TransportCostCache>,
+    forecast: Option<&LogisticsCostForecastBook>,
+    depart_tick: u64,
 ) -> Option<Vec<TransportEdgeId>> {
     if from == to {
         return Some(Vec::new());
@@ -137,7 +223,9 @@ pub fn path_edges_between_tiles(
             .collect(),
     };
     let adj = build_edge_adjacency(&filtered_nav, directory);
-    let path = bfs_path_to_goals(&adj, &starts, &goal_edges)?;
+    let path = dijkstra_path_to_goals(&adj, &starts, &goal_edges, |id| {
+        route_edge_cost(cache, forecast, depart_tick, id)
+    })?;
     if path.is_empty() {
         None
     } else {
@@ -316,9 +404,11 @@ pub fn refresh_resource_flow_routes_system(
     graph: Option<Res<LogisticsGraph>>,
     nav: Res<TransportNavExport>,
     directory: Res<TransportEdgeDirectory>,
+    cost_cache: Option<Res<TransportCostCache>>,
     construction_rev: Option<Res<ConstructionWorldRevision>>,
     mut dirty_tiles: ResMut<LogisticsRouteDirtyTiles>,
-    forecast: Option<Res<crate::systems::navigation::LogisticsCostForecastBook>>,
+    forecast: Option<Res<LogisticsCostForecastBook>>,
+    clock: Option<Res<crate::systems::sim_control::SimStepClock>>,
     mut route_cache: ResMut<RouteCache>,
     mut path_store: ResMut<RoutePathStore>,
     mut flow: ResMut<crate::economy::resource_flow::ResourceFlowRegistry>,
@@ -384,12 +474,16 @@ pub fn refresh_resource_flow_routes_system(
 
         let key = (edge.from, edge.to);
         if !route_cache.routes.contains_key(&key) {
-            let path_edges = path_edges_between_tiles(
+            let depart_tick = clock.as_ref().map(|c| c.steps).unwrap_or(0);
+            let path_edges = path_edges_between_tiles_costed(
                 &nav_open,
                 &directory_open,
                 *from_tile,
                 *to_tile,
                 edge.transport_mode,
+                cost_cache.as_deref(),
+                forecast.as_deref(),
+                depart_tick,
             );
             let reachable = path_edges.is_some();
             let path = path_edges

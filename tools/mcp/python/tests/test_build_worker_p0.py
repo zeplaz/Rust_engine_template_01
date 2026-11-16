@@ -27,6 +27,25 @@ BDEF = (
 
 
 def test_style_pack_resolves_industrial_corner_production_not_victorian():
+    # Live generate uses corners_as_walls (PG-MODULE-AUDIT-001); still assert the
+    # style-pack slot resolves to an industrial_west production corner, not Victorian.
+    from rust_engine_mcp.library import load_index_json
+
+    pack = assembly.load_style_pack("style_industrial_west")
+    mid = str((pack.get("slots") or {}).get("corner_outer") or "")
+    assert mid == "corner_L"
+    row = assembly._resolve_module_row(
+        mid,
+        load_index_json(),
+        style_pack_id="style_industrial_west",
+        source_tier="production",
+    )
+    assert row is not None, "corner_outer must resolve in style_industrial_west"
+    job = str(row.get("job_id") or "")
+    assert "victorian" not in job.lower()
+    assert job == "corner_L_industrial_west_production_run001"
+    assert "industrial_west" in job or str(row.get("development_tier") or "") == "production"
+
     snap = assembly.generate_assembly_snapshot(
         archetype_id="IndustrialWarehouse",
         district_style="industrial_west",
@@ -34,12 +53,9 @@ def test_style_pack_resolves_industrial_corner_production_not_victorian():
         source_tier="production",
         write=False,
     )
-    corners = [p for p in snap["module_placements"] if p.get("module_id") == "corner_L"]
-    assert corners
-    job = str(corners[0]["job_id"])
-    assert "victorian" not in job
-    assert job == "corner_L_industrial_west_production_run001"
-    assert "industrial_west" in job or str(corners[0].get("development_tier") or "") == "production"
+    jobs = [str(p.get("job_id") or "") for p in snap.get("module_placements") or []]
+    assert jobs
+    assert all("victorian" not in j.lower() for j in jobs)
 
 
 def test_warehouse_grammar_uses_door_warehouse_not_door_shop():

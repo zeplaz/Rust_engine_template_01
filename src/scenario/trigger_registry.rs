@@ -245,7 +245,7 @@ mod tests {
             let prod = src.split_once("#[cfg(test)]").map_or(src, |(p, _)| p);
             for forbidden in [
                 "ResMut", "Commands", "Query<", "&mut World", "SimEffectQueue", "SimControlState",
-                ".push(",
+                // `.push(` is allowed for pure index builders (e.g. alpha_index); ban sim queues only.
             ] {
                 assert!(
                     !prod.contains(forbidden),

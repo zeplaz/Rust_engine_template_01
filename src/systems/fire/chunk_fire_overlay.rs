@@ -80,18 +80,41 @@ fn chunk_has_spread_source(heat: &[f32], fuel: &[f32], hold: &[u16]) -> bool {
     })
 }
 
-/// Cells on the source chunk’s edge that face the neighbour at offset `(toward_dx, toward_dy)`.
-fn source_edge_cell_indices(sx: usize, sy: usize, toward_dx: i32, toward_dy: i32) -> Vec<usize> {
+/// Visit cells on the source chunk’s edge that face the neighbour at offset `(toward_dx, toward_dy)`.
+/// Avoids allocating a per-neighbour `Vec` on the hot path (CQ-60).
+fn for_each_source_edge_cell(
+    sx: usize,
+    sy: usize,
+    toward_dx: i32,
+    toward_dy: i32,
+    mut visit: impl FnMut(usize),
+) {
     match (toward_dx, toward_dy) {
-        (1, 0) => (0..sy).map(|y| y * sx + (sx - 1)).collect(),
-        (-1, 0) => (0..sy).map(|y| y * sx).collect(),
-        (0, 1) => (0..sx).map(|x| (sy - 1) * sx + x).collect(),
-        (0, -1) => (0..sx).map(|x| x).collect(),
-        (1, 1) => vec![(sy - 1) * sx + (sx - 1)],
-        (1, -1) => vec![sx - 1],
-        (-1, 1) => vec![(sy - 1) * sx],
-        (-1, -1) => vec![0],
-        _ => Vec::new(),
+        (1, 0) => {
+            for y in 0..sy {
+                visit(y * sx + (sx - 1));
+            }
+        }
+        (-1, 0) => {
+            for y in 0..sy {
+                visit(y * sx);
+            }
+        }
+        (0, 1) => {
+            for x in 0..sx {
+                visit((sy - 1) * sx + x);
+            }
+        }
+        (0, -1) => {
+            for x in 0..sx {
+                visit(x);
+            }
+        }
+        (1, 1) => visit((sy - 1) * sx + (sx - 1)),
+        (1, -1) => visit(sx - 1),
+        (-1, 1) => visit((sy - 1) * sx),
+        (-1, -1) => visit(0),
+        _ => {}
     }
 }
 
@@ -113,12 +136,18 @@ fn sleeping_chunks_to_wake(
             if !snap_chunk_sleeping(dst) {
                 continue;
             }
-            let edge_hot = source_edge_cell_indices(src.sx, src.sy, dx, dy).iter().any(|&i| {
-                can_spread(&FireCell {
+            let mut edge_hot = false;
+            for_each_source_edge_cell(src.sx, src.sy, dx, dy, |i| {
+                if edge_hot {
+                    return;
+                }
+                if can_spread(&FireCell {
                     heat: src.heat[i],
                     fuel: src.fuel[i],
                     burned_hold: src.burn_hold[i],
-                })
+                }) {
+                    edge_hot = true;
+                }
             });
             let wind_wake = {
                 let sp = src.wind_mps.length();
@@ -323,8 +352,9 @@ pub fn chunk_fire_overlay_tick(
 
     bufs.tick_snapshots.clear();
     bufs.sleep_wake.clear();
+    // Pass 1: which chunks have a live spread source (no vector clones yet).
     let mut active_coords = HashSet::new();
-    for (entity, chunk, matrix, wx, _, _, _, _, _, _, ovl, ..) in q.iter() {
+    for (_entity, chunk, matrix, _wx, _, _, _, _, _, _, ovl, ..) in q.iter() {
         let sx = matrix.size.x as usize;
         let sy = matrix.size.y as usize;
         let n = sx * sy;
@@ -333,6 +363,24 @@ pub fn chunk_fire_overlay_tick(
         }
         if chunk_has_spread_source(&ovl.heat, &ovl.fuel, &ovl.burn_hold) {
             active_coords.insert(chunk.coord);
+        }
+    }
+    // Pass 2: snapshot only active chunks + their 8-neighbour ring (CQ-60).
+    let mut snap_coords = active_coords.clone();
+    for &acoord in &active_coords {
+        for (dx, dy) in NEIGHBOR8 {
+            snap_coords.insert(acoord + IVec2::new(dx, dy));
+        }
+    }
+    for (_entity, chunk, matrix, wx, _, _, _, _, _, _, ovl, ..) in q.iter() {
+        if !snap_coords.contains(&chunk.coord) {
+            continue;
+        }
+        let sx = matrix.size.x as usize;
+        let sy = matrix.size.y as usize;
+        let n = sx * sy;
+        if n == 0 || ovl.heat.len() != n || ovl.fuel.len() != n || ovl.burn_hold.len() != n {
+            continue;
         }
         bufs.tick_snapshots.insert(
             chunk.coord,
@@ -345,11 +393,11 @@ pub fn chunk_fire_overlay_tick(
                 wind_mps: wx.wind_mps,
             },
         );
-        let _ = entity;
     }
     bufs.sleep_wake = sleeping_chunks_to_wake(&bufs.tick_snapshots, &active_coords);
-    let sleep_wake = bufs.sleep_wake.clone();
-    let tick_snapshots = bufs.tick_snapshots.clone();
+    // Move out of bufs so the mut query below can borrow without a full HashMap clone.
+    let sleep_wake = std::mem::take(&mut bufs.sleep_wake);
+    let tick_snapshots = std::mem::take(&mut bufs.tick_snapshots);
 
     let FireTickScratch {
         spread: scratch,

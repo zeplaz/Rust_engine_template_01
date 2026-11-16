@@ -270,10 +270,32 @@ pub fn ensure_site_fire_state(
     q: Query<(Entity, &PlannedSite), (With<ConstructionSite>, Without<SiteFireState>)>,
 ) {
     for (e, planned) in &q {
-        commands.entity(e).insert(SiteFireState {
-            profile: profile_for_site_archetype(planned.archetype),
-            ..Default::default()
-        });
+        commands.entity(e).insert((
+            SiteFireState {
+                profile: profile_for_site_archetype(planned.archetype),
+                ..Default::default()
+            },
+            crate::construction::DestructibleDamage::default(),
+        ));
+    }
+}
+
+/// Sites that already have fire state but predate PHYS-08 damage components.
+pub fn ensure_site_destructible_damage(
+    mut commands: Commands,
+    q: Query<
+        Entity,
+        (
+            With<ConstructionSite>,
+            With<SiteFireState>,
+            Without<crate::construction::DestructibleDamage>,
+        ),
+    >,
+) {
+    for e in &q {
+        commands
+            .entity(e)
+            .insert(crate::construction::DestructibleDamage::default());
     }
 }
 
@@ -302,7 +324,12 @@ pub fn site_fire_exposure_tick(
         &ChunkFireOverlay,
         Option<&ChunkWeather>,
     )>,
-    mut sites: Query<(&SiteFootprint, &PlannedSite, &mut SiteFireState)>,
+    mut sites: Query<(
+        &SiteFootprint,
+        &PlannedSite,
+        &mut SiteFireState,
+        Option<&mut crate::construction::DestructibleDamage>,
+    )>,
 ) {
     if !ctrl.should_tick() {
         return;
@@ -316,7 +343,7 @@ pub fn site_fire_exposure_tick(
     stats.sites_disrupted = 0;
     stats.sites_deteriorating = 0;
 
-    for (footprint, planned, mut state) in &mut sites {
+    for (footprint, planned, mut state, destructible) in &mut sites {
         state.profile = profile_for_site_archetype(planned.archetype);
         let mut flux_sum = 0.0f32;
         let mut rain_max = 0.0f32;
@@ -380,6 +407,15 @@ pub fn site_fire_exposure_tick(
                 stats.sites_deteriorating = stats.sites_deteriorating.saturating_add(1);
             }
             _ => {}
+        }
+
+        // PHYS-08: map remaining integrity onto the construction damage ladder.
+        let ladder = crate::construction::destructible_stage_from_integrity(
+            state.integrity,
+            collapse_bar,
+        );
+        if let Some(mut dmg) = destructible {
+            dmg.stage = dmg.stage.escalate(ladder);
         }
 
         if state.stage == SiteFireStage::Collapsing {
@@ -484,11 +520,18 @@ pub fn apply_site_fire_ops_derate(
 /// Presentation: copy footprint wash strengths for raster / stamps.
 pub fn sync_site_burn_wash_frame(
     mut frame: ResMut<SiteBurnWashFrame>,
-    sites: Query<(&SiteFootprint, &SiteFireState)>,
+    sites: Query<(
+        &SiteFootprint,
+        &SiteFireState,
+        Option<&crate::construction::DestructibleDamage>,
+    )>,
 ) {
     frame.tiles.clear();
-    for (fp, state) in &sites {
-        let wash = state.stage.burn_wash01();
+    for (fp, state, destructible) in &sites {
+        let mut wash = state.stage.burn_wash01();
+        if let Some(dmg) = destructible {
+            wash = wash.max(dmg.stage.visual_wash01());
+        }
         if wash <= 0.0 {
             continue;
         }

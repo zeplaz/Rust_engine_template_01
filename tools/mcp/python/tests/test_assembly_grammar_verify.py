@@ -100,8 +100,14 @@ def test_minimal_valid_shell_passes_grammar_checks() -> None:
 
 
 def test_cli_path_wrapper_full_p0() -> None:
-    if not WAREHOUSE_7X5.is_file():
-        pytest.skip("warehouse 7x5 snapshot missing")
-    rep = validate_assembly_grammar_verify_path(WAREHOUSE_7X5, full_p0=True)
+    # Staging industrial_west_7x5 still points at missing lod0 GLBs; the schemas
+    # example carries production GLB paths that exist on disk.
+    example = (
+        ROOT
+        / "tools/mcp/schemas/examples/assembly_snapshot_warehouse_industrial_west_production_v1.json"
+    )
+    if not example.is_file():
+        pytest.skip("warehouse production example missing")
+    rep = validate_assembly_grammar_verify_path(example, full_p0=True)
     assert rep.status == "passed"
     assert rep.validator == "assembly_p0"

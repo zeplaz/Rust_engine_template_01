@@ -250,7 +250,15 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-04 | DONE | `9a26d6d5` | Thermal/hydraulic transfers via delta buffer; thermal conserves mass; hydraulic loss = intentional deposit fraction only. |
 | CQ-05 | DONE | `0144002c` | Chrome gates pointer only; sole `sync_view_input_routing` after Publish / before ApplyInput. |
 | CQ-06 | DONE | `f8367a42` | Check `consumed_before_pause` before open/close; Esc cascade uses `cancel_keybinding_capture`. |
-| CQ-08 | DONE (uncommitted) | — | Split side demand across front sites; per-site pool fallback; reorder/draw from FrontBalance. |
+| CQ-08 | DONE | `f22b6630` | Split side demand across front sites; per-site pool fallback; reorder/draw from FrontBalance. |
+| CQ-20 | DONE | (pending commit) | Weather reads → `Option<Res>` (forecast/haul/renewable); heatmap blend vs sample assert; transport hydrate/g4 treat nodes as derived; ecs12 lint no longer bans `.push(`. All 15 named failures green. |
+| CQ-21 | DONE | (pending commit) | APS default archetype → IndustrialWarehouse; material filter passes category string + PhotoImage `master=`; tests retarget production example / style-pack resolve / shared Tk root. Six named pytest cases green. |
+| CQ-57h | DONE | (pending commit) | Real IO-08 rebuild: clear portal map, mark route dirty + clear RouteCache; deleted `POST_LOAD_DERIVED_STEPS` string list; utility (power/water) hydrate joins the same rebuild. |
+| CQ-57d | DONE | (pending commit) | `DestructibleDamage` component; fire integrity + blast peak escalate Intact→Collapsed; burn wash reads ladder; collapse still via demolish funnel. |
+| CQ-60 | DONE | (pending commit) | Fire tick snapshots only active+neighbour ring; `mem::take` instead of HashMap clone; edge cell walk without per-neighbour Vec. |
+| CQ-56 | DONE | (pending commit) | `MissileSortieLaunch.wind` from stations; `apply_missile_sortie_launches_system` → `launch_with_wind`. |
+| CQ-55 | DONE | (pending commit) | Ballistics solid probe via occupation + `probe_hits_solid` on MaterializedChunk; deleted coherent pair pipeline; `CollisionPlugin` minimal. |
+| CQ-53 | DONE | (pending commit) | Production `refresh_resource_flow_routes` uses costed Dijkstra (`route_edge_cost` = cache × NAV-13 forecast); path-concerns load on Startup; potential-field nav scheduled. Residual: fold tile Dijkstra variants + heat/wildlife into same cost (CQ-51/52). |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking

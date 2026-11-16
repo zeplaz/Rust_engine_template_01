@@ -713,12 +713,13 @@ pub fn apply_missile_sortie_launches_system(
             );
         }
         if let Some(book) = ballistics.as_mut() {
-            book.launch(
+            book.launch_with_wind(
                 launch.origin_xz,
                 launch.target_xz,
                 8.0,
                 2.5,
                 super::ballistics::BallisticKind::Missile,
+                launch.wind,
             );
         }
     }
@@ -937,6 +938,7 @@ mod tests {
                 faction_slot: 0,
                 origin_xz: Vec2::new(1.0, 2.0),
                 target_xz: Vec2::new(10.0, 12.0),
+                wind: None,
             });
         app.update();
         assert!(

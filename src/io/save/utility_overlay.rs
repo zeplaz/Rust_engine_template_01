@@ -110,11 +110,19 @@ pub struct UtilityOverlayHydrateState {
 }
 
 /// Restore the utility snapshot + rebuild [`UtilityGraph`] when the manifest references it.
+///
+/// On success, joins IO-08 post-load derived rebuild (portal map + route dirty) so power/water
+/// network restore does not leave logistics attachments stale.
 pub fn try_hydrate_utility_overlay_on_bundle_dir(
     settings: Option<Res<crate::io::save::WorldSaveBundleSettings>>,
     mut state: ResMut<UtilityOverlayHydrateState>,
     snap_res: Option<ResMut<UtilityNetworkSnapshotResource>>,
     graph: Option<ResMut<UtilityGraph>>,
+    mut post_load: Option<ResMut<crate::io::save::PostLoadDerivedBook>>,
+    mut portal_map: Option<ResMut<crate::economy::logistics::types::PortalAttachmentMap>>,
+    mut route_dirty: Option<ResMut<crate::economy::logistics::types::LogisticsRouteDirtyTiles>>,
+    mut route_cache: Option<ResMut<crate::economy::logistics::types::RouteCache>>,
+    directory: Option<Res<crate::systems::transport::TransportEdgeDirectory>>,
 ) {
     let Some(settings) = settings else {
         return;
@@ -144,6 +152,17 @@ pub fn try_hydrate_utility_overlay_on_bundle_dir(
     *graph = hydrate_utility_graph_from_snapshot(&snap);
     snap_res.0 = snap;
     state.hydrated_from_manifest = true;
+    crate::io::save::rebuild_derived_after_chunk_apply(
+        crate::io::save::PostLoadDerivedSinks {
+            preview: None,
+            book: post_load.as_deref_mut(),
+            portal_map: portal_map.as_deref_mut(),
+            route_dirty: route_dirty.as_deref_mut(),
+            route_cache: route_cache.as_deref_mut(),
+            directory: directory.as_deref(),
+        },
+        &[IVec2::ZERO],
+    );
 }
 
 #[cfg(test)]

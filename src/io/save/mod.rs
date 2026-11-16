@@ -25,7 +25,7 @@ mod wire_format;
 pub use autosave::{tick_world_save_autosave, WorldSaveAutosaveSettings};
 pub use apply::{
     apply_pending_save_pipeline_jobs, apply_saved_body_to_materialized_chunk,
-    rebuild_derived_after_chunk_apply, PostLoadDerivedBook, POST_LOAD_DERIVED_STEPS,
+    rebuild_derived_after_chunk_apply, PostLoadDerivedBook, PostLoadDerivedSinks,
 };
 pub use async_io::{poll_save_io_completions, SaveIoCompletion, SaveIoDispatcher, SaveIoWorkOrder};
 pub use dirty_queue::{

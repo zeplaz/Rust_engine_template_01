@@ -393,7 +393,7 @@ class MaterialLibraryWidget(ttk.Frame):
             if thumb_img is not None:
                 thumb_img = thumb_img.copy()
                 thumb_img.thumbnail((LIST_THUMB, LIST_THUMB), Image.Resampling.LANCZOS)
-                photo = ImageTk.PhotoImage(thumb_img)
+                photo = ImageTk.PhotoImage(thumb_img, master=self.winfo_toplevel())
                 self._row_photos[entry.profile_id] = photo
                 lbl_img = tk.Label(row, image=photo, bg=COLOR_PREVIEW_PLACEHOLDER, cursor="hand2")
                 lbl_img.image = photo
@@ -427,7 +427,8 @@ class MaterialLibraryWidget(ttk.Frame):
         cat = self._category_var.get().strip().lower()
         filtered: list[MaterialProfileEntry] = []
         for entry in self._entries:
-            if not self._category_matches_filter(entry):
+            entry_category = entry.category or infer_category(entry.profile_id)
+            if not self._category_matches_filter(entry_category):
                 continue
             blob = f"{entry.profile_id} {entry.label} {entry.generator} {entry.category}".lower()
             if q and q not in blob:
@@ -474,11 +475,12 @@ class MaterialLibraryWidget(ttk.Frame):
                 path = fresh.albedo_path
             except Exception:
                 path = None
+        master = self.winfo_toplevel()
         if path and path.is_file():
             try:
                 img = Image.open(path).convert("RGB")
                 img.thumbnail((self.THUMB_SIZE, self.THUMB_SIZE), Image.Resampling.LANCZOS)
-                photo = ImageTk.PhotoImage(img)
+                photo = ImageTk.PhotoImage(img, master=master)
             except Exception:
                 photo = self._placeholder_thumb((180, 60, 60), "ERR")
         else:
@@ -495,7 +497,7 @@ class MaterialLibraryWidget(ttk.Frame):
             draw.text((8, self.THUMB_SIZE // 2 - 6), label, fill=(255, 255, 255))
         except Exception:
             pass
-        return ImageTk.PhotoImage(img)
+        return ImageTk.PhotoImage(img, master=self.winfo_toplevel())
 
     def _make_card(self, entry: MaterialProfileEntry) -> ttk.Frame:
         frame = ttk.Frame(self._grid_inner, relief=tk.RIDGE, borderwidth=1, padding=3)

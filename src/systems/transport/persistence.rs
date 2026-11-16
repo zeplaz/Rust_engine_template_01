@@ -251,8 +251,12 @@ mod tests {
         let mut field = TransportFieldStore::default();
         let mut dir = TransportEdgeDirectory::default();
         hydrate_transport_from_snapshot(&mut top, &mut field, &mut dir, &s0).unwrap();
-        let s1 = transport_network_snapshot_from_world(&top, &dir).unwrap();
-        let js0 = serde_json::to_value(&s0).unwrap();
+        let mut s1 = transport_network_snapshot_from_world(&top, &dir).unwrap();
+        // Nodes are derived (IO-08); rebuild both sides before equality.
+        let mut s0n = s0.clone();
+        crate::systems::transport::snapshot::rebuild_transport_snapshot_nodes_from_edges(&mut s0n);
+        crate::systems::transport::snapshot::rebuild_transport_snapshot_nodes_from_edges(&mut s1);
+        let js0 = serde_json::to_value(&s0n).unwrap();
         let js1 = serde_json::to_value(&s1).unwrap();
         assert_eq!(js0, js1);
     }
