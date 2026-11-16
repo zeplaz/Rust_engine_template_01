@@ -1,6 +1,18 @@
-//! Central keyboard bindings for tooling / HUD panels (editable from **Options → Key bindings**).
+//! Central keyboard bindings for play HUD panels (editable from **Options → Key bindings**).
 //!
-//! Persisted as RON under the path from [`InputBindings::default_input_bindings_ron_path`].
+//! # Config authority split (IO-11)
+//!
+//! Ref-books **IO-11** · LEGACY keyword `engine_configuration` (GEA 4e I §6.5 / §6.5.1–6.5.3.1,
+//! gea4v1 p455–458 · gea_v1_e4 p454): load/save options, **per-user** prefs, and Quake-style
+//! **cvars** for per-game engine tuning must not share one blob.
+//!
+//! | Store | Type | Path helper | Who edits |
+//! |:---|:---|:---|:---|
+//! | **Per-user options** | [`InputBindings`] | [`user_options_root`] / [`InputBindings::default_input_bindings_ron_path`] | Play Options → Key bindings |
+//! | **Per-game tuning** | [`EngineGameTuning`] (cvars) | [`game_config_root`] / [`EngineGameTuning::default_ron_path`] | Install / ship defaults; not the keybindings panel |
+//!
+//! Ref-books **INPUT-03** · Input remapping (GEA 4e I §9.5.7, gea4v1 p562–564): [`InputBindings`]
+//! is the single action table between devices and gameplay — remaps stay in the per-user store.
 //!
 //! **Inventory** (search `KeyCode::` outside this file — should only be defaults, presets, tests,
 //! and fallbacks tied to `InputBindings`):
@@ -17,7 +29,119 @@ use std::path::{Path, PathBuf};
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
-/// Rebindable keys. Defaults match the historical hardcoded shortcuts.
+/// Which config store owns a blob (GEA 6.5.1–6.5.2). Never mix the two RON files.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum ConfigStoreKind {
+    /// Per-user preferences (key bindings). Under APPDATA / XDG; never the sole install-adjacent path.
+    PerUser,
+    /// Per-game / engine tuning (cvars). Under `game_config/`; not written by the keybindings panel.
+    PerGame,
+}
+
+/// Per-user options root (`%APPDATA%/proc_A_dine01` · `~/.local/share/proc_A_dine01` · `user_settings/`).
+#[must_use]
+pub fn user_options_root() -> PathBuf {
+    if let Ok(appdata) = std::env::var("APPDATA") {
+        return PathBuf::from(appdata).join("proc_A_dine01");
+    }
+    if let Ok(home) = std::env::var("HOME") {
+        return PathBuf::from(home).join(".local/share/proc_A_dine01");
+    }
+    PathBuf::from("user_settings")
+}
+
+/// Per-game / engine config root (install-adjacent cwd). Distinct from [`user_options_root`].
+#[must_use]
+pub fn game_config_root() -> PathBuf {
+    PathBuf::from("game_config")
+}
+
+/// One Quake-style cvar entry (GEA 6.5.3.1). Archived cvars may persist in the per-game RON.
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq)]
+pub struct EngineCvar {
+    pub name: String,
+    pub value: String,
+    /// When true, included when writing [`EngineGameTuning`] to disk.
+    pub archive: bool,
+}
+
+/// Per-game engine tuning (cvars). **Not** mixed into the [`InputBindings`] user-options RON.
+#[derive(Resource, Clone, Debug, Serialize, Deserialize, PartialEq)]
+#[serde(default)]
+pub struct EngineGameTuning {
+    pub cvars: Vec<EngineCvar>,
+}
+
+impl Default for EngineGameTuning {
+    fn default() -> Self {
+        Self {
+            cvars: vec![
+                EngineCvar {
+                    name: "sim_speed_default".into(),
+                    value: "1.0".into(),
+                    archive: true,
+                },
+                EngineCvar {
+                    name: "capture_frame_stride".into(),
+                    value: "1".into(),
+                    archive: true,
+                },
+                EngineCvar {
+                    name: "capture_max_frames".into(),
+                    value: "3600".into(),
+                    archive: true,
+                },
+            ],
+        }
+    }
+}
+
+impl EngineGameTuning {
+    #[must_use]
+    pub const fn store_kind() -> ConfigStoreKind {
+        ConfigStoreKind::PerGame
+    }
+
+    /// Install-adjacent `game_config/engine_tuning.ron` (not under the per-user options root).
+    #[must_use]
+    pub fn default_ron_path() -> PathBuf {
+        game_config_root().join("engine_tuning.ron")
+    }
+
+    #[must_use]
+    pub fn cvar(&self, name: &str) -> Option<&str> {
+        self.cvars
+            .iter()
+            .find(|c| c.name == name)
+            .map(|c| c.value.as_str())
+    }
+
+    /// Read tuning from `path`. Returns `None` if missing or invalid.
+    pub fn try_load_from_ron_path(path: &Path) -> Option<Self> {
+        let s = fs::read_to_string(path).ok()?;
+        ron::from_str(&s).ok()
+    }
+
+    /// Pretty RON write of archived cvars only; creates parent directories.
+    pub fn save_to_ron_path(&self, path: &Path) -> Result<(), String> {
+        let archived = EngineGameTuning {
+            cvars: self
+                .cvars
+                .iter()
+                .filter(|c| c.archive)
+                .cloned()
+                .collect(),
+        };
+        if let Some(parent) = path.parent() {
+            fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        let cfg = ron::ser::PrettyConfig::new().depth_limit(4);
+        let s = ron::ser::to_string_pretty(&archived, cfg).map_err(|e| e.to_string())?;
+        fs::write(path, s).map_err(|e| e.to_string())
+    }
+}
+
+/// Rebindable keys — **per-user options** ([`ConfigStoreKind::PerUser`]). Defaults match historical shortcuts.
 #[derive(Resource, Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(default)]
 pub struct InputBindings {
@@ -158,6 +282,11 @@ impl Default for InputBindings {
 
 impl InputBindings {
     #[must_use]
+    pub const fn store_kind() -> ConfigStoreKind {
+        ConfigStoreKind::PerUser
+    }
+
+    #[must_use]
     pub fn format_key(code: KeyCode) -> String {
         match code {
             KeyCode::Slash => "/".to_string(),
@@ -166,19 +295,10 @@ impl InputBindings {
         }
     }
 
-    /// User-writable config directory + `input_bindings.ron`.
+    /// Per-user `input_bindings.ron` under [`user_options_root`].
     #[must_use]
     pub fn default_input_bindings_ron_path() -> PathBuf {
-        if let Ok(appdata) = std::env::var("APPDATA") {
-            return PathBuf::from(appdata)
-                .join("proc_A_dine01")
-                .join("input_bindings.ron");
-        }
-        if let Ok(home) = std::env::var("HOME") {
-            return PathBuf::from(home)
-                .join(".local/share/proc_A_dine01/input_bindings.ron");
-        }
-        PathBuf::from("user_settings/input_bindings.ron")
+        user_options_root().join("input_bindings.ron")
     }
 
     /// Read bindings from `path`. Returns `None` if missing or invalid.
@@ -308,5 +428,67 @@ mod tests {
                 }
             }
         }
+    }
+
+    #[test]
+    fn per_user_and_per_game_stores_are_distinct() {
+        assert_eq!(InputBindings::store_kind(), ConfigStoreKind::PerUser);
+        assert_eq!(EngineGameTuning::store_kind(), ConfigStoreKind::PerGame);
+        let user = InputBindings::default_input_bindings_ron_path();
+        let game = EngineGameTuning::default_ron_path();
+        assert_ne!(user, game);
+        assert_ne!(user_options_root(), game_config_root());
+        assert_eq!(user.file_name().and_then(|s| s.to_str()), Some("input_bindings.ron"));
+        assert_eq!(game.file_name().and_then(|s| s.to_str()), Some("engine_tuning.ron"));
+        assert_eq!(user.parent(), Some(user_options_root().as_path()));
+        assert_eq!(game.parent(), Some(game_config_root().as_path()));
+    }
+
+    #[test]
+    fn user_options_ron_does_not_embed_game_tuning_cvars() {
+        let text =
+            ron::ser::to_string_pretty(&InputBindings::default(), ron::ser::PrettyConfig::new())
+                .unwrap();
+        assert!(
+            !text.contains("sim_speed_default"),
+            "per-user bindings must not serialize per-game cvars"
+        );
+        assert!(!text.contains("capture_frame_stride"));
+        assert!(!text.contains("cvars"));
+    }
+
+    #[test]
+    fn engine_game_tuning_ron_roundtrip_archives_only() {
+        let mut tuning = EngineGameTuning::default();
+        tuning.cvars.push(EngineCvar {
+            name: "dbg_scratch".into(),
+            value: "1".into(),
+            archive: false,
+        });
+        let dir = std::env::temp_dir().join(format!(
+            "proc_a_dine01_io11_tuning_{}",
+            std::process::id()
+        ));
+        let path = dir.join("engine_tuning.ron");
+        tuning.save_to_ron_path(&path).expect("save tuning");
+        let loaded = EngineGameTuning::try_load_from_ron_path(&path).expect("load tuning");
+        assert!(loaded.cvar("sim_speed_default").is_some());
+        assert!(loaded.cvar("dbg_scratch").is_none());
+        let _ = fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn per_user_bindings_save_load_roundtrip_on_disk() {
+        let dir = std::env::temp_dir().join(format!(
+            "proc_a_dine01_io11_user_{}",
+            std::process::id()
+        ));
+        let path = dir.join("input_bindings.ron");
+        let mut bindings = InputBindings::default();
+        bindings.toggle_simulation_pause = KeyCode::KeyO;
+        bindings.save_to_ron_path(&path).expect("save user options");
+        let loaded = InputBindings::try_load_from_ron_path(&path).expect("load user options");
+        assert_eq!(loaded.toggle_simulation_pause, KeyCode::KeyO);
+        let _ = fs::remove_dir_all(&dir);
     }
 }

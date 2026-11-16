@@ -1,0 +1,8 @@
+{
+  "schema_version": 1,
+  "task_id": "studio_task_param_frame_example_v1",
+  "kind": "param_frame",
+  "seed": 1,
+  "payload_path": "tools/mcp/schemas/examples/param_frame_rail_warehouse_v1.json",
+  "status": "queued"
+}

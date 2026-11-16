@@ -20,6 +20,8 @@ pub enum WeatherPresetId {
     Windy,
     StormFront,
     FireWeather,
+    /// Deep vortex low (W5 hurricane-class).
+    HurricaneClass,
 }
 
 /// One preset: replaces the seeded climate and pressure systems.
@@ -32,6 +34,13 @@ pub struct WeatherPreset {
     pub systems: u32,
     pub low_fraction: f32,
     pub strength_hpa: (f32, f32),
+    /// Peak tangential vortex m/s range for spawned lows (`(0,0)` = none). W5.
+    #[serde(default = "default_vortex_mps")]
+    pub vortex_mps: (f32, f32),
+}
+
+fn default_vortex_mps() -> (f32, f32) {
+    (0.0, 0.0)
 }
 
 #[derive(Resource, Clone, Debug, Serialize, Deserialize, PartialEq)]
@@ -82,12 +91,110 @@ pub struct WeatherTuning {
     pub visibility_clear_m: f32,
     pub visibility_fog_k: f32,
     pub visibility_rain_k: f32,
+    /// Combined visibility smoke weight (`vis / (1 + k_smoke·smoke + …)`). W3.
+    #[serde(default = "default_k_smoke")]
+    pub k_smoke: f32,
+    /// Combined visibility ash weight. W3.
+    #[serde(default = "default_k_ash")]
+    pub k_ash: f32,
+    /// Cold edge of the icing temperature band (°C at altitude). W3.
+    #[serde(default = "default_icing_temp_min_c")]
+    pub icing_temp_min_c: f32,
+    /// Warm edge of the icing temperature band (°C at altitude). W3.
+    #[serde(default = "default_icing_temp_max_c")]
+    pub icing_temp_max_c: f32,
+    /// Minimum cloud×humidity liquid-water proxy for non-zero icing risk. W3.
+    #[serde(default = "default_icing_liquid_min")]
+    pub icing_liquid_min: f32,
+    /// Reference altitude (m) for frame-tile `icing_risk`. W3.
+    #[serde(default = "default_icing_ref_alt_m")]
+    pub icing_ref_alt_m: f32,
+    /// Dump threshold: tiles with `icing_risk` above this count as grounded. W3.
+    #[serde(default = "default_icing_ground_threshold")]
+    pub icing_ground_threshold: f32,
+    #[serde(default = "default_storm_developing_cloud_min")]
+    pub storm_developing_cloud_min: f32,
+    #[serde(default = "default_storm_developing_humidity_min")]
+    pub storm_developing_humidity_min: f32,
+    #[serde(default = "default_storm_developing_low_depth_min_hpa")]
+    pub storm_developing_low_depth_min_hpa: f32,
+    #[serde(default = "default_storm_developing_rain_max_mm_h")]
+    pub storm_developing_rain_max_mm_h: f32,
+    #[serde(default = "default_storm_thunder_lightning_min")]
+    pub storm_thunder_lightning_min: f32,
+    #[serde(default = "default_storm_thunder_cloud_min")]
+    pub storm_thunder_cloud_min: f32,
+    #[serde(default = "default_storm_thunder_rain_min_mm_h")]
+    pub storm_thunder_rain_min_mm_h: f32,
+    #[serde(default = "default_storm_hurricane_wind_min_mps")]
+    pub storm_hurricane_wind_min_mps: f32,
+    #[serde(default = "default_storm_hurricane_low_depth_min_hpa")]
+    pub storm_hurricane_low_depth_min_hpa: f32,
+    #[serde(default = "default_storm_hurricane_rain_min_mm_h")]
+    pub storm_hurricane_rain_min_mm_h: f32,
+    #[serde(default = "default_storm_hurricane_vortex_min")]
+    pub storm_hurricane_vortex_min: f32,
     pub gust_bucket_secs: u32,
     pub gust_ratio: (f32, f32),
     #[serde(default)]
     pub weather_preset: Option<WeatherPresetId>,
     #[serde(default)]
     pub presets: Vec<WeatherPreset>,
+}
+
+fn default_k_smoke() -> f32 {
+    2.5
+}
+fn default_k_ash() -> f32 {
+    1.5
+}
+fn default_icing_temp_min_c() -> f32 {
+    -25.0
+}
+fn default_icing_temp_max_c() -> f32 {
+    0.0
+}
+fn default_icing_liquid_min() -> f32 {
+    0.25
+}
+fn default_icing_ref_alt_m() -> f32 {
+    3000.0
+}
+fn default_icing_ground_threshold() -> f32 {
+    0.4
+}
+fn default_storm_developing_cloud_min() -> f32 {
+    0.55
+}
+fn default_storm_developing_humidity_min() -> f32 {
+    0.70
+}
+fn default_storm_developing_low_depth_min_hpa() -> f32 {
+    4.0
+}
+fn default_storm_developing_rain_max_mm_h() -> f32 {
+    2.0
+}
+fn default_storm_thunder_lightning_min() -> f32 {
+    0.35
+}
+fn default_storm_thunder_cloud_min() -> f32 {
+    0.85
+}
+fn default_storm_thunder_rain_min_mm_h() -> f32 {
+    3.0
+}
+fn default_storm_hurricane_wind_min_mps() -> f32 {
+    24.0
+}
+fn default_storm_hurricane_low_depth_min_hpa() -> f32 {
+    12.0
+}
+fn default_storm_hurricane_rain_min_mm_h() -> f32 {
+    1.5
+}
+fn default_storm_hurricane_vortex_min() -> f32 {
+    0.12
 }
 
 impl Default for WeatherTuning {
@@ -118,6 +225,12 @@ impl WeatherTuning {
         }
         if self.gust_bucket_secs == 0 {
             issues.push("gust_bucket_secs must be > 0".into());
+        }
+        if self.k_smoke < 0.0 || self.k_ash < 0.0 {
+            issues.push("k_smoke/k_ash must be >= 0".into());
+        }
+        if self.icing_temp_min_c >= self.icing_temp_max_c {
+            issues.push("icing_temp_min_c must be < icing_temp_max_c".into());
         }
         issues
     }

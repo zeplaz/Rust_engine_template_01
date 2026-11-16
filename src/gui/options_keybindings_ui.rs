@@ -1,10 +1,17 @@
-//! **Options → Key bindings** Bevy window (`InputBindings` defaults: F1 opens this panel).
+//! **Options → Key bindings** Bevy play panel (per-user remaps only).
+//!
+//! Ref-books **IO-11** · LEGACY `engine_configuration` (GEA 4e I §6.5.1–6.5.2, gea4v1 p455–458):
+//! this panel loads/saves [`InputBindings`] under the **per-user** options root. It does **not**
+//! edit [`EngineGameTuning`] (per-game cvars under `game_config/`).
+//!
+//! Ref-books **INPUT-03** · Input remapping (GEA 4e I §9.5.7): one action table — rebinds write
+//! through [`assign_binding`] then persist via [`InputBindings::save_to_ron_path`].
 
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
 
-use super::input_bindings::InputBindings;
+use super::input_bindings::{EngineGameTuning, InputBindings};
 use super::panel_presence::PanelPresence;
 use super::style::{CmdUiMonoFont, UiPalette};
 
@@ -76,10 +83,16 @@ pub struct KeybindingsOptionsPlugin;
 
 impl Plugin for KeybindingsOptionsPlugin {
     fn build(&self, app: &mut App) {
+        // Per-user options (IO-11 §6.5.2) — never load game tuning into this resource.
         let bindings =
             InputBindings::try_load_from_ron_path(&InputBindings::default_input_bindings_ron_path())
                 .unwrap_or_default();
+        // Per-game cvars (IO-11 §6.5.3.1) — separate RON; keybindings UI does not mutate it.
+        let tuning =
+            EngineGameTuning::try_load_from_ron_path(&EngineGameTuning::default_ron_path())
+                .unwrap_or_default();
         app.insert_resource(bindings)
+            .insert_resource(tuning)
             .init_resource::<KeybindingsUiState>()
             .add_systems(
                 Update,
@@ -89,7 +102,10 @@ impl Plugin for KeybindingsOptionsPlugin {
                     sync_keybindings_bevy_panel,
                     keybindings_row_clicks,
                 )
-                    .chain(),
+                    .chain()
+                    // ECS-10: the Esc chain resolves against `capture_slot` *before* this plugin
+                    // clears it, so the Esc that cancels a capture is consumed by it alone.
+                    .after(crate::gui::hud::sim_hud_esc_cascade::HudEscCascadeSet::Resolve),
             );
     }
 }
@@ -129,7 +145,17 @@ fn apply_binding_capture(
         }
         assign_binding(&mut bindings, slot, k);
         state.capture_slot = None;
-        state.last_io_message = Some(format!("bound {} → {}", slot_label(slot), InputBindings::format_key(k)));
+        let key_label = InputBindings::format_key(k);
+        // Persist per-user options only (GEA 6.5.1); never write EngineGameTuning from this panel.
+        state.last_io_message = Some(match bindings
+            .save_to_ron_path(&InputBindings::default_input_bindings_ron_path())
+        {
+            Ok(()) => format!("bound {slot} → {key_label} (saved)", slot = slot_label(slot)),
+            Err(e) => format!(
+                "bound {slot} → {key_label} (save failed: {e})",
+                slot = slot_label(slot)
+            ),
+        });
         return;
     }
 }
@@ -377,6 +403,11 @@ fn sync_keybindings_bevy_panel(
                 Text::new("Key bindings"),
                 tf.clone(),
                 TextColor(palette.bevy_primary_text()),
+            ));
+            root.spawn((
+                Text::new("Per-user options — saved for this account"),
+                tf.clone(),
+                TextColor(palette.bevy_text_muted()),
             ));
             root.spawn((
                 Text::new(capture_msg),

@@ -5,11 +5,10 @@
 use bevy::prelude::*;
 
 use crate::substrate::atmosphere::{
-    sample_tactical_fog_from_l0, sample_tactical_smoke_from_l0, AtmosphereClipmapStack,
-    CLIPMAP_L0_RES,
+    sample_tactical_smoke_from_l0, AtmosphereClipmapStack, CLIPMAP_L0_RES,
 };
 
-use super::field::ATMO_GRID_SIZE;
+use super::field::{participating_media_visibility, ATMO_GRID_SIZE, PARTICIPATING_SMOKE_OPTICAL_K};
 
 /// Sample visibility along segment `(a,b)` in **tactical tile space**
 /// ([`super::field::atmos_chunk_to_tile`] origin).
@@ -32,13 +31,14 @@ pub fn visibility_between(a: Vec2, b: Vec2, stack: &AtmosphereClipmapStack) -> f
     acc.clamp(0.0, 1.0)
 }
 
-/// LOS / HUD visibility from tactical smoke + fog on L0.
-/// Matches fill formula: `(1 - smoke*0.7 - fog*0.45).clamp(0.05, 1)`.
+/// LOS / HUD visibility from tactical smoke on L0 (LGT-05 unit participating-media path).
+/// W7: weather fog is [`super::frame::AtmosphereFrame`] / WeatherField — not the retired L0 fog lane.
+/// Smoke optical weight: [`PARTICIPATING_SMOKE_OPTICAL_K`] via [`participating_media_visibility`].
 #[must_use]
 pub fn sample_tactical_visibility_from_l0(stack: &AtmosphereClipmapStack, x: u32, y: u32) -> f32 {
     let smoke = sample_tactical_smoke_from_l0(stack, x, y).unwrap_or(0.0);
-    let fog = sample_tactical_fog_from_l0(stack, x, y).unwrap_or(0.0);
-    (1.0 - smoke * 0.7 - fog * 0.45).clamp(0.05, 1.0)
+    let _ = PARTICIPATING_SMOKE_OPTICAL_K; // shared optical authority with field.rs
+    participating_media_visibility(smoke, 0.0, 0.0)
 }
 
 fn sample_visibility_at(stack: &AtmosphereClipmapStack, wx: f32, wy: f32) -> f32 {

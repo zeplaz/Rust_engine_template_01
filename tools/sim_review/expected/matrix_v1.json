@@ -435,6 +435,119 @@
       "note": "PLAYCHECK-1: TruckPresentationIndex series present."
     },
     {
+      "id": "atmosphere.l0_advect_single_writer",
+      "path": "atmosphere.l0_advect_writers",
+      "op": "lte",
+      "expect": 1,
+      "note": "W1 shared-atmosphere plan: at most one distinct L0 advect writer (advect_atmosphere_field); ==1 once WeatherField has solved. 0 only when no wind advect ran."
+    },
+    {
+      "id": "atmosphere.second_writer_violations_clear",
+      "path": "atmosphere.second_writer_violations",
+      "op": "eq",
+      "expect": 0,
+      "note": "W7 retire duplicates: reviewer counter for extra L0 advect writers (not a production *_green predicate)."
+    },
+    {
+      "id": "atmosphere.frame_builds_tracked",
+      "path": "atmosphere.frame_builds",
+      "op": "gte",
+      "expect": 0,
+      "note": "D0 · DBG-02 / shared-atmosphere §6: `AtmosphereFrame` stats wired into dump (LGT-08 scorer reads series across runs)."
+    },
+    {
+      "id": "atmosphere.l0_revision_tracked",
+      "path": "atmosphere.l0_revision",
+      "op": "gte",
+      "expect": 0,
+      "note": "D0: clipmap revision counter present (counts-only; not a green predicate)."
+    },
+    {
+      "id": "presentation.dump_sampled",
+      "path": "presentation.samples",
+      "op": "gte",
+      "expect": 1,
+      "note": "D0 · PCG-06 / RND-18: voxel presentation dump hook ran (massing_columns series)."
+    },
+    {
+      "id": "presentation.massing_columns_tracked",
+      "path": "presentation.massing_columns.max",
+      "op": "gte",
+      "expect": 0,
+      "note": "D0: sole-writer `massing_columns` length series (presentation-only)."
+    },
+    {
+      "id": "occupation.dump_sampled",
+      "path": "occupation.samples",
+      "op": "gte",
+      "expect": 0,
+      "note": "X2-P3 · PCG-06 / ECS-15: occupation.* count block present (0 when resources absent)."
+    },
+    {
+      "id": "occupation.voxel_cells_tracked",
+      "path": "occupation.voxel_cells",
+      "op": "gte",
+      "expect": 0,
+      "note": "X2-P3: sparse VoxelOccupationBook cell count (counts only)."
+    },
+    {
+      "id": "playquad.extent",
+      "path": "world.width",
+      "op": "eq",
+      "expect": 512,
+      "when_scene": ["PlayQuad"],
+      "note": "PQ-S2: Standard 512² extent."
+    },
+    {
+      "id": "playquad.nw_fire_heat",
+      "path": "quadrants.nw.fire_heat_cells",
+      "op": "gt",
+      "expect": 0,
+      "when_scene": ["PlayQuad"],
+      "note": "PQ-F2: NW fire seeder produced heat."
+    },
+    {
+      "id": "playquad.ne_sites",
+      "path": "quadrants.ne.sites",
+      "op": "gte",
+      "expect": 1,
+      "when_scene": ["PlayQuad"],
+      "note": "PQ-B1: at least one NE site committed."
+    },
+    {
+      "id": "playquad.sw_lake_river",
+      "path": "quadrants.sw.lake_river_attached",
+      "op": "gte",
+      "expect": 40,
+      "when_scene": ["PlayQuad"],
+      "note": "PQ-H2: SW lake cells touching river (L=40 from seed sweep)."
+    },
+    {
+      "id": "playquad.se_wetland_belt",
+      "path": "quadrants.se_wetland_near_water",
+      "op": "gte",
+      "expect": 200,
+      "when_scene": ["PlayQuad"],
+      "note": "PQ-H3: SE wetland within R=6 of river/lake (M=200)."
+    },
+    {
+      "id": "playquad.presentation_pixel",
+      "path": "launch.presentation",
+      "op": "eq",
+      "expect": "PixelWorld3D",
+      "when_scene": ["PlayQuad"],
+      "note": "PQ-R1 scaffold: NE seeder arms PixelWorld3D for precip acceptance."
+    },
+    {
+      "id": "playquad.release_stalls",
+      "path": "perf.stalls",
+      "op": "lte",
+      "expect": 0,
+      "when_scene": ["PlayQuad"],
+      "when_build": ["release"],
+      "note": "PQ-X2: release perf stalls after warm-up."
+    },
+    {
       "id": "perf.sampled",
       "path": "perf.samples",
       "op": "gt",

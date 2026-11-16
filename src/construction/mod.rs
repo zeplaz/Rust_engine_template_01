@@ -32,8 +32,9 @@ pub use ghost_visual::{
 };
 pub use phase_visual::{phase_map_word, phase_stack_band, phase_stack_band_word, PhaseStackBand};
 pub use voxel_massing::{
-    derive_massing_floors, VoxelColumnRequest,
-    MASSING_FLOORS_MAX,
+    derive_massing_floors, massing_uses_instance_batch, pack_massing_instances,
+    MassingColumnInstance, StudioMassingOverride, VoxelColumnRequest, MASSING_FLOORS_MAX,
+    MASSING_INSTANCE_BATCH_THRESHOLD, STUDIO_MASSING_ENV, STUDIO_MASSING_PREVIEW_REL,
 };
 pub use map_egui_projection::{world_to_sim_map_egui, world_to_sim_map_screen, ConstructionMapProjection};
 mod build_confidence;
@@ -50,13 +51,17 @@ mod defense_staging_stock;
 mod blast;
 mod blast_present;
 mod demolish;
-pub use demolish::execute_demolish_at_tile;
+pub use demolish::{
+    destructible_catastrophic_collapse, destructible_stage_from_integrity,
+    execute_demolish_at_tile, DestructibleDamageStage, DESTRUCTIBLE_COLLAPSE_INTEGRITY,
+};
 pub(crate) mod ghost_visual;
 mod grammar_labels;
 mod history;
 mod hydro_coupling;
 mod industrial_menu;
 mod iso_draw_scale;
+mod build_readability_harness;
 mod mock_shapes_menu;
 mod path_feedback;
 mod pending_construction;
@@ -165,8 +170,8 @@ pub use building_definitions::{
 };
 pub use commercial_menu::draw_commercial_submenu;
 pub use construction_pipeline::{
-    execute_construction_plans_system, validate_construction_plans_system, ConstructionPlanQueue,
-    ConstructionWorldRevision, ExecutedRoadNetwork,
+    execute_construction_plans_system, validate_construction_plans_system, ConstructionIntent,
+    ConstructionPlanQueue, ConstructionType, ConstructionWorldRevision, ExecutedRoadNetwork,
 };
 pub use construction_queue_intent::{
     apply_construction_queue_intents, sync_construction_queue_panel_view,
@@ -322,6 +327,7 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<sessions::ActiveToolSession>()
             .init_resource::<roads::IntersectionRegistry>()
             .init_resource::<visual_authority::ConstructionVisualRequests>()
+            .init_resource::<voxel_massing::StudioMassingOverride>()
             .init_resource::<round4_corridor::ConstructionRound4ProductGate>()
             .init_resource::<footprint_tile_instances::FootprintTileStats>()
             .init_resource::<site_phase_tile_instances::ConstructionPhaseGpuChannel>()
@@ -336,8 +342,14 @@ impl Plugin for BuildPlanningPlugin {
                     procedural::init_variant_catalog,
                     building_definitions::init_building_definition_registry,
                     ensure_build_toolbox_shell_visible,
+                    // One-shot env opt-in — never polls disk per frame.
+                    voxel_massing::load_studio_massing_override_from_env_once,
                 )
                     .chain(),
+            )
+            .add_systems(
+                Update,
+                build_readability_harness::seed_build_readability_harness_once,
             )
             .init_resource::<BuildGhostState>()
             .init_resource::<BuildPlacementPreview>()

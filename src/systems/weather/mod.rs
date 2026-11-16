@@ -23,9 +23,11 @@ mod weather_visual;
 
 pub use air_ops::{
     air_fuel_mul, air_ground_speed_mul, airlift_hold, collect_chunk_smoke_density,
-    crosswind_component, evaluate_grounding, headwind_component, link_quality, load_air_ops_tuning,
-    missile_weather_drift, parse_air_ops_tuning, sensor_range_mul, smoke01_at_tile, smoke01_resolve,
-    sortie_envelopes_ok, sync_air_ops_weather_status, tile_to_smoke_chunk, AirOpsProfile,
+    crosswind_component, evaluate_grounding, evaluate_grounding_with, headwind_component,
+    icing_risk, icing_risk_for_sample, link_quality, liquid_water_proxy01, load_air_ops_tuning,
+    missile_weather_drift, parse_air_ops_tuning, sensor_range_mul, smoke01_at_chunk_from_frame,
+    smoke01_at_tile, smoke01_at_tile_from_frame, smoke01_resolve, sortie_envelopes_ok,
+    sync_air_ops_weather_status, temp_at_altitude_c, tile_to_smoke_chunk, AirOpsProfile,
     AirOpsProfileId, AirOpsTuning, AirOpsWeatherStatus, GroundingReason, GroundingVerdict,
     LinkModality, SensorKind, AIR_OPS_TUNING_RON, SMOKE_SAMPLE_CELLS_PER_CHUNK,
 };
@@ -41,7 +43,9 @@ pub use camera_local::{
     publish_camera_local_weather_sample, rain_snow01_from_sample, CameraLocalWeatherSample,
 };
 pub use overlay_bake::{
-    bake_weather_overlay_from_field, sync_weather_projection_node, WeatherOverlayBakeState,
+    bake_weather_overlay_from_field, sample_overlay_bake_probe_at_pos_m,
+    sample_overlay_bake_probe_at_uv, sync_weather_projection_node, OverlayBakeProbeSample,
+    WeatherOverlayBakeState,
 };
 pub use player_read_hud::{
     format_ops_power_derate_line, format_ops_wx_line, format_ops_wx_line_with_vis,
@@ -61,8 +65,9 @@ pub use sense_propagation::{
     sense_seed_mul, WeatherSenseCellField, SENSE_MUL_FLOOR,
 };
 pub use field::{
-    PressureKind, PressureSystem, WeatherClimate, WeatherField, WeatherFieldSave, WeatherRng,
-    WeatherSample, WeatherSnapshot, BASELINE_PRESSURE_HPA, WEATHER_FIELD_SAVE_SCHEMA,
+    migrate_weather_field_save, PressureKind, PressureSystem, WeatherClimate, WeatherField,
+    WeatherFieldSave, WeatherRng, WeatherSample, WeatherSnapshot, BASELINE_PRESSURE_HPA,
+    WEATHER_FIELD_SAVE_SCHEMA, WEATHER_FIELD_SAVE_SCHEMA_V1,
 };
 pub use systems::{weather_field_step, PendingWeatherRestore, WeatherPresetRequest};
 pub use tuning::{
@@ -78,6 +83,7 @@ pub use weather_visual::{
 
 use bevy::prelude::*;
 
+use crate::systems::atmosphere::{AtmosphereFrame, AtmospherePipelineSet};
 use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 use chunk_weather::spawn_chunk_weather_on_new_chunk;
 
@@ -94,6 +100,10 @@ impl Plugin for WeatherSimulationPlugin {
             .init_resource::<AirPresentationFrame>()
             .init_resource::<AirPresentationZoom>()
             .init_resource::<WeatherField>()
+            // W4: fire→cloud terms (AtmospherePlugin also inits; idempotent).
+            .init_resource::<crate::systems::atmosphere::WeatherSourceTerms>()
+            // Read path for air-ops / camera-local; built by `AtmospherePlugin` (empty ⇒ not ready).
+            .init_resource::<AtmosphereFrame>()
             .init_resource::<WeatherPollSiteBook>()
             .init_resource::<WeatherPollingStations>()
             .init_resource::<WeatherSenseCellField>()
@@ -117,10 +127,18 @@ impl Plugin for WeatherSimulationPlugin {
                     sync_weather_polling_stations,
                     build_weather_sense_cell_field,
                     bake_weather_overlay_from_field,
-                    sync_air_ops_weather_status,
                 )
                     .chain()
                     .in_set(ChunkEnvironmentSet::Weather),
+            )
+            // W2: air-ops reads the derived `AtmosphereFrame`, so it runs after `Frame` (post-fire)
+            // instead of inside the Weather chain; stations + sense field are still fresh this tick.
+            .add_systems(
+                Update,
+                sync_air_ops_weather_status
+                    .after(AtmospherePipelineSet::Frame)
+                    .after(sync_weather_polling_stations)
+                    .after(build_weather_sense_cell_field),
             )
             .add_systems(
                 Update,

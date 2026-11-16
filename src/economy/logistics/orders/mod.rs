@@ -57,7 +57,8 @@ pub use sim::{
     SimConfig, TravelModel,
 };
 pub use snapshot::{
-    build_snapshot, DemandRow, EventRow, FleetRow, LogisticsOrdersSnapshot, OrderRow, SiteMeta,
-    SiteRole, SiteRow, StockRow, VehicleRow,
+    build_snapshot, quantize_telemetry_rate_f32, quantize_telemetry_unit_f32, DemandRow, EventRow,
+    FleetRow, LogisticsOrdersSnapshot, OrderRow, SiteMeta, SiteRole, SiteRow, StockRow,
+    VehicleRow, TELEMETRY_FLOAT_QUANT_SCALE,
 };
 pub use travel::SiteDistanceTravel;

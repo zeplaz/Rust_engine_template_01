@@ -6,6 +6,8 @@
 //! Voronoi site count here still maps tiles → region entities; optional [`WorldGenParams::strategic_field_coupling`]
 //! applies [`MacroTerrainSemantics`](super::polygon_world_semantics::MacroTerrainSemantics) nudges to moisture/temperature
 //! after noise sampling (structure-informed fields without replacing the fractal core).
+//!
+//! **PCG-02** (aig3 8.3.4 *Faults*): [`fault_ridge_boost`] adds mountain ridges along seeded fault lines.
 
 use std::collections::HashMap;
 use std::time::Instant;
@@ -14,6 +16,7 @@ use bevy::prelude::*;
 use crossbeam_channel::{unbounded, Receiver, TryRecvError};
 use noise::{Fbm, NoiseFn, Perlin};
 use rand::{Rng, SeedableRng};
+use crate::ai::faction::rng::derive_keyed_seed;
 use rand::rngs::StdRng;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
@@ -79,6 +82,10 @@ pub struct WorldGenParams {
     pub height_curve_exponent: f32,
     /// Domain warp: displaces sample coordinates before height noise (0 = off). Natural coasts / folds.
     pub domain_warp_strength: f32,
+    /// PCG-02: 0 = off; >0 adds a Gaussian ridge along a seeded fault line (height bump).
+    pub fault_ridge_strength: f32,
+    /// World-tile width of the fault ridge (Gaussian sigma).
+    pub fault_ridge_width: f32,
     /// Blend in high-frequency fBm for small-scale breakup (0–1).
     pub terrain_detail_mix: f32,
     pub moisture_bias: f32,
@@ -143,6 +150,8 @@ impl Default for WorldGenParams {
             height_noise_profile: TerrainNoiseProfile::default(),
             height_curve_exponent: 1.12,
             domain_warp_strength: 0.32,
+            fault_ridge_strength: 0.0,
+            fault_ridge_width: 24.0,
             terrain_detail_mix: 0.22,
             moisture_bias: 0.0,
             temperature_bias: 0.03,
@@ -227,28 +236,28 @@ pub fn build_world_noise_kernels(params: &WorldGenParams, tuning: &NoiseSampling
     let warp_noise = build_fbm_perlin(
         params.noise_scale * tuning.warp_noise_scale_mul,
         tuning.warp_noise_octaves,
-        params.seed.wrapping_add(tuning.warp_seed_offset),
+        derive_keyed_seed(params.seed, tuning.warp_seed_offset),
         lac,
         per,
     );
     let detail_noise = build_fbm_perlin(
         params.noise_scale * tuning.detail_noise_scale_mul,
         tuning.detail_noise_octaves,
-        params.seed.wrapping_add(tuning.detail_seed_offset),
+        derive_keyed_seed(params.seed, tuning.detail_seed_offset),
         lac,
         per * tuning.detail_persistence_mul,
     );
     let moisture_noise = build_fbm_perlin(
         params.noise_scale * tuning.moisture_noise_scale_mul,
         params.noise_octaves,
-        params.seed.wrapping_add(tuning.moisture_seed_offset),
+        derive_keyed_seed(params.seed, tuning.moisture_seed_offset),
         lac,
         per,
     );
     let temperature_noise = build_fbm_perlin(
         params.noise_scale * tuning.temperature_noise_scale_mul,
         params.noise_octaves,
-        params.seed.wrapping_add(tuning.temperature_seed_offset),
+        derive_keyed_seed(params.seed, tuning.temperature_seed_offset),
         lac,
         per,
     );
@@ -385,6 +394,23 @@ pub fn island_falloff_at_world_tile(wx: i32, wy: i32, params: &WorldGenParams) -
     }
 }
 
+
+/// PCG-02: height boost from a seeded infinite fault line (Gaussian ridge, peak on the line).
+#[must_use]
+pub fn fault_ridge_boost(wx: f32, wy: f32, seed: u64, strength: f32, width: f32) -> f32 {
+    if strength <= 0.0 {
+        return 0.0;
+    }
+    let angle = (crate::ai::faction::rng::mix64(seed) as f64 / u64::MAX as f64) as f32
+        * std::f32::consts::TAU;
+    let nx = angle.cos();
+    let ny = angle.sin();
+    let dist = (wx * nx + wy * ny).abs();
+    let w = width.max(1.0);
+    let g = (-(dist * dist) / (2.0 * w * w)).exp();
+    (g * strength).clamp(0.0, 1.0)
+}
+
 /// Elevation (with island falloff), moisture, temperature for one world tile — shared by `generate_world` and pass 1.
 pub fn sample_fields_at_world_tile(
     wx: i32,
@@ -406,7 +432,17 @@ pub fn sample_fields_at_world_tile(
         params.terrain_detail_mix,
         tuning,
     );
-    let height_value = height_norm * island_falloff_at_world_tile(wx, wy, params);
+    let mut height_value = height_norm * island_falloff_at_world_tile(wx, wy, params);
+    if params.fault_ridge_strength > 0.0 {
+        let boost = fault_ridge_boost(
+            wx as f32,
+            wy as f32,
+            params.seed,
+            params.fault_ridge_strength,
+            params.fault_ridge_width,
+        );
+        height_value = (height_value + boost).clamp(0.0, 1.0);
+    }
     let moisture_value = (kernels.moisture.get([
         noise_x * tuning.moisture_sample_freq_mul,
         noise_y * tuning.moisture_sample_freq_mul,
@@ -751,7 +787,7 @@ fn world_gen_pipeline_tick(
 
                     // The one water decision for this world: sim chunks, the dense cache and the render
                     // catalog all read it.
-                    let water_grid = super::water_class::WorldWaterGrid::from_hydrology_on_terrain(
+                    let mut water_grid = super::water_class::WorldWaterGrid::from_hydrology_on_terrain(
                         &hydro,
                         job.run_params.width,
                         job.run_params.height,
@@ -759,6 +795,21 @@ fn world_gen_pipeline_tick(
                         &job.height_grid,
                         job.run_params.biome_tuning.shallow_water_height_max,
                     );
+                    // Soft marsh belts beside channels / lakes (Wetland only; open water is never changed).
+                    // Neutral by default: radius 0 skips the pass, so only a rhythm that opts in (PlayQuad) runs it.
+                    let marsh = super::water_class::MarshBeltParams::from_rhythm(
+                        &job.run_params.feature_rhythm,
+                        &job.run_params.map_scale,
+                        &job.run_params.biome_tuning,
+                    );
+                    if marsh.radius_tiles > 0 {
+                        water_grid.apply_marsh_belts(
+                            &job.moisture_grid,
+                            &job.height_grid,
+                            job.run_params.biome_tuning.shallow_water_height_max,
+                            &marsh,
+                        );
+                    }
                     if chunk_authoritative {
                         if let Some(cache) = dense_cache.as_mut() {
                             cache.apply_water_grid(&job.run_params, &water_grid);
@@ -1154,8 +1205,10 @@ fn world_gen_pipeline_tick(
         let rc = job.run_params.river_count;
         let lc = job.run_params.lake_count;
         let tuning = job.run_params.biome_tuning.clone();
+        let rhythm = job.run_params.feature_rhythm;
+        let map_scale = job.run_params.map_scale;
         std::thread::spawn(move || {
-            let hp = HydrologyParams::from_biome_tuning(&tuning);
+            let hp = HydrologyParams::from_biome_tuning(&tuning).with_rhythm(&rhythm, &map_scale);
             let r = compute_hydrology_world(gw, gh, &grid, Some(moist.as_slice()), &hp, rc, lc);
             let _ = tx.send(r);
         });
@@ -1564,6 +1617,19 @@ mod hydrology_spawning_tests {
             !catalog.river_segments.is_empty() || !catalog.river_tiles.is_empty(),
             "expected river geometry from hydrology finalize path"
         );
+    }
+
+    #[test]
+    fn pcg02_fault_ridge_peaks_on_line_and_falls_off() {
+        let seed = 42u64;
+        let strength = 0.5;
+        let width = 10.0;
+        // peak near origin for any angle is not guaranteed; compare distance ranking via sweep
+        let on = super::fault_ridge_boost(0.0, 0.0, seed, strength, width);
+        let far = super::fault_ridge_boost(500.0, 500.0, seed, strength, width);
+        assert!(on > far, "ridge must fall off away from the fault");
+        assert!(on > 0.0);
+        assert_eq!(super::fault_ridge_boost(0.0, 0.0, seed, 0.0, width), 0.0);
     }
 
 }

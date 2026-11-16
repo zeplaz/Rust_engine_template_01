@@ -474,7 +474,7 @@ pub fn front_mouse_system(
                 DeploymentKind::Reinforce { tile, .. } => tile_center(tile),
                 DeploymentKind::Hold | DeploymentKind::Fortify(_) => tile_center(f.tile),
             };
-            issue(&mut queue, &mut fb, DeploymentOrder { formation: *e, kind, issued_by: f.faction_slot }, target, tile_center(f.tile));
+            issue(&mut queue, &mut fb, DeploymentOrder { formation: *e, kind, issued_by: f.faction_slot, priority: 0 }, target, tile_center(f.tile));
         }
     }
 }
@@ -493,7 +493,7 @@ fn hold_selected(sel: &SelectedFormation, formations: &Query<(Entity, &Formation
     for e in &sel.0 {
         if let Ok((_, f)) = formations.get(*e) {
             let at = tile_center(f.tile);
-            issue(queue, fb, DeploymentOrder { formation: *e, kind: DeploymentKind::Hold, issued_by: f.faction_slot }, at, at);
+            issue(queue, fb, DeploymentOrder { formation: *e, kind: DeploymentKind::Hold, issued_by: f.faction_slot, priority: 0 }, at, at);
         }
     }
 }
@@ -516,7 +516,7 @@ fn fortify_selected(
             continue;
         };
         let at = tile_center(f.tile);
-        issue(queue, fb, DeploymentOrder { formation: *e, kind: DeploymentKind::Fortify(theater), issued_by: f.faction_slot }, at, at);
+        issue(queue, fb, DeploymentOrder { formation: *e, kind: DeploymentKind::Fortify(theater), issued_by: f.faction_slot, priority: 0 }, at, at);
     }
 }
 

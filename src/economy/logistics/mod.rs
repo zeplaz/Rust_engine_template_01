@@ -28,6 +28,7 @@ pub use solver::{
     book_matches_soa_reserved, feedback_congestion_from_load_system,
     propagate_corridor_pressure_system, reservations_within_capacity, soa_solver_aligned,
     solve_throughput_greedy_system, sync_solver_capacity_from_graph_system,
+    throughput_solve_max_edges, throughput_solve_unchanged, THROUGHPUT_SOLVE_BASE_EDGE_BUDGET,
 };
 pub use types::{
     DistrictSolveScope, FacilityPortal, FacilityPortalRegistered, FreightLot, FreightMovementModel,

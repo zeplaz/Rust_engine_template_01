@@ -1,6 +1,11 @@
 //! **Deployment orders** (PLAN-FRONT-COMBAT-v1 FC-6): the one queue UI and AI both enqueue into.
 //! Enqueue-only; [`execute_deployment_orders_system`] is the single writer of formation posture / target
 //! from orders and reports every result through [`DeploymentOutcomes`].
+//!
+//! **DEC-13** (aig3 5.10 *Action Execution*): [`DeploymentOrder::priority`] +
+//! [`DeploymentOrderQueue::enqueue_interruptible`] implement preemption; [`expand_compound_orders`]
+//! builds sequenced compound actions. Strategic delayed lane:
+//! [`crate::strategic::StrategicCommandQueue`].
 
 use std::collections::VecDeque;
 
@@ -33,6 +38,16 @@ pub struct DeploymentOrder {
     pub kind: DeploymentKind,
     /// Faction slot issuing the order (player = 0, AI factions use their slot).
     pub issued_by: u8,
+    /// DEC-13: higher priority preempts pending same-formation orders (0 = default FIFO).
+    pub priority: u8,
+}
+
+impl DeploymentOrder {
+    #[must_use]
+    pub fn with_priority(mut self, priority: u8) -> Self {
+        self.priority = priority;
+        self
+    }
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -91,6 +106,50 @@ impl DeploymentOrderQueue {
     pub fn drain(&mut self) -> Vec<(DeploymentOrderId, DeploymentOrder)> {
         self.pending.drain(..).collect()
     }
+
+    /// DEC-13: enqueue with preemption - drops pending same-formation orders with lower priority.
+    pub fn enqueue_interruptible(
+        &mut self,
+        order: DeploymentOrder,
+    ) -> Result<DeploymentOrderId, EnqueueError> {
+        self.pending
+            .retain(|(_, o)| !(o.formation == order.formation && o.priority < order.priority));
+        self.enqueue(order)
+    }
+
+    /// Drain highest priority first, then earlier ids (DEC-13 action manager arbitration).
+    pub fn drain_by_priority(&mut self) -> Vec<(DeploymentOrderId, DeploymentOrder)> {
+        let mut items: Vec<_> = self.pending.drain(..).collect();
+        items.sort_by(|a, b| b.1.priority.cmp(&a.1.priority).then(a.0.cmp(&b.0)));
+        items
+    }
+}
+
+
+/// DEC-13: expand a compound waypoint chain into sequenced Move...Hold orders (same priority).
+#[must_use]
+pub fn expand_compound_orders(
+    formation: Entity,
+    issued_by: u8,
+    waypoints: &[IVec2],
+    priority: u8,
+) -> Vec<DeploymentOrder> {
+    let mut out = Vec::with_capacity(waypoints.len().saturating_add(1));
+    for &tile in waypoints {
+        out.push(DeploymentOrder {
+            formation,
+            kind: DeploymentKind::Move(tile),
+            issued_by,
+            priority,
+        });
+    }
+    out.push(DeploymentOrder {
+        formation,
+        kind: DeploymentKind::Hold,
+        issued_by,
+        priority,
+    });
+    out
 }
 
 /// Order that sends `formation` to a pressure point: reinforce a threatened one, attack through an opportunity.
@@ -103,6 +162,7 @@ pub fn order_for_pressure_point(formation: Entity, point: &PressurePoint) -> Dep
             PressureKind::Threatened => DeploymentKind::Reinforce { theater: point.theater, tile: point.tile },
             PressureKind::Opportunity => DeploymentKind::Attack(point.tile),
         },
+        priority: 0,
     }
 }
 
@@ -275,7 +335,7 @@ pub fn execute_deployment_orders_system(
     outcomes.last.clear();
     outcomes.records.clear();
     let now = time.map_or(0, |t| t.0);
-    for (id, order) in queue.drain() {
+    for (id, order) in queue.drain_by_priority() {
         let result = match formations.get_mut(order.formation) {
             Ok(mut f) => apply_deployment_order(&mut f, &order, &theaters),
             Err(_) => Err(DeploymentReject::NoSuchFormation),
@@ -333,7 +393,7 @@ mod tests {
     use super::*;
 
     fn order(issued_by: u8) -> DeploymentOrder {
-        DeploymentOrder { formation: Entity::PLACEHOLDER, kind: DeploymentKind::Hold, issued_by }
+        DeploymentOrder { formation: Entity::PLACEHOLDER, kind: DeploymentKind::Hold, issued_by, priority: 0 }
     }
 
     #[test]
@@ -370,4 +430,34 @@ mod tests {
         assert_eq!(o.recently_rejected(e, 31_000_000, 60.0), None, "newer accepted order clears it");
         assert_eq!(o.for_faction(1).count(), 2);
     }
+    #[test]
+    fn dec13_priority_interrupts_and_compounds() {
+        let mut q = DeploymentOrderQueue::default();
+        let f = Entity::from_bits(7);
+        let low = DeploymentOrder {
+            formation: f,
+            kind: DeploymentKind::Hold,
+            issued_by: 0,
+            priority: 1,
+        };
+        let high = DeploymentOrder {
+            formation: f,
+            kind: DeploymentKind::Attack(IVec2::new(1, 1)),
+            issued_by: 0,
+            priority: 5,
+        };
+        q.enqueue(low).unwrap();
+        q.enqueue_interruptible(high).unwrap();
+        assert_eq!(q.len(), 1);
+        let drained = q.drain_by_priority();
+        assert_eq!(drained.len(), 1);
+        assert_eq!(drained[0].1.priority, 5);
+
+        let compound = expand_compound_orders(f, 0, &[IVec2::new(2, 2), IVec2::new(3, 3)], 2);
+        assert_eq!(compound.len(), 3);
+        assert!(matches!(compound[0].kind, DeploymentKind::Move(_)));
+        assert!(matches!(compound[2].kind, DeploymentKind::Hold));
+        assert!(compound.iter().all(|o| o.priority == 2));
+    }
+
 }

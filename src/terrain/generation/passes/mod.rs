@@ -17,7 +17,7 @@ pub use p3_classify::classify_cells;
 pub use p4_hydrology::{
     apply_hydrology, apply_hydrology_chunk, apply_hydrology_with_params, stamp_water_class,
 };
-pub use p5_agent_overlay::apply_agent_overlay;
+pub use p5_agent_overlay::{apply_agent_overlay, apply_agent_overlay_into_book};
 pub use p6_materialize::{materialize, MaterializedChunkData};
 #[cfg(feature = "dev_tools")]
 pub use p6_materialize::materialize_traced;

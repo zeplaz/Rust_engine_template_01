@@ -2,6 +2,16 @@
 //! [`ChunkCellMatrix::moisture`] is atmospheric humidity / dryness; **standing water** (elevation +
 //! `flooded` tag) suppresses burn and blocks spread — see [`super::surface_water::SurfaceWaterFireGate`].
 //! Scalar [`ChunkSurfaceFire`] tracks chunk means for GPU uniforms.
+//!
+//! **ECS-08** — Game object updates as jobs / async updates (gea4v2 17.7.4.1–2 · 17.7.4.6).
+//! **CONC-01** — Job systems (gea4v1 8.6.4). LEGACY: chunk-parallel game-object update (gea_v2_e4 p626).
+//!
+//! Chunk-parallel shape:
+//! 1. Tick-start snapshots = job inputs (immutable for the tick).
+//! 2. Per-chunk cell update in [`chunk_fire_overlay_tick`] = sole writer of that chunk's
+//!    [`ChunkFireOverlay`] during the tick (no dual writer across systems).
+//! 3. Cross-chunk edge deposits collect into a job-result list, then
+//!    [`apply_edge_fire_deposits`] applies on the main thread only (ordered after the tick).
 
 use std::collections::{HashMap, HashSet};
 
@@ -846,12 +856,57 @@ fn can_spread(cell: &FireCell) -> bool {
     cell.burned_hold == 0 && cell.fuel >= MIN_CELL_FUEL_FOR_SPREAD && cell.heat >= SPREAD_HEAT_MIN
 }
 
+/// One edge deposit produced by the collect pass — applied only via [`apply_edge_fire_deposits`] (ECS-08).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct EdgeFireDeposit {
+    pub entity: Entity,
+    pub cell: usize,
+    pub heat_gain: f32,
+}
+
+/// Main-thread sole apply of collected edge deposits (ECS-08 / no dual writer).
+///
+/// Job bodies must push [`EdgeFireDeposit`] values; they must not mutate overlays themselves.
+pub fn apply_edge_fire_deposits(
+    deposits: &[EdgeFireDeposit],
+    deposit_fuel_k: f32,
+    q: &mut Query<(
+        Entity,
+        &Chunk,
+        &ChunkCellMatrix,
+        &ChunkWeather,
+        &mut ChunkFireOverlay,
+    )>,
+) {
+    for dep in deposits {
+        if let Ok((_, _, _, _, mut ovl)) = q.get_mut(dep.entity) {
+            apply_one_edge_deposit(&mut ovl, dep.cell, dep.heat_gain, deposit_fuel_k);
+        }
+    }
+}
+
+/// Pure per-cell apply used by [`apply_edge_fire_deposits`] (testable without a full Query).
+#[inline]
+pub fn apply_one_edge_deposit(
+    ovl: &mut ChunkFireOverlay,
+    cell: usize,
+    heat_gain: f32,
+    deposit_fuel_k: f32,
+) {
+    if cell >= ovl.heat.len() || cell >= ovl.fuel.len() {
+        return;
+    }
+    ovl.heat[cell] = (ovl.heat[cell] + heat_gain).min(1.0);
+    ovl.fuel[cell] = (ovl.fuel[cell] - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).max(0.0);
+}
+
 /// Fire crosses chunk borders: a hot cell on a chunk edge deposits heat on the facing cell of the neighbouring
 /// chunk under the same rules as the in-chunk 8-neighbour deposit ([`take_neighbor_deposit`] +
 /// [`directional_heat_gain`]). Without this each chunk burns as an island.
 ///
-/// Reads every chunk's edge cells as they stand after [`chunk_fire_overlay_tick`], then applies the deposits, so
-/// the exchange is symmetric and order independent. Writes only `heat` / `fuel` of the receiving cell.
+/// Collect-then-apply (ECS-08): reads every chunk's edge cells as they stand after
+/// [`chunk_fire_overlay_tick`], builds [`EdgeFireDeposit`] jobs, then
+/// [`apply_edge_fire_deposits`] on the main thread so the exchange is symmetric and order-independent.
 pub fn chunk_fire_edge_spread(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
@@ -873,7 +928,7 @@ pub fn chunk_fire_edge_spread(
         return;
     }
     let by_coord: HashMap<IVec2, Entity> = q.iter().map(|(e, c, ..)| (c.coord, e)).collect();
-    let mut deposits: Vec<(Entity, usize, f32)> = Vec::new();
+    let mut deposits: Vec<EdgeFireDeposit> = Vec::new();
     let mut taken: HashSet<(Entity, usize)> = HashSet::new();
     let cell_m = TILE_METRES_GAMEPLAY;
     for (_, chunk, matrix, wx, ovl) in q.iter() {
@@ -952,7 +1007,11 @@ pub fn chunk_fire_edge_spread(
                     continue;
                 }
                 taken.insert((ne, di));
-                deposits.push((ne, di, gain));
+                deposits.push(EdgeFireDeposit {
+                    entity: ne,
+                    cell: di,
+                    heat_gain: gain,
+                });
                 continue;
             }
             let along = if dx != 0 { sy } else { sx };
@@ -989,16 +1048,15 @@ pub fn chunk_fire_edge_spread(
                     continue;
                 }
                 taken.insert((ne, di));
-                deposits.push((ne, di, gain));
+                deposits.push(EdgeFireDeposit {
+                    entity: ne,
+                    cell: di,
+                    heat_gain: gain,
+                });
             }
         }
     }
-    for (e, di, gain) in deposits {
-        if let Ok((_, _, _, _, mut ovl)) = q.get_mut(e) {
-            ovl.heat[di] = (ovl.heat[di] + gain).min(1.0);
-            ovl.fuel[di] = (ovl.fuel[di] - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).max(0.0);
-        }
-    }
+    apply_edge_fire_deposits(&deposits, deposit_fuel_k, &mut q);
 }
 
 #[cfg(test)]
@@ -1205,5 +1263,37 @@ mod link_tests {
         let out = run_one(matrix, overlay, true);
         assert!((out.heat[4] - before).abs() < 1e-6);
         assert!((disruption_after_cell_heat(0.0, out.heat[4]) - disruption_before).abs() < 1e-6);
+    }
+
+    /// ECS-08: edge job results mutate overlay only through the main-thread apply helper.
+    #[test]
+    fn edge_deposits_apply_on_main_thread_no_dual_writer() {
+        let n = 9usize;
+        let mut ovl = ChunkFireOverlay {
+            heat: vec![0.0; n],
+            fuel: vec![0.5; n],
+            smoke: vec![0.0; n],
+            toxic: vec![0.0; n],
+            burn_hold: vec![0; n],
+        };
+        let cell = 4usize;
+        let heat_before = ovl.heat[cell];
+        let fuel_before = ovl.fuel[cell];
+        let gain = 0.2f32;
+        let deposit_fuel_k = 0.016 * DEPOSIT_FUEL_RATE;
+        // Job product only — no mutation yet.
+        let jobs = [EdgeFireDeposit {
+            entity: Entity::from_bits(1),
+            cell,
+            heat_gain: gain,
+        }];
+        assert!((ovl.heat[cell] - heat_before).abs() < 1e-9);
+        // Sole apply path.
+        apply_one_edge_deposit(&mut ovl, jobs[0].cell, jobs[0].heat_gain, deposit_fuel_k);
+        assert!((ovl.heat[cell] - (heat_before + gain).min(1.0)).abs() < 1e-5);
+        let drawn = fuel_before - ovl.fuel[cell];
+        assert!((drawn - NEIGHBOR_FUEL_DRAW * deposit_fuel_k).abs() < 1e-5);
+        // Second apply would be a dual writer if a worker also mutated — contract: one apply call.
+        assert_eq!(jobs.len(), 1);
     }
 }

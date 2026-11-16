@@ -129,12 +129,43 @@ fn snap_axis(v: Vec2) -> IVec2 {
     }
 }
 
+/// TAC-05 RO: prefer a candidate origin with higher gen-time defensibility (ties keep `preferred`).
+#[must_use]
+pub fn prefer_defensible_origin(
+    preferred: IVec2,
+    alternate: IVec2,
+    analysis: &crate::terrain::TerrainAnalysisBook,
+) -> IVec2 {
+    let a = analysis.defensibility_at(preferred);
+    let b = analysis.defensibility_at(alternate);
+    if b > a + 1e-5 {
+        alternate
+    } else {
+        preferred
+    }
+}
+
 /// Plan rows for `side` in `theater`: bunkers behind its Threatened pressure points, dragon's teeth on
 /// the enemy's attack axes (the enemy's Opportunity points land on our cells), trench strips along its
 /// front set back from the line. Deterministic, at most `fortify_max_rows`, no overlaps, non-negative
 /// origins only (construction origins are unsigned tiles).
+///
+/// Optional [`TerrainAnalysisBook`](crate::terrain::TerrainAnalysisBook) biases bunker origins
+/// toward higher defensibility (TAC-05 RO consumer — never writes the book).
 #[must_use]
 pub fn plan_fortification_rows(theater: &Theater, side: u8, points: &[PressurePoint], balance: &FrontBalance) -> Vec<FortifyRow> {
+    plan_fortification_rows_with_analysis(theater, side, points, balance, None)
+}
+
+/// Same as [`plan_fortification_rows`] with optional terrain analysis RO.
+#[must_use]
+pub fn plan_fortification_rows_with_analysis(
+    theater: &Theater,
+    side: u8,
+    points: &[PressurePoint],
+    balance: &FrontBalance,
+    analysis: Option<&crate::terrain::TerrainAnalysisBook>,
+) -> Vec<FortifyRow> {
     let own: Vec<&FrontCell> = theater.cells_of(side).collect();
     let enemy: Vec<&FrontCell> = theater.cells.iter().filter(|c| c.owner != side).collect();
     if own.is_empty() {
@@ -169,7 +200,12 @@ pub fn plan_fortification_rows(theater: &Theater, side: u8, points: &[PressurePo
         v
     };
     for p in ranked(PressureKind::Threatened, true) {
-        try_push(DefenseKind::Bunker, p.tile + back * setback, &mut rows);
+        let mut origin = p.tile + back * setback;
+        if let Some(book) = analysis {
+            let alt = origin + back;
+            origin = prefer_defensible_origin(origin, alt, book);
+        }
+        try_push(DefenseKind::Bunker, origin, &mut rows);
     }
     for p in ranked(PressureKind::Opportunity, false) {
         if theater.contains_front_tile(p.tile) {
@@ -226,6 +262,22 @@ mod tests {
         app.world_mut().despawn(done);
         app.update();
         assert_eq!(app.world().resource::<FortificationIndex>().cover_at(IVec2::new(4, 4), 0, &b), 0.0);
+    }
+
+    #[test]
+    fn tac05_fort_ro_prefers_defensible() {
+        let mut book = crate::terrain::TerrainAnalysisBook::default();
+        book.cells.insert(
+            (5, 5),
+            crate::terrain::TerrainAnalysisCell {
+                defensibility: 0.9,
+                ..Default::default()
+            },
+        );
+        let a = prefer_defensible_origin(IVec2::new(4, 5), IVec2::new(5, 5), &book);
+        assert_eq!(a, IVec2::new(5, 5));
+        // Signature is RO (`&TerrainAnalysisBook`) — no fort system takes ResMut of the book.
+        let _ = prefer_defensible_origin as fn(IVec2, IVec2, &crate::terrain::TerrainAnalysisBook) -> IVec2;
     }
 
     #[test]

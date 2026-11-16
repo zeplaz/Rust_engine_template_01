@@ -1,7 +1,28 @@
-//! W3 — soft wind-advected cloud puffs (procedural; not volumetric).
+//! W3 / W6 — soft wind-advected cloud puffs (procedural; not volumetric — LGT-04 presentation).
 //!
 //! Many small radial-falloff sprites drift with local wind and wrap in a
-//! camera-local field. No sin bounce, no giant solid rectangles.
+//! camera-local field. Cover/wind come from [`CameraLocalWeatherSample`]
+//! (AtmosphereFrame-derived). No sin bounce, no giant solid rectangles; no sim writes.
+//!
+//! ## RND-04 — Cloud alpha layering (sort, not OIT)
+//!
+//! NEW: **RND-04** · gea4v2 **11.3.12** / **11.3.12.1**.
+//! LEGACY: `geometry_visual_effects` (gea_v2_e4 p141).
+//!
+//! Cloud sheets use **premultiplied-style alpha** on ColorMaterial sprites with
+//! strictly increasing [`CLOUD_SHEET_LAYER_Z`] (far → near within the deck) and
+//! depth-fade alpha so lower layers stay softer. Cross-pass smoke/fire ordering
+//! lives in fire `ParticleClass::transparent_draw_order` + Core2d overlay chain
+//! (RND-03 owns `core2d_overlay_order.rs`). Debt not taken: true volumetric OIT.
+//!
+//! ## RND-14 — Card / impostor clouds (intentional)
+//!
+//! NEW: **RND-14** · gea4v2 **11.6.4** *Card-Based Effects*.
+//! LEGACY: `geometry_visual_effects` (gea_v2_e4 p141).
+//!
+//! Each puff is a **camera-local card** (`Rectangle` mesh + soft puff texture) — a
+//! billboard/impostor stack that fakes volume via layered alpha, not ray marching.
+//! [`CLOUD_SHEET_LAYER_Z`] strata stay RND-04-owned; this slice only locks the card path.
 
 use bevy::asset::RenderAssetUsages;
 use bevy::prelude::*;
@@ -20,7 +41,9 @@ const PUFF_TEX_SIZE: u32 = 64;
 /// Camera-local wrap half-extents (world units under the weather VFX root).
 const FIELD_HALF_W: f32 = 240.0;
 const FIELD_HALF_H: f32 = 150.0;
-const LAYER_Z: [f32; 3] = [400.0, 455.0, 510.0];
+/// RND-04: three cloud deck strata — Z must stay strictly increasing (back→front).
+pub(crate) const CLOUD_SHEET_LAYER_Z: [f32; 3] = [400.0, 455.0, 510.0];
+const LAYER_Z: [f32; 3] = CLOUD_SHEET_LAYER_Z;
 /// Visual meters of drift per (m/s) of wind per second — tuned for readable sky motion.
 const WIND_VISUAL_SCALE: f32 = 2.8;
 
@@ -39,7 +62,31 @@ struct WeatherCloudSheetMaterials {
     handles: Vec<Handle<ColorMaterial>>,
 }
 
-fn soft_puff_image() -> Image {
+/// Cover alpha for the whole cloud deck (0 = clear). Shared by the top-down sprites and the
+/// PixelWorld3D layer so both views read the same weather.
+#[must_use]
+pub(crate) fn cloud_cover_alpha(cloud: f32, tactical: bool) -> f32 {
+    if cloud < 0.06 {
+        0.0
+    } else if tactical {
+        (cloud * 0.18).min(0.22)
+    } else {
+        (cloud * 0.32).min(0.38)
+    }
+}
+
+/// Per-puff alpha: deck cover × layer depth fade × slow flicker (view time only).
+#[must_use]
+pub(crate) fn cloud_puff_alpha(cover_alpha: f32, layer: u8, speed_mul: f32, phase: f32, t: f32) -> f32 {
+    let depth_fade = 0.55 + 0.45 * (1.0 - f32::from(layer) / 2.0);
+    let flicker = 0.82
+        + 0.18
+            * ((t * 0.22 + phase).sin() * 0.5 + 0.5)
+                .mul_add(0.6, (t * 0.11 + phase * 1.7).cos() * 0.2 + 0.5);
+    (cover_alpha * depth_fade * flicker * speed_mul.clamp(0.5, 1.1)).min(0.42)
+}
+
+pub(crate) fn soft_puff_image() -> Image {
     let w = PUFF_TEX_SIZE;
     let h = PUFF_TEX_SIZE;
     let mut data = vec![0u8; (w * h * 4) as usize];
@@ -77,7 +124,7 @@ fn soft_puff_image() -> Image {
     image
 }
 
-fn hash01(i: u32, salt: u32) -> f32 {
+pub(crate) fn hash01(i: u32, salt: u32) -> f32 {
     let mut x = i.wrapping_mul(0x9E37_79B9).wrapping_add(salt);
     x ^= x >> 16;
     x = x.wrapping_mul(0x85EB_CA6B);
@@ -198,13 +245,7 @@ fn update_cloud_sheets(
         0.0
     };
     let tactical = cam.zoom_alpha > WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA;
-    let cover_alpha = if cloud < 0.06 {
-        0.0
-    } else if tactical {
-        (cloud * 0.18).min(0.22)
-    } else {
-        (cloud * 0.32).min(0.38)
-    };
+    let cover_alpha = cloud_cover_alpha(cloud, tactical);
     if cover_alpha < 0.01 {
         for (_, _, mut vis) in &mut sheets {
             *vis = Visibility::Hidden;
@@ -264,12 +305,7 @@ fn update_cloud_sheets(
         // Face slightly into the wind so ellipses read as streaming.
         tf.rotation = Quat::from_rotation_z(wind_dir.y.atan2(wind_dir.x) * 0.35);
 
-        let depth_fade = 0.55 + 0.45 * (1.0 - layer_f / 2.0);
-        let flicker = 0.82
-            + 0.18
-                * ((t * 0.22 + puff.phase).sin() * 0.5 + 0.5)
-                    .mul_add(0.6, (t * 0.11 + puff.phase * 1.7).cos() * 0.2 + 0.5);
-        let alpha = (cover_alpha * depth_fade * flicker * puff.speed_mul.clamp(0.5, 1.1)).min(0.42);
+        let alpha = cloud_puff_alpha(cover_alpha, puff.layer, puff.speed_mul, puff.phase, t);
         *vis = if alpha < 0.02 {
             Visibility::Hidden
         } else {
@@ -293,4 +329,33 @@ pub fn register_cloud_sheets(app: &mut App) {
                 .after(ExtractedCameraMetricsSet::Sync),
         ),
     );
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn rnd04_cloud_layer_z_is_strictly_increasing() {
+        assert!(
+            CLOUD_SHEET_LAYER_Z[0] < CLOUD_SHEET_LAYER_Z[1]
+                && CLOUD_SHEET_LAYER_Z[1] < CLOUD_SHEET_LAYER_Z[2],
+            "cloud sheet Z must be back→front sorted (RND-04 alpha layering): {:?}",
+            CLOUD_SHEET_LAYER_Z
+        );
+        assert_eq!(LAYER_Z, CLOUD_SHEET_LAYER_Z);
+    }
+
+    #[test]
+    fn rnd04_cloud_puff_alpha_fades_with_layer_depth() {
+        let cover = cloud_cover_alpha(0.8, false);
+        assert!(cover > 0.0);
+        let a0 = cloud_puff_alpha(cover, 0, 1.0, 0.0, 0.0);
+        let a2 = cloud_puff_alpha(cover, 2, 1.0, 0.0, 0.0);
+        assert!(
+            a0 > a2,
+            "lower cloud layers keep higher alpha (depth fade): a0={a0} a2={a2}"
+        );
+        assert!(a0 <= 0.42 && a2 <= 0.42);
+    }
 }

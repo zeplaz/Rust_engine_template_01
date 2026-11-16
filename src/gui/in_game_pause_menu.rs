@@ -21,6 +21,7 @@ pub fn toggle_pause_menu_on_escape(
     layout: Res<crate::gui::hud::HudCommandShellLayout>,
     mut next_menu: ResMut<NextState<InGameMenuState>>,
     mut pending: ResMut<PauseMenuPendingAction>,
+    esc_frame: Res<super::hud::sim_hud_esc_cascade::HudEscCascadeFrame>,
 ) {
     if !keys.just_pressed(bindings.cancel_keybinding_capture) {
         return;
@@ -31,6 +32,11 @@ pub fn toggle_pause_menu_on_escape(
         return;
     }
     if pending.is_pending() {
+        return;
+    }
+    // ECS-10: an upstream handler (key-binding capture, picker, road sheet, tray) already consumed
+    // this Esc — it must not fall through to open pause.
+    if esc_frame.consumed_before_pause() {
         return;
     }
     if !super::hud::sim_hud_esc_cascade::sim_hud_esc_cascade_ready_for_pause(
@@ -51,12 +57,163 @@ impl Plugin for InGamePauseMenuPlugin {
     fn build(&self, app: &mut App) {
         app.init_state::<InGameMenuState>()
             .init_resource::<PauseMenuPendingAction>()
+            .init_resource::<super::hud::sim_hud_esc_cascade::HudEscCascadeFrame>()
             .add_plugins(super::pause_menu_bevy::PauseMenuBevyPlugin)
             .add_systems(
                 Update,
                 toggle_pause_menu_on_escape
                     .run_if(in_simulation_or_editor)
-                    .after(crate::gui::hud::panel_state::hud_panel_escape_collapse_system),
+                    .after(crate::gui::hud::sim_hud_esc_cascade::HudEscCascadeSet::Resolve),
             );
+    }
+}
+
+#[cfg(test)]
+mod ecs10_esc_chain_tests {
+    use super::*;
+    use crate::gui::hud::panel_state::hud_panel_escape_collapse_system;
+    use crate::gui::hud::sim_hud_esc_cascade::{
+        EscCascadeHandler, HudEscCascadeFrame, HudEscCascadeSet,
+    };
+    use crate::gui::hud::{
+        ContextTrayState, HudCommandShellLayout, HudOverlayTrayState, HudPanelState,
+        SimBuildPickerState,
+    };
+    use crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState;
+    use crate::gui::options_keybindings_ui::{BindingSlot, KeybindingsUiState};
+    use bevy::state::app::StatesPlugin;
+
+    fn chain_app() -> App {
+        let mut app = App::new();
+        app.add_plugins((MinimalPlugins, StatesPlugin))
+            .init_state::<InGameMenuState>()
+            .init_resource::<ButtonInput<KeyCode>>()
+            .init_resource::<InputBindings>()
+            .init_resource::<SimBuildPickerState>()
+            .init_resource::<SimRoadToolSheetState>()
+            .init_resource::<ContextTrayState>()
+            .init_resource::<HudOverlayTrayState>()
+            .init_resource::<HudCommandShellLayout>()
+            .init_resource::<PauseMenuPendingAction>()
+            .init_resource::<KeybindingsUiState>()
+            .init_resource::<HudEscCascadeFrame>()
+            .add_systems(
+                Update,
+                (
+                    hud_panel_escape_collapse_system.in_set(HudEscCascadeSet::Resolve),
+                    toggle_pause_menu_on_escape.after(HudEscCascadeSet::Resolve),
+                ),
+            );
+        app
+    }
+
+    fn press_esc_and_update(app: &mut App) {
+        {
+            let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+            keys.clear();
+            keys.release(KeyCode::Escape);
+            keys.clear();
+            keys.press(KeyCode::Escape);
+        }
+        app.update();
+    }
+
+    fn pause_requested(app: &App) -> bool {
+        // The transition may already be applied (StateTransition) or still queued.
+        *app.world().resource::<State<InGameMenuState>>().get() == InGameMenuState::Pause
+            || matches!(
+                app.world().resource::<NextState<InGameMenuState>>(),
+                NextState::Pending(InGameMenuState::Pause)
+                    | NextState::PendingIfDifferent(InGameMenuState::Pause)
+            )
+    }
+
+    fn clear_pending(app: &mut App) {
+        app.world_mut()
+            .resource_mut::<NextState<InGameMenuState>>()
+            .reset();
+    }
+
+    #[test]
+    fn ecs10_esc_closing_picker_does_not_fall_through_to_pause() {
+        let mut app = chain_app();
+        app.world_mut().resource_mut::<SimBuildPickerState>().open = true;
+        press_esc_and_update(&mut app);
+        assert!(!app.world().resource::<SimBuildPickerState>().open, "picker consumed Esc");
+        assert_eq!(
+            app.world().resource::<HudEscCascadeFrame>().handled_by,
+            Some(EscCascadeHandler::BuildPicker)
+        );
+        assert!(!pause_requested(&app), "same Esc must not also open pause");
+
+        clear_pending(&mut app);
+        press_esc_and_update(&mut app);
+        assert!(pause_requested(&app), "second Esc reaches the pause handler");
+    }
+
+    #[test]
+    fn ecs10_esc_closing_road_sheet_does_not_fall_through_to_pause() {
+        let mut app = chain_app();
+        app.world_mut().resource_mut::<SimRoadToolSheetState>().open = true;
+        press_esc_and_update(&mut app);
+        assert!(!app.world().resource::<SimRoadToolSheetState>().open);
+        assert!(!pause_requested(&app));
+    }
+
+    #[test]
+    fn ecs10_esc_collapsing_tray_does_not_fall_through_to_pause() {
+        let mut app = chain_app();
+        app.world_mut().resource_mut::<ContextTrayState>().panel_state = HudPanelState::Expanded;
+        press_esc_and_update(&mut app);
+        assert_eq!(
+            app.world().resource::<ContextTrayState>().panel_state,
+            HudPanelState::Collapsed
+        );
+        assert_eq!(
+            app.world().resource::<HudEscCascadeFrame>().handled_by,
+            Some(EscCascadeHandler::TrayCollapse)
+        );
+        assert!(!pause_requested(&app));
+    }
+
+    #[test]
+    fn ecs10_keybinding_capture_esc_does_not_open_pause_or_collapse_hud() {
+        let mut app = chain_app();
+        app.world_mut().resource_mut::<KeybindingsUiState>().capture_slot =
+            Some(BindingSlot::FrontHold);
+        app.world_mut().resource_mut::<ContextTrayState>().panel_state = HudPanelState::Expanded;
+        press_esc_and_update(&mut app);
+        assert_eq!(
+            app.world().resource::<HudEscCascadeFrame>().handled_by,
+            Some(EscCascadeHandler::KeybindingCapture)
+        );
+        assert!(!pause_requested(&app));
+        assert_eq!(
+            app.world().resource::<ContextTrayState>().panel_state,
+            HudPanelState::Expanded,
+            "capture owns Esc; HUD must not collapse"
+        );
+    }
+
+    #[test]
+    fn ecs10_esc_with_no_upstream_handler_opens_pause() {
+        let mut app = chain_app();
+        press_esc_and_update(&mut app);
+        assert_eq!(
+            app.world().resource::<HudEscCascadeFrame>().handled_by,
+            Some(EscCascadeHandler::PauseMenu)
+        );
+        assert!(pause_requested(&app));
+    }
+
+    #[test]
+    fn ecs10_frame_witness_resets_when_esc_not_pressed() {
+        let mut app = chain_app();
+        app.world_mut().resource_mut::<SimBuildPickerState>().open = true;
+        press_esc_and_update(&mut app);
+        assert!(app.world().resource::<HudEscCascadeFrame>().consumed_before_pause());
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().clear();
+        app.update();
+        assert_eq!(*app.world().resource::<HudEscCascadeFrame>(), HudEscCascadeFrame::default());
     }
 }

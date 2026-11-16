@@ -185,7 +185,7 @@ def validate_report(
     compress: int = 3,
     use_cached: bool = False,
 ) -> str:
-    """Run a structured validator (cargo/bevy/mcp_spec/mcp_job/asset_glb). Returns ValidationReport JSON — not raw logs."""
+    """Run a structured validator (cargo/bevy/mcp_spec/mcp_job/asset_glb/param_frame/massing_preview/building_grammar/…). Returns ValidationReport JSON — not raw logs."""
     report = run_validator(
         validator,
         target or None,

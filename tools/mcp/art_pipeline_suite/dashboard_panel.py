@@ -49,6 +49,9 @@ class DashboardPanel(ttk.Frame):
         ttk.Button(btns, text="Render StudioTasks HTML", command=self._render_tasks).pack(
             side="left", padx=4
         )
+        ttk.Button(btns, text="Open massing QC", command=self._open_massing_qc).pack(
+            side="left", padx=4
+        )
         ttk.Button(btns, text="Open selected", command=self._open_selected).pack(side="left", padx=4)
         ttk.Button(btns, text="Blender handoff (selected task)", command=self._handoff).pack(
             side="left", padx=4
@@ -70,10 +73,20 @@ class DashboardPanel(ttk.Frame):
             root / "assets" / "staging",
         ]
         out: list[Path] = []
+        massing = root / "debug_runs" / "studio_dash" / "massing_preview.json"
+        if massing.is_file():
+            out.append(massing)
         for base in candidates:
             if not base.is_dir():
                 continue
-            for pat in ("*.html", "*coverage*.json", "*pcg*.json", "*golden*.json", "matrix.json"):
+            for pat in (
+                "*.html",
+                "*coverage*.json",
+                "*pcg*.json",
+                "*golden*.json",
+                "massing_preview.json",
+                "matrix.json",
+            ):
                 out.extend(sorted(base.glob(pat))[:20])
                 out.extend(sorted(base.glob(f"**/{pat}"))[:20])
         # de-dupe preserve order
@@ -116,8 +129,36 @@ class DashboardPanel(ttk.Frame):
         from studio_dash.render_report import write_report
 
         data = json.loads(path.read_text(encoding="utf-8"))
+        if path.name == "massing_preview.json" or (
+            data.get("presentation_only") is True and "massing_columns" in data
+        ):
+            from .voxel_massing_panel import massing_qc_view
+
+            data = massing_qc_view(data)
         out = _repo_root() / "debug_runs" / "studio_dash" / f"{path.stem}.html"
         return write_report(data, out, title=path.stem)
+
+    def _open_massing_qc(self) -> None:
+        from .voxel_massing_panel import default_massing_path, massing_qc_view
+
+        path = default_massing_path()
+        if not path.is_file():
+            self._log(f"Dashboard: no massing preview at {path} — export from Massing tab first")
+            return
+        _studio_dash_on_path()
+        from studio_dash.render_report import write_report
+
+        raw = json.loads(path.read_text(encoding="utf-8"))
+        data = massing_qc_view(raw)
+        out = _repo_root() / "debug_runs" / "studio_dash" / "massing_preview.html"
+        write_report(data, out, title="massing_preview QC")
+        webbrowser.open(out.resolve().as_uri())
+        self._refresh()
+        hist = data.get("floors_histogram") or {}
+        self._log(
+            f"Dashboard: massing QC → {out} "
+            f"(columns={data.get('column_count')} seed={data.get('seed')} floors={hist})"
+        )
 
     def _render_tasks(self) -> None:
         _studio_dash_on_path()

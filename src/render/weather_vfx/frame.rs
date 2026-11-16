@@ -31,6 +31,8 @@ pub struct WeatherPrecipFrame {
     /// Snapshot of zoom used for ES-5-4 density.
     pub zoom_alpha: f32,
     pub tactical_band: bool,
+    /// [`crate::systems::atmosphere::AtmosphereFrame::revision`] used for streak samples (W6).
+    pub frame_revision: u64,
 }
 
 impl WeatherPrecipFrame {

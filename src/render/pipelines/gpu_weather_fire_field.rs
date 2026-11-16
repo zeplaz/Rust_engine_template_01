@@ -1,10 +1,10 @@
 //! Ping-pong **GPU field** for weather + fire **visuals** (compute on `Rgba32Float` textures).
 //!
-//! - **CPU** uploads [`WeatherFireFieldUniforms`] from [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate)
-//!   and [`RenderProjectionGraph`](crate::render::extraction::RenderProjectionGraph) (**fire** + **smoke** nodes)
-//!   via [`crate::systems::atmosphere::gpu_field_bridge`]. Smoke channel bias is projection-only
-//!   (no second ECS smoke scan). No direct [`ChunkWeather`](crate::systems::weather::ChunkWeather) /
-//!   [`ChunkEcology`](crate::systems::ecology::ChunkEcology) queries in the bridge.
+//! - **CPU** uploads [`WeatherFireFieldUniforms`] from [`AtmosphereFrame`](crate::systems::atmosphere::AtmosphereFrame)
+//!   weather means + [`RenderProjectionGraph`](crate::render::extraction::RenderProjectionGraph)
+//!   (**fire** + **smoke** nodes) via [`crate::systems::atmosphere::gpu_field_bridge`] (W6 single path).
+//!   Ecology biomass/fire_risk still ride [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate).
+//!   Smoke channel bias is projection-only (no second ECS smoke scan).
 //! - Packed fire instances are extracted to the render world and uploaded each frame through
 //!   [`GPUBufferRegistry`](crate::render::GPUBufferRegistry) ([`FIRE_VISUAL_INSTANCES_BUFFER`](crate::render::FIRE_VISUAL_INSTANCES_BUFFER)).
 //! - **WGSL** (`assets/shaders/post/weather_fire_field.wgsl`) relaxes the field each frame and applies a

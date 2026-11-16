@@ -14,13 +14,17 @@ except `--read`, which shells out to pdftotext for just the requested pages).
     python src/dev/ref_books_index/lookup.py --brief combat/ballistics.rs  # ≤12 lines: id, best ref, --read
     python src/dev/ref_books_index/lookup.py --grep REGEX book:sec   # match lines + context + page
     python src/dev/ref_books_index/lookup.py --read aig3:6.2.8 --pages  # page range + line count only
-    python src/dev/ref_books_index/lookup.py --gaps                  # uncovered src dirs / large .rs
+    python src/dev/ref_books_index/lookup.py --gaps                  # uncovered src+tools; [tools]/[voxel]/[atmos] tags
+    python src/dev/ref_books_index/lookup.py --dual shape grammar    # NEW matrix + LEGACY keywords (both)
+    python src/dev/ref_books_index/lookup.py --dual --code PATH      # same for a code path
+    python src/dev/ref_books_index/lookup.py --json --dual shape grammar  # {"new":[...],"legacy":[...]}
 """
-import json, os, re, shutil, subprocess, sys
+import csv, json, os, re, shutil, subprocess, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.abspath(os.path.join(HERE, "..", "..", ".."))
 BOOK_DIR = os.environ.get("REF_BOOKS_DIR", r"$REF_BOOKS_DIR")
+LEGACY_LOOKUP_DIR = os.environ.get("REF_BOOKS_LEGACY_LOOKUP_DIR", r"$REF_BOOKS_DIR\lookup")
 CACHE_DIR = os.path.join(REPO, "debug_runs", "ref_books_cache")
 ADOPTION_PATH = os.path.join(HERE, "adoption.tsv")
 STATUSES = {"OPEN", "ADOPTED", "PARTIAL", "DEFER", "REJECTED"}
@@ -122,6 +126,108 @@ def show_row(toc, r, adopt, refs=True):
         for ref in r["refs"]: print(ref_line(toc, ref))
     if r["code"]: print("    code: " + "; ".join(r["code"]))
     print("    -> " + r["take"])
+
+def load_legacy_lookup():
+    """Rows from keyword_lookup.csv, or None if legacy tree absent."""
+    path = os.path.join(LEGACY_LOOKUP_DIR, "keyword_lookup.csv")
+    if not os.path.isfile(path):
+        return None
+    rows = []
+    with open(path, encoding="utf-8", newline="") as f:
+        for row in csv.DictReader(f):
+            page = row.get("pdf_page", "").strip()
+            if not page or not row.get("keyword", "").strip():
+                continue
+            rows.append({
+                "keyword": row["keyword"],
+                "book_id": row["book_id"],
+                "section": row.get("section", ""),
+                "pdf_page": int(page),
+            })
+    return rows
+
+def score_legacy(terms, legacy_rows):
+    terms = [t.lower() for t in terms]
+    scored = []
+    for row in legacy_rows:
+        kw = row["keyword"].replace("_", " ").lower()
+        sec = row["section"].lower()
+        hay = kw + " " + sec
+        if not all(t in hay for t in terms):
+            continue
+        s = sum(3 * (t in kw) + (t in sec) for t in terms)
+        scored.append((s, row))
+    scored.sort(key=lambda x: (-x[0], x[1]["keyword"], x[1]["book_id"]))
+    return scored
+
+def legacy_line(row):
+    return f"    {row['keyword']:<22} {row['book_id']:<10} p{row['pdf_page']:<5} {row['section']}"
+
+def terms_from_code(frag, mat_rows):
+    frag = frag.replace("\\", "/").removeprefix("src/")
+    terms = []
+    seen = set()
+    for part in re.split(r"[/_.\\-]+", frag):
+        w = part.lower()
+        if len(w) >= 3 and w not in seen:
+            seen.add(w)
+            terms.append(w)
+    for r in mat_rows:
+        for blob in (r["kw"], r["concept"]):
+            for word in re.split(r"[,;/]+", blob):
+                w = word.strip().lower()
+                if len(w) >= 3 and w not in seen:
+                    seen.add(w)
+                    terms.append(w)
+    return terms
+
+def by_dual(terms, toc, mat, adopt, as_json=False):
+    scored = score_search(terms, mat)
+    new_hits = [r for _, r in scored[:8]]
+    legacy_rows = load_legacy_lookup()
+    legacy_hits = []
+    if legacy_rows is not None:
+        legacy_hits = [row for _, row in score_legacy(terms, legacy_rows)[:12]]
+    if as_json:
+        out = {"new": [row_json(toc, r, adopt) for r in new_hits], "legacy": legacy_hits}
+        print(json.dumps(out, ensure_ascii=False))
+        return
+    print(f"== dual: new matrix ({len(scored)} rows) ==")
+    for _, r in scored[:8]:
+        show_row(toc, r, adopt)
+    if legacy_rows is None:
+        print("legacy: unavailable")
+        return
+    print(f"== dual: legacy keywords ({len(legacy_hits)} rows) ==")
+    if not legacy_hits:
+        print("    (no keyword hits)")
+    else:
+        for row in legacy_hits:
+            print(legacy_line(row))
+
+def by_dual_code(frag, toc, mat, adopt, as_json=False):
+    rows = rows_for_code(frag, mat)
+    legacy_rows = load_legacy_lookup()
+    terms = terms_from_code(frag, rows)
+    legacy_hits = []
+    if legacy_rows is not None and terms:
+        legacy_hits = [row for _, row in score_legacy(terms, legacy_rows)[:12]]
+    if as_json:
+        out = {"new": [row_json(toc, r, adopt) for r in rows], "legacy": legacy_hits}
+        print(json.dumps(out, ensure_ascii=False))
+        return
+    print(f"== dual: new matrix ({len(rows)} rows) ==")
+    for r in rows:
+        show_row(toc, r, adopt)
+    if legacy_rows is None:
+        print("legacy: unavailable")
+        return
+    print(f"== dual: legacy keywords ({len(legacy_hits)} rows) ==")
+    if not legacy_hits:
+        print("    (no keyword hits)")
+    else:
+        for row in legacy_hits:
+            print(legacy_line(row))
 
 def score_search(terms, mat):
     terms = [t.lower() for t in terms]
@@ -308,35 +414,78 @@ def covered_code_paths(mat):
     paths = set()
     for r in mat:
         for p in r["code"]:
-            paths.add(p.replace("\\", "/").removeprefix("src/"))
+            p = p.replace("\\", "/")
+            if p.startswith("tools/"):
+                paths.add(p.rstrip("/"))
+            else:
+                paths.add(p.removeprefix("src/").rstrip("/"))
     return paths
 
-def by_gaps(mat):
-    covered = covered_code_paths(mat)
-    src_root = os.path.join(REPO, "src")
-    dir_hits = []  # (lines, path)
-    file_hits = []
-    for name in sorted(os.listdir(src_root)):
-        d = os.path.join(src_root, name)
+def _gap_path_covered(rel, covered, *, dir_entry=False):
+    rel = rel.replace("\\", "/").rstrip("/")
+    bodies = {rel}
+    if rel.startswith("src/"):
+        bodies.add(rel[4:])
+    elif rel.startswith("tools/"):
+        bodies.add(rel[6:])
+    for body in bodies:
+        top = body.split("/")[0] if body else ""
+        for c in covered:
+            c = c.replace("\\", "/").rstrip("/")
+            if not c:
+                continue
+            if body == c or body.startswith(c + "/") or c.startswith(body + "/"):
+                return True
+            if dir_entry and top and (c == top or c.startswith(top + "/")):
+                return True
+            cr = c.rstrip("/")
+            if cr in body or body.startswith(cr + "/") or body.startswith(cr):
+                return True
+    return False
+
+def _count_source_lines(root_dir, suffixes):
+    n = 0
+    for root, _, files in os.walk(root_dir):
+        for fn in files:
+            if not any(fn.endswith(s) for s in suffixes):
+                continue
+            try:
+                with open(os.path.join(root, fn), encoding="utf-8", errors="replace") as f:
+                    n += sum(1 for _ in f)
+            except OSError:
+                pass
+    return n
+
+def gap_bucket_tags(rel_path):
+    """PLAN v3 T2: tools / voxel / atmos buckets for --gaps lines."""
+    p = rel_path.replace("\\", "/").lower()
+    tags = []
+    if p.startswith("tools/") or "/tools/" in p:
+        tags.append("tools")
+    if "voxel" in p or "massing" in p:
+        tags.append("voxel")
+    if "atmosphere" in p or "atmos" in p:
+        tags.append("atmos")
+    return tags
+
+def _collect_tree_gaps(tree_root, rel_prefix, covered, *, dir_suffixes, large_suffixes, large_min):
+    dir_hits, file_hits = [], []
+    if not os.path.isdir(tree_root):
+        return dir_hits, file_hits
+    for name in sorted(os.listdir(tree_root)):
+        d = os.path.join(tree_root, name)
         if not os.path.isdir(d):
             continue
-        rel = name + "/"
-        if any(c == name or c.startswith(rel) or c.startswith(name + "/") for c in covered):
+        rel = f"{rel_prefix}{name}/"
+        if _gap_path_covered(rel, covered, dir_entry=True) or _gap_path_covered(
+            name + "/", covered, dir_entry=True
+        ):
             continue
-        # count .rs lines under dir
-        n = 0
-        for root, _, files in os.walk(d):
-            for fn in files:
-                if fn.endswith(".rs"):
-                    try:
-                        with open(os.path.join(root, fn), encoding="utf-8", errors="replace") as f:
-                            n += sum(1 for _ in f)
-                    except OSError:
-                        pass
-        dir_hits.append((n, f"src/{name}/"))
-    for root, _, files in os.walk(src_root):
+        n = _count_source_lines(d, dir_suffixes)
+        dir_hits.append((n, rel))
+    for root, _, files in os.walk(tree_root):
         for fn in files:
-            if not fn.endswith(".rs"):
+            if not any(fn.endswith(s) for s in large_suffixes):
                 continue
             full = os.path.join(root, fn)
             try:
@@ -344,23 +493,43 @@ def by_gaps(mat):
                     n = sum(1 for _ in f)
             except OSError:
                 continue
-            if n <= 400:
+            if n <= large_min:
                 continue
-            rel = os.path.relpath(full, src_root).replace("\\", "/")
-            if any(rel == c or rel.startswith(c.rstrip("/") + "/") or c in rel for c in covered):
-                # covered if any matrix code path is a prefix/substring match like rows_for_code
-                hit = False
-                for c in covered:
-                    if rel == c or c.rstrip("/") in rel or rel.startswith(c.rstrip("/") + "/") or rel.startswith(c):
-                        hit = True
-                        break
-                if hit:
-                    continue
-            file_hits.append((n, f"src/{rel}"))
-    ranked = sorted(dir_hits + file_hits, key=lambda x: (-x[0], x[1]))[:40]
+            rel = os.path.relpath(full, tree_root).replace("\\", "/")
+            rel_path = f"{rel_prefix}{rel}"
+            if _gap_path_covered(rel_path, covered, dir_entry=False):
+                continue
+            file_hits.append((n, rel_path))
+    return dir_hits, file_hits
+
+def by_gaps(mat):
+    covered = covered_code_paths(mat)
+    src_root = os.path.join(REPO, "src")
+    tools_root = os.path.join(REPO, "tools")
+    dir_hits, file_hits = _collect_tree_gaps(
+        src_root, "src/", covered, dir_suffixes=(".rs",), large_suffixes=(".rs",), large_min=400,
+    )
+    t_dirs, t_files = _collect_tree_gaps(
+        tools_root, "tools/", covered, dir_suffixes=(".py", ".rs"), large_suffixes=(".py", ".rs"), large_min=400,
+    )
+    dir_hits.extend(t_dirs)
+    file_hits.extend(t_files)
+    def _gap_rank(item):
+        n, p = item
+        return (0 if gap_bucket_tags(p) else 1, -n, p)
+
+    all_hits = sorted(dir_hits + file_hits, key=_gap_rank)
+    ranked = all_hits[:40]
     print(f"== gaps (top {len(ranked)}) ==")
     for n, p in ranked:
-        print(f"{n:6d}  {p}")
+        tags = gap_bucket_tags(p)
+        tag = f"[{','.join(tags)}] " if tags else ""
+        print(f"{n:6d}  {tag}{p}")
+    tagged = [(n, p, gap_bucket_tags(p)) for n, p in all_hits if gap_bucket_tags(p)][:25]
+    if tagged:
+        print(f"== gap buckets ({len(tagged)} tagged paths) ==")
+        for n, p, tags in tagged:
+            print(f"    {','.join(tags):<12} {n:6d}  {p}")
 
 def check(toc, mat, adopt):
     bad = 0
@@ -418,6 +587,15 @@ def main(a):
         by_open(toc, mat, adopt, domain, as_json=as_json)
     elif a[0] == "--gaps":
         by_gaps(mat)
+    elif a[0] == "--dual":
+        if len(a) < 2:
+            sys.exit("--dual needs search terms or --code PATH")
+        if a[1] == "--code":
+            if len(a) < 3:
+                sys.exit("--dual --code needs a path")
+            by_dual_code(a[2], toc, mat, adopt, as_json=as_json)
+        else:
+            by_dual(a[1:], toc, mat, adopt, as_json=as_json)
     elif a[0] == "--check": sys.exit(1 if check(toc, mat, adopt) else 0)
     else: search(a, toc, mat, adopt, as_json=as_json)
 

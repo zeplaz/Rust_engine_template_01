@@ -1,10 +1,10 @@
 //! Pushes [`crate::render::WeatherFireFieldUniforms`] from **visual extract** only (no sim chunk queries).
 //!
-//! Fire heat in the GPU field mean uses [`crate::render::extraction::RenderProjectionGraph`]
-//! (**fire** + **smoke** projection nodes). Smoke channel bias comes from the smoke node only —
-//! never a second ECS smoke scan. Weather / ecology means come from
-//! [`ClimateVisualAggregate`](crate::render::ClimateVisualAggregate)
-//! (filled in the same [`AtmospherePipelineSet::VisualExtract`](super::pipeline::AtmospherePipelineSet) chain).
+//! **W6 / X4:** cloud/precip/fog means come from [`AtmosphereFrame`]; fire heat uses
+//! [`crate::render::extraction::RenderProjectionGraph`] (**fire** + **smoke** projection nodes).
+//! Smoke channel bias comes from the smoke node (frame-sourced when the graph saw
+//! [`AtmosphereFrame`]) — never a second ECS smoke scan. Ecology means still ride
+//! [`ClimateVisualAggregate`] (biomass / fire_risk only). Single GPU field upload path.
 
 use bevy::prelude::*;
 
@@ -14,7 +14,12 @@ use crate::gui::{
 };
 use crate::render::extraction::{RenderProjectionGraph, SmokeProjectionNode};
 use crate::render::{ClimateVisualAggregate, WeatherFireFieldUniforms};
+use super::diagnostics::AtmosphereDiagnostics;
+use super::frame::AtmosphereFrame;
 use super::incremental_schedule::AtmospherePartialFieldState;
+
+/// Distinct weather/fire **field** upload writers observed by this bridge (Accept: == 1).
+pub const GPU_FIELD_UPLOAD_PATHS: u32 = 1;
 
 /// Mean emitter intensity × smoke/toxic bias (WGSL `means.z` fire channel).
 ///
@@ -77,11 +82,50 @@ pub(crate) const fn fire_propagate_from_representation_band(band: Representation
     }
 }
 
+/// Fill [`WeatherFireFieldUniforms`] from frame weather means + projection fire/smoke (pure).
+#[must_use]
+pub(crate) fn weather_fire_field_means_from_frame(
+    frame: &AtmosphereFrame,
+    climate: &ClimateVisualAggregate,
+    fire_node: &crate::render::extraction::FireProjectionNode,
+    smoke_node: &SmokeProjectionNode,
+    atm_weight: f32,
+    cine: f32,
+    band: RepresentationBand,
+    partial: Option<&AtmospherePartialFieldState>,
+    time_secs: f32,
+) -> WeatherFireFieldUniforms {
+    let wx = frame.weather_means();
+    let mut heat_effective = effective_fire_heat_for_gpu_field(fire_node, smoke_node);
+    heat_effective *= 0.9 + 0.22 * cine.clamp(0.0, 1.0);
+    heat_effective = heat_effective.min(1.85);
+    if let Some(partial) = partial {
+        heat_effective = blend_partial_field_heat(heat_effective, partial);
+    }
+    let fog_smoke = fog_smoke_channel_from_bridge(wx.fog, atm_weight, smoke_node);
+    let fire_n = fire_node.instance_buffer.len();
+    WeatherFireFieldUniforms {
+        means: Vec4::new(wx.rain01, wx.snow01, heat_effective, fog_smoke),
+        extra_means: Vec4::new(
+            climate.mean_biomass,
+            climate.mean_fire_risk,
+            wx.wind_speed01,
+            wx.lightning,
+        ),
+        time_secs,
+        fire_propagate: fire_propagate_from_representation_band(band),
+        fire_instance_count: (fire_n.min(u32::MAX as usize)) as u32,
+        _fire_pad: UVec3::ZERO,
+        ..WeatherFireFieldUniforms::default()
+    }
+}
+
 fn sync_gpu_weather_fire_uniforms_from_extract(
     time: Res<Time>,
     cadence: Option<Res<crate::gui::VisualCadence>>,
     mut cadence_acc: Local<f32>,
     mut cadence_warmed: Local<bool>,
+    frame: Res<AtmosphereFrame>,
     climate: Res<ClimateVisualAggregate>,
     fire_proj: Option<Res<RenderProjectionGraph>>,
     partial_field: Option<Res<AtmospherePartialFieldState>>,
@@ -89,6 +133,7 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
     cam_vis: Option<Res<CameraVisualState>>,
     rep: Option<Res<RepresentationResult>>,
     uniforms: Option<ResMut<WeatherFireFieldUniforms>>,
+    mut diag: ResMut<AtmosphereDiagnostics>,
 ) {
     let Some(mut u) = uniforms else {
         return;
@@ -118,51 +163,43 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
         Some(g) => (&g.fire, &g.smoke),
         None => (&empty_fire, &empty_smoke),
     };
-    let mut heat_effective = effective_fire_heat_for_gpu_field(fire_node, smoke_node);
-
-    // View Representation: macro/cinematic emphasis on GPU field means (no ECS sim readback).
-    let cine = cam_vis
-        .as_deref()
-        .map(|c| c.cinematic_weight)
-        .unwrap_or(0.0)
-        .clamp(0.0, 1.0);
-    heat_effective *= 0.9 + 0.22 * cine;
-    heat_effective = heat_effective.min(1.85);
-    if let Some(partial) = partial_field.as_deref() {
-        heat_effective = blend_partial_field_heat(heat_effective, partial);
-    }
 
     let atm_w = fx_vis
         .as_deref()
         .map(|f| f.atmosphere_weight)
         .unwrap_or(1.0)
         .clamp(0.05, 2.5);
-
-    let fire_n = fire_node.instance_buffer.len();
-    u.fire_instance_count = (fire_n.min(u32::MAX as usize)) as u32;
-    u._fire_pad = UVec3::ZERO;
-
+    let cine = cam_vis
+        .as_deref()
+        .map(|c| c.cinematic_weight)
+        .unwrap_or(0.0)
+        .clamp(0.0, 1.0);
     let band = rep
         .as_deref()
         .map(|r| r.active_band)
         .unwrap_or(RepresentationBand::Full);
-    u.fire_propagate = fire_propagate_from_representation_band(band);
 
-    let fog_smoke = fog_smoke_channel_from_bridge(climate.mean_fog_density, atm_w, smoke_node);
+    let filled = weather_fire_field_means_from_frame(
+        &frame,
+        &climate,
+        fire_node,
+        smoke_node,
+        atm_w,
+        cine,
+        band,
+        partial_field.as_deref(),
+        time.elapsed_secs(),
+    );
+    // Preserve partial-dispatch pads owned elsewhere; overwrite means channels only.
+    u.means = filled.means;
+    u.extra_means = filled.extra_means;
+    u.time_secs = filled.time_secs;
+    u.fire_propagate = filled.fire_propagate;
+    u.fire_instance_count = filled.fire_instance_count;
+    u._fire_pad = filled._fire_pad;
 
-    u.means = Vec4::new(
-        climate.mean_rain,
-        climate.mean_snow,
-        heat_effective,
-        fog_smoke,
-    );
-    u.extra_means = Vec4::new(
-        climate.mean_biomass,
-        climate.mean_fire_risk,
-        climate.mean_wind_speed,
-        climate.mean_lightning_risk,
-    );
-    u.time_secs = time.elapsed_secs();
+    diag.gpu_field_upload_paths = GPU_FIELD_UPLOAD_PATHS;
+    diag.presentation_frame_revision = frame.revision();
 }
 
 pub fn gpu_field_bridge_systems(app: &mut App) {
@@ -250,5 +287,43 @@ mod tests {
         assert!(full > tac);
         assert!(tac > ovr);
         assert_eq!(0.0, fire_propagate_from_representation_band(RepresentationBand::Dormant));
+    }
+
+    #[test]
+    fn uniforms_means_come_from_atmosphere_frame() {
+        let mut frame = AtmosphereFrame::default();
+        frame.rebuild_for_tests_with_smoke(42, 0.0);
+        let wx = *frame.weather_means();
+        assert!(wx.tiles > 0);
+        let climate = ClimateVisualAggregate {
+            mean_biomass: 0.3,
+            mean_fire_risk: 0.1,
+            ..Default::default()
+        };
+        let u = weather_fire_field_means_from_frame(
+            &frame,
+            &climate,
+            &FireProjectionNode::default(),
+            &SmokeProjectionNode::default(),
+            1.0,
+            0.0,
+            RepresentationBand::Full,
+            None,
+            1.5,
+        );
+        assert_eq!(u.means.x, wx.rain01);
+        assert_eq!(u.means.y, wx.snow01);
+        assert_eq!(u.extra_means.x, 0.3);
+        assert_eq!(u.extra_means.z, wx.wind_speed01);
+        assert_eq!(GPU_FIELD_UPLOAD_PATHS, 1);
+    }
+
+    #[test]
+    fn bridge_does_not_write_sim_authorities() {
+        let src = include_str!("gpu_field_bridge.rs");
+        let prod = src.split("#[cfg(test)]").next().unwrap();
+        assert!(!prod.contains("ResMut<AtmosphereFrame>"));
+        assert!(!prod.contains("ResMut<WeatherField>"));
+        assert!(!prod.contains("ResMut<AtmosphereClipmapStack>"));
     }
 }

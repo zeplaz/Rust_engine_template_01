@@ -1,7 +1,11 @@
-//! RTT-SPRITE-TRACE — temporary render-world probe for the tactical terrain sprite void.
+//! RTT-SPRITE-TRACE — DBG-04 **inspection** probe (render-world visibility).
 //!
-//! Active only with `RTT_SPRITE_TRACE=1`. Answers, from inside the `RenderApp` (invisible to
-//! main-world witnesses), every 60th render frame:
+//! **V4-DBG04** · **DBG-04** (gea4v2:12.9.4) · LEGACY **`render_debug_tools`** (gea_v2_e4 p248).
+//! Sibling of `VFX_CAPTURE` PNG capture: env-gated logs from inside `RenderApp` (invisible to
+//! main-world witnesses). Active only with `RTT_SPRITE_TRACE=1` (see
+//! [`super::vfx_capture_env::RTT_SPRITE_TRACE_ENV`]). Does **not** write simulation authority.
+//!
+//! Every 60th render frame answers:
 //! 1. does `RenderAssets<GpuImage>` hold the tile-fallback terrain image (GPU residency)?
 //! 2. was the terrain sprite extracted this frame (`ExtractedSprites` entry with that asset id)?
 //! 3. how many `Transparent2d` phase items exist per view (is anything queued at all)?
@@ -17,7 +21,7 @@ use bevy::sprite_render::ExtractedSprites;
 
 #[must_use]
 pub fn rtt_sprite_trace_enabled() -> bool {
-    std::env::var("RTT_SPRITE_TRACE").is_ok()
+    crate::render::probes::vfx_capture_env::rtt_sprite_trace_enabled()
 }
 
 /// Render-world copy of the main-world terrain image id (+ render-frame counter).

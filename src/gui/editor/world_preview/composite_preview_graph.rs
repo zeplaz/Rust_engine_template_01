@@ -172,6 +172,7 @@ mod tests {
             schema_version: 1,
             materials: Vec::new(),
             name_to_id: Default::default(),
+            collision: Vec::new(),
         };
         let mat_chunk = MaterializedChunk {
             size: UVec2::ONE,
@@ -205,6 +206,7 @@ mod tests {
             schema_version: 1,
             materials: Vec::new(),
             name_to_id: Default::default(),
+            collision: Vec::new(),
         };
         let mat_chunk = MaterializedChunk {
             size: UVec2::new(2, 1),
@@ -223,6 +225,7 @@ mod tests {
             schema_version: 1,
             materials: Vec::new(),
             name_to_id: Default::default(),
+            collision: Vec::new(),
         }
     }
 

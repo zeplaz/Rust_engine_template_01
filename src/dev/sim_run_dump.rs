@@ -217,11 +217,12 @@ fn env_on(key: &str) -> bool {
 }
 
 
-fn count_water(matrices: &Query<&ChunkCellMatrix>) -> (u32, u32, u32, u32) {
+fn count_water(matrices: &Query<&ChunkCellMatrix>) -> (u32, u32, u32, u32, u32) {
     let mut cells = 0u32;
     let mut open = 0u32;
     let mut river = 0u32;
     let mut standing = 0u32;
+    let mut wetland = 0u32;
     for m in matrices {
         for w in &m.water {
             cells = cells.saturating_add(1);
@@ -234,11 +235,12 @@ fn count_water(matrices: &Query<&ChunkCellMatrix>) -> (u32, u32, u32, u32) {
                     open = open.saturating_add(1);
                     standing = standing.saturating_add(1);
                 }
-                WaterClass::Dry | WaterClass::Wetland => {}
+                WaterClass::Wetland => wetland = wetland.saturating_add(1),
+                WaterClass::Dry => {}
             }
         }
     }
-    (cells, open, river, standing)
+    (cells, open, river, standing, wetland)
 }
 
 fn count_veg(stands: &Query<&ChunkCellStand>) -> (u32, u32, u32, u32) {
@@ -316,6 +318,11 @@ struct WorldParams<'w, 's> {
     hitch: Option<Res<'w, FrameHitchLog>>,
     weather: Option<Res<'w, super::sim_run_dump_weather::WeatherDumpSeries>>,
     fidelity: Option<Res<'w, super::sim_run_dump_fidelity::FidelityDumpSeries>>,
+    atmosphere: Option<Res<'w, crate::systems::atmosphere::AtmosphereDiagnostics>>,
+    atmosphere_frame: Option<Res<'w, crate::systems::atmosphere::AtmosphereFrame>>,
+    presentation: Option<Res<'w, super::sim_run_dump_massing::PresentationDumpSeries>>,
+    voxel_occupation: Option<Res<'w, crate::strategic::VoxelOccupationBook>>,
+    voxel_occupation_cfg: Option<Res<'w, crate::strategic::VoxelOccupationConfig>>,
 }
 
 /// Fire visual chain, stage by stage: sim heat -> snapshot -> active/visible chunks -> per-view
@@ -818,7 +825,13 @@ fn push_history(state: &mut SimRunDumpState, entry: Value) {
     }
 }
 
-fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mut SimRunDumpState) -> Value {
+fn collect_dump(
+    w: &WorldParams,
+    g: &GameParams,
+    q: &super::sim_run_dump_quadrants::QuadrantDumpParams,
+    f: &FireChainParams,
+    state: &mut SimRunDumpState,
+) -> Value {
     let water = count_water(&w.matrices);
     let veg = count_veg(&w.stands);
     let regrowth = w
@@ -843,12 +856,28 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
 
     let tick = w.tick.0;
     let cells = water.0.max(1);
+    let world_w = w.params.as_ref().map_or(0, |p| p.width);
+    let world_h = w.params.as_ref().map_or(0, |p| p.height);
+    let mpt = w.params.as_ref().map_or(100.0, |p| p.map_scale.meters_per_tile);
+    let test_scene = w.launch.as_ref().map(|l| l.test_scene).unwrap_or_default();
+    let quadrants = super::sim_run_dump_quadrants::quadrants_json(test_scene, world_w, world_h, mpt, q);
+    let mut weather = super::sim_run_dump_weather::weather_json(w.weather.as_deref());
+    if let Some(inst) = q.precip.as_ref().map(|p| p.instance_count) {
+        if let Some(obj) = weather.as_object_mut() {
+            obj.insert("precip_instances".into(), json!(inst));
+        }
+    }
     let river_frac = water.2 as f32 / cells as f32;
     let scene = w
         .launch
         .as_ref()
         .map(|l| format!("{:?}", l.test_scene))
         .unwrap_or_else(|| "None".into());
+    let presentation_kind = w
+        .presentation
+        .as_ref()
+        .map(|p| p.kind.clone())
+        .unwrap_or_else(|| "Unknown".into());
     let spark_view = w.particles.as_ref().map_or("", |p| p.spark_witness.projection_view);
     let frame_ms_last = state.frame_ms.last().copied().unwrap_or(0.0);
     push_history(
@@ -867,14 +896,17 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
             "frame_ms": frame_ms_last,
         }),
     );
-    json!({
+    let mut body = json!({
         "schema": SIM_RUN_DUMP_SCHEMA,
         "proof_grade": "sim_dump",
         "tick": tick,
         "seed": w.params.as_ref().map_or(0, |p| p.seed),
         "debug": cfg!(debug_assertions),
         "build": if cfg!(debug_assertions) { "debug" } else { "release" },
-        "launch": { "test_scene": scene },
+        "launch": {
+            "test_scene": scene,
+            "presentation": presentation_kind,
+        },
         "world": {
             "width": w.params.as_ref().map_or(0, |p| p.width),
             "height": w.params.as_ref().map_or(0, |p| p.height),
@@ -889,6 +921,7 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
             "water_open_cells": water.1,
             "river_cells": water.2,
             "lake_or_ocean_cells": water.3,
+            "wetland_cells": water.4,
             "veg_live_cells": veg.0,
             "veg_burning_cells": veg.1,
             "veg_burnt_cells": veg.2,
@@ -911,11 +944,26 @@ fn collect_dump(w: &WorldParams, g: &GameParams, f: &FireChainParams, state: &mu
         "combat": combat,
         "fire": fire,
         "fire_chain": fire_chain_json(w, f),
-        "weather": super::sim_run_dump_weather::weather_json(w.weather.as_deref()),
+        "weather": weather,
         "fidelity": super::sim_run_dump_fidelity::fidelity_json(w.fidelity.as_deref()),
+        "atmosphere": super::sim_run_dump_atmosphere::atmosphere_json(
+            w.atmosphere.as_deref(),
+            w.atmosphere_frame.as_deref(),
+        ),
+        "presentation": super::sim_run_dump_massing::presentation_json(w.presentation.as_deref()),
+        "occupation": super::sim_run_dump_occupation::occupation_json(
+            w.voxel_occupation.as_deref(),
+            w.voxel_occupation_cfg.as_deref(),
+        ),
         "perf": state.perf_json(w.hitch.as_deref()),
         "history": state.history,
-    })
+    });
+    if let Some(qblock) = quadrants {
+        if let Some(obj) = body.as_object_mut() {
+            obj.insert("quadrants".into(), qblock);
+        }
+    }
+    body
 }
 
 /// Frame wall time from the hitch detector (end of `Last` to end of `Last`, uncapped); counted after
@@ -957,6 +1005,7 @@ fn sample_frame_time(hitch: Option<Res<FrameHitchLog>>, mut state: ResMut<SimRun
 fn flush_sim_run_dump(
     w: WorldParams,
     g: GameParams,
+    q: super::sim_run_dump_quadrants::QuadrantDumpParams,
     f: FireChainParams,
     mut state: ResMut<SimRunDumpState>,
     exit: MessageReader<AppExit>,
@@ -972,7 +1021,7 @@ fn flush_sim_run_dump(
     if !due {
         return;
     }
-    let body = collect_dump(&w, &g, &f, &mut state);
+    let body = collect_dump(&w, &g, &q, &f, &mut state);
     if write_dump_files(&body) {
         state.last_tick = tick;
     }
@@ -987,11 +1036,14 @@ impl Plugin for SimRunDumpPlugin {
         }
         app.add_plugins(super::sim_run_dump_weather::WeatherDumpPlugin);
         app.add_plugins(super::sim_run_dump_fidelity::FidelityDumpPlugin);
+        app.add_plugins(super::sim_run_dump_massing::PresentationDumpPlugin);
         app.init_resource::<SimRunDumpState>().add_systems(
             Last,
-            (sample_frame_time, flush_sim_run_dump)
-                .chain()
-                .after(crate::render::probes::frame_hitch::detect_frame_hitches),
+            (
+                sample_frame_time
+                    .after(crate::render::probes::frame_hitch::detect_frame_hitches),
+                flush_sim_run_dump.after(sample_frame_time),
+            ),
         );
     }
 }

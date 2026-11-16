@@ -5,8 +5,14 @@
 //! (contested cells + owned cells touching the enemy) and the ownership boundary as oriented
 //! polylines in **tile-corner** coordinates, the lower slot always on the left of travel so a
 //! renderer can put FLOT teeth on the right (toward the higher slot) without re-deriving sides.
+//!
+//! **TAC-02** (aig3 6.2.6 *Map Flooding*): [`flood_ownership_regions`] expands clear ownership
+//! seeds across weak tiles before [`derive_fronts`] walks hostile contacts. Voronoi sites
+//! (`terrain/voronoi`) remain optional seed sources; flood owns contiguous regions.
+//! **TAC-09** (aig3 6.1.5 *Condensation*): [`condense_front_cells`] thins dense front
+//! candidate sets to spaced representatives without changing boundary polylines.
 
-use std::collections::{BTreeMap, HashMap};
+use std::collections::{BTreeMap, HashMap, VecDeque};
 
 use bevy::prelude::IVec2;
 
@@ -181,6 +187,15 @@ pub struct FrontSegment {
     pub length_m: f32,
 }
 
+
+impl FrontSegment {
+    /// TAC-09: AI/HUD candidate thinning; polylines stay full-resolution.
+    #[must_use]
+    pub fn condensed_cells(&self, min_spacing: i32) -> Vec<FrontCell> {
+        condense_front_cells(&self.cells, min_spacing)
+    }
+}
+
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct FrontDerivation {
     /// Sorted by pair.
@@ -292,6 +307,80 @@ pub fn chain_edges(mut edges: Vec<(IVec2, IVec2)>, left_slot: u8, right_slot: u8
     lines
 }
 
+
+
+/// TAC-09: thin dense front candidates to representatives ≥ `min_spacing` Chebyshev tiles apart.
+/// Deterministic: walk cells already sorted by `(y, x)` (as produced by [`derive_fronts`]).
+#[must_use]
+pub fn condense_front_cells(cells: &[FrontCell], min_spacing: i32) -> Vec<FrontCell> {
+    if min_spacing <= 1 || cells.len() <= 1 {
+        return cells.to_vec();
+    }
+    let mut kept: Vec<FrontCell> = Vec::with_capacity(cells.len());
+    for c in cells {
+        let far = kept.iter().all(|k| {
+            let dx = (c.tile.x - k.tile.x).abs();
+            let dy = (c.tile.y - k.tile.y).abs();
+            dx.max(dy) >= min_spacing
+        });
+        if far {
+            kept.push(*c);
+        }
+    }
+    kept
+}
+
+/// TAC-02: multi-source BFS ownership regions from clear (non-contested) seeds.
+/// Weak tiles present in `grid` inherit the nearest clear owner's region. Contested cells and
+/// clear rival owners block expansion. Deterministic: seeds sorted `(y, x)`, then FIFO.
+#[must_use]
+pub fn flood_ownership_regions(
+    grid: &ControlGrid,
+    hostility: &Hostility,
+    own_min: f32,
+    contest_band: f32,
+) -> HashMap<(i32, i32), u8> {
+    let mut region: HashMap<(i32, i32), u8> = HashMap::new();
+    let mut queue: VecDeque<(i32, i32)> = VecDeque::new();
+    let mut seeds: Vec<(i32, i32, u8)> = Vec::new();
+    for (k, c) in &grid.cells {
+        if let Some(o) = classify_cell(c, hostility, own_min, contest_band) {
+            if !o.contested {
+                seeds.push((k.0, k.1, o.owner));
+            }
+        }
+    }
+    seeds.sort_by_key(|(x, y, _)| (*y, *x));
+    for (x, y, owner) in seeds {
+        let key = (x, y);
+        if region.contains_key(&key) {
+            continue;
+        }
+        region.insert(key, owner);
+        queue.push_back(key);
+    }
+    while let Some(t) = queue.pop_front() {
+        let owner = region[&t];
+        for d in NEIGHBORS4 {
+            let nt = (t.0 + d.x, t.1 + d.y);
+            if !grid.cells.contains_key(&nt) || region.contains_key(&nt) {
+                continue;
+            }
+            if let Some(o) = classify_cell(&grid.cells[&nt], hostility, own_min, contest_band) {
+                if o.contested {
+                    continue;
+                }
+                if o.owner != owner {
+                    continue;
+                }
+            }
+            region.insert(nt, owner);
+            queue.push_back(nt);
+        }
+    }
+    region
+}
+
 /// Derive fronts for every hostile pair present in `grid`.
 #[must_use]
 pub fn derive_fronts(grid: &ControlGrid, hostility: &Hostility, own_min: f32, contest_band: f32, tile_size_m: f32) -> FrontDerivation {
@@ -300,6 +389,18 @@ pub fn derive_fronts(grid: &ControlGrid, hostility: &Hostility, own_min: f32, co
         if let Some(o) = classify_cell(c, hostility, own_min, contest_band) {
             owners.insert(*k, o);
         }
+    }
+    let flooded = flood_ownership_regions(grid, hostility, own_min, contest_band);
+    for (k, owner) in &flooded {
+        owners.entry(*k).or_insert_with(|| {
+            let control = grid.cells.get(k).map_or(0.0, |c| c[*owner as usize]);
+            CellOwnership {
+                owner: *owner,
+                owner_control: control,
+                rival: None,
+                contested: false,
+            }
+        });
     }
     let mut tiles: Vec<(i32, i32)> = owners.keys().copied().collect();
     tiles.sort_by_key(|(x, y)| (*y, *x));
@@ -504,4 +605,47 @@ mod tests {
         assert!(g.get(IVec2::new(32, 64)).is_some());
         assert!(g.get(IVec2::new(32, 65)).is_some());
     }
+    #[test]
+    fn tac02_flood_claims_weak_gap_between_clear_seeds() {
+        let mut g = ControlGrid::default();
+        g.insert(IVec2::new(0, 0), ctl(0, 0.9));
+        g.insert(IVec2::new(1, 0), [0.05; MAX_STRATEGIC_FACTION_SLOTS]);
+        g.insert(IVec2::new(2, 0), ctl(1, 0.9));
+        let regions = flood_ownership_regions(&g, &Hostility::legacy_pair(), 0.25, 0.3);
+        assert_eq!(regions.get(&(0, 0)), Some(&0));
+        assert_eq!(regions.get(&(2, 0)), Some(&1));
+        assert_eq!(
+            regions.get(&(1, 0)),
+            Some(&0),
+            "weak gap claimed by first processed clear seed (slot 0)"
+        );
+        let d = derive_fronts(&g, &Hostility::legacy_pair(), 0.25, 0.3, 25.0);
+        assert_eq!(d.segments.len(), 1);
+        assert!(
+            d.segments[0]
+                .cells
+                .iter()
+                .any(|c| c.tile == IVec2::new(1, 0) || c.tile == IVec2::new(0, 0)),
+            "flooded ownership must surface a hostile contact"
+        );
+    }
+
+    #[test]
+    fn tac09_condensation_thins_dense_front_candidates() {
+        let g = split_grid(8, 4, 4);
+        let d = derive_fronts(&g, &Hostility::legacy_pair(), 0.25, 0.3, 25.0);
+        let full = &d.segments[0].cells;
+        assert!(full.len() >= 8);
+        let thin = condense_front_cells(full, 2);
+        assert!(thin.len() < full.len(), "condensation must drop neighbours");
+        assert_eq!(thin, d.segments[0].condensed_cells(2));
+        for i in 0..thin.len() {
+            for j in i + 1..thin.len() {
+                let dx = (thin[i].tile.x - thin[j].tile.x).abs();
+                let dy = (thin[i].tile.y - thin[j].tile.y).abs();
+                assert!(dx.max(dy) >= 2);
+            }
+        }
+    }
+
 }

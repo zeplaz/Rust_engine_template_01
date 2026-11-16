@@ -22,6 +22,8 @@ pub struct HydrologyResult {
     pub lake_mask: Vec<bool>,
     /// Filled DEM after depression processing (for debugging / downstream use).
     pub filled_dem: Vec<f32>,
+    /// DEM after PCG-03 thermal→hydraulic (before flood fill). Empty when input invalid.
+    pub eroded_dem: Vec<f32>,
 }
 
 #[inline]
@@ -324,12 +326,15 @@ pub fn compute_hydrology_rect(
             river_mask: Vec::new(),
             lake_mask: Vec::new(),
             filled_dem: dem.to_vec(),
+            eroded_dem: dem.to_vec(),
         };
     }
 
     let moisture = moisture.filter(|m| m.len() == n);
 
-    let filled = priority_flood_fill(dem, w, h);
+    // PCG-03: thermal → hydraulic incision, then D8 on the eroded surface.
+    let eroded = super::erosion::erode_dem(dem, w, h, params);
+    let filled = priority_flood_fill(&eroded, w, h);
     let down = d8_downstream(&filled, w, h);
     let acc = accumulate(&down, &filled, w, h, moisture);
     let mx = max_slice(&acc).max(1.0);
@@ -362,8 +367,8 @@ pub fn compute_hydrology_rect(
 
     let mut lake_mask = vec![false; n];
     for i in 0..n {
-        let is_dep = filled[i] > dem[i] + 1e-6;
-        let is_low = dem[i] <= params.water_line;
+        let is_dep = filled[i] > eroded[i] + 1e-6;
+        let is_low = eroded[i] <= params.water_line;
         if is_dep || is_low {
             lake_mask[i] = true;
         }
@@ -375,7 +380,7 @@ pub fn compute_hydrology_rect(
     }
 
     let rivers = extract_river_traces(w, h, &acc, &river_mask, &down, river_traces);
-    let lakes = label_lakes(w, h, dem, &filled, &lake_mask);
+    let lakes = label_lakes(w, h, &eroded, &filled, &lake_mask);
 
     HydrologyResult {
         rivers,
@@ -384,13 +389,70 @@ pub fn compute_hydrology_rect(
         river_mask,
         lake_mask,
         filled_dem: filled,
+        eroded_dem: eroded,
+    }
+}
+
+/// True when any cell of `lake` has a `river_mask` cell within Chebyshev distance `radius` (grid `w × h`).
+#[must_use]
+pub fn lake_touches_river(
+    lake: &LakeRegion,
+    river_mask: &[bool],
+    w: usize,
+    h: usize,
+    radius: u32,
+) -> bool {
+    if radius == 0 || river_mask.len() != w * h {
+        return false;
+    }
+    let r = radius as i32;
+    lake.cells.iter().any(|&(cx, cy)| {
+        for dy in -r..=r {
+            for dx in -r..=r {
+                let (nx, ny) = (cx as i32 + dx, cy as i32 + dy);
+                if nx < 0 || ny < 0 || nx >= w as i32 || ny >= h as i32 {
+                    continue;
+                }
+                if river_mask[ny as usize * w + nx as usize] {
+                    return true;
+                }
+            }
+        }
+        false
+    })
+}
+
+/// Order lake regions best-first: score = `cells`, times `(1 + attach_weight)` when river-attached.
+/// Stable sort, so equal scores keep the deterministic scan order of [`label_lakes`]. With radius `0` or
+/// weight `0` this is the legacy size-only ordering.
+fn rank_lakes_by_river_attachment(
+    lakes: &mut [LakeRegion],
+    river_mask: &[bool],
+    w: usize,
+    h: usize,
+    radius: u32,
+    weight: f32,
+) {
+    let bonus = 1.0 + weight.max(0.0);
+    let mut scored: Vec<(f32, LakeRegion)> = lakes
+        .iter()
+        .map(|l| {
+            let base = l.cells.len() as f32;
+            let attached = weight > 0.0 && lake_touches_river(l, river_mask, w, h, radius);
+            (if attached { base * bonus } else { base }, l.clone())
+        })
+        .collect();
+    scored.sort_by(|a, b| b.0.total_cmp(&a.0));
+    for (slot, (_, lake)) in lakes.iter_mut().zip(scored) {
+        *slot = lake;
     }
 }
 
 /// World-map hydrology using full `height_grid` and `WorldGenParams` feature counts.
 ///
-/// `lake_count` limits how many lake regions are returned (largest by cell count first); `0` clears
-/// the `lakes` list (river / lake masks and accumulation are unchanged).
+/// `lake_count` limits how many lake regions are returned — ranked by river attachment then size (see
+/// [`HydrologyParams::lake_attach_radius_tiles`]); `0` clears the `lakes` list (river / lake masks and
+/// accumulation are unchanged).
 pub fn compute_hydrology_world(
     width: u32,
     height: u32,
@@ -411,7 +473,14 @@ pub fn compute_hydrology_world(
     if lake_count == 0 {
         r.lakes.clear();
     } else if r.lakes.len() > lake_count as usize {
-        r.lakes.sort_by(|a, b| b.cells.len().cmp(&a.cells.len()));
+        rank_lakes_by_river_attachment(
+            &mut r.lakes,
+            &r.river_mask,
+            width as usize,
+            height as usize,
+            params.lake_attach_radius_tiles,
+            params.lake_attach_weight,
+        );
         r.lakes.truncate(lake_count as usize);
     }
     r
@@ -499,6 +568,34 @@ mod tests {
                 i
             );
         }
+    }
+
+    #[test]
+    fn attached_lake_outranks_larger_detached_lake() {
+        let (w, h) = (16usize, 8usize);
+        let mut river = vec![false; w * h];
+        // Channel column at x = 4, rows 0..8.
+        for y in 0..h {
+            river[y * w + 4] = true;
+        }
+        let rect = |x0: u32, y0: u32, ww: u32, hh: u32| LakeRegion {
+            cells: (y0..y0 + hh)
+                .flat_map(|y| (x0..x0 + ww).map(move |x| (x, y)))
+                .collect(),
+        };
+        let attached = rect(6, 2, 2, 2); // 4 cells, 2 tiles from the channel
+        let detached = rect(11, 2, 3, 3); // 9 cells, far from the channel
+        assert!(lake_touches_river(&attached, &river, w, h, 2));
+        assert!(!lake_touches_river(&detached, &river, w, h, 2));
+
+        let mut lakes = vec![detached.clone(), attached.clone()];
+        rank_lakes_by_river_attachment(&mut lakes, &river, w, h, 2, 2.0);
+        assert_eq!(lakes[0].cells, attached.cells, "attached ranks first (4 × 3 > 9)");
+
+        // Legacy size-only ordering when the bonus is off.
+        let mut lakes = vec![attached, detached.clone()];
+        rank_lakes_by_river_attachment(&mut lakes, &river, w, h, 2, 0.0);
+        assert_eq!(lakes[0].cells, detached.cells);
     }
 
     #[test]

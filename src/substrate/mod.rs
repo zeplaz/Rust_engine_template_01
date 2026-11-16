@@ -147,8 +147,7 @@ impl Plugin for SubstratePlugin {
                     hydrology_boundary_exchange_system,
                     hydrology_drain_construction_events_system,
                     sync_hydrology_runtime_witness_system,
-                    // DEBT-006 bridge_legacy deleted (ES-6-3b) — L0 authority only.
-                    atmosphere::contamination_tick_system,
+                    // W7: slab→L0 smoke seed is FieldFill (`atmosphere_field_seed_slab_smoke`).
                     sync_atmos_clipmap_witness_system,
                     mirror_logistics_pressure_to_slab_system,
                     sync_regional_weather_from_clipmap_system,

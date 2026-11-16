@@ -10,6 +10,10 @@
 //! The camera renders into the same RTT image ([`SimulationMapTexture`]) the top-down camera
 //! uses; exactly one of the two is active, decided by [`crate::gui::WorldPresentationMode`].
 //! [`PixelWorldCameraFrame`] records the projection actually rendered, which picking reads.
+//!
+//! **LGT-06 / tonemap_hdr:** PixelWorld keeps `Tonemapping::None` (display-referred palette on
+//! the shared SDR RTT — fire-at-night readability; voxels in scope). See
+//! [`crate::render::view_runtime::tonemap_hdr`].
 
 use bevy::camera::{ClearColorConfig, RenderTarget};
 use bevy::camera::visibility::RenderLayers;
@@ -212,7 +216,7 @@ pub fn spawn_pixel_world_camera(
             ..default()
         }),
         Msaa::Off,
-        // Raster colours are the terrain palette already; keep them, no filmic curve.
+        // LGT-06 / tonemap_hdr: display-referred palette on SDR RTT — no filmic curve.
         bevy::core_pipeline::tonemapping::Tonemapping::None,
         layer.clone(),
         DistanceFog {

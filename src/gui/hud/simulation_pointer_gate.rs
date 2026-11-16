@@ -414,103 +414,43 @@ pub fn simulation_build_placement_active(
         || tool.is_some_and(|t| !matches!(t.tool, BuildTool::None))
 }
 
-/// Left command stack / build rail (logical px) — hide OS here while placing (§2 hide-when-build).
-#[inline]
-#[must_use]
-pub fn simulation_cursor_over_build_rail_chrome(
-    cursor: Vec2,
-    left_stack: &CommandLeftStackState,
-) -> bool {
-    if cursor.y < SIMULATION_MAP_VIEWPORT_TOP_CHROME_PX {
-        return false;
-    }
-    let left_block_w =
-        CENTER_ROW_EDGE_PAD_PX + command_left_stack_footprint_px(left_stack.collapsed);
-    cursor.x < left_block_w
-}
-
-/// Hide-region while build-active: play area **or** left build rail (not ops/minimap/tray).
-#[inline]
-#[must_use]
-pub fn simulation_unified_cursor_hide_region(
-    cursor: Vec2,
-    left_stack: &CommandLeftStackState,
-    in_play_area: bool,
-) -> bool {
-    in_play_area || simulation_cursor_over_build_rail_chrome(cursor, left_stack)
-}
-
-/// **TRIAGE-CURSOR-UNIFY-001** — OS hide only when build placement active ∧ hide-region.
-/// Picks stay on [`Window::cursor_position`] / gate.cursor (aligned with game crosshair).
-#[inline]
-#[must_use]
-pub fn simulation_unified_cursor_hide_os(
-    base: BaseState,
-    build_placement_active: bool,
-    in_hide_region: bool,
-) -> bool {
-    matches!(base, BaseState::Simulation) && build_placement_active && in_hide_region
-}
-
-/// Armed tool over the play area: hide the OS cursor. Menu/chrome flags must not
-/// flip this back on — that alternates the OS cursor with the crosshair.
+/// OS cursor policy: hidden **only** while an armed placement tool is over the free map play area,
+/// where [`crate::gui::hud::sim_play_bevy_chrome::sync_sim_play_crosshair`] draws the world
+/// crosshair in its place. Over any chrome (build rail, left stack, ops strip, tray, minimap,
+/// panels) the OS cursor must stay visible: the crosshair is never drawn there, so hiding it left
+/// no cursor at all above clickable buttons (the "funny cursor" over the side bar).
+/// Menu/chrome flags must not flip this back on — that alternates OS cursor and crosshair.
 #[inline]
 #[must_use]
 pub fn armed_play_area_hides_os_cursor(
     base: BaseState,
     build_placement_active: bool,
     in_play_area: bool,
-    _menu_open: bool,
+    chrome_blocks: bool,
 ) -> bool {
-    matches!(base, BaseState::Simulation) && build_placement_active && in_play_area
+    matches!(base, BaseState::Simulation)
+        && build_placement_active
+        && in_play_area
+        && !chrome_blocks
 }
 
 pub fn apply_simulation_unified_cursor_system(
     base: Res<State<BaseState>>,
     mut gate: ResMut<SimulationMapPointerGate>,
     mut cursors: Query<&mut CursorOptions, With<PrimaryWindow>>,
-    left_stack: Res<CommandLeftStackState>,
     strip: Option<Res<BuildStripState>>,
-    picker: Option<Res<crate::gui::hud::sim_build_picker_sheet::SimBuildPickerState>>,
     tool: Option<Res<ActiveBuildTool>>,
-    keybindings: Option<Res<crate::gui::KeybindingsUiState>>,
-    logistics_orders: Option<Res<crate::gui::LogisticsOrdersPanelState>>,
-    logistics_targets: Option<Res<crate::gui::LogisticsTargetsPanelState>>,
 ) {
-    // Catalog / tool menus / diagnostics / floating panels need OS cursor for accurate hits.
-    // Do **not** treat all chrome_blocks as menu_open — that popped the OS cursor on the
-    // build rail during place mode (dual-cursor glitch vs play-area hide).
-    let picker_open = picker.as_ref().is_some_and(|p| p.open);
-    let tool_menus = tool.as_ref().is_some_and(|t| {
-        t.residential_menu_open
-            || t.commercial_menu_open
-            || t.industrial_menu_open
-            || t.utilities_menu_open
-            || t.mock_shapes_menu_open
-    });
-    let keys_open = keybindings.as_ref().is_some_and(|k| k.visible);
-    let logi_open = logistics_orders.as_ref().is_some_and(|p| p.visible)
-        || logistics_targets.as_ref().is_some_and(|p| p.visible);
-    let menu_open = picker_open || tool_menus || keys_open || logi_open || gate.egui_blocks;
-
     let build_active = strip
         .as_ref()
         .map(|s| simulation_build_placement_active(s, tool.as_deref()))
         .unwrap_or_else(|| tool.as_ref().is_some_and(|t| !matches!(t.tool, BuildTool::None)));
-    let in_hide_region = simulation_unified_cursor_hide_region(
-        gate.cursor,
-        left_stack.as_ref(),
-        gate.in_play_area,
-    );
-    let play_hide = armed_play_area_hides_os_cursor(
+    let hide_os = armed_play_area_hides_os_cursor(
         *base.get(),
         build_active,
         gate.in_play_area,
-        menu_open,
+        gate.chrome_blocks,
     );
-    let rail_hide = !menu_open
-        && simulation_unified_cursor_hide_os(*base.get(), build_active, in_hide_region);
-    let hide_os = play_hide || rail_hide;
     gate.os_cursor_visible = !hide_os;
     for mut cursor in &mut cursors {
         cursor.visible = !hide_os;
@@ -638,39 +578,50 @@ mod tests {
     fn simulation_unified_cursor_hides_over_play_area() {
         use crate::engine::states::BaseState;
 
-        let left = CommandLeftStackState { collapsed: true };
-        assert!(simulation_unified_cursor_hide_os(
+        assert!(armed_play_area_hides_os_cursor(
             BaseState::Simulation,
             true,
-            true
+            true,
+            false
         ));
-        assert!(!simulation_unified_cursor_hide_os(
+        assert!(!armed_play_area_hides_os_cursor(
             BaseState::Simulation,
             false,
-            true
+            true,
+            false
         ));
-        assert!(!simulation_unified_cursor_hide_os(
+        assert!(!armed_play_area_hides_os_cursor(
             BaseState::MainMenu,
             true,
-            true
-        ));
-        assert!(simulation_unified_cursor_hide_region(
-            Vec2::new(20.0, 200.0),
-            &left,
+            true,
             false
         ));
-        assert!(!simulation_unified_cursor_hide_region(
-            Vec2::new(640.0, 10.0),
+    }
+
+    /// The OS cursor must stay visible over the build rail / any chrome even while a tool is armed
+    /// (the crosshair is never drawn there).
+    #[test]
+    fn cursor_stays_visible_over_chrome_while_tool_armed() {
+        let left = CommandLeftStackState { collapsed: true };
+        let rail_cursor = Vec2::new(40.0, 200.0);
+        let chrome = simulation_chrome_blocks_map_pointer(
+            rail_cursor,
+            Vec2::new(1280.0, 720.0),
             &left,
-            false
-        ));
+            &MinimapShellState::default(),
+            &ContextTrayState::default(),
+        );
+        assert!(chrome, "rail position is chrome");
+        // in_play_area is false over chrome, and chrome_blocks wins even if a caller disagrees.
+        assert!(!armed_play_area_hides_os_cursor(BaseState::Simulation, true, false, chrome));
+        assert!(!armed_play_area_hides_os_cursor(BaseState::Simulation, true, true, chrome));
     }
 
     #[test]
     fn cursor_hide_does_not_oscillate_over_armed_play_area() {
         let mut seen = [false; 4];
         for slot in &mut seen {
-            *slot = armed_play_area_hides_os_cursor(BaseState::Simulation, true, true, true);
+            *slot = armed_play_area_hides_os_cursor(BaseState::Simulation, true, true, false);
         }
         assert!(seen.iter().all(|hide| *hide));
         assert_eq!(seen[0], seen[3]);

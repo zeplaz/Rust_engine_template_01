@@ -1,16 +1,21 @@
 //! **VISUAL-CAPTURE-PROBE-001** — real GPU-pixel capture for tactical-map render regressions.
 //!
-//! Env-gated (`VFX_CAPTURE=1`) one-shot capture batch fired 240 frames into
-//! [`BaseState::Simulation`]. Unlike [`crate::render::probes::vfx_capture_hook`] (text-stub,
-//! ignored), this probe spawns real [`Screenshot`] entities against the primary window and the
-//! tactical map RTT image, and dumps a metadata JSON describing what was captured. Intended for
-//! human/agent visual diagnosis of "tactical map renders nothing" — actual pixels on disk, not
-//! witness JSON claims.
+//! **V4-DBG04** · **DBG-04** (gea4v2:12.9.4 GPU Capture / Inspection / Playback) · LEGACY
+//! **`render_debug_tools`** (gea_v2_e4 p248) · sibling **DBG-07** (gea4v1:10.7 screenshots).
+//! Env contract: [`crate::render::probes::vfx_capture_env`] (`VFX_CAPTURE` / `VFX_CAPTURE_FRAME` /
+//! `VFX_CAPTURE_VIEW=voxel` for PixelWorld massing stills).
+//!
+//! Env-gated one-shot capture batch fired after N frames in [`BaseState::Simulation`] (default
+//! 240 via [`crate::render::probes::vfx_capture_env::DEFAULT_VFX_CAPTURE_FRAME`]). Unlike
+//! [`crate::render::probes::vfx_capture_hook`] (text-stub), this probe spawns real [`Screenshot`]
+//! entities against the primary window and the tactical map RTT image, and dumps metadata JSON.
+//! Capture is presentation-only — **no simulation authority writes**.
 //!
 //! ## Why 240 frames
 //!
 //! Bootstrap (camera spawn, RTT bind barrier, first layout measure) takes several frames; 240
-//! gives a comfortable steady-state margin before we grab pixels.
+//! gives a comfortable steady-state margin before we grab pixels. PlayQuad voxel weather/massing
+//! stills use frame ≥2000 (see env `PLAYQUAD_VOXEL_CAPTURE_FRAME`).
 //!
 //! ## Files written
 //!
@@ -28,17 +33,16 @@ use bevy::window::PrimaryWindow;
 use crate::engine::states::BaseState;
 use crate::gui::tactical::map_camera::MainWorldCamera;
 use crate::gui::tactical::sim_map_rtt::SimulationMapTexture;
+use crate::render::probes::vfx_capture_env::{
+    vfx_capture_enabled, vfx_capture_frame, DEFAULT_VFX_CAPTURE_FRAME,
+};
 
 /// Default: fire the capture batch this many frames after entering [`BaseState::Simulation`].
-const CAPTURE_AT_FRAME: u32 = 240;
+const CAPTURE_AT_FRAME: u32 = DEFAULT_VFX_CAPTURE_FRAME;
 
-/// Capture frame, overridable via `VFX_CAPTURE_FRAME=<n>` (e.g. 600 to capture after the vfx
-/// harness seeds fire at ~frame 330).
+/// Capture frame — sole authority [`vfx_capture_frame`] (DBG-04 env contract).
 fn capture_at_frame() -> u32 {
-    std::env::var("VFX_CAPTURE_FRAME")
-        .ok()
-        .and_then(|v| v.parse().ok())
-        .unwrap_or(CAPTURE_AT_FRAME)
+    vfx_capture_frame()
 }
 
 const CAPTURE_DIR: &str = "debug_runs/captures";
@@ -48,7 +52,7 @@ const CAPTURE_META_PATH: &str = "debug_runs/captures/capture_meta_live.json";
 
 #[must_use]
 pub fn visual_capture_probe_enabled() -> bool {
-    std::env::var("VFX_CAPTURE").is_ok()
+    vfx_capture_enabled()
 }
 
 /// Frame counter (frames spent in [`BaseState::Simulation`]) + fire-once latch.
@@ -242,5 +246,23 @@ mod tests {
         assert!(WINDOW_CAPTURE_PATH.starts_with(CAPTURE_DIR));
         assert!(TACTICAL_RTT_CAPTURE_PATH.starts_with(CAPTURE_DIR));
         assert!(CAPTURE_META_PATH.starts_with(CAPTURE_DIR));
+    }
+
+    /// DBG-04 / V4-DBG04 tripwire: default capture frame matches env contract constant.
+    #[test]
+    fn dbg04_capture_at_frame_matches_env_default() {
+        assert_eq!(CAPTURE_AT_FRAME, DEFAULT_VFX_CAPTURE_FRAME);
+        assert_eq!(capture_at_frame(), vfx_capture_frame());
+    }
+
+    /// DBG-04 / V4-DBG04 tripwire: dual-cite + env deferral stay in this module.
+    #[test]
+    fn dbg04_dual_cite_and_env_deferral_in_probe_docs() {
+        let src = include_str!("visual_capture_probe.rs");
+        assert!(src.contains("DBG-04"));
+        assert!(src.contains("render_debug_tools"));
+        assert!(src.contains("vfx_capture_env"));
+        assert!(src.contains("vfx_capture_enabled"));
+        assert!(src.contains("vfx_capture_frame"));
     }
 }

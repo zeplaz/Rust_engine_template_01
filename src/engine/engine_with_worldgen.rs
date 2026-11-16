@@ -37,9 +37,8 @@ use crate::render::{
 };
 use crate::systems::{
     configure_chunk_environment_sets,
-    AtmospherePlugin, ChunkEnvironmentPersistPlugin, ChunkSimLodPlugin, EcologyPlugin, FirePlugin,
-    SimAttentionPlugin,
-    WeatherPlugin,
+    AtmospherePlugin, ChunkEnvironmentPersistPlugin, ChunkSimLodPlugin, CollisionPlugin,
+    EcologyPlugin, FirePlugin, SimAttentionPlugin, WeatherPlugin,
 };
 use crate::systems::terrain::MaterialUnificationPlugin;
 use crate::terrain::generation::WorldGenToolsPlugin;
@@ -51,7 +50,7 @@ use super::DebugManeuverPlugin;
 use bevy::asset::AssetPlugin;
 use bevy::prelude::*;
 use bevy::winit::WinitSettings;
-use bevy::window::{PresentMode, Window, WindowPlugin};
+use bevy::window::{Window, WindowPlugin};
 
 /// Root camera for tactical map — renders to [`crate::gui::SimulationMapTexture`].
 fn spawn_primary_ui_camera(
@@ -71,26 +70,36 @@ fn spawn_primary_ui_camera(
     crate::gui::spawn_simulation_hud_ui_camera(&mut commands, palette.as_ref());
 }
 
+/// DES-03 (gea4v1 6.1 *Subsystem Start-Up and Shut-Down*): canonical plugin registration phases.
+/// Later phases depend on earlier ones; reverse this list for tear-down mental model.
+pub const ENGINE_STARTUP_PHASES: &[&str] = &[
+    "platform",      // DefaultPlugins / assets / window
+    "shell_ui",       // splash, menus, theme, UX
+    "sim_control",    // tick / pause / scenario host
+    "world_persist",  // substrate, save spine, streaming LOD
+    "sim_domains",    // fire, ecology, atmosphere, weather, collision
+    "render_gpu",     // overlays, GPU fields, world-map meshes
+    "transport_nav",  // transport + navigation + damage
+    "strategic_ai",   // strategic fields / AI
+];
+
+/// DES-03: phase index for docs / Accept (None if unknown).
+#[must_use]
+pub fn engine_startup_phase_index(name: &str) -> Option<usize> {
+    ENGINE_STARTUP_PHASES.iter().position(|p| *p == name)
+}
+
 pub struct EnginePlugin;
 
 impl Plugin for EnginePlugin {
     fn build(&self, app: &mut App) {
+        // DES-03: registration order follows [`ENGINE_STARTUP_PHASES`] (platform → … → strategic_ai).
         app.init_resource::<crate::render::DebugRenderTraceConfig>();
         // Resolve `assets/` from the crate root so running `target/debug/proc_A_dine01.exe` from any CWD still finds files.
         let assets_root = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("assets");
         let asset_file_path = assets_root.to_string_lossy().into_owned();
-        let present_mode = if std::env::var("PERF_NO_VSYNC")
-            .ok()
-            .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
-            || std::env::var("PERF_VSYNC")
-                .ok()
-                .is_some_and(|v| v == "0" || v.eq_ignore_ascii_case("false"))
-            || cfg!(not(debug_assertions))
-        {
-            PresentMode::AutoNoVsync
-        } else {
-            PresentMode::AutoVsync
-        };
+        // RND-19 / V4-RND19: sole primary-window present + buffer-count authority.
+        let present = crate::render::view_runtime::resolve_present_surface_config_from_env();
 
         app.add_plugins(
             DefaultPlugins
@@ -100,7 +109,10 @@ impl Plugin for EnginePlugin {
                 })
                 .set(WindowPlugin {
                     primary_window: Some(Window {
-                        present_mode,
+                        present_mode: present.present_mode,
+                        desired_maximum_frame_latency: Some(
+                            present.desired_maximum_frame_latency(),
+                        ),
                         ..default()
                     }),
                     ..default()
@@ -144,6 +156,7 @@ impl Plugin for EnginePlugin {
             .add_plugins(EcologyPlugin)
             .add_plugins(AtmospherePlugin)
             .add_plugins(WeatherPlugin)
+            .add_plugins(CollisionPlugin)
             .add_plugins(FramePerfPlugin)
             .add_plugins(crate::render::probes::rtt_sprite_trace::RttSpriteTracePlugin)
             .add_plugins(crate::dev::diagnostics::DevDiagnosticsPlugin)
@@ -308,6 +321,32 @@ impl Plugin for EnginePlugin {
              ③ menu Demo world · \
              `unittest` fixture · `--test weather`/`fire`/`atmosphere`. \
              Keys: F1 options · F2 pressure · F3 diagnostics · F7 agent perms · F11/F12 capture."
+        );
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn des03_startup_phases_are_ordered_and_complete() {
+        assert_eq!(ENGINE_STARTUP_PHASES.len(), 8);
+        assert_eq!(engine_startup_phase_index("platform"), Some(0));
+        assert_eq!(engine_startup_phase_index("strategic_ai"), Some(7));
+        assert!(
+            engine_startup_phase_index("sim_control").unwrap()
+                < engine_startup_phase_index("sim_domains").unwrap()
+        );
+        assert!(
+            engine_startup_phase_index("world_persist").unwrap()
+                < engine_startup_phase_index("render_gpu").unwrap()
+        );
+        assert_eq!(engine_startup_phase_index("missing"), None);
+        let src = include_str!("engine_with_worldgen.rs");
+        assert!(
+            src.contains("DES-03: registration order follows"),
+            "EnginePlugin build must cite DES-03 phase order"
         );
     }
 }

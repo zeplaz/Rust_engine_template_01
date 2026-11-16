@@ -1,4 +1,7 @@
 //! **INFRA-E1-001** — push authoritative [`TransportGraph`] into runtime transport resources.
+//!
+//! **ECS-15:** this is the sole bridge from tool-side graph → SIM-TRN runtime resources.
+//! Callers must not invent a second writer into `TransportTopology` / field / directory.
 
 use super::graph::TransportGraph;
 use crate::systems::transport::{

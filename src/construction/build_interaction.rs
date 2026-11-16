@@ -840,6 +840,8 @@ pub fn build_confirm_site_system(
     mut events: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
     mut commands: Commands,
     mut occupation: Option<ResMut<crate::strategic::TileOccupationBook>>,
+    mut voxel_occupation: Option<ResMut<crate::strategic::VoxelOccupationBook>>,
+    voxel_cfg: Option<Res<crate::strategic::VoxelOccupationConfig>>,
     staging_stock: Option<Res<SiteStagingStock>>,
     mut pending_staging: Option<ResMut<PendingSiteStagingDebits>>,
     mut queries: ParamSet<(
@@ -910,11 +912,16 @@ pub fn build_confirm_site_system(
                     record_zone_spawns(commit.history.as_mut(), vec![entity]);
                 }
                 PendingEntryKind::Demolish => {
+                    let commit_auth = voxel_cfg
+                        .as_ref()
+                        .is_some_and(|c| c.commit_authority_enabled);
                     let (_n, events) = execute_demolish_at_tile(
                         &mut commands,
                         entry.origin,
                         &queries.p1(),
                         occupation.as_deref_mut(),
+                        voxel_occupation.as_deref_mut(),
+                        commit_auth,
                     );
                     record_demolish_execution(commit.history.as_mut(), events);
                 }

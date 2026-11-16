@@ -6,15 +6,18 @@ mod field_l0_shim;
 mod gpu_field_bridge;
 mod advect;
 mod coupling;
+pub mod coupling_terms;
 mod diagnostics;
 mod emitter_sync;
 mod field;
+pub mod frame;
 mod gpu_paths;
 mod overlays;
 mod particles;
 mod perf_overlay;
 pub mod pipeline;
 mod render_layers;
+pub mod storm_class;
 mod update;
 mod validation_layout;
 mod visibility;
@@ -22,15 +25,31 @@ mod visual_extract;
 
 pub use advect::advect_atmosphere_field;
 pub use coupling::merge_atmosphere_into_logistics_sample;
+pub use coupling_terms::{
+    aggregate_source_terms, detect_firestorm_plumes, is_plume_core, pyro_cloud_lift,
+    AEROSOL_TEMP_SHADE_C, PLUME_EMBER_MIN, PLUME_HEAT_MIN, PLUME_MIN_CELLS, PLUME_SMOKE_MIN,
+    WeatherSourceCell, WeatherSourceTerms,
+};
 pub use diagnostics::AtmosphereDiagnostics;
 pub use emitter_sync::{fire_emitter_from_heat_fuel, FireEmitter};
 pub(crate) use emitter_sync::update_fire_emitters_from_heat;
 pub use field::{
-    atmos_chunk_to_tile, atmos_chunk_to_tile_in, AtmosphereCell, ATMO_GRID_ORIGIN, ATMO_GRID_SIZE,
+    atmos_chunk_to_tile, atmos_chunk_to_tile_in, participating_media_visibility, AtmosphereCell,
+    ATMO_GRID_ORIGIN, ATMO_GRID_SIZE, PARTICIPATING_ASH_OPTICAL_K, PARTICIPATING_FOG_OPTICAL_K,
+    PARTICIPATING_SMOKE_OPTICAL_K, PARTICIPATING_VIS_FLOOR,
 };
 pub use field_l0_shim::{
     atmosphere_field_l0_shim_system, DEBT_010_WRITERS_ON_L0, FIELD_L0_SHIM_RETIRED,
     FIELD_L0_SHIM_WIRED,
+};
+pub use frame::{
+    build_atmosphere_frame, combine_visibility_m, combine_visibility_m_k, AtmosphereFrame,
+    AtmosphereFrameInputs, AtmosphereFrameKey, AtmosphereFrameStats, AtmosphereTile,
+    AtmosphereWeatherMeans, VIS_ASH_K, VIS_SMOKE_K,
+};
+pub use storm_class::{
+    classify_storm, classify_storm_with_context, classify_storm_with_plume, low_depth_hpa,
+    StormClass, StormClassThresholds,
 };
 pub use visual_extract::{DEBT_011_SMOKE_UNIFIED, SMOKE_EXTRACT_BRIDGE};
 pub use gpu_paths::{
@@ -58,7 +77,10 @@ pub use field_page_residency::{
 };
 pub use pipeline::{configure_atmosphere_pipeline_sets, AtmospherePipelineSet};
 pub use render_layers::AtmosphereRenderLayers;
-pub use update::{atmosphere_field_blend_fire_overlay_sources, atmosphere_field_fill_from_chunks};
+pub use update::{
+    atmosphere_field_blend_fire_overlay_sources, atmosphere_field_fill_from_chunks,
+    atmosphere_field_seed_slab_smoke,
+};
 pub use validation_layout::{
     tile_in_any_validation_region, AtmosphereValidationRegion, ATMOSPHERE_VALIDATION_LAYOUT_V1,
 };
@@ -73,7 +95,7 @@ use bevy::prelude::*;
 
 use emitter_sync::sync_fire_emitters;
 
-use crate::systems::fire::chunk_smoke_field_pull_from_advected_atmosphere;
+use crate::systems::fire::project_chunk_smoke_from_atmosphere_frame;
 
 pub struct AtmospherePlugin;
 
@@ -90,19 +112,22 @@ impl Plugin for AtmospherePlugin {
                     atmosphere_field_fill_from_chunks,
                     atmosphere_field_blend_fire_overlay_sources
                         .after(atmosphere_field_fill_from_chunks),
+                    update::atmosphere_field_seed_slab_smoke
+                        .after(atmosphere_field_blend_fire_overlay_sources),
                 )
                     .chain()
                     .in_set(AtmospherePipelineSet::FieldFill),
             )
             .add_systems(
                 Update,
-                (
-                    advect_atmosphere_field,
-                    // DEBT-011: Field→L0 shim retired; ChunkSmoke pulls from L0 only.
-                    chunk_smoke_field_pull_from_advected_atmosphere,
-                )
-                    .chain()
-                    .in_set(AtmospherePipelineSet::WindAdvect),
+                advect_atmosphere_field.in_set(AtmospherePipelineSet::WindAdvect),
+            )
+            .add_systems(
+                Update,
+                // W7: sole ChunkSmoke writer — project from AtmosphereFrame after Frame rebuild.
+                project_chunk_smoke_from_atmosphere_frame
+                    .after(frame::build_atmosphere_frame)
+                    .in_set(AtmospherePipelineSet::Frame),
             )
             .add_systems(
                 Update,
@@ -115,6 +140,8 @@ impl Plugin for AtmospherePlugin {
             );
         // ES-0: CPU particle controller + render-prep placeholder removed from live schedule.
         // Fire/atmosphere particles use `fire_vfx` → GPU instanced quad spine (ES-2 generalizes).
+        frame::atmosphere_frame_systems(app);
+        coupling_terms::coupling_terms_systems(app);
         coupling::coupling_systems(app);
         render_layers::render_layer_systems(app);
         visual_extract::visual_extract_systems(app);

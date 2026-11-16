@@ -16,8 +16,10 @@ use super::tuning::{WeatherPreset, WeatherPresetId, WeatherTuning};
 /// Sea-level reference pressure.
 pub const BASELINE_PRESSURE_HPA: f32 = 1013.25;
 
-/// Schema of [`WeatherFieldSave`].
-pub const WEATHER_FIELD_SAVE_SCHEMA: u32 = 1;
+/// Schema of [`WeatherFieldSave`] (v2 adds [`PressureSystem::vortex_mps`]).
+pub const WEATHER_FIELD_SAVE_SCHEMA: u32 = 2;
+/// Prior schema — load path migrates to [`WEATHER_FIELD_SAVE_SCHEMA`].
+pub const WEATHER_FIELD_SAVE_SCHEMA_V1: u32 = 1;
 
 /// Deterministic, serialisable RNG (SplitMix64).
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -71,6 +73,10 @@ pub struct PressureSystem {
     pub humidity_load: f32,
     pub age_secs: f32,
     pub lifetime_secs: f32,
+    /// Peak tangential vortex wind (m/s) at ~0.35·radius. `0` = pure Gaussian (v1). W5.
+    /// Cyclonic for [`PressureKind::Low`], anticyclonic for High. Save schema 2.
+    #[serde(default)]
+    pub vortex_mps: f32,
 }
 
 impl PressureSystem {
@@ -98,6 +104,40 @@ impl PressureSystem {
     pub fn weight_at(&self, p: Vec2) -> f32 {
         let d = p - Vec2::from(self.centre_m);
         (-(d.length_squared()) / (self.radius_m * self.radius_m).max(1.0)).exp()
+    }
+
+    /// Envelope-scaled vortex influence `0..1+` at `p` (0 when `vortex_mps == 0`).
+    #[must_use]
+    pub fn vortex_influence_at(&self, p: Vec2) -> f32 {
+        if self.vortex_mps <= 0.0 {
+            return 0.0;
+        }
+        self.weight_at(p) * self.envelope()
+    }
+
+    /// Tangential Rankine-like vortex wind at `p` (before terrain / max clamp).
+    #[must_use]
+    pub fn vortex_wind_at(&self, p: Vec2) -> Vec2 {
+        if self.vortex_mps <= 0.0 {
+            return Vec2::ZERO;
+        }
+        let d = p - Vec2::from(self.centre_m);
+        let r = d.length();
+        if r < 1.0 {
+            return Vec2::ZERO;
+        }
+        let r_max = (self.radius_m * 0.35).max(1.0);
+        let profile = if r <= r_max {
+            r / r_max
+        } else {
+            r_max / r
+        };
+        let sign = match self.kind {
+            PressureKind::Low => 1.0,
+            PressureKind::High => -1.0,
+        };
+        let tang = Vec2::new(-d.y, d.x) / r;
+        tang * (sign * self.vortex_mps * self.envelope() * profile)
     }
 }
 
@@ -435,6 +475,20 @@ impl WeatherField {
                 s.kind = PressureKind::Low;
                 s.centre_m = c.into();
                 s.humidity_load = field.rng.range((0.7, 1.0));
+                // W5: opening low inherits vortex when the preset requests one (spawn may have been High).
+                // Centre the vortex core so L0 / dump tiles sample hurricane-class.
+                if let Some(p) = &preset_row {
+                    if p.vortex_mps.1 > 0.0 {
+                        s.vortex_mps = field.rng.range((
+                            p.vortex_mps.0.max(0.0),
+                            p.vortex_mps.1.max(p.vortex_mps.0),
+                        ));
+                        s.centre_m = (field.extent_m * 0.5).into();
+                        s.radius_m = s
+                            .radius_m
+                            .max(field.extent_m.min_element() * 0.45);
+                    }
+                }
             }
             field.systems.push(s);
         }
@@ -498,6 +552,13 @@ impl WeatherField {
             PressureKind::Low => self.rng.range((0.5, 1.0)),
             PressureKind::High => self.rng.range((0.0, 0.3)),
         };
+        let vortex_range = preset.map(|p| p.vortex_mps).unwrap_or((0.0, 0.0));
+        let vortex_mps = if matches!(kind, PressureKind::Low) && vortex_range.1 > 0.0 {
+            self.rng
+                .range((vortex_range.0.max(0.0), vortex_range.1.max(vortex_range.0)))
+        } else {
+            0.0
+        };
         PressureSystem {
             kind,
             centre_m: centre.into(),
@@ -507,11 +568,32 @@ impl WeatherField {
             humidity_load,
             age_secs: 0.0,
             lifetime_secs: self.rng.range(tuning.system_lifetime_secs),
+            vortex_mps,
         }
+    }
+
+    /// Max vortex influence over systems with `vortex_mps > 0` (frame hurricane classifier).
+    #[must_use]
+    pub fn vortex_influence_at(&self, pos_m: Vec2) -> f32 {
+        self.systems
+            .iter()
+            .map(|s| s.vortex_influence_at(pos_m))
+            .fold(0.0f32, f32::max)
     }
 
     /// One weather step: climate tier, move / age / respawn systems, solve the next forecast.
     pub fn advance(&mut self, tuning: &WeatherTuning, now_micros: u64) {
+        let _ = self.advance_with_terms(tuning, now_micros, None);
+    }
+
+    /// One weather step with optional fire→cloud [`WeatherSourceTerms`] (W4).
+    /// Returns `(moisture_injected, cloud_delta)` applied from terms (0 when absent).
+    pub fn advance_with_terms(
+        &mut self,
+        tuning: &WeatherTuning,
+        now_micros: u64,
+        terms: Option<&crate::systems::atmosphere::WeatherSourceTerms>,
+    ) -> (f32, f32) {
         let dt = self.step_secs as f32;
         let preset_row = self.climate.preset.and_then(|id| tuning.preset(id)).cloned();
 
@@ -545,24 +627,41 @@ impl WeatherField {
             }
         }
 
-        let next = self.solve(&self.next, tuning, dt);
+        let (next, deltas) = self.solve_with_terms(&self.next, tuning, dt, terms);
         self.prev = std::mem::replace(&mut self.next, next);
         self.prev_micros = now_micros;
         self.next_micros = now_micros + u64::from(self.step_secs) * 1_000_000;
         self.solves += 1;
         self.revision = self.revision.wrapping_add(1);
+        deltas
     }
 
     /// Pressure → wind → humidity → cloud → precipitation → visibility for every cell.
     #[must_use]
     pub fn solve(&self, from: &WeatherSnapshot, t: &WeatherTuning, dt: f32) -> WeatherSnapshot {
+        self.solve_with_terms(from, t, dt, None).0
+    }
+
+    /// Like [`Self::solve`], applying optional W4 fire→cloud source terms.
+    /// Returns `(snapshot, (moisture_injected, pyro_cloud_delta))`.
+    #[must_use]
+    pub fn solve_with_terms(
+        &self,
+        from: &WeatherSnapshot,
+        t: &WeatherTuning,
+        dt: f32,
+        terms: Option<&crate::systems::atmosphere::WeatherSourceTerms>,
+    ) -> (WeatherSnapshot, (f32, f32)) {
         let n = self.cell_count();
         let mut out = WeatherSnapshot::with_len(n);
         if from.len() != n || self.terrain.exposure.len() != n {
-            return out;
+            return (out, (0.0, 0.0));
         }
+        let terms = terms.filter(|src| src.is_ready() && src.cells.len() == n);
         let prevailing = self.climate.prevailing_mps();
         let (sin_t, cos_t) = t.friction_turn_deg.to_radians().sin_cos();
+        let mut moisture_injected = 0.0f32;
+        let mut cloud_delta = 0.0f32;
         for i in 0..n {
             let p = self.cell_center_m(i);
             // 1. Pressure (hPa) and its gradient (hPa/km).
@@ -587,10 +686,14 @@ impl WeatherField {
                     PressureKind::High => high_w += g * s.envelope(),
                 }
             }
-            // 2. Wind: prevailing + gradient wind (low on the left), turned toward low pressure.
+            // 2. Wind: prevailing + gradient + vortex (W5), turned toward low pressure, then clamped.
             let geo = Vec2::new(-grad.y, grad.x) * t.gradient_mps_per_hpa_km;
             let geo = Vec2::new(geo.x * cos_t - geo.y * sin_t, geo.x * sin_t + geo.y * cos_t);
-            let mut wind = prevailing + geo;
+            let mut vortex = Vec2::ZERO;
+            for s in &self.systems {
+                vortex += s.vortex_wind_at(p);
+            }
+            let mut wind = prevailing + geo + vortex;
             let speed = wind.length();
             if speed > 1e-4 {
                 let mut dir = wind / speed;
@@ -604,10 +707,12 @@ impl WeatherField {
                 wind = dir * (speed * factor).min(t.max_wind_mps);
             }
             let speed = wind.length();
-            // Temperature: base, lapse rate, cloud shade.
+            let src = terms.map(|s| s.cell(i)).unwrap_or_default();
+            // Temperature: base, lapse rate, cloud shade, W4 aerosol shade.
             let elev_m = self.terrain.elevation_norm[i] * t.elevation_range_m;
             let temp = self.climate.base_temp_c - t.lapse_rate_c_per_km * elev_m / 1000.0
-                - 2.0 * from.cloud[i];
+                - 2.0 * from.cloud[i]
+                - crate::systems::atmosphere::AEROSOL_TEMP_SHADE_C * src.aerosol;
             // 3. Humidity: semi-Lagrangian advection on the coarse grid, sources, sinks.
             let back = p - wind * dt;
             let mut h = bilinear(&from.humidity, self.dims, self.cell_size_m, back);
@@ -617,6 +722,10 @@ impl WeatherField {
             h -= t.high_drying * high_w;
             h += (self.climate.humidity_base - h) * t.humidity_relax;
             h -= t.rain_sink_per_mm_h * from.rain_mm_h[i];
+            if src.moisture > 0.0 {
+                h += src.moisture;
+                moisture_injected += src.moisture;
+            }
             let h = h.clamp(0.02, 1.0);
             // 4. Cloud: humidity, low-pressure lift, orographic lift (rain shadow on the lee).
             let moist = ((h - 0.35) / 0.3).clamp(0.0, 1.0);
@@ -624,6 +733,10 @@ impl WeatherField {
             let mut cloud = (h - t.cloud_humidity_min) / t.cloud_humidity_span.max(1e-3);
             cloud += t.low_lift_per_hpa * low_depth * moist;
             cloud += if oro > 0.0 { oro * moist } else { oro * 0.5 };
+            let pyro_lift =
+                crate::systems::atmosphere::pyro_cloud_lift(&src, moist);
+            cloud += pyro_lift;
+            cloud_delta += pyro_lift;
             let cloud = cloud.clamp(0.0, 1.0);
             // 5. Rain / fog / lightning.
             let rain = if cloud > t.rain_cloud_min {
@@ -638,7 +751,7 @@ impl WeatherField {
                 * ((h - 0.7) / 0.3).clamp(0.0, 1.0)
                 * (low_depth / 10.0).clamp(0.0, 1.0)
                 * cloud;
-            // 6. Visibility (fog, rain; smoke joins in W2).
+            // 6. Visibility (fog, rain; combined smoke path is AtmosphereFrame W2).
             let vis = t.visibility_clear_m / (1.0 + fog * t.visibility_fog_k) / (1.0 + rain * t.visibility_rain_k);
 
             out.pressure_hpa[i] = pressure;
@@ -651,7 +764,7 @@ impl WeatherField {
             out.lightning[i] = lightning;
             out.visibility_m[i] = vis.clamp(50.0, t.visibility_clear_m);
         }
-        out
+        (out, (moisture_injected, cloud_delta))
     }
 
     /// Bilinear in space, linear in time between `prev` and `next`. O(1).
@@ -722,10 +835,9 @@ impl WeatherField {
     }
 
     /// Field from a save. `now_micros` re-anchors the interpolation window to the current sim time.
+    /// Accepts schema 1 (vortex defaults to 0) and schema 2.
     pub fn from_save(save: &WeatherFieldSave, tuning: &WeatherTuning, now_micros: u64) -> Result<Self, String> {
-        if save.schema_version != WEATHER_FIELD_SAVE_SCHEMA {
-            return Err(format!("weather save schema {} unsupported", save.schema_version));
-        }
+        let save = migrate_weather_field_save(save.clone())?;
         let n = (save.dims[0] * save.dims[1]) as usize;
         if save.prev.len() != n || save.next.len() != n || save.next.humidity.len() != n {
             return Err(format!("weather save snapshot len != {n}"));
@@ -753,6 +865,24 @@ impl WeatherField {
             gust_ratio: tuning.gust_ratio,
             rough_factor: tuning.rough_factor,
         })
+    }
+}
+
+/// Bump schema 1 → 2 in place (`vortex_mps` already defaulted by serde when absent).
+pub fn migrate_weather_field_save(mut save: WeatherFieldSave) -> Result<WeatherFieldSave, String> {
+    match save.schema_version {
+        WEATHER_FIELD_SAVE_SCHEMA_V1 => {
+            for s in &mut save.systems {
+                // Explicit for v1 payloads that somehow carried a non-default (should be 0).
+                if s.vortex_mps.is_nan() || s.vortex_mps < 0.0 {
+                    s.vortex_mps = 0.0;
+                }
+            }
+            save.schema_version = WEATHER_FIELD_SAVE_SCHEMA;
+            Ok(save)
+        }
+        WEATHER_FIELD_SAVE_SCHEMA => Ok(save),
+        other => Err(format!("weather save schema {other} unsupported")),
     }
 }
 
@@ -875,4 +1005,92 @@ fn bilinear_vec(v: &[[f32; 2]], dims: UVec2, cell: f32, pos: Vec2) -> Vec2 {
     let a = g(y0 * w + x0).lerp(g(y0 * w + x1), tx);
     let b = g(y1 * w + x0).lerp(g(y1 * w + x1), tx);
     a.lerp(b, ty)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn extent() -> Vec2 {
+        Vec2::splat(8_000.0)
+    }
+
+    #[test]
+    fn save_schema_v1_loads_with_zero_vortex() {
+        let tuning = WeatherTuning::default();
+        let field = WeatherField::new(42, extent(), &tuning, None, WeatherTerrain::default(), 0);
+        let mut save = field.to_save();
+        save.schema_version = WEATHER_FIELD_SAVE_SCHEMA_V1;
+        for s in &mut save.systems {
+            s.vortex_mps = 0.0;
+        }
+        let restored = WeatherField::from_save(&save, &tuning, 0).expect("migrate v1");
+        assert!(restored.is_ready());
+        assert!(restored.systems.iter().all(|s| s.vortex_mps == 0.0));
+        // serde default: PressureSystem without vortex_mps field → 0.
+        let legacy = r#"(
+            kind: Low,
+            centre_m: (1000.0, 2000.0),
+            velocity_mps: (1.0, 0.0),
+            radius_m: 8000.0,
+            peak_hpa: 10.0,
+            humidity_load: 0.8,
+            age_secs: 100.0,
+            lifetime_secs: 10000.0,
+        )"#;
+        let sys: PressureSystem = ron::from_str(legacy).expect("v1 system ron");
+        assert_eq!(sys.vortex_mps, 0.0);
+    }
+
+    #[test]
+    fn hurricane_preset_spawns_vortex() {
+        let tuning = WeatherTuning::default();
+        assert!(tuning.preset(WeatherPresetId::HurricaneClass).is_some());
+        let field = WeatherField::new(
+            7,
+            extent(),
+            &tuning,
+            Some(WeatherPresetId::HurricaneClass),
+            WeatherTerrain::default(),
+            0,
+        );
+        assert!(
+            field.systems.iter().any(|s| s.vortex_mps > 0.0 && matches!(s.kind, PressureKind::Low)),
+            "HurricaneClass must spawn a vortex low"
+        );
+    }
+
+    #[test]
+    fn max_wind_mps_clamp_respected_with_vortex() {
+        let mut tuning = WeatherTuning::default();
+        tuning.max_wind_mps = 22.0;
+        let mut field = WeatherField::new(
+            11,
+            extent(),
+            &tuning,
+            Some(WeatherPresetId::HurricaneClass),
+            WeatherTerrain::default(),
+            0,
+        );
+        for s in &mut field.systems {
+            if matches!(s.kind, PressureKind::Low) {
+                s.vortex_mps = 80.0;
+                s.peak_hpa = 40.0;
+                s.centre_m = (field.extent_m * 0.5).into();
+                s.age_secs = s.lifetime_secs * 0.4;
+            }
+        }
+        let snap = field.solve(&field.next, &tuning, field.step_secs as f32);
+        let max_speed = snap
+            .wind_mps
+            .iter()
+            .map(|w| Vec2::from(*w).length())
+            .fold(0.0f32, f32::max);
+        assert!(
+            max_speed <= tuning.max_wind_mps + 1e-3,
+            "max wind {max_speed} exceeded clamp {}",
+            tuning.max_wind_mps
+        );
+        assert!(max_speed > 5.0, "vortex should still produce strong wind");
+    }
 }

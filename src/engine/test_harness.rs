@@ -1,11 +1,22 @@
-//! Automated **test worlds** (`--test weather|fire|atmosphere|visual`): drive world-gen flow, seed sim
-//! chunk slabs + debug defaults, and frame the map camera for fire / atmosphere / precip checks.
+//! Automated **test worlds** (`--test weather|fire|atmosphere|visual|playquad|…`): drive world-gen flow,
+//! seed sim chunk slabs + debug defaults, and frame the map camera for fire / atmosphere / precip checks.
+//!
+//! **PlayQuad review recipe** (voxel view + weather + massing dump → score): set `VFX_CAPTURE_VIEW=voxel`,
+//! `RUST_ENGINE_STUDIO_MASSING=fixture`, then `python tools/sim_review/playcheck.py --scene playquad`
+//! (see [`tools/sim_review/README.md`](../../tools/sim_review/README.md) § PlayQuad). StormFront arms
+//! after [`PLAYQUAD_RAIN_DELAY_FRAMES`] (~1800 sim frames); use playcheck `--frame 2400` and
+//! `--min-secs 420` so `weather.*` and precip have ticked before capture/score.
 
 use bevy::diagnostic::FrameCount;
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
 use crate::engine::launch_args::{EngineLaunchArgs, TestScene};
+use crate::engine::playquad::{
+    quadrant_aabb, quadrant_tile_rect, rank_land_chunks, PlayQuadrant, TileAabb, TileRect,
+    PLAYTEST_EXTENT_PRESET,
+};
+use crate::strategic::BuildSiteTile;
 // @orchestrator-status: ACTIVE — VSS-001 trip: $ref:src/dev/TRIP_VSS_TEST_HARNESS.md
 // @orchestrator-owner: @coder
 // Harness seeds are NOT product fire proof — scenario/save parity required (VSS-T2).
@@ -87,10 +98,33 @@ pub struct TestWorldHarness {
     /// VSS-T2-001: harness-injected fire is **debug fallback** — never sole product proof.
     /// Witness: `debug_runs/spectator_parity_live.json` · trip: `TRIP_VSS_TEST_HARNESS.md`.
     pub harness_fire_debug_fallback: bool,
+    /// PLAYTEST-QUADRANT-WORLD-001: NE build sites committed (one-shot latch).
+    pub playquad_ne_seeded: bool,
+    /// PLAYTEST-QUADRANT-WORLD-001: wet (StormFront) phase requested after the dry opening (one-shot latch).
+    pub playquad_rain_requested: bool,
+}
+
+impl TestWorldHarness {
+    /// Re-arm the PlayQuad one-shots when a new test world starts.
+    pub fn reset_playquad_latches(&mut self) {
+        self.playquad_ne_seeded = false;
+        self.playquad_rain_requested = false;
+    }
 }
 
 /// Min frames between [`preserve_test_scene_fire_after_sim_tick`] full rearms.
 const FIRE_REARM_COOLDOWN_FRAMES: u32 = 2400;
+
+/// PlayQuad dry opening: frames after sim enter before the wet (StormFront) preset is requested, so the NW
+/// fire can burn briefly first. Weather stays one world-wide preset; `WeatherField` stays the only writer.
+pub const PLAYQUAD_RAIN_DELAY_FRAMES: u32 = 1800;
+
+/// NE yard: max catalog pilots committed, and the gap between footprints (tiles).
+const PLAYQUAD_NE_MAX_SITES: usize = 3;
+const PLAYQUAD_NE_SITE_GAP_TILES: u32 = 2;
+/// Land fraction for the NE yard chunk (first choice, then fallback).
+const PLAYQUAD_NE_LAND_FRACTION: f32 = 0.9;
+const PLAYQUAD_NE_LAND_FRACTION_FALLBACK: f32 = 0.5;
 
 impl Default for TestWorldHarness {
     fn default() -> Self {
@@ -110,6 +144,8 @@ impl Default for TestWorldHarness {
             post_enter_sim_frame: 0,
             last_fire_rearm_frame: 0,
             harness_fire_debug_fallback: true,
+            playquad_ne_seeded: false,
+            playquad_rain_requested: false,
         }
     }
 }
@@ -257,6 +293,15 @@ impl Plugin for TestHarnessPlugin {
             )
             .add_systems(
                 Update,
+                (
+                    seed_playquad_ne_build_order_once,
+                    request_playquad_wet_phase_once,
+                )
+                    .after(apply_test_scene_defaults)
+                    .run_if(in_state(BaseState::Simulation)),
+            )
+            .add_systems(
+                Update,
                 preserve_test_scene_fire_after_sim_tick
                     .after(ChunkEnvironmentSet::Fire)
                     .before(crate::render::extraction::FireVisualFrameSet::BuildProfiles)
@@ -386,6 +431,7 @@ fn debug_quick_world_bootstrap(
                 commands.insert_resource(ActiveTestScene(scene));
                 harness.defaults_applied = false;
         harness.last_fire_rearm_frame = 0;
+                harness.reset_playquad_latches();
                 harness.finished = true;
             } else {
                 commands.remove_resource::<ActiveTestScene>();
@@ -427,6 +473,28 @@ fn world_gen_params_for_maneuver(
             p.apply_tile_extent_preset(TileExtentPreset::MediumSmall);
             p.field_storage = TerrainFieldStorage::ChunkCellMatrixAuthoritative;
         }
+    }
+    // PLAYTEST-QUADRANT-WORLD-001 P2: quadrant world on Standard (512²), chunk matrix authoritative.
+    // FrameScreen keeps its TacticalSmall world; buildread / other scenes keep MediumSmall.
+    if launch.test_scene.is_playquad() && maneuver != DebugManeuver::FrameScreen {
+        p.apply_tile_extent_preset(PLAYTEST_EXTENT_PRESET);
+        p.field_storage = TerrainFieldStorage::ChunkCellMatrixAuthoritative;
+        if let Some(seed) = launch.test_scene.isolation_world_seed() {
+            p.seed = seed;
+        }
+        // NE builds an industrial yard from the pilot catalog — no generated town book competing for it.
+        p.settlement_count = 0;
+        // P4: SW lake basin (river-attached lakes rank first) + SE marsh belt. Rhythm data only, PlayQuad-only;
+        // the SE region comes from the shared partition so terrain never defines its own quadrants.
+        let se = quadrant_aabb(PlayQuadrant::Se, p.width, p.height);
+        let (fw, fh) = (p.width as f32, p.height as f32);
+        p.feature_rhythm = crate::terrain::LandFeatureRhythm::playquad_hydrology([
+            se.min.x / fw,
+            se.min.y / fh,
+            se.max.x / fw,
+            se.max.y / fh,
+        ]);
+        p.recompute_symbolic_land_features();
     }
     // Isolation play entries keep this harness extent (MediumSmall). Each gets its own fixed seed.
     if matches!(
@@ -503,6 +571,7 @@ fn test_world_bootstrap(
             };
             *params = world_gen_params_for_maneuver(launch, maneuver);
             harness.defaults_applied = false;
+            harness.reset_playquad_latches();
         harness.last_fire_rearm_frame = 0;
             harness.logistics_visual_seeded = false;
             harness.s7p_logistics_throughput_seeded = false;
@@ -608,7 +677,13 @@ fn test_scene_fire_seed_count(scene: TestScene) -> u32 {
         TestScene::Atmosphere => 8,
         // Small burn cluster — not a world-center ocean flood of markers.
         TestScene::Visual | TestScene::VfxSandbox => 8,
-        TestScene::None | TestScene::Weather | TestScene::City | TestScene::SubFx => 0,
+        // Contained NW wildland burn (quadrant AABB pick).
+        TestScene::PlayQuad => 6,
+        TestScene::None
+        | TestScene::Weather
+        | TestScene::City
+        | TestScene::BuildReadability
+        | TestScene::SubFx => 0,
     }
 }
 
@@ -630,6 +705,8 @@ fn apply_test_scene_fire_seeds(
     commands: &mut Commands,
     region: Option<&mut VfxFireTestRegion>,
 ) {
+    // PlayQuad keeps its whole-map camera: the burn-cluster focus region is not armed for it.
+    let region = region.filter(|_| scene.arms_fire_camera_focus());
     let count = test_scene_fire_seed_count(scene);
     if count == 0 {
         return;
@@ -638,9 +715,24 @@ fn apply_test_scene_fire_seeds(
         TestScene::Fire | TestScene::Vfx => (0.78, 0.65),
         TestScene::Atmosphere => (0.55, 0.5),
         TestScene::Visual | TestScene::VfxSandbox => (0.92, 0.75),
-        TestScene::None | TestScene::Weather | TestScene::City | TestScene::SubFx => (0.0, 0.0),
+        TestScene::PlayQuad => (0.85, 0.7),
+        TestScene::None
+        | TestScene::Weather
+        | TestScene::City
+        | TestScene::BuildReadability
+        | TestScene::SubFx => (0.0, 0.0),
     };
-    let bounds = seed_test_fire_near_world_center(params, fire_q, count, heat, fuel);
+    // P3: playquad confines ignition to the NW quadrant; every other scene keeps the world-center pick.
+    let fire_region = scene
+        .fire_seeds_in_quadrant()
+        .then(|| quadrant_aabb(PlayQuadrant::Nw, params.width, params.height));
+    let bounds = seed_test_fire_in_region(params, fire_q, count, heat, fuel, fire_region);
+    if bounds.is_none() && fire_region.is_some() {
+        warn!(
+            target: "test_harness::playquad",
+            "NW fire: no burnable land chunk with live fuel in the NW quadrant — nothing ignited"
+        );
+    }
     attach_fire_light_emission_for_seeded_chunks(fire_q, commands);
     if let (Some(region), Some((min, max, n))) = (region, bounds) {
         if region.is_valid() {
@@ -1376,6 +1468,177 @@ fn seed_atmosphere_wind(req: &mut WeatherPresetRequest) {
     request_weather_preset(req, WeatherPresetId::Windy);
 }
 
+/// Pure NE yard layout: pilots side by side (`gap` tiles apart), centered on `yard_center`, every footprint
+/// fully inside `ne`. Trailing pilots that cannot fit are dropped. Returns `(pilot index, origin)`.
+#[must_use]
+fn plan_playquad_ne_sites(
+    footprints: &[(u32, u32)],
+    yard_center: Vec2,
+    ne: &TileRect,
+    gap: u32,
+) -> Vec<(usize, BuildSiteTile)> {
+    let ne_w = ne.x1.saturating_sub(ne.x0);
+    let ne_d = ne.y1.saturating_sub(ne.y0);
+    let mut fit: Vec<(usize, u32, u32)> = Vec::new();
+    let mut row_w = 0u32;
+    for (i, &(w, d)) in footprints.iter().enumerate() {
+        let (w, d) = (w.max(1), d.max(1));
+        if d > ne_d {
+            continue;
+        }
+        let next = row_w + w + if fit.is_empty() { 0 } else { gap };
+        if next > ne_w {
+            break;
+        }
+        row_w = next;
+        fit.push((i, w, d));
+    }
+    let mut x = ((yard_center.x - row_w as f32 * 0.5).max(ne.x0 as f32) as u32)
+        .min(ne.x1.saturating_sub(row_w));
+    let mut out = Vec::with_capacity(fit.len());
+    for (i, w, d) in fit {
+        let z = ((yard_center.y - d as f32 * 0.5).max(ne.y0 as f32) as u32)
+            .min(ne.y1.saturating_sub(d));
+        out.push((i, BuildSiteTile { x, z }));
+        x += w + gap;
+    }
+    out
+}
+
+/// PLAYTEST-QUADRANT-WORLD-001 P3: NE build order. Commits generic catalog-pilot sites through the one
+/// construction funnel (`CommitConstructionSiteEvent` → `commit_construction_site_system`); the harness never
+/// spawns sites directly. No archetype-named branches; no fire at t0 (fire seeds are NW-only).
+/// Also switches presentation to PixelWorld3D so the (global) rain acceptance track reads there.
+fn seed_playquad_ne_build_order_once(
+    scene: Option<Res<ActiveTestScene>>,
+    mut harness: ResMut<TestWorldHarness>,
+    params: Res<WorldGenParams>,
+    chunks: Query<(&Chunk, &ChunkCellMatrix)>,
+    mut commands: Commands,
+    mut commit: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
+    mut world_mode: ResMut<crate::gui::WorldPresentationMode>,
+) {
+    if harness.playquad_ne_seeded || !harness.defaults_applied {
+        return;
+    }
+    if !scene.is_some_and(|s| s.0.is_playquad()) || chunks.is_empty() {
+        return;
+    }
+    harness.playquad_ne_seeded = true;
+    world_mode.kind = crate::gui::WorldPresentationKind::PixelWorld3D;
+
+    let (w, h) = (params.width, params.height);
+    for q in PlayQuadrant::ALL {
+        let r = quadrant_tile_rect(q, w, h);
+        info!(
+            target: "test_harness::playquad",
+            "quadrant {:?} x[{},{}) y[{},{}) — {}",
+            q, r.x0, r.x1, r.y0, r.y1, q.label()
+        );
+    }
+
+    let catalog = crate::construction::pilot_catalog::PilotCatalog::load_from_disk();
+    // Generic pick: grammar pilots first, then the rest; one site per catalog id.
+    let mut pilots: Vec<&crate::construction::pilot_catalog::ResolvedPilotEntry> =
+        catalog.grammar_pilots().collect();
+    pilots.extend(
+        catalog
+            .pilots
+            .iter()
+            .filter(|p| p.pilot_kind != crate::construction::pilot_catalog::PilotKind::Grammar),
+    );
+    let mut seen = std::collections::HashSet::new();
+    pilots.retain(|p| seen.insert(p.catalog_id.clone()));
+    pilots.truncate(PLAYQUAD_NE_MAX_SITES);
+    if pilots.is_empty() {
+        warn!(target: "test_harness::playquad", "NE build order: pilot catalog empty — no sites committed");
+        return;
+    }
+
+    let ne_rect = quadrant_tile_rect(PlayQuadrant::Ne, w, h);
+    let ne = quadrant_aabb(PlayQuadrant::Ne, w, h);
+    let water_line = params.biome_tuning.shallow_water_height_max;
+    let candidates: Vec<(Vec2, f32)> = chunks
+        .iter()
+        .map(|(chunk, matrix)| {
+            (
+                chunk_center_world_tiles(chunk, matrix),
+                chunk_land_burnable_fraction(matrix, water_line),
+            )
+        })
+        .collect();
+    let nearest = |min_land: f32| {
+        rank_land_chunks(
+            candidates.iter().enumerate().map(|(i, (c, land))| (i, *c, *land)),
+            Some(&ne),
+            ne.center(),
+            min_land,
+        )
+        .first()
+        .map(|(_, i)| candidates[*i].0)
+    };
+    let Some(yard_center) = nearest(PLAYQUAD_NE_LAND_FRACTION)
+        .or_else(|| nearest(PLAYQUAD_NE_LAND_FRACTION_FALLBACK))
+    else {
+        warn!(target: "test_harness::playquad", "NE build order: no land chunk in NE — no sites committed");
+        return;
+    };
+
+    let footprints: Vec<(u32, u32)> = pilots
+        .iter()
+        .map(|p| (p.footprint.width, p.footprint.depth))
+        .collect();
+    let owner = commands.spawn_empty().id();
+    for (i, origin) in
+        plan_playquad_ne_sites(&footprints, yard_center, &ne_rect, PLAYQUAD_NE_SITE_GAP_TILES)
+    {
+        let pilot = pilots[i];
+        commit.write(crate::strategic::CommitConstructionSiteEvent {
+            site_id: crate::strategic::SiteId::UNASSIGNED,
+            owner,
+            archetype: crate::strategic::SiteArchetype::Factory,
+            origin,
+            footprint: crate::strategic::FootprintTiles {
+                width: pilot.footprint.width.max(1),
+                depth: pilot.footprint.depth.max(1),
+            },
+            layer: crate::strategic::LayerType::Surface,
+            catalog_id: Some(pilot.catalog_id.clone()),
+            placement: None,
+        });
+        info!(
+            target: "test_harness::playquad",
+            "NE build order: commit pilot={} catalog_id={} footprint={}x{} origin=({}, {})",
+            pilot.id, pilot.catalog_id, pilot.footprint.width, pilot.footprint.depth, origin.x, origin.z
+        );
+    }
+}
+
+/// PlayQuad dry→wet: after [`PLAYQUAD_RAIN_DELAY_FRAMES`] request the StormFront preset once. The weather
+/// field stays the only weather writer (this sends a `WeatherPresetRequest`, nothing else).
+fn request_playquad_wet_phase_once(
+    scene: Option<Res<ActiveTestScene>>,
+    mut harness: ResMut<TestWorldHarness>,
+    mut weather_preset: ResMut<WeatherPresetRequest>,
+) {
+    if harness.playquad_rain_requested || !harness.defaults_applied {
+        return;
+    }
+    if !scene.is_some_and(|s| s.0.is_playquad()) {
+        return;
+    }
+    if harness.post_enter_sim_frame < PLAYQUAD_RAIN_DELAY_FRAMES {
+        return;
+    }
+    harness.playquad_rain_requested = true;
+    weather_preset.0 = Some(WeatherPresetId::StormFront);
+    info!(
+        target: "test_harness::playquad",
+        "wet phase: StormFront requested at sim frame {}",
+        harness.post_enter_sim_frame
+    );
+}
+
 fn apply_test_scene_defaults(
     scene: Option<Res<ActiveTestScene>>,
     mut harness: ResMut<TestWorldHarness>,
@@ -1407,14 +1670,17 @@ fn apply_test_scene_defaults(
     }
     let sim = presentation.get_mut(crate::gui::MapViewInstanceId::SimulationMap);
     sim.overlays.fire_heat = match kind {
-        TestScene::None | TestScene::City | TestScene::SubFx => false,
+        TestScene::None | TestScene::City | TestScene::BuildReadability | TestScene::SubFx => false,
         // `--test weather` keeps the heat overlay chrome it already had; it still does not seed fire.
         TestScene::Weather => true,
         other => other.seeds_fire_overlay(),
     };
     sim.bump_revision();
 
-    let weather_chrome = !matches!(kind, TestScene::City | TestScene::Vfx);
+    let weather_chrome = !matches!(
+        kind,
+        TestScene::City | TestScene::BuildReadability | TestScene::Vfx
+    );
     wx.enabled = weather_chrome;
     wx.overlay = weather_chrome;
     wx.particles = weather_chrome;
@@ -1485,10 +1751,34 @@ fn apply_test_scene_defaults(
                 fi += 1;
             }
         }
+        TestScene::PlayQuad => {
+            // NW fire (seeded below, quadrant rect) · NE build sites (`seed_playquad_ne_build_order_once`) ·
+            // rain is global and dry-first: Windy now, StormFront after `PLAYQUAD_RAIN_DELAY_FRAMES`
+            // (`request_playquad_wet_phase_once`). Product WeatherVfx only — no harness test-particle chrome.
+            wx.enabled = true;
+            wx.overlay = true;
+            wx.particles = false;
+            wx.background_aesthetic = true;
+            focus_debug.enabled = false;
+            tile_debug.use_batched_mesh_overlay = true;
+            gpu.show = false;
+            seed_atmosphere_wind(&mut weather_preset);
+        }
         TestScene::City => {
             // Town stamps are the play raster. No fire overlay, weather particles, or wind field.
             focus_debug.enabled = false;
             tile_debug.use_batched_mesh_overlay = false;
+            wx.enabled = false;
+            wx.overlay = false;
+            wx.particles = false;
+            gpu.show = false;
+            sim.overlays.fire_heat = false;
+            sim.bump_revision();
+        }
+        TestScene::BuildReadability => {
+            // Catalog pilots + massing silhouette — construction chrome, no VFX.
+            focus_debug.enabled = false;
+            tile_debug.use_batched_mesh_overlay = true;
             wx.enabled = false;
             wx.overlay = false;
             wx.particles = false;
@@ -1596,7 +1886,7 @@ fn publish_vfx_fire_test_region_after_defaults(
     if !harness.defaults_applied {
         return;
     }
-    if !scene.is_some_and(|s| s.0.seeds_fire_overlay()) {
+    if !scene.is_some_and(|s| s.0.arms_fire_camera_focus()) {
         return;
     }
     if region.is_valid() {
@@ -1605,7 +1895,7 @@ fn publish_vfx_fire_test_region_after_defaults(
     crate::gui::publish_vfx_fire_test_region(params.as_ref(), &fire_q, region.as_mut());
 }
 
-fn chunk_center_world_tiles(chunk: &Chunk, matrix: &ChunkCellMatrix) -> Vec2 {
+pub(crate) fn chunk_center_world_tiles(chunk: &Chunk, matrix: &ChunkCellMatrix) -> Vec2 {
     let sx = matrix.size.x.max(1) as f32;
     let sy = matrix.size.y.max(1) as f32;
     Vec2::new(
@@ -1614,7 +1904,7 @@ fn chunk_center_world_tiles(chunk: &Chunk, matrix: &ChunkCellMatrix) -> Vec2 {
     )
 }
 
-fn chunk_land_burnable_fraction(matrix: &ChunkCellMatrix, water_line: f32) -> f32 {
+pub(crate) fn chunk_land_burnable_fraction(matrix: &ChunkCellMatrix, water_line: f32) -> f32 {
     let n = matrix.elevation.len();
     if n == 0 {
         return 0.0;
@@ -1628,8 +1918,12 @@ fn chunk_land_burnable_fraction(matrix: &ChunkCellMatrix, water_line: f32) -> f3
     land as f32 / n as f32
 }
 
-/// Prefer land near world center — ocean chunks extinguish heat and leave an empty gizmo over water.
-fn seed_test_fire_near_world_center(
+/// Prefer land near the anchor — ocean chunks extinguish heat and leave an empty gizmo over water.
+///
+/// `region = None`: nearest land to world center (legacy, all non-quadrant scenes).
+/// `region = Some(aabb)`: only chunks whose center is inside the AABB, nearest its center
+/// (PLAYTEST-QUADRANT-WORLD-001 P3: NW fire).
+fn seed_test_fire_in_region(
     params: &WorldGenParams,
     fire_q: &mut Query<(
         Entity,
@@ -1642,26 +1936,32 @@ fn seed_test_fire_near_world_center(
     count: u32,
     heat: f32,
     fuel: f32,
+    region: Option<TileAabb>,
 ) -> Option<(Vec2, Vec2, u32)> {
     if params.width == 0 || params.height == 0 || count == 0 {
         return None;
     }
-    let center = Vec2::new(params.width as f32 * 0.5, params.height as f32 * 0.5);
+    let anchor = region.as_ref().map_or_else(
+        || Vec2::new(params.width as f32 * 0.5, params.height as f32 * 0.5),
+        TileAabb::center,
+    );
     let water_line = params.biome_tuning.shallow_water_height_max;
-    let mut land: Vec<(f32, Entity)> = Vec::new();
-    for (e, chunk, matrix, _, _, _) in fire_q.iter() {
-        let c = chunk_center_world_tiles(chunk, matrix);
-        let d2 = center.distance_squared(c);
-        if chunk_land_burnable_fraction(matrix, water_line) >= 0.5 {
-            land.push((d2, e));
-        }
-    }
     // Land-only — no ocean fallback (water fire was an operator bug).
-    if land.is_empty() {
+    let ranked = rank_land_chunks(
+        fire_q.iter().map(|(e, chunk, matrix, _, _, _)| {
+            (
+                e,
+                chunk_center_world_tiles(chunk, matrix),
+                chunk_land_burnable_fraction(matrix, water_line),
+            )
+        }),
+        region.as_ref(),
+        anchor,
+        0.5,
+    );
+    if ranked.is_empty() {
         return None;
     }
-    let mut ranked = land;
-    ranked.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
     let mut min = Vec2::splat(f32::INFINITY);
     let mut max = Vec2::splat(f32::NEG_INFINITY);
     let mut seeded = 0u32;
@@ -1744,6 +2044,183 @@ mod tests {
         assert_eq!(pending.test_scene, TestScene::VfxSandbox);
         assert!(!harness.active);
         assert!(!harness.defaults_applied);
+    }
+
+    fn launch_for(name: &str) -> (EngineLaunchArgs, DebugManeuver) {
+        let l = EngineLaunchArgs::from_cli(Some(name.into()), false, None);
+        let m = l.maneuver;
+        (l, m)
+    }
+
+    /// PQ-S2: playquad → exactly Standard 512², chunk matrix authoritative, 0 towns.
+    #[test]
+    fn playquad_params_are_standard_512_chunk_authoritative() {
+        let (l, m) = launch_for("playquad");
+        let p = world_gen_params_for_maneuver(&l, m);
+        assert_eq!((p.width, p.height), (512, 512));
+        assert_eq!(p.field_storage, TerrainFieldStorage::ChunkCellMatrixAuthoritative);
+        assert_eq!(p.settlement_count, 0);
+        assert_eq!(p.seed, TestScene::PLAYQUAD_WORLD_SEED);
+        assert_eq!(
+            (p.width / 2) % crate::terrain::world_scale_contract::CHUNK_TILES_SIM,
+            0,
+            "quadrant split is chunk-aligned"
+        );
+    }
+
+    /// PQ-S3: every other scene keeps its prior extent (320 harness / 192 frame).
+    #[test]
+    fn other_scenes_keep_their_extents() {
+        let medium = TileExtentPreset::MediumSmall.tiles_per_axis();
+        assert_eq!(medium, 320);
+        for name in ["city", "vfx", "subfx", "buildread", "visual", "demo", "sandbox", "unittest"] {
+            let (l, m) = launch_for(name);
+            if m == DebugManeuver::UnittestWorld {
+                continue; // fixture-defined extent, untouched
+            }
+            let p = world_gen_params_for_maneuver(&l, m);
+            assert_eq!((p.width, p.height), (medium, medium), "--test {name}");
+        }
+        let (l, m) = launch_for("frame");
+        assert_eq!(m, DebugManeuver::FrameScreen);
+        let p = world_gen_params_for_maneuver(&l, m);
+        assert_eq!(p.width, TileExtentPreset::TacticalSmall.tiles_per_axis());
+        // Even a playquad launch never widens the FrameScreen world.
+        let mut pq = launch_for("playquad").0;
+        pq.maneuver = DebugManeuver::FrameScreen;
+        let p = world_gen_params_for_maneuver(&pq, DebugManeuver::FrameScreen);
+        assert_eq!(p.width, TileExtentPreset::TacticalSmall.tiles_per_axis());
+    }
+
+    /// PQ-X1: buildread keeps its fire / weather chrome off while playquad opts in.
+    #[test]
+    fn buildread_chrome_stays_off_playquad_opts_in() {
+        let br = TestScene::BuildReadability;
+        assert!(!br.seeds_fire_overlay() && !br.seeds_weather() && !br.menu_vfx_bootstrap());
+        assert_eq!(test_scene_fire_seed_count(br), 0);
+        assert!(test_scene_fire_seed_count(TestScene::PlayQuad) > 0);
+    }
+
+    /// PQ-F1: playquad fire touches only land chunks inside NW (+Y north), nothing else.
+    #[test]
+    fn playquad_fire_seeds_only_inside_nw() {
+        use crate::engine::playquad::{quadrant_of, PlayQuadrant};
+        use bevy::ecs::system::RunSystemOnce;
+
+        let mut params = WorldGenParams::default();
+        params.apply_tile_extent_preset(TileExtentPreset::Standard);
+        let slab = UVec2::splat(crate::terrain::world_scale_contract::CHUNK_TILES_SIM);
+        let n = (params.width / slab.x) as i32;
+        let mut world = World::new();
+        for cy in 0..n {
+            for cx in 0..n {
+                let mut matrix = ChunkCellMatrix::new(slab);
+                matrix.elevation.fill(0.9); // land everywhere
+                let cells = matrix.elevation.len();
+                world.spawn((
+                    Chunk { coord: IVec2::new(cx, cy) },
+                    matrix,
+                    ChunkSurfaceFire { heat: 0.0, fuel: 1.0 },
+                    ChunkFireOverlay {
+                        heat: vec![0.0; cells],
+                        fuel: vec![1.0; cells],
+                        smoke: vec![0.0; cells],
+                        toxic: vec![0.0; cells],
+                        burn_hold: vec![0; cells],
+                    },
+                    ChunkSmokeField::default(),
+                ));
+            }
+        }
+        world.insert_resource(params.clone());
+        let region = Some(quadrant_aabb(PlayQuadrant::Nw, params.width, params.height));
+        let bounds = world
+            .run_system_once(
+                move |p: Res<WorldGenParams>,
+                      mut q: Query<(
+                    Entity,
+                    &Chunk,
+                    &mut ChunkCellMatrix,
+                    &mut ChunkSurfaceFire,
+                    Option<&mut ChunkFireOverlay>,
+                    &mut ChunkSmokeField,
+                )>| {
+                    seed_test_fire_in_region(&p, &mut q, 6, 0.85, 0.7, region)
+                },
+            )
+            .expect("system ran");
+        assert_eq!(bounds.expect("NW has land").2, 6);
+
+        let mut burning = 0;
+        let mut q = world.query::<(&Chunk, &ChunkCellMatrix, &ChunkSurfaceFire)>();
+        for (chunk, matrix, fire) in q.iter(&world) {
+            if fire.heat <= 0.0 {
+                continue;
+            }
+            burning += 1;
+            let c = chunk_center_world_tiles(chunk, matrix);
+            assert_eq!(
+                quadrant_of(c, params.width, params.height),
+                Some(PlayQuadrant::Nw),
+                "burning chunk {:?} outside NW",
+                chunk.coord
+            );
+        }
+        assert_eq!(burning, 6);
+    }
+
+    #[test]
+    fn ne_sites_fit_inside_ne_and_are_ordered() {
+        use crate::engine::playquad::quadrant_tile_rect;
+        let ne = quadrant_tile_rect(PlayQuadrant::Ne, 512, 512);
+        let yard = Vec2::new(384.0, 384.0);
+        let sites = plan_playquad_ne_sites(&[(10, 6), (8, 8), (12, 5)], yard, &ne, 2);
+        assert_eq!(sites.len(), 3);
+        let fps = [(10u32, 6u32), (8, 8), (12, 5)];
+        let mut prev_end = 0;
+        for (i, o) in &sites {
+            let (w, d) = fps[*i];
+            assert!(ne.contains(o.x, o.z) && ne.contains(o.x + w - 1, o.z + d - 1), "{o:?}");
+            assert!(o.x >= prev_end, "footprints do not overlap");
+            prev_end = o.x + w;
+        }
+        // Edge yard: shifted back inside NE, never past the world edge.
+        let edge = plan_playquad_ne_sites(&[(10, 6), (8, 8)], Vec2::new(511.0, 511.0), &ne, 2);
+        for (i, o) in &edge {
+            let (w, d) = [(10u32, 6u32), (8, 8)][*i];
+            assert!(o.x + w <= ne.x1 && o.z + d <= ne.y1);
+        }
+        // A pilot that cannot fit the NE quadrant is dropped, not clipped.
+        assert!(plan_playquad_ne_sites(&[(300, 4)], yard, &ne, 2).is_empty());
+    }
+
+    /// Rain is dry-first: no StormFront request until the delay, then exactly one.
+    #[test]
+    fn playquad_wet_phase_waits_for_the_dry_opening() {
+        use bevy::ecs::system::RunSystemOnce;
+        let mut world = World::new();
+        world.insert_resource(ActiveTestScene(TestScene::PlayQuad));
+        world.insert_resource(TestWorldHarness {
+            defaults_applied: true,
+            post_enter_sim_frame: PLAYQUAD_RAIN_DELAY_FRAMES - 1,
+            ..Default::default()
+        });
+        world.init_resource::<WeatherPresetRequest>();
+        world.run_system_once(request_playquad_wet_phase_once).unwrap();
+        assert!(world.resource::<WeatherPresetRequest>().0.is_none());
+        world.resource_mut::<TestWorldHarness>().post_enter_sim_frame = PLAYQUAD_RAIN_DELAY_FRAMES;
+        world.run_system_once(request_playquad_wet_phase_once).unwrap();
+        assert_eq!(
+            world.resource::<WeatherPresetRequest>().0,
+            Some(WeatherPresetId::StormFront)
+        );
+        assert!(world.resource::<TestWorldHarness>().playquad_rain_requested);
+        // Not a PlayQuad scene: never requests.
+        world.insert_resource(ActiveTestScene(TestScene::BuildReadability));
+        world.resource_mut::<WeatherPresetRequest>().0 = None;
+        world.resource_mut::<TestWorldHarness>().reset_playquad_latches();
+        world.run_system_once(request_playquad_wet_phase_once).unwrap();
+        assert!(world.resource::<WeatherPresetRequest>().0.is_none());
     }
 
     #[test]

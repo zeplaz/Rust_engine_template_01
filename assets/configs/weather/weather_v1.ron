@@ -2,7 +2,8 @@
 // Loaded by `src/systems/weather/tuning.rs`; the compiled-in copy is the default, this file
 // overrides it at runtime. Metric units: metres, seconds, m/s, hPa, °C, mm/h.
 (
-    schema_version: 1,
+    // W3: +k_smoke/k_ash, icing band, storm-class thresholds (schema 2).
+    schema_version: 2,
     // Edge of one weather cell. The grid is ceil(map extent / cell) per axis (8 km map -> 8x8).
     cell_size_m: 1000.0,
     // Game seconds between field solves (1 sim step = 1 s). Consumers interpolate between solves.
@@ -67,6 +68,30 @@
     visibility_clear_m: 20000.0,
     visibility_fog_k: 80.0,
     visibility_rain_k: 0.35,
+    // Combined visibility: weather_vis / (1 + k_smoke·smoke + k_ash·ash).
+    k_smoke: 2.5,
+    k_ash: 1.5,
+    // Icing band at altitude (temp = ground − lapse × alt_km); liquid proxy = cloud × humidity.
+    icing_temp_min_c: -25.0,
+    icing_temp_max_c: 0.0,
+    icing_liquid_min: 0.25,
+    // Frame dump altitude for icing_risk (air_ops profiles use their own ice_alt_m).
+    icing_ref_alt_m: 3000.0,
+    // Dump: tiles with icing_risk above this count as icing_grounded_samples.
+    icing_ground_threshold: 0.4,
+    // Storm classifier thresholds (see atmosphere/storm_class.rs).
+    storm_developing_cloud_min: 0.55,
+    storm_developing_humidity_min: 0.70,
+    storm_developing_low_depth_min_hpa: 4.0,
+    storm_developing_rain_max_mm_h: 2.0,
+    storm_thunder_lightning_min: 0.35,
+    storm_thunder_cloud_min: 0.85,
+    storm_thunder_rain_min_mm_h: 3.0,
+    // Hurricane-class (W5): vortex influence + wind + deep low + rain band.
+    storm_hurricane_wind_min_mps: 24.0,
+    storm_hurricane_low_depth_min_hpa: 12.0,
+    storm_hurricane_rain_min_mm_h: 1.5,
+    storm_hurricane_vortex_min: 0.12,
     // Gusts: 5 s buckets, peak ratio over the mean wind (smooth terrain .. rough terrain).
     gust_bucket_secs: 5,
     gust_ratio: (0.25, 0.6),
@@ -108,6 +133,16 @@
             systems: 3,
             low_fraction: 0.0,
             strength_hpa: (10.0, 16.0),
+        ),
+        (
+            id: HurricaneClass,
+            prevailing_mps: 5.0,
+            base_temp_offset_c: 6.0,
+            humidity: 0.95,
+            systems: 2,
+            low_fraction: 1.0,
+            strength_hpa: (28.0, 40.0),
+            vortex_mps: (36.0, 48.0),
         ),
     ],
 )

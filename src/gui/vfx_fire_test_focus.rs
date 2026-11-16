@@ -67,7 +67,7 @@ impl VfxFireTestRegion {
 const REGION_PAD_TILES: f32 = 4.0;
 
 fn harness_camera_focus_armed(scene: crate::engine::TestScene) -> bool {
-    scene.seeds_fire_overlay() || matches!(scene, crate::engine::TestScene::City)
+    scene.arms_fire_camera_focus() || matches!(scene, crate::engine::TestScene::City)
 }
 
 #[must_use]
@@ -174,7 +174,7 @@ fn sync_vfx_fire_test_region_from_fire_system(
     fire_q: Query<(Entity, &Chunk, &ChunkCellMatrix, &ChunkSurfaceFire)>,
     mut region: ResMut<VfxFireTestRegion>,
 ) {
-    if !scene.is_some_and(|s| s.0.seeds_fire_overlay()) {
+    if !scene.is_some_and(|s| s.0.arms_fire_camera_focus()) {
         return;
     }
     if !region.is_valid() {

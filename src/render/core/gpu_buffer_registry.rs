@@ -6,6 +6,18 @@
 //!
 //! All `RenderDevice::create_buffer` / `Queue::write_buffer` for registered buffers go through
 //! [`GPUBufferRegistry`]. Projection and compute graphs hold [`BufferId`] only.
+//!
+//! # MEM-04 — fragmentation + relocation (gea4v1 6.2.2 / 6.2.2.1–2; LEGACY `memory_management`, gea_v1_e4 p412)
+//!
+//! * **Fixed-size pages sidestep fragmentation (6.2.2.1).** Every allocation is rounded up to a
+//!   multiple of [`GPU_BUFFER_PAGE_BYTES`] (one fixed page size, never per-call), so freed and
+//!   re-created buffers are interchangeable page multiples rather than arbitrary holes.
+//! * **Relocation needs handle indirection (6.2.2.2).** [`ensure_capacity`](GPUBufferRegistry::ensure_capacity)
+//!   *relocates* a buffer (drop + re-`create` under the same [`BufferId`], new `version`). That is
+//!   only safe because consumers hold the [`BufferId`] handle (and the plain-data [`GpuSlice`]) and
+//!   resolve it through [`GPUBufferRegistry::get`] each frame — never a cached `Buffer`/pointer.
+//!   Bind groups key on `(BufferId, version)`, so a relocation invalidates them by version, not by
+//!   dangling reference. Do not hand out `&Buffer`/`Buffer` clones that outlive the frame.
 
 use std::collections::HashMap;
 use std::marker::PhantomData;
@@ -15,7 +27,13 @@ use bevy::render::render_resource::{Buffer, BufferDescriptor, BufferUsages};
 use bevy::render::renderer::{RenderDevice, RenderQueue};
 use bytemuck::Pod;
 
+/// MEM-04: the single fixed allocation page (bytes). All registry buffer sizes are multiples of
+/// this (also the wgpu storage/uniform offset alignment ceiling used by the render graphs).
+pub const GPU_BUFFER_PAGE_BYTES: u64 = 256;
+
 /// Stable numeric identity for a registered GPU buffer (no string keys on the hot path).
+///
+/// MEM-04: this is the **handle** — relocation keeps the id and bumps `version`.
 #[derive(Clone, Copy, Debug, Hash, Eq, PartialEq, Ord, PartialOrd)]
 pub struct BufferId(pub u64);
 
@@ -154,7 +172,9 @@ pub enum RegistryError {
 #[must_use]
 pub fn row_capacity_bytes(stride: u32, rows: usize) -> u64 {
     let rows = rows.max(1) as u64;
-    (rows * stride as u64).max(stride as u64).next_multiple_of(256)
+    (rows * stride as u64)
+        .max(stride as u64)
+        .next_multiple_of(GPU_BUFFER_PAGE_BYTES)
 }
 
 impl GPUBufferRegistry {
@@ -200,7 +220,10 @@ impl GPUBufferRegistry {
         if self.buffers.contains_key(&desc.id) {
             return Err(RegistryError::DuplicateId(desc.id));
         }
-        let size = desc.size_bytes.max(desc.stride as u64).next_multiple_of(256);
+        let size = desc
+            .size_bytes
+            .max(desc.stride as u64)
+            .next_multiple_of(GPU_BUFFER_PAGE_BYTES);
         let reserved_rows = (size / desc.stride as u64).max(1) as u32;
         let buffer = device.create_buffer(&BufferDescriptor {
             label: Some("gpu_buffer_registry"),
@@ -372,5 +395,40 @@ mod tests {
     fn row_capacity_bytes_aligns_to_256() {
         assert_eq!(row_capacity_bytes(32, 1) % 256, 0);
         assert!(row_capacity_bytes(32, 10) >= 320);
+    }
+
+    /// MEM-04 tripwire: the page size is one pinned constant; every capacity is a whole page multiple.
+    #[test]
+    fn mem04_allocation_page_size_is_fixed_and_capacity_is_page_multiple() {
+        assert_eq!(GPU_BUFFER_PAGE_BYTES, 256, "page size is part of the GPU contract");
+        for stride in [16u32, 32, 48, 64, 96, 128] {
+            for rows in [0usize, 1, 2, 7, 10, 255, 1000] {
+                let cap = row_capacity_bytes(stride, rows);
+                assert_eq!(cap % GPU_BUFFER_PAGE_BYTES, 0, "stride {stride} rows {rows}");
+                assert!(cap >= u64::from(stride) * rows.max(1) as u64);
+                // Grow is monotonic in whole pages: no sub-page holes between sizes.
+                assert!(row_capacity_bytes(stride, rows + 1) >= cap);
+            }
+        }
+    }
+
+    /// MEM-04 tripwire: consumers hold handles, not pointers. `Buffer` is `Clone` but not `Copy`, so a
+    /// `Copy` bound on the handle types proves neither embeds a GPU buffer that relocation could strand.
+    #[test]
+    fn mem04_handles_are_plain_copy_data_not_buffer_pointers() {
+        fn assert_copy<T: Copy>() {}
+        assert_copy::<BufferId>();
+        assert_copy::<GpuSlice<u8>>();
+        assert_copy::<RegistryBufferAllocation>();
+        assert_eq!(std::mem::size_of::<BufferId>(), 8);
+    }
+
+    /// MEM-04 tripwire: a slice view of an unregistered handle resolves to nothing (no stale pointer).
+    #[test]
+    fn mem04_unregistered_handle_resolves_to_none() {
+        let reg = GPUBufferRegistry::default();
+        assert!(reg.get(FIRE_VISUAL_INSTANCES_BUFFER).is_none());
+        assert!(reg.slice_view::<u8>(FIRE_VISUAL_INSTANCES_BUFFER).is_none());
+        assert!(reg.allocation(FIRE_VISUAL_INSTANCES_BUFFER).is_none());
     }
 }

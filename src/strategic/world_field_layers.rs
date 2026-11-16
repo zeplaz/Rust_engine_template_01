@@ -3,6 +3,23 @@
 //!
 //! Nodes and zones write **deltas** into these layers; systems blend, decay, and expose summaries.
 //!
+//! # Property-centric field layers (ECS-02)
+//!
+//! Book: gea4v2 17.2.2 / 17.2.2.3–4 *Property-Centric Architectures* (printed p561-564).
+//! LEGACY keyword: `runtime_object_model` (gea_v2_e4 §17.2 p563). Plan: V4-ECS02.
+//!
+//! The world is modeled as **named properties of space** ([`FieldScalarLayer`]), not as
+//! Bevy components hung on entities. [`ChunkFieldCell`] packs those scalars AoS per cell
+//! so blend/decay that touches several layers stays cache-local (array-of-structs *within*
+//! the cell). That is the intentional trade-off vs a pure SoA column per scalar:
+//! * **Property identity** — [`FieldScalarLayer`] + [`FieldScalarLayer::read_from`] is the
+//!   column key; epochs ([`WorldFieldLayerEpoch`]) stamp validity per update-class tier
+//!   (LOOP-09), not per entity.
+//! * **Layout** — AoS cell packing favors multi-scalar passes; consumers that need one
+//!   scalar still go through the property enum (not an entity query gather).
+//! * **Book cons we accept** — inspecting "one logical object" means reading several
+//!   layers/epochs; debugger-friendly object bags are not the authority here.
+//!
 //! Update-rate tiers (`TAC-06`): each scalar maps to [`FieldLayerUpdateClass`]; [`WorldFieldLayerEpoch`]
 //! holds one counter per class so writers bump only their tier and consumers invalidate against that tier.
 
@@ -240,5 +257,64 @@ mod tests {
         epochs.bump(FieldLayerUpdateClass::Dynamic);
         let v = cache.value_or_refresh(&epochs, || 0.9);
         assert!((v - 0.5).abs() < f32::EPSILON);
+    }
+
+    /// ECS-02 tripwire: field scalars are named properties of space (column keys), not
+    /// entity components — access goes through [`FieldScalarLayer::read_from`].
+    #[test]
+    fn ecs02_field_scalars_are_named_properties_not_entity_components() {
+        let cell = ChunkFieldCell {
+            supply: 1.0,
+            demand: 2.0,
+            power: 3.0,
+            control: 4.0,
+            visibility: 5.0,
+            threat: 6.0,
+            morale: 7.0,
+        };
+        let layers = [
+            FieldScalarLayer::Supply,
+            FieldScalarLayer::Demand,
+            FieldScalarLayer::Power,
+            FieldScalarLayer::Control,
+            FieldScalarLayer::Visibility,
+            FieldScalarLayer::Threat,
+            FieldScalarLayer::Morale,
+        ];
+        let expected = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0];
+        for (layer, want) in layers.iter().zip(expected.iter()) {
+            assert!(
+                (layer.read_from(&cell) - want).abs() < f32::EPSILON,
+                "{layer:?} property column mismatch"
+            );
+        }
+        // Seven property columns; AoS packing keeps blend-local layout (7 × f32).
+        assert_eq!(std::mem::size_of::<ChunkFieldCell>(), 7 * std::mem::size_of::<f32>());
+        assert_eq!(layers.len(), 7);
+    }
+
+    /// ECS-02 tripwire: property validity is stamped per update-class tier (not per
+    /// object bag) — the book’s “harder to debug whole object” cost we accept.
+    #[test]
+    fn ecs02_property_epochs_are_per_tier_not_per_object_bag() {
+        let mut epochs = WorldFieldLayerEpoch::default();
+        // Distinct properties share a tier stamp when they share update_class.
+        assert_eq!(
+            FieldScalarLayer::Supply.update_class(),
+            FieldScalarLayer::Threat.update_class()
+        );
+        assert_eq!(
+            epochs.epoch_for_scalar(FieldScalarLayer::Supply),
+            epochs.epoch_for_scalar(FieldScalarLayer::Threat)
+        );
+        epochs.bump_for_scalar(FieldScalarLayer::Supply);
+        assert_eq!(epochs.dynamic_epoch, 1);
+        assert_eq!(epochs.static_epoch, 0);
+        assert_eq!(epochs.slow_epoch, 0);
+        // Power (static) does not share Supply's stamp — gather across tiers is explicit.
+        assert_ne!(
+            epochs.epoch_for_scalar(FieldScalarLayer::Power),
+            epochs.epoch_for_scalar(FieldScalarLayer::Supply)
+        );
     }
 }

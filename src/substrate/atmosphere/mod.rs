@@ -8,10 +8,11 @@ pub mod clipmap_advect;
 mod contamination_tick;
 
 pub use clipmap_advect::{
-    advect_l0_with_wind, advect_l0_with_wind_field, max_blend_l0_ash_at, max_blend_l0_ember_at,
-    max_blend_l0_fog_at, max_blend_l0_heat_at, max_blend_l0_smoke_at, max_blend_l0_toxicity_at,
-    sample_tactical_ash_from_l0, sample_tactical_ember_from_l0, sample_tactical_fog_from_l0,
-    sample_tactical_heat_from_l0, sample_tactical_smoke_from_l0, sample_tactical_toxicity_from_l0,
+    advect_l0_with_wind, advect_l0_with_wind_field, apply_l0_rain_washout, fold_registry_smoke_into_l0,
+    max_blend_l0_ash_at, max_blend_l0_ember_at, max_blend_l0_fog_at, max_blend_l0_heat_at,
+    max_blend_l0_smoke_at, max_blend_l0_toxicity_at, sample_tactical_ash_from_l0,
+    sample_tactical_ember_from_l0, sample_tactical_fog_from_l0, sample_tactical_heat_from_l0,
+    sample_tactical_smoke_from_l0, sample_tactical_toxicity_from_l0,
 };
 pub use contamination_tick::contamination_tick_system;
 
@@ -33,7 +34,7 @@ pub const CLIPMAP_L0_AUTHORITATIVE: bool = true;
 /// DEBT-010 — FieldFill/WindAdvect smoke authority is clipmap L0.
 pub const DEBT_010_WRITERS_L0: bool = true;
 
-/// DEBT-010b — L0 owns fog + toxicity lanes; chunk_smoke pulls from L0.
+/// DEBT-010b — L0 owns toxicity; fog lane retired in W7 (weather fog via AtmosphereFrame).
 pub const DEBT_010B_TOXICITY_FOG_L0: bool = true;
 
 /// DEBT-010c — L0 owns ash / ember / heat lanes; GPU weather field is projection-owned.
@@ -43,7 +44,7 @@ pub const DEBT_010C_ASH_EMBER_HEAT_L0: bool = true;
 /// (projection graph + partial field state). L0 lanes are the sim authority for those channels.
 pub const GPU_FIELD_CONSUMERS_ON_L0: bool = true;
 
-/// DEBT-011 — smoke triangle unified: L0 → ChunkSmoke → SimChunkSmokeVisualExtract; Field deleted.
+/// DEBT-011 — Field deleted; W7 smoke path is L0 → AtmosphereFrame → extract / ChunkSmoke projection.
 pub const DEBT_011_FIELD_DELETED: bool = true;
 
 /// Default L0–L3 sim resolutions (tunable).
@@ -56,9 +57,9 @@ pub const CLIPMAP_L3_RES: UVec2 = UVec2::new(16, 16);
 pub struct AtmosphereClipLevel {
     pub resolution: UVec2,
     pub smoke_density: Vec<f32>,
-    /// DEBT-010b — L0 fog authority (mirrored into Field for transitional consumers).
+    /// W7 — retired weather-fog mirror lane (kept allocated for save layout; not filled/advected).
     pub fog_density: Vec<f32>,
-    /// DEBT-010b — L0 toxicity authority (mirrored into Field for transitional consumers).
+    /// DEBT-010b — L0 toxicity authority.
     pub toxicity: Vec<f32>,
     /// DEBT-010c — L0 ash authority.
     pub ash_density: Vec<f32>,
@@ -68,10 +69,49 @@ pub struct AtmosphereClipLevel {
     pub heat_distortion: Vec<f32>,
 }
 
+/// W1 — advect-writer id: `advect_atmosphere_field` (`AtmospherePipelineSet::WindAdvect`), the
+/// single L0 advect authority (per-texel wind from `WeatherField`, `ctrl.should_tick()` gated).
+pub const L0_ADVECT_WRITER_WIND_ADVECT: u32 = 1 << 0;
+
 #[derive(Resource, Clone, Debug)]
 pub struct AtmosphereClipmapStack {
     pub levels: Vec<AtmosphereClipLevel>,
     pub active_focus: DVec2,
+    /// W1 — monotone change counter, bumped by every L0 writer (key part of the future
+    /// `AtmosphereFrame`). Diagnostic only; never read to gate simulation.
+    pub revision: u64,
+    /// W1 — bit set of advect writers that have actually run on L0 (observation, not a verdict).
+    pub advect_writer_mask: u32,
+}
+
+impl AtmosphereClipmapStack {
+    /// Record an L0 mutation (fill / blend / advect / seed fold).
+    #[inline]
+    pub fn bump_revision(&mut self) {
+        self.revision = self.revision.wrapping_add(1);
+    }
+
+    /// Record that `writer` (an `L0_ADVECT_WRITER_*` bit) advected L0; bumps [`Self::revision`].
+    #[inline]
+    pub fn note_advect_writer(&mut self, writer: u32) {
+        self.advect_writer_mask |= writer;
+        self.bump_revision();
+    }
+
+    /// Number of distinct advect writers observed on L0 so far.
+    #[must_use]
+    pub fn l0_advect_writers(&self) -> u32 {
+        self.advect_writer_mask.count_ones()
+    }
+
+    /// Sum of L0 smoke density (dump counter).
+    #[must_use]
+    pub fn l0_smoke_mass(&self) -> f32 {
+        self.levels
+            .first()
+            .map(|l| l.smoke_density.iter().sum())
+            .unwrap_or(0.0)
+    }
 }
 
 impl Default for AtmosphereClipmapStack {
@@ -96,6 +136,8 @@ impl Default for AtmosphereClipmapStack {
                 make_level(CLIPMAP_L3_RES),
             ],
             active_focus: DVec2::ZERO,
+            revision: 0,
+            advect_writer_mask: 0,
         }
     }
 }
@@ -111,20 +153,14 @@ pub struct AtmosphereClipmapStats {
     pub toxic_hazard_sample: f32,
 }
 
+/// W7 — read-only clipmap stats (seed fold moved to FieldFill `atmosphere_field_seed_slab_smoke`).
 pub fn sync_atmos_clipmap_witness_system(
-    mut stack: ResMut<AtmosphereClipmapStack>,
+    stack: Res<AtmosphereClipmapStack>,
     mut witness: ResMut<AtmosphereClipmapStats>,
     registry: Option<Res<crate::substrate::WorldSubstrateRegistry>>,
-    smoke_extract: Option<Res<crate::render::extraction::SmokeVisualBridgeStats>>,
 ) {
-    let mut smoke_seed = 0.0_f32;
-    if let Some(smoke) = smoke_extract.as_deref() {
-        smoke_seed = smoke.smoke_density_sum.max(smoke_seed);
-    }
     if let Some(registry) = registry.as_deref() {
         if let Some((_key, chunk)) = registry.chunks.chunks.iter().next() {
-            let smoke = chunk.contamination.airborne.first().copied().unwrap_or(0.0);
-            smoke_seed = smoke_seed.max(smoke);
             witness.toxic_hazard_sample = chunk
                 .atmosphere
                 .local
@@ -133,12 +169,7 @@ pub fn sync_atmos_clipmap_witness_system(
         }
     }
 
-    clipmap_advect::fold_registry_smoke_into_l0(&mut stack, smoke_seed);
-    if let Some(level0) = stack.levels.first_mut() {
-        clipmap_advect::advect_l0_preserving_mass(level0);
-    }
-
-    witness.clipmap_advect_wired = true;
+    witness.clipmap_advect_wired = stack.l0_advect_writers() > 0;
     witness.render_clipmap_wired = true;
     witness.gpu_partial_upload_count = if clipmap_l0_smoke_max(&stack) > 0.0 {
         1
@@ -174,5 +205,38 @@ mod tests {
         }
         assert!(DEBT_010C_ASH_EMBER_HEAT_L0);
         assert!(GPU_FIELD_CONSUMERS_ON_L0);
+    }
+
+    /// W7 — witness is read-only (no L0 seed fold / no advect).
+    #[test]
+    fn witness_system_is_not_an_l0_writer() {
+        let mut app = App::new();
+        app.init_resource::<AtmosphereClipmapStack>()
+            .init_resource::<AtmosphereClipmapStats>()
+            .add_systems(Update, sync_atmos_clipmap_witness_system);
+        {
+            let mut stack = app.world_mut().resource_mut::<AtmosphereClipmapStack>();
+            let level0 = &mut stack.levels[0];
+            level0.smoke_density[5] = 0.5;
+        }
+        for _ in 0..3 {
+            app.update();
+        }
+        let stack = app.world().resource::<AtmosphereClipmapStack>();
+        assert_eq!(stack.levels[0].smoke_density[5], 0.5, "witness must not mutate L0");
+        assert_eq!(stack.levels[0].smoke_density[4], 0.0);
+        assert_eq!(stack.l0_advect_writers(), 0);
+        let stats = app.world().resource::<AtmosphereClipmapStats>();
+        assert!(!stats.clipmap_advect_wired, "no advect ran in this app");
+    }
+
+    #[test]
+    fn advect_writer_mask_counts_distinct_writers_and_bumps_revision() {
+        let mut stack = AtmosphereClipmapStack::default();
+        assert_eq!((stack.revision, stack.l0_advect_writers()), (0, 0));
+        stack.note_advect_writer(L0_ADVECT_WRITER_WIND_ADVECT);
+        stack.note_advect_writer(L0_ADVECT_WRITER_WIND_ADVECT);
+        assert_eq!(stack.l0_advect_writers(), 1, "same writer twice is still one writer");
+        assert_eq!(stack.revision, 2);
     }
 }

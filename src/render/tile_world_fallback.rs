@@ -689,7 +689,11 @@ fn focus_main_camera_on_world_params(
         fit.clamp(zoom_lo, zoom_hi)
     } else {
         match test_scene.as_ref().map(|s| s.0) {
-            Some(TestScene::Fire) | Some(TestScene::Atmosphere) | Some(TestScene::SubFx) => {
+            // PlayQuad: whole-map fit so all four quadrants are visible on entry.
+            Some(TestScene::Fire)
+            | Some(TestScene::Atmosphere)
+            | Some(TestScene::SubFx)
+            | Some(TestScene::PlayQuad) => {
                 let margin = crate::terrain::world_scale_contract::WHOLE_MAP_FIT_MARGIN;
                 let fit: f32 = margin * (viewport.x / world_w).min(viewport.y / world_h);
                 fit.clamp(zoom_lo, zoom_hi)

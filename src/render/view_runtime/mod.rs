@@ -12,7 +12,9 @@ mod layers;
 mod passes;
 mod per_view_policy;
 mod plugin;
+pub mod present;
 mod surface;
+pub mod tonemap_hdr;
 mod trace;
 mod view_fire_isolation;
 
@@ -22,15 +24,21 @@ mod isolation_tests;
 pub use authority::{ViewAuthorityWriter, ViewProjectionAuthority};
 pub use ids::{ViewEntity, ViewIsolationGroup, ViewSurfaceId};
 pub use input_routing::{
-    commit_deferred_map_view_poses_from_instances, commit_deferred_map_view_poses_to_authority,
-    sync_view_input_routing_from_active_map, view_surface_from_map_instance, ViewInputRoutingState,
+    apply_pointer_gate_capture_to_view_input_routing, commit_deferred_map_view_poses_from_instances,
+    commit_deferred_map_view_poses_to_authority, sync_view_input_routing_from_active_map,
+    view_surface_from_map_instance, InputCaptureOwner, ViewInputRoutingState,
 };
 pub use layers::{
     InteractionViewportState, OverlayViewportPolicy, RenderViewportContract, SemanticViewportRect,
     ViewRenderTargetDesc,
 };
-pub use passes::{InteractionPass, OverlayPass, ViewCameraCommitPass};
+pub use passes::{InteractionPass, OverlayPass, ToneMapHdrPass, ViewCameraCommitPass};
 pub use per_view_policy::PerViewRepresentationPolicy;
+pub use tonemap_hdr::{
+    hdr_pipeline_index_for_target, is_display_referred_sdr_format, map_view_display_format,
+    map_view_skips_filmic_tonemap, ViewToneMapPolicy, MAP_VIEW_TONE_MAP_POLICY,
+    PIXEL_WORLD_TONEMAPPING_NONE_TOKEN, PIXEL_WORLD_TONE_MAP_POLICY,
+};
 pub use view_fire_isolation::{
     overlay_masks_aligned_with_map_views, ViewFireIsolationStats,
 };
@@ -44,6 +52,12 @@ pub use commit::{
 
 
 pub use plugin::ViewRuntimePlugin;
+pub use present::{
+    env_requests_no_vsync, resolve_present_surface_config,
+    resolve_present_surface_config_from_env, PresentBufferPolicy, PresentSurfaceConfig,
+    PERF_NO_VSYNC_ENV, PERF_VSYNC_ENV, PRESENT_DOUBLE_BUFFER_LATENCY,
+    PRESENT_TRIPLE_BUFFER_LATENCY, PRESENT_UNCAPPED_BUFFER_LATENCY,
+};
 pub use surface::ViewSurface;
 pub use trace::{
     advance_view_runtime_trace_frame, ViewRuntimeTrace, ViewRuntimeTraceEntry, ViewViolationKind,

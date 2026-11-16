@@ -56,6 +56,7 @@ use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 pub use decide::{choose_goal, FactionDoctrine, GoalChoice, GoalScore, ScoreTerm, StrategicGoal};
 pub use log::{
     DecisionTrace, FactionAiDecisionLog, FactionAiDecisionRecord, FactionBehaviourChangeLog,
+    TacticalFragMap,
     FactionBehaviourChangeRecord, PerceptionDigest, BEHAVIOUR_CHANGES_CAP,
 };
 pub use orders::{
@@ -87,7 +88,11 @@ pub const API_LOGISTICS_SITE: &str = "LogisticsOrderSite";
 /// World metres per tile for logistics endpoint placement (`economy::site_placement`).
 const METRES_PER_TILE: f32 = crate::economy::logistics::orders::snapshot::METRES_PER_TILE;
 
-/// Ordering label for partners that consume AI orders the same frame.
+/// **LOOP-06 dependency tier — AI:** runs after combat/zone read model
+/// ([`StrategicFieldPipeline::ZoneAndReadModel`]) so perceive/decide see this frame's fronts and
+/// logistics. See
+/// [`configure_sim_dependency_tier_edges`](crate::systems::chunk_environment_set::configure_sim_dependency_tier_edges)
+/// (env → logistics → combat → **AI**).
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
 pub enum FactionAiSet {
     Tick,
@@ -368,7 +373,7 @@ fn run_military_brain(
             DeployKind::Attack => DeploymentKind::Attack(d.tile),
             DeployKind::Fortify => DeploymentKind::Fortify(TheaterId(d.theater)),
         };
-        let outcome = match queue.enqueue(DeploymentOrder { formation: d.formation, kind, issued_by: c.slot }) {
+        let outcome = match queue.enqueue(DeploymentOrder { formation: d.formation, kind, issued_by: c.slot, priority: 0 }) {
             Ok(id) => OrderOutcome::Issued { api: API_DEPLOYMENT_QUEUE, id },
             Err(e) => OrderOutcome::Refused { reason: format!("{e:?}") },
         };
@@ -534,6 +539,7 @@ pub fn faction_ai_tick_system(
     mut behaviour_log: ResMut<FactionBehaviourChangeLog>,
     mut sinks: AiOrderSinks,
     world: AiWorld,
+    terrain_analysis: Option<Res<crate::terrain::TerrainAnalysisBook>>,
     mut perception_cache: Local<std::collections::HashMap<u8, (u64, FactionPerception)>>,
 ) {
     if ctrl.as_deref().is_some_and(|c| !c.should_tick()) {
@@ -582,7 +588,11 @@ pub fn faction_ai_tick_system(
         let perception = match perception_cache.get(&slot) {
             Some((at, p)) if now >= *at && now - *at < refresh_after => p.clone(),
             _ => {
-                let fresh = perceive_faction(slot, world.overlays.iter());
+                let mut fresh = perceive_faction(slot, world.overlays.iter());
+                // TAC-05 RO: fold gen-time defensibility into the digest (never writes the book).
+                if let Some(book) = terrain_analysis.as_deref() {
+                    fresh.apply_terrain_analysis(book);
+                }
                 perception_cache.insert(slot, (now, fresh.clone()));
                 fresh
             }
@@ -656,11 +666,14 @@ impl Plugin for FactionAiPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<FactionAiDecisionLog>()
+            .init_resource::<TacticalFragMap>()
             .init_resource::<FactionBehaviourChangeLog>()
             .init_resource::<AiSeed>()
             .init_resource::<FactionAiRoster>()
             .configure_sets(
                 Update,
+                // LOOP-06 AI tier: after ZoneAndReadModel (combat); cross-tier edges also in
+                // `configure_sim_dependency_tier_edges`.
                 FactionAiSet::Tick
                     .after(SimControlSystemSet::AdvanceSimTick)
                     .after(StrategicFieldPipeline::ZoneAndReadModel),

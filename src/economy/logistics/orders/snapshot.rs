@@ -2,6 +2,11 @@
 //!
 //! Built by one system per frame from [`LogisticsOrderSim`]; consumers never read the sim.
 //! Pure Rust — site placement arrives as [`SiteMeta`] from the adapter.
+//!
+//! **ANIM-03** (gea4v2 13.8.2–13.8.4 · LEGACY `animation_compression` gea_v2_e4 §13.8 p306):
+//! telemetry float keys are quantized before compare; redundant fill/throughput keys are omitted
+//! (one-off orders drop fill; zero-delivery lines drop throughput). No AnimationCurve host —
+//! save/telemetry is the compression surface until a curve module lands.
 
 use std::collections::BTreeMap;
 
@@ -104,6 +109,21 @@ pub struct OrderRow {
     pub finished_tick: Option<Tick>,
 }
 
+/// ANIM-03 telemetry quantize scale — pinned to save-wire `SAVE_FLOAT_QUANT_SCALE` (×10000).
+pub const TELEMETRY_FLOAT_QUANT_SCALE: f32 = 10_000.0;
+
+/// Quantize a unit-interval telemetry float (gea4v2 13.8.2).
+#[must_use]
+pub fn quantize_telemetry_unit_f32(v: f32) -> u32 {
+    (v.clamp(0.0, 1.0) * TELEMETRY_FLOAT_QUANT_SCALE).round() as u32
+}
+
+/// Quantize a non-negative rate (units/min) to hundredths.
+#[must_use]
+pub fn quantize_telemetry_rate_f32(v: f32) -> u32 {
+    (v.max(0.0) * 100.0).round() as u32
+}
+
 impl OrderRow {
     /// 0..1 progress for the run bar (lines: fill ratio).
     #[must_use]
@@ -112,6 +132,22 @@ impl OrderRow {
             Some(q) if q > 0 => (self.delivered as f32 / q as f32).clamp(0.0, 1.0),
             Some(_) => 1.0,
             None => self.fill_ratio.unwrap_or(0.0).clamp(0.0, 1.0),
+        }
+    }
+
+    /// ANIM-03 key omission: fill_ratio wire key — `None` for one-off runs (no standing buffer).
+    #[must_use]
+    pub fn fill_ratio_wire_key(&self) -> Option<u32> {
+        self.fill_ratio.map(quantize_telemetry_unit_f32)
+    }
+
+    /// ANIM-03 key omission: throughput wire key — omit when nothing has been delivered.
+    #[must_use]
+    pub fn throughput_wire_key(&self) -> Option<u32> {
+        if self.delivered == 0 && self.throughput_per_min <= 0.0 {
+            None
+        } else {
+            Some(quantize_telemetry_rate_f32(self.throughput_per_min))
         }
     }
 }
@@ -550,4 +586,79 @@ pub fn build_snapshot_with_forecast(
         .map(|(t, why)| format!("t{t}: {why}"))
         .collect();
     snap
+}
+
+#[cfg(test)]
+mod anim03_tests {
+    use super::*;
+
+    fn blank_order() -> OrderRow {
+        OrderRow {
+            id: OrderId(1),
+            owner: OwnerId(0),
+            standing: false,
+            source: SiteId(0),
+            sink: SiteId(1),
+            source_name: "a".into(),
+            sink_name: "b".into(),
+            cargo: "fuel".into(),
+            unit: "L",
+            priority: Priority::Normal,
+            status: OrderStatus::Pending,
+            status_label: "pending".into(),
+            quantity: Some(10),
+            delivered: 0,
+            in_flight: 0,
+            remaining: 10,
+            trips_done: 0,
+            trips_planned: 1,
+            vehicles: 0,
+            vehicle_cap: None,
+            next_eta_ticks: None,
+            fill_ratio: None,
+            throughput_per_min: 0.0,
+            lost: 0,
+            created_tick: 0,
+            finished_tick: None,
+        }
+    }
+
+    /// ANIM-03 tripwire: one-off runs omit fill_ratio; standing lines keep a quantized key.
+    #[test]
+    fn anim03_snapshot_omits_none_fill_ratio() {
+        let one_off = blank_order();
+        assert!(one_off.fill_ratio_wire_key().is_none());
+
+        let mut standing = blank_order();
+        standing.standing = true;
+        standing.quantity = None;
+        standing.fill_ratio = Some(0.5);
+        assert_eq!(standing.fill_ratio_wire_key(), Some(5_000));
+    }
+
+    /// ANIM-03 tripwire: zero-delivery throughput is omitted; delivered lines quantize the rate.
+    #[test]
+    fn anim03_snapshot_omits_zero_throughput() {
+        let idle = blank_order();
+        assert!(idle.throughput_wire_key().is_none());
+
+        let mut moving = blank_order();
+        moving.delivered = 4;
+        moving.throughput_per_min = 1.25;
+        assert_eq!(moving.throughput_wire_key(), Some(125));
+    }
+
+    /// ANIM-03 tripwire: unit quantize collapses sub-quantum noise before compare.
+    #[test]
+    fn anim03_snapshot_floats_quantize_before_compare() {
+        assert_eq!(TELEMETRY_FLOAT_QUANT_SCALE, 10_000.0);
+        assert_eq!(
+            quantize_telemetry_unit_f32(0.50001),
+            quantize_telemetry_unit_f32(0.50004)
+        );
+        assert_ne!(
+            quantize_telemetry_unit_f32(0.50),
+            quantize_telemetry_unit_f32(0.51)
+        );
+    }
 }

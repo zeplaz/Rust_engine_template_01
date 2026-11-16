@@ -6,6 +6,10 @@
 //! W2: heat deposits are **anisotropic** — continuous wind (`Vec2` m/s) and slope weight an
 //! 8-neighbour stencil. Wind is not quantized to 8 headings; neighbours are only the lattice
 //! deposit targets (see `plan_weather_wind_v1.md` §4a / post-W2 fidelity).
+//!
+//! CONC-08 (gea4v1 4.10.6–7 generalized vectorization / predication; LEGACY `simd` gea_v1_e4 p324):
+//! the per-cell deposit gate is a single predicate mask ([`spread_deposit_mask`]) with select-style
+//! writes, locked against the scalar early-return form by `conc08_predicated_spread_matches_scalar_on_gate_lattice`.
 
 use bevy::math::Vec2;
 
@@ -263,21 +267,38 @@ pub fn directional_heat_gain(
     base * down * up * slope * gust / dist
 }
 
+/// Deposit admission as one **predicate mask** (CONC-08 · gea4v1 4.10.7 vector predication;
+/// LEGACY `simd` gea_v1_e4 p324).
+///
+/// Mask contract: every gate is evaluated (non-short-circuit `&`) and combined into one lane
+/// mask, so a lane batch can compute all gates unconditionally and select on the result. A
+/// masked-off lane must leave `dst` bit-for-bit unchanged. Gates are written as the negation of
+/// the rejecting compare (`!(x < min)`), so a NaN input is **admitted** exactly as the original
+/// early-return form did; do not rewrite them as `x >= min`.
+#[inline]
+#[must_use]
+pub fn spread_deposit_mask(src: &FireCell, dst: &FireCell, heat_gain: f32) -> bool {
+    !(heat_gain <= 0.0)
+        & (src.burned_hold == 0)
+        & !(src.fuel < MIN_CELL_FUEL_FOR_SPREAD)
+        & !(src.heat < SPREAD_HEAT_MIN)
+        & (dst.burned_hold == 0)
+        & !(dst.fuel < MIN_CELL_FUEL_FOR_SPREAD)
+        & !(dst.heat >= 1.0)
+}
+
 /// Same gates as [`spread_onto_neighbor`], with an explicit heat gain.
+///
+/// Predicated (CONC-08): the deposit is computed unconditionally and selected by
+/// [`spread_deposit_mask`]; no early return.
 #[must_use]
 pub fn spread_with_gain(src: &FireCell, dst: &mut FireCell, heat_gain: f32) -> bool {
-    if heat_gain <= 0.0 {
-        return false;
-    }
-    if src.burned_hold > 0 || src.fuel < MIN_CELL_FUEL_FOR_SPREAD || src.heat < SPREAD_HEAT_MIN {
-        return false;
-    }
-    if dst.burned_hold > 0 || dst.fuel < MIN_CELL_FUEL_FOR_SPREAD || dst.heat >= 1.0 {
-        return false;
-    }
-    dst.heat = (dst.heat + heat_gain).min(1.0);
-    dst.fuel = (dst.fuel - NEIGHBOR_FUEL_DRAW).max(0.0);
-    true
+    let admit = spread_deposit_mask(src, dst, heat_gain);
+    let heat = (dst.heat + heat_gain).min(1.0);
+    let fuel = (dst.fuel - NEIGHBOR_FUEL_DRAW).max(0.0);
+    dst.heat = if admit { heat } else { dst.heat };
+    dst.fuel = if admit { fuel } else { dst.fuel };
+    admit
 }
 
 /// Lightning is an extra spark only when the wildland gate and the cell fuel floor already allow it.
@@ -829,6 +850,85 @@ mod tests {
         let down = directional_heat_gain(base, 0, 1, calm, 0.0, -0.2);
         assert!(up > flat * 1.5, "up {up} flat {flat}");
         assert!(flat > down, "flat {flat} down {down}");
+    }
+
+    /// Pre-CONC-08 early-return form; the predicated path must match it bit-for-bit.
+    fn spread_with_gain_scalar(src: &FireCell, dst: &mut FireCell, heat_gain: f32) -> bool {
+        if heat_gain <= 0.0 {
+            return false;
+        }
+        if src.burned_hold > 0 || src.fuel < MIN_CELL_FUEL_FOR_SPREAD || src.heat < SPREAD_HEAT_MIN {
+            return false;
+        }
+        if dst.burned_hold > 0 || dst.fuel < MIN_CELL_FUEL_FOR_SPREAD || dst.heat >= 1.0 {
+            return false;
+        }
+        dst.heat = (dst.heat + heat_gain).min(1.0);
+        dst.fuel = (dst.fuel - NEIGHBOR_FUEL_DRAW).max(0.0);
+        true
+    }
+
+    fn bits(c: &FireCell) -> (u32, u32, u16) {
+        (c.heat.to_bits(), c.fuel.to_bits(), c.burned_hold)
+    }
+
+    /// CONC-08 tripwire: predicated deposit == scalar early-return over a boundary lattice
+    /// (both sides of every gate, NaN, negatives); masked-off lanes leave `dst` untouched.
+    #[test]
+    fn conc08_predicated_spread_matches_scalar_on_gate_lattice() {
+        let heats = [
+            f32::NAN,
+            -0.5,
+            0.0,
+            SPREAD_HEAT_MIN - 1e-4,
+            SPREAD_HEAT_MIN,
+            0.5,
+            0.999,
+            1.0,
+            1.5,
+        ];
+        let fuels = [
+            f32::NAN,
+            -0.1,
+            0.0,
+            MIN_CELL_FUEL_FOR_SPREAD - 1e-4,
+            MIN_CELL_FUEL_FOR_SPREAD,
+            NEIGHBOR_FUEL_DRAW * 0.5,
+            0.4,
+        ];
+        let holds = [0u16, 1, BURNED_HOLD_TICKS];
+        let gains = [f32::NAN, -0.04, 0.0, NEIGHBOR_HEAT_GAIN, 0.5];
+        let mut admitted = 0usize;
+        let mut rejected = 0usize;
+        for &sh in &heats {
+            for &sf in &fuels {
+                for &sb in &holds {
+                    for &dh in &heats {
+                        for &df in &fuels {
+                            for &db in &holds {
+                                for &g in &gains {
+                                    let src = FireCell { heat: sh, fuel: sf, burned_hold: sb };
+                                    let d0 = FireCell { heat: dh, fuel: df, burned_hold: db };
+                                    let (mut a, mut b) = (d0, d0);
+                                    let ra = spread_with_gain(&src, &mut a, g);
+                                    let rb = spread_with_gain_scalar(&src, &mut b, g);
+                                    assert_eq!(ra, rb, "mask {src:?} {d0:?} g={g}");
+                                    assert_eq!(bits(&a), bits(&b), "state {src:?} {d0:?} g={g}");
+                                    assert_eq!(ra, spread_deposit_mask(&src, &d0, g));
+                                    if ra {
+                                        admitted += 1;
+                                    } else {
+                                        rejected += 1;
+                                        assert_eq!(bits(&a), bits(&d0), "masked-off lane mutated dst");
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        assert!(admitted > 0 && rejected > 0, "lattice must cover both mask outcomes");
     }
 
     #[test]

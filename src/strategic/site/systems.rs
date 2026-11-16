@@ -60,6 +60,8 @@ pub fn commit_construction_site_system(
     mut book: ResMut<SiteConstructionBook>,
     mut issuer: ResMut<SiteIdIssuer>,
     mut occupation_book: Option<ResMut<TileOccupationBook>>,
+    mut voxel_occupation: Option<ResMut<super::voxel_occupation::VoxelOccupationBook>>,
+    voxel_occupation_cfg: Option<Res<super::voxel_occupation::VoxelOccupationConfig>>,
     cfg: Option<Res<StrategicRasterConfig>>,
     mut overlays: Query<(&ChunkStrategicOverlay, &mut NetworkDirtyMask)>,
     mut preview_state: Option<ResMut<WorldPreviewState>>,
@@ -86,20 +88,42 @@ pub fn commit_construction_site_system(
                 continue;
             }
         }
+        let commit_auth = voxel_occupation_cfg
+            .as_ref()
+            .is_some_and(|c| c.commit_authority_enabled);
+
         if let Some(placement) = ev.placement.as_ref() {
-            let Some(occ) = occupation_book.as_mut() else {
-                warn!(
-                    "commit_construction_site: parametric placement without TileOccupationBook at {:?}",
-                    placement.origin
-                );
-                continue;
-            };
-            if !occ.can_apply(&placement.weights) {
-                warn!(
-                    "commit_construction_site: weighted overlap rejected at {:?}",
-                    placement.origin
-                );
-                continue;
+            // X2-P2: under commit authority, voxel is sole overlap gate; else tile-only.
+            if commit_auth {
+                let Some(voxel) = voxel_occupation.as_ref() else {
+                    warn!(
+                        "commit_construction_site: commit authority on without VoxelOccupationBook at {:?}",
+                        placement.origin
+                    );
+                    continue;
+                };
+                if !voxel.can_apply_weights(&placement.weights) {
+                    warn!(
+                        "commit_construction_site: voxel occupation overlap/reserve rejected at {:?}",
+                        placement.origin
+                    );
+                    continue;
+                }
+            } else {
+                let Some(occ) = occupation_book.as_mut() else {
+                    warn!(
+                        "commit_construction_site: parametric placement without TileOccupationBook at {:?}",
+                        placement.origin
+                    );
+                    continue;
+                };
+                if !occ.can_apply(&placement.weights) {
+                    warn!(
+                        "commit_construction_site: weighted overlap rejected at {:?}",
+                        placement.origin
+                    );
+                    continue;
+                }
             }
         }
 
@@ -110,7 +134,15 @@ pub fn commit_construction_site_system(
         };
 
         if let Some(placement) = ev.placement.as_ref() {
-            if let Some(occ) = occupation_book.as_mut() {
+            if commit_auth {
+                // Sole voxel write → refresh derived tile cache (no independent tile apply).
+                if let Some(voxel) = voxel_occupation.as_mut() {
+                    voxel.apply_site_commit(id, &placement.weights);
+                    if let Some(occ) = occupation_book.as_mut() {
+                        occ.replace_from_voxel(voxel);
+                    }
+                }
+            } else if let Some(occ) = occupation_book.as_mut() {
                 occ.apply_site(id, &placement.weights);
             }
         }

@@ -80,8 +80,18 @@
 | **DR-SCHED-W2** | Schedule sync Wave 2+ (fire authority SCH-E2…) | program_gate | Wave 1 gate recorded **AND** no file conflict with RTT lane per HANDOFF matrix | `plan_schedule_sync_v1.md` |
 | **DR-CLEANUP-P2** | Cleanup Phase 2+ authority/perf splits | program_gate | Phase 0 started **OR** PERF baseline captured **AND** steward sign-off on slice | `plan_cleanup_v1.md` |
 | **DR-GPU-TERRAIN-P0C** | Enable tilemap adapter as sim default | ecosystem_blocked | **DR-MIG-TILEMAP** all predicates **OR** P0-C′ instanced path signed without tilemap | `plan_gpu_terrain_production_exec_001_v1.md` |
-| **DR-VOXEL-OCCUPATION** | Promote voxels to **sim** occupation authority (replace `FootprintMatrix` XY) | product_blocked | Signed `plan_voxel_occupation_v1.md` + conflict matrix vs roads/zones/`RepresentationResult` + steward EV/Cx PASS | `plan_voxel_massing_presentation_v1.md` (presentation-only now) · `design_ebbtide_build_style_rubric_v1.md` |
+| **DR-VOXEL-OCCUPATION** | Promote voxels to **sim** occupation authority (replace `FootprintMatrix` XY) | product_shipped | **CLOSED** 2026-11-15 — live witness `debug_runs/construction/voxel_occupation_authority_live.json` (OCC-P6); steward EV/Cx PASS retained | `plan_voxel_occupation_v1.md` · `plan_voxel_massing_presentation_v1.md` · `design_ebbtide_build_style_rubric_v1.md` |
 | **DR-PIXEL-WORLD-APS-MESH** | Landscape LG-5 atlas → PixelWorld RTT | **closed_landscape_atlas_rtt** | LG-5 + ship building iso stamps under PixelWorld3D (witness dual_view v6) | `plan_dual_view_pixel_world_v1.md` · residual = extra module-kit / 3D mesh G4 |
+
+### Ref-books residual (v3 PROGRAM CLOSE)
+
+| ID | Item | Class | unblock_when | Owner plan |
+|:---|:---|:---|:---|:---|
+| **DR-BOOKS-DEFER-UNLOCK** | v3 residual DEFER/PARTIAL (MOVE/TAC/PCG/RND/LEARN/DEC + TAC-03/EXEC-05) | program_gate | Per-row trigger in unlock plan (not “polish”); charter signed before cut | [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) |
+| **DR-BOOKS-TAC03-DENSE** | TAC-03 dense separable heat (GPU-primary) | product_shipped | **CLOSED** 2026-11-16 — DH-01…03b shipped; TAC-03 ADOPTED | `plan_dense_heat_wgsl_v1.md` |
+| **DR-BOOKS-UNIT-MEMBER** | Formation unit-member model (MOVE-05/06/07 → TAC-10) | product_shipped | **CLOSED** 2026-11-15 — MOVE-05/06/07 · TAC-10 ADOPTED (UM-05/06/07/10) | `plan_unit_member_v1.md` |
+| **DR-BOOKS-TWN-PCG07** | Settlement road skeleton / blocks | — | **DONE** 2026-11-15 — PCG-07 ADOPTED (`twn_pcg07`) | `plan_town_growth_v1.md` **TWN-PCG07** |
+| **DR-BOOKS-OCC-PRODUCTIZE** | Voxel occupation default-on + DR close | program_gate | **OCC-P4 PASS**; next OCC-P5→P6 | `plan_voxel_occupation_v1.md` OCC-P4…P6 |
 
 ---
 

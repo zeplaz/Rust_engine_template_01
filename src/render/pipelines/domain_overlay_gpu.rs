@@ -9,7 +9,6 @@ use bytemuck::{Pod, Zeroable};
 
 use crate::gui::style::{
     blend_heatmap_linear, default_heatmap_ramp_linear, sample_heatmap_ramp_linear,
-    HEATMAP_RAMP_STOPS,
 };
 use crate::render::extraction::ecology_visual_snapshot::EcologyVisualSnapshot;
 use crate::render::extraction::RenderProjectionGraph;
@@ -130,6 +129,7 @@ pub fn emit_domain_overlay_frame_from_projection(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::gui::style::HEATMAP_RAMP_STOPS;
     use crate::render::extraction::RenderProjectionGraph;
     use crate::render::{EcologyVisualSnapshot, LogisticsVisualSnapshot};
     use crate::systems::sim_control::SimStepStamp;

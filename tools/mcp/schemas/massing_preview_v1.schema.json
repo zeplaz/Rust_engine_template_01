@@ -1,0 +1,106 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/massing_preview_v1.json",
+  "title": "MassingPreview",
+  "description": "APS presentation-only voxel massing columns (VOXEL-MASSING-PRES-001 / IO-09). S2 dual-cite PCG-06 · RND-09 · LGT-04 + geometry_visual_effects. Never writes FootprintMatrix / sim occupation (DR-VOXEL-OCCUPATION).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "seed",
+    "presentation_only",
+    "sim_occupation",
+    "massing_columns"
+  ],
+  "additionalProperties": true,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Deterministic seed for the preview export."
+    },
+    "presentation_only": {
+      "const": true,
+      "description": "Must be true — preview ≠ gameplay."
+    },
+    "sim_occupation": {
+      "const": false,
+      "description": "Must be false — DR-VOXEL-OCCUPATION."
+    },
+    "title": { "type": "string" },
+    "note": { "type": "string" },
+    "pilot_id": {
+      "type": "string",
+      "description": "Catalog pilot id from _pilot_catalog.ron (presentation lineage)."
+    },
+    "arch_build_grammar_preset_id": {
+      "type": "string",
+      "description": "ARCH-DNA preset id when exported from a grammar pilot."
+    },
+    "material_strategy": {
+      "type": "string",
+      "description": "Republic QC — massing/material strategy label from grammar (paint ignores)."
+    },
+    "grammar_rule_chain": {
+      "type": "object",
+      "additionalProperties": { "type": "string" },
+      "description": "Flattened grammar_rule_chain for studio_dash Republic QC (engine may ignore)."
+    },
+    "param_frame_id": {
+      "type": "string",
+      "description": "Source ParamFrame frame_id when exported via massing_from_param_frame (Studio DCC)."
+    },
+    "ref_books_dual_cite": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "new_rows": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Z]+-[0-9]+$" }
+        },
+        "legacy_keywords": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      },
+      "description": "Adoption ledger orient (NEW + LEGACY matrix)."
+    },
+    "massing_columns": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/massing_column" }
+    }
+  },
+  "$defs": {
+    "massing_column": {
+      "type": "object",
+      "required": ["tile", "floors", "color_kind", "weight"],
+      "additionalProperties": false,
+      "properties": {
+        "tile": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "type": "integer" },
+          "description": "World cell [x, y]."
+        },
+        "floors": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 4,
+          "description": "Stacked visual layers; floors 0 must be omitted, not exported."
+        },
+        "color_kind": {
+          "type": "string",
+          "enum": ["Valid", "Risky", "Invalid"],
+          "description": "FootprintTileColorKind token."
+        },
+        "weight": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Partial-alpha from weighted raster."
+        }
+      }
+    }
+  }
+}

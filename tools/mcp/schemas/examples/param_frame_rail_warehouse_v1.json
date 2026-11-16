@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "frame_id": "rail_warehouse_param_frame_v1",
+  "title": "Param frame: logistics rail warehouse pilot",
+  "seed": 1,
+  "presentation_only": true,
+  "sim_occupation": false,
+  "ref_books_dual_cite": {
+    "new_rows": ["IO-09", "ECS-15", "PCG-06"],
+    "legacy_keywords": ["asset_pipeline", "shape_grammars", "ai_tools"]
+  },
+  "grammar_chain": [
+    {
+      "step": "archetype",
+      "grammar_ref": "building_grammar_v1",
+      "grammar_id": "logistics_rail_warehouse_v0",
+      "rule_key": "archetype"
+    },
+    {
+      "step": "massing",
+      "grammar_ref": "building_grammar_v1",
+      "grammar_id": "logistics_rail_warehouse_v0",
+      "rule_key": "massing",
+      "params": { "max_floors": 2 }
+    },
+    {
+      "step": "district",
+      "grammar_ref": "arch_build_grammar_v0",
+      "grammar_id": "industrial_west_v0",
+      "rule_key": "pressure_field"
+    }
+  ],
+  "modifiers": [
+    {
+      "modifier_id": "district_style",
+      "params": { "style_id": "industrial_west" },
+      "enabled": true
+    },
+    {
+      "modifier_id": "facility_binding",
+      "params": { "catalog_id": "logistics_rail_warehouse_v0" }
+    }
+  ],
+  "connection_graph_ids": [
+    "rail_warehouse_pilot",
+    "assembly_snapshot_rail_warehouse_pilot_v1"
+  ],
+  "massing_intent": {
+    "pilot_id": "logistics_rail_warehouse_v0",
+    "target_floors_min": 1,
+    "target_floors_max": 2,
+    "material_strategy": "industrial_panel",
+    "district_style_id": "industrial_west",
+    "footprint_hint_tiles": [[0, 0], [4, 0]]
+  },
+  "escalate": {
+    "massing_preview_path": "tools/mcp/schemas/examples/massing_preview_pilot_rail_warehouse_v1.json",
+    "assembly_snapshot_path": "tools/mcp/schemas/examples/assembly_snapshot_rail_warehouse_pilot_v1.json"
+  },
+  "note": "S0 ParamFrame — Studio edits this JSON; bpy optional via escalate hints."
+}

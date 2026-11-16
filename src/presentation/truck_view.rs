@@ -155,5 +155,5 @@ fn facing_from_motion(
     // 8-way facing from atan2 (iso bake grid).
     let ang = d.y.atan2(d.x);
     let sector = ((ang + std::f32::consts::PI) / (std::f32::consts::TAU / 8.0)).floor() as i32;
-    (sector.rem_euclid(8) as u8)
+    sector.rem_euclid(8) as u8
 }

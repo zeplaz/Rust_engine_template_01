@@ -11,6 +11,7 @@ mod provisioning;
 mod resources;
 mod systems;
 mod tile_occupation;
+mod voxel_occupation;
 mod validation;
 
 pub use components::*;
@@ -30,6 +31,12 @@ pub use parametric::{
     CommittedPlacementSnapshot,
 };
 pub use tile_occupation::{TileOccupationBook};
+pub use voxel_occupation::{
+    capture_voxel_occupation_snapshot, read_voxel_occupation_snapshot_ron,
+    write_voxel_occupation_snapshot_ron, OccupancyLayerStack, VoxelOccupationBook,
+    VoxelOccupationCell, VoxelOccupationCellRecord, VoxelOccupationConfig,
+    VoxelOccupationProvenance, VoxelOccupationSnapshot, VOXEL_OCCUPATION_SNAPSHOT_SCHEMA_V1,
+};
 pub use validation::{
     evaluate_site_placement_at_world_tile,
     evaluate_site_placement_stubs, validate_network_access_for_site, validate_site_placement_stubs,

@@ -1,7 +1,8 @@
 //! Schedule sets for **post-fire** atmosphere work (`base_fire2_smoke.md` §18).
 //!
 //! Chunk-scale weather / ecology / fire run in [`crate::systems::chunk_environment_set::ChunkEnvironmentSet`].
-//! This pipeline fills Field + clipmap L0 channels (DEBT-010/010b/010c), advects L0 then
+//! This pipeline fills Field + clipmap L0 channels (DEBT-010/010b/010c), advects L0, builds the
+//! derived [`super::frame::AtmosphereFrame`] (W2), then
 //! emitters → particles → coupling → **VisualExtract** → render prep → diagnostics.
 //! **Transport** is ordered after this stack from the engine.
 
@@ -14,8 +15,11 @@ use crate::systems::chunk_environment_set::ChunkEnvironmentSet;
 pub enum AtmospherePipelineSet {
     /// Push chunk signals into Field + clipmap L0 channels (DEBT-010/010b/010c).
     FieldFill,
-    /// Semi-Lagrangian drift — L0 channel authority (smoke/fog/toxicity/ash/ember/heat).
+    /// Semi-Lagrangian drift — L0 channel authority (smoke/toxicity/ash/ember/heat; fog lane retired W7).
     WindAdvect,
+    /// [`super::frame::AtmosphereFrame`] — the one derived, revision-keyed read path over
+    /// `WeatherField` + the clipmap stack (sole writer `build_atmosphere_frame`). Consumers order after it.
+    Frame,
     /// Low-count [`super::emitter_sync::FireEmitter`] sync.
     Emitters,
     /// Reserved for future GPU atmosphere particle frontend (ES-2); no live systems in ES-0.
@@ -38,7 +42,8 @@ pub fn configure_atmosphere_pipeline_sets(app: &mut App) {
         (
             AtmospherePipelineSet::FieldFill.after(ChunkEnvironmentSet::Fire),
             AtmospherePipelineSet::WindAdvect.after(AtmospherePipelineSet::FieldFill),
-            AtmospherePipelineSet::Emitters.after(AtmospherePipelineSet::WindAdvect),
+            AtmospherePipelineSet::Frame.after(AtmospherePipelineSet::WindAdvect),
+            AtmospherePipelineSet::Emitters.after(AtmospherePipelineSet::Frame),
             AtmospherePipelineSet::Particles.after(AtmospherePipelineSet::Emitters),
             AtmospherePipelineSet::Coupling.after(AtmospherePipelineSet::Particles),
             AtmospherePipelineSet::VisualExtract
@@ -91,18 +96,19 @@ mod tests {
                 push!(4).in_set(ChunkEnvironmentSet::Fire),
                 push!(5).in_set(AtmospherePipelineSet::FieldFill),
                 push!(6).in_set(AtmospherePipelineSet::WindAdvect),
-                push!(7).in_set(AtmospherePipelineSet::Emitters),
-                push!(8).in_set(AtmospherePipelineSet::Particles),
-                push!(9).in_set(AtmospherePipelineSet::Coupling),
-                push!(10).in_set(AtmospherePipelineSet::VisualExtract),
-                push!(11).in_set(AtmospherePipelineSet::RenderPrep),
-                push!(12).in_set(AtmospherePipelineSet::Diagnostics),
+                push!(7).in_set(AtmospherePipelineSet::Frame),
+                push!(8).in_set(AtmospherePipelineSet::Emitters),
+                push!(9).in_set(AtmospherePipelineSet::Particles),
+                push!(10).in_set(AtmospherePipelineSet::Coupling),
+                push!(11).in_set(AtmospherePipelineSet::VisualExtract),
+                push!(12).in_set(AtmospherePipelineSet::RenderPrep),
+                push!(13).in_set(AtmospherePipelineSet::Diagnostics),
             ),
         );
         app.update();
         assert_eq!(
             app.world().resource::<Order>().0,
-            (1..=12).collect::<Vec<_>>()
+            (1..=13).collect::<Vec<_>>()
         );
     }
 

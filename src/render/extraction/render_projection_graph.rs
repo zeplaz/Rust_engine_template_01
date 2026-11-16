@@ -25,6 +25,7 @@ use crate::render::FireVisualFramesByView;
 use crate::render::extraction::sim_visual_extract::{
     ChunkFireHeat, FireVisualFrame, FireVisualGpuInstance, SimChunkSmokeVisualExtract,
 };
+use crate::systems::atmosphere::AtmosphereFrame;
 use crate::systems::sim_control::SimStepStamp;
 
 /// Max fire instance rows in the fire projection when band is [`WorldLodBand::Operational`].
@@ -38,6 +39,8 @@ pub struct RenderProjectionContext<'a> {
     pub fire: &'a FireVisualFrame,
     /// Layer-B smoke extract (`publish_sim_visual_extract` sole writer). Optional for fixtures.
     pub smoke: Option<&'a SimChunkSmokeVisualExtract>,
+    /// W6 — preferred smoke authority for GPU field means ([`AtmosphereFrame`] tracers).
+    pub atmosphere: Option<&'a AtmosphereFrame>,
     pub logistics: &'a LogisticsVisualSnapshot,
     pub ecology: &'a EcologyVisualSnapshot,
     pub committed_stamp: SimStepStamp,
@@ -289,10 +292,11 @@ impl ProjectionNodeTrait for EcologyProjectionNode {
     }
 }
 
-/// Smoke Layer B: LOD-agnostic aggregate from [`SimChunkSmokeVisualExtract`] for GPU field uniforms.
+/// Smoke Layer B: LOD-agnostic aggregate for GPU field uniforms.
 ///
-/// Sole projection of smoke rows — [`crate::systems::atmosphere::gpu_field_bridge`] must read this
-/// node (not a second ECS smoke scan) for the weather/fire field smoke channel.
+/// **W6:** prefers [`AtmosphereFrame`] tracer means when present; otherwise
+/// [`SimChunkSmokeVisualExtract`]. Sole projection of smoke for
+/// [`crate::systems::atmosphere::gpu_field_bridge`] (no second ECS smoke scan).
 #[derive(Debug, Clone, Default)]
 pub struct SmokeProjectionNode {
     pub snapshot_stamp: u64,
@@ -302,9 +306,46 @@ pub struct SmokeProjectionNode {
     pub mean_toxicity: f32,
     /// Non-empty extract rows this evaluation (feeds `smoke_extract_wired` witness).
     pub extract_wired: bool,
+    /// True when means came from [`AtmosphereFrame`] (W6 single presentation path).
+    pub frame_sourced: bool,
 }
 
 impl SmokeProjectionNode {
+    const SMOKE_EPS: f32 = 1e-4;
+
+    /// Aggregate L0 tracer smoke/toxicity from the derived atmosphere frame (W6).
+    pub fn project_from_atmosphere_frame(
+        &mut self,
+        frame: &AtmosphereFrame,
+        committed_tick: u64,
+    ) {
+        self.snapshot_stamp = committed_tick;
+        self.frame_sourced = true;
+        let mut n = 0u32;
+        let mut dens = 0.0f32;
+        let mut tox = 0.0f32;
+        for tile in frame.tiles() {
+            if tile.smoke <= Self::SMOKE_EPS && tile.toxicity <= Self::SMOKE_EPS {
+                continue;
+            }
+            n += 1;
+            dens += tile.smoke.max(0.0);
+            tox += tile.toxicity.max(0.0);
+        }
+        self.row_count = n;
+        self.extract_wired = n > 0 || frame.is_built();
+        if n == 0 {
+            self.density_sum = 0.0;
+            self.mean_density = 0.0;
+            self.mean_toxicity = 0.0;
+            return;
+        }
+        let nf = n as f32;
+        self.density_sum = dens;
+        self.mean_density = dens / nf;
+        self.mean_toxicity = tox / nf;
+    }
+
     /// Aggregate smoke extract rows into field-upload params (no ECS queries).
     pub fn project_from_extract(
         &mut self,
@@ -312,6 +353,7 @@ impl SmokeProjectionNode {
         committed_tick: u64,
     ) {
         self.snapshot_stamp = committed_tick;
+        self.frame_sourced = false;
         self.row_count = smoke.instances.len() as u32;
         self.extract_wired = !smoke.instances.is_empty();
         if smoke.instances.is_empty() {
@@ -338,6 +380,10 @@ impl SmokeProjectionNode {
 
 impl ProjectionNodeTrait for SmokeProjectionNode {
     fn evaluate(&mut self, ctx: &RenderProjectionContext<'_>) {
+        if let Some(frame) = ctx.atmosphere.filter(|f| f.is_built()) {
+            self.project_from_atmosphere_frame(frame, ctx.committed_stamp.tick);
+            return;
+        }
         match ctx.smoke {
             Some(smoke) => self.project_from_extract(smoke, ctx.committed_stamp.tick),
             None => {
@@ -347,6 +393,7 @@ impl ProjectionNodeTrait for SmokeProjectionNode {
                 self.mean_density = 0.0;
                 self.mean_toxicity = 0.0;
                 self.extract_wired = false;
+                self.frame_sourced = false;
             }
         }
     }
@@ -552,6 +599,7 @@ pub fn f2_tactical_fire_projection_fixture() -> RenderProjectionGraph {
         lod_map: &lod_map,
         fire: &fire_frame,
         smoke: None,
+            atmosphere: None,
         logistics: &logistics,
         ecology: &ecology,
         committed_stamp: stamp,
@@ -570,6 +618,7 @@ pub fn run_render_projection_graph(
     manager: Option<Res<ViewManager>>,
     per_view_policy: Res<PerViewRepresentationPolicy>,
     smoke: Option<Res<SimChunkSmokeVisualExtract>>,
+    atmosphere: Option<Res<AtmosphereFrame>>,
     logistics: Res<LogisticsVisualSnapshot>,
     ecology: Res<EcologyVisualSnapshot>,
     fence: Res<crate::render::CommittedVisualSnapshotFence>,
@@ -587,6 +636,7 @@ pub fn run_render_projection_graph(
         policy.as_ref(),
     );
     let smoke_ref = smoke.as_deref();
+    let atmosphere_ref = atmosphere.as_deref();
     if overlay_projection_idle(policy.as_ref(), &fire, smoke_ref) {
         advance_projection_graph_snapshot_stamps(&mut graph, fence.fire);
         coherence.evaluate_skipped = true;
@@ -598,6 +648,7 @@ pub fn run_render_projection_graph(
         lod_map: &lod_map,
         fire: &fire,
         smoke: smoke_ref,
+        atmosphere: atmosphere_ref,
         logistics: &logistics,
         ecology: &ecology,
         committed_stamp: fence.fire,
@@ -757,6 +808,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &frame,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: crate::systems::sim_control::SimStepStamp::new(1, 0),
@@ -799,6 +851,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &frame,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: crate::systems::sim_control::SimStepStamp::new(1, 0),
@@ -841,6 +894,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &frame,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: frame.stamp,
@@ -909,6 +963,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &frame,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: SimStepStamp::new(4, 0),
@@ -962,6 +1017,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &fire,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: stamp,
@@ -1041,6 +1097,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &fire,
             smoke: Some(&smoke),
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: stamp,
@@ -1049,5 +1106,52 @@ mod tests {
         assert!(graph.smoke.extract_wired);
         assert_eq!(graph.smoke.row_count, 1);
         assert!(graph.smoke.density_sum > 0.0);
+        assert!(!graph.smoke.frame_sourced);
+    }
+
+    #[test]
+    fn smoke_projection_node_prefers_atmosphere_frame() {
+        use crate::render::extraction::sim_visual_extract::{ChunkSmokeGpu, SimChunkSmokeVisualExtract};
+
+        let stamp = SimStepStamp::new(5, 0);
+        let mut frame = AtmosphereFrame::default();
+        frame.rebuild_for_tests_with_smoke(9, 0.7);
+        let mut smoke = SimChunkSmokeVisualExtract::default();
+        smoke.instances.push(ChunkSmokeGpu {
+            chunk_xy: Vec4::new(0.0, 0.0, 0.0, 0.0),
+            density_tox_vis: Vec4::new(0.1, 0.0, 0.0, 0.0),
+        });
+        let fire = FireVisualFrame {
+            stamp,
+            ..Default::default()
+        };
+        let lod = WorldRepresentationFrame::default();
+        let lod_map = WorldLodMap::default();
+        let policy_inputs = build_representation_inputs(
+            &crate::gui::CameraVisualState::default(),
+            &LodZoneRegistry::default(),
+            &VisualBudgetSettings::default(),
+            &VisualCadence::from(&VisualBudgetSettings::default()),
+            stamp,
+        );
+        let policy = build_representation_result(&lod, &policy_inputs);
+        let logistics = LogisticsVisualSnapshot::default();
+        let ecology = EcologyVisualSnapshot::default();
+        let mut graph = RenderProjectionGraph::default();
+        let ctx = RenderProjectionContext {
+            policy: &policy,
+            lod: &lod,
+            lod_map: &lod_map,
+            fire: &fire,
+            smoke: Some(&smoke),
+            atmosphere: Some(&frame),
+            logistics: &logistics,
+            ecology: &ecology,
+            committed_stamp: stamp,
+        };
+        graph.evaluate(&ctx);
+        assert!(graph.smoke.frame_sourced);
+        assert!(graph.smoke.extract_wired);
+        assert!(graph.smoke.mean_density > 0.0);
     }
 }

@@ -3,6 +3,11 @@
 //! Zoom is the camera. A tile center does not take a screen scale, so it cannot
 //! slide off the map. The GPU minimap compositor is a separate view of this grid.
 //! Egui paints the editor only.
+//!
+//! **Lane C (RND-01 / RND-09):** consumers of [`ConstructionVisualRequests::massing_columns`]
+//! and [`ConstructionVisualRequests::massing_instances`] are **read-only** (`Res`);
+//! sole writer is `voxel_massing::sync_voxel_massing_visual_requests`. Prefer
+//! `massing_instances` when non-empty (count ≥ [`super::voxel_massing::MASSING_INSTANCE_BATCH_THRESHOLD`]).
 
 use std::collections::HashMap;
 
@@ -110,6 +115,67 @@ fn massing_rim(kind: FootprintTileColorKind) -> Color {
     color32_bevy(super::ghost_visual::massing_stack_rim_color(valid_family))
 }
 
+fn spawn_massing_stack_floors(
+    commands: &mut Commands,
+    stamp: &mut WorldMapFootprintStamp,
+    meshes: &mut Assets<Mesh>,
+    materials: &mut Assets<ColorMaterial>,
+    tile: IVec2,
+    floors: u8,
+    color_kind: FootprintTileColorKind,
+    floor_off: f32,
+    shrink: f32,
+) {
+    if floors <= 1 {
+        return;
+    }
+    let base_fill = footprint_fill(color_kind, None);
+    let rim = massing_rim(color_kind);
+    let rim_key = rgba_key(rim);
+    let rim_mat = stamp
+        .materials
+        .entry(rim_key)
+        .or_insert_with(|| materials.add(ColorMaterial::from_color(rim)))
+        .clone();
+    let fill_key = rgba_key(base_fill);
+    let fill_mat = stamp
+        .materials
+        .entry(fill_key)
+        .or_insert_with(|| materials.add(ColorMaterial::from_color(base_fill)))
+        .clone();
+    let center = world_map_tile_center(tile.x, tile.y);
+    for floor in 1..floors {
+        let t = f32::from(floor);
+        let size = (0.84 - shrink * t).max(0.35);
+        let size_q = (size * 100.0).round() as u32;
+        let rim_q = ((size + 0.12) * 100.0).round() as u32;
+        let stack_mesh = stamp
+            .stack_meshes
+            .entry(size_q)
+            .or_insert_with(|| meshes.add(Rectangle::new(size, size)))
+            .clone();
+        let stack_rim = stamp
+            .stack_meshes
+            .entry(rim_q)
+            .or_insert_with(|| meshes.add(Rectangle::new(size + 0.12, size + 0.12)))
+            .clone();
+        let y = center.y + floor_off * t;
+        let z = center.z + 0.04 * t;
+        commands.spawn((
+            WorldMapMassingTile { tile, floor },
+            Mesh2d(stack_rim),
+            MeshMaterial2d(rim_mat.clone()),
+            Transform::from_translation(Vec3::new(center.x, y, z - 0.01)),
+        ));
+        commands.spawn((
+            WorldMapMassingTile { tile, floor },
+            Mesh2d(stack_mesh),
+            MeshMaterial2d(fill_mat.clone()),
+            Transform::from_translation(Vec3::new(center.x, y, z)),
+        ));
+    }
+}
+
 fn color_kind_key(kind: FootprintTileColorKind) -> u64 {
     match kind {
         FootprintTileColorKind::Valid => 1,
@@ -200,6 +266,8 @@ fn collect_footprint_tiles(
 
 /// Places rim + fill quads per footprint cell on the world map (Bevy mesh; no egui).
 /// Also paints VoxelMassing column stacks (presentation-only height silhouette).
+/// Reads massing RO (`massing_instances` when packed, else `massing_columns`);
+/// does not mutate [`ConstructionVisualRequests`].
 pub fn sync_world_map_footprints(
     mut commands: Commands,
     base: Res<State<BaseState>>,
@@ -229,11 +297,20 @@ pub fn sync_world_map_footprints(
     let foot_key = footprint_key(&keyed);
     let mass_key = massing_key(&requests.massing_columns);
     let key = foot_key.wrapping_mul(0xC2B2_AE3D).wrapping_add(mass_key);
-    let massing_quads: usize = requests
-        .massing_columns
-        .iter()
-        .map(|c| usize::from(c.floors.saturating_sub(1)) * 2)
-        .sum();
+    // RND-09: when instances packed, floors come from that batch (1:1 with columns).
+    let massing_quads: usize = if !requests.massing_instances.is_empty() {
+        requests
+            .massing_instances
+            .iter()
+            .map(|c| usize::from(c.floors.saturating_sub(1)) * 2)
+            .sum()
+    } else {
+        requests
+            .massing_columns
+            .iter()
+            .map(|c| usize::from(c.floors.saturating_sub(1)) * 2)
+            .sum()
+    };
     // Rim + fill per footprint tile; stacked floors above base (floors>1).
     let expected = colored.len().saturating_mul(2) + massing_quads;
     if key == stamp.key
@@ -289,60 +366,34 @@ pub fn sync_world_map_footprints(
     }
     let floor_off = super::ghost_visual::massing_floor_offset_world();
     let shrink = super::ghost_visual::massing_floor_shrink();
-    for col in &requests.massing_columns {
-        if col.floors <= 1 {
-            continue;
+    // RND-09: prefer packed instance batch when sole writer gated it.
+    if !requests.massing_instances.is_empty() {
+        for inst in &requests.massing_instances {
+            spawn_massing_stack_floors(
+                &mut commands,
+                &mut stamp,
+                &mut meshes,
+                &mut materials,
+                inst.tile,
+                inst.floors,
+                inst.color_kind,
+                floor_off,
+                shrink,
+            );
         }
-        let base_fill = footprint_fill(col.color_kind, None);
-        let rim = massing_rim(col.color_kind);
-        let rim_key = rgba_key(rim);
-        let rim_mat = stamp
-            .materials
-            .entry(rim_key)
-            .or_insert_with(|| materials.add(ColorMaterial::from_color(rim)))
-            .clone();
-        let fill_key = rgba_key(base_fill);
-        let fill_mat = stamp
-            .materials
-            .entry(fill_key)
-            .or_insert_with(|| materials.add(ColorMaterial::from_color(base_fill)))
-            .clone();
-        let center = world_map_tile_center(col.tile.x, col.tile.y);
-        for floor in 1..col.floors {
-            let t = f32::from(floor);
-            let size = (0.84 - shrink * t).max(0.35);
-            let size_q = (size * 100.0).round() as u32;
-            let rim_q = ((size + 0.12) * 100.0).round() as u32;
-            let stack_mesh = stamp
-                .stack_meshes
-                .entry(size_q)
-                .or_insert_with(|| meshes.add(Rectangle::new(size, size)))
-                .clone();
-            let stack_rim = stamp
-                .stack_meshes
-                .entry(rim_q)
-                .or_insert_with(|| meshes.add(Rectangle::new(size + 0.12, size + 0.12)))
-                .clone();
-            let y = center.y + floor_off * t;
-            let z = center.z + 0.04 * t;
-            commands.spawn((
-                WorldMapMassingTile {
-                    tile: col.tile,
-                    floor,
-                },
-                Mesh2d(stack_rim),
-                MeshMaterial2d(rim_mat.clone()),
-                Transform::from_translation(Vec3::new(center.x, y, z - 0.01)),
-            ));
-            commands.spawn((
-                WorldMapMassingTile {
-                    tile: col.tile,
-                    floor,
-                },
-                Mesh2d(stack_mesh),
-                MeshMaterial2d(fill_mat.clone()),
-                Transform::from_translation(Vec3::new(center.x, y, z)),
-            ));
+    } else {
+        for col in &requests.massing_columns {
+            spawn_massing_stack_floors(
+                &mut commands,
+                &mut stamp,
+                &mut meshes,
+                &mut materials,
+                col.tile,
+                col.floors,
+                col.color_kind,
+                floor_off,
+                shrink,
+            );
         }
     }
     stamp.key = key;

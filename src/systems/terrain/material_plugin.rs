@@ -7,8 +7,10 @@ use bevy::asset::{AssetEvent, AssetEventSystems};
 use bevy::prelude::*;
 
 use crate::terrain::generation::passes::{
-    apply_agent_overlay, apply_hydrology_chunk, apply_threshold_tags, classify_cells, fill_fields, materialize,
+    apply_agent_overlay, apply_agent_overlay_into_book, apply_hydrology_chunk, apply_threshold_tags,
+    classify_cells, fill_fields, materialize,
 };
+use crate::terrain::TerrainAnalysisBook;
 #[cfg(feature = "dev_tools")]
 use crate::terrain::generation::passes::materialize_traced;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -272,6 +274,7 @@ fn run_passes_from(
     }
 }
 
+
 /// Cross-chunk slope stitching: chunk boundaries are partitions only; edge cells sample neighbor elevations.
 ///
 /// Only chunks whose own matrix changed (or that are new), plus their four cardinal neighbours — the only
@@ -446,6 +449,7 @@ pub fn materialize_chunks(
     rule_assets: Res<Assets<RuleSet>>,
     params: Res<WorldGenParams>,
     world_water: Option<Res<WorldWaterGrid>>,
+    mut analysis: ResMut<TerrainAnalysisBook>,
     mut commands: Commands,
     mut preview_state: ResMut<WorldPreviewState>,
     mut q: Query<
@@ -485,6 +489,7 @@ pub fn materialize_chunks(
             world_water.as_deref(),
         );
         apply_agent_overlay(&mut matrix);
+        apply_agent_overlay_into_book(&matrix, chunk.coord, &mut analysis);
         #[cfg(feature = "dev_tools")]
         let (data, trace) = materialize_traced(&matrix, rule_set, reg, tag_reg);
         #[cfg(not(feature = "dev_tools"))]
@@ -540,6 +545,7 @@ impl Plugin for MaterialUnificationPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<DynamicTerrainOverlay>()
             .init_resource::<WorldPreviewState>()
+            .init_resource::<TerrainAnalysisBook>()
             .add_plugins(ChunkWorldgenSchedulerPlugin)
             .init_asset::<TerrainFamilyRegistry>()
             .register_asset_loader(TerrainFamilyRegistryLoader::default())

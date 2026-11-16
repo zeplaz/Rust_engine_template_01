@@ -1,8 +1,9 @@
-// Air / missile / drone weather hooks (W5 + drone D0).
+// Air / missile / drone weather hooks (W5 + drone D0 + atmosphere W3).
 // Loaded by `src/systems/weather/air_ops.rs`. Metric units: m/s, m visibility.
+// Schema 3: +max_icing / ice_alt_m per profile (defaults preserve pre-W3 grounding).
 // No ECS airframes — envelopes for MissionBook / packages later.
 (
-    schema_version: 2,
+    schema_version: 3,
     profiles: [
         (
             id: FixedWing,
@@ -16,6 +17,8 @@
             max_missile_wind_mps: 40.0,
             link_resist: 0.0,
             sensor_resist: 0.0,
+            max_icing: 0.40,
+            ice_alt_m: 3000.0,
         ),
         (
             id: Rotor,
@@ -29,6 +32,8 @@
             max_missile_wind_mps: 40.0,
             link_resist: 0.0,
             sensor_resist: 0.0,
+            max_icing: 0.50,
+            ice_alt_m: 1500.0,
         ),
         (
             id: Missile,
@@ -42,6 +47,9 @@
             max_missile_wind_mps: 30.0,
             link_resist: 0.0,
             sensor_resist: 0.0,
+            // Missiles ignore icing grounding.
+            max_icing: 1.0,
+            ice_alt_m: 0.0,
         ),
         (
             id: Airlift,
@@ -55,6 +63,8 @@
             max_missile_wind_mps: 40.0,
             link_resist: 0.0,
             sensor_resist: 0.0,
+            max_icing: 0.35,
+            ice_alt_m: 2500.0,
         ),
         (
             id: DroneFpv,
@@ -68,6 +78,8 @@
             max_missile_wind_mps: 40.0,
             link_resist: 0.0,
             sensor_resist: 0.0,
+            max_icing: 0.55,
+            ice_alt_m: 400.0,
         ),
         (
             id: DroneRecon,
@@ -81,6 +93,8 @@
             max_missile_wind_mps: 40.0,
             link_resist: 0.05,
             sensor_resist: 0.05,
+            max_icing: 0.50,
+            ice_alt_m: 1200.0,
         ),
         (
             id: DroneCruise,
@@ -94,6 +108,8 @@
             max_missile_wind_mps: 28.0,
             link_resist: 0.1,
             sensor_resist: 0.05,
+            max_icing: 0.45,
+            ice_alt_m: 2000.0,
         ),
         (
             id: DroneInterceptor,
@@ -107,6 +123,8 @@
             max_missile_wind_mps: 40.0,
             link_resist: 0.08,
             sensor_resist: 0.1,
+            max_icing: 0.45,
+            ice_alt_m: 1800.0,
         ),
     ],
 )

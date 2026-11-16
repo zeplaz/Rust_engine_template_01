@@ -1,4 +1,11 @@
-//! Async save IO â€” workers write buffers; main thread owns ECS apply.
+//! Async save IO — workers write buffers; main thread owns ECS apply.
+//!
+//! **CONC-09** — When to make asynchronous requests (gea4v2 17.7.2 / 17.7.2.1): issue early, consume a frame later.
+//! LEGACY: sync request / job / streaming I/O latency hiding (gea_v2_e4 p621-624).
+//!
+//! Request half = [SaveIoDispatcher::submit] (non-blocking send; never touches ECS state).
+//! Consume half = [poll_save_io_completions] -> [pply_save_io_completion] (	ry_recv, main thread).
+//! No sync wait on the critical path; no worker-side writes to [PendingSaveApplyQueue](crate::io::save::pipeline::PendingSaveApplyQueue).
 
 use std::path::PathBuf;
 use std::sync::Mutex;
@@ -103,17 +110,103 @@ fn run_save_io_work_order(order: SaveIoWorkOrder) -> SaveIoCompletion {
     SaveIoCompletion::Ready { manifest, jobs }
 }
 
+/// **CONC-09** main-thread consume half: the only place a worker product reaches
+/// [`PendingSaveApplyQueue`](crate::io::save::pipeline::PendingSaveApplyQueue).
+/// Workers never call this; `submit` (request half) never touches the queue.
+pub fn apply_save_io_completion(
+    completion: SaveIoCompletion,
+    pending: &mut crate::io::save::pipeline::PendingSaveApplyQueue,
+) {
+    match completion {
+        SaveIoCompletion::Ready { jobs, .. } => pending.jobs.extend(jobs),
+        SaveIoCompletion::Failed(message) => {
+            bevy::log::warn!("save IO worker failed: {message}");
+        }
+    }
+}
+
 pub fn poll_save_io_completions(
     mut dispatcher: ResMut<SaveIoDispatcher>,
     mut pending: ResMut<crate::io::save::pipeline::PendingSaveApplyQueue>,
 ) {
     dispatcher.ensure_started();
+    // Non-blocking `try_recv` drain — never waits on the worker (CONC-09: consume a frame later).
     while let Some(completion) = dispatcher.poll_completion() {
-        match completion {
-            SaveIoCompletion::Ready { jobs, .. } => pending.jobs.extend(jobs),
-            SaveIoCompletion::Failed(message) => {
-                bevy::log::warn!("save IO worker failed: {message}");
+        apply_save_io_completion(completion, &mut pending);
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::io::save::pipeline::PendingSaveApplyQueue;
+
+    fn temp_bundle(tag: &str) -> PathBuf {
+        std::env::temp_dir().join(format!(
+            "conc09_{tag}_{}",
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_nanos()
+        ))
+    }
+
+    #[test]
+    fn submit_before_start_is_rejected_not_blocking() {
+        // Request half never spins up a hidden sync fallback: un-started dispatcher refuses.
+        let dispatcher = SaveIoDispatcher::default();
+        let accepted = dispatcher.submit(SaveIoWorkOrder {
+            bundle_dir: temp_bundle("unstarted"),
+            world_seed: 1,
+            chunk_bodies: Vec::new(),
+        });
+        assert!(!accepted);
+        assert!(dispatcher.poll_completion().is_none());
+    }
+
+    #[test]
+    fn request_does_not_apply_until_main_thread_poll() {
+        let dir = temp_bundle("req_apply");
+        let mut dispatcher = SaveIoDispatcher::default();
+        dispatcher.ensure_started();
+        let mut pending = PendingSaveApplyQueue::default();
+
+        let body = SavedChunkBody {
+            schema_version: crate::io::save::SAVED_CHUNK_BODY_SCHEMA_VERSION,
+            chunk: [3, 4],
+            cells: Vec::new(),
+        };
+        // Request half: returns immediately; queue is untouched by submit.
+        assert!(dispatcher.submit(SaveIoWorkOrder {
+            bundle_dir: dir.clone(),
+            world_seed: 9,
+            chunk_bodies: vec![(IVec2::new(3, 4), body)],
+        }));
+        assert!(pending.jobs.is_empty(), "submit must not apply products");
+
+        // Consume half: poll (try_recv) until the worker product lands, then apply on main.
+        let deadline = std::time::Instant::now() + std::time::Duration::from_secs(10);
+        let completion = loop {
+            if let Some(done) = dispatcher.poll_completion() {
+                break done;
             }
-        }
+            assert!(std::time::Instant::now() < deadline, "worker never completed");
+            std::thread::yield_now();
+        };
+        assert!(
+            pending.jobs.is_empty(),
+            "poll_completion alone must not apply products"
+        );
+        apply_save_io_completion(completion, &mut pending);
+        assert_eq!(pending.jobs.len(), 1);
+        assert_eq!(pending.jobs[0].chunk, IVec2::new(3, 4));
+        let _ = std::fs::remove_dir_all(&dir);
+    }
+
+    #[test]
+    fn failed_completion_does_not_enqueue_apply_jobs() {
+        let mut pending = PendingSaveApplyQueue::default();
+        apply_save_io_completion(SaveIoCompletion::Failed("disk full".into()), &mut pending);
+        assert!(pending.jobs.is_empty());
     }
 }

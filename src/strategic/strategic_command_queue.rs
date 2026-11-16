@@ -1,4 +1,7 @@
 //! Strategic command queue — M1 stub + M2 fixed-tick dispatch delay (**S7B-M2-001**).
+//!
+//! **DEC-13** (aig3 5.10): delayed strategic action lane; tactical preemption lives on
+//! [crate::combat::DeploymentOrderQueue::enqueue_interruptible].
 
 use bevy::prelude::*;
 

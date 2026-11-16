@@ -466,6 +466,7 @@ impl Plugin for WorldSaveSpinePlugin {
             .init_resource::<WorldSaveSeed>()
 
             .init_resource::<PendingSaveApplyQueue>()
+            .init_resource::<crate::io::save::PostLoadDerivedBook>()
 
             .init_resource::<WorldSaveBundleSettings>()
 
@@ -598,6 +599,7 @@ mod tests {
             }],
 
             name_to_id: Default::default(),
+            collision: Vec::new(),
 
         };
 

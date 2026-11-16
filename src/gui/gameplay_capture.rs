@@ -2,6 +2,13 @@
 //!
 //! Default hotkeys: **F11** start, **F12** stop (rebind in Options). Output goes under the user
 //! captures directory (see [`GameplayRecorder::default_captures_root`]).
+//!
+//! # Key consumption (INPUT-04 · ECS-10 · LEGACY `hid`)
+//!
+//! While Options → Key bindings is capturing a key ([`KeybindingsUiState::capture_slot`]) the
+//! next key press is **owned by the rebind handler** (first claim wins, GEA 4e II §17.8.7 /
+//! GEA 4e I §9.5.9 disabling inputs), so [`gameplay_capture_hotkeys`] must not treat it as a
+//! record start/stop — otherwise rebinding F11/F12 would start a recording.
 
 use std::fs;
 use std::path::{Path, PathBuf};
@@ -331,4 +338,47 @@ fn write_session_meta(session: &Path, frames: usize, delay_ms: u32, gif: &Path) 
         gif.file_name().and_then(|n| n.to_str()).unwrap_or("clip.gif")
     );
     fs::write(meta, text)
+}
+
+#[cfg(test)]
+mod ecs10_tests {
+    use super::*;
+    use crate::gui::options_keybindings_ui::BindingSlot;
+
+    fn hotkey_app(capture_slot: Option<BindingSlot>) -> (App, KeyCode, KeyCode) {
+        let bindings = InputBindings::default();
+        let (start, stop) = (bindings.start_gameplay_recording, bindings.stop_gameplay_recording);
+        let (tx, _rx) = unbounded();
+        let mut app = App::new();
+        app.init_resource::<ButtonInput<KeyCode>>()
+            .insert_resource(bindings)
+            .insert_resource(KeybindingsUiState { capture_slot, ..default() })
+            .init_resource::<GameplayRecorder>()
+            .insert_resource(GameplayExportTx(tx))
+            .add_systems(Update, gameplay_capture_hotkeys);
+        (app, start, stop)
+    }
+
+    #[test]
+    fn ecs10_rebind_capture_consumes_record_hotkeys() {
+        let (mut app, start, _stop) = hotkey_app(Some(BindingSlot::StartGameplayRecording));
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(start);
+        app.update();
+        let rec = app.world().resource::<GameplayRecorder>();
+        assert!(!rec.active, "start hotkey claimed by rebind capture must not record");
+        assert!(rec.session_dir.is_none());
+        assert!(rec.last_summary().is_none());
+    }
+
+    #[test]
+    fn ecs10_rebind_capture_consumes_stop_hotkey() {
+        let (mut app, _start, stop) = hotkey_app(Some(BindingSlot::StopGameplayRecording));
+        app.world_mut().resource_mut::<GameplayRecorder>().active = true;
+        app.world_mut().resource_mut::<ButtonInput<KeyCode>>().press(stop);
+        app.update();
+        assert!(
+            app.world().resource::<GameplayRecorder>().active,
+            "stop hotkey claimed by rebind capture must not end the recording"
+        );
+    }
 }

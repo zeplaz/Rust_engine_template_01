@@ -122,6 +122,33 @@ class RUSTENGINE_OT_open_staging(Operator):
         return {"FINISHED"}
 
 
+class RUSTENGINE_OT_escalate_param_frame(Operator):
+    bl_idname = "rustengine.escalate_param_frame"
+    bl_label = "Escalate ParamFrame Hints"
+    task_id: StringProperty(name="Task ID", default="")
+    param_frame_path: StringProperty(name="ParamFrame JSON", subtype="FILE_PATH", default="")
+
+    def execute(self, context):
+        _ensure_mcp_path()
+        from rust_engine_mcp import studio_task
+
+        tid = self.task_id.strip() or getattr(context.scene, "rustengine_task_id", "")
+        pf = self.param_frame_path.strip() or getattr(context.scene, "rustengine_job_path", "")
+        try:
+            result = studio_task.escalate_from_param_frame(
+                task_id=tid if tid else None,
+                param_frame_path=pf if pf and not tid else None,
+                blender_session="addon",
+            )
+        except (FileNotFoundError, ValueError) as exc:
+            self.report({"ERROR"}, str(exc))
+            return {"CANCELLED"}
+        kinds = ", ".join(c.get("kind", "?") for c in result.get("children", []))
+        self.report({"INFO"}, f"escalated: {kinds}")
+        print(json.dumps(result, indent=2))
+        return {"FINISHED"}
+
+
 class RUSTENGINE_OT_consume_handoff(Operator):
     bl_idname = "rustengine.consume_handoff"
     bl_label = "Consume APS Handoff"
@@ -157,6 +184,9 @@ class RUSTENGINE_PT_panel(Panel):
         layout.prop(sc, "rustengine_job_path")
         layout.operator("rustengine.consume_handoff")
         layout.operator("rustengine.poll_studio_task").task_id = sc.rustengine_task_id
+        esc = layout.operator("rustengine.escalate_param_frame")
+        esc.task_id = sc.rustengine_task_id
+        esc.param_frame_path = sc.rustengine_job_path
         op = layout.operator("rustengine.run_geometry_job")
         op.job_path = sc.rustengine_job_path
         layout.operator("rustengine.open_staging")
@@ -166,6 +196,7 @@ _CLASSES = (
     RUSTENGINE_OT_poll_task,
     RUSTENGINE_OT_run_geometry,
     RUSTENGINE_OT_open_staging,
+    RUSTENGINE_OT_escalate_param_frame,
     RUSTENGINE_OT_consume_handoff,
     RUSTENGINE_PT_panel,
 )

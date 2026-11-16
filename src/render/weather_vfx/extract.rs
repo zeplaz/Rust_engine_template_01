@@ -1,7 +1,8 @@
 //! Climate / camera-local → [`WeatherPrecipFrame`] frontend extract (EFFECTS-SYSTEM ES-5).
 //!
-//! **W3:** density and per-streak rain/snow from [`WeatherField::sample`] at camera / streak XY
-//! when the field is ready; [`ClimateVisualAggregate`] remains the fallback for tests / dry boot.
+//! **W6 / X4:** density and per-streak rain/snow from [`AtmosphereFrame`] at camera / streak XY
+//! when the frame is built; [`ClimateVisualAggregate`] remains the fallback for tests / dry boot.
+//! Presentation-only — never writes sim authorities (LGT-04 skies/clouds presentation).
 
 use bevy::math::Vec4;
 use bevy::prelude::*;
@@ -13,11 +14,10 @@ use crate::render::extraction::extracted_camera_metrics::{
 use crate::render::pipelines::gpu_instanced_quad::GpuInstancedQuadInstance;
 use crate::render::particle_domains::ParticleDomainRegistry;
 use crate::render::ClimateVisualAggregate;
+use crate::systems::atmosphere::frame::AtmosphereFrame;
 use crate::systems::atmosphere::pipeline::AtmospherePipelineSet;
-use crate::systems::sim_control::SimTimeMicros;
 use crate::systems::weather::{
-    rain_snow01_from_sample, CameraLocalWeatherSample, WeatherField,
-    WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA,
+    rain_snow01_from_sample, CameraLocalWeatherSample, WEATHER_TACTICAL_PRECIP_ZOOM_ALPHA,
 };
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
@@ -48,6 +48,16 @@ impl WeatherPrecipZoomBand {
     #[must_use]
     pub fn from_zoom_alpha(zoom_alpha: f32) -> Self {
         Self::from_zoom_and_view(zoom_alpha, 96.0)
+    }
+
+    /// PixelWorld3D: scatter over the ground footprint the voxel camera sees (`half_diag` in
+    /// tiles). Unlike [`Self::from_zoom_and_view`] there is no 64-tile floor — at play zoom the
+    /// footprint is a few tiles wide and the floor would leave the view nearly dry.
+    #[must_use]
+    pub fn from_ground_footprint(zoom_alpha: f32, half_diag: f32) -> Self {
+        let mut band = Self::from_zoom_and_view(zoom_alpha, half_diag);
+        band.scatter_radius = half_diag.max(4.0);
+        band
     }
 
     /// Prefer this when camera metrics are available — scatter covers most of the view.
@@ -99,7 +109,6 @@ pub fn apply_weather_precip_frame_from_climate(
         WeatherPrecipZoomBand::from_zoom_alpha(0.5),
         None,
         None,
-        SimTimeMicros(0),
     );
 }
 
@@ -112,29 +121,30 @@ pub fn apply_weather_precip_frame_from_climate_at(
     camera: Option<&ExtractedCameraMetrics>,
     zoom: WeatherPrecipZoomBand,
     local: Option<&CameraLocalWeatherSample>,
-    field: Option<&WeatherField>,
-    sim_time: SimTimeMicros,
+    atmos: Option<&AtmosphereFrame>,
 ) {
-    let (rain, snow, fog, wind_speed, wind_mps, local_ok) = if let Some(loc) = local.filter(|l| l.ready)
-    {
-        (
-            loc.rain01,
-            loc.snow01,
-            loc.fog,
-            loc.sample.wind_mps.length() / 20.0,
-            loc.sample.wind_mps,
-            true,
-        )
-    } else {
-        (
-            climate.mean_rain,
-            climate.mean_snow,
-            climate.mean_fog_density,
-            climate.mean_wind_speed,
-            climate.mean_wind_mps,
-            false,
-        )
-    };
+    let (rain, snow, fog, wind_speed, wind_mps, local_ok, frame_rev) =
+        if let Some(loc) = local.filter(|l| l.ready) {
+            (
+                loc.rain01,
+                loc.snow01,
+                loc.fog,
+                loc.sample.wind_mps.length() / 20.0,
+                loc.sample.wind_mps,
+                true,
+                loc.frame_revision,
+            )
+        } else {
+            (
+                climate.mean_rain,
+                climate.mean_snow,
+                climate.mean_fog_density,
+                climate.mean_wind_speed,
+                climate.mean_wind_mps,
+                false,
+                atmos.map(|a| a.revision()).unwrap_or(0),
+            )
+        };
 
     frame.mean_rain = rain;
     frame.mean_snow = snow;
@@ -147,6 +157,7 @@ pub fn apply_weather_precip_frame_from_climate_at(
     frame.gpu_authority = false;
     frame.zoom_alpha = zoom.zoom_alpha;
     frame.tactical_band = zoom.tactical;
+    frame.frame_revision = frame_rev;
 
     domains.set_weather_precip_active(true);
     let origin = camera.map(|c| c.translation).unwrap_or(bevy::math::Vec2::ZERO);
@@ -159,8 +170,7 @@ pub fn apply_weather_precip_frame_from_climate_at(
         climate.weather_chunk_count.max(if local_ok { 1 } else { 0 }),
         origin,
         zoom,
-        field.filter(|f| f.is_ready()),
-        sim_time,
+        atmos.filter(|a| a.is_weather_ready()),
     );
     frame.instance_count = frame.streaks.len();
     frame.camera_centered = camera.is_some();
@@ -178,7 +188,6 @@ pub fn build_precip_streak_instances(climate: &ClimateVisualAggregate) -> Vec<Gp
         bevy::math::Vec2::ZERO,
         WeatherPrecipZoomBand::from_zoom_alpha(0.5),
         None,
-        SimTimeMicros(0),
     )
 }
 
@@ -192,8 +201,7 @@ pub fn build_precip_streak_instances_at(
     weather_chunk_count: u32,
     origin: bevy::math::Vec2,
     zoom: WeatherPrecipZoomBand,
-    field: Option<&WeatherField>,
-    sim_time: SimTimeMicros,
+    atmos: Option<&AtmosphereFrame>,
 ) -> Vec<GpuInstancedQuadInstance> {
     let precip = (rain * 0.85 + snow * 0.65).clamp(0.0, 1.0);
     if precip < PRECIP_STREAK_THRESHOLD || weather_chunk_count == 0 {
@@ -211,9 +219,11 @@ pub fn build_precip_streak_instances_at(
         let fi = i as f32;
         let x = origin.x + (fi * 17.13 + wind * 3.1).sin() * radius + drift.x;
         let y = origin.y + (fi * 9.71 + wind * 1.7).cos() * radius + drift.y;
-        let (streak_rain, streak_snow) = if let Some(f) = field {
-            let s = f.sample(Vec2::new(x, y) * TILE_METRES_GAMEPLAY, sim_time);
-            rain_snow01_from_sample(&s)
+        let (streak_rain, streak_snow) = if let Some(a) = atmos {
+            match a.weather_at_pos_m(Vec2::new(x, y) * TILE_METRES_GAMEPLAY) {
+                Some(s) => rain_snow01_from_sample(&s),
+                None => (rain, snow),
+            }
         } else {
             (rain, snow)
         };
@@ -238,10 +248,11 @@ pub(crate) fn fill_weather_precip_frame_from_climate(
     cam: Res<ExtractedCameraMetrics>,
     zoom_frame: Option<Res<ZoomFrame>>,
     local: Option<Res<CameraLocalWeatherSample>>,
-    field: Option<Res<WeatherField>>,
-    sim_time: Option<Res<SimTimeMicros>>,
+    atmos: Option<Res<AtmosphereFrame>>,
     mut frame: ResMut<WeatherPrecipFrame>,
     mut domains: ResMut<ParticleDomainRegistry>,
+    mut diag: Option<ResMut<crate::systems::atmosphere::AtmosphereDiagnostics>>,
+    pixel_cam: Option<Res<crate::render::pixel_world::PixelWorldCameraFrame>>,
 ) {
     let zoom_alpha = zoom_frame
         .map(|z| z.zoom_alpha)
@@ -251,26 +262,40 @@ pub(crate) fn fill_weather_precip_frame_from_climate(
     let half_w = cam.view_pixels.x.max(1.0) * 0.5 / zoom;
     let half_h = cam.view_pixels.y.max(1.0) * 0.5 / zoom;
     let half_diag = (half_w * half_w + half_h * half_h).sqrt();
-    let t = sim_time
-        .as_deref()
-        .copied()
-        .unwrap_or_else(|| {
-            field
-                .as_ref()
-                .map(|f| SimTimeMicros(f.prev_micros))
-                .unwrap_or(SimTimeMicros(0))
-        });
-    apply_weather_precip_frame_from_climate_at(
-        &climate,
-        &mut frame,
-        &mut domains,
-        false,
-        Some(&cam),
-        WeatherPrecipZoomBand::from_zoom_and_view(zoom_alpha, half_diag),
-        local.as_deref(),
-        field.as_deref(),
-        t,
-    );
+    // PixelWorld3D active: the ortho view rect is not what the tilted perspective camera sees.
+    // Scatter streaks over the voxel ground footprint instead (same frame, same writer).
+    if let Some(px) = pixel_cam.as_deref().filter(|p| p.active) {
+        let centre = (px.ground_min + px.ground_max) * 0.5;
+        let half_ext = (px.ground_max - px.ground_min) * 0.5;
+        let voxel_cam = ExtractedCameraMetrics {
+            translation: centre,
+            ..*cam
+        };
+        apply_weather_precip_frame_from_climate_at(
+            &climate,
+            &mut frame,
+            &mut domains,
+            false,
+            Some(&voxel_cam),
+            WeatherPrecipZoomBand::from_ground_footprint(zoom_alpha, half_ext.max_element()),
+            local.as_deref(),
+            atmos.as_deref(),
+        );
+    } else {
+        apply_weather_precip_frame_from_climate_at(
+            &climate,
+            &mut frame,
+            &mut domains,
+            false,
+            Some(&cam),
+            WeatherPrecipZoomBand::from_zoom_and_view(zoom_alpha, half_diag),
+            local.as_deref(),
+            atmos.as_deref(),
+        );
+    }
+    if let Some(d) = diag.as_mut() {
+        d.presentation_frame_revision = frame.frame_revision;
+    }
 }
 
 pub(super) fn register_weather_precip_extract(app: &mut App) {
@@ -326,7 +351,6 @@ mod tests {
             bevy::math::Vec2::ZERO,
             WeatherPrecipZoomBand::from_zoom_alpha(0.8),
             None,
-            SimTimeMicros(0),
         );
         let bg = build_precip_streak_instances_at(
             climate.mean_rain,
@@ -338,7 +362,6 @@ mod tests {
             bevy::math::Vec2::ZERO,
             WeatherPrecipZoomBand::from_zoom_alpha(0.2),
             None,
-            SimTimeMicros(0),
         );
         assert!(tac.len() > bg.len());
         assert!(WeatherPrecipZoomBand::from_zoom_alpha(0.8).tactical);
@@ -363,7 +386,6 @@ mod tests {
             WeatherPrecipZoomBand::from_zoom_alpha(0.7),
             None,
             None,
-            SimTimeMicros(0),
         );
         assert!(frame.camera_centered);
         assert!(frame.tactical_band);
@@ -383,5 +405,14 @@ mod tests {
         apply_weather_precip_frame_from_climate(&climate, &mut frame, &mut domains, false);
         assert!(domains.weather_precip_active());
         assert!(frame.streaks.is_empty());
+    }
+
+    #[test]
+    fn precip_extract_does_not_read_weather_field() {
+        let src = include_str!("extract.rs");
+        let prod = src.split("#[cfg(test)]").next().unwrap();
+        assert!(!prod.contains("Res<WeatherField>"));
+        assert!(!prod.contains("field.sample("));
+        assert!(prod.contains("AtmosphereFrame"));
     }
 }

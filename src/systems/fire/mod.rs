@@ -25,13 +25,18 @@ pub mod types;
 pub(crate) use fire_fuel::{fire_fuel_field_tick, spawn_fire_fuel_field_on_new_chunk};
 
 pub use crate::terrain::fire::FuelLayer;
-pub use chunk_fire_overlay::{chunk_fire_edge_spread, chunk_fire_overlay_tick};
+pub use chunk_fire_overlay::{
+    apply_edge_fire_deposits, apply_one_edge_deposit, chunk_fire_edge_spread,
+    chunk_fire_overlay_tick, EdgeFireDeposit,
+};
 pub use chunk_fuel_profile::{chunk_fuel_profile_from_vegetation, ChunkFuelProfile};
 pub use chunk_smoke_field::{
-    chunk_smoke_field_pull_from_advected_atmosphere, chunk_smoke_field_tick, ChunkSmokeField,
-    ATMOSPHERE_TO_CHUNK_SMOKE_BLEND, CHUNK_SMOKE_L0_PULL,
+    project_chunk_smoke_from_atmosphere_frame, ChunkSmokeField, CHUNK_SMOKE_WRITERS,
 };
-pub use chunk_surface_fire::{chunk_surface_fire_tick, ChunkSurfaceFire};
+pub use chunk_surface_fire::{
+    chunk_surface_fire_tick, surface_fire_scorch_decal01, ChunkSurfaceFire,
+    SURFACE_FIRE_EXTINCTION_HEAT, SURFACE_FIRE_SCORCH_HEAT_MAX,
+};
 pub use ember_spot_ignition::{
     apply_ember_spot_ignitions, emit_ember_spot_ignition_events, resolve_spot_ignite_cell,
     EmberSpotIgnitionEvent,
@@ -103,9 +108,7 @@ impl Plugin for FirePlugin {
                     update_fire_light_emission_flicker
                         .after(maintain_fire_light_emission_from_surface_fire)
                         .in_set(ChunkEnvironmentSet::Fire),
-                    chunk_smoke_field_tick
-                        .after(update_fire_light_emission_flicker)
-                        .in_set(ChunkEnvironmentSet::Fire),
+                    // W7: ChunkSmokeField projected from AtmosphereFrame (atmosphere plugin), not Fire tick.
                     // TRIAGE-FIRE-PLAY-VIS-001 / VFX-ABSENT: product SimulationMap fire_heat
                     // follows real sim heat (was exported but never scheduled → dead overlay).
                     sync_sim_map_fire_overlay_when_sim_has_heat

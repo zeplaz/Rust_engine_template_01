@@ -3,9 +3,29 @@
 //! overlay / smoke / ember) — matches `base_fire2_smoke.md` “weather → ecology → fire” and ensures fire reads
 //! fuel updated this frame.
 //! Configured from [`crate::engine::EnginePlugin`](crate::engine::EnginePlugin).
+//!
+//! # LOOP-06 — dependency tiers (GEA 4e Vol II §17.6.3.2 Bucketed Updates)
+//!
+//! Cross-domain SystemSets are grouped by **dependency depth**, not ad-hoc `.after(system_fn)` chains:
+//!
+//! | Tier | Sets (anchors) | Role |
+//! |:---|:---|:---|
+//! | **Env** | [`ChunkEnvironmentSet`] Lod → Weather → Ecology → Fire | Chunk fields that feed each other |
+//! | **Logistics** | [`StrategicFieldPipeline`](crate::strategic::StrategicFieldPipeline) through `NetworkFlow` | Graph sync → net inject → network flow |
+//! | **Combat** | `StrategicFieldPipeline::ZoneAndReadModel` (combat systems) | Fronts / formations / resolve after logistics + weather |
+//! | **AI** | [`FactionAiSet::Tick`](crate::ai::faction::FactionAiSet) | Perceive/decide after zone + combat read model |
+//!
+//! Production edges (also reasserted by [`configure_sim_dependency_tier_edges`]):
+//! - `NetworkFlow` **after** `ChunkEnvironmentSet::Weather` (env → logistics)
+//! - `ZoneAndReadModel` **after** `NetworkFlow` **and** `Weather` (logistics → combat)
+//! - `FactionAiSet::Tick` **after** `ZoneAndReadModel` (combat → AI)
+//!
+//! Dual-cite: **LOOP-06** · LEGACY `game_object_update` (gea_v2_e4 p606).
 
 use bevy::prelude::*;
 
+use crate::ai::faction::FactionAiSet;
+use crate::strategic::StrategicFieldPipeline;
 use crate::systems::sim_attention::AttentionSet;
 use crate::systems::sim_control::SimControlSystemSet;
 
@@ -34,15 +54,36 @@ pub fn configure_chunk_environment_sets(app: &mut App) {
             ChunkEnvironmentSet::Fire.after(ChunkEnvironmentSet::Ecology),
         ),
     );
+    configure_sim_dependency_tier_edges(app);
+}
+
+/// LOOP-06: harden env → logistics → combat → AI as named SystemSet edges.
+///
+/// Intra-set chains stay owned by their plugins (`StrategicFieldsPlugin`, `FactionAiPlugin`,
+/// `CombatPlugin`). This only asserts the **cross-tier** dependency-depth edges so partners do not
+/// invent parallel `.after` chains.
+pub fn configure_sim_dependency_tier_edges(app: &mut App) {
+    app.configure_sets(
+        Update,
+        (
+            StrategicFieldPipeline::NetworkFlow.after(ChunkEnvironmentSet::Weather),
+            StrategicFieldPipeline::ZoneAndReadModel
+                .after(StrategicFieldPipeline::NetworkFlow)
+                .after(ChunkEnvironmentSet::Weather),
+            FactionAiSet::Tick.after(StrategicFieldPipeline::ZoneAndReadModel),
+        ),
+    );
 }
 
 #[cfg(test)]
 mod tests {
-    use super::ChunkEnvironmentSet;
+    use super::{configure_chunk_environment_sets, configure_sim_dependency_tier_edges, ChunkEnvironmentSet};
     use bevy::input::InputPlugin;
     use bevy::prelude::*;
 
+    use crate::ai::faction::FactionAiSet;
     use crate::gui::InputBindings;
+    use crate::strategic::StrategicFieldPipeline;
     use crate::systems::chunk_environment_persist::ChunkEnvironmentPersistPlugin;
     use crate::systems::chunk_sim_lod::ChunkSimLodPlugin;
     use crate::systems::ecology::EcologyPlugin;
@@ -74,7 +115,7 @@ mod tests {
         app.add_plugins(InputPlugin);
         app.init_resource::<InputBindings>();
         app.add_plugins(SimControlPlugin);
-        super::configure_chunk_environment_sets(&mut app);
+        configure_chunk_environment_sets(&mut app);
         app.init_resource::<OrderLog>();
         app.add_systems(
             Update,
@@ -89,16 +130,65 @@ mod tests {
         assert_eq!(app.world().resource::<OrderLog>().0, vec![1, 2, 3, 4]);
     }
 
+    /// LOOP-06: dependency-depth tiers env → logistics → combat → AI.
     #[test]
-    fn fire_fuel_field_spawns_and_derives_before_fire_pass() {
+    fn loop06_dependency_tiers_env_logistics_combat_ai_order() {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.add_plugins(InputPlugin);
         app.init_resource::<InputBindings>();
+        app.add_plugins(SimControlPlugin);
+        configure_chunk_environment_sets(&mut app);
+        // Mirror StrategicFieldsPlugin intra-logistics spine (minimal) so NetworkFlow is reachable.
+        app.configure_sets(
+            Update,
+            (
+                StrategicFieldPipeline::EnsureOverlays
+                    .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick),
+                StrategicFieldPipeline::GraphSync.after(StrategicFieldPipeline::EnsureOverlays),
+                StrategicFieldPipeline::InjectTransportScalars
+                    .after(StrategicFieldPipeline::GraphSync),
+                StrategicFieldPipeline::LogisticsNetInject
+                    .after(StrategicFieldPipeline::InjectTransportScalars),
+                StrategicFieldPipeline::NetworkFlow
+                    .after(StrategicFieldPipeline::LogisticsNetInject),
+            ),
+        );
+        configure_sim_dependency_tier_edges(&mut app);
+        app.init_resource::<OrderLog>();
+        app.add_systems(
+            Update,
+            (
+                (|mut log: ResMut<OrderLog>| log.0.push(1)).in_set(ChunkEnvironmentSet::Weather),
+                (|mut log: ResMut<OrderLog>| log.0.push(2))
+                    .in_set(StrategicFieldPipeline::NetworkFlow),
+                (|mut log: ResMut<OrderLog>| log.0.push(3))
+                    .in_set(StrategicFieldPipeline::ZoneAndReadModel),
+                (|mut log: ResMut<OrderLog>| log.0.push(4)).in_set(FactionAiSet::Tick),
+            ),
+        );
+        app.update();
+        assert_eq!(
+            app.world().resource::<OrderLog>().0,
+            vec![1, 2, 3, 4],
+            "LOOP-06 tiers: Weather(env) → NetworkFlow(logistics) → ZoneAndReadModel(combat) → FactionAi(AI)"
+        );
+    }
+
+    #[test]
+    fn fire_fuel_field_spawns_and_derives_before_fire_pass() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.add_plugins(bevy::asset::AssetPlugin::default());
+        app.init_asset::<Image>();
+        app.add_plugins(InputPlugin);
+        app.init_resource::<InputBindings>();
         // Fire's ember-spot emitter enqueues through the sim-effect queue (owned by `SimEffectsPlugin`).
         app.init_resource::<crate::sim::effects::SimEffectQueue>();
+        app.init_resource::<crate::render::extraction::RenderProjectionGraph>();
+        app.init_resource::<crate::gui::OverlayFieldFrame>();
         app.add_plugins(SimControlPlugin);
-        super::configure_chunk_environment_sets(&mut app);
+        configure_chunk_environment_sets(&mut app);
         app.add_plugins((
             ChunkEnvironmentPersistPlugin,
             ChunkSimLodPlugin,

@@ -4,17 +4,22 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::utils::StringId;
+
 /// Maps variant tags and cue ids → handles / variant lists.
+///
+/// Keyed by [`StringId`] (MEM-07: FNV-1a of the tag — deterministic, no pointer identity); the
+/// source tag is kept beside the value so registration can reject hash collisions.
 #[derive(Resource, Debug)]
 pub struct SfxCatalog {
-    pub by_tag: HashMap<&'static str, Handle<AudioSource>>,
-    cues: HashMap<&'static str, &'static [&'static str]>,
+    pub by_id: HashMap<StringId, (&'static str, Handle<AudioSource>)>,
+    cues: HashMap<StringId, (&'static str, &'static [&'static str])>,
 }
 
 impl Default for SfxCatalog {
     fn default() -> Self {
         Self {
-            by_tag: HashMap::new(),
+            by_id: HashMap::new(),
             cues: HashMap::new(),
         }
     }
@@ -23,22 +28,36 @@ impl Default for SfxCatalog {
 impl SfxCatalog {
     #[must_use]
     pub fn get(&self, tag: &str) -> Option<&Handle<AudioSource>> {
-        self.by_tag.get(tag)
+        self.get_by_id(StringId::new(tag))
+    }
+
+    /// Lookup by precomputed id (hash-stable across reloads).
+    #[must_use]
+    pub fn get_by_id(&self, id: StringId) -> Option<&Handle<AudioSource>> {
+        self.by_id.get(&id).map(|(_, h)| h)
     }
 
     pub fn insert(&mut self, tag: &'static str, handle: Handle<AudioSource>) {
-        self.by_tag.insert(tag, handle);
+        let id = StringId::new(tag);
+        if let Some((prev, _)) = self.by_id.get(&id) {
+            debug_assert_eq!(*prev, tag, "sfx tag hash collision {id}: `{prev}` vs `{tag}`");
+        }
+        self.by_id.insert(id, (tag, handle));
     }
 
     /// Register one logical cue id behind `variant_tags` (≥ 1).
     pub fn register_cue(&mut self, cue_id: &'static str, variant_tags: &'static [&'static str]) {
         debug_assert!(!variant_tags.is_empty(), "cue {cue_id} needs ≥1 variant");
-        self.cues.insert(cue_id, variant_tags);
+        let id = StringId::new(cue_id);
+        if let Some((prev, _)) = self.cues.get(&id) {
+            debug_assert_eq!(*prev, cue_id, "sfx cue hash collision {id}: `{prev}` vs `{cue_id}`");
+        }
+        self.cues.insert(id, (cue_id, variant_tags));
     }
 
     #[must_use]
     pub fn cue_variants(&self, cue_id: &str) -> Option<&'static [&'static str]> {
-        self.cues.get(cue_id).copied()
+        self.cues.get(&StringId::new(cue_id)).map(|(_, v)| *v)
     }
 
     /// Resolve a mix `tag` (cue id or bare variant) to a concrete variant tag for playback.
@@ -181,6 +200,53 @@ mod tests {
         let mut picker = AudioCuePicker::new(1);
         for _ in 0..8 {
             assert_eq!(catalog.resolve_play_tag(tags::UI_DENY, &mut picker), tags::UI_DENY);
+        }
+    }
+
+    const ALL_TAGS: &[&str] = &[
+        tags::AMBIENT_RAIN, tags::AMBIENT_WIND, tags::SPATIAL_NEAR, tags::UI_CLICK, tags::UI_CONFIRM,
+        tags::UI_DENY, tags::SHOT, tags::EXPLOSION, tags::MISSILE_LAUNCH, tags::LAUNCH_WARNING,
+        tags::WEATHER_ALERT, tags::SHOT_V0, tags::SHOT_V1, tags::SHOT_V2, tags::EXPLOSION_V0,
+        tags::EXPLOSION_V1, tags::UI_CLICK_V0, tags::UI_CLICK_V1,
+    ];
+
+    /// MEM-07 tripwire: built-in tags hash to distinct ids; same string → same id.
+    #[test]
+    fn mem07_builtin_tag_ids_unique_and_stable() {
+        let mut seen: HashMap<StringId, &str> = HashMap::new();
+        for tag in ALL_TAGS {
+            let owned = String::from(*tag);
+            assert_eq!(StringId::new(&owned), StringId::new(tag));
+            if let Some(prev) = seen.insert(StringId::new(tag), tag) {
+                panic!("hash collision {prev} vs {tag}");
+            }
+        }
+    }
+
+    /// MEM-07 tripwire: catalog lookup by hash is stable across a rebuild ("reload") of the catalog.
+    #[test]
+    fn mem07_catalog_lookup_by_hash_stable_across_reload() {
+        let build = || {
+            let mut c = SfxCatalog::default();
+            for tag in ALL_TAGS {
+                c.insert(tag, Handle::default());
+            }
+            c.register_cue(tags::SHOT, &[tags::SHOT_V0, tags::SHOT_V1, tags::SHOT_V2]);
+            c
+        };
+        let (a, b) = (build(), build());
+        for tag in ALL_TAGS {
+            let id = StringId::new(&String::from(*tag));
+            assert!(a.get_by_id(id).is_some() && b.get_by_id(id).is_some(), "{tag}");
+            assert!(a.get(tag).is_some());
+        }
+        assert!(a.get("not.a.tag").is_none());
+        let id_a: Vec<_> = a.cue_variants(tags::SHOT).unwrap().to_vec();
+        assert_eq!(id_a, b.cue_variants("combat.shot").unwrap());
+        // Resolution sequence is identical for two catalogs + same seed.
+        let (mut pa, mut pb) = (AudioCuePicker::new(7), AudioCuePicker::new(7));
+        for _ in 0..32 {
+            assert_eq!(a.resolve_play_tag(tags::SHOT, &mut pa), b.resolve_play_tag(tags::SHOT, &mut pb));
         }
     }
 }

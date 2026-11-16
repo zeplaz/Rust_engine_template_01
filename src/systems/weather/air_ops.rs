@@ -14,14 +14,14 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::substrate::atmosphere::{sample_tactical_smoke_from_l0, AtmosphereClipmapStack};
-use crate::systems::atmosphere::atmos_chunk_to_tile;
+use crate::systems::atmosphere::{atmos_chunk_to_tile, AtmosphereFrame};
 use crate::systems::fire::ChunkSmokeField;
 use crate::terrain::generation::Chunk;
-use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
 
 use super::field::WeatherSample;
 use super::polling_stations::WeatherPollingStations;
 use super::sense_propagation::WeatherSenseCellField;
+use super::tuning::WeatherTuning;
 
 /// Fallback cells/chunk when raster config is absent (matches common worldgen).
 pub const SMOKE_SAMPLE_CELLS_PER_CHUNK: u32 = 16;
@@ -81,6 +81,17 @@ pub struct AirOpsProfile {
     /// Research resist on sensor envelope (0..1).
     #[serde(default)]
     pub sensor_resist: f32,
+    /// Ground when [`icing_risk_for_sample`] at [`Self::ice_alt_m`] exceeds this (0..1).
+    /// Default `1.0` preserves pre-W3 behaviour (icing never grounds).
+    #[serde(default = "default_max_icing")]
+    pub max_icing: f32,
+    /// Altitude (m AGL) used for the icing temperature lapse. W3 schema.
+    #[serde(default)]
+    pub ice_alt_m: f32,
+}
+
+fn default_max_icing() -> f32 {
+    1.0
 }
 
 /// Loaded air-ops table (`air_ops_v1.ron`).
@@ -147,6 +158,8 @@ pub enum GroundingReason {
     Crosswind,
     Visibility,
     Lightning,
+    /// Icing risk at [`AirOpsProfile::ice_alt_m`] above [`AirOpsProfile::max_icing`].
+    Icing,
 }
 
 /// Result of [`evaluate_grounding`].
@@ -191,12 +204,78 @@ pub fn crosswind_component(wind_mps: Vec2, heading: Vec2) -> f32 {
     wind_mps.dot(cross).abs()
 }
 
-/// Grounding from wind / optional runway crosswind / visibility / lightning.
+/// Temperature at altitude via the weather lapse rate (°C).
+#[inline]
+#[must_use]
+pub fn temp_at_altitude_c(ground_temp_c: f32, alt_m: f32, lapse_rate_c_per_km: f32) -> f32 {
+    ground_temp_c - lapse_rate_c_per_km * (alt_m.max(0.0) / 1000.0)
+}
+
+/// Liquid-water proxy for icing (`cloud × humidity`, 0..1).
+#[inline]
+#[must_use]
+pub fn liquid_water_proxy01(sample: &WeatherSample) -> f32 {
+    (sample.cloud.clamp(0.0, 1.0) * sample.humidity.clamp(0.0, 1.0)).clamp(0.0, 1.0)
+}
+
+/// Icing risk `0..1` from altitude temperature and liquid-water proxy (W3).
+///
+/// Zero outside the mixed-phase band [`WeatherTuning::icing_temp_min_c`]..[`WeatherTuning::icing_temp_max_c`]
+/// or when liquid water is below [`WeatherTuning::icing_liquid_min`].
+#[must_use]
+pub fn icing_risk(temp_alt_c: f32, liquid_water01: f32, tuning: &WeatherTuning) -> f32 {
+    let liquid = liquid_water01.clamp(0.0, 1.0);
+    if liquid < tuning.icing_liquid_min {
+        return 0.0;
+    }
+    let t_min = tuning.icing_temp_min_c;
+    let t_max = tuning.icing_temp_max_c;
+    if !(temp_alt_c >= t_min && temp_alt_c <= t_max) {
+        return 0.0;
+    }
+    let band = (t_max - t_min).max(1e-3);
+    // Peak near the warm third of the band (≈ −8 °C when band is −25..0).
+    let peak = t_max - 0.35 * band;
+    let half = band * 0.5;
+    let temp_factor = (1.0 - ((temp_alt_c - peak).abs() / half)).clamp(0.0, 1.0);
+    (liquid * temp_factor).clamp(0.0, 1.0)
+}
+
+/// Icing risk for a weather sample at a profile altitude.
+#[must_use]
+pub fn icing_risk_for_sample(
+    sample: &WeatherSample,
+    alt_m: f32,
+    tuning: &WeatherTuning,
+) -> f32 {
+    let temp_alt = temp_at_altitude_c(sample.temp_c, alt_m, tuning.lapse_rate_c_per_km);
+    icing_risk(temp_alt, liquid_water_proxy01(sample), tuning)
+}
+
+/// Grounding from wind / optional runway crosswind / weather visibility / lightning.
+///
+/// Does **not** apply smoke/ash combined visibility or icing — use
+/// [`evaluate_grounding_with`] when those threats are known (frame / air-ops status).
 #[must_use]
 pub fn evaluate_grounding(
     sample: &WeatherSample,
     profile: &AirOpsProfile,
     runway_dir: Option<Vec2>,
+) -> GroundingVerdict {
+    evaluate_grounding_with(sample, profile, runway_dir, sample.visibility_m, 0.0)
+}
+
+/// Grounding with combined visibility and icing risk (W3 air threats).
+///
+/// `visibility_m` should be [`AtmosphereTile::visibility_m_combined`] when smoke/ash are known;
+/// using weather-only visibility ignores aerosol grounding.
+#[must_use]
+pub fn evaluate_grounding_with(
+    sample: &WeatherSample,
+    profile: &AirOpsProfile,
+    runway_dir: Option<Vec2>,
+    visibility_m: f32,
+    icing_risk01: f32,
 ) -> GroundingVerdict {
     let mut reasons = Vec::new();
     let wind_speed = sample.wind_mps.length().max(sample.gust_mps * 0.9);
@@ -208,11 +287,14 @@ pub fn evaluate_grounding(
             reasons.push(GroundingReason::Crosswind);
         }
     }
-    if sample.visibility_m < profile.min_visibility_m {
+    if visibility_m < profile.min_visibility_m {
         reasons.push(GroundingReason::Visibility);
     }
     if sample.lightning > profile.max_lightning {
         reasons.push(GroundingReason::Lightning);
+    }
+    if icing_risk01 > profile.max_icing {
+        reasons.push(GroundingReason::Icing);
     }
     if reasons.is_empty() {
         GroundingVerdict::Clear
@@ -388,7 +470,22 @@ pub fn collect_chunk_smoke_density(
     map
 }
 
+/// Per-chunk smoke `0..1` from [`AtmosphereFrame`] (W2 read path; no L0/ChunkSmoke proxy).
+#[must_use]
+pub fn smoke01_at_chunk_from_frame(chunk: IVec2, frame: &AtmosphereFrame) -> f32 {
+    frame.smoke01_at_chunk(chunk).unwrap_or(0.0)
+}
+
+/// Per-tile smoke `0..1` from [`AtmosphereFrame`] (owning chunk; not a centre-origin proxy).
+#[must_use]
+pub fn smoke01_at_tile_from_frame(tile: IVec2, frame: &AtmosphereFrame) -> f32 {
+    frame.smoke01_at_tile(tile).unwrap_or(0.0)
+}
+
 /// Envelope smoke `0..1`: prefer [`ChunkSmokeField`] density, else L0 clipmap, else `0`.
+///
+/// Transitional for sense-field build (runs before [`AtmospherePipelineSet::Frame`]). New consumers
+/// should call [`smoke01_at_chunk_from_frame`] / [`smoke01_at_tile_from_frame`].
 #[must_use]
 pub fn smoke01_resolve(
     chunk: IVec2,
@@ -408,7 +505,7 @@ pub fn smoke01_resolve(
     0.0
 }
 
-/// Smoke at a gameplay tile for link/sensor envelopes.
+/// Smoke at a gameplay tile for link/sensor envelopes (legacy ChunkSmoke/L0 path).
 #[must_use]
 pub fn smoke01_at_tile(
     tile: IVec2,
@@ -458,12 +555,16 @@ impl Default for AirOpsWeatherStatus {
 }
 
 /// Sole writer of [`AirOpsWeatherStatus`] from polling stations (+ sense cell for EO mul).
+///
+/// Smoke / combined visibility / icing are read from the [`AtmosphereFrame`] at the weather-centre
+/// chunk (same chunk as the station centre sample), not a fixed origin proxy. Runs after
+/// [`AtmospherePipelineSet::Frame`](crate::systems::atmosphere::AtmospherePipelineSet::Frame).
 pub fn sync_air_ops_weather_status(
     stations: Res<WeatherPollingStations>,
     sense: Res<WeatherSenseCellField>,
     tuning: Res<AirOpsTuning>,
-    stack: Option<Res<AtmosphereClipmapStack>>,
-    smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
+    wx_tuning: Res<WeatherTuning>,
+    frame: Res<AtmosphereFrame>,
     mut status: ResMut<AirOpsWeatherStatus>,
 ) {
     if !stations.ready {
@@ -483,15 +584,21 @@ pub fn sync_air_ops_weather_status(
         missile.max_missile_wind_mps,
         20.0,
     );
-    let by_chunk = collect_chunk_smoke_density(&smoke_q);
-    let cells = UVec2::splat(SMOKE_SAMPLE_CELLS_PER_CHUNK);
-    // Stable centre-tile proxy (chunk 0,0) for smoke / sense lookup at map origin.
-    let ct = CHUNK_TILES_SIM as i32;
-    let centre_tile = IVec2::new(ct / 2, ct / 2);
-    let smoke01 = smoke01_at_tile(centre_tile, cells, &by_chunk, stack.as_deref());
+    let centre_chunk = frame.centre_chunk();
+    // Per-tile frame sample at the weather-centre chunk (not L0 origin / fixed proxy).
+    let smoke01 = smoke01_at_chunk_from_frame(centre_chunk, &frame);
+    let centre_tile = frame.tile_at_chunk(centre_chunk);
+    let vis_combined = centre_tile
+        .map(|t| t.visibility_m_combined)
+        .unwrap_or(sample.visibility_m);
+    let icing_fw = icing_risk_for_sample(&sample, fw.ice_alt_m, &wx_tuning);
+    let icing_lift = icing_risk_for_sample(&sample, lift.ice_alt_m, &wx_tuning);
+    let icing_cruise = icing_risk_for_sample(&sample, cruise.ice_alt_m, &wx_tuning);
     status.ready = true;
-    status.grounded_fixed_wing = evaluate_grounding(&sample, fw, Some(heading)).is_grounded();
-    status.airlift_hold = airlift_hold(&sample, lift);
+    status.grounded_fixed_wing =
+        evaluate_grounding_with(&sample, fw, Some(heading), vis_combined, icing_fw).is_grounded();
+    status.airlift_hold =
+        evaluate_grounding_with(&sample, lift, None, vis_combined, icing_lift).is_grounded();
     status.ground_speed_mul = air_ground_speed_mul(&sample, heading, fw);
     status.missile_drift_m = drift.length();
     status.wind_mps = sample.wind_mps;
@@ -500,13 +607,14 @@ pub fn sync_air_ops_weather_status(
     status.link_quality_fiber = link_quality(&sample, smoke01, LinkModality::Fiber, fpv.link_resist);
     status.sensor_range_mul_eo = if sense.ready {
         // Blend resist into cell field the same way as sensor_range_mul.
-        let raw = sense.mul_at_tile(centre_tile);
+        let raw = sense.mul_at_chunk(centre_chunk);
         let r = fpv.sensor_resist.clamp(0.0, 1.0);
         (raw + (1.0 - raw) * r).clamp(0.15, 1.0)
     } else {
         sensor_range_mul(&sample, smoke01, SensorKind::Eo, fpv.sensor_resist)
     };
-    status.drone_cruise_grounded = evaluate_grounding(&sample, cruise, None).is_grounded();
+    status.drone_cruise_grounded =
+        evaluate_grounding_with(&sample, cruise, None, vis_combined, icing_cruise).is_grounded();
     status.samples = status.samples.wrapping_add(1);
 }
 
@@ -542,7 +650,75 @@ mod tests {
         assert!(t.profile(AirOpsProfileId::Missile).is_some());
         assert!(t.profile(AirOpsProfileId::DroneFpv).is_some());
         assert!(t.profile(AirOpsProfileId::DroneCruise).is_some());
-        assert!(t.schema_version >= 2);
+        assert!(t.schema_version >= 3);
+        let fw = t.profile_or_default(AirOpsProfileId::FixedWing);
+        assert!(fw.ice_alt_m > 0.0);
+        assert!(fw.max_icing < 1.0);
+    }
+
+    #[test]
+    fn icing_grounds_when_cold_and_humid_at_ice_alt() {
+        let air = AirOpsTuning::default();
+        let wx = WeatherTuning::default();
+        let p = air.profile_or_default(AirOpsProfileId::FixedWing);
+        // Ground temp warm; at ice_alt_m the lapse puts the column in the icing band.
+        let iced = WeatherSample {
+            temp_c: 5.0,
+            humidity: 0.95,
+            cloud: 0.95,
+            visibility_m: 20_000.0,
+            ..Default::default()
+        };
+        let risk = icing_risk_for_sample(&iced, p.ice_alt_m, &wx);
+        assert!(risk > p.max_icing, "icing risk {risk} should exceed max_icing {}", p.max_icing);
+        let v = evaluate_grounding_with(&iced, p, None, iced.visibility_m, risk);
+        assert!(v.is_grounded());
+        if let GroundingVerdict::Grounded { reasons } = v {
+            assert!(reasons.contains(&GroundingReason::Icing));
+            assert_eq!(reasons.len(), 1, "only icing should ground calm iced column");
+        }
+    }
+
+    #[test]
+    fn calm_clear_stays_clear_with_zero_icing() {
+        let air = AirOpsTuning::default();
+        let wx = WeatherTuning::default();
+        let p = air.profile_or_default(AirOpsProfileId::FixedWing);
+        let calm = WeatherSample::default();
+        let risk = icing_risk_for_sample(&calm, p.ice_alt_m, &wx);
+        assert!(risk <= p.max_icing, "calm icing risk {risk}");
+        assert!(evaluate_grounding_with(&calm, p, Some(Vec2::X), calm.visibility_m, risk).is_clear());
+        assert!(evaluate_grounding(&calm, p, Some(Vec2::X)).is_clear());
+    }
+
+    #[test]
+    fn smoke_lowers_combined_visibility_and_can_ground() {
+        use crate::systems::atmosphere::combine_visibility_m_k;
+
+        let air = AirOpsTuning::default();
+        let wx = WeatherTuning::default();
+        let p = air.profile_or_default(AirOpsProfileId::FixedWing);
+        let sample = WeatherSample {
+            visibility_m: 3_000.0,
+            ..Default::default()
+        };
+        assert!(
+            evaluate_grounding(&sample, p, None).is_clear(),
+            "weather-only vis must clear without smoke"
+        );
+        let combined = combine_visibility_m_k(
+            sample.visibility_m,
+            0.85,
+            0.0,
+            wx.k_smoke,
+            wx.k_ash,
+        );
+        assert!(combined < p.min_visibility_m, "combined {combined} < min {}", p.min_visibility_m);
+        let v = evaluate_grounding_with(&sample, p, None, combined, 0.0);
+        assert!(v.is_grounded());
+        if let GroundingVerdict::Grounded { reasons } = v {
+            assert!(reasons.contains(&GroundingReason::Visibility));
+        }
     }
 
     #[test]
@@ -640,6 +816,68 @@ mod tests {
     }
 
     #[test]
+    fn status_smoke_is_read_from_frame_at_weather_centre_chunk() {
+        use crate::systems::atmosphere::AtmosphereFrame;
+        use crate::systems::weather::{WeatherField, WeatherTuning};
+        use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
+
+        let extent = Vec2::splat(8.0 * CHUNK_TILES_SIM as f32 * TILE_METRES_GAMEPLAY);
+        let field = WeatherField::new(1, extent, &WeatherTuning::default(), None, Default::default(), 0);
+
+        // Weather centre of an 8×8-chunk world is chunk (4,4); smoke at the origin must not leak in.
+        let mut stack = AtmosphereClipmapStack::default();
+        let w = stack.levels[0].resolution.x;
+        stack.levels[0].smoke_density[(4 * w + 4) as usize] = 0.6;
+        stack.levels[0].smoke_density[0] = 0.9;
+        stack.bump_revision();
+        let mut frame = AtmosphereFrame::default();
+        assert!(frame.rebuild(Some(&field), &stack, 0, &WeatherTuning::default()));
+        assert_eq!(frame.centre_chunk(), IVec2::new(4, 4));
+
+        let mut app = App::new();
+        app.insert_resource(frame)
+            .insert_resource(WeatherPollingStations {
+                ready: true,
+                ..Default::default()
+            })
+            .init_resource::<WeatherSenseCellField>()
+            .init_resource::<AirOpsTuning>()
+            .init_resource::<WeatherTuning>()
+            .init_resource::<AirOpsWeatherStatus>()
+            .add_systems(Update, sync_air_ops_weather_status);
+        app.update();
+
+        let st = app.world().resource::<AirOpsWeatherStatus>();
+        assert!(st.ready);
+        assert!((st.smoke01_centre - 0.6).abs() < 1e-5, "smoke01_centre {}", st.smoke01_centre);
+        assert!(st.link_quality_radio < 1.0, "radio link must see smoke");
+    }
+
+    #[test]
+    fn smoke01_from_frame_is_per_tile_not_origin_proxy() {
+        use crate::systems::atmosphere::AtmosphereFrame;
+        use crate::systems::weather::{WeatherField, WeatherTuning};
+        use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
+
+        let extent = Vec2::splat(8.0 * CHUNK_TILES_SIM as f32 * TILE_METRES_GAMEPLAY);
+        let field = WeatherField::new(2, extent, &WeatherTuning::default(), None, Default::default(), 0);
+        let mut stack = AtmosphereClipmapStack::default();
+        let w = stack.levels[0].resolution.x;
+        stack.levels[0].smoke_density[(2 * w + 3) as usize] = 0.55;
+        stack.levels[0].smoke_density[0] = 0.99;
+        stack.bump_revision();
+        let mut frame = AtmosphereFrame::default();
+        assert!(frame.rebuild(Some(&field), &stack, 0, &WeatherTuning::default()));
+
+        let chunk = IVec2::new(3, 2);
+        assert!((smoke01_at_chunk_from_frame(chunk, &frame) - 0.55).abs() < 1e-5);
+        let tile = chunk * CHUNK_TILES_SIM as i32 + IVec2::new(4, 1);
+        assert!((smoke01_at_tile_from_frame(tile, &frame) - 0.55).abs() < 1e-5);
+        // Origin smoke must not leak into an empty off-chunk sample.
+        assert_eq!(smoke01_at_chunk_from_frame(IVec2::new(1, 1), &frame), 0.0);
+    }
+
+    #[test]
     fn smoke01_prefers_chunk_density_over_empty_l0() {
         let mut map = HashMap::new();
         map.insert(IVec2::new(1, 2), 0.72);
@@ -648,5 +886,15 @@ mod tests {
         let cells = UVec2::splat(16);
         assert_eq!(tile_to_smoke_chunk(IVec2::new(17, -3), cells), IVec2::new(1, -1));
         assert!((smoke01_at_tile(IVec2::new(17, 32), cells, &map, None) - 0.72).abs() < 1e-5);
+    }
+
+    /// W2 gate: air-ops status sync does not sample `WeatherField` directly.
+    #[test]
+    fn status_sync_does_not_read_weather_field() {
+        let src = include_str!("air_ops.rs");
+        let prod = src.split("#[cfg(test)]").next().unwrap();
+        assert!(!prod.contains("Res<WeatherField>"));
+        assert!(!prod.contains("field.sample("));
+        assert!(prod.contains("smoke01_at_chunk_from_frame"));
     }
 }

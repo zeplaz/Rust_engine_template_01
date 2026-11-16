@@ -11,17 +11,14 @@ use bevy::prelude::*;
 
 use super::balance::{FrontBalance, UnitKind};
 use super::formation::Formation;
-use super::supply::FrontSupplyPoints;
-use super::theater::TheaterBook;
-use crate::economy::logistics::orders::{
-    CargoKind, ConsumerKind, LogisticsOrderCommand, LogisticsOrderRequest, LogisticsOrderSiteId,
-    LogisticsOrdersSnapshotRes, Priority, SiteId,
-};
-use crate::systems::sim_control::SimStepClock;
+use super::front_stock_pool::FrontStockPool;
+use crate::economy::logistics::orders::LogisticsOrderRequest;
 
 /// Side → replacement personnel still owed to under-strength formations.
 ///
-/// Sole writer: [`refill_personnel_credits_from_front_system`]. Consume via
+/// `published_deficit` writer: [`super::toe_demand::publish_toe_cargo_demands_system`].
+/// Credits writer: [`refill_personnel_credits_sink`] via
+/// [`super::toe_refill::refill_toe_from_front_system`]. Consume via
 /// [`take_personnel_credit`] from combat resolve only.
 #[derive(Resource, Debug, Default, Clone)]
 pub struct PersonnelRestockBook {
@@ -53,87 +50,13 @@ pub fn side_personnel_deficit<'a>(
         .fold(0u32, |a, b| a.saturating_add(b))
 }
 
-/// Publish `personnel` demand onto each front site from toe_personnel deficit.
-pub fn publish_personnel_demands_system(
-    clock: Res<SimStepClock>,
-    theaters: Res<TheaterBook>,
-    balance: Res<FrontBalance>,
-    points: Res<FrontSupplyPoints>,
-    formations: Query<&Formation>,
-    sites: Query<&LogisticsOrderSiteId>,
-    mut book: ResMut<PersonnelRestockBook>,
-    mut requests: MessageWriter<LogisticsOrderRequest>,
+/// Typed sink: pull front `personnel` into credits (not Formation.strength) (**CS-6**).
+/// Scheduled only via [`super::toe_refill::refill_toe_from_front_system`].
+pub fn refill_personnel_credits_sink(
+    pool: &mut FrontStockPool,
+    book: &mut PersonnelRestockBook,
+    requests: &mut MessageWriter<LogisticsOrderRequest>,
 ) {
-    if clock.due == 0 {
-        return;
-    }
-    book.published_deficit.clear();
-    let mut sides: Vec<u8> = points.entities.keys().map(|(_, s)| *s).collect();
-    sides.sort_unstable();
-    sides.dedup();
-    for side in sides {
-        let deficit = side_personnel_deficit(side, &balance, formations.iter());
-        book.published_deficit.insert(side, deficit);
-        if deficit == 0 {
-            continue;
-        }
-        for ((_, s), entity) in &points.entities {
-            if *s != side {
-                continue;
-            }
-            let Ok(site) = sites.get(*entity).map(|x| x.0) else {
-                continue;
-            };
-            requests.write(LogisticsOrderRequest(LogisticsOrderCommand::PublishDemand {
-                site,
-                cargo: CargoKind::new("personnel"),
-                consumer: ConsumerKind::Front,
-                buffer_target: deficit.max(1),
-                reorder_point: ((deficit as f32) * 0.5).ceil() as u32,
-                draw_rate_per_min: 1,
-                priority: Priority::Normal,
-            }));
-        }
-    }
-    let _ = theaters;
-}
-
-/// Pull front `personnel` stock into [`PersonnelRestockBook`] credits (not Formation.strength).
-pub fn refill_personnel_credits_from_front_system(
-    clock: Res<SimStepClock>,
-    points: Res<FrontSupplyPoints>,
-    snap: Option<Res<LogisticsOrdersSnapshotRes>>,
-    sites: Query<&LogisticsOrderSiteId>,
-    mut book: ResMut<PersonnelRestockBook>,
-    mut requests: MessageWriter<LogisticsOrderRequest>,
-) {
-    if clock.due == 0 {
-        return;
-    }
-    let Some(snap) = snap else {
-        return;
-    };
-
-    let mut available: BTreeMap<u8, (SiteId, u32)> = BTreeMap::new();
-    for ((_, side), entity) in &points.entities {
-        let Ok(site_id) = sites.get(*entity).map(|s| s.0) else {
-            continue;
-        };
-        let Some(row) = snap.0.sites.iter().find(|s| s.id == site_id) else {
-            continue;
-        };
-        let on_hand = row
-            .stock
-            .iter()
-            .find(|r| r.cargo == "personnel")
-            .map(|r| r.on_hand)
-            .unwrap_or(0);
-        let entry = available.entry(*side).or_insert((site_id, 0));
-        if on_hand > entry.1 {
-            *entry = (site_id, on_hand);
-        }
-    }
-
     for (side, need) in book.published_deficit.clone() {
         if need == 0 {
             continue;
@@ -143,22 +66,11 @@ pub fn refill_personnel_credits_from_front_system(
             continue;
         }
         let want = need.saturating_sub(already);
-        let Some((site, on_hand)) = available.get(&side).copied() else {
-            continue;
-        };
-        let take = want.min(on_hand);
+        let take = pool.consume_tag_up_to(side, "personnel", want, requests);
         if take == 0 {
             continue;
         }
-        if let Some(entry) = available.get_mut(&side) {
-            entry.1 = entry.1.saturating_sub(take);
-        }
         *book.by_side.entry(side).or_insert(0) = already.saturating_add(take);
-        requests.write(LogisticsOrderRequest(LogisticsOrderCommand::ConsumeStock {
-            site,
-            cargo: CargoKind::new("personnel"),
-            amount: take,
-        }));
     }
 }
 

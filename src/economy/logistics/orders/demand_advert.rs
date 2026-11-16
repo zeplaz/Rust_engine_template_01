@@ -1,6 +1,5 @@
 //! DEC-10 — demand advert scoring (Smelly GOB): urgency grows with unmet time; travel discounts score.
 
-use super::model::Priority;
 use super::snapshot::{DemandRow, LogisticsOrdersSnapshot};
 use super::source_pick::{best_source_open_goal, dijkstra_from};
 
@@ -79,7 +78,9 @@ pub fn cmp_demands_by_advert(
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::economy::logistics::orders::model::{ConsumerKind, DemandHealth, OwnerId, SiteId};
+    use crate::economy::logistics::orders::model::{
+        ConsumerKind, DemandHealth, OwnerId, Priority, SiteId,
+    };
 
     fn row(site: u32, unmet: u64, travel: u32) -> DemandRow {
         DemandRow {

@@ -1,5 +1,8 @@
 //! Per-cell **standing vegetation** — the vegetation side of the fire loop.
 //!
+//! **DES-06** (aig3 15.2.4 *Ecosystem Design*): [`ecosystem_logistic_step`] is the
+//! stable carrying-capacity feedback used by fuel/regrowth ramps.
+//!
 //! ```text
 //! vegetation (canopy / understory / old growth / litter, per cell through the suitability ceiling)
 //!   -> fuel capacity per cell                          (this module: `fuel_cap`, `kind`)
@@ -50,6 +53,21 @@ pub const CELL_YOUNG: u8 = 3;
 pub const CELL_OLD: u8 = 4;
 pub const CELL_BURNING: u8 = 5;
 pub const CELL_BURNT: u8 = 6;
+
+/// DES-06: logistic growth toward carrying capacity `capacity` (stable negative feedback).
+/// `rate` is per-step; result stays in `[0, capacity]`.
+#[inline]
+#[must_use]
+pub fn ecosystem_logistic_step(biomass: f32, capacity: f32, rate: f32) -> f32 {
+    let k = capacity.max(0.0);
+    if k <= 1e-6 {
+        return 0.0;
+    }
+    let x = biomass.clamp(0.0, k);
+    let r = rate.max(0.0);
+    (x + r * x * (1.0 - x / k)).clamp(0.0, k)
+}
+
 pub const CELL_REGROWTH: u8 = 7;
 /// Open water (river, lake, ocean): nothing grows or burns here.
 pub const CELL_WATER: u8 = 8;
@@ -1009,4 +1027,19 @@ mod tests {
         assert!(veg.ground_fuel < veg0.ground_fuel * 0.8, "litter {} -> {}", veg0.ground_fuel, veg.ground_fuel);
         assert_eq!(app.world().get::<ChunkCellStand>(e).unwrap().burnt_count, 0);
     }
+    #[test]
+    fn des06_logistic_feedback_approaches_capacity_without_overshoot() {
+        let k = 1.0_f32;
+        let mut x = 0.05_f32;
+        for _ in 0..40 {
+            let next = ecosystem_logistic_step(x, k, 0.35);
+            assert!(next >= x - 1e-6, "monotonic rise while below K");
+            assert!(next <= k + 1e-5);
+            x = next;
+        }
+        assert!(x > 0.9, "should approach capacity, got {x}");
+        assert!((ecosystem_logistic_step(k, k, 0.5) - k).abs() < 1e-5);
+        assert_eq!(ecosystem_logistic_step(0.5, 0.0, 1.0), 0.0);
+    }
+
 }

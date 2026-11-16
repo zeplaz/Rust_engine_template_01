@@ -1,8 +1,12 @@
 # Ref-books index v2 — cheap routing from our code to book sections
 
 Built from the **tables of contents** (PDF outlines plus numbered x.y.z headings) of the books in
-`$REF_BOOKS_DIR\`. No book text is stored here. This replaces nothing; the older
-`$REF_BOOKS_DIR\lookup\` folder is separate and was not used to build this one.
+`$REF_BOOKS_DIR\`. No book text is stored here.
+
+**Dual matrices (parallel combined):** this folder is the **NEW** concept matrix (`matrix.md`, row ids,
+adoption ledger). The **LEGACY** keyword matrix lives at `$REF_BOOKS_DIR\lookup\` (`keyword_book_matrix.csv`,
+`keyword_lookup.csv`). They are **not** either/or — run both every orient session. `lookup.py --dual` prints
+NEW hits and LEGACY keyword rows in one command (see [`../plan_ref_books_upgrade_v3.md`](../plan_ref_books_upgrade_v3.md) §1).
 
 Work queue built on this index: [`../plan_ref_books_upgrade_v2.md`](../plan_ref_books_upgrade_v2.md) (slice cards, ledger of adopted rows).
 
@@ -32,6 +36,14 @@ Work queue built on this index: [`../plan_ref_books_upgrade_v2.md`](../plan_ref_
 1. systems.md  -> find your game system, pick a gem or row id
 2. lookup.py   -> resolve to book + section + PDF page range (+ which code it maps to)
 3. --read      -> pull only those pages as text when you actually need the details
+```
+
+```bash
+python src/dev/ref_books_index/lookup.py --dual shape grammar
+```
+
+```bash
+python src/dev/ref_books_index/lookup.py --dual --code construction/voxel_massing.rs
 ```
 
 ```bash
@@ -72,8 +84,10 @@ python src/dev/ref_books_index/lookup.py --row PHYS-02
 python src/dev/ref_books_index/lookup.py --brief combat/ballistics.rs
 ```
 
-`--json` also works with `--niche` / `--open` / `--row`. Each JSON object is
+`--json` also works with `--niche` / `--open` / `--row` / `--dual`. Each JSON object is
 `{id,tier,concept,refs:[{book,sec,start,end,title}],code,take}` (+ `status` when in `adoption.tsv`).
+`--json --dual` prints `{"new":[...],"legacy":[{keyword,book_id,pdf_page,section}]}`. If the legacy CSV
+tree is absent, `legacy` is `[]` and text mode prints `legacy: unavailable` (exit 0).
 `--brief` prints at most 12 lines: row id, best ref, and the exact `--read` command.
 Row ids in text output show `[STATUS]` when present in `adoption.tsv`.
 
@@ -103,7 +117,7 @@ and every TOC entry is one line (`grep -i "erosion" src/dev/ref_books_index/toc/
 - Page numbers are **PDF page indices** (what `pdftotext -f/-l` takes), not printed page numbers. `end` is the next sibling's start page, so it can share a page.
 - Matrix code paths are relative to `src/`; paths starting with `tools/` are repo-relative.
 - A book idea maps onto an **existing** authority and SystemSet (AGENTS.md: one writer per domain, Sim → View → Render → UI). Reject anything that adds a parallel stack.
-- `REF_BOOKS_DIR` overrides the PDF folder.
+- `REF_BOOKS_DIR` overrides the PDF folder; `REF_BOOKS_LEGACY_LOOKUP_DIR` overrides the legacy lookup folder.
 
 ## Maintenance
 

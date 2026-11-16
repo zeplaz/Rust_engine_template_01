@@ -7,8 +7,9 @@
 //!   chunk's cells change;
 //! - sites: `PlannedSite` / `ConstructionSite` / `SiteFootprint` — footprint columns by archetype,
 //!   height by phase and footprint size ([`derive_massing_floors`]);
-//! - ghost: [`ConstructionVisualRequests`] footprint tiles + massing columns (the same requests the
-//!   top-down overlay paints);
+//! - ghost: [`ConstructionVisualRequests`] footprint tiles + **RO** `massing_columns` /
+//!   `massing_instances` (same requests the top-down overlay paints; sole writer = `voxel_massing`;
+//!   **RND-09** instance batch when count ≥ threshold);
 //! - fronts: [`FrontOverlaySources`] geometry (the top-down layer's builders) draped on the surface.
 
 use std::collections::HashMap;
@@ -24,7 +25,8 @@ use crate::construction::{derive_massing_floors, ConstructionVisualRequests, Foo
 use crate::gui::WorldPresentationMode;
 use crate::render::extraction::{VegExtractRow, VegetationExtractFrame};
 use crate::render::world_map_front_mesh::FrontOverlaySources;
-use crate::render::world_map_vegetation_mesh::{cell_probability, cover_for_code, site_rand, Cover, VegLod};
+use crate::render::vegetation_species::{Maturity, VegSpeciesTable};
+use crate::render::world_map_vegetation_mesh::{sample_row_instances, Cover, VegInstance, VegLod};
 use crate::strategic::{ConstructionSite, PlannedSite, SiteArchetype, SiteConstructionPhase, SiteFootprint};
 use crate::terrain::generation::ChunkCellMatrix;
 use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
@@ -69,6 +71,8 @@ pub struct PixelWorldTreeChunk;
 pub(crate) struct TreeLayerState {
     material: Option<Handle<StandardMaterial>>,
     chunks: HashMap<IVec2, (Entity, u64)>,
+    /// Reused site buffer for chunk rebuilds.
+    scratch: Vec<VegInstance>,
 }
 
 /// Chunk meshes rebuilt per frame (nearest first); the rest wait a frame.
@@ -84,10 +88,13 @@ fn step_scale(step: u32) -> f32 {
     }
 }
 
-fn push_tree(buf: &mut MeshBuf, cover: Cover, at: Vec2, base: f32, k: f32, trunks: bool, rand: f32, burn_phase: u8) {
-    let j = 0.85 + 0.3 * rand;
-    let k = k * j;
-    let trunk_col = [0.30, 0.21, 0.13];
+const TRUNK_COL: [f32; 3] = [0.30, 0.21, 0.13];
+
+/// One plant as stacked voxel boxes. Shape (tiers, trunk, colours) comes from the species table through
+/// [`VegSpeciesTable::resolve_shape`]; `k` is the zoom-band scale and `trunks` is off on coarse bands, where
+/// the crown sits on the ground and still reads as forest.
+fn push_tree(buf: &mut MeshBuf, table: &VegSpeciesTable, inst: &VegInstance, base: f32, k: f32, trunks: bool) {
+    let at = inst.pos;
     let crown = |buf: &mut MeshBuf, w: f32, lo: f32, hi: f32, c: [f32; 3]| {
         let hw = w * 0.5;
         column(buf, at.x - hw, at.y - hw, at.x + hw, at.y + hw, base + lo, base + hi, shade(c, 1.08, 1.0), shade(c, 0.86, 1.0));
@@ -96,84 +103,77 @@ fn push_tree(buf: &mut MeshBuf, cover: Cover, at: Vec2, base: f32, k: f32, trunk
         let hw = w * 0.5;
         column(buf, at.x - hw, at.y - hw, at.x + hw, at.y + hw, base, base + hi, shade(c, 1.0, 1.0), shade(c, 0.8, 1.0));
     };
-    match cover {
-        Cover::OldGrowth => {
-            let lift = if trunks {
-                trunk(buf, 0.16 * k, 0.45 * k, trunk_col);
-                0.35 * k
-            } else {
-                0.0
-            };
-            crown(buf, 0.86 * k, lift, lift + 0.95 * k, [0.06, 0.24, 0.09]);
-            crown(buf, 0.48 * k, lift + 0.95 * k, lift + 1.25 * k, [0.09, 0.31, 0.12]);
+    // Fire states use the species' mature envelope; `hs` is its height against the reference oak (1.6).
+    let fire_shape = || table.resolve_shape(inst.species, Maturity::Old, inst.rand);
+    let kj = k * (0.85 + 0.3 * inst.rand);
+    match inst.cover {
+        Cover::OldGrowth | Cover::YoungForest => {
+            let sh = table.resolve_shape(inst.species, inst.cover.maturity(), inst.rand);
+            let lift = if trunks { sh.trunk_frac * sh.height * k } else { 0.0 };
+            if lift > 0.0 {
+                trunk(buf, sh.trunk_width * k, lift * 1.3, TRUNK_COL);
+            }
+            for (n, t) in sh.tiers().iter().enumerate() {
+                crown(buf, t.width * k, lift + t.lo * k, lift + t.hi * k, sh.tier_color(n));
+            }
         }
-        Cover::YoungForest => {
-            let lift = if trunks {
-                trunk(buf, 0.12 * k, 0.3 * k, trunk_col);
-                0.24 * k
-            } else {
-                0.0
-            };
-            crown(buf, 0.62 * k, lift, lift + 0.72 * k, [0.12, 0.36, 0.13]);
+        Cover::Shrub => {
+            let sh = table.resolve_shape(inst.species, Maturity::Shrub, inst.rand);
+            crown(buf, sh.crown_width * k, 0.0, sh.height * k, sh.crown);
         }
-        Cover::Shrub => crown(buf, 0.5 * k, 0.0, 0.36 * k, [0.36, 0.46, 0.18]),
         Cover::Grass => {}
         Cover::Burning => {
-            let flick = if burn_phase % 2 == 0 { 1.0 } else { 0.85 };
-            trunk(buf, 0.16 * k, 0.4 * k, [0.12, 0.09, 0.07]);
-            crown(buf, 0.78 * k, 0.3 * k, (0.3 + 0.85 * flick) * k, [1.0, 0.42, 0.08]);
-            crown(buf, 0.42 * k, (0.3 + 0.85 * flick) * k, (0.3 + 1.2 * flick) * k, [1.0, 0.82, 0.30]);
+            let sh = fire_shape();
+            let hs = sh.height / 1.6;
+            let flick = if inst.burn_phase % 2 == 0 { 1.0 } else { 0.85 };
+            trunk(buf, sh.trunk_width * k, 0.4 * k * hs, [0.12, 0.09, 0.07]);
+            crown(buf, 0.9 * sh.crown_width * k, 0.3 * k * hs, (0.3 + 0.85 * flick) * k * hs, [1.0, 0.42, 0.08]);
+            crown(buf, 0.5 * sh.crown_width * k, (0.3 + 0.85 * flick) * k * hs, (0.3 + 1.2 * flick) * k * hs, [1.0, 0.82, 0.30]);
         }
         Cover::Burnt => {
-            trunk(buf, 0.14 * k, 0.95 * k, [0.11, 0.09, 0.08]);
-            let arm = 0.28 * k;
-            column(buf, at.x - arm, at.y - 0.05 * k, at.x + arm, at.y + 0.05 * k, base + 0.6 * k, base + 0.68 * k, shade([0.11, 0.09, 0.08], 1.0, 1.0), shade([0.11, 0.09, 0.08], 0.8, 1.0));
+            let sh = fire_shape();
+            let hs = sh.height / 1.6;
+            trunk(buf, 0.9 * sh.trunk_width * k, 0.95 * k * hs, [0.11, 0.09, 0.08]);
+            let arm = 0.32 * sh.crown_width * k;
+            column(buf, at.x - arm, at.y - 0.05 * k, at.x + arm, at.y + 0.05 * k, base + 0.6 * k * hs, base + 0.68 * k * hs, shade([0.11, 0.09, 0.08], 1.0, 1.0), shade([0.11, 0.09, 0.08], 0.8, 1.0));
         }
-        Cover::Regrowth => crown(buf, 0.3 * k, 0.0, 0.26 * k, [0.45, 0.72, 0.30]),
+        Cover::Regrowth => crown(buf, 0.3 * kj, 0.0, 0.26 * kj, [0.45, 0.72, 0.30]),
     }
 }
 
-/// Voxel trees for one extract row (one sim chunk), cell by cell from the sim's per-cell codes.
-fn build_tree_chunk(row: &VegExtractRow, chunk: UVec2, lod: VegLod, field: &PixelWorldTerrainField) -> MeshBuf {
+/// Voxel trees for one extract row (one sim chunk). Sites come from the same sampler as the flat layer
+/// ([`sample_row_instances`]), so a plant keeps its tile, species and rand across the view toggle.
+pub(crate) fn build_tree_chunk(
+    row: &VegExtractRow,
+    chunk: UVec2,
+    lod: VegLod,
+    field: &PixelWorldTerrainField,
+    table: &VegSpeciesTable,
+    scratch: &mut Vec<VegInstance>,
+) -> MeshBuf {
     let mut buf = MeshBuf::default();
-    let Some(cells) = row.cells.as_deref().filter(|c| c.len() == (chunk.x * chunk.y) as usize) else {
+    if row.cells.as_deref().is_none_or(|c| c.len() != (chunk.x * chunk.y) as usize) {
         return buf;
-    };
+    }
     let step = match lod {
         VegLod::Wash => 8,
         other => other.step_tiles().max(1),
     };
     let k = step_scale(step);
     let trunks = step == 1;
-    let origin = IVec2::new(row.coord.x * chunk.x as i32, row.coord.y * chunk.y as i32);
-    let density = row.modifiers.mean_density;
-    let burn_phase = row.frame_index / 3;
-    for by in (0..chunk.y).step_by(step as usize) {
-        for bx in (0..chunk.x).step_by(step as usize) {
-            // One site per block, on a deterministic cell inside it.
-            let lx = (bx + (site_rand(row.coord, bx, by, 2) * step as f32) as u32).min(chunk.x - 1);
-            let ly = (by + (site_rand(row.coord, bx, by, 3) * step as f32) as u32).min(chunk.y - 1);
-            let Some(cover) = cover_for_code(cells[(ly * chunk.x + lx) as usize]) else {
-                continue;
-            };
-            if cover == Cover::Grass {
-                continue;
-            }
-            if site_rand(row.coord, bx, by, 1) >= cell_probability(cover, density).min(0.97) {
-                continue;
-            }
-            let (wx, wy) = (origin.x + lx as i32, origin.y + ly as i32);
-            let Some(i) = field.index(wx, wy) else {
-                continue;
-            };
-            if field.water[i].is_finite() {
-                continue;
-            }
-            let jx = 0.25 + 0.5 * site_rand(row.coord, bx, by, 5);
-            let jy = 0.25 + 0.5 * site_rand(row.coord, bx, by, 6);
-            let at = Vec2::new(wx as f32 + jx, wy as f32 + jy);
-            push_tree(&mut buf, cover, at, field.ground[i], k, trunks, site_rand(row.coord, bx, by, 4), burn_phase);
+    scratch.clear();
+    sample_row_instances(row, chunk, step, scratch);
+    for inst in scratch.iter() {
+        if inst.cover == Cover::Grass {
+            continue;
         }
+        let Some(i) = field.index(inst.pos.x.floor() as i32, inst.pos.y.floor() as i32) else {
+            continue;
+        };
+        if field.water[i].is_finite() {
+            continue;
+        }
+        push_tree(&mut buf, table, inst, field.ground[i], k, trunks);
     }
     buf
 }
@@ -182,6 +182,7 @@ fn tree_chunk_key(row: &VegExtractRow, lod: VegLod, field_rev: u64) -> u64 {
     let burn = if row.burn_active { u64::from(row.frame_index / 3) + 1 } else { 0 };
     mix64(
         u64::from(row.cells_rev)
+            ^ u64::from(row.species_rev).wrapping_mul(0xD6E8_FEB8_6659_FD93)
             ^ (lod as u64) << 32
             ^ burn << 40
             ^ field_rev.wrapping_mul(0x9E37_79B9)
@@ -196,6 +197,7 @@ pub(crate) fn sync_pixel_world_trees(
     cam: Res<PixelWorldCameraFrame>,
     field: Res<PixelWorldTerrainField>,
     veg: Option<Res<VegetationExtractFrame>>,
+    table: Res<VegSpeciesTable>,
     matrices: Query<&ChunkCellMatrix>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -207,6 +209,12 @@ pub(crate) fn sync_pixel_world_trees(
     let Some(veg) = veg else {
         return;
     };
+    if table.is_changed() {
+        // New species table: every chunk mesh is stale.
+        for (_, (e, _)) in state.chunks.drain() {
+            commands.entity(e).despawn();
+        }
+    }
     let chunk = matrices
         .iter()
         .next()
@@ -261,7 +269,7 @@ pub(crate) fn sync_pixel_world_trees(
             break;
         }
         budget -= 1;
-        let buf = build_tree_chunk(row, chunk, lod, field.as_ref());
+        let buf = build_tree_chunk(row, chunk, lod, field.as_ref(), &table, &mut state.scratch);
         if let Some((e, _)) = state.chunks.remove(&row.coord) {
             commands.entity(e).despawn();
         }
@@ -489,6 +497,8 @@ fn ghost_rgb(kind: FootprintTileColorKind) -> [f32; 3] {
 /// Ghost tiles cap (a drag can request thousands; the slab reads the same past this).
 const GHOST_TILE_CAP: usize = 6000;
 
+/// Paints ghost footprint + massing from [`ConstructionVisualRequests`] (**RO**).
+/// RND-09: prefer `massing_instances` when the sole writer packed a batch (≥ threshold).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn sync_pixel_world_ghost(
     mut commands: Commands,
@@ -511,7 +521,11 @@ pub(crate) fn sync_pixel_world_ghost(
     }
     let mut buf = MeshBuf::default();
     let lock: std::collections::HashSet<IVec2> = requests.footprint_lock_tiles.iter().copied().collect();
-    let massing: std::collections::HashSet<IVec2> = requests.massing_columns.iter().map(|c| c.tile).collect();
+    let massing: std::collections::HashSet<IVec2> = if !requests.massing_instances.is_empty() {
+        requests.massing_instances.iter().map(|c| c.tile).collect()
+    } else {
+        requests.massing_columns.iter().map(|c| c.tile).collect()
+    };
     for t in requests.footprint_tiles.iter().take(GHOST_TILE_CAP) {
         if massing.contains(&t.tile) {
             continue;
@@ -528,14 +542,47 @@ pub(crate) fn sync_pixel_world_ghost(
         let (x0, y0) = (t.tile.x as f32 + 0.04, t.tile.y as f32 + 0.04);
         column(&mut buf, x0, y0, x0 + 0.92, y0 + 0.92, s + 0.02, s + lift, shade(rgb, 1.1, a), shade(rgb, 0.9, a));
     }
-    for c in requests.massing_columns.iter().take(GHOST_TILE_CAP) {
-        let Some(s) = field.surface_at_cell(c.tile.x, c.tile.y) else {
-            continue;
-        };
-        let rgb = ghost_rgb(c.color_kind);
-        let a = (0.3 + 0.4 * c.weight).min(0.7);
-        let (x0, y0) = (c.tile.x as f32 + 0.03, c.tile.y as f32 + 0.03);
-        column(&mut buf, x0, y0, x0 + 0.94, y0 + 0.94, s + 0.02, s + f32::from(c.floors.max(1)) * 0.9, shade(rgb, 1.1, a), shade(rgb, 0.85, a));
+    // RND-09 batch path: one mesh, many instance rows (gea4v2 11.3.8.2).
+    if !requests.massing_instances.is_empty() {
+        for c in requests.massing_instances.iter().take(GHOST_TILE_CAP) {
+            let Some(s) = field.surface_at_cell(c.tile.x, c.tile.y) else {
+                continue;
+            };
+            let rgb = ghost_rgb(c.color_kind);
+            let a = (0.3 + 0.4 * c.weight).min(0.7);
+            let (x0, y0) = (c.tile.x as f32 + 0.03, c.tile.y as f32 + 0.03);
+            column(
+                &mut buf,
+                x0,
+                y0,
+                x0 + 0.94,
+                y0 + 0.94,
+                s + 0.02,
+                s + f32::from(c.floors.max(1)) * 0.9,
+                shade(rgb, 1.1, a),
+                shade(rgb, 0.85, a),
+            );
+        }
+    } else {
+        for c in requests.massing_columns.iter().take(GHOST_TILE_CAP) {
+            let Some(s) = field.surface_at_cell(c.tile.x, c.tile.y) else {
+                continue;
+            };
+            let rgb = ghost_rgb(c.color_kind);
+            let a = (0.3 + 0.4 * c.weight).min(0.7);
+            let (x0, y0) = (c.tile.x as f32 + 0.03, c.tile.y as f32 + 0.03);
+            column(
+                &mut buf,
+                x0,
+                y0,
+                x0 + 0.94,
+                y0 + 0.94,
+                s + 0.02,
+                s + f32::from(c.floors.max(1)) * 0.9,
+                shade(rgb, 1.1, a),
+                shade(rgb, 0.85, a),
+            );
+        }
     }
     let material = state
         .material
@@ -811,5 +858,101 @@ pub(crate) fn sync_pixel_world_paths(
                     .id(),
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::render::extraction::VegExtractModifiers;
+    use crate::render::pixel_world::field::NO_WATER;
+    use crate::render::world_map_vegetation_mesh::build_vegetation_geometry;
+    use crate::systems::ecology::{SuccessionTopologyStage, CELL_OLD};
+
+    const CHUNK: u32 = 32;
+
+    fn row(species: impl Fn(u32) -> u8) -> VegExtractRow {
+        let n = (CHUNK * CHUNK) as usize;
+        VegExtractRow {
+            coord: IVec2::ZERO,
+            planning_glyph: '#',
+            extract_glyph: '#',
+            modifiers: VegExtractModifiers { burn_active: false, mean_density: 0.9 },
+            variant_key: "veg_topo_patch".to_owned(),
+            succession_stage: SuccessionTopologyStage::OldGrowth,
+            burn_active: false,
+            frame_index: 0,
+            cells: Some(vec![CELL_OLD; n].into()),
+            cells_rev: 1,
+            species: Some((0..n as u32).map(|i| species(i % CHUNK)).collect()),
+            species_rev: 1,
+        }
+    }
+
+    fn flat_field() -> PixelWorldTerrainField {
+        let mut f = PixelWorldTerrainField::default();
+        f.width = CHUNK;
+        f.height = CHUNK;
+        f.ground = vec![0.0; (CHUNK * CHUNK) as usize];
+        f.water = vec![NO_WATER; (CHUNK * CHUNK) as usize];
+        f
+    }
+
+    fn build(row: &VegExtractRow, lod: VegLod) -> (MeshBuf, usize) {
+        let mut scratch = Vec::new();
+        let buf = build_tree_chunk(row, UVec2::splat(CHUNK), lod, &flat_field(), &VegSpeciesTable::default(), &mut scratch);
+        (buf, scratch.len())
+    }
+
+    #[test]
+    fn voxel_and_tactical_place_the_same_plants() {
+        let r = row(|_| 0);
+        let (buf, n) = build(&r, VegLod::Fine);
+        assert!(n > 100 && !buf.is_empty());
+        let (flat, _) = build_vegetation_geometry(
+            std::slice::from_ref(&r),
+            UVec2::splat(CHUNK),
+            VegLod::Fine,
+            None,
+            &VegSpeciesTable::default(),
+        );
+        assert_eq!(flat.symbols, n, "one sampler: same site count in both views");
+    }
+
+    #[test]
+    fn species_changes_shape_not_placement() {
+        let t = VegSpeciesTable::default();
+        let spruce = t.species.iter().position(|s| s.id == "spruce").unwrap() as u8;
+        let oak = t.species.iter().position(|s| s.id == "oak").unwrap() as u8;
+        let (b_oak, n_oak) = build(&row(|_| oak), VegLod::Fine);
+        let (b_spruce, n_spruce) = build(&row(|_| spruce), VegLod::Fine);
+        assert_eq!(n_oak, n_spruce);
+        // Fine band: oak = trunk + 3 tiers, spruce = trunk + 4 tiers, 20 vertices per open box.
+        assert_eq!(b_oak.positions.len(), n_oak * 4 * 20);
+        assert_eq!(b_spruce.positions.len(), n_spruce * 5 * 20);
+        // Spruce is taller than oak: its highest vertex is higher.
+        let top = |b: &MeshBuf| b.positions.iter().map(|p| p[1]).fold(f32::MIN, f32::max);
+        assert!(top(&b_spruce) > top(&b_oak));
+    }
+
+    #[test]
+    fn mixed_stand_builds_both_shapes_deterministically() {
+        let r = row(|x| if x < 16 { 0 } else { 2 });
+        let (a, _) = build(&r, VegLod::Fine);
+        let (b, _) = build(&r, VegLod::Fine);
+        assert_eq!(a.positions, b.positions);
+        let (oak, _) = build(&row(|_| 0), VegLod::Fine);
+        let (spruce, _) = build(&row(|_| 2), VegLod::Fine);
+        assert!(a.positions.len() > oak.positions.len() && a.positions.len() < spruce.positions.len());
+    }
+
+    #[test]
+    fn coarse_band_drops_trunks_but_keeps_species_tiers() {
+        let (fine, nf) = build(&row(|_| 2), VegLod::Fine);
+        let (tree, nt) = build(&row(|_| 2), VegLod::Tree);
+        assert!(nf > nt && !tree.is_empty());
+        // Tree band (step 2): no trunk box, four tiers per plant.
+        assert_eq!(tree.positions.len(), nt * 4 * 20);
+        assert_eq!(fine.positions.len(), nf * 5 * 20);
     }
 }

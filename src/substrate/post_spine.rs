@@ -15,7 +15,8 @@ pub struct PostSpineStats {
     pub logistics_pressure_on_slab: bool,
     pub regional_weather_wired: bool,
     pub climate_seed_present: bool,
-    pub weather_runbook_phase2_green: bool,
+    /// W7 — factual AND of the three phase-2 components (not a `*_green` predicate).
+    pub weather_runbook_phase2_ready: bool,
     pub logistics_pressure_sample: f32,
     pub regional_weather_sample: f32,
 }
@@ -179,13 +180,13 @@ pub fn compute_post_spine_witness(
         .map(climate_seed_present)
         .unwrap_or(false);
     let logistics_pressure_on_slab = congestion > 0.01;
-    let weather_runbook_phase2_green =
+    let weather_runbook_phase2_ready =
         regional_weather_wired && logistics_pressure_on_slab && climate_seed_present;
     PostSpineStats {
         logistics_pressure_on_slab,
         regional_weather_wired,
         climate_seed_present,
-        weather_runbook_phase2_green,
+        weather_runbook_phase2_ready,
         logistics_pressure_sample: congestion,
         regional_weather_sample: regional,
     }

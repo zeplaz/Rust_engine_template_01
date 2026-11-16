@@ -139,6 +139,9 @@ pub fn build_sim_attention_frame(
     view_auth: Option<Res<ViewProjectionAuthority>>,
     mission_book: Option<Res<MissionBook>>,
     fire_chunks: Query<(&Chunk, &ChunkSurfaceFire)>,
+    // DH-03b: RO dense heat — elevates foci / path budget; never writes heat.
+    dense_heat: Option<Res<crate::compute::DenseHeatPlayField>>,
+    heat_field: Option<Res<crate::compute::HeatDiffusionFieldBuffers>>,
 ) {
     frame.tick = tick.0;
     frame.sim_steps = clock.steps;
@@ -210,6 +213,45 @@ pub fn build_sim_attention_frame(
                 tier: AttentionTier::Full,
             });
         }
+    }
+
+    // DH-03b: dense heat RO — hot cells add Aggregate foci; active heat bumps path budget.
+    let mut dense_hot = 0u32;
+    if let Some(play) = dense_heat.as_deref() {
+        if let Some(grid) = play.grid.as_ref() {
+            for y in 0..grid.height {
+                for x in 0..grid.width {
+                    let i = grid.idx(x, y);
+                    if grid.heat[i] <= 0.12 {
+                        continue;
+                    }
+                    dense_hot = dense_hot.saturating_add(1);
+                    let chunk = grid.origin + IVec2::new(x as i32, y as i32);
+                    let xz = Vec2::new(chunk.x as f32, chunk.y as f32) * CHUNK_SPACING_WORLD;
+                    frame.foci.push(SimAttentionFocus {
+                        world_xz: xz,
+                        radius_world: CHUNK_SPACING_WORLD,
+                        tier: AttentionTier::Aggregate,
+                    });
+                }
+            }
+        }
+    } else if let Some(field) = heat_field.as_deref() {
+        for cell in field.read_cells() {
+            if cell.heat <= 0.12 {
+                continue;
+            }
+            dense_hot = dense_hot.saturating_add(1);
+            let xz = Vec2::new(cell.chunk.x as f32, cell.chunk.y as f32) * CHUNK_SPACING_WORLD;
+            frame.foci.push(SimAttentionFocus {
+                world_xz: xz,
+                radius_world: CHUNK_SPACING_WORLD,
+                tier: AttentionTier::Aggregate,
+            });
+        }
+    }
+    if dense_hot > 0 {
+        frame.budget_path_units = frame.budget_path_units.saturating_add(16).min(128);
     }
 }
 

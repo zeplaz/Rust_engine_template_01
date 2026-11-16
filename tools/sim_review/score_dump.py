@@ -254,6 +254,46 @@ def _perf_section(perf: dict) -> str:
     )
 
 
+def _quadrants_story(dump: dict | None) -> str:
+    if not dump:
+        return ""
+    q = dump.get("quadrants")
+    if not isinstance(q, dict):
+        return ""
+    cols = ("nw", "ne", "sw", "se")
+    headers = (
+        "<tr><th>quadrant</th><th>fire heat</th><th>burning veg</th><th>sites</th>"
+        "<th>lake∩river</th><th>wetland</th><th>rain01 @ center</th></tr>"
+    )
+    rows = []
+    for key in cols:
+        block = q.get(key) or {}
+        rain = block.get("rain_at_center") or {}
+        lake_att = block.get("lake_river_attached", "")
+        if key == "se":
+            wetland = block.get("wetland_near_water", block.get("wetland_cells"))
+        else:
+            wetland = block.get("wetland_cells")
+        rows.append(
+            f"<tr><td>{key.upper()}</td>"
+            f"<td>{block.get('fire_heat_cells')}</td>"
+            f"<td>{block.get('veg_burning_cells')}</td>"
+            f"<td>{block.get('sites')}</td>"
+            f"<td>{lake_att if key == 'sw' else '—'}</td>"
+            f"<td>{wetland}</td>"
+            f"<td>{rain.get('rain01')}</td></tr>"
+        )
+    nw_fire = (q.get("nw") or {}).get("fire_heat_cells")
+    out = (
+        "<h2>PlayQuad quadrant story (PQ-R3 report)</h2>"
+        "<p>Rain at quadrant centre vs NW fire — emergent interaction, not pass/fail.</p>"
+        "<table>" + headers + "".join(rows) + "</table>"
+        f"<p>NW fire heat cells: <b>{nw_fire}</b> · global wetland: {q.get('global_wetland_cells')} · "
+        f"SE wetland near water: {q.get('se_wetland_near_water')}</p>"
+    )
+    return out
+
+
 def _kv(title: str, d: dict | None) -> str:
     if not isinstance(d, dict):
         return ""
@@ -274,6 +314,15 @@ def _sections(dump: dict | None) -> str:
         ("logistics", "Logistics"),
         ("combat", "Fronts / combat"),
         ("fire", "Fire / ecology (first/last/min/max)"),
+        ("atmosphere", "Atmosphere (L0 writers / revision; `stubs` keys are 0 = not wired)"),
+        (
+            "presentation",
+            "Voxel / massing presentation (PCG-06; `massing_*` are column stack counts)",
+        ),
+        (
+            "occupation",
+            "Voxel occupation (PCG-06 · ECS-15; `voxel_*` counts only, no *_green)",
+        ),
     ):
         out.append(_kv(title, dump.get(key)))
     ai = dump.get("ai") or {}
@@ -287,6 +336,7 @@ def _sections(dump: dict | None) -> str:
         f"<th>deployment</th><th>build</th><th>last goal</th></tr>{ai_rows}</table></div>"
     )
     out.append("</div>")
+    out.append(_quadrants_story(dump))
     out.append(_perf_section(dump.get("perf") or {}))
     out.append("<h2>time series</h2><table>")
     hist = dump.get("history") or []

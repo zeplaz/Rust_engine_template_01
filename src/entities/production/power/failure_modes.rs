@@ -19,7 +19,6 @@ use crate::entities::production::power::plant_registry::PlantDefinitionRegistry;
 use crate::entities::production::power::power_states::PowerPlantType;
 use crate::entities::types::{EmergencyType, OperationalStatus};
 use crate::infrastructure::{UtilityConnection, UtilityNetworkKind};
-use crate::systems::sim_control::SimTimeMicros;
 use crate::systems::weather::WeatherPollingStations;
 
 /// Placeholder: steam leak, condenser vacuum, feedwater chemistry — adjust `efficiency` or `status` later.

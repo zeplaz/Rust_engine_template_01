@@ -142,6 +142,7 @@ mod tests {
                 preview_color: [10, 20, 30, 255],
             }],
             name_to_id: HashMap::from([("grass_default".into(), crate::terrain::material::MaterialId(0))]),
+            collision: Vec::new(),
         };
         (families, reg)
     }
