@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-UNIT-MEMBER-v1** |
-| **Status** | **PROGRAM CLOSE** — **UM-05/06/07/10 ADOPTED** (MOVE-05/06/07 · TAC-10) |
+| **Status** | **REOPENED 2026-11-16** — member systems tick on zero entities (spawn is test-only); TAC-10 type is doc-only. **MOVE-05 → PARTIAL**, **TAC-10 → UNWIRED** · cleanup **CQ-54, CQ-57n** |
 | **Date** | 2026-11-15 |
 | **Owner** | `@planner` → `@coder` |
 | **Parents** | [`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) W1 · PLAN-FRONT-COMBAT FC-5/6 · v3 PROGRAM CLOSE |
@@ -13,6 +13,20 @@
 **Trigger to start UM-05:** Front combat wants **visible unit positions** (not one Formation blob / `faction_slot`).
 
 ---
+
+## Review 2026-11-16 — reopened
+
+> Operator code review of the Cursor wave ([`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md)). **Operator choice pending:** are individual soldiers drawn on the map? If yes, wire spawn + instanced draw; if no, unschedule the member systems.
+
+| Finding | Evidence | Fix |
+|:---|:---|:---|
+| No members in play | `spawn_formation_with_members` / `spawn_formation_members` called only from a test (`formation_members.rs:313`); 4 systems scheduled (`combat/mod.rs:230-233`) on empty queries | Spawn members in the formation spawn path (CQ-54) |
+| Overwatch role thrashes | `OverwatchRole` flips every tick while `target` set; nothing reads it | Phase timer + a reader, or remove the role |
+| Spacing | `potential_field_navigation_system` (separation/avoid/arbitrate) is never scheduled | Use the CQ-53 steering layer for member spacing |
+| Not visible | formations render as front ribbons/tiles only (`render/world_map_front_mesh.rs`) | GPU-instanced member sprites |
+| TAC-10 doc-only | `CombatAuthorityTier` has no reader | Delete (CQ-57n) |
+
+**Close again only when:** members exist in a normal scenario run, move by the shared steering layer, and are visible (or the operator chose "no members" and the systems are unscheduled). Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 
 ## Authority (frozen)
 
@@ -119,3 +133,4 @@
 | 1.2.0 | 2026-11-15 | **UM-06 ADOPTED** — `assign_slots_by_cost`; Accept `--lib move06`; MOVE-06 ledger. |
 | 1.3.0 | 2026-11-15 | **UM-07 ADOPTED** — `OverwatchRole` + `bounding_overwatch_tick_system`; Accept `--lib move07`; MOVE-07 ledger. |
 | 1.4.0 | 2026-11-15 | **UM-10 ADOPTED** — `tier_handoff.rs` + `tac10` tripwire; Accept `--lib tac10`; TAC-10 ledger. **PROGRAM CLOSE**. |
+| 1.5.0 | 2026-11-16 | **REOPENED** — review: members never spawned in play, overwatch thrash, TAC-10 doc-only; MOVE-05 → PARTIAL; cleanup CQ-54. |

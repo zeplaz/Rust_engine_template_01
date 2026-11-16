@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-DEFER-UNLOCK-v1** |
-| **Status** | **PARTIAL CLOSE** — W1 · W2 · W3 TAC-05 · PCG-03 **shipped**; residual CONDITIONAL (TAC-03 dense) + evidence DEFERs |
+| **Status** | **REOPENED 2026-11-16** — review re-graded W1/W2/W3 claims: TAC-03 PARTIAL, MOVE-10/PCG-07 UNWIRED, MOVE-05/TAC-05 PARTIAL, RND-07 evidence retracted. See Review + cleanup plan §5. |
 | **Date** | 2026-11-15 |
 | **Parents** | [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) (**PROGRAM CLOSE**) · [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) §8 · [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md) |
 | **Child charters** | [`plan_unit_member_v1.md`](plan_unit_member_v1.md) · [`plan_town_growth_v1.md`](plan_town_growth_v1.md) **TWN-PCG07** · [`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md) **OCC-P4…P6** · [`plan_dense_heat_wgsl_v1.md`](plan_dense_heat_wgsl_v1.md) (conditional) |
@@ -12,6 +12,23 @@
 **Deferrals:** cite **DR-BOOKS-DEFER-UNLOCK** · **DR-BOOKS-UNIT-MEMBER** · **DR-BOOKS-TAC03-DENSE**.
 
 ---
+
+## Review 2026-11-16 — reopened
+
+> Operator code review of the Cursor wave ([`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md)). Re-grades below are mirrored in `ref_books_index/adoption.tsv`.
+
+| Row | Was | Now | Why | Cleanup |
+|:---|:---|:---|:---|:---|
+| TAC-03 | ADOPTED | PARTIAL | GPU dispatch/readback missing; parity test tautological | CQ-50 |
+| MOVE-10 | ADOPTED | UNWIRED | herd never seeded in play; soft cost unread | CQ-51/52 |
+| MOVE-05 (UM-05) | ADOPTED | PARTIAL | member systems run on zero entities | CQ-54 |
+| TAC-10 | ADOPTED | UNWIRED | `CombatAuthorityTier` doc-only | CQ-57n (delete) |
+| PCG-07 | ADOPTED | UNWIRED | road skeleton no production caller | CQ-57g |
+| TAC-05 | ADOPTED | PARTIAL | decide consumer real; fort path passes `None` (`fortification.rs:157`) | CQ-58 |
+| RND-07 | DEFER (HOLD) | DEFER (no evidence) | "profile run" was a unit test on `Stage6VirtualizationFrame::default()` (all zeros); verdict code is test-shaped | CQ-31 |
+| PCG-03 / TAC-05 "user world-look sign-off" | — | unverified | no record in repo; erosion also loses mass (`erosion.rs:66-67,91-92`) | CQ-04, CQ-84 |
+
+**Close again only when:** each row above has a production caller `file:line` (or a real profile from a play run for RND-07). Every ADOPTED claim cites a production caller `file:line` (a test alone does not count).
 
 ## 0. Master DAG
 
@@ -179,3 +196,4 @@ PARTIAL ≠ broken. Unlock only via [`plan_dense_heat_wgsl_v1.md`](plan_dense_he
 |:---|:---|:---|
 | 1.0.0 | 2026-11-15 | Initial unlock roadmap. |
 | 1.1.0 | 2026-11-15 | Full waves + slice cards; child charters; master DAG; OCC parallel. |
+| 1.2.0 | 2026-11-16 | **REOPENED** — review re-grades TAC-03/MOVE-10/MOVE-05/TAC-10/PCG-07/TAC-05/RND-07; see cleanup plan §5. |

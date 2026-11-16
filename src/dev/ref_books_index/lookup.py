@@ -27,7 +27,8 @@ BOOK_DIR = os.environ.get("REF_BOOKS_DIR", r"$REF_BOOKS_DIR")
 LEGACY_LOOKUP_DIR = os.environ.get("REF_BOOKS_LEGACY_LOOKUP_DIR", r"$REF_BOOKS_DIR\lookup")
 CACHE_DIR = os.path.join(REPO, "debug_runs", "ref_books_cache")
 ADOPTION_PATH = os.path.join(HERE, "adoption.tsv")
-STATUSES = {"OPEN", "ADOPTED", "PARTIAL", "DEFER", "REJECTED"}
+# UNWIRED = code exists but no production caller (review 2026-11-16); ADOPTED requires a prod caller.
+STATUSES = {"OPEN", "ADOPTED", "PARTIAL", "UNWIRED", "DEFER", "REJECTED"}
 BOOKS = {
     "gea4v1": ("GEA 4e Vol I", "game-engine-architecture-volume-i-foundations-and-core-engine-systems-4_compress.pdf"),
     "gea4v2": ("GEA 4e Vol II", "Game Engine Architecture Volume II_ Graphics_ Motion_ and Sound_ 4th Edition.sanet.st.pdf"),
