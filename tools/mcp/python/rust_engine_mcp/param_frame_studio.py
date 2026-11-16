@@ -263,33 +263,27 @@ def write_param_frame(frame: dict[str, Any], path: Path) -> Path:
 
 
 def pcg08_promote_gate_snapshot(*, repo: Path | None = None) -> dict[str, Any]:
-    """PCG-08 witness gate — escalate / kit promote paths consult this; frame edit does not."""
+    """Optional PCG-08 status for UI chrome (CQ-32: no longer blocks enqueue)."""
     report = building_quality_qc.load_pcg08_report(repo=repo)
     if not report:
         return {
             "ok": False,
-            "blocked_by": "PCG-08-missing-witness",
+            "blocked_by": "PCG-08-missing-report",
             "hint": "Run: python -m rust_engine_mcp.cli generate-and-test-report",
         }
     try:
         pass_rate = float(report.get("pass_rate") or 0.0)
     except (TypeError, ValueError):
         pass_rate = 0.0
-    if pass_rate <= 0.0:
-        return {
-            "ok": False,
-            "blocked_by": "PCG-08-zero-pass-rate",
-            "pass_rate": pass_rate,
-            "hint": "Refresh generate-and-test-report before promote/escalate.",
-        }
-    return {"ok": True, "pass_rate": pass_rate, "task_id": report.get("task_id")}
+    return {
+        "ok": pass_rate > 0.0,
+        "pass_rate": pass_rate,
+        "task_id": report.get("task_id"),
+    }
 
 
 def enqueue_param_frame_task(frame_path: Path, *, task_id: str | None = None, seed: int | None = None) -> dict[str, Any]:
-    """Queue StudioTask — blocked when PCG-08 gate is red (same bar as kit promote)."""
-    gate = pcg08_promote_gate_snapshot()
-    if not gate.get("ok"):
-        raise ValueError(gate.get("hint") or gate.get("blocked_by"))
+    """Queue StudioTask for a param frame (CQ-32: enqueue is not gated on PCG-08)."""
     data = load_param_frame(frame_path)
     rel = frame_path
     root = repo_root()

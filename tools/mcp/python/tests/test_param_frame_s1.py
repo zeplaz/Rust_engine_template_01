@@ -51,16 +51,21 @@ def test_toggle_connection_graph_id() -> None:
     assert "test_graph_link_v1" in after or "test_graph_link_v1" not in before
 
 
-def test_pcg08_gate_blocks_enqueue_without_witness(monkeypatch, tmp_path) -> None:
+def test_enqueue_param_frame_without_pcg08_gate(monkeypatch, tmp_path) -> None:
+    """CQ-32: enqueue must not require a PCG-08 witness."""
     monkeypatch.setattr(building_quality_qc, "load_pcg08_report", lambda **_: None)
+    tasks_dir = tmp_path / "tasks"
+    tasks_dir.mkdir(parents=True, exist_ok=True)
+    monkeypatch.setattr(studio_task, "studio_tasks_dir", lambda: tasks_dir)
     frame = param_frame_studio.load_param_frame()
-    path = tmp_path / "gate_test_frame.json"
+    path = tmp_path / "ungated_frame.json"
     param_frame_studio.write_param_frame(frame, path)
-    with pytest.raises(ValueError, match="generate-and-test"):
-        param_frame_studio.enqueue_param_frame_task(path)
+    task = param_frame_studio.enqueue_param_frame_task(path, task_id="s1_ungated_test")
+    assert task["kind"] == "param_frame"
+    assert task["status"] == "queued"
 
 
-def test_pcg08_gate_allows_enqueue_with_witness(monkeypatch, tmp_path) -> None:
+def test_enqueue_param_frame_still_queues_when_pcg08_green(monkeypatch, tmp_path) -> None:
     monkeypatch.setattr(
         building_quality_qc,
         "load_pcg08_report",

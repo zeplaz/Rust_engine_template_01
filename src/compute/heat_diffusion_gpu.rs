@@ -9,7 +9,6 @@ use bevy::math::IVec2;
 use bevy::prelude::*;
 
 use crate::render::extraction::sim_visual_extract::ChunkFireHeat;
-use crate::render::ClimateVisualAggregate;
 use crate::systems::sim_control::SimStepStamp;
 
 use super::heat_diffusion::{HeatDiffusionCell, HeatDiffusionFieldBuffers};
@@ -145,8 +144,8 @@ pub fn advance_dense_heat_play(
     if let Some(grid) = play.grid.as_mut() {
         run_dense_heat_step(grid, &eligible);
         // DH-03a: weather RO (wind advection + rain damp) after diffusion/sources.
-        if let Some(climate) = ctx.climate {
-            apply_climate_to_dense_heat(grid, climate);
+        if let Some(wx) = ctx.atmosphere_wx {
+            apply_climate_to_dense_heat(grid, wx);
         }
     }
     let cells = play

@@ -76,6 +76,15 @@ class DashboardPanel(ttk.Frame):
         massing = root / "debug_runs" / "studio_dash" / "massing_preview.json"
         if massing.is_file():
             out.append(massing)
+        # CQ-12: surface StudioTask JSON so handoff can use Treeview selection.
+        try:
+            from rust_engine_mcp import studio_task
+
+            tasks_dir = studio_task.studio_tasks_dir()
+            if tasks_dir.is_dir():
+                out.extend(sorted(tasks_dir.glob("*.json"))[:40])
+        except Exception:  # noqa: BLE001
+            pass
         for base in candidates:
             if not base.is_dir():
                 continue
@@ -179,10 +188,26 @@ class DashboardPanel(ttk.Frame):
     def _handoff(self) -> None:
         from rust_engine_mcp import studio_task
 
-        tasks = studio_task.list_tasks(limit=1)
-        if not tasks:
-            self._log("Dashboard: no StudioTasks to hand off — enqueue first")
+        # CQ-12: hand off the Treeview selection (StudioTask JSON), not "most recent".
+        path = self._selected_path()
+        tid: str | None = None
+        if path is not None and path.suffix.lower() == ".json":
+            try:
+                data = json.loads(path.read_text(encoding="utf-8"))
+                if isinstance(data, dict) and data.get("task_id"):
+                    tid = str(data["task_id"])
+                elif path.parent.name == "studio_tasks":
+                    tid = path.stem
+            except Exception:  # noqa: BLE001
+                if path.parent.name == "studio_tasks":
+                    tid = path.stem
+        if not tid:
+            self._log(
+                "Dashboard: select a StudioTask JSON in the list, then Blender handoff"
+            )
             return
-        tid = tasks[0]["task_id"]
+        if studio_task.read_task(tid) is None:
+            self._log(f"Dashboard: no StudioTask for selection {tid!r}")
+            return
         marker = studio_task.blender_handoff_marker(tid)
         self._log(f"Dashboard: Blender handoff → {marker}")

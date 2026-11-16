@@ -14,7 +14,7 @@ use crate::terrain::generation::chunk_world_center;
 use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
 
 use super::diagnostics::AtmosphereDiagnostics;
-use super::field::{ATMO_GRID_ORIGIN, ATMO_GRID_SIZE};
+use super::field::ATMO_GRID_ORIGIN;
 use super::frame::AtmosphereFrame;
 use super::pipeline::AtmospherePipelineSet;
 
@@ -57,8 +57,10 @@ pub struct WeatherSourceTerms {
     pub firestorm_plumes: u32,
     /// Dump: peak `plume_updraft_mps` over plume cores.
     pub plume_updraft_peak_mps: f32,
-    /// Dump: sum of moisture terms written this build.
+    /// Pre-solve proposed moisture from fire coupling (CQ-36).
     pub pyro_moisture_injected: f32,
+    /// Solve-applied moisture written only by weather advance (CQ-36).
+    pub pyro_moisture_applied: f32,
     /// Dump: sum of cloud lift applied by the last weather solve that read these terms.
     pub pyro_cloud_delta: f32,
     /// Dump: L0 tiles with smoke+cloud both above threshold.
@@ -89,9 +91,9 @@ impl WeatherSourceTerms {
         }
     }
 
-    /// Record cloud / moisture actually applied by a weather solve.
-    pub fn record_solve_deltas(&mut self, moisture_injected: f32, cloud_delta: f32) {
-        self.pyro_moisture_injected = moisture_injected;
+    /// Record cloud / moisture actually applied by a weather solve (does not overwrite proposed).
+    pub fn record_solve_deltas(&mut self, moisture_applied: f32, cloud_delta: f32) {
+        self.pyro_moisture_applied = moisture_applied;
         self.pyro_cloud_delta = cloud_delta;
     }
 }
@@ -258,11 +260,12 @@ pub fn build_weather_source_terms(
         terms.firestorm_plumes = 0;
         terms.plume_updraft_peak_mps = 0.0;
         terms.pyro_moisture_injected = 0.0;
-        // Keep last solve deltas; overlap still readable from frame.
+        // Keep last solve-applied deltas; overlap still readable from frame.
         terms.smoke_cloud_overlap_cells = count_smoke_cloud_overlap(&frame);
         diag.smoke_cloud_overlap_cells = terms.smoke_cloud_overlap_cells;
         diag.firestorm_plumes = 0;
         diag.plume_updraft_peak_mps = 0.0;
+        // CQ-36: diagnostics hold solve-applied only — leave pyro_moisture_injected alone here.
         return;
     };
 
@@ -286,16 +289,14 @@ pub fn build_weather_source_terms(
     terms.cells = cells;
     terms.firestorm_plumes = plumes;
     terms.plume_updraft_peak_mps = peak_up;
-    // Pre-solve estimate; overwritten by `weather_field_step` when a solve applies terms.
+    // CQ-36: pre-solve proposed on terms only; diag gets applied from weather solve.
     terms.pyro_moisture_injected = moisture_sum;
     terms.smoke_cloud_overlap_cells = count_smoke_cloud_overlap(&frame);
     terms.builds = terms.builds.wrapping_add(1);
 
     diag.firestorm_plumes = plumes;
     diag.plume_updraft_peak_mps = peak_up;
-    diag.pyro_moisture_injected = moisture_sum;
     diag.smoke_cloud_overlap_cells = terms.smoke_cloud_overlap_cells;
-    let _ = ATMO_GRID_SIZE; // keep grid contract visible to reviewers
 }
 
 pub fn coupling_terms_systems(app: &mut App) {

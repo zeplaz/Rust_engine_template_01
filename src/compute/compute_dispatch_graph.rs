@@ -147,8 +147,8 @@ pub struct ComputeContext<'a> {
     pub agents: &'a AgentFrame,
     pub navigation: &'a NavFieldFrame,
     pub fire: &'a FireSimulationSnapshot,
-    /// DH-03a: RO climate means (wind/rain) for dense heat — never writes weather.
-    pub climate: Option<&'a crate::render::ClimateVisualAggregate>,
+    /// DH-03a / CQ-37: RO atmosphere weather means for dense heat — never writes weather.
+    pub atmosphere_wx: Option<&'a crate::systems::atmosphere::AtmosphereWeatherMeans>,
     /// FIDELITY-1 B6: soft cap from [`crate::systems::sim_attention::SimAttentionFrame::budget_path_units`].
     pub path_budget: u32,
 }
@@ -237,7 +237,7 @@ pub fn run_compute_dispatch_graph(
     lod: Res<WorldRepresentationFrame>,
     lod_map: Res<WorldLodMap>,
     fire: Res<FireSimulationSnapshot>,
-    climate: Option<Res<crate::render::ClimateVisualAggregate>>,
+    atmosphere: Option<Res<crate::systems::atmosphere::AtmosphereFrame>>,
     attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
     mut agents: ResMut<AgentFrame>,
     mut navigation: ResMut<NavFieldFrame>,
@@ -270,7 +270,7 @@ pub fn run_compute_dispatch_graph(
         agents: &agents,
         navigation: &navigation,
         fire: &fire,
-        climate: climate.as_deref(),
+        atmosphere_wx: atmosphere.as_ref().map(|a| a.weather_means()),
         path_budget,
     };
     graph.dispatch(&ctx);

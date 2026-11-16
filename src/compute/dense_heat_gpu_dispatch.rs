@@ -548,8 +548,8 @@ pub fn advance_dense_heat_play_gpu_or_cpu(
 
     if !gpu_primary {
         run_dense_heat_step(grid, &eligible);
-        if let Some(climate) = ctx.climate {
-            apply_climate_to_dense_heat(grid, climate);
+        if let Some(wx) = ctx.atmosphere_wx {
+            apply_climate_to_dense_heat(grid, wx);
         }
         let cells = pack_dense_to_cells(grid);
         let write = field.write_cells_mut_pub();
@@ -574,8 +574,8 @@ pub fn advance_dense_heat_play_gpu_or_cpu(
         .map(|r| (r.chunk, r.heat, r.smoke))
         .collect();
     let (wind, rain) = ctx
-        .climate
-        .map(|c| (c.mean_wind_mps, c.mean_rain))
+        .atmosphere_wx
+        .map(|w| (w.wind_mps, w.rain01))
         .unwrap_or((Vec2::ZERO, 0.0));
     *job = DenseHeatGpuJob {
         active: true,

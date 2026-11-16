@@ -38,7 +38,7 @@ pub use per_view_policy::PerViewRepresentationPolicy;
 pub use tonemap_hdr::{
     hdr_pipeline_index_for_target, is_display_referred_sdr_format, map_view_display_format,
     map_view_skips_filmic_tonemap, ViewToneMapPolicy, MAP_VIEW_TONE_MAP_POLICY,
-    PIXEL_WORLD_TONEMAPPING_NONE_TOKEN, PIXEL_WORLD_TONE_MAP_POLICY,
+    PIXEL_WORLD_TONE_MAP_POLICY,
 };
 pub use view_fire_isolation::{
     overlay_masks_aligned_with_map_views, ViewFireIsolationStats,

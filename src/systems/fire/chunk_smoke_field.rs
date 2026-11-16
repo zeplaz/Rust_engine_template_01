@@ -64,9 +64,6 @@ pub fn project_chunk_smoke_from_atmosphere_frame(
     }
 }
 
-/// W7 — single projection writer (tick + L0-pull retired).
-pub const CHUNK_SMOKE_WRITERS: u32 = 1;
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -84,6 +81,5 @@ mod tests {
         smoke.visibility_penalty =
             (smoke.density * 0.75 + smoke.toxicity * 0.25).clamp(0.0, 0.98);
         assert!(smoke.density > 0.4);
-        assert_eq!(CHUNK_SMOKE_WRITERS, 1);
     }
 }

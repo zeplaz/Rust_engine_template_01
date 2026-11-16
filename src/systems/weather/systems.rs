@@ -162,6 +162,7 @@ pub fn weather_field_step(
         if let Some(t) = terms.as_mut() {
             t.record_solve_deltas(moisture, cloud_delta);
         }
+        // CQ-36: AtmosphereDiagnostics holds solve-applied moisture/cloud only.
         if let Some(d) = diag.as_mut() {
             if moisture > 0.0 || cloud_delta > 0.0 {
                 d.pyro_moisture_injected = moisture;

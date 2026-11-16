@@ -267,11 +267,10 @@ pub fn solve_throughput_greedy_system(
     if throughput_solve_unchanged(&solver, &flow) {
         return;
     }
+    // CQ-13: non-player theaters share Aggregate budget whether or not foci are listed.
     let tier = attention.as_ref().map_or(AttentionTier::Full, |a| {
         if a.player_theater_active {
             AttentionTier::Full
-        } else if a.foci.is_empty() {
-            AttentionTier::Aggregate
         } else {
             AttentionTier::Aggregate
         }

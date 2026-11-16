@@ -67,7 +67,7 @@ pub struct MissileSortieDump {
     pub consumed: u64,
 }
 
-/// Typed sink: top up [`MissilePackage`] toward TOE from a shared pool (**CS-6**).
+/// Typed sink: top up [`MissilePackage`] toward TOE from a shared pool (**CS-6** / CQ-40).
 /// Scheduled only via [`super::toe_refill::refill_toe_from_front_system`].
 pub fn refill_missile_packages_sink(
     toe: &CapabilityToeRegistry,
@@ -75,27 +75,15 @@ pub fn refill_missile_packages_sink(
     packages: &mut Query<(Entity, &Formation, &mut MissilePackage)>,
     requests: &mut MessageWriter<LogisticsOrderRequest>,
 ) {
-    let mut order: Vec<(Entity, u8)> = packages
-        .iter()
-        .map(|(e, f, _)| (e, f.faction_slot))
-        .collect();
-    order.sort_by_key(|(e, slot)| (*slot, e.to_bits()));
-
-    for (entity, slot) in order {
-        let Ok((_, _, mut pkg)) = packages.get_mut(entity) else {
-            continue;
-        };
-        for class in MissileClass::ALL {
+    super::toe_refill::refill_packages_sink(
+        |class| {
             let row = toe.missile(class);
-            while pkg.count(class) < row.toe_count {
-                if !pool.try_consume_bom_unit(slot, &row.lines, requests) {
-                    break;
-                }
-                let i = class.index();
-                pkg.counts[i] = pkg.counts[i].saturating_add(1);
-            }
-        }
-    }
+            (row.toe_count, row.lines)
+        },
+        pool,
+        packages,
+        requests,
+    );
 }
 
 /// One successful weather-gated missile launch (for ballistics / audio).

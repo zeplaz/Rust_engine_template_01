@@ -9,7 +9,6 @@ mod heat_diffusion_dense;
 mod heat_diffusion_gpu;
 mod dense_heat_gpu_dispatch;
 mod heat_weather;
-mod heat_consumers;
 
 pub use compute_dispatch_graph::{
     check_parallel_claim, compute_critical_path_len, compute_graph_parallel_width,
@@ -43,4 +42,3 @@ pub use heat_weather::{
     apply_climate_to_dense_heat, apply_weather_to_dense_heat, WEATHER_RAIN_DAMP,
     WEATHER_WIND_FRAC_AT_20,
 };
-pub use heat_consumers::{nav_from_heat_cells, sparse_play_retired};

@@ -22,10 +22,6 @@ use super::frame::AtmosphereFrame;
 
 const SMOKE_EXTRACT_EPS: f32 = 1e-4;
 
-/// DEBT-011 / W7 — documented single smoke extract bridge (compile-time witness).
-pub const DEBT_011_SMOKE_UNIFIED: bool = true;
-pub const SMOKE_EXTRACT_BRIDGE: &str = "L0→AtmosphereFrame→SimChunkSmokeVisualExtract";
-
 /// [`ClimateVisualAggregate`] for GPU / precip overlay.
 ///
 /// Weather from [`AtmosphereFrame::weather_means`]; ecology means from [`EcologyVisualSnapshot`]
@@ -100,7 +96,6 @@ pub(crate) fn publish_sim_visual_extract(
     substrate: Option<Res<crate::substrate::WorldSubstrateRegistry>>,
     smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
 ) {
-    let _ = (DEBT_011_SMOKE_UNIFIED, SMOKE_EXTRACT_BRIDGE);
     smoke_out.instances.clear();
 
     let slab_smoke_extract = ecs_retire
@@ -258,15 +253,6 @@ mod tests {
         assert!(!prod.contains("Query<&ChunkWeather>"));
         assert!(!prod.contains("Query<&ChunkEcology>"));
         assert!(!prod.contains("Res<WeatherField>"));
-    }
-
-    #[test]
-    fn debt_011_smoke_bridge_const() {
-        assert!(super::DEBT_011_SMOKE_UNIFIED);
-        assert_eq!(
-            super::SMOKE_EXTRACT_BRIDGE,
-            "L0→AtmosphereFrame→SimChunkSmokeVisualExtract"
-        );
     }
 
     #[test]

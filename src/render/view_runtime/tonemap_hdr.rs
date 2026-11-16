@@ -50,10 +50,6 @@ pub const MAP_VIEW_TONE_MAP_POLICY: ViewToneMapPolicy = ViewToneMapPolicy::Displ
 /// Voxel PixelWorld3D uses the same display-referred policy (voxels in scope).
 pub const PIXEL_WORLD_TONE_MAP_POLICY: ViewToneMapPolicy = ViewToneMapPolicy::DisplayReferredNone;
 
-/// Source token tripwires expect on the PixelWorld camera spawn site.
-pub const PIXEL_WORLD_TONEMAPPING_NONE_TOKEN: &str =
-    "bevy::core_pipeline::tonemapping::Tonemapping::None";
-
 /// SDR display format for the shared map RTT (must match overlay SDR PSOs).
 #[inline]
 #[must_use]
@@ -145,8 +141,7 @@ mod lgt06_tonemap_hdr_tests {
         assert_eq!(PIXEL_WORLD_TONE_MAP_POLICY, ViewToneMapPolicy::DisplayReferredNone);
         let cam = read("render/pixel_world/camera.rs");
         assert!(
-            cam.contains(PIXEL_WORLD_TONEMAPPING_NONE_TOKEN)
-                || cam.contains("Tonemapping::None"),
+            cam.contains("Tonemapping::None"),
             "PixelWorld camera must keep Tonemapping::None (LGT-06 display-referred)"
         );
         assert!(

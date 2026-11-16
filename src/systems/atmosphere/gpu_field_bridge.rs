@@ -18,9 +18,6 @@ use super::diagnostics::AtmosphereDiagnostics;
 use super::frame::AtmosphereFrame;
 use super::incremental_schedule::AtmospherePartialFieldState;
 
-/// Distinct weather/fire **field** upload writers observed by this bridge (Accept: == 1).
-pub const GPU_FIELD_UPLOAD_PATHS: u32 = 1;
-
 /// Mean emitter intensity × smoke/toxic bias (WGSL `means.z` fire channel).
 ///
 /// Smoke density/toxicity come from [`SmokeProjectionNode`] only (Layer B bridge).
@@ -198,7 +195,7 @@ fn sync_gpu_weather_fire_uniforms_from_extract(
     u.fire_instance_count = filled.fire_instance_count;
     u._fire_pad = filled._fire_pad;
 
-    diag.gpu_field_upload_paths = GPU_FIELD_UPLOAD_PATHS;
+    diag.gpu_field_upload_paths = 1;
     diag.presentation_frame_revision = frame.revision();
 }
 
@@ -315,7 +312,6 @@ mod tests {
         assert_eq!(u.means.y, wx.snow01);
         assert_eq!(u.extra_means.x, 0.3);
         assert_eq!(u.extra_means.z, wx.wind_speed01);
-        assert_eq!(GPU_FIELD_UPLOAD_PATHS, 1);
     }
 
     #[test]

@@ -52,16 +52,22 @@ pub const COMBAT_ONESHOT_CAP: usize = 4;
 /// Linear gain when ambience is ducked under warnings (−6 dB ≈ 0.501).
 pub const AMBIENCE_DUCK_TARGET_GAIN: f32 = 0.501_187_2;
 
+/// Hold ambience duck after a warning one-shot leaves the pending queue (CQ-10).
+pub const WARNING_DUCK_HOLD_SECS: f32 = 1.25;
+
 /// Smoothed ambience-bus duck state — sole writer: [`build_audio_mix_frame`].
 #[derive(Resource, Clone, Debug)]
 pub struct AudioMixDuckState {
     pub ambience_bus_gain: f32,
+    /// Remaining real-time seconds to keep ducking after the last warning frame.
+    pub warning_hold_secs: f32,
 }
 
 impl Default for AudioMixDuckState {
     fn default() -> Self {
         Self {
             ambience_bus_gain: 1.0,
+            warning_hold_secs: 0.0,
         }
     }
 }
@@ -358,11 +364,18 @@ pub fn build_audio_mix_frame(
 
     cap_combat_oneshots_in_place(&mut oneshots.pending, mix.listener_xz, COMBAT_ONESHOT_CAP);
 
-    let warnings_active = oneshots
+    let warnings_in_pending = oneshots
         .pending
         .iter()
         .any(|r| r.class == AudioEventClass::Warning);
     let dt = time.delta_secs();
+    // CQ-10: pending is drained each frame — hold duck for WARNING_DUCK_HOLD_SECS after fire.
+    if warnings_in_pending {
+        duck.warning_hold_secs = WARNING_DUCK_HOLD_SECS;
+    } else if duck.warning_hold_secs > 0.0 {
+        duck.warning_hold_secs = (duck.warning_hold_secs - dt).max(0.0);
+    }
+    let warnings_active = warnings_in_pending || duck.warning_hold_secs > 0.0;
     duck.ambience_bus_gain =
         step_ambience_duck_gain(duck.ambience_bus_gain, warnings_active, dt);
     mix.ambience_duck_gain = duck.ambience_bus_gain;

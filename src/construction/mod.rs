@@ -343,7 +343,8 @@ impl Plugin for BuildPlanningPlugin {
                     procedural::init_variant_catalog,
                     building_definitions::init_building_definition_registry,
                     ensure_build_toolbox_shell_visible,
-                    // One-shot env opt-in — never polls disk per frame.
+                    // One-shot env opt-in — debug / sim_dump only (CQ-09); never polls disk per frame.
+                    #[cfg(any(debug_assertions, feature = "sim_dump"))]
                     voxel_massing::load_studio_massing_override_from_env_once,
                 )
                     .chain(),

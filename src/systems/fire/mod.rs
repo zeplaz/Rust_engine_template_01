@@ -31,7 +31,7 @@ pub use chunk_fire_overlay::{
 };
 pub use chunk_fuel_profile::{chunk_fuel_profile_from_vegetation, ChunkFuelProfile};
 pub use chunk_smoke_field::{
-    project_chunk_smoke_from_atmosphere_frame, ChunkSmokeField, CHUNK_SMOKE_WRITERS,
+    project_chunk_smoke_from_atmosphere_frame, ChunkSmokeField,
 };
 pub use chunk_surface_fire::{
     chunk_surface_fire_tick, ChunkSurfaceFire,
