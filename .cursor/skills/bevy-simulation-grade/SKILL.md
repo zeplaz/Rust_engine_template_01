@@ -34,6 +34,7 @@ Determinism over years of sim = **ownership discipline** ¬cleverness. Hard laye
 | 3 | immutable-frame | build snapshots/registries/derived per frame ⊰ authority · downstream reads ¬mutates upstream truth |
 | 4 | layer boundaries ⛓ | `Sim ═▶ View ═▶ Render ═▶ UI` · never inverted |
 | 5 | parallel-safety | `par_iter_mut` over disjoint data only · ¬shared-resource writes in parallel bodies |
+| 6 | narrow systems 🎯 | 1 domain per system · ≤ 8 params · 16-param cap hit = design bug 🔴 · `derive(SystemParam)` groups ONE domain only ¬cross-domain bundle to dodge cap · invert: each domain publishes own surface/dump section · extra writes ⇒ request queue drained by owner · ◎`src/dev/rule_narrow_systems_v1.md` |
 
 ```text
 🚦 before any schedule/authority edit ⊨ ⦃ name the single writer ║ place system in correct set ║ confirm cross-layer read/write boundary ⦄
