@@ -27,17 +27,19 @@ pub fn strip_stand_row_derived_for_save(row: &mut SavedCellStandRow) {
     row.burn_hold.clear();
 }
 
-/// Rebuild fire-row derived chunk metadata (IO-08); smoke/toxic/has_overlay are not persisted.
+/// Rebuild fire-row derived flags after load (IO-08).
+///
+/// `has_overlay` follows the per-cell vectors. Smoke, toxic, and cell
+/// heat/fuel/burn_hold are persisted (schema v2) and must not be cleared here.
 pub fn rebuild_saved_fire_chunk_row_derived(row: &mut SavedFireChunkRow) {
-    row.smoke = 0.0;
-    row.toxic = 0.0;
-    row.has_overlay = false;
+    row.has_overlay = !row.cell_heat.is_empty()
+        && row.cell_heat.len() == row.cell_fuel.len()
+        && row.cell_heat.len() == row.cell_burn_hold.len();
 }
 
-/// Omit derived fire overlay aggregates from new saves.
+/// Omit the derived `has_overlay` flag from new saves. Cell fire and chunk
+/// smoke/toxic stay on the wire.
 pub fn strip_fire_row_derived_for_save(row: &mut SavedFireChunkRow) {
-    row.smoke = 0.0;
-    row.toxic = 0.0;
     row.has_overlay = false;
 }
 

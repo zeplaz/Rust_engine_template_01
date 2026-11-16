@@ -484,6 +484,7 @@ impl Plugin for WorldSaveSpinePlugin {
             .init_resource::<crate::io::save::UtilityOverlayHydrateState>()
             .init_resource::<crate::io::save::WeatherOverlayHydrateState>()
             .init_resource::<crate::io::save::StandOverlayHydrateState>()
+            .init_resource::<crate::io::save::FireOverlayHydrateState>()
             // Infrastructure overlays (roads/rails/power lines): write before the manifest flush,
             // hydrate once per bundle dir like the settlement books.
             .add_systems(
@@ -493,6 +494,7 @@ impl Plugin for WorldSaveSpinePlugin {
                     crate::io::save::write_utility_overlay_on_save_flush,
                     crate::io::save::write_weather_overlay_on_save_flush,
                     crate::io::save::write_stand_overlay_on_save_flush,
+                    crate::io::save::write_fire_overlay_on_save_flush,
                 )
                     .before(flush_dirty_chunk_save_queue),
             )
@@ -504,6 +506,10 @@ impl Plugin for WorldSaveSpinePlugin {
                     crate::io::save::try_hydrate_weather_overlay_on_bundle_dir,
                     crate::io::save::try_hydrate_stand_overlay_on_bundle_dir,
                 ),
+            )
+            .add_systems(
+                Update,
+                crate::io::save::try_hydrate_fire_overlay_on_bundle_dir,
             )
 
             .add_message::<crate::io::save::dirty_queue::RequestWorldSaveFlush>()

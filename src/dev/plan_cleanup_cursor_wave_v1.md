@@ -241,7 +241,7 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 
 | ID | Status | Commit | Note |
 |---|---|---|---|
-| | | | |
+| CQ-01 | DONE (uncommitted) | — | Fire overlay schema v2: per-cell heat/fuel/burn_hold + chunk smoke/toxic; write/hydrate wired in `WorldSaveSpinePlugin`; v1 still loads means-only; round-trip test green. Production callers: `pipeline.rs` `write_fire_overlay_on_save_flush` / `try_hydrate_fire_overlay_on_bundle_dir`. |
 
 **Exit criteria:**
 - lib tests: 0 new failures, and the defer list is shrinking

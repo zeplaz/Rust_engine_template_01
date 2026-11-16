@@ -68,10 +68,10 @@ pub use settlement_overlay::{
 };
 pub use fire_overlay::{
     apply_chunk_fire_state, capture_chunk_fire_state, capture_chunk_fire_state_from_rows,
-    default_fire_overlay_ref, fire_overlay_ref, hash_saved_fire_state, hash_surface_fire_rows, read_chunk_fire_state_ron,
-    write_chunk_fire_state_ron, ChunkFireStateSnapshot,
-    SavedFireChunkRow, FIRE_OVERLAY_NAME, FIRE_SAVE_ROUNDTRIP_JSON, FIRE_STATE_REL_PATH,
-    FIRE_STATE_SCHEMA_VERSION,
+    default_fire_overlay_ref, fire_overlay_ref, hash_saved_fire_state, hash_surface_fire_rows,
+    read_chunk_fire_state_ron, try_hydrate_fire_overlay_on_bundle_dir, write_chunk_fire_state_ron,
+    write_fire_overlay_on_save_flush, ChunkFireStateSnapshot, FireOverlayHydrateState,
+    SavedFireChunkRow, FIRE_OVERLAY_NAME, FIRE_STATE_REL_PATH, FIRE_STATE_SCHEMA_VERSION,
 };
 pub use stand_overlay::{
     apply_chunk_cell_stand, capture_chunk_cell_stand, default_stand_overlay_ref,

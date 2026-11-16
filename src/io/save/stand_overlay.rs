@@ -25,7 +25,8 @@ pub struct SavedCellStandRow {
     #[serde(default, skip_serializing)]
     pub burnt_count: u32,
     pub seeded: bool,
-    /// Legacy v1 overlay fire; authority is `chunk_fire_state` overlay (IO-08).
+    /// Legacy v1 stand-row fire. New saves write per-cell fire on
+    /// `chunk_fire_state` schema v2. Still applied when a pre-move file has it.
     #[serde(default, skip_serializing)]
     pub heat: Vec<f32>,
     #[serde(default, skip_serializing)]
