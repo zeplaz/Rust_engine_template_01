@@ -9,6 +9,7 @@
 //! Layout keeps the top-right 224 x 56 px of the window free for the view toggle.
 
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
+use crate::gui::DeprecatedInteraction;
 use bevy::prelude::*;
 use bevy::ui::{FocusPolicy, RelativeCursorPosition};
 
@@ -1269,7 +1270,7 @@ struct FlowActRes<'w> {
 /// Generate / enter / discard / close.
 fn world_gen_panel_flow_actions(
     mut commands: Commands,
-    q: Query<(&Interaction, &UiButton, &WgAct), Changed<Interaction>>,
+    q: Query<(&DeprecatedInteraction, &UiButton, &WgAct), Changed<DeprecatedInteraction>>,
     mut res: FlowActRes,
     roots: Query<Entity, With<WorldMarker>>,
     keys: Res<ButtonInput<KeyCode>>,
@@ -1337,7 +1338,7 @@ fn world_gen_panel_flow_actions(
 
 /// Layer / zoom / follow / sheet toggle.
 fn world_gen_panel_view_actions(
-    q: Query<(&Interaction, &UiButton, &WgAct), Changed<Interaction>>,
+    q: Query<(&DeprecatedInteraction, &UiButton, &WgAct), Changed<DeprecatedInteraction>>,
     mut views: ResMut<crate::gui::MapViewInstances>,
     mut cam: ResMut<PreviewCameraState>,
     mut ui_state: ResMut<WorldGenUiState>,
@@ -1390,7 +1391,7 @@ fn world_gen_panel_view_actions(
 
 /// "Main menu": leave the generator (confirm first while a job is running).
 fn world_gen_panel_exit_action(
-    q: Query<(&Interaction, &UiButton, &WgAct), Changed<Interaction>>,
+    q: Query<(&DeprecatedInteraction, &UiButton, &WgAct), Changed<DeprecatedInteraction>>,
     mut ui_state: ResMut<WorldGenUiState>,
     mut exit: super::world_gen_bevy_shell::MainMenuExit,
 ) {
@@ -1415,11 +1416,11 @@ struct HoldStep {
 /// Parameters: steppers (hold to repeat), sliders, cycles, presets, tuning files, tags, sections.
 fn world_gen_panel_param_actions(
     time: Res<Time>,
-    acts: Query<(&Interaction, &UiButton, &WgAct), Changed<Interaction>>,
-    knob_btns: Query<(Entity, &Interaction, &WgKnobBtn)>,
-    sliders: Query<(&WgKnobSlider, &Interaction, &RelativeCursorPosition)>,
-    tag_btns: Query<(&Interaction, &WgTag), Changed<Interaction>>,
-    section_btns: Query<(&Interaction, &WgSectionToggle), Changed<Interaction>>,
+    acts: Query<(&DeprecatedInteraction, &UiButton, &WgAct), Changed<DeprecatedInteraction>>,
+    knob_btns: Query<(Entity, &DeprecatedInteraction, &WgKnobBtn)>,
+    sliders: Query<(&WgKnobSlider, &DeprecatedInteraction, &RelativeCursorPosition)>,
+    tag_btns: Query<(&DeprecatedInteraction, &WgTag), Changed<DeprecatedInteraction>>,
+    section_btns: Query<(&DeprecatedInteraction, &WgSectionToggle), Changed<DeprecatedInteraction>>,
     mut params: ResMut<WorldGenParams>,
     mut hint: ResMut<WorldGenTuningNote>,
     mut panel: ResMut<WorldGenPanelState>,
@@ -1429,7 +1430,7 @@ fn world_gen_panel_param_actions(
     mut hold: Local<HoldStep>,
 ) {
     // Steppers with hold-to-repeat.
-    let pressed = knob_btns.iter().find(|(_, i, _)| **i == Interaction::Pressed);
+    let pressed = knob_btns.iter().find(|(_, i, _)| **i == DeprecatedInteraction::Pressed);
     match pressed {
         Some((entity, _, btn)) => {
             if hold.held != Some(entity) {
@@ -1453,7 +1454,7 @@ fn world_gen_panel_param_actions(
         }
     }
     for (interaction, tag) in &tag_btns {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         let id = TagId(tag.0);
@@ -1464,7 +1465,7 @@ fn world_gen_panel_param_actions(
         }
     }
     for (interaction, sec) in &section_btns {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             panel.collapsed[sec.0] = !panel.collapsed[sec.0];
         }
     }

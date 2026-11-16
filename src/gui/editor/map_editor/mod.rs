@@ -33,6 +33,7 @@ pub use transport_io::{
 };
 
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
+use crate::gui::DeprecatedInteraction;
 use bevy::math::IVec2;
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
@@ -491,12 +492,12 @@ pub fn sync_map_editor_bevy_shell(
 }
 
 pub fn map_editor_palette_pick_system(
-    q: Query<(&Interaction, &MapEditorPalettePick), (Changed<Interaction>, With<Button>)>,
+    q: Query<(&DeprecatedInteraction, &MapEditorPalettePick), (Changed<DeprecatedInteraction>, With<Button>)>,
     mut tool: ResMut<MapEditorTool>,
     mut next_sub: ResMut<NextState<InGameEditorState>>,
 ) {
     for (interaction, pick) in &q {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         tool.kind = pick.0;

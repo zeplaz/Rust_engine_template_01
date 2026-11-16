@@ -178,14 +178,14 @@ struct SegmentApplyResult {
 }
 
 #[derive(SystemParam)]
-pub(crate) struct ExecuteHydroOpt<'w> {
+pub struct ExecuteHydroOpt<'w> {
     queue: Option<ResMut<'w, crate::substrate::hydrology::HydrologyEventQueue>>,
     coupling: Option<ResMut<'w, crate::substrate::hydrology::HydrologyConstructionCouplingStats>>,
 }
 
 /// Bundles fuel-break + optional voxel corridor reserve (keeps execute system ≤16 params).
 #[derive(SystemParam)]
-pub(crate) struct ExecuteSideEffects<'w> {
+pub struct ExecuteSideEffects<'w> {
     fuel_breaks: ResMut<'w, crate::systems::ecology::PendingFuelBreaks>,
     voxel_book: Option<ResMut<'w, crate::strategic::VoxelOccupationBook>>,
     voxel_cfg: Option<Res<'w, crate::strategic::VoxelOccupationConfig>>,

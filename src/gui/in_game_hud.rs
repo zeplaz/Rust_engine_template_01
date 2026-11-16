@@ -6,6 +6,7 @@
 use std::collections::HashMap;
 
 use bevy::prelude::*;
+use crate::gui::DeprecatedInteraction;
 use bevy::picking::events::PointerClick;
 use bevy::picking::pointer::PointerButton;
 use bevy::ui_widgets::Button;
@@ -233,11 +234,11 @@ struct PlayMapHeightSlopeButton;
 struct PlayMapHeightSlopeLabel;
 
 fn play_map_height_slope_click_system(
-    q: Query<&Interaction, (Changed<Interaction>, With<PlayMapHeightSlopeButton>)>,
+    q: Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<PlayMapHeightSlopeButton>)>,
     mut mode: ResMut<crate::gui::map_tile_raster::PlayMapPixelMode>,
 ) {
     for interaction in &q {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             mode.height_slope = !mode.height_slope;
         }
     }
@@ -405,7 +406,7 @@ fn spawn_simulation_command_shell(
                     strip_border,
                     ZIndex(1200),
                     FocusPolicy::Block,
-                    Interaction::default(),
+                    DeprecatedInteraction::default(),
                     OperationsStripRoot,
                 ))
                 .with_children(|parent| {
@@ -618,7 +619,7 @@ fn spawn_simulation_command_shell(
                             ..default()
                         },
                         FocusPolicy::Pass,
-                        Interaction::default(),
+                        DeprecatedInteraction::default(),
                         SimulationMapViewportFill,
                         map_image,
                         BackgroundColor(palette.bevy_hud_panel_fill()),
@@ -659,7 +660,7 @@ fn spawn_simulation_command_shell(
                         ..default()
                     },
                     FocusPolicy::Block,
-                    Interaction::default(),
+                    DeprecatedInteraction::default(),
                     ZIndex(900),
                     CommandLeftStackOverlay,
                     Name::new("left_stack_overlay"),
@@ -852,7 +853,7 @@ fn spawn_simulation_command_shell(
                         ..default()
                     },
                     FocusPolicy::Block,
-                    Interaction::default(),
+                    DeprecatedInteraction::default(),
                     Visibility::Hidden,
                     // Real window frame (replaces the 1px magenta debug border): panel fill + wire edge.
                     BorderColor::all(palette.bevy_wire_magenta()),
@@ -978,7 +979,7 @@ fn spawn_simulation_command_shell(
                     Visibility::Hidden,
                     ZIndex(1100),
                     FocusPolicy::Block,
-                    Interaction::default(),
+                    DeprecatedInteraction::default(),
                     ContextTrayRoot,
                     Name::new("context_tray_root"),
                 ))
@@ -1349,22 +1350,22 @@ fn sync_command_left_stack_visibility(
 }
 
 fn command_left_stack_rail_interaction(
-    q: Query<&Interaction, (Changed<Interaction>, With<LeftContextRail>)>,
+    q: Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<LeftContextRail>)>,
     mut state: ResMut<CommandLeftStackState>,
 ) {
     for interaction in &q {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             state.collapsed = false;
         }
     }
 }
 
 fn left_context_stack_collapse_interaction(
-    q: Query<&Interaction, (Changed<Interaction>, With<LeftContextStackCollapse>)>,
+    q: Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<LeftContextStackCollapse>)>,
     mut state: ResMut<CommandLeftStackState>,
 ) {
     for interaction in &q {
-        if *interaction == Interaction::Pressed {
+        if *interaction == DeprecatedInteraction::Pressed {
             state.collapsed = true;
         }
     }

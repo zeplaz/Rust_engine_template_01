@@ -5,6 +5,7 @@
 //! only the catalog list is rebuilt, and only when the open category or registry changes.
 
 use bevy::prelude::*;
+use bevy::ui::DeprecatedInteraction;
 
 use crate::gui::hud::{HudDockRegistry, HudWidgetId};
 use crate::gui::style::widgets::{
@@ -490,11 +491,11 @@ fn sync_toolbox_state(
 /// Tool-select intents only — no execute / place / queue mutation.
 fn build_toolbox_bevy_action_system(
     q: Query<
-        (&Interaction, &UiButton, &BuildToolboxAction),
-        (Changed<Interaction>, Without<ToolboxMenuItem>),
+        (&DeprecatedInteraction, &UiButton, &BuildToolboxAction),
+        (Changed<DeprecatedInteraction>, Without<ToolboxMenuItem>),
     >,
-    items: Query<(&Interaction, &UiButton, &ToolboxMenuItem), Changed<Interaction>>,
-    collapse: Query<(&Interaction, &UiButton), (Changed<Interaction>, With<ToolboxCollapse>)>,
+    items: Query<(&DeprecatedInteraction, &UiButton, &ToolboxMenuItem), Changed<DeprecatedInteraction>>,
+    collapse: Query<(&DeprecatedInteraction, &UiButton), (Changed<DeprecatedInteraction>, With<ToolboxCollapse>)>,
     cache: Res<ToolboxMenuCache>,
     mut ui: ResMut<ToolboxUiState>,
     mut tool: ResMut<ActiveBuildTool>,

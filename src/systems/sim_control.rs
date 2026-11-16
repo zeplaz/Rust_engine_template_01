@@ -386,7 +386,7 @@ mod tests {
         // (LOOP-04 / GEA 8.5.4.4 floating-point clock limits).
         let hour_micros = 3_600_000_000u64;
         assert_ne!(hour_micros, hour_micros + 1);
-        let as_f32 = |µ: u64| (µ as f64 / 1_000_000.0) as f32;
+        let as_f32 = |micros: u64| (micros as f64 / 1_000_000.0) as f32;
         assert_eq!(as_f32(hour_micros), as_f32(hour_micros + 1));
         let tick = SimTick(1_000_000);
         assert_eq!(tick.0.wrapping_add(1), 1_000_001);

@@ -2,6 +2,7 @@
 //! Plan: `prompts/guides/ui/ui_phase5_pause_menu_plan_v1.md` · design: `src/dev/ui_p5_design_signoff_v1.md`.
 
 use bevy::ecs::system::SystemParam;
+use crate::gui::DeprecatedInteraction;
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
 use bevy::ui::FocusPolicy;
@@ -288,9 +289,9 @@ fn spawn_pause_button(
 fn pause_menu_button_border_color(
     palette: &UiPalette,
     tier: PauseMenuButtonTier,
-    interaction: &Interaction,
+    interaction: &DeprecatedInteraction,
 ) -> BorderColor {
-    if *interaction == Interaction::Hovered || *interaction == Interaction::Pressed {
+    if *interaction == DeprecatedInteraction::Hovered || *interaction == DeprecatedInteraction::Pressed {
         return BorderColor::all(palette.bevy_accent_hot());
     }
     match tier {
@@ -311,7 +312,7 @@ fn sync_pause_menu_button_chrome_system(
     palette: Res<UiPalette>,
     mut buttons: Query<
         (
-            &Interaction,
+            &DeprecatedInteraction,
             &PauseMenuButtonTier,
             &mut BackgroundColor,
             &mut BorderColor,
@@ -319,16 +320,16 @@ fn sync_pause_menu_button_chrome_system(
         (With<Button>, With<PauseMenuButtonAction>),
     >,
     mut labels: Query<(&ChildOf, &mut TextColor), With<PauseMenuButtonLabel>>,
-    parents: Query<(Entity, &PauseMenuButtonTier, &Interaction), With<Button>>,
+    parents: Query<(Entity, &PauseMenuButtonTier, &DeprecatedInteraction), With<Button>>,
 ) {
     for (interaction, tier, mut bg, mut border) in &mut buttons {
         *border = pause_menu_button_border_color(palette.as_ref(), *tier, interaction);
         *bg = match (*tier, interaction) {
-            (PauseMenuButtonTier::Primary, Interaction::Hovered | Interaction::Pressed) => {
+            (PauseMenuButtonTier::Primary, DeprecatedInteraction::Hovered | DeprecatedInteraction::Pressed) => {
                 BackgroundColor(palette.bevy_bg_vellum())
             }
             (PauseMenuButtonTier::Primary, _) => BackgroundColor(palette.bevy_bg_vellum()),
-            (_, Interaction::Hovered | Interaction::Pressed) => {
+            (_, DeprecatedInteraction::Hovered | DeprecatedInteraction::Pressed) => {
                 BackgroundColor(palette.bevy_hud_panel_fill())
             }
             _ => BackgroundColor(palette.bevy_button_idle()),
@@ -340,7 +341,7 @@ fn sync_pause_menu_button_chrome_system(
         };
         *text_color = match tier {
             PauseMenuButtonTier::Stub => TextColor(palette.bevy_text_muted()),
-            _ if *interaction == Interaction::Hovered => TextColor(palette.bevy_accent_hot()),
+            _ if *interaction == DeprecatedInteraction::Hovered => TextColor(palette.bevy_accent_hot()),
             _ => TextColor(palette.bevy_primary_text()),
         };
     }
@@ -546,14 +547,14 @@ fn sync_pause_menu_bevy_shell(
 
 fn handle_pause_menu_buttons(
     q: Query<
-        (&Interaction, &PauseMenuButtonAction),
-        (Changed<Interaction>, With<Button>),
+        (&DeprecatedInteraction, &PauseMenuButtonAction),
+        (Changed<DeprecatedInteraction>, With<Button>),
     >,
     mut nav: PauseMenuNavParams,
     mut wg: PauseMenuWorldGenParams,
 ) {
     for (interaction, action) in &q {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         match *action {
@@ -601,15 +602,15 @@ fn handle_pause_menu_buttons(
 
 fn handle_pause_confirm_buttons(
     q: Query<
-        (&Interaction, &PauseMenuConfirmButtonAction),
-        (Changed<Interaction>, With<Button>),
+        (&DeprecatedInteraction, &PauseMenuConfirmButtonAction),
+        (Changed<DeprecatedInteraction>, With<Button>),
     >,
     mut nav: PauseMenuNavParams,
     mut wg: PauseMenuWorldGenParams,
 ) {
     let confirm_kind = nav.pending.confirm;
     for (interaction, action) in &q {
-        if *interaction != Interaction::Pressed {
+        if *interaction != DeprecatedInteraction::Pressed {
             continue;
         }
         match *action {

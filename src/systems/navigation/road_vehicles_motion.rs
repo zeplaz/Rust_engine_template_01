@@ -13,7 +13,6 @@ use crate::economy::logistics::orders::{
 };
 use crate::entities::vehicles::runtime::{Bus, Truck};
 use crate::entities::components::Waypoints;
-use crate::systems::navigation::motion::SpeedModifier;
 use crate::systems::sim_control::{SimControlState, SimStepClock};
 use crate::traits::LoadBasedSpeedModifier;
 

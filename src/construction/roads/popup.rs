@@ -4,6 +4,7 @@
 //! updated in place. Commit intents only via [`commit_road_path_to_queue`] / [`enqueue_road_upgrade`].
 
 use bevy::prelude::*;
+use bevy::ui::DeprecatedInteraction;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType, RoadType};
@@ -232,7 +233,7 @@ fn sync_road_tool_popup_values(
 
 /// Commit / cancel / snap / upgrade — funnel only (no direct graph mutate).
 pub fn road_tool_popup_bevy_action_system(
-    q: Query<(&Interaction, &UiButton, &RoadPopupAction), Changed<Interaction>>,
+    q: Query<(&DeprecatedInteraction, &UiButton, &RoadPopupAction), Changed<DeprecatedInteraction>>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut queue: ResMut<ConstructionPlanQueue>,
     mut session: ResMut<ActiveToolSession>,

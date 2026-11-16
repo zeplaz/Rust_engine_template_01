@@ -65,7 +65,7 @@ pub fn advect_l0_with_wind(level: &mut AtmosphereClipLevel, direction: Vec2, spe
     advect_l0_with_wind_field(level, dt, |_, _| wind);
 }
 
-/// Per-texel wind (m/s) from `WeatherField::sample` — W2 smoke/ash/ember advection authority.
+/// Per-texel wind (m/s) from caller — W2 smoke/ash/ember advection (fed from AtmosphereFrame in sim).
 pub fn advect_l0_with_wind_field(
     level: &mut AtmosphereClipLevel,
     dt: f32,

@@ -148,9 +148,6 @@ pub(crate) fn chunk_key(chunk: IVec2) -> i64 {
 
 #[inline]
 #[must_use]
-pub fn chunk_key_pub(chunk: IVec2) -> i64 {
-    chunk_key(chunk)
-}
 
 #[must_use]
 pub fn eligible_fire_rows<'a>(

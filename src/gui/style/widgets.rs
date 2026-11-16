@@ -6,6 +6,7 @@
 //! pressed button when [`UiButton::disabled`] is set (see [`ui_button_fired`]).
 
 use bevy::ecs::hierarchy::ChildSpawnerCommands;
+use crate::gui::DeprecatedInteraction;
 use bevy::input::mouse::{AccumulatedMouseScroll, MouseScrollUnit};
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
@@ -75,8 +76,8 @@ impl UiButton {
 
 /// True when `interaction` is a fresh press on an enabled button.
 #[must_use]
-pub fn ui_button_fired(interaction: &Interaction, button: &UiButton) -> bool {
-    *interaction == Interaction::Pressed && !button.disabled
+pub fn ui_button_fired(interaction: &DeprecatedInteraction, button: &UiButton) -> bool {
+    *interaction == DeprecatedInteraction::Pressed && !button.disabled
 }
 
 /// Text node inside a button — recoloured with the button state.
@@ -100,8 +101,8 @@ pub struct UiSlider {
 
 /// Fraction (0..1) under the cursor while the slider track is held, else `None`.
 #[must_use]
-pub fn ui_slider_drag(interaction: &Interaction, cursor: &RelativeCursorPosition) -> Option<f32> {
-    if *interaction != Interaction::Pressed {
+pub fn ui_slider_drag(interaction: &DeprecatedInteraction, cursor: &RelativeCursorPosition) -> Option<f32> {
+    if *interaction != DeprecatedInteraction::Pressed {
         return None;
     }
     cursor.normalized.map(|n| (n.x + 0.5).clamp(0.0, 1.0))
@@ -161,7 +162,7 @@ fn mix(a: Color, b: Color, t: f32) -> Color {
 pub fn button_colors(
     palette: &UiPalette,
     button: &UiButton,
-    interaction: Interaction,
+    interaction: DeprecatedInteraction,
 ) -> (Color, Color, Color) {
     let base = UiKit::rgba(palette.bg_interactive);
     let fg = UiKit::rgba(palette.fg_primary);
@@ -199,15 +200,15 @@ pub fn button_colors(
         }
     }
     match interaction {
-        Interaction::Hovered => {
+        DeprecatedInteraction::Hovered => {
             bg = mix(bg, fg, 0.14);
             bd = if button.selected { bd } else { fg };
         }
-        Interaction::Pressed => {
+        DeprecatedInteraction::Pressed => {
             bg = mix(bg, UiKit::rgba(palette.accent_terminal), 0.35);
             bd = palette.bevy_accent_gold();
         }
-        Interaction::None => {}
+        DeprecatedInteraction::None => {}
     }
     (bg, bd, tx)
 }
@@ -362,7 +363,7 @@ pub fn spawn_button_with<'a>(
     marker: impl Bundle,
     leading: impl FnOnce(&mut ChildSpawnerCommands<'_>),
 ) -> EntityCommands<'a> {
-    let (bg, bd, tx) = button_colors(kit.palette, &state, Interaction::None);
+    let (bg, bd, tx) = button_colors(kit.palette, &state, DeprecatedInteraction::None);
     let mut ec = parent.spawn((
         Button,
         state,
@@ -533,7 +534,7 @@ pub fn spawn_stepper(
             col.spawn((
                 UiSlider { fraction: fraction.clamp(0.0, 1.0) },
                 slider,
-                Interaction::default(),
+                DeprecatedInteraction::default(),
                 RelativeCursorPosition::default(),
                 FocusPolicy::Block,
                 Node {
@@ -584,7 +585,7 @@ pub fn spawn_hint_row(parent: &mut ChildSpawnerCommands<'_>, kit: &UiKit, text: 
 fn sync_button_visuals(
     palette: Res<UiPalette>,
     mut buttons: Query<
-        (&Interaction, &UiButton, &mut BackgroundColor, &mut BorderColor, Option<&Children>),
+        (&DeprecatedInteraction, &UiButton, &mut BackgroundColor, &mut BorderColor, Option<&Children>),
         Without<UiButtonLabel>,
     >,
     mut labels: Query<&mut TextColor, With<UiButtonLabel>>,
@@ -693,14 +694,14 @@ fn spawn_tooltip_root(mut commands: Commands, palette: Res<UiPalette>, assets: R
 
 fn sync_tooltip(
     windows: Query<&Window, With<PrimaryWindow>>,
-    hovered: Query<(&Interaction, &UiTooltip)>,
+    hovered: Query<(&DeprecatedInteraction, &UiTooltip)>,
     mut root: Query<(&mut Node, &mut Visibility), With<UiTooltipRoot>>,
     mut text: Query<&mut Text, With<UiTooltipText>>,
 ) {
     let Ok((mut node, mut vis)) = root.single_mut() else { return };
     let tip = hovered
         .iter()
-        .find(|(i, _)| **i == Interaction::Hovered)
+        .find(|(i, _)| **i == DeprecatedInteraction::Hovered)
         .map(|(_, t)| t.0.as_str());
     let cursor = windows.single().ok().and_then(Window::cursor_position);
     match (tip, cursor) {
@@ -729,16 +730,15 @@ pub struct UiWidgetsPlugin;
 
 /// Restore what the deprecated `bevy::ui::widget::Button` gave every button for free.
 ///
-/// `bevy::ui_widgets::Button` (the 0.20 replacement) requires neither [`Interaction`] nor
+/// `bevy::ui_widgets::Button` (the 0.20 replacement) requires neither [`DeprecatedInteraction`] nor
 /// [`FocusPolicy::Block`]. Every HUD / menu action system in this crate still reads
-/// `Query<&Interaction, (Changed<Interaction>, With<..>)>`, so without this a `Button` entity is
+/// `Query<&DeprecatedInteraction, (Changed<DeprecatedInteraction>, With<..>)>`, so without this a `Button` entity is
 /// never matched and the click silently does nothing (side rail, build rail, ops strip, tray tabs,
 /// pause menu, sheets). One registration here instead of N spawn-site patches.
 ///
 /// Migration debt: move action systems to `Pressed` / `Hovered` + `Activate`, then delete this.
-#[allow(deprecated)]
 pub(crate) fn register_ui_button_interaction_compat(app: &mut App) {
-    app.register_required_components::<Button, Interaction>();
+    app.register_required_components::<Button, DeprecatedInteraction>();
     app.register_required_components_with::<Button, FocusPolicy>(|| FocusPolicy::Block);
 }
 
@@ -786,10 +786,9 @@ mod tests {
         init_ok(sync_tooltip);
     }
 
-    /// Regression: `ui_widgets::Button` alone has no `Interaction`, so every action system reading
-    /// `&Interaction` matched nothing (side rails / build rail / tray / ops strip dead).
+    /// Regression: `ui_widgets::Button` alone has no `DeprecatedInteraction`, so every action system reading
+    /// `&DeprecatedInteraction` matched nothing (side rails / build rail / tray / ops strip dead).
     #[test]
-    #[allow(deprecated)]
     fn ui_widgets_button_gets_interaction_and_blocks_focus() {
         let mut app = App::new();
         register_ui_button_interaction_compat(&mut app);
@@ -799,32 +798,32 @@ mod tests {
             .spawn((Button, Node::default(), FocusPolicy::Pass))
             .id();
         let w = app.world();
-        assert_eq!(w.get::<Interaction>(plain), Some(&Interaction::None));
+        assert_eq!(w.get::<DeprecatedInteraction>(plain), Some(&DeprecatedInteraction::None));
         assert_eq!(w.get::<FocusPolicy>(plain), Some(&FocusPolicy::Block));
         // An explicit policy on the spawn site still wins.
-        assert_eq!(w.get::<Interaction>(passing), Some(&Interaction::None));
+        assert_eq!(w.get::<DeprecatedInteraction>(passing), Some(&DeprecatedInteraction::None));
         assert_eq!(w.get::<FocusPolicy>(passing), Some(&FocusPolicy::Pass));
     }
 
     #[test]
     fn disabled_button_never_fires() {
         let b = UiButton::new(UiButtonVariant::Primary).disabled(true);
-        assert!(!ui_button_fired(&Interaction::Pressed, &b));
-        assert!(ui_button_fired(&Interaction::Pressed, &UiButton::default()));
+        assert!(!ui_button_fired(&DeprecatedInteraction::Pressed, &b));
+        assert!(ui_button_fired(&DeprecatedInteraction::Pressed, &UiButton::default()));
     }
 
     #[test]
     fn button_states_are_distinct() {
         let pal = UiPalette::default();
         let b = UiButton::default();
-        let idle = button_colors(&pal, &b, Interaction::None);
-        let hover = button_colors(&pal, &b, Interaction::Hovered);
-        let press = button_colors(&pal, &b, Interaction::Pressed);
+        let idle = button_colors(&pal, &b, DeprecatedInteraction::None);
+        let hover = button_colors(&pal, &b, DeprecatedInteraction::Hovered);
+        let press = button_colors(&pal, &b, DeprecatedInteraction::Pressed);
         assert_ne!(idle.0, hover.0);
         assert_ne!(hover.0, press.0);
-        let sel = button_colors(&pal, &b.selected(true), Interaction::None);
+        let sel = button_colors(&pal, &b.selected(true), DeprecatedInteraction::None);
         assert_ne!(idle.0, sel.0);
-        let dis = button_colors(&pal, &b.disabled(true), Interaction::None);
+        let dis = button_colors(&pal, &b.disabled(true), DeprecatedInteraction::None);
         assert_ne!(idle.2, dis.2);
     }
 }

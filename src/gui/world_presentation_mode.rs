@@ -11,6 +11,7 @@
 //! through its own camera into the same map RTT; the top-down camera is inactive meanwhile.
 
 use bevy::camera::ClearColorConfig;
+use crate::gui::DeprecatedInteraction;
 use bevy::prelude::*;
 use bevy::ui_widgets::Button;
 
@@ -236,14 +237,14 @@ pub fn spawn_world_presentation_toggle(
 pub fn world_presentation_toggle_system(
     mut mode: ResMut<WorldPresentationMode>,
     interactions: Query<
-        &Interaction,
-        (Changed<Interaction>, With<WorldPresentationToggleButton>),
+        &DeprecatedInteraction,
+        (Changed<DeprecatedInteraction>, With<WorldPresentationToggleButton>),
     >,
     mut labels: Query<&mut Text, With<WorldPresentationToggleLabel>>,
     keys: Option<Res<ButtonInput<KeyCode>>>,
     bindings: Option<Res<crate::gui::InputBindings>>,
 ) {
-    let pressed = interactions.iter().any(|i| *i == Interaction::Pressed);
+    let pressed = interactions.iter().any(|i| *i == DeprecatedInteraction::Pressed);
     let hotkey = bindings.as_ref().map_or(KeyCode::KeyV, |b| b.toggle_world_presentation);
     let key_pressed = keys.as_ref().is_some_and(|k| k.just_pressed(hotkey));
     if pressed || key_pressed {

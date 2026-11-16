@@ -13,8 +13,7 @@ use crate::systems::sim_control::SimStepStamp;
 
 use super::heat_diffusion::{HeatDiffusionCell, HeatDiffusionFieldBuffers};
 use super::heat_diffusion_dense::{
-    dense_roi_from_fire, run_dense_heat_step, DenseHeatGrid, HeatDiffusionConfig, DENSE_DECAY,
-    DENSE_SOURCE_BLEND, DENSE_W_CENTER, DENSE_W_SIDE,
+    dense_roi_from_fire, run_dense_heat_step, DenseHeatGrid, DENSE_DECAY, DENSE_W_CENTER, DENSE_W_SIDE,
 };
 use super::heat_weather::apply_climate_to_dense_heat;
 use super::ComputeContext;

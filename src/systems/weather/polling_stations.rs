@@ -1,20 +1,21 @@
-//! SENSE-02 — per-chunk weather polling stations (sole field sampler for gameplay readers).
+//! SENSE-02 — per-chunk weather polling stations (projection of [`AtmosphereFrame`] for gameplay readers).
 //!
 //! [`WeatherPollSiteBook`] lists chunk keys for this tick (written by [`crate::combat::gather_weather_poll_sites`]).
-//! [`sync_weather_polling_stations`] is the only system that calls [`WeatherField::sample`] for those sites.
-//! Consumers read [`WeatherPollingStations`] — they must not sample the field or build a private cache.
+//! [`sync_weather_polling_stations`] copies chunk-centre samples from [`AtmosphereFrame`] (CQ-39); it never
+//! calls [`WeatherField::sample`]. Consumers read [`WeatherPollingStations`] — they must not sample the field
+//! or build a private cache.
 
 use std::collections::{HashMap, HashSet};
 
 use bevy::math::{IVec2, UVec2, Vec2};
 use bevy::prelude::*;
 
-use crate::systems::sim_control::SimTimeMicros;
+use crate::systems::atmosphere::AtmosphereFrame;
 use crate::terrain::generation::chunk_world_center;
 use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
 
 use super::air_ops::tile_to_smoke_chunk;
-use super::field::{WeatherField, WeatherSample};
+use super::field::WeatherSample;
 
 /// Chunks that need a weather station sample this sim tick (gathered before the weather pass).
 #[derive(Resource, Debug, Clone, Default)]
@@ -30,7 +31,7 @@ pub struct WeatherPollingStations {
     pub by_chunk: HashMap<IVec2, WeatherSample>,
     /// Unique chunk keys materialised in [`Self::by_chunk`] this tick.
     pub chunks_polled: u64,
-    /// Count of [`WeatherField::sample`] calls issued while building this frame (evidence / tests).
+    /// Chunk-centre lookups from [`AtmosphereFrame`] while building this tick (evidence / tests).
     pub field_samples: u64,
 }
 
@@ -80,10 +81,9 @@ impl WeatherPollingStations {
     }
 }
 
-/// Sole writer of [`WeatherPollingStations`] from [`WeatherField`] + [`WeatherPollSiteBook`].
+/// Sole writer of [`WeatherPollingStations`] from [`AtmosphereFrame`] + [`WeatherPollSiteBook`].
 pub fn sync_weather_polling_stations(
-    field: Option<Res<WeatherField>>,
-    sim_time: Option<Res<SimTimeMicros>>,
+    frame: Res<AtmosphereFrame>,
     sites: Res<WeatherPollSiteBook>,
     mut stations: ResMut<WeatherPollingStations>,
 ) {
@@ -91,27 +91,18 @@ pub fn sync_weather_polling_stations(
     stations.chunks_polled = 0;
     stations.field_samples = 0;
 
-    let Some(field) = field.filter(|f| f.is_ready()) else {
+    if !frame.is_weather_ready() {
         stations.ready = false;
         stations.centre = WeatherSample::default();
         return;
-    };
+    }
 
-    let t = sim_time
-        .as_deref()
-        .copied()
-        .unwrap_or(SimTimeMicros(field.prev_micros));
-
-    let centre_m = field.extent_m * 0.5;
-    stations.centre = field.sample(centre_m, t);
+    let centre_chunk = frame.centre_chunk();
+    stations.centre = frame
+        .weather_at_chunk(centre_chunk)
+        .unwrap_or_default();
     stations.field_samples = 1;
     stations.ready = true;
-
-    let centre_tile = IVec2::new(
-        (centre_m.x / TILE_METRES_GAMEPLAY).floor() as i32,
-        (centre_m.y / TILE_METRES_GAMEPLAY).floor() as i32,
-    );
-    let centre_chunk = tile_to_weather_chunk(centre_tile);
 
     let mut unique: HashSet<IVec2> = sites.chunks.iter().copied().collect();
     unique.insert(centre_chunk);
@@ -121,7 +112,10 @@ pub fn sync_weather_polling_stations(
             stations.centre
         } else {
             stations.field_samples += 1;
-            field.sample(chunk_centre_pos_m(chunk), t)
+            frame
+                .weather_at_chunk(chunk)
+                .or_else(|| frame.weather_at_pos_m(chunk_centre_pos_m(chunk)))
+                .unwrap_or(stations.centre)
         };
         stations.by_chunk.insert(chunk, sample);
         stations.chunks_polled += 1;
@@ -133,19 +127,26 @@ mod tests {
     use super::*;
     use bevy::prelude::{App, MinimalPlugins, Update};
 
-    use crate::systems::sim_control::SimTimeMicros;
+    use crate::substrate::atmosphere::AtmosphereClipmapStack;
+    use crate::systems::atmosphere::AtmosphereFrame;
     use crate::systems::weather::tuning::WeatherTuning;
 
-    fn ready_field() -> WeatherField {
+    use super::super::field::WeatherField;
+
+    fn ready_frame() -> AtmosphereFrame {
         let tuning = WeatherTuning::default();
-        WeatherField::new(
+        let field = WeatherField::new(
             42,
             Vec2::new(512.0 * TILE_METRES_GAMEPLAY, 512.0 * TILE_METRES_GAMEPLAY),
             &tuning,
             None,
             Default::default(),
             0,
-        )
+        );
+        let stack = AtmosphereClipmapStack::default();
+        let mut frame = AtmosphereFrame::default();
+        frame.rebuild(Some(&field), &stack, 0, &tuning);
+        frame
     }
 
     #[test]
@@ -154,8 +155,7 @@ mod tests {
         app.add_plugins(MinimalPlugins);
         app.init_resource::<WeatherPollSiteBook>();
         app.init_resource::<WeatherPollingStations>();
-        app.insert_resource(ready_field());
-        app.insert_resource(SimTimeMicros(0));
+        app.insert_resource(ready_frame());
 
         {
             let mut sites = app.world_mut().resource_mut::<WeatherPollSiteBook>();

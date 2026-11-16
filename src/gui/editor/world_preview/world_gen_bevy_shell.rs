@@ -6,6 +6,7 @@
 //! and tile sampling stay in their existing systems.
 
 use bevy::ecs::system::SystemParam;
+use crate::gui::DeprecatedInteraction;
 use bevy::input::mouse::{MouseButton, MouseWheel};
 use bevy::prelude::*;
 use bevy::ui::widget::ImageNode;
@@ -677,7 +678,7 @@ fn node_logical_rect(node: &ComputedNode, xf: &UiGlobalTransform, scale: f32) ->
 
 /// Esc closes the sheet; the leave-while-running dialog buttons.
 pub(crate) fn world_gen_bevy_shell_actions(
-    buttons: Query<(&Interaction, &UiButton, &WorldGenAction), Changed<Interaction>>,
+    buttons: Query<(&DeprecatedInteraction, &UiButton, &WorldGenAction), Changed<DeprecatedInteraction>>,
     keys: Res<ButtonInput<KeyCode>>,
     mut ui_state: ResMut<WorldGenUiState>,
     mut exit: MainMenuExit,
