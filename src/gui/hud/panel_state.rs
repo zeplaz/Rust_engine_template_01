@@ -95,6 +95,7 @@ impl Default for HudPanel {
 /// Global HUD panel collapse on Escape (unpinned panels only).
 pub fn hud_panel_escape_collapse_system(
     keys: Res<ButtonInput<KeyCode>>,
+    bindings: Res<crate::gui::InputBindings>,
     mut picker: ResMut<crate::gui::hud::SimBuildPickerState>,
     mut road_sheet: ResMut<crate::gui::hud::sim_road_tool_sheet::SimRoadToolSheetState>,
     mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
@@ -104,7 +105,8 @@ pub fn hud_panel_escape_collapse_system(
     mut esc_frame: ResMut<HudEscCascadeFrame>,
 ) {
     // ECS-10: sole writer of the per-frame Esc witness; resolve from pre-mutation state.
-    if !keys.just_pressed(KeyCode::Escape) {
+    // CQ-06: same key as pause toggle / capture cancel (`InputBindings::cancel_keybinding_capture`).
+    if !keys.just_pressed(bindings.cancel_keybinding_capture) {
         esc_frame.set_if_neq(HudEscCascadeFrame::default());
         return;
     }

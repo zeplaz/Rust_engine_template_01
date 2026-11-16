@@ -26,17 +26,17 @@ pub fn toggle_pause_menu_on_escape(
     if !keys.just_pressed(bindings.cancel_keybinding_capture) {
         return;
     }
+    // CQ-06 / ECS-10: honor upstream claim *before* open/close pause (capture must not also
+    // dismiss the pause menu on the same press).
+    if esc_frame.consumed_before_pause() {
+        return;
+    }
     if *menu.get() == InGameMenuState::Pause {
         NextState::set_if_different(&mut *next_menu, InGameMenuState::Normal);
         pending.clear();
         return;
     }
     if pending.is_pending() {
-        return;
-    }
-    // ECS-10: an upstream handler (key-binding capture, picker, road sheet, tray) already consumed
-    // this Esc — it must not fall through to open pause.
-    if esc_frame.consumed_before_pause() {
         return;
     }
     if !super::hud::sim_hud_esc_cascade::sim_hud_esc_cascade_ready_for_pause(
@@ -193,6 +193,54 @@ mod ecs10_esc_chain_tests {
             HudPanelState::Expanded,
             "capture owns Esc; HUD must not collapse"
         );
+    }
+
+    #[test]
+    fn cq06_capture_esc_does_not_also_close_open_pause_menu() {
+        let mut app = chain_app();
+        NextState::set_if_different(
+            &mut *app.world_mut().resource_mut::<NextState<InGameMenuState>>(),
+            InGameMenuState::Pause,
+        );
+        app.update();
+        assert_eq!(
+            *app.world().resource::<State<InGameMenuState>>().get(),
+            InGameMenuState::Pause
+        );
+        app.world_mut().resource_mut::<KeybindingsUiState>().capture_slot =
+            Some(BindingSlot::FrontHold);
+        press_esc_and_update(&mut app);
+        assert_eq!(
+            app.world().resource::<HudEscCascadeFrame>().handled_by,
+            Some(EscCascadeHandler::KeybindingCapture)
+        );
+        assert_eq!(
+            *app.world().resource::<State<InGameMenuState>>().get(),
+            InGameMenuState::Pause,
+            "same Esc must cancel capture only; pause stays open"
+        );
+    }
+
+    #[test]
+    fn cq06_rebound_cancel_key_drives_esc_cascade() {
+        let mut app = chain_app();
+        app.world_mut()
+            .resource_mut::<InputBindings>()
+            .cancel_keybinding_capture = KeyCode::Backspace;
+        app.world_mut().resource_mut::<SimBuildPickerState>().open = true;
+        {
+            let mut keys = app.world_mut().resource_mut::<ButtonInput<KeyCode>>();
+            keys.clear();
+            keys.press(KeyCode::Backspace);
+        }
+        app.update();
+        assert!(!app.world().resource::<SimBuildPickerState>().open);
+        assert_eq!(
+            app.world().resource::<HudEscCascadeFrame>().handled_by,
+            Some(EscCascadeHandler::BuildPicker)
+        );
+        // Hardcoded Escape must not also fire the cascade this frame.
+        assert!(!pause_requested(&app));
     }
 
     #[test]
