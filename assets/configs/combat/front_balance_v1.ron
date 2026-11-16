@@ -51,6 +51,8 @@
         // reorder. Draw is kg/s; logistics carries whole tonnes, so short buffers round up to 1 t.
         buffer_s: 259200.0,
         reorder_fraction: 0.5,
+        // TOE cargo PublishDemand draw rate (CQ-08); was a hardcoded `1` in front_stock_pool.
+        toe_draw_rate_per_min: 1,
     ),
     combat: (
         step_s: 1.0,

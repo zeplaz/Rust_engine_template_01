@@ -149,11 +149,23 @@ pub struct FrontSupplyParams {
     pub buffer_s: f32,
     /// Reorder when on-hand falls to this fraction of the buffer.
     pub reorder_fraction: f32,
+    /// Standing-line draw rate published with TOE cargo demands (CQ-08).
+    #[serde(default = "default_toe_draw_rate_per_min")]
+    pub toe_draw_rate_per_min: u32,
+}
+
+fn default_toe_draw_rate_per_min() -> u32 {
+    1
 }
 
 impl Default for FrontSupplyParams {
     fn default() -> Self {
-        Self { garrison_per_km: 2.0, buffer_s: 259_200.0, reorder_fraction: 0.5 }
+        Self {
+            garrison_per_km: 2.0,
+            buffer_s: 259_200.0,
+            reorder_fraction: 0.5,
+            toe_draw_rate_per_min: default_toe_draw_rate_per_min(),
+        }
     }
 }
 
@@ -430,6 +442,9 @@ impl FrontBalance {
         positive("supply.garrison_per_km", self.supply.garrison_per_km, &mut issues);
         positive("supply.buffer_s", self.supply.buffer_s, &mut issues);
         unit01("supply.reorder_fraction", self.supply.reorder_fraction, &mut issues);
+        if self.supply.toe_draw_rate_per_min == 0 {
+            issues.push("supply.toe_draw_rate_per_min must be >= 1".into());
+        }
         let c = &self.combat;
         positive("combat.step_s", c.step_s, &mut issues);
         positive("combat.k_attrition", c.k_attrition, &mut issues);
