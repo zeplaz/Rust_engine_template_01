@@ -1,7 +1,7 @@
-//! `VoxelOccupationSnapshot` save overlay — hydrate stub (PLAN-VOXEL-OCCUPATION-v1 · X2-P0).
+//! `VoxelOccupationSnapshot` save overlay (PLAN-VOXEL-OCCUPATION-v1 · CQ-07).
 //!
 //! Load order (charter): transport topology → voxel occupation → logistics GraphSync.
-//! P0: parse/apply helpers only — manifest registration lands in P1+.
+//! Write/hydrate are scheduled on [`crate::io::save::WorldSaveSpinePlugin`].
 
 use std::path::Path;
 
@@ -44,16 +44,15 @@ pub fn write_voxel_occupation_overlay_to_bundle(
     Ok(default_voxel_occupation_overlay_ref())
 }
 
+/// Apply a snapshot when the manifest names the overlay. Independent of live cutover flags —
+/// flags gate writers; hydrate restores saved state.
 #[must_use]
 pub fn try_hydrate_voxel_occupation_from_manifest(
     bundle_dir: &Path,
     manifest: &SaveWorldManifest,
     book: &mut VoxelOccupationBook,
-    config: &VoxelOccupationConfig,
+    _config: &VoxelOccupationConfig,
 ) -> bool {
-    if !config.derived_mirror_enabled {
-        return false;
-    }
     let Some(entry) = manifest
         .overlays
         .iter()
@@ -69,12 +68,63 @@ pub fn try_hydrate_voxel_occupation_from_manifest(
     true
 }
 
-/// Tracks hydrate attempts for voxel occupation overlay (P0 stub — not wired to load pipeline).
+/// Tracks hydrate attempts for voxel occupation overlay.
 #[derive(Resource, Default, Debug)]
 pub struct VoxelOccupationHydrateState {
     pub last_bundle_dir: Option<std::path::PathBuf>,
     pub hydrate_attempted: bool,
     pub hydrated_from_manifest: bool,
+}
+
+/// Write the voxel occupation overlay when a save flush is armed.
+pub fn write_voxel_occupation_overlay_on_save_flush(
+    flush: Res<crate::io::save::SaveFlushRequested>,
+    settings: Res<crate::io::save::WorldSaveBundleSettings>,
+    book: Option<Res<VoxelOccupationBook>>,
+) {
+    if !flush.0 {
+        return;
+    }
+    let Some(book) = book else {
+        return;
+    };
+    if book.cell_count() == 0 {
+        return;
+    }
+    let snap = capture_voxel_occupation_overlay(&book);
+    if let Err(err) = write_voxel_occupation_overlay_to_bundle(&settings.bundle_dir, &snap) {
+        bevy::log::warn!(
+            "voxel occupation overlay write failed at {:?}: {err}",
+            settings.bundle_dir.join(VOXEL_OCCUPATION_REL_PATH)
+        );
+    }
+}
+
+/// Hydrate voxel occupation once per bundle directory when the overlay file is present.
+pub fn try_hydrate_voxel_occupation_on_bundle_dir(
+    settings: Option<Res<crate::io::save::WorldSaveBundleSettings>>,
+    mut state: ResMut<VoxelOccupationHydrateState>,
+    book: Option<ResMut<VoxelOccupationBook>>,
+) {
+    let Some(settings) = settings else {
+        return;
+    };
+    let Some(mut book) = book else {
+        return;
+    };
+    let bundle = settings.bundle_dir.clone();
+    if state.last_bundle_dir.as_ref() == Some(&bundle) && state.hydrate_attempted {
+        return;
+    }
+    state.last_bundle_dir = Some(bundle.clone());
+    state.hydrate_attempted = true;
+
+    let path = bundle.join(VOXEL_OCCUPATION_REL_PATH);
+    let Ok(loaded) = read_voxel_occupation_snapshot_ron(&path) else {
+        return;
+    };
+    book.apply_snapshot(&loaded);
+    state.hydrated_from_manifest = true;
 }
 
 #[cfg(test)]
@@ -85,9 +135,10 @@ mod tests {
     };
 
     #[test]
-    fn voxel_occupation_overlay_manifest_hydrate_stub() {
-        let dir = std::env::temp_dir().join("voxel_occ_overlay");
-        std::fs::create_dir_all(&dir).ok();
+    fn voxel_occupation_overlay_round_trip_through_bundle() {
+        let dir = std::env::temp_dir().join("voxel_occ_overlay_cq07");
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).expect("tmpdir");
         let snap = VoxelOccupationSnapshot {
             schema_version: VOXEL_OCCUPATION_SNAPSHOT_SCHEMA_V1,
             cells: vec![VoxelOccupationCellRecord {
@@ -95,8 +146,8 @@ mod tests {
                 y: 4,
                 layer_index: 0,
                 weight: 1.0,
-                z_layers: 1,
-                site_id: None,
+                z_layers: 2,
+                site_id: Some(9),
                 corridor_reserve: true,
             }],
         };
@@ -110,10 +161,10 @@ mod tests {
             overlays: vec![default_voxel_occupation_overlay_ref()],
         };
 
-        let config = VoxelOccupationConfig {
-            derived_mirror_enabled: true,
-            commit_authority_enabled: false,
-        };
+        // Flags off must still hydrate saved state (CQ-07).
+        let config = VoxelOccupationConfig::default();
+        assert!(!config.derived_mirror_enabled);
+        assert!(!config.commit_authority_enabled);
         let mut book = VoxelOccupationBook::default();
         assert!(try_hydrate_voxel_occupation_from_manifest(
             &dir,
@@ -122,5 +173,6 @@ mod tests {
             &config
         ));
         assert!((book.weight_at(IVec2::new(3, 4)) - 1.0).abs() < 1e-5);
+        assert_eq!(book.cells[&IVec2::new(3, 4)].layers.z_layers, 2);
     }
 }

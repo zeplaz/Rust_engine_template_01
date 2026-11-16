@@ -18,6 +18,8 @@
 ## Review 2026-11-16 — reopened
 
 > Operator code review of the Cursor wave ([`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md)). Until the save path is wired, the safe default is commit authority **OFF** (CQ-07).
+>
+> **CQ-07/CQ-30 progress 2026-11-16:** save overlay write/hydrate wired; flags default off; `by_site` BTreeMap + append; witness JSON API removed. Close again only after OCC-P4/P5 re-score for product default-on.
 
 | Finding | Evidence | Fix |
 |:---|:---|:---|
