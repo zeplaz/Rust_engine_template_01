@@ -2,9 +2,11 @@
 //!
 //! [`weather_field_step`] is the only system that writes [`WeatherField`]. Save hydrate and the test
 //! harness hand it requests ([`PendingWeatherRestore`], [`WeatherPresetRequest`]) instead of writing it.
+//! W4: reads [`WeatherSourceTerms`] (built previous frame) inside each solve.
 
 use bevy::prelude::*;
 
+use crate::systems::atmosphere::{AtmosphereDiagnostics, WeatherSourceTerms};
 use crate::systems::sim_control::{SimStepClock, SimTimeMicros};
 use crate::terrain::biome::BiomeBucket;
 use crate::terrain::family::default_terrain_families;
@@ -88,6 +90,8 @@ pub fn weather_field_step(
     mut preset_req: ResMut<WeatherPresetRequest>,
     mut restore: ResMut<PendingWeatherRestore>,
     mut field: ResMut<WeatherField>,
+    mut terms: Option<ResMut<WeatherSourceTerms>>,
+    mut diag: Option<ResMut<AtmosphereDiagnostics>>,
 ) {
     let Some(params) = params else {
         return;
@@ -151,7 +155,19 @@ pub fn weather_field_step(
             terrain.key = Some(key);
             field.set_terrain(terrain);
         }
-        field.advance(&tuning, now);
+        let (moisture, cloud_delta) = match terms.as_ref() {
+            Some(t) => field.advance_with_terms(&tuning, now, Some(t.as_ref())),
+            None => field.advance_with_terms(&tuning, now, None),
+        };
+        if let Some(t) = terms.as_mut() {
+            t.record_solve_deltas(moisture, cloud_delta);
+        }
+        if let Some(d) = diag.as_mut() {
+            if moisture > 0.0 || cloud_delta > 0.0 {
+                d.pyro_moisture_injected = moisture;
+                d.pyro_cloud_delta = cloud_delta;
+            }
+        }
         solved += 1;
     }
 }

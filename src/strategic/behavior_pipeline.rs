@@ -1,6 +1,10 @@
 //! **Decision pipeline (composed score)** — documents the locked formula; no hard scripted outcomes.
 //!
 //! `Final ≈ traits + emotion + faction + script + environment` (each channel stays fuzzy).
+//!
+//! **DEC-05** (aig3 5.5 *Fuzzy Logic*): [`fuzzy_degree`] / [`fuzzy_and`] / [`fuzzy_or`] keep
+//! channels as soft memberships — no hard thresholds. [`compose_decision_score_fuzzy`] is the
+//! fuzzy state composition; linear [`compose_decision_score`] remains the HUD sum.
 
 use bevy::prelude::*;
 
@@ -16,6 +20,56 @@ pub struct DecisionScoreComponents {
     pub faction_pressure: f32,
     pub script_influence: f32,
     pub environmental: f32,
+}
+
+
+/// DEC-05: triangular membership of `x` in [lo, peak, hi] → degree in [0, 1].
+#[inline]
+#[must_use]
+pub fn fuzzy_degree(x: f32, lo: f32, peak: f32, hi: f32) -> f32 {
+    if !(lo < peak && peak < hi) {
+        return 0.0;
+    }
+    if x <= lo || x >= hi {
+        return 0.0;
+    }
+    if x == peak {
+        return 1.0;
+    }
+    if x < peak {
+        (x - lo) / (peak - lo)
+    } else {
+        (hi - x) / (hi - peak)
+    }
+}
+
+/// Soft AND (product t-norm).
+#[inline]
+#[must_use]
+pub fn fuzzy_and(a: f32, b: f32) -> f32 {
+    (a.clamp(0.0, 1.0) * b.clamp(0.0, 1.0)).clamp(0.0, 1.0)
+}
+
+/// Soft OR (probabilistic sum).
+#[inline]
+#[must_use]
+pub fn fuzzy_or(a: f32, b: f32) -> f32 {
+    let a = a.clamp(0.0, 1.0);
+    let b = b.clamp(0.0, 1.0);
+    (a + b - a * b).clamp(0.0, 1.0)
+}
+
+/// DEC-05: compose channels as fuzzy degrees then soft-OR (no hard cutoffs).
+#[must_use]
+pub fn compose_decision_score_fuzzy(c: &DecisionScoreComponents) -> f32 {
+    let channels = [
+        fuzzy_degree(c.base_traits, -0.05, 0.15, 0.45),
+        fuzzy_degree(c.emotional, -0.15, 0.05, 0.35),
+        fuzzy_degree(c.faction_pressure, -0.05, 0.1, 0.4),
+        fuzzy_degree(c.script_influence, -0.05, 0.12, 0.5),
+        fuzzy_degree(c.environmental, -0.05, 0.15, 0.55),
+    ];
+    channels.into_iter().fold(0.0_f32, fuzzy_or)
 }
 
 #[inline]
@@ -109,4 +163,27 @@ pub fn decision_pipeline_composition_system(
     }
     sink.last_mean_composed_score = if n > 0 { sum / n as f32 } else { 0.0 };
     sink.last_agent_samples = n;
+}
+
+#[cfg(test)]
+mod dec05_tests {
+    use super::*;
+
+    #[test]
+    fn dec05_fuzzy_membership_and_soft_compose() {
+        assert!((fuzzy_degree(0.15, -0.05, 0.15, 0.45) - 1.0).abs() < 1e-5);
+        assert_eq!(fuzzy_degree(-1.0, 0.0, 0.5, 1.0), 0.0);
+        assert!((fuzzy_and(0.5, 0.5) - 0.25).abs() < 1e-5);
+        assert!((fuzzy_or(0.5, 0.5) - 0.75).abs() < 1e-5);
+        let c = DecisionScoreComponents {
+            base_traits: 0.15,
+            emotional: 0.05,
+            faction_pressure: 0.1,
+            script_influence: 0.12,
+            environmental: 0.15,
+        };
+        let soft = compose_decision_score_fuzzy(&c);
+        assert!(soft > 0.5 && soft <= 1.0);
+        assert_ne!(soft, compose_decision_score(&c));
+    }
 }

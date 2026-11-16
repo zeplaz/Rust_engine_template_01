@@ -1,4 +1,11 @@
 //! Multi-focus interest orbs merged into chunk streaming windows.
+//!
+//! **ECS-11** (gea4v2 17.8.8 *Registering Interest in Events* · aig3 11.2.2 *Event Casting*):
+//! an orb is a subscription; work fans out only to chunks some orb registered
+//! ([`registered_priority_for_chunk`] / [`retain_registered_chunks`]) instead of broadcasting
+//! to every chunk. LEGACY keywords: interest · subscribe · event filter.
+//! Hysteresis-retained chunks (IO-02, `R+H`) are a deliberate residency superset and are
+//! merged *after* this gate in `streaming::mod`, not through it.
 
 use std::collections::HashSet;
 
@@ -6,7 +13,7 @@ use bevy::prelude::{IVec2, UVec2};
 
 use crate::gui::{OperationalLodZone, WorldRepresentationFrame};
 
-use super::residency::chunk_window_coords;
+use super::residency::{chunk_window_coords, chunk_within_load_radius};
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum InterestOrbKind {
@@ -57,13 +64,46 @@ pub fn interest_orbs_from_lod_zones(
         .collect()
 }
 
+/// Chunk `coord` lies inside this orb's registered window (square, Chebyshev — same set as
+/// [`chunk_window_coords`], without allocating the window).
 #[must_use]
-pub fn priority_for_chunk(coord: IVec2, orbs: &[InterestOrb]) -> u8 {
+pub fn orb_registers_chunk(orb: &InterestOrb, coord: IVec2) -> bool {
+    chunk_within_load_radius(coord, orb.center, orb.radius_chunks)
+}
+
+/// ECS-11 (gea4v2 17.8.8 / aig3 11.2.2): the **only** interest gate for streaming fan-out.
+///
+/// `Some(priority)` = at least one orb registered interest in `coord` (highest priority wins);
+/// `None` = nobody subscribed, so the chunk receives no load / priority / ghost-band work.
+/// LEGACY keywords: interest · subscribe · event filter (`events_message_passing`, `event_managers`).
+#[must_use]
+pub fn registered_priority_for_chunk(coord: IVec2, orbs: &[InterestOrb]) -> Option<u8> {
     orbs.iter()
-        .filter(|orb| chunk_window_coords(orb.center, orb.radius_chunks).contains(&coord))
+        .filter(|orb| orb_registers_chunk(orb, coord))
         .map(|orb| orb.priority)
         .max()
-        .unwrap_or(0)
+}
+
+/// `true` when any orb registered interest in `coord`.
+#[must_use]
+pub fn chunk_has_registered_interest(coord: IVec2, orbs: &[InterestOrb]) -> bool {
+    orbs.iter().any(|orb| orb_registers_chunk(orb, coord))
+}
+
+/// Drop every candidate nobody registered interest in (order preserved).
+#[must_use]
+pub fn retain_registered_chunks(candidates: &[IVec2], orbs: &[InterestOrb]) -> Vec<IVec2> {
+    candidates
+        .iter()
+        .copied()
+        .filter(|&coord| chunk_has_registered_interest(coord, orbs))
+        .collect()
+}
+
+/// Priority for scheduling; unregistered chunks collapse to `0` (see [`registered_priority_for_chunk`]).
+#[must_use]
+pub fn priority_for_chunk(coord: IVec2, orbs: &[InterestOrb]) -> u8 {
+    registered_priority_for_chunk(coord, orbs).unwrap_or(0)
 }
 
 #[must_use]
@@ -186,6 +226,71 @@ mod tests {
         ];
         let merged = merge_interest_chunk_coords(&orbs);
         assert_eq!(merged.len(), 2);
+    }
+
+    fn orb(center: IVec2, radius: i32, priority: u8) -> InterestOrb {
+        InterestOrb {
+            center,
+            radius_chunks: radius,
+            priority,
+            kind: InterestOrbKind::LodZone,
+        }
+    }
+
+    #[test]
+    fn ecs11_uninterested_chunk_is_skipped() {
+        let orbs = vec![orb(IVec2::ZERO, 1, 10)];
+        let far = IVec2::new(9, 9);
+        assert_eq!(registered_priority_for_chunk(far, &orbs), None);
+        assert!(!chunk_has_registered_interest(far, &orbs));
+        assert_eq!(priority_for_chunk(far, &orbs), 0);
+        let kept = retain_registered_chunks(&[IVec2::ZERO, far, IVec2::new(1, 1)], &orbs);
+        assert_eq!(kept, vec![IVec2::ZERO, IVec2::new(1, 1)]);
+    }
+
+    #[test]
+    fn ecs11_no_orbs_means_no_fan_out() {
+        let candidates = [IVec2::ZERO, IVec2::new(1, 0)];
+        assert!(retain_registered_chunks(&candidates, &[]).is_empty());
+        assert_eq!(registered_priority_for_chunk(IVec2::ZERO, &[]), None);
+    }
+
+    #[test]
+    fn ecs11_negative_radius_registers_nothing() {
+        let orbs = vec![orb(IVec2::ZERO, -1, 200)];
+        assert_eq!(registered_priority_for_chunk(IVec2::ZERO, &orbs), None);
+        assert!(merge_interest_chunk_coords(&orbs).is_empty());
+    }
+
+    #[test]
+    fn ecs11_highest_registered_priority_wins_and_zero_priority_is_still_registered() {
+        let orbs = vec![orb(IVec2::ZERO, 2, 5), orb(IVec2::new(1, 0), 0, 90), orb(IVec2::new(8, 8), 0, 0)];
+        assert_eq!(registered_priority_for_chunk(IVec2::new(1, 0), &orbs), Some(90));
+        assert_eq!(registered_priority_for_chunk(IVec2::new(-2, 2), &orbs), Some(5));
+        // priority 0 is a registration, not absence — `priority_for_chunk` alone cannot tell.
+        assert_eq!(registered_priority_for_chunk(IVec2::new(8, 8), &orbs), Some(0));
+        assert_eq!(registered_priority_for_chunk(IVec2::new(4, 4), &orbs), None);
+    }
+
+    #[test]
+    fn ecs11_gate_matches_window_membership_for_every_orb() {
+        for radius in -1..=3 {
+            let o = orb(IVec2::new(2, -3), radius, 7);
+            let window: HashSet<IVec2> = chunk_window_coords(o.center, o.radius_chunks).into_iter().collect();
+            for y in -8..=8 {
+                for x in -8..=8 {
+                    let c = IVec2::new(x, y);
+                    assert_eq!(orb_registers_chunk(&o, c), window.contains(&c), "r={radius} c={c}");
+                }
+            }
+        }
+    }
+
+    #[test]
+    fn ecs11_merged_streaming_coords_are_all_registered() {
+        let orbs = vec![orb(IVec2::ZERO, 2, 10), orb(IVec2::new(10, 10), 1, 20)];
+        let merged = merge_interest_chunk_coords(&orbs);
+        assert_eq!(retain_registered_chunks(&merged, &orbs), merged);
     }
 
     #[test]

@@ -9,7 +9,9 @@ use std::path::Path;
 use bevy::prelude::*;
 
 use crate::io::save::manifest::{OverlaySnapshotRef, SaveWorldManifest};
-use crate::systems::weather::{PendingWeatherRestore, WeatherField, WeatherFieldSave, WEATHER_FIELD_SAVE_SCHEMA};
+use crate::systems::weather::{
+    migrate_weather_field_save, PendingWeatherRestore, WeatherField, WeatherFieldSave,
+};
 
 pub const WEATHER_OVERLAY_NAME: &str = "weather_field";
 pub const WEATHER_OVERLAY_REL_PATH: &str = "overlays/weather_field.ron";
@@ -41,13 +43,8 @@ pub fn read_weather_field_ron(path: impl AsRef<Path>) -> std::io::Result<Weather
     let body = std::fs::read_to_string(path)?;
     let save: WeatherFieldSave = ron::from_str(&body)
         .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e.to_string()))?;
-    if save.schema_version != WEATHER_FIELD_SAVE_SCHEMA {
-        return Err(std::io::Error::new(
-            std::io::ErrorKind::InvalidData,
-            format!("weather field schema {} unsupported", save.schema_version),
-        ));
-    }
-    Ok(save)
+    migrate_weather_field_save(save)
+        .map_err(|e| std::io::Error::new(std::io::ErrorKind::InvalidData, e))
 }
 
 /// Read the weather overlay named by `manifest`; `None` when absent (older saves) or unreadable.

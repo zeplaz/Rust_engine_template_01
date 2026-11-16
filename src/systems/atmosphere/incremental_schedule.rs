@@ -2,6 +2,9 @@
 //!
 //! CPU dirty-region scheduling, mirrored GPU subresource uploads, and partial compute dispatch
 //! are in-tree. Full-field compute runs only on reconcile cadence when partial uploads are empty.
+//!
+//! **EXEC-02** (aig3 10.1.2–10.1.3 *Interruptible Processes / Load-Balancing Scheduler*):
+//! [`take_budgeted_dirty_regions`] resumes a cursor with a fixed per-tick region budget.
 
 use std::collections::HashMap;
 
@@ -64,6 +67,37 @@ pub struct AtmosphereDirtyRegion {
 #[derive(Resource, Clone, Debug, Default)]
 pub struct AtmosphereDirtyRegionQueue {
     pub regions: Vec<AtmosphereDirtyRegion>,
+}
+
+/// EXEC-02: fixed per-tick cap on dirty regions drained into the partial upload plan.
+pub const ATMOSPHERE_PARTIAL_REGION_BUDGET: usize = 8;
+
+/// EXEC-02: resumable index into [`AtmosphereDirtyRegionQueue::regions`].
+#[derive(Resource, Clone, Copy, Debug, Default)]
+pub struct AtmosphereIncrementalCursor {
+    pub next_index: usize,
+}
+
+/// EXEC-02: take up to `budget` regions starting at `cursor`, wrapping when exhausted.
+#[must_use]
+pub fn take_budgeted_dirty_regions(
+    regions: &[AtmosphereDirtyRegion],
+    cursor: &mut AtmosphereIncrementalCursor,
+    budget: usize,
+) -> Vec<AtmosphereDirtyRegion> {
+    if regions.is_empty() || budget == 0 {
+        cursor.next_index = 0;
+        return Vec::new();
+    }
+    let n = regions.len();
+    let start = cursor.next_index % n;
+    let take = budget.min(n);
+    let mut out = Vec::with_capacity(take);
+    for i in 0..take {
+        out.push(regions[(start + i) % n]);
+    }
+    cursor.next_index = (start + take) % n;
+    out
 }
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -195,6 +229,7 @@ pub fn build_partial_gpu_uploads(
 pub fn register_atmosphere_incremental_schedule(app: &mut App) {
     app.init_resource::<AtmosphereIncrementalSchedule>()
         .init_resource::<AtmosphereDirtyRegionQueue>()
+        .init_resource::<AtmosphereIncrementalCursor>()
         .init_resource::<AtmospherePartialFieldState>()
         .init_resource::<AtmospherePartialUploadPlan>()
         .init_resource::<AtmosphereGpuFieldBridge>()
@@ -636,5 +671,26 @@ mod tests {
         let expanded = expand_diffusion_region(region, 1);
         assert_eq!(expanded.min, IVec2::new(1, 1));
         assert_eq!(expanded.max, IVec2::new(4, 4));
+    }
+
+    #[test]
+    fn exec02_budgeted_regions_resume_across_ticks() {
+        let regions: Vec<_> = (0..5)
+            .map(|i| AtmosphereDirtyRegion {
+                min: IVec2::new(i, 0),
+                max: IVec2::new(i, 0),
+                stamp: SimStepStamp::new(i as u64, 0),
+                mean_heat: 0.1,
+            })
+            .collect();
+        let mut cursor = AtmosphereIncrementalCursor::default();
+        let a = take_budgeted_dirty_regions(&regions, &mut cursor, 2);
+        assert_eq!(a.len(), 2);
+        assert_eq!(a[0].min.x, 0);
+        assert_eq!(a[1].min.x, 1);
+        let b = take_budgeted_dirty_regions(&regions, &mut cursor, 2);
+        assert_eq!(b[0].min.x, 2);
+        assert_eq!(b[1].min.x, 3);
+        assert_eq!(cursor.next_index, 4);
     }
 }

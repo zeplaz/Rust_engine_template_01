@@ -77,11 +77,11 @@ Reported authoritatively by `grammar_set_tier()` + `grammar_set_brief` + `buildi
 | **G1 — Family seed** | ≥3 archetypes *or* ≥3 districts in one lineage; JSON mirrors for MCP | **Met** — 4 archetypes on disk |
 | **G2 — Axis coverage** | ARCH-DNA axes represented across set (F,L,C,D,W… per v0 baseline) | **Met** — 4 F-axis presets (fuel, logistics, manufacturing, power) |
 | **G3 — Layer depth** | `grammar_rule_chain` includes facade + detail + age layers in snapshots | **Current cold-start** — DNA + iterate visible; kit hint off; set-health promoted |
-| **G4 — Production set** | Diversity witness green; module audit gaps closed; G4 bake path unblocked | **Blocked** — `building_set_coverage` not green; `pilot_hardcode_green` false |
+| **G4 — Production set** | Diversity witness green; module audit gaps closed; G4 bake path unblocked | **Met (2026-11-15)** — `building_set_coverage` green; `pilot_hardcode_green` true; tier **G4** |
 
-**Live tier witness:** `debug_runs/grammar_set_tier_live.json` → **G3** (4 archetypes, 5 districts, 4 presets).
+**Live tier witness:** `debug_runs/grammar_set_tier_live.json` → **G4** · `debug_runs/aps_g4_coverage_live.json` → `APS-G4-COVERAGE-001` green.
 
-**G4 gap (honest):** pilot counts align (`APS-GUARD-BRIEF-PARITY-001` green) but coverage/hardcode guards still red — tier reasons include `building_set_coverage not green for G4`.
+**G4 close (honest):** coverage + hardcode guards green; grammar pilots feed studio massing export ([`plan_studio_massing_grammar_bridge_v1.md`](plan_studio_massing_grammar_bridge_v1.md)). RND-09 column instancing remains DEFER.
 
 **APS reads tier at runtime** (cached from last `grammar_set_brief` or witness) — do not hardcode “we have grammar” from a single file on disk.
 

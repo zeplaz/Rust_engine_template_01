@@ -86,8 +86,10 @@ struct SimulationNarrativeFeedLine;
 
 pub(crate) const LEFT_CONTEXT_RAIL_W_PX: f32 = CONTEXT_RAIL_W_PX;
 /// Bottom context tray must not cover the fixed build rail column.
+/// Includes the overlay's window inset (`CENTER_ROW_EDGE_PAD_PX`) — without it the tray overlapped
+/// the build rail's right edge by that many px.
 pub(crate) const CONTEXT_TRAY_LEFT_INSET_PX: f32 =
-    LEFT_CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX;
+    CENTER_ROW_EDGE_PAD_PX + LEFT_CONTEXT_RAIL_W_PX + COMMAND_LEFT_STACK_COLUMN_GAP_PX + BUILD_RAIL_W_PX;
 /// Fixed width for the expanded left command stack (prevents flex from squeezing `sim_map_fill`).
 pub(crate) const LEFT_CONTEXT_STACK_W_PX: f32 = LEFT_CONTEXT_STACK_BODY_W_PX;
 
@@ -1309,7 +1311,7 @@ fn sync_command_left_stack_visibility(
     state: Res<CommandLeftStackState>,
     mut q: ParamSet<(
         Query<(&mut Visibility, &mut Node), With<LeftContextStackBody>>,
-        Query<&mut Visibility, With<LeftContextRail>>,
+        Query<(&mut Visibility, &mut Node), With<LeftContextRail>>,
         Query<(&mut Visibility, &mut Node), With<BuildRailRoot>>,
     )>,
 ) {
@@ -1326,12 +1328,19 @@ fn sync_command_left_stack_visibility(
             Display::Flex
         };
     }
-    for mut v in q.p1().iter_mut() {
+    for (mut v, mut node) in q.p1().iter_mut() {
         *v = if collapsed {
             Visibility::Visible
         } else {
             Visibility::Hidden
         };
+        // `Visibility::Hidden` keeps the rail in flex layout: expanded, it pushed the build rail
+        // 54 px right of where `command_left_stack_footprint_px` / `build_rail_slot_anchor_xy`
+        // (picker sheet, pointer gate) place it, so the picker covered the rail buttons.
+        let display = if collapsed { Display::Flex } else { Display::None };
+        if node.display != display {
+            node.display = display;
+        }
     }
     for (mut v, mut node) in q.p2().iter_mut() {
         *v = Visibility::Visible;

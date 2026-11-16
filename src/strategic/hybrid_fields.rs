@@ -1,4 +1,5 @@
 //! Hybrid sim **statistical layer** — macro fields + regional overlays (probability shaping, not agent truth).
+//! **DEC-06**: field stats feed Markov resolution masses in `hybrid_brain`.
 //!
 //! Principle: stats **bias** outcomes; they do not dictate individual agent actions.
 //! [`crate::strategic::sim::StrategicSimulationPlugin`]: **PreUpdate** runs [`region_stats_spatial_smoothing_system`];

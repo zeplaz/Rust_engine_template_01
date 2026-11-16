@@ -1,6 +1,17 @@
 //! Deterministic ballistic / blast bookkeeping (Ranking C3 scaffold).
 //!
-//! Sim owns trajectories; presentation/audio consume dumps. No rigid-body world.
+//! **Dual-cite (V4-PHYS09 / PHYS-09):**
+//! - NEW: gea4v2 14.1 Do You Want Physics in Your Game? · 14.1.2.1 Simulations (Sims) ·
+//!   14.1.3 Impact of Physics on a Game — bookkeeping / kinematic envelopes beat a full
+//!   rigid-body world for this city-sim; we do **not** host middleware dynamics here.
+//! - LEGACY: `physics_collision` (gea_v2_e4 §14 p352) · `physics_middleware` (gea_v2_e4 §14.2 p358)
+//!   — chapter asks the same design question; answer for this engine is intentional **no**
+//!   rigid-body middleware (no Rapier/Havok/PhysX host).
+//!
+//! Contract: [`BallisticFlightBook`] + [`step_ballistic_flights`] advance kinematic flights,
+//! then **enqueue** [`BlastIntent`] (intent→execute). Construction owns damage execute
+//! (PHYS-07/08). Presentation/audio consume dumps. Voxel occupation clears stay on the
+//! demolish funnel — ballistics never writes sites / occupation.
 
 use bevy::prelude::*;
 
@@ -490,6 +501,122 @@ mod tests {
         assert!(
             (predicted - desired).length() <= 1.0,
             "predicted impact should land on target"
+        );
+    }
+
+    #[test]
+    fn phys09_dual_cite_in_module_docs() {
+        let src = include_str!("ballistics.rs");
+        let prod = src.split_once("#[cfg(test)]").map_or(src, |(p, _)| p);
+        assert!(prod.contains("PHYS-09") || prod.contains("V4-PHYS09"));
+        assert!(prod.contains("14.1") && prod.contains("14.1.2.1") && prod.contains("14.1.3"));
+        assert!(prod.contains("physics_collision") || prod.contains("physics_middleware"));
+        assert!(prod.contains("gea_v2_e4"));
+        assert!(
+            prod.contains("bookkeeping") && prod.contains("rigid-body"),
+            "docs must state bookkeeping over rigid-body design"
+        );
+    }
+
+    /// PHYS-09: this module is kinematic bookkeeping + intent enqueue — not a dynamics world.
+    /// Scans non-comment production lines only (docs may cite middleware names as rejects).
+    #[test]
+    fn phys09_source_rejects_rigid_body_middleware() {
+        let src = include_str!("ballistics.rs");
+        let prod = src.split_once("#[cfg(test)]").map_or(src, |(p, _)| p);
+        let code_only: String = prod
+            .lines()
+            .filter(|line| {
+                let t = line.trim_start();
+                !(t.starts_with("//") || t.starts_with("//!") || t.starts_with("/*") || t.is_empty())
+            })
+            .collect::<Vec<_>>()
+            .join("\n");
+        for forbidden in [
+            "RigidBody",
+            "bevy_rapier",
+            "ImpulseJoint",
+            "ExternalForce",
+            "Collider::",
+            "PhysicsPipeline",
+            "rapier3d",
+            "rapier2d",
+            "use rapier",
+            "use physx",
+            "use havok",
+        ] {
+            assert!(
+                !code_only.contains(forbidden),
+                "ballistics must not host rigid-body middleware (found `{forbidden}`)"
+            );
+        }
+        assert!(
+            prod.contains("BallisticFlightBook") && prod.contains("BlastIntent"),
+            "bookkeeping flight book + blast intent must remain the contract"
+        );
+    }
+
+    #[test]
+    fn phys09_impact_enqueues_blast_intent_not_site_mutate() {
+        let mut app = App::new();
+        app.init_resource::<BallisticFlightBook>()
+            .init_resource::<AudioOneShotQueue>()
+            .init_resource::<BlastIntentQueue>()
+            .init_resource::<SimStepClock>()
+            .add_systems(Update, step_ballistic_flights);
+        {
+            let world = app.world_mut();
+            world
+                .resource_mut::<BallisticFlightBook>()
+                .launch(Vec2::ZERO, Vec2::new(2.0, 0.0), 4.0, 2.0, BallisticKind::Shell);
+            world.resource_mut::<SimStepClock>().due = 1;
+        }
+        app.update();
+
+        let book = app.world().resource::<BallisticFlightBook>();
+        assert_eq!(book.flights.len(), 0);
+        assert_eq!(book.impacts, 1);
+        let queue = app.world().resource::<BlastIntentQueue>();
+        assert_eq!(
+            queue.pending.len(),
+            1,
+            "impact must enqueue BlastIntent (intent→execute)"
+        );
+        assert!(
+            (queue.pending[0].center_xz - Vec2::new(2.0, 0.0)).length() < 1e-3
+        );
+
+        let prod = include_str!("ballistics.rs")
+            .split_once("#[cfg(test)]")
+            .map_or(include_str!("ballistics.rs"), |(p, _)| p);
+        for forbidden in [
+            "BlastCraterBook",
+            "execute_demolish",
+            "TileOccupationBook",
+            "VoxelOccupationBook",
+            "ConstructionSite",
+            ".despawn(",
+        ] {
+            assert!(
+                !prod.contains(forbidden),
+                "ballistics must stay intent-only (found `{forbidden}`)"
+            );
+        }
+    }
+
+    #[test]
+    fn phys09_ballistic_book_is_sole_flight_writer() {
+        let prod = include_str!("ballistics.rs")
+            .split_once("#[cfg(test)]")
+            .map_or(include_str!("ballistics.rs"), |(p, _)| p);
+        assert!(
+            prod.contains("mut book: ResMut<BallisticFlightBook>"),
+            "step_ballistic_flights must be the BallisticFlightBook writer"
+        );
+        assert!(
+            prod.contains("Option<ResMut<BlastIntentQueue>>")
+                || prod.contains("mut blast_queue: Option<ResMut<BlastIntentQueue>>"),
+            "damage path must be enqueue-only via BlastIntentQueue"
         );
     }
 }

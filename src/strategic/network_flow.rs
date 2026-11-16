@@ -1,5 +1,11 @@
 //! **Network flow → [`ChunkStrategicOverlay`](super::ChunkStrategicOverlay)** — solvers write only SOA fields;
 //! gameplay entities read overlays. U7 extension: [`NetworkDirtyMask`] when [`ChunkNetworkDigest`](super::spatial_network::ChunkNetworkDigest) signatures move.
+//!
+//! Ref-books **LOOP-11** · LEGACY `game_object_update` (GEA 4e I §8.3.3 Event-Based Updating,
+//! gea_v1_e4 p511–512 / gea_v2_e4 p606): chunk diffusion runs only when digest signatures move
+//! ([`network_digest_marks_flow_dirty_system`] sets [`NETWORK_DIRTY_FLOW`]);
+//! [`network_flow_chunk_local_solver_system`] skips clean chunks and clears the bit after a pass.
+//! Do **not** retick flow SOA every frame.
 
 use bevy::prelude::*;
 
@@ -50,6 +56,39 @@ pub struct NetworkFlowPrevSignatures {
     pub connectivity_hash: u64,
     pub flow_hash: u64,
     pub initialized: bool,
+}
+
+/// Digest signature tuple used by the LOOP-11 dirty gate (road/power/pipe/connectivity/flow).
+#[must_use]
+pub fn network_digest_signature_tuple(digest: &ChunkNetworkDigest) -> (u64, u64, u64, u64, u64) {
+    (
+        digest.road_signature,
+        digest.power_signature,
+        digest.pipe_signature,
+        digest.connectivity_hash,
+        digest.flow_hash,
+    )
+}
+
+/// **LOOP-11 gate:** `true` ⇒ overlay flow SOA should be marked dirty (digest moved / first tick).
+#[must_use]
+pub fn network_flow_digest_changed(
+    prev: &NetworkFlowPrevSignatures,
+    digest: &ChunkNetworkDigest,
+) -> bool {
+    let cur = network_digest_signature_tuple(digest);
+    !prev.initialized
+        || cur.0 != prev.road_signature
+        || cur.1 != prev.power_signature
+        || cur.2 != prev.pipe_signature
+        || cur.3 != prev.connectivity_hash
+        || cur.4 != prev.flow_hash
+}
+
+/// **LOOP-11 gate:** `true` ⇒ chunk-local solver should tick this overlay.
+#[must_use]
+pub fn network_flow_chunk_needs_solve(mask: &NetworkDirtyMask) -> bool {
+    mask.mask & NETWORK_DIRTY_FLOW != 0
 }
 
 #[inline]
@@ -152,24 +191,13 @@ pub fn network_digest_marks_flow_dirty_system(
     mut prev: ResMut<NetworkFlowPrevSignatures>,
     mut masks: Query<&mut NetworkDirtyMask, With<ChunkStrategicOverlay>>,
 ) {
-    let cur = (
-        digest.road_signature,
-        digest.power_signature,
-        digest.pipe_signature,
-        digest.connectivity_hash,
-        digest.flow_hash,
-    );
-    let changed = !prev.initialized
-        || cur.0 != prev.road_signature
-        || cur.1 != prev.power_signature
-        || cur.2 != prev.pipe_signature
-        || cur.3 != prev.connectivity_hash
-        || cur.4 != prev.flow_hash;
+    let changed = network_flow_digest_changed(&prev, &digest);
     if changed {
         for mut m in masks.iter_mut() {
             m.mask |= NETWORK_DIRTY_FLOW;
         }
     }
+    let cur = network_digest_signature_tuple(&digest);
     prev.road_signature = cur.0;
     prev.power_signature = cur.1;
     prev.pipe_signature = cur.2;
@@ -187,7 +215,8 @@ pub fn network_flow_chunk_local_solver_system(
 ) {
     let iters = 2u32;
     for (mut overlay, mut mask) in q.iter_mut() {
-        if mask.mask & NETWORK_DIRTY_FLOW == 0 {
+        // LOOP-11: skip chunks whose digest/graph revision did not mark flow dirty.
+        if !network_flow_chunk_needs_solve(&mask) {
             continue;
         }
         let n = overlay.len_cells();
@@ -314,5 +343,156 @@ pub fn network_insulation_visibility_post_system(
                 overlay.artillery_danger[ci][0],
             );
         }
+    }
+}
+
+#[cfg(test)]
+mod loop11_revision_gate_tests {
+    use super::*;
+    use bevy::ecs::system::RunSystemOnce;
+    use bevy::math::{IVec2, UVec2};
+    use bevy::prelude::App;
+
+    #[test]
+    fn network_flow_digest_changed_true_until_initialized() {
+        let prev = NetworkFlowPrevSignatures::default();
+        let digest = ChunkNetworkDigest::default();
+        assert!(
+            network_flow_digest_changed(&prev, &digest),
+            "LOOP-11: first digest tick must dirty"
+        );
+    }
+
+    #[test]
+    fn network_flow_digest_changed_false_when_signatures_match() {
+        let digest = ChunkNetworkDigest {
+            road_signature: 1,
+            power_signature: 2,
+            pipe_signature: 3,
+            connectivity_hash: 4,
+            flow_hash: 5,
+            ..Default::default()
+        };
+        let prev = NetworkFlowPrevSignatures {
+            road_signature: 1,
+            power_signature: 2,
+            pipe_signature: 3,
+            connectivity_hash: 4,
+            flow_hash: 5,
+            initialized: true,
+        };
+        assert!(
+            !network_flow_digest_changed(&prev, &digest),
+            "LOOP-11: matching digest must not retick"
+        );
+    }
+
+    #[test]
+    fn network_flow_digest_changed_true_on_flow_hash_bump() {
+        let digest = ChunkNetworkDigest {
+            flow_hash: 99,
+            ..Default::default()
+        };
+        let prev = NetworkFlowPrevSignatures {
+            initialized: true,
+            ..Default::default()
+        };
+        assert!(network_flow_digest_changed(&prev, &digest));
+    }
+
+    #[test]
+    fn network_flow_chunk_needs_solve_respects_dirty_bit() {
+        let clean = NetworkDirtyMask { mask: 0 };
+        let dirty = NetworkDirtyMask {
+            mask: NETWORK_DIRTY_FLOW,
+        };
+        assert!(!network_flow_chunk_needs_solve(&clean));
+        assert!(network_flow_chunk_needs_solve(&dirty));
+    }
+
+    #[test]
+    fn network_flow_solver_skips_clean_and_clears_dirty() {
+        let mut app = App::new();
+        app.init_resource::<SpatialNetworkGraph>()
+            .init_resource::<InfrastructureGraph>();
+        let overlay = ChunkStrategicOverlay::new(IVec2::ZERO, UVec2::new(2, 2));
+        let dirty_e = app
+            .world_mut()
+            .spawn((
+                overlay.clone(),
+                NetworkDirtyMask {
+                    mask: NETWORK_DIRTY_FLOW,
+                },
+            ))
+            .id();
+        let clean_e = app
+            .world_mut()
+            .spawn((overlay, NetworkDirtyMask { mask: 0 }))
+            .id();
+
+        app.world_mut()
+            .run_system_once(network_flow_chunk_local_solver_system)
+            .unwrap();
+
+        let dirty_mask = app.world().entity(dirty_e).get::<NetworkDirtyMask>().unwrap();
+        let clean_mask = app.world().entity(clean_e).get::<NetworkDirtyMask>().unwrap();
+        assert_eq!(
+            dirty_mask.mask & NETWORK_DIRTY_FLOW,
+            0,
+            "LOOP-11: successful pass clears dirty bit"
+        );
+        assert_eq!(
+            clean_mask.mask, 0,
+            "LOOP-11: clean chunk must stay skipped"
+        );
+    }
+
+    #[test]
+    fn network_digest_marks_dirty_only_when_signatures_move() {
+        let mut app = App::new();
+        app.init_resource::<ChunkNetworkDigest>()
+            .init_resource::<NetworkFlowPrevSignatures>();
+        let e = app
+            .world_mut()
+            .spawn((
+                ChunkStrategicOverlay::new(IVec2::ZERO, UVec2::new(1, 1)),
+                NetworkDirtyMask { mask: 0 },
+            ))
+            .id();
+
+        // First tick: uninitialized prev → dirty.
+        app.world_mut()
+            .run_system_once(network_digest_marks_flow_dirty_system)
+            .unwrap();
+        assert_ne!(
+            app.world().entity(e).get::<NetworkDirtyMask>().unwrap().mask & NETWORK_DIRTY_FLOW,
+            0
+        );
+
+        // Clear and tick again with same signatures → stay clean.
+        app.world_mut()
+            .entity_mut(e)
+            .get_mut::<NetworkDirtyMask>()
+            .unwrap()
+            .mask = 0;
+        app.world_mut()
+            .run_system_once(network_digest_marks_flow_dirty_system)
+            .unwrap();
+        assert_eq!(
+            app.world().entity(e).get::<NetworkDirtyMask>().unwrap().mask & NETWORK_DIRTY_FLOW,
+            0,
+            "LOOP-11: unchanged digest must not re-dirty"
+        );
+
+        // Bump flow_hash → dirty again.
+        app.world_mut().resource_mut::<ChunkNetworkDigest>().flow_hash = 42;
+        app.world_mut()
+            .run_system_once(network_digest_marks_flow_dirty_system)
+            .unwrap();
+        assert_ne!(
+            app.world().entity(e).get::<NetworkDirtyMask>().unwrap().mask & NETWORK_DIRTY_FLOW,
+            0,
+            "LOOP-11: digest bump must dirty"
+        );
     }
 }

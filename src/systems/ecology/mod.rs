@@ -1,8 +1,10 @@
 //! Ecology: macro [`ChunkEcology`](chunk_ecology::ChunkEcology) + meso [`vegetation_field::VegetationField`] (CPU authority).
+//! **DES-06**: stable feedback via [`ecosystem_logistic_step`].
 
 mod cell_stand;
 mod fuel_break;
 mod chunk_ecology;
+mod wildlife_flock;
 mod landscape_grammar;
 mod landscape_grammar_burn;
 mod landscape_grammar_lg2;
@@ -16,7 +18,7 @@ mod water_vegetation_tests;
 
 pub use cell_stand::{
     ChunkCellStand, StandBurnConfig, StandKind, StandPhase, CELL_BURN_HEAT, CELL_BURNING, CELL_BURNT,
-    GAME_DAY_SECS, STAND_BURN_RON, load_stand_burn_config, parse_stand_burn_ron,
+    GAME_DAY_SECS, STAND_BURN_RON, ecosystem_logistic_step, load_stand_burn_config, parse_stand_burn_ron,
     CELL_GRASS, CELL_NONE, CELL_OLD, CELL_REGROWTH, CELL_SHRUB, CELL_WATER, CELL_YOUNG, SCAR_FRACTION,
 };
 pub use fuel_break::{
@@ -78,6 +80,12 @@ pub use vegetation_variant_catalog::{
     ENGINE_VEG_RESOLVER_KEYS, VegetationVariantCatalog, VegetationVariantCatalogEntry,
     VEGETATION_VARIANT_CATALOG_RON,
 };
+pub use wildlife_flock::{
+    clamp_speed, flock_step, soft_cost_at, soft_costs_from_agents, spawn_wildlife_agents,
+    sync_agent_frame_from_wildlife, sync_nav_wildlife_soft, tick_wildlife_herd, WildlifeAgent,
+    WildlifeHerdBook, WildlifeSoftCostSample, WILDLIFE_DEFAULT_COUNT, WILDLIFE_MAX_SPEED,
+    WILDLIFE_SOFT_COST_MAX,
+};
 
 use bevy::prelude::*;
 
@@ -121,6 +129,7 @@ impl Plugin for EcologyPlugin {
         landscape_grammar_lg2::landscape_grammar_lg2_plugin(app);
         landscape_grammar_burn::landscape_grammar_burn_plugin(app);
         landscape_grammar_map::landscape_grammar_map_plugin(app);
+        wildlife_flock::register_wildlife_flock(app);
         app.add_systems(
             Startup,
             (

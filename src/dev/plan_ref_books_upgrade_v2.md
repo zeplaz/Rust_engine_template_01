@@ -3,7 +3,7 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-REF-BOOKS-UPGRADE-v2** |
-| **Status** | **WAVES 0–S CLOSED** · Wave 3 SENSE-04 + NAV-13 **ADOPTED** (N13-P5 DEFER) |
+| **Status** | **WAVES 0–S CLOSED** · Wave 3 SENSE-04 + NAV-13 **ADOPTED** (N13-P5 DEFER) · Successor [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) **PROGRAM CLOSE** |
 | **Date** | 2026-11-14 |
 | **Supersedes** | [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (**SHIPPED**, built on the old `C:\dev\ref books\lookup\` CSVs — do not use those) |
 | **Tool** | [`ref_books_index/`](ref_books_index/README.md): `systems.md` → `lookup.py` → `--read` |
@@ -405,7 +405,7 @@ Update the row when a slice closes. Evidence = `file:line`, test name, or commit
 | LEARN-01 | T7 | ADOPTED | `tune.py --dry-run` whitelist |
 | RND-08 | S1 | OPEN | Wave S |
 | PCG-08 | S3 | ADOPTED | `test_pcg08_generate_and_test.py` + `generate-and-test-report` CLI |
-| PCG-06 | S4 | OPEN | Wave S |
+| PCG-06 | S4 | ADOPTED | Wave S — `kit_coverage_audit` grammar rule coverage + staging report (2026-11-15) |
 | MOVE-05 | §8 | DEFER | needs unit-member model |
 | MOVE-06 | §8 | DEFER | needs unit-member model |
 | MOVE-07 | §8 | DEFER | needs unit-member model |

@@ -20,3 +20,7 @@ def test_addon_init_has_bl_info():
     assert found
     readme = init.parent.parent / "README.md"
     assert readme.is_file()
+    text = init.read_text(encoding="utf-8")
+    assert "rustengine.poll_studio_task" in text
+    assert "rustengine.escalate_param_frame" in text
+    assert "studio_task.escalate_from_param_frame" in text

@@ -1,7 +1,11 @@
 //! **BQ-Q3-GOLDEN-001** — committed golden-seed regression set (~12 seeds × archetype × district).
 //!
 //! Any grammar/kit change must diff against these hashes; update only with operator approval.
+//!
+//! **MATH-02**: committed [`GoldenSeedEntry::seed`] values are *roots*. Derive subsystem /
+//! stream seeds with [`derive_golden_stream_seed`] — never `wrapping_add` offsets in call order.
 
+use crate::ai::faction::rng::derive_keyed_seed;
 use crate::construction::PILOT_GRAMMAR_ARCHETYPE_WAREHOUSE;
 
 #[derive(Clone, Copy, Debug)]
@@ -88,11 +92,26 @@ pub const GOLDEN_SEED_SET_V1: &[GoldenSeedEntry] = &[
     },
 ];
 
-
+/// MATH-02: order-independent stream seed from a golden root + key (does not change hash roots).
+#[must_use]
+pub fn derive_golden_stream_seed(entry: &GoldenSeedEntry, stream_key: u64) -> u64 {
+    derive_keyed_seed(entry.seed, stream_key)
+}
 
 #[cfg(test)]
 mod tests {
-    
+    use super::*;
 
-
+    #[test]
+    fn math02_golden_stream_seeds_are_stable_and_keyed() {
+        let e = &GOLDEN_SEED_SET_V1[0];
+        assert_eq!(
+            derive_golden_stream_seed(e, 1),
+            derive_golden_stream_seed(e, 1)
+        );
+        assert_ne!(
+            derive_golden_stream_seed(e, 1),
+            derive_golden_stream_seed(e, 2)
+        );
+    }
 }

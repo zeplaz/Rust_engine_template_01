@@ -1,38 +1,12 @@
-//! AC-004 — L0 smoke advect + blend helpers (mass-preserving stub).
+//! AC-004 — L0 smoke advect + blend helpers.
 //! DEBT-010/010b/010c — FieldFill/WindAdvect write L0 channels as authority.
 //! DEBT-011 — Field resource + Field↔L0 fold/mirror helpers **deleted**.
+//! W7 — `advect_l0_preserving_mass` deleted (obsolete duplicate advect); L0 fog fill/advect
+//! retired (weather fog aliases [`crate::systems::atmosphere::AtmosphereFrame`]).
 
 use bevy::math::Vec2;
 
 use super::{AtmosphereClipLevel, AtmosphereClipmapStack};
-
-/// Semi-Lagrangian-style neighbor blend that preserves total mass on L0 smoke.
-pub fn advect_l0_preserving_mass(level: &mut AtmosphereClipLevel) {
-    let n = level.smoke_density.len();
-    if n < 2 {
-        return;
-    }
-    let total_before: f32 = level.smoke_density.iter().sum();
-    if total_before <= 0.0 {
-        return;
-    }
-
-    let mut next = level.smoke_density.clone();
-    for i in 1..n {
-        let blended = (level.smoke_density[i] + level.smoke_density[i - 1]) * 0.5;
-        next[i] = blended;
-        next[i - 1] = blended;
-    }
-
-    let total_after: f32 = next.iter().sum();
-    if total_after > 1e-6 {
-        let scale = total_before / total_after;
-        for v in &mut next {
-            *v *= scale;
-        }
-    }
-    level.smoke_density = next;
-}
 
 /// Convert map-plane wind (m/s) into L0 texel drift. One L0 texel = one chunk
 /// (`CHUNK_TILES_SIM * TILE_METRES_GAMEPLAY` metres); scale matches the legacy `* 2` kernel.
@@ -103,11 +77,7 @@ pub fn advect_l0_with_wind_field(
     {
         level.smoke_density = next;
     }
-    if let Some(next) =
-        advect_channel_with_wind_field(&level.fog_density, res, dt, 0.99, &mut wind_at)
-    {
-        level.fog_density = next;
-    }
+    // W7: do not advect L0 fog — lane is retired weather mirror (zeros / unused).
     if let Some(next) = advect_channel_with_wind_field(&level.toxicity, res, dt, 0.992, &mut wind_at)
     {
         level.toxicity = next;
@@ -127,6 +97,47 @@ pub fn advect_l0_with_wind_field(
     {
         level.heat_distortion = next;
     }
+}
+
+/// W4 — sole rain washout owner (L0 advect). Matches retired chunk `rain_cleanse` scale:
+/// `rain01 = mm_h / 10`, cleanse = `rain01 * 0.45` per second on smoke; toxicity ×0.35.
+/// Returns total smoke mass removed.
+pub fn apply_l0_rain_washout(
+    level: &mut AtmosphereClipLevel,
+    dt: f32,
+    mut rain_mm_h_at: impl FnMut(u32, u32) -> f32,
+) -> f32 {
+    if dt <= 0.0 {
+        return 0.0;
+    }
+    let res = level.resolution;
+    let n = (res.x * res.y) as usize;
+    if level.smoke_density.len() != n {
+        return 0.0;
+    }
+    let mut washed = 0.0f32;
+    for y in 0..res.y {
+        for x in 0..res.x {
+            let rain_mm_h = rain_mm_h_at(x, y);
+            if rain_mm_h <= 1e-4 {
+                continue;
+            }
+            let rain01 = (rain_mm_h / 10.0).clamp(0.0, 1.0);
+            let cleanse = rain01 * 0.45 * dt;
+            let i = (y * res.x + x) as usize;
+            let before = level.smoke_density[i];
+            let after = (before - cleanse).clamp(0.0, 1.0);
+            washed += before - after;
+            level.smoke_density[i] = after;
+            if let Some(tox) = level.toxicity.get_mut(i) {
+                *tox = (*tox - cleanse * 0.35).clamp(0.0, 1.0);
+            }
+            if let Some(ash) = level.ash_density.get_mut(i) {
+                *ash = (*ash - cleanse * 0.5).clamp(0.0, 1.0);
+            }
+        }
+    }
+    washed
 }
 
 #[inline]
@@ -290,25 +301,6 @@ mod tests {
     use bevy::prelude::UVec2;
 
     #[test]
-    fn clipmap_advect_preserves_mass_approximately() {
-        let n = 4;
-        let mut level = super::super::AtmosphereClipLevel {
-            resolution: UVec2::new(4, 1),
-            smoke_density: vec![0.1, 0.2, 0.3, 0.4],
-            fog_density: vec![0.0; n],
-            toxicity: vec![0.0; n],
-            ash_density: vec![0.0; n],
-            ember_density: vec![0.0; n],
-            heat_distortion: vec![0.0; n],
-        };
-        let before: f32 = level.smoke_density.iter().sum();
-        advect_l0_preserving_mass(&mut level);
-        let after: f32 = level.smoke_density.iter().sum();
-        assert!((before - after).abs() < 1e-4);
-        assert!(level.smoke_density.iter().any(|v| *v > 0.0));
-    }
-
-    #[test]
     fn l0_max_blend_all_channels() {
         use super::super::AtmosphereClipmapStack;
 
@@ -326,6 +318,32 @@ mod tests {
         assert_eq!(sample_tactical_ember_from_l0(&stack, 4, 0), Some(0.22));
         assert_eq!(sample_tactical_heat_from_l0(&stack, 5, 0), Some(0.18));
         assert!((stack.levels[0].smoke_density[1]).abs() < 1e-5);
+    }
+
+    #[test]
+    fn rain_washout_reduces_smoke_mass() {
+        let mut level = super::super::AtmosphereClipLevel {
+            resolution: UVec2::new(2, 1),
+            smoke_density: vec![0.8, 0.5],
+            fog_density: vec![0.0; 2],
+            toxicity: vec![0.4, 0.2],
+            ash_density: vec![0.3, 0.1],
+            ember_density: vec![0.0; 2],
+            heat_distortion: vec![0.0; 2],
+        };
+        let before: f32 = level.smoke_density.iter().sum();
+        let washed = apply_l0_rain_washout(&mut level, 1.0, |x, _| {
+            if x == 0 {
+                10.0
+            } else {
+                0.0
+            }
+        });
+        let after: f32 = level.smoke_density.iter().sum();
+        assert!(washed > 0.0);
+        assert!(after < before);
+        assert!(level.smoke_density[0] < 0.8);
+        assert!((level.smoke_density[1] - 0.5).abs() < 1e-5);
     }
 
     #[test]

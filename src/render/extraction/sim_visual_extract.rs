@@ -6,8 +6,8 @@
 //! **main** world for legacy CPU/debug callers; the render world uploads [`crate::render::pipelines::gpu_weather_fire_field::FireVisualGpuInstanceStorage`]
 //! from extracted [`crate::render::extraction::RenderProjectionGraph`].
 //!
-//! [`ClimateVisualAggregate`] is the **single** world mean over chunk weather + ecology for GPU / overlay
-//! consumers; only [`crate::systems::atmosphere::visual_extract::publish_climate_visual_aggregate`] scans those components.
+//! [`ClimateVisualAggregate`] carries frame weather means + ecology snapshot means for GPU / overlay
+//! consumers (W7: no ChunkWeather/ChunkEcology scan in the climate publisher).
 //!
 //! Extract snapshots below document **Staleness** per [`LOOP-07`](../../dev/plan_ref_books_upgrade_v2.md) (GEA 17.6.3.3):
 //! writers name which sim step they sample and why visual lag is bounded.
@@ -187,13 +187,12 @@ pub struct SimChunkSmokeVisualExtract {
     pub instances: Vec<ChunkSmokeGpu>,
 }
 
-/// World-aggregated chunk weather + ecology for **visual** paths (GPU uniforms, precip overlay).
+/// World-aggregated weather + ecology means for **visual** paths (GPU uniforms, precip overlay).
 ///
-/// Filled in [`crate::systems::atmosphere::AtmospherePipelineSet::VisualExtract`]; consumers must not query
-/// [`crate::systems::weather::ChunkWeather`] / [`crate::systems::ecology::ChunkEcology`] again for the same means.
-///
-/// Staleness: **this sim tick** — [`crate::systems::atmosphere::visual_extract::publish_climate_visual_aggregate`]
-/// scans live chunk weather/ecology after environment fire/weather for the step; presentation-only means, so no gameplay coupling.
+/// Filled in [`crate::systems::atmosphere::AtmospherePipelineSet::VisualExtract`] from
+/// [`crate::systems::atmosphere::AtmosphereFrame`] weather means + [`EcologyVisualSnapshot`] ecology means.
+/// Consumers must not query [`crate::systems::weather::ChunkWeather`] /
+/// [`crate::systems::ecology::ChunkEcology`] for the same means.
 #[derive(Resource, Default, Debug, Clone, Copy)]
 pub struct ClimateVisualAggregate {
     pub mean_rain: f32,

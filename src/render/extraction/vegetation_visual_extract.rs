@@ -7,6 +7,7 @@ use bevy::prelude::*;
 
 use crate::gui::ViewAuthoritySystemSet;
 use crate::render::extraction::FireVisualFrameSet;
+use crate::render::vegetation_species::VegSpeciesTable;
 use crate::systems::ecology::{
     extract_glyph_for_burn, planning_glyph_for_burn, variant_key_for_burn_row, ActiveBurn,
     ChunkCellStand, ChunkVegetationSuitability, LandscapeProgramOnChunk, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
@@ -36,6 +37,12 @@ pub struct VegExtractRow {
     pub cells: Option<Arc<[u8]>>,
     /// Changes whenever `cells` does.
     pub cells_rev: u32,
+    /// Species per cell ([`VegSpeciesTable::species_cell_codes`]), row-major like `cells`. A pure function
+    /// of the chunk's cell matrix and the species table, cached until either changes. `None` without a
+    /// matrix: consumers then use [`crate::render::vegetation_species::SPECIES_DEFAULT`].
+    pub species: Option<Arc<[u8]>>,
+    /// Changes whenever `species` is recomputed.
+    pub species_rev: u32,
 }
 
 #[derive(Resource, Default, Debug, Clone)]
@@ -153,6 +160,11 @@ pub fn build_vegetation_extract_frame(
     mut centre_scale_cache: Local<
         bevy::platform::collections::HashMap<Entity, (bevy::ecs::change_detection::Tick, f32)>,
     >,
+    species_table: Res<VegSpeciesTable>,
+    mut species_cache: Local<
+        bevy::platform::collections::HashMap<Entity, (bevy::ecs::change_detection::Tick, u32, Arc<[u8]>)>,
+    >,
+    mut species_rev_counter: Local<u32>,
 ) {
     // PERF-INSTR-VFX-001: name this per-chunk veg scan inside the Update wall window (STALL/PERF only).
     let _perf = crate::render::PerfScope::new("upd_veg_extract_frame");
@@ -163,6 +175,9 @@ pub fn build_vegetation_extract_frame(
     frame.revision = frame.revision.saturating_add(1);
     frame.stamp = stamp;
     frame.rows.clear();
+    if species_table.is_changed() {
+        species_cache.clear();
+    }
     for (entity, chunk, succ, burn, pop, program, matrix, suitability, stand) in &q {
         let matrix_ref = matrix.as_ref();
         let matrix = matrix_ref.map(|m| &**m);
@@ -186,6 +201,22 @@ pub fn build_vegetation_extract_frame(
             }
         });
         let impact = shot_impact_in_chunk(shots.as_deref(), tick.0, chunk, matrix);
+        // Species depends only on the matrix (static between materializations) and the table.
+        let (species, species_rev) = match (matrix, matrix_ref) {
+            (Some(m), Some(r)) => {
+                let changed_at = r.last_changed();
+                match species_cache.get(&entity) {
+                    Some((t, rev, codes)) if *t == changed_at => (Some(codes.clone()), *rev),
+                    _ => {
+                        let codes = species_table.species_cell_codes(m, chunk.coord);
+                        *species_rev_counter = species_rev_counter.wrapping_add(1);
+                        species_cache.insert(entity, (changed_at, *species_rev_counter, codes.clone()));
+                        (Some(codes), *species_rev_counter)
+                    }
+                }
+            }
+            _ => (None, 0),
+        };
         frame.rows.push(VegExtractRow {
             coord: chunk.coord,
             planning_glyph,
@@ -204,10 +235,15 @@ pub fn build_vegetation_extract_frame(
             frame_index: burn.map(|b| b.frame_index).unwrap_or(0),
             cells: stand.map(|s| s.render.clone()),
             cells_rev: stand.map_or(0, |s| s.render_rev),
+            species,
+            species_rev,
         });
     }
     if centre_scale_cache.len() > frame.rows.len() {
         centre_scale_cache.retain(|e, _| q.contains(*e));
+    }
+    if species_cache.len() > frame.rows.len() {
+        species_cache.retain(|e, _| q.contains(*e));
     }
 }
 
@@ -280,6 +316,8 @@ pub fn build_harness_topo_extract_frame(world: &mut World) -> VegetationExtractF
             frame_index: 0,
             cells: None,
             cells_rev: 0,
+            species: None,
+            species_rev: 0,
         });
     }
     VegetationExtractFrame {
@@ -296,6 +334,7 @@ pub struct VegetationVisualExtractPlugin;
 impl Plugin for VegetationVisualExtractPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<VegetationExtractFrame>()
+            .insert_resource(VegSpeciesTable::load())
             .configure_sets(
                 Update,
                 VegetationExtractFrameSet::BuildProfiles

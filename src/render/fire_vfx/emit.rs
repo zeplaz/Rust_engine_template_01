@@ -2,6 +2,14 @@
 //!
 //! Sparks follow **fire events** (heat with fuel / burn-hold), not geography.
 //! Empty water does not burn in sim; a fueled fire on water (e.g. ship) still emits.
+//!
+//! ## RND-15 — Decals / scorchmark band
+//!
+//! NEW: **RND-15** · gea4v2 **11.6.6** *Decals* · LEGACY `geometry_visual_effects`
+//! (gea_v2_e4 p141). Overlay heat **below** [`CHUNK_FIRE_OVERLAY_DISPLAY_MIN`] is the
+//! scorchmark / decal residual band ([`overlay_heat_scorch_decal01`]) — terrain-projected
+//! tint, not particle cards (RND-14). [`seed_world_fire_particles_from_overlay_heat`]
+//! seeds cards only at/above that floor so scars stay out of the transparent particle pass.
 
 use std::collections::HashMap;
 
@@ -12,7 +20,8 @@ use crate::construction::world_map_tile_center;
 use crate::gui::GPU_FIRE_INSTANCE_BUDGET_CEILING;
 use crate::render::extraction::RenderProjectionGraph;
 use crate::render::extraction::sim_visual_extract::{
-    ClimateVisualAggregate, FireVisualGpuInstance, SimChunkSmokeVisualExtract,
+    ClimateVisualAggregate, FireVisualGpuInstance, FIRE_VISUAL_ACTIVE_HEAT_EPS,
+    SimChunkSmokeVisualExtract,
 };
 use crate::render::CHUNK_FIRE_OVERLAY_DISPLAY_MIN;
 use crate::render::{
@@ -56,6 +65,25 @@ pub fn is_tactical_fire_particle_view(id: crate::gui::ViewId) -> bool {
     )
 }
 
+/// RND-15 / gea4v2 11.6.6 — scorchmark **decal** strength from overlay heat.
+///
+/// Heat below [`FIRE_VISUAL_ACTIVE_HEAT_EPS`] → no scar. Heat in the residual band up to
+/// [`CHUNK_FIRE_OVERLAY_DISPLAY_MIN`] → remapped `[0, 1]` terrain-projected decal.
+/// At/above the particle seed floor → full scar under active cards (still not a card itself).
+#[inline]
+#[must_use]
+pub fn overlay_heat_scorch_decal01(heat: f32) -> f32 {
+    let h = heat.clamp(0.0, 1.0);
+    if h < FIRE_VISUAL_ACTIVE_HEAT_EPS {
+        return 0.0;
+    }
+    if h >= CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
+        return 1.0;
+    }
+    let span = (CHUNK_FIRE_OVERLAY_DISPLAY_MIN - FIRE_VISUAL_ACTIVE_HEAT_EPS).max(1e-6);
+    ((h - FIRE_VISUAL_ACTIVE_HEAT_EPS) / span).clamp(0.0, 1.0)
+}
+
 /// Scatter slots from heat and budget pressure. Camera scale does not change the count.
 #[inline]
 #[must_use]
@@ -66,7 +94,7 @@ pub fn fire_particle_scatter_count(heat: f32, budget_pressure: f32) -> usize {
         8
     } else if heat >= 0.28 {
         4
-    } else if heat >= 0.12 {
+    } else if heat >= CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
         2
     } else {
         0
@@ -196,6 +224,7 @@ pub fn emit_world_fire_particles_from_projection(
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
     registry: Option<Res<crate::render::fire_vfx::EffectConsumableRegistry>>,
     climate: Option<Res<ClimateVisualAggregate>>,
+    dense_heat: Option<Res<crate::compute::DenseHeatPlayField>>,
     wx: Query<(&crate::terrain::generation::Chunk, &crate::systems::weather::ChunkWeather)>,
     consumables: Query<&crate::render::fire_vfx::EffectConsumable>,
     mut frame: ResMut<WorldFireParticleFrame>,
@@ -218,6 +247,7 @@ pub fn emit_world_fire_particles_from_projection(
         anim,
         &mut memory,
         Some(&wind_by_chunk),
+        dense_heat.as_deref(),
     );
     if let Some(smoke) = smoke_extract.as_deref() {
         append_smoke_atmosphere_particles_from_extract(smoke, frame.as_mut(), anim);
@@ -275,6 +305,7 @@ pub fn update_world_fire_particles_from_projection(
         anim,
         &mut FireEmitterMemory::default(),
         None,
+        None,
     );
 }
 
@@ -287,6 +318,7 @@ pub fn update_world_fire_particles_animated(
     anim: FireAnim,
     memory: &mut FireEmitterMemory,
     wind_by_chunk: Option<&HashMap<IVec2, Vec2>>,
+    dense_heat: Option<&crate::compute::DenseHeatPlayField>,
 ) {
     frame.snapshot_stamp = graph.fire.snapshot_stamp;
     frame.active_band = crate::gui::representation_band_from_world_lod(graph.fire.lod);
@@ -346,13 +378,22 @@ pub fn update_world_fire_particles_animated(
         if band == FireLodBand::None {
             continue;
         }
-        // Heat below the display floor is not a fire.
-        let heat = row.heat();
+        // LOD crossfade: eased level per chunk, so band changes fade instead of popping.
+        let chunk = IVec2::new(row.chunk_grid_xy().x as i32, row.chunk_grid_xy().y as i32);
+        // Heat below the display floor is not a fire. DH-03a: dense heat may reinforce (RO).
+        let heat = {
+            let sim_h = row.heat();
+            match dense_heat {
+                Some(play) => {
+                    let (dh, _) = crate::compute::sample_dense_heat_at_chunk(play, chunk);
+                    crate::compute::fire_vfx_blend_dense_heat(sim_h, dh)
+                }
+                None => sim_h,
+            }
+        };
         if heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
             continue;
         }
-        // LOD crossfade: eased level per chunk, so band changes fade instead of popping.
-        let chunk = IVec2::new(row.chunk_grid_xy().x as i32, row.chunk_grid_xy().y as i32);
         let level = *seen_chunks.entry(chunk).or_insert_with(|| {
             let target = lod_level_target(band);
             let cur = memory.lod_level.get(&chunk).copied().unwrap_or(target);
@@ -482,10 +523,12 @@ pub fn seed_world_fire_particles_from_overlay_heat(
     cam: ExtractedCameraMetrics,
 ) {
     // FIRE-VIS-001: cull gate removed for operator debug — always seed from overlay heat.
+    // RND-15: heat below CHUNK_FIRE_OVERLAY_DISPLAY_MIN stays in the scorchmark/decal band
+    // (terrain overlay) and must not enter particle-card instances.
     frame.instances.clear();
     let mut scatter_slots = 0usize;
     for (&coord, &heat) in chunk_fire_heat {
-        if heat < 0.12 {
+        if heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
             continue;
         }
         let mut row = FireVisualGpuInstance::default();
@@ -786,6 +829,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &fire,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: fire.stamp,
@@ -839,6 +883,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &fire,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: fire.stamp,
@@ -914,6 +959,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &fire,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: fire.stamp,
@@ -983,6 +1029,7 @@ mod tests {
             lod_map: &lod_map,
             fire: &fire,
             smoke: None,
+            atmosphere: None,
             logistics: &logistics,
             ecology: &ecology,
             committed_stamp: fire.stamp,

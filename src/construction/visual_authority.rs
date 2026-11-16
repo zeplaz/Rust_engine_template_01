@@ -69,7 +69,12 @@ pub struct ConstructionVisualRequests {
     /// BUILD-UX-1 — facing/nose tiles (rotation chevron) for the live ghost.
     pub footprint_facing_tiles: Vec<IVec2>,
     /// Ebbtide-style column stacks — presentation only ([`super::voxel_massing`]).
+    /// Frame `clear()` resets the buffer; **content** is written only by
+    /// `voxel_massing::sync_voxel_massing_visual_requests` (after footprint sync).
     pub massing_columns: Vec<super::voxel_massing::VoxelColumnRequest>,
+    /// RND-09 instance batch — packed by the same sole writer when column count ≥
+    /// [`super::voxel_massing::MASSING_INSTANCE_BATCH_THRESHOLD`]; empty below gate.
+    pub massing_instances: Vec<super::voxel_massing::MassingColumnInstance>,
     pub corridor_paths: Vec<super::round4_corridor::CorridorPhasePathRequest>,
     pub site_stub_boxes: Vec<SiteStubBoxRequest>,
     pub site_zone_labels: Vec<SiteZoneLabelRequest>,
@@ -84,6 +89,7 @@ impl ConstructionVisualRequests {
         self.footprint_lock_tiles.clear();
         self.footprint_facing_tiles.clear();
         self.massing_columns.clear();
+        self.massing_instances.clear();
         self.corridor_paths.clear();
         self.site_stub_boxes.clear();
         self.site_zone_labels.clear();

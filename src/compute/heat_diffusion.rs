@@ -1,6 +1,7 @@
-//! Chunk heat **diffusion** compute kernel (CPU v1) with owned ping-pong buffers and GPU registry sync.
+//! Chunk heat **diffusion** — sparse Jacobi play path (gated) + dense separable parity (**DH-01**).
 //!
-//! Reads [`crate::render::fx_spine::fire_chunk_runtime::FireSimulationSnapshot`] + [`WorldLodMap`] only; writes [`HeatDiffusionFieldBuffers`] (compute-owned).
+//! Reads [`crate::render::fx_spine::fire_chunk_runtime::FireSimulationSnapshot`] + [`WorldLodMap`] only;
+//! writes [`HeatDiffusionFieldBuffers`] (compute-owned). Dense CPU: [`super::heat_diffusion_dense`].
 
 use std::collections::HashMap;
 
@@ -82,7 +83,7 @@ impl HeatDiffusionFieldBuffers {
         }
     }
 
-    fn write_cells_mut(&mut self) -> &mut Vec<HeatDiffusionCell> {
+    pub(crate) fn write_cells_mut(&mut self) -> &mut Vec<HeatDiffusionCell> {
         if self.front_is_read {
             &mut self.back
         } else {
@@ -90,9 +91,18 @@ impl HeatDiffusionFieldBuffers {
         }
     }
 
-    fn swap(&mut self) {
+    /// Public alias for DH-02 dense pack path.
+    pub fn write_cells_mut_pub(&mut self) -> &mut Vec<HeatDiffusionCell> {
+        self.write_cells_mut()
+    }
+
+    pub(crate) fn swap(&mut self) {
         self.front_is_read = !self.front_is_read;
         self.generation = self.generation.wrapping_add(1);
+    }
+
+    pub fn swap_pub(&mut self) {
+        self.swap();
     }
 
     #[must_use]
@@ -132,8 +142,14 @@ impl HeatDiffusionDispatchNode {
 }
 
 #[inline]
-fn chunk_key(chunk: IVec2) -> i64 {
+pub(crate) fn chunk_key(chunk: IVec2) -> i64 {
     (chunk.x as i64) << 32 | (chunk.y as i64 & 0xffff_ffff)
+}
+
+#[inline]
+#[must_use]
+pub fn chunk_key_pub(chunk: IVec2) -> i64 {
+    chunk_key(chunk)
 }
 
 #[must_use]
@@ -255,8 +271,28 @@ pub fn advance_heat_diffusion_field(
     ctx: &ComputeContext<'_>,
     influence_active: bool,
 ) {
+    advance_heat_diffusion_field_with_config(
+        field,
+        ctx,
+        influence_active,
+        &super::HeatDiffusionConfig::default(),
+    );
+}
+
+/// Same as [`advance_heat_diffusion_field`] with explicit sparse gate (**DH-01**).
+pub fn advance_heat_diffusion_field_with_config(
+    field: &mut HeatDiffusionFieldBuffers,
+    ctx: &ComputeContext<'_>,
+    influence_active: bool,
+    config: &super::HeatDiffusionConfig,
+) {
     if !influence_active {
         field.active_cell_count = 0;
+        return;
+    }
+    // DH-02: dense WGSL-parity play path (see heat_diffusion_gpu). Callers that own
+    // DenseHeatPlayField should use advance_dense_heat_play; this branch is the gated sparse skip.
+    if !config.use_sparse_play {
         return;
     }
     let fallback = ctx.lod.global_band();
@@ -285,9 +321,36 @@ pub fn advance_heat_diffusion_field(
     field.stamp = ctx.fire.stamp;
 }
 
+/// DH-03b: map heat → path penalty (RO helper; nav does not write heat).
+#[must_use]
+pub fn heat_to_nav_cost(heat: f32) -> f32 {
+    (heat * 1.25).clamp(0.0, 1.0)
+}
+
+/// Sync nav snapshot from heat field buffers (RO projection).
 pub fn sync_nav_field_from_heat_diffusion(nav: &mut NavFieldFrame, field: &HeatDiffusionFieldBuffers) {
     nav.stamp = field.stamp;
     nav.cell_count = field.active_cell_count as u32;
+    nav.heat_cost_samples.clear();
+    let mut sum = 0.0f32;
+    for cell in field.read_cells() {
+        let cost = heat_to_nav_cost(cell.heat);
+        if cost <= 1e-4 {
+            continue;
+        }
+        sum += cost;
+        nav.heat_cost_samples.push(super::frame_snapshots::NavHeatCostSample {
+            chunk: cell.chunk,
+            heat_cost: cost,
+        });
+    }
+    nav.heat_cost_samples
+        .sort_by_key(|s| chunk_key(s.chunk));
+    nav.mean_heat_cost = if nav.heat_cost_samples.is_empty() {
+        0.0
+    } else {
+        sum / nav.heat_cost_samples.len() as f32
+    };
 }
 
 pub fn register_heat_diffusion_gpu_sync(app: &mut App) {
@@ -419,9 +482,14 @@ mod tests {
             agents: &crate::compute::AgentFrame::default(),
             navigation: &crate::compute::NavFieldFrame::default(),
             fire: &fire,
+            climate: None,
             path_budget: 64,
         };
-        advance_heat_diffusion_field(&mut field, &ctx, true);
+        // Explicit sparse path (DH-02 default is dense play).
+        let sparse = crate::compute::HeatDiffusionConfig {
+            use_sparse_play: true,
+        };
+        advance_heat_diffusion_field_with_config(&mut field, &ctx, true, &sparse);
         assert_eq!(field.generation, 1);
         assert_eq!(field.stamp, fire.stamp);
         assert!(field.active_cell_count > 0);

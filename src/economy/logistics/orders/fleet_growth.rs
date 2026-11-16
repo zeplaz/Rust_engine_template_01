@@ -16,7 +16,7 @@ use bevy::prelude::*;
 
 use super::auto_supply::AutoSupplyPolicy;
 use super::cargo_registry::CargoKindRegistry;
-use super::model::{CargoClass, CargoClassMask, CargoKind, OrderStatus, OwnerId, WaitReason};
+use super::model::{CargoClassMask, CargoKind, OrderStatus, OwnerId, WaitReason};
 use super::plugin::{LogisticsOrderRequest, LogisticsOrdersSnapshotRes};
 use super::sim::LogisticsOrderCommand;
 use super::snapshot::{LogisticsOrdersSnapshot, SiteRole};
@@ -200,6 +200,7 @@ pub fn grow_depot_fleets_system(
 mod tests {
     use super::*;
     use crate::economy::logistics::orders::cargo_registry::load_cargo_kind_registry;
+    use crate::economy::logistics::orders::model::CargoClass;
 
     #[test]
     fn default_recipes_cover_freight_tanker_troop_and_registry_steel_machinery() {

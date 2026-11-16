@@ -51,6 +51,7 @@ from .pipeline_status_bar import PipelineStatusBar
 from .status_log_panel import StatusLogPanel
 from .dashboard_panel import DashboardPanel
 from .voxel_massing_panel import VoxelMassingPanel
+from .param_frame_panel import ParamFramePanel
 # DES-APS-E1-IA-OPTION-D-001 — dual notebook page sets (not label-rename on one 5-tab row).
 OPTION_D_DUAL_NOTEBOOK = True
 class ArtPipelineSuiteApp(tk.Tk):
@@ -333,6 +334,9 @@ class ArtPipelineSuiteApp(tk.Tk):
         )
         bind_aps_tooltip(self.atlas, "tab_atlas")
         self.atlas.set_domain(ArtDomain.BUILDINGS.value)
+        self.param_frame = self._add_scrollable_tab(
+            nb, ParamFramePanel, "Param frame", state=self.state, on_log=self._log
+        )
         self.voxel_massing = self._add_scrollable_tab(
             nb, VoxelMassingPanel, "Massing", state=self.state, on_log=self._log
         )

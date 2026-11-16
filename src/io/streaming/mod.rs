@@ -33,13 +33,16 @@ pub use hydrate::{
     hydrate_all_manifest_chunks, hydrate_stream_chunks_from_manifest, load_manifest_for_streaming,
 };
 pub use budget::{
-    stream_sync_hydrate_enabled, StreamingSpineBudget, STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS,
+    clamp_hydrate_batch_by_spawn_budget, spawn_reserve_for_batch, stream_sync_hydrate_enabled,
+    StreamingSpineBudget, STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS,
+    STREAMING_SPAWN_ENTITIES_PER_CHUNK_DEFAULT, STREAMING_SPAWN_ENTITIES_PER_FRAME_DEFAULT,
 };
 pub use interest::{
     cap_chunk_coords_by_focus, highest_priority_orb, interest_chunk_set_signature, interest_orbs_from_lod_zones,
     merge_interest_chunk_coords, merge_interest_chunk_coords_with_ghost_bands,
     merge_interest_orbs_deduped, primary_interest_orb, priority_for_chunk, InterestOrb,
-    InterestOrbKind,
+    InterestOrbKind, chunk_has_registered_interest, orb_registers_chunk,
+    registered_priority_for_chunk, retain_registered_chunks,
 };
 pub use manifest_cache::StreamingManifestCache;
 pub use preview_ghost::{
@@ -378,6 +381,9 @@ pub fn schedule_chunk_streaming_from_interest(
             hydrate_budget = budget.max_hydrate_chunks_per_frame,
             reconstruct_budget = budget.max_reconstruct_chunks_per_frame,
             max_pending_chunks = budget.max_pending_chunks,
+            spawn_per_chunk = budget.max_spawn_entities_per_chunk,
+            spawn_per_frame = budget.max_spawn_entities_per_frame,
+            effective_hydrate = budget.effective_hydrate_chunks_per_frame(),
             sync_hydrate = stream_sync_hydrate_enabled(),
             "STREAM budget config"
         );
@@ -499,7 +505,9 @@ pub fn hydrate_stream_jobs_from_save_bundle(
     if !scheduler.staged_chunk_bodies.is_empty() || dispatcher.in_flight {
         return;
     }
-    let batch = scheduler.select_disk_hydrate_batch(&cache, budget.max_hydrate_chunks_per_frame);
+    // IO-03: spawn frame ceiling clamps hydrate ahead of RemoteAllocator fill.
+    let batch = scheduler
+        .select_disk_hydrate_batch(&cache, budget.effective_hydrate_chunks_per_frame());
     if batch.is_empty() {
         scheduler.clear_jobs_if_fully_cached(&cache);
         return;
@@ -540,10 +548,11 @@ pub fn reconstruct_staged_chunks_into_cache(
     if scheduler.staged_chunk_bodies.is_empty() {
         return;
     }
+    // IO-03: reconstruct cannot stage more bodies than the spawn reserve frame budget.
     let batch_len = scheduler
         .staged_chunk_bodies
         .len()
-        .min(budget.max_reconstruct_chunks_per_frame);
+        .min(budget.effective_reconstruct_chunks_per_frame());
     let batch: Vec<_> = scheduler.staged_chunk_bodies.drain(..batch_len).collect();
     for (coord, body) in batch {
         let hash = hash_saved_chunk_body(&body);
@@ -665,7 +674,8 @@ impl Plugin for StreamingSpinePlugin {
 
 
 pub use entity_reserve::{
-    mig_a5_stream_entity_reserve_enabled, StreamingEntityReserveSpine,
+    mig_a5_stream_entity_reserve_enabled, reserved_entity_count_for_ready_batch,
+    StreamingEntityReserveSpine,
 };
 
 /// Main-thread ECS apply order (S6-22); must match `StreamingSpinePlugin` reconstruct chain.

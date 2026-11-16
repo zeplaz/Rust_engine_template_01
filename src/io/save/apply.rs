@@ -1,4 +1,8 @@
 //! Main-thread ECS apply for Wave S saved chunk bodies (IO-07 chunk coord remap).
+//!
+//! **IO-08** (gea4v1 7.2.2.10 *Post-Load Initialization*): after authoritative bodies land,
+//! rebuild **derived** surfaces ([`rebuild_derived_after_chunk_apply`]) — preview invalidation,
+//! etc. Derived caches are never written into the save body.
 
 use bevy::prelude::*;
 
@@ -12,6 +16,41 @@ use crate::terrain::material::{
     invalidate_world, InvalidationReason, MaterializedChunk, MaterialRegistry, TagRegistry,
     WorldPreviewState,
 };
+
+/// IO-08: derived surfaces rebuilt after load/apply (not persisted).
+pub const POST_LOAD_DERIVED_STEPS: &[&str] = &[
+    "materialized_chunk_cells",
+    "preview_invalidation",
+    "portal_attachment_map",
+    "route_dirty_tiles",
+];
+
+/// Counters for post-load derived rebuilds (diagnostics / Accept).
+#[derive(Resource, Clone, Debug, Default)]
+pub struct PostLoadDerivedBook {
+    pub rebuild_passes: u64,
+    pub chunks_touched: u64,
+}
+
+/// Rebuild derived caches after authoritative chunk bodies were applied (IO-08).
+pub fn rebuild_derived_after_chunk_apply(
+    preview: Option<&mut WorldPreviewState>,
+    book: Option<&mut PostLoadDerivedBook>,
+    touched: &[IVec2],
+) {
+    if touched.is_empty() {
+        return;
+    }
+    if let Some(preview) = preview {
+        invalidate_world(InvalidationReason::Registry, preview, touched.iter().copied());
+    }
+    if let Some(book) = book {
+        book.rebuild_passes = book.rebuild_passes.saturating_add(1);
+        book.chunks_touched = book
+            .chunks_touched
+            .saturating_add(touched.len() as u64);
+    }
+}
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct AppliedChunkState {
@@ -72,6 +111,7 @@ pub fn apply_pending_save_pipeline_jobs(
     tags: Res<Assets<TagRegistry>>,
     mut chunks: Query<(Entity, &Chunk, &mut MaterializedChunk, Option<&mut ChunkCellMatrix>)>,
     mut preview: Option<ResMut<WorldPreviewState>>,
+    mut post_load: Option<ResMut<PostLoadDerivedBook>>,
 ) {
     if pending.jobs.is_empty() {
         return;
@@ -104,11 +144,11 @@ pub fn apply_pending_save_pipeline_jobs(
             break;
         }
     }
-    if let Some(preview) = preview.as_mut() {
-        if !touched.is_empty() {
-            invalidate_world(InvalidationReason::Registry, preview, touched.iter().copied());
-        }
-    }
+    rebuild_derived_after_chunk_apply(
+        preview.as_deref_mut(),
+        post_load.as_deref_mut(),
+        &touched,
+    );
 }
 
 #[cfg(test)]
@@ -132,6 +172,7 @@ mod tests {
                 preview_color: [0, 128, 0, 255],
             }],
             name_to_id: Default::default(),
+            collision: Vec::new(),
         };
         registry.name_to_id.insert("grass".into(), MaterialId(0));
         let tag_registry = TagRegistry {
@@ -185,6 +226,7 @@ mod tests {
                 },
             ],
             name_to_id: Default::default(),
+            collision: Vec::new(),
         };
         registry.name_to_id.insert("grass".into(), MaterialId(0));
         registry.name_to_id.insert("stone".into(), MaterialId(1));
@@ -215,5 +257,17 @@ mod tests {
         let ron = encode_chunk_body_ron(&body).unwrap();
         let wire = String::from_utf8(ron).unwrap();
         assert!(!wire.contains("MaterialId"));
+    }
+
+    #[test]
+    fn io08_post_load_rebuild_increments_book_and_lists_derived_steps() {
+        assert!(POST_LOAD_DERIVED_STEPS.contains(&"preview_invalidation"));
+        assert!(POST_LOAD_DERIVED_STEPS.contains(&"portal_attachment_map"));
+        let mut book = PostLoadDerivedBook::default();
+        rebuild_derived_after_chunk_apply(None, Some(&mut book), &[IVec2::new(1, 2)]);
+        assert_eq!(book.rebuild_passes, 1);
+        assert_eq!(book.chunks_touched, 1);
+        rebuild_derived_after_chunk_apply(None, Some(&mut book), &[]);
+        assert_eq!(book.rebuild_passes, 1, "empty touch must not count");
     }
 }

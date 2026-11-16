@@ -76,13 +76,19 @@ impl WorldPresentationMode {
     /// `VFX_CAPTURE_VIEW` (`voxel` / `pixel` / `3d` → PixelWorld3D, `topdown` / `tactical` → top-down).
     #[must_use]
     pub fn at_simulation_start() -> Self {
-        let kind = match std::env::var("VFX_CAPTURE_VIEW")
-            .map(|v| v.trim().to_ascii_lowercase())
-            .as_deref()
-        {
-            Ok("voxel" | "pixel" | "3d" | "world") => WorldPresentationKind::PixelWorld3D,
-            Ok("topdown" | "tactical" | "2d") => WorldPresentationKind::TacticalFlat2D,
-            _ => DEFAULT_WORLD_PRESENTATION,
+        let kind = match crate::render::probes::vfx_capture_env::vfx_capture_presentation_from_env() {
+            crate::render::probes::vfx_capture_env::VfxCapturePresentation::PixelWorld3D => {
+                WorldPresentationKind::PixelWorld3D
+            }
+            crate::render::probes::vfx_capture_env::VfxCapturePresentation::TacticalFlat2D => {
+                WorldPresentationKind::TacticalFlat2D
+            }
+        };
+        // Unset `VFX_CAPTURE_VIEW` keeps tactical default (capture env returns TacticalFlat2D).
+        let kind = if std::env::var("VFX_CAPTURE_VIEW").is_err() {
+            DEFAULT_WORLD_PRESENTATION
+        } else {
+            kind
         };
         Self { kind }
     }

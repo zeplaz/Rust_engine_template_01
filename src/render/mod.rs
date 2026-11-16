@@ -7,6 +7,7 @@ pub use tile_world_fallback::play_sprite_fire_heat_boost;
 mod visual_perf_budget;
 mod fire_vfx;
 mod weather_vfx;
+pub use weather_vfx::WeatherPrecipFrame;
 mod particle_domains;
 mod stage6_virtualization;
 mod viewport_pipeline;
@@ -21,6 +22,7 @@ pub use world_map_front_mesh::{
 };
 mod world_map_network_mesh;
 pub use world_map_network_mesh::WorldMapNetworkMeshPlugin;
+pub mod vegetation_species;
 mod world_map_vegetation_mesh;
 pub use world_map_vegetation_mesh::WorldMapVegetationMeshPlugin;
 pub mod pixel_world;

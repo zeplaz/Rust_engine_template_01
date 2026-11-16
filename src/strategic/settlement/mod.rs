@@ -21,6 +21,7 @@ mod market;
 mod need_utility;
 mod policy;
 mod pressure;
+mod road_skeleton;
 mod seed_chain;
 mod town;
 mod zoning;
@@ -101,6 +102,10 @@ pub use policy::{
     AutoBuildPolicyBook, GrowthProposalGhostState,
 };
 pub use pressure::{compute_district_pressure_system, rollup_district_metrics_system};
+pub use road_skeleton::{
+    enqueue_settlement_road_skeleton, mst_town_road_segments, settlement_road_skeleton,
+    subdivide_ring_edges, RoadSegmentProposal,
+};
 pub use seed_chain::{
     block_id_for_site, block_seed, building_grammar_seed, building_grammar_seed_chain,
     building_grammar_seed_for_site, lot_idx_from_site_id, lot_seed, mix_u64, town_seed, CitySeedContext, DEFAULT_TOWN_ID,

@@ -22,6 +22,12 @@ from .assembly_grammar_verify import (
 from .material_textures import validate_material_textures, validate_material_textures_path
 from .tile_promotion import validate_tile_promotion
 from .site_zone_grid import validate_site_zone_grid_path
+from .studio_dcc import (
+    validate_building_grammar_path,
+    validate_massing_preview_path,
+    validate_param_frame_path,
+    validate_veg_species_path,
+)
 from .report import ValidationReport
 
 __all__ = [
@@ -43,6 +49,9 @@ __all__ = [
     "validate_material_textures",
     "validate_material_textures_path",
     "validate_tile_promotion",
+    "validate_param_frame_path",
+    "validate_massing_preview_path",
+    "validate_building_grammar_path",
     "run_validator",
 ]
 
@@ -62,7 +71,9 @@ def run_validator(
             return None
         path = Path(p)
         if not path.is_absolute():
-            path = repo_root() / path
+            path = (repo_root() / path).resolve()
+        else:
+            path = path.resolve()
         return path
 
     if name == "cargo":
@@ -236,4 +247,21 @@ def run_validator(
         if not target:
             raise ValueError("target path required for sound_cue (sound_cue_groups_v1 JSON)")
         return validate_sound_cue_path(_resolve(target), compression_level=compression_level)
+    if name == "param_frame":
+        if not target:
+            raise ValueError("target path required for param_frame (param_frame_v1 JSON)")
+        return validate_param_frame_path(_resolve(target), compression_level=compression_level)
+    if name in ("massing_preview", "massing"):
+        if not target:
+            raise ValueError("target path required for massing_preview (massing_preview_v1 JSON)")
+        return validate_massing_preview_path(_resolve(target), compression_level=compression_level)
+    if name == "building_grammar":
+        if not target:
+            raise ValueError("target path required for building_grammar (building_grammar_v1 JSON)")
+        return validate_building_grammar_path(_resolve(target), compression_level=compression_level)
+    if name == "veg_species":
+        return validate_veg_species_path(
+            _resolve(target) if target else None,
+            compression_level=compression_level,
+        )
     raise ValueError(f"unknown validator: {name}")

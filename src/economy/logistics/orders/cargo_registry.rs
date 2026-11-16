@@ -1,12 +1,13 @@
 //! CargoKind registry (`assets/configs/economy/cargo_kinds_v1.ron`) — spine P0.
 
 use std::collections::HashMap;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 
 use bevy::prelude::*;
 use serde::Deserialize;
 
 use super::model::{CargoClass, CargoKind};
+use crate::utils::StringId;
 
 pub const CARGO_KINDS_RON: &str = "assets/configs/economy/cargo_kinds_v1.ron";
 
@@ -40,9 +41,12 @@ pub struct RegisteredCargoKind {
 }
 
 /// Loaded cargo registry (sole writer: load on startup / Default).
+///
+/// Keyed by [`StringId`] (MEM-07: FNV-1a of the RON `tag`, deterministic across reloads); the
+/// row keeps its `tag` so load can reject two distinct tags hashing to one id.
 #[derive(Resource, Debug, Clone)]
 pub struct CargoKindRegistry {
-    pub by_tag: HashMap<String, RegisteredCargoKind>,
+    pub by_id: HashMap<StringId, RegisteredCargoKind>,
     pub schema_version: u32,
     pub table_id: String,
 }
@@ -56,12 +60,18 @@ impl Default for CargoKindRegistry {
 impl CargoKindRegistry {
     #[must_use]
     pub fn get(&self, tag: &str) -> Option<&RegisteredCargoKind> {
-        self.by_tag.get(tag)
+        self.get_by_id(StringId::new(tag))
+    }
+
+    /// Lookup by precomputed id (hash-stable catalog key).
+    #[must_use]
+    pub fn get_by_id(&self, id: StringId) -> Option<&RegisteredCargoKind> {
+        self.by_id.get(&id)
     }
 
     #[must_use]
     pub fn contains(&self, tag: &str) -> bool {
-        self.by_tag.contains_key(tag)
+        self.by_id.contains_key(&StringId::new(tag))
     }
 
     /// Registry class if known; else [`CargoKind::class`] heuristic.
@@ -86,10 +96,16 @@ fn parse_class(s: &str) -> CargoClass {
 
 fn parse_file(text: &str) -> Result<CargoKindRegistry, String> {
     let file: CargoKindsFile = ron::de::from_str(text).map_err(|e| e.to_string())?;
-    let mut by_tag = HashMap::new();
+    let mut by_id: HashMap<StringId, RegisteredCargoKind> = HashMap::new();
     for row in file.kinds {
-        by_tag.insert(
-            row.tag.clone(),
+        let id = StringId::new(&row.tag);
+        if let Some(prev) = by_id.get(&id) {
+            if prev.tag != row.tag {
+                return Err(format!("cargo tag hash collision {id}: `{}` vs `{}`", prev.tag, row.tag));
+            }
+        }
+        by_id.insert(
+            id,
             RegisteredCargoKind {
                 tag: row.tag,
                 class: parse_class(&row.class),
@@ -99,7 +115,7 @@ fn parse_file(text: &str) -> Result<CargoKindRegistry, String> {
         );
     }
     Ok(CargoKindRegistry {
-        by_tag,
+        by_id,
         schema_version: file.schema_version,
         table_id: file.table_id,
     })
@@ -155,6 +171,7 @@ pub fn cargo_tag_known(reg: &CargoKindRegistry, tag: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
 
     #[test]
     fn embedded_has_drone_airframe_and_fuel() {
@@ -173,6 +190,36 @@ mod tests {
     fn path_constant_exists_or_embedded() {
         let _ = Path::new(CARGO_KINDS_RON);
         let (reg, _) = load_cargo_kind_registry();
-        assert!(!reg.by_tag.is_empty());
+        assert!(!reg.by_id.is_empty());
     }
+
+    /// MEM-07 tripwire: same string → same id; catalog lookup by hash is stable across reloads.
+    #[test]
+    fn mem07_cargo_hashed_ids_stable_across_reloads() {
+        let a = parse_file(EMBEDDED).unwrap();
+        let b = parse_file(EMBEDDED).unwrap();
+        assert_eq!(a.by_id.len(), b.by_id.len());
+        let mut ids: Vec<StringId> = a.by_id.keys().copied().collect();
+        ids.sort();
+        for id in &ids {
+            let row_a = a.get_by_id(*id).expect("id in first load");
+            let row_b = b.get_by_id(*id).expect("id in second load");
+            assert_eq!(row_a.tag, row_b.tag);
+            assert_eq!(*id, StringId::new(&row_a.tag), "key is the hash of the tag");
+            assert!(std::ptr::eq(a.get(&row_a.tag).unwrap(), a.get_by_id(*id).unwrap()));
+        }
+        // Heap-distinct string with equal content resolves to the same row.
+        let owned = String::from("Fuel");
+        assert_eq!(a.get(&owned).unwrap().tag, "Fuel");
+        assert_eq!(a.get_by_id(StringId::new("Fuel")).unwrap().class, a.get("Fuel").unwrap().class);
+        assert!(a.get_by_id(StringId::new("no_such_cargo_tag")).is_none());
+    }
+
+    #[test]
+    fn mem07_cargo_duplicate_tag_is_single_row() {
+        // Same tag twice is a benign overwrite; distinct tags must never share an id.
+        let dup = "(schema_version: 1, table_id: \"t\", kinds: [(tag: \"Fuel\", class: \"liquid\"), (tag: \"Fuel\", class: \"liquid\")])";
+        assert_eq!(parse_file(dup).unwrap().by_id.len(), 1);
+    }
+    
 }

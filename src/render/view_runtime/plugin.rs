@@ -5,8 +5,12 @@ use super::authority::ViewProjectionAuthority;
 
 use super::view_fire_isolation::ViewFireIsolationStats;
 use super::per_view_policy::PerViewRepresentationPolicy;
-use super::input_routing::{sync_view_input_routing_from_active_map, ViewInputRoutingState};
+use super::input_routing::{
+    apply_pointer_gate_capture_to_view_input_routing, sync_view_input_routing_from_active_map,
+    ViewInputRoutingState,
+};
 use super::trace::{advance_view_runtime_trace_frame, ViewRuntimeTrace};
+use crate::gui::hud::simulation_pointer_gate::PointerGateSet;
 
 pub struct ViewRuntimePlugin;
 
@@ -30,6 +34,10 @@ impl Plugin for ViewRuntimePlugin {
                     sync_view_input_routing_from_active_map,
                 ),
             )
-            ;
+            .add_systems(
+                Update,
+                apply_pointer_gate_capture_to_view_input_routing
+                    .after(PointerGateSet::Publish),
+            );
     }
 }

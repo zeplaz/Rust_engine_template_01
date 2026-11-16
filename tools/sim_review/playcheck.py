@@ -8,6 +8,15 @@ debug_runs/sim_review/playcheck_summary.md. The game process is always killed.
     python tools/sim_review/playcheck.py --no-build --frame 1800 --secs 300
     python tools/sim_review/playcheck.py --release        # release + `sim_dump` feature: real frame times
 
+GPU capture (DBG-04 · DBG-07 · LEGACY render_debug_tools / gea_v2_e4 p248):
+  Sets VFX_CAPTURE=1, VFX_CAPTURE_NO_MACRO_ZOOM=1, and writes PNGs under debug_runs/captures/.
+  --view voxel  → VFX_CAPTURE_VIEW=voxel (PixelWorld3D: voxel terrain, massing, precip)
+  --scene playquad → --test playquad; default capture frame 2000 (past PLAYQUAD_RAIN_DELAY ~1800)
+
+    python tools/sim_review/playcheck.py --scene playquad --view voxel --no-build --frame 2000
+
+  Pair with RUST_ENGINE_SIM_DUMP=1 (always on here) for weather.* / massing_* dump counters.
+
 Frame time is always tracked: the dump's perf section (avg/p50/p95/p99/max, hitches, worst hitch
 frames with their top PerfScopes) is scored with build-specific thresholds and drawn on the dashboard.
 """
@@ -29,6 +38,10 @@ _REPO = Path(__file__).resolve().parents[2]
 _OUT = _REPO / "debug_runs" / "sim_review"
 _CAPTURES = _REPO / "debug_runs" / "captures"
 _DUMP = _REPO / "debug_runs" / "sim_run_dump.json"
+_CAP_META = _CAPTURES / "capture_meta_live.json"
+# Keep in sync with src/render/probes/vfx_capture_env.rs
+_PLAYQUAD_VOXEL_CAPTURE_FRAME = 2000
+_PLAYQUAD_RAIN_DELAY_HINT = 1800
 _ANSI = re.compile(r"\x1b\[[0-9;]*m")
 _LEVEL = re.compile(r"\s(ERROR|WARN)\s+([\w:]+):\s*(.*)")
 
@@ -74,7 +87,16 @@ def dump_tick(since: float) -> int:
         return 0
 
 
-def run_game(exe: Path, seed: str, frame: int, secs: int, scene: str, ticks: int, min_secs: int) -> list[str]:
+def run_game(
+    exe: Path,
+    seed: str,
+    frame: int,
+    secs: int,
+    scene: str,
+    ticks: int,
+    min_secs: int,
+    capture_view: str | None,
+) -> list[str]:
     env = dict(os.environ)
     env.update({
         "RUST_ENGINE_SIM_DUMP": "1",
@@ -84,6 +106,8 @@ def run_game(exe: Path, seed: str, frame: int, secs: int, scene: str, ticks: int
         "VFX_CAPTURE_NO_MACRO_ZOOM": "1",
         "RUST_BACKTRACE": "1",
     })
+    if capture_view:
+        env["VFX_CAPTURE_VIEW"] = capture_view
     capture = _CAPTURES / "tactical_rtt_live.png"
     started = time.time()
     log_path = _OUT / "playcheck_run.log"
@@ -176,14 +200,49 @@ def derive_seeds(base: str, n: int) -> list[str]:
     return out[:n]
 
 
-def run_one(exe: Path, seed: str, frame: int, secs: int, scene: str, ticks: int, min_secs: int) -> tuple[list[str], list[str]]:
+def capture_notes() -> list[str]:
+    out: list[str] = []
+    for label, path in (
+        ("window", _CAPTURES / "window_live.png"),
+        ("tactical_rtt", _CAPTURES / "tactical_rtt_live.png"),
+        ("meta", _CAP_META),
+    ):
+        if path.is_file():
+            out.append(f"  {label}: {path} ({path.stat().st_size} bytes)")
+        else:
+            out.append(f"  {label}: (missing) {path}")
+    if _CAP_META.is_file():
+        try:
+            meta = json.loads(_CAP_META.read_text(encoding="utf-8"))
+            out.append(f"  meta.frame_in_simulation={meta.get('frame_in_simulation')}")
+        except (OSError, ValueError):
+            pass
+    return out
+
+
+def default_capture_frame(scene: str, cli_frame: int) -> int:
+    if scene.strip().lower() in ("playquad", "quadrant", "quad"):
+        return max(cli_frame, _PLAYQUAD_VOXEL_CAPTURE_FRAME)
+    return cli_frame
+
+
+def run_one(
+    exe: Path,
+    seed: str,
+    frame: int,
+    secs: int,
+    scene: str,
+    ticks: int,
+    min_secs: int,
+    capture_view: str | None,
+) -> tuple[list[str], list[str]]:
     t0 = time.time()
     if _DUMP.exists():
         try:
             _DUMP.unlink()
         except OSError:
             pass
-    lines = run_game(exe, seed, frame, secs, scene, ticks, min_secs)
+    lines = run_game(exe, seed, frame, secs, scene, ticks, min_secs, capture_view)
     scored = score(t0)
     return lines, scored
 
@@ -201,7 +260,13 @@ def main() -> None:
     ap.add_argument("--frame", type=int, default=1200, help="capture frame")
     ap.add_argument("--secs", type=int, default=420, help="hard time limit")
     ap.add_argument("--ticks", type=int, default=3000, help="sim tick the dump must reach before stopping")
-    ap.add_argument("--scene", default="visual")
+    ap.add_argument("--scene", default="visual", help="--test scene (e.g. visual, playquad)")
+    ap.add_argument(
+        "--view",
+        default=None,
+        choices=("voxel", "tactical", "topdown"),
+        help="VFX_CAPTURE_VIEW override (voxel → PixelWorld3D for weather/massing stills)",
+    )
     ap.add_argument("--release", action="store_true", help="build/run release with the sim_dump feature")
     ap.add_argument("--exe", help="run this binary instead (implies --no-build)")
     ap.add_argument("--min-secs", type=int, default=None,
@@ -210,6 +275,15 @@ def main() -> None:
     a = ap.parse_args()
     min_secs = a.min_secs if a.min_secs is not None else 360
     n_seeds = max(1, int(a.seeds))
+    frame = default_capture_frame(a.scene, a.frame)
+    capture_view = a.view
+    if capture_view is None and a.scene.strip().lower() in ("playquad", "quadrant", "quad"):
+        capture_view = "voxel"
+    if frame != a.frame:
+        say(
+            f"capture frame bumped {a.frame} → {frame} "
+            f"(playquad rain delay hint {_PLAYQUAD_RAIN_DELAY_HINT})"
+        )
 
     exe = Path(a.exe) if a.exe else _exe_path(a.release)
     if not a.no_build and not a.exe:
@@ -229,12 +303,16 @@ def main() -> None:
                 _DUMP.unlink()
             except OSError:
                 pass
-        lines = run_game(exe, seeds[0], a.frame, a.secs, a.scene, a.ticks, min_secs)
+        lines = run_game(exe, seeds[0], frame, a.secs, a.scene, a.ticks, min_secs, capture_view)
         s = summarise_log(lines)
         scored = score(t0)
 
-        md = [f"# playcheck  {'release' if a.release else 'debug'} exe={exe.name} seed={seeds[0]} frame={a.frame} "
-              f"scene={a.scene} ran={time.time() - t0:.0f}s", ""]
+        md = [
+            f"# playcheck  {'release' if a.release else 'debug'} exe={exe.name} seed={seeds[0]} "
+            f"frame={frame} scene={a.scene} view={capture_view or '(default)'} "
+            f"ran={time.time() - t0:.0f}s",
+            "",
+        ]
         md.append(f"panics: {len(s['panics'])}")
         md += [f"  {p[:200]}" for p in s["panics"][:5]]
         perf = {}
@@ -249,7 +327,8 @@ def main() -> None:
             md += [f"  {n:>5}x {k}" for k, n in items[:8]]
         md.append("score:")
         md += [f"  {l}" for l in scored]
-        md.append(f"captures: {_CAPTURES / 'tactical_rtt_live.png'} | {_CAPTURES / 'window_live.png'}")
+        md.append("captures (VFX_CAPTURE):")
+        md += capture_notes()
         text = "\n".join(md)
         (_OUT / "playcheck_summary.md").write_text(text, encoding="utf-8")
         print(text)
@@ -264,7 +343,7 @@ def main() -> None:
     ]
     for seed in seeds:
         say(f"seed {seed}")
-        lines, scored = run_one(exe, seed, a.frame, a.secs, a.scene, a.ticks, min_secs)
+        lines, scored = run_one(exe, seed, frame, a.secs, a.scene, a.ticks, min_secs, capture_view)
         s = summarise_log(lines)
         if _DUMP.exists():
             dest = _OUT / f"dump_{seed}.json"

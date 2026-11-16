@@ -99,6 +99,7 @@ impl TileExtentPreset {
 
 /// Design-time land-feature rhythm in **symbolic km** (rivers, ridges, macro patches).
 #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[serde(default)]
 pub struct LandFeatureRhythm {
     /// Typical diameter of a Voronoi macro patch (strategic region).
     pub macro_patch_km: f32,
@@ -108,6 +109,21 @@ pub struct LandFeatureRhythm {
     pub major_river_spacing_km: f32,
     /// Lake count density: lakes ≈ `area_km² / 100 × this`.
     pub lakes_per_100km2: f32,
+    /// A lake counts as **river-attached** when a river channel cell lies within this many km of any lake
+    /// cell (hydrology lake ranking only; see `compute_hydrology_world`). `0` = size-only ranking (default).
+    pub lake_river_attach_km: f32,
+    /// Rank bonus for attached lakes: score = `cells × (1 + weight)` when attached. `0` = size-only ranking
+    /// (default).
+    pub lake_river_attach_weight: f32,
+    /// Soft marsh belt reach (km) around open water: wet ground within this range becomes `Wetland`
+    /// (never open water, never a channel). `0` = no belts (default).
+    pub marsh_belt_km: f32,
+    /// `0..=1` extra reach / lower moisture threshold inside [`Self::marsh_region`]. Ignored without a region.
+    pub marsh_emphasis: f32,
+    /// Normalized map rectangle `[x0, y0, x1, y1]` (fractions of width / height, half-open, tile `y` up). When
+    /// set, marsh belts form **only** inside it. The region comes from the shared partition
+    /// (`engine::playquad::quadrant_aabb`); terrain never defines its own quadrants. `None` = uniform world.
+    pub marsh_region: Option<[f32; 4]>,
 }
 
 impl Default for LandFeatureRhythm {
@@ -117,6 +133,31 @@ impl Default for LandFeatureRhythm {
             relief_wavelength_km: 4.0,
             major_river_spacing_km: 6.0,
             lakes_per_100km2: 0.3,
+            // Neutral: legacy lake choice, no marsh belts (PQ-H1). Only PlayQuad opts in.
+            lake_river_attach_km: 0.0,
+            lake_river_attach_weight: 0.0,
+            marsh_belt_km: 0.0,
+            marsh_emphasis: 0.0,
+            marsh_region: None,
+        }
+    }
+}
+
+impl LandFeatureRhythm {
+    /// Play-test quadrant world (PLAYTEST-QUADRANT-WORLD-001 §3.3): SW lake basin (river-attached lakes
+    /// ranked first, world-wide candidates) and an SE marsh belt confined to `marsh_region`.
+    /// `marsh_region` is the SE quadrant as map fractions — built by the caller from the shared partition.
+    /// PlayQuad-only; the default rhythm stays neutral.
+    #[must_use]
+    pub fn playquad_hydrology(marsh_region: [f32; 4]) -> Self {
+        Self {
+            lakes_per_100km2: 0.5,
+            lake_river_attach_km: 0.4,
+            lake_river_attach_weight: 4.0,
+            marsh_belt_km: 0.3,
+            marsh_emphasis: 0.75,
+            marsh_region: Some(marsh_region),
+            ..Self::default()
         }
     }
 }

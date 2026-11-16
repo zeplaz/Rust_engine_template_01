@@ -16,13 +16,17 @@ mod fire_overlay;
 mod stand_overlay;
 mod atmosphere_clipmap_overlay;
 mod transport_overlay;
+mod voxel_occupation_overlay;
 mod utility_overlay;
 mod weather_overlay;
 mod wave_s_artifacts;
 mod wire_format;
 
 pub use autosave::{tick_world_save_autosave, WorldSaveAutosaveSettings};
-pub use apply::{apply_pending_save_pipeline_jobs, apply_saved_body_to_materialized_chunk};
+pub use apply::{
+    apply_pending_save_pipeline_jobs, apply_saved_body_to_materialized_chunk,
+    rebuild_derived_after_chunk_apply, PostLoadDerivedBook, POST_LOAD_DERIVED_STEPS,
+};
 pub use async_io::{poll_save_io_completions, SaveIoCompletion, SaveIoDispatcher, SaveIoWorkOrder};
 pub use dirty_queue::{
     arm_save_flush_from_requests, enqueue_dirty_chunks_from_environment_hooks,
@@ -91,6 +95,12 @@ pub use transport_overlay::{
     write_transport_overlay_to_bundle, write_transport_snapshot_ron,
     TransportOverlayHydrateState, TRANSPORT_OVERLAY_NAME, TRANSPORT_OVERLAY_REL_PATH,
 };
+pub use voxel_occupation_overlay::{
+    capture_voxel_occupation_overlay, default_voxel_occupation_overlay_ref,
+    try_hydrate_voxel_occupation_from_manifest, voxel_occupation_overlay_ref,
+    write_voxel_occupation_overlay_to_bundle, VoxelOccupationHydrateState,
+    VOXEL_OCCUPATION_OVERLAY_NAME, VOXEL_OCCUPATION_REL_PATH,
+};
 pub use weather_overlay::{
     build_weather_overlay_refs, default_weather_overlay_ref, read_weather_field_ron,
     read_weather_overlay_from_manifest, try_hydrate_weather_overlay_on_bundle_dir,
@@ -115,9 +125,10 @@ pub use wave_s_artifacts::{
 
 pub use wire_format::{
     active_chunk_artifact_body_kind, active_save_payload_compression, active_save_wire_format,
-    compress_payload, decompress_payload, unwrap_chunk_artifact_body, wrap_chunk_artifact_body,
-    SaveArtifactBodyKind, SavePayloadCompression, SaveWireFormat, SAVE_ARTIFACT_ENVELOPE_VERSION,
-    SAVE_ARTIFACT_MAGIC, SAVE_BINARY_BULK_DEFERRED,
+    compress_payload, decompress_payload, quantize_unit_interval_f32, unwrap_chunk_artifact_body,
+    wrap_chunk_artifact_body, SaveArtifactBodyKind, SavePayloadCompression, SaveWireFormat,
+    SAVE_ARTIFACT_ENVELOPE_VERSION, SAVE_ARTIFACT_MAGIC, SAVE_BINARY_BULK_DEFERRED,
+    SAVE_FLOAT_QUANT_SCALE,
 };
 pub use snapshot_builder::{
     build_chunk_save_snapshot_input, build_saved_chunk_body, tag_names_from_set,

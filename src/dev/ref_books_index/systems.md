@@ -4,6 +4,42 @@ Find your system, read its **gems** (niche, high-leverage sections chosen from t
 `lookup.py --code <path>` or `lookup.py <words>` for page ranges. Row ids point into [`matrix.md`](matrix.md).
 Code roots are relative to `src/`.
 
+## Dual matrices (cite both)
+
+Every orient runs **NEW** and **LEGACY** in the same session — complementary, not either/or.
+Record **both** cites in commits, adoption notes, and slice evidence.
+
+| NEW (`src/dev/ref_books_index/`) | LEGACY (`C:\dev\ref books\lookup\`) | Prefer |
+|:---|:---|:---|
+| `gea4v1` | `gea_v1_e4` | foundations, HID, debug, asset pipeline |
+| `gea4v2` | `gea_v2_e4` | graphics, lighting, streaming, gameplay runtime |
+| `aig3` | `aig_e3` | PCG, grammars, AI tooling |
+| `gea3` | `gea_e3` | fallback only when 4e has no section |
+
+```bash
+python src/dev/ref_books_index/lookup.py --dual <terms>
+python src/dev/ref_books_index/lookup.py --dual --code <path-under-src>
+```
+
+**DBG / IO / PCG dual pairs** (NEW row id → LEGACY keyword):
+
+| NEW | LEGACY keyword | Notes |
+|:---|:---|:---|
+| DBG-01..DBG-07 | `debug_tools` | gea_v1_e4 p566 |
+| DBG-03 | `debug_drawing` | gea_v1_e4 p571 |
+| DBG-06 | `debug_cameras_pause` | gea_v1_e4 p582 |
+| DBG-04 | `render_debug_tools` | gea_v2_e4 p248 |
+| IO-09 | `asset_pipeline` | gea_v1_e4 p68 |
+| IO-11 | `engine_configuration` | gea_v1_e4 p454 |
+| PCG-06 | `shape_grammars` | aig_e3 p748 |
+| PCG-* | `pcg` | aig_e3 p690 |
+| DES-04 | `ai_tools` | aig_e3 p896 |
+| RND-09 / voxel VFX | `geometry_visual_effects` | gea_v2_e4 p141 |
+| ECS-02 | `runtime_object_model` | gea_v2_e4 §17.2 p563 (property-centric) |
+| RND-04 transparency / OIT | `geometry_visual_effects` | gea_v2_e4 p141 · gea4v2 11.3.12 / 11.3.12.1 (sort path in fire/weather VFX) |
+| PHYS-07 explosions / blast funnel | `physics_integration` | gea_v2_e4 §14.5 p423 · gea4v2 14.5.3.2–4 (intent→execute; no rigid-body middleware) |
+| PHYS-04 collision materials/filters | `collision_detection` · `physics_collision` | gea_v2_e4 §14.3 p359 / p352 · gea4v2 14.3.8 / 14.3.8.3 (tags → layers/masks; MaterialId indexes collision table) |
+
 ## Fire, smoke, ecology loop
 Code: `systems/fire/`, `systems/ecology/`, `compute/heat_diffusion.rs`, `render/fire_vfx`, `render/lighting/`
 - **TAC-04 cellular automata** (aig3 6.2.8): `cell_spread` is a CA; the book's neighbourhood and update-order notes apply directly.
@@ -32,10 +68,11 @@ Code: `economy/logistics/` (`orders/` = `LogisticsOrderSim`), `systems/navigatio
 - **NAV-10 dynamic pathfinding** (aig3 4.7.2): fire and weather close roads; replan incrementally.
 - **NAV-13 continuous-time pathfinding** (aig3 4.8): edge costs that change over time (weather haul windows, advancing fronts).
 - **NAV-14 tactical pathfinding** (aig3 6.3): danger-weighted cost and concern blending; `logistics_floodfill` already tracks max risk.
+- **NAV-04 node-array A\*** (aig3 4.3.7 · LEGACY `node_array_astar` aig_e3 p249 · V4-NAV04): dense `LogisticsNodeRecord` / `LogisticsNodeArray` + generation reuse in `logistics_floodfill`; Dijkstra = A\* with h=0 (concern blend); `nav04_*` tripwires.
 - **NAV-07 / NAV-08 hierarchical pathfinding and its artefacts** (aig3 4.6.3–4.6.4): portals and districts, plus the odd routes they cause.
 - **EXEC-04 anytime algorithms** (aig3 10.2): the throughput solver should always return a usable answer.
-- **ECS-15 tool vs runtime split** (gea4v2 16.2.2): IF-TRG authoring vs SIM-TRN runtime.
-- Rows: DEC-10 NAV-01..NAV-14 MOVE-02 MOVE-03 MOVE-08 EXEC-04 LOOP-11 MEM-01 MEM-06 MEM-08 ANIM-03
+- **ECS-15 tool vs runtime split** (gea4v2 16.2.2 · V4-ECS15): IF-TRG authoring vs SIM-TRN runtime (`infrastructure/transport` → `systems/transport`); same split for Studio ParamFrame / massing_preview (`sim_occupation: false`) vs runtime massing — occupation only via construction funnel.
+- Rows: DEC-10 NAV-01..NAV-14 MOVE-02 MOVE-03 MOVE-08 EXEC-04 LOOP-11 MEM-01 MEM-06 MEM-08 ANIM-03 ECS-15
 
 ## Fronts, formations, combat, ballistics, air missions
 Code: `combat/`, `render/world_map_front_mesh.rs`, `gui/front_controls.rs`
@@ -45,6 +82,7 @@ Code: `combat/`, `render/world_map_front_mesh.rs`, `gui/front_controls.rs`
 - **MOVE-07 bounding overwatch** (aig3 3.7.10, 6.4.4): tactical advance behaviour.
 - **MOVE-09 firing solutions with drag, iterative targeting** (aig3 3.5.4–3.5.5): missiles and shells under wind drift.
 - **PHYS-02 swept collision** (gea4v2 14.3.5.7): fast projectiles tunnel through cells without it.
+- **PHYS-09 bookkeeping over rigid bodies** (gea4v2 14.1 / 14.1.2.1 / 14.1.3 · LEGACY `physics_collision` · `physics_middleware` gea_v2_e4 p352/p358 · V4-PHYS09): `ballistics.rs` kinematic flights + BlastIntent enqueue — no rigid-body middleware world (ADOPTED).
 - **TAC-10 multi-tier AI** (aig3 6.4.1): faction → formation → unit → mission packages.
 - **ECS-07 deferred inter-object mutation** (gea4v2 17.7.4.5): `MissionIntentQueue` → `MissionBook` sole writer.
 - Rows: TAC-01..TAC-11 MOVE-05..MOVE-09 PHYS-02 PHYS-07 PHYS-08 PHYS-09 DEC-13 ECS-07
@@ -65,12 +103,13 @@ Code: `ai/faction/`, `strategic/` (behavior_*, hybrid_*, world_read_snapshot, st
 Code: `construction/`, `strategic/settlement`, `strategic/site`, `construction/procedural/`
 - **ANIM-02 transition matrix** (gea4v2 13.10.4.3): table-driven allowed transitions for `site_stage_transitions`.
 - **PCG-06 shape grammars and grammar planning** (aig3 8.5.2): building grammar and voxel massing.
+- **ECS-15 tool vs runtime** (gea4v2 16.2.2 · V4-ECS15): Studio/tool massing hydrate refuses `sim_occupation: true`; sole runtime writer is `sync_voxel_massing_visual_requests`.
 - **PCG-07 spanning tree, recursive subdivision** (aig3 8.4.2–8.4.3): settlement road skeletons and blocks.
 - **PCG-08 generate and test** (aig3 8.4.4): `assembly_quality_gate`.
 - **INPUT-02 chords and gestures** (gea4v1 9.5.4.3): drag-to-build timing windows.
 - **ECS-14 editor placement and alignment aids** (gea4v2 16.4.1.7): snapping.
-- **PHYS-07/08 explosions, destructibles** (gea4v2 14.5.3.4–5): `blast.rs`, `demolish.rs`.
-- Rows: ANIM-02 PCG-06 PCG-07 PCG-08 INPUT-02 INPUT-04 ECS-03 ECS-14 PHYS-07 PHYS-08 DEC-02
+- **PHYS-07/08 explosions, destructibles** (gea4v2 14.5.3.2–5 · LEGACY `physics_integration`): `blast.rs` intent→execute funnel + falloff; `demolish.rs` `DestructibleDamageStage` ladder + sole terminal execute (ADOPTED).
+- Rows: ANIM-02 PCG-06 PCG-07 PCG-08 INPUT-02 INPUT-04 ECS-03 ECS-14 ECS-15 PHYS-07 PHYS-08 DEC-02
 
 ## World generation, terrain, hydrology
 Code: `terrain/generation/`, `terrain/voronoi*.rs`, `terrain/material/`
@@ -86,9 +125,12 @@ Code: `systems/sim_control.rs`, `systems/sim_attention.rs`, `systems/chunk_sim_l
 - **LOOP-07 one-frame-off lag** (gea4v2 17.6.3.3): document which reads may be one tick stale.
 - **LOOP-09 time-stamping** (gea4v2 17.6.3.5): epochs and dirty masks for staleness.
 - **CONC-03 lock-not-needed assertions** (gea4v1 4.9.7.5): a debug-only check that enforces "one writer per domain".
+- **ECS-08 jobs / async updates** (gea4v2 17.7.4.1–2 · 17.7.4.6) + **CONC-01** job counters (gea4v1 8.6.4): chunk-parallel job products; main-thread sole apply (`chunk_fire_overlay` edge deposits · `io/streaming/task_pool` hydrate completions). LEGACY: job systems / async game-object update.
+- **ECS-12 data-pathway triggers** (gea4v2 17.8.11.1–2 · V4-ECS12): `trigger_spec`/`trigger_registry` resolve registered edges to intents only; unregistered/malformed edges do not broadcast. LEGACY: `events_message_passing`.
 - **MEM-08 fixed vs floating point** (gea4v1 3.3.1.3–4) + **LOOP-04 float clocks**: determinism hygiene.
 - **EXEC-01 frequency and phase scheduling** (aig3 10.1.1): stagger heavy systems across ticks.
-- **MEM-10 virtual-memory pages** (gea4v1 3.5.2): `ChunkSlab` paging is VM paging.
+- **MEM-10 virtual-memory pages** (gea4v1 3.5.2 / 3.5.2.3–4; LEGACY `memory_architectures` gea_v1_e4 p183): `ChunkSlab` + `field_page_residency` mirror page table + residency + fault-in (handles, not raw ptrs).
+- **ECS-02 property-centric slabs/layers** (gea4v2 17.2.2 / 17.2.2.3–4 · V4-ECS02; LEGACY `runtime_object_model` gea_v2_e4 p563): `ChunkSlab<T>` = homogeneous property/page columns; `FieldScalarLayer` + AoS `ChunkFieldCell` = named properties of space (SoA-vs-AoS trade-offs documented; MEM-05/10 unregressed).
 - Rows: LOOP-01..LOOP-12 ECS-01..ECS-13 CONC-01..CONC-10 MEM-01..MEM-10 EXEC-01..EXEC-03
 
 ## Save, load, streaming
@@ -96,8 +138,10 @@ Code: `io/save/`, `io/streaming/`, `substrate/hydrate.rs`
 - **IO-02 air locks** (gea4v2 17.4.2): a hysteresis band between load and unload radii.
 - **IO-07 cross-references and pointer fix-up** (gea4v1 7.2.2.9): stable ids plus one remap pass on apply.
 - **IO-08 post-load initialization** (gea4v1 7.2.2.10): rebuild derived caches; never save them.
-- **IO-03 spawn memory** (gea4v2 17.4.4): budget spawns and reserve entities ahead of hydrate.
+- **IO-03 spawn memory** (gea4v2 17.4.4 / 17.4.4.1 offline · 17.4.4.2 dynamic; LEGACY `memory_management` · `world_streaming`): per-chunk offline ceiling + per-frame dynamic cap clamp hydrate/reconstruct; RemoteAllocator reserve fills the gated batch.
 - Rows: IO-01..IO-11 ECS-05 CONC-05 CONC-09 ANIM-03 MEM-09
+- **ANIM-03 quantization / key omission / curve compression** (gea4v2 13.8.2–13.8.4 · LEGACY `animation_compression` gea_v2_e4 §13.8 p306 · V4-ANIM03): save `quantize_unit_interval_f32` + Identity-only payload codec; logistics snapshot omits fill/throughput keys and quantizes before compare. No AnimationCurve host — true keyframe compression deferred.
+- **CONC-09 async requests** (gea4v2 17.7.2 / 17.7.2.1): request early (`SaveIoDispatcher::submit`, `submit_stream_hydrate_work`), consume a frame later on main (`apply_save_io_completion`, `apply_stream_io_completion`); `hydrate.rs` = worker-side body only. LEGACY: async / job / streaming.
 
 ## Rendering, views, overlays, map
 Code: `render/`, `gui/representation_policy.rs`, `gui/world_representation.rs`, `gui/map_view`, `gui/tactical/`
@@ -105,8 +149,9 @@ Code: `render/`, `gui/representation_policy.rs`, `gui/world_representation.rs`, 
 - **RND-07 virtual textures** (gea4v2 11.3.14.8): the stage-6 virtualization model.
 - **RND-08 mipmapping, texel density** (gea4v2 11.3.14.5–6): atlas bleed and readability across zoom bands.
 - **RND-20 color spaces** (gea4v2 11.2.3.12–13): perceptual heatmap ramps; blend in linear.
-- **RND-19 double/triple buffering, v-sync** (gea4v2 11.3.4.1): why present/vsync shows up as "stalls".
-- **DBG-04 GPU capture** (gea4v2 12.9.4) with the repo's `VFX_CAPTURE` / `RTT_SPRITE_TRACE` probes.
+- **RND-19 double/triple buffering, v-sync** (gea4v2 11.3.4.1; gea4v1 8.5.2.5; LEGACY gea_v2_e4 p50-51 · gea_v1_e4 p518-519) — **ADOPTED** V4-RND19: `PresentSurfaceConfig` in `render/view_runtime/present.rs`; debug AutoVsync+triple latency 3; `PERF_NO_VSYNC`→AutoNoVsync+latency 1; `rnd19_*` tripwires.
+- **DBG-04 GPU capture** (gea4v2 12.9.4; LEGACY `render_debug_tools` gea_v2_e4 p248) — **ADOPTED** V4-DBG04: `VFX_CAPTURE` / `RTT_SPRITE_TRACE` + env contract `render/probes/vfx_capture_env.rs` (PlayQuad → `VFX_CAPTURE_VIEW=voxel`, frame ≥2000); `dbg04_*` tripwires.
+- **MATH-06 Solving 3D problems in 2D** (gea4v1 5.1 p350–351; LEGACY `math_3d` gea_v1_e4 p350): reduce world→map XY, lift for presentation; `gui/sim_map_projection.rs` owns the contract + `math06_*` tripwires.
 - Rows: RND-01..RND-22 LGT-01..LGT-07 UI-01 DBG-02 DBG-04 MATH-04 MATH-06
 
 ## Audio

@@ -1,5 +1,23 @@
 //! Simulation control loop: pause, single-step, speed multiplier, monotonic tick.
 //!
+//! Ref-books **DBG-06** (gea4v1 10.5) · LEGACY keyword `debug_cameras_pause` (gea_v1_e4 p582) —
+//! **V4-DBG06** formal ADOPT of D2 pause/step: freeze the **gameplay timeline** while the
+//! **render and UI loop stay live** (Bevy `Time` / input / extract). Gameplay systems gate on
+//! [`SimControlState::should_tick`] and scale sim dt with [`SimControlState::dt_scale`]; they
+//! must **not** gate presentation or HUD on those flags.
+//!
+//! Ref-books **LOOP-03** · LEGACY `game_loop` / `time_measurement` (GEA 4e I §8.5.5, gea_v1_e4
+//! p522 / p514): [`advance_sim_tick`] clamps wall-clock dt via
+//! [`crate::systems::sim_frame_delta::clamp_sim_frame_delta_secs`] so a hitch/load never leaps
+//! sim time past the catch-up budget.
+//!
+//! Ref-books **LOOP-04** · LEGACY `time_measurement` (GEA 4e I §8.5.4.4 / §3.3.1.4, p522 / p138):
+//! [`SimTick`] and [`SimTimeMicros`] (**u64**) are sim-time truth. [`sim_time_secs_display`] is
+//! HUD-only — f32 seconds lose sub-µs (and eventually sub-second) precision after long sessions.
+//!
+//! **Studio / playcheck stills:** set `RUST_ENGINE_SIM_PAUSE=1` before launch so the sim starts
+//! paused with gameplay dt frozen; the window still paints frames for capture (`tools/sim_review/`).
+//!
 //! Designer doc: `prompts/designer_questions/tools_ui/spec/01_plugin_schedule_patterns.md`.
 //! UI driver:   `crate::gui::diagnostics_ui::DiagnosticsUiPlugin` (diagnostics panel).
 //!
@@ -8,10 +26,15 @@
 //! **Schedule:** [`SimControlSystemSet`] — transport and other gameplay should run **after**
 //! [`SimControlSystemSet::AdvanceSimTick`] (see `TransportSimulationPlugin`).
 
+/// Latched once at startup: start with [`SimControlState::paused`] so playcheck / Studio can grab
+/// stills before the timeline advances.
+pub const SIM_PAUSE_ENV: &str = "RUST_ENGINE_SIM_PAUSE";
+
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use crate::gui::InputBindings;
+use crate::systems::sim_frame_delta::clamp_sim_frame_delta_secs;
 
 /// Ordering hooks for cross-plugin dependencies on `Update`.
 #[derive(SystemSet, Debug, Clone, PartialEq, Eq, Hash)]
@@ -39,26 +62,62 @@ impl Default for SimControlState {
 }
 
 impl SimControlState {
-    /// Whether sim should advance this frame.
+    /// Whether the gameplay timeline should advance this frame.
+    ///
+    /// When `false`, [`Self::dt_scale`] is 0 — sim systems skip work, but the render/UI frame loop
+    /// continues (DBG-06).
     #[inline]
     pub fn should_tick(&self) -> bool {
         !self.paused || self.steps_remaining > 0
     }
 
-    /// Effective dt scaler for sim systems. Returns 0.0 when fully paused.
+    /// Effective dt scaler for **gameplay** systems only. Returns 0.0 when fully paused.
     #[inline]
     pub fn dt_scale(&self) -> f32 {
         if self.should_tick() { self.speed.max(0.0) } else { 0.0 }
     }
+
+    /// Queue single-step ticks consumed while paused (scenario `SimAdvance`, diagnostics step).
+    #[inline]
+    pub fn queue_steps(&mut self, ticks: u32) {
+        self.steps_remaining = self.steps_remaining.saturating_add(ticks);
+    }
 }
 
 /// Monotonic simulation tick counter; incremented when `SimControlState::should_tick()`.
+///
+/// **LOOP-04:** this `u64` (with [`SimTimeMicros`]) is sim-time truth — not f32 seconds.
 #[derive(Resource, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SimTick(pub u64);
 
 /// Authoritative sim time in microseconds (monotonic while the sim advances).
+///
+/// **LOOP-04:** integer micros stay exact across multi-hour sessions; prefer this over
+/// [`sim_time_secs_display`] for any gameplay / determinism path.
 #[derive(Resource, Debug, Default, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct SimTimeMicros(pub u64);
+
+/// HUD / debug only: convert [`SimTimeMicros`] to f32 seconds (GEA 8.5.4.4).
+///
+/// After ~1 hour of continuous play, consecutive µs values can map to the **same** f32 second.
+/// Never use this for tick gates, saves, or replication — keep [`SimTick`] / [`SimTimeMicros`].
+#[inline]
+#[must_use]
+pub fn sim_time_secs_display(sim_time_micros: u64) -> f32 {
+    (sim_time_micros as f64 / 1_000_000.0) as f32
+}
+
+/// Wall-clock frame → sim micros for one Update, after LOOP-03 hitch clamp.
+#[inline]
+#[must_use]
+pub fn sim_delta_micros_from_frame(delta_secs: f32, speed: f32) -> u64 {
+    let clamped = clamp_sim_frame_delta_secs(delta_secs);
+    let scaled = clamped * speed.max(0.0);
+    if !scaled.is_finite() || scaled <= 0.0 {
+        return 0;
+    }
+    (scaled * 1_000_000.0) as u64
+}
 
 /// Simulated microseconds per gameplay step: one step = one simulated second.
 ///
@@ -194,6 +253,7 @@ impl Plugin for SimControlPlugin {
         app.init_resource::<SimControlState>()
             .init_resource::<SimTick>()
             .init_resource::<SimTimeMicros>()
+            .add_systems(PreStartup, apply_env_sim_pause_latch)
             .add_plugins(crate::systems::sim_frame_delta::SimFrameDeltaPlugin);
         ensure_sim_step_clock(app);
         app
@@ -214,6 +274,24 @@ impl Plugin for SimControlPlugin {
                     .in_set(SimControlSystemSet::AdvanceSimTick)
                     .before(advance_sim_step_clock),
             );
+    }
+}
+
+#[must_use]
+pub fn sim_pause_env_latched() -> bool {
+    static ON: std::sync::OnceLock<bool> = std::sync::OnceLock::new();
+    *ON.get_or_init(|| sim_pause_env_on())
+}
+
+fn sim_pause_env_on() -> bool {
+    std::env::var(SIM_PAUSE_ENV)
+        .ok()
+        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+}
+
+fn apply_env_sim_pause_latch(mut ctrl: ResMut<SimControlState>) {
+    if sim_pause_env_on() {
+        ctrl.paused = true;
     }
 }
 
@@ -238,13 +316,177 @@ pub(crate) fn advance_sim_tick(
     }
     tick.0 = tick.0.wrapping_add(1);
     // An operator single-step while paused advances exactly one gameplay step.
+    // Running path clamps wall-clock dt (LOOP-03) so stalls/loads cannot leap sim time.
     let delta_micros = if ctrl.paused {
         SIM_STEP_MICROS
     } else {
-        (time.delta_secs() * ctrl.speed.max(0.0) * 1_000_000.0) as u64
+        sim_delta_micros_from_frame(time.delta_secs(), ctrl.speed)
     };
     sim_time.0 = sim_time.0.wrapping_add(delta_micros);
     if ctrl.steps_remaining > 0 {
         ctrl.steps_remaining -= 1;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use bevy::prelude::{App, MinimalPlugins};
+
+    #[test]
+    fn paused_freezes_gameplay_dt_without_steps() {
+        let ctrl = SimControlState {
+            paused: true,
+            steps_remaining: 0,
+            speed: 2.0,
+        };
+        assert!(!ctrl.should_tick());
+        assert_eq!(ctrl.dt_scale(), 0.0);
+    }
+
+    #[test]
+    fn single_step_while_paused_advances_once() {
+        let mut ctrl = SimControlState {
+            paused: true,
+            steps_remaining: 0,
+            speed: 1.0,
+        };
+        ctrl.queue_steps(1);
+        assert!(ctrl.should_tick());
+        assert_eq!(ctrl.dt_scale(), 1.0);
+    }
+
+    #[test]
+    fn sim_pause_env_recognizes_truthy_values() {
+        let prior = std::env::var(SIM_PAUSE_ENV).ok();
+        std::env::set_var(SIM_PAUSE_ENV, "1");
+        assert!(sim_pause_env_on());
+        std::env::set_var(SIM_PAUSE_ENV, "true");
+        assert!(sim_pause_env_on());
+        std::env::set_var(SIM_PAUSE_ENV, "0");
+        assert!(!sim_pause_env_on());
+        match prior {
+            Some(v) => std::env::set_var(SIM_PAUSE_ENV, v),
+            None => {
+                let _ = std::env::remove_var(SIM_PAUSE_ENV);
+            }
+        }
+    }
+
+    #[test]
+    fn advance_sim_tick_skips_while_paused() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(SimControlState {
+            paused: true,
+            steps_remaining: 0,
+            speed: 1.0,
+        });
+        app.insert_resource(SimTick::default());
+        app.insert_resource(SimTimeMicros::default());
+        app.add_systems(Update, advance_sim_tick);
+        app.update();
+        assert_eq!(app.world().resource::<SimTick>().0, 0);
+    }
+
+    #[test]
+    fn hitch_frame_delta_clamps_before_sim_micros() {
+        let max_micros = u64::from(SIM_STEP_MAX_PER_FRAME) * 1_000_000;
+        assert_eq!(sim_delta_micros_from_frame(0.016, 1.0), 16_000);
+        assert_eq!(sim_delta_micros_from_frame(120.0, 1.0), max_micros);
+        assert_eq!(sim_delta_micros_from_frame(120.0, 2.0), max_micros * 2);
+        assert_eq!(sim_delta_micros_from_frame(-1.0, 1.0), 0);
+    }
+
+    #[test]
+    fn u64_tick_and_micros_remain_exact_when_f32_display_collapses() {
+        // ~1 hour of sim: consecutive µs are distinct as u64, but identical as f32 seconds
+        // (LOOP-04 / GEA 8.5.4.4 floating-point clock limits).
+        let hour_micros = 3_600_000_000u64;
+        assert_ne!(hour_micros, hour_micros + 1);
+        assert_eq!(
+            sim_time_secs_display(hour_micros),
+            sim_time_secs_display(hour_micros + 1)
+        );
+        let tick = SimTick(1_000_000);
+        assert_eq!(tick.0.wrapping_add(1), 1_000_001);
+        assert_eq!(SimTimeMicros(hour_micros).0 + 1, hour_micros + 1);
+    }
+
+    /// DBG-06 / V4-DBG06 tripwire: paused gameplay clock stays frozen while Bevy `Time`
+    /// (render/UI frame loop) keeps advancing.
+    #[test]
+    fn dbg06_pause_freezes_sim_tick_while_bevy_time_advances() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(SimControlState {
+            paused: true,
+            steps_remaining: 0,
+            speed: 1.0,
+        });
+        app.insert_resource(SimTick::default());
+        app.insert_resource(SimTimeMicros::default());
+        app.add_systems(Update, advance_sim_tick);
+
+        app.update();
+        let elapsed_a = app.world().resource::<Time>().elapsed_secs_f64();
+        assert_eq!(app.world().resource::<SimTick>().0, 0);
+        assert_eq!(app.world().resource::<SimTimeMicros>().0, 0);
+
+        std::thread::sleep(std::time::Duration::from_millis(25));
+        app.update();
+        let elapsed_b = app.world().resource::<Time>().elapsed_secs_f64();
+        assert!(
+            elapsed_b > elapsed_a,
+            "Bevy Time must keep advancing while paused (DBG-06 render/UI live)"
+        );
+        assert_eq!(app.world().resource::<SimTick>().0, 0);
+        assert_eq!(app.world().resource::<SimTimeMicros>().0, 0);
+        assert!(!app.world().resource::<SimControlState>().should_tick());
+        assert_eq!(app.world().resource::<SimControlState>().dt_scale(), 0.0);
+    }
+
+    /// DBG-06 / V4-DBG06 tripwire: single-step while paused advances exactly one sim second,
+    /// then refreezes (no further ticks without another queued step).
+    #[test]
+    fn dbg06_single_step_advances_one_sim_second_then_refreezes() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.insert_resource(SimControlState {
+            paused: true,
+            steps_remaining: 0,
+            speed: 1.0,
+        });
+        app.insert_resource(SimTick::default());
+        app.insert_resource(SimTimeMicros::default());
+        app.add_systems(Update, advance_sim_tick);
+
+        app.world_mut().resource_mut::<SimControlState>().queue_steps(1);
+        app.update();
+        assert_eq!(app.world().resource::<SimTick>().0, 1);
+        assert_eq!(app.world().resource::<SimTimeMicros>().0, SIM_STEP_MICROS);
+        assert_eq!(app.world().resource::<SimControlState>().steps_remaining, 0);
+        assert!(!app.world().resource::<SimControlState>().should_tick());
+
+        app.update();
+        assert_eq!(app.world().resource::<SimTick>().0, 1);
+        assert_eq!(app.world().resource::<SimTimeMicros>().0, SIM_STEP_MICROS);
+    }
+
+    /// DBG-06 / V4-DBG06 tripwire: dual-cite (NEW row + LEGACY keyword) stays in module docs.
+    #[test]
+    fn dbg06_dual_cite_debug_cameras_pause_in_module_docs() {
+        let src = include_str!("sim_control.rs");
+        assert!(src.contains("DBG-06"), "missing NEW matrix cite DBG-06");
+        assert!(
+            src.contains("debug_cameras_pause"),
+            "missing LEGACY keyword debug_cameras_pause"
+        );
+        assert!(
+            src.contains("render and UI"),
+            "missing DBG-06 render/UI-live contract wording"
+        );
+        assert!(src.contains("should_tick"));
+        assert!(src.contains(SIM_PAUSE_ENV));
     }
 }

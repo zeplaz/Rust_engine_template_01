@@ -41,6 +41,42 @@ def emit_mission_dashboard(
     return write_report(data, html_path, title=str(data.get("title")))
 
 
+def emit_frame_qc_dashboard(
+    payload: dict[str, Any],
+    *,
+    name: str = "frame_qc",
+) -> Path:
+    """ParamFrame JSON → static HTML under debug_runs/studio_dash/."""
+    try:
+        from .frame_qc import frame_qc_view
+    except ImportError:
+        from frame_qc import frame_qc_view  # type: ignore
+
+    data = frame_qc_view(dict(payload))
+    json_path = _out_dir() / f"{name}.json"
+    html_path = _out_dir() / f"{name}.html"
+    json_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return write_report(data, html_path, title=str(data.get("title")))
+
+
+def emit_massing_qc_dashboard(
+    payload: dict[str, Any],
+    *,
+    name: str = "massing_qc",
+) -> Path:
+    """massing_preview JSON → static HTML."""
+    try:
+        from .massing_qc import massing_qc_view
+    except ImportError:
+        from massing_qc import massing_qc_view  # type: ignore
+
+    data = massing_qc_view(dict(payload))
+    json_path = _out_dir() / f"{name}.json"
+    html_path = _out_dir() / f"{name}.html"
+    json_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+    return write_report(data, html_path, title=str(data.get("title")))
+
+
 def emit_worldgen_dashboard(
     payload: dict[str, Any],
     *,

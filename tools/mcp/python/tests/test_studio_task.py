@@ -42,3 +42,29 @@ def test_handoff_marker(tmp_path, monkeypatch):
     task = studio_task.read_task("handoff_1")
     assert task is not None
     assert "blender_session" in task
+
+
+def test_run_queued_massing_export(tmp_path, monkeypatch):
+    from rust_engine_mcp.paths import repo_root, schemas_dir
+
+    monkeypatch.setattr(studio_task, "studio_tasks_dir", lambda: tmp_path)
+    example = schemas_dir() / "examples" / "massing_preview_pilot_rail_warehouse_v1.json"
+    payload = tmp_path / "massing_preview.json"
+    payload.write_text(example.read_text(encoding="utf-8"), encoding="utf-8")
+    # payload_path relative to repo for resolve_payload
+    rel = str(payload)  # absolute OK via resolve
+    task = studio_task.enqueue(
+        kind="massing_export",
+        seed=1,
+        payload_path=str(payload),
+        task_id="massing_export_test",
+    )
+    assert task["status"] == "queued"
+    done = studio_task.run_queued_massing_export("massing_export_test")
+    assert done["status"] == "done", done.get("error")
+    assert done.get("report_path")
+    report = repo_root() / done["report_path"]
+    assert report.is_file()
+    html = report.read_text(encoding="utf-8")
+    assert "Grammar rule chain" in html or "seed" in html
+    assert "Massing columns" in html

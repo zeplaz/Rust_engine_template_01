@@ -4,13 +4,68 @@
 //! **Behaviour changes** ([`FactionBehaviourChangeLog`]): goal switches only — copied into
 //! [`crate::strategic::BehaviourChangesSnapshot`] for the Insert explain panel (`DEC-15`).
 //!
+//! **TAC-07** (aig3 6.2.4 *Learning with Tactical Analyses*): [`TacticalFragMap`] remembers
+//! where losses happened (frag heat). Decision scoring may *read* heat; this module owns writes.
+//!
 //! This is an audit trail of decisions already taken, not a blackboard: nothing in the sim reads it
-//! back to decide (`MAI-CUT-BOARD`).
+//! back to decide (`MAI-CUT-BOARD`) except optional frag-heat bias via [`TacticalFragMap::heat_at`].
+
+use std::collections::BTreeMap;
 
 use bevy::prelude::*;
 
 use super::decide::{GoalChoice, ScoreTerm, StrategicGoal};
 use super::orders::{AiOrder, OrderOutcome};
+
+
+/// TAC-07: remembered loss sites (frag map). Sole writers call [`TacticalFragMap::record_loss`].
+#[derive(Resource, Clone, Debug, Default)]
+pub struct TacticalFragMap {
+    /// Tile → accumulated loss weight (deterministic BTree for stable iteration).
+    pub losses: BTreeMap<(i32, i32), f32>,
+    pub total_recorded: u64,
+}
+
+impl TacticalFragMap {
+    /// Record a loss event at `tile` (weight > 0). Caps per-cell heat at 8.0.
+    pub fn record_loss(&mut self, tile: IVec2, weight: f32) {
+        let w = weight.max(0.0);
+        if w <= 0.0 {
+            return;
+        }
+        let key = (tile.x, tile.y);
+        let entry = self.losses.entry(key).or_insert(0.0);
+        *entry = (*entry + w).min(8.0);
+        self.total_recorded = self.total_recorded.saturating_add(1);
+    }
+
+    #[must_use]
+    pub fn heat_at(&self, tile: IVec2) -> f32 {
+        self.losses.get(&(tile.x, tile.y)).copied().unwrap_or(0.0)
+    }
+
+    /// Uniform decay toward zero; drops near-zero cells.
+    pub fn decay(&mut self, factor: f32) {
+        let f = factor.clamp(0.0, 1.0);
+        self.losses.retain(|_, h| {
+            *h *= f;
+            *h > 1e-3
+        });
+    }
+
+    /// Hottest tiles, descending heat then `(y, x)`.
+    #[must_use]
+    pub fn hottest(&self, n: usize) -> Vec<(IVec2, f32)> {
+        let mut v: Vec<(IVec2, f32)> = self
+            .losses
+            .iter()
+            .map(|(&(x, y), &h)| (IVec2::new(x, y), h))
+            .collect();
+        v.sort_by(|a, b| b.1.total_cmp(&a.1).then(a.0.y.cmp(&b.0.y)).then(a.0.x.cmp(&b.0.x)));
+        v.truncate(n);
+        v
+    }
+}
 
 /// Records kept per faction slot.
 pub const DECISION_LOG_PER_FACTION: usize = 32;
@@ -292,4 +347,18 @@ mod behaviour_change_tests {
         assert_eq!(log.total, 1);
         assert_eq!(log.entries[0].new_goal, defend);
     }
+    #[test]
+    fn tac07_frag_map_remembers_and_decays_losses() {
+        let mut map = TacticalFragMap::default();
+        map.record_loss(IVec2::new(3, 4), 1.0);
+        map.record_loss(IVec2::new(3, 4), 1.0);
+        map.record_loss(IVec2::new(1, 1), 0.5);
+        assert_eq!(map.heat_at(IVec2::new(3, 4)), 2.0);
+        assert_eq!(map.total_recorded, 3);
+        let hot = map.hottest(1);
+        assert_eq!(hot[0].0, IVec2::new(3, 4));
+        map.decay(0.5);
+        assert!((map.heat_at(IVec2::new(3, 4)) - 1.0).abs() < 1e-5);
+    }
+
 }

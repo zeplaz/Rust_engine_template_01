@@ -3,7 +3,8 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-TOWN-GROWTH-v1** |
-| **Status** | **OPEN** — slices **TWN-OV1 → TWN-OV2 → TWN-GEN → TWN-AI** |
+| **Status** | **PROGRAM CLOSE** — **TWN-OV1/OV2/GEN/PCG07/AI Accept green**; PCG-07 ADOPTED |
+| **Books unlock** | **TWN-PCG07** → **PCG-07** ([`plan_ref_books_defer_unlock_v1.md`](plan_ref_books_defer_unlock_v1.md) W2) |
 | **Date** | 2026-09-27 |
 | **Owner** | `@planner` → `@coder` |
 | **Not this program** | Play-image town stamp. **PLN-3** in [`plan_egui_game_retirement_v1.md`](plan_egui_game_retirement_v1.md) already owns `raster_tile_fallback_subregion` dropping `stamp_town_centers_subregion` on the play image. Do not redo PLN-1..3. |
@@ -106,7 +107,7 @@ Faction step reads `LogisticsGraph` and overlay threat. It is not a writer of ei
 
 ## Implementation phases
 
-Serial: **TWN-OV1 → TWN-OV2 → TWN-GEN → TWN-AI**. OV2 and GEN both need the ring field from OV1. AI needs the ring test and the generation book.
+Serial: **TWN-OV1 → TWN-OV2 → TWN-GEN → TWN-PCG07 → TWN-AI**. OV2 and GEN both need the ring field from OV1. **TWN-PCG07** needs dry towns + rings from GEN. AI needs the ring test and the generation book; prefer after PCG07 so growth sites can sit on subdivided blocks.
 
 ### TWN-OV1 — ring is the membership test
 
@@ -150,6 +151,25 @@ Serial: **TWN-OV1 → TWN-OV2 → TWN-GEN → TWN-AI**. OV2 and GEN both need th
 
 **Proof.** `cargo test -p proc_A_dine01 --lib twn_gen_places_on_dry_land`
 
+### TWN-PCG07 — settlement road skeleton + block subdivision (PCG-07)
+
+| Field | Value |
+|:---|:---|
+| **Id** | **TWN-PCG07** |
+| **Needs** | TWN-GEN green · town phase needs road skeleton/blocks |
+| **Goal** | MST between town centers / district anchors + recursive subdivision inside rings → settlement road edges committed through the **existing** construction/transport funnel — not a parallel road book. |
+| **Files** | `src/strategic/settlement/` (skeleton + subdivision pure fns) · `src/infrastructure/transport/graph.rs` (read API only) · construction plan enqueue path used by settlements · tests under settlement |
+| **Authority** | ⊚ConstructionPlanQueue → execute → tile markers → `bake_snapshot…` → ⊚TransportTopology ═▶ ⊨roads. Settlement PCG **enqueues plans** / proposes polylines; it does **not** write `TransportTopology` or `LogisticsGraph`. ⊚TownBook / ⊚DistrictBook RO for centers/rings. |
+| **Do** | (1) Build MST over generated town centers (and optional district anchors) with seeded tie-break. (2) Recursive subdivision inside each closed ring → block polys + edge segments. (3) Emit road/corridor construction plans for those segments (same execute funnel as player/AI roads). (4) Dual-cite transport graph consumers RO. |
+| **Don't** | Second road authority · write `LogisticsGraph` · stamp play-image towns (PLN-3) · edit `src/construction/mod.rs` funnel invariants · medieval wall/castle kit · mutate occupation from preview |
+| **Proof** | `cargo test -p proc_A_dine01 --lib twn_pcg07` |
+| **Dual-cite** | NEW **PCG-07** (aig3 8.4.2–8.4.3) · LEGACY `pcg` / road network · code `strategic/settlement` + `infrastructure/transport/graph.rs` |
+| **Risk** | Dual road writer; subdivision crossing foreign rings |
+| **Unlocks** | Flip `adoption.tsv` **PCG-07** → ADOPTED with Accept evidence |
+| **Rollback** | Leave topology unchanged if plan enqueue fails; no silent topology patch |
+
+**Schedule note:** run skeleton generation on full-gen completion after town place (same job), or as an explicit post-gen settlement pass that only enqueues plans — never inside render/extract.
+
 ### TWN-AI — one faction step, one growth site
 
 **Goal.** Each step looks at resources, threat, allies, and enemies, then enqueues at most one existing growth site through the commit funnel.
@@ -187,8 +207,15 @@ No new witness file is required to start. The city launch `city_faction_progress
 
 ## Handoff
 
-`@coder` implements **TWN-OV1**, then **TWN-OV2**, then **TWN-GEN**, then **TWN-AI**. No slice writes `src/construction/mod.rs`. PLN-3 still owns the play-image stamp.
+**PROGRAM CLOSE** 2026-11-15 — all serial slices Accept-green; PCG-07 ledger ADOPTED. Residual open questions (stance writer ownership, settlement_count default 0) stay product ops, not this charter. PLN-3 still owns the play-image stamp.
 
 ## Studio dashboards (cross-link)
 
 World-builder HTML reports reuse [`tools/studio_dash/mission_adapter.py`](../../tools/studio_dash/mission_adapter.py) (`emit_worldgen_dashboard`) — same kit as APS Dashboard. Charter: [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) §P4.
+
+## Changelog
+
+| Version | Date | Notes |
+|:---|:---|:---|
+| 1.0.0 | 2026-09-27 | SIGNED — OV1…AI + TWN-PCG07. |
+| 1.1.0 | 2026-11-15 | **PROGRAM CLOSE** — Accept green across OV1/OV2/GEN/PCG07/AI; PCG-07 ADOPTED. |

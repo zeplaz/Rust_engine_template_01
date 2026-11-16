@@ -9,6 +9,10 @@ use bevy::window::PrimaryWindow;
 use crate::gui::hud::simulation_pointer_gate::{
     simulation_tool_pointer, SimulationMapPointerGate, SimulationToolPointer,
 };
+use crate::gui::hud::sim_hud_esc_cascade::{
+    resolve_esc_handler, sim_hud_trays_expanded, EscCascadeHandler, HudEscCascadeFrame,
+    HudEscCascadeSet,
+};
 use crate::gui::SimulationMapViewport;
 
 /// Panel chrome state — replaces bool `expanded` on shell resources.
@@ -96,17 +100,35 @@ pub fn hud_panel_escape_collapse_system(
     mut tray: ResMut<crate::gui::hud::HudOverlayTrayState>,
     mut layout: ResMut<crate::gui::hud::HudCommandShellLayout>,
     mut context_tray: ResMut<super::simulation_shell_phase2::ContextTrayState>,
+    keybindings: Option<Res<crate::gui::options_keybindings_ui::KeybindingsUiState>>,
+    mut esc_frame: ResMut<HudEscCascadeFrame>,
 ) {
+    // ECS-10: sole writer of the per-frame Esc witness; resolve from pre-mutation state.
     if !keys.just_pressed(KeyCode::Escape) {
+        esc_frame.set_if_neq(HudEscCascadeFrame::default());
         return;
     }
-    if picker.open {
-        picker.close();
-        return;
-    }
-    if road_sheet.open {
-        road_sheet.close();
-        return;
+    let handler = resolve_esc_handler(
+        keybindings.is_some_and(|k| k.capture_slot.is_some()),
+        picker.open,
+        road_sheet.open,
+        sim_hud_trays_expanded(&context_tray, &tray, &layout),
+    );
+    esc_frame.set_if_neq(HudEscCascadeFrame {
+        handled_by: Some(handler),
+    });
+    match handler {
+        // Key-binding capture owns Esc (cancel); HUD stays as-is.
+        EscCascadeHandler::KeybindingCapture | EscCascadeHandler::PauseMenu => return,
+        EscCascadeHandler::BuildPicker => {
+            picker.close();
+            return;
+        }
+        EscCascadeHandler::RoadSheet => {
+            road_sheet.close();
+            return;
+        }
+        EscCascadeHandler::TrayCollapse => {}
     }
     super::simulation_shell_phase2::collapse_context_tray_on_escape(&mut context_tray);
     tray.tray_panel_state.collapse_unpinned();
@@ -167,12 +189,12 @@ pub struct HudPanelStatePlugin;
 
 impl Plugin for HudPanelStatePlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.init_resource::<HudEscCascadeFrame>().add_systems(
             Update,
             (
-                hud_panel_escape_collapse_system,
+                hud_panel_escape_collapse_system.in_set(HudEscCascadeSet::Resolve),
                 hud_panel_click_outside_collapse_system
-                    .after(hud_panel_escape_collapse_system)
+                    .after(HudEscCascadeSet::Resolve)
                     .after(super::simulation_pointer_gate::PointerGateSet::Publish),
             )
                 .run_if(crate::gui::ui_gates::in_simulation_or_editor),

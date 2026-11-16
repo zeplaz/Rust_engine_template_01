@@ -12,6 +12,8 @@ pub struct ChunkFireOverlay {
     /// Toxic products per cell `[0, 1]`.
     pub toxic: Vec<f32>,
     /// Ticks left that this cell stays at residual heat after fuel drops below spread.
-    /// Written only by [`super::chunk_fire_overlay::chunk_fire_overlay_tick`].
+    /// Written only by [`super::chunk_fire_overlay::chunk_fire_overlay_tick`] (ECS-08 sole
+    /// in-tick writer). Cross-chunk heat/fuel deposits apply via
+    /// [`super::chunk_fire_overlay::apply_edge_fire_deposits`] after the tick.
     pub burn_hold: Vec<u16>,
 }

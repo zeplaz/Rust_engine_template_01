@@ -1,4 +1,5 @@
 //! **Theaters** (PLAN-FRONT-COMBAT-v1 FC-3): each hostile pair's front cells are partitioned into
+//! **SENSE-03**: theaters bound *where* a faction acts; modalities in `ai/faction/perception` bound *what* is known.
 //! connected stretches (8-connectivity), long stretches are split along their principal axis into
 //! sectors, and every theater keeps a **stable id** across front revisions by best overlap
 //! (Jaccard) with the previous revision. Pure core + one thin system; sole writer of [`TheaterBook`].

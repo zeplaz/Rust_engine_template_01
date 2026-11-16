@@ -138,7 +138,7 @@ No FixedUpdate anywhere: sim is dt-scaled Update (frame-rate consistent, not ind
 | `ResolvedViewports` | `ViewportPipelineSet::Resolve` chain | `resolve_*` systems in `viewport_pipeline.rs` |
 | `ViewportAuthority.pending` | UI via `submit_viewport_request` | Cleared after resolve |
 | `ViewRepresentationSnapshot` | `build_view_representation_snapshot` | After `SyncViewManager` |
-| `AtmosphereClipmapStack` L0 | FieldFill/WindAdvect (+ `sync_atmos_clipmap_witness_system`) | **ES-6 / DEBT-011** — smoke+fog+toxicity+ash+ember+heat authority; Field resource deleted; smoke extract bridge `L0→ChunkSmoke→SimChunkSmokeVisualExtract` |
+| `AtmosphereClipmapStack` L0 | FieldFill/WindAdvect (sole advect writer: `advect_atmosphere_field`; seed folds: `contamination_tick_system`, `sync_atmos_clipmap_witness_system` — no advect) | **ES-6 / DEBT-011** — smoke+fog+toxicity+ash+ember+heat authority; Field resource deleted; smoke extract bridge `L0→ChunkSmoke→SimChunkSmokeVisualExtract` |
 | ~~`AtmosphereField` (128²)~~ | — | **DEBT-011 deleted** — use `atmos_chunk_to_tile` + L0 `sample_tactical_*` |
 | `LogisticsGraph` | `sync_logistics_graph_from_transport` (`StrategicFieldPipeline::GraphSync`) | **LOG-A-01** derived cache only; portals via `PortalAttachmentMap`; one-shot play/harness seeds call same `rebuild_logistics_graph_from_transport` then GraphSync replaces |
 

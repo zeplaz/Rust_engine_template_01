@@ -48,12 +48,20 @@ pub enum TestScene {
     VfxSandbox,
     /// Generated towns on the play map. Stay-open. Does not seed fire, weather, or atmosphere.
     City,
+    /// Catalog pilot footprints + presentation massing (BUILD-READABILITY). Stay-open.
+    /// No fire / weather / towns — seeds construction ghost from `_pilot_catalog.ron`.
+    BuildReadability,
     /// Fire / fire-VFX only. Stay-open. No weather, atmosphere, or towns.
     /// Fire overlay uses the same heat/fuel/count as [`Self::Fire`].
     Vfx,
     /// Weather + atmosphere (wind / precip). Stay-open. No fire overlay and no towns.
     /// CLI name is `subfx`.
     SubFx,
+    /// PLAYTEST-QUADRANT-WORLD-001: one Standard (512²) world, four spatial quadrants ([`crate::engine::playquad`],
+    /// +Y north). Stay-open `DemoOpen`. NW fire seeds only · NE catalog-pilot sites via the construction commit
+    /// funnel · SW river-attached lake basin · SE marsh belt (world-gen hydrology). Rain is a global dry→wet
+    /// weather preset (not a quadrant). CLI: `--test playquad`. Not buildread: buildread stays free of fire / weather chrome.
+    PlayQuad,
 }
 
 impl TestScene {
@@ -67,8 +75,10 @@ impl TestScene {
             Self::Visual => "Full capture visual",
             Self::VfxSandbox => "Fire + weather + atmosphere",
             Self::City => "Generated cities",
+            Self::BuildReadability => "Build readability / pilots",
             Self::Vfx => "Fire VFX",
             Self::SubFx => "Weather + atmosphere",
+            Self::PlayQuad => "Play-test quadrant world",
         }
     }
 
@@ -76,7 +86,12 @@ impl TestScene {
     pub const fn seeds_fire_overlay(self) -> bool {
         matches!(
             self,
-            Self::Fire | Self::Atmosphere | Self::Visual | Self::VfxSandbox | Self::Vfx
+            Self::Fire
+                | Self::Atmosphere
+                | Self::Visual
+                | Self::VfxSandbox
+                | Self::Vfx
+                | Self::PlayQuad
         )
     }
 
@@ -85,9 +100,33 @@ impl TestScene {
     pub const fn seeds_weather(self) -> bool {
         matches!(
             self,
-            Self::Weather | Self::Visual | Self::VfxSandbox | Self::SubFx
+            Self::Weather | Self::Visual | Self::VfxSandbox | Self::SubFx | Self::PlayQuad
         )
     }
+
+    /// Quadrant world entry ([`crate::engine::playquad`]): spatial seeds + Standard extent.
+    #[must_use]
+    pub const fn is_playquad(self) -> bool {
+        matches!(self, Self::PlayQuad)
+    }
+
+    /// Fire seeds confined to a quadrant AABB (NW) instead of world center.
+    #[must_use]
+    pub const fn fire_seeds_in_quadrant(self) -> bool {
+        matches!(self, Self::PlayQuad)
+    }
+
+    /// Harness one-shot camera focus onto the seeded burn cluster ([`crate::gui::VfxFireTestRegion`]).
+    /// PlayQuad keeps its whole-map fit so all four quadrants stay visible on entry.
+    #[must_use]
+    pub const fn arms_fire_camera_focus(self) -> bool {
+        self.seeds_fire_overlay() && !self.is_playquad()
+    }
+
+    /// Fixed world seed for the quadrant world. **Scored**, not guessed: chosen by the `#[ignore]`d
+    /// `water_class::tests::playquad_seed_sweep` (1..=64; criteria PQ-H2/H3 + land/ocean guards) and pinned by
+    /// `playquad_world_seed_satisfies_hydrology_criteria`; re-run the sweep before changing this.
+    pub const PLAYQUAD_WORLD_SEED: u64 = 8;
 
     /// Global wind + chunk wind field ([`crate::engine::test_harness`] atmosphere arm).
     #[must_use]
@@ -104,10 +143,16 @@ impl TestScene {
         matches!(self, Self::City)
     }
 
+    /// Construction ghost + pilot catalog seed ([`crate::construction::build_readability_harness`]).
+    #[must_use]
+    pub const fn seeds_build_readability(self) -> bool {
+        matches!(self, Self::BuildReadability)
+    }
+
     /// Fire-only and subordinate-field play must not call [`crate::strategic::settlement::seed_settlement_books_if_empty`].
     #[must_use]
     pub const fn suppresses_town_book_seed(self) -> bool {
-        matches!(self, Self::Vfx | Self::SubFx)
+        matches!(self, Self::Vfx | Self::SubFx | Self::PlayQuad)
     }
 
     /// Fixed world-gen seed for an isolation play entry. `None` leaves the harness default.
@@ -119,13 +164,14 @@ impl TestScene {
             Self::Vfx => Some(42),
             // Distinct from the city book seed and the fire fixture seed so this world is not the city map.
             Self::SubFx => Some(1_603),
+            Self::PlayQuad => Some(Self::PLAYQUAD_WORLD_SEED),
             _ => None,
         }
     }
 
     #[must_use]
     pub const fn menu_vfx_bootstrap(self) -> bool {
-        !matches!(self, Self::None | Self::City)
+        !matches!(self, Self::None | Self::City | Self::BuildReadability)
     }
 }
 
@@ -219,6 +265,18 @@ impl EngineLaunchArgs {
                 args.maneuver = DebugManeuver::DemoOpen;
                 args.visual_auto_exit = false;
             }
+            // Catalog pilots + massing silhouette (BUILD-READABILITY / studio bridge).
+            "buildread" | "build_readability" | "readability" => {
+                args.test_scene = TestScene::BuildReadability;
+                args.maneuver = DebugManeuver::DemoOpen;
+                args.visual_auto_exit = false;
+            }
+            // PLAYTEST-QUADRANT-WORLD-001: Standard 512² world; NW fire · NE build order · SE rain · SW reserved.
+            "playquad" | "quadrant" | "quad" => {
+                args.test_scene = TestScene::PlayQuad;
+                args.maneuver = DebugManeuver::DemoOpen;
+                args.visual_auto_exit = false;
+            }
             // Weather + atmosphere only. CLI name `subfx` (menu label: Weather + atmosphere).
             "subfx" => {
                 args.test_scene = TestScene::SubFx;
@@ -228,7 +286,7 @@ impl EngineLaunchArgs {
             other => {
                 bevy::log::warn!(
                     "Unknown --test mode {other:?}; isolation commands: \
-                     `city`, `vfx`, `subfx`. Combined sandbox: `sandbox`/`fireweather`. \
+                     `city`, `buildread`, `vfx`, `subfx`, `playquad`. Combined sandbox: `sandbox`/`fireweather`. \
                      Capture: `visual`. Also `frame`, `demo`, `unittest`, `weather`, `fire`, `atmosphere`."
                 );
             }
@@ -304,13 +362,20 @@ impl EngineLaunchArgs {
                 | TestScene::Visual
                 | TestScene::VfxSandbox
                 | TestScene::City
+                | TestScene::BuildReadability
                 | TestScene::Vfx
                 | TestScene::SubFx
+                | TestScene::PlayQuad
         ) || self.full_capture_active();
         let flush_secs = if self.full_capture_active() { 2.0 } else { 5.0 };
         let frame_jsonl_stride = match self.test_scene {
             TestScene::Visual => 30,
-            TestScene::VfxSandbox | TestScene::City | TestScene::Vfx | TestScene::SubFx => 10,
+            TestScene::VfxSandbox
+            | TestScene::City
+            | TestScene::BuildReadability
+            | TestScene::Vfx
+            | TestScene::SubFx
+            | TestScene::PlayQuad => 10,
             TestScene::Weather | TestScene::Fire | TestScene::Atmosphere => 15,
             TestScene::None => 1,
         };
@@ -318,8 +383,10 @@ impl EngineLaunchArgs {
             self.test_scene,
             TestScene::VfxSandbox
                 | TestScene::City
+                | TestScene::BuildReadability
                 | TestScene::Vfx
                 | TestScene::SubFx
+                | TestScene::PlayQuad
                 | TestScene::Weather
                 | TestScene::Fire
                 | TestScene::Atmosphere
@@ -427,6 +494,70 @@ mod tests {
         assert_eq!(fireweather.test_scene, TestScene::VfxSandbox);
         assert_eq!(sandbox.maneuver, DebugManeuver::DemoOpen);
         assert!(!sandbox.visual_auto_exit);
+    }
+
+    #[test]
+    fn cli_buildread_maps_build_readability() {
+        let br = EngineLaunchArgs::from_cli(Some("buildread".into()), false, None);
+        assert_eq!(br.test_scene, TestScene::BuildReadability);
+        assert_eq!(br.maneuver, DebugManeuver::DemoOpen);
+        assert!(!br.visual_auto_exit);
+        assert!(br.test_scene.seeds_build_readability());
+        assert!(!br.test_scene.seeds_towns());
+        assert!(!br.test_scene.seeds_fire_overlay());
+        assert!(!br.test_scene.seeds_weather());
+        assert!(!br.test_scene.seeds_atmosphere());
+        assert!(!br.test_scene.menu_vfx_bootstrap());
+        let alias = EngineLaunchArgs::from_cli(Some("readability".into()), false, None);
+        assert_eq!(alias.test_scene, TestScene::BuildReadability);
+    }
+
+    #[test]
+    fn cli_playquad_maps_quadrant_world() {
+        for name in ["playquad", "quadrant", "quad", "PlayQuad"] {
+            let a = EngineLaunchArgs::from_cli(Some(name.into()), false, None);
+            assert_eq!(a.test_scene, TestScene::PlayQuad, "{name}");
+            assert_eq!(a.maneuver, DebugManeuver::DemoOpen);
+            assert!(!a.visual_auto_exit);
+            assert!(!a.full_capture_active());
+            assert!(!a.sim_enter_uses_tactical_camera_zoom());
+        }
+        let pq = TestScene::PlayQuad;
+        assert!(pq.is_playquad());
+        assert!(pq.seeds_fire_overlay() && pq.fire_seeds_in_quadrant());
+        assert!(!pq.arms_fire_camera_focus(), "playquad keeps whole-map fit");
+        assert!(TestScene::Fire.arms_fire_camera_focus() && TestScene::Visual.arms_fire_camera_focus());
+        assert!(pq.seeds_weather());
+        assert!(!pq.seeds_atmosphere());
+        assert!(!pq.seeds_towns());
+        assert!(pq.suppresses_town_book_seed());
+        assert!(!pq.seeds_build_readability());
+        assert_eq!(pq.isolation_world_seed(), Some(TestScene::PLAYQUAD_WORLD_SEED));
+        assert!(pq.menu_vfx_bootstrap());
+        assert_eq!(pq.menu_label(), "Play-test quadrant world");
+    }
+
+    #[test]
+    fn playquad_does_not_leak_into_buildread_or_other_scenes() {
+        let br = TestScene::BuildReadability;
+        assert!(!br.is_playquad() && !br.fire_seeds_in_quadrant());
+        assert!(!br.seeds_fire_overlay());
+        assert!(!br.seeds_weather());
+        for scene in [
+            TestScene::Fire,
+            TestScene::Visual,
+            TestScene::VfxSandbox,
+            TestScene::Vfx,
+            TestScene::SubFx,
+            TestScene::City,
+        ] {
+            assert!(!scene.is_playquad());
+            assert!(!scene.fire_seeds_in_quadrant());
+        }
+        // Frame layout test keeps its own tiny world (not playquad).
+        let frame = EngineLaunchArgs::from_cli(Some("frame".into()), false, None);
+        assert_eq!(frame.maneuver, DebugManeuver::FrameScreen);
+        assert!(!frame.test_scene.is_playquad());
     }
 
     #[test]

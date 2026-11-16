@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "title": "massing_preview",
+  "presentation_only": true,
+  "sim_occupation": false,
+  "seed": 1,
+  "massing_columns": [
+    { "tile": [-1, -1], "floors": 1, "color_kind": "Valid", "weight": 1.0 },
+    { "tile": [0, -1], "floors": 1, "color_kind": "Valid", "weight": 1.0 },
+    { "tile": [1, -1], "floors": 1, "color_kind": "Valid", "weight": 1.0 },
+    { "tile": [-1, 0], "floors": 1, "color_kind": "Valid", "weight": 1.0 },
+    { "tile": [0, 0], "floors": 2, "color_kind": "Valid", "weight": 1.0 },
+    { "tile": [1, 0], "floors": 1, "color_kind": "Valid", "weight": 1.0 },
+    { "tile": [-1, 1], "floors": 1, "color_kind": "Valid", "weight": 1.0 },
+    { "tile": [0, 1], "floors": 1, "color_kind": "Valid", "weight": 1.0 },
+    { "tile": [1, 1], "floors": 1, "color_kind": "Valid", "weight": 1.0 }
+  ],
+  "note": "VOXEL-MASSING-PRES-001 — never commit to occupation"
+}

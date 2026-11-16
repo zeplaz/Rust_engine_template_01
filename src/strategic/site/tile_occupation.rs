@@ -1,10 +1,15 @@
-//! Weighted tile occupation book — single writer on commit/demolish.
+//! Weighted tile occupation book — interim aggregate (flag off) or derived cache (P2).
+//!
+//! When [`super::voxel_occupation::VoxelOccupationConfig::commit_authority_enabled`] is on,
+//! commit/demolish must **not** call [`Self::apply_site`] / [`Self::remove_site`] directly;
+//! refresh via [`Self::replace_from_voxel`] after the voxel book mutates.
 
 use std::collections::HashMap;
 
 use bevy::prelude::{IVec2, Resource};
 
 use super::resources::SiteId;
+use super::voxel_occupation::VoxelOccupationBook;
 
 pub const TILE_OCCUPATION_OVERLAP_EPSILON: f32 = 0.001;
 
@@ -53,6 +58,42 @@ impl TileOccupationBook {
         }
         Some(weights)
     }
+
+    /// Iterates committed Σw entries (for derived voxel mirror — read-only).
+    pub fn iter_tile_weights(&self) -> impl Iterator<Item = (&IVec2, &f32)> {
+        self.by_tile.iter()
+    }
+
+    /// Per-site contributions (P0 mirror → voxel `by_site`).
+    pub fn iter_by_site(&self) -> impl Iterator<Item = (&SiteId, &Vec<(IVec2, f32)>)> {
+        self.by_site.iter()
+    }
+
+    /// First site that owns nonzero weight on `tile` (mirror heuristic at P0).
+    #[must_use]
+    pub fn primary_site_at(&self, tile: IVec2) -> Option<SiteId> {
+        self.by_site.iter().find_map(|(site_id, weights)| {
+            weights.iter().any(|(t, w)| {
+                *t == tile && *w > TILE_OCCUPATION_OVERLAP_EPSILON
+            })
+            .then_some(*site_id)
+        })
+    }
+
+    /// P2 derived-cache refresh — sole tile mutation under `commit_authority_enabled`.
+    pub fn replace_from_voxel(&mut self, voxel: &VoxelOccupationBook) {
+        self.by_tile.clear();
+        self.by_site.clear();
+        for (tile, cell) in &voxel.cells {
+            if cell.layers.weight < TILE_OCCUPATION_OVERLAP_EPSILON {
+                continue;
+            }
+            self.by_tile.insert(*tile, cell.layers.weight);
+        }
+        for (site_id, weights) in voxel.iter_by_site() {
+            self.by_site.insert(*site_id, weights.clone());
+        }
+    }
 }
 
 #[cfg(test)]
@@ -79,4 +120,13 @@ mod tests {
         assert!(book.would_overlap(&[(IVec2::new(0, 0), 0.4)]));
     }
 
+    #[test]
+    fn tile_occupation_replace_from_voxel_matches_weights() {
+        let mut voxel = VoxelOccupationBook::default();
+        voxel.apply_site_commit(SiteId(5), &[(IVec2::new(3, 4), 0.55)]);
+        let mut tile = TileOccupationBook::default();
+        tile.replace_from_voxel(&voxel);
+        assert!((tile.weight_at(IVec2::new(3, 4)) - 0.55).abs() < 1e-5);
+        assert_eq!(tile.primary_site_at(IVec2::new(3, 4)), Some(SiteId(5)));
+    }
 }

@@ -12,14 +12,9 @@ use bevy::prelude::*;
 use super::capability_toe::{CapabilityToeRegistry, MissileClass};
 use super::drone_missions::{AirOpZone, MissionBook};
 use super::formation::Formation;
-use super::supply::FrontSupplyPoints;
-use crate::economy::logistics::orders::{
-    CargoKind, ConsumerKind, LogisticsOrderCommand, LogisticsOrderRequest, LogisticsOrderSiteId,
-    LogisticsOrdersSnapshotRes, Priority, SiteId,
-};
-use crate::systems::sim_control::{SimStepClock, SimTimeMicros};
+use crate::economy::logistics::orders::LogisticsOrderRequest;
 use crate::systems::weather::{
-    evaluate_grounding, AirOpsProfileId, AirOpsTuning, WeatherPollingStations, WeatherSample,
+    evaluate_grounding, AirOpsProfileId, AirOpsTuning, WeatherPollingStations,
 };
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
@@ -56,7 +51,7 @@ impl MissilePackage {
     }
 }
 
-/// Aggregated missile BOM demand (dump + publish). Sole writer: [`publish_missile_cargo_demands_system`].
+/// Aggregated missile BOM demand (dump). Sole writer: [`super::toe_demand::publish_toe_cargo_demands_system`].
 #[derive(Resource, Debug, Default, Clone)]
 pub struct MissileCargoDemandBook {
     pub by_side_tag: BTreeMap<(u8, String), u32>,
@@ -71,96 +66,14 @@ pub struct MissileSortieDump {
     pub consumed: u64,
 }
 
-/// Package refill demand → front sites.
-pub fn publish_missile_cargo_demands_system(
-    clock: Res<SimStepClock>,
-    points: Res<FrontSupplyPoints>,
-    toe: Res<CapabilityToeRegistry>,
-    sites: Query<&LogisticsOrderSiteId>,
-    packages: Query<(&Formation, &MissilePackage)>,
-    mut book: ResMut<MissileCargoDemandBook>,
-    mut requests: MessageWriter<LogisticsOrderRequest>,
+/// Typed sink: top up [`MissilePackage`] toward TOE from a shared pool (**CS-6**).
+/// Scheduled only via [`super::toe_refill::refill_toe_from_front_system`].
+pub fn refill_missile_packages_sink(
+    toe: &CapabilityToeRegistry,
+    pool: &mut super::front_stock_pool::FrontStockPool,
+    packages: &mut Query<(Entity, &Formation, &mut MissilePackage)>,
+    requests: &mut MessageWriter<LogisticsOrderRequest>,
 ) {
-    if clock.due == 0 {
-        return;
-    }
-    book.by_side_tag.clear();
-    let mut total = 0u32;
-    for (f, p) in packages.iter() {
-        for class in MissileClass::ALL {
-            let row = toe.missile(class);
-            let have = p.count(class);
-            if have >= row.toe_count {
-                continue;
-            }
-            let need_units = row.toe_count - have;
-            for line in &row.lines {
-                let qty = need_units.saturating_mul(line.qty);
-                *book
-                    .by_side_tag
-                    .entry((f.faction_slot, line.tag.clone()))
-                    .or_insert(0) += qty;
-                total = total.saturating_add(qty);
-            }
-        }
-    }
-    book.total_units = total;
-
-    for ((_, side), entity) in &points.entities {
-        let Ok(site) = sites.get(*entity).map(|s| s.0) else {
-            continue;
-        };
-        for ((slot, tag), qty) in &book.by_side_tag {
-            if *slot != *side || *qty == 0 {
-                continue;
-            }
-            requests.write(LogisticsOrderRequest(LogisticsOrderCommand::PublishDemand {
-                site,
-                cargo: CargoKind::new(tag.clone()),
-                consumer: ConsumerKind::Front,
-                buffer_target: (*qty).max(1),
-                reorder_point: ((*qty as f32) * 0.5).ceil() as u32,
-                draw_rate_per_min: 1,
-                priority: Priority::Normal,
-            }));
-        }
-    }
-}
-
-/// Consume front missile_* stock to top up [`MissilePackage`] toward TOE.
-pub fn refill_missile_packages_from_front_system(
-    clock: Res<SimStepClock>,
-    points: Res<FrontSupplyPoints>,
-    toe: Res<CapabilityToeRegistry>,
-    snap: Option<Res<LogisticsOrdersSnapshotRes>>,
-    sites: Query<&LogisticsOrderSiteId>,
-    mut packages: Query<(Entity, &Formation, &mut MissilePackage)>,
-    mut requests: MessageWriter<LogisticsOrderRequest>,
-) {
-    if clock.due == 0 {
-        return;
-    }
-    let Some(snap) = snap else {
-        return;
-    };
-
-    let mut available: BTreeMap<(u8, String), (SiteId, u32)> = BTreeMap::new();
-    for ((_, side), entity) in &points.entities {
-        let Ok(site_id) = sites.get(*entity).map(|s| s.0) else {
-            continue;
-        };
-        let Some(row) = snap.0.sites.iter().find(|s| s.id == site_id) else {
-            continue;
-        };
-        for stock in &row.stock {
-            let key = (*side, stock.cargo.clone());
-            let entry = available.entry(key).or_insert((site_id, 0));
-            if stock.on_hand > entry.1 {
-                *entry = (site_id, stock.on_hand);
-            }
-        }
-    }
-
     let mut order: Vec<(Entity, u8)> = packages
         .iter()
         .map(|(e, f, _)| (e, f.faction_slot))
@@ -174,39 +87,8 @@ pub fn refill_missile_packages_from_front_system(
         for class in MissileClass::ALL {
             let row = toe.missile(class);
             while pkg.count(class) < row.toe_count {
-                let mut ok = true;
-                let mut planned: Vec<(String, SiteId)> = Vec::new();
-                for line in &row.lines {
-                    let key = (slot, line.tag.clone());
-                    let Some((site, on_hand)) = available.get(&key).copied() else {
-                        ok = false;
-                        break;
-                    };
-                    if on_hand < line.qty {
-                        ok = false;
-                        break;
-                    }
-                    planned.push((line.tag.clone(), site));
-                }
-                if !ok {
+                if !pool.try_consume_bom_unit(slot, &row.lines, requests) {
                     break;
-                }
-                for (tag, site) in &planned {
-                    let key = (slot, tag.clone());
-                    if let Some(entry) = available.get_mut(&key) {
-                        let take = row
-                            .lines
-                            .iter()
-                            .find(|l| l.tag == *tag)
-                            .map(|l| l.qty)
-                            .unwrap_or(1);
-                        entry.1 = entry.1.saturating_sub(take);
-                        requests.write(LogisticsOrderRequest(LogisticsOrderCommand::ConsumeStock {
-                            site: *site,
-                            cargo: CargoKind::new(tag.clone()),
-                            amount: take,
-                        }));
-                    }
                 }
                 let i = class.index();
                 pkg.counts[i] = pkg.counts[i].saturating_add(1);

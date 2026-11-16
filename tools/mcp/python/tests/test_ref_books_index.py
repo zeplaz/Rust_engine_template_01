@@ -19,3 +19,17 @@ def test_lookup_check_exit_zero():
     )
     assert r.returncode == 0, r.stdout + r.stderr
     assert "0 problems" in r.stdout
+
+
+def test_gaps_shows_bucket_tags():
+    """PLAN v3 T2: --gaps tags tools / voxel / atmos paths."""
+    r = subprocess.run(
+        [sys.executable, "-I", str(_LOOKUP), "--gaps"],
+        cwd=_REPO,
+        capture_output=True,
+        text=True,
+    )
+    assert r.returncode == 0, r.stdout + r.stderr
+    out = r.stdout
+    assert "== gap buckets" in out
+    assert any(tag in out for tag in ("[tools]", "[voxel]", "[atmos]", "tools,", "voxel,", "atmos,"))

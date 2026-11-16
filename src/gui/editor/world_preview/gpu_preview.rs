@@ -487,6 +487,7 @@ mod tests {
             schema_version: 1,
             materials: Vec::new(),
             name_to_id: HashMap::new(),
+            collision: Vec::new(),
         };
         let mat_chunk = MaterializedChunk {
             size: UVec2::ONE,
@@ -531,6 +532,7 @@ mod tests {
             schema_version: 1,
             materials: Vec::new(),
             name_to_id: HashMap::new(),
+            collision: Vec::new(),
         };
         let mat_chunk = MaterializedChunk {
             size: UVec2::new(2, 1),

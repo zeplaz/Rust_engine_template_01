@@ -187,6 +187,8 @@ impl Plugin for StrategicFieldsPlugin {
             .init_resource::<SiteConstructionBook>()
             .init_resource::<SiteIdIssuer>()
             .init_resource::<super::site::TileOccupationBook>()
+            .init_resource::<super::site::VoxelOccupationBook>()
+            .init_resource::<super::site::VoxelOccupationConfig>()
             .init_resource::<super::settlement::BlockBook>()
             .init_resource::<super::settlement::DistrictBook>()
             .init_resource::<super::settlement::TownBook>()
@@ -203,7 +205,11 @@ impl Plugin for StrategicFieldsPlugin {
                     StrategicFieldPipeline::InjectTransportScalars.after(StrategicFieldPipeline::GraphSync),
                     StrategicFieldPipeline::LogisticsNetInject
                         .after(StrategicFieldPipeline::InjectTransportScalars),
-                    StrategicFieldPipeline::NetworkFlow.after(StrategicFieldPipeline::LogisticsNetInject),
+                    // LOOP-06 logistics tier: NetworkFlow after Weather (env → logistics).
+                    StrategicFieldPipeline::NetworkFlow
+                        .after(StrategicFieldPipeline::LogisticsNetInject)
+                        .after(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Weather),
+                    // LOOP-06 combat tier gate: ZoneAndReadModel after logistics + weather.
                     StrategicFieldPipeline::ZoneAndReadModel
                         .after(StrategicFieldPipeline::NetworkFlow)
                         .after(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Weather),

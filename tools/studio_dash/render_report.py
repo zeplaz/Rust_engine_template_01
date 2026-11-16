@@ -27,11 +27,151 @@ def render_report(
     rows: list[str] = []
 
     # Flat key/value summary
-    skip = {"raw_log", "raw_log_path", "issues", "errors", "warnings", "metrics", "tasks"}
+    skip = {
+        "raw_log",
+        "raw_log_path",
+        "issues",
+        "errors",
+        "warnings",
+        "metrics",
+        "tasks",
+        "massing_columns",
+        "floors_histogram",
+        "grammar_rule_chain",
+        "grammar_chain",
+        "modifiers",
+        "connection_graph_ids",
+        "massing_intent",
+        "escalate",
+        "ref_books_dual_cite",
+        "report_kind",
+        "series",
+        "chart",
+    }
+    # Republic lineage first when present
+    for k in (
+        "report_kind",
+        "frame_id",
+        "seed",
+        "pilot_id",
+        "arch_build_grammar_preset_id",
+        "material_strategy",
+        "column_count",
+        "presentation_only",
+        "sim_occupation",
+    ):
+        if k in data and data[k] is not None:
+            rows.append(f"<tr><th>{_esc(k)}</th><td>{_esc(data[k])}</td></tr>")
     for k, v in data.items():
         if k in skip or isinstance(v, (dict, list)):
             continue
+        if k in {
+            "report_kind",
+            "frame_id",
+            "seed",
+            "pilot_id",
+            "arch_build_grammar_preset_id",
+            "material_strategy",
+            "column_count",
+            "presentation_only",
+            "sim_occupation",
+        }:
+            continue
         rows.append(f"<tr><th>{_esc(k)}</th><td>{_esc(v)}</td></tr>")
+
+    chain = data.get("grammar_rule_chain")
+    chain_html = ""
+    if isinstance(chain, dict) and chain:
+        crows = "".join(
+            f"<tr><th>{_esc(k)}</th><td>{_esc(v)}</td></tr>" for k, v in chain.items()
+        )
+        chain_html = (
+            "<h2>Grammar rule chain</h2>"
+            f"<table><tbody>{crows}</tbody></table>"
+        )
+
+    grammar_steps = data.get("grammar_chain")
+    grammar_chain_html = ""
+    if isinstance(grammar_steps, list) and grammar_steps:
+        grows = []
+        for step in grammar_steps[:24]:
+            if not isinstance(step, dict):
+                continue
+            grows.append(
+                "<tr><td>{st}</td><td>{gid}</td><td>{rk}</td><td>{ref}</td></tr>".format(
+                    st=_esc(step.get("step")),
+                    gid=_esc(step.get("grammar_id")),
+                    rk=_esc(step.get("rule_key")),
+                    ref=_esc(step.get("grammar_ref")),
+                )
+            )
+        grammar_chain_html = (
+            "<h2>Grammar chain (param frame)</h2>"
+            "<table><thead><tr><th>step</th><th>grammar_id</th>"
+            "<th>rule_key</th><th>grammar_ref</th></tr></thead>"
+            f"<tbody>{''.join(grows)}</tbody></table>"
+        )
+
+    modifiers = data.get("modifiers")
+    modifier_html = ""
+    if isinstance(modifiers, list) and modifiers:
+        mrows = []
+        for m in modifiers[:24]:
+            if not isinstance(m, dict):
+                continue
+            mrows.append(
+                "<tr><td>{mid}</td><td>{en}</td><td>{params}</td></tr>".format(
+                    mid=_esc(m.get("modifier_id")),
+                    en=_esc(m.get("enabled", True)),
+                    params=_esc(m.get("params")),
+                )
+            )
+        modifier_html = (
+            "<h2>Modifiers</h2>"
+            "<table><thead><tr><th>id</th><th>enabled</th><th>params</th></tr></thead>"
+            f"<tbody>{''.join(mrows)}</tbody></table>"
+        )
+
+    graph_ids = data.get("connection_graph_ids")
+    graphs_html = ""
+    if isinstance(graph_ids, list) and graph_ids:
+        glis = "".join(f"<li>{_esc(g)}</li>" for g in graph_ids[:24])
+        graphs_html = f"<h2>Connection graphs</h2><ul>{glis}</ul>"
+
+    intent = data.get("massing_intent")
+    intent_html = ""
+    if isinstance(intent, dict) and intent:
+        irows = "".join(
+            f"<tr><th>{_esc(k)}</th><td>{_esc(v)}</td></tr>" for k, v in intent.items()
+        )
+        intent_html = (
+            "<h2>Massing intent</h2>"
+            f"<table><tbody>{irows}</tbody></table>"
+        )
+
+    escalate = data.get("escalate")
+    escalate_html = ""
+    if isinstance(escalate, dict) and escalate:
+        erows = "".join(
+            f"<tr><th>{_esc(k)}</th><td>{_esc(v)}</td></tr>" for k, v in escalate.items()
+        )
+        escalate_html = (
+            "<h2>Escalate hints</h2>"
+            f"<table><tbody>{erows}</tbody></table>"
+        )
+
+    dual = data.get("ref_books_dual_cite")
+    dual_html = ""
+    if isinstance(dual, dict) and dual:
+        new_rows = dual.get("new_rows") or []
+        legacy = dual.get("legacy_keywords") or []
+        dual_html = (
+            "<h2>Ref-books dual cite</h2>"
+            "<table><tbody>"
+            f"<tr><th>NEW rows</th><td>{_esc(', '.join(str(x) for x in new_rows))}</td></tr>"
+            f"<tr><th>LEGACY keywords</th><td>{_esc(', '.join(str(x) for x in legacy))}</td></tr>"
+            "</tbody></table>"
+        )
 
     # Issues / errors lists
     issues = data.get("errors") or data.get("issues") or []
@@ -54,6 +194,49 @@ def render_report(
         metric_html = (
             "<h2>Metrics</h2><table><thead><tr><th>id</th><th>value</th></tr></thead>"
             f"<tbody>{''.join(mrows)}</tbody></table>"
+        )
+
+    # Floors histogram (massing QC)
+    floors_hist = data.get("floors_histogram")
+    floors_html = ""
+    if isinstance(floors_hist, dict) and floors_hist:
+        frows = []
+        for band in ("1", "2", "3", "4"):
+            if band in floors_hist:
+                frows.append(
+                    f"<tr><td>floors={_esc(band)}</td><td>{_esc(floors_hist[band])}</td></tr>"
+                )
+        for k, v in floors_hist.items():
+            if str(k) not in {"1", "2", "3", "4"}:
+                frows.append(f"<tr><td>{_esc(k)}</td><td>{_esc(v)}</td></tr>")
+        floors_html = (
+            "<h2>Floors histogram</h2>"
+            "<table><thead><tr><th>band</th><th>count</th></tr></thead>"
+            f"<tbody>{''.join(frows)}</tbody></table>"
+        )
+
+    # Massing columns table
+    massing_cols = data.get("massing_columns")
+    massing_html = ""
+    if isinstance(massing_cols, list) and massing_cols:
+        crows = []
+        for c in massing_cols[:80]:
+            if not isinstance(c, dict):
+                continue
+            tile = c.get("tile") or []
+            crows.append(
+                "<tr><td>{tile}</td><td>{floors}</td><td>{kind}</td><td>{w}</td></tr>".format(
+                    tile=_esc(tile),
+                    floors=_esc(c.get("floors")),
+                    kind=_esc(c.get("color_kind")),
+                    w=_esc(c.get("weight")),
+                )
+            )
+        massing_html = (
+            "<h2>Massing columns</h2>"
+            "<table><thead><tr><th>tile</th><th>floors</th>"
+            "<th>color_kind</th><th>weight</th></tr></thead>"
+            f"<tbody>{''.join(crows)}</tbody></table>"
         )
 
     # Tasks list
@@ -110,7 +293,16 @@ th {{ color: #9aa0a6; width: 28%; }}
 {''.join(rows)}
 </tbody></table>
 {issue_html}
+{chain_html}
+{grammar_chain_html}
+{modifier_html}
+{graphs_html}
+{intent_html}
+{escalate_html}
+{dual_html}
 {metric_html}
+{floors_html}
+{massing_html}
 {task_html}
 {chart_html}
 </body></html>

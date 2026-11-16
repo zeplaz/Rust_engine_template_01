@@ -179,10 +179,11 @@ pub use map_zoom_coherence::{
     MAP_ZOOM_PICK_DELTA_WORLD_MAX,
 };
 pub use sim_map_projection::{
-    camera_map_plane_vec3_to_logical_screen, map_camera_desired_from_presentation,
-    map_camera_pose_for_presentation, sim_map_projection_frame,
-    sim_map_screen_to_world_xy_in_frame,
-    sim_map_world_vec3_to_screen_rendered, MapCameraPresentationPose, SimMapProjectionFrame,
+    camera_map_plane_vec3_to_logical_screen, lift_map_xy_for_presentation,
+    map_camera_desired_from_presentation, map_camera_pose_for_presentation,
+    reduce_world_to_map_xy, sim_map_projection_frame, sim_map_screen_to_world_xy_in_frame,
+    sim_map_world_vec3_to_screen_rendered, sim_map_world_xy_to_screen_in_frame,
+    MapCameraPresentationPose, MAP_PRESENTATION_Z, SimMapProjectionFrame,
 };
 pub use camera_focus_debug::{
     camera_focus_debug_env_armed, camera_focus_lod_paint_active,

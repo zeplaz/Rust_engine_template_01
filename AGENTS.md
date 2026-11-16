@@ -8,7 +8,7 @@ Policy: [`src/dev/single_worktree_policy_v1.md`](src/dev/single_worktree_policy_
 ## Project
 
 Rust + Bevy **0.20** on master (PLAN-BEVY-020-MIG-v1 **PROGRAM CLOSE** — gate [`debug_runs/mig_bevy_020/mig_v2_gate.json`](debug_runs/mig_bevy_020/mig_v2_gate.json)). UI is Bevy UI (egui is gone). Guide: https://bevy.org/learn/migration-guides/0-19-to-0-20/
-Closed **0.19** `MIG-*` rows stay closed. Residual lib-test `If`/harness polish: [`src/dev/mig_bevy_020_m0_test_defer.md`](src/dev/mig_bevy_020_m0_test_defer.md). Book-driven upgrade plan (open, slice cards for any agent): [`src/dev/plan_ref_books_upgrade_v2.md`](src/dev/plan_ref_books_upgrade_v2.md) (v1 shipped: [`src/dev/plan_ref_books_upgrade_use_v1.md`](src/dev/plan_ref_books_upgrade_use_v1.md)). Other open work: [`src/dev/coder_todos_v1.md`](src/dev/coder_todos_v1.md).
+Closed **0.19** `MIG-*` rows stay closed. Residual lib-test `If`/harness polish: [`src/dev/mig_bevy_020_m0_test_defer.md`](src/dev/mig_bevy_020_m0_test_defer.md). Book-driven upgrade: [`src/dev/plan_ref_books_upgrade_v3.md`](src/dev/plan_ref_books_upgrade_v3.md) (**PROGRAM CLOSE**) · residual unlock program: [`plan_ref_books_defer_unlock_v1.md`](src/dev/plan_ref_books_defer_unlock_v1.md) · next product charters: [`plan_unit_member_v1.md`](src/dev/plan_unit_member_v1.md) · [`plan_town_growth_v1.md`](src/dev/plan_town_growth_v1.md) (incl. **TWN-PCG07**) · [`plan_voxel_occupation_v1.md`](src/dev/plan_voxel_occupation_v1.md) (**OCC-P4…P6**) · conditional [`plan_dense_heat_wgsl_v1.md`](src/dev/plan_dense_heat_wgsl_v1.md). Other open work: [`src/dev/coder_todos_v1.md`](src/dev/coder_todos_v1.md).
 
 ## Review path (how to check a run)
 
@@ -30,6 +30,7 @@ Unit tests: `cargo test -p proc_A_dine01 --lib` (filter by module, e.g. `constru
 - **No parallel extraction or duplicate LOD** in rendering; attach to the existing contracts (`RepresentationResult`, `FireVisualFrame`, `SharedOverlayFieldBuffers`, projection graph). Transitional scaffolds need a `ScaffoldContract` (`src/gui/representation_governance.rs`).
 - **Play UI only.** Panels shipped in `src/gui/` are the ones a player uses: build picker and rail, logistics orders, plant info card, AI explain panel (`Insert`), front controls, world-gen panel, main/pause menu, options/keybindings, minimap, HUD tray. No dev/debug panels or toggles.
 - **No test-shaped production code.** No `*_green` predicates, `*_LIVE_JSON` constants or witness resources; assert in tests, score in `tools/sim_review/`.
+- **No protocol clone farms.** N systems with the same control flow and only type/tag/sink swapped → one shared kernel + typed adapters (not a god-system that mashes domains). Standing rule: [`src/dev/plan_anti_clone_kernel_v1.md`](src/dev/plan_anti_clone_kernel_v1.md). Combat TOE restock: [`plan_combat_sustainment_v1.md`](src/dev/plan_combat_sustainment_v1.md).
 
 ## Serialization
 

@@ -40,6 +40,33 @@ pub struct AtmosphereDiagnostics {
     pub last_fill_contiguous: bool,
     pub stale_partial_region_skips: u64,
     pub partial_write_metrics: AtmospherePartialWriteMetrics,
+    /// W1 — distinct L0 advect writers observed (`AtmosphereClipmapStack::advect_writer_mask`).
+    /// Dump counter only; the reviewer script scores it (expected ≤ 1).
+    pub l0_advect_writers: u32,
+    /// W1 — mirror of `AtmosphereClipmapStack::revision` at the last diagnostics sample.
+    pub l0_revision: u64,
+    /// W1 — L0 smoke max / mass at the last diagnostics sample (dump counters).
+    pub l0_smoke_max: f32,
+    pub l0_smoke_mass: f32,
+    /// W4 — cumulative smoke mass removed by L0 rain washout this session.
+    pub rain_washout_mass: f32,
+    /// W4 — contiguous firestorm plume count (from `WeatherSourceTerms` build).
+    pub firestorm_plumes: u32,
+    /// W4 — peak plume updraft (m/s).
+    pub plume_updraft_peak_mps: f32,
+    /// W4 — moisture injected by last weather solve (or last terms build estimate).
+    pub pyro_moisture_injected: f32,
+    /// W4 — cloud lift applied by last weather solve that read source terms.
+    pub pyro_cloud_delta: f32,
+    /// W4 — L0 tiles with smoke+cloud both above threshold.
+    pub smoke_cloud_overlap_cells: u32,
+    /// W6 — distinct GPU weather/fire **field** upload writers (expects `1` = `WeatherFireFieldUniforms`).
+    pub gpu_field_upload_paths: u32,
+    /// W6 — [`super::frame::AtmosphereFrame::revision`] last read by presentation (GPU bridge / precip).
+    pub presentation_frame_revision: u64,
+    /// W7 — reviewer counter: extra L0 advect writers beyond the sole WindAdvect authority.
+    /// `0` when `l0_advect_writers ≤ 1`. Not a production `*_green` predicate.
+    pub second_writer_violations: u32,
 }
 
 fn atmosphere_diagnostics_sample(
@@ -73,6 +100,12 @@ fn atmosphere_diagnostics_sample(
     diag.last_mean_smoke = sum_s / n;
     diag.last_mean_visibility = sum_v / n;
     diag.last_max_toxicity = max_t;
+    diag.l0_advect_writers = stack.l0_advect_writers();
+    diag.l0_revision = stack.revision;
+    diag.l0_smoke_max = crate::substrate::atmosphere::clipmap_l0_smoke_max(stack.as_ref());
+    diag.l0_smoke_mass = stack.l0_smoke_mass();
+    // W7 Accept: dump second_writer_violations == 0 (reviewer/script, not production gate).
+    diag.second_writer_violations = stack.l0_advect_writers().saturating_sub(1);
 
     diag.mean_smoke_over_budget = diag.last_mean_smoke > thresholds.warn_mean_smoke;
     diag.max_toxicity_over_budget = diag.last_max_toxicity > thresholds.warn_max_toxicity;

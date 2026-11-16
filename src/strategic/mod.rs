@@ -164,9 +164,11 @@ pub use gpu_bridge_plugin::{
 };
 pub use network_flow::{
     effective_visibility_sample, network_digest_marks_flow_dirty_system,
-    network_flow_chunk_local_solver_system, network_insulation_visibility_post_system,
-    sample_network_flow_at_world_tile, NetworkDirtyMask, NetworkFlowFieldSample,
-    NetworkFlowPrevSignatures, NETWORK_DIRTY_CONNECTIVITY, NETWORK_DIRTY_FLOW,
+    network_digest_signature_tuple, network_flow_chunk_local_solver_system,
+    network_flow_chunk_needs_solve, network_flow_digest_changed,
+    network_insulation_visibility_post_system, sample_network_flow_at_world_tile,
+    NetworkDirtyMask, NetworkFlowFieldSample, NetworkFlowPrevSignatures,
+    NETWORK_DIRTY_CONNECTIVITY, NETWORK_DIRTY_FLOW,
 };
 pub use mission_plugin::MissionPlugin;
 pub use narrative_observation::{
@@ -213,6 +215,17 @@ pub use site::{
     ProceduralBuildingSpec,
     SiteWeightedFootprint,
     TileOccupationBook,
+    capture_voxel_occupation_snapshot,
+    read_voxel_occupation_snapshot_ron,
+    write_voxel_occupation_snapshot_ron,
+    OccupancyLayerStack,
+    VoxelOccupationBook,
+    VoxelOccupationCell,
+    VoxelOccupationCellRecord,
+    VoxelOccupationConfig,
+    VoxelOccupationProvenance,
+    VoxelOccupationSnapshot,
+    VOXEL_OCCUPATION_SNAPSHOT_SCHEMA_V1,
     NetworkMask,
     PlannedSite,
     SiteArchetype,
@@ -304,7 +317,9 @@ pub use world_field_layers::{
     ChunkFieldCell, FieldLayerConsumerCache, FieldLayerUpdateClass, FieldScalarLayer,
     WorldFieldLayerConfig, WorldFieldLayerEpoch,
 };
-pub use world_read_snapshot::{world_read_snapshot_refresh_system, WorldReadSnapshot};
+pub use world_read_snapshot::{
+    blackboard_revision, world_read_snapshot_refresh_system, BlackboardWriteLane, WorldReadSnapshot,
+};
 pub use zones::{apply_zones_to_strategic_overlays_system, Zone, ZoneKind};
 
 use bevy::prelude::{Component, IVec2, Resource, UVec2};

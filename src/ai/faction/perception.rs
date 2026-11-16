@@ -3,6 +3,16 @@
 //! Reads [`ChunkStrategicOverlay`] (control, threat, logistics strength) the same way the player's
 //! map does. Returns a value type; nothing is stored as a second grid (`MAI-CUT-INFLUENCE`,
 //! `MAI-CUT-BOARD`). The decision log keeps only the few scalars that drove a decision.
+//!
+//! **DEC-12** (aig3 5.9): this is a *knowledge-source local view*, not a second blackboard.
+//! Shared board = [`crate::strategic::WorldReadSnapshot`]; experts write via
+//! [`crate::strategic::BlackboardWriteLane`] queues only.
+//!
+//! **SENSE-03** (aig3 11.4 *Sense Management*): [`SensoryModality`] / [`SenseMask`]
+//! gate which channels [`perceive_faction_masked`] may read. Theaters bound AOR
+//! (`combat/theater.rs`); modalities bound *what* is knowable.
+//! **SENSE-05** (aig3 11.4.1 *Faking It*): [`PerceptionFidelity::PerfectKnowledge`]
+//! is an explicit cheat path — use for soft AI / debug only; players notice omniscience.
 
 use bevy::prelude::IVec2;
 
@@ -53,6 +63,8 @@ pub struct FactionPerception {
     pub rival_slots: Vec<u8>,
     /// Held cell with the best logistics strength — the anchor a supply line draws from.
     pub rear_anchor: Option<IVec2>,
+    /// TAC-05: mean gen-time defensibility along the front (0 when no analysis).
+    pub mean_front_defensibility: f32,
 }
 
 impl FactionPerception {
@@ -108,6 +120,12 @@ impl FactionPerception {
         })
     }
 
+    /// TAC-05 RO: sample [`TerrainAnalysisBook`](crate::terrain::TerrainAnalysisBook) onto the front digest.
+    pub fn apply_terrain_analysis(&mut self, book: &crate::terrain::TerrainAnalysisBook) {
+        self.mean_front_defensibility =
+            book.mean_defensibility(self.front.iter().map(|c| &c.tile));
+    }
+
     /// Worst-supplied front cell (ties `(y, x)`).
     #[must_use]
     pub fn worst_supplied_front(&self) -> Option<&FrontCell> {
@@ -143,6 +161,143 @@ pub fn overlay_cell_tile(overlay: &ChunkStrategicOverlay, cell: usize) -> Option
         overlay.chunk_coord.x * overlay.size.x as i32 + lx,
         overlay.chunk_coord.y * overlay.size.y as i32 + ly,
     ))
+}
+
+
+/// SENSE-03: sensory channel a faction may possess.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+pub enum SensoryModality {
+    /// Control / ownership fields.
+    Visual,
+    /// Threat pressure.
+    Threat,
+    /// Logistics strength / supply.
+    Logistics,
+}
+
+/// SENSE-03: bit-set of enabled modalities (default = all).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct SenseMask {
+    pub visual: bool,
+    pub threat: bool,
+    pub logistics: bool,
+}
+
+impl Default for SenseMask {
+    fn default() -> Self {
+        Self {
+            visual: true,
+            threat: true,
+            logistics: true,
+        }
+    }
+}
+
+impl SenseMask {
+    #[must_use]
+    pub const fn all() -> Self {
+        Self {
+            visual: true,
+            threat: true,
+            logistics: true,
+        }
+    }
+
+    #[must_use]
+    pub const fn only(modality: SensoryModality) -> Self {
+        match modality {
+            SensoryModality::Visual => Self {
+                visual: true,
+                threat: false,
+                logistics: false,
+            },
+            SensoryModality::Threat => Self {
+                visual: false,
+                threat: true,
+                logistics: false,
+            },
+            SensoryModality::Logistics => Self {
+                visual: false,
+                threat: false,
+                logistics: true,
+            },
+        }
+    }
+
+    #[must_use]
+    pub fn allows(self, modality: SensoryModality) -> bool {
+        match modality {
+            SensoryModality::Visual => self.visual,
+            SensoryModality::Threat => self.threat,
+            SensoryModality::Logistics => self.logistics,
+        }
+    }
+}
+
+
+/// SENSE-05: how honest perception is. Perfect knowledge is a deliberate cheat.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
+pub enum PerceptionFidelity {
+    /// Respect [`SenseMask`] — fair fog of war.
+    #[default]
+    Honest,
+    /// Omniscient overlay read (all modalities). Acceptable for soft opponents / tools;
+    /// players notice if hard AI always knows hidden logistics.
+    PerfectKnowledge,
+}
+
+/// SENSE-05: perceive with fidelity policy. PerfectKnowledge ignores `mask` and uses all channels.
+#[must_use]
+pub fn perceive_with_fidelity<'a>(
+    slot: u8,
+    overlays: impl IntoIterator<Item = &'a ChunkStrategicOverlay>,
+    mask: SenseMask,
+    fidelity: PerceptionFidelity,
+) -> FactionPerception {
+    match fidelity {
+        PerceptionFidelity::Honest => perceive_faction_masked(slot, overlays, mask),
+        PerceptionFidelity::PerfectKnowledge => {
+            perceive_faction_masked(slot, overlays, SenseMask::all())
+        }
+    }
+}
+
+/// True when fidelity is a cheat players can notice (SENSE-05).
+#[inline]
+#[must_use]
+pub const fn perception_is_faked(fidelity: PerceptionFidelity) -> bool {
+    matches!(fidelity, PerceptionFidelity::PerfectKnowledge)
+}
+
+/// SENSE-03: perceive with modality gates — disabled channels zero their contributions.
+#[must_use]
+pub fn perceive_faction_masked<'a>(
+    slot: u8,
+    overlays: impl IntoIterator<Item = &'a ChunkStrategicOverlay>,
+    mask: SenseMask,
+) -> FactionPerception {
+    let mut p = perceive_faction(slot, overlays);
+    if !mask.allows(SensoryModality::Threat) {
+        p.mean_threat_held = 0.0;
+        for c in &mut p.front {
+            c.threat = 0.0;
+        }
+    }
+    if !mask.allows(SensoryModality::Logistics) {
+        p.mean_logistics_held = 0.0;
+        for c in &mut p.front {
+            c.logistics_strength = 0.0;
+        }
+        p.rear_anchor = None;
+    }
+    if !mask.allows(SensoryModality::Visual) {
+        p.cells_held = 0;
+        p.mean_own_control = 0.0;
+        p.front.clear();
+        p.rival_slots.clear();
+        p.rear_anchor = None;
+    }
+    p
 }
 
 /// Pure perception for `slot` over the given overlays. Deterministic: output order does not depend
@@ -292,4 +447,40 @@ mod tests {
         assert_eq!(p.cells_total, 0);
         assert!(p.front.is_empty());
     }
+    #[test]
+    fn sense03_modality_mask_blinds_threat_and_logistics() {
+        let mut ov = two_faction_strip();
+        ov.threat[2][0] = 0.9;
+        ov.logistics_strength[0][0] = 0.9;
+        let full = perceive_faction_masked(0, [&ov], SenseMask::all());
+        assert!(full.mean_threat_held > 0.0 || full.most_threatened_front().is_some());
+        let no_threat = perceive_faction_masked(0, [&ov], SenseMask {
+            visual: true,
+            threat: false,
+            logistics: true,
+        });
+        assert_eq!(no_threat.mean_threat_held, 0.0);
+        assert!(no_threat.front.iter().all(|c| c.threat == 0.0));
+        let blind = perceive_faction_masked(0, [&ov], SenseMask::only(SensoryModality::Logistics));
+        assert!(blind.front.is_empty());
+        assert_eq!(blind.cells_held, 0);
+    }
+
+    #[test]
+    fn sense05_perfect_knowledge_bypasses_honest_mask() {
+        let mut ov = two_faction_strip();
+        ov.threat[2][0] = 0.9;
+        let limited = SenseMask {
+            visual: true,
+            threat: false,
+            logistics: true,
+        };
+        let honest = perceive_with_fidelity(0, [&ov], limited, PerceptionFidelity::Honest);
+        let fake = perceive_with_fidelity(0, [&ov], limited, PerceptionFidelity::PerfectKnowledge);
+        assert_eq!(honest.mean_threat_held, 0.0);
+        assert!(fake.front.iter().any(|c| c.threat > 0.0));
+        assert!(perception_is_faked(PerceptionFidelity::PerfectKnowledge));
+        assert!(!perception_is_faked(PerceptionFidelity::Honest));
+    }
+
 }

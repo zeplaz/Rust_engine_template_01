@@ -89,8 +89,13 @@ def _cmd_studio_task_enqueue(args: argparse.Namespace) -> int:
         payload_path=args.payload,
         task_id=args.task_id,
     )
-    if args.run and args.kind == "geometry":
-        task = studio_task.run_queued_geometry(task["task_id"])
+    if args.run and args.kind in (
+        "geometry",
+        "massing_export",
+        "assembly_build",
+        "param_frame",
+    ):
+        task = studio_task.run_queued(str(task["task_id"]))
     print(json.dumps(task))
     return 0 if task.get("status") in ("queued", "done") else 1
 
@@ -119,6 +124,24 @@ def _cmd_studio_task_handoff(args: argparse.Namespace) -> int:
     marker = studio_task.blender_handoff_marker(args.task_id)
     print(json.dumps({"handoff": str(marker), "task_id": args.task_id}))
     return 0
+
+
+def _cmd_studio_task_escalate(args: argparse.Namespace) -> int:
+    from rust_engine_mcp import studio_task
+
+    try:
+        result = studio_task.escalate_from_param_frame(
+            task_id=args.task_id,
+            param_frame_path=args.param_frame,
+            run=bool(args.run),
+            blender_session=args.blender_session,
+        )
+    except (FileNotFoundError, ValueError) as exc:
+        print(json.dumps({"error": str(exc)}))
+        return 1
+    print(json.dumps(result))
+    failed = [c for c in result.get("children", []) if c.get("status") == "failed"]
+    return 1 if failed else 0
 
 
 def _cmd_studio_dash_render(args: argparse.Namespace) -> int:
@@ -653,14 +676,46 @@ def build_parser() -> argparse.ArgumentParser:
         "studio-task-enqueue",
         help="Enqueue a StudioTask on the shared APS/Blender job bus",
     )
-    p.add_argument("--kind", required=True, choices=[
-        "geometry", "assembly_build", "tile_bake", "report", "massing_export", "open_staging",
-    ])
+    p.add_argument(
+        "--kind",
+        required=True,
+        choices=[
+            "geometry",
+            "assembly_build",
+            "tile_bake",
+            "report",
+            "massing_export",
+            "param_frame",
+            "open_staging",
+        ],
+    )
     p.add_argument("--seed", type=int, required=True)
     p.add_argument("--payload", default=None, help="Path to underlying job/spec JSON")
     p.add_argument("--task-id", default=None)
-    p.add_argument("--run", action="store_true", help="For geometry: run headless immediately")
+    p.add_argument(
+        "--run",
+        action="store_true",
+        help="Run queued worker immediately (geometry, massing_export, assembly_build, param_frame)",
+    )
     p.set_defaults(func=_cmd_studio_task_enqueue)
+
+    p = sub.add_parser(
+        "studio-task-escalate",
+        help="Enqueue StudioTasks from ParamFrame escalate hints (IO-09 / pipeline_app_layer)",
+    )
+    p.add_argument("--task-id", default=None, help="Existing kind=param_frame StudioTask id")
+    p.add_argument(
+        "--param-frame",
+        default=None,
+        help="Repo-relative ParamFrame JSON path (alternative to --task-id)",
+    )
+    p.add_argument("--run", action="store_true", help="Run each enqueued child task")
+    p.add_argument(
+        "--blender-session",
+        default=None,
+        help="Optional blender_session marker (e.g. addon)",
+    )
+    p.set_defaults(func=_cmd_studio_task_escalate)
 
     p = sub.add_parser("studio-task-status", help="Read a StudioTask status JSON")
     p.add_argument("task_id")
@@ -910,6 +965,10 @@ def build_parser() -> argparse.ArgumentParser:
             "render_variant",
             "build_graph",
             "tile_promotion_honest",
+            "param_frame",
+            "massing_preview",
+            "massing",
+            "building_grammar",
         ],
         help="Validator id",
     )

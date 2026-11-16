@@ -9,7 +9,7 @@ mod placement;
 mod popup;
 pub mod spline;
 
-pub use commit::{commit_firebreak_path_to_queue, commit_road_path_to_queue};
+pub use commit::commit_road_path_to_queue;
 pub use input::{
     cursor_world_on_map, road_path_input_system, sync_road_path_build_preview,
     sync_road_placement_width_from_tool, update_road_path_preview_system,

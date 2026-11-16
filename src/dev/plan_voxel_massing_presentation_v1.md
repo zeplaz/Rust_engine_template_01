@@ -73,7 +73,7 @@ floors = clamp(
 | Footprint ghost / weighted raster | SERIAL — massing derives after footprint sync |
 | Site stub overlay | PARALLEL OK — different request fields |
 | PG-2 / RepresentationResult bake | COORDINATE — bake may later replace column stacks for committed sites |
-| Future `plan_voxel_occupation_v1` | SERIAL / BLOCK until DR-VOXEL-OCCUPATION predicates true |
+| [`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md) (X1 SIGNED) | SERIAL for sim replace — X2 gated on steward EV/Cx; presentation lanes stay unblocked |
 
 ## 7. Witness
 
@@ -97,6 +97,14 @@ Presentation massing is **not** a second sim authority. Books split tool-side vs
 | **B — Engine derive** | **PCG-06** (shape / massing heuristic) | `@coder` [`voxel_massing.rs`](../construction/voxel_massing.rs) | `derive_massing_floors`, `VoxelColumnRequest`, sole writer into `ConstructionVisualRequests.massing_columns` from ghost/footprint | GPU meshes, APS UI, occupation dig/place |
 | **C — View / render paint** | **RND-01** (application stage) · **RND-09** (instanced stacks later) · **RND-18** (viewport / dual-view) | `@coder` world_map_frame / pixel_world layers | Consume `massing_columns` RO; stacked quads / silhouette; zoom collapse | Height heuristics, grammar seeds, occupation |
 
+**Lane A status:** schema + APS export QC + dashboard enrichment shipped 2026-11-15 (`massing_preview_v1.schema.json`, `validate_massing_preview`). Grammar→preview bridge: [`plan_studio_massing_grammar_bridge_v1.md`](plan_studio_massing_grammar_bridge_v1.md).
+
+**Lane B status:** `StudioMassingOverride` + one-shot `RUST_ENGINE_STUDIO_MASSING` ingest shipped 2026-11-15 — still sole content writer of `massing_columns`; no `FootprintMatrix` writes.
+
+**Lane C status:** RO audit done 2026-11-15 — `world_map_frame` / `pixel_world` layers read `massing_columns` (+ `massing_instances` when packed). **RND-09** X5: sole writer packs instance batch at `MASSING_INSTANCE_BATCH_THRESHOLD` (64); consumers prefer instances when non-empty.
+
+**Index hygiene:** `lookup.py voxel` may also hit **NAV-05**, **LGT-04**, **LGT-07** — false friends (pathfinding / volumetrics / AO). They are **not** adoption targets for VoxelMassing. Primary code map remains **PCG-06**. Full REJECT ledger: bridge plan §2 (no PHYS / AI-BT / nav-on-stacks / sim occupation).
+
 **Shared wire (parallel-safe):**
 
 ```text
@@ -109,4 +117,5 @@ APS massing_preview.json  ≈  VoxelColumnRequest[]
 
 **Future (blocked until DR-VOXEL-OCCUPATION):** sim voxel occupation plan — serial after presentation lanes are green; do not grow Lane B/C into dig authority.
 
-**Studio charter:** [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) § Book lanes.
+**Studio charter:** [`plan_artist_studio_expansion_v1.md`](plan_artist_studio_expansion_v1.md) § Book lanes.  
+**Readable-env spine:** [`plan_studio_massing_grammar_bridge_v1.md`](plan_studio_massing_grammar_bridge_v1.md).

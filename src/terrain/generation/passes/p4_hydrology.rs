@@ -88,6 +88,10 @@ pub fn apply_hydrology_with_params(
     let w = matrix.size.x;
     let h = matrix.size.y;
     let hydro = compute_hydrology_rect(w, h, &matrix.elevation, params, 0, Some(&matrix.moisture));
+    // PCG-03: persist eroded surface (pre–flood-fill) as chunk elevation authority.
+    if hydro.eroded_dem.len() == matrix.elevation.len() {
+        matrix.elevation.clone_from(&hydro.eroded_dem);
+    }
 
     for y in 0..h {
         for x in 0..w {

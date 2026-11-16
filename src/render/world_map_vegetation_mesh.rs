@@ -29,6 +29,7 @@ use bevy::prelude::*;
 use crate::engine::states::BaseState;
 use crate::gui::{MainWorldCameraOrthoTrace, WorldPresentationMode};
 use crate::render::extraction::{VegExtractRow, VegetationExtractFrame, VegetationExtractFrameSet};
+use crate::render::vegetation_species::{CrownProfile, Maturity, TreeShape, VegSpeciesTable, SPECIES_DEFAULT};
 use crate::systems::ecology::{
     SuccessionTopologyStage, CELL_BURNING, CELL_BURNT, CELL_GRASS, CELL_OLD, CELL_REGROWTH, CELL_SHRUB,
     CELL_WATER, CELL_YOUNG,
@@ -274,13 +275,18 @@ impl<'a> CellView<'a> {
             .map(|codes| Self { codes, size: chunk })
     }
 
-    /// Code at chunk-local tile position `p` (tile units). `None` outside the chunk.
-    fn code_at(&self, p: Vec2) -> Option<u8> {
+    /// Row-major cell index of chunk-local tile position `p` (tile units). `None` outside the chunk.
+    fn index_at(&self, p: Vec2) -> Option<usize> {
         let (x, y) = (p.x.floor(), p.y.floor());
         if x < 0.0 || y < 0.0 || x >= self.size.x as f32 || y >= self.size.y as f32 {
             return None;
         }
-        self.codes.get(y as usize * self.size.x as usize + x as usize).copied()
+        Some(y as usize * self.size.x as usize + x as usize)
+    }
+
+    /// Code at chunk-local tile position `p` (tile units). `None` outside the chunk.
+    fn code_at(&self, p: Vec2) -> Option<u8> {
+        self.index_at(p).and_then(|i| self.codes.get(i).copied())
     }
 
     /// True when the symbol centre or any of four points at `reach` tiles falls on open water, so
@@ -404,63 +410,166 @@ fn riparian_tint(c: [f32; 4], on: bool) -> [f32; 4] {
     }
 }
 
-struct Site {
-    lod: VegLod,
-    cover: Cover,
-    riparian: bool,
-    pos: Vec2,
-    step: f32,
-    rand: f32,
-    burn_phase: u8,
+/// One placed plant: the instance both presentation modes consume (Tactical symbols here, voxel trees in
+/// `pixel_world::layers`). Plain data (position, cover, species, site rand), so a chunk's list can be
+/// uploaded as an instance buffer later without reshaping it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct VegInstance {
+    /// World tile position.
+    pub pos: Vec2,
+    pub cover: Cover,
+    /// Species table index ([`VegSpeciesTable`]).
+    pub species: u8,
+    /// Site rand in `[0, 1)`: size / shade variation. The same value in both views.
+    pub rand: f32,
+    pub riparian: bool,
+    pub burn_phase: u8,
 }
 
-fn push_symbol(g: &mut VegGeometry, s: &Site) {
-    let (pos, step) = (s.pos, s.step);
-    let shade = (s.rand - 0.5) * 0.12;
+impl Cover {
+    /// Growth stage a shape is resolved at. Fire states take the mature envelope of the species.
+    #[must_use]
+    pub(crate) fn maturity(self) -> Maturity {
+        match self {
+            Cover::Grass | Cover::Shrub | Cover::Regrowth => Maturity::Shrub,
+            Cover::YoungForest => Maturity::Young,
+            Cover::OldGrowth | Cover::Burning | Cover::Burnt => Maturity::Old,
+        }
+    }
+}
+
+/// The one site sampler. Both presentation modes place plants through it, so a tree stands on the same
+/// tile, with the same species and rand, in Tactical and in PixelWorld3D. Candidate sites sit on a
+/// `step`-tile grid with Halton jitter; per-cell stand codes (water, fire, regrowth) and the row's topology
+/// layout decide which sites hold a plant. Painter order: far rows of sites first.
+pub(crate) fn sample_row_instances(row: &VegExtractRow, chunk: UVec2, step: u32, out: &mut Vec<VegInstance>) {
+    let step = step.max(1);
+    let stepf = step as f32;
+    let (cover, layout) = classify_row(row);
+    let view = CellView::of(row, chunk);
+    let density = row.modifiers.mean_density;
+    let origin = Vec2::new(row.coord.x as f32 * chunk.x as f32, row.coord.y as f32 * chunk.y as f32);
+    if view.is_none() && base_probability(cover, density) < 0.02 {
+        return;
+    }
+    let species_codes = row.species.as_deref().filter(|s| s.len() == (chunk.x * chunk.y) as usize);
+    let (nx, ny) = (chunk.x.div_ceil(step), chunk.y.div_ceil(step));
+    for iy in (0..ny).rev() {
+        for ix in 0..nx {
+            let (jx, jy) = scatter_jitter_in_cell(row.coord, ix, iy);
+            let lx = (ix as f32 + jx) * stepf;
+            let ly = (iy as f32 + jy) * stepf;
+            if lx >= chunk.x as f32 || ly >= chunk.y as f32 {
+                continue;
+            }
+            let local = Vec2::new(lx, ly);
+            let (site_cover, p_base, structured) = match &view {
+                Some(v) => {
+                    let Some(c) = v.code_at(local).and_then(cover_for_code) else {
+                        continue;
+                    };
+                    if v.footprint_wet(local, stepf * 0.4) {
+                        continue;
+                    }
+                    let live = matches!(c, Cover::Grass | Cover::Shrub | Cover::YoungForest | Cover::OldGrowth);
+                    (c, cell_probability(c, density), live)
+                }
+                None => (cover, base_probability(cover, density), true),
+            };
+            let (w, mean) = if structured {
+                layout_weight(layout, row.coord, lx / chunk.x as f32, ly / chunk.y as f32)
+            } else {
+                (1.0, 1.0)
+            };
+            let p = (p_base * w / mean).min(0.97);
+            if site_rand(row.coord, ix, iy, 1) >= p {
+                continue;
+            }
+            let species = match (&view, species_codes) {
+                (Some(v), Some(s)) => v.index_at(local).and_then(|i| s.get(i).copied()).unwrap_or(SPECIES_DEFAULT),
+                _ => SPECIES_DEFAULT,
+            };
+            out.push(VegInstance {
+                pos: origin + local,
+                cover: site_cover,
+                species,
+                rand: site_rand(row.coord, ix, iy, 4),
+                riparian: layout == Layout::Corridor && structured,
+                burn_phase: row.frame_index / 3,
+            });
+        }
+    }
+}
+
+struct Site {
+    lod: VegLod,
+    step: f32,
+    inst: VegInstance,
+}
+
+/// Tactical crown radius per unit of shape crown width (an oak crown of 0.87 reads as the old 0.55 radius).
+const CROWN_R_PER_WIDTH: f32 = 0.64;
+/// Palette is shared with the voxel view, which lights it; the flat layer sits darker on the terrain raster.
+const TACTICAL_CROWN_SHADE: f32 = -0.3;
+
+fn crown_symbol(g: &mut VegGeometry, profile: CrownProfile, pos: Vec2, r: f32, c: [f32; 4]) {
+    match profile {
+        CrownProfile::Round => g.polygon(pos.x, pos.y, r, 6, c),
+        CrownProfile::Cone => g.polygon(pos.x, pos.y, r * 1.15, 3, c),
+        CrownProfile::Column => g.polygon(pos.x, pos.y, r, 4, c),
+        CrownProfile::Spread => g.polygon(pos.x, pos.y, r * 1.05, 8, c),
+    }
+}
+
+fn shape_rgba(c: [f32; 3], a: f32, shade: f32) -> [f32; 4] {
+    rgba(c[0], c[1], c[2], a, shade)
+}
+
+fn tree_symbol(g: &mut VegGeometry, s: &Site, sh: &TreeShape, shade: f32, fine: bool, detailed: bool) {
+    let (pos, i) = (s.inst.pos, &s.inst);
+    let r = s.step * CROWN_R_PER_WIDTH * sh.crown_width;
+    let old = sh.maturity == Maturity::Old;
+    if fine && sh.trunk_frac > 0.0 {
+        let hw = r * (sh.trunk_width / sh.crown_width) * 0.65;
+        g.rect(pos.x - hw, pos.y - r * 0.9, pos.x + hw, pos.y - r * 0.2, rgba(0.30, 0.20, 0.12, 1.0, shade));
+    }
+    let alpha = if old { 0.97 } else { 0.95 };
+    crown_symbol(
+        g,
+        sh.profile,
+        pos,
+        r,
+        riparian_tint(shape_rgba(sh.crown, alpha, shade + TACTICAL_CROWN_SHADE), i.riparian),
+    );
+    if old && detailed {
+        crown_symbol(
+            g,
+            sh.profile,
+            Vec2::new(pos.x - r * 0.15, pos.y + r * 0.15),
+            r * 0.5,
+            riparian_tint(shape_rgba(sh.tip, 0.9, shade), i.riparian),
+        );
+    }
+}
+
+fn push_symbol(g: &mut VegGeometry, s: &Site, table: &VegSpeciesTable) {
+    let (pos, step, i) = (s.inst.pos, s.step, &s.inst);
+    let shade = (i.rand - 0.5) * 0.12;
     let fine = s.lod == VegLod::Fine;
     let detailed = matches!(s.lod, VegLod::Tree | VegLod::Fine);
-    let size_jitter = 0.9 + 0.3 * s.rand;
-    match s.cover {
-        Cover::OldGrowth => {
-            let r = step * 0.55 * size_jitter;
-            if fine {
-                g.rect(
-                    pos.x - r * 0.12,
-                    pos.y - r * 0.9,
-                    pos.x + r * 0.12,
-                    pos.y - r * 0.2,
-                    rgba(0.30, 0.20, 0.12, 1.0, shade),
-                );
-            }
-            g.hex(pos.x, pos.y, r, riparian_tint(rgba(0.03, 0.18, 0.08, 0.97, shade), s.riparian));
-            if detailed {
-                g.hex(
-                    pos.x - r * 0.15,
-                    pos.y + r * 0.15,
-                    r * 0.5,
-                    riparian_tint(rgba(0.09, 0.31, 0.14, 0.9, shade), s.riparian),
-                );
-            }
-        }
-        Cover::YoungForest => {
-            let r = step * 0.45 * size_jitter;
-            if fine {
-                g.rect(
-                    pos.x - r * 0.12,
-                    pos.y - r * 0.9,
-                    pos.x + r * 0.12,
-                    pos.y - r * 0.2,
-                    rgba(0.32, 0.22, 0.13, 1.0, shade),
-                );
-            }
-            g.hex(pos.x, pos.y, r, riparian_tint(rgba(0.06, 0.28, 0.10, 0.95, shade), s.riparian));
+    let size_jitter = 0.9 + 0.3 * i.rand;
+    match i.cover {
+        Cover::OldGrowth | Cover::YoungForest => {
+            let sh = table.resolve_shape(i.species, i.cover.maturity(), i.rand);
+            tree_symbol(g, s, &sh, shade, fine, detailed);
         }
         Cover::Shrub => {
+            let sh = table.resolve_shape(i.species, Maturity::Shrub, i.rand);
             g.diamond(
                 pos.x,
                 pos.y,
-                step * 0.32 * size_jitter,
-                riparian_tint(rgba(0.38, 0.48, 0.20, 0.9, shade), s.riparian),
+                step * CROWN_R_PER_WIDTH * sh.crown_width,
+                riparian_tint(shape_rgba(sh.crown, 0.9, shade), i.riparian),
             );
         }
         Cover::Grass => {
@@ -471,15 +580,22 @@ fn push_symbol(g: &mut VegGeometry, s: &Site) {
             }
         }
         Cover::Burning => {
-            let flicker = 0.9 + 0.1 * f32::from(s.burn_phase % 3);
-            let r = step * 0.5 * size_jitter;
+            let sh = table.resolve_shape(i.species, Maturity::Old, i.rand);
+            let flicker = 0.9 + 0.1 * f32::from(i.burn_phase % 3);
+            let r = step * CROWN_R_PER_WIDTH * sh.crown_width * 0.9;
             g.hex(pos.x, pos.y, r, rgba(1.0, 0.40, 0.06, 0.95, shade * flicker));
             if detailed {
                 g.hex(pos.x, pos.y, r * 0.5, rgba(1.0, 0.85, 0.30, 1.0, shade * flicker));
             }
         }
         Cover::Burnt => {
-            g.diamond(pos.x, pos.y, step * 0.3 * size_jitter, rgba(0.10, 0.09, 0.08, 0.9, shade));
+            let sh = table.resolve_shape(i.species, Maturity::Old, i.rand);
+            g.diamond(
+                pos.x,
+                pos.y,
+                step * CROWN_R_PER_WIDTH * sh.crown_width * 0.55,
+                rgba(0.10, 0.09, 0.08, 0.9, shade),
+            );
         }
         Cover::Regrowth => {
             g.tri(pos.x, pos.y, step * 0.28 * size_jitter, rgba(0.45, 0.70, 0.30, 0.9, shade));
@@ -554,6 +670,7 @@ pub(crate) fn build_vegetation_geometry(
     chunk: UVec2,
     lod: VegLod,
     window: Option<(IVec2, IVec2)>,
+    table: &VegSpeciesTable,
 ) -> (VegGeometry, VegLod) {
     let mut visible: Vec<&VegExtractRow> = rows
         .iter()
@@ -579,8 +696,9 @@ pub(crate) fn build_vegetation_geometry(
     // Once the sim publishes per-cell state, a chunk that has none yet (just spawned) draws nothing
     // rather than a chunk-wide guess that could cover water for a frame or two.
     let per_cell_world = visible.iter().any(|r| r.cells.is_some());
+    let mut instances: Vec<VegInstance> = Vec::new();
     for row in visible {
-        let (cover, layout) = classify_row(row);
+        let (cover, _) = classify_row(row);
         let view = CellView::of(row, chunk);
         if per_cell_world && view.is_none() {
             continue;
@@ -621,57 +739,10 @@ pub(crate) fn build_vegetation_geometry(
             }
             continue;
         }
-        if view.is_none() && base < 0.02 {
-            continue;
-        }
-        let (nx, ny) = sites_per_axis(chunk, lod);
-        for iy in (0..ny).rev() {
-            for ix in 0..nx {
-                let (jx, jy) = scatter_jitter_in_cell(row.coord, ix, iy);
-                let lx = (ix as f32 + jx) * step;
-                let ly = (iy as f32 + jy) * step;
-                if lx >= chunk.x as f32 || ly >= chunk.y as f32 {
-                    continue;
-                }
-                let local = Vec2::new(lx, ly);
-                let (site_cover, p_base, structured) = match &view {
-                    Some(v) => {
-                        let Some(c) = v.code_at(local).and_then(cover_for_code) else {
-                            continue;
-                        };
-                        if v.footprint_wet(local, step * 0.4) {
-                            continue;
-                        }
-                        let live = matches!(
-                            c,
-                            Cover::Grass | Cover::Shrub | Cover::YoungForest | Cover::OldGrowth
-                        );
-                        (c, cell_probability(c, density), live)
-                    }
-                    None => (cover, base, true),
-                };
-                let (w, mean) = if structured {
-                    layout_weight(layout, row.coord, lx / chunk.x as f32, ly / chunk.y as f32)
-                } else {
-                    (1.0, 1.0)
-                };
-                let p = (p_base * w / mean).min(0.97);
-                if site_rand(row.coord, ix, iy, 1) >= p {
-                    continue;
-                }
-                push_symbol(
-                    &mut g,
-                    &Site {
-                        lod,
-                        cover: site_cover,
-                        riparian: layout == Layout::Corridor && structured,
-                        pos: origin + local,
-                        step,
-                        rand: site_rand(row.coord, ix, iy, 4),
-                        burn_phase: row.frame_index / 3,
-                    },
-                );
-            }
+        instances.clear();
+        sample_row_instances(row, chunk, lod.step_tiles(), &mut instances);
+        for inst in &instances {
+            push_symbol(&mut g, &Site { lod, step, inst: *inst }, table);
         }
     }
     (g, lod)
@@ -700,7 +771,8 @@ fn extract_content_hash(rows: &[VegExtractRow], chunk: UVec2) -> u64 {
                 ^ ((layout as u64) << 16)
                 ^ (q << 24)
                 ^ (burn << 40)
-                ^ (u64::from(r.cells_rev) << 44),
+                ^ (u64::from(r.cells_rev) << 44)
+                ^ (u64::from(r.species_rev) << 52),
         );
     }
     h
@@ -745,6 +817,7 @@ pub(crate) fn sync_world_map_vegetation(
     base: Res<State<BaseState>>,
     mode: Option<Res<WorldPresentationMode>>,
     frame: Option<Res<VegetationExtractFrame>>,
+    table: Res<VegSpeciesTable>,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
     matrices: Query<&ChunkCellMatrix>,
     mut layer: Query<(Entity, &mut Visibility, &Mesh2d), With<WorldMapVegetationLayer>>,
@@ -775,8 +848,8 @@ pub(crate) fn sync_world_map_vegetation(
         .map(|m| m.size)
         .filter(|s| s.x > 0 && s.y > 0)
         .unwrap_or(UVec2::splat(CHUNK_TILES_SIM));
-    if frame.is_changed() || state.built_key.is_none() {
-        state.content_hash = extract_content_hash(&frame.rows, chunk);
+    if frame.is_changed() || table.is_changed() || state.built_key.is_none() {
+        state.content_hash = extract_content_hash(&frame.rows, chunk) ^ u64::from(table.species.len() as u32);
     }
     let default_trace = MainWorldCameraOrthoTrace::default();
     let trace = trace.as_deref().unwrap_or(&default_trace);
@@ -798,7 +871,7 @@ pub(crate) fn sync_world_map_vegetation(
         .clone();
 
     if state.built_key != Some(key) {
-        let (geo, _) = build_vegetation_geometry(&frame.rows, chunk, lod, window);
+        let (geo, _) = build_vegetation_geometry(&frame.rows, chunk, lod, window, &table);
         // Empty builds never reach `Assets<Mesh>` (zero-vertex meshes trip the render slab allocator).
         let drawable = geo.symbols > 0
             && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, geometry_to_mesh(geo));
@@ -867,6 +940,8 @@ mod tests {
             frame_index: 0,
             cells: None,
             cells_rev: 0,
+            species: None,
+            species_rev: 0,
         }
     }
 
@@ -876,6 +951,10 @@ mod tests {
         r.cells = Some(codes.into());
         r.cells_rev = 1;
         r
+    }
+
+    fn build(rows: &[VegExtractRow], chunk: UVec2, lod: VegLod, window: Option<(IVec2, IVec2)>) -> (VegGeometry, VegLod) {
+        build_vegetation_geometry(rows, chunk, lod, window, &VegSpeciesTable::default())
     }
 
     fn known_rows() -> Vec<VegExtractRow> {
@@ -894,9 +973,9 @@ mod tests {
     fn rows_build_symbols_inside_their_chunks_and_zoom_changes_density() {
         let chunk = UVec2::splat(32);
         let rows = known_rows();
-        let (fine, fine_lod) = build_vegetation_geometry(&rows, chunk, VegLod::Fine, None);
-        let (blob, _) = build_vegetation_geometry(&rows, chunk, VegLod::Blob, None);
-        let (wash, _) = build_vegetation_geometry(&rows, chunk, VegLod::Wash, None);
+        let (fine, fine_lod) = build(&rows, chunk, VegLod::Fine, None);
+        let (blob, _) = build(&rows, chunk, VegLod::Blob, None);
+        let (wash, _) = build(&rows, chunk, VegLod::Wash, None);
         assert_eq!(fine_lod, VegLod::Fine);
         assert!(fine.symbols > blob.symbols, "{} vs {}", fine.symbols, blob.symbols);
         assert_eq!(wash.symbols, 3 * 16, "8-tile wash blocks per chunk");
@@ -907,7 +986,7 @@ mod tests {
         }
         // The burning chunk draws ember, and only that chunk does.
         assert!(fine.colors.iter().any(is_ember));
-        let (calm, _) = build_vegetation_geometry(&rows[..2], chunk, VegLod::Fine, None);
+        let (calm, _) = build(&rows[..2], chunk, VegLod::Fine, None);
         assert!(!calm.colors.iter().any(is_ember));
     }
 
@@ -921,7 +1000,7 @@ mod tests {
             |x, _| if x < 16 { CELL_WATER } else { CELL_OLD },
         )];
         for lod in [VegLod::Fine, VegLod::Tree, VegLod::Blob, VegLod::Wash] {
-            let (g, _) = build_vegetation_geometry(&rows, chunk, lod, None);
+            let (g, _) = build(&rows, chunk, lod, None);
             assert!(g.symbols > 0, "{lod:?}");
             // Symbol centers are not inspectable after merge; vertices stay out of the wet half
             // by at most one crown radius.
@@ -951,7 +1030,7 @@ mod tests {
                 }
             },
         )];
-        let (g, _) = build_vegetation_geometry(&rows, chunk, VegLod::Fine, None);
+        let (g, _) = build(&rows, chunk, VegLod::Fine, None);
         // Vertex colours are linear: the charred grey is near black in all channels, live greens are not.
         let charred = |c: &[f32; 4]| c[0] < 0.015 && c[1] < 0.015 && c[2] < 0.015 && c[3] > 0.8;
         let ember_x: Vec<f32> =
@@ -968,15 +1047,60 @@ mod tests {
             32,
             |_, _| CELL_YOUNG,
         )];
-        let (c, _) = build_vegetation_geometry(&calm, chunk, VegLod::Fine, None);
+        let (c, _) = build(&calm, chunk, VegLod::Fine, None);
         assert!(!c.colors.iter().any(|col| is_ember(col) || charred(col)));
+    }
+
+    #[test]
+    fn species_changes_the_crown_silhouette_not_the_sites() {
+        let table = VegSpeciesTable::default();
+        let id = |n: &str| table.species.iter().position(|s| s.id == n).unwrap() as u8;
+        let chunk = UVec2::splat(32);
+        let stand = |sp: u8| {
+            let mut r = with_cells(
+                row(IVec2::ZERO, SuccessionTopologyStage::OldGrowth, "veg_topo_patch", 0.9, false),
+                32,
+                |_, _| CELL_OLD,
+            );
+            r.species = Some(vec![sp; 32 * 32].into());
+            r
+        };
+        let verts_per_plant = |name: &str| {
+            let (g, _) = build(&[stand(id(name))], chunk, VegLod::Tree, None);
+            assert!(g.symbols > 50, "{name}");
+            assert_eq!(g.positions.len() % g.symbols, 0, "{name}");
+            (g.symbols, g.positions.len() / g.symbols)
+        };
+        // Tree band, old growth: crown plus detail crown. Round = 2 hexes, Cone = 2 triangles,
+        // Column = 2 diamonds, Spread = 2 octagons.
+        let (n_oak, oak) = verts_per_plant("oak");
+        let (n_spruce, spruce) = verts_per_plant("spruce");
+        let (n_birch, birch) = verts_per_plant("birch");
+        let (n_pine, pine) = verts_per_plant("pine");
+        assert_eq!((oak, spruce, birch, pine), (12, 6, 8, 16));
+        assert!(n_oak == n_spruce && n_spruce == n_birch && n_birch == n_pine, "sites do not depend on species");
+    }
+
+    #[test]
+    fn rows_without_species_codes_use_the_default_species() {
+        let chunk = UVec2::splat(32);
+        let plain = with_cells(
+            row(IVec2::ZERO, SuccessionTopologyStage::OldGrowth, "veg_topo_patch", 0.9, false),
+            32,
+            |_, _| CELL_OLD,
+        );
+        let mut coded = plain.clone();
+        coded.species = Some(vec![SPECIES_DEFAULT; 32 * 32].into());
+        let (a, _) = build(&[plain], chunk, VegLod::Fine, None);
+        let (b, _) = build(&[coded], chunk, VegLod::Fine, None);
+        assert_eq!(a.positions, b.positions);
     }
 
     #[test]
     fn window_culls_chunks_and_classify_reads_stand_type() {
         let chunk = UVec2::splat(32);
         let rows = known_rows();
-        let (g, _) = build_vegetation_geometry(
+        let (g, _) = build(
             &rows,
             chunk,
             VegLod::Tree,
@@ -1056,6 +1180,7 @@ mod tests {
         ));
         app.init_asset::<Mesh>();
         app.init_asset::<ColorMaterial>();
+        app.insert_resource(VegSpeciesTable::default());
         app.init_state::<BaseState>();
         app.insert_resource(WorldPresentationMode::default());
         let frame = VegetationExtractFrame {

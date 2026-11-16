@@ -7,6 +7,7 @@ pub mod ux_orchestration;
 pub mod ux_states;
 pub mod debug_maneuver;
 pub mod launch_args;
+pub mod playquad;
 pub mod states;
 pub mod play_scenario;
 /// CLI/menu test worlds — import `engine::test_harness::*` internally; not re-exported at `engine::*` root.

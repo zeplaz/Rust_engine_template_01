@@ -1,4 +1,9 @@
 //! Save wire-format markers — binary bulk remains matrix-owned.
+//!
+//! **ANIM-03** (gea4v2 13.8.2–13.8.4 · LEGACY `animation_compression` gea_v2_e4 §13.8 p306):
+//! book curve quantization / key-omission / curve compression map onto save+telemetry —
+//! quantize floats before hash/compare, Identity payload codec until a real compressor lands.
+//! No in-engine `AnimationCurve` host; debt: true keyframe curve compression stays deferred.
 
 use std::io;
 
@@ -6,12 +11,23 @@ use std::io;
 pub const SAVE_ARTIFACT_MAGIC: &[u8; 4] = b"WRST";
 pub const SAVE_ARTIFACT_ENVELOPE_VERSION: u8 = 1;
 
+/// ANIM-03 unit-interval quantize scale (matches fire-overlay VT-4 heat hash ×10000).
+pub const SAVE_FLOAT_QUANT_SCALE: f32 = 10_000.0;
+
+/// Quantize a unit-interval float to a stable u32 key (gea4v2 13.8.2).
+#[must_use]
+pub fn quantize_unit_interval_f32(v: f32) -> u32 {
+    (v.clamp(0.0, 1.0) * SAVE_FLOAT_QUANT_SCALE).round() as u32
+}
+
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 pub enum SaveWireFormat {
     RonTextual,
 }
 
 /// Compression codec for chunk artifact bodies (matrix-owned beyond identity).
+///
+/// ANIM-03: sole active codec is [`SavePayloadCompression::Identity`] — envelope rejects others.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
 #[repr(u8)]
 pub enum SavePayloadCompression {
@@ -148,5 +164,48 @@ mod tests {
     fn binary_bulk_remains_matrix_deferred() {
         assert!(SAVE_BINARY_BULK_DEFERRED.contains("binary bulk"));
         assert_eq!(active_chunk_artifact_body_kind(), SaveArtifactBodyKind::RonChunkTextual);
+    }
+
+    /// ANIM-03 tripwire: Identity is the only active payload codec (curve-compress deferred).
+    #[test]
+    fn anim03_identity_is_sole_active_codec() {
+        assert_eq!(
+            active_save_payload_compression(),
+            SavePayloadCompression::Identity
+        );
+        assert_eq!(SavePayloadCompression::Identity as u8, 0);
+    }
+
+    /// ANIM-03 tripwire: envelope rejects non-Identity codecs (no silent fallback).
+    #[test]
+    fn anim03_envelope_rejects_non_identity_codec() {
+        let body = b"(schema_version: 1,)";
+        let mut wrapped = wrap_chunk_artifact_body(body);
+        wrapped[5] = 1; // forged non-Identity codec tag
+        let err = unwrap_chunk_artifact_body(&wrapped).expect_err("non-identity must fail");
+        assert!(
+            err.to_string().contains("compression codec"),
+            "unexpected err: {err}"
+        );
+    }
+
+    /// ANIM-03 tripwire: unit-interval quantize is stable at the pinned scale.
+    #[test]
+    fn anim03_unit_quantize_matches_scale() {
+        assert_eq!(SAVE_FLOAT_QUANT_SCALE, 10_000.0);
+        assert_eq!(quantize_unit_interval_f32(0.0), 0);
+        assert_eq!(quantize_unit_interval_f32(1.0), 10_000);
+        assert_eq!(quantize_unit_interval_f32(0.5), 5_000);
+        assert_eq!(quantize_unit_interval_f32(-0.1), 0);
+        assert_eq!(quantize_unit_interval_f32(1.5), 10_000);
+        // Sub-quantum noise collapses (key omission of redundant precision).
+        assert_eq!(
+            quantize_unit_interval_f32(0.50001),
+            quantize_unit_interval_f32(0.50004)
+        );
+        assert_ne!(
+            quantize_unit_interval_f32(0.50),
+            quantize_unit_interval_f32(0.51)
+        );
     }
 }

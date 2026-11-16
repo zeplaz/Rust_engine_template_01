@@ -189,6 +189,7 @@ mod tests {
                 },
             ],
             name_to_id: Default::default(),
+            collision: Vec::new(),
         }
     }
 

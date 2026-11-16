@@ -1,6 +1,10 @@
 //! **Deterministic randomness for AI decisions** (FAI-2). No `thread_rng`, no clock: every roll is a
 //! pure function of `(session seed, faction slot, sim tick, salt)`, so the same session replays the
 //! same decisions.
+//!
+//! **MATH-02** (aig3 8.1.1 *Numeric Mixing and Game Seeds*): prefer
+//! [`derive_keyed_seed`] / [`derive_chunk_seed`] over sequential `wrapping_add` so subsystem
+//! streams do not depend on call order.
 
 use bevy::prelude::*;
 
@@ -43,6 +47,21 @@ pub const fn mix64(mut x: u64) -> u64 {
 #[must_use]
 pub const fn decision_seed(session: u64, slot: u8, tick: u64, salt: u64) -> u64 {
     mix64(mix64(mix64(session ^ salt) ^ (slot as u64)) ^ tick)
+}
+
+/// MATH-02: subsystem / layer seed from `(root, key)` — independent of call order.
+#[inline]
+#[must_use]
+pub const fn derive_keyed_seed(root: u64, key: u64) -> u64 {
+    mix64(mix64(root) ^ key)
+}
+
+/// MATH-02: per-chunk seed from world root + chunk coords.
+#[inline]
+#[must_use]
+pub const fn derive_chunk_seed(root: u64, chunk_x: i32, chunk_y: i32) -> u64 {
+    let key = ((chunk_x as u32 as u64) << 32) | (chunk_y as u32 as u64);
+    derive_keyed_seed(root, key)
 }
 
 /// Tiny deterministic generator (SplitMix64 stream).
@@ -130,5 +149,19 @@ mod tests {
         assert_eq!(session_seed(Some(&AiSeed(9)), None), 9);
         assert_eq!(session_seed(Some(&AiSeed(0)), None), 0);
         assert_eq!(session_seed(None, None), 0);
+    }
+
+    #[test]
+    fn math02_keyed_seeds_are_order_independent_and_distinct() {
+        let a = derive_keyed_seed(100, 1);
+        let b = derive_keyed_seed(100, 2);
+        let a2 = derive_keyed_seed(100, 1);
+        assert_eq!(a, a2);
+        assert_ne!(a, b);
+        assert_ne!(
+            derive_chunk_seed(9, 0, 1),
+            derive_chunk_seed(9, 1, 0),
+            "chunk axes must not collide"
+        );
     }
 }

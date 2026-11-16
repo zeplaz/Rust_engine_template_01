@@ -14,6 +14,8 @@
 use bevy::prelude::*;
 
 use super::hydrology::HydrologyResult;
+use crate::terrain::biome::BiomeTuning;
+use crate::terrain::world_map_scale::{LandFeatureRhythm, WorldMapScale};
 
 /// What a cell is, water-wise.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash)]
@@ -44,6 +46,44 @@ impl WaterClass {
     #[must_use]
     pub const fn is_standing(self) -> bool {
         matches!(self, Self::Lake | Self::Ocean)
+    }
+}
+
+/// Marsh belts only form on low ground: at most this far above the shallow-water line (normalized height).
+const MARSH_BANK_HEIGHT: f32 = 0.12;
+/// Moisture threshold reduction at full regional emphasis.
+const MARSH_REGION_THRESHOLD_DROP: f32 = 0.15;
+
+/// Soft marsh / wetland belt tunables (derived from [`LandFeatureRhythm`] + [`BiomeTuning`]).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct MarshBeltParams {
+    /// Belt reach in tiles around river / lake cells. `0` = off.
+    pub radius_tiles: u32,
+    /// Minimum moisture for a belt cell (the biome `wetland_moist_threshold`).
+    pub moisture_threshold: f32,
+    /// `0..=1` extra reach / lower threshold inside `region`. Ignored without a region.
+    pub emphasis: f32,
+    /// Map fractions `[x0, y0, x1, y1]` (half-open, tile `y` up). When set, belts form only inside it.
+    pub region: Option<[f32; 4]>,
+}
+
+impl MarshBeltParams {
+    #[must_use]
+    pub fn from_rhythm(
+        rhythm: &LandFeatureRhythm,
+        scale: &WorldMapScale,
+        tuning: &BiomeTuning,
+    ) -> Self {
+        Self {
+            radius_tiles: if rhythm.marsh_belt_km > 0.0 {
+                scale.tiles_for_km(rhythm.marsh_belt_km)
+            } else {
+                0
+            },
+            moisture_threshold: tuning.wetland_moist_threshold,
+            emphasis: rhythm.marsh_emphasis,
+            region: rhythm.marsh_region,
+        }
     }
 }
 
@@ -86,6 +126,79 @@ impl WorldWaterGrid {
             classes: classify_world_water_on_terrain(hydro, width, height, dem, water_line),
             stamp,
         }
+    }
+
+    /// Soft marsh belts (PLAYTEST-QUADRANT-WORLD-001 §3): wet, low `Dry` ground near a river or lake becomes
+    /// [`WaterClass::Wetland`]. Never touches open water, so channel rivers keep their mask; Wetland only caps
+    /// vegetation and raises dense-cache moisture — no occupation, no new authority. Returns cells converted.
+    pub fn apply_marsh_belts(
+        &mut self,
+        moisture: &[f32],
+        dem: &[f32],
+        water_line: f32,
+        params: &MarshBeltParams,
+    ) -> usize {
+        let (w, h) = (self.width as usize, self.height as usize);
+        let n = w * h;
+        if params.radius_tiles == 0
+            || self.classes.len() != n
+            || moisture.len() != n
+            || dem.len() != n
+        {
+            return 0;
+        }
+        let emphasis = params.emphasis.clamp(0.0, 1.0);
+        let base_r = params.radius_tiles as i32;
+        // Region mode: belts only inside the rectangle, with emphasis. No region: uniform, no emphasis.
+        let (reach, threshold) = if params.region.is_some() {
+            (
+                base_r + (emphasis * base_r as f32).ceil() as i32,
+                params.moisture_threshold - emphasis * MARSH_REGION_THRESHOLD_DROP,
+            )
+        } else {
+            (base_r, params.moisture_threshold)
+        };
+        // Half-open tile box, same semantics as `engine::playquad::TileAabb::contains` (tile index as f32).
+        let region = params.region.map(|[x0, y0, x1, y1]| {
+            (x0 * w as f32, y0 * h as f32, x1 * w as f32, y1 * h as f32)
+        });
+        let in_region = |x: i32, y: i32| {
+            region.map_or(true, |(x0, y0, x1, y1)| {
+                (x as f32) >= x0 && (x as f32) < x1 && (y as f32) >= y0 && (y as f32) < y1
+            })
+        };
+        let max_r = reach;
+        let mut marks: Vec<usize> = Vec::new();
+        for i in 0..n {
+            if !matches!(self.classes[i], WaterClass::River | WaterClass::Lake) {
+                continue;
+            }
+            let (x, y) = ((i % w) as i32, (i / w) as i32);
+            for dy in -max_r..=max_r {
+                for dx in -max_r..=max_r {
+                    let (nx, ny) = (x + dx, y + dy);
+                    if nx < 0 || ny < 0 || nx >= w as i32 || ny >= h as i32 {
+                        continue;
+                    }
+                    let j = ny as usize * w + nx as usize;
+                    if self.classes[j] != WaterClass::Dry || dem[j] > water_line + MARSH_BANK_HEIGHT {
+                        continue;
+                    }
+                    if in_region(nx, ny)
+                        && dx * dx + dy * dy <= reach * reach
+                        && moisture[j] >= threshold
+                    {
+                        marks.push(j);
+                    }
+                }
+            }
+        }
+        marks.sort_unstable();
+        marks.dedup();
+        for &j in &marks {
+            self.classes[j] = WaterClass::Wetland;
+        }
+        marks.len()
     }
 
     #[inline]
@@ -288,8 +401,20 @@ pub(crate) mod tests {
     pub(crate) fn generate_hydrology(
         seed: u64,
     ) -> (WorldGenParams, Vec<f32>, Vec<f32>, HydrologyResult) {
+        generate_hydrology_with(seed, TileExtentPreset::TacticalSmall, None)
+    }
+
+    /// As [`generate_hydrology`], for any extent and an optional rhythm (PlayQuad opts in; `None` = default).
+    pub(crate) fn generate_hydrology_with(
+        seed: u64,
+        preset: TileExtentPreset,
+        rhythm: Option<LandFeatureRhythm>,
+    ) -> (WorldGenParams, Vec<f32>, Vec<f32>, HydrologyResult) {
         let mut p = WorldGenParams::default();
-        p.apply_tile_extent_preset(TileExtentPreset::TacticalSmall);
+        if let Some(r) = rhythm {
+            p.feature_rhythm = r;
+        }
+        p.apply_tile_extent_preset(preset);
         p.seed = seed;
         let (w, h) = (p.width as usize, p.height as usize);
         let k = build_world_noise_kernels(&p, &p.noise_sampling);
@@ -303,7 +428,8 @@ pub(crate) mod tests {
                 moist[y * w + x] = mv;
             }
         }
-        let hp = HydrologyParams::from_biome_tuning(&p.biome_tuning);
+        let hp = HydrologyParams::from_biome_tuning(&p.biome_tuning)
+            .with_rhythm(&p.feature_rhythm, &p.map_scale);
         let hydro = compute_hydrology_world(
             p.width,
             p.height,
@@ -337,6 +463,277 @@ pub(crate) mod tests {
         }
     }
 
+    fn belt_grid(w: u32, h: u32, river_x: u32) -> WorldWaterGrid {
+        let mut classes = vec![WaterClass::Dry; (w * h) as usize];
+        for y in 0..h {
+            classes[(y * w + river_x) as usize] = WaterClass::River;
+        }
+        WorldWaterGrid { width: w, height: h, classes, stamp: 1 }
+    }
+
+    #[test]
+    fn marsh_belt_is_soft_wetland_never_open_water() {
+        let (w, h) = (16u32, 16u32);
+        let n = (w * h) as usize;
+        let mut grid = belt_grid(w, h, 3); // channel in the west half
+        let wet = vec![0.9f32; n];
+        let low = vec![0.30f32; n];
+        let p = MarshBeltParams {
+            radius_tiles: 2,
+            moisture_threshold: 0.7,
+            emphasis: 0.0,
+            region: None,
+        };
+        let added = grid.apply_marsh_belts(&wet, &low, 0.28, &p);
+        assert!(added > 0);
+        assert_eq!(grid.class_at(3, 8), Some(WaterClass::River), "channel untouched");
+        assert_eq!(grid.class_at(5, 8), Some(WaterClass::Wetland), "bank within reach");
+        assert_eq!(grid.class_at(6, 8), Some(WaterClass::Dry), "belt is bounded");
+
+        // Dry moisture or high ground: no belt.
+        let mut dry = belt_grid(w, h, 3);
+        assert_eq!(dry.apply_marsh_belts(&vec![0.2; n], &low, 0.28, &p), 0);
+        assert_eq!(dry.apply_marsh_belts(&wet, &vec![0.9; n], 0.28, &p), 0);
+    }
+
+    /// SE quadrant as map fractions, from the one shared partition (`engine::playquad`).
+    fn se_fractions(w: u32, h: u32) -> [f32; 4] {
+        use crate::engine::playquad::{quadrant_aabb, PlayQuadrant};
+        let b = quadrant_aabb(PlayQuadrant::Se, w, h);
+        [b.min.x / w as f32, b.min.y / h as f32, b.max.x / w as f32, b.max.y / h as f32]
+    }
+
+    #[test]
+    fn marsh_region_confines_belt_to_se_and_emphasis_widens_it() {
+        use crate::engine::playquad::{quadrant_of, PlayQuadrant};
+        use bevy::prelude::Vec2;
+        let (w, h) = (64u32, 64u32);
+        let n = (w * h) as usize;
+        let wet = vec![0.75f32; n];
+        let low = vec![0.30f32; n];
+        // Channels: one in the west (SW/NW), one in the east (SE/NE). Full height.
+        let mk = || {
+            let mut g = belt_grid(w, h, 10);
+            for y in 0..h {
+                g.classes[(y * w + 50) as usize] = WaterClass::River;
+            }
+            g
+        };
+        let region = Some(se_fractions(w, h));
+        let flat = MarshBeltParams { radius_tiles: 2, moisture_threshold: 0.7, emphasis: 0.0, region };
+        let wide = MarshBeltParams { emphasis: 1.0, ..flat };
+        let (mut a, mut b) = (mk(), mk());
+        a.apply_marsh_belts(&wet, &low, 0.28, &flat);
+        b.apply_marsh_belts(&wet, &low, 0.28, &wide);
+
+        for y in 0..h as i32 {
+            for x in 0..w as i32 {
+                let in_se = quadrant_of(Vec2::new(x as f32, y as f32), w, h) == Some(PlayQuadrant::Se);
+                for g in [&a, &b] {
+                    if !in_se {
+                        assert_ne!(
+                            g.class_at(x, y),
+                            Some(WaterClass::Wetland),
+                            "marsh leaked outside SE at ({x},{y})"
+                        );
+                    }
+                }
+            }
+        }
+        // SE (x >= 32, y < 32): channel at x = 50; 3 tiles off the bank is wetland only with emphasis.
+        assert_eq!(a.class_at(53, 10), Some(WaterClass::Dry));
+        assert_eq!(b.class_at(53, 10), Some(WaterClass::Wetland));
+        assert_eq!(b.class_at(50, 10), Some(WaterClass::River), "channel untouched");
+        // NW half of the same east channel (y >= 32) gets nothing; SW channel (x = 10) gets nothing.
+        assert_eq!(b.class_at(12, 10), Some(WaterClass::Dry), "SW gets no marsh");
+        assert_eq!(b.class_at(53, 40), Some(WaterClass::Dry), "NE gets no marsh");
+    }
+
+    /// PQ-H1: default rhythm / params are neutral — legacy lake choice, no belts, byte-identical classes.
+    #[test]
+    fn default_hydrology_is_neutral() {
+        let (p, dem, moist, hydro) = generate_hydrology(7);
+        assert_eq!(p.feature_rhythm, LandFeatureRhythm::default());
+        let hp = HydrologyParams::from_biome_tuning(&p.biome_tuning);
+        assert_eq!((hp.lake_attach_radius_tiles, hp.lake_attach_weight), (0, 0.0));
+
+        // Legacy truncation: the same solve, sorted by size only, then truncated.
+        let mut legacy = crate::terrain::generation::hydrology::compute_hydrology_rect(
+            p.width,
+            p.height,
+            &dem,
+            &hp,
+            p.river_count,
+            Some(&moist),
+        )
+        .lakes;
+        if legacy.len() > p.lake_count as usize {
+            legacy.sort_by(|a, b| b.cells.len().cmp(&a.cells.len()));
+            legacy.truncate(p.lake_count as usize);
+        }
+        let got: Vec<_> = hydro.lakes.iter().map(|l| l.cells.clone()).collect();
+        let want: Vec<_> = legacy.iter().map(|l| l.cells.clone()).collect();
+        assert_eq!(got, want, "default lake list must equal legacy size-only ranking");
+
+        let water_line = p.biome_tuning.shallow_water_height_max;
+        let mut grid =
+            WorldWaterGrid::from_hydrology_on_terrain(&hydro, p.width, p.height, 1, &dem, water_line);
+        let before = grid.classes.clone();
+        let mp = MarshBeltParams::from_rhythm(&p.feature_rhythm, &p.map_scale, &p.biome_tuning);
+        assert_eq!(mp.radius_tiles, 0);
+        assert_eq!(grid.apply_marsh_belts(&moist, &dem, water_line, &mp), 0);
+        assert_eq!(grid.classes, before);
+    }
+
+    #[test]
+    fn real_world_marsh_keeps_open_water() {
+        let (p, dem, moist, hydro) = generate_hydrology(7);
+        let water_line = p.biome_tuning.shallow_water_height_max;
+        let mut grid =
+            WorldWaterGrid::from_hydrology_on_terrain(&hydro, p.width, p.height, 1, &dem, water_line);
+        let before = grid.classes.clone();
+        let rhythm = LandFeatureRhythm::playquad_hydrology(se_fractions(p.width, p.height));
+        let mp = MarshBeltParams::from_rhythm(&rhythm, &p.map_scale, &p.biome_tuning);
+        grid.apply_marsh_belts(&moist, &dem, water_line, &mp);
+        for (b, a) in before.iter().zip(&grid.classes) {
+            if b.is_open_water() {
+                assert_eq!(b, a, "belt must not convert open water");
+            }
+        }
+    }
+
+    /// PQ-H2 / PQ-H3 + quadrant sanity for one PlayQuad world seed (512², PlayQuad rhythm). Returns
+    /// `(passes, report row)`. Thresholds from the first sweep: L = 40 SW lake cells, M = 200 SE wetland
+    /// cells within R = 6 tiles of river/lake, NW land ≥ 0.6, NE land ≥ 0.7, no quadrant > 40 % ocean.
+    fn score_playquad_seed(seed: u64) -> (bool, String) {
+        use crate::engine::playquad::{quadrant_aabb, PlayQuadrant};
+        const SW_LAKE_MIN_CELLS: usize = 40; // L
+        const SE_WETLAND_MIN_CELLS: usize = 200; // M
+        const SE_WETLAND_REACH: i32 = 6; // R
+        let preset = TileExtentPreset::Standard;
+        let w = preset.tiles_per_axis();
+        let frac = se_fractions(w, w);
+        {
+            let rhythm = LandFeatureRhythm::playquad_hydrology(frac);
+            let (p, dem, moist, hydro) = generate_hydrology_with(seed, preset, Some(rhythm));
+            let water_line = p.biome_tuning.shallow_water_height_max;
+            let mut grid = WorldWaterGrid::from_hydrology_on_terrain(
+                &hydro, p.width, p.height, seed, &dem, water_line,
+            );
+            let mp = MarshBeltParams::from_rhythm(&rhythm, &p.map_scale, &p.biome_tuning);
+            grid.apply_marsh_belts(&moist, &dem, water_line, &mp);
+            let hp = HydrologyParams::from_biome_tuning(&p.biome_tuning)
+                .with_rhythm(&rhythm, &p.map_scale);
+
+            let q = |which| quadrant_aabb(which, w, w);
+            let inside = |b: &crate::engine::playquad::TileAabb, x: u32, y: u32| {
+                b.contains(bevy::prelude::Vec2::new(x as f32, y as f32))
+            };
+            let (sw, se, nw, ne) = (
+                q(PlayQuadrant::Sw),
+                q(PlayQuadrant::Se),
+                q(PlayQuadrant::Nw),
+                q(PlayQuadrant::Ne),
+            );
+            // PQ-H2: best designed Lake in SW that touches river_mask.
+            let sw_lake = hydro
+                .lakes
+                .iter()
+                .filter(|l| {
+                    let (x, y) = l.cells[0];
+                    grid.class_at(x as i32, y as i32) == Some(WaterClass::Lake)
+                        && crate::terrain::generation::hydrology::lake_touches_river(
+                            l,
+                            &hydro.river_mask,
+                            w as usize,
+                            w as usize,
+                            hp.lake_attach_radius_tiles,
+                        )
+                })
+                .map(|l| l.cells.iter().filter(|&&(x, y)| inside(&sw, x, y)).count())
+                .max()
+                .unwrap_or(0);
+            // PQ-H3: SE Wetland cells within R of River/Lake.
+            let mut se_wet = 0usize;
+            for y in 0..w {
+                for x in 0..w {
+                    if !inside(&se, x, y)
+                        || grid.class_at(x as i32, y as i32) != Some(WaterClass::Wetland)
+                    {
+                        continue;
+                    }
+                    let near = (-SE_WETLAND_REACH..=SE_WETLAND_REACH).any(|dy| {
+                        (-SE_WETLAND_REACH..=SE_WETLAND_REACH).any(|dx| {
+                            dx * dx + dy * dy <= SE_WETLAND_REACH * SE_WETLAND_REACH
+                                && matches!(
+                                    grid.class_at(x as i32 + dx, y as i32 + dy),
+                                    Some(WaterClass::River | WaterClass::Lake)
+                                )
+                        })
+                    });
+                    se_wet += usize::from(near);
+                }
+            }
+            let frac_of = |b: &crate::engine::playquad::TileAabb, f: &dyn Fn(WaterClass, f32) -> bool| {
+                let (mut hit, mut tot) = (0usize, 0usize);
+                for y in 0..w {
+                    for x in 0..w {
+                        if inside(b, x, y) {
+                            tot += 1;
+                            let c = grid.class_at(x as i32, y as i32).unwrap();
+                            hit += usize::from(f(c, dem[(y * w + x) as usize]));
+                        }
+                    }
+                }
+                hit as f32 / tot.max(1) as f32
+            };
+            let land = |c: WaterClass, _: f32| !c.is_open_water() && c != WaterClass::Wetland;
+            let nw_land = frac_of(&nw, &land);
+            let ne_land = frac_of(&ne, &land);
+            let max_ocean = [&nw, &ne, &sw, &se]
+                .iter()
+                .map(|b| frac_of(b, &|c, _| c == WaterClass::Ocean))
+                .fold(0.0f32, f32::max);
+            let ok = sw_lake >= SW_LAKE_MIN_CELLS
+                && se_wet >= SE_WETLAND_MIN_CELLS
+                && nw_land >= 0.6
+                && ne_land >= 0.7
+                && max_ocean <= 0.4;
+            (
+                ok,
+                format!(
+                    "seed {seed:>5}: sw_lake_attached={sw_lake:>5} se_wetland={se_wet:>5} nw_land={nw_land:.2} ne_land={ne_land:.2} max_ocean={max_ocean:.2} {}",
+                    if ok { "PASS" } else { "-" }
+                ),
+            )
+        }
+    }
+
+    /// Seed sweep (N ≤ 64). Run manually:
+    /// `cargo test -p proc_A_dine01 --lib playquad_seed_sweep -- --ignored --nocapture`.
+    #[test]
+    #[ignore = "512² sweep; run manually to (re)pick PLAYQUAD_WORLD_SEED"]
+    fn playquad_seed_sweep() {
+        let mut winners = Vec::new();
+        for seed in 1..=64u64 {
+            let (ok, row) = score_playquad_seed(seed);
+            println!("{row}");
+            if ok {
+                winners.push(seed);
+            }
+        }
+        println!("winners: {winners:?}");
+        assert!(!winners.is_empty(), "no seed in 1..=64 satisfies PQ-H2/H3 — escalate to moisture bias");
+    }
+
+    /// The committed `PLAYQUAD_WORLD_SEED` must satisfy PQ-H2/H3 (512², ~1 s).
+    #[test]
+    fn playquad_world_seed_satisfies_hydrology_criteria() {
+        let seed = crate::engine::launch_args::TestScene::PLAYQUAD_WORLD_SEED;
+        let (ok, row) = score_playquad_seed(seed);
+        assert!(ok, "{row}");
+    }
+
     #[test]
     fn edge_connected_water_is_ocean_and_inland_water_is_lake() {
         // 8x8: a basin in the middle (inland) and a sea-level strip on the left edge.
@@ -362,6 +759,7 @@ pub(crate) mod tests {
             river_mask: vec![false; w * h],
             lake_mask,
             filled_dem: vec![0.5; w * h],
+            eroded_dem: vec![0.5; w * h],
         };
         let c = classify_world_water(&hydro, w as u32, h as u32);
         assert_eq!(c[3 * w + 4], WaterClass::Lake);

@@ -227,7 +227,14 @@ pub fn construction_redo_input_system(
         }
         ConstructionAction::DemolishedSites(events) => {
             for ev in events {
-                super::demolish::execute_demolish_at_tile(&mut commands, ev.origin, &sites, None);
+                super::demolish::execute_demolish_at_tile(
+                    &mut commands,
+                    ev.origin,
+                    &sites,
+                    None,
+                    None,
+                    false,
+                );
             }
         }
         // Site/zone redo needs spawn replay (undo despawn only); demolish redo above.

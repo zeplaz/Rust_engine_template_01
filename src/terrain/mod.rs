@@ -11,6 +11,7 @@ pub mod biome;
 pub mod ecology;
 pub mod family;
 pub mod material;
+pub mod analysis;
 pub mod generation;
 pub mod mobility;
 pub mod fire;
@@ -28,6 +29,9 @@ pub use family::{
     TerrainFamilyDef, TerrainFamilyId, TerrainFamilyRegistry, TerrainFamilyRegistryLoader,
 };
 pub use ecology::*;
+pub use analysis::{
+    compute_terrain_analysis_rect, TerrainAnalysisBook, TerrainAnalysisCell,
+};
 pub use tiles::*;
 pub use voronoi::*;
 pub use world::*;

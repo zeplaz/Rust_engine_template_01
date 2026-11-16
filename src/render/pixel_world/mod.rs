@@ -10,6 +10,8 @@
 //! VegetationExtractFrame ──▶ voxel trees     sites ──▶ columns
 //! ConstructionVisualRequests ──▶ ghost footprint / massing, draped road + rail ribbons
 //! FrontOverlaySources (top-down front builders) ──▶ draped fronts
+//! CameraLocalWeatherSample (RO cloud cover + wind) ──▶ cloud deck sheets
+//! WeatherPrecipFrame (RO; streaks scattered over the voxel ground footprint) ──▶ rain / snow streaks
 //! PixelWorldCameraFrame + field ──▶ SimulationMapPointerGate::world_pick (PointerGateSet::WorldPick)
 //! ```
 //!
@@ -22,7 +24,9 @@ use bevy::prelude::*;
 
 mod camera;
 mod field;
+mod clouds;
 mod layers;
+mod rain;
 mod terrain;
 
 pub use camera::{
@@ -87,6 +91,8 @@ impl Plugin for PixelWorldViewPlugin {
                     layers::sync_pixel_world_ghost,
                     layers::sync_pixel_world_fronts,
                     layers::sync_pixel_world_paths,
+                    rain::sync_pixel_world_precip,
+                    clouds::sync_pixel_world_clouds,
                 )
                     .in_set(PixelWorldViewSet::Layers),
             );

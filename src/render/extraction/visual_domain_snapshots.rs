@@ -11,6 +11,7 @@ use crate::strategic::{
     edge_flow_for_overlay, CorridorConstructionBook, LogisticsGraph, LogisticsNodeId, PlannedSite,
 };
 use crate::strategic::StrategicRasterConfig;
+use crate::systems::ecology::{ChunkEcology, LandscapeProgramOnChunk};
 use crate::systems::transport::TransportEdgeDirectory;
 use crate::systems::TransportEdgeId;
 
@@ -72,23 +73,26 @@ pub fn fill_logistics_snapshot(
         .collect();
 }
 
-fn fill_ecology_snapshot(
+/// Fill ecology snapshot from explicit means (W7: climate no longer owns the ecology scan).
+fn fill_ecology_snapshot_means(
     fire: &FireSimulationSnapshot,
-    climate: &ClimateVisualAggregate,
+    ecology_chunk_count: u32,
+    mean_biomass: f32,
+    mean_fire_risk: f32,
     snapshot: &mut EcologyVisualSnapshot,
 ) {
     snapshot.stamp = fire.stamp;
-    snapshot.ecology_chunk_count = climate.ecology_chunk_count;
-    snapshot.mean_biomass = climate.mean_biomass;
-    snapshot.mean_fire_risk = climate.mean_fire_risk;
+    snapshot.ecology_chunk_count = ecology_chunk_count;
+    snapshot.mean_biomass = mean_biomass;
+    snapshot.mean_fire_risk = mean_fire_risk;
     snapshot.chunk_rows.clear();
-    let rows = climate.ecology_chunk_count.max(1) as usize;
+    let rows = ecology_chunk_count.max(1) as usize;
     snapshot.chunk_rows.reserve(rows);
     for i in 0..rows {
         snapshot.chunk_rows.push(Vec4::new(
             i as f32,
-            climate.mean_biomass,
-            climate.mean_fire_risk,
+            mean_biomass,
+            mean_fire_risk,
             fire.stamp.tick as f32,
         ));
     }
@@ -112,12 +116,30 @@ pub fn publish_logistics_visual_snapshot(
     crate::substrate::apply_slab_traction_to_logistics_snapshot(registry, snapshot);
 }
 
+/// Sole ecology means writer (W7): scans [`ChunkEcology`] — not ClimateVisualAggregate.
 pub fn publish_ecology_visual_snapshot(
     fire: Res<FireSimulationSnapshot>,
-    climate: Res<ClimateVisualAggregate>,
+    eco: Query<&ChunkEcology>,
+    programs: Query<&LandscapeProgramOnChunk>,
     mut snapshot: ResMut<EcologyVisualSnapshot>,
 ) {
-    fill_ecology_snapshot(&fire, &climate, &mut snapshot);
+    let mut ne = 0u32;
+    let mut bio = 0f32;
+    let mut frisk = 0f32;
+    for e in &eco {
+        ne += 1;
+        bio += e.biomass;
+        frisk += e.fire_risk;
+    }
+    let nf = ne.max(1) as f32;
+    let np = programs.iter().count() as u32;
+    fill_ecology_snapshot_means(
+        &fire,
+        if np > 0 { np } else { ne },
+        bio / nf,
+        frisk / nf,
+        &mut snapshot,
+    );
 }
 
 /// Chunk samples for minimap **design M3** fog-of-war + EW (`UI-P3-M4-001` — not `UI-P3-M3-001`).
@@ -315,7 +337,13 @@ pub fn seed_minimap_m2_overlay_witness(
         climate.mean_fire_risk = 0.11;
     }
 
-    fill_ecology_snapshot(fire, climate, ecology);
+    fill_ecology_snapshot_means(
+        fire,
+        climate.ecology_chunk_count,
+        climate.mean_biomass,
+        climate.mean_fire_risk,
+        ecology,
+    );
 }
 
 #[cfg(test)]
@@ -386,19 +414,13 @@ mod tests {
     }
 
     #[test]
-    fn ecology_snapshot_copies_climate_aggregate() {
+    fn ecology_snapshot_fills_from_means() {
         let fire = FireSimulationSnapshot {
             stamp: SimStepStamp::new(4, 0),
             ..Default::default()
         };
-        let climate = ClimateVisualAggregate {
-            ecology_chunk_count: 5,
-            mean_biomass: 0.42,
-            mean_fire_risk: 0.11,
-            ..Default::default()
-        };
         let mut snapshot = EcologyVisualSnapshot::default();
-        fill_ecology_snapshot(&fire, &climate, &mut snapshot);
+        fill_ecology_snapshot_means(&fire, 5, 0.42, 0.11, &mut snapshot);
         assert_eq!(snapshot.ecology_chunk_count, 5);
         assert!((snapshot.mean_biomass - 0.42).abs() < 1e-5);
         assert_eq!(snapshot.chunk_rows.len(), 5);

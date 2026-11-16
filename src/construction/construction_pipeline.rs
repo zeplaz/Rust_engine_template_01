@@ -183,6 +183,14 @@ pub(crate) struct ExecuteHydroOpt<'w> {
     coupling: Option<ResMut<'w, crate::substrate::hydrology::HydrologyConstructionCouplingStats>>,
 }
 
+/// Bundles fuel-break + optional voxel corridor reserve (keeps execute system ≤16 params).
+#[derive(SystemParam)]
+pub(crate) struct ExecuteSideEffects<'w> {
+    fuel_breaks: ResMut<'w, crate::systems::ecology::PendingFuelBreaks>,
+    voxel_book: Option<ResMut<'w, crate::strategic::VoxelOccupationBook>>,
+    voxel_cfg: Option<Res<'w, crate::strategic::VoxelOccupationConfig>>,
+}
+
 pub fn execute_construction_plans_system(
     mut commands: Commands,
     mut queue: ResMut<ConstructionPlanQueue>,
@@ -199,7 +207,7 @@ pub fn execute_construction_plans_system(
     rail: Res<super::rail::ActiveRailPlacement>,
     raster_cfg: Option<Res<crate::strategic::StrategicRasterConfig>>,
     mut hydro: ExecuteHydroOpt,
-    mut fuel_breaks: ResMut<crate::systems::ecology::PendingFuelBreaks>,
+    mut side: ExecuteSideEffects,
 ) {
     let mut executed = false;
     let cells_per_chunk = raster_cfg
@@ -302,10 +310,29 @@ pub fn execute_construction_plans_system(
                 );
             }
             // Natural breaks (road/rail) and player firebreaks clear fuel along the strip.
-            fuel_breaks.push(crate::systems::ecology::FuelBreakCommitEvent {
-                tiles: apply.tiles_added.clone(),
-                cells_per_chunk,
-            });
+            side.fuel_breaks
+                .push(crate::systems::ecology::FuelBreakCommitEvent {
+                    tiles: apply.tiles_added.clone(),
+                    cells_per_chunk,
+                });
+            // X2-P1: road/rail corridor reserve into voxel occupation (flag default off).
+            if !matches!(
+                plan.intent.entity_type,
+                ConstructionType::FirebreakSegment { .. }
+            ) && side
+                .voxel_cfg
+                .as_ref()
+                .is_some_and(|c| c.commit_authority_enabled)
+            {
+                if let Some(voxel) = side.voxel_book.as_mut() {
+                    let reserve_tiles: Vec<bevy::prelude::IVec2> = apply
+                        .tiles_added
+                        .iter()
+                        .map(|t| bevy::prelude::IVec2::new(t.x as i32, t.z as i32))
+                        .collect();
+                    voxel.apply_corridor_reserve_mask(&reserve_tiles, true);
+                }
+            }
             if let (Some(hydro), Some(coupling)) = (hydro.queue.as_mut(), hydro.coupling.as_mut()) {
                 if !matches!(plan.intent.entity_type, ConstructionType::FirebreakSegment { .. }) {
                     super::hydro_coupling::emit_road_execute_hydro_dirty(

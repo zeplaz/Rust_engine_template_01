@@ -689,6 +689,7 @@ mod tests {
             accumulation: vec![0.0; n],
             river_mask: vec![false; n],
             lake_mask,
+            eroded_dem: filled_dem.clone(),
             filled_dem,
         };
         let mut params = WorldGenParams::default();
@@ -738,6 +739,7 @@ mod tests {
             river_mask: vec![false; n],
             lake_mask,
             filled_dem: vec![0.05; n],
+            eroded_dem: vec![0.05; n],
         };
         let mut params = WorldGenParams::default();
         params.width = w;
@@ -782,6 +784,7 @@ mod tests {
             accumulation: vec![0.0; n],
             river_mask: vec![false; n],
             lake_mask,
+            eroded_dem: filled_dem.clone(),
             filled_dem,
         };
         let mut params = WorldGenParams::default();

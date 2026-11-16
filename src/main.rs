@@ -74,6 +74,8 @@ fn main() {
             post_enter_sim_frame: 0,
             last_fire_rearm_frame: 0,
             harness_fire_debug_fallback: true,
+            playquad_ne_seeded: false,
+            playquad_rain_requested: false,
         });
     }
     app.add_plugins(EnginePlugin).run();

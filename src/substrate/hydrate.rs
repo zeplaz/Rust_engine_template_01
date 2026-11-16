@@ -1,4 +1,7 @@
 //! CS-003 — sim hydrate bridge: `Chunk` + [`ChunkCellMatrix`] → slab (witness + persist target).
+//!
+//! **IO-08**: slab fill here is a *derived* residency surface from live ECS matrices — not a save
+//! body. World-save derived rebuild after load lives in `io::save::apply` / `post_load_rebuild`.
 
 use bevy::prelude::*;
 

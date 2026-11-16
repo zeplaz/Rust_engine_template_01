@@ -4,6 +4,12 @@
 //! `transport_code_implementation_plan_v1.md`.
 //!
 //! This module is **not** the map-editor authoring UI; editor ghost/preview lives in [`crate::gui::editor::map_editor`].
+//!
+//! **ECS-15 (gea4v2 16.2.2) — tool-side vs runtime (IF-TRG → SIM-TRN):**
+//! - **Tool-side:** map-editor markers / R8 bake → [`crate::infrastructure::transport::TransportGraph`].
+//! - **Runtime:** [`transport_topology_tick`] → [`sync_transport_runtime_from_graph`] owns
+//!   [`TransportTopology`] / field / directory; sim ticks never accept Studio occupation or
+//!   editor ghosts as writers into those resources.
 
 mod bake;
 mod persistence;

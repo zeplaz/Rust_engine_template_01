@@ -2,7 +2,6 @@
 
 use bevy::prelude::*;
 
-use crate::gui::ViewAuthoritySystemSet;
 use crate::presentation::TruckPresentation;
 use crate::render::view_runtime::{ViewProjectionAuthority, ViewSurfaceId};
 use crate::systems::sim_attention::SimAttentionFrame;

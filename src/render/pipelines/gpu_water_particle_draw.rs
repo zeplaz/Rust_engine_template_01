@@ -14,7 +14,7 @@ use bevy::render::{
 
 use crate::gui::GPU_FIRE_INSTANCE_BUDGET_CEILING;
 use crate::render::core::gpu_bind_group_registry::{
-    BindGroupBufferBinding, GPUBindGroupRegistry, WORLD_WATER_PARTICLE_DRAW_BIND_GROUP,
+    GPUBindGroupRegistry, WORLD_WATER_PARTICLE_DRAW_BIND_GROUP,
     WORLD_WATER_PARTICLE_EXPANDED_BIND_GROUP,
 };
 use crate::render::core::gpu_buffer_registry::{
@@ -272,9 +272,10 @@ fn prepare_world_water_particle_draw_bind_group(
     let Some(instance_buf) = registry.get(buffer_id) else {
         return;
     };
-    if !bind_registry.is_valid(WORLD_WATER_PARTICLE_DRAW_BIND_GROUP, &registry) {
+    // RND-11: sole view cache — builder runs only when the key/deps/versions miss.
+    bind_registry.get_or_build(WORLD_WATER_PARTICLE_DRAW_BIND_GROUP, &registry, &[buffer_id], || {
         let layout = pipeline_cache.get_bind_group_layout(&pipeline.instance_layout);
-        let bg = render_device.create_bind_group(
+        render_device.create_bind_group(
             None,
             &layout,
             &[BindGroupEntry {
@@ -285,16 +286,8 @@ fn prepare_world_water_particle_draw_bind_group(
                     size: None,
                 }),
             }],
-        );
-        bind_registry.insert(
-            WORLD_WATER_PARTICLE_DRAW_BIND_GROUP,
-            bg,
-            vec![BindGroupBufferBinding {
-                buffer_id,
-                buffer_version: instance_buf.version,
-            }],
-        );
-    }
+        )
+    });
 
     let expanded_format = water_particle_expanded_vertex_format();
     let max_expand = (uniforms.max_instances as usize).min(GPU_FIRE_INSTANCE_BUDGET_CEILING);
@@ -317,29 +310,26 @@ fn prepare_world_water_particle_draw_bind_group(
         let Some(expanded_buf) = registry.get(WATER_PARTICLE_EXPANDED_VERTICES_BUFFER) else {
             return;
         };
-        if !bind_registry.is_valid(WORLD_WATER_PARTICLE_EXPANDED_BIND_GROUP, &registry) {
-            let layout = pipeline_cache.get_bind_group_layout(&pipeline.expanded_layout);
-            let bg = render_device.create_bind_group(
-                None,
-                &layout,
-                &[BindGroupEntry {
-                    binding: 0,
-                    resource: BindingResource::Buffer(BufferBinding {
-                        buffer: &expanded_buf.buffer,
-                        offset: 0,
-                        size: None,
-                    }),
-                }],
-            );
-            bind_registry.insert(
-                WORLD_WATER_PARTICLE_EXPANDED_BIND_GROUP,
-                bg,
-                vec![BindGroupBufferBinding {
-                    buffer_id: WATER_PARTICLE_EXPANDED_VERTICES_BUFFER,
-                    buffer_version: expanded_buf.version,
-                }],
-            );
-        }
+        bind_registry.get_or_build(
+            WORLD_WATER_PARTICLE_EXPANDED_BIND_GROUP,
+            &registry,
+            &[WATER_PARTICLE_EXPANDED_VERTICES_BUFFER],
+            || {
+                let layout = pipeline_cache.get_bind_group_layout(&pipeline.expanded_layout);
+                render_device.create_bind_group(
+                    None,
+                    &layout,
+                    &[BindGroupEntry {
+                        binding: 0,
+                        resource: BindingResource::Buffer(BufferBinding {
+                            buffer: &expanded_buf.buffer,
+                            offset: 0,
+                            size: None,
+                        }),
+                    }],
+                )
+            },
+        );
     }
 
     uniform_gpu.uniform.set((*uniforms).clone());

@@ -6,6 +6,8 @@
 //! [`super::hybrid_fields::region_stats_spatial_smoothing_system`].
 //!
 //! - Agents **do not** own world truth — they nudge [`WorldIntentField`].
+//! - **DEC-06**: [`markov_step_world_event`] treats resolution as a Markov process over [`WorldEvent`] (row-stochastic given masses).
+//! - **DEC-05**: scoring stays fuzzy (see [`super::behavior_pipeline::fuzzy_degree`]); no hard thresholds in [`agent_decision_score`].
 //! - [`WorldFields`](super::WorldFields) **bias** resolution, not individual actions.
 //! - Schedule: [`super::hybrid_fields::region_stats_spatial_smoothing_system`] in **PreUpdate**;
 //!   intent reset → **emotion drift** → contributions in **Update** via [`crate::strategic::sim::HybridSimPipeline`];
@@ -290,6 +292,72 @@ pub fn resolve_world_state_from_masses(m: &HybridResolutionMasses, roll: f32) ->
     acc += m.p_coop;
     if roll < acc {
         return WorldEvent::CooperationPulse;
+    }
+    WorldEvent::StabilityDrift
+}
+
+
+/// DEC-06: ordinal index for Markov rows (stable order).
+#[inline]
+#[must_use]
+pub fn world_event_markov_index(ev: WorldEvent) -> usize {
+    match ev {
+        WorldEvent::WarBreakout => 0,
+        WorldEvent::RevoltRisk => 1,
+        WorldEvent::TradeSurge => 2,
+        WorldEvent::CooperationPulse => 3,
+        WorldEvent::StabilityDrift => 4,
+    }
+}
+
+#[inline]
+#[must_use]
+pub fn world_event_from_markov_index(i: usize) -> WorldEvent {
+    match i {
+        0 => WorldEvent::WarBreakout,
+        1 => WorldEvent::RevoltRisk,
+        2 => WorldEvent::TradeSurge,
+        3 => WorldEvent::CooperationPulse,
+        _ => WorldEvent::StabilityDrift,
+    }
+}
+
+/// DEC-06: row-stochastic transition from `from` biased by current resolution masses.
+#[must_use]
+pub fn markov_transition_row(from: WorldEvent, m: &HybridResolutionMasses) -> [f32; 5] {
+    let base = [
+        m.p_war.max(0.0),
+        m.p_revolt.max(0.0),
+        m.p_trade.max(0.0),
+        m.p_coop.max(0.0),
+        0.15_f32, // residual stay/drift mass
+    ];
+    let self_i = world_event_markov_index(from);
+    let mut row = base;
+    row[self_i] += 0.25; // sticky self-transition
+    let sum: f32 = row.iter().sum();
+    if sum <= 1e-8 {
+        let mut uni = [0.2_f32; 5];
+        uni[self_i] = 0.2;
+        return uni;
+    }
+    for v in &mut row {
+        *v /= sum;
+    }
+    row
+}
+
+/// DEC-06: one Markov step — sample next [`WorldEvent`] from `from` given masses + roll.
+#[must_use]
+pub fn markov_step_world_event(from: WorldEvent, m: &HybridResolutionMasses, roll: f32) -> WorldEvent {
+    let row = markov_transition_row(from, m);
+    let roll = roll.clamp(0.0, 1.0);
+    let mut acc = 0.0_f32;
+    for (i, p) in row.iter().enumerate() {
+        acc += *p;
+        if roll < acc {
+            return world_event_from_markov_index(i);
+        }
     }
     WorldEvent::StabilityDrift
 }
@@ -599,4 +667,29 @@ mod tests {
                 > agent_decision_score(&lo_risk, &emotions, &action, 0.0)
         );
     }
+    #[test]
+    fn dec06_markov_rows_are_stochastic_and_sticky() {
+        let m = HybridResolutionMasses {
+            p_war: 0.4,
+            p_revolt: 0.1,
+            p_trade: 0.1,
+            p_coop: 0.1,
+        };
+        let row = markov_transition_row(WorldEvent::WarBreakout, &m);
+        let sum: f32 = row.iter().sum();
+        assert!((sum - 1.0).abs() < 1e-4, "sum={sum}");
+        assert!(row[0] >= row[1], "self-sticky war row");
+        let next = markov_step_world_event(WorldEvent::WarBreakout, &m, 0.0);
+        assert_eq!(next, WorldEvent::WarBreakout);
+        let mid = markov_step_world_event(WorldEvent::StabilityDrift, &m, 0.99);
+        assert!(matches!(
+            mid,
+            WorldEvent::StabilityDrift
+                | WorldEvent::WarBreakout
+                | WorldEvent::RevoltRisk
+                | WorldEvent::TradeSurge
+                | WorldEvent::CooperationPulse
+        ));
+    }
+
 }

@@ -80,7 +80,23 @@ fn force(c: &RelaxCell, slot: usize, supply_floor: f32) -> f32 {
     c.control[slot] * (FORCE_BASE + (1.0 - FORCE_BASE) * c.presence[slot].clamp(0.0, 1.0)) * sf
 }
 
+/// Live-lane mask of one slot on one tile (CONC-08 · gea4v1 4.10.7 vector predication; LEGACY
+/// `simd` gea_v1_e4 p324). A dead lane (no control, presence or friendly neighbour) must come out
+/// of the step bit-identical and credit no conquest: the update is zero there, so the scalar
+/// early-out and the fully predicated (compute-then-select) form agree. A lane batch may drop the
+/// branch; `conc08_predicated_step_matches_early_out` locks the contract.
+#[inline]
+fn slot_live(c: f32, presence: f32, nb_c: f32) -> bool {
+    !(c <= 0.0 && presence <= 0.0 && nb_c <= 0.0)
+}
+
 fn step_once(grid: &mut RelaxGrid, hostility: &Hostility, p: &RelaxParams, dt: f32) {
+    step_once_lanes::<true>(grid, hostility, p, dt);
+}
+
+/// `SKIP_DEAD = true` is the production early-out; `false` evaluates every lane and selects by
+/// [`slot_live`] (the SIMD-shaped form, used by the equivalence tripwire).
+fn step_once_lanes<const SKIP_DEAD: bool>(grid: &mut RelaxGrid, hostility: &Hostility, p: &RelaxParams, dt: f32) {
     let old = grid.clone();
     let near = |k: (i32, i32)| NEIGHBORS4.iter().filter_map(|(dx, dy)| old.get(&(k.0 + dx, k.1 + dy))).collect::<Vec<_>>();
     for (k, cell) in grid.iter_mut() {
@@ -103,7 +119,8 @@ fn step_once(grid: &mut RelaxGrid, hostility: &Hostility, p: &RelaxParams, dt: f
         for s in 0..SLOTS {
             let c = me.control[s];
             let presence = me.presence[s].clamp(0.0, 1.0);
-            if c <= 0.0 && presence <= 0.0 && nb_c[s] <= 0.0 {
+            let live = slot_live(c, presence, nb_c[s]);
+            if SKIP_DEAD && !live {
                 continue;
             }
             // Strongest hostile pushing on this slot, and whether it is also in the cell itself.
@@ -117,6 +134,10 @@ fn step_once(grid: &mut RelaxGrid, hostility: &Hostility, p: &RelaxParams, dt: f
                     }
                 }
             }
+            // Dead lane: drop the pressure term so nothing is credited (select, not branch).
+            if !live {
+                top = None;
+            }
             let sf = p.supply_floor + (1.0 - p.supply_floor) * me.supply[s].clamp(0.0, 1.0);
             let gain = p.gain_per_s * presence * sf;
             let spill = p.spread_per_s * sf * (nb_c[s] - c).max(0.0) * (1.0 - hostile_here.min(1.0));
@@ -125,7 +146,8 @@ fn step_once(grid: &mut RelaxGrid, hostility: &Hostility, p: &RelaxParams, dt: f
             if let Some((h, _)) = top {
                 conquest[h] += p.conquest_transfer * loss;
             }
-            next[s] = c + dt * (gain + spill - decay - loss);
+            let updated = c + dt * (gain + spill - decay - loss);
+            next[s] = if live { updated } else { c };
         }
         for s in 0..SLOTS {
             let v = (next[s] + dt * conquest[s]).clamp(0.0, 1.0);
@@ -361,6 +383,55 @@ mod tests {
         relax_step(&mut b, &h, &params(), 8.0);
         assert_eq!(a, b);
         assert!(a.values().all(|c| c.control.iter().all(|v| (0.0..=1.0).contains(v))));
+    }
+
+    /// CONC-08 tripwire: the fully predicated step (every lane computed, selected by `slot_live`)
+    /// is bit-identical to the production early-out over a sparse hashed grid, multi-step.
+    #[test]
+    fn conc08_predicated_step_matches_early_out() {
+        let h = Hostility::legacy_pair();
+        let p = params();
+        let mut g = RelaxGrid::new();
+        let mut dead_slots = 0usize;
+        for y in 0..9 {
+            for x in 0..9 {
+                let mut cell = RelaxCell::default();
+                for s in 0..SLOTS {
+                    let r = |salt: u32| {
+                        let mut n = (x as u32).wrapping_mul(374_761_393)
+                            ^ (y as u32).wrapping_mul(668_265_263)
+                            ^ (s as u32 + 1).wrapping_mul(0x9E37_79B9)
+                            ^ salt;
+                        n = (n ^ (n >> 15)).wrapping_mul(0x85EB_CA6B);
+                        n ^= n >> 13;
+                        (n >> 8) as f32 / (1u32 << 24) as f32
+                    };
+                    // ~70% of lanes empty so dead lanes sit next to live ones.
+                    if r(1) < 0.3 {
+                        cell.control[s] = r(2);
+                        cell.presence[s] = r(3);
+                    }
+                    cell.supply[s] = r(4);
+                    if cell.control[s] <= 0.0 && cell.presence[s] <= 0.0 {
+                        dead_slots += 1;
+                    }
+                }
+                g.insert((x, y), cell);
+            }
+        }
+        assert!(dead_slots > 0, "fixture must contain dead lanes");
+        let (mut a, mut b) = (g.clone(), g);
+        for _ in 0..24 {
+            step_once_lanes::<true>(&mut a, &h, &p, 0.5);
+            step_once_lanes::<false>(&mut b, &h, &p, 0.5);
+            assert_eq!(a, b, "predicated lanes diverged from early-out");
+        }
+        // Mask contract: a lane with no control, presence or friendly neighbour stays exactly 0.
+        let mut lone = RelaxGrid::new();
+        lone.insert((0, 0), RelaxCell::default());
+        step_once_lanes::<false>(&mut lone, &h, &p, 1.0);
+        assert_eq!(lone[&(0, 0)], RelaxCell::default());
+        assert!(!slot_live(0.0, 0.0, 0.0) && slot_live(0.0, 0.0, 0.1));
     }
 
     #[test]

@@ -352,14 +352,14 @@ mod tests {
     fn deployment_order_moves_a_formation_to_its_target() {
         let mut app = world([1.0, 1.0]);
         let e = spawn(&mut app, Formation::new(0, UnitKind::Mechanized, IVec2::new(5, 0)));
-        let order = DeploymentOrder { formation: e, kind: DeploymentKind::Move(IVec2::new(15, 0)), issued_by: 0 };
+        let order = DeploymentOrder { formation: e, kind: DeploymentKind::Move(IVec2::new(15, 0)), issued_by: 0, priority: 0 };
         app.world_mut().resource_mut::<DeploymentOrderQueue>().enqueue(order).unwrap();
         tick(&mut app, 120);
         let f = app.world().entity(e).get::<Formation>().unwrap();
         assert_eq!(f.tile, IVec2::new(15, 0));
         assert_eq!(f.posture, Posture::Hold, "arrived");
         // Wrong faction cannot command it.
-        let bad = DeploymentOrder { formation: e, kind: DeploymentKind::Hold, issued_by: 1 };
+        let bad = DeploymentOrder { formation: e, kind: DeploymentKind::Hold, issued_by: 1, priority: 0 };
         app.world_mut().resource_mut::<DeploymentOrderQueue>().enqueue(bad).unwrap();
         tick(&mut app, 1);
         let out = app.world().resource::<crate::combat::DeploymentOutcomes>();
@@ -376,7 +376,7 @@ mod tests {
         let defender = spawn(&mut app, Formation::new(1, UnitKind::Infantry, IVec2::new(44, 0)));
         assert_eq!(owner_at(&mut app, 36), Some(1));
         for a in &attackers {
-            let o = DeploymentOrder { formation: *a, kind: DeploymentKind::Attack(IVec2::new(44, 0)), issued_by: 0 };
+            let o = DeploymentOrder { formation: *a, kind: DeploymentKind::Attack(IVec2::new(44, 0)), issued_by: 0, priority: 0 };
             app.world_mut().resource_mut::<DeploymentOrderQueue>().enqueue(o).unwrap();
         }
         tick(&mut app, 1500);
@@ -393,7 +393,7 @@ mod tests {
         let e = spawn(&mut app, Formation::new(0, UnitKind::Infantry, IVec2::new(28, 0)));
         tick(&mut app, 30);
         let theater = app.world().resource::<TheaterBook>().theaters.first().map(|t| t.id).expect("front -> theater");
-        let o = DeploymentOrder { formation: e, kind: DeploymentKind::Fortify(theater), issued_by: 0 };
+        let o = DeploymentOrder { formation: e, kind: DeploymentKind::Fortify(theater), issued_by: 0, priority: 0 };
         app.world_mut().resource_mut::<DeploymentOrderQueue>().enqueue(o).unwrap();
         tick(&mut app, 2);
         let early = app.world().entity(e).get::<Formation>().unwrap().dug_in;
@@ -404,7 +404,7 @@ mod tests {
         let q = app.world().resource::<crate::construction::PendingConstructionQueue>();
         assert!(!q.entries.is_empty() && q.entries.iter().all(|e| !e.approved), "rows wait for the construction funnel");
         // Moving away abandons the works.
-        let mv = DeploymentOrder { formation: e, kind: DeploymentKind::Move(IVec2::new(20, 0)), issued_by: 0 };
+        let mv = DeploymentOrder { formation: e, kind: DeploymentKind::Move(IVec2::new(20, 0)), issued_by: 0, priority: 0 };
         app.world_mut().resource_mut::<DeploymentOrderQueue>().enqueue(mv).unwrap();
         tick(&mut app, 2);
         assert_eq!(app.world().entity(e).get::<Formation>().unwrap().dug_in, 0.0);

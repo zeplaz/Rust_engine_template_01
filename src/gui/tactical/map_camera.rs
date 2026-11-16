@@ -444,9 +444,9 @@ fn test_scene_zoom(test_scene: Option<Res<ActiveTestScene>>) -> f32 {
         .map(|ts| match ts.0 {
             TestScene::Weather => 1.25,
             TestScene::Fire | TestScene::Vfx => 1.95,
-            TestScene::Atmosphere | TestScene::SubFx => 1.75,
+            TestScene::Atmosphere | TestScene::SubFx | TestScene::PlayQuad => 1.75,
             TestScene::Visual | TestScene::VfxSandbox => 2.1,
-            TestScene::City => 2.1,
+            TestScene::City | TestScene::BuildReadability => 2.1,
             TestScene::None => 1.0,
         })
         .unwrap_or(1.0)
@@ -493,10 +493,11 @@ fn map_camera_apply_input(
     mut authority: ResMut<ViewProjectionAuthority>,
     mut q_cam: Query<&mut Transform, With<MainWorldCamera>>,
     mut locals: Local<MapCameraInputLocals>,
-    (active_map_surface, world_mode, pixel_rig): (
+    (active_map_surface, world_mode, pixel_rig, input_routing): (
         Res<ActiveMapViewInput>,
         Option<Res<crate::gui::WorldPresentationMode>>,
         Option<Res<crate::render::pixel_world::PixelWorldCameraRig>>,
+        Option<Res<crate::render::view_runtime::ViewInputRoutingState>>,
     ),
 ) {
     // PERF-INSTR-VFX-001: name this system inside the `map_cam` wall bracket (STALL/PERF only).
@@ -534,6 +535,10 @@ fn map_camera_apply_input(
     }
 
     if active_map_surface.blocks_main_world_map_camera_input() {
+        return;
+    }
+    // INPUT-04: UI chrome / play panels disable world camera (UI → surface → world chain).
+    if input_routing.is_some_and(|r| r.world_gameplay_input_disabled()) {
         return;
     }
 

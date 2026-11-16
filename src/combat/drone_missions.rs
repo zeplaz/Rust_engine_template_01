@@ -11,7 +11,6 @@ use std::collections::{BTreeMap, HashMap, VecDeque};
 use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 
-use super::balance::UnitKind;
 use super::capability_toe::MissileClass;
 use super::drone_doctrine::{doctrine_effect_scale, FactionDroneDoctrine};
 use super::drone_research::DroneResearchState;
@@ -22,10 +21,9 @@ use crate::systems::fire::ChunkSmokeField;
 use crate::systems::weather::{
     collect_chunk_smoke_density, evaluate_grounding, smoke01_at_tile, sortie_envelopes_ok,
     AirOpsProfileId, AirOpsTuning, AirPresentationSortieHint, LinkModality, SensorKind,
-    WeatherPollingStations, WeatherSample, SMOKE_SAMPLE_CELLS_PER_CHUNK,
+    WeatherPollingStations, SMOKE_SAMPLE_CELLS_PER_CHUNK,
 };
 use crate::terrain::generation::Chunk;
-use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 /// Drone role in a formation package / AO (RON/data identity).
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -164,6 +162,44 @@ impl DroneAo {
     pub fn centroid_tile(&self) -> IVec2 {
         IVec2::new((self.min.x + self.max.x) / 2, (self.min.y + self.max.y) / 2)
     }
+}
+
+
+/// TAC-11: script a cooperative multi-role package as enqueue intents (recon screen + strike).
+/// Deterministic ids: `base_id` / `base_id+1`. Does not mutate the queue — caller enqueues.
+#[must_use]
+pub fn script_group_package_intents(
+    faction_slot: u8,
+    base_id: u64,
+    area_min: IVec2,
+    area_max: IVec2,
+) -> Vec<MissionIntent> {
+    let recon = DroneAo {
+        id: base_id,
+        faction_slot,
+        min: area_min,
+        max: area_max,
+        mission: DroneMissionKind::Recon,
+        role: DroneRole::ReconLoiter,
+        priority: 0.6,
+        weight: 1.0,
+        paused: false,
+    };
+    let strike = DroneAo {
+        id: base_id.saturating_add(1),
+        faction_slot,
+        min: area_min,
+        max: area_max,
+        mission: DroneMissionKind::Strike,
+        role: DroneRole::FpvStrike,
+        priority: 0.8,
+        weight: 1.0,
+        paused: false,
+    };
+    vec![
+        MissionIntent::UpsertDroneAo(recon),
+        MissionIntent::UpsertDroneAo(strike),
+    ]
 }
 
 /// Enqueue-only intents (player / AI).
@@ -691,8 +727,10 @@ pub fn apply_missile_sortie_launches_system(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::combat::balance::UnitKind;
     use crate::combat::drone_doctrine::FactionDroneDoctrine;
     use crate::combat::drone_research::DroneResearchState;
+    use crate::systems::weather::WeatherSample;
 
     fn ao(id: u64, role: DroneRole) -> DroneAo {
         DroneAo {
@@ -938,4 +976,29 @@ mod tests {
         );
         assert!(launches.is_empty());
     }
+    #[test]
+    fn tac11_scripted_group_package_emits_cooperative_aos() {
+        let intents = script_group_package_intents(0, 10, IVec2::new(0, 0), IVec2::new(4, 4));
+        assert_eq!(intents.len(), 2);
+        match &intents[0] {
+            MissionIntent::UpsertDroneAo(ao) => {
+                assert_eq!(ao.mission, DroneMissionKind::Recon);
+                assert_eq!(ao.role, DroneRole::ReconLoiter);
+            }
+            _ => panic!("expected recon ao"),
+        }
+        match &intents[1] {
+            MissionIntent::UpsertDroneAo(ao) => {
+                assert_eq!(ao.mission, DroneMissionKind::Strike);
+                assert_eq!(ao.id, 11);
+            }
+            _ => panic!("expected strike ao"),
+        }
+        let mut q = MissionIntentQueue::default();
+        for i in intents {
+            q.enqueue(i).unwrap();
+        }
+        assert_eq!(q.len(), 2);
+    }
+
 }

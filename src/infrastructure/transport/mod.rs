@@ -1,4 +1,11 @@
 //! Transport graph core (INFRA-E1-*).
+//!
+//! **ECS-15 (gea4v2 16.2.2) — tool-side vs runtime:** [`TransportGraph`] is the
+//! **tool/authoring** conditioned asset (editor bake / IF-TRG / R8 hydrate). Runtime
+//! topology, field, and cost caches live under `systems/transport` and are rebuilt only
+//! via [`sync_transport_runtime_from_graph`] — never by Studio/UI writing sim edges
+//! directly. Same split as Studio ParamFrame → presentation massing (occupation stays
+//! construction-funnel only).
 
 pub mod graph;
 pub mod junction;

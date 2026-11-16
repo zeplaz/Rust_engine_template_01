@@ -2,6 +2,15 @@
 //!
 //! Instance storage → `WEATHER_PRECIP_INSTANCES_BUFFER` → anisotropic streak raster.
 //! Does **not** share FIRE_* buffers or fire expand WGSL. Reject Hanabi world rain.
+//!
+//! ## RND-04 — Alpha blend (sorted pass, not OIT)
+//!
+//! NEW: **RND-04** · gea4v2 **11.3.12** / **11.3.12.1**.
+//! LEGACY: `geometry_visual_effects` (gea_v2_e4 p141).
+//!
+//! Precip uses standard **SrcAlpha / OneMinusSrcAlpha** color blend with
+//! **depth write off** (transparent overlay). Pass placement under fire sparks is
+//! owned by `Core2dOverlaySet::WeatherPrecipRaster` → `FireParticleRaster` (RND-03).
 
 use std::borrow::Cow;
 

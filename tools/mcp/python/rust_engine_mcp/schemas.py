@@ -28,6 +28,16 @@ def validate_studio_task(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("studio_task_v1.schema.json"))
 
 
+def validate_param_frame(data: dict[str, Any]) -> None:
+    """S0 ParamFrame — Studio DCC parametric frame (IO-09 / ECS-15 / PCG-06). No sim occupation."""
+    jsonschema.validate(instance=data, schema=_load_schema("param_frame_v1.schema.json"))
+
+
+def validate_massing_preview(data: dict[str, Any]) -> None:
+    """VOXEL-MASSING-PRES-001 / IO-09 — presentation-only columns; no sim occupation."""
+    jsonschema.validate(instance=data, schema=_load_schema("massing_preview_v1.schema.json"))
+
+
 def validate_module_contract(data: dict[str, Any]) -> None:
     jsonschema.validate(instance=data, schema=_load_schema("module_contract_v1.schema.json"))
 

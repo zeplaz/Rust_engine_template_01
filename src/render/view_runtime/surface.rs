@@ -1,3 +1,10 @@
+//! View isolation surface snapshot (multiview read model).
+//!
+//! **RND-19** present / swapchain / v-sync / buffer-count contract lives in
+//! [`super::present`] (`present.rs`) — not here. This type is the per-view
+//! viewport surface; the OS window present path is shared (including PixelWorld
+//! voxels). See `PresentSurfaceConfig` / `rnd19_*` tripwires.
+
 use bevy::prelude::Entity;
 
 use crate::gui::{ViewCameraState, ViewRenderPolicy};

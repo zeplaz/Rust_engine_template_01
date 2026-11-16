@@ -1,73 +1,68 @@
 //! Publishes sim state into [`crate::render::extraction::sim_visual_extract`] resources (`base_gui_next.md` Stage 2).
 //!
-//! **DEBT-011:** sole smoke extract bridge is
-//! `clipmap L0 → ChunkSmokeField → SimChunkSmokeVisualExtract` (slab cutover path optional).
-//! AtmosphereField is not in this path.
+//! **LGT-04** (gea4v2 12.5.13 *Skies, Clouds, and Volumetrics* · frame-fed W6/X4 presentation):
+//! precip / haze consumers read optical depth from LGT-05 [`participating_media_visibility`] —
+//! volumetric *look* via density→visibility, not a second ray-march path (RND-14 cards stay).
+//!
+//! **W7:** smoke extract prefers [`AtmosphereFrame`] tracers (same authority as the smoke projection
+//! node). [`ClimateVisualAggregate`] weather channels come from the frame; ecology means ride
+//! [`EcologyVisualSnapshot`] (no ChunkEcology scan here).
 
 use bevy::prelude::*;
 
-use crate::render::{ChunkSmokeGpu, ClimateVisualAggregate, SimChunkSmokeVisualExtract};
-use crate::systems::ecology::{ChunkEcology, LandscapeProgramOnChunk};
+use crate::render::{
+    ChunkSmokeGpu, ClimateVisualAggregate, EcologyVisualSnapshot, SimChunkSmokeVisualExtract,
+};
 use crate::systems::fire::ChunkSmokeField;
-use crate::systems::weather::{ChunkWeather, WeatherPrecipVisualSample};
+use crate::systems::weather::WeatherPrecipVisualSample;
 use crate::terrain::generation::Chunk;
 
 use super::diagnostics::AtmosphereDiagnostics;
+use super::frame::AtmosphereFrame;
 
 const SMOKE_EXTRACT_EPS: f32 = 1e-4;
 
-/// DEBT-011 — documented single smoke extract bridge (compile-time witness).
+/// DEBT-011 / W7 — documented single smoke extract bridge (compile-time witness).
 pub const DEBT_011_SMOKE_UNIFIED: bool = true;
-pub const SMOKE_EXTRACT_BRIDGE: &str = "L0→ChunkSmoke→SimChunkSmokeVisualExtract";
+pub const SMOKE_EXTRACT_BRIDGE: &str = "L0→AtmosphereFrame→SimChunkSmokeVisualExtract";
 
-/// Single scan of chunk weather + ecology → [`ClimateVisualAggregate`] for GPU / precip overlay (no duplicate queries).
+/// [`ClimateVisualAggregate`] for GPU / precip overlay.
+///
+/// Weather from [`AtmosphereFrame::weather_means`]; ecology means from [`EcologyVisualSnapshot`]
+/// (sole ecology scan lives in `publish_ecology_visual_snapshot`).
 pub(crate) fn publish_climate_visual_aggregate(
-    wx: Query<&ChunkWeather>,
-    eco: Query<&ChunkEcology>,
-    programs: Query<&LandscapeProgramOnChunk>,
+    frame: Res<AtmosphereFrame>,
+    ecology: Option<Res<EcologyVisualSnapshot>>,
     mut out: ResMut<ClimateVisualAggregate>,
 ) {
-    let mut nw = 0u32;
-    let mut r = 0f32;
-    let mut s = 0f32;
-    let mut fg = 0f32;
-    let mut wind = 0f32;
-    let mut wind_mps = Vec2::ZERO;
-    let mut li = 0f32;
-    for w in &wx {
-        nw += 1;
-        r += w.rain_intensity;
-        s += w.snow_depth;
-        fg += w.fog_density;
-        wind += w.wind_speed;
-        wind_mps += w.wind_mps;
-        li += w.lightning_risk;
-    }
-
-    let mut ne = 0u32;
-    let mut bio = 0f32;
-    let mut frisk = 0f32;
-    for e in &eco {
-        ne += 1;
-        bio += e.biomass;
-        frisk += e.fire_risk;
-    }
-
-    let np = programs.iter().count() as u32;
-    let nf_w = nw.max(1) as f32;
-    let nf_e = ne.max(1) as f32;
+    let wx = frame.weather_means();
+    let (bio, frisk, ne) = ecology
+        .as_deref()
+        .map(|e| (e.mean_biomass, e.mean_fire_risk, e.ecology_chunk_count))
+        .unwrap_or((0.0, 0.0, 0));
     *out = ClimateVisualAggregate {
-        mean_rain: r / nf_w,
-        mean_snow: s / nf_w,
-        mean_fog_density: fg / nf_w,
-        mean_wind_speed: wind / nf_w,
-        mean_wind_mps: wind_mps / nf_w,
-        mean_lightning_risk: li / nf_w,
-        mean_biomass: bio / nf_e,
-        mean_fire_risk: frisk / nf_e,
-        weather_chunk_count: nw,
-        ecology_chunk_count: if np > 0 { np } else { ne },
+        mean_rain: wx.rain01,
+        mean_snow: wx.snow01,
+        mean_fog_density: wx.fog,
+        mean_wind_speed: wx.wind_speed01,
+        mean_wind_mps: wx.wind_mps,
+        mean_lightning_risk: wx.lightning,
+        mean_biomass: bio,
+        mean_fire_risk: frisk,
+        weather_chunk_count: wx.tiles,
+        ecology_chunk_count: ne,
     };
+}
+
+/// Clear-air reference distance (metres) before fog optical depth (LGT-04 skies/haze).
+pub const VOLUMETRIC_BASE_VISIBILITY_M: f32 = 10_000.0;
+
+/// LGT-04: fog density → unit transmittance + metre visibility for precip/haze presentation.
+#[inline]
+#[must_use]
+pub fn volumetric_haze_from_fog(fog01: f32) -> (f32, f32) {
+    let unit = super::participating_media_visibility(0.0, fog01, 0.0);
+    (unit, VOLUMETRIC_BASE_VISIBILITY_M * unit)
 }
 
 pub(crate) fn sync_weather_precip_sample_from_climate_aggregate(
@@ -79,29 +74,28 @@ pub(crate) fn sync_weather_precip_sample_from_climate_aggregate(
         *sample = WeatherPrecipVisualSample::default();
         return;
     }
+    let (visibility_factor, visibility_m) = volumetric_haze_from_fog(climate.mean_fog_density);
     *sample = WeatherPrecipVisualSample {
         rain: climate.mean_rain,
         snow: climate.mean_snow,
         fog: climate.mean_fog_density,
         chunk_count: n,
-        visibility_factor: 1.0,
+        visibility_factor,
         wind_mps: climate.mean_wind_mps,
         gust_mps: 0.0,
         cloud: 0.0,
         rain_mm_h: climate.mean_rain * crate::systems::weather::CHUNK_RAIN_FULL_SCALE_MM_H,
-        visibility_m: 10_000.0,
+        visibility_m,
         local_ready: false,
     };
 }
 
-/// Chunk smoke only — fire truth rows live in [`crate::render::extraction::FireVisualFrame`]; GPU field reads
-/// [`crate::render::extraction::RenderProjectionGraph`] after [`crate::render::extraction::run_render_projection_graph`].
-///
-/// **DEBT-011:** does not read AtmosphereField; ChunkSmoke (L0-pulled) is the sole ECS smoke extract source
-/// unless slab cutover is active.
+/// Chunk smoke GPU extract — **W7:** prefer [`AtmosphereFrame`] tiles; slab cutover optional;
+/// ChunkSmokeField is fallback only when the frame is not built yet.
 pub(crate) fn publish_sim_visual_extract(
     mut smoke_out: ResMut<SimChunkSmokeVisualExtract>,
     mut diag: ResMut<AtmosphereDiagnostics>,
+    frame: Option<Res<AtmosphereFrame>>,
     ecs_retire: Option<Res<crate::substrate::EcsRetireState>>,
     substrate: Option<Res<crate::substrate::WorldSubstrateRegistry>>,
     smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
@@ -145,6 +139,27 @@ pub(crate) fn publish_sim_visual_extract(
                     ),
                 });
             }
+        }
+    } else if let Some(frame) = frame.as_deref().filter(|f| f.is_built()) {
+        let origin = crate::systems::atmosphere::ATMO_GRID_ORIGIN;
+        let size = frame.size();
+        for (i, tile) in frame.tiles().iter().enumerate() {
+            if tile.smoke <= SMOKE_EXTRACT_EPS && tile.toxicity <= SMOKE_EXTRACT_EPS {
+                continue;
+            }
+            let x = (i as u32) % size.x;
+            let y = (i as u32) / size.x;
+            let chunk = IVec2::new(origin.x + x as i32, origin.y + y as i32);
+            let fog = if tile.weather_valid {
+                tile.weather.fog
+            } else {
+                0.0
+            };
+            let vis = (tile.smoke * 0.75 + fog * 0.35 + tile.toxicity * 0.25).clamp(0.0, 0.98);
+            smoke_out.instances.push(ChunkSmokeGpu {
+                chunk_xy: Vec4::new(chunk.x as f32, chunk.y as f32, 0.0, 0.0),
+                density_tox_vis: Vec4::new(tile.smoke, tile.toxicity, vis, 0.0),
+            });
         }
     } else {
         for (chunk, smoke) in &smoke_q {
@@ -205,11 +220,61 @@ mod tests {
     }
 
     #[test]
+    fn climate_aggregate_weather_channels_equal_frame_means() {
+        use crate::render::ClimateVisualAggregate;
+        use crate::systems::atmosphere::AtmosphereFrame;
+        use crate::systems::weather::{WeatherField, WeatherTuning};
+        use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
+
+        let extent = Vec2::splat(8.0 * CHUNK_TILES_SIM as f32 * TILE_METRES_GAMEPLAY);
+        let field = WeatherField::new(13, extent, &WeatherTuning::default(), None, Default::default(), 0);
+        let mut stack = crate::substrate::atmosphere::AtmosphereClipmapStack::default();
+        stack.bump_revision();
+        let mut frame = AtmosphereFrame::default();
+        frame.rebuild(Some(&field), &stack, 2_000_000, &WeatherTuning::default());
+        let m = *frame.weather_means();
+        assert!(m.tiles > 0);
+
+        let mut app = App::new();
+        app.insert_resource(frame)
+            .init_resource::<ClimateVisualAggregate>()
+            .add_systems(Update, super::publish_climate_visual_aggregate);
+        app.update();
+        let c = app.world().resource::<ClimateVisualAggregate>();
+        assert_eq!(c.weather_chunk_count, m.tiles);
+        assert_eq!(c.mean_rain, m.rain01);
+        assert_eq!(c.mean_snow, m.snow01);
+        assert_eq!(c.mean_fog_density, m.fog);
+        assert_eq!(c.mean_wind_speed, m.wind_speed01);
+        assert_eq!(c.mean_wind_mps, m.wind_mps);
+        assert_eq!(c.mean_lightning_risk, m.lightning);
+    }
+
+    /// W2/W7 gate: the aggregate no longer scans `ChunkWeather` or `ChunkEcology`.
+    #[test]
+    fn climate_publisher_does_not_scan_chunk_weather_or_ecology() {
+        let src = include_str!("visual_extract.rs");
+        let prod = src.split("#[cfg(test)]").next().unwrap();
+        assert!(!prod.contains("Query<&ChunkWeather>"));
+        assert!(!prod.contains("Query<&ChunkEcology>"));
+        assert!(!prod.contains("Res<WeatherField>"));
+    }
+
+    #[test]
     fn debt_011_smoke_bridge_const() {
         assert!(super::DEBT_011_SMOKE_UNIFIED);
         assert_eq!(
             super::SMOKE_EXTRACT_BRIDGE,
-            "L0→ChunkSmoke→SimChunkSmokeVisualExtract"
+            "L0→AtmosphereFrame→SimChunkSmokeVisualExtract"
         );
+    }
+
+    #[test]
+    fn lgt04_volumetric_haze_denser_fog_lowers_visibility() {
+        let (clear_f, clear_m) = super::volumetric_haze_from_fog(0.0);
+        let (fog_f, fog_m) = super::volumetric_haze_from_fog(0.8);
+        assert!(clear_f > fog_f);
+        assert!(clear_m > fog_m);
+        assert!((clear_m - super::VOLUMETRIC_BASE_VISIBILITY_M).abs() < 1e-3);
     }
 }

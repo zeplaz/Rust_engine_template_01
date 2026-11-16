@@ -9,8 +9,12 @@ pub mod schedule_cycle_probe;
 pub mod perf_scope_frame_log;
 pub mod test_run_instrumentation;
 pub mod sim_run_dump;
+pub mod sim_run_dump_atmosphere;
 pub mod sim_run_dump_fidelity;
 pub mod sim_run_dump_weather;
+pub mod sim_run_dump_massing;
+pub mod sim_run_dump_occupation;
+pub mod sim_run_dump_quadrants;
 pub mod orchestrator_health;
 pub mod city_faction_progress;
 

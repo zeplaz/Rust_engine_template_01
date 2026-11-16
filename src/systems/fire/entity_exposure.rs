@@ -11,7 +11,6 @@ use std::collections::{HashMap, HashSet};
 
 use bevy::prelude::*;
 
-use crate::combat::balance::UnitKind;
 use crate::combat::formation::Formation;
 use crate::construction::execute_demolish_at_tile;
 use crate::economy::activation::BuildingDefinitionRef;
@@ -431,6 +430,8 @@ pub fn apply_fire_collapse_demolish(
     mut queue: ResMut<FireCollapseQueue>,
     mut stats: ResMut<FireEntityExposureStats>,
     mut occupation: Option<ResMut<TileOccupationBook>>,
+    mut voxel_occupation: Option<ResMut<crate::strategic::VoxelOccupationBook>>,
+    voxel_cfg: Option<Res<crate::strategic::VoxelOccupationConfig>>,
     sites: Query<(
         Entity,
         &ConstructionSite,
@@ -442,6 +443,9 @@ pub fn apply_fire_collapse_demolish(
     if queue.tiles.is_empty() {
         return;
     }
+    let commit_auth = voxel_cfg
+        .as_ref()
+        .is_some_and(|c| c.commit_authority_enabled);
     let tiles = std::mem::take(&mut queue.tiles);
     let mut seen = HashSet::new();
     for tile in tiles {
@@ -454,6 +458,8 @@ pub fn apply_fire_collapse_demolish(
             tile,
             &sites,
             occupation.as_deref_mut(),
+            voxel_occupation.as_deref_mut(),
+            commit_auth,
         );
         if n > 0 {
             queue.collapsed = queue.collapsed.saturating_add(u64::from(n));
@@ -496,6 +502,7 @@ pub fn sync_site_burn_wash_frame(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::combat::balance::UnitKind;
     use crate::strategic::SiteArchetype;
     use crate::terrain::fire::profile_for_site_archetype;
 

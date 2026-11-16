@@ -1,4 +1,8 @@
 //! **VFX-CAPTURE-HOOK-001** — operator PNG capture hooks (sim-callable).
+//!
+//! Real GPU pixels: `VFX_CAPTURE=1` + [`super::vfx_capture_env`] (**V4-DBG04** · **DBG-04** ·
+//! LEGACY `render_debug_tools` · **DBG-07**). This hook queues in-sim stub files for operator
+//! review lanes; do not confuse with `visual_capture_probe`.
 
 use std::path::PathBuf;
 

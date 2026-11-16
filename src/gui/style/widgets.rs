@@ -727,8 +727,24 @@ fn sync_tooltip(
 /// Paints [`UiButton`] / toggles, wheel-scrolls [`UiScroll`], shows [`UiTooltip`].
 pub struct UiWidgetsPlugin;
 
+/// Restore what the deprecated `bevy::ui::widget::Button` gave every button for free.
+///
+/// `bevy::ui_widgets::Button` (the 0.20 replacement) requires neither [`Interaction`] nor
+/// [`FocusPolicy::Block`]. Every HUD / menu action system in this crate still reads
+/// `Query<&Interaction, (Changed<Interaction>, With<..>)>`, so without this a `Button` entity is
+/// never matched and the click silently does nothing (side rail, build rail, ops strip, tray tabs,
+/// pause menu, sheets). One registration here instead of N spawn-site patches.
+///
+/// Migration debt: move action systems to `Pressed` / `Hovered` + `Activate`, then delete this.
+#[allow(deprecated)]
+pub(crate) fn register_ui_button_interaction_compat(app: &mut App) {
+    app.register_required_components::<Button, Interaction>();
+    app.register_required_components_with::<Button, FocusPolicy>(|| FocusPolicy::Block);
+}
+
 impl Plugin for UiWidgetsPlugin {
     fn build(&self, app: &mut App) {
+        register_ui_button_interaction_compat(app);
         app.add_systems(Startup, spawn_tooltip_root)
             .add_systems(
                 Update,
@@ -768,6 +784,26 @@ mod tests {
         init_ok(sync_slider_fill);
         init_ok(scroll_wheel);
         init_ok(sync_tooltip);
+    }
+
+    /// Regression: `ui_widgets::Button` alone has no `Interaction`, so every action system reading
+    /// `&Interaction` matched nothing (side rails / build rail / tray / ops strip dead).
+    #[test]
+    #[allow(deprecated)]
+    fn ui_widgets_button_gets_interaction_and_blocks_focus() {
+        let mut app = App::new();
+        register_ui_button_interaction_compat(&mut app);
+        let plain = app.world_mut().spawn((Button, Node::default())).id();
+        let passing = app
+            .world_mut()
+            .spawn((Button, Node::default(), FocusPolicy::Pass))
+            .id();
+        let w = app.world();
+        assert_eq!(w.get::<Interaction>(plain), Some(&Interaction::None));
+        assert_eq!(w.get::<FocusPolicy>(plain), Some(&FocusPolicy::Block));
+        // An explicit policy on the spawn site still wins.
+        assert_eq!(w.get::<Interaction>(passing), Some(&Interaction::None));
+        assert_eq!(w.get::<FocusPolicy>(passing), Some(&FocusPolicy::Pass));
     }
 
     #[test]

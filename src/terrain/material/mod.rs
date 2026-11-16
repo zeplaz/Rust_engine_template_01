@@ -10,7 +10,8 @@ mod rules;
 mod tags;
 
 pub use registry::{
-    family_default_material_def, MaterialDef, MaterialId, MaterialRegistry, MaterialRegistryLoader,
+    family_default_material_def, CollisionFilter, CollisionLayer, CollisionMaterial,
+    MaterialDef, MaterialId, MaterialRegistry, MaterialRegistryLoader, DEFAULT_LAYER_COLLIDES_WITH,
 };
 pub use resolver::{resolve_material, resolve_material_with_rule_index};
 pub use rules::{MaterialRule, RuleSet, RuleSetLoader};

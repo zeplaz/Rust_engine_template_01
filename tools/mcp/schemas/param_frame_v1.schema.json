@@ -1,0 +1,172 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rust-engine.local/schemas/param_frame_v1.json",
+  "title": "ParamFrame",
+  "description": "Studio DCC parametric frame (PLAN-REF-BOOKS-UPGRADE-v3 S0 / IO-09 · ECS-15 · PCG-06). Editable in APS without bpy; escalates to geometry/massing jobs optionally. Never authorizes sim occupation.",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "frame_id",
+    "seed",
+    "presentation_only",
+    "sim_occupation",
+    "grammar_chain",
+    "modifiers",
+    "connection_graph_ids",
+    "massing_intent"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": { "const": 1 },
+    "frame_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$",
+      "description": "Stable frame id for Studio saves and StudioTask payload lineage."
+    },
+    "title": { "type": "string" },
+    "seed": {
+      "type": "integer",
+      "minimum": 0,
+      "description": "Deterministic seed for grammar/modifier evaluation."
+    },
+    "presentation_only": {
+      "const": true,
+      "description": "Frame edits conditioning/preview only — not gameplay authority."
+    },
+    "sim_occupation": {
+      "const": false,
+      "description": "Must be false — Studio never writes FootprintMatrix / occupation (ECS-15)."
+    },
+    "ref_books_dual_cite": {
+      "type": "object",
+      "description": "Optional orient record for adoption ledger (NEW + LEGACY).",
+      "additionalProperties": false,
+      "properties": {
+        "new_rows": {
+          "type": "array",
+          "items": { "type": "string", "pattern": "^[A-Z]+-[0-9]+$" }
+        },
+        "legacy_keywords": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        }
+      }
+    },
+    "grammar_chain": {
+      "type": "array",
+      "minItems": 1,
+      "description": "Ordered grammar steps — ids and rule keys, not bpy operator knobs.",
+      "items": { "$ref": "#/$defs/grammar_chain_step" }
+    },
+    "modifiers": {
+      "type": "array",
+      "description": "Named modifier stack applied after grammar chain.",
+      "items": { "$ref": "#/$defs/modifier_binding" }
+    },
+    "connection_graph_ids": {
+      "type": "array",
+      "description": "Assembly / variant graph ids for connection logic browse (no live backend required).",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z][a-z0-9_]*$",
+        "minLength": 1
+      }
+    },
+    "massing_intent": { "$ref": "#/$defs/massing_intent" },
+    "escalate": { "$ref": "#/$defs/escalate_hints" },
+    "note": { "type": "string" }
+  },
+  "$defs": {
+    "param_scalar": {
+      "type": ["string", "integer", "boolean"]
+    },
+    "grammar_chain_step": {
+      "type": "object",
+      "required": ["step", "grammar_ref", "grammar_id"],
+      "additionalProperties": false,
+      "properties": {
+        "step": {
+          "type": "string",
+          "enum": [
+            "archetype",
+            "massing",
+            "roof",
+            "facade",
+            "detail",
+            "age",
+            "landscape",
+            "district"
+          ]
+        },
+        "grammar_ref": {
+          "type": "string",
+          "description": "Schema family id, e.g. building_grammar_v1, arch_build_grammar_v0, landscape_grammar_v0."
+        },
+        "grammar_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "rule_key": {
+          "type": "string",
+          "description": "Optional rule axis within the grammar document."
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/param_scalar" }
+        }
+      }
+    },
+    "modifier_binding": {
+      "type": "object",
+      "required": ["modifier_id"],
+      "additionalProperties": false,
+      "properties": {
+        "modifier_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        "params": {
+          "type": "object",
+          "additionalProperties": { "$ref": "#/$defs/param_scalar" }
+        },
+        "enabled": { "type": "boolean", "default": true }
+      }
+    },
+    "massing_intent": {
+      "type": "object",
+      "required": ["pilot_id"],
+      "additionalProperties": false,
+      "properties": {
+        "pilot_id": {
+          "type": "string",
+          "pattern": "^[a-z][a-z0-9_]*$",
+          "description": "Catalog pilot / preset lineage for voxel presentation preview."
+        },
+        "target_floors_min": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "target_floors_max": { "type": "integer", "minimum": 1, "maximum": 4 },
+        "material_strategy": { "type": "string" },
+        "district_style_id": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
+        "footprint_hint_tiles": {
+          "type": "array",
+          "description": "Optional coarse footprint anchors for Studio preview (not sim tiles).",
+          "items": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": { "type": "integer" }
+          }
+        }
+      }
+    },
+    "escalate_hints": {
+      "type": "object",
+      "description": "Optional paths when the frame cannot express mesh intent — bpy not required for frame edit.",
+      "additionalProperties": false,
+      "properties": {
+        "geometry_job_path": { "type": "string" },
+        "massing_preview_path": { "type": "string" },
+        "assembly_snapshot_path": { "type": "string" }
+      }
+    }
+  }
+}

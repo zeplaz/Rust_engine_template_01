@@ -1,0 +1,121 @@
+{
+  "schema_version": 1,
+  "title": "massing_preview:logistics_rail_warehouse_v0",
+  "presentation_only": true,
+  "sim_occupation": false,
+  "seed": 1,
+  "pilot_id": "logistics_rail_warehouse_v0",
+  "massing_columns": [
+    {
+      "tile": [
+        0,
+        0
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        1,
+        0
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        2,
+        0
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        3,
+        0
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        4,
+        0
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        5,
+        0
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        0,
+        1
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        1,
+        1
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        2,
+        1
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        0,
+        2
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    },
+    {
+      "tile": [
+        1,
+        2
+      ],
+      "floors": 1,
+      "color_kind": "Valid",
+      "weight": 1.0
+    }
+  ],
+  "note": "VOXEL-MASSING-PRES-001 \u2014 never commit to occupation",
+  "arch_build_grammar_preset_id": "logistics_rail_warehouse_v0",
+  "grammar_rule_chain": {
+    "footprint_mode": "l_shape",
+    "archetype": "IndustrialWarehouse",
+    "massing": "l_shape",
+    "roof": "roof_default",
+    "facade": "facade_v1",
+    "detail": "prop_clutter",
+    "age": "new"
+  },
+  "material_strategy": "l_shape"
+}

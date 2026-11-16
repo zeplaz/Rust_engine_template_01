@@ -1,10 +1,68 @@
 //! Deterministic sim cadence helpers — frame deltas, replay ring, replication interest.
+//!
+//! Ref-books **LOOP-03** · LEGACY `game_loop` / `time_measurement` (GEA 4e I §8.5.5 / §8.5,
+//! gea_v1_e4 p522 / p514): after a debugger hitch or load stall, wall-clock dt must be
+//! **clamped** before it advances sim time — see [`clamp_sim_frame_delta_secs`]. Running
+//! averages of frame dt are **display-only** ([`DisplayFrameDtAverage`]); never feed them
+//! into [`crate::systems::sim_control::advance_sim_tick`].
+//!
+//! Replay / scrub stamps stay on **u64** [`SimStepStamp`] ticks (LOOP-04 / LOOP-01) — not f32
+//! clocks.
 
 use std::collections::VecDeque;
 
 use bevy::prelude::*;
 
-use crate::systems::sim_control::SimStepStamp;
+use crate::systems::sim_control::{SimStepStamp, SIM_STEP_MAX_PER_FRAME};
+
+/// Max wall-clock seconds that may contribute to sim time in one Update (GEA 8.5.5).
+///
+/// Aligned with [`SIM_STEP_MAX_PER_FRAME`] so a 1× hitch cannot inject more sim time than the
+/// fixed-step catch-up budget already allows.
+pub const SIM_FRAME_DT_CLAMP_SECS: f32 = SIM_STEP_MAX_PER_FRAME as f32;
+
+/// Clamp a raw Bevy/`Time` delta for **sim advance** after stalls, loads, or breakpoints.
+#[inline]
+#[must_use]
+pub fn clamp_sim_frame_delta_secs(raw_secs: f32) -> f32 {
+    if !raw_secs.is_finite() {
+        return 0.0;
+    }
+    raw_secs.clamp(0.0, SIM_FRAME_DT_CLAMP_SECS)
+}
+
+/// Display-only exponential moving average of wall-clock frame dt (GEA 8.5.2.3).
+///
+/// Never use [`Self::secs`] to drive gameplay clocks — sim truth is u64 ticks / micros.
+#[derive(Resource, Debug, Clone, Copy)]
+pub struct DisplayFrameDtAverage {
+    pub secs: f32,
+    pub alpha: f32,
+}
+
+impl Default for DisplayFrameDtAverage {
+    fn default() -> Self {
+        Self {
+            secs: 0.0,
+            alpha: 0.1,
+        }
+    }
+}
+
+impl DisplayFrameDtAverage {
+    /// Fold one raw wall-clock sample (unclamped is fine — this is HUD/debug only).
+    pub fn push_sample(&mut self, raw_secs: f32) {
+        if !raw_secs.is_finite() || raw_secs < 0.0 {
+            return;
+        }
+        if self.secs <= 0.0 {
+            self.secs = raw_secs;
+            return;
+        }
+        let a = self.alpha.clamp(0.0, 1.0);
+        self.secs = self.secs * (1.0 - a) + raw_secs * a;
+    }
+}
 
 /// Monotonic delta between two committed sim steps.
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -115,6 +173,7 @@ impl Plugin for SimFrameDeltaPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<CommittedSimReplayRing>()
             .init_resource::<ReplicationInterestPolicy>()
+            .init_resource::<DisplayFrameDtAverage>()
             .add_systems(
                 Update,
                 record_committed_sim_replay_stamp
@@ -146,5 +205,28 @@ mod tests {
         };
         assert!(policy.replication_score(3, 1.0, 1.0).is_infinite());
         assert!(policy.replication_score(1, 1.0, 1.0).is_finite());
+    }
+
+    #[test]
+    fn long_frame_dt_clamps_to_catch_up_budget() {
+        assert_eq!(clamp_sim_frame_delta_secs(0.016), 0.016);
+        assert_eq!(
+            clamp_sim_frame_delta_secs(120.0),
+            SIM_FRAME_DT_CLAMP_SECS
+        );
+        assert_eq!(clamp_sim_frame_delta_secs(-1.0), 0.0);
+        assert_eq!(clamp_sim_frame_delta_secs(f32::INFINITY), 0.0);
+        assert_eq!(SIM_FRAME_DT_CLAMP_SECS, SIM_STEP_MAX_PER_FRAME as f32);
+    }
+
+    #[test]
+    fn display_dt_average_is_display_only_smoother() {
+        let mut avg = DisplayFrameDtAverage {
+            secs: 0.0,
+            alpha: 0.5,
+        };
+        avg.push_sample(0.010);
+        avg.push_sample(0.030);
+        assert!((avg.secs - 0.020).abs() < 1e-6);
     }
 }
