@@ -109,11 +109,21 @@ impl WaterSurfaceVisualCatalog {
             }
         }
 
+        // Exclusive look: standing/ocean wins over channel paint (no river-on-lake stack).
+        river_tiles.retain(|t| !lake_tiles.contains(t) && !ocean_tiles.contains(t));
+
+        // One fluid, one kind per tile: river ribbons stop at standing water.
+        // A path that enters a lake continues as lake water — not a river drawn on the lake.
         let mut river_segments = Vec::new();
         for (path_id, path) in hydro.rivers.iter().enumerate() {
             for window in path.windows(2) {
                 let (ax, ay) = window[0];
                 let (bx, by) = window[1];
+                let a_ok = river_tiles.contains(&(ax, ay));
+                let b_ok = river_tiles.contains(&(bx, by));
+                if !a_ok || !b_ok {
+                    continue;
+                }
                 let start = Vec2::new(ax as f32, ay as f32);
                 let end = Vec2::new(bx as f32, by as f32);
                 let delta = end - start;
@@ -127,7 +137,7 @@ impl WaterSurfaceVisualCatalog {
                     start,
                     end,
                     flow_dir,
-                    half_width: 0.58,
+                    half_width: 1.15,
                 });
             }
         }
@@ -151,7 +161,13 @@ impl WaterSurfaceVisualCatalog {
                 extent: 1.25,
             });
         }
+        let gw = params.width;
+        let gh = params.height;
         for &(tx, ty) in &ocean_anchor_tiles {
+            // Rim "ocean" (edge-touching depressions) flickers hard — skip anchors there.
+            if tx < 2 || ty < 2 || tx + 2 >= gw || ty + 2 >= gh {
+                continue;
+            }
             motion_anchors.push(WaterMotionAnchor {
                 kind: WaterSurfaceKind::Ocean,
                 world: Vec2::new(tx as f32, ty as f32),
@@ -193,6 +209,48 @@ impl WaterSurfaceVisualCatalog {
     #[must_use]
     pub fn w1_green(&self) -> bool {
         !self.river_segments.is_empty() || !self.river_tiles.is_empty()
+    }
+
+    /// Authored N→S river corridor (DamFlood fixture). Overwrites lake/ocean class in-band
+    /// so the dam site has a proper channel on the presentation map — seed alone is noise.
+    pub fn inject_ns_river_corridor(
+        &mut self,
+        center_x: u32,
+        z0: u32,
+        z1: u32,
+        half_width: u32,
+    ) {
+        if self.grid_width == 0 || self.grid_height == 0 || z1 <= z0 {
+            return;
+        }
+        let hw = half_width.max(1);
+        let z0 = z0.min(self.grid_height.saturating_sub(1));
+        let z1 = z1.min(self.grid_height.saturating_sub(1)).max(z0);
+        let cx = center_x.min(self.grid_width.saturating_sub(1));
+        for z in z0..=z1 {
+            for dx in 0..=hw {
+                for &sx in &[cx.saturating_sub(dx), (cx + dx).min(self.grid_width.saturating_sub(1))]
+                {
+                    self.lake_tiles.remove(&(sx, z));
+                    self.ocean_tiles.remove(&(sx, z));
+                    self.river_tiles.insert((sx, z));
+                }
+            }
+        }
+        // Flow south (−Y): upstream north → downstream south (fixture gauges).
+        let mut z = z0;
+        while z < z1 {
+            let zend = (z + 10).min(z1);
+            self.river_segments.push(RiverPolylineSegment {
+                path_id: 0xD00D,
+                start: Vec2::new(cx as f32 + 0.5, z as f32),
+                end: Vec2::new(cx as f32 + 0.5, zend as f32),
+                flow_dir: Vec2::new(0.0, -1.0),
+                half_width: (hw as f32 * 0.9).max(1.15),
+            });
+            z = zend;
+        }
+        self.stamp = self.stamp.wrapping_add(0xD00D_0001);
     }
 
     /// WATER-W1-OCEAN-001 — open-ocean presentation band has tiles (D-W04).
@@ -484,30 +542,107 @@ pub struct WaterOverlayDrawFrame {
 
 pub fn sync_water_overlay_draw_frame(
     catalog: Option<Res<WaterSurfaceVisualCatalog>>,
+    sim_water: Option<Res<crate::systems::water::SurfaceWaterVisualFrame>>,
+    gpu_field: Option<Res<crate::systems::water::SurfaceWaterGpuFieldMeta>>,
     cam_scale: Option<Res<crate::render::pipelines::gpu_particles::FireParticleCameraScale>>,
     time: Res<Time>,
     mut frame: ResMut<WaterOverlayDrawFrame>,
 ) {
+    // Presentation contract: one fluid → at most one kind per tile.
+    // River / lake / ocean are labels on the same water, not stacked layers.
+    // River→lake is a channel entering a standing body; never draw a river ribbon on lake tiles.
     frame.instances.clear();
     frame.anim_time_secs = time.elapsed_secs();
     frame.zoom_alpha = cam_scale
         .as_deref()
         .map(|c| c.zoom_alpha)
         .unwrap_or(0.5);
-    let Some(catalog) = catalog else {
-        return;
-    };
-    frame.instances.reserve(catalog.river_segments.len() + catalog.motion_anchors.len());
     let strategic = water_at_strategic_zoom(frame.zoom_alpha);
-    for seg in &catalog.river_segments {
-        let mut inst = WaterOverlayGpuInstance::from_river(seg);
-        if strategic {
-            inst.flow_extent.z *= 1.35;
+    let field_roi = gpu_field.as_ref().filter(|g| g.wired && g.width > 0 && g.height > 0);
+    let in_field_roi = |tx: f32, tz: f32| -> bool {
+        let Some(g) = field_roi else {
+            return false;
+        };
+        let step = g.step.max(1) as f32;
+        let x0 = g.origin_x as f32;
+        let z0 = g.origin_z as f32;
+        let x1 = x0 + g.width as f32 * step;
+        let z1 = z0 + g.height as f32 * step;
+        tx >= x0 && tx < x1 && tz >= z0 && tz < z1
+    };
+    if let Some(catalog) = catalog.as_ref() {
+        frame
+            .instances
+            .reserve(catalog.river_segments.len() + catalog.motion_anchors.len() + 128);
+        for seg in &catalog.river_segments {
+            // Inside live ROI the field shader owns the surface; keep catalog ribbons outside.
+            if in_field_roi(seg.start.x, seg.start.y) && in_field_roi(seg.end.x, seg.end.y) {
+                continue;
+            }
+            let mut inst = WaterOverlayGpuInstance::from_river(seg);
+            if strategic {
+                inst.flow_extent.z *= 1.35;
+            }
+            frame.instances.push(inst);
         }
-        frame.instances.push(inst);
+        for anchor in &catalog.motion_anchors {
+            if in_field_roi(anchor.world.x, anchor.world.y) {
+                continue;
+            }
+            frame.instances.push(WaterOverlayGpuInstance::from_motion(anchor));
+        }
     }
-    for anchor in &catalog.motion_anchors {
-        frame.instances.push(WaterOverlayGpuInstance::from_motion(anchor));
+    // DF-3: expand presentation for *new* wet area (reservoir / flood) only.
+    // Skip tiles covered by the GPU field ROI (field pass draws depth/flow/foam there).
+    if let Some(sw) = sim_water.as_ref() {
+        for &(tx, tz, depth, speed, fdx, fdz) in sw.samples.iter().take(256) {
+            if in_field_roi(tx, tz) {
+                // Tactical flow arrows only (short river segments) when moving.
+                if speed > 0.25 {
+                    let dir = Vec2::new(fdx, fdz).normalize_or_zero();
+                    let half = (0.35 + speed * 0.15).clamp(0.25, 0.9);
+                    let start = Vec2::new(tx, tz) - dir * half;
+                    let end = Vec2::new(tx, tz) + dir * half;
+                    frame.instances.push(WaterOverlayGpuInstance::from_river(
+                        &RiverPolylineSegment {
+                            path_id: 0,
+                            start,
+                            end,
+                            flow_dir: dir,
+                            half_width: 0.18,
+                        },
+                    ));
+                }
+                continue;
+            }
+            let tile = (tx.floor() as u32, tz.floor() as u32);
+            let already = catalog.as_ref().is_some_and(|c| {
+                c.river_tiles.contains(&tile)
+                    || c.lake_tiles.contains(&tile)
+                    || c.ocean_tiles.contains(&tile)
+            });
+            if already {
+                continue;
+            }
+            // Derived kind from the fluid state (not a second water layer).
+            let kind = if speed > 0.12 {
+                WaterSurfaceKind::River
+            } else {
+                WaterSurfaceKind::Lake
+            };
+            let extent = if kind == WaterSurfaceKind::River {
+                (1.1 + depth * 0.12).clamp(0.9, 2.8)
+            } else {
+                (1.4 + depth * 0.2).clamp(1.0, 4.0)
+            };
+            frame.instances.push(WaterOverlayGpuInstance::from_motion(
+                &WaterMotionAnchor {
+                    kind,
+                    world: Vec2::new(tx, tz),
+                    extent,
+                },
+            ));
+        }
     }
 }
 
@@ -538,7 +673,7 @@ impl Plugin for WaterSurfaceVisualPlugin {
 
 /// Water ripple repaint cadence (seconds). Animated water re-rasterizes chunks that contain water;
 /// doing so for every chunk every tick starves the raster queue and pins the frame budget.
-const WATER_MOTION_REPAINT_SECS: f32 = 0.2;
+const WATER_MOTION_REPAINT_SECS: f32 = 0.55;
 
 /// Upper bound on water chunks re-dirtied per motion tick (round-robin over the visible ones).
 /// A 128x128 chunk repaint costs a few ms on the CPU, so this caps the ripple at a flat, small
@@ -581,83 +716,14 @@ fn mark_water_surface_motion_dirty(
     catalog: Res<WaterSurfaceVisualCatalog>,
     mut last: ResMut<LastWaterCatalogRevision>,
     mut raster_ctrl: ResMut<crate::render::TileWorldFallbackRasterCtrl>,
-    trace: Option<Res<crate::gui::MainWorldCameraOrthoTrace>>,
-    time: Res<Time>,
-    mut acc: Local<f32>,
-    mut cache: Local<WaterMotionChunks>,
 ) {
-    if !catalog.has_motion() {
-        return;
-    }
-    const CHUNK: u32 = crate::render::tile_world_fallback::RASTER_CHUNK_TILES;
-    if cache.stamp != Some(catalog.stamp) {
-        let mut set: HashSet<(u32, u32)> = HashSet::new();
-        for &(tx, ty) in catalog
-            .river_tiles
-            .iter()
-            .chain(catalog.lake_tiles.iter())
-            .chain(catalog.ocean_tiles.iter())
-        {
-            set.insert((tx / CHUNK, ty / CHUNK));
-        }
-        let mut chunks: Vec<(u32, u32)> = set.into_iter().collect();
-        chunks.sort_unstable();
-        cache.chunks = chunks;
-        cache.stale.clear();
-        cache.stamp = Some(catalog.stamp);
-    }
+    // PLAN-FINAL-GPU-PRESENTATION-v1: CPU water paint into the terrain raster is retired.
+    // Water motion is GPU-only (water_field / particles). Only re-dirty on catalog
+    // topology stamp changes (land/water class bake), not on a ripple cadence.
     if last.0 != catalog.stamp {
         last.0 = catalog.stamp;
-        *acc = 0.0;
         raster_ctrl.chunk_grid.mark_all_dirty();
-        return;
     }
-    let visible = visible_raster_chunk_rect(trace.as_deref());
-
-    // Chunks that rippled off-screen catch up as soon as they scroll into view.
-    if !cache.stale.is_empty() {
-        let back: Vec<(u32, u32)> = cache
-            .stale
-            .iter()
-            .copied()
-            .filter(|c| chunk_in_rect(*c, visible))
-            .collect();
-        for c in back {
-            raster_ctrl.chunk_grid.mark_chunk(c.0, c.1);
-            cache.stale.remove(&c);
-        }
-    }
-
-    *acc += time.delta_secs();
-    if *acc < WATER_MOTION_REPAINT_SECS {
-        return;
-    }
-    *acc = 0.0;
-
-    let n = cache.chunks.len();
-    if n == 0 {
-        return;
-    }
-    let mut marked = 0;
-    let start = cache.cursor % n;
-    let mut next_cursor = start;
-    for step in 0..n {
-        let i = (start + step) % n;
-        let c = cache.chunks[i];
-        if !chunk_in_rect(c, visible) {
-            cache.stale.insert(c);
-            continue;
-        }
-        if marked < WATER_MOTION_CHUNKS_PER_TICK {
-            raster_ctrl.chunk_grid.mark_chunk(c.0, c.1);
-            cache.stale.remove(&c);
-            marked += 1;
-            next_cursor = i + 1;
-        } else {
-            // Visible but over this tick's cap: it ripples on a later tick, not stale.
-        }
-    }
-    cache.cursor = next_cursor;
 }
 
 #[cfg(test)]
@@ -979,5 +1045,53 @@ mod tests {
             "lake motion anchor kind"
         );
         assert_ne!(river.world_kind.z, lake.world_kind.z, "rivers ≠ lakes on GPU path");
+    }
+
+    /// DF-3 / WATER-5: when the GPU field is wired, catalog ribbons inside the ROI
+    /// must not dual-draw (field shader owns the surface).
+    #[test]
+    fn df3_catalog_ribbons_skipped_inside_wired_field_roi() {
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins);
+        app.init_resource::<Time>();
+        app.init_resource::<WaterOverlayDrawFrame>();
+        let mut catalog = WaterSurfaceVisualCatalog::default();
+        catalog.river_segments.push(RiverPolylineSegment {
+            path_id: 0,
+            start: Vec2::new(2.0, 2.0),
+            end: Vec2::new(4.0, 2.0),
+            flow_dir: Vec2::X,
+            half_width: 0.4,
+        });
+        catalog.river_segments.push(RiverPolylineSegment {
+            path_id: 1,
+            start: Vec2::new(90.0, 90.0),
+            end: Vec2::new(92.0, 90.0),
+            flow_dir: Vec2::X,
+            half_width: 0.4,
+        });
+        app.insert_resource(catalog);
+        app.insert_resource(crate::systems::water::SurfaceWaterGpuFieldMeta {
+            wired: true,
+            origin_x: 0,
+            origin_z: 0,
+            width: 16,
+            height: 16,
+            step: 1,
+            ..Default::default()
+        });
+        app.add_systems(Update, sync_water_overlay_draw_frame);
+        app.update();
+        let frame = app.world().resource::<WaterOverlayDrawFrame>();
+        assert_eq!(
+            frame.instances.len(),
+            1,
+            "only outside-ROI catalog ribbon should remain"
+        );
+        let mid = frame.instances[0].world_kind.xy();
+        assert!(
+            mid.x > 80.0 && mid.y > 80.0,
+            "kept instance should be the outside-ROI segment"
+        );
     }
 }

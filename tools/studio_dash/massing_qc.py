@@ -1,50 +1,14 @@
-"""Massing preview → QC dict for studio_dash HTML (presentation / voxels in scope)."""
+"""Massing QC — re-export from rust_engine_mcp (CQ-76)."""
 
 from __future__ import annotations
 
-from typing import Any
+import sys
+from pathlib import Path
 
+_PY = Path(__file__).resolve().parents[1] / "mcp" / "python"
+if str(_PY) not in sys.path:
+    sys.path.insert(0, str(_PY))
 
-def floors_histogram(columns: list[dict[str, Any]]) -> dict[str, int]:
-    """Count columns by floors band 1..4 (QC summary)."""
-    hist = {"1": 0, "2": 0, "3": 0, "4": 0}
-    for col in columns:
-        try:
-            f = int(col.get("floors", 0))
-        except (TypeError, ValueError):
-            continue
-        key = str(f)
-        if key in hist:
-            hist[key] += 1
-    return hist
+from rust_engine_mcp.massing_qc import floors_histogram, massing_qc_view  # noqa: E402
 
-
-def massing_qc_view(data: dict[str, Any]) -> dict[str, Any]:
-    """Enrich massing_preview JSON for static HTML QC (Republic lineage fields)."""
-    cols = list(data.get("massing_columns") or [])
-    hist = floors_histogram(cols)
-    chain = data.get("grammar_rule_chain") if isinstance(data.get("grammar_rule_chain"), dict) else {}
-    return {
-        **data,
-        "title": data.get("title") or "massing_preview QC",
-        "status": "presentation_only",
-        "report_kind": "massing_qc",
-        "column_count": len(cols),
-        "seed": data.get("seed"),
-        "presentation_only": data.get("presentation_only", True),
-        "sim_occupation": data.get("sim_occupation", False),
-        "pilot_id": data.get("pilot_id"),
-        "arch_build_grammar_preset_id": data.get("arch_build_grammar_preset_id"),
-        "material_strategy": data.get("material_strategy"),
-        "grammar_rule_chain": chain,
-        "floors_histogram": hist,
-        "metrics": {
-            "column_count": len(cols),
-            "floors_1": hist["1"],
-            "floors_2": hist["2"],
-            "floors_3": hist["3"],
-            "floors_4": hist["4"],
-            "has_grammar_chain": 1 if chain else 0,
-        },
-        "massing_columns": cols,
-    }
+__all__ = ["floors_histogram", "massing_qc_view"]

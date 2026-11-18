@@ -84,6 +84,14 @@ struct BuildingDefinitionFile {
     /// MCP module catalog id — mesh resolved from `_module_index.ron` when set.
     #[serde(default)]
     procedural_module_id: Option<String>,
+    /// Dam crest elevation (metres) — DF-4 hydraulic catalogs.
+    #[serde(default)]
+    crest_m: Option<f32>,
+    #[serde(default)]
+    dam_kind: Option<String>,
+    /// Shared research capability ids (see `ResearchCapabilityBook`).
+    #[serde(default)]
+    required_research_ids: Vec<String>,
 }
 
 fn default_one() -> u32 {
@@ -124,6 +132,12 @@ pub struct BuildingDefinition {
     pub site_json_path: Option<String>,
     pub pilot_hover_hint: Option<String>,
     pub district_style: Option<String>,
+    /// Dam crest elevation (metres). `None` for non-dam buildings.
+    pub crest_m: Option<f32>,
+    /// Optional dam kind token from JSON (`embankment` / `gravity` / `weir` / …).
+    pub dam_kind: Option<String>,
+    /// Capability ids that must be unlocked before industrial activation.
+    pub required_research_ids: Vec<String>,
 }
 
 #[derive(Resource, Debug, Default)]
@@ -178,6 +192,7 @@ pub fn intent_from_archetype(
         BuildingArchetypeId::Office | BuildingArchetypeId::Retail => BuildingFamily::Retail,
         BuildingArchetypeId::Factory | BuildingArchetypeId::Depot => BuildingFamily::Industry,
         BuildingArchetypeId::PowerPlant | BuildingArchetypeId::WaterPlant => BuildingFamily::Power,
+        BuildingArchetypeId::Dam => BuildingFamily::Civic,
     };
     if let Some(id) = registry
         .ids_by_family(family)
@@ -248,6 +263,14 @@ pub fn check_industrial_governance(def: &BuildingDefinition) -> Option<String> {
 }
 
 fn infer_archetype(raw: &BuildingDefinitionFile, name_lower: &str) -> SiteArchetype {
+    if name_lower.contains("dam")
+        || name_lower.contains("embankment")
+        || name_lower.contains("weir")
+        || raw.dam_kind.is_some()
+        || raw.utility_role.as_deref() == Some("dam")
+    {
+        return SiteArchetype::Dam;
+    }
     if raw
         .utility_role
         .as_deref()
@@ -282,8 +305,9 @@ fn infer_archetype(raw: &BuildingDefinitionFile, name_lower: &str) -> SiteArchet
 fn infer_family(archetype: SiteArchetype, raw: &BuildingDefinitionFile) -> BuildingFamily {
     match archetype {
         SiteArchetype::CivilHousing => BuildingFamily::Residential,
-        SiteArchetype::WaterPlant => BuildingFamily::Power,
-        SiteArchetype::PowerPlant => BuildingFamily::Power,
+        SiteArchetype::WaterPlant | SiteArchetype::PowerPlant => BuildingFamily::Power,
+        // Dam is hydraulic works, not generation — keep out of Power family (§0 / DF-4).
+        SiteArchetype::Dam => BuildingFamily::Civic,
         SiteArchetype::RailDepot => BuildingFamily::Rail,
         SiteArchetype::Factory => {
             if raw.segment.eq_ignore_ascii_case("civilian") && raw.produces_resources.is_empty() {
@@ -359,6 +383,9 @@ fn file_to_definition(id: String, raw: BuildingDefinitionFile) -> BuildingDefini
         site_json_path: None,
         pilot_hover_hint: None,
         district_style: None,
+        crest_m: raw.crest_m.filter(|c| *c > 0.0),
+        dam_kind: raw.dam_kind.clone(),
+        required_research_ids: raw.required_research_ids.clone(),
     }
 }
 
@@ -417,6 +444,9 @@ fn register_mock_shapes_from_ron(registry: &mut BuildingDefinitionRegistry) {
             site_json_path: None,
             pilot_hover_hint: None,
             district_style: None,
+            crest_m: None,
+            dam_kind: None,
+            required_research_ids: Vec::new(),
         };
         registry.by_id.insert(id, def);
     }
@@ -461,6 +491,9 @@ fn register_pilot_catalog_from_ron(registry: &mut BuildingDefinitionRegistry) {
             site_json_path: pilot.site_json_path.clone(),
             pilot_hover_hint: pilot.hover_hint.clone(),
             district_style: pilot.district_style.clone(),
+            crest_m: None,
+            dam_kind: None,
+            required_research_ids: Vec::new(),
         };
         registry.by_id.insert(def.id.clone(), def);
     }
@@ -504,6 +537,9 @@ fn register_builtin_apartments(registry: &mut BuildingDefinitionRegistry) {
             site_json_path: None,
             pilot_hover_hint: None,
             district_style: None,
+            crest_m: None,
+            dam_kind: None,
+            required_research_ids: Vec::new(),
         };
         registry.by_id.insert(def.id.clone(), def);
     }
@@ -825,6 +861,9 @@ mod tests {
             plant_definition_id: None,
             transfer_capacity_mva: 0.0,
             procedural_module_id: None,
+            crest_m: None,
+            dam_kind: None,
+            required_research_ids: Vec::new(),
         };
         let def = file_to_definition("test_bad_mega".into(), raw);
         assert_eq!(def.family, BuildingFamily::Industry);

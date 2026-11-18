@@ -1,17 +1,23 @@
 //! VEG-H02 — trees and cover on the TacticalFlat2D world map.
 //!
+//! **GPU-C:** each plant is **one (or two) axis-aligned instance quads** — no polygon
+//! crown tessellation. [`VegetationInstanceFrame`] holds the instance list for the draw.
+//! Full GPU instance-buffer / indirect draw remains GPU-C.2.
+//! [`plan_gpu_stubs_kill_v1.md`](../dev/plan_gpu_stubs_kill_v1.md) Upgrade C.
+//!
 //! Reads [`VegetationExtractFrame`] and nothing else about vegetation (no second extract,
 //! no second LOD ladder). The extract carries one row per chunk, so each row is expanded
 //! into deterministic symbols inside that chunk. All symbols for the visible chunks go into
-//! one merged vertex-colored mesh on one entity.
+//! one merged vertex-colored **quad** mesh on one entity.
 //!
 //! Plane and layering: same tile axes as the terrain sprite (`[0,w] x [0,h]`, z = 0).
 //! The layer sits at [`VEG_Z`], above terrain and below the construction / road plane
 //! (`world_map_tile_center` z = 1, network ribbons z = 1.04). It is never pickable.
 //!
 //! Zoom is the camera ([`MainWorldCameraOrthoTrace`]): pixels per tile pick one of four
-//! [`VegLod`] bands. A band change, a visible-chunk-window change, or an extract content
-//! change rebuilds the mesh. Nothing else does.
+//! [`VegLod`] bands. Extract re-sample runs on content / LOD / **snapped** window change.
+//! Pan inside a snap cell frustum-culls cached [`VegetationInstanceFrame`] and rebuilds the
+//! mesh only (BOOK-S3 / RND-02) — no second extract pass.
 //!
 //! Per cell: every extract row carries the sim's per-cell stand state ([`ChunkCellStand::render`]): live
 //! stage, burning, burnt snags, regrowth, open water (the water class decided once by world generation).
@@ -31,8 +37,8 @@ use crate::gui::{MainWorldCameraOrthoTrace, WorldPresentationMode};
 use crate::render::extraction::{VegExtractRow, VegetationExtractFrame, VegetationExtractFrameSet};
 use crate::render::vegetation_species::{CrownProfile, Maturity, TreeShape, VegSpeciesTable, SPECIES_DEFAULT};
 use crate::systems::ecology::{
-    SuccessionTopologyStage, CELL_BURNING, CELL_BURNT, CELL_GRASS, CELL_OLD, CELL_REGROWTH, CELL_SHRUB,
-    CELL_WATER, CELL_YOUNG,
+    SuccessionTopologyStage, CELL_BURNING, CELL_BURNT, CELL_DEAD, CELL_GRASS, CELL_OLD, CELL_REGROWTH,
+    CELL_SHRUB, CELL_WATER, CELL_YOUNG,
 };
 use crate::terrain::generation::ChunkCellMatrix;
 use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
@@ -44,10 +50,24 @@ pub const VEG_Z: f32 = 0.5;
 const MAX_SYMBOLS: usize = 40_000;
 
 /// Chunks beyond the view edge that still build, so a pan does not pop at the border.
-const WINDOW_MARGIN_CHUNKS: i32 = 1;
+const WINDOW_MARGIN_CHUNKS: i32 = 2;
+/// Snap sample window to this chunk grid so pan within a cell reuses sampled instances (BOOK-S3).
+const SAMPLE_WINDOW_SNAP_CHUNKS: i32 = 4;
 
 #[derive(Component)]
 pub(crate) struct WorldMapVegetationLayer;
+
+/// GPU-C — last built plant instances (flat layer). Frustum cull feeds mesh rebuild / future GPU draw.
+#[derive(Resource, Debug, Default, Clone)]
+pub struct VegetationInstanceFrame {
+    pub instances: Vec<VegInstance>,
+    pub symbols: u32,
+    pub revision: u64,
+    /// BOOK-S3 / RND-02 — last frustum sphere cull counters.
+    pub submitted: u32,
+    pub visible: u32,
+    pub culled: u32,
+}
 
 /// Zoom band, chosen from screen pixels per tile.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -104,6 +124,8 @@ pub(crate) enum Cover {
     OldGrowth,
     Burning,
     Burnt,
+    /// Flood-killed standing dead — bleached, no crown (distinct from charred [`Cover::Burnt`]).
+    Dead,
     Regrowth,
 }
 
@@ -256,6 +278,7 @@ fn base_probability(cover: Cover, density: f32) -> f32 {
         Cover::Grass => d * 0.6,
         Cover::Burning => d.max(0.4),
         Cover::Burnt => 0.3 + 0.4 * d,
+        Cover::Dead => 0.35 + 0.35 * d,
         Cover::Regrowth => 0.2 + 0.4 * d,
     }
 }
@@ -307,6 +330,7 @@ pub(crate) fn cover_for_code(code: u8) -> Option<Cover> {
         CELL_OLD => Some(Cover::OldGrowth),
         CELL_BURNING => Some(Cover::Burning),
         CELL_BURNT => Some(Cover::Burnt),
+        CELL_DEAD => Some(Cover::Dead),
         CELL_REGROWTH => Some(Cover::Regrowth),
         _ => None,
     }
@@ -318,6 +342,7 @@ pub(crate) fn cell_probability(cover: Cover, density: f32) -> f32 {
     match cover {
         Cover::Burning => 0.85,
         Cover::Burnt => 0.55,
+        Cover::Dead => 0.5,
         Cover::Regrowth => 0.5,
         live => base_probability(live, density),
     }
@@ -397,6 +422,7 @@ fn wash_color(cover: Cover, density: f32) -> [f32; 4] {
         Cover::Grass => rgba(0.55, 0.65, 0.30, 0.08 + 0.2 * d, 0.0),
         Cover::Burning => rgba(1.0, 0.45, 0.08, 0.65, 0.0),
         Cover::Burnt => rgba(0.10, 0.09, 0.08, 0.55, 0.0),
+        Cover::Dead => rgba(0.55, 0.52, 0.48, 0.5, 0.0),
         Cover::Regrowth => rgba(0.45, 0.70, 0.30, 0.3, 0.0),
     }
 }
@@ -433,7 +459,7 @@ impl Cover {
         match self {
             Cover::Grass | Cover::Shrub | Cover::Regrowth => Maturity::Shrub,
             Cover::YoungForest => Maturity::Young,
-            Cover::OldGrowth | Cover::Burning | Cover::Burnt => Maturity::Old,
+            Cover::OldGrowth | Cover::Burning | Cover::Burnt | Cover::Dead => Maturity::Old,
         }
     }
 }
@@ -512,13 +538,15 @@ const CROWN_R_PER_WIDTH: f32 = 0.64;
 /// Palette is shared with the voxel view, which lights it; the flat layer sits darker on the terrain raster.
 const TACTICAL_CROWN_SHADE: f32 = -0.3;
 
+/// GPU-C — one axis-aligned instance quad (profile only scales radius; no polygon fan).
 fn crown_symbol(g: &mut VegGeometry, profile: CrownProfile, pos: Vec2, r: f32, c: [f32; 4]) {
-    match profile {
-        CrownProfile::Round => g.polygon(pos.x, pos.y, r, 6, c),
-        CrownProfile::Cone => g.polygon(pos.x, pos.y, r * 1.15, 3, c),
-        CrownProfile::Column => g.polygon(pos.x, pos.y, r, 4, c),
-        CrownProfile::Spread => g.polygon(pos.x, pos.y, r * 1.05, 8, c),
-    }
+    let rr = match profile {
+        CrownProfile::Round => r,
+        CrownProfile::Cone => r * 1.15,
+        CrownProfile::Column => r,
+        CrownProfile::Spread => r * 1.05,
+    };
+    g.rect(pos.x - rr, pos.y - rr, pos.x + rr, pos.y + rr, c);
 }
 
 fn shape_rgba(c: [f32; 3], a: f32, shade: f32) -> [f32; 4] {
@@ -565,40 +593,83 @@ fn push_symbol(g: &mut VegGeometry, s: &Site, table: &VegSpeciesTable) {
         }
         Cover::Shrub => {
             let sh = table.resolve_shape(i.species, Maturity::Shrub, i.rand);
-            g.diamond(
-                pos.x,
-                pos.y,
-                step * CROWN_R_PER_WIDTH * sh.crown_width,
+            let r = step * CROWN_R_PER_WIDTH * sh.crown_width;
+            g.rect(
+                pos.x - r,
+                pos.y - r,
+                pos.x + r,
+                pos.y + r,
                 riparian_tint(shape_rgba(sh.crown, 0.9, shade), i.riparian),
             );
         }
         Cover::Grass => {
-            if detailed {
-                g.tri(pos.x, pos.y, step * 0.25 * size_jitter, rgba(0.55, 0.65, 0.30, 0.8, shade));
+            let r = if detailed {
+                step * 0.25 * size_jitter
             } else {
-                g.diamond(pos.x, pos.y, step * 0.2, rgba(0.55, 0.65, 0.30, 0.5, shade));
-            }
+                step * 0.2
+            };
+            let a = if detailed { 0.8 } else { 0.5 };
+            g.rect(
+                pos.x - r,
+                pos.y - r,
+                pos.x + r,
+                pos.y + r,
+                rgba(0.55, 0.65, 0.30, a, shade),
+            );
         }
         Cover::Burning => {
             let sh = table.resolve_shape(i.species, Maturity::Old, i.rand);
             let flicker = 0.9 + 0.1 * f32::from(i.burn_phase % 3);
             let r = step * CROWN_R_PER_WIDTH * sh.crown_width * 0.9;
-            g.hex(pos.x, pos.y, r, rgba(1.0, 0.40, 0.06, 0.95, shade * flicker));
+            g.rect(
+                pos.x - r,
+                pos.y - r,
+                pos.x + r,
+                pos.y + r,
+                rgba(1.0, 0.40, 0.06, 0.95, shade * flicker),
+            );
             if detailed {
-                g.hex(pos.x, pos.y, r * 0.5, rgba(1.0, 0.85, 0.30, 1.0, shade * flicker));
+                let r2 = r * 0.5;
+                g.rect(
+                    pos.x - r2,
+                    pos.y - r2,
+                    pos.x + r2,
+                    pos.y + r2,
+                    rgba(1.0, 0.85, 0.30, 1.0, shade * flicker),
+                );
             }
         }
         Cover::Burnt => {
             let sh = table.resolve_shape(i.species, Maturity::Old, i.rand);
-            g.diamond(
-                pos.x,
-                pos.y,
-                step * CROWN_R_PER_WIDTH * sh.crown_width * 0.55,
+            let r = step * CROWN_R_PER_WIDTH * sh.crown_width * 0.55;
+            g.rect(
+                pos.x - r,
+                pos.y - r,
+                pos.x + r,
+                pos.y + r,
                 rgba(0.10, 0.09, 0.08, 0.9, shade),
             );
         }
+        Cover::Dead => {
+            // Bleached trunk — no crown, grey, distinct from charred snag.
+            let sh = table.resolve_shape(i.species, Maturity::Old, i.rand);
+            g.rect(
+                pos.x - step * 0.08,
+                pos.y - step * CROWN_R_PER_WIDTH * sh.crown_width * 0.35,
+                pos.x + step * 0.08,
+                pos.y + step * CROWN_R_PER_WIDTH * sh.crown_width * 0.45,
+                rgba(0.62, 0.58, 0.52, 0.92, shade),
+            );
+        }
         Cover::Regrowth => {
-            g.tri(pos.x, pos.y, step * 0.28 * size_jitter, rgba(0.45, 0.70, 0.30, 0.9, shade));
+            let r = step * 0.28 * size_jitter;
+            g.rect(
+                pos.x - r,
+                pos.y - r,
+                pos.x + r,
+                pos.y + r,
+                rgba(0.45, 0.70, 0.30, 0.9, shade),
+            );
         }
     }
     g.symbols += 1;
@@ -631,25 +702,30 @@ fn estimate_symbols(rows: &[&VegExtractRow], chunk: UVec2, lod: VegLod) -> usize
 /// Wash colour for a block of cells: fire states win, then the commonest live stage. `None` when most of
 /// the block is water or bare ground.
 fn wash_cover(view: &CellView, x0: u32, y0: u32, x1: u32, y1: u32) -> Option<Cover> {
-    let mut counts = [0u32; 9];
+    let mut counts = [0u32; 10];
     let mut total = 0u32;
     for y in y0..y1.min(view.size.y) {
         for x in x0..x1.min(view.size.x) {
-            counts[view.codes[(y * view.size.x + x) as usize].min(8) as usize] += 1;
+            counts[view.codes[(y * view.size.x + x) as usize].min(9) as usize] += 1;
             total += 1;
         }
     }
     if total == 0 {
         return None;
     }
-    let veg: u32 = (CELL_GRASS..=CELL_REGROWTH).map(|c| counts[c as usize]).sum();
+    let veg: u32 = (CELL_GRASS..=CELL_REGROWTH).map(|c| counts[c as usize]).sum::<u32>()
+        + counts[CELL_DEAD as usize];
     if veg * 4 < total {
         return None;
     }
     if counts[CELL_BURNING as usize] > 0 {
         return Some(Cover::Burning);
     }
-    for (code, cover) in [(CELL_BURNT, Cover::Burnt), (CELL_REGROWTH, Cover::Regrowth)] {
+    for (code, cover) in [
+        (CELL_BURNT, Cover::Burnt),
+        (CELL_DEAD, Cover::Dead),
+        (CELL_REGROWTH, Cover::Regrowth),
+    ] {
         if counts[code as usize] * 5 >= veg * 2 {
             return Some(cover);
         }
@@ -671,7 +747,7 @@ pub(crate) fn build_vegetation_geometry(
     lod: VegLod,
     window: Option<(IVec2, IVec2)>,
     table: &VegSpeciesTable,
-) -> (VegGeometry, VegLod) {
+) -> (VegGeometry, VegLod, Vec<VegInstance>) {
     let mut visible: Vec<&VegExtractRow> = rows
         .iter()
         .filter(|r| {
@@ -697,6 +773,7 @@ pub(crate) fn build_vegetation_geometry(
     // rather than a chunk-wide guess that could cover water for a frame or two.
     let per_cell_world = visible.iter().any(|r| r.cells.is_some());
     let mut instances: Vec<VegInstance> = Vec::new();
+    let mut all_instances: Vec<VegInstance> = Vec::new();
     for row in visible {
         let (cover, _) = classify_row(row);
         let view = CellView::of(row, chunk);
@@ -741,11 +818,12 @@ pub(crate) fn build_vegetation_geometry(
         }
         instances.clear();
         sample_row_instances(row, chunk, lod.step_tiles(), &mut instances);
+        all_instances.extend_from_slice(&instances);
         for inst in &instances {
             push_symbol(&mut g, &Site { lod, step, inst: *inst }, table);
         }
     }
-    (g, lod)
+    (g, lod, all_instances)
 }
 
 fn geometry_to_mesh(g: VegGeometry) -> Mesh {
@@ -754,6 +832,71 @@ fn geometry_to_mesh(g: VegGeometry) -> Mesh {
     mesh.insert_attribute(Mesh::ATTRIBUTE_COLOR, g.colors);
     mesh.insert_indices(Indices::U32(g.indices));
     mesh
+}
+
+/// BOOK-S3 — rebuild draw geometry from cached instances (no extract re-sample).
+#[must_use]
+pub(crate) fn geometry_from_veg_instances(
+    instances: &[VegInstance],
+    lod: VegLod,
+    table: &VegSpeciesTable,
+) -> VegGeometry {
+    let mut g = VegGeometry::default();
+    if lod == VegLod::Wash || instances.is_empty() {
+        return g;
+    }
+    let step = lod.step_tiles() as f32;
+    for inst in instances {
+        push_symbol(&mut g, &Site { lod, step, inst: *inst }, table);
+    }
+    g
+}
+
+/// Sphere radius proxy for a veg crown (half-step).
+#[inline]
+fn veg_instance_radius(inst: &VegInstance, lod: VegLod) -> f32 {
+    let step = lod.step_tiles().max(1) as f32;
+    (step * CROWN_R_PER_WIDTH * 0.9).max(0.5)
+}
+
+#[must_use]
+pub(crate) fn frustum_filter_veg_instances(
+    instances: &[VegInstance],
+    lod: VegLod,
+    frustum: &crate::render::culling::FrustumPlanes,
+) -> (Vec<VegInstance>, u32, u32) {
+    let submitted = instances.len() as u32;
+    let visible: Vec<VegInstance> = instances
+        .iter()
+        .copied()
+        .filter(|inst| {
+            let c = Vec3::new(inst.pos.x, inst.pos.y, 0.0);
+            frustum.contains_sphere(c, veg_instance_radius(inst, lod))
+        })
+        .collect();
+    let vis_n = visible.len() as u32;
+    (visible, submitted, submitted.saturating_sub(vis_n))
+}
+
+fn snap_chunk_coord(v: i32, snap: i32) -> i32 {
+    if snap <= 1 {
+        return v;
+    }
+    let s = snap;
+    v.div_euclid(s) * s
+}
+
+/// Visible chunk range snapped to [`SAMPLE_WINDOW_SNAP_CHUNKS`] so pan reuses samples.
+fn chunk_window_snapped(trace: &MainWorldCameraOrthoTrace, chunk: UVec2) -> Option<(IVec2, IVec2)> {
+    let (lo, hi) = chunk_window(trace, chunk)?;
+    let s = SAMPLE_WINDOW_SNAP_CHUNKS;
+    Some((
+        IVec2::new(snap_chunk_coord(lo.x, s), snap_chunk_coord(lo.y, s)),
+        IVec2::new(
+            snap_chunk_coord(hi.x, s).saturating_add(s),
+            snap_chunk_coord(hi.y, s).saturating_add(s),
+        ),
+    ))
 }
 
 /// What the extract looks like to this layer. `revision` bumps every sim step, so the
@@ -780,8 +923,12 @@ fn extract_content_hash(rows: &[VegExtractRow], chunk: UVec2) -> u64 {
 
 #[derive(Default)]
 pub(crate) struct LayerState {
-    built_key: Option<u64>,
+    /// Content + LOD + snapped sample window (re-sample extract).
+    sample_key: Option<u64>,
+    /// Frustum / draw fingerprint (rebuild mesh from cached instances only).
+    draw_key: Option<u64>,
     content_hash: u64,
+    cached_lod: Option<VegLod>,
     mesh: Option<Handle<Mesh>>,
     material: Option<Handle<ColorMaterial>>,
     last_empty: bool,
@@ -819,17 +966,20 @@ pub(crate) fn sync_world_map_vegetation(
     frame: Option<Res<VegetationExtractFrame>>,
     table: Res<VegSpeciesTable>,
     trace: Option<Res<MainWorldCameraOrthoTrace>>,
+    cam: Option<Res<crate::render::extraction::extracted_camera_metrics::ExtractedCameraMetrics>>,
     matrices: Query<&ChunkCellMatrix>,
     mut layer: Query<(Entity, &mut Visibility, &Mesh2d), With<WorldMapVegetationLayer>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
+    mut veg_instances: ResMut<VegetationInstanceFrame>,
     mut state: Local<LayerState>,
 ) {
     if !matches!(base.get(), BaseState::Simulation) {
         for (e, _, _) in &layer {
             commands.entity(e).despawn();
         }
-        state.built_key = None;
+        state.sample_key = None;
+        state.draw_key = None;
         return;
     }
     // PixelWorld3D has its own LG-5 atlas stamps. Hide, keep the built mesh for the way back.
@@ -848,13 +998,17 @@ pub(crate) fn sync_world_map_vegetation(
         .map(|m| m.size)
         .filter(|s| s.x > 0 && s.y > 0)
         .unwrap_or(UVec2::splat(CHUNK_TILES_SIM));
-    if frame.is_changed() || table.is_changed() || state.built_key.is_none() {
+    if frame.is_changed() || table.is_changed() || state.sample_key.is_none() {
         state.content_hash = extract_content_hash(&frame.rows, chunk) ^ u64::from(table.species.len() as u32);
     }
     let default_trace = MainWorldCameraOrthoTrace::default();
     let trace = trace.as_deref().unwrap_or(&default_trace);
     let lod = VegLod::for_px_per_tile(px_per_tile(trace));
-    let window = if lod == VegLod::Wash { None } else { chunk_window(trace, chunk) };
+    let window = if lod == VegLod::Wash {
+        None
+    } else {
+        chunk_window_snapped(trace, chunk)
+    };
     let window_key = window.map_or(0, |(lo, hi)| {
         mix64(
             (lo.x as u32 as u64)
@@ -863,22 +1017,85 @@ pub(crate) fn sync_world_map_vegetation(
                 ^ ((hi.y as u32 as u64) << 48),
         )
     });
-    let key = mix64(state.content_hash ^ (lod as u64) ^ window_key);
+    let sample_key = mix64(state.content_hash ^ (lod as u64) ^ window_key);
 
     let material = state
         .material
         .get_or_insert_with(|| materials.add(ColorMaterial::from_color(Color::WHITE)))
         .clone();
 
-    if state.built_key != Some(key) {
-        let (geo, _) = build_vegetation_geometry(&frame.rows, chunk, lod, window, &table);
-        // Empty builds never reach `Assets<Mesh>` (zero-vertex meshes trip the render slab allocator).
+    let frustum = cam.as_ref().and_then(|c| {
+        if c.view_proj == Mat4::IDENTITY {
+            None
+        } else {
+            Some(crate::render::culling::FrustumPlanes::from_view_proj(c.view_proj))
+        }
+    });
+    let draw_key = match frustum {
+        Some(fr) => {
+            // Quantize plane distances so tiny camera jitter does not thrash the mesh.
+            let mut h = sample_key;
+            for p in &fr.planes {
+                h = mix64(
+                    h ^ (((p.d * 4.0).round() as i32) as u32 as u64)
+                        ^ ((((p.n.x * 64.0).round() as i32) as u32 as u64) << 16),
+                );
+            }
+            h
+        }
+        None => sample_key,
+    };
+
+    let need_sample = state.sample_key != Some(sample_key);
+    let need_draw = need_sample || state.draw_key != Some(draw_key);
+
+    if need_sample {
+        let (geo, used_lod, instances) =
+            build_vegetation_geometry(&frame.rows, chunk, lod, window, &table);
+        veg_instances.instances = instances;
+        veg_instances.revision = veg_instances.revision.wrapping_add(1);
+        state.cached_lod = Some(used_lod);
+        state.sample_key = Some(sample_key);
+        if used_lod == VegLod::Wash {
+            // Wash has no per-plant instances — keep the sampled mesh as-is.
+            let symbols = geo.symbols as u32;
+            let drawable = geo.symbols > 0
+                && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, geometry_to_mesh(geo));
+            state.last_empty = !drawable;
+            veg_instances.symbols = if drawable { symbols } else { 0 };
+            veg_instances.submitted = 0;
+            veg_instances.visible = 0;
+            veg_instances.culled = 0;
+            state.draw_key = Some(draw_key);
+        }
+    }
+
+    if need_draw && state.cached_lod.is_some_and(|l| l != VegLod::Wash) {
+        let used_lod = state.cached_lod.unwrap_or(lod);
+        let (visible, submitted, culled) = match frustum.as_ref() {
+            Some(fr) => frustum_filter_veg_instances(&veg_instances.instances, used_lod, fr),
+            None => (
+                veg_instances.instances.clone(),
+                veg_instances.instances.len() as u32,
+                0,
+            ),
+        };
+        veg_instances.submitted = submitted;
+        veg_instances.visible = visible.len() as u32;
+        veg_instances.culled = culled;
+        let geo = geometry_from_veg_instances(&visible, used_lod, &table);
+        veg_instances.symbols = geo.symbols as u32;
         let drawable = geo.symbols > 0
             && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, geometry_to_mesh(geo));
         state.last_empty = !drawable;
-        state.built_key = Some(key);
+        state.draw_key = Some(draw_key);
     }
-    let want = if state.last_empty { Visibility::Hidden } else { Visibility::Visible };
+
+    let want = if state.last_empty {
+        Visibility::Hidden
+    } else {
+        Visibility::Visible
+    };
     let Some(mesh_handle) = state.mesh.clone() else {
         return;
     };
@@ -906,7 +1123,7 @@ pub struct WorldMapVegetationMeshPlugin;
 
 impl Plugin for WorldMapVegetationMeshPlugin {
     fn build(&self, app: &mut App) {
-        app.add_systems(
+        app.init_resource::<VegetationInstanceFrame>().add_systems(
             Update,
             sync_world_map_vegetation.after(VegetationExtractFrameSet::BuildProfiles),
         );
@@ -954,7 +1171,8 @@ mod tests {
     }
 
     fn build(rows: &[VegExtractRow], chunk: UVec2, lod: VegLod, window: Option<(IVec2, IVec2)>) -> (VegGeometry, VegLod) {
-        build_vegetation_geometry(rows, chunk, lod, window, &VegSpeciesTable::default())
+        let (g, lod, _) = build_vegetation_geometry(rows, chunk, lod, window, &VegSpeciesTable::default());
+        (g, lod)
     }
 
     fn known_rows() -> Vec<VegExtractRow> {
@@ -967,6 +1185,46 @@ mod tests {
 
     fn is_ember(c: &[f32; 4]) -> bool {
         c[0] > 0.8 && c[2] < 0.1
+    }
+
+    #[test]
+    fn book_s3_frustum_filters_cached_instances_without_resample() {
+        use crate::render::culling::{FrustumPlanes, Plane4};
+        let fr = FrustumPlanes {
+            planes: [
+                Plane4::from_normal_distance(Vec3::X, 0.0),
+                Plane4::from_normal_distance(-Vec3::X, 10.0),
+                Plane4::from_normal_distance(Vec3::Y, 0.0),
+                Plane4::from_normal_distance(-Vec3::Y, 10.0),
+                Plane4::from_normal_distance(Vec3::Z, 1.0),
+                Plane4::from_normal_distance(-Vec3::Z, 10.0),
+            ],
+        };
+        let rows = [
+            VegInstance {
+                pos: Vec2::new(5.0, 5.0),
+                cover: Cover::Grass,
+                species: 0,
+                rand: 0.5,
+                riparian: false,
+                burn_phase: 0,
+            },
+            VegInstance {
+                pos: Vec2::new(50.0, 5.0),
+                cover: Cover::Grass,
+                species: 0,
+                rand: 0.5,
+                riparian: false,
+                burn_phase: 0,
+            },
+        ];
+        let (vis, submitted, culled) = frustum_filter_veg_instances(&rows, VegLod::Fine, &fr);
+        assert_eq!(submitted, 2);
+        assert_eq!(vis.len(), 1);
+        assert_eq!(culled, 1);
+        let table = VegSpeciesTable::default();
+        let geo = geometry_from_veg_instances(&vis, VegLod::Fine, &table);
+        assert!(geo.symbols > 0);
     }
 
     #[test]
@@ -1068,16 +1326,16 @@ mod tests {
         let verts_per_plant = |name: &str| {
             let (g, _) = build(&[stand(id(name))], chunk, VegLod::Tree, None);
             assert!(g.symbols > 50, "{name}");
-            assert_eq!(g.positions.len() % g.symbols, 0, "{name}");
+            // GPU-C: every symbol is axis-aligned quads (4 verts each).
+            assert_eq!(g.positions.len() % 4, 0, "{name}");
             (g.symbols, g.positions.len() / g.symbols)
         };
-        // Tree band, old growth: crown plus detail crown. Round = 2 hexes, Cone = 2 triangles,
-        // Column = 2 diamonds, Spread = 2 octagons.
+        // Tree band, old growth: crown quad + detail crown quad → 8 verts/plant (all profiles).
         let (n_oak, oak) = verts_per_plant("oak");
         let (n_spruce, spruce) = verts_per_plant("spruce");
         let (n_birch, birch) = verts_per_plant("birch");
         let (n_pine, pine) = verts_per_plant("pine");
-        assert_eq!((oak, spruce, birch, pine), (12, 6, 8, 16));
+        assert_eq!((oak, spruce, birch, pine), (8, 8, 8, 8));
         assert!(n_oak == n_spruce && n_spruce == n_birch && n_birch == n_pine, "sites do not depend on species");
     }
 
@@ -1188,6 +1446,7 @@ mod tests {
             ..Default::default()
         };
         app.insert_resource(frame);
+        app.init_resource::<VegetationInstanceFrame>();
         app.add_systems(Update, sync_world_map_vegetation);
         app.world_mut()
             .resource_mut::<NextState<BaseState>>()

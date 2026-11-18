@@ -265,10 +265,14 @@ impl Plugin for SimControlPlugin {
     }
 }
 
+/// CQ-22: pure parse for pause-env truthy values (tests must not `set_var`).
+#[must_use]
+pub fn sim_pause_env_flag(raw: Option<&str>) -> bool {
+    raw.is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+}
+
 fn sim_pause_env_on() -> bool {
-    std::env::var(SIM_PAUSE_ENV)
-        .ok()
-        .is_some_and(|v| v == "1" || v.eq_ignore_ascii_case("true"))
+    sim_pause_env_flag(std::env::var(SIM_PAUSE_ENV).ok().as_deref())
 }
 
 fn apply_env_sim_pause_latch(mut ctrl: ResMut<SimControlState>) {
@@ -340,19 +344,12 @@ mod tests {
 
     #[test]
     fn sim_pause_env_recognizes_truthy_values() {
-        let prior = std::env::var(SIM_PAUSE_ENV).ok();
-        std::env::set_var(SIM_PAUSE_ENV, "1");
-        assert!(sim_pause_env_on());
-        std::env::set_var(SIM_PAUSE_ENV, "true");
-        assert!(sim_pause_env_on());
-        std::env::set_var(SIM_PAUSE_ENV, "0");
-        assert!(!sim_pause_env_on());
-        match prior {
-            Some(v) => std::env::set_var(SIM_PAUSE_ENV, v),
-            None => {
-                let _ = std::env::remove_var(SIM_PAUSE_ENV);
-            }
-        }
+        assert!(sim_pause_env_flag(Some("1")));
+        assert!(sim_pause_env_flag(Some("true")));
+        assert!(sim_pause_env_flag(Some("TRUE")));
+        assert!(!sim_pause_env_flag(Some("0")));
+        assert!(!sim_pause_env_flag(Some("false")));
+        assert!(!sim_pause_env_flag(None));
     }
 
     #[test]

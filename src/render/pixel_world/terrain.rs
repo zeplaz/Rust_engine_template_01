@@ -1,12 +1,10 @@
-//! Voxel terrain + water meshes for PixelWorld3D.
+//! Voxel **ground** meshes for PixelWorld3D (water is GPU-only — see `water_gpu`).
 //!
-//! One opaque ground mesh and one translucent water mesh per [`TERRAIN_CHUNK`] block of cells,
-//! built from [`PixelWorldTerrainField`]. Column tops and walls are run-merged along a row (equal
-//! heights share one quad). The ground is textured with the terrain raster the top-down view draws
-//! ([`TileWorldFallbackState::image`], one texel per cell, nearest sampling), so terrain family,
-//! roads, fire tint and site stamps read the same in both views — no second terrain colouring.
-//! Rebuilt only when the field revision changes; the material is re-touched when the raster image
-//! changes so the GPU bind group follows the repaint.
+//! One opaque ground mesh per [`TERRAIN_CHUNK`] block of cells from [`PixelWorldTerrainField`].
+//! Column tops and walls are **greedy run-merged** (GPU-ARRAY land path). Textured with the
+//! same world bake / raster Image the top-down view uses (bake samples Texture2DArray materials).
+//! Water surfaces are **not** emitted here
+//! ([`plan_final_gpu_presentation_v1.md`](../../../dev/plan_final_gpu_presentation_v1.md)).
 
 use bevy::asset::RenderAssetUsages;
 use bevy::camera::visibility::RenderLayers;
@@ -16,7 +14,6 @@ use bevy::prelude::*;
 use super::field::PixelWorldTerrainField;
 use super::PIXEL_WORLD_RENDER_LAYER;
 use crate::render::TileWorldFallbackState;
-use crate::terrain::generation::WaterClass;
 
 /// Cells per terrain chunk edge.
 pub const TERRAIN_CHUNK: u32 = 64;
@@ -26,6 +23,13 @@ const WALL_SHADE: f32 = 0.82;
 
 #[derive(Component)]
 pub struct PixelWorldTerrainChunk;
+
+/// Chunk grid index — DESTROY-T2b priority remesh despawns by coord.
+#[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PixelWorldTerrainChunkCoord {
+    pub cx: u32,
+    pub cy: u32,
+}
 
 /// Vertex buffers for one mesh (positions / normals / uvs / colours).
 #[derive(Default)]
@@ -216,145 +220,85 @@ pub(crate) fn build_terrain_chunk(field: &PixelWorldTerrainField, cx: u32, cy: u
         }
     }
 
-    // Water: flat surfaces per cell run, plus falls where a river steps down to lower water.
-    let water_at = |x: i32, y: i32| -> Option<(f32, WaterClass)> {
-        let i = field.index(x, y)?;
-        let s = field.water[i];
-        s.is_finite().then(|| (s, field.class[i]))
-    };
-    for y in y_lo..y_hi {
-        let mut x = x_lo;
-        while x < x_hi {
-            let Some((s, class)) = water_at(x, y) else {
-                x += 1;
-                continue;
-            };
-            let mut x_end = x + 1;
-            while x_end < x_hi && water_at(x_end, y).is_some_and(|(s2, c2)| s2 == s && c2 == class) {
-                x_end += 1;
-            }
-            let depth = (s - ground_at(x, y)).max(0.0);
-            let c = water_color(class, depth);
-            let (x0, x1, y0, y1) = (x as f32, x_end as f32, y as f32, (y + 1) as f32);
-            wtr.quad(
-                [p3(x0, y0, s), p3(x1, y0, s), p3(x1, y1, s), p3(x0, y1, s)],
-                Vec3::Y,
-                [Vec2::ZERO; 4],
-                c,
-            );
-            x = x_end;
-        }
-    }
-    for y in y_lo..y_hi {
-        for x in x_lo..x_hi {
-            let Some((s, _)) = water_at(x, y) else {
-                continue;
-            };
-            for (dx, dy, n) in [(1, 0, Vec3::X), (-1, 0, Vec3::NEG_X), (0, 1, Vec3::NEG_Z), (0, -1, Vec3::Z)] {
-                let lower = match water_at(x + dx, y + dy) {
-                    Some((s2, _)) if s2 < s - 0.05 => s2,
-                    // World edge: close the sea down to the skirt.
-                    None if field.index(x + dx, y + dy).is_none() => floor,
-                    _ => continue,
-                };
-                let (ex0, ey0, ex1, ey1) = match (dx, dy) {
-                    (1, 0) => ((x + 1) as f32, y as f32, (x + 1) as f32, (y + 1) as f32),
-                    (-1, 0) => (x as f32, y as f32, x as f32, (y + 1) as f32),
-                    (0, 1) => (x as f32, (y + 1) as f32, (x + 1) as f32, (y + 1) as f32),
-                    _ => (x as f32, y as f32, (x + 1) as f32, y as f32),
-                };
-                let foam = [0.80, 0.90, 0.95, 0.85];
-                wtr.quad(
-                    [p3(ex0, ey0, lower), p3(ex1, ey1, lower), p3(ex1, ey1, s), p3(ex0, ey0, s)],
-                    n,
-                    [Vec2::ZERO; 4],
-                    foam,
-                );
-            }
-        }
-    }
+    // PLAN-FINAL-GPU-PRESENTATION-v1: water is GPU-only (water_gpu / water_field shaders).
+    // Terrain chunks emit ground only — empty water MeshBuf.
+    let _ = floor;
     (g, wtr)
-}
-
-/// Water tint: deeper and standing water darker, rivers lighter and greener.
-fn water_color(class: WaterClass, depth: f32) -> [f32; 4] {
-    let d = (depth / 2.0).clamp(0.0, 1.0);
-    let (shallow, deep) = match class {
-        WaterClass::River => ([0.22, 0.52, 0.66], [0.14, 0.40, 0.58]),
-        WaterClass::Lake => ([0.18, 0.46, 0.66], [0.08, 0.28, 0.52]),
-        _ => ([0.14, 0.40, 0.64], [0.04, 0.18, 0.42]),
-    };
-    let mix = |a: f32, b: f32| a + (b - a) * d;
-    [mix(shallow[0], deep[0]), mix(shallow[1], deep[1]), mix(shallow[2], deep[2]), 0.86]
 }
 
 #[derive(Default)]
 pub(crate) struct TerrainLayerState {
     built_revision: Option<u64>,
     raster: Handle<Image>,
-    ground_material: Option<Handle<StandardMaterial>>,
-    water_material: Option<Handle<StandardMaterial>>,
     pending: Vec<(u32, u32)>,
 }
 
-/// Chunks rebuilt per frame after a field change (spreads the first build over a few frames).
-const CHUNKS_PER_FRAME: usize = 12;
+/// Chunks rebuilt per frame after a field change.
+/// 320² DamFlood = 5×5 chunks — keep this ≥ that so a revision never leaves a half-map hole.
+const CHUNKS_PER_FRAME: usize = 48;
 
 /// Keep terrain chunk entities in step with the field and the raster image.
+/// DESTROY-T2: ground uses [`PixelWorldGroundMaterial`] (bake albedo + destruction mask).
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn sync_pixel_world_terrain(
     mut commands: Commands,
     mode: Option<Res<crate::gui::WorldPresentationMode>>,
     field: Res<super::field::PixelWorldTerrainField>,
     raster: Option<Res<TileWorldFallbackState>>,
+    bake_spike: Option<Res<crate::render::TerrainGpuBakeSpikeState>>,
+    mask_gpu: Res<super::destruction_mask::DestructionMaskGpu>,
+    mut mask_book: ResMut<super::destruction_mask::DestructionMaskBook>,
     mut image_events: MessageReader<AssetEvent<Image>>,
     mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
-    chunks: Query<Entity, With<PixelWorldTerrainChunk>>,
+    mut materials: ResMut<Assets<super::ground_material::PixelWorldGroundMaterial>>,
+    mut ground_handle: ResMut<super::ground_material::PixelWorldGroundMaterialHandle>,
+    chunks: Query<(Entity, &PixelWorldTerrainChunkCoord), With<PixelWorldTerrainChunk>>,
     mut state: Local<TerrainLayerState>,
 ) {
-    let raster_image = raster.as_deref().map(|r| r.image.clone()).unwrap_or_default();
+    // Same display Image as flat tactical (bake when ready).
+    let raster_image = bake_spike
+        .as_ref()
+        .filter(|s| crate::render::spike_bake_ready_for_consumers(s))
+        .map(|s| s.world_bake_image.clone())
+        .filter(|h| *h != Handle::default())
+        .or_else(|| raster.as_deref().map(|r| r.image.clone()))
+        .unwrap_or_default();
     let raster_touched = image_events
         .read()
         .any(|e| matches!(e, AssetEvent::Modified { id } if *id == raster_image.id()));
     if !mode.is_some_and(|m| m.is_pixel_world()) || !field.is_ready() {
         return;
     }
-    let ground_mat = state
-        .ground_material
-        .get_or_insert_with(|| {
-            materials.add(StandardMaterial {
-                base_color: Color::WHITE,
-                perceptual_roughness: 0.95,
-                reflectance: 0.08,
-                ..default()
-            })
-        })
-        .clone();
-    let water_mat = state
-        .water_material
-        .get_or_insert_with(|| {
-            materials.add(StandardMaterial {
-                base_color: Color::WHITE,
-                alpha_mode: AlphaMode::Blend,
-                perceptual_roughness: 0.12,
-                reflectance: 0.6,
-                ..default()
-            })
-        })
-        .clone();
-    // Re-point / re-touch the ground material when the raster handle or its pixels change, so the
-    // render world rebuilds the bind group against the repainted texture.
-    if state.raster != raster_image || raster_touched {
-        state.raster = raster_image.clone();
-        if let Some(mut m) = materials.get_mut(&ground_mat) {
-            m.base_color_texture = (raster_image != Handle::default()).then(|| raster_image.clone());
+
+    let skirt = field.min_h - 3.0;
+    let w = mask_book.width.max(field.width).max(1) as f32;
+    let h = mask_book.height.max(field.height).max(1) as f32;
+    if ground_handle.0 == Handle::default() {
+        ground_handle.0 = materials.add(super::ground_material::PixelWorldGroundMaterial {
+            uniform: super::ground_material::GroundMaskUniform {
+                extent_skirt: Vec4::new(w, h, skirt, 0.0),
+            },
+            albedo: raster_image.clone(),
+            destruction_mask: mask_gpu.image.clone(),
+        });
+    }
+    if let Some(mut mat) = materials.get_mut(&ground_handle.0) {
+        mat.uniform.extent_skirt = Vec4::new(w, h, skirt, 0.0);
+        if state.raster != raster_image || raster_touched {
+            state.raster = raster_image.clone();
+            if raster_image != Handle::default() {
+                mat.albedo = raster_image.clone();
+            }
+        }
+        if mask_gpu.image != Handle::default() {
+            mat.destruction_mask = mask_gpu.image.clone();
         }
     }
+    let ground_mat = ground_handle.0.clone();
 
     if state.built_revision != Some(field.revision) {
         state.built_revision = Some(field.revision);
-        for e in &chunks {
+        for (e, _) in &chunks {
             commands.entity(e).despawn();
         }
         state.pending.clear();
@@ -366,28 +310,35 @@ pub(crate) fn sync_pixel_world_terrain(
             }
         }
     }
+    // DESTROY-T2b: destroyed-mask chunks to the front of pending (stack: push = next pop).
+    if !mask_book.remesh_priority.is_empty() {
+        let priority = std::mem::take(&mut mask_book.remesh_priority);
+        let mut drop_ents: Vec<Entity> = Vec::new();
+        for (e, coord) in &chunks {
+            if priority.iter().any(|&(cx, cy)| coord.cx == cx && coord.cy == cy) {
+                drop_ents.push(e);
+            }
+        }
+        for e in drop_ents {
+            commands.entity(e).despawn();
+        }
+        for &(cx, cy) in &priority {
+            state.pending.retain(|p| *p != (cx, cy));
+            state.pending.push((cx, cy));
+        }
+    }
     let layer = RenderLayers::layer(PIXEL_WORLD_RENDER_LAYER);
     for _ in 0..CHUNKS_PER_FRAME {
         let Some((cx, cy)) = state.pending.pop() else {
             break;
         };
-        let (ground, water) = build_terrain_chunk(field.as_ref(), cx, cy);
+        let (ground, _water) = build_terrain_chunk(field.as_ref(), cx, cy);
         if !ground.is_empty() {
             commands.spawn((
                 PixelWorldTerrainChunk,
+                PixelWorldTerrainChunkCoord { cx, cy },
                 Mesh3d(meshes.add(ground.into_mesh())),
                 MeshMaterial3d(ground_mat.clone()),
-                Transform::IDENTITY,
-                Visibility::Inherited,
-                layer.clone(),
-                Pickable::IGNORE,
-            ));
-        }
-        if !water.is_empty() {
-            commands.spawn((
-                PixelWorldTerrainChunk,
-                Mesh3d(meshes.add(water.into_mesh())),
-                MeshMaterial3d(water_mat.clone()),
                 Transform::IDENTITY,
                 Visibility::Inherited,
                 layer.clone(),

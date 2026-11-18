@@ -65,7 +65,7 @@ DO / ACCEPT / LEDGER  same as v2 §0; ledger records BOTH cites
 
 | Bucket | Signal | Upgrade implication |
 |:---|:---|:---|
-| Adoption | **101 ADOPTED · 18 UNWIRED · 10 PARTIAL · 4 DEFER · 133 total** (`adoption.tsv` · measured 2026-11-16 · `--open` = UNWIRED/DEFER/PARTIAL) | `UNWIRED` = code exists, no production caller; ADOPTED only with `file:line` caller; DEFER/PARTIAL unlock via defer-unlock plan |
+| Adoption | **123 ADOPTED · 0 UNWIRED · 1 PARTIAL · 9 DEFER · 133 total** (`adoption.tsv` · measured 2026-11-16 · `--open` = DEFER/PARTIAL) | ADOPTED only with production caller; DEFER/PARTIAL unlock via defer-unlock plan |
 | DBG | DBG-04 / DBG-06 **ADOPTED** | GPU capture + pause/step shipped |
 | Tools / authoring | ECS-15 · IO-09 · DES-04 · PCG-06 **ADOPTED** (V1 S0–S5) | Studio param frames + MCP promote shipped |
 | Voxel / PCG | PCG-02/04/05 · RND-09 · LGT-04 **ADOPTED** (V3); **PCG-07** DEFER (town-growth) · **PCG-03** DEFER ⚠ world | Massing + flora + atmosphere presentation shipped; occupation flag default-off |
@@ -263,7 +263,7 @@ Owner default `@coder-mcp` / `@designer-mcp` unless Files are under `src/`.
 
 ## 10. Ledger (2026-11-15 snapshot — read `adoption.tsv`)
 
-**Authoritative ledger:** [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv). Update statuses there only. Live counts: **101 ADOPTED · 18 UNWIRED · 10 PARTIAL · 4 DEFER** (133 rows). This §10 table is the program-close evidence snapshot.
+**Authoritative ledger:** [`ref_books_index/adoption.tsv`](ref_books_index/adoption.tsv). Update statuses there only. Live counts: **123 ADOPTED · 0 UNWIRED · 1 PARTIAL · 9 DEFER** (133 rows). This §10 table is the program-close evidence snapshot.
 
 | Id | Wave | Status | Evidence |
 |:---|:---|:---|:---|

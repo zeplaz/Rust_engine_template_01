@@ -14,10 +14,10 @@ use bevy::prelude::*;
 
 pub mod balance;
 pub mod ballistics;
+pub mod ballistic_present;
 pub mod capability_toe;
 pub mod drone_doctrine;
 pub mod drone_missions;
-pub mod drone_research;
 pub mod drone_supply;
 pub mod formation;
 pub mod formation_members;
@@ -28,6 +28,7 @@ pub mod toe_demand;
 pub mod toe_refill;
 pub mod front;
 pub mod missile_supply;
+pub mod warheads;
 pub mod orders;
 pub mod personnel_supply;
 pub mod pressure;
@@ -81,20 +82,25 @@ pub use weather::{
 };
 pub use weather_poll_sites::gather_weather_poll_sites;
 pub use drone_missions::{
-    apply_missile_sortie_launches_system, pulse_drone_sorties, step_drone_missions_system,
-    AirOpZone, DroneAo, DroneCombatModifiers, DroneMissionDump, DroneMissionKind, DronePackage, script_group_package_intents,
-    DroneRole, MissionBook, MissionIntent, MissionIntentQueue,
+    apply_missile_sortie_launches_system, publish_mission_sense_frame_system, pulse_drone_sorties,
+    step_drone_missions_system, AirOpZone, DroneAo, DroneCombatModifiers, DroneMissionDump,
+    DroneMissionKind, DronePackage, script_group_package_intents, DroneRole, MissionBook,
+    MissionIntent, MissionIntentQueue, MissionSenseFrame,
 };
-pub use drone_research::DroneResearchState;
 pub use drone_doctrine::{doctrine_preferred_role, FactionDroneDoctrine};
 pub use capability_toe::{
     load_capability_toe_registry, CapabilityToeRegistry, MissileClass, CAPABILITY_TOE_RON,
 };
 pub use drone_supply::DroneCargoDemandBook;
 pub use ballistics::{BallisticFlightBook, BallisticKind, BallisticsPlugin};
+pub use ballistic_present::BallisticPresentFrame;
 pub use missile_supply::{
     pulse_missile_sorties, MissileSortieLaunch, MissileSortieLaunchQueue, MissileCargoDemandBook,
     MissilePackage, MissileSortieDump,
+};
+pub use warheads::{
+    apply_strike_orders_system, load_warheads, StrikeOrder, StrikeOrderQueue, WarheadCatalog,
+    WarheadDef, WARHEADS_RON,
 };
 pub use personnel_supply::PersonnelRestockBook;
 pub use front_stock_pool::{rebuild_front_stock_pool_system, FrontStockPoolFrame};
@@ -119,6 +125,29 @@ impl Plugin for CombatPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::sim_control::ensure_sim_step_clock(app);
         app.add_plugins(ballistics::BallisticsPlugin);
+        app.init_resource::<BallisticPresentFrame>()
+            .init_resource::<ballistic_present::BallisticImpactRing>()
+            .add_systems(
+                Update,
+                (
+                    ballistic_present::publish_ballistic_present_system,
+                    ballistic_present::record_impacts_from_blast_craters,
+                )
+                    .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick),
+            );
+        if !app.world().contains_resource::<WarheadCatalog>() {
+            let (catalog, err) = load_warheads();
+            if let Some(e) = err {
+                warn!("warheads: using compiled-in default ({e})");
+            }
+            app.insert_resource(catalog);
+        }
+        app.init_resource::<StrikeOrderQueue>().add_systems(
+            Update,
+            apply_strike_orders_system
+                .after(crate::systems::sim_control::SimControlSystemSet::AdvanceSimTick)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        );
         if !app.world().contains_resource::<FrontBalance>() {
             let (balance, error) = load_front_balance();
             if let Some(err) = &error {
@@ -186,9 +215,9 @@ impl Plugin for CombatPlugin {
             .init_resource::<ArtilleryWeatherDump>()
             .init_resource::<MissionIntentQueue>()
             .init_resource::<MissionBook>()
+            .init_resource::<MissionSenseFrame>()
             .init_resource::<DroneCombatModifiers>()
             .init_resource::<DroneMissionDump>()
-            .init_resource::<DroneResearchState>()
             .init_resource::<FactionDroneDoctrine>()
             .init_resource::<DroneCargoDemandBook>()
             .init_resource::<MissileCargoDemandBook>()
@@ -206,7 +235,8 @@ impl Plugin for CombatPlugin {
             (
                 advance_combat_clock_system,
                 execute_deployment_orders_system,
-                // Mission consume (take) → one stock pool → one refill dispatcher (typed sinks) → formation feed.
+                // Sense frame → mission pulse → stock pool → refill → formation feed.
+                publish_mission_sense_frame_system,
                 step_drone_missions_system,
                 rebuild_front_stock_pool_system,
                 refill_toe_from_front_system,

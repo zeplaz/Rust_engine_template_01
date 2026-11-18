@@ -15,6 +15,7 @@ use crate::economy::resource_flow::{FacilityFlowState, ResourceFlowNode};
 use crate::gui::logistics_focus::HudLogisticsFocus;
 use crate::gui::style::{CmdUiMonoFont, UiPalette};
 use crate::construction::SiteStageProgress;
+use crate::scenario::dam_flood::DamFloodPlayerOwner;
 use crate::strategic::{ConstructionSite, SiteMaterialStarved, SiteResourceManifest};
 
 #[derive(Component)]
@@ -37,6 +38,7 @@ pub fn sync_facility_info_card_system(
         Option<&FacilityFlowState>,
         Option<&FacilityInputs>,
     )>,
+    player_owner: Option<Res<DamFloodPlayerOwner>>,
     roots: Query<Entity, With<FacilityInfoCardRoot>>,
     mut texts: Query<&mut Text, With<FacilityInfoCardText>>,
     palette: Option<Res<UiPalette>>,
@@ -46,8 +48,23 @@ pub fn sync_facility_info_card_system(
         .tracked_entity
         .and_then(|e| sites.get(e).ok())
         .map(|(site, def, stage, manifest, starved, node, state, inputs)| {
-            let id = def.map_or("site", |d| d.catalog_id.as_str());
-            facility_report_lines(id, site, stage, manifest, starved, node, state, inputs)
+            let id = def
+                .map(|d| d.catalog_id.as_str())
+                .unwrap_or_else(|| match site.archetype {
+                    crate::strategic::SiteArchetype::Dam => "dam",
+                    crate::strategic::SiteArchetype::Factory => "factory",
+                    crate::strategic::SiteArchetype::PowerPlant => "power_plant",
+                    _ => "site",
+                });
+            let mut lines =
+                facility_report_lines(id, site, stage, manifest, starved, node, state, inputs);
+            // Intel floor: always report; mark foreign when local player owner is known and differs.
+            if let Some(local) = player_owner.as_ref().and_then(|o| o.0) {
+                if site.owner != local && site.owner != Entity::PLACEHOLDER {
+                    lines.insert(0, "Intel: foreign / limited contact".into());
+                }
+            }
+            lines
         })
         .unwrap_or_default();
 

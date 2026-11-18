@@ -1,4 +1,7 @@
 //! Shared RGBA minimap / overworld raster from tile grid positions.
+//!
+//! **GPU-B:** land fire tint gated when [`crate::render::TerrainScorchField`] is ready.
+//! Companion overlay owns scorch display — [`plan_gpu_stubs_kill_v1.md`](../dev/plan_gpu_stubs_kill_v1.md).
 
 use std::collections::HashMap;
 

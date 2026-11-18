@@ -1,7 +1,6 @@
-"""P4 — thin adapters so mission / world-builder tools reuse studio_dash HTML.
+"""CQ-75 — thin emit helpers over shared studio_dash.render_report.
 
-Call ``emit_mission_dashboard`` or ``emit_worldgen_dashboard`` with a JSON-serializable
-dict; writes under ``debug_runs/studio_dash/``.
+Play matrix dashboards stay in tools/sim_review/score_dump.py.
 """
 
 from __future__ import annotations
@@ -10,10 +9,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-try:
-    from .render_report import write_report
-except ImportError:
-    from render_report import write_report  # type: ignore
+from .render_report import write_report
 
 
 def _repo_root() -> Path:
@@ -31,7 +27,6 @@ def emit_mission_dashboard(
     *,
     name: str = "mission_report",
 ) -> Path:
-    """World / mission tooling → HTML. Does not invent a second stack."""
     data = dict(payload)
     data.setdefault("title", "Mission / ops report")
     data.setdefault("tool", "mission_adapter")
@@ -46,11 +41,7 @@ def emit_frame_qc_dashboard(
     *,
     name: str = "frame_qc",
 ) -> Path:
-    """ParamFrame JSON → static HTML under debug_runs/studio_dash/."""
-    try:
-        from .frame_qc import frame_qc_view
-    except ImportError:
-        from frame_qc import frame_qc_view  # type: ignore
+    from .frame_qc import frame_qc_view
 
     data = frame_qc_view(dict(payload))
     json_path = _out_dir() / f"{name}.json"
@@ -64,11 +55,7 @@ def emit_massing_qc_dashboard(
     *,
     name: str = "massing_qc",
 ) -> Path:
-    """massing_preview JSON → static HTML."""
-    try:
-        from .massing_qc import massing_qc_view
-    except ImportError:
-        from massing_qc import massing_qc_view  # type: ignore
+    from .massing_qc import massing_qc_view
 
     data = massing_qc_view(dict(payload))
     json_path = _out_dir() / f"{name}.json"
@@ -94,6 +81,6 @@ def emit_worldgen_dashboard(
 def cross_link_doc() -> str:
     return (
         "Mission/world-builder dashboards use tools/studio_dash/render_report.py "
-        "via mission_adapter.emit_* — same kit as APS DashboardPanel. "
-        "See src/dev/plan_artist_studio_expansion_v1.md §P4."
+        "(emit_* in mission_adapter). Play review = tools/sim_review/score_dump.py. "
+        "Massing QC = rust_engine_mcp.massing_qc (CQ-75/76)."
     )

@@ -428,13 +428,26 @@ fn overlay_cell_index(overlay: &ChunkStrategicOverlay, tile: IVec2) -> Option<us
     }
 }
 
-#[derive(bevy::ecs::system::SystemParam)]
-pub(super) struct GrowthPathStock<'w, 's> {
-    routes: Option<Res<'w, crate::economy::logistics::RouteCache>>,
-    paths: Option<Res<'w, crate::economy::logistics::RoutePathStore>>,
-    costs: Option<Res<'w, crate::systems::transport::TransportCostCache>>,
-    nav: Option<Res<'w, crate::systems::transport::TransportNavExport>>,
-    storages: Query<'w, 's, &'static crate::entities::production::core::ResourceStorage>,
+/// Published logistics gate for growth (RULE-NARROW-SYSTEMS-v1 §3.4). Sole writer below.
+#[derive(Resource, Debug, Default, Clone, Copy)]
+pub struct GrowthPathStockLatch {
+    pub path_stock_ok: bool,
+}
+
+/// Cross-domain sense frame for growth act (sole writer: [`publish_faction_growth_sense_system`]).
+#[derive(Resource, Debug, Default, Clone)]
+pub struct FactionGrowthSenseFrame {
+    pub threat_tiles: Vec<IVec2>,
+    pub shot_targets: Vec<IVec2>,
+    pub haul: Option<HaulTrafficClass>,
+    pub plant_feeds: bool,
+    pub stockpile_fill_ratio: f32,
+    pub industrial_output_proxy: f32,
+    pub contested_chunks: Vec<IVec2>,
+    pub stance: FactionStanceBook,
+    pub resources: f32,
+    pub path_stock_ok: bool,
+    pub ready: bool,
 }
 
 fn chebyshev(a: IVec2, b: IVec2) -> i32 {
@@ -482,33 +495,37 @@ fn world_stock_sum(
     Some(sum)
 }
 
-/// After pressure and saturation, before the growth commit funnel.
-pub fn faction_growth_step_system(
-    towns: Option<Res<TownBook>>,
-    districts: Option<Res<DistrictBook>>,
-    stance: Option<Res<FactionStanceBook>>,
-    factions: Query<&Faction>,
+/// Logistics path/stock gate → [`GrowthPathStockLatch`] (≤8 params).
+pub fn publish_growth_path_stock_latch_system(
+    routes: Option<Res<crate::economy::logistics::RouteCache>>,
+    paths: Option<Res<crate::economy::logistics::RoutePathStore>>,
+    costs: Option<Res<crate::systems::transport::TransportCostCache>>,
+    nav: Option<Res<crate::systems::transport::TransportNavExport>>,
+    storages: Query<&crate::entities::production::core::ResourceStorage>,
+    mut latch: ResMut<GrowthPathStockLatch>,
+) {
+    let path_sum = stored_path_cost_sum(
+        routes.as_deref(),
+        paths.as_deref(),
+        costs.as_deref(),
+        nav.as_deref(),
+    );
+    let stock = world_stock_sum(&storages);
+    latch.path_stock_ok =
+        path_sum.is_some() && stock.is_some_and(|sum| sum.is_finite() && sum > 0.0);
+}
+
+/// Sense stage A: threat / shots / front / logistics AI → frame shell (≤8).
+pub fn publish_faction_growth_sense_system(
     overlays: Query<&ChunkStrategicOverlay>,
     shots: Option<Res<super::super::shot_pulse::ShotPulseBook>>,
-    haul: Option<Res<HaulTrafficClass>>,
-    logistics_ai: Option<Res<LogisticsAiRuntime>>,
     front: Option<Res<FrontlineState>>,
-    utility: Option<Res<UtilityGraph>>,
-    damage: Option<Res<PowerLineDamageBook>>,
-    water: Option<Res<crate::render::WaterSurfaceVisualCatalog>>,
-    queue: Option<ResMut<GrowthProposalQueue>>,
-    pending: Option<ResMut<PendingConstructionQueue>>,
-    gate: GrowthPathStock,
+    logistics_ai: Option<Res<LogisticsAiRuntime>>,
+    haul: Option<Res<HaulTrafficClass>>,
+    latch: Res<GrowthPathStockLatch>,
+    stance: Option<Res<FactionStanceBook>>,
+    mut frame: ResMut<FactionGrowthSenseFrame>,
 ) {
-    let (Some(towns), Some(districts), Some(mut queue), Some(mut pending)) =
-        (towns, districts, queue, pending)
-    else {
-        return;
-    };
-    let resources = factions
-        .iter()
-        .map(|faction| faction.resources)
-        .fold(0.0_f32, f32::max);
     let mut threat_tiles = Vec::new();
     for overlay in &overlays {
         let sx = overlay.size.x as usize;
@@ -530,11 +547,35 @@ pub fn faction_growth_step_system(
     }
     threat_tiles.sort_by(|a, b| a.x.cmp(&b.x).then(a.y.cmp(&b.y)));
     threat_tiles.dedup();
-    let shot_targets: Vec<IVec2> = shots
+    frame.threat_tiles = threat_tiles;
+    frame.shot_targets = shots
         .as_ref()
         .map(|book| book.recent.iter().map(|shot| shot.target).collect())
         .unwrap_or_default();
-    let plant_feeds = match utility.as_deref() {
+    frame.contested_chunks = front
+        .as_ref()
+        .map(|state| state.contested_chunks.clone())
+        .unwrap_or_default();
+    let (stockpile_fill_ratio, industrial_output_proxy) = logistics_ai
+        .as_deref()
+        .map(|ai| (ai.stockpile_fill_ratio, ai.industrial_output_proxy))
+        .unwrap_or((1.0, 0.0));
+    frame.stockpile_fill_ratio = stockpile_fill_ratio;
+    frame.industrial_output_proxy = industrial_output_proxy;
+    frame.haul = haul.as_deref().copied();
+    frame.stance = stance.as_deref().cloned().unwrap_or_default();
+    frame.path_stock_ok = latch.path_stock_ok;
+    frame.ready = false; // power + resources stages still pending
+}
+
+/// Sense stage B: utility reachability → plant_feeds on the frame (≤8).
+pub fn publish_faction_growth_power_sense_system(
+    utility: Option<Res<UtilityGraph>>,
+    damage: Option<Res<PowerLineDamageBook>>,
+    factions: Query<&Faction>,
+    mut frame: ResMut<FactionGrowthSenseFrame>,
+) {
+    frame.plant_feeds = match utility.as_deref() {
         None => true,
         Some(graph) => {
             let blocked = damage
@@ -544,56 +585,58 @@ pub fn faction_growth_step_system(
             plant_reaches_consumer(graph, &blocked)
         }
     };
-    let dry = |_tile: IVec2| false;
-    let wet = |tile: IVec2| -> bool {
-        let Some(catalog) = water.as_deref() else {
-            return false;
-        };
-        if tile.x < 0 || tile.y < 0 {
-            return true;
-        }
-        catalog.tile_kind(tile.x as u32, tile.y as u32) != crate::render::WaterSurfaceKind::None
+    frame.resources = factions
+        .iter()
+        .map(|faction| faction.resources)
+        .fold(0.0_f32, f32::max);
+    frame.ready = true;
+}
+
+/// Act stage: settlement books + sense frame + water probe (≤8 params).
+pub fn faction_growth_step_system(
+    towns: Option<Res<TownBook>>,
+    districts: Option<Res<DistrictBook>>,
+    overlays: Query<&ChunkStrategicOverlay>,
+    sense: Res<FactionGrowthSenseFrame>,
+    water_probe: crate::systems::water::WaterTileProbe,
+    queue: Option<ResMut<GrowthProposalQueue>>,
+    pending: Option<ResMut<PendingConstructionQueue>>,
+) {
+    let (Some(towns), Some(districts), Some(mut queue), Some(mut pending)) =
+        (towns, districts, queue, pending)
+    else {
+        return;
     };
-    let is_water: &dyn Fn(IVec2) -> bool = if water.is_some() { &wet } else { &dry };
-    let stance_book = stance.as_deref().cloned().unwrap_or_default();
-    let contested_chunks = front
-        .as_ref()
-        .map(|state| state.contested_chunks.clone())
-        .unwrap_or_default();
-    let (stockpile_fill_ratio, industrial_output_proxy) = logistics_ai
-        .as_deref()
-        .map(|ai| (ai.stockpile_fill_ratio, ai.industrial_output_proxy))
-        .unwrap_or((1.0, 0.0));
+    if !sense.ready || !sense.path_stock_ok {
+        return;
+    }
+    let dry = |_tile: IVec2| false;
+    let wet = |tile: IVec2| -> bool { water_probe.is_water(tile.x, tile.y) };
+    let is_water: &dyn Fn(IVec2) -> bool = if water_probe.available() {
+        &wet
+    } else {
+        &dry
+    };
     let cell_at = |tile: IVec2, friendly: u8| {
-        read_growth_cell(&overlays, &contested_chunks, tile, friendly)
+        read_growth_cell(&overlays, &sense.contested_chunks, tile, friendly)
     };
     let look = FactionGrowthLook {
         towns: &towns,
         districts: &districts,
-        stance: &stance_book,
-        resources,
-        threat_tiles: &threat_tiles,
-        shot_targets: &shot_targets,
-        haul: haul.as_deref().copied(),
-        plant_feeds,
-        stockpile_fill_ratio,
-        industrial_output_proxy,
+        stance: &sense.stance,
+        resources: sense.resources,
+        threat_tiles: &sense.threat_tiles,
+        shot_targets: &sense.shot_targets,
+        haul: sense.haul,
+        plant_feeds: sense.plant_feeds,
+        stockpile_fill_ratio: sense.stockpile_fill_ratio,
+        industrial_output_proxy: sense.industrial_output_proxy,
         is_water,
         cell_at: &cell_at,
     };
     let Some(proposal) = select_faction_growth(&look) else {
         return;
     };
-    let path_sum = stored_path_cost_sum(
-        gate.routes.as_deref(),
-        gate.paths.as_deref(),
-        gate.costs.as_deref(),
-        gate.nav.as_deref(),
-    );
-    let stock = world_stock_sum(&gate.storages);
-    if path_sum.is_none() || !stock.is_some_and(|sum| sum.is_finite() && sum > 0.0) {
-        return;
-    }
     queue.enqueue(proposal);
     let index = queue.proposals.len() - 1;
     let _ = approve_growth_proposal_into_pending(&mut queue, index, &mut pending);
@@ -613,6 +656,12 @@ mod tests {
     use crate::strategic::{
         BuildSiteTile, CommitConstructionSiteEvent, FootprintTiles, LayerType, SiteArchetype,
     };
+
+    fn init_growth_sense_resources(app: &mut App) {
+        app.init_resource::<GrowthPathStockLatch>()
+            .init_resource::<FactionGrowthSenseFrame>()
+            .init_resource::<FactionStanceBook>();
+    }
 
     fn insert_finite_haul_and_stock(app: &mut App) {
         use crate::economy::logistics::types::CachedRoute;
@@ -873,9 +922,18 @@ mod tests {
         let cell = 12 * 32 + 12;
         overlay.threat[cell][0] = 1.0;
         app.world_mut().spawn(overlay);
+        init_growth_sense_resources(&mut app);
         app.add_systems(
             Update,
-            (faction_growth_step_system, crate::strategic::settlement::commit_growth_pending_to_funnel_system, tally).chain(),
+            (
+                publish_growth_path_stock_latch_system,
+                publish_faction_growth_sense_system,
+                publish_faction_growth_power_sense_system,
+                faction_growth_step_system,
+                crate::strategic::settlement::commit_growth_pending_to_funnel_system,
+                tally,
+            )
+                .chain(),
         );
         insert_finite_haul_and_stock(&mut app);
         app.update();
@@ -974,9 +1032,13 @@ mod tests {
                 .entity_mut(overlay_id)
                 .insert(ChunkSimLod::Dormant);
         }
+        init_growth_sense_resources(&mut app);
         app.add_systems(
             Update,
             (
+                publish_growth_path_stock_latch_system,
+                publish_faction_growth_sense_system,
+                publish_faction_growth_power_sense_system,
                 faction_growth_step_system,
                 crate::strategic::settlement::commit_growth_pending_to_funnel_system,
                 tally_perception_commits,
@@ -1190,9 +1252,13 @@ mod tests {
         overlay.faction_control[winner_cell][1] = 0.7;
         overlay.faction_control[winner_cell][0] = 0.2;
         app.world_mut().spawn(overlay);
+        init_growth_sense_resources(&mut app);
         app.add_systems(
             Update,
             (
+                publish_growth_path_stock_latch_system,
+                publish_faction_growth_sense_system,
+                publish_faction_growth_power_sense_system,
                 faction_growth_step_system,
                 crate::strategic::settlement::commit_growth_pending_to_funnel_system,
                 tally,

@@ -17,7 +17,10 @@ pub fn zone_emitter_for_archetype(archetype: SiteArchetype) -> ZoneEmitter {
             supply_strength: 0.4,
             ..Default::default()
         },
-        SiteArchetype::Factory | SiteArchetype::PowerPlant | SiteArchetype::WaterPlant => ZoneEmitter {
+        SiteArchetype::Factory
+        | SiteArchetype::PowerPlant
+        | SiteArchetype::WaterPlant
+        | SiteArchetype::Dam => ZoneEmitter {
             supply_strength: 0.22,
             civil_authority_strength: 0.12,
             ..Default::default()

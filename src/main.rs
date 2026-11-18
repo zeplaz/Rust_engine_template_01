@@ -76,6 +76,8 @@ fn main() {
             harness_fire_debug_fallback: true,
             playquad_ne_seeded: false,
             playquad_rain_requested: false,
+            dam_flood_seeded: false,
+            dam_flood_play_props: false,
         });
     }
     app.add_plugins(EnginePlugin).run();

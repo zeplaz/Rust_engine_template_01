@@ -12,8 +12,10 @@ GPU capture (DBG-04 · DBG-07 · LEGACY render_debug_tools / gea_v2_e4 p248):
   Sets VFX_CAPTURE=1, VFX_CAPTURE_NO_MACRO_ZOOM=1, and writes PNGs under debug_runs/captures/.
   --view voxel  → VFX_CAPTURE_VIEW=voxel (PixelWorld3D: voxel terrain, massing, precip)
   --scene playquad → --test playquad; default capture frame 2000 (past PLAYQUAD_RAIN_DELAY ~1800)
+  --scene dam → --test dam (DamFlood benchmark; DF-1 harness / dam.* matrix rows)
 
     python tools/sim_review/playcheck.py --scene playquad --view voxel --no-build --frame 2000
+    python tools/sim_review/playcheck.py --scene dam --view voxel --frame 600 --ticks 800 --min-secs 60
 
   Pair with RUST_ENGINE_SIM_DUMP=1 (always on here) for weather.* / massing_* dump counters.
 
@@ -98,9 +100,11 @@ def run_game(
     capture_view: str | None,
 ) -> list[str]:
     env = dict(os.environ)
+    # DamFlood isolation seed is fixed in harness (77); don't let a random WORLD_GEN_SEED fight it.
+    world_seed = "77" if _scene_cli(scene) == "dam" else seed
     env.update({
         "RUST_ENGINE_SIM_DUMP": "1",
-        "WORLD_GEN_SEED": seed,
+        "WORLD_GEN_SEED": world_seed,
         "VFX_CAPTURE": "1",
         "VFX_CAPTURE_FRAME": str(frame),
         "VFX_CAPTURE_NO_MACRO_ZOOM": "1",
@@ -115,7 +119,7 @@ def run_game(
     with open(log_path, "w", encoding="utf-8", errors="replace") as log:
         # --stay-open: FullCapture must not AppExit before dump ticks / playcheck kill.
         proc = subprocess.Popen(
-            [str(exe), "--test", scene, "--stay-open"], cwd=_REPO, env=env,
+            [str(exe), "--test", _scene_cli(scene), "--stay-open"], cwd=_REPO, env=env,
             stdout=log, stderr=subprocess.STDOUT,
         )
         say(f"game started pid={proc.pid}; waiting for capture (limit {secs}s), log {log_path}")
@@ -220,9 +224,22 @@ def capture_notes() -> list[str]:
     return out
 
 
+def _scene_cli(scene: str) -> str:
+    """Map playcheck --scene aliases to engine --test tokens."""
+    s = scene.strip().lower()
+    if s in ("dam", "damflood", "dam_flood"):
+        return "dam"
+    if s in ("playquad", "quadrant", "quad"):
+        return "playquad"
+    return s
+
+
 def default_capture_frame(scene: str, cli_frame: int) -> int:
-    if scene.strip().lower() in ("playquad", "quadrant", "quad"):
+    s = scene.strip().lower()
+    if s in ("playquad", "quadrant", "quad"):
         return max(cli_frame, _PLAYQUAD_VOXEL_CAPTURE_FRAME)
+    if s in ("dam", "damflood", "dam_flood"):
+        return max(cli_frame, 600)
     return cli_frame
 
 
@@ -250,7 +267,8 @@ def run_one(
 def main() -> None:
     ap = argparse.ArgumentParser()
     ap.add_argument("--no-build", action="store_true")
-    ap.add_argument("--seed", default="14046650793090929382")
+    # DamFlood pins engine seed 77 in harness; default here matches for dump labels.
+    ap.add_argument("--seed", default="77")
     ap.add_argument(
         "--seeds",
         type=int,
@@ -260,7 +278,7 @@ def main() -> None:
     ap.add_argument("--frame", type=int, default=1200, help="capture frame")
     ap.add_argument("--secs", type=int, default=420, help="hard time limit")
     ap.add_argument("--ticks", type=int, default=3000, help="sim tick the dump must reach before stopping")
-    ap.add_argument("--scene", default="visual", help="--test scene (e.g. visual, playquad)")
+    ap.add_argument("--scene", default="visual", help="--test scene (e.g. visual, playquad, dam)")
     ap.add_argument(
         "--view",
         default=None,
@@ -277,7 +295,14 @@ def main() -> None:
     n_seeds = max(1, int(a.seeds))
     frame = default_capture_frame(a.scene, a.frame)
     capture_view = a.view
-    if capture_view is None and a.scene.strip().lower() in ("playquad", "quadrant", "quad"):
+    if capture_view is None and a.scene.strip().lower() in (
+        "playquad",
+        "quadrant",
+        "quad",
+        "dam",
+        "damflood",
+        "dam_flood",
+    ):
         capture_view = "voxel"
     if frame != a.frame:
         say(

@@ -321,9 +321,11 @@ mod tests {
         ];
 
         {
-            let mut state: SystemState<bevy::ecs::system::MessageWriter<LogisticsOrderRequest>> =
+            let mut state: SystemState<MessageWriter<LogisticsOrderRequest>> =
                 SystemState::new(app.world_mut());
-            let mut requests = state.get_mut(app.world_mut());
+            let mut requests = state
+                .get_mut(app.world_mut())
+                .expect("MessageWriter param");
             assert!(pool.try_consume_bom_unit(0, &lines, &mut requests));
             state.apply(app.world_mut());
         }

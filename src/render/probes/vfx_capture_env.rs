@@ -10,7 +10,7 @@
 //! | **Inspection** | `RTT_SPRITE_TRACE` → [`super::rtt_sprite_trace`] render-world visibility logs |
 //! | **Playback / review** | playcheck / Studio stills (`tools/sim_review/`) armed via this env |
 //!
-//! [`super::vfx_capture_hook`] remains the sim-enqueue stub lane for operator PNG hooks (not real
+//! [`super::vfx_capture_hook`] is enqueue-only redirect (GS-07); real pixels are not
 //! GPU pixels). Capture / inspection are **env-gated**, never play UI, and must **not** write
 //! simulation authority (Screenshot / RenderApp logs only).
 //!

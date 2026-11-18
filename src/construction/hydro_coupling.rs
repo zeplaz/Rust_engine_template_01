@@ -72,6 +72,30 @@ pub fn emit_site_execute_hydro_dirty(
     }
 }
 
+/// DF-8: dam collapse / structural breach — marks substrate dirty with [`HydrologyDirtyReason::DamBreach`].
+pub fn emit_dam_breach_hydro_dirty(
+    queue: &mut HydrologyEventQueue,
+    coupling: &mut HydrologyConstructionCouplingStats,
+    structure_id: u64,
+    world_tile: IVec2,
+    cells_per_chunk: UVec2,
+) {
+    let cw = cells_per_chunk.x.max(1) as i32;
+    let ch = cells_per_chunk.y.max(1) as i32;
+    let cc = IVec2::new(world_tile.x.div_euclid(cw), world_tile.y.div_euclid(ch));
+    let local_x = world_tile.x.rem_euclid(cw) as u32;
+    let local_z = world_tile.y.rem_euclid(ch) as u32;
+    let idx = local_z * cw as u32 + local_x;
+    emit_construction_hydro_dirty(
+        queue,
+        coupling,
+        ChunkKey::from(cc),
+        HydrologyDirtyReason::DamBreach { structure_id },
+        structure_id,
+        [idx],
+    );
+}
+
 /// Road / rail segment execute ([`super::construction_pipeline::execute_construction_plans_system`]).
 pub fn emit_road_execute_hydro_dirty(
     queue: &mut HydrologyEventQueue,
@@ -154,6 +178,28 @@ mod tests {
         assert_eq!(queue.pending.len(), 1);
         assert_eq!(coupling.execute_emit_count, 1);
         assert_eq!(coupling.preview_emit_count, 0);
+    }
+
+    #[test]
+    fn collapse_emits_dambreach() {
+        let mut queue = HydrologyEventQueue::default();
+        let mut coupling = HydrologyConstructionCouplingStats {
+            bridge_registered: true,
+            ..Default::default()
+        };
+        emit_dam_breach_hydro_dirty(
+            &mut queue,
+            &mut coupling,
+            99,
+            IVec2::new(4, 8),
+            UVec2::new(32, 32),
+        );
+        assert_eq!(queue.pending.len(), 1);
+        assert!(matches!(
+            queue.pending[0].reason,
+            HydrologyDirtyReason::DamBreach { structure_id: 99 }
+        ));
+        assert_eq!(coupling.execute_emit_count, 1);
     }
 
     #[test]

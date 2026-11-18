@@ -25,7 +25,7 @@ mod world_map_network_mesh;
 pub use world_map_network_mesh::WorldMapNetworkMeshPlugin;
 pub mod vegetation_species;
 mod world_map_vegetation_mesh;
-pub use world_map_vegetation_mesh::WorldMapVegetationMeshPlugin;
+pub use world_map_vegetation_mesh::{VegetationInstanceFrame, WorldMapVegetationMeshPlugin};
 pub mod pixel_world;
 pub use pixel_world::PixelWorldViewPlugin;
 
@@ -37,6 +37,8 @@ pub(crate) mod pipelines;
 pub(crate) mod probes;
 // RENDER-DIR-RESTRUCTURE-v1 — mechanical move: registries, formats, GPU lifetime.
 pub(crate) mod core;
+/// MATH-05 / RND-02 frustum primitives (BOOK-S1 → GPU-CULL).
+pub mod culling;
 // RENDER-DIR-RESTRUCTURE-v1 — mechanical move: fire/water VFX spine (renamed from plan's
 // "fire_vfx" to "fx_spine" to avoid collision with the pre-existing render::fire_vfx frontend).
 pub(crate) mod fx_spine;

@@ -17,11 +17,12 @@ def _repo_root() -> Path:
 
 
 def _studio_dash_on_path() -> Path:
+    """Ensure tools/ is importable once for studio_dash.* (CQ-75)."""
     root = _repo_root()
-    dash = root / "tools" / "studio_dash"
-    if str(dash) not in sys.path:
-        sys.path.insert(0, str(dash.parent))
-    return dash
+    tools = root / "tools"
+    if str(tools) not in sys.path:
+        sys.path.insert(0, str(tools))
+    return tools / "studio_dash"
 
 
 class DashboardPanel(ttk.Frame):

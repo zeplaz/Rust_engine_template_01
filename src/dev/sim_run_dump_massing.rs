@@ -5,7 +5,6 @@
 
 use std::collections::BTreeMap;
 
-use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use serde_json::{json, Value};
 
@@ -57,35 +56,38 @@ fn track(s: &mut PresentationDumpSeries, key: &'static str, v: f64) {
     s.series.entry(key).or_default().push(v);
 }
 
-#[derive(SystemParam)]
-pub struct PresentationSampleReads<'w> {
-    requests: Option<Res<'w, ConstructionVisualRequests>>,
-    studio: Option<Res<'w, StudioMassingOverride>>,
-    mode: Option<Res<'w, WorldPresentationMode>>,
-    pixel: Option<Res<'w, PixelWorldCameraFrame>>,
-}
-
-pub fn sample_presentation_series(mut s: ResMut<PresentationDumpSeries>, r: PresentationSampleReads) {
+pub fn sample_presentation_series(
+    mut s: ResMut<PresentationDumpSeries>,
+    requests: Option<Res<ConstructionVisualRequests>>,
+    studio: Option<Res<StudioMassingOverride>>,
+    mode: Option<Res<WorldPresentationMode>>,
+    pixel: Option<Res<PixelWorldCameraFrame>>,
+) {
     if !super::sim_run_dump::sim_dump_enabled(None) {
         return;
     }
     s.samples = s.samples.saturating_add(1);
-    s.kind = r
-        .mode
+    s.kind = mode
         .as_ref()
         .map(|m| format!("{:?}", m.kind))
         .unwrap_or_else(|| "Unknown".into());
-    let pixel_world_active = r.pixel.as_ref().is_some_and(|p| p.active);
+    let pixel_world_active = pixel.as_ref().is_some_and(|p| p.active);
     s.pixel_world_active = pixel_world_active;
-    s.pixel_px_per_tile = r.pixel.as_ref().map(|p| p.px_per_tile).unwrap_or(0.0);
+    s.pixel_px_per_tile = pixel.as_ref().map(|p| p.px_per_tile).unwrap_or(0.0);
 
-    let (cols, floors_max, floors_sum, footprint_tiles) = r.requests.as_ref().map_or((0, 0, 0, 0), |req| {
-        let cols = req.massing_columns.len();
-        let floors_max = req.massing_columns.iter().map(|c| u64::from(c.floors)).max().unwrap_or(0);
-        let floors_sum: u64 = req.massing_columns.iter().map(|c| u64::from(c.floors)).sum();
-        let footprint_tiles = req.footprint_tiles.len();
-        (cols, floors_max, floors_sum, footprint_tiles)
-    });
+    let (cols, floors_max, floors_sum, footprint_tiles) =
+        requests.as_ref().map_or((0, 0, 0, 0), |req| {
+            let cols = req.massing_columns.len();
+            let floors_max = req
+                .massing_columns
+                .iter()
+                .map(|c| u64::from(c.floors))
+                .max()
+                .unwrap_or(0);
+            let floors_sum: u64 = req.massing_columns.iter().map(|c| u64::from(c.floors)).sum();
+            let footprint_tiles = req.footprint_tiles.len();
+            (cols, floors_max, floors_sum, footprint_tiles)
+        });
 
     track(&mut s, "massing_columns", cols as f64);
     track(&mut s, "massing_floors_max", floors_max as f64);
@@ -94,7 +96,7 @@ pub fn sample_presentation_series(mut s: ResMut<PresentationDumpSeries>, r: Pres
     track(
         &mut s,
         "massing_studio_override",
-        if r.studio.as_ref().is_some_and(|st| st.is_active()) {
+        if studio.as_ref().is_some_and(|st| st.is_active()) {
             1.0
         } else {
             0.0

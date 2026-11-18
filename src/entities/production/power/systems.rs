@@ -24,6 +24,7 @@ use crate::entities::production::power::grid_topology::{
 };
 use crate::entities::production::power::plant_profile::PlantArchetype;
 use crate::entities::production::power::plant_registry::PlantDefinitionRegistry;
+use crate::entities::production::power::power_states::PowerPlantType;
 use crate::entities::types::OperationalStatus;
 use crate::strategic::PlannedSite;
 use crate::systems::sim_control::SimControlState;
@@ -52,6 +53,14 @@ impl Plugin for PowerRuntimePlugin {
                     emit_grid_overload_signals,
                     update_electrical_load_system,
                     update_power_output_system,
+                    apply_hydro_generation_to_plants_system,
+                )
+                    .chain()
+                    .run_if(power_simulation_running),
+            )
+            .add_systems(
+                Update,
+                (
                     steam_system_placeholder,
                     sync_nuclear_offsite_from_utility,
                     nuclear_loop_scram_system,
@@ -66,6 +75,7 @@ impl Plugin for PowerRuntimePlugin {
                         .after(crate::systems::chunk_environment_set::ChunkEnvironmentSet::Weather),
                 )
                     .chain()
+                    .after(apply_hydro_generation_to_plants_system)
                     .run_if(power_simulation_running),
             );
     }
@@ -247,6 +257,26 @@ fn update_power_output_system(
     }
 }
 
+/// DF-6 — hydro plants take `current_output` from general [`HydroGenerationState`] (P=ηρgQH).
+fn apply_hydro_generation_to_plants_system(
+    hydro: Option<Res<crate::systems::water::HydroGenerationState>>,
+    mut query: Query<&mut PowerPlant>,
+) {
+    let Some(hydro) = hydro else {
+        return;
+    };
+    for mut plant in &mut query {
+        if plant.plant_type != PowerPlantType::Hydro {
+            continue;
+        }
+        if plant.status != OperationalStatus::Operational {
+            plant.current_output = 0.0;
+            continue;
+        }
+        plant.current_output = hydro.power_mw.clamp(0.0, plant.max_output.max(0.0));
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
@@ -293,6 +323,9 @@ mod tests {
             site_json_path: None,
             pilot_hover_hint: None,
             district_style: None,
+            crest_m: None,
+            dam_kind: None,
+            required_research_ids: Vec::new(),
         }
     }
 

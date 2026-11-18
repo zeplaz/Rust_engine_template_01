@@ -15,5 +15,6 @@
     "power_consumption": 40,
     "produces_resources": ["missile_body"],
     "consumes_resources": ["Aluminum", "missile_seeker", "missile_warhead", "Labour", "Electricity"],
+    "required_research_ids": ["manuf.cruise_line"],
     "version": "1.0.0"
 }

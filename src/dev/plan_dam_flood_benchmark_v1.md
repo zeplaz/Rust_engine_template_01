@@ -3,12 +3,51 @@
 | Field | Value |
 |:---|:---|
 | **Id** | **PLAN-DAM-FLOOD-BENCHMARK-v1** |
-| **Status** | **CHARTER (draft)** — waiting for operator sign-off on §2. Execution starts after [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) prerequisites (§9). |
+| **Status** | **SIGNED** — DF-0 locked. **DF-1/2 ADOPTED**. **DF-3 landed** (GPU field + visual frame; capture Accept open). **DF-4 landed**. **DF-5–9 landed in code** (ecology flood/moisture, cooling/hydro, warheads, dam barrier leak path, flood consequences). **DF-10: BLOCKED baseline** (honest — S0 gauge + S3–S9 matrix not green). **Harness:** `src/scenario/dam_flood/`. **APS:** `kit_dam_flood_aps_001`. |
 | **Date** | 2026-11-16 |
-| **Purpose** | One scripted test scene that is **also the acceptance benchmark**. Each system the scene touches either passes its stage rows or gets an upgrade slice here. The first fully scored run becomes **baseline v1** for water, structures, damage, ecology, fire, power and perf. |
+| **Purpose** | One scripted **example** scene that proves the **general** water / structure / damage / ecology / fire / power stack works together. The scene is the acceptance harness — not a parallel dam-only simulation. The first fully scored run becomes **baseline v1**. |
 | **Supersedes** | `plan_wss_hydro_runtime_exec_001_v1.md` **HY-005 / HY-006** (deep solve + visual extract; witness-era exits) → replaced by **DF-2 / DF-3** here |
 | **Review path** | `sim_run_dump.json` counters → `tools/sim_review/score_dump.py` matrix + dashboard (AGENTS.md). Counts only in the dump; verdicts only in the matrix. No witness JSON, no `*_green`. |
 | **Units** | Metric throughout: m, m³/s, MW, °C, game seconds/days. `1 tile = 16 m` (`terrain/world_scale_contract.rs:18`), sim step = 1 game second (`SIM_STEP_MICROS`, `systems/sim_control.rs:127`). |
+
+---
+
+## 0. Non-negotiable: the dam is an example of player play, not a cheat path
+
+### Product loop (what the systems must support)
+
+```text
+Place dam (may or may not include a hydro plant)
+  → reservoir forms from real water solve (stage / storage / inundation)
+  → any industrial site that needs cooling can hook an intake to that reservoir
+      (nuclear, coal, chemical, data hall, … — not a dam-only special)
+  → optional: hydro uses the same head × turbine flow
+  → if the dam is damaged / destroyed: reservoir drains / flood wave
+      → hooked coolers lose water → derate / trip
+      → flood hits ecology, roads, sites downstream
+```
+
+**Dam ≠ “power building.”** The dam’s first job is to **make a reservoir**. Power generation is optional. Cooling consumers are **general industrial attachments** to reservoir stage (or river intake), not hardwired to one nuclear prefab in the DamFlood scene.
+
+The DamFlood scene is a **scripted example** of that loop (dam + reservoir + one hooked plant + strike/breach) so we can score it. It is not a parallel toy world.
+
+**This plan exists to force production systems to behave correctly under that hard scenario.**  
+`TestScene::DamFlood` + `dam_valley_v1.ron` are a **repeatable configuration** (topology, gauges, timeline, expected envelopes). They are **not** permission to invent dam-only truth.
+
+| Rule | Required | Forbidden (cheat) |
+|:---|:---|:---|
+| **Ownership** | Water / class / save / construction / ecology / combat / power live as **general** sim modules with sole writers (§4). Same path as a player dam + plant in a normal game. | Hiding a second “dam flood solver” that only runs under `--test dam` and disagrees with production water. |
+| **Reservoir first** | Placing/closing a dam forms storage via the water solve; consumers **read** stage/depth. | Painting a lake because the narrative stage says “impound,” or baking cooling into a dam-only flag. |
+| **Cooling is a hook** | Industrial sites declare an intake (tile / reservoir id / min stage). Any cooler can attach to the same reservoir. | `if DamFlood { cooling = true }` or nuclear-only water hacks that other industries cannot reuse. |
+| **Destruction cascades** | Breach/drain updates water truth → hooked coolers derate/trip; flood uses the same depth field as placement/ecology/routes. | Separate “dam destroyed” cheat that trips plants without changing reservoir stage. |
+| **What the scene may do** | Seed ROI bounds, inflow hydrograph, gauge sites, scenario steps, build/strike orders — **configure and drive** the real systems (same APIs UI / AI will use). | Hardcode stage outcomes, fake gauge balance, skip construction/damage funnels, or paint depth from narrative stage names. |
+| **How Accept is earned** | Events emerge from physics + ECS authority: close outlets → level rises; intake submerged → cooling ok; breach → stage falls → coolers trip; inundation → stands drown; etc. | Special-casing to force matrix rows green, or reading the fixture as runtime water truth. |
+| **Reusability test** | Same water / barrier / intake / damage path works for another valley, a cooling-only dam (no hydro), or a mid-game player dam. | APIs that only make sense inside `scenario/dam_flood/*` narrative helpers (harness may configure; must not own truth). |
+| **Honest exit** | ADOPTED only with a production `file:line` caller on the **general** path (`systems/water`, construction, power cooling intake, …). | Marking DF-2+ done because a dam harness stub “looks wet.” |
+
+**Fixture role (D3):** `dam_valley_v1.ron` fixes **topology and placements** so the benchmark is repeatable. Seed only varies noise. The fixture is input to world-gen / scenario / ROI **request** — **never** a substitute for the surface-water solve, breach mechanics, or ecology phases.
+
+**Smell test:** if removing `TestScene::DamFlood` would require deleting the water solver, reservoir book, or cooling-intake path, those were cheats. The scene goes away; a player can still place a dam, fill a reservoir, and hook any cooler to it.
 
 ---
 
@@ -17,13 +56,13 @@
 | Stage | Game time (approx.) | What happens | What must be visible |
 |:---|:---|:---|:---|
 | **S0 River** | 0 → steady | A river flows down a valley: forest on the floodplain, a town upstream, a downstream forest and road bridge, a thermal (or nuclear) plant on the valley side. | River width and flow animation match the discharge. Gauges G1 (upstream), G2 (dam site) and G3 (downstream) agree within mass balance. |
-| **S1 Build** | t₁ | A dam is committed across the narrows (through the construction funnel), with a hydro plant at the toe. | Dam massing spans both banks; the river passes through the diversion and bottom outlet while it is built. |
+| **S1 Build** | t₁ | A dam is committed across the narrows (construction funnel). Hydro at the toe is **optional** in the product; the example may include it. Reservoir formation is the required outcome once outlets close. | Dam massing spans both banks; river passes diversion/outlet while building. |
 | **S2 Impound** | t₁ → full (days) | Outlets close. The reservoir fills behind the dam, and downstream flow drops to the minimum release. | Water rises over the floodplain. **Submerged trees are hidden**, not deleted. The downstream river visibly narrows and slows. |
 | **S3 Drown** | +2–4 weeks submerged | Trees under water past their species tolerance die (Drowned phase). They keep their wood as fuel, saturated. | Nothing new while submerged (hidden). Ledger counts move Live → Drowned. |
-| **S4 Operate** | full | The hydro plant generates from head × flow. The thermal plant's intake is submerged, so it runs at full rating. The operator opens spillway gates and the emergency bottom outlet in steps. | The spillway jet and foam scale with gate opening. Downstream flow rises and falls with releases, and the reservoir level drops while dumping. |
+| **S4 Operate** | full | Reservoir at full stage. Hooked industrial intakes are submerged → coolers at rating. If hydro is present, it generates from head × flow. Operator may open spillway / bottom outlet in steps. | Spillway jet scales with gate opening when used. Downstream flow tracks releases; reservoir stage responds. |
 | **S5 Strike** | t₅ | A missile from the launch site hits the dam with one of the warhead yields (variant). Where it hits matters: crest, mid-face, base or abutment. | Impact VFX, a crater carved in the dam voxels at the hit point, and a damage stage change. |
 | **S6 Leak** | t₅ → collapse | Water flows through the breach (orifice or notch). The flow erodes the voxels around the hole (piping / overtopping), so the leak grows. Integrity falls Scarred → Compromised. | A jet from the hole that grows over time, and the dam visual state changes. |
-| **S7 Collapse** | t₇ | Integrity crosses the collapse threshold. The breach widens to the failure geometry, and a flood wave goes downstream. | The wave front travels down the valley, inundates the floodplain and cuts the road. The hydro plant trips; the thermal plant derates or trips as the level drops. |
+| **S7 Collapse** | t₇ | Integrity crosses the collapse threshold. The breach widens to the failure geometry, and a flood wave goes downstream. | Wave front inundates the floodplain and cuts the road. Reservoir stage falls → hooked coolers derate/trip; optional hydro trips. |
 | **S8 Recede** | t₇ → new equilibrium | The reservoir drains to a river through the breach. The flood recedes downstream. | The old lake bed is exposed. **Drowned trees reappear as dead standing trunks** with their own sprite and voxel model, not the burnt snag. |
 | **S9 Dry + burn** | +days → weeks | Exposed dead wood dries according to the weather (timelag fuel moisture). A fire is ignited on the exposed bed. | The fire spreads faster through the dried dead stand than through the live forest next to it, and leaves Burnt snags. |
 
@@ -31,16 +70,16 @@
 
 ---
 
-## 2. Operator decisions (sign before DF-2)
+## 2. Operator decisions (SIGNED 2026-11-16)
 
-| # | Decision | Recommended | Why |
+| # | Decision | Locked | Why |
 |:---|:---|:---|:---|
 | D1 | **Water solver runtime** | **CPU sim in a region of interest (ROI), GPU for visuals.** A measured gate decides whether to move the solver to the GPU. | Flood depth decides tree death, power, routes and damage, so it is seeded sim truth. Async GPU readback would make seeded runs depend on frame timing (the same rule as dense heat, `plan_dense_heat_wgsl_v1.md` Review). The estimate fits easily on CPU: a 256×256-tile ROI = 65k cells, ~20 flops per cell per sub-step, ~4 CFL sub-steps per 1 s sim step at 70 m depth ≈ 5 Mflop per step. **Gate:** if `water.solver_ms_p95` exceeds the budget in §7 on the benchmark machine, open a GPU-solver slice (deterministic, fixed order, readback stamped like CQ-50). |
 | D2 | **Dam type** | **Earth-fill embankment with a concrete spillway and bottom outlet** first; a concrete gravity dam later. | Earth dams leak, pipe and erode progressively before collapsing, which is the leak → deterioration → collapse you described. Concrete gravity dams usually fail suddenly by sliding or overturning blocks. Voxel material decides behaviour, so both can share one body model. |
 | D3 | **Scene world** | **Authored valley fixture** (procedural, parameter RON), not a random seed. | It gives repeatable gauges, dam site, plant intake and launch-site geometry. Seeds vary only noise (forest, rain), not topology. |
 | D4 | **Time compression** | **Coarse-step "time skip" for slow domains** (level-pool reservoir, ecology, fuel drying, weather means) during S2/S3/S8/S9. Fast domains (2D water, fire, ballistics) stay at 1 s steps during S4–S7. | At the 30-steps/frame cap (≈1800× at 60 fps) a game day costs ~48 s real, so S2–S9 would take hours. A benchmark must finish in minutes (see §7). |
 | D5 | **Warhead set** | Three yields in `assets/configs/combat/warheads_v1.ron`: **small** (~250 kg HE class), **medium** (~500 kg class), **large** (~1000 kg penetrator class), each with blast radius, peak damage and penetration depth in voxels. | Real damage depends on yield, standoff and penetration. Numbers are tuning, with order-of-magnitude realism. |
-| D6 | **Thermal plant type** | Use the existing `nuclear_plant_pwr.json` (exercises the `failure_modes.rs` cooling path), with an option for coal. | Nuclear cooling loss is the most demanding consequence chain. |
+| D6 | **Cooling consumer in the example** | Benchmark hooks the existing `nuclear_plant_pwr.json` cooling path to the **reservoir** (most demanding). Architecture must still allow **any** industrial cooler to attach the same way (coal, chemical, …). | Nuclear is the stress case; cooling intake is a general hook, not nuclear-only. |
 
 ---
 
@@ -72,20 +111,23 @@ This is from a read-only survey of the code on 2026-11-16. **Every row is an upg
 ## 4. Architecture (authority map — sole writers)
 
 ```text
-⊚ValleyFixture (RON) ═▶ world-gen terrain + base WaterClass (as today)            [world-gen, once]
-⊚SurfaceWaterField  ═▶ depth[m], surface[m], qx/qy[m³/s], wet_since[s]  (ROI)      [water solver — SOLE WRITER]
-   ◂ inflow boundary (upstream discharge hydrograph from fixture / rain-runoff)
-   ◂ DamHydraulics (barrier crest per tile, outlet + spillway + breach flows)       [read-only input]
-⊚ReservoirLevelPool ═▶ stage[m], storage[m³] — used while dam intact & slow phases [water solver — same owner]
-⊚WaterClassRuntime  ═▶ derived class per tile = f(base class, depth, hysteresis)  [water solver projection]
+⊚ValleyFixture (RON) ═▶ world-gen terrain + base WaterClass (as today)            [world-gen / example scene only]
+⊚SurfaceWaterField  ═▶ depth[m], surface[m], qx/qy[m³/s], wet_since[s]  (ROI)      [`systems/water` — SOLE WRITER]
+   ◂ SurfaceWaterRoiRequest (player build, scenario, or DamFlood seeder — same API)
+   ◂ BarrierHydraulics (crest / outlet / spillway) + BarrierControlIntent           [read-only inputs]
+⊚ReservoirLevelPool ═▶ stage[m], storage[m³] — intact barrier + slow fill          [same water owner]
+⊚WaterClassRuntime  ═▶ derived class per tile = f(base class, depth, hysteresis)  [water projection]
    ▸ substrate HydrologyState.water_depth ◂ projection (retire moisture placeholder)
 ⊚DamBody (voxel)    ═▶ per-voxel material + integrity; crest profile per tile        [construction damage funnel — SOLE WRITER]
-⊚DamControl         ═▶ gate openings, outlet valve, turbine flow setpoint           [player / scenario intent → construction ops system]
+⊚BarrierControlIntent ═▶ gate / outlet / (optional) turbine setpoint               [ops → water]
+⊚CoolingIntake     ═▶ site → reservoir/river sample (min stage, flow demand)       [industrial hook — any cooler]
+   ▸ reads ReservoirLevelPool / SurfaceWaterField (not DamFlood narrative)
 ⊚ChunkCellStand     ═▶ + Submerged / Drowned / Dead phases, wood fuel kept          [ecology — SOLE WRITER]
 ⊚CellFuelMoisture   ═▶ dead-fuel moisture per cell (timelag)                        [ecology — SOLE WRITER]
-⊚Power plant state  ═▶ output from head×flow / cooling availability                 [power — SOLE WRITER]
+⊚Power plant state  ═▶ optional hydro P=ηρgQH; thermal/nuclear from CoolingIntake   [power — SOLE WRITER]
 Render / UI ◂ snapshots only (water surface/flow textures on GPU, dam visual stage, dead-tree codes)
 ⛔ GPU readback feeding sim truth · ⛔ render catalog as gameplay water truth · ⛔ deleting trees on flood
+⛔ cooling that bypasses reservoir/river water truth · ⛔ “power dam” as the only legal dam use
 ```
 
 **Water model (DF-2).** A hybrid that is standard practice in hydraulic modelling:
@@ -121,25 +163,27 @@ Render / UI ◂ snapshots only (water surface/flow textures on GPU, dam visual s
   - Lib tests: `dam_scene_timeline_*` (steps fire at the right tick), `gauge_kernel_*`, `time_skip_quiescent_*`.
   - Matrix rows `dam.*` exist with `when_scene: ["DamFlood"]`.
   - **Baseline v0 run recorded with every DF row failing**: this proves the benchmark detects missing systems.
+- **Ledger (2026-11-16):** DF-1 shipped — `TestScene::DamFlood` / `--test dam` · `assets/configs/scenes/dam_valley_v1.ron` · `seed_dam_flood_valley_once` · scenario steps + `WaitUntilTick` / `SimAdvance` block · `GaugeBook` · `SlowDomainTimeSkip` · `sim_run_dump_dam_flood` · `playcheck.py --scene dam` · matrix `dam.*`. Callers: `src/engine/test_harness.rs` (`seed_dam_flood_valley_once`), **`src/scenario/dam_flood/`** (harness — not a sim domain), `src/dev/sim_run_dump_dam_flood.rs`. Baseline v0 score artifact: `tools/sim_review/expected/baseline_dam_v0_note.md` + scored dump under `debug_runs/sim_review/`.
 - **Effort:** M
 
 ### DF-2 — Surface water solver (sim truth) + save
-- **Do:**
-  1. `SurfaceWaterField` (ROI from the fixture) holds a level pool plus a 2D virtual-pipes solver at CFL sub-steps.
-  2. Inflow and outflow boundaries; rain-runoff source from `WeatherField` (counted for mass balance).
-  3. Projection: `WaterClassRuntime` (base class + depth thresholds with hysteresis, e.g. wet > 0.3 m, dry < 0.05 m for 6 h) and substrate `water_depth`. Retire the placeholder; route through `@cleanup-intelligence`.
-  4. **Gameplay water checks read `WaterClassRuntime`, not the render catalog** (`build_interaction.rs:53`, `town.rs:333`, `site/systems.rs:73`, `faction_step.rs:498`).
-  5. **Dirty regions**, not a full-map rebuild: only changed chunks re-stamp, and erosion is **not** re-applied on re-stamp (`p4_hydrology.rs:92-94`). Keep the base elevation so receding is possible.
-  6. **Save:** a water overlay (depth + flux in the ROI, level-pool storage), with a schema version and a round-trip test.
-  7. Fix `deep_solve_wired` honesty, or remove the flag.
+- **Do (general systems — §0 applies):**
+  1. Own `SurfaceWaterField` + level-pool + virtual-pipes under a **general** water/hydrology module (not behind `if DamFlood`). ROI + inflow are **parameters** any scene/scenario can set.
+  2. DamFlood / `dam_valley_v1.ron` only **seeds** that API (bounds, baseflow, gauge sites). No narrative stage → paint depth. Barriers come from dam/construction hydraulics inputs when those exist — not from fixture story flags.
+  3. Inflow/outflow boundaries; rain-runoff from `WeatherField` (mass-balance counted).
+  4. Projection: `WaterClassRuntime` (base class + depth hysteresis) → substrate `water_depth`. Retire moisture placeholder; `@cleanup-intelligence` on dead stubs.
+  5. **Gameplay water checks read `WaterClassRuntime`**, not the render catalog (`build_interaction`, `town`, `site/systems`, `faction_step`).
+  6. **Dirty regions** only; no erosion re-stamp on water update (`p4_hydrology`).
+  7. **Save** overlay (depth + flux + level-pool) + round-trip test — works for any wired ROI.
+  8. Honest `deep_solve_wired` (= surface field wired), or remove the flag.
 - **Accept:**
-  - `water_mass_conserved_*` (error < 0.5% over 24 game hours at steady inflow).
-  - `level_pool_fill_matches_volume_*` (fill time = storage / net inflow, ±2%).
-  - `dam_break_wave_*`: an analytic Ritter dam-break on a flat, dry channel, front speed `2·√(g·h₀)` within 10%.
-  - `water_save_roundtrip_*`.
-  - Matrix: `dam.s0.gauge_balance_err < 0.02`, `dam.s2.downstream_ratio` ≈ min release / inflow (±10%).
+  - Lib tests on the **general** solver (no `DamFlood` required): `water_mass_conserved_*`, `level_pool_fill_matches_volume_*`, `dam_break_wave_*` (Ritter), `water_save_roundtrip_*`.
+  - DamFlood matrix rows pass because the **same** solver + gauges were configured by the example scene — not because of a dam-only branch.
+  - Matrix: `dam.s0.gauge_balance_err < 0.02`, `dam.s2.downstream_ratio` ≈ min release / inflow (±10%) after real impound control.
 - **Runtime:** CPU (D1).
 - **Effort:** L
+- **Correction (2026-11-16):** early DF-2 draft that gated solve/seed on `TestScene::DamFlood` / fixture narrative is **rejected** under §0. Relocate to general water ownership; dam scene = config only.
+- **Ledger (2026-11-16):** DF-2 sim core shipped on general path — `systems/water/{surface_water,solver_tick,barrier_ops,hydro,cooling_intake}.rs` · ROI request · barrier install/breach · Ritter ±10% · level-pool fill · `io/save/surface_water_overlay.rs` · gameplay water via `WaterClassRuntime` (`build_interaction`, `town`, `faction_step`). Callers: `WaterSimPlugin`, `seed_surface_water_from_request_system`, `apply_barrier_*_request_system`. Matrix Accept: `dam.water_solver_wired` / `s0_gauge_balance` / `s2_downstream_ratio` (latched).
 
 ### DF-3 — Water visuals (GPU, render-only)
 - **Do:**
@@ -156,16 +200,26 @@ Render / UI ◂ snapshots only (water surface/flow textures on GPU, dam visual s
 - **Effort:** M–L
 
 ### DF-4 — Dam structure, placement, control
+- **Stance (not optional):** a dam is a **hydraulic structure** whose form follows **geology, topography, and hydrology**. It is **not** a power building. Hydro (penstock + turbine plant) is an **optional consumer** of the same reservoir head — same rule as cooling intakes (§0). Catalog / picker must not live under “Power plants.”
+- **Dam kinds (catalog + `DamKind` on `DamBody`):**
+  | Kind | Role | Site suitability (placement gates) |
+  |:---|:---|:---|
+  | **Embankment** | Earth/rock fill; sloping faces; length ≫ height | Wide valleys, fill borrow available; soft foundations OK with core |
+  | **Gravity** | Concrete/masonry/earth weight resists overturning; **crib** = timber chambers filled with stone | Competent foundation; moderate canyons |
+  | **Arch** | Masonry/concrete arched upstream; load into abutments | Narrow rock canyon with sound abutments both ends |
+  | **Buttress** | Watertight upstream face + downstream buttresses | Intermediate valleys; less mass than gravity |
+  | **Weir** | Low rise across channel for intake / fish pond / diversion | Existing channel; small head; still a barrier to the water solve |
+  | **Coffer** | Temporary pumped enclosure for construction | Staging only; removed or flooded when permanent works finish |
 - **Do:**
-  1. `SiteArchetype::Dam` + `assets/configs/buildings/dam_embankment_v1.json` (crest elevation, crest length via drag-span placement across the valley, spillway width and crest, N radial gates, bottom outlet diameter, penstock to `hydro_plant_francis_v1.json`). The hydro plant gets a building that uses the existing `reaction_francis_medium_head_v1` definition.
-  2. **Placement validation:** a dam *must* span water and tie into both banks above the crest. Add a `dam` exemption beside `building_may_occupy_water`.
-  3. **Construction staging:** diversion (outlet open) → fill → close.
-  4. **`DamBody`:** a voxel body (default 4 m voxels; material per voxel: core clay, shell fill, concrete spillway, outlet conduit) with integrity per voxel. The **crest profile per tile** feeds the water solver's barrier.
-  5. **`DamControl`:** gates, outlet and turbine setpoint, written only by an ops system that consumes player/scenario intents. **Play UI:** a dam control card (gates, outlet, turbine; reservoir stage, inflow/outflow, MW). This is a player panel, not a debug panel.
+  1. `SiteArchetype::Dam` + per-kind catalogs (start: `dam_embankment_v1.json`, then gravity/weir; arch/buttress/coffer as follow-ons). Crest elevation, drag-span length, spillway/outlet params. **Optional** `penstock_to` / linked hydro site — never required for a valid dam.
+  2. **Placement validation:** span water + bank tie-in (kind-specific: arch requires abutment rock class; embankment checks borrow/foundation softness later). `building_may_occupy_water` for dam/weir/coffer tokens.
+  3. **Construction staging:** coffer/diversion (outlet open) → permanent works → fill → close. Coffer is a temporary site, not the reservoir dam.
+  4. **`DamBody`:** `DamKind` + crest profile per tile → water barrier; voxel integrity/material by kind (clay core vs concrete arch vs weir sill).
+  5. **`DamControl`:** gates + outlet always; **turbine setpoint only if a hydro plant is linked**. Play UI: reservoir stage, inflow/outflow, integrity — MW only when hydro present.
 - **Accept:**
-  - `dam_spans_banks_validation_*`, `dam_barrier_profile_*`.
-  - `spillway_weir_flow_*` / `orifice_flow_*` (formula match ±2%).
-  - Matrix: `dam.s4.release_follows_gates` (G3 discharge monotonic with gate setting).
+  - `dam_spans_banks_validation_*`, `dam_kind_site_suitability_*` (arch rejects soft wide valley; weir allows low span).
+  - `dam_barrier_profile_*`, `spillway_weir_flow_*` / `orifice_flow_*` (±2%).
+  - Matrix: `dam.s4.release_follows_gates`; cooling-only dam (no hydro) still fills and trips intakes on breach.
 - **Effort:** L
 
 ### DF-5 — Drowned trees, dead fuel, fuel moisture, visuals
@@ -189,18 +243,21 @@ Render / UI ◂ snapshots only (water surface/flow textures on GPU, dam visual s
   - Matrix: `dam.s3.drowned_cells > 0`, `dam.s8.dead_exposed_cells ≈ drowned_cells (±5%)`, `dam.s9.burn_rate_dead / burn_rate_live > 1.5`.
 - **Effort:** L
 
-### DF-6 — Power from water
-- **Do:**
-  1. **Hydro output:** `P = η·ρ·g·Q_t·H_net` with η from the definition and `H_net = stage − tailwater − losses`. Turbine flow is limited by the setpoint, the design flow and the available water.
-  2. **`current_output` feeds grid supply** (today nothing reads it).
-  3. **Cooling:** the plant intake has an elevation and a minimum submergence.
+### DF-6 — Reservoir consumers: cooling hooks + optional hydro
+- **Do (§0 reservoir-first):**
+  1. **`CoolingIntake` (general):** any industrial site that needs cooling declares intake tile / linked reservoir, min stage (or depth), and demand. Reads `ReservoirLevelPool` / `SurfaceWaterField` — **not** DamFlood stage names. Nuclear in the example is one consumer; coal/chemical/etc. must be able to use the same component.
+  2. **Hydro (optional):** `P = η·ρ·g·Q_t·H_net` with η from the definition and `H_net = stage − tailwater − losses`. Turbine flow limited by setpoint, design flow, and available water. A dam with **no** hydro is still valid (reservoir + coolers only).
+  3. **`current_output` feeds grid supply** where hydro exists (today nothing reads it).
+  4. **Cooling from reservoir:** intake elevation + minimum submergence against reservoir stage.
      - Required withdrawal: `Q_cool = P_reject / (ρ·c_p·ΔT)`, so ~48 m³/s for ~2 GW rejected heat at ΔT = 10 K.
      - Below the minimum level, or with less available flow → derate. Below the trip level → trip.
-     - For nuclear, water availability joins `cooling_available` (`failure_modes.rs:435-446`) next to offsite power and diesels.
-  4. **Dump power block:** per-plant output, head, flow and cooling state.
+     - Nuclear (example consumer) joins `cooling_available` (`failure_modes.rs:435-446`) next to offsite power and diesels — **same intake API** as any other cooler.
+  5. **Dump block:** per-site cooling state + optional hydro output/head/flow.
+  6. **Destruction path:** when breach drains the reservoir, hooked intakes see low stage and derate/trip without a dam-special case.
 - **Accept:**
-  - `hydro_power_formula_*` (±3%), `cooling_derates_on_low_stage_*`, `nuclear_cooling_needs_water_*`.
-  - Matrix: `dam.s4.hydro_mw` within ±5% of the formula; `dam.s7.hydro_mw == 0` after the trip; `dam.s7.thermal_state ∈ {derated, tripped}` when the stage < intake minimum.
+  - `cooling_intake_reads_reservoir_*`, `cooling_derates_on_low_stage_*`, `nuclear_cooling_needs_water_*` (example), `second_industry_can_share_reservoir_*` (fixture or unit).
+  - Optional hydro: `hydro_power_formula_*` (±3%) when a turbine exists.
+  - Matrix: cooling ok at S4 when stage ≥ intake min; after S7 drain, thermal/cooler `∈ {derated, tripped}`; hydro MW → 0 if present.
 - **Effort:** M
 
 ### DF-7 — Launch site, strike orders, warheads

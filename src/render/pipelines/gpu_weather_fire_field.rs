@@ -183,6 +183,7 @@ fn prepare_fire_visual_gpu_storage(
 
 pub(crate) fn prepare_fire_particle_gpu_storage(
     extracted: Res<WorldFireParticleFrame>,
+    cam: Option<Res<crate::render::ExtractedCameraMetrics>>,
     mut storage: ResMut<WorldFireParticleGpuStorage>,
     mut metrics: ResMut<GpuRepresentationMetrics>,
     mut registry: ResMut<GPUBufferRegistry>,
@@ -212,7 +213,33 @@ pub(crate) fn prepare_fire_particle_gpu_storage(
         return;
     }
 
-    let upload_rows = &rows[..active_rows];
+    // GPU-CULL.1: compact to frustum-visible so expand + draw_indirect share index 0..visible.
+    let frustum = cam.as_ref().and_then(|c| {
+        if c.view_proj == Mat4::IDENTITY {
+            None
+        } else {
+            Some(crate::render::culling::FrustumPlanes::from_view_proj(c.view_proj))
+        }
+    });
+    let compacted: Vec<_> = if let Some(fr) = frustum {
+        rows[..active_rows]
+            .iter()
+            .copied()
+            .filter(|row| {
+                let c = Vec3::new(row.world_xyz_heat.x, row.world_xyz_heat.y, row.world_xyz_heat.z);
+                let r = row.ember_class_radius_smoke.z.max(0.5);
+                fr.contains_sphere(c, r)
+            })
+            .collect()
+    } else {
+        rows[..active_rows].to_vec()
+    };
+    if compacted.is_empty() {
+        storage.instance_count = 0;
+        storage.expanded_vertex_count = 0;
+        return;
+    }
+    let upload_rows = compacted.as_slice();
     let alloc_rows = lod_cap.max(upload_rows.len()).min(HARD).max(1);
     let needed = packed_byte_size(format, alloc_rows);
     #[cfg(debug_assertions)]
@@ -232,7 +259,8 @@ pub(crate) fn prepare_fire_particle_gpu_storage(
                 id: format.buffer_id,
                 size_bytes: needed,
                 usage: BufferUsages::COPY_DST | BufferUsages::STORAGE,
-                visibility: BufferVisibility::RenderOnly,
+                // GPU-CULL.1 compute reads this buffer (RND-02 / RND-12).
+                visibility: BufferVisibility::RenderAndCompute,
                 stride: format.stride,
             },
             alloc_rows,
@@ -459,6 +487,7 @@ impl Plugin for GpuWeatherFireFieldPlugin {
         ));
 
         crate::render::register_world_fire_particle_draw(app);
+        crate::render::pipelines::gpu_frustum_cull::register_fire_frustum_cull(app);
         let render_app = app.sub_app_mut(RenderApp);
         render_app
             .init_resource::<GPUBufferRegistry>()
@@ -497,6 +526,7 @@ impl Plugin for GpuWeatherFireFieldPlugin {
                 WeatherFireFieldPassSet,
                 crate::compute::DenseHeatGpuComputePassSet,
                 crate::render::pipelines::gpu_spark_compute::FireSparkComputePassSet,
+                crate::render::pipelines::gpu_frustum_cull::FireFrustumCullPassSet,
                 crate::render::pipelines::gpu_particle_draw::WorldFireParticleDrawPassSet,
             )
                 .chain()

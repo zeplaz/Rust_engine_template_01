@@ -50,18 +50,6 @@ use crate::economy::logistics::{InTransitLedger, PendingSiteStagingDebits, SiteS
 use crate::economy::resource_flow::ResourceFlowNode;
 use crate::strategic::FootprintTiles;
 
-fn cell_is_water(
-    catalog: &crate::render::fx_spine::water_surface_visual::WaterSurfaceVisualCatalog,
-    x: i32,
-    z: i32,
-) -> bool {
-    if x < 0 || z < 0 {
-        return false;
-    }
-    catalog.tile_kind(x as u32, z as u32)
-        != crate::render::fx_spine::water_surface_visual::WaterSurfaceKind::None
-}
-
 /// INPUT-02 — screen distance before a press counts as drag-to-build (not a click).
 pub const BUILD_POINTER_DRAG_MIN_DISTANCE_PX: f32 = 6.0;
 /// INPUT-02 — hold longer than this with any nontrivial move also counts as drag.
@@ -321,21 +309,21 @@ pub fn build_pick_ghost_tile_system(
     }
 }
 
-/// Recompute [`BuildPlacementPreview`] when ghost origin or tool changes.
+/// RULE-NARROW-SYSTEMS-v1: placement refresh is staged (≤8 params each).
+/// Site → occupancy → water reject → material gates.
+fn placement_path_tools_skip(strip: &BuildStripState, tool: &ActiveBuildTool) -> bool {
+    strip.active == ToolContext::Roads
+        || strip.active == ToolContext::Rail
+        || matches!(tool.tool, BuildTool::PowerLine(_))
+}
+
+/// Recompute site validity on [`BuildPlacementPreview`] (construction domain only).
 pub fn build_refresh_placement_validation_system(
     tool: Res<ActiveBuildTool>,
     strip: Res<BuildStripState>,
     mut ghost: ResMut<BuildGhostState>,
-    registry: Res<BuildingDefinitionRegistry>,
-    occupation: Option<Res<crate::strategic::TileOccupationBook>>,
     config: Option<Res<StrategicRasterConfig>>,
     overlay: Query<&crate::strategic::ChunkStrategicOverlay>,
-    concrete_nodes: Query<&ResourceFlowNode>,
-    staging: Option<Res<SiteStagingStock>>,
-    pending_staging: Option<Res<PendingSiteStagingDebits>>,
-    ledger: Option<Res<InTransitLedger>>,
-    pending: Option<Res<PendingConstructionQueue>>,
-    water: Option<Res<crate::render::fx_spine::water_surface_visual::WaterSurfaceVisualCatalog>>,
     mut preview: ResMut<BuildPlacementPreview>,
 ) {
     if let Some(intent) = tool.building_intent.as_ref() {
@@ -350,10 +338,7 @@ pub fn build_refresh_placement_validation_system(
     } else if strip.is_changed() {
         ghost.footprint = strip.active.footprint_for_tool();
     }
-    if strip.active == ToolContext::Roads
-        || strip.active == ToolContext::Rail
-        || matches!(tool.tool, BuildTool::PowerLine(_))
-    {
+    if placement_path_tools_skip(&strip, &tool) {
         return;
     }
 
@@ -370,38 +355,41 @@ pub fn build_refresh_placement_validation_system(
         ghost.footprint.width,
         ghost.footprint.depth,
     );
+}
 
-    if let Some(book) = occupation.as_deref() {
-        if let Some(snapshot) = placement_snapshot_for_building(&tool, &registry, &ghost, origin) {
-            if book.would_overlap(&snapshot.weights) {
-                preview.report.valid = false;
-                preview.report.allows_commit = false;
-                if !preview
-                    .report
-                    .errors
-                    .iter()
-                    .any(|e| e == "weighted_overlap")
-                {
-                    preview.report.errors.push("weighted_overlap".to_string());
-                }
-            }
-        } else if pending.is_some() {
-            let tiles = super::preview_commit_guard::oriented_rect_tiles(
-                origin.x as i32,
-                origin.z as i32,
-                ghost.footprint.width,
-                ghost.footprint.depth,
-                ghost.rotation_quarter_turns,
-            );
-            super::preview_commit_guard::apply_rect_occupancy_reject(
-                &mut preview.report,
-                book,
-                &tiles,
-            );
-        }
+/// Occupation overlap reject (strategic occupation surface).
+pub fn build_apply_occupancy_reject_system(
+    tool: Res<ActiveBuildTool>,
+    strip: Res<BuildStripState>,
+    ghost: Res<BuildGhostState>,
+    registry: Res<BuildingDefinitionRegistry>,
+    occupation: Option<Res<crate::strategic::TileOccupationBook>>,
+    pending: Option<Res<PendingConstructionQueue>>,
+    mut preview: ResMut<BuildPlacementPreview>,
+) {
+    if placement_path_tools_skip(&strip, &tool) {
+        return;
     }
-
-    if let Some(catalog) = water.as_deref() {
+    let Some(origin) = ghost.origin else {
+        return;
+    };
+    let Some(book) = occupation.as_deref() else {
+        return;
+    };
+    if let Some(snapshot) = placement_snapshot_for_building(&tool, &registry, &ghost, origin) {
+        if book.would_overlap(&snapshot.weights) {
+            preview.report.valid = false;
+            preview.report.allows_commit = false;
+            if !preview
+                .report
+                .errors
+                .iter()
+                .any(|e| e == "weighted_overlap")
+            {
+                preview.report.errors.push("weighted_overlap".to_string());
+            }
+        }
+    } else if pending.is_some() {
         let tiles = super::preview_commit_guard::oriented_rect_tiles(
             origin.x as i32,
             origin.z as i32,
@@ -409,24 +397,73 @@ pub fn build_refresh_placement_validation_system(
             ghost.footprint.depth,
             ghost.rotation_quarter_turns,
         );
-        let catalog_id = tool
-            .building_intent
-            .as_ref()
-            .and_then(|intent| intent.catalog_id.as_deref());
-        super::preview_commit_guard::apply_water_footprint_reject(
+        super::preview_commit_guard::apply_rect_occupancy_reject(
             &mut preview.report,
-            catalog_id,
+            book,
             &tiles,
-            |x, z| cell_is_water(catalog, x, z),
         );
     }
+}
 
-    // COD-WALL-CONCRETE-GATE-001 / COD-TRENCH-MATERIAL-GATE-001 — in-situ wall/trench/bunker.
-    // Deployables (DragonTeeth/Minefield) are a no-op here (staging gate below).
+/// Water footprint reject — reads water domain via [`WaterTileProbe`] only (KEEP bundle).
+pub fn build_apply_water_reject_system(
+    tool: Res<ActiveBuildTool>,
+    strip: Res<BuildStripState>,
+    ghost: Res<BuildGhostState>,
+    water_probe: crate::systems::water::WaterTileProbe,
+    mut preview: ResMut<BuildPlacementPreview>,
+) {
+    if placement_path_tools_skip(&strip, &tool) || ghost.origin.is_none() {
+        return;
+    }
+    if !water_probe.available() {
+        return;
+    }
+    let Some(origin) = ghost.origin else {
+        return;
+    };
+    let tiles = super::preview_commit_guard::oriented_rect_tiles(
+        origin.x as i32,
+        origin.z as i32,
+        ghost.footprint.width,
+        ghost.footprint.depth,
+        ghost.rotation_quarter_turns,
+    );
+    let catalog_id = tool
+        .building_intent
+        .as_ref()
+        .and_then(|intent| intent.catalog_id.as_deref());
+    super::preview_commit_guard::apply_water_footprint_reject(
+        &mut preview.report,
+        catalog_id,
+        &tiles,
+        |x, z| water_probe.is_water(x, z),
+    );
+    super::preview_commit_guard::apply_dam_banks_reject(
+        &mut preview.report,
+        catalog_id,
+        &tiles,
+        |x, z| water_probe.is_water(x, z),
+    );
+}
+
+/// Concrete + deployable staging gates (logistics surfaces only).
+pub fn build_apply_material_gates_system(
+    tool: Res<ActiveBuildTool>,
+    strip: Res<BuildStripState>,
+    ghost: Res<BuildGhostState>,
+    concrete_nodes: Query<&ResourceFlowNode>,
+    staging: Option<Res<SiteStagingStock>>,
+    pending_staging: Option<Res<PendingSiteStagingDebits>>,
+    ledger: Option<Res<InTransitLedger>>,
+    mut preview: ResMut<BuildPlacementPreview>,
+) {
+    if placement_path_tools_skip(&strip, &tool) || ghost.origin.is_none() {
+        return;
+    }
     let available = total_available_concrete(concrete_nodes.iter());
     apply_defensive_wall_concrete_gate(tool.tool, ghost.footprint, available, &mut preview.report);
 
-    // COD-DEPLOYABLE-PLACE-001 — DragonTeeth / Minefield gated on SiteStagingStock.
     if let (Some(staging), Some(pending), Some(ledger)) = (
         staging.as_deref(),
         pending_staging.as_deref(),
@@ -444,7 +481,6 @@ pub fn build_refresh_placement_validation_system(
         tool.tool,
         BuildTool::Defense(DefenseKind::DragonTeeth | DefenseKind::Minefield)
     ) {
-        // Fail closed when logistics resources are absent.
         preview.report.allows_commit = false;
         if !preview
             .report
@@ -842,6 +878,8 @@ pub fn build_confirm_site_system(
     mut occupation: Option<ResMut<crate::strategic::TileOccupationBook>>,
     mut voxel_occupation: Option<ResMut<crate::strategic::VoxelOccupationBook>>,
     voxel_cfg: Option<Res<crate::strategic::VoxelOccupationConfig>>,
+    mut destruction_mask: Option<ResMut<crate::render::pixel_world::DestructionMaskBook>>,
+    mut debris_frame: Option<ResMut<crate::render::WorldFireParticleFrame>>,
     staging_stock: Option<Res<SiteStagingStock>>,
     mut pending_staging: Option<ResMut<PendingSiteStagingDebits>>,
     mut queries: ParamSet<(
@@ -922,6 +960,8 @@ pub fn build_confirm_site_system(
                         occupation.as_deref_mut(),
                         voxel_occupation.as_deref_mut(),
                         commit_auth,
+                        destruction_mask.as_deref_mut(),
+                        debris_frame.as_deref_mut(),
                     );
                     record_demolish_execution(commit.history.as_mut(), events);
                 }

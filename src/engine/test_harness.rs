@@ -102,6 +102,10 @@ pub struct TestWorldHarness {
     pub playquad_ne_seeded: bool,
     /// PLAYTEST-QUADRANT-WORLD-001: wet (StormFront) phase requested after the dry opening (one-shot latch).
     pub playquad_rain_requested: bool,
+    /// PLAN-DAM-FLOOD-BENCHMARK-v1: valley fixture + stub sites seeded (one-shot latch).
+    pub dam_flood_seeded: bool,
+    /// DamFlood play props: authored river inject, road, formations, camera (one-shot).
+    pub dam_flood_play_props: bool,
 }
 
 impl TestWorldHarness {
@@ -109,6 +113,12 @@ impl TestWorldHarness {
     pub fn reset_playquad_latches(&mut self) {
         self.playquad_ne_seeded = false;
         self.playquad_rain_requested = false;
+    }
+
+    pub fn reset_dam_flood_latches(&mut self) {
+        self.dam_flood_seeded = false;
+        self.dam_flood_play_props = false;
+        // DamFloodValleyAuthorLatch is a separate resource — cleared where scene swaps.
     }
 }
 
@@ -146,6 +156,8 @@ impl Default for TestWorldHarness {
             harness_fire_debug_fallback: true,
             playquad_ne_seeded: false,
             playquad_rain_requested: false,
+            dam_flood_seeded: false,
+            dam_flood_play_props: false,
         }
     }
 }
@@ -302,6 +314,8 @@ impl Plugin for TestHarnessPlugin {
                 (
                     seed_playquad_ne_build_order_once,
                     request_playquad_wet_phase_once,
+                    seed_dam_flood_valley_once,
+                    seed_dam_flood_play_props_once.after(seed_dam_flood_valley_once),
                 )
                     .after(apply_test_scene_defaults)
                     .run_if(in_state(BaseState::Simulation)),
@@ -438,6 +452,10 @@ fn debug_quick_world_bootstrap(
                 harness.defaults_applied = false;
         harness.last_fire_rearm_frame = 0;
                 harness.reset_playquad_latches();
+                harness.reset_dam_flood_latches();
+                commands.insert_resource(
+                    crate::scenario::dam_flood::DamFloodValleyAuthorLatch::default(),
+                );
                 harness.finished = true;
             } else {
                 commands.remove_resource::<ActiveTestScene>();
@@ -500,6 +518,16 @@ fn world_gen_params_for_maneuver(
             se.max.x / fw,
             se.max.y / fh,
         ]);
+        p.recompute_symbolic_land_features();
+    }
+    // PLAN-DAM-FLOOD-BENCHMARK-v1 DF-1: MediumSmall valley (fixture extent hint 320²).
+    if launch.test_scene.is_dam_flood() && maneuver != DebugManeuver::FrameScreen {
+        p.apply_tile_extent_preset(TileExtentPreset::MediumSmall);
+        p.field_storage = TerrainFieldStorage::ChunkCellMatrixAuthoritative;
+        if let Some(seed) = launch.test_scene.isolation_world_seed() {
+            p.seed = seed;
+        }
+        p.settlement_count = 0;
         p.recompute_symbolic_land_features();
     }
     // Isolation play entries keep this harness extent (MediumSmall). Each gets its own fixed seed.
@@ -578,6 +606,10 @@ fn test_world_bootstrap(
             *params = world_gen_params_for_maneuver(launch, maneuver);
             harness.defaults_applied = false;
             harness.reset_playquad_latches();
+            harness.reset_dam_flood_latches();
+            commands.insert_resource(
+                crate::scenario::dam_flood::DamFloodValleyAuthorLatch::default(),
+            );
         harness.last_fire_rearm_frame = 0;
             harness.logistics_visual_seeded = false;
             harness.s7p_logistics_throughput_seeded = false;
@@ -689,7 +721,8 @@ fn test_scene_fire_seed_count(scene: TestScene) -> u32 {
         | TestScene::Weather
         | TestScene::City
         | TestScene::BuildReadability
-        | TestScene::SubFx => 0,
+        | TestScene::SubFx
+        | TestScene::DamFlood => 0,
     }
 }
 
@@ -726,7 +759,8 @@ fn apply_test_scene_fire_seeds(
         | TestScene::Weather
         | TestScene::City
         | TestScene::BuildReadability
-        | TestScene::SubFx => (0.0, 0.0),
+        | TestScene::SubFx
+        | TestScene::DamFlood => (0.0, 0.0),
     };
     // P3: playquad confines ignition to the NW quadrant; every other scene keeps the world-center pick.
     let fire_region = scene
@@ -1620,6 +1654,248 @@ fn seed_playquad_ne_build_order_once(
     }
 }
 
+/// PLAN-DAM-FLOOD-BENCHMARK-v1 DF-1: load valley fixture, seed gauges, commit stub sites via funnel.
+fn seed_dam_flood_valley_once(
+    scene: Option<Res<ActiveTestScene>>,
+    mut harness: ResMut<TestWorldHarness>,
+    chunks: Query<&Chunk>,
+    mut commands: Commands,
+    mut commit: MessageWriter<crate::strategic::CommitConstructionSiteEvent>,
+    mut world_mode: ResMut<crate::gui::WorldPresentationMode>,
+    mut book: ResMut<crate::scenario::dam_flood::DamFloodBenchmarkBook>,
+    mut script: ResMut<crate::scenario::script_host::EngineScriptHost>,
+) {
+    if harness.dam_flood_seeded || !harness.defaults_applied {
+        return;
+    }
+    if !scene.is_some_and(|s| s.0.is_dam_flood()) || chunks.is_empty() {
+        return;
+    }
+    harness.dam_flood_seeded = true;
+    world_mode.kind = crate::gui::WorldPresentationKind::PixelWorld3D;
+
+    let fixture = crate::scenario::dam_flood::load_dam_valley_fixture();
+    // Gauges + SurfaceWaterRoiRequest: dam_flood::scene_seed configures general `systems/water`.
+    book.fixture_id = fixture.id.clone();
+    book.outlet_flow_m3s = fixture.river_baseflow_m3s;
+    book.seeded = true;
+    book.enter_stage(crate::scenario::dam_flood::DamFloodStage::S0River, 0);
+
+    // Player-owned for control / selection tests (same side as faction-0 formations).
+    let owner = commands.spawn(Name::new("DamFloodPlayer")).id();
+    commands.insert_resource(crate::scenario::dam_flood::DamFloodPlayerOwner(Some(owner)));
+    // Channel-centered dam span (footprint grows +X/+Z from origin — do not place at narrows center).
+    let dam_span = fixture.dam_span_tiles.max(4);
+    let (dam_origin, dam_fp) = crate::scenario::dam_flood::dam_channel_span_footprint(
+        fixture.narrows_tile,
+        dam_span,
+        2,
+    );
+    commit.write(crate::strategic::CommitConstructionSiteEvent {
+        site_id: crate::strategic::SiteId::UNASSIGNED,
+        owner,
+        archetype: crate::strategic::SiteArchetype::Dam,
+        origin: dam_origin,
+        footprint: dam_fp,
+        layer: crate::strategic::LayerType::Surface,
+        catalog_id: Some("dam_embankment_v1".into()),
+        placement: None,
+    });
+    // Stub hydro / nuclear / town — same player owner (selectable + controllable in experiments).
+    let stubs = [
+        (
+            fixture.hydro_plant_origin,
+            3,
+            3,
+            crate::strategic::SiteArchetype::PowerPlant,
+            Some("hydro_plant_v1"),
+        ),
+        (
+            fixture.nuclear_plant_origin,
+            4,
+            4,
+            crate::strategic::SiteArchetype::PowerPlant,
+            Some("nuclear_plant_v1"),
+        ),
+        (
+            fixture.town_origin,
+            3,
+            3,
+            crate::strategic::SiteArchetype::CivilHousing,
+            None,
+        ),
+    ];
+    for ((ox, oz), w, d, archetype, catalog) in stubs {
+        commit.write(crate::strategic::CommitConstructionSiteEvent {
+            site_id: crate::strategic::SiteId::UNASSIGNED,
+            owner,
+            archetype,
+            origin: crate::strategic::BuildSiteTile {
+                x: ox.max(0) as u32,
+                z: oz.max(0) as u32,
+            },
+            footprint: crate::strategic::FootprintTiles {
+                width: w,
+                depth: d,
+            },
+            layer: crate::strategic::LayerType::Surface,
+            catalog_id: catalog.map(str::to_string),
+            placement: None,
+        });
+    }
+    // Missile pad: military massing so PixelWorld shows a real launcher site (not a factory box).
+    let (lx, lz) = fixture.launch_site_origin;
+    commit.write(crate::strategic::CommitConstructionSiteEvent {
+        site_id: crate::strategic::SiteId::UNASSIGNED,
+        owner,
+        archetype: crate::strategic::SiteArchetype::MilitaryBase,
+        origin: crate::strategic::BuildSiteTile {
+            x: lx.max(0) as u32,
+            z: lz.max(0) as u32,
+        },
+        footprint: crate::strategic::FootprintTiles {
+            width: 4,
+            depth: 4,
+        },
+        layer: crate::strategic::LayerType::Surface,
+        catalog_id: Some("missile_battery_v1".into()),
+        placement: None,
+    });
+
+    // Load DF-1 timeline scenario if present (optional — harness still works without it).
+    let scenario_path = "assets/scenarios/tests/dam_flood_df1.scenario.ron";
+    if let Ok(text) = std::fs::read_to_string(scenario_path) {
+        match ron::from_str::<crate::scenario::ScenarioFileV1>(&text) {
+            Ok(file) => {
+                script.load_script(file);
+                info!(target: "test_harness::dam_flood", "loaded {scenario_path}");
+            }
+            Err(err) => {
+                warn!(target: "test_harness::dam_flood", "scenario parse failed: {err}");
+            }
+        }
+    }
+
+    info!(
+        target: "test_harness::dam_flood",
+        "seeded fixture={} baseflow_m3s={} (water ROI via general SurfaceWaterRoiRequest)",
+        fixture.id,
+        fixture.river_baseflow_m3s
+    );
+}
+
+/// DamFlood playability: authored river on the map, road bridge, movable formations, camera on dam.
+fn seed_dam_flood_play_props_once(
+    scene: Option<Res<ActiveTestScene>>,
+    mut harness: ResMut<TestWorldHarness>,
+    mut commands: Commands,
+    balance: Option<Res<crate::combat::balance::FrontBalance>>,
+    mut roads: Option<ResMut<crate::construction::ConstructionPlanQueue>>,
+    mut region: Option<ResMut<crate::gui::VfxFireTestRegion>>,
+    valley: Option<Res<crate::scenario::dam_flood::DamFloodValleyAuthorLatch>>,
+    grid: Option<Res<crate::terrain::generation::water_class::WorldWaterGrid>>,
+) {
+    if harness.dam_flood_play_props || !harness.dam_flood_seeded {
+        return;
+    }
+    if !scene.is_some_and(|s| s.0.is_dam_flood()) {
+        return;
+    }
+    // Wait until authored valley wiped the ocean/lake world.
+    if !valley.is_some_and(|v| v.done) {
+        return;
+    }
+    harness.dam_flood_play_props = true;
+
+    let fixture = crate::scenario::dam_flood::load_dam_valley_fixture();
+    let (cx, cz) = fixture.narrows_tile;
+
+    if let Some(region) = region.as_mut() {
+        let pad = 36.0_f32;
+        region.set_bounds(
+            Vec2::new((cx as f32 - pad).max(0.0), (cz as f32 - pad).max(0.0)),
+            Vec2::new(cx as f32 + pad, cz as f32 + pad),
+            1,
+        );
+    }
+
+    if let Some(queue) = roads.as_mut() {
+        let (bx, bz) = fixture.road_bridge_tile;
+        let head = crate::strategic::BuildSiteTile {
+            x: (bx - 8).max(0) as u32,
+            z: bz.max(0) as u32,
+        };
+        let tail = crate::strategic::BuildSiteTile {
+            x: (bx + 8).max(0) as u32,
+            z: bz.max(0) as u32,
+        };
+        let center = Vec2::new(bx as f32 + 0.5, bz as f32 + 0.5);
+        queue.enqueue(crate::construction::ConstructionIntent {
+            entity_type: crate::construction::ConstructionType::RoadSegment { head, tail },
+            world_position: center,
+            rotation: 0.0,
+        });
+    }
+
+    if let Some(balance) = balance.as_ref() {
+        let dry = |ox: i32, oz: i32| {
+            let o = IVec2::new(ox, oz);
+            grid.as_ref()
+                .map(|g| crate::scenario::dam_flood::nearest_dry_tile(g, o, 24))
+                .unwrap_or(o)
+        };
+        let town_dry = dry(fixture.town_origin.0 - 12, fixture.town_origin.1);
+        let mech_dry = dry(fixture.town_origin.0 - 8, fixture.town_origin.1 - 4);
+        let launch_dry = dry(fixture.launch_site_origin.0 - 10, fixture.launch_site_origin.1);
+        crate::combat::formation::spawn_formation(
+            &mut commands,
+            crate::combat::formation::Formation::new(
+                0,
+                crate::combat::balance::UnitKind::Infantry,
+                town_dry,
+            ),
+            balance,
+        );
+        crate::combat::formation::spawn_formation(
+            &mut commands,
+            crate::combat::formation::Formation::new(
+                0,
+                crate::combat::balance::UnitKind::Mechanized,
+                mech_dry,
+            ),
+            balance,
+        );
+        let battery = crate::combat::formation::spawn_formation(
+            &mut commands,
+            crate::combat::formation::Formation::new(
+                0,
+                crate::combat::balance::UnitKind::AirDefense,
+                launch_dry,
+            ),
+            balance,
+        );
+        commands.entity(battery).insert(
+            crate::combat::missile_supply::MissilePackage::with_count(
+                crate::combat::capability_toe::MissileClass::GenericCruise,
+                4,
+            ),
+        );
+        // Crew / pad security — visible voxel guys at the launcher.
+        let pad = dry(fixture.launch_site_origin.0 + 1, fixture.launch_site_origin.1 + 1);
+        crate::combat::formation::spawn_formation(
+            &mut commands,
+            crate::combat::formation::Formation::new(
+                0,
+                crate::combat::balance::UnitKind::Infantry,
+                pad,
+            ),
+            balance,
+        );
+    }
+
+    info!(target: "test_harness::dam_flood", "play props: road + dry formations + camera");
+}
+
 /// PlayQuad dry→wet: after [`PLAYQUAD_RAIN_DELAY_FRAMES`] request the StormFront preset once. The weather
 /// field stays the only weather writer (this sends a `WeatherPresetRequest`, nothing else).
 fn request_playquad_wet_phase_once(
@@ -1768,6 +2044,19 @@ fn apply_test_scene_defaults(
             focus_debug.enabled = false;
             tile_debug.use_batched_mesh_overlay = true;
             gpu.show = false;
+            seed_atmosphere_wind(&mut weather_preset);
+        }
+        TestScene::DamFlood => {
+            // DF-1: valley fixture + gauges; weather on for later fuel-drying stages; no fire at t0.
+            wx.enabled = true;
+            wx.overlay = true;
+            wx.particles = false;
+            wx.background_aesthetic = true;
+            focus_debug.enabled = false;
+            tile_debug.use_batched_mesh_overlay = true;
+            gpu.show = false;
+            sim.overlays.fire_heat = false;
+            sim.bump_revision();
             seed_atmosphere_wind(&mut weather_preset);
         }
         TestScene::City => {
@@ -2072,6 +2361,16 @@ mod tests {
             0,
             "quadrant split is chunk-aligned"
         );
+    }
+
+    /// DF-1: dam flood valley uses MediumSmall 320² + fixed seed 77.
+    #[test]
+    fn dam_flood_params_are_medium_small_320() {
+        let (l, m) = launch_for("dam");
+        assert_eq!(l.test_scene, TestScene::DamFlood);
+        let p = world_gen_params_for_maneuver(&l, m);
+        assert_eq!((p.width, p.height), (320, 320));
+        assert_eq!(p.seed, TestScene::DAM_FLOOD_WORLD_SEED);
     }
 
     /// PQ-S3: every other scene keeps its prior extent (320 harness / 192 frame).

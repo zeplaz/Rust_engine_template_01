@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """Hill-climb FrontBalance constants against multi-seed matrix scores (T7 / LEARN-01).
 
-Does not write assets/ or src/. Emits debug_runs/sim_review/tune_proposal.ron + a trial table.
-Accept step requires T6 multi-seed dumps and the verdict rule; --dry-run prints the plan only.
+CQ-78: T7 is **not built** — only `--dry-run` (default) is supported. Does not write
+assets/ or src/. A future Accept step needs T6 multi-seed dumps + the verdict rule.
 """
 
 from __future__ import annotations

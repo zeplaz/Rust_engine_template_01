@@ -115,7 +115,11 @@ pub enum FireLodBand {
     FullFlame,
 }
 
-/// Latest [`FireLodBand`] per chunk, derived from simulation heat (CPU stub policy).
+/// Latest [`FireLodBand`] per chunk, derived from simulation heat.
+///
+/// **GS-06 CLOSED** — intentional **CPU visual-policy LOD** (not a GPU compute stub).
+/// Particle emit / Core2d shaping reads these bands; GPU spark compute does not own LOD.
+/// Kill board: [`plan_gpu_stubs_kill_v1.md`](../../dev/plan_gpu_stubs_kill_v1.md).
 #[derive(Resource, Default, Debug, Clone)]
 pub struct FireChunkLodState {
     pub bands: HashMap<ChunkCoord, FireLodBand>,
@@ -241,5 +245,26 @@ fn merge_fire_lod_band_for_heat(current: FireLodBand, heat: f32) -> FireLodBand 
         next
     } else {
         current
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gs06_fire_lod_is_cpu_visual_policy_not_gpu_stub() {
+        let src = include_str!("fire_chunk_runtime.rs");
+        assert!(src.contains("GS-06 CLOSED"));
+        assert!(src.contains("CPU visual-policy LOD"));
+        // Split so include_str cannot false-match this assert body.
+        let forbidden = format!("{}-{}", "GPU", "STUB P1 GS-06");
+        assert!(!src.contains(&forbidden));
+        assert_eq!(fire_lod_band_for_visual_heat(0.0), FireLodBand::None);
+        assert_ne!(
+            fire_lod_band_for_visual_heat(1.0),
+            FireLodBand::None,
+            "positive heat must select a visible band"
+        );
     }
 }

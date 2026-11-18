@@ -133,10 +133,14 @@ impl Plugin for WorldGenUiPlugin {
                 OnExit(AppState::WorldGen),
                 crate::gui::editor::world_preview::world_gen_bevy_shell::despawn_world_gen_bevy_shell,
             )
+            .init_resource::<crate::gui::editor::world_preview::world_gen_bevy_shell::WorldGenShellGate>()
             .add_systems(
                 Update,
                 (
-                    crate::gui::editor::world_preview::world_gen_bevy_shell::sync_world_gen_bevy_shell,
+                    crate::gui::editor::world_preview::world_gen_bevy_shell::publish_world_gen_shell_gate,
+                    crate::gui::editor::world_preview::world_gen_bevy_shell::sync_world_gen_shell_chrome,
+                    crate::gui::editor::world_preview::world_gen_bevy_shell::sync_world_gen_shell_viewport,
+                    crate::gui::editor::world_preview::world_gen_bevy_shell::sync_world_gen_shell_status,
                     crate::gui::editor::world_preview::world_gen_bevy_shell::world_gen_bevy_shell_actions,
                 )
                     .chain()

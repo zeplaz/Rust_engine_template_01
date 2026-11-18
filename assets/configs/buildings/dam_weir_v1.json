@@ -1,0 +1,21 @@
+{
+    "asset_name": "Weir",
+    "asset_type": "Building",
+    "segment": "Hydraulic",
+    "description": "Low channel weir for diversion / intake ponds. Still a SurfaceWater barrier (DF-4).",
+    "utility_role": "dam",
+    "dam_kind": "weir",
+    "is_building": true,
+    "is_power": false,
+    "building_size_x": 6,
+    "building_size_y": 1,
+    "building_height": 1,
+    "construction_cost": 6000,
+    "power_consumption": 0,
+    "power_generation": 0,
+    "crest_m": 8.0,
+    "spillway_length_m": 48.0,
+    "outlet_area_m2": 1.5,
+    "procedural_module_id": "dam_weir_v1",
+    "version": "1.0.0"
+}

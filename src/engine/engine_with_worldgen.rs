@@ -33,7 +33,7 @@ use crate::render::{
     TerrainMaterialAtlasPlugin, TerrainRenderAuthorityPlugin, TileWorldFallbackPlugin,
     ViewportPipelinePlugin,
     ViewRuntimePlugin, GpuWaterParticlesPlugin, WaterSurfaceVisualPlugin,
-    register_water_surface_draw, register_world_water_particle_draw,
+    register_water_field_draw, register_water_surface_draw, register_world_water_particle_draw,
 };
 use crate::systems::{
     configure_chunk_environment_sets,
@@ -123,7 +123,11 @@ impl Plugin for EnginePlugin {
             .add_plugins(SimAttentionPlugin)
             // Scenario script host (Wave 1): drains one step per frame before sim tick.
             .add_plugins(crate::sim::SimEffectsPlugin)
-            .add_plugins(ScenarioScriptingPlugin);
+            .add_plugins(ScenarioScriptingPlugin)
+            // General surface water (player dams / plants / floods). DamFlood scene only configures it.
+            .add_plugins(crate::systems::water::WaterSimPlugin)
+            .add_plugins(crate::research::ResearchCapabilityPlugin)
+            .add_plugins(crate::scenario::DamFloodPlugin);
         configure_chunk_environment_sets(app);
         #[cfg(any(debug_assertions, feature = "sim_dump"))]
         app.add_plugins(crate::dev::SimRunDumpPlugin);
@@ -229,10 +233,12 @@ impl Plugin for EnginePlugin {
             .add_plugins(TerrainMaterialAtlasPlugin)
             .add_plugins(TerrainInstancedDrawPlugin)
             .add_plugins(TerrainGpuBakeSpikePlugin)
+            .add_plugins(crate::render::TerrainScorchFieldPlugin)
             .add_plugins(crate::render::TacticalVectorOverlayPlugin)
             .add_plugins(WaterSurfaceVisualPlugin)
             .add_plugins(GpuWaterParticlesPlugin);
         register_water_surface_draw(app);
+        register_water_field_draw(app);
         register_world_water_particle_draw(app);
         app.add_plugins(ViewportPipelinePlugin)
             .add_plugins(ViewRuntimePlugin)

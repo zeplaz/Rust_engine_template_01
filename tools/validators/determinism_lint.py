@@ -47,6 +47,8 @@ def strip_test_lines(raw: str) -> list[tuple[int, str]]:
 
 
 def main() -> int:
+    # CQ-78: default report-only; `--fail` exits non-zero when hits exist.
+    fail = "--fail" in sys.argv
     hits: list[tuple[str, str, int, str]] = []
     counts = {r: 0 for r, _ in _RULES}
     for root in _SIM_DIRS:
@@ -85,6 +87,8 @@ def main() -> int:
     print("top 15:")
     for rule, rel, lineno, snip in hits[:15]:
         print(f"  {rule} {rel}:{lineno}  {snip}")
+    if fail and hits:
+        return 1
     return 0
 
 

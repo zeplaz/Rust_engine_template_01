@@ -498,6 +498,7 @@ impl Plugin for WorldSaveSpinePlugin {
                     crate::io::save::write_stand_overlay_on_save_flush,
                     crate::io::save::write_fire_overlay_on_save_flush,
                     crate::io::save::write_voxel_occupation_overlay_on_save_flush,
+                    crate::io::save::write_surface_water_overlay_on_save_flush,
                 )
                     .before(flush_dirty_chunk_save_queue),
             )

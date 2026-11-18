@@ -88,12 +88,38 @@ impl Plugin for IndustrialActivationPlugin {
 
 
 
+/// Resolve research gates from building JSON and/or linked plant definition.
+#[must_use]
+pub fn required_research_ids_for_catalog(
+    buildings: Option<&BuildingDefinitionRegistry>,
+    plants: Option<&crate::entities::production::power::plant_registry::PlantDefinitionRegistry>,
+    catalog_id: &str,
+) -> Vec<String> {
+    let Some(def) = buildings.and_then(|r| r.get(catalog_id)) else {
+        return Vec::new();
+    };
+    if !def.required_research_ids.is_empty() {
+        return def.required_research_ids.clone();
+    }
+    let Some(pid) = def.plant_definition_id.as_deref() else {
+        return Vec::new();
+    };
+    plants
+        .and_then(|r| r.get(pid))
+        .map(|p| p.research.required_research_ids.clone())
+        .unwrap_or_default()
+}
+
 /// When a site reaches **Operational**, attach production/runtime components from its catalog def.
 pub fn activate_industrial_facilities_system(
     mut commands: Commands,
     // Bevy 0.20: skip when registries absent (minimal test worlds).
     If(registry): If<Res<BuildingDefinitionRegistry>>,
     If(mfg_blueprints): If<Res<ManufacturingBlueprintRegistry>>,
+    plants: Option<
+        Res<crate::entities::production::power::plant_registry::PlantDefinitionRegistry>,
+    >,
+    research: Option<Res<crate::research::ResearchCapabilityBook>>,
     q: Query<
         (Entity, &ConstructionSite, &BuildingDefinitionRef),
         (
@@ -106,6 +132,20 @@ pub fn activate_industrial_facilities_system(
     for (entity, site, def_ref) in &q {
         if site.phase != SiteConstructionPhase::Operational {
             continue;
+        }
+        // Shared research ledger — building catalog and/or linked plant ResearchGates.
+        let needed = required_research_ids_for_catalog(
+            Some(registry.as_ref()),
+            plants.as_deref(),
+            def_ref.catalog_id.as_str(),
+        );
+        if !needed.is_empty() {
+            let Some(book) = research.as_ref() else {
+                continue;
+            };
+            if !book.all_unlocked(needed.iter().map(String::as_str)) {
+                continue;
+            }
         }
         let network_id = entity.to_bits();
         let connected = initial_utility_power_connected(registry.as_ref(), def_ref.catalog_id.as_str());

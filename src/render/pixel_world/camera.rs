@@ -183,6 +183,43 @@ pub fn pixel_world_rotate_input_system(
     }
 }
 
+/// Middle-mouse drag orbits the voxel world (does not pan — pan stays on right-drag / WASD).
+pub fn pixel_world_mmb_orbit_system(
+    mode: Option<Res<WorldPresentationMode>>,
+    mouse_btn: Res<ButtonInput<MouseButton>>,
+    input_frame: Res<crate::gui::InputFrame>,
+    active_map_surface: Res<crate::gui::ActiveMapViewInput>,
+    input_routing: Option<Res<crate::render::view_runtime::ViewInputRoutingState>>,
+    mut rig: ResMut<PixelWorldCameraRig>,
+    mut accum: Local<f32>,
+) {
+    if !mode.is_some_and(|m| m.is_pixel_world()) {
+        *accum = 0.0;
+        return;
+    }
+    if active_map_surface.blocks_main_world_map_camera_input() {
+        return;
+    }
+    if input_routing.is_some_and(|r| r.world_pointer_input_disabled()) {
+        return;
+    }
+    if !mouse_btn.pressed(MouseButton::Middle) {
+        *accum = 0.0;
+        return;
+    }
+    *accum += input_frame.pointer_delta.x;
+    // ~48 px per 90° step — deliberate turntable, not twitchy.
+    const STEP_PX: f32 = 48.0;
+    while *accum >= STEP_PX {
+        *accum -= STEP_PX;
+        rig.yaw_steps = (rig.yaw_steps + 3) % 4; // CW
+    }
+    while *accum <= -STEP_PX {
+        *accum += STEP_PX;
+        rig.yaw_steps = (rig.yaw_steps + 1) % 4; // CCW
+    }
+}
+
 /// Spawn the voxel camera + sun once the map RTT exists. Both start inactive / dark.
 pub fn spawn_pixel_world_camera(
     mut commands: Commands,
@@ -216,8 +253,15 @@ pub fn spawn_pixel_world_camera(
             ..default()
         }),
         Msaa::Off,
-        // LGT-06 / tonemap_hdr: display-referred palette on SDR RTT — no filmic curve.
-        bevy::core_pipeline::tonemapping::Tonemapping::None,
+        // LGT-06: sole map/voxel policy → Bevy Tonemapping (CQ-57j).
+        match crate::render::view_runtime::tonemap_hdr::PIXEL_WORLD_TONE_MAP_POLICY {
+            crate::render::view_runtime::tonemap_hdr::ViewToneMapPolicy::DisplayReferredNone => {
+                bevy::core_pipeline::tonemapping::Tonemapping::None
+            }
+            crate::render::view_runtime::tonemap_hdr::ViewToneMapPolicy::HdrFloatTarget => {
+                bevy::core_pipeline::tonemapping::Tonemapping::TonyMcMapface
+            }
+        },
         layer.clone(),
         DistanceFog {
             color: PIXEL_WORLD_SKY,

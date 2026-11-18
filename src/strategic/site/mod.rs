@@ -4,6 +4,7 @@
 
 mod components;
 mod events;
+mod flood_readiness;
 mod logistics;
 mod overlays;
 mod parametric;
@@ -16,6 +17,7 @@ mod validation;
 
 pub use components::*;
 pub use events::*;
+pub use flood_readiness::apply_flood_site_readiness_system;
 pub use logistics::site_construction_progression_system;
 pub use provisioning::site_provisioning_system;
 pub use resources::*;

@@ -120,50 +120,8 @@ def export_massing_preview(path: Path, data: dict[str, Any]) -> dict[str, Any]:
     return payload
 
 
-def floors_histogram(columns: list[dict[str, Any]]) -> dict[str, int]:
-    """Count columns by floors band 1..4 (QC summary)."""
-    hist = {"1": 0, "2": 0, "3": 0, "4": 0}
-    for col in columns:
-        try:
-            f = int(col.get("floors", 0))
-        except (TypeError, ValueError):
-            continue
-        key = str(f)
-        if key in hist:
-            hist[key] += 1
-    return hist
-
-
-def massing_qc_view(data: dict[str, Any]) -> dict[str, Any]:
-    """Enrich massing_preview JSON for studio_dash HTML QC (Republic lineage fields)."""
-    cols = list(data.get("massing_columns") or [])
-    hist = floors_histogram(cols)
-    chain = data.get("grammar_rule_chain") if isinstance(data.get("grammar_rule_chain"), dict) else {}
-    return {
-        **data,
-        "title": data.get("title") or "massing_preview QC",
-        "status": "presentation_only",
-        "column_count": len(cols),
-        "seed": data.get("seed"),
-        "presentation_only": data.get("presentation_only", True),
-        "sim_occupation": data.get("sim_occupation", False),
-        "pilot_id": data.get("pilot_id"),
-        "arch_build_grammar_preset_id": data.get("arch_build_grammar_preset_id"),
-        "material_strategy": data.get("material_strategy"),
-        "grammar_rule_chain": chain,
-        "param_frame_id": data.get("param_frame_id"),
-        "ref_books_dual_cite": data.get("ref_books_dual_cite"),
-        "floors_histogram": hist,
-        "metrics": {
-            "column_count": len(cols),
-            "floors_1": hist["1"],
-            "floors_2": hist["2"],
-            "floors_3": hist["3"],
-            "floors_4": hist["4"],
-            "has_grammar_chain": 1 if chain else 0,
-        },
-        "massing_columns": cols,
-    }
+# CQ-76: sole implementation lives in rust_engine_mcp.massing_qc.
+from rust_engine_mcp.massing_qc import floors_histogram, massing_qc_view
 
 
 class VoxelMassingPanel(ttk.Frame):

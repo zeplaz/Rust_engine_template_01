@@ -1,0 +1,30 @@
+// PLAN-DAM-FLOOD-BENCHMARK-v1 D5 / DF-7 — warhead yield table (metres, not tiles).
+(
+  warheads: [
+    (
+      id: "small",
+      mass_kg: 250.0,
+      blast_radius_m: 24.0,
+      peak_damage: 55.0,
+      penetration_m: 2.0,
+      cep_m: 12.0,
+    ),
+    (
+      id: "medium",
+      mass_kg: 500.0,
+      blast_radius_m: 40.0,
+      peak_damage: 120.0,
+      penetration_m: 4.0,
+      cep_m: 18.0,
+    ),
+    (
+      id: "large",
+      mass_kg: 1000.0,
+      blast_radius_m: 64.0,
+      peak_damage: 220.0,
+      penetration_m: 8.0,
+      cep_m: 28.0,
+    ),
+  ],
+  default_id: "medium",
+)

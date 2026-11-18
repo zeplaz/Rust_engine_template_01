@@ -23,11 +23,20 @@
 use bevy::prelude::*;
 
 mod camera;
+mod destruction_mask;
 mod field;
 mod clouds;
+mod ground_material;
 mod layers;
 mod rain;
 mod terrain;
+mod water_gpu;
+
+pub use destruction_mask::{
+    DestructionMaskBook, DestructionMaskGpu, PresentationUploadRing, MASK_DAMAGED, MASK_DESTROYED,
+    MASK_INTACT,
+};
+pub use ground_material::{PixelWorldGroundMaterial, PixelWorldGroundMaterialHandle};
 
 pub use camera::{
     clamp_pixel_world_zoom, pixel_world_pan_axes, PixelWorldCamera, PixelWorldCameraFrame,
@@ -60,9 +69,17 @@ pub struct PixelWorldViewPlugin;
 
 impl Plugin for PixelWorldViewPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<PixelWorldTerrainField>()
+        app.add_plugins((
+            water_gpu::PixelWorldWaterGpuPlugin,
+            ground_material::PixelWorldGroundMaterialPlugin,
+        ))
+            .init_resource::<PixelWorldTerrainField>()
             .init_resource::<PixelWorldCameraRig>()
             .init_resource::<PixelWorldCameraFrame>()
+            .init_resource::<DestructionMaskBook>()
+            .init_resource::<DestructionMaskGpu>()
+            .init_resource::<PresentationUploadRing>()
+            .init_resource::<PixelWorldGroundMaterialHandle>()
             .configure_sets(
                 PostUpdate,
                 (
@@ -76,7 +93,19 @@ impl Plugin for PixelWorldViewPlugin {
                 (
                     camera::spawn_pixel_world_camera.run_if(crate::gui::in_simulation_or_editor_map),
                     field::sync_pixel_world_terrain_field.in_set(PixelWorldViewSet::Field),
+                    destruction_mask::ensure_destruction_mask_size
+                        .after(field::sync_pixel_world_terrain_field)
+                        .run_if(crate::gui::in_simulation_or_editor_map),
+                    crate::construction::cascade_mask_from_roles_system
+                        .after(destruction_mask::ensure_destruction_mask_size)
+                        .run_if(crate::gui::in_simulation_or_editor_map),
+                    destruction_mask::upload_destruction_mask_gpu
+                        .after(crate::construction::cascade_mask_from_roles_system)
+                        .run_if(crate::gui::in_simulation_or_editor_map),
                     camera::pixel_world_rotate_input_system
+                        .before(crate::gui::MapCameraSystemSet::ApplyInput)
+                        .run_if(crate::gui::in_simulation_or_editor_map),
+                    camera::pixel_world_mmb_orbit_system
                         .before(crate::gui::MapCameraSystemSet::ApplyInput)
                         .run_if(crate::gui::in_simulation_or_editor_map),
                 ),
@@ -85,9 +114,14 @@ impl Plugin for PixelWorldViewPlugin {
             .add_systems(
                 PostUpdate,
                 (
-                    terrain::sync_pixel_world_terrain,
+                    (
+                        terrain::sync_pixel_world_terrain,
+                        water_gpu::sync_pixel_world_gpu_water,
+                    )
+                        .chain(),
                     layers::sync_pixel_world_trees,
                     layers::sync_pixel_world_sites,
+                    layers::sync_pixel_world_units,
                     layers::sync_pixel_world_ghost,
                     layers::sync_pixel_world_fronts,
                     layers::sync_pixel_world_paths,

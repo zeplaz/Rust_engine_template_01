@@ -105,7 +105,8 @@ fn apply_missile_wind_to_impact(
     flight_time_s: f32,
     wind: Option<MissileBallisticWind>,
 ) -> Vec2 {
-    wind.map(|w| nominal + wind_drift_tiles(&w, flight_time_s))
+    // Drift helper returns tiles; impact position is metres (DF-7).
+    wind.map(|w| nominal + wind_drift_tiles(&w, flight_time_s) * METRES_PER_TILE)
         .unwrap_or(nominal)
 }
 
@@ -158,14 +159,21 @@ pub fn refine_missile_aim(
 }
 
 /// One in-flight projectile (missile / shell) — package-level, not airframe ECS.
+/// Positions and radii are **world metres** (DF-7).
 #[derive(Clone, Debug)]
 pub struct BallisticFlight {
     pub id: u64,
     pub origin: Vec2,
     pub target: Vec2,
     pub pos: Vec2,
+    /// Metres advanced per sim step (legacy field name kept for callers).
     pub speed_tiles_per_step: f32,
+    /// Blast radius in **metres**.
     pub blast_radius: f32,
+    /// Peak damage at epicenter (warhead table).
+    pub peak_damage: f32,
+    /// Penetration depth metres (DF-8 carve); informational until voxel carve lands.
+    pub penetration_m: f32,
     pub kind: BallisticKind,
     /// Accumulated sim seconds since launch (wind drift at impact).
     pub flight_time_s: f32,
@@ -184,6 +192,10 @@ pub struct BallisticFlightBook {
     pub flights: Vec<BallisticFlight>,
     next_id: u64,
     pub impacts: u64,
+    /// Metres between last impact and its aim point (DF-7 matrix `s5_impact_err_m`).
+    pub last_impact_err_m: f32,
+    pub last_impact_pos_m: Option<Vec2>,
+    pub last_target_m: Option<Vec2>,
 }
 
 /// Grid cells visited along `origin` → `end` (Amanatides–Woo); floats only for setup.
@@ -270,19 +282,68 @@ impl BallisticFlightBook {
         &mut self,
         origin: Vec2,
         target: Vec2,
-        speed_tiles_per_step: f32,
-        blast_radius: f32,
+        speed_m_per_step: f32,
+        blast_radius_m: f32,
         kind: BallisticKind,
     ) -> u64 {
-        self.launch_with_wind(origin, target, speed_tiles_per_step, blast_radius, kind, None)
+        self.launch_with_wind(origin, target, speed_m_per_step, blast_radius_m, kind, None)
     }
 
     pub fn launch_with_wind(
         &mut self,
         origin: Vec2,
         target: Vec2,
-        speed_tiles_per_step: f32,
-        blast_radius: f32,
+        speed_m_per_step: f32,
+        blast_radius_m: f32,
+        kind: BallisticKind,
+        wind: Option<MissileBallisticWind>,
+    ) -> u64 {
+        let peak = match kind {
+            BallisticKind::Missile => 120.0,
+            BallisticKind::Shell => 80.0,
+            BallisticKind::EmberProxy => 15.0,
+        };
+        self.launch_with_wind_damage(
+            origin,
+            target,
+            speed_m_per_step,
+            blast_radius_m,
+            peak,
+            0.0,
+            kind,
+            wind,
+        )
+    }
+
+    pub fn launch_with_warhead(
+        &mut self,
+        origin: Vec2,
+        target: Vec2,
+        speed_m_per_step: f32,
+        warhead: &super::warheads::WarheadDef,
+        kind: BallisticKind,
+        wind: Option<MissileBallisticWind>,
+    ) -> u64 {
+        self.launch_with_wind_damage(
+            origin,
+            target,
+            speed_m_per_step,
+            warhead.blast_radius_m,
+            warhead.peak_damage,
+            warhead.penetration_m,
+            kind,
+            wind,
+        )
+    }
+
+    pub fn launch_with_wind_damage(
+        &mut self,
+        origin: Vec2,
+        target: Vec2,
+        speed_m_per_step: f32,
+        blast_radius_m: f32,
+        peak_damage: f32,
+        penetration_m: f32,
         kind: BallisticKind,
         wind: Option<MissileBallisticWind>,
     ) -> u64 {
@@ -293,8 +354,10 @@ impl BallisticFlightBook {
             origin,
             target,
             pos: origin,
-            speed_tiles_per_step: speed_tiles_per_step.max(0.01),
-            blast_radius,
+            speed_tiles_per_step: speed_m_per_step.max(0.01),
+            blast_radius: blast_radius_m.max(0.5),
+            peak_damage: peak_damage.max(0.0),
+            penetration_m: penetration_m.max(0.0),
             kind,
             flight_time_s: 0.0,
             wind,
@@ -388,29 +451,49 @@ pub fn step_ballistic_flights(
         let prev = f.pos;
         let advance =
             advance_ballistic_toward_aim(prev, f.target, f.speed_tiles_per_step, steps, step_secs);
+        // Ignore pad/terrain hits near the launcher so cruise missiles clear their own site (DamFlood ~997m miss).
+        const MIN_ARM_M: f32 = 280.0;
+        let armed = (prev - f.origin).length() >= MIN_ARM_M
+            || (f.target - f.origin).length() <= MIN_ARM_M * 1.25;
         let (impact_early, next_pos, seg_time_s) = match advance {
             BallisticAdvance::InFlight { pos, seg_time_s } => {
-                if let Some(hit) = first_solid_hit_on_segment(
-                    prev,
-                    pos,
-                    occupation.as_deref(),
-                    materials,
-                    &chunks,
-                ) {
-                    (true, hit, seg_time_s * ((hit - prev).length() / (pos - prev).length().max(1e-3)))
+                if armed {
+                    if let Some(hit) = first_solid_hit_on_segment(
+                        prev,
+                        pos,
+                        occupation.as_deref(),
+                        materials,
+                        &chunks,
+                    ) {
+                        (
+                            true,
+                            hit,
+                            seg_time_s * ((hit - prev).length() / (pos - prev).length().max(1e-3)),
+                        )
+                    } else {
+                        (false, pos, seg_time_s)
+                    }
                 } else {
                     (false, pos, seg_time_s)
                 }
             }
             BallisticAdvance::Impact { pos, seg_time_s } => {
-                if let Some(hit) = first_solid_hit_on_segment(
-                    prev,
-                    pos,
-                    occupation.as_deref(),
-                    materials,
-                    &chunks,
-                ) {
-                    (true, hit, seg_time_s * ((hit - prev).length() / (pos - prev).length().max(1e-3)))
+                if armed {
+                    if let Some(hit) = first_solid_hit_on_segment(
+                        prev,
+                        pos,
+                        occupation.as_deref(),
+                        materials,
+                        &chunks,
+                    ) {
+                        (
+                            true,
+                            hit,
+                            seg_time_s * ((hit - prev).length() / (pos - prev).length().max(1e-3)),
+                        )
+                    } else {
+                        (true, pos, seg_time_s)
+                    }
                 } else {
                     (true, pos, seg_time_s)
                 }
@@ -424,6 +507,9 @@ pub fn step_ballistic_flights(
         }
         let impact_pos = apply_missile_wind_to_impact(next_pos, f.flight_time_s, f.wind);
         impacts += 1;
+        book.last_impact_err_m = (impact_pos - f.target).length();
+        book.last_impact_pos_m = Some(impact_pos);
+        book.last_target_m = Some(f.target);
         if full_audio {
             let kind = match f.kind {
                 BallisticKind::Missile => AudioOneShotKind::Explosion,
@@ -436,12 +522,9 @@ pub fn step_ballistic_flights(
         if let Some(q) = blast_queue.as_mut() {
             q.enqueue(BlastIntent {
                 center_xz: impact_pos,
-                radius_m: f.blast_radius.max(1.0) * METRES_PER_TILE,
-                damage: match f.kind {
-                    BallisticKind::Missile => 120.0,
-                    BallisticKind::Shell => 80.0,
-                    BallisticKind::EmberProxy => 15.0,
-                },
+                radius_m: f.blast_radius.max(0.5),
+                damage: f.peak_damage,
+                penetration_m: f.penetration_m,
                 source_flight: f.id,
             });
         }

@@ -105,6 +105,8 @@ def scan_file(path: Path, owners: list[tuple[str, str]]) -> list[str]:
 
 
 def main() -> int:
+    # CQ-78: default report-only; `--fail` exits non-zero when violations exist.
+    fail = "--fail" in sys.argv
     owners = load_owners()
     all_v: list[str] = []
     for path in sorted(_SRC.rglob("*.rs")):
@@ -112,6 +114,8 @@ def main() -> int:
     print(f"{len(owners)} resources, {len(all_v)} violations")
     for v in all_v:
         print(v)
+    if fail and all_v:
+        return 1
     return 0
 
 

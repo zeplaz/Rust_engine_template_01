@@ -206,7 +206,23 @@ pub fn route_edge_cost(
     depart_tick: u64,
     id: TransportEdgeId,
 ) -> f32 {
-    route_edge_cost_with_nav(cache, forecast, None, None, depart_tick, id)
+    route_edge_cost_with_nav(cache, forecast, None, None, None, depart_tick, id)
+}
+
+/// Hard block when head or tail tile is in the flood book (DF-9).
+#[must_use]
+pub fn flood_blocks_route_edge(
+    flood: Option<&crate::systems::water::FloodRouteBlockBook>,
+    directory: Option<&TransportEdgeDirectory>,
+    id: TransportEdgeId,
+) -> bool {
+    let Some(flood) = flood else {
+        return false;
+    };
+    let Some(meta) = directory.and_then(|d| d.by_edge.get(&id)) else {
+        return false;
+    };
+    flood.blocks_key(&meta.head_key) || flood.blocks_key(&meta.tail_key)
 }
 
 #[must_use]
@@ -215,9 +231,13 @@ pub fn route_edge_cost_with_nav(
     forecast: Option<&LogisticsCostForecastBook>,
     nav: Option<&crate::compute::NavFieldFrame>,
     directory: Option<&TransportEdgeDirectory>,
+    flood: Option<&crate::systems::water::FloodRouteBlockBook>,
     depart_tick: u64,
     id: TransportEdgeId,
 ) -> f32 {
+    if flood_blocks_route_edge(flood, directory, id) {
+        return f32::INFINITY;
+    }
     let base = base_edge_route_cost(cache, id);
     let timed = match forecast.filter(|f| f.ready) {
         Some(book) => book.edge_cost(base, depart_tick, 1),
@@ -234,7 +254,7 @@ pub fn path_edges_between_tiles(
     to: BuildSiteTile,
     mode: TransportMode,
 ) -> Option<Vec<TransportEdgeId>> {
-    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, None, 0)
+    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, None, None, 0)
 }
 
 /// Costed production path (CQ-53): Dijkstra with [`route_edge_cost_with_nav`].
@@ -248,6 +268,7 @@ pub fn path_edges_between_tiles_costed(
     cache: Option<&TransportCostCache>,
     forecast: Option<&LogisticsCostForecastBook>,
     nav_field: Option<&crate::compute::NavFieldFrame>,
+    flood: Option<&crate::systems::water::FloodRouteBlockBook>,
     depart_tick: u64,
 ) -> Option<Vec<TransportEdgeId>> {
     if from == to {
@@ -276,7 +297,15 @@ pub fn path_edges_between_tiles_costed(
     };
     let adj = build_edge_adjacency(&filtered_nav, directory);
     let path = dijkstra_path_to_goals(&adj, &starts, &goal_edges, |id| {
-        route_edge_cost_with_nav(cache, forecast, nav_field, Some(directory), depart_tick, id)
+        route_edge_cost_with_nav(
+            cache,
+            forecast,
+            nav_field,
+            Some(directory),
+            flood,
+            depart_tick,
+            id,
+        )
     })?;
     if path.is_empty() {
         None
@@ -461,6 +490,7 @@ pub fn refresh_resource_flow_routes_system(
     mut dirty_tiles: ResMut<LogisticsRouteDirtyTiles>,
     forecast: Option<Res<LogisticsCostForecastBook>>,
     nav_field: Option<Res<crate::compute::NavFieldFrame>>,
+    flood: Option<Res<crate::systems::water::FloodRouteBlockBook>>,
     clock: Option<Res<crate::systems::sim_control::SimStepClock>>,
     mut route_cache: ResMut<RouteCache>,
     mut path_store: ResMut<RoutePathStore>,
@@ -534,6 +564,7 @@ pub fn refresh_resource_flow_routes_system(
                 cost_cache.as_deref(),
                 forecast.as_deref(),
                 nav_field.as_deref(),
+                flood.as_deref(),
                 depart_tick,
             );
             let reachable = path_edges.is_some();
@@ -896,6 +927,35 @@ mod nav10_tests {
             "unrelated flow keeps cached path"
         );
         assert_eq!(slice_b_after, slice_b_before);
+    }
+
+    #[test]
+    fn flooded_road_blocks_route_cost() {
+        let mut directory = TransportEdgeDirectory::default();
+        directory
+            .by_edge
+            .insert(TransportEdgeId(9), road("t1_0", "t2_0"));
+        let mut flood = crate::systems::water::FloodRouteBlockBook::default();
+        assert!(
+            !flood_blocks_route_edge(Some(&flood), Some(&directory), TransportEdgeId(9)),
+            "dry edge open"
+        );
+        flood.blocked.insert("t2_0".into());
+        assert!(flood_blocks_route_edge(
+            Some(&flood),
+            Some(&directory),
+            TransportEdgeId(9)
+        ));
+        let cost = route_edge_cost_with_nav(
+            None,
+            None,
+            None,
+            Some(&directory),
+            Some(&flood),
+            0,
+            TransportEdgeId(9),
+        );
+        assert!(cost.is_infinite(), "flooded edge must hard-block");
     }
 }
 

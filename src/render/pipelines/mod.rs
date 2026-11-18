@@ -21,14 +21,19 @@
 //! Tripwires: tests below scan this directory's sources (no GPU needed).
 
 pub mod gpu_fire_particle_raster;
+pub mod gpu_frustum_cull;
 pub mod gpu_indirect_draw;
 pub mod gpu_particle_draw;
 pub mod gpu_tile_debug_draw;
 pub mod gpu_water_particle_draw;
 pub mod gpu_water_particle_raster;
 pub mod gpu_water_surface_draw;
+pub mod gpu_water_field_draw;
+pub mod terrain_tile_instance;
 pub mod terrain_instanced_draw;
 pub mod terrain_gpu_bake_spike;
+pub mod terrain_gpu_bake_rtt;
+pub mod terrain_scorch_field;
 
 // RENDER-DIR-RESTRUCTURE-v1 — mechanical move: GPU passes, draw/raster/compute, overlay draws.
 pub mod gpu_spark_compute;

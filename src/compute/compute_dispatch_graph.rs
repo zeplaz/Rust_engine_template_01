@@ -430,7 +430,7 @@ mod tests {
             agents: &AgentFrame::default(),
             navigation: &NavFieldFrame::default(),
             fire: &fire,
-            climate: None,
+            atmosphere_wx: None,
             path_budget: 64,
         };
         graph.dispatch(&ctx);
@@ -452,7 +452,7 @@ mod tests {
             agents: &AgentFrame::default(),
             navigation: &NavFieldFrame::default(),
             fire: &fire,
-            climate: None,
+            atmosphere_wx: None,
             path_budget: 64,
         };
         graph.dispatch(&ctx);
@@ -500,7 +500,7 @@ mod tests {
             agents: &AgentFrame::default(),
             navigation: &NavFieldFrame::default(),
             fire: &fire,
-            climate: None,
+            atmosphere_wx: None,
             path_budget: 64,
         };
         graph.dispatch(&ctx);

@@ -8,8 +8,11 @@
 //! Combat ballistics **enqueue** [`BlastIntent`] only; only [`execute_blast_intents_system`]
 //! mutates sites / [`BlastCraterBook`] / occupation (construction invariants). Voxel occupation
 //! clears go through [`execute_demolish_at_tile`] when commit authority is on — no parallel write.
+//!
+//! Thresholds: [`BlastProfile`] (RON) · instance yield: intent / [`crate::combat::WarheadCatalog`].
 
 use bevy::prelude::*;
+use serde::Deserialize;
 
 use crate::economy::activation::BuildingDefinitionRef;
 use crate::strategic::{
@@ -19,24 +22,96 @@ use crate::strategic::{
 use crate::substrate::hydrology::{HydrologyConstructionCouplingStats, HydrologyEventQueue};
 use crate::systems::sim_control::SimControlSystemSet;
 
+use super::dam_barrier::DamBody;
 use super::demolish::{
     destructible_catastrophic_collapse, destructible_stage_from_integrity, execute_demolish_at_tile,
     DestructibleDamage, DestructibleDamageStage, DESTRUCTIBLE_COLLAPSE_INTEGRITY,
 };
-use super::hydro_coupling::emit_site_execute_hydro_dirty;
+use super::hydro_coupling::{emit_dam_breach_hydro_dirty, emit_site_execute_hydro_dirty};
+use crate::systems::water::{BarrierBreachRequest, BarrierBreachSpec};
 
-/// Effective damage at epicenter required to demolish overlapping sites (after falloff).
+/// Compiled-in demolish gate (matches [`BlastProfile::default`]); tripwires / tests.
 pub const BLAST_DEMOLISH_DAMAGE: f32 = 50.0;
+
+pub const BLAST_PROFILE_RON: &str = "assets/configs/construction/blast_profile_v1.ron";
+
+/// Construction-side blast execute thresholds (not warhead yield).
+#[derive(Resource, Clone, Debug, Deserialize, PartialEq)]
+pub struct BlastProfile {
+    /// Effective damage at epicenter (after falloff) required to demolish overlapping sites.
+    pub demolish_damage: f32,
+    /// Dam pen multiplier: `1 + penetration_m * scale`, clamped to [min, max].
+    pub penetration_scale: f32,
+    pub penetration_mult_min: f32,
+    pub penetration_mult_max: f32,
+    /// Peak column loss scale vs demolish gate (`peak / gate * scale`).
+    pub dam_peak_loss_scale: f32,
+    /// Partial leak when mean integrity drops below this (and/or Compromised).
+    pub dam_leak_integrity: f32,
+    pub breach_flow_per_damage: f32,
+    pub breach_flow_min: f32,
+    pub breach_flow_max: f32,
+    pub leak_flow_scale: f32,
+    pub leak_flow_min: f32,
+    pub leak_flow_max: f32,
+}
+
+impl Default for BlastProfile {
+    fn default() -> Self {
+        Self {
+            demolish_damage: BLAST_DEMOLISH_DAMAGE,
+            penetration_scale: 0.12,
+            penetration_mult_min: 1.0,
+            penetration_mult_max: 3.0,
+            dam_peak_loss_scale: 0.85,
+            dam_leak_integrity: 0.72,
+            breach_flow_per_damage: 8.0,
+            breach_flow_min: 50.0,
+            breach_flow_max: 5000.0,
+            leak_flow_scale: 400.0,
+            leak_flow_min: 10.0,
+            leak_flow_max: 800.0,
+        }
+    }
+}
+
+impl BlastProfile {
+    #[must_use]
+    pub fn penetration_mult(&self, penetration_m: f32) -> f32 {
+        (1.0 + penetration_m * self.penetration_scale).clamp(
+            self.penetration_mult_min,
+            self.penetration_mult_max,
+        )
+    }
+}
+
+#[must_use]
+pub fn parse_blast_profile(text: &str) -> Result<BlastProfile, String> {
+    ron::from_str(text).map_err(|e| e.to_string())
+}
+
+#[must_use]
+pub fn load_blast_profile() -> (BlastProfile, Option<String>) {
+    match std::fs::read_to_string(BLAST_PROFILE_RON) {
+        Ok(text) => match parse_blast_profile(&text) {
+            Ok(p) => (p, None),
+            Err(e) => (BlastProfile::default(), Some(e)),
+        },
+        Err(e) => (BlastProfile::default(), Some(e.to_string())),
+    }
+}
 
 /// One blast to apply this tick (ingress from combat / tools).
 #[derive(Clone, Debug)]
 pub struct BlastIntent {
     pub center_xz: Vec2,
-    /// World metres.
+    /// World metres (instance / warhead).
     pub radius_m: f32,
-    /// Peak damage at epicenter; after [`blast_radius_falloff`], ≥ [`BLAST_DEMOLISH_DAMAGE`]
+    /// Peak damage at epicenter; after [`blast_radius_falloff`], ≥ profile demolish gate
     /// demolishes overlapping sites; lower / edge falloff = crater only.
     pub damage: f32,
+    /// Penetration depth (metres) — scales dam integrity loss (DF-8).
+    pub penetration_m: f32,
     pub source_flight: u64,
 }
 
@@ -51,6 +126,37 @@ pub fn blast_radius_falloff(distance_m: f32, radius_m: f32) -> f32 {
 #[must_use]
 pub fn blast_damage_at_distance(base_damage: f32, distance_m: f32, radius_m: f32) -> f32 {
     base_damage * blast_radius_falloff(distance_m, radius_m)
+}
+
+/// DF-8: sphere carve over dam columns (metres). Returns mean integrity after carve.
+/// Crest-precise: only columns inside the disk lose integrity (no adjacent smear).
+#[must_use]
+pub fn carve_dam_columns(
+    columns: &mut [f32],
+    tiles: &[IVec2],
+    blast_center_xz_m: Vec2,
+    radius_m: f32,
+    penetration_m: f32,
+    peak_loss: f32,
+    profile: &BlastProfile,
+) -> f32 {
+    let n = columns.len().min(tiles.len());
+    if n == 0 {
+        return 1.0;
+    }
+    let pen = profile.penetration_mult(penetration_m);
+    let r = radius_m.max(0.5);
+    for i in 0..n {
+        let t = tiles[i];
+        let c = tile_center_xz(t);
+        let fall = blast_radius_falloff(c.distance(blast_center_xz_m), r);
+        if fall <= 0.0 {
+            continue;
+        }
+        let loss = (peak_loss * fall * pen).clamp(0.0, 1.0);
+        columns[i] = (columns[i] - loss).clamp(0.0, 1.0);
+    }
+    columns.iter().copied().sum::<f32>() / n as f32
 }
 
 /// True when a world-XZ sample lies inside the blast disk (radius query).
@@ -100,11 +206,14 @@ pub fn execute_blast_intents_system(
     mut commands: Commands,
     mut queue: ResMut<BlastIntentQueue>,
     mut craters: ResMut<BlastCraterBook>,
+    profile: Res<BlastProfile>,
     mut occupation: Option<ResMut<TileOccupationBook>>,
     mut voxel_occupation: Option<ResMut<VoxelOccupationBook>>,
     voxel_cfg: Option<Res<VoxelOccupationConfig>>,
     mut hydro_q: Option<ResMut<HydrologyEventQueue>>,
     mut hydro_stats: Option<ResMut<HydrologyConstructionCouplingStats>>,
+    mut destruction_mask: Option<ResMut<crate::render::pixel_world::DestructionMaskBook>>,
+    mut debris_frame: Option<ResMut<crate::render::WorldFireParticleFrame>>,
     sites: Query<(
         Entity,
         &ConstructionSite,
@@ -113,10 +222,13 @@ pub fn execute_blast_intents_system(
         Option<&BuildingDefinitionRef>,
     )>,
     mut damage: Query<&mut DestructibleDamage>,
+    mut dams: Query<&mut DamBody>,
+    mut breach: Option<ResMut<BarrierBreachRequest>>,
 ) {
     if queue.pending.is_empty() {
         return;
     }
+    let gate = profile.demolish_damage.max(1e-3);
     let commit_auth = voxel_cfg
         .as_ref()
         .is_some_and(|c| c.commit_authority_enabled);
@@ -134,6 +246,10 @@ pub fn execute_blast_intents_system(
                 let c = tile_center_xz(t);
                 if c.distance_squared(center) <= r2 {
                     craters.tiles.insert((t.x, t.y));
+                    // DESTROY-T2: crater disk → same-frame ground collapse.
+                    if let Some(mask) = destruction_mask.as_mut() {
+                        mask.mark_tile(t.x, t.y, crate::render::pixel_world::MASK_DESTROYED);
+                    }
                 }
             }
         }
@@ -162,25 +278,87 @@ pub fn execute_blast_intents_system(
                 continue;
             }
             peaks.push((entity, peak));
-            if peak >= BLAST_DEMOLISH_DAMAGE {
+            if peak >= gate {
                 hit_origins.push(planned.origin);
             }
         }
-        for (entity, peak) in peaks {
-            let Ok(mut dmg) = damage.get_mut(entity) else {
-                continue;
-            };
-            let integrity_left =
-                (1.0 - (peak / BLAST_DEMOLISH_DAMAGE).clamp(0.0, 1.0)).clamp(0.0, 1.0);
-            let ladder =
-                destructible_stage_from_integrity(integrity_left, DESTRUCTIBLE_COLLAPSE_INTEGRITY);
-            dmg.stage = dmg.stage.escalate(ladder);
-            if destructible_catastrophic_collapse(peak, BLAST_DEMOLISH_DAMAGE) {
-                dmg.stage = DestructibleDamageStage::Collapsed;
+        for (entity, peak) in &peaks {
+            if let Ok(mut dmg) = damage.get_mut(*entity) {
+                let integrity_left =
+                    (1.0 - (peak / gate).clamp(0.0, 1.0)).clamp(0.0, 1.0);
+                let ladder = destructible_stage_from_integrity(
+                    integrity_left,
+                    DESTRUCTIBLE_COLLAPSE_INTEGRITY,
+                );
+                dmg.stage = dmg.stage.escalate(ladder);
+                if destructible_catastrophic_collapse(*peak, gate) {
+                    dmg.stage = DestructibleDamageStage::Collapsed;
+                }
+            }
+            // DF-8: sphere carve per dam column + aggregate integrity (construction funnel).
+            if let Ok(mut body) = dams.get_mut(*entity) {
+                if let Ok((_, _, _, footprint, _)) = sites.get(*entity) {
+                    body.ensure_columns(footprint.tiles.len());
+                    let peak_loss =
+                        ((peak / gate) * profile.dam_peak_loss_scale).clamp(0.0, 1.0);
+                    let mean = carve_dam_columns(
+                        &mut body.column_integrity,
+                        &footprint.tiles,
+                        center,
+                        r,
+                        intent.penetration_m,
+                        peak_loss,
+                        &profile,
+                    );
+                    body.integrity_01 = mean;
+                    body.damage_stage = destructible_stage_from_integrity(
+                        body.integrity_01,
+                        DESTRUCTIBLE_COLLAPSE_INTEGRITY,
+                    );
+                    if body.damage_stage.is_terminal()
+                        || body.integrity_01 <= DESTRUCTIBLE_COLLAPSE_INTEGRITY
+                    {
+                        body.damage_stage = DestructibleDamageStage::Collapsed;
+                        if let Some(req) = breach.as_mut() {
+                            req.pending = Some(BarrierBreachSpec {
+                                clear_crest: true,
+                                breach_flow_m3s: (intent.damage * profile.breach_flow_per_damage)
+                                    .clamp(profile.breach_flow_min, profile.breach_flow_max),
+                            });
+                        }
+                        // DF-8: substrate hydrology dirty via DamBreach (finally used).
+                        if let (Some(q), Some(stats)) = (hydro_q.as_mut(), hydro_stats.as_mut()) {
+                            if let Some(mid) = footprint.tiles.get(footprint.tiles.len() / 2) {
+                                emit_dam_breach_hydro_dirty(
+                                    q,
+                                    stats,
+                                    entity.to_bits(),
+                                    *mid,
+                                    UVec2::new(32, 32),
+                                );
+                            }
+                        }
+                    } else if body.damage_stage.rank()
+                        >= DestructibleDamageStage::Compromised.rank()
+                        || body.integrity_01 < profile.dam_leak_integrity
+                    {
+                        // Partial leak through compromised columns (no full crest clear).
+                        if let Some(req) = breach.as_mut() {
+                            if req.pending.is_none() {
+                                let q_leak = ((1.0 - body.integrity_01) * profile.leak_flow_scale)
+                                    .clamp(profile.leak_flow_min, profile.leak_flow_max);
+                                req.pending = Some(BarrierBreachSpec {
+                                    clear_crest: false,
+                                    breach_flow_m3s: q_leak,
+                                });
+                            }
+                        }
+                    }
+                }
             }
         }
 
-        if intent.damage < BLAST_DEMOLISH_DAMAGE {
+        if intent.damage < gate {
             continue;
         }
         hit_origins.sort_by_key(|t| (t.x, t.z));
@@ -194,6 +372,8 @@ pub fn execute_blast_intents_system(
                 occupation.as_deref_mut(),
                 voxel_occupation.as_deref_mut(),
                 commit_auth,
+                destruction_mask.as_deref_mut(),
+                debris_frame.as_deref_mut(),
             );
             if n > 0 {
                 craters.sites_demolished = craters.sites_demolished.saturating_add(u64::from(n));
@@ -207,7 +387,8 @@ pub fn execute_blast_intents_system(
                             width: 1,
                             depth: 1,
                         },
-                        UVec2::new(16, 16),
+                        // Terrain chunks are 32×32 (DF-7 units fix vs stale 16).
+                        UVec2::new(32, 32),
                     );
                 }
             }
@@ -219,6 +400,13 @@ pub struct ConstructionBlastPlugin;
 
 impl Plugin for ConstructionBlastPlugin {
     fn build(&self, app: &mut App) {
+        if !app.world().contains_resource::<BlastProfile>() {
+            let (profile, err) = load_blast_profile();
+            if let Some(e) = err {
+                warn!("blast profile: using compiled-in default ({e})");
+            }
+            app.insert_resource(profile);
+        }
         app.init_resource::<BlastIntentQueue>()
             .init_resource::<BlastCraterBook>()
             .init_resource::<super::blast_present::BlastCraterDump>()
@@ -247,6 +435,7 @@ mod tests {
         app.add_plugins(MinimalPlugins)
             .init_resource::<BlastIntentQueue>()
             .init_resource::<BlastCraterBook>()
+            .insert_resource(BlastProfile::default())
             .add_systems(Update, execute_blast_intents_system);
         app
     }
@@ -307,6 +496,17 @@ mod tests {
     }
 
     #[test]
+    fn blast_profile_ron_matches_compiled_default() {
+        assert_eq!(
+            BlastProfile::default().demolish_damage,
+            BLAST_DEMOLISH_DAMAGE
+        );
+        let text = std::fs::read_to_string(BLAST_PROFILE_RON).expect("blast profile on disk");
+        let loaded = parse_blast_profile(&text).expect("parse");
+        assert_eq!(loaded, BlastProfile::default());
+    }
+
+    #[test]
     fn phys07_enqueue_then_execute_writes_craters_only_for_low_damage() {
         let mut app = blast_test_app();
         let center = Vec2::new(8.0, 8.0);
@@ -318,6 +518,7 @@ mod tests {
                 center_xz: center,
                 radius_m: 16.0,
                 damage: 15.0, // grenade / ember — crater, no demolish
+                penetration_m: 0.0,
                 source_flight: 9,
             });
         app.update();
@@ -350,6 +551,7 @@ mod tests {
                 center_xz: center,
                 radius_m: 16.0,
                 damage: 120.0, // missile peak
+                penetration_m: 4.0,
                 source_flight: 11,
             });
         app.update();
@@ -383,6 +585,7 @@ mod tests {
                 center_xz: center,
                 radius_m: radius,
                 damage: 80.0,
+                penetration_m: 0.0,
                 source_flight: 12,
             });
         app.update();
@@ -391,6 +594,67 @@ mod tests {
             0
         );
         assert_eq!(count_sites(&mut app), 1);
+    }
+
+    #[test]
+    fn blast_units_metres_radius_not_tiles() {
+        // 2.5 m radius must not be treated as 2.5 tiles (40 m).
+        let r_m = 2.5_f32;
+        assert!(r_m < METRES_PER_TILE);
+        let tiles = [IVec2::new(0, 0), IVec2::new(1, 0), IVec2::new(2, 0)];
+        let mut cols = vec![1.0; 3];
+        let profile = BlastProfile::default();
+        let mean = carve_dam_columns(
+            &mut cols,
+            &tiles,
+            Vec2::new(0.5 * METRES_PER_TILE, 0.5 * METRES_PER_TILE),
+            r_m,
+            4.0,
+            1.0,
+            &profile,
+        );
+        assert!(cols[0] < 1.0, "near column should carve");
+        assert!((cols[2] - 1.0).abs() < 1e-4, "2 tiles away outside 2.5 m");
+        assert!(mean < 1.0);
+    }
+
+    #[test]
+    fn blast_carves_voxels_by_yield_penetration() {
+        let tiles = [IVec2::ZERO, IVec2::new(1, 0)];
+        let mut small = vec![1.0; 2];
+        let mut large = vec![1.0; 2];
+        let c = Vec2::new(0.5 * METRES_PER_TILE, 0.5 * METRES_PER_TILE);
+        let profile = BlastProfile::default();
+        let _ = carve_dam_columns(&mut small, &tiles, c, 24.0, 2.0, 0.5, &profile);
+        let _ = carve_dam_columns(&mut large, &tiles, c, 64.0, 8.0, 0.5, &profile);
+        assert!(large[0] < small[0], "larger yield+pen must carve deeper");
+    }
+
+    #[test]
+    fn crest_small_yield_no_collapse() {
+        let tiles = [
+            IVec2::new(0, 0),
+            IVec2::new(1, 0),
+            IVec2::new(2, 0),
+            IVec2::new(3, 0),
+            IVec2::new(4, 0),
+        ];
+        let mut cols = vec![1.0; tiles.len()];
+        let profile = BlastProfile::default();
+        // Small crest hit: 4 m radius, low pen — far columns stay near intact.
+        let mean = carve_dam_columns(
+            &mut cols,
+            &tiles,
+            Vec2::new(0.5 * METRES_PER_TILE, 0.5 * METRES_PER_TILE),
+            4.0,
+            1.0,
+            0.35,
+            &profile,
+        );
+        assert!(mean > DESTRUCTIBLE_COLLAPSE_INTEGRITY + 0.15);
+        assert!(cols.iter().all(|&c| c > DESTRUCTIBLE_COLLAPSE_INTEGRITY));
+        let stage = destructible_stage_from_integrity(mean, DESTRUCTIBLE_COLLAPSE_INTEGRITY);
+        assert!(!stage.is_terminal());
     }
 
     /// Combat / presentation must not mutate crater book or sites — enqueue / dump only.
@@ -404,11 +668,13 @@ mod tests {
             ball_prod.contains("BlastIntent") && ball_prod.contains("enqueue"),
             "ballistics must enqueue BlastIntent"
         );
+        // Read-only occupation / materials for mid-flight solid hits (CQ-55) is allowed;
+        // mutation of construction books / demolish / despawn is not.
         for forbidden in [
             "BlastCraterBook",
             "execute_demolish",
-            "TileOccupationBook",
-            "VoxelOccupationBook",
+            "ResMut<TileOccupationBook>",
+            "ResMut<VoxelOccupationBook>",
             "ConstructionSite",
             ".despawn(",
         ] {

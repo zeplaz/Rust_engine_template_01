@@ -548,6 +548,118 @@
       "note": "PQ-X2: release perf stalls after warm-up."
     },
     {
+      "id": "dam.harness.seeded",
+      "path": "dam_flood.seeded",
+      "op": "eq",
+      "expect": true,
+      "when_scene": ["DamFlood"],
+      "note": "DF-1: valley fixture + GaugeBook seeded via harness."
+    },
+    {
+      "id": "dam.extent",
+      "path": "world.width",
+      "op": "eq",
+      "expect": 320,
+      "when_scene": ["DamFlood"],
+      "note": "DF-1: MediumSmall 320² valley extent."
+    },
+    {
+      "id": "dam.stage_s0",
+      "path": "dam_flood.s0_entered",
+      "op": "eq",
+      "expect": true,
+      "when_scene": ["DamFlood"],
+      "note": "DF-1/DF-2: S0River was entered (timeline may advance past S0)."
+    },
+    {
+      "id": "dam.water_solver_wired",
+      "path": "dam_flood.water_solver_wired",
+      "op": "eq",
+      "expect": true,
+      "when_scene": ["DamFlood"],
+      "note": "DF-2: SurfaceWaterField sole writer live."
+    },
+    {
+      "id": "dam.s0_gauge_balance",
+      "path": "dam_flood.s0_gauge_balance_err",
+      "op": "lte",
+      "expect": 0.20,
+      "when_scene": ["DamFlood"],
+      "note": "DF-2: G1–G3 / outlet–inflow balance (≤0.20 interim; charter target <0.02)."
+    },
+    {
+      "id": "dam.s2_downstream_ratio",
+      "path": "dam_flood.s2_downstream_ratio",
+      "op": "lte",
+      "expect": 0.45,
+      "when_scene": ["DamFlood"],
+      "note": "DF-2: during impound, downstream ≪ inflow (≤0.45 interim; tighten with DF-4 crest)."
+    },
+    {
+      "id": "dam.s3_drowned_cells",
+      "path": "dam_flood.s3_drowned_cells",
+      "op": "gt",
+      "expect": 0,
+      "when_scene": ["DamFlood"],
+      "note": "DF-5: drowned stand phase. Baseline v0 expects FAIL."
+    },
+    {
+      "id": "dam.s4_hydro_mw",
+      "path": "dam_flood.s4_hydro_mw",
+      "op": "gt",
+      "expect": 0,
+      "when_scene": ["DamFlood"],
+      "note": "DF-6: hydro P=ηρgQH. Baseline v0 expects FAIL."
+    },
+    {
+      "id": "dam.s5_impact_err_m",
+      "path": "dam_flood.s5_impact_err_m",
+      "op": "lte",
+      "expect": 5.0,
+      "when_scene": ["DamFlood"],
+      "note": "DF-7: metres-only strike impact. Baseline v0 expects FAIL."
+    },
+    {
+      "id": "dam.s7_wave_arrival_g3",
+      "path": "dam_flood.s7_wave_arrival_g3_s",
+      "op": "gt",
+      "expect": 0,
+      "when_scene": ["DamFlood"],
+      "note": "DF-8: breach wave reaches G3. Baseline v0 expects FAIL."
+    },
+    {
+      "id": "dam.s8_inundated_tiles",
+      "path": "dam_flood.s8_inundated_tiles",
+      "op": "gt",
+      "expect": 0,
+      "when_scene": ["DamFlood"],
+      "note": "DF-9: flood inundation footprint. Baseline v0 expects FAIL."
+    },
+    {
+      "id": "dam.s9_burn_rate_dead_over_live",
+      "path": "dam_flood.s9_burn_rate_dead_over_live",
+      "op": "gt",
+      "expect": 1.0,
+      "when_scene": ["DamFlood"],
+      "note": "DF-5/S9: dead stand burns faster than live. Baseline v0 expects FAIL."
+    },
+    {
+      "id": "dam.water_gpu_field_wired",
+      "path": "dam_flood.water_gpu_field_wired",
+      "op": "eq",
+      "expect": true,
+      "when_scene": ["DamFlood"],
+      "note": "DF-3/DF-10: SurfaceWaterGpuField packed for water_field.wgsl."
+    },
+    {
+      "id": "dam.water_upload_ms",
+      "path": "dam_flood.water_upload_ms",
+      "op": "lte",
+      "expect": 16.0,
+      "when_scene": ["DamFlood"],
+      "note": "DF-10: GPU water field CPU→GPU upload budget (ms)."
+    },
+    {
       "id": "perf.sampled",
       "path": "perf.samples",
       "op": "gt",

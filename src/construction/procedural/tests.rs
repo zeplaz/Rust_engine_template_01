@@ -144,6 +144,9 @@ fn attach_paths_from_procedural_module_id_field() {
             site_json_path: None,
             pilot_hover_hint: None,
             district_style: None,
+            crest_m: None,
+            dam_kind: None,
+            required_research_ids: Vec::new(),
         },
     );
     attach_procedural_glb_paths(&mut buildings, &modules);

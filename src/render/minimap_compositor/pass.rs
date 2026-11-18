@@ -1,4 +1,8 @@
 //! Minimap compositor pass — overlay-aware composite into dedicated minimap RT.
+//!
+//! **GS-09 CLOSED** — play default = GPU composite; `CpuBridge` only on
+//! `MINIMAP_GPU_COMPOSITOR=0` (CI/headless) or `MINIMAP_GPU_SHADER_FAILED`.
+//! Kill board: [`plan_gpu_stubs_kill_v1.md`](../../dev/plan_gpu_stubs_kill_v1.md).
 
 use bevy::diagnostic::FrameCount;
 use bevy::ecs::system::SystemParam;
@@ -228,9 +232,8 @@ pub fn run_minimap_compositor_pass(
     // Terrain input: `TerrainMaterialAtlasGpu.image` is a material-swatch palette grid
     // (src/render/core/terrain_material_atlas.rs), never a world-space texture — it must
     // never feed the compositor regardless of `TerrainRenderAuthority`.
-    // Default: CPU-rastered world image (`TileWorldFallbackState`).
-    // RPC-1-005: when `TERRAIN_GPU_BAKE_SPIKE` consumers are ready, bind the spike bake Image
-    // (material/topo only — fire stays live overlay heat).
+    // GS-09 / RPC-1-005: prefer GPU RTT bake Image when ready; else world raster fallback
+    // (spike-off / first frames). Fire stays live overlay heat — never baked into land.
     let bake_ready = terrain_feed
         .bake_spike
         .as_ref()

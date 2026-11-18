@@ -1,0 +1,38 @@
+{
+  "schema": "bqa2_score_fixture_v1",
+  "note": "CQ-77: fixed inputs for Python overall_score_from_parts ↔ Rust assembly_quality_gate weights",
+  "cases": [
+    {
+      "id": "clean",
+      "style_purity_pct": 100.0,
+      "silhouette_continuity_pct": 100.0,
+      "missing_slot_count": 0,
+      "adjacency_violation_count": 0,
+      "overall_score": 100.0
+    },
+    {
+      "id": "adj_two",
+      "style_purity_pct": 100.0,
+      "silhouette_continuity_pct": 100.0,
+      "missing_slot_count": 0,
+      "adjacency_violation_count": 2,
+      "overall_score": 97.0
+    },
+    {
+      "id": "missing_one",
+      "style_purity_pct": 100.0,
+      "silhouette_continuity_pct": 100.0,
+      "missing_slot_count": 1,
+      "adjacency_violation_count": 0,
+      "overall_score": 97.0
+    },
+    {
+      "id": "mixed",
+      "style_purity_pct": 80.0,
+      "silhouette_continuity_pct": 50.0,
+      "missing_slot_count": 2,
+      "adjacency_violation_count": 1,
+      "overall_score": 70.5
+    }
+  ]
+}

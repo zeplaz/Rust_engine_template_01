@@ -36,9 +36,11 @@ use super::roads::cursor_world_on_map;
 /// Writers of progressive damage (fire integrity, blast threshold) map into this
 /// vocabulary; terminal [`Self::Collapsed`] must route through
 /// [`execute_demolish_at_tile`] — never a parallel despawn.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Reflect, Default)]
+#[reflect(Default)]
 pub enum DestructibleDamageStage {
     /// Cohesive undamaged object.
+    #[default]
     Intact,
     /// Light scarring / threatened — still structural.
     Scarred,
@@ -207,6 +209,8 @@ pub fn execute_demolish_at_tile(
     mut occupation: Option<&mut crate::strategic::TileOccupationBook>,
     mut voxel_occupation: Option<&mut crate::strategic::VoxelOccupationBook>,
     commit_authority_enabled: bool,
+    mut destruction_mask: Option<&mut crate::render::pixel_world::DestructionMaskBook>,
+    mut debris_frame: Option<&mut crate::render::WorldFireParticleFrame>,
 ) -> (u32, Vec<CommitConstructionSiteEvent>) {
     let target = IVec2::new(tile.x as i32, tile.z as i32);
     let mut n = 0u32;
@@ -225,6 +229,14 @@ pub fn execute_demolish_at_tile(
             catalog_id: catalog.map(|c| c.catalog_id.clone()),
             placement: planned.placement.clone(),
         });
+        // DESTROY-T2: mark footprint destroyed before despawn (same-frame GPU collapse).
+        if let Some(mask) = destruction_mask.as_mut() {
+            mask.mark_destroyed_tiles(footprint.tiles.iter().copied());
+        }
+        // DEBRIS-FX: dust burst into shared particle spine (covers remesh lag).
+        if let Some(frame) = debris_frame.as_mut() {
+            super::debris_fx::emit_collapse_debris_burst(frame, footprint.tiles.iter().copied());
+        }
         if planned.placement.is_some() {
             let sid = SiteId(site.site_id);
             if commit_authority_enabled {
@@ -333,6 +345,55 @@ mod tests {
     }
 
     #[test]
+    fn destroy_t2_demolish_marks_footprint_destroyed() {
+        use bevy::ecs::system::SystemState;
+        use crate::render::pixel_world::{DestructionMaskBook, MASK_DESTROYED, MASK_INTACT};
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .init_resource::<DestructionMaskBook>();
+        {
+            let mut book = app.world_mut().resource_mut::<DestructionMaskBook>();
+            book.ensure_size(16, 16);
+        }
+        let tile = IVec2::new(5, 7);
+        spawn_site_with_placement(app.world_mut(), tile, 91, false);
+        {
+            let mut state: SystemState<(
+                Commands,
+                Query<(
+                    Entity,
+                    &ConstructionSite,
+                    &PlannedSite,
+                    &SiteFootprint,
+                    Option<&BuildingDefinitionRef>,
+                )>,
+                ResMut<DestructionMaskBook>,
+            )> = SystemState::new(app.world_mut());
+            let (mut commands, sites, mut mask) = state
+                .get_mut(app.world_mut())
+                .expect("destroy_t2 demolish SystemState");
+            let (n, _) = execute_demolish_at_tile(
+                &mut commands,
+                BuildSiteTile {
+                    x: tile.x as u32,
+                    z: tile.y as u32,
+                },
+                &sites,
+                None,
+                None,
+                false,
+                Some(&mut *mask),
+                None,
+            );
+            assert_eq!(n, 1);
+            assert_eq!(mask.cell(tile.x, tile.y), MASK_DESTROYED);
+            assert_eq!(mask.cell(0, 0), MASK_INTACT);
+            state.apply(app.world_mut());
+        }
+    }
+
+    #[test]
     fn phys08_execute_demolish_despawns_overlapping_site() {
         use bevy::ecs::system::SystemState;
 
@@ -372,6 +433,8 @@ mod tests {
                 None,
                 None,
                 false,
+                None,
+                None,
             );
             assert_eq!(n, 1);
             assert_eq!(events.len(), 1);
@@ -429,6 +492,8 @@ mod tests {
                 Some(&mut *tile_book),
                 Some(&mut *voxel),
                 true, // commit authority on → voxel sole writer
+                None,
+                None,
             );
             assert_eq!(n, 1);
             assert!(

@@ -100,7 +100,8 @@ pub fn style_pack_for_site_archetype(archetype: SiteArchetype) -> StylePackId {
             SiteArchetype::Factory
             | SiteArchetype::PowerPlant
             | SiteArchetype::FuelDepot
-            | SiteArchetype::WaterPlant => "style_industrial_west",
+            | SiteArchetype::WaterPlant
+            | SiteArchetype::Dam => "style_industrial_west",
             SiteArchetype::RailDepot => "style_industrial_soviet",
             SiteArchetype::MilitaryBase
             | SiteArchetype::BunkerComplex
@@ -125,6 +126,7 @@ fn default_floors_for_archetype(
         | SiteArchetype::PowerPlant
         | SiteArchetype::FuelDepot
         | SiteArchetype::WaterPlant
+        | SiteArchetype::Dam
         | SiteArchetype::RailDepot => 1,
         _ => 2,
     };

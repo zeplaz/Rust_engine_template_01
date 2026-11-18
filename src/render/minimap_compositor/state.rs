@@ -6,8 +6,10 @@ use bevy::prelude::*;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
 pub enum MinimapCompositePath {
-    #[default]
+    /// Opt-out / degrade only: `MINIMAP_GPU_COMPOSITOR=0`, headless CI, or shader-failed.
     CpuBridge,
+    /// GS-09 play default — zero-copy VRAM composite.
+    #[default]
     GpuCompute,
 }
 
@@ -47,15 +49,15 @@ pub enum MinimapTerrainSourceBind {
     None,
     /// CPU dirty-bake world image (`TileWorldFallbackState`).
     WorldRaster,
-    /// Flagged spike bake Image (`TERRAIN_GPU_BAKE_SPIKE` + host atlas→world write).
+    /// GPU RTT world bake Image (`TERRAIN_GPU_BAKE_SPIKE` + control→`terrain_bake_rtt`).
     GpuBake,
 }
 
-/// P0-E / RPC-1-005 witness helper — terrain source label from the *actual* bound input.
+/// P0-E / RPC-1-005 / GS-09 witness helper — terrain source label from the *actual* bound input.
 ///
 /// The label reports what texture really feeds the compositor, not `TerrainRenderAuthority`.
-/// `gpu_bake` is honest **only** when [`MinimapTerrainSourceBind::GpuBake`] (spike bake Image
-/// with pixels written). Default-off / CPU world image remains [`WorldRaster`] → `world_raster`.
+/// `gpu_bake` is honest **only** when [`MinimapTerrainSourceBind::GpuBake`] (bake Image ready).
+/// Fallback CPU world image remains [`WorldRaster`] → `world_raster` (CI / spike-off only).
 #[must_use]
 pub fn minimap_terrain_source_label(bind: MinimapTerrainSourceBind) -> &'static str {
     match bind {
@@ -113,6 +115,8 @@ impl Default for MinimapCompositorState {
     }
 }
 
+/// GS-09: GPU compositor is **default ON** when unset.
+/// Set `MINIMAP_GPU_COMPOSITOR=0` for CI/headless opt-out (CpuBridge + SharedCpuRaster).
 #[must_use]
 pub fn minimap_gpu_compositor_env_enabled() -> bool {
     match std::env::var("MINIMAP_GPU_COMPOSITOR").ok().as_deref() {

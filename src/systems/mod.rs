@@ -1,6 +1,7 @@
 // Game systems
 pub mod agents;
 pub mod atmosphere;
+pub mod water;
 pub mod chunk_environment_persist;
 pub mod chunk_environment_set;
 pub mod chunk_sim_lod;

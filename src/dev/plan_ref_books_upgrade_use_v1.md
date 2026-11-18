@@ -400,8 +400,8 @@ Validate with `validate_cargo_report` / targeted `cargo test -p proc_A_dine01 --
 
 | Pattern | Use | Reject |
 |:---|:---|:---|
-| **`#[derive(SystemParam)]` groups** | `MissionStepWriters` / `MissionStepReads` / `MissionStepQueries` — one arg each; derive folds >16 **fields** internally ([`SystemParam` derive](https://docs.rs/bevy/0.20.0/bevy/ecs/system/trait.SystemParam.html)) | Flat 17+ `fn` args; hand-nested `(a,(b,(c,…)))` “bunk” style |
-| **Split by side-effect** | Mission step **enqueues** `MissileSortieLaunchQueue`; `apply_missile_sortie_launches_system` owns `BallisticFlightBook` + `AudioOneShotQueue` | Stuffing more `ResMut` into the mission step |
+| **`#[derive(SystemParam)]` groups** | `MissionStepWriters` / `MissionStepReads` / `MissionStepQueries` — one arg each; derive folds >16 **fields** internally ([`SystemParam` derive](https://docs.rs/bevy/0.20.0/bevy/ecs/system/trait.SystemParam.html)) | Flat 17+ `fn` args; hand-nested `(a,(b,(c,…)))` “bunk” style. **Note (2026-11-16):** bundling to dodge the 16-cap is still a smell when the fields cross domains — standing rule [`rule_narrow_systems_v1.md`](rule_narrow_systems_v1.md); dump farm cleanup = **CQ-68**. |
+| **Split by side-effect** | Mission step **enqueues** `MissileSortieLaunchQueue`; `apply_missile_sortie_launches_system` owns `BallisticFlightBook` + `AudioOneShotQueue` | Stuffing more `ResMut` into the mission step — **this half is the correct pattern**; keep using it |
 | **Attention as RO** | `MissionStepReads.attention` → `allows_sortie_pulse` / faction gate | Parallel AI scheduler |
 | **Atmos** | `MissionStepReads.atmos: Option<Res<AtmosphereClipmapStack>>` (restored — headroom from derive) | Dropping atmos to “fix” param count |
 

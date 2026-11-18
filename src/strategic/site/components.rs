@@ -31,6 +31,8 @@ pub enum SiteArchetype {
     Minefield,
     FuelDepot,
     WaterPlant,
+    /// Embankment / gravity dam spanning a river channel (DF-4).
+    Dam,
 }
 
 /// Bitmask of required / connected [`crate::strategic::spatial_network::NetworkType`] lanes (expand as graphs mature).

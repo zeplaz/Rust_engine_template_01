@@ -32,8 +32,8 @@ use bevy::asset::RenderAssetUsages;
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::prelude::*;
 use crate::combat::{
-    DeploymentKind, DroneAo, Formation, FrontBalance, MissionBook, Posture, PressureKind,
-    PressurePointBook, TheaterBook, UnitKind,
+    BallisticPresentFrame, DeploymentKind, DroneAo, Formation, FrontBalance, MissionBook, Posture,
+    PressureKind, PressurePointBook, TheaterBook, UnitKind,
 };
 use crate::engine::states::BaseState;
 use crate::gui::drone_mission_chrome::{drone_ao_preview_rect, DroneAoTool};
@@ -49,6 +49,7 @@ use bevy::ecs::system::SystemParam;
 pub const FRONT_Z: f32 = 1.10;
 const THEATER_Z: f32 = 1.08;
 const DRONE_AO_Z: f32 = 1.09;
+const BALLISTIC_Z: f32 = 1.11;
 const PRESSURE_Z: f32 = 1.12;
 const SYMBOL_Z: f32 = 1.15;
 const LABEL_Z: f32 = 1.2;
@@ -237,6 +238,36 @@ pub(crate) fn build_theater_outlines(geo: &mut Geo, book: &TheaterBook, px_per_t
 }
 
 /// D7 — player drone AO rectangles (+ in-progress draw preview).
+/// DF-7: projectile trails + impact flashes from [`BallisticPresentFrame`] (metres → tiles).
+pub(crate) fn build_ballistic_present(
+    geo: &mut Geo,
+    frame: &BallisticPresentFrame,
+    px_per_tile: f32,
+) {
+    let m_per_tile = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
+    let w = px_to_tiles(2.0, px_per_tile).clamp(0.08, 0.45);
+    let trail = [0.95, 0.85, 0.35, 0.85];
+    for &(a, b) in &frame.trail_segments {
+        let a_t = Vec2::new(a.x / m_per_tile, a.y / m_per_tile);
+        let b_t = Vec2::new(b.x / m_per_tile, b.y / m_per_tile);
+        geo.line(a_t, b_t, w, BALLISTIC_Z, trail);
+    }
+    for &(pos, age) in &frame.impacts {
+        let t = Vec2::new(pos.x / m_per_tile, pos.y / m_per_tile);
+        let fade = (1.0 - (age / 2.5).clamp(0.0, 1.0)).clamp(0.15, 1.0);
+        let r = px_to_tiles(6.0, px_per_tile).clamp(0.2, 1.2) * fade;
+        let col = [1.0, 0.45 + 0.4 * fade, 0.12, 0.95 * fade];
+        // Diamond flash (two quads via fan of 4).
+        let ring = [
+            t + Vec2::new(0.0, r),
+            t + Vec2::new(r, 0.0),
+            t + Vec2::new(0.0, -r),
+            t + Vec2::new(-r, 0.0),
+        ];
+        geo.fan(t, &ring, BALLISTIC_Z, col);
+    }
+}
+
 pub(crate) fn build_drone_ao_outlines(
     geo: &mut Geo,
     aos: &[DroneAo],
@@ -520,6 +551,7 @@ pub(crate) struct FrontOverlaySources<'w, 's> {
     balance: Option<Res<'w, FrontBalance>>,
     missions: Option<Res<'w, MissionBook>>,
     drone_tool: Option<Res<'w, DroneAoTool>>,
+    ballistic: Option<Res<'w, BallisticPresentFrame>>,
     formations: Query<'w, 's, (Entity, &'static Formation)>,
 }
 
@@ -614,6 +646,14 @@ impl FrontOverlaySources<'_, '_> {
                 );
             }
         }
+        if let Some(b) = self.ballistic.as_deref() {
+            key = mix64(
+                key ^ b.revision
+                    ^ b.in_flight as u64
+                    ^ (b.trail_segments.len() as u64) << 16
+                    ^ (b.impacts.len() as u64) << 32,
+            );
+        }
         key
     }
 
@@ -656,6 +696,11 @@ impl FrontOverlaySources<'_, '_> {
                 .and_then(|t| drone_ao_preview_rect(t, px));
             if !aos.is_empty() || preview.is_some() {
                 build_drone_ao_outlines(&mut geo, &aos, preview, px);
+            }
+        }
+        if let Some(b) = self.ballistic.as_deref() {
+            if !b.trail_segments.is_empty() || !b.impacts.is_empty() {
+                build_ballistic_present(&mut geo, b, px);
             }
         }
         if settings.formations {

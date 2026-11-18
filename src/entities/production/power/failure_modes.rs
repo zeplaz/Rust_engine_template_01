@@ -301,8 +301,9 @@ pub fn nuclear_loop_scram_system(
 }
 
 /// **COD-NUCLEAR-COOLING-001** — after SCRAM, drive [`ThermalComponent`] from decay heat vs cooling.
-/// Cooling available: passive profile, offsite restored, or diesels Starting/Running.
-/// Cooling lost: diesels Failed while still islanded → core heat rises toward meltdown threshold (P2 flag only).
+/// Cooling available: (passive / offsite / diesels) **and** reservoir/river water when a
+/// [`CoolingIntake`] is attached (DF-6 — same hook any industry uses).
+/// Cooling lost: diesels Failed while islanded, or intake tripped/unavailable → core heat rises.
 pub fn nuclear_decay_heat_cooling_system(
     time: Res<Time>,
     defs: Res<PlantDefinitionRegistry>,
@@ -313,6 +314,7 @@ pub fn nuclear_decay_heat_cooling_system(
             &PowerPlant,
             &mut NuclearContainmentRuntime,
             &mut ThermalComponent,
+            Option<&crate::systems::water::CoolingIntake>,
         ),
         With<ContainmentBuilding>,
     >,
@@ -322,7 +324,7 @@ pub fn nuclear_decay_heat_cooling_system(
         return;
     }
 
-    for (entity, plant, mut runtime, mut thermal) in &mut q {
+    for (entity, plant, mut runtime, mut thermal, intake) in &mut q {
         let Some(profile) = nuclear_profile_for(plant, &defs) else {
             continue;
         };
@@ -330,7 +332,7 @@ pub fn nuclear_decay_heat_cooling_system(
             continue;
         }
 
-        let cooling_ok = cooling_available(profile, &runtime);
+        let cooling_ok = cooling_available(profile, &runtime, intake);
         runtime.cooling_degraded = !cooling_ok;
 
         let stable = profile.core_stable_temp_c.max(0.0);
@@ -432,17 +434,30 @@ pub fn nuclear_meltdown_breach_system(
     }
 }
 
-fn cooling_available(profile: &NuclearFailureProfile, runtime: &NuclearContainmentRuntime) -> bool {
-    if profile.passive_cooling {
-        return true;
+fn cooling_available(
+    profile: &NuclearFailureProfile,
+    runtime: &NuclearContainmentRuntime,
+    intake: Option<&crate::systems::water::CoolingIntake>,
+) -> bool {
+    let power_ok = if profile.passive_cooling {
+        true
+    } else if runtime.offsite_connected {
+        true
+    } else {
+        matches!(
+            runtime.diesel,
+            NuclearDieselState::Starting | NuclearDieselState::Running
+        )
+    };
+    if !power_ok {
+        return false;
     }
-    if runtime.offsite_connected {
-        return true;
+    // No intake yet → legacy power-only path. With intake, water must still be available
+    // (Available or Derated). Trip/Unavailable after dam destroy drains reservoir.
+    match intake {
+        None => true,
+        Some(i) => i.water_available(),
     }
-    matches!(
-        runtime.diesel,
-        NuclearDieselState::Starting | NuclearDieselState::Running
-    )
 }
 
 fn nuclear_profile_for<'a>(
@@ -1001,5 +1016,106 @@ mod tests {
         assert!(!runtime.meltdown_threshold_reached);
         assert!(!runtime.meltdown_event_emitted);
         assert!(!runtime.containment_breached);
+    }
+
+    #[test]
+    fn nuclear_cooling_needs_water_when_intake_hooked() {
+        use crate::systems::water::{CoolingIntake, CoolingWaterState};
+
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(200)))
+            .init_resource::<PlantDefinitionRegistry>()
+            .add_message::<NuclearScramEvent>()
+            .add_message::<NuclearCoolingDegradedEvent>()
+            .add_systems(
+                Update,
+                (
+                    attach_power_plant_capabilities,
+                    attach_nuclear_containment_runtime,
+                    sync_nuclear_offsite_from_utility,
+                    nuclear_loop_scram_system,
+                    nuclear_decay_heat_cooling_system,
+                )
+                    .chain(),
+            );
+
+        // Offsite stays up → power path OK; water must still gate cooling.
+        let mut profile = test_profile();
+        profile.scram_delay_s = 0.1;
+        profile.passive_cooling = false;
+        profile.decay_heat_rise_c_per_s = 10.0;
+        profile.decay_heat_time_compress = 1.0;
+        {
+            let mut defs = app.world_mut().resource_mut::<PlantDefinitionRegistry>();
+            defs.insert_for_test(test_nuclear_def("pwr_water_gate", profile));
+        }
+
+        let mut intake = CoolingIntake::reservoir(100.0, 90.0, 48.0);
+        intake.state = CoolingWaterState::Tripped;
+        intake.cooling_factor = 0.0;
+
+        let nuclear = app
+            .world_mut()
+            .spawn((
+                PowerPlant {
+                    definition_id: "pwr_water_gate".into(),
+                    plant_type: PowerPlantType::Nuclear,
+                    max_output: 1100.0,
+                    current_output: 800.0,
+                    status: OperationalStatus::Operational,
+                    efficiency: 1.0,
+                },
+                // Connected offsite — without intake this would keep cooling_ok.
+                UtilityConnection::power(1, 0.1, true),
+                intake,
+            ))
+            .id();
+
+        // Force LOOP by flipping utility mid-run after attach.
+        for _ in 0..8 {
+            app.update();
+        }
+        {
+            let mut util = app
+                .world_mut()
+                .get_mut::<UtilityConnection>(nuclear)
+                .unwrap();
+            util.connected = false;
+        }
+        for _ in 0..20 {
+            app.update();
+        }
+        // Restore offsite (pumps have power) but intake still tripped.
+        {
+            let mut util = app
+                .world_mut()
+                .get_mut::<UtilityConnection>(nuclear)
+                .unwrap();
+            util.connected = true;
+        }
+        {
+            let mut intake = app.world_mut().get_mut::<CoolingIntake>(nuclear).unwrap();
+            intake.state = CoolingWaterState::Tripped;
+            intake.cooling_factor = 0.0;
+        }
+        let temp_before = app
+            .world()
+            .get::<ThermalComponent>(nuclear)
+            .map(|t| t.current_temperature)
+            .unwrap_or(80.0);
+        for _ in 0..10 {
+            // Keep intake tripped across ticks (no water update system in this unit app).
+            if let Some(mut intake) = app.world_mut().get_mut::<CoolingIntake>(nuclear) {
+                intake.state = CoolingWaterState::Tripped;
+                intake.cooling_factor = 0.0;
+            }
+            app.update();
+        }
+        let runtime = app.world().get::<NuclearContainmentRuntime>(nuclear).unwrap();
+        let thermal = app.world().get::<ThermalComponent>(nuclear).unwrap();
+        assert!(runtime.scrammed);
+        assert!(runtime.cooling_degraded);
+        assert!(thermal.current_temperature >= temp_before);
     }
 }

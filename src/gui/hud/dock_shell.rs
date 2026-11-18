@@ -114,6 +114,7 @@ pub struct HudDockShellPlugin;
 impl Plugin for HudDockShellPlugin {
     fn build(&self, app: &mut App) {
         app.add_plugins(super::panel_state::HudPanelStatePlugin)
+            .add_plugins(super::dam_ops_card::DamOpsCardPlugin)
             .add_plugins(super::live_data::HudLiveDataPlugin)
             .init_resource::<HudDockRegistry>()
             .init_resource::<HudOverlayTrayState>()

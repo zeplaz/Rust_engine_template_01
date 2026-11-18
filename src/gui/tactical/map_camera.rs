@@ -445,7 +445,9 @@ fn test_scene_zoom(test_scene: Option<Res<ActiveTestScene>>) -> f32 {
         .map(|ts| match ts.0 {
             TestScene::Weather => 1.25,
             TestScene::Fire | TestScene::Vfx => 1.95,
-            TestScene::Atmosphere | TestScene::SubFx | TestScene::PlayQuad => 1.75,
+            TestScene::Atmosphere | TestScene::SubFx | TestScene::PlayQuad | TestScene::DamFlood => {
+                1.75
+            }
             TestScene::Visual | TestScene::VfxSandbox => 2.1,
             TestScene::City | TestScene::BuildReadability => 2.1,
             TestScene::None => 1.0,
@@ -628,9 +630,10 @@ fn map_camera_apply_input(
         pose.translation += screen_to_world(pan.normalize() * key_speed).extend(0.0);
     }
 
-    // Traditional RTS/city pan: right-drag (primary), middle-drag / Space (legacy).
+    // PixelWorld3D: middle-drag is orbit-rotate (pixel_world_mmb_orbit_system), not pan.
+    // Tactical 2D: middle-drag still pans (legacy). Right-drag / Space grip pan in both.
     let grip = keys.pressed(bindings.map_mouse_grip)
-        || mouse_btn.pressed(MouseButton::Middle)
+        || (!pixel_world && mouse_btn.pressed(MouseButton::Middle))
         || mouse_btn.pressed(MouseButton::Right);
     if grip && !pointer_blocks_mouse {
         let sum = input_frame.pointer_delta;

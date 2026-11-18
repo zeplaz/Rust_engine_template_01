@@ -14,7 +14,6 @@
 
 use std::sync::atomic::{AtomicBool, Ordering};
 
-use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use serde_json::{json, Value};
 
@@ -246,23 +245,18 @@ impl Default for EcsResourceInventory {
     }
 }
 
-#[derive(SystemParam)]
-struct InventoryProbe<'w, 's> {
-    params: Res<'w, WorldGenParams>,
-    tiles: Query<'w, 's, (), With<TileMarker>>,
-    worlds: Query<'w, 's, (), With<WorldMarker>>,
-    roads: Query<'w, 's, (), With<MapEditorRoadMarkerV1>>,
-    test_chunks: Query<'w, 's, (), With<TestSceneSimChunk>>,
-    cameras: Query<'w, 's, (), With<Camera>>,
-    transport: Option<Res<'w, TransportTopology>>,
-    logistics: Option<Res<'w, LogisticsGraph>>,
-    fire_sim: Option<Res<'w, FireSimulationSnapshot>>,
-    world_gen: Option<Res<'w, WorldGenProgress>>,
-}
-
 fn sample_ecs_resource_inventory(
     mut inventory: ResMut<EcsResourceInventory>,
-    probe: InventoryProbe,
+    params: Res<WorldGenParams>,
+    tiles: Query<(), With<TileMarker>>,
+    worlds: Query<(), With<WorldMarker>>,
+    roads: Query<(), With<MapEditorRoadMarkerV1>>,
+    test_chunks: Query<(), With<TestSceneSimChunk>>,
+    cameras: Query<(), With<Camera>>,
+    transport: Option<Res<TransportTopology>>,
+    logistics: Option<Res<LogisticsGraph>>,
+    fire_sim: Option<Res<FireSimulationSnapshot>>,
+    world_gen: Option<Res<WorldGenProgress>>,
 ) {
     if !instrumentation_active() {
         return;
@@ -273,43 +267,39 @@ fn sample_ecs_resource_inventory(
     }
     inventory.frames_since_sample = 0;
 
-    let tile_entities = if probe.params.field_storage == TerrainFieldStorage::ChunkCellMatrixAuthoritative {
+    let tile_entities = if params.field_storage == TerrainFieldStorage::ChunkCellMatrixAuthoritative {
         0u64
     } else {
-        probe.tiles.iter().count() as u64
+        tiles.iter().count() as u64
     };
-    let terrain_tiles = probe
-        .params
-        .width
-        .saturating_mul(probe.params.height) as u64;
+    let terrain_tiles = params.width.saturating_mul(params.height) as u64;
 
     let entities = json!({
         "tiles": tile_entities,
         "terrain_tiles_symbolic": terrain_tiles,
-        "terrain_storage": format!("{:?}", probe.params.field_storage),
-        "world_markers": probe.worlds.iter().count(),
-        "map_editor_roads": probe.roads.iter().count(),
-        "test_scene_chunks": probe.test_chunks.iter().count(),
-        "cameras": probe.cameras.iter().count(),
+        "terrain_storage": format!("{:?}", params.field_storage),
+        "world_markers": worlds.iter().count(),
+        "map_editor_roads": roads.iter().count(),
+        "test_scene_chunks": test_chunks.iter().count(),
+        "cameras": cameras.iter().count(),
     });
 
     let resources = json!({
-        "transport_topology_edges": probe
-            .transport
+        "transport_topology_edges": transport
             .as_deref()
             .map(|t| t.neighbors.len())
             .unwrap_or(0),
-        "logistics_graph": probe.logistics.as_deref().map(|g| json!({
+        "logistics_graph": logistics.as_deref().map(|g| json!({
             "revision": g.revision,
             "nodes": g.nodes.len(),
             "edges": g.edges.len(),
         })),
-        "fire_simulation": probe.fire_sim.as_deref().map(|f| json!({
+        "fire_simulation": fire_sim.as_deref().map(|f| json!({
             "instances": f.instances.len(),
             "chunk_heat_cells": f.chunk_heat.len(),
             "stamp_tick": f.stamp.tick,
         })),
-        "world_gen": probe.world_gen.as_deref().map(|w| json!({
+        "world_gen": world_gen.as_deref().map(|w| json!({
             "running": w.running,
             "fraction": w.fraction,
             "label": w.label,

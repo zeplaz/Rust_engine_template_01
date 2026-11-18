@@ -285,17 +285,17 @@ def pcg08_promote_gate_snapshot(*, repo: Path | None = None) -> dict[str, Any]:
 def enqueue_param_frame_task(frame_path: Path, *, task_id: str | None = None, seed: int | None = None) -> dict[str, Any]:
     """Queue StudioTask for a param frame (CQ-32: enqueue is not gated on PCG-08)."""
     data = load_param_frame(frame_path)
-    rel = frame_path
     root = repo_root()
     try:
-        rel = frame_path.relative_to(root)
+        payload = str(frame_path.resolve().relative_to(root)).replace("\\", "/")
     except ValueError:
-        rel = schemas_dir() / "examples" / f"{data['frame_id']}.json"
-        write_param_frame(data, root / rel)
+        # CQ-23: outside-repo paths (tests / scratch) keep an absolute payload —
+        # never write into tools/mcp/schemas/examples/.
+        payload = str(frame_path.resolve())
     tid = task_id or f"param_frame_{data['frame_id']}"
     return studio_task.enqueue(
         kind="param_frame",
         seed=int(seed if seed is not None else data.get("seed", 0)),
-        payload_path=str(rel).replace("\\", "/"),
+        payload_path=payload,
         task_id=tid,
     )

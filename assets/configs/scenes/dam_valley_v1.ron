@@ -1,0 +1,23 @@
+// PLAN-DAM-FLOOD-BENCHMARK-v1 DF-1 — authored valley fixture (topology fixed; seed varies noise only).
+(
+    schema_version: 1,
+    id: "dam_valley_v1",
+    // World extent hint — harness applies MediumSmall (320²) unless overridden.
+    extent_tiles: 320,
+    // Upstream baseflow (m³/s).
+    river_baseflow_m3s: 220.0,
+    // Valley runs +Y (north) → -Y (south): upstream north, dam mid, downstream south.
+    narrows_tile: (160, 160),
+    dam_span_tiles: 12,
+    gauges: [
+        (id: "G1", label: "upstream", tile: (160, 220), cross_section_half_tiles: 4),
+        (id: "G2", label: "dam_site", tile: (160, 160), cross_section_half_tiles: 4),
+        (id: "G3", label: "downstream", tile: (160, 100), cross_section_half_tiles: 4),
+    ],
+    town_origin: (140, 200),
+    nuclear_plant_origin: (180, 140),
+    hydro_plant_origin: (160, 152),
+    launch_site_origin: (100, 180),
+    forest_floodplain: (min: (120, 120), max: (200, 200)),
+    road_bridge_tile: (160, 110),
+)

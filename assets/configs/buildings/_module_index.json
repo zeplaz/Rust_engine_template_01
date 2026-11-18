@@ -98,6 +98,102 @@
       "stylepack_visible": true
     },
     {
+      "module_id": "dam_arch_v1",
+      "job_id": "dam_arch_v1_production_run001",
+      "category": "corner_prop",
+      "glb": "assets/models/modules/dam_arch_v1_production_run001/model.glb",
+      "glb_path": "assets/models/modules/dam_arch_v1_production_run001/model.glb",
+      "archetype": "module_prop",
+      "style_pack": "style_industrial_west",
+      "grid_units": [
+        6,
+        2
+      ],
+      "snap": "floor_edge",
+      "material_profile": "concrete_grey_01",
+      "style_tags": [
+        "concrete",
+        "grey",
+        "industrial_west"
+      ],
+      "batch_id": "kit_dam_flood_aps_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "dam_embankment_v1",
+      "job_id": "dam_embankment_v1_production_run001",
+      "category": "corner_prop",
+      "glb": "assets/models/modules/dam_embankment_v1_production_run001/model.glb",
+      "glb_path": "assets/models/modules/dam_embankment_v1_production_run001/model.glb",
+      "archetype": "module_prop",
+      "style_pack": "style_industrial_west",
+      "grid_units": [
+        12,
+        2
+      ],
+      "snap": "floor_edge",
+      "material_profile": "concrete_grey_01",
+      "style_tags": [
+        "concrete",
+        "grey",
+        "industrial_west"
+      ],
+      "batch_id": "kit_dam_flood_aps_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "dam_gravity_v1",
+      "job_id": "dam_gravity_v1_production_run001",
+      "category": "corner_prop",
+      "glb": "assets/models/modules/dam_gravity_v1_production_run001/model.glb",
+      "glb_path": "assets/models/modules/dam_gravity_v1_production_run001/model.glb",
+      "archetype": "module_prop",
+      "style_pack": "style_industrial_west",
+      "grid_units": [
+        10,
+        2
+      ],
+      "snap": "floor_edge",
+      "material_profile": "concrete_grey_01",
+      "style_tags": [
+        "concrete",
+        "grey",
+        "industrial_west"
+      ],
+      "batch_id": "kit_dam_flood_aps_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
+      "module_id": "dam_weir_v1",
+      "job_id": "dam_weir_v1_production_run001",
+      "category": "corner_prop",
+      "glb": "assets/models/modules/dam_weir_v1_production_run001/model.glb",
+      "glb_path": "assets/models/modules/dam_weir_v1_production_run001/model.glb",
+      "archetype": "module_prop",
+      "style_pack": "style_industrial_west",
+      "grid_units": [
+        6,
+        1
+      ],
+      "snap": "floor_edge",
+      "material_profile": "concrete_grey_01",
+      "style_tags": [
+        "concrete",
+        "grey",
+        "industrial_west"
+      ],
+      "batch_id": "kit_dam_flood_aps_001",
+      "development_tier": "production",
+      "pbr_status": "shipped",
+      "stylepack_visible": true
+    },
+    {
       "module_id": "door_brick_residential_1u",
       "job_id": "door_brick_residential_1u_production_run001",
       "category": "door",

@@ -123,6 +123,31 @@ cd tools/mcp/python && python -m pytest tests/test_building_quality_qc.py tests/
 
 
 
+### @coder — **P0 HIGH — GPU stubs kill / upgrades A–D (pick now)**
+
+Charter: [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md) · board [`gpu_todos_v1.md`](gpu_todos_v1.md) § PLAN-GPU-STUBS-KILL.  
+**Locked:** bake texture = sole terrain display; **delete** instanced draw + retire `GpuTilemap`.
+
+| ☐ | ID | Scope |
+|:---:|:---|:---|
+| ☑ | **GS-07** | Retire `vfx_capture_hook` text stubs |
+| ☑ | **GPU-A** | True GPU RTT bake (control tex + `terrain_bake_rtt.wgsl`); kill host write |
+| ☑ | **GPU-A'** | Eliminate Sim land paint after bake RTT |
+| ☑ | **GPU-B** | Scorch companion field + overlay; stop CPU land tint |
+| ☑ | **GS-03+04** | Instanced draw deleted + `GpuTilemap` removed |
+| ☑ | **GPU-D** | Voxel water static grid + VS displace |
+| ☑ | **GPU-C** | Flat veg instance quads + VegetationInstanceFrame |
+| ☑ | **GS-05** | Water particle emit+draw wired |
+| ☑ | **GS-WITNESS** | Honesty: gpu_rtt probe path; no GpuTilemap |
+| ☑ | **GS-09** | Minimap default GPU (P1) |
+| ☑ | **GPU-MIPS** | Bake mip chain after GPU RTT |
+| ☑ | **GS-06** | Fire LOD = CPU visual policy (honest) |
+| ☑ | **GS-08** | Spark wired; smoke_volume deferred ES-4 |
+| ☐ | **GPU-MIPS** | Bake mip chain (P1) |
+| ☑ | **GPU-ARRAY** | Texture2DArray bake + greedy land (P1) |
+| ☐ | **GPU-CULL** | Frustum cull → indirect (P2) |
+| ☐ | **GS-06/08** | Fire LOD / smoke_volume (P1) |
+
 ### @coder (P1 — RGR Phase 1 — **hub pick_now**)
 
 

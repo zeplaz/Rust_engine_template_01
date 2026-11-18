@@ -18,6 +18,7 @@ mod atmosphere_clipmap_overlay;
 mod transport_overlay;
 mod voxel_occupation_overlay;
 mod utility_overlay;
+mod surface_water_overlay;
 mod weather_overlay;
 mod wave_s_artifacts;
 mod wire_format;
@@ -114,6 +115,12 @@ pub use utility_overlay::{
     utility_overlay_ref, write_utility_network_ron, write_utility_overlay_on_save_flush,
     write_utility_overlay_to_bundle, UtilityOverlayHydrateState, UTILITY_OVERLAY_NAME,
     UTILITY_OVERLAY_REL_PATH,
+};
+pub use surface_water_overlay::{
+    default_surface_water_overlay_ref, read_surface_water_overlay_from_manifest,
+    read_surface_water_ron, write_surface_water_overlay_on_save_flush,
+    write_surface_water_overlay_to_bundle, write_surface_water_ron, SurfaceWaterOverlaySnapshot,
+    SURFACE_WATER_OVERLAY_NAME, SURFACE_WATER_OVERLAY_REL_PATH,
 };
 pub use wave_s_artifacts::{
     apply_wave_s_shell_capture_requests, apply_wave_s_shell_restore_requests,

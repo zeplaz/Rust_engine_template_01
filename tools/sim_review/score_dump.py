@@ -346,6 +346,10 @@ def _sections(dump: dict | None) -> str:
     return "".join(out)
 
 
+# CQ-75: this module owns the *play* review dashboard. APS / studio HTML uses
+# tools/studio_dash/render_report.py (+ rust_engine_mcp.studio_html write helper).
+
+
 def _html(result: dict, dump: dict | None = None) -> str:
     rows = []
     for r in result.get("rows") or []:

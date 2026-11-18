@@ -2,6 +2,10 @@
 //!
 //! Yields while a build tool is armed or formation select owns the pointer path.
 //! Writes only [`HudLogisticsFocus`] — never sim truth.
+//!
+//! **Selection is not faction-gated:** any site footprint is pickable (player or foreign).
+//! Intel filtering (what the card reveals from sat / sensors / LOS) is a later layer —
+//! for DamFlood experiments the dam is player-owned so full dam ops are available.
 
 use bevy::prelude::*;
 
@@ -60,9 +64,8 @@ pub fn map_pick_site_focus_system(
     };
     let tile = IVec2::new(xy.x.floor() as i32, xy.y.floor() as i32);
     let list: Vec<(Entity, &SiteFootprint)> = sites.iter().collect();
-    if let Some(e) = pick_construction_site_at_tile(&list, tile) {
-        focus.tracked_entity = Some(e);
-    }
+    // Hit → focus that site (any faction). Miss → clear so cards dismiss.
+    focus.tracked_entity = pick_construction_site_at_tile(&list, tile);
 }
 
 /// Clear formation selection when a place/demolish tool is armed (mode arbitration).

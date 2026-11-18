@@ -88,5 +88,10 @@ CANONICAL_MODULE_IDS: frozenset[str] = frozenset(
         "switchyard_edge_1u",
         "warning_sign_nuclear_1u",
         "kit_nuclear_pwr_production_001",
+        # DamFlood APS dam kinds (kit_dam_flood_aps_001)
+        "dam_embankment_v1",
+        "dam_gravity_v1",
+        "dam_weir_v1",
+        "dam_arch_v1",
     }
 )
