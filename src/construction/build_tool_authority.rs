@@ -26,6 +26,8 @@ pub enum BuildingArchetypeId {
     Depot,
     PowerPlant,
     WaterPlant,
+    /// Valley-spanning embankment (DF-4) — default stub span; drag-span placement follows.
+    Dam,
 }
 
 impl BuildingArchetypeId {
@@ -37,6 +39,7 @@ impl BuildingArchetypeId {
             Self::Factory | Self::Depot => SiteArchetype::Factory,
             Self::PowerPlant => SiteArchetype::PowerPlant,
             Self::WaterPlant => SiteArchetype::WaterPlant,
+            Self::Dam => SiteArchetype::Dam,
         }
     }
 
@@ -49,6 +52,8 @@ impl BuildingArchetypeId {
                 FootprintTiles { width: 2, depth: 2 }
             }
             Self::Office | Self::Retail => FootprintTiles { width: 1, depth: 1 },
+            // Default crest span across channel (tiles); player drag widens later.
+            Self::Dam => FootprintTiles { width: 12, depth: 2 },
         }
     }
 }
@@ -170,9 +175,9 @@ impl BuildTool {
                 BuildingArchetypeId::Housing => ToolContext::Civil,
                 BuildingArchetypeId::Office | BuildingArchetypeId::Retail => ToolContext::Industry,
                 BuildingArchetypeId::Factory | BuildingArchetypeId::Depot => ToolContext::Industry,
-                BuildingArchetypeId::PowerPlant | BuildingArchetypeId::WaterPlant => {
-                    ToolContext::Utilities
-                }
+                BuildingArchetypeId::PowerPlant
+                | BuildingArchetypeId::WaterPlant
+                | BuildingArchetypeId::Dam => ToolContext::Utilities,
             },
             Self::Defense(_) | Self::Demolish => ToolContext::Military,
             Self::Road(_) => ToolContext::Roads,

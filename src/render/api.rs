@@ -27,12 +27,20 @@ pub use super::pipelines::terrain_instanced_draw::{
 };
 pub use super::pipelines::terrain_gpu_bake_spike::{
     build_bake_spike_probe, collect_material_bake_instances, pack_gpu_bake_scissors, peek_dirty_chunk_coords,
-    sample_atlas_material_rgba,
+    sample_atlas_material_rgba, write_control_texels,
     spike_bake_ready_for_consumers, terrain_gpu_bake_spike_env_enabled,
     write_atlas_to_world_bake, TerrainGpuBakeIndexMap, TerrainGpuBakeScissor,
     TerrainGpuBakeSpikePlugin, TerrainGpuBakeSpikeProbe, TerrainGpuBakeSpikeState,
     TERRAIN_GPU_BAKE_SPIKE_ENV,
     };
+pub use super::pipelines::terrain_gpu_bake_rtt::{
+    register_terrain_gpu_bake_rtt, TerrainBakeRttParamsGpu, TerrainGpuBakeRttDispatch,
+    TERRAIN_BAKE_RTT_WGSL,
+};
+pub use super::pipelines::terrain_scorch_field::{
+    cpu_land_scorch_tint_suppressed, terrain_scorch_field_ready, TerrainScorchField,
+    TerrainScorchFieldPlugin, TerrainScorchOverlay,
+};
 pub use super::tile_world_fallback::{
     simulation_minimap_egui_texture, SimMinimapUiState,
     tile_raster_dirty_on_zoom_band_change_enabled, TileFallbackRasterPolicy,
@@ -71,6 +79,7 @@ pub use super::pipelines::gpu_spark_compute::{
 };
 pub use super::pipelines::gpu_fire_particle_raster::{register_fire_particle_raster_draw, FireDrawDiagnostics, FireParticleDrawGlobals};
 pub use super::pipelines::gpu_water_surface_draw::{register_water_surface_draw, WaterOverlayDrawGlobals};
+pub use super::pipelines::gpu_water_field_draw::{register_water_field_draw, WaterFieldDrawGlobals};
 pub use super::pipelines::gpu_water_particle_draw::{
     register_world_water_particle_draw, WorldWaterParticleDrawDispatch, WorldWaterParticleGpuStorage,
     WATER_PARTICLE_WGSL,
@@ -285,13 +294,19 @@ pub use super::pipelines::gpu_tile_debug_buffer::register_tile_debug_instance_st
 pub use super::pipelines::gpu_tile_debug_draw::register_tile_debug_instanced_draw;
 pub use super::pipelines::gpu_indirect_draw::{
     apply_gpu_indirect_spine_dispatch_authority, compact_world_fire_indirect_draw,
-    sync_world_fire_indirect_draw, GpuIndirectDrawSpine, GpuIndirectDrawSpinePlugin,
-    GPU_INDIRECT_DISPATCH_WORKGROUP, WorldFireIndirectDrawArgs, WORLD_FIRE_VERTICES_PER_INSTANCE,
+    sync_world_fire_indirect_draw, FireFrustumCullStats, GpuIndirectDrawSpine,
+    GpuIndirectDrawSpinePlugin, FIRE_DRAW_VERTS_PER_INSTANCE, GPU_INDIRECT_DISPATCH_WORKGROUP,
+    WorldFireIndirectDrawArgs, WORLD_FIRE_VERTICES_PER_INSTANCE,
+};
+pub use super::pipelines::gpu_frustum_cull::{
+    register_fire_frustum_cull, FireFrustumCullFrame, FireFrustumCullPassSet,
+    FRUSTUM_INSTANCE_CULL_WGSL,
 };
 pub use super::minimap_compositor::{
     minimap_gpu_compositor_env_enabled, MinimapGpuCompositorDiagnostics, MinimapCompositorPlugin,
     MinimapCompositorState, MinimapRenderTargetRegistry,
 };
+pub use super::culling::{FrustumPlanes, Plane4};
 pub use super::pipelines::light::*;
 #[cfg(feature = "bevy_tilemap_adapter")]
 pub use super::tilemap_adapter::{

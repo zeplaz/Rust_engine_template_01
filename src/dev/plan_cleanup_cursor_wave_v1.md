@@ -37,6 +37,7 @@
 - **Real regressions:** mid-burn fire state is no longer saved, the route cache is cleared every sim step, terrain erosion loses mass, keyboard camera input dies over HUD chrome, 15 new lib-test failures.
 - **Test inflation:** ~50 `include_str!` tests that grep source files and doc comments for book-citation strings, plus several tautological tests.
 - **Doc sprawl:** 16 new `plan_*.md` (811 `.md` files under `src/dev/`), the same status kept in three ledgers that disagree, and a plan section that forbids agents from stopping to report gaps.
+- **God-dump / param-cap dodge:** `sim_run_dump` (and friends) gather every domain via `SystemParam` bundles so new features pad the centre until Bevy's 16-cap — same architecture mistake as the mission-step bundle farm. Standing rule: [`rule_narrow_systems_v1.md`](rule_narrow_systems_v1.md). Fix tracked as **CQ-68**.
 
 ---
 
@@ -126,6 +127,17 @@ The test files are unchanged in range, but `art_pipeline_suite/app.py` and the p
 | CQ-40 | `combat/drone_supply.rs:29-56`, `missile_supply.rs:68-95`, `toe_demand.rs:44-90` | The `refill_*_packages_sink` functions and the drone/missile aggregation blocks are line-for-line copies. Add one `TopUpPackage` trait (`ALL`, `count`, `bump`, `toe_row`) with a generic sink and aggregator. |
 | CQ-41 | `tools/mcp/python/rust_engine_mcp/studio_task.py` | The four `run_queued_*` functions are type-swapped copies. The file-based queued/running/done "bus" with handoff markers rebuilds the deleted queue system, and every caller runs it synchronously. Replace it with `run(kind, payload)` plus a dispatch table. Keep status files only if Blender truly needs async; if so, record why in the module doc. |
 
+### 4d. Narrow systems — no god-dump / no bundles to dodge 16 (`rule_narrow_systems_v1.md`)
+
+**Smell:** one system (or a `#[derive(SystemParam)]` farm) reads every domain so a new feature (water, dam, missiles) adds params until Bevy's 16-cap, then someone groups them into another bundle. That hides the problem. Same mistake as `MissionStepWriters` / `MissionStepReads` in `plan_ref_books_upgrade_use_v1.md` §5c — the *good* half of that fix was the request queue (`MissileSortieLaunchQueue` → owner applies); the *bad* half was bundling cross-domain params to stay under 16.
+
+| ID | Sev | Where | Problem | Fix | Effort |
+|---|---|---|---|---|---|
+| CQ-68 | Med | `src/dev/sim_run_dump.rs` (+ `sim_run_dump_*.rs`) | Central dump system reaches into every subsystem via `SystemParam` farms. | **DONE (2026-11-16):** `SimRunDump` + `SimDumpArm` + `SimDumpSet`. Per-domain reporters in `sim_run_dump_reporters.rs` (+ dam/quadrants). Flush reads sections only. Deleted `WorldParams`/`GameParams`/`FireChainParams`/`DamFloodDumpParams`/`QuadrantDumpParams`/`FidelitySampleReads`/`PresentationSampleReads`/`InventoryProbe`. | M |
+| CQ-69 | Med | `src/combat/drone_missions.rs` `MissionStepReads` / `MissionStepQueries` | Reads pull weather stations, attention, atmosphere clipmap, and smoke queries next to mission book writers. Writers correctly enqueue `MissileSortieLaunchQueue`; reads still cross domains. | **DONE (2026-11-16):** `MissionSenseFrame` + `publish_mission_sense_frame_system`; step reads sense frame only; smoke baked from ChunkSmoke + AtmosphereFrame gaps. | M |
+| CQ-68b | Med | `src/gui/editor/world_preview/world_gen_bevy_shell.rs` was `ShellSyncA/B/C` | A/B/C naming = always a violation. | **DONE (2026-11-16):** split into `publish_world_gen_shell_gate` → `sync_world_gen_shell_chrome` → `sync_world_gen_shell_viewport` → `sync_world_gen_shell_status`; one-panel bundles renamed (`WorldGenShellChromeQueries`, …). | S |
+| CQ-68c | Low | `src/render/tile_world_fallback.rs` `TileFallbackRasterExtras` | Comment admitted "to stay under param limit"; mixed terrain + strategic overlays. | **DONE (2026-11-16):** split into `TileFallbackTerrainRasterReads` + `TileFallbackStrategicRasterReads`; removed cap-dodge comment on dual-view atlas inputs. | S |
+
 ---
 
 ## 5. Phase P4 — finish (wire) unwired features
@@ -163,8 +175,8 @@ The test files are unchanged in range, but `art_pipeline_suite/app.py` and the p
 | CQ-57g | PCG-07 `enqueue_settlement_road_skeleton` (`strategic/settlement/road_skeleton.rs:214`) · `plan_town_growth_v1.md` (reopened) | **Wire** | Call it from settlement growth, through the construction funnel. | M |
 | CQ-57h | IO-08 `POST_LOAD_DERIVED_STEPS` (`io/save/apply.rs:21`) | **Check, then wire** | The list claims `portal_attachment_map` and `route_dirty_tiles` are rebuilt after load; nothing rebuilds them. Test save → load → compare. If stale, add the rebuild. Then delete the string list. | S–M |
 | CQ-57i | RND-15 scorch decals (`fire_vfx/emit.rs:75`, `fire/chunk_surface_fire.rs:64`) | **Wire one** | Keep one mapping and apply it as a tint in the existing overlay/terrain shader (GPU, render-only); delete the other. | S |
-| CQ-57j | LGT-06 `render/view_runtime/tonemap_hdr.rs` | **Operator choice** | Wire it through Bevy's `Tonemapping` (GPU, cheap) if you want the HDR look; otherwise delete. | S |
-| CQ-57k | DES-06 `ecosystem_logistic_step` (`ecology/cell_stand.rs:61`) | **Operator choice** | Makes regrowth slow down near full capacity. It changes the ecology balance, so run `playcheck.py` before and after. | S |
+| CQ-57j | LGT-06 `render/view_runtime/tonemap_hdr.rs` | **DONE** | Locked **DisplayReferredNone**; `pixel_world/camera.rs` matches `PIXEL_WORLD_TONE_MAP_POLICY` → `Tonemapping::None` (no filmic crush on SDR map RTT). | S |
+| CQ-57k | DES-06 `ecosystem_logistic_step` (`ecology/cell_stand.rs:61`) | **DONE** | Regrowth fuel level uses `ecosystem_logistic_step` toward capacity. | S |
 | CQ-57l | DEC-09 `plan_goap` (`ai/faction/decide.rs:271`) | **Delete** | A second AI decision path next to the real one. | S |
 | CQ-57m | `classify_storm_with_plume`, default-k `combine_visibility_m`, `relax_sense_from_samples` | **Fold, then delete** | Copies of `classify_storm_with_context`, `combine_visibility_m_k` and the registered sense system. First move any missing input (e.g. plume membership) into the used function. | S |
 | CQ-57n | TAC-10 `CombatAuthorityTier` · DES-03 `ENGINE_STARTUP_PHASES` · `VoxelOccupationConfig::from_env_*` · `sim_pause_env_latched`, `sim_time_secs_display` · `saw_forecast_route_invalidation` · ANIM-03 `quantize_unit_interval_f32` · `write_cells_mut_pub` / `swap_pub` / `chunk_key_pub` · empty `contamination_tick` (`substrate/atmosphere/contamination_tick.rs:13`) | **Delete** | Doc-only types, string lists, unused env helpers and aliases. | S |
@@ -205,9 +217,9 @@ Audio low-pass/duck wiring is in CQ-10.
 ### Tooling (`@coder-mcp`)
 | ID | Item |
 |---|---|
-| CQ-75 | Three HTML dashboard builders (`tools/sim_review/score_dump.py` `_html/_html_multi`, `tools/studio_dash/render_report.py`, `art_pipeline_suite/dashboard_panel.py`). Keep `sim_review` as the one review path, and share one HTML kit for the others. Delete `studio_dash/mission_adapter.py` (only its own test calls it). |
-| CQ-76 | `floors_histogram` / `massing_qc_view` are duplicated in `art_pipeline_suite/voxel_massing_panel.py:123-170` and `tools/studio_dash/massing_qc.py`, and have drifted. Keep one, inside `rust_engine_mcp`, and remove the 5 `sys.path.insert` hacks (the core lib currently imports from the Tk GUI package). |
-| CQ-77 | `building_quality_qc.py:290` re-implements the Rust BQ-A2 score with adjacency hard-coded to 0, so it can score up to +10 above Rust. `veg_species_table.py` regex-parses RON. Add shared-fixture parity tests (the Halton pattern) or call the Rust side. |
+| CQ-75 | **DONE** — `sim_review` owns play dashboards; studio HTML via `studio_dash/render_report` + `rust_engine_mcp.studio_html`; `mission_adapter` kept as thin emit_* only. |
+| CQ-76 | **DONE** — `rust_engine_mcp.massing_qc` sole `floors_histogram` / `massing_qc_view`; APS + studio_dash re-export; studio_task dropped APS/sys.path massing imports. |
+| CQ-77 | **DONE** — `overall_score_from_parts` + `bqa2_score_fixture_v1.json` parity test; snapshot honors `adjacency_violation_count`; veg RON brief stays bounded-regex (Rust validate authoritative). |
 | CQ-78 | Delete or fix:<br>• `tools/validators/sole_writer_check.py` and `determinism_lint.py` always `return 0` and are never run. Either fail on new violations against a baseline file, or delete them.<br>• `tools/sim_review/tune.py` is a stub. Delete it, or mark T7 as not built.<br>• `assets/staging/reports/pcg_06_grammar_rule_coverage.json` is 877 lines, generated, stale and unread. Remove it from git and write it to `debug_runs` instead.<br>• `assets/configs/buildings/examples/massing_preview_pilot_rail_warehouse_v1.json` is byte-identical to the copy in `tools/mcp/schemas/examples/`. Keep one.<br>• `tile_map_tiles_tile_factory_floor_greybox_001.png` is a 70-byte stub. Check it. |
 | CQ-79 | Small fixes:<br>• `lookup.py:25`, `build_toc.py:17`: replace the hard-coded `C:\dev\ref books` with an env var or a repo-relative path.<br>• Narrow the silent `except` blocks in `studio_task.list_tasks` and the panel pilot fallback.<br>• `playcheck.py` dump unlink: abort on failure.<br>• Prune the ~12 new "Uncategorised" CLI commands rather than adding MCP wrappers.<br>• Strip `ref_books_dual_cite` from data schemas; it is book bookkeeping in asset payloads. |
 
@@ -217,7 +229,7 @@ Audio low-pass/duck wiring is in CQ-10.
 | CQ-80 | **DONE** — `adoption.tsv` is the sole ledger; v2 banner + §9 pointer; v3 §2.1/**CLOSE** counts **101 ADOPTED · 18 UNWIRED · 10 PARTIAL · 4 DEFER** (133 total); ref-books skill/rule point at TSV + defer-unlock plan. |
 | CQ-81 | **DONE** — v3 §0.1 honest exits; §11 anti-stall paste blocks removed; no anti-stall copies in `.cursor`/`.claude` skills or `prompts/`. |
 | CQ-82 | Put a "superseded by adoption.tsv" banner on `plan_ref_books_upgrade_v2.md`. Point `.cursor/skills/ref-books/SKILL.md` and `.cursor/rules/ref-books.mdc` (plus the `.claude` copies) at the TSV and the defer-unlock plan. |
-| CQ-83 | Archive the PROGRAM CLOSE plans (14, plus older ones) to `src/dev/archive/`. Fix `AGENTS.md:11`, which lists closed programs as "next product charters", by moving the plan links to `development_plan_index.md`. Fix `plan_ref_books_defer_unlock_v1.md:161` (OCC "default remains off"). Fix `plan_playtest_quadrant_world_v1.md:6` ("plan only") — `engine/playquad.rs` shipped. |
+| CQ-83 | **DONE** — 14 closed plans → `src/dev/archive/closed_programs/` with stubs at old paths; AGENTS → plan index; OCC default-off note; playquad SHIPPED. |
 | CQ-84 | Plans cite evidence JSON under gitignored `debug_runs/`, which nobody else can check. Either cite a test name / matrix row, or stop citing. Retract the "user world-look sign-off" for erosion and terrain analysis unless a record exists. |
 
 ### Warnings (`@coder`)
@@ -303,8 +315,17 @@ Order: **P1 → P2 → P3 → P4 → P5 → P6 → P7/P8**.
 | CQ-71 | DONE | `143d9ecd`+ | toe_demand/front_stock_pool/vfx_capture tautologies fixed. |
 | CQ-72 | DONE | `143d9ecd`+ | `_theaters` rename; ATMO_GRID noise already gone. |
 | CQ-82 | DONE | (prior) | v2 superseded banner + adoption.tsv skill/rule pointers. |
-| CQ-83 | PARTIAL | `143d9ecd`+ | AGENTS.md → plan index; playquad SHIPPED. Full archive move of PROGRAM CLOSE plans deferred. |
-| CQ-84 | OPEN | — | Stop citing gitignored debug_runs evidence. |
+| CQ-75 | DONE | (working tree) | sim_review vs studio_dash ownership; thin mission_adapter. |
+| CQ-76 | DONE | (working tree) | massing_qc sole in rust_engine_mcp. |
+| CQ-77 | DONE | (working tree) | BQ-A2 fixture parity + adjacency field. |
+| CQ-83 | DONE | (working tree) | 14 closed plans archived under `src/dev/archive/closed_programs/`. |
+| CQ-22 | DONE | (working tree) | Pure `sim_pause_env_flag` / `terrain_env_flag` + `resolve_sim_default_authority_from`; named tests no longer `set_var`. |
+| CQ-23 | DONE | (working tree) | `enqueue_param_frame_task` keeps absolute payload outside repo; never writes `schemas/examples`. |
+| CQ-57j | DONE | (working tree) | LGT-06 policy → PixelWorld `Tonemapping`. |
+| CQ-57k | DONE | (working tree) | DES-06 logistic regrowth. |
+| CQ-69 | DONE | (working tree) | `MissionSenseFrame` publish → mission step. |
+| CQ-78 | PARTIAL | (working tree) | Validators gain `--fail`; `tune.py` marked T7-not-built. Dashboard consolidate / duplicate massing still open (CQ-75/76). |
+| CQ-84 | PARTIAL | (working tree) | Prefer matrix rows / test names; DF-10 cites `baseline_dam_df10_note.md` + matrix rows not live JSON as Accept. |
 | CQ-85 | DONE | `4761b21a`+ | Warnings 165→35 via DeprecatedInteraction + dead-code/private-API hygiene (≤50 met). |
 
 **Exit criteria:**

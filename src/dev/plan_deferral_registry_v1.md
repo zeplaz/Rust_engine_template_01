@@ -55,7 +55,7 @@
 | ID | Item | Class | unblock_when | Owner plan |
 |:---|:---|:---|:---|:---|
 | **DR-MIG-V1** | Bevy 0.18 → 0.19 mechanical + render port | — | **DONE** — `mig_v1_gate.json` → `gate_pass: true` | `plan_bevy_019_migration_v1.md` |
-| **DR-MIG-TILEMAP** | `bevy_ecs_tilemap` 0.19 + `bevy_tilemap_adapter` default | ecosystem_blocked | `crates.io/bevy_ecs_tilemap` publishes **0.19.x** + compat row in `compat_matrix_g1.json` + steward sign-off | `plan_gpu_terrain_production_exec_001_v1.md` PERF-GPU-TERRAIN P0-C |
+| **DR-MIG-TILEMAP** | `bevy_ecs_tilemap` + `GpuTilemap` as sim display | **closed_wont_adopt** (2026-11-17) | Never — sole display = world bake texture; retire `GpuTilemap` / delete `terrain_instanced_draw` (**GS-03+04**) | `plan_gpu_stubs_kill_v1.md` · was `plan_gpu_terrain_production_exec_001_v1.md` P0-C |
 | **DR-MIG-A8** | SettingsPlugin replaces shell persistence | closed_wont_adopt | Never — audit only (`mig_a_a8_settings_coexistence_audit.json`) | `plan_bevy_019_migration_v1.md` A8 |
 | **DR-MIG-A9** | BSN / WorldAssetRoot | closed_handoff | **DONE** — pilot + witness; **product owner = plan_city_grammar § BSN ASSEMBLY CHARTER** | `plan_city_grammar_upgrade_v1.md` |
 | **DR-MIG-A15** | Morph targets / MorphWeights | product_blocked | `grep MorphWeights src/` non-zero **OR** procedural skinning plan signed | `plan_bevy_019_migration_v1.md` A15 |
@@ -79,9 +79,10 @@
 |:---|:---|:---|:---|:---|
 | **DR-SCHED-W2** | Schedule sync Wave 2+ (fire authority SCH-E2…) | program_gate | Wave 1 gate recorded **AND** no file conflict with RTT lane per HANDOFF matrix | `plan_schedule_sync_v1.md` |
 | **DR-CLEANUP-P2** | Cleanup Phase 2+ authority/perf splits | program_gate | Phase 0 started **OR** PERF baseline captured **AND** steward sign-off on slice | `plan_cleanup_v1.md` |
-| **DR-GPU-TERRAIN-P0C** | Enable tilemap adapter as sim default | ecosystem_blocked | **DR-MIG-TILEMAP** all predicates **OR** P0-C′ instanced path signed without tilemap | `plan_gpu_terrain_production_exec_001_v1.md` |
+| **DR-GPU-TERRAIN-P0C** | Enable tilemap adapter as sim default | **closed_wont_adopt** (2026-11-17) | Superseded by bake-texture authority (`PLAN-GPU-STUBS-KILL` / `PLAN-FINAL-GPU-PRESENTATION`) | `plan_gpu_stubs_kill_v1.md` |
 | **DR-VOXEL-OCCUPATION** | Promote voxels to **sim** occupation authority (replace `FootprintMatrix` XY) | product_shipped | **CLOSED** 2026-11-15 — live witness `debug_runs/construction/voxel_occupation_authority_live.json` (OCC-P6); steward EV/Cx PASS retained | `plan_voxel_occupation_v1.md` · `plan_voxel_massing_presentation_v1.md` · `design_ebbtide_build_style_rubric_v1.md` |
 | **DR-PIXEL-WORLD-APS-MESH** | Landscape LG-5 atlas → PixelWorld RTT | **closed_landscape_atlas_rtt** | LG-5 + ship building iso stamps under PixelWorld3D (witness dual_view v6) | `plan_dual_view_pixel_world_v1.md` · residual = extra module-kit / 3D mesh G4 |
+| **DR-WATER-SALINITY** | Optional cell salinity (ocean / Dead Sea look+effects) | product_shipped | PLAN-WATER-DEPTH-TRUTH W0–W4 ADOPTED **AND** a play surface needs salt look/effects (not enum fork) | `plan_water_depth_truth_v1.md` W5 · stub `systems/water/salinity.rs` |
 
 ### Ref-books residual (v3 PROGRAM CLOSE)
 
@@ -117,4 +118,4 @@ When a defer **closes**, update: this file (status column) · `defer_registry.js
 | “defer while MIG in flight” | “see DR-SCHED-W2 / DR-CLEANUP-P2 — MIG-V1 **done**” |
 | “POST-MIG BSN” / “MIG-A9 blocked” | **DR-CITY-C6-BSN** (product) · MIG-A9 = **closed_handoff** |
 | “pick MIG-A9” | Route to **plan_city_grammar_upgrade_v1** § BSN ASSEMBLY CHARTER |
-| “enable bevy_tilemap in default” | “blocked — **DR-MIG-TILEMAP** until crates.io 0.19” |
+| “enable bevy_tilemap in default” | “wont_adopt — bake texture sole display (**DR-MIG-TILEMAP** closed; `plan_gpu_stubs_kill_v1`)” |

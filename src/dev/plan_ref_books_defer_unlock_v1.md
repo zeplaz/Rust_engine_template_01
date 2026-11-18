@@ -175,7 +175,7 @@ PARTIAL ≠ broken. Unlock only via [`plan_dense_heat_wgsl_v1.md`](plan_dense_he
 
 ## 8. Parallel — occupation productize
 
-[`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md) **OCC-P4 → OCC-P5 → OCC-P6** (flag-on / EV-Cx / DR close). X2-P0–P3 already ADOPTED; default remains off until OCC-P4 PASS.
+[`plan_voxel_occupation_v1.md`](plan_voxel_occupation_v1.md) **OCC-P4 → OCC-P5 → OCC-P6** (flag-on / EV-Cx / DR close). X2-P0–P3 already ADOPTED; **default remains off** (CQ-07 save overlay wired; flags stay off until OCC-P4 product PASS).
 
 ---
 

@@ -8,6 +8,7 @@ use bevy::prelude::*;
 
 use crate::systems::atmosphere::{AtmosphereDiagnostics, WeatherSourceTerms};
 use crate::systems::sim_control::{SimStepClock, SimTimeMicros};
+use crate::systems::water::SlowDomainTimeSkip;
 use crate::terrain::biome::BiomeBucket;
 use crate::terrain::family::default_terrain_families;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -86,6 +87,7 @@ pub fn weather_field_step(
     sim_time: Option<Res<SimTimeMicros>>,
     params: Option<Res<WorldGenParams>>,
     water: Option<Res<WorldWaterGrid>>,
+    skip: Option<Res<SlowDomainTimeSkip>>,
     chunks: Query<(&Chunk, &ChunkCellMatrix), With<MaterializedChunk>>,
     mut preset_req: ResMut<WeatherPresetRequest>,
     mut restore: ResMut<PendingWeatherRestore>,
@@ -142,7 +144,17 @@ pub fn weather_field_step(
         return;
     }
     let steps_per_solve = ((field.step_secs as f32 / clock.step_secs().max(1e-3)).round() as u32).max(1);
-    field.steps_into_interval = field.steps_into_interval.saturating_add(clock.due);
+    // DF-1 D4: time-skip advances weather means with coarse dt (same as ecology/level-pool).
+    let due_steps = if let Some(skip) = skip.filter(|s| s.enabled) {
+        let slow = skip.dt_slow_secs.max(1);
+        let step_s = clock.step_secs().max(1e-3);
+        ((slow as f32 / step_s).round() as u32)
+            .saturating_mul(clock.due)
+            .max(clock.due)
+    } else {
+        clock.due
+    };
+    field.steps_into_interval = field.steps_into_interval.saturating_add(due_steps);
     let mut solved = 0;
     while field.steps_into_interval >= steps_per_solve {
         field.steps_into_interval -= steps_per_solve;

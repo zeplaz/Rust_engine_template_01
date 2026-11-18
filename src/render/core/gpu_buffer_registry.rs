@@ -63,6 +63,12 @@ pub const TILE_DEBUG_INSTANCES_BUFFER: BufferId = BufferId(7);
 pub const TERRAIN_INSTANCES_BUFFER: BufferId = BufferId(12);
 /// Weather precip streak instances (ES-5-002) — exclusive of FIRE_*/WATER_*.
 pub const WEATHER_PRECIP_INSTANCES_BUFFER: BufferId = BufferId(13);
+/// GPU-CULL.1 compacted fire particle rows (post frustum sphere test).
+pub const FIRE_PARTICLE_CULLED_INSTANCES_BUFFER: BufferId = BufferId(14);
+/// `DrawIndirectArgs` for fire particle raster (`draw_indirect`).
+pub const FIRE_PARTICLE_INDIRECT_DRAW_BUFFER: BufferId = BufferId(15);
+/// Atomic visible counter for frustum cull compute (u32).
+pub const FIRE_PARTICLE_CULL_COUNTER_BUFFER: BufferId = BufferId(16);
 
 /// Prevents accidental cross-graph buffer sharing until explicitly allowed.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -375,6 +381,9 @@ mod tests {
         assert_eq!(TILE_DEBUG_INSTANCES_BUFFER, BufferId(7));
         assert_eq!(TERRAIN_INSTANCES_BUFFER, BufferId(12));
         assert_eq!(WEATHER_PRECIP_INSTANCES_BUFFER, BufferId(13));
+        assert_eq!(FIRE_PARTICLE_CULLED_INSTANCES_BUFFER, BufferId(14));
+        assert_eq!(FIRE_PARTICLE_INDIRECT_DRAW_BUFFER, BufferId(15));
+        assert_eq!(FIRE_PARTICLE_CULL_COUNTER_BUFFER, BufferId(16));
     }
 
     #[test]

@@ -112,6 +112,20 @@ fn gpu_compositor_env_default_on_when_unset() {
     }
 }
 
+/// **GS-09** — play default is GPU composite; CpuBridge is degrade/opt-out only.
+#[test]
+fn gs09_default_composite_path_is_gpu_compute() {
+    assert_eq!(
+        super::MinimapCompositePath::default(),
+        super::MinimapCompositePath::GpuCompute
+    );
+    let state = super::MinimapCompositorState::default();
+    assert_eq!(state.composite_path, super::MinimapCompositePath::GpuCompute);
+    let pass_src = include_str!("pass.rs");
+    assert!(pass_src.contains("GS-09 CLOSED"));
+    assert!(pass_src.contains("MINIMAP_GPU_SHADER_FAILED") || pass_src.contains("CpuBridge"));
+}
+
 #[test]
 fn gpu_compositor_env_cpu_opt_out() {
     let _guard = MINIMAP_GPU_COMPOSITOR_ENV_LOCK

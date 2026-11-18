@@ -2,6 +2,10 @@
 
 Engine authority: `VegSpeciesTable` + `VegExtractRow.species` (extract cache).
 Dual-cite: PCG-05 stage-specific rules · LEGACY `l_systems` (aig_e3 p701).
+
+CQ-77: field extract uses a **bounded regex** over the RON table (id/profile/tiers/seed
+only). Full RON parse is not required for this brief; Rust `VegSpeciesTable::validate`
+remains authoritative for load.
 """
 
 from __future__ import annotations

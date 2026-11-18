@@ -62,6 +62,82 @@ pub enum ScenarioStep {
     TriggerEffect {
         effect_id: String,
     },
+    /// DF-1 — hold until `SimStepClock.steps >= tick` (do not pop until ready).
+    WaitUntilTick {
+        tick: u64,
+    },
+    /// DF-1 — commit a construction site through the sole funnel (stub until DF-4 dam archetype).
+    CommitSite {
+        origin_x: i32,
+        origin_z: i32,
+        width: u32,
+        depth: u32,
+        #[serde(default)]
+        catalog_id: Option<String>,
+    },
+    /// DF-1 — dam gate / outlet / turbine setpoints (stored on `DamControlIntent`).
+    SetDamControl {
+        #[serde(default)]
+        gate_open01: f32,
+        #[serde(default)]
+        outlet_open01: f32,
+        #[serde(default)]
+        turbine_flow_setpoint_m3s: f32,
+    },
+    /// DF-2 — install barrier crest on the general water field (post-commit / player build).
+    InstallBarrier {
+        world_z: i32,
+        #[serde(default = "default_barrier_crest")]
+        crest_m: f32,
+        #[serde(default = "default_barrier_half_span")]
+        half_span: u32,
+        #[serde(default)]
+        center_world_x: Option<i32>,
+    },
+    /// DF-2 / destroy cascade — clear crest and/or arm breach outflow (stage falls → intakes trip).
+    ApplyBreach {
+        #[serde(default = "default_true")]
+        clear_crest: bool,
+        #[serde(default = "default_breach_flow")]
+        breach_flow_m3s: f32,
+    },
+    /// DF-1 / DF-7 — strike order intent (launch wiring lands in DF-7).
+    StrikeOrder {
+        target_x: i32,
+        target_z: i32,
+        #[serde(default = "default_warhead_tag")]
+        warhead: String,
+    },
+    /// DF-1 / D4 — coarse-step time skip for slow domains.
+    SetTimeSkip {
+        enabled: bool,
+        #[serde(default = "default_dt_slow")]
+        dt_slow_secs: u32,
+    },
+}
+
+fn default_warhead_tag() -> String {
+    "medium".into()
+}
+
+fn default_dt_slow() -> u32 {
+    600
+}
+
+fn default_barrier_crest() -> f32 {
+    40.0
+}
+
+fn default_barrier_half_span() -> u32 {
+    6
+}
+
+fn default_true() -> bool {
+    true
+}
+
+fn default_breach_flow() -> f32 {
+    400.0
 }
 
 impl ScenarioStep {

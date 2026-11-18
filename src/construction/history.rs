@@ -234,6 +234,8 @@ pub fn construction_redo_input_system(
                     None,
                     None,
                     false,
+                    None,
+                    None,
                 );
             }
         }

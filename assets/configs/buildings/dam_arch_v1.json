@@ -1,0 +1,21 @@
+{
+    "asset_name": "Dam arch",
+    "asset_type": "Building",
+    "segment": "Hydraulic",
+    "description": "Arched concrete dam — needs narrow rock canyon abutments (DF-4 kind gate).",
+    "utility_role": "dam",
+    "dam_kind": "arch",
+    "is_building": true,
+    "is_power": false,
+    "building_size_x": 6,
+    "building_size_y": 2,
+    "building_height": 5,
+    "construction_cost": 55000,
+    "power_consumption": 2,
+    "power_generation": 0,
+    "crest_m": 55.0,
+    "spillway_length_m": 16.0,
+    "outlet_area_m2": 3.0,
+    "procedural_module_id": "dam_arch_v1",
+    "version": "1.0.0"
+}

@@ -156,6 +156,8 @@ impl Plugin for SettlementPlugin {
             .init_resource::<DistrictBook>()
             .init_resource::<admin_ink::AdminZoneDrag>()
             .init_resource::<faction_step::FactionStanceBook>()
+            .init_resource::<faction_step::GrowthPathStockLatch>()
+            .init_resource::<faction_step::FactionGrowthSenseFrame>()
             .init_resource::<BlockBook>()
             .init_resource::<DistrictMetricsBook>()
             .init_resource::<DevelopmentPressureBook>()
@@ -194,9 +196,20 @@ impl Plugin for SettlementPlugin {
                     compute_district_pressure_system,
                     compute_market_saturation_system,
                     growth_proposal_tick_system,
+                    faction_step::publish_growth_path_stock_latch_system,
+                    faction_step::publish_faction_growth_sense_system,
+                    faction_step::publish_faction_growth_power_sense_system,
                     faction_step::faction_growth_step_system,
                     sync_growth_proposal_ghosts_system,
                     push_proposal_ghosts_to_visual_requests,
+                )
+                    .chain()
+                    .in_set(SettlementGrowthSet::Decide)
+                    .after(InfrastructureSiteSet::Planning),
+            )
+            .add_systems(
+                Update,
+                (
                     sync_block_frames_system,
                     resolve_block_archetypes_system,
                     evaluate_block_recipes_system,
@@ -211,7 +224,7 @@ impl Plugin for SettlementPlugin {
                 )
                     .chain()
                     .in_set(SettlementGrowthSet::Decide)
-                    .after(InfrastructureSiteSet::Planning),
+                    .after(faction_step::faction_growth_step_system),
             )
             .add_systems(
                 Update,

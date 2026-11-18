@@ -1,0 +1,42 @@
+(
+    schema_version: 2,
+    metadata: (
+        id: "dam_flood_df1",
+        display_name: "Dam Flood DF-1 Timeline",
+        author: Some("PLAN-DAM-FLOOD-BENCHMARK-v1"),
+        description: Some("Playable loop: river → dam → impound → drown → operate → missile strike → flood → dry burn. Water ROI + barrier on general systems."),
+    ),
+    steps: [
+        WaitUntilTick(tick: 30),
+        Log(message: "DF-1: S0 river settling — keep outlets open so G1≈G3 balance latches"),
+        // Open river settle before the crest so s0_gauge_balance can read live gauges.
+        SetDamControl(gate_open01: 0.0, outlet_open01: 1.0, turbine_flow_setpoint_m3s: 0.0),
+        SimAdvance(ticks: 40),
+        // Barrier crest on general water (construction DamBody also installs once Operational).
+        WaitUntilTick(tick: 80),
+        InstallBarrier(world_z: 160, crest_m: 40.0, half_span: 8, center_world_x: Some(160)),
+        // Close outlets → level-pool impound (S2). Coarse dt so ecology clocks can clear 14 d drown.
+        // Force-close: hold the pool (no low/mid outlet, no turbine) so DF-2 ratio drops and crest rises.
+        SetDamControl(gate_open01: 0.0, outlet_open01: 0.0, turbine_flow_setpoint_m3s: 0.0),
+        SetTimeSkip(enabled: true, dt_slow_secs: 12000),
+        Log(message: "DF-2/DF-5: reservoir fill + drown clocks (time skip)"),
+        SimAdvance(ticks: 64),
+        SetTimeSkip(enabled: false, dt_slow_secs: 600),
+        // Operate (S4): partial outlet + turbine (downstream release visible).
+        SetDamControl(gate_open01: 0.2, outlet_open01: 0.35, turbine_flow_setpoint_m3s: 40.0),
+        SimAdvance(ticks: 48),
+        Log(message: "DF-7: missile strike on dam crest"),
+        StrikeOrder(target_x: 160, target_z: 160, warhead: "medium"),
+        SimAdvance(ticks: 200),
+        Log(message: "DF-8/9: flood wave / stage drain"),
+        SimAdvance(ticks: 80),
+        // Recede + dry standing dead, then ignite for S9 burn-rate ratio.
+        SetTimeSkip(enabled: true, dt_slow_secs: 3600),
+        SimAdvance(ticks: 50),
+        SetTimeSkip(enabled: false, dt_slow_secs: 600),
+        Log(message: "DF-5/S9: ignite floodplain after recession"),
+        IgniteAt(tile: (tile_x: 168, tile_z: 140), spark: 0.85, cause_id: "dam_flood_s9"),
+        SimAdvance(ticks: 60),
+        Log(message: "DF-1 harness timeline complete"),
+    ],
+)

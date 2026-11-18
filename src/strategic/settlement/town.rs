@@ -321,7 +321,7 @@ fn settle_centers_onto_dry(book: &mut TownBook, is_water: &dyn Fn(IVec2) -> bool
     }
 }
 
-/// One-shot: generated centers that sit on [`crate::render::WaterSurfaceVisualCatalog`] move to dry land.
+/// One-shot: generated centers that sit on wet depth move to dry land.
 #[derive(Resource, Debug, Default, Clone, Copy)]
 pub struct GeneratedTownDrySnap {
     pub pending: bool,
@@ -330,25 +330,25 @@ pub struct GeneratedTownDrySnap {
 pub fn snap_generated_towns_off_water(
     mut towns: ResMut<TownBook>,
     mut districts: ResMut<super::district::DistrictBook>,
-    catalog: Option<Res<crate::render::WaterSurfaceVisualCatalog>>,
+    water_probe: crate::systems::water::WaterTileProbe,
     mut snap: ResMut<GeneratedTownDrySnap>,
 ) {
     if !snap.pending {
         return;
     }
-    let Some(catalog) = catalog else {
-        return;
-    };
-    if catalog.grid_width == 0 || catalog.grid_height == 0 {
+    if !water_probe.available() {
         return;
     }
-    let is_water = |cell: IVec2| {
-        if cell.x < 0 || cell.y < 0 {
-            return true;
+    if let Some(catalog) = water_probe.catalog.as_ref() {
+        if (catalog.grid_width == 0 || catalog.grid_height == 0)
+            && water_probe.runtime.is_none()
+            && water_probe.field.is_none()
+            && water_probe.static_depth.is_none()
+        {
+            return;
         }
-        catalog.tile_kind(cell.x as u32, cell.y as u32)
-            != crate::render::WaterSurfaceKind::None
-    };
+    }
+    let is_water = |cell: IVec2| water_probe.is_water(cell.x, cell.y);
     let wet: Vec<IVec2> = towns
         .towns
         .iter()

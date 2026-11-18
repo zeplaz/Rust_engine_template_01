@@ -274,8 +274,6 @@ def run_queued_geometry(task_id: str) -> dict[str, Any]:
 
 def run_queued_massing_export(task_id: str) -> dict[str, Any]:
     """Validate massing_preview payload, write Republic QC HTML, mark StudioTask done."""
-    import sys
-
     task = read_task(task_id)
     if task is None:
         raise FileNotFoundError(f"studio task not found: {task_id}")
@@ -290,22 +288,14 @@ def run_queued_massing_export(task_id: str) -> dict[str, Any]:
     try:
         data = json.loads(payload.read_text(encoding="utf-8"))
         validate_massing_preview(data)
-        # Enrich QC view (APS helper lives next to studio_dash)
-        aps_parent = repo_root() / "tools" / "mcp"
-        if str(aps_parent) not in sys.path:
-            sys.path.insert(0, str(aps_parent))
-        from art_pipeline_suite.voxel_massing_panel import massing_qc_view
+        from .massing_qc import massing_qc_view
+        from .studio_html import write_studio_report
 
         qc = massing_qc_view(data)
         report_dir = repo_root() / "debug_runs" / "studio_dash"
         report_dir.mkdir(parents=True, exist_ok=True)
         report_path = report_dir / f"{task_id}_massing_qc.html"
-        tools_parent = repo_root() / "tools"
-        if str(tools_parent) not in sys.path:
-            sys.path.insert(0, str(tools_parent))
-        from studio_dash.render_report import write_report
-
-        write_report(qc, report_path, title=str(qc.get("title") or "massing_preview QC"))
+        write_studio_report(qc, report_path, title=str(qc.get("title") or "massing_preview QC"))
         rel = str(report_path.relative_to(repo_root())).replace("\\", "/")
         return mark_status(task_id, "done", error=None, report_path=rel)
     except Exception as exc:
@@ -342,9 +332,9 @@ def run_queued_assembly_build(task_id: str) -> dict[str, Any]:
 
 def run_queued_param_frame(task_id: str) -> dict[str, Any]:
     """ParamFrame → massing_preview.json + Republic QC HTML (no bpy)."""
-    import sys
-
     from .massing_from_param_frame import export_massing_preview_from_param_frame
+    from .massing_qc import massing_qc_view
+    from .studio_html import write_studio_report
 
     task = read_task(task_id)
     if task is None:
@@ -358,21 +348,11 @@ def run_queued_param_frame(task_id: str) -> dict[str, Any]:
     try:
         massing_out = repo_root() / "debug_runs" / "studio_dash" / "massing_preview.json"
         data = export_massing_preview_from_param_frame(massing_out, payload)
-        aps_parent = repo_root() / "tools" / "mcp"
-        if str(aps_parent) not in sys.path:
-            sys.path.insert(0, str(aps_parent))
-        from art_pipeline_suite.voxel_massing_panel import massing_qc_view
-
         qc = massing_qc_view(data)
         report_dir = repo_root() / "debug_runs" / "studio_dash"
         report_dir.mkdir(parents=True, exist_ok=True)
         report_path = report_dir / f"{task_id}_param_frame_massing_qc.html"
-        tools_parent = repo_root() / "tools"
-        if str(tools_parent) not in sys.path:
-            sys.path.insert(0, str(tools_parent))
-        from studio_dash.render_report import write_report
-
-        write_report(qc, report_path, title=str(qc.get("title") or "massing_preview QC"))
+        write_studio_report(qc, report_path, title=str(qc.get("title") or "massing_preview QC"))
         rel = str(report_path.relative_to(repo_root())).replace("\\", "/")
         massing_rel = str(massing_out.relative_to(repo_root())).replace("\\", "/")
         done = mark_status(task_id, "done", error=None, report_path=rel)

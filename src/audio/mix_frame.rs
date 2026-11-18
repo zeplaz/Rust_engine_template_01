@@ -336,6 +336,7 @@ pub fn build_audio_mix_frame(
                         nearest = Some((d, p));
                     }
                 }
+                // Only rumble when a near truck exists — phantom listener bed was a constant beep.
                 if let Some((d, p)) = nearest {
                     let zoom_g = ((zoom - 0.35) / 1.5).clamp(0.0, 1.0);
                     let dist_g = (1.0 - d / 120.0).clamp(0.0, 1.0);
@@ -343,15 +344,7 @@ pub fn build_audio_mix_frame(
                         class: AudioEventClass::SpatialContinuum,
                         kind: None,
                         world_xz: Some(p),
-                        gain: (zoom_g * dist_g).clamp(0.0, 1.0),
-                        tag: "spatial.near_field",
-                    });
-                } else {
-                    mix.requests.push(AudioMixRequest {
-                        class: AudioEventClass::SpatialContinuum,
-                        kind: None,
-                        world_xz: Some(listener),
-                        gain: ((zoom - 0.35) / 1.5).clamp(0.0, 1.0) * 0.35,
+                        gain: (zoom_g * dist_g * 0.55).clamp(0.0, 1.0),
                         tag: "spatial.near_field",
                     });
                 }

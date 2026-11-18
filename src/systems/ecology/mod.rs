@@ -2,6 +2,8 @@
 //! **DES-06**: stable feedback via [`ecosystem_logistic_step`].
 
 mod cell_stand;
+mod stand_flood;
+mod fuel_moisture;
 mod fuel_break;
 mod chunk_ecology;
 mod wildlife_flock;
@@ -18,8 +20,14 @@ mod water_vegetation_tests;
 
 pub use cell_stand::{
     ChunkCellStand, StandBurnConfig, StandKind, StandPhase, CELL_BURN_HEAT, CELL_BURNING, CELL_BURNT,
-    GAME_DAY_SECS, STAND_BURN_RON, ecosystem_logistic_step, load_stand_burn_config, parse_stand_burn_ron,
-    CELL_GRASS, CELL_NONE, CELL_OLD, CELL_REGROWTH, CELL_SHRUB, CELL_WATER, CELL_YOUNG, SCAR_FRACTION,
+    CELL_DEAD, GAME_DAY_SECS, STAND_BURN_RON, ecosystem_logistic_step, load_stand_burn_config,
+    parse_stand_burn_ron, CELL_GRASS, CELL_NONE, CELL_OLD, CELL_REGROWTH, CELL_SHRUB, CELL_WATER,
+    CELL_YOUNG, SCAR_FRACTION,
+};
+pub use stand_flood::stand_flood_from_water_system;
+pub use fuel_moisture::{
+    effective_fuel_moisture01, equilibrium_moisture01, step_timelag01, ChunkCellFuelMoisture,
+    TIMELAG_FINE_H, TIMELAG_HUNDRED_H, TIMELAG_TEN_H, TIMELAG_THOUSAND_H,
 };
 pub use fuel_break::{
     apply_fuel_break_commits, FuelBreakCommitEvent, PendingFuelBreaks,
@@ -147,11 +155,15 @@ impl Plugin for EcologyPlugin {
             Update,
             (
                 cell_stand::spawn_chunk_cell_stand,
+                fuel_moisture::spawn_chunk_cell_fuel_moisture.after(cell_stand::spawn_chunk_cell_stand),
                 fuel_break::apply_fuel_break_commits,
                 cell_stand::cell_stand_tick
                     .after(vegetation_suitability::update_chunk_vegetation_suitability)
                     .after(landscape_grammar_lg2::derive_vegetation_population_from_graph)
                     .after(fuel_break::apply_fuel_break_commits),
+                stand_flood::stand_flood_from_water_system.after(cell_stand::cell_stand_tick),
+                fuel_moisture::cell_fuel_moisture_tick
+                    .after(stand_flood::stand_flood_from_water_system),
             )
                 .chain()
                 .in_set(ChunkEnvironmentSet::Ecology)

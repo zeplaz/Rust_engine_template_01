@@ -2,7 +2,7 @@ id	status	evidence	date
 ANIM-02	ADOPTED	construction/site_stage_transitions.rs pure transition table (CON-P2-002)	2026-11-14
 TAC-04	ADOPTED	systems/fire/cell_spread.rs 8-neighbour CA in snapshot order	2026-11-14
 MATH-02	ADOPTED	derive_keyed_seed/chunk_seed + worldgen noise offsets + golden_stream_seed; HashMap lint remains MEM-08 report-only	2026-11-15
-LOOP-09	UNWIRED	WorldFieldLayerEpoch static/slow/dynamic epochs (E5) · REVIEW 2026-11-16: WorldFieldLayerEpoch init only; nothing bumps or reads it → CQ-57f	2026-11-16
+LOOP-09	ADOPTED	network_flow_chunk_local_solver_system bumps WorldFieldLayerEpoch; world_read_snapshot_refresh_system skips stale slow epoch (CQ-57f)	2026-11-16
 INPUT-05	ADOPTED	gui/tactical/map_camera.rs ApplyInput → DeriveDesired → Smooth	2026-11-14
 ECS-07	ADOPTED	v1 Order 3: MissionIntentQueue → MissionBook	2026-11-14
 EXEC-05	PARTIAL	LOCKED: SimAttentionFrame scaffold sufficient; further attention consumers are their own slices	2026-11-15
@@ -14,10 +14,10 @@ IO-02	ADOPTED	STREAMING_RESIDENCY_UNLOAD_HYSTERESIS_CHUNKS + oscillation test	20
 LOOP-07	ADOPTED	Staleness docs E2	2026-11-14
 EXEC-01	ADOPTED	heavy_periodic phase offsets + LCM test (E3)	2026-11-14
 TAC-06	ADOPTED	FieldLayerUpdateClass epochs (E5)	2026-11-14
-IO-08	PARTIAL	post_load_rebuild strip/rebuild + apply PostLoadDerivedBook; streaming/substrate docs; legacy heat may still deserialize (no format bump) · REVIEW 2026-11-16: per-cell fire heat/fuel/burn_hold no longer saved; POST_LOAD_DERIVED_STEPS lists rebuilds that never run → CQ-01/CQ-57h	2026-11-16
+IO-08	ADOPTED	apply.rs post_load rebuild clears portal map + marks route dirty / clears RouteCache; utility hydrate joins (CQ-57h)	2026-11-16
 IO-07	ADOPTED	chunk coords + string keys on wire; no Entity in save DTOs	2026-11-14
 PHYS-02	ADOPTED	swept DDA step_ballistic_flights + swept_impact test	2026-11-14
-MOVE-09	PARTIAL	refine_missile_aim 6-iter + wind tests in ballistics.rs · REVIEW 2026-11-16: launch passes wind: None, wind drift/refine never run in play → CQ-56	2026-11-16
+MOVE-09	ADOPTED	drone_missions pulse_missile_sorties → MissileSortieLaunch.wind; apply → launch_with_wind (CQ-56)	2026-11-16
 PHYS-06	ADOPTED	sleeping_neighbor_west_edge_ignites_within_two_ticks	2026-11-14
 NAV-09	ADOPTED	best_source_open_goal + nav09 fixture test (L1)	2026-11-14
 AUD-02	ADOPTED	combat oneshot cap + ambience duck in mix_frame.rs	2026-11-14
@@ -41,19 +41,23 @@ INPUT-02	ADOPTED	BUILD_POINTER_DRAG thresholds (K2)	2026-11-14
 LGT-02	ADOPTED	screen-tile fire light cap wired in fire_visual_extract (R3)	2026-11-14
 LGT-08	ADOPTED	playcheck --seeds + score_dump --multi (T6)	2026-11-14
 LEARN-01	ADOPTED	tools/sim_review/tune.py --dry-run whitelist (T7)	2026-11-14
-RND-08	ADOPTED	test_aps_atlas_bleed_qc.py (gutter+mip+extrusion+density)	2026-11-15
+RND-08	ADOPTED	APS atlas QC + engine world bake mips/trilinear/aniso8 (terrain_gpu_bake_spike::make_rgba8_bake_image_with_mips; terrain_gpu_bake_rtt dirty-rect mipgen) · PixelWorld samples same Image	2026-11-17
+MATH-05	ADOPTED	render/culling/frustum.rs Plane4/FrustumPlanes; production caller gpu_frustum_cull::sync_fire_frustum_cull_frame + prepare_fire_particle_gpu_storage compact	2026-11-17
+RND-02	PARTIAL	Fire GPU-CULL.1 + veg frustum mesh filter (world_map_vegetation_mesh::frustum_filter_veg_instances); PVS/portals DEFER; veg GPU instance buffer still UNWIRED	2026-11-17
+RND-12	PARTIAL	gpu_frustum_cull finalize → FIRE_PARTICLE_INDIRECT_DRAW_BUFFER; fire_particle_raster draw_indirect; expand still CPU-count (not dispatch_indirect)	2026-11-17
+RND-16	ADOPTED	pixel_world/water_gpu.rs water_grid_step_for_zoom → build_static_water_grid; DF-3 field + bed unchanged; foam projected DEFER	2026-11-17
 PCG-08	ADOPTED	test_pcg08_generate_and_test.py golden CLI determinism + APS histogram strip	2026-11-15
 PCG-06	ADOPTED	grammar coverage + voxel_massing presentation contract (tool/runtime split ECS-15); sim voxels DR-VOXEL-OCCUPATION	2026-11-15
-MOVE-05	PARTIAL	UM-05: FormationMember + steer_members_to_slots_system (anchor sole Formation.tile); Accept --lib move05 · REVIEW 2026-11-16: member systems scheduled but spawn_formation_with_members test-only: zero members in play → CQ-54	2026-11-16
+MOVE-05	ADOPTED	spawn_formation → spawn_formation_members + FormationOverwatchClock phase (CQ-54); sim-only members	2026-11-16
 MOVE-06	ADOPTED	UM-06: assign_slots_by_cost + assign_member_slots_system hysteresis; Accept --lib move06	2026-11-15
 MOVE-07	ADOPTED	UM-07: OverwatchRole + bounding_overwatch_tick_system; Accept --lib move07	2026-11-15
 PCG-03	ADOPTED	thermal→hydraulic before D8 (user world-look sign-off 2026-11-15); Accept --lib pcg03	2026-11-15
 TAC-05	ADOPTED	orders.rs execute_deployment_orders→plan_fortification_rows_with_analysis; prefer_chokepoint_origin; perception mean_front_chokepoint→decide Advance; Accept --lib tac05	2026-11-16
 SENSE-04	ADOPTED	S4-P0–P4 shipped (cell field + strategic + sample audit)	2026-11-15
-NAV-13	PARTIAL	N13-P0–P4 shipped (forecast book + dijkstra + invalidate + source_pick); P5 DEFER · REVIEW 2026-11-16: forecast-aware dijkstra fed None,0; revision bumps every step so route cache clears every step; second writer on consumed_revision → CQ-02/CQ-35/CQ-53	2026-11-16
+NAV-13	ADOPTED	routes.rs route_edge_cost / path_edges_between_tiles_costed + forecast/path-concerns; P5 still DEFER (CQ-02/53)	2026-11-16
 LEARN-02	DEFER	no learning stack; decide sim-truth vs derived before adopt	2026-11-14
-TAC-10	UNWIRED	UM-10: CombatAuthorityTier + faction RO Formation tripwire; Accept --lib tac10 · REVIEW 2026-11-16: CombatAuthorityTier doc-only; decision: delete → CQ-57n	2026-11-16
-PCG-07	UNWIRED	TWN-PCG07: mst_town_road_segments + subdivide_ring_edges + enqueue_settlement_road_skeleton (no topology write); Accept --lib twn_pcg07 · REVIEW 2026-11-16: enqueue_settlement_road_skeleton no production caller → CQ-57g	2026-11-16
+TAC-10	DEFER	CQ-57n deleted CombatAuthorityTier doc-only type	2026-11-16
+PCG-07	ADOPTED	enqueue_settlement_roads_once_system → enqueue_settlement_road_skeleton via ConstructionPlanQueue (CQ-57g)	2026-11-16
 RND-07	DEFER	profile run 2026-11-16: HOLD — bottleneck_proven=false (debug_runs/rnd07/atlas_memory_profile.json); reopen when upload≥8MiB or reserved≥64MiB or 3slots+≥512 chunks · REVIEW 2026-11-16: evidence retracted: profile was a unit test on Stage6VirtualizationFrame::default() (all zeros); no real profile yet → CQ-31	2026-11-16
 RND-06	DEFER	trigger: visible LOD seam capture shows cracks	2026-11-14
 TAC-14	DEFER	plain scoring still cheap/explainable; MCTS if T6 fails x2	2026-11-14
@@ -88,47 +92,47 @@ DBG-06	ADOPTED	sim_control pause freezes tick while Bevy Time advances + single-
 RND-04	ADOPTED	fire/weather VFX explicit smoke→ember→spark + cloud Z strata + weather-under-fire tripwires (sort not OIT); rnd04_* (V4-RND04); LEGACY geometry_visual_effects gea_v2_e4 p141 · gea4v2 11.3.12/11.3.12.1	2026-11-15
 RND-03	ADOPTED	CORE2D_OVERLAY_DRAW_ORDER sole painter chain + draw_rank; fire last; rnd03_* tripwires (V4-RND03); LEGACY geometry_visual_effects gea_v2_e4 p141 · pipeline_app_layer p133; gea4v2 11.5.2/11.5.3.1/11.5.3.3	2026-11-15
 RND-14	ADOPTED	weather/fire card impostors intentional (cloud Rectangle+soft puff; smoke/atmos instanced-quad billboards); pin CLOUD_SHEET_LAYER_Z + TRANSPARENT_ORDER_*; rnd14_* tripwires (V4-RND14); LEGACY geometry_visual_effects gea_v2_e4 p141 · gea4v2 11.6.4; no ray-march; no dual-write RND-04 order keys	2026-11-15
-RND-15	UNWIRED	surface-fire / overlay-heat scorchmark as terrain-projected decal layer (not particle cards); surface_fire_scorch_decal01 + overlay_heat_scorch_decal01; seed skips residual band; rnd15_* tripwires (V4-RND15); LEGACY geometry_visual_effects gea_v2_e4 p141 · gea4v2 11.6.6; no rewrite RND-04/14 order keys · REVIEW 2026-11-16: both scorch decal mappings have no production caller → CQ-57i	2026-11-16
+RND-15	ADOPTED	map_tile_raster overlay_heat_scorch_decal01 tint; surface_fire_scorch deleted (CQ-57i)	2026-11-16
 DBG-04	ADOPTED	GPU capture/inspection/playback via VFX_CAPTURE + RTT_SPRITE_TRACE; vfx_capture_env sole env authority; visual_capture_probe defers; dbg04_* tripwires (V4-DBG04); LEGACY render_debug_tools gea_v2_e4 p248 · gea4v2 12.9.4	2026-11-15
 PHYS-07	ADOPTED	blast intent→execute funnel + linear falloff; sole BlastCraterBook writer; ballistics enqueue-only; voxel clear via demolish; phys07_* tripwires (V4-PHYS07); LEGACY physics_integration gea_v2_e4 §14.5 p423 · gea4v2 14.5.3.2–4	2026-11-15
-PHYS-04	PARTIAL	tag-driven CollisionLayer/Filter + parallel CollisionMaterial table keyed by MaterialId; fluid pass-through; phys04_* tripwires (V4-PHYS04); LEGACY collision_detection · physics_collision gea_v2_e4 §14.3 p359/p352 · gea4v2 14.3.8/14.3.8.3 · REVIEW 2026-11-16: filter table exists; probe_hits_solid test-only, projectiles ignore terrain/structures → CQ-55	2026-11-16
-LGT-06	UNWIRED	view_runtime tonemap_hdr + ToneMapHdrPass; SDR map RTT + overlay [SDR,HDR] index + PixelWorld Tonemapping::None; lgt06/tonemap/hdr tripwires (V4-LGT06); LEGACY lighting_post/post_processing gea_v2_e4 p153/§12.7 p244 · gea4v2 12.7.1 · REVIEW 2026-11-16: tonemap_hdr has no production caller; operator choice wire-or-delete → CQ-57j	2026-11-16
-PHYS-08	PARTIAL	destructible Intact→Scarred→Compromised→Collapsed ladder; sole terminal execute_demolish_at_tile; voxel remove_site_commit gated; phys08_* tripwires (V4-PHYS08); LEGACY physics_integration gea_v2_e4 §14.5 p423 · gea4v2 14.5.3.5; debt not taken: rigid-body multi-piece / Havok Destruction · REVIEW 2026-11-16: terminal execute_demolish_at_tile real; DestructibleDamageStage ladder unused → CQ-57d	2026-11-16
+PHYS-04	ADOPTED	ballistics step uses probe_hits_solid on MaterializedChunk + occupation (CQ-55)	2026-11-16
+LGT-06	ADOPTED	MAP_VIEW_TONE_MAP_POLICY=DisplayReferredNone; pixel_world/camera.rs Tonemapping::None (CQ-57j locked SDR path)	2026-11-16
+PHYS-08	ADOPTED	DestructibleDamage on blast/fire/dam_barrier; collapse via demolish funnel (CQ-57d)	2026-11-16
 RND-19	ADOPTED	PresentSurfaceConfig sole present+buffer latency (AutoVsync+triple=3 debug; PERF_NO_VSYNC→AutoNoVsync+1); rnd19_* tripwires (V4-RND19); LEGACY gea_v2_e4 p50-51 · gea_v1_e4 p518-519	2026-11-15
-ANIM-03	PARTIAL	save quantize_unit_interval_f32 + Identity-only codec; snapshot fill/throughput key omission; anim03_* tripwires (V4-ANIM03); LEGACY animation_compression gea_v2_e4 §13.8 p306 · gea4v2 13.8.2–13.8.4; no AnimationCurve host · REVIEW 2026-11-16: quantize_unit_interval_f32 unused in production → CQ-57n	2026-11-16
+ANIM-03	DEFER	quantize_unit_interval_f32 private/test-only; production codecs Identity; reopen if save needs quantization	2026-11-16
 LGT-03	ADOPTED	fire_light_emission sole sim emissive + fire_vfx cite; heat gate/intensity/biomass; defer tonemap to LGT-06; voxels share pooled lights; lgt03_* tripwires (V4-LGT03); LEGACY lighting_post/post_processing gea_v2_e4 §12 p153 · gea4v2 12.5.10/12.7.2	2026-11-15
 LGT-05	ADOPTED	participating_media_visibility + AtmosphereCell sole media sample; denser smoke/fog/ash lowers visibility; shares smoke optical K with LOS; lgt05_* tripwires (V4-LGT05); LEGACY lighting_post/post_processing gea_v2_e4 p153 · gea4v2 12.1.2.2	2026-11-15
 PHYS-09	ADOPTED	ballistics kinematic bookkeeping + BlastIntent enqueue (intent→execute); no rigid-body middleware; phys09_* tripwires (V4-PHYS09); LEGACY physics_collision · physics_middleware gea_v2_e4 p352/p358 · gea4v2 14.1/14.1.2.1/14.1.3	2026-11-15
-PHYS-11	UNWIRED	CollisionPlugin + CoherentPairCache sole writer; warm→broad→mid→narrow; PHYS-04 filter mid-phase; phys11_* behavioral (V4-PHYS11); LEGACY collision_detection/physics_collision gea_v2_e4 §14.3 · gea4v2 14.3.6 · REVIEW 2026-11-16: no CollisionBodySample producer; O(n2) broad phase; decision: delete pair pipeline → CQ-55	2026-11-16
-NAV-04	UNWIRED	LogisticsNodeArray dense scratch + generation clear; no HashMap per search; nav04_* behavioral (V4-NAV04) · REVIEW 2026-11-16: scratch-array dijkstra only called from tests → CQ-53	2026-11-16
+PHYS-11	DEFER	CQ-55 deleted coherent pair pipeline; reopen only if uniform-grid hard non-overlap needed	2026-11-16
+NAV-04	ADOPTED	logistics_grid_path NAV-04 scratch used by routes + road_vehicles_motion (CQ-53)	2026-11-16
 LGT-10	ADOPTED	bake_weather_overlay_from_field sole Wind + CPU probe lattice; sample_overlay_bake_probe_*; revision skip; lgt10_* behavioral (V4-LGT10); LEGACY raster_lighting gea_v2_e4 §12.5 · gea4v2 12.5.3/12.5.4	2026-11-15
 NAV-06	ADOPTED	axis-aligned string-pull smooth_logistics_tile_path + smooth_vehicle_tile_path; concern blend cost; nav06_* behavioral (V4-NAV06); aig3 4.4.6–4.4.7	2026-11-15
 NAV-06	ADOPTED	axis-aligned string-pull smooth_logistics_tile_path + smooth_vehicle_tile_path; concern blend cost; nav06_* behavioral (V4-NAV06); aig3 4.4.6–4.4.7	2026-11-15
-MOVE-03	UNWIRED	separation_steer + collision_avoidance_steer in potential_field_navigation_system; depot-queue two-pass neighbors; move03_* behavioral (V4-MOVE03); aig3 3.3.13–3.3.14 · REVIEW 2026-11-16: potential_field_navigation_system never scheduled; separation/avoid never run in play → CQ-53	2026-11-16
+MOVE-03	ADOPTED	potential_field_navigation_system scheduled in schedule_plugin (CQ-53)	2026-11-16
 LGT-04	ADOPTED	volumetric_haze_from_fog → precip visibility_factor/m from LGT-05 participating media; frame-fed W6/X4 presentation; lgt04_* behavioral (V4-LGT04); gea4v2 12.5.13; debt: true ray-march	2026-11-15
 NAV-08	ADOPTED	portal attach exact→nearest within PORTAL_ATTACH_MAX_CHUNK_MANHATTAN; far excluded; nav08_* (V4-NAV08); aig3 4.6.3–4.6.4	2026-11-15
 NAV-11	ADOPTED	advance_interruptible_solve_pass + budgeted cursor; SoA pooled planner; nav11_* (V4-NAV11); aig3 4.7.5–4.7.6	2026-11-15
-MOVE-04	UNWIRED	arbitrate_steering_pipeline avoid→separate→seek; move04_* (V4-MOVE04) · REVIEW 2026-11-16: arbitrate_steering_pipeline only reached via unscheduled potential_field_navigation_system → CQ-53	2026-11-16
-MOVE-08	UNWIRED	filter_vehicle_steering_output accel+turn caps; move08_* (V4-MOVE08) · REVIEW 2026-11-16: filter_vehicle_steering_output test-only → CQ-53	2026-11-16
+MOVE-04	ADOPTED	arbitrate_steering_pipeline via scheduled potential_field_navigation_system (CQ-53)	2026-11-16
+MOVE-08	ADOPTED	filter_vehicle_steering_output + sync_truck_motion_waypoints in nav schedule (CQ-53)	2026-11-16
 DEC-12	ADOPTED	WorldReadSnapshot blackboard + BlackboardWriteLane; experts enqueue only; Accept --lib dec12 → 1 passed	2026-11-15
 TAC-02	ADOPTED	flood_ownership_regions multi-source BFS + derive_fronts wire; Accept --lib tac02 / front::tests	2026-11-15
 TAC-09	ADOPTED	condense_front_cells Chebyshev thin + FrontSegment::condensed_cells; Accept --lib tac09 → 1 passed	2026-11-15
 DEC-13	ADOPTED	DeploymentOrder.priority + enqueue_interruptible + drain_by_priority + expand_compound_orders; Accept --lib dec13 → 1	2026-11-15
-TAC-15	UNWIRED	static_board_eval BoardEval leaf features; Accept --lib tac15 → 1 passed · REVIEW 2026-11-16: static_board_eval test-only → CQ-57b	2026-11-16
-TAC-07	UNWIRED	TacticalFragMap record_loss/heat_at/decay/hottest; Accept --lib tac07 → 1 passed · REVIEW 2026-11-16: record_loss/heat_at no production caller → CQ-57a	2026-11-16
+TAC-15	ADOPTED	static_board_eval folded into score_goals / faction_ai_tick_system (CQ-57b)	2026-11-16
+TAC-07	ADOPTED	combat/resolve record_loss; decide.rs frag heat_at in score_goals (CQ-57a)	2026-11-16
 DEC-05	ADOPTED	fuzzy_degree/and/or + compose_decision_score_fuzzy; Accept --lib dec05 → 1	2026-11-15
 DEC-06	ADOPTED	markov_transition_row + markov_step_world_event; Accept --lib dec06 → 1	2026-11-15
-DEC-11	UNWIRED	TriggerFactMemory + alpha_index + arbitrate_trigger_rules; Accept --lib dec11 → 1 · REVIEW 2026-11-16: arbitrate_trigger_rules/TriggerFactMemory test-only → CQ-57c	2026-11-16
-DEC-09	UNWIRED	plan_goap IDA* over StrategicGoal world atoms; Accept --lib dec09 → 1 · REVIEW 2026-11-16: plan_goap test-only second AI path; decision: delete → CQ-57l	2026-11-16
+DEC-11	ADOPTED	script_host drain → reorder_pending_trigger_effects + TriggerFactMemory (CQ-57c)	2026-11-16
+DEC-09	DEFER	CQ-57l deleted plan_goap second AI path; reopen only if faction GOAP chartered	2026-11-16
 DEC-04	ADOPTED	ADOPTED-as-gate: BT stack not adopted; aig3 5.4 concurrency/limits read (DEC-04-GATE) — no BT runtime	2026-11-15
 TAC-11	ADOPTED	script_group_package_intents recon+strike package; Accept --lib tac11_scripted → 1	2026-11-15
 PCG-02	ADOPTED	fault_ridge_boost + WorldGenParams fault_ridge_*; Accept --lib pcg02 → 1	2026-11-15
 PCG-04	ADOPTED	altitude_filter_elevations + apply_threshold_tags_filtered; Accept --lib pcg04 → 1	2026-11-15
 EXEC-02	ADOPTED	take_budgeted_dirty_regions + AtmosphereIncrementalCursor; Accept --lib exec02 → 1	2026-11-15
-EXEC-03	UNWIRED	allocate_nested_domain_budgets priority cascade; Accept --lib exec03 → 1 · REVIEW 2026-11-16: allocate_nested_domain_budgets test-only; streaming still env-knob tuned → CQ-57e	2026-11-16
+EXEC-03	ADOPTED	StreamingSpineBudget::default uses allocate_nested_domain_budgets via STREAMING_FRAME_ENTITY_BUDGET (CQ-57e)	2026-11-16
 SENSE-03	ADOPTED	SensoryModality/SenseMask + perceive_faction_masked; Accept --lib sense03 → 1	2026-11-15
 SENSE-05	ADOPTED	PerceptionFidelity PerfectKnowledge cheat path; Accept --lib sense05 → 1	2026-11-15
 LEARN-03	ADOPTED	ADOPTED-as-gate: over-learning warnings acknowledged (aig3 7.1.4–7.1.5); gates LEARN-02	2026-11-15
-DES-03	UNWIRED	ENGINE_STARTUP_PHASES + phase index; Accept --lib des03 → 1 · REVIEW 2026-11-16: ENGINE_STARTUP_PHASES string list enforces nothing; decision: delete → CQ-57n	2026-11-16
+DES-03	DEFER	CQ-57n deleted ENGINE_STARTUP_PHASES string list; no runtime enforcer	2026-11-16
 MOVE-10	ADOPTED	wildlife_flock seed_wildlife_herd_from_world_seed + sync_nav/agent scheduled; route_edge_cost reads wildlife_soft_samples; Accept --lib move10	2026-11-16
-DES-06	UNWIRED	ecosystem_logistic_step carrying-capacity feedback; Accept --lib des06 → 1 · REVIEW 2026-11-16: ecosystem_logistic_step test-only; operator choice → CQ-57k	2026-11-16
+DES-06	ADOPTED	cell_stand Regrowth uses ecosystem_logistic_step toward capacity (CQ-57k)	2026-11-16

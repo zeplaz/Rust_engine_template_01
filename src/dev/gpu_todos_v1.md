@@ -6,6 +6,44 @@
 
 **Rule:** Plan §13 tracking rows marked DONE = **scaffolding shipped** — **§10 program exit gate is NOT closed** until witnesses match (see audit below).
 
+---
+
+## PLAN-GPU-STUBS-KILL-v1 — **P0 / HIGH (pick now)**
+
+Charter: [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md). **Locked:** sole terrain display = world bake texture; **delete** `terrain_instanced_draw` + retire `GpuTilemap`.
+
+### Priority upgrades A–D (host pixel & mesh debt)
+
+| ☐ | ID | Pri | Scope | Exit |
+|:---:|:---|:---:|:---|:---|
+| ☑ | **GS-07** | P0 | Retire `vfx_capture_hook` text stubs | Zero text-as-PNG — enqueue redirects only |
+| ☑ | **GPU-A / GS-01** | P0 | True GPU RTT bake: control-tex upload + `terrain_bake_rtt.wgsl` compute; host write diagnose-only | `upload_control_and_arm_gpu_rtt` + RenderApp pass |
+| ☑ | **GPU-A' / GS-02** | P0 | Eliminate Sim `tile_world_fallback` land paint after bake ready | early-return when `spike_bake_ready_for_consumers` |
+| ☑ | **GPU-B** | P0 | Scorch companion field + overlay; stop CPU land tint when ready | `TerrainScorchFieldPlugin` |
+| ☑ | **GS-03+04** | P0 | Instanced draw gutted + `GpuTilemap` removed | Bake sole authority |
+| ☑ | **GPU-D** | P0 | Static grid + VS displace (DF-3 + bed tex) in `water_field_3d.wgsl` | Geom key ≠ depth rev |
+| ☑ | **GPU-C** | P0 | Flat veg: axis-aligned instance quads + `VegetationInstanceFrame` | No polygon tessellation |
+| ☑ | **GS-05** | P0 | Water particle emit+draw wired; policy-only doc removed | Lib witness |
+| ☑ | **GS-WITNESS** | P0 | Probe path `gpu_rtt_control_to_world_bake`; no GpuTilemap | Honesty tests |
+
+### Architecture beyond offload
+
+| ☐ | ID | Pri | Scope | Exit |
+|:---:|:---|:---:|:---|:---|
+| ☑ | **GS-09** | P1 | Minimap compositor **default GPU**; CpuBridge = CI/headless/shader-failed | Zero-copy VRAM composite |
+| ☑ | **GPU-MIPS** | P1 | Bake full mip chain + dirty-rect incremental downsample (RND-08) | No zoom-out shimmer / cache thrash |
+| ☑ | **GS-06** | P1 | Fire LOD band = CPU visual policy (honest rename) | Not a GPU stub |
+| ☑ | **GS-08** | P1 | Spark compute production-wired; smoke_volume deferred ES-4 | Honest defer |
+| ☑ | **GPU-ARRAY** | P1 | Material Texture2DArray → bake RTT; PixelWorld land already greedy | No atlas mip UV bleed |
+| ☑ | **GPU-CULL** | P2 | Fire frustum compute cull → `draw_indirect` (BOOK-S2); veg = BOOK-S3 | Off-screen skip VS |
+| ☑ | **DESTROY-T2** | P1 | Same-frame destruction mask + PixelWorld ground collapse | [`plan_destroy_t2_mask_v1.md`](plan_destroy_t2_mask_v1.md) · ADOPTED 2026-11-17 · `--lib destroy_t2` |
+| ☑ | **DESTROY-T2.1** | P1 | Site columns skip destroyed mask tiles | `layers.rs` `build_site` |
+| ☑ | **DESTROY-T2b** | P1 | Priority remesh for masked chunks | `remesh_priority` → pending front |
+| ☑ | **STAGE-RING** Tier 0 | P1 | Mask upload never budget-gated | [`plan_stage_ring_v1.md`](plan_stage_ring_v1.md) |
+| ☐ | **GS-06/08** | P1 | Fire LOD / smoke_volume stubs — finish or rename | Honest naming |
+
+**Kill order:** GS-07 → A → A' → B → GS-03+04 → D → C → GS-05 → WITNESS → GS-09 → MIPS → ARRAY → CULL → GS-06/08.
+
 ```powershell
 cargo test -p proc_A_dine01 --lib terrain_render terrain_instanced terrain_material tile_world_fallback gpu_particle -q
 cargo test -p proc_A_dine01 --lib stage5 -q

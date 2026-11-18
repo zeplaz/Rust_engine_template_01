@@ -138,7 +138,7 @@ Code: [`AirPresentationPolicy`](../systems/weather/air_presentation_policy.rs) +
 | D3 | Interceptor / CUAS cuts `cruise_threat` |
 | D4a | `DroneCargoDemandBook` → front `PublishDemand` |
 | D4b | UAS manufacturing blueprints + catalog map ids (buildings deferred — see §Catalog) |
-| D5 | `DroneResearchState` recipe/resist gates |
+| D5 | **DONE** → `ResearchCapabilityBook` ids (`comms.fiber_ops`, `uas.autonomy_*`, `sensor.seeker_ir`, wx resist); see PLAN-SCENARIO-SYSTEMS-RESEARCH-v1 |
 | D6 | `FactionDroneDoctrine` scales strike effects |
 | D7 | Draw tool `U` + Shift+U quick AO + pause/remove + map outlines |
 | D8 | `AirPresentationFrame` LOD caps from policy + hints |

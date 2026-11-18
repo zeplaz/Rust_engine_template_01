@@ -228,6 +228,7 @@ pub fn tick_manufacturing_nodes(
     clock: Res<SimStepClock>,
     blueprints: Res<ManufacturingBlueprintRegistry>,
     attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
+    research: Option<Res<crate::research::ResearchCapabilityBook>>,
     mut nodes: Query<(&mut ManufacturingNode, Option<&mut ManufacturingOutputBuffers>)>,
 ) {
     let mut scale = clock.due as f32;
@@ -243,14 +244,24 @@ pub fn tick_manufacturing_nodes(
         };
         scale *= tier.work_scale().max(0.25);
     }
+    let uas_yield = research
+        .as_ref()
+        .map(|b| b.yield_mul(crate::research::ids::MANUF_UAS_ASSEMBLY))
+        .unwrap_or(1.0);
     for (mut node, buffers) in nodes.iter_mut() {
         let bp = blueprints.get(node.blueprint_id.as_str());
         let target = bp.map(|b| b.throughput_target).unwrap_or(1.0);
-        // Efficiency drifts toward 1.0; throughput = target × efficiency.
+        let yield_mul = if node.blueprint_id.contains("uas") {
+            uas_yield
+        } else {
+            1.0
+        };
+        // Efficiency drifts toward 1.0; throughput = target × efficiency × research yield.
         let eff = node.local_efficiency.clamp(0.05, 1.25);
         let toward = 1.0;
         node.local_efficiency = eff + (toward - eff) * 0.02 * scale;
-        node.current_throughput = target * node.local_efficiency.clamp(0.05, 1.25);
+        node.current_throughput =
+            target * node.local_efficiency.clamp(0.05, 1.25) * yield_mul;
 
         let Some(tag) = bp.and_then(|b| b.output_buffer_tag.as_deref()) else {
             continue;

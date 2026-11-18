@@ -31,8 +31,13 @@ use crate::gui::{RepresentationResult, TileDebugRenderHost};
 use crate::render::pipelines::core2d_overlay_order::{
     core2d_overlay_pipeline_hdr_index, Core2dOverlaySet, CORE2D_OVERLAY_SDR_FORMAT,
 };
-use crate::render::core::gpu_buffer_registry::{GPUBufferRegistry, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER};
+use crate::render::core::gpu_buffer_registry::{
+    GPUBufferRegistry, FIRE_PARTICLE_EXPANDED_VERTICES_BUFFER, FIRE_PARTICLE_INDIRECT_DRAW_BUFFER,
+};
 use crate::render::fire_vfx::WorldFireParticleFrame;
+use crate::render::pipelines::gpu_indirect_draw::{
+    FireFrustumCullStats, FIRE_DRAW_VERTS_PER_INSTANCE,
+};
 use crate::render::ExtractedCameraMetrics;
 
 pub const FIRE_PARTICLE_DRAW_WGSL: &str = "shaders/fire/fire_particle_draw.wgsl";
@@ -97,6 +102,7 @@ pub fn register_fire_particle_raster_draw(app: &mut App) {
             sync_fire_particle_draw_globals
                 .after(crate::render::ExtractedCameraMetricsSet::Sync)
                 .after(crate::gui::sync_main_world_camera_viewport_and_projection)
+                .after(crate::render::pipelines::gpu_frustum_cull::sync_fire_frustum_cull_frame)
                 .run_if(crate::gui::in_simulation_or_editor_map),
         );
 
@@ -135,6 +141,7 @@ fn sync_fire_particle_draw_globals(
     particles: Res<WorldFireParticleFrame>,
     metrics: Res<ExtractedCameraMetrics>,
     zoom_frame: Res<crate::gui::ZoomFrame>,
+    cull_stats: Option<Res<FireFrustumCullStats>>,
     mut globals: ResMut<FireParticleDrawGlobals>,
     mut diag: ResMut<FireDrawDiagnostics>,
 ) {
@@ -161,7 +168,18 @@ fn sync_fire_particle_draw_globals(
         return;
     };
     globals.view_proj = view_proj;
-    globals.vertex_count = (cap as u32).saturating_mul(6);
+    // Prefer frustum-visible count (GPU-CULL.1 CPU mirror) when the cull spine has run.
+    let rows = cull_stats
+        .as_ref()
+        .map(|s| {
+            if s.submitted > 0 {
+                s.visible
+            } else {
+                cap as u32
+            }
+        })
+        .unwrap_or(cap as u32);
+    globals.vertex_count = rows.saturating_mul(FIRE_DRAW_VERTS_PER_INSTANCE);
     globals.time_secs = particles.anim_time_secs;
     globals.zoom_alpha = zoom_frame.zoom_alpha;
     diag.draw_ok = diag.draw_ok.saturating_add(1);
@@ -399,7 +417,13 @@ fn fire_particle_raster_pass(
     pass.set_render_pipeline(pl);
     pass.set_bind_group(0, bg0, &[]);
     pass.set_bind_group(1, bg1, &[]);
-    pass.draw(0..globals.vertex_count, 0..1);
+    // RND-12: prefer GPU-written DrawIndirectArgs (GPU-CULL.1 finalize).
+    let registry = world.resource::<GPUBufferRegistry>();
+    if let Some(indirect) = registry.get(FIRE_PARTICLE_INDIRECT_DRAW_BUFFER) {
+        pass.draw_indirect(&indirect.buffer, 0);
+    } else {
+        pass.draw(0..globals.vertex_count, 0..1);
+    }
 }
 
 #[cfg(test)]

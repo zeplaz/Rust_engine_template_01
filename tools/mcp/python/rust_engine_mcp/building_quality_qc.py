@@ -287,14 +287,40 @@ def _missing_slot_count(snapshot: dict[str, Any]) -> int:
     return len(required - present)
 
 
+def overall_score_from_parts(
+    *,
+    style_purity_pct: float,
+    silhouette_continuity_pct: float,
+    missing_slot_count: int,
+    adjacency_violation_count: int,
+) -> float:
+    """BQ-A2 weights — must match `assembly_quality_gate.rs` compute_assembly_quality."""
+    missing_penalty = min(100.0, missing_slot_count * 12.0)
+    adjacency_penalty = min(100.0, adjacency_violation_count * 15.0)
+    overall = (
+        style_purity_pct * 0.35
+        + silhouette_continuity_pct * 0.30
+        + (100.0 - missing_penalty) * 0.25
+        + (100.0 - adjacency_penalty) * 0.10
+    )
+    return max(0.0, min(100.0, overall))
+
+
 def compute_snapshot_quality_score(snapshot: dict[str, Any]) -> dict[str, Any]:
-    """Mirror BQ-A2 weights from assembly_quality_gate.rs (studio path; adjacency=0)."""
+    """Mirror BQ-A2 weights from assembly_quality_gate.rs.
+
+    Studio snapshots usually omit a footprint grid; pass
+    ``adjacency_violation_count`` on the snapshot when known (CQ-77).
+    """
     placements = [p for p in (snapshot.get("module_placements") or []) if isinstance(p, dict)]
     resolved_count = len(placements)
     visible_count = sum(1 for p in placements if not p.get("hidden"))
     cross_style = _cross_style_fallback_count(snapshot)
     missing_slot_count = _missing_slot_count(snapshot)
-    adjacency_violation_count = 0
+    try:
+        adjacency_violation_count = int(snapshot.get("adjacency_violation_count") or 0)
+    except (TypeError, ValueError):
+        adjacency_violation_count = 0
 
     style_purity_pct = (
         100.0
@@ -306,15 +332,12 @@ def compute_snapshot_quality_score(snapshot: dict[str, Any]) -> dict[str, Any]:
         if resolved_count == 0
         else min(100.0, 100.0 * visible_count / resolved_count)
     )
-    missing_penalty = min(100.0, missing_slot_count * 12.0)
-    adjacency_penalty = min(100.0, adjacency_violation_count * 15.0)
-    overall_score = (
-        style_purity_pct * 0.35
-        + silhouette_continuity_pct * 0.30
-        + (100.0 - missing_penalty) * 0.25
-        + (100.0 - adjacency_penalty) * 0.10
+    overall_score = overall_score_from_parts(
+        style_purity_pct=style_purity_pct,
+        silhouette_continuity_pct=silhouette_continuity_pct,
+        missing_slot_count=missing_slot_count,
+        adjacency_violation_count=adjacency_violation_count,
     )
-    overall_score = max(0.0, min(100.0, overall_score))
     passes_gate = overall_score >= PASS_THRESHOLD
     return {
         "style_purity_pct": style_purity_pct,

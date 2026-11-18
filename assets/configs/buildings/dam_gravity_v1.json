@@ -1,0 +1,21 @@
+{
+    "asset_name": "Dam gravity",
+    "asset_type": "Building",
+    "segment": "Hydraulic",
+    "description": "Weight-stable concrete/masonry gravity dam (includes crib fill). Crest → SurfaceWater barrier. Hydro optional (DF-4).",
+    "utility_role": "dam",
+    "dam_kind": "gravity",
+    "is_building": true,
+    "is_power": false,
+    "building_size_x": 10,
+    "building_size_y": 2,
+    "building_height": 4,
+    "construction_cost": 42000,
+    "power_consumption": 3,
+    "power_generation": 0,
+    "crest_m": 45.0,
+    "spillway_length_m": 32.0,
+    "outlet_area_m2": 5.0,
+    "procedural_module_id": "dam_gravity_v1",
+    "version": "1.0.0"
+}

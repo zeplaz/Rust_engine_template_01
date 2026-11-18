@@ -71,6 +71,8 @@ pub fn ecosystem_logistic_step(biomass: f32, capacity: f32, rate: f32) -> f32 {
 pub const CELL_REGROWTH: u8 = 7;
 /// Open water (river, lake, ocean): nothing grows or burns here.
 pub const CELL_WATER: u8 = 8;
+/// Standing dead wood after flood drown (distinct from charred [`CELL_BURNT`]) — DF-5.
+pub const CELL_DEAD: u8 = 9;
 
 /// Cell heat at which the stand counts as burning (the neighbour-spread source threshold).
 pub const CELL_BURN_HEAT: f32 = 0.08;
@@ -229,6 +231,10 @@ pub enum StandPhase {
     Burnt,
     /// Coming back; `0..1` progress.
     Regrowth(f32),
+    /// Still submerged past species flood tolerance (DF-5).
+    Drowned,
+    /// Exposed standing dead after drown (woody fuel kept).
+    Dead,
 }
 
 #[inline]
@@ -332,6 +338,10 @@ pub struct ChunkCellStand {
     pub render_rev: u32,
     /// Whether capacities have been rated at least once (persisted with the stand).
     pub seeded: bool,
+    /// Sim seconds when flood submergence began; negative while dry (DF-5).
+    pub submerged_since: Vec<f32>,
+    /// Flood-killed standing dead (keeps woody `fuel_cap`).
+    pub flood_dead: Vec<bool>,
     last_refresh: u64,
     last_snapshot: u64,
     last_pass: u64,
@@ -351,9 +361,36 @@ impl ChunkCellStand {
             lit: vec![false; n],
             render_rev: 0,
             seeded: false,
+            submerged_since: vec![-1.0; n],
+            flood_dead: vec![false; n],
             last_refresh: 0,
             last_snapshot: 0,
             last_pass: 0,
+        }
+    }
+
+    /// Default upland flood tolerance (~14 days). Species RON can override later.
+    pub const FLOOD_TOLERANCE_S: f32 = 14.0 * GAME_DAY_SECS;
+
+    /// DF-5: update submergence clocks from a per-cell wet mask (chunk-local).
+    pub fn apply_flood_submergence(&mut self, wet: &[bool], now: f32) {
+        let n = self.kind.len().min(wet.len()).min(self.submerged_since.len());
+        for i in 0..n {
+            if self.kind[i] == StandKind::Bare {
+                continue;
+            }
+            if wet[i] {
+                if self.submerged_since[i] < 0.0 {
+                    self.submerged_since[i] = now;
+                } else if now - self.submerged_since[i] >= Self::FLOOD_TOLERANCE_S {
+                    self.flood_dead[i] = true;
+                }
+            } else if self.submerged_since[i] >= 0.0 {
+                if now - self.submerged_since[i] >= Self::FLOOD_TOLERANCE_S {
+                    self.flood_dead[i] = true;
+                }
+                self.submerged_since[i] = -1.0;
+            }
         }
     }
 
@@ -371,6 +408,14 @@ impl ChunkCellStand {
         grid_w: u32,
         moisture: f32,
     ) -> StandPhase {
+        if self.flood_dead.get(i).copied().unwrap_or(false) {
+            let sub = self.submerged_since.get(i).copied().unwrap_or(-1.0);
+            return if sub >= 0.0 {
+                StandPhase::Drowned
+            } else {
+                StandPhase::Dead
+            };
+        }
         let t = self.burnt_at.get(i).copied().unwrap_or(-1.0);
         if t < 0.0 {
             return StandPhase::Live;
@@ -527,9 +572,19 @@ pub(crate) fn cell_stand_tick(
                     scar_cells += 1;
                     (0.0, 1.0)
                 }
+                StandPhase::Drowned => {
+                    // Crown fines gone; woody fuel remains while submerged.
+                    (0.85, 0.15)
+                }
+                StandPhase::Dead => {
+                    // Exposed standing dead — woody fuel kept (DF-5).
+                    (0.7, 0.3)
+                }
                 StandPhase::Regrowth(p) => {
                     scar_cells += 1;
-                    (p, 1.0 - p)
+                    // DES-06: logistic approach to capacity so late regrowth slows near full.
+                    let level = ecosystem_logistic_step(p, 1.0, 0.35).clamp(0.0, 1.0);
+                    (level, 1.0 - level)
                 }
             };
             stand.fuel_cap[i] = full * level;
@@ -665,6 +720,7 @@ fn snapshot(
             let m = matrix.moisture.get(i).copied().unwrap_or(0.4);
             match stand.phase(i, now, cfg, chunk_bits, grid_w, m) {
                 StandPhase::Burnt => CELL_BURNT,
+                StandPhase::Drowned | StandPhase::Dead => CELL_DEAD,
                 StandPhase::Regrowth(_) => CELL_REGROWTH,
                 StandPhase::Live => {
                     let d = suit
@@ -767,7 +823,7 @@ mod tests {
                     regrowing += 1;
                     progresses.push(p);
                 }
-                StandPhase::Live => {}
+                StandPhase::Live | StandPhase::Drowned | StandPhase::Dead => {}
             }
         }
         assert!(burnt > 0, "noise should leave some cells in snag");

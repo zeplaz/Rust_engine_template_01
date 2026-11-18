@@ -635,8 +635,8 @@ mod tests {
         start: (i32, i32),
         goal: (i32, i32),
         tile_at: impl FnMut(i32, i32) -> LogisticsTile,
-        concern: super::path_concerns::LogisticsPathConcern,
-        forecast: Option<&super::cost_forecast::LogisticsCostForecastBook>,
+        concern: crate::systems::navigation::LogisticsPathConcern,
+        forecast: Option<&crate::systems::navigation::LogisticsCostForecastBook>,
         depart_tick: u64,
     ) -> Option<LogisticsPathResult> {
         let mut nodes = LogisticsNodeArray::default();
@@ -656,7 +656,7 @@ mod tests {
     #[test]
     fn straight_path_open_grid() {
         let mut g = constant_grid(5, 5, LogisticsTile::default());
-        let r = grid_path(5, 5, (0, 0), (4, 0), |x, y| g(x, y), super::path_concerns::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
+        let r = grid_path(5, 5, (0, 0), (4, 0), |x, y| g(x, y), crate::systems::navigation::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
         assert_eq!(r.path.len(), 5);
         assert!((r.total_cost - 4.0).abs() < 0.01, "cost {}", r.total_cost);
         assert!(r.max_env_risk < 0.01);
@@ -671,7 +671,7 @@ mod tests {
                 ..LogisticsTile::default()
             };
         }
-        let r = grid_path(5, 5, (0, 0), (4, 4), |x, y| tiles[y as usize][x as usize], super::path_concerns::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
+        let r = grid_path(5, 5, (0, 0), (4, 4), |x, y| tiles[y as usize][x as usize], crate::systems::navigation::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
         assert!(r.path.iter().all(|p| p.1 != 2 || p.0 == 4));
     }
 
@@ -684,7 +684,7 @@ mod tests {
             cost_mul: 12.0,
             env_risk: 0.0,
         };
-        let r = grid_path(3, 3, (0, 1), (2, 1), |x, y| tiles[y as usize][x as usize], super::path_concerns::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
+        let r = grid_path(3, 3, (0, 1), (2, 1), |x, y| tiles[y as usize][x as usize], crate::systems::navigation::LogisticsPathConcern::DEFAULT, None, 0).unwrap();
         assert!(
             !r.path.contains(&(1, 1)),
             "should avoid expensive center: {:?}",
@@ -726,7 +726,7 @@ mod tests {
             (0, 1),
             (6, 1),
             tile_at,
-            super::path_concerns::LogisticsPathConcern::DEFAULT,
+            crate::systems::navigation::LogisticsPathConcern::DEFAULT,
             None,
             0,
         )
@@ -843,8 +843,8 @@ mod nav04_tests {
         start: (i32, i32),
         goal: (i32, i32),
         tile_at: impl FnMut(i32, i32) -> LogisticsTile,
-        concern: super::path_concerns::LogisticsPathConcern,
-        forecast: Option<&super::cost_forecast::LogisticsCostForecastBook>,
+        concern: crate::systems::navigation::LogisticsPathConcern,
+        forecast: Option<&crate::systems::navigation::LogisticsCostForecastBook>,
         depart_tick: u64,
     ) -> Option<LogisticsPathResult> {
         let mut nodes = LogisticsNodeArray::default();
@@ -990,7 +990,7 @@ mod nav04_tests {
             (0, 0),
             (4, 0),
             |_x, _y| LogisticsTile::default(),
-            super::path_concerns::LogisticsPathConcern::DEFAULT,
+            crate::systems::navigation::LogisticsPathConcern::DEFAULT,
             None,
             0,
         )

@@ -1,0 +1,16 @@
+(
+    schema_version: 1,
+    capabilities: [
+        (id: "comms.fiber_ops", label: "Fiber-optic C2", domain: "comms"),
+        (id: "comms.link_hardening", label: "Link weather hardening", domain: "comms"),
+        (id: "sat.downlink_basic", label: "Satellite downlink (basic)", domain: "sat"),
+        (id: "uas.autonomy_l2", label: "UAS autonomy L2", domain: "uas"),
+        (id: "uas.autonomy_l3", label: "UAS autonomy L3", domain: "uas"),
+        (id: "sensor.seeker_ir", label: "IR seeker", domain: "sensor"),
+        (id: "manuf.uas_assembly", label: "UAS assembly line", domain: "manuf"),
+        (id: "manuf.cruise_line", label: "Attrition cruise production", domain: "manuf"),
+        (id: "wx.resist_link", label: "WX link resist (mul)", domain: "wx"),
+        (id: "wx.resist_sensor", label: "WX sensor resist (mul)", domain: "wx"),
+        (id: "nuclear_gen_ii_plus_v1", label: "Nuclear Gen II+ ops", domain: "power"),
+    ],
+)

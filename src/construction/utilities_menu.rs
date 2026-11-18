@@ -37,6 +37,28 @@ pub fn draw_utilities_submenu(registry: &BuildingDefinitionRegistry) -> Vec<Menu
             Some(format!("Generic {archetype:?}")),
         )));
     }
+    // Hydraulic works — separate from generation (dam ≠ power plant).
+    rows.push(MenuRow::Section("Hydraulic works".into()));
+    rows.push(MenuRow::Item(MenuItem::building(
+        BuildingArchetypeId::Dam,
+        intent_from_archetype(BuildingArchetypeId::Dam, registry),
+        Some("Embankment / gravity / weir — reservoir first; hydro optional".into()),
+    )));
+    let mut dam_defs: Vec<_> = registry
+        .ids_by_family(BuildingFamily::Civic)
+        .into_iter()
+        .filter(|id| !id.starts_with("builtin:") && !id.starts_with("mock:"))
+        .filter_map(|id| registry.get(id))
+        .filter(|d| d.site_archetype == crate::strategic::SiteArchetype::Dam)
+        .collect();
+    dam_defs.sort_by(|a, b| a.display_name.cmp(&b.display_name));
+    for def in dam_defs {
+        rows.push(MenuRow::Item(MenuItem::building(
+            BuildingArchetypeId::Dam,
+            intent_from_definition(def),
+            None,
+        )));
+    }
     let mut defs: Vec<_> = registry
         .ids_by_family(BuildingFamily::Power)
         .into_iter()

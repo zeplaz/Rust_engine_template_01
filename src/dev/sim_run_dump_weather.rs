@@ -51,6 +51,8 @@ pub struct WeatherDumpSeries {
     solves: u64,
     cells: usize,
     cell_size_m: f32,
+    /// Mean wind vector from the previous dump sample (for inter-solve change).
+    last_mean_wind_mps: Option<(f64, f64)>,
     series: BTreeMap<&'static str, WxSeries>,
     last: Value,
 }
@@ -103,7 +105,7 @@ fn sample_weather_series(
         .iter()
         .fold((f32::MAX, f32::MIN), |(a, b), p| (a.min(*p), b.max(*p)));
     // Mean per-cell change of the wind vector across the last solve (prev -> next).
-    let change = if field.prev.wind_mps.len() == snap.wind_mps.len() {
+    let mut change = if field.prev.wind_mps.len() == snap.wind_mps.len() {
         snap.wind_mps
             .iter()
             .zip(&field.prev.wind_mps)
@@ -113,6 +115,14 @@ fn sample_weather_series(
     } else {
         0.0
     };
+    // Also score mean-vector drift between dump samples (covers spin-up where prev==next).
+    let mean_vx = snap.wind_mps.iter().map(|w| f64::from(w[0])).sum::<f64>() / n;
+    let mean_vy = snap.wind_mps.iter().map(|w| f64::from(w[1])).sum::<f64>() / n;
+    if let Some((px, py)) = s.last_mean_wind_mps {
+        let sample_change = ((mean_vx - px).powi(2) + (mean_vy - py).powi(2)).sqrt();
+        change = change.max(sample_change);
+    }
+    s.last_mean_wind_mps = Some((mean_vx, mean_vy));
     s.samples += 1;
     s.solves = field.solves;
     s.cells = field.cell_count();

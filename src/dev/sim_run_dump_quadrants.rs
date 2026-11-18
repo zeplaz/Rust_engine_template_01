@@ -4,7 +4,6 @@
 
 use std::collections::{BTreeMap, HashMap};
 
-use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use serde_json::{json, Map, Value};
 
@@ -18,7 +17,6 @@ use crate::systems::weather::WeatherField;
 use crate::terrain::generation::water_class::WaterClass;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
-use crate::render::WeatherPrecipFrame;
 
 /// Wetland-within-R of river/lake in SE — matches `water_class::tests::score_playquad_seed` (R = 6).
 const SE_WETLAND_REACH: i32 = 6;
@@ -103,17 +101,6 @@ fn bump_water(acc: &mut QuadrantAcc, class: WaterClass) {
     }
 }
 
-#[derive(SystemParam)]
-pub struct QuadrantDumpParams<'w, 's> {
-    pub matrices: Query<'w, 's, (&'static Chunk, &'static ChunkCellMatrix)>,
-    pub stands: Query<'w, 's, (&'static Chunk, &'static ChunkCellStand)>,
-    pub overlays: Query<'w, 's, (&'static Chunk, &'static ChunkFireOverlay)>,
-    pub sites: Query<'w, 's, (&'static ConstructionSite, &'static SiteFootprint)>,
-    pub weather_field: Option<Res<'w, WeatherField>>,
-    pub sim_time: Option<Res<'w, SimTimeMicros>>,
-    pub precip: Option<Res<'w, WeatherPrecipFrame>>,
-}
-
 /// `None` when the active scene is not PlayQuad or the world is not ready.
 #[must_use]
 pub fn quadrants_json(
@@ -121,9 +108,14 @@ pub fn quadrants_json(
     w: u32,
     h: u32,
     meters_per_tile: f32,
-    p: &QuadrantDumpParams,
+    matrices: &Query<'_, '_, (&Chunk, &ChunkCellMatrix)>,
+    stands: &Query<'_, '_, (&Chunk, &ChunkCellStand)>,
+    overlays: &Query<'_, '_, (&Chunk, &ChunkFireOverlay)>,
+    sites: &Query<'_, '_, (&ConstructionSite, &SiteFootprint)>,
+    weather_field: Option<&WeatherField>,
+    sim_time: Option<&SimTimeMicros>,
 ) -> Option<Value> {
-    if !scene.is_playquad() || w == 0 || h == 0 || p.matrices.is_empty() {
+    if !scene.is_playquad() || w == 0 || h == 0 || matrices.is_empty() {
         return None;
     }
 
@@ -138,7 +130,7 @@ pub fn quadrants_json(
     let cw = CHUNK_TILES_SIM;
     let ch = CHUNK_TILES_SIM;
 
-    for (chunk, matrix) in &p.matrices {
+    for (chunk, matrix) in matrices {
         let ox = chunk.coord.x as u32 * cw;
         let oy = chunk.coord.y as u32 * ch;
         for ly in 0..matrix.size.y {
@@ -196,7 +188,7 @@ pub fn quadrants_json(
         se.wetland_near_water = se_wetland_near_water;
     }
 
-    for (chunk, stand) in &p.stands {
+    for (chunk, stand) in stands {
         let ox = chunk.coord.x as u32 * cw;
         let oy = chunk.coord.y as u32 * ch;
         for (i, cell) in stand.render.iter().enumerate() {
@@ -219,7 +211,7 @@ pub fn quadrants_json(
     }
 
     const HEAT_EPS: f32 = 0.04;
-    for (chunk, overlay) in &p.overlays {
+    for (chunk, overlay) in overlays {
         let ox = chunk.coord.x as u32 * cw;
         let oy = chunk.coord.y as u32 * ch;
         for (i, hcell) in overlay.heat.iter().enumerate() {
@@ -241,7 +233,7 @@ pub fn quadrants_json(
         }
     }
 
-    for (site, footprint) in &p.sites {
+    for (site, footprint) in sites {
         let (tx, ty) = site_centroid_tile(footprint);
         let phase = format!("{:?}", site.phase);
         for q in PlayQuadrant::ALL {
@@ -257,15 +249,13 @@ pub fn quadrants_json(
     out.insert("global_wetland_cells".into(), json!(global_wetland));
     out.insert("se_wetland_near_water".into(), json!(se_wetland_near_water));
 
-    let sim_time = p.sim_time.as_ref().map(|t| t.0).unwrap_or(0);
+    let sim_time = sim_time.map(|t| t.0).unwrap_or(0);
     let mpt = meters_per_tile.max(1.0);
 
     for q in PlayQuadrant::ALL {
         let a = acc.remove(&q).unwrap_or_default();
         let center = quadrant_aabb(q, w, h).center();
-        let (rain_mm_h, rain01) = p
-            .weather_field
-            .as_ref()
+        let (rain_mm_h, rain01) = weather_field
             .filter(|f| f.is_ready())
             .map(|f| {
                 let pos_m = center * mpt;
@@ -317,4 +307,46 @@ fn site_centroid_tile(footprint: &SiteFootprint) -> (u32, u32) {
         (sx / n).max(0) as u32,
         (sy / n).max(0) as u32,
     )
+}
+
+use crate::dev::sim_run_dump::{SimDumpArm, SimRunDump};
+use crate::engine::EngineLaunchArgs;
+use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+
+/// CQ-68 PlayQuad reporter — no cross-domain SystemParam on the central flush.
+pub fn dump_quadrants_section(
+    arm: Res<SimDumpArm>,
+    launch: Option<Res<EngineLaunchArgs>>,
+    params: Option<Res<WorldGenParams>>,
+    matrices: Query<(&Chunk, &ChunkCellMatrix)>,
+    stands: Query<(&Chunk, &ChunkCellStand)>,
+    overlays: Query<(&Chunk, &ChunkFireOverlay)>,
+    sites: Query<(&ConstructionSite, &SiteFootprint)>,
+    weather_field: Option<Res<WeatherField>>,
+    sim_time: Option<Res<SimTimeMicros>>,
+    mut dump: ResMut<SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    let scene = launch.as_ref().map(|l| l.test_scene).unwrap_or_default();
+    let world_w = params.as_ref().map_or(0, |p| p.width);
+    let world_h = params.as_ref().map_or(0, |p| p.height);
+    let mpt = params
+        .as_ref()
+        .map_or(100.0, |p| p.map_scale.meters_per_tile);
+    if let Some(block) = quadrants_json(
+        scene,
+        world_w,
+        world_h,
+        mpt,
+        &matrices,
+        &stands,
+        &overlays,
+        &sites,
+        weather_field.as_deref(),
+        sim_time.as_deref(),
+    ) {
+        dump.put_value("quadrants", block);
+    }
 }

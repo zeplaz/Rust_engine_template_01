@@ -468,6 +468,8 @@ pub fn apply_fire_collapse_demolish(
     mut occupation: Option<ResMut<TileOccupationBook>>,
     mut voxel_occupation: Option<ResMut<crate::strategic::VoxelOccupationBook>>,
     voxel_cfg: Option<Res<crate::strategic::VoxelOccupationConfig>>,
+    mut destruction_mask: Option<ResMut<crate::render::pixel_world::DestructionMaskBook>>,
+    mut debris_frame: Option<ResMut<crate::render::WorldFireParticleFrame>>,
     sites: Query<(
         Entity,
         &ConstructionSite,
@@ -496,6 +498,8 @@ pub fn apply_fire_collapse_demolish(
             occupation.as_deref_mut(),
             voxel_occupation.as_deref_mut(),
             commit_auth,
+            destruction_mask.as_deref_mut(),
+            debris_frame.as_deref_mut(),
         );
         if n > 0 {
             queue.collapsed = queue.collapsed.saturating_add(u64::from(n));

@@ -80,6 +80,7 @@ pub fn site_archetype_operational_name(a: SiteArchetype) -> &'static str {
         SiteArchetype::Minefield => "Minefield",
         SiteArchetype::FuelDepot => "Fuel depot",
         SiteArchetype::WaterPlant => "Water / utilities plant",
+        SiteArchetype::Dam => "Dam / embankment",
     }
 }
 

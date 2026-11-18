@@ -33,6 +33,7 @@ pub mod scenario;
 pub mod substrate;
 pub mod sim;
 pub mod combat;
+pub mod research;
 
 // Re-export commonly used items
 pub use ai::construction::{ConstructionAiConfig, ConstructionAiOwner, ConstructionAiPlugin};

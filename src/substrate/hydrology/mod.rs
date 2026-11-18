@@ -39,6 +39,7 @@ pub fn sync_hydrology_runtime_witness_system(
     tick: Res<HydrologyTickState>,
     hydro_queue: Option<Res<HydrologyEventQueue>>,
     coupling: Option<Res<HydrologyConstructionCouplingStats>>,
+    surface: Option<Res<crate::systems::water::SurfaceWaterField>>,
     mut witness: ResMut<HydrologyRuntimeStats>,
 ) {
     let mut ocean_tiles = 0_u64;
@@ -78,14 +79,16 @@ pub fn sync_hydrology_runtime_witness_system(
     } else {
         0.0
     };
-    // HY-005 deep solve + HY-006 extract remain staged; witness true when slab + tick path live.
-    witness.deep_solve_wired = witness.hydrology_background_wired;
+    // DF-2: honest deep-solve flag — true only when `SurfaceWaterField` is wired (sole depth writer).
+    // Background saturation tick alone is not a surface-water solve.
+    let surface_wired = surface.as_ref().is_some_and(|f| f.wired);
+    witness.deep_solve_wired = surface_wired;
+    witness.deep_solve_active_tasks = if surface_wired { 1 } else { 0 };
     witness.hydrology_extract_wired = witness.hydrology_hydrated;
     witness.construction_hydro_coupling_wired = match (coupling.as_deref(), hydro_queue.as_deref()) {
         (Some(c), Some(q)) => construction_hydro_coupling_witness_green(c, q),
         _ => false,
     };
-    witness.deep_solve_active_tasks = 0;
     witness.ocean_tile_count = ocean_tiles;
     witness.river_channel_cells = river_cells;
     witness.waterborne_contamination_max = contamination_max;

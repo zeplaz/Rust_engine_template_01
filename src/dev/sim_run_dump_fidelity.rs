@@ -1,13 +1,13 @@
 //! FIDELITY / MISSILE dump series (counts only) for PLAYCHECK-1 matrix rows.
+//! CQ-68: per-domain sample systems write the shared series (no cross-domain SystemParam).
 
 use std::collections::BTreeMap;
 
-use bevy::ecs::system::SystemParam;
 use bevy::prelude::*;
 use serde_json::{json, Value};
 
 use crate::audio::AudioMixFrame;
-use crate::combat::{BallisticFlightBook, MissileSortieDump};
+use crate::combat::{BallisticFlightBook, BallisticPresentFrame, MissileSortieDump};
 use crate::construction::BlastCraterDump;
 use crate::presentation::truck_view::TruckPresentationIndex;
 
@@ -41,7 +41,7 @@ impl Series {
     }
 }
 
-/// Run-over-run fidelity / sensory counters (sole writer: [`sample_fidelity_series`]).
+/// Run-over-run fidelity / sensory counters.
 #[derive(Resource, Debug, Default)]
 pub struct FidelityDumpSeries {
     pub samples: u64,
@@ -52,21 +52,23 @@ fn track(s: &mut FidelityDumpSeries, key: &'static str, v: f64) {
     s.series.entry(key).or_default().push(v);
 }
 
-#[derive(SystemParam)]
-pub struct FidelitySampleReads<'w> {
-    missile: Option<Res<'w, MissileSortieDump>>,
-    ballistics: Option<Res<'w, BallisticFlightBook>>,
-    blast: Option<Res<'w, BlastCraterDump>>,
-    audio: Option<Res<'w, AudioMixFrame>>,
-    trucks: Option<Res<'w, TruckPresentationIndex>>,
+fn bump_sample(s: &mut FidelityDumpSeries) {
+    s.samples = s.samples.saturating_add(1);
 }
 
-pub fn sample_fidelity_series(mut s: ResMut<FidelityDumpSeries>, r: FidelitySampleReads) {
+/// Combat / blast fidelity samples.
+pub fn sample_fidelity_combat_series(
+    mut s: ResMut<FidelityDumpSeries>,
+    missile: Option<Res<MissileSortieDump>>,
+    ballistics: Option<Res<BallisticFlightBook>>,
+    ballistic_present: Option<Res<BallisticPresentFrame>>,
+    blast: Option<Res<BlastCraterDump>>,
+) {
     if !super::sim_run_dump::sim_dump_enabled(None) {
         return;
     }
-    s.samples = s.samples.saturating_add(1);
-    if let Some(m) = r.missile.as_ref() {
+    bump_sample(&mut s);
+    if let Some(m) = missile.as_ref() {
         track(&mut s, "missile_dump_present", 1.0);
         track(&mut s, "missile_sorties_ok", m.sorties_ok as f64);
         track(&mut s, "missile_sorties_aborted_wx", m.sorties_aborted_wx as f64);
@@ -78,27 +80,47 @@ pub fn sample_fidelity_series(mut s: ResMut<FidelityDumpSeries>, r: FidelitySamp
     } else {
         track(&mut s, "missile_dump_present", 0.0);
     }
-    if let Some(b) = r.ballistics.as_ref() {
+    if let Some(b) = ballistics.as_ref() {
         track(&mut s, "ballistic_flights", b.flights.len() as f64);
         track(&mut s, "ballistic_impacts", b.impacts as f64);
     } else {
         track(&mut s, "ballistic_flights", 0.0);
         track(&mut s, "ballistic_impacts", 0.0);
     }
-    if let Some(c) = r.blast.as_ref() {
+    if let Some(p) = ballistic_present.as_ref() {
+        track(&mut s, "ballistic_present_trails", p.trail_segments.len() as f64);
+        track(&mut s, "ballistic_present_impacts", p.impacts.len() as f64);
+        track(&mut s, "ballistic_present_in_flight", f64::from(p.in_flight));
+    } else {
+        track(&mut s, "ballistic_present_trails", 0.0);
+        track(&mut s, "ballistic_present_impacts", 0.0);
+        track(&mut s, "ballistic_present_in_flight", 0.0);
+    }
+    if let Some(c) = blast.as_ref() {
         track(&mut s, "blast_crater_tiles", f64::from(c.tile_count));
         track(&mut s, "blast_applied", c.blasts_applied as f64);
     } else {
         track(&mut s, "blast_crater_tiles", 0.0);
         track(&mut s, "blast_applied", 0.0);
     }
-    if let Some(a) = r.audio.as_ref() {
+}
+
+/// Audio / truck presentation fidelity samples.
+pub fn sample_fidelity_audio_trucks_series(
+    mut s: ResMut<FidelityDumpSeries>,
+    audio: Option<Res<AudioMixFrame>>,
+    trucks: Option<Res<TruckPresentationIndex>>,
+) {
+    if !super::sim_run_dump::sim_dump_enabled(None) {
+        return;
+    }
+    if let Some(a) = audio.as_ref() {
         track(&mut s, "audio_mix_requests", a.requests.len() as f64);
         track(&mut s, "audio_ambient_rain", f64::from(a.ambient_rain));
     } else {
         track(&mut s, "audio_mix_requests", 0.0);
     }
-    let truck_n = r.trucks.as_ref().map_or(0, |t| t.by_vehicle.len());
+    let truck_n = trucks.as_ref().map_or(0, |t| t.by_vehicle.len());
     track(&mut s, "truck_proxies", truck_n as f64);
 }
 
@@ -119,7 +141,12 @@ pub struct FidelityDumpPlugin;
 
 impl Plugin for FidelityDumpPlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<FidelityDumpSeries>()
-            .add_systems(Last, sample_fidelity_series);
+        app.init_resource::<FidelityDumpSeries>().add_systems(
+            Last,
+            (
+                sample_fidelity_combat_series,
+                sample_fidelity_audio_trucks_series.after(sample_fidelity_combat_series),
+            ),
+        );
     }
 }

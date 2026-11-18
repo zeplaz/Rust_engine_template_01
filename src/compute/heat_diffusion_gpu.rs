@@ -198,6 +198,7 @@ pub fn wgsl_embeds_dense_constants(wgsl: &str) -> bool {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::compute::{DENSE_SOURCE_BLEND, HeatDiffusionConfig};
     use std::path::PathBuf;
 
     #[test]

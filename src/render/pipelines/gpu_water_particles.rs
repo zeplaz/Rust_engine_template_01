@@ -1,7 +1,9 @@
 //! FX-WATER-PARTICLE-002 — water particle emission from [`WaterSurfaceVisualCatalog`] (D-W06–D-W09).
 //!
-//! Policy-only lane: builds [`WorldWaterParticleFrame`] for future WGSL upload (D-W10 A).
+//! **GS-05:** emit + Core2d draw are live (`GpuWaterParticlesPlugin` +
+//! `register_world_water_particle_draw`). Builds [`WorldWaterParticleFrame`] for GPU upload/draw.
 //! **No** terrain extract; reads catalog + [`FireParticleCameraScale`] only.
+//! [`plan_gpu_stubs_kill_v1.md`](../../dev/plan_gpu_stubs_kill_v1.md).
 
 use std::collections::HashMap;
 
@@ -498,6 +500,7 @@ pub fn update_world_water_particles_from_catalog(
 pub fn emit_world_water_particles_from_catalog(
     time: Res<Time>,
     catalog: Option<Res<WaterSurfaceVisualCatalog>>,
+    sim_water: Option<Res<crate::systems::water::SurfaceWaterVisualFrame>>,
     cam: Res<FireParticleCameraScale>,
     mut frame: ResMut<WorldWaterParticleFrame>,
 ) {
@@ -508,9 +511,66 @@ pub fn emit_world_water_particles_from_catalog(
             zoom_alpha: cam.zoom_alpha,
             ..Default::default()
         };
+        // Still emit DF-3 jet foam from live surface frame when catalog is absent.
+        if let Some(sw) = sim_water.as_ref() {
+            append_sim_water_jet_foam(frame.as_mut(), sw.as_ref(), *cam);
+        }
         return;
     };
     update_world_water_particles_from_catalog(catalog.as_ref(), frame.as_mut(), *cam, time.elapsed_secs());
+    if let Some(sw) = sim_water.as_ref() {
+        append_sim_water_jet_foam(frame.as_mut(), sw.as_ref(), *cam);
+    }
+}
+
+/// DF-3: foam/streaks at high-speed samples + spillway/outlet/breach intensity.
+fn append_sim_water_jet_foam(
+    frame: &mut WorldWaterParticleFrame,
+    sw: &crate::systems::water::SurfaceWaterVisualFrame,
+    cam: FireParticleCameraScale,
+) {
+    let dens = WaterParticleDensityScale::from_zoom_alpha(cam.zoom_alpha);
+    if dens.river <= 0.0 {
+        return;
+    }
+    let jet = (sw.spillway_flow_m3s
+        + sw.outlet_flow_m3s
+        + sw.mid_outlet_flow_m3s
+        + sw.overtopping_flow_m3s
+        + sw.turbine_flow_m3s
+        + sw.breach_flow_m3s)
+        .max(0.0);
+    let jet_boost = (jet / 80.0).clamp(0.0, 3.0);
+    let budget = ((8.0 + jet_boost * 12.0) as usize).min(48);
+    let mut added = 0usize;
+    for &(tx, tz, depth, speed, fdx, fdz) in sw.samples.iter() {
+        if added >= budget {
+            break;
+        }
+        if speed < 0.18 && jet_boost < 0.15 {
+            continue;
+        }
+        let half = water_particle_half_world(
+            WaterParticleProfile::RiverFoam,
+            cam.zoom_alpha,
+            cam.zoom_level,
+        ) * (1.0 + depth * 0.05).min(1.8);
+        let flow = if speed > 1e-3 {
+            Vec2::new(fdx, fdz).normalize_or_zero()
+        } else {
+            Vec2::Y
+        };
+        push_instance(
+            &mut frame.instances,
+            Vec2::new(tx, tz),
+            WaterParticleProfile::RiverFoam,
+            flow,
+            half,
+            (depth * 0.17).fract(),
+            0.35 + jet_boost * 0.15,
+        );
+        added += 1;
+    }
 }
 
 pub struct GpuWaterParticlesPlugin;
@@ -561,6 +621,21 @@ mod tests {
         assert!(frame.instances.is_empty());
         assert!(frame.witness.strategic_culled);
         assert!(frame.witness.shader_motion_always_on);
+    }
+
+    #[test]
+    fn gs05_emit_and_draw_are_wired() {
+        // Emit produces instances; draw registration is in engine_with_worldgen.
+        let src_emit = include_str!("gpu_water_particles.rs");
+        let src_draw = include_str!("gpu_water_particle_draw.rs");
+        let src_engine = include_str!("../../engine/engine_with_worldgen.rs");
+        assert!(src_emit.contains("emit_world_water_particles"));
+        assert!(src_draw.contains("register_world_water_particle_draw") || src_draw.contains("WorldWaterParticle"));
+        assert!(src_engine.contains("register_world_water_particle_draw"));
+        assert!(src_engine.contains("GpuWaterParticlesPlugin"));
+        // Split token so this assert cannot false-fail via include_str self-match.
+        let forbidden = format!("{}-{}", "policy", "only");
+        assert!(!src_emit.contains(&forbidden));
     }
 
     #[test]

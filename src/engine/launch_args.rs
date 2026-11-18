@@ -62,6 +62,9 @@ pub enum TestScene {
     /// funnel · SW river-attached lake basin · SE marsh belt (world-gen hydrology). Rain is a global dry→wet
     /// weather preset (not a quadrant). CLI: `--test playquad`. Not buildread: buildread stays free of fire / weather chrome.
     PlayQuad,
+    /// PLAN-DAM-FLOOD-BENCHMARK-v1: authored valley fixture + dam-flood timeline. Stay-open `DemoOpen`.
+    /// CLI: `--test dam` / `--test damflood`. DF-1 harness; water solver arrives in DF-2.
+    DamFlood,
 }
 
 impl TestScene {
@@ -79,6 +82,7 @@ impl TestScene {
             Self::Vfx => "Fire VFX",
             Self::SubFx => "Weather + atmosphere",
             Self::PlayQuad => "Play-test quadrant world",
+            Self::DamFlood => "Dam-flood benchmark valley",
         }
     }
 
@@ -100,7 +104,12 @@ impl TestScene {
     pub const fn seeds_weather(self) -> bool {
         matches!(
             self,
-            Self::Weather | Self::Visual | Self::VfxSandbox | Self::SubFx | Self::PlayQuad
+            Self::Weather
+                | Self::Visual
+                | Self::VfxSandbox
+                | Self::SubFx
+                | Self::PlayQuad
+                | Self::DamFlood
         )
     }
 
@@ -108,6 +117,12 @@ impl TestScene {
     #[must_use]
     pub const fn is_playquad(self) -> bool {
         matches!(self, Self::PlayQuad)
+    }
+
+    /// Dam-flood benchmark valley ([`crate::scenario::dam_flood`]).
+    #[must_use]
+    pub const fn is_dam_flood(self) -> bool {
+        matches!(self, Self::DamFlood)
     }
 
     /// Fire seeds confined to a quadrant AABB (NW) instead of world center.
@@ -152,8 +167,11 @@ impl TestScene {
     /// Fire-only and subordinate-field play must not call [`crate::strategic::settlement::seed_settlement_books_if_empty`].
     #[must_use]
     pub const fn suppresses_town_book_seed(self) -> bool {
-        matches!(self, Self::Vfx | Self::SubFx | Self::PlayQuad)
+        matches!(self, Self::Vfx | Self::SubFx | Self::PlayQuad | Self::DamFlood)
     }
+
+    /// Fixed world-gen seed for the dam-flood valley (topology from fixture; seed = noise only).
+    pub const DAM_FLOOD_WORLD_SEED: u64 = 77;
 
     /// Fixed world-gen seed for an isolation play entry. `None` leaves the harness default.
     #[must_use]
@@ -165,6 +183,7 @@ impl TestScene {
             // Distinct from the city book seed and the fire fixture seed so this world is not the city map.
             Self::SubFx => Some(1_603),
             Self::PlayQuad => Some(Self::PLAYQUAD_WORLD_SEED),
+            Self::DamFlood => Some(Self::DAM_FLOOD_WORLD_SEED),
             _ => None,
         }
     }
@@ -274,6 +293,10 @@ impl EngineLaunchArgs {
             // PLAYTEST-QUADRANT-WORLD-001: Standard 512² world; NW fire · NE build order · SE rain · SW reserved.
             "playquad" | "quadrant" | "quad" => {
                 args.test_scene = TestScene::PlayQuad;
+            }
+            // PLAN-DAM-FLOOD-BENCHMARK-v1 DF-1 harness.
+            "dam" | "damflood" => {
+                args.test_scene = TestScene::DamFlood;
                 args.maneuver = DebugManeuver::DemoOpen;
                 args.visual_auto_exit = false;
             }
@@ -286,7 +309,7 @@ impl EngineLaunchArgs {
             other => {
                 bevy::log::warn!(
                     "Unknown --test mode {other:?}; isolation commands: \
-                     `city`, `buildread`, `vfx`, `subfx`, `playquad`. Combined sandbox: `sandbox`/`fireweather`. \
+                     `city`, `buildread`, `vfx`, `subfx`, `playquad`, `dam`. Combined sandbox: `sandbox`/`fireweather`. \
                      Capture: `visual`. Also `frame`, `demo`, `unittest`, `weather`, `fire`, `atmosphere`."
                 );
             }
@@ -366,6 +389,7 @@ impl EngineLaunchArgs {
                 | TestScene::Vfx
                 | TestScene::SubFx
                 | TestScene::PlayQuad
+                | TestScene::DamFlood
         ) || self.full_capture_active();
         let flush_secs = if self.full_capture_active() { 2.0 } else { 5.0 };
         let frame_jsonl_stride = match self.test_scene {
@@ -375,7 +399,8 @@ impl EngineLaunchArgs {
             | TestScene::BuildReadability
             | TestScene::Vfx
             | TestScene::SubFx
-            | TestScene::PlayQuad => 10,
+            | TestScene::PlayQuad
+            | TestScene::DamFlood => 10,
             TestScene::Weather | TestScene::Fire | TestScene::Atmosphere => 15,
             TestScene::None => 1,
         };
@@ -387,6 +412,7 @@ impl EngineLaunchArgs {
                 | TestScene::Vfx
                 | TestScene::SubFx
                 | TestScene::PlayQuad
+                | TestScene::DamFlood
                 | TestScene::Weather
                 | TestScene::Fire
                 | TestScene::Atmosphere

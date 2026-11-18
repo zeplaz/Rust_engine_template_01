@@ -179,9 +179,13 @@ impl Plugin for DenseHeatGpuPlugin {
 
 fn setup_dense_heat_gpu_buffers(
     mut commands: Commands,
-    mut buffers: ResMut<Assets<ShaderBuffer>>,
+    buffers: Option<ResMut<Assets<ShaderBuffer>>>,
     primary: Res<DenseHeatGpuPrimary>,
 ) {
+    let Some(mut buffers) = buffers else {
+        // ShaderBuffer assets live with the render stack; skip if unavailable this frame.
+        return;
+    };
     // Always allocate ShaderBuffers when RenderApp exists so fire expand can bind group 4.
     // CPU-primary (`!enabled`) skips compute dispatch + readback observer.
     let bytes = (DENSE_HEAT_GPU_MAX_F32 * std::mem::size_of::<f32>()) as u64;
@@ -278,9 +282,12 @@ fn init_dense_heat_gpu_pipeline(
 fn upload_dense_heat_gpu_job(
     job: Res<DenseHeatGpuJob>,
     handles: Option<Res<DenseHeatGpuHandles>>,
-    mut buffers: ResMut<Assets<ShaderBuffer>>,
+    buffers: Option<ResMut<Assets<ShaderBuffer>>>,
 ) {
     let Some(handles) = handles else {
+        return;
+    };
+    let Some(mut buffers) = buffers else {
         return;
     };
     if !job.active || job.interleaved.is_empty() {

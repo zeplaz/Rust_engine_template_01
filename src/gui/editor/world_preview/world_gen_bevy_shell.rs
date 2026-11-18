@@ -53,25 +53,25 @@ pub(super) struct WorldGenSheetRoot;
 pub(super) struct WorldGenToolbarRoot;
 
 #[derive(Component)]
-struct WorldGenPreviewPanel;
+pub(crate) struct WorldGenPreviewPanel;
 
 #[derive(Component)]
-struct WorldGenPreviewImage;
+pub(crate) struct WorldGenPreviewImage;
 
 #[derive(Component)]
-struct WorldGenCornerInset;
+pub(crate) struct WorldGenCornerInset;
 
 #[derive(Component)]
-struct WorldGenMapDim;
+pub(crate) struct WorldGenMapDim;
 
 #[derive(Component)]
-struct WorldGenPlaceholderText;
+pub(crate) struct WorldGenPlaceholderText;
 
 #[derive(Component)]
-struct WorldGenStatusText;
+pub(crate) struct WorldGenStatusText;
 
 #[derive(Component)]
-struct WorldGenConfirmRoot;
+pub(crate) struct WorldGenConfirmRoot;
 
 #[derive(Component, Clone, Copy)]
 pub(crate) enum WorldGenAction {
@@ -294,26 +294,17 @@ struct PreviewPointer {
     tex: (u32, u32),
 }
 
-#[derive(SystemParam)]
-pub(crate) struct ShellSyncA<'w> {
-    ui_state: Res<'w, WorldGenUiState>,
-    preview_ui: ResMut<'w, WorldPreviewUiState>,
-    preview_tex: Res<'w, WorldPreviewTexture>,
-    path: Res<'w, PreviewPathAuthority>,
-    registry: Res<'w, WorldPreviewRenderTargetRegistry>,
-    lifecycle: Res<'w, WorldPreviewLifecycle>,
-    views: ResMut<'w, crate::gui::MapViewInstances>,
-    preview_cam: ResMut<'w, PreviewCameraState>,
+/// Published once per frame for the WorldGen shell panel (RULE-NARROW-SYSTEMS §3.9).
+#[derive(Resource, Debug, Default, Clone, Copy)]
+pub(crate) struct WorldGenShellGate {
+    pub show: bool,
+    pub sheet_open: bool,
+    pub confirm: bool,
 }
 
+/// Chrome Visibility/Node queries for the WorldGen shell — one UI domain, marker-disjoint.
 #[derive(SystemParam)]
-pub(crate) struct ShellSyncB<'w, 's> {
-    viewport_requests: ResMut<'w, crate::gui::ViewportAuthority>,
-    viewport_sanity: ResMut<'w, crate::gui::hud::ViewportRectSanity>,
-    shell_diag: Option<ResMut<'w, crate::gui::hud::ProductShellDiagnostics>>,
-    pending_layout: Res<'w, crate::gui::hud::PendingHudLayoutCommit>,
-    // Marker-disjoint: one entity never carries two of these chrome markers.
-    // Shared `Visibility` / `Text` writes panic at schedule init (B0001) otherwise.
+pub(crate) struct WorldGenShellChromeQueries<'w, 's> {
     shell: Query<
         'w,
         's,
@@ -370,6 +361,96 @@ pub(crate) struct ShellSyncB<'w, 's> {
             Without<WorldGenPlaceholderText>,
         ),
     >,
+}
+
+pub(crate) fn publish_world_gen_shell_gate(
+    ui_state: Res<WorldGenUiState>,
+    preview_ui: Res<WorldPreviewUiState>,
+    mut gate: ResMut<WorldGenShellGate>,
+) {
+    gate.show = preview_ui.window_open || ui_state.visible;
+    gate.sheet_open = ui_state.visible && ui_state.generator_sheet_open;
+    gate.confirm = ui_state.confirm_close_pending;
+}
+
+/// Visibility / display for shell chrome only (≤8 params).
+pub(crate) fn sync_world_gen_shell_chrome(
+    gate: Res<WorldGenShellGate>,
+    mut preview_ui: ResMut<WorldPreviewUiState>,
+    mut viewport_requests: ResMut<crate::gui::ViewportAuthority>,
+    mut chrome: WorldGenShellChromeQueries,
+) {
+    for mut vis in &mut chrome.shell {
+        *vis = if gate.show {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+    }
+    if !gate.show {
+        preview_ui.d07_corner_inset_active = false;
+        preview_ui.d07_inset_side_px = 0.0;
+        clear_world_preview_viewport_requests(&mut viewport_requests);
+        return;
+    }
+    let vis_sheet = if gate.sheet_open {
+        Visibility::Visible
+    } else {
+        Visibility::Hidden
+    };
+    // Display::None (not just Hidden): a hidden sheet must not keep its 380 px column or block clicks.
+    let sheet_display = if gate.sheet_open {
+        Display::Flex
+    } else {
+        Display::None
+    };
+    for (mut vis, mut node) in &mut chrome.sheet {
+        *vis = vis_sheet;
+        if node.display != sheet_display {
+            node.display = sheet_display;
+        }
+    }
+    let confirm_vis = if gate.confirm {
+        Visibility::Visible
+    } else {
+        Visibility::Hidden
+    };
+    for mut vis in &mut chrome.confirm {
+        *vis = confirm_vis;
+    }
+    for mut vis in &mut chrome.dim {
+        *vis = if gate.sheet_open {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+    }
+}
+
+/// Preview path / texture / camera — one WorldGen preview panel domain (§3.9).
+#[derive(SystemParam)]
+pub(crate) struct WorldGenShellPreviewSources<'w> {
+    preview_ui: ResMut<'w, WorldPreviewUiState>,
+    preview_tex: Res<'w, WorldPreviewTexture>,
+    path: Res<'w, PreviewPathAuthority>,
+    registry: Res<'w, WorldPreviewRenderTargetRegistry>,
+    lifecycle: Res<'w, WorldPreviewLifecycle>,
+    views: ResMut<'w, crate::gui::MapViewInstances>,
+    preview_cam: ResMut<'w, PreviewCameraState>,
+}
+
+/// Viewport authority writes for the same panel.
+#[derive(SystemParam)]
+pub(crate) struct WorldGenShellViewportWrites<'w> {
+    viewport_requests: ResMut<'w, crate::gui::ViewportAuthority>,
+    viewport_sanity: ResMut<'w, crate::gui::hud::ViewportRectSanity>,
+    shell_diag: Option<ResMut<'w, crate::gui::hud::ProductShellDiagnostics>>,
+    pending_layout: Res<'w, crate::gui::hud::PendingHudLayoutCommit>,
+}
+
+/// Image / inset / placeholder / panel geometry queries for the preview surface.
+#[derive(SystemParam)]
+pub(crate) struct WorldGenShellSurfaceQueries<'w, 's> {
     image_q: Query<
         'w,
         's,
@@ -398,10 +479,6 @@ pub(crate) struct ShellSyncB<'w, 's> {
             Without<WorldGenPlaceholderText>,
         ),
     >,
-}
-
-#[derive(SystemParam)]
-pub(crate) struct ShellSyncC<'w, 's> {
     placeholder: Query<
         'w,
         's,
@@ -417,13 +494,12 @@ pub(crate) struct ShellSyncC<'w, 's> {
             Without<WorldGenStatusText>,
         ),
     >,
-    status: Query<
-        'w,
-        's,
-        &'static mut Text,
-        (With<WorldGenStatusText>, Without<WorldGenPlaceholderText>),
-    >,
     panel_q: Query<'w, 's, (&'static ComputedNode, &'static UiGlobalTransform), With<WorldGenPreviewPanel>>,
+}
+
+/// Pointer / window inputs for pan-zoom on the preview panel.
+#[derive(SystemParam)]
+pub(crate) struct WorldGenShellPointerInputs<'w, 's> {
     windows: Query<'w, 's, &'static Window, With<PrimaryWindow>>,
     mouse: Res<'w, ButtonInput<MouseButton>>,
     keys: Res<'w, ButtonInput<KeyCode>>,
@@ -431,13 +507,18 @@ pub(crate) struct ShellSyncC<'w, 's> {
     pointer: Local<'s, PreviewPointer>,
 }
 
-pub(crate) fn sync_world_gen_bevy_shell(
-    a: ShellSyncA,
-    b: ShellSyncB,
-    c: ShellSyncC,
+/// Preview viewport request, pan/zoom, image + inset placement.
+pub(crate) fn sync_world_gen_shell_viewport(
+    gate: Res<WorldGenShellGate>,
+    mut sources: WorldGenShellPreviewSources,
+    mut viewport: WorldGenShellViewportWrites,
+    mut surface: WorldGenShellSurfaceQueries,
+    mut pointer_in: WorldGenShellPointerInputs,
 ) {
-    let ShellSyncA {
-        ui_state,
+    if !gate.show {
+        return;
+    }
+    let WorldGenShellPreviewSources {
         mut preview_ui,
         preview_tex,
         path,
@@ -445,61 +526,26 @@ pub(crate) fn sync_world_gen_bevy_shell(
         lifecycle,
         mut views,
         mut preview_cam,
-    } = a;
-    let ShellSyncB {
+    } = sources;
+    let WorldGenShellViewportWrites {
         mut viewport_requests,
         mut viewport_sanity,
         mut shell_diag,
         pending_layout,
-        mut shell,
-        mut sheet,
-        mut confirm,
-        mut dim,
+    } = viewport;
+    let WorldGenShellSurfaceQueries {
         mut image_q,
         mut inset_q,
-    } = b;
-    let ShellSyncC {
         mut placeholder,
-        mut status,
         panel_q,
+    } = surface;
+    let WorldGenShellPointerInputs {
         windows,
         mouse,
         keys,
         mut wheel,
         mut pointer,
-    } = c;
-    let show = preview_ui.window_open || ui_state.visible;
-    for mut vis in &mut shell {
-        *vis = if show { Visibility::Visible } else { Visibility::Hidden };
-    }
-    if !show {
-        preview_ui.d07_corner_inset_active = false;
-        preview_ui.d07_inset_side_px = 0.0;
-        clear_world_preview_viewport_requests(&mut viewport_requests);
-        return;
-    }
-    let sheet_open = ui_state.visible && ui_state.generator_sheet_open;
-    let vis_sheet = if sheet_open { Visibility::Visible } else { Visibility::Hidden };
-    // Display::None (not just Hidden): a hidden sheet must not keep its 380 px column or block clicks.
-    let sheet_display = if sheet_open { Display::Flex } else { Display::None };
-    for (mut vis, mut node) in &mut sheet {
-        *vis = vis_sheet;
-        if node.display != sheet_display {
-            node.display = sheet_display;
-        }
-    }
-    let confirm_vis = if ui_state.confirm_close_pending {
-        Visibility::Visible
-    } else {
-        Visibility::Hidden
-    };
-    for mut vis in &mut confirm {
-        *vis = confirm_vis;
-    }
-    for mut vis in &mut dim {
-        *vis = if sheet_open { Visibility::Visible } else { Visibility::Hidden };
-    }
-
+    } = pointer_in;
     let view = &mut views.world_preview;
     let disp_w = preview_tex.width.max(1);
     let disp_h = preview_tex.height.max(1);
@@ -518,110 +564,137 @@ pub(crate) fn sync_world_gen_bevy_shell(
     let window = windows.iter().next();
     let scale = window.map(|w| w.scale_factor()).unwrap_or(1.0);
     let cursor = window.and_then(|w| w.cursor_position());
-    if let Ok((node, xf)) = panel_q.single() {
-        if !node.is_empty() {
-            let panel_rect = node_logical_rect(node, xf, scale);
-            preview_ui.last_viewport_rect = Some(panel_rect);
-            preview_ui.last_window_rect = Some(panel_rect);
-            write_world_preview_viewport_request(
-                &mut viewport_requests,
-                panel_rect,
-                disp_w,
-                disp_h,
-                &mut viewport_sanity,
-                shell_diag.as_deref_mut(),
-                pending_layout.can_emit_layout_capture(),
-            );
-            let inner = bevy::prelude::Rect::from_corners(
-                panel_rect.min + bevy::prelude::Vec2::splat(MAP_PANEL_INSET_PX),
-                panel_rect.max - bevy::prelude::Vec2::splat(MAP_PANEL_INSET_PX),
-            );
-            let fit = compute_map_fit_strict(inner, UVec2::new(disp_w, disp_h), view.fit_mode);
-            let gpu_painted = path.authoritative_surface
-                == super::preview_render_contract::PreviewAuthoritativeSurface::GpuRenderTarget;
-            let image_rect = if gpu_painted {
-                fit.image_rect
-            } else {
-                map_presentation_image_rect(
-                    fit.image_rect,
-                    view.camera_center,
-                    view.zoom,
-                    disp_w as f32,
-                    disp_h as f32,
-                )
-            };
-            if let Some(cursor) = cursor {
-                let p = bevy::prelude::Vec2::new(cursor.x, cursor.y);
-                if panel_rect.contains(p) {
-                    let scroll: f32 = wheel.read().map(|w| w.y).sum();
-                    let zoom_mod = keys.pressed(KeyCode::ControlLeft)
-                        || keys.pressed(KeyCode::ControlRight)
-                        || keys.pressed(KeyCode::SuperLeft);
-                    if zoom_mod && scroll != 0.0 {
-                        let factor = 1.0 + scroll * 0.00125;
-                        apply_zoom_toward(view, p, image_rect.center(), factor);
-                        preview_cam.zoom = view.zoom;
-                        preview_cam.center = view.camera_center;
-                    }
-                    if mouse.pressed(MouseButton::Middle) {
-                        if let Some(last) = pointer.last {
-                            apply_pan(view, cursor - last);
-                            preview_cam.center = view.camera_center;
-                        }
-                        pointer.last = Some(cursor);
-                    } else {
-                        pointer.last = None;
-                    }
-                } else {
-                    pointer.last = None;
+    let Ok((node, xf)) = panel_q.single() else {
+        return;
+    };
+    if node.is_empty() {
+        return;
+    }
+    let panel_rect = node_logical_rect(node, xf, scale);
+    preview_ui.last_viewport_rect = Some(panel_rect);
+    preview_ui.last_window_rect = Some(panel_rect);
+    write_world_preview_viewport_request(
+        &mut viewport_requests,
+        panel_rect,
+        disp_w,
+        disp_h,
+        &mut viewport_sanity,
+        shell_diag.as_deref_mut(),
+        pending_layout.can_emit_layout_capture(),
+    );
+    let inner = bevy::prelude::Rect::from_corners(
+        panel_rect.min + bevy::prelude::Vec2::splat(MAP_PANEL_INSET_PX),
+        panel_rect.max - bevy::prelude::Vec2::splat(MAP_PANEL_INSET_PX),
+    );
+    let fit = compute_map_fit_strict(inner, UVec2::new(disp_w, disp_h), view.fit_mode);
+    let gpu_painted = path.authoritative_surface
+        == super::preview_render_contract::PreviewAuthoritativeSurface::GpuRenderTarget;
+    let image_rect = if gpu_painted {
+        fit.image_rect
+    } else {
+        map_presentation_image_rect(
+            fit.image_rect,
+            view.camera_center,
+            view.zoom,
+            disp_w as f32,
+            disp_h as f32,
+        )
+    };
+    if let Some(cursor) = cursor {
+        let p = bevy::prelude::Vec2::new(cursor.x, cursor.y);
+        if panel_rect.contains(p) {
+            let scroll: f32 = wheel.read().map(|w| w.y).sum();
+            let zoom_mod = keys.pressed(KeyCode::ControlLeft)
+                || keys.pressed(KeyCode::ControlRight)
+                || keys.pressed(KeyCode::SuperLeft);
+            if zoom_mod && scroll != 0.0 {
+                let factor = 1.0 + scroll * 0.00125;
+                apply_zoom_toward(view, p, image_rect.center(), factor);
+                preview_cam.zoom = view.zoom;
+                preview_cam.center = view.camera_center;
+            }
+            if mouse.pressed(MouseButton::Middle) {
+                if let Some(last) = pointer.last {
+                    apply_pan(view, cursor - last);
+                    preview_cam.center = view.camera_center;
                 }
+                pointer.last = Some(cursor);
+            } else {
+                pointer.last = None;
             }
-            let source = resolve_world_preview_texture_source(
-                path.as_ref(),
-                registry.as_ref(),
-                preview_tex.as_ref(),
-            );
-            let handle = source.handle().clone();
-            let ready = handle != Handle::default()
-                && lifecycle.phase.allows_egui_present();
-            if let Ok((mut image, mut node, mut vis)) = image_q.single_mut() {
-                *image = ImageNode::from(handle.clone());
-                node.position_type = PositionType::Absolute;
-                node.left = Val::Px((image_rect.min.x - panel_rect.min.x).max(0.0));
-                node.top = Val::Px((image_rect.min.y - panel_rect.min.y).max(0.0));
-                node.width = Val::Px(image_rect.width().max(1.0));
-                node.height = Val::Px(image_rect.height().max(1.0));
-                *vis = if ready { Visibility::Visible } else { Visibility::Hidden };
-            }
-            if let Ok((mut inset, mut vis)) = inset_q.single_mut() {
-                *inset = ImageNode::from(handle.clone());
-                let side = d07_inset_side_px();
-                preview_ui.d07_corner_inset_active = ready;
-                preview_ui.d07_inset_side_px = if ready { side } else { 0.0 };
-                *vis = if ready { Visibility::Visible } else { Visibility::Hidden };
-            }
-            if let Ok((mut text, mut vis)) = placeholder.single_mut() {
-                crate::gui::style::widgets::set_text_if_changed(&mut text, lifecycle.phase.placeholder_label());
-                *vis = if ready { Visibility::Hidden } else { Visibility::Visible };
-            }
-            let _ = gpu_painted;
+        } else {
+            pointer.last = None;
         }
     }
-
-    if let Ok(mut text) = status.single_mut() {
-        let next = format!(
-            "Tile: {} | {}x{} world | z={:.2} | {}",
-            view.hovered_tile
-                .map(|t| format!("{} , {}", t.x, t.y))
-                .unwrap_or_else(|| "-".to_string()),
-            disp_w,
-            disp_h,
-            view.zoom,
-            layer_summary(view.layers),
+    let source =
+        resolve_world_preview_texture_source(path.as_ref(), registry.as_ref(), preview_tex.as_ref());
+    let handle = source.handle().clone();
+    let ready = handle != Handle::default() && lifecycle.phase.allows_egui_present();
+    if let Ok((mut image, mut node, mut vis)) = image_q.single_mut() {
+        *image = ImageNode::from(handle.clone());
+        node.position_type = PositionType::Absolute;
+        node.left = Val::Px((image_rect.min.x - panel_rect.min.x).max(0.0));
+        node.top = Val::Px((image_rect.min.y - panel_rect.min.y).max(0.0));
+        node.width = Val::Px(image_rect.width().max(1.0));
+        node.height = Val::Px(image_rect.height().max(1.0));
+        *vis = if ready {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+    }
+    if let Ok((mut inset, mut vis)) = inset_q.single_mut() {
+        *inset = ImageNode::from(handle.clone());
+        let side = d07_inset_side_px();
+        preview_ui.d07_corner_inset_active = ready;
+        preview_ui.d07_inset_side_px = if ready { side } else { 0.0 };
+        *vis = if ready {
+            Visibility::Visible
+        } else {
+            Visibility::Hidden
+        };
+    }
+    if let Ok((mut text, mut vis)) = placeholder.single_mut() {
+        crate::gui::style::widgets::set_text_if_changed(
+            &mut text,
+            lifecycle.phase.placeholder_label(),
         );
-        if text.0 != next {
-            text.0 = next;
-        }
+        *vis = if ready {
+            Visibility::Hidden
+        } else {
+            Visibility::Visible
+        };
+    }
+}
+
+/// Status strip text for the open shell.
+pub(crate) fn sync_world_gen_shell_status(
+    gate: Res<WorldGenShellGate>,
+    preview_tex: Res<WorldPreviewTexture>,
+    views: Res<crate::gui::MapViewInstances>,
+    mut status: Query<&mut Text, (With<WorldGenStatusText>, Without<WorldGenPlaceholderText>)>,
+) {
+    if !gate.show {
+        return;
+    }
+    let view = &views.world_preview;
+    let disp_w = preview_tex.width.max(1);
+    let disp_h = preview_tex.height.max(1);
+    let Ok(mut text) = status.single_mut() else {
+        return;
+    };
+    let next = format!(
+        "Tile: {} | {}x{} world | z={:.2} | {}",
+        view.hovered_tile
+            .map(|t| format!("{} , {}", t.x, t.y))
+            .unwrap_or_else(|| "-".to_string()),
+        disp_w,
+        disp_h,
+        view.zoom,
+        layer_summary(view.layers),
+    );
+    if text.0 != next {
+        text.0 = next;
     }
 }
 
@@ -716,18 +789,21 @@ mod wgen_tests {
         assert!(!layers.contains(PreviewLayers::HEIGHT));
     }
 
-    /// Schedule init of `sync_world_gen_bevy_shell` builds the same query pair
-    /// that panics with B0001 when `Visibility` writers are not marker-disjoint.
+    /// Schedule init of chrome sync builds the same query pair that panics with
+    /// B0001 when `Visibility` writers are not marker-disjoint.
     #[test]
     fn wgen_shell_sync_visibility_queries_are_disjoint() {
         use bevy::ecs::schedule::Schedule;
         use bevy::ecs::world::World;
 
         let mut world = World::new();
+        world.init_resource::<WorldGenShellGate>();
+        world.init_resource::<WorldPreviewUiState>();
+        world.init_resource::<crate::gui::ViewportAuthority>();
         let mut schedule = Schedule::default();
-        schedule.add_systems(sync_world_gen_bevy_shell);
+        schedule.add_systems(sync_world_gen_shell_chrome);
         schedule
             .initialize(&mut world)
-            .expect("sync_world_gen_bevy_shell schedule must build");
+            .expect("sync_world_gen_shell_chrome schedule must build");
     }
 }

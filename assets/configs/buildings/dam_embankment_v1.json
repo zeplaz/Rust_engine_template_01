@@ -1,0 +1,21 @@
+{
+    "asset_name": "Dam embankment",
+    "asset_type": "Building",
+    "segment": "Hydraulic",
+    "description": "Earth/rock-fill embankment — sloping faces, length>height; crest → SurfaceWater barrier. Hydro plant optional (DF-4).",
+    "utility_role": "dam",
+    "dam_kind": "embankment",
+    "is_building": true,
+    "is_power": false,
+    "building_size_x": 12,
+    "building_size_y": 2,
+    "building_height": 3,
+    "construction_cost": 28000,
+    "power_consumption": 2,
+    "power_generation": 0,
+    "crest_m": 40.0,
+    "spillway_length_m": 40.0,
+    "outlet_area_m2": 4.0,
+    "procedural_module_id": "dam_embankment_v1",
+    "version": "1.0.0"
+}

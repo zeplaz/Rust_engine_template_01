@@ -30,8 +30,9 @@ pub fn footprint_is_placeable(width: u32, depth: u32) -> bool {
 pub const EMPTY_FOOTPRINT_ERROR: &str = "empty_footprint";
 pub const FOOTPRINT_OCCUPIED_ERROR: &str = "footprint_occupied";
 pub const WATER_FOOTPRINT_ERROR: &str = "footprint_on_water";
+pub use super::dam_barrier::{DAM_BANKS_ERROR, DAM_KIND_SITE_ERROR};
 
-/// Port and oil rig are the only buildings that may occupy river, lake, or ocean.
+/// Port, oil rig, and dam may occupy river / lake cells (DF-4 dam must span the channel).
 #[must_use]
 pub fn building_may_occupy_water(catalog_id: Option<&str>) -> bool {
     let Some(id) = catalog_id.map(str::trim).filter(|id| !id.is_empty()) else {
@@ -45,6 +46,12 @@ pub fn building_may_occupy_water(catalog_id: Option<&str>) -> bool {
     tokens.iter().any(|token| token_is_port(token))
         || tokens.windows(2).any(|pair| pair == ["oil", "rig"])
         || tokens.iter().any(|token| *token == "oilrig")
+        || tokens.iter().any(|token| {
+            matches!(
+                *token,
+                "dam" | "embankment" | "weir" | "coffer" | "buttress" | "gravity" | "arch"
+            )
+        })
 }
 
 fn token_is_port(token: &str) -> bool {
@@ -77,6 +84,49 @@ pub fn apply_water_footprint_reject(
         report.errors.push(WATER_FOOTPRINT_ERROR.to_string());
     }
     true
+}
+
+/// DF-4: dam must span banks + pass kind suitability. Call after water-occupy allow.
+pub fn apply_dam_banks_reject(
+    report: &mut SitePlacementValidation,
+    catalog_id: Option<&str>,
+    tiles: &[IVec2],
+    is_water: impl Fn(i32, i32) -> bool,
+) -> bool {
+    let kind = super::dam_barrier::dam_kind_from_catalog_id(catalog_id);
+    let is_dam = building_may_occupy_water(catalog_id)
+        && catalog_id.is_some_and(|id| {
+            let n = id.to_ascii_lowercase();
+            n.contains("dam")
+                || n.contains("weir")
+                || n.contains("embankment")
+                || n.contains("coffer")
+                || n.contains("buttress")
+                || n.contains("gravity")
+                || n.contains("arch")
+        });
+    if !is_dam {
+        return false;
+    }
+    let mut rejected = false;
+    if !super::dam_barrier::dam_spans_banks(tiles, &is_water) {
+        report.valid = false;
+        report.allows_commit = false;
+        if !report.errors.iter().any(|e| e == DAM_BANKS_ERROR) {
+            report.errors.push(DAM_BANKS_ERROR.to_string());
+        }
+        rejected = true;
+    }
+    let soft = super::dam_barrier::dam_soft_foundation_proxy(tiles);
+    if !super::dam_barrier::dam_kind_site_suitable(kind, tiles, soft) {
+        report.valid = false;
+        report.allows_commit = false;
+        if !report.errors.iter().any(|e| e == DAM_KIND_SITE_ERROR) {
+            report.errors.push(DAM_KIND_SITE_ERROR.to_string());
+        }
+        rejected = true;
+    }
+    rejected
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]

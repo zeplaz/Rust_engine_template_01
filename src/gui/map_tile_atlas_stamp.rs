@@ -430,7 +430,7 @@ mod tests {
         use crate::render::TerrainRenderAuthority;
         assert!(stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::CpuRaster));
         assert!(!stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::GpuBake));
-        assert!(!stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::GpuTilemap));
+        assert!(!stamp_cpu_rgba_blit_enabled(TerrainRenderAuthority::GpuBake));
     }
 
     #[test]

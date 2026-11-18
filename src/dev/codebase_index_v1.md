@@ -208,6 +208,8 @@ STR-TBR | src/strategic/ (transport_bridge etc.) | ~300 | infra graph → strate
 # SCN / AI — scenario + ai  (~1.1k LOC)
 # ═════════════════════════════════════════════════════════════════════════════
 SCN-ALL | src/scenario/ (scenario_types, objectives, validation, script_host 202, runner, steps, trigger_spec, plugin; tests/ cfg-test) | 890 | scenario file format + script host | →CO-PLY
+SCN-DAM | src/scenario/dam_flood/ | ~ | DamFlood **harness only** (seed/timeline/dump); water truth → systems/water | →SIM-H2O, →CB
+RS-CAP | src/research/mod.rs + assets/configs/research/capabilities_v1.ron | ~ | ResearchCapabilityBook (one writer); drones/plants/sat/comms/manuf consumers | ←CB, ←CMBT, ←MFG
 AI-CON | src/ai/construction/mod.rs | 113 | construction AI validation probe | →CB-TOOL
 
 # ═════════════════════════════════════════════════════════════════════════════

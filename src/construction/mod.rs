@@ -74,9 +74,28 @@ mod place_feedback;
 mod placement_debug;
 mod preview_commit_guard;
 pub use preview_commit_guard::{
-    apply_water_footprint_reject, building_may_occupy_water, land_building_blocked_on_water,
-    WATER_FOOTPRINT_ERROR,
+    apply_dam_banks_reject, apply_water_footprint_reject, building_may_occupy_water,
+    land_building_blocked_on_water, DAM_BANKS_ERROR, DAM_KIND_SITE_ERROR, WATER_FOOTPRINT_ERROR,
 };
+mod dam_barrier;
+pub use dam_barrier::{
+    attach_dam_body_on_commit_system, dam_integrity_progress_system,
+    derate_turbines_from_dam_damage_system, dam_kind_site_suitable, dam_spans_banks,
+    dam_spans_banks_with_runtime, ensure_dam_surface_water_roi_system, erode_dam_columns_by_flow,
+    install_barrier_from_operational_dam_system, leak_flow_from_integrity,
+    mirror_dam_control_to_barrier_system, DamBody, DamControl, DamKind,
+};
+mod structural_role;
+pub use structural_role::{SiteStructuralRoles, StructuralRole};
+mod structural_cascade;
+pub use structural_cascade::cascade_mask_from_roles_system;
+mod disaster_proxy;
+pub use disaster_proxy::{
+    apply_structural_collapse_demolish, flood_foundation_integrity_proxy_system,
+    StructuralCollapseQueue, FLOOD_FOUNDATION_DEPTH_M,
+};
+mod debris_fx;
+pub use debris_fx::{emit_collapse_debris_burst, DEBRIS_BURST_MAX};
 mod round4_corridor;
 pub use round4_corridor::CorridorPhaseDrawKind;
 mod sessions;
@@ -144,7 +163,9 @@ pub use build_interaction::{
     build_adjust_blocks_map_wheel, build_adjust_modifiers_system, build_cancel_ghost_system,
     build_clear_pending_queue_system, build_confirm_site_system, build_drag_paint_queue_system,
     build_pick_ghost_tile_system, build_place_on_second_lmb_system,
-    build_queue_blueprint_on_shift_click_system, build_refresh_placement_validation_system,
+    build_apply_material_gates_system, build_apply_occupancy_reject_system,
+    build_apply_water_reject_system, build_queue_blueprint_on_shift_click_system,
+    build_refresh_placement_validation_system,
     build_rotate_mirror_ghost_system, build_sync_ghost_cursor_entity_system,
     construction_map_pick_allowed, two_click_lmb_commit_count, two_click_mode_lock_count, };
 pub use build_mode::{BuildEscCancelLatch, BuildMode, BuildModeState};
@@ -195,7 +216,7 @@ pub use grammar_labels::{
     human_massing_label,
 };
 pub use blast::{
-    BlastCraterBook, BlastIntent, BlastIntentQueue, ConstructionBlastPlugin,
+    BlastCraterBook, BlastIntent, BlastIntentQueue, BlastProfile, ConstructionBlastPlugin,
 };
 pub use blast_present::BlastCraterDump;
 pub use hydro_coupling::{
@@ -488,8 +509,10 @@ impl Plugin for BuildPlanningPlugin {
                     build_pick_ghost_tile_system,
                     demolish::demolish_pick_queue_system,
                     build_refresh_placement_validation_system,
-                    staged_ghost_panel::stage_active_ghost_on_lmb_system
-                        .after(build_refresh_placement_validation_system),
+                    build_apply_occupancy_reject_system,
+                    build_apply_water_reject_system,
+                    build_apply_material_gates_system,
+                    staged_ghost_panel::stage_active_ghost_on_lmb_system,
                     build_place_on_second_lmb_system,
                     build_queue_blueprint_on_shift_click_system,
                     build_drag_paint_queue_system,
@@ -527,7 +550,31 @@ impl Plugin for BuildPlanningPlugin {
                 Update,
                 crate::gui::hud::context_tray_build_egui::ensure_context_tray_peek_when_build_armed
                     .run_if(in_simulation_or_editor),
-            );
+            )
+            .add_systems(
+                Update,
+                (
+                    attach_dam_body_on_commit_system,
+                    ensure_dam_surface_water_roi_system.after(attach_dam_body_on_commit_system),
+                    install_barrier_from_operational_dam_system
+                        .after(ensure_dam_surface_water_roi_system),
+                    dam_integrity_progress_system
+                        .after(install_barrier_from_operational_dam_system),
+                    derate_turbines_from_dam_damage_system.after(dam_integrity_progress_system),
+                    mirror_dam_control_to_barrier_system
+                        .after(derate_turbines_from_dam_damage_system),
+                    flood_foundation_integrity_proxy_system,
+                    apply_structural_collapse_demolish
+                        .after(flood_foundation_integrity_proxy_system),
+                )
+                    .run_if(in_simulation_or_editor),
+            )
+            .init_resource::<StructuralCollapseQueue>()
+            .register_type::<DamBody>()
+            .register_type::<DamControl>()
+            .register_type::<DamKind>()
+            .register_type::<SiteStructuralRoles>()
+            .register_type::<StructuralRole>();
 
         register_build_toolbox_bevy_systems(app);
         register_road_tool_popup_bevy_systems(app);

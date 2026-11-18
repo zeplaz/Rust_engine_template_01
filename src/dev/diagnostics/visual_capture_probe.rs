@@ -7,7 +7,7 @@
 //!
 //! Env-gated one-shot capture batch fired after N frames in [`BaseState::Simulation`] (default
 //! 240 via [`crate::render::probes::vfx_capture_env::DEFAULT_VFX_CAPTURE_FRAME`]). Unlike
-//! [`crate::render::probes::vfx_capture_hook`] (text-stub), this probe spawns real [`Screenshot`]
+//! [`crate::render::probes::vfx_capture_hook`] (enqueue redirect only; GS-07), this probe spawns real [`Screenshot`]
 //! entities against the primary window and the tactical map RTT image, and dumps metadata JSON.
 //! Capture is presentation-only — **no simulation authority writes**.
 //!

@@ -134,9 +134,10 @@ pub fn profile_for_site_archetype(arch: SiteArchetype) -> StructureFireProfile {
         SiteArchetype::MilitaryBase | SiteArchetype::BunkerComplex | SiteArchetype::DefensiveWall => {
             concrete_structure_profile()
         }
-        SiteArchetype::Factory | SiteArchetype::PowerPlant | SiteArchetype::RailDepot => {
-            steel_structure_profile()
-        }
+        SiteArchetype::Factory
+        | SiteArchetype::PowerPlant
+        | SiteArchetype::RailDepot
+        | SiteArchetype::Dam => steel_structure_profile(),
         SiteArchetype::CivilHousing
         | SiteArchetype::WaterPlant
         | SiteArchetype::RadarSite

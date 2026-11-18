@@ -88,6 +88,41 @@ def build(params: dict) -> bpy.types.Object:
             (w * 0.45, 0.0, h * 0.51),
         )
         obj = join_objects([panel, post_l, post_r])
+    elif kind in ("dam_embankment", "dam_embankment_v1"):
+        # Sloped earth/rock fill: wide base → narrow crest along depth (flow axis).
+        base = add_box("embank_base", w, h * 0.42, d, (0.0, 0.0, h * 0.21))
+        mid = add_box("embank_mid", w, h * 0.36, d * 0.72, (0.0, 0.0, h * 0.55))
+        crest = add_box("embank_crest", w, max(h * 0.22, 0.4), d * 0.38, (0.0, 0.0, h * 0.89))
+        obj = join_objects([base, mid, crest])
+    elif kind in ("dam_gravity", "dam_gravity_v1"):
+        # Weight-stable concrete: thick body with slight upstream batter.
+        body = add_box("gravity_body", w, h * 0.88, d * 0.85, (0.0, d * 0.02, h * 0.44))
+        crest = add_box("gravity_crest", w, max(h * 0.14, 0.35), d * 0.55, (0.0, 0.0, h * 0.93))
+        toe = add_box("gravity_toe", w, max(h * 0.12, 0.3), d * 1.05, (0.0, d * 0.05, h * 0.06))
+        obj = join_objects([toe, body, crest])
+    elif kind in ("dam_weir", "dam_weir_v1"):
+        # Low diversion weir: apron + thin crest wall.
+        apron = add_box("weir_apron", w, max(h * 0.35, 0.25), d, (0.0, 0.0, h * 0.175))
+        wall = add_box("weir_crest", w, max(h * 0.75, 0.5), max(d * 0.28, 0.35), (0.0, 0.0, h * 0.55))
+        obj = join_objects([apron, wall])
+    elif kind in ("dam_arch", "dam_arch_v1"):
+        # Arched canyon dam: center thick, abutments thin; curved via 5 span segments.
+        segments: list[bpy.types.Object] = []
+        n = 5
+        seg_w = w / float(n)
+        for i in range(n):
+            t = (i + 0.5) / float(n)  # 0..1 along span
+            # Depth thicker at mid-span (arch crown toward upstream +Y).
+            bow = 1.0 - abs(t - 0.5) * 1.4
+            seg_d = d * (0.55 + 0.45 * max(bow, 0.15))
+            y_off = d * 0.18 * max(bow, 0.0)
+            x = -w * 0.5 + seg_w * (i + 0.5)
+            segments.append(
+                add_box(f"arch_seg_{i}", seg_w * 1.02, h * 0.92, seg_d, (x, y_off, h * 0.46))
+            )
+        crest = add_box("arch_crest", w, max(h * 0.12, 0.3), d * 0.42, (0.0, 0.0, h * 0.94))
+        segments.append(crest)
+        obj = join_objects(segments)
     else:
         # Generic upright box — covers bus_bay, breaker, shack, gravel, signs, yards, etc.
         obj = add_box("module_prop", w, h, d, (0.0, 0.0, h * 0.5))

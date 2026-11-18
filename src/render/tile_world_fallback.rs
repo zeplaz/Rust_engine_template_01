@@ -60,7 +60,7 @@ struct TileFallbackGpuStampInputs<'w> {
     gpu_stamps: ResMut<'w, crate::gui::map_tile_atlas_stamp::TerrainGpuStampIndices>,
 }
 
-/// Dual-view + atlas cache inputs (keeps `sync_tile_fallback_raster_policy` under Bevy param limits).
+/// Dual-view presentation + tile atlas stamp cache (one fallback-raster domain).
 #[derive(SystemParam)]
 struct TileFallbackDualViewAtlasInputs<'w> {
     world_mode: Option<Res<'w, crate::gui::WorldPresentationMode>>,
@@ -804,6 +804,7 @@ fn commit_raster_image_for_gpu(images: &mut Assets<Image>, handle: &Handle<Image
 
 fn sync_tile_fallback_sprite_after_raster(
     state: Res<TileWorldFallbackState>,
+    bake_spike: Option<Res<crate::render::TerrainGpuBakeSpikeState>>,
     rtt_diag: Option<Res<crate::gui::RttDiagCameraConfig>>,
     mut sprites: Query<&mut Sprite, With<TileWorldFallbackSprite>>,
     mesh_materials: Query<&MeshMaterial2d<ColorMaterial>, With<TileWorldFallbackSprite>>,
@@ -812,7 +813,14 @@ fn sync_tile_fallback_sprite_after_raster(
     let Some(entity) = state.sprite_entity else {
         return;
     };
-    if state.image == Handle::default() {
+    // PLAN-FINAL-GPU-PRESENTATION-v1: prefer atlas→world bake Image when ready.
+    let display = bake_spike
+        .as_ref()
+        .filter(|s| crate::render::spike_bake_ready_for_consumers(s))
+        .map(|s| s.world_bake_image.clone())
+        .filter(|h| *h != Handle::default())
+        .unwrap_or_else(|| state.image.clone());
+    if display == Handle::default() {
         return;
     };
     if rtt_diag.is_some_and(|c| c.mode.uses_mesh_terrain()) {
@@ -820,14 +828,14 @@ fn sync_tile_fallback_sprite_after_raster(
             return;
         };
         if let Some(mut mat) = color_assets.get_mut(&mat_handle.0) {
-            mat.texture = Some(state.image.clone());
+            mat.texture = Some(display);
         }
         return;
     }
     let Ok(mut sprite) = sprites.get_mut(entity) else {
         return;
     };
-    sprite.image = state.image.clone();
+    sprite.image = display;
 }
 
 fn tile_world_fallback_sync_spawner(
@@ -1272,6 +1280,7 @@ fn raster_tile_fallback_subregion(
     y1: usize,
     layers: PreviewLayers,
     fire_heat_overlay: bool,
+    suppress_land_scorch: bool,
     tile_iter: impl Iterator<Item = (usize, usize, crate::terrain::family::TerrainFamilyId, f32, f32, f32)>,
     road_iter: impl Iterator<Item = (usize, usize)>,
     mat_slices: &[(bevy::math::IVec2, bevy::math::UVec2, &[crate::terrain::material::MaterialId])],
@@ -1313,9 +1322,8 @@ fn raster_tile_fallback_subregion(
         reg_opt,
         fam_opt,
     );
-    // Fire tint is per cell only. A chunk-mean tint (the old fallback while per-cell heat was missing) painted
-    // whole chunk-sized rectangles over the map for every chunk with any heat.
-    if fire_heat_overlay && !cell_fire_heat.is_empty() {
+    // GPU-B: companion TerrainScorchField owns scorch — skip CPU land tint when ready.
+    if fire_heat_overlay && !suppress_land_scorch && !cell_fire_heat.is_empty() {
         crate::gui::map_tile_raster::apply_cell_fire_heat_to_rgba_subregion(
             data.as_mut_slice(),
             tex_w,
@@ -1327,19 +1335,9 @@ fn raster_tile_fallback_subregion(
             fire_heat_visibility_boost,
         );
     }
-    if let Some(catalog) = water_catalog {
-        crate::render::apply_water_surface_overlay_subregion(
-            data.as_mut_slice(),
-            tex_w,
-            x0,
-            y0,
-            x1,
-            y1,
-            catalog,
-            time_secs,
-            zoom_alpha,
-        );
-    }
+    // PLAN-FINAL-GPU-PRESENTATION-v1: water motion is GPU-only (`water_field` /
+    // `water_overlay` Core2d passes). Do not CPU-paint water into the terrain raster.
+    let _ = (water_catalog, time_secs, zoom_alpha);
     crate::gui::map_tile_raster::stamp_tracer_cells_subregion(
         data.as_mut_slice(),
         tex_w,
@@ -1380,21 +1378,39 @@ fn raster_tile_fallback_subregion(
     );
 }
 
-/// Optional terrain sources that would exceed Bevy's system param limit if listed separately.
+/// Terrain / water / zoom / pixel-mode reads for the fallback raster (render domain).
 #[derive(SystemParam)]
-struct TileFallbackRasterExtras<'w> {
+struct TileFallbackTerrainRasterReads<'w> {
     dense_cache: Option<Res<'w, WorldGenDenseTerrainCache>>,
     water_catalog: Option<Res<'w, crate::render::WaterSurfaceVisualCatalog>>,
     zoom_frame: Res<'w, crate::gui::ZoomFrame>,
+    play_map: Res<'w, crate::gui::map_tile_raster::PlayMapPixelMode>,
+    pixel_world: Option<Res<'w, crate::gui::PixelWorldLandscapeIntent>>,
+    /// GS-02 — when bake consumers ready, land CPU paint is skipped.
+    bake_spike: Option<Res<'w, crate::render::TerrainGpuBakeSpikeState>>,
+    /// GPU-B — companion scorch field (suppresses CPU land fire tint when ready).
+    scorch: Option<Res<'w, crate::render::TerrainScorchField>>,
+}
+
+/// Strategic overlay samples painted into the fallback raster (read-only published surfaces).
+#[derive(SystemParam)]
+struct TileFallbackStrategicRasterReads<'w> {
     shots: Option<Res<'w, crate::strategic::ShotPulseBook>>,
     sim_tick: Option<Res<'w, crate::systems::sim_control::SimTick>>,
     towns: Option<Res<'w, crate::strategic::TownBook>>,
     pending: Option<Res<'w, crate::construction::PendingConstructionQueue>>,
-    play_map: Res<'w, crate::gui::map_tile_raster::PlayMapPixelMode>,
-    pixel_world: Option<Res<'w, crate::gui::PixelWorldLandscapeIntent>>,
     site_burn_wash: Res<'w, crate::systems::fire::SiteBurnWashFrame>,
 }
 
+/// Nested so `tile_world_fallback_rasterize` stays ≤16 top-level params.
+/// Terrain + strategic are still separate types (not an Extras/cap-dodge bag).
+#[derive(SystemParam)]
+struct TileFallbackRasterSources<'w> {
+    terrain: TileFallbackTerrainRasterReads<'w>,
+    strategic: TileFallbackStrategicRasterReads<'w>,
+}
+
+// GS-02 — skip CPU land paint when GPU bake consumers are ready (plan_gpu_stubs_kill_v1).
 fn tile_world_fallback_rasterize(
     authority: Res<TerrainRenderAuthority>,
     mut images: ResMut<Assets<Image>>,
@@ -1403,7 +1419,7 @@ fn tile_world_fallback_rasterize(
     materials: Res<Assets<MaterialRegistry>>,
     map_views: Res<MapViewInstances>,
     presentation: Res<MapViewPresentationStates>,
-    extras: TileFallbackRasterExtras,
+    sources: TileFallbackRasterSources,
     mut queries: ParamSet<(
         Query<(
             &Transform,
@@ -1423,18 +1439,34 @@ fn tile_world_fallback_rasterize(
     mut raster_policy: ResMut<TileFallbackRasterPolicy>,
     atlas_cache: Res<crate::gui::map_tile_atlas_stamp::TileAtlasGpuCache>,
 ) {
-    let TileFallbackRasterExtras {
+    let TileFallbackTerrainRasterReads {
         dense_cache,
         water_catalog,
         zoom_frame,
+        play_map,
+        pixel_world,
+        bake_spike,
+        scorch,
+    } = sources.terrain;
+
+    // GPU-A' / GS-02: Simulation land display is bake Image — do not CPU-paint land fills.
+    if authority.is_gpu()
+        && bake_spike
+            .as_ref()
+            .is_some_and(|s| crate::render::spike_bake_ready_for_consumers(s))
+    {
+        return;
+    }
+    let suppress_land_scorch = scorch.as_ref().is_some_and(|f| {
+        crate::render::cpu_land_scorch_tint_suppressed(authority.as_ref(), f)
+    });
+    let TileFallbackStrategicRasterReads {
         shots,
         sim_tick,
         towns,
         pending,
-        play_map,
-        pixel_world,
         site_burn_wash,
-    } = extras;
+    } = sources.strategic;
     let mut tracer_cells: Vec<(i32, i32)> = Vec::new();
     let mut impact_cells: Vec<(i32, i32)> = Vec::new();
     let town_cells: Vec<(i32, i32)> = towns
@@ -1690,6 +1722,7 @@ fn tile_world_fallback_rasterize(
                 y1,
                 sim_layers,
                 sim.overlays.fire_heat,
+                suppress_land_scorch,
                 main_tiles,
                 main_roads,
                 &mat_slices,
@@ -1763,6 +1796,7 @@ fn tile_world_fallback_rasterize(
                 y1,
                 minimap.layers,
                 minimap.overlays.fire_heat,
+                suppress_land_scorch,
                 tile_iter,
                 road_iter,
                 &mat_slices,
@@ -1985,6 +2019,7 @@ mod chunk_grid_tests {
                 4,
                 4,
                 PreviewLayers::empty(),
+                false,
                 false,
                 std::iter::empty(),
                 std::iter::empty(),

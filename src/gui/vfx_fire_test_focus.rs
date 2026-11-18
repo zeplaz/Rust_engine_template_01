@@ -67,7 +67,11 @@ impl VfxFireTestRegion {
 const REGION_PAD_TILES: f32 = 4.0;
 
 fn harness_camera_focus_armed(scene: crate::engine::TestScene) -> bool {
-    scene.arms_fire_camera_focus() || matches!(scene, crate::engine::TestScene::City)
+    scene.arms_fire_camera_focus()
+        || matches!(
+            scene,
+            crate::engine::TestScene::City | crate::engine::TestScene::DamFlood
+        )
 }
 
 #[must_use]

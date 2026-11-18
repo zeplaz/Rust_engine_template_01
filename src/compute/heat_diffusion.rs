@@ -479,7 +479,7 @@ mod tests {
             agents: &crate::compute::AgentFrame::default(),
             navigation: &crate::compute::NavFieldFrame::default(),
             fire: &fire,
-            climate: None,
+            atmosphere_wx: None,
             path_budget: 64,
         };
         // Explicit sparse path (DH-02 default is dense play).

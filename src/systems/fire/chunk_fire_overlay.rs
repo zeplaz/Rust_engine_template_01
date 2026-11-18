@@ -39,7 +39,9 @@ use crate::systems::chunk_environment_persist::{
     ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks,
 };
 use crate::systems::chunk_sim_lod::ChunkSimLod;
-use crate::systems::ecology::{ChunkCellStand, ChunkEcology, StandBurnConfig, VegetationField};
+use crate::systems::ecology::{
+    ChunkCellFuelMoisture, ChunkCellStand, ChunkEcology, StandBurnConfig, VegetationField,
+};
 use crate::systems::sim_control::SimControlState;
 use crate::systems::weather::ChunkWeather;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
@@ -332,6 +334,7 @@ pub fn chunk_fire_overlay_tick(
         Option<&ChunkFuelProfile>,
         Option<&FireFuelField>,
         Option<&ChunkCellStand>,
+        Option<&ChunkCellFuelMoisture>,
         &mut ChunkFireOverlay,
         &mut ChunkSurfaceFire,
         &mut ChunkEnvironmentDirty,
@@ -354,7 +357,7 @@ pub fn chunk_fire_overlay_tick(
     bufs.sleep_wake.clear();
     // Pass 1: which chunks have a live spread source (no vector clones yet).
     let mut active_coords = HashSet::new();
-    for (_entity, chunk, matrix, _wx, _, _, _, _, _, _, ovl, ..) in q.iter() {
+    for (_entity, chunk, matrix, _wx, _, _, _, _, _, _, _, ovl, ..) in q.iter() {
         let sx = matrix.size.x as usize;
         let sy = matrix.size.y as usize;
         let n = sx * sy;
@@ -372,7 +375,7 @@ pub fn chunk_fire_overlay_tick(
             snap_coords.insert(acoord + IVec2::new(dx, dy));
         }
     }
-    for (_entity, chunk, matrix, wx, _, _, _, _, _, _, ovl, ..) in q.iter() {
+    for (_entity, chunk, matrix, wx, _, _, _, _, _, _, _, ovl, ..) in q.iter() {
         if !snap_coords.contains(&chunk.coord) {
             continue;
         }
@@ -421,6 +424,7 @@ pub fn chunk_fire_overlay_tick(
         prof_opt,
         fuel_opt,
         stand_opt,
+        fuel_m_opt,
         mut ovl,
         mut surf,
         mut dirty,
@@ -787,7 +791,20 @@ pub fn chunk_fire_overlay_tick(
                             continue;
                         }
                         let j = ny as usize * sx + nx as usize;
-                        if water[j] || !spread_allowed(wx.snow_depth, matrix.moisture[j]) {
+                        let dest_m = stand_opt
+                            .map(|s| {
+                                let fine = fuel_m_opt
+                                    .and_then(|m| m.fine_01.get(j).copied())
+                                    .filter(|_| s.flood_dead.get(j).copied().unwrap_or(false));
+                                crate::systems::ecology::effective_fuel_moisture01(
+                                    matrix.moisture[j],
+                                    s.flood_dead.get(j).copied().unwrap_or(false),
+                                    s.submerged_since.get(j).copied().unwrap_or(-1.0) >= 0.0,
+                                    fine,
+                                )
+                            })
+                            .unwrap_or(matrix.moisture[j]);
+                        if water[j] || !spread_allowed(wx.snow_depth, dest_m) {
                             continue;
                         }
                         let rise = if elev.len() == n {

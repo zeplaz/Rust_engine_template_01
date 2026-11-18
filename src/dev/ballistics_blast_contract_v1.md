@@ -20,7 +20,7 @@
 |:---|:---|
 | `systems/fire/ember_spot_ignition.rs` ballistic loft | Missile / shell loft patterns |
 | `MissionBook` / missile sortie dump | Launch events → audio + near-band ASM `Launch` |
-| `construction/blast.rs` | **SHIPPED scaffold** — `BlastIntentQueue` → crater + demolish |
+| `construction/blast.rs` | **SHIPPED scaffold** — `BlastIntentQueue` → crater + demolish; thresholds via `BlastProfile` RON ([`plan_blast_profile_v1.md`](plan_blast_profile_v1.md)) |
 | `SimAttentionFrame` | Full-tier theaters get high-rate ballistic steps |
 
 **Flow:** `step_ballistic_flights` (impact) → enqueue `BlastIntent` → `execute_blast_intents_system` (sole site mutator).

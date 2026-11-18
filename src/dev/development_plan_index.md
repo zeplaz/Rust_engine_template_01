@@ -10,7 +10,7 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Bevy 0.20 migration (2026-11-13) — PROGRAM CLOSE:** [`plan_bevy_020_migration_v1.md`](plan_bevy_020_migration_v1.md) · gate [`../debug_runs/mig_bevy_020/mig_v2_gate.json`](../debug_runs/mig_bevy_020/mig_v2_gate.json) · residual lib-test defer [`mig_bevy_020_m0_test_defer.md`](mig_bevy_020_m0_test_defer.md) · book/ECS [`plan_ref_books_upgrade_use_v1.md`](plan_ref_books_upgrade_use_v1.md) (SHIPPED) → v2 [`plan_ref_books_upgrade_v2.md`](plan_ref_books_upgrade_v2.md) (WAVES 0–S CLOSED) → **ACTIVE** [`plan_ref_books_upgrade_v3.md`](plan_ref_books_upgrade_v3.md) (dual matrices parallel · tools suite · voxels **in scope**) · Wave 3 charters: [`plan_ref_books_sense_04_v1.md`](plan_ref_books_sense_04_v1.md) (**SENSE-04**) · [`plan_ref_books_nav_13_v1.md`](plan_ref_books_nav_13_v1.md) (**NAV-13**)
 
-**Cursor-wave cleanup (OPEN — 2026-11-16):** [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) — CQ-01…85 · then **dam-flood benchmark scene (CHARTER draft):** [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) — river → dam → reservoir → strike → breach → flood → recession; DF-0…10; first scored run = baseline v1 for water/structures/damage/ecology/fire/power/perf
+**Cursor-wave cleanup (OPEN — 2026-11-16):** [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) — most CQ DONE; residual CQ-75/76/77/79/83 archive · **dam-flood (SIGNED):** [`plan_dam_flood_benchmark_v1.md`](plan_dam_flood_benchmark_v1.md) — DF-1…9 landed in code · **DF-10 BLOCKED** (baseline) · **water depth:** [`plan_water_depth_truth_v1.md`](plan_water_depth_truth_v1.md) — W0–W4 ADOPTED · W5 DEFER
 
 **Bevy 0.19 migration (CLOSED):** [`plan_bevy_019_migration_v1.md`](plan_bevy_019_migration_v1.md) — do **not** reopen `MIG-*` 0.19 rows · deferrals [`plan_deferral_registry_v1.md`](plan_deferral_registry_v1.md)
 
@@ -34,7 +34,13 @@ Single map of **planning → proof → implementation** for this repo. Use with 
 
 **Schedule sync (2026-07-03):** [`plan_schedule_sync_v1.md`](plan_schedule_sync_v1.md) — Wave 1 unblocked (MIG-V1 green); Wave 2+ → **DR-SCHED-W2**
 
-**Building quality + APS refactor (P1 finish — 2026-09-24):** [`plan_building_quality_v1.md`](plan_building_quality_v1.md) — **machine F/C/A/H/K/Q ★closed** · companion APSR ★closed · **visual finish** [`mcp_aps_tooling_finish_queue.json`](../tools/orchestrator/queues/mcp_aps_tooling_finish_queue.json) — SILH/SMOKE/assemble/LOOK-V2-ART ★closed · residual **operator** warehouse G4 · VEG G4 · G-PLAY · RPC-1-006 · BQ-Q3 deferred · ¬reopen game-systems drain
+**Building quality + APS refactor (P1 finish — 2026-09-24):** [`plan_building_quality_v1.md`](plan_building_quality_v1.md) — **machine F/C/A/H/K/Q ★closed** · companion APSR ★closed · **visual finish** [`mcp_aps_tooling_finish_queue.json`](../tools/orchestrator/queues/mcp_aps_tooling_finish_queue.json) — SILH/SMOKE/assemble/LOOK-V2-ART ★closed · residual **operator** warehouse G4 · VEG G4 · G-PLAY · BQ-Q3 deferred · ¬reopen game-systems drain
+
+**Final GPU presentation (2026-11-17):** [`plan_final_gpu_presentation_v1.md`](plan_final_gpu_presentation_v1.md) — Simulation `GpuBake` only; atlas bake default ON (RPC-1-006); water GPU field both views; CPU water mesh/paint retired.
+
+**Destruction presentation (ADOPTED core — 2026-11-17):** [`plan_destruction_presentation_v1.md`](plan_destruction_presentation_v1.md) — T2/T2.1/T2b · STAGE-RING Tier0 · STRUCT-ROLE/CASCADE · DISASTER-PROXY · DEBRIS-FX. Charters under `plan_destroy_t2_mask_v1.md` + siblings. Residual: playcheck eye + GPU-C.2/RND-12/08. **Blast thresholds:** [`plan_blast_profile_v1.md`](plan_blast_profile_v1.md) (**PLAN-BLAST-PROFILE-v1** ADOPTED).
+
+**GPU stubs kill (ACTIVE · P0 — 2026-11-17):** [`plan_gpu_stubs_kill_v1.md`](plan_gpu_stubs_kill_v1.md) — upgrades **A–D** + delete instanced/`GpuTilemap`. Design: [`design_gpu_rtt_bake_water_displace_v1.md`](design_gpu_rtt_bake_water_displace_v1.md) (RTT control-tex bake · water VS displace · Part 3 practices). Pick: [`gpu_todos_v1.md`](gpu_todos_v1.md) § PLAN-GPU-STUBS-KILL.
 
 **Render + GUI refactor (P1 — 2026-07-04):** [`plan_render_gui_refactor_v1.md`](plan_render_gui_refactor_v1.md) · **RGR-M1 ★closed** (001..004) · tail → [`plan_render_production_cleanup_v1.md`](plan_render_production_cleanup_v1.md) · queue [`render_gui_refactor_queue.json`](../tools/orchestrator/queues/render_gui_refactor_queue.json) · [`HANDOFF.md`](../tools/orchestrator/queues/HANDOFF.md) § PLAN-RENDER-GUI-REFACTOR-v1
 

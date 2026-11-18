@@ -1,23 +1,23 @@
 //! Voxel height + water surface field for PixelWorld3D, derived from the world's own grids.
 //!
 //! Sources (read only, never written):
-//! - [`WorldGenDenseTerrainCache::elevation`] — the carved elevation every sim system reads.
-//! - [`WorldWaterGrid`] — the one per-cell water decision ([`WaterClass`]).
+//! - [`WorldGenDenseTerrainCache::elevation`] — bed every sim system reads.
+//! - [`WorldWaterGrid`] — bake hint for look (channel vs standing); not gameplay wet authority.
+//! - [`WorldStaticWaterDepth`] — PLAN-WATER-DEPTH-TRUTH-v1 static depth (m); when present, surfaces
+//!   are `ground + depth` (one fluid). Class-based rim fill is the fallback bootstrap.
 //!
 //! The field is a presentation projection: ground is the elevation in world units, quantized to
-//! [`HEIGHT_STEP`] terraces (the voxel look). Water bodies get a flat surface:
-//! - ocean: the world water line;
-//! - lake: the lowest dry rim around the connected water body (its outlet level);
-//! - river: just under the lowest bank next to the cell, so a river runs in a channel instead of
-//!   the sea-level trench the carved elevation would draw in highlands.
-//!
-//! The bed under a water surface sits a class-dependent depth below it. Picking, terrain meshes,
-//! trees, sites and fronts all sample this one field.
+//! [`HEIGHT_STEP`] terraces (the voxel look).
 
 use bevy::prelude::*;
 
+use crate::systems::water::{
+    water_look_from_depth_speed, SurfaceWaterField, WorldStaticWaterDepth, CHANNEL_LOOK_SPEED,
+    WET_DEPTH_M,
+};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{WaterClass, WorldGenDenseTerrainCache, WorldWaterGrid};
+use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 /// World units (tiles) per normalized elevation unit in the voxel view.
 ///
@@ -116,21 +116,62 @@ impl PixelWorldTerrainField {
         params: &WorldGenParams,
         dense: &WorldGenDenseTerrainCache,
         grid: &WorldWaterGrid,
+        static_depth: Option<&WorldStaticWaterDepth>,
+        surface: Option<&SurfaceWaterField>,
         dense_changed: bool,
     ) -> bool {
         if !dense.is_live_height_grid() || grid.width != dense.width || grid.height != dense.height {
             return false;
         }
-        if !dense_changed && self.source_stamp == Some(grid.stamp) && self.is_ready() {
+        // Mass fingerprint of live ROI depths so reservoir fill / flood rebuilds the voxel water.
+        let surface_stamp = surface
+            .filter(|f| f.wired)
+            .map(|f| {
+                let wet = f
+                    .depth_m
+                    .iter()
+                    .filter(|d| **d >= WET_DEPTH_M)
+                    .count() as u64;
+                // Coarse quanta only — fine flow every frame would thrash
+                // `field.revision` and leave half the voxel map undrawn
+                // (chunks rebuild at CHUNKS_PER_FRAME after a full despawn).
+                let stage_q = (f.pool.stage_m * 2.0).round() as i32; // 0.5 m
+                let out_q = (f.outlet_flow_m3s / 8.0).round() as i32;
+                let mid_q = (f.mid_outlet_flow_m3s / 8.0).round() as i32;
+                let breach_q = (f.breach_flow_m3s / 20.0).round() as i32;
+                let over_q = (f.overtopping_flow_m3s / 8.0).round() as i32;
+                let wet_q = wet / 32; // ignore tiny shoreline flicker
+                wet_q
+                    .wrapping_mul(0x9E37_79B9)
+                    .wrapping_add(stage_q as u64)
+                    .wrapping_add((out_q as u64) << 8)
+                    .wrapping_add((mid_q as u64) << 16)
+                    .wrapping_add((breach_q as u64) << 24)
+                    .wrapping_add((over_q as u64) << 32)
+                    .wrapping_add((f.width as u64) << 40)
+            })
+            .unwrap_or(0);
+        let stamp = grid
+            .stamp
+            .wrapping_add(static_depth.map(|s| s.stamp).unwrap_or(0))
+            .wrapping_add(surface_stamp);
+        if !dense_changed && self.source_stamp == Some(stamp) && self.is_ready() {
             return false;
         }
-        self.build(params, dense, grid);
-        self.source_stamp = Some(grid.stamp);
+        self.build(params, dense, grid, static_depth, surface);
+        self.source_stamp = Some(stamp);
         self.revision = self.revision.wrapping_add(1);
         true
     }
 
-    fn build(&mut self, params: &WorldGenParams, dense: &WorldGenDenseTerrainCache, grid: &WorldWaterGrid) {
+    fn build(
+        &mut self,
+        params: &WorldGenParams,
+        dense: &WorldGenDenseTerrainCache,
+        grid: &WorldWaterGrid,
+        static_depth: Option<&WorldStaticWaterDepth>,
+        surface: Option<&SurfaceWaterField>,
+    ) {
         let (w, h) = (dense.width as usize, dense.height as usize);
         let n = w * h;
         let scale = PIXEL_WORLD_HEIGHT_SCALE;
@@ -245,18 +286,78 @@ impl PixelWorldTerrainField {
             self.water[i] = sea_surface;
         }
 
-        // Beds sit under the surface; dry ground never drops below the sea surface it borders.
-        for i in 0..n {
-            let s = self.water[i];
-            if s.is_finite() {
-                let depth = match self.class[i] {
-                    WaterClass::River => 0.75,
-                    WaterClass::Lake => 1.5,
-                    _ => 2.0,
-                };
-                self.ground[i] = quantize(s - depth).min(s - 0.25);
+        // PLAN-WATER-DEPTH-TRUTH-v1 W3: when static depth exists, surface = ground + depth (one fluid).
+        // Look class is derived from depth (standing vs channel bake hint), not a second water.
+        if let Some(st) = static_depth {
+            if st.width == dense.width
+                && st.height == dense.height
+                && st.depth_m.len() >= n
+            {
+                for i in 0..n {
+                    let d = st.depth_m[i];
+                    if d < WET_DEPTH_M {
+                        self.water[i] = NO_WATER;
+                        self.class[i] = WaterClass::Dry;
+                        continue;
+                    }
+                    let lift = (d / TILE_METRES_GAMEPLAY) * scale;
+                    self.water[i] = quantize(self.ground[i] + lift.max(SURFACE_UNDER_BANK));
+                    let coast = matches!(self.class[i], WaterClass::Ocean);
+                    // Static bootstrap has no flux — channel look stays River when bake said River.
+                    let speed = if self.class[i] == WaterClass::River {
+                        CHANNEL_LOOK_SPEED + 0.01
+                    } else {
+                        0.0
+                    };
+                    self.class[i] = water_look_from_depth_speed(d, speed, coast);
+                }
             }
         }
+
+        // Class-bootstrap only: dig bed under surface. Depth-truth keeps DEM as bed.
+        if static_depth.is_none() {
+            for i in 0..n {
+                let s = self.water[i];
+                if s.is_finite() {
+                    let depth = match self.class[i] {
+                        WaterClass::River => 0.75,
+                        WaterClass::Lake => 1.5,
+                        _ => 2.0,
+                    };
+                    self.ground[i] = quantize(s - depth).min(s - 0.25);
+                }
+            }
+        }
+
+        // Live SurfaceWaterField ROI (dam reservoir / flood) overlays static/class water.
+        if let Some(sf) = surface.filter(|f| f.wired && !f.depth_m.is_empty()) {
+            let ox = sf.origin_x;
+            let oz = sf.origin_z;
+            for lz in 0..sf.height {
+                for lx in 0..sf.width {
+                    let d = sf.depth_m[sf.idx(lx, lz)];
+                    if d < WET_DEPTH_M {
+                        continue;
+                    }
+                    let wx = ox + lx as i32;
+                    let wz = oz + lz as i32;
+                    if wx < 0 || wz < 0 || wx >= w as i32 || wz >= h as i32 {
+                        continue;
+                    }
+                    let i = wz as usize * w + wx as usize;
+                    let lift = (d / TILE_METRES_GAMEPLAY) * scale;
+                    self.water[i] = quantize(self.ground[i] + lift.max(SURFACE_UNDER_BANK));
+                    let speed = {
+                        let dx = sf.dx_m.max(1e-3);
+                        let qx = sf.qx_m3s.get(sf.idx(lx, lz)).copied().unwrap_or(0.0).abs();
+                        let qy = sf.qy_m3s.get(sf.idx(lx, lz)).copied().unwrap_or(0.0).abs();
+                        (qx + qy) / (d * dx).max(1e-3)
+                    };
+                    self.class[i] = water_look_from_depth_speed(d, speed, false);
+                }
+            }
+        }
+
         let (mut lo, mut hi) = (f32::INFINITY, f32::NEG_INFINITY);
         for i in 0..n {
             let top = self.ground[i].max(self.water[i]);
@@ -323,6 +424,8 @@ pub fn sync_pixel_world_terrain_field(
     params: Res<WorldGenParams>,
     dense: Option<Res<WorldGenDenseTerrainCache>>,
     grid: Option<Res<WorldWaterGrid>>,
+    static_depth: Option<Res<WorldStaticWaterDepth>>,
+    surface: Option<Res<SurfaceWaterField>>,
     mut field: ResMut<PixelWorldTerrainField>,
 ) {
     if !mode.is_some_and(|m| m.is_pixel_world()) {
@@ -331,6 +434,16 @@ pub fn sync_pixel_world_terrain_field(
     let (Some(dense), Some(grid)) = (dense, grid) else {
         return;
     };
-    let dense_changed = dense.is_changed() || grid.is_changed();
-    field.rebuild_if_stale(params.as_ref(), dense.as_ref(), grid.as_ref(), dense_changed);
+    let dense_changed = dense.is_changed()
+        || grid.is_changed()
+        || static_depth.as_ref().is_some_and(|s| s.is_changed())
+        || surface.as_ref().is_some_and(|s| s.is_changed());
+    field.rebuild_if_stale(
+        params.as_ref(),
+        dense.as_ref(),
+        grid.as_ref(),
+        static_depth.as_deref(),
+        surface.as_deref(),
+        dense_changed,
+    );
 }

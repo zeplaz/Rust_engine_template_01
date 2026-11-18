@@ -2,6 +2,10 @@
 //!
 //! **MIG-A10:** [`apply_gpu_indirect_spine_dispatch_authority`] mirrors `dispatch_count` from the
 //! spine onto [`WorldFireParticleDrawDispatch`] so compute prepass workgroups have a single authority.
+//!
+//! **GPU-CULL.1 / RND-12:** fire raster submits via `draw_indirect` from
+//! [`FIRE_PARTICLE_INDIRECT_DRAW_BUFFER`](crate::render::core::gpu_buffer_registry::FIRE_PARTICLE_INDIRECT_DRAW_BUFFER)
+//! written by [`super::gpu_frustum_cull`].
 
 use bevy::prelude::*;
 
@@ -13,8 +17,25 @@ use crate::render::core::gpu_representation_metrics::GpuRepresentationMetrics;
 /// Workgroup size for particle indirect dispatch (shared with compute raster prepass).
 pub const GPU_INDIRECT_DISPATCH_WORKGROUP: u32 = PARTICLE_WORKGROUP;
 
-/// Expanded billboard vertices per instanced fire particle row.
+/// Expanded billboard vertices per instanced fire particle row (expand compute = 4 corners).
 pub const WORLD_FIRE_VERTICES_PER_INSTANCE: u32 = 4;
+
+/// Indexed triangle list verts per fire billboard in `fire_particle_draw.wgsl` (two tris).
+pub const FIRE_DRAW_VERTS_PER_INSTANCE: u32 = 6;
+
+/// CPU-mirrored frustum cull counters (Accept without GPU readback).
+#[derive(Resource, Debug, Clone, Copy, Default, PartialEq, Eq)]
+pub struct FireFrustumCullStats {
+    pub submitted: u32,
+    pub visible: u32,
+    pub culled: u32,
+}
+
+impl FireFrustumCullStats {
+    pub fn clear(&mut self) {
+        *self = Self::default();
+    }
+}
 
 /// Indirect draw arguments for world-fire instancing (future multi-draw indirect).
 #[repr(C)]

@@ -24,9 +24,9 @@ use super::{
     CorridorConstructionBook, FrontlineState, InfrastructureGraph, LogisticsGraph,
     SiteConstructionBook, SiteIdIssuer, SpatialNetworkGraph, WorldFieldLayerConfig,
     WorldFieldLayerEpoch, WorldReadSnapshot,
-    commit_construction_site_system, site_advance_planned_to_under_construction_system,
-    site_construction_progression_system, site_provisioning_system,
-    validate_committed_site_terrain_system,
+    apply_flood_site_readiness_system, commit_construction_site_system,
+    site_advance_planned_to_under_construction_system, site_construction_progression_system,
+    site_provisioning_system, validate_committed_site_terrain_system,
 };
 use super::construction_book::{
     advance_corridor_construction_book_on_sim_tick, align_corridor_book_with_transport_directory,
@@ -303,7 +303,11 @@ impl Plugin for StrategicFieldsPlugin {
             )
             .add_systems(
                 Update,
-                site_provisioning_system.in_set(InfrastructureSiteSet::Provisioning),
+                (
+                    site_provisioning_system,
+                    apply_flood_site_readiness_system.after(site_provisioning_system),
+                )
+                    .in_set(InfrastructureSiteSet::Provisioning),
             )
             .add_systems(
                 Update,

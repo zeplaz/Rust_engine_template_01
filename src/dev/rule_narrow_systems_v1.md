@@ -152,23 +152,31 @@ Each panel gets a **view model** resource, e.g. `PlantCardVm`, built by one syst
 - Render-world extraction systems that must read several main-world sources in one `ExtractSchedule` pass. They are read-only and can still use `QueryData`. Document them with a `ScaffoldContract` if they keep growing.
 - Exclusive `&mut World` systems for load/save/setup (3.7).
 
-## 5. Audit list (2026-11-16): existing `derive(SystemParam)` bundles to check
+## 5. Audit list (2026-11-16) — classified ([cleanup-intelligence](5464f41c-cdf7-4830-a51c-53d0cb7ba452))
 
-These come from a grep. They are **not verdicts**. Classify each one before changing it (cleanup-intelligence), then fix it with the pattern shown.
+46 bundles grepped. Keep unless marked. Primary dump farm = **CQ-68 DONE**.
 
-| Bundle(s) | File | Likely pattern |
-|:---|:---|:---|
-| `WorldParams`, `FireChainParams`, `GameParams` | `src/dev/sim_run_dump.rs` | 3.1 |
-| `DamFloodDumpParams`, `FidelitySampleReads`, `PresentationSampleReads`, `QuadrantDumpParams` | `src/dev/sim_run_dump_*.rs` | 3.1 |
-| `InventoryProbe` | `src/dev/test_run_instrumentation.rs` | 3.1 / 3.8 |
-| `MissionStepWriters`, `MissionStepReads`, `MissionStepQueries` | `src/combat/drone_missions.rs` | 3.2 + 3.4 |
-| `AiOrderSinks`, `AiWorld` | `src/ai/faction/mod.rs` | 3.2 / 3.4 (keep if all AI) |
-| `ExecuteHydroOpt`, `ExecuteSideEffects` | `src/construction/construction_pipeline.rs` | 3.3 (side effects → messages; the execute funnel stays the single writer) |
-| `ShellSyncA`, `ShellSyncB`, `ShellSyncC`, `MainMenuExit` | `src/gui/editor/world_preview/world_gen_bevy_shell.rs` | 3.9 / 3.5 (**A/B/C naming = violation**) |
-| `TileFallbackGpuStampInputs`, `TileFallbackDualViewAtlasInputs`, `TileFallbackRasterExtras` | `src/render/tile_world_fallback.rs` | 3.5 / 3.6 |
-| `TestHarnessEnterWorld` | `src/engine/test_harness.rs` | 3.8 |
-| `MenuDebugBootstrap` | `src/gui/app_shell.rs` | 3.7 (or delete: no debug panels) |
-| `VisualDiagCtx` | `src/render/probes/visual_diagnostics.rs` | 3.1 |
-| others (29 files total) | `rg "derive\(SystemParam\)" src` | check against §1.3 |
+| Bundle(s) | File | Class | Pattern | Cleanup |
+|:---|:---|:---|:---|:---|
+| ~~`WorldParams`/`GameParams`/`FireChainParams`~~ | `sim_run_dump.rs` | — | 3.1 | **CQ-68 DONE** → reporters |
+| ~~`DamFloodDumpParams`/`QuadrantDumpParams`~~ | `sim_run_dump_*.rs` | — | 3.1 | **DELETED** |
+| ~~`FidelitySampleReads`/`PresentationSampleReads`~~ | fidelity/massing | — | 3.1 | **DELETED** (split/flat) |
+| ~~`InventoryProbe`~~ | `test_run_instrumentation.rs` | — | 3.8 | **DELETED** (flat harness params) |
+| `MissionStepWriters` | `drone_missions.rs` | KEEP | 3.2 | keep |
+| `MissionStepReads` / `Queries` | same | KEEP / CQ-69 | 3.4 | **CQ-69** shrink reads |
+| `AiOrderSinks` | `ai/faction/mod.rs` | KEEP | 3.2 | keep |
+| `AiWorld` | same | VIOLATION | 3.4 | staged frames |
+| `ExecuteHydroOpt`, `ExecuteSideEffects` | `construction_pipeline.rs` | VIOLATION | 3.2 | request_queue |
+| `WaterTileProbe`, `ConstructionMapPick`, `ConstructionTerrainConform`, `TwoClickCommitParams` | various | KEEP | — | keep |
+| ~~`ShellSyncA/B/C`~~ | `world_gen_bevy_shell.rs` | — | 3.9 | **CQ-68b DONE** |
+| `MainMenuExit` | same | CAP_DODGE | 3.7 | rename_split later |
+| ~~`TileFallbackRasterExtras`~~ | `tile_world_fallback.rs` | — | 3.5 | **CQ-68c DONE** |
+| `TileFallbackDualViewAtlasInputs` | same | borderline | 3.5 | rename_split later |
+| `TestHarnessEnterWorld` | `test_harness.rs` | HARNESS_OK | 3.8 | keep |
+| `MenuDebugBootstrap` | `app_shell.rs` | VIOLATION | 3.7 | delete / World adapter |
+| `VisualDiagCtx` | `visual_diagnostics.rs` | VIOLATION | 3.1 | split_reporters |
+| `FrontOverlaySources` | `world_map_front_mesh.rs` | VIOLATION | 3.9 | overlay VMs |
+| HUD sheet draw params (`SimPower*`, `SimRoad*`, `ContextTray*`) | `gui/hud/*` | CAP_DODGE smell | 3.9 | panel-local keep for now |
+| Fire extract / minimap compositor / gpu preview bundles | `render/*` | RENDER_EXTRACT_OK | — | keep |
 
-Track fixes as cleanup items (CQ-xx) in [`plan_cleanup_cursor_wave_v1.md`](plan_cleanup_cursor_wave_v1.md) when they are picked up.
+Full 46-row table: agent transcript of the classify run above.

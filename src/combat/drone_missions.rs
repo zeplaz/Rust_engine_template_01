@@ -13,15 +13,16 @@ use bevy::prelude::*;
 
 use super::capability_toe::MissileClass;
 use super::drone_doctrine::{doctrine_effect_scale, FactionDroneDoctrine};
-use super::drone_research::DroneResearchState;
+use crate::research::{ids as research_ids, ResearchCapabilityBook};
 use super::formation::{CombatClock, Formation};
 use super::missile_supply::{pulse_missile_sorties, MissilePackage, MissileSortieDump};
-use crate::substrate::atmosphere::AtmosphereClipmapStack;
+use crate::systems::atmosphere::AtmosphereFrame;
 use crate::systems::fire::ChunkSmokeField;
+use crate::systems::sim_attention::SimAttentionFrame;
 use crate::systems::weather::{
-    collect_chunk_smoke_density, evaluate_grounding, smoke01_at_tile, sortie_envelopes_ok,
-    AirOpsProfileId, AirOpsTuning, AirPresentationSortieHint, LinkModality, SensorKind,
-    WeatherPollingStations, SMOKE_SAMPLE_CELLS_PER_CHUNK,
+    collect_chunk_smoke_density, evaluate_grounding, smoke01_at_chunk_from_frame, smoke01_at_tile,
+    sortie_envelopes_ok, AirOpsProfileId, AirOpsTuning, AirPresentationSortieHint, LinkModality,
+    SensorKind, WeatherPollingStations, SMOKE_SAMPLE_CELLS_PER_CHUNK,
 };
 use crate::terrain::generation::Chunk;
 
@@ -365,13 +366,13 @@ fn default_modality(role: DroneRole) -> LinkModality {
 fn effective_modality(
     pkg: &DronePackage,
     role: DroneRole,
-    research: &DroneResearchState,
+    research: &ResearchCapabilityBook,
 ) -> LinkModality {
     let mut m = pkg.modality;
-    if matches!(m, LinkModality::Fiber) && !research.fiber_ops {
+    if matches!(m, LinkModality::Fiber) && !research.unlocked(research_ids::COMMS_FIBER_OPS) {
         m = LinkModality::Radio;
     }
-    let auto_cap = research.max_autonomy_level();
+    let auto_cap = research.max_uas_autonomy_level();
     let level = pkg.autonomy_level.min(auto_cap);
     if level >= 2 {
         m = LinkModality::Autonomy;
@@ -382,9 +383,9 @@ fn effective_modality(
     m
 }
 
-fn effective_sensor(pkg: &DronePackage, research: &DroneResearchState) -> SensorKind {
+fn effective_sensor(pkg: &DronePackage, research: &ResearchCapabilityBook) -> SensorKind {
     match pkg.sensor {
-        SensorKind::Ir if !research.seeker_ir_unlock => SensorKind::Eo,
+        SensorKind::Ir if !research.unlocked(research_ids::SENSOR_SEEKER_IR) => SensorKind::Eo,
         other => other,
     }
 }
@@ -396,10 +397,9 @@ pub fn pulse_drone_sorties(
     packages: &mut [(Entity, &Formation, &mut DronePackage)],
     tuning: &AirOpsTuning,
     stations: Option<&WeatherPollingStations>,
-    research: &DroneResearchState,
+    research: &ResearchCapabilityBook,
     doctrine: &FactionDroneDoctrine,
     smoke_by_chunk: Option<&HashMap<IVec2, f32>>,
-    atmos: Option<&AtmosphereClipmapStack>,
     faction_allowed: &dyn Fn(u8) -> bool,
 ) {
     *mods = DroneCombatModifiers::default();
@@ -426,9 +426,11 @@ pub fn pulse_drone_sorties(
         if ao.paused || !faction_allowed(ao.faction_slot) {
             continue;
         }
-        if matches!(ao.role, DroneRole::AttritCruise) && !research.cruise_line_unlock {
-            // Allow stock use once unlocked; until then treat as med attack profile still ok —
-            // gate only blocks doctrine saturation cruise lines (soft: still fly with recon profile).
+        if matches!(ao.role, DroneRole::AttritCruise)
+            && !research.unlocked(research_ids::MANUF_CRUISE_LINE)
+        {
+            // Soft gate: cruise attrition sorties need manuf.cruise_line (shared with plants).
+            continue;
         }
         let c = ao.centroid_tile();
         let mut best: Option<(usize, i32)> = None;
@@ -452,7 +454,8 @@ pub fn pulse_drone_sorties(
             .filter(|s| s.ready)
             .map(|s| s.sample_at_tile(c))
             .unwrap_or_default();
-        let smoke01 = smoke01_at_tile(c, cells, smoke_map, atmos);
+        // Smoke baked into MissionSenseFrame (CQ-69); no live AtmosphereClipmapStack read.
+        let smoke01 = smoke01_at_tile(c, cells, smoke_map, None);
         // D2: research resist into envelope floors (implemented via higher effective resist in checks).
         let link_r = research.link_resist(profile.link_resist);
         let sens_r = research.sensor_resist(profile.sensor_resist);
@@ -553,9 +556,71 @@ fn refresh_dump(book: &MissionBook, dump: &mut DroneMissionDump) {
     dump.sorties_ok = book.sorties_ok;
 }
 
-/// Bevy **0.20** forward pattern: group >16 world accesses via [`SystemParam`] derive
-/// (docs.rs/bevy/0.20 — function systems still max **16 top-level args**; derive folds fields).
-/// Do **not** stuff ballistics/audio `ResMut` here — enqueue only ([`MissileSortieLaunchQueue`]).
+/// Cross-domain sense for drone/missile pulses (RULE-NARROW-SYSTEMS §3.4).
+/// Sole writer: [`publish_mission_sense_frame_system`].
+#[derive(Resource, Debug, Clone, Default)]
+pub struct MissionSenseFrame {
+    pub ready: bool,
+    pub stations: WeatherPollingStations,
+    pub smoke_by_chunk: HashMap<IVec2, f32>,
+    /// Bit `i` set ⇒ faction slot `i` may pulse sorties (slots ≥64 always allowed).
+    pub faction_sortie_mask: u64,
+}
+
+impl MissionSenseFrame {
+    #[must_use]
+    pub fn allows_faction(&self, slot: u8) -> bool {
+        if !self.ready {
+            return true;
+        }
+        if slot >= 64 {
+            return true;
+        }
+        self.faction_sortie_mask & (1u64 << slot) != 0
+    }
+
+    #[must_use]
+    pub fn stations_ready(&self) -> Option<&WeatherPollingStations> {
+        self.ready.then_some(&self.stations).filter(|s| s.ready)
+    }
+}
+
+/// Publish weather / attention / smoke into [`MissionSenseFrame`] (CQ-69).
+pub fn publish_mission_sense_frame_system(
+    stations: Option<Res<WeatherPollingStations>>,
+    attention: Option<Res<SimAttentionFrame>>,
+    atmosphere: Option<Res<AtmosphereFrame>>,
+    smoke_q: Query<(&Chunk, &ChunkSmokeField)>,
+    mut frame: ResMut<MissionSenseFrame>,
+) {
+    let mut smoke = collect_chunk_smoke_density(&smoke_q);
+    if let Some(atmo) = atmosphere.as_deref() {
+        // Fill gaps for polled weather chunks from AtmosphereFrame smoke.
+        if let Some(st) = stations.as_deref() {
+            for &chunk in st.by_chunk.keys() {
+                smoke
+                    .entry(chunk)
+                    .or_insert_with(|| smoke01_at_chunk_from_frame(chunk, atmo));
+            }
+        }
+    }
+    let mut mask = u64::MAX;
+    if let Some(att) = attention.as_deref() {
+        mask = 0;
+        for slot in 0u8..64 {
+            if att.tier_for_faction_slot(slot).allows_sortie_pulse() {
+                mask |= 1u64 << slot;
+            }
+        }
+    }
+    frame.stations = stations.as_deref().cloned().unwrap_or_default();
+    frame.smoke_by_chunk = smoke;
+    frame.faction_sortie_mask = mask;
+    frame.ready = true;
+}
+
+/// Mission-domain writers. Cross-domain side effects stay on
+/// [`MissileSortieLaunchQueue`] → owner apply (RULE-NARROW-SYSTEMS §3.2).
 #[derive(SystemParam)]
 pub struct MissionStepWriters<'w> {
     pub queue: ResMut<'w, MissionIntentQueue>,
@@ -566,20 +631,18 @@ pub struct MissionStepWriters<'w> {
     pub launch_q: ResMut<'w, super::missile_supply::MissileSortieLaunchQueue>,
 }
 
+/// Mission-domain reads + one published sense frame (CQ-69).
 #[derive(SystemParam)]
 pub struct MissionStepReads<'w> {
     pub clock: Res<'w, CombatClock>,
     pub tuning: Res<'w, AirOpsTuning>,
-    pub stations: Option<Res<'w, WeatherPollingStations>>,
-    pub research: Res<'w, DroneResearchState>,
+    pub research: Res<'w, ResearchCapabilityBook>,
     pub doctrine: Res<'w, FactionDroneDoctrine>,
-    pub attention: Option<Res<'w, crate::systems::sim_attention::SimAttentionFrame>>,
-    pub atmos: Option<Res<'w, AtmosphereClipmapStack>>,
+    pub sense: Res<'w, MissionSenseFrame>,
 }
 
 #[derive(SystemParam)]
 pub struct MissionStepQueries<'w, 's> {
-    pub smoke_q: Query<'w, 's, (&'static Chunk, &'static ChunkSmokeField)>,
     pub packages: Query<'w, 's, (Entity, &'static Formation, &'static mut DronePackage)>,
     pub missile_packages:
         Query<'w, 's, (Entity, &'static Formation, &'static mut MissilePackage)>,
@@ -605,14 +668,9 @@ pub fn step_drone_missions_system(
     }
     w.book.sortie_acc_s = 0.0;
 
-    let allow = |slot: u8| {
-        r.attention
-            .as_ref()
-            .map(|a| a.tier_for_faction_slot(slot).allows_sortie_pulse())
-            .unwrap_or(true)
-    };
-
-    let smoke_by_chunk = collect_chunk_smoke_density(&q.smoke_q);
+    let allow = |slot: u8| r.sense.allows_faction(slot);
+    let stations = r.sense.stations_ready();
+    let smoke_by_chunk = &r.sense.smoke_by_chunk;
 
     let mut rows: Vec<(Entity, Formation, DronePackage)> = q
         .packages
@@ -631,11 +689,10 @@ pub fn step_drone_missions_system(
             &mut w.mods,
             &mut refs,
             &r.tuning,
-            r.stations.as_deref(),
+            stations,
             &r.research,
             &r.doctrine,
-            Some(&smoke_by_chunk),
-            r.atmos.as_deref(),
+            Some(smoke_by_chunk),
             &allow,
         );
     }
@@ -665,7 +722,7 @@ pub fn step_drone_missions_system(
             &mut w.missile_dump,
             &mut refs,
             &r.tuning,
-            r.stations.as_deref(),
+            stations,
             MissileClass::SamShort,
             &allow,
         ));
@@ -674,7 +731,7 @@ pub fn step_drone_missions_system(
             &mut w.missile_dump,
             &mut refs,
             &r.tuning,
-            r.stations.as_deref(),
+            stations,
             MissileClass::GenericCruise,
             &allow,
         ));
@@ -694,6 +751,7 @@ pub fn step_drone_missions_system(
 /// FIDELITY-1: ballistics + audio from missile sorties (separate system — SystemParam budget).
 pub fn apply_missile_sortie_launches_system(
     mut launch_q: ResMut<super::missile_supply::MissileSortieLaunchQueue>,
+    warheads: Option<Res<super::warheads::WarheadCatalog>>,
     mut ballistics: Option<ResMut<super::ballistics::BallisticFlightBook>>,
     mut audio: Option<ResMut<crate::audio::AudioOneShotQueue>>,
 ) {
@@ -701,6 +759,10 @@ pub fn apply_missile_sortie_launches_system(
         return;
     }
     let launches = std::mem::take(&mut launch_q.pending);
+    let wh = warheads
+        .as_ref()
+        .map(|c| c.default_def().clone())
+        .unwrap_or_else(|| super::warheads::WarheadCatalog::default().default_def().clone());
     for launch in launches {
         if let Some(audio) = audio.as_mut() {
             audio.push_warning(
@@ -713,11 +775,12 @@ pub fn apply_missile_sortie_launches_system(
             );
         }
         if let Some(book) = ballistics.as_mut() {
-            book.launch_with_wind(
+            // Metres: ~128 m/step cruise; radius/damage from warhead table (DF-7).
+            book.launch_with_warhead(
                 launch.origin_xz,
                 launch.target_xz,
-                8.0,
-                2.5,
+                128.0,
+                &wh,
                 super::ballistics::BallisticKind::Missile,
                 launch.wind,
             );
@@ -730,7 +793,7 @@ mod tests {
     use super::*;
     use crate::combat::balance::UnitKind;
     use crate::combat::drone_doctrine::FactionDroneDoctrine;
-    use crate::combat::drone_research::DroneResearchState;
+    use crate::research::ResearchCapabilityBook;
     use crate::systems::weather::WeatherSample;
 
     fn ao(id: u64, role: DroneRole) -> DroneAo {
@@ -774,9 +837,8 @@ mod tests {
             &mut rows,
             &AirOpsTuning::default(),
             None,
-            &DroneResearchState::default(),
+            &ResearchCapabilityBook::default(),
             &FactionDroneDoctrine::default(),
-            None,
             None,
             &|_| true,
         );
@@ -824,9 +886,8 @@ mod tests {
             &mut rows,
             &AirOpsTuning::default(),
             None,
-            &DroneResearchState::default(),
+            &ResearchCapabilityBook::default(),
             &FactionDroneDoctrine::default(),
-            None,
             None,
             &|_| true,
         );
@@ -872,8 +933,8 @@ mod tests {
         pkg.counts[DroneRole::Interceptor.index()] = 2;
         let e = Entity::from_bits(9);
         let mut rows = vec![(e, &f, &mut pkg)];
-        let mut research = DroneResearchState::default();
-        research.cruise_line_unlock = true;
+        let mut research = ResearchCapabilityBook::default();
+        research.unlock(crate::research::ids::MANUF_CRUISE_LINE);
         pulse_drone_sorties(
             &mut book,
             &mut mods,
@@ -882,7 +943,6 @@ mod tests {
             None,
             &research,
             &FactionDroneDoctrine::default(),
-            None,
             None,
             &|_| true,
         );
@@ -909,10 +969,9 @@ mod tests {
             &mut rows,
             &AirOpsTuning::default(),
             None,
-            &DroneResearchState::default(),
+            &ResearchCapabilityBook::default(),
             &FactionDroneDoctrine::default(),
             Some(&smoke),
-            None,
             &|_| true,
         );
         assert!(book.sorties_aborted_wx >= 1);

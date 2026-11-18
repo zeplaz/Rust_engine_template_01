@@ -844,7 +844,14 @@ fn world_gen_pipeline_tick(
                         &hydro,
                         &job.run_params,
                     );
+                    // PLAN-WATER-DEPTH-TRUTH-v1 W2: bootstrap static depth from class+DEM.
+                    let static_depth = crate::systems::water::WorldStaticWaterDepth::from_water_grid(
+                        &water_grid,
+                        &job.height_grid,
+                        job.run_params.biome_tuning.shallow_water_height_max,
+                    );
                     commands.insert_resource(water_grid);
+                    commands.insert_resource(static_depth.clone());
                     if let (Some(towns), Some(districts), Some(snap)) =
                         (towns.as_mut(), districts.as_mut(), town_snap.as_mut())
                     {
@@ -862,8 +869,12 @@ fn world_gen_pipeline_tick(
                                 if cell.x < 0 || cell.y < 0 {
                                     return true;
                                 }
-                                catalog.tile_kind(cell.x as u32, cell.y as u32)
-                                    != crate::render::WaterSurfaceKind::None
+                                static_depth
+                                    .is_wet_world(cell.x, cell.y)
+                                    .unwrap_or_else(|| {
+                                        catalog.tile_kind(cell.x as u32, cell.y as u32)
+                                            != crate::render::WaterSurfaceKind::None
+                                    })
                             },
                         );
                     }

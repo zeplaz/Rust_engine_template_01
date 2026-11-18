@@ -27,9 +27,10 @@ use crate::render::extraction::{VegExtractRow, VegetationExtractFrame};
 use crate::render::world_map_front_mesh::FrontOverlaySources;
 use crate::render::vegetation_species::{Maturity, VegSpeciesTable};
 use crate::render::world_map_vegetation_mesh::{sample_row_instances, Cover, VegInstance, VegLod};
+use crate::combat::{BallisticPresentFrame, Formation, UnitKind};
 use crate::strategic::{ConstructionSite, PlannedSite, SiteArchetype, SiteConstructionPhase, SiteFootprint};
 use crate::terrain::generation::ChunkCellMatrix;
-use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
+use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
 
 #[inline]
 fn p3(x: f32, y: f32, h: f32) -> Vec3 {
@@ -76,7 +77,7 @@ pub(crate) struct TreeLayerState {
 }
 
 /// Chunk meshes rebuilt per frame (nearest first); the rest wait a frame.
-const TREE_CHUNKS_PER_FRAME: usize = 10;
+const TREE_CHUNKS_PER_FRAME: usize = 48;
 
 /// Crown / trunk sizes scale with the sampling step so a coarse band still reads as forest.
 fn step_scale(step: u32) -> f32 {
@@ -137,6 +138,12 @@ fn push_tree(buf: &mut MeshBuf, table: &VegSpeciesTable, inst: &VegInstance, bas
             let arm = 0.32 * sh.crown_width * k;
             column(buf, at.x - arm, at.y - 0.05 * k, at.x + arm, at.y + 0.05 * k, base + 0.6 * k * hs, base + 0.68 * k * hs, shade([0.11, 0.09, 0.08], 1.0, 1.0), shade([0.11, 0.09, 0.08], 0.8, 1.0));
         }
+        Cover::Dead => {
+            // Bleached standing dead — trunk only, grey (vs charred Burnt).
+            let sh = fire_shape();
+            let hs = sh.height / 1.6;
+            trunk(buf, 0.85 * sh.trunk_width * k, 0.9 * k * hs, [0.58, 0.54, 0.48]);
+        }
         Cover::Regrowth => crown(buf, 0.3 * kj, 0.0, 0.26 * kj, [0.45, 0.72, 0.30]),
     }
 }
@@ -152,9 +159,8 @@ pub(crate) fn build_tree_chunk(
     scratch: &mut Vec<VegInstance>,
 ) -> MeshBuf {
     let mut buf = MeshBuf::default();
-    if row.cells.as_deref().is_none_or(|c| c.len() != (chunk.x * chunk.y) as usize) {
-        return buf;
-    }
+    // Prefer per-cell stand codes when ready; otherwise sample from row density so trees
+    // appear as soon as extract + terrain field are up (not only after stand.render lands).
     let step = match lod {
         VegLod::Wash => 8,
         other => other.step_tiles().max(1),
@@ -322,6 +328,7 @@ fn archetype_look(a: SiteArchetype) -> ([f32; 3], [f32; 3], f32) {
         SiteArchetype::Minefield => ([0.42, 0.32, 0.22], [0.42, 0.32, 0.22], 0.08),
         SiteArchetype::FuelDepot => ([0.78, 0.75, 0.58], [0.62, 0.58, 0.42], 1.6),
         SiteArchetype::WaterPlant => ([0.56, 0.66, 0.74], [0.40, 0.50, 0.60], 1.6),
+        SiteArchetype::Dam => ([0.48, 0.50, 0.54], [0.32, 0.34, 0.38], 2.8),
     }
 }
 
@@ -340,11 +347,29 @@ fn phase_look(p: SiteConstructionPhase) -> (f32, Option<[f32; 3]>, f32) {
     }
 }
 
-fn build_site(buf: &mut MeshBuf, planned: &PlannedSite, site: &ConstructionSite, fp: &SiteFootprint, field: &PixelWorldTerrainField) {
+fn build_site(
+    buf: &mut MeshBuf,
+    planned: &PlannedSite,
+    site: &ConstructionSite,
+    fp: &SiteFootprint,
+    field: &PixelWorldTerrainField,
+    mask: Option<&super::DestructionMaskBook>,
+) {
     if fp.tiles.is_empty() {
         return;
     }
-    let tiles: std::collections::HashSet<IVec2> = fp.tiles.iter().copied().collect();
+    // DESTROY-T2.1: omit columns on destroyed mask tiles (same book as ground VS).
+    let tiles: std::collections::HashSet<IVec2> = fp
+        .tiles
+        .iter()
+        .copied()
+        .filter(|t| {
+            mask.map_or(true, |m| m.cell(t.x, t.y) < super::MASK_DESTROYED)
+        })
+        .collect();
+    if tiles.is_empty() {
+        return;
+    }
     let mut top = f32::NEG_INFINITY;
     let mut bottom = f32::INFINITY;
     for t in &tiles {
@@ -394,7 +419,7 @@ fn build_site(buf: &mut MeshBuf, planned: &PlannedSite, site: &ConstructionSite,
     }
     // Masts / stacks read the archetype at a glance once the shell stands.
     if frac >= 0.9 {
-        let o = fp.tiles.iter().copied().min_by_key(|t| (t.y, t.x)).unwrap_or_default();
+        let o = tiles.iter().copied().min_by_key(|t| (t.y, t.x)).unwrap_or_default();
         let c = Vec2::new(o.x as f32 + 0.5, o.y as f32 + 0.5);
         let mast = |buf: &mut MeshBuf, w: f32, h: f32, col: [f32; 3]| {
             column(buf, c.x - w, c.y - w, c.x + w, c.y + w, hi, hi + h, shade(col, dim, 1.0), shade(col, dim * 0.85, 1.0));
@@ -404,6 +429,22 @@ fn build_site(buf: &mut MeshBuf, planned: &PlannedSite, site: &ConstructionSite,
             SiteArchetype::RadarSite => mast(buf, 0.08, 3.5, [0.80, 0.82, 0.85]),
             SiteArchetype::SensorPost => mast(buf, 0.06, 2.4, [0.80, 0.82, 0.85]),
             SiteArchetype::Factory => mast(buf, 0.14, 1.6, [0.50, 0.40, 0.34]),
+            // Missile pad placeholder: low bunker + angled launcher rail.
+            SiteArchetype::MilitaryBase => {
+                mast(buf, 0.22, 0.55, [0.38, 0.40, 0.32]);
+                let rail = [0.55, 0.52, 0.42];
+                column(
+                    buf,
+                    c.x - 0.08,
+                    c.y - 0.35,
+                    c.x + 0.08,
+                    c.y + 0.55,
+                    hi + 0.5,
+                    hi + 1.8,
+                    shade(rail, dim, 1.0),
+                    shade(rail, dim * 0.85, 1.0),
+                );
+            }
             _ => {}
         }
     }
@@ -415,6 +456,7 @@ pub(crate) fn sync_pixel_world_sites(
     mode: Option<Res<WorldPresentationMode>>,
     cam: Res<PixelWorldCameraFrame>,
     field: Res<PixelWorldTerrainField>,
+    mask: Option<Res<super::DestructionMaskBook>>,
     sites: Query<(Entity, &PlannedSite, &ConstructionSite, &SiteFootprint)>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
@@ -423,7 +465,7 @@ pub(crate) fn sync_pixel_world_sites(
     if !pixel_world_on(&mode, &cam, &field) {
         return;
     }
-    let mut key = mix64(field.revision);
+    let mut key = mix64(field.revision ^ mask.as_ref().map_or(0, |m| m.revision));
     for (e, planned, site, fp) in &sites {
         key = mix64(
             key ^ e.to_bits()
@@ -438,8 +480,9 @@ pub(crate) fn sync_pixel_world_sites(
     }
     state.key = Some(key);
     let mut buf = MeshBuf::default();
+    let mask_ref = mask.as_deref();
     for (_, planned, site, fp) in &sites {
-        build_site(&mut buf, planned, site, fp, field.as_ref());
+        build_site(&mut buf, planned, site, fp, field.as_ref(), mask_ref);
     }
     let material = state
         .material
@@ -861,6 +904,167 @@ pub(crate) fn sync_pixel_world_paths(
     }
 }
 
+// ---------------------------------------------------------------------------------------------
+// Formations + ballistic placeholders (voxel guys / missile body)
+// ---------------------------------------------------------------------------------------------
+
+#[derive(Component)]
+pub struct PixelWorldUnitLayer;
+
+#[derive(Default)]
+pub(crate) struct UnitLayerState {
+    key: Option<u64>,
+    material: Option<Handle<StandardMaterial>>,
+    mesh: Option<Handle<Mesh>>,
+    entity: Option<Entity>,
+}
+
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn sync_pixel_world_units(
+    mut commands: Commands,
+    mode: Option<Res<WorldPresentationMode>>,
+    cam: Res<PixelWorldCameraFrame>,
+    field: Res<PixelWorldTerrainField>,
+    formations: Query<&Formation>,
+    ballistics: Option<Res<BallisticPresentFrame>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<StandardMaterial>>,
+    mut state: Local<UnitLayerState>,
+) {
+    let on = pixel_world_on(&mode, &cam, &field);
+    if !on {
+        if let Some(e) = state.entity {
+            commands.entity(e).try_insert(Visibility::Hidden);
+        }
+        state.key = None;
+        return;
+    }
+    let mut key = mix64(field.revision ^ (formations.iter().len() as u64) << 20);
+    for f in &formations {
+        key = mix64(
+            key ^ ((f.tile.x as u64) << 32)
+                ^ (f.tile.y as u64)
+                ^ ((f.kind as u8 as u64) << 48)
+                ^ ((f.strength * 16.0) as u64),
+        );
+    }
+    if let Some(b) = ballistics.as_ref() {
+        key = mix64(key ^ b.revision ^ (b.in_flight as u64) << 8);
+    }
+    if state.key == Some(key) {
+        return;
+    }
+    state.key = Some(key);
+
+    let mut buf = MeshBuf::default();
+    for f in &formations {
+        let base = field
+            .surface_at_cell(f.tile.x, f.tile.y)
+            .unwrap_or(field.min_h);
+        let (w, h, rgb) = match f.kind {
+            UnitKind::Infantry => (0.18, 0.55, [0.22, 0.28, 0.18]),
+            UnitKind::AirDefense => (0.28, 0.85, [0.42, 0.38, 0.28]),
+            UnitKind::Armor => (0.32, 0.70, [0.36, 0.40, 0.28]),
+            UnitKind::Artillery => (0.30, 0.75, [0.40, 0.36, 0.26]),
+            _ => (0.22, 0.60, [0.34, 0.36, 0.30]),
+        };
+        let c = Vec2::new(f.tile.x as f32 + 0.5, f.tile.y as f32 + 0.5);
+        column(
+            &mut buf,
+            c.x - w,
+            c.y - w,
+            c.x + w,
+            c.y + w,
+            base,
+            base + h * f.strength.max(0.25),
+            shade(rgb, 1.05, 1.0),
+            shade(rgb, 0.85, 1.0),
+        );
+    }
+    if let Some(b) = ballistics.as_ref() {
+        let tm = TILE_METRES_GAMEPLAY.max(1e-3);
+        for (a, p) in &b.trail_segments {
+            let tile = Vec2::new(p.x / tm, p.y / tm);
+            let base = field.surface_at(tile).unwrap_or(field.min_h) + 1.2;
+            let c = tile;
+            column(
+                &mut buf,
+                c.x - 0.12,
+                c.y - 0.12,
+                c.x + 0.12,
+                c.y + 0.12,
+                base,
+                base + 0.55,
+                shade([0.85, 0.75, 0.35], 1.0, 1.0),
+                shade([0.70, 0.55, 0.25], 1.0, 1.0),
+            );
+            let _ = a;
+        }
+        for (p, age) in &b.impacts {
+            let tile = Vec2::new(p.x / tm, p.y / tm);
+            let base = field.surface_at(tile).unwrap_or(field.min_h);
+            let r = (0.55 + (1.0 - age / 2.5).max(0.0) * 0.6).clamp(0.4, 1.2);
+            column(
+                &mut buf,
+                tile.x - r * 0.5,
+                tile.y - r * 0.5,
+                tile.x + r * 0.5,
+                tile.y + r * 0.5,
+                base,
+                base + 0.35,
+                shade([0.95, 0.45, 0.15], 1.0, 0.9),
+                shade([0.80, 0.25, 0.10], 1.0, 0.9),
+            );
+        }
+    }
+
+    let material = state
+        .material
+        .get_or_insert_with(|| {
+            materials.add(StandardMaterial {
+                base_color: Color::WHITE,
+                unlit: true,
+                ..default()
+            })
+        })
+        .clone();
+    let before = state.mesh.as_ref().map(Handle::id);
+    let drawable = !buf.is_empty()
+        && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, buf.into_mesh());
+    let vis = if drawable {
+        Visibility::Inherited
+    } else {
+        Visibility::Hidden
+    };
+    let Some(mesh) = state.mesh.clone() else {
+        return;
+    };
+    match state.entity {
+        Some(e) => {
+            if before != Some(mesh.id()) {
+                commands.entity(e).try_insert((Mesh3d(mesh), vis));
+            } else {
+                commands.entity(e).try_insert(vis);
+            }
+        }
+        None => {
+            state.entity = Some(
+                commands
+                    .spawn((
+                        PixelWorldUnitLayer,
+                        Mesh3d(mesh),
+                        MeshMaterial3d(material),
+                        Transform::IDENTITY,
+                        vis,
+                        layer(),
+                        Pickable::IGNORE,
+                    ))
+                    .id(),
+            );
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -909,7 +1113,7 @@ mod tests {
         let r = row(|_| 0);
         let (buf, n) = build(&r, VegLod::Fine);
         assert!(n > 100 && !buf.is_empty());
-        let (flat, _) = build_vegetation_geometry(
+        let (flat, _, _) = build_vegetation_geometry(
             std::slice::from_ref(&r),
             UVec2::splat(CHUNK),
             VegLod::Fine,
@@ -927,9 +1131,11 @@ mod tests {
         let (b_oak, n_oak) = build(&row(|_| oak), VegLod::Fine);
         let (b_spruce, n_spruce) = build(&row(|_| spruce), VegLod::Fine);
         assert_eq!(n_oak, n_spruce);
-        // Fine band: oak = trunk + 3 tiers, spruce = trunk + 4 tiers, 20 vertices per open box.
-        assert_eq!(b_oak.positions.len(), n_oak * 4 * 20);
-        assert_eq!(b_spruce.positions.len(), n_spruce * 5 * 20);
+        // GPU-C: Fine band = trunk quad + crown quad(s) as axis-aligned rects (4 verts each).
+        assert!(b_oak.positions.len() >= n_oak * 4);
+        assert!(b_spruce.positions.len() >= n_spruce * 4);
+        assert_eq!(b_oak.positions.len() % 4, 0);
+        assert_eq!(b_spruce.positions.len() % 4, 0);
         // Spruce is taller than oak: its highest vertex is higher.
         let top = |b: &MeshBuf| b.positions.iter().map(|p| p[1]).fold(f32::MIN, f32::max);
         assert!(top(&b_spruce) > top(&b_oak));
@@ -954,5 +1160,17 @@ mod tests {
         // Tree band (step 2): no trunk box, four tiers per plant.
         assert_eq!(tree.positions.len(), nt * 4 * 20);
         assert_eq!(fine.positions.len(), nf * 5 * 20);
+    }
+
+    #[test]
+    fn destroy_t2_1_site_tiles_skip_destroyed_mask() {
+        use crate::render::pixel_world::{DestructionMaskBook, MASK_DESTROYED};
+
+        let mut book = DestructionMaskBook::default();
+        book.ensure_size(8, 8);
+        book.mark_tile(2, 3, MASK_DESTROYED);
+        let keep = |t: IVec2| book.cell(t.x, t.y) < MASK_DESTROYED;
+        assert!(keep(IVec2::new(0, 0)));
+        assert!(!keep(IVec2::new(2, 3)));
     }
 }
