@@ -66,6 +66,10 @@ pub enum ScenarioStep {
     WaitUntilTick {
         tick: u64,
     },
+    /// Sim speed multiplier (1.0 = real time), same control as the player's fast-forward.
+    SetSimSpeed {
+        speed: f32,
+    },
     /// Block the script until a committed site with this catalog id is Operational (built through
     /// the real construction + logistics path). Gate: `gate_wait_until_site_operational_system`.
     WaitUntilSiteOperational {
