@@ -17,7 +17,6 @@ use crate::systems::water::{
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{WaterClass, WorldGenDenseTerrainCache, WorldWaterGrid};
-use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 // Heights: metres from `WorldGenParams::elevation_range_m` (the one vertical contract), drawn at
 // `display_units_per_metre()` for ground AND water alike. The old fixed 42-tile scale also got

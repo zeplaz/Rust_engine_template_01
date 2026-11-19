@@ -21,7 +21,6 @@ use super::field::PixelWorldTerrainField;
 use super::PIXEL_WORLD_RENDER_LAYER;
 use crate::gui::WorldPresentationMode;
 use crate::systems::water::{SurfaceWaterGpuField, SurfaceWaterGpuFieldMeta, DEPTH_SCALE_M};
-use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 pub const WATER_FIELD_3D_WGSL: &str = "shaders/water/water_field_3d.wesl";
 
