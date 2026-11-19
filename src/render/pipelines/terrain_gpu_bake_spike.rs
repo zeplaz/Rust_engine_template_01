@@ -131,6 +131,8 @@ pub struct TerrainGpuBakeSpikeState {
     pub last_dispatch_stamp: u64,
     /// Render-world execute count snapshot when consumers last became ready.
     pub last_rtt_execute_seen: u64,
+    /// Scissors of the last armed dispatch (incremental re-bake when the dirty set changes).
+    pub last_dispatched_regions: Vec<TerrainGpuBakeScissor>,
 }
 
 impl Default for TerrainGpuBakeSpikeState {
@@ -149,6 +151,7 @@ impl Default for TerrainGpuBakeSpikeState {
             last_control_index_revision: 0,
             last_dispatch_stamp: 0,
             last_rtt_execute_seen: 0,
+            last_dispatched_regions: Vec::new(),
         }
     }
 }
@@ -611,16 +614,24 @@ fn upload_control_and_arm_gpu_rtt(
     if map.instances.is_empty() {
         return;
     }
-    if map.revision == state.last_control_index_revision && state.last_control_texel_count > 0 {
+    let bake_w = state.world_bake_w;
+    let bake_h = state.world_bake_h;
+    // CLOSE-G1: a new bake image or new material indices must be baked WHOLE. Baking only the
+    // CPU raster's dirty chunks at that moment (often just the authored valley) left the rest of
+    // the world image blank → grey ground in both views. Later dirty-chunk changes bake
+    // incrementally.
+    let full_bake = map.revision != state.last_control_index_revision
+        || state.last_control_texel_count == 0;
+    let regions = if full_bake {
+        vec![TerrainGpuBakeScissor { x0: 0, y0: 0, x1: bake_w, y1: bake_h }]
+    } else if state.regions != state.last_dispatched_regions {
+        state.regions.clone()
+    } else {
         // Still refresh execute-seen for readiness honesty.
         let exec = TERRAIN_BAKE_RTT_EXECUTE_COUNT.load(std::sync::atomic::Ordering::Relaxed);
         state.last_rtt_execute_seen = exec;
         return;
-    }
-
-    let bake_w = state.world_bake_w;
-    let bake_h = state.world_bake_h;
-    let regions = state.regions.clone();
+    };
     let control_handle = state.control_image.clone();
     let bake_handle = state.world_bake_image.clone();
     // GPU-ARRAY.1 — bake samples Texture2DArray; fall back to 2D grid only if array missing.
@@ -664,6 +675,7 @@ fn upload_control_and_arm_gpu_rtt(
     };
 
     dispatch.arm(control_handle, bake_handle, atlas_handle, params);
+    state.last_dispatched_regions = state.regions.clone();
     state.last_control_texel_count = written;
     state.last_control_index_revision = map.revision;
     state.last_dispatch_stamp = dispatch.commit_stamp;
