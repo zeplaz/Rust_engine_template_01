@@ -1,24 +1,25 @@
+// Bevy 0.20 WESL (imports via `import`; material group 3).
 // DESTROY-T2 — PixelWorld ground: bake albedo + destruction mask collapse.
 // World XY tiles: mesh uses (x, h, -y); tile = (floor(x), floor(-z)).
 
-#import bevy_pbr::forward_io::VertexOutput
-#import bevy_pbr::mesh_functions::{get_world_from_local, mesh_position_local_to_clip}
-#import bevy_pbr::mesh_view_bindings::view
+import bevy_pbr::render::forward_io::VertexOutput;
+import bevy_pbr::render::mesh_functions::{get_world_from_local, mesh_position_local_to_clip};
+import bevy_pbr::render::mesh_view_bindings::view;
 
 struct GroundMaskUniform {
     /// xy = world width/height in tiles; z = skirt Y for destroyed columns; w unused
     extent_skirt: vec4<f32>,
 }
 
-@group(2) @binding(0)
+@group(3) @binding(0)
 var<uniform> material: GroundMaskUniform;
-@group(2) @binding(1)
+@group(3) @binding(1)
 var albedo_tex: texture_2d<f32>;
-@group(2) @binding(2)
+@group(3) @binding(2)
 var albedo_samp: sampler;
-@group(2) @binding(3)
+@group(3) @binding(3)
 var destruction_mask: texture_2d<f32>;
-@group(2) @binding(4)
+@group(3) @binding(4)
 var destruction_samp: sampler;
 
 // CPU packs state in .r as 0/1/2 (u8). Destroyed threshold.
@@ -29,7 +30,7 @@ struct Vertex {
     @location(0) position: vec3<f32>,
     @location(1) normal: vec3<f32>,
     @location(2) uv: vec2<f32>,
-    @location(3) color: vec4<f32>,
+    @location(5) color: vec4<f32>, // Bevy Mesh::ATTRIBUTE_COLOR slot
 };
 
 @vertex
@@ -56,9 +57,9 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     out.world_position = get_world_from_local(vertex.instance_index) * vec4<f32>(local, 1.0);
     out.world_normal = vertex.normal;
     out.uv = vertex.uv;
-#ifdef VERTEX_OUTPUT_INSTANCE_INDEX
-    out.instance_index = vertex.instance_index;
-#endif
+    @if(VERTEX_OUTPUT_INSTANCE_INDEX) {
+        out.instance_index = vertex.instance_index;
+    }
     return out;
 }
 

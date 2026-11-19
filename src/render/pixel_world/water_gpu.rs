@@ -23,7 +23,7 @@ use crate::gui::WorldPresentationMode;
 use crate::systems::water::{SurfaceWaterGpuField, SurfaceWaterGpuFieldMeta, DEPTH_SCALE_M};
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
-pub const WATER_FIELD_3D_WGSL: &str = "shaders/water/water_field_3d.wgsl";
+pub const WATER_FIELD_3D_WGSL: &str = "shaders/water/water_field_3d.wesl";
 
 #[derive(Clone, Copy, Debug, Default, ShaderType)]
 pub struct WaterField3dUniform {
@@ -293,9 +293,9 @@ pub(crate) fn sync_pixel_world_gpu_water(
         state.bed_field_rev = None;
     }
     let bed_handle = state.bed_image.clone().unwrap_or(bed_handle);
-    let (bed_min, bed_range) = if state.bed_field_rev != Some(field.revision) || need_bed_resize {
+    let (bed_min, bed_range) = if state.bed_field_rev != Some(field.ground_revision) || need_bed_resize {
         let r = upload_bed_texture(images.as_mut(), &bed_handle, gpu.as_ref(), field.as_ref());
-        state.bed_field_rev = Some(field.revision);
+        state.bed_field_rev = Some(field.ground_revision);
         r
     } else {
         (field.min_h, (field.max_h - field.min_h).max(0.001))
@@ -408,10 +408,10 @@ mod tests {
     use super::*;
 
     #[test]
-    fn water_field_3d_wgsl_has_vertex_displace() {
+    fn water_field_3d_wesl_has_vertex_displace() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
-        let src = std::fs::read_to_string(root.join("assets/shaders/water/water_field_3d.wgsl"))
-            .expect("water_field_3d.wgsl");
+        let src = std::fs::read_to_string(root.join("assets/shaders/water/water_field_3d.wesl"))
+            .expect("water_field_3d.wesl");
         assert!(src.contains("@vertex"));
         assert!(src.contains("fn fragment"));
         assert!(src.contains("field_tex"));
