@@ -204,10 +204,17 @@ fn tree_chunk_key(row: &VegExtractRow, lod: VegLod, field_rev: u64) -> u64 {
 }
 
 #[allow(clippy::too_many_arguments)]
+/// Voxel camera domain: the frame plus whether layers may cull against it.
+#[derive(bevy::ecs::system::SystemParam)]
+pub(crate) struct VoxelCamView<'w> {
+    frame: Res<'w, PixelWorldCameraFrame>,
+    culling: Res<'w, super::PixelWorldCulling>,
+}
+
 pub(crate) fn sync_pixel_world_trees(
     mut commands: Commands,
     mode: Option<Res<WorldPresentationMode>>,
-    cam: Res<PixelWorldCameraFrame>,
+    view: VoxelCamView,
     field: Res<PixelWorldTerrainField>,
     veg: Option<Res<VegetationExtractFrame>>,
     table: Res<VegSpeciesTable>,
@@ -216,7 +223,8 @@ pub(crate) fn sync_pixel_world_trees(
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut state: Local<TreeLayerState>,
 ) {
-    if !pixel_world_on(&mode, &cam, &field) {
+    let cam = &*view.frame;
+    if !pixel_world_on(&mode, cam, &field) {
         return;
     }
     let Some(veg) = veg else {
@@ -256,7 +264,9 @@ pub(crate) fn sync_pixel_world_trees(
         .filter_map(|r| {
             let c0 = r.coord.as_vec2() * csize;
             let c1 = c0 + csize;
-            let overlaps = c1.x >= lo.x && c0.x <= hi.x && c1.y >= lo.y && c0.y <= hi.y;
+            // Culling off (default, `PixelWorldCulling`): every chunk is kept, nearest first.
+            let overlaps = !view.culling.trees
+                || (c1.x >= lo.x && c0.x <= hi.x && c1.y >= lo.y && c0.y <= hi.y);
             let d = (c0 + csize * 0.5).distance(cam.focus);
             overlaps.then_some((d, r))
         })
