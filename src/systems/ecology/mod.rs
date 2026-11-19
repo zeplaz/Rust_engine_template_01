@@ -154,6 +154,8 @@ impl Plugin for EcologyPlugin {
             .add_systems(
             Update,
             (
+                landscape_grammar_lg2::seed_mature_canopy_system
+                    .after(landscape_grammar_lg2::derive_vegetation_population_from_graph),
                 cell_stand::spawn_chunk_cell_stand,
                 fuel_moisture::spawn_chunk_cell_fuel_moisture.after(cell_stand::spawn_chunk_cell_stand),
                 fuel_break::apply_fuel_break_commits,

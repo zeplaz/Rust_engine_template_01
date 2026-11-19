@@ -62,6 +62,9 @@ pub struct CanopyDrivers {
     pub old_growth_target: Option<f32>,
     /// One-shot clear (construction, harvest): caps canopy at this value, then is consumed.
     pub clear_to: Option<f32>,
+    /// One-shot start: a stand that exists at world start (mature) begins at this canopy instead
+    /// of growing into it from zero; capped by the biome ceiling, then consumed (CLOSE-T4).
+    pub seed_to: Option<f32>,
     /// Biome ceiling: canopy, understory, old growth and fuel never exceed it (0 = nothing grows).
     /// Set from terrain suitability; 1 means unrestricted.
     pub suitability_cap: f32,
@@ -83,6 +86,7 @@ impl Default for CanopyDrivers {
             succession_floor: 0.0,
             old_growth_target: None,
             clear_to: None,
+            seed_to: None,
             suitability_cap: 1.0,
             growth_scale: 1.0,
             burn_canopy_loss: 0.0,
@@ -351,6 +355,11 @@ pub fn integrate_vegetation_field_step_from_aggregates(
     let canopy_room = (1.0 - drivers.burn_canopy_loss).clamp(0.0, 1.0);
     let floor_room = (1.0 - drivers.burn_canopy_loss.max(drivers.burn_ground_loss)).clamp(0.0, 1.0);
     let canopy_cap = biome_cap * canopy_room;
+    if let Some(seed) = drivers.seed_to {
+        let s = seed.clamp(0.0, 1.0).min(canopy_cap);
+        veg.canopy_density = veg.canopy_density.max(s);
+        veg.understory_density = veg.understory_density.max(s * 0.65);
+    }
     if let Some(cap) = drivers.clear_to {
         veg.canopy_density = veg.canopy_density.min(cap.clamp(0.0, 1.0));
     }
@@ -568,6 +577,9 @@ pub(crate) fn vegetation_field_tick(
         // Consume the one-shot clear (only when it was set: avoids marking the component changed).
         if drivers.clear_to.is_some() {
             drivers.clear_to = None;
+        }
+        if drivers.seed_to.is_some() {
+            drivers.seed_to = None;
         }
     }
     if terrain_cache.len() > seen {

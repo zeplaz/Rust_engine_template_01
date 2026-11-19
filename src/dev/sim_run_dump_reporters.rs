@@ -164,6 +164,81 @@ pub fn dump_vegetation_section(
     );
 }
 
+/// Ecology canopy chain per chunk (counts only): succession stage, canopy, target, cap.
+pub fn dump_canopy_section(
+    arm: Res<SimDumpArm>,
+    chunks: Query<(
+        &crate::systems::ecology::VegetationField,
+        &crate::systems::ecology::CanopyDrivers,
+        Option<&crate::systems::ecology::SuccessionState>,
+    )>,
+    matrices: Query<(&Chunk, &ChunkCellMatrix)>,
+    mut dump: ResMut<SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    // Family + water class histogram inside the dam fixture floodplain box (120..=200)^2.
+    let fams = crate::terrain::family::default_terrain_families();
+    let mut fp_family: BTreeMap<String, u32> = BTreeMap::new();
+    let mut fp_water: BTreeMap<String, u32> = BTreeMap::new();
+    for (chunk, m) in &matrices {
+        for y in 0..m.size.y {
+            for x in 0..m.size.x {
+                let wx = chunk.coord.x * m.size.x as i32 + x as i32;
+                let wy = chunk.coord.y * m.size.y as i32 + y as i32;
+                if !(120..=200).contains(&wx) || !(120..=200).contains(&wy) {
+                    continue;
+                }
+                let i = m.idx(x, y);
+                let name = m.family.get(i).and_then(|f| fams.def(*f)).map_or("?".to_string(), |d| d.name.clone());
+                *fp_family.entry(name).or_default() += 1;
+                *fp_water.entry(format!("{:?}", m.water.get(i).copied().unwrap_or_default())).or_default() += 1;
+            }
+        }
+    }
+    let mut cap_max = 0.0f32;
+    let mut stages: BTreeMap<String, u32> = BTreeMap::new();
+    let (mut n, mut canopy, mut cmax, mut target, mut cap, mut growth) = (0u32, 0.0f32, 0.0f32, 0.0f32, 0.0f32, 0.0f32);
+    let mut bands = [0u32; 4];
+    for (veg, drv, succ) in &chunks {
+        n += 1;
+        canopy += veg.canopy_density;
+        cmax = cmax.max(veg.canopy_density);
+        target += drv.population_density.unwrap_or(-1.0);
+        cap += drv.suitability_cap;
+        cap_max = cap_max.max(drv.suitability_cap);
+        growth += drv.growth_scale;
+        let b = match veg.canopy_density {
+            c if c < 0.2 => 0,
+            c if c < 0.45 => 1,
+            c if c < 0.75 => 2,
+            _ => 3,
+        };
+        bands[b] += 1;
+        if let Some(s) = succ {
+            *stages.entry(format!("{:?}", s.stage)).or_default() += 1;
+        }
+    }
+    let nf = n.max(1) as f32;
+    dump.put_value(
+        "canopy",
+        json!({
+            "chunks": n,
+            "canopy_mean": canopy / nf,
+            "canopy_max": cmax,
+            "population_target_mean": target / nf,
+            "suitability_cap_mean": cap / nf,
+            "suitability_cap_max": cap_max,
+            "floodplain_family": fp_family,
+            "floodplain_water": fp_water,
+            "growth_scale_mean": growth / nf,
+            "canopy_bands_grass_shrub_young_old": bands,
+            "succession_stages": stages,
+        }),
+    );
+}
+
 pub fn dump_economy_section(
     arm: Res<SimDumpArm>,
     plants: Query<(
@@ -887,6 +962,7 @@ pub fn flush_sim_run_dump(
         "construction",
         "dam_site",
         "vegetation",
+        "canopy",
         "economy",
         "logistics",
         "ai",
