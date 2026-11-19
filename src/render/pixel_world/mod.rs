@@ -48,6 +48,33 @@ pub use field::PixelWorldTerrainField;
 /// Render layer of every voxel-view entity (camera, sun, meshes).
 pub const PIXEL_WORLD_RENDER_LAYER: usize = 9;
 
+/// Camera culling for the voxel view's trees and fire. **Off by default** while those layers are
+/// being verified (operator call, 2026-11-19): every tree chunk is kept and fire is extracted for
+/// the whole world at full detail, independent of the camera. Switch on with `PIXEL_WORLD_CULL=1`
+/// (or per layer: `PIXEL_WORLD_CULL=trees` / `=fire`) once both are proven, then make it default.
+#[derive(Resource, Clone, Copy, Debug, Default, PartialEq, Eq)]
+pub struct PixelWorldCulling {
+    pub trees: bool,
+    pub fire: bool,
+}
+
+impl PixelWorldCulling {
+    #[must_use]
+    pub fn from_env() -> Self {
+        Self::parse(std::env::var("PIXEL_WORLD_CULL").ok().as_deref())
+    }
+
+    #[must_use]
+    pub fn parse(v: Option<&str>) -> Self {
+        match v.map(str::trim) {
+            Some("1" | "true" | "on" | "all") => Self { trees: true, fire: true },
+            Some("trees") => Self { trees: true, fire: false },
+            Some("fire") => Self { trees: false, fire: true },
+            _ => Self::default(),
+        }
+    }
+}
+
 /// Tactical XY (x = column, y = row, +Y north) at height `h` → 3D (`+Y` up, north = `-Z`).
 #[inline]
 #[must_use]
@@ -70,6 +97,7 @@ pub struct PixelWorldViewPlugin;
 
 impl Plugin for PixelWorldViewPlugin {
     fn build(&self, app: &mut App) {
+        app.insert_resource(PixelWorldCulling::from_env());
         app.add_plugins((
             water_gpu::PixelWorldWaterGpuPlugin,
             ground_material::PixelWorldGroundMaterialPlugin,
@@ -132,5 +160,18 @@ impl Plugin for PixelWorldViewPlugin {
                 )
                     .in_set(PixelWorldViewSet::Layers),
             );
+    }
+}
+
+#[cfg(test)]
+mod culling_tests {
+    use super::PixelWorldCulling;
+
+    #[test]
+    fn culling_defaults_off_and_parses_per_layer() {
+        assert_eq!(PixelWorldCulling::parse(None), PixelWorldCulling { trees: false, fire: false });
+        assert_eq!(PixelWorldCulling::parse(Some("1")), PixelWorldCulling { trees: true, fire: true });
+        assert_eq!(PixelWorldCulling::parse(Some("trees")), PixelWorldCulling { trees: true, fire: false });
+        assert_eq!(PixelWorldCulling::parse(Some("fire")), PixelWorldCulling { trees: false, fire: true });
     }
 }

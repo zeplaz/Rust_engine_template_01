@@ -47,14 +47,25 @@ pub fn pixel_world_fire_band(px_per_tile: f32) -> WorldLodBand {
 pub fn publish_fire_view_override_from_pixel_world(
     mode: Option<Res<WorldPresentationMode>>,
     cam: Option<Res<PixelWorldCameraFrame>>,
+    culling: Option<Res<crate::render::pixel_world::PixelWorldCulling>>,
     mut out: ResMut<FireViewOverride>,
 ) {
+    let cull = culling.is_some_and(|c| c.fire);
     let next = match cam.as_deref() {
         Some(c) if c.active && mode.as_deref().is_some_and(|m| m.is_pixel_world()) => {
-            let pad = Vec2::splat(PIXEL_WORLD_FIRE_FOOTPRINT_MARGIN_TILES);
-            FireViewOverride {
-                footprint: Some(Rect::from_corners(c.ground_min - pad, c.ground_max + pad)),
-                band: Some(pixel_world_fire_band(c.px_per_tile)),
+            if cull {
+                let pad = Vec2::splat(PIXEL_WORLD_FIRE_FOOTPRINT_MARGIN_TILES);
+                FireViewOverride {
+                    footprint: Some(Rect::from_corners(c.ground_min - pad, c.ground_max + pad)),
+                    band: Some(pixel_world_fire_band(c.px_per_tile)),
+                }
+            } else {
+                // Culling off (default): whole world, one fixed band at every zoom — fire
+                // particles showed only when zoomed out because the band changed with zoom.
+                FireViewOverride {
+                    footprint: Some(Rect::from_corners(Vec2::splat(-1.0e6), Vec2::splat(1.0e6))),
+                    band: Some(WorldLodBand::Operational),
+                }
             }
         }
         _ => FireViewOverride::default(),
@@ -159,8 +170,13 @@ mod tests {
     }
 
     fn publish(mode: Option<WorldPresentationMode>, cam: PixelWorldCameraFrame) -> FireViewOverride {
+        publish_with(mode, cam, true)
+    }
+
+    fn publish_with(mode: Option<WorldPresentationMode>, cam: PixelWorldCameraFrame, cull: bool) -> FireViewOverride {
         use bevy::ecs::system::RunSystemOnce;
         let mut world = World::new();
+        world.insert_resource(crate::render::pixel_world::PixelWorldCulling { trees: cull, fire: cull });
         if let Some(m) = mode {
             world.insert_resource(m);
         }
@@ -182,6 +198,18 @@ mod tests {
         assert_eq!(publish(Some(voxel), voxel_camera(1.6)).band, Some(WorldLodBand::Strategic));
         assert_eq!(publish(Some(flat), voxel_camera(20.0)), FireViewOverride::default());
         assert_eq!(publish(None, voxel_camera(20.0)), FireViewOverride::default());
+    }
+
+    /// Culling off (default): whole world at one fixed band, whatever the zoom.
+    #[test]
+    fn culling_off_publishes_whole_world_one_band() {
+        use crate::gui::WorldPresentationKind;
+        let voxel = WorldPresentationMode { kind: WorldPresentationKind::PixelWorld3D };
+        for px in [1.6, 20.0] {
+            let o = publish_with(Some(voxel), voxel_camera(px), false);
+            assert!(o.footprint.unwrap().contains(Vec2::new(-5000.0, 9000.0)));
+            assert_eq!(o.band, Some(WorldLodBand::Operational));
+        }
     }
 
     /// The one particle fill yields rows for burning cells in PixelWorld3D: chunk selected by the
