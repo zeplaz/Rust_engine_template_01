@@ -119,7 +119,9 @@ impl GpuParticleInstance {
                 ember,
                 class.as_f32(),
                 quad_half_world,
-                smoke,
+                // `.w` = smoke weight for AtmosphereFx only; for CPU-animated classes it is the oblique
+                // height lift (see `particle_anim::particle_ground_and_height_m`), 0 here (on the ground).
+                if class == ParticleClass::AtmosphereFx { smoke } else { 0.0 },
             ),
         }
     }
