@@ -17,9 +17,8 @@ pub use author_valley::{
 pub use fixture::{load_dam_valley_fixture, DamValleyFixture, DAM_VALLEY_FIXTURE_REL};
 pub use placement::dam_channel_span_footprint;
 pub use scene_seed::{
-    apply_dam_control_intent_to_sites_system, breach_dam_on_strike_impact_system,
-    enqueue_dam_flood_strike_once_system, enqueue_dam_flood_water_config_system,
-    mirror_stands_into_dam_book_system, mirror_water_into_dam_book_system,
+    apply_dam_control_intent_to_sites_system, enqueue_dam_flood_water_config_system,
+    mirror_dam_integrity_into_book_system, mirror_stands_into_dam_book_system, mirror_water_into_dam_book_system,
     spawn_dam_flood_cooling_intakes_system, sync_dam_control_to_barrier_intent_system,
     DamFloodCoolerTag,
 };
@@ -109,7 +108,7 @@ impl Default for DamFloodBenchmarkBook {
             stage_entry_tick: [0; 10],
             water_mass_m3: 0.0,
             inundated_tiles: 0,
-            dam_integrity_mean: 1.0,
+            dam_integrity_mean: 0.0,
             outlet_flow_m3s: 0.0,
             spillway_flow_m3s: 0.0,
             breach_flow_m3s: 0.0,
@@ -245,8 +244,9 @@ impl Plugin for DamFloodPlugin {
                         .after(apply_dam_control_intent_to_sites_system),
                     mirror_water_into_dam_book_system,
                     mirror_stands_into_dam_book_system.after(mirror_water_into_dam_book_system),
-                    enqueue_dam_flood_strike_once_system,
-                    breach_dam_on_strike_impact_system.after(enqueue_dam_flood_strike_once_system),
+                    // CLOSE-S1: strike failsafe + breach-on-impact removed — the script's
+                    // StrikeOrder flies a real warhead; blast → DamBody → leak/breach owns damage.
+                    mirror_dam_integrity_into_book_system,
                 ),
             )
             .register_type::<DamFloodStage>()

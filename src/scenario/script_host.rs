@@ -287,8 +287,6 @@ pub fn drain_script_steps(
                 } else {
                     book.enter_stage(DamFloodStage::S4Operate, tick);
                 }
-                book.outlet_flow_m3s = outlet_open01.clamp(0.0, 1.0) * 150.0;
-                book.spillway_flow_m3s = gate_open01.clamp(0.0, 1.0) * 200.0;
             }
             host.execution_log.push(format!(
                 "SetDamControl: gate={gate_open01:.2} outlet={outlet_open01:.2} turbine={turbine_flow_setpoint_m3s:.1}"
@@ -308,10 +306,8 @@ pub fn drain_script_steps(
                     center_world_x,
                 });
             }
-            if let Some(book) = dam_book.as_mut() {
-                book.enter_stage(DamFloodStage::S1Build, tick);
-                book.dam_integrity_mean = 1.0;
-            }
+            // General water API (e.g. a ROI with no dam). Book values are mirrored from water
+            // and DamBody, never written by script (CLOSE-S1).
             host.execution_log.push(format!(
                 "InstallBarrier: z={world_z} crest_m={crest_m:.1} half_span={half_span}"
             ));
@@ -326,11 +322,6 @@ pub fn drain_script_steps(
                     clear_crest,
                     breach_flow_m3s: breach_flow_m3s.max(0.0),
                 });
-            }
-            if let Some(book) = dam_book.as_mut() {
-                book.enter_stage(DamFloodStage::S7Collapse, tick);
-                book.dam_integrity_mean = 0.0;
-                book.breach_flow_m3s = breach_flow_m3s.max(0.0);
             }
             host.execution_log.push(format!(
                 "ApplyBreach: clear_crest={clear_crest} breach_flow_m3s={breach_flow_m3s:.1}"
