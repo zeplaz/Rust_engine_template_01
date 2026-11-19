@@ -144,3 +144,84 @@ pub fn dump_dam_flood_section(
         dump.put_value("dam_flood", v);
     }
 }
+
+/// The scene's dam site build state + the logistics lines feeding it (counts only, no verdicts).
+/// Own section so `dump_dam_flood_section` stays narrow.
+pub fn dump_dam_site_section(
+    arm: Res<crate::dev::sim_run_dump::SimDumpArm>,
+    sites: Query<(
+        &crate::strategic::ConstructionSite,
+        &crate::strategic::PlannedSite,
+        Option<&crate::construction::SiteStageProgress>,
+        Option<&crate::strategic::SiteResourceManifest>,
+        Option<&crate::strategic::SiteOperationalStats>,
+        Option<&crate::economy::logistics::orders::LogisticsOrderSiteId>,
+    )>,
+    snapshot: Option<Res<crate::economy::logistics::orders::LogisticsOrdersSnapshotRes>>,
+    mut dump: ResMut<crate::dev::sim_run_dump::SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    let mut out = Vec::new();
+    for (site, planned, stage, manifest, stats, sid) in &sites {
+        if site.archetype != crate::strategic::SiteArchetype::Dam {
+            continue;
+        }
+        let snap = snapshot.as_ref().map(|s| &s.0);
+        let sid = sid.map(|s| s.0);
+        let orders: Vec<_> = snap
+            .zip(sid)
+            .map(|(snap, sid)| {
+                snap.orders
+                    .iter()
+                    .filter(|o| o.sink == sid)
+                    .map(|o| json!({
+                        "cargo": o.cargo, "status": o.status_label, "delivered": o.delivered,
+                        "in_flight": o.in_flight, "remaining": o.remaining, "vehicles": o.vehicles,
+                        "source": o.source_name,
+                    }))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let demands: Vec<_> = snap
+            .zip(sid)
+            .map(|(snap, sid)| {
+                snap.demands
+                    .iter()
+                    .filter(|d| d.site == sid)
+                    .map(|d| json!({"cargo": d.cargo, "on_hand": d.on_hand, "inbound": d.inbound, "target": d.buffer_target}))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let rejected: Vec<_> = snap.map(|s| s.rejected.iter().rev().take(5).cloned().collect()).unwrap_or_default();
+        let trucks: Vec<_> = snap
+            .zip(sid)
+            .map(|(snap, sid)| {
+                snap.vehicles
+                    .iter()
+                    .filter(|v| v.to == sid || v.from == sid || v.at == sid)
+                    .take(6)
+                    .map(|v| json!({"phase": v.phase, "load": v.load, "from": v.from.0, "to": v.to.0, "at": v.at.0, "fraction": v.fraction}))
+                    .collect()
+            })
+            .unwrap_or_default();
+        let events: Vec<_> = snap.map(|s| s.events.iter().rev().take(6).map(|e| e.text.clone()).collect()).unwrap_or_default();
+        out.push(json!({
+            "catalog_id": planned.catalog_id,
+            "phase": format!("{:?}", site.phase),
+            "progress": stage.map(|s| s.progress),
+            "delivered_ratio": manifest.map(|m| m.min_delivered_ratio()),
+            "short": manifest.map(|m| m.short_materials().iter().map(|(k, v)| json!([k, v])).collect::<Vec<_>>()),
+            "stats": stats.map(|s| json!({"power": s.power_ratio, "supply": s.supply_ratio, "workforce": s.workforce_ratio})),
+            "logistics_registered": sid.is_some(),
+            "orders": orders,
+            "demands": demands,
+            "rejected_recent": rejected,
+            "site_id": sid.map(|s| s.0),
+            "trucks": trucks,
+            "events_recent": events,
+        }));
+    }
+    dump.put_value("dam_site", json!(out));
+}

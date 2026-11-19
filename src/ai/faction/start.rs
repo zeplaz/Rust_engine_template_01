@@ -91,6 +91,10 @@ pub struct FactionStart {
     /// `Some(doctrine)` makes the slot an AI faction.
     #[serde(default)]
     pub ai: Option<FactionDoctrine>,
+    /// Logistics auto-supply for this faction at start (`None` = the logistics default: AI on,
+    /// player off in a windowed game). Same switch as the orders-panel toggle.
+    #[serde(default)]
+    pub auto_supply: Option<bool>,
     pub hq: HqPlacement,
     pub stockpile: Vec<StockLine>,
     pub fleet: Vec<FleetLine>,
@@ -143,6 +147,26 @@ impl FactionStartConfig {
                 bevy::log::warn!("faction start config {} unusable: {e}", path.display());
                 None
             }
+        }
+    }
+}
+
+/// Apply each faction's start `auto_supply` choice once (the orders-panel toggle, set by config).
+pub fn apply_start_auto_supply_policy_system(
+    config: Option<Res<FactionStartConfig>>,
+    mut policy: Option<ResMut<crate::economy::logistics::orders::AutoSupplyPolicy>>,
+    mut done: Local<bool>,
+) {
+    if *done {
+        return;
+    }
+    let (Some(config), Some(policy)) = (config, policy.as_mut()) else {
+        return;
+    };
+    *done = true;
+    for f in &config.factions {
+        if let Some(on) = f.auto_supply {
+            policy.set(crate::economy::logistics::orders::OwnerId(f.slot), on);
         }
     }
 }
@@ -275,6 +299,7 @@ impl Plugin for FactionStartPlugin {
             Update,
             (
                 apply_faction_start_system,
+                apply_start_auto_supply_policy_system,
                 apply_faction_start_formations_system,
                 seed_ai_roster_from_start_config_system,
             )
