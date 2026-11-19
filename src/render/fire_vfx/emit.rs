@@ -187,6 +187,8 @@ pub struct FireEmitterMemory {
     live: HashMap<(i32, i32), DyingSmoke>,
     dying: HashMap<(i32, i32), DyingSmoke>,
     last_time_s: f32,
+    /// Anim time (s) a burning cell was last seen per chunk; gates the chunk smoke haze.
+    chunk_fire_s: HashMap<IVec2, f32>,
 }
 
 #[derive(Clone, Copy)]
@@ -202,6 +204,26 @@ const DYING_SMOKE_S: f32 = 3.5;
 /// LOD level ease time constant (s).
 const LOD_EASE_TAU_S: f32 = 0.35;
 const DYING_MAX: usize = 2048;
+/// Chunk smoke haze fades out over this long (s) after the last burning cell near it.
+const HAZE_TAIL_S: f32 = 12.0;
+/// Lowest heat a cell can still be drawn burning: the stand snapshot keeps a lit cell burning down
+/// to half of `CELL_BURN_HEAT` (hysteresis), so flame rows must reach that low or a tree is
+/// drawn burning with no flame on it. The extract already gates rows on that same stand code.
+const FLAME_MIN_HEAT: f32 = crate::systems::ecology::CELL_BURN_HEAT * 0.5;
+
+/// Haze gain `[0, 1]` for a chunk: full while a cell in it or a neighbour burns, then fading.
+#[must_use]
+fn chunk_haze_gain(memory: &FireEmitterMemory, coord: IVec2, now_s: f32) -> f32 {
+    let mut gain = 0.0f32;
+    for dy in -1..=1 {
+        for dx in -1..=1 {
+            if let Some(&t) = memory.chunk_fire_s.get(&(coord + IVec2::new(dx, dy))) {
+                gain = gain.max(1.0 - (now_s - t) / HAZE_TAIL_S);
+            }
+        }
+    }
+    gain.clamp(0.0, 1.0)
+}
 
 #[inline]
 fn lod_level_target(band: FireLodBand) -> f32 {
@@ -248,7 +270,7 @@ pub fn emit_world_fire_particles_from_projection(
         Some(&wind_by_chunk),
     );
     if let Some(smoke) = smoke_extract.as_deref() {
-        append_smoke_atmosphere_particles_from_extract(smoke, frame.as_mut(), anim);
+        append_smoke_atmosphere_particles_from_extract(smoke, frame.as_mut(), anim, &memory);
     }
     // Sparks follow fire events only: no chunk-centre overlay bootstrap (it invented sparks
     // over cells with no fuel and ignored view culling).
@@ -376,11 +398,13 @@ pub fn update_world_fire_particles_animated(
         }
         // LOD crossfade: eased level per chunk, so band changes fade instead of popping.
         let chunk = IVec2::new(row.chunk_grid_xy().x as i32, row.chunk_grid_xy().y as i32);
-        // Heat below the display floor is not a fire (CQ-38: no main-world DenseHeatPlayField blend).
+        // Rows are already gated on the stand's burning code by the extract; this floor only drops
+        // numerical residue (CQ-38: no main-world DenseHeatPlayField blend).
         let heat = row.heat();
-        if heat < CHUNK_FIRE_OVERLAY_DISPLAY_MIN {
+        if heat < FLAME_MIN_HEAT {
             continue;
         }
+        memory.chunk_fire_s.insert(chunk, anim.time_s);
         let level = *seen_chunks.entry(chunk).or_insert_with(|| {
             let target = lod_level_target(band);
             let cur = memory.lod_level.get(&chunk).copied().unwrap_or(target);
@@ -430,6 +454,9 @@ pub fn update_world_fire_particles_animated(
         live_now.insert(key, DyingSmoke { xy, heat, smoke, left_s: DYING_SMOKE_S });
     }
     memory.lod_level = seen_chunks;
+    memory
+        .chunk_fire_s
+        .retain(|_, t| anim.time_s - *t < HAZE_TAIL_S && anim.time_s >= *t);
 
     // Cells that were burning last frame and are not now leave smoke behind, fading out.
     let previous = std::mem::take(&mut memory.live);
@@ -477,6 +504,7 @@ fn append_smoke_atmosphere_particles_from_extract(
     smoke: &SimChunkSmokeVisualExtract,
     frame: &mut WorldFireParticleFrame,
     anim: FireAnim,
+    memory: &FireEmitterMemory,
 ) {
     if smoke.instances.is_empty() {
         return;
@@ -491,9 +519,14 @@ fn append_smoke_atmosphere_particles_from_extract(
             continue;
         }
         let coord = IVec2::new(row.chunk_xy.x as i32, row.chunk_xy.y as i32);
+        // Smoke follows fire: haze only near burning cells, fading after burnout (no haze from nowhere).
+        let gain = chunk_haze_gain(memory, coord, anim.time_s);
+        if gain <= 0.0 {
+            continue;
+        }
         let center = chunk_world_center(ChunkCoord::new(coord.x, coord.y), UVec2::splat(16));
         let seed = (coord.x as u32).wrapping_mul(73_856_093) ^ (coord.y as u32).wrapping_mul(19_349_663);
-        if let Some(r) = smoke_puff(center, 2.0, density * 0.35, &anim, seed, 0, 1.5 + 2.5 * density) {
+        if let Some(r) = smoke_puff(center, 2.0, density * 0.35 * gain, &anim, seed, 0, 1.5 + 2.5 * density) {
             frame.instances.push(r);
         }
     }
@@ -895,6 +928,113 @@ mod tests {
             .iter()
             .any(|r| r.ember_class_radius_smoke.y == ParticleClass::Spark.as_f32()));
         assert_eq!(particles.spark_witness.projection_view, "WorldMain");
+    }
+
+    fn tactical_graph_with_rows(rows: &[FireVisualGpuInstance]) -> RenderProjectionGraph {
+        let mut graph = RenderProjectionGraph::default();
+        graph.fire.instance_buffer = rows.to_vec();
+        graph.fire.snapshot_stamp = 1;
+        graph.fire.lod = WorldLodBand::LocalTactical;
+        graph.fire.gpu_instance_capacity = 512;
+        graph
+    }
+
+    fn classes(frame: &WorldFireParticleFrame) -> Vec<f32> {
+        frame.instances.iter().map(|r| r.ember_class_radius_smoke.y).collect()
+    }
+
+    fn at(time_s: f32) -> FireAnim {
+        FireAnim { time_s, wind_mps: Vec2::ZERO }
+    }
+
+    #[test]
+    fn burning_cell_emits_flame_and_smoke_then_burnout_leaves_only_a_smoke_tail() {
+        let cam = ExtractedCameraMetrics::default();
+        let mut row = sample_fire_row(IVec2::new(0, 0), 0.8, 0.5);
+        row.world_xyz_radius = Vec4::new(5.5, 6.5, 0.0, 1.0);
+        row.smoke_ember_vis_priority.x = 0.8;
+        let mut memory = FireEmitterMemory::default();
+        let mut frame = WorldFireParticleFrame::default();
+
+        // Burning: flame core every frame and smoke over a full smoke cycle.
+        let burning = tactical_graph_with_rows(&[row]);
+        let mut saw_smoke = false;
+        for i in 0..40 {
+            update_world_fire_particles_animated(&burning, &mut frame, None, cam, None, at(i as f32 * 0.25), &mut memory, None);
+            let c = classes(&frame);
+            assert!(c.contains(&ParticleClass::Spark.as_f32()), "flame row while burning");
+            saw_smoke |= c.contains(&ParticleClass::Smoke.as_f32());
+        }
+        assert!(saw_smoke, "smoke follows the burning cell");
+
+        // Burnt out (the extract no longer emits the row): no flame or ember row, only a decaying smoke tail.
+        let out = tactical_graph_with_rows(&[]);
+        let t0 = 10.0;
+        let mut tail_rows = 0usize;
+        for i in 0..30 {
+            update_world_fire_particles_animated(&out, &mut frame, None, cam, None, at(t0 + i as f32 * 0.1), &mut memory, None);
+            for c in classes(&frame) {
+                assert_eq!(c, ParticleClass::Smoke.as_f32(), "only smoke after burnout");
+                tail_rows += 1;
+            }
+        }
+        assert!(tail_rows > 0, "smoke tail after burnout");
+        // The emitter clock advances at most 0.25 s per frame; run past the tail length.
+        for i in 0..20 {
+            update_world_fire_particles_animated(&out, &mut frame, None, cam, None, at(t0 + 3.0 + i as f32 * 0.25), &mut memory, None);
+        }
+        assert!(frame.instances.is_empty(), "tail fully gone after the decay time");
+    }
+
+    #[test]
+    fn low_heat_burning_cell_still_gets_a_flame() {
+        // The stand keeps a lit cell burning down to half of CELL_BURN_HEAT, so the tree stays drawn
+        // burning there; the flame must not vanish at the old 0.12 display floor.
+        let cam = ExtractedCameraMetrics::default();
+        let mut row = sample_fire_row(IVec2::new(0, 0), 0.05, 0.1);
+        row.world_xyz_radius = Vec4::new(5.5, 6.5, 0.0, 1.0);
+        let graph = tactical_graph_with_rows(&[row]);
+        let mut frame = WorldFireParticleFrame::default();
+        update_world_fire_particles_animated(&graph, &mut frame, None, cam, None, at(1.0), &mut FireEmitterMemory::default(), None);
+        assert!(classes(&frame).contains(&ParticleClass::Spark.as_f32()));
+    }
+
+    #[test]
+    fn chunk_haze_only_near_fire_and_fades_after_burnout() {
+        let mut memory = FireEmitterMemory::default();
+        let c = IVec2::new(3, 3);
+        assert_eq!(chunk_haze_gain(&memory, c, 5.0), 0.0, "no fire, no haze");
+        memory.chunk_fire_s.insert(c, 5.0);
+        assert_eq!(chunk_haze_gain(&memory, c, 5.0), 1.0);
+        assert!(chunk_haze_gain(&memory, c + IVec2::X, 5.0) > 0.99, "neighbour chunk drifts");
+        assert_eq!(chunk_haze_gain(&memory, c + IVec2::new(2, 0), 5.0), 0.0, "two chunks away: none");
+        let mid = chunk_haze_gain(&memory, c, 5.0 + HAZE_TAIL_S * 0.5);
+        assert!(mid > 0.4 && mid < 0.6, "linear fade");
+        assert_eq!(chunk_haze_gain(&memory, c, 5.0 + HAZE_TAIL_S), 0.0);
+    }
+
+    #[test]
+    fn tree_stage_and_flame_presence_agree_for_the_same_cell_codes() {
+        use crate::render::world_map_vegetation_mesh::{cover_for_code, Cover};
+        use crate::systems::ecology::{CELL_BURNING, CELL_BURNT, CELL_OLD};
+        let cam = ExtractedCameraMetrics::default();
+        for code in [CELL_BURNING, CELL_BURNT, CELL_OLD] {
+            // The extract emits a row exactly for CELL_BURNING cells (`cell_flame_stage`).
+            let rows: Vec<FireVisualGpuInstance> = if code == CELL_BURNING {
+                let mut r = sample_fire_row(IVec2::ZERO, 0.8, 0.5);
+                r.world_xyz_radius = Vec4::new(5.5, 6.5, 0.0, 1.0);
+                vec![r]
+            } else {
+                vec![]
+            };
+            let mut frame = WorldFireParticleFrame::default();
+            update_world_fire_particles_animated(
+                &tactical_graph_with_rows(&rows), &mut frame, None, cam, None, at(2.0),
+                &mut FireEmitterMemory::default(), None,
+            );
+            let flame = classes(&frame).iter().any(|c| *c == ParticleClass::Spark.as_f32());
+            assert_eq!(flame, cover_for_code(code) == Some(Cover::Burning), "code {code}");
+        }
     }
 
     #[test]

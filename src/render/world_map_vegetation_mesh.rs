@@ -515,16 +515,25 @@ pub(crate) fn sample_row_instances(row: &VegExtractRow, chunk: UVec2, step: u32,
                 (Some(v), Some(s)) => v.index_at(local).and_then(|i| s.get(i).copied()).unwrap_or(SPECIES_DEFAULT),
                 _ => SPECIES_DEFAULT,
             };
+            let rand = site_rand(row.coord, ix, iy, 4);
             out.push(VegInstance {
                 pos: origin + local,
                 cover: site_cover,
                 species,
-                rand: site_rand(row.coord, ix, iy, 4),
+                rand,
                 riparian: layout == Layout::Corridor && structured,
-                burn_phase: row.frame_index / 3,
+                burn_phase: burn_phase_for_site(row.frame_index, rand),
             });
         }
     }
+}
+
+/// Flicker phase `0..3` of one burning tree: the row's shared-clock step (`frame_index / 3`, see
+/// `veg_burn_frame_from_clock`) offset by a per-site constant, so trees on one clock do not blink in
+/// lock-step (the flame particles likewise add a per-cell phase to the same clock).
+#[must_use]
+pub(crate) fn burn_phase_for_site(frame_index: u8, rand: f32) -> u8 {
+    (frame_index / 3 + (rand.clamp(0.0, 0.999) * 3.0) as u8) % 3
 }
 
 struct Site {
@@ -1188,6 +1197,16 @@ mod tests {
 
     fn is_ember(c: &[f32; 4]) -> bool {
         c[0] > 0.8 && c[2] < 0.1
+    }
+
+    #[test]
+    fn burn_phase_shares_one_clock_but_desyncs_sites() {
+        let phases: std::collections::HashSet<u8> =
+            (0..8).map(|k| burn_phase_for_site(4, k as f32 / 8.0)).collect();
+        assert_eq!(phases.len(), 3, "sites spread over all flicker phases at one clock step");
+        assert_ne!(burn_phase_for_site(0, 0.1), burn_phase_for_site(3, 0.1), "phase moves with the clock");
+        assert_eq!(burn_phase_for_site(0, 0.1), burn_phase_for_site(2, 0.1));
+        assert!(burn_phase_for_site(255, 0.9999) < 3);
     }
 
     #[test]
