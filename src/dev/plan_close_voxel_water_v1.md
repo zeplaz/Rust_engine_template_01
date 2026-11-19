@@ -205,3 +205,16 @@ Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, D
 | Fire | Voxel flames/embers/smoke layer | PARTIAL — layer landed, particle frame has 0 rows in voxel view | `605776ab` |
 | Fire | "Burns slower" | EXPLAINED — timber/shrub burn longer than grass by config, spread speed unchanged | agent measurement |
 | Tests | Pre-existing failures (also fail on clean HEAD) | OPEN | dam_ops_card "Presets"; scenario wave1/wave3 + ecs12 (CommitConstructionSiteEvent not registered in test app); ai_faction_builds_supplies; voxel_massing; 2 construction integration (fuel_breaks resource) |
+
+## Status update (2026-11-19, later)
+
+| Area | Item | State | Commit / evidence |
+|:---|:---|:---|:---|
+| Dam | Built for real: S1 commit → logistics → Operational | **DONE** | `5cc4bb65`, `a94c0ec8`, auto-supply `…S3` — capture: Operational, 7000 concrete delivered, script reached S5 |
+| Dam | Crest holds reservoir (stage 302 m, head 56 m) | DONE | r12_late |
+| Dam ops card | "Crest" shows max cell crest (bank height under dam ends, 578 m) — misleading | OPEN (display) | r12_late |
+| Dam scene | Strike → blast → DamBody → breach | IN RUN: integrity 0.80, breach flow 49 m³/s after strike — not yet checked visually | r12_late |
+| Fire | Particles in voxel view | DONE (seen in r10) — fire_heat overlay + 3D footprint | `164cbbe5` |
+| Culling | Voxel trees + fire culling off by default, `PIXEL_WORLD_CULL` switch | DONE | `e296c3f9` |
+| Vegetation | Mature start + forest floodplain | LANDED — forest codes (3/4) still not seen in dumps | `7ee2e280` |
+| Ground look | Plateau grey with bake on (green with bake off) | **OPEN** — two bake fixes landed (`74f53b65` bind group, `196e912c` re-arm union), still grey | r12_late |
