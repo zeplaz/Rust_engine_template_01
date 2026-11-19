@@ -374,7 +374,8 @@ fn build_site(
     let mut bottom = f32::INFINITY;
     for t in &tiles {
         if let Some(i) = field.index(t.x, t.y) {
-            top = top.max(field.ground[i].max(field.water[i]));
+            // Ground only: water tops made every flooded building stretch with the flood (CLOSE-W2).
+            top = top.max(field.ground[i]);
             bottom = bottom.min(field.ground[i]);
         }
     }

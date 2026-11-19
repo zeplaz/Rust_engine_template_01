@@ -306,6 +306,31 @@ impl SurfaceWaterField {
         }
     }
 
+    /// Copy world static water depth into the ROI (one fluid, CLOSE-W3). Returns wet cells seeded.
+    pub fn seed_from_static_depth(&mut self, st: &super::WorldStaticWaterDepth) -> u32 {
+        if !self.wired || st.width == 0 {
+            return 0;
+        }
+        let mut wet = 0;
+        for lz in 0..self.height {
+            for lx in 0..self.width {
+                let wx = self.origin_x + lx as i32;
+                let wz = self.origin_z + lz as i32;
+                if wx < 0 || wz < 0 || wx as u32 >= st.width || wz as u32 >= st.height {
+                    continue;
+                }
+                let d = st.depth_m.get(wz as usize * st.width as usize + wx as usize).copied().unwrap_or(0.0);
+                if d > 0.05 {
+                    let i = self.idx(lx, lz);
+                    self.depth_m[i] = d.max(self.depth_m[i]);
+                    wet += 1;
+                }
+            }
+        }
+        self.recompute_mass();
+        wet
+    }
+
     /// Seed a north→south river corridor with baseflow depth.
     pub fn seed_river_corridor(&mut self, center_x_world: i32, half_width: u32, depth_m: f32) {
         if !self.wired {
@@ -528,9 +553,10 @@ impl SurfaceWaterField {
     }
 
     /// One virtual-pipes sub-step. Conservative volume update.
-    pub fn step_virtual_pipes_sub(&mut self, dt_s: f32) {
+    /// Returns the boundary volume actually applied (inflow − south drain, m³).
+    pub fn step_virtual_pipes_sub(&mut self, dt_s: f32) -> f64 {
         if !self.wired || self.width < 2 || self.height < 2 || dt_s <= 0.0 {
-            return;
+            return 0.0;
         }
         let w = self.width as usize;
         let h = self.height as usize;
@@ -569,19 +595,21 @@ impl SurfaceWaterField {
                     let crest = crest_i.max(self.hydraulics.barrier_crest_m[j]);
                     if crest > 0.0 {
                         let pass = eta_i.max(eta_j) > crest;
-                        if !pass {
+                        // CLOSE-W2: no `continue` here — it skipped the north (z) flux below,
+                        // so a crest row never leaked or overtopped along the river.
+                        if pass {
+                            // Effective surfaces clipped to crest for orifice-like leak.
+                            let eta_i2 = eta_i.max(crest);
+                            eta_j = eta_j.max(crest);
+                            let c = conductance(h_i, h_j);
+                            flux_x[i] = c * (eta_i2 - eta_j);
+                        } else {
                             flux_x[i] = 0.0;
-                            continue;
                         }
-                        // Effective surfaces clipped to crest for orifice-like leak.
-                        let eta_i2 = eta_i.max(crest);
-                        eta_j = eta_j.max(crest);
+                    } else {
                         let c = conductance(h_i, h_j);
-                        flux_x[i] = c * (eta_i2 - eta_j);
-                        continue;
+                        flux_x[i] = c * (eta_i - eta_j);
                     }
-                    let c = conductance(h_i, h_j);
-                    flux_x[i] = c * (eta_i - eta_j);
                 }
                 // North neighbor (+z)
                 if z + 1 < h {
@@ -608,8 +636,14 @@ impl SurfaceWaterField {
         // Inflow along north edge (highest z).
         let q_edge = self.inflow_m3s + self.rain_runoff_m3s;
         let north_z = h - 1;
-        let per_cell = q_edge / w.max(1) as f32;
+        // CLOSE-W2: inflow enters the river where it already runs (wet north cells), not
+        // smeared over the whole edge — that fed the dry banks and flooded the valley.
+        let north_row = north_z * w;
+        let wet_north = (0..w).filter(|&x| self.depth_m[north_row + x] > 0.05).count();
+        let inflow_cols = if wet_north > 0 { wet_north } else { w };
+        let per_cell = q_edge / inflow_cols.max(1) as f32;
 
+        let mut applied = 0.0_f64;
         let mut next = self.depth_m.clone();
         for z in 0..h {
             for x in 0..w {
@@ -628,15 +662,21 @@ impl SurfaceWaterField {
                     div -= flux_y[i - w];
                 }
                 let mut dvol = -div * dt_s;
-                if z == north_z {
+                if z == north_z && (wet_north == 0 || self.depth_m[i] > 0.05) {
                     dvol += per_cell * dt_s;
+                    applied += f64::from(per_cell * dt_s);
                 }
-                // South edge sinks a fraction of outlet when free-flowing.
+                // CLOSE-W2: open downstream boundary. The south edge drains like a free
+                // overfall into a dry ghost cell (head = local depth). The old sink was the
+                // dam outlet flow (~40 m³/s) vs 220 m³/s inflow → water piled up forever.
+                // Dam releases are internal to the ROI; they are not this boundary.
                 if z == 0 {
-                    let sink = (self.outlet_flow_m3s.max(self.hydraulics.min_release_m3s)
-                        / w.max(1) as f32)
-                        * dt_s;
+                    let h0 = self.depth_m[i];
+                    let q_free = conductance(h0, h0) * h0;
+                    let avail = (h0 * cell_a + dvol).max(0.0);
+                    let sink = (q_free * dt_s).clamp(0.0, avail);
                     dvol -= sink;
+                    applied -= f64::from(sink);
                 }
                 next[i] = (self.depth_m[i] + dvol / cell_a).max(0.0);
                 self.qx_m3s[i] = flux_x[i];
@@ -651,6 +691,7 @@ impl SurfaceWaterField {
                 self.wet_since_s[i] = 0.0;
             }
         }
+        applied
     }
 
     /// Advance `dt_s` game seconds (may sub-step for CFL).
@@ -675,7 +716,7 @@ impl SurfaceWaterField {
             + self.overtopping_flow_m3s as f64
             + self.turbine_flow_m3s as f64
             + self.breach_flow_m3s as f64;
-        let expected_net = (self.inflow_m3s as f64 + self.rain_runoff_m3s as f64 - q_out_expected)
+        let mut expected_net = (self.inflow_m3s as f64 + self.rain_runoff_m3s as f64 - q_out_expected)
             * dt_s as f64;
 
         match self.mode {
@@ -737,8 +778,10 @@ impl SurfaceWaterField {
                 let cfl = wave.min(cond).max(1e-4);
                 let sub = (dt_s / cfl).ceil().max(1.0).min(64.0) as u32;
                 let sub_dt = dt_s / sub as f32;
+                // CLOSE-W2: conservation vs what the boundaries really applied.
+                expected_net = 0.0;
                 for _ in 0..sub {
-                    self.step_virtual_pipes_sub(sub_dt);
+                    expected_net += self.step_virtual_pipes_sub(sub_dt);
                 }
                 self.recompute_mass();
                 self.mark_all_chunks_dirty();

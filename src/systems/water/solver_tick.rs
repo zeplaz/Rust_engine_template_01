@@ -52,6 +52,7 @@ fn sample_bed_from_chunks(
     origin_z: i32,
     width: u32,
     height: u32,
+    elevation_range_m: f32,
 ) -> (Vec<f32>, u32) {
     let n = (width as usize) * (height as usize);
     let mut bed = vec![12.0_f32; n];
@@ -72,7 +73,8 @@ fn sample_bed_from_chunks(
                     continue;
                 }
                 let i = (lz as usize) * (width as usize) + (lx as usize);
-                bed[i] = matrix.elevation[matrix.idx(lx_c as u32, ly_c as u32)];
+                // Normalized 0..1 → metres via the world's height range (CLOSE-W3).
+                bed[i] = matrix.elevation[matrix.idx(lx_c as u32, ly_c as u32)] * elevation_range_m;
                 sampled += 1;
             }
         }
@@ -98,6 +100,8 @@ pub fn seed_surface_water_from_request_system(
     mut field: ResMut<SurfaceWaterField>,
     mut runtime: ResMut<WaterClassRuntime>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
+    static_depth: Option<Res<super::WorldStaticWaterDepth>>,
+    params: Option<Res<crate::terrain::generation::world_generator_enhanced::WorldGenParams>>,
 ) {
     let Some(spec) = request.pending.take() else {
         return;
@@ -117,10 +121,15 @@ pub fn seed_surface_water_from_request_system(
         spec.origin_z,
         spec.width,
         spec.height,
+        params.as_ref().map_or(
+            crate::terrain::world_scale_contract::DEFAULT_ELEVATION_RANGE_M,
+            |p| p.elevation_range_m,
+        ),
     );
-    // Authored valley (DamFlood / player ROI): always carve when requested so the
-    // fixture river sits under the dam even when world-gen DEM has no channel there.
-    if spec.synthetic_valley_if_no_dem {
+    // CLOSE-W3: carve the synthetic valley only when the DEM doesn't cover the ROI. Carving
+    // over a real DEM gave the solver a different bed than the drawn ground → water walls.
+    let full = (spec.width as u64) * (spec.height as u64);
+    if spec.synthetic_valley_if_no_dem && u64::from(sampled) < full / 2 {
         if let Some(cx) = spec.river_center_x {
             carve_synthetic_valley(&mut bed, spec.width, spec.height, cx, spec.origin_x);
         }
@@ -139,8 +148,15 @@ pub fn seed_surface_water_from_request_system(
     field.hydraulics.min_release_m3s = spec.min_release_m3s;
     field.outlet_flow_m3s = spec.inflow_m3s;
 
-    if let Some(cx) = spec.river_center_x {
-        field.seed_river_corridor(cx, spec.river_half_width.max(1), spec.river_seed_depth_m);
+    // CLOSE-W3 one water: start the live ROI from the world's static water (same river the
+    // world drew), so there is one fluid. Corridor seed only when there is no static water.
+    let seeded_static = static_depth
+        .as_deref()
+        .is_some_and(|st| field.seed_from_static_depth(st) > 0);
+    if !seeded_static {
+        if let Some(cx) = spec.river_center_x {
+            field.seed_river_corridor(cx, spec.river_half_width.max(1), spec.river_seed_depth_m);
+        }
     }
     if let Some(bz) = spec.barrier_world_z {
         if spec.barrier_crest_m > 0.0 {

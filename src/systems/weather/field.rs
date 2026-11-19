@@ -224,6 +224,9 @@ pub struct WeatherTerrain {
     /// Normalised elevation gradient per km (orographic lift).
     pub elev_grad_per_km: Vec<Vec2>,
     pub elevation_norm: Vec<f32>,
+    /// Metres between normalized elevation 0 and 1 — copied from `WorldGenParams` at bake
+    /// (the world's one vertical contract; weather keeps no private copy).
+    pub elevation_range_m: f32,
     /// Share of open water (evaporation source).
     pub water_frac: Vec<f32>,
     /// Terrain revision this bake belongs to.
@@ -240,6 +243,7 @@ impl WeatherTerrain {
             channel_strength: vec![0.0; n],
             elev_grad_per_km: vec![Vec2::ZERO; n],
             elevation_norm: vec![0.0; n],
+            elevation_range_m: crate::terrain::world_scale_contract::DEFAULT_ELEVATION_RANGE_M,
             water_frac: vec![0.0; n],
             key: None,
         }
@@ -709,7 +713,7 @@ impl WeatherField {
             let speed = wind.length();
             let src = terms.map(|s| s.cell(i)).unwrap_or_default();
             // Temperature: base, lapse rate, cloud shade, W4 aerosol shade.
-            let elev_m = self.terrain.elevation_norm[i] * t.elevation_range_m;
+            let elev_m = self.terrain.elevation_norm[i] * self.terrain.elevation_range_m;
             let temp = self.climate.base_temp_c - t.lapse_rate_c_per_km * elev_m / 1000.0
                 - 2.0 * from.cloud[i]
                 - crate::systems::atmosphere::AEROSOL_TEMP_SHADE_C * src.aerosol;

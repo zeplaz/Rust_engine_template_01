@@ -58,7 +58,12 @@ pub struct WorldGenParams {
     pub width: u32,
     pub height: u32,
     pub seed: u64,
-    
+
+    /// Metres between normalized elevation 0 and 1 — the world's one vertical contract.
+    /// Water solver bed, weather lapse and construction conform read this; displays convert
+    /// with `world_scale_contract::display_units_per_metre`.
+    pub elevation_range_m: f32,
+
     /// Voronoi **site count** for tile→region assignment (ECS hierarchy / future sim hooks).
     /// This does **not** drive height, moisture, or temperature — those come entirely from fractal noise
     /// (`noise_scale`, profiles, island falloff, warp, etc.).
@@ -139,6 +144,7 @@ impl Default for WorldGenParams {
                 .ok()
                 .and_then(|s| s.trim().parse::<u64>().ok())
                 .unwrap_or_else(rand::random),
+            elevation_range_m: crate::terrain::world_scale_contract::DEFAULT_ELEVATION_RANGE_M,
             num_regions: 0,
             region_method: RegionMethod::Centroidal,
             region_iterations: 3,
