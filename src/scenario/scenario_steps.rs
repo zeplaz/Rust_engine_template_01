@@ -66,6 +66,11 @@ pub enum ScenarioStep {
     WaitUntilTick {
         tick: u64,
     },
+    /// Block the script until a committed site with this catalog id is Operational (built through
+    /// the real construction + logistics path). Gate: `gate_wait_until_site_operational_system`.
+    WaitUntilSiteOperational {
+        catalog_id: String,
+    },
     /// DF-1 — commit a construction site through the sole funnel (stub until DF-4 dam archetype).
     CommitSite {
         origin_x: i32,

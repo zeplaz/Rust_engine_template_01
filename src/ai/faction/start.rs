@@ -127,9 +127,15 @@ impl FactionStartConfig {
     /// The shipped config, or `None` when the file is missing or malformed (logged).
     #[must_use]
     pub fn load_default() -> Option<Self> {
+        Self::load_path(FACTION_START_PATH)
+    }
+
+    /// A start config at a repo-relative path (scenes may ship their own, same schema).
+    #[must_use]
+    pub fn load_path(rel: &str) -> Option<Self> {
         let path = std::env::var_os("CARGO_MANIFEST_DIR")
             .map(PathBuf::from)
-            .map_or_else(|| PathBuf::from(FACTION_START_PATH), |root| root.join(FACTION_START_PATH));
+            .map_or_else(|| PathBuf::from(rel), |root| root.join(rel));
         let text = std::fs::read_to_string(&path).ok()?;
         match Self::from_ron(&text) {
             Ok(cfg) => Some(cfg),
@@ -137,6 +143,17 @@ impl FactionStartConfig {
                 bevy::log::warn!("faction start config {} unusable: {e}", path.display());
                 None
             }
+        }
+    }
+}
+
+fn insert_default_faction_start_if_absent(
+    mut commands: Commands,
+    existing: Option<Res<FactionStartConfig>>,
+) {
+    if existing.is_none() {
+        if let Some(cfg) = FactionStartConfig::load_default() {
+            commands.insert_resource(cfg);
         }
     }
 }
@@ -251,11 +268,9 @@ pub struct FactionStartPlugin;
 
 impl Plugin for FactionStartPlugin {
     fn build(&self, app: &mut App) {
-        if !app.world().contains_resource::<FactionStartConfig>() {
-            if let Some(cfg) = FactionStartConfig::load_default() {
-                app.insert_resource(cfg);
-            }
-        }
+        // Default config at Startup, only if a scene didn't insert its own in PreStartup
+        // (plugin order independent).
+        app.add_systems(Startup, insert_default_faction_start_if_absent);
         app.init_resource::<FactionAiRoster>().add_systems(
             Update,
             (

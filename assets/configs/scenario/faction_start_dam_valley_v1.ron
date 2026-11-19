@@ -1,0 +1,85 @@
+// DamFlood scene start (dam_valley_v1.ron `faction_start`). Same schema as faction_start_v1.ron.
+// Player HQ on the west bank near the narrows (160,160) with a stockpile sized for an embankment
+// dam (bill = construction_cost 28000 -> 5600 concrete, 2240 steel, 1120 fuel, 560 machinery)
+// and a fleet that can haul it. The dam is committed by the scenario at S1 and built by logistics.
+// Units: cargo in its own unit (t for bulk goods, m3 for liquids); capacity in t (m3 tanker, seats
+// troop); speed in m/s; tiles are 16 m.
+// HQs sit on fixed tiles in each faction's rear. Formations start on a shared contact line around
+// tile (64, 64): the front pairs are ~11 tiles apart (inside infantry range, overlapping control
+// radius) so control is contested and a front forms; reserves stand back for the AI to deploy.
+// Front supply points draw `ammo` / `Fuel` / `rations` / `engineering` from the HQ depot.
+(
+    schema_version: 1,
+    territory_wait_frames: 300,
+    factions: [
+        (
+            slot: 0,
+            name: "Player HQ",
+            ai: None,
+            hq: Tile(x: 140, z: 168),
+            stockpile: [
+                (cargo: "Concrete", amount: 7000),
+                (cargo: "Steel", amount: 2800),
+                (cargo: "Fuel", amount: 1600),
+                (cargo: "Machinery", amount: 800),
+                (cargo: "Cement", amount: 500),
+                (cargo: "Gravel", amount: 700),
+                (cargo: "Limestone", amount: 500),
+                (cargo: "Coal", amount: 300),
+                (cargo: "Water", amount: 400),
+                (cargo: "Chemicals", amount: 150),
+                (cargo: "ammo", amount: 300),
+                (cargo: "rations", amount: 300),
+                (cargo: "engineering", amount: 150),
+            ],
+            fleet: [
+                (class: Freight, count: 40, capacity: 20, speed_mps: 12.0),
+                (class: Tanker, count: 2, capacity: 20, speed_mps: 11.0),
+                (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
+            ],
+            formations: [
+                (kind: Infantry, tile: (60, 58)),
+                (kind: Infantry, tile: (58, 60)),
+                (kind: Mechanized, tile: (44, 44)),
+            ],
+        ),
+        (
+            slot: 1,
+            name: "AI HQ",
+            ai: Some((
+                aggression: 0.5,
+                caution: 0.5,
+                logistics_focus: 0.5,
+                development_focus: 0.5,
+                commitment: 0.1,
+            )),
+            hq: Tile(x: 104, z: 104),
+            stockpile: [
+                (cargo: "Concrete", amount: 1000),
+                (cargo: "Steel", amount: 400),
+                (cargo: "Fuel", amount: 300),
+                (cargo: "Machinery", amount: 80),
+                (cargo: "Cement", amount: 500),
+                (cargo: "Gravel", amount: 700),
+                (cargo: "Limestone", amount: 500),
+                (cargo: "Coal", amount: 300),
+                (cargo: "Water", amount: 400),
+                (cargo: "Chemicals", amount: 150),
+                (cargo: "ammo", amount: 300),
+                (cargo: "rations", amount: 300),
+                (cargo: "engineering", amount: 150),
+            ],
+            fleet: [
+                (class: Freight, count: 10, capacity: 10, speed_mps: 12.0),
+                (class: Tanker, count: 2, capacity: 20, speed_mps: 11.0),
+                (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
+            ],
+            formations: [
+                (kind: Infantry, tile: (68, 66)),
+                (kind: Infantry, tile: (66, 68)),
+                (kind: Infantry, tile: (84, 84)),
+                (kind: Mechanized, tile: (86, 82)),
+            ],
+        ),
+    ],
+)

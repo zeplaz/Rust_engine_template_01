@@ -221,6 +221,7 @@ impl Plugin for DamFloodPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<DamFloodBenchmarkBook>()
             .init_resource::<DamControlIntent>()
+            .add_systems(PreStartup, insert_dam_flood_faction_start_system)
             .init_resource::<DamFloodPlayerOwner>()
             .init_resource::<scene_seed::DamFloodWaterConfigLatch>()
             .init_resource::<DamFloodValleyAuthorLatch>()
@@ -236,10 +237,9 @@ impl Plugin for DamFloodPlugin {
                         .after(author_dam_flood_valley_rearm_water_system),
                     spawn_dam_flood_cooling_intakes_system
                         .after(enqueue_dam_flood_water_config_system),
-                    force_dam_flood_sites_operational_system
-                        .after(spawn_dam_flood_cooling_intakes_system),
+                    // CLOSE-S2: the dam is built by construction + logistics (no forced Operational).
                     apply_dam_control_intent_to_sites_system
-                        .after(force_dam_flood_sites_operational_system),
+                        .after(spawn_dam_flood_cooling_intakes_system),
                     sync_dam_control_to_barrier_intent_system
                         .after(apply_dam_control_intent_to_sites_system),
                     mirror_water_into_dam_book_system,
@@ -255,37 +255,21 @@ impl Plugin for DamFloodPlugin {
     }
 }
 
-/// Test/experiment: advance DamFlood dam sites to Operational so barrier install + selection work.
-/// Does not invent water truth — only clears the construction material stall for the scenario dam.
-pub fn force_dam_flood_sites_operational_system(
-    book: Res<DamFloodBenchmarkBook>,
-    mut sites: Query<(
-        &mut ConstructionSite,
-        Option<&mut crate::construction::SiteStageProgress>,
-        Option<&mut crate::strategic::SiteResourceManifest>,
-    )>,
+/// DamFlood scene start: the fixture names its own faction start config (HQ near the narrows,
+/// dam-sized stockpile). Inserted in PreStartup so the faction plugin's default doesn't apply.
+fn insert_dam_flood_faction_start_system(
+    mut commands: Commands,
+    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
 ) {
-    if !book.seeded {
+    if !launch.is_some_and(|l| l.test_scene.is_dam_flood()) {
         return;
     }
-    use crate::strategic::{SiteArchetype, SiteConstructionPhase};
-    for (mut site, mut stage, mut manifest) in &mut sites {
-        if site.archetype != SiteArchetype::Dam {
-            continue;
-        }
-        if site.phase == SiteConstructionPhase::Operational {
-            continue;
-        }
-        if let Some(ref mut m) = manifest {
-            m.delivered_concrete = m.concrete_required;
-            m.delivered_steel = m.steel_required;
-            m.delivered_fuel = m.fuel_required;
-            m.delivered_machinery = m.machinery_required;
-        }
-        site.phase = SiteConstructionPhase::Operational;
-        site.operational_readiness = 1.0;
-        if let Some(ref mut st) = stage {
-            st.progress = 1.0;
-        }
+    let fixture = load_dam_valley_fixture();
+    if let Some(cfg) = fixture
+        .faction_start
+        .as_deref()
+        .and_then(crate::ai::faction::FactionStartConfig::load_path)
+    {
+        commands.insert_resource(cfg);
     }
 }

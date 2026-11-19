@@ -23,6 +23,10 @@ pub struct DamValleyFixture {
     pub launch_site_origin: (i32, i32),
     pub forest_floodplain: DamValleyAabb,
     pub road_bridge_tile: (i32, i32),
+    /// Faction start config for this scene (same schema as the shipped one): HQ depot, stockpile
+    /// and fleet a player would bring to build a dam here. Configures the real start path.
+    #[serde(default)]
+    pub faction_start: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -121,6 +125,7 @@ fn default_fixture() -> DamValleyFixture {
             max: (200, 200),
         },
         road_bridge_tile: (160, 110),
+        faction_start: None,
     }
 }
 
