@@ -19,11 +19,9 @@ use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{WaterClass, WorldGenDenseTerrainCache, WorldWaterGrid};
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
-/// World units (tiles) per normalized elevation unit in the voxel view.
-///
-/// Presentation scale: 1.5x the construction conform scale (`TERRAIN_CONFORM_Y_SCALE` = 28 in
-/// `construction::terrain_conform`) so relief reads at play zoom. Sim heights are untouched.
-pub const PIXEL_WORLD_HEIGHT_SCALE: f32 = 42.0;
+// Heights: metres from `WorldGenParams::elevation_range_m` (the one vertical contract), drawn at
+// `display_units_per_metre()` for ground AND water alike. The old fixed 42-tile scale also got
+// multiplied into water depth (`d / 16 m · 42`), drawing a 3.5 m river ~150 m tall.
 
 /// Terrace step of the voxel ground (world units).
 pub const HEIGHT_STEP: f32 = 0.5;
@@ -49,6 +47,8 @@ pub struct PixelWorldTerrainField {
     pub max_h: f32,
     /// Bumps on every rebuild (ground or water); water/overlay consumers key on it.
     pub revision: u64,
+    /// Display units per real metre used for this build (ground, water, depth lifts).
+    pub units_per_metre: f32,
     /// Bumps only when [`Self::ground`] (or the grid size) changes. Ground meshes key on this so
     /// water motion never respawns terrain chunks (PLAN-CLOSE-VOXEL-WATER-v1 V1).
     pub ground_revision: u64,
@@ -182,7 +182,10 @@ impl PixelWorldTerrainField {
     ) {
         let (w, h) = (dense.width as usize, dense.height as usize);
         let n = w * h;
-        let scale = PIXEL_WORLD_HEIGHT_SCALE;
+        let upm = crate::terrain::world_scale_contract::display_units_per_metre();
+        self.units_per_metre = upm;
+        // Normalized elevation → metres (world contract) → display units.
+        let scale = params.elevation_range_m * upm;
         let sea = params.biome_tuning.shallow_water_height_max * scale;
         let sea_surface = quantize(sea) - SURFACE_UNDER_BANK;
         self.width = dense.width;
@@ -308,7 +311,7 @@ impl PixelWorldTerrainField {
                         self.class[i] = WaterClass::Dry;
                         continue;
                     }
-                    let lift = (d / TILE_METRES_GAMEPLAY) * scale;
+                    let lift = d * upm; // metres → display units (once)
                     self.water[i] = quantize(self.ground[i] + lift.max(SURFACE_UNDER_BANK));
                     let coast = matches!(self.class[i], WaterClass::Ocean);
                     // Static bootstrap has no flux — channel look stays River when bake said River.
@@ -353,7 +356,7 @@ impl PixelWorldTerrainField {
                         continue;
                     }
                     let i = wz as usize * w + wx as usize;
-                    let lift = (d / TILE_METRES_GAMEPLAY) * scale;
+                    let lift = d * upm; // metres → display units (once)
                     self.water[i] = quantize(self.ground[i] + lift.max(SURFACE_UNDER_BANK));
                     let speed = {
                         let dx = sf.dx_m.max(1e-3);

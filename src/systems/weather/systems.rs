@@ -39,6 +39,7 @@ fn bake_from_chunks(
     field: &WeatherField,
     tuning: &WeatherTuning,
     chunks: &Query<(&Chunk, &ChunkCellMatrix), With<MaterializedChunk>>,
+    elevation_range_m: f32,
 ) -> super::field::WeatherTerrain {
     let families = default_terrain_families();
     let rough_family: Vec<bool> = (0..families.families.len())
@@ -76,7 +77,9 @@ fn bake_from_chunks(
             }
         }
     }
-    bake_weather_terrain(field.dims, field.cell_size_m, &acc, tuning)
+    let mut out = bake_weather_terrain(field.dims, field.cell_size_m, &acc, tuning);
+    out.elevation_range_m = elevation_range_m;
+    out
 }
 
 /// Init / restore / preset, then one solve per `weather_step_secs` of sim steps.
@@ -106,7 +109,7 @@ pub fn weather_field_step(
     if let Some(save) = restore.0.take() {
         match WeatherField::from_save(&save, &tuning, now) {
             Ok(mut restored) => {
-                let mut terrain = bake_from_chunks(&restored, &tuning, &chunks);
+                let mut terrain = bake_from_chunks(&restored, &tuning, &chunks, params.elevation_range_m);
                 terrain.key = Some(key);
                 restored.set_terrain(terrain);
                 restored.revision = field.revision.wrapping_add(1);
@@ -129,7 +132,7 @@ pub fn weather_field_step(
         }
         let preset = preset.or(if world_changed { tuning.weather_preset } else { field.climate.preset });
         let probe = WeatherField::new(params.seed, extent, &tuning, None, Default::default(), now);
-        let mut terrain = bake_from_chunks(&probe, &tuning, &chunks);
+        let mut terrain = bake_from_chunks(&probe, &tuning, &chunks, params.elevation_range_m);
         terrain.key = Some(key);
         let revision = field.revision;
         *field = WeatherField::new(params.seed, extent, &tuning, preset, terrain, now);
@@ -163,7 +166,7 @@ pub fn weather_field_step(
             break;
         }
         if field.terrain.key != Some(key) {
-            let mut terrain = bake_from_chunks(&field, &tuning, &chunks);
+            let mut terrain = bake_from_chunks(&field, &tuning, &chunks, params.elevation_range_m);
             terrain.key = Some(key);
             field.set_terrain(terrain);
         }

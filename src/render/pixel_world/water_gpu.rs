@@ -18,7 +18,7 @@ use bevy::shader::ShaderRef;
 
 use super::camera::PixelWorldCameraFrame;
 use super::field::PixelWorldTerrainField;
-use super::{PIXEL_WORLD_HEIGHT_SCALE, PIXEL_WORLD_RENDER_LAYER};
+use super::PIXEL_WORLD_RENDER_LAYER;
 use crate::gui::WorldPresentationMode;
 use crate::systems::water::{SurfaceWaterGpuField, SurfaceWaterGpuFieldMeta, DEPTH_SCALE_M};
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
@@ -108,8 +108,9 @@ impl Plugin for PixelWorldWaterGpuPlugin {
     }
 }
 
-fn height_scale() -> f32 {
-    (DEPTH_SCALE_M / TILE_METRES_GAMEPLAY) * PIXEL_WORLD_HEIGHT_SCALE
+/// Display units for depth01 = 1 (`DEPTH_SCALE_M` metres), same units-per-metre as the ground.
+fn height_scale(field: &PixelWorldTerrainField) -> f32 {
+    DEPTH_SCALE_M * field.units_per_metre
 }
 
 fn make_bed_image(w: u32, h: u32) -> Image {
@@ -280,7 +281,7 @@ pub(crate) fn sync_pixel_world_gpu_water(
     );
     let zoom_alpha = (cam.px_per_tile / 16.0).clamp(0.25, 1.0);
     let time_secs = time.elapsed_secs();
-    let h_scale = height_scale();
+    let h_scale = height_scale(field.as_ref());
 
     // Bed texture — refresh when terrain field revision changes.
     let bed_handle = state

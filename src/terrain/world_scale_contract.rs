@@ -17,6 +17,22 @@ pub const TILE_METERS_SYMBOLIC: f32 = 100.0;
 /// stores metres converts tile coordinates with this constant at its boundary.
 pub const TILE_METRES_GAMEPLAY: f32 = 16.0;
 
+/// Default height range of a generated world (metres between normalized elevation 0 and 1).
+/// The live value is [`WorldGenParams::elevation_range_m`] — world-gen owns it; every sim
+/// consumer (water bed, weather lapse, construction conform) reads that one field.
+pub const DEFAULT_ELEVATION_RANGE_M: f32 = 1200.0;
+
+/// Display-only vertical exaggeration for 3D views. Applied to ground, water, sites and trees
+/// alike, so it changes how steep things look, never what is under water.
+pub const DISPLAY_VERTICAL_EXAGGERATION: f32 = 1.0;
+
+/// Display units (tiles) per real metre of height: `exaggeration / TILE_METRES_GAMEPLAY`.
+#[inline]
+#[must_use]
+pub fn display_units_per_metre() -> f32 {
+    DISPLAY_VERTICAL_EXAGGERATION / TILE_METRES_GAMEPLAY
+}
+
 /// Sim substrate chunk slab — WSS, fire tick, weather, dense cache.
 pub const CHUNK_TILES_SIM: u32 = 32;
 

@@ -42,7 +42,7 @@ pub use camera::{
     clamp_pixel_world_zoom, pixel_world_pan_axes, PixelWorldCamera, PixelWorldCameraFrame,
     PixelWorldCameraRig, PIXEL_WORLD_ZOOM_RANGE,
 };
-pub use field::{PixelWorldTerrainField, PIXEL_WORLD_HEIGHT_SCALE};
+pub use field::PixelWorldTerrainField;
 
 /// Render layer of every voxel-view entity (camera, sun, meshes).
 pub const PIXEL_WORLD_RENDER_LAYER: usize = 9;

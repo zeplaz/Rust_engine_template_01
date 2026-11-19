@@ -55,7 +55,6 @@ pub struct WeatherTuning {
     pub season_length_secs: f32,
     pub base_temp_mean_c: f32,
     pub base_temp_amplitude_c: f32,
-    pub elevation_range_m: f32,
     pub lapse_rate_c_per_km: f32,
     pub prevailing_speed_mps: (f32, f32),
     pub prevailing_veer_rad: f32,

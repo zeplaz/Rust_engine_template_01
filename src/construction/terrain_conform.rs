@@ -9,8 +9,6 @@ use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use bevy::ecs::system::SystemParam;
 use crate::terrain::generation::WorldGenDenseTerrainCache;
 
-/// World-unit Y scale for normalized height samples.
-pub const TERRAIN_CONFORM_Y_SCALE: f32 = 28.0;
 
 /// Blocker note when live height grid is missing (witness / board Open).
 #[allow(dead_code)] // egui-retired; kept for Bevy port / export
@@ -68,7 +66,10 @@ pub fn conform_world_y(
     params: &WorldGenParams,
     height_grid: Option<&WorldGenDenseTerrainCache>,
 ) -> f32 {
-    sample_height_norm(x, z, params, height_grid) * TERRAIN_CONFORM_Y_SCALE
+    // One vertical contract: metres from world-gen, drawn at the shared display scale.
+    sample_height_norm(x, z, params, height_grid)
+        * params.elevation_range_m
+        * crate::terrain::world_scale_contract::display_units_per_metre()
 }
 
 #[must_use]
