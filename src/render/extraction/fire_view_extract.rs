@@ -17,7 +17,7 @@ use bevy::prelude::*;
 use rustc_hash::FxHashSet;
 
 use crate::engine::states::BaseState;
-use crate::gui::{ViewId, ViewInstance, ViewManager, WorldLodBand};
+use crate::gui::{ViewId, ViewManager, WorldLodBand};
 use crate::render::fx_spine::fire_chunk_runtime::{
     ActiveFireChunkSet, ChunkCoord, FireChunkLodState, FireLodBand, FireSimulationSnapshot, VisibleFireChunkSet,
 };
@@ -25,6 +25,7 @@ use crate::io::streaming::ChunkResidencyTable;
 use crate::render::{
     chunk_in_residency_table, per_view_residency_contains, PerViewResidencyConsumerWindow,
 };
+use crate::render::fx_spine::view_fire_projection::FireViewOverride;
 use crate::render::view_runtime::ViewSurfaceId;
 use crate::render::extraction::sim_visual_extract::{FireVisualFrame, FireVisualGpuInstance};
 
@@ -92,8 +93,54 @@ fn chunk_in_rect(c: ChunkCoord, min_c: ChunkCoord, max_c: ChunkCoord) -> bool {
     c.x >= min_c.x && c.x <= max_c.x && c.y >= min_c.y && c.y <= max_c.y
 }
 
-fn visible_chunks_for_view(view: &ViewInstance, active: &ActiveFireChunkSet) -> FxHashSet<ChunkCoord> {
-    let world = view.visible_world_rect();
+/// Fire visual-proof launch / test-scene gate (one domain: "seed fire without the residency window").
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct FireProofGate<'w> {
+    launch: Option<Res<'w, crate::engine::EngineLaunchArgs>>,
+    test_scene: Option<Res<'w, crate::engine::ActiveTestScene>>,
+}
+
+impl FireProofGate<'_> {
+    #[must_use]
+    fn active(&self) -> bool {
+        self.launch
+            .as_deref()
+            .is_some_and(crate::engine::EngineLaunchArgs::visual_tactical_vfx_proof)
+            || self
+                .test_scene
+                .as_ref()
+                .is_some_and(|s| s.0.seeds_fire_overlay())
+    }
+}
+
+/// Tactical views the voxel camera stands in for (see [`FireViewOverride`]).
+#[inline]
+fn is_tactical_view(id: ViewId) -> bool {
+    matches!(id, ViewId::WorldMain | ViewId::SimulationMap)
+}
+
+/// World band for a view's fire extract: voxel-camera band for the tactical views while
+/// PixelWorld3D is active, else the view-manager policy band.
+fn world_band_for_view(
+    id: ViewId,
+    proof: bool,
+    manager: Option<&ViewManager>,
+    over: &FireViewOverride,
+    default_band: WorldLodBand,
+) -> WorldLodBand {
+    if proof && is_tactical_view(id) {
+        return WorldLodBand::LocalTactical;
+    }
+    if let Some(band) = over.band.filter(|_| is_tactical_view(id)) {
+        return band;
+    }
+    manager
+        .and_then(|m| m.view(id))
+        .map(|v| v.render_policy.lod_band)
+        .unwrap_or(default_band)
+}
+
+fn visible_chunks_in_world_rect(world: Rect, active: &ActiveFireChunkSet) -> FxHashSet<ChunkCoord> {
     let (min_c, max_c) = chunk_bounds_for_world_rect(world, FIRE_VIEW_CHUNK_SPACING_WORLD);
     active
         .chunks
@@ -105,24 +152,24 @@ fn visible_chunks_for_view(view: &ViewInstance, active: &ActiveFireChunkSet) -> 
 
 /// Fills [`VisibleFireChunkSet`] from [`ViewManager`] + [`ActiveFireChunkSet`] using each view's
 /// [`ViewInstance::visible_world_rect`] and [`ViewRenderPolicy::overlays`].
+///
+/// While PixelWorld3D draws, the tactical views use the voxel camera's ground footprint
+/// ([`FireViewOverride`]) instead of the inactive flat camera's rect; residency is then the global
+/// table (the per-view window is derived from that same flat rect).
 pub fn sync_visible_fire_chunks_from_views(
-    launch: Option<Res<crate::engine::EngineLaunchArgs>>,
-    test_scene: Option<Res<crate::engine::ActiveTestScene>>,
+    proof_gate: FireProofGate,
     manager: Option<Res<ViewManager>>,
     active: Res<ActiveFireChunkSet>,
     sim: Res<FireSimulationSnapshot>,
     residency: Option<Res<ChunkResidencyTable>>,
     per_view_windows: Option<Res<PerViewResidencyConsumerWindow>>,
+    view_override: Option<Res<FireViewOverride>>,
     mut visible: ResMut<VisibleFireChunkSet>,
 ) {
     let _perf = crate::render::PerfScope::new("upd_fire_sync_visible");
     visible.per_view.clear();
-    let proof = launch
-        .as_deref()
-        .is_some_and(crate::engine::EngineLaunchArgs::visual_tactical_vfx_proof)
-        || test_scene
-            .as_ref()
-            .is_some_and(|s| s.0.seeds_fire_overlay());
+    let proof = proof_gate.active();
+    let footprint = view_override.as_deref().and_then(|o| o.footprint);
     let mut tactical_visible: FxHashSet<ChunkCoord> = active.chunks.iter().copied().collect();
     if tactical_visible.is_empty() && proof {
         for h in &sim.chunk_heat {
@@ -153,17 +200,20 @@ pub fn sync_visible_fire_chunks_from_views(
             visible.per_view.insert(id, FxHashSet::default());
             continue;
         }
-        let mut list = if proof && matches!(id, ViewId::WorldMain | ViewId::SimulationMap) {
+        let voxel_footprint = footprint.filter(|_| is_tactical_view(id));
+        let mut list = if proof && is_tactical_view(id) {
             tactical_visible.clone()
         } else {
-            visible_chunks_for_view(view, &active)
+            visible_chunks_in_world_rect(
+                voxel_footprint.unwrap_or_else(|| view.visible_world_rect()),
+                &active,
+            )
         };
         // F2-PR-2: tactical visual proof must not residency-cull all seeded fire chunks.
-        let skip_residency_cull =
-            proof && matches!(id, ViewId::WorldMain | ViewId::SimulationMap);
+        let skip_residency_cull = proof && is_tactical_view(id);
         if !skip_residency_cull {
             let surface = ViewSurfaceId::from_view_id(id);
-            if let Some(windows) = per_view_windows {
+            if let Some(windows) = per_view_windows.filter(|_| voxel_footprint.is_none()) {
                 list.retain(|c| per_view_residency_contains(surface, *c, windows));
             } else if let Some(table) = residency {
                 list.retain(|c| chunk_in_residency_table(*c, table));
@@ -390,11 +440,13 @@ pub fn build_fire_visual_frames_by_view(
     active: Res<ActiveFireChunkSet>,
     manager: Option<Res<ViewManager>>,
     per_view_policy: Option<Res<crate::render::view_runtime::PerViewRepresentationPolicy>>,
+    view_override: Option<Res<FireViewOverride>>,
     mut out: ResMut<FireVisualFramesByView>,
     mut last_fingerprint: Local<Option<FireViewExtractFingerprint>>,
 ) {
     let _perf = crate::render::PerfScope::new("upd_fire_build_view");
     let default_band = WorldLodBand::Strategic;
+    let view_over = view_override.as_deref().copied().unwrap_or_default();
     let proof = launch
         .as_deref()
         .is_some_and(crate::engine::EngineLaunchArgs::visual_tactical_vfx_proof);
@@ -412,15 +464,7 @@ pub fn build_fire_visual_frames_by_view(
         .into_iter()
         .enumerate()
         {
-            let world_band = if proof && matches!(id, ViewId::WorldMain | ViewId::SimulationMap) {
-                WorldLodBand::LocalTactical
-            } else {
-                manager
-                    .as_deref()
-                    .and_then(|m| m.view(id))
-                    .map(|v| v.render_policy.lod_band)
-                    .unwrap_or(default_band)
-            };
+            let world_band = world_band_for_view(id, proof, manager.as_deref(), &view_over, default_band);
             let vis_len = vis.per_view.get(&id).map(|s| s.len()).unwrap_or(0);
             out_bands[slot] = (world_band, vis_len);
         }
@@ -472,15 +516,7 @@ pub fn build_fire_visual_frames_by_view(
             continue;
         }
         let allowed = allowed_chunks_for_view(id, &vis, &active);
-        let world_band = if proof && matches!(id, ViewId::WorldMain | ViewId::SimulationMap) {
-            WorldLodBand::LocalTactical
-        } else {
-            manager
-                .as_deref()
-                .and_then(|m| m.view(id))
-                .map(|v| v.render_policy.lod_band)
-                .unwrap_or(default_band)
-        };
+        let world_band = world_band_for_view(id, proof, manager.as_deref(), &view_over, default_band);
         let mut frame = build_frame_for_allowed(&sim, &lod, &allowed, world_band);
         {
             let design_cap = fire_cap_for_world_band(world_band);
@@ -500,6 +536,7 @@ pub fn build_fire_visual_frames_by_view(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::gui::ViewInstance;
 
     #[test]
     fn visible_fire_chunks_respect_residency_table() {
@@ -552,6 +589,63 @@ mod tests {
             clamp_fire_lod_for_world_band(WorldLodBand::LocalTactical, FireLodBand::FullFlame),
             FireLodBand::FullFlame
         );
+    }
+
+    fn flat_view_far_from(chunk_world: Vec2) -> ViewManager {
+        use crate::gui::{ViewCameraState, ViewInteractionState, ViewRenderPolicy, ViewRenderTarget};
+        let mut policy = ViewRenderPolicy::default();
+        policy.overlays.bits.fire_heat = true;
+        let camera = ViewCameraState { translation: -chunk_world, zoom: 10.0, rotation: 0.0 };
+        let mut manager = ViewManager::default();
+        manager.views.insert(
+            ViewId::WorldMain,
+            ViewInstance {
+                id: ViewId::WorldMain,
+                camera_entity: Entity::PLACEHOLDER,
+                render_target: ViewRenderTarget::PrimaryWindow,
+                camera,
+                projection: camera.to_projection(),
+                interaction_state: ViewInteractionState::default(),
+                viewport_rect: Rect::from_corners(Vec2::ZERO, Vec2::new(800.0, 600.0)),
+                render_policy: policy,
+            },
+        );
+        manager
+    }
+
+    /// PixelWorld3D: the flat camera's rect is stale / elsewhere, the voxel footprint decides.
+    #[test]
+    fn voxel_footprint_selects_fire_chunks_the_flat_rect_misses() {
+        use bevy::ecs::system::RunSystemOnce;
+        let chunk = IVec2::new(5, 5);
+        let world_xy = Vec2::splat(5.0 * FIRE_VIEW_CHUNK_SPACING_WORLD + 8.0);
+        let run = |over: FireViewOverride| {
+            let mut world = World::new();
+            world.insert_resource(flat_view_far_from(world_xy));
+            let mut active = ActiveFireChunkSet::default();
+            active.chunks.insert(chunk);
+            world.insert_resource(active);
+            world.init_resource::<FireSimulationSnapshot>();
+            world.init_resource::<VisibleFireChunkSet>();
+            world.insert_resource(over);
+            world.run_system_once(sync_visible_fire_chunks_from_views).unwrap();
+            world.resource::<VisibleFireChunkSet>().per_view.get(&ViewId::WorldMain).cloned().unwrap_or_default()
+        };
+        assert!(run(FireViewOverride::default()).is_empty(), "flat rect misses the chunk");
+        let footprint = Rect::from_center_half_size(world_xy, Vec2::splat(40.0));
+        let seen = run(FireViewOverride { footprint: Some(footprint), band: None });
+        assert!(seen.contains(&chunk), "voxel footprint must keep the burning chunk");
+    }
+
+    #[test]
+    fn voxel_band_replaces_view_band_for_tactical_views_only() {
+        let over = FireViewOverride { footprint: None, band: Some(WorldLodBand::LocalTactical) };
+        let none = FireViewOverride::default();
+        let pick = |id, o: &FireViewOverride| world_band_for_view(id, false, None, o, WorldLodBand::Macro);
+        assert_eq!(pick(ViewId::WorldMain, &over), WorldLodBand::LocalTactical);
+        assert_eq!(pick(ViewId::SimulationMap, &over), WorldLodBand::LocalTactical);
+        assert_eq!(pick(ViewId::Minimap, &over), WorldLodBand::Macro);
+        assert_eq!(pick(ViewId::WorldMain, &none), WorldLodBand::Macro);
     }
 
     #[test]
