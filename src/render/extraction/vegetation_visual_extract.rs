@@ -11,7 +11,7 @@ use crate::render::vegetation_species::VegSpeciesTable;
 use crate::systems::ecology::{
     extract_glyph_for_burn, planning_glyph_for_burn, variant_key_for_burn_row, ActiveBurn,
     ChunkCellStand, ChunkVegetationSuitability, LandscapeProgramOnChunk, SuccessionState, SuccessionTopologyStage, VegetationPopulation,
-    ACTIVE_BURN_HEAT_EPS,
+    ACTIVE_BURN_HEAT_EPS, CELL_BURNING, VEG_BURN_FRAME_COUNT, VEG_BURN_FRAME_PERIOD_MS,
 };
 use crate::systems::sim_control::SimStepStamp;
 use crate::terrain::generation::Chunk;
@@ -141,7 +141,29 @@ fn shot_impact_in_chunk(
     best
 }
 
+/// Burning-tree flicker frame from the shared fire clock (`Time::elapsed_secs`, the clock the flame
+/// and smoke particles animate on), so trees, flames and embers never run on different timers and
+/// the flicker keeps moving while the sim is paused.
+#[must_use]
+pub fn veg_burn_frame_from_clock(time_s: f32) -> u8 {
+    let ms = (time_s.max(0.0) * 1000.0) as u64;
+    let frame = (ms / u64::from(VEG_BURN_FRAME_PERIOD_MS.max(1))) % u64::from(VEG_BURN_FRAME_COUNT.max(1));
+    u8::try_from(frame).unwrap_or(0)
+}
+
+/// Whether a chunk row draws burning. Per-cell stand codes are the one truth (the same
+/// `CELL_BURNING` the particles are gated on); the chunk's `ActiveBurn` heat is only the fallback
+/// for a chunk without stand codes, so it can no longer keep a whole chunk burning after its cells burnt out.
+#[must_use]
+pub fn row_burn_active(cells: Option<&[u8]>, burn: Option<&ActiveBurn>) -> bool {
+    match cells {
+        Some(codes) => codes.contains(&CELL_BURNING),
+        None => burn.is_some_and(|b| b.heat > ACTIVE_BURN_HEAT_EPS),
+    }
+}
+
 pub fn build_vegetation_extract_frame(
+    time: Res<Time>,
     tick: Res<crate::systems::sim_control::SimTick>,
     sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
     shots: Option<Res<crate::strategic::ShotPulseBook>>,
@@ -169,7 +191,15 @@ pub fn build_vegetation_extract_frame(
     // PERF-INSTR-VFX-001: name this per-chunk veg scan inside the Update wall window (STALL/PERF only).
     let _perf = crate::render::PerfScope::new("upd_veg_extract_frame");
     let stamp = SimStepStamp::new(tick.0, sim_time.0);
+    let burn_frame = veg_burn_frame_from_clock(time.elapsed_secs());
     if frame.stamp == stamp && !frame.rows.is_empty() {
+        // No new sim step (paused / between ticks): burning rows still follow the shared clock.
+        if frame.rows.iter().any(|r| r.burn_active && r.frame_index != burn_frame) {
+            for r in frame.rows.iter_mut().filter(|r| r.burn_active) {
+                r.frame_index = burn_frame;
+            }
+            frame.revision = frame.revision.saturating_add(1);
+        }
         return;
     }
     frame.revision = frame.revision.saturating_add(1);
@@ -181,7 +211,7 @@ pub fn build_vegetation_extract_frame(
     for (entity, chunk, succ, burn, pop, program, matrix, suitability, stand) in &q {
         let matrix_ref = matrix.as_ref();
         let matrix = matrix_ref.map(|m| &**m);
-        let burn_active = burn.is_some_and(|b| b.heat > crate::systems::ecology::ACTIVE_BURN_HEAT_EPS);
+        let burn_active = row_burn_active(stand.map(|s| &s.render[..]), burn);
         let planning_glyph = planning_glyph_for_burn(burn, succ.stage);
         let extract_glyph = extract_glyph_for_burn(burn, succ.stage);
         let variant_key = variant_key_for_extract_row(program, burn, succ.stage);
@@ -232,7 +262,7 @@ pub fn build_vegetation_extract_frame(
             variant_key,
             succession_stage: succ.stage,
             burn_active,
-            frame_index: burn.map(|b| b.frame_index).unwrap_or(0),
+            frame_index: if burn_active { burn_frame } else { 0 },
             cells: stand.map(|s| s.render.clone()),
             cells_rev: stand.map_or(0, |s| s.render_rev),
             species,
@@ -356,6 +386,28 @@ mod tests {
         LandscapeProgramOnChunk, LG1_PILOT_CHUNK, LG1_PILOT_PRESET_ID, VegetationField,
     };
     use crate::systems::weather::ChunkWeather;
+
+    #[test]
+    fn row_burns_exactly_when_a_cell_code_is_burning() {
+        use crate::systems::ecology::{CELL_BURNT, CELL_GRASS};
+        let hot = ActiveBurn { heat: 0.9, ..Default::default() };
+        assert!(row_burn_active(Some(&[CELL_GRASS, CELL_BURNING]), None));
+        assert!(
+            !row_burn_active(Some(&[CELL_GRASS, CELL_BURNT]), Some(&hot)),
+            "chunk ActiveBurn heat must not keep burnt-out cells drawn burning"
+        );
+        assert!(row_burn_active(None, Some(&hot)), "no stand codes: chunk burn is the fallback");
+        assert!(!row_burn_active(None, None));
+    }
+
+    #[test]
+    fn burn_frame_follows_wall_clock_and_wraps() {
+        assert_eq!(veg_burn_frame_from_clock(0.0), 0);
+        let period_s = VEG_BURN_FRAME_PERIOD_MS as f32 / 1000.0;
+        assert_eq!(veg_burn_frame_from_clock(period_s * 1.5), 1);
+        assert_eq!(veg_burn_frame_from_clock(period_s * f32::from(VEG_BURN_FRAME_COUNT) * 3.0 + 0.01), 0);
+        assert_eq!(veg_burn_frame_from_clock(-5.0), 0);
+    }
 
     #[test]
     fn water_centre_cell_draws_no_vegetation_and_land_is_rebased() {

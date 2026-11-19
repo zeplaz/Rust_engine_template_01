@@ -44,7 +44,7 @@ use crate::render::lighting::{
     FireLightCluster, FireLightEmission as VisFireLightSample, FireLightType,
 };
 use crate::systems::atmosphere::AtmosphereDiagnostics;
-use crate::systems::ecology::ChunkEcology;
+use crate::systems::ecology::{ChunkCellStand, ChunkEcology, CELL_BURNING};
 use crate::systems::fire::{
     ChunkFireOverlay, ChunkFuelProfile, ChunkSmokeField, ChunkSurfaceFire, FireLightEmission as SimFireLightEmission,
 };
@@ -433,11 +433,38 @@ fn should_fire_extract_full_reconcile(
         || sim_secs - clock.last_full_reconcile_sim_secs >= interval
 }
 
+/// Per-cell stand codes when the stand snapshot covers this chunk, else `None` (harnesses, chunks
+/// not yet seeded). The stand code is the one burning truth shared with the vegetation draw.
+#[must_use]
+fn stand_burn_codes(stand: Option<&ChunkCellStand>, cells: usize) -> Option<&[u8]> {
+    stand
+        .filter(|s| s.is_seeded() && s.render.len() == cells)
+        .map(|s| &s.render[..])
+}
+
+/// Burn stage of one overlay cell for the fire visuals. With stand codes the cell burns exactly
+/// where the vegetation draw shows `CELL_BURNING` (a burnt-out cell emits no flame or ember; its
+/// smoke tail comes from the emitter memory). Without codes the overlay alone decides.
+#[must_use]
+fn cell_flame_stage(
+    codes: Option<&[u8]>,
+    idx: usize,
+    heat: f32,
+    fuel: f32,
+    burn_hold: u16,
+) -> BurnStage {
+    if codes.is_some_and(|c| c.get(idx).copied() != Some(CELL_BURNING)) {
+        return BurnStage::Out;
+    }
+    BurnStage::classify(heat, fuel, burn_hold)
+}
+
 #[allow(clippy::too_many_arguments)]
 fn ingest_fire_chunk_row(
     chunk: &Chunk,
     matrix: &ChunkCellMatrix,
     overlay: Option<&ChunkFireOverlay>,
+    stand: Option<&ChunkCellStand>,
     fire: &ChunkSurfaceFire,
     em: Option<&SimFireLightEmission>,
     smoke: Option<&ChunkSmokeField>,
@@ -503,6 +530,7 @@ fn ingest_fire_chunk_row(
         slab_heat,
     );
     let mut instances_written = 0usize;
+    let stand_codes = stand_burn_codes(stand, matrix.water.len());
     if let Some(ovl) = overlay {
         let sx = matrix.size.x as usize;
         if sx > 0 && ovl.heat.len() == sx * matrix.size.y as usize {
@@ -525,7 +553,7 @@ fn ingest_fire_chunk_row(
                 // Burn stage (ignition -> flaming -> smouldering -> out) shapes what the cell
                 // emits: embers need flames, smouldering cells mostly smoke. The chunk profile
                 // carries chunk-wide ember/smoke scalars; scale them to this cell.
-                let stage = BurnStage::classify(cell_heat, cell_fuel, burn_hold);
+                let stage = cell_flame_stage(stand_codes, idx, cell_heat, cell_fuel, burn_hold);
                 if stage == BurnStage::Out {
                     continue;
                 }
@@ -550,7 +578,10 @@ fn ingest_fire_chunk_row(
     }
     // No geographic water cull: sparks follow fire events. Chunk-center fallback only when
     // the scalar surface fire still has fuel (avoids inventing sparks over empty ocean).
+    // With stand codes the cells decide: a chunk whose cells are all burnt out must not invent a
+    // flame at its centre from the lingering scalar surface fire.
     if instances_written == 0
+        && stand_codes.is_none()
         && profile.heat > FIRE_VISUAL_ACTIVE_HEAT_EPS
         && fire.fuel > 0.0
     {
@@ -707,6 +738,7 @@ pub fn extract_fire_simulation_snapshot(
         &Chunk,
         &ChunkCellMatrix,
         Option<&ChunkFireOverlay>,
+        Option<&ChunkCellStand>,
         &ChunkSurfaceFire,
         // Optional: present only while the chunk's scalar surface fire is hot. Burning cells
         // (`ChunkFireOverlay`) must reach the visual frame without it.
@@ -865,7 +897,7 @@ pub fn extract_fire_simulation_snapshot(
         sim.chunk_heat.clear();
         let prev = std::mem::take(&mut runtime.chunks);
 
-        for (chunk, matrix, overlay, fire, em, smoke, prof, eco, wx, mat_chunk) in &q {
+        for (chunk, matrix, overlay, stand, fire, em, smoke, prof, eco, wx, mat_chunk) in &q {
             report.chunks_iterated = report.chunks_iterated.saturating_add(1);
             let coord = chunk.coord;
             if scope_residency && !test_fire_loose {
@@ -882,6 +914,7 @@ pub fn extract_fire_simulation_snapshot(
                 chunk,
                 matrix,
                 overlay,
+                stand,
                 fire,
                 em,
                 smoke,
@@ -915,6 +948,7 @@ pub fn extract_fire_simulation_snapshot(
                 chunk,
                 matrix,
                 overlay,
+                stand,
                 fire,
                 em,
                 smoke,
@@ -931,6 +965,7 @@ pub fn extract_fire_simulation_snapshot(
                 chunk,
                 matrix,
                 overlay,
+                stand,
                 fire,
                 em,
                 smoke,
@@ -1254,6 +1289,84 @@ mod vt1_full_world_fire_extract_tests {
             !frame.instances.is_empty(),
             "fueled fire event must produce visual instances"
         );
+    }
+
+    /// 4x4 chunk, cells 0 and 1 hot and fueled; `codes` are the stand render codes for cells 0 and 1.
+    fn spawn_stand_gated_chunk(app: &mut App, codes: [u8; 2]) {
+        use crate::systems::ecology::ChunkCellStand;
+        let cell = UVec2::new(4, 4);
+        let n = (cell.x * cell.y) as usize;
+        let mut heat = vec![0.0; n];
+        let mut fuel = vec![0.0; n];
+        for i in 0..2 {
+            heat[i] = 0.85;
+            fuel[i] = 0.8;
+        }
+        let mut stand = ChunkCellStand::new(n);
+        stand.seeded = true;
+        let mut render = vec![crate::systems::ecology::CELL_GRASS; n];
+        render[0] = codes[0];
+        render[1] = codes[1];
+        stand.render = render.into();
+        app.world_mut().spawn((
+            Chunk { coord: IVec2::ZERO },
+            ChunkCellMatrix::new(cell),
+            ChunkSurfaceFire { heat: 0.85, fuel: 0.8 },
+            ChunkFireOverlay {
+                heat,
+                fuel,
+                smoke: vec![0.0; n],
+                toxic: vec![0.0; n],
+                burn_hold: vec![0; n],
+            },
+            stand,
+            sample_emitter(),
+        ));
+    }
+
+    #[test]
+    fn burnt_cell_emits_no_fire_row_and_burning_cell_does() {
+        use crate::systems::ecology::{CELL_BURNING, CELL_BURNT};
+        let mut app = fire_visual_test_app();
+        insert_operational_view_manager(app.world_mut());
+        spawn_stand_gated_chunk(&mut app, [CELL_BURNING, CELL_BURNT]);
+        sync_representation_policy(app.world_mut());
+        app.update();
+        let by_view = app.world().resource::<FireVisualFramesByView>();
+        let frame = tactical_fire_visual(by_view);
+        // Same input: the tree draw says exactly one cell burns, the fire rows say the same.
+        assert_eq!(
+            frame.instances.len(),
+            1,
+            "one CELL_BURNING cell -> one row; the CELL_BURNT cell (still hot) must emit none"
+        );
+    }
+
+    #[test]
+    fn all_cells_burnt_out_emits_no_fire_rows_even_with_chunk_surface_heat() {
+        use crate::systems::ecology::CELL_BURNT;
+        let mut app = fire_visual_test_app();
+        insert_operational_view_manager(app.world_mut());
+        spawn_stand_gated_chunk(&mut app, [CELL_BURNT, CELL_BURNT]);
+        sync_representation_policy(app.world_mut());
+        app.update();
+        let by_view = app.world().resource::<FireVisualFramesByView>();
+        let frame = tactical_fire_visual(by_view);
+        assert!(
+            frame.instances.is_empty(),
+            "no burning cell: no flame at the chunk centre from lingering scalar surface fire"
+        );
+    }
+
+    #[test]
+    fn cell_flame_stage_follows_stand_code_else_overlay() {
+        use super::{cell_flame_stage, BurnStage};
+        use crate::systems::ecology::{CELL_BURNING, CELL_BURNT};
+        let codes = [CELL_BURNING, CELL_BURNT];
+        assert_eq!(cell_flame_stage(Some(&codes), 0, 0.8, 0.5, 0), BurnStage::Flaming);
+        assert_eq!(cell_flame_stage(Some(&codes), 1, 0.8, 0.5, 0), BurnStage::Out);
+        assert_eq!(cell_flame_stage(Some(&codes), 9, 0.8, 0.5, 0), BurnStage::Out);
+        assert_eq!(cell_flame_stage(None, 1, 0.8, 0.5, 0), BurnStage::Flaming);
     }
 
     #[test]
