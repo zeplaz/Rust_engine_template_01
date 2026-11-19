@@ -68,10 +68,17 @@ fn pixel_world_on(mode: &Option<Res<WorldPresentationMode>>, frame: &PixelWorldC
 #[derive(Component)]
 pub struct PixelWorldTreeChunk;
 
+/// One live chunk: stable entity + mesh handle, content key of what the mesh currently shows.
+pub(crate) struct TreeChunkSlot {
+    entity: Entity,
+    key: u64,
+    mesh: Option<Handle<Mesh>>,
+}
+
 #[derive(Default)]
 pub(crate) struct TreeLayerState {
     material: Option<Handle<StandardMaterial>>,
-    chunks: HashMap<IVec2, (Entity, u64)>,
+    chunks: HashMap<IVec2, TreeChunkSlot>,
     /// Reused site buffer for chunk rebuilds.
     scratch: Vec<VegInstance>,
 }
@@ -217,8 +224,8 @@ pub(crate) fn sync_pixel_world_trees(
     };
     if table.is_changed() {
         // New species table: every chunk mesh is stale.
-        for (_, (e, _)) in state.chunks.drain() {
-            commands.entity(e).despawn();
+        for (_, slot) in state.chunks.drain() {
+            commands.entity(slot.entity).despawn();
         }
     }
     let chunk = matrices
@@ -257,10 +264,10 @@ pub(crate) fn sync_pixel_world_trees(
     wanted.sort_by(|a, b| a.0.total_cmp(&b.0));
 
     let keep: std::collections::HashSet<IVec2> = wanted.iter().map(|(_, r)| r.coord).collect();
-    state.chunks.retain(|coord, (e, _)| {
+    state.chunks.retain(|coord, slot| {
         let k = keep.contains(coord);
         if !k {
-            commands.entity(*e).despawn();
+            commands.entity(slot.entity).despawn();
         }
         k
     });
@@ -268,7 +275,7 @@ pub(crate) fn sync_pixel_world_trees(
     let mut budget = TREE_CHUNKS_PER_FRAME;
     for (_, row) in wanted {
         let key = tree_chunk_key(row, lod, field.revision);
-        if state.chunks.get(&row.coord).is_some_and(|(_, k)| *k == key) {
+        if state.chunks.get(&row.coord).is_some_and(|s| s.key == key) {
             continue;
         }
         if budget == 0 {
@@ -276,25 +283,70 @@ pub(crate) fn sync_pixel_world_trees(
         }
         budget -= 1;
         let buf = build_tree_chunk(row, chunk, lod, field.as_ref(), &table, &mut state.scratch);
-        if let Some((e, _)) = state.chunks.remove(&row.coord) {
-            commands.entity(e).despawn();
+        let prev = state.chunks.remove(&row.coord);
+        let slot = publish_tree_chunk(&mut commands, &mut meshes, &material, prev, buf, key);
+        state.chunks.insert(row.coord, slot);
+    }
+}
+
+/// Publish a rebuilt chunk mesh. The chunk keeps its entity and mesh handle: the asset is replaced in
+/// place, so a burn-frame rebuild never despawns the old draw before the new one is GPU-prepared.
+fn publish_tree_chunk(
+    commands: &mut Commands,
+    meshes: &mut Assets<Mesh>,
+    material: &Handle<StandardMaterial>,
+    prev: Option<TreeChunkSlot>,
+    buf: MeshBuf,
+    key: u64,
+) -> TreeChunkSlot {
+    let empty = buf.is_empty();
+    match prev {
+        Some(mut slot) => {
+            if empty {
+                commands.entity(slot.entity).try_insert(Visibility::Hidden);
+            } else {
+                let mesh = buf.into_mesh();
+                match slot.mesh.as_ref().filter(|h| meshes.contains(*h)) {
+                    Some(h) => {
+                        let _ = meshes.insert(h, mesh);
+                        commands.entity(slot.entity).try_insert(Visibility::Inherited);
+                    }
+                    None => {
+                        let h = meshes.add(mesh);
+                        commands.entity(slot.entity).try_insert((
+                            Mesh3d(h.clone()),
+                            MeshMaterial3d(material.clone()),
+                            layer(),
+                            Pickable::IGNORE,
+                            Visibility::Inherited,
+                        ));
+                        slot.mesh = Some(h);
+                    }
+                }
+            }
+            slot.key = key;
+            slot
         }
-        let e = if buf.is_empty() {
-            commands.spawn((PixelWorldTreeChunk, Transform::IDENTITY, Visibility::Hidden)).id()
-        } else {
-            commands
+        None if empty => TreeChunkSlot {
+            entity: commands.spawn((PixelWorldTreeChunk, Transform::IDENTITY, Visibility::Hidden)).id(),
+            key,
+            mesh: None,
+        },
+        None => {
+            let h = meshes.add(buf.into_mesh());
+            let entity = commands
                 .spawn((
                     PixelWorldTreeChunk,
-                    Mesh3d(meshes.add(buf.into_mesh())),
+                    Mesh3d(h.clone()),
                     MeshMaterial3d(material.clone()),
                     Transform::IDENTITY,
                     Visibility::Inherited,
                     layer(),
                     Pickable::IGNORE,
                 ))
-                .id()
-        };
-        state.chunks.insert(row.coord, (e, key));
+                .id();
+            TreeChunkSlot { entity, key, mesh: Some(h) }
+        }
     }
 }
 
@@ -1107,6 +1159,49 @@ mod tests {
         let mut scratch = Vec::new();
         let buf = build_tree_chunk(row, UVec2::splat(CHUNK), lod, &flat_field(), &VegSpeciesTable::default(), &mut scratch);
         (buf, scratch.len())
+    }
+
+    #[test]
+    fn burn_tick_does_not_change_key_of_unburnt_chunk() {
+        let mut r = row(|_| 0);
+        let k0 = tree_chunk_key(&r, VegLod::Fine, 7);
+        r.frame_index = 5;
+        assert_eq!(k0, tree_chunk_key(&r, VegLod::Fine, 7), "no burn: frame tick is ignored");
+        r.burn_active = true;
+        let a = tree_chunk_key(&r, VegLod::Fine, 7);
+        r.frame_index = 8;
+        assert_ne!(a, tree_chunk_key(&r, VegLod::Fine, 7), "burning chunk animates");
+    }
+
+    #[test]
+    fn chunk_rebuild_keeps_entity_and_mesh_handle() {
+        let mut world = World::new();
+        world.insert_resource(Assets::<Mesh>::default());
+        let material = Handle::<StandardMaterial>::default();
+        let table = VegSpeciesTable::default();
+        let r = row(|_| 0);
+        let mut scratch = Vec::new();
+        let field = flat_field();
+        let mut publish = |world: &mut World, prev: Option<TreeChunkSlot>, key: u64| {
+            let buf = build_tree_chunk(&r, UVec2::splat(CHUNK), VegLod::Fine, &field, &table, &mut scratch);
+            let mut meshes = world.remove_resource::<Assets<Mesh>>().unwrap();
+            let mut queue = bevy::ecs::world::CommandQueue::default();
+            let slot = {
+                let mut commands = Commands::new(&mut queue, world);
+                publish_tree_chunk(&mut commands, &mut meshes, &material, prev, buf, key)
+            };
+            queue.apply(world);
+            world.insert_resource(meshes);
+            slot
+        };
+        let first = publish(&mut world, None, 1);
+        let (e, h) = (first.entity, first.mesh.clone().unwrap());
+        let second = publish(&mut world, Some(first), 2);
+        assert_eq!(second.entity, e, "entity is reused");
+        assert_eq!(second.mesh.as_ref().unwrap().id(), h.id(), "mesh asset replaced in place");
+        assert_eq!(second.key, 2);
+        assert_eq!(world.resource::<Assets<Mesh>>().len(), 1, "no orphaned mesh assets");
+        assert!(world.get_entity(e).is_ok());
     }
 
     #[test]

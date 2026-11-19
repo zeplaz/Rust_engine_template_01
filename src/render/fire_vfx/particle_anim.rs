@@ -6,7 +6,7 @@
 //! it onto [`GpuParticleInstance`] rows. Row packing consumed by `fire_particle.wgsl`:
 //!
 //! * `world_xyz_heat` = (map x, map y, plane z, glow temperature `u` — or smoke density for smoke);
-//! * `ember_class_radius_smoke` = (alpha envelope, class id, **physical** half-edge in tiles, 0).
+//! * `ember_class_radius_smoke` = (alpha envelope, class id, **physical** half-edge in tiles, oblique height lift in tiles).
 //!
 //! Screen-space minimum size and the matching alpha compensation (no pop across zoom) are applied
 //! in the shader, which knows the camera zoom.
@@ -76,17 +76,38 @@ fn emitter_seed(xy: Vec2) -> u32 {
 }
 
 #[inline]
-fn pack(xy: Vec2, heat: f32, alpha: f32, class: ParticleClass, half_tiles: f32) -> GpuParticleInstance {
+fn pack(
+    (xy, lift_tiles): (Vec2, f32),
+    heat: f32,
+    alpha: f32,
+    class: ParticleClass,
+    half_tiles: f32,
+) -> GpuParticleInstance {
     GpuParticleInstance {
         world_xyz_heat: Vec4::new(xy.x, xy.y, FIRE_SPARK_MAP_PLANE_Z, heat),
-        ember_class_radius_smoke: Vec4::new(alpha, class.as_f32(), half_tiles, 0.0),
+        // `.w` is unread by `fire_particle.wgsl` for animated classes; it carries the oblique height
+        // lift so a 3D view can recover true height (see `particle_height_m`).
+        ember_class_radius_smoke: Vec4::new(alpha, class.as_f32(), half_tiles, lift_tiles),
     }
 }
 
 /// Screen position of a point `p_m` metres from the emitter (height drawn as an oblique offset).
 #[inline]
-fn project(origin: Vec2, off_m: Vec2, z_m: f32) -> Vec2 {
-    origin + off_m / FIRE_TILE_METERS + Vec2::new(0.0, z_m * HEIGHT_TO_SCREEN / FIRE_TILE_METERS)
+fn project(origin: Vec2, off_m: Vec2, z_m: f32) -> (Vec2, f32) {
+    let lift = z_m * HEIGHT_TO_SCREEN / FIRE_TILE_METERS;
+    (origin + off_m / FIRE_TILE_METERS + Vec2::new(0.0, lift), lift)
+}
+
+/// Split an animated row back into (ground xy in tiles, height above ground in metres).
+/// Inverse of [`project`]; the flat view keeps drawing the oblique `xy` as is.
+#[inline]
+#[must_use]
+pub fn particle_ground_and_height_m(row: &GpuParticleInstance) -> (Vec2, f32) {
+    let lift = row.ember_class_radius_smoke.w.max(0.0);
+    (
+        Vec2::new(row.world_xyz_heat.x, row.world_xyz_heat.y - lift),
+        lift * FIRE_TILE_METERS / HEIGHT_TO_SCREEN,
+    )
 }
 
 /// Append every particle row for `e` at `anim.time_s`.

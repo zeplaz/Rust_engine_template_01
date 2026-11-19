@@ -28,6 +28,7 @@ mod field;
 mod clouds;
 mod ground_material;
 mod layers;
+mod fire;
 mod rain;
 mod terrain;
 mod water_gpu;
@@ -126,6 +127,7 @@ impl Plugin for PixelWorldViewPlugin {
                     layers::sync_pixel_world_fronts,
                     layers::sync_pixel_world_paths,
                     rain::sync_pixel_world_precip,
+                    fire::sync_pixel_world_fire,
                     clouds::sync_pixel_world_clouds,
                 )
                     .in_set(PixelWorldViewSet::Layers),
