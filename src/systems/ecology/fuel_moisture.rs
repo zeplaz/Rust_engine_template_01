@@ -114,6 +114,7 @@ pub(crate) fn cell_fuel_moisture_tick(
         &mut ChunkCellFuelMoisture,
     )>,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_eco_cell_fuel_moisture_tick");
     if !ctrl.should_tick() {
         return;
     }

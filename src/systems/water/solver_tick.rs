@@ -193,6 +193,8 @@ pub fn step_surface_water_system(
     if !field.wired {
         return;
     }
+    // Hitch attribution (measurement only; `HITCH_MS=<ms>` reports the top scopes per slow frame).
+    let _perf = crate::render::PerfScope::new("upd_water_solver");
 
     let has_barrier = field.hydraulics.barrier_crest_m.iter().any(|c| *c > 0.5);
     let use_pool = control.prefer_level_pool
