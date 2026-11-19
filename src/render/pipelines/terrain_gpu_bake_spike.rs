@@ -134,6 +134,10 @@ pub struct TerrainGpuBakeSpikeState {
     pub last_rtt_execute_seen: u64,
     /// Scissors of the last armed dispatch (incremental re-bake when the dirty set changes).
     pub last_dispatched_regions: Vec<TerrainGpuBakeScissor>,
+    /// Dirty rect of the last armed dispatch and the render execute count when it was armed:
+    /// a re-arm before that dispatch ran must cover both rects, or it is lost.
+    pub armed_dirty: Option<TerrainGpuBakeScissor>,
+    pub exec_count_at_arm: u64,
 }
 
 impl Default for TerrainGpuBakeSpikeState {
@@ -153,6 +157,8 @@ impl Default for TerrainGpuBakeSpikeState {
             last_dispatch_stamp: 0,
             last_rtt_execute_seen: 0,
             last_dispatched_regions: Vec::new(),
+            armed_dirty: None,
+            exec_count_at_arm: 0,
         }
     }
 }
@@ -669,7 +675,17 @@ fn upload_control_and_arm_gpu_rtt(
         control.data = Some(data.clone());
     }
 
-    let dirty = TerrainGpuBakeScissor::union_bounds(&regions, bake_w, bake_h);
+    let mut dirty = TerrainGpuBakeScissor::union_bounds(&regions, bake_w, bake_h);
+    // CLOSE-G3: the render world retries an armed dispatch until it executes, but a new arm
+    // replaces it. Water keeps the ROI chunks dirty, so the full-world bake after authoring was
+    // overwritten by small ROI re-arms before it ever ran (grey ground outside the ROI). Keep
+    // the not-yet-executed rect in the new dispatch.
+    let exec_now = TERRAIN_BAKE_RTT_EXECUTE_COUNT.load(std::sync::atomic::Ordering::Relaxed);
+    if let Some(prev) = state.armed_dirty {
+        if exec_now == state.exec_count_at_arm {
+            dirty = TerrainGpuBakeScissor::union_bounds(&[prev, dirty], bake_w, bake_h);
+        }
+    }
     let params = TerrainBakeRttParamsGpu {
         atlas_cols: atlas.cols.max(1),
         atlas_tile_px: atlas_tile_px(),
@@ -682,6 +698,8 @@ fn upload_control_and_arm_gpu_rtt(
     };
 
     dispatch.arm(control_handle, bake_handle, atlas_handle, params);
+    state.armed_dirty = Some(dirty);
+    state.exec_count_at_arm = exec_now;
     state.last_dispatched_regions = state.regions.clone();
     state.last_control_texel_count = written;
     state.last_control_index_revision = map.revision;
