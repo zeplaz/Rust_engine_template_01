@@ -66,9 +66,18 @@ pub fn author_dam_flood_valley_system(
     let water_line = params.biome_tuning.shallow_water_height_max;
     let river_bed = (water_line * 0.55).clamp(0.02, 0.45);
     let land_h = (water_line + BANK_ABOVE_WATER_LINE).clamp(0.08, 0.95);
-    let grassland = default_terrain_families()
+    let families = default_terrain_families();
+    let grassland = families
         .id("Grassland")
         .unwrap_or(crate::terrain::family::DEFAULT_TERRAIN_FAMILY_ID);
+    // CLOSE-T3: the fixture's forest floodplain is forest ground (S0 "forest on the floodplain");
+    // grassland everywhere capped every stand at shrub, so no tree stage could exist.
+    let forest = families.id("Forest").unwrap_or(grassland);
+    let fp = &fixture.forest_floodplain;
+    let in_floodplain = |x: u32, z: u32| {
+        let (x, z) = (x as i32, z as i32);
+        x >= fp.min.0 && x <= fp.max.0 && z >= fp.min.1 && z <= fp.max.1
+    };
 
     // Ensure static depth grid matches world size.
     if let Some(st) = static_depth.as_mut() {
@@ -102,7 +111,7 @@ pub fn author_dam_flood_valley_system(
                 let bank = land_h + (dx.saturating_sub(RIVER_HALF_WIDTH) as f32) * 0.012;
                 dense.elevation[i] = bank.clamp(land_h, 0.98);
                 dense.moisture[i] = dense.moisture[i].min(0.55);
-                dense.family[i] = grassland;
+                dense.family[i] = if in_floodplain(x, z) { forest } else { grassland };
                 if let Some(st) = static_depth.as_mut() {
                     st.depth_m[i] = 0.0;
                 }
