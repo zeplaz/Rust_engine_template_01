@@ -349,12 +349,16 @@ impl SurfaceWaterField {
         self.recompute_mass();
     }
 
-    /// Install a barrier crest across a world-z row (dam at narrows).
+    /// Install a barrier across a world-z row (dam at narrows).
+    /// `crest_height_m` is the dam's height above the lowest bed in the span; the stored crest
+    /// is that absolute elevation (level crest), never below a cell's own bed. Absolute crest
+    /// values broke once the bed became real terrain metres (CLOSE-W3): a "40 m" crest sat under
+    /// a 300 m valley floor and blocked nothing.
     /// `center_world_x` defaults to ROI mid-x when `None`.
     pub fn install_barrier_row(
         &mut self,
         world_z: i32,
-        crest_m: f32,
+        crest_height_m: f32,
         half_span: u32,
         center_world_x: Option<i32>,
     ) {
@@ -366,11 +370,17 @@ impl SurfaceWaterField {
         let cx_world = center_world_x.unwrap_or(self.origin_x + (self.width as i32) / 2);
         let cx = cx_world - self.origin_x;
         let half = half_span.max(1) as i32;
-        for lx in 0..self.width as i32 {
-            if (lx - cx).abs() <= half {
-                let i = self.idx(lx as u32, lz);
-                self.hydraulics.barrier_crest_m[i] = crest_m;
-            }
+        let span: Vec<usize> = (0..self.width as i32)
+            .filter(|lx| (lx - cx).abs() <= half)
+            .map(|lx| self.idx(lx as u32, lz))
+            .collect();
+        let invert = span.iter().map(|&i| self.bed_m[i]).fold(f32::INFINITY, f32::min);
+        if !invert.is_finite() {
+            return;
+        }
+        let crest_abs = invert + crest_height_m.max(0.0);
+        for i in span {
+            self.hydraulics.barrier_crest_m[i] = crest_abs.max(self.bed_m[i]);
         }
     }
 

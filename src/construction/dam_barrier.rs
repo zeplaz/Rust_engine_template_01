@@ -191,6 +191,51 @@ pub fn erode_dam_columns_by_flow(
     columns.iter().copied().sum::<f32>() / columns.len() as f32
 }
 
+/// Velocity (m/s) of water crossing each dam column, from the water field (DF-8).
+///
+/// Water crosses a column only when the upstream surface is above that column's crest
+/// (overtopping) or the crest has been cleared/lowered by a breach. Head = upstream surface −
+/// max(downstream surface, crest); orifice/weir velocity `v = C_d·√(2g·head)`, `C_d` = 0.6.
+/// Columns outside the ROI or without water on both faces report 0.
+#[must_use]
+pub fn dam_face_velocities_m_s(
+    field: &crate::systems::water::SurfaceWaterField,
+    tiles: &[IVec2],
+) -> Vec<f32> {
+    const G: f32 = 9.81;
+    const CD: f32 = 0.6;
+    let at = |x: i32, z: i32| -> Option<usize> {
+        field.contains_world(x, z).then(|| {
+            field.idx((x - field.origin_x) as u32, (z - field.origin_z) as u32)
+        })
+    };
+    tiles
+        .iter()
+        .map(|t| {
+            // Valley runs +z (upstream) → −z (downstream), as the solver's inflow/outflow edges.
+            let (Some(i), Some(u), Some(d)) =
+                (at(t.x, t.y), at(t.x, t.y + 1), at(t.x, t.y - 1))
+            else {
+                return 0.0;
+            };
+            let crest = field
+                .hydraulics
+                .barrier_crest_m
+                .get(i)
+                .copied()
+                .unwrap_or(0.0)
+                .max(field.bed_m[i]);
+            let eta_u = field.surface_at(u);
+            let head = eta_u - field.surface_at(d).max(crest);
+            if field.depth_m[u] <= 0.05 || head <= 0.0 {
+                0.0
+            } else {
+                CD * (2.0 * G * head).sqrt()
+            }
+        })
+        .collect()
+}
+
 /// Orifice leak intensity from mean integrity (m³/s), zero while nearly intact.
 #[must_use]
 pub fn leak_flow_from_integrity(integrity_01: f32) -> f32 {
@@ -255,19 +300,9 @@ pub fn dam_integrity_progress_system(
     if dt <= 0.0 {
         return;
     }
-    // Overtopping is the dangerous path: force-closed gates → fill → sheet over crest
-    // → embankment erosion → leak → collapse (DF-8). Weight it above controlled spill.
-    let flow_proxy = field
-        .as_ref()
-        .map(|f| {
-            // CLOSE-D1: only uncontrolled flow erodes the body. Outlet + spillway releases run
-            // through the outlet works; counting them (outlet starts at full inflow) eroded every
-            // dam from normal operation → collapse → breach → dam vanished at scene start.
-            (f.breach_flow_m3s.max(0.0) * 0.002 + f.overtopping_flow_m3s.max(0.0) * 0.004)
-                .clamp(0.0, 8.0)
-        })
-        .unwrap_or(0.0);
-
+    // DF-8 erosion input: the real velocity of water passing each dam column (overtopping
+    // sheet or an open breach), from the water field. Controlled outlet / spillway releases go
+    // through the outlet works and never touch the body.
     for (entity, mut body, footprint, roles) in &mut dams {
         if body.damage_stage.is_terminal() {
             continue;
@@ -277,15 +312,17 @@ pub fn dam_integrity_progress_system(
         if let Some(mut roles) = roles {
             roles.ensure_dam_span(footprint.tiles.len());
         }
-        if flow_proxy > 0.0 && !body.column_integrity.is_empty() {
+        let speeds = field
+            .as_deref()
+            .map(|f| dam_face_velocities_m_s(f, &footprint.tiles))
+            .unwrap_or_default();
+        if speeds.iter().any(|v| *v > 0.0) && body.column_integrity.len() == speeds.len() {
             let kind = body.kind;
-            let mean = erode_dam_columns_by_flow(
-                &mut body.column_integrity,
-                kind,
-                flow_proxy,
-                dt,
-            );
-            body.integrity_01 = mean;
+            for (col, v) in body.column_integrity.iter_mut().zip(&speeds) {
+                let _ = erode_dam_columns_by_flow(std::slice::from_mut(col), kind, *v, dt);
+            }
+            let n = body.column_integrity.len().max(1) as f32;
+            body.integrity_01 = body.column_integrity.iter().sum::<f32>() / n;
             body.damage_stage = crate::construction::demolish::destructible_stage_from_integrity(
                 body.integrity_01,
                 crate::construction::demolish::DESTRUCTIBLE_COLLAPSE_INTEGRITY,
@@ -609,6 +646,47 @@ pub fn dam_spans_banks_with_runtime(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// 5×5 ROI on a 300 m valley floor (real terrain metres), dam row at z=2.
+    fn dam_field(up_depth: f32) -> crate::systems::water::SurfaceWaterField {
+        let mut f = crate::systems::water::SurfaceWaterField::default();
+        f.allocate(0, 0, 5, 5, vec![300.0; 25], 0.0);
+        f.install_barrier_row(2, 10.0, 1, Some(2));
+        for z in 3..5 {
+            for x in 0..5 {
+                let i = f.idx(x, z);
+                f.depth_m[i] = up_depth;
+            }
+        }
+        f
+    }
+
+    /// CLOSE-D2: crest is the dam height above the span's bed (not an absolute elevation).
+    #[test]
+    fn close_d2_crest_is_height_above_bed() {
+        let f = dam_field(0.0);
+        let i = f.idx(2, 2);
+        assert!((f.hydraulics.barrier_crest_m[i] - 310.0).abs() < 1e-3);
+    }
+
+    /// CLOSE-D2: a full reservoir below the crest does not erode the dam body.
+    #[test]
+    fn close_d2_no_erosion_below_crest() {
+        let f = dam_field(8.0);
+        let v = dam_face_velocities_m_s(&f, &[IVec2::new(2, 2)]);
+        assert_eq!(v, vec![0.0]);
+    }
+
+    /// CLOSE-D2: overtopping gives a real face velocity that erodes an embankment.
+    #[test]
+    fn close_d2_overtopping_erodes_embankment() {
+        let f = dam_field(12.0); // 2 m over a 10 m crest
+        let v = dam_face_velocities_m_s(&f, &[IVec2::new(2, 2)])[0];
+        assert!((v - 0.6 * (2.0 * 9.81 * 2.0_f32).sqrt()).abs() < 1e-3);
+        let mut cols = [1.0_f32];
+        let mean = erode_dam_columns_by_flow(&mut cols, DamKind::Embankment, v, 10.0);
+        assert!(mean < 1.0);
+    }
 
     #[test]
     fn dam_spans_banks_validation_requires_water_and_dry_ends() {
