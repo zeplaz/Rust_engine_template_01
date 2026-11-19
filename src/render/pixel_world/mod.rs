@@ -44,6 +44,7 @@ pub use camera::{
     PixelWorldCameraRig, PIXEL_WORLD_ZOOM_RANGE,
 };
 pub use field::PixelWorldTerrainField;
+pub use layers::{ray_hit_site_boxes, PixelWorldSitePickBoxes, SitePickBox};
 
 /// Render layer of every voxel-view entity (camera, sun, meshes).
 pub const PIXEL_WORLD_RENDER_LAYER: usize = 9;
@@ -98,6 +99,7 @@ pub struct PixelWorldViewPlugin;
 impl Plugin for PixelWorldViewPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(PixelWorldCulling::from_env());
+        app.init_resource::<layers::PixelWorldSitePickBoxes>();
         app.add_plugins((
             water_gpu::PixelWorldWaterGpuPlugin,
             ground_material::PixelWorldGroundMaterialPlugin,
@@ -150,6 +152,7 @@ impl Plugin for PixelWorldViewPlugin {
                         .chain(),
                     layers::sync_pixel_world_trees,
                     layers::sync_pixel_world_sites,
+                    layers::publish_pixel_world_site_pick_boxes,
                     layers::sync_pixel_world_units,
                     layers::sync_pixel_world_ghost,
                     layers::sync_pixel_world_fronts,

@@ -459,6 +459,119 @@ fn phase_look(p: SiteConstructionPhase) -> (f32, Option<[f32; 3]>, f32) {
     }
 }
 
+/// Drawn vertical extent `(lo, hi)` of a site's columns, shared by the mesh and the voxel pick so
+/// a click hits exactly what is drawn (OP-1).
+pub(crate) fn site_vertical_extent<'a>(
+    planned: &PlannedSite,
+    site: &ConstructionSite,
+    tiles: impl Iterator<Item = &'a IVec2>,
+    field: &PixelWorldTerrainField,
+) -> Option<(f32, f32)> {
+    let mut top = f32::NEG_INFINITY;
+    let mut bottom = f32::INFINITY;
+    let mut n = 0u32;
+    for t in tiles {
+        n += 1;
+        if let Some(i) = field.index(t.x, t.y) {
+            // Ground only: water tops made every flooded building stretch with the flood (CLOSE-W2).
+            top = top.max(field.ground[i]);
+            bottom = bottom.min(field.ground[i]);
+        }
+    }
+    if !top.is_finite() {
+        return None;
+    }
+    let (_, _, full) = archetype_look(planned.archetype);
+    let floors = derive_massing_floors(n, None);
+    let full = full * (1.0 + 0.25 * f32::from(floors.saturating_sub(1)));
+    let (frac, _, _) = phase_look(site.phase);
+    // Slabs (planned / clearing / foundation) sit just over the ground; the rest stand up.
+    let height = if frac <= 0.0 {
+        match site.phase {
+            SiteConstructionPhase::Foundation => 0.3,
+            _ => 0.12,
+        }
+    } else {
+        (full * frac).max(0.3)
+    };
+    Some((bottom - 0.4, top + height))
+}
+
+/// One drawn site box for voxel picking (tactical XY bounds + vertical extent).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct SitePickBox {
+    pub min: Vec2,
+    pub max: Vec2,
+    pub lo: f32,
+    pub hi: f32,
+}
+
+/// Drawn site boxes in the voxel view (render publishes, the pointer gate reads; OP-1).
+#[derive(Resource, Debug, Default, Clone, PartialEq)]
+pub struct PixelWorldSitePickBoxes(pub Vec<SitePickBox>);
+
+/// Publish every site's drawn box so the voxel pick can hit sites standing above the ground
+/// (a dam across a river: the ground ray passed over it and landed on the water behind).
+pub(crate) fn publish_pixel_world_site_pick_boxes(
+    mode: Option<Res<WorldPresentationMode>>,
+    cam: Res<PixelWorldCameraFrame>,
+    field: Res<PixelWorldTerrainField>,
+    sites: Query<(&PlannedSite, &ConstructionSite, &SiteFootprint)>,
+    mut out: ResMut<PixelWorldSitePickBoxes>,
+) {
+    if !pixel_world_on(&mode, &cam, &field) {
+        if !out.0.is_empty() {
+            out.0.clear();
+        }
+        return;
+    }
+    let mut boxes = Vec::new();
+    for (planned, site, fp) in &sites {
+        let Some((lo, hi)) = site_vertical_extent(planned, site, fp.tiles.iter(), &field) else {
+            continue;
+        };
+        let (mut mn, mut mx) = (Vec2::splat(f32::INFINITY), Vec2::splat(f32::NEG_INFINITY));
+        for t in &fp.tiles {
+            mn = mn.min(t.as_vec2());
+            mx = mx.max(t.as_vec2() + Vec2::ONE);
+        }
+        boxes.push(SitePickBox { min: mn, max: mx, lo, hi });
+    }
+    if out.0 != boxes {
+        out.0 = boxes;
+    }
+}
+
+/// Nearest ray entry into any site box: `(t, tactical xy inside the footprint)`.
+#[must_use]
+pub fn ray_hit_site_boxes(boxes: &[SitePickBox], origin: Vec3, dir: Vec3) -> Option<(f32, Vec2)> {
+    let mut best: Option<(f32, Vec2)> = None;
+    for b in boxes {
+        // World: x = tile x, y = height, z = -tile y.
+        let bmin = Vec3::new(b.min.x, b.lo, -b.max.y);
+        let bmax = Vec3::new(b.max.x, b.hi, -b.min.y);
+        let (mut t0, mut t1) = (0.0f32, f32::INFINITY);
+        for a in 0..3 {
+            let (o, d, lo, hi) = (origin[a], dir[a], bmin[a], bmax[a]);
+            if d.abs() < 1e-8 {
+                if o < lo || o > hi {
+                    t0 = f32::INFINITY;
+                }
+                continue;
+            }
+            let (ta, tb) = ((lo - o) / d, (hi - o) / d);
+            t0 = t0.max(ta.min(tb));
+            t1 = t1.min(ta.max(tb));
+        }
+        if t0 <= t1 && t0.is_finite() && best.is_none_or(|(bt, _)| t0 < bt) {
+            let p = origin + dir * t0;
+            let xy = Vec2::new(p.x, -p.z).clamp(b.min + 0.01, b.max - 0.01);
+            best = Some((t0, xy));
+        }
+    }
+    best
+}
+
 fn build_site(
     buf: &mut MeshBuf,
     planned: &PlannedSite,
@@ -482,37 +595,15 @@ fn build_site(
     if tiles.is_empty() {
         return;
     }
-    let mut top = f32::NEG_INFINITY;
-    let mut bottom = f32::INFINITY;
-    for t in &tiles {
-        if let Some(i) = field.index(t.x, t.y) {
-            // Ground only: water tops made every flooded building stretch with the flood (CLOSE-W2).
-            top = top.max(field.ground[i]);
-            bottom = bottom.min(field.ground[i]);
-        }
-    }
-    if !top.is_finite() {
+    let Some((lo, hi)) = site_vertical_extent(planned, site, tiles.iter(), field) else {
         return;
-    }
-    let (wall, roof, full) = archetype_look(planned.archetype);
-    let floors = derive_massing_floors(tiles.len() as u32, None);
-    let full = full * (1.0 + 0.25 * f32::from(floors.saturating_sub(1)));
-    let (frac, tint, dim) = phase_look(site.phase);
-    // Slabs (planned / clearing / foundation) sit just over the ground; the rest stand up.
-    let height = if frac <= 0.0 {
-        match site.phase {
-            SiteConstructionPhase::Foundation => 0.3,
-            _ => 0.12,
-        }
-    } else {
-        (full * frac).max(0.3)
     };
+    let (wall, roof, _) = archetype_look(planned.archetype);
+    let (frac, tint, dim) = phase_look(site.phase);
     let wall = tint.unwrap_or(wall);
     let roof = tint.map(|c| [c[0] * 0.9, c[1] * 0.9, c[2] * 0.9]).unwrap_or(roof);
     let side = shade(wall, dim * 0.92, 1.0);
     let cap = shade(roof, dim, 1.0);
-    let lo = bottom - 0.4;
-    let hi = top + height;
     for t in &tiles {
         let (x0, y0, x1, y1) = (t.x as f32, t.y as f32, (t.x + 1) as f32, (t.y + 1) as f32);
         // Top.
@@ -1369,5 +1460,25 @@ mod tests {
         let keep = |t: IVec2| book.cell(t.x, t.y) < MASK_DESTROYED;
         assert!(keep(IVec2::new(0, 0)));
         assert!(!keep(IVec2::new(2, 3)));
+    }
+}
+
+#[cfg(test)]
+mod op1_pick_tests {
+    use super::{ray_hit_site_boxes, SitePickBox};
+    use bevy::prelude::*;
+
+    /// OP-1: an oblique click ray over a dam (box standing above a river) hits the dam, inside its
+    /// footprint — the ground-only ray used to pass over it and land on the water behind.
+    #[test]
+    fn op1_oblique_ray_hits_dam_box() {
+        let dam = SitePickBox { min: Vec2::new(154.0, 159.0), max: Vec2::new(166.0, 161.0), lo: 18.0, hi: 36.0 };
+        // Eye south of the dam (tile y 140), high up, looking north-down through the dam's face.
+        let eye = Vec3::new(160.0, 60.0, -140.0);
+        let target = Vec3::new(160.0, 30.0, -160.0);
+        let (t, xy) = ray_hit_site_boxes(&[dam], eye, (target - eye).normalize()).expect("hits the dam");
+        assert!(t > 0.0);
+        assert!(xy.x >= 154.0 && xy.x <= 166.0 && xy.y >= 159.0 && xy.y <= 161.0, "{xy:?}");
+        assert!(ray_hit_site_boxes(&[dam], eye, Vec3::new(1.0, -0.1, 0.0).normalize()).is_none());
     }
 }

@@ -217,11 +217,28 @@ pub fn resolve_map_world_pick_system(
     mode: Option<Res<crate::gui::WorldPresentationMode>>,
     camera: Option<Res<crate::render::pixel_world::PixelWorldCameraFrame>>,
     field: Option<Res<crate::render::pixel_world::PixelWorldTerrainField>>,
+    site_boxes: Option<Res<crate::render::pixel_world::PixelWorldSitePickBoxes>>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
     let pick = if mode.as_deref().is_some_and(|m| m.is_pixel_world()) {
         let hit = match (camera.as_deref(), field.as_deref()) {
-            (Some(cam), Some(field)) if gate.cursor_known => cam.pick(field, gate.cursor),
+            (Some(cam), Some(field)) if gate.cursor_known => {
+                let ground = cam.pick(field, gate.cursor);
+                // OP-1: sites stand above the ground (a dam over a river); the nearer of the drawn
+                // site box and the ground wins, so clicking the dam selects it.
+                let boxed = site_boxes.as_deref().zip(cam.ray(gate.cursor)).and_then(|(b, (o, d))| {
+                    crate::render::pixel_world::ray_hit_site_boxes(&b.0, o, d)
+                });
+                match (boxed, ground) {
+                    (Some((tb, xy)), Some(g)) => {
+                        let gs = field.surface_at(g).unwrap_or(field.min_h);
+                        let gp = Vec3::new(g.x, gs, -g.y);
+                        if tb <= (gp - cam.eye).length() { Some(xy) } else { Some(g) }
+                    }
+                    (Some((_, xy)), None) => Some(xy),
+                    (None, g) => g,
+                }
+            }
             _ => None,
         };
         MapWorldPick::PixelWorld(hit)
