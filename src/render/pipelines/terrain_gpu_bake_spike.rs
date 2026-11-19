@@ -25,7 +25,7 @@ use crate::render::tile_world_fallback::{
 };
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use crate::terrain::generation::{Chunk, ChunkCellMatrix};
+use crate::terrain::generation::{Chunk, ChunkCellMatrix, WorldGenDenseTerrainCache};
 use crate::terrain::material::ground_display::ground_display_material_index;
 use crate::terrain::material::MaterialRegistry;
 
@@ -221,13 +221,14 @@ pub fn collect_material_bake_instances(
     materials: &Assets<MaterialRegistry>,
     handles: Option<&TerrainRegistriesHandles>,
     chunks: &[(Chunk, ChunkCellMatrix)],
+    dense: Option<&WorldGenDenseTerrainCache>,
     gpu_stamps: &TerrainGpuStampIndices,
 ) -> Vec<TerrainTileInstance> {
     // No registry yet → no bake feed (index 0 would be a water material); re-collected once loaded.
     let Some(reg) = handles.and_then(|h| materials.get(&h.material_registry)) else {
         return Vec::new();
     };
-    collect_material_bake_instances_with_registry(params, reg, chunks, gpu_stamps)
+    collect_material_bake_instances_with_registry(params, reg, chunks, dense, gpu_stamps)
 }
 
 /// Registry-explicit core of [`collect_material_bake_instances`].
@@ -236,6 +237,7 @@ pub fn collect_material_bake_instances_with_registry(
     params: &WorldGenParams,
     reg: &MaterialRegistry,
     chunks: &[(Chunk, ChunkCellMatrix)],
+    dense: Option<&WorldGenDenseTerrainCache>,
     gpu_stamps: &TerrainGpuStampIndices,
 ) -> Vec<TerrainTileInstance> {
     let tex_w = params.width;
@@ -243,6 +245,29 @@ pub fn collect_material_bake_instances_with_registry(
     let mut out = Vec::new();
 
     let families = crate::terrain::default_terrain_families();
+    // Same source as the CPU raster (`tile_world_fallback` raster index): the dense world cache
+    // is authoritative for display whenever it exists. Per-chunk matrices can be re-classified
+    // from elevation after scenario authoring (DamFlood plateau: dense Grassland, matrix
+    // Mountain -> grey granite in the bake while the raster stayed green).
+    if let Some(cache) = dense.filter(|c| !c.family.is_empty() && c.width > 0) {
+        let w = cache.width as usize;
+        for (i, &family) in cache.family.iter().enumerate() {
+            let xu = (i % w) as u32;
+            let yu = (i / w) as u32;
+            if xu >= tex_w || yu >= tex_h {
+                continue;
+            }
+            let material_index =
+                ground_display_material_index(reg, families, family).unwrap_or(0);
+            out.push(TerrainTileInstance {
+                world_pos: [xu as f32 + 0.5, yu as f32 + 0.5],
+                material_index,
+                _pad: 0,
+            });
+        }
+        crate::gui::map_tile_atlas_stamp::apply_gpu_stamps_to_terrain_instances(gpu_stamps, &mut out);
+        return out;
+    }
     for (chunk, matrix) in chunks {
         let sx = matrix.size.x as usize;
         let sy = matrix.size.y as usize;
@@ -526,6 +551,7 @@ fn sync_gpu_bake_indices_from_chunks(
     materials: Res<Assets<MaterialRegistry>>,
     gpu_stamps: Res<TerrainGpuStampIndices>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
+    dense: Option<Res<WorldGenDenseTerrainCache>>,
     mut map: ResMut<TerrainGpuBakeIndexMap>,
 ) {
     if !state.enabled {
@@ -545,6 +571,7 @@ fn sync_gpu_bake_indices_from_chunks(
         materials.as_ref(),
         handles.as_deref(),
         &owned,
+        dense.as_deref(),
         gpu_stamps.as_ref(),
     );
 
@@ -897,6 +924,7 @@ mod tests {
             &params,
             &reg,
             &[(Chunk { coord: IVec2::ZERO }, m.clone())],
+            None,
             &TerrainGpuStampIndices::default(),
         );
         assert_eq!(out.len(), names.len());
@@ -917,6 +945,36 @@ mod tests {
     }
 
     #[test]
+    fn dense_cache_family_wins_over_stale_chunk_matrix() {
+        let reg = test_registry();
+        let fams = crate::terrain::default_terrain_families();
+        let mut m = ChunkCellMatrix::new(UVec2::new(2, 1));
+        m.family[0] = fams.id("Mountain").unwrap();
+        m.family[1] = fams.id("Mountain").unwrap();
+        let dense = WorldGenDenseTerrainCache {
+            width: 2,
+            height: 1,
+            elevation: vec![0.9; 2],
+            moisture: vec![0.5; 2],
+            temperature: vec![0.5; 2],
+            family: vec![fams.id("Grassland").unwrap(); 2],
+            region_index: vec![0; 2],
+        };
+        let params = WorldGenParams { width: 2, height: 1, ..Default::default() };
+        let out = collect_material_bake_instances_with_registry(
+            &params,
+            &reg,
+            &[(Chunk { coord: IVec2::ZERO }, m)],
+            Some(&dense),
+            &TerrainGpuStampIndices::default(),
+        );
+        assert_eq!(out.len(), 2);
+        for inst in &out {
+            assert_eq!(reg.materials[inst.material_index as usize].name, "loam_wet");
+        }
+    }
+
+    #[test]
     fn collect_material_bake_instances_empty_world() {
         let params = WorldGenParams {
             width: 4,
@@ -925,7 +983,7 @@ mod tests {
         };
         let materials = Assets::<MaterialRegistry>::default();
         let stamps = TerrainGpuStampIndices::default();
-        let out = collect_material_bake_instances(&params, &materials, None, &[], &stamps);
+        let out = collect_material_bake_instances(&params, &materials, None, &[], None, &stamps);
         assert!(out.is_empty());
     }
 

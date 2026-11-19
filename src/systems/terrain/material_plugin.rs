@@ -8,7 +8,7 @@ use bevy::prelude::*;
 
 use crate::terrain::generation::passes::{
     apply_agent_overlay, apply_agent_overlay_into_book, apply_hydrology_chunk, apply_threshold_tags,
-    classify_cells, fill_fields, materialize,
+    classify_cells, classify_cells_with, fill_fields, materialize,
 };
 use crate::terrain::TerrainAnalysisBook;
 #[cfg(feature = "dev_tools")]
@@ -259,7 +259,14 @@ fn run_passes_from(
         match p {
             0 => fill_fields(matrix, chunk_coord, params, None),
             1 => apply_threshold_tags(matrix, &params.biome_tuning, tag_reg, &params.tag_pool),
-            2 => classify_cells(matrix, &params.biome_tuning, tag_reg, families),
+            2 => classify_cells_with(
+                matrix,
+                &params.biome_tuning,
+                tag_reg,
+                families,
+                params.field_storage
+                    != crate::terrain::world_map_scale::TerrainFieldStorage::ChunkCellMatrixAuthoritative,
+            ),
             3 => apply_hydrology_chunk(
                 matrix,
                 chunk_coord,
@@ -479,7 +486,9 @@ pub fn materialize_chunks(
             fill_fields(&mut matrix, chunk.coord, &params, None);
         }
         apply_threshold_tags(&mut matrix, &params.biome_tuning, tag_reg, &params.tag_pool);
-        classify_cells(&mut matrix, &params.biome_tuning, tag_reg, families);
+        // Hydrated matrices (ChunkCellMatrixAuthoritative: dense cache filled them, incl. authored
+        // edits) keep their `family`; only freshly noise-filled fields get it derived.
+        classify_cells_with(&mut matrix, &params.biome_tuning, tag_reg, families, !chunk_field_authoritative);
         apply_hydrology_chunk(
             &mut matrix,
             chunk.coord,
