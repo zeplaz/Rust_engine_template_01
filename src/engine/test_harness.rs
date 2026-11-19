@@ -2042,7 +2042,9 @@ fn apply_test_scene_defaults(
             gpu.show = false;
             // Fire layer stays on: the scene burns vegetation (strikes, S9) and with `fire_heat`
             // off the fire extract drops every chunk, so flames never draw (CLOSE-F2).
-            seed_atmosphere_wind(&mut weather_preset);
+            // Calm weather: Windy's storm lows brought lightning + 11 m/s ember spotting that burnt
+            // ~25% of the valley before S1. Fire belongs to the strike and S9; calm still dries fuel.
+            request_weather_preset(&mut weather_preset, WeatherPresetId::Calm);
         }
         TestScene::City => {
             // Town stamps are the play raster. No fire overlay, weather particles, or wind field.

@@ -2,6 +2,8 @@
 // Player HQ on the west bank near the narrows (160,160) with a stockpile sized for an embankment
 // dam (bill = construction_cost 28000 -> 5600 concrete, 2240 steel, 1120 fuel, 560 machinery)
 // and a fleet that can haul it. The dam is committed by the scenario at S1 and built by logistics.
+// No formations: the default config's contact line (~64,64) started a war that set the valley
+// on fire within ~15 game-minutes. Scene units (launch site, props) come from the harness.
 // Units: cargo in its own unit (t for bulk goods, m3 for liquids); capacity in t (m3 tanker, seats
 // troop); speed in m/s; tiles are 16 m.
 // HQs sit on fixed tiles in each faction's rear. Formations start on a shared contact line around
@@ -39,11 +41,7 @@
                 (class: Tanker, count: 2, capacity: 20, speed_mps: 11.0),
                 (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
             ],
-            formations: [
-                (kind: Infantry, tile: (60, 58)),
-                (kind: Infantry, tile: (58, 60)),
-                (kind: Mechanized, tile: (44, 44)),
-            ],
+            formations: [],
         ),
         (
             slot: 1,
@@ -76,12 +74,7 @@
                 (class: Tanker, count: 2, capacity: 20, speed_mps: 11.0),
                 (class: Troop, count: 1, capacity: 12, speed_mps: 15.0),
             ],
-            formations: [
-                (kind: Infantry, tile: (68, 66)),
-                (kind: Infantry, tile: (66, 68)),
-                (kind: Infantry, tile: (84, 84)),
-                (kind: Mechanized, tile: (86, 82)),
-            ],
+            formations: [],
         ),
     ],
 )
