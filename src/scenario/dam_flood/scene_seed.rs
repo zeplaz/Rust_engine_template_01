@@ -380,94 +380,15 @@ pub fn mirror_stands_into_dam_book_system(
     }
 }
 
-/// DF-7: fire a medium warhead when S5 is entered, or as a failsafe if the script stalls
-/// in S2/S4 with no ballistic activity after the dam has been up for a while.
-pub fn enqueue_dam_flood_strike_once_system(
-    scene: Option<Res<ActiveTestScene>>,
+/// Mean `DamBody` integrity over the scene's dams (0 when none exists). Construction owns
+/// `DamBody`; this only mirrors it for the dump/matrix (CLOSE-S1 — was a script-written 1.0).
+pub fn mirror_dam_integrity_into_book_system(
+    dams: Query<&crate::construction::DamBody>,
     mut book: ResMut<DamFloodBenchmarkBook>,
-    mut strikes: ResMut<StrikeOrderQueue>,
-    ballistics: Option<Res<BallisticFlightBook>>,
-    clock: Option<Res<crate::systems::sim_control::SimStepClock>>,
-    mut done: Local<bool>,
 ) {
-    if *done || !scene.is_some_and(|s| s.0.is_dam_flood()) {
-        return;
+    let (sum, n) = dams.iter().fold((0.0_f32, 0_u32), |(s, n), d| (s + d.integrity_01, n + 1));
+    let mean = if n == 0 { 0.0 } else { sum / n as f32 };
+    if book.dam_integrity_mean != mean {
+        book.dam_integrity_mean = mean;
     }
-    let tick = clock.map(|c| c.steps).unwrap_or(0);
-    // Latch only after a real flight / impact — pending alone can stall if the book
-    // was missing for a frame and must not permanently suppress the failsafe.
-    if ballistics.is_some_and(|b| !b.flights.is_empty() || b.impacts > 0) {
-        *done = true;
-        return;
-    }
-    if !strikes.pending.is_empty() {
-        return;
-    }
-    let failsafe = matches!(
-        book.stage,
-        DamFloodStage::S2Impound | DamFloodStage::S3Drown | DamFloodStage::S4Operate
-    ) && tick >= 160
-        && book.stage_entry_tick[DamFloodStage::S2Impound as usize] > 0;
-    if book.stage != DamFloodStage::S5Strike && !failsafe {
-        return;
-    }
-    if failsafe && book.stage != DamFloodStage::S5Strike {
-        book.enter_stage(DamFloodStage::S5Strike, tick);
-        info!(
-            target: "dam_flood::scene_seed",
-            "failsafe S5 Strike at tick={tick} (scenario stalled before StrikeOrder)"
-        );
-    }
-    *done = true;
-    let fixture = load_dam_valley_fixture();
-    let (lx, lz) = fixture.launch_site_origin;
-    let (tx, tz) = fixture.narrows_tile;
-    strikes.enqueue(StrikeOrder {
-        origin_xz_m: Vec2::new((lx - 18) as f32 + 0.5, lz as f32 + 0.5) * TILE_METRES_GAMEPLAY,
-        target_xz_m: Vec2::new(tx as f32 + 0.5, tz as f32 + 0.5) * TILE_METRES_GAMEPLAY,
-        warhead_id: "medium".into(),
-    });
-    info!(
-        target: "dam_flood::scene_seed",
-        "S5 Strike → StrikeOrder medium warhead launch→narrows"
-    );
-}
-
-/// After the missile impacts, apply the hydraulic breach (visible fly-in first).
-pub fn breach_dam_on_strike_impact_system(
-    scene: Option<Res<ActiveTestScene>>,
-    mut book: ResMut<DamFloodBenchmarkBook>,
-    ballistics: Option<Res<BallisticFlightBook>>,
-    sim_time: Res<SimTimeMicros>,
-    mut breach: ResMut<crate::systems::water::BarrierBreachRequest>,
-    mut done: Local<bool>,
-) {
-    if *done || !scene.is_some_and(|s| s.0.is_dam_flood()) {
-        return;
-    }
-    if book.stage != DamFloodStage::S5Strike {
-        return;
-    }
-    let Some(b) = ballistics.as_ref() else {
-        return;
-    };
-    if b.impacts == 0 {
-        return;
-    }
-    *done = true;
-    breach.push(crate::systems::water::BarrierBreachSpec {
-        dam: None,
-        clear_crest: true,
-        breach_flow_m3s: 500.0,
-    });
-    let tick = (sim_time.0 / 1_000_000) as u64;
-    book.enter_stage(DamFloodStage::S7Collapse, tick);
-    book.dam_integrity_mean = 0.0;
-    book.breach_flow_m3s = 500.0;
-    info!(
-        target: "dam_flood::scene_seed",
-        "S5 impact → BarrierBreach + S7Collapse (impacts={}, err_m={:.1})",
-        b.impacts,
-        b.last_impact_err_m
-    );
 }

@@ -81,7 +81,7 @@ pub fn dam_flood_json(
         "water_mass_m3": field.map(|f| f.mass_m3).unwrap_or_else(|| book.map(|b| b.water_mass_m3).unwrap_or(0.0)),
         "mass_error_frac": field.map(|f| f.mass_error_frac).unwrap_or(1.0),
         "inundated_tiles": inundated_live,
-        "dam_integrity_mean": book.map(|b| b.dam_integrity_mean).unwrap_or(1.0),
+        "dam_integrity_mean": book.map(|b| b.dam_integrity_mean).unwrap_or(0.0),
         "outlet_flow_m3s": field.map(|f| f.outlet_flow_m3s).unwrap_or_else(|| book.map(|b| b.outlet_flow_m3s).unwrap_or(0.0)),
         "spillway_flow_m3s": field.map(|f| f.spillway_flow_m3s).unwrap_or_else(|| book.map(|b| b.spillway_flow_m3s).unwrap_or(0.0)),
         "overtopping_flow_m3s": field.map(|f| f.overtopping_flow_m3s).unwrap_or(0.0),
