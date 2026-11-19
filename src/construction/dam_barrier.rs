@@ -312,8 +312,11 @@ pub fn dam_integrity_progress_system(
         if let Some(mut roles) = roles {
             roles.ensure_dam_span(footprint.tiles.len());
         }
+        // A dam erodes only once it is a barrier (crest installed). An unbuilt site has no body
+        // for the river to attack — it ran through the footprint and "eroded" the plan.
         let speeds = field
             .as_deref()
+            .filter(|_| body.barrier_installed)
             .map(|f| dam_face_velocities_m_s(f, &footprint.tiles))
             .unwrap_or_default();
         if speeds.iter().any(|v| *v > 0.0) && body.column_integrity.len() == speeds.len() {

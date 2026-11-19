@@ -407,7 +407,28 @@ impl SurfaceWaterField {
         for &(i, _) in &cells {
             self.hydraulics.barrier_crest_m[i] = crest_abs.max(self.bed_m[i]);
         }
+        // The dam body is solid: water standing in its cells moves to the first non-barrier cell
+        // upstream (+z), volume kept. Otherwise the crest traps it and a water column pokes
+        // through the dam forever.
+        let w = self.width as usize;
+        for &(i, lz) in &cells {
+            let d = self.depth_m[i];
+            if d <= 0.0 {
+                continue;
+            }
+            let mut z = lz as usize + 1;
+            while z < self.height as usize {
+                let j = z * w + i % w;
+                if self.hydraulics.barrier_crest_m[j] <= 0.0 {
+                    self.depth_m[j] += d;
+                    self.depth_m[i] = 0.0;
+                    break;
+                }
+                z += 1;
+            }
+        }
         self.barrier_lz = cells.iter().map(|&(_, lz)| lz).max();
+        self.recompute_mass();
     }
 
     /// Upstream of the barrier (north / higher z when valley runs +Y → -Y).
