@@ -455,7 +455,8 @@ pub fn breach_dam_on_strike_impact_system(
         return;
     }
     *done = true;
-    breach.pending = Some(crate::systems::water::BarrierBreachSpec {
+    breach.push(crate::systems::water::BarrierBreachSpec {
+        dam: None,
         clear_crest: true,
         breach_flow_m3s: 500.0,
     });

@@ -320,7 +320,8 @@ pub fn execute_blast_intents_system(
                     {
                         body.damage_stage = DestructibleDamageStage::Collapsed;
                         if let Some(req) = breach.as_mut() {
-                            req.pending = Some(BarrierBreachSpec {
+                            req.push(BarrierBreachSpec {
+                                dam: Some(*entity),
                                 clear_crest: true,
                                 breach_flow_m3s: (intent.damage * profile.breach_flow_per_damage)
                                     .clamp(profile.breach_flow_min, profile.breach_flow_max),
@@ -344,14 +345,13 @@ pub fn execute_blast_intents_system(
                     {
                         // Partial leak through compromised columns (no full crest clear).
                         if let Some(req) = breach.as_mut() {
-                            if req.pending.is_none() {
-                                let q_leak = ((1.0 - body.integrity_01) * profile.leak_flow_scale)
-                                    .clamp(profile.leak_flow_min, profile.leak_flow_max);
-                                req.pending = Some(BarrierBreachSpec {
-                                    clear_crest: false,
-                                    breach_flow_m3s: q_leak,
-                                });
-                            }
+                            let q_leak = ((1.0 - body.integrity_01) * profile.leak_flow_scale)
+                                .clamp(profile.leak_flow_min, profile.leak_flow_max);
+                            req.push(BarrierBreachSpec {
+                                dam: Some(*entity),
+                                clear_crest: false,
+                                breach_flow_m3s: q_leak,
+                            });
                         }
                     }
                 }

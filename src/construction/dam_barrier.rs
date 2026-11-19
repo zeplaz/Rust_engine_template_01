@@ -260,10 +260,10 @@ pub fn dam_integrity_progress_system(
     let flow_proxy = field
         .as_ref()
         .map(|f| {
-            (f.breach_flow_m3s.max(0.0) * 0.002
-                + f.overtopping_flow_m3s.max(0.0) * 0.004
-                + f.spillway_flow_m3s.max(0.0) * 0.001
-                + f.outlet_flow_m3s.max(0.0) * 0.001)
+            // CLOSE-D1: only uncontrolled flow erodes the body. Outlet + spillway releases run
+            // through the outlet works; counting them (outlet starts at full inflow) eroded every
+            // dam from normal operation → collapse → breach → dam vanished at scene start.
+            (f.breach_flow_m3s.max(0.0) * 0.002 + f.overtopping_flow_m3s.max(0.0) * 0.004)
                 .clamp(0.0, 8.0)
         })
         .unwrap_or(0.0);
@@ -303,12 +303,11 @@ pub fn dam_integrity_progress_system(
                 if let Some(mask) = destruction_mask.as_mut() {
                     mask.mark_destroyed_tiles(footprint.tiles.iter().copied());
                 }
-                if breach.pending.is_none() {
-                    breach.pending = Some(crate::systems::water::BarrierBreachSpec {
-                        clear_crest: true,
-                        breach_flow_m3s: leak_flow_from_integrity(0.0).max(200.0),
-                    });
-                }
+                breach.push(crate::systems::water::BarrierBreachSpec {
+                    dam: Some(entity),
+                    clear_crest: true,
+                    breach_flow_m3s: leak_flow_from_integrity(0.0).max(200.0),
+                });
                 if let (Some(q), Some(stats)) = (hydro_q.as_mut(), hydro_stats.as_mut()) {
                     if let Some(mid) = footprint.tiles.get(footprint.tiles.len() / 2) {
                         super::hydro_coupling::emit_dam_breach_hydro_dirty(
@@ -323,8 +322,9 @@ pub fn dam_integrity_progress_system(
             }
         } else {
             let q_leak = leak_flow_from_integrity(body.integrity_01);
-            if q_leak > 0.0 && breach.pending.is_none() {
-                breach.pending = Some(crate::systems::water::BarrierBreachSpec {
+            if q_leak > 0.0 {
+                breach.push(crate::systems::water::BarrierBreachSpec {
+                    dam: Some(entity),
                     clear_crest: false,
                     breach_flow_m3s: q_leak,
                 });
