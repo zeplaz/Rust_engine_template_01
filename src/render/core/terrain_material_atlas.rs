@@ -210,6 +210,15 @@ pub fn sync_terrain_material_atlas_from_registry(
     let Some(reg) = materials.get(&handles.material_registry) else {
         return;
     };
+    // Registry is static after load: rebuilding every frame re-uploads (new GpuImage) the atlas
+    // each frame and invalidates every bind group that samples it.
+    if atlas.material_count > 0
+        && atlas.array_image != Handle::default()
+        && !materials.is_changed()
+        && !handles.is_changed()
+    {
+        return;
+    }
     rebuild_terrain_material_atlas(reg, images.as_mut(), atlas.as_mut());
 }
 

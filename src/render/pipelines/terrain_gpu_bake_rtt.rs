@@ -127,6 +127,13 @@ struct TerrainBakeRttBindGpu {
     control_id: AssetId<Image>,
     bake_id: AssetId<Image>,
     atlas_id: AssetId<Image>,
+    /// GPU texture identities the bind group was built from. A modified `Image` asset is re-prepared
+    /// into a NEW `GpuImage`/texture under the same `AssetId`; comparing asset ids alone left the
+    /// bind group reading the first-ever control texture (stale material map: the world kept the
+    /// pre-author biomes while the CPU raster showed the authored ones).
+    control_tex: Option<TextureId>,
+    bake_tex: Option<TextureId>,
+    atlas_tex: Option<TextureId>,
     params: TerrainBakeRttParamsGpu,
     mip_level_count: u32,
 }
@@ -272,25 +279,31 @@ fn prepare_terrain_bake_rtt_bind_groups(
     let control_id = dispatch.control.id();
     let bake_id = dispatch.bake.id();
     let atlas_id = dispatch.atlas.id();
+    let Some(control) = gpu_images.get(&dispatch.control) else {
+        // Never bake through a bind group built from an older texture.
+        bind_gpu.bind_group = None;
+        return;
+    };
+    let Some(bake) = gpu_images.get(&dispatch.bake) else {
+        bind_gpu.bind_group = None;
+        return;
+    };
+    let Some(atlas) = gpu_images.get(&dispatch.atlas) else {
+        bind_gpu.bind_group = None;
+        return;
+    };
     let same = bind_gpu.bind_group.is_some()
         && bind_gpu.bake_mip0_view.is_some()
         && bind_gpu.control_id == control_id
         && bind_gpu.bake_id == bake_id
         && bind_gpu.atlas_id == atlas_id
+        && bind_gpu.control_tex == Some(control.texture.id())
+        && bind_gpu.bake_tex == Some(bake.texture.id())
+        && bind_gpu.atlas_tex == Some(atlas.texture.id())
         && bind_gpu.params == dispatch.params;
     if same {
         return;
     }
-
-    let Some(control) = gpu_images.get(&dispatch.control) else {
-        return;
-    };
-    let Some(bake) = gpu_images.get(&dispatch.bake) else {
-        return;
-    };
-    let Some(atlas) = gpu_images.get(&dispatch.atlas) else {
-        return;
-    };
 
     let mip_level_count = bake.texture_descriptor.mip_level_count.max(1);
     let bake_mip0 = single_mip_view(&bake.texture, 0, "terrain_bake_mip0_storage");
@@ -316,6 +329,9 @@ fn prepare_terrain_bake_rtt_bind_groups(
     bind_gpu.control_id = control_id;
     bind_gpu.bake_id = bake_id;
     bind_gpu.atlas_id = atlas_id;
+    bind_gpu.control_tex = Some(control.texture.id());
+    bind_gpu.bake_tex = Some(bake.texture.id());
+    bind_gpu.atlas_tex = Some(atlas.texture.id());
     bind_gpu.params = dispatch.params;
     bind_gpu.mip_level_count = mip_level_count;
 }
