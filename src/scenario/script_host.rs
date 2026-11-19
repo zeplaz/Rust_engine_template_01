@@ -132,6 +132,28 @@ impl EngineScriptHost {
     }
 }
 
+/// Release a front `WaitUntilSiteOperational` once a site with that catalog id is Operational.
+/// Narrow system (scenario host + sites); `drain_script_steps` only blocks on the step.
+pub fn gate_wait_until_site_operational_system(
+    mut host: ResMut<EngineScriptHost>,
+    sites: Query<(&crate::strategic::ConstructionSite, &crate::strategic::PlannedSite)>,
+) {
+    let Some(ScenarioStep::WaitUntilSiteOperational { catalog_id }) = host.pending_steps.front()
+    else {
+        return;
+    };
+    let want = catalog_id.clone();
+    let done = sites.iter().any(|(site, planned)| {
+        planned.catalog_id.as_deref() == Some(want.as_str())
+            && site.phase == crate::strategic::SiteConstructionPhase::Operational
+    });
+    if done {
+        host.pending_steps.pop_front();
+        host.current_step_index = host.current_step_index.saturating_add(1);
+        host.execution_log.push(format!("WaitUntilSiteOperational reached: {want}"));
+    }
+}
+
 pub fn drain_script_steps(
     mut commands: Commands,
     mut host: ResMut<EngineScriptHost>,
@@ -188,6 +210,10 @@ pub fn drain_script_steps(
             return;
         }
     }
+    // Site waits are released by `gate_wait_until_site_operational_system` (own domain query).
+    if matches!(host.pending_steps.front(), Some(ScenarioStep::WaitUntilSiteOperational { .. })) {
+        return;
+    }
 
     let Some(step) = host.pending_steps.pop_front() else {
         host.execution_log.push("Scenario complete".into());
@@ -199,6 +225,7 @@ pub fn drain_script_steps(
     host.current_step_index = host.current_step_index.saturating_add(1);
 
     match step {
+        ScenarioStep::WaitUntilSiteOperational { .. } => {}
         ScenarioStep::NoOp => {
             host.execution_log.push("Executed NoOp".into());
         }

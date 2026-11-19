@@ -12,9 +12,13 @@
         // Open river settle before the crest so s0_gauge_balance can read live gauges.
         SetDamControl(gate_open01: 0.0, outlet_open01: 1.0, turbine_flow_setpoint_m3s: 0.0),
         SimAdvance(ticks: 40),
-        // Barrier crest on general water (construction DamBody also installs once Operational).
+        // S1 Build: commit the dam through the construction funnel (player play path). Logistics
+        // hauls the bill from the HQ depot; once Operational, DamBody installs its crest on water.
         WaitUntilTick(tick: 80),
-        InstallBarrier(world_z: 160, crest_m: 40.0, half_span: 8, center_world_x: Some(160)),
+        Log(message: "DF-4: S1 commit dam_embankment_v1 across the narrows"),
+        CommitSite(origin_x: 160, origin_z: 160, width: 12, depth: 2, catalog_id: Some("dam_embankment_v1")),
+        WaitUntilSiteOperational(catalog_id: "dam_embankment_v1"),
+        Log(message: "DF-4: dam operational (built by logistics) — crest installed by DamBody"),
         // Close outlets → level-pool impound (S2). Coarse dt so ecology clocks can clear 14 d drown.
         // Force-close: hold the pool (no low/mid outlet, no turbine) so DF-2 ratio drops and crest rises.
         SetDamControl(gate_open01: 0.0, outlet_open01: 0.0, turbine_flow_setpoint_m3s: 0.0),

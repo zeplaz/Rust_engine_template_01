@@ -20,7 +20,12 @@ impl Plugin for ScenarioRunnerPlugin {
 
         app.add_systems(
             Update,
-            drain_script_steps.in_set(ScenarioScriptSystemSet::DrainScenarioSteps),
+            (
+                super::script_host::gate_wait_until_site_operational_system,
+                drain_script_steps,
+            )
+                .chain()
+                .in_set(ScenarioScriptSystemSet::DrainScenarioSteps),
         );
     }
 }

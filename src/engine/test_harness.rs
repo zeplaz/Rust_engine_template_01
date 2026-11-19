@@ -1684,23 +1684,8 @@ fn seed_dam_flood_valley_once(
     // Player-owned for control / selection tests (same side as faction-0 formations).
     let owner = commands.spawn(Name::new("DamFloodPlayer")).id();
     commands.insert_resource(crate::scenario::dam_flood::DamFloodPlayerOwner(Some(owner)));
-    // Channel-centered dam span (footprint grows +X/+Z from origin — do not place at narrows center).
-    let dam_span = fixture.dam_span_tiles.max(4);
-    let (dam_origin, dam_fp) = crate::scenario::dam_flood::dam_channel_span_footprint(
-        fixture.narrows_tile,
-        dam_span,
-        2,
-    );
-    commit.write(crate::strategic::CommitConstructionSiteEvent {
-        site_id: crate::strategic::SiteId::UNASSIGNED,
-        owner,
-        archetype: crate::strategic::SiteArchetype::Dam,
-        origin: dam_origin,
-        footprint: dam_fp,
-        layer: crate::strategic::LayerType::Surface,
-        catalog_id: Some("dam_embankment_v1".into()),
-        placement: None,
-    });
+    // S0 River has no dam (§1). The scenario commits it at S1 (`CommitSite`) and construction +
+    // logistics build it from the scene's start stockpile (CLOSE-S2).
     // Stub hydro / nuclear / town — same player owner (selectable + controllable in experiments).
     let stubs = [
         (
