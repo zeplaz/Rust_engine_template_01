@@ -505,8 +505,6 @@ pub fn chunk_fire_overlay_tick(
         }
 
         let rain_suppress = (1.0 - wx.rain_intensity * 0.78).max(0.0);
-        let wind_boost = 1.0 + wx.wind_speed * 0.6;
-
         scratch.clear();
         scratch.resize(n, 0.0);
         water.clear();
@@ -549,14 +547,13 @@ pub fn chunk_fire_overlay_tick(
                 }
 
                 let m = matrix.moisture[i];
-                let t = matrix.temperature[i];
                 let dryness = SurfaceWaterFireGate::atmospheric_dryness(m);
-                let warmth = (t - 0.08).max(0.0);
-                let raw_spark = (dryness * warmth * 3.5).min(0.08)
+                // An ignition needs a source. Dry warm air alone never lights wildland (a calm, clear map stays
+                // unburnt); the only ambient source is lightning, scaled by how dry the cell is.
+                let raw_spark = lightning_spark(wildland_mass, ovl.fuel[i], wx.lightning_risk)
+                    * dryness
                     * rain_suppress
-                    * wind_boost
-                    * eco_boost
-                    + lightning_spark(wildland_mass, ovl.fuel[i], wx.lightning_risk);
+                    * eco_boost;
                 let admitted = admit_spark(wildland_mass, ovl.fuel[i], raw_spark);
                 let spark = if admitted <= 0.0 || profile_mult <= 0.0 {
                     fuel_gated_sparks += 1;
