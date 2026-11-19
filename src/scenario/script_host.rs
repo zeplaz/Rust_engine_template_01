@@ -226,6 +226,10 @@ pub fn drain_script_steps(
 
     match step {
         ScenarioStep::WaitUntilSiteOperational { .. } => {}
+        ScenarioStep::SetSimSpeed { speed } => {
+            sim_control.speed = speed.clamp(0.0, 1000.0);
+            host.execution_log.push(format!("SetSimSpeed: {:.1}x", sim_control.speed));
+        }
         ScenarioStep::NoOp => {
             host.execution_log.push("Executed NoOp".into());
         }

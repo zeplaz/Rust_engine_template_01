@@ -17,7 +17,10 @@
         WaitUntilTick(tick: 80),
         Log(message: "DF-4: S1 commit dam_embankment_v1 across the narrows"),
         CommitSite(origin_x: 160, origin_z: 160, width: 12, depth: 2, catalog_id: Some("dam_embankment_v1")),
+        // Fast-forward through the build like a player would (~2.5 h game time to haul the bill).
+        SetSimSpeed(speed: 120.0),
         WaitUntilSiteOperational(catalog_id: "dam_embankment_v1"),
+        SetSimSpeed(speed: 1.0),
         Log(message: "DF-4: dam operational (built by logistics) — crest installed by DamBody"),
         // Close outlets → level-pool impound (S2). Coarse dt so ecology clocks can clear 14 d drown.
         // Force-close: hold the pool (no low/mid outlet, no turbine) so DF-2 ratio drops and crest rises.

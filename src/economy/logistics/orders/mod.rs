@@ -25,6 +25,8 @@ pub mod weather_haul;
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod dam_supply_tests;
 
 pub use haul_amplify::{
     haul_capacity_mul_by_owner, unit_kind_haul_capacity_mul, sync_haul_amplify_mul_system,
