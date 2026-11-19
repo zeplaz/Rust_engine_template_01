@@ -24,6 +24,7 @@ pub fn stand_flood_from_water_system(
         Option<&mut super::fuel_moisture::ChunkCellFuelMoisture>,
     )>,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_eco_stand_flood_from_water_system");
     if field.is_none() && static_depth.is_none() {
         return;
     }

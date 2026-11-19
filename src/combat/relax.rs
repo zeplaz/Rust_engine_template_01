@@ -90,70 +90,146 @@ fn slot_live(c: f32, presence: f32, nb_c: f32) -> bool {
     !(c <= 0.0 && presence <= 0.0 && nb_c <= 0.0)
 }
 
+#[cfg(test)]
 fn step_once(grid: &mut RelaxGrid, hostility: &Hostility, p: &RelaxParams, dt: f32) {
     step_once_lanes::<true>(grid, hostility, p, dt);
 }
 
 /// `SKIP_DEAD = true` is the production early-out; `false` evaluates every lane and selects by
 /// [`slot_live`] (the SIMD-shaped form, used by the equivalence tripwire).
-fn step_once_lanes<const SKIP_DEAD: bool>(grid: &mut RelaxGrid, hostility: &Hostility, p: &RelaxParams, dt: f32) {
-    let old = grid.clone();
-    let near = |k: (i32, i32)| NEIGHBORS4.iter().filter_map(|(dx, dy)| old.get(&(k.0 + dx, k.1 + dy))).collect::<Vec<_>>();
-    for (k, cell) in grid.iter_mut() {
-        let me = &old[k];
-        // Strongest friendly control next door (what an advance spills from) and fighting force
-        // here or next door (what a hostile pushes with).
-        let mut nb_c = [0.0f32; SLOTS];
-        let mut push = [0.0f32; SLOTS];
-        for s in 0..SLOTS {
-            push[s] = force(me, s, p.supply_floor);
+/// Dense, double-buffered view of a [`RelaxGrid`] over its bounding box (`None` = no tile).
+/// The relaxation runs here: neighbours are index arithmetic and a sub-step copies one flat
+/// buffer, instead of cloning a `BTreeMap` and doing four tree lookups per cell per sub-step
+/// (that cost 60-190 ms per pass on a 100k-cell valley at high sim speed).
+struct DenseRelax {
+    x0: i32,
+    y0: i32,
+    w: usize,
+    h: usize,
+    cells: Vec<Option<RelaxCell>>,
+}
+
+impl DenseRelax {
+    fn from_grid(grid: &RelaxGrid) -> Self {
+        let (mut x0, mut y0, mut x1, mut y1) = (i32::MAX, i32::MAX, i32::MIN, i32::MIN);
+        for &(x, y) in grid.keys() {
+            x0 = x0.min(x);
+            y0 = y0.min(y);
+            x1 = x1.max(x);
+            y1 = y1.max(y);
         }
-        for n in near(*k) {
-            for s in 0..SLOTS {
-                nb_c[s] = nb_c[s].max(n.control[s]);
-                push[s] = push[s].max(force(n, s, p.supply_floor));
-            }
+        let w = (x1 - x0 + 1).max(0) as usize;
+        let h = (y1 - y0 + 1).max(0) as usize;
+        let mut cells = vec![None; w * h];
+        for (&(x, y), c) in grid {
+            cells[(y - y0) as usize * w + (x - x0) as usize] = Some(*c);
         }
-        let mut conquest = [0.0f32; SLOTS];
-        let mut next = me.control;
-        for s in 0..SLOTS {
-            let c = me.control[s];
-            let presence = me.presence[s].clamp(0.0, 1.0);
-            let live = slot_live(c, presence, nb_c[s]);
-            if SKIP_DEAD && !live {
-                continue;
+        Self { x0, y0, w, h, cells }
+    }
+
+    fn write_back(&self, grid: &mut RelaxGrid) {
+        for (&(x, y), c) in grid.iter_mut() {
+            if let Some(d) = self.cells[(y - self.y0) as usize * self.w + (x - self.x0) as usize] {
+                *c = d;
             }
-            // Strongest hostile pushing on this slot, and whether it is also in the cell itself.
-            let mut top: Option<(usize, f32)> = None;
-            let mut hostile_here = 0.0f32;
-            for h in 0..SLOTS {
-                if h != s && hostility.hostile(s as u8, h as u8) {
-                    hostile_here = hostile_here.max(me.control[h]);
-                    if push[h] > 0.0 && top.is_none_or(|(_, best)| push[h] > best) {
-                        top = Some((h, push[h]));
-                    }
-                }
-            }
-            // Dead lane: drop the pressure term so nothing is credited (select, not branch).
-            if !live {
-                top = None;
-            }
-            let sf = p.supply_floor + (1.0 - p.supply_floor) * me.supply[s].clamp(0.0, 1.0);
-            let gain = p.gain_per_s * presence * sf;
-            let spill = p.spread_per_s * sf * (nb_c[s] - c).max(0.0) * (1.0 - hostile_here.min(1.0));
-            let decay = p.decay_rate * c * (1.0 - presence);
-            let loss = top.map_or(0.0, |(_, f)| p.pressure_per_s * c * f);
-            if let Some((h, _)) = top {
-                conquest[h] += p.conquest_transfer * loss;
-            }
-            let updated = c + dt * (gain + spill - decay - loss);
-            next[s] = if live { updated } else { c };
-        }
-        for s in 0..SLOTS {
-            let v = (next[s] + dt * conquest[s]).clamp(0.0, 1.0);
-            cell.control[s] = if v < SNAP_ZERO { 0.0 } else { v };
         }
     }
+
+    fn step<const SKIP_DEAD: bool>(&mut self, hostility: &Hostility, p: &RelaxParams, dt: f32) {
+        let old = self.cells.clone();
+        let (w, h) = (self.w as i32, self.h as i32);
+        for yi in 0..h {
+            for xi in 0..w {
+                let idx = (yi * w + xi) as usize;
+                let Some(me) = old[idx] else { continue };
+                let mut nb = [None; 4];
+                for (k, (dx, dy)) in NEIGHBORS4.iter().enumerate() {
+                    let (nx, ny) = (xi + dx, yi + dy);
+                    if nx >= 0 && ny >= 0 && nx < w && ny < h {
+                        nb[k] = old[(ny * w + nx) as usize];
+                    }
+                }
+                let out = relax_cell::<SKIP_DEAD>(&me, nb.iter().flatten(), hostility, p, dt);
+                if let Some(c) = self.cells[idx].as_mut() {
+                    c.control = out;
+                }
+            }
+        }
+    }
+}
+
+/// One tile's next control from its own state and its present 4-neighbours (unchanged maths).
+fn relax_cell<'a, const SKIP_DEAD: bool>(
+    me: &RelaxCell,
+    near: impl Iterator<Item = &'a RelaxCell> + Clone,
+    hostility: &Hostility,
+    p: &RelaxParams,
+    dt: f32,
+) -> SlotControl {
+    // Strongest friendly control next door (what an advance spills from) and fighting force
+    // here or next door (what a hostile pushes with).
+    let mut nb_c = [0.0f32; SLOTS];
+    let mut push = [0.0f32; SLOTS];
+    for s in 0..SLOTS {
+        push[s] = force(me, s, p.supply_floor);
+    }
+    for n in near {
+        for s in 0..SLOTS {
+            nb_c[s] = nb_c[s].max(n.control[s]);
+            push[s] = push[s].max(force(n, s, p.supply_floor));
+        }
+    }
+    let mut conquest = [0.0f32; SLOTS];
+    let mut next = me.control;
+    for s in 0..SLOTS {
+        let c = me.control[s];
+        let presence = me.presence[s].clamp(0.0, 1.0);
+        let live = slot_live(c, presence, nb_c[s]);
+        if SKIP_DEAD && !live {
+            continue;
+        }
+        // Strongest hostile pushing on this slot, and whether it is also in the cell itself.
+        let mut top: Option<(usize, f32)> = None;
+        let mut hostile_here = 0.0f32;
+        for hh in 0..SLOTS {
+            if hh != s && hostility.hostile(s as u8, hh as u8) {
+                hostile_here = hostile_here.max(me.control[hh]);
+                if push[hh] > 0.0 && top.is_none_or(|(_, best)| push[hh] > best) {
+                    top = Some((hh, push[hh]));
+                }
+            }
+        }
+        // Dead lane: drop the pressure term so nothing is credited (select, not branch).
+        if !live {
+            top = None;
+        }
+        let sf = p.supply_floor + (1.0 - p.supply_floor) * me.supply[s].clamp(0.0, 1.0);
+        let gain = p.gain_per_s * presence * sf;
+        let spill = p.spread_per_s * sf * (nb_c[s] - c).max(0.0) * (1.0 - hostile_here.min(1.0));
+        let decay = p.decay_rate * c * (1.0 - presence);
+        let loss = top.map_or(0.0, |(_, f)| p.pressure_per_s * c * f);
+        if let Some((hh, _)) = top {
+            conquest[hh] += p.conquest_transfer * loss;
+        }
+        let updated = c + dt * (gain + spill - decay - loss);
+        next[s] = if live { updated } else { c };
+    }
+    let mut out = [0.0f32; SLOTS];
+    for s in 0..SLOTS {
+        let v = (next[s] + dt * conquest[s]).clamp(0.0, 1.0);
+        out[s] = if v < SNAP_ZERO { 0.0 } else { v };
+    }
+    out
+}
+
+#[cfg(test)]
+fn step_once_lanes<const SKIP_DEAD: bool>(grid: &mut RelaxGrid, hostility: &Hostility, p: &RelaxParams, dt: f32) {
+    if grid.is_empty() {
+        return;
+    }
+    let mut dense = DenseRelax::from_grid(grid);
+    dense.step::<SKIP_DEAD>(hostility, p, dt);
+    dense.write_back(grid);
 }
 
 /// Integrate `dt_s` sim seconds (split into sub-steps ≤ `max_substep_s`, at most [`MAX_SUBSTEPS`]).
@@ -163,9 +239,12 @@ pub fn relax_step(grid: &mut RelaxGrid, hostility: &Hostility, params: &RelaxPar
     }
     let n = ((dt_s / params.max_substep_s).ceil() as usize).clamp(1, MAX_SUBSTEPS);
     let sub = dt_s / n as f32;
+    // Densify once per pass; sub-steps double-buffer the flat grid.
+    let mut dense = DenseRelax::from_grid(grid);
     for _ in 0..n {
-        step_once(grid, hostility, params, sub);
+        dense.step::<true>(hostility, params, sub);
     }
+    dense.write_back(grid);
 }
 
 /// Cadence state of the relaxation pass. Its presence switches the zone pass off for Control zones.

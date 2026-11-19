@@ -490,6 +490,7 @@ pub(crate) fn cell_stand_tick(
         &mut CanopyDrivers,
     )>,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_eco_cell_stand_tick");
     if !ctrl.should_tick() {
         return;
     }

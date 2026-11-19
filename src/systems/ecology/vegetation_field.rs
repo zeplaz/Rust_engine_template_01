@@ -536,6 +536,7 @@ pub(crate) fn vegetation_field_tick(
         bevy::platform::collections::HashMap<Entity, (bevy::ecs::change_detection::Tick, VegMatrixAggregates)>,
     >,
 ) {
+    let _perf = crate::render::PerfScope::new("upd_eco_vegetation_field_tick");
     if !ctrl.should_tick() {
         return;
     }
