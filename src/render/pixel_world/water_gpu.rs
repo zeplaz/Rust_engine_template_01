@@ -5,7 +5,7 @@
 //! [`plan_gpu_stubs_kill_v1.md`](../../dev/plan_gpu_stubs_kill_v1.md) Upgrade D.
 
 use bevy::asset::RenderAssetUsages;
-use bevy::camera::visibility::RenderLayers;
+use bevy::camera::visibility::{NoFrustumCulling, RenderLayers};
 use bevy::mesh::{Indices, PrimitiveTopology};
 use bevy::pbr::{Material, MaterialPlugin};
 use bevy::prelude::*;
@@ -76,6 +76,9 @@ pub(crate) struct GpuWaterState {
     /// Geometry key only (not depth revision).
     geom_key: Option<u64>,
     bed_field_rev: Option<u64>,
+    /// `(bed_min, bed_range)` the bed texture was encoded with — the uniform must match the
+    /// texture, not the live field range (which moves with water tops). CLOSE-W1.
+    bed_encode: (f32, f32),
 }
 
 /// Near / default grid density (texels per mesh step). Coarser when zoomed out (RND-16).
@@ -296,9 +299,10 @@ pub(crate) fn sync_pixel_world_gpu_water(
     let (bed_min, bed_range) = if state.bed_field_rev != Some(field.ground_revision) || need_bed_resize {
         let r = upload_bed_texture(images.as_mut(), &bed_handle, gpu.as_ref(), field.as_ref());
         state.bed_field_rev = Some(field.ground_revision);
+        state.bed_encode = r;
         r
     } else {
-        (field.min_h, (field.max_h - field.min_h).max(0.001))
+        state.bed_encode
     };
 
     if let Some(h) = state.material.clone() {
@@ -381,6 +385,9 @@ pub(crate) fn sync_pixel_world_gpu_water(
                     commands
                         .spawn((
                             PixelWorldGpuWater,
+                            // Flat y=0 grid displaced in the vertex shader: its mesh Aabb sits
+                            // far below the drawn surface, so CPU frustum culling dropped it.
+                            NoFrustumCulling,
                             Mesh3d(mesh_handle),
                             MeshMaterial3d(mat),
                             Transform::IDENTITY,
