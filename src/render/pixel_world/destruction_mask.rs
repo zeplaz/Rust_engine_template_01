@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn destroy_t2_shader_collapses_on_mask() {
-        let src = include_str!("../../../assets/shaders/pixel_world/ground_mask.wgsl");
+        let src = include_str!("../../../assets/shaders/pixel_world/ground_mask.wesl");
         assert!(src.contains("destruction_mask"));
         assert!(src.contains("MASK_DESTROYED") || src.contains(">= 2u") || src.contains(">= 2."));
         assert!(src.contains("skirt") || src.contains("position.y") || src.contains("local.y"));

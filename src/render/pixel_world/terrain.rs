@@ -296,14 +296,18 @@ pub(crate) fn sync_pixel_world_terrain(
     }
     let ground_mat = ground_handle.0.clone();
 
-    if state.built_revision != Some(field.revision) {
-        state.built_revision = Some(field.revision);
-        for (e, _) in &chunks {
-            commands.entity(e).despawn();
+    let nx = field.width.div_ceil(TERRAIN_CHUNK);
+    let ny = field.height.div_ceil(TERRAIN_CHUNK);
+    // Ground only: water motion must never respawn terrain (PLAN-CLOSE-VOXEL-WATER-v1 V1).
+    if state.built_revision != Some(field.ground_revision) {
+        state.built_revision = Some(field.ground_revision);
+        // Out-of-grid chunks go now; in-grid ones stay visible until their rebuild swaps in (V2).
+        for (e, coord) in &chunks {
+            if coord.cx >= nx || coord.cy >= ny {
+                commands.entity(e).despawn();
+            }
         }
         state.pending.clear();
-        let nx = field.width.div_ceil(TERRAIN_CHUNK);
-        let ny = field.height.div_ceil(TERRAIN_CHUNK);
         for cy in 0..ny {
             for cx in 0..nx {
                 state.pending.push((cx, cy));
@@ -313,15 +317,6 @@ pub(crate) fn sync_pixel_world_terrain(
     // DESTROY-T2b: destroyed-mask chunks to the front of pending (stack: push = next pop).
     if !mask_book.remesh_priority.is_empty() {
         let priority = std::mem::take(&mut mask_book.remesh_priority);
-        let mut drop_ents: Vec<Entity> = Vec::new();
-        for (e, coord) in &chunks {
-            if priority.iter().any(|&(cx, cy)| coord.cx == cx && coord.cy == cy) {
-                drop_ents.push(e);
-            }
-        }
-        for e in drop_ents {
-            commands.entity(e).despawn();
-        }
         for &(cx, cy) in &priority {
             state.pending.retain(|p| *p != (cx, cy));
             state.pending.push((cx, cy));
@@ -333,6 +328,12 @@ pub(crate) fn sync_pixel_world_terrain(
             break;
         };
         let (ground, _water) = build_terrain_chunk(field.as_ref(), cx, cy);
+        // Swap-on-ready: the old chunk leaves in the same command flush the new one arrives.
+        for (e, coord) in &chunks {
+            if coord.cx == cx && coord.cy == cy {
+                commands.entity(e).despawn();
+            }
+        }
         if !ground.is_empty() {
             commands.spawn((
                 PixelWorldTerrainChunk,

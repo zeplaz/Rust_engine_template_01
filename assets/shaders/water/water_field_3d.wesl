@@ -1,9 +1,10 @@
+// Bevy 0.20 WESL (imports via `import`; material group 3).
 // PixelWorld3D water — GPU-D: VS displace from DF-3 field + bed texture; FS owns look.
 // DF-3 field: R=depth01, GB=flow, A=foam. Bed is a separate height01 texture.
 
-#import bevy_pbr::forward_io::VertexOutput
-#import bevy_pbr::mesh_functions::{get_world_from_local, mesh_position_local_to_clip}
-#import bevy_pbr::mesh_view_bindings::view
+import bevy_pbr::render::forward_io::VertexOutput;
+import bevy_pbr::render::mesh_functions::{get_world_from_local, mesh_position_local_to_clip};
+import bevy_pbr::render::mesh_view_bindings::view;
 
 struct WaterField3dUniform {
     time_secs: f32,
@@ -16,15 +17,15 @@ struct WaterField3dUniform {
     bed_range: vec4<f32>,
 }
 
-@group(2) @binding(0)
+@group(3) @binding(0)
 var<uniform> material: WaterField3dUniform;
-@group(2) @binding(1)
+@group(3) @binding(1)
 var field_tex: texture_2d<f32>;
-@group(2) @binding(2)
+@group(3) @binding(2)
 var field_samp: sampler;
-@group(2) @binding(3)
+@group(3) @binding(3)
 var bed_tex: texture_2d<f32>;
-@group(2) @binding(4)
+@group(3) @binding(4)
 var bed_samp: sampler;
 
 const WATER_DEEP: vec3<f32> = vec3<f32>(0.059, 0.157, 0.180);
@@ -67,9 +68,9 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     out.world_position = get_world_from_local(vertex.instance_index) * vec4<f32>(local, 1.0);
     out.world_normal = vec3<f32>(0.0, 1.0, 0.0);
     out.uv = uv;
-#ifdef VERTEX_OUTPUT_INSTANCE_INDEX
-    out.instance_index = vertex.instance_index;
-#endif
+    @if(VERTEX_OUTPUT_INSTANCE_INDEX) {
+        out.instance_index = vertex.instance_index;
+    }
     return out;
 }
 

@@ -47,8 +47,11 @@ pub struct PixelWorldTerrainField {
     pub class: Vec<WaterClass>,
     pub min_h: f32,
     pub max_h: f32,
-    /// Bumps on every rebuild; meshes key on it.
+    /// Bumps on every rebuild (ground or water); water/overlay consumers key on it.
     pub revision: u64,
+    /// Bumps only when [`Self::ground`] (or the grid size) changes. Ground meshes key on this so
+    /// water motion never respawns terrain chunks (PLAN-CLOSE-VOXEL-WATER-v1 V1).
+    pub ground_revision: u64,
     source_stamp: Option<u64>,
 }
 
@@ -158,9 +161,14 @@ impl PixelWorldTerrainField {
         if !dense_changed && self.source_stamp == Some(stamp) && self.is_ready() {
             return false;
         }
+        let prev_dims = (self.width, self.height);
+        let prev_ground = std::mem::take(&mut self.ground);
         self.build(params, dense, grid, static_depth, surface);
         self.source_stamp = Some(stamp);
         self.revision = self.revision.wrapping_add(1);
+        if prev_dims != (self.width, self.height) || prev_ground != self.ground {
+            self.ground_revision = self.ground_revision.wrapping_add(1);
+        }
         true
     }
 
@@ -436,8 +444,10 @@ pub fn sync_pixel_world_terrain_field(
     };
     let dense_changed = dense.is_changed()
         || grid.is_changed()
-        || static_depth.as_ref().is_some_and(|s| s.is_changed())
-        || surface.as_ref().is_some_and(|s| s.is_changed());
+        || static_depth.as_ref().is_some_and(|s| s.is_changed());
+    // Live surface water changes every sim tick; its coarse stamp inside `rebuild_if_stale`
+    // decides when it matters. Counting `surface.is_changed()` here rebuilt the field (and
+    // respawned every ground chunk) each tick — PLAN-CLOSE-VOXEL-WATER-v1 V0.
     field.rebuild_if_stale(
         params.as_ref(),
         dense.as_ref(),
@@ -446,4 +456,52 @@ pub fn sync_pixel_world_terrain_field(
         surface.as_deref(),
         dense_changed,
     );
+}
+
+#[cfg(test)]
+mod ground_revision_tests {
+    use super::*;
+
+    fn inputs(n_side: u32, elev: f32) -> (WorldGenDenseTerrainCache, WorldWaterGrid) {
+        let n = (n_side * n_side) as usize;
+        let dense = WorldGenDenseTerrainCache {
+            width: n_side,
+            height: n_side,
+            elevation: vec![elev; n],
+            moisture: vec![0.3; n],
+            temperature: vec![0.3; n],
+            family: vec![crate::terrain::family::DEFAULT_TERRAIN_FAMILY_ID; n],
+            region_index: vec![0; n],
+        };
+        let grid = WorldWaterGrid { width: n_side, height: n_side, classes: vec![WaterClass::Dry; n], stamp: 1 };
+        (dense, grid)
+    }
+
+    /// CLOSE-V1: a water-driven rebuild (forced, same ground) bumps `revision` but not
+    /// `ground_revision`, so terrain chunks never respawn on water motion.
+    #[test]
+    fn close_v1_water_rebuild_keeps_ground_revision() {
+        let params = WorldGenParams::default();
+        let (dense, grid) = inputs(8, 0.5);
+        let mut f = PixelWorldTerrainField::default();
+        assert!(f.rebuild_if_stale(&params, &dense, &grid, None, None, true));
+        let (rev, ground_rev) = (f.revision, f.ground_revision);
+        assert!(f.rebuild_if_stale(&params, &dense, &grid, None, None, true));
+        assert_ne!(f.revision, rev);
+        assert_eq!(f.ground_revision, ground_rev);
+
+        let (dense2, _) = inputs(8, 0.7);
+        assert!(f.rebuild_if_stale(&params, &dense2, &grid, None, None, true));
+        assert_ne!(f.ground_revision, ground_rev);
+    }
+
+    /// CLOSE-V1: an unchanged world does not rebuild at all.
+    #[test]
+    fn close_v1_stable_inputs_do_not_rebuild() {
+        let params = WorldGenParams::default();
+        let (dense, grid) = inputs(8, 0.5);
+        let mut f = PixelWorldTerrainField::default();
+        f.rebuild_if_stale(&params, &dense, &grid, None, None, true);
+        assert!(!f.rebuild_if_stale(&params, &dense, &grid, None, None, false));
+    }
 }
