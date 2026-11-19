@@ -414,6 +414,24 @@ fn hide(commands: &mut Commands, state: &mut GpuWaterState) {
 mod tests {
     use super::*;
 
+    /// One water look: flat and voxel water shaders carry the identical colour/alpha block.
+    #[test]
+    fn water_look_ramps_match() {
+        let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));
+        let block = |p: &str| -> String {
+            let src = std::fs::read_to_string(root.join(p)).expect(p).replace("
+", "
+");
+            let start = src.find("const WATER_DEEP").expect("ramp start");
+            let end = src.find("const WATER_ALPHA_MAX").expect("ramp end");
+            src[start..end].to_string()
+        };
+        assert_eq!(
+            block("assets/shaders/water/water_field.wgsl"),
+            block("assets/shaders/water/water_field_3d.wesl")
+        );
+    }
+
     #[test]
     fn water_field_3d_wesl_has_vertex_displace() {
         let root = std::path::Path::new(env!("CARGO_MANIFEST_DIR"));

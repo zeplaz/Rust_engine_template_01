@@ -28,10 +28,15 @@ var bed_tex: texture_2d<f32>;
 @group(3) @binding(4)
 var bed_samp: sampler;
 
-const WATER_DEEP: vec3<f32> = vec3<f32>(0.059, 0.157, 0.180);
-const WATER_MID: vec3<f32> = vec3<f32>(0.118, 0.271, 0.267);
-const WATER_SHALLOW: vec3<f32> = vec3<f32>(0.290, 0.471, 0.471);
-const FOAM: vec3<f32> = vec3<f32>(0.86, 0.92, 0.95);
+// ONE water look (flat + voxel share this block verbatim; test water_look_ramps_match).
+// Blue, semi-transparent: the bed shows through shallows, deep water reads darker blue.
+const WATER_DEEP: vec3<f32> = vec3<f32>(0.040, 0.140, 0.360);
+const WATER_MID: vec3<f32> = vec3<f32>(0.090, 0.270, 0.560);
+const WATER_SHALLOW: vec3<f32> = vec3<f32>(0.220, 0.460, 0.760);
+const FOAM: vec3<f32> = vec3<f32>(0.86, 0.92, 0.97);
+const WATER_ALPHA_BASE: f32 = 0.30;
+const WATER_ALPHA_DEPTH: f32 = 0.40;
+const WATER_ALPHA_MAX: f32 = 0.78;
 
 struct Vertex {
     @builtin(instance_index) instance_index: u32,
@@ -108,7 +113,7 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     tint = mix(tint, WATER_SHALLOW, scroll_mix * 0.18 * clamp(speed, 0.0, 1.0));
     tint = mix(tint, FOAM, clamp(foam01 * 0.55 + shoreline * 0.65, 0.0, 0.75));
 
-    var alpha = 0.22 + depth01 * 0.48 + foam01 * 0.12 + shoreline * 0.2;
+    var alpha = WATER_ALPHA_BASE + depth01 * WATER_ALPHA_DEPTH + foam01 * 0.12 + shoreline * 0.2;
     alpha *= clamp(material.zoom_alpha * 0.55 + 0.45, 0.4, 1.0);
-    return vec4<f32>(tint, clamp(alpha, 0.0, 0.88));
+    return vec4<f32>(tint, clamp(alpha, 0.0, WATER_ALPHA_MAX));
 }

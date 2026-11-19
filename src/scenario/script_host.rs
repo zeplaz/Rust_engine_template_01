@@ -300,6 +300,7 @@ pub fn drain_script_steps(
         } => {
             if let Some(req) = barrier_install.as_mut() {
                 req.pending = Some(BarrierInstallSpec {
+                    tiles: Vec::new(),
                     world_z,
                     crest_m: crest_m.max(0.0),
                     half_span: half_span.max(1),
