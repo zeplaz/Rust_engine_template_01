@@ -121,6 +121,49 @@ pub fn dump_construction_section(
     );
 }
 
+/// Vegetation draw inputs: extract row density + stand codes (counts only, no verdicts).
+pub fn dump_vegetation_section(
+    arm: Res<SimDumpArm>,
+    veg: Option<Res<crate::render::extraction::VegetationExtractFrame>>,
+    mut dump: ResMut<SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    let Some(veg) = veg else {
+        dump.put_value("vegetation", json!({ "extract_present": false }));
+        return;
+    };
+    let n = veg.rows.len();
+    let dens: Vec<f32> = veg.rows.iter().map(|r| r.modifiers.mean_density).collect();
+    let mean = if n == 0 { 0.0 } else { dens.iter().sum::<f32>() / n as f32 };
+    let min = dens.iter().copied().fold(f32::INFINITY, f32::min);
+    let max = dens.iter().copied().fold(0.0_f32, f32::max);
+    let low = dens.iter().filter(|d| **d < 0.02).count();
+    let with_cells = veg.rows.iter().filter(|r| r.cells.is_some()).count();
+    let mut codes: BTreeMap<u8, u64> = BTreeMap::new();
+    for r in &veg.rows {
+        if let Some(c) = r.cells.as_deref() {
+            for code in c {
+                *codes.entry(*code).or_default() += 1;
+            }
+        }
+    }
+    dump.put_value(
+        "vegetation",
+        json!({
+            "extract_present": true,
+            "rows": n,
+            "rows_with_cells": with_cells,
+            "density_mean": mean,
+            "density_min": if min.is_finite() { min } else { 0.0 },
+            "density_max": max,
+            "rows_density_lt_002": low,
+            "cell_codes": codes.iter().map(|(k, v)| (k.to_string(), json!(v))).collect::<Map<String, Value>>(),
+        }),
+    );
+}
+
 pub fn dump_economy_section(
     arm: Res<SimDumpArm>,
     plants: Query<(
@@ -842,6 +885,7 @@ pub fn flush_sim_run_dump(
     let obj = body.as_object_mut().expect("envelope object");
     for key in [
         "construction",
+        "vegetation",
         "economy",
         "logistics",
         "ai",

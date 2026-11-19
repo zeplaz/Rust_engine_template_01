@@ -365,6 +365,7 @@ impl Plugin for SimRunDumpPlugin {
                     (
                         r::dump_series_sections,
                         r::dump_construction_section,
+                        r::dump_vegetation_section,
                         r::dump_economy_section,
                         r::dump_logistics_section,
                         r::dump_ai_section,

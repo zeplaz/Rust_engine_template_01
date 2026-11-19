@@ -442,12 +442,29 @@ pub fn derive_vegetation_population_from_graph(
         };
         pop.topology_kind_count = eval.topology_kind_count.max(1) as u32;
         // Biome ceiling applies to every population output: no instances, no density on water.
+        // CLOSE-T1: cover comes from the succession stage (each lands inside its own band of
+        // `max_stage_for_canopy_cap`: grass < 0.2 ≤ shrub < 0.45 ≤ young < 0.75 ≤ old); plant-kind
+        // diversity only nudges it. `kinds × 0.08` treated diversity as cover, kept canopy < 0.2,
+        // so every live cell was coded Grass and no live tree was ever drawn (only burnt snags).
+        let diversity = (0.85 + 0.03 * eval.topology_kind_count as f32).min(1.0);
         pop.mean_density =
-            ((eval.topology_kind_count as f32 * 0.08 * stage_factor).clamp(0.05, 1.0)).min(cap);
+            (stage_canopy_cover(succ.stage) * diversity).clamp(0.05, 1.0).min(cap);
         pop.instance_budget =
             (pop.topology_kind_count.saturating_mul(8) as f32 * stage_factor * cap) as u32;
         drivers.population_density = Some(pop.mean_density);
         // VEG-E02: SubcellPopulationGrid is filled from terrain in sync_stand_instances_from_terrain.
+    }
+}
+
+/// Canopy cover a stand carries at each succession stage (VEG-C07 population target).
+#[must_use]
+pub fn stage_canopy_cover(stage: SuccessionTopologyStage) -> f32 {
+    match stage {
+        SuccessionTopologyStage::BurnScar => 0.05,
+        SuccessionTopologyStage::Grass => 0.12,
+        SuccessionTopologyStage::Shrub => 0.32,
+        SuccessionTopologyStage::YoungForest => 0.6,
+        SuccessionTopologyStage::OldGrowth => 0.9,
     }
 }
 
@@ -957,5 +974,28 @@ mod tests {
         let mut capped = SubcellPopulationGrid::default();
         fill_subcell_from_terrain(&mut capped, &matrix, Some(&derived), 0.8, 0.1);
         assert!(capped.cells.iter().all(|c| *c <= 0.1001));
+    }
+}
+
+#[cfg(test)]
+mod close_t1_tests {
+    use super::*;
+    use crate::systems::ecology::max_stage_for_canopy_cap;
+
+    /// CLOSE-T1: each succession stage's canopy cover codes back to the same stage, so forest
+    /// stages produce live tree cells (not Grass).
+    #[test]
+    fn close_t1_stage_cover_round_trips() {
+        for stage in [
+            SuccessionTopologyStage::Grass,
+            SuccessionTopologyStage::Shrub,
+            SuccessionTopologyStage::YoungForest,
+            SuccessionTopologyStage::OldGrowth,
+        ] {
+            for kinds in [1u32, 3, 8] {
+                let d = (0.85 + 0.03 * kinds as f32).min(1.0);
+                assert_eq!(max_stage_for_canopy_cap(stage_canopy_cover(stage) * d), stage, "{stage:?} k={kinds}");
+            }
+        }
     }
 }
