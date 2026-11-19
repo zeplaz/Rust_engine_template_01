@@ -218,3 +218,14 @@ Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, D
 | Culling | Voxel trees + fire culling off by default, `PIXEL_WORLD_CULL` switch | DONE | `e296c3f9` |
 | Vegetation | Mature start + forest floodplain | LANDED — forest codes (3/4) still not seen in dumps | `7ee2e280` |
 | Ground look | Plateau grey with bake on (green with bake off) | **OPEN** — two bake fixes landed (`74f53b65` bind group, `196e912c` re-arm union), still grey | r12_late |
+
+## Operator report (2026-11-19, late) — queued after grey bake + forest
+
+| Id | Item | Notes |
+|:---|:---|:---|
+| OP-1 | Can't click / select the dam | Dam ops card says "click dam, then use keys"; picking may not hit the voxel dam footprint (site pick vs PixelWorld ground ray) |
+| OP-2 | A black line appears somewhere in the water | Unlocated — likely voxel water grid seam (ROI edge / grid step LOD / bed texture edge) or barrier row |
+| OP-3 | Water does not react correctly with the dam | Reservoir holds (stage 302 m, head 56 m) but visual: water vs dam footprint (crest per tile, displaced cells, flat grid over bank cells under dam ends) |
+| OP-4 | Dam ops card "Crest" shows max cell crest (bank height) | Show the crest over the channel (span invert + height) |
+| OP-5 | A stand-in for every tree stage, always visible, both views | Grass / shrub / young / old / burning / burnt / dead / regrowth each get a voxel mesh (3D) and a symbol (2D) with slight per-instance variation (species, rand); no stage may draw nothing at any LOD |
+| OP-6 | Fire effects in sync | Ground burn tint, flame/ember particles, smoke and the burning tree stage must follow one burning state + one clock (today they look out of sync) |

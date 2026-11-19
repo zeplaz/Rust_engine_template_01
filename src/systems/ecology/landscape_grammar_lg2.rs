@@ -456,6 +456,27 @@ pub fn derive_vegetation_population_from_graph(
     }
 }
 
+/// Age at/after which a chunk counts as an established (world-start) stand.
+pub const MATURE_STAND_AGE_TICKS: u32 = 400;
+
+/// Once per chunk: a stand that starts mature (world-gen) begins at its population canopy
+/// instead of growing from zero — sets the one-shot `CanopyDrivers::seed_to` that the canopy
+/// writer (`vegetation_field_tick`) applies. Burned / cleared chunks regrow as before.
+pub fn seed_mature_canopy_system(
+    mut q: Query<(Entity, &SuccessionState, &VegetationPopulation, &mut CanopyDrivers)>,
+    mut seeded: Local<std::collections::HashSet<Entity>>,
+) {
+    for (e, succ, pop, mut drivers) in &mut q {
+        if seeded.contains(&e) || pop.mean_density <= 0.0 {
+            continue;
+        }
+        seeded.insert(e);
+        if succ.age_ticks >= MATURE_STAND_AGE_TICKS {
+            drivers.seed_to = Some(pop.mean_density);
+        }
+    }
+}
+
 /// Canopy cover a stand carries at each succession stage (VEG-C07 population target).
 #[must_use]
 pub fn stage_canopy_cover(stage: SuccessionTopologyStage) -> f32 {
