@@ -1,5 +1,6 @@
 //! Material / tag / rule unification — see `prompts/guides/terrain_unification_runbook_v1.md`.
 
+pub mod ground_display;
 mod registry;
 mod resolver;
 pub mod dependency;

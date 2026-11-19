@@ -26,7 +26,8 @@ use crate::render::tile_world_fallback::{
 use crate::systems::terrain::TerrainRegistriesHandles;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
-use crate::terrain::material::{family_default_material_def, MaterialId, MaterializedChunk, MaterialRegistry};
+use crate::terrain::material::ground_display::ground_display_material_index;
+use crate::terrain::material::MaterialRegistry;
 
 /// Env flag — Simulation default ON; set `0`/`false` to opt out for diagnose.
 pub const TERRAIN_GPU_BAKE_SPIKE_ENV: &str = "TERRAIN_GPU_BAKE_SPIKE";
@@ -213,15 +214,30 @@ pub fn collect_material_bake_instances(
     params: &WorldGenParams,
     materials: &Assets<MaterialRegistry>,
     handles: Option<&TerrainRegistriesHandles>,
-    chunks: &[(Chunk, ChunkCellMatrix, Option<MaterializedChunk>)],
+    chunks: &[(Chunk, ChunkCellMatrix)],
     gpu_stamps: &TerrainGpuStampIndices,
 ) -> Vec<TerrainTileInstance> {
-    let reg = handles.and_then(|h| materials.get(&h.material_registry));
+    // No registry yet → no bake feed (index 0 would be a water material); re-collected once loaded.
+    let Some(reg) = handles.and_then(|h| materials.get(&h.material_registry)) else {
+        return Vec::new();
+    };
+    collect_material_bake_instances_with_registry(params, reg, chunks, gpu_stamps)
+}
+
+/// Registry-explicit core of [`collect_material_bake_instances`].
+#[must_use]
+pub fn collect_material_bake_instances_with_registry(
+    params: &WorldGenParams,
+    reg: &MaterialRegistry,
+    chunks: &[(Chunk, ChunkCellMatrix)],
+    gpu_stamps: &TerrainGpuStampIndices,
+) -> Vec<TerrainTileInstance> {
     let tex_w = params.width;
     let tex_h = params.height;
     let mut out = Vec::new();
 
-    for (chunk, matrix, mat_chunk) in chunks {
+    let families = crate::terrain::default_terrain_families();
+    for (chunk, matrix) in chunks {
         let sx = matrix.size.x as usize;
         let sy = matrix.size.y as usize;
         if sx == 0 || sy == 0 {
@@ -240,20 +256,11 @@ pub fn collect_material_bake_instances(
                     continue;
                 }
                 let i = matrix.idx(x as u32, y as u32);
-                let material_index = if let Some(mc) = mat_chunk {
-                    mc.materials.get(i).copied().unwrap_or(MaterialId(0)).0 as u32
-                } else if let Some(reg) = reg {
-                    family_default_material_def(reg, matrix.family[i])
-                        .map(|d| {
-                            reg.materials
-                                .iter()
-                                .position(|m| m.name == d.name)
-                                .unwrap_or(0) as u32
-                        })
-                        .unwrap_or(0)
-                } else {
-                    0
-                };
+                // One resolution with the CPU raster (`tile_world_fallback`): family default
+                // material; water families map to bed material. Rule-resolved
+                // `MaterializedChunk` ids are not used by either display path.
+                let material_index =
+                    ground_display_material_index(reg, families, matrix.family[i]).unwrap_or(0);
                 out.push(TerrainTileInstance {
                     world_pos: [xu as f32 + 0.5, yu as f32 + 0.5],
                     material_index,
@@ -512,7 +519,7 @@ fn sync_gpu_bake_indices_from_chunks(
     handles: Option<Res<TerrainRegistriesHandles>>,
     materials: Res<Assets<MaterialRegistry>>,
     gpu_stamps: Res<TerrainGpuStampIndices>,
-    chunks: Query<(&Chunk, &ChunkCellMatrix, Option<&MaterializedChunk>)>,
+    chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     mut map: ResMut<TerrainGpuBakeIndexMap>,
 ) {
     if !state.enabled {
@@ -523,9 +530,9 @@ fn sync_gpu_bake_indices_from_chunks(
         return;
     }
 
-    let owned: Vec<(Chunk, ChunkCellMatrix, Option<MaterializedChunk>)> = chunks
+    let owned: Vec<(Chunk, ChunkCellMatrix)> = chunks
         .iter()
-        .map(|(c, m, mat)| (*c, m.clone(), mat.cloned()))
+        .map(|(c, m)| (*c, m.clone()))
         .collect();
     let out = collect_material_bake_instances(
         params.as_ref(),
@@ -844,6 +851,51 @@ mod tests {
         let taken = grid.take_dirty_chunks(8);
         assert_eq!(taken, vec![(0, 0), (1, 0)]);
         assert!(!grid.has_dirty());
+    }
+
+    fn test_registry() -> MaterialRegistry {
+        let root = std::path::PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+        MaterialRegistry::load_from_json(
+            root.join("assets/config/terrain/material_registry.example.json")
+                .to_str()
+                .unwrap(),
+        )
+        .unwrap()
+    }
+
+    #[test]
+    fn bake_material_matches_cpu_raster_and_water_gets_bed() {
+        use crate::gui::editor::world_preview::preview_biome_rgba_for_tile;
+        use crate::render::tile_world_fallback::ground_display_family_for_raster;
+        let reg = test_registry();
+        let fams = crate::terrain::default_terrain_families();
+        let names = ["Grassland", "Forest", "Mountain", "Stone", "ShallowWater", "DeepWater"];
+        let mut m = ChunkCellMatrix::new(UVec2::new(names.len() as u32, 1));
+        for (i, n) in names.iter().enumerate() {
+            m.family[i] = fams.id(n).unwrap();
+        }
+        let params = WorldGenParams { width: 6, height: 1, ..Default::default() };
+        let out = collect_material_bake_instances_with_registry(
+            &params,
+            &reg,
+            &[(Chunk { coord: IVec2::ZERO }, m.clone())],
+            &TerrainGpuStampIndices::default(),
+        );
+        assert_eq!(out.len(), names.len());
+        for (i, inst) in out.iter().enumerate() {
+            // CPU raster colour for the same cell (family handed through the raster's mapping).
+            let raster_fam = ground_display_family_for_raster(Some(fams), m.family[i]);
+            let cpu = preview_biome_rgba_for_tile(i as u32, 0, raster_fam, &[], &reg, Some(fams));
+            let bake = reg.materials[inst.material_index as usize].preview_color;
+            assert_eq!(bake, cpu, "{}", names[i]);
+        }
+        // Land is not rule-resolved grey; water is a non-water bed material.
+        assert_eq!(reg.materials[out[0].material_index as usize].name, "loam_wet");
+        for i in [4, 5] {
+            let def = &reg.materials[out[i].material_index as usize];
+            assert_ne!(def.name, "water_deep");
+            assert_ne!(def.name, "water_shallow");
+        }
     }
 
     #[test]

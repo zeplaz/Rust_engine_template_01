@@ -1269,6 +1269,20 @@ fn mark_tile_world_fallback_dirty_on_changes(
     }
 }
 
+/// Family used for the ground colour of a raster tile: water families map to bed material
+/// (shared with the GPU bake, [`crate::terrain::material::ground_display`]). Only the GPU water
+/// field draws water.
+#[must_use]
+pub fn ground_display_family_for_raster(
+    fam_opt: Option<&crate::terrain::TerrainFamilyRegistry>,
+    family: crate::terrain::family::TerrainFamilyId,
+) -> crate::terrain::family::TerrainFamilyId {
+    match fam_opt {
+        Some(fams) => crate::terrain::material::ground_display::ground_display_family(fams, family),
+        None => family,
+    }
+}
+
 fn raster_tile_fallback_subregion(
     images: &mut Assets<Image>,
     handle: &Handle<Image>,
@@ -1307,6 +1321,9 @@ fn raster_tile_fallback_subregion(
     let Some(data) = image.data.as_mut() else {
         return;
     };
+    let tile_iter = tile_iter.map(|(x, y, fam, h, m, t)| {
+        (x, y, ground_display_family_for_raster(fam_opt, fam), h, m, t)
+    });
     crate::gui::map_tile_raster::raster_sim_minimap_layered_to_subregion(
         data,
         tex_w,
