@@ -210,6 +210,15 @@ impl Plugin for FireVisualFramePlugin {
                     .chain()
                     .in_set(FireVisualFrameSet::BuildProfiles),
             )
+            .init_resource::<crate::render::fx_spine::view_fire_projection::FireViewOverride>()
+            .add_systems(
+                Update,
+                // Voxel camera footprint + band for the tactical fire views (PixelWorld3D only).
+                crate::render::fx_spine::view_fire_projection::publish_fire_view_override_from_pixel_world
+                    .in_set(FireVisualFrameSet::BuildProfiles)
+                    .before(sync_visible_fire_chunks_from_views)
+                    .before(build_fire_visual_frames_by_view),
+            )
             .add_systems(
                 Update,
                 build_fire_clusters_into_scratch.in_set(FireVisualFrameSet::BuildClusters),

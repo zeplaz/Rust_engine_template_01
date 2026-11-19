@@ -2040,8 +2040,8 @@ fn apply_test_scene_defaults(
             focus_debug.enabled = false;
             tile_debug.use_batched_mesh_overlay = true;
             gpu.show = false;
-            sim.overlays.fire_heat = false;
-            sim.bump_revision();
+            // Fire layer stays on: the scene burns vegetation (strikes, S9) and with `fire_heat`
+            // off the fire extract drops every chunk, so flames never draw (CLOSE-F2).
             seed_atmosphere_wind(&mut weather_preset);
         }
         TestScene::City => {
