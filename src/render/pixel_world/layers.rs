@@ -26,7 +26,7 @@ use crate::gui::WorldPresentationMode;
 use crate::render::extraction::{VegExtractRow, VegetationExtractFrame};
 use crate::render::world_map_front_mesh::FrontOverlaySources;
 use crate::render::vegetation_species::{Maturity, VegSpeciesTable};
-use crate::render::world_map_vegetation_mesh::{sample_row_instances, Cover, VegInstance, VegLod};
+use crate::render::world_map_vegetation_mesh::{sample_row_instances, Cover, Variation, VegInstance, VegLod};
 use crate::combat::{BallisticPresentFrame, Formation, UnitKind};
 use crate::strategic::{ConstructionSite, PlannedSite, SiteArchetype, SiteConstructionPhase, SiteFootprint};
 use crate::terrain::generation::ChunkCellMatrix;
@@ -97,61 +97,115 @@ fn step_scale(step: u32) -> f32 {
 }
 
 const TRUNK_COL: [f32; 3] = [0.30, 0.21, 0.13];
+const CHAR_COL: [f32; 3] = [0.11, 0.09, 0.08];
+const BLEACH_COL: [f32; 3] = [0.58, 0.54, 0.48];
+const GRASS_COL: [f32; 3] = [0.50, 0.64, 0.26];
+const SAPLING_COL: [f32; 3] = [0.45, 0.78, 0.28];
 
-/// One plant as stacked voxel boxes. Shape (tiers, trunk, colours) comes from the species table through
-/// [`VegSpeciesTable::resolve_shape`]; `k` is the zoom-band scale and `trunks` is off on coarse bands, where
-/// the crown sits on the ground and still reads as forest.
-fn push_tree(buf: &mut MeshBuf, table: &VegSpeciesTable, inst: &VegInstance, base: f32, k: f32, trunks: bool) {
-    let at = inst.pos;
-    let crown = |buf: &mut MeshBuf, w: f32, lo: f32, hi: f32, c: [f32; 3]| {
-        let hw = w * 0.5;
-        column(buf, at.x - hw, at.y - hw, at.x + hw, at.y + hw, base + lo, base + hi, shade(c, 1.08, 1.0), shade(c, 0.86, 1.0));
-    };
-    let trunk = |buf: &mut MeshBuf, w: f32, hi: f32, c: [f32; 3]| {
-        let hw = w * 0.5;
-        column(buf, at.x - hw, at.y - hw, at.x + hw, at.y + hw, base, base + hi, shade(c, 1.0, 1.0), shade(c, 0.8, 1.0));
-    };
+/// Per-plant placement: ground point, base height and the instance tint (shared by every box of one plant).
+struct Plant {
+    at: Vec2,
+    base: f32,
+    tint: f32,
+}
+
+impl Plant {
+    /// Box centred `(ox, oy)` off the plant point, `w` wide in x and `d` deep in y, spanning `lo..hi` above ground.
+    #[allow(clippy::too_many_arguments)]
+    fn bx(&self, buf: &mut MeshBuf, (ox, oy): (f32, f32), w: f32, d: f32, lo: f32, hi: f32, c: [f32; 3], crown: bool) {
+        let (top, side) = if crown { (1.08, 0.86) } else { (1.0, 0.8) };
+        let (cx, cy) = (self.at.x + ox, self.at.y + oy);
+        let (hx, hy) = (w * 0.5, d * 0.5);
+        column(
+            buf,
+            cx - hx,
+            cy - hy,
+            cx + hx,
+            cy + hy,
+            self.base + lo,
+            self.base + hi,
+            shade(c, self.tint * top, 1.0),
+            shade(c, self.tint * side, 1.0),
+        );
+    }
+}
+
+/// One plant as stacked voxel boxes, every stage always drawn at every band (`k` = zoom-band scale, so a coarse
+/// band keeps a trunk and reads as a tree, not a floating cube). Live trees take tiers / trunk / colours from the
+/// species table ([`VegSpeciesTable::resolve_shape`]); every stage gets a small deterministic per-instance
+/// variation from `inst.rand` ([`Variation`]: size, lean, tint).
+fn push_tree(buf: &mut MeshBuf, table: &VegSpeciesTable, inst: &VegInstance, base: f32, k: f32) {
+    let v = Variation::of(inst.rand);
+    let p = Plant { at: inst.pos, base, tint: 1.0 + v.tint };
+    let kj = k * v.size;
+    let lean = |sh_w: f32, t: f32| (v.dx * sh_w * kj * t, v.dy * sh_w * kj * t);
     // Fire states use the species' mature envelope; `hs` is its height against the reference oak (1.6).
     let fire_shape = || table.resolve_shape(inst.species, Maturity::Old, inst.rand);
-    let kj = k * (0.85 + 0.3 * inst.rand);
     match inst.cover {
         Cover::OldGrowth | Cover::YoungForest => {
             let sh = table.resolve_shape(inst.species, inst.cover.maturity(), inst.rand);
-            let lift = if trunks { sh.trunk_frac * sh.height * k } else { 0.0 };
-            if lift > 0.0 {
-                trunk(buf, sh.trunk_width * k, lift * 1.3, TRUNK_COL);
-            }
-            for (n, t) in sh.tiers().iter().enumerate() {
-                crown(buf, t.width * k, lift + t.lo * k, lift + t.hi * k, sh.tier_color(n));
+            let lift = sh.trunk_frac.max(0.15) * sh.height * kj;
+            p.bx(buf, (0.0, 0.0), sh.trunk_width * kj, sh.trunk_width * kj, 0.0, lift * 1.3, TRUNK_COL, false);
+            let n = sh.tiers().len().max(1) as f32;
+            for (i, t) in sh.tiers().iter().enumerate() {
+                let off = lean(sh.crown_width, (i + 1) as f32 / n);
+                p.bx(buf, off, t.width * kj, t.width * kj, lift + t.lo * kj, lift + t.hi * kj, sh.tier_color(i), true);
             }
         }
         Cover::Shrub => {
+            // Low round-ish clump: three stacked boxes, narrowing and brightening upward.
             let sh = table.resolve_shape(inst.species, Maturity::Shrub, inst.rand);
-            crown(buf, sh.crown_width * k, 0.0, sh.height * k, sh.crown);
+            let (w, h) = (sh.crown_width * kj, sh.height * kj);
+            let bands = [(1.0, 0.0, 0.45, 1.0), (0.75, 0.3, 0.8, 1.06), (0.45, 0.6, 1.0, 1.12)];
+            for (i, (bw, lo, hi, lit)) in bands.into_iter().enumerate() {
+                let c = sh.crown.map(|x| (x * lit).min(1.0));
+                p.bx(buf, lean(sh.crown_width, i as f32 * 0.5), w * bw, w * bw, h * lo, h * hi, c, true);
+            }
         }
-        Cover::Grass => {}
+        Cover::Grass => {
+            // Low tuft: two thin flat boxes crossed.
+            p.bx(buf, (v.dx * kj, v.dy * kj), 0.26 * kj, 0.05 * kj, 0.0, 0.14 * kj, GRASS_COL, true);
+            p.bx(buf, (v.dx * kj, v.dy * kj), 0.05 * kj, 0.22 * kj, 0.0, 0.18 * kj, GRASS_COL, true);
+        }
         Cover::Burning => {
             let sh = fire_shape();
             let hs = sh.height / 1.6;
             let flick = if inst.burn_phase % 2 == 0 { 1.0 } else { 0.85 };
-            trunk(buf, sh.trunk_width * k, 0.4 * k * hs, [0.12, 0.09, 0.07]);
-            crown(buf, 0.9 * sh.crown_width * k, 0.3 * k * hs, (0.3 + 0.85 * flick) * k * hs, [1.0, 0.42, 0.08]);
-            crown(buf, 0.5 * sh.crown_width * k, (0.3 + 0.85 * flick) * k * hs, (0.3 + 1.2 * flick) * k * hs, [1.0, 0.82, 0.30]);
+            let tw = sh.trunk_width * kj;
+            p.bx(buf, (0.0, 0.0), tw, tw, 0.0, 0.4 * kj * hs, [0.12, 0.09, 0.07], false);
+            let off = lean(sh.crown_width, 0.6);
+            let w = 0.9 * sh.crown_width * kj;
+            p.bx(buf, off, w, w, 0.3 * kj * hs, (0.3 + 0.85 * flick) * kj * hs, [1.0, 0.42, 0.08], true);
+            let w2 = 0.5 * sh.crown_width * kj;
+            p.bx(buf, off, w2, w2, (0.3 + 0.85 * flick) * kj * hs, (0.3 + 1.2 * flick) * kj * hs, [1.0, 0.82, 0.30], true);
         }
         Cover::Burnt => {
+            // Charred snag: trunk plus two stubs.
             let sh = fire_shape();
             let hs = sh.height / 1.6;
-            trunk(buf, 0.9 * sh.trunk_width * k, 0.95 * k * hs, [0.11, 0.09, 0.08]);
-            let arm = 0.32 * sh.crown_width * k;
-            column(buf, at.x - arm, at.y - 0.05 * k, at.x + arm, at.y + 0.05 * k, base + 0.6 * k * hs, base + 0.68 * k * hs, shade([0.11, 0.09, 0.08], 1.0, 1.0), shade([0.11, 0.09, 0.08], 0.8, 1.0));
+            let tw = 0.9 * sh.trunk_width * kj;
+            p.bx(buf, (0.0, 0.0), tw, tw, 0.0, 0.95 * kj * hs, CHAR_COL, false);
+            let arm = 0.64 * sh.crown_width * kj;
+            let th = 0.1 * kj;
+            p.bx(buf, (0.0, 0.0), arm, th, 0.6 * kj * hs, 0.68 * kj * hs, CHAR_COL, false);
+            p.bx(buf, (0.0, 0.0), th, 0.7 * arm, 0.42 * kj * hs, 0.5 * kj * hs, CHAR_COL, false);
         }
         Cover::Dead => {
-            // Bleached standing dead — trunk only, grey (vs charred Burnt).
+            // Bleached standing dead (vs charred Burnt): grey trunk with bare arms.
             let sh = fire_shape();
             let hs = sh.height / 1.6;
-            trunk(buf, 0.85 * sh.trunk_width * k, 0.9 * k * hs, [0.58, 0.54, 0.48]);
+            let tw = 0.85 * sh.trunk_width * kj;
+            p.bx(buf, (0.0, 0.0), tw, tw, 0.0, 0.9 * kj * hs, BLEACH_COL, false);
+            let arm = 0.7 * sh.crown_width * kj;
+            let th = 0.07 * kj;
+            p.bx(buf, (0.0, 0.0), arm, th, 0.62 * kj * hs, 0.68 * kj * hs, BLEACH_COL, false);
+            p.bx(buf, (0.0, 0.0), th, 0.7 * arm, 0.46 * kj * hs, 0.52 * kj * hs, BLEACH_COL, false);
         }
-        Cover::Regrowth => crown(buf, 0.3 * kj, 0.0, 0.26 * kj, [0.45, 0.72, 0.30]),
+        Cover::Regrowth => {
+            // Small bright sapling: thin stem, light crown.
+            p.bx(buf, (0.0, 0.0), 0.05 * kj, 0.05 * kj, 0.0, 0.16 * kj, [0.36, 0.28, 0.16], false);
+            p.bx(buf, lean(0.3, 0.5), 0.3 * kj, 0.3 * kj, 0.1 * kj, 0.3 * kj, SAPLING_COL, true);
+        }
     }
 }
 
@@ -173,20 +227,16 @@ pub(crate) fn build_tree_chunk(
         other => other.step_tiles().max(1),
     };
     let k = step_scale(step);
-    let trunks = step == 1;
     scratch.clear();
     sample_row_instances(row, chunk, step, scratch);
     for inst in scratch.iter() {
-        if inst.cover == Cover::Grass {
-            continue;
-        }
         let Some(i) = field.index(inst.pos.x.floor() as i32, inst.pos.y.floor() as i32) else {
             continue;
         };
         if field.water[i].is_finite() {
             continue;
         }
-        push_tree(&mut buf, table, inst, field.ground[i], k, trunks);
+        push_tree(&mut buf, table, inst, field.ground[i], k);
     }
     buf
 }
@@ -1259,13 +1309,54 @@ mod tests {
     }
 
     #[test]
-    fn coarse_band_drops_trunks_but_keeps_species_tiers() {
+    fn coarse_band_keeps_trunks_and_species_tiers() {
         let (fine, nf) = build(&row(|_| 2), VegLod::Fine);
         let (tree, nt) = build(&row(|_| 2), VegLod::Tree);
         assert!(nf > nt && !tree.is_empty());
-        // Tree band (step 2): no trunk box, four tiers per plant.
-        assert_eq!(tree.positions.len(), nt * 4 * 20);
+        // Both bands: trunk box + four spruce tiers per plant (20 verts a box).
+        assert_eq!(tree.positions.len(), nt * 5 * 20);
         assert_eq!(fine.positions.len(), nf * 5 * 20);
+    }
+
+    fn stage_instance(cover: Cover, rand: f32) -> VegInstance {
+        VegInstance { pos: Vec2::new(8.5, 8.5), cover, species: 2, rand, riparian: false, burn_phase: 0 }
+    }
+
+    const STAGES: [Cover; 8] = [
+        Cover::Grass,
+        Cover::Shrub,
+        Cover::YoungForest,
+        Cover::OldGrowth,
+        Cover::Burning,
+        Cover::Burnt,
+        Cover::Dead,
+        Cover::Regrowth,
+    ];
+
+    fn one(cover: Cover, rand: f32, step: u32) -> MeshBuf {
+        let mut b = MeshBuf::default();
+        push_tree(&mut b, &VegSpeciesTable::default(), &stage_instance(cover, rand), 0.0, step_scale(step));
+        b
+    }
+
+    fn height(b: &MeshBuf) -> f32 {
+        b.positions.iter().map(|p| p[1]).fold(f32::MIN, f32::max)
+    }
+
+    #[test]
+    fn every_stage_draws_at_every_band_deterministically_with_variation() {
+        for cover in STAGES {
+            for step in [1, 2, 4, 8] {
+                let (a, b) = (one(cover, 0.3, step), one(cover, 0.3, step));
+                assert!(!a.is_empty(), "{cover:?} step {step} draws");
+                assert_eq!(a.positions, b.positions, "{cover:?} deterministic");
+                assert!(height(&one(cover, 0.05, step)) != height(&one(cover, 0.95, step)), "{cover:?} size varies");
+            }
+        }
+        // Tree stages carry a trunk below the crown at the coarsest band too: more than one box.
+        for cover in [Cover::YoungForest, Cover::OldGrowth, Cover::Burning, Cover::Burnt, Cover::Dead] {
+            assert!(one(cover, 0.5, 8).positions.len() > 20, "{cover:?} has trunk + more");
+        }
     }
 
     #[test]

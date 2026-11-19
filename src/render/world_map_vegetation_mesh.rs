@@ -549,127 +549,130 @@ fn crown_symbol(g: &mut VegGeometry, profile: CrownProfile, pos: Vec2, r: f32, c
     g.rect(pos.x - rr, pos.y - rr, pos.x + rr, pos.y + rr, c);
 }
 
+/// Small deterministic per-instance variation shared by both views (flat symbols and voxel boxes), derived
+/// from the site rand only: size ±15%, lean / offset ±0.1 of the plant's width, tint ±8%.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub(crate) struct Variation {
+    pub size: f32,
+    pub dx: f32,
+    pub dy: f32,
+    pub tint: f32,
+}
+
+impl Variation {
+    #[must_use]
+    pub(crate) fn of(rand: f32) -> Self {
+        let r = rand.clamp(0.0, 0.999_999);
+        let r2 = (r * 97.0).fract();
+        let r3 = (r * 389.0).fract();
+        Self { size: 0.85 + 0.3 * r, dx: (r2 - 0.5) * 0.2, dy: (r3 - 0.5) * 0.2, tint: (r2 - 0.5) * 0.16 }
+    }
+}
+
+const TRUNK_RGB: [f32; 3] = [0.30, 0.20, 0.12];
+const CHAR_RGB: [f32; 3] = [0.10, 0.09, 0.08];
+const BLEACH_RGB: [f32; 3] = [0.62, 0.58, 0.52];
+
 fn shape_rgba(c: [f32; 3], a: f32, shade: f32) -> [f32; 4] {
     rgba(c[0], c[1], c[2], a, shade)
 }
 
-fn tree_symbol(g: &mut VegGeometry, s: &Site, sh: &TreeShape, shade: f32, fine: bool, detailed: bool) {
+/// Axis-aligned bar centred `(cx, cy)`, half sizes `(hx, hy)`.
+fn bar(g: &mut VegGeometry, cx: f32, cy: f32, hx: f32, hy: f32, c: [f32; 4]) {
+    g.rect(cx - hx, cy - hy, cx + hx, cy + hy, c);
+}
+
+/// Live tree: trunk (every band) under a crown quad that sits on top of it, offset by the instance lean.
+fn tree_symbol(g: &mut VegGeometry, s: &Site, sh: &TreeShape, v: &Variation, detailed: bool) {
     let (pos, i) = (s.inst.pos, &s.inst);
-    let r = s.step * CROWN_R_PER_WIDTH * sh.crown_width;
+    let r = s.step * CROWN_R_PER_WIDTH * sh.crown_width * v.size;
     let old = sh.maturity == Maturity::Old;
-    if fine && sh.trunk_frac > 0.0 {
-        let hw = r * (sh.trunk_width / sh.crown_width) * 0.65;
-        g.rect(pos.x - hw, pos.y - r * 0.9, pos.x + hw, pos.y - r * 0.2, rgba(0.30, 0.20, 0.12, 1.0, shade));
-    }
+    let hw = (r * (sh.trunk_width / sh.crown_width) * 0.65).max(s.step * 0.04);
+    let crown_c = Vec2::new(pos.x + v.dx * r, pos.y + 0.3 * r);
+    bar(g, pos.x, pos.y - 0.25 * r, hw, 0.55 * r, rgba(TRUNK_RGB[0], TRUNK_RGB[1], TRUNK_RGB[2], 1.0, v.tint));
     let alpha = if old { 0.97 } else { 0.95 };
     crown_symbol(
         g,
         sh.profile,
-        pos,
-        r,
-        riparian_tint(shape_rgba(sh.crown, alpha, shade + TACTICAL_CROWN_SHADE), i.riparian),
+        crown_c,
+        r * 0.8,
+        riparian_tint(shape_rgba(sh.crown, alpha, v.tint + TACTICAL_CROWN_SHADE), i.riparian),
     );
     if old && detailed {
         crown_symbol(
             g,
             sh.profile,
-            Vec2::new(pos.x - r * 0.15, pos.y + r * 0.15),
-            r * 0.5,
-            riparian_tint(shape_rgba(sh.tip, 0.9, shade), i.riparian),
+            Vec2::new(crown_c.x - r * 0.12, crown_c.y + r * 0.12),
+            r * 0.4,
+            riparian_tint(shape_rgba(sh.tip, 0.9, v.tint), i.riparian),
         );
     }
 }
 
 fn push_symbol(g: &mut VegGeometry, s: &Site, table: &VegSpeciesTable) {
     let (pos, step, i) = (s.inst.pos, s.step, &s.inst);
-    let shade = (i.rand - 0.5) * 0.12;
-    let fine = s.lod == VegLod::Fine;
+    let v = Variation::of(i.rand);
+    let shade = v.tint;
     let detailed = matches!(s.lod, VegLod::Tree | VegLod::Fine);
-    let size_jitter = 0.9 + 0.3 * i.rand;
+    let crown_r = |sh: &TreeShape| step * CROWN_R_PER_WIDTH * sh.crown_width * v.size;
     match i.cover {
         Cover::OldGrowth | Cover::YoungForest => {
             let sh = table.resolve_shape(i.species, i.cover.maturity(), i.rand);
-            tree_symbol(g, s, &sh, shade, fine, detailed);
+            tree_symbol(g, s, &sh, &v, detailed);
         }
         Cover::Shrub => {
+            // Low clump: wide base with a lighter cap.
             let sh = table.resolve_shape(i.species, Maturity::Shrub, i.rand);
-            let r = step * CROWN_R_PER_WIDTH * sh.crown_width;
-            g.rect(
-                pos.x - r,
-                pos.y - r,
-                pos.x + r,
-                pos.y + r,
-                riparian_tint(shape_rgba(sh.crown, 0.9, shade), i.riparian),
+            let r = crown_r(&sh);
+            bar(g, pos.x, pos.y - 0.1 * r, r, 0.6 * r, riparian_tint(shape_rgba(sh.crown, 0.92, shade), i.riparian));
+            bar(
+                g,
+                pos.x + v.dx * r,
+                pos.y + 0.35 * r,
+                0.55 * r,
+                0.4 * r,
+                riparian_tint(shape_rgba(sh.crown, 0.92, shade + 0.12), i.riparian),
             );
         }
         Cover::Grass => {
-            let r = if detailed {
-                step * 0.25 * size_jitter
-            } else {
-                step * 0.2
-            };
-            let a = if detailed { 0.8 } else { 0.5 };
-            g.rect(
-                pos.x - r,
-                pos.y - r,
-                pos.x + r,
-                pos.y + r,
-                rgba(0.55, 0.65, 0.30, a, shade),
-            );
+            // Tuft: two thin crossed bars, yellow-green.
+            let r = step * 0.25 * v.size;
+            let a = if detailed { 0.85 } else { 0.55 };
+            let c = rgba(0.55, 0.65, 0.30, a, shade);
+            bar(g, pos.x, pos.y, r, 0.25 * r, c);
+            bar(g, pos.x + v.dx * r, pos.y, 0.25 * r, 0.85 * r, c);
         }
         Cover::Burning => {
             let sh = table.resolve_shape(i.species, Maturity::Old, i.rand);
             let flicker = 0.9 + 0.1 * f32::from(i.burn_phase % 3);
-            let r = step * CROWN_R_PER_WIDTH * sh.crown_width * 0.9;
-            g.rect(
-                pos.x - r,
-                pos.y - r,
-                pos.x + r,
-                pos.y + r,
-                rgba(1.0, 0.40, 0.06, 0.95, shade * flicker),
-            );
-            if detailed {
-                let r2 = r * 0.5;
-                g.rect(
-                    pos.x - r2,
-                    pos.y - r2,
-                    pos.x + r2,
-                    pos.y + r2,
-                    rgba(1.0, 0.85, 0.30, 1.0, shade * flicker),
-                );
-            }
+            let r = crown_r(&sh) * 0.9;
+            bar(g, pos.x, pos.y - 0.3 * r, 0.12 * r, 0.6 * r, rgba(0.22, 0.13, 0.08, 1.0, shade));
+            let cy = pos.y + 0.3 * r;
+            bar(g, pos.x + v.dx * r, cy, 0.8 * r, 0.8 * r, rgba(1.0, 0.40, 0.06, 0.95, shade * flicker));
+            bar(g, pos.x + v.dx * r, cy + 0.1 * r, 0.4 * r, 0.4 * r, rgba(1.0, 0.85, 0.30, 1.0, shade * flicker));
         }
         Cover::Burnt => {
+            // Charred snag: black trunk with a stub across it.
             let sh = table.resolve_shape(i.species, Maturity::Old, i.rand);
-            let r = step * CROWN_R_PER_WIDTH * sh.crown_width * 0.55;
-            g.rect(
-                pos.x - r,
-                pos.y - r,
-                pos.x + r,
-                pos.y + r,
-                rgba(0.10, 0.09, 0.08, 0.9, shade),
-            );
+            let r = crown_r(&sh) * 0.6;
+            let c = rgba(CHAR_RGB[0], CHAR_RGB[1], CHAR_RGB[2], 0.95, shade);
+            bar(g, pos.x, pos.y + 0.2 * r, 0.14 * r, 1.0 * r, c);
+            bar(g, pos.x, pos.y + 0.55 * r, 0.6 * r, 0.1 * r, c);
         }
         Cover::Dead => {
-            // Bleached trunk — no crown, grey, distinct from charred snag.
+            // Bleached trunk with bare arms, distinct from the charred snag.
             let sh = table.resolve_shape(i.species, Maturity::Old, i.rand);
-            g.rect(
-                pos.x - step * 0.08,
-                pos.y - step * CROWN_R_PER_WIDTH * sh.crown_width * 0.35,
-                pos.x + step * 0.08,
-                pos.y + step * CROWN_R_PER_WIDTH * sh.crown_width * 0.45,
-                rgba(0.62, 0.58, 0.52, 0.92, shade),
-            );
+            let r = crown_r(&sh) * 0.65;
+            let c = rgba(BLEACH_RGB[0], BLEACH_RGB[1], BLEACH_RGB[2], 0.92, shade);
+            bar(g, pos.x, pos.y + 0.2 * r, 0.12 * r, 1.0 * r, c);
+            bar(g, pos.x, pos.y + 0.5 * r, 0.7 * r, 0.08 * r, c);
+            bar(g, pos.x + 0.1 * r, pos.y + 0.1 * r, 0.45 * r, 0.07 * r, c);
         }
         Cover::Regrowth => {
-            let r = step * 0.28 * size_jitter;
-            g.rect(
-                pos.x - r,
-                pos.y - r,
-                pos.x + r,
-                pos.y + r,
-                rgba(0.45, 0.70, 0.30, 0.9, shade),
-            );
+            // Bright sapling: stem under a light crown.
+            let r = step * 0.28 * v.size;
+            bar(g, pos.x, pos.y - 0.4 * r, 0.1 * r, 0.6 * r, rgba(0.36, 0.28, 0.16, 0.9, shade));
+            bar(g, pos.x + v.dx * r, pos.y + 0.25 * r, 0.8 * r, 0.7 * r, rgba(0.45, 0.78, 0.28, 0.95, shade));
         }
     }
     g.symbols += 1;
@@ -856,7 +859,7 @@ pub(crate) fn geometry_from_veg_instances(
 #[inline]
 fn veg_instance_radius(inst: &VegInstance, lod: VegLod) -> f32 {
     let step = lod.step_tiles().max(1) as f32;
-    (step * CROWN_R_PER_WIDTH * 0.9).max(0.5)
+    (step * 0.95).max(0.8)
 }
 
 #[must_use]
@@ -1228,6 +1231,49 @@ mod tests {
     }
 
     #[test]
+    fn every_stage_draws_at_every_band_deterministically_with_variation() {
+        let table = VegSpeciesTable::default();
+        let inst = |cover: Cover, rand: f32| VegInstance {
+            pos: Vec2::new(8.5, 8.5),
+            cover,
+            species: 2,
+            rand,
+            riparian: false,
+            burn_phase: 0,
+        };
+        let width = |g: &VegGeometry| {
+            let xs = g.positions.iter().map(|p| p[0]);
+            xs.clone().fold(f32::MIN, f32::max) - xs.fold(f32::MAX, f32::min)
+        };
+        for cover in [
+            Cover::Grass,
+            Cover::Shrub,
+            Cover::YoungForest,
+            Cover::OldGrowth,
+            Cover::Burning,
+            Cover::Burnt,
+            Cover::Dead,
+            Cover::Regrowth,
+        ] {
+            for lod in [VegLod::Fine, VegLod::Tree, VegLod::Blob] {
+                let a = geometry_from_veg_instances(&[inst(cover, 0.3)], lod, &table);
+                let b = geometry_from_veg_instances(&[inst(cover, 0.3)], lod, &table);
+                assert!(a.symbols == 1 && !a.indices.is_empty(), "{cover:?} {lod:?} draws");
+                assert_eq!(a.positions, b.positions, "{cover:?} deterministic");
+                assert_eq!(a.colors, b.colors);
+                let small = geometry_from_veg_instances(&[inst(cover, 0.05)], lod, &table);
+                let big = geometry_from_veg_instances(&[inst(cover, 0.95)], lod, &table);
+                assert!(width(&small) != width(&big), "{cover:?} {lod:?} size varies");
+            }
+        }
+        // A live tree has a trunk at every band (two or more quads), not a lone crown.
+        for lod in [VegLod::Fine, VegLod::Tree, VegLod::Blob] {
+            let g = geometry_from_veg_instances(&[inst(Cover::YoungForest, 0.5)], lod, &table);
+            assert!(g.positions.len() >= 8, "{lod:?} trunk + crown");
+        }
+    }
+
+    #[test]
     fn rows_build_symbols_inside_their_chunks_and_zoom_changes_density() {
         let chunk = UVec2::splat(32);
         let rows = known_rows();
@@ -1335,7 +1381,7 @@ mod tests {
         let (n_spruce, spruce) = verts_per_plant("spruce");
         let (n_birch, birch) = verts_per_plant("birch");
         let (n_pine, pine) = verts_per_plant("pine");
-        assert_eq!((oak, spruce, birch, pine), (8, 8, 8, 8));
+        assert_eq!((oak, spruce, birch, pine), (12, 12, 12, 12));
         assert!(n_oak == n_spruce && n_spruce == n_birch && n_birch == n_pine, "sites do not depend on species");
     }
 
