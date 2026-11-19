@@ -514,7 +514,10 @@ pub fn install_barrier_from_operational_dam_system(
                 .max()
                 .unwrap_or(1),
         );
+        // DF-4.4: the barrier is exactly the dam's footprint (a single row + per-kind half span
+        // missed footprint rows, so the river ran through the dam and eroded it).
         request.pending = Some(BarrierInstallSpec {
+            tiles: footprint.tiles.clone(),
             world_z: mid.y,
             crest_m: body.crest_m.max(1.0),
             half_span: half.max(1),

@@ -384,6 +384,32 @@ impl SurfaceWaterField {
         }
     }
 
+    /// Install the barrier on explicit world tiles (a dam's footprint — DF-4.4 crest profile).
+    /// Level crest at `crest_height_m` above the lowest footprint bed; never below a cell's bed.
+    /// Upstream for the level pool starts above the footprint's highest row.
+    pub fn install_barrier_tiles(&mut self, tiles: &[IVec2], crest_height_m: f32) {
+        if !self.wired {
+            return;
+        }
+        let cells: Vec<(usize, u32)> = tiles
+            .iter()
+            .filter(|t| self.contains_world(t.x, t.y))
+            .map(|t| {
+                let lz = (t.y - self.origin_z) as u32;
+                (self.idx((t.x - self.origin_x) as u32, lz), lz)
+            })
+            .collect();
+        let invert = cells.iter().map(|&(i, _)| self.bed_m[i]).fold(f32::INFINITY, f32::min);
+        if !invert.is_finite() {
+            return;
+        }
+        let crest_abs = invert + crest_height_m.max(0.0);
+        for &(i, _) in &cells {
+            self.hydraulics.barrier_crest_m[i] = crest_abs.max(self.bed_m[i]);
+        }
+        self.barrier_lz = cells.iter().map(|&(_, lz)| lz).max();
+    }
+
     /// Upstream of the barrier (north / higher z when valley runs +Y → -Y).
     #[inline]
     #[must_use]
@@ -638,6 +664,74 @@ impl SurfaceWaterField {
                     } else {
                         let c = conductance(h_i, h_j);
                         flux_y[i] = c * (eta_i - eta_j);
+                    }
+                }
+            }
+        }
+
+        // CLOSE-W4 conservation: (1) only the donor (higher surface) side can give water and the
+        // driving head is capped at the donor's depth — a dry cell gives nothing, and a thin film
+        // over a terrain step can't push the whole bed drop; (2) each cell's total outflow per
+        // sub-step is scaled to the water it holds. Without these, real-terrain beds (CLOSE-W3)
+        // created water on every steep face and the field went to NaN.
+        {
+            let depth = &self.depth_m;
+            let cap = |f: f32, donor: usize, eta_drop: f32| -> f32 {
+                let hd = depth[donor];
+                if hd < 1e-4 || eta_drop <= 0.0 {
+                    0.0
+                } else {
+                    f * (hd / eta_drop).min(1.0)
+                }
+            };
+            for z in 0..h {
+                for x in 0..w {
+                    let i = z * w + x;
+                    if x + 1 < w {
+                        let j = i + 1;
+                        let f = flux_x[i];
+                        let drop = (self.surface_at(i) - self.surface_at(j)).abs();
+                        flux_x[i] = if f >= 0.0 { cap(f, i, drop) } else { cap(f, j, drop) };
+                    }
+                    if z + 1 < h {
+                        let j = i + w;
+                        let f = flux_y[i];
+                        let drop = (self.surface_at(i) - self.surface_at(j)).abs();
+                        flux_y[i] = if f >= 0.0 { cap(f, i, drop) } else { cap(f, j, drop) };
+                    }
+                }
+            }
+            // Outflow limiter: scale every outgoing face of a cell so it can't give more than it has.
+            let mut scale = vec![1.0_f32; n];
+            for z in 0..h {
+                for x in 0..w {
+                    let i = z * w + x;
+                    let mut out = 0.0_f32;
+                    out += flux_x[i].max(0.0);
+                    out += flux_y[i].max(0.0);
+                    if x > 0 {
+                        out += (-flux_x[i - 1]).max(0.0);
+                    }
+                    if z > 0 {
+                        out += (-flux_y[i - w]).max(0.0);
+                    }
+                    let vol = depth[i] * cell_a;
+                    let want = out * dt_s;
+                    if want > vol && want > 0.0 {
+                        scale[i] = vol / want;
+                    }
+                }
+            }
+            for z in 0..h {
+                for x in 0..w {
+                    let i = z * w + x;
+                    if x + 1 < w {
+                        let donor = if flux_x[i] >= 0.0 { i } else { i + 1 };
+                        flux_x[i] *= scale[donor];
+                    }
+                    if z + 1 < h {
+                        let donor = if flux_y[i] >= 0.0 { i } else { i + w };
+                        flux_y[i] *= scale[donor];
                     }
                 }
             }

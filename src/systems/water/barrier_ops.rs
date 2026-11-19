@@ -13,6 +13,9 @@ pub struct BarrierInstallRequest {
 
 #[derive(Debug, Clone)]
 pub struct BarrierInstallSpec {
+    /// DF-4.4 crest profile: the dam's own footprint tiles (world XY). When non-empty these are
+    /// the barrier cells and `world_z` / `half_span` / `center_world_x` are ignored.
+    pub tiles: Vec<IVec2>,
     pub world_z: i32,
     pub crest_m: f32,
     pub half_span: u32,
@@ -109,12 +112,16 @@ pub fn apply_barrier_install_request_system(
     if spec.crest_m <= 0.0 {
         return;
     }
-    field.install_barrier_row(
-        spec.world_z,
-        spec.crest_m,
-        spec.half_span.max(1),
-        spec.center_world_x,
-    );
+    if spec.tiles.is_empty() {
+        field.install_barrier_row(
+            spec.world_z,
+            spec.crest_m,
+            spec.half_span.max(1),
+            spec.center_world_x,
+        );
+    } else {
+        field.install_barrier_tiles(&spec.tiles, spec.crest_m);
+    }
     info!(
         target: "water::barrier",
         "installed barrier crest_m={} at z={} half_span={}",
