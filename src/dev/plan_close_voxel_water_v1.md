@@ -177,3 +177,31 @@ Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, D
 - The dam site is committed at seed time (`engine/test_harness.rs:~1694`), i.e. the dam exists in S0 River, while the script's `InstallBarrier` is a separate crest write. Barrier crest should come from `DamBody` (DF-4.4 "crest profile per tile → water barrier"), not a parallel script step.
 - `dam_integrity_mean` is a book default (1.0), not aggregated from `DamBody` — matrix row can't fail.
 - Pre-existing failing test: `gui::hud::dam_ops_card::tests::balance_text_names_inflow_release_and_held` ("Presets").
+
+## Status table (2026-11-19, end of session) — evidence = dam scene playcheck captures
+
+| Area | Item | State | Commit / evidence |
+|:---|:---|:---|:---|
+| Voxel ground | Shaders compile on Bevy 0.20 (WESL) | DONE | `fe3c6f27` |
+| Voxel ground | No per-tick full remesh; swap-on-ready | DONE | `fe3c6f27` |
+| Heights | One vertical contract (`WorldGenParams::elevation_range_m`) | DONE | `124d55de` |
+| Ground look | Bake covers whole world; one material resolution; sand bed under water | DONE (valley) | `7f7e3fb6`, `d644c2f6` |
+| Ground look | Plateau still grey (family default material is grey) | **OPEN** | r7 capture |
+| Water sim | One water (ROI seeded from static depth, real bed) | DONE | `124d55de` |
+| Water sim | Mass conservation on real terrain (donor cap + limiter) | DONE — mass err ~1e-7 | `b4c405c0` |
+| Water sim | S0 gauge balance < 0.02 | FLAKY — 0.0016 in one run, 0.21 in the long run | r6 / r7 |
+| Water sim | Reservoir fill in test time (solver dt fixed 1 s; time skip doesn't speed water) | **OPEN** | |
+| Water look | One blue semi-transparent ramp, flat + voxel | DONE — but river reads pale over sand | `b4c405c0` |
+| Dam | Barrier = dam footprint; crest = height above bed | DONE | `b4c405c0`, `3a4434fe` |
+| Dam | Body solid (no water inside); no erosion before crest | DONE | `a82c1495` |
+| Dam | Erosion from real face velocity per DamKind | DONE | `3a4434fe` |
+| Dam | Flood proxy never demolishes dams / water-legal sites | DONE | `82715e4f` |
+| Dam | Built for real (S1 commit + logistics, no forced Operational) | PARTIAL — still UnderConstruction at tick 4208 | `5cc4bb65` |
+| Dam scene | Strike failsafe / breach-on-impact / fake book values removed | DONE | `d9d0db62` |
+| Dam scene | Strike → blast → DamBody → breach end to end | **UNVERIFIED** (script never reached S5: dam unbuilt) | |
+| Vegetation | Live stands no longer all Grass | DONE (shrubs) | `2be652c8` |
+| Vegetation | Young/old forest stages appear | **OPEN** | r6/r7: no codes 3/4 |
+| Fire | Tree flicker near fire | DONE | `605776ab` |
+| Fire | Voxel flames/embers/smoke layer | PARTIAL — layer landed, particle frame has 0 rows in voxel view | `605776ab` |
+| Fire | "Burns slower" | EXPLAINED — timber/shrub burn longer than grass by config, spread speed unchanged | agent measurement |
+| Tests | Pre-existing failures (also fail on clean HEAD) | OPEN | dam_ops_card "Presets"; scenario wave1/wave3 + ecs12 (CommitConstructionSiteEvent not registered in test app); ai_faction_builds_supplies; voxel_massing; 2 construction integration (fuel_breaks resource) |
