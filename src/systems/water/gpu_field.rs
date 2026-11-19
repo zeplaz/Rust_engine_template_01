@@ -217,7 +217,9 @@ pub fn pack_composite_water_field_rgba8(
                 }
             }
             let px = pack_water_texel(d, qx, qy, dx);
-            if px[0] > 8 {
+            // Match the shaders' discard (depth01 < 0.02 ≈ R 5): `> 8` hid shallow live flow
+            // (wet_texels = 0 → both views hid all water). CLOSE-W1.
+            if px[0] >= 5 {
                 wet += 1;
             }
             let o = ((tz * tw + tx) * 4) as usize;
