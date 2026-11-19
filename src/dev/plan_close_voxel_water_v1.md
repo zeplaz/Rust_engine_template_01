@@ -132,3 +132,48 @@ Then, after V is accepted:
 | W1 fix | OPEN |
 | W2 fallback | CONDITIONAL |
 | W3 verify | OPEN |
+
+## Round 2 findings (2026-11-19, operator playtest + traces)
+
+| Row | State |
+|-----|-------|
+| W1 voxel water render fixes | DONE `77e685b4` — no frustum cull on displaced grid; bed range matches texture; wet count matches shader discard |
+| W2a solver mass balance | IN PROGRESS (uncommitted) — inflow only into wet north cells (was smeared over whole edge → fed banks); south edge free-drains (was dam-outlet sink ≈40 vs 220 m³/s inflow → runaway flood); barrier east-branch `continue` skipped north flux; conservation uses applied boundary volume |
+| W2b buildings stretch with flood | IN PROGRESS — `build_site` top used `ground.max(water)`; now ground only |
+| G1 grey ground | IN PROGRESS — A/B: `TERRAIN_GPU_BAKE_SPIKE=0` textures whole map; bake only fills part of the world image. Bake now **opt-in**. Fix the bake coverage later, then re-default ON |
+| T1 no live trees (any view) | OPEN — sim has 100k live stand cells, 0 dead; lost in render. Live draw prob = `mean_density·0.9`, burnt ≈ independent → density≈0 suspected (`landscape_grammar_lg2.rs:445`, `vegetation_visual_extract.rs:188`). Next: runtime check of `row.modifiers.mean_density` |
+| D1 dam missing | OPEN — scene seeds no barrier (`scene_seed.rs:71`); scenario step `InstallBarrier` expected to add it. Verify the step fires and the dam site/mesh spawns |
+| **W3 single water system** | OPEN — operator requirement: **one** water, blue + semi-transparent. Today: static river (`WorldStaticWaterDepth`, dark, never moves) and live ROI solver (light sheet) are two fluids; composite pack lets ROI override static (`gpu_field.rs:202-218`). Target: seed the live solver from static depth inside the ROI (one fluid), static only outside the ROI with matched look/edge fade; one material colour ramp shared by flat + voxel shaders |
+
+## Round 3 — plan review of this session's changes (2026-11-19, operator asked: no hacks)
+
+Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, DF-2/4/8/9, §8 rejects),
+`plan_water_depth_truth_v1.md`, `plan_disaster_proxy_v1.md`, `plan_final_gpu_presentation_v1.md`.
+
+### Keep (plan-aligned root-cause fixes)
+
+| Change | Plan basis |
+|:---|:---|
+| WESL port, `ground_revision`, swap-on-ready (`fe3c6f27`) | FINAL-GPU: ground columns textured from the bake/raster image; Bevy 0.20 contract |
+| Voxel water no-cull / bed encode / wet threshold (`77e685b4`) | FINAL-GPU: water only via the GPU field shader |
+| Solver: barrier east-branch `continue` skipped z-flux | DF-2 correctness (barrier must leak/overtop along the river) |
+| Solver: inflow into the wet channel; open (free-drain) downstream boundary; conservation from applied boundary volume | DF-2 "inflow/outflow boundaries", §4 "mass conservation is a hard invariant" |
+| ROI starts from `WorldStaticWaterDepth`; no synthetic carve over a covered DEM | WATER-DEPTH-TRUTH "one physical water: bed+depth"; W4 authored bed+depth corridor is already in the world DEM |
+| `build_site` stands on ground, not water top | §4 render reads snapshots; flood must not reshape buildings |
+
+### Revert / redo properly
+
+| Change | Problem | Plan-correct fix |
+|:---|:---|:---|
+| GPU terrain bake made opt-in | **Violates FINAL-GPU** (Simulation `CpuRaster` forbidden; bake default ON) | Revert. Fix the real bug: bake only fills part of the world image (rest grey) |
+| `ELEVATION_NORM_METRES = 672` (new constant) | Third vertical contract: voxel implies 672 m, weather RON says `elevation_range_m: 1200` | **Operator decision:** one vertical scale for sim water bed, voxel display and weather lapse |
+| Flood proxy skips `Dam`/`WaterPlant` archetypes | Hard-coded archetype list | DF-8 + §8: dam damage is the `DamBody` voxel path; whole-site demolish is **rejected** as the dam damage model. Gate the flood-foundation proxy on the same rule as placement (`building_may_occupy_water` / hydraulic structure), not an archetype list |
+| Dam erosion: dropped outlet/spillway from `flow_proxy` | Direction right, model still wrong | DF-8: erosion ∝ (flow velocity − critical velocity) by `DamKind` at the breach/overtop face; controlled outlet works don't erode |
+| `try_insert` in `presentation/mod.rs` | Hides the symptom; cause was the proxy despawning the dam | Revert once the proxy is fixed |
+
+### Found cheats in the scene (pre-existing, §0 violations)
+
+- `force_dam_flood_sites_operational_system` (`scenario/dam_flood/mod.rs:260`) skips the construction funnel ("clears the construction material stall"). §0: forbidden to "skip construction/damage funnels". S1 Build should commit + build the dam through the real funnel.
+- The dam site is committed at seed time (`engine/test_harness.rs:~1694`), i.e. the dam exists in S0 River, while the script's `InstallBarrier` is a separate crest write. Barrier crest should come from `DamBody` (DF-4.4 "crest profile per tile → water barrier"), not a parallel script step.
+- `dam_integrity_mean` is a book default (1.0), not aggregated from `DamBody` — matrix row can't fail.
+- Pre-existing failing test: `gui::hud::dam_ops_card::tests::balance_text_names_inflow_release_and_held` ("Presets").

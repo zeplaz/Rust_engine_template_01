@@ -321,7 +321,8 @@ pub fn drain_script_steps(
             breach_flow_m3s,
         } => {
             if let Some(req) = barrier_breach.as_mut() {
-                req.pending = Some(BarrierBreachSpec {
+                req.push(BarrierBreachSpec {
+                    dam: None,
                     clear_crest,
                     breach_flow_m3s: breach_flow_m3s.max(0.0),
                 });

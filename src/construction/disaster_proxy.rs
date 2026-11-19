@@ -44,6 +44,15 @@ pub fn flood_foundation_integrity_proxy_system(
         return;
     }
     for (fp, planned, roles, damage) in &mut sites {
+        // CLOSE-D1: water structures stand in the river by design (dam erosion has its own
+        // path in `dam_barrier`). Flooding their foundations demolished the dam + intakes on
+        // the first frame once the solver started from the real river.
+        if matches!(
+            planned.archetype,
+            crate::strategic::SiteArchetype::Dam | crate::strategic::SiteArchetype::WaterPlant
+        ) {
+            continue;
+        }
         let n = fp.tiles.len().min(roles.roles.len());
         if n == 0 {
             continue;
