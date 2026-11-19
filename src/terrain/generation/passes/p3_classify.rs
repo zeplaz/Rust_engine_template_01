@@ -24,12 +24,28 @@ pub fn classify_cells(
     tag_registry: &TagRegistry,
     families: &TerrainFamilyRegistry,
 ) {
+    classify_cells_with(matrix, tuning, tag_registry, families, true);
+}
+
+/// [`classify_cells`], optionally keeping the matrix's `family`. When the dense world-gen cache
+/// is the field authority it hydrates `family` (incl. authored edits); re-deriving it here from
+/// elevation was a second family writer (authored Grassland/Forest became Mountain on high
+/// ground → grey ground bake + vegetation capped at shrub). Weights + tags still update.
+pub fn classify_cells_with(
+    matrix: &mut ChunkCellMatrix,
+    tuning: &BiomeTuning,
+    tag_registry: &TagRegistry,
+    families: &TerrainFamilyRegistry,
+    write_family: bool,
+) {
     for i in 0..matrix.elevation.len() {
         let h = matrix.elevation[i];
         let m = matrix.moisture[i];
         let t = matrix.temperature[i];
         let classification = classify_biome(h, m, t, tuning, families);
-        matrix.family[i] = classification.terrain_family;
+        if write_family {
+            matrix.family[i] = classification.terrain_family;
+        }
         matrix.weights[i] = classification.biome_weights;
         let primary = classification.biome_weights.primary();
         let name = biome_primary_tag_name(primary);
