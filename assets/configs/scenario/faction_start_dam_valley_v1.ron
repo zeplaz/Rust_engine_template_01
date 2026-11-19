@@ -16,6 +16,8 @@
             slot: 0,
             name: "Player HQ",
             ai: None,
+            // Scripted scene: nobody at the orders panel, so the player runs auto-supply.
+            auto_supply: Some(true),
             hq: Tile(x: 140, z: 168),
             stockpile: [
                 (cargo: "Concrete", amount: 7000),

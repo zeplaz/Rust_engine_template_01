@@ -885,6 +885,7 @@ pub fn flush_sim_run_dump(
     let obj = body.as_object_mut().expect("envelope object");
     for key in [
         "construction",
+        "dam_site",
         "vegetation",
         "economy",
         "logistics",
