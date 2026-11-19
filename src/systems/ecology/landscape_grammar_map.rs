@@ -317,7 +317,12 @@ pub fn rollout_landscape_program_on_chunks(
                 preset_id,
             },
         ));
-        attach_lg2_bundle_on_chunk(&mut commands, entity, chunk.coord == LG1_PILOT_CHUNK);
+        // CLOSE-T2: a generated world starts mature (established stands); fire / clearing reset
+        // succession. Suitability still caps each family (grassland stays shrub, forest is forest).
+        // Starting every chunk at age 64 (= Shrub) meant no young/old forest existed for the first
+        // hundreds of ecology ticks, so live trees drew as shrub boxes everywhere.
+        let _ = LG1_PILOT_CHUNK;
+        attach_lg2_bundle_on_chunk(&mut commands, entity, true);
     }
 
     if count > 0 {
