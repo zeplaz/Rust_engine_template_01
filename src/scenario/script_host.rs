@@ -214,6 +214,10 @@ pub fn drain_script_steps(
     if matches!(host.pending_steps.front(), Some(ScenarioStep::WaitUntilSiteOperational { .. })) {
         return;
     }
+    // Corridor placements run in the corridor tool's own system (`place_corridor`).
+    if matches!(host.pending_steps.front(), Some(ScenarioStep::PlaceCorridor { .. })) {
+        return;
+    }
 
     let Some(step) = host.pending_steps.pop_front() else {
         host.execution_log.push("Scenario complete".into());
@@ -225,7 +229,7 @@ pub fn drain_script_steps(
     host.current_step_index = host.current_step_index.saturating_add(1);
 
     match step {
-        ScenarioStep::WaitUntilSiteOperational { .. } => {}
+        ScenarioStep::WaitUntilSiteOperational { .. } | ScenarioStep::PlaceCorridor { .. } => {}
         ScenarioStep::SetSimSpeed { speed } => {
             sim_control.speed = speed.clamp(0.0, 1000.0);
             host.execution_log.push(format!("SetSimSpeed: {:.1}x", sim_control.speed));

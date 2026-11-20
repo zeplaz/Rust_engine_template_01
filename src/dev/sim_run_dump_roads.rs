@@ -20,6 +20,8 @@ pub fn dump_roads_section(
     surface: Option<Res<PixelWorldRoadSurface>>,
     trucks: Query<(&Transform, &Waypoints), With<TruckPresentation>>,
     legs: Option<Res<crate::economy::logistics::orders::SiteLegRouteBook>>,
+    placements: Option<Res<crate::scenario::place_corridor::CorridorPlacementLog>>,
+    bridges: Option<Res<crate::construction::bridges::BridgeBook>>,
     mut dump: ResMut<SimRunDump>,
 ) {
     if !arm.due {
@@ -116,6 +118,17 @@ pub fn dump_roads_section(
             "legs_planned": leg_rows.len(),
             "leg_road_share": if road_m + off_m > 0.0 { road_m / (road_m + off_m) } else { 0.0 },
             "leg_rows": leg_rows.into_iter().take(16).collect::<Vec<_>>(),
+            "bridges": bridges.as_deref().map(|b| b.bridges.iter().map(|r| json!({
+                "segment": r.segment_id, "a": [r.a.x, r.a.y], "b": [r.b.x, r.b.y],
+                "type": r.bridge_type.label(), "length_m": r.length_m(), "deck_m": r.deck_m,
+                "sections": r.sections.len(), "fallen": r.fallen_sections(), "min_integrity": r.integrity(),
+                "hits": r.sections.iter().map(|s| s.hits.len()).sum::<usize>(),
+                "overtopped": r.overtopped, "peak_load": r.peak_load,
+            })).collect::<Vec<_>>()).unwrap_or_default(),
+            "placements": placements.as_deref().map(|l| l.0.iter().map(|r| json!({
+                "kind": r.kind, "queued": r.queued, "length_m": r.length_m,
+                "check_us": r.check_us as u64, "stretches": r.stretches,
+            })).collect::<Vec<_>>()).unwrap_or_default(),
             "truck_rows": rows.into_iter().take(12).collect::<Vec<_>>(),
         }),
     );

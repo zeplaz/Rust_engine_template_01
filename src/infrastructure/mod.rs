@@ -3,6 +3,7 @@
 //! Epic slices: [`src/dev/plan_infrastructure_world_layers_exec_001_v1.md`](../dev/plan_infrastructure_world_layers_exec_001_v1.md).
 
 pub mod authoring;
+pub mod bridge_types;
 pub mod profiles;
 pub mod road_tier;
 pub mod settlement;

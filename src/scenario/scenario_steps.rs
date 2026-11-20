@@ -117,6 +117,13 @@ pub enum ScenarioStep {
         #[serde(default = "default_warhead_tag")]
         warhead: String,
     },
+    /// PLAN-ROADS-v1 RD-6 — draw a path with the corridor tool and finish it (same checks and
+    /// commit as a player). `kind`: `dirt` | `gravel` | `paved` | `concrete` | `motorway` | `rail`.
+    /// Run by `run_place_corridor_step_system` (own domain), logged in `CorridorPlacementLog`.
+    PlaceCorridor {
+        kind: String,
+        points: Vec<ScenarioWorldTile>,
+    },
     /// DF-1 / D4 — coarse-step time skip for slow domains.
     SetTimeSkip {
         enabled: bool,

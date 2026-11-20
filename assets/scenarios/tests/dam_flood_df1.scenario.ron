@@ -8,6 +8,13 @@
     ),
     steps: [
         WaitUntilTick(tick: 30),
+        // PLAN-ROADS-v1 RD-6: scripted corridor placements through the same tool a player uses
+        // (per-stretch checks + commit). A paved road across the river downstream with a bend
+        // (bridge), a gravel road from the HQ east across the valley to the town terrace, and a
+        // rail line down the west bank (grade + curve rules).
+        PlaceCorridor(kind: "paved", points: [(tile_x: 120, tile_z: 126), (tile_x: 150, tile_z: 118), (tile_x: 196, tile_z: 118)]),
+        PlaceCorridor(kind: "gravel", points: [(tile_x: 140, tile_z: 168), (tile_x: 176, tile_z: 182), (tile_x: 212, tile_z: 196)]),
+        PlaceCorridor(kind: "rail", points: [(tile_x: 112, tile_z: 96), (tile_x: 114, tile_z: 140), (tile_x: 126, tile_z: 176)]),
         Log(message: "DF-1: S0 river settling — keep outlets open so G1≈G3 balance latches"),
         // Open river settle before the crest so s0_gauge_balance can read live gauges.
         SetDamControl(gate_open01: 0.0, outlet_open01: 1.0, turbine_flow_setpoint_m3s: 0.0),
@@ -32,6 +39,11 @@
         StrikeOrder(target_x: 46, target_z: 44, warhead: "medium"),
         Log(message: "FIRE-ZONE: ignite live forest across the zone"),
         IgniteAt(tile: (tile_x: 70, tile_z: 70), spark: 0.85, cause_id: "fire_zone_live"),
+        // Bridge strike (PLAN-ROADS-v1): a small warhead on the paved road's concrete beam bridge
+        // over the river downstream. It should damage the sections near the impact, not the
+        // whole bridge; the dam burst flood later loads every section.
+        Log(message: "BRIDGE: small missile on the downstream concrete bridge"),
+        StrikeOrder(target_x: 160, target_z: 118, warhead: "small"),
         SimAdvance(ticks: 60),
         // Close outlets → level-pool impound (S2). Coarse dt so ecology clocks can clear 14 d drown.
         // Force-close: hold the pool (no low/mid outlet, no turbine) so DF-2 ratio drops and crest rises.

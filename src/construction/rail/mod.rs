@@ -1,17 +1,10 @@
-//! Rail placement lane — spline, grade, and curve authority (not a road clone).
+//! Rail settings shared with the corridor tool (profile, grade limit) + junction registry.
+//! Placement itself is the one corridor tool (`construction::roads::input`, PLAN-ROADS-v1 RD-6).
 
-mod commit;
-mod ghost;
-mod input;
 mod junction;
-mod pathing;
 mod placement;
 mod validation;
 
-pub use input::{
-    rail_path_input_system, sync_rail_path_build_preview, sync_rail_placement_from_tool,
-    update_rail_path_preview_system,
-};
 pub use junction::RailJunctionAuthority;
 pub use placement::ActiveRailPlacement;
 pub use validation::validate_rail_segment;

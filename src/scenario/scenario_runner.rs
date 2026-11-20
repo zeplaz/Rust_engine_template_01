@@ -18,10 +18,12 @@ impl Plugin for ScenarioRunnerPlugin {
             ScenarioScriptSystemSet::DrainScenarioSteps.before(SimControlSystemSet::AdvanceSimTick),
         );
 
+        app.init_resource::<super::place_corridor::CorridorPlacementLog>();
         app.add_systems(
             Update,
             (
                 super::script_host::gate_wait_until_site_operational_system,
+                super::place_corridor::run_place_corridor_step_system,
                 drain_script_steps,
             )
                 .chain()

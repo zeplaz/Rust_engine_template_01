@@ -10,14 +10,23 @@ use super::corridor_network::CorridorNetwork;
 #[derive(Clone, Debug)]
 pub enum SnapTarget {
     RoadNode(BuildSiteTile),
+    /// A point along an existing line (finishing here makes a junction).
+    OnLine(BuildSiteTile),
     Grid(Vec3),
 }
 
 impl SnapTarget {
+    /// Snapped onto an existing line (node or along it): a click here finishes the path.
+    #[must_use]
+    pub fn joins_line(&self) -> bool {
+        matches!(self, SnapTarget::RoadNode(_) | SnapTarget::OnLine(_))
+    }
+
     #[must_use]
     pub fn hint_label(&self) -> String {
         match self {
-            SnapTarget::RoadNode(t) => format!("snap: road node ({},{})", t.x, t.z),
+            SnapTarget::RoadNode(t) => format!("snap: joins the line at ({},{})", t.x, t.z),
+            SnapTarget::OnLine(t) => format!("snap: joins along the line at ({},{})", t.x, t.z),
             SnapTarget::Grid(p) => format!("snap: grid ({:.1}, {:.1})", p.x, p.z),
         }
     }
@@ -53,6 +62,7 @@ pub fn snap_placement(
     world: Vec3,
     settings: &RoadSnapSettings,
     roads: &CorridorNetwork,
+    rail: bool,
 ) -> SnapPlacement {
     let mut out = world;
     let mut target = None;
@@ -69,10 +79,14 @@ pub fn snap_placement(
         out = snapped;
     }
     if settings.node_snap {
-        if let Some(node) = nearest_road_node(world, roads, settings.node_radius) {
+        if let Some(node) = nearest_road_node(world, roads, settings.node_radius, rail) {
             out.x = node.x as f32 + 0.5;
             out.z = node.z as f32 + 0.5;
             target = Some(SnapTarget::RoadNode(node));
+        } else if let Some(tile) = nearest_point_on_line(world, roads, settings.node_radius, rail) {
+            out.x = tile.x as f32 + 0.5;
+            out.z = tile.z as f32 + 0.5;
+            target = Some(SnapTarget::OnLine(tile));
         }
     }
     SnapPlacement { world: out, target }
@@ -83,9 +97,11 @@ pub fn nearest_road_node(
     world: Vec3,
     roads: &CorridorNetwork,
     radius: f32,
+    rail: bool,
 ) -> Option<BuildSiteTile> {
     let mut best: Option<(f32, BuildSiteTile)> = None;
-    for tile in roads.node_tiles() {
+    let tiles = roads.segments.iter().filter(|s| s.kind.is_rail() == rail).flat_map(|s| s.nodes.iter().copied());
+    for tile in tiles {
         let dx = world.x - tile.x as f32 - 0.5;
         let dz = world.z - tile.z as f32 - 0.5;
         let d2 = dx * dx + dz * dz;
@@ -96,6 +112,27 @@ pub fn nearest_road_node(
         }
     }
     best.map(|(_, t)| t)
+}
+
+/// Tile on the nearest line of the same class within `radius` of `world` (projection).
+#[must_use]
+pub fn nearest_point_on_line(world: Vec3, roads: &CorridorNetwork, radius: f32, rail: bool) -> Option<BuildSiteTile> {
+    let p = Vec2::new(world.x, world.z);
+    let c = |t: BuildSiteTile| Vec2::new(t.x as f32 + 0.5, t.z as f32 + 0.5);
+    let mut best: Option<(f32, Vec2)> = None;
+    for seg in roads.segments.iter().filter(|s| s.kind.is_rail() == rail) {
+        for (a, b) in seg.spans() {
+            let (a, b) = (c(a), c(b));
+            let d = b - a;
+            let t = if d.length_squared() < 1e-6 { 0.0 } else { ((p - a).dot(d) / d.length_squared()).clamp(0.0, 1.0) };
+            let q = a + d * t;
+            let dist = p.distance(q);
+            if dist <= radius && best.is_none_or(|(bd, _)| dist < bd) {
+                best = Some((dist, q));
+            }
+        }
+    }
+    best.map(|(_, q)| BuildSiteTile { x: q.x.floor().max(0.0) as u32, z: q.y.floor().max(0.0) as u32 })
 }
 
 #[cfg(test)]
@@ -114,6 +151,7 @@ mod tests {
             Vec3::new(3.2, 0.0, 5.7),
             &s,
             &CorridorNetwork::default(),
+            false,
         )
         .world;
         assert_eq!(out.x, 4.0);

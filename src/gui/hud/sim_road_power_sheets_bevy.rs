@@ -9,10 +9,10 @@ use crate::gui::DeprecatedInteraction;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::{
-    commit_power_line_to_utility_graph, commit_road_path_to_queue, cursor_world_on_map,
+    commit_power_line_to_utility_graph, corridor_tool_kind, cursor_world_on_map, finish_corridor_path,
     enqueue_road_upgrade, ActiveBuildTool, ActivePowerLinePlacement, ActiveRoadPlacement,
     ActiveToolSession, BuildStripState, BuildTool, ConstructionPlanQueue, CorridorNetwork,
-    PowerLineRoutingMode, RailType, RoadSnapSettings, RoadToolPopupState, RoadType, ToolContext,
+    PowerLineRoutingMode, RailType, RoadSnapSettings, RoadToolPopupState, ToolContext,
 };
 use crate::engine::states::BaseState;
 use crate::gui::hud::power_hud_icon_atlas::{PowerHudDrawnIcon, PowerHudIconId};
@@ -48,6 +48,8 @@ pub enum SimSheetStat {
     Points,
     Valid,
     Cost,
+    /// Corridor tool: why a stretch is blocked / which works it needs.
+    Notes,
 }
 
 #[derive(Component)]
@@ -179,9 +181,10 @@ pub fn spawn_sim_road_power_sheets_bevy(
         ))
         .with_children(|root| {
             spawn_header(root, &kit, "Road", SimRoadSheetTitle, None::<()>);
-            spawn_label_row(root, &kit, "Control points", "0", SimSheetStat::Points);
-            spawn_label_row(root, &kit, "Valid segments", "0 of 0", SimSheetStat::Valid);
-            spawn_label_row(root, &kit, "Est. cost / width", "0", SimSheetStat::Cost);
+            spawn_label_row(root, &kit, "Length", "0 m", SimSheetStat::Points);
+            spawn_label_row(root, &kit, "Ok / works / blocked", "0 / 0 / 0", SimSheetStat::Valid);
+            spawn_label_row(root, &kit, "Truck trip", "-", SimSheetStat::Cost);
+            spawn_label_row(root, &kit, "Notes", "", SimSheetStat::Notes);
             root.spawn(row_node()).with_children(|row| {
                 spawn_toggle(row, &kit, "Grid snap", true, SimRoadSheetToggleGrid)
                     .insert(grow_node(ROW_H));
@@ -325,21 +328,31 @@ pub fn sync_sim_road_sheet_bevy(
     }
 
     let title = match tool.tool {
-        BuildTool::Road(RoadType::Street) => "Road - Street",
-        BuildTool::Road(RoadType::Highway) => "Road - Highway",
+        BuildTool::Road(tier) => tier.label(),
         BuildTool::Rail(RailType::Standard) => "Rail - Standard",
+        BuildTool::Firebreak => "Firebreak",
         _ => "Road",
     };
     for mut t in &mut title_q {
         set_text(&mut t, title);
     }
-    let valid = placement.generated_segments.iter().filter(|s| s.valid).count();
-    let total = placement.generated_segments.len();
+    let valid = placement.checks.iter().filter(|c| c.verdict.buildable()).count();
     for (stat, mut t) in &mut stats_q {
         let next = match stat {
-            SimSheetStat::Points => placement.control_points.len().to_string(),
-            SimSheetStat::Valid => format!("{valid} of {total}"),
-            SimSheetStat::Cost => format!("{} / w {:.1}", valid.saturating_mul(10), placement.width),
+            SimSheetStat::Points => format!("{:.0} m", placement.summary.length_m),
+            SimSheetStat::Valid => format!(
+                "{} / {} / {}",
+                placement.summary.stretches_ok, placement.summary.stretches_works, placement.summary.stretches_blocked
+            ),
+            SimSheetStat::Cost => {
+                if placement.summary.trip_s > 0.0 {
+                    format!("{:.0} s", placement.summary.trip_s)
+                } else {
+                    "-".to_string()
+                }
+            }
+            SimSheetStat::Notes => placement.summary.notes.join("
+"),
         };
         set_text(&mut t, &next);
     }
@@ -415,6 +428,7 @@ pub fn sync_sim_power_sheet_bevy(
             SimSheetStat::Points => placement.control_points.len().to_string(),
             SimSheetStat::Valid => format!("{valid} of {total}"),
             SimSheetStat::Cost => valid.saturating_mul(12).to_string(),
+            SimSheetStat::Notes => String::new(),
         };
         set_text(&mut t, &next);
     }
@@ -451,28 +465,24 @@ pub fn sim_road_sheet_actions(
     roads: Res<CorridorNetwork>,
     params: Res<WorldGenParams>,
     win: Query<&Window, With<PrimaryWindow>>,
-    (authority, pointer_gate): (
+    (authority, pointer_gate, tool): (
         Option<Res<ViewProjectionAuthority>>,
         Option<Res<crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate>>,
+        Res<ActiveBuildTool>,
     ),
     desired: Res<MapCameraDesiredRes>,
     map_vp: Res<SimulationMapViewport>,
 ) {
     for (i, b) in &build_q {
         if ui_button_fired(i, b) {
-            commit_road_path_to_queue(
-                placement.as_mut(),
-                queue.as_mut(),
-                params.as_ref(),
-                session.continuous_path,
-            );
-            session.record_commit();
+            if let Some(kind) = corridor_tool_kind(tool.tool) {
+                finish_corridor_path(placement.as_mut(), kind, queue.as_mut(), session.as_mut());
+            }
         }
     }
     for (i, b) in &cancel_q {
         if ui_button_fired(i, b) {
-            placement.control_points.clear();
-            placement.generated_segments.clear();
+            placement.clear_path();
             popup.cancel_requested = true;
         }
     }

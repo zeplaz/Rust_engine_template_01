@@ -364,18 +364,20 @@ pub fn sync_road_visual_requests(
 
     sync_executed_road_paths(&roads, &mut requests);
 
-    if !matches!(tool.tool, BuildTool::Road(_) | BuildTool::Firebreak) {
+    if !matches!(tool.tool, BuildTool::Road(_) | BuildTool::Rail(_) | BuildTool::Firebreak) {
         return;
     }
+    let kind = if matches!(tool.tool, BuildTool::Rail(_)) { VisualPathKind::Rail } else { VisualPathKind::Road };
     use crate::construction::tile_visual::build_site_tiles_between;
     for seg in &placement.generated_segments {
+        // Green buildable, amber buildable with works (bridge / cut-fill / crossing), red blocked.
         requests.paths.push(PathLineRequest {
-            kind: VisualPathKind::Road,
+            kind,
             start: seg.start,
             end: seg.end,
             width: placement.width,
             valid: seg.valid,
-            slope_ok: true,
+            slope_ok: !seg.works,
             committed: false,
         });
         let a = BuildSiteTile {
@@ -438,34 +440,6 @@ fn sync_executed_road_paths(
     }
 }
 
-pub fn sync_rail_visual_requests(
-    tool: Res<crate::construction::build_tool_authority::ActiveBuildTool>,
-    placement: Res<crate::construction::rail::ActiveRailPlacement>,
-    mut requests: ResMut<ConstructionVisualRequests>,
-) {
-    use crate::construction::build_tool_authority::BuildTool;
-
-    if !matches!(tool.tool, BuildTool::Rail(_)) {
-        return;
-    }
-    for seg in &placement.generated_segments {
-        requests.paths.push(PathLineRequest {
-            kind: VisualPathKind::Rail,
-            start: seg.start,
-            end: seg.end,
-            width: seg.width,
-            valid: seg.valid,
-            slope_ok: seg.slope_ok,
-            committed: false,
-        });
-    }
-    for p in &placement.control_points {
-        requests.control_points.push((
-            *p,
-            crate::gui::UiRgba::from_rgba_unmultiplied(200, 160, 255, 220),
-        ));
-    }
-}
 
 pub fn sync_zone_visual_requests(
     tool: Res<crate::construction::build_tool_authority::ActiveBuildTool>,

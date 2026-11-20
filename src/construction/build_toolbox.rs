@@ -18,7 +18,7 @@ use crate::economy::logistics::orders::LogisticsOrdersSnapshotRes;
 use crate::gui::{product_shell_active, PanelPresence};
 
 use super::build_tool_authority::{
-    ActiveBuildTool, BuildTool, DefenseKind, RailType, RoadType,
+    ActiveBuildTool, BuildTool, DefenseKind, RailType, RoadTier,
 };
 use super::building_definitions::menu_rows::{
     affordability, intent_detail_lines, player_depot_stock, MenuItem, MenuRow,
@@ -545,7 +545,7 @@ fn build_toolbox_bevy_action_system(
             BuildToolboxAction::Road => {
                 tool.close_submenus();
                 tool.clear_building_intent();
-                tool.tool = BuildTool::Road(RoadType::Street);
+                tool.tool = BuildTool::Road(RoadTier::Gravel);
             }
             BuildToolboxAction::Rail => {
                 tool.close_submenus();

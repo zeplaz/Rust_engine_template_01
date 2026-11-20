@@ -14,49 +14,8 @@ use super::construction_pipeline::{
     ConstructionType,
 };
 use super::pending_construction::PendingConstructionQueue;
-use super::roads::{regenerate_road_segments, IntersectionRegistry};
+use super::roads::IntersectionRegistry;
 use super::zones::{commit_painted_zones_to_pending, ActiveZonePaint};
-
-#[test]
-fn road_e2e_queue_validate_segments() {
-    let params = WorldGenParams {
-        width: 64,
-        height: 64,
-        ..Default::default()
-    };
-    let pts = vec![
-        Vec3::new(1.0, 0.0, 1.0),
-        Vec3::new(4.0, 0.0, 1.0),
-        Vec3::new(7.0, 0.0, 1.0),
-    ];
-    let segs = regenerate_road_segments(&pts, None, 8.0, &params, false);
-    assert!(segs.len() >= 2);
-    let mut queue = ConstructionPlanQueue::default();
-    for w in segs.windows(2) {
-        if !w[0].valid {
-            continue;
-        }
-        let head = BuildSiteTile {
-            x: w[0].start.x.floor() as u32,
-            z: w[0].start.z.floor() as u32,
-        };
-        let tail = BuildSiteTile {
-            x: w[0].end.x.floor() as u32,
-            z: w[0].end.z.floor() as u32,
-        };
-        if validate_road_segment(head, tail, &params).valid {
-            queue.enqueue(ConstructionIntent {
-                entity_type: ConstructionType::RoadSegment { head, tail, tier: crate::infrastructure::RoadTier::Gravel },
-                world_position: Vec2::ZERO,
-                rotation: 0.0,
-            });
-        }
-    }
-    assert!(!queue.plans.is_empty());
-    for plan in &queue.plans {
-        assert_eq!(plan.status, ConstructionStatus::Requested);
-    }
-}
 
 #[test]
 fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {

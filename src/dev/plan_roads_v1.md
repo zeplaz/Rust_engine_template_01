@@ -1,6 +1,6 @@
 # PLAN-ROADS-v1 — roads and rail that freight uses: tiers, motorways, worn tracks, congestion, real travel time
 
-Status: **OPEN** (2026-11-20). Owner lanes: `coder` (sim/logistics/construction), `designer` (build picker, road card, ribbons).
+Status: **OPEN — PAUSED** (2026-11-20, operator halt after RD-0/1/3/6 + bridges; see Status, Open items and Next at the end). Owner lanes: `coder` (sim/logistics/construction), `designer` (build picker, road card, ribbons).
 Supersedes the road half of T-8 in [`plan_close_voxel_water_v1.md`](plan_close_voxel_water_v1.md) (clickable roads and
 bridge decks DONE there; this plan makes roads and rail matter).
 
@@ -248,3 +248,46 @@ RD-2 and RD-9 can run in parallel with RD-5/6 (different files). RD-0/RD-1 are w
 | RD-3 leg time from the route | DONE (code) | `SiteLegRouteBook` (sole writer `plan_site_leg_routes_system`), `RoutedTravel` in the order sim; presentation copies the planned route |
 | RD-11 dam scene roads | PARTIAL | 3 gravel supply roads + bridge; capture: 4 road segments / 11 spans, picks 11/11 (2D) and 2/2 deck rays (3D), **42 of 57 trucks routed on roads** (was 0), deliveries 879 (unchanged), all dam rows pass. Leg book was empty at the end of the run (stale-leg prune after 3 600 ticks under time skip), so trip time vs straight line is not yet in the dump |
 | Note | — | Off-road speed is now 18 km/h (RON), so roadless trips are ~2.4× slower than the old straight-line estimate at truck speed |
+| RD-6 placement tool | DONE (code), feel NOT checked by hand | One tool for every road tier, rail and firebreaks (`construction/corridor_tool.rs` + `roads/input.rs`); duplicate rail tool removed. Always-live preview; click start / bend, double-click / Enter / click a line to finish, Backspace / RMB undo point, Esc cancel, Shift 15° lock, drag points. Per-stretch verdict Ok / Works (bridge type, cut/fill, level crossing, overpass) / Blocked (reason). Road sheet: length, ok/works/blocked, truck trip, notes; picker offers Dirt / Gravel / Paved / Concrete / Motorway. `PlaceCorridor` scenario step drives the same code. Capture: paved road queued with a "concrete beam bridge 120 m"; gravel road to the town blocked ("climb 17.2% steeper than 12.0%"); rail down the west bank blocked (39 m / 91 m cut/fill > 18 m). Checks 7–25 µs per path |
+| Bridges | DONE (code) | `infrastructure/bridge_types.rs` + `assets/config/infrastructure/bridge_types.ron` (culvert, timber beam, timber trestle, pontoon, Bailey, steel girder, prestressed concrete, steel truss, stone arch; cheapest type that fits per line); `construction/bridges.rs` (`BridgeBook`, sections pier to pier, flood damage per section, blast damage per section from `BlastCraterBook.recent`, routing open / closed); placeholder model per type and section condition (`render/pixel_world/layers.rs` `push_bridge_model`); deck height fixed at build. Capture: gravel road got a Bailey (2 sections), paved road a concrete beam bridge (4 sections); small missile hit 2 concrete sections (standing); dam burst dropped every section of both |
+
+## Bridges (2026-11-20)
+
+A bridge is a structure type, not a road surface. A line built across water (depth > 0.3 m at
+build time) becomes a bridge bank to bank; its type is the cheapest in the line's preference list
+that spans the length and depth (`choose_bridge_type`). Built in sections (one per pier span).
+
+- **Flood:** per section, load = depth × speed² × pier exposure (single span 0.35), + 10 × overtop
+  multiplier × (water above soffit) × speed²; over strength costs integrity; 0 = section falls.
+  Pontoons ride the water and fail when current > 2 m/s.
+- **Blast:** per section, warhead peak × linear falloff at the section ÷ blast toughness; impact
+  points kept for the deck scorch. A small warhead drops a few timber spans or scars concrete; a
+  large one drops a concrete span.
+- **Routing:** intact bridge carries traffic over flooded river tiles; any fallen section or water
+  over the deck closes it (routes re-plan via the road stamp).
+
+## Open items (operator list 2026-11-20 + found in captures)
+
+| # | Item | Notes |
+|---|------|-------|
+| B-1 | **Fire: timber bridges don't burn** | Timber beam / trestle sections should take fire damage from the fire grid (and burn as fuel) |
+| B-2 | **2D map: bridges look like roads** | Tactical map needs a bridge symbol per type and fallen-section gaps |
+| B-3 | **Repair: fallen sections stay down** | Belongs to D-7 repair/rebuild (deferred program); meanwhile only a rebuild of the line restores it |
+| B-4 | **Choice and cost** | Player can't pick a different bridge type (picker on the amber stretch); bridge materials (`materials_per_m`) are not charged — road/rail builds have no material bill yet either (RD-6 cost item) |
+| B-5 | **Flood load calibration** | Dam-burst peak load reached ~20 000 on the concrete bridge (strength 400): implies ~30 m/s or a large overtop term. Check `WaterTileProbe::flow` magnitudes at the burst, cap speed at a physical value, and decide whether any type should survive a full dam burst |
+| B-6 | Missile vs flood not separated in the dump | Record what dropped each section (blast / flood) so captures show cause |
+| R-1 | Leg book empty at end of run | Stale-leg prune (3 600 ticks) empties it under time skip, so trip time vs straight line is not measured; prune by count instead, or dump mid-run |
+| R-2 | `roads.drawn_segments` / picks 0 in the last captures | Voxel road surface empty at dump time (presentation mode at the end?); earlier capture had 11/11. Check the dump timing vs presentation |
+| R-3 | Placement tool feel | Not tried by hand: operator hands-on round for controls, preview, readout |
+| R-4 | Route assist ("follow terrain" auto path) | RD-6 item not built |
+| R-5 | Curved paths commit many short segments | Each sampled stretch is its own line; undo removes one stretch at a time — group a path into one undo step |
+| R-6 | Cut/fill and works are labels only | Bridges are modelled; cuts, fills, level crossings and overpasses are not applied to terrain or the graph yet |
+| R-7 | Pre-existing lib test failures | construction (fuel-break resource in 2 integration tests, demolish funnel, voxel massing), scenario (`CommitConstructionSiteEvent` message not initialised in 4 tests, trigger registry), economy (4 LOG-B/LOG-C supply-chain tests), AI faction activation — not caused by roads work; confirm on the previous commit |
+| R-8 | `step_logistics_orders_system` has 13 params | Pre-existing over the ≤ 8 rule; RD-3 added the leg book read |
+
+## Next (when work resumes)
+
+1. B-5 calibration (one capture) and B-6 cause in the dump.
+2. R-1 leg-book measure, then RD-4 congestion.
+3. B-1 timber fire, B-2 2D bridge symbol, B-4 bridge type choice + materials with the RD-6 material bill.
+4. Then the order above (RD-2 → RD-5 → RD-7 rail → …).
