@@ -262,7 +262,7 @@ Background agents stopped. Work in this order, one at a time, each verified in o
 | T-16 | Hitch: upd_control_relax up to 236 ms at frames 2400–2750 (OP-9 impact freeze itself not reproduced: no hitch >150 ms after frame 2900) | open |
 | T-6 | OP-9 freeze on missile impact | open — HITCH_MS=150 capture through the strike |
 | T-7 | Verify blue water look, short missile tail, bridge deck (OP-7/8) in a capture | open |
-| T-8 | OP-7 rest: roads not clickable, trucks don't drive roads | on deck (larger feature) |
+| T-8 | OP-7 rest: roads not clickable, trucks don't drive roads | clicks DONE; trucks on roads -> PLAN-ROADS-v1 ([`plan_roads_v1.md`](plan_roads_v1.md)) |
 
 ## Design: destruction changes the world (operator 2026-11-19 night)
 
