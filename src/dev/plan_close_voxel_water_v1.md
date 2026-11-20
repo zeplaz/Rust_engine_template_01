@@ -229,3 +229,14 @@ Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, D
 | OP-4 | Dam ops card "Crest" shows max cell crest (bank height) | Show the crest over the channel (span invert + height) |
 | OP-5 | A stand-in for every tree stage, always visible, both views | Grass / shrub / young / old / burning / burnt / dead / regrowth each get a voxel mesh (3D) and a symbol (2D) with slight per-instance variation (species, rand); no stage may draw nothing at any LOD |
 | OP-6 | Fire effects in sync | Ground burn tint, flame/ember particles, smoke and the burning tree stage must follow one burning state + one clock (today they look out of sync) |
+
+## On deck (operator, 2026-11-19 late)
+
+| Id | Item | Notes |
+|:---|:---|:---|
+| OP-7 | Road bridge at (152..162, 110) | Scene play-prop road + bridge (fixture `road_bridge_tile` (160,110)). Renders as a thin dark glitchy strip that follows the ground INTO the river (no deck height), not clickable, no truck drives across it |
+| OP-8 | Missile leaves a yellow streak | Trail segments (`BallisticPresentFrame.trail_segments` drawn as columns in voxel units layer) persist / read as a streak |
+| OP-9 | Freeze on missile impact | Hitch at impact — measure with HITCH_MS (blast execute / ignition / crater mask / remesh) |
+| OP-10 | Extra water downstream of the dam | Following the river past the dam, more water appears at one point (ROI south edge 96 → static water beyond / composite pack seam) |
+| OP-11 | Reservoir fills unevenly behind the dam | Uneven / wonky build-up upstream after the dam is built |
+| OP-12 | S3 drown premise unmet | No forest cell submerged 14 days → no drowned/dead stands for S9; evaluate drowning from solver depth per forest cell |
