@@ -142,11 +142,14 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     // foam is cut into streaks along the flow and capped, so a fast flood reads blue + white
     // streaks instead of a white/grey sheet.
     let sp = dot(world_xy, vec2<f32>(0.9, 1.7)) * 1.3;
-    let sp_aa = clamp(1.0 - fwidth(sp) * 0.5, 0.0, 1.0);
+    // Stripes vanish well before they reach pixel size (they read as zigzag moire on a
+    // zoomed-out flood), and foam only marks genuinely turbulent water, not every fast cell.
+    let sp_aa = clamp(1.0 - fwidth(sp) * 1.5, 0.0, 1.0);
+    let foam_w = smoothstep(0.45, 0.9, foam01);
     let streak = smoothstep(0.55, 0.95, sin(sp + scroll_mix * 3.1416) * 0.5 + 0.5) * sp_aa;
-    tint = mix(tint, FOAM, clamp(foam01 * streak * 0.35 + shoreline * 0.4, 0.0, 0.20));
+    tint = mix(tint, FOAM, clamp(foam_w * streak * 0.35 + shoreline * 0.4, 0.0, 0.20));
 
-    var alpha = WATER_ALPHA_BASE + depth01 * WATER_ALPHA_DEPTH + foam01 * streak * 0.08 + shoreline * 0.1;
+    var alpha = WATER_ALPHA_BASE + depth01 * WATER_ALPHA_DEPTH + foam_w * streak * 0.08 + shoreline * 0.1;
     alpha *= clamp(material.zoom_alpha * 0.15 + 0.85, 0.85, 1.0); // zoom fade no longer greys the river
     return vec4<f32>(tint, clamp(alpha, 0.0, WATER_ALPHA_MAX));
 }
