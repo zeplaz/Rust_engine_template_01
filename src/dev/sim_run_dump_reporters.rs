@@ -961,6 +961,7 @@ pub fn flush_sim_run_dump(
     for key in [
         "construction",
         "dam_site",
+        "voxel_camera",
         "vegetation",
         "canopy",
         "economy",
@@ -992,4 +993,45 @@ pub fn flush_sim_run_dump(
     if super::sim_run_dump::write_dump_files_pub(&body) {
         state.last_tick = arm.tick;
     }
+}
+
+/// Voxel camera / pick rectangle (counts only): the map fill rect the click maths uses, and where
+/// the dam centre projects with that maths — compare against the screenshot to measure an offset.
+pub fn dump_voxel_camera_section(
+    arm: Res<SimDumpArm>,
+    cam: Option<Res<crate::render::pixel_world::PixelWorldCameraFrame>>,
+    fill: Option<Res<crate::gui::tactical::sim_map_rtt::TacticalMapFillRect>>,
+    field: Option<Res<crate::render::pixel_world::PixelWorldTerrainField>>,
+    window: Query<&bevy::window::Window, With<bevy::window::PrimaryWindow>>,
+    mut dump: ResMut<SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    let win = window.single().ok().map(|w| json!({
+        "logical": [w.width(), w.height()],
+        "physical": [w.physical_width(), w.physical_height()],
+        "scale_factor": w.scale_factor(),
+    }));
+    let proj = |tile: Vec2| -> Option<[f32; 2]> {
+        let (cam, field) = (cam.as_deref()?, field.as_deref()?);
+        let h = field.surface_at(tile)?;
+        let p = crate::render::pixel_world::tile_to_world3(tile, h);
+        cam.world_to_screen(p).map(|v| [v.x, v.y])
+    };
+    dump.put_value(
+        "voxel_camera",
+        json!({
+            "active": cam.as_deref().is_some_and(|c| c.active),
+            "screen_min": cam.as_deref().map(|c| [c.screen_min.x, c.screen_min.y]),
+            "screen_max": cam.as_deref().map(|c| [c.screen_max.x, c.screen_max.y]),
+            "aspect": cam.as_deref().map(|c| c.aspect),
+            "fill_valid": fill.as_deref().map(|f| f.valid),
+            "fill_min": fill.as_deref().map(|f| [f.min.x, f.min.y]),
+            "fill_max": fill.as_deref().map(|f| [f.max.x, f.max.y]),
+            "window": win,
+            "dam_centre_screen": proj(Vec2::new(160.0, 160.0)),
+            "valley_south_screen": proj(Vec2::new(160.0, 120.0)),
+        }),
+    );
 }
