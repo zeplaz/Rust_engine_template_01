@@ -29,11 +29,11 @@ struct VertexOutput {
 // Blue, semi-transparent: the bed shows through shallows, deep water reads darker blue.
 const WATER_DEEP: vec3<f32> = vec3<f32>(0.040, 0.140, 0.360);
 const WATER_MID: vec3<f32> = vec3<f32>(0.090, 0.270, 0.560);
-const WATER_SHALLOW: vec3<f32> = vec3<f32>(0.140, 0.380, 0.680);
+const WATER_SHALLOW: vec3<f32> = vec3<f32>(0.090, 0.300, 0.600);
 const FOAM: vec3<f32> = vec3<f32>(0.86, 0.92, 0.97);
-const WATER_ALPHA_BASE: f32 = 0.52;
-const WATER_ALPHA_DEPTH: f32 = 0.33;
-const WATER_ALPHA_MAX: f32 = 0.86;
+const WATER_ALPHA_BASE: f32 = 0.70;
+const WATER_ALPHA_DEPTH: f32 = 0.20;
+const WATER_ALPHA_MAX: f32 = 0.90;
 
 @vertex
 fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {
@@ -95,10 +95,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // foam is cut into streaks along the flow and capped, so a fast flood reads blue + white
     // streaks instead of a white/grey sheet.
     let streak = smoothstep(0.55, 0.95, sin(dot(in.world_xy, vec2<f32>(0.9, 1.7)) * 1.3 + scroll_mix * 6.2831) * 0.5 + 0.5);
-    tint = mix(tint, FOAM, clamp(foam01 * streak * 0.35 + shoreline * 0.4, 0.0, 0.35));
+    tint = mix(tint, FOAM, clamp(foam01 * streak * 0.35 + shoreline * 0.4, 0.0, 0.20));
 
     var alpha = WATER_ALPHA_BASE + depth01 * WATER_ALPHA_DEPTH + foam01 * streak * 0.08 + shoreline * 0.1;
-    alpha *= clamp(globals.zoom_alpha * 0.55 + 0.45, 0.4, 1.0);
+    alpha *= clamp(globals.zoom_alpha * 0.15 + 0.85, 0.85, 1.0); // zoom fade no longer greys the river
     // Soft edge so subsampled ROI does not brick-wall.
     let edge = smoothstep(0.0, 0.04, min(min(in.uv.x, 1.0 - in.uv.x), min(in.uv.y, 1.0 - in.uv.y)));
     alpha *= edge;
