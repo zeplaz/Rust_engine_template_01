@@ -87,6 +87,8 @@ pub struct DamFloodBenchmarkBook {
     pub s0_gauge_balance_err: f32,
     /// Latched while stage == S2Impound (DF-2 matrix).
     pub s2_downstream_ratio: f32,
+    /// Peak drowned stand count (S3).
+    pub s3_drowned_peak: u32,
     /// Peak hydro MW seen at/after S4Operate (DF-6 matrix).
     pub s4_hydro_mw_peak: f32,
     /// DF-7: metres between strike impact and aim (latched on first impact).
@@ -123,6 +125,7 @@ impl Default for DamFloodBenchmarkBook {
             seeded: false,
             s0_gauge_balance_err: 1.0,
             s2_downstream_ratio: 1.0,
+            s3_drowned_peak: 0,
             s4_hydro_mw_peak: 0.0,
             s5_impact_err_m: 999.0,
             s7_wave_arrival_g3_s: 0.0,

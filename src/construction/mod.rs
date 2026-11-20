@@ -82,7 +82,7 @@ pub mod water_obstacles;
 pub mod rubble;
 pub use dam_barrier::{
     attach_dam_body_on_commit_system, dam_integrity_progress_system,
-    release_barrier_of_removed_dams_system, publish_dam_column_crests_system,
+    release_barrier_of_removed_dams_system, publish_dam_column_crests_system, dam_face_velocities_m_s,
     dam_column_crest_fraction,
     derate_turbines_from_dam_damage_system, dam_kind_site_suitable, dam_spans_banks,
     dam_spans_banks_with_runtime, ensure_dam_surface_water_roi_system, erode_dam_columns_by_flow,
