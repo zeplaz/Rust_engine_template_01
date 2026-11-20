@@ -54,6 +54,38 @@ pub fn rubble_heap_op(tiles: &[IVec2], height_m: f32, material: SiteMaterial) ->
     })
 }
 
+/// Share of a breached dam's rubble left as a remnant on its footprint (the rest washes out).
+pub const DAM_BREACH_REMNANT_SHARE: f32 = 0.1;
+/// The washed-out share settles this many tiles downstream, over a fan of this radius (tiles).
+pub const DAM_BREACH_FAN_OFFSET_TILES: f32 = 20.0;
+pub const DAM_BREACH_FAN_RADIUS_TILES: f32 = 20.0;
+
+/// Remnant on the footprint + thin downstream fan; total volume = the embankment's rubble.
+/// Downstream is -z (the dam scene's valley runs +z -> -z, like the solver's river edges).
+#[must_use]
+pub fn breached_dam_rubble_ops(tiles: &[IVec2], height_m: f32, material: SiteMaterial) -> Vec<GroundDeformOp> {
+    let Some(GroundDeformOp::Heap { centre_m, outer_radius_m, volume_m3, .. }) =
+        rubble_heap_op(tiles, height_m, material)
+    else {
+        return Vec::new();
+    };
+    let tm = TILE_METRES_GAMEPLAY;
+    vec![
+        GroundDeformOp::Heap {
+            centre_m,
+            inner_radius_m: 0.0,
+            outer_radius_m,
+            volume_m3: volume_m3 * DAM_BREACH_REMNANT_SHARE,
+        },
+        GroundDeformOp::Heap {
+            centre_m: centre_m - Vec2::new(0.0, DAM_BREACH_FAN_OFFSET_TILES * tm),
+            inner_radius_m: 0.0,
+            outer_radius_m: DAM_BREACH_FAN_RADIUS_TILES * tm,
+            volume_m3: volume_m3 * (1.0 - DAM_BREACH_REMNANT_SHARE),
+        },
+    ]
+}
+
 /// Standing height (m) a site would collapse from; dams use their crest height.
 fn standing_height_m(site: &ConstructionSite, fp: &SiteFootprint, dam: Option<&super::DamBody>) -> f32 {
     if let Some(d) = dam {
@@ -70,9 +102,13 @@ pub fn rubble_from_destroyed_sites_system(
     mut destroyed: MessageReader<SiteDestroyed>,
     mut queue: ResMut<GroundDeformQueue>,
     mut standing: Local<HashMap<Entity, (Vec<IVec2>, f32)>>,
+    mut dams_seen: Local<HashSet<Entity>>,
 ) {
     let mut seen = std::collections::HashSet::new();
     for (e, site, fp, dam) in &sites {
+        if dam.is_some() {
+            dams_seen.insert(e);
+        }
         seen.insert(e);
         let h = standing_height_m(site, fp, dam);
         if h > 0.0 {
@@ -94,11 +130,20 @@ pub fn rubble_from_destroyed_sites_system(
             continue;
         }
         let height = remembered.unwrap_or(ev.height_m);
-        if let Some(op) = rubble_heap_op(&ev.tiles, height, ev.material) {
+        if dams_seen.remove(&ev.entity) {
+            // A breached embankment is washed out by its own flood: a low remnant stays on the
+            // footprint and the rest settles as a thin sediment fan downstream. Heaping the whole
+            // 40 m x 0.6 earth volume on the footprint built a ~24 m rubble weir that held the
+            // reservoir back and made the breach drain like syrup.
+            for op in breached_dam_rubble_ops(&ev.tiles, height, ev.material) {
+                queue.push(op);
+            }
+        } else if let Some(op) = rubble_heap_op(&ev.tiles, height, ev.material) {
             queue.push(op);
         }
     }
     standing.retain(|e, _| seen.contains(e));
+    dams_seen.retain(|e| seen.contains(e));
 }
 
 /// Ember ring thrown by a blast on a burning site reaches this many disk radii out.
@@ -208,9 +253,18 @@ pub fn rubble_from_failed_dam_columns_system(
             let gone = super::dam_column_crest_fraction(*i) <= 0.0;
             if gone && !*was {
                 // Downstream = -z in the dam scene valley (river runs +z -> -z).
-                let foot = [*t - IVec2::Y];
-                if let Some(op) = rubble_heap_op(&foot, body.crest_m, SiteMaterial::Earth) {
-                    queue.push(op);
+                // The failed column's earth is carried off by the water pouring through the gap:
+                // a thin fan just below the dam, not a column-high heap at the toe.
+                if let Some(GroundDeformOp::Heap { centre_m, volume_m3, .. }) =
+                    rubble_heap_op(&[*t], body.crest_m, SiteMaterial::Earth)
+                {
+                    let tm = TILE_METRES_GAMEPLAY;
+                    queue.push(GroundDeformOp::Heap {
+                        centre_m: centre_m - Vec2::new(0.0, 4.0 * tm),
+                        inner_radius_m: 0.0,
+                        outer_radius_m: 6.0 * tm,
+                        volume_m3,
+                    });
                 }
             }
             *was = gone;

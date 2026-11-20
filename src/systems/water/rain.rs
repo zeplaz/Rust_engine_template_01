@@ -450,9 +450,12 @@ mod tests {
             .sum::<f32>()
             / 64.0;
         assert!(bowl_mean > 0.05, "the rain gathered in the bowl: mean {bowl_mean} m");
-        // A slope cell far from the bowl holds only the thin sheet in transit.
+        // A slope cell far from the bowl holds only the thin sheet in transit: the Manning normal
+        // depth of the rain falling on the catchment above it (all of it runs off, clay is full).
         let slope_cell = f.depth_m[f.idx(10, 50)];
-        assert!(slope_cell < 0.01, "the slope runs off: {slope_cell} m");
+        let q_sheet = 40.0 / 3.6e6 * f.dx_m * (S - 50) as f32; // m2/s per metre of width
+        let sheet_m = (q_sheet * crate::systems::water::step_kernel::MANNING_LAND / (0.4 / f.dx_m).sqrt()).powf(0.6);
+        assert!(slope_cell < 1.25 * sheet_m, "the slope runs off: {slope_cell} m vs sheet {sheet_m} m");
         // More than the bowl's own catchment ended up in it: it drains the slope above it.
         let rain_on_bowl = 40.0 / 3.6e6 * 1800.0;
         assert!(bowl_mean > 3.0 * rain_on_bowl, "the bowl is fed by the slope above it, not only by its own rain");

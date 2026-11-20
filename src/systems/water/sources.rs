@@ -3,7 +3,7 @@
 //! The world draws each river as a channel (`River` class cells held at a baseline depth in
 //! `ref_depth_m`, width grown with the flow). The river is seeded at that depth, so its baseflow is
 //! what keeps it there: the uniform-flow discharge of the channel at its baseline depth and its own
-//! surface slope, in the solver's own flux law. Fed less it would drain to a film, fed more it would
+//! surface slope, by the Manning law the solver's friction settles to. Fed less it would drain to a film, fed more it would
 //! pile up and flood its banks. Each headwater cell injects its column's share, bounded by what the
 //! cross-section can carry at [`RIVER_MAX_SPEED_MPS`].
 //!
@@ -16,7 +16,7 @@
 //! sources in proportion to their columns. Flow accumulation from world generation is not kept at
 //! runtime; the channel mask and baseline depths it produced are, and they are all this needs.
 
-use super::step_kernel::nominal_conductance;
+use super::step_kernel::channel_baseflow_m3s;
 use super::surface_water::SurfaceWaterField;
 
 /// Fastest cross-section mean speed (m/s) a source may be given (steep mountain streams).
@@ -126,7 +126,7 @@ impl SurfaceWaterField {
             }
             if !fed && drop_m > 0.0 {
                 let h = self.ref_depth_m[i];
-                let uniform = nominal_conductance(self.dx_m, h) * drop_m;
+                let uniform = channel_baseflow_m3s(self.dx_m, h, drop_m);
                 let section = h * self.dx_m * RIVER_MAX_SPEED_MPS;
                 list.push(RiverSource { cell: i as u32, derived_m3s: uniform.min(section) });
             }

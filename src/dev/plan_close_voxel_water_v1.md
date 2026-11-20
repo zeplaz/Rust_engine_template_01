@@ -423,3 +423,14 @@ pool window, outlets, spillways, `transfer_through_dam`) until WM-3. Dam-scene r
 
 ### Destruction interactions pass (2026-11-20, agent stopped at usage limit; code in tree, construction/combat tests green)
 `construction/destruction.rs` (destroyed-site cause log), rubble + dust only from real destruction, material-tinted dust, `combat/blast_casualties.rs` (blast -> formation strength), `economy/logistics/orders/vehicle_blast.rs` (blast -> trucks). Staged blast collapse + burning rubble: verify in a capture.
+
+### Momentum water (2026-11-20) — DONE
+Diffusive face law (no momentum, damped ~30x by the stability cap) replaced by local-inertial
+shallow water with streamwise advection + Manning friction (`step_kernel.rs`); radiating open edges;
+river sources at Manning uniform flow. Breached dam rubble: 10% remnant + thin downstream fan
+(was a ~24 m earth weir). Capture (dam scene): after breach the pool falls 26 m in 1440 s (was
+1.8 m), the river below peaks at 14 m deep at ~360 s and recedes, inundation peaks at 9767 tiles
+then drains to 3483; wave reaches G3 in 26 s (was 413 s); river back at ~225 m3/s baseflow; S2
+now passes (0.41). Cost: solver 2 -> 12 ms (CFL 0.25 + advection), frames avg 35 / p95 62 ms
+debug. Natural world (playquad 512): lakes/streams settle, no artefacts; inflow total 19 980 m3/s
+from 333 derived sources (watch over long runs).

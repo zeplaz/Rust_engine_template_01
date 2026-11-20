@@ -1,8 +1,20 @@
-//! Active-tile virtual-pipes kernel (WM-1): the one explicit step of [`SurfaceWaterField`].
+//! Active-tile shallow-water kernel (WM-1): the one explicit step of [`SurfaceWaterField`].
+//!
+//! Momentum scheme: every cell face (east `qx`, north `qy`) carries a signed discharge that is
+//! integrated, not recomputed from the head. Per face, per sub-step (per-width `q = Q/dx`):
+//!
+//! `q' = (q - dt (g h_f dÎ·/dx + d(qÂ²/h)/dx)) / (1 + g dt nÂ² |q| / h_f^(7/3))`
+//!
+//! the local-inertial law of Bates et al. 2010 (LISFLOOD-FP) with first-order upwind streamwise
+//! advection (the pure local-inertial law tops out at `sqrt(g h)`, half a dam-break front) and
+//! semi-implicit Manning friction (so a flood dissipates and recedes). `h_f` is the flow depth at
+//! the face, clipped at walls and crests; a face whose depth is below [`FACE_DRY_M`] carries
+//! nothing and loses its momentum. The donor limiter still stops a cell from sending more than it
+//! holds, so volume is conserved exactly.
 //!
 //! Only tiles in [`WaterTileGrid::active`] are touched. A face is solved only when both of its
-//! cells sit in active tiles, so a sleeping tile is never written and volume is conserved exactly.
-//! The flux / limiter buffers are reused across sub-steps (no allocation per sub-step).
+//! cells sit in active tiles, so a sleeping tile is never written. The flux / limiter buffers are
+//! reused across sub-steps (no allocation per sub-step).
 
 use super::dam_faces::{Pipe, NO_DONOR};
 use super::surface_water::{SurfaceWaterField, G_MPS2};
@@ -20,25 +32,41 @@ pub struct StepScratch {
     pipe_out: Vec<f32>,
 }
 
-/// Calibrated so dam-break front celerity matches Ritter 2*sqrt(g*h) within +-10%
-/// (see `measure_dam_break_front_distance`).
-pub const VP_CONDUCTANCE_K: f32 = 16.0;
+/// Courant number of a sub-step on the gravity wave `sqrt(g h_max)`. The upwind advection needs
+/// `(|u| + c) dt / dx < 1` and a dam-break front runs at `|u| + c = 2 sqrt(g h)`, so this sits well
+/// under the pure local-inertial bound of ~0.7.
+pub const WAVE_CFL: f32 = 0.25;
 
-/// The sim's base solver step (s): one sub-step of a 1x sim second.
-pub const NOMINAL_SUBSTEP_S: f32 = 1.0;
+/// Manning roughness (s/m^(1/3)) of a face touching baseline water (river / lake channel).
+pub const MANNING_CHANNEL: f32 = 0.035;
+/// Manning roughness of a face over open ground (floodplain, fields, rubble).
+pub const MANNING_LAND: f32 = 0.05;
+/// Faces shallower than this carry no flow and reset their momentum (m).
+pub const FACE_DRY_M: f32 = 1.0e-4;
+/// Depth floor used to turn a face discharge into a speed for the advection term (m).
+const ADVECTION_MIN_DEPTH_M: f32 = 0.01;
+/// A face never runs faster than this many gravity-wave speeds of its deeper cell (the dam-break
+/// tip is `2 sqrt(g h)`): a stability bound on the explicit step, not a flow law.
+const FACE_SPEED_CAP: f32 = 3.0;
+/// Baseline depth above which a cell counts as channel water for the roughness.
+const CHANNEL_MIN_DEPTH_M: f32 = 0.05;
 
-/// The face conductance (m2/s) the kernel gives water of depth `h_m` at the nominal sub-step: the
-/// physical `K dx sqrt(g h)` capped by the stability bound `A / (8 dt)`, with `dt` the nominal step
-/// or the gravity-wave CFL (`dx / (2 sqrt(g h))`) when that is shorter. What a river's channel
-/// conveys per metre of surface fall, so its baseflow keeps it at its baseline depth.
+/// Sub-steps of `dt_s` so each stays under [`WAVE_CFL`] for water `h_max_m` deep.
 #[must_use]
-pub fn nominal_conductance(dx_m: f32, h_m: f32) -> f32 {
-    let c = (G_MPS2 * h_m.max(0.0)).sqrt();
-    if c <= 0.0 {
+pub fn wave_substeps(dx_m: f32, h_max_m: f32, dt_s: f32) -> u32 {
+    let wave = WAVE_CFL * dx_m / (G_MPS2 * h_max_m.max(0.1)).sqrt();
+    (dt_s / wave.max(1e-3)).ceil().clamp(1.0, 256.0) as u32
+}
+
+/// Uniform-flow discharge (m3/s) of one `dx`-wide channel cell at depth `h_m` under a surface fall
+/// of `drop_m` over `dx_m` (Manning, [`MANNING_CHANNEL`]): the steady state of the face law above,
+/// so a river fed this much keeps its baseline depth.
+#[must_use]
+pub fn channel_baseflow_m3s(dx_m: f32, h_m: f32, drop_m: f32) -> f32 {
+    if h_m <= 0.0 || drop_m <= 0.0 {
         return 0.0;
     }
-    let dt = NOMINAL_SUBSTEP_S.min(0.5 * dx_m / c);
-    (VP_CONDUCTANCE_K * dx_m * c).min(dx_m * dx_m / (8.0 * dt))
+    dx_m * h_m.powf(5.0 / 3.0) / MANNING_CHANNEL * (drop_m / dx_m).sqrt()
 }
 
 /// Does the edge of tile `t` facing `dir` (0=E, 1=W, 2=N(+z), 3=S) hold any water?
@@ -142,7 +170,7 @@ impl SurfaceWaterField {
         m
     }
 
-    /// One virtual-pipes sub-step over the active tiles. Conservative volume update; returns the
+    /// One momentum sub-step over the active tiles. Conservative volume update; returns the
     /// boundary volume actually applied (inflow - open-edge drain, m3).
     pub fn step_active_substep(&mut self, dt_s: f32) -> f64 {
         if !self.wired || self.width < 2 || self.height < 2 || dt_s <= 0.0 {
@@ -167,49 +195,69 @@ impl SurfaceWaterField {
         let mut tg = std::mem::take(&mut self.tiles);
         let (nx, nz) = (tg.nx as usize, tg.nz as usize);
 
-        // Stability bound: flux = C*d(eta) is explicit diffusion, stable only while C*dt/A <= 1/4
-        // per face. Above it (deep reservoir) cells overshoot their neighbours and blow up into an
-        // odd-even checkerboard. Capping each face at A/(8*dt) means a cell can never pass a
-        // neighbour in one sub-step; when the sub-step is small enough the physical conductance is
-        // used unchanged.
-        let c_stable = cell_a / (8.0 * dt_s);
-        let conductance = |h_a: f32, h_b: f32| -> f32 {
-            // Upwind depth so dry-bed wetting is not starved by a zero neighbour.
-            let hp = h_a.max(h_b);
-            if hp < 1e-4 {
-                0.0
-            } else {
-                // Gravity-wave scale: C = k*dx*sqrt(g*h) -> volume flux = C*d(eta).
-                (VP_CONDUCTANCE_K * dx * (G_MPS2 * hp).sqrt()).min(c_stable)
-            }
-        };
+        if self.qx_m3s.len() != n {
+            self.qx_m3s = vec![0.0; n];
+            self.qy_m3s = vec![0.0; n];
+        }
 
-        // Pass 1: face fluxes. CLOSE-W4: only the donor (higher surface) side gives water and the
-        // driving head is capped at the donor's depth, so a dry cell gives nothing and a thin film
-        // over a terrain step can't push the whole bed drop.
+        // Pass 1: face fluxes by the momentum law (module docs). `state` is the flow depth at the
+        // face and the surface step across it, clipped at walls and crests: a wall shuts the face
+        // unless the water clears its top, and over a crest the depth is the water above it.
         {
-            let face = |i: usize, j: usize| -> f32 {
-                let (h_i, h_j) = (self.depth_m[i], self.depth_m[j]);
-                let raw_i = self.bed_m[i] + h_i;
-                let raw_j = self.bed_m[j] + h_j;
+            let dt = dt_s;
+            let state = |i: usize, j: usize| -> Option<(f32, f32)> {
+                let raw_i = self.bed_m[i] + self.depth_m[i];
+                let raw_j = self.bed_m[j] + self.depth_m[j];
                 let crest = self.wall_top_m(i).max(self.wall_top_m(j));
-                let (eta_i, eta_j) = if crest > 0.0 {
-                    // Barrier blocks unless stage above crest; effective surfaces clip to the crest.
+                let (eta_i, eta_j, floor) = if crest > 0.0 {
                     if raw_i.max(raw_j) <= crest {
-                        return 0.0;
+                        return None;
                     }
-                    (raw_i.max(crest), raw_j.max(crest))
+                    (raw_i.max(crest), raw_j.max(crest), self.bed_m[i].max(self.bed_m[j]).max(crest))
                 } else {
-                    (raw_i, raw_j)
+                    (raw_i, raw_j, self.bed_m[i].max(self.bed_m[j]))
                 };
-                let f = conductance(h_i, h_j) * (eta_i - eta_j);
-                let drop = (raw_i - raw_j).abs();
-                let donor_h = if f >= 0.0 { h_i } else { h_j };
-                if donor_h < 1e-4 || drop <= 0.0 {
-                    0.0
+                let hf = eta_i.max(eta_j) - floor;
+                (hf >= FACE_DRY_M).then_some((hf, eta_j - eta_i))
+            };
+            let roughness = |i: usize, j: usize| -> f32 {
+                let wet = |c: usize| self.ref_depth_m.get(c).is_some_and(|r| *r > CHANNEL_MIN_DEPTH_M);
+                if wet(i) || wet(j) {
+                    MANNING_CHANNEL
                 } else {
-                    f * (donor_h / drop).min(1.0)
+                    MANNING_LAND
                 }
+            };
+            // Streamwise momentum flux qÂ²/h (per-width units) through the face between `a` and `b`.
+            let momentum_flux = |a: usize, b: usize, q_total: f32| -> f32 {
+                state(a, b).map_or(0.0, |(hk, _)| {
+                    let qw = q_total / dx;
+                    qw * qw / hk.max(ADVECTION_MIN_DEPTH_M)
+                })
+            };
+            // New discharge of the face between `i` and `j = i + stride` from the old ones `qs`.
+            let new_q = |i: usize, j: usize, stride: usize, qs: &[f32], has_prev: bool, has_next: bool| -> f32 {
+                let Some((hf, d_eta)) = state(i, j) else {
+                    return 0.0;
+                };
+                let qw = qs[i] / dx;
+                let own = momentum_flux(i, j, qs[i]);
+                let advect = if qw >= 0.0 {
+                    if has_prev {
+                        (own - momentum_flux(i - stride, i, qs[i - stride])) / dx
+                    } else {
+                        0.0
+                    }
+                } else if has_next {
+                    (momentum_flux(j, j + stride, qs[j]) - own) / dx
+                } else {
+                    0.0
+                };
+                let n_man = roughness(i, j);
+                let drive = G_MPS2 * hf * d_eta / dx + advect;
+                let friction = 1.0 + G_MPS2 * dt * n_man * n_man * qw.abs() / (hf * hf * hf.cbrt());
+                let cap = FACE_SPEED_CAP * (G_MPS2 * self.depth_m[i].max(self.depth_m[j])).sqrt() * hf;
+                ((qw - dt * drive) / friction).clamp(-cap, cap) * dx
             };
             for k in 0..tg.active.len() {
                 let t = tg.active[k] as usize;
@@ -223,10 +271,18 @@ impl SurfaceWaterField {
                     for x in x0..x1 {
                         let i = z * w + x;
                         if x + 1 < w {
-                            sc.flux_x[i] = if x + 1 < x1 || east_ok { face(i, i + 1) } else { 0.0 };
+                            sc.flux_x[i] = if x + 1 < x1 || east_ok {
+                                new_q(i, i + 1, 1, &self.qx_m3s, x > 0, x + 2 < w)
+                            } else {
+                                0.0
+                            };
                         }
                         if z + 1 < h {
-                            sc.flux_y[i] = if z + 1 < z1 || north_ok { face(i, i + w) } else { 0.0 };
+                            sc.flux_y[i] = if z + 1 < z1 || north_ok {
+                                new_q(i, i + w, w, &self.qy_m3s, z > 0, z + 2 < h)
+                            } else {
+                                0.0
+                            };
                         }
                         // Faces owned by a sleeping neighbour tile carry nothing.
                         if x == x0 && x > 0 && !west_on {
@@ -334,14 +390,15 @@ impl SurfaceWaterField {
                         dvol += q_src * dt_s;
                         applied += f64::from(q_src * dt_s);
                     }
-                    // Open map edge: an edge cell drains like a free overfall into a ghost cell that
-                    // holds the baseline (static) depth, so water leaves only while the edge stands
-                    // above the world's own water and hands over without a step.
+                    // Open map edge: a radiating boundary into a ghost cell that holds the baseline
+                    // (static) depth. The excess over it leaves at the gravity-wave speed, so water
+                    // goes only while the edge stands above the world's own water and hands over
+                    // without a step (and without reflecting a wave back).
                     if q_src <= 0.0 && (x == 0 || z == 0 || x == w - 1 || z == h - 1) {
                         let h0 = self.depth_m[i];
                         let h_ghost = self.ref_depth_m.get(i).copied().unwrap_or(0.0);
                         if h0 > h_ghost {
-                            let q_free = conductance(h0, h_ghost) * (h0 - h_ghost);
+                            let q_free = dx * (G_MPS2 * h0).sqrt() * (h0 - h_ghost);
                             let avail = (h0 * cell_a + dvol).max(0.0);
                             let sink = (q_free * dt_s).clamp(0.0, avail);
                             dvol -= sink;
@@ -391,7 +448,7 @@ impl SurfaceWaterField {
         applied
     }
 
-    /// One virtual-pipes sub-step over the whole field (wakes every tile first). For callers that
+    /// One momentum sub-step over the whole field (wakes every tile first). For callers that
     /// drive the kernel directly (benchmarks, unit tests); the simulation uses [`Self::step`].
     pub fn step_virtual_pipes_sub(&mut self, dt_s: f32) -> f64 {
         if !self.wired {
