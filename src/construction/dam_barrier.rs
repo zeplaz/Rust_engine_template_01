@@ -360,15 +360,72 @@ pub fn dam_integrity_progress_system(
                     }
                 }
             }
-        } else {
-            let q_leak = leak_flow_from_integrity(body.integrity_01);
-            if q_leak > 0.0 {
-                breach.push(crate::systems::water::BarrierBreachSpec {
-                    dam: Some(entity),
-                    clear_crest: false,
-                    breach_flow_m3s: q_leak,
-                });
+        }
+        // Partial damage is no global leak any more: each damaged column lowers its own crest
+        // (`publish_dam_column_crests_system`), so water flows through that notch in 2D.
+    }
+}
+
+/// Remaining crest fraction of a dam column from its integrity: full at 1, nothing left at the
+/// collapse threshold.
+#[must_use]
+pub fn dam_column_crest_fraction(integrity: f32) -> f32 {
+    let c = crate::construction::demolish::DESTRUCTIBLE_COLLAPSE_INTEGRITY;
+    ((integrity - c) / (1.0 - c).max(1e-3)).clamp(0.0, 1.0)
+}
+
+/// DW-3: publish each installed dam's per-column crest when its column integrity changes
+/// (blast carve or flow erosion). Construction publishes; water applies
+/// ([`crate::systems::water::BarrierColumnRequest`]).
+pub fn publish_dam_column_crests_system(
+    dams: Query<(Entity, &DamBody, &SiteFootprint)>,
+    mut request: ResMut<crate::systems::water::BarrierColumnRequest>,
+    mut published: Local<std::collections::HashMap<Entity, Vec<f32>>>,
+) {
+    published.retain(|e, _| dams.contains(*e));
+    for (e, body, fp) in &dams {
+        if !body.barrier_installed || body.column_integrity.len() != fp.tiles.len() {
+            continue;
+        }
+        let fracs: Vec<f32> = body.column_integrity.iter().map(|i| dam_column_crest_fraction(*i)).collect();
+        let last = published.entry(e).or_insert_with(|| vec![1.0; fracs.len()]);
+        if last.len() != fracs.len() {
+            *last = vec![1.0; fracs.len()];
+        }
+        for ((t, f), l) in fp.tiles.iter().zip(&fracs).zip(last.iter_mut()) {
+            // Publish in 2 % steps: erosion moves every tick, the crest needn't.
+            if (*f - *l).abs() >= 0.02 || (*f <= 0.0 && *l > 0.0) {
+                request.push(*t, *f);
+                *l = *f;
             }
+        }
+    }
+}
+
+/// A dam that leaves the world by any path (demolish confirm, structural collapse, scenario
+/// teardown) releases its barrier: the crest lives in the water field, so without this the
+/// despawned dam kept blocking the river as an invisible wall. Construction publishes the
+/// request; water clears the crest (sole writer, [`crate::systems::water::BarrierBreachRequest`]).
+pub fn release_barrier_of_removed_dams_system(
+    dams: Query<(Entity, &DamBody)>,
+    mut removed: RemovedComponents<DamBody>,
+    mut breach: ResMut<crate::systems::water::BarrierBreachRequest>,
+    mut installed: Local<std::collections::HashSet<Entity>>,
+) {
+    for e in removed.read() {
+        if installed.remove(&e) {
+            breach.push(crate::systems::water::BarrierBreachSpec {
+                dam: Some(e),
+                clear_crest: true,
+                breach_flow_m3s: 0.0,
+            });
+        }
+    }
+    for (e, body) in &dams {
+        if body.barrier_installed {
+            installed.insert(e);
+        } else {
+            installed.remove(&e);
         }
     }
 }
@@ -653,6 +710,34 @@ pub fn dam_spans_banks_with_runtime(
 mod tests {
     use super::*;
 
+    /// A dam despawned by any path (demolish funnel) releases its crest in the water field.
+    #[test]
+    fn removed_dam_releases_its_barrier() {
+        let mut app = App::new();
+        app.init_resource::<crate::systems::water::BarrierBreachRequest>()
+            .add_systems(Update, release_barrier_of_removed_dams_system);
+        let dam = app
+            .world_mut()
+            .spawn(DamBody { barrier_installed: true, ..default() })
+            .id();
+        let unbuilt = app.world_mut().spawn(DamBody::default()).id();
+        app.update();
+        app.world_mut().despawn(unbuilt);
+        app.update();
+        assert!(
+            app.world_mut().resource_mut::<crate::systems::water::BarrierBreachRequest>().drain_merged().is_none(),
+            "a dam with no barrier releases nothing"
+        );
+        app.world_mut().despawn(dam);
+        app.update();
+        let spec = app
+            .world_mut()
+            .resource_mut::<crate::systems::water::BarrierBreachRequest>()
+            .drain_merged()
+            .expect("despawned dam must release its crest");
+        assert!(spec.clear_crest);
+    }
+
     /// 5×5 ROI on a 300 m valley floor (real terrain metres), dam row at z=2.
     fn dam_field(up_depth: f32) -> crate::systems::water::SurfaceWaterField {
         let mut f = crate::systems::water::SurfaceWaterField::default();
@@ -734,6 +819,7 @@ mod tests {
             min_release_m3s: 0.0,
             spillway_c: 1.7,
             orifice_cd: 0.6,
+            ..Default::default()
         };
         let head = 2.0_f32;
         let gate = 0.5_f32;

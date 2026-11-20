@@ -91,17 +91,48 @@ impl DestructibleDamageStage {
 
 /// Per-site PHYS-08 damage ladder (component on the construction site entity).
 ///
-/// Sole writers: fire integrity sync + blast scar/collapse paths. Terminal
+/// Sole writers: fire integrity sync + blast scar/collapse paths + flood proxy. Terminal
 /// [`DestructibleDamageStage::Collapsed`] must still despawn via [`execute_demolish_at_tile`].
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq)]
 pub struct DestructibleDamage {
     pub stage: DestructibleDamageStage,
+    /// Sim time (µs) spent at `stage`, capped at [`DESTRUCTIBLE_STAGE_DWELL_MICROS`]; drives
+    /// [`Self::advance_toward`] (D-8 staged collapse).
+    pub held_micros: u64,
 }
 
 impl Default for DestructibleDamage {
     fn default() -> Self {
         Self {
             stage: DestructibleDamageStage::Intact,
+            // Onset of damage shows its first stage immediately; later stages wait a dwell.
+            held_micros: DESTRUCTIBLE_STAGE_DWELL_MICROS,
+        }
+    }
+}
+
+/// Sim time a site rests at one stage before the next stage of an in-progress collapse (D-8).
+pub const DESTRUCTIBLE_STAGE_DWELL_MICROS: u64 = 2_000_000;
+
+impl DestructibleDamage {
+    /// Shared staged-collapse rule for causes that jump straight to a target stage (flood).
+    /// Advances at most one rank per [`DESTRUCTIBLE_STAGE_DWELL_MICROS`] toward `target`, so
+    /// Scarred → Compromised → Collapsed are visible before the demolish funnel runs.
+    /// Gradual causes (fire integrity) already pass the stages and only `escalate`; an
+    /// instantaneous blast ≥ gate stays an immediate `Collapsed` by cause.
+    pub fn advance_toward(&mut self, target: DestructibleDamageStage, dt_micros: u64) {
+        self.held_micros = self
+            .held_micros
+            .saturating_add(dt_micros)
+            .min(DESTRUCTIBLE_STAGE_DWELL_MICROS);
+        if target.rank() > self.stage.rank() && self.held_micros >= DESTRUCTIBLE_STAGE_DWELL_MICROS
+        {
+            self.stage = match self.stage {
+                DestructibleDamageStage::Intact => DestructibleDamageStage::Scarred,
+                DestructibleDamageStage::Scarred => DestructibleDamageStage::Compromised,
+                _ => DestructibleDamageStage::Collapsed,
+            };
+            self.held_micros = 0;
         }
     }
 }
@@ -210,7 +241,10 @@ pub fn execute_demolish_at_tile(
     mut voxel_occupation: Option<&mut crate::strategic::VoxelOccupationBook>,
     commit_authority_enabled: bool,
     mut destruction_mask: Option<&mut crate::render::pixel_world::DestructionMaskBook>,
-    mut debris_frame: Option<&mut crate::render::WorldFireParticleFrame>,
+    // Retired: collapse dust is now drawn by `render::fire_vfx::blast_dust::detect_collapse_dust`
+    // from the vanished footprint (the old one-frame push here was rebuilt away every frame).
+    // Param stays until every caller drops its argument (follow-up: disaster_proxy owner).
+    _debris_frame: Option<&mut crate::render::WorldFireParticleFrame>,
 ) -> (u32, Vec<CommitConstructionSiteEvent>) {
     let target = IVec2::new(tile.x as i32, tile.z as i32);
     let mut n = 0u32;
@@ -232,10 +266,6 @@ pub fn execute_demolish_at_tile(
         // DESTROY-T2: mark footprint destroyed before despawn (same-frame GPU collapse).
         if let Some(mask) = destruction_mask.as_mut() {
             mask.mark_destroyed_tiles(footprint.tiles.iter().copied());
-        }
-        // DEBRIS-FX: dust burst into shared particle spine (covers remesh lag).
-        if let Some(frame) = debris_frame.as_mut() {
-            super::debris_fx::emit_collapse_debris_burst(frame, footprint.tiles.iter().copied());
         }
         if planned.placement.is_some() {
             let sid = SiteId(site.site_id);

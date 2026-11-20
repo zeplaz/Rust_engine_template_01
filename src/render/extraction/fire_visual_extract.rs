@@ -124,6 +124,7 @@ impl Plugin for FireVisualFramePlugin {
             .init_resource::<FireAtmosphereAggregate>()
             .init_resource::<FireClusterScratch>()
             .init_resource::<WorldFireParticleFrame>()
+            .init_resource::<crate::render::fire_vfx::blast_dust::BlastDustBook>()
             .init_resource::<crate::render::DomainOverlayGpuFrame>()
             .init_resource::<ActiveFireChunkSet>()
             .init_resource::<crate::render::FirePlaybackStabilityStats>()
@@ -252,6 +253,9 @@ impl Plugin for FireVisualFramePlugin {
                     // PERF-INSTR-VFX-001: bracket the WorldFireParticleFrame build → `fire_particles`.
                     attrib_fire_particles_before,
                     emit_world_fire_particles_from_projection,
+                    crate::render::fire_vfx::site_fire::append_site_fire_particles,
+                    crate::render::fire_vfx::blast_dust::detect_collapse_dust,
+                    crate::render::fire_vfx::blast_dust::append_blast_dust_particles,
                     attrib_fire_particles_after,
                 )
                     .chain()

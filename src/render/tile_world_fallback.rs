@@ -996,6 +996,7 @@ fn sync_tile_fallback_raster_policy(
         &crate::strategic::SiteFootprint,
         Option<&crate::strategic::ProceduralBuildingSpec>,
         Option<&crate::systems::fire::SiteFireState>,
+        Option<&crate::construction::DestructibleDamage>,
     )>,
     sim_tick: Option<Res<crate::systems::sim_control::SimTick>>,
     overlay: Option<Res<crate::render::SharedOverlayFieldBuffers>>,
@@ -1049,7 +1050,7 @@ fn sync_tile_fallback_raster_policy(
                         .fold(0.0f32, f32::max)
                 })
                 .unwrap_or(0.0);
-            for (planned, site, footprint, spec, fire) in &sites {
+            for (planned, site, footprint, spec, fire, damage) in &sites {
                 // PT-5 Option B: prefer SiteFireState wash; fall back to chunk overlay max.
                 let fire_heat = fire
                     .map(|f| f.stage.burn_wash01().max(f.heat_mean))
@@ -1059,6 +1060,7 @@ fn sync_tile_fallback_raster_policy(
                     catalog.as_deref(),
                     tick,
                     fire_heat,
+                    damage.map(|d| d.stage),
                     planned,
                     site,
                     footprint,

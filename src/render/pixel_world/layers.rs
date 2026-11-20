@@ -334,7 +334,9 @@ pub(crate) fn sync_pixel_world_trees(
 
     let mut budget = TREE_CHUNKS_PER_FRAME;
     for (_, row) in wanted {
-        let key = tree_chunk_key(row, lod, field.revision);
+        // Trees stand on `field.ground` only: key on the ground revision. `revision` bumps on
+        // every water rebuild, which re-meshed every tree chunk per water tick (flicker).
+        let key = tree_chunk_key(row, lod, field.ground_revision);
         if state.chunks.get(&row.coord).is_some_and(|s| s.key == key) {
             continue;
         }
@@ -572,6 +574,33 @@ pub fn ray_hit_site_boxes(boxes: &[SitePickBox], origin: Vec3, dir: Vec3) -> Opt
     best
 }
 
+/// D-1: deterministic broken-column pattern for a damaged building. Scarred: a few columns
+/// lose their top; Compromised: about half are down to a stub-to-half height. `None` = intact.
+#[must_use]
+pub(crate) fn damage_stage_column_fracs(
+    stage: crate::construction::DestructibleDamageStage,
+    tiles: &[IVec2],
+) -> Option<Vec<f32>> {
+    use crate::construction::DestructibleDamageStage as S;
+    let (share, lo, hi) = match stage {
+        S::Intact => return None,
+        S::Scarred => (0.25, 0.70, 0.90),
+        S::Compromised => (0.55, 0.15, 0.55),
+        S::Collapsed => (1.0, 0.0, 0.1),
+    };
+    Some(
+        tiles
+            .iter()
+            .map(|t| {
+                let h = mix64((t.x as u32 as u64) ^ ((t.y as u32 as u64) << 32) ^ 0xD1);
+                let u = (h & 0xFFFF) as f32 / 65535.0;
+                let v = ((h >> 16) & 0xFFFF) as f32 / 65535.0;
+                if u < share { lo + (hi - lo) * v } else { 1.0 }
+            })
+            .collect(),
+    )
+}
+
 fn build_site(
     buf: &mut MeshBuf,
     planned: &PlannedSite,
@@ -579,10 +608,18 @@ fn build_site(
     fp: &SiteFootprint,
     field: &PixelWorldTerrainField,
     mask: Option<&super::DestructionMaskBook>,
+    column_frac: Option<&[f32]>,
 ) {
     if fp.tiles.is_empty() {
         return;
     }
+    // DW-3: per-column remaining height (dam columns broken by blast or eroded by flow). Indexed
+    // like `fp.tiles`; a broken column is drawn as a low rubble stub, so the notch water pours
+    // through is visible.
+    let col_frac: std::collections::HashMap<IVec2, f32> = match column_frac {
+        Some(f) if f.len() == fp.tiles.len() => fp.tiles.iter().copied().zip(f.iter().copied()).collect(),
+        _ => Default::default(),
+    };
     // DESTROY-T2.1: omit columns on destroyed mask tiles (same book as ground VS).
     let tiles: std::collections::HashSet<IVec2> = fp
         .tiles
@@ -604,21 +641,30 @@ fn build_site(
     let roof = tint.map(|c| [c[0] * 0.9, c[1] * 0.9, c[2] * 0.9]).unwrap_or(roof);
     let side = shade(wall, dim * 0.92, 1.0);
     let cap = shade(roof, dim, 1.0);
+    let rubble = shade([0.42, 0.38, 0.33], dim, 1.0);
+    let stub = (lo + 0.6).min(hi);
+    let top_of = |t: &IVec2| -> f32 {
+        col_frac.get(t).map_or(hi, |f| (lo + (hi - lo) * f.clamp(0.0, 1.0)).max(stub))
+    };
     for t in &tiles {
         let (x0, y0, x1, y1) = (t.x as f32, t.y as f32, (t.x + 1) as f32, (t.y + 1) as f32);
-        // Top.
-        buf.quad([p3(x0, y0, hi), p3(x1, y0, hi), p3(x1, y1, hi), p3(x0, y1, hi)], Vec3::Y, [Vec2::ZERO; 4], cap);
-        // Outer walls only.
+        let h = top_of(t);
+        let broken = col_frac.get(t).is_some_and(|f| *f < 0.999);
+        // Top: intact cap, or broken rubble face.
+        buf.quad([p3(x0, y0, h), p3(x1, y0, h), p3(x1, y1, h), p3(x0, y1, h)], Vec3::Y, [Vec2::ZERO; 4], if broken { rubble } else { cap });
+        // Walls: outer faces, plus the face down to a lower (broken) neighbour column.
         for (d, n, a, b) in [
             (IVec2::new(0, -1), Vec3::Z, Vec2::new(x0, y0), Vec2::new(x1, y0)),
             (IVec2::new(0, 1), Vec3::NEG_Z, Vec2::new(x0, y1), Vec2::new(x1, y1)),
             (IVec2::new(-1, 0), Vec3::NEG_X, Vec2::new(x0, y0), Vec2::new(x0, y1)),
             (IVec2::new(1, 0), Vec3::X, Vec2::new(x1, y0), Vec2::new(x1, y1)),
         ] {
-            if tiles.contains(&(*t + d)) {
+            let nb = *t + d;
+            let base = if tiles.contains(&nb) { top_of(&nb) } else { lo };
+            if base >= h {
                 continue;
             }
-            buf.quad([p3(a.x, a.y, lo), p3(b.x, b.y, lo), p3(b.x, b.y, hi), p3(a.x, a.y, hi)], n, [Vec2::ZERO; 4], side);
+            buf.quad([p3(a.x, a.y, base), p3(b.x, b.y, base), p3(b.x, b.y, h), p3(a.x, a.y, h)], n, [Vec2::ZERO; 4], if broken { rubble } else { side });
         }
     }
     // Masts / stacks read the archetype at a glance once the shell stands.
@@ -661,7 +707,14 @@ pub(crate) fn sync_pixel_world_sites(
     cam: Res<PixelWorldCameraFrame>,
     field: Res<PixelWorldTerrainField>,
     mask: Option<Res<super::DestructionMaskBook>>,
-    sites: Query<(Entity, &PlannedSite, &ConstructionSite, &SiteFootprint)>,
+    sites: Query<(
+        Entity,
+        &PlannedSite,
+        &ConstructionSite,
+        &SiteFootprint,
+        Option<&crate::construction::DamBody>,
+        Option<&crate::construction::DestructibleDamage>,
+    )>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<StandardMaterial>>,
     mut state: Local<SiteLayerState>,
@@ -669,10 +722,24 @@ pub(crate) fn sync_pixel_world_sites(
     if !pixel_world_on(&mode, &cam, &field) {
         return;
     }
+    // Per-column remaining height: dams from their column integrity (DW-3), other sites from
+    // their damage stage (D-1: a damaged building shows broken columns before it collapses).
+    let col_fracs = |dam: Option<&crate::construction::DamBody>,
+                     dmg: Option<&crate::construction::DestructibleDamage>,
+                     tiles: &[IVec2]|
+     -> Option<Vec<f32>> {
+        if let Some(d) = dam {
+            return Some(d.column_integrity.iter().map(|i| crate::construction::dam_column_crest_fraction(*i)).collect());
+        }
+        dmg.and_then(|d| damage_stage_column_fracs(d.stage, tiles))
+    };
     let mut key = mix64(field.revision ^ mask.as_ref().map_or(0, |m| m.revision));
-    for (e, planned, site, fp) in &sites {
+    for (e, planned, site, fp, dam, damage) in &sites {
+        // Damage in 5 % steps re-meshes the layer (erosion moves every tick).
+        let dmg = col_fracs(dam, damage, &fp.tiles)
+            .map_or(0u64, |f| f.iter().fold(0u64, |h, x| mix64(h ^ (x * 20.0) as u64)));
         key = mix64(
-            key ^ e.to_bits()
+            key ^ dmg ^ e.to_bits()
                 ^ (site.phase as u64) << 48
                 ^ (planned.archetype as u64) << 56
                 ^ (fp.tiles.len() as u64) << 32
@@ -685,8 +752,9 @@ pub(crate) fn sync_pixel_world_sites(
     state.key = Some(key);
     let mut buf = MeshBuf::default();
     let mask_ref = mask.as_deref();
-    for (_, planned, site, fp) in &sites {
-        build_site(&mut buf, planned, site, fp, field.as_ref(), mask_ref);
+    for (_, planned, site, fp, dam, damage) in &sites {
+        let fr = col_fracs(dam, damage, &fp.tiles);
+        build_site(&mut buf, planned, site, fp, field.as_ref(), mask_ref, fr.as_deref());
     }
     let material = state
         .material
@@ -1554,5 +1622,64 @@ mod op7_bridge_tests {
         let (ha, hb) = bridge_deck_heights(&f, Vec2::new(1.5, 1.5), Vec2::new(14.5, 1.5)).expect("crosses water");
         assert!(ha >= 30.0 && hb >= 30.0, "deck at bank height: {ha} {hb}");
         assert!(bridge_deck_heights(&f, Vec2::new(0.5, 1.5), Vec2::new(4.5, 1.5)).is_none(), "dry road drapes");
+    }
+}
+
+#[cfg(test)]
+mod dw3_dam_column_tests {
+    use super::{build_site, MeshBuf};
+    use crate::render::pixel_world::PixelWorldTerrainField;
+    use crate::strategic::*;
+    use bevy::prelude::*;
+
+    /// DW-3: a broken dam column is drawn lower than the intact ones (visible notch).
+    #[test]
+    fn dw3_broken_dam_column_draws_a_notch() {
+        let mut f = PixelWorldTerrainField::default();
+        f.width = 8;
+        f.height = 4;
+        f.ground = vec![10.0; 32];
+        f.water = vec![f32::NEG_INFINITY; 32];
+        f.class = vec![Default::default(); 32];
+        let tiles: Vec<IVec2> = (0..6).map(|x| IVec2::new(x, 1)).collect();
+        let site = ConstructionSite {
+            site_id: 1,
+            owner: Entity::PLACEHOLDER,
+            archetype: SiteArchetype::Dam,
+            phase: SiteConstructionPhase::Operational,
+            operational_readiness: 1.0,
+        };
+        let planned = PlannedSite {
+            site_id: SiteId::UNASSIGNED,
+            origin: BuildSiteTile { x: 0, z: 1 },
+            footprint: FootprintTiles { width: 6, depth: 1 },
+            archetype: SiteArchetype::Dam,
+            layer: LayerType::Surface,
+            catalog_id: None,
+            placement: None,
+        };
+        let fp = SiteFootprint { tiles: tiles.clone(), layer: LayerType::Surface };
+        let top_over = |fracs: Option<&[f32]>, x: f32| {
+            let mut buf = MeshBuf::default();
+            build_site(&mut buf, &planned, &site, &fp, &f, None, fracs);
+            buf.positions
+                .iter()
+                .filter(|p| p[0] > x + 0.1 && p[0] < x + 0.9 || (p[0] - x).abs() < 1e-4 || (p[0] - x - 1.0).abs() < 1e-4)
+                .map(|p| p[1])
+                .fold(f32::NEG_INFINITY, f32::max)
+        };
+        let fracs = [1.0, 1.0, 0.0, 1.0, 1.0, 1.0];
+        let intact = top_over(None, 2.0);
+        let mut buf = MeshBuf::default();
+        build_site(&mut buf, &planned, &site, &fp, &f, None, Some(&fracs));
+        // Top quad of column x=2 (all four corners inside [2,3]) sits below the intact top.
+        let notch_top = buf
+            .positions
+            .chunks(4)
+            .zip(buf.normals.chunks(4))
+            .filter(|(q, n)| n[0][1] > 0.9 && q.iter().all(|p| p[0] >= 2.0 - 1e-4 && p[0] <= 3.0 + 1e-4))
+            .map(|(q, _)| q[0][1])
+            .fold(f32::INFINITY, f32::min);
+        assert!(notch_top < intact - 0.5, "notch {notch_top} vs intact {intact}");
     }
 }

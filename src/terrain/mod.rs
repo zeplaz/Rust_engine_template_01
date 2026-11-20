@@ -13,6 +13,7 @@ pub mod family;
 pub mod material;
 pub mod analysis;
 pub mod generation;
+pub mod ground_deform;
 pub mod mobility;
 pub mod fire;
 pub mod dynamic_overlay;

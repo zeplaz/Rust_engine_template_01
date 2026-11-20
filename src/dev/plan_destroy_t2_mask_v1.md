@@ -45,7 +45,7 @@ Suggested location: `src/render/pixel_world/destruction_mask.rs` (presentation) 
 | Piece | Path |
 |:---|:---|
 | Rust | `src/render/pixel_world/ground_material.rs` — `PixelWorldGroundMaterial` (`AsBindGroup` / Bevy `Material`) |
-| WGSL | `assets/shaders/pixel_world/ground_mask.wgsl` |
+| WGSL | `assets/shaders/pixel_world/ground_mask.wesl` |
 
 Bindings:
 
@@ -87,9 +87,9 @@ Must cite real `file:line` after impl:
 | Event | Hook |
 |:---|:---|
 | Demolish | [`demolish.rs:233`](../construction/demolish.rs) `mark_destroyed_tiles` in `execute_demolish_at_tile` |
-| Blast crater | [`blast.rs:175`](../construction/blast.rs) crater disk → `MASK_DESTROYED` |
+| Blast crater | [`blast.rs`](../construction/blast.rs) crater disk → `MASK_DAMAGED` only (scorch). Height comes from the terrain ground delta (`terrain/ground_deform.rs`, DW-1: bowl + ejecta rim); `MASK_DESTROYED` is for sites/buildings (a crater marked DESTROYED dropped the ground to the skirt floor). Scorch authority is `TerrainScorchField`. |
 | Dam collapse | [`dam_barrier.rs:295`](../construction/dam_barrier.rs) first Collapsed → footprint mask |
-| Ground material | [`terrain.rs:270`](../render/pixel_world/terrain.rs) `PixelWorldGroundMaterial` + [`ground_mask.wgsl`](../../assets/shaders/pixel_world/ground_mask.wgsl) VS collapse |
+| Ground material | [`terrain.rs`](../render/pixel_world/terrain.rs) `PixelWorldGroundMaterial` = `ExtendedMaterial<StandardMaterial, PixelWorldGroundExt>` (lit, sun shadows, 2026-11-19) + [`ground_mask.wesl`](../../assets/shaders/pixel_world/ground_mask.wesl) VS collapse; crater soot from MASK_DAMAGED, fire glow from `TerrainScorchField` (GPU-B) |
 
 ## Accept
 
@@ -115,7 +115,7 @@ BLOCKED  = Bevy Material bind or Image format blocks same-frame upload (document
 |:---|:---|
 | Add | `src/render/pixel_world/destruction_mask.rs` |
 | Add | `src/render/pixel_world/ground_material.rs` |
-| Add | `assets/shaders/pixel_world/ground_mask.wgsl` |
+| Add | `assets/shaders/pixel_world/ground_mask.wesl` |
 | Edit | `src/render/pixel_world/terrain.rs` — material swap + plugin register |
 | Edit | `src/render/pixel_world/mod.rs` — mod exports |
 | Edit | `src/construction/demolish.rs` / `blast.rs` / `dam_barrier.rs` — mask dirty after occupation clear |

@@ -1444,6 +1444,7 @@ pub struct WorldGeneratorPlugin;
 impl Plugin for WorldGeneratorPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<WorldGenParams>()
+            .add_plugins(crate::terrain::ground_deform::GroundDeformPlugin)
             .init_resource::<super::world_gen_dense_cache::DenseTerrainHydrationGate>()
             .init_resource::<WorldGenPending>()
             .init_resource::<WorldGenJobSlot>()

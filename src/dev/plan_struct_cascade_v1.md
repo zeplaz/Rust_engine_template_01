@@ -4,7 +4,7 @@
 |:---|:---|
 | **Id** | **STRUCT-CASCADE-v1** |
 | **Program** | [`plan_destruction_presentation_v1.md`](plan_destruction_presentation_v1.md) |
-| **Status** | **ADOPTED** — foundation→column mask cascade |
+| **Status** | **ADOPTED** — foundation→column mask cascade; reaches ordinary buildings since D-2 default roles (test `d2_d8_ordinary_building_flood_stages_cascade_and_funnel_collapse`, 2026-11-19) |
 | **Date** | 2026-11-17 |
 | **Owner** | `@coder` |
 | **Depends** | STRUCT-ROLE |

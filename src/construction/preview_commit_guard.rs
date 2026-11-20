@@ -50,6 +50,10 @@ pub fn building_may_occupy_water(catalog_id: Option<&str>) -> bool {
             matches!(
                 *token,
                 "dam" | "embankment" | "weir" | "coffer" | "buttress" | "gravity" | "arch"
+                    // River works: a hydro powerhouse sits at the dam toe in the channel, an
+                    // intake draws from it. They are built for water, so flood never collapses
+                    // them (DISASTER-PROXY) and placement allows them on water.
+                    | "hydro" | "powerhouse" | "intake"
             )
         })
 }

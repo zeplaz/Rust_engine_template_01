@@ -342,6 +342,8 @@ pub struct ChunkCellStand {
     pub submerged_since: Vec<f32>,
     /// Flood-killed standing dead (keeps woody `fuel_cap`).
     pub flood_dead: Vec<bool>,
+    /// Ground destroyed here (crater / rubble, DW-1): no stand, and capacity refresh must not re-rate it.
+    pub cleared: Vec<bool>,
     last_refresh: u64,
     last_snapshot: u64,
     last_pass: u64,
@@ -363,10 +365,42 @@ impl ChunkCellStand {
             seeded: false,
             submerged_since: vec![-1.0; n],
             flood_dead: vec![false; n],
+            cleared: vec![false; n],
             last_refresh: 0,
             last_snapshot: 0,
             last_pass: 0,
         }
+    }
+
+    /// Destroy the stand at cell `i` for good (ground deformed beneath it): bare, no fuel, no regrowth.
+    pub fn clear_cell(&mut self, i: usize) {
+        if i >= self.kind.len() {
+            return;
+        }
+        if self.cleared.len() != self.kind.len() {
+            self.cleared.resize(self.kind.len(), false);
+        }
+        if self.cleared[i] {
+            return;
+        }
+        self.cleared[i] = true;
+        if self.burnt_at[i] >= 0.0 {
+            self.burnt_count = self.burnt_count.saturating_sub(1);
+        }
+        self.kind[i] = StandKind::Bare;
+        self.full_cap[i] = 0.0;
+        self.fuel_cap[i] = 0.0;
+        self.burnt_at[i] = -1.0;
+        self.submerged_since[i] = -1.0;
+        self.flood_dead[i] = false;
+        // Force the next snapshot so the drawn stand disappears promptly.
+        self.last_snapshot = 0;
+    }
+
+    /// Stand at cell `i` was destroyed by ground deformation.
+    #[must_use]
+    pub fn is_cleared(&self, i: usize) -> bool {
+        self.cleared.get(i).copied().unwrap_or(false)
     }
 
     /// Default upland flood tolerance (~14 days). Species RON can override later.
@@ -663,7 +697,7 @@ fn refresh_capacity(
     let mut land = 0u32;
     for i in 0..n {
         // A burnt cell keeps the stand it had: it regrows toward that, whatever the canopy shows now.
-        if matrix.water[i].is_open_water() || stand.is_burnt(i) {
+        if matrix.water[i].is_open_water() || stand.is_burnt(i) || stand.is_cleared(i) {
             continue;
         }
         let d = suit
@@ -677,7 +711,7 @@ fn refresh_capacity(
     }
     let mean = if land > 0 { (sum / land as f32).max(1e-3) } else { 1.0 };
     for i in 0..n {
-        if stand.is_burnt(i) && !matrix.water[i].is_open_water() {
+        if stand.is_cleared(i) || (stand.is_burnt(i) && !matrix.water[i].is_open_water()) {
             continue;
         }
         let kind = StandKind::from_density(dens[i]);

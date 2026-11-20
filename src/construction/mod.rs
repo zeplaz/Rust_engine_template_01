@@ -78,8 +78,12 @@ pub use preview_commit_guard::{
     land_building_blocked_on_water, DAM_BANKS_ERROR, DAM_KIND_SITE_ERROR, WATER_FOOTPRINT_ERROR,
 };
 mod dam_barrier;
+pub mod water_obstacles;
+pub mod rubble;
 pub use dam_barrier::{
     attach_dam_body_on_commit_system, dam_integrity_progress_system,
+    release_barrier_of_removed_dams_system, publish_dam_column_crests_system,
+    dam_column_crest_fraction,
     derate_turbines_from_dam_damage_system, dam_kind_site_suitable, dam_spans_banks,
     dam_spans_banks_with_runtime, ensure_dam_surface_water_roi_system, erode_dam_columns_by_flow,
     install_barrier_from_operational_dam_system, leak_flow_from_integrity,
@@ -94,8 +98,6 @@ pub use disaster_proxy::{
     apply_structural_collapse_demolish, flood_foundation_integrity_proxy_system,
     StructuralCollapseQueue, FLOOD_FOUNDATION_DEPTH_M,
 };
-mod debris_fx;
-pub use debris_fx::{emit_collapse_debris_burst, DEBRIS_BURST_MAX};
 mod round4_corridor;
 pub use round4_corridor::CorridorPhaseDrawKind;
 mod sessions;
@@ -563,9 +565,22 @@ impl Plugin for BuildPlanningPlugin {
                     derate_turbines_from_dam_damage_system.after(dam_integrity_progress_system),
                     mirror_dam_control_to_barrier_system
                         .after(derate_turbines_from_dam_damage_system),
+                    structural_role::ensure_default_structural_roles_system
+                        .before(flood_foundation_integrity_proxy_system),
                     flood_foundation_integrity_proxy_system,
                     apply_structural_collapse_demolish
                         .after(flood_foundation_integrity_proxy_system),
+                    release_barrier_of_removed_dams_system
+                        .after(apply_structural_collapse_demolish),
+                    publish_dam_column_crests_system.after(dam_integrity_progress_system),
+                    water_obstacles::publish_water_obstacles_system
+                        .after(apply_structural_collapse_demolish),
+                    rubble::rubble_from_removed_sites_system
+                        .after(apply_structural_collapse_demolish)
+                        .before(crate::terrain::ground_deform::GroundDeformSet::Drain),
+                    rubble::rubble_from_failed_dam_columns_system
+                        .after(dam_integrity_progress_system)
+                        .before(crate::terrain::ground_deform::GroundDeformSet::Drain),
                 )
                     .run_if(in_simulation_or_editor),
             )

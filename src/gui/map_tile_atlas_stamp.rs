@@ -11,6 +11,7 @@ use std::collections::HashMap;
 
 use bevy::prelude::*;
 
+use crate::construction::DestructibleDamageStage;
 use crate::construction::procedural::{
     assembly_id_for, TileAtlasRegistry, TileVariantContext, VariantCatalog,
     VisualState,
@@ -80,15 +81,32 @@ pub struct TileAtlasGpuCache {
     pub handles: HashMap<String, Handle<Image>>,
 }
 
+/// Resolver damage `[0, 1]` for a PHYS-08 stage (variant catalog bands: <=0.25 clean,
+/// <=0.75 damaged, else ruined). A hit building reads damaged before it collapses.
+#[must_use]
+pub fn damage_for_destructible_stage(stage: DestructibleDamageStage) -> f32 {
+    match stage {
+        DestructibleDamageStage::Intact => 0.0,
+        DestructibleDamageStage::Scarred => 0.3,
+        DestructibleDamageStage::Compromised => 0.6,
+        DestructibleDamageStage::Collapsed => 0.9,
+    }
+}
+
 /// Build sim context for resolver (PT-4/5). Night/power stub until grid wired.
+///
+/// Damage is the worst of readiness, fire heat and the [`DestructibleDamage`] stage (set by
+/// blast, fire and flood), so every damage source drives the same damaged/ruined tile states.
+/// A missing `damaged_*`/`ruined` atlas key falls back inside the resolver (clean key).
 #[must_use]
 pub fn tile_variant_context_for_site(
     site: &ConstructionSite,
     sim_tick: u64,
     fire_heat: f32,
+    damage_stage: Option<DestructibleDamageStage>,
 ) -> TileVariantContext {
     // FIRE-ENTITY / PT-5: heat drives damaged_* until burning_* atlases exist.
-    let damage = if site.operational_readiness < 0.5 {
+    let heat_damage: f32 = if site.operational_readiness < 0.5 {
         0.5
     } else if fire_heat >= 0.72 {
         0.8
@@ -97,6 +115,7 @@ pub fn tile_variant_context_for_site(
     } else {
         0.0
     };
+    let damage = heat_damage.max(damage_stage.map_or(0.0, damage_for_destructible_stage));
     TileVariantContext {
         phase: site.phase,
         damage,
@@ -263,6 +282,7 @@ pub fn stamp_request_for_site(
     catalog: Option<&VariantCatalog>,
     sim_tick: u64,
     fire_heat: f32,
+    damage_stage: Option<DestructibleDamageStage>,
     planned: &PlannedSite,
     site: &ConstructionSite,
     footprint: &SiteFootprint,
@@ -272,7 +292,7 @@ pub fn stamp_request_for_site(
         // Resolver may still pick abandoned key; skip only when no atlas.
     }
     let entry = resolve_atlas_entry_for_planned_site(registry, planned, spec)?;
-    let ctx = tile_variant_context_for_site(site, sim_tick, fire_heat);
+    let ctx = tile_variant_context_for_site(site, sim_tick, fire_heat, damage_stage);
     let rotation = planned
         .placement
         .as_ref()
@@ -462,6 +482,52 @@ mod tests {
         }];
         apply_gpu_stamps_to_terrain_instances(&stamps, &mut instances);
         assert_eq!(instances[0].material_index, 7);
+    }
+
+    fn operational_site() -> ConstructionSite {
+        ConstructionSite {
+            site_id: 1,
+            owner: Entity::PLACEHOLDER,
+            archetype: crate::strategic::SiteArchetype::CivilHousing,
+            phase: SiteConstructionPhase::Operational,
+            operational_readiness: 1.0,
+        }
+    }
+
+    #[test]
+    fn destructible_stage_drives_damaged_then_ruined_tile_key() {
+        use crate::construction::procedural::{load_variant_catalog, resolve_tile_variant};
+        let catalog = load_variant_catalog().expect("catalog");
+        let available: HashMap<String, [f32; 4]> = [
+            "clean_day",
+            "clean_night_on",
+            "damaged_day",
+            "damaged_night_on",
+            "ruined",
+        ]
+        .iter()
+        .map(|k| ((*k).to_owned(), [0.0; 4]))
+        .collect();
+        let site = operational_site();
+        let key = |stage: Option<DestructibleDamageStage>| {
+            let ctx = tile_variant_context_for_site(&site, 0, 0.0, stage);
+            resolve_tile_variant(&catalog, ctx, &available).variant_key
+        };
+        assert_eq!(key(None), "clean_day");
+        assert_eq!(key(Some(DestructibleDamageStage::Intact)), "clean_day");
+        for s in [DestructibleDamageStage::Scarred, DestructibleDamageStage::Compromised] {
+            assert!(key(Some(s)).starts_with("damaged"), "{s:?}");
+        }
+        assert_eq!(key(Some(DestructibleDamageStage::Collapsed)), "ruined");
+    }
+
+    #[test]
+    fn destructible_stage_never_lowers_heat_damage() {
+        let site = operational_site();
+        let ctx = tile_variant_context_for_site(&site, 0, 0.9, Some(DestructibleDamageStage::Scarred));
+        assert!((ctx.damage - 0.8).abs() < 1e-6, "fire heat 0.8 outranks Scarred");
+        let ctx = tile_variant_context_for_site(&site, 0, 0.0, Some(DestructibleDamageStage::Compromised));
+        assert!((ctx.damage - 0.6).abs() < 1e-6);
     }
 
     #[test]
