@@ -207,6 +207,7 @@ pub fn dump_dam_flood_history_section(
     field: Option<Res<SurfaceWaterField>>,
     sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
     skip: Res<crate::systems::water::SlowDomainElapsedSecs>,
+    dams: Query<&crate::construction::DamBody>,
     mut rows: Local<Vec<Value>>,
     mut dump: ResMut<SimRunDump>,
 ) {
@@ -232,6 +233,18 @@ pub fn dump_dam_flood_history_section(
         "dead": book.stand_dead,
         "live": book.stand_live,
         "inundated": book.inundated_tiles,
+        // Dam state per sample: pins where a run diverges (erosion through a notch vs build
+        // timing vs crest never installed).
+        "crest_m": pick("channel_crest_m"),
+        "dam_installed": dams.iter().any(|d| d.barrier_installed),
+        "dam_integrity": dams.iter().map(|d| d.integrity_01).fold(f32::NAN, f32::min),
+        "dam_col_min": dams
+            .iter()
+            .flat_map(|d| d.column_integrity.iter().copied())
+            .fold(f32::NAN, f32::min),
+        "notch": field.as_deref().is_some_and(|f| f.hydraulics.barrier_damaged),
+        "breach_q": field.as_deref().map_or(0.0, |f| f.breach_flow_m3s),
+        "overtop_q": field.as_deref().map_or(0.0, |f| f.overtopping_flow_m3s),
     }));
     let peak_drowned = rows
         .iter()

@@ -961,6 +961,7 @@ pub fn flush_sim_run_dump(
     for key in [
         "construction",
         "dam_site",
+        "dam_flood_history",
         "voxel_camera",
         "vegetation",
         "canopy",
