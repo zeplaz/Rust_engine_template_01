@@ -51,6 +51,11 @@ mod defense_staging_stock;
 mod blast;
 mod blast_present;
 mod demolish;
+pub mod destruction;
+pub use destruction::{
+    drain_collapse_pending_system, CollapsePending, DestroyCause, SiteDestroyed, SiteMaterial,
+    BLAST_COLLAPSE_MICROS,
+};
 pub use demolish::{
     destructible_catastrophic_collapse, destructible_stage_from_integrity,
     execute_demolish_at_tile, DestructibleDamage, DestructibleDamageStage,
@@ -219,7 +224,7 @@ pub use grammar_labels::{
     human_massing_label,
 };
 pub use blast::{
-    BlastCraterBook, BlastIntent, BlastIntentQueue, BlastProfile, ConstructionBlastPlugin,
+    blast_radius_falloff, BlastCraterBook, BlastIntent, BlastIntentQueue, BlastProfile, ConstructionBlastPlugin,
 };
 pub use blast_present::BlastCraterDump;
 pub use hydro_coupling::{
@@ -578,9 +583,16 @@ impl Plugin for BuildPlanningPlugin {
                     publish_dam_column_crests_system.after(dam_integrity_progress_system),
                     water_obstacles::publish_water_obstacles_system
                         .after(apply_structural_collapse_demolish),
-                    rubble::rubble_from_removed_sites_system
+                    destruction::drain_collapse_pending_system
+                        .after(blast::execute_blast_intents_system)
+                        .before(apply_structural_collapse_demolish),
+                    rubble::rubble_from_destroyed_sites_system
                         .after(apply_structural_collapse_demolish)
+                        .after(destruction::drain_collapse_pending_system)
                         .before(crate::terrain::ground_deform::GroundDeformSet::Drain),
+                    rubble::ignite_rubble_of_burning_sites_system
+                        .after(apply_structural_collapse_demolish)
+                        .after(destruction::drain_collapse_pending_system),
                     rubble::rubble_from_failed_dam_columns_system
                         .after(dam_integrity_progress_system)
                         .before(crate::terrain::ground_deform::GroundDeformSet::Drain),
@@ -588,6 +600,7 @@ impl Plugin for BuildPlanningPlugin {
                     .run_if(in_simulation_or_editor),
             )
             .init_resource::<StructuralCollapseQueue>()
+            .add_message::<SiteDestroyed>()
             .register_type::<DamBody>()
             .register_type::<DamControl>()
             .register_type::<DamKind>()

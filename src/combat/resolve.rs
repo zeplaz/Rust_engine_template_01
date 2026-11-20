@@ -12,11 +12,14 @@
 //! breaks and retreats, and rallies at `rally_threshold`.
 //!
 //! The pure core is [`resolve_step`]; [`combat_resolve_system`] is the only writer of strength / morale
-//! and of the break / rally postures.
+//! and of the break / rally postures. Blast casualties arrive on the combat-owned
+//! [`super::blast_casualties::BlastCasualtyQueue`] and are applied to the combatants here, before the
+//! exchange.
 
 use bevy::prelude::*;
 
 use super::balance::{FortificationProfile, FrontBalance, UnitKind};
+use super::blast_casualties::{apply_blast_strikes, BlastCasualtyQueue};
 use super::drone_missions::{DroneCombatModifiers, DronePackage, DroneRole};
 use super::formation::{CombatClock, Formation, Posture};
 use super::fortification::FortificationIndex;
@@ -218,6 +221,7 @@ pub fn combat_resolve_system(
     fire_exp: Query<&crate::systems::fire::FormationFireExposure>,
     mut formations: Query<(Entity, &mut Formation)>,
     mut frag: Option<ResMut<TacticalFragMap>>,
+    mut blasts: Option<ResMut<BlastCasualtyQueue>>,
 ) {
     if clock.resolve_acc_s < balance.combat.step_s {
         return;
@@ -281,6 +285,14 @@ pub fn combat_resolve_system(
             }
         })
         .collect();
+    // Detonations since the last step: casualties land before the exchange, so the same
+    // write-back below records the loss and despawns a formation the blast destroyed.
+    if let Some(queue) = blasts.as_mut() {
+        let strikes = queue.take();
+        if !strikes.is_empty() {
+            apply_blast_strikes(&mut units, &strikes, &balance);
+        }
+    }
     let hostility = hostility_from_stances(stances.as_deref());
     let fort = |tile: IVec2, slot: u8| {
         let (owner, kind) = forts.as_ref()?.get(tile)?;

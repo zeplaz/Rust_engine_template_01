@@ -6,29 +6,29 @@
 
 use bevy::prelude::*;
 
-use crate::substrate::registry::WorldSubstrateRegistry;
-use crate::substrate::slab::ChunkKey;
 use crate::systems::sim_control::{SimControlSystemSet, SimStepClock};
-use crate::systems::weather::WeatherField;
+use crate::terrain::family::default_terrain_families;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
 
-use super::gauge::GaugeBook;
 use super::dam_faces::DamOps;
+use super::gauge::GaugeBook;
+use super::rain::{sample_weather_rain_system, SoilClass};
+use super::sources::BASELINE_WATER_MIN_M;
 use super::surface_water::{SurfaceWaterField, SurfaceWaterMode, FAR_FIELD_MIN_DT_S};
-use super::water_runtime::WaterClassRuntime;
 use super::{BarrierControlBook, BarrierControlIntent, SlowDomainTimeSkip, WorldStaticWaterDepth};
 
 /// Most solver steps one frame runs; a bigger backlog (high sim speed) is folded into longer
 /// steps so the cost stays bounded.
 pub const MAX_WATER_STEPS_PER_FRAME: u32 = 4;
 
-/// River baseflow the map field is fed with. WM-1 keeps the scene's config here; WM-2 replaces it
-/// with sources derived from the hydrology drainage graph.
+/// Scene overrides of the river sources. Rivers get their water from the world (`sources.rs`: each
+/// headwater cell injects its channel's baseflow); a scene that needs a fixed river pins it here.
 #[derive(Resource, Debug, Clone, Default)]
 pub struct SurfaceWaterBaseflow {
-    /// Inflow (m3/s) shared by the river cells that touch the upstream (north) map edge.
+    /// Pinned total river inflow (m3/s), shared over the sources by cross-section. 0 = every
+    /// source carries its own channel's discharge.
     pub inflow_m3s: f32,
     pub min_release_m3s: f32,
 }
@@ -40,14 +40,23 @@ pub struct SurfaceWaterSeedLatch {
     pub stamp: u64,
 }
 
-/// Bed (metres) and standing-water flag per map cell, sampled from the chunk matrices. `None`
-/// until every chunk of the `width` x `height` world is present: a partial bed would seed holes.
+/// What the world gives the water field per map cell: the bed (metres), standing-water flag, and
+/// the soil (class + resting moisture) the rain falls on.
+struct WorldSample {
+    bed: Vec<f32>,
+    standing: Vec<bool>,
+    soil: Vec<SoilClass>,
+    moisture: Vec<f32>,
+}
+
+/// Sample the chunk matrices into a [`WorldSample`]. `None` until every chunk of the `width` x
+/// `height` world is present: a partial bed would seed holes.
 fn sample_world_bed(
     chunks: &Query<(&Chunk, &ChunkCellMatrix)>,
     width: u32,
     height: u32,
     elevation_range_m: f32,
-) -> Option<(Vec<f32>, Vec<bool>)> {
+) -> Option<WorldSample> {
     let edge = CHUNK_TILES_SIM;
     let (cnx, cnz) = (width.div_ceil(edge), height.div_ceil(edge));
     let mut covered = vec![false; (cnx * cnz) as usize];
@@ -67,8 +76,17 @@ fn sample_world_bed(
         return None;
     }
     let n = (width as usize) * (height as usize);
-    let mut bed = vec![0.0_f32; n];
-    let mut standing = vec![false; n];
+    let family_soil: Vec<SoilClass> = default_terrain_families()
+        .families
+        .iter()
+        .map(|f| SoilClass::from_family_name(&f.name))
+        .collect();
+    let mut sample = WorldSample {
+        bed: vec![0.0_f32; n],
+        standing: vec![false; n],
+        soil: vec![SoilClass::default(); n],
+        moisture: vec![0.45_f32; n],
+    };
     for (chunk, matrix) in chunks.iter() {
         let origin = chunk.coord * edge as i32;
         for ly in 0..matrix.size.y {
@@ -79,20 +97,36 @@ fn sample_world_bed(
                 }
                 let i = (wz as usize) * (width as usize) + wx as usize;
                 let m = matrix.idx(lx, ly);
-                // Normalized 0..1 → metres via the world's height range (CLOSE-W3).
-                bed[i] = matrix.elevation[m] * elevation_range_m;
-                standing[i] = matrix.water.get(m).is_some_and(|c| c.is_standing());
+                // Normalized 0..1 -> metres via the world's height range (CLOSE-W3).
+                sample.bed[i] = matrix.elevation[m] * elevation_range_m;
+                sample.standing[i] = matrix.water.get(m).is_some_and(|c| c.is_standing());
+                if let Some(c) = matrix.family.get(m).and_then(|f| family_soil.get(f.0 as usize)) {
+                    sample.soil[i] = *c;
+                }
+                if let Some(mo) = matrix.moisture.get(m) {
+                    sample.moisture[i] = *mo;
+                }
             }
         }
     }
-    Some((bed, standing))
+    Some(sample)
+}
+
+/// Give the field its sources from the world: headwater cells of the river channels and the soil
+/// the rain falls on. The channel mask is the baseline water that is not standing (lake / sea).
+fn install_world_sources(field: &mut SurfaceWaterField, sample: &WorldSample, baseflow: &SurfaceWaterBaseflow) {
+    let river: Vec<bool> = (0..field.cell_count())
+        .map(|i| !sample.standing[i] && field.ref_depth_m.get(i).is_some_and(|d| *d > BASELINE_WATER_MIN_M))
+        .collect();
+    field.derive_river_sources(&river);
+    field.pin_river_inflow((baseflow.inflow_m3s > 0.0).then_some(baseflow.inflow_m3s));
+    field.set_soil(&sample.soil, &sample.moisture);
 }
 
 /// Allocate the map field once the world exists (and again when the world changes).
 pub fn seed_surface_water_system(
     mut latch: ResMut<SurfaceWaterSeedLatch>,
     mut field: ResMut<SurfaceWaterField>,
-    mut runtime: ResMut<WaterClassRuntime>,
     chunks: Query<(&Chunk, &ChunkCellMatrix)>,
     static_depth: Option<Res<WorldStaticWaterDepth>>,
     params: Option<Res<WorldGenParams>>,
@@ -101,10 +135,10 @@ pub fn seed_surface_water_system(
     let st = static_depth.as_deref().filter(|s| s.width > 0 && s.height > 0);
     let stale = st.is_some_and(|s| latch.stamp != s.stamp);
     if field.wired && latch.seeded && !stale {
-        // Config follows the baseflow resource; a loaded field regains its baseline.
+        // Config follows the baseflow resource; a loaded field regains its baseline and sources.
         if baseflow.is_changed() {
             let (q, rel) = (baseflow.inflow_m3s, baseflow.min_release_m3s);
-            field.inflow_m3s = q;
+            field.pin_river_inflow((q > 0.0).then_some(q));
             field.outlet_flow_m3s = q;
             field.hydraulics.min_release_m3s = rel;
         }
@@ -120,7 +154,14 @@ pub fn seed_surface_water_system(
                         }
                     }
                 }
-                field.configure_boundaries();
+            }
+        }
+        if field.river_sources_stale() && field.ref_depth_m.len() == field.cell_count() {
+            let range_m = params
+                .as_deref()
+                .map_or(crate::terrain::world_scale_contract::DEFAULT_ELEVATION_RANGE_M, |p| p.elevation_range_m);
+            if let Some(sample) = sample_world_bed(&chunks, field.width, field.height, range_m) {
+                install_world_sources(&mut field, &sample, &baseflow);
             }
         }
         return;
@@ -138,11 +179,11 @@ pub fn seed_surface_water_system(
         .as_deref()
         .map_or(crate::terrain::world_scale_contract::DEFAULT_ELEVATION_RANGE_M, |p| p.elevation_range_m);
     // Not every chunk exists yet (world still generating): wait, never seed a partial bed.
-    let Some((bed, standing)) = sample_world_bed(&chunks, width, height, range_m) else {
+    let Some(sample) = sample_world_bed(&chunks, width, height, range_m) else {
         return;
     };
 
-    field.allocate(0, 0, width, height, bed, baseflow.inflow_m3s);
+    field.allocate(0, 0, width, height, sample.bed.clone(), 0.0);
     field.mode = SurfaceWaterMode::VirtualPipes;
     field.hydraulics.min_release_m3s = baseflow.min_release_m3s;
     field.outlet_flow_m3s = baseflow.inflow_m3s;
@@ -151,28 +192,27 @@ pub fn seed_surface_water_system(
     let static_wet = st.map_or(0, |s| field.seed_from_static_depth(s));
     // Standing water starts level at the world water line over the real bed (at rest).
     let leveled = params.as_deref().map_or(0, |p| {
-        field.seed_standing_water(&standing, p.biome_tuning.shallow_water_height_max * range_m)
+        field.seed_standing_water(&sample.standing, p.biome_tuning.shallow_water_height_max * range_m)
     });
     field.recompute_mass();
-    runtime.project_from_field(&field, None, 0.0);
+    install_world_sources(&mut field, &sample, &baseflow);
     latch.seeded = true;
     latch.stamp = st.map_or(0, |s| s.stamp);
 
     info!(
         target: "water::solver",
-        "SurfaceWaterField map {width}x{height} static_wet={static_wet} leveled_standing={leveled} inflow={}",
-        baseflow.inflow_m3s
+        "SurfaceWaterField map {width}x{height} static_wet={static_wet} leveled_standing={leveled} river_sources={} inflow={:.1} m3/s",
+        field.river_sources().len(),
+        field.inflow_m3s
     );
 }
 
 pub fn step_surface_water_system(
     mut field: ResMut<SurfaceWaterField>,
-    mut runtime: ResMut<WaterClassRuntime>,
     control: Res<BarrierControlIntent>,
     book: Res<BarrierControlBook>,
     skip: Res<SlowDomainTimeSkip>,
     clock: Res<SimStepClock>,
-    weather: Option<Res<WeatherField>>,
 ) {
     // The solver runs on the sim clock: no sim step this frame (paused, or between steps) = no
     // water motion.
@@ -188,17 +228,6 @@ pub fn step_surface_water_system(
     let fallback = DamOps::from(&*control);
     field.set_dam_ops(|owner| owner.and_then(|e| book.get(e)).unwrap_or(fallback));
 
-    if let Some(wx) = weather.as_ref() {
-        let mean_mm_h = if !wx.next.rain_mm_h.is_empty() {
-            let s: f32 = wx.next.rain_mm_h.iter().sum();
-            s / wx.next.rain_mm_h.len() as f32
-        } else {
-            0.0
-        };
-        let area = (field.width as f32) * (field.height as f32) * field.dx_m * field.dx_m;
-        field.rain_runoff_m3s = (mean_mm_h / 1000.0 / 3600.0) * area;
-    }
-
     let sim_secs = clock.step_secs() * clock.due as f32;
     // Time skip rides the sim clock like `SlowDomainElapsedSecs` (ecology): each due sim step
     // advances the reservoir by `dt_slow_secs` (OP-12). Only then may a shut-in dam's reservoir
@@ -206,9 +235,8 @@ pub fn step_surface_water_system(
     let skip_dt = skip.dt_slow_secs.max(1) as f32 * clock.due as f32;
     let far_field = skip.enabled && skip_dt >= FAR_FIELD_MIN_DT_S && field.far_field_eligible();
     field.mode = if far_field { SurfaceWaterMode::LevelPool } else { SurfaceWaterMode::VirtualPipes };
-    let dt_total = if far_field {
+    if far_field {
         field.advance(skip_dt);
-        skip_dt
     } else {
         // Real-time water: one solver step per due sim step (folded into longer steps beyond
         // MAX_WATER_STEPS_PER_FRAME so a fast sim cannot stall the frame).
@@ -217,9 +245,7 @@ pub fn step_surface_water_system(
         for _ in 0..n {
             field.advance(dt);
         }
-        sim_secs
-    };
-    runtime.project_from_field(&field, None, dt_total);
+    }
     field.solver_ms = t0.elapsed().as_secs_f32() * 1000.0;
 }
 
@@ -242,48 +268,9 @@ pub fn publish_gauges_from_solver_system(
         let (q, stage, vel) = field.gauge_discharge(x, z, half);
         if let Some(r) = gauges.readings.get_mut(i) {
             r.discharge_m3s = q;
+            r.flux_m3s = field.gauge_flux_m3s(x, z, half);
             r.stage_m = stage;
             r.velocity_mps = vel;
-        }
-    }
-}
-
-/// Project depth into substrate hydrology for the chunks whose water moved (no erosion re-stamp).
-pub fn project_surface_water_to_substrate_system(
-    mut field: ResMut<SurfaceWaterField>,
-    mut registry: ResMut<WorldSubstrateRegistry>,
-) {
-    if !field.wired || !field.has_pending_dirty() {
-        return;
-    }
-    let dirty = field.take_dirty_chunks();
-    let chunk_tiles = CHUNK_TILES_SIM as i32;
-    for coord in &dirty {
-        let key = ChunkKey::new(coord.x, coord.y);
-        let Some(chunk) = registry.chunks.get_mut(key) else {
-            continue;
-        };
-        let origin = IVec2::new(coord.x * chunk_tiles, coord.y * chunk_tiles);
-        let n = chunk.hydrology.water_depth.len();
-        if n == 0 {
-            continue;
-        }
-        let side = (n as f32).sqrt() as i32;
-        if side <= 0 {
-            continue;
-        }
-        for ly in 0..side {
-            for lx in 0..side {
-                let wx = origin.x + lx;
-                let wz = origin.y + ly;
-                let i = (ly * side + lx) as usize;
-                if i >= n {
-                    continue;
-                }
-                if let Some(d) = field.depth_at_world(wx, wz) {
-                    chunk.hydrology.water_depth[i] = d;
-                }
-            }
         }
     }
 }
@@ -294,7 +281,6 @@ impl Plugin for SurfaceWaterSolverPlugin {
     fn build(&self, app: &mut App) {
         crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<SurfaceWaterField>()
-            .init_resource::<WaterClassRuntime>()
             .init_resource::<SurfaceWaterSeedLatch>()
             .init_resource::<SurfaceWaterBaseflow>()
             .register_type::<SurfaceWaterField>()
@@ -302,11 +288,11 @@ impl Plugin for SurfaceWaterSolverPlugin {
                 Update,
                 (
                     seed_surface_water_system,
+                    sample_weather_rain_system.after(seed_surface_water_system),
                     step_surface_water_system
-                        .after(seed_surface_water_system)
+                        .after(sample_weather_rain_system)
                         .after(SimControlSystemSet::AdvanceSimTick),
                     publish_gauges_from_solver_system.after(step_surface_water_system),
-                    project_surface_water_to_substrate_system.after(step_surface_water_system),
                 ),
             );
     }
@@ -317,9 +303,17 @@ mod tests {
     use super::*;
     use bevy::math::UVec2;
 
+    /// A chunk whose ground falls toward z = 0 by `fall_per_tile` (normalized height per tile).
     fn chunk(app: &mut App, x: i32, y: i32, elevation: f32) {
         let mut m = ChunkCellMatrix::new(UVec2::splat(CHUNK_TILES_SIM));
-        m.elevation.fill(elevation);
+        let edge = CHUNK_TILES_SIM;
+        for ly in 0..edge {
+            for lx in 0..edge {
+                let wz = y as u32 * edge + ly;
+                let i = m.idx(lx, ly);
+                m.elevation[i] = elevation + wz as f32 * 2.0e-4;
+            }
+        }
         app.world_mut().spawn((Chunk { coord: IVec2::new(x, y) }, m));
     }
 
@@ -335,7 +329,6 @@ mod tests {
         app.insert_resource(params)
             .insert_resource(st)
             .init_resource::<SurfaceWaterField>()
-            .init_resource::<WaterClassRuntime>()
             .init_resource::<SurfaceWaterSeedLatch>()
             .insert_resource(SurfaceWaterBaseflow { inflow_m3s: 120.0, min_release_m3s: 12.0 })
             .add_systems(Update, seed_surface_water_system);
@@ -343,7 +336,7 @@ mod tests {
     }
 
     /// The map field waits for the whole world, then takes its bed from the chunks and its water
-    /// from the static grid; the river that touches the upstream edge becomes the inflow.
+    /// from the static grid; the river that enters at the upstream edge is sourced there.
     #[test]
     fn the_map_field_waits_for_every_chunk_then_seeds_from_the_world() {
         let mut app = app_64();
@@ -359,7 +352,9 @@ mod tests {
         let range = WorldGenParams::default().elevation_range_m;
         assert!((f.bed_m[0] - 0.5 * range).abs() < 1e-3, "bed from the chunk elevation, no fallback");
         assert!((f.depth_m[f.idx(31, 10)] - 2.5).abs() < 1e-6, "static river depth seeded");
-        assert_eq!(f.inflow_m3s, 120.0);
+        assert_eq!(f.inflow_m3s, 120.0, "the scene's pin is shared over the river's headwater cells");
+        assert_eq!(f.river_sources().len(), 4, "the 4-wide river that enters at the upstream edge");
+        assert!(f.river_sources().iter().all(|s| s.cell / 64 == 63));
         // Changing world (new static stamp) seeds the field again.
         app.world_mut().resource_mut::<WorldStaticWaterDepth>().stamp = 2;
         app.world_mut().resource_mut::<SurfaceWaterField>().depth_m[0] = 9.0;

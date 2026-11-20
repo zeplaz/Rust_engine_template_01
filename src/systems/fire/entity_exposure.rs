@@ -161,6 +161,15 @@ impl Default for SiteFireState {
     }
 }
 
+impl SiteFireState {
+    /// Open flame on the site: disrupted or worse and not rain-suppressed (the state the site
+    /// fire VFX draws flames for).
+    #[must_use]
+    pub fn burning(&self) -> bool {
+        !matches!(self.stage, SiteFireStage::Clear | SiteFireStage::Threatened) && !self.suppression
+    }
+}
+
 /// Heat stamp on a formation — resolve is the sole strength/morale writer.
 #[derive(Component, Clone, Copy, Debug, Default)]
 pub struct FormationFireExposure {
@@ -469,7 +478,6 @@ pub fn apply_fire_collapse_demolish(
     mut voxel_occupation: Option<ResMut<crate::strategic::VoxelOccupationBook>>,
     voxel_cfg: Option<Res<crate::strategic::VoxelOccupationConfig>>,
     mut destruction_mask: Option<ResMut<crate::render::pixel_world::DestructionMaskBook>>,
-    mut debris_frame: Option<ResMut<crate::render::WorldFireParticleFrame>>,
     sites: Query<(
         Entity,
         &ConstructionSite,
@@ -499,7 +507,7 @@ pub fn apply_fire_collapse_demolish(
             voxel_occupation.as_deref_mut(),
             commit_auth,
             destruction_mask.as_deref_mut(),
-            debris_frame.as_deref_mut(),
+            crate::construction::DestroyCause::Fire,
         );
         if n > 0 {
             queue.collapsed = queue.collapsed.saturating_add(u64::from(n));

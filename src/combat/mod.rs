@@ -15,6 +15,7 @@ use bevy::prelude::*;
 pub mod balance;
 pub mod ballistics;
 pub mod ballistic_present;
+pub mod blast_casualties;
 pub mod capability_toe;
 pub mod drone_doctrine;
 pub mod drone_missions;
@@ -77,6 +78,7 @@ pub use orders::{
     FortifyPlans, OrderEffect, OutcomeRecord,
 };
 pub use resolve::{combat_resolve_system, resolve_step, Combatant, Outcome};
+pub use blast_casualties::{BlastCasualtyQueue, BlastStrike};
 pub use weather::{
     artillery_weather_stamp, engagement_visibility_scale, ArtilleryWeatherDump,
 };
@@ -223,6 +225,7 @@ impl Plugin for CombatPlugin {
             .init_resource::<MissileCargoDemandBook>()
             .init_resource::<MissileSortieDump>()
             .init_resource::<MissileSortieLaunchQueue>()
+            .init_resource::<BlastCasualtyQueue>()
             .init_resource::<PersonnelRestockBook>()
             .init_resource::<FrontStockPoolFrame>()
             .init_resource::<CapabilityToeRegistry>()
@@ -243,6 +246,12 @@ impl Plugin for CombatPlugin {
                 formation_supply_system,
             )
                 .chain()
+                .before(combat_resolve_system)
+                .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
+        )
+        .add_systems(
+            Update,
+            blast_casualties::queue_blast_casualties_system
                 .before(combat_resolve_system)
                 .in_set(crate::strategic::StrategicFieldPipeline::ZoneAndReadModel),
         )

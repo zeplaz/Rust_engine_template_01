@@ -2,11 +2,14 @@
 //!
 //! * **Blast:** every detonation throws a dust column over its crater (sim record
 //!   [`crate::construction::BlastCraterBook`] `recent`).
-//! * **Collapse:** every site that leaves the world (all demolish paths: player, blast, fire,
-//!   flood, structural) and every dam column that fails ([`crate::construction::DamBody`]
-//!   column integrity at the collapse bar). Both are read from sim components; the old
-//!   one-frame push inside the demolish funnel is gone (the particle frame is rebuilt every
-//!   frame, so it lasted a single frame).
+//! * **Collapse:** a site that starts its visible collapse
+//!   ([`crate::construction::CollapsePending`]), every site the demolish funnel announces
+//!   destroyed ([`crate::construction::SiteDestroyed`], only for causes that leave wreckage: an
+//!   undone placement, a teardown or a cancelled build raise no dust) and every dam column that
+//!   fails ([`crate::construction::DamBody`] column integrity at the collapse bar). Collapse
+//!   dust is tinted by the structure's material (concrete grey, brick red-brown, timber brown,
+//!   earth for the dam) through the smoke tint channel of the particle row
+//!   ([`super::pack::encode_smoke_tint`]).
 //!
 //! Presentation appends smoke-class rows into the shared [`WorldFireParticleFrame`] after the
 //! fire build, through the same `smoke_puff` animation the fire's lingering smoke uses. Rows
@@ -14,12 +17,15 @@
 //! drawn as an oblique lift carried in `ember_class_radius_smoke.w`, so the voxel and tactical
 //! views draw it with no new pipeline.
 
-use std::collections::{HashMap, HashSet};
+use std::collections::HashSet;
 
 use bevy::prelude::*;
 
+use super::pack::encode_smoke_tint;
 use super::particle_anim::{smoke_puff, FireAnim};
+use crate::construction::{CollapsePending, SiteDestroyed, SiteMaterial};
 use crate::render::WorldFireParticleFrame;
+use crate::strategic::{ConstructionSite, SiteFootprint};
 
 /// How long blast dust lingers (s, wall clock).
 pub const BLAST_DUST_S: f32 = 12.0;
@@ -40,6 +46,8 @@ struct DustBlast {
     seed: u32,
     life_s: f32,
     puffs: u32,
+    /// Material of the collapsed structure; `None` = plain grey (blast column).
+    tint: Option<SiteMaterial>,
 }
 
 /// Recent blasts still dusting (render-side memory).
@@ -78,32 +86,37 @@ fn collapse_seed(centre: Vec2) -> u32 {
         ^ (centre.y.floor() as i32 as u32).wrapping_mul(19_349_663)
 }
 
-/// Collapse dust source: footprints that vanish and dam columns that fail. Reads sim components
-/// only; the next [`append_blast_dust_particles`] draws what lands in the book.
+/// Collapse dust source: sites that start collapsing, sites the funnel announces destroyed, and
+/// dam columns that fail. Reads sim components and the destroyed-site message only; the next
+/// [`append_blast_dust_particles`] draws what lands in the book.
 pub fn detect_collapse_dust(
     time: Res<Time>,
-    born: Query<(Entity, &crate::strategic::SiteFootprint), Added<crate::strategic::SiteFootprint>>,
-    mut gone: RemovedComponents<crate::strategic::SiteFootprint>,
-    dams: Query<(Entity, &crate::construction::DamBody, &crate::strategic::SiteFootprint)>,
+    starting: Query<(&SiteFootprint, &ConstructionSite), Added<CollapsePending>>,
+    mut destroyed: MessageReader<SiteDestroyed>,
+    dams: Query<(Entity, &crate::construction::DamBody, &SiteFootprint)>,
     mut book: ResMut<BlastDustBook>,
-    mut known: Local<HashMap<Entity, Vec<IVec2>>>,
     mut failed: Local<HashSet<(Entity, usize)>>,
 ) {
     let now = time.elapsed_secs();
-    for (e, fp) in &born {
-        known.insert(e, fp.tiles.clone());
-    }
-    for e in gone.read() {
-        let Some(tiles) = known.remove(&e) else { continue };
-        if let Some((centre_tiles, radius_tiles)) = footprint_dust_disk(&tiles) {
+    let mut collapse_dust = |tiles: &[IVec2], material: SiteMaterial, salt: u32| {
+        if let Some((centre_tiles, radius_tiles)) = footprint_dust_disk(tiles) {
             book.push(DustBlast {
                 centre_tiles,
                 radius_tiles,
                 born_s: now,
-                seed: collapse_seed(centre_tiles),
+                seed: collapse_seed(centre_tiles) ^ salt,
                 life_s: COLLAPSE_DUST_S,
                 puffs: PUFFS_PER_COLLAPSE,
+                tint: Some(material),
             });
+        }
+    };
+    for (fp, site) in &starting {
+        collapse_dust(&fp.tiles, SiteMaterial::of_archetype(site.archetype), 0x1111);
+    }
+    for ev in destroyed.read() {
+        if ev.leaves_wreckage() {
+            collapse_dust(&ev.tiles, ev.material, 0);
         }
     }
     failed.retain(|(e, _)| dams.contains(*e));
@@ -119,6 +132,7 @@ pub fn detect_collapse_dust(
                     seed: collapse_seed(centre_tiles) ^ i as u32,
                     life_s: COLLAPSE_DUST_S,
                     puffs: PUFFS_PER_COLLAPSE,
+                    tint: Some(SiteMaterial::Earth),
                 });
             }
         }
@@ -145,6 +159,7 @@ pub fn append_blast_dust_particles(
                 seed: (seq as u32).wrapping_mul(2_654_435_761),
                 life_s: BLAST_DUST_S,
                 puffs: PUFFS_PER_BLAST,
+                tint: None,
             });
         }
     }
@@ -167,7 +182,10 @@ pub fn append_blast_dust_particles(
             let r = b.radius_tiles * ((k as f32 + 0.5) / b.puffs as f32).sqrt();
             let xy = b.centre_tiles + Vec2::new(a.cos(), a.sin()) * r;
             let lift = 2.0 + 30.0 * age;
-            if let Some(row) = smoke_puff(xy, lift, density, &anim, b.seed ^ k, k, 1.0 + 1.5 * age) {
+            if let Some(mut row) = smoke_puff(xy, lift, density, &anim, b.seed ^ k, k, 1.0 + 1.5 * age) {
+                if let Some(m) = b.tint {
+                    row.world_xyz_heat.w = encode_smoke_tint(row.world_xyz_heat.w, m.tint_id());
+                }
                 frame.instances.push(row);
                 pushed = true;
             }
@@ -182,12 +200,15 @@ pub fn append_blast_dust_particles(
 mod tests {
     use super::*;
     use crate::render::fire_vfx::particle_anim::particle_ground_and_height_m;
-    use crate::strategic::{LayerType, SiteFootprint};
+    use crate::construction::DestroyCause;
+    use crate::render::fire_vfx::pack::decode_smoke_tint;
+    use crate::strategic::{BuildSiteTile, LayerType, SiteArchetype, SiteConstructionPhase};
     use std::time::Duration;
 
     fn app() -> App {
         let mut app = App::new();
-        app.init_resource::<Time>()
+        app.add_message::<SiteDestroyed>()
+            .init_resource::<Time>()
             .init_resource::<BlastDustBook>()
             .init_resource::<WorldFireParticleFrame>()
             .add_systems(
@@ -223,6 +244,18 @@ mod tests {
         assert!(footprint_dust_disk(&[]).is_none());
     }
 
+    fn announce(app: &mut App, cause: DestroyCause, phase: SiteConstructionPhase, material: SiteMaterial) {
+        app.world_mut().resource_mut::<Messages<SiteDestroyed>>().write(SiteDestroyed {
+            entity: Entity::PLACEHOLDER,
+            origin: BuildSiteTile { x: 40, z: 60 },
+            tiles: footprint().tiles,
+            height_m: 6.0,
+            material,
+            cause,
+            phase,
+        });
+    }
+
     #[test]
     fn demolished_site_dust_lands_on_its_tiles_and_lingers_seconds() {
         let mut app = app();
@@ -230,6 +263,7 @@ mod tests {
         at(&mut app, 1.0);
         assert!(app.world().resource::<BlastDustBook>().live.is_empty(), "no dust while standing");
         app.world_mut().entity_mut(e).despawn();
+        announce(&mut app, DestroyCause::Fire, SiteConstructionPhase::Operational, SiteMaterial::Brick);
         at(&mut app, 1.1);
         assert_eq!(app.world().resource::<BlastDustBook>().live.len(), 1);
         // Persists across later frames (the frame is rebuilt each frame; the book re-appends).
@@ -248,6 +282,60 @@ mod tests {
         at(&mut app, 1.1 + COLLAPSE_DUST_S + 0.5);
         assert!(app.world().resource::<BlastDustBook>().live.is_empty());
         assert!(app.world().resource::<WorldFireParticleFrame>().instances.is_empty());
+    }
+
+    /// An undone placement / teardown (plain despawn) and a cancelled build raise no dust.
+    #[test]
+    fn only_destruction_raises_collapse_dust() {
+        let mut app = app();
+        let e = app.world_mut().spawn(footprint()).id();
+        at(&mut app, 1.0);
+        app.world_mut().entity_mut(e).despawn();
+        at(&mut app, 1.1);
+        assert!(app.world().resource::<BlastDustBook>().live.is_empty(), "plain despawn: no dust");
+        announce(&mut app, DestroyCause::PlayerDemolish, SiteConstructionPhase::UnderConstruction, SiteMaterial::Brick);
+        at(&mut app, 1.2);
+        assert!(app.world().resource::<BlastDustBook>().live.is_empty(), "cancelled build: no dust");
+    }
+
+    /// Dust takes the structure's material: a timber house starts a brown column when its collapse
+    /// begins, and its rows carry the timber tint.
+    #[test]
+    fn collapse_dust_is_tinted_by_material() {
+        let mut app = app();
+        app.world_mut().spawn((
+            footprint(),
+            ConstructionSite {
+                site_id: 1,
+                owner: Entity::PLACEHOLDER,
+                archetype: SiteArchetype::CivilHousing,
+                phase: SiteConstructionPhase::Operational,
+                operational_readiness: 1.0,
+            },
+            CollapsePending::blast(1),
+        ));
+        at(&mut app, 1.0);
+        assert_eq!(app.world().resource::<BlastDustBook>().live.len(), 1);
+        assert_eq!(app.world().resource::<BlastDustBook>().live[0].tint, Some(SiteMaterial::Timber));
+        at(&mut app, 2.0);
+        let frame = app.world().resource::<WorldFireParticleFrame>();
+        assert!(!frame.instances.is_empty());
+        for row in &frame.instances {
+            let (tone, id) = decode_smoke_tint(row.world_xyz_heat.w);
+            assert_eq!(id, SiteMaterial::Timber.tint_id());
+            assert!((0.0..=1.0).contains(&tone));
+        }
+    }
+
+    #[test]
+    fn smoke_tint_roundtrips_and_plain_smoke_is_untinted() {
+        for id in 0..=4u8 {
+            for tone in [0.0, 0.3, 1.0] {
+                let (t, i) = decode_smoke_tint(encode_smoke_tint(tone, id));
+                assert_eq!(i, id);
+                assert!((t - tone).abs() < 1e-5);
+            }
+        }
     }
 
     #[test]

@@ -93,14 +93,20 @@ pub struct DamFloodBenchmarkBook {
     pub s4_hydro_mw_peak: f32,
     /// DF-7: metres between strike impact and aim (latched on first impact).
     pub s5_impact_err_m: f32,
-    /// DF-8/9: sim seconds from breach/strike to G3 discharge rise.
+    /// DF-8/9: water-solver seconds from the breach to the breach wave's arrival at G3 (the first
+    /// time G3's real cross-section flux stays above its operate-stage level by a wave's margin).
     pub s7_wave_arrival_g3_s: f32,
     /// DF-5/S9: dead-stand burn rate / live-stand burn rate (latched when > 1).
     pub s9_burn_rate_dead_over_live: f32,
-    /// Wall-clock sim seconds when S5/S7 breach began (for G3 arrival).
+    /// Water-solver clock (`SurfaceWaterField::elapsed_s`) when the dam broke (-1 = intact). The
+    /// solver clock, not sim time + time skip: skipped hours are not water that travelled.
     pub breach_sim_s: f32,
-    /// G3 discharge sample at breach start (baseline for arrival detect).
+    /// G3 flux (m3/s) before the breach: its level during the operate stage with the gates open.
     pub breach_g3_baseline_m3s: f32,
+    /// Running level of G3's flux while the dam operates (-1 = not sampled yet).
+    pub g3_flux_operate_m3s: f32,
+    /// Consecutive frames G3's flux stood above the wave margin.
+    pub g3_wave_hits: u8,
 }
 
 impl Default for DamFloodBenchmarkBook {
@@ -132,6 +138,8 @@ impl Default for DamFloodBenchmarkBook {
             s9_burn_rate_dead_over_live: 0.0,
             breach_sim_s: -1.0,
             breach_g3_baseline_m3s: 0.0,
+            g3_flux_operate_m3s: -1.0,
+            g3_wave_hits: 0,
         }
     }
 }

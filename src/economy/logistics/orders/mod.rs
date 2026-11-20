@@ -20,6 +20,7 @@ pub mod snapshot;
 pub mod source_pick;
 pub mod travel;
 pub mod haul_amplify;
+pub mod vehicle_blast;
 pub mod vehicle_fire;
 pub mod weather_haul;
 

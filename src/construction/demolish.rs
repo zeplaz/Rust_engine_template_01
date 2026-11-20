@@ -26,6 +26,7 @@ use crate::strategic::{
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::build_tool_authority::{ActiveBuildTool, BuildTool};
+use super::destruction::{DestroyCause, SiteDestroyed, SiteMaterial};
 use super::pending_construction::{
     PendingBuildBlueprint, PendingConstructionQueue, PendingEntryKind,
 };
@@ -241,10 +242,9 @@ pub fn execute_demolish_at_tile(
     mut voxel_occupation: Option<&mut crate::strategic::VoxelOccupationBook>,
     commit_authority_enabled: bool,
     mut destruction_mask: Option<&mut crate::render::pixel_world::DestructionMaskBook>,
-    // Retired: collapse dust is now drawn by `render::fire_vfx::blast_dust::detect_collapse_dust`
-    // from the vanished footprint (the old one-frame push here was rebuilt away every frame).
-    // Param stays until every caller drops its argument (follow-up: disaster_proxy owner).
-    _debris_frame: Option<&mut crate::render::WorldFireParticleFrame>,
+    // Why the site goes: published as a [`SiteDestroyed`] message that rubble, dust and burning
+    // rubble consume (a `Cancelled` cause leaves no wreckage).
+    cause: DestroyCause,
 ) -> (u32, Vec<CommitConstructionSiteEvent>) {
     let target = IVec2::new(tile.x as i32, tile.z as i32);
     let mut n = 0u32;
@@ -280,6 +280,26 @@ pub fn execute_demolish_at_tile(
                 book.remove_site(sid);
             }
         }
+        let announced = SiteDestroyed {
+            entity,
+            origin: planned.origin,
+            tiles: footprint.tiles.clone(),
+            height_m: super::water_obstacles::water_obstacle_height_m(
+                site.archetype,
+                site.phase,
+                footprint.tiles.len(),
+            )
+            .unwrap_or(0.0),
+            material: SiteMaterial::of_archetype(site.archetype),
+            cause,
+            phase: site.phase,
+        };
+        // Worlds without the construction plugin have no listeners and no message store.
+        commands.queue(move |world: &mut World| {
+            if let Some(mut store) = world.get_resource_mut::<Messages<SiteDestroyed>>() {
+                store.write(announced);
+            }
+        });
         commands.entity(entity).despawn();
         n += 1;
     }
@@ -414,7 +434,7 @@ mod tests {
                 None,
                 false,
                 Some(&mut *mask),
-                None,
+                DestroyCause::PlayerDemolish,
             );
             assert_eq!(n, 1);
             assert_eq!(mask.cell(tile.x, tile.y), MASK_DESTROYED);
@@ -464,7 +484,7 @@ mod tests {
                 None,
                 false,
                 None,
-                None,
+                DestroyCause::PlayerDemolish,
             );
             assert_eq!(n, 1);
             assert_eq!(events.len(), 1);
@@ -523,7 +543,7 @@ mod tests {
                 Some(&mut *voxel),
                 true, // commit authority on → voxel sole writer
                 None,
-                None,
+                DestroyCause::PlayerDemolish,
             );
             assert_eq!(n, 1);
             assert!(

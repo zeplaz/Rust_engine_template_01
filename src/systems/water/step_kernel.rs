@@ -24,6 +24,15 @@ pub struct StepScratch {
 /// (see `measure_dam_break_front_distance`).
 pub const VP_CONDUCTANCE_K: f32 = 16.0;
 
+/// The lowest face conductance (m2/s) the kernel gives water of depth `h_m`. A sub-step never
+/// exceeds the gravity-wave CFL (`dt <= dx / (2 sqrt(g h))`), so the stability cap `A / (8 dt)` is at
+/// least `dx sqrt(g h) / 4` whatever the sim step: the conveyance a river can always count on.
+#[must_use]
+pub fn cfl_limited_conductance(dx_m: f32, h_m: f32) -> f32 {
+    let c = (G_MPS2 * h_m.max(0.0)).sqrt();
+    (VP_CONDUCTANCE_K * dx_m * c).min(0.25 * dx_m * c)
+}
+
 /// Does the edge of tile `t` facing `dir` (0=E, 1=W, 2=N(+z), 3=S) hold any water?
 fn edge_wet(tg: &WaterTileGrid, depth: &[f32], w: usize, t: usize, dir: u8) -> bool {
     let (x0, z0, x1, z1) = tg.tile_rect(t);
@@ -36,14 +45,6 @@ fn edge_wet(tg: &WaterTileGrid, depth: &[f32], w: usize, t: usize, dir: u8) -> b
 }
 
 impl SurfaceWaterField {
-    /// Is local cell `i` a boundary inflow cell? (north-edge cell that is river in the baseline).
-    #[inline]
-    #[must_use]
-    pub(super) fn is_inflow_cell(&self, i: usize) -> bool {
-        let w = self.width as usize;
-        i / w == self.height as usize - 1 && self.ref_depth_m.get(i).is_some_and(|d| *d > 0.05)
-    }
-
     /// Pick this step's active tiles: awake tiles, tiles with boundary activity, and the neighbours
     /// water can actually cross into (a wet cell on either side of the shared edge).
     pub fn refresh_active_tiles(&mut self) {
@@ -59,7 +60,7 @@ impl SurfaceWaterField {
             tg = WaterTileGrid::new(self.width, self.height, self.origin_x, self.origin_z);
         }
         tg.begin_refresh();
-        if self.inflow_m3s + self.rain_runoff_m3s > 0.0 {
+        if self.inflow_m3s > 0.0 {
             for k in 0..tg.inflow_tiles.len() {
                 let t = tg.inflow_tiles[k] as usize;
                 tg.add_base(t);
@@ -68,7 +69,7 @@ impl SurfaceWaterField {
         // Open boundary: an edge cell standing above its baseline drains, so its tile must run.
         let draining = |i: usize| {
             self.depth_m[i] > self.ref_depth_m.get(i).copied().unwrap_or(0.0) + 1e-3
-                && !self.is_inflow_cell(i)
+                && self.river.rate_at(i) <= 0.0
         };
         for x in 0..w {
             for z in [0, h - 1] {
@@ -303,9 +304,6 @@ impl SurfaceWaterField {
 
         // Pass 4: divergence + boundaries, depth updated in place (a cell reads only its own old
         // depth and the already-final face fluxes).
-        let q_edge = self.inflow_m3s + self.rain_runoff_m3s;
-        let n_inflow = tg.inflow_cells.max(1) as f32;
-        let per_cell = if tg.inflow_cells > 0 { q_edge / n_inflow } else { 0.0 };
         let mut applied = 0.0_f64;
         for k in 0..tg.active.len() {
             let t = tg.active[k] as usize;
@@ -322,15 +320,16 @@ impl SurfaceWaterField {
                         div -= sc.flux_y[i - w];
                     }
                     let mut dvol = -div * dt_s;
-                    let inflow_cell = z == h - 1 && self.ref_depth_m.get(i).is_some_and(|d| *d > 0.05);
-                    if inflow_cell && per_cell > 0.0 {
-                        dvol += per_cell * dt_s;
-                        applied += f64::from(per_cell * dt_s);
+                    // River source: the headwater cell's baseflow (WM-2, `sources.rs`).
+                    let q_src = self.river.rate_at(i);
+                    if q_src > 0.0 {
+                        dvol += q_src * dt_s;
+                        applied += f64::from(q_src * dt_s);
                     }
                     // Open map edge: an edge cell drains like a free overfall into a ghost cell that
                     // holds the baseline (static) depth, so water leaves only while the edge stands
                     // above the world's own water and hands over without a step.
-                    if !inflow_cell && (x == 0 || z == 0 || x == w - 1 || z == h - 1) {
+                    if q_src <= 0.0 && (x == 0 || z == 0 || x == w - 1 || z == h - 1) {
                         let h0 = self.depth_m[i];
                         let h_ghost = self.ref_depth_m.get(i).copied().unwrap_or(0.0);
                         if h0 > h_ghost {

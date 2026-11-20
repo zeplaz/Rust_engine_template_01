@@ -6,8 +6,10 @@
 //!   rigid-body world; we bookkeep radius + falloff instead of middleware contacts.
 //!
 //! Combat ballistics **enqueue** [`BlastIntent`] only; only [`execute_blast_intents_system`]
-//! mutates sites / [`BlastCraterBook`] / occupation (construction invariants). Voxel occupation
-//! clears go through [`execute_demolish_at_tile`] when commit authority is on — no parallel write.
+//! mutates sites / [`BlastCraterBook`] (construction invariants). A blast at or over the gate does
+//! not demolish at once: the site is staged `Collapsed` with a [`CollapsePending`] and
+//! [`super::drain_collapse_pending_system`] runs [`execute_demolish_at_tile`] (the sole despawn,
+//! voxel occupation included) after [`super::BLAST_COLLAPSE_MICROS`] of sim time.
 //!
 //! Thresholds: [`BlastProfile`] (RON) · instance yield: intent / [`crate::combat::WarheadCatalog`].
 
@@ -15,18 +17,16 @@ use bevy::prelude::*;
 use serde::Deserialize;
 
 use crate::economy::activation::BuildingDefinitionRef;
-use crate::strategic::{
-    BuildSiteTile, ConstructionSite, FootprintTiles, PlannedSite, SiteFootprint, TileOccupationBook,
-    VoxelOccupationBook, VoxelOccupationConfig,
-};
+use crate::strategic::{ConstructionSite, FootprintTiles, PlannedSite, SiteFootprint};
 use crate::substrate::hydrology::{HydrologyConstructionCouplingStats, HydrologyEventQueue};
 use crate::systems::sim_control::SimControlSystemSet;
 
 use super::dam_barrier::DamBody;
 use super::demolish::{
-    destructible_catastrophic_collapse, destructible_stage_from_integrity, execute_demolish_at_tile,
-    DestructibleDamage, DestructibleDamageStage, DESTRUCTIBLE_COLLAPSE_INTEGRITY,
+    destructible_catastrophic_collapse, destructible_stage_from_integrity, DestructibleDamage,
+    DestructibleDamageStage, DESTRUCTIBLE_COLLAPSE_INTEGRITY,
 };
+use super::destruction::{CollapsePending, DestroyCause, SiteDestroyed};
 use super::hydro_coupling::{emit_dam_breach_hydro_dirty, emit_site_execute_hydro_dirty};
 use crate::systems::water::{BarrierBreachRequest, BarrierBreachSpec};
 
@@ -210,13 +210,9 @@ pub fn execute_blast_intents_system(
     mut queue: ResMut<BlastIntentQueue>,
     mut craters: ResMut<BlastCraterBook>,
     profile: Res<BlastProfile>,
-    mut occupation: Option<ResMut<TileOccupationBook>>,
-    mut voxel_occupation: Option<ResMut<VoxelOccupationBook>>,
-    voxel_cfg: Option<Res<VoxelOccupationConfig>>,
     mut hydro_q: Option<ResMut<HydrologyEventQueue>>,
     mut hydro_stats: Option<ResMut<HydrologyConstructionCouplingStats>>,
     mut destruction_mask: Option<ResMut<crate::render::pixel_world::DestructionMaskBook>>,
-    mut debris_frame: Option<ResMut<crate::render::WorldFireParticleFrame>>,
     sites: Query<(
         Entity,
         &ConstructionSite,
@@ -227,14 +223,17 @@ pub fn execute_blast_intents_system(
     mut damage: Query<&mut DestructibleDamage>,
     mut dams: Query<&mut DamBody>,
     mut breach: Option<ResMut<BarrierBreachRequest>>,
+    collapsing: Query<(), With<CollapsePending>>,
 ) {
     if queue.pending.is_empty() {
         return;
     }
     let gate = profile.demolish_damage.max(1e-3);
-    let commit_auth = voxel_cfg
-        .as_ref()
-        .is_some_and(|c| c.commit_authority_enabled);
+    // Sites already collapsing; grows as this frame's intents stage more (commands apply later).
+    let mut pending_now: std::collections::HashSet<Entity> = sites
+        .iter()
+        .filter_map(|(e, ..)| collapsing.contains(e).then_some(e))
+        .collect();
     let intents = std::mem::take(&mut queue.pending);
     for intent in intents {
         let center = intent.center_xz;
@@ -271,8 +270,7 @@ pub fn execute_blast_intents_system(
         // PHYS-08: map peak blast damage onto the damage ladder (scar / compromise) even
         // when below the demolish gate; terminal collapse still goes through demolish.
         let mut peaks: Vec<(Entity, f32)> = Vec::new();
-        let mut hit_origins: Vec<BuildSiteTile> = Vec::new();
-        for (entity, _site, planned, footprint, _) in sites.iter() {
+        for (entity, _site, _planned, footprint, _) in sites.iter() {
             let mut peak = 0.0f32;
             let mut in_disk = false;
             for t in &footprint.tiles {
@@ -291,11 +289,9 @@ pub fn execute_blast_intents_system(
                 continue;
             }
             peaks.push((entity, peak));
-            if peak >= gate {
-                hit_origins.push(planned.origin);
-            }
         }
         for (entity, peak) in &peaks {
+            let collapse = destructible_catastrophic_collapse(*peak, gate);
             if let Ok(mut dmg) = damage.get_mut(*entity) {
                 let integrity_left =
                     (1.0 - (peak / gate).clamp(0.0, 1.0)).clamp(0.0, 1.0);
@@ -304,9 +300,22 @@ pub fn execute_blast_intents_system(
                     DESTRUCTIBLE_COLLAPSE_INTEGRITY,
                 );
                 dmg.stage = dmg.stage.escalate(ladder);
-                if destructible_catastrophic_collapse(*peak, gate) {
+                if collapse {
                     dmg.stage = DestructibleDamageStage::Collapsed;
                 }
+            } else if collapse {
+                // Not yet stamped by the fire domain's ensure pass: show Collapsed all the same.
+                commands.entity(*entity).insert_if_new(DestructibleDamage {
+                    stage: DestructibleDamageStage::Collapsed,
+                    held_micros: 0,
+                });
+            }
+            if collapse && pending_now.insert(*entity) {
+                // Visible collapse first; the drain demolishes through the funnel when it is spent.
+                commands
+                    .entity(*entity)
+                    .insert_if_new(CollapsePending::blast(intent.source_flight));
+                craters.sites_demolished = craters.sites_demolished.saturating_add(1);
             }
             // DF-8: sphere carve per dam column + aggregate integrity (construction funnel).
             if let Ok(mut body) = dams.get_mut(*entity) {
@@ -360,40 +369,30 @@ pub fn execute_blast_intents_system(
             }
         }
 
-        if intent.damage < gate {
-            continue;
-        }
-        hit_origins.sort_by_key(|t| (t.x, t.z));
-        hit_origins.dedup();
+    }
+}
 
-        for origin in hit_origins {
-            let (n, _events) = execute_demolish_at_tile(
-                &mut commands,
-                origin,
-                &sites,
-                occupation.as_deref_mut(),
-                voxel_occupation.as_deref_mut(),
-                commit_auth,
-                destruction_mask.as_deref_mut(),
-                debris_frame.as_deref_mut(),
+/// Hydrology learns of a blast-demolished site when the funnel announces it (after the visible
+/// collapse): the dirty emit the executor used to do inline.
+pub fn hydro_dirty_from_blast_collapse_system(
+    mut destroyed: MessageReader<SiteDestroyed>,
+    mut hydro_q: Option<ResMut<HydrologyEventQueue>>,
+    mut hydro_stats: Option<ResMut<HydrologyConstructionCouplingStats>>,
+) {
+    for ev in destroyed.read() {
+        let DestroyCause::Blast { source_flight } = ev.cause else {
+            continue;
+        };
+        if let (Some(q), Some(stats)) = (hydro_q.as_mut(), hydro_stats.as_mut()) {
+            emit_site_execute_hydro_dirty(
+                q,
+                stats,
+                source_flight,
+                ev.origin,
+                FootprintTiles { width: 1, depth: 1 },
+                // Terrain chunks are 32×32 (DF-7 units fix vs stale 16).
+                UVec2::new(32, 32),
             );
-            if n > 0 {
-                craters.sites_demolished = craters.sites_demolished.saturating_add(u64::from(n));
-                if let (Some(q), Some(stats)) = (hydro_q.as_mut(), hydro_stats.as_mut()) {
-                    emit_site_execute_hydro_dirty(
-                        q,
-                        stats,
-                        intent.source_flight,
-                        origin,
-                        FootprintTiles {
-                            width: 1,
-                            depth: 1,
-                        },
-                        // Terrain chunks are 32×32 (DF-7 units fix vs stale 16).
-                        UVec2::new(32, 32),
-                    );
-                }
-            }
         }
     }
 }
@@ -492,6 +491,7 @@ impl Plugin for ConstructionBlastPlugin {
                     super::blast_present::publish_blast_crater_dump
                         .after(execute_blast_intents_system),
                     ignite_ground_from_blasts_system.after(execute_blast_intents_system),
+                    hydro_dirty_from_blast_collapse_system,
                     blast_ground_deform_system
                         .after(execute_blast_intents_system)
                         .before(crate::terrain::ground_deform::GroundDeformSet::Drain),
@@ -504,7 +504,7 @@ impl Plugin for ConstructionBlastPlugin {
 mod tests {
     use super::*;
     use crate::strategic::{
-        FootprintTiles, LayerType, SiteArchetype, SiteConstructionPhase, SiteId,
+        BuildSiteTile, FootprintTiles, LayerType, SiteArchetype, SiteConstructionPhase, SiteId,
     };
 
     fn blast_test_app() -> App {
@@ -617,7 +617,7 @@ mod tests {
     }
 
     #[test]
-    fn phys07_high_damage_execute_demolishes_via_construction_funnel() {
+    fn phys07_high_damage_stages_collapse_for_the_construction_funnel() {
         let mut app = blast_test_app();
         let center = Vec2::new(8.0, 8.0);
         let tile = tile_of_xz(center);
@@ -635,11 +635,12 @@ mod tests {
         let book = app.world().resource::<BlastCraterBook>();
         assert_eq!(book.blasts_applied, 1);
         assert!(book.sites_demolished >= 1);
-        assert_eq!(
-            count_sites(&mut app),
-            0,
-            "demolish must run inside execute_blast_intents_system"
-        );
+        // The executor only stages the collapse; `drain_collapse_pending_system` demolishes it
+        // through the funnel after the visible window (see `destruction::tests`).
+        assert_eq!(count_sites(&mut app), 1, "site stands through its collapse window");
+        let world = app.world_mut();
+        let mut q = world.query::<&CollapsePending>();
+        assert_eq!(q.iter(world).count(), 1);
     }
 
     #[test]
@@ -808,13 +809,15 @@ mod tests {
             .split_once("#[cfg(test)]")
             .map(|(p, _)| p)
             .unwrap_or(include_str!("blast.rs"));
-        assert!(prod.contains("execute_demolish_at_tile"));
-        assert!(prod.contains("VoxelOccupationBook"));
-        assert!(prod.contains("commit_auth"));
+        assert!(prod.contains("CollapsePending"), "blast stages the collapse");
         assert!(
             !prod.contains("voxel.remove_site") && !prod.contains("voxel_occupation.insert"),
             "blast must not write voxel book outside demolish funnel"
         );
+        let drain = include_str!("destruction.rs")
+            .split_once("#[cfg(test)]")
+            .map_or("", |(p, _)| p);
+        assert!(drain.contains("execute_demolish_at_tile"), "the drain runs the funnel");
     }
 }
 

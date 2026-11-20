@@ -191,6 +191,11 @@ pub struct LogisticsOrderSim {
     pub vehicles_lost_to_fire: u64,
     #[serde(skip)]
     pub cargo_lost_to_fire: u64,
+    /// Vehicles (and, in `cargo_lost_to_blast`, their loads) destroyed by detonations. Not persisted.
+    #[serde(skip)]
+    pub vehicles_lost_to_blast: u64,
+    #[serde(skip)]
+    pub cargo_lost_to_blast: u64,
     /// HAUL-AMPLIFY-1: per-owner capacity scale from formations (1.0 default). Not persisted.
     #[serde(skip)]
     pub haul_capacity_mul_by_owner: BTreeMap<OwnerId, f32>,
@@ -275,15 +280,30 @@ impl LogisticsOrderSim {
             }
         }
         for vid in lost {
-            self.destroy_vehicle_to_fire(vid);
+            if let Some(cargo) = self.remove_destroyed_vehicle(vid) {
+                self.cargo_lost_to_fire = self.cargo_lost_to_fire.saturating_add(u64::from(cargo));
+                self.vehicles_lost_to_fire = self.vehicles_lost_to_fire.saturating_add(1);
+            }
         }
     }
 
-    fn destroy_vehicle_to_fire(&mut self, vid: VehicleId) {
-        let Some(v) = self.vehicles.remove(&vid) else {
-            return;
-        };
+    /// Detonation losses: every listed vehicle is destroyed, with the same cargo / reservation
+    /// bookkeeping as a fire loss. The caller decides who is inside the blast.
+    pub fn apply_vehicle_blast_losses(&mut self, victims: &[VehicleId]) {
+        for &vid in victims {
+            if let Some(cargo) = self.remove_destroyed_vehicle(vid) {
+                self.cargo_lost_to_blast = self.cargo_lost_to_blast.saturating_add(u64::from(cargo));
+                self.vehicles_lost_to_blast = self.vehicles_lost_to_blast.saturating_add(1);
+            }
+        }
+    }
+
+    /// Remove a destroyed vehicle and release what it held. Returns the cargo units lost with it
+    /// (0 when it was empty), or `None` when it is already gone.
+    fn remove_destroyed_vehicle(&mut self, vid: VehicleId) -> Option<u32> {
+        let v = self.vehicles.remove(&vid)?;
         self.vehicle_fire_accum.remove(&vid);
+        let mut cargo_lost = 0u32;
         if let Some(a) = v.assignment {
             if v.phase.is_loaded() {
                 let dst = self.stock.entry_mut(a.sink, &a.cargo);
@@ -293,7 +313,7 @@ impl LogisticsOrderSim {
                     o.stats.lost = o.stats.lost.saturating_add(a.load);
                     o.stats.trips_in_flight = o.stats.trips_in_flight.saturating_sub(1);
                 }
-                self.cargo_lost_to_fire = self.cargo_lost_to_fire.saturating_add(u64::from(a.load));
+                cargo_lost = a.load;
             } else {
                 let src = self.stock.entry_mut(a.source, &a.cargo);
                 src.reserved_out = src.reserved_out.saturating_sub(a.load);
@@ -305,7 +325,7 @@ impl LogisticsOrderSim {
                 }
             }
         }
-        self.vehicles_lost_to_fire = self.vehicles_lost_to_fire.saturating_add(1);
+        Some(cargo_lost)
     }
 
     // ── commands ────────────────────────────────────────────────────────────────

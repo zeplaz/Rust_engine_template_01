@@ -46,7 +46,10 @@ pub struct GaugeSite {
 
 #[derive(Clone, Copy, Debug, Default)]
 pub struct GaugeReading {
+    /// Conveyance estimate of the cross-section (flux, or depth x width x 0.5 m/s when quiet).
     pub discharge_m3s: f32,
+    /// Water the solver's face fluxes really carry across the cross-section.
+    pub flux_m3s: f32,
     pub stage_m: f32,
     pub velocity_mps: f32,
 }
@@ -98,6 +101,7 @@ impl GaugeBook {
             let (q, stage, vel) =
                 field.gauge_discharge(site.tile.x, site.tile.y, site.cross_section_half_tiles);
             r.discharge_m3s = q;
+            r.flux_m3s = field.gauge_flux_m3s(site.tile.x, site.tile.y, site.cross_section_half_tiles);
             r.stage_m = stage;
             r.velocity_mps = vel;
         }

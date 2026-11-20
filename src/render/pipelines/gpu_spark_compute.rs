@@ -98,7 +98,12 @@ pub(crate) struct FireSparkComputePassSet;
 pub fn build_fire_spark_attractors(instances: &[GpuParticleInstance]) -> FireSparkAttractors {
     let mut by_cell: HashMap<(i32, i32), (Vec3, f32)> = HashMap::new();
     for row in instances {
-        let heat = row.world_xyz_heat.w;
+        // Tinted smoke (collapse dust) carries its material id above the tone: decode the tone.
+        let heat = if row.ember_class_radius_smoke.y > 0.5 {
+            crate::render::fire_vfx::pack::decode_smoke_tint(row.world_xyz_heat.w).0
+        } else {
+            row.world_xyz_heat.w
+        };
         if heat < 0.05 {
             continue;
         }

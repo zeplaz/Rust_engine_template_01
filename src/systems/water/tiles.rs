@@ -41,10 +41,8 @@ pub struct WaterTileGrid {
     /// Per-tile stats of the current step.
     pub max_rate: Vec<f32>,
     pub max_flux: Vec<f32>,
-    /// Tiles holding a boundary inflow cell (always awake while the inflow runs).
+    /// Tiles holding a river source cell (always awake while the river runs).
     pub inflow_tiles: Vec<u32>,
-    /// Number of boundary inflow cells (the inflow is split over them).
-    pub inflow_cells: usize,
     dirty_tile: Vec<bool>,
     dirty_list: Vec<u32>,
     chunk_x0: i32,
@@ -82,7 +80,6 @@ impl WaterTileGrid {
             max_rate: vec![0.0; nt],
             max_flux: vec![0.0; nt],
             inflow_tiles: Vec::new(),
-            inflow_cells: 0,
             dirty_tile: vec![false; nt],
             dirty_list: Vec::new(),
             chunk_x0,
@@ -136,10 +133,16 @@ impl WaterTileGrid {
         self.awake.iter().filter(|a| **a > 0).count()
     }
 
-    fn touch_tile(&mut self, t: usize) {
+    /// Wake tile `t` (full sleep countdown) and queue it for dirty-chunk marking.
+    pub fn touch_tile(&mut self, t: usize) {
         if let Some(a) = self.awake.get_mut(t) {
             *a = WATER_SLEEP_STEPS;
         }
+        self.mark_tile_dirty(t);
+    }
+
+    /// Queue tile `t` for dirty-chunk marking without waking it (its water changed while asleep).
+    pub fn mark_tile_dirty(&mut self, t: usize) {
         if let Some(d) = self.dirty_tile.get_mut(t) {
             if !*d {
                 *d = true;

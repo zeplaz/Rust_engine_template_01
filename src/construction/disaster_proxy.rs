@@ -104,7 +104,6 @@ pub fn apply_structural_collapse_demolish(
     mut voxel_occupation: Option<ResMut<VoxelOccupationBook>>,
     voxel_cfg: Option<Res<VoxelOccupationConfig>>,
     mut destruction_mask: Option<ResMut<DestructionMaskBook>>,
-    mut debris_frame: Option<ResMut<crate::render::WorldFireParticleFrame>>,
     sites: Query<(
         Entity,
         &ConstructionSite,
@@ -134,7 +133,7 @@ pub fn apply_structural_collapse_demolish(
             voxel_occupation.as_deref_mut(),
             commit_auth,
             destruction_mask.as_deref_mut(),
-            debris_frame.as_deref_mut(),
+            super::destruction::DestroyCause::Structural,
         );
         if n > 0 {
             queue.collapsed = queue.collapsed.saturating_add(u64::from(n));
