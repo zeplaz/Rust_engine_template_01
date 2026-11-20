@@ -41,10 +41,14 @@ pub(crate) fn publish_ballistic_present_system(
     }
 
     frame.trail_segments.clear();
+    // OP-8: a short tail behind each projectile only. The old origin→position segment drew a
+    // growing yellow streak from the launcher across the map for the whole flight.
+    const TAIL_M: f32 = 160.0;
     for f in &book.flights {
-        frame.trail_segments.push((f.origin, f.pos));
-        if (f.pos - f.origin).length_squared() > 1.0 {
-            frame.trail_segments.push((f.pos - (f.target - f.origin).normalize_or_zero() * 24.0, f.pos));
+        let flown = (f.pos - f.origin).length();
+        if flown > 1.0 {
+            let dir = (f.target - f.origin).normalize_or_zero();
+            frame.trail_segments.push((f.pos - dir * flown.min(TAIL_M), f.pos));
         }
     }
     frame.in_flight = book.flights.len() as u32;
