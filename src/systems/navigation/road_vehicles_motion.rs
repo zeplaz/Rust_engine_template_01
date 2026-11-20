@@ -14,11 +14,13 @@ use crate::economy::logistics::orders::{
 use crate::entities::vehicles::runtime::{Bus, Truck};
 use crate::entities::components::Waypoints;
 use crate::systems::sim_control::{SimControlState, SimStepClock};
+use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 use crate::traits::LoadBasedSpeedModifier;
 
 use super::logistics_floodfill::{logistics_grid_path, smooth_logistics_tile_path, LogisticsNodeArray, LogisticsTile};
 use super::path_concerns::{front_haul_path_concern, LogisticsPathConcern, LogisticsPathConcernRegistry};
 use super::cost_forecast::LogisticsCostForecastBook;
+use crate::economy::logistics::routes::TruckRoadNetwork;
 
 /// Marks an entity whose waypoint motion is filtered by [`filter_vehicle_steering_output`].
 #[derive(Component, Clone, Copy, Debug, Default)]
@@ -151,11 +153,14 @@ fn site_xz(registry: &LogisticsSiteRegistry, site: SiteId) -> Option<Vec2> {
         .or_else(|| registry.meta.get(&site).map(|m| Vec2::new(m.world_xz[0], m.world_xz[1])))
 }
 
+/// Grid cell of a tile-space position (cell = floor).
 fn xz_to_grid(xz: Vec2) -> (i32, i32) {
-    (xz.x.round() as i32, xz.y.round() as i32)
+    (xz.x.floor() as i32, xz.y.floor() as i32)
 }
 
-fn leg_key(v: &crate::economy::logistics::orders::Vehicle) -> u64 {
+/// Identifies the order-sim leg a truck's waypoints were planned for.
+#[must_use]
+pub fn truck_leg_key(v: &crate::economy::logistics::orders::Vehicle) -> u64 {
     let Some(a) = v.assignment.as_ref() else {
         return 0;
     };
@@ -180,7 +185,7 @@ fn concern_for_sink(
     }
 }
 
-/// Build a smoothed world-space waypoint polyline for an active truck leg (presentation motion).
+/// Cross-country waypoint polyline for a truck leg; positions in **tile units**, cell centres out.
 #[must_use]
 pub fn plan_truck_tile_waypoints(
     scratch: &mut LogisticsNodeArray,
@@ -220,8 +225,38 @@ pub fn plan_truck_tile_waypoints(
     let smooth = smooth_vehicle_tile_path(&raw_path, width, height, &mut tile);
     smooth
         .into_iter()
-        .map(|(lx, ly)| Vec2::new((lx + min_x) as f32, (ly + min_y) as f32))
+        .map(|(lx, ly)| Vec2::new((lx + min_x) as f32 + 0.5, (ly + min_y) as f32 + 0.5))
         .collect()
+}
+
+/// Position and heading `fraction` (0..1) of the way along `points` by arc length.
+#[must_use]
+pub fn point_along_polyline(points: &[Vec2], fraction: f32) -> Option<(Vec2, Vec2)> {
+    let total: f32 = points.windows(2).map(|w| w[0].distance(w[1])).sum();
+    let first = *points.first()?;
+    if points.len() < 2 || total < 1e-4 {
+        return Some((first, Vec2::ZERO));
+    }
+    let mut left = total * fraction.clamp(0.0, 1.0);
+    let last = points.len() - 2;
+    for (i, w) in points.windows(2).enumerate() {
+        let len = w[0].distance(w[1]);
+        if left <= len || i == last {
+            let dir = (w[1] - w[0]).normalize_or_zero();
+            return Some((w[0] + dir * left.min(len), dir));
+        }
+        left -= len;
+    }
+    None
+}
+
+/// Truck leg planning inputs: the cross-country grid scratch, the cost forecast and the built
+/// road network (one domain: how a truck gets from A to B).
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct TruckLegPlanner<'w> {
+    scratch: ResMut<'w, LogisticsGridPathScratch>,
+    forecast: Option<Res<'w, LogisticsCostForecastBook>>,
+    roads: TruckRoadNetwork<'w>,
 }
 
 /// Refresh waypoint polylines for order-sim truck proxies (read sim + site registry only).
@@ -230,14 +265,14 @@ pub fn sync_truck_motion_waypoints_system(
     sim: Option<Res<LogisticsOrderSimRes>>,
     registry: Option<Res<LogisticsSiteRegistry>>,
     concerns: Option<Res<LogisticsPathConcernRegistry>>,
-    forecast: Option<Res<LogisticsCostForecastBook>>,
     clock: Option<Res<SimStepClock>>,
-    mut scratch: ResMut<LogisticsGridPathScratch>,
+    mut planner: TruckLegPlanner,
     mut q: Query<(
         &mut TruckMotionLeg,
         &mut Waypoints,
         Option<&mut RoadVehicleKinematics>,
     )>,
+    mut road_stamp: Local<u64>,
 ) {
     if !sim_ctrl.should_tick() {
         return;
@@ -246,12 +281,15 @@ pub fn sync_truck_motion_waypoints_system(
         return;
     };
     let depart_tick = clock.as_ref().map(|c| c.steps).unwrap_or(0);
+    // A road built, flooded, buried or cleared re-plans every active leg.
+    let stamp = planner.roads.stamp();
+    let network_changed = std::mem::replace(&mut *road_stamp, stamp) != stamp;
     for (mut leg, mut wp, kin) in q.iter_mut() {
         let Some(v) = sim.sim.vehicles.get(&leg.vehicle_id) else {
             continue;
         };
-        let key = leg_key(v);
-        if leg.leg_key == key && !wp.points.is_empty() {
+        let key = truck_leg_key(v);
+        if leg.leg_key == key && !wp.points.is_empty() && !network_changed {
             continue;
         }
         leg.leg_key = key;
@@ -274,19 +312,21 @@ pub fn sync_truck_motion_waypoints_system(
             continue;
         };
         let concern = concern_for_sink(&concerns, &registry, to);
-        let points = plan_truck_tile_waypoints(
-            &mut scratch.nodes,
-            from_xz,
-            to_xz,
-            concern,
-            forecast.as_deref(),
-            depart_tick,
-        );
-        if points.len() < 2 {
-            wp.points = vec![from_xz, to_xz];
-        } else {
-            wp.points = points;
-        }
+        // Sites are in metres; routing is in tiles. Follow the built road when one connects the
+        // ends (flooded / rubble edges are walls); cross-country only where none does.
+        let (from_t, to_t) = (from_xz / TILE_METRES_GAMEPLAY, to_xz / TILE_METRES_GAMEPLAY);
+        let forecast = planner.forecast.as_deref();
+        let tiles = planner.roads.polyline(forecast, depart_tick, from_t, to_t).unwrap_or_else(|| {
+            let mut pts = plan_truck_tile_waypoints(&mut planner.scratch.nodes, from_t, to_t, concern, forecast, depart_tick);
+            if pts.len() < 2 {
+                pts = vec![from_t, to_t];
+            }
+            let last = pts.len() - 1;
+            pts[0] = from_t;
+            pts[last] = to_t;
+            pts
+        });
+        wp.points = tiles.into_iter().map(|p| p * TILE_METRES_GAMEPLAY).collect();
         wp.current_waypoint_index = 0;
         if let Some(mut k) = kin {
             k.velocity = Vec2::ZERO;

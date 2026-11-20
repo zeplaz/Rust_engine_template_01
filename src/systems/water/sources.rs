@@ -16,7 +16,7 @@
 //! sources in proportion to their columns. Flow accumulation from world generation is not kept at
 //! runtime; the channel mask and baseline depths it produced are, and they are all this needs.
 
-use super::step_kernel::cfl_limited_conductance;
+use super::step_kernel::nominal_conductance;
 use super::surface_water::SurfaceWaterField;
 
 /// Fastest cross-section mean speed (m/s) a source may be given (steep mountain streams).
@@ -126,7 +126,7 @@ impl SurfaceWaterField {
             }
             if !fed && drop_m > 0.0 {
                 let h = self.ref_depth_m[i];
-                let uniform = cfl_limited_conductance(self.dx_m, h) * drop_m;
+                let uniform = nominal_conductance(self.dx_m, h) * drop_m;
                 let section = h * self.dx_m * RIVER_MAX_SPEED_MPS;
                 list.push(RiverSource { cell: i as u32, derived_m3s: uniform.min(section) });
             }
@@ -203,7 +203,9 @@ mod tests {
         let mut bed = vec![0.0_f32; n];
         for z in 0..h {
             for x in 0..w {
-                bed[(z * w + x) as usize] = fall * z as f32 + 5.0;
+                // Banks 20 m above the channel keep the river in its bed.
+                let bank = if (x0..x1).contains(&x) { 0.0 } else { 20.0 };
+                bed[(z * w + x) as usize] = fall * z as f32 + 5.0 + bank;
             }
         }
         let mut f = SurfaceWaterField::default();
@@ -258,9 +260,8 @@ mod tests {
     /// every cross-section below the source, and the river keeps what it is given (open map edges
     /// carry it away; nothing is lost on the way).
     #[test]
-    #[ignore = "WM-2 in progress: behaviour not reached yet (see plan WM status)"]
     fn a_river_fed_at_its_source_reaches_steady_flow_down_its_channel() {
-        let (mut f, river) = stream(48, 48, 20, 24, 2.0, 0.05);
+        let (mut f, river) = stream(48, 48, 20, 24, 2.0, 0.2);
         f.derive_river_sources(&river);
         let q_in = f.inflow_m3s;
         assert!(q_in > 10.0);

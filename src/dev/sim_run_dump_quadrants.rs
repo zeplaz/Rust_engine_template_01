@@ -140,7 +140,7 @@ pub fn quadrants_json(
                 if tx >= w || ty >= h {
                     continue;
                 }
-                let class = matrix.water[matrix.idx(lx, ty)];
+                let class = matrix.water[matrix.idx(lx, ly)];
                 let gidx = ty as usize * w as usize + tx as usize;
                 grid[gidx] = (true, class);
                 if class == WaterClass::Wetland {

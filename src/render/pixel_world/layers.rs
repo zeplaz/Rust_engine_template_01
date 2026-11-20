@@ -33,18 +33,18 @@ use crate::terrain::generation::ChunkCellMatrix;
 use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
 
 #[inline]
-fn p3(x: f32, y: f32, h: f32) -> Vec3 {
+pub(super) fn p3(x: f32, y: f32, h: f32) -> Vec3 {
     Vec3::new(x, h, -y)
 }
 
-fn mix64(mut x: u64) -> u64 {
+pub(super) fn mix64(mut x: u64) -> u64 {
     x = x.wrapping_add(0x9E37_79B9_7F4A_7C15);
     x = (x ^ (x >> 30)).wrapping_mul(0xBF58_476D_1CE4_E5B9);
     x = (x ^ (x >> 27)).wrapping_mul(0x94D0_49BB_1331_11EB);
     x ^ (x >> 31)
 }
 
-fn shade(c: [f32; 3], k: f32, a: f32) -> [f32; 4] {
+pub(super) fn shade(c: [f32; 3], k: f32, a: f32) -> [f32; 4] {
     [c[0] * k, c[1] * k, c[2] * k, a]
 }
 
@@ -53,11 +53,11 @@ fn column(buf: &mut MeshBuf, x0: f32, y0: f32, x1: f32, y1: f32, lo: f32, hi: f3
     buf.open_box(p3(x0, y0, lo).min(p3(x1, y1, hi)), p3(x0, y0, lo).max(p3(x1, y1, hi)), top, side);
 }
 
-fn layer() -> RenderLayers {
+pub(super) fn layer() -> RenderLayers {
     RenderLayers::layer(PIXEL_WORLD_RENDER_LAYER)
 }
 
-fn pixel_world_on(mode: &Option<Res<WorldPresentationMode>>, frame: &PixelWorldCameraFrame, field: &PixelWorldTerrainField) -> bool {
+pub(super) fn pixel_world_on(mode: &Option<Res<WorldPresentationMode>>, frame: &PixelWorldCameraFrame, field: &PixelWorldTerrainField) -> bool {
     mode.as_deref().is_some_and(|m| m.is_pixel_world()) && frame.active && field.is_ready()
 }
 
@@ -958,7 +958,7 @@ const DRAPE_MAX_EDGE: f32 = 1.0;
 /// Overlay lift above the surface (world units); the 2D layer's z order adds a little more.
 const DRAPE_LIFT: f32 = 0.35;
 /// Roads / rails sit just over the ground.
-const PATH_LIFT: f32 = 0.06;
+pub(super) const PATH_LIFT: f32 = 0.06;
 
 /// Drape tile-space overlay triangles (`[x, y, z_order]`) on the voxel surface.
 /// Deck heights `(a, b)` when the straight segment `a → b` crosses a water cell; `None` for a dry

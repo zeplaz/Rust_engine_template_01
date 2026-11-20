@@ -24,3 +24,14 @@ impl Default for HudAggregateSettings {
         }
     }
 }
+
+/// The committed road segment the player selected: endpoint tiles (`x`, row) of one drawn
+/// segment of `ExecutedRoadNetwork`. Written by the map pick only.
+#[derive(Resource, Default, Debug, Clone, Copy, PartialEq, Eq)]
+pub struct HudRoadFocus {
+    pub segment: Option<(IVec2, IVec2)>,
+}
+
+/// Info-card lines for [`HudRoadFocus`] (empty = no card). Written by the road report system only.
+#[derive(Resource, Default, Debug, Clone, PartialEq, Eq)]
+pub struct HudRoadReport(pub Vec<String>);

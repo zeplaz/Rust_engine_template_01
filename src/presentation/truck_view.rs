@@ -9,7 +9,7 @@ use crate::economy::logistics::orders::{
 };
 use crate::entities::components::Waypoints;
 use crate::presentation::visual_asm::{VisualActionPhase, VisualActionState};
-use crate::systems::navigation::{RoadVehicleKinematics, SpeedModifier, TruckMotionLeg};
+use crate::systems::navigation::{point_along_polyline, truck_leg_key, RoadVehicleKinematics, TruckMotionLeg};
 
 /// Marks a presentation proxy for one order-sim vehicle.
 #[derive(Component, Clone, Copy, Debug, PartialEq, Eq, Hash)]
@@ -70,7 +70,7 @@ pub fn sync_truck_presentation(
     sim: Option<Res<LogisticsOrderSimRes>>,
     registry: Option<Res<LogisticsSiteRegistry>>,
     mut index: ResMut<TruckPresentationIndex>,
-    mut q: Query<(&TruckPresentation, &mut Transform, &mut VisualActionState)>,
+    mut q: Query<(&TruckPresentation, &mut Transform, &mut VisualActionState, &Waypoints, &TruckMotionLeg)>,
 ) {
     let Some(sim) = sim else {
         return;
@@ -104,10 +104,24 @@ pub fn sync_truck_presentation(
             VehiclePhase::ToPickup(_) | VehiclePhase::Hauling(_)
         );
         if let Some(&e) = index.by_vehicle.get(id) {
-            if let Ok((_, mut tf, mut vis)) = q.get_mut(e) {
-                if !nav_driven {
-                    tf.translation.x = xz.x;
-                    tf.translation.y = xz.y;
+            if let Ok((_, mut tf, mut vis, wp, leg)) = q.get_mut(e) {
+                // Sole writer of the proxy transform. A driving truck sits `fraction` of the way
+                // along the planned route (built road, bridge deck included, else cross-country),
+                // so it arrives exactly when the order sim says it does; until the route is
+                // planned it falls back to the straight line.
+                let driven = nav_driven
+                    .then(|| match &v.phase {
+                        VehiclePhase::ToPickup(l) | VehiclePhase::Hauling(l) => Some(l.fraction()),
+                        _ => None,
+                    })
+                    .flatten()
+                    .filter(|_| leg.leg_key == truck_leg_key(v) && wp.points.len() >= 2)
+                    .and_then(|f| point_along_polyline(&wp.points, f));
+                let (pos, heading) = driven.unwrap_or((xz, Vec2::ZERO));
+                tf.translation.x = pos.x;
+                tf.translation.y = pos.y;
+                if heading != Vec2::ZERO {
+                    tf.rotation = Quat::from_rotation_z(heading.y.atan2(heading.x));
                 }
                 vis.facing = facing_from_motion(v, &registry);
                 vis.set_phase(phase);
@@ -134,7 +148,6 @@ pub fn sync_truck_presentation(
                         facing,
                     },
                     Waypoints::default(),
-                    SpeedModifier::default(),
                     RoadVehicleKinematics::default(),
                     TruckMotionLeg {
                         vehicle_id: *id,

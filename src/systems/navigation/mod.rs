@@ -20,6 +20,7 @@ pub use nav::*;
 pub use potental_feild_nav::*;
 pub use road_vehicles_motion::{
     filter_vehicle_steering_output, smooth_vehicle_tile_path, sync_truck_motion_waypoints_system,
-    LogisticsGridPathScratch, RoadVehicleKinematics, TruckMotionLeg, VehicleMotionLimits,
+    point_along_polyline, truck_leg_key, LogisticsGridPathScratch, RoadVehicleKinematics,
+    TruckLegPlanner, TruckMotionLeg, VehicleMotionLimits,
 };
 pub use schedule_plugin::*;

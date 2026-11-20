@@ -30,6 +30,7 @@ mod ground_material;
 mod layers;
 mod fire;
 mod rain;
+mod roads;
 mod terrain;
 mod water_gpu;
 
@@ -47,6 +48,7 @@ pub use field::PixelWorldTerrainField;
 #[cfg(test)]
 pub(crate) use field::sync_pixel_world_terrain_field;
 pub use layers::{ray_hit_site_boxes, PixelWorldSitePickBoxes, SitePickBox};
+pub use roads::{ray_hit_road_decks, PixelWorldRoadSurface, RoadSurfaceSeg};
 
 /// Render layer of every voxel-view entity (camera, sun, meshes).
 pub const PIXEL_WORLD_RENDER_LAYER: usize = 9;
@@ -102,6 +104,7 @@ impl Plugin for PixelWorldViewPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(PixelWorldCulling::from_env());
         app.init_resource::<layers::PixelWorldSitePickBoxes>();
+        app.init_resource::<roads::PixelWorldRoadSurface>();
         app.add_plugins((
             water_gpu::PixelWorldWaterGpuPlugin,
             ground_material::PixelWorldGroundMaterialPlugin,
@@ -171,6 +174,8 @@ impl Plugin for PixelWorldViewPlugin {
                     layers::sync_pixel_world_ghost,
                     layers::sync_pixel_world_fronts,
                     layers::sync_pixel_world_paths,
+                    roads::publish_pixel_world_road_surface,
+                    roads::sync_pixel_world_trucks.after(roads::publish_pixel_world_road_surface),
                     rain::sync_pixel_world_precip,
                     fire::sync_pixel_world_fire,
                     clouds::sync_pixel_world_clouds,
