@@ -366,3 +366,5 @@ Evidence: dam scene playcheck capture (frame 5000, 6500 ticks) + `cargo test --l
 | Perf | T-16 `upd_control_relax` hitch: per-pass BTreeMap of ~100k tiles replaced by a dense grid built from the overlays | DONE (code) | relax tests; re-measure perf.debug in next capture |
 | Docs | Stale destruction docs (T2 mask shader path/crater row, blast contract, presentation table, struct/disaster/debris statuses) | DONE | — |
 | Tests | Lib suite failures | see commit note | baseline comparison vs HEAD |
+| Water | Run-to-run variance: same code, two captures gave s3 839 vs 145, s4 16.2 MW vs 0, inundated 2729 vs 1193; second run's reservoir only ~8 m deep, crest gone by S4 | OPEN | suspect dam erosion through the DW-3 notch while filling (per-column erosion now real) or build timing; needs a per-tick dam history dump to pin |
+| Perf | After T-16: hitches/min 20 -> 3.9 (PASS), avg 75 -> 52 ms, p95 124 -> 67 ms; one 116 ms relax pass left | PARTIAL | debug build |
