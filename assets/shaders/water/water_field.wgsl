@@ -75,8 +75,10 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // Flow-map scroll: offset UV along velocity for streaking.
     let scroll_uv = in.uv - flow * globals.time_secs * 0.035;
     let scrolled = sample_field(scroll_uv);
-    let scroll_mix = sin(dot(in.world_xy, normalize(flow + vec2<f32>(0.001, 0.0))) * 0.55
-        + globals.time_secs * (0.4 + speed * 1.2)) * 0.5 + 0.5;
+    // Fixed-direction phase (see water_field_3d.wesl): normalize(flow) x world coords = moire.
+    let ph = dot(in.world_xy, vec2<f32>(0.31, 0.47));
+    let ph_aa = clamp(1.0 - fwidth(ph) * 0.6, 0.0, 1.0);
+    let scroll_mix = (sin(ph - globals.time_secs * (0.4 + speed * 1.2)) * 0.5 + 0.5) * ph_aa;
 
     // Shoreline wetting from depth neighborhood gradient.
     let eps = vec2<f32>(1.5) / max(globals.origin_extent.zw, vec2<f32>(1.0));
@@ -94,7 +96,9 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     // Foam is a broken, moving highlight on blue water, not the water's colour: flow-driven
     // foam is cut into streaks along the flow and capped, so a fast flood reads blue + white
     // streaks instead of a white/grey sheet.
-    let streak = smoothstep(0.55, 0.95, sin(dot(in.world_xy, vec2<f32>(0.9, 1.7)) * 1.3 + scroll_mix * 6.2831) * 0.5 + 0.5);
+    let sp = dot(in.world_xy, vec2<f32>(0.9, 1.7)) * 1.3;
+    let sp_aa = clamp(1.0 - fwidth(sp) * 0.5, 0.0, 1.0);
+    let streak = smoothstep(0.55, 0.95, sin(sp + scroll_mix * 3.1416) * 0.5 + 0.5) * sp_aa;
     tint = mix(tint, FOAM, clamp(foam01 * streak * 0.35 + shoreline * 0.4, 0.0, 0.20));
 
     var alpha = WATER_ALPHA_BASE + depth01 * WATER_ALPHA_DEPTH + foam01 * streak * 0.08 + shoreline * 0.1;

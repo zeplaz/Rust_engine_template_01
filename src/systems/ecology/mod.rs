@@ -3,6 +3,7 @@
 
 mod cell_stand;
 mod stand_flood;
+mod stand_ground;
 mod fuel_moisture;
 mod fuel_break;
 mod chunk_ecology;
@@ -163,7 +164,10 @@ impl Plugin for EcologyPlugin {
                     .after(vegetation_suitability::update_chunk_vegetation_suitability)
                     .after(landscape_grammar_lg2::derive_vegetation_population_from_graph)
                     .after(fuel_break::apply_fuel_break_commits),
-                stand_flood::stand_flood_from_water_system.after(cell_stand::cell_stand_tick),
+                stand_ground::stand_ground_deform_system
+                    .after(cell_stand::cell_stand_tick)
+                    .after(crate::terrain::ground_deform::GroundDeformSet::Drain),
+                stand_flood::stand_flood_from_water_system.after(stand_ground::stand_ground_deform_system),
                 fuel_moisture::cell_fuel_moisture_tick
                     .after(stand_flood::stand_flood_from_water_system),
             )

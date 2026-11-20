@@ -4,7 +4,7 @@
 |:---|:---|
 | **Id** | **STRUCT-ROLE-v1** |
 | **Program** | [`plan_destruction_presentation_v1.md`](plan_destruction_presentation_v1.md) |
-| **Status** | **ADOPTED** — tags + dam production writer; cascade = STRUCT-CASCADE |
+| **Status** | **ADOPTED** — tags; dam span writer + D-2 default roles for every committed non-dam site (`ensure_default_structural_roles_system`: corner/end tile Foundation, 3-neighbour perimeter Column, interior Facade); cascade = STRUCT-CASCADE (2026-11-19) |
 | **Date** | 2026-11-17 |
 | **Owner** | `@coder` (construction) |
 

@@ -206,7 +206,20 @@ pub fn route_edge_cost(
     depart_tick: u64,
     id: TransportEdgeId,
 ) -> f32 {
-    route_edge_cost_with_nav(cache, forecast, None, None, None, depart_tick, id)
+    route_edge_cost_with_nav(cache, forecast, None, None, None, None, depart_tick, id)
+}
+
+/// Hard block when head or tail tile is under rubble / in a crater (DW-1 reader).
+#[must_use]
+pub fn debris_blocks_route_edge(
+    debris: Option<&super::debris_block::DebrisRouteBlockBook>,
+    directory: Option<&TransportEdgeDirectory>,
+    id: TransportEdgeId,
+) -> bool {
+    let (Some(debris), Some(meta)) = (debris, directory.and_then(|d| d.by_edge.get(&id))) else {
+        return false;
+    };
+    debris.blocks_key(&meta.head_key) || debris.blocks_key(&meta.tail_key)
 }
 
 /// Hard block when head or tail tile is in the flood book (DF-9).
@@ -232,10 +245,13 @@ pub fn route_edge_cost_with_nav(
     nav: Option<&crate::compute::NavFieldFrame>,
     directory: Option<&TransportEdgeDirectory>,
     flood: Option<&crate::systems::water::FloodRouteBlockBook>,
+    debris: Option<&super::debris_block::DebrisRouteBlockBook>,
     depart_tick: u64,
     id: TransportEdgeId,
 ) -> f32 {
-    if flood_blocks_route_edge(flood, directory, id) {
+    if flood_blocks_route_edge(flood, directory, id)
+        || debris_blocks_route_edge(debris, directory, id)
+    {
         return f32::INFINITY;
     }
     let base = base_edge_route_cost(cache, id);
@@ -254,7 +270,7 @@ pub fn path_edges_between_tiles(
     to: BuildSiteTile,
     mode: TransportMode,
 ) -> Option<Vec<TransportEdgeId>> {
-    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, None, None, 0)
+    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, None, None, None, 0)
 }
 
 /// Costed production path (CQ-53): Dijkstra with [`route_edge_cost_with_nav`].
@@ -269,6 +285,7 @@ pub fn path_edges_between_tiles_costed(
     forecast: Option<&LogisticsCostForecastBook>,
     nav_field: Option<&crate::compute::NavFieldFrame>,
     flood: Option<&crate::systems::water::FloodRouteBlockBook>,
+    debris: Option<&super::debris_block::DebrisRouteBlockBook>,
     depart_tick: u64,
 ) -> Option<Vec<TransportEdgeId>> {
     if from == to {
@@ -303,6 +320,7 @@ pub fn path_edges_between_tiles_costed(
             nav_field,
             Some(directory),
             flood,
+            debris,
             depart_tick,
             id,
         )
@@ -481,6 +499,13 @@ pub fn invalidate_routes_touching_dirty_tiles(
     before.saturating_sub(route_cache.routes.len() as u32)
 }
 
+/// Hard route blockers (flood + debris): one domain (route passability), published by their owners.
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct RouteHardBlocks<'w> {
+    flood: Option<Res<'w, crate::systems::water::FloodRouteBlockBook>>,
+    debris: Option<Res<'w, super::debris_block::DebrisRouteBlockBook>>,
+}
+
 pub fn refresh_resource_flow_routes_system(
     graph: Option<Res<LogisticsGraph>>,
     nav: Res<TransportNavExport>,
@@ -490,7 +515,7 @@ pub fn refresh_resource_flow_routes_system(
     mut dirty_tiles: ResMut<LogisticsRouteDirtyTiles>,
     forecast: Option<Res<LogisticsCostForecastBook>>,
     nav_field: Option<Res<crate::compute::NavFieldFrame>>,
-    flood: Option<Res<crate::systems::water::FloodRouteBlockBook>>,
+    blocks: RouteHardBlocks,
     clock: Option<Res<crate::systems::sim_control::SimStepClock>>,
     mut route_cache: ResMut<RouteCache>,
     mut path_store: ResMut<RoutePathStore>,
@@ -564,7 +589,8 @@ pub fn refresh_resource_flow_routes_system(
                 cost_cache.as_deref(),
                 forecast.as_deref(),
                 nav_field.as_deref(),
-                flood.as_deref(),
+                blocks.flood.as_deref(),
+                blocks.debris.as_deref(),
                 depart_tick,
             );
             let reachable = path_edges.is_some();
@@ -952,10 +978,30 @@ mod nav10_tests {
             None,
             Some(&directory),
             Some(&flood),
+            None,
             0,
             TransportEdgeId(9),
         );
         assert!(cost.is_infinite(), "flooded edge must hard-block");
+    }
+
+    #[test]
+    fn rubble_road_blocks_route_cost_until_cleared() {
+        use super::super::debris_block::DebrisRouteBlockBook;
+        let mut directory = TransportEdgeDirectory::default();
+        directory
+            .by_edge
+            .insert(TransportEdgeId(9), road("t1_0", "t2_0"));
+        let mut debris = DebrisRouteBlockBook::default();
+        let e = TransportEdgeId(9);
+        let open = route_edge_cost_with_nav(None, None, None, Some(&directory), None, Some(&debris), 0, e);
+        assert!(open.is_finite(), "clear road open");
+        debris.blocked.insert("t1_0".into());
+        assert!(debris_blocks_route_edge(Some(&debris), Some(&directory), e));
+        let cost = route_edge_cost_with_nav(None, None, None, Some(&directory), None, Some(&debris), 0, e);
+        assert!(cost.is_infinite(), "rubble edge must hard-block");
+        debris.blocked.clear();
+        assert!(!debris_blocks_route_edge(Some(&debris), Some(&directory), e));
     }
 }
 

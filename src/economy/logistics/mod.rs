@@ -6,6 +6,7 @@ pub mod intent_draw;
 pub mod orders;
 pub mod portals;
 pub mod propagation;
+pub mod debris_block;
 pub mod routes;
 pub mod solver;
 pub mod types;
@@ -17,6 +18,9 @@ pub use propagation::{
     apply_pending_site_staging_debits_system, commit_freight_arrivals_system,
     deployable_haul_transit_ticks, dispatch_deployable_from_manufacturing_system,
     dispatch_freight_from_solver_system, freight_movement_for_transport, freight_transit_ticks,
+};
+pub use debris_block::{
+    publish_debris_route_blocks_system, tile_debris_impassable, DebrisRouteBlockBook,
 };
 pub use routes::{
     accumulate_logistics_route_dirty_tiles_system, cached_route_intersects_dirty_tiles,
@@ -70,6 +74,7 @@ impl Plugin for LogisticsThroughputPlugin {
         app.init_resource::<PortalAttachmentMap>()
             .init_resource::<RouteCache>()
             .init_resource::<LogisticsRouteDirtyTiles>()
+            .init_resource::<DebrisRouteBlockBook>()
             .init_resource::<RoutePathStore>()
             .init_resource::<InTransitLedger>()
             .init_resource::<SiteStagingStock>()
@@ -114,6 +119,7 @@ impl Plugin for LogisticsThroughputPlugin {
             .add_systems(
                 Update,
                 (
+                    publish_debris_route_blocks_system,
                     accumulate_logistics_route_dirty_tiles_system,
                     refresh_resource_flow_routes_system,
                 )

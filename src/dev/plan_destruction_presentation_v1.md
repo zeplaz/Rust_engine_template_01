@@ -58,7 +58,9 @@ flowchart LR
 | **STRUCT-ROLE** | Grammar/occupation `StructuralRole` tags | Glass ≠ load column | **ADOPTED** — [`plan_struct_role_v1.md`](plan_struct_role_v1.md) · dam writer |
 | **STRUCT-CASCADE** | Per-building integrity / DSU (dam pattern generalized) | No floating island for tagged buildings | **ADOPTED** — [`plan_struct_cascade_v1.md`](plan_struct_cascade_v1.md) mask cascade |
 | **DISASTER-PROXY** | Hydro/fire → integrity proxy via construction funnel | Surge/fire can demolish tagged structure | **ADOPTED** — [`plan_disaster_proxy_v1.md`](plan_disaster_proxy_v1.md) |
-| **DEBRIS-FX** | Material-tinted GPU particle burst on collapse | Cover remesh lag | **ADOPTED** — [`plan_debris_fx_v1.md`](plan_debris_fx_v1.md) |
+| **DEBRIS-FX** | Material-tinted GPU particle burst on collapse | Cover remesh lag | **ADOPTED** — [`plan_debris_fx_v1.md`](plan_debris_fx_v1.md) (audit 2026-11-19: row convention + persistence fix in progress) |
+| **DW-1..6** | Destruction changes the world: terrain ground delta (craters + rims, rubble), dam per-column crest, buildings as water walls, debris wash, woodland strike test | Craters/rubble are terrain truth; water/ground/trees follow | **IN TREE 2026-11-19** — [`plan_close_voxel_water_v1.md`](plan_close_voxel_water_v1.md) "Design: destruction changes the world" |
+| **D-1..8** | Audit gaps: visible damage stages, roles for all buildings, blast dust, rubble/crater gameplay, building fire, staged collapse | Player sees damage before collapse; damage has consequences | **IN PROGRESS** — same plan, "Audit" section |
 
 ## Pillars captured from review (mapped)
 

@@ -259,14 +259,21 @@ pub fn mirror_water_into_dam_book_system(
             } else {
                 field.outlet_flow_m3s.max(0.0) / inflow
             };
-            book.s2_downstream_ratio = ratio.clamp(0.0, 10.0);
+            // DF-2 asks whether closing the dam cuts the river while the reservoir fills: keep
+            // the lowest ratio of the stage (a full reservoir later spills the whole inflow over
+            // the crest, which is correct, and overwrote the measurement with ~1).
+            book.s2_downstream_ratio = book.s2_downstream_ratio.min(ratio.clamp(0.0, 10.0));
             book.s4_hydro_mw_peak = book.s4_hydro_mw_peak.max(hydro.power_mw);
         }
         DamFloodStage::S4Operate | DamFloodStage::S3Drown => {
             book.s4_hydro_mw_peak = book.s4_hydro_mw_peak.max(hydro.power_mw);
         }
         DamFloodStage::S5Strike | DamFloodStage::S7Collapse => {
-            if book.breach_sim_s < 0.0 && field.breach_flow_m3s > 0.0 {
+            // Breached = a crest clear / breach flow, or any broken column (DW-3 notch flow
+            // carries the wave with no global breach flow).
+            if book.breach_sim_s < 0.0
+                && (field.breach_flow_m3s > 0.0 || field.hydraulics.barrier_damaged)
+            {
                 book.breach_sim_s = now;
                 book.breach_g3_baseline_m3s = g3.max(g3_stage).max(0.0);
             }

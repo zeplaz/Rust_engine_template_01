@@ -30,12 +30,13 @@ pub fn flood_foundation_integrity_proxy_system(
     field: Option<Res<SurfaceWaterField>>,
     mut mask: Option<ResMut<DestructionMaskBook>>,
     mut queue: ResMut<StructuralCollapseQueue>,
+    clock: Res<crate::systems::sim_control::SimStepClock>,
     mut sites: Query<
         (
             &SiteFootprint,
             &PlannedSite,
             &SiteStructuralRoles,
-            Option<&mut DestructibleDamage>,
+            &mut DestructibleDamage,
         ),
         // DF-8 / §8: a dam's damage is its `DamBody` (voxel integrity, leak, erosion) — never
         // whole-site demolish from a wet foundation.
@@ -48,7 +49,8 @@ pub fn flood_foundation_integrity_proxy_system(
     if !field.wired {
         return;
     }
-    for (fp, planned, roles, damage) in &mut sites {
+    let dt_micros = clock.step_micros.saturating_mul(u64::from(clock.due));
+    for (fp, planned, roles, mut dmg) in &mut sites {
         // Same rule as placement (`preview_commit_guard`): a building allowed to stand in water
         // (port, intake, rig, weir…) has a wet foundation by design, so wetness is not damage.
         if super::preview_commit_guard::building_may_occupy_water(planned.catalog_id.as_deref()) {
@@ -59,7 +61,7 @@ pub fn flood_foundation_integrity_proxy_system(
             continue;
         }
         let mut max_depth = 0.0f32;
-        let mut foundation_wet = false;
+        let mut wet_tiles: Vec<IVec2> = Vec::new();
         for i in 0..n {
             if roles.roles[i] != StructuralRole::Foundation {
                 continue;
@@ -69,28 +71,29 @@ pub fn flood_foundation_integrity_proxy_system(
                 continue;
             };
             if d >= FLOOD_FOUNDATION_DEPTH_M {
-                foundation_wet = true;
                 max_depth = max_depth.max(d);
-                if let Some(mask) = mask.as_mut() {
+                wet_tiles.push(t);
+            }
+        }
+        if wet_tiles.is_empty() {
+            continue;
+        }
+        // Integrity falls as depth exceeds gate (2m ≈ total loss); the stage then walks the
+        // ladder one dwell at a time (D-8) instead of vanishing in one frame.
+        let integrity = (1.0 - ((max_depth - FLOOD_FOUNDATION_DEPTH_M) / 2.0).clamp(0.0, 1.0))
+            .clamp(0.0, 1.0);
+        let target = destructible_stage_from_integrity(integrity, DESTRUCTIBLE_COLLAPSE_INTEGRITY);
+        dmg.advance_toward(target, dt_micros);
+        // A failing foundation (Compromised or worse) drops its ground column; the cascade
+        // then takes the load-bearing walls.
+        if dmg.stage.rank() >= DestructibleDamageStage::Compromised.rank() {
+            if let Some(mask) = mask.as_mut() {
+                for t in &wet_tiles {
                     mask.mark_tile(t.x, t.y, MASK_DESTROYED);
                 }
             }
         }
-        if !foundation_wet {
-            continue;
-        }
-        // Integrity falls as depth exceeds gate (2m ≈ total loss).
-        let integrity = (1.0 - ((max_depth - FLOOD_FOUNDATION_DEPTH_M) / 2.0).clamp(0.0, 1.0))
-            .clamp(0.0, 1.0);
-        let stage = destructible_stage_from_integrity(integrity, DESTRUCTIBLE_COLLAPSE_INTEGRITY);
-        if let Some(mut dmg) = damage {
-            dmg.stage = dmg.stage.escalate(stage);
-            if dmg.stage.is_terminal() {
-                queue.tiles.push(planned.origin);
-            }
-        } else if stage == DestructibleDamageStage::Collapsed
-            || integrity <= DESTRUCTIBLE_COLLAPSE_INTEGRITY
-        {
+        if dmg.stage.is_terminal() {
             queue.tiles.push(planned.origin);
         }
     }
@@ -154,6 +157,14 @@ mod tests {
         assert!(prod.contains("FireCollapseQueue"));
     }
 
+    /// Each `app.update()` is one whole sim second (`due = 1`).
+    fn one_second_clock() -> crate::systems::sim_control::SimStepClock {
+        let mut c = crate::systems::sim_control::SimStepClock::default();
+        c.step_micros = 1_000_000;
+        c.due = 1;
+        c
+    }
+
     fn flooded_app(catalog: Option<&str>, dam: bool) -> (App, Entity) {
         use crate::strategic::{FootprintTiles, LayerType, SiteArchetype, SiteId};
         let mut app = App::new();
@@ -162,6 +173,7 @@ mod tests {
         field.depth_m.fill(3.0); // well over FLOOD_FOUNDATION_DEPTH_M + 2 m gate
         app.insert_resource(field);
         app.init_resource::<StructuralCollapseQueue>();
+        app.insert_resource(one_second_clock());
         let tile = IVec2::new(1, 1);
         let origin = BuildSiteTile { x: 1, z: 1 };
         let mut e = app.world_mut().spawn((
@@ -176,6 +188,7 @@ mod tests {
             },
             SiteFootprint { tiles: vec![tile], layer: LayerType::Surface },
             SiteStructuralRoles { roles: vec![StructuralRole::Foundation] },
+            DestructibleDamage::default(),
         ));
         if dam {
             e.insert(super::super::dam_barrier::DamBody::default());
@@ -190,7 +203,97 @@ mod tests {
     fn close_d1_flood_collapses_ordinary_site() {
         let (mut app, _) = flooded_app(Some("factory_light_v1"), false);
         app.update();
-        assert_eq!(app.world().resource::<StructuralCollapseQueue>().tiles.len(), 1);
+        // D-8: first frame only scars; collapse is staged, not a one-frame vanish.
+        assert!(app.world().resource::<StructuralCollapseQueue>().tiles.is_empty());
+        for _ in 0..6 {
+            app.update();
+        }
+        assert!(!app.world().resource::<StructuralCollapseQueue>().tiles.is_empty());
+    }
+
+    /// D-2 + D-8 end to end: an ordinary building gets default roles, deep water walks it
+    /// Scarred -> Compromised -> Collapsed, the cascade marks its walls, and the collapse goes
+    /// through `StructuralCollapseQueue` -> `execute_demolish_at_tile` (entity despawned).
+    #[test]
+    fn d2_d8_ordinary_building_flood_stages_cascade_and_funnel_collapse() {
+        use crate::construction::structural_cascade::cascade_mask_from_roles_system;
+        use crate::construction::structural_role::ensure_default_structural_roles_system;
+        use crate::strategic::{
+            ConstructionSite, FootprintTiles, LayerType, SiteArchetype, SiteConstructionPhase,
+            SiteId,
+        };
+        let mut app = App::new();
+        let mut field = SurfaceWaterField::default();
+        field.allocate(0, 0, 8, 8, vec![0.0; 64], 0.0);
+        field.depth_m.fill(3.0);
+        app.insert_resource(field);
+        app.init_resource::<StructuralCollapseQueue>();
+        app.insert_resource(one_second_clock());
+        let mut mask = DestructionMaskBook::default();
+        mask.ensure_size(16, 16);
+        app.insert_resource(mask);
+        // 3x3 house: corners Foundation, edges Column, centre Facade.
+        let tiles: Vec<IVec2> = (1..4)
+            .flat_map(|y| (1..4).map(move |x| IVec2::new(x, y)))
+            .collect();
+        let site = app
+            .world_mut()
+            .spawn((
+                ConstructionSite {
+                    site_id: 9,
+                    owner: Entity::PLACEHOLDER,
+                    archetype: SiteArchetype::Factory,
+                    phase: SiteConstructionPhase::default(),
+                    operational_readiness: 1.0,
+                },
+                PlannedSite {
+                    site_id: SiteId(9),
+                    origin: BuildSiteTile { x: 1, z: 1 },
+                    footprint: FootprintTiles { width: 3, depth: 3 },
+                    archetype: SiteArchetype::Factory,
+                    layer: LayerType::Surface,
+                    catalog_id: Some("factory_light_v1".to_string()),
+                    placement: None,
+                },
+                SiteFootprint { tiles, layer: LayerType::Surface },
+            ))
+            .id();
+        app.add_systems(
+            Update,
+            (
+                ensure_default_structural_roles_system,
+                flood_foundation_integrity_proxy_system,
+                cascade_mask_from_roles_system,
+                apply_structural_collapse_demolish,
+            )
+                .chain(),
+        );
+        app.update();
+        let roles = app.world().get::<SiteStructuralRoles>(site).expect("roles");
+        assert!(roles.roles.contains(&StructuralRole::Foundation));
+        assert!(roles.roles.contains(&StructuralRole::Column));
+        // Frame 1 sees no damage component yet (inserted via commands) -> no stage change.
+        let mut seen = Vec::new();
+        for _ in 0..8 {
+            app.update();
+            if let Some(d) = app.world().get::<DestructibleDamage>(site) {
+                seen.push(d.stage);
+                if d.stage == DestructibleDamageStage::Compromised {
+                    // Cascade marked the load-bearing edge (2,1) while the house still stands.
+                    assert_eq!(
+                        app.world().resource::<DestructionMaskBook>().cell(2, 1),
+                        MASK_DESTROYED
+                    );
+                }
+            }
+            if app.world().get_entity(site).is_err() {
+                break;
+            }
+        }
+        assert!(seen.contains(&DestructibleDamageStage::Scarred), "{seen:?}");
+        assert!(seen.contains(&DestructibleDamageStage::Compromised), "{seen:?}");
+        assert!(app.world().get_entity(site).is_err(), "collapse must despawn via the funnel");
+        assert!(app.world().resource::<StructuralCollapseQueue>().collapsed >= 1);
     }
 
     /// CLOSE-D1: water-legal buildings (placement rule) and dams (DamBody owns damage) are not

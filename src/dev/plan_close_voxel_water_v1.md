@@ -240,3 +240,128 @@ Checked against `plan_dam_flood_benchmark_v1.md` (§0 no-cheat, §4 authority, D
 | OP-10 | Extra water downstream of the dam | Following the river past the dam, more water appears at one point (ROI south edge 96 → static water beyond / composite pack seam) |
 | OP-11 | Reservoir fills unevenly behind the dam | Uneven / wonky build-up upstream after the dam is built |
 | OP-12 | S3 drown premise unmet | No forest cell submerged 14 days → no drowned/dead stands for S9; evaluate drowning from solver depth per forest cell |
+
+## Todo (operator playtest 2026-11-19 night, on the uncommitted OP-10/11/12 water + valley rework)
+
+Background agents stopped. Work in this order, one at a time, each verified in one dam playcheck capture.
+
+| Id | Item | State |
+|:---|:---|:---|
+| T-1 | Big square in the water + water runs in a weird pattern (also before the dam) | open — suspect solver ROI square vs static water outside it; check against new valley profile |
+| T-2 | Water rework (OP-10/11/12) uncommitted: valley terrain, level pool from depth, ghost south boundary, time-skip on sim clock | review after T-1; not committed |
+| T-3 | Missile crater: craters set MASK_DAMAGED, ground shader only reacts to DESTROYED → no bowl / no scorch | open — shallow bowl + scorch for damaged tiles |
+| T-4 | Land not rendering cleanly: voxel terrain outline hard to see, high ground reads as flat solid green | fix in progress — ground shader was unlit (bake albedo only, mesh normals + wall shade ignored); add face shading |
+| T-5 | Trees stopped drawing (REGRESSION — worked after d99e89d7 OP-5) — floodplain is a bare dark-green rectangle | agent bisecting; prime suspect uncommitted ValleyProfile rework |
+| T-9 | Fire broken / unfinished: S9 burn 0 (was 34%), OP-6 sync never visually confirmed mid-burn | likely same root as T-5 (no stands = no fuel); then verify flames/smoke/stage sync in a mid-burn capture |
+| T-10 | Day/night: voxel sun on the tactical day clock (8 min sim day), lit ground + shadow maps | done in tree, verify in capture |
+| T-11 | Dam removed (demolish funnel despawn) kept blocking water — crest stayed in the field | fixed: `release_barrier_of_removed_dams_system` (test `removed_dam_releases_its_barrier`) |
+| T-12 | Partial dam damage: water must flow through the damaged columns, erosion must widen that notch, all visible (dam mesh per column) | done in tree (DW-3), verify in capture |
+| T-13 | Missile explosion must deform land (crater bowl in terrain truth → ground mesh + water bed), scorch/fry visible | agent: terrain deform request drained by terrain owner |
+| T-14 | Second missile test: strike into a random wooded area (crater + fire + tree damage) | agent, after T-13 |
+| T-15 | Flood goes "around" the dam (geometry not closing) | re-check after the Lake-stamp fix (whole floodplain was Lake in matrices) |
+| T-16 | Hitch: upd_control_relax up to 236 ms at frames 2400–2750 (OP-9 impact freeze itself not reproduced: no hitch >150 ms after frame 2900) | open |
+| T-6 | OP-9 freeze on missile impact | open — HITCH_MS=150 capture through the strike |
+| T-7 | Verify blue water look, short missile tail, bridge deck (OP-7/8) in a capture | open |
+| T-8 | OP-7 rest: roads not clickable, trucks don't drive roads | on deck (larger feature) |
+
+## Design: destruction changes the world (operator 2026-11-19 night)
+
+Operator ask: a missile crater deforms the land and throws dirt into a rim; a destroyed building or
+dam stops being a building and its voxels become rubble that is part of the world; dam debris
+washes downstream and scatters; water collides with every changed shape (craters, rubble, damaged
+dam columns, standing buildings); partial damage is local and visible (water through the broken
+columns, erosion widening that notch).
+
+One authority, request-driven (AGENTS.md: one writer per domain, request queues to the owner):
+
+- **Ground delta (terrain owner).** A per-tile height delta in metres on top of the authored DEM,
+  owned by the terrain domain and drained from a `GroundDeformRequest` queue. Producers: blast
+  (crater bowl: dig; ejecta: raise a rim with the dug volume), demolish/collapse (site footprint ->
+  rubble heap with the structure's volume x a bulking factor), dam columns (failed column ->
+  rubble), water (sediment pick-up / deposit). Volume-conserving where it is a move (crater ->
+  rim, rubble -> downstream).
+- **Readers.** PixelWorld field ground (mesh + trees + pick), water solver bed (`bed_m`, so flow
+  routes around/through the new shape), ecology (rubble/crater cells: no stand, burnt), tactical
+  bake (rubble/dirt family tint). No reader writes back.
+- **Structures in water.** Every standing site footprint is an obstacle to the water solver at its
+  drawn height (dam = per-column crest = integrity x height; other buildings = their height);
+  destroyed -> obstacle removed and the rubble heap enters through the ground delta.
+- **Debris transport.** Water picks rubble/loose dirt from a cell when face velocity exceeds a
+  threshold and deposits it where velocity drops (simple capacity model), through the same queue.
+
+Phases:
+| Id | Slice | Owner |
+|:---|:---|:---|
+| DW-1 | Ground delta layer + request queue; crater bowl + ejecta rim from blasts; field ground + water bed follow | agent |
+| DW-2 | Site destroy -> rubble heap (footprint volume) through DW-1; building stops drawing | DONE in tree: `construction/rubble.rs` (sites + failed dam columns) |
+| DW-3 | Dam per-column crest from integrity (water flows through the damaged notch, erosion widens it); dam mesh per column; failed column -> rubble | main — DONE in tree: `BarrierColumnRequest` + `set_barrier_column_fractions`, `publish_dam_column_crests_system`, erosion global leak removed, dam columns drawn per integrity (rubble stub). Tests `dw3_*`. Left: blast.rs partial-damage global leak (after DW-1 agent), failed column -> rubble heap via DW-1 |
+| DW-4 | Standing buildings as water obstacles at their height | after DW-3 |
+| DW-5 | Debris/sediment wash-down (velocity pick-up / deposit) | DONE in tree: `systems/water/sediment.rs` -> `GroundDeformOp::Transfer` |
+| DW-6 | Second missile test into a wooded area (crater + rim + fire + tree damage) | DONE in tree: dam_flood_df1 `StrikeOrder(138,132)` after S9 |
+
+### Integration with the existing destruction program (checked 2026-11-19 night)
+
+DW is not a new program: it extends **PLAN-DESTROY-PRESENTATION-v1** (`plan_destruction_presentation_v1.md`, 4 tiers)
+at **Tier 1 (sim truth)**. Mapping and corrections:
+
+| Existing (ADOPTED) | DW relation |
+|:---|:---|
+| Tier 1 sim truth: construction funnel / `execute_demolish_at_tile` / `BlastCraterBook` sole writer / dam `column_integrity` | DW-1 ground delta is a new Tier-1 truth owned by terrain, fed only by these funnels (blast execute, demolish, dam columns). No new writer of sites. |
+| Tier 2 DESTROY-T2 mask (`MASK_DESTROYED` same-frame collapse) | Keep for buildings vanishing same frame. Craters no longer use DESTROYED (pit to world floor); the bowl comes from DW-1 heights. `plan_destroy_t2_mask_v1.md` row "Blast crater -> MASK_DESTROYED" is stale. |
+| Tier 3 catch-up remesh (`CHUNKS_PER_FRAME`, T2b priority) | DW-1 height changes ride the same remesh (ground_revision), priority chunks first. |
+| Tier 4 DEBRIS-FX particle burst on demolish | Keep: the burst covers the moment; DW-2 rubble heap is what stays. DEFER "rigid-body debris -> particles + CPU rubble occupancy" is honoured: rubble is height in the ground delta, not bodies. |
+| GPU-B `TerrainScorchField` (scorch authority, fed by `ChunkFireOverlay`) | **Correction:** the voxel ground shader's mask-DAMAGED scorch tint (this session) is a second scorch path. Replace it by sampling `TerrainScorchField` in the ground shader, so fire burn + blast scorch show the same in 2D and 3D. Blasts already ignite their disk -> fire -> scorch field. |
+| DISASTER-PROXY (flood depth -> foundation integrity -> demolish) | DW-4 obstacle walls feed water; flood damage to buildings stays DISASTER-PROXY (no second force path). |
+| STRUCT-ROLE / STRUCT-CASCADE | DW-2 rubble volume per site can use role counts (load columns) later; first cut uses footprint x floors. |
+| `VoxelOccupationBook` (REOPENED, stub) | Not used by DW; rubble is ground height. Revisit when X2 lands. |
+
+### Audit of all destruction plans vs code (2026-11-19 night) — what is really done
+
+DONE: DESTROY-T2 wiring, T2.1, T2b, BLAST-PROFILE, fire->site collapse (FireCollapseQueue), GPU-B scorch, DW-1..5 in code (DW-1..5 not yet eye-verified).
+PARTIAL / not as claimed:
+- STRUCT-ROLE / STRUCT-CASCADE / DISASTER-PROXY flood: only dams have `SiteStructuralRoles` -> ordinary buildings never take flood damage or cascade (doc says ADOPTED).
+- DEBRIS-FX: burst only on demolish (not blast, not dam column failure).
+- STAGE-RING: Tier 0 only (doc honest). Voxel occupation X2: reopened stub (doc honest).
+- PT damaged/ruined tile states: driven only by readiness + fire heat, never by blast/flood `DestructibleDamage`.
+- Stale docs: plan_destroy_t2_mask_v1 shader path (.wgsl -> .wesl); ballistics_blast_contract omits DW-1.
+
+Game-feel gaps, ranked (new todo D-1..D-8):
+| Id | Gap | Plan |
+|:---|:---|:---|
+| D-1 | Buildings show no damage before they vanish (`DestructibleDamage` / `damage_stage` read by no renderer) | voxel site mesh + 2D stamp read damage stage: cracked/dark/partly collapsed columns (same per-column idea as the dam) |
+| D-2 | Ordinary buildings: no structural roles -> no flood damage, no cascade | default roles from footprint (perimeter = load wall, interior = floor) so DISASTER-PROXY + CASCADE reach them |
+| D-3 | Blast has no smoke / dust / debris burst (audio only) | blast execute -> DEBRIS-FX burst + lingering smoke via the fire particle spine |
+| D-4 | Craters / rubble don't affect movement, roads, ecology | readers of GroundDeltaBook: road blocked under rubble > 1 m, nav cost on slope, no stand on rubble/crater (burnt) |
+| D-5 | Fire on buildings only a heat tint; no burning frames | fire visuals on sites from the same burning state (OP-6 one clock) |
+| D-6 | Missiles / fire don't hurt units or vehicles | separate program (unit damage shells DEFERRED in destruction plan) — leave |
+| D-7 | No repair / rebuild on rubble | later (economy) |
+| D-8 | Collapse is one-frame vanish; no staged sequence | after D-1 |
+
+## CLOSE — final status (2026-11-20)
+
+Evidence: dam scene playcheck capture (frame 5000, 6500 ticks) + `cargo test --lib` + per-slice unit tests.
+
+| Area | Item | Status | Evidence |
+|:---|:---|:---|:---|
+| Ground | Lit voxel ground (StandardMaterial ext), sun shadows, day-night on the sim day clock | DONE | capture: relief + shadows read; `voxel_day_pose` tests |
+| Ground | Water-line stamp turned the authored floodplain into Lake (trees + fire gone) | DONE | dump `floodplain_water` Dry 5994; trees in capture |
+| Ground | Box valley -> organic walls / head / swells (natural shorelines) | DONE (code) | `author_valley` tests; verify shoreline in next capture |
+| Trees | Tree chunks keyed on ground revision (no rebuild per water tick) | DONE | — |
+| Fire | S9 dead-over-live burn | DONE | s9 = 1.18 PASS |
+| Fire | Burning ground glows in 3D from GPU-B scorch field; burning buildings flame/smoke on the fire clock (D-5) | DONE (code) | `site_fire` tests |
+| Water | Moire swirl on water (flow-normalised phase x world coords) | DONE (code) | 2D + 3D shaders fixed-direction, fwidth-faded |
+| Water | Reservoir fills / drowns forest (S3), wave reaches G3 (S7) | DONE | s3 = 752, s7 = 1.6 PASS |
+| Water | S2 downstream ratio now min over impound (was overwritten by full-reservoir spill) | DONE | s2 PASS (0.0 — watch: min release should keep a trickle) |
+| Water | Hydro plant flood-collapsed once every building got roles | FIXED | hydro/powerhouse/intake are water-legal (`building_may_occupy_water`) |
+| Destruction | DW-1 craters + rims (terrain ground delta), DW-2 rubble, DW-3 dam per-column crest + notch mesh, DW-4 buildings wall water, DW-5 debris wash, DW-6 woodland strike | DONE (code, unit-tested) | `dw1_*`..`dw5_*`; capture `blast_craters_tracked` |
+| Destruction | Removed dam kept blocking water | DONE | `removed_dam_releases_its_barrier` |
+| Destruction | D-1 visible damage (voxel broken columns + 2D damaged/ruined stamps) | DONE (code) | `dw3_*`, stamp tests |
+| Destruction | D-2 roles for all buildings -> flood + cascade reach them; D-8 staged collapse (flood) | DONE (code) | `d2_d8_*` |
+| Destruction | D-3 blast + collapse dust (persistent, correct row convention); old one-frame debris burst removed | DONE (code) | `blast_dust` tests |
+| Destruction | D-4 rubble/crater block roads, clear stands | DONE (code) | `debris_block`, `stand_ground` tests |
+| Destruction | Unit-movement cost from craters | DEFER | no sim movement-cost field exists (`LogisticsTile` stub) |
+| Destruction | D-6 unit/vehicle damage, D-7 repair/rebuild | DEFER | separate programs (unit damage shells DEFERRED in destruction plan) |
+| Destruction | Blast at/over gate stays instant collapse | BY DESIGN | instantaneous cause |
+| Perf | Debug-build avg ~70 ms, hitches from `upd_control_relax` (T-16) | OPEN | perf.debug fails (debug build); OP-9 impact freeze not reproduced |
+| Docs | Stale destruction docs (T2 mask shader path/crater row, blast contract, presentation table, struct/disaster/debris statuses) | DONE | — |
+| Tests | Lib suite failures | see commit note | baseline comparison vs HEAD |

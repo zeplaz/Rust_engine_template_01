@@ -32,11 +32,13 @@
 //! This module's ember/spark colour is **self-glow on cards**, not a second emissive
 //! light writer. Tonemap / HDR post stays **LGT-06** `tonemap_hdr` (do not rewrite).
 
+pub mod blast_dust;
 pub mod consumable;
 pub mod emit;
 pub mod frame;
 pub mod pack;
 pub mod particle_anim;
+pub mod site_fire;
 pub mod spark_tuning;
 
 pub use consumable::{

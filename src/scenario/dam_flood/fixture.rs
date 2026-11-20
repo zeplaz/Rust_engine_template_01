@@ -116,7 +116,7 @@ fn default_fixture() -> DamValleyFixture {
                 cross_section_half_tiles: 4,
             },
         ],
-        town_origin: (140, 200),
+        town_origin: (212, 196),
         nuclear_plant_origin: (180, 140),
         hydro_plant_origin: (160, 152),
         launch_site_origin: (100, 180),

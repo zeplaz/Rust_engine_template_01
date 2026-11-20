@@ -352,21 +352,10 @@ pub fn execute_blast_intents_system(
                                 );
                             }
                         }
-                    } else if body.damage_stage.rank()
-                        >= DestructibleDamageStage::Compromised.rank()
-                        || body.integrity_01 < profile.dam_leak_integrity
-                    {
-                        // Partial leak through compromised columns (no full crest clear).
-                        if let Some(req) = breach.as_mut() {
-                            let q_leak = ((1.0 - body.integrity_01) * profile.leak_flow_scale)
-                                .clamp(profile.leak_flow_min, profile.leak_flow_max);
-                            req.push(BarrierBreachSpec {
-                                dam: Some(*entity),
-                                clear_crest: false,
-                                breach_flow_m3s: q_leak,
-                            });
-                        }
                     }
+                    // Partial damage: no global leak. The carved columns lower their own crest
+                    // (DW-3 `publish_dam_column_crests_system`), so water flows through the
+                    // actual hole.
                 }
             }
         }
@@ -456,6 +445,29 @@ pub fn ignite_ground_from_blasts_system(
     }
 }
 
+/// DW-1: every detonation, hit or miss, digs a crater bowl and throws its spoil into an ejecta rim.
+/// Narrow: reads the crater book (seq cursor), writes the terrain request queue only -- the terrain
+/// owner (`drain_ground_deform_system`) applies it, so blast never touches ground height itself.
+pub fn blast_ground_deform_system(
+    craters: Res<BlastCraterBook>,
+    mut queue: ResMut<crate::terrain::ground_deform::GroundDeformQueue>,
+    mut cursor: Local<u64>,
+) {
+    let from = *cursor;
+    for &(seq, centre_m, radius_m, damage) in craters.recent.iter().filter(|(seq, ..)| *seq > from) {
+        *cursor = (*cursor).max(seq);
+        let depth_m = crate::terrain::ground_deform::crater_depth_m(damage, radius_m);
+        if depth_m <= 0.0 {
+            continue;
+        }
+        queue.push(crate::terrain::ground_deform::GroundDeformOp::Crater {
+            centre_m,
+            radius_m,
+            depth_m,
+        });
+    }
+}
+
 pub struct ConstructionBlastPlugin;
 
 impl Plugin for ConstructionBlastPlugin {
@@ -469,6 +481,7 @@ impl Plugin for ConstructionBlastPlugin {
         }
         app.init_resource::<BlastIntentQueue>()
             .init_resource::<BlastCraterBook>()
+            .init_resource::<crate::terrain::ground_deform::GroundDeformQueue>()
             .init_resource::<super::blast_present::BlastCraterDump>()
             .add_systems(
                 Update,
@@ -479,6 +492,9 @@ impl Plugin for ConstructionBlastPlugin {
                     super::blast_present::publish_blast_crater_dump
                         .after(execute_blast_intents_system),
                     ignite_ground_from_blasts_system.after(execute_blast_intents_system),
+                    blast_ground_deform_system
+                        .after(execute_blast_intents_system)
+                        .before(crate::terrain::ground_deform::GroundDeformSet::Drain),
                 ),
             );
     }
@@ -823,5 +839,82 @@ mod blast_ignite_tests {
             crate::sim::effects::SimEffectKind::IgniteCells { cells } => assert!(cells.len() >= 9, "{}", cells.len()),
             k => panic!("unexpected {k:?}"),
         }
+    }
+}
+
+#[cfg(test)]
+mod blast_deform_tests {
+    use super::*;
+    use crate::render::pixel_world::PixelWorldTerrainField;
+    use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+    use crate::terrain::generation::{WaterClass, WorldGenDenseTerrainCache, WorldWaterGrid};
+    use crate::terrain::ground_deform::{GroundDeformPlugin, GroundDeformQueue};
+
+    /// DW-1: a strike (hit or miss) digs the voxel field ground at its centre and raises a rim,
+    /// the queue drains, and only the touched chunks are queued for remesh (no full-map rebuild).
+    #[test]
+    fn dw1_blast_digs_field_ground_and_patches_only_touched_chunks() {
+        let (w, h) = (192u32, 192u32);
+        let n = (w * h) as usize;
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .init_resource::<WorldGenParams>()
+            .init_resource::<BlastIntentQueue>()
+            .init_resource::<BlastCraterBook>()
+            .insert_resource(BlastProfile::default())
+            .insert_resource(crate::gui::WorldPresentationMode {
+                kind: crate::gui::WorldPresentationKind::PixelWorld3D,
+            })
+            .insert_resource(WorldGenDenseTerrainCache {
+                width: w,
+                height: h,
+                elevation: vec![0.5; n],
+                moisture: vec![0.3; n],
+                temperature: vec![0.3; n],
+                family: vec![crate::terrain::family::DEFAULT_TERRAIN_FAMILY_ID; n],
+                region_index: vec![0; n],
+            })
+            .insert_resource(WorldWaterGrid { width: w, height: h, classes: vec![WaterClass::Dry; n], stamp: 1 })
+            .init_resource::<PixelWorldTerrainField>()
+            .add_plugins(GroundDeformPlugin)
+            .add_systems(
+                Update,
+                (
+                    execute_blast_intents_system,
+                    blast_ground_deform_system
+                        .after(execute_blast_intents_system)
+                        .before(crate::terrain::ground_deform::GroundDeformSet::Drain),
+                    crate::render::pixel_world::sync_pixel_world_terrain_field
+                        .after(crate::terrain::ground_deform::GroundDeformSet::Drain),
+                ),
+            );
+        app.update(); // first sight: full build
+        let before = app.world().resource::<PixelWorldTerrainField>();
+        assert!(before.is_ready());
+        let (full_rev, ground_rev) = (before.ground_full_revision, before.ground_revision);
+        let at = IVec2::new(100, 100);
+        let i = (at.y as u32 * w + at.x as u32) as usize;
+        let ground0 = before.ground[i];
+
+        app.world_mut().resource_mut::<BlastIntentQueue>().enqueue(BlastIntent {
+            center_xz: tile_center_xz(at),
+            radius_m: 40.0,
+            damage: 120.0,
+            penetration_m: 0.0,
+            source_flight: 1,
+        });
+        app.update();
+
+        assert!(app.world().resource::<GroundDeformQueue>().is_empty(), "queue drained");
+        let f = app.world().resource::<PixelWorldTerrainField>();
+        assert!(f.ground[i] < ground0 - 2.0 / 16.0, "centre dug: {} -> {}", ground0, f.ground[i]);
+        assert!(f.ground.iter().any(|g| *g > ground0), "rim raised");
+        assert_eq!(f.ground_full_revision, full_rev, "no full-map remesh");
+        assert_ne!(f.ground_revision, ground_rev);
+        assert!(!f.ground_patches.is_empty());
+        assert!(f.ground_patches.len() <= 4, "bounded patch: {} chunks", f.ground_patches.len());
+        // Terrain truth carries it too (what fire / ecology / a fresh water seed read).
+        let dense = app.world().resource::<WorldGenDenseTerrainCache>();
+        assert!(dense.elevation[i] < 0.5);
     }
 }

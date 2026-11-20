@@ -44,6 +44,8 @@ pub use camera::{
     PixelWorldCameraRig, PIXEL_WORLD_ZOOM_RANGE,
 };
 pub use field::PixelWorldTerrainField;
+#[cfg(test)]
+pub(crate) use field::sync_pixel_world_terrain_field;
 pub use layers::{ray_hit_site_boxes, PixelWorldSitePickBoxes, SitePickBox};
 
 /// Render layer of every voxel-view entity (camera, sun, meshes).
@@ -123,7 +125,9 @@ impl Plugin for PixelWorldViewPlugin {
                 Update,
                 (
                     camera::spawn_pixel_world_camera.run_if(crate::gui::in_simulation_or_editor_map),
-                    field::sync_pixel_world_terrain_field.in_set(PixelWorldViewSet::Field),
+                    field::sync_pixel_world_terrain_field
+                        .in_set(PixelWorldViewSet::Field)
+                        .after(crate::terrain::ground_deform::GroundDeformSet::Drain),
                     destruction_mask::ensure_destruction_mask_size
                         .after(field::sync_pixel_world_terrain_field)
                         .run_if(crate::gui::in_simulation_or_editor_map),
@@ -142,6 +146,14 @@ impl Plugin for PixelWorldViewPlugin {
                 ),
             )
             .add_systems(PostUpdate, camera::sync_pixel_world_camera.in_set(PixelWorldViewSet::Camera))
+            .add_systems(
+                Update,
+                (
+                    camera::sync_pixel_world_day_cycle,
+                    ground_material::sync_ground_scorch_texture,
+                )
+                    .run_if(crate::gui::in_simulation_or_editor_map),
+            )
             .add_systems(
                 PostUpdate,
                 (

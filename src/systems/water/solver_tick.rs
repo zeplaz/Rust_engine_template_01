@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::substrate::registry::WorldSubstrateRegistry;
 use crate::substrate::slab::ChunkKey;
-use crate::systems::sim_control::SimControlSystemSet;
+use crate::systems::sim_control::{SimControlSystemSet, SimStepClock};
 use crate::systems::weather::WeatherField;
 use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
@@ -188,6 +188,7 @@ pub fn step_surface_water_system(
     mut runtime: ResMut<WaterClassRuntime>,
     control: Res<BarrierControlIntent>,
     skip: Res<SlowDomainTimeSkip>,
+    clock: Res<SimStepClock>,
     weather: Option<Res<WeatherField>>,
 ) {
     if !field.wired {
@@ -202,7 +203,9 @@ pub fn step_surface_water_system(
         && control.combined_outlet_open01() <= 0.2
         && control.gate_open01 <= 0.2
         && control.effective_turbine_m3s() < 1.0
-        && field.breach_flow_m3s <= 0.0;
+        && field.breach_flow_m3s <= 0.0
+        // DW-3: a damaged column is a notch — flow through it is 2D, not a level pool.
+        && !field.hydraulics.barrier_damaged;
     field.mode = if use_pool {
         SurfaceWaterMode::LevelPool
     } else {
@@ -211,7 +214,15 @@ pub fn step_surface_water_system(
 
     let mut dt = 1.0_f32;
     if skip.enabled && use_pool {
-        dt = skip.dt_slow_secs.max(1) as f32;
+        // Time skip rides the sim clock like `SlowDomainElapsedSecs` (ecology): each due sim step
+        // advances the reservoir by `dt_slow_secs`, and a frame with no step advances nothing.
+        // Stepping `dt_slow` once per FRAME while ecology advanced `dt_slow × due` left the
+        // pool ~due× behind the drown clocks, so the reservoir never filled in scenario time
+        // (OP-12).
+        if clock.due == 0 {
+            return;
+        }
+        dt = skip.dt_slow_secs.max(1) as f32 * clock.due as f32;
     }
 
     if let Some(wx) = weather.as_ref() {
@@ -303,6 +314,7 @@ pub struct SurfaceWaterSolverPlugin;
 
 impl Plugin for SurfaceWaterSolverPlugin {
     fn build(&self, app: &mut App) {
+        crate::systems::sim_control::ensure_sim_step_clock(app);
         app.init_resource::<SurfaceWaterField>()
             .init_resource::<WaterClassRuntime>()
             .init_resource::<SurfaceWaterSeedLatch>()

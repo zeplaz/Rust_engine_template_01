@@ -27,7 +27,7 @@
         // Close outlets → level-pool impound (S2). Coarse dt so ecology clocks can clear 14 d drown.
         // Force-close: hold the pool (no low/mid outlet, no turbine) so DF-2 ratio drops and crest rises.
         SetDamControl(gate_open01: 0.0, outlet_open01: 0.0, turbine_flow_setpoint_m3s: 0.0),
-        SetTimeSkip(enabled: true, dt_slow_secs: 12000),
+        SetTimeSkip(enabled: true, dt_slow_secs: 24000),
         Log(message: "DF-2/DF-5: reservoir fill + drown clocks (time skip)"),
         SimAdvance(ticks: 64),
         SetTimeSkip(enabled: false, dt_slow_secs: 600),
@@ -46,6 +46,12 @@
         Log(message: "DF-5/S9: ignite floodplain after recession"),
         IgniteAt(tile: (tile_x: 168, tile_z: 140), spark: 0.85, cause_id: "dam_flood_s9"),
         SimAdvance(ticks: 60),
+        // DW-6: a second strike into the downstream forest (west bank, away from the river and
+        // after the S9 measurement so its fire can't skew the burn ratio): crater + rim, ground
+        // fire, tree damage on open woodland.
+        Log(message: "DW-6: missile strike into woodland"),
+        StrikeOrder(target_x: 138, target_z: 132, warhead: "medium"),
+        SimAdvance(ticks: 120),
         Log(message: "DF-1 harness timeline complete"),
     ],
 )

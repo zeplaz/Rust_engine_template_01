@@ -239,6 +239,8 @@ pub(crate) fn build_terrain_chunk(field: &PixelWorldTerrainField, cx: u32, cy: u
 #[derive(Default)]
 pub(crate) struct TerrainLayerState {
     built_revision: Option<u64>,
+    /// DW-1: last `field.ground_patch_seq` whose chunks were queued.
+    patch_seen: u64,
     raster: Handle<Image>,
     pending: Vec<(u32, u32)>,
 }
@@ -285,23 +287,30 @@ pub(crate) fn sync_pixel_world_terrain(
     let h = mask_book.height.max(field.height).max(1) as f32;
     if ground_handle.0 == Handle::default() {
         ground_handle.0 = materials.add(super::ground_material::PixelWorldGroundMaterial {
-            uniform: super::ground_material::GroundMaskUniform {
-                extent_skirt: Vec4::new(w, h, skirt, 0.0),
+            base: super::ground_material::ground_base_material(
+                (raster_image != Handle::default()).then(|| raster_image.clone()),
+            ),
+            extension: super::ground_material::PixelWorldGroundExt {
+                uniform: super::ground_material::GroundMaskUniform {
+                    extent_skirt: Vec4::new(w, h, skirt, 0.0),
+                },
+                destruction_mask: mask_gpu.image.clone(),
+                // Placeholder until the scorch field exists (mask R <= 2/255 stays under the
+                // glow threshold); `sync_ground_scorch_texture` swaps in the real field.
+                scorch: mask_gpu.image.clone(),
             },
-            albedo: raster_image.clone(),
-            destruction_mask: mask_gpu.image.clone(),
         });
     }
     if let Some(mut mat) = materials.get_mut(&ground_handle.0) {
-        mat.uniform.extent_skirt = Vec4::new(w, h, skirt, 0.0);
+        mat.extension.uniform.extent_skirt = Vec4::new(w, h, skirt, 0.0);
         if state.raster != raster_image || raster_touched {
             state.raster = raster_image.clone();
             if raster_image != Handle::default() {
-                mat.albedo = raster_image.clone();
+                mat.base.base_color_texture = Some(raster_image.clone());
             }
         }
         if mask_gpu.image != Handle::default() {
-            mat.destruction_mask = mask_gpu.image.clone();
+            mat.extension.destruction_mask = mask_gpu.image.clone();
         }
     }
     let ground_mat = ground_handle.0.clone();
@@ -309,8 +318,11 @@ pub(crate) fn sync_pixel_world_terrain(
     let nx = field.width.div_ceil(TERRAIN_CHUNK);
     let ny = field.height.div_ceil(TERRAIN_CHUNK);
     // Ground only: water motion must never respawn terrain (PLAN-CLOSE-VOXEL-WATER-v1 V1).
-    if state.built_revision != Some(field.ground_revision) {
-        state.built_revision = Some(field.ground_revision);
+    // Full-ground changes respawn everything; a terrain deformation patches cells and names only
+    // the touched chunks (`ground_patches`), so a blast never costs a whole-map remesh (DW-1).
+    if state.built_revision != Some(field.ground_full_revision) {
+        state.built_revision = Some(field.ground_full_revision);
+        state.patch_seen = field.ground_patch_seq;
         // Out-of-grid chunks go now; in-grid ones stay visible until their rebuild swaps in (V2).
         for (e, coord) in &chunks {
             if coord.cx >= nx || coord.cy >= ny {
@@ -323,6 +335,14 @@ pub(crate) fn sync_pixel_world_terrain(
                 state.pending.push((cx, cy));
             }
         }
+    }
+    if state.patch_seen != field.ground_patch_seq {
+        let seen = state.patch_seen;
+        for &(_, cx, cy) in field.ground_patches.iter().filter(|p| p.0 > seen) {
+            state.pending.retain(|p| *p != (cx, cy));
+            state.pending.push((cx, cy));
+        }
+        state.patch_seen = field.ground_patch_seq;
     }
     // DESTROY-T2b: destroyed-mask chunks to the front of pending (stack: push = next pop).
     if !mask_book.remesh_priority.is_empty() {

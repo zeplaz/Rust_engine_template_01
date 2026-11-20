@@ -71,7 +71,10 @@ pub fn dam_flood_json(
         .or_else(|| book.map(|b| b.inundated_tiles))
         .unwrap_or(0);
 
+    let reservoir = reservoir_json(field);
+
     json!({
+        "reservoir": reservoir,
         "stage": stage,
         "stage_entry_tick": entry,
         "s0_entered": s0_entered,
@@ -112,6 +115,57 @@ pub fn dam_flood_json(
     })
 }
 
+/// Reservoir shape counts (OP-10/11/12): pool stage vs crest, forest-floodplain cells wet in the
+/// live ROI, how flat the upstream water surface is, and the depth hand-over at the ROI south edge.
+fn reservoir_json(field: Option<&SurfaceWaterField>) -> Value {
+    let Some(f) = field.filter(|f| f.wired && f.width > 0 && f.depth_m.len() == f.bed_m.len()) else {
+        return Value::Null;
+    };
+    let fixture = crate::scenario::dam_flood::load_dam_valley_fixture();
+    let fp = &fixture.forest_floodplain;
+    let (mut fp_total, mut fp_wet, mut fp_wet_up) = (0_u32, 0_u32, 0_u32);
+    let (mut up_wet, mut surf_min, mut surf_max) = (0_u32, f32::INFINITY, f32::NEG_INFINITY);
+    for lz in 0..f.height {
+        for lx in 0..f.width {
+            let i = f.idx(lx, lz);
+            let (wx, wz) = (f.origin_x + lx as i32, f.origin_z + lz as i32);
+            let wet = f.depth_m[i] >= crate::systems::water::WET_DEPTH_M;
+            if wx >= fp.min.0 && wx <= fp.max.0 && wz >= fp.min.1 && wz <= fp.max.1 {
+                fp_total += 1;
+                fp_wet += u32::from(wet);
+                fp_wet_up += u32::from(wet && f.is_upstream_lz(lz));
+            }
+            // Deep upstream water only: shallow film cells follow the bed, not the lake.
+            if f.is_upstream_lz(lz) && f.depth_m[i] >= 2.0 {
+                up_wet += 1;
+                let surface = f.surface_at(i);
+                surf_min = surf_min.min(surface);
+                surf_max = surf_max.max(surface);
+            }
+        }
+    }
+    let cx = (fixture.narrows_tile.0 - f.origin_x).clamp(0, f.width as i32 - 1) as u32;
+    // River centre column every 16 rows, south (lz 0) to north.
+    let centre_profile: Vec<f32> = (0..f.height)
+        .step_by(16)
+        .map(|lz| f.depth_m[f.idx(cx, lz)])
+        .collect();
+    json!({
+        "mode": format!("{:?}", f.mode),
+        "pool_stage_m": f.pool.stage_m,
+        "pool_storage_m3": f.pool.storage_m3,
+        "channel_crest_m": f.channel_crest_m(),
+        "floodplain_cells_in_roi": fp_total,
+        "floodplain_cells_wet": fp_wet,
+        "floodplain_cells_wet_upstream": fp_wet_up,
+        "upstream_deep_cells": up_wet,
+        "upstream_surface_spread_m": if up_wet > 0 { surf_max - surf_min } else { 0.0 },
+        "south_edge_depth_m": f.depth_m[f.idx(cx, 0)],
+        "south_edge_ref_m": f.ref_depth_m.get(f.idx(cx, 0)).copied().unwrap_or(0.0),
+        "centre_depth_profile_m_south_to_north_step16": centre_profile,
+    })
+}
+
 /// DamFlood scene reporter — reads dam book + water gauges/field only.
 pub fn dump_dam_flood_section(
     arm: Res<SimDumpArm>,
@@ -143,6 +197,51 @@ pub fn dump_dam_flood_section(
     if !v.is_null() {
         dump.put_value("dam_flood", v);
     }
+}
+
+/// Reservoir time series (one compact row per dump sample): lets a run show the impound / drown /
+/// recession sequence instead of only the end state. Own section + own `Local` (one domain).
+pub fn dump_dam_flood_history_section(
+    arm: Res<SimDumpArm>,
+    book: Option<Res<DamFloodBenchmarkBook>>,
+    field: Option<Res<SurfaceWaterField>>,
+    sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
+    skip: Res<crate::systems::water::SlowDomainElapsedSecs>,
+    mut rows: Local<Vec<Value>>,
+    mut dump: ResMut<SimRunDump>,
+) {
+    if !arm.due {
+        return;
+    }
+    let Some(book) = book.filter(|b| b.seeded) else {
+        return;
+    };
+    let r = reservoir_json(field.as_deref());
+    let pick = |k: &str| r.get(k).cloned().unwrap_or(Value::Null);
+    rows.push(json!({
+        "tick": arm.tick,
+        "eco_s": sim_time.0 as f64 / 1_000_000.0 + skip.0,
+        "stage": book.stage.as_str(),
+        "mode": pick("mode"),
+        "pool_stage_m": pick("pool_stage_m"),
+        "fp_wet": pick("floodplain_cells_wet"),
+        "up_deep": pick("upstream_deep_cells"),
+        "surface_spread_m": pick("upstream_surface_spread_m"),
+        "south_edge_m": pick("south_edge_depth_m"),
+        "drowned": book.stand_drowned,
+        "dead": book.stand_dead,
+        "live": book.stand_live,
+        "inundated": book.inundated_tiles,
+    }));
+    let peak_drowned = rows
+        .iter()
+        .filter_map(|v| v.get("drowned").and_then(Value::as_u64))
+        .max()
+        .unwrap_or(0);
+    dump.put_value(
+        "dam_flood_history",
+        json!({ "peak_drowned": peak_drowned, "rows": rows.clone() }),
+    );
 }
 
 /// The scene's dam site build state + the logistics lines feeding it (counts only, no verdicts).

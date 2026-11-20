@@ -236,7 +236,7 @@ Document in [`construction_procedural_growth_index_v1.md`](construction_procedur
 | PT-4-002 | Wire `stamp_request_for_site` | `map_tile_atlas_stamp.rs` | Integration test with pilot atlas |
 | PT-4-003 | `RepresentationResult` — suppress PG-2 meshes when production atlas hit | `representation_policy.rs` | Test: tactical + atlas → `procedural_module_meshes == false` |
 | PT-4-004 | Power + day/night inputs | Hook `FireAtmosphereAggregate` / grid resource when available; stub constants behind `cfg(test)` | Documented TODOs with witness keys |
-| PT-4-005 | Damage input | Site or building component scalar | Maps to damaged_* keys |
+| PT-4-005 | Damage input | Site or building component scalar | Maps to damaged_* keys. **SHIPPED 2026-11-19:** `tile_variant_context_for_site` takes the worst of readiness, fire heat and `DestructibleDamage` stage (Scarred 0.3 / Compromised 0.6 / Collapsed 0.9 → damaged / damaged / ruined), so blast/fire/flood hits show before collapse. Unit-tested on the resolver; a missing `damaged_*`/`ruined` atlas key falls back to the clean key (no tint yet). |
 
 **Witness:** `debug_runs/procedural_tiles_runtime_live.json` — `resolver_version`, sample sites with expected `variant_key`, `stamp_applied: true`.
 
@@ -244,7 +244,7 @@ Document in [`construction_procedural_growth_index_v1.md`](construction_procedur
 
 ### PT-5 — Fire frame animation `@coder` + `@coder-mcp`
 
-**Option B wash SHIPPED** (FIRE-ENTITY-1). Atlas bake follow-on: [`plan_pt5_burning_atlas_followon_v1.md`](plan_pt5_burning_atlas_followon_v1.md).
+**Option B wash SHIPPED** (FIRE-ENTITY-1). **D-5 SHIPPED 2026-11-19 (code, unit-tested, not seen live):** a burning site also emits flames/embers/smoke from `SiteFireState` through the vegetation fire animation and clock (`render/fire_vfx/site_fire.rs`, Threatened = smoke only, Disrupted+ = flames, Deteriorating+ = embers, rain-suppressed = smoke only). Atlas bake follow-on: [`plan_pt5_burning_atlas_followon_v1.md`](plan_pt5_burning_atlas_followon_v1.md).
 
 | ID | Deliverable | Acceptance |
 |:---|:---|:---|

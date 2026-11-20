@@ -8,6 +8,8 @@
 //! **example** scene. The benchmark configures this API; it does not own a parallel solve.
 
 mod barrier_ops;
+mod bed_follow;
+pub mod sediment;
 mod cooling_intake;
 mod flood_consequences;
 mod gauge;
@@ -22,8 +24,10 @@ mod gpu_field;
 mod water_runtime;
 
 pub use barrier_ops::{
-    apply_barrier_breach_request_system, apply_barrier_install_request_system,
-    BarrierBreachRequest, BarrierBreachSpec, BarrierInstallRequest, BarrierInstallSpec,
+    apply_barrier_breach_request_system, apply_barrier_column_request_system,
+    apply_barrier_install_request_system, apply_water_obstacle_request_system,
+    BarrierBreachRequest, BarrierBreachSpec, BarrierColumnRequest, BarrierInstallRequest,
+    BarrierInstallSpec, WaterObstacleRequest,
 };
 pub use cooling_intake::{
     evaluate_cooling_from_stage, sample_intake_stage_m, update_cooling_intake_system, CoolingIntake,
@@ -257,6 +261,8 @@ impl Plugin for WaterSimPlugin {
             .init_resource::<SlowDomainElapsedSecs>()
             .init_resource::<BarrierInstallRequest>()
             .init_resource::<BarrierBreachRequest>()
+            .init_resource::<BarrierColumnRequest>()
+            .init_resource::<WaterObstacleRequest>()
             .init_resource::<HydroGenerationState>()
             .init_resource::<SurfaceWaterVisualFrame>()
             .init_resource::<SurfaceWaterGpuField>()
@@ -266,6 +272,21 @@ impl Plugin for WaterSimPlugin {
             .init_resource::<FloodSiteReadinessBook>()
             .add_plugins(GaugeBookPlugin)
             .add_plugins(SurfaceWaterSolverPlugin)
+            .init_resource::<crate::terrain::ground_deform::GroundDeltaJournal>()
+            .init_resource::<crate::terrain::ground_deform::GroundDeformQueue>()
+            // DW-5: debris in fast water moves downstream (queued to terrain, drained next frame).
+            .add_systems(
+                Update,
+                sediment::wash_debris_downstream_system.after(step_surface_water_system),
+            )
+            .add_systems(
+                Update,
+                bed_follow::follow_ground_deform_bed_system
+                    .after(crate::terrain::ground_deform::GroundDeformSet::Drain)
+                    // Before the seed: a ROI seeded this frame samples post-drain chunk elevation.
+                    .before(seed_surface_water_from_request_system)
+                    .before(step_surface_water_system),
+            )
             .add_systems(
                 Update,
                 (
@@ -275,6 +296,10 @@ impl Plugin for WaterSimPlugin {
                         .before(step_surface_water_system),
                     apply_barrier_breach_request_system
                         .before(step_surface_water_system),
+                    apply_barrier_column_request_system
+                        .after(apply_barrier_install_request_system)
+                        .before(step_surface_water_system),
+                    apply_water_obstacle_request_system.before(step_surface_water_system),
                     update_cooling_intake_system.after(step_surface_water_system),
                     update_hydro_generation_system.after(step_surface_water_system),
                     publish_flood_consequences_system.after(step_surface_water_system),

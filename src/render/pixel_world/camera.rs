@@ -282,11 +282,23 @@ pub fn spawn_pixel_world_camera(
             color: Color::srgb(1.0, 0.96, 0.88),
             // Default exposure (EV100 9.7): ~0.7 of albedo on a sunlit top face, ambient ~0.3.
             illuminance: 2_900.0,
-            shadow_maps_enabled: false,
+            // Ground, trees and buildings cast and receive: relief (valley walls, voxel steps,
+            // dam) reads from its shadows, not only from face shading.
+            shadow_maps_enabled: true,
             ..default()
         },
-        // Late-morning sun from the south-west: east and north faces fall into shade.
-        Transform::from_rotation(Quat::from_euler(EulerRot::YXZ, (-35f32).to_radians(), (-50f32).to_radians(), 0.0)),
+        // Cascades over the voxel view's draw range (fog ends at 1200 display units).
+        bevy::light::CascadeShadowConfigBuilder {
+            num_cascades: 3,
+            minimum_distance: 1.0,
+            first_cascade_far_bound: 120.0,
+            maximum_distance: 1_200.0,
+            ..default()
+        }
+        .build(),
+        // Mid-morning sun from the south-west, low enough (40 deg) that walls and steps throw
+        // visible shadows; east and north faces fall into shade.
+        Transform::from_rotation(Quat::from_euler(EulerRot::YXZ, (-35f32).to_radians(), (-40f32).to_radians(), 0.0)),
         layer,
     ));
 }
@@ -442,4 +454,109 @@ pub fn sync_pixel_world_camera(
     next.ground_min = lo;
     next.ground_max = hi;
     *frame = next;
+}
+
+/// Voxel sun / sky for one instant of the sim day (pure; see [`voxel_day_pose`]).
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct VoxelDayPose {
+    pub sun_rotation: Quat,
+    pub sun_illuminance: f32,
+    pub sun_color: Color,
+    pub ambient_brightness: f32,
+    pub sky: Color,
+}
+
+/// Highest sun elevation at noon (degrees).
+const NOON_ELEVATION_DEG: f32 = 62.0;
+/// The light never drops below this elevation: at night it is the moon (dim, blue).
+const MIN_LIGHT_ELEVATION_DEG: f32 = 12.0;
+const NIGHT_SKY: Color = Color::srgb(0.07, 0.09, 0.15);
+
+/// Sun pose from sim time on the same day clock as the tactical map
+/// ([`crate::gui::tactical::sim_map_rtt::SIM_MAP_DAY_CYCLE_MICROS`] / `sim_map_daylight_factor`):
+/// one day for both views. The sun rises in the east, crosses the south and sets in the west,
+/// so shadows sweep across the valley; at night a low dim moon keeps the ground readable.
+#[must_use]
+pub fn voxel_day_pose(sim_time_micros: u64) -> VoxelDayPose {
+    use crate::gui::tactical::sim_map_rtt::{sim_map_daylight_factor, SIM_MAP_DAY_CYCLE_MICROS};
+    let phase = (sim_time_micros % SIM_MAP_DAY_CYCLE_MICROS) as f32 / SIM_MAP_DAY_CYCLE_MICROS as f32;
+    let daylight = sim_map_daylight_factor(sim_time_micros);
+    // sin(phase) > 0 is day (noon at phase 0.25). Sun elevation follows it; azimuth sweeps
+    // east (sunrise, phase 0) -> south (noon) -> west (sunset, phase 0.5).
+    let s = (phase * std::f32::consts::TAU).sin();
+    let day = s.max(0.0);
+    let elevation = (NOON_ELEVATION_DEG * day).max(MIN_LIGHT_ELEVATION_DEG);
+    let azimuth = if s >= 0.0 {
+        // 90 deg (east) -> 180 (south) -> 270 (west) across the day.
+        90.0 + 360.0 * phase
+    } else {
+        // Moon: crosses the sky through the night on the same path.
+        90.0 + 360.0 * (phase - 0.5)
+    };
+    // Bevy light shines along its -Z: yaw to the azimuth, pitch down by the elevation.
+    let sun_rotation = Quat::from_euler(
+        EulerRot::YXZ,
+        (180.0 - azimuth).to_radians(),
+        (-elevation).to_radians(),
+        0.0,
+    );
+    // Warm and low at dawn/dusk, white at noon; dim blue moonlight at night.
+    let warm = 1.0 - day;
+    let sun_color = if s >= 0.0 {
+        Color::srgb(1.0, 0.96 - 0.22 * warm, 0.88 - 0.38 * warm)
+    } else {
+        Color::srgb(0.62, 0.72, 1.0)
+    };
+    let sun_illuminance = if s >= 0.0 { 600.0 + 2_600.0 * day.sqrt() } else { 260.0 };
+    let ambient_brightness = 70.0 + 230.0 * daylight;
+    let sky = NIGHT_SKY.mix(&PIXEL_WORLD_SKY, daylight);
+    VoxelDayPose { sun_rotation, sun_illuminance, sun_color, ambient_brightness, sky }
+}
+
+/// Drive the voxel sun, ambient and sky from the sim day clock (render reads sim time only).
+pub fn sync_pixel_world_day_cycle(
+    sim_time: Option<Res<crate::systems::sim_control::SimTimeMicros>>,
+    mut sun: Query<(&mut Transform, &mut DirectionalLight), With<PixelWorldSun>>,
+    mut cam: Query<(&mut Camera, &mut AmbientLight, &mut DistanceFog), With<PixelWorldCamera>>,
+) {
+    let pose = voxel_day_pose(sim_time.map_or(0, |t| t.0));
+    for (mut tf, mut light) in &mut sun {
+        tf.rotation = pose.sun_rotation;
+        light.illuminance = pose.sun_illuminance;
+        light.color = pose.sun_color;
+    }
+    for (mut camera, mut ambient, mut fog) in &mut cam {
+        camera.clear_color = ClearColorConfig::Custom(pose.sky);
+        ambient.brightness = pose.ambient_brightness;
+        fog.color = pose.sky;
+    }
+}
+
+#[cfg(test)]
+mod day_cycle_tests {
+    use super::*;
+    use crate::gui::tactical::sim_map_rtt::SIM_MAP_DAY_CYCLE_MICROS;
+
+    fn light_dir(p: &VoxelDayPose) -> Vec3 {
+        p.sun_rotation * Vec3::NEG_Z
+    }
+
+    #[test]
+    fn noon_is_high_and_bright_midnight_is_dim_moon() {
+        let noon = voxel_day_pose(SIM_MAP_DAY_CYCLE_MICROS / 4);
+        let night = voxel_day_pose(SIM_MAP_DAY_CYCLE_MICROS * 3 / 4);
+        assert!(light_dir(&noon).y < -0.8, "noon sun shines steeply down: {:?}", light_dir(&noon));
+        assert!(noon.sun_illuminance > 3.0 * night.sun_illuminance);
+        assert!(noon.ambient_brightness > night.ambient_brightness);
+        assert!(light_dir(&night).y < 0.0, "the moon still lights the ground from above");
+    }
+
+    #[test]
+    fn sun_moves_east_to_west_through_the_day() {
+        let morning = light_dir(&voxel_day_pose(SIM_MAP_DAY_CYCLE_MICROS / 16));
+        let evening = light_dir(&voxel_day_pose(SIM_MAP_DAY_CYCLE_MICROS * 7 / 16));
+        // Morning sun is in the east, so its light travels west (-X); evening the reverse.
+        assert!(morning.x < -0.3, "morning light {morning:?}");
+        assert!(evening.x > 0.3, "evening light {evening:?}");
+    }
 }

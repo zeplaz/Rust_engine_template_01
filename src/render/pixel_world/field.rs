@@ -16,11 +16,15 @@ use crate::systems::water::{
     WET_DEPTH_M,
 };
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
+use crate::terrain::ground_deform::GroundDeltaJournal;
 use crate::terrain::generation::{WaterClass, WorldGenDenseTerrainCache, WorldWaterGrid};
 
 // Heights: metres from `WorldGenParams::elevation_range_m` (the one vertical contract), drawn at
 // `display_units_per_metre()` for ground AND water alike. The old fixed 42-tile scale also got
 // multiplied into water depth (`d / 16 m · 42`), drawing a 3.5 m river ~150 m tall.
+
+/// Cells per terrain mesh chunk (`terrain::TERRAIN_CHUNK`).
+const CHUNK_CELLS: u32 = super::terrain::TERRAIN_CHUNK;
 
 /// Terrace step of the voxel ground (world units).
 pub const HEIGHT_STEP: f32 = 0.5;
@@ -51,8 +55,22 @@ pub struct PixelWorldTerrainField {
     /// Bumps only when [`Self::ground`] (or the grid size) changes. Ground meshes key on this so
     /// water motion never respawns terrain chunks (PLAN-CLOSE-VOXEL-WATER-v1 V1).
     pub ground_revision: u64,
+    /// Bumps only when the whole ground is recomputed (world / grid change). A terrain deformation
+    /// patches cells in place (`ground_patches`) and bumps `ground_revision` but not this, so the
+    /// ground mesh remeshes only the touched chunks instead of the whole map (DW-1).
+    pub ground_full_revision: u64,
+    /// Incremental ground patches, newest last: `(patch seq, chunk cx, chunk cy)`, bounded.
+    pub ground_patches: Vec<(u64, u32, u32)>,
+    pub ground_patch_seq: u64,
+    /// Mirror of the terrain ground delta in metres (journal-fed; drawn as `terraced DEM + delta`).
+    deform_m: Vec<f32>,
+    deform_seq: u64,
+    deform_epoch: u64,
     source_stamp: Option<u64>,
 }
+
+/// Patch history kept for the mesh builder's cursor.
+const GROUND_PATCH_HISTORY: usize = 512;
 
 #[inline]
 fn quantize(h: f32) -> f32 {
@@ -167,8 +185,102 @@ impl PixelWorldTerrainField {
         self.revision = self.revision.wrapping_add(1);
         if prev_dims != (self.width, self.height) || prev_ground != self.ground {
             self.ground_revision = self.ground_revision.wrapping_add(1);
+            self.ground_full_revision = self.ground_full_revision.wrapping_add(1);
         }
         true
+    }
+
+    /// DW-1: follow the terrain ground-delta journal. Cells are patched in place (ground, the
+    /// water surface over them, height bounds) and the touched chunks queued for remesh -- no
+    /// whole-map rebuild. Returns true when a full rebuild is needed instead (first sight of a
+    /// world, grid change, journal overrun).
+    pub fn follow_ground_deform(
+        &mut self,
+        params: &WorldGenParams,
+        dense: &WorldGenDenseTerrainCache,
+        journal: &GroundDeltaJournal,
+    ) -> bool {
+        let n = (dense.width as usize) * (dense.height as usize);
+        let mut full = false;
+        if self.deform_m.len() != n {
+            self.deform_m = vec![0.0; n];
+            full = true;
+        }
+        if self.deform_epoch != journal.epoch {
+            self.deform_m.fill(0.0);
+            self.deform_epoch = journal.epoch;
+            self.deform_seq = journal.dropped_through;
+            full = true;
+        }
+        if self.deform_seq == journal.seq {
+            return full;
+        }
+        let Some(cells) = journal.since(self.deform_seq) else {
+            warn!("pixel world field: ground journal overran its cursor; full rebuild");
+            self.deform_seq = journal.seq;
+            return true;
+        };
+        let (w, h) = (dense.width as i32, dense.height as i32);
+        let patch = !full
+            && self.is_ready()
+            && (self.width, self.height) == (dense.width, dense.height)
+            && dense.is_live_height_grid();
+        let upm = crate::terrain::world_scale_contract::display_units_per_metre();
+        let mut chunks: Vec<(u32, u32)> = Vec::new();
+        let mut touched = false;
+        for c in cells {
+            let (x, y) = (c.tile.x, c.tile.y);
+            if x < 0 || y < 0 || x >= w || y >= h {
+                continue;
+            }
+            let i = (y * w + x) as usize;
+            self.deform_m[i] += c.delta_m;
+            if !patch {
+                continue;
+            }
+            let dm = self.deform_m[i];
+            let new = if dm == 0.0 {
+                quantize(dense.elevation[i] * params.elevation_range_m * upm)
+            } else {
+                quantize((dense.elevation[i] * params.elevation_range_m - dm) * upm) + dm * upm
+            };
+            let moved = new - self.ground[i];
+            self.ground[i] = new;
+            // Live water keeps its depth over a moved bed (mass conserved): the surface rides it.
+            if self.water[i].is_finite() {
+                self.water[i] += moved;
+                self.max_h = self.max_h.max(self.water[i]);
+            }
+            self.min_h = self.min_h.min(new);
+            self.max_h = self.max_h.max(new);
+            touched = true;
+            // The cell's chunk and any chunk across an edge it borders (side walls read neighbours).
+            for (nx, ny) in [(x, y), (x - 1, y), (x + 1, y), (x, y - 1), (x, y + 1)] {
+                if nx < 0 || ny < 0 || nx >= w || ny >= h {
+                    continue;
+                }
+                let ck = (nx as u32 / CHUNK_CELLS, ny as u32 / CHUNK_CELLS);
+                if !chunks.contains(&ck) {
+                    chunks.push(ck);
+                }
+            }
+        }
+        self.deform_seq = journal.seq;
+        if !patch {
+            return true;
+        }
+        if touched {
+            self.ground_patch_seq = self.ground_patch_seq.wrapping_add(1);
+            let seq = self.ground_patch_seq;
+            self.ground_patches.extend(chunks.into_iter().map(|(cx, cy)| (seq, cx, cy)));
+            if self.ground_patches.len() > GROUND_PATCH_HISTORY {
+                let drop = self.ground_patches.len() - GROUND_PATCH_HISTORY;
+                self.ground_patches.drain(..drop);
+            }
+            self.ground_revision = self.ground_revision.wrapping_add(1);
+            self.revision = self.revision.wrapping_add(1);
+        }
+        false
     }
 
     fn build(
@@ -190,7 +302,18 @@ impl PixelWorldTerrainField {
         self.width = dense.width;
         self.height = dense.height;
         self.class = grid.classes.clone();
-        self.ground = dense.elevation.iter().map(|e| quantize(e * scale)).collect();
+        // Terraced DEM plus the (unterraced) deformation delta: a few-metre crater must not be
+        // swallowed by the 8 m height terrace. No delta -> identical to `quantize(e * scale)`.
+        let range_m = params.elevation_range_m;
+        self.ground = dense
+            .elevation
+            .iter()
+            .enumerate()
+            .map(|(i, e)| match self.deform_m.get(i).copied().filter(|d| *d != 0.0) {
+                Some(dm) => quantize((e * range_m - dm) * upm) + dm * upm,
+                None => quantize(e * scale),
+            })
+            .collect();
         self.water = vec![NO_WATER; n];
 
         let is_open = |i: usize| self.class[i].is_open_water();
@@ -436,6 +559,7 @@ pub fn sync_pixel_world_terrain_field(
     grid: Option<Res<WorldWaterGrid>>,
     static_depth: Option<Res<WorldStaticWaterDepth>>,
     surface: Option<Res<SurfaceWaterField>>,
+    journal: Option<Res<GroundDeltaJournal>>,
     mut field: ResMut<PixelWorldTerrainField>,
 ) {
     if !mode.is_some_and(|m| m.is_pixel_world()) {
@@ -444,8 +568,14 @@ pub fn sync_pixel_world_terrain_field(
     let (Some(dense), Some(grid)) = (dense, grid) else {
         return;
     };
+    // Terrain deformation arrives through the journal (the dense cache is mutated without its
+    // change flag, which is reserved for "world regenerated").
+    let deform_full = journal
+        .as_deref()
+        .is_some_and(|j| field.follow_ground_deform(params.as_ref(), dense.as_ref(), j));
     let dense_changed = dense.is_changed()
         || grid.is_changed()
+        || deform_full
         || static_depth.as_ref().is_some_and(|s| s.is_changed());
     // Live surface water changes every sim tick; its coarse stamp inside `rebuild_if_stale`
     // decides when it matters. Counting `surface.is_changed()` here rebuilt the field (and

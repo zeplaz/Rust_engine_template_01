@@ -14,7 +14,9 @@
         (id: "G2", label: "dam_site", tile: (160, 160), cross_section_half_tiles: 4),
         (id: "G3", label: "downstream", tile: (160, 100), cross_section_half_tiles: 4),
     ],
-    town_origin: (140, 200),
+    // On the east valley terrace (plateau above the reservoir): a town on the floodplain at
+    // (140,200) would sit under 30 m of impounded water.
+    town_origin: (212, 196),
     nuclear_plant_origin: (180, 140),
     hydro_plant_origin: (160, 152),
     launch_site_origin: (100, 180),
