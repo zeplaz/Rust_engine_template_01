@@ -14,6 +14,8 @@ mod barrier_ops;
 mod bed_follow;
 pub mod sediment;
 mod cooling_intake;
+mod dam_faces;
+mod field_read;
 mod flood_consequences;
 mod gauge;
 mod hydro;
@@ -25,8 +27,10 @@ mod step_kernel;
 mod surface_water;
 mod tiles;
 mod visual_frame;
+mod field_feed;
 mod gpu_field;
 mod water_runtime;
+mod wet_mask;
 
 pub use barrier_ops::{
     apply_barrier_breach_request_system, apply_barrier_column_request_system,
@@ -48,7 +52,7 @@ pub use gauge::{
 pub use hydro::{update_hydro_generation_system, HydroGenerationState};
 pub use visual_frame::{publish_surface_water_visual_frame_system, SurfaceWaterVisualFrame};
 pub use gpu_field::{
-    field_texel_step, pack_composite_water_field_rgba8, pack_surface_water_field_rgba8,
+    field_texel_step, field_texture_dims, pack_surface_water_field_rgba8,
     pack_water_texel, publish_surface_water_gpu_field_system, SurfaceWaterGpuField,
     SurfaceWaterGpuFieldMeta,
     DEPTH_SCALE_M, FLOW_SPEED_SCALE, GPU_FIELD_MAX_EDGE,
@@ -58,11 +62,14 @@ pub use solver_tick::{
     seed_surface_water_system, step_surface_water_system, SurfaceWaterBaseflow,
     SurfaceWaterSeedLatch, SurfaceWaterSolverPlugin, MAX_WATER_STEPS_PER_FRAME,
 };
+pub use dam_faces::{DamFlows, DamGeometry, DamOps, DamSite, FaceFlows, CHANNEL_BAND_M};
 pub use surface_water::{
     hydro_power_mw, measure_dam_break_front_distance, ritter_front_speed_mps, BarrierHydraulics,
-    DamSite, PoolWindow, ReservoirLevelPool, SurfaceWaterField, SurfaceWaterMode, G_MPS2,
-    SURFACE_WATER_SCHEMA_V1,
+    PoolWindow, ReservoirLevelPool, SurfaceWaterField, SurfaceWaterMode, FAR_FIELD_2D_DT_CAP_S,
+    FAR_FIELD_MIN_DT_S, G_MPS2, SURFACE_WATER_SCHEMA_V1,
 };
+pub use field_feed::{publish_water_dirty_feed_system, WaterFieldDirtyFeed};
+pub use wet_mask::{update_water_wet_mask_system, WaterFieldWetMask, WET_MASK_DEPTH_M};
 pub use tiles::{WaterTileGrid, WATER_SLEEP_STEPS, WATER_TILE_CELLS};
 pub use probe::WaterTileProbe;
 pub use salinity::WorldWaterSalinity;
@@ -121,8 +128,6 @@ pub struct BarrierControlIntent {
     pub turbine_flow_setpoint_m3s: f32,
     /// Per-unit bank (slots may be unused / setpoint 0).
     pub turbines: [DamTurbineUnit; DAM_TURBINE_UNIT_COUNT],
-    /// When true and a crest exists with outlets mostly closed, prefer level-pool routing.
-    pub prefer_level_pool: bool,
 }
 
 impl Default for BarrierControlIntent {
@@ -133,8 +138,45 @@ impl Default for BarrierControlIntent {
             mid_outlet_open01: 0.0,
             turbine_flow_setpoint_m3s: 0.0,
             turbines: [DamTurbineUnit::default(); DAM_TURBINE_UNIT_COUNT],
-            prefer_level_pool: false,
         }
+    }
+}
+
+/// Control of each dam by its owner entity (WM-3). Construction publishes (one entry per dam
+/// site); water is the only reader, applying each entry to the dam of that owner in the field.
+/// A dam with no entry (bare scenario rows, a dam not yet mirrored) follows the global
+/// [`BarrierControlIntent`].
+#[derive(Resource, Debug, Clone, Default, PartialEq)]
+pub struct BarrierControlBook {
+    by_dam: std::collections::HashMap<Entity, DamOps>,
+}
+
+impl BarrierControlBook {
+    /// Publish `ops` for `dam`; returns true when the entry changed.
+    pub fn set(&mut self, dam: Entity, ops: DamOps) -> bool {
+        self.by_dam.insert(dam, ops) != Some(ops)
+    }
+
+    #[must_use]
+    pub fn get(&self, dam: Entity) -> Option<DamOps> {
+        self.by_dam.get(&dam).copied()
+    }
+
+    /// Drop the entries of dams that no longer exist; true when any was removed.
+    pub fn retain(&mut self, mut keep: impl FnMut(Entity) -> bool) -> bool {
+        let n = self.by_dam.len();
+        self.by_dam.retain(|e, _| keep(*e));
+        self.by_dam.len() != n
+    }
+
+    #[must_use]
+    pub fn len(&self) -> usize {
+        self.by_dam.len()
+    }
+
+    #[must_use]
+    pub fn is_empty(&self) -> bool {
+        self.by_dam.is_empty()
     }
 }
 
@@ -264,6 +306,7 @@ pub struct WaterSimPlugin;
 impl Plugin for WaterSimPlugin {
     fn build(&self, app: &mut App) {
         app.init_resource::<BarrierControlIntent>()
+            .init_resource::<BarrierControlBook>()
             .init_resource::<SlowDomainTimeSkip>()
             .init_resource::<SlowDomainElapsedSecs>()
             .init_resource::<BarrierInstallRequest>()
@@ -274,6 +317,8 @@ impl Plugin for WaterSimPlugin {
             .init_resource::<SurfaceWaterVisualFrame>()
             .init_resource::<SurfaceWaterGpuField>()
             .init_resource::<SurfaceWaterGpuFieldMeta>()
+            .init_resource::<WaterFieldDirtyFeed>()
+            .init_resource::<WaterFieldWetMask>()
             .init_resource::<WorldStaticWaterDepth>()
             .init_resource::<FloodRouteBlockBook>()
             .init_resource::<FloodSiteReadinessBook>()
@@ -311,8 +356,15 @@ impl Plugin for WaterSimPlugin {
                     update_hydro_generation_system.after(step_surface_water_system),
                     publish_flood_consequences_system.after(step_surface_water_system),
                     publish_surface_water_visual_frame_system.after(step_surface_water_system),
+                    // WM-5: peek the moved chunks once, before the substrate projection drains
+                    // them; every render-side consumer reads the same feed after this.
+                    publish_water_dirty_feed_system
+                        .after(step_surface_water_system)
+                        .before(project_surface_water_to_substrate_system),
                     publish_surface_water_gpu_field_system
-                        .after(publish_surface_water_visual_frame_system),
+                        .after(publish_surface_water_visual_frame_system)
+                        .after(publish_water_dirty_feed_system),
+                    update_water_wet_mask_system.after(publish_water_dirty_feed_system),
                 ),
             )
             .register_type::<BarrierControlIntent>()

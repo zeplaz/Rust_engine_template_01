@@ -95,7 +95,7 @@ pub fn emit_ember_spot_ignition_events(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
     tick: Res<SimTick>,
-    water_gate: Res<SurfaceWaterFireGate>,
+    water_gate: SurfaceWaterFireGate,
     mut queue: ResMut<SimEffectQueue>,
     mut witness: Option<ResMut<FireEcologyStats>>,
     q: Query<(
@@ -146,7 +146,7 @@ pub fn emit_ember_spot_ignition_events(
             if sent >= MAX_EMBERS_PER_CHUNK {
                 break;
             }
-            if water_gate.cell_has_standing_water(matrix, i) {
+            if water_gate.cell_has_standing_water(chunk.coord, matrix, i) {
                 continue;
             }
             let h = heat[i];
@@ -223,7 +223,7 @@ pub fn emit_ember_spot_ignition_events(
 
 pub fn apply_ember_spot_ignitions(
     mut reader: MessageReader<EmberSpotIgnitionEvent>,
-    water_gate: Res<SurfaceWaterFireGate>,
+    water_gate: SurfaceWaterFireGate,
     mut hooks: ResMut<ChunkEnvironmentPersistHooks>,
     mut witness: Option<ResMut<FireEcologyStats>>,
     chunks: Query<(Entity, &Chunk), With<ChunkFireOverlay>>,
@@ -273,7 +273,7 @@ pub fn apply_ember_spot_ignitions(
             if i >= n {
                 continue;
             }
-            if water_gate.cell_has_standing_water(matrix, i) {
+            if water_gate.cell_has_standing_water(coord, matrix, i) {
                 continue;
             }
             let m = matrix.moisture.get(i).copied().unwrap_or(0.5);

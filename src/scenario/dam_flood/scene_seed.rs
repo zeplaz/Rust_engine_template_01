@@ -135,9 +135,9 @@ pub fn apply_dam_control_intent_to_sites_system(
     }
 }
 
-/// Mirror scenario `DamControlIntent` into the general barrier intent **only when no
-/// site [`DamControl`] exists**. Player/ops authority is the dam component →
-/// `mirror_dam_control_to_barrier_system`.
+/// Mirror scenario `DamControlIntent` into the general barrier intent (the control of dams that
+/// have no entry in the per-dam book) **only when no site [`DamControl`] exists**. Player/ops
+/// authority is the dam component → `mirror_dam_control_to_barrier_system` → `BarrierControlBook`.
 pub fn sync_dam_control_to_barrier_intent_system(
     dam: Res<super::DamControlIntent>,
     site_controls: Query<&crate::construction::DamControl>,
@@ -151,10 +151,6 @@ pub fn sync_dam_control_to_barrier_intent_system(
     barrier.mid_outlet_open01 = dam.mid_outlet_open01;
     barrier.turbines = dam.turbines;
     barrier.sync_turbine_aggregate();
-    barrier.prefer_level_pool = dam.outlet_open01 <= 0.2
-        && dam.mid_outlet_open01 <= 0.2
-        && dam.gate_open01 <= 0.2
-        && dam.turbine_flow_setpoint_m3s < 1.0;
 }
 
 /// Copy live water / hydro / cooling counters into the benchmark book (read-only mirror).

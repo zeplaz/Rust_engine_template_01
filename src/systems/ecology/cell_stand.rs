@@ -818,7 +818,6 @@ mod tests {
     use crate::systems::ecology::ChunkEcology;
     use crate::systems::fire::{
         chunk_fire_overlay_tick, chunk_fuel_profile_tick, ChunkFuelProfile, FireEcologyStats,
-        SurfaceWaterFireGate,
     };
     use crate::systems::weather::ChunkWeather;
     use crate::terrain::default_terrain_families;
@@ -903,7 +902,6 @@ mod tests {
             .init_resource::<SimTick>()
             .init_resource::<SimTimeMicros>()
             .insert_resource(test_cfg())
-            .init_resource::<SurfaceWaterFireGate>()
             .init_resource::<ChunkEnvironmentPersistHooks>()
             .init_resource::<FireEcologyStats>()
             .add_systems(

@@ -1,11 +1,10 @@
-//! DF-5 — flood drown clock from surface / static water depth into [`ChunkCellStand`].
+//! DF-5 — flood drown clock from the live water field into [`ChunkCellStand`] (WM-4: the field
+//! only, through [`WaterTileProbe`]; no static-depth fallback).
 
 use bevy::prelude::*;
 
 use crate::systems::sim_control::SimTimeMicros;
-use crate::systems::water::{
-    SlowDomainElapsedSecs, SurfaceWaterField, WorldStaticWaterDepth, WET_DEPTH_M,
-};
+use crate::systems::water::{SlowDomainElapsedSecs, WaterTileProbe, WET_DEPTH_M};
 use crate::terrain::generation::chunk::Chunk;
 use crate::terrain::generation::cell_matrix::ChunkCellMatrix;
 
@@ -13,8 +12,7 @@ use super::cell_stand::ChunkCellStand;
 
 /// Sole writer of flood submergence clocks on stands (ecology domain).
 pub fn stand_flood_from_water_system(
-    field: Option<Res<SurfaceWaterField>>,
-    static_depth: Option<Res<WorldStaticWaterDepth>>,
+    water: WaterTileProbe,
     sim_time: Res<SimTimeMicros>,
     slow_elapsed: Option<Res<SlowDomainElapsedSecs>>,
     mut q: Query<(
@@ -25,7 +23,8 @@ pub fn stand_flood_from_water_system(
     )>,
 ) {
     let _perf = crate::render::PerfScope::new("upd_eco_stand_flood_from_water_system");
-    if field.is_none() && static_depth.is_none() {
+    // No live field yet (world still loading): nothing is submerged.
+    if !water.seeded() {
         return;
     }
     // DF-1 D4: time-skip adds ecology seconds so drown/dead clocks can finish in a benchmark.
@@ -47,16 +46,7 @@ pub fn stand_flood_from_water_system(
                 let wx = chunk.coord.x * sx + x;
                 let wz = chunk.coord.y * sy + y;
                 let i = (y * sx + x) as usize;
-                let depth = field
-                    .as_ref()
-                    .and_then(|f| f.depth_at_world(wx, wz))
-                    .or_else(|| {
-                        static_depth
-                            .as_ref()
-                            .and_then(|s| s.depth_at_world(wx, wz))
-                    })
-                    .unwrap_or(0.0);
-                wet[i] = depth >= WET_DEPTH_M;
+                wet[i] = water.is_wet(IVec2::new(wx, wz), WET_DEPTH_M);
             }
         }
         let was_dead = stand.flood_dead.clone();
@@ -84,6 +74,41 @@ pub fn stand_flood_from_water_system(
 mod tests {
     use super::*;
     use crate::systems::ecology::cell_stand::{StandKind, StandPhase, StandBurnConfig};
+
+    /// WM-4: submergence comes from the live field alone. A static river stamp (here none at all)
+    /// is not consulted; a cell under field water starts the drown clock, a dry one does not.
+    #[test]
+    fn stand_under_field_water_drowns_without_any_static_fallback() {
+        use crate::systems::water::SurfaceWaterField;
+        use bevy::math::UVec2;
+        let mut field = SurfaceWaterField::default();
+        field.allocate(0, 0, 2, 1, vec![0.0; 2], 0.0);
+        field.depth_m[0] = 1.0;
+        let mut app = App::new();
+        app.insert_resource(field)
+            .init_resource::<SimTimeMicros>()
+            .add_systems(Update, stand_flood_from_water_system);
+        let mut stand = ChunkCellStand::new(2);
+        for i in 0..2 {
+            stand.kind[i] = StandKind::Grass;
+            stand.full_cap[i] = 0.5;
+            stand.fuel_cap[i] = 0.5;
+        }
+        let chunk = app
+            .world_mut()
+            .spawn((Chunk { coord: IVec2::ZERO }, ChunkCellMatrix::new(UVec2::new(2, 1)), stand))
+            .id();
+        app.update();
+        let at = |app: &App| app.world().get::<ChunkCellStand>(chunk).unwrap().clone();
+        assert!(at(&app).submerged_since[0] >= 0.0, "wet cell starts the clock");
+        assert!(at(&app).submerged_since[1] < 0.0, "dry cell does not");
+        // Past the tolerance the wet cell is dead (Drowned phase), the dry one lives.
+        app.world_mut().resource_mut::<SimTimeMicros>().0 =
+            ((ChunkCellStand::FLOOD_TOLERANCE_S + 1.0) * 1.0e6) as u64;
+        app.update();
+        let s = at(&app);
+        assert!(s.flood_dead[0] && !s.flood_dead[1]);
+    }
 
     #[test]
     fn flood_does_not_delete_stand_marks_drowned_after_tolerance() {

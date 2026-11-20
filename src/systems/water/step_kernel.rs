@@ -4,6 +4,7 @@
 //! cells sit in active tiles, so a sleeping tile is never written and volume is conserved exactly.
 //! The flux / limiter buffers are reused across sub-steps (no allocation per sub-step).
 
+use super::dam_faces::{Pipe, NO_DONOR};
 use super::surface_water::{SurfaceWaterField, G_MPS2};
 use super::tiles::{WaterTileGrid, EDGE_DRY_M};
 
@@ -13,6 +14,10 @@ pub struct StepScratch {
     flux_x: Vec<f32>,
     flux_y: Vec<f32>,
     scale: Vec<f32>,
+    /// Dam-face pipes of the sub-step ([`super::dam_faces`]).
+    pipes: Vec<Pipe>,
+    /// Pipe discharge leaving each donor cell (zero outside a sub-step).
+    pipe_out: Vec<f32>,
 }
 
 /// Calibrated so dam-break front celerity matches Ritter 2*sqrt(g*h) within +-10%
@@ -81,6 +86,8 @@ impl SurfaceWaterField {
                 }
             }
         }
+        // A dam passing water wakes the tiles on both sides of its faces.
+        self.wake_dam_tiles(&mut tg);
         let base = tg.base_tiles();
         let (nx, nz) = (tg.nx as usize, tg.nz as usize);
         for &t in &base {
@@ -144,6 +151,9 @@ impl SurfaceWaterField {
             sc.flux_x = vec![0.0; n];
             sc.flux_y = vec![0.0; n];
             sc.scale = vec![1.0; n];
+        }
+        if sc.pipe_out.len() != n {
+            sc.pipe_out = vec![0.0; n];
         }
         let mut tg = std::mem::take(&mut self.tiles);
         let (nx, nz) = (tg.nx as usize, tg.nz as usize);
@@ -221,13 +231,23 @@ impl SurfaceWaterField {
             }
         }
 
+        // Dam faces: outlets, spillways and turbines pass water from the cell above the dam to the
+        // cell below it by the local head. They draw on the same donor budget as the face fluxes.
+        sc.pipes.clear();
+        self.collect_dam_pipes(dt_s, &tg, self.far_release.as_ref(), &mut sc.pipes);
+        for p in &sc.pipes {
+            if p.from != NO_DONOR {
+                sc.pipe_out[p.from] += p.q;
+            }
+        }
+
         // Pass 2: outflow limiter — each cell can't give more than it holds.
         for k in 0..tg.active.len() {
             let (x0, z0, x1, z1) = tg.tile_rect(tg.active[k] as usize);
             for z in z0..z1 {
                 for x in x0..x1 {
                     let i = z * w + x;
-                    let mut out = sc.flux_x[i].max(0.0) + sc.flux_y[i].max(0.0);
+                    let mut out = sc.flux_x[i].max(0.0) + sc.flux_y[i].max(0.0) + sc.pipe_out[i];
                     if x > 0 {
                         out += (-sc.flux_x[i - 1]).max(0.0);
                     }
@@ -271,6 +291,15 @@ impl SurfaceWaterField {
             }
             tg.max_flux[t] = tg.max_flux[t].max(peak);
         }
+
+        // The pipes take the donor's limiter too; flow over each crest is read off the final fluxes.
+        for p in &mut sc.pipes {
+            if p.from != NO_DONOR {
+                p.q *= sc.scale[p.from];
+                sc.pipe_out[p.from] = 0.0;
+            }
+        }
+        self.tally_overtop(&tg, &sc.flux_y, dt_s);
 
         // Pass 4: divergence + boundaries, depth updated in place (a cell reads only its own old
         // depth and the already-final face fluxes).
@@ -326,6 +355,28 @@ impl SurfaceWaterField {
                 }
             }
             tg.max_rate[t] = tg.max_rate[t].max(peak_rate);
+        }
+
+        // Apply the dam pipes (volume leaves the donor, arrives below the dam). A far-field source
+        // has no donor: its volume is new to the field, so it counts as applied.
+        for k in 0..sc.pipes.len() {
+            let p = sc.pipes[k];
+            let dvol = p.q * dt_s;
+            if p.from != NO_DONOR {
+                self.depth_m[p.from] = (self.depth_m[p.from] - dvol / cell_a).max(0.0);
+            } else {
+                applied += f64::from(dvol);
+            }
+            self.depth_m[p.to] += dvol / cell_a;
+            for c in [p.from, p.to] {
+                if c == NO_DONOR {
+                    continue;
+                }
+                let t = tg.tile_of((c % w) as u32, (c / w) as u32);
+                tg.max_rate[t] = tg.max_rate[t].max(p.q / cell_a);
+                tg.max_flux[t] = tg.max_flux[t].max(p.q);
+            }
+            self.tally_pipe(&p, dt_s);
         }
 
         self.scratch = sc;

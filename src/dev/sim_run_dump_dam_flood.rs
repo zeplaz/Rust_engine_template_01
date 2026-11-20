@@ -84,6 +84,7 @@ pub fn dam_flood_json(
         "outlet_flow_m3s": field.map(|f| f.outlet_flow_m3s).unwrap_or_else(|| book.map(|b| b.outlet_flow_m3s).unwrap_or(0.0)),
         "spillway_flow_m3s": field.map(|f| f.spillway_flow_m3s).unwrap_or_else(|| book.map(|b| b.spillway_flow_m3s).unwrap_or(0.0)),
         "overtopping_flow_m3s": field.map(|f| f.overtopping_flow_m3s).unwrap_or(0.0),
+        "dam_flows": dam_flows_json(field),
         "breach_flow_m3s": book.map(|b| b.breach_flow_m3s).unwrap_or(0.0),
         "stand_live": book.map(|b| b.stand_live).unwrap_or(0),
         "stand_drowned": book.map(|b| b.stand_drowned).unwrap_or(0),
@@ -109,6 +110,30 @@ pub fn dam_flood_json(
         "water_upload_ms": gpu_field.map(|g| g.upload_ms).unwrap_or(0.0),
         "flood_route_blocked_tiles": flood_routes.map(|b| b.blocked.len() as u32).unwrap_or(0),
     })
+}
+
+/// Per-dam release of the last water step (WM-3): each dam's own outlet / spillway / overtop /
+/// turbine discharge, upstream surface and gross head. The aggregates above are their sums.
+fn dam_flows_json(field: Option<&SurfaceWaterField>) -> Value {
+    let Some(f) = field.filter(|f| f.wired) else {
+        return Value::Array(Vec::new());
+    };
+    Value::Array(
+        f.dam_flows()
+            .map(|(owner, d)| {
+                json!({
+                    "dam": owner.map(|e| e.to_bits()),
+                    "outlet_m3s": d.outlet_m3s,
+                    "mid_outlet_m3s": d.mid_outlet_m3s,
+                    "spillway_m3s": d.spillway_m3s,
+                    "overtop_m3s": d.overtop_m3s,
+                    "turbine_m3s": d.turbine_m3s,
+                    "up_surface_m": d.up_surface_m,
+                    "head_m": d.head_m,
+                })
+            })
+            .collect(),
+    )
 }
 
 /// Reservoir shape counts (OP-10/11/12): pool stage vs crest, forest-floodplain cells wet in the

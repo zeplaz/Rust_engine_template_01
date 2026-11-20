@@ -319,7 +319,7 @@ pub fn chunk_fire_overlay_tick(
     mut bufs: Local<FireTickScratch>,
     ctrl: Res<SimControlState>,
     time: Res<Time>,
-    water_gate: Res<SurfaceWaterFireGate>,
+    water_gate: SurfaceWaterFireGate,
     stand_cfg: Option<Res<StandBurnConfig>>,
     mut hooks: ResMut<ChunkEnvironmentPersistHooks>,
     mut witness: ResMut<FireEcologyStats>,
@@ -508,7 +508,7 @@ pub fn chunk_fire_overlay_tick(
         scratch.clear();
         scratch.resize(n, 0.0);
         water.clear();
-        water.extend((0..n).map(|i| water_gate.cell_has_standing_water(matrix, i)));
+        water.extend((0..n).map(|i| water_gate.cell_has_standing_water(chunk.coord, matrix, i)));
 
         // Most chunks are not burning: no heat, smoke, toxic or burned window anywhere. While a
         // chunk stays like that (no cell has lit yet this tick), a cell that does not ignite ends
@@ -972,7 +972,7 @@ pub fn apply_one_edge_deposit(
 pub fn chunk_fire_edge_spread(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
-    water_gate: Res<SurfaceWaterFireGate>,
+    water_gate: SurfaceWaterFireGate,
     mut q: Query<(
         Entity,
         &Chunk,
@@ -1039,8 +1039,8 @@ pub fn chunk_fire_edge_spread(
                 let (di_x, di_y) = (si_x - dx * (sx_i - 1), si_y - dy * (sy_i - 1));
                 let si = (si_y * sx_i + si_x) as usize;
                 let di = (di_y * sx_i + di_x) as usize;
-                if water_gate.cell_has_standing_water(matrix, si)
-                    || water_gate.cell_has_standing_water(nm, di)
+                if water_gate.cell_has_standing_water(chunk.coord, matrix, si)
+                    || water_gate.cell_has_standing_water(chunk.coord + IVec2::new(dx, dy), nm, di)
                     || !spread_allowed(nwx.snow_depth, nm.moisture[di])
                 {
                     continue;
@@ -1084,8 +1084,8 @@ pub fn chunk_fire_edge_spread(
                     (0, 1) => ((sy - 1) * sx + k, k),
                     _ => (k, (sy - 1) * sx + k),
                 };
-                if water_gate.cell_has_standing_water(matrix, si)
-                    || water_gate.cell_has_standing_water(nm, di)
+                if water_gate.cell_has_standing_water(chunk.coord, matrix, si)
+                    || water_gate.cell_has_standing_water(chunk.coord + IVec2::new(dx, dy), nm, di)
                     || !spread_allowed(nwx.snow_depth, nm.moisture[di])
                 {
                     continue;
@@ -1130,7 +1130,7 @@ mod link_tests {
         ChunkEnvironmentDirty, ChunkEnvironmentPersistHooks,
     };
     use crate::systems::fire::{
-        ChunkFireOverlay, ChunkSurfaceFire, FireEcologyStats, SurfaceWaterFireGate,
+        ChunkFireOverlay, ChunkSurfaceFire, FireEcologyStats,
     };
     use crate::systems::sim_control::SimControlState;
     use crate::systems::weather::ChunkWeather;
@@ -1155,7 +1155,19 @@ mod link_tests {
     }
 
     fn run_one(matrix: ChunkCellMatrix, overlay: ChunkFireOverlay, paused: bool) -> ChunkFireOverlay {
+        run_one_with_water(matrix, overlay, paused, None)
+    }
+
+    fn run_one_with_water(
+        matrix: ChunkCellMatrix,
+        overlay: ChunkFireOverlay,
+        paused: bool,
+        water: Option<crate::systems::water::SurfaceWaterField>,
+    ) -> ChunkFireOverlay {
         let mut app = App::new();
+        if let Some(w) = water {
+            app.insert_resource(w);
+        }
         app.add_plugins(MinimalPlugins)
             .insert_resource(TimeUpdateStrategy::ManualDuration(Duration::from_millis(16)))
             .insert_resource(SimControlState {
@@ -1163,7 +1175,6 @@ mod link_tests {
                 steps_remaining: 0,
                 speed: 1.0,
             })
-            .init_resource::<SurfaceWaterFireGate>()
             .init_resource::<ChunkEnvironmentPersistHooks>()
             .init_resource::<FireEcologyStats>()
             .add_systems(Update, chunk_fire_overlay_tick);
@@ -1211,6 +1222,33 @@ mod link_tests {
             (drawn - one_tick).abs() < one_tick * 0.5,
             "west fuel draw {drawn} is not one deposit ({one_tick})"
         );
+    }
+
+    /// WM-4: fire reads live depth. The west neighbour of the burning centre takes no deposit while
+    /// the water is on it, and takes it once the water has drained.
+    #[test]
+    fn fire_does_not_spread_into_a_flooded_cell_but_does_into_a_drained_one() {
+        let west = 3usize; // world tile (0, 1) of the 3x3 chunk at (0, 0)
+        let field_with = |depth_m: f32| {
+            let mut f = crate::systems::water::SurfaceWaterField::default();
+            f.allocate(0, 0, 3, 3, vec![0.0; 9], 0.0);
+            let i = f.idx(0, 1);
+            f.depth_m[i] = depth_m;
+            f
+        };
+        let burn = || {
+            let (matrix, mut overlay) = grid();
+            overlay.heat[4] = 0.6;
+            overlay.fuel[4] = 0.8;
+            (matrix, overlay)
+        };
+        let (m, o) = burn();
+        let flooded = run_one_with_water(m, o, false, Some(field_with(0.6)));
+        assert_eq!(flooded.heat[west], 0.0, "flooded cell must stay cold");
+        assert!(flooded.heat[1] > 0.0, "dry north neighbour still takes heat");
+        let (m, o) = burn();
+        let drained = run_one_with_water(m, o, false, Some(field_with(0.0)));
+        assert!(drained.heat[west] > 0.0, "drained cell burns again: {}", drained.heat[west]);
     }
 
     #[test]
@@ -1267,7 +1305,6 @@ mod link_tests {
                 steps_remaining: 0,
                 speed: 1.0,
             })
-            .init_resource::<SurfaceWaterFireGate>()
             .init_resource::<ChunkEnvironmentPersistHooks>()
             .init_resource::<FireEcologyStats>()
             .add_systems(Update, (chunk_fire_overlay_tick, chunk_fire_edge_spread).chain());

@@ -612,8 +612,11 @@ impl Plugin for TileWorldFallbackPlugin {
                         .after(tile_world_fallback_sync_spawner),
                     mark_tile_world_fallback_dirty_on_map_overlay_controls
                         .after(mark_tile_world_fallback_dirty_on_changes),
+                    mark_tile_world_fallback_dirty_on_water_mask
+                        .after(mark_tile_world_fallback_dirty_on_map_overlay_controls)
+                        .after(crate::systems::water::update_water_wet_mask_system),
                     sync_tile_fallback_raster_policy
-                        .after(mark_tile_world_fallback_dirty_on_map_overlay_controls),
+                        .after(mark_tile_world_fallback_dirty_on_water_mask),
                     queue_pixel_world_landscape_atlas_stamps
                         .after(sync_tile_fallback_raster_policy),
                     tile_world_fallback_rasterize
@@ -1306,7 +1309,7 @@ fn raster_tile_fallback_subregion(
     cell_fire_heat: &[(bevy::math::IVec2, bevy::math::UVec2, &[f32])],
     _overlay: &SharedOverlayFieldBuffers,
     fire_heat_visibility_boost: f32,
-    water_catalog: Option<&crate::render::WaterSurfaceVisualCatalog>,
+    water_mask: Option<&crate::systems::water::WaterFieldWetMask>,
     time_secs: f32,
     zoom_alpha: f32,
     tracer_cells: &[(i32, i32)],
@@ -1354,9 +1357,21 @@ fn raster_tile_fallback_subregion(
             fire_heat_visibility_boost,
         );
     }
-    // PLAN-FINAL-GPU-PRESENTATION-v1: water motion is GPU-only (`water_field` /
-    // `water_overlay` Core2d passes). Do not CPU-paint water into the terrain raster.
-    let _ = (water_catalog, time_secs, zoom_alpha);
+    // PLAN-FINAL-GPU-PRESENTATION-v1: water *motion* is GPU-only (`water_field` / `water_overlay`
+    // Core2d passes). The map raster only shows where the live field has water (WM-5), so floods and
+    // reservoirs appear on the strategic views; it never carries ripples.
+    if let Some(mask) = water_mask {
+        crate::gui::map_tile_raster::apply_water_wet_mask_to_rgba_subregion(
+            data.as_mut_slice(),
+            tex_w,
+            x0,
+            y0,
+            x1,
+            y1,
+            mask,
+        );
+    }
+    let _ = (time_secs, zoom_alpha);
     crate::gui::map_tile_raster::stamp_tracer_cells_subregion(
         data.as_mut_slice(),
         tex_w,
@@ -1397,11 +1412,32 @@ fn raster_tile_fallback_subregion(
     );
 }
 
+/// WM-5: repaint only the raster chunks that contain a tile whose water mask byte changed.
+fn mark_tile_world_fallback_dirty_on_water_mask(
+    mask: Option<Res<crate::systems::water::WaterFieldWetMask>>,
+    mut raster_ctrl: ResMut<TileWorldFallbackRasterCtrl>,
+    mut seen: Local<u64>,
+) {
+    let Some(mask) = mask.filter(|m| m.is_ready() && m.revision != *seen) else {
+        return;
+    };
+    *seen = mask.revision;
+    let per_raster = (RASTER_CHUNK_TILES / crate::terrain::world_scale_contract::CHUNK_TILES_SIM).max(1) as i32;
+    for c in &mask.changed_chunks {
+        if c.x >= 0 && c.y >= 0 {
+            raster_ctrl
+                .chunk_grid
+                .mark_chunk((c.x / per_raster) as u32, (c.y / per_raster) as u32);
+        }
+    }
+}
+
 /// Terrain / water / zoom / pixel-mode reads for the fallback raster (render domain).
 #[derive(SystemParam)]
 struct TileFallbackTerrainRasterReads<'w> {
     dense_cache: Option<Res<'w, WorldGenDenseTerrainCache>>,
-    water_catalog: Option<Res<'w, crate::render::WaterSurfaceVisualCatalog>>,
+    /// WM-5 -- live water as a per-tile mask (published by the water domain).
+    water_mask: Option<Res<'w, crate::systems::water::WaterFieldWetMask>>,
     zoom_frame: Res<'w, crate::gui::ZoomFrame>,
     play_map: Res<'w, crate::gui::map_tile_raster::PlayMapPixelMode>,
     pixel_world: Option<Res<'w, crate::gui::PixelWorldLandscapeIntent>>,
@@ -1460,7 +1496,7 @@ fn tile_world_fallback_rasterize(
 ) {
     let TileFallbackTerrainRasterReads {
         dense_cache,
-        water_catalog,
+        water_mask,
         zoom_frame,
         play_map,
         pixel_world,
@@ -1633,7 +1669,7 @@ fn tile_world_fallback_rasterize(
     let fire_boost_main = play_sprite_fire_heat_boost();
     let fire_boost_minimap = 1.0;
     let time_secs = time.elapsed_secs();
-    let water_catalog = water_catalog.as_deref();
+    let water_mask = water_mask.as_deref();
 
     let mat_slices: Vec<(bevy::math::IVec2, bevy::math::UVec2, &[crate::terrain::material::MaterialId])> =
         vec![];
@@ -1751,7 +1787,7 @@ fn tile_world_fallback_rasterize(
                 &cell_fire_heat,
                 overlay.as_ref(),
                 fire_boost_main,
-                water_catalog,
+                water_mask,
                 time_secs,
                 zoom_alpha,
                 &tracer_cells,
@@ -1825,7 +1861,7 @@ fn tile_world_fallback_rasterize(
                 &cell_fire_heat,
                 overlay.as_ref(),
                 fire_boost_minimap,
-                water_catalog,
+                water_mask,
                 time_secs,
                 zoom_alpha,
                 &tracer_cells,

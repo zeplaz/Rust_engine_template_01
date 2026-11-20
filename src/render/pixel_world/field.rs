@@ -3,8 +3,11 @@
 //! Sources (read only, never written):
 //! - [`WorldGenDenseTerrainCache::elevation`] — bed every sim system reads.
 //! - [`WorldWaterGrid`] — bake hint for look (channel vs standing); not gameplay wet authority.
-//! - [`WorldStaticWaterDepth`] — PLAN-WATER-DEPTH-TRUTH-v1 static depth (m); when present, surfaces
-//!   are `ground + depth` (one fluid). Class-based rim fill is the fallback bootstrap.
+//! - [`SurfaceWaterField`] — the map-wide live water (WM-5): `water[]` is `ground + depth` read
+//!   straight from it, patched in place for the chunks the field reports as moved
+//!   ([`PixelWorldTerrainField::follow_surface_water`]); nothing is quantised or rebuilt per change.
+//! - [`WorldStaticWaterDepth`] — only the pre-seed bootstrap (before the field exists); class-based
+//!   rim fill is the fallback under that.
 //!
 //! The field is a presentation projection: ground is the elevation in world units, quantized to
 //! [`HEIGHT_STEP`] terraces (the voxel look).
@@ -12,9 +15,10 @@
 use bevy::prelude::*;
 
 use crate::systems::water::{
-    water_look_from_depth_speed, SurfaceWaterField, WorldStaticWaterDepth, CHANNEL_LOOK_SPEED,
-    WET_DEPTH_M,
+    water_look_from_depth_speed, SurfaceWaterField, WaterFieldDirtyFeed, WorldStaticWaterDepth,
+    CHANNEL_LOOK_SPEED, WET_DEPTH_M,
 };
+use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 use crate::terrain::ground_deform::GroundDeltaJournal;
 use crate::terrain::generation::{WaterClass, WorldGenDenseTerrainCache, WorldWaterGrid};
@@ -48,8 +52,11 @@ pub struct PixelWorldTerrainField {
     pub class: Vec<WaterClass>,
     pub min_h: f32,
     pub max_h: f32,
-    /// Bumps on every rebuild (ground or water); water/overlay consumers key on it.
+    /// Bumps on every rebuild and whenever water moved enough to matter to meshes draped on the
+    /// field (a cell turned wet/dry or its surface drifted by [`HEIGHT_STEP`] since the last bump).
     pub revision: u64,
+    /// Bumps on every water patch that changed any `water[]` value (exact data; no threshold).
+    pub water_revision: u64,
     /// Display units per real metre used for this build (ground, water, depth lifts).
     pub units_per_metre: f32,
     /// Bumps only when [`Self::ground`] (or the grid size) changes. Ground meshes key on this so
@@ -67,6 +74,12 @@ pub struct PixelWorldTerrainField {
     deform_seq: u64,
     deform_epoch: u64,
     source_stamp: Option<u64>,
+    /// Last [`WaterFieldDirtyFeed`] frame folded into `water[]`.
+    water_feed_seq: u64,
+    /// Coastal (ocean-class) cells of the baked grid: the look hint survives wet/dry flips.
+    coast: Vec<bool>,
+    /// `water[]` as of the last `revision` bump (drift reference for the threshold above).
+    water_drape: Vec<f32>,
 }
 
 /// Patch history kept for the mesh builder's cursor.
@@ -143,38 +156,13 @@ impl PixelWorldTerrainField {
         if !dense.is_live_height_grid() || grid.width != dense.width || grid.height != dense.height {
             return false;
         }
-        // Mass fingerprint of live ROI depths so reservoir fill / flood rebuilds the voxel water.
-        let surface_stamp = surface
-            .filter(|f| f.wired)
-            .map(|f| {
-                let wet = f
-                    .depth_m
-                    .iter()
-                    .filter(|d| **d >= WET_DEPTH_M)
-                    .count() as u64;
-                // Coarse quanta only — fine flow every frame would thrash
-                // `field.revision` and leave half the voxel map undrawn
-                // (chunks rebuild at CHUNKS_PER_FRAME after a full despawn).
-                let stage_q = (f.pool.stage_m * 2.0).round() as i32; // 0.5 m
-                let out_q = (f.outlet_flow_m3s / 8.0).round() as i32;
-                let mid_q = (f.mid_outlet_flow_m3s / 8.0).round() as i32;
-                let breach_q = (f.breach_flow_m3s / 20.0).round() as i32;
-                let over_q = (f.overtopping_flow_m3s / 8.0).round() as i32;
-                let wet_q = wet / 32; // ignore tiny shoreline flicker
-                wet_q
-                    .wrapping_mul(0x9E37_79B9)
-                    .wrapping_add(stage_q as u64)
-                    .wrapping_add((out_q as u64) << 8)
-                    .wrapping_add((mid_q as u64) << 16)
-                    .wrapping_add((breach_q as u64) << 24)
-                    .wrapping_add((over_q as u64) << 32)
-                    .wrapping_add((f.width as u64) << 40)
-            })
-            .unwrap_or(0);
+        // Live water is not part of the stamp: it arrives per chunk through `follow_surface_water`.
+        // Only the first sight of the field (pre-seed bootstrap -> field-sourced) forces a build.
+        let live = surface.is_some_and(|f| Self::field_covers(f, dense));
         let stamp = grid
             .stamp
             .wrapping_add(static_depth.map(|s| s.stamp).unwrap_or(0))
-            .wrapping_add(surface_stamp);
+            .wrapping_add(u64::from(live) << 60);
         if !dense_changed && self.source_stamp == Some(stamp) && self.is_ready() {
             return false;
         }
@@ -281,6 +269,95 @@ impl PixelWorldTerrainField {
             self.revision = self.revision.wrapping_add(1);
         }
         false
+    }
+
+    /// The field is usable as the live water of this grid.
+    fn field_covers(f: &SurfaceWaterField, dense: &WorldGenDenseTerrainCache) -> bool {
+        f.wired
+            && f.depth_m.len() == f.cell_count()
+            && f.origin_x == 0
+            && f.origin_z == 0
+            && f.width == dense.width
+            && f.height == dense.height
+    }
+
+    /// Water surface + look of cell `(x, y)` (index `i`) straight from the field: `ground + depth`
+    /// in display units (the height the GPU water draws), no terracing.
+    fn field_cell(&self, f: &SurfaceWaterField, x: u32, y: u32, i: usize, upm: f32) -> (f32, WaterClass) {
+        let fi = f.idx(x, y);
+        let d = f.depth_m.get(fi).copied().unwrap_or(0.0);
+        if d < WET_DEPTH_M {
+            return (NO_WATER, WaterClass::Dry);
+        }
+        let qx = f.qx_m3s.get(fi).copied().unwrap_or(0.0).abs();
+        let qy = f.qy_m3s.get(fi).copied().unwrap_or(0.0).abs();
+        let speed = (qx + qy) / (d * f.dx_m.max(1e-3)).max(1e-3);
+        let coast = self.coast.get(i).copied().unwrap_or(false);
+        (self.ground[i] + d * upm, water_look_from_depth_speed(d, speed, coast))
+    }
+
+    /// WM-5: fold the field's moved chunks into `water[]` / `class[]` in place (the way
+    /// [`Self::follow_ground_deform`] patches the ground). Cost is the touched chunks, not the map.
+    /// A consumer that skipped a feed frame re-reads every chunk. Returns true when any `water[]`
+    /// value changed.
+    pub fn follow_surface_water(&mut self, surface: &SurfaceWaterField, feed: &WaterFieldDirtyFeed) -> bool {
+        if !self.is_ready()
+            || self.water.len() != self.ground.len()
+            || self.water_drape.len() != self.water.len()
+            || self.coast.len() != self.water.len()
+            || !(surface.wired
+                && surface.origin_x == 0
+                && surface.origin_z == 0
+                && surface.width == self.width
+                && surface.height == self.height
+                && surface.depth_m.len() == surface.cell_count())
+        {
+            return false;
+        }
+        let chunks = feed.chunks_since(self.water_feed_seq);
+        self.water_feed_seq = feed.seq;
+        let cs = CHUNK_TILES_SIM as i32;
+        let (w, h) = (self.width as i32, self.height as i32);
+        let rects: Vec<(i32, i32, i32, i32)> = match chunks {
+            Some(list) => list
+                .iter()
+                .map(|c| (c.x * cs, c.y * cs, ((c.x + 1) * cs).min(w), ((c.y + 1) * cs).min(h)))
+                .collect(),
+            None => vec![(0, 0, w, h)],
+        };
+        let upm = crate::terrain::world_scale_contract::display_units_per_metre();
+        let (mut changed, mut drifted) = (false, false);
+        for (x0, y0, x1, y1) in rects {
+            for y in y0.max(0)..y1 {
+                for x in x0.max(0)..x1 {
+                    let i = y as usize * self.width as usize + x as usize;
+                    let (water, class) = self.field_cell(surface, x as u32, y as u32, i, upm);
+                    let old = self.water[i];
+                    if old.to_bits() != water.to_bits() {
+                        changed = true;
+                        self.water[i] = water;
+                        if water.is_finite() {
+                            self.max_h = self.max_h.max(water);
+                        }
+                    }
+                    self.class[i] = class;
+                    let r = self.water_drape[i];
+                    let moved = r.is_finite() != water.is_finite()
+                        || (water.is_finite() && (water - r).abs() >= HEIGHT_STEP);
+                    if moved {
+                        self.water_drape[i] = water;
+                        drifted = true;
+                    }
+                }
+            }
+        }
+        if changed {
+            self.water_revision = self.water_revision.wrapping_add(1);
+        }
+        if drifted {
+            self.revision = self.revision.wrapping_add(1);
+        }
+        changed
     }
 
     fn build(
@@ -421,7 +498,8 @@ impl PixelWorldTerrainField {
 
         // PLAN-WATER-DEPTH-TRUTH-v1 W3: when static depth exists, surface = ground + depth (one fluid).
         // Look class is derived from depth (standing vs channel bake hint), not a second water.
-        if let Some(st) = static_depth {
+        let live_field = surface.filter(|f| Self::field_covers(f, dense));
+        if let Some(st) = static_depth.filter(|_| live_field.is_none()) {
             if st.width == dense.width
                 && st.height == dense.height
                 && st.depth_m.len() >= n
@@ -462,34 +540,17 @@ impl PixelWorldTerrainField {
             }
         }
 
-        // Live SurfaceWaterField ROI (dam reservoir / flood) overlays static/class water.
-        if let Some(sf) = surface.filter(|f| f.wired && !f.depth_m.is_empty()) {
-            let ox = sf.origin_x;
-            let oz = sf.origin_z;
-            for lz in 0..sf.height {
-                for lx in 0..sf.width {
-                    let d = sf.depth_m[sf.idx(lx, lz)];
-                    if d < WET_DEPTH_M {
-                        continue;
-                    }
-                    let wx = ox + lx as i32;
-                    let wz = oz + lz as i32;
-                    if wx < 0 || wz < 0 || wx >= w as i32 || wz >= h as i32 {
-                        continue;
-                    }
-                    let i = wz as usize * w + wx as usize;
-                    let lift = d * upm; // metres → display units (once)
-                    self.water[i] = quantize(self.ground[i] + lift.max(SURFACE_UNDER_BANK));
-                    let speed = {
-                        let dx = sf.dx_m.max(1e-3);
-                        let qx = sf.qx_m3s.get(sf.idx(lx, lz)).copied().unwrap_or(0.0).abs();
-                        let qy = sf.qy_m3s.get(sf.idx(lx, lz)).copied().unwrap_or(0.0).abs();
-                        (qx + qy) / (d * dx).max(1e-3)
-                    };
-                    self.class[i] = water_look_from_depth_speed(d, speed, false);
-                }
+        // WM-5: the map-wide field is the live truth; static depth was only its seed.
+        self.coast = grid.classes.iter().map(|c| *c == WaterClass::Ocean).collect();
+        if let Some(sf) = live_field {
+            for i in 0..n {
+                let (x, y) = ((i % w) as u32, (i / w) as u32);
+                let (water, class) = self.field_cell(sf, x, y, i, upm);
+                self.water[i] = water;
+                self.class[i] = class;
             }
         }
+        self.water_drape = self.water.clone();
 
         let (mut lo, mut hi) = (f32::INFINITY, f32::NEG_INFINITY);
         for i in 0..n {
@@ -559,6 +620,7 @@ pub fn sync_pixel_world_terrain_field(
     grid: Option<Res<WorldWaterGrid>>,
     static_depth: Option<Res<WorldStaticWaterDepth>>,
     surface: Option<Res<SurfaceWaterField>>,
+    feed: Option<Res<WaterFieldDirtyFeed>>,
     journal: Option<Res<GroundDeltaJournal>>,
     mut field: ResMut<PixelWorldTerrainField>,
 ) {
@@ -577,10 +639,9 @@ pub fn sync_pixel_world_terrain_field(
         || grid.is_changed()
         || deform_full
         || static_depth.as_ref().is_some_and(|s| s.is_changed());
-    // Live surface water changes every sim tick; its coarse stamp inside `rebuild_if_stale`
-    // decides when it matters. Counting `surface.is_changed()` here rebuilt the field (and
-    // respawned every ground chunk) each tick — PLAN-CLOSE-VOXEL-WATER-v1 V0.
-    field.rebuild_if_stale(
+    // Live water never triggers a rebuild (PLAN-CLOSE-VOXEL-WATER-v1 V0): a rebuild reads the
+    // field in full once, and from then on the moved chunks are patched in place (WM-5).
+    let rebuilt = field.rebuild_if_stale(
         params.as_ref(),
         dense.as_ref(),
         grid.as_ref(),
@@ -588,6 +649,13 @@ pub fn sync_pixel_world_terrain_field(
         surface.as_deref(),
         dense_changed,
     );
+    if let (Some(surface), Some(feed)) = (surface.as_deref(), feed.as_deref()) {
+        if rebuilt {
+            field.water_feed_seq = feed.seq;
+        } else {
+            field.follow_surface_water(surface, feed);
+        }
+    }
 }
 
 #[cfg(test)]
@@ -635,5 +703,83 @@ mod ground_revision_tests {
         let mut f = PixelWorldTerrainField::default();
         f.rebuild_if_stale(&params, &dense, &grid, None, None, true);
         assert!(!f.rebuild_if_stale(&params, &dense, &grid, None, None, false));
+    }
+}
+
+#[cfg(test)]
+mod surface_water_follow_tests {
+    use super::*;
+    use crate::terrain::generation::WaterClass;
+
+    const N: u32 = 96; // 3 x 3 sim chunks
+
+    fn app_with_field() -> App {
+        let n = (N * N) as usize;
+        let mut sf = SurfaceWaterField::default();
+        sf.allocate(0, 0, N, N, vec![0.0; n], 0.0);
+        let mut app = App::new();
+        app.add_plugins(MinimalPlugins)
+            .init_resource::<WorldGenParams>()
+            .insert_resource(crate::gui::WorldPresentationMode {
+                kind: crate::gui::WorldPresentationKind::PixelWorld3D,
+            })
+            .insert_resource(WorldGenDenseTerrainCache {
+                width: N,
+                height: N,
+                elevation: vec![0.5; n],
+                moisture: vec![0.3; n],
+                temperature: vec![0.3; n],
+                family: vec![crate::terrain::family::DEFAULT_TERRAIN_FAMILY_ID; n],
+                region_index: vec![0; n],
+            })
+            .insert_resource(WorldWaterGrid { width: N, height: N, classes: vec![WaterClass::Dry; n], stamp: 1 })
+            .insert_resource(sf)
+            .insert_resource(WaterFieldDirtyFeed::default())
+            .init_resource::<PixelWorldTerrainField>()
+            .add_systems(Update, sync_pixel_world_terrain_field);
+        app
+    }
+
+    /// WM-5: a depth change in one chunk reaches `water[]` on the next frame, touches only that
+    /// chunk (no rebuild: a sentinel in another chunk survives) and keeps `surface_at` equal to
+    /// what the GPU draws (`ground + depth`).
+    #[test]
+    fn wm5_field_depth_change_patches_only_its_chunk_next_frame() {
+        let mut app = app_with_field();
+        app.update(); // first sight: full build from the field
+        let (x, y) = (40u32, 5u32); // chunk (1, 0)
+        let i = (y * N + x) as usize;
+        let far = ((70 * N) + 70) as usize; // chunk (2, 2)
+        {
+            let mut f = app.world_mut().resource_mut::<PixelWorldTerrainField>();
+            assert!(f.is_ready() && !f.water[i].is_finite());
+            f.water[far] = 123.0; // sentinel: a rebuild or a wider patch would overwrite it
+        }
+        let (full_rev, ground_rev) = {
+            let f = app.world().resource::<PixelWorldTerrainField>();
+            (f.ground_full_revision, f.ground_revision)
+        };
+
+        {
+            let mut sf = app.world_mut().resource_mut::<SurfaceWaterField>();
+            let fi = sf.idx(x, y);
+            sf.depth_m[fi] = 0.4; // shallow and slow: the old 0.5 m stage stamp never saw this
+        }
+        {
+            let mut feed = app.world_mut().resource_mut::<WaterFieldDirtyFeed>();
+            feed.seq += 1;
+            feed.chunks = vec![IVec2::new(1, 0)];
+        }
+        app.update();
+
+        let f = app.world().resource::<PixelWorldTerrainField>();
+        let upm = crate::terrain::world_scale_contract::display_units_per_metre();
+        assert!(f.water[i].is_finite(), "the shallow water shows");
+        assert!((f.water[i] - (f.ground[i] + 0.4 * upm)).abs() < 1e-4, "surface = ground + depth");
+        assert_eq!(f.surface_at(Vec2::new(x as f32 + 0.5, y as f32 + 0.5)), Some(f.water[i].max(f.ground[i])));
+        assert_eq!(f.water[far], 123.0, "other chunks were not touched");
+        assert_eq!(f.ground_full_revision, full_rev, "no full rebuild");
+        assert_eq!(f.ground_revision, ground_rev, "ground meshes stay");
+        assert_ne!(f.class[i], WaterClass::Dry);
     }
 }

@@ -32,10 +32,14 @@ pub fn publish_surface_water_visual_frame_system(
         return;
     }
 
+    // The snapshot is a pure function of the field: nothing to redo on frames it did not move.
+    if !field.is_changed() {
+        return;
+    }
     let mut next: Vec<(f32, f32, f32, f32, f32, f32)> =
         Vec::with_capacity(frame.samples.capacity());
-    // Subsample so overlay stays cheap on large ROIs.
-    let step = ((field.width.max(field.height) / 32).max(1)) as usize;
+    // Subsample so the overlay stays cheap on a map-wide field (every 4th tile at 320).
+    let step = ((field.width.max(field.height) / 80).max(1)) as usize;
     let dx = field.dx_m.max(TILE_METRES_GAMEPLAY);
     for lz in (0..field.height as usize).step_by(step) {
         for lx in (0..field.width as usize).step_by(step) {

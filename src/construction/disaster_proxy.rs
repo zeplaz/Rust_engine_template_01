@@ -13,6 +13,8 @@ use crate::strategic::{
     BuildSiteTile, ConstructionSite, PlannedSite, SiteFootprint, TileOccupationBook,
     VoxelOccupationBook, VoxelOccupationConfig,
 };
+use crate::systems::water::WaterTileProbe;
+#[cfg(test)]
 use crate::systems::water::SurfaceWaterField;
 
 /// Depth (m) over a Foundation tile that starts flood integrity loss.
@@ -27,7 +29,7 @@ pub struct StructuralCollapseQueue {
 
 /// Flood over Foundation tiles → escalate [`DestructibleDamage`] + mask; terminal → queue.
 pub fn flood_foundation_integrity_proxy_system(
-    field: Option<Res<SurfaceWaterField>>,
+    water: WaterTileProbe,
     mut mask: Option<ResMut<DestructionMaskBook>>,
     mut queue: ResMut<StructuralCollapseQueue>,
     clock: Res<crate::systems::sim_control::SimStepClock>,
@@ -43,10 +45,7 @@ pub fn flood_foundation_integrity_proxy_system(
         Without<super::dam_barrier::DamBody>,
     >,
 ) {
-    let Some(field) = field else {
-        return;
-    };
-    if !field.wired {
+    if !water.seeded() {
         return;
     }
     let dt_micros = clock.step_micros.saturating_mul(u64::from(clock.due));
@@ -67,9 +66,7 @@ pub fn flood_foundation_integrity_proxy_system(
                 continue;
             }
             let t = fp.tiles[i];
-            let Some(d) = field.depth_at_world(t.x, t.y) else {
-                continue;
-            };
+            let d = water.depth_m(t);
             if d >= FLOOD_FOUNDATION_DEPTH_M {
                 max_depth = max_depth.max(d);
                 wet_tiles.push(t);

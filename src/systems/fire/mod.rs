@@ -73,8 +73,7 @@ pub struct FirePlugin;
 
 impl Plugin for FirePlugin {
     fn build(&self, app: &mut App) {
-        app.init_resource::<surface_water::SurfaceWaterFireGate>()
-            .init_resource::<ecology_metrics::FireEcologyStats>()
+        app.init_resource::<ecology_metrics::FireEcologyStats>()
             .init_resource::<entity_exposure::FireCollapseQueue>()
             .init_resource::<entity_exposure::FireEntityExposureStats>()
             .init_resource::<entity_exposure::SiteBurnWashFrame>()

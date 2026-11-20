@@ -35,7 +35,7 @@ fn debug_cursor_readout_system(
     mut commands: Commands,
     cursor: Res<FrontMapCursor>,
     field: Option<Res<crate::render::pixel_world::PixelWorldTerrainField>>,
-    water: Option<Res<crate::systems::water::SurfaceWaterField>>,
+    water: crate::systems::water::WaterTileProbe,
     mut q: Query<&mut Text, With<DebugCursorReadout>>,
 ) {
     let ground = cursor.xy.zip(field.as_deref()).and_then(|(p, f)| {
@@ -44,8 +44,8 @@ fn debug_cursor_readout_system(
     });
     let depth = cursor
         .xy
-        .zip(water.as_deref())
-        .and_then(|(p, w)| w.depth_at_world(p.x.floor() as i32, p.y.floor() as i32));
+        .filter(|_| water.seeded())
+        .map(|p| water.depth_m(IVec2::new(p.x.floor() as i32, p.y.floor() as i32)));
     let text = cursor_readout_text(cursor.xy, ground, depth);
     if let Ok(mut t) = q.single_mut() {
         if t.0 != text {
