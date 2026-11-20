@@ -29,11 +29,11 @@ struct VertexOutput {
 // Blue, semi-transparent: the bed shows through shallows, deep water reads darker blue.
 const WATER_DEEP: vec3<f32> = vec3<f32>(0.040, 0.140, 0.360);
 const WATER_MID: vec3<f32> = vec3<f32>(0.090, 0.270, 0.560);
-const WATER_SHALLOW: vec3<f32> = vec3<f32>(0.220, 0.460, 0.760);
+const WATER_SHALLOW: vec3<f32> = vec3<f32>(0.140, 0.380, 0.680);
 const FOAM: vec3<f32> = vec3<f32>(0.86, 0.92, 0.97);
-const WATER_ALPHA_BASE: f32 = 0.30;
-const WATER_ALPHA_DEPTH: f32 = 0.40;
-const WATER_ALPHA_MAX: f32 = 0.78;
+const WATER_ALPHA_BASE: f32 = 0.52;
+const WATER_ALPHA_DEPTH: f32 = 0.33;
+const WATER_ALPHA_MAX: f32 = 0.86;
 
 @vertex
 fn vs_main(@builtin(vertex_index) vertex_index: u32) -> VertexOutput {

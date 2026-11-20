@@ -146,14 +146,26 @@ pub fn refine_missile_aim(
     wind: &MissileBallisticWind,
     step_secs: f32,
 ) -> Vec2 {
+    // Drift depends on flight time, hence on aim, so a plain `aim += miss` can diverge
+    // (gain > 2). Use a secant estimate of d(impact)/d(aim) along the miss direction.
     let mut aim = desired;
+    let mut impact = simulate_missile_impact(origin, aim, speed_tiles_per_step, wind, step_secs);
+    let mut gain = 1.0_f32;
     for _ in 0..MISSILE_AIM_REFINE_ITERS {
-        let impact = simulate_missile_impact(origin, aim, speed_tiles_per_step, wind, step_secs);
         let miss = desired - impact;
         if miss.length() < MISSILE_AIM_HALF_CELL {
             break;
         }
-        aim += miss;
+        let next_aim = aim + miss / gain.max(0.2);
+        let next_impact =
+            simulate_missile_impact(origin, next_aim, speed_tiles_per_step, wind, step_secs);
+        let da = next_aim - aim;
+        let di = next_impact - impact;
+        if da.length_squared() > 1e-6 {
+            gain = (di.dot(da) / da.length_squared()).clamp(0.2, 5.0);
+        }
+        aim = next_aim;
+        impact = next_impact;
     }
     aim
 }
@@ -366,14 +378,17 @@ impl BallisticFlightBook {
     }
 }
 
-/// CQ-55: first solid hit on a metre-space segment (structure occupation or PHYS-04 solid material).
+/// CQ-55: first structure hit on a metre-space segment (tile occupation).
 /// Returns impact position in the same metre space as `prev`/`next`.
+///
+/// Terrain materials are deliberately NOT probed: flights are 2D with no altitude, and
+/// `probe_hits_solid` is true for nearly every land tile, so it turned flat ground into a wall
+/// and detonated cruise missiles ~370-550 m after launch (DamFlood `s5_impact_err_m` 735-918 m).
+/// Re-add a terrain probe only together with a flight-altitude vs heightfield comparison.
 fn first_solid_hit_on_segment(
     prev: Vec2,
     next: Vec2,
     occupation: Option<&crate::strategic::TileOccupationBook>,
-    materials: Option<&crate::terrain::material::MaterialRegistry>,
-    chunks: &Query<(&crate::terrain::generation::Chunk, &crate::terrain::material::MaterializedChunk)>,
 ) -> Option<Vec2> {
     let prev_t = prev / METRES_PER_TILE;
     let next_t = next / METRES_PER_TILE;
@@ -383,36 +398,9 @@ fn first_solid_hit_on_segment(
         if cx == start_x && cy == start_y {
             continue;
         }
-        let tile = IVec2::new(cx, cy);
-        if occupation.is_some_and(|b| b.weight_at(tile) > 1e-3) {
+        if occupation.is_some_and(|b| b.weight_at(IVec2::new(cx, cy)) > 1e-3) {
             return Some(Vec2::new(cx as f32 + 0.5, cy as f32 + 0.5) * METRES_PER_TILE);
         }
-        if let (Some(reg), Some(mid)) = (materials, material_id_at_world_tile(chunks, tile)) {
-            if reg.probe_hits_solid(mid) {
-                return Some(Vec2::new(cx as f32 + 0.5, cy as f32 + 0.5) * METRES_PER_TILE);
-            }
-        }
-    }
-    None
-}
-
-fn material_id_at_world_tile(
-    chunks: &Query<(&crate::terrain::generation::Chunk, &crate::terrain::material::MaterializedChunk)>,
-    tile: IVec2,
-) -> Option<crate::terrain::material::MaterialId> {
-    for (chunk, mat) in chunks.iter() {
-        let sx = mat.size.x as i32;
-        let sy = mat.size.y as i32;
-        if sx <= 0 || sy <= 0 {
-            continue;
-        }
-        let origin = IVec2::new(chunk.coord.x * sx, chunk.coord.y * sy);
-        let local = tile - origin;
-        if local.x < 0 || local.y < 0 || local.x >= sx || local.y >= sy {
-            continue;
-        }
-        let i = (local.y * sx + local.x) as usize;
-        return mat.materials.get(i).copied();
     }
     None
 }
@@ -425,9 +413,6 @@ pub fn step_ballistic_flights(
     attention: Option<Res<SimAttentionFrame>>,
     clock: Res<SimStepClock>,
     occupation: Option<Res<crate::strategic::TileOccupationBook>>,
-    handles: Option<Res<crate::systems::terrain::TerrainRegistriesHandles>>,
-    material_assets: Option<Res<Assets<crate::terrain::material::MaterialRegistry>>>,
-    chunks: Query<(&crate::terrain::generation::Chunk, &crate::terrain::material::MaterializedChunk)>,
 ) {
     if clock.due == 0 {
         return;
@@ -438,11 +423,6 @@ pub fn step_ballistic_flights(
         .as_ref()
         .map(|a| a.player_theater_active)
         .unwrap_or(true);
-    let materials = handles.as_ref().and_then(|h| {
-        material_assets
-            .as_ref()
-            .and_then(|a| a.get(&h.material_registry))
-    });
 
     let mut flights = std::mem::take(&mut book.flights);
     let mut remain = Vec::with_capacity(flights.len());
@@ -462,8 +442,6 @@ pub fn step_ballistic_flights(
                         prev,
                         pos,
                         occupation.as_deref(),
-                        materials,
-                        &chunks,
                     ) {
                         (
                             true,
@@ -483,8 +461,6 @@ pub fn step_ballistic_flights(
                         prev,
                         pos,
                         occupation.as_deref(),
-                        materials,
-                        &chunks,
                     ) {
                         (
                             true,

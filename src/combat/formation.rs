@@ -318,6 +318,14 @@ mod tests {
         let mut app = App::new();
         app.init_resource::<FrontlineState>()
             .insert_resource(SimTimeMicros(0))
+            // Resources/messages other plugins own; Bevy 0.20 panics on failed param validation.
+            .init_resource::<crate::audio::AudioOneShotQueue>()
+            .init_resource::<crate::construction::BlastCraterBook>()
+            .init_resource::<crate::systems::weather::WeatherPollSiteBook>()
+            .init_resource::<crate::systems::weather::WeatherPollingStations>()
+            .init_resource::<crate::systems::weather::AirOpsTuning>()
+            .init_resource::<crate::research::ResearchCapabilityBook>()
+            .add_message::<crate::economy::logistics::orders::LogisticsOrderRequest>()
             .add_plugins(CombatPlugin)
             .add_systems(Update, derive_frontline_from_control_system.in_set(StrategicFieldPipeline::ZoneAndReadModel));
         let mut ov = ChunkStrategicOverlay::new(IVec2::ZERO, UVec2::new(W, 1));
