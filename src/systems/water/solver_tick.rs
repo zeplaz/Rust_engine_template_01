@@ -251,7 +251,7 @@ pub fn step_surface_water_system(
 
 pub fn publish_gauges_from_solver_system(
     field: Option<Res<SurfaceWaterField>>,
-    mut gauges: Option<ResMut<GaugeBook>>,
+    gauges: Option<ResMut<GaugeBook>>,
 ) {
     let (Some(field), Some(mut gauges)) = (field, gauges) else {
         return;

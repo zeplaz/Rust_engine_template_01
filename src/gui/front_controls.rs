@@ -785,7 +785,9 @@ impl Plugin for FrontControlsPlugin {
             .init_resource::<TheaterBook>()
             .init_resource::<PressurePointBook>()
             .init_resource::<ActiveBuildTool>()
-            .init_resource::<crate::gui::logistics_focus::HudLogisticsFocus>();
+            .init_resource::<crate::gui::logistics_focus::HudLogisticsFocus>()
+            .init_resource::<crate::gui::logistics_focus::HudRoadFocus>()
+            .init_resource::<crate::gui::logistics_focus::HudRoadReport>();
         crate::gui::drone_mission_chrome::register_drone_mission_chrome(app);
         app.add_systems(
                 Update,
@@ -795,6 +797,7 @@ impl Plugin for FrontControlsPlugin {
                     front_mouse_system,
                     crate::gui::hud::site_map_pick::clear_formation_selection_when_build_armed,
                     crate::gui::hud::site_map_pick::map_pick_site_focus_system,
+                    crate::gui::hud::road_info_card::map_pick_road_focus_system,
                     front_key_commands_system,
                     crate::gui::drone_mission_chrome::drone_mission_hotkey_system,
                     front_panel_buttons_system,

@@ -218,6 +218,7 @@ pub fn resolve_map_world_pick_system(
     camera: Option<Res<crate::render::pixel_world::PixelWorldCameraFrame>>,
     field: Option<Res<crate::render::pixel_world::PixelWorldTerrainField>>,
     site_boxes: Option<Res<crate::render::pixel_world::PixelWorldSitePickBoxes>>,
+    roads: Option<Res<crate::render::pixel_world::PixelWorldRoadSurface>>,
     mut gate: ResMut<SimulationMapPointerGate>,
 ) {
     let pick = if mode.as_deref().is_some_and(|m| m.is_pixel_world()) {
@@ -226,9 +227,19 @@ pub fn resolve_map_world_pick_system(
                 let ground = cam.pick(field, gate.cursor);
                 // OP-1: sites stand above the ground (a dam over a river); the nearer of the drawn
                 // site box and the ground wins, so clicking the dam selects it.
-                let boxed = site_boxes.as_deref().zip(cam.ray(gate.cursor)).and_then(|(b, (o, d))| {
+                let ray = cam.ray(gate.cursor);
+                let boxed = site_boxes.as_deref().zip(ray).and_then(|(b, (o, d))| {
                     crate::render::pixel_world::ray_hit_site_boxes(&b.0, o, d)
                 });
+                // Bridge decks float over the riverbed: the deck hit stands in for the ground.
+                let deck = roads.as_deref().zip(ray).and_then(|(r, (o, d))| {
+                    let slack = (7.0 / cam.px_per_tile.max(0.05)).clamp(0.35, 2.0);
+                    crate::render::pixel_world::ray_hit_road_decks(r, o, d, slack)
+                });
+                let boxed = match (boxed, deck) {
+                    (Some(b), Some(d)) => Some(if b.0 <= d.0 { b } else { d }),
+                    (b, d) => b.or(d),
+                };
                 match (boxed, ground) {
                     (Some((tb, xy)), Some(g)) => {
                         let gs = field.surface_at(g).unwrap_or(field.min_h);

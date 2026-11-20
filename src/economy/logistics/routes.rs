@@ -112,7 +112,12 @@ fn dijkstra_path_to_goals(
     let mut parent: HashMap<TransportEdgeId, TransportEdgeId> = HashMap::new();
     let mut heap = BinaryHeap::new();
     for &s in starts {
-        let c = edge_cost(s).max(1e-3);
+        let c = edge_cost(s);
+        // Flooded / rubble edges cost infinity: they are walls, not just expensive.
+        if !c.is_finite() {
+            continue;
+        }
+        let c = c.max(1e-3);
         best.insert(s, c);
         heap.push(EdgeDijkstraState { cost: c, edge: s });
     }
@@ -126,8 +131,11 @@ fn dijkstra_path_to_goals(
             break;
         }
         for &next in adj.get(&cur).into_iter().flatten() {
-            let step = edge_cost(next).max(1e-3);
-            let nd = cost + step;
+            let step = edge_cost(next);
+            if !step.is_finite() {
+                continue;
+            }
+            let nd = cost + step.max(1e-3);
             if best.get(&next).is_none_or(|&b| nd + 1e-4 < b) {
                 best.insert(next, nd);
                 parent.insert(next, cur);
@@ -504,6 +512,192 @@ pub fn invalidate_routes_touching_dirty_tiles(
 pub struct RouteHardBlocks<'w> {
     flood: Option<Res<'w, crate::systems::water::FloodRouteBlockBook>>,
     debris: Option<Res<'w, super::debris_block::DebrisRouteBlockBook>>,
+}
+
+/// Road network inputs a truck leg is routed over (one domain: the built road graph and what
+/// currently blocks it). Read-only; owners publish, this only reads.
+#[derive(bevy::ecs::system::SystemParam)]
+pub struct TruckRoadNetwork<'w> {
+    graph: Option<Res<'w, LogisticsGraph>>,
+    nav: Option<Res<'w, TransportNavExport>>,
+    directory: Option<Res<'w, TransportEdgeDirectory>>,
+    cost_cache: Option<Res<'w, TransportCostCache>>,
+    nav_field: Option<Res<'w, crate::compute::NavFieldFrame>>,
+    blocks: RouteHardBlocks<'w>,
+}
+
+impl TruckRoadNetwork<'_> {
+    /// Changes whenever a road is built / removed or a flood or rubble block appears or clears;
+    /// legs planned under an older stamp are re-planned.
+    #[must_use]
+    pub fn stamp(&self) -> u64 {
+        let flood = self.blocks.flood.as_deref().map_or(0, |b| b.revision);
+        let debris = self.blocks.debris.as_deref().map_or(0, |b| b.revision);
+        let edges = self.directory.as_deref().map_or(0, |d| d.by_edge.len() as u64);
+        let closed = self
+            .graph
+            .as_deref()
+            .map_or(0, |g| g.edges.iter().filter(|e| e.disruption >= 1.0).count() as u64);
+        flood
+            .wrapping_mul(0x9E37_79B9_7F4A_7C15)
+            .wrapping_add(debris.wrapping_mul(0xBF58_476D_1CE4_E5B9))
+            .wrapping_add(edges.rotate_left(17))
+            .wrapping_add(closed.rotate_left(31))
+    }
+
+    /// Road polyline for a truck leg (tile units, see [`truck_road_polyline`]).
+    #[must_use]
+    pub fn polyline(
+        &self,
+        forecast: Option<&LogisticsCostForecastBook>,
+        depart_tick: u64,
+        from: Vec2,
+        to: Vec2,
+    ) -> Option<Vec<Vec2>> {
+        let (nav, directory) = (self.nav.as_deref()?, self.directory.as_deref()?);
+        truck_road_polyline(
+            &RoadRouteWorld {
+                nav,
+                directory,
+                graph: self.graph.as_deref(),
+                cache: self.cost_cache.as_deref(),
+                forecast,
+                nav_field: self.nav_field.as_deref(),
+                flood: self.blocks.flood.as_deref(),
+                debris: self.blocks.debris.as_deref(),
+                depart_tick,
+            },
+            from,
+            to,
+        )
+    }
+}
+
+/// Everything [`truck_road_polyline`] reads.
+pub struct RoadRouteWorld<'a> {
+    pub nav: &'a TransportNavExport,
+    pub directory: &'a TransportEdgeDirectory,
+    pub graph: Option<&'a LogisticsGraph>,
+    pub cache: Option<&'a TransportCostCache>,
+    pub forecast: Option<&'a LogisticsCostForecastBook>,
+    pub nav_field: Option<&'a crate::compute::NavFieldFrame>,
+    pub flood: Option<&'a crate::systems::water::FloodRouteBlockBook>,
+    pub debris: Option<&'a super::debris_block::DebrisRouteBlockBook>,
+    pub depart_tick: u64,
+}
+
+/// Road nodes within this many tiles of a leg end can be used to join the built network.
+const ROAD_JOIN_TILES: f32 = 24.0;
+/// Candidate road nodes tried at each end of a leg (nearest first).
+const ROAD_JOIN_CANDIDATES: usize = 3;
+/// A road route longer than this multiple of the straight line (plus the slack) is not worth
+/// driving: the truck goes cross-country instead.
+const ROAD_DETOUR_LIMIT: f32 = 2.5;
+const ROAD_DETOUR_SLACK_TILES: f32 = 8.0;
+
+fn edge_carries_trucks(meta: &crate::systems::transport::TransportEdgeMeta) -> bool {
+    meta.allowed_agents.is_empty()
+        || meta.allowed_agents.iter().any(|a| a == "road_vehicle")
+        || meta.profile.contains("road")
+}
+
+fn tile_centre(t: bevy::math::IVec2) -> Vec2 {
+    Vec2::new(t.x as f32 + 0.5, t.y as f32 + 0.5)
+}
+
+fn polyline_length(points: &[Vec2]) -> f32 {
+    points.windows(2).map(|w| w[0].distance(w[1])).sum()
+}
+
+/// Node centres a transport-edge path walks from tile `start` to tile `goal`; `None` when the
+/// edges do not chain between them.
+fn chain_edge_nodes(
+    directory: &TransportEdgeDirectory,
+    start: bevy::math::IVec2,
+    goal: bevy::math::IVec2,
+    edges: &[TransportEdgeId],
+) -> Option<Vec<Vec2>> {
+    let mut cur = start;
+    let mut out = vec![tile_centre(cur)];
+    for id in edges {
+        let meta = directory.by_edge.get(id)?;
+        let (head, tail) = (parse_tile_xy(&meta.head_key)?, parse_tile_xy(&meta.tail_key)?);
+        cur = if head == cur {
+            tail
+        } else if tail == cur {
+            head
+        } else {
+            return None;
+        };
+        out.push(tile_centre(cur));
+    }
+    (cur == goal).then_some(out)
+}
+
+/// The built road a truck drives from `from` to `to` (tile units, cell = floor): the leg joins
+/// the road network at the nearest connected nodes, follows the transport graph's costed route
+/// (flooded and rubble edges are walls) and leaves it near `to`. Result: `from`, the road node
+/// centres, `to`. `None` when no road connects the two ends within [`ROAD_JOIN_TILES`] or the
+/// road route is a needless detour; the truck then goes cross-country.
+#[must_use]
+pub fn truck_road_polyline(world: &RoadRouteWorld, from: Vec2, to: Vec2) -> Option<Vec<Vec2>> {
+    let (nav, directory) = nav_and_directory_without_closed_edges(world.graph, world.nav, world.directory);
+    let mut nodes: Vec<bevy::math::IVec2> = directory
+        .by_edge
+        .values()
+        .filter(|m| edge_carries_trucks(m))
+        .flat_map(|m| [parse_tile_xy(&m.head_key), parse_tile_xy(&m.tail_key)])
+        .flatten()
+        .collect();
+    nodes.sort_by_key(|n| (n.x, n.y));
+    nodes.dedup();
+    let nearest = |p: Vec2| -> Vec<bevy::math::IVec2> {
+        let mut near: Vec<(f32, bevy::math::IVec2)> = nodes
+            .iter()
+            .map(|n| (tile_centre(*n).distance(p), *n))
+            .filter(|(d, _)| *d <= ROAD_JOIN_TILES)
+            .collect();
+        near.sort_by(|a, b| a.0.total_cmp(&b.0));
+        near.into_iter().take(ROAD_JOIN_CANDIDATES).map(|(_, n)| n).collect()
+    };
+    let budget = from.distance(to) * ROAD_DETOUR_LIMIT + ROAD_DETOUR_SLACK_TILES;
+    let as_tile = |n: bevy::math::IVec2| BuildSiteTile { x: n.x.max(0) as u32, z: n.y.max(0) as u32 };
+    let to_nodes = nearest(to);
+    let mut best: Option<(f32, Vec<Vec2>)> = None;
+    for a in nearest(from) {
+        for &b in &to_nodes {
+            if a == b {
+                continue;
+            }
+            let Some(edges) = path_edges_between_tiles_costed(
+                &nav,
+                &directory,
+                as_tile(a),
+                as_tile(b),
+                TransportMode::Truck,
+                world.cache,
+                world.forecast,
+                world.nav_field,
+                world.flood,
+                world.debris,
+                world.depart_tick,
+            ) else {
+                continue;
+            };
+            let Some(road) = chain_edge_nodes(&directory, a, b, &edges) else {
+                continue;
+            };
+            let mut points = Vec::with_capacity(road.len() + 2);
+            points.push(from);
+            points.extend(road);
+            points.push(to);
+            let len = polyline_length(&points);
+            if len <= budget && best.as_ref().is_none_or(|(l, _)| len < *l) {
+                best = Some((len, points));
+            }
+        }
+    }
+    best.map(|(_, points)| points)
 }
 
 pub fn refresh_resource_flow_routes_system(

@@ -24,13 +24,21 @@ pub struct StepScratch {
 /// (see `measure_dam_break_front_distance`).
 pub const VP_CONDUCTANCE_K: f32 = 16.0;
 
-/// The lowest face conductance (m2/s) the kernel gives water of depth `h_m`. A sub-step never
-/// exceeds the gravity-wave CFL (`dt <= dx / (2 sqrt(g h))`), so the stability cap `A / (8 dt)` is at
-/// least `dx sqrt(g h) / 4` whatever the sim step: the conveyance a river can always count on.
+/// The sim's base solver step (s): one sub-step of a 1x sim second.
+pub const NOMINAL_SUBSTEP_S: f32 = 1.0;
+
+/// The face conductance (m2/s) the kernel gives water of depth `h_m` at the nominal sub-step: the
+/// physical `K dx sqrt(g h)` capped by the stability bound `A / (8 dt)`, with `dt` the nominal step
+/// or the gravity-wave CFL (`dx / (2 sqrt(g h))`) when that is shorter. What a river's channel
+/// conveys per metre of surface fall, so its baseflow keeps it at its baseline depth.
 #[must_use]
-pub fn cfl_limited_conductance(dx_m: f32, h_m: f32) -> f32 {
+pub fn nominal_conductance(dx_m: f32, h_m: f32) -> f32 {
     let c = (G_MPS2 * h_m.max(0.0)).sqrt();
-    (VP_CONDUCTANCE_K * dx_m * c).min(0.25 * dx_m * c)
+    if c <= 0.0 {
+        return 0.0;
+    }
+    let dt = NOMINAL_SUBSTEP_S.min(0.5 * dx_m / c);
+    (VP_CONDUCTANCE_K * dx_m * c).min(dx_m * dx_m / (8.0 * dt))
 }
 
 /// Does the edge of tile `t` facing `dir` (0=E, 1=W, 2=N(+z), 3=S) hold any water?
