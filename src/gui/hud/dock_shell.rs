@@ -144,6 +144,9 @@ impl Plugin for HudDockShellPlugin {
                 )
                     .run_if(in_simulation_or_editor),
             );
+        // Debug builds only: cursor tile / ground / water readout for playtest reports.
+        #[cfg(debug_assertions)]
+        app.add_plugins(super::debug_cursor_readout::DebugCursorReadoutPlugin);
     }
 }
 

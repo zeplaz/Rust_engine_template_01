@@ -130,14 +130,19 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     let eps = vec2<f32>(1.5) / extent;
     let grad = abs(sample_field(uv + vec2<f32>(eps.x, 0.0)).r - sample_field(uv - vec2<f32>(eps.x, 0.0)).r)
         + abs(sample_field(uv + vec2<f32>(0.0, eps.y)).r - sample_field(uv - vec2<f32>(0.0, eps.y)).r);
-    let shoreline = smoothstep(0.02, 0.18, grad) * smoothstep(0.25, 0.02, depth01);
+    // Shoreline lip only at the wet edge (thin, shallow water is not 'shore' everywhere).
+    let shoreline = smoothstep(0.04, 0.2, grad) * smoothstep(0.08, 0.0, depth01) * 0.6;
 
     var tint = mix(WATER_SHALLOW, WATER_MID, smoothstep(0.05, 0.35, depth01));
     tint = mix(tint, WATER_DEEP, smoothstep(0.35, 0.85, depth01));
     tint = mix(tint, WATER_SHALLOW, scroll_mix * 0.18 * clamp(speed, 0.0, 1.0));
-    tint = mix(tint, FOAM, clamp(foam01 * 0.55 + shoreline * 0.65, 0.0, 0.75));
+    // Foam is a broken, moving highlight on blue water, not the water's colour: flow-driven
+    // foam is cut into streaks along the flow and capped, so a fast flood reads blue + white
+    // streaks instead of a white/grey sheet.
+    let streak = smoothstep(0.55, 0.95, sin(dot(world_xy, vec2<f32>(0.9, 1.7)) * 1.3 + scroll_mix * 6.2831) * 0.5 + 0.5);
+    tint = mix(tint, FOAM, clamp(foam01 * streak * 0.35 + shoreline * 0.4, 0.0, 0.35));
 
-    var alpha = WATER_ALPHA_BASE + depth01 * WATER_ALPHA_DEPTH + foam01 * 0.12 + shoreline * 0.2;
+    var alpha = WATER_ALPHA_BASE + depth01 * WATER_ALPHA_DEPTH + foam01 * streak * 0.08 + shoreline * 0.1;
     alpha *= clamp(material.zoom_alpha * 0.55 + 0.45, 0.4, 1.0);
     return vec4<f32>(tint, clamp(alpha, 0.0, WATER_ALPHA_MAX));
 }
