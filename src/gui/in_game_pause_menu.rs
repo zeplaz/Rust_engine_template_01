@@ -152,11 +152,16 @@ mod ecs10_esc_chain_tests {
     }
 
     #[test]
-    fn ecs10_esc_closing_road_sheet_does_not_fall_through_to_pause() {
+    fn ecs10_esc_with_road_sheet_open_does_not_fall_through_to_pause() {
         let mut app = chain_app();
         app.world_mut().resource_mut::<SimRoadToolSheetState>().open = true;
         press_esc_and_update(&mut app);
-        assert!(!app.world().resource::<SimRoadToolSheetState>().open);
+        // The sheet belongs to the armed line tool: the build cancel takes this Esc (clear the
+        // path, then drop the tool, which hides the sheet). The cascade only keeps it from pause.
+        assert_eq!(
+            app.world().resource::<HudEscCascadeFrame>().handled_by,
+            Some(EscCascadeHandler::RoadSheet)
+        );
         assert!(!pause_requested(&app));
     }
 

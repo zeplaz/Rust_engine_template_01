@@ -1,6 +1,6 @@
 # PLAN-ROADS-v1 — roads and rail that freight uses: tiers, motorways, worn tracks, congestion, real travel time
 
-Status: **OPEN — PAUSED** (2026-11-20, after RD-0/1/3/6 + bridges and the B/R open-items round; see Status, Open items and Next at the end). Owner lanes: `coder` (sim/logistics/construction), `designer` (build picker, road card, ribbons).
+Status: **OPEN** (2026-11-20, RD-0/1/3/4/6 + bridges + B/R items in code; see Status, Open items, Round (c) and Next at the end). Owner lanes: `coder` (sim/logistics/construction), `designer` (build picker, road card, ribbons).
 Supersedes the road half of T-8 in [`plan_close_voxel_water_v1.md`](plan_close_voxel_water_v1.md) (clickable roads and
 bridge decks DONE there; this plan makes roads and rail matter).
 
@@ -291,13 +291,32 @@ capture. Status per item:
 Capture (b), dam scene: all dam rows pass; deliveries path unchanged; 42 of 57 trucks on roads; debug
 perf avg 37 ms / p95 70 ms (was 36 / 67; debug rows fail their thresholds as before), 0 hitches.
 
+### Round 2026-11-20 (c): next todos + UI responsiveness
+
+Operator: bridges should survive most floods but not all, by how hard the water hits; do every next
+code todo; make the build tools and other play UIs work and respond properly.
+
+| Item | Status | Notes |
+|------|--------|-------|
+| B-5 flood survival | DONE (code) | `strength` is now the design flood load, taken indefinitely; from 1× to 3× it the piers scour slowly (≈ 5 min of sustained load to fail), past 3× a span goes in seconds (`flood_integrity_after`). Strengths: culvert 60, timber beam 90, trestle 70, Bailey 300, girder 1000, truss 1200, stone arch 1400, concrete 1500. Capture: the dam-break wave stood ~18 m over the concrete deck (peak 6 033 = 4× design) and took all 4 spans; the Bailey (2 904 = 10×) went too. A smaller flood or a bridge further downstream scours instead. Test `a_big_flood_scours_concrete_slowly_only_a_far_bigger_one_drops_it_fast` |
+| B-4 charging | DONE (code), seen in capture | `construction/corridor_works.rs`: a line placed to order (`CorridorSegment::charged`, set by the tool's commit) gets a bill = tier `materials_per_m` (new in `road_tiers.ron`; rail `rail_materials_per_m`) × length + its bridges' `materials_per_m` × length. Taken from the owner's nearest site with free stock (order-sim `ConsumeStock`, 40 units per cargo per sim second); the corridor build progress is capped at the scarcest delivered share (`CorridorWorksCaps` → `advance_corridor_construction_book_on_sim_tick`). Road sheet row "Materials" shows the bill. New cargo `Timber` (timber bridges, sleepers). Capture: 1 966 units taken from the HQ; its 700 Gravel ran out, so the paved line stands at 58 % and the gravel line at 90 % until more gravel arrives. Starting-world lines (fixtures, settlement skeletons) are not charged. Delivery is from stock, not yet hauled by trucks |
+| RD-4 congestion | DONE (code), not yet seen under load | `economy/logistics/road_flow.rs` (`RoadFlowBook`, sole writer `publish_road_flow_system`): every truck on a leg adds its rate to each road edge of the leg's route; capacity = tier `capacity_veh_h_lane` × lanes; time × BPR `1 + 0.15 (v/c)^4` (capped at 1/0.15). Used in edge cost (`route_edge_cost_with_nav`, so routes spread to parallel roads) and in leg caps (trip time); legs re-plan when a slow-down bucket changes. Dump `road_flow` (now with run peak). Capture: book empty at dump time (trucks idle), revision moved 157 times during the run; peak v/c added for the next capture. Test `a_road_slows_as_it_fills_and_never_stops` |
+| R-6 cut/fill | DONE (code), terrain change not measured | `construction/corridor_grading.rs`: each line placed to order is graded once: dry tiles between two nodes are cut / filled to the straight bed between the node heights, at most the mode's cut/fill limit, water and bridge spans left alone; applied through the terrain's own queue (`GroundDeformOp::Grade`, terrain stays sole writer, water/fire/voxel see it). Crossings: graph rules already in `CorridorNetwork::add_segment` (road/road junction, motorway grade separation, rail never shares road nodes = level crossing); no overpass deck model yet. Tests `a_bump_is_cut_a_dip_is_filled_water_is_left_alone`, `grading_stops_at_the_modes_cut_limit` |
+| B-1 follow-up | DONE (code) | A burning timber span keeps burning while wood is left (×0.97 per s), passes fire to the spans either side (×0.6 × `burns`, water under it does not stop that), and end spans set the bank alight (scripted-ignition path, `SimEffectQueue`) |
+| R-7 tests | PARTIAL | Checked against the previous commit (stash run): 36 failures there, none caused by roads work. Fixed 18: construction (fuel-break resource in 2 integration tests, demolish tripwire split, voxel massing not cleared in tactical), fire visual extract ×7 (plugin did not declare `SiteDestroyed`), scenario ×5 (runner did not declare `CommitConstructionSiteEvent`), network flow (missing `WorldFieldLayerEpoch`), plus 2 tests updated for this round (grid snap on tile centres, Esc with road sheet). **18 still fail**, other domains: economy activation / resource-flow chain (12 incl. AI faction + game loop), render pipeline tripwires (2), launch args, atmosphere revision key, strategic bundle (combat resources missing in the test app) |
+| UI responsiveness | DONE (code), not tried by hand | From a read-only audit of the play UI: (1) RMB no longer drops a line tool and its path (it takes back a point on a click; a right-drag pans) and ignores clicks on panels; (2) curves sampled by distance (~2-tile pieces) so bends are not cut into "too short" stretches; (3) 2D map path layer keys every coordinate and colour (the rubber band follows the cursor, colours update) and respawns only preview ribbons on cursor moves, not the whole network; (4) Esc has one owner for line tools (first clears the path, next drops the tool; the sheet follows the tool; Esc that closed the picker or a key capture is spent); (5) the road sheet blocks map clicks over its real rect; (6) Upgrade acts on the road under the last map cursor, not under the button; (7) logistics orders panel no longer respawns every sim tick (data refresh ≤ 2/s, clicks immediate); (8) Backspace no longer wipes pending blueprints and Ctrl+Z no longer resets map zoom; (9) preview checks skipped when nothing changed; context-tray layout writes only on change; (10) rubber band freezes while the pointer is on a panel; (11) firebreak gets the sheet; (12) grid snap on tile centres (no half-tile jump on build); (13) input runs before the preview (no one-frame lag). Not covered: minimap, pause / options menus, plant card (audit found nothing there but did not look closely) |
+
+Capture (c), dam scene: lib suite 2 329 pass / 18 fail (all pre-existing); all dam rows pass; 42 of 57
+trucks on roads; debug perf avg 35 ms / p95 68 ms (debug rows fail their thresholds as before).
+
 ## Next (when work resumes)
 
-1. Operator: R-3 hands-on (tool feel, G, T) and a look at the 2D bridge marks (B-2).
-2. B-5 decision: should concrete / truss survive a full dam burst?
-3. RD-6 cost item: supply gate on corridor construction so road, rail and bridge bills are taken
-   from stock (closes B-4 charging).
-4. RD-4 congestion (leg book now holds measured legs).
-5. R-6 cut/fill + crossings applied; B-1 follow-up (burning bridge as fuel); R-7 test cleanup.
-6. Then the phase order (RD-2 → RD-5 → RD-7 rail → …); B-3 with D-7.
+1. Operator hands-on: line tool feel (RMB, Esc, curves, G, T), 2D bridge marks, materials row,
+   orders panel.
+2. Capture with congestion peak (`road_flow.peak_vc`) and grading volume; a scene with a narrow
+   road and many trucks to see traffic spread.
+3. Works hauled by trucks (order-sim runs to a works site) instead of drawn from stock.
+4. R-7 remainder (economy activation chain first — 12 tests).
+5. Then the phase order (RD-2 off-road speed field → RD-5 worn tracks → RD-7 rail freight → …);
+   B-3 repair with D-7; overpass deck model.
 

@@ -400,6 +400,11 @@ pub fn sync_voxel_massing_visual_requests(
         .map(|m| m.is_pixel_world())
         .unwrap_or(false);
     if !pixel_world {
+        // Tactical draws flat tokens: no massing columns may linger from the 3D view.
+        if !requests.massing_columns.is_empty() || !requests.massing_instances.is_empty() {
+            requests.massing_columns.clear();
+            requests.massing_instances.clear();
+        }
         return;
     }
     if strip.active == ToolContext::None || !settings.show_occupation_tiles {

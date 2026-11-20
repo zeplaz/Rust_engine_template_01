@@ -6,10 +6,9 @@
 
 use bevy::prelude::*;
 use crate::gui::DeprecatedInteraction;
-use bevy::window::PrimaryWindow;
 
 use crate::construction::{
-    commit_power_line_to_utility_graph, corridor_tool_kind, cursor_world_on_map, finish_corridor_path,
+    commit_power_line_to_utility_graph, corridor_tool_kind, finish_corridor_path,
     enqueue_road_upgrade, ActiveBuildTool, ActivePowerLinePlacement, ActiveRoadPlacement,
     ActiveToolSession, BuildStripState, BuildTool, ConstructionPlanQueue, CorridorNetwork,
     PowerLineRoutingMode, RailType, RoadSnapSettings, RoadToolPopupState, ToolContext,
@@ -28,10 +27,9 @@ use crate::gui::style::widgets::{
     ROW_H, SECTION_GAP,
 };
 use crate::gui::style::CmdUiMonoFont;
-use crate::gui::{MapCameraDesiredRes, SimulationMapViewport, UiPalette};
+use crate::gui::UiPalette;
 use crate::infrastructure::utility::graph::{UtilityGraph, UtilityNetworkSnapshotResource};
 use crate::infrastructure::VoltageClass;
-use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 pub const SIM_ROAD_POWER_SHEETS_USE_BEVY: bool = true;
@@ -52,6 +50,8 @@ pub enum SimSheetStat {
     Notes,
     /// Corridor tool: bridge type (T cycles) and its material bill.
     Bridge,
+    /// Corridor tool: the whole works bill (taken from the nearest stocked site).
+    Bill,
 }
 
 #[derive(Component)]
@@ -187,6 +187,7 @@ pub fn spawn_sim_road_power_sheets_bevy(
             spawn_label_row(root, &kit, "Ok / works / blocked", "0 / 0 / 0", SimSheetStat::Valid);
             spawn_label_row(root, &kit, "Truck trip", "-", SimSheetStat::Cost);
             spawn_label_row(root, &kit, "Bridge", "-", SimSheetStat::Bridge);
+            spawn_label_row(root, &kit, "Materials", "-", SimSheetStat::Bill);
             spawn_label_row(root, &kit, "Notes", "", SimSheetStat::Notes);
             root.spawn(row_node()).with_children(|row| {
                 spawn_toggle(row, &kit, "Grid snap", true, SimRoadSheetToggleGrid)
@@ -303,14 +304,15 @@ pub fn sync_sim_road_sheet_bevy(
     mut node_q: Query<&mut ToggleState, (With<SimRoadSheetToggleNode>, Without<SimRoadSheetToggleGrid>)>,
     mut build_q: Query<&mut UiButton, With<SimRoadSheetBuild>>,
 ) {
-    road_sheet.sync_from_strip(strip.as_ref());
+    road_sheet.sync_from_tool(tool.as_ref());
+    let _ = &strip;
     let Ok((mut node, mut vis)) = root_q.single_mut() else {
         return;
     };
     let show = SIM_ROAD_POWER_SHEETS_USE_BEVY
         && matches!(base.get(), BaseState::Simulation)
         && road_sheet.open
-        && matches!(tool.tool, BuildTool::Road(_) | BuildTool::Rail(_));
+        && crate::construction::corridor_tool_kind(tool.tool).is_some();
     let want_vis = if show { Visibility::Visible } else { Visibility::Hidden };
     if *vis != want_vis {
         *vis = want_vis;
@@ -361,6 +363,7 @@ pub fn sync_sim_road_sheet_bevy(
                 }
                 None => "-".to_string(),
             },
+            SimSheetStat::Bill => placement.summary.bill_line(),
             SimSheetStat::Notes => placement.summary.notes.join("
 "),
         };
@@ -438,7 +441,7 @@ pub fn sync_sim_power_sheet_bevy(
             SimSheetStat::Points => placement.control_points.len().to_string(),
             SimSheetStat::Valid => format!("{valid} of {total}"),
             SimSheetStat::Cost => valid.saturating_mul(12).to_string(),
-            SimSheetStat::Notes | SimSheetStat::Bridge => String::new(),
+            SimSheetStat::Notes | SimSheetStat::Bridge | SimSheetStat::Bill => String::new(),
         };
         set_text(&mut t, &next);
     }
@@ -474,14 +477,7 @@ pub fn sim_road_sheet_actions(
     mut snap: ResMut<RoadSnapSettings>,
     roads: Res<CorridorNetwork>,
     params: Res<WorldGenParams>,
-    win: Query<&Window, With<PrimaryWindow>>,
-    (authority, pointer_gate, tool): (
-        Option<Res<ViewProjectionAuthority>>,
-        Option<Res<crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate>>,
-        Res<ActiveBuildTool>,
-    ),
-    desired: Res<MapCameraDesiredRes>,
-    map_vp: Res<SimulationMapViewport>,
+    tool: Res<ActiveBuildTool>,
 ) {
     for (i, b) in &build_q {
         if ui_button_fired(i, b) {
@@ -498,16 +494,8 @@ pub fn sim_road_sheet_actions(
     }
     for (i, b) in &upgrade_q {
         if ui_button_fired(i, b) {
-            if let Some(world) = win.single().ok().and_then(|window| {
-                cursor_world_on_map(
-                    window,
-                    pointer_gate.as_deref(),
-                    authority.as_deref(),
-                    desired.as_ref(),
-                    map_vp.as_ref(),
-                    params.as_ref(),
-                )
-            }) {
+            // The rubber-band cursor freezes where the pointer left the map.
+            if let Some(world) = placement.cursor {
                 enqueue_road_upgrade(
                     world,
                     roads.as_ref(),

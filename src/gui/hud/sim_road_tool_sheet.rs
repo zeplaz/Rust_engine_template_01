@@ -25,8 +25,12 @@ pub struct SimRoadToolSheetState {
 }
 
 impl SimRoadToolSheetState {
-    pub fn sync_from_strip(&mut self, strip: &BuildStripState) {
-        self.open = matches!(strip.active, ToolContext::Roads | ToolContext::Rail);
+    /// Open while a line tool (road tier, rail, firebreak) is armed.
+    pub fn sync_from_tool(&mut self, tool: &ActiveBuildTool) {
+        let open = crate::construction::corridor_tool_kind(tool.tool).is_some();
+        if self.open != open {
+            self.open = open;
+        }
     }
 
     pub fn close(&mut self) {

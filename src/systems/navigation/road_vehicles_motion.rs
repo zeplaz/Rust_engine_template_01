@@ -296,7 +296,7 @@ fn plan_leg_route(
 }
 
 /// Site pair a vehicle's current or next leg drives, if it is moving or about to.
-fn vehicle_leg_pair(v: &crate::economy::logistics::orders::Vehicle) -> Option<(SiteId, SiteId)> {
+pub(crate) fn vehicle_leg_pair(v: &crate::economy::logistics::orders::Vehicle) -> Option<(SiteId, SiteId)> {
     let a = v.assignment.as_ref()?;
     match v.phase {
         VehiclePhase::ToPickup(_) => Some((v.at, a.source)),

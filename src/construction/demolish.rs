@@ -584,13 +584,13 @@ mod tests {
             "fire must not write voxel book outside demolish"
         );
 
-        let pending = include_str!("build_interaction.rs");
-        let pending_prod = pending
-            .split_once("#[cfg(test)]")
-            .map_or(pending, |(p, _)| p);
+        // build_interaction.rs has a test module mid-file, so match the production arm itself
+        // (`PendingEntryKind::Demolish =>`) and the funnel call instead of splitting at the first
+        // `#[cfg(test)]`.
+        let pending_prod = include_str!("build_interaction.rs");
         assert!(
-            pending_prod.contains("PendingEntryKind::Demolish")
-                && pending_prod.contains("execute_demolish_at_tile"),
+            pending_prod.contains("PendingEntryKind::Demolish =>")
+                && pending_prod.contains("execute_demolish_at_tile("),
             "player demolish confirm must use execute funnel"
         );
     }

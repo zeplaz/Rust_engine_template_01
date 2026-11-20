@@ -214,7 +214,7 @@ pub fn route_edge_cost(
     depart_tick: u64,
     id: TransportEdgeId,
 ) -> f32 {
-    route_edge_cost_with_nav(cache, forecast, None, None, None, None, None, depart_tick, id)
+    route_edge_cost_with_nav(cache, forecast, None, None, None, None, None, None, depart_tick, id)
 }
 
 /// Bridge state of a transport edge, if it runs over a bridge.
@@ -269,6 +269,7 @@ pub fn route_edge_cost_with_nav(
     flood: Option<&crate::systems::water::FloodRouteBlockBook>,
     debris: Option<&super::debris_block::DebrisRouteBlockBook>,
     bridges: Option<&crate::construction::bridges::BridgeBook>,
+    flow: Option<&super::road_flow::RoadFlowBook>,
     depart_tick: u64,
     id: TransportEdgeId,
 ) -> f32 {
@@ -286,7 +287,9 @@ pub fn route_edge_cost_with_nav(
         Some(book) => book.edge_cost(base, depart_tick, 1),
         None => base,
     };
-    timed * (1.0 + nav_field_edge_penalty(nav, directory, id))
+    // RD-4: a busy road takes longer (BPR), so routes spread onto parallel roads.
+    let congestion = flow.map_or(1.0, |f| f.time_mul(id));
+    timed * congestion * (1.0 + nav_field_edge_penalty(nav, directory, id))
 }
 
 #[must_use]
@@ -297,7 +300,7 @@ pub fn path_edges_between_tiles(
     to: BuildSiteTile,
     mode: TransportMode,
 ) -> Option<Vec<TransportEdgeId>> {
-    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, None, None, None, None, 0)
+    path_edges_between_tiles_costed(nav, directory, from, to, mode, None, None, None, None, None, None, None, 0)
 }
 
 /// Costed production path (CQ-53): Dijkstra with [`route_edge_cost_with_nav`].
@@ -314,6 +317,7 @@ pub fn path_edges_between_tiles_costed(
     flood: Option<&crate::systems::water::FloodRouteBlockBook>,
     debris: Option<&super::debris_block::DebrisRouteBlockBook>,
     bridges: Option<&crate::construction::bridges::BridgeBook>,
+    flow: Option<&super::road_flow::RoadFlowBook>,
     depart_tick: u64,
 ) -> Option<Vec<TransportEdgeId>> {
     if from == to {
@@ -350,6 +354,7 @@ pub fn path_edges_between_tiles_costed(
             flood,
             debris,
             bridges,
+            flow,
             depart_tick,
             id,
         )
@@ -534,6 +539,8 @@ pub struct RouteHardBlocks<'w> {
     flood: Option<Res<'w, crate::systems::water::FloodRouteBlockBook>>,
     debris: Option<Res<'w, super::debris_block::DebrisRouteBlockBook>>,
     bridges: Option<Res<'w, crate::construction::bridges::BridgeBook>>,
+    /// RD-4 traffic (a soft cost, not a block; carried here with the other route conditions).
+    flow: Option<Res<'w, super::road_flow::RoadFlowBook>>,
 }
 
 /// Road network inputs a truck leg is routed over (one domain: the built road graph and what
@@ -556,7 +563,8 @@ impl TruckRoadNetwork<'_> {
     pub fn stamp(&self) -> u64 {
         let flood = self.blocks.flood.as_deref().map_or(0, |b| b.revision);
         let debris = self.blocks.debris.as_deref().map_or(0, |b| b.revision)
-            ^ self.blocks.bridges.as_deref().map_or(0, |b| b.revision).rotate_left(29);
+            ^ self.blocks.bridges.as_deref().map_or(0, |b| b.revision).rotate_left(29)
+            ^ self.blocks.flow.as_deref().map_or(0, |f| f.revision).rotate_left(41);
         let edges = self.directory.as_deref().map_or(0, |d| d.by_edge.len() as u64);
         let closed = self
             .graph
@@ -592,6 +600,7 @@ impl TruckRoadNetwork<'_> {
                 flood: self.blocks.flood.as_deref(),
                 debris: self.blocks.debris.as_deref(),
                 bridges: self.blocks.bridges.as_deref(),
+                flow: self.blocks.flow.as_deref(),
                 depart_tick,
             },
             from,
@@ -612,6 +621,7 @@ pub struct RoadRouteWorld<'a> {
     pub flood: Option<&'a crate::systems::water::FloodRouteBlockBook>,
     pub debris: Option<&'a super::debris_block::DebrisRouteBlockBook>,
     pub bridges: Option<&'a crate::construction::bridges::BridgeBook>,
+    pub flow: Option<&'a super::road_flow::RoadFlowBook>,
     pub depart_tick: u64,
 }
 
@@ -687,6 +697,7 @@ fn chain_edge_nodes(
     goal: bevy::math::IVec2,
     edges: &[TransportEdgeId],
     offroad_mps: f32,
+    flow: Option<&super::road_flow::RoadFlowBook>,
 ) -> Option<(Vec<Vec2>, Vec<f32>)> {
     let mut cur = start;
     let mut out = vec![tile_centre(cur)];
@@ -702,7 +713,8 @@ fn chain_edge_nodes(
             return None;
         };
         out.push(tile_centre(cur));
-        caps.push(crate::infrastructure::road_profile_speed_mps(&meta.profile).unwrap_or(offroad_mps));
+        let free = crate::infrastructure::road_profile_speed_mps(&meta.profile).unwrap_or(offroad_mps);
+        caps.push(free / flow.map_or(1.0, |f| f.time_mul(*id)));
     }
     (cur == goal).then_some((out, caps))
 }
@@ -754,11 +766,12 @@ pub fn truck_road_route(world: &RoadRouteWorld, from: Vec2, to: Vec2, ref_speed_
                 world.flood,
                 world.debris,
                 world.bridges,
+                world.flow,
                 world.depart_tick,
             ) else {
                 continue;
             };
-            let Some((road, road_caps)) = chain_edge_nodes(&directory, a, b, &edges, offroad) else {
+            let Some((road, road_caps)) = chain_edge_nodes(&directory, a, b, &edges, offroad, world.flow) else {
                 continue;
             };
             // Ramps: winding off-road, expressed as a slower cap on the straight stretch.
@@ -868,6 +881,7 @@ pub fn refresh_resource_flow_routes_system(
                 blocks.flood.as_deref(),
                 blocks.debris.as_deref(),
                 blocks.bridges.as_deref(),
+                blocks.flow.as_deref(),
                 depart_tick,
             );
             let reachable = path_edges.is_some();
@@ -1257,6 +1271,7 @@ mod nav10_tests {
             Some(&flood),
             None,
             None,
+            None,
             0,
             TransportEdgeId(9),
         );
@@ -1272,11 +1287,11 @@ mod nav10_tests {
             .insert(TransportEdgeId(9), road("t1_0", "t2_0"));
         let mut debris = DebrisRouteBlockBook::default();
         let e = TransportEdgeId(9);
-        let open = route_edge_cost_with_nav(None, None, None, Some(&directory), None, Some(&debris), None, 0, e);
+        let open = route_edge_cost_with_nav(None, None, None, Some(&directory), None, Some(&debris), None, None, 0, e);
         assert!(open.is_finite(), "clear road open");
         debris.blocked.insert("t1_0".into());
         assert!(debris_blocks_route_edge(Some(&debris), Some(&directory), e));
-        let cost = route_edge_cost_with_nav(None, None, None, Some(&directory), None, Some(&debris), None, 0, e);
+        let cost = route_edge_cost_with_nav(None, None, None, Some(&directory), None, Some(&debris), None, None, 0, e);
         assert!(cost.is_infinite(), "rubble edge must hard-block");
         debris.blocked.clear();
         assert!(!debris_blocks_route_edge(Some(&debris), Some(&directory), e));

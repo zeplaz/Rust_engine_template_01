@@ -75,10 +75,31 @@ fn angle_locked(from: Vec3, to: Vec3) -> Vec3 {
     Vec3::new(from.x + a.cos() * len, to.y, from.z + a.sin() * len)
 }
 
+/// Target spline piece length (tiles) and the shortest piece kept.
+const CURVE_PIECE_TILES: f32 = 2.0;
+const MIN_PIECE_TILES: f32 = 1.2;
+
 /// Sampled path (tile units): straight between points, or a Catmull-Rom curve through them.
 fn sample_path(points: &[Vec3], curved: bool) -> Vec<Vec2> {
-    let chain = if curved && points.len() >= 3 { catmull_rom_chain(points, 6) } else { points.to_vec() };
-    let mut out: Vec<Vec2> = chain.iter().map(|p| Vec2::new(p.x, p.z)).collect();
+    let chain = if curved && points.len() >= 3 {
+        // Pieces about 2 tiles long (1–6 per control stretch).
+        let longest = points.windows(2).map(|w| Vec2::new(w[1].x - w[0].x, w[1].z - w[0].z).length()).fold(0.0_f32, f32::max);
+        let per = ((longest / CURVE_PIECE_TILES).round() as usize).clamp(1, 6);
+        catmull_rom_chain(points, per)
+    } else {
+        points.to_vec()
+    };
+    let mut out: Vec<Vec2> = Vec::with_capacity(chain.len());
+    for p in chain.iter().map(|p| Vec2::new(p.x, p.z)) {
+        // Drop spline points closer than a piece to the last kept one (keeps the end point).
+        if out.last().is_some_and(|l: &Vec2| l.distance(p) < MIN_PIECE_TILES) {
+            continue;
+        }
+        out.push(p);
+    }
+    if let (Some(&end), Some(last)) = (chain.last(), out.last_mut()) {
+        *last = Vec2::new(end.x, end.z);
+    }
     out.dedup_by(|a, b| a.distance(*b) < 0.05);
     out
 }
@@ -113,6 +134,13 @@ pub fn update_road_path_preview_system(
         return;
     };
     let rail = kind == CorridorToolKind::Rail;
+    // Over a panel (the sheet, the picker) the rubber band stays where the map cursor left it.
+    if crate::gui::hud::simulation_pointer_gate::simulation_tool_pointer(pick.gate.as_deref())
+        != SimulationToolPointer::Free
+        && !placement.assist_requested
+    {
+        return;
+    }
     let cursor = pick.cursor_world().map(|raw| {
         let placed = snap_placement(raw, snap.as_ref(), roads.as_ref(), rail);
         feedback.snap_hint = placed.target.as_ref().map(SnapTarget::hint_label);
@@ -129,6 +157,22 @@ pub fn update_road_path_preview_system(
     placement.cursor = cursor.map(|c| c.0);
     placement.cursor_joins_line = cursor.is_some_and(|c| c.1);
 
+    // Nothing moved: the checks from last frame still hold.
+    let key = {
+        use std::hash::{Hash, Hasher};
+        let mut h = std::collections::hash_map::DefaultHasher::new();
+        let q = |v: f32| (v * 64.0).round() as i64;
+        for p in placement.control_points.iter().chain(placement.cursor.iter()) {
+            (q(p.x), q(p.z)).hash(&mut h);
+        }
+        (placement.control_points.len(), placement.dragging, roads.revision, kind == CorridorToolKind::Rail).hash(&mut h);
+        format!("{kind:?}{:?}{}", placement.bridge_choice, placement.use_curved_preview).hash(&mut h);
+        h.finish()
+    };
+    if key == placement.preview_key && !placement.assist_requested && !placement.live_checks.is_empty() {
+        return;
+    }
+    placement.preview_key = key;
     let params = pick.params.as_ref();
     let grid = pick.height_grid();
     let ground = |p: Vec2| sample_height_norm(p.x, p.y, params, grid) * params.elevation_range_m;
@@ -255,6 +299,18 @@ pub fn finish_corridor_path(
     n
 }
 
+/// A right press released this soon (s) and this close (logical px) is a click (take back a
+/// point); longer or further is a map pan.
+const RMB_CLICK_S: f64 = 0.3;
+const RMB_CLICK_PX: f32 = 6.0;
+
+/// Click memory of the corridor tool: last left click (double-click) and the right press.
+#[derive(Default)]
+pub struct CorridorClicks {
+    last_click: Option<(f64, Vec2)>,
+    rmb_down: Option<(f64, Vec2)>,
+}
+
 /// A second click this soon (s) and this close (tiles) finishes the path.
 const DOUBLE_CLICK_S: f64 = 0.35;
 const DOUBLE_CLICK_TILES: f32 = 1.0;
@@ -272,15 +328,13 @@ pub fn road_path_input_system(
     mut queue: ResMut<ConstructionPlanQueue>,
     mut session: ResMut<ActiveToolSession>,
     pointer_gate: Option<Res<SimulationMapPointerGate>>,
-    mut last_click: Local<Option<(f64, Vec2)>>,
+    mut clicks: Local<CorridorClicks>,
 ) {
     let Some(kind) = corridor_tool_kind(tool.tool) else {
         return;
     };
-    if keys.just_pressed(KeyCode::Escape) {
-        placement.clear_path();
-        return;
-    }
+    // Esc is handled by the build cancel (`build_mode::build_escape_cancel_system`): first Esc
+    // clears the path, the next drops the tool.
     if keys.just_pressed(KeyCode::Enter) || keys.just_pressed(KeyCode::NumpadEnter) {
         finish_corridor_path(&mut placement, kind, &mut queue, &mut session);
         return;
@@ -308,7 +362,17 @@ pub fn road_path_input_system(
         return;
     }
     if buttons.just_pressed(MouseButton::Right) {
-        placement.control_points.pop();
+        clicks.rmb_down = Some((time.elapsed_secs_f64(), pointer_gate.as_deref().map(|g| g.cursor).unwrap_or_default()));
+    }
+    if buttons.just_released(MouseButton::Right) {
+        let here = pointer_gate.as_deref().map(|g| g.cursor).unwrap_or_default();
+        let click = clicks
+            .rmb_down
+            .take()
+            .is_some_and(|(t, p)| time.elapsed_secs_f64() - t < RMB_CLICK_S && p.distance(here) < RMB_CLICK_PX);
+        if click {
+            placement.control_points.pop();
+        }
         return;
     }
     let Some(cursor) = placement.cursor else {
@@ -329,11 +393,11 @@ pub fn road_path_input_system(
         return;
     }
     let now = time.elapsed_secs_f64();
-    let double = last_click.is_some_and(|(t, p)| now - t < DOUBLE_CLICK_S && p.distance(c2) < DOUBLE_CLICK_TILES);
-    *last_click = Some((now, c2));
+    let double = clicks.last_click.is_some_and(|(t, p)| now - t < DOUBLE_CLICK_S && p.distance(c2) < DOUBLE_CLICK_TILES);
+    clicks.last_click = Some((now, c2));
     if double && placement.control_points.len() >= 2 {
         finish_corridor_path(&mut placement, kind, &mut queue, &mut session);
-        *last_click = None;
+        clicks.last_click = None;
         return;
     }
     // Grab a placed point (not the one just placed by the first click of a double-click).

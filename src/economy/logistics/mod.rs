@@ -7,6 +7,7 @@ pub mod orders;
 pub mod portals;
 pub mod propagation;
 pub mod debris_block;
+pub mod road_flow;
 pub mod routes;
 pub mod solver;
 pub mod types;

@@ -105,6 +105,9 @@ pub struct FireVisualFramePlugin;
 
 impl Plugin for FireVisualFramePlugin {
     fn build(&self, app: &mut App) {
+        // `detect_collapse_dust` (below) reads site collapses; declare the message it reads so the
+        // plugin stands on its own (registering an existing message is a no-op).
+        app.add_message::<crate::construction::SiteDestroyed>();
         app.add_plugins(crate::render::fx_spine::fire_streaming::FireStreamingPlugin);
         app.add_plugins(crate::render::particle_domains::ParticleDomainRegistryPlugin);
         app.add_plugins(crate::render::fire_vfx::EffectConsumableRegistryPlugin);

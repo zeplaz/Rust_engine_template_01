@@ -191,85 +191,120 @@ pub(crate) fn path_color(kind: VisualPathKind, valid: bool, slope_ok: bool, comm
     color32(token)
 }
 
+/// Cache of the path layer: the static part (committed lines, zones, corridor phases, zone drag)
+/// and the live preview (lines being drawn) are keyed apart, so moving the cursor respawns only
+/// the preview ribbons, never the whole network.
+#[derive(Default)]
+pub(crate) struct PathLayerCache {
+    static_key: u64,
+    preview_key: u64,
+    unit: Option<Handle<Mesh>>,
+    cell: Option<Handle<Mesh>>,
+}
+
+/// A preview (not yet committed) road / rail ribbon.
+#[derive(Component)]
+pub(crate) struct WorldMapPreviewSeg;
+
+fn path_key(key: &mut u64, path: &crate::construction::PathLineRequest) {
+    mix(key, q(path.start.x));
+    mix(key, q(path.start.z));
+    mix(key, q(path.end.x));
+    mix(key, q(path.end.z));
+    mix(key, q(path.width));
+    mix(key, (path.valid as u64) | (path.slope_ok as u64) << 1 | matches!(path.kind, VisualPathKind::Rail) as u64 * 4);
+}
+
 pub(crate) fn sync_world_map_path_meshes(
     mut commands: Commands,
     base: Res<State<BaseState>>,
     requests: Option<Res<ConstructionVisualRequests>>,
     drag: Option<Res<AdminZoneDrag>>,
-    roads: Query<Entity, With<WorldMapRoadSeg>>,
-    rails: Query<Entity, With<WorldMapRailSeg>>,
-    zones: Query<Entity, With<WorldMapZoneCell>>,
-    corridors: Query<Entity, With<WorldMapCorridorSeg>>,
-    zone_drag: Query<Entity, With<WorldMapZoneDrag>>,
+    lines: Query<(Entity, Has<WorldMapPreviewSeg>), Or<(With<WorldMapRoadSeg>, With<WorldMapRailSeg>)>>,
+    static_marks: Query<Entity, Or<(With<WorldMapZoneCell>, With<WorldMapCorridorSeg>, With<WorldMapZoneDrag>)>>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
-    mut mesh_slot: Local<Option<Handle<Mesh>>>,
     mut mat_cache: Local<HashMap<u32, Handle<ColorMaterial>>>,
-    mut stamp: Local<LayerStamp>,
+    mut cache: Local<PathLayerCache>,
 ) {
-    if !matches!(base.get(), BaseState::Simulation) {
-        despawn_query(&mut commands, &roads);
-        despawn_query(&mut commands, &rails);
-        despawn_query(&mut commands, &zones);
-        despawn_query(&mut commands, &corridors);
-        despawn_query(&mut commands, &zone_drag);
-        stamp.key = 0;
-        return;
-    }
-    let mut key = 0u64;
-    let req = requests.as_deref();
-    if let Some(req) = req {
-        mix(&mut key, req.paths.len() as u64);
-        for path in &req.paths {
-            mix(&mut key, q(path.start.x) ^ q(path.end.z).rotate_left(8));
-            mix(&mut key, path.committed as u64);
-        }
-        mix(&mut key, req.zone_tiles.len() as u64);
-        mix(&mut key, req.corridor_paths.len() as u64);
-    }
-    if let Some(drag) = drag.as_deref() {
-        mix(&mut key, drag.armed as u64);
-        if let Some(rect) = admin_zone_drag_rect(drag) {
-            mix(&mut key, rect.min.x as u64);
-            mix(&mut key, rect.max.y as u64);
-        }
-    }
-    if key == stamp.key {
-        return;
-    }
-    despawn_query(&mut commands, &roads);
-    despawn_query(&mut commands, &rails);
-    despawn_query(&mut commands, &zones);
-    despawn_query(&mut commands, &corridors);
-    despawn_query(&mut commands, &zone_drag);
-    stamp.key = key;
+    let req = requests.as_deref().filter(|_| matches!(base.get(), BaseState::Simulation));
     let Some(req) = req else {
+        if cache.static_key != 0 || cache.preview_key != 0 {
+            for (e, _) in &lines {
+                commands.entity(e).despawn();
+            }
+            for e in &static_marks {
+                commands.entity(e).despawn();
+            }
+            cache.static_key = 0;
+            cache.preview_key = 0;
+        }
         return;
     };
-    let unit = unit_mesh(&mut meshes, &mut mesh_slot);
+    let mut static_key = 1u64;
+    let mut preview_key = 1u64;
     for path in &req.paths {
-        let color = path_color(path.kind, path.valid, path.slope_ok, path.committed);
-        let mat = material_for(&mut mat_cache, &mut materials, color);
-        match path.kind {
-            VisualPathKind::Road => {
-                commands.spawn((
-                    WorldMapRoadSeg,
-                    Mesh2d(unit.clone()),
-                    MeshMaterial2d(mat),
-                    ribbon_transform(path.start, path.end, path.width),
-                ));
-            }
-            VisualPathKind::Rail => {
-                commands.spawn((
-                    WorldMapRailSeg,
-                    Mesh2d(unit.clone()),
-                    MeshMaterial2d(mat),
-                    ribbon_transform(path.start, path.end, path.width),
-                ));
-            }
+        if path.committed {
+            path_key(&mut static_key, path);
+        } else {
+            path_key(&mut preview_key, path);
         }
     }
-    let cell = meshes.add(Rectangle::new(0.92, 0.92));
+    mix(&mut static_key, req.zone_tiles.len() as u64);
+    for z in &req.zone_tiles {
+        mix(&mut static_key, q(z.center.x) ^ q(z.center.z).rotate_left(20));
+        mix(&mut static_key, (z.color.r as u64) << 24 | (z.color.g as u64) << 16 | (z.color.b as u64) << 8 | z.color.a as u64);
+    }
+    mix(&mut static_key, req.corridor_paths.len() as u64);
+    for c in &req.corridor_paths {
+        mix(&mut static_key, matches!(c.kind, CorridorPhaseDrawKind::Planned) as u64);
+        for p in &c.points {
+            mix(&mut static_key, q(p.x) ^ q(p.z).rotate_left(20));
+        }
+    }
+    if let Some(drag) = drag.as_deref() {
+        mix(&mut static_key, drag.armed as u64);
+        if let Some(rect) = admin_zone_drag_rect(drag) {
+            mix(&mut static_key, rect.min.x as u64);
+            mix(&mut static_key, rect.min.y as u64);
+            mix(&mut static_key, rect.max.x as u64);
+            mix(&mut static_key, rect.max.y as u64);
+        }
+    }
+    let static_changed = static_key != cache.static_key;
+    let preview_changed = preview_key != cache.preview_key;
+    if !static_changed && !preview_changed {
+        return;
+    }
+    for (e, preview) in &lines {
+        if static_changed || preview {
+            commands.entity(e).despawn();
+        }
+    }
+    if static_changed {
+        for e in &static_marks {
+            commands.entity(e).despawn();
+        }
+    }
+    cache.static_key = static_key;
+    cache.preview_key = preview_key;
+    let unit = unit_mesh(&mut meshes, &mut cache.unit);
+    for path in req.paths.iter().filter(|p| if p.committed { static_changed } else { true }) {
+        let color = path_color(path.kind, path.valid, path.slope_ok, path.committed);
+        let mat = material_for(&mut mat_cache, &mut materials, color);
+        let mut e = commands.spawn((Mesh2d(unit.clone()), MeshMaterial2d(mat), ribbon_transform(path.start, path.end, path.width)));
+        match path.kind {
+            VisualPathKind::Road => e.insert(WorldMapRoadSeg),
+            VisualPathKind::Rail => e.insert(WorldMapRailSeg),
+        };
+        if !path.committed {
+            e.insert(WorldMapPreviewSeg);
+        }
+    }
+    if !static_changed {
+        return;
+    }
+    let cell = cache.cell.get_or_insert_with(|| meshes.add(Rectangle::new(0.92, 0.92))).clone();
     for zone in &req.zone_tiles {
         let mat = material_for(&mut mat_cache, &mut materials, color32(zone.color));
         let xy = map_plane_horizontal_xy(zone.center);

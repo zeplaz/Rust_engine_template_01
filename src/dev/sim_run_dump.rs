@@ -379,6 +379,8 @@ impl Plugin for SimRunDumpPlugin {
                         super::sim_run_dump_dam_flood::dump_dam_flood_history_section,
                         super::sim_run_dump_quadrants::dump_quadrants_section,
                         super::sim_run_dump_roads::dump_roads_section,
+                        super::sim_run_dump_traffic::dump_corridor_works_section,
+                        super::sim_run_dump_traffic::dump_road_flow_section,
                     )
                         .in_set(SimDumpSet)
                         .after(arm_sim_dump),

@@ -68,10 +68,11 @@ pub fn snap_placement(
     let mut target = None;
     if settings.grid_snap && settings.grid_step > 0.0 {
         let step = settings.grid_step;
+        // Tile centres (+0.5): the same place a node snap and the built road use.
         let snapped = Vec3::new(
-            (out.x / step).round() * step,
+            ((out.x - 0.5) / step).round() * step + 0.5,
             out.y,
-            (out.z / step).round() * step,
+            ((out.z - 0.5) / step).round() * step + 0.5,
         );
         if (snapped.x - out.x).abs() > 1e-4 || (snapped.z - out.z).abs() > 1e-4 {
             target = Some(SnapTarget::Grid(snapped));
@@ -154,7 +155,8 @@ mod tests {
             false,
         )
         .world;
-        assert_eq!(out.x, 4.0);
-        assert_eq!(out.z, 6.0);
+        // Tile centres on the step grid (x.5), where nodes and the built road sit.
+        assert_eq!(out.x, 2.5);
+        assert_eq!(out.z, 6.5);
     }
 }

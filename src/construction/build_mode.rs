@@ -192,8 +192,19 @@ pub fn build_escape_cancel_system(
     mut pending: ResMut<super::pending_construction::PendingConstructionQueue>,
     mut staged: ResMut<super::staged_ghost_panel::StagedPlacementBook>,
     mut staging_mode: ResMut<super::staged_ghost_panel::StagedPlacementMode>,
+    esc_frame: Option<Res<crate::gui::hud::sim_hud_esc_cascade::HudEscCascadeFrame>>,
 ) {
     if !keys.just_pressed(KeyCode::Escape) {
+        return;
+    }
+    // Esc that closed the build picker or cancelled a key capture is spent.
+    if esc_frame.as_deref().is_some_and(|f| {
+        matches!(
+            f.handled_by,
+            Some(crate::gui::hud::sim_hud_esc_cascade::EscCascadeHandler::BuildPicker)
+                | Some(crate::gui::hud::sim_hud_esc_cascade::EscCascadeHandler::KeybindingCapture)
+        )
+    }) {
         return;
     }
     let _ = apply_build_escape_cancel(

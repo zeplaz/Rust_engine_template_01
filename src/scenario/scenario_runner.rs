@@ -19,6 +19,8 @@ impl Plugin for ScenarioRunnerPlugin {
         );
 
         app.init_resource::<super::place_corridor::CorridorPlacementLog>();
+        // `drain_script_steps` commits sites; declare the message so the runner stands alone.
+        app.add_message::<crate::strategic::CommitConstructionSiteEvent>();
         app.add_systems(
             Update,
             (

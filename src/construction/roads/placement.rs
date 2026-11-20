@@ -44,6 +44,8 @@ pub struct ActiveRoadPlacement {
     pub assist_requested: bool,
     /// Last route-assist result for the readout ("no way within 12% found").
     pub assist_note: Option<String>,
+    /// Hash of what the preview checks were computed from (skip when unchanged).
+    pub preview_key: u64,
 }
 
 impl Default for ActiveRoadPlacement {
@@ -63,6 +65,7 @@ impl Default for ActiveRoadPlacement {
             bridge_choice: None,
             assist_requested: false,
             assist_note: None,
+            preview_key: 0,
         }
     }
 }
@@ -78,5 +81,6 @@ impl ActiveRoadPlacement {
         self.dragging = None;
         self.bridge_choice = None;
         self.assist_note = None;
+        self.preview_key = 0;
     }
 }

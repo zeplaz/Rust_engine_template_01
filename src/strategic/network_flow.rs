@@ -421,7 +421,8 @@ mod loop11_revision_gate_tests {
     fn network_flow_solver_skips_clean_and_clears_dirty() {
         let mut app = App::new();
         app.init_resource::<SpatialNetworkGraph>()
-            .init_resource::<InfrastructureGraph>();
+            .init_resource::<InfrastructureGraph>()
+            .init_resource::<crate::strategic::world_field_layers::WorldFieldLayerEpoch>();
         let overlay = ChunkStrategicOverlay::new(IVec2::ZERO, UVec2::new(2, 2));
         let dirty_e = app
             .world_mut()

@@ -275,6 +275,7 @@ type PointerBlockingPanelRoots = Or<(
     With<crate::gui::world_presentation_mode::WorldPresentationToggleRoot>,
     With<crate::gui::front_controls::FrontSelectionPanelRoot>,
     With<crate::gui::hud::sim_build_picker_panel::SimBuildPickerPanelRoot>,
+    With<crate::gui::hud::sim_road_power_sheets_bevy::SimRoadSheetRoot>,
 )>;
 
 /// True when `physical_cursor` (window physical px — the space `ComputedNode` /
@@ -386,7 +387,7 @@ fn open_play_sheet_holds_pointer(
         }
     }
     let road_open = road_sheet.is_some_and(|s| s.open)
-        && matches!(tool, Some(BuildTool::Road(_) | BuildTool::Rail(_)));
+        && tool.is_some_and(|t| crate::construction::corridor_tool_kind(t).is_some());
     if road_open {
         let slot = strip.map(|s| s.active).unwrap_or(ToolContext::Roads);
         let anchor = crate::gui::hud::simulation_shell_phase2::build_rail_slot_anchor_xy(
