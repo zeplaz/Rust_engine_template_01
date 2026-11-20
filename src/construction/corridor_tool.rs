@@ -8,7 +8,11 @@
 //!   with a bridge, cut/fill, level crossing or overpass, each labelled) or **Blocked** (with the
 //!   reason). Pure: ground height and water depth come in as closures, so the live preview, the
 //!   scenario step and any AI builder run the same rules.
-//! - [`summarize_path`] is the readout (length, works, trip time, reasons).
+//! - [`summarize_path`] is the readout (length, works, trip time, reasons, bridge material bill).
+//! - [`assist_route`]: "follow terrain" — an auto path from the last point to the cursor that
+//!   winds within the mode's grade and bridges water only where it can.
+//! - [`apply_bridge_choice`] / [`bridge_choices`]: the player may pick another bridge type that
+//!   spans every crossing of the path (the cheapest that fits is the default).
 //! - [`commit_corridor_path`] queues the buildable stretches into the construction funnel; blocked
 //!   stretches are skipped, never half-built.
 
@@ -16,6 +20,7 @@ use bevy::prelude::*;
 
 use super::construction_pipeline::{ConstructionIntent, ConstructionPlanQueue, ConstructionType};
 use super::corridor_network::CorridorNetwork;
+use crate::infrastructure::bridge_types::{bridge_type_preference, BridgeCarries, BridgeType};
 use crate::infrastructure::RoadTier;
 use crate::strategic::BuildSiteTile;
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
@@ -113,6 +118,72 @@ pub struct StretchCheck {
     pub b: Vec2,
     pub length_m: f32,
     pub verdict: StretchVerdict,
+    /// The bridge this stretch needs, if it crosses water.
+    pub bridge: Option<StretchBridge>,
+}
+
+/// A water crossing on a stretch and the structure chosen for it.
+#[derive(Clone, Copy, Debug, PartialEq)]
+pub struct StretchBridge {
+    pub carries: BridgeCarries,
+    pub span_m: f32,
+    pub depth_m: f32,
+    /// Cheapest type that fits (the default).
+    pub cheapest: BridgeType,
+    /// Type that will be built.
+    pub kind: BridgeType,
+}
+
+impl StretchBridge {
+    /// `t` can carry this line over this crossing.
+    #[must_use]
+    pub fn fits(&self, t: BridgeType) -> bool {
+        let s = t.spec();
+        bridge_type_preference(self.carries).contains(&t)
+            && self.span_m <= s.max_length_m
+            && (s.floating || self.depth_m <= s.max_depth_m)
+    }
+}
+
+fn carries_of(kind: CorridorToolKind) -> BridgeCarries {
+    match kind {
+        CorridorToolKind::Road(tier) => BridgeCarries::Road(tier),
+        _ => BridgeCarries::Rail,
+    }
+}
+
+/// Bridge types that span every crossing of the path (cheapest first); empty without water.
+#[must_use]
+pub fn bridge_choices(checks: &[StretchCheck]) -> Vec<BridgeType> {
+    let bridges: Vec<StretchBridge> = checks.iter().filter_map(|c| c.bridge).collect();
+    let Some(first) = bridges.first() else {
+        return Vec::new();
+    };
+    bridge_type_preference(first.carries)
+        .iter()
+        .copied()
+        .filter(|t| bridges.iter().all(|b| b.fits(*t)))
+        .collect()
+}
+
+/// Builds `choice` on every crossing it fits (others keep the cheapest) and relabels the works.
+pub fn apply_bridge_choice(checks: &mut [StretchCheck], choice: Option<BridgeType>) {
+    for c in checks.iter_mut() {
+        let Some(b) = c.bridge.as_mut() else {
+            continue;
+        };
+        let want = choice.filter(|t| b.fits(*t)).unwrap_or(b.cheapest);
+        if want == b.kind {
+            continue;
+        }
+        let (old, new) = (format!("{} {:.0} m", b.kind.label(), b.span_m), format!("{} {:.0} m", want.label(), b.span_m));
+        b.kind = want;
+        if let StretchVerdict::Works(w) = &mut c.verdict {
+            for x in w.iter_mut().filter(|x| **x == old) {
+                x.clone_from(&new);
+            }
+        }
+    }
 }
 
 /// Water this deep (m) needs a bridge.
@@ -154,6 +225,7 @@ pub fn check_corridor_path(
         let (a, b) = (w[0], w[1]);
         let len_tiles = a.distance(b);
         let length_m = len_tiles * TILE_METRES_GAMEPLAY;
+        let mut bridge = None;
         let verdict = (|| {
             if !inside(a) || !inside(b) {
                 return StretchVerdict::Blocked("outside the map".into());
@@ -206,12 +278,12 @@ pub fn check_corridor_path(
                 }
                 // The cheapest real structure that spans it for this line (culvert, timber,
                 // pontoon, Bailey, girder, concrete beam, truss, stone arch).
-                let carries = match kind {
-                    CorridorToolKind::Road(tier) => crate::infrastructure::bridge_types::BridgeCarries::Road(tier),
-                    _ => crate::infrastructure::bridge_types::BridgeCarries::Rail,
-                };
+                let carries = carries_of(kind);
                 match crate::infrastructure::bridge_types::choose_bridge_type(carries, span_m, deepest) {
-                    Some(t) => works.push(format!("{} {span_m:.0} m", t.label())),
+                    Some(t) => {
+                        works.push(format!("{} {span_m:.0} m", t.label()));
+                        bridge = Some(StretchBridge { carries, span_m, depth_m: deepest, cheapest: t, kind: t });
+                    }
                     None => {
                         return StretchVerdict::Blocked(format!(
                             "water {span_m:.0} m wide, {deepest:.0} m deep: no bridge type spans it"
@@ -271,7 +343,8 @@ pub fn check_corridor_path(
                 StretchVerdict::Works(works)
             }
         })();
-        out.push(StretchCheck { a, b, length_m, verdict });
+        let bridge = bridge.filter(|_| verdict.buildable());
+        out.push(StretchCheck { a, b, length_m, verdict, bridge });
     }
     out
 }
@@ -287,6 +360,18 @@ pub struct CorridorPathSummary {
     pub trip_s: f32,
     /// Up to four "stretch n: reason" lines (blocked first).
     pub notes: Vec<String>,
+    /// Bridge materials for the buildable stretches (cargo, units), largest first.
+    pub bridge_materials: Vec<(String, f32)>,
+    /// Bridge type being built (when the path crosses water) and how many types fit.
+    pub bridge: Option<(BridgeType, usize)>,
+}
+
+impl CorridorPathSummary {
+    /// "Steel 140, Concrete 300" (empty without bridges).
+    #[must_use]
+    pub fn materials_line(&self) -> String {
+        self.bridge_materials.iter().map(|(c, n)| format!("{c} {n:.0}")).collect::<Vec<_>>().join(", ")
+    }
 }
 
 #[must_use]
@@ -307,6 +392,15 @@ pub fn summarize_path(checks: &[StretchCheck], kind: CorridorToolKind) -> Corrid
                 blocked.push(format!("stretch {} blocked: {why}", i + 1));
             }
         }
+        if let (true, Some(b)) = (c.verdict.buildable(), c.bridge) {
+            for (cargo, per_m) in &b.kind.spec().materials_per_m {
+                match s.bridge_materials.iter_mut().find(|(n, _)| n == cargo) {
+                    Some((_, q)) => *q += per_m * b.span_m,
+                    None => s.bridge_materials.push((cargo.clone(), per_m * b.span_m)),
+                }
+            }
+            s.bridge = Some((b.kind, 0));
+        }
         if c.verdict.buildable() {
             s.length_m += c.length_m;
             if cap > 0.0 {
@@ -315,6 +409,10 @@ pub fn summarize_path(checks: &[StretchCheck], kind: CorridorToolKind) -> Corrid
         }
     }
     s.notes = blocked.into_iter().chain(works).take(4).collect();
+    s.bridge_materials.sort_by(|a, b| b.1.total_cmp(&a.1));
+    if let Some((t, _)) = s.bridge {
+        s.bridge = Some((t, bridge_choices(checks).len()));
+    }
     s
 }
 
@@ -326,6 +424,8 @@ fn tile_of(p: Vec2) -> BuildSiteTile {
 /// how many were queued.
 pub fn commit_corridor_path(checks: &[StretchCheck], kind: CorridorToolKind, queue: &mut ConstructionPlanQueue) -> usize {
     let mut n = 0;
+    // The whole path undoes as one step.
+    let group = queue.begin_group();
     for c in checks.iter().filter(|c| c.verdict.buildable()) {
         let (head, tail) = (tile_of(c.a), tile_of(c.b));
         if head == tail {
@@ -336,10 +436,142 @@ pub fn commit_corridor_path(checks: &[StretchCheck], kind: CorridorToolKind, que
             CorridorToolKind::Rail => ConstructionType::RailSegment { head, tail },
             CorridorToolKind::Firebreak => ConstructionType::FirebreakSegment { head, tail },
         };
-        queue.enqueue(ConstructionIntent { entity_type, world_position: (c.a + c.b) * 0.5, rotation: 0.0 });
+        queue.enqueue_in_group(ConstructionIntent { entity_type, world_position: (c.a + c.b) * 0.5, rotation: 0.0 }, group);
+        // The bridge type the tool showed is the one built.
+        if let (Some(b), Some(plan)) = (c.bridge, queue.plans.last_mut()) {
+            plan.bridge = Some(b.kind);
+        }
         n += 1;
     }
     n
+}
+
+/// Route assist grid step (tiles).
+const ASSIST_STEP_TILES: f32 = 2.0;
+/// Most grid nodes the route assist expands before giving up.
+const ASSIST_MAX_EXPANDED: usize = 60_000;
+/// Water cells cost this much more per metre (bridges are dear; cross where it is narrow).
+const ASSIST_WATER_MUL: f32 = 4.0;
+
+/// Route assist (RD-6 "follow terrain"): a path from `from` to `to` (tile units) that holds the
+/// mode's grade (winding up slopes instead of straight at them), crosses water only where the
+/// mode can bridge it, and is simplified so every stretch passes [`check_corridor_path`].
+/// Returns the points after `from` (ending at `to`), or `None` when no such path is found.
+#[must_use]
+pub fn assist_route(
+    from: Vec2,
+    to: Vec2,
+    kind: CorridorToolKind,
+    ground_m: &dyn Fn(Vec2) -> f32,
+    water_m: &dyn Fn(IVec2) -> f32,
+    network: &CorridorNetwork,
+    map_tiles: UVec2,
+) -> Option<Vec<Vec2>> {
+    use std::cmp::Reverse;
+    use std::collections::{BinaryHeap, HashMap};
+    let spec = mode_spec(kind);
+    if kind == CorridorToolKind::Firebreak || from.distance(to) < ASSIST_STEP_TILES {
+        return Some(vec![to]);
+    }
+    let s = ASSIST_STEP_TILES;
+    let step_m = s * TILE_METRES_GAMEPLAY;
+    // Search box: the two ends with a margin for detours.
+    let margin = (from.distance(to) * 0.5).max(24.0);
+    let lo = (from.min(to) - Vec2::splat(margin)).max(Vec2::ZERO);
+    let hi = (from.max(to) + Vec2::splat(margin)).min(map_tiles.as_vec2() - Vec2::splat(0.5));
+    let gw = ((hi.x - lo.x) / s).ceil() as i32 + 1;
+    let gh = ((hi.y - lo.y) / s).ceil() as i32 + 1;
+    let pos = |c: IVec2| lo + c.as_vec2() * s;
+    let cell = |p: Vec2| ((p - lo) / s).round().as_ivec2().clamp(IVec2::ZERO, IVec2::new(gw - 1, gh - 1));
+    let (start, goal) = (cell(from), cell(to));
+    let wet = |p: Vec2| water_m(IVec2::new(p.x.floor() as i32, p.y.floor() as i32)) > BRIDGE_DEPTH_M;
+    let mut height: HashMap<IVec2, f32> = HashMap::new();
+    let mut h_at = |c: IVec2| *height.entry(c).or_insert_with(|| ground_m(pos(c)));
+    const DIRS: [(i32, i32); 16] = [
+        (1, 0), (-1, 0), (0, 1), (0, -1), (1, 1), (1, -1), (-1, 1), (-1, -1),
+        (2, 1), (2, -1), (-2, 1), (-2, -1), (1, 2), (1, -2), (-1, 2), (-1, -2),
+    ];
+    let key = |c: f32| (c * 16.0) as u64;
+    let mut open = BinaryHeap::new();
+    let mut best: HashMap<IVec2, f32> = HashMap::new();
+    let mut came: HashMap<IVec2, IVec2> = HashMap::new();
+    best.insert(start, 0.0);
+    open.push(Reverse((0_u64, start.x, start.y)));
+    let mut expanded = 0;
+    let mut found = false;
+    while let Some(Reverse((_, x, y))) = open.pop() {
+        let c = IVec2::new(x, y);
+        if c == goal {
+            found = true;
+            break;
+        }
+        expanded += 1;
+        if expanded > ASSIST_MAX_EXPANDED {
+            break;
+        }
+        let g = best[&c];
+        let hc = h_at(c);
+        for (dx, dy) in DIRS {
+            let n = c + IVec2::new(dx, dy);
+            if n.x < 0 || n.y < 0 || n.x >= gw || n.y >= gh {
+                continue;
+            }
+            let dist_m = (IVec2::new(dx, dy).as_vec2().length()) * step_m;
+            let p = pos(n);
+            let water = wet(p) || wet((pos(c) + p) * 0.5);
+            if water && spec.max_bridge_m <= 0.0 {
+                continue;
+            }
+            // Over water the deck is level; on land hold the grade with a little slack for cut/fill.
+            let cost = if water {
+                dist_m * ASSIST_WATER_MUL
+            } else {
+                let grade = (h_at(n) - hc).abs() / dist_m;
+                if grade > spec.max_grade * 0.95 {
+                    continue;
+                }
+                dist_m * (1.0 + grade / spec.max_grade.max(1e-3))
+            };
+            let ng = g + cost;
+            if best.get(&n).is_none_or(|&b| ng < b) {
+                best.insert(n, ng);
+                came.insert(n, c);
+                let f = ng + pos(n).distance(pos(goal)) * TILE_METRES_GAMEPLAY;
+                open.push(Reverse((key(f), n.x, n.y)));
+            }
+        }
+    }
+    if !found {
+        return None;
+    }
+    let mut cells = vec![goal];
+    while let Some(&p) = came.get(cells.last().expect("non-empty")) {
+        cells.push(p);
+    }
+    cells.reverse();
+    let mut raw: Vec<Vec2> = cells.iter().map(|&c| pos(c)).collect();
+    raw[0] = from;
+    *raw.last_mut().expect("non-empty") = to;
+    // Simplify: from each kept point reach as far along the raw path as one buildable stretch
+    // goes (the check also sees the bend from the previous kept point).
+    let buildable = |prev: Option<Vec2>, a: Vec2, b: Vec2| {
+        let pts: Vec<Vec2> = prev.into_iter().chain([a, b]).collect();
+        check_corridor_path(&pts, kind, ground_m, water_m, network, map_tiles)
+            .last()
+            .is_some_and(|c| c.verdict.buildable())
+    };
+    let mut out: Vec<Vec2> = Vec::new();
+    let (mut i, mut prev) = (0usize, None::<Vec2>);
+    while i + 1 < raw.len() {
+        let mut j = i + 1;
+        while j + 1 < raw.len() && buildable(prev, raw[i], raw[j + 1]) {
+            j += 1;
+        }
+        prev = Some(raw[i]);
+        out.push(raw[j]);
+        i = j;
+    }
+    Some(out)
 }
 
 #[cfg(test)]
@@ -371,6 +603,53 @@ mod tests {
         let lake = |t: IVec2| if (20..120).contains(&t.x) { 3.0 } else { 0.0 };
         let c = check(&[Vec2::new(10.5, 10.5), Vec2::new(130.5, 10.5)], CorridorToolKind::Road(RoadTier::Dirt), &flat, &lake);
         assert!(matches!(c[0].verdict, StretchVerdict::Blocked(ref why) if why.contains("no bridge type")));
+        assert!(c[0].bridge.is_none(), "a blocked stretch builds no bridge");
+    }
+
+    #[test]
+    fn route_assist_winds_up_a_slope_a_straight_line_cannot_climb() {
+        // A ridge rising 40 m over 10 tiles (160 m, 25%) across the straight line, fading along y.
+        let ridge = |p: Vec2| {
+            let x = p.x - 40.0;
+            let along = (p.y / 120.0).clamp(0.0, 1.0);
+            100.0 + if x < 0.0 { 0.0 } else if x < 10.0 { 4.0 * x } else { 40.0 } * (1.0 - along)
+        };
+        let kind = CorridorToolKind::Road(RoadTier::Gravel);
+        let (a, b) = (Vec2::new(30.5, 10.5), Vec2::new(60.5, 10.5));
+        let straight = check(&[a, b], kind, &ridge, &dry);
+        assert!(matches!(straight[0].verdict, StretchVerdict::Blocked(_)), "straight up is too steep");
+        let route = assist_route(a, b, kind, &ridge, &dry, &CorridorNetwork::default(), MAP).expect("a way round");
+        assert_eq!(route.last(), Some(&b));
+        let pts: Vec<Vec2> = std::iter::once(a).chain(route.iter().copied()).collect();
+        let checks = check(&pts, kind, &ridge, &dry);
+        assert!(checks.iter().all(|c| c.verdict.buildable()), "{checks:?}");
+        assert!(pts.len() > 2, "it bends");
+    }
+
+    #[test]
+    fn the_player_can_pick_another_bridge_type_and_sees_its_bill() {
+        let river = |t: IVec2| if (50..54).contains(&t.x) { 3.0 } else { 0.0 };
+        let kind = CorridorToolKind::Road(RoadTier::Gravel);
+        let mut c = check(&[Vec2::new(40.5, 10.5), Vec2::new(64.5, 10.5)], kind, &flat, &river);
+        let choices = bridge_choices(&c);
+        assert_eq!(choices.first(), Some(&BridgeType::Bailey), "cheapest that fits first");
+        assert!(choices.contains(&BridgeType::SteelGirder), "{choices:?}");
+        assert!(!choices.contains(&BridgeType::TimberBeam), "too short a type is not offered");
+        apply_bridge_choice(&mut c, Some(BridgeType::SteelGirder));
+        assert_eq!(c[0].bridge.map(|b| b.kind), Some(BridgeType::SteelGirder));
+        match &c[0].verdict {
+            StretchVerdict::Works(w) => assert!(w.iter().any(|x| x.starts_with("steel girder bridge")), "{w:?}"),
+            v => panic!("expected a bridge, got {v:?}"),
+        }
+        let s = summarize_path(&c, kind);
+        assert!(s.bridge_materials.iter().any(|(n, q)| n == "Steel" && *q > 0.0), "{:?}", s.bridge_materials);
+        // A type that does not fit falls back to the cheapest.
+        apply_bridge_choice(&mut c, Some(BridgeType::TimberBeam));
+        assert_eq!(c[0].bridge.map(|b| b.kind), Some(BridgeType::Bailey));
+        let mut q = ConstructionPlanQueue::default();
+        apply_bridge_choice(&mut c, Some(BridgeType::SteelGirder));
+        assert_eq!(commit_corridor_path(&c, kind, &mut q), 1);
+        assert_eq!(q.plans[0].bridge, Some(BridgeType::SteelGirder), "the shown type is the one built");
     }
 
     #[test]

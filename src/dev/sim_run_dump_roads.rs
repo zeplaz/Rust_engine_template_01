@@ -124,6 +124,12 @@ pub fn dump_roads_section(
                 "sections": r.sections.len(), "fallen": r.fallen_sections(), "min_integrity": r.integrity(),
                 "hits": r.sections.iter().map(|s| s.hits.len()).sum::<usize>(),
                 "overtopped": r.overtopped, "peak_load": r.peak_load,
+                "section_rows": r.sections.iter().map(|s| json!({
+                    "integrity": s.integrity, "fallen": s.fallen,
+                    "dropped_by": s.dropped_by.map(|c| c.label()),
+                    "blast_loss": s.blast_loss, "flood_loss": s.flood_loss, "fire_loss": s.fire_loss,
+                    "hits": s.hits.len(),
+                })).collect::<Vec<_>>(),
             })).collect::<Vec<_>>()).unwrap_or_default(),
             "placements": placements.as_deref().map(|l| l.0.iter().map(|r| json!({
                 "kind": r.kind, "queued": r.queued, "length_m": r.length_m,

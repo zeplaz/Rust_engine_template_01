@@ -68,6 +68,9 @@ pub(crate) struct WorldMapTownLabel;
 #[derive(Component)]
 pub(crate) struct WorldMapZoneTint;
 
+#[derive(Component)]
+pub(crate) struct WorldMapBridgeMark;
+
 #[derive(Default)]
 pub(crate) struct LayerStamp {
     key: u64,
@@ -88,6 +91,7 @@ impl Plugin for WorldMapNetworkMeshPlugin {
                     .after(crate::construction::sync_zone_visual_requests),
                 sync_world_map_town_names_and_zone_shade,
                 default_city_zone_shade,
+                sync_world_map_bridge_marks.after(sync_world_map_path_meshes),
             ),
         );
         app.add_systems(
@@ -1248,5 +1252,119 @@ mod tests {
         assert!(delete_admin_zone(&mut districts, &zone));
         assert!(!districts.districts.contains_key(&zone));
         let _still = building;
+    }
+}
+
+/// Mesh / material caches and the content stamp of the 2D bridge marks.
+#[derive(Default)]
+pub(crate) struct BridgeMarkCache {
+    mesh: Option<Handle<Mesh>>,
+    mats: HashMap<u32, Handle<ColorMaterial>>,
+    revision: Option<u64>,
+}
+
+/// Deck colour of a bridge type on the 2D map (structure family at a glance).
+fn bridge_map_color(t: crate::infrastructure::bridge_types::BridgeType) -> Color {
+    use crate::infrastructure::bridge_types::BridgeType as T;
+    match t {
+        T::Culvert => Color::srgb(0.55, 0.47, 0.33),
+        T::TimberBeam | T::TimberTrestle => Color::srgb(0.62, 0.42, 0.22),
+        T::Pontoon => Color::srgb(0.30, 0.42, 0.32),
+        T::Bailey => Color::srgb(0.42, 0.50, 0.40),
+        T::SteelGirder | T::SteelTruss => Color::srgb(0.45, 0.55, 0.68),
+        T::PrestressedConcrete => Color::srgb(0.82, 0.82, 0.78),
+        T::StoneArch => Color::srgb(0.78, 0.70, 0.55),
+    }
+}
+
+/// PLAN-ROADS-v1 B-2: bridges on the 2D map as a bridge symbol, not a plain road: a wider deck
+/// in the structure's colour, casing lines along both sides with splayed wing ticks at the
+/// abutments (the usual map bridge sign), pier ticks at section joints, damaged sections tinted,
+/// burning sections orange, fallen sections a gap with a red cross.
+pub(crate) fn sync_world_map_bridge_marks(
+    mut commands: Commands,
+    base: Res<State<BaseState>>,
+    bridges: Option<Res<crate::construction::bridges::BridgeBook>>,
+    marks: Query<Entity, With<WorldMapBridgeMark>>,
+    mut meshes: ResMut<Assets<Mesh>>,
+    mut materials: ResMut<Assets<ColorMaterial>>,
+    mut cache: Local<BridgeMarkCache>,
+) {
+    let live = matches!(base.get(), BaseState::Simulation);
+    let revision = bridges.as_deref().filter(|_| live).map(|b| b.revision);
+    if revision == cache.revision {
+        return;
+    }
+    cache.revision = revision;
+    despawn_query(&mut commands, &marks);
+    let (Some(book), true) = (bridges.as_deref(), live) else {
+        return;
+    };
+    let unit = unit_mesh(&mut meshes, &mut cache.mesh);
+    let mut bar = |commands: &mut Commands, cache: &mut BridgeMarkCache, a: Vec2, b: Vec2, w: f32, z: f32, color: Color| {
+        let d = b - a;
+        let len = d.length().max(0.04);
+        let mid = (a + b) * 0.5;
+        let mat = material_for(&mut cache.mats, &mut materials, color);
+        commands.spawn((
+            WorldMapBridgeMark,
+            Mesh2d(unit.clone()),
+            MeshMaterial2d(mat),
+            Transform {
+                translation: Vec3::new(mid.x, mid.y, PLANE_Z + z),
+                rotation: Quat::from_rotation_z(d.y.atan2(d.x)),
+                scale: Vec3::new(len, w, 1.0),
+            },
+        ));
+    };
+    let casing = Color::srgb(0.08, 0.08, 0.09);
+    let red = Color::srgb(0.85, 0.12, 0.10);
+    let fire = Color::srgb(1.0, 0.50, 0.10);
+    for rec in &book.bridges {
+        let d = rec.b - rec.a;
+        if d.length_squared() < 1e-6 {
+            continue;
+        }
+        let along = d.normalize();
+        let side = Vec2::new(-along.y, along.x);
+        let half = if rec.rail { 0.16 } else { 0.20 };
+        let base_col = bridge_map_color(rec.bridge_type);
+        for (k, sec) in rec.sections.iter().enumerate() {
+            let (p0, p1) = (rec.a + d * sec.t0, rec.a + d * sec.t1);
+            if sec.fallen {
+                // Gap with a red cross.
+                let mid = (p0 + p1) * 0.5;
+                let r = half * 1.3;
+                bar(&mut commands, &mut cache, mid - along * r - side * r, mid + along * r + side * r, 0.06, 0.03, red);
+                bar(&mut commands, &mut cache, mid - along * r + side * r, mid + along * r - side * r, 0.06, 0.03, red);
+                continue;
+            }
+            let col = if sec.fire_heat >= 0.15 {
+                fire
+            } else if sec.integrity < 0.75 {
+                let s = base_col.to_srgba();
+                let k = 0.5 + 0.5 * sec.integrity;
+                Color::srgb(s.red * k + 0.4 * (1.0 - k), s.green * k, s.blue * k)
+            } else {
+                base_col
+            };
+            bar(&mut commands, &mut cache, p0, p1, half * 2.0, 0.01, col);
+            for sgn in [-1.0_f32, 1.0] {
+                let o = side * half * sgn;
+                bar(&mut commands, &mut cache, p0 + o, p1 + o, 0.04, 0.02, casing);
+            }
+            // Pier tick at the far joint.
+            if k + 1 < rec.sections.len() {
+                bar(&mut commands, &mut cache, p1 - side * half * 1.25, p1 + side * half * 1.25, 0.035, 0.02, casing);
+            }
+        }
+        // Wing ticks splayed outwards at both abutments.
+        for (end, out) in [(rec.a, -along), (rec.b, along)] {
+            for sgn in [-1.0_f32, 1.0] {
+                let s0 = end + side * half * sgn;
+                let s1 = s0 + (out + side * sgn) * (half * 0.9);
+                bar(&mut commands, &mut cache, s0, s1, 0.04, 0.02, casing);
+            }
+        }
     }
 }

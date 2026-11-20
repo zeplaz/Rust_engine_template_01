@@ -7,11 +7,14 @@
 //!
 //! - [`register_bridges_system`]: a new line's wet stretches (depth > 0.3 m at build time) become
 //!   bridges, bank to bank; the type is the cheapest that fits the line and the crossing.
-//! - [`bridge_flood_damage_system`]: per section, water load (depth × speed²; deck hits ×10) over
+//! - [`bridge_flood_damage_system`]: per section, water load (depth × speed²; deck hits ×4; speed
+//!   capped at a physical flood current, [`structural_current_mps`]) over
 //!   the type's strength costs integrity; pontoons fail in fast current instead and ride the water.
 //! - [`bridge_blast_damage_system`]: every detonation (`BlastCraterBook.recent`) damages each
 //!   section by the warhead's falloff at the section, over the type's blast toughness; the impact
 //!   point is kept for the deck scorch.
+//! - [`bridge_fire_damage_system`]: timber (and partly pontoon / Bailey deck) sections in fire
+//!   heat burn down (`burns` in the type table); rain slows it.
 //! - Routing ([`BridgeBook::edge_state`]): an intact bridge carries traffic over flooded river
 //!   tiles; any fallen section or water over the deck closes it.
 
@@ -33,7 +36,18 @@ pub const DECK_DEPTH_M: f32 = 1.5;
 /// Integrity lost per second per unit of flood load over strength.
 const DAMAGE_PER_S: f32 = 0.02;
 /// Water on the deck counts this much more than on the piers (broad face, debris raft).
-const DECK_LOAD_MUL: f32 = 10.0;
+const DECK_LOAD_MUL: f32 = 4.0;
+/// Fastest flood current a structure meets (m/s): dam-break fronts run ~5–10 m/s; the solver's
+/// face flux over a thin film reads far higher (up to its 50 m/s clamp), which is not a load.
+pub const FLOOD_MAX_SPEED_MPS: f32 = 9.0;
+/// Froude bound: open-channel flow faster than this × √(g·depth) does not persist at a pier.
+const MAX_FROUDE: f32 = 1.5;
+
+/// Current speed a structure takes from water of `depth_m` reading `raw_mps` in the solver.
+#[must_use]
+pub fn structural_current_mps(raw_mps: f32, depth_m: f32) -> f32 {
+    raw_mps.min(FLOOD_MAX_SPEED_MPS).min(MAX_FROUDE * (9.81 * depth_m.max(0.0)).sqrt())
+}
 /// Most sections one bridge is split into.
 const MAX_SECTIONS: usize = 64;
 /// Impact marks kept per section (render scorch).
@@ -49,6 +63,33 @@ pub struct BridgeSection {
     pub fallen: bool,
     /// Impact points on this section (tile units).
     pub hits: Vec<Vec2>,
+    /// Integrity lost to blasts, floods and fire so far (dump: what wore it down).
+    pub blast_loss: f32,
+    pub flood_loss: f32,
+    pub fire_loss: f32,
+    /// Fire heat on it right now (0..1; render flames / char).
+    pub fire_heat: f32,
+    /// What dropped it, once fallen.
+    pub dropped_by: Option<BridgeDamageCause>,
+}
+
+/// What took a bridge section down.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum BridgeDamageCause {
+    Blast,
+    Flood,
+    Fire,
+}
+
+impl BridgeDamageCause {
+    #[must_use]
+    pub fn label(self) -> &'static str {
+        match self {
+            BridgeDamageCause::Blast => "blast",
+            BridgeDamageCause::Flood => "flood",
+            BridgeDamageCause::Fire => "fire",
+        }
+    }
 }
 
 /// One bridge: the wet part of a line, bank to bank (tile units).
@@ -214,16 +255,27 @@ pub fn bridge_sections(t: BridgeType, length_m: f32) -> Vec<BridgeSection> {
             integrity: 1.0,
             fallen: false,
             hits: Vec::new(),
+            blast_loss: 0.0,
+            flood_loss: 0.0,
+            fire_loss: 0.0,
+            fire_heat: 0.0,
+            dropped_by: None,
         })
         .collect()
 }
 
 /// The bridge a wet run of a line becomes.
 #[must_use]
-pub fn bridge_for_run(segment_id: u32, kind: &CorridorKind, run: WetRun, bank_ground_m: f32) -> BridgeRecord {
+pub fn bridge_for_run(segment_id: u32, kind: &CorridorKind, run: WetRun, bank_ground_m: f32, pref: Option<BridgeType>) -> BridgeRecord {
     let carries = bridge_carries(kind);
     let length_m = run.a.distance(run.b) * TILE_METRES_GAMEPLAY;
-    let bridge_type = choose_bridge_type(carries, length_m, run.depth_m)
+    let fits = |t: &BridgeType| {
+        let s = t.spec();
+        bridge_type_preference(carries).contains(t) && length_m <= s.max_length_m * 1.1 && (s.floating || run.depth_m <= s.max_depth_m * 1.1)
+    };
+    let bridge_type = pref
+        .filter(fits)
+        .or_else(|| choose_bridge_type(carries, length_m, run.depth_m))
         .unwrap_or_else(|| *bridge_type_preference(carries).last().expect("every line has a type"));
     let spec = bridge_type.spec();
     let water = if run.top_m.is_finite() { run.top_m } else { bank_ground_m };
@@ -269,7 +321,7 @@ pub fn register_bridges_system(
             let pts: Vec<Vec2> = seg.nodes.iter().copied().map(centre).collect();
             for run in wet_runs(&pts, &depth, &surface) {
                 let banks = ground(run.a).max(ground(run.b));
-                book.bridges.push(bridge_for_run(seg.id, &seg.kind, run, banks));
+                book.bridges.push(bridge_for_run(seg.id, &seg.kind, run, banks, seg.bridge_pref));
                 changed = true;
             }
         }
@@ -301,8 +353,9 @@ pub fn section_water_load(
         if d <= 0.0 {
             continue;
         }
-        let v2 = flow(t).length_squared();
-        vmax = vmax.max(v2.sqrt());
+        let v = structural_current_mps(flow(t).length(), d);
+        let v2 = v * v;
+        vmax = vmax.max(v);
         let mut l = d * v2 * exposure;
         if !spec.floating {
             if let Some(s) = surface(t) {
@@ -358,9 +411,12 @@ pub fn bridge_flood_damage_system(
             let (load, over, v) = section_water_load(&rec, s.t0, s.t1, &depth, &surface, &flow);
             over_any |= over;
             peak = peak.max(load);
-            s.integrity = flood_integrity_after(rec.bridge_type, s.integrity, load, v, dt_s);
+            let after = flood_integrity_after(rec.bridge_type, s.integrity, load, v, dt_s);
+            s.flood_loss += s.integrity - after;
+            s.integrity = after;
             if s.integrity <= 0.0 {
                 s.fallen = true;
+                s.dropped_by = Some(BridgeDamageCause::Flood);
                 changed = true;
                 bevy::log::info!(target: "construction::bridges", segment = rec.segment_id, kind = rec.bridge_type.label(), "bridge section washed out");
             }
@@ -394,12 +450,15 @@ pub fn apply_blast_to_bridges(book: &mut BridgeBook, centre_tiles: Vec2, radius_
             if fall <= 0.0 {
                 continue;
             }
-            s.integrity = (s.integrity - damage * fall / tough).max(0.0);
+            let after = (s.integrity - damage * fall / tough).max(0.0);
+            s.blast_loss += s.integrity - after;
+            s.integrity = after;
             if fall > 0.3 && s.hits.len() < MAX_HITS {
                 s.hits.push(near);
             }
             if s.integrity <= 0.0 {
                 s.fallen = true;
+                s.dropped_by = Some(BridgeDamageCause::Blast);
                 fell = true;
             }
         }
@@ -435,6 +494,115 @@ pub fn bridge_blast_damage_system(
     }
 }
 
+/// Integrity a fully burning all-timber section loses per second (≈ 4 min to drop).
+const BURN_PER_S: f32 = 0.004;
+/// Rain this heavy (mm/h) damps a burn (same threshold that stops fire spread).
+const RAIN_STOPS_BURN_MM_H: f32 = 8.5;
+/// Fire heat below this does not char a structure.
+const BURN_HEAT_MIN: f32 = 0.15;
+/// Seconds between fire samples.
+const FIRE_SAMPLE_S: f32 = 1.0;
+
+/// Integrity after `dt_s` of fire heat `heat` (0..1) on a section of a type that `burns`.
+#[must_use]
+pub fn fire_integrity_after(burns: f32, integrity: f32, heat: f32, rain_mm_h: f32, dt_s: f32) -> f32 {
+    if burns <= 0.0 || heat < BURN_HEAT_MIN {
+        return integrity;
+    }
+    let wet = if rain_mm_h >= RAIN_STOPS_BURN_MM_H { 0.25 } else { 1.0 };
+    (integrity - BURN_PER_S * burns * heat * wet * dt_s).max(0.0)
+}
+
+/// Hottest fire cell (and its rain) at or next to `tile`.
+fn fire_heat_near(index: &std::collections::HashMap<IVec2, (UVec2, &[f32], f32)>, tile: IVec2) -> (f32, f32) {
+    let Some(size) = index.values().next().map(|v| v.0) else {
+        return (0.0, 0.0);
+    };
+    let (cw, ch) = (size.x.max(1) as i32, size.y.max(1) as i32);
+    let mut out = (0.0_f32, 0.0_f32);
+    for dz in -1..=1 {
+        for dx in -1..=1 {
+            let t = tile + IVec2::new(dx, dz);
+            if t.x < 0 || t.y < 0 {
+                continue;
+            }
+            let c = IVec2::new(t.x / cw, t.y / ch);
+            if let Some((sz, heat, rain)) = index.get(&c) {
+                if *sz != size {
+                    continue;
+                }
+                let i = ((t.y % ch) * cw + (t.x % cw)) as usize;
+                if let Some(h) = heat.get(i) {
+                    if *h > out.0 {
+                        out = (*h, *rain);
+                    }
+                }
+            }
+        }
+    }
+    out
+}
+
+/// Fire burns combustible bridge sections (sim time, sampled once a second).
+pub fn bridge_fire_damage_system(
+    sim_time: Option<Res<crate::systems::sim_control::SimTimeMicros>>,
+    chunks: Query<(
+        &crate::terrain::generation::Chunk,
+        &crate::terrain::generation::ChunkCellMatrix,
+        &crate::systems::fire::types::ChunkFireOverlay,
+        Option<&crate::systems::weather::ChunkWeather>,
+    )>,
+    mut book: ResMut<BridgeBook>,
+    mut last: Local<Option<u64>>,
+) {
+    let Some(now) = sim_time.map(|t| t.0) else {
+        return;
+    };
+    let Some(prev) = *last else {
+        *last = Some(now);
+        return;
+    };
+    let dt_s = now.saturating_sub(prev) as f32 / 1_000_000.0;
+    if dt_s < FIRE_SAMPLE_S {
+        return;
+    }
+    *last = Some(now);
+    let dt_s = dt_s.min(60.0);
+    if !book.bridges.iter().any(|b| b.bridge_type.spec().burns > 0.0) {
+        return;
+    }
+    let index = crate::systems::fire::entity_exposure::build_heat_index(chunks.iter());
+    let mut changed = false;
+    for b in &mut book.bridges {
+        let burns = b.bridge_type.spec().burns;
+        if burns <= 0.0 {
+            continue;
+        }
+        let (a, d) = (b.a, b.b - b.a);
+        let label = b.bridge_type.label();
+        for s in b.sections.iter_mut().filter(|s| !s.fallen) {
+            let mid = a + d * ((s.t0 + s.t1) * 0.5);
+            let (heat, rain) = fire_heat_near(&index, IVec2::new(mid.x.floor() as i32, mid.y.floor() as i32));
+            let was_hot = s.fire_heat >= BURN_HEAT_MIN;
+            s.fire_heat = heat;
+            let after = fire_integrity_after(burns, s.integrity, heat, rain, dt_s);
+            if after < s.integrity || was_hot != (heat >= BURN_HEAT_MIN) {
+                changed = true;
+            }
+            s.fire_loss += s.integrity - after;
+            s.integrity = after;
+            if s.integrity <= 0.0 {
+                s.fallen = true;
+                s.dropped_by = Some(BridgeDamageCause::Fire);
+                bevy::log::info!(target: "construction::bridges", kind = label, "bridge section burned through");
+            }
+        }
+    }
+    if changed {
+        book.revision = book.revision.wrapping_add(1);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -442,7 +610,7 @@ mod tests {
 
     fn bridge(t: BridgeType, len_tiles: f32) -> BridgeRecord {
         let run = WetRun { a: Vec2::new(10.0, 5.5), b: Vec2::new(10.0 + len_tiles, 5.5), top_m: 100.0, depth_m: 4.0 };
-        let mut b = bridge_for_run(0, &CorridorKind::Road { tier: RoadTier::Paved, lanes: 2 }, run, 100.0);
+        let mut b = bridge_for_run(0, &CorridorKind::Road { tier: RoadTier::Paved, lanes: 2 }, run, 100.0, None);
         b.bridge_type = t;
         b.sections = bridge_sections(t, b.length_m());
         b
@@ -508,6 +676,24 @@ mod tests {
         // Pontoons fail in fast current regardless of depth.
         assert!(flood_integrity_after(BridgeType::Pontoon, 1.0, 0.0, 5.0, 30.0) < 1.0);
         assert_eq!(flood_integrity_after(BridgeType::Pontoon, 1.0, 0.0, 1.0, 3600.0), 1.0);
+    }
+
+    #[test]
+    fn timber_burns_concrete_does_not_rain_slows_it() {
+        let timber = BridgeType::TimberTrestle.spec().burns;
+        let concrete = BridgeType::PrestressedConcrete.spec().burns;
+        assert!(fire_integrity_after(timber, 1.0, 0.8, 0.0, 60.0) < 1.0);
+        assert_eq!(fire_integrity_after(concrete, 1.0, 0.8, 0.0, 60.0), 1.0);
+        let dry = fire_integrity_after(timber, 1.0, 0.8, 0.0, 60.0);
+        let wet = fire_integrity_after(timber, 1.0, 0.8, 20.0, 60.0);
+        assert!(wet > dry, "rain slows the burn");
+    }
+
+    #[test]
+    fn a_dam_break_current_is_capped_at_a_physical_speed() {
+        assert!(structural_current_mps(45.0, 0.05) < 1.1, "thin film reads fast, carries little");
+        assert!(structural_current_mps(45.0, 12.0) <= FLOOD_MAX_SPEED_MPS);
+        assert_eq!(structural_current_mps(2.0, 3.0), 2.0);
     }
 
     #[test]

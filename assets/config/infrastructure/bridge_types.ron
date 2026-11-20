@@ -2,27 +2,28 @@
 // max_length_m = longest crossing, max_depth_m = deepest founding water, span_m = pier spacing
 // (a crossing this short has no piers in the water), strength = water load (depth m x speed^2)
 // taken without damage, clearance_m = deck soffit above the water at build time,
-// blast_toughness = blast damage (warhead peak x falloff) that drops one section.
+// blast_toughness = blast damage (warhead peak x falloff) that drops one section,
+// burns = how readily it burns (0 steel/concrete/stone .. 1 all-timber).
 (
     schema_version: 1,
     types: [
         (kind: Culvert, max_length_m: 16.0, max_depth_m: 3.0, span_m: 16.0, strength: 40.0, clearance_m: 0.5,
-         overtop_damage_mul: 0.2, floating: false, max_current_mps: 0.0, blast_toughness: 150.0, materials_per_m: [("Gravel", 6.0), ("Concrete", 1.0)]),
+         overtop_damage_mul: 0.2, floating: false, max_current_mps: 0.0, blast_toughness: 150.0, materials_per_m: [("Gravel", 6.0), ("Concrete", 1.0)], burns: 0.0),
         (kind: TimberBeam, max_length_m: 24.0, max_depth_m: 4.0, span_m: 12.0, strength: 35.0, clearance_m: 2.0,
-         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 40.0, materials_per_m: [("Timber", 2.0)]),
+         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 40.0, materials_per_m: [("Timber", 2.0)], burns: 1.0),
         (kind: TimberTrestle, max_length_m: 150.0, max_depth_m: 8.0, span_m: 6.0, strength: 30.0, clearance_m: 3.0,
-         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 35.0, materials_per_m: [("Timber", 3.0)]),
+         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 35.0, materials_per_m: [("Timber", 3.0)], burns: 1.0),
         (kind: Pontoon, max_length_m: 300.0, max_depth_m: 100.0, span_m: 300.0, strength: 0.0, clearance_m: 0.0,
-         overtop_damage_mul: 0.0, floating: true, max_current_mps: 2.0, blast_toughness: 30.0, materials_per_m: [("Steel", 0.6), ("Timber", 0.5)]),
+         overtop_damage_mul: 0.0, floating: true, max_current_mps: 2.0, blast_toughness: 30.0, materials_per_m: [("Steel", 0.6), ("Timber", 0.5)], burns: 0.4),
         (kind: Bailey, max_length_m: 200.0, max_depth_m: 8.0, span_m: 60.0, strength: 120.0, clearance_m: 3.0,
-         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 70.0, materials_per_m: [("Steel", 1.2)]),
+         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 70.0, materials_per_m: [("Steel", 1.2)], burns: 0.15),
         (kind: SteelGirder, max_length_m: 600.0, max_depth_m: 25.0, span_m: 40.0, strength: 250.0, clearance_m: 5.0,
-         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 120.0, materials_per_m: [("Steel", 2.5), ("Concrete", 3.0)]),
+         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 120.0, materials_per_m: [("Steel", 2.5), ("Concrete", 3.0)], burns: 0.0),
         (kind: PrestressedConcrete, max_length_m: 1000.0, max_depth_m: 30.0, span_m: 35.0, strength: 400.0, clearance_m: 6.0,
-         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 160.0, materials_per_m: [("Concrete", 8.0), ("Steel", 1.0)]),
+         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 160.0, materials_per_m: [("Concrete", 8.0), ("Steel", 1.0)], burns: 0.0),
         (kind: SteelTruss, max_length_m: 400.0, max_depth_m: 30.0, span_m: 100.0, strength: 300.0, clearance_m: 8.0,
-         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 110.0, materials_per_m: [("Steel", 4.0), ("Concrete", 2.0)]),
+         overtop_damage_mul: 1.0, floating: false, max_current_mps: 0.0, blast_toughness: 110.0, materials_per_m: [("Steel", 4.0), ("Concrete", 2.0)], burns: 0.0),
         (kind: StoneArch, max_length_m: 80.0, max_depth_m: 6.0, span_m: 20.0, strength: 350.0, clearance_m: 3.0,
-         overtop_damage_mul: 0.6, floating: false, max_current_mps: 0.0, blast_toughness: 200.0, materials_per_m: [("Limestone", 12.0), ("Cement", 1.0)]),
+         overtop_damage_mul: 0.6, floating: false, max_current_mps: 0.0, blast_toughness: 200.0, materials_per_m: [("Limestone", 12.0), ("Cement", 1.0)], burns: 0.0),
     ],
 )

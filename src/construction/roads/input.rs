@@ -136,12 +136,36 @@ pub fn update_road_path_preview_system(
     let map = UVec2::new(params.width, params.height);
     let curved = placement.use_curved_preview && kind != CorridorToolKind::Firebreak;
 
+    // G: route assist from the last point to the cursor (adds the bends as control points).
+    if std::mem::take(&mut placement.assist_requested) {
+        if let (Some(last), Some(c)) = (placement.control_points.last().copied(), placement.cursor) {
+            let route = crate::construction::corridor_tool::assist_route(
+                Vec2::new(last.x, last.z),
+                Vec2::new(c.x, c.z),
+                kind,
+                &ground,
+                &wet,
+                roads.as_ref(),
+                map,
+            );
+            placement.assist_note = match route {
+                Some(pts) => {
+                    for p in pts {
+                        placement.control_points.push(conform_vec3(Vec3::new(p.x, 0.0, p.y), params, grid));
+                    }
+                    None
+                }
+                None => Some("route assist: no way within this line's grade found".into()),
+            };
+        }
+    }
     let placed = sample_path(&placement.control_points, curved);
-    let checks = if placed.len() >= 2 {
+    let mut checks = if placed.len() >= 2 {
         check_corridor_path(&placed, kind, &ground, &wet, roads.as_ref(), map)
     } else {
         Vec::new()
     };
+    crate::construction::corridor_tool::apply_bridge_choice(&mut checks, placement.bridge_choice);
     let mut live_points = placement.control_points.clone();
     if let (Some(c), None) = (placement.cursor, placement.dragging) {
         if live_points.last().is_none_or(|l| Vec2::new(l.x - c.x, l.z - c.z).length() > 0.3) && !live_points.is_empty() {
@@ -149,11 +173,12 @@ pub fn update_road_path_preview_system(
         }
     }
     let live = sample_path(&live_points, curved);
-    let live_checks = if live.len() >= 2 {
+    let mut live_checks = if live.len() >= 2 {
         check_corridor_path(&live, kind, &ground, &wet, roads.as_ref(), map)
     } else {
         Vec::new()
     };
+    crate::construction::corridor_tool::apply_bridge_choice(&mut live_checks, placement.bridge_choice);
     let width = placement.width;
     let segs = live_checks
         .iter()
@@ -166,6 +191,9 @@ pub fn update_road_path_preview_system(
         })
         .collect();
     placement.summary = summarize_path(&live_checks, kind);
+    if let Some(note) = placement.assist_note.clone() {
+        placement.summary.notes.insert(0, note);
+    }
     placement.checks = checks;
     placement.live_checks = live_checks;
     placement.generated_segments = segs;
@@ -259,6 +287,21 @@ pub fn road_path_input_system(
     }
     if keys.just_pressed(KeyCode::Backspace) {
         placement.control_points.pop();
+        return;
+    }
+    if keys.just_pressed(KeyCode::KeyG) {
+        placement.assist_requested = true;
+        return;
+    }
+    // T: next bridge type that spans every crossing of the path (wraps back to the cheapest).
+    if keys.just_pressed(KeyCode::KeyT) {
+        let choices = crate::construction::corridor_tool::bridge_choices(&placement.live_checks);
+        let now = placement.live_checks.iter().find_map(|c| c.bridge.map(|b| b.kind));
+        let at = now.and_then(|t| choices.iter().position(|c| *c == t));
+        placement.bridge_choice = match at {
+            Some(i) if i + 1 < choices.len() => Some(choices[i + 1]),
+            _ => choices.first().copied(),
+        };
         return;
     }
     if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {

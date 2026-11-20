@@ -50,6 +50,8 @@ pub enum SimSheetStat {
     Cost,
     /// Corridor tool: why a stretch is blocked / which works it needs.
     Notes,
+    /// Corridor tool: bridge type (T cycles) and its material bill.
+    Bridge,
 }
 
 #[derive(Component)]
@@ -184,6 +186,7 @@ pub fn spawn_sim_road_power_sheets_bevy(
             spawn_label_row(root, &kit, "Length", "0 m", SimSheetStat::Points);
             spawn_label_row(root, &kit, "Ok / works / blocked", "0 / 0 / 0", SimSheetStat::Valid);
             spawn_label_row(root, &kit, "Truck trip", "-", SimSheetStat::Cost);
+            spawn_label_row(root, &kit, "Bridge", "-", SimSheetStat::Bridge);
             spawn_label_row(root, &kit, "Notes", "", SimSheetStat::Notes);
             root.spawn(row_node()).with_children(|row| {
                 spawn_toggle(row, &kit, "Grid snap", true, SimRoadSheetToggleGrid)
@@ -351,6 +354,13 @@ pub fn sync_sim_road_sheet_bevy(
                     "-".to_string()
                 }
             }
+            SimSheetStat::Bridge => match placement.summary.bridge {
+                Some((t, n)) => {
+                    let pick = if n > 1 { format!(" (T: {n} types fit)") } else { String::new() };
+                    format!("{}{pick}\n{}", t.label(), placement.summary.materials_line())
+                }
+                None => "-".to_string(),
+            },
             SimSheetStat::Notes => placement.summary.notes.join("
 "),
         };
@@ -428,7 +438,7 @@ pub fn sync_sim_power_sheet_bevy(
             SimSheetStat::Points => placement.control_points.len().to_string(),
             SimSheetStat::Valid => format!("{valid} of {total}"),
             SimSheetStat::Cost => valid.saturating_mul(12).to_string(),
-            SimSheetStat::Notes => String::new(),
+            SimSheetStat::Notes | SimSheetStat::Bridge => String::new(),
         };
         set_text(&mut t, &next);
     }

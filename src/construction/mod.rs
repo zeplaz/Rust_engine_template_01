@@ -402,9 +402,11 @@ impl Plugin for BuildPlanningPlugin {
             .add_systems(
                 Update,
                 (
-                    bridges::register_bridges_system,
+                    // After execute so a new line's picked bridge type is on its segment.
+                    bridges::register_bridges_system.after(execute_construction_plans_system),
                     bridges::bridge_flood_damage_system.after(bridges::register_bridges_system),
                     bridges::bridge_blast_damage_system.after(bridges::register_bridges_system),
+                    bridges::bridge_fire_damage_system.after(bridges::register_bridges_system),
                 ),
             )
             .init_resource::<crate::gui::hud::power_node_hover::PowerNodeHoverState>()

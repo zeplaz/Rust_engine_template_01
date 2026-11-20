@@ -1,6 +1,6 @@
 # PLAN-ROADS-v1 — roads and rail that freight uses: tiers, motorways, worn tracks, congestion, real travel time
 
-Status: **OPEN — PAUSED** (2026-11-20, operator halt after RD-0/1/3/6 + bridges; see Status, Open items and Next at the end). Owner lanes: `coder` (sim/logistics/construction), `designer` (build picker, road card, ribbons).
+Status: **OPEN — PAUSED** (2026-11-20, after RD-0/1/3/6 + bridges and the B/R open-items round; see Status, Open items and Next at the end). Owner lanes: `coder` (sim/logistics/construction), `designer` (build picker, road card, ribbons).
 Supersedes the road half of T-8 in [`plan_close_voxel_water_v1.md`](plan_close_voxel_water_v1.md) (clickable roads and
 bridge decks DONE there; this plan makes roads and rail matter).
 
@@ -268,26 +268,36 @@ that spans the length and depth (`choose_bridge_type`). Built in sections (one p
 
 ## Open items (operator list 2026-11-20 + found in captures)
 
-| # | Item | Notes |
-|---|------|-------|
-| B-1 | **Fire: timber bridges don't burn** | Timber beam / trestle sections should take fire damage from the fire grid (and burn as fuel) |
-| B-2 | **2D map: bridges look like roads** | Tactical map needs a bridge symbol per type and fallen-section gaps |
-| B-3 | **Repair: fallen sections stay down** | Belongs to D-7 repair/rebuild (deferred program); meanwhile only a rebuild of the line restores it |
-| B-4 | **Choice and cost** | Player can't pick a different bridge type (picker on the amber stretch); bridge materials (`materials_per_m`) are not charged — road/rail builds have no material bill yet either (RD-6 cost item) |
-| B-5 | **Flood load calibration** | Dam-burst peak load reached ~20 000 on the concrete bridge (strength 400): implies ~30 m/s or a large overtop term. Check `WaterTileProbe::flow` magnitudes at the burst, cap speed at a physical value, and decide whether any type should survive a full dam burst |
-| B-6 | Missile vs flood not separated in the dump | Record what dropped each section (blast / flood) so captures show cause |
-| R-1 | Leg book empty at end of run | Stale-leg prune (3 600 ticks) empties it under time skip, so trip time vs straight line is not measured; prune by count instead, or dump mid-run |
-| R-2 | `roads.drawn_segments` / picks 0 in the last captures | Voxel road surface empty at dump time (presentation mode at the end?); earlier capture had 11/11. Check the dump timing vs presentation |
-| R-3 | Placement tool feel | Not tried by hand: operator hands-on round for controls, preview, readout |
-| R-4 | Route assist ("follow terrain" auto path) | RD-6 item not built |
-| R-5 | Curved paths commit many short segments | Each sampled stretch is its own line; undo removes one stretch at a time — group a path into one undo step |
-| R-6 | Cut/fill and works are labels only | Bridges are modelled; cuts, fills, level crossings and overpasses are not applied to terrain or the graph yet |
-| R-7 | Pre-existing lib test failures | construction (fuel-break resource in 2 integration tests, demolish funnel, voxel massing), scenario (`CommitConstructionSiteEvent` message not initialised in 4 tests, trigger registry), economy (4 LOG-B/LOG-C supply-chain tests), AI faction activation — not caused by roads work; confirm on the previous commit |
-| R-8 | `step_logistics_orders_system` has 13 params | Pre-existing over the ≤ 8 rule; RD-3 added the leg book read |
+Round 2026-11-20 (b): code for B-1, B-2, B-4 (choice + bill), B-5, B-6, R-1, R-4, R-5, R-8; one dam
+capture. Status per item:
+
+| # | Item | Status | Notes |
+|---|------|--------|-------|
+| B-1 | Fire: timber bridges don't burn | DONE (code), not seen in a capture | `burns` per type in `bridge_types.ron` (timber 1.0, pontoon 0.4, Bailey 0.15, rest 0); `bridge_fire_damage_system` samples fire-overlay heat at each section once a sim second (rain ≥ 8.5 mm/h quarters it), records `fire_loss`, drops with cause `fire`; 3D model chars and shows flames; 2D mark turns orange. Burning bridges do not yet add fuel / spread fire themselves. Test `timber_burns_concrete_does_not_rain_slows_it`. Dam scene has no fire at its bridges, so no capture evidence |
+| B-2 | 2D map: bridges look like roads | DONE (code), not checked on screen | `sync_world_map_bridge_marks` (`render/world_map_network_mesh.rs`): wider deck in the type's colour, casing lines, splayed wing ticks at the abutments, pier ticks at joints, damage tint, fire orange, fallen section = gap with a red cross. Capture shot is the 3D view; needs a look on the tactical map |
+| B-3 | Repair: fallen sections stay down | OPEN — waits on D-7 | No change; a rebuild of the line is the only fix. Decision kept: repair belongs to the D-7 repair/rebuild program |
+| B-4 | Choice and cost | PARTIAL | **Choice DONE (code):** each stretch carries its bridge (`StretchBridge`); **T** cycles the types that span every crossing of the path (`bridge_choices`, `apply_bridge_choice`); the chosen type rides on the plan (`ConstructionPlan.bridge`) to the segment (`bridge_pref`) and `register_bridges_system` (now after execute) builds it if it fits. Road sheet row "Bridge": type, "(T: n types fit)", bill. **Bill DONE (shown):** `CorridorPathSummary.bridge_materials` = `materials_per_m` × span. **Charging OPEN:** corridors build per tick with no material gate at all (`CorridorConstructionBook`), so the bill is not taken from stock — needs the RD-6 cost item (a supply gate on corridor construction) for roads, rail and bridges together. Test `the_player_can_pick_another_bridge_type_and_sees_its_bill` |
+| B-5 | Flood load calibration | PARTIAL — decision needed | Current a structure takes is now capped (`structural_current_mps`: ≤ 9 m/s and ≤ 1.5·√(g·depth); the solver read up to its 50 m/s clamp over thin films), deck term ×4 (was ×10). Capture: concrete beam peak load **3 141** (was ~20 000), Bailey 2 640; both bridges still drop in the full dam burst (concrete strength 400 = 7.8× over). Open: decide whether a concrete / truss bridge should survive a full burst (raise strength, or accept wash-out as realistic) |
+| B-6 | Missile vs flood not separated | DONE | Per section `blast_loss`, `flood_loss`, `fire_loss`, `dropped_by` in the dump (`roads.bridges[].section_rows`). Capture: missile took 0.23 / 0.22 of two concrete sections, the flood finished them (`dropped_by: flood`) |
+| R-1 | Leg book empty at end of run | DONE | Prune by count (512, least recently driven first) instead of age. Capture: 5 legs at the end, road share 76%; haul 1→4 runs 314 m of road + 41 m off-road, 35.9 s at 12 m/s vs 28.6 s old straight-line estimate |
+| R-2 | `drawn_segments` 0 in earlier captures | EXPLAINED | Surface publishes only while the pixel world is on (`pixel_world_on`); this capture had it on (`presentation.pixel_world_active`) and shows 21/21 drawn, 21 picks, 1/1 deck ray. A 0 means the dump fired outside the 3D view |
+| R-3 | Placement tool feel | OPEN — operator | Hands-on round: controls, preview, readout, plus the new G (route assist) and T (bridge type) keys |
+| R-4 | Route assist | DONE (code), not tried by hand | **G** routes from the last point to the cursor: A* on a 2-tile grid (16 directions, so it can zig-zag up a slope), grade ≤ 95% of the mode's limit, water only if the mode bridges (×4 cost), then simplified so every stretch passes `check_corridor_path`. Failure note in the readout. Test `route_assist_winds_up_a_slope_a_straight_line_cannot_climb`. Note: curved preview re-samples the assist points as a spline |
+| R-5 | Curved path undo | DONE (code) | Plans from one placed path share a group (`ConstructionPlanQueue::begin_group`); history `RoadSegment.group`; Ctrl+Z / Ctrl+Y take the whole group (`ConstructionHistory::pop_step`). Test `a_placed_path_undoes_as_one_step` |
+| R-6 | Cut/fill and crossings are labels only | OPEN | Not started: terrain cut/fill (through `ground_deform`), level crossings and overpasses in the graph |
+| R-7 | Pre-existing lib test failures | OPEN — unchanged | This round's `construction::` run: 372 pass, the same 4 fail (2 integration tests on missing `FuelBreakCommitEvent` resource in `ExecuteSideEffects`, demolish funnel, voxel massing). Not checked against an older commit |
+| R-8 | `step_logistics_orders_system` 13 params | DONE | Split into a chain in the same domain: `sync_logistics_order_sites_system` (8), `apply_logistics_order_requests_system` (6), `step_logistics_orders_system` (5) |
+
+Capture (b), dam scene: all dam rows pass; deliveries path unchanged; 42 of 57 trucks on roads; debug
+perf avg 37 ms / p95 70 ms (was 36 / 67; debug rows fail their thresholds as before), 0 hitches.
 
 ## Next (when work resumes)
 
-1. B-5 calibration (one capture) and B-6 cause in the dump.
-2. R-1 leg-book measure, then RD-4 congestion.
-3. B-1 timber fire, B-2 2D bridge symbol, B-4 bridge type choice + materials with the RD-6 material bill.
-4. Then the order above (RD-2 → RD-5 → RD-7 rail → …).
+1. Operator: R-3 hands-on (tool feel, G, T) and a look at the 2D bridge marks (B-2).
+2. B-5 decision: should concrete / truss survive a full dam burst?
+3. RD-6 cost item: supply gate on corridor construction so road, rail and bridge bills are taken
+   from stock (closes B-4 charging).
+4. RD-4 congestion (leg book now holds measured legs).
+5. R-6 cut/fill + crossings applied; B-1 follow-up (burning bridge as fuel); R-7 test cleanup.
+6. Then the phase order (RD-2 → RD-5 → RD-7 rail → …); B-3 with D-7.
+

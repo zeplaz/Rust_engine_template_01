@@ -69,6 +69,10 @@ pub struct ConstructionPlan {
     pub intent: ConstructionIntent,
     pub status: ConstructionStatus,
     pub progress: f32,
+    /// Plans queued together from one placed path share a group (0 = alone): one undo step.
+    pub group: u64,
+    /// Bridge type picked in the tool for this line's water crossing (else the cheapest fits).
+    pub bridge: Option<crate::infrastructure::bridge_types::BridgeType>,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -81,10 +85,21 @@ pub struct ConstructionValidation {
 pub struct ConstructionPlanQueue {
     pub plans: Vec<ConstructionPlan>,
     next_id: u64,
+    next_group: u64,
 }
 
 impl ConstructionPlanQueue {
     pub fn enqueue(&mut self, intent: ConstructionIntent) -> u64 {
+        self.enqueue_in_group(intent, 0)
+    }
+
+    /// A fresh group id for plans that undo together (one placed path).
+    pub fn begin_group(&mut self) -> u64 {
+        self.next_group = self.next_group.wrapping_add(1).max(1);
+        self.next_group
+    }
+
+    pub fn enqueue_in_group(&mut self, intent: ConstructionIntent, group: u64) -> u64 {
         let id = self.next_id;
         self.next_id = self.next_id.wrapping_add(1);
         self.plans.push(ConstructionPlan {
@@ -92,6 +107,8 @@ impl ConstructionPlanQueue {
             intent,
             status: ConstructionStatus::Requested,
             progress: 0.0,
+            group,
+            bridge: None,
         });
         id
     }
@@ -284,6 +301,9 @@ pub fn execute_construction_plans_system(
                     intersections.register_or_extend(tail, entity);
                 }
             }
+            if let (Some(segment_id), Some(t)) = (apply.segment_id, plan.bridge) {
+                roads.set_bridge_pref(segment_id, t);
+            }
             if let Some(segment_id) = apply.segment_id {
                 super::history::record_road_execution(
                     history.as_mut(),
@@ -297,6 +317,7 @@ pub fn execute_construction_plans_system(
                     apply.marker_entities,
                     apply.edge_id,
                     apply.construction_record,
+                    plan.group,
                 );
             }
             // Natural breaks (road/rail) and player firebreaks clear fuel along the strip.

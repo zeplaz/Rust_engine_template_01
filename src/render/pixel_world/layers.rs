@@ -1107,12 +1107,17 @@ fn push_bridge_model(
             continue;
         }
         let hurt = sec.integrity < 0.75;
-        let col = if hurt {
+        let mut col = if hurt {
             let k = 0.6 + 0.4 * sec.integrity;
             [deck_col[0] * k + 0.08 * (1.0 - k), deck_col[1] * k, deck_col[2] * k, 1.0]
         } else {
             deck_col
         };
+        // Charred by fire: darker the more it has burned.
+        if sec.fire_loss > 0.02 {
+            let c = (1.0 - sec.fire_loss * 1.5).clamp(0.25, 1.0);
+            col = [col[0] * c, col[1] * c, col[2] * c, 1.0];
+        }
         // Deck + its structure depth.
         push_bridge_deck(buf, p0, p1, n, h0, h1, col);
         let mid = (p0 + p1) * 0.5;
@@ -1179,6 +1184,15 @@ fn push_bridge_model(
                     let cc = c + side_dir * width * 0.92 * sgn;
                     push_box(buf, cc, Vec2::new(sec_len / posts as f32 * 0.45, 0.035), along, hm, hm + 0.2, [0.28, 0.28, 0.3, 1.0]);
                 }
+            }
+        }
+        // Burning now: flame boxes along the deck.
+        if sec.fire_heat >= 0.15 {
+            let n_fl = ((sec_len / 0.8).ceil() as usize).max(1);
+            for f in 0..n_fl {
+                let c = p0 + (p1 - p0) * ((f as f32 + 0.5) / n_fl as f32);
+                let tall = 0.3 + 0.6 * sec.fire_heat;
+                push_box(buf, c, Vec2::new(0.18, width * 0.5), along, hm, hm + tall, [1.0, 0.45, 0.08, 1.0]);
             }
         }
         // Impact scorch on the deck.
