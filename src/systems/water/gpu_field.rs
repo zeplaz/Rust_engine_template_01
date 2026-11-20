@@ -259,6 +259,13 @@ pub fn publish_surface_water_gpu_field_system(
     mut meta: ResMut<SurfaceWaterGpuFieldMeta>,
     mut images: ResMut<Assets<Image>>,
 ) {
+    // The map field only moves on sim steps: repack when it (or the static water) changed.
+    if book.wired
+        && !field.is_changed()
+        && !static_depth.as_ref().is_some_and(|s| s.is_changed())
+    {
+        return;
+    }
     let t0 = Instant::now();
     let st = static_depth.as_deref();
     let (tw, th, step, data, wet, ox, oz) =

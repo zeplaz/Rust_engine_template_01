@@ -1,5 +1,6 @@
 //! DamFlood example scene — configures general water/gauge APIs from the valley fixture.
-//! Does not own depth truth; only enqueues [`SurfaceWaterRoiRequest`] like a player/scenario would.
+//! Does not own depth truth; only sets the river baseflow + gauges on the general water API
+//! (the map-sized field is seeded from the world by `systems/water`).
 
 use bevy::math::IVec2;
 use bevy::prelude::*;
@@ -13,7 +14,7 @@ use crate::systems::ecology::{
 use crate::systems::sim_control::SimTimeMicros;
 use crate::systems::water::{
     BarrierControlIntent, CoolingIntake, GaugeBook, GaugeId, GaugeSite, HydroGenerationState,
-    SlowDomainElapsedSecs, SurfaceWaterField, SurfaceWaterRoiRequest, SurfaceWaterRoiSpec,
+    SlowDomainElapsedSecs, SurfaceWaterBaseflow, SurfaceWaterField,
 };
 use crate::terrain::generation::cell_matrix::ChunkCellMatrix;
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
@@ -35,16 +36,16 @@ pub struct DamFloodCoolerTag {
     pub design_mw: f32,
 }
 
-/// One-shot: turn the authored valley fixture into a general ROI + gauge configuration.
+/// One-shot: turn the authored valley fixture into the river baseflow + gauge configuration. The
+/// river enters at the scene's north edge and leaves at the south edge of the map field.
 pub fn enqueue_dam_flood_water_config_system(
     scene: Option<Res<ActiveTestScene>>,
     mut latch: ResMut<DamFloodWaterConfigLatch>,
     mut book: ResMut<DamFloodBenchmarkBook>,
-    mut request: ResMut<SurfaceWaterRoiRequest>,
+    mut baseflow: ResMut<SurfaceWaterBaseflow>,
     mut gauges: ResMut<GaugeBook>,
-    field: Res<SurfaceWaterField>,
 ) {
-    if latch.enqueued || field.wired || request.pending.is_some() {
+    if latch.enqueued {
         return;
     }
     // Example scene active, or harness already marked the benchmark book seeded.
@@ -53,38 +54,8 @@ pub fn enqueue_dam_flood_water_config_system(
     }
 
     let fixture = load_dam_valley_fixture();
-    let fp = &fixture.forest_floodplain;
-    // Expand ROI to cover floodplain + all gauges (G1 upstream / G3 downstream).
-    let mut origin_x = fp.min.0.min(fp.max.0) - 8;
-    let mut origin_z = fp.min.1.min(fp.max.1) - 16;
-    let mut x1 = fp.min.0.max(fp.max.0) + 8;
-    let mut z1 = fp.min.1.max(fp.max.1) + 16;
-    for g in &fixture.gauges {
-        origin_x = origin_x.min(g.tile.0 - 4);
-        origin_z = origin_z.min(g.tile.1 - 4);
-        x1 = x1.max(g.tile.0 + 4);
-        z1 = z1.max(g.tile.1 + 4);
-    }
-    let width = (x1 - origin_x).max(16) as u32;
-    let height = (z1 - origin_z).max(16) as u32;
-
-    // S0 river: no barrier yet — player/scenario InstallBarrier + SetDamControl installs crest later.
-    request.pending = Some(SurfaceWaterRoiSpec {
-        origin_x,
-        origin_z,
-        width,
-        height,
-        inflow_m3s: fixture.river_baseflow_m3s,
-        min_release_m3s: fixture.river_baseflow_m3s * 0.1,
-        river_center_x: Some(fixture.narrows_tile.0),
-        // Corridor-scale river (authored valley half_width 3). Wider = fake lake.
-        river_half_width: 3,
-        river_seed_depth_m: 3.5,
-        barrier_world_z: None,
-        barrier_crest_m: 0.0,
-        barrier_half_span: fixture.dam_span_tiles.max(4) / 2,
-        synthetic_valley_if_no_dem: true,
-    });
+    baseflow.inflow_m3s = fixture.river_baseflow_m3s;
+    baseflow.min_release_m3s = fixture.river_baseflow_m3s * 0.1;
 
     gauges.seed_sites(fixture.gauges.iter().map(|g| GaugeSite {
         id: GaugeId::from_str_id(&g.id),
@@ -99,7 +70,7 @@ pub fn enqueue_dam_flood_water_config_system(
 
     info!(
         target: "dam_flood::scene_seed",
-        "enqueued SurfaceWaterRoiRequest from fixture={} (general water path)",
+        "configured river baseflow + gauges from fixture={} (map water field)",
         fixture.id
     );
 }
@@ -122,7 +93,7 @@ pub fn spawn_dam_flood_cooling_intakes_system(
     }
     latch.intakes_spawned = true;
 
-    // Reservoir-pool intakes: thresholds in absolute stage metres (bed≈0 after synthetic carve).
+    // Reservoir-pool intakes: thresholds in absolute stage metres above the reservoir bed.
     commands.spawn((
         Name::new("DamFloodNuclearCooler"),
         DamFloodCoolerTag { design_mw: 900.0 },
@@ -205,11 +176,8 @@ pub fn mirror_water_into_dam_book_system(
     book.spillway_flow_m3s = field.spillway_flow_m3s;
     book.breach_flow_m3s = field.breach_flow_m3s;
     book.solver_ms = field.solver_ms;
-    book.inundated_tiles = field
-        .depth_m
-        .iter()
-        .filter(|h| **h >= crate::systems::water::WET_DEPTH_M)
-        .count() as u32;
+    // Counted around the dam (its pool window): the map field also holds every other river.
+    book.inundated_tiles = field.wet_cells_in_pool_window();
     book.hydro_mw = hydro.power_mw;
 
     let mut thermal = 0.0_f32;

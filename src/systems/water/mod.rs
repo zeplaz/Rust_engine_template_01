@@ -6,6 +6,9 @@
 //!
 //! Used by player-built dams, hydro/thermal cooling intakes, floods, and the DamFlood
 //! **example** scene. The benchmark configures this API; it does not own a parallel solve.
+//!
+//! WM-1: **one map-sized field** (seeded once the world exists), solved over active tiles only
+//! (`tiles`, `step_kernel`); the solver runs on the sim clock.
 
 mod barrier_ops;
 mod bed_follow;
@@ -18,7 +21,9 @@ mod probe;
 mod salinity;
 mod solver_tick;
 mod static_depth;
+mod step_kernel;
 mod surface_water;
+mod tiles;
 mod visual_frame;
 mod gpu_field;
 mod water_runtime;
@@ -50,13 +55,15 @@ pub use gpu_field::{
 };
 pub use solver_tick::{
     project_surface_water_to_substrate_system, publish_gauges_from_solver_system,
-    seed_surface_water_from_request_system, step_surface_water_system, SurfaceWaterRoiRequest,
-    SurfaceWaterRoiSpec, SurfaceWaterSeedLatch, SurfaceWaterSolverPlugin,
+    seed_surface_water_system, step_surface_water_system, SurfaceWaterBaseflow,
+    SurfaceWaterSeedLatch, SurfaceWaterSolverPlugin, MAX_WATER_STEPS_PER_FRAME,
 };
 pub use surface_water::{
     hydro_power_mw, measure_dam_break_front_distance, ritter_front_speed_mps, BarrierHydraulics,
-    ReservoirLevelPool, SurfaceWaterField, SurfaceWaterMode, G_MPS2, SURFACE_WATER_SCHEMA_V1,
+    DamSite, PoolWindow, ReservoirLevelPool, SurfaceWaterField, SurfaceWaterMode, G_MPS2,
+    SURFACE_WATER_SCHEMA_V1,
 };
+pub use tiles::{WaterTileGrid, WATER_SLEEP_STEPS, WATER_TILE_CELLS};
 pub use probe::WaterTileProbe;
 pub use salinity::WorldWaterSalinity;
 pub use static_depth::WorldStaticWaterDepth;
@@ -283,8 +290,8 @@ impl Plugin for WaterSimPlugin {
                 Update,
                 bed_follow::follow_ground_deform_bed_system
                     .after(crate::terrain::ground_deform::GroundDeformSet::Drain)
-                    // Before the seed: a ROI seeded this frame samples post-drain chunk elevation.
-                    .before(seed_surface_water_from_request_system)
+                    // Before the seed: a field seeded this frame samples post-drain chunk elevation.
+                    .before(seed_surface_water_system)
                     .before(step_surface_water_system),
             )
             .add_systems(

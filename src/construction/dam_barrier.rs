@@ -261,6 +261,48 @@ fn turbine_availability_caps(integrity_01: f32) -> [f32; crate::systems::water::
     }
 }
 
+/// Max gap (tiles) between a dam footprint and a hydro powerhouse footprint for the two to be
+/// one scheme (the powerhouse sits at the dam toe).
+pub const DAM_HYDRO_LINK_TILES: i32 = 16;
+
+/// Link each dam to the nearest hydro powerhouse at its toe. Nothing ever set
+/// `DamBody::hydro_site`, so the control mirror zeroed every turbine and a dam with a working
+/// powerhouse made no power unless a scenario wrote the barrier intent after the mirror ran.
+/// Re-links when the linked plant disappears.
+pub fn link_dam_hydro_site_system(
+    mut dams: Query<(&mut DamBody, &SiteFootprint)>,
+    plants: Query<(Entity, &crate::strategic::PlannedSite, &SiteFootprint), Without<DamBody>>,
+) {
+    for (mut body, dam_fp) in &mut dams {
+        if body.hydro_site.is_some_and(|e| plants.contains(e)) {
+            continue;
+        }
+        let mut best: Option<(i32, Entity)> = None;
+        for (e, planned, fp) in &plants {
+            let is_hydro = planned
+                .catalog_id
+                .as_deref()
+                .is_some_and(|id| id.to_ascii_lowercase().contains("hydro"));
+            if !is_hydro {
+                continue;
+            }
+            let gap = dam_fp
+                .tiles
+                .iter()
+                .flat_map(|a| fp.tiles.iter().map(move |b| (a.x - b.x).abs().max((a.y - b.y).abs())))
+                .min()
+                .unwrap_or(i32::MAX);
+            if gap <= DAM_HYDRO_LINK_TILES && best.is_none_or(|(g, _)| gap < g) {
+                best = Some((gap, e));
+            }
+        }
+        let next = best.map(|(_, e)| e);
+        if body.hydro_site != next {
+            body.hydro_site = next;
+        }
+    }
+}
+
 /// When dam integrity falls, trip hydro units offline so the operator must augment
 /// release via mid/low outlets (or risk overtop). Writes site [`DamControl`] only
 /// (construction must not depend on scenario resources).
@@ -470,93 +512,18 @@ pub fn dam_spans_banks(
     water >= 1 && !(left_wet && right_wet)
 }
 
-/// Ensure a live [`SurfaceWaterRoiRequest`] exists for player-built dams (not scenario-only).
-/// Without this, barrier install waits forever because the ROI was never seeded outside DamFlood.
-pub fn ensure_dam_surface_water_roi_system(
-    dams: Query<(&ConstructionSite, &SiteFootprint, &DamBody)>,
-    field: Option<Res<SurfaceWaterField>>,
-    mut request: ResMut<crate::systems::water::SurfaceWaterRoiRequest>,
-) {
-    if request.pending.is_some() {
-        return;
-    }
-    if field.as_ref().is_some_and(|f| f.wired) {
-        return;
-    }
-    let mut origin_x = i32::MAX;
-    let mut origin_z = i32::MAX;
-    let mut max_x = i32::MIN;
-    let mut max_z = i32::MIN;
-    let mut river_x = None;
-    let mut any = false;
-    for (site, footprint, body) in &dams {
-        if site.archetype != SiteArchetype::Dam {
-            continue;
-        }
-        if site.phase != SiteConstructionPhase::Operational {
-            continue;
-        }
-        if body.barrier_installed {
-            continue;
-        }
-        for t in &footprint.tiles {
-            any = true;
-            origin_x = origin_x.min(t.x);
-            origin_z = origin_z.min(t.y);
-            max_x = max_x.max(t.x);
-            max_z = max_z.max(t.y);
-        }
-        if river_x.is_none() {
-            if let Some(mid) = footprint.tiles.get(footprint.tiles.len() / 2) {
-                river_x = Some(mid.x);
-            }
-        }
-    }
-    if !any {
-        return;
-    }
-    // Pad corridor upstream/downstream so reservoir + release sheet are visible.
-    let pad_x = 24_i32;
-    let pad_z = 40_i32;
-    origin_x -= pad_x;
-    origin_z -= pad_z;
-    max_x += pad_x;
-    max_z += pad_z;
-    let width = (max_x - origin_x + 1).max(32) as u32;
-    let height = (max_z - origin_z + 1).max(48) as u32;
-    request.pending = Some(crate::systems::water::SurfaceWaterRoiSpec {
-        origin_x,
-        origin_z,
-        width,
-        height,
-        inflow_m3s: 120.0,
-        min_release_m3s: 12.0,
-        river_center_x: river_x,
-        river_half_width: 3,
-        river_seed_depth_m: 3.0,
-        barrier_world_z: None,
-        barrier_crest_m: 0.0,
-        barrier_half_span: 6,
-        synthetic_valley_if_no_dem: false,
-    });
-    info!(
-        target: "construction::dam",
-        "player dam → SurfaceWaterRoiRequest {}x{} at ({},{})",
-        width, height, origin_x, origin_z
-    );
-}
-
-/// When a dam becomes operational (and the ROI is wired), enqueue crest install.
-/// Re-checks every frame until installed so late ROI seed still attaches the barrier.
+/// When a dam becomes operational (and the map water field is wired), enqueue crest install. The
+/// field covers the whole map, so a dam anywhere gets its barrier.
+/// Re-checks every frame until installed so a late field seed still attaches the barrier.
 pub fn install_barrier_from_operational_dam_system(
-    mut q: Query<(&ConstructionSite, &SiteFootprint, &mut DamBody)>,
+    mut q: Query<(Entity, &ConstructionSite, &SiteFootprint, &mut DamBody)>,
     mut request: ResMut<BarrierInstallRequest>,
     field: Option<Res<SurfaceWaterField>>,
 ) {
     if request.pending.is_some() {
         return;
     }
-    for (site, footprint, mut body) in &mut q {
+    for (dam, site, footprint, mut body) in &mut q {
         if site.archetype != SiteArchetype::Dam {
             continue;
         }
@@ -588,6 +555,7 @@ pub fn install_barrier_from_operational_dam_system(
             crest_m: body.crest_m.max(1.0),
             half_span: half.max(1),
             center_world_x: Some(mid.x),
+            dam: Some(dam),
         });
         body.barrier_installed = true;
         info!(

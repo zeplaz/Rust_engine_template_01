@@ -6,10 +6,7 @@ use bevy::prelude::*;
 use crate::engine::test_harness::ActiveTestScene;
 use crate::render::fx_spine::water_surface_visual::WaterSurfaceVisualCatalog;
 use crate::render::TileWorldFallbackRasterDirty;
-use crate::systems::water::{
-    SurfaceWaterField, SurfaceWaterRoiRequest, SurfaceWaterRoiSpec, WorldStaticWaterDepth,
-    WET_DEPTH_M,
-};
+use crate::systems::water::{SurfaceWaterField, WorldStaticWaterDepth, WET_DEPTH_M};
 use crate::terrain::family::default_terrain_families;
 use crate::terrain::generation::cell_matrix::ChunkCellMatrix;
 use crate::terrain::generation::chunk::Chunk;
@@ -308,12 +305,13 @@ pub fn author_dam_flood_valley_system(
     );
 }
 
+/// The valley rewrote the world's bed and static water: drop the map field so the water seed
+/// builds it again from the authored world, and re-run the scene's baseflow / gauge config.
 pub fn author_dam_flood_valley_rearm_water_system(
     scene: Option<Res<ActiveTestScene>>,
     latch: Res<DamFloodValleyAuthorLatch>,
     mut rear_latch: Local<bool>,
     mut raster_dirty: Option<ResMut<TileWorldFallbackRasterDirty>>,
-    mut water_req: Option<ResMut<SurfaceWaterRoiRequest>>,
     mut water_field: Option<ResMut<SurfaceWaterField>>,
     mut water_cfg: Option<ResMut<DamFloodWaterConfigLatch>>,
     mut seed_latch: Option<ResMut<crate::systems::water::SurfaceWaterSeedLatch>>,
@@ -333,37 +331,6 @@ pub fn author_dam_flood_valley_rearm_water_system(
     }
     if let Some(cfg) = water_cfg.as_mut() {
         cfg.enqueued = false;
-    }
-    let fixture = load_dam_valley_fixture();
-    if let Some(req) = water_req.as_mut() {
-        let fp = &fixture.forest_floodplain;
-        // Match scene_seed gauge coverage — G1 upstream / G3 downstream must sit inside the ROI
-        // or matrix s0/s7 gauges read zeros forever.
-        let mut origin_x = fp.min.0.min(fp.max.0) - 8;
-        let mut origin_z = fp.min.1.min(fp.max.1) - 16;
-        let mut x1 = fp.min.0.max(fp.max.0) + 8;
-        let mut z1 = fp.min.1.max(fp.max.1) + 16;
-        for g in &fixture.gauges {
-            origin_x = origin_x.min(g.tile.0 - 4);
-            origin_z = origin_z.min(g.tile.1 - 4);
-            x1 = x1.max(g.tile.0 + 4);
-            z1 = z1.max(g.tile.1 + 4);
-        }
-        req.pending = Some(SurfaceWaterRoiSpec {
-            origin_x,
-            origin_z,
-            width: (x1 - origin_x).max(16) as u32,
-            height: (z1 - origin_z).max(16) as u32,
-            inflow_m3s: fixture.river_baseflow_m3s,
-            min_release_m3s: fixture.river_baseflow_m3s * 0.1,
-            river_center_x: Some(fixture.narrows_tile.0),
-            river_half_width: RIVER_HALF_WIDTH,
-            river_seed_depth_m: CORRIDOR_DEPTH_M,
-            barrier_world_z: None,
-            barrier_crest_m: 0.0,
-            barrier_half_span: fixture.dam_span_tiles.max(4) / 2,
-            synthetic_valley_if_no_dem: true,
-        });
     }
 }
 

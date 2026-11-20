@@ -83,9 +83,10 @@ pub mod rubble;
 pub use dam_barrier::{
     attach_dam_body_on_commit_system, dam_integrity_progress_system,
     release_barrier_of_removed_dams_system, publish_dam_column_crests_system, dam_face_velocities_m_s,
+    link_dam_hydro_site_system,
     dam_column_crest_fraction,
     derate_turbines_from_dam_damage_system, dam_kind_site_suitable, dam_spans_banks,
-    dam_spans_banks_with_runtime, ensure_dam_surface_water_roi_system, erode_dam_columns_by_flow,
+    dam_spans_banks_with_runtime, erode_dam_columns_by_flow,
     install_barrier_from_operational_dam_system, leak_flow_from_integrity,
     mirror_dam_control_to_barrier_system, DamBody, DamControl, DamKind,
 };
@@ -557,12 +558,14 @@ impl Plugin for BuildPlanningPlugin {
                 Update,
                 (
                     attach_dam_body_on_commit_system,
-                    ensure_dam_surface_water_roi_system.after(attach_dam_body_on_commit_system),
                     install_barrier_from_operational_dam_system
-                        .after(ensure_dam_surface_water_roi_system),
+                        .after(attach_dam_body_on_commit_system),
                     dam_integrity_progress_system
                         .after(install_barrier_from_operational_dam_system),
-                    derate_turbines_from_dam_damage_system.after(dam_integrity_progress_system),
+                    link_dam_hydro_site_system.after(attach_dam_body_on_commit_system),
+                    derate_turbines_from_dam_damage_system
+                        .after(dam_integrity_progress_system)
+                        .after(link_dam_hydro_site_system),
                     mirror_dam_control_to_barrier_system
                         .after(derate_turbines_from_dam_damage_system),
                     structural_role::ensure_default_structural_roles_system
