@@ -73,6 +73,8 @@ pub struct ConstructionPlan {
     pub group: u64,
     /// Bridge type picked in the tool for this line's water crossing (else the cheapest fits).
     pub bridge: Option<crate::infrastructure::bridge_types::BridgeType>,
+    /// Ordered by a player / AI: the line's material bill is taken from stock.
+    pub charged: bool,
 }
 
 #[derive(Clone, Debug, Default)]
@@ -109,6 +111,7 @@ impl ConstructionPlanQueue {
             progress: 0.0,
             group,
             bridge: None,
+            charged: false,
         });
         id
     }
@@ -303,6 +306,9 @@ pub fn execute_construction_plans_system(
             }
             if let (Some(segment_id), Some(t)) = (apply.segment_id, plan.bridge) {
                 roads.set_bridge_pref(segment_id, t);
+            }
+            if let (Some(segment_id), true) = (apply.segment_id, plan.charged) {
+                roads.mark_charged(segment_id);
             }
             if let Some(segment_id) = apply.segment_id {
                 super::history::record_road_execution(

@@ -887,8 +887,13 @@ pub fn build_clear_pending_queue_system(
     bindings: Res<InputBindings>,
     strip: Res<BuildStripState>,
     mut pending: ResMut<PendingConstructionQueue>,
+    tool: Res<ActiveBuildTool>,
 ) {
     if strip.active == ToolContext::None {
+        return;
+    }
+    // Backspace takes back a line point there, it must not also wipe the blueprints.
+    if super::roads::corridor_tool_kind(tool.tool).is_some() || matches!(tool.tool, BuildTool::PowerLine(_)) {
         return;
     }
     if keys.just_pressed(bindings.clear_pending_blueprints) {
@@ -1033,11 +1038,22 @@ pub fn build_cancel_ghost_system(
     mut rail: ResMut<super::rail::ActiveRailPlacement>,
     mut zone: ResMut<super::zones::ActiveZonePaint>,
     mut latch: ResMut<super::build_mode::BuildEscCancelLatch>,
+    pointer_gate: Option<Res<crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate>>,
 ) {
     if strip.active == ToolContext::None && tool.tool == BuildTool::None {
         return;
     }
     if !buttons.just_pressed(MouseButton::Right) {
+        return;
+    }
+    // Line tools use RMB to take back a point (and right-drag pans the map): never drop them here.
+    if super::roads::corridor_tool_kind(tool.tool).is_some() || matches!(tool.tool, BuildTool::PowerLine(_)) {
+        return;
+    }
+    // A right-click on a panel is not a map cancel.
+    if crate::gui::hud::simulation_pointer_gate::simulation_tool_pointer(pointer_gate.as_deref())
+        != crate::gui::hud::simulation_pointer_gate::SimulationToolPointer::Free
+    {
         return;
     }
     // Design: RMB cancels lock → Preview while building/defense tool stays armed.

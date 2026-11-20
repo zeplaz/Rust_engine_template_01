@@ -145,6 +145,15 @@ impl StretchBridge {
     }
 }
 
+/// The network line a tool kind lays (none for a firebreak).
+fn line_kind(kind: CorridorToolKind) -> Option<super::corridor_network::CorridorKind> {
+    match kind {
+        CorridorToolKind::Road(tier) => Some(super::corridor_network::CorridorKind::Road { tier, lanes: tier.spec().lanes_default }),
+        CorridorToolKind::Rail => Some(super::corridor_network::CorridorKind::Rail { profile: String::new() }),
+        CorridorToolKind::Firebreak => None,
+    }
+}
+
 fn carries_of(kind: CorridorToolKind) -> BridgeCarries {
     match kind {
         CorridorToolKind::Road(tier) => BridgeCarries::Road(tier),
@@ -362,6 +371,8 @@ pub struct CorridorPathSummary {
     pub notes: Vec<String>,
     /// Bridge materials for the buildable stretches (cargo, units), largest first.
     pub bridge_materials: Vec<(String, f32)>,
+    /// Whole bill (line surface + bridges) for the buildable stretches, largest first.
+    pub materials: Vec<(String, f32)>,
     /// Bridge type being built (when the path crosses water) and how many types fit.
     pub bridge: Option<(BridgeType, usize)>,
 }
@@ -371,6 +382,15 @@ impl CorridorPathSummary {
     #[must_use]
     pub fn materials_line(&self) -> String {
         self.bridge_materials.iter().map(|(c, n)| format!("{c} {n:.0}")).collect::<Vec<_>>().join(", ")
+    }
+
+    /// Whole bill as "Gravel 300, Fuel 15" ("-" when free).
+    #[must_use]
+    pub fn bill_line(&self) -> String {
+        if self.materials.is_empty() {
+            return "-".into();
+        }
+        self.materials.iter().map(|(c, n)| format!("{c} {n:.0}")).collect::<Vec<_>>().join(", ")
     }
 }
 
@@ -410,6 +430,13 @@ pub fn summarize_path(checks: &[StretchCheck], kind: CorridorToolKind) -> Corrid
     }
     s.notes = blocked.into_iter().chain(works).take(4).collect();
     s.bridge_materials.sort_by(|a, b| b.1.total_cmp(&a.1));
+    if let Some(k) = line_kind(kind) {
+        super::corridor_works::add_to_bill(&mut s.materials, &super::corridor_works::line_materials_per_m(&k), s.length_m);
+    }
+    for (c, q) in &s.bridge_materials {
+        super::corridor_works::add_to_bill(&mut s.materials, &[(c.clone(), *q)], 1.0);
+    }
+    s.materials.sort_by(|a, b| b.1.total_cmp(&a.1));
     if let Some((t, _)) = s.bridge {
         s.bridge = Some((t, bridge_choices(checks).len()));
     }
@@ -438,8 +465,9 @@ pub fn commit_corridor_path(checks: &[StretchCheck], kind: CorridorToolKind, que
         };
         queue.enqueue_in_group(ConstructionIntent { entity_type, world_position: (c.a + c.b) * 0.5, rotation: 0.0 }, group);
         // The bridge type the tool showed is the one built.
-        if let (Some(b), Some(plan)) = (c.bridge, queue.plans.last_mut()) {
-            plan.bridge = Some(b.kind);
+        if let Some(plan) = queue.plans.last_mut() {
+            plan.bridge = c.bridge.map(|b| b.kind);
+            plan.charged = kind != CorridorToolKind::Firebreak;
         }
         n += 1;
     }

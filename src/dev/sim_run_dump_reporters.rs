@@ -963,6 +963,8 @@ pub fn flush_sim_run_dump(
         "dam_site",
         "dam_flood_history",
         "roads",
+        "corridor_works",
+        "road_flow",
         "voxel_camera",
         "vegetation",
         "canopy",

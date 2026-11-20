@@ -65,6 +65,7 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
         .init_resource::<super::rail::ActiveRailPlacement>()
         .init_resource::<super::roads::IntersectionRegistry>()
         .init_resource::<super::history::ConstructionHistory>()
+        .init_resource::<crate::systems::ecology::PendingFuelBreaks>()
         .init_resource::<HydrologyEventQueue>()
         .init_resource::<HydrologyConstructionCouplingStats>()
         .insert_resource(params)
@@ -155,6 +156,7 @@ fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
         .init_resource::<super::rail::ActiveRailPlacement>()
         .init_resource::<super::roads::IntersectionRegistry>()
         .init_resource::<super::history::ConstructionHistory>()
+        .init_resource::<crate::systems::ecology::PendingFuelBreaks>()
         .insert_resource(params)
         .insert_resource(queue)
         .add_systems(

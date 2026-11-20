@@ -76,6 +76,8 @@ pub struct CorridorSegment {
     pub nodes: Vec<BuildSiteTile>,
     /// Bridge type the builder picked for this line's water crossings (None = cheapest that fits).
     pub bridge_pref: Option<crate::infrastructure::bridge_types::BridgeType>,
+    /// Built by a player / AI order: its material bill is taken from stock (`corridor_works`).
+    pub charged: bool,
 }
 
 impl CorridorSegment {
@@ -224,7 +226,7 @@ impl CorridorNetwork {
         nodes.push(tail);
         let id = self.next_id;
         self.next_id = self.next_id.wrapping_add(1);
-        self.segments.push(CorridorSegment { id, kind, nodes, bridge_pref: None });
+        self.segments.push(CorridorSegment { id, kind, nodes, bridge_pref: None, charged: false });
         self.revision = self.revision.wrapping_add(1);
         Some(id)
     }
@@ -233,6 +235,13 @@ impl CorridorNetwork {
     pub fn set_bridge_pref(&mut self, id: u32, t: crate::infrastructure::bridge_types::BridgeType) {
         if let Some(s) = self.segments.iter_mut().find(|s| s.id == id) {
             s.bridge_pref = Some(t);
+        }
+    }
+
+    /// Marks a line as built to order (its works bill is charged).
+    pub fn mark_charged(&mut self, id: u32) {
+        if let Some(s) = self.segments.iter_mut().find(|s| s.id == id) {
+            s.charged = true;
         }
     }
 

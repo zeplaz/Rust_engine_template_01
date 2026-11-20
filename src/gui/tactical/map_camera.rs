@@ -584,7 +584,8 @@ fn map_camera_apply_input(
     }
 
     let default_z = default_map_zoom_for_world(None);
-    if keys.just_pressed(bindings.map_reset_zoom) {
+    let ctrl = keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight);
+    if keys.just_pressed(bindings.map_reset_zoom) && !ctrl {
         pose.scale = Vec3::splat(default_z);
     }
 

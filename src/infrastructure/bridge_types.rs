@@ -80,7 +80,8 @@ pub struct BridgeTypeSpec {
     pub max_depth_m: f32,
     /// Pier spacing (m); a crossing no longer than this is one span with no piers in the water.
     pub span_m: f32,
-    /// Load (water depth m × speed² m²/s²) the structure takes without damage.
+    /// Design flood load (water depth m × speed² m²/s²) taken indefinitely; up to 3× it scours the
+    /// piers over minutes, beyond 3× a span fails within seconds.
     pub strength: f32,
     /// Deck soffit above the water at build time (m).
     pub clearance_m: f32,
@@ -154,15 +155,15 @@ fn default_table() -> &'static BridgeTypeTable {
     DEFAULT.get_or_init(|| BridgeTypeTable {
         schema_version: 1,
         types: vec![
-            row(BridgeType::Culvert, 16.0, 3.0, 16.0, 40.0, 0.5, 0.2, false, 0.0, 150.0, &[("Gravel", 6.0), ("Concrete", 1.0)]),
-            row(BridgeType::TimberBeam, 24.0, 4.0, 12.0, 35.0, 2.0, 1.0, false, 0.0, 40.0, &[("Timber", 2.0)]),
-            row(BridgeType::TimberTrestle, 150.0, 8.0, 6.0, 30.0, 3.0, 1.0, false, 0.0, 35.0, &[("Timber", 3.0)]),
+            row(BridgeType::Culvert, 16.0, 3.0, 16.0, 60.0, 0.5, 0.2, false, 0.0, 150.0, &[("Gravel", 6.0), ("Concrete", 1.0)]),
+            row(BridgeType::TimberBeam, 24.0, 4.0, 12.0, 90.0, 2.0, 1.0, false, 0.0, 40.0, &[("Timber", 2.0)]),
+            row(BridgeType::TimberTrestle, 150.0, 8.0, 6.0, 70.0, 3.0, 1.0, false, 0.0, 35.0, &[("Timber", 3.0)]),
             row(BridgeType::Pontoon, 300.0, 100.0, 300.0, 0.0, 0.0, 0.0, true, 2.0, 30.0, &[("Steel", 0.6), ("Timber", 0.5)]),
-            row(BridgeType::Bailey, 200.0, 8.0, 60.0, 120.0, 3.0, 1.0, false, 0.0, 70.0, &[("Steel", 1.2)]),
-            row(BridgeType::SteelGirder, 600.0, 25.0, 40.0, 250.0, 5.0, 1.0, false, 0.0, 120.0, &[("Steel", 2.5), ("Concrete", 3.0)]),
-            row(BridgeType::PrestressedConcrete, 1000.0, 30.0, 35.0, 400.0, 6.0, 1.0, false, 0.0, 160.0, &[("Concrete", 8.0), ("Steel", 1.0)]),
-            row(BridgeType::SteelTruss, 400.0, 30.0, 100.0, 300.0, 8.0, 1.0, false, 0.0, 110.0, &[("Steel", 4.0), ("Concrete", 2.0)]),
-            row(BridgeType::StoneArch, 80.0, 6.0, 20.0, 350.0, 3.0, 0.6, false, 0.0, 200.0, &[("Limestone", 12.0), ("Cement", 1.0)]),
+            row(BridgeType::Bailey, 200.0, 8.0, 60.0, 300.0, 3.0, 1.0, false, 0.0, 70.0, &[("Steel", 1.2)]),
+            row(BridgeType::SteelGirder, 600.0, 25.0, 40.0, 1000.0, 5.0, 1.0, false, 0.0, 120.0, &[("Steel", 2.5), ("Concrete", 3.0)]),
+            row(BridgeType::PrestressedConcrete, 1000.0, 30.0, 35.0, 1500.0, 6.0, 1.0, false, 0.0, 160.0, &[("Concrete", 8.0), ("Steel", 1.0)]),
+            row(BridgeType::SteelTruss, 400.0, 30.0, 100.0, 1200.0, 8.0, 1.0, false, 0.0, 110.0, &[("Steel", 4.0), ("Concrete", 2.0)]),
+            row(BridgeType::StoneArch, 80.0, 6.0, 20.0, 1400.0, 3.0, 0.6, false, 0.0, 200.0, &[("Limestone", 12.0), ("Cement", 1.0)]),
         ],
     })
 }

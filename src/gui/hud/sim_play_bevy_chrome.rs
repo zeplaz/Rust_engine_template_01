@@ -275,8 +275,13 @@ pub(crate) fn sync_context_tray_power_repair_list(
         .cloned()
         .unwrap_or_else(|| TextFont::from_font_size(11.0));
     for (entity, mut vis, mut node) in &mut root {
-        *vis = if show { Visibility::Visible } else { Visibility::Hidden };
-        node.max_height = Val::Px(body_h);
+        let want = if show { Visibility::Visible } else { Visibility::Hidden };
+        if *vis != want {
+            *vis = want;
+        }
+        if node.max_height != Val::Px(body_h) {
+            node.max_height = Val::Px(body_h);
+        }
         if !show || key == stamp.key {
             continue;
         }

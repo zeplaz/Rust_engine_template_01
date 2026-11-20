@@ -82,6 +82,9 @@ pub struct RoadTierSpec {
     pub wet_speed_mul: f32,
     /// Water depth (m) that closes the road.
     pub flood_close_m: f32,
+    /// Materials per metre of road (cargo, units) — the corridor works bill.
+    #[serde(default)]
+    pub materials_per_m: Vec<(String, f32)>,
 }
 
 impl RoadTierSpec {
@@ -98,6 +101,26 @@ pub struct RoadTierTable {
     /// Cross-country truck speed (km/h) until the off-road speed field (RD-2) lands.
     pub offroad_speed_kmh: f32,
     pub tiers: Vec<RoadTierSpec>,
+    /// Materials per metre of railway (ballast, rails, sleepers).
+    #[serde(default = "default_rail_materials")]
+    pub rail_materials_per_m: Vec<(String, f32)>,
+}
+
+fn default_rail_materials() -> Vec<(String, f32)> {
+    vec![("Gravel".into(), 1.0), ("Steel".into(), 0.25), ("Timber".into(), 0.3)]
+}
+
+/// Default bill per metre of each tier (cargo, units).
+fn default_tier_materials(tier: RoadTier) -> Vec<(String, f32)> {
+    let m: &[(&str, f32)] = match tier {
+        RoadTier::Track => &[],
+        RoadTier::Dirt => &[("Fuel", 0.02)],
+        RoadTier::Gravel => &[("Gravel", 0.6), ("Fuel", 0.03)],
+        RoadTier::Paved => &[("Gravel", 0.8), ("Cement", 0.1), ("Fuel", 0.05)],
+        RoadTier::Concrete => &[("Gravel", 0.6), ("Concrete", 1.2), ("Steel", 0.05)],
+        RoadTier::Motorway => &[("Gravel", 1.5), ("Concrete", 2.5), ("Steel", 0.15), ("Fuel", 0.1)],
+    };
+    m.iter().map(|(c, q)| ((*c).to_owned(), *q)).collect()
 }
 
 impl RoadTierTable {
@@ -119,6 +142,7 @@ const TABLE_PATH: &str = "assets/config/infrastructure/road_tiers.ron";
 
 fn row(tier: RoadTier, speed_kmh: f32, lanes: u8, cap: f32, wet: f32, flood: f32) -> RoadTierSpec {
     RoadTierSpec {
+        materials_per_m: default_tier_materials(tier),
         tier,
         speed_kmh,
         lanes_default: lanes,
@@ -133,6 +157,7 @@ fn default_table() -> &'static RoadTierTable {
     DEFAULT.get_or_init(|| RoadTierTable {
         schema_version: 1,
         offroad_speed_kmh: 18.0,
+        rail_materials_per_m: default_rail_materials(),
         tiers: vec![
             row(RoadTier::Track, 25.0, 1, 40.0, 0.4, 0.3),
             row(RoadTier::Dirt, 35.0, 1, 60.0, 0.5, 0.3),

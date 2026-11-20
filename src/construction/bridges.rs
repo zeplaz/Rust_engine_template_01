@@ -33,8 +33,13 @@ use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 pub const BRIDGE_WATER_DEPTH_M: f32 = 0.3;
 /// Structure depth under the deck top (m): water above `deck_m - DECK_DEPTH_M` hits the deck.
 pub const DECK_DEPTH_M: f32 = 1.5;
-/// Integrity lost per second per unit of flood load over strength.
-const DAMAGE_PER_S: f32 = 0.02;
+/// Load past `strength` (the design flood, taken indefinitely) up to this many times `strength`
+/// only scours the piers slowly; past it the structure fails within seconds.
+const ULTIMATE_OVER_STRENGTH: f32 = 3.0;
+/// Integrity lost per second at the ultimate load while scouring (≈ 5 min of sustained load).
+const SCOUR_PER_S: f32 = 0.003;
+/// Integrity lost per second per multiple of the ultimate load beyond it.
+const COLLAPSE_PER_S: f32 = 0.06;
 /// Water on the deck counts this much more than on the piers (broad face, debris raft).
 const DECK_LOAD_MUL: f32 = 4.0;
 /// Fastest flood current a structure meets (m/s): dam-break fronts run ~5–10 m/s; the solver's
@@ -375,12 +380,22 @@ pub fn section_water_load(
 #[must_use]
 pub fn flood_integrity_after(t: BridgeType, integrity: f32, load: f32, current_mps: f32, dt_s: f32) -> f32 {
     let spec = t.spec();
-    let over = if spec.floating {
-        (current_mps / spec.max_current_mps.max(0.1) - 1.0).max(0.0) * 3.0
+    let rate = if spec.floating {
+        (current_mps / spec.max_current_mps.max(0.1) - 1.0).max(0.0) * 3.0 * COLLAPSE_PER_S
     } else {
-        (load / spec.strength.max(1e-3) - 1.0).max(0.0)
+        // Real bridges: a design flood does nothing, a bigger one scours the piers over minutes,
+        // a dam-break wall well past the design load takes a span out at once.
+        let strength = spec.strength.max(1e-3);
+        let ultimate = strength * ULTIMATE_OVER_STRENGTH;
+        if load <= strength {
+            0.0
+        } else if load <= ultimate {
+            SCOUR_PER_S * (load - strength) / (ultimate - strength)
+        } else {
+            SCOUR_PER_S + COLLAPSE_PER_S * (load / ultimate)
+        }
     };
-    (integrity - DAMAGE_PER_S * over * dt_s).max(0.0)
+    (integrity - rate * dt_s).max(0.0)
 }
 
 /// Floods wear bridge sections down (sim time).
@@ -502,6 +517,10 @@ const RAIN_STOPS_BURN_MM_H: f32 = 8.5;
 const BURN_HEAT_MIN: f32 = 0.15;
 /// Seconds between fire samples.
 const FIRE_SAMPLE_S: f32 = 1.0;
+/// Share of its heat a burning timber span keeps per sample (it burns until its wood is gone).
+const DECK_BURN_KEEP: f32 = 0.97;
+/// Share of a burning span's heat that reaches the spans either side per sample (× `burns`).
+const DECK_BURN_PASS: f32 = 0.6;
 
 /// Integrity after `dt_s` of fire heat `heat` (0..1) on a section of a type that `burns`.
 #[must_use]
@@ -554,6 +573,8 @@ pub fn bridge_fire_damage_system(
     )>,
     mut book: ResMut<BridgeBook>,
     mut last: Local<Option<u64>>,
+    mut effects: Option<ResMut<crate::sim::effects::SimEffectQueue>>,
+    raster: Option<Res<crate::strategic::StrategicRasterConfig>>,
 ) {
     let Some(now) = sim_time.map(|t| t.0) else {
         return;
@@ -572,6 +593,11 @@ pub fn bridge_fire_damage_system(
         return;
     }
     let index = crate::systems::fire::entity_exposure::build_heat_index(chunks.iter());
+    let cells_per_chunk = raster
+        .as_ref()
+        .map(|r| r.cells_per_chunk)
+        .unwrap_or_else(|| crate::strategic::StrategicRasterConfig::default().cells_per_chunk);
+    let mut sparks: Vec<(IVec2, f32)> = Vec::new();
     let mut changed = false;
     for b in &mut book.bridges {
         let burns = b.bridge_type.spec().burns;
@@ -580,11 +606,28 @@ pub fn bridge_fire_damage_system(
         }
         let (a, d) = (b.a, b.b - b.a);
         let label = b.bridge_type.label();
-        for s in b.sections.iter_mut().filter(|s| !s.fallen) {
+        // The deck carries the fire itself: a burning span keeps burning while wood is left and
+        // passes fire to the spans either side (water under it stops ground fire, not this).
+        let prev_heat: Vec<f32> = b.sections.iter().map(|s| if s.fallen { 0.0 } else { s.fire_heat }).collect();
+        let last_k = b.sections.len().saturating_sub(1);
+        for (k, s) in b.sections.iter_mut().enumerate().filter(|(_, s)| !s.fallen) {
             let mid = a + d * ((s.t0 + s.t1) * 0.5);
-            let (heat, rain) = fire_heat_near(&index, IVec2::new(mid.x.floor() as i32, mid.y.floor() as i32));
+            let (grid_heat, rain) = fire_heat_near(&index, IVec2::new(mid.x.floor() as i32, mid.y.floor() as i32));
+            let wet = rain >= RAIN_STOPS_BURN_MM_H;
+            let own = if s.integrity > 0.05 { prev_heat[k] * if wet { 0.6 } else { DECK_BURN_KEEP } } else { 0.0 };
+            let side = [k.checked_sub(1), (k < last_k).then_some(k + 1)]
+                .into_iter()
+                .flatten()
+                .map(|j| prev_heat[j] * DECK_BURN_PASS * burns)
+                .fold(0.0_f32, f32::max);
+            let heat = grid_heat.max(own).max(side).min(1.0);
             let was_hot = s.fire_heat >= BURN_HEAT_MIN;
             s.fire_heat = heat;
+            // End spans set the bank they stand on alight.
+            if heat >= BURN_HEAT_MIN && (k == 0 || k == last_k) {
+                let end = if k == 0 { a } else { b.b };
+                sparks.push((end.floor().as_ivec2(), (0.3 * heat * burns).clamp(0.2, 0.8)));
+            }
             let after = fire_integrity_after(burns, s.integrity, heat, rain, dt_s);
             if after < s.integrity || was_hot != (heat >= BURN_HEAT_MIN) {
                 changed = true;
@@ -597,6 +640,26 @@ pub fn bridge_fire_damage_system(
                 bevy::log::info!(target: "construction::bridges", kind = label, "bridge section burned through");
             }
         }
+    }
+    if let (Some(effects), false) = (effects.as_mut(), sparks.is_empty()) {
+        let cells = sparks
+            .into_iter()
+            .filter(|(t, _)| t.x >= 0 && t.y >= 0)
+            .map(|(t, spark)| {
+                crate::scenario::ignite::ignite_cell_from_world_tile(
+                    crate::scenario::scenario_steps::ScenarioWorldTile { tile_x: t.x as u32, tile_z: t.y as u32 },
+                    cells_per_chunk,
+                    spark,
+                )
+            })
+            .collect();
+        crate::scenario::ignite::enqueue_scenario_ignite_sim_effect(
+            effects,
+            crate::sim::effects::SimEffectSource::Construction,
+            "bridge-fire",
+            None,
+            cells,
+        );
     }
     if changed {
         book.revision = book.revision.wrapping_add(1);
@@ -655,6 +718,16 @@ mod tests {
         // A large warhead on the same spot drops that span.
         apply_blast_to_bridges(&mut book, hit, 64.0, 220.0);
         assert!(book.bridges[0].fallen_sections() >= 1);
+    }
+
+    #[test]
+    fn a_big_flood_scours_concrete_slowly_only_a_far_bigger_one_drops_it_fast() {
+        let s = BridgeType::PrestressedConcrete.spec().strength;
+        // Twice the design load for a minute: scarred, standing.
+        let scoured = flood_integrity_after(BridgeType::PrestressedConcrete, 1.0, 2.0 * s, 0.0, 60.0);
+        assert!(scoured < 1.0 && scoured > 0.8, "{scoured}");
+        // Five times the design load: down within half a minute.
+        assert_eq!(flood_integrity_after(BridgeType::PrestressedConcrete, 1.0, 5.0 * s, 0.0, 30.0), 0.0);
     }
 
     #[test]

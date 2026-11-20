@@ -49,6 +49,8 @@ mod corridor_transport;
 pub mod corridor_network;
 pub mod corridor_tool;
 pub mod bridges;
+pub mod corridor_works;
+pub mod corridor_grading;
 mod defense_concrete_stock;
 mod defense_staging_stock;
 mod blast;
@@ -399,6 +401,8 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<ConstructionWorldRevision>()
             .init_resource::<CorridorNetwork>()
             .init_resource::<bridges::BridgeBook>()
+            .init_resource::<corridor_works::CorridorWorksBook>()
+            .init_resource::<corridor_works::CorridorWorksCaps>()
             .add_systems(
                 Update,
                 (
@@ -407,6 +411,14 @@ impl Plugin for BuildPlanningPlugin {
                     bridges::bridge_flood_damage_system.after(bridges::register_bridges_system),
                     bridges::bridge_blast_damage_system.after(bridges::register_bridges_system),
                     bridges::bridge_fire_damage_system.after(bridges::register_bridges_system),
+                    (
+                        corridor_works::register_corridor_works_system,
+                        corridor_works::supply_corridor_works_system,
+                        corridor_works::publish_corridor_works_caps_system,
+                    )
+                        .chain()
+                        .after(bridges::register_bridges_system),
+                    corridor_grading::grade_new_corridors_system.after(bridges::register_bridges_system),
                 ),
             )
             .init_resource::<crate::gui::hud::power_node_hover::PowerNodeHoverState>()
@@ -445,10 +457,12 @@ impl Plugin for BuildPlanningPlugin {
                 Update,
                 (
                     sync_road_placement_width_from_tool,
-                    update_road_path_preview_system.after(sync_road_placement_width_from_tool),
+                    road_path_input_system
+                        .after(sync_road_placement_width_from_tool)
+                        .after(crate::gui::hud::simulation_pointer_gate::PointerGateSet::Publish),
+                    update_road_path_preview_system.after(road_path_input_system),
                     finish_pending_corridor_path.after(update_road_path_preview_system),
                     sync_road_path_build_preview.after(finish_pending_corridor_path),
-                    road_path_input_system.after(sync_road_path_build_preview),
                     zone_paint_input_system,
                     visual_authority::clear_construction_visual_requests,
                     visual_authority::sync_road_visual_requests,

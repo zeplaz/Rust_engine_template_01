@@ -664,9 +664,14 @@ pub struct LogisticsOrdersAction(pub PanelAction);
 #[derive(Default)]
 struct OrdersPanelStamp {
     key: u64,
+    /// Frames since the last rebuild (data-only changes wait for ~0.5 s).
+    frames: u32,
     tab: Option<OrdersTab>,
     scroll: Vec2,
 }
+
+/// Frames between rebuilds for data-only changes.
+const ORDERS_PANEL_DATA_REFRESH_FRAMES: u32 = 30;
 
 pub struct LogisticsOrdersPanelPlugin;
 
@@ -716,7 +721,6 @@ fn site_label(snap: &LogisticsOrdersSnapshot, id: Option<SiteId>) -> String {
 fn panel_stamp(snap: &LogisticsOrdersSnapshot, state: &LogisticsOrdersPanelState) -> u64 {
     let mut h = std::collections::hash_map::DefaultHasher::new();
     format!("{state:?}").hash(&mut h);
-    snap.tick.hash(&mut h);
     snap.orders.len().hash(&mut h);
     snap.demands.len().hash(&mut h);
     snap.vehicles.len().hash(&mut h);
@@ -1444,9 +1448,15 @@ fn sync_logistics_orders_bevy_panel(
     }
 
     let next = panel_stamp(&snap.0, state.as_ref());
+    stamp.frames = stamp.frames.saturating_add(1);
     if !roots.is_empty() && stamp.key == next {
         return;
     }
+    // Live numbers (stock, trips) refresh twice a second; a click on the panel rebuilds at once.
+    if !roots.is_empty() && !state.is_changed() && stamp.frames < ORDERS_PANEL_DATA_REFRESH_FRAMES {
+        return;
+    }
+    stamp.frames = 0;
     // Keep the scroll offset across rebuilds unless the player changed tab.
     if let Some((_, pos)) = roots.iter().next() {
         stamp.scroll = pos.0;

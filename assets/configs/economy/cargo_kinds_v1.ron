@@ -9,6 +9,7 @@
         (tag: "Concrete", class: "Bulk", consumers: ["Construction", "Depot"], notes: "Civ construction"),
         (tag: "Cement", class: "Bulk", consumers: ["Plant", "Depot"], notes: "Concrete chain"),
         (tag: "Gravel", class: "Bulk", consumers: ["Plant"], notes: "Aggregate"),
+        (tag: "Timber", class: "Bulk", consumers: ["Construction", "Depot"], notes: "Timber bridges, rail sleepers"),
         (tag: "Limestone", class: "Bulk", consumers: ["Plant"], notes: "Kiln feed"),
         (tag: "Bauxite", class: "Bulk", consumers: ["Plant"], notes: "Aluminum chain"),
         (tag: "Alumina", class: "Bulk", consumers: ["Plant"], notes: "Aluminum chain"),

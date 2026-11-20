@@ -19,6 +19,7 @@ impl Plugin for NavigationSchedulePlugin {
                 ),
             )
             .init_resource::<crate::economy::logistics::orders::SiteLegRouteBook>()
+            .init_resource::<crate::economy::logistics::road_flow::RoadFlowBook>()
             .add_systems(
                 Startup,
                 crate::systems::navigation::load_logistics_path_concerns_on_startup,
@@ -26,6 +27,9 @@ impl Plugin for NavigationSchedulePlugin {
             .add_systems(
                 Update,
                 (
+                    // RD-4: traffic from last frame's legs feeds this frame's planning.
+                    crate::economy::logistics::road_flow::publish_road_flow_system
+                        .before(crate::systems::navigation::plan_site_leg_routes_system),
                     crate::systems::navigation::plan_site_leg_routes_system,
                     crate::systems::navigation::sync_truck_motion_waypoints_system
                         .after(crate::systems::navigation::plan_site_leg_routes_system),

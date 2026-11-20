@@ -152,9 +152,12 @@ pub fn advance_corridor_construction_row(row: &mut CorridorConstructionRow, prog
 }
 
 /// Sole writer for corridor construction progress.
+/// A line still waiting on materials (`construction::corridor_works::CorridorWorksCaps`) never runs
+/// ahead of its delivered share.
 pub fn advance_corridor_construction_book_on_sim_tick(
     sim: Res<SimControlState>,
     config: Res<CorridorConstructionTickConfig>,
+    caps: Option<Res<crate::construction::corridor_works::CorridorWorksCaps>>,
     mut book: ResMut<CorridorConstructionBook>,
 ) {
     if !sim.should_tick() {
@@ -167,6 +170,11 @@ pub fn advance_corridor_construction_book_on_sim_tick(
         let Some(row) = book.rows.get_mut(&edge_id) else {
             continue;
         };
+        let cap = caps.as_deref().and_then(|c| c.by_edge.get(&edge_id)).copied().unwrap_or(1.0);
+        if row.phase == ConstructionPhase::InProgress && cap < 1.0 {
+            row.progress = (row.progress + step).min(cap).max(row.progress);
+            continue;
+        }
         advance_corridor_construction_row(row, step);
     }
 }

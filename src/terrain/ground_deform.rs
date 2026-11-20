@@ -45,6 +45,8 @@ pub enum GroundDeformOp {
     Crater { centre_m: Vec2, radius_m: f32, depth_m: f32 },
     /// Move `depth_m` of loose material from one tile to a neighbour (DW-5 wash; volume kept).
     Transfer { from: IVec2, to: IVec2, depth_m: f32 },
+    /// Per-tile height change in metres (road / rail cut and fill along a graded line).
+    Grade { cells: Vec<(IVec2, f32)> },
 }
 
 /// Pending deformation, drained by [`drain_ground_deform_system`] (the sole consumer).
@@ -243,7 +245,11 @@ fn heap_cells(centre: Vec2, r0: f32, r1: f32, volume_m3: f32, dims: UVec2) -> Ve
 #[must_use]
 pub fn op_cells(op: &GroundDeformOp, dims: UVec2) -> Vec<(IVec2, f32)> {
     let inside = |t: IVec2| t.x >= 0 && t.y >= 0 && (t.x as u32) < dims.x && (t.y as u32) < dims.y;
+    if let GroundDeformOp::Grade { cells } = op {
+        return cells.iter().copied().filter(|(t, d)| inside(*t) && d.is_finite() && *d != 0.0).collect();
+    }
     match *op {
+        GroundDeformOp::Grade { .. } => Vec::new(),
         GroundDeformOp::Transfer { from, to, depth_m } => {
             if !inside(from) || !inside(to) || depth_m <= 0.0 {
                 return Vec::new();

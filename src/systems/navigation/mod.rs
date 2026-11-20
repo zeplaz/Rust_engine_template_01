@@ -6,6 +6,7 @@ mod motion;
 mod nav;
 mod potental_feild_nav;
 mod road_vehicles_motion;
+pub(crate) use road_vehicles_motion::vehicle_leg_pair;
 mod schedule_plugin;
 
 // Public exports

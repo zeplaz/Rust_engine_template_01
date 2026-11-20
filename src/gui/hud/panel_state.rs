@@ -126,8 +126,10 @@ pub fn hud_panel_escape_collapse_system(
             picker.close();
             return;
         }
+        // The road sheet belongs to the armed line tool: the build cancel takes this Esc (clear
+        // the path, then drop the tool, which hides the sheet). It only stops the pause menu.
         EscCascadeHandler::RoadSheet => {
-            road_sheet.close();
+            let _ = &mut road_sheet;
             return;
         }
         EscCascadeHandler::TrayCollapse => {}
