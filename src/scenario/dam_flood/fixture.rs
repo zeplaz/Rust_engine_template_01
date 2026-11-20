@@ -28,6 +28,10 @@ pub struct DamValleyFixture {
     #[serde(default = "default_woodland_test_zone")]
     pub woodland_test_zone: DamValleyAabb,
     pub road_bridge_tile: (i32, i32),
+    /// Gravel supply roads the scene's trucks need (PLAN-ROADS-v1 RD-11): HQ -> dam abutment and
+    /// down the west bank to the bridge. Each is one committed straight line (head, tail).
+    #[serde(default = "default_supply_roads")]
+    pub supply_roads: Vec<((i32, i32), (i32, i32))>,
     /// Faction start config for this scene (same schema as the shipped one): HQ depot, stockpile
     /// and fleet a player would bring to build a dam here. Configures the real start path.
     #[serde(default)]
@@ -98,6 +102,10 @@ fn default_woodland_test_zone() -> DamValleyAabb {
     DamValleyAabb { min: (24, 24), max: (84, 84) }
 }
 
+fn default_supply_roads() -> Vec<((i32, i32), (i32, i32))> {
+    vec![((140, 168), (146, 157)), ((146, 157), (153, 156)), ((146, 157), (152, 110))]
+}
+
 fn default_fixture() -> DamValleyFixture {
     DamValleyFixture {
         schema_version: 1,
@@ -136,6 +144,7 @@ fn default_fixture() -> DamValleyFixture {
         },
         woodland_test_zone: default_woodland_test_zone(),
         road_bridge_tile: (160, 110),
+        supply_roads: default_supply_roads(),
         faction_start: None,
     }
 }

@@ -8,7 +8,8 @@ use bevy::ui::DeprecatedInteraction;
 use bevy::window::PrimaryWindow;
 
 use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType, RoadType};
-use crate::construction::construction_pipeline::{ConstructionPlanQueue, ExecutedRoadNetwork};
+use crate::construction::construction_pipeline::ConstructionPlanQueue;
+use crate::construction::corridor_network::CorridorNetwork;
 use crate::construction::sessions::ActiveToolSession;
 use crate::construction::snap::RoadSnapSettings;
 use crate::construction::upgrade::enqueue_road_upgrade;
@@ -239,7 +240,7 @@ pub fn road_tool_popup_bevy_action_system(
     mut session: ResMut<ActiveToolSession>,
     mut popup: ResMut<RoadToolPopupState>,
     mut snap: ResMut<RoadSnapSettings>,
-    roads: Res<ExecutedRoadNetwork>,
+    roads: Res<CorridorNetwork>,
     params: Res<WorldGenParams>,
     tool: Res<ActiveBuildTool>,
     win: Query<&Window, With<PrimaryWindow>>,

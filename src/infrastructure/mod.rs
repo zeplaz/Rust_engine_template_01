@@ -4,6 +4,7 @@
 
 pub mod authoring;
 pub mod profiles;
+pub mod road_tier;
 pub mod settlement;
 pub mod transport;
 pub mod utility;
@@ -13,6 +14,7 @@ pub use profiles::{
     CorridorProfileKind, InfrastructureProfilesPlugin, ProfileRegistry, RailProfile, RoadProfile,
     DEFAULT_CORRIDOR_PROFILES_RON,
 };
+pub use road_tier::{road_profile_speed_mps, road_tier_table, RoadTier, RoadTierSpec, RoadTierTable};
 pub use transport::InfrastructureTransportPlugin;
 pub use settlement::{
     attach_settlement_to_nearest_transport_node, settlement_node_for_town, SettlementId,

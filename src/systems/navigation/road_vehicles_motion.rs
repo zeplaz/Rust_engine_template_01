@@ -20,7 +20,8 @@ use crate::traits::LoadBasedSpeedModifier;
 use super::logistics_floodfill::{logistics_grid_path, smooth_logistics_tile_path, LogisticsNodeArray, LogisticsTile};
 use super::path_concerns::{front_haul_path_concern, LogisticsPathConcern, LogisticsPathConcernRegistry};
 use super::cost_forecast::LogisticsCostForecastBook;
-use crate::economy::logistics::routes::TruckRoadNetwork;
+use crate::economy::logistics::orders::{PlannedLeg, SiteLegRouteBook};
+use crate::economy::logistics::routes::{TruckRoadNetwork, TruckRoute};
 
 /// Marks an entity whose waypoint motion is filtered by [`filter_vehicle_steering_output`].
 #[derive(Component, Clone, Copy, Debug, Default)]
@@ -34,9 +35,11 @@ pub struct RoadVehicleKinematics {
 pub struct TruckMotionLeg {
     pub vehicle_id: VehicleId,
     pub leg_key: u64,
+    /// [`PlannedLeg::version`] the waypoints were copied from (0 = straight-line placeholder).
+    pub route_version: u64,
 }
 
-/// Reused NAV-04 node array for truck tile path queries (sole writer: [`sync_truck_motion_waypoints_system`]).
+/// Reused NAV-04 node array for truck tile path queries (sole writer: [`plan_site_leg_routes_system`]).
 #[derive(Resource, Default)]
 pub struct LogisticsGridPathScratch {
     pub nodes: LogisticsNodeArray,
@@ -259,20 +262,60 @@ pub struct TruckLegPlanner<'w> {
     roads: TruckRoadNetwork<'w>,
 }
 
-/// Refresh waypoint polylines for order-sim truck proxies (read sim + site registry only).
-pub fn sync_truck_motion_waypoints_system(
+/// Site pairs (re)planned per frame at most; the rest wait (unplanned pairs use the off-road estimate).
+const LEG_PLANS_PER_FRAME: usize = 16;
+/// Truck speed (m/s) the planner compares road and off-road routes at.
+const PLAN_REF_TRUCK_MPS: f32 = 12.0;
+/// Pairs no vehicle needed for this many order-sim ticks are dropped.
+const LEG_STALE_TICKS: u64 = 3_600;
+
+/// The route a truck drives between two sites (tile units): the faster of the built-road route
+/// and the cross-country path, by time at [`PLAN_REF_TRUCK_MPS`].
+fn plan_leg_route(
+    planner: &mut TruckLegPlanner,
+    from_t: Vec2,
+    to_t: Vec2,
+    concern: LogisticsPathConcern,
+    depart_tick: u64,
+) -> TruckRoute {
+    let forecast = planner.forecast.as_deref();
+    let offroad = crate::infrastructure::road_tier_table().offroad_speed_mps();
+    let mut pts = plan_truck_tile_waypoints(&mut planner.scratch.nodes, from_t, to_t, concern, forecast, depart_tick);
+    if pts.len() < 2 {
+        pts = vec![from_t, to_t];
+    }
+    let last = pts.len() - 1;
+    pts[0] = from_t;
+    pts[last] = to_t;
+    let cross_country = TruckRoute::uniform(pts, offroad);
+    match planner.roads.route(forecast, depart_tick, from_t, to_t, PLAN_REF_TRUCK_MPS) {
+        Some(road) if road.time_s(PLAN_REF_TRUCK_MPS) < cross_country.time_s(PLAN_REF_TRUCK_MPS) => road,
+        _ => cross_country,
+    }
+}
+
+/// Site pair a vehicle's current or next leg drives, if it is moving or about to.
+fn vehicle_leg_pair(v: &crate::economy::logistics::orders::Vehicle) -> Option<(SiteId, SiteId)> {
+    let a = v.assignment.as_ref()?;
+    match v.phase {
+        VehiclePhase::ToPickup(_) => Some((v.at, a.source)),
+        // Plan the haul while loading so the trip time is ready when it departs.
+        VehiclePhase::Loading(_) | VehiclePhase::Hauling(_) => Some((a.source, a.sink)),
+        _ => None,
+    }
+}
+
+/// RD-1/RD-3 truck route planner. Sole writer of [`SiteLegRouteBook`]: plans every site pair a
+/// vehicle drives (re-plans all when a road is built, flooded, buried or cleared). The order sim
+/// times trips from it, presentation draws trucks along it.
+pub fn plan_site_leg_routes_system(
     sim_ctrl: Res<SimControlState>,
     sim: Option<Res<LogisticsOrderSimRes>>,
     registry: Option<Res<LogisticsSiteRegistry>>,
     concerns: Option<Res<LogisticsPathConcernRegistry>>,
     clock: Option<Res<SimStepClock>>,
     mut planner: TruckLegPlanner,
-    mut q: Query<(
-        &mut TruckMotionLeg,
-        &mut Waypoints,
-        Option<&mut RoadVehicleKinematics>,
-    )>,
-    mut road_stamp: Local<u64>,
+    mut book: ResMut<SiteLegRouteBook>,
 ) {
     if !sim_ctrl.should_tick() {
         return;
@@ -280,52 +323,84 @@ pub fn sync_truck_motion_waypoints_system(
     let (Some(sim), Some(registry), Some(concerns)) = (sim, registry, concerns) else {
         return;
     };
-    let depart_tick = clock.as_ref().map(|c| c.steps).unwrap_or(0);
-    // A road built, flooded, buried or cleared re-plans every active leg.
+    let tick = clock.as_ref().map(|c| c.steps).unwrap_or(0);
     let stamp = planner.roads.stamp();
-    let network_changed = std::mem::replace(&mut *road_stamp, stamp) != stamp;
+    let mut wanted: Vec<(SiteId, SiteId)> = sim.sim.vehicles.values().filter_map(vehicle_leg_pair).collect();
+    wanted.sort_unstable_by_key(|(a, b)| (a.0, b.0));
+    wanted.dedup();
+    let mut budget = LEG_PLANS_PER_FRAME;
+    for pair in wanted {
+        let fresh = book.legs.get(&pair).is_some_and(|l| l.network_stamp == stamp);
+        if let Some(l) = book.legs.get_mut(&pair) {
+            l.last_used_tick = tick;
+        }
+        if fresh || budget == 0 {
+            continue;
+        }
+        let (Some(from_xz), Some(to_xz)) = (site_xz(&registry, pair.0), site_xz(&registry, pair.1)) else {
+            continue;
+        };
+        budget -= 1;
+        let concern = concern_for_sink(&concerns, &registry, pair.1);
+        let route = plan_leg_route(&mut planner, from_xz / TILE_METRES_GAMEPLAY, to_xz / TILE_METRES_GAMEPLAY, concern, tick);
+        book.revision = book.revision.wrapping_add(1);
+        let version = book.revision;
+        book.legs.insert(pair, PlannedLeg { route, version, network_stamp: stamp, last_used_tick: tick });
+    }
+    let before = book.legs.len();
+    book.legs.retain(|_, l| tick.saturating_sub(l.last_used_tick) <= LEG_STALE_TICKS);
+    if book.legs.len() != before {
+        book.revision = book.revision.wrapping_add(1);
+    }
+}
+
+/// Truck proxies take their leg's planned route as waypoints (metres). Reads the book only.
+pub fn sync_truck_motion_waypoints_system(
+    sim_ctrl: Res<SimControlState>,
+    sim: Option<Res<LogisticsOrderSimRes>>,
+    registry: Option<Res<LogisticsSiteRegistry>>,
+    book: Res<SiteLegRouteBook>,
+    mut q: Query<(
+        &mut TruckMotionLeg,
+        &mut Waypoints,
+        Option<&mut RoadVehicleKinematics>,
+    )>,
+) {
+    if !sim_ctrl.should_tick() {
+        return;
+    }
+    let (Some(sim), Some(registry)) = (sim, registry) else {
+        return;
+    };
     for (mut leg, mut wp, kin) in q.iter_mut() {
         let Some(v) = sim.sim.vehicles.get(&leg.vehicle_id) else {
             continue;
         };
         let key = truck_leg_key(v);
-        if leg.leg_key == key && !wp.points.is_empty() && !network_changed {
+        let pair = match v.phase {
+            VehiclePhase::ToPickup(_) | VehiclePhase::Hauling(_) => vehicle_leg_pair(v),
+            _ => None,
+        };
+        let Some(pair) = pair else {
+            continue;
+        };
+        let planned = book.legs.get(&pair);
+        let version = planned.map_or(0, |p| p.version);
+        if leg.leg_key == key && leg.route_version == version && !wp.points.is_empty() {
             continue;
         }
+        let tiles = match planned {
+            Some(p) if p.route.points.len() >= 2 => p.route.points.clone(),
+            // Not planned yet: straight line until the planner gets to it (next frames).
+            _ => {
+                let (Some(a), Some(b)) = (site_xz(&registry, pair.0), site_xz(&registry, pair.1)) else {
+                    continue;
+                };
+                vec![a / TILE_METRES_GAMEPLAY, b / TILE_METRES_GAMEPLAY]
+            }
+        };
         leg.leg_key = key;
-        let (from, to) = match &v.phase {
-            VehiclePhase::ToPickup(_) => {
-                let Some(a) = v.assignment.as_ref() else {
-                    continue;
-                };
-                (v.at, a.source)
-            }
-            VehiclePhase::Hauling(_) => {
-                let Some(a) = v.assignment.as_ref() else {
-                    continue;
-                };
-                (a.source, a.sink)
-            }
-            _ => continue,
-        };
-        let (Some(from_xz), Some(to_xz)) = (site_xz(&registry, from), site_xz(&registry, to)) else {
-            continue;
-        };
-        let concern = concern_for_sink(&concerns, &registry, to);
-        // Sites are in metres; routing is in tiles. Follow the built road when one connects the
-        // ends (flooded / rubble edges are walls); cross-country only where none does.
-        let (from_t, to_t) = (from_xz / TILE_METRES_GAMEPLAY, to_xz / TILE_METRES_GAMEPLAY);
-        let forecast = planner.forecast.as_deref();
-        let tiles = planner.roads.polyline(forecast, depart_tick, from_t, to_t).unwrap_or_else(|| {
-            let mut pts = plan_truck_tile_waypoints(&mut planner.scratch.nodes, from_t, to_t, concern, forecast, depart_tick);
-            if pts.len() < 2 {
-                pts = vec![from_t, to_t];
-            }
-            let last = pts.len() - 1;
-            pts[0] = from_t;
-            pts[last] = to_t;
-            pts
-        });
+        leg.route_version = version;
         wp.points = tiles.into_iter().map(|p| p * TILE_METRES_GAMEPLAY).collect();
         wp.current_waypoint_index = 0;
         if let Some(mut k) = kin {

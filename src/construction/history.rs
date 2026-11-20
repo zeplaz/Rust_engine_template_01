@@ -4,20 +4,17 @@ use bevy::prelude::*;
 
 use crate::economy::activation::BuildingDefinitionRef;
 use crate::strategic::{
-    align_corridor_book_with_transport_directory, BuildSiteTile, ChunkStrategicOverlay,
+    BuildSiteTile, ChunkStrategicOverlay,
     CommitConstructionSiteEvent, ConstructionSite, CorridorConstructionBook, NetworkDirtyMask,
     PlannedSite, SiteConstructionBook, SiteConstructionPhase, SiteFootprint, SiteId, Zone,
 };
-use crate::systems::transport::bake_snapshot_from_ordered_tile_markers;
-use crate::systems::transport::{
-    hydrate_transport_from_snapshot, TransportEdgeDirectory, TransportFieldStore, TransportTopology,
-};
+use crate::systems::transport::{TransportEdgeDirectory, TransportFieldStore, TransportTopology};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::construction_pipeline::{
-    ExecutedRoadNetwork, SimRailSegmentMarker, SimRoadSegmentMarker, ROAD_MARKER_Y_BIAS,
-    ROAD_MARKER_Y_SCALE,
+    rebuild_corridor_transport, SimRailSegmentMarker, SimRoadSegmentMarker,
 };
+use super::corridor_network::{CorridorKind, CorridorNetwork};
 
 const MAX_UNDO: usize = 32;
 
@@ -31,7 +28,12 @@ pub enum ConstructionActionKind {
 
 #[derive(Clone, Debug)]
 pub enum ConstructionAction {
+    /// One committed road/rail line: undo removes exactly this network segment.
     RoadSegment {
+        segment_id: u32,
+        kind: CorridorKind,
+        head: BuildSiteTile,
+        tail: BuildSiteTile,
         tiles_added: Vec<BuildSiteTile>,
         marker_entities: Vec<Entity>,
     },
@@ -109,7 +111,7 @@ pub fn construction_undo_input_system(
     mut history: ResMut<ConstructionHistory>,
     mut site_events: MessageWriter<CommitConstructionSiteEvent>,
     mut commands: Commands,
-    mut roads: ResMut<ExecutedRoadNetwork>,
+    mut roads: ResMut<CorridorNetwork>,
     mut book: ResMut<SiteConstructionBook>,
     mut topology: ResMut<TransportTopology>,
     mut fields: ResMut<TransportFieldStore>,
@@ -132,26 +134,25 @@ pub fn construction_undo_input_system(
     history.redo_stack.push(action.clone());
     match action {
         ConstructionAction::RoadSegment {
-            tiles_added,
+            segment_id,
             marker_entities,
+            ..
         } => {
             for entity in marker_entities {
                 if road_markers.get(entity).is_ok() || rail_markers.get(entity).is_ok() {
                     commands.entity(entity).despawn();
                 }
             }
-            for tile in tiles_added {
-                roads.tiles.retain(|t| *t != tile);
-            }
-            rebuild_road_transport(
-                &mut roads,
-                &params,
+            roads.remove_segment(segment_id);
+            rebuild_corridor_transport(
+                &roads,
                 &mut topology,
                 &mut fields,
                 &mut directory,
                 &mut corridor_book,
                 &mut overlays,
             );
+            let _ = &params;
         }
         ConstructionAction::Site { entity, site_id } => {
             if sites.get(entity).is_ok() {
@@ -178,7 +179,7 @@ pub fn construction_redo_input_system(
     keyboard: Res<ButtonInput<KeyCode>>,
     mut history: ResMut<ConstructionHistory>,
     mut commands: Commands,
-    mut roads: ResMut<super::construction_pipeline::ExecutedRoadNetwork>,
+    mut roads: ResMut<CorridorNetwork>,
     mut topology: ResMut<TransportTopology>,
     mut fields: ResMut<TransportFieldStore>,
     mut directory: ResMut<TransportEdgeDirectory>,
@@ -207,23 +208,36 @@ pub fn construction_redo_input_system(
     history.undo_stack.push(action.clone());
     match action {
         ConstructionAction::RoadSegment {
+            kind,
+            head,
+            tail,
             tiles_added,
-            marker_entities: _,
+            ..
         } => {
-            let _markers = super::construction_pipeline::replay_road_tiles_for_redo(
-                &mut commands,
-                &mut roads,
-                &params,
-                &mut topology,
-                &mut fields,
-                &mut directory,
-                &mut corridor_book,
-                &mut overlays,
-                &tiles_added,
-                super::construction_pipeline::SimRoadSegmentMarker,
-            );
-            let _ = road_markers;
-            let _ = rail_markers;
+            let rail = kind.is_rail();
+            let replayed = if rail {
+                super::construction_pipeline::replay_corridor_segment_for_redo(
+                    &mut commands, &mut roads, &mut topology, &mut fields, &mut directory,
+                    &mut corridor_book, &mut overlays, kind.clone(), head, tail, SimRailSegmentMarker,
+                )
+            } else {
+                super::construction_pipeline::replay_corridor_segment_for_redo(
+                    &mut commands, &mut roads, &mut topology, &mut fields, &mut directory,
+                    &mut corridor_book, &mut overlays, kind.clone(), head, tail, SimRoadSegmentMarker,
+                )
+            };
+            // The replayed line has a new id: the undo entry just pushed must point at it.
+            if let (Some((id, markers)), Some(top)) = (replayed, history.undo_stack.last_mut()) {
+                *top = ConstructionAction::RoadSegment {
+                    segment_id: id,
+                    kind,
+                    head,
+                    tail,
+                    tiles_added,
+                    marker_entities: markers,
+                };
+            }
+            let _ = (&road_markers, &rail_markers, &params);
         }
         ConstructionAction::DemolishedSites(events) => {
             for ev in events {
@@ -245,37 +259,11 @@ pub fn construction_redo_input_system(
     }
 }
 
-fn rebuild_road_transport(
-    roads: &mut ExecutedRoadNetwork,
-    params: &WorldGenParams,
-    topology: &mut TransportTopology,
-    fields: &mut TransportFieldStore,
-    directory: &mut TransportEdgeDirectory,
-    corridor_book: &mut CorridorConstructionBook,
-    overlays: &mut Query<&mut NetworkDirtyMask, With<ChunkStrategicOverlay>>,
-) {
-    let marker_tiles: Vec<(u32, u32)> = roads.tiles.iter().map(|t| (t.x, t.z)).collect();
-    if marker_tiles.is_empty() {
-        return;
-    }
-    let snap = bake_snapshot_from_ordered_tile_markers(
-        &marker_tiles,
-        |_x, _z| 0.5,
-        ROAD_MARKER_Y_SCALE,
-        ROAD_MARKER_Y_BIAS,
-    );
-    if hydrate_transport_from_snapshot(topology, fields, directory, &snap).is_ok() {
-        align_corridor_book_with_transport_directory(directory, corridor_book);
-        for mut mask in overlays.iter_mut() {
-            mask.mask |=
-                crate::strategic::NETWORK_DIRTY_FLOW | crate::strategic::NETWORK_DIRTY_CONNECTIVITY;
-        }
-    }
-    let _ = params;
-}
-
 pub fn record_road_execution(
     history: &mut ConstructionHistory,
+    segment_id: u32,
+    kind: CorridorKind,
+    (head, tail): (BuildSiteTile, BuildSiteTile),
     tiles_added: Vec<BuildSiteTile>,
     marker_entities: Vec<Entity>,
     edge_id: Option<crate::systems::transport::TransportEdgeId>,
@@ -290,15 +278,17 @@ pub fn record_road_execution(
             "recorded corridor execute"
         );
     }
-    if tiles_added.is_empty() && marker_entities.is_empty() {
-        return;
-    }
+    let action_kind = if kind.is_rail() { ConstructionActionKind::Rail } else { ConstructionActionKind::Road };
     history.push(
         ConstructionAction::RoadSegment {
+            segment_id,
+            kind,
+            head,
+            tail,
             tiles_added,
             marker_entities,
         },
-        ConstructionActionKind::Road,
+        action_kind,
     );
 }
 
@@ -334,13 +324,15 @@ mod tests {
     fn road_redo_stack_records_and_replays_tiles() {
         let mut history = ConstructionHistory::default();
         let tiles = vec![BuildSiteTile { x: 1, z: 2 }, BuildSiteTile { x: 2, z: 2 }];
-        record_road_execution(&mut history, tiles.clone(), vec![], None, None);
+        let kind = CorridorKind::Road { tier: crate::infrastructure::RoadTier::Gravel, lanes: 2 };
+        record_road_execution(&mut history, 7, kind, (tiles[0], tiles[1]), tiles.clone(), vec![], None, None);
         assert!(history.can_undo());
         let action = history.undo_stack.pop().unwrap();
         history.redo_stack.push(action.clone());
         match action {
-            ConstructionAction::RoadSegment { tiles_added, .. } => {
+            ConstructionAction::RoadSegment { tiles_added, segment_id, .. } => {
                 assert_eq!(tiles_added, tiles);
+                assert_eq!(segment_id, 7, "undo removes exactly the committed segment");
             }
             _ => panic!("expected road segment action"),
         }

@@ -48,3 +48,48 @@ impl TravelModel for SiteDistanceTravel {
         Some((d / metres_per_tick).ceil().max(1.0) as u32)
     }
 }
+
+/// One planned site-to-site truck leg (PLAN-ROADS-v1 RD-3): the route a truck drives (tile units)
+/// with a speed cap per stretch. Written by the truck route planner only
+/// (`plan_site_leg_routes_system`); read by the order sim (trip time) and truck presentation
+/// (where the truck is drawn).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct PlannedLeg {
+    pub route: crate::economy::logistics::routes::TruckRoute,
+    /// Bumps each time this pair is re-planned (presentation re-syncs its waypoints).
+    pub version: u64,
+    /// Road network stamp the plan was made under.
+    pub network_stamp: u64,
+    /// Order-sim tick of the last time a vehicle needed this pair (stale pairs are dropped).
+    pub last_used_tick: u64,
+}
+
+/// Planned legs by (from, to) site. Sole writer: the truck route planner.
+#[derive(bevy::prelude::Resource, Clone, Debug, Default)]
+pub struct SiteLegRouteBook {
+    pub legs: BTreeMap<(SiteId, SiteId), PlannedLeg>,
+    pub revision: u64,
+}
+
+/// Order-sim travel over planned legs: a planned pair takes the time of the route actually driven
+/// (built roads at their tier speed, the rest off-road); an unplanned pair falls back to the
+/// straight line × detour at off-road speed until the planner gets to it.
+pub struct RoutedTravel<'a> {
+    pub base: &'a SiteDistanceTravel,
+    pub legs: &'a SiteLegRouteBook,
+    /// Off-road speed (m/s) for the fallback.
+    pub offroad_mps: f32,
+}
+
+impl TravelModel for RoutedTravel<'_> {
+    fn travel_ticks(&self, from: SiteId, to: SiteId, speed_mps: f32) -> Option<u32> {
+        if from == to {
+            return Some(0);
+        }
+        let secs = match self.legs.legs.get(&(from, to)) {
+            Some(leg) if leg.route.points.len() >= 2 => leg.route.time_s(speed_mps),
+            _ => self.base.distance_m(from, to)? * self.base.detour.max(1.0) / speed_mps.min(self.offroad_mps).max(0.1),
+        };
+        Some((secs / self.base.seconds_per_tick.max(1e-3)).ceil().max(1.0) as u32)
+    }
+}

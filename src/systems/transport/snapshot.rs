@@ -150,6 +150,9 @@ pub enum HydrateError {
     DuplicateEdgeId(u64),
 }
 
+/// Speed (m/s) at which a road edge's travel cost equals its length (50 km/h).
+pub const ROAD_REFERENCE_SPEED_MPS: f32 = 50.0 / 3.6;
+
 /// Clears and repopulates topology, field store, and edge directory from `snapshot`. Does **not** touch cost cache or nav export (those refresh on the next transport tick).
 pub fn hydrate_transport_from_snapshot(
     topology: &mut TransportTopology,
@@ -198,7 +201,11 @@ pub fn hydrate_transport_from_snapshot(
         let succ: Vec<TransportEdgeId> = e.successors.iter().copied().map(TransportEdgeId).collect();
         topology.neighbors.insert(tid, succ);
 
-        let base = polyline_length(&e.control_points).max(0.1);
+        // Road tiers price an edge by time: length scaled by reference speed / tier speed, so a
+        // gravel tile costs more than a paved one (PLAN-ROADS-v1 RD-1). Other profiles: length.
+        let len = polyline_length(&e.control_points).max(0.1);
+        let base = crate::infrastructure::road_profile_speed_mps(e.effective_profile_id())
+            .map_or(len, |v| len * ROAD_REFERENCE_SPEED_MPS / v.max(0.1));
         field_store.by_edge.insert(tid, EdgeFieldState {
             travel_time_base: base,
             ..Default::default()

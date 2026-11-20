@@ -64,4 +64,4 @@ pub use snapshot::{
     FleetRow, LogisticsOrdersSnapshot, OrderRow, SiteMeta, SiteRole, SiteRow, StockRow,
     VehicleRow, TELEMETRY_FLOAT_QUANT_SCALE,
 };
-pub use travel::SiteDistanceTravel;
+pub use travel::{PlannedLeg, RoutedTravel, SiteDistanceTravel, SiteLegRouteBook};

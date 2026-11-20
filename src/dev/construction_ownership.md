@@ -13,7 +13,7 @@
 | Building ghost | `BuildGhostState` | Building pick/refresh (not zone/road/demolish) |
 | Pending queue | `PendingConstructionQueue` | Queue systems, confirm drain |
 | Plan queue | `ConstructionPlanQueue` | Road/rail commit enqueue; validate/execute systems |
-| Transport / roads executed | `ExecutedRoadNetwork` + transport resources | **`execute_construction_plans_system` only** (undo via `history`) |
+| Transport / roads executed | `CorridorNetwork` + transport resources | **`execute_construction_plans_system` only** (undo via `history`) |
 | Sites | `ConstructionSite` entities | **`CommitConstructionSiteEvent`** → strategic commit system |
 | Zones | `Zone` components | Zone confirm (`spawn_zone_at_tile`) |
 | Intersections | `IntersectionRegistry` | Road/rail execute (Round 3) |

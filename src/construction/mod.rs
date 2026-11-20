@@ -46,6 +46,7 @@ mod commercial_menu;
 mod construction_pipeline;
 mod construction_queue_intent;
 mod corridor_transport;
+pub mod corridor_network;
 mod defense_concrete_stock;
 mod defense_staging_stock;
 mod blast;
@@ -199,9 +200,10 @@ pub use building_definitions::{
     intent_from_definition, load_building_definitions_from_dir, BuildingDefinition, BuildingDefinitionRegistry,
 };
 pub use commercial_menu::draw_commercial_submenu;
+pub use corridor_network::{CorridorKind, CorridorNetwork, CorridorSegment};
 pub use construction_pipeline::{
     execute_construction_plans_system, validate_construction_plans_system, ConstructionIntent,
-    ConstructionPlanQueue, ConstructionType, ConstructionWorldRevision, ExecutedRoadNetwork,
+    ConstructionPlanQueue, ConstructionType, ConstructionWorldRevision,
 };
 pub use construction_queue_intent::{
     apply_construction_queue_intents, sync_construction_queue_panel_view,
@@ -395,7 +397,7 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<place_feedback::PlaceFeedbackPulse>()
             .init_resource::<ConstructionPlanQueue>()
             .init_resource::<ConstructionWorldRevision>()
-            .init_resource::<ExecutedRoadNetwork>()
+            .init_resource::<CorridorNetwork>()
             .init_resource::<crate::gui::hud::power_node_hover::PowerNodeHoverState>()
             .add_systems(Startup, hydro_coupling::register_construction_hydro_coupling_bridge)
             .add_message::<ConstructionQueueIntent>()

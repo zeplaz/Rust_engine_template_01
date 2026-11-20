@@ -231,7 +231,7 @@ pub fn enqueue_settlement_road_skeleton(
             (head.z as f32 + tail.z as f32) * 0.5,
         );
         queue.enqueue(ConstructionIntent {
-            entity_type: ConstructionType::RoadSegment { head, tail },
+            entity_type: ConstructionType::RoadSegment { head, tail, tier: crate::infrastructure::RoadTier::Paved },
             world_position: mid,
             rotation: 0.0,
         });

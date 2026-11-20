@@ -6,7 +6,7 @@ use bevy::prelude::*;
 use crate::construction::{
     ActiveBuildTool,
     ActiveRoadPlacement, ActiveToolSession, BuildStripState, ConstructionPlanQueue,
-    ExecutedRoadNetwork, RoadSnapSettings, RoadToolPopupState, ToolContext,
+    CorridorNetwork, RoadSnapSettings, RoadToolPopupState, ToolContext,
 };
 use crate::gui::{MapCameraDesiredRes, SimulationMapViewport, UiPalette};
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
@@ -45,7 +45,7 @@ pub struct SimRoadToolSheetDrawParams<'w> {
     pub queue: ResMut<'w, ConstructionPlanQueue>,
     pub session: ResMut<'w, ActiveToolSession>,
     pub snap: ResMut<'w, RoadSnapSettings>,
-    pub roads: Res<'w, ExecutedRoadNetwork>,
+    pub roads: Res<'w, CorridorNetwork>,
     pub params: Res<'w, WorldGenParams>,
     pub desired: Res<'w, MapCameraDesiredRes>,
     pub map_vp: Res<'w, SimulationMapViewport>,

@@ -55,7 +55,7 @@ pub fn cursor_world_on_map(
 fn resolve_placement_world(
     raw: Vec3,
     snap: &RoadSnapSettings,
-    roads: &crate::construction::construction_pipeline::ExecutedRoadNetwork,
+    roads: &crate::construction::CorridorNetwork,
     params: &WorldGenParams,
     height_grid: Option<&WorldGenDenseTerrainCache>,
     feedback: &mut ConstructionPathFeedback,
@@ -83,7 +83,7 @@ pub fn update_road_path_preview_system(
     keys: Res<ButtonInput<KeyCode>>,
     pick: ConstructionMapPick,
     snap: Res<RoadSnapSettings>,
-    roads: Res<crate::construction::construction_pipeline::ExecutedRoadNetwork>,
+    roads: Res<crate::construction::CorridorNetwork>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut feedback: ResMut<ConstructionPathFeedback>,
     pointer_gate: Option<Res<SimulationMapPointerGate>>,
@@ -178,7 +178,7 @@ pub fn road_path_input_system(
     keys: Res<ButtonInput<KeyCode>>,
     pick: ConstructionMapPick,
     snap: Res<RoadSnapSettings>,
-    roads: Res<crate::construction::construction_pipeline::ExecutedRoadNetwork>,
+    roads: Res<crate::construction::CorridorNetwork>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut queue: ResMut<ConstructionPlanQueue>,
     mut session: ResMut<ActiveToolSession>,
@@ -276,7 +276,7 @@ mod egr_tests {
         app.init_resource::<crate::gui::MainWorldCameraOrthoTrace>();
         app.init_resource::<crate::terrain::generation::world_generator_enhanced::WorldGenParams>();
         app.init_resource::<crate::construction::snap::RoadSnapSettings>();
-        app.init_resource::<crate::construction::construction_pipeline::ExecutedRoadNetwork>();
+        app.init_resource::<crate::construction::CorridorNetwork>();
         app.init_resource::<super::super::placement::ActiveRoadPlacement>();
         app.init_resource::<crate::construction::path_feedback::ConstructionPathFeedback>();
         app.insert_resource(SimulationMapPointerGate {

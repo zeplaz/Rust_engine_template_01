@@ -152,6 +152,7 @@ pub fn sync_truck_presentation(
                     TruckMotionLeg {
                         vehicle_id: *id,
                         leg_key: 0,
+                        route_version: 0,
                     },
                     Name::new(format!("truck:{}", id.0)),
                 ))

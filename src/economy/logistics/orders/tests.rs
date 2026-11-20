@@ -1155,10 +1155,19 @@ mod app {
         let snap = &app2.world().resource::<LogisticsOrdersSnapshotRes>().0;
         assert_eq!(snap.fleet(OwnerId::PLAYER).total, 6, "no second seed fleet");
         assert_eq!(snap.orders[0].delivered, delivered_at_save);
-        advance_secs(&mut app2, 900);
-        let snap = &app2.world().resource::<LogisticsOrdersSnapshotRes>().0;
-        assert_eq!(snap.orders[0].status, OrderStatus::Completed);
-        assert_eq!(snap.orders[0].delivered, 200);
+        // No roads here: trips run at the off-road speed (PLAN-ROADS-v1 RD-3), ~2.4x the old
+        // straight-line-at-truck-speed time.
+        // Completed orders are pruned later, so watch for completion rather than a fixed time.
+        let mut done = None;
+        for _ in 0..60 {
+            advance_secs(&mut app2, 60);
+            let snap = &app2.world().resource::<LogisticsOrdersSnapshotRes>().0;
+            if let Some(o) = snap.orders.first().filter(|o| o.status == OrderStatus::Completed) {
+                done = Some(o.delivered);
+                break;
+            }
+        }
+        assert_eq!(done, Some(200), "the restored order completes with every unit delivered");
     }
 
     #[test]

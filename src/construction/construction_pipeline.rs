@@ -10,16 +10,17 @@ use crate::strategic::{
     align_corridor_book_with_transport_directory, ChunkStrategicOverlay, CorridorConstructionBook,
     NetworkDirtyMask, NETWORK_DIRTY_CONNECTIVITY, NETWORK_DIRTY_FLOW,
 };
-use crate::systems::transport::bake_snapshot_from_ordered_tile_markers;
 use crate::systems::transport::{
     hydrate_transport_from_snapshot, TransportEdgeDirectory, TransportEdgeId, TransportFieldStore,
     TransportTopology,
 };
 
+use super::corridor_network::{CorridorKind, CorridorNetwork};
 use super::corridor_transport::{
-    apply_selected_rail_profile_to_edge, find_edge_id_for_segment, planned_construction_record,
-    transport_edge_from_binding, RailProfileSelection, SimCorridorEdgeBinding,
+    find_edge_id_for_segment, planned_construction_record, transport_edge_from_binding,
+    SimCorridorEdgeBinding,
 };
+use crate::infrastructure::RoadTier;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::terrain_conform::{conform_world_y, ConstructionTerrainConform};
@@ -33,6 +34,7 @@ pub enum ConstructionType {
     RoadSegment {
         head: BuildSiteTile,
         tail: BuildSiteTile,
+        tier: RoadTier,
     },
     RailSegment {
         head: BuildSiteTile,
@@ -101,12 +103,6 @@ pub struct ConstructionWorldRevision {
     pub revision: u64,
 }
 
-/// Authoritative ordered road tiles applied by execution.
-#[derive(Resource, Debug, Default, Clone)]
-pub struct ExecutedRoadNetwork {
-    pub tiles: Vec<BuildSiteTile>,
-    pub marker_seq: u32,
-}
 
 #[derive(Component, Debug, Clone, Copy)]
 pub struct SimRoadSegmentMarker;
@@ -154,7 +150,7 @@ pub fn validate_construction_plans_system(
             continue;
         }
         let validation = match plan.intent.entity_type {
-            ConstructionType::RoadSegment { head, tail }
+            ConstructionType::RoadSegment { head, tail, .. }
             | ConstructionType::FirebreakSegment { head, tail } => {
                 validate_road_segment(head, tail, &params)
             }
@@ -171,6 +167,8 @@ pub fn validate_construction_plans_system(
 }
 
 struct SegmentApplyResult {
+    /// The network segment this commit added (undo removes exactly it).
+    segment_id: Option<u32>,
     tiles_added: Vec<BuildSiteTile>,
     marker_entities: Vec<Entity>,
     edge_id: Option<TransportEdgeId>,
@@ -194,7 +192,7 @@ pub struct ExecuteSideEffects<'w> {
 pub fn execute_construction_plans_system(
     mut commands: Commands,
     mut queue: ResMut<ConstructionPlanQueue>,
-    mut roads: ResMut<ExecutedRoadNetwork>,
+    mut roads: ResMut<CorridorNetwork>,
     mut revision: ResMut<ConstructionWorldRevision>,
     mut topology: ResMut<TransportTopology>,
     mut fields: ResMut<TransportFieldStore>,
@@ -220,12 +218,12 @@ pub fn execute_construction_plans_system(
         }
         plan.status = ConstructionStatus::Building;
         let endpoints = match plan.intent.entity_type {
-            ConstructionType::RoadSegment { head, tail }
+            ConstructionType::RoadSegment { head, tail, .. }
             | ConstructionType::RailSegment { head, tail }
             | ConstructionType::FirebreakSegment { head, tail } => (head, tail),
         };
         let result = match plan.intent.entity_type {
-            ConstructionType::RoadSegment { head, tail } => apply_road_segment_to_world(
+            ConstructionType::RoadSegment { head, tail, tier } => apply_road_segment_to_world(
                 &mut commands,
                 &mut roads,
                 terrain.params.as_ref(),
@@ -237,8 +235,7 @@ pub fn execute_construction_plans_system(
                 head,
                 tail,
                 SimRoadSegmentMarker,
-                false,
-                None,
+                CorridorKind::Road { tier, lanes: tier.spec().lanes_default },
             ),
             ConstructionType::RailSegment { head, tail } => {
                 let hy = conform_world_y(
@@ -270,8 +267,7 @@ pub fn execute_construction_plans_system(
                         head,
                         tail,
                         SimRailSegmentMarker,
-                        true,
-                        Some(rail.profile_id.as_str()),
+                        CorridorKind::Rail { profile: rail.profile_id.clone() },
                     )
                 }
             }
@@ -281,6 +277,7 @@ pub fn execute_construction_plans_system(
                     None
                 } else {
                     Some(SegmentApplyResult {
+                        segment_id: None,
                         tiles_added: tiles,
                         marker_entities: Vec::new(),
                         edge_id: None,
@@ -300,9 +297,15 @@ pub fn execute_construction_plans_system(
                     intersections.register_or_extend(tail, entity);
                 }
             }
-            if !apply.marker_entities.is_empty() || apply.edge_id.is_some() {
+            if let Some(segment_id) = apply.segment_id {
                 super::history::record_road_execution(
                     history.as_mut(),
+                    segment_id,
+                    roads.segment(segment_id).map_or(
+                        CorridorKind::Road { tier: RoadTier::default(), lanes: 2 },
+                        |seg| seg.kind.clone(),
+                    ),
+                    endpoints,
                     apply.tiles_added.clone(),
                     apply.marker_entities,
                     apply.edge_id,
@@ -353,9 +356,31 @@ pub fn execute_construction_plans_system(
     }
 }
 
+/// Rebuild the transport graph from the corridor network (one edge per span, road tiers priced
+/// by time). The only path from built roads/rail into transport truth.
+pub(crate) fn rebuild_corridor_transport(
+    roads: &CorridorNetwork,
+    topology: &mut TransportTopology,
+    fields: &mut TransportFieldStore,
+    directory: &mut TransportEdgeDirectory,
+    corridor_book: &mut CorridorConstructionBook,
+    overlays: &mut Query<&mut NetworkDirtyMask, With<ChunkStrategicOverlay>>,
+) -> bool {
+    let snap = roads.bake_snapshot(0.5 * ROAD_MARKER_Y_SCALE + ROAD_MARKER_Y_BIAS);
+    if hydrate_transport_from_snapshot(topology, fields, directory, &snap).is_err() {
+        return false;
+    }
+    align_corridor_book_with_transport_directory(directory, corridor_book);
+    for mut mask in overlays.iter_mut() {
+        mask.mask |= NETWORK_DIRTY_FLOW | NETWORK_DIRTY_CONNECTIVITY;
+    }
+    true
+}
+
+#[allow(clippy::too_many_arguments)]
 fn apply_road_segment_to_world<M: Component + Copy>(
     commands: &mut Commands,
-    roads: &mut ExecutedRoadNetwork,
+    roads: &mut CorridorNetwork,
     params: &WorldGenParams,
     topology: &mut TransportTopology,
     fields: &mut TransportFieldStore,
@@ -365,8 +390,7 @@ fn apply_road_segment_to_world<M: Component + Copy>(
     head: BuildSiteTile,
     tail: BuildSiteTile,
     marker_component: M,
-    is_rail: bool,
-    rail_profile_id: Option<&str>,
+    kind: CorridorKind,
 ) -> Option<SegmentApplyResult> {
     let validation = validate_road_segment(head, tail, params);
     if !validation.valid {
@@ -381,85 +405,27 @@ fn apply_road_segment_to_world<M: Component + Copy>(
         }
         return None;
     }
-    let mut tiles_added = Vec::new();
-    let len_before = roads.tiles.len();
-    append_road_tile(roads, head);
-    append_road_tile(roads, tail);
-    if roads.tiles.len() > len_before {
-        tiles_added.extend_from_slice(&roads.tiles[len_before..]);
-    }
-    let marker_tiles: Vec<(u32, u32)> = roads.tiles.iter().map(|tile| (tile.x, tile.z)).collect();
-    let snap = bake_snapshot_from_ordered_tile_markers(
-        &marker_tiles,
-        |_x, _z| 0.5,
-        ROAD_MARKER_Y_SCALE,
-        ROAD_MARKER_Y_BIAS,
-    );
-    if snap.edges.is_empty() {
+    let segment_id = roads.add_segment(kind, head, tail)?;
+    if !rebuild_corridor_transport(roads, topology, fields, directory, corridor_book, overlays) {
+        roads.remove_segment(segment_id);
         return None;
     }
-    let edge_count_before = topology.neighbors.len();
-    if hydrate_transport_from_snapshot(topology, fields, directory, &snap).is_err() {
-        return None;
+    let spans: Vec<(BuildSiteTile, BuildSiteTile)> =
+        roads.segment(segment_id).map(|s| s.spans().collect()).unwrap_or_default();
+    let edges: Vec<TransportEdgeId> =
+        spans.iter().filter_map(|(a, b)| find_edge_id_for_segment(directory, *a, *b)).collect();
+    for &e in &edges {
+        corridor_book.plan_edge(e);
     }
-    let edge_count_after = topology.neighbors.len();
-    align_corridor_book_with_transport_directory(directory, corridor_book);
-
-    let segment_edge = find_edge_id_for_segment(directory, head, tail);
-    if let Some(edge_id) = segment_edge {
-        corridor_book.plan_edge(edge_id);
-        if is_rail {
-            let selection = RailProfileSelection {
-                profile_id: rail_profile_id.unwrap_or("default_rail").to_owned(),
-            };
-            apply_selected_rail_profile_to_edge(directory, edge_id, &selection, None);
-        }
-    } else if let Some(edge_id) = directory
-        .by_edge
-        .keys()
-        .max_by_key(|id| id.0)
-        .copied()
-        .filter(|_| edge_count_after > edge_count_before)
-    {
-        corridor_book.plan_edge(edge_id);
-        if is_rail {
-            let selection = RailProfileSelection {
-                profile_id: rail_profile_id.unwrap_or("default_rail").to_owned(),
-            };
-            apply_selected_rail_profile_to_edge(directory, edge_id, &selection, None);
-        }
-    }
-    let bound_edge = segment_edge.or_else(|| {
-        directory
-            .by_edge
-            .keys()
-            .max_by_key(|id| id.0)
-            .copied()
-            .filter(|_| edge_count_after > edge_count_before)
-    });
+    let bound_edge = edges.first().copied();
     let construction_record = bound_edge.map(planned_construction_record);
-    for mut mask in overlays.iter_mut() {
-        mask.mask |= NETWORK_DIRTY_FLOW | NETWORK_DIRTY_CONNECTIVITY;
-    }
-    let mut marker_entities = vec![spawn_path_marker(
-        commands,
-        roads,
-        head,
-        marker_component,
-        "path",
-        bound_edge,
-    )];
-    if tail != head {
-        marker_entities.push(spawn_path_marker(
-            commands,
-            roads,
-            tail,
-            marker_component,
-            "path",
-            bound_edge,
-        ));
-    }
+    let tiles_added = super::tile_visual::build_site_tiles_between(head, tail);
+    let marker_entities = vec![
+        spawn_path_marker(commands, roads, head, marker_component, "path", bound_edge),
+        spawn_path_marker(commands, roads, tail, marker_component, "path", edges.last().copied()),
+    ];
     Some(SegmentApplyResult {
+        segment_id: Some(segment_id),
         tiles_added,
         marker_entities,
         edge_id: bound_edge,
@@ -467,76 +433,33 @@ fn apply_road_segment_to_world<M: Component + Copy>(
     })
 }
 
-fn append_road_tile(roads: &mut ExecutedRoadNetwork, tile: BuildSiteTile) {
-    if roads.tiles.last() == Some(&tile) {
-        return;
-    }
-    roads.tiles.push(tile);
-}
-
-/// Re-apply road tiles + transport + endpoint markers after undo (Ctrl+Y redo).
-pub(crate) fn replay_road_tiles_for_redo<M: Component + Copy>(
+/// Redo of a corridor commit: the same line again (new segment id) with its end markers.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn replay_corridor_segment_for_redo<M: Component + Copy>(
     commands: &mut Commands,
-    roads: &mut ExecutedRoadNetwork,
-    params: &WorldGenParams,
+    roads: &mut CorridorNetwork,
     topology: &mut TransportTopology,
     fields: &mut TransportFieldStore,
     directory: &mut TransportEdgeDirectory,
     corridor_book: &mut CorridorConstructionBook,
     overlays: &mut Query<&mut NetworkDirtyMask, With<ChunkStrategicOverlay>>,
-    tiles_added: &[BuildSiteTile],
+    kind: CorridorKind,
+    head: BuildSiteTile,
+    tail: BuildSiteTile,
     marker_component: M,
-) -> Vec<Entity> {
-    if tiles_added.is_empty() {
-        return Vec::new();
-    }
-    for tile in tiles_added {
-        if !roads.tiles.contains(tile) {
-            append_road_tile(roads, *tile);
-        }
-    }
-    let marker_tiles: Vec<(u32, u32)> = roads.tiles.iter().map(|t| (t.x, t.z)).collect();
-    let snap = bake_snapshot_from_ordered_tile_markers(
-        &marker_tiles,
-        |_x, _z| 0.5,
-        ROAD_MARKER_Y_SCALE,
-        ROAD_MARKER_Y_BIAS,
-    );
-    if !snap.edges.is_empty()
-        && hydrate_transport_from_snapshot(topology, fields, directory, &snap).is_ok()
-    {
-        align_corridor_book_with_transport_directory(directory, corridor_book);
-        for mut mask in overlays.iter_mut() {
-            mask.mask |= NETWORK_DIRTY_FLOW | NETWORK_DIRTY_CONNECTIVITY;
-        }
-    }
-    let head = tiles_added[0];
-    let tail = *tiles_added.last().unwrap_or(&head);
-    let mut marker_entities = vec![spawn_path_marker(
-        commands,
-        roads,
-        head,
-        marker_component,
-        "path",
-        None,
-    )];
-    if tail != head {
-        marker_entities.push(spawn_path_marker(
-            commands,
-            roads,
-            tail,
-            marker_component,
-            "path",
-            None,
-        ));
-    }
-    let _ = params;
-    marker_entities
+) -> Option<(u32, Vec<Entity>)> {
+    let id = roads.add_segment(kind, head, tail)?;
+    rebuild_corridor_transport(roads, topology, fields, directory, corridor_book, overlays);
+    let markers = vec![
+        spawn_path_marker(commands, roads, head, marker_component, "path", None),
+        spawn_path_marker(commands, roads, tail, marker_component, "path", None),
+    ];
+    Some((id, markers))
 }
 
 fn spawn_path_marker<M: Component + Copy>(
     commands: &mut Commands,
-    roads: &mut ExecutedRoadNetwork,
+    roads: &mut CorridorNetwork,
     tile: BuildSiteTile,
     marker: M,
     label: &str,

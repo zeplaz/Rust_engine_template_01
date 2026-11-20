@@ -238,3 +238,13 @@ RD-2 and RD-9 can run in parallel with RD-5/6 (different files). RD-0/RD-1 are w
 4. Cost: **materials + labour + build time** (no money exists), diesel/power to run.
 5. Rail on par: shared corridor kernel, train adapter, stations, intermodal.
 6. Placement: one shared corridor tool for road, motorway and rail; always-live preview, plain controls, per-section feedback, auto works (RD-6), moved early in the order.
+
+## Status (2026-11-20)
+
+| Phase | Status | Evidence |
+|-------|--------|----------|
+| RD-0 corridor data model | DONE (code) | `construction/corridor_network.rs` (segments, nodes ≤ 8 tiles, junctions, motorway grade separation, rail never shares road nodes); `infrastructure/road_tier.rs` + `assets/config/infrastructure/road_tiers.ron`; undo/redo by segment id; rail draws as rail; tests `corridor_network::*`, `road_tier::*`, `upgrade::*` |
+| RD-1 joinable roads, time-based choice | DONE (code) | road edges priced by tier speed (`hydrate_transport_from_snapshot`); `truck_road_route` joins at nodes within 48 tiles, ramps off-road; planner picks road vs cross-country by time |
+| RD-3 leg time from the route | DONE (code) | `SiteLegRouteBook` (sole writer `plan_site_leg_routes_system`), `RoutedTravel` in the order sim; presentation copies the planned route |
+| RD-11 dam scene roads | PARTIAL | 3 gravel supply roads + bridge; capture: 4 road segments / 11 spans, picks 11/11 (2D) and 2/2 deck rays (3D), **42 of 57 trucks routed on roads** (was 0), deliveries 879 (unchanged), all dam rows pass. Leg book was empty at the end of the run (stale-leg prune after 3 600 ticks under time skip), so trip time vs straight line is not yet in the dump |
+| Note | — | Off-road speed is now 18 km/h (RON), so roadless trips are ~2.4× slower than the old straight-line estimate at truck speed |

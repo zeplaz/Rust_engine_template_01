@@ -1815,8 +1815,24 @@ fn seed_dam_flood_play_props_once(
             z: bz.max(0) as u32,
         };
         let center = Vec2::new(bx as f32 + 0.5, bz as f32 + 0.5);
+        let tile = |(x, z): (i32, i32)| crate::strategic::BuildSiteTile { x: x.max(0) as u32, z: z.max(0) as u32 };
+        for &(a, b) in &fixture.supply_roads {
+            queue.enqueue(crate::construction::ConstructionIntent {
+                entity_type: crate::construction::ConstructionType::RoadSegment {
+                    head: tile(a),
+                    tail: tile(b),
+                    tier: crate::infrastructure::RoadTier::Gravel,
+                },
+                world_position: Vec2::new((a.0 + b.0) as f32 * 0.5, (a.1 + b.1) as f32 * 0.5),
+                rotation: 0.0,
+            });
+        }
         queue.enqueue(crate::construction::ConstructionIntent {
-            entity_type: crate::construction::ConstructionType::RoadSegment { head, tail },
+            entity_type: crate::construction::ConstructionType::RoadSegment {
+                head,
+                tail,
+                tier: crate::infrastructure::RoadTier::Gravel,
+            },
             world_position: center,
             rotation: 0.0,
         });
