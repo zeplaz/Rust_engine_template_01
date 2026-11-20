@@ -373,3 +373,22 @@ Evidence: dam scene playcheck capture (frame 5000, 6500 ticks) + `cargo test --l
 | Water | Controlled releases (outlet / spillway / turbine) were reported numbers only in 2D mode: water never passed the dam except over the crest | DONE | `transfer_through_dam` moves them upstream face -> toe |
 | Destruction | Dam crest holds until a column is Compromised (integrity < 0.6); emergency spillway doubled (freeboard ~1.5 m) | DONE | — |
 | Tests/zones | Fire + missile test moved to a dry woodland zone (24..84, 24..84) away from the dam; S9 water x fire moved to a planned third zone; S3 = peak drowned (was end-of-run count) | DONE / zone fire spread OPEN (agent) | capture: drowned peak 3682 |
+
+## Water across the map (WM) — plan from the map-wide audit (2026-11-20)
+
+Finding: one fluid solver runs only inside a fixed ROI box seeded once by the first dam; everything
+else is `WorldStaticWaterDepth`, a per-class depth stamp written at worldgen and never changed. No
+rain, dam, crater or flood outside the box touches it; the box edge is a hard wall; the GPU view and
+the PixelWorld field composite the two differently; fire/roads/buildings/stands each read a
+different water source; the solver steps a fixed 1 s per frame regardless of the sim clock.
+
+Target: **one water field for the whole map**, solved where water can move, read by everyone.
+
+| Id | Slice | Exit |
+|:---|:---|:---|
+| WM-1 | Map-sized `SurfaceWaterField` seeded from static depth + real bed (no synthetic valley, coverage check); **active-chunk stepping** (wet chunks + 1-chunk halo, sleep when settled); per-region CFL; scratch buffers reused; dt from `SimStepClock` (pause/speed aware). ROI box + per-dam ROI request retired (every dam works anywhere) | whole map solved at <= the old ROI cost when calm |
+| WM-2 | Sources/sinks: river inflow from the hydrology drainage graph at map-edge/headwater cells (not a constant 120 m3/s), open outflow at map edges/ocean, per-cell rain + infiltration | rivers flow from their sources; rain ponds and raises rivers |
+| WM-3 | Level-pool only as a far-field reduction, never painted depth; `transfer_through_dam` replaced by outlet faces in the solver | no mode pops, closed dam fills by real flow |
+| WM-4 | One water read API (`WaterTileProbe`) for fire gate, roads (flood blocks), buildings (DISASTER-PROXY), stands, cursor, dam placement; fire reads live depth | flooded forest doesn't burn, static rivers block roads, etc. |
+| WM-5 | Render from the one field: GPU texture full-res from the field (with flux), PixelWorld field patched per dirty chunk (no quantised stamp), catalog ribbons only where the field has no flow; minimap/world map overlay from the field | what you see = what the sim has, updated next frame |
+| WM-6 | Remove duplicates: substrate `hydrology.water_depth` copy, `WaterClassRuntime` hysteresis (or make them read-only projections) | one truth |
