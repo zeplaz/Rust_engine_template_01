@@ -86,7 +86,7 @@ pub use dam_barrier::{
     link_dam_hydro_site_system,
     dam_column_crest_fraction,
     derate_turbines_from_dam_damage_system, dam_kind_site_suitable, dam_spans_banks,
-    dam_spans_banks_with_runtime, erode_dam_columns_by_flow,
+    erode_dam_columns_by_flow,
     install_barrier_from_operational_dam_system, leak_flow_from_integrity,
     mirror_dam_control_to_barrier_system, DamBody, DamControl, DamKind,
 };

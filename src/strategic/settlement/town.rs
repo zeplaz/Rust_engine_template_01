@@ -336,17 +336,8 @@ pub fn snap_generated_towns_off_water(
     if !snap.pending {
         return;
     }
-    if !water_probe.available() {
+    if !water_probe.ready() {
         return;
-    }
-    if let Some(catalog) = water_probe.catalog.as_ref() {
-        if (catalog.grid_width == 0 || catalog.grid_height == 0)
-            && water_probe.runtime.is_none()
-            && water_probe.field.is_none()
-            && water_probe.static_depth.is_none()
-        {
-            return;
-        }
     }
     let is_water = |cell: IVec2| water_probe.is_water(cell.x, cell.y);
     let wet: Vec<IVec2> = towns

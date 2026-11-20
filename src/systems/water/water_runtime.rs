@@ -135,30 +135,23 @@ impl WaterClassRuntime {
     }
 }
 
-/// Canonical gameplay wet test (W1).
+/// Wet test over explicit sources (WM-4). Systems use [`super::WaterTileProbe`]; this stays for
+/// pure helpers that hold plain references.
 ///
-/// Order: live ROI field depth → runtime look/wet → world static depth → fallback
-/// (catalog last resort only).
+/// Wired field: its live depth decides, and a tile off the map is dry. Not seeded yet: the static
+/// stamp the field will be seeded from, then `fallback` (the render catalog). `_runtime` is
+/// ignored: the look labels are a projection of the field, never a second wet source.
 #[must_use]
 pub fn tile_is_wet(
     field: Option<&SurfaceWaterField>,
-    runtime: Option<&WaterClassRuntime>,
+    _runtime: Option<&WaterClassRuntime>,
     static_depth: Option<&WorldStaticWaterDepth>,
     wx: i32,
     wz: i32,
     fallback: impl FnOnce(i32, i32) -> bool,
 ) -> bool {
-    if let Some(f) = field {
-        if f.wired {
-            if let Some(d) = f.depth_at_world(wx, wz) {
-                return d >= WET_DEPTH_M;
-            }
-        }
-    }
-    if let Some(rt) = runtime {
-        if let Some(open) = rt.is_open_water_world(wx, wz) {
-            return open;
-        }
+    if let Some(f) = field.filter(|f| f.wired) {
+        return f.depth_at_world(wx, wz).is_some_and(|d| d >= WET_DEPTH_M);
     }
     if let Some(st) = static_depth {
         if let Some(wet) = st.is_wet_world(wx, wz) {
@@ -196,6 +189,15 @@ mod tests {
         assert!(rt.class[5].is_open_water(), "still wet during hysteresis");
         rt.project_from_field(&field, None, DRY_HOLD_S);
         assert_eq!(rt.class[5], WaterClass::Dry);
+    }
+
+    #[test]
+    fn dried_field_cell_beats_wet_static_stamp() {
+        let mut field = SurfaceWaterField::default();
+        field.allocate(0, 0, 2, 2, vec![0.0; 4], 0.0);
+        let stamp = WorldStaticWaterDepth { width: 2, height: 2, depth_m: vec![3.0; 4], stamp: 0 };
+        assert!(!tile_is_wet(Some(&field), None, Some(&stamp), 0, 0, |_, _| true));
+        assert!(tile_is_wet(None, None, Some(&stamp), 0, 0, |_, _| false), "unseeded: static stamp");
     }
 
     #[test]

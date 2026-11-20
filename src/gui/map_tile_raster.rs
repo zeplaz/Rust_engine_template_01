@@ -230,6 +230,43 @@ pub fn raster_sim_minimap_layered_to_subregion(
     }
 }
 
+/// Water tint of the strategic map raster.
+const WATER_MAP_RGB: [u8; 3] = [38, 96, 178];
+
+/// Tint tiles the live surface-water field says are wet (WM-5): floods, reservoirs and rivers show
+/// on the map as the sim has them, deeper water darker. Reads the per-tile mask only.
+pub fn apply_water_wet_mask_to_rgba_subregion(
+    data: &mut [u8],
+    tex_w: usize,
+    x0: usize,
+    y0: usize,
+    x1: usize,
+    y1: usize,
+    mask: &crate::systems::water::WaterFieldWetMask,
+) {
+    for y in y0..y1.min(mask.height as usize) {
+        for x in x0..x1.min(mask.width as usize) {
+            let level = mask.level_at(x as u32, y as u32);
+            if level == 0 {
+                continue;
+            }
+            let i = 4 * (y * tex_w + x);
+            if i + 3 >= data.len() {
+                continue;
+            }
+            let depth01 = f32::from(level) / 255.0;
+            let strength = 0.55 + 0.35 * depth01.sqrt();
+            let shade = 1.0 - 0.35 * depth01;
+            for c in 0..3 {
+                let tint = f32::from(WATER_MAP_RGB[c]) * shade;
+                data[i + c] = (f32::from(data[i + c]) * (1.0 - strength) + tint * strength)
+                    .round()
+                    .clamp(0.0, 255.0) as u8;
+            }
+        }
+    }
+}
+
 /// Chunk-uniform fire heat from [`crate::render::SharedOverlayFieldBuffers`] (same source as world preview).
 pub fn apply_shared_fire_heat_to_rgba(
     data: &mut [u8],
@@ -557,6 +594,20 @@ fn landform_from_neighbor_elev(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    /// WM-5: a flooded tile turns blue on the map raster, a dry one is left alone.
+    #[test]
+    fn water_mask_tints_wet_tiles_only() {
+        let mut mask = crate::systems::water::WaterFieldWetMask::default();
+        mask.width = 2;
+        mask.height = 1;
+        mask.level = vec![0, 200];
+        let mut data = vec![120u8; 4 * 2];
+        apply_water_wet_mask_to_rgba_subregion(&mut data, 2, 0, 0, 2, 1, &mask);
+        assert_eq!(&data[0..4], &[120, 120, 120, 120], "dry tile unchanged");
+        assert!(data[6] > data[4], "wet tile is bluer than red");
+        assert!(data[4] < 120, "wet tile loses its land red");
+    }
 
     #[test]
     fn play_map_ridge_is_lighter_than_hollow() {

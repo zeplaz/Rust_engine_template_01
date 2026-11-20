@@ -540,17 +540,26 @@ pub struct WaterOverlayDrawFrame {
     pub instances: Vec<WaterOverlayGpuInstance>,
 }
 
+/// Field flow below this (m/s) is not drawn as an arrow (the field shader already shows the water).
+const FIELD_FLOW_ARROW_MIN_MPS: f32 = 0.25;
+/// Flow arrows per frame (the visual frame subsamples the map; this bounds the instance buffer).
+const FIELD_FLOW_ARROWS_MAX: usize = 1024;
+
 pub fn sync_water_overlay_draw_frame(
     catalog: Option<Res<WaterSurfaceVisualCatalog>>,
     sim_water: Option<Res<crate::systems::water::SurfaceWaterVisualFrame>>,
     gpu_field: Option<Res<crate::systems::water::SurfaceWaterGpuFieldMeta>>,
+    wet_mask: Option<Res<crate::systems::water::WaterFieldWetMask>>,
     cam_scale: Option<Res<crate::render::pipelines::gpu_particles::FireParticleCameraScale>>,
     time: Res<Time>,
     mut frame: ResMut<WaterOverlayDrawFrame>,
 ) {
-    // Presentation contract: one fluid → at most one kind per tile.
-    // River / lake / ocean are labels on the same water, not stacked layers.
-    // River→lake is a channel entering a standing body; never draw a river ribbon on lake tiles.
+    // Presentation contract: one fluid -> at most one kind per tile. WM-5: once the map-wide field
+    // is seeded it is the water everywhere -- its shader draws depth / flow / foam, so catalog
+    // river ribbons (a second flow description) are dropped and motion comes from the field's own
+    // flux as short arrows. The catalog keeps only what the field has no data for: everything
+    // before the field is seeded, and still-water ripples (lake / ocean anchors) on tiles the
+    // field says are wet.
     frame.instances.clear();
     frame.anim_time_secs = time.elapsed_secs();
     frame.zoom_alpha = cam_scale
@@ -558,90 +567,57 @@ pub fn sync_water_overlay_draw_frame(
         .map(|c| c.zoom_alpha)
         .unwrap_or(0.5);
     let strategic = water_at_strategic_zoom(frame.zoom_alpha);
-    let field_roi = gpu_field.as_ref().filter(|g| g.wired && g.width > 0 && g.height > 0);
-    let in_field_roi = |tx: f32, tz: f32| -> bool {
-        let Some(g) = field_roi else {
-            return false;
-        };
-        let step = g.step.max(1) as f32;
-        let x0 = g.origin_x as f32;
-        let z0 = g.origin_z as f32;
-        let x1 = x0 + g.width as f32 * step;
-        let z1 = z0 + g.height as f32 * step;
-        tx >= x0 && tx < x1 && tz >= z0 && tz < z1
-    };
+    let field_seeded = gpu_field
+        .as_deref()
+        .is_some_and(|g| g.wired && g.width > 0 && g.height > 0);
+    let mask = wet_mask.as_deref().filter(|m| field_seeded && m.is_ready());
     if let Some(catalog) = catalog.as_ref() {
         frame
             .instances
             .reserve(catalog.river_segments.len() + catalog.motion_anchors.len() + 128);
-        for seg in &catalog.river_segments {
-            // Inside live ROI the field shader owns the surface; keep catalog ribbons outside.
-            if in_field_roi(seg.start.x, seg.start.y) && in_field_roi(seg.end.x, seg.end.y) {
-                continue;
+        if !field_seeded {
+            for seg in &catalog.river_segments {
+                let mut inst = WaterOverlayGpuInstance::from_river(seg);
+                if strategic {
+                    inst.flow_extent.z *= 1.35;
+                }
+                frame.instances.push(inst);
             }
-            let mut inst = WaterOverlayGpuInstance::from_river(seg);
-            if strategic {
-                inst.flow_extent.z *= 1.35;
-            }
-            frame.instances.push(inst);
         }
         for anchor in &catalog.motion_anchors {
-            if in_field_roi(anchor.world.x, anchor.world.y) {
+            let field_dry = mask.is_some_and(|m| {
+                anchor.world.x < 0.0
+                    || anchor.world.y < 0.0
+                    || m.level_at(anchor.world.x as u32, anchor.world.y as u32) == 0
+            });
+            let field_owns_flow = field_seeded && anchor.kind == WaterSurfaceKind::River;
+            if field_dry || field_owns_flow {
                 continue;
             }
             frame.instances.push(WaterOverlayGpuInstance::from_motion(anchor));
         }
     }
-    // DF-3: expand presentation for *new* wet area (reservoir / flood) only.
-    // Skip tiles covered by the GPU field ROI (field pass draws depth/flow/foam there).
-    if let Some(sw) = sim_water.as_ref() {
-        for &(tx, tz, depth, speed, fdx, fdz) in sw.samples.iter().take(256) {
-            if in_field_roi(tx, tz) {
-                // Tactical flow arrows only (short river segments) when moving.
-                if speed > 0.25 {
-                    let dir = Vec2::new(fdx, fdz).normalize_or_zero();
-                    let half = (0.35 + speed * 0.15).clamp(0.25, 0.9);
-                    let start = Vec2::new(tx, tz) - dir * half;
-                    let end = Vec2::new(tx, tz) + dir * half;
-                    frame.instances.push(WaterOverlayGpuInstance::from_river(
-                        &RiverPolylineSegment {
-                            path_id: 0,
-                            start,
-                            end,
-                            flow_dir: dir,
-                            half_width: 0.18,
-                        },
-                    ));
-                }
+    // Flow arrows straight from the field's flux (sim snapshot `SurfaceWaterVisualFrame`).
+    if let Some(sw) = sim_water.as_ref().filter(|_| field_seeded) {
+        let mut arrows = 0usize;
+        for &(tx, tz, _depth, speed, fdx, fdz) in &sw.samples {
+            if speed <= FIELD_FLOW_ARROW_MIN_MPS {
                 continue;
             }
-            let tile = (tx.floor() as u32, tz.floor() as u32);
-            let already = catalog.as_ref().is_some_and(|c| {
-                c.river_tiles.contains(&tile)
-                    || c.lake_tiles.contains(&tile)
-                    || c.ocean_tiles.contains(&tile)
-            });
-            if already {
-                continue;
+            if arrows >= FIELD_FLOW_ARROWS_MAX {
+                break;
             }
-            // Derived kind from the fluid state (not a second water layer).
-            let kind = if speed > 0.12 {
-                WaterSurfaceKind::River
-            } else {
-                WaterSurfaceKind::Lake
-            };
-            let extent = if kind == WaterSurfaceKind::River {
-                (1.1 + depth * 0.12).clamp(0.9, 2.8)
-            } else {
-                (1.4 + depth * 0.2).clamp(1.0, 4.0)
-            };
-            frame.instances.push(WaterOverlayGpuInstance::from_motion(
-                &WaterMotionAnchor {
-                    kind,
-                    world: Vec2::new(tx, tz),
-                    extent,
-                },
-            ));
+            arrows += 1;
+            let dir = Vec2::new(fdx, fdz).normalize_or_zero();
+            let half = (0.35 + speed * 0.15).clamp(0.25, 0.9);
+            let centre = Vec2::new(tx, tz);
+            frame.instances.push(WaterOverlayGpuInstance::from_river(&RiverPolylineSegment {
+                path_id: 0,
+                start: centre - dir * half,
+                end: centre + dir * half,
+                flow_dir: dir,
+                half_width: 0.18,
+            }));
         }
     }
 }
@@ -1047,10 +1023,7 @@ mod tests {
         assert_ne!(river.world_kind.z, lake.world_kind.z, "rivers ≠ lakes on GPU path");
     }
 
-    /// DF-3 / WATER-5: when the GPU field is wired, catalog ribbons inside the ROI
-    /// must not dual-draw (field shader owns the surface).
-    #[test]
-    fn df3_catalog_ribbons_skipped_inside_wired_field_roi() {
+    fn overlay_app(seeded: bool) -> App {
         let mut app = App::new();
         app.add_plugins(MinimalPlugins);
         app.init_resource::<Time>();
@@ -1072,26 +1045,41 @@ mod tests {
         });
         app.insert_resource(catalog);
         app.insert_resource(crate::systems::water::SurfaceWaterGpuFieldMeta {
-            wired: true,
-            origin_x: 0,
-            origin_z: 0,
-            width: 16,
-            height: 16,
+            wired: seeded,
+            width: if seeded { 320 } else { 0 },
+            height: if seeded { 320 } else { 0 },
             step: 1,
             ..Default::default()
         });
         app.add_systems(Update, sync_water_overlay_draw_frame);
+        app
+    }
+
+    /// WM-5: before the field is seeded the catalog ribbons draw everywhere.
+    #[test]
+    fn wm5_catalog_ribbons_draw_until_the_field_is_seeded() {
+        let mut app = overlay_app(false);
+        app.update();
+        assert_eq!(app.world().resource::<WaterOverlayDrawFrame>().instances.len(), 2);
+    }
+
+    /// WM-5: once the map-wide field is seeded, motion comes from the field's flux (arrows), the
+    /// catalog river ribbons no longer dual-draw, and slow water gets no arrow.
+    #[test]
+    fn wm5_seeded_field_replaces_catalog_ribbons_with_field_flow_arrows() {
+        let mut app = overlay_app(true);
+        app.insert_resource(crate::systems::water::SurfaceWaterVisualFrame {
+            samples: vec![
+                (200.5, 150.5, 2.0, 1.5, 0.0, 1.0), // fast river cell far from any ROI
+                (10.5, 10.5, 2.0, 0.05, 1.0, 0.0),  // slow
+            ],
+            ..Default::default()
+        });
         app.update();
         let frame = app.world().resource::<WaterOverlayDrawFrame>();
-        assert_eq!(
-            frame.instances.len(),
-            1,
-            "only outside-ROI catalog ribbon should remain"
-        );
-        let mid = frame.instances[0].world_kind.xy();
-        assert!(
-            mid.x > 80.0 && mid.y > 80.0,
-            "kept instance should be the outside-ROI segment"
-        );
+        assert_eq!(frame.instances.len(), 1, "one field-flow arrow, no catalog ribbons");
+        let i = &frame.instances[0];
+        assert!((i.world_kind.x - (200.5 - 0.0)).abs() < 1.0 && i.world_kind.y < 150.5, "arrow centred on the sample");
+        assert!(i.flow_extent.y > 0.9, "arrow points along the field flow (+z)");
     }
 }

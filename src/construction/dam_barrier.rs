@@ -10,10 +10,7 @@ use crate::strategic::{
     ConstructionSite, SiteArchetype, SiteConstructionPhase, SiteFootprint,
 };
 use crate::construction::demolish::DestructibleDamageStage;
-use crate::systems::water::{
-    BarrierInstallRequest, BarrierInstallSpec, SurfaceWaterField, WaterClassRuntime,
-    WorldStaticWaterDepth,
-};
+use crate::systems::water::{BarrierInstallRequest, BarrierInstallSpec, SurfaceWaterField};
 use bevy::math::UVec2;
 
 /// Structural / hydraulic kind — drives placement gates and barrier profile, not “power tier.”
@@ -609,40 +606,42 @@ pub fn attach_dam_body_on_commit_system(
     }
 }
 
-/// Mirror per-dam [`DamControl`] into general [`BarrierControlIntent`] (water owns solve).
-/// Deterministic: highest entity bits among installed dams wins.
+/// The control a dam site publishes to water: its own gates / outlets, and the turbine bank only
+/// when a hydro plant is linked.
+#[must_use]
+pub fn dam_ops_from_control(ctrl: &DamControl, has_hydro: bool) -> crate::systems::water::DamOps {
+    let turbine_m3s = if has_hydro {
+        ctrl.turbines.iter().map(|t| t.effective_m3s()).sum()
+    } else {
+        0.0
+    };
+    crate::systems::water::DamOps {
+        gate_open01: ctrl.gate_open01.clamp(0.0, 1.0),
+        outlet_open01: ctrl.outlet_open01.clamp(0.0, 1.0),
+        mid_outlet_open01: ctrl.mid_outlet_open01.clamp(0.0, 1.0),
+        turbine_m3s,
+    }
+}
+
+/// Publish every dam site's [`DamControl`] to water, keyed by the dam entity (WM-3). Each dam in
+/// the field runs on its own entry; water is the only reader. Control may be set before the
+/// barrier is installed, so a scenario can pre-set gates. Entries of dams that left the world
+/// are dropped.
 pub fn mirror_dam_control_to_barrier_system(
     dams: Query<(Entity, &DamBody, &DamControl)>,
-    mut barrier: ResMut<crate::systems::water::BarrierControlIntent>,
+    mut book: ResMut<crate::systems::water::BarrierControlBook>,
 ) {
-    let mut best: Option<(u64, &DamControl, bool)> = None;
+    let mut seen = 0_usize;
     for (e, body, ctrl) in &dams {
-        if !body.barrier_installed && body.integrity_01 >= 0.99 {
-            // Still allow control before install so scenario can pre-set gates.
-        }
-        let id = e.to_bits();
-        let has_hydro = body.hydro_site.is_some();
-        if best.as_ref().is_none_or(|(b, _, _)| id >= *b) {
-            best = Some((id, ctrl, has_hydro));
+        seen += 1;
+        let ops = dam_ops_from_control(ctrl, body.hydro_site.is_some());
+        if book.get(e) != Some(ops) {
+            book.set(e, ops);
         }
     }
-    let Some((_, ctrl, has_hydro)) = best else {
-        return;
-    };
-    barrier.gate_open01 = ctrl.gate_open01.clamp(0.0, 1.0);
-    barrier.outlet_open01 = ctrl.outlet_open01.clamp(0.0, 1.0);
-    barrier.mid_outlet_open01 = ctrl.mid_outlet_open01.clamp(0.0, 1.0);
-    if has_hydro {
-        barrier.turbines = ctrl.turbines;
-        barrier.sync_turbine_aggregate();
-    } else {
-        barrier.turbines = [crate::systems::water::DamTurbineUnit::default();
-            crate::systems::water::DAM_TURBINE_UNIT_COUNT];
-        barrier.turbine_flow_setpoint_m3s = 0.0;
+    if book.len() != seen {
+        book.retain(|e| dams.contains(e));
     }
-    barrier.prefer_level_pool = barrier.combined_outlet_open01() <= 0.2
-        && barrier.gate_open01 <= 0.2
-        && barrier.effective_turbine_m3s() < 1.0;
 }
 
 /// Infer kind from catalog id / display tokens (embankment default).
@@ -664,20 +663,6 @@ pub fn dam_kind_from_catalog_id(catalog_id: Option<&str>) -> DamKind {
     } else {
         DamKind::Embankment
     }
-}
-
-/// Pure helper for placement preview (depth-first wet test).
-#[must_use]
-pub fn dam_spans_banks_with_runtime(
-    tiles: &[IVec2],
-    field: Option<&SurfaceWaterField>,
-    runtime: Option<&WaterClassRuntime>,
-    static_depth: Option<&WorldStaticWaterDepth>,
-    catalog_fallback: impl Fn(i32, i32) -> bool,
-) -> bool {
-    dam_spans_banks(tiles, |x, z| {
-        crate::systems::water::tile_is_wet(field, runtime, static_depth, x, z, &catalog_fallback)
-    })
 }
 
 #[cfg(test)]
@@ -710,6 +695,41 @@ mod tests {
             .drain_merged()
             .expect("despawned dam must release its crest");
         assert!(spec.clear_crest);
+    }
+
+    /// Every dam site publishes its own control (turbines only with a linked plant); entries of
+    /// dams that left the world are dropped.
+    #[test]
+    fn mirror_publishes_each_dams_own_control() {
+        use crate::systems::water::{BarrierControlBook, DamTurbineUnit};
+        let mut app = App::new();
+        app.init_resource::<BarrierControlBook>()
+            .add_systems(Update, mirror_dam_control_to_barrier_system);
+        let turbines = [DamTurbineUnit { setpoint_m3s: 20.0, available01: 1.0 }; 3];
+        let hydro_plant = app.world_mut().spawn_empty().id();
+        let a = app
+            .world_mut()
+            .spawn((
+                DamBody { hydro_site: Some(hydro_plant), ..default() },
+                DamControl { gate_open01: 0.9, outlet_open01: 0.1, turbines, ..default() },
+            ))
+            .id();
+        let b = app
+            .world_mut()
+            .spawn((
+                DamBody::default(),
+                DamControl { gate_open01: 0.0, outlet_open01: 0.7, turbines, ..default() },
+            ))
+            .id();
+        app.update();
+        let book = app.world().resource::<BarrierControlBook>();
+        let (oa, ob) = (book.get(a).unwrap(), book.get(b).unwrap());
+        assert_eq!((oa.gate_open01, oa.outlet_open01, oa.turbine_m3s), (0.9, 0.1, 60.0));
+        assert_eq!((ob.gate_open01, ob.outlet_open01, ob.turbine_m3s), (0.0, 0.7, 0.0), "no plant, no turbine");
+        app.world_mut().despawn(b);
+        app.update();
+        let book = app.world().resource::<BarrierControlBook>();
+        assert!(book.get(b).is_none() && book.get(a).is_some() && book.len() == 1);
     }
 
     /// 5×5 ROI on a 300 m valley floor (real terrain metres), dam row at z=2.

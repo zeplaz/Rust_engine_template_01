@@ -15,9 +15,10 @@ use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use crate::terrain::world_scale_contract::CHUNK_TILES_SIM;
 
 use super::gauge::GaugeBook;
-use super::surface_water::{SurfaceWaterField, SurfaceWaterMode};
+use super::dam_faces::DamOps;
+use super::surface_water::{SurfaceWaterField, SurfaceWaterMode, FAR_FIELD_MIN_DT_S};
 use super::water_runtime::WaterClassRuntime;
-use super::{BarrierControlIntent, SlowDomainTimeSkip, WorldStaticWaterDepth};
+use super::{BarrierControlBook, BarrierControlIntent, SlowDomainTimeSkip, WorldStaticWaterDepth};
 
 /// Most solver steps one frame runs; a bigger backlog (high sim speed) is folded into longer
 /// steps so the cost stays bounded.
@@ -168,6 +169,7 @@ pub fn step_surface_water_system(
     mut field: ResMut<SurfaceWaterField>,
     mut runtime: ResMut<WaterClassRuntime>,
     control: Res<BarrierControlIntent>,
+    book: Res<BarrierControlBook>,
     skip: Res<SlowDomainTimeSkip>,
     clock: Res<SimStepClock>,
     weather: Option<Res<WeatherField>>,
@@ -181,20 +183,10 @@ pub fn step_surface_water_system(
     let _perf = crate::render::PerfScope::new("upd_water_solver");
     let t0 = std::time::Instant::now();
 
-    let has_barrier = field.has_barrier();
-    let use_pool = control.prefer_level_pool
-        && has_barrier
-        && control.combined_outlet_open01() <= 0.2
-        && control.gate_open01 <= 0.2
-        && control.effective_turbine_m3s() < 1.0
-        && field.breach_flow_m3s <= 0.0
-        // DW-3: a damaged column is a notch — flow through it is 2D, not a level pool.
-        && !field.hydraulics.barrier_damaged;
-    field.mode = if use_pool {
-        SurfaceWaterMode::LevelPool
-    } else {
-        SurfaceWaterMode::VirtualPipes
-    };
+    // Every dam runs on its own control: the owner's entry in the book, else the global intent
+    // (scenario rows without a dam site).
+    let fallback = DamOps::from(&*control);
+    field.set_dam_ops(|owner| owner.and_then(|e| book.get(e)).unwrap_or(fallback));
 
     if let Some(wx) = weather.as_ref() {
         let mean_mm_h = if !wx.next.rain_mm_h.is_empty() {
@@ -208,25 +200,22 @@ pub fn step_surface_water_system(
     }
 
     let sim_secs = clock.step_secs() * clock.due as f32;
-    let (gate, outlet, mid, turbine) = (
-        control.gate_open01,
-        control.outlet_open01,
-        control.mid_outlet_open01,
-        control.effective_turbine_m3s(),
-    );
-    let dt_total = if skip.enabled && use_pool {
-        // Time skip rides the sim clock like `SlowDomainElapsedSecs` (ecology): each due sim step
-        // advances the reservoir by `dt_slow_secs` (OP-12).
-        let dt = skip.dt_slow_secs.max(1) as f32 * clock.due as f32;
-        field.step(dt, gate, outlet, mid, turbine);
-        dt
+    // Time skip rides the sim clock like `SlowDomainElapsedSecs` (ecology): each due sim step
+    // advances the reservoir by `dt_slow_secs` (OP-12). Only then may a shut-in dam's reservoir
+    // window be filled by the level pool; the rest of the map keeps stepping in 2D (capped dt).
+    let skip_dt = skip.dt_slow_secs.max(1) as f32 * clock.due as f32;
+    let far_field = skip.enabled && skip_dt >= FAR_FIELD_MIN_DT_S && field.far_field_eligible();
+    field.mode = if far_field { SurfaceWaterMode::LevelPool } else { SurfaceWaterMode::VirtualPipes };
+    let dt_total = if far_field {
+        field.advance(skip_dt);
+        skip_dt
     } else {
         // Real-time water: one solver step per due sim step (folded into longer steps beyond
         // MAX_WATER_STEPS_PER_FRAME so a fast sim cannot stall the frame).
         let n = clock.due.min(MAX_WATER_STEPS_PER_FRAME).max(1);
         let dt = sim_secs / n as f32;
         for _ in 0..n {
-            field.step(dt, gate, outlet, mid, turbine);
+            field.advance(dt);
         }
         sim_secs
     };
@@ -378,6 +367,52 @@ mod tests {
         assert_eq!(app.world().resource::<SurfaceWaterField>().depth_m[0], 0.0, "reseeded for the new world");
     }
 
+    /// Each dam in the field runs on the entry its owner published; a dam with none follows the
+    /// global intent.
+    #[test]
+    fn each_dam_takes_its_own_control_from_the_book() {
+        use super::super::DamOps;
+        let mut app = app_64();
+        for y in 0..2 {
+            for x in 0..2 {
+                chunk(&mut app, x, y, 0.5);
+            }
+        }
+        app.init_resource::<BarrierControlIntent>()
+            .init_resource::<BarrierControlBook>()
+            .init_resource::<SlowDomainTimeSkip>()
+            .init_resource::<SimStepClock>()
+            .add_systems(Update, step_surface_water_system.after(seed_surface_water_system));
+        app.update(); // seed
+        let (a, b, c) = (
+            Entity::from_bits(1 << 32 | 7),
+            Entity::from_bits(1 << 32 | 8),
+            Entity::from_bits(1 << 32 | 9),
+        );
+        let row = |x0: i32, x1: i32, z: i32| -> Vec<IVec2> { (x0..x1).map(|x| IVec2::new(x, z)).collect() };
+        {
+            let mut f = app.world_mut().resource_mut::<SurfaceWaterField>();
+            f.install_barrier_tiles_for(&row(5, 15, 20), 10.0, Some(a));
+            f.install_barrier_tiles_for(&row(40, 50, 40), 10.0, Some(b));
+            f.install_barrier_tiles_for(&row(5, 15, 50), 10.0, Some(c));
+        }
+        let ops_a = DamOps { gate_open01: 0.9, outlet_open01: 0.1, ..DamOps::default() };
+        let ops_b = DamOps { outlet_open01: 0.6, turbine_m3s: 12.0, ..DamOps::default() };
+        {
+            let mut book = app.world_mut().resource_mut::<BarrierControlBook>();
+            book.set(a, ops_a);
+            book.set(b, ops_b);
+        }
+        app.world_mut().resource_mut::<BarrierControlIntent>().outlet_open01 = 0.25;
+        app.world_mut().resource_mut::<SimStepClock>().due = 1;
+        app.update();
+        let f = app.world().resource::<SurfaceWaterField>();
+        assert_eq!(f.dam_ops(0), Some(ops_a));
+        assert_eq!(f.dam_ops(1), Some(ops_b));
+        let fallback = f.dam_ops(2).unwrap();
+        assert_eq!((fallback.outlet_open01, fallback.gate_open01), (0.25, 0.0), "no entry: the global intent");
+    }
+
     /// The solver runs on the sim clock: no due step (pause / between steps) = no water motion.
     #[test]
     fn the_solver_steps_only_when_the_sim_clock_is_due() {
@@ -388,6 +423,7 @@ mod tests {
             }
         }
         app.init_resource::<BarrierControlIntent>()
+            .init_resource::<BarrierControlBook>()
             .init_resource::<SlowDomainTimeSkip>()
             .init_resource::<SimStepClock>()
             .add_systems(Update, step_surface_water_system.after(seed_surface_water_system));

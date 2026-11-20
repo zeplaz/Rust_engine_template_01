@@ -68,9 +68,10 @@ pub(crate) fn spawn_chunk_surface_fire_on_new_chunk(
 pub fn chunk_surface_fire_tick(
     ctrl: Res<SimControlState>,
     time: Res<Time>,
-    water_gate: Res<SurfaceWaterFireGate>,
+    water_gate: SurfaceWaterFireGate,
     mut query: Query<
         (
+            &Chunk,
             &ChunkCellMatrix,
             &ChunkWeather,
             Option<&ChunkSimLod>,
@@ -91,7 +92,7 @@ pub fn chunk_surface_fire_tick(
         return;
     }
 
-    for (matrix, wx, lod, eco_opt, veg_opt, prof_opt, fuel_opt, mut fire) in &mut query {
+    for (chunk, matrix, wx, lod, eco_opt, veg_opt, prof_opt, fuel_opt, mut fire) in &mut query {
         let lod_s = lod.map(|l| l.dt_scale()).unwrap_or(1.0);
         let dt_e = dt * lod_s;
 
@@ -103,7 +104,7 @@ pub fn chunk_surface_fire_tick(
         let mut sum_t = 0f32;
         let mut burnable = 0u32;
         for i in 0..n {
-            if water_gate.cell_has_standing_water(matrix, i) {
+            if water_gate.cell_has_standing_water(chunk.coord, matrix, i) {
                 continue;
             }
             sum_m += matrix.moisture[i];

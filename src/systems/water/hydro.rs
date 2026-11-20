@@ -4,7 +4,6 @@
 use bevy::prelude::*;
 
 use super::surface_water::{hydro_power_mw, SurfaceWaterField, SurfaceWaterMode};
-use super::BarrierControlIntent;
 
 /// Live hydro output derived from general water + barrier control (not scene-private).
 #[derive(Resource, Debug, Clone, Reflect)]
@@ -27,10 +26,10 @@ impl Default for HydroGenerationState {
     }
 }
 
-/// Sole writer of [`HydroGenerationState`]. Reads field + barrier intent.
+/// Sole writer of [`HydroGenerationState`]. Reads the field: each dam's turbine discharge is what
+/// its own intake face really passed, under its own gross head (`P = η·ρ·g·Q·H`, summed over dams).
 pub fn update_hydro_generation_system(
     field: Res<SurfaceWaterField>,
-    control: Res<BarrierControlIntent>,
     mut hydro: ResMut<HydroGenerationState>,
 ) {
     if !field.wired {
@@ -39,31 +38,25 @@ pub fn update_hydro_generation_system(
         hydro.q_m3s = 0.0;
         return;
     }
-    let has_crest = field.hydraulics.barrier_crest_m.iter().any(|c| *c > 0.5);
-    let head = if field.mode == SurfaceWaterMode::LevelPool || field.pool.storage_m3 > 1.0 {
-        (field.pool.stage_m - field.pool.bed_min_m).max(0.0)
-    } else {
-        field
-            .depth_m
-            .iter()
-            .copied()
-            .fold(0.0_f32, f32::max)
-            .max((field.pool.stage_m - field.pool.bed_min_m).max(0.0))
-    };
-    // Turbine draws up to setpoint while a crest + head exist (DF-6). Do not require outlet_open —
-    // closed-outlet impound with a turbine setpoint still reports available head/power.
-    let q = if has_crest && head > 0.5 {
-        control
-            .effective_turbine_m3s()
-            .clamp(0.0, field.hydraulics.turbine_design_m3s.max(1.0))
-    } else {
-        0.0
-    };
+    let (mut q, mut power_mw, mut head) = (0.0_f32, 0.0_f32, 0.0_f32);
+    let mut any_dam = false;
+    for (_, flows) in field.dam_flows() {
+        any_dam = true;
+        head = head.max(flows.head_m);
+        if flows.turbine_m3s > 0.0 && flows.head_m > 0.0 {
+            q += flows.turbine_m3s;
+            power_mw += hydro_power_mw(hydro.eta, flows.turbine_m3s, flows.head_m);
+        }
+    }
+    if !any_dam {
+        // No dam recorded: the reservoir's own stage is the only head there is.
+        head = if field.mode == SurfaceWaterMode::LevelPool || field.pool.storage_m3 > 1.0 {
+            (field.pool.stage_m - field.pool.bed_min_m).max(0.0)
+        } else {
+            field.depth_m.iter().copied().fold(0.0_f32, f32::max)
+        };
+    }
     hydro.head_m = head;
     hydro.q_m3s = q;
-    hydro.power_mw = if q > 0.0 && head > 0.0 {
-        hydro_power_mw(hydro.eta, q, head)
-    } else {
-        0.0
-    };
+    hydro.power_mw = power_mw;
 }

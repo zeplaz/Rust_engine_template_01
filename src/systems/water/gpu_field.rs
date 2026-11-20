@@ -1,4 +1,8 @@
-//! DF-3 — per-cell surface water → GPU texture (sim pack; render samples only).
+//! DF-3 / WM-5 -- the map-wide surface-water field -> GPU texture (sim pack; render samples only).
+//!
+//! The texture is packed from [`SurfaceWaterField`] alone (depth and flux; the static seed is gone
+//! by the time anything is drawn), one texel per tile up to [`GPU_FIELD_MAX_EDGE`]. After the first
+//! full pack only the texels of the field's dirty chunks are rewritten.
 //!
 //! Channels (Rgba8Unorm):
 //! - R = depth01 (depth / [`DEPTH_SCALE_M`])
@@ -16,18 +20,21 @@ use bevy::render::render_resource::{
     Extent3d, TextureDimension, TextureFormat, TextureUsages,
 };
 
-use super::static_depth::WorldStaticWaterDepth;
+use super::field_feed::WaterFieldDirtyFeed;
 use super::surface_water::SurfaceWaterField;
-use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
+use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
 
 /// Depth that maps to R=1.0 in the field texture.
 pub const DEPTH_SCALE_M: f32 = 24.0;
 /// Flow speed (m/s) that maps foam / velocity encoding toward 1.
 pub const FLOW_SPEED_SCALE: f32 = 4.0;
-/// Soft cap on texture edge so upload stays frame-budget friendly.
-pub const GPU_FIELD_MAX_EDGE: u32 = 256;
+/// Largest texture edge packed at full resolution (one texel per tile). Bigger maps subsample.
+pub const GPU_FIELD_MAX_EDGE: u32 = 1024;
 
-/// CPU book + GPU image handle for the ROI field (sole writer: [`publish_surface_water_gpu_field_system`]).
+/// A texel shows water once its R reaches this (matches the shaders' discard, depth01 < 0.02).
+const WET_TEXEL_R: u8 = 5;
+
+/// CPU book + GPU image handle for the field (sole writer: [`publish_surface_water_gpu_field_system`]).
 #[derive(Resource, Debug, Clone)]
 pub struct SurfaceWaterGpuField {
     pub image: Handle<Image>,
@@ -41,11 +48,13 @@ pub struct SurfaceWaterGpuField {
     /// Last pack cost (ms) — matrix `render.water_upload_ms_*`.
     pub upload_ms: f32,
     pub wet_texels: u32,
-    /// Inclusive dirty rectangle in texture space (for partial rewrite).
+    /// Inclusive rectangle (texture space) rewritten by the latest publish.
     pub dirty_x0: u32,
     pub dirty_z0: u32,
     pub dirty_x1: u32,
     pub dirty_z1: u32,
+    /// Last [`WaterFieldDirtyFeed`] frame applied.
+    feed_seq: u64,
 }
 
 impl Default for SurfaceWaterGpuField {
@@ -65,6 +74,7 @@ impl Default for SurfaceWaterGpuField {
             dirty_z0: 0,
             dirty_x1: 0,
             dirty_z1: 0,
+            feed_seq: 0,
         }
     }
 }
@@ -103,6 +113,7 @@ impl SurfaceWaterGpuFieldMeta {
     }
 }
 
+/// Tiles per texel along each edge: 1 up to [`GPU_FIELD_MAX_EDGE`], coarser beyond it.
 #[must_use]
 pub fn field_texel_step(width: u32, height: u32) -> u32 {
     let edge = width.max(height).max(1);
@@ -143,90 +154,86 @@ pub fn pack_water_texel(depth_m: f32, qx_m3s: f32, qy_m3s: f32, dx_m: f32) -> [u
     ]
 }
 
-/// Full ROI pack (possibly subsampled). Returns (tex_w, tex_h, step, rgba, wet_count).
+#[inline]
+fn field_texel(field: &SurfaceWaterField, lx: u32, lz: u32, dx_m: f32) -> [u8; 4] {
+    let i = field.idx(lx.min(field.width - 1), lz.min(field.height - 1));
+    pack_water_texel(
+        field.depth_m.get(i).copied().unwrap_or(0.0),
+        field.qx_m3s.get(i).copied().unwrap_or(0.0),
+        field.qy_m3s.get(i).copied().unwrap_or(0.0),
+        dx_m,
+    )
+}
+
+/// Texture size and tile-per-texel step for a field.
+#[must_use]
+pub fn field_texture_dims(field: &SurfaceWaterField) -> (u32, u32, u32) {
+    let step = field_texel_step(field.width, field.height);
+    (field.width.div_ceil(step).max(1), field.height.div_ceil(step).max(1), step)
+}
+
+/// Pack the whole field (full resolution up to [`GPU_FIELD_MAX_EDGE`]).
+/// Returns `(tex_w, tex_h, step, rgba, wet_texels)`; empty when the field is not wired.
 #[must_use]
 pub fn pack_surface_water_field_rgba8(field: &SurfaceWaterField) -> (u32, u32, u32, Vec<u8>, u32) {
     if !field.wired || field.width == 0 || field.height == 0 {
         return (0, 0, 1, Vec::new(), 0);
     }
-    let (tw, th, step, data, wet, _, _) = pack_composite_water_field_rgba8(Some(field), None);
-    (tw, th, step, data, wet)
-}
-
-/// Composite pack: world static depth ⊕ live ROI (ROI overwrites). Same Rgba8 contract.
-/// Returns `(tex_w, tex_h, step, rgba, wet, origin_x, origin_z)`.
-#[must_use]
-pub fn pack_composite_water_field_rgba8(
-    field: Option<&SurfaceWaterField>,
-    static_depth: Option<&WorldStaticWaterDepth>,
-) -> (u32, u32, u32, Vec<u8>, u32, i32, i32) {
-    let roi = field.filter(|f| f.wired && f.width > 0 && f.height > 0);
-    let st = static_depth.filter(|s| s.width > 0 && s.height > 0 && s.depth_m.len() >= (s.width * s.height) as usize);
-
-    let (origin_x, origin_z, world_w, world_h) = match (roi, st) {
-        (Some(f), Some(s)) => {
-            let x0 = f.origin_x.min(0);
-            let z0 = f.origin_z.min(0);
-            let x1 = (f.origin_x + f.width as i32).max(s.width as i32);
-            let z1 = (f.origin_z + f.height as i32).max(s.height as i32);
-            // Prefer full static map extent when present (covers play world).
-            if s.width >= f.width && s.height >= f.height && f.origin_x >= 0 && f.origin_z >= 0 {
-                (0, 0, s.width, s.height)
-            } else {
-                let w = (x1 - x0).max(1) as u32;
-                let h = (z1 - z0).max(1) as u32;
-                (x0, z0, w, h)
-            }
-        }
-        (Some(f), None) => (f.origin_x, f.origin_z, f.width, f.height),
-        (None, Some(s)) => (0, 0, s.width, s.height),
-        (None, None) => return (0, 0, 1, Vec::new(), 0, 0, 0),
-    };
-
-    let step = field_texel_step(world_w, world_h);
-    let tw = world_w.div_ceil(step).max(1);
-    let th = world_h.div_ceil(step).max(1);
+    let (tw, th, step) = field_texture_dims(field);
+    let dx = field.dx_m.max(TILE_METRES_GAMEPLAY);
     let mut data = vec![0u8; (tw * th * 4) as usize];
-    let dx = roi
-        .map(|f| f.dx_m.max(TILE_METRES_GAMEPLAY))
-        .unwrap_or(TILE_METRES_GAMEPLAY);
     let mut wet = 0u32;
-
     for tz in 0..th {
         for tx in 0..tw {
-            let wx = origin_x + (tx * step) as i32;
-            let wz = origin_z + (tz * step) as i32;
-            let mut d = 0.0_f32;
-            let mut qx = 0.0_f32;
-            let mut qy = 0.0_f32;
-            if let Some(s) = st {
-                if wx >= 0 && wz >= 0 {
-                    if let Some(i) = s.idx(wx as u32, wz as u32) {
-                        d = s.depth_m.get(i).copied().unwrap_or(0.0);
-                    }
-                }
-            }
-            if let Some(f) = roi {
-                let lx = wx - f.origin_x;
-                let lz = wz - f.origin_z;
-                if lx >= 0 && lz >= 0 && (lx as u32) < f.width && (lz as u32) < f.height {
-                    let i = f.idx(lx as u32, lz as u32);
-                    d = f.depth_m.get(i).copied().unwrap_or(d);
-                    qx = f.qx_m3s.get(i).copied().unwrap_or(0.0);
-                    qy = f.qy_m3s.get(i).copied().unwrap_or(0.0);
-                }
-            }
-            let px = pack_water_texel(d, qx, qy, dx);
-            // Match the shaders' discard (depth01 < 0.02 ≈ R 5): `> 8` hid shallow live flow
-            // (wet_texels = 0 → both views hid all water). CLOSE-W1.
-            if px[0] >= 5 {
-                wet += 1;
-            }
+            let px = field_texel(field, tx * step, tz * step, dx);
+            wet += u32::from(px[0] >= WET_TEXEL_R);
             let o = ((tz * tw + tx) * 4) as usize;
             data[o..o + 4].copy_from_slice(&px);
         }
     }
-    (tw, th, step, data, wet, origin_x, origin_z)
+    (tw, th, step, data, wet)
+}
+
+/// Rewrite the texels of one sim chunk in place. Returns the signed change of the wet-texel count
+/// and the inclusive texture rect touched (`None` when the chunk is outside the texture).
+fn patch_chunk_texels(
+    field: &SurfaceWaterField,
+    data: &mut [u8],
+    tw: u32,
+    th: u32,
+    step: u32,
+    chunk: IVec2,
+) -> Option<(i32, [u32; 4])> {
+    let cs = CHUNK_TILES_SIM as i32;
+    // Chunk cell range in field-local cells.
+    let lx0 = (chunk.x * cs - field.origin_x).max(0);
+    let lz0 = (chunk.y * cs - field.origin_z).max(0);
+    let lx1 = ((chunk.x + 1) * cs - field.origin_x).min(field.width as i32);
+    let lz1 = ((chunk.y + 1) * cs - field.origin_z).min(field.height as i32);
+    if lx0 >= lx1 || lz0 >= lz1 {
+        return None;
+    }
+    let s = step as i32;
+    // Texels whose sampled cell (t * step) falls inside the chunk range.
+    let tx0 = (lx0 + s - 1) / s;
+    let tz0 = (lz0 + s - 1) / s;
+    let tx1 = ((lx1 + s - 1) / s).min(tw as i32); // exclusive
+    let tz1 = ((lz1 + s - 1) / s).min(th as i32);
+    if tx0 >= tx1 || tz0 >= tz1 {
+        return None;
+    }
+    let dx = field.dx_m.max(TILE_METRES_GAMEPLAY);
+    let mut wet_delta = 0i32;
+    for tz in tz0..tz1 {
+        for tx in tx0..tx1 {
+            let px = field_texel(field, tx as u32 * step, tz as u32 * step, dx);
+            let o = ((tz as u32 * tw + tx as u32) * 4) as usize;
+            let was = data[o] >= WET_TEXEL_R;
+            wet_delta += i32::from(px[0] >= WET_TEXEL_R) - i32::from(was);
+            data[o..o + 4].copy_from_slice(&px);
+        }
+    }
+    Some((wet_delta, [tx0 as u32, tz0 as u32, tx1 as u32 - 1, tz1 as u32 - 1]))
 }
 
 fn make_field_image(w: u32, h: u32, data: Vec<u8>) -> Image {
@@ -252,25 +259,17 @@ fn make_field_image(w: u32, h: u32, data: Vec<u8>) -> Image {
 }
 
 /// Sole writer of [`SurfaceWaterGpuField`] + its [`Image`] bytes.
+///
+/// First sight (or a resized field, or a skipped feed frame) packs the whole field; afterwards
+/// only the texels of the chunks the field reported as moved are rewritten.
 pub fn publish_surface_water_gpu_field_system(
     field: Res<SurfaceWaterField>,
-    static_depth: Option<Res<WorldStaticWaterDepth>>,
+    feed: Res<WaterFieldDirtyFeed>,
     mut book: ResMut<SurfaceWaterGpuField>,
     mut meta: ResMut<SurfaceWaterGpuFieldMeta>,
     mut images: ResMut<Assets<Image>>,
 ) {
-    // The map field only moves on sim steps: repack when it (or the static water) changed.
-    if book.wired
-        && !field.is_changed()
-        && !static_depth.as_ref().is_some_and(|s| s.is_changed())
-    {
-        return;
-    }
-    let t0 = Instant::now();
-    let st = static_depth.as_deref();
-    let (tw, th, step, data, wet, ox, oz) =
-        pack_composite_water_field_rgba8(Some(field.as_ref()), st);
-    if tw == 0 || th == 0 || data.is_empty() {
+    if !field.wired || field.width == 0 || field.height == 0 {
         if book.wired {
             book.wired = false;
             book.width = 0;
@@ -279,26 +278,64 @@ pub fn publish_surface_water_gpu_field_system(
             book.revision = book.revision.wrapping_add(1);
             *meta = SurfaceWaterGpuFieldMeta::from_book(&book);
         }
-        book.upload_ms = t0.elapsed().as_secs_f32() * 1000.0;
-        meta.upload_ms = book.upload_ms;
+        return;
+    }
+    let (tw, th, step) = field_texture_dims(&field);
+    let size_ok = book.wired
+        && book.width == tw
+        && book.height == th
+        && book.step == step
+        && (book.origin_x, book.origin_z) == (field.origin_x, field.origin_z)
+        && images.contains(&book.image);
+    let delta = if size_ok { feed.chunks_since(book.feed_seq) } else { None };
+    if size_ok && delta.is_some_and(<[IVec2]>::is_empty) {
+        return;
+    }
+    let t0 = Instant::now();
+    book.feed_seq = feed.seq;
+
+    if let Some(chunks) = delta {
+        let handle = book.image.clone();
+        let mut wet = book.wet_texels as i32;
+        let mut rect: Option<[u32; 4]> = None;
+        if let Some(mut img) = images.get_mut(&handle) {
+            if let Some(data) = img.data.as_mut() {
+                for &c in chunks {
+                    if let Some((d, r)) = patch_chunk_texels(&field, data, tw, th, step, c) {
+                        wet += d;
+                        rect = Some(rect.map_or(r, |u| [u[0].min(r[0]), u[1].min(r[1]), u[2].max(r[2]), u[3].max(r[3])]));
+                    }
+                }
+            }
+            if rect.is_some() {
+                // Retouch asset usage so the render world re-uploads the image.
+                img.asset_usage = RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD;
+            }
+        }
+        if let Some(r) = rect {
+            book.wet_texels = wet.max(0) as u32;
+            book.dirty_x0 = r[0];
+            book.dirty_z0 = r[1];
+            book.dirty_x1 = r[2];
+            book.dirty_z1 = r[3];
+            book.revision = book.revision.wrapping_add(1);
+            book.upload_ms = t0.elapsed().as_secs_f32() * 1000.0;
+            *meta = SurfaceWaterGpuFieldMeta::from_book(&book);
+        }
         return;
     }
 
-    let size_changed = book.width != tw || book.height != th || book.image == Handle::default();
-    let handle = book.image.clone();
-    let reused = !size_changed && images.contains(&handle);
-    if reused {
-        if let Some(mut img) = images.get_mut(&handle) {
-            // Replace data + retouch asset_usage so RenderAssets re-uploads (tile_world pattern).
+    let (tw, th, step, data, wet) = pack_surface_water_field_rgba8(&field);
+    if size_ok {
+        if let Some(mut img) = images.get_mut(&book.image.clone()) {
             img.data = Some(data);
             img.asset_usage = RenderAssetUsages::MAIN_WORLD | RenderAssetUsages::RENDER_WORLD;
         }
     } else {
         book.image = images.add(make_field_image(tw, th, data));
     }
-
-    book.origin_x = ox;
-    book.origin_z = oz;
+    book.origin_x = field.origin_x;
+    book.origin_z = field.origin_z;
     book.width = tw;
     book.height = th;
     book.step = step;
@@ -306,8 +343,8 @@ pub fn publish_surface_water_gpu_field_system(
     book.wet_texels = wet;
     book.dirty_x0 = 0;
     book.dirty_z0 = 0;
-    book.dirty_x1 = tw.saturating_sub(1);
-    book.dirty_z1 = th.saturating_sub(1);
+    book.dirty_x1 = tw - 1;
+    book.dirty_z1 = th - 1;
     book.revision = book.revision.wrapping_add(1);
     book.upload_ms = t0.elapsed().as_secs_f32() * 1000.0;
     *meta = SurfaceWaterGpuFieldMeta::from_book(&book);
@@ -316,6 +353,12 @@ pub fn publish_surface_water_gpu_field_system(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn flat_field(w: u32, h: u32) -> SurfaceWaterField {
+        let mut field = SurfaceWaterField::default();
+        field.allocate(0, 0, w, h, vec![0.0; (w * h) as usize], 0.0);
+        field
+    }
 
     #[test]
     fn pack_texel_encodes_depth_and_flow() {
@@ -327,20 +370,53 @@ mod tests {
         assert!(deep[3] > 0, "moving water carries foam");
     }
 
+    /// WM-5: a 320 map packs one texel per tile (it used to drop to every second tile).
     #[test]
-    fn pack_field_respects_max_edge() {
-        let mut field = SurfaceWaterField::default();
-        let w = 320_u32;
-        let h = 320_u32;
-        let n = (w * h) as usize;
-        field.allocate(0, 0, w, h, vec![0.0; n], 0.0);
-        for d in &mut field.depth_m {
-            *d = 1.0;
-        }
+    fn pack_is_full_res_at_320() {
+        let mut field = flat_field(320, 320);
+        let marked = field.idx(319, 301);
+        field.depth_m[marked] = 3.0;
         let (tw, th, step, data, wet) = pack_surface_water_field_rgba8(&field);
-        assert!(step >= 2);
-        assert!(tw <= GPU_FIELD_MAX_EDGE && th <= GPU_FIELD_MAX_EDGE);
-        assert_eq!(data.len(), (tw * th * 4) as usize);
-        assert!(wet > 0);
+        assert_eq!((tw, th, step), (320, 320, 1));
+        assert_eq!(data.len(), 320 * 320 * 4);
+        assert_eq!(wet, 1, "the odd-coordinate cell survives (a 2x subsample would drop it)");
+        assert!(data[((301 * 320 + 319) * 4) as usize] > 0);
+        assert_eq!(field_texel_step(2048, 100), 2, "past the cap the pack still subsamples");
+    }
+
+    /// WM-5: a river cell carries the field's own flux into the texture (static texels had none).
+    #[test]
+    fn pack_carries_field_flow_on_a_river_cell() {
+        let mut field = flat_field(64, 64);
+        let i = field.idx(10, 20);
+        field.depth_m[i] = 2.0;
+        field.qx_m3s[i] = 60.0;
+        let (tw, _, _, data, _) = pack_surface_water_field_rgba8(&field);
+        let o = ((20 * tw + 10) * 4) as usize;
+        assert!(data[o] > 0, "depth packed");
+        assert!(data[o + 1] > 128, "eastward flux shifts G above rest");
+        assert_eq!(data[o + 2], 128, "no north-south flux stays at rest");
+        assert!(data[o + 3] > 0, "moving water foams");
+    }
+
+    #[test]
+    fn chunk_patch_matches_a_full_pack_and_tracks_wet_count() {
+        let mut field = flat_field(96, 96);
+        let (tw, th, step, mut data, wet0) = pack_surface_water_field_rgba8(&field);
+        assert_eq!(wet0, 0);
+        for (x, z) in [(40, 5), (41, 5), (70, 70)] {
+            let i = field.idx(x, z);
+            field.depth_m[i] = 1.5;
+            field.qy_m3s[i] = -20.0;
+        }
+        let mut wet = 0i32;
+        for c in [IVec2::new(1, 0), IVec2::new(2, 2)] {
+            let (d, r) = patch_chunk_texels(&field, &mut data, tw, th, step, c).expect("inside");
+            wet += d;
+            assert!(r[0] <= r[2] && r[1] <= r[3]);
+        }
+        let (_, _, _, full, full_wet) = pack_surface_water_field_rgba8(&field);
+        assert_eq!(data, full, "in-place patch equals a full repack");
+        assert_eq!(wet as u32, full_wet);
     }
 }

@@ -127,7 +127,9 @@ impl Plugin for PixelWorldViewPlugin {
                     camera::spawn_pixel_world_camera.run_if(crate::gui::in_simulation_or_editor_map),
                     field::sync_pixel_world_terrain_field
                         .in_set(PixelWorldViewSet::Field)
-                        .after(crate::terrain::ground_deform::GroundDeformSet::Drain),
+                        .after(crate::terrain::ground_deform::GroundDeformSet::Drain)
+                        // WM-5: patch water[] from the chunks the field moved this frame.
+                        .after(crate::systems::water::publish_water_dirty_feed_system),
                     destruction_mask::ensure_destruction_mask_size
                         .after(field::sync_pixel_world_terrain_field)
                         .run_if(crate::gui::in_simulation_or_editor_map),
