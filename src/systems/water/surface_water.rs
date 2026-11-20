@@ -349,6 +349,21 @@ impl SurfaceWaterField {
         self.recompute_mass();
     }
 
+    /// Spill crest of the installed barrier: the LOWEST positive crest cell (water leaves over the
+    /// lowest point — the channel). Cells under the dam's ends keep their bank ground as crest, so
+    /// the max was bank height and the spillway / overtopping head was never reached. 0 = none.
+    #[must_use]
+    pub fn channel_crest_m(&self) -> f32 {
+        let c = self
+            .hydraulics
+            .barrier_crest_m
+            .iter()
+            .copied()
+            .filter(|c| *c > 0.0)
+            .fold(f32::INFINITY, f32::min);
+        if c.is_finite() { c } else { 0.0 }
+    }
+
     /// Install a barrier across a world-z row (dam at narrows).
     /// `crest_height_m` is the dam's height above the lowest bed in the span; the stored crest
     /// is that absolute elevation (level crest), never below a cell's own bed. Absolute crest
@@ -503,12 +518,7 @@ impl SurfaceWaterField {
         }
         self.pool.area_m2 = area;
 
-        let crest = self
-            .hydraulics
-            .barrier_crest_m
-            .iter()
-            .copied()
-            .fold(0.0_f32, f32::max);
+        let crest = self.channel_crest_m();
         let head_pool = (self.pool.stage_m - self.pool.bed_min_m).max(0.0);
         let head_crest = if crest > 0.0 {
             (self.pool.stage_m - crest).max(0.0)
@@ -862,12 +872,7 @@ impl SurfaceWaterField {
                     .copied()
                     .fold(0.0_f32, f32::max)
                     .max(0.5);
-                let crest = self
-                    .hydraulics
-                    .barrier_crest_m
-                    .iter()
-                    .copied()
-                    .fold(0.0_f32, f32::max);
+                let crest = self.channel_crest_m();
                 let head_crest = if crest > 0.0 {
                     (self.pool.stage_m.max(head) - crest).max(0.0)
                 } else {

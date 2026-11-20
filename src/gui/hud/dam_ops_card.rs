@@ -114,13 +114,7 @@ fn dam_ops_text(
     let stage = field.map(|f| f.pool.stage_m).unwrap_or(0.0);
     let bed = field.map(|f| f.pool.bed_min_m).unwrap_or(0.0);
     let crest = field
-        .map(|f| {
-            f.hydraulics
-                .barrier_crest_m
-                .iter()
-                .copied()
-                .fold(0.0_f32, f32::max)
-        })
+        .map(crate::systems::water::SurfaceWaterField::channel_crest_m)
         .unwrap_or_else(|| body.map(|b| b.crest_m).unwrap_or(0.0));
     let head = (stage - bed).max(0.0);
     let freeboard = if crest > 0.0 {
@@ -249,7 +243,7 @@ fn dam_ops_text(
          Mid outlet       ;  '          {:.0}%\n\
          Spillway gate    -  =          {:.0}%\n\
          {}\
-         ── presets (number row) ──\n\
+         ── Presets (number row) ──\n\
          1 SHUT all  ·  2 LOW only  ·  3 PASS  ·  4 FLOOD  ·  5 AUGMENT lost turb\n\
          Tab select T#  ·  , / . setpoint  ·  / trip-restore\n\
          Alt+D hide card · water viz follows these setpoints",
