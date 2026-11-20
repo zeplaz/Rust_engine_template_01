@@ -1,11 +1,11 @@
-//! WM-5 -- one read surface of "which chunks of the map-wide water field moved this frame".
+//! WM-5 / WM-6 -- one read surface of "which chunks of the map-wide water field moved this frame".
 //!
-//! The field queues its moved chunks for one consumer (`take_dirty_chunks`, the substrate
-//! projection). Render consumers (GPU texture, PixelWorld surface, minimap mask) must not steal that
-//! queue, so [`publish_water_dirty_feed_system`] *peeks* it once per frame, before the projection
-//! drains it, and publishes the list here. Every consumer reads the same list, each with its own
-//! cursor ([`WaterFieldDirtyFeed::chunks_since`]); a consumer that missed a frame gets `None` and
-//! resyncs fully.
+//! The field queues its moved chunks for exactly one consumer: [`publish_water_dirty_feed_system`]
+//! drains that queue once per frame and publishes the list here (the substrate no longer keeps a
+//! copy of the depth, so nobody else drains it). Every render consumer (GPU texture, PixelWorld
+//! surface, minimap mask) reads the same list, each with its own cursor
+//! ([`WaterFieldDirtyFeed::chunks_since`]); a consumer that missed a frame gets `None` and resyncs
+//! fully.
 
 use bevy::prelude::*;
 
@@ -35,20 +35,8 @@ impl WaterFieldDirtyFeed {
     }
 }
 
-/// Non-consuming view of the field's pending dirty chunks (separate impl: the queue and its mask
-/// stay owned by the field; this only flushes tile marks into the chunk list).
-impl SurfaceWaterField {
-    /// Pending dirty chunks, left queued for [`SurfaceWaterField::take_dirty_chunks`].
-    pub fn peek_dirty_chunks(&mut self) -> &[IVec2] {
-        let mut tiles = std::mem::take(&mut self.tiles);
-        tiles.flush_dirty_into(&mut self.dirty_chunks);
-        self.tiles = tiles;
-        &self.dirty_chunks
-    }
-}
-
-/// Sole writer of [`WaterFieldDirtyFeed`]. Runs after the solver step and before the substrate
-/// projection drains the queue. Reads the field without marking it changed.
+/// Sole writer of [`WaterFieldDirtyFeed`] and sole consumer of the field's dirty-chunk queue. Runs
+/// after the solver step. Drains the queue without marking the field changed.
 pub fn publish_water_dirty_feed_system(
     mut field: ResMut<SurfaceWaterField>,
     mut feed: ResMut<WaterFieldDirtyFeed>,
@@ -58,9 +46,7 @@ pub fn publish_water_dirty_feed_system(
         return;
     }
     if field.has_pending_dirty() {
-        let peeked = field.peek_dirty_chunks();
-        feed.chunks.clear();
-        feed.chunks.extend_from_slice(peeked);
+        feed.chunks = field.take_dirty_chunks();
         feed.seq = feed.seq.wrapping_add(1);
     } else if !feed.chunks.is_empty() {
         feed.chunks.clear();
@@ -79,12 +65,26 @@ mod tests {
         assert!(feed.chunks_since(2).is_none(), "skipped frames need a full resync");
     }
 
+    /// The feed is the queue's only consumer: a frame's moved chunks are published once, then the
+    /// queue is empty until the water moves again.
     #[test]
-    fn peek_leaves_the_queue_for_the_projection() {
+    fn the_feed_drains_the_field_queue_once() {
+        let mut app = App::new();
         let mut f = SurfaceWaterField::default();
         f.allocate(0, 0, 64, 64, vec![0.0; 64 * 64], 0.0);
-        let peeked = f.peek_dirty_chunks().to_vec();
-        assert!(!peeked.is_empty(), "allocation queues every chunk");
-        assert_eq!(f.take_dirty_chunks().len(), peeked.len(), "the owner still drains the same chunks");
+        app.insert_resource(f)
+            .init_resource::<WaterFieldDirtyFeed>()
+            .add_systems(Update, publish_water_dirty_feed_system);
+        app.update();
+        let feed = app.world().resource::<WaterFieldDirtyFeed>();
+        assert_eq!((feed.seq, feed.chunks.len()), (1, 4), "allocation queues every chunk");
+        assert!(!app.world().resource::<SurfaceWaterField>().has_pending_dirty(), "drained");
+        app.update();
+        let feed = app.world().resource::<WaterFieldDirtyFeed>();
+        assert_eq!((feed.seq, feed.chunks.len()), (1, 0), "nothing moved: nothing published");
+        app.world_mut().resource_mut::<SurfaceWaterField>().touch_world(3, 3);
+        app.update();
+        let feed = app.world().resource::<WaterFieldDirtyFeed>();
+        assert_eq!((feed.seq, feed.chunks.as_slice()), (2, &[IVec2::new(0, 0)][..]));
     }
 }

@@ -30,6 +30,13 @@ pub struct DamFloodWaterConfigLatch {
     pub intakes_spawned: bool,
 }
 
+/// G3 counts the breach wave as arrived at this share above its operate-stage flux ...
+const WAVE_REL_MARGIN: f32 = 0.25;
+/// ... and at least this much more (m3/s) ...
+const WAVE_MIN_MARGIN_M3S: f32 = 5.0;
+/// ... for this many frames in a row.
+const WAVE_HITS: u8 = 3;
+
 /// Marker for DamFlood example coolers (nuclear + second industry share the reservoir).
 #[derive(Component, Debug, Clone, Copy)]
 pub struct DamFloodCoolerTag {
@@ -159,8 +166,6 @@ pub fn mirror_water_into_dam_book_system(
     hydro: Res<HydroGenerationState>,
     gauges: Res<GaugeBook>,
     intakes: Query<(&CoolingIntake, &DamFloodCoolerTag)>,
-    sim_time: Res<SimTimeMicros>,
-    slow_elapsed: Option<Res<SlowDomainElapsedSecs>>,
     ballistics: Option<Res<BallisticFlightBook>>,
     mut book: ResMut<DamFloodBenchmarkBook>,
 ) {
@@ -182,8 +187,10 @@ pub fn mirror_water_into_dam_book_system(
     }
     book.thermal_mw = thermal;
 
-    let now = ((sim_time.0 as f64 / 1_000_000.0)
-        + slow_elapsed.map(|s| s.0).unwrap_or(0.0)) as f32;
+    // Water time: the seconds the solver has been advanced. A time skip moves sim time by hours
+    // while the wave moves by what the solver steps, so travel time is measured on this clock.
+    let solver_s = field.elapsed_s as f32;
+    let g3_flux = gauges.reading(GaugeId::G3).map_or(0.0, |r| r.flux_m3s);
 
     // Latch stage-scoped metrics so late timeline (breach) does not wipe DF-2/DF-6 Accepts.
     let g1 = gauges
@@ -231,22 +238,13 @@ pub fn mirror_water_into_dam_book_system(
         }
         DamFloodStage::S4Operate | DamFloodStage::S3Drown => {
             book.s4_hydro_mw_peak = book.s4_hydro_mw_peak.max(hydro.power_mw);
-        }
-        DamFloodStage::S5Strike | DamFloodStage::S7Collapse => {
-            // Breached = a crest clear / breach flow, or any broken column (DW-3 notch flow
-            // carries the wave with no global breach flow).
-            if book.breach_sim_s < 0.0
-                && (field.breach_flow_m3s > 0.0 || field.hydraulics.barrier_damaged)
-            {
-                book.breach_sim_s = now;
-                book.breach_g3_baseline_m3s = g3.max(g3_stage).max(0.0);
-            }
-            if book.s7_wave_arrival_g3_s <= 0.0 && book.breach_sim_s >= 0.0 {
-                let spiked = g3 > book.breach_g3_baseline_m3s + 2.0
-                    || g3_stage > book.breach_g3_baseline_m3s.max(0.2) + 0.4;
-                if spiked {
-                    book.s7_wave_arrival_g3_s = (now - book.breach_sim_s).max(0.01);
-                }
+            // The level G3 carries while the dam operates (gates open): the S7 baseline.
+            if matches!(book.stage, DamFloodStage::S4Operate) && book.breach_sim_s < 0.0 {
+                book.g3_flux_operate_m3s = if book.g3_flux_operate_m3s < 0.0 {
+                    g3_flux
+                } else {
+                    book.g3_flux_operate_m3s + (g3_flux - book.g3_flux_operate_m3s) * 0.1
+                };
             }
         }
         _ => {
@@ -258,6 +256,27 @@ pub fn mirror_water_into_dam_book_system(
 
     if hydro.power_mw > 0.0 {
         book.s4_hydro_mw_peak = book.s4_hydro_mw_peak.max(hydro.power_mw);
+    }
+
+    // S7: the dam breaks (a crest clear / breach flow, or any broken column: DW-3 notch flow
+    // carries the wave with no global breach flow), whatever stage the script is in.
+    if book.breach_sim_s < 0.0 && (field.breach_flow_m3s > 0.0 || field.hydraulics.barrier_damaged) {
+        book.breach_sim_s = solver_s;
+        book.breach_g3_baseline_m3s =
+            if book.g3_flux_operate_m3s >= 0.0 { book.g3_flux_operate_m3s } else { g3_flux };
+    }
+    // The wave has arrived when G3's real cross-section flux stands a wave's margin above its
+    // operate level for a few frames in a row (one noisy sample is not a wave).
+    if book.breach_sim_s >= 0.0 && book.s7_wave_arrival_g3_s <= 0.0 {
+        let margin = (WAVE_REL_MARGIN * book.breach_g3_baseline_m3s).max(WAVE_MIN_MARGIN_M3S);
+        book.g3_wave_hits = if g3_flux > book.breach_g3_baseline_m3s + margin {
+            book.g3_wave_hits.saturating_add(1)
+        } else {
+            0
+        };
+        if book.g3_wave_hits >= WAVE_HITS {
+            book.s7_wave_arrival_g3_s = (solver_s - book.breach_sim_s).max(0.01);
+        }
     }
 
     if let Some(b) = ballistics.as_ref() {

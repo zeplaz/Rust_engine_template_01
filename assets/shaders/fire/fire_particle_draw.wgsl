@@ -89,9 +89,23 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
         let fall = 1.0 - smoothstep(0.0, 1.0, r);
         if in.heat >= 2.0 {
             // Smoke: soft grey disc; additive blend can only lighten, so keep it faint.
-            let tone = clamp(in.heat - 2.0, 0.0, 1.0);
+            // Collapse dust adds 2 * material id on top of the tone (`pack::encode_smoke_tint`).
+            let packed = in.heat - 2.0;
+            let tint_id = floor(packed * 0.5);
+            let tone = clamp(packed - 2.0 * tint_id, 0.0, 1.0);
+            var smoke_rgb = vec3<f32>(0.34, 0.33, 0.32);
+            // Mirror of `SiteMaterial::dust_rgb` (concrete, brick, timber, earth).
+            if tint_id == 1.0 {
+                smoke_rgb = vec3<f32>(0.36, 0.36, 0.37);
+            } else if tint_id == 2.0 {
+                smoke_rgb = vec3<f32>(0.46, 0.27, 0.21);
+            } else if tint_id == 3.0 {
+                smoke_rgb = vec3<f32>(0.37, 0.28, 0.17);
+            } else if tint_id == 4.0 {
+                smoke_rgb = vec3<f32>(0.41, 0.33, 0.23);
+            }
             let a = fall * fall * env * 0.22;
-            return vec4<f32>(vec3<f32>(0.34, 0.33, 0.32) * (0.6 + 0.4 * tone), a);
+            return vec4<f32>(smoke_rgb * (0.6 + 0.4 * tone), a);
         }
         // Glow: hot core, soft halo.
         let a = clamp(fall * fall * (0.35 + 0.65 * fall) * env, 0.0, 1.0);

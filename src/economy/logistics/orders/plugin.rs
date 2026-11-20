@@ -444,10 +444,13 @@ impl Plugin for LogisticsOrdersPlugin {
                     super::haul_amplify::sync_haul_amplify_mul_system,
                     super::vehicle_fire::apply_order_sim_vehicle_fire_system
                         .after(super::weather_haul::sync_haul_weather_mul_system),
+                    super::vehicle_blast::apply_order_sim_vehicle_blast_system
+                        .after(super::weather_haul::sync_haul_weather_mul_system),
                     step_logistics_orders_system
                         .after(super::weather_haul::sync_haul_weather_mul_system)
                         .after(super::haul_amplify::sync_haul_amplify_mul_system)
-                        .after(super::vehicle_fire::apply_order_sim_vehicle_fire_system),
+                        .after(super::vehicle_fire::apply_order_sim_vehicle_fire_system)
+                        .after(super::vehicle_blast::apply_order_sim_vehicle_blast_system),
                 )
                     .in_set(LogisticsOrdersSet::Step),
             )

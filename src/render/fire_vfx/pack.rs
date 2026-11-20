@@ -92,6 +92,25 @@ impl ParticleClass {
     }
 }
 
+/// Smoke rows carry their density / tone in `world_xyz_heat.w` (0..1). A tinted row (collapse dust
+/// of a known material) adds `SMOKE_TINT_STEP * tint_id` on top, so one float carries both and every
+/// consumer that only wants the tone decodes it with [`decode_smoke_tint`]. Tint id 0 is plain
+/// grey smoke; ids map to [`crate::construction::SiteMaterial::from_tint_id`].
+pub const SMOKE_TINT_STEP: f32 = 2.0;
+
+/// Pack a smoke tone (0..1) and a tint id into the heat channel.
+#[must_use]
+pub fn encode_smoke_tint(tone: f32, tint_id: u8) -> f32 {
+    tone.clamp(0.0, 1.0) + SMOKE_TINT_STEP * f32::from(tint_id)
+}
+
+/// Inverse of [`encode_smoke_tint`]: `(tone 0..1, tint id)`.
+#[must_use]
+pub fn decode_smoke_tint(heat_w: f32) -> (f32, u8) {
+    let id = (heat_w / SMOKE_TINT_STEP).floor().clamp(0.0, 255.0);
+    ((heat_w - id * SMOKE_TINT_STEP).clamp(0.0, 1.0), id as u8)
+}
+
 /// Fire-packed alias — same 32-byte layout as [`GpuInstancedQuadInstance`].
 #[repr(C)]
 #[derive(Clone, Copy, Debug, Default, PartialEq, bytemuck::Pod, bytemuck::Zeroable)]

@@ -8,6 +8,8 @@ use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
 use super::dam_faces::{DamFlows, DamOps, DamSite, FaceFlows};
+use super::rain::RainSoil;
+use super::sources::RiverSources;
 use super::step_kernel::StepScratch;
 use super::tiles::WaterTileGrid;
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
@@ -268,8 +270,12 @@ pub struct SurfaceWaterField {
     pub ref_depth_m: Vec<f32>,
     pub pool: ReservoirLevelPool,
     pub hydraulics: BarrierHydraulics,
+    /// Total river inflow (m3/s): the sum of the river sources' injection (`sources.rs`).
     pub inflow_m3s: f32,
+    /// Rain the ground did not take in the latest rain pass, over the whole map (m3/s); 0 when dry.
     pub rain_runoff_m3s: f32,
+    /// Seconds of sim time the field has been advanced (the solver's own clock).
+    pub elapsed_s: f64,
     pub outlet_flow_m3s: f32,
     pub mid_outlet_flow_m3s: f32,
     pub spillway_flow_m3s: f32,
@@ -291,6 +297,12 @@ pub struct SurfaceWaterField {
     /// Reused flux / limiter buffers.
     #[reflect(ignore)]
     pub(super) scratch: StepScratch,
+    /// River headwater sources (WM-2).
+    #[reflect(ignore)]
+    pub(super) river: RiverSources,
+    /// Rain, soil store and the slow pass state (WM-2).
+    #[reflect(ignore)]
+    pub(super) rain: RainSoil,
     /// Installed dams, each with its own control and faces (the first is the primary: its
     /// reservoir window is the far-field fill).
     #[reflect(ignore)]
@@ -325,6 +337,7 @@ impl Default for SurfaceWaterField {
             hydraulics: BarrierHydraulics::default_earth_fill(8.0),
             inflow_m3s: 0.0,
             rain_runoff_m3s: 0.0,
+            elapsed_s: 0.0,
             outlet_flow_m3s: 0.0,
             mid_outlet_flow_m3s: 0.0,
             spillway_flow_m3s: 0.0,
@@ -338,6 +351,8 @@ impl Default for SurfaceWaterField {
             dirty_chunks: Vec::new(),
             tiles: WaterTileGrid::default(),
             scratch: StepScratch::default(),
+            river: RiverSources::default(),
+            rain: RainSoil::default(),
             dams: Vec::new(),
             far_release: None,
             pool_window: None,
@@ -426,6 +441,7 @@ impl SurfaceWaterField {
         self.ref_depth_m = vec![0.0; n];
         self.inflow_m3s = inflow_m3s;
         self.rain_runoff_m3s = 0.0;
+        self.elapsed_s = 0.0;
         self.breach_flow_m3s = 0.0;
         self.overtopping_flow_m3s = 0.0;
         self.mid_outlet_flow_m3s = 0.0;
@@ -448,6 +464,8 @@ impl SurfaceWaterField {
         self.dirty_chunks.clear();
         self.tiles = WaterTileGrid::new(width, height, origin_x, origin_z);
         self.scratch = StepScratch::default();
+        self.river = RiverSources::default();
+        self.reset_rain_soil();
         self.dams.clear();
         self.far_release = None;
         self.pool_window = None;
@@ -502,6 +520,9 @@ impl SurfaceWaterField {
         let (w, h) = (self.width, self.height);
         self.tiles = WaterTileGrid::new(w, h, self.origin_x, self.origin_z);
         self.scratch = StepScratch::default();
+        self.river = RiverSources::default();
+        self.river.stale = true;
+        self.reset_rain_soil();
         self.dams.clear();
         self.pool_window = None;
         let wu = w.max(1) as usize;
@@ -520,35 +541,8 @@ impl SurfaceWaterField {
             self.dams.push(DamSite { damaged, ..DamSite::new(cells, invert_m, height_m, lz, None) });
             self.adopt_primary_dam();
         }
-        self.configure_boundaries();
         self.tiles.touch_wet(&self.depth_m);
         self.mark_all_chunks_dirty();
-    }
-
-    /// Derive the open-boundary set from the baseline river: inflow enters where river cells touch
-    /// the upstream (north, +z) edge; every other edge cell is an open outflow holding its baseline
-    /// depth. Call after `ref_depth_m` was seeded.
-    pub fn configure_boundaries(&mut self) {
-        let (w, h) = (self.width as usize, self.height as usize);
-        if w == 0 || h == 0 || self.ref_depth_m.len() != w * h {
-            self.tiles.inflow_cells = 0;
-            self.tiles.inflow_tiles.clear();
-            return;
-        }
-        let row = (h - 1) * w;
-        let mut tiles: Vec<u32> = Vec::new();
-        let mut count = 0;
-        for x in 0..w {
-            if self.ref_depth_m[row + x] > 0.05 {
-                count += 1;
-                let t = self.tiles.tile_of(x as u32, (h - 1) as u32) as u32;
-                if !tiles.contains(&t) {
-                    tiles.push(t);
-                }
-            }
-        }
-        self.tiles.inflow_cells = count;
-        self.tiles.inflow_tiles = tiles;
     }
 
     /// Is any dam crest standing (> 0.5 m)?
@@ -688,7 +682,6 @@ impl SurfaceWaterField {
             }
         }
         self.recompute_mass();
-        self.configure_boundaries();
         self.tiles.touch_wet(&self.depth_m);
         wet
     }
@@ -713,7 +706,6 @@ impl SurfaceWaterField {
             n += 1;
         }
         self.recompute_mass();
-        self.configure_boundaries();
         self.tiles.touch_wet(&self.depth_m);
         n
     }
@@ -737,7 +729,6 @@ impl SurfaceWaterField {
             }
         }
         self.recompute_mass();
-        self.configure_boundaries();
         self.tiles.touch_wet(&self.depth_m);
     }
 
@@ -1079,7 +1070,7 @@ impl SurfaceWaterField {
             mid_outlet_open01,
             turbine_m3s: turbine_setpoint_m3s.max(0.0),
         };
-        let q_in = f64::from(self.inflow_m3s) + f64::from(self.rain_runoff_m3s);
+        let q_in = f64::from(self.inflow_m3s);
         self.integrate_level_pool(dt_s, &ops, q_in).0
     }
 
@@ -1212,6 +1203,10 @@ impl SurfaceWaterField {
         }
         let t0 = std::time::Instant::now();
         let mass_before = self.mass_m3;
+        self.elapsed_s += f64::from(dt_s);
+        // Rain falls, the ground drinks, puddles dry (before the pool sync: rain over the reservoir
+        // window joins the pool).
+        let rained = self.apply_surface_sources(dt_s);
         self.refresh_dam_faces();
         self.begin_dam_tally();
 
@@ -1225,8 +1220,7 @@ impl SurfaceWaterField {
             let ops = self.dams.first().map_or_else(DamOps::default, |d| d.ops);
             // The 2D boundary delivers `dt_2d` worth of the river inflow itself; the pool takes the
             // rest of the skipped span.
-            let q_in = (f64::from(self.inflow_m3s) + f64::from(self.rain_runoff_m3s))
-                * f64::from((dt_s - dt_2d) / dt_s);
+            let q_in = f64::from(self.inflow_m3s) * f64::from((dt_s - dt_2d) / dt_s);
             let (d_storage, release) = self.integrate_level_pool(dt_s, &ops, q_in);
             self.far_release = Some(release);
             let applied = self.run_2d(dt_2d);
@@ -1242,10 +1236,10 @@ impl SurfaceWaterField {
                 };
             }
             self.publish_dam_flows(dt_2d);
-            expected_net = d_storage + applied;
+            expected_net = d_storage + applied + rained;
         } else {
             // CLOSE-W2: conservation vs what the boundaries really applied.
-            expected_net = self.run_2d(dt_s);
+            expected_net = self.run_2d(dt_s) + rained;
             self.sync_pool_from_depth();
             self.publish_dam_flows(dt_s);
         }
@@ -1276,6 +1270,20 @@ impl SurfaceWaterField {
         }
         self.settle_active_tiles();
         applied
+    }
+
+    /// Water actually crossing the cross-section of `half` cells either side of `wx` at world row
+    /// `wz` (m3/s): the sum of the solver's face fluxes there, no conveyance estimate. Zero where
+    /// nothing flows (dry or off the map).
+    #[must_use]
+    pub fn gauge_flux_m3s(&self, wx: i32, wz: i32, half: u32) -> f32 {
+        if !self.wired || !self.contains_world(wx, wz) {
+            return 0.0;
+        }
+        let lz = (wz - self.origin_z) as u32;
+        let cx = wx - self.origin_x;
+        let (lo, hi) = ((cx - half as i32).max(0), (cx + half as i32).min(self.width as i32 - 1));
+        (lo..=hi).map(|lx| self.qy_m3s[self.idx(lx as u32, lz)].abs()).sum()
     }
 
     /// Cross-section discharge (m³/s) along a world-z row near `wx`.

@@ -235,7 +235,8 @@ pub fn construction_redo_input_system(
                     None,
                     false,
                     None,
-                    None,
+                    // Redo of a player demolish.
+                    super::destruction::DestroyCause::PlayerDemolish,
                 );
             }
         }

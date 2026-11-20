@@ -13,6 +13,15 @@ use crate::terrain::generation::{Chunk, ChunkCellMatrix};
 use super::model::{SiteId, Vehicle, VehicleId, VehiclePhase};
 use super::plugin::{LogisticsOrderSimRes, LogisticsSiteRegistry};
 
+/// World xz (m) of a vehicle that is mid-leg on a haul (interpolated along its trip); `None` when
+/// it is parked or its sites have no position.
+pub(super) fn travel_xz(v: &Vehicle, registry: &LogisticsSiteRegistry) -> Option<Vec2> {
+    let (from, to, frac) = travel_leg_sample(v)?;
+    let a = registry.travel.positions.get(&from)?;
+    let b = registry.travel.positions.get(&to)?;
+    Some(Vec2::new(a[0] + (b[0] - a[0]) * frac, a[1] + (b[1] - a[1]) * frac))
+}
+
 fn travel_leg_sample(v: &Vehicle) -> Option<(SiteId, SiteId, f32)> {
     match (&v.phase, &v.assignment) {
         (VehiclePhase::ToPickup(l), Some(a)) => Some((v.at, a.source, l.fraction())),
@@ -39,19 +48,9 @@ pub fn apply_order_sim_vehicle_fire_system(
     }
     let mut hits: Vec<(VehicleId, f32)> = Vec::new();
     for (vid, v) in &sim.sim.vehicles {
-        let Some((from, to, frac)) = travel_leg_sample(v) else {
+        let Some(xz) = travel_xz(v, &registry) else {
             continue;
         };
-        let Some(a) = registry.travel.positions.get(&from) else {
-            continue;
-        };
-        let Some(b) = registry.travel.positions.get(&to) else {
-            continue;
-        };
-        let xz = Vec2::new(
-            a[0] + (b[0] - a[0]) * frac,
-            a[1] + (b[1] - a[1]) * frac,
-        );
         let tile = xz_to_world_tile(xz);
         let (heat, _) = sample_heat_at_tile(&index, tile);
         if heat >= 0.06 {

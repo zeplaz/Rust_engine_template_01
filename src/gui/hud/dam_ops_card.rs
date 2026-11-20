@@ -99,7 +99,8 @@ fn dam_ops_text(
     field: Option<&SurfaceWaterField>,
     hydro: Option<&HydroGenerationState>,
 ) -> String {
-    let inflow = field.map(|f| f.inflow_m3s + f.rain_runoff_m3s).unwrap_or(0.0);
+    // River inflow of the map. (The rain falling on the whole map is not this reservoir's inflow.)
+    let inflow = field.map(|f| f.inflow_m3s).unwrap_or(0.0);
     let q_out = field.map(|f| f.outlet_flow_m3s).unwrap_or(0.0);
     let q_mid = field.map(|f| f.mid_outlet_flow_m3s).unwrap_or(0.0);
     let q_spill = field.map(|f| f.spillway_flow_m3s).unwrap_or(0.0);

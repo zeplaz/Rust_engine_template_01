@@ -37,8 +37,9 @@
         // Force-close: hold the pool (no low/mid outlet, no turbine) so DF-2 ratio drops and crest rises.
         SetDamControl(gate_open01: 0.0, outlet_open01: 0.0, turbine_flow_setpoint_m3s: 0.0),
         // Watch the impound at real speed first (S2: the closed dam cuts the river while it
-        // fills). Under the time skip the reservoir fills and spills within one coarse tick.
-        SimAdvance(ticks: 20),
+        // fills). Under the time skip the reservoir fills and spills within one coarse tick. The
+        // river below the dam needs ~400 s (S7 travel time) to drain past G3, so watch longer.
+        SimAdvance(ticks: 600),
         SetTimeSkip(enabled: true, dt_slow_secs: 24000),
         Log(message: "DF-2/DF-5: reservoir fill + drown clocks (time skip)"),
         SimAdvance(ticks: 64),

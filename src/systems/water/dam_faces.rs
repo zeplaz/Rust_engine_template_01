@@ -713,8 +713,10 @@ mod tests {
                 f.ref_depth_m[i] = 1.0;
             }
         }
-        f.inflow_m3s = 40.0;
-        f.configure_boundaries();
+        // 40 m3/s enters the strip at its upstream edge.
+        let head: Vec<(u32, f32)> =
+            (river_x0..river_x1).map(|x| (f.idx(x, H - 1) as u32, 40.0 / (river_x1 - river_x0) as f32)).collect();
+        f.set_river_sources(&head);
         f.recompute_mass();
         f.wake_all_tiles();
         f.set_dam_ops(|_| DamOps::default());

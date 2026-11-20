@@ -20,8 +20,10 @@ mod flood_consequences;
 mod gauge;
 mod hydro;
 mod probe;
+mod rain;
 mod salinity;
 mod solver_tick;
+mod sources;
 mod static_depth;
 mod step_kernel;
 mod surface_water;
@@ -58,8 +60,7 @@ pub use gpu_field::{
     DEPTH_SCALE_M, FLOW_SPEED_SCALE, GPU_FIELD_MAX_EDGE,
 };
 pub use solver_tick::{
-    project_surface_water_to_substrate_system, publish_gauges_from_solver_system,
-    seed_surface_water_system, step_surface_water_system, SurfaceWaterBaseflow,
+    publish_gauges_from_solver_system, seed_surface_water_system, step_surface_water_system, SurfaceWaterBaseflow,
     SurfaceWaterSeedLatch, SurfaceWaterSolverPlugin, MAX_WATER_STEPS_PER_FRAME,
 };
 pub use dam_faces::{DamFlows, DamGeometry, DamOps, DamSite, FaceFlows, CHANNEL_BAND_M};
@@ -74,10 +75,9 @@ pub use tiles::{WaterTileGrid, WATER_SLEEP_STEPS, WATER_TILE_CELLS};
 pub use probe::WaterTileProbe;
 pub use salinity::WorldWaterSalinity;
 pub use static_depth::WorldStaticWaterDepth;
-pub use water_runtime::{
-    tile_is_water_prefer_runtime, tile_is_wet, water_look_from_depth_speed, WaterClassRuntime,
-    CHANNEL_LOOK_SPEED, DRY_DEPTH_M, DRY_HOLD_S, WET_DEPTH_M,
-};
+pub use rain::{sample_weather_rain_system, SoilClass, DRIFT_REPORT_M, EVAP_MM_H, RAIN_MIN_MM_H, RAIN_WAKE_MM_H, SLOW_PASS_S};
+pub use sources::{RiverSource, RIVER_MAX_SPEED_MPS};
+pub use water_runtime::{water_look_from_depth_speed, CHANNEL_LOOK_SPEED, WET_DEPTH_M};
 
 use bevy::prelude::*;
 
@@ -356,11 +356,9 @@ impl Plugin for WaterSimPlugin {
                     update_hydro_generation_system.after(step_surface_water_system),
                     publish_flood_consequences_system.after(step_surface_water_system),
                     publish_surface_water_visual_frame_system.after(step_surface_water_system),
-                    // WM-5: peek the moved chunks once, before the substrate projection drains
-                    // them; every render-side consumer reads the same feed after this.
-                    publish_water_dirty_feed_system
-                        .after(step_surface_water_system)
-                        .before(project_surface_water_to_substrate_system),
+                    // WM-5 / WM-6: the one consumer of the moved-chunk queue; every render-side
+                    // consumer reads the same feed after this.
+                    publish_water_dirty_feed_system.after(step_surface_water_system),
                     publish_surface_water_gpu_field_system
                         .after(publish_surface_water_visual_frame_system)
                         .after(publish_water_dirty_feed_system),

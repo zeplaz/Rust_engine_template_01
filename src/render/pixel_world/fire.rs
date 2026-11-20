@@ -72,9 +72,16 @@ pub(crate) fn build_fire_mesh(
         let up = right.cross(to_eye).normalize_or_zero();
         let half = row.ember_class_radius_smoke.z.abs().max(min_half);
         let (r, u) = (right * half, up * half * if smoke { 1.0 } else { 1.6 });
-        let heat = row.world_xyz_heat.w.clamp(0.0, 1.0);
+        let (heat, tint_id) = if smoke {
+            crate::render::fire_vfx::pack::decode_smoke_tint(row.world_xyz_heat.w)
+        } else {
+            (row.world_xyz_heat.w.clamp(0.0, 1.0), 0)
+        };
         let tint = if smoke {
-            [0.30, 0.29, 0.28, alpha * 0.55]
+            // Collapse dust takes its colour from the destroyed structure's material.
+            let [r, g, b] = crate::construction::SiteMaterial::from_tint_id(tint_id)
+                .map_or([0.30, 0.29, 0.28], |m| m.dust_rgb());
+            [r, g, b, alpha * 0.55]
         } else {
             // Deep red → orange → yellow-white with heat; additive, so alpha scales the glow.
             [1.0, 0.25 + 0.6 * heat, 0.04 + 0.35 * heat * heat, alpha]

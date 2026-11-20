@@ -136,7 +136,7 @@ mod tests {
     fn mask_patches_only_the_moved_chunk() {
         let mut f = SurfaceWaterField::default();
         f.allocate(0, 0, 96, 96, vec![0.0; 96 * 96], 0.0);
-        let mut feed = WaterFieldDirtyFeed { seq: 1, chunks: f.peek_dirty_chunks().to_vec() };
+        let mut feed = WaterFieldDirtyFeed { seq: 1, chunks: f.take_dirty_chunks() };
         let mut m = WaterFieldWetMask::default();
         m.follow(&f, &feed);
         assert!(m.is_ready() && m.level.iter().all(|l| *l == 0));

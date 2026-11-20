@@ -908,7 +908,6 @@ pub fn build_confirm_site_system(
     mut voxel_occupation: Option<ResMut<crate::strategic::VoxelOccupationBook>>,
     voxel_cfg: Option<Res<crate::strategic::VoxelOccupationConfig>>,
     mut destruction_mask: Option<ResMut<crate::render::pixel_world::DestructionMaskBook>>,
-    mut debris_frame: Option<ResMut<crate::render::WorldFireParticleFrame>>,
     staging_stock: Option<Res<SiteStagingStock>>,
     mut pending_staging: Option<ResMut<PendingSiteStagingDebits>>,
     mut queries: ParamSet<(
@@ -990,7 +989,9 @@ pub fn build_confirm_site_system(
                         voxel_occupation.as_deref_mut(),
                         commit_auth,
                         destruction_mask.as_deref_mut(),
-                        debris_frame.as_deref_mut(),
+                        // A demolish of a build still in progress is a cancel (no rubble): the
+                        // funnel reads the site's phase.
+                        super::destruction::DestroyCause::PlayerDemolish,
                     );
                     record_demolish_execution(commit.history.as_mut(), events);
                 }
