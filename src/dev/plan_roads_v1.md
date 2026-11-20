@@ -1,16 +1,23 @@
-# PLAN-ROADS-v1 — roads that trucks use: tiers, worn tracks, real travel time
+# PLAN-ROADS-v1 — roads and rail that freight uses: tiers, motorways, worn tracks, congestion, real travel time
 
 Status: **OPEN** (2026-11-20). Owner lanes: `coder` (sim/logistics/construction), `designer` (build picker, road card, ribbons).
 Supersedes the road half of T-8 in [`plan_close_voxel_water_v1.md`](plan_close_voxel_water_v1.md) (clickable roads and
-bridge decks DONE there; this plan makes roads matter).
+bridge decks DONE there; this plan makes roads and rail matter).
 
 ## Product stance (operator 2026-11-20)
 
 - Logistics still moves off-road. A road is a faster, more reliable way, never the only way.
-- Repeated off-road traffic wears **dirt tracks** into the ground on its own.
-- The player and the AI **build quality roads**: tiers (dirt, gravel, paved, concrete), lane counts, bridges. A road's tier
-  sets its speed, capacity and how it handles weather, flooding and damage.
+- Repeated off-road traffic wears **tracks** into the ground on its own; what wears them and how much depends on the unit.
+- The player and the AI **build quality roads**: tiers (dirt, gravel, paved, concrete) and a **motorway / express** tier
+  (autobahn, 401, interstate) whose real-world effect is modelled: high speed and capacity because access is limited
+  to interchanges and crossings are grade-separated.
+- **Congestion matters.** Every corridor has a capacity; traffic above it slows everything on it.
+- **Rail is on par with roads**: same network model, same build/upgrade, same congestion and damage rules; a train is the
+  rail adapter of the same kernel (big batched loads, station to station), not a separate system.
 - Travel time comes from the route actually driven. No straight-line timing.
+- There is **no money** in the game (checked 2026-11-20): the economy runs on goods and labour (`StockLedger`, cargo such as
+  Gravel, Cement, Concrete, Labour, Diesel). Roads and rail cost **materials + labour + build time**, delivered like any site,
+  and cost **diesel / power to run**.
 
 ## Where it stands (capture 2026-11-20, dam scene, `roads` dump section)
 
@@ -22,109 +29,184 @@ bridge decks DONE there; this plan makes roads matter).
 | Road graph | A committed road is **one edge head→tail**, no interior nodes: a truck can only join at the two ends |
 | Road storage | `ExecutedRoadNetwork.tiles` is one flat list; readers pair consecutive tiles, so road A's end + road B's start = a phantom segment |
 | Road types | `RoadType { Street, Highway }` in the build tool; `corridor_profiles.example.ron` has lanes/speed/surface tags, read only by spline geometry |
-| Leg timing | `orders/travel.rs`: straight line × detour 1.3 ÷ speed; ignores road, terrain, slope, water |
+| Leg timing | `orders/travel.rs`: straight line × detour 1.3 ÷ speed; ignores road, terrain, slope, water, traffic |
 | Off-road cost | Cross-country path grid (`logistics_floodfill`) has no terrain-speed or wetness term |
+| Congestion | None |
 | Worn tracks | None |
-| AI roads | No faction AI road building |
+| AI roads | No faction AI road or rail building |
+
+### Rail review (2026-11-20)
+
+| Area | Has | Gap |
+|------|-----|-----|
+| Placement | `src/construction/rail/` (~500 lines): spline path, grade and curve validation, continuous placement, ghost | — |
+| Junctions | `RailJunctionAuthority` registers a switch where rail meets a road tile | No level-crossing behaviour (trucks/trains don't interact), no rail-rail junction routing |
+| Network | `ConstructionType::RailSegment` commits a transport edge (`CorridorClass::Rail`, agent `rail_train`) | Same one-edge-per-segment and flat `ExecutedRoadNetwork` lookups as roads |
+| Profiles | `corridor_profiles.example.ron`: gauge, electrification, tracks, max speed | Read by nothing that moves freight |
+| Trains | — | **No train exists.** Order-sim `Vehicle` is truck-only (speed, capacity, no mode) |
+| Stations / yards | — | **None**: rail cannot load or unload at any site, so rail can carry nothing |
+| Timing | Old propagation model: `Batched` ETA = 2 × path length | Order sim ignores rail entirely |
+| Capacity / signals | — | No block signalling, no track capacity, no single vs double track effect |
+| Look | 2D infrastructure overlay marker | Voxel view draws roads (`pixel_world/roads.rs`) but not rail; no rail bridges |
+| Damage / water | — | Rail not blocked by flood/rubble books, no blast damage |
+| AI | — | AI never builds rail |
+| Intermodal | — | No truck → train → truck transfer |
+
+Rail today is a placement tool and graph edges with nothing running on them. Roads are one step further (trucks exist and can
+follow them). Both share the same structural gaps, so they are fixed **once, in a shared corridor kernel** (AGENTS.md
+anti-clone rule), with mode adapters.
 
 ## Authority (AGENTS.md rules)
 
 | Domain | Sole writer | Readers | Requests in |
 |--------|-------------|---------|-------------|
-| Built road network (segments, tier, lanes, deck, condition) | construction execute funnel (`src/construction/`) | transport graph, render, road card, AI | `ConstructionIntent` (build / upgrade / remove) |
-| Track wear field (per-cell wear, emergent tracks) | new `TrackWearField` owner system (logistics/transport) | transport graph, render, road card | `TrackWearQueue` (truck motion pushes cells driven) |
-| Off-road speed field (land class, slope, wetness, ford depth) | one publisher system (navigation) | route planner | — (reads `WaterTileProbe`, ground delta, rain) |
+| Built corridor network (road + rail segments, tier/profile, lanes/tracks, deck, condition) | construction execute funnel (`src/construction/`) | transport graph, render, cards, AI | `ConstructionIntent` (build / upgrade / remove) |
+| Wear field (per-cell wear, emergent tracks) | `TrackWearField` owner system (transport) | transport graph, render, road card | `TrackWearQueue` (truck motion, formation motion push cells + unit wear class) |
+| Off-road speed field (land class, slope, wetness, ford depth) | one publisher system (navigation) | route planner, formations | — (reads `WaterTileProbe`, ground delta, rain) |
+| Corridor flow + congestion (vehicles per edge per hour) | transport owner | route planner, cards | `CorridorFlowQueue` (planned legs register their edges) |
 | Transport graph + costs | transport owner | route planner, order sim | — |
-| Leg route + leg time | route planner (`sync_truck_motion_waypoints_system` successor) | order sim, truck presentation | — |
+| Leg route + leg time | route planner (shared kernel, per-mode adapter) | order sim, presentation | — |
 
 The order sim never computes distance itself. It reads the leg time the planner publishes. Presentation reads both, writes neither.
 
+## Shared corridor kernel + mode adapters
+
+One kernel: segments → graph edges with nodes along them → costed route (time = length ÷ effective speed, effective speed =
+profile speed × condition × weather × congestion) → published leg plan. Adapters say only what differs:
+
+| | Truck (road adapter) | Train (rail adapter) |
+|---|---|---|
+| Ends of a leg | door to door; off-road on/off-ramp to nearest allowed node | station / yard to station; truck legs to and from the yard |
+| Joins the network | any node of a non-limited-access road; motorway only at interchanges | stations only |
+| Capacity unit | vehicles/h per lane | trains/h per track (block length) |
+| Load | one truck load | consist of N wagons (batched, large) |
+| Off network | yes (slow) | never |
+| Energy | diesel | diesel or grid power (electrified profile) |
+
+## Road tiers (RON `assets/config/infrastructure/road_tiers.ron`, first pass; tuning lives in the RON)
+
+| Tier | Speed km/h | Lanes | Capacity veh/h/lane | Access | Wet speed × | Floods closed at | Build per 100 m |
+|------|-----------:|------:|------:|--------|-----:|------|-----------------|
+| Track (worn, not built) | 25 | 1 | 40 | any | 0.4 (mud) | 0.3 m | — |
+| Dirt | 35 | 1–2 | 60 | any | 0.5 | 0.3 m | labour |
+| Gravel | 55 | 2 | 120 | any | 0.85 | 0.5 m | gravel + labour |
+| Paved | 80 | 2–4 | 300 | any | 1.0 | 0.5 m | gravel + asphalt + labour |
+| Concrete | 90 | 2–6 | 400 | any | 1.0 | 0.6 m | gravel + concrete + labour |
+| **Motorway / express** | 110 | 4–8 (divided) | 900 | **interchanges only** | 1.0 | 0.8 m | gravel + concrete + steel (interchanges, overpasses) + labour |
+
+Motorway rules (the IRL effect):
+- No at-grade junctions: crossing roads and rail get an overpass/underpass; trucks enter and leave only at interchanges.
+- That is why it is fast and high-capacity: no cross traffic, divided carriageways. The cost is the interchanges, the
+  grade separations and the detour to the nearest interchange.
+- Junctions on other tiers add a delay per crossing (level crossings with rail add a train-priority delay).
+
+Rail profiles (same RON): single / double track, gauge, diesel / electrified, speed, trains/h per track, build per 100 m
+(gravel ballast + steel + sleepers + labour; electrified adds power line).
+
+## Congestion
+
+- Each planned leg registers its edges in `CorridorFlowQueue`; the transport owner keeps a rolling vehicles-per-hour per edge.
+- Effective speed = free speed ÷ (1 + 0.15 × (flow / capacity)^4) (BPR curve, standard traffic-engineering form), floor at
+  a crawl; rail uses block occupancy (a train waits for a free block instead).
+- Route choice uses the congested time, so traffic spreads onto parallel roads; road card and dump show volume / capacity.
+- Military convoys and refugees later feed the same flow book.
+
+## Wear by unit (the "who makes tracks" choice)
+
+Different movers mark the ground and roads differently. One wear queue, a wear class per mover:
+
+| Mover | Off-road | On built roads |
+|-------|----------|----------------|
+| Truck (wheeled) | wears a track after repeated passes | normal |
+| Tracked armour (mechanized formations) | wears fast, churns mud, flattens young stands | damages dirt/gravel/paved over time (raises repair need) |
+| Infantry | light footpath wear only | none |
+| Trains | — | rail wear only (maintenance) |
+
+Formation movement already exists in combat; it pushes cells to the same `TrackWearQueue` with its class.
+
 ## Phases
 
-### RD-0 Road data model (fixes the flat list)
+### RD-0 Corridor data model (fixes the flat list, roads + rail)
 
-- Replace `ExecutedRoadNetwork.tiles` with `RoadNetwork { segments: Vec<RoadSegment> }`; `RoadSegment { id, polyline: Vec<IVec2>, tier, lanes, deck: Option<Deck>, condition }`.
-  Undo/redo, snap, upgrade and rail-crossing readers move over; the phantom segment goes away.
-- Tier table in RON `assets/config/infrastructure/road_tiers.ron` (replaces the example profiles for roads):
+- Replace `ExecutedRoadNetwork.tiles` with `CorridorNetwork { segments: Vec<CorridorSegment> }`; `CorridorSegment { id, kind: Road(tier, lanes) | Rail(profile, tracks), polyline, deck, condition }`.
+  Undo/redo, snap, upgrade, rail-crossing and junction readers move over; the phantom segment goes away.
+- Tier/profile RON as above. Old saves/R8 snapshots migrate from the tile list.
 
-| Tier | Speed km/h | Lanes | Capacity trucks/h/lane | Wet speed × | Floods as | Build per 100 m |
-|------|-----------:|------:|-------:|-----:|-----------|-----------------|
-| Track (worn, not built) | 25 | 1 | 40 | 0.4 (mud) | blocked > 0.3 m | — |
-| Dirt | 35 | 1–2 | 60 | 0.5 | blocked > 0.3 m | labour only |
-| Gravel | 55 | 2 | 120 | 0.85 | blocked > 0.5 m | gravel |
-| Paved | 80 | 2–4 | 300 | 1.0 | blocked > 0.5 m | gravel + asphalt |
-| Concrete | 90 | 2–6 | 400 | 1.0 | blocked > 0.6 m | gravel + cement |
+### RD-1 Graph edges joinable along the way
 
-  The numbers are the first pass; tuning lives in the RON. Bridges: a deck on any built tier, with a load limit by tier.
-- Done when: two separate roads give exactly their own segments; old saves/R8 snapshots load (migration from the tile list).
-
-### RD-1 Graph edges a truck can join anywhere
-
-- A road commit becomes a chain of edges with nodes every ≤ 8 tiles and at every junction and crossing (roads that cross
-  or touch get joined). Edge cost = length ÷ (tier speed × wet factor × congestion factor).
-- Route planner joins the network at the nearest node of a **nearby** road (on-ramp cost = off-road time to that node), not only within a fixed 24 tiles. Pick by total time (off-road on-ramp + road + off-road off-ramp) vs all off-road.
-- Done when: a truck whose leg runs parallel to a road 6 tiles away takes the road; one with the road 60 tiles away does not.
+- A commit becomes a chain of edges with nodes every ≤ 8 tiles and at every junction/crossing (crossings joined; motorway
+  crossings become grade separations, no node). Edge cost = time with the current congestion and condition.
+- Route planner (truck adapter) joins at the nearest allowed node, on-ramp cost = off-road time. Picks by total time vs all off-road.
+- Done when: a truck whose leg runs parallel to a road 6 tiles away takes the road; one with the road 60 tiles away does not; a motorway is only entered at an interchange.
 
 ### RD-2 Off-road speed field
 
-- One published field: base speed by land class (grass, forest, rubble, crater, rock), × slope factor (from DEM + ground delta),
-  × wetness (rain/infiltration soil moisture), water depth via `WaterTileProbe` (ford ≤ 0.5 m slow, deeper = wall).
-- The cross-country path grid uses it as its cost. Rubble and craters already block roads (D-4); off-road they become slow, not walls.
-- Done when: trucks route around a flooded valley floor and steep valley walls; rain visibly slows dirt and off-road legs.
+- Base speed by land class (grass, forest, rubble, crater, rock) × slope (DEM + ground delta) × wetness × ford depth (`WaterTileProbe`; ≤ 0.5 m slow, deeper = wall).
+- Cross-country grid and formations both read it. Rubble/craters block roads (D-4) and are slow off-road.
 
 ### RD-3 Leg time from the route driven
 
-- The planner publishes `LegPlan { polyline, time_s, tier_share }` per vehicle leg; the order sim's `travel_ticks` reads it
-  (falls back to the straight-line estimate only until a plan exists for a brand-new leg).
-- Re-plan on network change (stamp already exists) also re-times the remaining part of the leg.
-- Done when: a paved detour 1.4× longer than the straight line beats the off-road straight line on time, and deliveries per hour go up when the road is built.
+- Planner publishes `LegPlan { polyline, time_s, mode_share }`; order sim `travel_ticks` reads it (straight-line fallback only until a new leg is planned). Network change re-times the remaining leg.
+- Done when: a paved detour 1.4× the straight line beats off-road on time; deliveries/hour rise when a road is built.
 
-### RD-4 Worn dirt tracks
+### RD-4 Congestion
 
-- Truck motion pushes the cells it drives to `TrackWearQueue`; the wear owner adds wear per pass, decays it slowly without traffic.
-- Wear above a threshold over a connected run turns it into a **Track** segment (graph edges, drawn as worn ground). Track speed beats raw off-road, so tracks reinforce themselves along real supply lines.
-- Below the decay threshold a track fades back. Rain turns tracks to mud (wet factor).
-- A track is not construction: it never takes building materials. The player or AI can **upgrade** it to a built tier (construction funnel).
-- Done when: in a long run with no built roads, tracks form along the depot → site lines and leg times on them drop.
+- `CorridorFlowQueue` + per-edge flow book, BPR slow-down, congested time in route choice, volume/capacity on the card and in the dump.
+- Done when: 50 trucks on one dirt road visibly slow and some take a parallel road.
 
-### RD-5 Build and upgrade (player)
+### RD-5 Worn tracks (by unit class)
 
-- Build picker: road tool gets tier + lanes (play UI only; no debug toggles). Upgrade an existing segment or track in place (`upgrade.rs` grows to tiers).
-- Building a road is a construction site with a material manifest (gravel, asphalt, cement per 100 m), delivered by trucks like any site; it opens when done.
-- Road info card: tier, lanes, speed now (wet, damaged), capacity use, condition (open / flooded / debris / damaged), trucks routed.
-- Done when: a player builds a gravel road, trucks deliver its material, it opens, and traffic shifts onto it.
+- Wear queue from trucks and formations with their wear class; decay without traffic; wear above a threshold over a connected run → Track segment (graph edges, worn-ground look).
+- Tracked armour damages road condition; rain turns tracks to mud.
+- A track is not construction; the player or AI can upgrade it to a built tier.
+- Done when: in a long run with no built roads, tracks form along depot → site lines and leg times on them drop.
 
-### RD-6 AI builds roads
+### RD-6 Build and upgrade (player)
 
-- Faction economy reads per-edge traffic and track wear: a track or off-road corridor above a traffic level gets an upgrade order (dirt → gravel → paved) within its budget; HQ ↔ key sites get a road when they are built.
-- Military: the AI repairs or reroutes around cut roads and blown bridges (reads the same blocks).
-- Done when: in the natural playquad world the AI's depot → site lines become gravel roads over a long run.
+- Build picker: road tier + lanes, motorway with interchange placement, rail profile + tracks (play UI only). Upgrade in place.
+- A road/rail build is a construction site with a material manifest delivered by trucks; it opens when done.
+- Road / rail card: tier, lanes/tracks, speed now, volume/capacity, condition, trucks/trains routed.
 
-### RD-7 Look
+### RD-7 Rail runs freight (parity)
 
-- 2D and voxel ribbons per tier: width from lanes, colour/texture per tier, worn tracks as a ground tint (no ribbon), lane offset for trucks (two-way traffic does not overlap), bridge decks per tier.
-- Damaged/flooded/muddy states visible.
+- Stations / freight yards as a site archetype (loading capacity, platform length); a site within reach of a yard can ship by rail.
+- Train vehicle in the order sim (rail adapter): consist size, speed by profile, batched loads, block signalling, single-track passing loops.
+- Intermodal legs: truck → yard → train → yard → truck, planner picks rail when the total time and load win.
+- Voxel view draws rail (ballast, sleepers, rails, rail bridges), trains on the track.
+- Floods and rubble block rail; blasts cut it; level crossings delay trucks.
+- Done when: a yard pair 150+ tiles apart moves a bulk cargo (gravel) faster per unit than trucks, and blocking the line reroutes to road.
 
-### RD-8 Weather, water, destruction
+### RD-8 AI builds roads and rail
+
+- Faction economy reads flow, wear and congestion: tracks and busy off-road corridors get upgrade orders (dirt → gravel → paved);
+  heavy long-haul bulk lines get rail; HQ ↔ key sites get a road when built.
+- Military: repair or reroute around cut roads, blown bridges and cut rail.
+
+### RD-9 Look
+
+- Ribbons per tier (width from lanes, colour/texture per tier, motorway divided with interchanges and overpasses), worn tracks as ground tint, lane offset for two-way traffic, decks per tier, rail as above.
+- Damaged / flooded / muddy / congested states visible.
+
+### RD-10 Weather, water, destruction
 
 - Already: flood and rubble/crater blocks (D-4), deck pick.
-- Add: mud from wetness on Track/Dirt/Gravel, road damage from blasts (craters cut paved roads; bridge decks fail and fall), flood erosion of unpaved roads.
-- Repair stays with D-7 (deferred program) — damaged roads can be rebuilt as an upgrade order meanwhile.
+- Add: mud on Track/Dirt/Gravel, blast damage to roads and rail (craters cut paved roads, bridge decks fail), flood erosion of unpaved roads. Repair stays with D-7 (deferred); meanwhile a damaged road is rebuilt by an upgrade order.
 
-### RD-9 Measure (one round per phase, real captures)
+### RD-11 Measure (one round per phase, real captures)
 
-- Dam scene gets a supply road network that trucks need (depot → dam, depot → town, a river crossing over the bridge) plus one off-road-only site.
-- `roads` dump section grows: per-truck route tier share, leg time vs straight-line time, tracks formed, wear, congestion, blocked edges.
-- Matrix rows (`tools/sim_review/expected/matrix_v1.json`): share of truck-km on roads > 0.5 in the dam scene; bridge carries traffic; mean leg time with roads < without; tracks formed in the natural world after N ticks.
+- Dam scene gets a supply network trucks need (depot → dam, depot → town, river crossing over the bridge), one off-road-only site, and later a rail line with two yards.
+- `roads` dump section grows: tier/mode share per leg, leg time vs straight-line time, volume/capacity per edge, tracks formed, blocked edges, train loads.
+- Matrix rows (`tools/sim_review/expected/matrix_v1.json`): truck-km on roads > 0.5 in the dam scene; bridge carries traffic; mean leg time with roads < without; tracks formed in the natural world after N ticks; rail moves the bulk cargo.
 
 ## Order
 
-RD-0 → RD-1 → RD-3 (trucks really use roads and get faster) → RD-9 scene + dump → RD-2 → RD-4 → RD-5 → RD-7 → RD-6 → RD-8.
-RD-2 and RD-7 can run in parallel with RD-4/5 (different files).
+RD-0 → RD-1 → RD-3 (trucks really use roads, faster) → RD-11 scene + dump → RD-4 congestion → RD-2 → RD-5 → RD-6 → RD-7 rail → RD-9 → RD-8 → RD-10.
+RD-2 and RD-9 can run in parallel with RD-5/6 (different files). RD-0/RD-1 are written for road and rail at once so RD-7 only adds the train adapter, stations and look.
 
-## Open choices (operator)
+## Decided (operator 2026-11-20)
 
-1. Tier list and lanes as above, or add a separate highway/motorway tier?
-2. Congestion: simple per-edge capacity slow-down (planned) or none for now?
-3. Tracks: only from trucks, or also from formations/infantry movement?
-4. Should roads cost money as well as materials?
+1. Motorway / express tier: **yes**, limited access + grade separation.
+2. Congestion: **yes**, BPR slow-down in route choice.
+3. Wear: **by unit class** (trucks, tracked armour, infantry, trains), one queue.
+4. Cost: **materials + labour + build time** (no money exists), diesel/power to run.
+5. Rail on par: shared corridor kernel, train adapter, stations, intermodal.
