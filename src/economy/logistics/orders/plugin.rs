@@ -446,7 +446,8 @@ impl Plugin for LogisticsOrdersPlugin {
                         .after(super::weather_haul::sync_haul_weather_mul_system),
                     super::vehicle_blast::apply_order_sim_vehicle_blast_system
                         .after(super::weather_haul::sync_haul_weather_mul_system),
-                    step_logistics_orders_system
+                    (sync_logistics_order_sites_system, apply_logistics_order_requests_system, step_logistics_orders_system)
+                        .chain()
                         .after(super::weather_haul::sync_haul_weather_mul_system)
                         .after(super::haul_amplify::sync_haul_amplify_mul_system)
                         .after(super::vehicle_fire::apply_order_sim_vehicle_fire_system)
@@ -579,14 +580,14 @@ fn site_xz(
 }
 
 #[allow(clippy::too_many_arguments, clippy::type_complexity)]
-pub fn step_logistics_orders_system(
+/// Order-sim site bookkeeping (first of the three chained order-sim systems): sites removed,
+/// new sites registered (with their starting stock and fleet, or rebound from a save), moved /
+/// renamed sites updated, unclaimed saved sites dropped after the rebind window.
+pub fn sync_logistics_order_sites_system(
     mut commands: Commands,
     mut res: ResMut<LogisticsOrderSimRes>,
     mut registry: ResMut<LogisticsSiteRegistry>,
     seed: Res<DepotFleetSeed>,
-    clock: Res<SimStepClock>,
-    attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
-    mut requests: MessageReader<LogisticsOrderRequest>,
     new_sites: Query<
         (
             Entity,
@@ -604,9 +605,6 @@ pub fn step_logistics_orders_system(
     >,
     mut removed: RemovedComponents<LogisticsOrderSiteId>,
     mut mirror: ResMut<PlantStockMirror>,
-    mut flow_nodes: Query<&mut ResourceFlowNode>,
-    mut mfg_buffers: Query<&mut ManufacturingOutputBuffers>,
-    legs: Option<Res<super::travel::SiteLegRouteBook>>,
 ) {
     let res = &mut *res;
     let registry = &mut *registry;
@@ -709,7 +707,20 @@ pub fn step_logistics_orders_system(
             }
         }
     }
+}
 
+/// Player / AI order requests applied, then plant and factory stock bridged into the order sim
+/// (second of the three chained order-sim systems).
+pub fn apply_logistics_order_requests_system(
+    mut res: ResMut<LogisticsOrderSimRes>,
+    registry: Res<LogisticsSiteRegistry>,
+    mut requests: MessageReader<LogisticsOrderRequest>,
+    mut mirror: ResMut<PlantStockMirror>,
+    mut flow_nodes: Query<&mut ResourceFlowNode>,
+    mut mfg_buffers: Query<&mut ManufacturingOutputBuffers>,
+) {
+    let res = &mut *res;
+    let registry = &*registry;
     for LogisticsOrderRequest(cmd) in requests.read() {
         let out = res.sim.apply(cmd.clone());
         res.last_outcomes.push(out);
@@ -721,7 +732,19 @@ pub fn step_logistics_orders_system(
 
     bridge_plant_stock(&mut res.sim, registry, &mut mirror, &mut flow_nodes);
     bridge_mfg_output_stock(&mut res.sim, registry, &mut mirror, &mut mfg_buffers);
+}
 
+/// The order-sim ticks due this frame, trips timed by the planned leg routes (last of the three
+/// chained order-sim systems).
+pub fn step_logistics_orders_system(
+    mut res: ResMut<LogisticsOrderSimRes>,
+    mut registry: ResMut<LogisticsSiteRegistry>,
+    clock: Res<SimStepClock>,
+    attention: Option<Res<crate::systems::sim_attention::SimAttentionFrame>>,
+    legs: Option<Res<super::travel::SiteLegRouteBook>>,
+) {
+    let res = &mut *res;
+    let registry = &mut *registry;
     registry.travel.seconds_per_tick = clock.step_secs();
     // FIDELITY-1: player theater Full → every due step; Aggregate → every 2nd; no theater → Aggregate.
     let tier = attention.as_ref().map_or(

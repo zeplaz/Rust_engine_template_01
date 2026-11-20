@@ -93,6 +93,9 @@ pub struct BridgeTypeSpec {
     pub blast_toughness: f32,
     /// Materials per metre of bridge (cargo, units) — for the construction bill.
     pub materials_per_m: Vec<(String, f32)>,
+    /// How readily the structure burns (0 = steel / concrete / stone, 1 = all-timber).
+    #[serde(default)]
+    pub burns: f32,
 }
 
 impl BridgeTypeSpec {
@@ -137,6 +140,12 @@ fn row(kind: BridgeType, len: f32, depth: f32, span: f32, strength: f32, clear: 
         max_current_mps: current,
         blast_toughness: tough,
         materials_per_m: mats.iter().map(|(c, n)| ((*c).to_owned(), *n)).collect(),
+        burns: match kind {
+            BridgeType::TimberBeam | BridgeType::TimberTrestle => 1.0,
+            BridgeType::Pontoon => 0.4,
+            BridgeType::Bailey => 0.15,
+            _ => 0.0,
+        },
     }
 }
 

@@ -266,8 +266,9 @@ pub struct TruckLegPlanner<'w> {
 const LEG_PLANS_PER_FRAME: usize = 16;
 /// Truck speed (m/s) the planner compares road and off-road routes at.
 const PLAN_REF_TRUCK_MPS: f32 = 12.0;
-/// Pairs no vehicle needed for this many order-sim ticks are dropped.
-const LEG_STALE_TICKS: u64 = 3_600;
+/// Most site pairs kept; past this the least recently driven pairs are dropped. (Pruning by age
+/// emptied the book under time skip, so idle pairs lost their measured trip time — R-1.)
+const LEG_BOOK_CAP: usize = 512;
 
 /// The route a truck drives between two sites (tile units): the faster of the built-road route
 /// and the cross-country path, by time at [`PLAN_REF_TRUCK_MPS`].
@@ -347,9 +348,19 @@ pub fn plan_site_leg_routes_system(
         let version = book.revision;
         book.legs.insert(pair, PlannedLeg { route, version, network_stamp: stamp, last_used_tick: tick });
     }
-    let before = book.legs.len();
-    book.legs.retain(|_, l| tick.saturating_sub(l.last_used_tick) <= LEG_STALE_TICKS);
-    if book.legs.len() != before {
+    if book.legs.len() > LEG_BOOK_CAP {
+        let mut ages: Vec<u64> = book.legs.values().map(|l| l.last_used_tick).collect();
+        ages.sort_unstable();
+        let cutoff = ages[book.legs.len() - LEG_BOOK_CAP];
+        let mut excess = book.legs.len() - LEG_BOOK_CAP;
+        book.legs.retain(|_, l| {
+            if excess > 0 && l.last_used_tick <= cutoff {
+                excess -= 1;
+                false
+            } else {
+                true
+            }
+        });
         book.revision = book.revision.wrapping_add(1);
     }
 }

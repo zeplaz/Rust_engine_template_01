@@ -36,6 +36,8 @@ pub enum ConstructionAction {
         tail: BuildSiteTile,
         tiles_added: Vec<BuildSiteTile>,
         marker_entities: Vec<Entity>,
+        /// Lines placed as one path share a group (0 = alone); undo / redo take the group.
+        group: u64,
     },
     Site {
         entity: Entity,
@@ -79,6 +81,30 @@ impl ConstructionHistory {
     #[must_use]
     pub fn can_undo(&self) -> bool {
         !self.undo_stack.is_empty()
+    }
+
+    /// Pops the top action and every action under it in the same path group.
+    pub fn pop_step(stack: &mut Vec<ConstructionAction>) -> Vec<ConstructionAction> {
+        let Some(first) = stack.pop() else {
+            return Vec::new();
+        };
+        let group = first.group();
+        let mut out = vec![first];
+        while group != 0 && stack.last().is_some_and(|a| a.group() == group) {
+            out.extend(stack.pop());
+        }
+        out
+    }
+}
+
+impl ConstructionAction {
+    /// Path group (0 = not grouped).
+    #[must_use]
+    pub fn group(&self) -> u64 {
+        match self {
+            ConstructionAction::RoadSegment { group, .. } => *group,
+            _ => 0,
+        }
     }
 }
 
@@ -128,48 +154,48 @@ pub fn construction_undo_input_system(
     if !ctrl || !keyboard.just_pressed(KeyCode::KeyZ) {
         return;
     }
-    let Some(action) = history.undo_stack.pop() else {
-        return;
-    };
-    history.redo_stack.push(action.clone());
-    match action {
-        ConstructionAction::RoadSegment {
-            segment_id,
-            marker_entities,
-            ..
-        } => {
-            for entity in marker_entities {
-                if road_markers.get(entity).is_ok() || rail_markers.get(entity).is_ok() {
+    let step = ConstructionHistory::pop_step(&mut history.undo_stack);
+    for action in step {
+        history.redo_stack.push(action.clone());
+        match action {
+            ConstructionAction::RoadSegment {
+                segment_id,
+                marker_entities,
+                ..
+            } => {
+                for entity in marker_entities {
+                    if road_markers.get(entity).is_ok() || rail_markers.get(entity).is_ok() {
+                        commands.entity(entity).despawn();
+                    }
+                }
+                roads.remove_segment(segment_id);
+                rebuild_corridor_transport(
+                    &roads,
+                    &mut topology,
+                    &mut fields,
+                    &mut directory,
+                    &mut corridor_book,
+                    &mut overlays,
+                );
+                let _ = &params;
+            }
+            ConstructionAction::Site { entity, site_id } => {
+                if sites.get(entity).is_ok() {
                     commands.entity(entity).despawn();
                 }
+                book.by_site.remove(&site_id);
             }
-            roads.remove_segment(segment_id);
-            rebuild_corridor_transport(
-                &roads,
-                &mut topology,
-                &mut fields,
-                &mut directory,
-                &mut corridor_book,
-                &mut overlays,
-            );
-            let _ = &params;
-        }
-        ConstructionAction::Site { entity, site_id } => {
-            if sites.get(entity).is_ok() {
-                commands.entity(entity).despawn();
-            }
-            book.by_site.remove(&site_id);
-        }
-        ConstructionAction::Zones { entities } => {
-            for entity in entities {
-                if zones.get(entity).is_ok() {
-                    commands.entity(entity).despawn();
+            ConstructionAction::Zones { entities } => {
+                for entity in entities {
+                    if zones.get(entity).is_ok() {
+                        commands.entity(entity).despawn();
+                    }
                 }
             }
-        }
-        ConstructionAction::DemolishedSites(events) => {
-            for ev in &events {
-                site_events.write(ev.clone());
+            ConstructionAction::DemolishedSites(events) => {
+                for ev in &events {
+                    site_events.write(ev.clone());
+                }
             }
         }
     }
@@ -202,60 +228,62 @@ pub fn construction_redo_input_system(
     if !ctrl || !keyboard.just_pressed(KeyCode::KeyY) {
         return;
     }
-    let Some(action) = history.redo_stack.pop() else {
-        return;
-    };
-    history.undo_stack.push(action.clone());
-    match action {
-        ConstructionAction::RoadSegment {
-            kind,
-            head,
-            tail,
-            tiles_added,
-            ..
-        } => {
-            let rail = kind.is_rail();
-            let replayed = if rail {
-                super::construction_pipeline::replay_corridor_segment_for_redo(
-                    &mut commands, &mut roads, &mut topology, &mut fields, &mut directory,
-                    &mut corridor_book, &mut overlays, kind.clone(), head, tail, SimRailSegmentMarker,
-                )
-            } else {
-                super::construction_pipeline::replay_corridor_segment_for_redo(
-                    &mut commands, &mut roads, &mut topology, &mut fields, &mut directory,
-                    &mut corridor_book, &mut overlays, kind.clone(), head, tail, SimRoadSegmentMarker,
-                )
-            };
-            // The replayed line has a new id: the undo entry just pushed must point at it.
-            if let (Some((id, markers)), Some(top)) = (replayed, history.undo_stack.last_mut()) {
-                *top = ConstructionAction::RoadSegment {
-                    segment_id: id,
-                    kind,
-                    head,
-                    tail,
-                    tiles_added,
-                    marker_entities: markers,
+    let step = ConstructionHistory::pop_step(&mut history.redo_stack);
+    for action in step {
+        history.undo_stack.push(action.clone());
+        match action {
+            ConstructionAction::RoadSegment {
+                kind,
+                head,
+                tail,
+                tiles_added,
+                group,
+                ..
+            } => {
+                let rail = kind.is_rail();
+                let replayed = if rail {
+                    super::construction_pipeline::replay_corridor_segment_for_redo(
+                        &mut commands, &mut roads, &mut topology, &mut fields, &mut directory,
+                        &mut corridor_book, &mut overlays, kind.clone(), head, tail, SimRailSegmentMarker,
+                    )
+                } else {
+                    super::construction_pipeline::replay_corridor_segment_for_redo(
+                        &mut commands, &mut roads, &mut topology, &mut fields, &mut directory,
+                        &mut corridor_book, &mut overlays, kind.clone(), head, tail, SimRoadSegmentMarker,
+                    )
                 };
+                // The replayed line has a new id: the undo entry just pushed must point at it.
+                if let (Some((id, markers)), Some(top)) = (replayed, history.undo_stack.last_mut()) {
+                    *top = ConstructionAction::RoadSegment {
+                        segment_id: id,
+                        kind,
+                        head,
+                        tail,
+                        tiles_added,
+                        marker_entities: markers,
+                        group,
+                    };
+                }
+                let _ = (&road_markers, &rail_markers, &params);
             }
-            let _ = (&road_markers, &rail_markers, &params);
-        }
-        ConstructionAction::DemolishedSites(events) => {
-            for ev in events {
-                super::demolish::execute_demolish_at_tile(
-                    &mut commands,
-                    ev.origin,
-                    &sites,
-                    None,
-                    None,
-                    false,
-                    None,
-                    // Redo of a player demolish.
-                    super::destruction::DestroyCause::PlayerDemolish,
-                );
+            ConstructionAction::DemolishedSites(events) => {
+                for ev in events {
+                    super::demolish::execute_demolish_at_tile(
+                        &mut commands,
+                        ev.origin,
+                        &sites,
+                        None,
+                        None,
+                        false,
+                        None,
+                        // Redo of a player demolish.
+                        super::destruction::DestroyCause::PlayerDemolish,
+                    );
+                }
             }
+            // Site/zone redo needs spawn replay (undo despawn only); demolish redo above.
+            ConstructionAction::Site { .. } | ConstructionAction::Zones { .. } => {}
         }
-        // Site/zone redo needs spawn replay (undo despawn only); demolish redo above.
-        ConstructionAction::Site { .. } | ConstructionAction::Zones { .. } => {}
     }
 }
 
@@ -268,6 +296,7 @@ pub fn record_road_execution(
     marker_entities: Vec<Entity>,
     edge_id: Option<crate::systems::transport::TransportEdgeId>,
     construction_record: Option<crate::systems::transport::TransportConstructionRecord>,
+    group: u64,
 ) {
     if let (Some(eid), Some(rec)) = (edge_id, construction_record.as_ref()) {
         bevy::log::debug!(
@@ -287,6 +316,7 @@ pub fn record_road_execution(
             tail,
             tiles_added,
             marker_entities,
+            group,
         },
         action_kind,
     );
@@ -325,7 +355,7 @@ mod tests {
         let mut history = ConstructionHistory::default();
         let tiles = vec![BuildSiteTile { x: 1, z: 2 }, BuildSiteTile { x: 2, z: 2 }];
         let kind = CorridorKind::Road { tier: crate::infrastructure::RoadTier::Gravel, lanes: 2 };
-        record_road_execution(&mut history, 7, kind, (tiles[0], tiles[1]), tiles.clone(), vec![], None, None);
+        record_road_execution(&mut history, 7, kind, (tiles[0], tiles[1]), tiles.clone(), vec![], None, None, 0);
         assert!(history.can_undo());
         let action = history.undo_stack.pop().unwrap();
         history.redo_stack.push(action.clone());
@@ -336,6 +366,22 @@ mod tests {
             }
             _ => panic!("expected road segment action"),
         }
+    }
+
+    #[test]
+    fn a_placed_path_undoes_as_one_step() {
+        let mut history = ConstructionHistory::default();
+        let t = |x| BuildSiteTile { x, z: 3 };
+        let kind = CorridorKind::Road { tier: crate::infrastructure::RoadTier::Gravel, lanes: 2 };
+        record_road_execution(&mut history, 1, kind.clone(), (t(0), t(4)), vec![], vec![], None, None, 0);
+        for (i, id) in [2_u32, 3, 4].into_iter().enumerate() {
+            let x = 4 + i as u32 * 4;
+            record_road_execution(&mut history, id, kind.clone(), (t(x), t(x + 4)), vec![], vec![], None, None, 9);
+        }
+        let step = ConstructionHistory::pop_step(&mut history.undo_stack);
+        assert_eq!(step.len(), 3, "the three stretches of path 9 go together");
+        assert_eq!(history.undo_stack.len(), 1, "the earlier lone line stays");
+        assert_eq!(ConstructionHistory::pop_step(&mut history.undo_stack).len(), 1);
     }
 
     #[test]

@@ -38,6 +38,12 @@ pub struct ActiveRoadPlacement {
     pub dragging: Option<usize>,
     /// The last click ended on an existing line: finish once the checks include it.
     pub finish_requested: bool,
+    /// Bridge type the player cycled to (T); None = cheapest that fits each crossing.
+    pub bridge_choice: Option<crate::infrastructure::bridge_types::BridgeType>,
+    /// G pressed: route-assist from the last point to the cursor on the next preview update.
+    pub assist_requested: bool,
+    /// Last route-assist result for the readout ("no way within 12% found").
+    pub assist_note: Option<String>,
 }
 
 impl Default for ActiveRoadPlacement {
@@ -54,6 +60,9 @@ impl Default for ActiveRoadPlacement {
             cursor_joins_line: false,
             dragging: None,
             finish_requested: false,
+            bridge_choice: None,
+            assist_requested: false,
+            assist_note: None,
         }
     }
 }
@@ -67,5 +76,7 @@ impl ActiveRoadPlacement {
         self.live_checks.clear();
         self.summary = CorridorPathSummary::default();
         self.dragging = None;
+        self.bridge_choice = None;
+        self.assist_note = None;
     }
 }

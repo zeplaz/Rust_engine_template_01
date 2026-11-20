@@ -82,7 +82,7 @@ pub const TRAY_QUEUE_EMPTY: &str = "○ Queue empty";
 pub const TRAY_PEEK_MODIFIERS: &str = "Ctrl rotate · Shift scale";
 
 pub const ROAD_SHEET_HINT_INPUT: &str =
-    "Click: start / bend · double-click, Enter or click a road: finish · Backspace / RMB: undo point · Esc: cancel · Shift: straight 15°";
+    "Click: start / bend · double-click, Enter or click a road: finish · Backspace / RMB: undo point · Esc: cancel · Shift: straight 15° · G: route round slopes · T: bridge type";
 pub const ROAD_SHEET_BUILD: &str = "Build";
 pub const ROAD_SHEET_CANCEL: &str = "Cancel";
 pub const ROAD_SHEET_UPGRADE: &str = "Upgrade nearest segment";
