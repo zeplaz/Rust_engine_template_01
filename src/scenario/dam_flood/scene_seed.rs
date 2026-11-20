@@ -356,7 +356,10 @@ pub fn mirror_stands_into_dam_book_system(
                     live_burn += rate;
                     live_n += 1;
                 }
-                StandPhase::Dead => {
+                // Dead fuel still under the receding reservoir can't burn: only exposed dead
+                // stands are S9 fuel (a submerged dead stand's wet fuel pulled the dead mean
+                // under the live one once the dam stopped failing early and the pool held).
+                StandPhase::Dead if !submerged => {
                     dead_burn += rate;
                     dead_n += 1;
                 }
@@ -371,6 +374,9 @@ pub fn mirror_stands_into_dam_book_system(
     }
     book.stand_live = live;
     book.stand_drowned = drowned;
+    // S3 is the impound drowning the forest: keep the peak (drowned stands later die and the
+    // pool drains after a breach, so the end-of-run count reads 0).
+    book.s3_drowned_peak = book.s3_drowned_peak.max(drowned);
     book.stand_dead = dead;
     book.fuel_moisture_mean = if moist_n > 0 {
         moist_sum / moist_n as f32

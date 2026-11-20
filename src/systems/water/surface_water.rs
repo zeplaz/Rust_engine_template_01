@@ -44,7 +44,9 @@ impl Default for ReservoirLevelPool {
 /// spill here; the embankment crest is never the spill crest).
 pub const SPILLWAY_FREEBOARD_M: f32 = 3.0;
 /// Emergency (ungated) spillway width as a share of the gated spillway length.
-pub const EMERGENCY_SPILLWAY_SHARE: f32 = 1.0;
+/// Sized so the design inflow passes with ~1.5 m head over the sill: a full pool keeps
+/// ~1.5 m freeboard under the crest (0.8 m let the first 2D wave overtop).
+pub const EMERGENCY_SPILLWAY_SHARE: f32 = 2.0;
 
 /// Barrier / outlet / spillway params — player dam, hydro plant, or scenario-fed.
 #[derive(Clone, Debug, Default, Reflect, Serialize, Deserialize, PartialEq)]
@@ -582,6 +584,70 @@ impl SurfaceWaterField {
         }
     }
 
+    /// Barrier cells' upstream (+z) and downstream (-z) open neighbours.
+    fn dam_faces(&self) -> (Vec<usize>, Vec<usize>) {
+        let (w, h) = (self.width as usize, self.height as usize);
+        let (mut up, mut down) = (Vec::new(), Vec::new());
+        for z in 0..h {
+            for x in 0..w {
+                let i = z * w + x;
+                if self.hydraulics.barrier_crest_m.get(i).copied().unwrap_or(0.0) <= 0.0 {
+                    continue;
+                }
+                if z + 1 < h && self.hydraulics.barrier_crest_m[i + w] <= 0.0 {
+                    up.push(i + w);
+                }
+                if z > 0 && self.hydraulics.barrier_crest_m[i - w] <= 0.0 {
+                    down.push(i - w);
+                }
+            }
+        }
+        up.sort_unstable();
+        up.dedup();
+        down.sort_unstable();
+        down.dedup();
+        (up, down)
+    }
+
+    /// Highest water surface right above the dam (m); bed min when dry.
+    #[must_use]
+    pub fn dam_upstream_surface_m(&self) -> f32 {
+        let (up, _) = self.dam_faces();
+        up.iter()
+            .filter(|i| self.depth_m[**i] > 0.05)
+            .map(|i| self.surface_at(*i))
+            .fold(self.pool.bed_min_m, f32::max)
+    }
+
+    /// Move `q_m3s * dt_s` from the wet cells above the dam to the cells below it (outlet /
+    /// spillway / turbine works through the body). Volume conserving; limited by what is there.
+    pub fn transfer_through_dam(&mut self, q_m3s: f32, dt_s: f32) {
+        if q_m3s <= 0.0 || dt_s <= 0.0 {
+            return;
+        }
+        let (up, down) = self.dam_faces();
+        if up.is_empty() || down.is_empty() {
+            return;
+        }
+        let cell_a = self.dx_m * self.dx_m;
+        let avail: f32 = up.iter().map(|i| self.depth_m[*i]).sum::<f32>() * cell_a;
+        let take = (q_m3s * dt_s).min(avail * 0.5);
+        if take <= 0.0 || avail <= 0.0 {
+            return;
+        }
+        let frac = take / avail;
+        for i in &up {
+            self.depth_m[*i] *= 1.0 - frac;
+        }
+        // Released water leaves at the toe, deepest channel cells first (lowest bed).
+        let bed_lo = down.iter().map(|i| self.bed_m[*i]).fold(f32::INFINITY, f32::min);
+        let toe: Vec<usize> = down.iter().copied().filter(|i| self.bed_m[*i] <= bed_lo + 1.0).collect();
+        let per = take / (toe.len().max(1) as f32 * cell_a);
+        for i in &toe {
+            self.depth_m[*i] += per;
+        }
+    }
+
     /// Wall top on cell `i` for the face flux: dam crest or standing structure, whichever is higher.
     #[inline]
     #[must_use]
@@ -908,6 +974,13 @@ impl SurfaceWaterField {
         // Calibrated so dam-break front celerity matches Ritter 2√(gh) within ±10%
         // on the general kernel (see `measure_dam_break_front_distance`).
         const VP_CONDUCTANCE_K: f32 = 16.0;
+        // Stability bound: flux = C·Δη is explicit diffusion, stable only while C·dt/A <= 1/4
+        // per face. Above it (deep reservoir: limit ~0.007 s at 35 m; the caller's sub-step cap
+        // gave ~0.016 s) cells overshoot their neighbours and blow up into an odd-even
+        // checkerboard (0 m / 46 m / 0 m above a dam), which also "eroded" intact dams. Capping
+        // each face at A/(8·dt) means a cell can never pass a neighbour in one sub-step; when the
+        // sub-step is small enough the physical conductance is used unchanged.
+        let c_stable = cell_a / (8.0 * dt_s);
         let conductance = |h_a: f32, h_b: f32| -> f32 {
             // Upwind depth so dry-bed wetting is not starved by a zero neighbor.
             let hp = h_a.max(h_b);
@@ -915,7 +988,7 @@ impl SurfaceWaterField {
                 0.0
             } else {
                 // Gravity-wave scale: C = k·Δx·√(g·h) → volume flux = C·Δη.
-                VP_CONDUCTANCE_K * dx * (G_MPS2 * hp).sqrt()
+                (VP_CONDUCTANCE_K * dx * (G_MPS2 * hp).sqrt()).min(c_stable)
             }
         };
 
@@ -1176,11 +1249,28 @@ impl SurfaceWaterField {
                 } else {
                     self.hydraulics.mid_outlet_flow_m3s(head, mid_outlet_open01)
                 };
-                self.spillway_flow_m3s =
-                    self.hydraulics.spillway_flow_m3s(head_crest, gate_open01);
+                // Spillways measure head over the sill (crest minus freeboard), like the pool.
+                let up_eta = self.dam_upstream_surface_m();
+                let head_sill = if crest > 0.0 {
+                    (up_eta - (crest - SPILLWAY_FREEBOARD_M)).max(0.0)
+                } else {
+                    0.0
+                };
+                self.spillway_flow_m3s = self.hydraulics.spillway_flow_m3s(head_sill, gate_open01)
+                    + self.hydraulics.emergency_spillway_flow_m3s(head_sill);
+                // Overtopping in 2D is the face flux over the crest itself (reported only).
                 self.overtopping_flow_m3s = self.hydraulics.overtopping_flow_m3s(head_crest);
                 self.turbine_flow_m3s = turbine_setpoint_m3s
                     .clamp(0.0, self.hydraulics.turbine_design_m3s.max(0.0));
+                // Controlled releases really pass the dam in 2D: outlets, spillways and turbines
+                // move water from the cells above the dam to the cells below it (volume kept).
+                // They were only reported numbers here, so once gates opened (S4) the only path
+                // past the dam was over the crest: the pool rose, overtopped and eroded it.
+                let q_release = self.outlet_flow_m3s
+                    + self.mid_outlet_flow_m3s
+                    + self.spillway_flow_m3s
+                    + self.turbine_flow_m3s;
+                self.transfer_through_dam(q_release, dt_s);
 
                 let h_max = self.depth_m.iter().copied().fold(0.1_f32, f32::max).max(0.1);
                 let wave = 0.5 * self.dx_m / (G_MPS2 * h_max).sqrt();
@@ -1570,6 +1660,36 @@ mod tests {
         let tiles: Vec<IVec2> = (0..width as i32).map(|x| IVec2::new(x, dam_z)).collect();
         f.install_barrier_tiles(&tiles, 40.0);
         f
+    }
+
+    /// A full reservoir switched to operate (2D, gates + outlet + turbine open) keeps its water
+    /// below the crest: releases pass through the dam, nothing flows over the intact crest, so
+    /// nothing erodes it.
+    #[test]
+    fn operating_a_full_dam_does_not_flow_over_the_crest() {
+        let (w, h) = (24_u32, 40_u32);
+        let mut f = terrace_valley(w, h, 10);
+        f.mode = SurfaceWaterMode::LevelPool;
+        for _ in 0..40 {
+            f.step_level_pool(24_000.0, 0.0, 0.0, 0.0, 0.0);
+        }
+        let crest = f.channel_crest_m();
+        assert!(f.pool.stage_m < crest, "full pool {} under crest {crest}", f.pool.stage_m);
+        let tiles: Vec<IVec2> = (0..w as i32).map(|x| IVec2::new(x, 10)).collect();
+        let mut worst = 0.0_f32;
+        let mut worst_step = 0;
+        for k in 0..600 {
+            f.mode = SurfaceWaterMode::VirtualPipes;
+            f.step(1.0, 0.2, 0.35, 0.0, 40.0);
+            let v = crate::construction::dam_face_velocities_m_s(&f, &tiles)
+                .into_iter()
+                .fold(0.0_f32, f32::max);
+            if v > worst {
+                worst = v;
+                worst_step = k;
+            }
+        }
+        assert!(worst < 0.5, "flow over the intact crest: {worst} m/s at step {worst_step}");
     }
 
     #[test]

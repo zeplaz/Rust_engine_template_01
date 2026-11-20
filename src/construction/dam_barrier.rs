@@ -366,12 +366,18 @@ pub fn dam_integrity_progress_system(
     }
 }
 
-/// Remaining crest fraction of a dam column from its integrity: full at 1, nothing left at the
-/// collapse threshold.
+/// Integrity above which a column keeps its full crest: surface scour of the faces does not
+/// lower the crest until the core is reached (Compromised). Without this, the first wave over
+/// the crest cut a notch at once and the notch flow tore alternate columns out (checkerboard).
+pub const DAM_CREST_HOLDS_ABOVE_INTEGRITY: f32 = 0.6;
+
+/// Remaining crest fraction of a dam column from its integrity: full down to
+/// [`DAM_CREST_HOLDS_ABOVE_INTEGRITY`], then falling to nothing at the collapse threshold.
 #[must_use]
 pub fn dam_column_crest_fraction(integrity: f32) -> f32 {
     let c = crate::construction::demolish::DESTRUCTIBLE_COLLAPSE_INTEGRITY;
-    ((integrity - c) / (1.0 - c).max(1e-3)).clamp(0.0, 1.0)
+    let hold = DAM_CREST_HOLDS_ABOVE_INTEGRITY.max(c + 1e-3);
+    ((integrity - c) / (hold - c)).clamp(0.0, 1.0)
 }
 
 /// DW-3: publish each installed dam's per-column crest when its column integrity changes

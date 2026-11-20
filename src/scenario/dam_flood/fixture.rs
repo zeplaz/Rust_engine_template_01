@@ -22,6 +22,11 @@ pub struct DamValleyFixture {
     pub hydro_plant_origin: (i32, i32),
     pub launch_site_origin: (i32, i32),
     pub forest_floodplain: DamValleyAabb,
+    /// Woodland test zone (fire + missile strike), on the dry plateau well away from the dam,
+    /// the river and the flood, so the fire test and the water test never interfere. A third
+    /// zone will bring water and fire together (S9 dead-over-live burn).
+    #[serde(default = "default_woodland_test_zone")]
+    pub woodland_test_zone: DamValleyAabb,
     pub road_bridge_tile: (i32, i32),
     /// Faction start config for this scene (same schema as the shipped one): HQ depot, stockpile
     /// and fleet a player would bring to build a dam here. Configures the real start path.
@@ -88,6 +93,11 @@ pub fn load_dam_valley_fixture() -> DamValleyFixture {
     }
 }
 
+/// South-west plateau, ~100 tiles from the dam and ~80 from the river (outside the valley walls).
+fn default_woodland_test_zone() -> DamValleyAabb {
+    DamValleyAabb { min: (24, 24), max: (84, 84) }
+}
+
 fn default_fixture() -> DamValleyFixture {
     DamValleyFixture {
         schema_version: 1,
@@ -124,6 +134,7 @@ fn default_fixture() -> DamValleyFixture {
             min: (120, 120),
             max: (200, 200),
         },
+        woodland_test_zone: default_woodland_test_zone(),
         road_bridge_tile: (160, 110),
         faction_start: None,
     }

@@ -100,7 +100,7 @@ pub fn dam_flood_json(
         "time_skip_dt_slow_secs": skip.map(|s| s.dt_slow_secs).unwrap_or(0),
         "s0_gauge_balance_err": s0_err,
         "s2_downstream_ratio": s2_ratio,
-        "s3_drowned_cells": book.map(|b| b.stand_drowned).unwrap_or(0),
+        "s3_drowned_cells": book.map(|b| b.s3_drowned_peak).unwrap_or(0),
         "s4_hydro_mw": s4_hydro,
         "s5_impact_err_m": book.map(|b| b.s5_impact_err_m).unwrap_or(999.0),
         "s7_wave_arrival_g3_s": book.map(|b| b.s7_wave_arrival_g3_s).unwrap_or(0.0),
@@ -207,7 +207,7 @@ pub fn dump_dam_flood_history_section(
     field: Option<Res<SurfaceWaterField>>,
     sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
     skip: Res<crate::systems::water::SlowDomainElapsedSecs>,
-    dams: Query<&crate::construction::DamBody>,
+    dams: Query<(&crate::construction::DamBody, &crate::strategic::SiteFootprint)>,
     mut rows: Local<Vec<Value>>,
     mut dump: ResMut<SimRunDump>,
 ) {
@@ -236,12 +236,28 @@ pub fn dump_dam_flood_history_section(
         // Dam state per sample: pins where a run diverges (erosion through a notch vs build
         // timing vs crest never installed).
         "crest_m": pick("channel_crest_m"),
-        "dam_installed": dams.iter().any(|d| d.barrier_installed),
-        "dam_integrity": dams.iter().map(|d| d.integrity_01).fold(f32::NAN, f32::min),
+        "dam_installed": dams.iter().any(|(d, _)| d.barrier_installed),
+        "dam_integrity": dams.iter().map(|(d, _)| d.integrity_01).fold(f32::NAN, f32::min),
         "dam_col_min": dams
             .iter()
-            .flat_map(|d| d.column_integrity.iter().copied())
+            .flat_map(|(d, _)| d.column_integrity.iter().copied())
             .fold(f32::NAN, f32::min),
+        // Per column: tile, integrity, face speed (m/s) — which column fails and why.
+        "dam_cols": dams
+            .iter()
+            .flat_map(|(d, fp)| {
+                let v = field
+                    .as_deref()
+                    .map(|f| crate::construction::dam_face_velocities_m_s(f, &fp.tiles))
+                    .unwrap_or_default();
+                fp.tiles
+                    .iter()
+                    .zip(d.column_integrity.iter())
+                    .enumerate()
+                    .map(move |(k, (t, i))| json!([t.x, t.y, (i * 100.0).round() / 100.0, v.get(k).map(|s| (s * 10.0).round() / 10.0)]))
+                    .collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>(),
         "notch": field.as_deref().is_some_and(|f| f.hydraulics.barrier_damaged),
         "breach_q": field.as_deref().map_or(0.0, |f| f.breach_flow_m3s),
         "overtop_q": field.as_deref().map_or(0.0, |f| f.overtopping_flow_m3s),

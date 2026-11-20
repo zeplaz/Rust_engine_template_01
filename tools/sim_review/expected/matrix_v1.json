@@ -640,8 +640,16 @@
       "path": "dam_flood.s9_burn_rate_dead_over_live",
       "op": "gt",
       "expect": 1.0,
+      "when_scene": ["WaterFireZone"],
+      "note": "DF-5/S9: dead stand burns faster than live. Water x fire interaction: moved to the planned third test zone (its dam-scene ignition sat in flood water)."
+    },
+    {
+      "id": "dam.fire_zone_burnt_cells",
+      "path": "counts.veg_burnt_cells",
+      "op": "gt",
+      "expect": 50,
       "when_scene": ["DamFlood"],
-      "note": "DF-5/S9: dead stand burns faster than live. Baseline v0 expects FAIL."
+      "note": "Woodland test zone (dry plateau, away from the dam): missile strike + ignition burn live forest."
     },
     {
       "id": "dam.water_gpu_field_wired",
