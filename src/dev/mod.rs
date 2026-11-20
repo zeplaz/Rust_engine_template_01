@@ -16,6 +16,7 @@ pub mod sim_run_dump_massing;
 pub mod sim_run_dump_occupation;
 pub mod sim_run_dump_quadrants;
 pub mod sim_run_dump_dam_flood;
+pub mod sim_run_dump_roads;
 pub mod sim_run_dump_reporters;
 pub mod orchestrator_health;
 pub mod city_faction_progress;
