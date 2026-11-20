@@ -62,8 +62,32 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     let depth01 = field.r;
     let bed_y = sample_bed_y(uv);
     var local = vertex.position;
-    // DF-3 depth01 → metres via height_scale (CPU: depth_m/TILE * PIXEL_WORLD_HEIGHT_SCALE).
-    local.y = bed_y + depth01 * material.height_scale + material.lift;
+    // DF-3 depth01 → display units via height_scale.
+    var y = bed_y + depth01 * material.height_scale + material.lift;
+    // Dry vertex: take the highest wet neighbour's surface so the sheet stays flat to the
+    // shoreline (the fragment discards dry pixels). Dropping dry vertices to the bed made every
+    // wet/dry edge a slope — the V-wedges at the dam and the ROI edges (OP-2/OP-3).
+    if depth01 < 0.02 {
+        let texel = vec2<f32>(1.0) / vec2<f32>(textureDimensions(field_tex));
+        var best = -1.0e9;
+        for (var r = 1; r <= 3; r = r + 1) {
+            for (var oy = -1; oy <= 1; oy = oy + 1) {
+                for (var ox = -1; ox <= 1; ox = ox + 1) {
+                    if ox == 0 && oy == 0 {
+                        continue;
+                    }
+                    let nuv = uv + vec2<f32>(f32(ox * r), f32(oy * r)) * texel;
+                    let nd = sample_field(nuv).r;
+                    if nd >= 0.02 {
+                        best = max(best, sample_bed_y(nuv) + nd * material.height_scale + material.lift);
+                    }
+                }
+            }
+        }
+        // No wet neighbour: tuck the vertex under the ground so nothing draws there.
+        y = select(bed_y - 1.0, best, best > -1.0e8);
+    }
+    local.y = y;
 
     var model = mesh_position_local_to_clip(
         get_world_from_local(vertex.instance_index),
