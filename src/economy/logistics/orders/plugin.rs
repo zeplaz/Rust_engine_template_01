@@ -606,6 +606,7 @@ pub fn step_logistics_orders_system(
     mut mirror: ResMut<PlantStockMirror>,
     mut flow_nodes: Query<&mut ResourceFlowNode>,
     mut mfg_buffers: Query<&mut ManufacturingOutputBuffers>,
+    legs: Option<Res<super::travel::SiteLegRouteBook>>,
 ) {
     let res = &mut *res;
     let registry = &mut *registry;
@@ -749,7 +750,14 @@ pub fn step_logistics_orders_system(
         {
             continue;
         }
-        res.sim.tick(&registry.travel);
+        // RD-3: trip time = the route the planner laid (roads at tier speed, else off-road).
+        let empty = super::travel::SiteLegRouteBook::default();
+        let routed = super::travel::RoutedTravel {
+            base: &registry.travel,
+            legs: legs.as_deref().unwrap_or(&empty),
+            offroad_mps: crate::infrastructure::road_tier_table().offroad_speed_mps(),
+        };
+        res.sim.tick(&routed);
     }
 }
 

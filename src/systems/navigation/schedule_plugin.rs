@@ -18,6 +18,7 @@ impl Plugin for NavigationSchedulePlugin {
                     NavSets::MotionCalculation.after(NavSets::DamageSpeedAdjustment),
                 ),
             )
+            .init_resource::<crate::economy::logistics::orders::SiteLegRouteBook>()
             .add_systems(
                 Startup,
                 crate::systems::navigation::load_logistics_path_concerns_on_startup,
@@ -25,7 +26,9 @@ impl Plugin for NavigationSchedulePlugin {
             .add_systems(
                 Update,
                 (
-                    crate::systems::navigation::sync_truck_motion_waypoints_system,
+                    crate::systems::navigation::plan_site_leg_routes_system,
+                    crate::systems::navigation::sync_truck_motion_waypoints_system
+                        .after(crate::systems::navigation::plan_site_leg_routes_system),
                     crate::systems::navigation::potential_field_navigation_system
                         .after(crate::systems::navigation::sync_truck_motion_waypoints_system),
                 )

@@ -61,7 +61,17 @@ fn commit_path_to_queue(
         let entity_type = if firebreak {
             ConstructionType::FirebreakSegment { head, tail }
         } else {
-            ConstructionType::RoadSegment { head, tail }
+            // Interim until the RD-6 picker: the street tool lays paved roads, the wide
+            // (highway) tool concrete.
+            ConstructionType::RoadSegment {
+                head,
+                tail,
+                tier: if placement.width >= 12.0 {
+                    crate::infrastructure::RoadTier::Concrete
+                } else {
+                    crate::infrastructure::RoadTier::Paved
+                },
+            }
         };
         queue.enqueue(ConstructionIntent {
             entity_type,

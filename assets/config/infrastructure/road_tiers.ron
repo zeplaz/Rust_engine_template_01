@@ -1,0 +1,15 @@
+// PLAN-ROADS-v1 road tiers (src/construction/road_tier.rs). Speeds in km/h, capacity in vehicles
+// per hour per lane, flood_close_m = water depth that closes the road. First pass; tune here.
+(
+    schema_version: 1,
+    // Cross-country truck speed until the off-road speed field (RD-2) lands.
+    offroad_speed_kmh: 18.0,
+    tiers: [
+        (tier: Track,    speed_kmh: 25.0,  lanes_default: 1, capacity_veh_h_lane: 40.0,  wet_speed_mul: 0.4,  flood_close_m: 0.3),
+        (tier: Dirt,     speed_kmh: 35.0,  lanes_default: 1, capacity_veh_h_lane: 60.0,  wet_speed_mul: 0.5,  flood_close_m: 0.3),
+        (tier: Gravel,   speed_kmh: 55.0,  lanes_default: 2, capacity_veh_h_lane: 120.0, wet_speed_mul: 0.85, flood_close_m: 0.5),
+        (tier: Paved,    speed_kmh: 80.0,  lanes_default: 2, capacity_veh_h_lane: 300.0, wet_speed_mul: 1.0,  flood_close_m: 0.5),
+        (tier: Concrete, speed_kmh: 90.0,  lanes_default: 2, capacity_veh_h_lane: 400.0, wet_speed_mul: 1.0,  flood_close_m: 0.6),
+        (tier: Motorway, speed_kmh: 110.0, lanes_default: 4, capacity_veh_h_lane: 900.0, wet_speed_mul: 1.0,  flood_close_m: 0.8),
+    ],
+)

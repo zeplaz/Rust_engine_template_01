@@ -22,6 +22,9 @@
     launch_site_origin: (100, 180),
     forest_floodplain: (min: (120, 120), max: (200, 200)),
     road_bridge_tile: (160, 110),
+    // Gravel supply roads (PLAN-ROADS-v1 RD-11): HQ (140,168) -> west dam abutment, and down the
+    // west bank to the bridge's west end so the bridge joins the network.
+    supply_roads: [((140, 168), (146, 157)), ((146, 157), (153, 156)), ((146, 157), (152, 110))],
     // Player HQ near the narrows with a dam-sized stockpile; the dam is built through logistics.
     faction_start: Some("assets/configs/scenario/faction_start_dam_valley_v1.ron"),
 )

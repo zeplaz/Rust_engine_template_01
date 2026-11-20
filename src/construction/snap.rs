@@ -4,7 +4,7 @@ use bevy::prelude::*;
 
 use crate::strategic::BuildSiteTile;
 
-use super::construction_pipeline::ExecutedRoadNetwork;
+use super::corridor_network::CorridorNetwork;
 
 /// Snap target kinds (Round 2 — node magnetism today; intersection entity later).
 #[derive(Clone, Debug)]
@@ -52,7 +52,7 @@ impl Default for RoadSnapSettings {
 pub fn snap_placement(
     world: Vec3,
     settings: &RoadSnapSettings,
-    roads: &ExecutedRoadNetwork,
+    roads: &CorridorNetwork,
 ) -> SnapPlacement {
     let mut out = world;
     let mut target = None;
@@ -81,17 +81,17 @@ pub fn snap_placement(
 #[must_use]
 pub fn nearest_road_node(
     world: Vec3,
-    roads: &ExecutedRoadNetwork,
+    roads: &CorridorNetwork,
     radius: f32,
 ) -> Option<BuildSiteTile> {
     let mut best: Option<(f32, BuildSiteTile)> = None;
-    for tile in &roads.tiles {
+    for tile in roads.node_tiles() {
         let dx = world.x - tile.x as f32 - 0.5;
         let dz = world.z - tile.z as f32 - 0.5;
         let d2 = dx * dx + dz * dz;
         if d2 <= radius * radius {
             if best.map_or(true, |(bd, _)| d2 < bd) {
-                best = Some((d2, *tile));
+                best = Some((d2, tile));
             }
         }
     }
@@ -113,7 +113,7 @@ mod tests {
         let out = snap_placement(
             Vec3::new(3.2, 0.0, 5.7),
             &s,
-            &ExecutedRoadNetwork::default(),
+            &CorridorNetwork::default(),
         )
         .world;
         assert_eq!(out.x, 4.0);

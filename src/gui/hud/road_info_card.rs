@@ -8,7 +8,7 @@
 use bevy::prelude::*;
 use bevy::ui::FocusPolicy;
 
-use crate::construction::{ActiveBuildTool, ExecutedRoadNetwork};
+use crate::construction::{ActiveBuildTool, CorridorNetwork};
 use crate::economy::logistics::debris_block::DebrisRouteBlockBook;
 use crate::entities::components::Waypoints;
 use crate::gui::front_controls::{build_tool_blocks_front_orders, FrontMapCursor, SelectedFormation};
@@ -37,15 +37,13 @@ fn dist_to_segment(p: Vec2, a: Vec2, b: Vec2) -> f32 {
 
 /// Nearest committed road segment within `radius` tiles of `xy`.
 #[must_use]
-pub fn pick_road_segment(roads: &ExecutedRoadNetwork, xy: Vec2, radius: f32) -> Option<(IVec2, IVec2)> {
+pub fn pick_road_segment(roads: &CorridorNetwork, xy: Vec2, radius: f32) -> Option<(IVec2, IVec2)> {
     roads
-        .tiles
-        .windows(2)
-        .filter(|w| w[0] != w[1])
-        .map(|w| (dist_to_segment(xy, centre(w[0]), centre(w[1])), w))
-        .filter(|(d, _)| *d <= radius + ROAD_RIBBON_HALF)
+        .road_spans()
+        .map(|(_, a, b)| (dist_to_segment(xy, centre(a), centre(b)), a, b))
+        .filter(|(d, ..)| *d <= radius + ROAD_RIBBON_HALF)
         .min_by(|a, b| a.0.total_cmp(&b.0))
-        .map(|(_, w)| (IVec2::new(w[0].x as i32, w[0].z as i32), IVec2::new(w[1].x as i32, w[1].z as i32)))
+        .map(|(_, a, b)| (IVec2::new(a.x as i32, a.z as i32), IVec2::new(b.x as i32, b.z as i32)))
 }
 
 /// Idle LMB on a road or bridge selects it. Yields to build tools, formation selection and sites
@@ -55,7 +53,7 @@ pub fn map_pick_road_focus_system(
     cursor: Res<FrontMapCursor>,
     tool: Option<Res<ActiveBuildTool>>,
     selected: Res<SelectedFormation>,
-    roads: Res<ExecutedRoadNetwork>,
+    roads: Res<CorridorNetwork>,
     site_focus: Res<HudLogisticsFocus>,
     mut focus: ResMut<HudRoadFocus>,
     gate: Option<Res<SimulationMapPointerGate>>,
@@ -84,7 +82,7 @@ pub fn map_pick_road_focus_system(
 #[allow(clippy::too_many_arguments)]
 pub fn sync_road_report_system(
     focus: Res<HudRoadFocus>,
-    roads: Res<ExecutedRoadNetwork>,
+    roads: Res<CorridorNetwork>,
     mode: Option<Res<WorldPresentationMode>>,
     surface: Option<Res<PixelWorldRoadSurface>>,
     flood: Option<Res<FloodRouteBlockBook>>,
@@ -92,14 +90,17 @@ pub fn sync_road_report_system(
     trucks: Query<&Waypoints, With<TruckPresentation>>,
     mut report: ResMut<HudRoadReport>,
 ) {
+    let as_iv = |t: crate::strategic::BuildSiteTile| IVec2::new(t.x as i32, t.z as i32);
     let lines = focus
         .segment
-        .filter(|(a, b)| {
-            roads.tiles.windows(2).any(|w| {
-                IVec2::new(w[0].x as i32, w[0].z as i32) == *a && IVec2::new(w[1].x as i32, w[1].z as i32) == *b
-            })
+        .and_then(|(a, b)| {
+            roads
+                .road_spans()
+                .find(|(_, p, q)| as_iv(*p) == a && as_iv(*q) == b)
+                .and_then(|(seg, ..)| seg.kind.road_tier())
+                .map(|tier| (a, b, tier))
         })
-        .map(|(a, b)| {
+        .map(|(a, b, tier)| {
             let (ca, cb) = (a.as_vec2() + Vec2::splat(0.5), b.as_vec2() + Vec2::splat(0.5));
             let bridge = mode.as_deref().is_some_and(|m| m.is_pixel_world())
                 && surface.as_deref().is_some_and(|s| {
@@ -125,7 +126,8 @@ pub fn sync_road_report_system(
                 })
                 .count();
             vec![
-                if bridge { "Road bridge".to_owned() } else { "Road".to_owned() },
+                if bridge { format!("{} bridge", tier.label()) } else { tier.label().to_owned() },
+                format!("Speed: {:.0} km/h, {} lane(s)", tier.spec().speed_kmh, tier.spec().lanes_default),
                 format!("From ({},{}) to ({},{})", a.x, a.y, b.x, b.y),
                 format!("Length: {:.0} m", ca.distance(cb) * TILE_METRES_GAMEPLAY),
                 format!("Condition: {condition}"),

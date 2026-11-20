@@ -524,6 +524,7 @@ pub struct TruckRoadNetwork<'w> {
     cost_cache: Option<Res<'w, TransportCostCache>>,
     nav_field: Option<Res<'w, crate::compute::NavFieldFrame>>,
     blocks: RouteHardBlocks<'w>,
+    construction: Option<Res<'w, ConstructionWorldRevision>>,
 }
 
 impl TruckRoadNetwork<'_> {
@@ -543,19 +544,21 @@ impl TruckRoadNetwork<'_> {
             .wrapping_add(debris.wrapping_mul(0xBF58_476D_1CE4_E5B9))
             .wrapping_add(edges.rotate_left(17))
             .wrapping_add(closed.rotate_left(31))
+            .wrapping_add(self.construction.as_deref().map_or(0, |c| c.revision).rotate_left(47))
     }
 
-    /// Road polyline for a truck leg (tile units, see [`truck_road_polyline`]).
+    /// Fastest built-road route for a truck leg (tile units, see [`truck_road_route`]).
     #[must_use]
-    pub fn polyline(
+    pub fn route(
         &self,
         forecast: Option<&LogisticsCostForecastBook>,
         depart_tick: u64,
         from: Vec2,
         to: Vec2,
-    ) -> Option<Vec<Vec2>> {
+        ref_speed_mps: f32,
+    ) -> Option<TruckRoute> {
         let (nav, directory) = (self.nav.as_deref()?, self.directory.as_deref()?);
-        truck_road_polyline(
+        truck_road_route(
             &RoadRouteWorld {
                 nav,
                 directory,
@@ -569,11 +572,12 @@ impl TruckRoadNetwork<'_> {
             },
             from,
             to,
+            ref_speed_mps,
         )
     }
 }
 
-/// Everything [`truck_road_polyline`] reads.
+/// Everything [`truck_road_route`] reads.
 pub struct RoadRouteWorld<'a> {
     pub nav: &'a TransportNavExport,
     pub directory: &'a TransportEdgeDirectory,
@@ -586,14 +590,13 @@ pub struct RoadRouteWorld<'a> {
     pub depart_tick: u64,
 }
 
-/// Road nodes within this many tiles of a leg end can be used to join the built network.
-const ROAD_JOIN_TILES: f32 = 24.0;
+/// Road nodes within this many tiles of a leg end are tried as on/off ramps (nodes sit every
+/// ≤ 8 tiles along every road, so a road running near the leg is reachable along its length).
+const ROAD_JOIN_TILES: f32 = 48.0;
 /// Candidate road nodes tried at each end of a leg (nearest first).
-const ROAD_JOIN_CANDIDATES: usize = 3;
-/// A road route longer than this multiple of the straight line (plus the slack) is not worth
-/// driving: the truck goes cross-country instead.
-const ROAD_DETOUR_LIMIT: f32 = 2.5;
-const ROAD_DETOUR_SLACK_TILES: f32 = 8.0;
+const ROAD_JOIN_CANDIDATES: usize = 5;
+/// Off-road ramp length over the straight line (terrain is not a ruler).
+pub const OFFROAD_WINDING: f32 = 1.2;
 
 fn edge_carries_trucks(meta: &crate::systems::transport::TransportEdgeMeta) -> bool {
     meta.allowed_agents.is_empty()
@@ -605,20 +608,64 @@ fn tile_centre(t: bevy::math::IVec2) -> Vec2 {
     Vec2::new(t.x as f32 + 0.5, t.y as f32 + 0.5)
 }
 
-fn polyline_length(points: &[Vec2]) -> f32 {
-    points.windows(2).map(|w| w[0].distance(w[1])).sum()
+/// A driven route in tile units: `points`, and per stretch (`points.len() - 1`) the speed cap in
+/// m/s (road tier, or the off-road speed). Time for any truck = Σ length / min(truck, cap).
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct TruckRoute {
+    pub points: Vec<Vec2>,
+    pub caps_mps: Vec<f32>,
 }
 
-/// Node centres a transport-edge path walks from tile `start` to tile `goal`; `None` when the
-/// edges do not chain between them.
+impl TruckRoute {
+    /// Straight stretches all at one cap.
+    #[must_use]
+    pub fn uniform(points: Vec<Vec2>, cap_mps: f32) -> Self {
+        let n = points.len().saturating_sub(1);
+        Self { points, caps_mps: vec![cap_mps; n] }
+    }
+
+    /// Seconds for a truck of `speed_mps` (tiles are [`TILE_METRES_GAMEPLAY`] metres; off-road
+    /// stretches count [`OFFROAD_WINDING`] when `winding` is set on them by the caller).
+    #[must_use]
+    pub fn time_s(&self, speed_mps: f32) -> f32 {
+        let tm = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
+        self.points
+            .windows(2)
+            .zip(&self.caps_mps)
+            .map(|(w, cap)| w[0].distance(w[1]) * tm / speed_mps.min(*cap).max(0.1))
+            .sum()
+    }
+
+    /// Metres on built roads vs off-road (cap at or below the off-road speed counts off-road).
+    #[must_use]
+    pub fn road_offroad_m(&self, offroad_mps: f32) -> (f32, f32) {
+        let tm = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
+        let mut road = 0.0;
+        let mut off = 0.0;
+        for (w, cap) in self.points.windows(2).zip(&self.caps_mps) {
+            let m = w[0].distance(w[1]) * tm;
+            if *cap > offroad_mps + 1e-3 {
+                road += m;
+            } else {
+                off += m;
+            }
+        }
+        (road, off)
+    }
+}
+
+/// Node centres + per-edge speed caps a transport-edge path walks from tile `start` to `goal`;
+/// `None` when the edges do not chain between them.
 fn chain_edge_nodes(
     directory: &TransportEdgeDirectory,
     start: bevy::math::IVec2,
     goal: bevy::math::IVec2,
     edges: &[TransportEdgeId],
-) -> Option<Vec<Vec2>> {
+    offroad_mps: f32,
+) -> Option<(Vec<Vec2>, Vec<f32>)> {
     let mut cur = start;
     let mut out = vec![tile_centre(cur)];
+    let mut caps = Vec::with_capacity(edges.len());
     for id in edges {
         let meta = directory.by_edge.get(id)?;
         let (head, tail) = (parse_tile_xy(&meta.head_key)?, parse_tile_xy(&meta.tail_key)?);
@@ -630,17 +677,19 @@ fn chain_edge_nodes(
             return None;
         };
         out.push(tile_centre(cur));
+        caps.push(crate::infrastructure::road_profile_speed_mps(&meta.profile).unwrap_or(offroad_mps));
     }
-    (cur == goal).then_some(out)
+    (cur == goal).then_some((out, caps))
 }
 
-/// The built road a truck drives from `from` to `to` (tile units, cell = floor): the leg joins
-/// the road network at the nearest connected nodes, follows the transport graph's costed route
-/// (flooded and rubble edges are walls) and leaves it near `to`. Result: `from`, the road node
-/// centres, `to`. `None` when no road connects the two ends within [`ROAD_JOIN_TILES`] or the
-/// road route is a needless detour; the truck then goes cross-country.
+/// Fastest way over the built roads from `from` to `to` (tile units, cell = floor) for a truck of
+/// `ref_speed_mps`: off-road ramp to a road node near `from`, the transport graph's route (flooded
+/// and rubble edges are walls), off-road ramp from a node near `to`. Ramps are straight × winding
+/// at the off-road speed. `None` when no road joins both ends within [`ROAD_JOIN_TILES`].
+/// The caller compares this with the all off-road route by time.
 #[must_use]
-pub fn truck_road_polyline(world: &RoadRouteWorld, from: Vec2, to: Vec2) -> Option<Vec<Vec2>> {
+pub fn truck_road_route(world: &RoadRouteWorld, from: Vec2, to: Vec2, ref_speed_mps: f32) -> Option<TruckRoute> {
+    let offroad = crate::infrastructure::road_tier_table().offroad_speed_mps();
     let (nav, directory) = nav_and_directory_without_closed_edges(world.graph, world.nav, world.directory);
     let mut nodes: Vec<bevy::math::IVec2> = directory
         .by_edge
@@ -660,10 +709,9 @@ pub fn truck_road_polyline(world: &RoadRouteWorld, from: Vec2, to: Vec2) -> Opti
         near.sort_by(|a, b| a.0.total_cmp(&b.0));
         near.into_iter().take(ROAD_JOIN_CANDIDATES).map(|(_, n)| n).collect()
     };
-    let budget = from.distance(to) * ROAD_DETOUR_LIMIT + ROAD_DETOUR_SLACK_TILES;
     let as_tile = |n: bevy::math::IVec2| BuildSiteTile { x: n.x.max(0) as u32, z: n.y.max(0) as u32 };
     let to_nodes = nearest(to);
-    let mut best: Option<(f32, Vec<Vec2>)> = None;
+    let mut best: Option<(f32, TruckRoute)> = None;
     for a in nearest(from) {
         for &b in &to_nodes {
             if a == b {
@@ -684,21 +732,29 @@ pub fn truck_road_polyline(world: &RoadRouteWorld, from: Vec2, to: Vec2) -> Opti
             ) else {
                 continue;
             };
-            let Some(road) = chain_edge_nodes(&directory, a, b, &edges) else {
+            let Some((road, road_caps)) = chain_edge_nodes(&directory, a, b, &edges, offroad) else {
                 continue;
             };
+            // Ramps: winding off-road, expressed as a slower cap on the straight stretch.
+            let ramp_cap = offroad / OFFROAD_WINDING;
             let mut points = Vec::with_capacity(road.len() + 2);
+            let mut caps = Vec::with_capacity(road.len() + 1);
             points.push(from);
+            caps.push(ramp_cap);
             points.extend(road);
+            caps.extend(road_caps);
             points.push(to);
-            let len = polyline_length(&points);
-            if len <= budget && best.as_ref().is_none_or(|(l, _)| len < *l) {
-                best = Some((len, points));
+            caps.push(ramp_cap);
+            let route = TruckRoute { points, caps_mps: caps };
+            let t = route.time_s(ref_speed_mps);
+            if best.as_ref().is_none_or(|(bt, _)| t < *bt) {
+                best = Some((t, route));
             }
         }
     }
-    best.map(|(_, points)| points)
+    best.map(|(_, r)| r)
 }
+
 
 pub fn refresh_resource_flow_routes_system(
     graph: Option<Res<LogisticsGraph>>,

@@ -5,8 +5,9 @@ use bevy::prelude::*;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
 use super::super::construction_pipeline::{
-    ConstructionIntent, ConstructionPlanQueue, ConstructionType, ExecutedRoadNetwork,
+    ConstructionIntent, ConstructionPlanQueue, ConstructionType,
 };
+use super::super::corridor_network::CorridorNetwork;
 use super::junction::RailJunctionAuthority;
 use super::pathing::world_xy_to_tile;
 use super::placement::ActiveRailPlacement;
@@ -15,7 +16,7 @@ pub fn commit_rail_path_to_queue(
     placement: &mut ActiveRailPlacement,
     queue: &mut ConstructionPlanQueue,
     junctions: &mut RailJunctionAuthority,
-    roads: &ExecutedRoadNetwork,
+    roads: &CorridorNetwork,
     params: &WorldGenParams,
     continuous: bool,
 ) {
@@ -34,10 +35,10 @@ pub fn commit_rail_path_to_queue(
         if head == tail {
             continue;
         }
-        if roads.tiles.contains(&head) {
+        if roads.has_road_node(head) {
             junctions.register_switch(head, None);
         }
-        if roads.tiles.contains(&tail) {
+        if roads.has_road_node(tail) {
             junctions.register_switch(tail, None);
         }
         let center = Vec2::new(

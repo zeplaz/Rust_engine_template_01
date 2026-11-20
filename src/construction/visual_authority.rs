@@ -356,7 +356,7 @@ mod footprint_tests {
 pub fn sync_road_visual_requests(
     tool: Res<crate::construction::build_tool_authority::ActiveBuildTool>,
     placement: Res<crate::construction::roads::ActiveRoadPlacement>,
-    roads: Res<crate::construction::construction_pipeline::ExecutedRoadNetwork>,
+    roads: Res<crate::construction::CorridorNetwork>,
     mut requests: ResMut<ConstructionVisualRequests>,
 ) {
     use crate::construction::build_tool_authority::BuildTool;
@@ -401,19 +401,13 @@ pub fn sync_road_visual_requests(
 }
 
 fn sync_executed_road_paths(
-    roads: &crate::construction::construction_pipeline::ExecutedRoadNetwork,
+    roads: &crate::construction::CorridorNetwork,
     requests: &mut ConstructionVisualRequests,
 ) {
     use crate::construction::ghost_visual::road_committed_color;
     use crate::construction::tile_visual::build_site_tiles_between;
 
-    let tiles: Vec<BuildSiteTile> = roads.tiles.clone();
-    for w in tiles.windows(2) {
-        let a = w[0];
-        let b = w[1];
-        if a == b {
-            continue;
-        }
+    for (_, a, b) in roads.road_spans() {
         requests.paths.push(PathLineRequest {
             kind: VisualPathKind::Road,
             start: Vec3::new(a.x as f32 + 0.5, 0.0, a.z as f32 + 0.5),
@@ -429,6 +423,18 @@ fn sync_executed_road_paths(
                 color: road_committed_color(),
             });
         }
+    }
+    // Committed rail draws as rail (it used to land in the road tile list and draw as road).
+    for (_, a, b) in roads.rail_spans() {
+        requests.paths.push(PathLineRequest {
+            kind: VisualPathKind::Rail,
+            start: Vec3::new(a.x as f32 + 0.5, 0.0, a.z as f32 + 0.5),
+            end: Vec3::new(b.x as f32 + 0.5, 0.0, b.z as f32 + 0.5),
+            width: 6.0,
+            valid: true,
+            slope_ok: true,
+            committed: true,
+        });
     }
 }
 

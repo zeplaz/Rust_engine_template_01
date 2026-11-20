@@ -11,7 +11,7 @@ use bevy::window::PrimaryWindow;
 use crate::construction::{
     commit_power_line_to_utility_graph, commit_road_path_to_queue, cursor_world_on_map,
     enqueue_road_upgrade, ActiveBuildTool, ActivePowerLinePlacement, ActiveRoadPlacement,
-    ActiveToolSession, BuildStripState, BuildTool, ConstructionPlanQueue, ExecutedRoadNetwork,
+    ActiveToolSession, BuildStripState, BuildTool, ConstructionPlanQueue, CorridorNetwork,
     PowerLineRoutingMode, RailType, RoadSnapSettings, RoadToolPopupState, RoadType, ToolContext,
 };
 use crate::engine::states::BaseState;
@@ -448,7 +448,7 @@ pub fn sim_road_sheet_actions(
     mut session: ResMut<ActiveToolSession>,
     mut popup: ResMut<RoadToolPopupState>,
     mut snap: ResMut<RoadSnapSettings>,
-    roads: Res<ExecutedRoadNetwork>,
+    roads: Res<CorridorNetwork>,
     params: Res<WorldGenParams>,
     win: Query<&Window, With<PrimaryWindow>>,
     (authority, pointer_gate): (

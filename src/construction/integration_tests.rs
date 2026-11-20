@@ -46,7 +46,7 @@ fn road_e2e_queue_validate_segments() {
         };
         if validate_road_segment(head, tail, &params).valid {
             queue.enqueue(ConstructionIntent {
-                entity_type: ConstructionType::RoadSegment { head, tail },
+                entity_type: ConstructionType::RoadSegment { head, tail, tier: crate::infrastructure::RoadTier::Gravel },
                 world_position: Vec2::ZERO,
                 rotation: 0.0,
             });
@@ -62,9 +62,10 @@ fn road_e2e_queue_validate_segments() {
 fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
     use super::construction_pipeline::{
         execute_construction_plans_system, validate_construction_plans_system,
-        ConstructionPlanQueue, ConstructionWorldRevision, ExecutedRoadNetwork,
+        ConstructionPlanQueue, ConstructionWorldRevision,
     };
     use crate::strategic::CorridorConstructionBook;
+    use super::corridor_network::CorridorNetwork;
     use crate::substrate::hydrology::{
         HydrologyConstructionCouplingStats, HydrologyDirtyReason, HydrologyEventQueue,
     };
@@ -85,6 +86,7 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
         entity_type: ConstructionType::RoadSegment {
             head: BuildSiteTile { x: 1, z: 1 },
             tail: BuildSiteTile { x: 3, z: 1 },
+            tier: crate::infrastructure::RoadTier::Gravel,
         },
         world_position: Vec2::ZERO,
         rotation: 0.0,
@@ -93,7 +95,7 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, StatesPlugin))
         .init_resource::<ConstructionPlanQueue>()
-        .init_resource::<ExecutedRoadNetwork>()
+        .init_resource::<CorridorNetwork>()
         .init_resource::<ConstructionWorldRevision>()
         .init_resource::<TransportTopology>()
         .init_resource::<TransportFieldStore>()
@@ -148,9 +150,10 @@ fn hydro_coupling_execute_plan_emits_preview_validate_does_not() {
 fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
     use super::construction_pipeline::{
         execute_construction_plans_system, validate_construction_plans_system,
-        ConstructionPlanQueue, ConstructionWorldRevision, ExecutedRoadNetwork,
+        ConstructionPlanQueue, ConstructionWorldRevision,
         SimRoadSegmentMarker,
     };
+    use super::corridor_network::CorridorNetwork;
     use super::corridor_transport::SimCorridorEdgeBinding;
     use crate::economy::logistics::routes::path_edges_between_tiles;
     use crate::economy::resource_flow::TransportMode;
@@ -172,6 +175,7 @@ fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
         entity_type: ConstructionType::RoadSegment {
             head: BuildSiteTile { x: 1, z: 1 },
             tail: BuildSiteTile { x: 3, z: 1 },
+            tier: crate::infrastructure::RoadTier::Gravel,
         },
         world_position: Vec2::ZERO,
         rotation: 0.0,
@@ -180,7 +184,7 @@ fn infra_e2_003_execute_road_increments_transport_binds_markers_and_paths() {
     let mut app = App::new();
     app.add_plugins((MinimalPlugins, StatesPlugin))
         .init_resource::<ConstructionPlanQueue>()
-        .init_resource::<ExecutedRoadNetwork>()
+        .init_resource::<CorridorNetwork>()
         .init_resource::<ConstructionWorldRevision>()
         .init_resource::<TransportTopology>()
         .init_resource::<TransportFieldStore>()

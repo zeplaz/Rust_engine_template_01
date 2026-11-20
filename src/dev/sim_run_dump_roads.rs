@@ -5,7 +5,7 @@
 use bevy::prelude::*;
 use serde_json::json;
 
-use crate::construction::ExecutedRoadNetwork;
+use crate::construction::CorridorNetwork;
 use crate::dev::sim_run_dump::{SimDumpArm, SimRunDump};
 use crate::entities::components::Waypoints;
 use crate::gui::hud::road_info_card::pick_road_segment;
@@ -16,23 +16,20 @@ use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 /// Writes the `roads` section.
 pub fn dump_roads_section(
     arm: Res<SimDumpArm>,
-    roads: Option<Res<ExecutedRoadNetwork>>,
+    roads: Option<Res<CorridorNetwork>>,
     surface: Option<Res<PixelWorldRoadSurface>>,
     trucks: Query<(&Transform, &Waypoints), With<TruckPresentation>>,
+    legs: Option<Res<crate::economy::logistics::orders::SiteLegRouteBook>>,
     mut dump: ResMut<SimRunDump>,
 ) {
     if !arm.due {
         return;
     }
     let tm = TILE_METRES_GAMEPLAY.max(1e-3);
-    let empty = ExecutedRoadNetwork::default();
+    let empty = CorridorNetwork::default();
     let roads = roads.as_deref().unwrap_or(&empty);
-    let segs: Vec<(Vec2, Vec2)> = roads
-        .tiles
-        .windows(2)
-        .filter(|w| w[0] != w[1])
-        .map(|w| (Vec2::new(w[0].x as f32 + 0.5, w[0].z as f32 + 0.5), Vec2::new(w[1].x as f32 + 0.5, w[1].z as f32 + 0.5)))
-        .collect();
+    let c = |t: crate::strategic::BuildSiteTile| Vec2::new(t.x as f32 + 0.5, t.z as f32 + 0.5);
+    let segs: Vec<(Vec2, Vec2)> = roads.road_spans().map(|(_, a, b)| (c(a), c(b))).collect();
     let drawn = surface.as_deref().map_or(&[][..], |s| &s.0[..]);
     // The picks a click runs, at each drawn segment's midpoint.
     let mut pick_2d_ok = 0;
@@ -76,17 +73,49 @@ pub fn dump_roads_section(
         })
         .collect();
     let on_road = rows.iter().filter(|r| r["route"] == "road").count();
+    // Planned legs: metres on roads vs off-road, and trip time vs the old straight-line estimate
+    // (straight x 1.3 at the same 12 m/s truck).
+    let offroad = crate::infrastructure::road_tier_table().offroad_speed_mps();
+    let (mut road_m, mut off_m) = (0.0_f32, 0.0_f32);
+    let leg_rows: Vec<_> = legs
+        .as_deref()
+        .map(|b| {
+            b.legs
+                .iter()
+                .map(|((from, to), l)| {
+                    let (r, o) = l.route.road_offroad_m(offroad);
+                    road_m += r;
+                    off_m += o;
+                    let straight = match (l.route.points.first(), l.route.points.last()) {
+                        (Some(a), Some(z)) => a.distance(*z) * tm,
+                        _ => 0.0,
+                    };
+                    json!({
+                        "from": from.0, "to": to.0, "road_m": r, "offroad_m": o,
+                        "time_s_12mps": l.route.time_s(12.0),
+                        "old_estimate_s": straight * 1.3 / 12.0,
+                        "points": l.route.points.len(),
+                    })
+                })
+                .collect()
+        })
+        .unwrap_or_default();
     dump.put_value(
         "roads",
         json!({
-            "road_tiles": roads.tiles.len(),
-            "segments": segs.len(),
+            "road_segments": roads.segments.iter().filter(|s| !s.kind.is_rail()).count(),
+            "rail_segments": roads.segments.iter().filter(|s| s.kind.is_rail()).count(),
+            "tiers": roads.segments.iter().filter_map(|s| s.kind.road_tier()).map(|t| t.label()).collect::<Vec<_>>(),
+            "spans": segs.len(),
             "drawn_segments": drawn.len(),
             "deck_segments": deck_segs,
             "pick_2d_ok": pick_2d_ok,
             "deck_ray_ok": deck_ray_ok,
             "trucks": rows.len(),
             "trucks_on_road": on_road,
+            "legs_planned": leg_rows.len(),
+            "leg_road_share": if road_m + off_m > 0.0 { road_m / (road_m + off_m) } else { 0.0 },
+            "leg_rows": leg_rows.into_iter().take(16).collect::<Vec<_>>(),
             "truck_rows": rows.into_iter().take(12).collect::<Vec<_>>(),
         }),
     );
