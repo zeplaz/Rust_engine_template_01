@@ -893,6 +893,45 @@ const DRAPE_LIFT: f32 = 0.35;
 const PATH_LIFT: f32 = 0.06;
 
 /// Drape tile-space overlay triangles (`[x, y, z_order]`) on the voxel surface.
+/// Deck heights `(a, b)` when the straight segment `a → b` crosses a water cell; `None` for a dry
+/// path. Each end sits on its bank (surface + lift); the deck never dips below the water surface.
+#[must_use]
+pub(crate) fn bridge_deck_heights(field: &PixelWorldTerrainField, a: Vec2, b: Vec2) -> Option<(f32, f32)> {
+    let len = (b - a).length();
+    let steps = (len * 2.0).ceil().max(2.0) as usize;
+    let mut wet = false;
+    let mut water_top = f32::NEG_INFINITY;
+    for k in 0..=steps {
+        let p = a + (b - a) * (k as f32 / steps as f32);
+        if let Some(i) = field.index(p.x.floor() as i32, p.y.floor() as i32) {
+            if field.water[i].is_finite() {
+                wet = true;
+                water_top = water_top.max(field.water[i]);
+            }
+        }
+    }
+    if !wet {
+        return None;
+    }
+    let ha = field.surface_max_around(a) + PATH_LIFT;
+    let hb = field.surface_max_around(b) + PATH_LIFT;
+    let clear = water_top + 0.6;
+    Some((ha.max(clear), hb.max(clear)))
+}
+
+/// Straight bridge deck (top + two side faces) from `a` to `b` at heights `ha` → `hb`.
+fn push_bridge_deck(buf: &mut MeshBuf, a: Vec2, b: Vec2, n: Vec2, ha: f32, hb: f32, col: [f32; 4]) {
+    let t = 0.25; // deck thickness (display units)
+    let (a0, a1, b0, b1) = (a - n, a + n, b - n, b + n);
+    let top = [p3(a0.x, a0.y, ha), p3(a1.x, a1.y, ha), p3(b1.x, b1.y, hb), p3(b0.x, b0.y, hb)];
+    buf.quad(top, Vec3::Y, [Vec2::ZERO; 4], col);
+    let side = shade([col[0], col[1], col[2]], 0.7, 1.0);
+    for (u, v) in [(a0, b0), (a1, b1)] {
+        let (hu, hv) = (ha, hb);
+        buf.quad([p3(u.x, u.y, hu - t), p3(v.x, v.y, hv - t), p3(v.x, v.y, hv), p3(u.x, u.y, hu)], Vec3::Y, [Vec2::ZERO; 4], side);
+    }
+}
+
 fn drape(positions: &[[f32; 3]], colors: &[[f32; 4]], indices: &[u32], field: &PixelWorldTerrainField, lift: f32) -> MeshBuf {
     let mut buf = MeshBuf::default();
     let mut stack: Vec<([Vec3; 3], [[f32; 4]; 3])> = Vec::new();
@@ -1049,6 +1088,7 @@ pub(crate) fn sync_pixel_world_paths(
     }
     state.key = Some(key);
     let (mut positions, mut colors, mut indices) = (Vec::new(), Vec::new(), Vec::new());
+    let mut decks = MeshBuf::default();
     for p in &req.paths {
         let a = crate::gui::tactical::map_camera::map_plane_horizontal_xy(p.start);
         let b = crate::gui::tactical::map_camera::map_plane_horizontal_xy(p.end);
@@ -1059,6 +1099,12 @@ pub(crate) fn sync_pixel_world_paths(
         let n = Vec2::new(-d.y, d.x).normalize() * (crate::render::world_map_network_mesh::world_ribbon_width(p.width) * 0.5);
         let c = LinearRgba::from(crate::render::world_map_network_mesh::path_color(p.kind, p.valid, p.slope_ok, p.committed));
         let col = [c.red, c.green, c.blue, c.alpha.max(0.85)];
+        // OP-7: a path that crosses water is a bridge — a straight deck between its bank ends,
+        // not a ribbon draped down the banks and across the riverbed.
+        if let Some((ha, hb)) = bridge_deck_heights(field.as_ref(), a, b) {
+            push_bridge_deck(&mut decks, a, b, n, ha, hb, col);
+            continue;
+        }
         let base = positions.len() as u32;
         for v in [a - n, a + n, b + n, b - n] {
             positions.push([v.x, v.y, 1.0]);
@@ -1066,7 +1112,8 @@ pub(crate) fn sync_pixel_world_paths(
         }
         indices.extend([base, base + 1, base + 2, base, base + 2, base + 3]);
     }
-    let buf = drape(&positions, &colors, &indices, field.as_ref(), PATH_LIFT);
+    let mut buf = drape(&positions, &colors, &indices, field.as_ref(), PATH_LIFT);
+    buf.append(decks);
     let material = state
         .material
         .get_or_insert_with(|| {
@@ -1480,5 +1527,32 @@ mod op1_pick_tests {
         assert!(t > 0.0);
         assert!(xy.x >= 154.0 && xy.x <= 166.0 && xy.y >= 159.0 && xy.y <= 161.0, "{xy:?}");
         assert!(ray_hit_site_boxes(&[dam], eye, Vec3::new(1.0, -0.1, 0.0).normalize()).is_none());
+    }
+}
+
+#[cfg(test)]
+mod op7_bridge_tests {
+    use super::bridge_deck_heights;
+    use crate::render::pixel_world::PixelWorldTerrainField;
+    use bevy::prelude::*;
+
+    fn canyon() -> PixelWorldTerrainField {
+        // 16 wide: banks at 30 on both sides, river cells 6..=9 with bed 5 and water surface 8.
+        let mut f = PixelWorldTerrainField::default();
+        f.width = 16;
+        f.height = 4;
+        f.ground = (0..64).map(|i| if (6..=9).contains(&(i % 16)) { 5.0 } else { 30.0 }).collect();
+        f.water = (0..64).map(|i| if (6..=9).contains(&(i % 16)) { 8.0 } else { f32::NEG_INFINITY }).collect();
+        f.class = vec![Default::default(); 64];
+        f
+    }
+
+    /// OP-7: a road over the river becomes a deck at bank height, not a ribbon into the riverbed.
+    #[test]
+    fn op7_water_crossing_is_a_level_deck() {
+        let f = canyon();
+        let (ha, hb) = bridge_deck_heights(&f, Vec2::new(1.5, 1.5), Vec2::new(14.5, 1.5)).expect("crosses water");
+        assert!(ha >= 30.0 && hb >= 30.0, "deck at bank height: {ha} {hb}");
+        assert!(bridge_deck_heights(&f, Vec2::new(0.5, 1.5), Vec2::new(4.5, 1.5)).is_none(), "dry road drapes");
     }
 }
