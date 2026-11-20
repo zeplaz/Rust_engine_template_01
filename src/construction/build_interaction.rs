@@ -241,9 +241,7 @@ pub fn build_pick_ghost_tile_system(
         return;
     };
 
-    let x = world_xy.x.floor().max(0.0) as u32;
-    let z = world_xy.y.floor().max(0.0) as u32;
-    let tile = BuildSiteTile { x, z };
+    let tile = centered_footprint_origin(world_xy, ghost.footprint);
     let _conform_y = conform_world_y(
         world_xy.x,
         world_xy.y,
@@ -306,6 +304,37 @@ pub fn build_pick_ghost_tile_system(
                 ghost.origin = Some(tile);
             }
         }
+    }
+}
+
+/// Footprint origin (min corner) that centres a `width × depth` footprint on the cursor. The
+/// cursor tile used to be the origin, so every building sat offset from the cursor by half its
+/// size (operator: "cursor doesn't line up with the world").
+#[must_use]
+pub fn centered_footprint_origin(cursor_xy: Vec2, fp: FootprintTiles) -> BuildSiteTile {
+    let hw = (fp.width.max(1) as f32 - 1.0) * 0.5;
+    let hd = (fp.depth.max(1) as f32 - 1.0) * 0.5;
+    BuildSiteTile {
+        x: (cursor_xy.x - hw).floor().max(0.0) as u32,
+        z: (cursor_xy.y - hd).floor().max(0.0) as u32,
+    }
+}
+
+#[cfg(test)]
+mod centered_origin_tests {
+    use super::*;
+
+    #[test]
+    fn footprint_centres_on_cursor_tile() {
+        let one = FootprintTiles { width: 1, depth: 1 };
+        assert_eq!(centered_footprint_origin(Vec2::new(10.3, 7.8), one), BuildSiteTile { x: 10, z: 7 });
+        let three = FootprintTiles { width: 3, depth: 3 };
+        // Cursor on tile 10 → tiles 9..=11 (centre tile 10).
+        assert_eq!(centered_footprint_origin(Vec2::new(10.5, 10.5), three), BuildSiteTile { x: 9, z: 9 });
+        let wide = FootprintTiles { width: 12, depth: 2 };
+        let o = centered_footprint_origin(Vec2::new(160.5, 160.5), wide);
+        let (cx, cz) = (o.x as f32 + 6.0, o.z as f32 + 1.0);
+        assert!((cx - 160.5).abs() <= 0.5 && (cz - 160.5).abs() <= 0.5, "{o:?}");
     }
 }
 
