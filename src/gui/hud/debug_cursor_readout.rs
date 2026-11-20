@@ -17,7 +17,7 @@ struct DebugCursorReadout;
 #[must_use]
 pub fn cursor_readout_text(xy: Option<Vec2>, ground_m: Option<f32>, water_m: Option<f32>) -> String {
     match xy {
-        None => "cursor —".to_string(),
+        None => "cursor -".to_string(),
         Some(p) => {
             let mut s = format!("tile ({}, {})", p.x.floor() as i32, p.y.floor() as i32);
             if let Some(g) = ground_m {
@@ -90,7 +90,7 @@ mod tests {
 
     #[test]
     fn readout_names_tile_ground_and_water() {
-        assert_eq!(cursor_readout_text(None, None, None), "cursor —");
+        assert_eq!(cursor_readout_text(None, None, None), "cursor -");
         assert_eq!(
             cursor_readout_text(Some(Vec2::new(162.7, 151.2)), Some(540.4), Some(3.46)),
             "tile (162, 151)  ground 540 m  water 3.5 m"
