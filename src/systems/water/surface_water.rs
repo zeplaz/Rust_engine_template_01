@@ -40,6 +40,12 @@ impl Default for ReservoirLevelPool {
     }
 }
 
+/// Spillway sill below the dam crest (m): the freeboard a full reservoir keeps (real dams
+/// spill here; the embankment crest is never the spill crest).
+pub const SPILLWAY_FREEBOARD_M: f32 = 3.0;
+/// Emergency (ungated) spillway width as a share of the gated spillway length.
+pub const EMERGENCY_SPILLWAY_SHARE: f32 = 1.0;
+
 /// Barrier / outlet / spillway params — player dam, hydro plant, or scenario-fed.
 #[derive(Clone, Debug, Default, Reflect, Serialize, Deserialize, PartialEq)]
 pub struct BarrierHydraulics {
@@ -86,6 +92,18 @@ impl BarrierHydraulics {
 
     /// Gated spillway weir: Q = C·L·gate·H^1.5 (`head_m` = stage − crest).
     #[must_use]
+    /// Ungated emergency spillway over the sill ([`SPILLWAY_FREEBOARD_M`] below the crest): a
+    /// full reservoir passes its inflow here even with every gate shut, so the embankment only
+    /// overtops (and erodes) in a flood larger than the spillway.
+    #[must_use]
+    pub fn emergency_spillway_flow_m3s(&self, head_over_sill_m: f32) -> f32 {
+        let h = head_over_sill_m.max(0.0);
+        if h <= 0.0 {
+            return 0.0;
+        }
+        self.spillway_c * self.spillway_length_m * EMERGENCY_SPILLWAY_SHARE * h.powf(1.5)
+    }
+
     pub fn spillway_flow_m3s(&self, head_m: f32, gate_open01: f32) -> f32 {
         let h = head_m.max(0.0);
         if h <= 0.0 || gate_open01 <= 0.0 {
@@ -739,8 +757,10 @@ impl SurfaceWaterField {
         let bed_min = self.pool.bed_min_m;
         let q_in = self.inflow_m3s as f64 + self.rain_runoff_m3s as f64;
         let q_breach = self.breach_flow_m3s.max(0.0) as f64;
-        // Shut = hold below crest. No forced min when all controlled paths closed; rain /
-        // inflow can fill to freeboard, then the overtopping weir takes over (and erodes).
+        // Shut = no controlled release. A full pool spills over the sill (crest minus freeboard)
+        // through the gated spillway and the ungated emergency spillway; the embankment only
+        // overtops — and erodes — when a flood beats the spillways. (Spilling at the crest
+        // itself made every closed-gate fill overtop and wash the earth dam out.)
         let q_turb = turbine_setpoint_m3s.clamp(0.0, self.hydraulics.turbine_design_m3s.max(0.0));
         let shut = outlet_open01 < 0.05
             && mid_outlet_open01 < 0.05
@@ -758,7 +778,9 @@ impl SurfaceWaterField {
             let stage = curve.stage_for(storage).unwrap_or(bed_min);
             let head_pool = (stage - bed_min).max(0.0);
             let head_crest = if crest > 0.0 { (stage - crest).max(0.0) } else { 0.0 };
-            let q_spill = hyd.spillway_flow_m3s(head_crest, gate_open01);
+            let head_sill = if crest > 0.0 { (stage - (crest - SPILLWAY_FREEBOARD_M)).max(0.0) } else { 0.0 };
+            let q_spill =
+                hyd.spillway_flow_m3s(head_sill, gate_open01) + hyd.emergency_spillway_flow_m3s(head_sill);
             let q_overtop = hyd.overtopping_flow_m3s(head_crest);
             let q_low_raw = hyd.outlet_flow_m3s(head_pool, outlet_open01);
             let q_mid = hyd.mid_outlet_flow_m3s(head_pool, mid_outlet_open01);
@@ -1421,10 +1443,8 @@ mod tests {
             "stage above crest with shut gates must overtop (got {})",
             field.overtopping_flow_m3s
         );
-        assert!(
-            field.outlet_flow_m3s < 0.5 && field.spillway_flow_m3s < 0.5,
-            "controlled releases stay shut during force-close overtop"
-        );
+        assert!(field.outlet_flow_m3s < 0.5, "controlled outlet stays shut during force-close overtop");
+        assert!(field.spillway_flow_m3s > 5.0, "the ungated emergency spillway carries the flood too");
         let down: f32 = (0..n)
             .filter(|&i| {
                 let lz = (i / w as usize) as u32;
@@ -1574,25 +1594,27 @@ mod tests {
                 "painted {painted} vs storage {}",
                 f.pool.storage_m3
             );
-            if f.pool.stage_m >= crest {
+            if f.pool.stage_m >= crest - SPILLWAY_FREEBOARD_M {
                 reached = true;
-                // Overtopping holds the stage just above the crest â€” no oscillation.
-                assert!(f.pool.stage_m < crest + 6.0, "stage {} overshoots crest", f.pool.stage_m);
+                // The spillway holds a full pool over its sill, below the crest: a closed dam fills
+                // and spills; the embankment is never overtopped by its own inflow.
+                assert!(f.pool.stage_m < crest, "stage {} overtops the crest", f.pool.stage_m);
             }
         }
-        assert!(reached, "pool never reached the crest: stage {}", f.pool.stage_m);
+        assert!(reached, "pool never reached the spillway sill: stage {}", f.pool.stage_m);
         // Terrace (5 m bed) is under ~35 m of water; walls (100 m) are dry.
         let up = (h - 2) as usize * w as usize + 5;
         assert!(f.depth_m[up] > 20.0, "terrace depth {}", f.depth_m[up]);
         let wall = (h - 2) as usize * w as usize;
         assert_eq!(f.depth_m[wall], 0.0);
-        // Overtopping carries the inflow at equilibrium.
+        // At equilibrium the spillway carries the inflow and nothing overtops the embankment.
         assert!(
-            (f.overtopping_flow_m3s - f.inflow_m3s).abs() < 0.05 * f.inflow_m3s,
-            "overtop {} vs inflow {}",
-            f.overtopping_flow_m3s,
+            (f.spillway_flow_m3s - f.inflow_m3s).abs() < 0.05 * f.inflow_m3s,
+            "spill {} vs inflow {}",
+            f.spillway_flow_m3s,
             f.inflow_m3s
         );
+        assert!(f.overtopping_flow_m3s < 1e-3, "overtop {}", f.overtopping_flow_m3s);
     }
 
     #[test]
