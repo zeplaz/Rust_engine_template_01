@@ -228,7 +228,7 @@ mod gui_esc_001_tests {
         };
         let mut latch = BuildEscCancelLatch::default();
         let mut tool = ActiveBuildTool {
-            tool: BuildTool::Road(crate::construction::RoadType::Street),
+            tool: BuildTool::Road(crate::construction::RoadTier::Gravel),
             ..Default::default()
         };
         let mut strip = BuildStripState {

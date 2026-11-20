@@ -7,7 +7,7 @@ use bevy::prelude::*;
 
 use super::camera::PixelWorldCameraFrame;
 use super::field::PixelWorldTerrainField;
-use super::layers::{bridge_deck_heights, layer, mix64, p3, pixel_world_on, shade, PATH_LIFT};
+use super::layers::{layer, mix64, p3, pixel_world_on, shade, PATH_LIFT};
 use super::terrain::MeshBuf;
 use crate::construction::ConstructionVisualRequests;
 use crate::gui::WorldPresentationMode;
@@ -88,6 +88,7 @@ pub(crate) fn publish_pixel_world_road_surface(
     cam: Res<PixelWorldCameraFrame>,
     field: Res<PixelWorldTerrainField>,
     requests: Option<Res<ConstructionVisualRequests>>,
+    bridges: Option<Res<crate::construction::bridges::BridgeBook>>,
     mut out: ResMut<PixelWorldRoadSurface>,
 ) {
     let mut segs = Vec::new();
@@ -102,7 +103,10 @@ pub(crate) fn publish_pixel_world_road_surface(
                 a,
                 b,
                 half_width: crate::render::world_map_network_mesh::world_ribbon_width(p.width) * 0.5,
-                deck: bridge_deck_heights(&field, a, b),
+                // Same deck the path layer draws; a failed bridge has none to stand on.
+                deck: super::layers::committed_deck_heights(&field, bridges.as_deref(), a, b).filter(|_| {
+                    !bridges.as_deref().and_then(|bk| bk.on_stretch(a, b)).is_some_and(|r| r.fallen_sections() > 0)
+                }),
             });
         }
     }

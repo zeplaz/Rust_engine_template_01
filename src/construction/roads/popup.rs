@@ -1,13 +1,13 @@
 //! Road tool popup — Bevy UI (editor product shell). Segment summary, Build / Cancel / snap / upgrade (P2-05 + P9).
 //!
 //! Spawned once while a road/rail tool is armed; values, toggles and Build enablement are
-//! updated in place. Commit intents only via [`commit_road_path_to_queue`] / [`enqueue_road_upgrade`].
+//! updated in place. Commit intents only via [`super::input::finish_corridor_path`] / [`enqueue_road_upgrade`].
 
 use bevy::prelude::*;
 use bevy::ui::DeprecatedInteraction;
 use bevy::window::PrimaryWindow;
 
-use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType, RoadType};
+use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType};
 use crate::construction::construction_pipeline::ConstructionPlanQueue;
 use crate::construction::corridor_network::CorridorNetwork;
 use crate::construction::sessions::ActiveToolSession;
@@ -24,7 +24,6 @@ use crate::gui::{
 use crate::render::view_runtime::ViewProjectionAuthority;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::commit::{commit_firebreak_path_to_queue, commit_road_path_to_queue};
 use super::input::cursor_world_on_map;
 use super::placement::ActiveRoadPlacement;
 
@@ -69,8 +68,7 @@ fn road_tool_active(tool: &ActiveBuildTool) -> bool {
 
 fn popup_title(tool: &ActiveBuildTool) -> &'static str {
     match tool.tool {
-        BuildTool::Road(RoadType::Street) => "Road - Street",
-        BuildTool::Road(RoadType::Highway) => "Road - Highway",
+        BuildTool::Road(tier) => tier.label(),
         BuildTool::Rail(RailType::Standard) => "Rail - Standard",
         BuildTool::Firebreak => "Firebreak",
         _ => "Road",
@@ -255,26 +253,12 @@ pub fn road_tool_popup_bevy_action_system(
         }
         match *action {
             RoadPopupAction::Build => {
-                if matches!(tool.tool, BuildTool::Firebreak) {
-                    commit_firebreak_path_to_queue(
-                        placement.as_mut(),
-                        queue.as_mut(),
-                        params.as_ref(),
-                        session.continuous_path,
-                    );
-                } else {
-                    commit_road_path_to_queue(
-                        placement.as_mut(),
-                        queue.as_mut(),
-                        params.as_ref(),
-                        session.continuous_path,
-                    );
+                if let Some(kind) = super::input::corridor_tool_kind(tool.tool) {
+                    super::input::finish_corridor_path(placement.as_mut(), kind, queue.as_mut(), session.as_mut());
                 }
-                session.record_commit();
             }
             RoadPopupAction::Cancel => {
-                placement.control_points.clear();
-                placement.generated_segments.clear();
+                placement.clear_path();
                 popup.cancel_requested = true;
             }
             RoadPopupAction::Upgrade => {

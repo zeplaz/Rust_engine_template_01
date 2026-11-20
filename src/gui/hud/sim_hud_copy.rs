@@ -1,6 +1,6 @@
 //! Locked sim HUD copy — [`src/dev/sim_hud_copy_registry_v1.md`].
 
-use crate::construction::{ActiveBuildTool, BuildTool, RoadType, ToolContext};
+use crate::construction::{ActiveBuildTool, BuildTool, ToolContext};
 
 pub const PICKER_TITLE_ZONE: &str = "Zones";
 pub const PICKER_TITLE_ROADS: &str = "Roads";
@@ -81,7 +81,8 @@ pub const TRAY_QUEUE_TITLE: &str = "Pending queue";
 pub const TRAY_QUEUE_EMPTY: &str = "○ Queue empty";
 pub const TRAY_PEEK_MODIFIERS: &str = "Ctrl rotate · Shift scale";
 
-pub const ROAD_SHEET_HINT_INPUT: &str = "LMB add · RMB undo · Shift+LMB commit";
+pub const ROAD_SHEET_HINT_INPUT: &str =
+    "Click: start / bend · double-click, Enter or click a road: finish · Backspace / RMB: undo point · Esc: cancel · Shift: straight 15°";
 pub const ROAD_SHEET_BUILD: &str = "Build";
 pub const ROAD_SHEET_CANCEL: &str = "Cancel";
 pub const ROAD_SHEET_UPGRADE: &str = "Upgrade nearest segment";
@@ -213,8 +214,7 @@ pub fn active_place_subject(tool: &ActiveBuildTool) -> Option<String> {
     }
     match tool.tool {
         BuildTool::Defense(kind) => Some(kind.player_label().to_string()),
-        BuildTool::Road(RoadType::Street) => Some("Street".to_string()),
-        BuildTool::Road(RoadType::Highway) => Some("Highway".to_string()),
+        BuildTool::Road(tier) => Some(tier.label().to_string()),
         BuildTool::Rail(_) => Some("Rail".to_string()),
         BuildTool::PowerLine(_) => Some("Power line".to_string()),
         BuildTool::Firebreak => Some("Firebreak".to_string()),

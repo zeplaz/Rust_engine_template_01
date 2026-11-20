@@ -1,4 +1,9 @@
-//! Road path input: LMB add, RMB undo last, Shift+LMB commit (P2-02).
+//! Corridor path input (roads of every tier, rail, firebreaks — one tool, PLAN-ROADS-v1 RD-6).
+//!
+//! Click to start, click to add a bend; double-click, Enter, or click an existing line to finish;
+//! Backspace / RMB removes the last point; Esc cancels; Shift locks the stretch to 15° steps;
+//! drag a placed point to move it. The preview follows the cursor from the first click (no
+//! modifier) and every stretch is judged live by [`check_corridor_path`].
 
 use bevy::prelude::*;
 
@@ -9,25 +14,31 @@ use crate::gui::hud::simulation_pointer_gate::{
 };
 use crate::gui::{MapCameraDesired, SimulationMapViewport};
 use crate::render::view_runtime::ViewProjectionAuthority;
+use crate::systems::water::WaterTileProbe;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
-use crate::terrain::generation::WorldGenDenseTerrainCache;
 
-use super::pathing::world_xy_to_tile;
-use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RailType, RoadType};
-use crate::construction::construction_pipeline::validate_road_segment;
+use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool};
 use crate::construction::construction_pipeline::ConstructionPlanQueue;
+use crate::construction::corridor_tool::{
+    check_corridor_path, commit_corridor_path, mode_spec, summarize_path, CorridorToolKind, StretchCheck,
+};
 use crate::construction::path_feedback::ConstructionPathFeedback;
 use crate::construction::sessions::ActiveToolSession;
 use crate::construction::snap::{snap_placement, RoadSnapSettings, SnapTarget};
-use crate::construction::terrain_conform::conform_vec3;
+use crate::construction::terrain_conform::{conform_vec3, sample_height_norm};
 
-use super::commit::{commit_firebreak_path_to_queue, commit_road_path_to_queue};
-use super::pathing::regenerate_road_segments;
-use super::placement::ActiveRoadPlacement;
+use super::placement::{ActiveRoadPlacement, RoadSegmentPreview};
+use super::spline::catmull_rom_chain;
 
-#[inline]
-fn path_tool_active(tool: BuildTool) -> bool {
-    matches!(tool, BuildTool::Road(_) | BuildTool::Firebreak)
+/// The corridor kind the active tool lays, if it is a path tool.
+#[must_use]
+pub fn corridor_tool_kind(tool: BuildTool) -> Option<CorridorToolKind> {
+    match tool {
+        BuildTool::Road(tier) => Some(CorridorToolKind::Road(tier)),
+        BuildTool::Rail(_) => Some(CorridorToolKind::Rail),
+        BuildTool::Firebreak => Some(CorridorToolKind::Firebreak),
+        _ => None,
+    }
 }
 
 /// Cursor → map point `Vec3(x, 0, row)` in the presentation on screen.
@@ -52,32 +63,38 @@ pub fn cursor_world_on_map(
     Some(Vec3::new(xy.x, 0.0, xy.y))
 }
 
-fn resolve_placement_world(
-    raw: Vec3,
-    snap: &RoadSnapSettings,
-    roads: &crate::construction::CorridorNetwork,
-    params: &WorldGenParams,
-    height_grid: Option<&WorldGenDenseTerrainCache>,
-    feedback: &mut ConstructionPathFeedback,
-) -> Vec3 {
-    let placed = snap_placement(raw, snap, roads);
-    feedback.snap_hint = placed.target.as_ref().map(SnapTarget::hint_label);
-    conform_vec3(placed.world, params, height_grid)
+/// Shift: keep the stretch from `from` to `to` on a 15° heading, same length.
+fn angle_locked(from: Vec3, to: Vec3) -> Vec3 {
+    let d = Vec2::new(to.x - from.x, to.z - from.z);
+    let len = d.length();
+    if len < 1e-3 {
+        return to;
+    }
+    let step = 15f32.to_radians();
+    let a = (d.y.atan2(d.x) / step).round() * step;
+    Vec3::new(from.x + a.cos() * len, to.y, from.z + a.sin() * len)
 }
 
-pub fn sync_road_placement_width_from_tool(
-    tool: Res<ActiveBuildTool>,
-    mut placement: ResMut<ActiveRoadPlacement>,
-) {
-    placement.width = match tool.tool {
-        BuildTool::Road(RoadType::Street) => 8.0,
-        BuildTool::Road(RoadType::Highway) => 14.0,
-        BuildTool::Rail(RailType::Standard) => 6.0,
-        BuildTool::Firebreak => 4.0,
-        _ => return,
-    };
+/// Sampled path (tile units): straight between points, or a Catmull-Rom curve through them.
+fn sample_path(points: &[Vec3], curved: bool) -> Vec<Vec2> {
+    let chain = if curved && points.len() >= 3 { catmull_rom_chain(points, 6) } else { points.to_vec() };
+    let mut out: Vec<Vec2> = chain.iter().map(|p| Vec2::new(p.x, p.z)).collect();
+    out.dedup_by(|a, b| a.distance(*b) < 0.05);
+    out
 }
 
+/// Width the active kind draws at.
+pub fn sync_road_placement_width_from_tool(tool: Res<ActiveBuildTool>, mut placement: ResMut<ActiveRoadPlacement>) {
+    if let Some(kind) = corridor_tool_kind(tool.tool) {
+        let w = mode_spec(kind).width;
+        if placement.width != w {
+            placement.width = w;
+        }
+    }
+}
+
+/// Live preview: snapped cursor, the placed path and the stretch to the cursor, each judged.
+#[allow(clippy::too_many_arguments)]
 pub fn update_road_path_preview_system(
     tool: Res<ActiveBuildTool>,
     keys: Res<ButtonInput<KeyCode>>,
@@ -86,175 +103,235 @@ pub fn update_road_path_preview_system(
     roads: Res<crate::construction::CorridorNetwork>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut feedback: ResMut<ConstructionPathFeedback>,
-    pointer_gate: Option<Res<SimulationMapPointerGate>>,
+    water: WaterTileProbe,
 ) {
-    if !path_tool_active(tool.tool) {
-        placement.generated_segments.clear();
-        feedback.snap_hint = None;
-        feedback.required_actions.clear();
-        return;
-    }
-    match simulation_tool_pointer(pointer_gate.as_deref()) {
-        SimulationToolPointer::Unavailable => return,
-        SimulationToolPointer::HeldByChrome => {
-            placement.generated_segments.clear();
-            return;
+    let Some(kind) = corridor_tool_kind(tool.tool) else {
+        if !placement.generated_segments.is_empty() || placement.cursor.is_some() {
+            placement.clear_path();
+            placement.cursor = None;
         }
-        SimulationToolPointer::Free => {}
-    }
-    let ctrl_preview = keys.pressed(KeyCode::ControlLeft) || keys.pressed(KeyCode::ControlRight);
-    let cursor = if ctrl_preview {
-        pick.cursor_world().map(|w| {
-            resolve_placement_world(
-                w,
-                snap.as_ref(),
-                roads.as_ref(),
-                pick.params.as_ref(),
-                pick.height_grid(),
-                feedback.as_mut(),
-            )
-        })
-    } else {
-        None
+        return;
     };
-    placement.generated_segments = regenerate_road_segments(
-        &placement.control_points,
-        cursor,
-        placement.width,
-        pick.params.as_ref(),
-        placement.use_curved_preview,
-    );
+    let rail = kind == CorridorToolKind::Rail;
+    let cursor = pick.cursor_world().map(|raw| {
+        let placed = snap_placement(raw, snap.as_ref(), roads.as_ref(), rail);
+        feedback.snap_hint = placed.target.as_ref().map(SnapTarget::hint_label);
+        let joins = placed.target.as_ref().is_some_and(SnapTarget::joins_line);
+        let mut w = placed.world;
+        let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
+        if shift && !joins {
+            if let Some(&last) = placement.control_points.last() {
+                w = angle_locked(last, w);
+            }
+        }
+        (conform_vec3(w, pick.params.as_ref(), pick.height_grid()), joins)
+    });
+    placement.cursor = cursor.map(|c| c.0);
+    placement.cursor_joins_line = cursor.is_some_and(|c| c.1);
+
+    let params = pick.params.as_ref();
+    let grid = pick.height_grid();
+    let ground = |p: Vec2| sample_height_norm(p.x, p.y, params, grid) * params.elevation_range_m;
+    let wet = |t: IVec2| water.depth_m(t);
+    let map = UVec2::new(params.width, params.height);
+    let curved = placement.use_curved_preview && kind != CorridorToolKind::Firebreak;
+
+    let placed = sample_path(&placement.control_points, curved);
+    let checks = if placed.len() >= 2 {
+        check_corridor_path(&placed, kind, &ground, &wet, roads.as_ref(), map)
+    } else {
+        Vec::new()
+    };
+    let mut live_points = placement.control_points.clone();
+    if let (Some(c), None) = (placement.cursor, placement.dragging) {
+        if live_points.last().is_none_or(|l| Vec2::new(l.x - c.x, l.z - c.z).length() > 0.3) && !live_points.is_empty() {
+            live_points.push(c);
+        }
+    }
+    let live = sample_path(&live_points, curved);
+    let live_checks = if live.len() >= 2 {
+        check_corridor_path(&live, kind, &ground, &wet, roads.as_ref(), map)
+    } else {
+        Vec::new()
+    };
+    let width = placement.width;
+    let segs = live_checks
+        .iter()
+        .map(|c| RoadSegmentPreview {
+            start: conform_vec3(Vec3::new(c.a.x, 0.0, c.a.y), params, grid),
+            end: conform_vec3(Vec3::new(c.b.x, 0.0, c.b.y), params, grid),
+            width,
+            valid: c.verdict.buildable(),
+            works: matches!(c.verdict, crate::construction::corridor_tool::StretchVerdict::Works(_)),
+        })
+        .collect();
+    placement.summary = summarize_path(&live_checks, kind);
+    placement.checks = checks;
+    placement.live_checks = live_checks;
+    placement.generated_segments = segs;
 }
 
+/// HUD feedback + placement report from the live checks.
 pub fn sync_road_path_build_preview(
     tool: Res<ActiveBuildTool>,
     placement: Res<ActiveRoadPlacement>,
-    params: Res<WorldGenParams>,
     mut preview: ResMut<crate::construction::BuildPlacementPreview>,
     mut feedback: ResMut<ConstructionPathFeedback>,
 ) {
-    if !path_tool_active(tool.tool) {
-        feedback.required_actions.clear();
+    if corridor_tool_kind(tool.tool).is_none() {
+        if !feedback.required_actions.is_empty() {
+            feedback.required_actions.clear();
+        }
         return;
     }
-    let valid_count = placement
-        .generated_segments
-        .iter()
-        .filter(|s| s.valid)
-        .count();
-    let invalid = placement
-        .generated_segments
-        .iter()
-        .any(|s| !s.valid && placement.generated_segments.len() > 1);
-    let mut actions = Vec::new();
-    if invalid {
-        for seg in placement.generated_segments.iter().filter(|s| !s.valid) {
-            let head = world_xy_to_tile(seg.start);
-            let tail = world_xy_to_tile(seg.end);
-            actions.extend(
-                validate_road_segment(head, tail, params.as_ref())
-                    .required_actions
-                    .into_iter(),
-            );
-        }
+    if feedback.required_actions != placement.summary.notes {
+        feedback.required_actions = placement.summary.notes.clone();
     }
-    feedback.required_actions = actions.clone();
-    let ok = valid_count > 0 && !invalid;
+    let ok = placement.checks.iter().any(|c| c.verdict.buildable());
     preview.report = crate::strategic::SitePlacementValidation {
         valid: ok,
         allows_commit: ok,
-        errors: if invalid {
-            vec!["invalid road segment in path".into()]
-        } else {
-            Vec::new()
-        },
+        errors: placement
+            .live_checks
+            .iter()
+            .filter_map(|c| match &c.verdict {
+                crate::construction::corridor_tool::StretchVerdict::Blocked(why) => Some(why.clone()),
+                _ => None,
+            })
+            .take(2)
+            .collect(),
         ..Default::default()
     };
 }
 
+/// Commit the placed path's buildable stretches; keep the last point as the next start when the
+/// session draws continuous paths.
+pub fn finish_corridor_path(
+    placement: &mut ActiveRoadPlacement,
+    kind: CorridorToolKind,
+    queue: &mut ConstructionPlanQueue,
+    session: &mut ActiveToolSession,
+) -> usize {
+    let checks: Vec<StretchCheck> = std::mem::take(&mut placement.checks);
+    let n = commit_corridor_path(&checks, kind, queue);
+    let last = placement.control_points.last().copied();
+    placement.clear_path();
+    if n > 0 {
+        session.record_commit();
+        if session.continuous_path {
+            if let Some(p) = last {
+                placement.control_points.push(p);
+            }
+        }
+    }
+    n
+}
+
+/// A second click this soon (s) and this close (tiles) finishes the path.
+const DOUBLE_CLICK_S: f64 = 0.35;
+const DOUBLE_CLICK_TILES: f32 = 1.0;
+/// A press this close (tiles) to a placed point grabs it for dragging.
+const GRAB_TILES: f32 = 0.8;
+
+/// Clicks and keys for the corridor tool.
+#[allow(clippy::too_many_arguments)]
 pub fn road_path_input_system(
     tool: Res<ActiveBuildTool>,
     buttons: Res<ButtonInput<MouseButton>>,
     keys: Res<ButtonInput<KeyCode>>,
-    pick: ConstructionMapPick,
-    snap: Res<RoadSnapSettings>,
-    roads: Res<crate::construction::CorridorNetwork>,
+    time: Res<Time<Real>>,
     mut placement: ResMut<ActiveRoadPlacement>,
     mut queue: ResMut<ConstructionPlanQueue>,
     mut session: ResMut<ActiveToolSession>,
-    mut feedback: ResMut<ConstructionPathFeedback>,
     pointer_gate: Option<Res<SimulationMapPointerGate>>,
+    mut last_click: Local<Option<(f64, Vec2)>>,
 ) {
-    if !path_tool_active(tool.tool) {
+    let Some(kind) = corridor_tool_kind(tool.tool) else {
+        return;
+    };
+    if keys.just_pressed(KeyCode::Escape) {
+        placement.clear_path();
+        return;
+    }
+    if keys.just_pressed(KeyCode::Enter) || keys.just_pressed(KeyCode::NumpadEnter) {
+        finish_corridor_path(&mut placement, kind, &mut queue, &mut session);
+        return;
+    }
+    if keys.just_pressed(KeyCode::Backspace) {
+        placement.control_points.pop();
         return;
     }
     if simulation_tool_pointer(pointer_gate.as_deref()) != SimulationToolPointer::Free {
         return;
     }
-    let Some(raw) = pick.cursor_world() else {
-        return;
-    };
-    let world = resolve_placement_world(
-        raw,
-        snap.as_ref(),
-        roads.as_ref(),
-        pick.params.as_ref(),
-        pick.height_grid(),
-        feedback.as_mut(),
-    );
-
-    let shift = keys.pressed(KeyCode::ShiftLeft) || keys.pressed(KeyCode::ShiftRight);
-
-    if buttons.just_pressed(MouseButton::Left) {
-        if shift {
-            if crate::construction::path_commit_leaves_generated_map(
-                &placement.control_points,
-                placement
-                    .generated_segments
-                    .iter()
-                    .flat_map(|seg| [seg.start, seg.end]),
-                pick.params.width,
-                pick.params.height,
-            ) {
-                return;
-            }
-            if matches!(tool.tool, BuildTool::Firebreak) {
-                commit_firebreak_path_to_queue(
-                    placement.as_mut(),
-                    queue.as_mut(),
-                    pick.params.as_ref(),
-                    session.continuous_path,
-                );
-            } else {
-                commit_road_path_to_queue(
-                    placement.as_mut(),
-                    queue.as_mut(),
-                    pick.params.as_ref(),
-                    session.continuous_path,
-                );
-            }
-            session.record_commit();
-        } else {
-            placement.control_points.push(world);
-        }
-    }
-
     if buttons.just_pressed(MouseButton::Right) {
         placement.control_points.pop();
-        placement.generated_segments = regenerate_road_segments(
-            &placement.control_points,
-            None,
-            placement.width,
-            pick.params.as_ref(),
-            placement.use_curved_preview,
-        );
+        return;
+    }
+    let Some(cursor) = placement.cursor else {
+        return;
+    };
+    let c2 = Vec2::new(cursor.x, cursor.z);
+    if let Some(i) = placement.dragging {
+        if buttons.pressed(MouseButton::Left) {
+            if let Some(p) = placement.control_points.get_mut(i) {
+                *p = cursor;
+            }
+        } else {
+            placement.dragging = None;
+        }
+        return;
+    }
+    if !buttons.just_pressed(MouseButton::Left) {
+        return;
+    }
+    let now = time.elapsed_secs_f64();
+    let double = last_click.is_some_and(|(t, p)| now - t < DOUBLE_CLICK_S && p.distance(c2) < DOUBLE_CLICK_TILES);
+    *last_click = Some((now, c2));
+    if double && placement.control_points.len() >= 2 {
+        finish_corridor_path(&mut placement, kind, &mut queue, &mut session);
+        *last_click = None;
+        return;
+    }
+    // Grab a placed point (not the one just placed by the first click of a double-click).
+    let grab = placement
+        .control_points
+        .iter()
+        .position(|p| Vec2::new(p.x, p.z).distance(c2) < GRAB_TILES);
+    if let Some(i) = grab {
+        placement.dragging = Some(i);
+        return;
+    }
+    let joins = placement.cursor_joins_line && !placement.control_points.is_empty();
+    placement.control_points.push(cursor);
+    if joins {
+        // Ending on an existing line finishes the path there (a junction). The checks are
+        // recomputed next frame, so finish from fresh checks then.
+        placement.dragging = None;
+        placement.finish_requested = true;
+    }
+}
+
+/// Finish a path that ended on an existing line once its checks include the last point.
+pub fn finish_pending_corridor_path(
+    tool: Res<ActiveBuildTool>,
+    mut placement: ResMut<ActiveRoadPlacement>,
+    mut queue: ResMut<ConstructionPlanQueue>,
+    mut session: ResMut<ActiveToolSession>,
+) {
+    if !placement.finish_requested {
+        return;
+    }
+    placement.finish_requested = false;
+    if let Some(kind) = corridor_tool_kind(tool.tool) {
+        finish_corridor_path(&mut placement, kind, &mut queue, &mut session);
     }
 }
 
 #[cfg(test)]
 mod egr_tests {
     use super::update_road_path_preview_system;
-    use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RoadType};
+    use crate::construction::build_tool_authority::{ActiveBuildTool, BuildTool, RoadTier};
     use crate::engine::states::BaseState;
     use crate::gui::hud::shell_diagnostics::ProductShellDiagnostics;
     use crate::gui::hud::simulation_pointer_gate::SimulationMapPointerGate;
@@ -287,7 +364,7 @@ mod egr_tests {
         });
         {
             let mut tool = app.world_mut().resource_mut::<ActiveBuildTool>();
-            tool.tool = BuildTool::Road(RoadType::Street);
+            tool.tool = BuildTool::Road(RoadTier::Gravel);
         }
         app.add_systems(Update, update_road_path_preview_system);
 

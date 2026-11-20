@@ -23,7 +23,7 @@ use super::corridor_transport::{
 use crate::infrastructure::RoadTier;
 use crate::terrain::generation::world_generator_enhanced::WorldGenParams;
 
-use super::terrain_conform::{conform_world_y, ConstructionTerrainConform};
+use super::terrain_conform::ConstructionTerrainConform;
 use crate::strategic::BuildSiteTile;
 
 pub const ROAD_MARKER_Y_SCALE: f32 = 20.0;
@@ -237,24 +237,11 @@ pub fn execute_construction_plans_system(
                 SimRoadSegmentMarker,
                 CorridorKind::Road { tier, lanes: tier.spec().lanes_default },
             ),
+            // Grade, curve and water are judged per stretch by the corridor tool
+            // (`corridor_tool::check_corridor_path`) before a plan is queued; execute only
+            // re-checks bounds (in `apply_road_segment_to_world`).
             ConstructionType::RailSegment { head, tail } => {
-                let hy = conform_world_y(
-                    head.x as f32 + 0.5,
-                    head.z as f32 + 0.5,
-                    terrain.params.as_ref(),
-                    terrain.height_grid.as_deref(),
-                );
-                let ty = conform_world_y(
-                    tail.x as f32 + 0.5,
-                    tail.z as f32 + 0.5,
-                    terrain.params.as_ref(),
-                    terrain.height_grid.as_deref(),
-                );
-                if !super::rail::validate_rail_segment(head, tail, hy, ty, rail.max_slope, terrain.params.as_ref())
-                    .valid
                 {
-                    None
-                } else {
                     apply_road_segment_to_world(
                         &mut commands,
                         &mut roads,

@@ -7,6 +7,7 @@
 pub mod dam_flood;
 pub mod ignite;
 pub mod objectives;
+pub mod place_corridor;
 pub mod scenario_plugin;
 pub mod scenario_runner;
 pub mod scenario_steps;

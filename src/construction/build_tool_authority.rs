@@ -2,6 +2,8 @@
 
 use bevy::prelude::*;
 
+pub use crate::infrastructure::RoadTier;
+
 use crate::infrastructure::VoltageClass;
 use crate::strategic::SiteArchetype;
 
@@ -56,13 +58,6 @@ impl BuildingArchetypeId {
             Self::Dam => FootprintTiles { width: 12, depth: 2 },
         }
     }
-}
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
-pub enum RoadType {
-    #[default]
-    Street,
-    Highway,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Default)]
@@ -136,7 +131,8 @@ pub enum BuildTool {
     Building(BuildingArchetypeId),
     /// Walls / trenches / bunkers — shares building two-click FSM.
     Defense(DefenseKind),
-    Road(RoadType),
+    /// Road placement at a built tier (PLAN-ROADS-v1 RD-6).
+    Road(RoadTier),
     Rail(RailType),
     PowerLine(VoltageClass),
     /// Bulldozed fuel strip (W2 firebreak) — path paint like road, execute clears fuel only.
@@ -191,7 +187,7 @@ impl BuildTool {
     pub fn from_tool_context(ctx: ToolContext) -> Self {
         match ctx {
             ToolContext::None => Self::None,
-            ToolContext::Roads => Self::Road(RoadType::Street),
+            ToolContext::Roads => Self::Road(RoadTier::Gravel),
             ToolContext::Rail => Self::Rail(RailType::Standard),
             ToolContext::Utilities => Self::PowerLine(VoltageClass::Medium),
             // Military opens Defense picker — do not auto-arm Demolish.
@@ -343,7 +339,7 @@ mod tests {
             ZoneTool::ResidentialLow
         )));
         assert!(shift_lmb_applies_to_active_tool(BuildTool::Road(
-            RoadType::Street
+            RoadTier::Gravel
         )));
         assert!(!shift_lmb_queues_building_blueprint(BuildTool::Building(
             BuildingArchetypeId::Factory

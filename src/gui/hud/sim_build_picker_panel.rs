@@ -14,7 +14,7 @@ use crate::construction::building_definitions::menu_rows::{
 use crate::economy::logistics::orders::LogisticsOrdersSnapshotRes;
 use crate::construction::{
     ActiveBuildTool, BuildStripState, BuildTool, BuildingDefinitionRegistry, BuildingFamily,
-    DefenseKind, PendingConstructionQueue, RailType, RoadType, ToolContext,
+    DefenseKind, PendingConstructionQueue, RailType, RoadTier, ToolContext,
 };
 use crate::engine::states::BaseState;
 use crate::gui::hud::sim_build_picker_sheet::{
@@ -63,7 +63,7 @@ pub struct PickerReq(pub usize);
 #[derive(Clone, Debug)]
 enum PickerAction {
     Menu(MenuItem),
-    Road(RoadType),
+    Road(RoadTier),
     Rail,
     Defense(DefenseKind),
     Demolish,
@@ -169,8 +169,11 @@ fn category_rows(
     match category {
         BuildPickerCategory::Roads => vec![
             PickerRow::Section("Roads".into()),
-            item("Street", "", PickerAction::Road(RoadType::Street)),
-            item("Highway", "", PickerAction::Road(RoadType::Highway)),
+            item("Dirt road", "35 km/h", PickerAction::Road(RoadTier::Dirt)),
+            item("Gravel road", "55 km/h", PickerAction::Road(RoadTier::Gravel)),
+            item("Paved road", "80 km/h", PickerAction::Road(RoadTier::Paved)),
+            item("Concrete road", "90 km/h", PickerAction::Road(RoadTier::Concrete)),
+            item("Motorway", "110 km/h, interchanges only", PickerAction::Road(RoadTier::Motorway)),
             PickerRow::Section("Rail".into()),
             item("Rail - Standard", "", PickerAction::Rail),
         ],

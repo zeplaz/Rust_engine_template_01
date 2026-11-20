@@ -171,7 +171,11 @@ fn despawn_query<T: Component>(commands: &mut Commands, query: &Query<Entity, Wi
 pub(crate) fn path_color(kind: VisualPathKind, valid: bool, slope_ok: bool, committed: bool) -> Color {
     let token = match (kind, valid, slope_ok, committed) {
         (VisualPathKind::Road, true, _, true) => crate::construction::road_committed_color(),
-        (VisualPathKind::Road, true, _, false) => crate::construction::road_segment_color(true),
+        (VisualPathKind::Road, true, false, false) => {
+            // Buildable with works (bridge, cut/fill, crossing).
+            crate::gui::UiRgba::from_rgba_unmultiplied(255, 176, 48, 220)
+        }
+        (VisualPathKind::Road, true, true, false) => crate::construction::road_segment_color(true),
         (VisualPathKind::Rail, true, true, _) => {
             crate::gui::UiRgba::from_rgba_unmultiplied(180, 120, 255, 150)
         }

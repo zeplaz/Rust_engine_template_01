@@ -1000,6 +1000,207 @@ fn push_bridge_deck(buf: &mut MeshBuf, a: Vec2, b: Vec2, n: Vec2, ha: f32, hb: f
     }
 }
 
+/// Axis box from `lo` to `hi` (display units, world axes) in one colour.
+fn push_box(buf: &mut MeshBuf, centre: Vec2, half: Vec2, along: Vec2, lo: f32, hi: f32, col: [f32; 4]) {
+    let side = Vec2::new(-along.y, along.x);
+    let c = [
+        centre - along * half.x - side * half.y,
+        centre + along * half.x - side * half.y,
+        centre + along * half.x + side * half.y,
+        centre - along * half.x + side * half.y,
+    ];
+    buf.quad([p3(c[0].x, c[0].y, hi), p3(c[1].x, c[1].y, hi), p3(c[2].x, c[2].y, hi), p3(c[3].x, c[3].y, hi)], Vec3::Y, [Vec2::ZERO; 4], col);
+    let dark = shade([col[0], col[1], col[2]], 0.72, 1.0);
+    for k in 0..4 {
+        let (u, v) = (c[k], c[(k + 1) % 4]);
+        let nrm = Vec2::new(v.y - u.y, u.x - v.x).normalize_or_zero();
+        buf.quad([p3(u.x, u.y, lo), p3(v.x, v.y, lo), p3(v.x, v.y, hi), p3(u.x, u.y, hi)], Vec3::new(nrm.x, 0.0, -nrm.y), [Vec2::ZERO; 4], dark);
+    }
+}
+
+/// Placeholder bridge model by structure type, drawn section by section (pier to pier):
+/// - deck colour and side structure by type (timber planks, steel girder, concrete beam, Bailey /
+///   truss side panels, stone arch, earth culvert embankment, pontoon deck on floats);
+/// - piers at the section joints down to the riverbed (none for a single span, floats for a
+///   pontoon, a solid embankment for a culvert);
+/// - a damaged section is scorched at its impact points and loses railing; a fallen section is
+///   gone (its broken ends hang down, debris in the water).
+#[allow(clippy::too_many_arguments)]
+fn push_bridge_model(
+    buf: &mut MeshBuf,
+    field: &PixelWorldTerrainField,
+    a: Vec2,
+    b: Vec2,
+    n: Vec2,
+    ha: f32,
+    hb: f32,
+    rec: Option<&crate::construction::bridges::BridgeRecord>,
+) {
+    use crate::infrastructure::bridge_types::BridgeType as T;
+    let Some(rec) = rec else {
+        // Not registered yet (first frames after build): plain deck.
+        push_bridge_deck(buf, a, b, n, ha, hb, [0.62, 0.62, 0.60, 1.0]);
+        return;
+    };
+    let kind = rec.bridge_type;
+    let (deck_col, side_col): ([f32; 4], [f32; 4]) = match kind {
+        T::Culvert => ([0.40, 0.38, 0.34, 1.0], [0.46, 0.38, 0.26, 1.0]),
+        T::TimberBeam | T::TimberTrestle => ([0.50, 0.36, 0.22, 1.0], [0.40, 0.28, 0.17, 1.0]),
+        T::Pontoon => ([0.34, 0.36, 0.33, 1.0], [0.22, 0.27, 0.24, 1.0]),
+        T::Bailey => ([0.38, 0.40, 0.36, 1.0], [0.30, 0.38, 0.30, 1.0]),
+        T::SteelGirder => ([0.44, 0.45, 0.46, 1.0], [0.30, 0.34, 0.38, 1.0]),
+        T::PrestressedConcrete => ([0.66, 0.66, 0.63, 1.0], [0.58, 0.58, 0.55, 1.0]),
+        T::SteelTruss => ([0.42, 0.42, 0.42, 1.0], [0.42, 0.20, 0.16, 1.0]),
+        T::StoneArch => ([0.62, 0.57, 0.48, 1.0], [0.55, 0.50, 0.42, 1.0]),
+    };
+    let d = b - a;
+    let len = d.length().max(1e-3);
+    let along = d / len;
+    let side_dir = n.normalize_or_zero();
+    let width = n.length().max(0.12);
+    let upm = field.units_per_metre.max(1e-3);
+    let water_at = |p: Vec2| field.index(p.x.floor() as i32, p.y.floor() as i32).map(|i| field.water[i]).filter(|w| w.is_finite());
+    let bed_at = |p: Vec2| field.index(p.x.floor() as i32, p.y.floor() as i32).map_or(ha.min(hb) - 2.0, |i| field.ground[i]);
+    // Where along this drawn stretch the bridge's own span lies.
+    let to_t = |p: Vec2| ((p - a).dot(d) / (len * len)).clamp(0.0, 1.0);
+    let (bt0, bt1) = (to_t(rec.a), to_t(rec.b));
+    // Deck height: floating rides the water, else the drawn deck line.
+    let deck_h = |t: f32| {
+        let p = a + d * t;
+        if kind == T::Pontoon {
+            water_at(p).map_or(ha + (hb - ha) * t, |w| w + 0.25)
+        } else {
+            ha + (hb - ha) * t
+        }
+    };
+    // Approaches (bank to the bridge's span ends) are plain deck.
+    if bt0 > 0.01 {
+        push_bridge_deck(buf, a, a + d * bt0, n, ha, deck_h(bt0), deck_col);
+    }
+    if bt1 < 0.99 {
+        push_bridge_deck(buf, a + d * bt1, b, n, deck_h(bt1), hb, deck_col);
+    }
+    let sec_t = |s: f32| bt0 + (bt1 - bt0) * s;
+    let thick = match kind {
+        T::SteelGirder | T::PrestressedConcrete => 1.6 * upm,
+        T::StoneArch => 2.0 * upm,
+        _ => 0.6 * upm,
+    }
+    .clamp(0.2, 1.2);
+    for (k, sec) in rec.sections.iter().enumerate() {
+        let (t0, t1) = (sec_t(sec.t0), sec_t(sec.t1));
+        let (p0, p1) = (a + d * t0, a + d * t1);
+        let (h0, h1) = (deck_h(t0), deck_h(t1));
+        if sec.fallen {
+            // Broken ends hang from the neighbours; wreckage in the water.
+            let hang = 1.2;
+            let stub = 0.15;
+            if k > 0 && !rec.sections[k - 1].fallen {
+                push_bridge_deck(buf, p0, p0 + (p1 - p0) * stub, n, h0, h0 - hang, side_col);
+            }
+            if k + 1 < rec.sections.len() && !rec.sections[k + 1].fallen {
+                push_bridge_deck(buf, p1 - (p1 - p0) * stub, p1, n, h1 - hang, h1, side_col);
+            }
+            let mid = (p0 + p1) * 0.5;
+            let rubble = water_at(mid).unwrap_or(bed_at(mid) + 0.2);
+            push_box(buf, mid, Vec2::new((p1 - p0).length() * 0.3, width * 0.8), along, bed_at(mid), rubble + 0.15, side_col);
+            continue;
+        }
+        let hurt = sec.integrity < 0.75;
+        let col = if hurt {
+            let k = 0.6 + 0.4 * sec.integrity;
+            [deck_col[0] * k + 0.08 * (1.0 - k), deck_col[1] * k, deck_col[2] * k, 1.0]
+        } else {
+            deck_col
+        };
+        // Deck + its structure depth.
+        push_bridge_deck(buf, p0, p1, n, h0, h1, col);
+        let mid = (p0 + p1) * 0.5;
+        let sec_len = (p1 - p0).length();
+        let hm = (h0 + h1) * 0.5;
+        match kind {
+            T::Culvert => {
+                // Earth embankment down to the bed, dark pipe mouths on the faces.
+                push_box(buf, mid, Vec2::new(sec_len * 0.5, width * 1.4), along, bed_at(mid), hm - 0.02, side_col);
+                for sgn in [-1.0_f32, 1.0] {
+                    let c = mid + side_dir * width * 1.41 * sgn;
+                    let wl = water_at(mid).unwrap_or(bed_at(mid));
+                    push_box(buf, c, Vec2::new(sec_len * 0.18, 0.02), along, bed_at(mid), wl.max(bed_at(mid) + 0.2) + 0.1, [0.08, 0.08, 0.09, 1.0]);
+                }
+            }
+            T::Pontoon => {
+                // Floats under the deck.
+                for f in [0.25_f32, 0.75] {
+                    let c = p0 + (p1 - p0) * f;
+                    let w = deck_h(t0 + (t1 - t0) * f);
+                    push_box(buf, c, Vec2::new(sec_len * 0.2, width * 0.9), along, w - 0.45, w - 0.05, side_col);
+                }
+            }
+            T::Bailey | T::SteelTruss => {
+                // Side panels / trusses: tall walls with gaps (lattice placeholder).
+                let tall = if kind == T::SteelTruss { 1.4 } else { 0.7 };
+                let bays = ((sec_len / 0.6).ceil() as usize).max(2);
+                for bay in 0..bays {
+                    if bay % 2 == 1 {
+                        continue;
+                    }
+                    let c = p0 + (p1 - p0) * ((bay as f32 + 0.5) / bays as f32);
+                    for sgn in [-1.0_f32, 1.0] {
+                        let cc = c + side_dir * width * 1.02 * sgn;
+                        push_box(buf, cc, Vec2::new(sec_len / bays as f32 * 0.5, 0.05), along, hm, hm + tall, side_col);
+                    }
+                }
+                for sgn in [-1.0_f32, 1.0] {
+                    let cc = mid + side_dir * width * 1.02 * sgn;
+                    push_box(buf, cc, Vec2::new(sec_len * 0.5, 0.06), along, hm + tall - 0.08, hm + tall, side_col);
+                }
+            }
+            T::SteelGirder | T::PrestressedConcrete | T::StoneArch => {
+                // Beam / arch depth under the deck.
+                push_box(buf, mid, Vec2::new(sec_len * 0.5, width * 0.7), along, hm - thick, hm - 0.2, side_col);
+            }
+            T::TimberBeam | T::TimberTrestle => {
+                // Stringers under the planks.
+                for sgn in [-0.6_f32, 0.0, 0.6] {
+                    let cc = mid + side_dir * width * sgn;
+                    push_box(buf, cc, Vec2::new(sec_len * 0.5, 0.06), along, hm - 0.45, hm - 0.2, side_col);
+                }
+            }
+        }
+        // Railings (missing where damaged).
+        if !matches!(kind, T::Bailey | T::SteelTruss | T::Culvert) {
+            let posts = ((sec_len / 0.5).ceil() as usize).max(1);
+            for p in 0..posts {
+                if hurt && p % 2 == 1 {
+                    continue;
+                }
+                let c = p0 + (p1 - p0) * ((p as f32 + 0.5) / posts as f32);
+                for sgn in [-1.0_f32, 1.0] {
+                    let cc = c + side_dir * width * 0.92 * sgn;
+                    push_box(buf, cc, Vec2::new(sec_len / posts as f32 * 0.45, 0.035), along, hm, hm + 0.2, [0.28, 0.28, 0.3, 1.0]);
+                }
+            }
+        }
+        // Impact scorch on the deck.
+        for hit in &sec.hits {
+            let c = a + d * to_t(*hit);
+            push_box(buf, c, Vec2::new(0.35, width * 0.7), along, hm, hm + 0.03, [0.10, 0.09, 0.08, 1.0]);
+        }
+        // Pier at this section's far joint (not at the far bank), down to the riverbed.
+        let joint_pier = k + 1 < rec.sections.len() && !matches!(kind, T::Pontoon | T::Culvert);
+        if joint_pier {
+            let pp = p1;
+            let bed = bed_at(pp);
+            let top = h1 - thick.min(0.5);
+            if top > bed + 0.1 {
+                let pier_col = if kind == T::StoneArch { deck_col } else if matches!(kind, T::TimberTrestle | T::TimberBeam) { side_col } else { [0.60, 0.60, 0.58, 1.0] };
+                let half = if matches!(kind, T::TimberTrestle | T::TimberBeam) { Vec2::new(0.08, width * 0.8) } else { Vec2::new(0.2, width * 0.75) };
+                push_box(buf, pp, half, along, bed, top, pier_col);
+            }
+        }
+    }
+}
+
 fn drape(positions: &[[f32; 3]], colors: &[[f32; 4]], indices: &[u32], field: &PixelWorldTerrainField, lift: f32) -> MeshBuf {
     let mut buf = MeshBuf::default();
     let mut stack: Vec<([Vec3; 3], [[f32; 4]; 3])> = Vec::new();
@@ -1128,6 +1329,39 @@ pub(crate) struct PathLayerState {
     entity: Option<Entity>,
 }
 
+/// Mesh + material assets a voxel layer uploads to (render domain).
+#[derive(bevy::ecs::system::SystemParam)]
+pub(crate) struct LayerAssets<'w> {
+    meshes: ResMut<'w, Assets<Mesh>>,
+    materials: ResMut<'w, Assets<StandardMaterial>>,
+}
+
+/// Deck top (display units) of a committed stretch `a → b` that crosses water: the bridge's built
+/// deck height when the sim knows the bridge (fixed: a flood does not lift it), else above the
+/// current water. Each end at least its bank. `None` for a dry stretch.
+pub(crate) fn committed_deck_heights(
+    field: &PixelWorldTerrainField,
+    bridges: Option<&crate::construction::bridges::BridgeBook>,
+    a: Vec2,
+    b: Vec2,
+) -> Option<(f32, f32)> {
+    let (ha, hb) = bridge_deck_heights(field, a, b)?;
+    match bridges.and_then(|bk| bk.on_stretch(a, b)) {
+        Some(br) => {
+            let deck = br.deck_m * field.units_per_metre;
+            let bank = |p: Vec2| field.surface_max_around(p) + PATH_LIFT;
+            // Banks only (not the flood): the deck stays where it was built.
+            let ground_bank = |p: Vec2| {
+                field
+                    .index(p.x.floor() as i32, p.y.floor() as i32)
+                    .map_or(bank(p), |i| field.ground[i] + PATH_LIFT)
+            };
+            Some((ground_bank(a).max(deck), ground_bank(b).max(deck)))
+        }
+        None => Some((ha, hb)),
+    }
+}
+
 #[allow(clippy::too_many_arguments)]
 pub(crate) fn sync_pixel_world_paths(
     mut commands: Commands,
@@ -1135,8 +1369,8 @@ pub(crate) fn sync_pixel_world_paths(
     cam: Res<PixelWorldCameraFrame>,
     field: Res<PixelWorldTerrainField>,
     requests: Option<Res<ConstructionVisualRequests>>,
-    mut meshes: ResMut<Assets<Mesh>>,
-    mut materials: ResMut<Assets<StandardMaterial>>,
+    bridges: Option<Res<crate::construction::bridges::BridgeBook>>,
+    mut assets: LayerAssets,
     mut state: Local<PathLayerState>,
 ) {
     if !pixel_world_on(&mode, &cam, &field) {
@@ -1146,7 +1380,8 @@ pub(crate) fn sync_pixel_world_paths(
         return;
     };
     let q = |v: f32| (v * 32.0).round() as i64 as u64;
-    let mut key = mix64(field.revision ^ (req.paths.len() as u64) << 40);
+    let bridge_rev = bridges.as_deref().map_or(0, |b| b.revision);
+    let mut key = mix64(field.revision ^ (req.paths.len() as u64) << 40 ^ bridge_rev.rotate_left(13));
     for p in &req.paths {
         key = mix64(key ^ q(p.start.x) ^ q(p.start.z) << 16 ^ q(p.end.x) << 32 ^ q(p.end.z) << 48);
         key = mix64(key ^ u64::from(p.committed) ^ u64::from(p.valid) << 1 ^ u64::from(p.slope_ok) << 2 ^ (p.kind as u64) << 3);
@@ -1168,8 +1403,15 @@ pub(crate) fn sync_pixel_world_paths(
         let c = LinearRgba::from(crate::render::world_map_network_mesh::path_color(p.kind, p.valid, p.slope_ok, p.committed));
         let col = [c.red, c.green, c.blue, c.alpha.max(0.85)];
         // OP-7: a path that crosses water is a bridge — a straight deck between its bank ends,
-        // not a ribbon draped down the banks and across the riverbed.
-        if let Some((ha, hb)) = bridge_deck_heights(field.as_ref(), a, b) {
+        // not a ribbon draped down the banks and across the riverbed. Built bridges get the
+        // placeholder model (concrete deck, piers, railings) in their sim condition.
+        if p.committed {
+            if let Some((ha, hb)) = committed_deck_heights(field.as_ref(), bridges.as_deref(), a, b) {
+                let rec = bridges.as_deref().and_then(|bk| bk.on_stretch(a, b));
+                push_bridge_model(&mut decks, field.as_ref(), a, b, n, ha, hb, rec);
+                continue;
+            }
+        } else if let Some((ha, hb)) = bridge_deck_heights(field.as_ref(), a, b) {
             push_bridge_deck(&mut decks, a, b, n, ha, hb, col);
             continue;
         }
@@ -1185,7 +1427,7 @@ pub(crate) fn sync_pixel_world_paths(
     let material = state
         .material
         .get_or_insert_with(|| {
-            materials.add(StandardMaterial {
+            assets.materials.add(StandardMaterial {
                 base_color: Color::WHITE,
                 alpha_mode: AlphaMode::Blend,
                 perceptual_roughness: 0.9,
@@ -1200,7 +1442,7 @@ pub(crate) fn sync_pixel_world_paths(
     // keep the last asset and hide the layer instead.
     let before = state.mesh.as_ref().map(Handle::id);
     let drawable = !buf.is_empty()
-        && crate::render::upload_layer_mesh(&mut meshes, &mut state.mesh, buf.into_mesh());
+        && crate::render::upload_layer_mesh(&mut assets.meshes, &mut state.mesh, buf.into_mesh());
     let vis = if drawable { Visibility::Inherited } else { Visibility::Hidden };
     let Some(mesh) = state.mesh.clone() else {
         return;

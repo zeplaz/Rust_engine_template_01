@@ -47,6 +47,8 @@ mod construction_pipeline;
 mod construction_queue_intent;
 mod corridor_transport;
 pub mod corridor_network;
+pub mod corridor_tool;
+pub mod bridges;
 mod defense_concrete_stock;
 mod defense_staging_stock;
 mod blast;
@@ -152,7 +154,7 @@ mod site_stage_tick;
 mod site_stage_transitions;
 mod snap;
 mod staged_ghost_panel;
-mod terrain_conform;
+pub mod terrain_conform;
 mod upgrade;
 mod utilities_menu;
 pub mod weighted_footprint;
@@ -185,7 +187,7 @@ pub use build_state::{
 pub use build_strip::{BuildStripState, ToolContext};
 pub use build_tool_authority::{
     apply_build_rail_tool_selection, ActiveBuildTool, BuildTool, BuildingArchetypeId, DefenseKind,
-    RailType, RoadType, ZoneTool,
+    RailType, RoadTier, ZoneTool,
 };
 pub use build_toolbox::{register_build_toolbox_bevy_systems, BuildToolboxBevyRoot};
 pub use build_validation::{
@@ -253,13 +255,11 @@ pub use procedural::{
     ProceduralAssemblyRequest, ProceduralModuleEntry, ProceduralModuleRegistry, StylePackRegistry,
     TileAtlasEntry, TileAtlasRegistry, MODULE_INDEX_RON, TILE_ATLAS_INDEX_RON,
 };
-pub use rail::{
-    rail_path_input_system, sync_rail_path_build_preview, sync_rail_placement_from_tool,
-    update_rail_path_preview_system, ActiveRailPlacement,
-};
+pub use rail::ActiveRailPlacement;
 pub use residential_menu::draw_residential_submenu;
 pub use roads::{
-    commit_road_path_to_queue, cursor_world_on_map, register_road_tool_popup_bevy_systems,
+    corridor_tool_kind, cursor_world_on_map, finish_corridor_path, finish_pending_corridor_path,
+    register_road_tool_popup_bevy_systems,
     road_path_input_system, sync_road_path_build_preview, sync_road_placement_width_from_tool,
     update_road_path_preview_system, ActiveRoadPlacement, RoadSegmentPreview,
     RoadToolPopupBevyRoot, RoadToolPopupState,
@@ -398,6 +398,15 @@ impl Plugin for BuildPlanningPlugin {
             .init_resource::<ConstructionPlanQueue>()
             .init_resource::<ConstructionWorldRevision>()
             .init_resource::<CorridorNetwork>()
+            .init_resource::<bridges::BridgeBook>()
+            .add_systems(
+                Update,
+                (
+                    bridges::register_bridges_system,
+                    bridges::bridge_flood_damage_system.after(bridges::register_bridges_system),
+                    bridges::bridge_blast_damage_system.after(bridges::register_bridges_system),
+                ),
+            )
             .init_resource::<crate::gui::hud::power_node_hover::PowerNodeHoverState>()
             .add_systems(Startup, hydro_coupling::register_construction_hydro_coupling_bridge)
             .add_message::<ConstructionQueueIntent>()
@@ -434,17 +443,13 @@ impl Plugin for BuildPlanningPlugin {
                 Update,
                 (
                     sync_road_placement_width_from_tool,
-                    update_road_path_preview_system,
-                    sync_road_path_build_preview.after(update_road_path_preview_system),
+                    update_road_path_preview_system.after(sync_road_placement_width_from_tool),
+                    finish_pending_corridor_path.after(update_road_path_preview_system),
+                    sync_road_path_build_preview.after(finish_pending_corridor_path),
                     road_path_input_system.after(sync_road_path_build_preview),
-                    sync_rail_placement_from_tool,
-                    update_rail_path_preview_system,
-                    sync_rail_path_build_preview.after(update_rail_path_preview_system),
-                    rail_path_input_system.after(sync_rail_path_build_preview),
                     zone_paint_input_system,
                     visual_authority::clear_construction_visual_requests,
                     visual_authority::sync_road_visual_requests,
-                    visual_authority::sync_rail_visual_requests,
                     visual_authority::sync_zone_visual_requests,
                     visual_authority::sync_footprint_visual_requests,
                     place_feedback::sync_place_feedback_visual_requests,
