@@ -91,7 +91,8 @@ fn fs_main(in: VertexOutput) -> @location(0) vec4<f32> {
     let shoreline = smoothstep(0.04, 0.2, grad) * smoothstep(0.08, 0.0, depth01) * 0.6;
 
     var tint = mix(WATER_SHALLOW, WATER_MID, smoothstep(0.05, 0.35, depth01));
-    tint = mix(tint, WATER_DEEP, smoothstep(0.35, 0.85, depth01));
+    // R is sqrt-encoded: 0.35 ~ 12 m, 0.6 ~ 35 m.
+    tint = mix(tint, WATER_DEEP, smoothstep(0.35, 0.6, depth01));
     tint = mix(tint, WATER_SHALLOW, scroll_mix * 0.18 * clamp(speed, 0.0, 1.0));
     // Foam is a broken, moving highlight on blue water, not the water's colour: flow-driven
     // foam is cut into streaks along the flow and capped, so a fast flood reads blue + white

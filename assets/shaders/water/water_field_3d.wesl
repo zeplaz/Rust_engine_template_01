@@ -63,7 +63,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
     let bed_y = sample_bed_y(uv);
     var local = vertex.position;
     // DF-3 depth01 → display units via height_scale.
-    var y = bed_y + depth01 * material.height_scale + material.lift;
+    var y = bed_y + depth01 * depth01 * material.height_scale + material.lift;
     // Dry vertex: take the highest wet neighbour's surface so the sheet stays flat to the
     // shoreline (the fragment discards dry pixels). Dropping dry vertices to the bed made every
     // wet/dry edge a slope — the V-wedges at the dam and the ROI edges (OP-2/OP-3).
@@ -79,7 +79,7 @@ fn vertex(vertex: Vertex) -> VertexOutput {
                     let nuv = uv + vec2<f32>(f32(ox * r), f32(oy * r)) * texel;
                     let nd = sample_field(nuv).r;
                     if nd >= 0.02 {
-                        best = max(best, sample_bed_y(nuv) + nd * material.height_scale + material.lift);
+                        best = max(best, sample_bed_y(nuv) + nd * nd * material.height_scale + material.lift);
                     }
                 }
             }
@@ -136,7 +136,8 @@ fn fragment(in: VertexOutput) -> @location(0) vec4<f32> {
     let shoreline = smoothstep(0.04, 0.2, grad) * smoothstep(0.08, 0.0, depth01) * 0.6;
 
     var tint = mix(WATER_SHALLOW, WATER_MID, smoothstep(0.05, 0.35, depth01));
-    tint = mix(tint, WATER_DEEP, smoothstep(0.35, 0.85, depth01));
+    // R is sqrt-encoded: 0.35 ~ 12 m, 0.6 ~ 35 m.
+    tint = mix(tint, WATER_DEEP, smoothstep(0.35, 0.6, depth01));
     tint = mix(tint, WATER_SHALLOW, scroll_mix * 0.18 * clamp(speed, 0.0, 1.0));
     // Foam is a broken, moving highlight on blue water, not the water's colour: flow-driven
     // foam is cut into streaks along the flow and capped, so a fast flood reads blue + white

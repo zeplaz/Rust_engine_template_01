@@ -25,7 +25,11 @@ use super::surface_water::SurfaceWaterField;
 use crate::terrain::world_scale_contract::{CHUNK_TILES_SIM, TILE_METRES_GAMEPLAY};
 
 /// Depth that maps to R=1.0 in the field texture.
-pub const DEPTH_SCALE_M: f32 = 24.0;
+/// Depth at encoded R = 1. Encoding is `sqrt(depth / DEPTH_SCALE_M)` (shaders square it back):
+/// fine 8-bit steps near zero for rivers and films, and deep reservoirs no longer saturate (24 m
+/// linear capped a 40 m reservoir, so its surface drew 16 m low and a breach drawdown was
+/// invisible until it fell under 24 m).
+pub const DEPTH_SCALE_M: f32 = 96.0;
 /// Flow speed (m/s) that maps foam / velocity encoding toward 1.
 pub const FLOW_SPEED_SCALE: f32 = 4.0;
 /// Largest texture edge packed at full resolution (one texel per tile). Bigger maps subsample.
@@ -140,7 +144,7 @@ pub fn pack_water_texel(depth_m: f32, qx_m3s: f32, qy_m3s: f32, dx_m: f32) -> [u
     if depth_m < 0.05 {
         return [0, 128, 128, 0];
     }
-    let depth01 = (depth_m / DEPTH_SCALE_M).clamp(0.0, 1.0);
+    let depth01 = (depth_m / DEPTH_SCALE_M).clamp(0.0, 1.0).sqrt();
     let cell = (depth_m * dx_m.max(1e-3)).max(1e-3);
     let vx = (qx_m3s / cell / FLOW_SPEED_SCALE).clamp(-1.0, 1.0);
     let vy = (qy_m3s / cell / FLOW_SPEED_SCALE).clamp(-1.0, 1.0);
@@ -365,7 +369,9 @@ mod tests {
         let dry = pack_water_texel(0.0, 0.0, 0.0, 16.0);
         assert_eq!(dry[0], 0);
         let deep = pack_water_texel(12.0, 80.0, 0.0, 16.0);
-        assert!(deep[0] > 100, "deep water elevates R");
+        assert!(deep[0] > 80, "deep water elevates R");
+        // A reservoir draining from 40 m to 30 m must read as a change (24 m linear saturated).
+        assert!(pack_water_texel(40.0, 0.0, 0.0, 16.0)[0] > pack_water_texel(30.0, 0.0, 0.0, 16.0)[0] + 5);
         assert!(deep[1] != 128, "eastward discharge shifts G");
         assert!(deep[3] > 0, "moving water carries foam");
     }
