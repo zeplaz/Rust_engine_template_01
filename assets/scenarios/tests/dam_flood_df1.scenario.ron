@@ -20,7 +20,9 @@
         // Fast-forward through the build like a player would (~2.5 h game time to haul the bill).
         SetSimSpeed(speed: 120.0),
         WaitUntilSiteOperational(catalog_id: "dam_embankment_v1"),
-        SetSimSpeed(speed: 1.0),
+        // Keep fast-forwarding through impound / operate / strike / flood / burn (the timeline is
+        // minutes of sim time; at 1x a capture never reaches S5-S9).
+        SetSimSpeed(speed: 30.0),
         Log(message: "DF-4: dam operational (built by logistics) — crest installed by DamBody"),
         // Close outlets → level-pool impound (S2). Coarse dt so ecology clocks can clear 14 d drown.
         // Force-close: hold the pool (no low/mid outlet, no turbine) so DF-2 ratio drops and crest rises.
