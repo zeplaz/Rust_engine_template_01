@@ -560,7 +560,13 @@ pub(crate) fn cell_stand_tick(
 
         // While a burn is working through the chunk the canopy is the burn ceiling, not the stand: keep
         // the ratings the cells had and re-rate once the stand is back.
+        // A re-rate can raise what a cell carries (terrain repainted forest, the stand grew). The capacity the
+        // reservoir was full against is kept so a still-full cell can follow it up below.
+        let mut prev_cap: Option<Vec<f32>> = None;
         if (reseed || periodic) && (!stand.seeded || drivers.burn_canopy_loss <= 0.02) {
+            if stand.seeded {
+                prev_cap = Some(stand.fuel_cap.clone());
+            }
             refresh_capacity(&mut stand, &matrix, veg, suit, &drivers);
             stand.last_refresh = tick.0.wrapping_add(stagger);
         }
@@ -663,6 +669,21 @@ pub(crate) fn cell_stand_tick(
                 }
             }
             stand.seeded = true;
+        }
+
+        // Fuel the fire has not touched is the stand's own: a reservoir that sat full against the old capacity
+        // is full against the new one. Litter regrowth (days) only refills what a burn took out, so a stand
+        // that was re-rated up does not stay at its old, thinner fuel until it has regrown.
+        if let Some(prev) = prev_cap {
+            for i in 0..n {
+                if stand.is_burnt(i) || prev.get(i).is_none_or(|p| *p <= 0.0) {
+                    continue;
+                }
+                let cap = stand.fuel_cap[i];
+                if cap > ovl.fuel[i] && ovl.fuel[i] >= prev[i] - 1e-3 && ovl.heat[i] < CELL_BURN_HEAT {
+                    ovl.fuel[i] = cap;
+                }
+            }
         }
 
         if (drivers.burn_canopy_loss - canopy_loss).abs() > 1e-4

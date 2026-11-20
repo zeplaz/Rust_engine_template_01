@@ -23,6 +23,8 @@ use super::scene_seed::DamFloodWaterConfigLatch;
 const RIVER_HALF_WIDTH: u32 = 3;
 /// Soil/fuel moisture of the fire test woodland (0..1): dry upland.
 pub const WOODLAND_TEST_MOISTURE: f32 = 0.18;
+/// Width (tiles) of the bare stone firebreak around the woodland test zone.
+pub const WOODLAND_FIREBREAK_TILES: i32 = 4;
 /// Authored channel depth (metres) — matrix wet / inundation threshold uses [`WET_DEPTH_M`].
 const CORRIDOR_DEPTH_M: f32 = 3.5;
 
@@ -185,6 +187,9 @@ pub fn author_dam_flood_valley_system(
     // CLOSE-T3: the fixture's forest floodplain is forest ground (S0 "forest on the floodplain");
     // grassland everywhere capped every stand at shrub, so no tree stage could exist.
     let forest = families.id("Forest").unwrap_or(grassland);
+    // Firebreak ring (cleared stone road) around the woodland test zone: the fire test stays in
+    // its zone instead of running through the dry grassland into the dam test area.
+    let stone = families.id("Stone").unwrap_or(grassland);
     let fp = &fixture.forest_floodplain;
     let in_floodplain = |x: u32, z: u32| {
         let (x, z) = (x as i32, z as i32);
@@ -224,12 +229,20 @@ pub fn author_dam_flood_valley_system(
                     + profile.above_channel_m(x as i32, z as i32);
                 dense.elevation[i] = (ground_m / range_m).clamp(0.02, 0.98);
                 dense.moisture[i] = dense.moisture[i].min(0.55);
-                let in_woodland = {
-                    let wz = &fixture.woodland_test_zone;
-                    let (xi, zi) = (x as i32, z as i32);
-                    xi >= wz.min.0 && xi <= wz.max.0 && zi >= wz.min.1 && zi <= wz.max.1
+                let wz = &fixture.woodland_test_zone;
+                let (xi, zi) = (x as i32, z as i32);
+                let in_box = |pad: i32| {
+                    xi >= wz.min.0 - pad && xi <= wz.max.0 + pad && zi >= wz.min.1 - pad && zi <= wz.max.1 + pad
                 };
-                dense.family[i] = if in_floodplain(x, z) || in_woodland { forest } else { grassland };
+                let in_woodland = in_box(0);
+                let in_firebreak = !in_woodland && in_box(WOODLAND_FIREBREAK_TILES);
+                dense.family[i] = if in_firebreak {
+                    stone
+                } else if in_floodplain(x, z) || in_woodland {
+                    forest
+                } else {
+                    grassland
+                };
                 if in_woodland {
                     // Fire test zone: dry upland woods (summer-dry plateau), so a strike or a
                     // spark spreads like a real forest fire instead of guttering in green wood.
