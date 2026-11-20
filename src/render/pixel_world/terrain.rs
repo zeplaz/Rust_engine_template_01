@@ -42,6 +42,16 @@ pub(crate) struct MeshBuf {
 }
 
 impl MeshBuf {
+    /// Append another buffer (indices re-based).
+    pub fn append(&mut self, other: MeshBuf) {
+        let base = self.positions.len() as u32;
+        self.positions.extend(other.positions);
+        self.normals.extend(other.normals);
+        self.uvs.extend(other.uvs);
+        self.colors.extend(other.colors);
+        self.indices.extend(other.indices.into_iter().map(|i| i + base));
+    }
+
     /// Quad from four corners in perimeter order; winding is fixed so the face points along `n`.
     pub fn quad(&mut self, p: [Vec3; 4], n: Vec3, uv: [Vec2; 4], c: [f32; 4]) {
         let base = self.positions.len() as u32;
