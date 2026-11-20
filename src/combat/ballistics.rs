@@ -258,9 +258,13 @@ fn grid_cells_on_segment(origin: Vec2, end: Vec2) -> Vec<(i32, i32)> {
     let t_delta_y = inv_dy;
 
     let mut cells = Vec::new();
+    // A segment crosses exactly |Δx| + |Δy| cell boundaries. Float rounding at a cell edge could
+    // step past the goal on one axis, after which `x == goal_x && y == goal_y` never held and the
+    // walk ran until i32 overflow (debug panic a few ticks after a launch). Bound it.
+    let max_cells = (goal_x - x).unsigned_abs() as usize + (goal_y - y).unsigned_abs() as usize + 1;
     loop {
         cells.push((x, y));
-        if x == goal_x && y == goal_y {
+        if (x == goal_x && y == goal_y) || cells.len() >= max_cells {
             break;
         }
         if t_max_x < t_max_y {
@@ -730,5 +734,29 @@ mod tests {
                 || prod.contains("mut blast_queue: Option<ResMut<BlastIntentQueue>>"),
             "damage path must be enqueue-only via BlastIntentQueue"
         );
+    }
+}
+
+#[cfg(test)]
+mod grid_walk_tests {
+    use super::grid_cells_on_segment;
+    use bevy::prelude::Vec2;
+
+    /// The walk always terminates within |dx|+|dy|+1 cells, including segments that end exactly
+    /// on cell edges (float rounding used to step past the goal and loop until overflow).
+    #[test]
+    fn grid_walk_terminates_on_edge_aligned_segments() {
+        let cases = [
+            (Vec2::new(0.0, 0.0), Vec2::new(10.0, 10.0)),
+            (Vec2::new(1599.9999, 2880.0), Vec2::new(2560.0, 2560.0)),
+            (Vec2::new(3.0, 7.0), Vec2::new(3.0, -5.0)),
+            (Vec2::new(-2.5, 4.0), Vec2::new(9.0, 4.0)),
+            (Vec2::new(0.1, 0.1), Vec2::new(0.3, 0.2)),
+        ];
+        for (a, b) in cases {
+            let cells = grid_cells_on_segment(a, b);
+            let bound = (b.x.floor() - a.x.floor()).abs() as usize + (b.y.floor() - a.y.floor()).abs() as usize + 1;
+            assert!(!cells.is_empty() && cells.len() <= bound, "{a:?}->{b:?}: {} > {bound}", cells.len());
+        }
     }
 }
