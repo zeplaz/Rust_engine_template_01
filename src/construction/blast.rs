@@ -183,6 +183,9 @@ pub struct BlastCraterBook {
     pub tiles: std::collections::BTreeSet<(i32, i32)>,
     pub blasts_applied: u64,
     pub sites_demolished: u64,
+    /// Recent blasts `(seq, centre m, radius m, peak damage)` for consumers that react to every
+    /// detonation, hit or miss (fire ignition, effects). Bounded; read with a seq cursor.
+    pub recent: Vec<(u64, Vec2, f32, f32)>,
 }
 
 const METRES_PER_TILE: f32 = crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
@@ -246,14 +249,24 @@ pub fn execute_blast_intents_system(
                 let c = tile_center_xz(t);
                 if c.distance_squared(center) <= r2 {
                     craters.tiles.insert((t.x, t.y));
-                    // DESTROY-T2: crater disk → same-frame ground collapse.
+                    // A crater is damaged ground, not a destroyed column: MASK_DESTROYED dropped
+                    // the voxel ground to the skirt floor (a pit to the world bottom) for every
+                    // open-ground hit. Sites destroyed by the blast still mark their footprint
+                    // destroyed through the demolish funnel.
                     if let Some(mask) = destruction_mask.as_mut() {
-                        mask.mark_tile(t.x, t.y, crate::render::pixel_world::MASK_DESTROYED);
+                        if mask.cell(t.x, t.y) < crate::render::pixel_world::MASK_DAMAGED {
+                            mask.mark_tile(t.x, t.y, crate::render::pixel_world::MASK_DAMAGED);
+                        }
                     }
                 }
             }
         }
         craters.blasts_applied = craters.blasts_applied.saturating_add(1);
+        let seq = craters.blasts_applied;
+        craters.recent.push((seq, center, r, intent.damage));
+        if craters.recent.len() > 32 {
+            craters.recent.remove(0);
+        }
 
         // PHYS-08: map peak blast damage onto the damage ladder (scar / compromise) even
         // when below the demolish gate; terminal collapse still goes through demolish.
@@ -396,6 +409,53 @@ pub fn execute_blast_intents_system(
     }
 }
 
+/// Every detonation, hit or miss, sets the ground in its disk alight through the fire spine
+/// (`SimEffectKind::IgniteCells`, same path as scripted ignition) — the operator expects an
+/// explosion + burning ground even when a strike misses. Narrow: reads the crater book, writes
+/// the effect queue only.
+pub fn ignite_ground_from_blasts_system(
+    craters: Res<BlastCraterBook>,
+    raster: Option<Res<crate::strategic::StrategicRasterConfig>>,
+    mut effects: Option<ResMut<crate::sim::effects::SimEffectQueue>>,
+    mut cursor: Local<u64>,
+) {
+    let Some(effects) = effects.as_mut() else {
+        return;
+    };
+    let cells_per_chunk = raster
+        .as_ref()
+        .map(|r| r.cells_per_chunk)
+        .unwrap_or_else(|| crate::strategic::StrategicRasterConfig::default().cells_per_chunk);
+    let from = *cursor;
+    for &(seq, center, r, damage) in craters.recent.iter().filter(|(seq, ..)| *seq > from) {
+        *cursor = (*cursor).max(seq);
+        let spark = (0.35 + damage / 200.0).clamp(0.35, 0.95);
+        let center_tile = tile_of_xz(center);
+        let tile_r = (r / METRES_PER_TILE).ceil() as i32;
+        let mut cells = Vec::new();
+        for dz in -tile_r..=tile_r {
+            for dx in -tile_r..=tile_r {
+                let t = IVec2::new(center_tile.x + dx, center_tile.y + dz);
+                if t.x < 0 || t.y < 0 || tile_center_xz(t).distance(center) > r {
+                    continue;
+                }
+                cells.push(crate::scenario::ignite::ignite_cell_from_world_tile(
+                    crate::scenario::scenario_steps::ScenarioWorldTile { tile_x: t.x as u32, tile_z: t.y as u32 },
+                    cells_per_chunk,
+                    spark,
+                ));
+            }
+        }
+        crate::scenario::ignite::enqueue_scenario_ignite_sim_effect(
+            effects,
+            crate::sim::effects::SimEffectSource::Construction,
+            format!("blast-{seq}"),
+            None,
+            cells,
+        );
+    }
+}
+
 pub struct ConstructionBlastPlugin;
 
 impl Plugin for ConstructionBlastPlugin {
@@ -418,6 +478,7 @@ impl Plugin for ConstructionBlastPlugin {
                         .after(crate::combat::ballistics::step_ballistic_flights),
                     super::blast_present::publish_blast_crater_dump
                         .after(execute_blast_intents_system),
+                    ignite_ground_from_blasts_system.after(execute_blast_intents_system),
                 ),
             );
     }
@@ -738,5 +799,29 @@ mod tests {
             !prod.contains("voxel.remove_site") && !prod.contains("voxel_occupation.insert"),
             "blast must not write voxel book outside demolish funnel"
         );
+    }
+}
+
+#[cfg(test)]
+mod blast_ignite_tests {
+    use super::*;
+    use bevy::ecs::system::RunSystemOnce;
+
+    /// A detonation on open ground (no site in range) still ignites the ground in its disk, once.
+    #[test]
+    fn open_ground_blast_ignites_its_disk_once() {
+        let mut world = World::new();
+        let mut book = BlastCraterBook::default();
+        book.blasts_applied = 1;
+        book.recent.push((1, Vec2::new(100.0 * 16.0, 100.0 * 16.0), 40.0, 120.0));
+        world.insert_resource(book);
+        world.init_resource::<crate::sim::effects::SimEffectQueue>();
+        world.run_system_once(ignite_ground_from_blasts_system).unwrap();
+        let n = world.resource::<crate::sim::effects::SimEffectQueue>().pending.len();
+        assert_eq!(n, 1, "one ignite effect per blast");
+        match &world.resource::<crate::sim::effects::SimEffectQueue>().pending[0].kind {
+            crate::sim::effects::SimEffectKind::IgniteCells { cells } => assert!(cells.len() >= 9, "{}", cells.len()),
+            k => panic!("unexpected {k:?}"),
+        }
     }
 }
