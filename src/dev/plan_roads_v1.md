@@ -161,11 +161,38 @@ Formation movement already exists in combat; it pushes cells to the same `TrackW
 - A track is not construction; the player or AI can upgrade it to a built tier.
 - Done when: in a long run with no built roads, tracks form along depot → site lines and leg times on them drop.
 
-### RD-6 Build and upgrade (player)
+### RD-6 Placement tool + build/upgrade (player)
 
-- Build picker: road tier + lanes, motorway with interchange placement, rail profile + tracks (play UI only). Upgrade in place.
-- A road/rail build is a construction site with a material manifest delivered by trucks; it opens when done.
+Operator 2026-11-20: the rail placement tool is "very janky"; placing roads and rail must be logical, easy, clean and
+responsive, enjoyable rather than annoying.
+
+What makes today's tools janky (review 2026-11-20, `src/construction/roads/input.rs`, `src/construction/rail/input.rs`):
+
+| Problem | Where |
+|---------|-------|
+| The preview only follows the cursor while **Ctrl is held**; otherwise you click blind | `update_*_path_preview_system` (`ctrl_preview`) |
+| Controls are unusual: LMB adds a point, RMB removes the last one, **Shift+LMB** commits; no Enter/Esc/double-click finish | `*_path_input_system` |
+| One bad segment blocks the whole path with a generic "invalid rail segment (grade or curve)"; no where or what to do | `sync_rail_path_build_preview` |
+| Grade is checked on straight chords between clicked points over the raw terrain, so any hill fails; no cut/fill, bridge or tunnel offered | `rail/validation.rs` |
+| Rail snaps with the **road** snap settings and to road tiles, not to rail ends or along track | `snap_placement(.., roads)` |
+| Roads and rail are two near-copies of the same tool (anti-clone rule) | `roads/` vs `rail/` |
+
+One corridor placement tool (shared kernel, the mode adapter supplies width, min curve radius, max grade, snap rules):
+
+- **Always-live preview.** From the first click the path follows the cursor, drawn on the ground (2D and voxel 3D) at its real width, with curves fitted to the mode's minimum radius.
+- **Plain controls.** Click start → click to add a bend → **double-click, Enter, or click an existing road/rail node to finish**; **Esc** cancels; **Backspace / RMB** removes the last point; **Shift** locks straight / 15° angles; drag a placed bend to move it before committing. Same keys for every corridor type, listed in the HUD hint line and rebindable in options.
+- **Route assist.** Optional "follow terrain" mode: pick start and end, the tool proposes a path that keeps within the grade (slope-cost path on the DEM), and you drag it where you want.
+- **Per-section feedback, not one pass/fail.** Each stretch is coloured: green buildable; amber buildable with works (cut, fill, bridge, tunnel, level crossing, overpass) labelled on the stretch; red impossible, with the reason at the cursor ("grade 7% > rail max 3%", "curve 40 m < min 300 m"). Commit builds what is valid; amber works are part of the site.
+- **Auto works.** Water → bridge deck; short steep stretch → cut/fill within limits; crossing a road → junction (road), level crossing or bridge (rail), overpass (motorway).
+- **Snapping that helps.** Snap to existing ends and anywhere along a segment (makes a junction), to parallel offsets (double track, divided motorway), to grid angles with Shift; snap target highlighted before you click.
+- **Live readout at the cursor.** Length, materials and labour, build time, and the travel speed you will get.
+- **Upgrade / remove.** Click a segment to upgrade tier or tracks; drag along a run to upgrade it all; bulldoze tool for removal. Undo/redo per commit (exists).
+- **Responsive.** Preview update ≤ 2 ms per frame; long auto-routes solve incrementally, never a hitch; the 3D pick is the voxel ray everywhere (no ortho fallback in 3D).
+- Build picker: road tier + lanes, motorway (interchange placement), rail profile + tracks (play UI only).
+- A road/rail build is a construction site with a material manifest delivered by trucks; it opens when done (sections open as they finish).
 - Road / rail card: tier, lanes/tracks, speed now, volume/capacity, condition, trucks/trains routed.
+- Measure: a `PlaceCorridor` scenario step drives the same tool code (start, bends, finish) so captures check the commit, works and junctions; frame cost of the preview in the dump; then an operator hands-on round for feel.
+- Done when: placing a 100-tile road with two bends over a river and a hill takes four clicks, shows the bridge and cut before commit, and never hitches.
 
 ### RD-7 Rail runs freight (parity)
 
@@ -200,7 +227,7 @@ Formation movement already exists in combat; it pushes cells to the same `TrackW
 
 ## Order
 
-RD-0 → RD-1 → RD-3 (trucks really use roads, faster) → RD-11 scene + dump → RD-4 congestion → RD-2 → RD-5 → RD-6 → RD-7 rail → RD-9 → RD-8 → RD-10.
+RD-0 → RD-1 → RD-3 (trucks really use roads, faster) → RD-11 scene + dump → RD-6 placement tool (one tool for road + rail, replaces the janky ones) → RD-4 congestion → RD-2 → RD-5 → RD-7 rail → RD-9 → RD-8 → RD-10.
 RD-2 and RD-9 can run in parallel with RD-5/6 (different files). RD-0/RD-1 are written for road and rail at once so RD-7 only adds the train adapter, stations and look.
 
 ## Decided (operator 2026-11-20)
@@ -210,3 +237,4 @@ RD-2 and RD-9 can run in parallel with RD-5/6 (different files). RD-0/RD-1 are w
 3. Wear: **by unit class** (trucks, tracked armour, infantry, trains), one queue.
 4. Cost: **materials + labour + build time** (no money exists), diesel/power to run.
 5. Rail on par: shared corridor kernel, train adapter, stations, intermodal.
+6. Placement: one shared corridor tool for road, motorway and rail; always-live preview, plain controls, per-section feedback, auto works (RD-6), moved early in the order.
