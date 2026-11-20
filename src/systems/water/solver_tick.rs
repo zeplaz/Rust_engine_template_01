@@ -21,7 +21,20 @@ use super::{BarrierControlBook, BarrierControlIntent, SlowDomainTimeSkip, WorldS
 
 /// Most solver steps one frame runs; a bigger backlog (high sim speed) is folded into longer
 /// steps so the cost stays bounded.
-pub const MAX_WATER_STEPS_PER_FRAME: u32 = 4;
+pub const MAX_WATER_STEPS_PER_FRAME: u32 = 8;
+/// Real-time water tick (sim microseconds). The sim clock steps whole seconds, so water stepped on
+/// it moved once a second at 1x (clunky); 0.2 s is about the solver's own sub-step at reservoir
+/// depth, so the cost stays the same while water visibly moves 5x as often.
+pub const WATER_TICK_MICROS: u64 = 200_000;
+/// Longest sim span one `advance` call covers in real-time mode (s).
+pub const WATER_MAX_ADVANCE_S: f32 = 4.0;
+
+/// Sim-time accumulator of the real-time water clock.
+#[derive(Default)]
+pub struct WaterClock {
+    last_micros: Option<u64>,
+    acc_micros: u64,
+}
 
 /// Scene overrides of the river sources. Rivers get their water from the world (`sources.rs`: each
 /// headwater cell injects its channel's baseflow); a scene that needs a fixed river pins it here.
@@ -213,10 +226,24 @@ pub fn step_surface_water_system(
     book: Res<BarrierControlBook>,
     skip: Res<SlowDomainTimeSkip>,
     clock: Res<SimStepClock>,
+    sim_time: Res<crate::systems::sim_control::SimTimeMicros>,
+    mut water_clock: Local<WaterClock>,
 ) {
-    // The solver runs on the sim clock: no sim step this frame (paused, or between steps) = no
-    // water motion.
-    if !field.wired || clock.due == 0 {
+    // Real-time water runs on its own 0.2 s tick of sim time (paused = sim time stands = no
+    // motion); the time-skip far field still rides whole sim steps.
+    let now = sim_time.0;
+    let elapsed = match water_clock.last_micros {
+        Some(prev) if now >= prev => now - prev,
+        _ => 0,
+    };
+    water_clock.last_micros = Some(now);
+    if !field.wired {
+        water_clock.acc_micros = 0;
+        return;
+    }
+    water_clock.acc_micros = water_clock.acc_micros.saturating_add(elapsed);
+    let ticks = water_clock.acc_micros / WATER_TICK_MICROS;
+    if ticks == 0 && clock.due == 0 {
         return;
     }
     // Hitch attribution (measurement only; `HITCH_MS=<ms>` reports the top scopes per slow frame).
@@ -228,23 +255,31 @@ pub fn step_surface_water_system(
     let fallback = DamOps::from(&*control);
     field.set_dam_ops(|owner| owner.and_then(|e| book.get(e)).unwrap_or(fallback));
 
-    let sim_secs = clock.step_secs() * clock.due as f32;
     // Time skip rides the sim clock like `SlowDomainElapsedSecs` (ecology): each due sim step
     // advances the reservoir by `dt_slow_secs` (OP-12). Only then may a shut-in dam's reservoir
     // window be filled by the level pool; the rest of the map keeps stepping in 2D (capped dt).
     let skip_dt = skip.dt_slow_secs.max(1) as f32 * clock.due as f32;
-    let far_field = skip.enabled && skip_dt >= FAR_FIELD_MIN_DT_S && field.far_field_eligible();
+    let far_field =
+        clock.due > 0 && skip.enabled && skip_dt >= FAR_FIELD_MIN_DT_S && field.far_field_eligible();
     field.mode = if far_field { SurfaceWaterMode::LevelPool } else { SurfaceWaterMode::VirtualPipes };
     if far_field {
+        water_clock.acc_micros = 0;
         field.advance(skip_dt);
-    } else {
-        // Real-time water: one solver step per due sim step (folded into longer steps beyond
-        // MAX_WATER_STEPS_PER_FRAME so a fast sim cannot stall the frame).
-        let n = clock.due.min(MAX_WATER_STEPS_PER_FRAME).max(1);
+    } else if ticks > 0 {
+        // Real-time water: every water tick that fell in this frame goes into ONE `advance` (the
+        // kernel sub-steps by the wave CFL anyway, so the physics is unchanged); `advance` carries
+        // a fixed per-call cost (tiles, dam faces, sources, rain, mass, dirty flush) that one call
+        // per 0.2 s tick paid 2-10x per frame. Long frames (fast sim) split past
+        // `WATER_MAX_ADVANCE_S` so a single call never spans minutes.
+        water_clock.acc_micros -= ticks * WATER_TICK_MICROS;
+        let sim_secs = (ticks * WATER_TICK_MICROS) as f32 / 1_000_000.0;
+        let n = ((sim_secs / WATER_MAX_ADVANCE_S).ceil() as u32).clamp(1, MAX_WATER_STEPS_PER_FRAME);
         let dt = sim_secs / n as f32;
         for _ in 0..n {
             field.advance(dt);
         }
+    } else {
+        return;
     }
     field.solver_ms = t0.elapsed().as_secs_f32() * 1000.0;
 }
@@ -377,6 +412,7 @@ mod tests {
             .init_resource::<BarrierControlBook>()
             .init_resource::<SlowDomainTimeSkip>()
             .init_resource::<SimStepClock>()
+            .init_resource::<crate::systems::sim_control::SimTimeMicros>()
             .add_systems(Update, step_surface_water_system.after(seed_surface_water_system));
         app.update(); // seed
         let (a, b, c) = (
@@ -400,6 +436,7 @@ mod tests {
         }
         app.world_mut().resource_mut::<BarrierControlIntent>().outlet_open01 = 0.25;
         app.world_mut().resource_mut::<SimStepClock>().due = 1;
+        app.world_mut().resource_mut::<crate::systems::sim_control::SimTimeMicros>().0 += 1_000_000;
         app.update();
         let f = app.world().resource::<SurfaceWaterField>();
         assert_eq!(f.dam_ops(0), Some(ops_a));
@@ -421,11 +458,13 @@ mod tests {
             .init_resource::<BarrierControlBook>()
             .init_resource::<SlowDomainTimeSkip>()
             .init_resource::<SimStepClock>()
+            .init_resource::<crate::systems::sim_control::SimTimeMicros>()
             .add_systems(Update, step_surface_water_system.after(seed_surface_water_system));
         app.update(); // seed (clock.due == 0: nothing steps)
         let moved = |app: &App| app.world().resource::<SurfaceWaterField>().solver_ms;
         assert_eq!(moved(&app), 0.0);
         app.world_mut().resource_mut::<SimStepClock>().due = 1;
+        app.world_mut().resource_mut::<crate::systems::sim_control::SimTimeMicros>().0 += 1_000_000;
         app.update();
         assert!(moved(&app) > 0.0, "a due sim step runs the solver");
         let t = app.world().resource::<SurfaceWaterField>().tile_stats();

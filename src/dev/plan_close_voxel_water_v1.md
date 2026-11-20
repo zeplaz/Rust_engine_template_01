@@ -434,3 +434,15 @@ then drains to 3483; wave reaches G3 in 26 s (was 413 s); river back at ~225 m3/
 now passes (0.41). Cost: solver 2 -> 12 ms (CFL 0.25 + advection), frames avg 35 / p95 62 ms
 debug. Natural world (playquad 512): lakes/streams settle, no artefacts; inflow total 19 980 m3/s
 from 333 derived sources (watch over long runs).
+
+### Water cost + feel (2026-11-20) — DONE
+- Kernel: each face's state (flow depth, surface step, roughness) computed once per sub-step into scratch
+  (was 3x per face via the upwind momentum terms).
+- Real-time water ticks every 0.2 s of sim time (was once per whole sim second: clunky); a frame's
+  ticks fold into one `advance` (per-call overhead paid once per frame).
+- GPU depth encoding sqrt(depth/96 m) (was linear /24 m: a 40 m reservoir drew 16 m low and a breach
+  drawdown was invisible until it fell under 24 m).
+- Scenario: visible fill phase (240 s/tick x 600 ticks) before the 24000 s drown skip.
+Capture: reservoir rises 422 -> 457.6 m over ~400 ticks; after breach -30 m in 1440 s, inundation
+peaks ~9 900 tiles at ~3 min then drains to ~1 200; solver 12 -> 8 ms; frames avg 36 / p95 62 ms
+debug, no hitches; all dam rows pass. Remaining hitch source: `upd_control_relax` (combat).

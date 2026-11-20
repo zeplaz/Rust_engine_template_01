@@ -30,6 +30,15 @@ pub struct StepScratch {
     pipes: Vec<Pipe>,
     /// Pipe discharge leaving each donor cell (zero outside a sub-step).
     pipe_out: Vec<f32>,
+    /// Per-face state of the sub-step, east (`_x`) and north (`_y`) face of each cell: flow depth
+    /// (negative = shut), surface step across it, Manning n. Computed once per face per sub-step
+    /// (the face law, and the upwind momentum terms of both neighbours, all read it).
+    hf_x: Vec<f32>,
+    de_x: Vec<f32>,
+    n_x: Vec<f32>,
+    hf_y: Vec<f32>,
+    de_y: Vec<f32>,
+    n_y: Vec<f32>,
 }
 
 /// Courant number of a sub-step on the gravity wave `sqrt(g h_max)`. The upwind advection needs
@@ -192,6 +201,11 @@ impl SurfaceWaterField {
         if sc.pipe_out.len() != n {
             sc.pipe_out = vec![0.0; n];
         }
+        if sc.hf_x.len() != n {
+            for v in [&mut sc.hf_x, &mut sc.de_x, &mut sc.n_x, &mut sc.hf_y, &mut sc.de_y, &mut sc.n_y] {
+                *v = vec![-1.0; n];
+            }
+        }
         let mut tg = std::mem::take(&mut self.tiles);
         let (nx, nz) = (tg.nx as usize, tg.nz as usize);
 
@@ -228,35 +242,73 @@ impl SurfaceWaterField {
                     MANNING_LAND
                 }
             };
-            // Streamwise momentum flux qÂ²/h (per-width units) through the face between `a` and `b`.
-            let momentum_flux = |a: usize, b: usize, q_total: f32| -> f32 {
-                state(a, b).map_or(0.0, |(hk, _)| {
+            // Pass 0: each face's state once per sub-step, over the active tiles plus a one-cell
+            // border (the upwind momentum term reads the faces just outside a tile).
+            for k in 0..tg.active.len() {
+                let t = tg.active[k] as usize;
+                let (x0, z0, x1, z1) = tg.tile_rect(t);
+                for z in z0.saturating_sub(1)..(z1 + 1).min(h) {
+                    for x in x0.saturating_sub(1)..(x1 + 1).min(w) {
+                        let i = z * w + x;
+                        if x + 1 < w {
+                            let (hf, de) = state(i, i + 1).unwrap_or((-1.0, 0.0));
+                            sc.hf_x[i] = hf;
+                            sc.de_x[i] = de;
+                            sc.n_x[i] = roughness(i, i + 1);
+                        }
+                        if z + 1 < h {
+                            let (hf, de) = state(i, i + w).unwrap_or((-1.0, 0.0));
+                            sc.hf_y[i] = hf;
+                            sc.de_y[i] = de;
+                            sc.n_y[i] = roughness(i, i + w);
+                        }
+                    }
+                }
+            }
+            // Streamwise momentum flux q^2/h (per-width units) through face `a` (its state `hfa`).
+            let momentum_flux = |hfa: &[f32], a: usize, q_total: f32| -> f32 {
+                let hk = hfa[a];
+                if hk < 0.0 {
+                    0.0
+                } else {
                     let qw = q_total / dx;
                     qw * qw / hk.max(ADVECTION_MIN_DEPTH_M)
-                })
+                }
             };
             // New discharge of the face between `i` and `j = i + stride` from the old ones `qs`.
-            let new_q = |i: usize, j: usize, stride: usize, qs: &[f32], has_prev: bool, has_next: bool| -> f32 {
-                let Some((hf, d_eta)) = state(i, j) else {
+            let depth = &self.depth_m;
+            let new_q = |i: usize,
+                         stride: usize,
+                         qs: &[f32],
+                         hfa: &[f32],
+                         dea: &[f32],
+                         na: &[f32],
+                         has_prev: bool,
+                         has_next: bool|
+             -> f32 {
+                let hf = hfa[i];
+                if hf < 0.0 {
                     return 0.0;
-                };
+                }
+                let d_eta = dea[i];
+                let j = i + stride;
                 let qw = qs[i] / dx;
-                let own = momentum_flux(i, j, qs[i]);
+                let own = momentum_flux(hfa, i, qs[i]);
                 let advect = if qw >= 0.0 {
                     if has_prev {
-                        (own - momentum_flux(i - stride, i, qs[i - stride])) / dx
+                        (own - momentum_flux(hfa, i - stride, qs[i - stride])) / dx
                     } else {
                         0.0
                     }
                 } else if has_next {
-                    (momentum_flux(j, j + stride, qs[j]) - own) / dx
+                    (momentum_flux(hfa, j, qs[j]) - own) / dx
                 } else {
                     0.0
                 };
-                let n_man = roughness(i, j);
+                let n_man = na[i];
                 let drive = G_MPS2 * hf * d_eta / dx + advect;
                 let friction = 1.0 + G_MPS2 * dt * n_man * n_man * qw.abs() / (hf * hf * hf.cbrt());
-                let cap = FACE_SPEED_CAP * (G_MPS2 * self.depth_m[i].max(self.depth_m[j])).sqrt() * hf;
+                let cap = FACE_SPEED_CAP * (G_MPS2 * depth[i].max(depth[j])).sqrt() * hf;
                 ((qw - dt * drive) / friction).clamp(-cap, cap) * dx
             };
             for k in 0..tg.active.len() {
@@ -272,14 +324,14 @@ impl SurfaceWaterField {
                         let i = z * w + x;
                         if x + 1 < w {
                             sc.flux_x[i] = if x + 1 < x1 || east_ok {
-                                new_q(i, i + 1, 1, &self.qx_m3s, x > 0, x + 2 < w)
+                                new_q(i, 1, &self.qx_m3s, &sc.hf_x, &sc.de_x, &sc.n_x, x > 0, x + 2 < w)
                             } else {
                                 0.0
                             };
                         }
                         if z + 1 < h {
                             sc.flux_y[i] = if z + 1 < z1 || north_ok {
-                                new_q(i, i + w, w, &self.qy_m3s, z > 0, z + 2 < h)
+                                new_q(i, w, &self.qy_m3s, &sc.hf_y, &sc.de_y, &sc.n_y, z > 0, z + 2 < h)
                             } else {
                                 0.0
                             };
