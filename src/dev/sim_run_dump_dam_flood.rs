@@ -62,12 +62,8 @@ pub fn dam_flood_json(
     // Live field count preferred; book mirror is fallback (DF-9/DF-10).
     let inundated_live = field
         .filter(|f| f.wired)
-        .map(|f| {
-            f.depth_m
-                .iter()
-                .filter(|h| **h >= crate::systems::water::WET_DEPTH_M)
-                .count() as u32
-        })
+        // Around the dam (its pool window): the map field holds every river on the map.
+        .map(SurfaceWaterField::wet_cells_in_pool_window)
         .or_else(|| book.map(|b| b.inundated_tiles))
         .unwrap_or(0);
 
@@ -116,7 +112,8 @@ pub fn dam_flood_json(
 }
 
 /// Reservoir shape counts (OP-10/11/12): pool stage vs crest, forest-floodplain cells wet in the
-/// live ROI, how flat the upstream water surface is, and the depth hand-over at the ROI south edge.
+/// dam's pool window, how flat the upstream water surface is, and the depth hand-over at the
+/// window's south edge. The field covers the map (origin 0,0); counts stay on the window.
 fn reservoir_json(field: Option<&SurfaceWaterField>) -> Value {
     let Some(f) = field.filter(|f| f.wired && f.width > 0 && f.depth_m.len() == f.bed_m.len()) else {
         return Value::Null;
@@ -125,8 +122,9 @@ fn reservoir_json(field: Option<&SurfaceWaterField>) -> Value {
     let fp = &fixture.forest_floodplain;
     let (mut fp_total, mut fp_wet, mut fp_wet_up) = (0_u32, 0_u32, 0_u32);
     let (mut up_wet, mut surf_min, mut surf_max) = (0_u32, f32::INFINITY, f32::NEG_INFINITY);
-    for lz in 0..f.height {
-        for lx in 0..f.width {
+    let win = f.window();
+    for lz in win.z0..win.z1 {
+        for lx in win.x0..win.x1 {
             let i = f.idx(lx, lz);
             let (wx, wz) = (f.origin_x + lx as i32, f.origin_z + lz as i32);
             let wet = f.depth_m[i] >= crate::systems::water::WET_DEPTH_M;
@@ -145,13 +143,20 @@ fn reservoir_json(field: Option<&SurfaceWaterField>) -> Value {
         }
     }
     let cx = (fixture.narrows_tile.0 - f.origin_x).clamp(0, f.width as i32 - 1) as u32;
-    // River centre column every 16 rows, south (lz 0) to north.
-    let centre_profile: Vec<f32> = (0..f.height)
+    // River centre column every 16 rows of the window, south to north.
+    let centre_profile: Vec<f32> = (win.z0..win.z1)
         .step_by(16)
         .map(|lz| f.depth_m[f.idx(cx, lz)])
         .collect();
+    let (tiles_total, tiles_active, tiles_awake) = f.tile_stats();
     json!({
         "mode": format!("{:?}", f.mode),
+        "field_origin": [f.origin_x, f.origin_z],
+        "field_size": [f.width, f.height],
+        "pool_window": [win.x0, win.z0, win.x1, win.z1],
+        "tiles_total": tiles_total,
+        "tiles_active_last_step": tiles_active,
+        "tiles_awake": tiles_awake,
         "pool_stage_m": f.pool.stage_m,
         "pool_storage_m3": f.pool.storage_m3,
         "channel_crest_m": f.channel_crest_m(),
@@ -160,8 +165,8 @@ fn reservoir_json(field: Option<&SurfaceWaterField>) -> Value {
         "floodplain_cells_wet_upstream": fp_wet_up,
         "upstream_deep_cells": up_wet,
         "upstream_surface_spread_m": if up_wet > 0 { surf_max - surf_min } else { 0.0 },
-        "south_edge_depth_m": f.depth_m[f.idx(cx, 0)],
-        "south_edge_ref_m": f.ref_depth_m.get(f.idx(cx, 0)).copied().unwrap_or(0.0),
+        "south_edge_depth_m": f.depth_m[f.idx(cx, win.z0)],
+        "south_edge_ref_m": f.ref_depth_m.get(f.idx(cx, win.z0)).copied().unwrap_or(0.0),
         "centre_depth_profile_m_south_to_north_step16": centre_profile,
     })
 }

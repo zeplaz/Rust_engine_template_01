@@ -20,6 +20,9 @@ pub struct BarrierInstallSpec {
     pub crest_m: f32,
     pub half_span: u32,
     pub center_world_x: Option<i32>,
+    /// Dam body that raised the install (`None` = scenario / script). Lets a later breach name
+    /// one of several dams.
+    pub dam: Option<Entity>,
 }
 
 /// DW-3: per-column crest updates from dam damage (construction publishes, water applies).
@@ -157,7 +160,7 @@ pub fn apply_barrier_install_request_system(
     mut request: ResMut<BarrierInstallRequest>,
     mut field: ResMut<SurfaceWaterField>,
 ) {
-    // Keep pending until the ROI is wired — do not drop the install.
+    // Keep pending until the field is wired — do not drop the install.
     if request.pending.is_none() {
         return;
     }
@@ -178,7 +181,7 @@ pub fn apply_barrier_install_request_system(
             spec.center_world_x,
         );
     } else {
-        field.install_barrier_tiles(&spec.tiles, spec.crest_m);
+        field.install_barrier_tiles_for(&spec.tiles, spec.crest_m, spec.dam);
     }
     info!(
         target: "water::barrier",
@@ -193,14 +196,14 @@ pub fn apply_barrier_breach_request_system(
     mut request: ResMut<BarrierBreachRequest>,
     mut field: ResMut<SurfaceWaterField>,
 ) {
-    // Keep queued until the ROI is wired — do not drop the breach.
+    // Keep queued until the field is wired — do not drop the breach.
     if request.is_empty() || !field.wired {
         return;
     }
     let Some(spec) = request.drain_merged() else {
         return;
     };
-    field.apply_barrier_breach(spec.clear_crest, spec.breach_flow_m3s);
+    field.apply_barrier_breach_for(spec.dam, spec.clear_crest, spec.breach_flow_m3s);
     info!(
         target: "water::barrier",
         "breach applied clear_crest={} breach_flow_m3s={} dam={:?}",

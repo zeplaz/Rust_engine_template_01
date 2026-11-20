@@ -336,9 +336,10 @@ pub fn drain_script_steps(
                     crest_m: crest_m.max(0.0),
                     half_span: half_span.max(1),
                     center_world_x,
+                    dam: None,
                 });
             }
-            // General water API (e.g. a ROI with no dam). Book values are mirrored from water
+            // General water API (a barrier with no dam body). Book values are mirrored from water
             // and DamBody, never written by script (CLOSE-S1).
             host.execution_log.push(format!(
                 "InstallBarrier: z={world_z} crest_m={crest_m:.1} half_span={half_span}"

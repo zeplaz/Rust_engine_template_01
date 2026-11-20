@@ -1675,7 +1675,7 @@ fn seed_dam_flood_valley_once(
     world_mode.kind = crate::gui::WorldPresentationKind::PixelWorld3D;
 
     let fixture = crate::scenario::dam_flood::load_dam_valley_fixture();
-    // Gauges + SurfaceWaterRoiRequest: dam_flood::scene_seed configures general `systems/water`.
+    // Gauges + river baseflow: dam_flood::scene_seed configures general `systems/water`.
     book.fixture_id = fixture.id.clone();
     book.outlet_flow_m3s = fixture.river_baseflow_m3s;
     book.seeded = true;
@@ -1763,7 +1763,7 @@ fn seed_dam_flood_valley_once(
 
     info!(
         target: "test_harness::dam_flood",
-        "seeded fixture={} baseflow_m3s={} (water ROI via general SurfaceWaterRoiRequest)",
+        "seeded fixture={} baseflow_m3s={} (map water field seeded from the world)",
         fixture.id,
         fixture.river_baseflow_m3s
     );

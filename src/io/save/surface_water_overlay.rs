@@ -102,7 +102,8 @@ impl SurfaceWaterOverlaySnapshot {
         field.breach_flow_m3s = self.breach_flow_m3s;
         field.mass_m3 = self.mass_m3;
         field.mass_error_frac = 0.0;
-        field.mark_all_chunks_dirty();
+        // Tile activity, dam sites and boundary cells are runtime state: rebuilt from the arrays.
+        field.rebuild_runtime();
     }
 }
 

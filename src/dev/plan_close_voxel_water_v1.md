@@ -392,3 +392,24 @@ Target: **one water field for the whole map**, solved where water can move, read
 | WM-4 | One water read API (`WaterTileProbe`) for fire gate, roads (flood blocks), buildings (DISASTER-PROXY), stands, cursor, dam placement; fire reads live depth | flooded forest doesn't burn, static rivers block roads, etc. |
 | WM-5 | Render from the one field: GPU texture full-res from the field (with flux), PixelWorld field patched per dirty chunk (no quantised stamp), catalog ribbons only where the field has no flow; minimap/world map overlay from the field | what you see = what the sim has, updated next frame |
 | WM-6 | Remove duplicates: substrate `hydrology.water_depth` copy, `WaterClassRuntime` hysteresis (or make them read-only projections) | one truth |
+
+**WM-1 status (2026-11-20): DONE.** `seed_surface_water_system` allocates the field for the whole map
+(static-depth dims) once every chunk exists; bed = chunk elevation, lake/ocean cells start level at the
+world water line; `SurfaceWaterRoiRequest` / `ensure_dam_surface_water_roi_system` are gone; the dam
+scene sets `SurfaceWaterBaseflow` (inflow where static river touches the north edge, every other map
+edge is an open outflow holding its baseline depth). Solver: 16-cell tiles (`systems/water/tiles.rs`),
+active set = awake tiles + neighbours whose shared edge is wet (`step_kernel.rs`), CFL from the active
+cells, scratch reused, tiles sleep after 6 calm steps (a flowing river is never calm), dirty chunks
+only where water moved. Time: `SimStepClock` (`due` steps, <= 4 solver steps per frame; none paused).
+Several dams: each keeps its crest cells / damage state (`DamSite`); the first is *primary* (level
+pool window, outlets, spillways, `transfer_through_dam`) until WM-3. Dam-scene river (7 wide, 220 m3/s):
+40 of 400 tiles active, ~12.5 ms per solver step in debug (old ROI: ~12 ms), once per sim second.
+
+### WM status (2026-11-20)
+| Id | Status | Evidence |
+|:---|:---|:---|
+| WM-1 | DONE | one 320x320 field, 16-cell active tiles (63-87 of 400 awake in the dam scene), sim-clock stepping (paused = no step), per-dam barriers, ROI requests retired; sub-steps by wave CFL only (flux cap makes diffusion stable) -> solver 88 ms -> 2.3 ms; capture: every dam score passes, s4 14.9 MW, frames avg 26 / p95 35 ms |
+| — | DONE | dams link to the hydro powerhouse at their toe (`link_dam_hydro_site_system`; nothing set `hydro_site`, turbines were zeroed by the control mirror) |
+| — | DONE | a cleared crest marks the barrier breached (S7 clock starts on a removal breach) |
+| — | OPEN | S7 wave arrival reads 180 441 s: the G3 spike is only seen after the S9 recession time skip, so the measure is not the wave's travel time; check gauge baseline at breach (operate release) and G3 discharge with the map field |
+| WM-2..6 | OPEN | per plan |

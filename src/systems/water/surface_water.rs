@@ -1,10 +1,14 @@
-//! DF-2 — `SurfaceWaterField` sole writer: level-pool + 2D virtual-pipes ROI.
+//! DF-2 / WM-1 — `SurfaceWaterField` sole writer: one map-sized field, 2D virtual pipes solved
+//! over active tiles only ([`super::tiles`], [`super::step_kernel`]) plus a level pool for the
+//! reservoir window of the primary dam.
 //!
 //! No GPU readback. Render/UI read snapshots only (DF-3).
 
 use bevy::prelude::*;
 use serde::{Deserialize, Serialize};
 
+use super::step_kernel::StepScratch;
+use super::tiles::WaterTileGrid;
 use crate::terrain::world_scale_contract::TILE_METRES_GAMEPLAY;
 
 pub const G_MPS2: f32 = 9.81;
@@ -214,14 +218,40 @@ impl PoolCurve {
     }
 }
 
-/// ROI surface-water field — sole sim water depth/flux authority (DF-2).
+/// Level-pool window padding around a dam's footprint (cells): the reservoir the pool paints.
+pub const POOL_WINDOW_PAD_X: u32 = 48;
+pub const POOL_WINDOW_PAD_Z: u32 = 64;
+
+/// Local cell rectangle `[x0, x1) x [z0, z1)` where the primary dam's level pool lives.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct PoolWindow {
+    pub x0: u32,
+    pub z0: u32,
+    pub x1: u32,
+    pub z1: u32,
+}
+
+/// One installed dam: its crest cells and the per-dam numbers the column-damage model needs.
+/// Runtime only (rebuilt from the crest cells on load).
+#[derive(Clone, Debug, Default)]
+pub struct DamSite {
+    pub cells: Vec<usize>,
+    pub invert_m: f32,
+    /// Dam height above its invert; 0 = installed as a bare row (no column damage model).
+    pub height_m: f32,
+    pub damaged: bool,
+    pub lz: u32,
+    pub owner: Option<Entity>,
+}
+
+/// Map-sized surface-water field — sole sim water depth/flux authority (DF-2, WM-1).
 #[derive(Resource, Clone, Debug, Reflect)]
 #[reflect(Resource)]
 pub struct SurfaceWaterField {
     pub schema_version: u32,
     pub wired: bool,
     pub mode: SurfaceWaterMode,
-    /// World-tile origin (inclusive) of the ROI.
+    /// World-tile origin (inclusive) of the field (0,0 for the map-sized field).
     pub origin_x: i32,
     pub origin_z: i32,
     pub width: u32,
@@ -236,9 +266,9 @@ pub struct SurfaceWaterField {
     pub qx_m3s: Vec<f32>,
     pub qy_m3s: Vec<f32>,
     pub wet_since_s: Vec<f32>,
-    /// Baseline river depth per cell (the world's static river the ROI was seeded from). Beyond
-    /// the ROI's south edge the world keeps this depth, so the free-drain boundary and the
-    /// level-pool downstream reach hand over to it without a step (OP-10). Empty = none.
+    /// Baseline river depth per cell (the world's static river the field was seeded from). Open
+    /// map edges drain only down to this depth and the level-pool downstream reach hands over to
+    /// it without a step (OP-10); north-edge river cells are the inflow cells. Empty = none.
     pub ref_depth_m: Vec<f32>,
     pub pool: ReservoirLevelPool,
     pub hydraulics: BarrierHydraulics,
@@ -252,12 +282,25 @@ pub struct SurfaceWaterField {
     /// Turbine penstock flow that actually left the pool (availability-capped).
     pub turbine_flow_m3s: f32,
     pub breach_flow_m3s: f32,
-    /// Local ROI z of the installed barrier row (`None` until install). Upstream = lz > this.
+    /// Local z of the primary dam's highest row (`None` until install). Upstream = lz > this.
     pub barrier_lz: Option<u32>,
     pub mass_m3: f64,
     pub mass_error_frac: f64,
     pub solver_ms: f32,
+    /// Chunks whose water moved since the last [`Self::take_dirty_chunks`].
     pub dirty_chunks: Vec<IVec2>,
+    /// Tile activity (which tiles are stepped / asleep).
+    #[reflect(ignore)]
+    pub(super) tiles: WaterTileGrid,
+    /// Reused flux / limiter buffers.
+    #[reflect(ignore)]
+    pub(super) scratch: StepScratch,
+    /// Installed dams (the first is the primary: pool, outlets and spillways act on it).
+    #[reflect(ignore)]
+    pub(super) dams: Vec<DamSite>,
+    /// Level-pool window of the primary dam (`None` = whole field).
+    #[reflect(ignore)]
+    pub(super) pool_window: Option<PoolWindow>,
 }
 
 impl Default for SurfaceWaterField {
@@ -293,6 +336,10 @@ impl Default for SurfaceWaterField {
             mass_error_frac: 0.0,
             solver_ms: 0.0,
             dirty_chunks: Vec::new(),
+            tiles: WaterTileGrid::default(),
+            scratch: StepScratch::default(),
+            dams: Vec::new(),
+            pool_window: None,
         }
     }
 }
@@ -329,6 +376,8 @@ impl SurfaceWaterField {
         let i = self.idx((wx - self.origin_x) as u32, (wz - self.origin_z) as u32);
         self.bed_m[i] += delta_m;
         self.pool.bed_min_m = self.pool.bed_min_m.min(self.bed_m[i]);
+        // The ground moved under (possibly) standing water: wake the tile so the surface re-levels.
+        self.tiles.touch_cell(i as u32 % self.width, i as u32 / self.width);
         true
     }
 
@@ -349,7 +398,7 @@ impl SurfaceWaterField {
         self.bed_m.get(i).copied().unwrap_or(0.0) + self.depth_m.get(i).copied().unwrap_or(0.0)
     }
 
-    /// Allocate / reset ROI buffers. Topology from bed; depths cleared.
+    /// Allocate / reset the field buffers. Topology from bed; depths cleared.
     pub fn allocate(
         &mut self,
         origin_x: i32,
@@ -396,20 +445,221 @@ impl SurfaceWaterField {
         self.recompute_mass();
         self.mass_error_frac = 0.0;
         self.dirty_chunks.clear();
+        self.tiles = WaterTileGrid::new(width, height, origin_x, origin_z);
+        self.scratch = StepScratch::default();
+        self.dams.clear();
+        self.pool_window = None;
         self.mark_all_chunks_dirty();
     }
 
+    /// Queue every chunk of the field for the substrate projection (no tile is woken).
     pub fn mark_all_chunks_dirty(&mut self) {
-        self.dirty_chunks.clear();
-        let chunk = crate::terrain::world_scale_contract::CHUNK_TILES_SIM as i32;
-        let x0 = self.origin_x.div_euclid(chunk);
-        let z0 = self.origin_z.div_euclid(chunk);
-        let x1 = (self.origin_x + self.width as i32 - 1).div_euclid(chunk);
-        let z1 = (self.origin_z + self.height as i32 - 1).div_euclid(chunk);
-        for cz in z0..=z1 {
-            for cx in x0..=x1 {
-                self.dirty_chunks.push(IVec2::new(cx, cz));
+        self.tiles.mark_all_dirty();
+        let mut tg = std::mem::take(&mut self.tiles);
+        tg.flush_dirty_into(&mut self.dirty_chunks);
+        self.tiles = tg;
+    }
+
+    /// True when some chunk's water moved and is waiting for [`Self::take_dirty_chunks`].
+    #[must_use]
+    pub fn has_pending_dirty(&self) -> bool {
+        !self.dirty_chunks.is_empty() || self.tiles.has_pending_dirty()
+    }
+
+    /// Take the chunks whose water moved (tile-level changes + touches), clearing the queue.
+    pub fn take_dirty_chunks(&mut self) -> Vec<IVec2> {
+        let mut tg = std::mem::take(&mut self.tiles);
+        tg.flush_dirty_into(&mut self.dirty_chunks);
+        let taken = std::mem::take(&mut self.dirty_chunks);
+        tg.clear_chunk_mask(&taken);
+        self.tiles = tg;
+        taken
+    }
+
+    /// Tiles in the field / tiles stepped by the latest step / tiles still awake.
+    #[must_use]
+    pub fn tile_stats(&self) -> (usize, usize, usize) {
+        (self.tiles.tile_count(), self.tiles.active_count(), self.tiles.awake_count())
+    }
+
+    /// Wake every tile (tests, tools that wrote depth directly).
+    pub fn wake_all_tiles(&mut self) {
+        self.tiles.touch_all();
+    }
+
+    /// Wake the tile of a world cell (anything that changed water or ground there).
+    pub fn touch_world(&mut self, wx: i32, wz: i32) {
+        if self.contains_world(wx, wz) {
+            self.tiles.touch_cell((wx - self.origin_x) as u32, (wz - self.origin_z) as u32);
+        }
+    }
+
+    /// Rebuild the runtime state that is not saved (tile activity, dam sites, boundary cells)
+    /// from the field arrays. Call after the arrays were replaced (load).
+    pub fn rebuild_runtime(&mut self) {
+        let (w, h) = (self.width, self.height);
+        self.tiles = WaterTileGrid::new(w, h, self.origin_x, self.origin_z);
+        self.scratch = StepScratch::default();
+        self.dams.clear();
+        self.pool_window = None;
+        let wu = w.max(1) as usize;
+        let cells: Vec<usize> = self
+            .hydraulics
+            .barrier_crest_m
+            .iter()
+            .enumerate()
+            .filter(|(_, c)| **c > 0.0)
+            .map(|(i, _)| i)
+            .collect();
+        if !cells.is_empty() {
+            let lz = cells.iter().map(|i| (i / wu) as u32).max().unwrap_or(0);
+            let (invert_m, height_m) = (self.hydraulics.barrier_invert_m, self.hydraulics.barrier_height_m);
+            let damaged = self.hydraulics.barrier_damaged;
+            self.dams.push(DamSite { cells, invert_m, height_m, damaged, lz, owner: None });
+            self.adopt_primary_dam();
+        }
+        self.configure_boundaries();
+        self.tiles.touch_wet(&self.depth_m);
+        self.mark_all_chunks_dirty();
+    }
+
+    /// Derive the open-boundary set from the baseline river: inflow enters where river cells touch
+    /// the upstream (north, +z) edge; every other edge cell is an open outflow holding its baseline
+    /// depth. Call after `ref_depth_m` was seeded.
+    pub fn configure_boundaries(&mut self) {
+        let (w, h) = (self.width as usize, self.height as usize);
+        if w == 0 || h == 0 || self.ref_depth_m.len() != w * h {
+            self.tiles.inflow_cells = 0;
+            self.tiles.inflow_tiles.clear();
+            return;
+        }
+        let row = (h - 1) * w;
+        let mut tiles: Vec<u32> = Vec::new();
+        let mut count = 0;
+        for x in 0..w {
+            if self.ref_depth_m[row + x] > 0.05 {
+                count += 1;
+                let t = self.tiles.tile_of(x as u32, (h - 1) as u32) as u32;
+                if !tiles.contains(&t) {
+                    tiles.push(t);
+                }
             }
+        }
+        self.tiles.inflow_cells = count;
+        self.tiles.inflow_tiles = tiles;
+    }
+
+    /// Is any dam crest standing (> 0.5 m)?
+    #[must_use]
+    pub fn has_barrier(&self) -> bool {
+        self.dams
+            .iter()
+            .any(|d| d.cells.iter().any(|&i| self.hydraulics.barrier_crest_m.get(i).is_some_and(|c| *c > 0.5)))
+    }
+
+    /// The level-pool window (the whole field until a dam is installed).
+    #[must_use]
+    pub fn window(&self) -> PoolWindow {
+        self.pool_window.unwrap_or(PoolWindow { x0: 0, z0: 0, x1: self.width, z1: self.height })
+    }
+
+    /// Wet cells (>= [`super::WET_DEPTH_M`]) inside the pool window: the dam's own neighbourhood,
+    /// what scene counters mean by "inundated".
+    #[must_use]
+    pub fn wet_cells_in_pool_window(&self) -> u32 {
+        let (win, w) = (self.window(), self.width as usize);
+        let mut n = 0;
+        for z in win.z0..win.z1 {
+            let row = z as usize * w;
+            n += self.depth_m[row + win.x0 as usize..row + win.x1 as usize]
+                .iter()
+                .filter(|d| **d >= super::WET_DEPTH_M)
+                .count() as u32;
+        }
+        n
+    }
+
+    /// Deepest water inside the pool window (m).
+    #[must_use]
+    pub fn window_depth_max(&self) -> f32 {
+        let (win, w) = (self.window(), self.width as usize);
+        let mut m = 0.0_f32;
+        for z in win.z0..win.z1 {
+            let row = z as usize * w;
+            for d in &self.depth_m[row + win.x0 as usize..row + win.x1 as usize] {
+                m = m.max(*d);
+            }
+        }
+        m
+    }
+
+    fn touch_window(&mut self) {
+        let win = self.window();
+        self.tiles.touch_rect(win.x0, win.z0, win.x1, win.z1);
+    }
+
+    /// Record a dam (replacing one with the same owner / cells) and adopt the first as primary.
+    fn register_dam(&mut self, cells: Vec<usize>, invert_m: f32, height_m: f32, lz: u32, owner: Option<Entity>) {
+        let w = self.width.max(1);
+        for &i in &cells {
+            self.tiles.touch_cell(i as u32 % w, i as u32 / w);
+        }
+        let site = DamSite { cells, invert_m, height_m, damaged: false, lz, owner };
+        let at = self
+            .dams
+            .iter()
+            .position(|d| (owner.is_some() && d.owner == owner) || d.cells == site.cells);
+        let primary = match at {
+            Some(k) => {
+                self.dams[k] = site;
+                k == 0
+            }
+            None => {
+                self.dams.push(site);
+                self.dams.len() == 1
+            }
+        };
+        if primary {
+            self.adopt_primary_dam();
+        }
+    }
+
+    /// The first dam drives the level pool, the outlets and the hydraulics mirror.
+    fn adopt_primary_dam(&mut self) {
+        let Some(site) = self.dams.first() else {
+            return;
+        };
+        let (w, h) = (self.width.max(1), self.height);
+        let (mut x0, mut z0, mut x1, mut z1) = (u32::MAX, u32::MAX, 0_u32, 0_u32);
+        for &i in &site.cells {
+            let (x, z) = (i as u32 % w, i as u32 / w);
+            x0 = x0.min(x);
+            z0 = z0.min(z);
+            x1 = x1.max(x);
+            z1 = z1.max(z);
+        }
+        let win = PoolWindow {
+            x0: x0.saturating_sub(POOL_WINDOW_PAD_X),
+            z0: z0.saturating_sub(POOL_WINDOW_PAD_Z),
+            x1: (x1 + POOL_WINDOW_PAD_X + 1).min(w),
+            z1: (z1 + POOL_WINDOW_PAD_Z + 1).min(h),
+        };
+        self.hydraulics.barrier_invert_m = site.invert_m;
+        self.hydraulics.barrier_height_m = site.height_m;
+        self.hydraulics.barrier_damaged = self.dams.iter().any(|d| d.damaged);
+        self.barrier_lz = Some(site.lz);
+        self.pool_window = Some(win);
+        // Stage readouts are measured from the lowest ground of the reservoir window.
+        let wu = w as usize;
+        let mut lo = f32::INFINITY;
+        for z in win.z0..win.z1 {
+            for b in &self.bed_m[z as usize * wu + win.x0 as usize..z as usize * wu + win.x1 as usize] {
+                lo = lo.min(*b);
+            }
+        }
+        if lo.is_finite() {
+            self.pool.bed_min_m = lo;
+            self.pool.stage_m = self.pool.stage_m.max(lo);
         }
     }
 
@@ -425,7 +675,7 @@ impl SurfaceWaterField {
         }
     }
 
-    /// Copy world static water depth into the ROI (one fluid, CLOSE-W3). Returns wet cells seeded.
+    /// Copy world static water depth into the field (one fluid, CLOSE-W3). Returns wet cells seeded.
     pub fn seed_from_static_depth(&mut self, st: &super::WorldStaticWaterDepth) -> u32 {
         if !self.wired || st.width == 0 {
             return 0;
@@ -450,7 +700,34 @@ impl SurfaceWaterField {
             }
         }
         self.recompute_mass();
+        self.configure_boundaries();
+        self.tiles.touch_wet(&self.depth_m);
         wet
+    }
+
+    /// Level standing water (lake / ocean cells) to the world water line: depth = sea level minus
+    /// the real bed, so seeded still water is at rest instead of a per-cell stamp that would slosh
+    /// the moment the solver runs. Baseline depth follows. Returns cells set.
+    pub fn seed_standing_water(&mut self, standing: &[bool], sea_level_m: f32) -> u32 {
+        if !self.wired || standing.len() != self.depth_m.len() {
+            return 0;
+        }
+        let mut n = 0;
+        for i in 0..standing.len() {
+            if !standing[i] {
+                continue;
+            }
+            let d = (sea_level_m - self.bed_m[i]).max(0.0);
+            self.depth_m[i] = d;
+            if let Some(r) = self.ref_depth_m.get_mut(i) {
+                *r = d;
+            }
+            n += 1;
+        }
+        self.recompute_mass();
+        self.configure_boundaries();
+        self.tiles.touch_wet(&self.depth_m);
+        n
     }
 
     /// Seed a north→south river corridor with baseflow depth.
@@ -472,6 +749,8 @@ impl SurfaceWaterField {
             }
         }
         self.recompute_mass();
+        self.configure_boundaries();
+        self.tiles.touch_wet(&self.depth_m);
     }
 
     /// Spill crest of the installed barrier: the LOWEST positive crest cell (water leaves over the
@@ -494,7 +773,7 @@ impl SurfaceWaterField {
     /// is that absolute elevation (level crest), never below a cell's own bed. Absolute crest
     /// values broke once the bed became real terrain metres (CLOSE-W3): a "40 m" crest sat under
     /// a 300 m valley floor and blocked nothing.
-    /// `center_world_x` defaults to ROI mid-x when `None`.
+    /// `center_world_x` defaults to the field's mid-x when `None`.
     pub fn install_barrier_row(
         &mut self,
         world_z: i32,
@@ -506,7 +785,6 @@ impl SurfaceWaterField {
             return;
         }
         let lz = (world_z - self.origin_z) as u32;
-        self.barrier_lz = Some(lz);
         let cx_world = center_world_x.unwrap_or(self.origin_x + (self.width as i32) / 2);
         let cx = cx_world - self.origin_x;
         let half = half_span.max(1) as i32;
@@ -519,15 +797,23 @@ impl SurfaceWaterField {
             return;
         }
         let crest_abs = invert + crest_height_m.max(0.0);
-        for i in span {
+        for &i in &span {
             self.hydraulics.barrier_crest_m[i] = crest_abs.max(self.bed_m[i]);
         }
+        // A bare row has no column damage model (height 0).
+        self.register_dam(span, invert, 0.0, lz, None);
     }
 
     /// Install the barrier on explicit world tiles (a dam's footprint — DF-4.4 crest profile).
     /// Level crest at `crest_height_m` above the lowest footprint bed; never below a cell's bed.
     /// Upstream for the level pool starts above the footprint's highest row.
     pub fn install_barrier_tiles(&mut self, tiles: &[IVec2], crest_height_m: f32) {
+        self.install_barrier_tiles_for(tiles, crest_height_m, None);
+    }
+
+    /// [`Self::install_barrier_tiles`] for a dam owned by `owner` (several dams may stand on the
+    /// map; each keeps its own crest cells and damage state).
+    pub fn install_barrier_tiles_for(&mut self, tiles: &[IVec2], crest_height_m: f32, owner: Option<Entity>) {
         if !self.wired {
             return;
         }
@@ -547,9 +833,6 @@ impl SurfaceWaterField {
         for &(i, _) in &cells {
             self.hydraulics.barrier_crest_m[i] = crest_abs.max(self.bed_m[i]);
         }
-        self.hydraulics.barrier_invert_m = invert;
-        self.hydraulics.barrier_height_m = crest_height_m.max(0.0);
-        self.hydraulics.barrier_damaged = false;
         // The dam body is solid: water standing in its cells moves to the first non-barrier cell
         // upstream (+z), volume kept. Otherwise the crest traps it and a water column pokes
         // through the dam forever.
@@ -565,12 +848,15 @@ impl SurfaceWaterField {
                 if self.hydraulics.barrier_crest_m[j] <= 0.0 {
                     self.depth_m[j] += d;
                     self.depth_m[i] = 0.0;
+                    self.tiles.touch_cell((j % w) as u32, (j / w) as u32);
                     break;
                 }
                 z += 1;
             }
         }
-        self.barrier_lz = cells.iter().map(|&(_, lz)| lz).max();
+        let lz = cells.iter().map(|&(_, lz)| lz).max().unwrap_or(0);
+        let idxs: Vec<usize> = cells.iter().map(|&(i, _)| i).collect();
+        self.register_dam(idxs, invert, crest_height_m.max(0.0), lz, owner);
         self.recompute_mass();
     }
 
@@ -584,22 +870,23 @@ impl SurfaceWaterField {
         }
     }
 
-    /// Barrier cells' upstream (+z) and downstream (-z) open neighbours.
+    /// Primary dam's upstream (+z) and downstream (-z) open neighbours.
     fn dam_faces(&self) -> (Vec<usize>, Vec<usize>) {
         let (w, h) = (self.width as usize, self.height as usize);
         let (mut up, mut down) = (Vec::new(), Vec::new());
-        for z in 0..h {
-            for x in 0..w {
-                let i = z * w + x;
-                if self.hydraulics.barrier_crest_m.get(i).copied().unwrap_or(0.0) <= 0.0 {
-                    continue;
-                }
-                if z + 1 < h && self.hydraulics.barrier_crest_m[i + w] <= 0.0 {
-                    up.push(i + w);
-                }
-                if z > 0 && self.hydraulics.barrier_crest_m[i - w] <= 0.0 {
-                    down.push(i - w);
-                }
+        let Some(site) = self.dams.first() else {
+            return (up, down);
+        };
+        for &i in &site.cells {
+            if self.hydraulics.barrier_crest_m.get(i).copied().unwrap_or(0.0) <= 0.0 {
+                continue;
+            }
+            let z = i / w;
+            if z + 1 < h && self.hydraulics.barrier_crest_m[i + w] <= 0.0 {
+                up.push(i + w);
+            }
+            if z > 0 && self.hydraulics.barrier_crest_m[i - w] <= 0.0 {
+                down.push(i - w);
             }
         }
         up.sort_unstable();
@@ -636,8 +923,10 @@ impl SurfaceWaterField {
             return;
         }
         let frac = take / avail;
+        let w = self.width.max(1);
         for i in &up {
             self.depth_m[*i] *= 1.0 - frac;
+            self.tiles.touch_cell(*i as u32 % w, *i as u32 / w);
         }
         // Released water leaves at the toe, deepest channel cells first (lowest bed).
         let bed_lo = down.iter().map(|i| self.bed_m[*i]).fold(f32::INFINITY, f32::min);
@@ -645,6 +934,7 @@ impl SurfaceWaterField {
         let per = take / (toe.len().max(1) as f32 * cell_a);
         for i in &toe {
             self.depth_m[*i] += per;
+            self.tiles.touch_cell(*i as u32 % w, *i as u32 / w);
         }
     }
 
@@ -674,9 +964,11 @@ impl SurfaceWaterField {
             let i = self.idx(lx as u32, lz as u32);
             if top <= 0.0 {
                 self.obstacle_top_m[i] = 0.0;
+                self.tiles.touch_cell(lx as u32, lz as u32);
                 continue;
             }
             self.obstacle_top_m[i] = self.bed_m[i] + top;
+            self.tiles.touch_cell(lx as u32, lz as u32);
             let d = self.depth_m[i];
             if d > 0.0 {
                 let open = [(1, 0), (-1, 0), (0, 1), (0, -1)]
@@ -689,6 +981,7 @@ impl SurfaceWaterField {
                 if let Some(j) = open {
                     self.depth_m[j] += d;
                     self.depth_m[i] = 0.0;
+                    self.tiles.touch_cell((j % self.width as usize) as u32, (j / self.width as usize) as u32);
                 }
             }
         }
@@ -698,28 +991,37 @@ impl SurfaceWaterField {
     /// DW-3: per-column crest from damage. `frac` = remaining height fraction of each dam
     /// column (1 = intact, 0 = gone). A column's crest is `invert + height * frac`, never below
     /// its own bed; a gone column holds nothing (crest 0), so water pours through the notch
-    /// and the face velocity there erodes it further. Returns true if any crest changed.
+    /// and the face velocity there erodes it further. Each column belongs to the dam whose
+    /// footprint holds it (several dams may stand on the map). Returns true if any crest changed.
     pub fn set_barrier_column_fractions(&mut self, cols: &[(IVec2, f32)]) -> bool {
-        if !self.wired || self.hydraulics.barrier_height_m <= 0.0 {
+        if !self.wired || self.dams.iter().all(|d| d.height_m <= 0.0) {
             return false;
         }
-        let (invert, height) = (self.hydraulics.barrier_invert_m, self.hydraulics.barrier_height_m);
         let mut changed = false;
         for &(t, frac) in cols {
             if !self.contains_world(t.x, t.y) {
                 continue;
             }
-            let i = self.idx((t.x - self.origin_x) as u32, (t.y - self.origin_z) as u32);
+            let (lx, lz) = ((t.x - self.origin_x) as u32, (t.y - self.origin_z) as u32);
+            let i = self.idx(lx, lz);
+            let Some(k) = self.dams.iter().position(|d| d.height_m > 0.0 && d.cells.contains(&i)) else {
+                continue;
+            };
+            let (invert, height) = (self.dams[k].invert_m, self.dams[k].height_m);
             let f = frac.clamp(0.0, 1.0);
             let crest = if f <= 0.0 { 0.0 } else { (invert + height * f).max(self.bed_m[i]) };
             if (self.hydraulics.barrier_crest_m[i] - crest).abs() > 1e-3 {
                 self.hydraulics.barrier_crest_m[i] = crest;
+                self.tiles.touch_cell(lx, lz);
                 changed = true;
+                // Damage only grows (no repair path): any column below full makes the barrier a notch.
+                if f < 0.999 {
+                    self.dams[k].damaged = true;
+                }
             }
         }
-        // Damage only grows (no repair path): any column below full makes the barrier a notch.
-        if changed && cols.iter().any(|(_, f)| *f < 0.999) {
-            self.hydraulics.barrier_damaged = true;
+        if changed {
+            self.hydraulics.barrier_damaged = self.dams.iter().any(|d| d.damaged);
         }
         changed
     }
@@ -727,20 +1029,49 @@ impl SurfaceWaterField {
     /// Clear crest and/or arm a breach outflow (destroy cascade → stage falls).
     /// Sole writer path for crest tear-down; coolers trip via stage, not scene hacks.
     pub fn apply_barrier_breach(&mut self, clear_crest: bool, breach_flow_m3s: f32) {
+        self.apply_barrier_breach_for(None, clear_crest, breach_flow_m3s);
+    }
+
+    /// Breach of the dam owned by `owner` (`None` = every dam). A crest clear that names one of
+    /// several dams tears down only that dam; the rest keep holding.
+    pub fn apply_barrier_breach_for(&mut self, owner: Option<Entity>, clear_crest: bool, breach_flow_m3s: f32) {
         if !self.wired {
             return;
         }
+        let only = owner
+            .filter(|_| self.dams.len() > 1)
+            .and_then(|o| self.dams.iter().position(|d| d.owner == Some(o)));
         if clear_crest {
-            for c in &mut self.hydraulics.barrier_crest_m {
-                *c = 0.0;
+            // A cleared crest is a breach: the barrier no longer holds (notch flag drives the
+            // 2D mode and the S7 breach clock even when no breach flow was given).
+            self.hydraulics.barrier_damaged = true;
+            let w = self.width.max(1);
+            match only {
+                Some(k) => {
+                    let site = self.dams.remove(k);
+                    for i in site.cells {
+                        self.hydraulics.barrier_crest_m[i] = 0.0;
+                        self.tiles.touch_cell(i as u32 % w, i as u32 / w);
+                    }
+                    if k == 0 {
+                        self.adopt_primary_dam();
+                    }
+                }
+                None => {
+                    for c in &mut self.hydraulics.barrier_crest_m {
+                        *c = 0.0;
+                    }
+                    self.dams.clear();
+                    // Immediate storage dump so reservoir-pool intakes see stage collapse.
+                    let pulse = (breach_flow_m3s.max(0.0) as f64) * 120.0;
+                    let dump = self.pool.storage_m3 * 0.85 + pulse;
+                    self.pool.storage_m3 = (self.pool.storage_m3 - dump).max(0.0);
+                    let area = self.pool.area_m2.max(1.0);
+                    self.pool.stage_m = self.pool.bed_min_m + (self.pool.storage_m3 / area) as f32;
+                    // The wall is gone: the whole reservoir window must run again.
+                    self.touch_window();
+                }
             }
-            // Immediate storage dump so reservoir-pool intakes see stage collapse.
-            let pulse = (breach_flow_m3s.max(0.0) as f64) * 120.0;
-            let dump = self.pool.storage_m3 * 0.85 + pulse;
-            self.pool.storage_m3 = (self.pool.storage_m3 - dump).max(0.0);
-            let area = self.pool.area_m2.max(1.0);
-            self.pool.stage_m =
-                self.pool.bed_min_m + (self.pool.storage_m3 / area) as f32;
         }
         self.breach_flow_m3s = breach_flow_m3s.max(0.0);
         // Wave / drain needs 2D routing once the wall is gone.
@@ -753,14 +1084,15 @@ impl SurfaceWaterField {
     ///
     /// Beds of the cells the level pool can fill (upstream of the barrier), ascending.
     fn pool_beds_sorted(&self) -> Vec<f32> {
-        let w = self.width.max(1) as usize;
-        let mut beds: Vec<f32> = self
-            .bed_m
-            .iter()
-            .enumerate()
-            .filter(|(i, _)| self.is_upstream_lz((*i / w) as u32))
-            .map(|(_, b)| *b)
-            .collect();
+        let (win, w) = (self.window(), self.width.max(1) as usize);
+        let mut beds: Vec<f32> = Vec::new();
+        for lz in win.z0..win.z1 {
+            if !self.is_upstream_lz(lz) {
+                continue;
+            }
+            let row = lz as usize * w;
+            beds.extend_from_slice(&self.bed_m[row + win.x0 as usize..row + win.x1 as usize]);
+        }
         beds.sort_by(f32::total_cmp);
         beds
     }
@@ -773,14 +1105,18 @@ impl SurfaceWaterField {
             return;
         }
         let cell_a = f64::from(self.dx_m) * f64::from(self.dx_m);
-        let w = self.width.max(1) as usize;
-        let stored: f64 = self
-            .depth_m
-            .iter()
-            .enumerate()
-            .filter(|(i, _)| self.is_upstream_lz((*i / w) as u32))
-            .map(|(_, d)| f64::from(*d) * cell_a)
-            .sum();
+        let (win, w) = (self.window(), self.width.max(1) as usize);
+        let mut stored = 0.0_f64;
+        for lz in win.z0..win.z1 {
+            if !self.is_upstream_lz(lz) {
+                continue;
+            }
+            let row = lz as usize * w;
+            stored += self.depth_m[row + win.x0 as usize..row + win.x1 as usize]
+                .iter()
+                .map(|d| f64::from(*d) * cell_a)
+                .sum::<f64>();
+        }
         let curve = PoolCurve::new(self.pool_beds_sorted(), cell_a);
         self.pool.storage_m3 = stored;
         self.pool.stage_m = curve.stage_for(stored).unwrap_or(self.pool.bed_min_m);
@@ -879,14 +1215,16 @@ impl SurfaceWaterField {
             + self.breach_flow_m3s)
             .max(0.0);
         let w = self.width.max(1) as usize;
+        let win = self.window();
         // Downstream river: the baseline corridor (`ref_depth_m`, the world's static river)
         // scaled by a rating curve of the release, so a baseflow release reproduces the static
-        // river exactly and nothing "appears" where the ROI hands over to world static water
+        // river exactly and nothing "appears" where the pool window hands over to the live field
         // (OP-10). Legacy centred-sheet painting only when no baseline was recorded.
         let ref_cols: Vec<u32> = if self.ref_depth_m.len() == self.depth_m.len() {
-            (0..self.height as usize)
+            (win.z0..win.z1)
                 .map(|z| {
-                    self.ref_depth_m[z * w..(z + 1) * w]
+                    let row = z as usize * w;
+                    self.ref_depth_m[row + win.x0 as usize..row + win.x1 as usize]
                         .iter()
                         .filter(|d| **d > 0.05)
                         .count() as u32
@@ -897,289 +1235,67 @@ impl SurfaceWaterField {
         };
         let have_ref = ref_cols.iter().any(|c| *c > 0);
         let rating = (q_vis / self.inflow_m3s.max(1.0)).clamp(0.0, 2.0).powf(0.6);
-        for i in 0..self.cell_count() {
-            let bed = self.bed_m[i];
-            let crest_i = self.hydraulics.barrier_crest_m.get(i).copied().unwrap_or(0.0);
-            let lz = (i / w) as u32;
-            if self.is_upstream_lz(lz) {
-                self.depth_m[i] = (self.pool.stage_m - bed).max(0.0);
-                self.qy_m3s[i] = 0.0;
-            } else if crest_i > 0.0 {
-                // Barrier cell: keep small depth if overtopping.
-                self.depth_m[i] = (self.pool.stage_m - crest_i).max(0.0).min(2.0);
-                self.qy_m3s[i] = 0.0;
-            } else if have_ref {
-                let d = self.ref_depth_m[i] * rating;
-                if d > 0.05 && q_vis >= 1.0 {
-                    self.depth_m[i] = d;
-                    self.qy_m3s[i] = -(q_vis / ref_cols[lz as usize].max(1) as f32);
-                } else {
-                    self.depth_m[i] = 0.0;
+        let win_w = (win.x1 - win.x0).max(1);
+        for lz in win.z0..win.z1 {
+            for lx in win.x0..win.x1 {
+                let i = lz as usize * w + lx as usize;
+                let bed = self.bed_m[i];
+                let crest_i = self.hydraulics.barrier_crest_m.get(i).copied().unwrap_or(0.0);
+                if self.is_upstream_lz(lz) {
+                    self.depth_m[i] = (self.pool.stage_m - bed).max(0.0);
                     self.qy_m3s[i] = 0.0;
-                }
-            } else {
-                // Downstream sheet scales with total release (outlet + spill + breach) so
-                // gate/outlet moves are readable in PixelWorld / GPU water.
-                let sheet = (q_vis / (self.width.max(1) as f32 * self.dx_m * 0.35)).clamp(0.0, 4.5);
-                let half = if q_vis < 1.0 {
-                    0
-                } else if q_vis < 5.0 {
-                    2
-                } else if q_vis < 80.0 {
-                    4
-                } else if q_vis < 250.0 {
-                    6
-                } else {
-                    8
-                };
-                let in_channel = half > 0 && {
-                    let lx = (i % w) as i32;
-                    let cx = (self.width / 2) as i32;
-                    (lx - cx).abs() <= half
-                };
-                if in_channel && sheet > 0.02 {
-                    self.depth_m[i] = sheet;
-                    // Mild downstream discharge so foam / GPU velocity encode release.
-                    self.qy_m3s[i] = -(q_vis / (half.max(1) as f32 * 2.0 + 1.0));
-                } else {
-                    self.depth_m[i] = 0.0;
+                } else if crest_i > 0.0 {
+                    // Barrier cell: keep small depth if overtopping.
+                    self.depth_m[i] = (self.pool.stage_m - crest_i).max(0.0).min(2.0);
                     self.qy_m3s[i] = 0.0;
+                } else if have_ref {
+                    let d = self.ref_depth_m[i] * rating;
+                    if d > 0.05 && q_vis >= 1.0 {
+                        self.depth_m[i] = d;
+                        self.qy_m3s[i] = -(q_vis / ref_cols[(lz - win.z0) as usize].max(1) as f32);
+                    } else {
+                        self.depth_m[i] = 0.0;
+                        self.qy_m3s[i] = 0.0;
+                    }
+                } else {
+                    // Downstream sheet scales with total release (outlet + spill + breach) so
+                    // gate/outlet moves are readable in PixelWorld / GPU water.
+                    let sheet = (q_vis / (win_w as f32 * self.dx_m * 0.35)).clamp(0.0, 4.5);
+                    let half = if q_vis < 1.0 {
+                        0
+                    } else if q_vis < 5.0 {
+                        2
+                    } else if q_vis < 80.0 {
+                        4
+                    } else if q_vis < 250.0 {
+                        6
+                    } else {
+                        8
+                    };
+                    let in_channel = half > 0 && {
+                        let cx = (win.x0 + win_w / 2) as i32;
+                        (lx as i32 - cx).abs() <= half
+                    };
+                    if in_channel && sheet > 0.02 {
+                        self.depth_m[i] = sheet;
+                        // Mild downstream discharge so foam / GPU velocity encode release.
+                        self.qy_m3s[i] = -(q_vis / (half.max(1) as f32 * 2.0 + 1.0));
+                    } else {
+                        self.depth_m[i] = 0.0;
+                        self.qy_m3s[i] = 0.0;
+                    }
                 }
-            }
-            if self.depth_m[i] > 0.05 {
-                self.wet_since_s[i] += dt_s;
-            } else {
-                self.wet_since_s[i] = 0.0;
+                if self.depth_m[i] > 0.05 {
+                    self.wet_since_s[i] += dt_s;
+                } else {
+                    self.wet_since_s[i] = 0.0;
+                }
             }
         }
         self.recompute_mass();
-        self.mark_all_chunks_dirty();
+        // The painted window must run again if the pool hands back to the 2D solver.
+        self.touch_window();
         d_storage
-    }
-
-    /// One virtual-pipes sub-step. Conservative volume update.
-    /// Returns the boundary volume actually applied (inflow − south drain, m³).
-    pub fn step_virtual_pipes_sub(&mut self, dt_s: f32) -> f64 {
-        if !self.wired || self.width < 2 || self.height < 2 || dt_s <= 0.0 {
-            return 0.0;
-        }
-        let w = self.width as usize;
-        let h = self.height as usize;
-        let dx = self.dx_m;
-        let cell_a = dx * dx;
-        let n = w * h;
-        let mut flux_x = vec![0.0_f32; n]; // east face of cell
-        let mut flux_y = vec![0.0_f32; n]; // north face of cell
-
-        // Calibrated so dam-break front celerity matches Ritter 2√(gh) within ±10%
-        // on the general kernel (see `measure_dam_break_front_distance`).
-        const VP_CONDUCTANCE_K: f32 = 16.0;
-        // Stability bound: flux = C·Δη is explicit diffusion, stable only while C·dt/A <= 1/4
-        // per face. Above it (deep reservoir: limit ~0.007 s at 35 m; the caller's sub-step cap
-        // gave ~0.016 s) cells overshoot their neighbours and blow up into an odd-even
-        // checkerboard (0 m / 46 m / 0 m above a dam), which also "eroded" intact dams. Capping
-        // each face at A/(8·dt) means a cell can never pass a neighbour in one sub-step; when the
-        // sub-step is small enough the physical conductance is used unchanged.
-        let c_stable = cell_a / (8.0 * dt_s);
-        let conductance = |h_a: f32, h_b: f32| -> f32 {
-            // Upwind depth so dry-bed wetting is not starved by a zero neighbor.
-            let hp = h_a.max(h_b);
-            if hp < 1e-4 {
-                0.0
-            } else {
-                // Gravity-wave scale: C = k·Δx·√(g·h) → volume flux = C·Δη.
-                (VP_CONDUCTANCE_K * dx * (G_MPS2 * hp).sqrt()).min(c_stable)
-            }
-        };
-
-        for z in 0..h {
-            for x in 0..w {
-                let i = z * w + x;
-                let eta_i = self.surface_at(i);
-                let h_i = self.depth_m[i];
-                let crest_i = self.wall_top_m(i);
-                // East neighbor
-                if x + 1 < w {
-                    let j = i + 1;
-                    let mut eta_j = self.surface_at(j);
-                    let h_j = self.depth_m[j];
-                    // Barrier blocks unless stage above crest.
-                    let crest = crest_i.max(self.wall_top_m(j));
-                    if crest > 0.0 {
-                        let pass = eta_i.max(eta_j) > crest;
-                        // CLOSE-W2: no `continue` here — it skipped the north (z) flux below,
-                        // so a crest row never leaked or overtopped along the river.
-                        if pass {
-                            // Effective surfaces clipped to crest for orifice-like leak.
-                            let eta_i2 = eta_i.max(crest);
-                            eta_j = eta_j.max(crest);
-                            let c = conductance(h_i, h_j);
-                            flux_x[i] = c * (eta_i2 - eta_j);
-                        } else {
-                            flux_x[i] = 0.0;
-                        }
-                    } else {
-                        let c = conductance(h_i, h_j);
-                        flux_x[i] = c * (eta_i - eta_j);
-                    }
-                }
-                // North neighbor (+z)
-                if z + 1 < h {
-                    let j = i + w;
-                    let mut eta_j = self.surface_at(j);
-                    let h_j = self.depth_m[j];
-                    let crest = crest_i.max(self.wall_top_m(j));
-                    if crest > 0.0 {
-                        let pass = eta_i.max(eta_j) > crest;
-                        if pass {
-                            let eta_i2 = eta_i.max(crest);
-                            eta_j = eta_j.max(crest);
-                            let c = conductance(h_i, h_j);
-                            flux_y[i] = c * (eta_i2 - eta_j);
-                        }
-                    } else {
-                        let c = conductance(h_i, h_j);
-                        flux_y[i] = c * (eta_i - eta_j);
-                    }
-                }
-            }
-        }
-
-        // CLOSE-W4 conservation: (1) only the donor (higher surface) side can give water and the
-        // driving head is capped at the donor's depth — a dry cell gives nothing, and a thin film
-        // over a terrain step can't push the whole bed drop; (2) each cell's total outflow per
-        // sub-step is scaled to the water it holds. Without these, real-terrain beds (CLOSE-W3)
-        // created water on every steep face and the field went to NaN.
-        {
-            let depth = &self.depth_m;
-            let cap = |f: f32, donor: usize, eta_drop: f32| -> f32 {
-                let hd = depth[donor];
-                if hd < 1e-4 || eta_drop <= 0.0 {
-                    0.0
-                } else {
-                    f * (hd / eta_drop).min(1.0)
-                }
-            };
-            for z in 0..h {
-                for x in 0..w {
-                    let i = z * w + x;
-                    if x + 1 < w {
-                        let j = i + 1;
-                        let f = flux_x[i];
-                        let drop = (self.surface_at(i) - self.surface_at(j)).abs();
-                        flux_x[i] = if f >= 0.0 { cap(f, i, drop) } else { cap(f, j, drop) };
-                    }
-                    if z + 1 < h {
-                        let j = i + w;
-                        let f = flux_y[i];
-                        let drop = (self.surface_at(i) - self.surface_at(j)).abs();
-                        flux_y[i] = if f >= 0.0 { cap(f, i, drop) } else { cap(f, j, drop) };
-                    }
-                }
-            }
-            // Outflow limiter: scale every outgoing face of a cell so it can't give more than it has.
-            let mut scale = vec![1.0_f32; n];
-            for z in 0..h {
-                for x in 0..w {
-                    let i = z * w + x;
-                    let mut out = 0.0_f32;
-                    out += flux_x[i].max(0.0);
-                    out += flux_y[i].max(0.0);
-                    if x > 0 {
-                        out += (-flux_x[i - 1]).max(0.0);
-                    }
-                    if z > 0 {
-                        out += (-flux_y[i - w]).max(0.0);
-                    }
-                    let vol = depth[i] * cell_a;
-                    let want = out * dt_s;
-                    if want > vol && want > 0.0 {
-                        scale[i] = vol / want;
-                    }
-                }
-            }
-            for z in 0..h {
-                for x in 0..w {
-                    let i = z * w + x;
-                    if x + 1 < w {
-                        let donor = if flux_x[i] >= 0.0 { i } else { i + 1 };
-                        flux_x[i] *= scale[donor];
-                    }
-                    if z + 1 < h {
-                        let donor = if flux_y[i] >= 0.0 { i } else { i + w };
-                        flux_y[i] *= scale[donor];
-                    }
-                }
-            }
-        }
-
-        // Inflow along north edge (highest z).
-        let q_edge = self.inflow_m3s + self.rain_runoff_m3s;
-        let north_z = h - 1;
-        // CLOSE-W2: inflow enters the river where it already runs (wet north cells), not
-        // smeared over the whole edge — that fed the dry banks and flooded the valley.
-        let north_row = north_z * w;
-        let wet_north = (0..w).filter(|&x| self.depth_m[north_row + x] > 0.05).count();
-        let inflow_cols = if wet_north > 0 { wet_north } else { w };
-        let per_cell = q_edge / inflow_cols.max(1) as f32;
-
-        let mut applied = 0.0_f64;
-        let mut next = self.depth_m.clone();
-        for z in 0..h {
-            for x in 0..w {
-                let i = z * w + x;
-                let mut div = 0.0_f32;
-                // East face out
-                div += flux_x[i];
-                // West face in = east face of west neighbor
-                if x > 0 {
-                    div -= flux_x[i - 1];
-                }
-                // North face out
-                div += flux_y[i];
-                // South face in
-                if z > 0 {
-                    div -= flux_y[i - w];
-                }
-                let mut dvol = -div * dt_s;
-                if z == north_z && (wet_north == 0 || self.depth_m[i] > 0.05) {
-                    dvol += per_cell * dt_s;
-                    applied += f64::from(per_cell * dt_s);
-                }
-                // CLOSE-W2: open downstream boundary. The south edge drains like a free
-                // overfall into a dry ghost cell (head = local depth). The old sink was the
-                // dam outlet flow (~40 m³/s) vs 220 m³/s inflow → water piled up forever.
-                // Dam releases are internal to the ROI; they are not this boundary.
-                if z == 0 {
-                    let h0 = self.depth_m[i];
-                    // Ghost cell below the edge holds the world's static river depth (same bed):
-                    // water leaves only while the edge stands above it, so the ROI hands over to
-                    // world static water without a drop (OP-10). Dry ghost = old free overfall.
-                    let h_ghost = self.ref_depth_m.get(i).copied().unwrap_or(0.0);
-                    let q_free = if h0 > h_ghost {
-                        conductance(h0, h_ghost) * (h0 - h_ghost)
-                    } else {
-                        0.0
-                    };
-                    let avail = (h0 * cell_a + dvol).max(0.0);
-                    let sink = (q_free * dt_s).clamp(0.0, avail);
-                    dvol -= sink;
-                    applied -= f64::from(sink);
-                }
-                next[i] = (self.depth_m[i] + dvol / cell_a).max(0.0);
-                self.qx_m3s[i] = flux_x[i];
-                self.qy_m3s[i] = flux_y[i];
-            }
-        }
-        self.depth_m = next;
-        for i in 0..n {
-            if self.depth_m[i] > 0.05 {
-                self.wet_since_s[i] += dt_s;
-            } else {
-                self.wet_since_s[i] = 0.0;
-            }
-        }
-        applied
     }
 
     /// Advance `dt_s` game seconds (may sub-step for CFL).
@@ -1220,13 +1336,9 @@ impl SurfaceWaterField {
                 );
             }
             SurfaceWaterMode::VirtualPipes => {
-                // Update release estimates from pool/channel head at dam row.
-                let head = self
-                    .depth_m
-                    .iter()
-                    .copied()
-                    .fold(0.0_f32, f32::max)
-                    .max(0.5);
+                // Update release estimates from pool/channel head at the dam (its window only: a
+                // deep lake or ocean elsewhere on the map is not this dam's head).
+                let head = self.window_depth_max().max(0.5);
                 let crest = self.channel_crest_m();
                 let head_crest = if crest > 0.0 {
                     (self.pool.stage_m.max(head) - crest).max(0.0)
@@ -1272,22 +1384,24 @@ impl SurfaceWaterField {
                     + self.turbine_flow_m3s;
                 self.transfer_through_dam(q_release, dt_s);
 
-                let h_max = self.depth_m.iter().copied().fold(0.1_f32, f32::max).max(0.1);
+                // Step only where water can move; CFL from the deepest active cell, not the map.
+                self.refresh_active_tiles();
+                let h_max = self.active_depth_max().max(0.1);
+                // Sub-steps follow the gravity-wave CFL only. The face flux is capped at A/(8·dt)
+                // in the kernel, so the explicit diffusion is stable at any sub-step; the old
+                // "conductance" bound (with a stray extra depth factor) always hit the 64 cap at
+                // reservoir depth and made the map-wide solver ~7x the old ROI cost.
                 let wave = 0.5 * self.dx_m / (G_MPS2 * h_max).sqrt();
-                // Match VP_CONDUCTANCE_K=16 used in step_virtual_pipes_sub.
-                let cond = 0.2 * self.dx_m * self.dx_m
-                    / (16.0 * self.dx_m * (G_MPS2 * h_max).sqrt() * h_max).max(1e-6);
-                let cfl = wave.min(cond).max(1e-4);
-                let sub = (dt_s / cfl).ceil().max(1.0).min(64.0) as u32;
+                let sub = (dt_s / wave.max(1e-3)).ceil().max(1.0).min(64.0) as u32;
                 let sub_dt = dt_s / sub as f32;
                 // CLOSE-W2: conservation vs what the boundaries really applied.
                 expected_net = 0.0;
                 for _ in 0..sub {
-                    expected_net += self.step_virtual_pipes_sub(sub_dt);
+                    expected_net += self.step_active_substep(sub_dt);
                 }
+                self.settle_active_tiles();
                 self.sync_pool_from_depth();
                 self.recompute_mass();
-                self.mark_all_chunks_dirty();
             }
         }
 
@@ -1312,10 +1426,9 @@ impl SurfaceWaterField {
         let mut stage = 0.0_f32;
         let mut vel = 0.0_f32;
         let mut n = 0_u32;
-        for lx in 0..self.width as i32 {
-            if (lx - cx).abs() > half {
-                continue;
-            }
+        let lo = (cx - half).max(0);
+        let hi = (cx + half).min(self.width as i32 - 1);
+        for lx in lo..=hi {
             let i = self.idx(lx as u32, lz);
             let h = self.depth_m[i];
             let face = self.qy_m3s[i].abs().max(self.qx_m3s[i].abs());
@@ -1353,12 +1466,19 @@ pub fn hydro_power_mw(eta: f32, q_m3s: f32, head_m: f32) -> f32 {
 #[must_use]
 pub fn measure_dam_break_front_distance(h0_m: f32, duration_s: f32) -> (f32, f32) {
     // Fine dx so the front can resolve Ritter celerity on the general virtual-pipes kernel.
-    let width = 3_u32;
+    // Channel columns 1..width-1 between two tall banks (the map edges are open boundaries, so a
+    // bare 3-wide strip would drain sideways).
+    let width = 5_u32;
     let height = 320_u32;
     let dx = 1.0_f32;
     let n = (width * height) as usize;
+    let mut bed = vec![0.0_f32; n];
+    for lz in 0..height {
+        bed[(lz * width) as usize] = 1.0e4;
+        bed[(lz * width + width - 1) as usize] = 1.0e4;
+    }
     let mut field = SurfaceWaterField::default();
-    field.allocate(0, 0, width, height, vec![0.0; n], 0.0);
+    field.allocate(0, 0, width, height, bed, 0.0);
     field.dx_m = dx;
     field.mode = SurfaceWaterMode::VirtualPipes;
     field.hydraulics.min_release_m3s = 0.0;
@@ -1370,7 +1490,7 @@ pub fn measure_dam_break_front_distance(h0_m: f32, duration_s: f32) -> (f32, f32
             if lz == mid {
                 field.hydraulics.barrier_crest_m[i] = h0_m + 5.0;
             }
-            if lz > mid {
+            if lz > mid && lx > 0 && lx + 1 < width {
                 field.depth_m[i] = h0_m;
             }
         }
@@ -1389,7 +1509,7 @@ pub fn measure_dam_break_front_distance(h0_m: f32, duration_s: f32) -> (f32, f32
         field.step_virtual_pipes_sub(dt);
         // Hold infinite upstream reservoir (Ritter idealization).
         for lz in (mid + 1)..height {
-            for lx in 0..width {
+            for lx in 1..width - 1 {
                 let i = field.idx(lx, lz);
                 field.depth_m[i] = h0_m;
             }
