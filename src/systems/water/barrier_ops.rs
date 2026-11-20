@@ -236,11 +236,16 @@ mod tests {
                 assert!(f.set_barrier_column_fractions(&[(IVec2::new(4, 4), 0.0)]));
                 assert!(f.hydraulics.barrier_damaged);
             }
+            // The 9x9 map drains through its open edges within seconds once the water is moving,
+            // so the claim is about what ever passed the dam (peak depth below it), not the last
+            // frame.
+            let (mut notch, mut side) = (0.0_f32, 0.0_f32);
             for _ in 0..40 {
                 f.step_virtual_pipes_sub(0.5);
+                notch = notch.max(f.depth_m[f.idx(4, 3)]);
+                side = side.max(f.depth_m[f.idx(0, 3)]);
             }
-            let below = |x: u32| f.depth_m[f.idx(x, 3)];
-            (below(4), below(0))
+            (notch, side)
         };
         let (intact_mid, _) = run(false);
         let (notch, side) = run(true);

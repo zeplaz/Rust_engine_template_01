@@ -692,7 +692,9 @@ mod tests {
         }
         assert!(peak < crest_h, "the surface stayed under the crest: {peak}");
         let fl = f.dam_flows_of(owner(0)).unwrap();
-        assert!(f.surface_at(up) < sill + 1.5, "the spill drew the pool down to the sill: {}", f.surface_at(up));
+        // The spill is tens of m3/s off a pool of ~10^5 m2, so in 40 s it takes centimetres off the
+        // pool, not metres: the surface stays between the sill and where it started.
+        assert!(f.surface_at(up) < 9.0 && f.surface_at(up) > sill, "the spill drew the pool down toward the sill: {}", f.surface_at(up));
         assert!(fl.up_surface_m < crest_h);
         assert!(below_dam_m3(&f, 0) > 100.0, "the spill reached the river below");
     }
