@@ -127,6 +127,60 @@ impl DenseRelax {
         Self { x0, y0, w, h, cells }
     }
 
+    /// Dense grid over the active chunks' bounding box, filled from the overlays (T-16).
+    fn from_overlays<'a>(
+        overlays: impl Iterator<Item = &'a ChunkStrategicOverlay> + Clone,
+        active: &BTreeSet<(i32, i32)>,
+        presence: &BTreeMap<(i32, i32), SlotControl>,
+    ) -> Option<Self> {
+        let (mut x0, mut y0, mut x1, mut y1) = (i32::MAX, i32::MAX, i32::MIN, i32::MIN);
+        for ov in overlays.clone().filter(|ov| active.contains(&(ov.chunk_coord.x, ov.chunk_coord.y))) {
+            let (ox, oy) = (ov.chunk_coord.x * ov.size.x as i32, ov.chunk_coord.y * ov.size.y as i32);
+            x0 = x0.min(ox);
+            y0 = y0.min(oy);
+            x1 = x1.max(ox + ov.size.x as i32 - 1);
+            y1 = y1.max(oy + ov.size.y as i32 - 1);
+        }
+        if x0 > x1 {
+            return None;
+        }
+        let w = (x1 - x0 + 1) as usize;
+        let h = (y1 - y0 + 1) as usize;
+        let mut cells = vec![None; w * h];
+        for ov in overlays.filter(|ov| active.contains(&(ov.chunk_coord.x, ov.chunk_coord.y))) {
+            let (ox, oy) = (ov.chunk_coord.x * ov.size.x as i32, ov.chunk_coord.y * ov.size.y as i32);
+            let cw = ov.size.x.max(1) as usize;
+            for ci in 0..ov.len_cells() {
+                let (x, y) = (ox + (ci % cw) as i32, oy + (ci / cw) as i32);
+                cells[(y - y0) as usize * w + (x - x0) as usize] = Some(RelaxCell {
+                    control: ov.faction_control[ci],
+                    presence: [0.0; SLOTS],
+                    supply: ov.logistics_strength[ci],
+                });
+            }
+        }
+        for (&(x, y), p) in presence {
+            if x < x0 || y < y0 || x > x1 || y > y1 {
+                continue;
+            }
+            if let Some(c) = cells[(y - y0) as usize * w + (x - x0) as usize].as_mut() {
+                c.presence = *p;
+            }
+        }
+        Some(Self { x0, y0, w, h, cells })
+    }
+
+    fn get(&self, x: i32, y: i32) -> Option<RelaxCell> {
+        if x < self.x0 || y < self.y0 {
+            return None;
+        }
+        let (dx, dy) = ((x - self.x0) as usize, (y - self.y0) as usize);
+        if dx >= self.w || dy >= self.h {
+            return None;
+        }
+        self.cells[dy * self.w + dx]
+    }
+
     fn write_back(&self, grid: &mut RelaxGrid) {
         for (&(x, y), c) in grid.iter_mut() {
             if let Some(d) = self.cells[(y - self.y0) as usize * self.w + (x - self.x0) as usize] {
@@ -306,22 +360,16 @@ pub fn control_relaxation_system(
     for z in zones.iter().filter(|z| z.kind == ZoneKind::Control) {
         add_zone_presence(z, &mut presence);
     }
-
-    // Active chunks: any control, or presence inside, dilated by one chunk (so spread can cross borders).
-    let mut live: BTreeSet<(i32, i32)> = BTreeSet::new();
-    let origin_of = |ov: &ChunkStrategicOverlay| {
-        (
-            ov.chunk_coord.x.saturating_mul(ov.size.x as i32),
-            ov.chunk_coord.y.saturating_mul(ov.size.y as i32),
-        )
+    // T-16: build the dense grid straight from the chunk overlays and write straight back. The
+    // per-pass BTreeMap of every active tile (~100k inserts + a lookup per tile to write back,
+    // plus a presence lookup per tile per chunk) was the 100-240 ms hitch, not the sub-steps.
+    let Some(chunk) = overlays.iter().next().map(|ov| (ov.size.x.max(1) as i32, ov.size.y.max(1) as i32)) else {
+        return;
     };
+    let chunk_of = |t: (i32, i32)| (t.0.div_euclid(chunk.0), t.1.div_euclid(chunk.1));
+    let mut live: BTreeSet<(i32, i32)> = presence.keys().map(|t| chunk_of(*t)).collect();
     for ov in overlays.iter() {
-        let (ox, oy) = origin_of(&ov);
-        let has_control = ov.faction_control.iter().any(|c| c.iter().any(|v| *v > 0.0));
-        let has_presence = (0..ov.size.y as i32).any(|ly| {
-            (0..ov.size.x as i32).any(|lx| presence.contains_key(&(ox + lx, oy + ly)))
-        });
-        if has_control || has_presence {
+        if ov.faction_control.iter().any(|c| c.iter().any(|v| *v > 0.0)) {
             live.insert((ov.chunk_coord.x, ov.chunk_coord.y));
         }
     }
@@ -333,40 +381,24 @@ pub fn control_relaxation_system(
             }
         }
     }
-
-    let mut grid = RelaxGrid::new();
-    for ov in overlays.iter() {
-        if !active.contains(&(ov.chunk_coord.x, ov.chunk_coord.y)) {
-            continue;
-        }
-        let (ox, oy) = origin_of(&ov);
-        let w = ov.size.x.max(1) as usize;
-        for ci in 0..ov.len_cells() {
-            let t = (ox + (ci % w) as i32, oy + (ci / w) as i32);
-            grid.insert(
-                t,
-                RelaxCell {
-                    control: ov.faction_control[ci],
-                    presence: presence.get(&t).copied().unwrap_or([0.0; SLOTS]),
-                    supply: ov.logistics_strength[ci],
-                },
-            );
-        }
-    }
-    if grid.is_empty() {
+    let Some(mut dense) = DenseRelax::from_overlays(overlays.iter(), &active, &presence) else {
         return;
-    }
+    };
     let hostility = hostility_from_stances(stances.as_deref());
-    relax_step(&mut grid, &hostility, &RelaxParams::from_balance(&balance), dt_s);
-
+    let params = RelaxParams::from_balance(&balance);
+    let n = ((dt_s / params.max_substep_s).ceil() as usize).clamp(1, MAX_SUBSTEPS);
+    let sub = dt_s / n as f32;
+    for _ in 0..n {
+        dense.step::<true>(&hostility, &params, sub);
+    }
     for mut ov in overlays.iter_mut() {
         if !active.contains(&(ov.chunk_coord.x, ov.chunk_coord.y)) {
             continue;
         }
-        let (ox, oy) = origin_of(&ov);
+        let (ox, oy) = (ov.chunk_coord.x * ov.size.x as i32, ov.chunk_coord.y * ov.size.y as i32);
         let w = ov.size.x.max(1) as usize;
         for ci in 0..ov.len_cells() {
-            if let Some(c) = grid.get(&(ox + (ci % w) as i32, oy + (ci / w) as i32)) {
+            if let Some(c) = dense.get(ox + (ci % w) as i32, oy + (ci / w) as i32) {
                 if ov.faction_control[ci] != c.control {
                     ov.faction_control[ci] = c.control;
                 }

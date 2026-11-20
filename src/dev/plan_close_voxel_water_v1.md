@@ -345,14 +345,15 @@ Evidence: dam scene playcheck capture (frame 5000, 6500 ticks) + `cargo test --l
 |:---|:---|:---|:---|
 | Ground | Lit voxel ground (StandardMaterial ext), sun shadows, day-night on the sim day clock | DONE | capture: relief + shadows read; `voxel_day_pose` tests |
 | Ground | Water-line stamp turned the authored floodplain into Lake (trees + fire gone) | DONE | dump `floodplain_water` Dry 5994; trees in capture |
-| Ground | Box valley -> organic walls / head / swells (natural shorelines) | DONE (code) | `author_valley` tests; verify shoreline in next capture |
+| Ground | Box valley -> organic walls / head / swells (natural shorelines) | DONE | capture: organic reservoir shoreline |
 | Trees | Tree chunks keyed on ground revision (no rebuild per water tick) | DONE | — |
 | Fire | S9 dead-over-live burn | DONE | s9 = 1.18 PASS |
 | Fire | Burning ground glows in 3D from GPU-B scorch field; burning buildings flame/smoke on the fire clock (D-5) | DONE (code) | `site_fire` tests |
-| Water | Moire swirl on water (flow-normalised phase x world coords) | DONE (code) | 2D + 3D shaders fixed-direction, fwidth-faded |
+| Water | Moire on water: swirl (flow-normalised phase) + zigzag (foam stripes on every fast cell) | DONE (code) | fixed-direction phase, stripes fade before pixel size, foam only on turbulent water |
+| Roads | T-8 roads clickable (no road selection exists in 2D either) + trucks follow the road network | OPEN | agent hit the usage limit; resume after reset |
 | Water | Reservoir fills / drowns forest (S3), wave reaches G3 (S7) | DONE | s3 = 752, s7 = 1.6 PASS |
-| Water | S2 downstream ratio now min over impound (was overwritten by full-reservoir spill) | DONE | s2 PASS (0.0 — watch: min release should keep a trickle) |
-| Water | Hydro plant flood-collapsed once every building got roles | FIXED | hydro/powerhouse/intake are water-legal (`building_may_occupy_water`) |
+| Water | S2 downstream ratio now min over impound (was overwritten by full-reservoir spill) | DONE | s2 PASS; ~0 is by design (scenario shuts every outlet; min release scales with outlet opening) |
+| Water | Hydro plant flood-collapsed once every building got roles | DONE | s4 = 16.2 MW PASS |
 | Destruction | DW-1 craters + rims (terrain ground delta), DW-2 rubble, DW-3 dam per-column crest + notch mesh, DW-4 buildings wall water, DW-5 debris wash, DW-6 woodland strike | DONE (code, unit-tested) | `dw1_*`..`dw5_*`; capture `blast_craters_tracked` |
 | Destruction | Removed dam kept blocking water | DONE | `removed_dam_releases_its_barrier` |
 | Destruction | D-1 visible damage (voxel broken columns + 2D damaged/ruined stamps) | DONE (code) | `dw3_*`, stamp tests |
@@ -362,6 +363,6 @@ Evidence: dam scene playcheck capture (frame 5000, 6500 ticks) + `cargo test --l
 | Destruction | Unit-movement cost from craters | DEFER | no sim movement-cost field exists (`LogisticsTile` stub) |
 | Destruction | D-6 unit/vehicle damage, D-7 repair/rebuild | DEFER | separate programs (unit damage shells DEFERRED in destruction plan) |
 | Destruction | Blast at/over gate stays instant collapse | BY DESIGN | instantaneous cause |
-| Perf | Debug-build avg ~70 ms, hitches from `upd_control_relax` (T-16) | OPEN | perf.debug fails (debug build); OP-9 impact freeze not reproduced |
+| Perf | T-16 `upd_control_relax` hitch: per-pass BTreeMap of ~100k tiles replaced by a dense grid built from the overlays | DONE (code) | relax tests; re-measure perf.debug in next capture |
 | Docs | Stale destruction docs (T2 mask shader path/crater row, blast contract, presentation table, struct/disaster/debris statuses) | DONE | — |
 | Tests | Lib suite failures | see commit note | baseline comparison vs HEAD |
