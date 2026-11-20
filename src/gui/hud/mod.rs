@@ -27,6 +27,7 @@ pub mod icon_atlas;
 pub mod power_hud_icon_atlas;
 pub mod plant_focus_card;
 pub mod dam_ops_card;
+pub mod debug_cursor_readout;
 pub mod simulation_shell_phase2;
 pub mod sim_hud_copy;
 pub mod sim_build_picker_sheet;
